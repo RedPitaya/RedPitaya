@@ -1,6 +1,6 @@
 body {
   color: #cdcccc;
-  overflow: auto; 
+  overflow-y: auto; 
   padding-right: 0 !important;
 }
 
