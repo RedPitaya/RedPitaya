@@ -463,7 +463,8 @@ $('#waterfall-holder_ch2').hide();
 		else if(SPEC.params.orig['CH2_SHOW'].value == true)
 			$('#CH1_SHOW').addClass('active');
 	}
-
+	var t_min = SPEC.config.xmin;
+	var t_max = SPEC.config.xmax;
     for(var key in SPEC.params.orig) {
       var field = $('#' + key);
       var value = undefined;
@@ -499,7 +500,16 @@ $('#waterfall-holder_ch2').hide();
 
 	console.log(SPEC.config.xmin, SPEC.config.xmax, SPEC.config.unit);
     }
-    
+
+	if (SPEC.config.xmin >= SPEC.config.xmax) {
+		SPEC.params.local['xmin'].value = t_min;
+		SPEC.params.local['xmax'].value = t_max;
+		SPEC.params.orig['xmin'].value = t_min;
+		SPEC.config.xmin = t_min;
+		SPEC.params.orig['xmax'].value = t_max;
+		SPEC.config.xmax = t_max;
+	}
+
     // Check changes in measurement list
     var mi_count = 0;
     $('#info-meas').empty();
