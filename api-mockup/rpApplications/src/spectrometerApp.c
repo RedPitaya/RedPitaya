@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <sys/time.h>
 
 #include "spectrometerApp.h"
 #include "common.h"
@@ -72,7 +73,7 @@ float                **rp_spectr_signals = NULL;
 rp_spectr_worker_res_t rp_spectr_result;
 int                    rp_spectr_signals_dirty = 0;
 
-static float freq_min, freq_max, current_freq_range;
+static float freq_min, freq_max, current_freq_range, current_unit;
 
 int rp_spectr_worker_init(const wf_func_table_t* wf_f)
 {
@@ -495,10 +496,17 @@ void *rp_spectr_worker_thread(void *args)
                              &tmp_result.peak_pw_chb, 
                              &tmp_result.peak_pw_freq_chb,
                              curr_params[FREQ_RANGE_PARAM].value);
+        /* Calculate the map used for Waterfall diagram  */
+		float fm, fmin, ff;
+		spec_getFreqMax(&fm);
+		spec_getFreqMin(&fmin);
+		spec_getFpgaFreq(&ff);
+		float koeff = fm/ff;
+		float koeff2 = fmin/ff;
 
         /* Calculate the map used for Waterfall diagram  */
 		if (wf_func_table)
-	        wf_func_table->rp_spectr_wf_calc(&rp_cha_fft[0], &rp_chb_fft[0]);
+	        wf_func_table->rp_spectr_wf_calc(&rp_cha_fft[0], &rp_chb_fft[0], koeff, koeff2);
 
         if((jpg_write_div == 0) || (loop_cnt++%jpg_write_div == 0)) {
             jpg_fn_cnt++;
@@ -706,7 +714,7 @@ int spec_run(const wf_func_table_t* wf_f)
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
 
-	spec_setFreqRange(63000000);
+	spec_setFreqRange(0, 63000000);
 
     return 0;
 }
@@ -772,20 +780,23 @@ int spec_getPeakFreq(int channel, float* freq)
 	return ret;
 }
 
-int spec_setFreqRange(float freq)
+int spec_setFreqRange(float _freq_min, float freq)
 {
-	const float ranges[] = { 62500000, 7800000, 976000, 61000, 7600, 953 };
+	const float ranges[] = { 953.67, 7629.39, 61035.15625, 976562.5, 7812500, 62500000 };
 	int range = 0;
 	for (; range < 5; ++range)
-		if (freq > ranges[range])
+		if (freq < ranges[range])
 			break;
 
+	
 	current_freq_range = ranges[range];
+	
+	range = 5 - range;
 	freq_max = freq;
-
+	freq_min = _freq_min;
+	current_unit = range;
+	
 	rp_spectr_worker_update_params_by_idx(range, FREQ_RANGE_PARAM, 1);
-
-	fprintf(stderr, "max freq = %.2f range = %d\n", freq, range);
 
 	return 0;
 }
@@ -797,6 +808,16 @@ int spec_setUnit(int unit)
 	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHB_PARAM, 1);
 
 	return 0;
+}
+
+int spec_getUnit()
+{
+	if (current_unit < 2)
+		return 2;
+	else if (current_unit < 5)
+		return 1;
+	else
+		return 0;
 }
 
 int spec_getFpgaFreq(float* freq)
