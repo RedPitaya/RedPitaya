@@ -259,7 +259,7 @@ typedef struct wf_func_table_t {
     int (*rp_spectr_wf_init)();
     int (*rp_spectr_wf_clean)();
     int (*rp_spectr_wf_clean_map)();
-    int (*rp_spectr_wf_calc)(double *cha_in, double *chb_in);
+    int (*rp_spectr_wf_calc)(double *cha_in, double *chb_in, float koeff, float koeff2);
     int (*rp_spectr_wf_save_jpeg)(const char *wf_file1, const char *wf_file2);
 } wf_func_table_t;
 

@@ -398,6 +398,7 @@ area:hover {
   width: 100%;
   text-align: center;
   height: 31px;
+  font-size: 85%;
 }
 
 .close-dialog {
