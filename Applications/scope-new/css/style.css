@@ -1,6 +1,6 @@
 body {
   color: #cdcccc;
-  overflow: hidden; 
+  overflow: auto; 
   padding-right: 0 !important;
 }
 
@@ -426,8 +426,9 @@ area:hover {
 
 #joystick {
   position: absolute; 
+  margin-left: 8px;
   right: 26px; 
-  bottom: 10px; 
+  top: 400px;  
   width: 150px; 
   height: auto;
 }
