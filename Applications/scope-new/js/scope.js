@@ -441,7 +441,7 @@
             if($.inArray(param_name, ['OSC_TIME_OFFSET', 'OSC_TIME_SCALE']) > -1) {
               field.html(OSC.convertTime(new_params[param_name].value));
             }
-            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE']) > -1) {
+            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE', 'OSC_OUTPUT1_SCALE', 'OSC_OUTPUT2_SCALE']) > -1) {
               field.html(OSC.convertVoltage(new_params[param_name].value));
             }
             else {
@@ -712,7 +712,7 @@
   OSC.changeYZoom = function(direction, curr_scale, send_changes) {
     
     // Output 1/2 signals do not have zoom
-    if($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2', 'math']) < 0) {
+    if($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2', 'math', 'output1', 'output2']) < 0) {
       return;
     }
     
@@ -749,7 +749,6 @@
       
       // Fix float length
       new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
-      
       if(send_changes !== false) {
         OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
         OSC.sendParams();
@@ -1597,7 +1596,12 @@ $(function() {
     
     // Hide offset arrows, trigger level line and arrow
     $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-    
+
+	if (OSC.ws) {
+            OSC.params.local['in_command'] = { value: 'send_all_params' };
+            OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+            OSC.params.local = {};
+    }
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
     
