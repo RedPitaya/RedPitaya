@@ -40,7 +40,7 @@ int rp_spectr_wf_clean_map(void);
 /* Processes the input signal and put it to the map which is builded from 
  * multiple acquisitions.
  * Input signal length = c_dsp_sig_len (output from FFT) */
-int rp_spectr_wf_calc(double *cha_in, double *chb_in);
+int rp_spectr_wf_calc(double *cha_in, double *chb_in, float koeff, float koeff2);
 
 
 /* Build the waterfall diagram out of the collected acquisitions and stores it */
@@ -52,7 +52,7 @@ int rp_spectr_wf_save_jpeg(const char *wf_file1, const char *wf_file2);
  * Output length = c_dsp_sig_len + RP_SPECTR_WF_AVG_FILT - 1
  */
 int rp_spectr_wf_conv(double *cha_in, double *chb_in,
-                      double **cha_out, double **chb_out);
+                      double **cha_out, double **chb_out, float koeff);
 
 /* Decimation & moving to linear scale
  * Input sig. length = c_dsp_sig_len
