@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# User startup script
+
+echo "Feel free to add custom initialization commands here."
