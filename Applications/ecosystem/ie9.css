@@ -1,0 +1,45 @@
+body {
+  text-align: center;
+}
+
+.headerwrapper {
+  text-align: left;
+}
+
+.pagewrapper {
+  width: 900px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.appdescredpitaya {
+  overflow: hidden;
+  clear: both;
+}
+
+.appicon, .appdesc {
+  float: left;
+}
+
+.appicon {
+  width: 15%;
+  margin: 0 5% 0 0;
+}
+
+.appdesc {
+  width: 70%;
+  margin-right: 5%;
+}
+
+.run-button {
+  clear: both;
+  text-align: right;
+  margin-top: 10px;
+}
+
+.run-button .button {
+  padding-left: 60px;
+  padding-right: 60px;
+  display: inline-block;
+  vertical-align: middle;
+}

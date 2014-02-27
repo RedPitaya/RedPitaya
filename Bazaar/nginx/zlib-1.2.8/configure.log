@@ -1,0 +1,154 @@
+--------------------
+./configure
+Tue Nov  5 07:32:45 PST 2013
+=== ztest10789.c ===
+extern int getchar();
+int hello() {return getchar();}
+===
+arm-xilinx-linux-gnueabi-gcc -c ztest10789.c
+... using gcc
+
+Checking for obsessive-compulsive compiler options...
+=== ztest10789.c ===
+int foo() { return 0; }
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe ztest10789.c
+
+Checking for shared library support...
+=== ztest10789.c ===
+extern int getchar();
+int hello() {return getchar();}
+===
+arm-xilinx-linux-gnueabi-gcc -w -c -O2 -fomit-frame-pointer -pipe -fPIC ztest10789.c
+arm-xilinx-linux-gnueabi-gcc -shared -Wl,-soname,libz.so.1,--version-script,zlib.map -O2 -fomit-frame-pointer -pipe -fPIC -o ztest10789.so ztest10789.o
+Building shared library libz.so.1.2.8 with arm-xilinx-linux-gnueabi-gcc.
+
+=== ztest10789.c ===
+#include <sys/types.h>
+off64_t dummy = 0;
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 ztest10789.c
+Checking for off64_t... Yes.
+Checking for fseeko... Yes.
+
+=== ztest10789.c ===
+#include <string.h>
+#include <errno.h>
+int main() { return strlen(strerror(errno)); }
+===
+arm-xilinx-linux-gnueabi-gcc -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 -o ztest10789 ztest10789.c
+Checking for strerror... Yes.
+
+=== ztest10789.c ===
+#include <unistd.h>
+int main() { return 0; }
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 ztest10789.c
+Checking for unistd.h... Yes.
+
+=== ztest10789.c ===
+#include <stdarg.h>
+int main() { return 0; }
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 ztest10789.c
+Checking for stdarg.h... Yes.
+
+=== ztest10789.c ===
+#include <stdio.h>
+#include <stdarg.h>
+#include "zconf.h"
+int main()
+{
+#ifndef STDC
+  choke me
+#endif
+  return 0;
+}
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 ztest10789.c
+Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+
+=== ztest10789.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return 0;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+arm-xilinx-linux-gnueabi-gcc -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 -o ztest10789 ztest10789.c
+Checking for vsnprintf() in stdio.h... Yes.
+
+=== ztest10789.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  int n;
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return n;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 ztest10789.c
+Checking for return value of vsnprintf()... Yes.
+
+=== ztest10789.c ===
+#define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+int ZLIB_INTERNAL foo;
+int main()
+{
+  return 0;
+}
+===
+arm-xilinx-linux-gnueabi-gcc -c -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 ztest10789.c
+Checking for attribute(visibility) support... Yes.
+
+ALL = static shared all64
+AR = ar
+ARFLAGS = rc
+CC = arm-xilinx-linux-gnueabi-gcc
+CFLAGS = -O2 -fomit-frame-pointer -pipe -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+CPP = arm-xilinx-linux-gnueabi-gcc -E
+EXE =
+LDCONFIG = ldconfig
+LDFLAGS =
+LDSHARED = arm-xilinx-linux-gnueabi-gcc -shared -Wl,-soname,libz.so.1,--version-script,zlib.map
+LDSHAREDLIBC = -lc
+OBJC = $(OBJZ) $(OBJG)
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJG)
+RANLIB = ranlib
+SFLAGS = -O2 -fomit-frame-pointer -pipe -fPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+SHAREDLIB = libz.so
+SHAREDLIBM = libz.so.1
+SHAREDLIBV = libz.so.1.2.8
+STATICLIB = libz.a
+TEST = all teststatic testshared test64
+VER = 1.2.8
+Z_U4 =
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+mandir = ${prefix}/share/man
+prefix = /usr/local
+sharedlibdir = ${libdir}
+uname = Linux
+--------------------
+
+
