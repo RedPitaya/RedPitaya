@@ -2,40 +2,9 @@
 #
 # Red Pitaya network configuration
 #
+# eth0 and wlan0 moved to Connman connection manager.
 
-
-###########################
-# lo: Loopback interface  #
-###########################
 
 auto lo
 iface lo inet loopback
 
-
-######################################
-# eth0: Wired Ethernet - 1000Base-T  #
-######################################
-#
-# Uncomment only one: dynamic or static configuration.
-#
-
-# Dynamic (DHCP) IP address
-iface eth0 inet dhcp
-    udhcpc_opts -t7 -T3
-
-# Static IP address
-#iface eth0 inet static
-#    address 192.168.1.101
-#    netmask 255.255.255.0
-#    gateway 192.168.1.1
-
-
-################################
-# wlan0: Wireless USB adapter  #
-################################
-
-auto wlan0
-iface wlan0 inet dhcp
-    pre-up wpa_supplicant -B -D wext -i wlan0 -c /opt/etc/network/wpa_supplicant.conf
-    post-down killall -q wpa_supplicant
-    udhcpc_opts -t7 -T3
