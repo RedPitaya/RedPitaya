@@ -202,10 +202,10 @@ set_property PACKAGE_PIN M15 [get_ports {exp_n_io[7]}]
 
 
 
-#NET "exp_p_io[0]" LOC = G17 | IOSTANDARD = LVCMOS33  | DRIVE = 8 | SLEW = FAST | PULLDOWN;
-#NET "exp_n_io[0]" LOC = G18 | IOSTANDARD = LVCMOS33  | DRIVE = 8 | SLEW = FAST | PULLDOWN;
-#NET "exp_p_io[7]" LOC = M14 | IOSTANDARD = LVCMOS33  | DRIVE = 8 | SLEW = FAST | PULLUP;
-#NET "exp_n_io[7]" LOC = M15 | IOSTANDARD = LVCMOS33  | DRIVE = 8 | SLEW = FAST | PULLUP;
+#set_property PULLDOWN TRUE [get_ports {exp_p_io[0]}]
+#set_property PULLDOWN TRUE [get_ports {exp_n_io[0]}]
+#set_property PULLUP   TRUE [get_ports {exp_p_io[7]}]
+#set_property PULLUP   TRUE [get_ports {exp_n_io[7]}]
 
 
 
@@ -268,6 +268,7 @@ set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_2clk_out]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks adc_clk]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks par_clk]
 set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2clk_out]
+set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2ph_out]
 
 
 
