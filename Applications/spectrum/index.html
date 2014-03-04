@@ -323,13 +323,16 @@
       }
       else {
         last_get_failed = true;
+        downloading = false;
         updateGraphData();  // One more try
       }
     })
     .always(function() {
-      downloading = false;
-      if(params.local) {
-        $('.btn, #freq_range').prop('disabled', false);
+      if(! last_get_failed) {
+        downloading = false;
+        if(params.local) {
+          $('.btn, #freq_range').prop('disabled', false);
+        }
       }
     });
   }

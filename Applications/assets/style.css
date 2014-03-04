@@ -197,8 +197,24 @@ label {
 .form-group {
   margin-bottom: 10px;
 }
+#measure span.unit {
+  width: 24px;
+  float: right;
+}
 
-@media (min-width: 1025px) {
+@media (max-width: 991px) {
+  #measure span.unit {
+    width: 126px;
+  }
+}
+
+@media (min-width: 1200px) {
+  #measure span.unit {
+    width: 40px;
+  }
+}
+
+@media (min-width: 992px) {
   #btn_avg, #btn_auto {
     float: right;
   }
