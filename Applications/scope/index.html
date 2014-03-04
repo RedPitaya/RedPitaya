@@ -43,6 +43,7 @@
   var update_interval = 50;              // Update interval for PC, milliseconds
   var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds 
   var request_timeout = 2000;            // Milliseconds
+  var long_timeout = 15000;              // Milliseconds
   var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
   var xdecimal_places = 2;               // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
   var trigger_level_xdecimal_places = 4; // Number of decimal places for trigger level tooltip
@@ -740,7 +741,7 @@
       type: 'POST',
       url: post_url,
       data: JSON.stringify({ datasets: { params: params.local } }),
-      timeout: request_timeout,
+      timeout: (auto_flag ? long_timeout : request_timeout),
       cache: false
     })
     .done(function(dresult) {
@@ -751,7 +752,7 @@
         if(auto_flag == 1 && dresult.datasets.params.min_y !== dresult.datasets.params.max_y) {
           var options = plot.getOptions();
           
-          options.xaxes[0].min = dresult.datasets.params.xmin+0.000001;
+          options.xaxes[0].min = dresult.datasets.params.xmin + 0.000001;
           options.xaxes[0].max = dresult.datasets.params.xmax;
           options.yaxes[0].min = dresult.datasets.params.min_y;
           options.yaxes[0].max = dresult.datasets.params.max_y;
