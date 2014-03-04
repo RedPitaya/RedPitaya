@@ -94,10 +94,6 @@
   // On page loaded
   
   $(function() {
-  
-    // TODO: Add markers support. Till then, remove marker buttons, to render correctly the Bootstrap button group, and hide info labels.
-    $('#btn_marker1, #btn_marker2').remove();
-    $('#info_cursors_title, #info_cursors_data').hide(); 
     
     // Show different buttons on touch screens    
     if(window.ontouchstart === undefined) {
@@ -737,14 +733,17 @@
       }
       else {
         last_get_failed = true;
+        downloading = false;
         updateGraphData();  // One more try
       }
     })
     .always(function() {
-      downloading = false;
-      if(params.local) {
-        $('#accordion').find('input,select').prop('disabled', false);
-        $('.btn').not('#btn_single, #range_y_plus, #gen_ch1_single, #gen_ch2_single').prop('disabled', false);
+      if(! last_get_failed) {
+        downloading = false;
+        if(params.local) {
+          $('#accordion').find('input,select').prop('disabled', false);
+          $('.btn').not('#btn_single, #range_y_plus, #gen_ch1_single, #gen_ch2_single').prop('disabled', false);
+        }
       }
     });
   }
@@ -864,15 +863,15 @@
     $('#info_ch1_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch1)));
     $('#info_ch1_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch1)));
     $('#info_ch1_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch1)));
-    $('#info_ch1_freq').html(floatToLocalString(convertHz(params.original.meas_freq_ch1)));
-    $('#info_ch1_period').html(floatToLocalString(convertSec(params.original.meas_per_ch1)));
+    $('#info_ch1_freq').html(convertHz(params.original.meas_freq_ch1));
+    $('#info_ch1_period').html(convertSec(params.original.meas_per_ch1));
 
     $('#info_ch2_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch2)));
     $('#info_ch2_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch2)));
     $('#info_ch2_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch2)));
     $('#info_ch2_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch2)));
-    $('#info_ch2_freq').html(floatToLocalString(convertHz(params.original.meas_freq_ch2)));
-    $('#info_ch2_period').html(floatToLocalString(convertSec(params.original.meas_per_ch2)));
+    $('#info_ch2_freq').html(convertHz(params.original.meas_freq_ch2));
+    $('#info_ch2_period').html(convertSec(params.original.meas_per_ch2));
     
     $('#gain_ch1_att').val(params.original.prb_att_ch1);
     $('#gain_ch1_sett').val(params.original.gain_ch1);
@@ -1646,11 +1645,32 @@
   }
   
   function convertHz(value) {
-    return (value >= 1000000 ? (value/1000000).toFixed(1) + ' MHz' : (value >= 10000 ? (value/1000).toFixed(1) + ' kHz' : value.toFixed(2) + ' Hz'));
+    if(value >= 1000000) {
+      value = floatToLocalString((value/1000000).toFixed(1)) + '<span class="unit">MHz</span>';
+    }
+    else if(value >= 10000) {
+      value = floatToLocalString((value/1000).toFixed(1)) + '<span class="unit">kHz</span>';
+    }
+    else {
+      value = floatToLocalString(value.toFixed(2)) + '<span class="unit">Hz</span>';
+    }
+    return value;
   }
   
   function convertSec(value) {
-    return (value < 0.000001 ? (value*1000000000).toFixed(2) + ' ns' : (value < 0.001 ? (value*1000000).toFixed(2) + ' μs' : (value < 1 ? (value*1000).toFixed(2) + ' ms' : value.toFixed(2) + ' s')));
+    if(value < 0.000001) {
+      value = floatToLocalString((value*1000000000).toFixed(2)) + '<span class="unit">ns</span>';
+    }
+    else if(value < 0.001) {
+      value = floatToLocalString((value*1000000).toFixed(2)) + '<span class="unit">μs</span>';
+    }
+    else if(value < 1) {
+      value = floatToLocalString((value*1000).toFixed(2)) + '<span class="unit">ms</span>';
+    }
+    else {
+      value = floatToLocalString(value.toFixed(2)) + '<span class="unit">s</span>';
+    }
+    return value;
   }
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
@@ -1684,12 +1704,6 @@
           </button>
           <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
-          </button>
-          <button id="btn_marker1" class="btn btn-default btn-lg " onclick="selectTool.call(this, 'marker1')">
-            <span class="glyphicon glyphicon-screenshot"></span> A
-          </button>
-          <button id="btn_marker2" class="btn btn-default btn-lg" onclick="selectTool.call(this, 'marker2')">
-            <span class="glyphicon glyphicon-screenshot"></span> B
           </button>
         </div>
         <button id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
@@ -1866,48 +1880,39 @@
               </div>
               <div class="row">
                 <div class="col-xs-3 txt-right">Min:</div>
-                <div class="col-xs-3"><span id="info_ch1_min">-</span> V</div>
+                <div class="col-xs-3"><span id="info_ch1_min">-</span><span class="unit">V</span></div>
                 <div class="col-xs-3 txt-right">Min:</div>
-                <div class="col-xs-3"><span id="info_ch2_min">-</span> V</div>
+                <div class="col-xs-3"><span id="info_ch2_min">-</span><span class="unit">V</span></div>
               </div>
               <div class="row">
                 <div class="col-xs-3 txt-right">Max:</div>
-                <div class="col-xs-3"><span id="info_ch1_max">-</span> V</div>
+                <div class="col-xs-3"><span id="info_ch1_max">-</span><span class="unit">V</span></div>
                 <div class="col-xs-3 txt-right">Max:</div>
-                <div class="col-xs-3"><span id="info_ch2_max">-</span> V</div>
+                <div class="col-xs-3"><span id="info_ch2_max">-</span><span class="unit">V</span></div>
               </div>
               <div class="row">
                 <div class="col-xs-3 txt-right">Amp:</div>
-                <div class="col-xs-3"><span id="info_ch1_amp">-</span> Vpp</div>
+                <div class="col-xs-3"><span id="info_ch1_amp">-</span><span class="unit">Vpp</span></div>
                 <div class="col-xs-3 txt-right">Amp:</div>
-                <div class="col-xs-3"><span id="info_ch2_amp">-</span> Vpp</div>
+                <div class="col-xs-3"><span id="info_ch2_amp">-</span><span class="unit">Vpp</span></div>
               </div>
               <div class="row">
                 <div class="col-xs-3 txt-right">Avg:</div>
-                <div class="col-xs-3"><span id="info_ch1_avg">-</span> V</div>
+                <div class="col-xs-3"><span id="info_ch1_avg">-</span><span class="unit">V</span></div>
                 <div class="col-xs-3 txt-right">Avg:</div>
-                <div class="col-xs-3"><span id="info_ch2_avg">-</span> V</div>
+                <div class="col-xs-3"><span id="info_ch2_avg">-</span><span class="unit">V</span></div>
               </div>
               <div class="row">
                 <div class="col-xs-3 txt-right">Freq:</div>
-                <div class="col-xs-3"><span id="info_ch1_freq">- Hz</span></div>
+                <div class="col-xs-3" id="info_ch1_freq">-<span class="unit">Hz</span></div>
                 <div class="col-xs-3 txt-right">Freq:</div>
-                <div class="col-xs-3"><span id="info_ch2_freq">- Hz</span></div>
+                <div class="col-xs-3" id="info_ch2_freq">-<span class="unit">Hz</span></div>
               </div>
               <div class="row">
                 <div class="col-xs-3 txt-right">Period:</div>
-                <div class="col-xs-3"><span id="info_ch1_period">- s</span></div>
+                <div class="col-xs-3" id="info_ch1_period">-<span class="unit">s</span></div>
                 <div class="col-xs-3 txt-right">Period:</div>
-                <div class="col-xs-3"><span id="info_ch2_period">- s</span></div>
-              </div>
-              <div id="info_cursors_title" class="row group-label" style="text-align: center;">Cursors</div>
-              <div id="info_cursors_data" class="row">
-                <div class="col-xs-6 txt-right">&#916;t &nbsp;=</div>
-                <div class="col-xs-6"><span id="info_cursor1">-</span></div>
-                <div class="col-xs-6 txt-right">1/&#916;t &nbsp;=</div>
-                <div class="col-xs-6"><span id="info_cursor2">-</span></div>
-                <div class="col-xs-6 txt-right">&#916;V &nbsp;=</div>
-                <div class="col-xs-6"><span id="info_cursor3">-</span></div>
+                <div class="col-xs-3" id="info_ch2_period">-<span class="unit">s</span></div>
               </div>
             </div>
           </div>
