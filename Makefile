@@ -91,7 +91,7 @@ $(FPGA): $(BUILD)
 
 # U-Boot build provides: u-boot.elf
 $(UBOOT): $(BUILD)
-	make -C $(UBOOT_DIR)
+	make -C $(UBOOT_DIR) RP_VERSION=$(VERSION) RP_REVISION=$(REVISION)
 	make -C $(UBOOT_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(BOOT): $(BUILD) $(UBOOT) $(FPGA)
