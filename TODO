@@ -1,12 +1,11 @@
 TODO
 
-1. Fix bugs.
-2. Build  GNU/Linux ramdisk from sources, e.g. use buildroot, Yocto.
-3. Decrease the amount of duplicated code and move common components
-   to shared.
-4. Bring OS & ecosystem sources together as they compose one package.
-5. Comment the code extensively in Doxygen style. Provide Doxygen
-   documentation.
-6. Move FPGA images to specific applications.
-7. Simplify Test/monitor.
+* Fix bugs.
+* Decrease the amount of duplicated code and move common components
+  to shared.
+* Bring OS & ecosystem sources together as they compose one package.
+* Comment the code extensively in Doxygen style. Provide Doxygen
+  documentation.
+* Move FPGA images to specific applications.
+* Simplify Test/monitor.
 
