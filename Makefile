@@ -21,7 +21,7 @@
 
 BUILD=build
 TARGET=target
-NAME=redpitaya-OS
+NAME=ecosystem
 
 LINUX_DIR=OS/linux
 LINUX_SOURCE_DIR=$(LINUX_DIR)/linux-xlnx
