@@ -1346,32 +1346,49 @@
   }
   
   function convertHz(value) {
+    var unit = '';
+    var decsep = getLocalDecimalSeparator();
+    
     if(value >= 1000000) {
-      value = floatToLocalString((value/1000000).toFixed(1)) + '<span class="unit">MHz</span>';
+      value = (value/1000000).toFixed(1);
+      unit = '<span class="unit">MHz</span>';
     }
     else if(value >= 10000) {
-      value = floatToLocalString((value/1000).toFixed(1)) + '<span class="unit">kHz</span>';
+      value = (value/1000).toFixed(1);
+      unit = '<span class="unit">kHz</span>';
     }
     else {
-      value = floatToLocalString(value.toFixed(2)) + '<span class="unit">Hz</span>';
+      value = value.toFixed(2);
+      unit = '<span class="unit">Hz</span>';
     }
-    return value;
+    
+    value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
+    return value + unit;
   }
   
   function convertSec(value) {
+    var unit = '';
+    var decsep = getLocalDecimalSeparator();
+    
     if(value < 0.000001) {
-      value = floatToLocalString((value*1000000000).toFixed(2)) + '<span class="unit">ns</span>';
+      value = (value*1000000000).toFixed(2);
+      unit = '<span class="unit">ns</span>';
     }
     else if(value < 0.001) {
-      value = floatToLocalString((value*1000000).toFixed(2)) + '<span class="unit">μs</span>';
+      value = (value*1000000).toFixed(2);
+      unit = '<span class="unit">μs</span>';
     }
     else if(value < 1) {
-      value = floatToLocalString((value*1000).toFixed(2)) + '<span class="unit">ms</span>';
+      value = (value*1000).toFixed(2);
+      unit = '<span class="unit">ms</span>';
     }
     else {
-      value = floatToLocalString(value.toFixed(2)) + '<span class="unit">s</span>';
+      value = value.toFixed(2);
+      unit = '<span class="unit">s</span>';
     }
-    return value;
+    
+    value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
+    return value + unit;
   }
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
