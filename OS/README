@@ -2,55 +2,34 @@ This is the GNU/Linux Operating system for Red Pitaya, an Open-source
 instrument based on Xilinx Zynq.
 
 
-FILESYSTEM
+DIRECTORIES
 
-The operating system consists of the following components:
-- BOOT.BIN: U-boot boot loader + initial FPGA image.
-- uImage: Linux kernel.
-- devicetree.dtb: Linux kernel device tree describing the Xilinx Zynq
-                  hardware configuration.
-- uramdisk.image.gz: Initial ramdisk, holding the root ext2 filesystem for
-                     the GNU/Linux OS. It is based on Busybox, but contains
-                     several other pieces of SW like:
-                     + Nginx web server
-                     + WiFi tools
-                     + SSH server
-                     
+u-boot          U-boot boot loader.
+linux           Linux kernel.
+buildroot       Root filesystem (ramdisk).
+discovery       IP discovery connection agent.
+filesystem      Overlay for SD card filesystem, holding user configurable
+                files.
 
-Upon boot, the ramdisk image and the root filesystem resides in RAM.
+Upon boot, the ramdisk image and thus the root filesystem resides in RAM.
 Although it is writable, its content is lost at next reboot or power cycle.
-This way, better OS robustness to abrupt power loss is achieved.
+This way, better OS robustness to abrupt power loss is achieved, compared 
+to a root filesystem on an SD card partition being mounted in read-write
+mode.
+
 
 BUILD
 
-These OS components sould have an automated build from the respective
-sources and configuration with clear versioning. Until this is established,
-these components are staged in the filesystem sub-directory.
+All the OS components, including the u-boot, FSBL, FPGA image, devicetree,
+Linux kernel and the ramdisk are built from sources using ../Makefile.
 
-The Linux kernel uImage is build from git repository defined by LINUX_GIT build
-valiable. By defaulty local (/var/git/linux-xlnx.git) bare repository is used.
+The Linux kernel uImage is built from git repository defined by LINUX_GIT
+build valiable. By defaulty local (/var/git/linux-xlnx.git) bare repository
+is used. This can be changed if remote repository is to be used.
+E.g. make clean all LINUX_GIT=git://<host>/linux-xlnx.git.
+
+The u-boot is built from git repository defined by UBOOT_GIT build valiable.
+By defaulty local (/var/git/u-boot-xlnx.git) bare repository is used.
 This can be changed if remote repository is to be used.
-e.g. make clean all LINUX_GIT=git://10.0.1.150/linux-xlnx.git
+E.g. make clean all UBOOT_GIT=git://<host>/u-boot-xlnx.git.
 
-TOOLS
-
-The tools sub-directory contains the tools to allow for easy manipulation of
-the ramdisk content.
-
-Usage (on any Linux system):
-
-> cd filesystem
-> ../tools/extract_image.sh uramdisk.image.gz
-> sudo mount -t ext2 -o loop ramdisk.img /mnt
-
-Edit files in /mnt, which represents the Linux root filesystem.
-
-> sudo umount /mnt
-> ../tools/create_image.sh ramdisk.img
-
-
-
-INSTALLATION
-
-Copy the contents of the filesystem sub-directory to the empty first partition 
-of the SD card. The SD partiton must be Windows FAT type (vfat - 0xb).
