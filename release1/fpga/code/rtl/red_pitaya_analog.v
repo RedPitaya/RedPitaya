@@ -136,6 +136,8 @@ wire  dac_2clk        ;
 wire  dac_locked      ;
 reg   dac_rst         ;
 wire  ser_clk_out     ;
+wire  dac_2ph_out     ;
+wire  dac_2ph         ;
 
 PLLE2_ADV
 #(
@@ -150,9 +152,12 @@ PLLE2_ADV
    .CLKOUT1_DIVIDE       (  4            ),
    .CLKOUT1_PHASE        (  0.000        ),
    .CLKOUT1_DUTY_CYCLE   (  0.5          ),
-   .CLKOUT2_DIVIDE       (  4            ),  // 4->250MHz, 2->500MHz
-   .CLKOUT2_PHASE        (  0.000        ),
+   .CLKOUT2_DIVIDE       (  4            ),
+   .CLKOUT2_PHASE        ( -45.000       ),
    .CLKOUT2_DUTY_CYCLE   (  0.5          ),
+   .CLKOUT3_DIVIDE       (  4            ),  // 4->250MHz, 2->500MHz
+   .CLKOUT3_PHASE        (  0.000        ),
+   .CLKOUT3_DUTY_CYCLE   (  0.5          ),
    .CLKIN1_PERIOD        (  8.000        ),
    .REF_JITTER1          (  0.010        )
 )
@@ -162,8 +167,8 @@ i_dac_plle2
    .CLKFBOUT     (  dac_clk_fb     ),
    .CLKOUT0      (  dac_clk_out    ),
    .CLKOUT1      (  dac_2clk_out   ),
-   .CLKOUT2      (  ser_clk_out    ),
-   .CLKOUT3      (        ),
+   .CLKOUT2      (  dac_2ph_out    ),
+   .CLKOUT3      (  ser_clk_out    ),
    .CLKOUT4      (        ),
    .CLKOUT5      (        ),
    // Input clock control
@@ -189,6 +194,7 @@ i_dac_plle2
 BUFG i_dacfb_buf   (.O(dac_clk_fb_buf), .I(dac_clk_fb));
 BUFG i_dac1_buf    (.O(dac_clk),        .I(dac_clk_out));
 BUFG i_dac2_buf    (.O(dac_2clk),       .I(dac_2clk_out));
+BUFG i_dac2ph_buf  (.O(dac_2ph),        .I(dac_2ph_out));
 BUFG i_ser_buf     (.O(ser_clk_o),      .I(ser_clk_out));
 
 
@@ -205,7 +211,7 @@ always @(posedge dac_clk) begin
 end
 
 
-ODDR i_dac_clk ( .Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_2clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
+ODDR i_dac_clk ( .Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_2ph),  .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_wrt ( .Q(dac_wrt_o), .D1(1'b0), .D2(1'b1), .C(dac_2clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_sel ( .Q(dac_sel_o), .D1(1'b1), .D2(1'b0), .C(dac_clk ), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_rst ( .Q(dac_rst_o), .D1(dac_rst), .D2(dac_rst), .C(dac_clk ), .CE(1'b1), .R(1'b0), .S(1'b0) );

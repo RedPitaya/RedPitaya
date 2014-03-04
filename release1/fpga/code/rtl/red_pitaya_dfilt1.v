@@ -160,9 +160,9 @@ always @(posedge adc_clk_i) begin
       r4_reg_rr <= r4_reg_r ;
 
       if ($signed(kk_mult[40-2:24]) > $signed(14'h1FFF))
-         r5_reg <= 16'h1FFF ;
+         r5_reg <= 14'h1FFF ;
       else if ($signed(kk_mult[40-2:24]) < $signed(14'h2000))
-         r5_reg <= 16'h2000 ;
+         r5_reg <= 14'h2000 ;
       else
          r5_reg <= kk_mult[24+14-1:24];
    end
