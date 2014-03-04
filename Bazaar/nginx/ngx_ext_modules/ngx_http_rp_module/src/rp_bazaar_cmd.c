@@ -818,7 +818,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     case eInstall:
     case eUpgrade:
         rp_debug(r->connection->log, "Installing: %s", j_url->valuestring);
-        sprintf(cmd, "/opt/sbin/bazaar install %s %s %s",
+        sprintf(cmd, "bazaar install %s %s %s",
                 j_app->valuestring,
                 j_url->valuestring,
                 j_md5->valuestring);
@@ -826,7 +826,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
 
     case eRemove:
         rp_debug(r->connection->log, "Removing: %s", j_app->valuestring);
-        sprintf(cmd, "/opt/sbin/bazaar remove %s",
+        sprintf(cmd, "bazaar remove %s",
                 j_app->valuestring);
         break;
 
