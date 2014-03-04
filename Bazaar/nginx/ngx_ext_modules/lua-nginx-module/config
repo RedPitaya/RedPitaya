@@ -8,7 +8,7 @@ ngx_feature_test="(void) luaL_newstate();"
 
 
 # ngx_custom_path should be available from wherever the ./configure for Nginx is called
-ngx_custom_path="../LuaJIT-2.0.1/src/"
+ngx_custom_path="../../../OS/buildroot/buildroot-2014.02/output/build/luajit-2.0.2/src/"
 LUAJIT_INC="-I ${ngx_custom_path}";
 LUAJIT_LIB="-L ${ngx_custom_path} -lluajit";
 ngx_force_module=yes;

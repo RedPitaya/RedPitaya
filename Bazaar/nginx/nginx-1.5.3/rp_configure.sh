@@ -15,7 +15,7 @@
 without=$(cat configure_withouts.txt)
 
 add_modules="--add-module=../ngx_ext_modules/lua-nginx-module --add-module=../ngx_ext_modules/ngx_http_rp_module"
-add_conf_params="--with-zlib=../zlib-1.2.8/ --with-pcre=../pcre-8.33"
+add_conf_params="--with-zlib=../../../OS/buildroot/buildroot-2014.02/output/build/zlib-1.2.8/ --with-pcre=../../../OS/buildroot/buildroot-2014.02/output/build/pcre-8.34/"
 export VERSION=$1
 export REVISION=$2
 echo ${without} | xargs ./configure ${add_conf_params} ${add_modules}

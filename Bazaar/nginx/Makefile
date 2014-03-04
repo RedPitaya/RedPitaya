@@ -11,9 +11,6 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat ../../Applications/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-ZLIB_DIR=zlib-1.2.8
-PCRE_DIR=pcre-8.33
-LUAJIT_DIR=LuaJIT-2.0.1
 NGINX_DIR=nginx-1.5.3
 NGINX=$(NGINX_DIR)/objs/nginx
 
@@ -28,7 +25,6 @@ DEPLIBS=$(DEPLIBS_DIR)/lib/libredpitaya.a
 all: $(NGINX)
 
 $(NGINX): $(DEPLIBS)
-	$(MAKE) -j $(JOBS) -C $(LUAJIT_DIR) HOST_CC="gcc -m32"
 	cd $(NGINX_DIR); ./rp_configure.sh $(VER)-$(BUILD_NUMBER) $(REVISION);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
 
@@ -53,8 +49,5 @@ install:
 
 
 clean:
-	$(MAKE) -C $(ZLIB_DIR) clean
-	$(MAKE) -C $(PCRE_DIR) clean
-	$(MAKE) -C $(LUAJIT_DIR) clean
 	-$(MAKE) -C $(NGINX_DIR) clean
 	rm -rf $(DEPLIBS_DIR)
