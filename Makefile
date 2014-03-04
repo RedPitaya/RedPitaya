@@ -27,6 +27,7 @@ LINUX_DIR=OS/linux
 LINUX_SOURCE_DIR=$(LINUX_DIR)/linux-xlnx
 UBOOT_DIR=OS/u-boot
 SOC_DIR=FPGA
+URAMDISK_DIR=OS/buildroot
 NGINX_DIR=Bazaar/nginx
 MONITOR_DIR=Test/monitor
 GENERATE_DIR=Test/generate
@@ -43,6 +44,7 @@ FPGA=$(BUILD)/fpga.bit
 FSBL=$(BUILD)/fsbl.elf
 TESTBOOT=testboot.bin
 MEMTEST=$(BUILD)/memtest.elf
+URAMDISK=$(BUILD)/uramdisk.image.gz
 NGINX=$(BUILD)/sbin/nginx
 MONITOR=$(BUILD)/bin/monitor
 GENERATE=$(BUILD)/bin/generate
@@ -62,7 +64,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -103,7 +105,11 @@ $(TESTBOOT): $(BOOT)
 $(DEVICETREE): $(BUILD) $(LINUX) $(FPGA)
 	$(LINUX_SOURCE_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) $(BUILD)/devicetree.dts
 
-$(NGINX):
+$(URAMDISK): $(BUILD)
+	$(MAKE) -C $(URAMDISK_DIR)
+	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+
+$(NGINX): $(URAMDISK)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(BUILD))
 
