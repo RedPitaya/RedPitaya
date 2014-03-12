@@ -238,14 +238,10 @@ always @(posedge dac_clk_i) begin
       trig_a_sw  <= wen && (addr[19:0]==20'h0) && wdata[0]  ;
       if (wen && (addr[19:0]==20'h0))
          trig_a_src <= wdata[2:0] ;
-      else if (trig_a_done)
-         trig_a_src <= 3'h0 ;
 
       trig_b_sw  <= wen && (addr[19:0]==20'h0) && wdata[16]  ;
       if (wen && (addr[19:0]==20'h0))
          trig_b_src <= wdata[19:16] ;
-      else if (trig_b_done)
-         trig_b_src <= 3'h0 ;
 
 
 
