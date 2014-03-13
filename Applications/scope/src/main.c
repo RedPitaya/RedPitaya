@@ -684,16 +684,19 @@ int rp_set_params(rp_app_params_t *p, int len)
         t_start_idx = round(t_start / smpl_period);
         t_stop_idx  = round(t_stop / smpl_period);
 
-        if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) < 1)
-            t_step_idx = 1;
-        else {
+        if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) >= 1) {
             t_step_idx = ceil((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1));
             int max_step = OSC_FPGA_SIG_LEN/SIGNAL_LENGTH;
             if(t_step_idx > max_step)
                 t_step_idx = max_step;
+
+            t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
         }
 
-        t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
+        const float c_min_t_span = 1e-7;
+        if ((t_stop - t_start) < c_min_t_span) {
+        	t_stop = t_start + c_min_t_span;
+        }
 
         /* write back and convert to set units */
         rp_main_params[MIN_GUI_PARAM].value = t_start;
