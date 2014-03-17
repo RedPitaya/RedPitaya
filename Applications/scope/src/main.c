@@ -206,15 +206,18 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
 /* params initialized */
 static int params_init = 0;
 
+/* AUTO set algorithm in progress flag */
+int auto_in_progress = 0;
+
 rp_calib_params_t rp_main_calib_params;
 float rp_main_ch1_max_adc_v;
 float rp_main_ch2_max_adc_v;
 
-int forcex_state=0;
-float forced_xmin=0;
-float forced_xmax=0;
-float forced_units=0;
-float forced_delay=0;
+int forcex_state = 0;
+float forced_xmin = 0;
+float forced_xmax = 0;
+float forced_units = 0;
+float forced_delay = 0;
 
 
 const char *rp_app_desc(void)
@@ -266,7 +269,7 @@ int rp_app_init(void)
 
 int rp_app_exit(void)
 {
-    fprintf(stderr, "Unloading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Unloading scope controller version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     rp_osc_worker_exit();
     generate_exit();
@@ -295,71 +298,77 @@ int time_range_to_time_unit(int range)
 }
 
 /* Find a suitable FPGA decimation factor and trigger delay,
- * based on xmin & xmax zoom conntrols */
+ * based on xmin & xmax zoom conntrols
+ */
 int transform_acq_params(rp_app_params_t *p)
 {
+    TRACE("%s()\n", __FUNCTION__);
+
     int ret = 0;
     int i;
-    
-    
-    
+
+    /* Skip the transform in case auto-set is in progress */
+    if ( (p[AUTO_FLAG_PARAM].value == 1) || (auto_in_progress == 1)) {
+        TRACE("Skipping TR, due to AUTO (unit = %d)...\n", (int)p[TIME_UNIT_PARAM].value);
+        return ret;
+    }
 
     double xmin = p[MIN_GUI_PARAM].value;
     double xmax = p[MAX_GUI_PARAM].value;
-
     float ratio;
-   
-    int reset_zoom=0;
-    
+
+    int reset_zoom = 0;
+
     int time_unit = p[TIME_UNIT_PARAM].value;
     float t_unit_factor = pow(10, 3*(2 - time_unit));
+    TRACE("TR: TU0: %d\n", time_unit);
 
-    
-    // When exactly this pair provided by client Reset Zoom is requested
-    if ((xmax==1.0e6) && (xmin==-1.0e6))
-      reset_zoom=1;
-    
-    TRACE("tu = %d, tf = %10.8f\n", time_unit, t_unit_factor);
-
-    // Retrieve Server ForceX state    
-    p[FORCEX_FLAG_PARAM].value  = (float) forcex_state;
-    
-    // Difference (expressed as ratio) between forced values and GUI state
-    if ((xmax-xmin) !=0)
-      ratio=fabs(forced_xmax-forced_xmin)/fabs(xmax-xmin);
-    else
-      ratio=0;
-    
-    if (ratio>1)   // Make it always between 0 and 1   (0: very different, 1 equal)
-      ratio=1/ratio;
-    
-    
-    if (ratio > 0.03)     // Stop forcing if factor 33 of difference or less  
-    {
-      p[FORCEX_FLAG_PARAM].value  = 0;
-      forcex_state=0;
+    /* When exactly this pair is provided by client, Reset Zoom is requested. */
+    if ((xmax == 1.0e6) && (xmin == -1.0e6)) {
+        reset_zoom = 1;
     }
-    
-    
-    // Contver GUI values to seconds
+
+    /* Server ForceX state */
+    p[FORCEX_FLAG_PARAM].value = (float) forcex_state;
+
+    /* Difference (expressed as ratio) between forced values and GUI state */
+    if ((xmax - xmin) != 0) {
+        ratio = fabs(forced_xmax - forced_xmin) / fabs(xmax - xmin);
+    } else {
+        ratio = 0.0;
+    }
+
+    /* Make it always between 0 and 1   (0: very different, 1 equal) */
+    if (ratio > 1) {
+        ratio = 1.0 / ratio;
+    }
+
+    /* Stop forcing if factor 33 of difference or less */
+    if (ratio > 0.03) {
+        p[FORCEX_FLAG_PARAM].value  = 0;
+        forcex_state = 0;
+    }
+
+    /* Contver GUI values to seconds */
     xmin /= t_unit_factor;
     xmax /= t_unit_factor;
 
-    TRACE("Xmin, Xmax: %10.8f, %10.8f\n", xmin, xmax);
+    TRACE("TR: Xmin, Xmax: %10.8f, %10.8f\n", xmin, xmax);
 
+    int time_unit_gui = time_unit;
 
-    int time_unit_gui=time_unit;
-    
     int dec;
     double rdec;
 
-    // Calculate the suitable FPGA decimation setting that optimally covers the GUI time frame
-    
-    if (p[TRIG_MODE_PARAM].value==0)  // Autotriggering mode => acquisition starts at time t=0
-      rdec= (xmax - 0) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
-    else
-      rdec= (xmax - xmin) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
-    
+    /* Calculate the suitable FPGA decimation setting that optimally covers the GUI time frame */
+    if (p[TRIG_MODE_PARAM].value == 0) {
+        /* Autotriggering mode => acquisition starts at time t = 0 */
+        rdec = (xmax - 0) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
+    } else {
+        rdec = (xmax - xmin) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
+    }
+
+    /* Find optimal decimation setting */
     for (i = 0; i < 6; i++) {
         dec = osc_fpga_cnv_time_range_to_dec(i);
         if (dec >= rdec) {
@@ -368,126 +377,111 @@ int transform_acq_params(rp_app_params_t *p)
     }
     if (i > 5)
         i = 5;
-    
-    // Optimal decimation setting identified
-    
-	
-    // Apply decimation parameter (time range), but not when forcing GUI client or during reset zoom.
-	
-    if ((forcex_state==0) && (reset_zoom==0))  
-    p[TIME_RANGE_PARAM].value = i;
 
-    
-    TRACE("Dcimation: %6.2f -> %dx\n", rdec, dec);
-    TRACE("Time range: %d\n", i);
+    /* Apply decimation parameter (time range), but not when forcing GUI client
+     * or during reset zoom.
+     */
+    if ((forcex_state == 0) && (reset_zoom == 0)) {
+        p[TIME_RANGE_PARAM].value = i;
+    }
 
-    TRACE("Reset zoom: %d\n", reset_zoom);
-    
-  
-    
-    
-    
+    TRACE("TR: Dcimation: %6.2f -> %dx\n", rdec, dec);
+    TRACE("TR: Time range: %d\n", i);
+    TRACE("TR: Reset zoom: %d\n", reset_zoom);
+
     /* New time_unit & factor */
     time_unit = time_range_to_time_unit(p[TIME_RANGE_PARAM].value);
     t_unit_factor = pow(10, 3*(2 - time_unit));
+    TRACE("TR: TU1: %d\n", time_unit);
 
-    
-  
-    if (forcex_state==0)   // Update time unit Min and Max, but not if GUI hasn't responded to "forceX" command.
-    { 
-     p[MIN_GUI_PARAM].value = xmin * t_unit_factor;
-     p[MAX_GUI_PARAM].value = xmax * t_unit_factor;
-     p[TIME_UNIT_PARAM].value = time_unit;
+    /* Update time unit Min and Max, but not if GUI hasn't responded to "forceX" command. */
+    if (forcex_state == 0) {
+        p[MIN_GUI_PARAM].value = xmin * t_unit_factor;
+        p[MAX_GUI_PARAM].value = xmax * t_unit_factor;
+        p[TIME_UNIT_PARAM].value = time_unit;
+        TRACE("TR: TU2: %d\n", (int)p[TIME_UNIT_PARAM].value);
+    } else {
+        p[MIN_GUI_PARAM].value = forced_xmin;
+        p[MAX_GUI_PARAM].value = forced_xmax;
+        p[TIME_UNIT_PARAM].value = forced_units;
+        TRACE("TR: TU3 (forced): %d\n", (int)p[TIME_UNIT_PARAM].value);
     }
-    else
-    {
-     p[MIN_GUI_PARAM].value = forced_xmin;
-     p[MAX_GUI_PARAM].value = forced_xmax;
-     p[TIME_UNIT_PARAM].value = forced_units;     
-    }
-    
-    
-    
-    
-    
-    // If time units changed by server: client MUST configure x axis (ForceX is set for this purpose by server)
-    // to p[MIN_GUI_PARAM].value, p[MIN_GUI_PARAM].value expressed in new units 
-    
-   
- 
-    
-    TRACE("New xmin, xmax [unit]: %6.2f  %6.2f [%d]\n",
-          p[MIN_GUI_PARAM].value,
-          p[MAX_GUI_PARAM].value,
-          (int)p[TIME_UNIT_PARAM].value);
 
+    /* If time units have changed by server: client MUST configure x axis
+     * (ForceX is set for this purpose by server) to p[MIN_GUI_PARAM].value,
+     * expressed in new units.
+     */
+
+    TRACE("TR: New xmin, xmax [unit]: %6.2f  %6.2f [%d]\n",
+            p[MIN_GUI_PARAM].value,
+            p[MAX_GUI_PARAM].value,
+            (int)p[TIME_UNIT_PARAM].value);
 
     int64_t t_delay;
-    
-    
-    // Calculating necessary trigger delay expressed in FPGA decimated cycles
-    if (p[TRIG_MODE_PARAM].value==0)  // Autotriggering mode => acquisition starts at time t=0
-     t_delay= OSC_FPGA_SIG_LEN ;
-    else
-     t_delay= OSC_FPGA_SIG_LEN + (xmin * c_osc_fpga_smpl_freq / dec);
-    
-    // Some limitations...
+
+    /* Calculate necessary trigger delay expressed in FPGA decimated cycles */
+    if (p[TRIG_MODE_PARAM].value == 0) {
+        /* Autotriggering mode => acquisition starts at time t = 0 */
+        t_delay= OSC_FPGA_SIG_LEN ;
+    } else {
+        t_delay= OSC_FPGA_SIG_LEN + (xmin * c_osc_fpga_smpl_freq / dec);
+    }
+
+    /* Trigger delay limitations/saturation */
+    const int64_t c_max_t_delay = ((int64_t)1 << 32) - 1;
     if (t_delay < 0)
         t_delay = 0;
-    if (t_delay > ((int64_t)1 << 32) - 1)
-        t_delay = ((int64_t)1 << 32) - 1;
+    if (t_delay > c_max_t_delay)
+        t_delay = c_max_t_delay;
 
-    TRACE("Trigger delay: %d\n", (int)t_delay);
-    
-    
-    if (forcex_state==0)     // Trigger delay (reconverted in seconds) updated ONLY if client has responded to last forceX command
-    p[TRIG_DLY_PARAM].value = ((t_delay - OSC_FPGA_SIG_LEN) * dec / c_osc_fpga_smpl_freq);
-    else
-    p[TRIG_DLY_PARAM].value =forced_delay;  
-    
-   
-    // Server issues a forceX command when time units change wrt. GUI (client) units
-     if ((time_unit != time_unit_gui))
-    {
-     p[FORCEX_FLAG_PARAM].value  = 1.0;
-     forcex_state=1;
-     forced_xmin=p[MIN_GUI_PARAM].value;     // Other settings frozen until GUI recovers
-     forced_xmax=p[MAX_GUI_PARAM].value;
-     forced_units=p[TIME_UNIT_PARAM].value;
-     forced_delay=p[TRIG_DLY_PARAM].value;
+    TRACE("TR: Trigger delay: %d\n", (int)t_delay);
+
+    /* Trigger delay (reconverted in seconds) updated ONLY if client has responded to
+     * last forceX command.
+     */
+    if (forcex_state == 0) {
+        p[TRIG_DLY_PARAM].value = ((t_delay - OSC_FPGA_SIG_LEN) * dec / c_osc_fpga_smpl_freq);
+    } else {
+        p[TRIG_DLY_PARAM].value = forced_delay;
     }
-      
-      
-     if (reset_zoom==1)                      // When client issues a zoom reset, a particular ForceX command with the initial 0 - 130 us time range 
-    {
-       
-       p[FORCEX_FLAG_PARAM].value  = 1.0;
-  
-       
-       forced_xmin=0.0;
-       forced_xmax=130.0;
-       forced_units=0.0;
-       forced_delay=0;
-       
-       forcex_state=1;
-       
-       p[MIN_GUI_PARAM].value = forced_xmin;
-       p[MAX_GUI_PARAM].value = forced_xmax;
-       p[TIME_UNIT_PARAM].value = forced_units;        
-       p[TRIG_DLY_PARAM].value=forced_delay;
-       p[TIME_RANGE_PARAM].value = 0;
-    }  
-      
-    
-    
-    
-    
-    TRACE("Trigger delay: %10.6f\n", p[TRIG_DLY_PARAM].value);
 
-     
+    /* Server issues a forceX command when time units change wrt. GUI (client) units */
+    if ((time_unit != time_unit_gui)) {
+        p[FORCEX_FLAG_PARAM].value = 1.0;
+        forcex_state = 1;
+
+        /* Other settings frozen until GUI recovers */
+        forced_xmin = p[MIN_GUI_PARAM].value;
+        forced_xmax = p[MAX_GUI_PARAM].value;
+        forced_units = p[TIME_UNIT_PARAM].value;
+        forced_delay = p[TRIG_DLY_PARAM].value;
+        TRACE("TR: TU4 (forced): %d\n", (int)p[TIME_UNIT_PARAM].value);
+    }
+
+    /* When client issues a zoom reset, a particular ForceX command with
+     * the initial 0 - 130 us time range.
+     */
+    if (reset_zoom == 1) {
+        p[FORCEX_FLAG_PARAM].value  = 1.0;
+        forcex_state = 1;
+
+        forced_xmin = 0.0;
+        forced_xmax = 130.0;
+        forced_units = 0.0;
+        forced_delay = 0;
+
+        p[MIN_GUI_PARAM].value = forced_xmin;
+        p[MAX_GUI_PARAM].value = forced_xmax;
+        p[TIME_UNIT_PARAM].value = forced_units;
+        p[TRIG_DLY_PARAM].value = forced_delay;
+        p[TIME_RANGE_PARAM].value = 0;
+        TRACE("TR: TU5 (reset): %d\n", (int)p[TIME_UNIT_PARAM].value);
+    }
+
+    TRACE("TR: Trigger delay: %.6f\n", p[TRIG_DLY_PARAM].value);
+
     return ret;
 }
-
 
 int rp_set_params(rp_app_params_t *p, int len)
 {
@@ -496,9 +490,10 @@ int rp_set_params(rp_app_params_t *p, int len)
     int params_change = 0;
     int awg_params_change = 0;
     
+    TRACE("%s()\n", __FUNCTION__);
 
     if(len > PARAMS_NUM) {
-        fprintf(stderr, "Too much parameters, max=%d\n", PARAMS_NUM);
+        fprintf(stderr, "Too many parameters, max=%d\n", PARAMS_NUM);
         return -1;
     }
 
@@ -550,8 +545,7 @@ int rp_set_params(rp_app_params_t *p, int len)
     }
     pthread_mutex_unlock(&rp_main_params_mutex);
     
-
-    
+    /* Set parameters in HW/FPGA only if they have changed */
     if(params_change || (params_init == 0)) {
 
         pthread_mutex_lock(&rp_main_params_mutex);
@@ -569,7 +563,6 @@ int rp_set_params(rp_app_params_t *p, int len)
         float t_delay = rp_main_params[TRIG_DLY_PARAM].value;
         float t_unit_factor = 1; /* to convert to seconds */
 
-        TRACE("After T: %d, %dx\n", time_range, dec_factor);
         /* Our time window with current settings:
          *   - time_delay is added later, when we check if it is correct 
          *     setting 
@@ -587,12 +580,17 @@ int rp_set_params(rp_app_params_t *p, int len)
         float ch1_max_adc_v, ch2_max_adc_v;
         float ch1_delta, ch2_delta;
 
+        TRACE("PC: t_stop = %.9f\n", t_stop);
+
         /* If auto-set algorithm was requested do not set other parameters */
         if(rp_main_params[AUTO_FLAG_PARAM].value == 1) {
+            TRACE("PC: AUTO algorithm started.\n");
+            auto_in_progress = 1;
+            forcex_state = 0;
+
             rp_osc_clean_signals();
             rp_osc_worker_change_state(rp_osc_auto_set_state);
             /* AUTO_FLAG_PARAM is cleared when Auto-set algorithm finishes */
-            /*            rp_main_params[AUTO_FLAG_PARAM].value = 0;*/
             
             /* Wait for auto-set algorithm to finish or timeout */
             int timeout = 10000000; // [us]
@@ -613,10 +611,13 @@ int rp_set_params(rp_app_params_t *p, int len)
                 fprintf(stderr, "AUTO: Timeout waiting for AUTO-set algorithm to finish.\n");
             }
 
+            auto_in_progress = 0;
+            TRACE("PC: AUTO algorithm finished.\n");
+
             return 0;
         }
 
-        /* if AUTO reset trigger delay */
+        /* If AUTO trigger mode, reset trigger delay */
         if(mode == 0) 
             t_delay = 0;
 
@@ -625,18 +626,17 @@ int rp_set_params(rp_app_params_t *p, int len)
             return -1;
         }
 
-        /* pick correct which time unit is selected */
+        /* Pick time unit and unit factor corresponding to current time range. */
         if((time_range == 0) || (time_range == 1)) {
             time_unit     = 0;
             t_unit_factor = 1e6;
         } else if((time_range == 2) || (time_range == 3)) {
             time_unit     = 1;
             t_unit_factor = 1e3;
-        } 
-
-        TRACE("After T: time_unit = %d\n", time_unit);
+        }
 
         rp_main_params[TIME_UNIT_PARAM].value = time_unit;
+        TRACE("PC: time_(R,U) = (%d, %d)\n", time_range, time_unit);
 
         /* Check if trigger delay in correct range, otherwise correct it
          * Correct trigger delay is:
@@ -654,9 +654,10 @@ int rp_set_params(rp_app_params_t *p, int len)
         t_max = t_max + t_delay;
         rp_main_params[TRIG_DLY_PARAM].value = t_delay;
 
-        /* convert to seconds */
+        /* Convert to seconds */
         t_start = t_start / t_unit_factor;
         t_stop  = t_stop  / t_unit_factor;
+        TRACE("PC: t_stop = %.9f\n", t_stop);
 
         /* Select correct time window with this settings:
          * time window is defined from:
@@ -695,8 +696,9 @@ int rp_set_params(rp_app_params_t *p, int len)
 
         const float c_min_t_span = 1e-7;
         if ((t_stop - t_start) < c_min_t_span) {
-        	t_stop = t_start + c_min_t_span;
+            t_stop = t_start + c_min_t_span;
         }
+        TRACE("PC: t_stop (rounded) = %.9f\n", t_stop);
 
         /* write back and convert to set units */
         rp_main_params[MIN_GUI_PARAM].value = t_start;
@@ -791,8 +793,9 @@ int rp_set_params(rp_app_params_t *p, int len)
         rp_main_params[GEN_SIG_FREQ_CH2].value = 
             rp_gen_limit_freq(rp_main_params[GEN_SIG_FREQ_CH2].value,
                               rp_main_params[GEN_SIG_TYPE_CH2].value);
-        if(generate_update(&rp_main_params[0]) < 0)
+        if(generate_update(&rp_main_params[0]) < 0) {
             return -1;
+        }
     }
 
     return 0;
