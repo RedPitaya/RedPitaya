@@ -1083,6 +1083,10 @@
     if(params.local.trig_mode == 0) {
       return dsets;
     }
+    // ...or trigger source is external
+    if(params.local.trig_source == 2) {
+      return dsets;
+    }
     // ...or outside of received data for Y axis
     var ch1ymin = null, 
         ch1ymax = null;
@@ -1429,10 +1433,10 @@
       y = plot.getAxes().yaxis.p2c(params.local.trig_level);
     }
     
-    // If trigger mode is auto or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
+    // If trigger source is external or mode is auto or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
     context.clearRect(0, 0, canvas.width, canvas.height); 
     var yaxis = plot.getAxes().yaxis;
-    if(params.original.trig_mode == 0 || params.local.trig_level < yaxis.min || params.local.trig_level > yaxis.max) {
+    if(params.original.trig_mode == 0 || params.local.trig_level < yaxis.min || params.local.trig_level > yaxis.max || params.original.trig_source == 2) {
       context.lineWidth = 1;
       context.strokeStyle = '#dddddd';
       context.stroke();
