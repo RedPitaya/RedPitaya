@@ -74,6 +74,7 @@
   var downloading = false;
   var sending = false;
   var send_que = false;
+  var use_long_timeout = false;
   var trig_dragging = false;
   var touch_last_y = 0;
   var user_editing = false;
@@ -632,10 +633,11 @@
     sendParams();
     
     var arun_before_ajax = autorun;
+    var long_timeout_used = use_long_timeout;
     
     $.ajax({
       url: get_url,
-      timeout: request_timeout,
+      timeout: (use_long_timeout ? long_timeout : request_timeout),
       cache: false
     })
     .done(function(dresult) {
@@ -745,6 +747,9 @@
           $('#accordion').find('input,select').prop('disabled', false);
           $('.btn').not('#btn_single, #range_y_plus, #gen_ch1_single, #gen_ch2_single').prop('disabled', false);
         }
+      }
+      if(long_timeout_used) {
+        use_long_timeout = false;
       }
     });
   }
@@ -939,12 +944,13 @@
     var auto_flag = params.local.auto_flag;  // Keep the value of auto_flag, because in POST response it is always 0
     sending = true;
     params.local.single_btn = (single_btn === true ? 1 : 0);
+    use_long_timeout = !!auto_flag;
   
     $.ajax({
       type: 'POST',
       url: post_url,
       data: JSON.stringify({ datasets: { params: params.local } }),
-      timeout: (auto_flag ? long_timeout : request_timeout),
+      timeout: (use_long_timeout ? long_timeout : request_timeout),
       cache: false
     })
     .done(function(dresult) {
