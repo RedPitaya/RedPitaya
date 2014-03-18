@@ -385,11 +385,11 @@ ngx_int_t rp_module_send_response(ngx_http_request_t *r, cJSON **json_root)
     //}
 
     cJSON_Delete(*json_root, r->pool);
-            
+    
     rc = ngx_http_send_header(r);
 
     /* If error while sending OK output we re-send it */
-    if((rc == NGX_ERROR) && (r->method == NGX_HTTP_GET) && 
+    if((rc == NGX_ERROR) && (r->method == NGX_HTTP_GET) && j_status && 
        (j_status->valuestring[0] = 'O') && (j_status->valuestring[1] == 'K')) {
         rp_data_clear_signals_dirty();
     }
