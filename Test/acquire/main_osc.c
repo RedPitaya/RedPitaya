@@ -68,8 +68,21 @@ static rp_osc_params_t rp_main_params[PARAMS_NUM] = {
     { /** time_unit_used:
        *    0 - [us]
        *    1 - [ms]
-       *    2 - [s]     */         0, 0, 1,         0,         2 }
+       *    2 - [s]     */         0, 0, 1,         0,         2 },
+    { /** Equalization filter:
+       *    0 - Disabled
+       *    1 - Enabled */         0, 0, 0,         0,         1 },
+    { /** Shaping filter:
+       *    0 - Disabled
+       *    1 - Enabled */         0, 0, 0,         0,         1 },
+    { /** Channel1 gain:
+       *    0 - LV
+       *    1 - HV */              0, 0, 0,         0,         1 },
+    { /** Channel2 gain:
+       *    0 - LV
+       *    1 - HV */              0, 0, 0,         0,         1 }
 };
+
 
 /** @brief Returns application description.
  *
