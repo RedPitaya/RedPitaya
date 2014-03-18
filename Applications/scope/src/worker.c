@@ -654,6 +654,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     }
     osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig);
     in_idx = wr_ptr_trig + t_start_idx - 3;
+
     if(in_idx < 0) 
         in_idx = OSC_FPGA_SIG_LEN + in_idx;
     if(in_idx >= OSC_FPGA_SIG_LEN)
@@ -684,6 +685,15 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                                                ch2_user_dc_off);
 
         t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
+
+        /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
+        if ( (dec_factor > 64) && (out_idx == 1) ) {
+            int i;
+            for (i=0; i < out_idx; i++) {
+                cha_s[i] = cha_s[out_idx];
+                chb_s[i] = chb_s[out_idx];
+            }
+        }
     }
 
     return 0;
@@ -750,6 +760,14 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
         t_out[next_out_idx]   = 
             (t_start + ((next_out_idx*step_wr_ptr)*smpl_period))*t_unit_factor;
 
+        /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
+         if ( (dec_factor > 64) && (next_out_idx == 2) ) {
+             int i;
+             for (i=0; i < next_out_idx; i++) {
+                 cha_out[i] = cha_out[next_out_idx];
+                 chb_out[i] = chb_out[next_out_idx];
+             }
+         }
     }
 
     *next_wr_ptr = in_idx;
@@ -1161,12 +1179,14 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
                        int *in_cha_signal, int *in_chb_signal, 
                        int start_idx, int stop_idx, int dec_factor)
 {
-    const float meas_freq_thr = 100;
+    const float c_meas_freq_thr = 100;
+    const int c_meas_time_thr = OSC_FPGA_SIG_LEN / 8;
+    const float c_min_period = 19.6e-9; // 51 MHz
 
     float ch1_thr1, ch1_thr2, ch2_thr1, ch2_thr2, ch1_cen, ch2_cen;
     int ch1_state = 0, ch2_state = 0;
-    int ch1_trig_t[3] = { -1, -1, -1 };
-    int ch2_trig_t[3] = { -1, -1, -1 };
+    int ch1_trig_t[2] = { 0, 0 };
+    int ch2_trig_t[2] = { 0, 0 };
     int ch1_trig_cnt = 0;
     int ch2_trig_cnt = 0;
     int in_idx;
@@ -1178,77 +1198,89 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
     ch1_cen = (ch1_meas->max + ch1_meas->min) / 2;
     ch2_cen = (ch2_meas->max + ch2_meas->min) / 2;
 
-    ch1_thr1 = (ch1_meas->min + ch1_cen) / 2;
-    ch1_thr2 = (ch1_meas->max + ch1_cen) / 2;
-    ch2_thr1 = (ch2_meas->min + ch2_cen) / 2;
-    ch2_thr2 = (ch2_meas->max + ch2_cen) / 2;
+    ch1_thr1 = ch1_cen + 0.2 * (ch1_meas->min - ch1_cen);
+    ch1_thr2 = ch1_cen + 0.2 * (ch1_meas->max - ch1_cen);
+    ch2_thr1 = ch2_cen + 0.2 * (ch2_meas->min - ch2_cen);
+    ch2_thr2 = ch2_cen + 0.2 * (ch2_meas->max - ch2_cen);
 
     // Checking where acquisition starts
     osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
 
-    ch1_meas->period =0;
-    ch2_meas->period =0;
+    ch1_meas->period = 0;
+    ch2_meas->period = 0;
 
     /* Frequency check - it was proposed to be done in the decimation but 
      * calculation can be inaccurate (depends on the SW decimation used) */
     for(in_idx = 0; in_idx < (OSC_FPGA_SIG_LEN); in_idx++) {
-        ix_corr=in_idx+wr_ptr_trig;
+        ix_corr = in_idx + wr_ptr_trig;
 
-        if (ix_corr>=(OSC_FPGA_SIG_LEN)) 
-            ix_corr=ix_corr-OSC_FPGA_SIG_LEN;
+        if (ix_corr >= OSC_FPGA_SIG_LEN) {
+            ix_corr %= OSC_FPGA_SIG_LEN;
+        }
 
-        float s_a_0 = rp_osc_adc_sign(in_cha_signal[ix_corr-1]);
-        float s_a_1 = rp_osc_adc_sign(in_cha_signal[ix_corr]);
-        float s_b_0 = rp_osc_adc_sign(in_chb_signal[ix_corr-1]);
-        float s_b_1 = rp_osc_adc_sign(in_chb_signal[ix_corr]);
-        /* Period/frequency measurement */
-        if((ch1_state == 0) && (ix_corr > 0) 
-            && (s_a_0<ch1_thr1)) {
+        float sa = rp_osc_adc_sign(in_cha_signal[ix_corr]);
+        float sb = rp_osc_adc_sign(in_chb_signal[ix_corr]);
+
+        /* Lower transitions */
+        if((ch1_state == 0) && (ix_corr > 0) && (sa < ch1_thr1)) {
             ch1_state = 1;
         }
-        if((ch2_state == 0) && (ix_corr > 0) &&
-            (s_b_0<ch2_thr1)) {
+        if((ch2_state == 0) && (ix_corr > 0) && (sb < ch2_thr1)) {
             ch2_state = 1;
         }
-        if((ch1_state == 1) && (ch1_trig_cnt < 3) && 
-           (s_a_1>=ch1_thr2) ) {
+
+        /* Upper transitions - count them & store edge times. */
+        if((ch1_state == 1) && (sa >= ch1_thr2) ) {
             ch1_state = 0;
-            ch1_trig_t[ch1_trig_cnt] = in_idx;
-            ch1_trig_cnt++;
-            if(ch1_trig_cnt >= 2) {
-                ch1_meas->period = (ch1_trig_t[1]-ch1_trig_t[0]) /
-                    (float)c_osc_fpga_smpl_freq * dec_factor;
+            if (ch1_trig_cnt++ == 0) {
+                ch1_trig_t[0] = in_idx;
+            } else {
+                ch1_trig_t[1] = in_idx;
             }
         }
-
-        if((ch2_state == 1) && (ch2_trig_cnt < 3) && 
-           (s_b_1>=ch2_thr2) ) {
+        if((ch2_state == 1) && (sb >= ch2_thr2) ) {
             ch2_state = 0;
-            ch2_trig_t[ch2_trig_cnt] = in_idx;
-            ch2_trig_cnt++;
-            if(ch2_trig_cnt >= 2) {
-                ch2_meas->period = (ch2_trig_t[1]-ch2_trig_t[0]) /
-                    (float)c_osc_fpga_smpl_freq * dec_factor;
+            if (ch2_trig_cnt++ == 0) {
+                ch2_trig_t[0] = in_idx;
+            } else {
+                ch2_trig_t[1] = in_idx;
             }
-           
         }
 
-        if((ch1_trig_cnt > 1) && (ch2_trig_cnt > 1))
+        if ( ((ch1_trig_t[1] - ch1_trig_t[0]) > c_meas_time_thr) &&
+             ((ch2_trig_t[1] - ch2_trig_t[0]) > c_meas_time_thr) ) {
             break;
+        }
     }
 
-    if(((ch1_thr2-ch1_thr1) < meas_freq_thr) || (ch1_meas->period * 3 >=acq_dur) || (ch1_meas->period<=(2/(float)c_osc_fpga_smpl_freq))) {  //16 ns is the minimum period (62.5 MHz)
+    /* Period calculations - taking into account at least meas_time_thr samples */
+    if(ch1_trig_cnt >= 2) {
+        ch1_meas->period = (ch1_trig_t[1] - ch1_trig_t[0]) /
+            ((float)c_osc_fpga_smpl_freq * (ch1_trig_cnt - 1)) * dec_factor;
+    }
+    if(ch2_trig_cnt >= 2) {
+        ch2_meas->period = (ch2_trig_t[1] - ch2_trig_t[0]) /
+            ((float)c_osc_fpga_smpl_freq * (ch2_trig_cnt - 1)) * dec_factor;
+    }
+
+    if( ((ch1_thr2 - ch1_thr1) < c_meas_freq_thr) ||
+         (ch1_meas->period * 3 >= acq_dur)      ||
+         (ch1_meas->period < c_min_period) )
+    {
         ch1_meas->period = 0;
-        ch1_meas->freq = 0;
+        ch1_meas->freq   = 0;
     } else {
-        ch1_meas->freq = 1 / ch1_meas->period;
+        ch1_meas->freq = 1.0 / ch1_meas->period;
     }
 
-    if(((ch2_thr2-ch2_thr1) < meas_freq_thr) || (ch2_meas->period *3 >= acq_dur) || (ch2_meas->period<=(2/(float)c_osc_fpga_smpl_freq))) {
+    if( ((ch2_thr2 - ch2_thr1) < c_meas_freq_thr) ||
+         (ch2_meas->period * 3 >= acq_dur)      ||
+         (ch2_meas->period < c_min_period) )
+    {
         ch2_meas->period = 0;
-        ch2_meas->freq = 0;
+        ch2_meas->freq   = 0;
     } else {
-        ch2_meas->freq = 1 / ch2_meas->period;
+        ch2_meas->freq = 1.0 / ch2_meas->period;
     }
 
     return 0;
