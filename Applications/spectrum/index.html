@@ -622,6 +622,9 @@
     if(! plot) {
       return;
     }
+
+    $('#btn_ch1, #btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');    
+    $('#btn_freezech1, #btn_freezech2').data('checked', false).removeClass('btn-primary').addClass('btn-default');
     
     $.extend(true, plot_options, {
       xaxis: { min: null, max: null },
