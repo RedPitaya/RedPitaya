@@ -360,7 +360,11 @@ void *rp_osc_worker_thread(void *args)
                                       /*curr_params[TRIG_DLY_PARAM].value,*/
                                       curr_params[MIN_GUI_PARAM].value,
                                       curr_params[TRIG_LEVEL_PARAM].value,
-                                      curr_params[TIME_RANGE_PARAM].value) < 0) {
+                                      curr_params[TIME_RANGE_PARAM].value,
+                                      curr_params[EQUAL_FILT_PARAM].value,
+                                      curr_params[SHAPE_FILT_PARAM].value,
+                                      curr_params[GAIN1_PARAM].value,
+                                      curr_params[GAIN2_PARAM].value) < 0) {
                 fprintf(stderr, "Setting of FPGA registers failed\n");
                 rp_osc_worker_change_state(rp_osc_idle_state);
             }
