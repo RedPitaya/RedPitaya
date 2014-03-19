@@ -173,6 +173,49 @@ int osc_fpga_exit(void)
     return __osc_fpga_cleanup_mem();
 }
 
+// TODO: Move to a shared folder and share with scope & spectrum.
+/**
+ * @brief Provides equalization & shaping filter coefficients.
+ *
+ *
+ * This function provides equalization & shaping filter coefficients, based on
+ * the type of use and gain settings.
+ *
+ * @param [in]  equal    Enable(1)/disable(0) equalization filter.
+ * @param [in]  shaping  Enable(1)/disable(0) shaping filter.
+ * @param [in]  gain     Gain setting (0 = LV, 1 = HV).
+ * @param [out] filt     Filter coefficients.
+ */
+void get_equ_shape_filter(ecu_shape_filter_t *filt, uint32_t equal,
+                          uint32_t shaping, uint32_t gain)
+{
+    /* Equalization filter */
+    if (equal) {
+        if (gain == 0) {
+            /* High gain = LV */
+            filt->aa = 0x7D93;
+            filt->bb = 0x437C7;
+        } else {
+            /* Low gain = HV */
+            filt->aa = 0x4C5F;
+            filt->bb = 0x2F38B;
+        }
+    } else {
+        filt->aa = 0;
+        filt->bb = 0;
+    }
+
+    /* Shaping filter */
+    if (shaping) {
+        filt->pp = 0x2666;
+        filt->kk = 0xd9999a;
+    } else {
+        filt->pp = 0;
+        filt->kk = 0xffffff;
+    }
+}
+
+
 /**
  * @brief Updates triggering parameters in FPGA registers.
  *
@@ -186,6 +229,11 @@ int osc_fpga_exit(void)
  * @param [in] trig_delay Trigger delay in [s].
  * @param [in] trig_level Trigger level in [V].
  * @param [in] time_range Time range, as defined in rp_main_params.
+ * @param [in] equal    Enable(1)/disable(0) equalization filter.
+ * @param [in] shaping  Enable(1)/disable(0) shaping filter.
+ * @param [in] gain1    Gain setting for Channel1 (0 = LV, 1 = HV).
+ * @param [in] gain2    Gain setting for Channel2 (0 = LV, 1 = HV).
+ *
  *
  * @retval 0 Success
  * @retval -1 Failure
@@ -193,7 +241,8 @@ int osc_fpga_exit(void)
  * @see rp_main_params
  */
 int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
-                           float trig_delay, float trig_level, int time_range)
+                           float trig_delay, float trig_level, int time_range,
+                           int equal, int shaping, int gain1, int gain2)
 {
     int fpga_trig_source = osc_fpga_cnv_trig_source(trig_imm, trig_source, 
                                                     trig_edge);
@@ -202,23 +251,12 @@ int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     float after_trigger; /* how much after trigger FPGA should write */
     int fpga_trig_thr = osc_fpga_cnv_v_to_cnt(trig_level);
     
+    /* Equalization filter coefficients */
+    ecu_shape_filter_t cha_filt;
+    ecu_shape_filter_t chb_filt;
+    get_equ_shape_filter(&cha_filt, equal, shaping, gain1);
+    get_equ_shape_filter(&chb_filt, equal, shaping, gain2);
     
-    uint32_t gain_hi_cha_filt_aa=0x7D93;
-    uint32_t gain_hi_cha_filt_bb=0x437C7;
-    uint32_t gain_hi_cha_filt_pp=0x2666;
-    uint32_t gain_hi_cha_filt_kk=0xd9999a;
-    
-    uint32_t gain_hi_chb_filt_aa=0x7D93;
-    uint32_t gain_hi_chb_filt_bb=0x437C7;
-    uint32_t gain_hi_chb_filt_pp=0x2666;
-    uint32_t gain_hi_chb_filt_kk=0xd9999a;
-    
-    
-    
-    
-    
-    
-
     if((fpga_trig_source < 0) || (fpga_dec_factor < 0)) {
         fprintf(stderr, "osc_fpga_update_params() failed\n");
         return -1;
@@ -245,22 +283,21 @@ int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
         g_osc_fpga_reg_mem->cha_thr   = fpga_trig_thr;
     else
         g_osc_fpga_reg_mem->chb_thr   = fpga_trig_thr;
+
     g_osc_fpga_reg_mem->data_dec      = fpga_dec_factor;
     g_osc_fpga_reg_mem->trigger_delay = (uint32_t)fpga_delay;
     
+    /* Update equalization filter with desired coefficients. */
+    g_osc_fpga_reg_mem->cha_filt_aa = cha_filt.aa;
+    g_osc_fpga_reg_mem->cha_filt_bb = cha_filt.bb;
+    g_osc_fpga_reg_mem->cha_filt_pp = cha_filt.pp;
+    g_osc_fpga_reg_mem->cha_filt_kk = cha_filt.kk;
     
-    // Updating equalization filter with default coefficients  
-    g_osc_fpga_reg_mem->cha_filt_aa =gain_hi_cha_filt_aa;
-    g_osc_fpga_reg_mem->cha_filt_bb =gain_hi_cha_filt_bb;
-    g_osc_fpga_reg_mem->cha_filt_pp =gain_hi_cha_filt_pp;
-    g_osc_fpga_reg_mem->cha_filt_kk =gain_hi_cha_filt_kk;
+    g_osc_fpga_reg_mem->chb_filt_aa = chb_filt.aa;
+    g_osc_fpga_reg_mem->chb_filt_bb = chb_filt.bb;
+    g_osc_fpga_reg_mem->chb_filt_pp = chb_filt.pp;
+    g_osc_fpga_reg_mem->chb_filt_kk = chb_filt.kk;
     
-    g_osc_fpga_reg_mem->chb_filt_aa =gain_hi_chb_filt_aa;
-    g_osc_fpga_reg_mem->chb_filt_bb =gain_hi_chb_filt_bb;
-    g_osc_fpga_reg_mem->chb_filt_pp =gain_hi_chb_filt_pp;
-    g_osc_fpga_reg_mem->chb_filt_kk =gain_hi_chb_filt_kk;     
-    
-     
     return 0;
 }
 

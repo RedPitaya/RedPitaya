@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <string.h>
 #include <sys/param.h>
 
 #include "main_osc.h"
@@ -47,10 +49,13 @@
 /** Program name */
 const char *g_argv0 = NULL;
 
-/** Oscilloclope module parameters as defined in main module
+/** Minimal number of command line arguments */
+#define MINARGS 2
+
+/** Oscilloscope module parameters as defined in main module
  * @see rp_main_params
  */
-float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0 };
+float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Max decimation index */
 #define DEC_MAX 6
@@ -63,16 +68,21 @@ static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 void usage() {
 
     const char *format =
-        "%s version %s-%s\n"
-        "\n"
-        "Usage: %s  size <dec>\n"
-        "\n"
-        "\tsize     Number of samples to acquire [0 - %u].\n"
-        "\tdec      Decimation [%u,%u,%u,%u,%u,%u] (default=1).\n"
-        "\n";
+            "\n"
+            "Usage: %s [OPTION]... SIZE <DEC>\n"
+            "\n"
+            "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
+            "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
+            "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
+            "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
+            "  --version       -v    Print version info.\n"
+            "  --help          -h    Print this message.\n"
+            "\n"
+            "    SIZE                Number of samples to acquire [0 - %u].\n"
+            "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
+            "\n";
 
-    fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, SIGNAL_LENGTH,
+    fprintf( stderr, format, g_argv0, SIGNAL_LENGTH,
              g_dec[0],
              g_dec[1],
              g_dec[2],
@@ -81,44 +91,143 @@ void usage() {
              g_dec[5]);
 }
 
+/** Gain string (lv/hv) to number (0/1) transformation */
+int get_gain(int *gain, const char *str)
+{
+    if ( (strncmp(str, "lv", 2) == 0) || (strncmp(str, "LV", 2) == 0) ) {
+        *gain = 0;
+        return 0;
+    }
+    if ( (strncmp(str, "hv", 2) == 0) || (strncmp(str, "HV", 2) == 0) ) {
+        *gain = 1;
+        return 0;
+    }
+
+    fprintf(stderr, "Unknown gain: %s\n", str);
+    return -1;
+}
+
+
 /** Acquire utility main */
 int main(int argc, char *argv[])
 {
     g_argv0 = argv[0];
+    int equal = 0;
+    int shaping = 0;
 
-    if ( argc < 2 ) {
-
+    if ( argc < MINARGS ) {
         usage();
-        return -1;
+        exit ( EXIT_FAILURE );
+    }
+
+    /* Command line options */
+    static struct option long_options[] = {
+            /* These options set a flag. */
+            {"equalization", no_argument,       0, 'e'},
+            {"shaping",      no_argument,       0, 's'},
+            {"gain1",        required_argument, 0, '1'},
+            {"gain2",        required_argument, 0, '2'},
+            {"version",      no_argument,       0, 'v'},
+            {"help",         no_argument,       0, 'h'},
+            {0, 0, 0, 0}
+    };
+    const char *optstring = "es1:2:vh";
+
+    /* getopt_long stores the option index here. */
+    int option_index = 0;
+
+    int ch = -1;
+    while ( (ch = getopt_long( argc, argv, optstring, long_options, &option_index )) != -1 ) {
+        switch ( ch ) {
+
+        case 'e':
+            equal = 1;
+            break;
+
+        case 's':
+            shaping = 1;
+            break;
+
+        /* Gain Channel 1 */
+        case '1':
+        {
+            int gain1;
+            if (get_gain(&gain1, optarg) != 0) {
+                usage();
+                return -1;
+            }
+            t_params[GAIN1_PARAM] = gain1;
+        }
+        break;
+
+        /* Gain Channel 2 */
+        case '2':
+        {
+            int gain2;
+            if (get_gain(&gain2, optarg) != 0) {
+                usage();
+                return -1;
+            }
+            t_params[GAIN2_PARAM] = gain2;
+        }
+        break;
+
+        case 'v':
+            fprintf(stdout, "%s version %s-%s\n", g_argv0, VERSION_STR, REVISION_STR);
+            exit( EXIT_SUCCESS );
+            break;
+
+        case 'h':
+            usage();
+            exit( EXIT_SUCCESS );
+            break;
+
+        default:
+            usage();
+            exit( EXIT_FAILURE );
+        }
     }
 
     /* Acquisition size */
-    uint32_t size = atoi(argv[1]);
-    if (size > SIGNAL_LENGTH) {
-        fprintf(stderr, "Invalid size: %s\n", argv[1]);
+    uint32_t size = 0;
+    if (optind < argc) {
+        size = atoi(argv[optind]);
+        if (size > SIGNAL_LENGTH) {
+            fprintf(stderr, "Invalid SIZE: %s\n", argv[optind]);
+            usage();
+            exit( EXIT_FAILURE );
+        }
+    } else {
+        fprintf(stderr, "SIZE parameter missing\n");
         usage();
-        return -1;
+        exit( EXIT_FAILURE );
     }
+    optind++;
 
-    /* Optional acquisition decimation */
-    if (argc > 2 ) {
-        uint32_t dec = atoi(argv[2]);
+    /* Optional decimation */
+    if (optind < argc) {
+        uint32_t dec = atoi(argv[optind]);
         uint32_t idx;
 
-        for (idx=0; idx< DEC_MAX; idx++) {
+        for (idx = 0; idx < DEC_MAX; idx++) {
             if (dec == g_dec[idx]) {
                 break;
             }
         }
 
         if (idx != DEC_MAX) {
-            t_params[8] = idx;
+            t_params[TIME_RANGE_PARAM] = idx;
         } else {
-            fprintf(stderr, "Invalid decimation: %s\n", argv[2]);
+            fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
             usage();
             return -1;
         }
     }
+
+    /* Filter parameters */
+    t_params[EQUAL_FILT_PARAM] = equal;
+    t_params[SHAPE_FILT_PARAM] = shaping;
+
 
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -139,9 +248,6 @@ int main(int argc, char *argv[])
         int ret_val;
 
         int retries = 150000;
-	
-	
-	
 
         s = (float **)malloc(SIGNALS_NUM * sizeof(float *));
         for(i = 0; i < SIGNALS_NUM; i++) {
@@ -155,11 +261,6 @@ int main(int argc, char *argv[])
                  * s[1][i] - Channel ADC1 raw signal
                  * s[2][i] - Channel ADC2 raw signal
                  */
-		
-		
-		
-		
-		
 		
                 for(i = 0; i < MIN(size, sig_len); i++) {
                     printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
