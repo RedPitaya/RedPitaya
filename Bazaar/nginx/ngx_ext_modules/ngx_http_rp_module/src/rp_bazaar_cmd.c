@@ -518,12 +518,12 @@ int rp_bazaar_stop(ngx_http_request_t *r,
     }
 
     if(rp_module_ctx.app.handle == NULL) {
-        /* Ignore requests to unload the application, if none is loaded. */
+        /* Ignore requests to unload the application controller, if none is loaded. */
         return rp_module_cmd_ok(json_root, r->pool);
     }
     if(rp_bazaar_app_unload_module(&rp_module_ctx.app) < 0) {
         return rp_module_cmd_error(json_root, 
-                                   "Can not unload appication.", NULL, r->pool);
+                                   "Can not unload application.", NULL, r->pool);
     }
 
     return rp_module_cmd_ok(json_root, r->pool);
