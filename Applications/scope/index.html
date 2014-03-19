@@ -1028,6 +1028,8 @@
       return;
     }
     
+    $('#btn_ch1, #btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+    
     var ymax = params.original.gui_reset_y_range / 2;
     var ymin = ymax * -1;
     
