@@ -40,7 +40,7 @@ typedef struct rp_osc_params_s {
 
 /* Parameters indexes */
 /** Number of parameters defined in main module */
-#define PARAMS_NUM      10
+#define PARAMS_NUM      14
 /** Minimal time in output time vector */
 #define MIN_GUI_PARAM    0
 /** Maximal time in output time vector */
@@ -61,6 +61,14 @@ typedef struct rp_osc_params_s {
 #define TIME_RANGE_PARAM 8
 /** Time unit (read-only) */
 #define TIME_UNIT_PARAM  9
+/** Equalization filter */
+#define EQUAL_FILT_PARAM 10
+/** Shaping filter */
+#define SHAPE_FILT_PARAM 11
+/** Channel1 gain */
+#define GAIN1_PARAM      12
+/** Channel2 gain */
+#define GAIN2_PARAM      13
 
 /** Output signal length  */
 #define SIGNAL_LENGTH (16*1024)
