@@ -200,11 +200,23 @@ typedef struct osc_fpga_reg_mem_s {
 
 /** @} */
 
+// TODO: Move to a shared folder and share with scope & spectrum.
+/** Equalization & shaping filter coefficients */
+typedef struct {
+    uint32_t aa;
+    uint32_t bb;
+    uint32_t pp;
+    uint32_t kk;
+} ecu_shape_filter_t;
+
 int osc_fpga_init(void);
 int osc_fpga_exit(void);
 
+void get_equ_shape_filter(ecu_shape_filter_t *filt, uint32_t equal,
+                          uint32_t shaping, uint32_t gain);
 int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
-                           float trig_delay, float trig_level, int time_range);
+                           float trig_delay, float trig_level, int time_range,
+                           int equal, int shaping, int gain1, int gain2);
 int osc_fpga_reset(void);
 int osc_fpga_arm_trigger(void);
 int osc_fpga_set_trigger(uint32_t trig_source);
