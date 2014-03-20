@@ -758,7 +758,7 @@
         if(auto_flag == 1 && dresult.datasets.params.min_y !== dresult.datasets.params.max_y) {
           var options = plot.getOptions();
           
-          options.xaxes[0].min = dresult.datasets.params.xmin + 0.000001;
+          options.xaxes[0].min = dresult.datasets.params.xmin;
           options.xaxes[0].max = dresult.datasets.params.xmax;
           options.yaxes[0].min = dresult.datasets.params.min_y;
           options.yaxes[0].max = dresult.datasets.params.max_y;
