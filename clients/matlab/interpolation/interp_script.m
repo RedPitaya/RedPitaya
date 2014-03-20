@@ -7,6 +7,8 @@ clc
 close all
 clear
 
+path(path,'../')  
+
 rp_ip='192.168.53.134';
 
 %Generate a sine signal (make sure Output1 connected to Input1 and properly terminated)
