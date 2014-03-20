@@ -147,6 +147,10 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* gen_DC_offs_2 - DC offset for channel 2 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
+    { /* gui_xmin - Xmin as specified by GUI - not rounded to sampling engine quanta. */
+        "gui_xmin",      0, 0, 1, -10000000, +10000000 },
+    { /* gui_xmax - Xmax as specified by GUI - not rounded to sampling engine quanta. */
+        "gui_xmax",    131, 0, 1, -10000000, +10000000 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -227,7 +231,7 @@ const char *rp_app_desc(void)
 
 int rp_app_init(void)
 {
-    fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Loading scope controller version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     rp_default_calib_params(&rp_main_calib_params);
     if(rp_read_calib_params(&rp_main_calib_params) < 0) {
@@ -315,6 +319,7 @@ int transform_acq_params(rp_app_params_t *p)
 
     double xmin = p[MIN_GUI_PARAM].value;
     double xmax = p[MAX_GUI_PARAM].value;
+
     float ratio;
 
     int reset_zoom = 0;
@@ -398,11 +403,15 @@ int transform_acq_params(rp_app_params_t *p)
     if (forcex_state == 0) {
         p[MIN_GUI_PARAM].value = xmin * t_unit_factor;
         p[MAX_GUI_PARAM].value = xmax * t_unit_factor;
+        p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
+        p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         p[TIME_UNIT_PARAM].value = time_unit;
         TRACE("TR: TU2: %d\n", (int)p[TIME_UNIT_PARAM].value);
     } else {
         p[MIN_GUI_PARAM].value = forced_xmin;
         p[MAX_GUI_PARAM].value = forced_xmax;
+        p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
+        p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         p[TIME_UNIT_PARAM].value = forced_units;
         TRACE("TR: TU3 (forced): %d\n", (int)p[TIME_UNIT_PARAM].value);
     }
@@ -472,6 +481,8 @@ int transform_acq_params(rp_app_params_t *p)
 
         p[MIN_GUI_PARAM].value = forced_xmin;
         p[MAX_GUI_PARAM].value = forced_xmax;
+        p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
+        p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         p[TIME_UNIT_PARAM].value = forced_units;
         p[TRIG_DLY_PARAM].value = forced_delay;
         p[TIME_RANGE_PARAM].value = 0;
@@ -545,10 +556,14 @@ int rp_set_params(rp_app_params_t *p, int len)
     }
     pthread_mutex_unlock(&rp_main_params_mutex);
     
+
     /* Set parameters in HW/FPGA only if they have changed */
     if(params_change || (params_init == 0)) {
 
         pthread_mutex_lock(&rp_main_params_mutex);
+        /* Xmin & Xmax public copy to be served to clients */
+        rp_main_params[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
+        rp_main_params[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         transform_acq_params(rp_main_params);
         pthread_mutex_unlock(&rp_main_params_mutex);
 
@@ -805,7 +820,6 @@ int rp_set_params(rp_app_params_t *p, int len)
 int rp_get_params(rp_app_params_t **p)
 {
     rp_app_params_t *p_copy = NULL;
-    int t_unit_factor;
     int i;
 
     p_copy = (rp_app_params_t *)malloc((PARAMS_NUM+1) * sizeof(rp_app_params_t));
@@ -813,9 +827,6 @@ int rp_get_params(rp_app_params_t **p)
         return -1;
 
     pthread_mutex_lock(&rp_main_params_mutex);
-    t_unit_factor =  
-        rp_osc_get_time_unit_factor(rp_main_params[TIME_UNIT_PARAM].value);
-
     for(i = 0; i < PARAMS_NUM; i++) {
         int p_strlen = strlen(rp_main_params[i].name);
         p_copy[i].name = (char *)malloc(p_strlen+1);
@@ -832,8 +843,9 @@ int rp_get_params(rp_app_params_t **p)
     pthread_mutex_unlock(&rp_main_params_mutex);
     p_copy[PARAMS_NUM].name = NULL;
 
-    p_copy[MIN_GUI_PARAM].value = p_copy[MIN_GUI_PARAM].value * t_unit_factor;
-    p_copy[MAX_GUI_PARAM].value = p_copy[MAX_GUI_PARAM].value * t_unit_factor;
+    /* Return the original public Xmin & Xmax to client (not the internally modified ones). */
+    p_copy[MIN_GUI_PARAM].value = p_copy[GUI_XMIN].value;
+    p_copy[MAX_GUI_PARAM].value = p_copy[GUI_XMAX].value;
 
     *p = p_copy;
     return PARAMS_NUM;
