@@ -231,7 +231,7 @@ const char *rp_app_desc(void)
 
 int rp_app_init(void)
 {
-    fprintf(stderr, "Loading scope controller version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Loading scope (with gen+pid extensions) version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     rp_default_calib_params(&rp_main_calib_params);
     if(rp_read_calib_params(&rp_main_calib_params) < 0) {
@@ -273,7 +273,7 @@ int rp_app_init(void)
 
 int rp_app_exit(void)
 {
-    fprintf(stderr, "Unloading scope controller version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Unloading scope (with gen+pid extensions) version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     rp_osc_worker_exit();
     generate_exit();
