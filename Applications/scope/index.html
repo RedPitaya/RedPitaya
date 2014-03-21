@@ -44,6 +44,8 @@
   var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds 
   var request_timeout = 2000;            // Milliseconds
   var long_timeout = 15000;              // Milliseconds
+  var meas_panel_dec = 5;                // Decimation for numerical measure panel to make it human readable
+  var meas_panel_dec_mobdev = 1;         // Decimation for numerical measure panel for mobile devices
   var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
   var xdecimal_places = 2;               // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
   var trigger_level_xdecimal_places = 4; // Number of decimal places for trigger level tooltip
@@ -79,6 +81,7 @@
   var user_editing = false;
   var app_started = false;
   var last_get_failed = false;
+  var refresh_counter = 0;
   var autorun = 1;
   var datasets = [];
   var plot = null;
@@ -680,19 +683,21 @@
     $('#trig_edge').val(params.original.trig_edge);
     $('#trig_level').val(floatToLocalString(params.original.trig_level));
     
-    $('#info_ch1_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch1)));
-    $('#info_ch1_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch1)));
-    $('#info_ch1_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch1)));
-    $('#info_ch1_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch1)));
-    $('#info_ch1_freq').html(convertHz(params.original.meas_freq_ch1));
-    $('#info_ch1_period').html(convertSec(params.original.meas_per_ch1));
+    if ((refresh_counter++ % meas_panel_dec) == 0) {
+        $('#info_ch1_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch1)));
+        $('#info_ch1_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch1)));
+        $('#info_ch1_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch1)));
+        $('#info_ch1_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch1)));
+        $('#info_ch1_freq').html(convertHz(params.original.meas_freq_ch1));
+        $('#info_ch1_period').html(convertSec(params.original.meas_per_ch1));
 
-    $('#info_ch2_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch2)));
-    $('#info_ch2_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch2)));
-    $('#info_ch2_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch2)));
-    $('#info_ch2_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch2)));
-    $('#info_ch2_freq').html(convertHz(params.original.meas_freq_ch2));
-    $('#info_ch2_period').html(convertSec(params.original.meas_per_ch2));
+        $('#info_ch2_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch2)));
+        $('#info_ch2_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch2)));
+        $('#info_ch2_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch2)));
+        $('#info_ch2_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch2)));
+        $('#info_ch2_freq').html(convertHz(params.original.meas_freq_ch2));
+        $('#info_ch2_period').html(convertSec(params.original.meas_per_ch2));
+    }
     
     $('#gain_ch1_att').val(params.original.prb_att_ch1);
     $('#gain_ch1_sett').val(params.original.gain_ch1);
