@@ -654,6 +654,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     }
     osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig);
     in_idx = wr_ptr_trig + t_start_idx - 3;
+
     if(in_idx < 0) 
         in_idx = OSC_FPGA_SIG_LEN + in_idx;
     if(in_idx >= OSC_FPGA_SIG_LEN)
@@ -684,6 +685,12 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                                                ch2_user_dc_off);
 
         t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
+
+        /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
+        if ( (dec_factor > 64) && (out_idx == 1) ) {
+            cha_s[0] = cha_s[1];
+            chb_s[0] = chb_s[1];
+        }
     }
 
     return 0;
