@@ -13,13 +13,14 @@ B_DOWNLOAD=$(B_SERVER)/$(B_ARCHIVE)
 UIMAGE=$(B_DIR)/output/images/rootfs.cpio.uboot
 
 INSTALL_DIR ?= .
-
+VERSION ?= 0.00-0000
+REVISION ?= devbuild
 
 all: $(UIMAGE)
 
 $(UIMAGE): $(B_DIR) overlay config
 	cp config $(B_DIR)/.config
-	$(MAKE) -C $(B_DIR)
+	$(MAKE) -C $(B_DIR) USER_HOOKS_EXTRA_ENV='VERSION=$(VERSION) REVISION=$(REVISION)'
 
 $(B_DIR):
 	wget $(B_DOWNLOAD)
