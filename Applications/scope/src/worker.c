@@ -688,8 +688,11 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
 
         /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
         if ( (dec_factor > 64) && (out_idx == 1) ) {
-            cha_s[0] = cha_s[1];
-            chb_s[0] = chb_s[1];
+            int i;
+            for (i=0; i < out_idx; i++) {
+                cha_s[i] = cha_s[out_idx];
+                chb_s[i] = chb_s[out_idx];
+            }
         }
     }
 
@@ -757,6 +760,14 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
         t_out[next_out_idx]   = 
             (t_start + ((next_out_idx*step_wr_ptr)*smpl_period))*t_unit_factor;
 
+        /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
+         if ( (dec_factor > 64) && (next_out_idx == 2) ) {
+             int i;
+             for (i=0; i < next_out_idx; i++) {
+                 cha_out[i] = cha_out[next_out_idx];
+                 chb_out[i] = chb_out[next_out_idx];
+             }
+         }
     }
 
     *next_wr_ptr = in_idx;
