@@ -1190,7 +1190,7 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
     ch1_thr1 = ch1_cen + 0.2 * (ch1_meas->min - ch1_cen);
     ch1_thr2 = ch1_cen + 0.2 * (ch1_meas->max - ch1_cen);
     ch2_thr1 = ch2_cen + 0.2 * (ch2_meas->min - ch2_cen);
-    ch2_thr2 = ch2_cen + 0.2 * (ch2_meas->min - ch2_cen);
+    ch2_thr2 = ch2_cen + 0.2 * (ch2_meas->max - ch2_cen);
 
     // Checking where acquisition starts
     osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
