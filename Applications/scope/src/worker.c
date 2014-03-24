@@ -1168,8 +1168,9 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
                        int *in_cha_signal, int *in_chb_signal, 
                        int start_idx, int stop_idx, int dec_factor)
 {
-    const float meas_freq_thr = 100;
-    const int meas_time_thr = OSC_FPGA_SIG_LEN / 16;
+    const float c_meas_freq_thr = 100;
+    const int c_meas_time_thr = OSC_FPGA_SIG_LEN / 8;
+    const float c_min_period = 19.6e-9; // 51 MHz
 
     float ch1_thr1, ch1_thr2, ch2_thr1, ch2_thr2, ch1_cen, ch2_cen;
     int ch1_state = 0, ch2_state = 0;
@@ -1186,10 +1187,10 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
     ch1_cen = (ch1_meas->max + ch1_meas->min) / 2;
     ch2_cen = (ch2_meas->max + ch2_meas->min) / 2;
 
-    ch1_thr1 = (ch1_meas->min + ch1_cen) / 2;
-    ch1_thr2 = (ch1_meas->max + ch1_cen) / 2;
-    ch2_thr1 = (ch2_meas->min + ch2_cen) / 2;
-    ch2_thr2 = (ch2_meas->max + ch2_cen) / 2;
+    ch1_thr1 = ch1_cen + 0.2 * (ch1_meas->min - ch1_cen);
+    ch1_thr2 = ch1_cen + 0.2 * (ch1_meas->max - ch1_cen);
+    ch2_thr1 = ch2_cen + 0.2 * (ch2_meas->min - ch2_cen);
+    ch2_thr2 = ch2_cen + 0.2 * (ch2_meas->min - ch2_cen);
 
     // Checking where acquisition starts
     osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
@@ -1206,21 +1207,19 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
             ix_corr %= OSC_FPGA_SIG_LEN;
         }
 
-        float s_a_0 = rp_osc_adc_sign(in_cha_signal[ix_corr-1]);
-        float s_a_1 = rp_osc_adc_sign(in_cha_signal[ix_corr]);
-        float s_b_0 = rp_osc_adc_sign(in_chb_signal[ix_corr-1]);
-        float s_b_1 = rp_osc_adc_sign(in_chb_signal[ix_corr]);
+        float sa = rp_osc_adc_sign(in_cha_signal[ix_corr]);
+        float sb = rp_osc_adc_sign(in_chb_signal[ix_corr]);
 
         /* Lower transitions */
-        if((ch1_state == 0) && (ix_corr > 0) && (s_a_0 < ch1_thr1)) {
+        if((ch1_state == 0) && (ix_corr > 0) && (sa < ch1_thr1)) {
             ch1_state = 1;
         }
-        if((ch2_state == 0) && (ix_corr > 0) && (s_b_0 < ch2_thr1)) {
+        if((ch2_state == 0) && (ix_corr > 0) && (sb < ch2_thr1)) {
             ch2_state = 1;
         }
 
         /* Upper transitions - count them & store edge times. */
-        if((ch1_state == 1) && (s_a_1 >= ch1_thr2) ) {
+        if((ch1_state == 1) && (sa >= ch1_thr2) ) {
             ch1_state = 0;
             if (ch1_trig_cnt++ == 0) {
                 ch1_trig_t[0] = in_idx;
@@ -1228,7 +1227,7 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
                 ch1_trig_t[1] = in_idx;
             }
         }
-        if((ch2_state == 1) && (s_b_1 >= ch2_thr2) ) {
+        if((ch2_state == 1) && (sb >= ch2_thr2) ) {
             ch2_state = 0;
             if (ch2_trig_cnt++ == 0) {
                 ch2_trig_t[0] = in_idx;
@@ -1237,8 +1236,8 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
             }
         }
 
-        if ( ((ch1_trig_t[1] - ch1_trig_t[0]) > meas_time_thr) &&
-             ((ch2_trig_t[1] - ch2_trig_t[0]) > meas_time_thr) ) {
+        if ( ((ch1_trig_t[1] - ch1_trig_t[0]) > c_meas_time_thr) &&
+             ((ch2_trig_t[1] - ch2_trig_t[0]) > c_meas_time_thr) ) {
             break;
         }
     }
@@ -1253,9 +1252,9 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
             ((float)c_osc_fpga_smpl_freq * (ch2_trig_cnt - 1)) * dec_factor;
     }
 
-    if( ((ch1_thr2 - ch1_thr1) < meas_freq_thr) ||
+    if( ((ch1_thr2 - ch1_thr1) < c_meas_freq_thr) ||
          (ch1_meas->period * 3 >= acq_dur)      ||
-         (ch1_meas->period <= (2/(float)c_osc_fpga_smpl_freq)) ) //16 ns is the minimum period (62.5 MHz)
+         (ch1_meas->period < c_min_period) )
     {
         ch1_meas->period = 0;
         ch1_meas->freq   = 0;
@@ -1263,9 +1262,9 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
         ch1_meas->freq = 1.0 / ch1_meas->period;
     }
 
-    if( ((ch2_thr2 - ch2_thr1) < meas_freq_thr) ||
+    if( ((ch2_thr2 - ch2_thr1) < c_meas_freq_thr) ||
          (ch2_meas->period * 3 >= acq_dur)      ||
-         (ch2_meas->period <= (2/(float)c_osc_fpga_smpl_freq)) )
+         (ch2_meas->period < c_min_period) )
     {
         ch2_meas->period = 0;
         ch2_meas->freq   = 0;
