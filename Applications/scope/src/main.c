@@ -709,10 +709,6 @@ int rp_set_params(rp_app_params_t *p, int len)
             t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
         }
 
-        const float c_min_t_span = 1e-7;
-        if ((t_stop - t_start) < c_min_t_span) {
-            t_stop = t_start + c_min_t_span;
-        }
         TRACE("PC: t_stop (rounded) = %.9f\n", t_stop);
 
         /* write back and convert to set units */
