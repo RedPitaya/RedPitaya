@@ -106,28 +106,30 @@ void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
     const int trans0 = 30;
     const int trans1 = 300;
     const float tt2 = 0.249;
+    const int c_dac_max =  (1 << (c_awg_fpga_dac_bits - 1)) - 1;
+    const int c_dac_min = -(1 << (c_awg_fpga_dac_bits - 1));
 
     int trans = round(freq / 1e6 * ((float) trans1)); /* 300 samples at 1 MHz */
     int user_dc_off_cnt = 
         round((1<<(c_awg_fpga_dac_bits-1)) * user_dc_offs / max_dac_v);
     uint32_t amp; 
 
-    awg->offsgain = ((calib_dc_offs+user_dc_off_cnt) << 16) | 0x2000;
+    /* Saturate offset - depending on calibration offset, it could overflow */
+    int offsgain = calib_dc_offs + user_dc_off_cnt;
+    offsgain = (offsgain > c_dac_max) ? c_dac_max : offsgain;
+    offsgain = (offsgain < c_dac_min) ? c_dac_min : offsgain;
+
+    awg->offsgain = (offsgain << 16) | 0x2000;
     awg->step = round(65536.0 * freq/c_awg_smpl_freq * ((float) AWG_SIG_LEN));
-    awg->wrap = round(65536 * (AWG_SIG_LEN-1));
-
-
-    
+    awg->wrap = round(65536 * (AWG_SIG_LEN - 1));
     
     //= (ampl) * (1<<(c_awg_fpga_dac_bits-2));
     //fpga_awg_calc_dac_max_v(calib_fs)
     
-    amp= round(ampl/2/fpga_awg_calc_dac_max_v(calib_fs)* ((1<<(c_awg_fpga_dac_bits-1))-1) );
+    amp= round(ampl/2/fpga_awg_calc_dac_max_v(calib_fs)* c_dac_max );
     
-    if (amp >= (1<<(c_awg_fpga_dac_bits-1))) {
-        /* Truncate to max value if needed */
-        amp = (1<<(c_awg_fpga_dac_bits-1))-1;
-    }
+    /* Truncate to max value */
+    amp = (amp > c_dac_max) ? c_dac_max : amp;
 
     if (trans <= 10) {
         trans = trans0;
@@ -143,10 +145,7 @@ void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
         /* Square */
         if (type == eSignalSquare) {
             data[i] = round(amp * cos(2*M_PI*(float)i/(float)AWG_SIG_LEN));
-            if (data[i] > 0)
-                data[i] = amp;
-            else 
-                data[i] = -amp;
+            data[i] = (data[i] > 0) ? amp : -amp;
 
             /* Soft linear transitions */
             float mm, qq, xx, xm;
@@ -188,14 +187,9 @@ void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
 
         /* Triangle */
         if (type == eSignalTriangle) {
-            data[i] = 
-                round(-1.0*(float)amp*
+            data[i] = round(-1.0 * (float)amp *
                      (acos(cos(2*M_PI*(float)i/(float)AWG_SIG_LEN))/M_PI*2-1));
         }
-
-        /* TODO: Remove, not necessary in C/C++. */
-        if(data[i] < 0)
-            data[i] += (1 << 14);
     }
 }
 
@@ -220,94 +214,49 @@ void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
 int read_in_file(int chann,  float *ch_data)
 {
     FILE *fi = NULL;
-    int i, read_size, samples_read=0;
+    int i, read_size, samples_read = 0;
 
-
-    
-    
-  
-    
-    
     /* open file */
-    if (chann==1)
-    {
-      
-  
-      
-      fi = fopen(gen_waveform_file1, "r+");
-      
-      
-      
-      
-  
-      
-      
-      //fi = fopen(gen_waveform_file1, "r+");      
-      
-      if(fi == NULL) {
-	
-	fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n", 
-		gen_waveform_file1, strerror(errno));
-	return -1;
-      }
+    if (chann == 1) {
+
+        fi = fopen(gen_waveform_file1, "r+");
+        if (fi == NULL) {
+            fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n",
+                    gen_waveform_file1, strerror(errno));
+            return -1;
+        }
+
+    } else {
+
+        fi = fopen(gen_waveform_file2, "r+");
+        if (fi == NULL) {
+            fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n",
+                    gen_waveform_file2, strerror(errno));
+            return -1;
+        }
     }
-    
-    else
-    {
-      
-       
-      fi = fopen(gen_waveform_file2, "r+");
-      
-      if(fi == NULL) {
-	fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n", 
-		gen_waveform_file2, strerror(errno));
-	
-	
-	
-	return -1;
-	
-      } 
-    }
-    
-    
-   
 
     /* parse at most AWG_SIG_LEN lines and save data to the specified buffers */
-    for(i = 0; i < AWG_SIG_LEN; i++) {
-      
-        read_size = fscanf(fi, "%f \n", 
-                            &ch_data[i]);
-	    
-	  if((read_size == EOF) || (read_size != 1)) {
-        
-            i -= 1;
-	     
+    for (i = 0; i < AWG_SIG_LEN; i++) {
+
+        read_size = fscanf(fi, "%f \n", &ch_data[i]);
+        if((read_size == EOF) || (read_size != 1)) {
+            i--;
             break;
         }
-        
-        
     }
     samples_read = i + 1;
 
+    if (samples_read >= AWG_SIG_LEN)
+        samples_read = AWG_SIG_LEN - 1;
 
-    if (samples_read>=AWG_SIG_LEN)
-      samples_read=AWG_SIG_LEN-1;
-     
-    
     /* check for errors */
-    if(i == 0) {
+    if (i == 0) {
         fprintf(stderr, "read_in_file() cannot read in signal, wrong format?\n");
-	
-	
-	
-    
         fclose(fi);
         return -1;
-	
     }
 
-
-    
     /* close a file */
     fclose(fi);
 
@@ -345,9 +294,12 @@ int  calculate_data(float *in_data, int in_data_len,
                     float amp, float freq, int calib_dc_offs, uint32_t calib_fs, float max_dac_v, 
                     float user_dc_offs, int32_t *out_data, awg_param_t *awg)
 {
-    float max_amp,min_amp;
+    const int c_dac_max =  (1 << (c_awg_fpga_dac_bits - 1)) - 1;
+    const int c_dac_min = -(1 << (c_awg_fpga_dac_bits - 1));
+
+    float max_amp, min_amp;
     float k_norm;
-    int i;
+    int i, j;
 
     /* calculate configurable DC offset, expressed in ADC counts */
     int user_dc_off_cnt = 
@@ -360,81 +312,51 @@ int  calculate_data(float *in_data, int in_data_len,
         return -1;
     }
 
+    /* Saturate offset - depending on calibration offset, it could overflow */
+    int offsgain = calib_dc_offs + user_dc_off_cnt;
+    offsgain = (offsgain > c_dac_max) ? c_dac_max : offsgain;
+    offsgain = (offsgain < c_dac_min) ? c_dac_min : offsgain;
+
     /* modify AWG settings  */
-    awg->offsgain = ((calib_dc_offs+user_dc_off_cnt) << 16) | 0x2000;
+    awg->offsgain = (offsgain << 16) | 0x2000;
     awg->step = round(65536 * freq/c_awg_smpl_freq * in_data_len); 
-    awg->wrap = round(65536 * (in_data_len-1));
-
+    awg->wrap = round(65536 * (in_data_len - 1));
     
-   
-    
-    
-
-    
-    
-    /* retrieve max amplitude of the specified Signal Definition, it is used for the normalization */
+    /* Retrieve max amplitude of the specified Signal Definition, it is used for the normalization */
     max_amp = -1e30;
     min_amp = +1e30;
     
     for(i = 0; i < in_data_len; i++) {
-        if((in_data[i]) > max_amp)
-            max_amp = in_data[i];
-	
-        if((in_data[i]) < min_amp)
-            min_amp = in_data[i];
-	
+        max_amp = (in_data[i] > max_amp) ? in_data[i] : max_amp;
+        min_amp = (in_data[i] < min_amp) ? in_data[i] : min_amp;
+    }
+    
+    /* Calculate normalization factor */
+    if ((max_amp - min_amp) == 0) {
+        k_norm = (max_amp == 0) ? 0 : (float)(c_dac_max) * amp /(max_amp*2) / fpga_awg_calc_dac_max_v(calib_fs);
+    } 
+    else {
+        k_norm = (float)(c_dac_max) * amp /(max_amp - min_amp) / fpga_awg_calc_dac_max_v(calib_fs);
     }
 
-     
-    
-    /* calculate normalization factor */
-    
-    
-   
-    
-    if (max_amp-min_amp==0)      
-    {
-      if (max_amp==0)
-	
-	k_norm=0;
-      
-      else
-	
-	k_norm=  (float)((1<<(c_awg_fpga_dac_bits-1))-1) * amp /(max_amp*2) /fpga_awg_calc_dac_max_v(calib_fs);
-    } 
-    else
-      
-      k_norm = (float)((1<<(c_awg_fpga_dac_bits-1))-1) * amp /(max_amp-min_amp) /fpga_awg_calc_dac_max_v(calib_fs);
-    
-    
-    
-    
-    
-    
-    
-    /* normalize Signal values */
+    /* Normalize Signal values */
     for(i = 0; i < in_data_len; i++) {
-        out_data[i] = round(k_norm * (in_data[i]-(max_amp+min_amp)/2));
-	
-	// clipping
-	if(out_data[i]>(1<<(c_awg_fpga_dac_bits-1))-1)
-	  out_data[i]=(1<<(c_awg_fpga_dac_bits-1))-1;
-	if(out_data[i]<(-(1<<(c_awg_fpga_dac_bits-1))))
-	  out_data[i]=(-(1<<(c_awg_fpga_dac_bits-1)));
-	
-	
-        if(out_data[i] < 0)
-            out_data[i] += (1 << 14);
+
+        out_data[i] = round(k_norm * (in_data[i] - (max_amp + min_amp)/2));
+
+        /* Clipping */
+        if (out_data[i] > c_dac_max)
+            out_data[i] = c_dac_max;
+        if (out_data[i] < c_dac_min)
+            out_data[i] = c_dac_min;
     }
-    /* ...and pad it with zero */
-    for(i = i+1; i < AWG_SIG_LEN; i++) {
-        out_data[i] = 0;
+
+    /* ...and pad it with zeros */
+    // TODO: Really from j = i+1 ??? Should be from j = i IMHO.
+    for(j = i+1; j < AWG_SIG_LEN; j++) {
+        out_data[j] = 0;
     }
-    
-    
-   
-    
-    
+
     return 0;
 }
 
@@ -457,22 +379,21 @@ void write_data_fpga(uint32_t ch, int mode, int trigger, const int32_t *data,
 
     switch(mode) {
     case 0: /* continuous */
-      if (wrap==1)
-      {
-	mode_mask = 0x01;
-	break;
-      }
-      else	  
-      {
-        mode_mask = 0x11;
+        if (wrap == 1) {
+            mode_mask = 0x01;
+        } else {
+            mode_mask = 0x11;
+        }
         break;
-      }
+
     case 1: /* single */
-        if (trigger)
+        if (trigger) {
             mode_mask = 0x21;
-        else
+        } else {
             mode_mask = 0x20;
+        }
         break;
+
     case 2: /* external */
         mode_mask = 0x22;
         break;
@@ -493,6 +414,7 @@ void write_data_fpga(uint32_t ch, int mode, int trigger, const int32_t *data,
         }
 
         g_awg_reg->state_machine_conf = state_machine | mode_mask;
+
     } else {
         /* Channel B */
         state_machine &= ~0xff0000;
@@ -614,54 +536,50 @@ int generate_update(rp_app_params_t *params)
     ch1_type = (awg_signal_t)params[GEN_SIG_TYPE_CH1].value;
     ch2_type = (awg_signal_t)params[GEN_SIG_TYPE_CH2].value;
 
- 
-    
-    if((ch1_type == eSignalFile))
-        if((in_smpl_len1 = read_in_file(1, ch1_arb)) < 0)
-	{   // Invalid file
-	    params[GEN_ENABLE_CH1].value=0;
-	    params[GEN_SIG_TYPE_CH1].value=eSignalSine;
-	    ch1_type = params[GEN_SIG_TYPE_CH1].value;
-	    ch1_enable = params[GEN_ENABLE_CH1].value;
+    if((ch1_type == eSignalFile)) {
+        if((in_smpl_len1 = read_in_file(1, ch1_arb)) < 0) {
+            // Invalid file
+            params[GEN_ENABLE_CH1].value=0;
+            params[GEN_SIG_TYPE_CH1].value=eSignalSine;
+            ch1_type = params[GEN_SIG_TYPE_CH1].value;
+            ch1_enable = params[GEN_ENABLE_CH1].value;
             //invalid_file=1;
-	}
-	    
-    if((ch2_type == eSignalFile))
-        if((in_smpl_len2 = read_in_file(2, ch2_arb)) < 0)
-	{   // Invalid file
-	    params[GEN_ENABLE_CH2].value=0;
-	    params[GEN_SIG_TYPE_CH2].value=eSignalSine;
-	    ch2_type = params[GEN_SIG_TYPE_CH2].value;
-	    ch2_enable = params[GEN_ENABLE_CH2].value;
-           // invalid_file=1;	
-	}
-	 
-   
+        }
+    }
 
-	
-	
+    if((ch2_type == eSignalFile)) {
+        if((in_smpl_len2 = read_in_file(2, ch2_arb)) < 0) {
+            // Invalid file
+            params[GEN_ENABLE_CH2].value=0;
+            params[GEN_SIG_TYPE_CH2].value=eSignalSine;
+            ch2_type = params[GEN_SIG_TYPE_CH2].value;
+            ch2_enable = params[GEN_ENABLE_CH2].value;
+            // invalid_file=1;
+        }
+    }
+
     /* Waveform from signal gets treated differently then others */
     if(ch1_enable > 0) {
         if(ch1_type < eSignalFile) {
             synthesize_signal(params[GEN_SIG_AMP_CH1].value,
                               params[GEN_SIG_FREQ_CH1].value,
                               gen_calib_params->be_ch1_dc_offs,
-			       gen_calib_params->be_ch1_fs,
+                              gen_calib_params->be_ch1_fs,
                               ch1_max_dac_v,
                               params[GEN_SIG_DCOFF_CH1].value,
                               ch1_type, ch1_data, &ch1_param);
-			       wrap=0;  // whole buffer used
+            wrap = 0;  // whole buffer used
         } else {
             /* Signal file */
             calculate_data(ch1_arb,  in_smpl_len1,
                            params[GEN_SIG_AMP_CH1].value, params[GEN_SIG_FREQ_CH1].value,
                            gen_calib_params->be_ch1_dc_offs,
-			    gen_calib_params->be_ch1_fs,
+                           gen_calib_params->be_ch1_fs,
                            ch1_max_dac_v, params[GEN_SIG_DCOFF_CH1].value,
                            ch1_data, &ch1_param);
-	    wrap=0;
-	    if (in_smpl_len1<AWG_SIG_LEN)
-	      wrap=1; // wrapping after (in_smpl_lenx) samples
+            wrap = 0;
+            if (in_smpl_len1<AWG_SIG_LEN)
+                wrap = 1; // wrapping after (in_smpl_lenx) samples
         }
     } else {
         clear_signal(gen_calib_params->be_ch1_dc_offs, ch1_data, &ch1_param);
@@ -676,22 +594,22 @@ int generate_update(rp_app_params_t *params)
             synthesize_signal(params[GEN_SIG_AMP_CH2].value,
                               params[GEN_SIG_FREQ_CH2].value,
                               gen_calib_params->be_ch2_dc_offs,
-			       gen_calib_params->be_ch2_fs,
+                              gen_calib_params->be_ch2_fs,
                               ch2_max_dac_v,
                               params[GEN_SIG_DCOFF_CH2].value,
                               ch2_type, ch2_data, &ch2_param);
-	                      wrap=0; // whole buffer used
+            wrap = 0; // whole buffer used
         } else {
             /* Signal file */
             calculate_data(ch2_arb, in_smpl_len2,
-                           params[GEN_SIG_AMP_CH2].value, params[GEN_SIG_FREQ_CH2].value,
-			   gen_calib_params->be_ch2_dc_offs,
-			   gen_calib_params->be_ch2_fs,
-			   ch2_max_dac_v, params[GEN_SIG_DCOFF_CH2].value,
-			   ch2_data, &ch2_param);
-	    wrap=0;
-	    if (in_smpl_len2<AWG_SIG_LEN)
-	      wrap=1; // wrapping after (in_smpl_lenx) samples
+                    params[GEN_SIG_AMP_CH2].value, params[GEN_SIG_FREQ_CH2].value,
+                    gen_calib_params->be_ch2_dc_offs,
+                    gen_calib_params->be_ch2_fs,
+                    ch2_max_dac_v, params[GEN_SIG_DCOFF_CH2].value,
+                    ch2_data, &ch2_param);
+            wrap = 0;
+            if (in_smpl_len2<AWG_SIG_LEN)
+                wrap = 1; // wrapping after (in_smpl_lenx) samples
         }
     } else {
         clear_signal(gen_calib_params->be_ch2_dc_offs, ch2_data, &ch2_param);
