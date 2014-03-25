@@ -873,8 +873,8 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             if(chb_smpl & (1<<(c_osc_fpga_adc_bits-1)))
                 chb_smpl = -1 * ((chb_smpl ^ ((1<<c_osc_fpga_adc_bits)-1))+1);
 
-            cha_smpl=cha_smpl+rp_calib_params->fe_ch1_dc_offs;
-            chb_smpl=chb_smpl+rp_calib_params->fe_ch2_dc_offs;
+            cha_smpl = cha_smpl + rp_calib_params->fe_ch1_dc_offs;
+            chb_smpl = chb_smpl + rp_calib_params->fe_ch2_dc_offs;
 
             /* Get min/maxes */
             max_cha = (max_cha < cha_smpl) ? cha_smpl : max_cha;
@@ -900,7 +900,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 
         /* Signal amplitude found & stable? */
         if ( ((ratio[0] < c_inc_thr) && (dy[0] > c_noise_thr)) ||
-             ((ratio[1] < c_inc_thr) && (dy[1] > c_noise_thr)) ){
+             ((ratio[1] < c_inc_thr) && (dy[1] > c_noise_thr)) ) {
             break;
         }
 
@@ -916,10 +916,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
     /* Check the Y axis amplitude on both channels and select the channel with 
      * the larger one.
      */
-    if(dy[0] > dy[1])
-        channel = 0;
-    else
-        channel = 1;
+    channel = (dy[0] > dy[1]) ? 0 : 1;
 
     if(dy[channel] < c_noise_thr) {
         /* No signal detected, set the parameters to:
@@ -929,10 +926,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
          * - Y axis - Min/Max + adding extra 200% to average
          */
         int min_y, max_y, ave_y;
-        int max_adc_v = ch1_max_adc_v;
-
-        if(channel == 1)
-            max_adc_v = ch2_max_adc_v;
+        int max_adc_v = (channel == 0) ? ch1_max_adc_v : ch2_max_adc_v;
 
         orig_params[TRIG_MODE_PARAM].value  = 0;
         orig_params[MIN_GUI_PARAM].value    = 0;      
@@ -946,17 +940,20 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
         min_y = (min_cha < min_chb) ? min_cha : min_chb;
         max_y = (max_cha > max_chb) ? max_cha : max_chb;
 
-        ave_y = (min_y + max_y)>>1;
-        min_y = (min_y-ave_y)*2+ave_y;
-        max_y = (max_y-ave_y)*2+ave_y;
+        ave_y = (min_y + max_y) >> 1;
+        min_y = (min_y - ave_y) * 2 + ave_y;
+        max_y = (max_y - ave_y) * 2 + ave_y;
 
         orig_params[MIN_Y_PARAM].value = (min_y * max_adc_v)/
             (float)(1<<(c_osc_fpga_adc_bits-1));
         orig_params[MAX_Y_PARAM].value = (max_y * max_adc_v)/
             (float)(1<<(c_osc_fpga_adc_bits-1));
         return 0;
+
     } else {
-        int min_y, max_y;              /* Signal above threshold - loop from lower to higher decimation */
+
+        /* Signal above threshold - loop from lower to higher decimation */
+        int min_y, max_y;
         int trig_src_ch;               /* Trigger level in samples, smpls_2 introduced for histeresis */
         int trig_level, trig_level_2;
         float trig_level_v;            /* Trigger level in [V] */
@@ -979,14 +976,14 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             max_adc_v = ch2_max_adc_v;
             calib_dc_off = rp_calib_params->fe_ch2_dc_offs;            
         }
-        trig_level = (max_y+min_y)>>1;
-        trig_level_2 = (trig_level+max_y)>>1;
+        trig_level = (max_y + min_y) >> 1;
+        trig_level_2 = (trig_level + max_y) >> 1;
 
         trig_level_v = (((trig_level + calib_dc_off) * max_adc_v)/
                         (float)(1<<(c_osc_fpga_adc_bits-1))) ;
 
-        int loc_max=INT_MIN;
-        int loc_min=INT_MAX;
+        int loc_max = INT_MIN;
+        int loc_min = INT_MAX;
 
         /* Loop over time ranges and search for the best suiting one (Last range removed: too slow) */
         for(time_range = 0; time_range < 5; time_range++) {
@@ -1032,20 +1029,15 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
 
             /* We have a signal in rp_fpga_chX_signal */
-            if(channel == 0)
-                sig_data = rp_fpga_cha_signal;
-            else
-                sig_data = rp_fpga_chb_signal;
-
-	    
-	    
+            sig_data = (channel == 0) ? rp_fpga_cha_signal : rp_fpga_chb_signal;
 	    
             /* Count trigger events */
             for(i = 1; i < OSC_FPGA_SIG_LEN; i++) {
-                ix_corr=i+wr_ptr_trig;
 
-                if (ix_corr>=(OSC_FPGA_SIG_LEN))
-                    ix_corr=ix_corr-OSC_FPGA_SIG_LEN;
+                ix_corr = i + wr_ptr_trig;
+                if (ix_corr >= OSC_FPGA_SIG_LEN)
+                    ix_corr %= OSC_FPGA_SIG_LEN;
+
                 int sig_smpl[2];
                 sig_smpl[1] = sig_data[ix_corr];
                 sig_smpl[0] = sig_data[ix_corr-1];
@@ -1059,38 +1051,38 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 
                 
                 // Another max, min calculation at lower rate to avoid evaluation errors on slower signals
-                if (sig_smpl[0]>loc_max)
-                    loc_max=sig_smpl[0];
+                if (sig_smpl[1] > loc_max)
+                    loc_max = sig_smpl[1];
 
-                if (sig_smpl[0]<loc_min)
-                    loc_min=sig_smpl[0];
+                if (sig_smpl[1] < loc_min)
+                    loc_min = sig_smpl[1];
 
                 /* Check for trigger condition 1 (trig_level) */
-                if((sig_smpl[0]<trig_level) && (sig_smpl[1]>=trig_level)) {
+                if((sig_smpl[0] < trig_level) && (sig_smpl[1] >= trig_level)) {
                     trig_state = 1;
                 }
 
                 /* Check for threshold condition 2 (trig_level_2) */
-                if((trig_state == 1) && (sig_smpl[0]<trig_level_2) && 
-                   (sig_smpl[1]>=trig_level_2)) {
+                if((trig_state == 1) && (sig_smpl[0] < trig_level_2) &&
+                   (sig_smpl[1] >= trig_level_2)) {
 
                     int dec_factor = 
                         osc_fpga_cnv_time_range_to_dec(time_range);
 
                     trig_time[trig_cnt] = i;
-                    trig_cnt = trig_cnt + 1;
+                    trig_cnt++;
                     trig_state = 0;
 
                     if(trig_cnt >= 3) {
-                        period=((trig_time[1]-trig_time[0])/
-                                (float)c_osc_fpga_smpl_freq*dec_factor);
+                        period = ((trig_time[1] - trig_time[0]) /
+                                (float)c_osc_fpga_smpl_freq * dec_factor);
                         break;
                     }
                 }
             }
 
             /* We have a winner - calculate the new parameters */
-            if ((period>0) || (time_range>=4))
+            if ((period > 0) || (time_range >= 4))
             {
                 int ave_y, amp_y;
                 int time_unit = 2;
@@ -1108,20 +1100,19 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 orig_params[TRIG_MODE_PARAM].value  = 1; /* 'normal' */
                 orig_params[TIME_RANGE_PARAM].value = time_range;
                 orig_params[TRIG_SRC_PARAM].value   = trig_src_ch;
-                orig_params[TRIG_LEVEL_PARAM].value = trig_level_v;
+                orig_params[TRIG_LEVEL_PARAM].value = ((float)(loc_max + loc_min))/2 * max_adc_v /
+                                        (float)(1<<(c_osc_fpga_adc_bits-1));
 
                 orig_params[MIN_GUI_PARAM].value    = 0;
 
                 const float c_min_t_span = 1e-7;
-                if (period < c_min_t_span/1.5) {
-                    period = c_min_t_span/1.5;
+                if (period < c_min_t_span / 1.5) {
+                    period = c_min_t_span / 1.5;
                 }
 
-                if(period < 0.1)
-                {
+                if(period < 0.1) {
                     orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
-                }
-                else {
+                } else {
                      // 0.5 s fits into 1s TimeRange
                     orig_params[MAX_GUI_PARAM].value  = 0.5 * 1.5 * t_unit_factor;
                 }
@@ -1132,13 +1123,13 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 min_y = (min_cha < min_chb) ? min_cha : min_chb;
                 max_y = (max_cha > max_chb) ? max_cha : max_chb;
 
-                if (loc_max> max_y)
-                  max_y=loc_max;
+                if (loc_max > max_y)
+                    max_y = loc_max;
 
-                if (loc_min< min_y)
-                  min_y=loc_min;
+                if (loc_min <  min_y)
+                    min_y = loc_min;
 
-                ave_y = (min_y + max_y)>>1;
+                ave_y = (min_y + max_y) >> 1;
                 amp_y = ((max_y - min_y) >> 1) * 1.2;
                 min_y = ave_y - amp_y;
                 max_y = ave_y + amp_y;
@@ -1146,9 +1137,6 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 orig_params[MIN_Y_PARAM].value = (min_y * max_adc_v)/
                     (float)(1<<(c_osc_fpga_adc_bits-1));
                 orig_params[MAX_Y_PARAM].value = (max_y * max_adc_v)/
-                        (float)(1<<(c_osc_fpga_adc_bits-1));
-
-                orig_params[TRIG_LEVEL_PARAM].value =((float)(loc_max+loc_min))/2* max_adc_v/
                         (float)(1<<(c_osc_fpga_adc_bits-1));
 
                 return 0;
