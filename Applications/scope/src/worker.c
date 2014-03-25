@@ -1111,6 +1111,12 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 orig_params[TRIG_LEVEL_PARAM].value = trig_level_v;
 
                 orig_params[MIN_GUI_PARAM].value    = 0;
+
+                const float c_min_t_span = 1e-7;
+                if (period < c_min_t_span/1.5) {
+                    period = c_min_t_span/1.5;
+                }
+
                 if(period < 0.1)
                 {
                     orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
@@ -1140,12 +1146,11 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 orig_params[MIN_Y_PARAM].value = (min_y * max_adc_v)/
                     (float)(1<<(c_osc_fpga_adc_bits-1));
                 orig_params[MAX_Y_PARAM].value = (max_y * max_adc_v)/
-                    (float)(1<<(c_osc_fpga_adc_bits-1));
-		
-		orig_params[TRIG_LEVEL_PARAM].value =((float)(loc_max+loc_min))/2* max_adc_v/
-			(float)(1<<(c_osc_fpga_adc_bits-1));    
+                        (float)(1<<(c_osc_fpga_adc_bits-1));
 
-		    
+                orig_params[TRIG_LEVEL_PARAM].value =((float)(loc_max+loc_min))/2* max_adc_v/
+                        (float)(1<<(c_osc_fpga_adc_bits-1));
+
                 return 0;
             }
            
