@@ -816,7 +816,9 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
     int min_cha = INT_MAX;
     int min_chb = INT_MAX;
     /* Y axis deltas, 0 - ChA, 1 - Chb */
-    int dy[2]; 
+    int dy[2]     = { 0, 0 };
+    int old_dy[2] = { 0, 0 };
+
     /* Channel to be used for auto-algorithm:
      * 0 - Channel A 
      * 1 - Channel B 
@@ -824,6 +826,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
     int channel; 
     int i, smpl_cnt;
     int iter;
+    int time_range = 0;
 
     for (iter=0; iter < 10; iter++) {
         /* 10 auto-trigger acquisitions */
@@ -832,7 +835,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
         osc_fpga_reset();
-        osc_fpga_update_params(1, 0, 0, 0, 0, 0, ch1_max_adc_v, ch2_max_adc_v,
+        osc_fpga_update_params(1, 0, 0, 0, 0, time_range, ch1_max_adc_v, ch2_max_adc_v,
                    rp_calib_params->fe_ch1_dc_offs,
                    0,
                    rp_calib_params->fe_ch2_dc_offs,
@@ -879,13 +882,40 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             max_chb = (max_chb < chb_smpl) ? chb_smpl : max_chb;
             min_chb = (min_chb > chb_smpl) ? chb_smpl : min_chb;
         }
+
+        dy[0] = max_cha - min_cha;
+        dy[1] = max_chb - min_chb;
+
+        /* Calculate ratios of last amplitude increase for both channels */
+        const float c_inc_thr = 1.1;
+        float ratio[2] = { 1e6, 1e6 };
+        int i;
+        for(i = 0; i < 2; i++) {
+            if (old_dy[i] != 0) {
+                ratio[i] = (float)dy[i] / (float)old_dy[i];
+            }
+        }
+        old_dy[0] = dy[0];
+        old_dy[1] = dy[1];
+
+        /* Signal amplitude found & stable? */
+        if ( ((ratio[0] < c_inc_thr) && (dy[0] > c_noise_thr)) ||
+             ((ratio[1] < c_inc_thr) && (dy[1] > c_noise_thr)) ){
+            break;
+        }
+
+        /* Still searching? - Increase time range up to 130 ms (D = 1024). */
+        if ((iter % 3) == 2) {
+            time_range++;
+            if (time_range > 3) {
+                time_range = 3;
+            }
+        }
     }
+
     /* Check the Y axis amplitude on both channels and select the channel with 
      * the larger one.
      */
-    dy[0] = max_cha - min_cha;
-    dy[1] = max_chb - min_chb;
-
     if(dy[0] > dy[1])
         channel = 0;
     else
