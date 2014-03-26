@@ -322,6 +322,9 @@ int rp_app_init(void)
     if(generate_init(&rp_main_calib_params) < 0) {
         return -1;
     }
+    if(pid_init() < 0) {
+        return -1;
+    }
 
     if(rp_main_params[GAIN_CH1].value == 0) {
         rp_main_ch1_max_adc_v = 
@@ -354,6 +357,7 @@ int rp_app_exit(void)
 
     rp_osc_worker_exit();
     generate_exit();
+    pid_exit();
 
     return 0;
 }
