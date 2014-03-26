@@ -22,7 +22,7 @@
 /** Base PID FPGA address */
 #define PID_BASE_ADDR 0x40300000
 /** Base PID FPGA core size */
-#define PID_BASE_SIZE 0x30000
+#define PID_BASE_SIZE 0x100
 
 /** Number of PID controllers */
 #define NUM_OF_PIDS 4
@@ -76,6 +76,8 @@ typedef struct pid_reg_t {
     uint32_t res0;
     /** @brief Offset 0x08 - Reserved */
     uint32_t res1;
+    /** @brief Offset 0x0c - Reserved */
+    uint32_t res2;
 
     /** @brief Offset 0x10 - Four consecutive PID Controller parameter blocks
      *
