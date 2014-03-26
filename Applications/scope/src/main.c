@@ -204,6 +204,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "gen_sig_freq_ch2", 1000, 1, 0, 0.2, 50e6 },
     { /* gen_sig_dcoff_ch2 - DC offset applied to the signal in [V] */
         "gen_sig_dcoff_ch2", 0, 1, 0, -1, 1 },
+    { /* gen_awg_refresh - Refresh AWG data from (uploaded) file. */
+        "gen_awg_refresh",   0, 0, 0, 0, 2 },
     { /* Must be last! */
         NULL, 0.0, -1, -1, 0.0, 0.0 }     
 };
