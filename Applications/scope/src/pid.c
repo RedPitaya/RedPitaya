@@ -114,12 +114,12 @@ int pid_update(rp_app_params_t *params)
     for (i = 0; i < NUM_OF_PIDS; i++) {
         /* PID enabled? */
         if (params[PID_11_ENABLE + i * PARAMS_PER_PID].value == 1) {
-            pid[i].kp = params[PID_11_KP + i * PARAMS_PER_PID].value;
-            pid[i].ki = params[PID_11_KI + i * PARAMS_PER_PID].value;
-            pid[i].kd = params[PID_11_KD + i * PARAMS_PER_PID].value;
+            pid[i].kp = (int)params[PID_11_KP + i * PARAMS_PER_PID].value;
+            pid[i].ki = (int)params[PID_11_KI + i * PARAMS_PER_PID].value;
+            pid[i].kd = (int)params[PID_11_KD + i * PARAMS_PER_PID].value;
         }
 
-        g_pid_reg->pid[i].setpoint = params[PID_11_SP + i * PARAMS_PER_PID].value;
+        g_pid_reg->pid[i].setpoint = (int)params[PID_11_SP + i * PARAMS_PER_PID].value;
         g_pid_reg->pid[i].kp = pid[i].kp;
         g_pid_reg->pid[i].ki = pid[i].ki;
         g_pid_reg->pid[i].kd = pid[i].kd;
