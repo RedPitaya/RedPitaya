@@ -72,6 +72,24 @@ int __pid_cleanup_mem(void)
     return 0;
 }
 
+/** Reset all PIDs */
+void reset_pids(void)
+{
+    if (g_pid_reg) {
+
+        int i;
+        for (i = 0; i < NUM_OF_PIDS; i++) {
+            g_pid_reg->pid[i].setpoint = 0;
+            g_pid_reg->pid[i].kp = 0;
+            g_pid_reg->pid[i].ki = 0;
+            g_pid_reg->pid[i].kd = 0;
+        }
+
+        g_pid_reg->configuration = 0xf;
+        g_pid_reg->configuration = 0;
+    }
+}
+
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -120,6 +138,9 @@ int fpga_pid_init(void)
     /* Set FPGA PID module pointers to correct values. */
     g_pid_reg = page_ptr + page_off;
 
+    /* Reset all controllers */
+    reset_pids();
+
     return 0;
 }
 
@@ -135,19 +156,8 @@ int fpga_pid_init(void)
  */
 int fpga_pid_exit(void)
 {
-    /* Turn all PIDs off */
-    if (g_pid_reg) {
-
-        int i;
-        for (i = 0; i < NUM_OF_PIDS; i++) {
-            g_pid_reg->pid[i].setpoint = 0;
-            g_pid_reg->pid[i].kp = 0;
-            g_pid_reg->pid[i].ki = 0;
-            g_pid_reg->pid[i].kd = 0;
-        }
-
-        g_pid_reg->configuration = 0;
-    }
+    /* Reset all controllers */
+    reset_pids();
 
     return __pid_cleanup_mem();
 }
