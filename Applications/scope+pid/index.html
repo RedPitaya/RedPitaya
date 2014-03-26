@@ -29,7 +29,6 @@
   <script type="text/javascript">
   
   // Settings which can be modified
-  // TODO: Copied from scope+gen. Generator extensions should be replaced with PID extensions.
    
   var app_id = 'scope+pid';  
   var root_url = '';
@@ -40,7 +39,6 @@
   var stop_app_url = root_url + '/bazaar?stop=';
   var get_url = root_url + '/data';
   var post_url = root_url + '/data';
-  var upload_url = root_url + '/upload_gen_ch';  // The channel number is added automatically
   
   var update_interval = 50;              // Update interval for PC, milliseconds
   var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds 
@@ -338,34 +336,30 @@
     $('#gain_ch2_att').on('change', function() { onDropdownChange($(this), 'prb_att_ch2'); });
     $('#gain_ch2_sett').on('change', function() { onDropdownChange($(this), 'gain_ch2'); });
     
-    // Events binding for signal generator
+    // Events binding for PID Controller
     
-    $('#gen_enable_ch1, #gen_enable_ch2').on('change', function() { 
+    $('#pid_11_enable, #pid_12_enable, #pid_21_enable, #pid_22_enable').on('change', function() { 
       params.local[this.id] = ($(this).is(':checked') ? 1 : 0);
       sendParams(); 
     });
     
-    $('#gen_ch1_sigtype').on('change', function() { onDropdownChange($(this), 'gen_sig_type_ch1'); });
-    $('#gen_ch1_trigmode').on('change', function() { onDropdownChange($(this), 'gen_trig_mod_ch1'); });
-    $('#gen_ch2_sigtype').on('change', function() { onDropdownChange($(this), 'gen_sig_type_ch2'); });
-    $('#gen_ch2_trigmode').on('change', function() { onDropdownChange($(this), 'gen_trig_mod_ch2'); });
-    
-    $('#gen_ch1_ampl')
+    // PID 11 Setpoint, Kp, Ki, Kd
+    $('#pid_11_sp')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_gen_ch1_ampl').show();
+        $('#apply_pid_11_sp').show();
       })
       .on('blur', function() {
-        $('#apply_gen_ch1_ampl').hide();
+        $('#apply_pid_11_sp').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.gen_sig_amp_ch1 = val;
+          params.local.pid_11_sp = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.gen_sig_amp_ch1)
+          $(this).val(params.local.pid_11_sp)
         }
         user_editing = false;
       })
@@ -377,23 +371,23 @@
           $(this).blur();
         }
       });
-      
-    $('#gen_ch1_freq')
+
+    $('#pid_11_kp')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_gen_ch1_freq').show();
+        $('#apply_pid_11_kp').show();
       })
       .on('blur', function() {
-        $('#apply_gen_ch1_freq').hide();
+        $('#apply_pid_11_kp').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.gen_sig_freq_ch1 = val;
+          params.local.pid_11_kp = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.gen_sig_freq_ch1)
+          $(this).val(params.local.pid_11_kp)
         }
         user_editing = false;
       })
@@ -405,23 +399,23 @@
           $(this).blur();
         }
       });
-      
-    $('#gen_ch1_dc')
+
+    $('#pid_11_ki')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_gen_ch1_dc').show();
+        $('#apply_pid_11_ki').show();
       })
       .on('blur', function() {
-        $('#apply_gen_ch1_dc').hide();
+        $('#apply_pid_11_ki').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.gen_sig_dcoff_ch1 = val;
+          params.local.pid_11_ki = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.gen_sig_dcoff_ch1)
+          $(this).val(params.local.pid_11_ki)
         }
         user_editing = false;
       })
@@ -433,23 +427,23 @@
           $(this).blur();
         }
       });
-      
-    $('#gen_ch2_ampl')
+
+    $('#pid_11_kd')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_gen_ch2_ampl').show();
+        $('#apply_pid_11_kd').show();
       })
       .on('blur', function() {
-        $('#apply_gen_ch2_ampl').hide();
+        $('#apply_pid_11_kd').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.gen_sig_amp_ch2 = val;
+          params.local.pid_11_kd = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.gen_sig_amp_ch2)
+          $(this).val(params.local.pid_11_kd)
         }
         user_editing = false;
       })
@@ -461,23 +455,24 @@
           $(this).blur();
         }
       });
-      
-    $('#gen_ch2_freq')
+
+    // PID 12 Setpoint, Kp, Ki, Kd
+    $('#pid_12_sp')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_gen_ch2_freq').show();
+        $('#apply_pid_12_sp').show();
       })
       .on('blur', function() {
-        $('#apply_gen_ch2_freq').hide();
+        $('#apply_pid_12_sp').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.gen_sig_freq_ch2 = val;
+          params.local.pid_12_sp = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.gen_sig_freq_ch2)
+          $(this).val(params.local.pid_12_sp)
         }
         user_editing = false;
       })
@@ -489,23 +484,305 @@
           $(this).blur();
         }
       });
-      
-    $('#gen_ch2_dc')
+
+    $('#pid_12_kp')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_gen_ch2_dc').show();
+        $('#apply_pid_12_kp').show();
       })
       .on('blur', function() {
-        $('#apply_gen_ch2_dc').hide();
+        $('#apply_pid_12_kp').hide();
         $(this).parent().removeClass('input-group');
-                
+        
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.gen_sig_dcoff_ch2 = val;
+          params.local.pid_12_kp = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.gen_sig_dcoff_ch2)
+          $(this).val(params.local.pid_12_kp)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_12_ki')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_12_ki').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_12_ki').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_12_ki = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_12_ki)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_12_kd')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_12_kd').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_12_kd').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_12_kd = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_12_kd)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    // PID 21 Setpoint, Kp, Ki, Kd
+    $('#pid_11_sp')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_11_sp').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_11_sp').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_11_sp = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_11_sp)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_11_kp')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_11_kp').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_11_kp').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_11_kp = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_11_kp)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_11_ki')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_11_ki').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_11_ki').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_11_ki = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_11_ki)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_11_kd')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_11_kd').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_11_kd').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_11_kd = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_11_kd)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    // PID 22 Setpoint, Kp, Ki, Kd
+    $('#pid_22_sp')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_22_sp').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_22_sp').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_22_sp = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_22_sp)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_22_kp')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_22_kp').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_22_kp').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_22_kp = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_22_kp)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_22_ki')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_22_ki').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_22_ki').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_22_ki = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_22_ki)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+
+    $('#pid_22_kd')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_pid_22_kd').show();
+      })
+      .on('blur', function() {
+        $('#apply_pid_22_kd').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.pid_22_kd = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.pid_22_kd)
         }
         user_editing = false;
       })
@@ -521,7 +798,6 @@
     // Modals
     
     $('#modal_err, #modal_app').modal({ show: false, backdrop: 'static', keyboard: false });
-    $('#modal_upload').modal({ show: false });
     
     $('#btn_switch_app').on('click', function() {
       var newapp_id = $('#new_app_id').text();
@@ -543,9 +819,6 @@
       $(this).closest('.modal').modal('hide');
     });
     
-    // Reset the upload form to prevent browser caching of the uploaded file name
-    $('#upload_form')[0].reset();
-      
     // Other event bindings
     
     $('#trigger_tooltip').tooltip({
@@ -750,7 +1023,7 @@
         downloading = false;
         if(params.local) {
           $('#accordion').find('input,select').prop('disabled', false);
-          $('.btn').not('#btn_single, #range_y_plus, #gen_ch1_single, #gen_ch2_single').prop('disabled', false);
+          $('.btn').not('#btn_single, #range_y_plus').prop('disabled', false);
         }
       }
       if(long_timeout_used) {
@@ -891,23 +1164,27 @@
     $('#gain_ch2_att').val(params.original.prb_att_ch2);
     $('#gain_ch2_sett').val(params.original.gain_ch2);
     
-    $('#gen_enable_ch1').prop('checked', (params.original.gen_enable_ch1 ? true : false));
-    $('#gen_enable_ch2').prop('checked', (params.original.gen_enable_ch2 ? true : false));
+    $('#pid_11_enable').prop('checked', (params.original.pid_11_enable ? true : false));
+    $('#pid_12_enable').prop('checked', (params.original.pid_12_enable ? true : false));
+    $('#pid_21_enable').prop('checked', (params.original.pid_21_enable ? true : false));
+    $('#pid_22_enable').prop('checked', (params.original.pid_22_enable ? true : false));
     
-    $('#gen_ch1_sigtype').val(params.original.gen_sig_type_ch1);
-    $('#gen_ch1_ampl').val(floatToLocalString(params.original.gen_sig_amp_ch1));
-    $('#gen_ch1_freq').val(floatToLocalString(params.original.gen_sig_freq_ch1));
-    $('#gen_ch1_dc').val(floatToLocalString(params.original.gen_sig_dcoff_ch1));
-    $('#gen_ch1_trigmode').val(params.original.gen_trig_mod_ch1);
-    
-    $('#gen_ch2_sigtype').val(params.original.gen_sig_type_ch2);
-    $('#gen_ch2_ampl').val(floatToLocalString(params.original.gen_sig_amp_ch2));
-    $('#gen_ch2_freq').val(floatToLocalString(params.original.gen_sig_freq_ch2));
-    $('#gen_ch2_dc').val(floatToLocalString(params.original.gen_sig_dcoff_ch2));
-    $('#gen_ch2_trigmode').val(params.original.gen_trig_mod_ch2);
-    
-    $('#gen_ch1_single').prop('disabled', (params.original.gen_trig_mod_ch1 == 1 ? false : true));
-    $('#gen_ch2_single').prop('disabled', (params.original.gen_trig_mod_ch2 == 1 ? false : true));    
+    $('#pid_11_sp').val(params.original.pid_11_sp);
+    $('#pid_11_kp').val(params.original.pid_11_kp);
+    $('#pid_11_ki').val(params.original.pid_11_ki);
+    $('#pid_11_kd').val(params.original.pid_11_kd);
+    $('#pid_12_sp').val(params.original.pid_12_sp);
+    $('#pid_12_kp').val(params.original.pid_12_kp);
+    $('#pid_12_ki').val(params.original.pid_12_ki);
+    $('#pid_12_kd').val(params.original.pid_12_kd);
+    $('#pid_21_sp').val(params.original.pid_21_sp);
+    $('#pid_21_kp').val(params.original.pid_21_kp);
+    $('#pid_21_ki').val(params.original.pid_21_ki);
+    $('#pid_21_kd').val(params.original.pid_21_kd);
+    $('#pid_22_sp').val(params.original.pid_22_sp);
+    $('#pid_22_kp').val(params.original.pid_22_kp);
+    $('#pid_22_ki').val(params.original.pid_22_ki);
+    $('#pid_22_kd').val(params.original.pid_22_kd);
     
     if(params.original.en_avg_at_dec) {
       $('#btn_avg').removeClass('btn-default').addClass('btn-primary');
@@ -1547,105 +1824,7 @@
     params.local.auto_flag = 1;
     sendParams(true);
   }
-  
-  function postGenSingle(channel) {
-    if(params.local['gen_trig_mod_ch' + channel] == 1) {
-      params.local['gen_single_ch' + channel] = 1;
-      sendParams();
-    }
-    else {
-      $('#gen_ch' + channel + '_single').prop('disabled', true);
-    }
-    return false;
-  }
-  
-  function showUploadForm(channel) {
-    var file_elem = $('#uploaded_file');
-    var fcontent_elem = $('#uploaded_file_content');
-    var hint_elem = $('#upload_form .help-block');
-    
-    fcontent_elem.val('');
-    hint_elem.html('Select the CSV file to upload.');
-    $('#upload_form')[0].reset();
-    $('#modal_upload_label span').text(channel);
-    
-    if(file_elem[0].files === undefined) {
-      file_elem.hide().parent().addClass('has-error');
-      hint_elem.html('Your browser is too old and do not support this feature.');
-    }
-    else {
-      file_elem.show().parent().removeClass('has-error');
-      file_elem.off('change').on('change', function() {
-        var file = this.files[0];
-        var freader = new FileReader();
         
-        // File validation
-        //var size = file.size;
-        var type = file.type;
-        if(file.type !== 'text/csv' && file.type !== 'text/comma-separated-values' && file.type !== 'application/vnd.ms-excel') {
-          file_elem.parent().addClass('has-error');
-          hint_elem.html('Wrong file type: ' + file.type);
-          $('#upload_form')[0].reset();
-        }
-        else {
-          file_elem.parent().removeClass('has-error');
-          hint_elem.html('File size: ' + file.size + ' bytes');
-          freader.onload = function(data) {
-            fcontent_elem.val(this.result);
-          };
-          freader.readAsText(file);
-        }
-      });
-    }
-    
-    $('#modal_upload').modal('show');
-    
-    return false;
-  }
-  
-  function startUpload() {
-    var mbody = $('#modal_upload .modal-body');
-    var file_elem = $('#uploaded_file');
-    var hint_elem = $('#upload_form .help-block');
-    var channel = $('#modal_upload_label span').text();
-    
-    if(mbody.data('errtimer')) {
-      clearTimeout(mbody.data('errtimer'));
-      mbody.removeData('errtimer');
-    }
-    
-    if(! $('#uploaded_file').val().length) {
-      mbody.addClass('alert-danger').data('errtimer', setTimeout(function() { 
-        $('#modal_upload .modal-body').removeClass('alert-danger'); 
-      }, 1000));
-      return;
-    }
-    
-    file_elem.hide();
-    hint_elem.html('Uploading file...');
-    
-    $.post(upload_url + channel, $('#uploaded_file_content').val(), function(dresult) {
-      if($.type(dresult) == 'string' && dresult.trim() == 'OK') {
-        $('#upload_form')[0].reset();
-        $('#modal_upload').modal('hide');
-        
-        user_editing = true;
-        params.local.gen_awg_refresh = parseInt(channel);
-        sendParams();
-      }
-      else {
-        file_elem.show();
-        hint_elem.html('Error while uploading the file.');
-        file_elem.parent().addClass('has-error');
-      }
-    })
-    .fail(function() {
-      file_elem.show();
-      hint_elem.html('Error while uploading the selected file.');
-      file_elem.parent().addClass('has-error');
-    });
-  }
-  
   function getLocalDecimalSeparator() {
     var n = 1.1;
     return n.toLocaleString().substring(1,2);
@@ -2011,173 +2190,234 @@
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
-              <a data-toggle="collapse" href="#generator">
+              <a data-toggle="collapse" href="#pid">
                 PID Controller
               </a>
             </h4>
           </div>
-          <div id="generator" class="panel-collapse collapse">
+          <div id="pid" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="checkbox" style="padding-bottom: 12px;">
                   <label class="group-label">
-                    <input type="checkbox" id="gen_enable_ch1" checked> Channel 1
+                    <input type="checkbox" id="pid_11_enable" checked> PID 11
                   </label>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_sigtype" class="col-xs-4 control-label">Signal type:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch1_sigtype">
-                      <option value="0">Sine</option>
-                      <option value="1">Square</option>
-                      <option value="2">Triangle</option>
-                      <option value="3">From file</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch1_ampl" class="col-xs-4 control-label">Amplitude:</label>
+                  <label for="pid_11_sp" class="col-xs-4 control-label">Setpoint:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_ampl">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_ampl">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_11_sp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_11_sp">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_ampl_units">Vpp</div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_11_sp_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_freq" class="col-xs-4 control-label">Frequency:</label>
+                  <label for="pid_11_kp" class="col-xs-4 control-label">Kp:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_freq">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_freq">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_11_kp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_11_kp">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_freq_units">Hz</div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_11_kp_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_dc" class="col-xs-4 control-label">DC offset:</label>
+                  <label for="pid_11_ki" class="col-xs-4 control-label">Ki:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch1_dc">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch1_dc">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_11_ki">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_11_ki">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch1_dc_units">V</div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_11_ki_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch1_trigmode" class="col-xs-4 control-label" style="white-space: nowrap;">Trigger mode:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch1_trigmode">
-                      <option value="0">Continuous</option>
-                      <option value="1">Single</option>
-                      <option value="2">External</option>
-                    </select>
+                  <label for="pid_11_kd" class="col-xs-4 control-label">Kd:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_11_kd">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_11_kd">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_11_kd_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="row">
-                  <div class="col-xs-8 col-md-12 col-lg-8 col-sm-offset-4 col-md-offset-0 col-lg-offset-4">
-                    <button id="gen_ch1_single" class="btn btn-primary" onclick="return postGenSingle(1)">
-                      <span class="glyphicon glyphicon-step-forward"></span> Single
-                    </button>
-                    <button id="gen_ch1_upload" class="btn btn-primary" onclick="return showUploadForm(1)">
-                      <span class="glyphicon glyphicon-upload"></span> File upload
-                    </button>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="checkbox" style="padding-top: 15px; padding-bottom: 12px;">
+                <div class="checkbox" style="padding-bottom: 12px;">
                   <label class="group-label">
-                    <input type="checkbox" id="gen_enable_ch2" checked> Channel 2
+                    <input type="checkbox" id="pid_12_enable" checked> PID 12
                   </label>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch2_sigtype" class="col-xs-4 control-label">Signal type:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch2_sigtype">
-                      <option value="0">Sine</option>
-                      <option value="1">Square</option>
-                      <option value="2">Triangle</option>
-                      <option value="3">From file</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="gen_ch2_ampl" class="col-xs-4 control-label">Amplitude:</label>
+                  <label for="pid_12_sp" class="col-xs-4 control-label">Setpoint:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch2_ampl">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch2_ampl">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_12_sp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_12_sp">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch2_ampl_units">Vpp</div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_12_sp_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch2_freq" class="col-xs-4 control-label">Frequency:</label>
+                  <label for="pid_12_kp" class="col-xs-4 control-label">Kp:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch2_freq">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch2_freq">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_12_kp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_12_kp">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch2_freq_units">Hz</div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_12_kp_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch2_dc" class="col-xs-4 control-label">DC offset:</label>
+                  <label for="pid_12_ki" class="col-xs-4 control-label">Ki:</label>
                   <div class="col-xs-4 col-sm-5">
-                    <input type="text" autocomplete="off" class="form-control" value="0" id="gen_ch2_dc">
-                    <span style="display: none;" class="input-group-btn" id="apply_gen_ch2_dc">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_12_ki">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_12_ki">
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_ch2_dc_units">V</div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_12_ki_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-                  <label for="gen_ch2_trigmode" class="col-xs-4 control-label" style="white-space: nowrap;">Trigger mode:</label>
-                  <div class="col-xs-4 col-sm-7">
-                    <select class="form-control" id="gen_ch2_trigmode">
-                      <option value="0">Continuous</option>
-                      <option value="1">Single</option>
-                      <option value="2">External</option>
-                    </select>
+                  <label for="pid_12_kd" class="col-xs-4 control-label">Kd:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_12_kd">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_12_kd">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
                   </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_12_kd_units">cnt</div>
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="row">
-                  <div class="col-xs-8 col-md-12 col-lg-8 col-sm-offset-4 col-md-offset-0 col-lg-offset-4">
-                    <button id="gen_ch2_single" class="btn btn-primary" onclick="return postGenSingle(2)">
-                      <span class="glyphicon glyphicon-step-forward"></span> Single
-                    </button>
-                    <button id="gen_ch2_upload" class="btn btn-primary" onclick="return showUploadForm(2)">
-                      <span class="glyphicon glyphicon-upload"></span> File upload
-                    </button>
-                  </div>
+                <div class="checkbox" style="padding-bottom: 12px;">
+                  <label class="group-label">
+                    <input type="checkbox" id="pid_21_enable" checked> PID 21
+                  </label>
                 </div>
               </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_21_sp" class="col-xs-4 control-label">Setpoint:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_21_sp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_21_sp">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_21_sp_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_21_kp" class="col-xs-4 control-label">Kp:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_21_kp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_21_kp">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_21_kp_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_21_ki" class="col-xs-4 control-label">Ki:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_21_ki">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_21_ki">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_21_ki_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_21_kd" class="col-xs-4 control-label">Kd:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_21_kd">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_21_kd">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_21_kd_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="checkbox" style="padding-bottom: 12px;">
+                  <label class="group-label">
+                    <input type="checkbox" id="pid_22_enable" checked> PID 22
+                  </label>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_22_sp" class="col-xs-4 control-label">Setpoint:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_22_sp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_22_sp">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_22_sp_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_22_kp" class="col-xs-4 control-label">Kp:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_22_kp">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_22_kp">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_22_kp_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_22_ki" class="col-xs-4 control-label">Ki:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_22_ki">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_22_ki">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_22_ki_units">cnt</div>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="pid_22_kd" class="col-xs-4 control-label">Kd:</label>
+                  <div class="col-xs-4 col-sm-5">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="pid_22_kd">
+                    <span style="display: none;" class="input-group-btn" id="apply_pid_22_kd">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="pid_22_kd_units">cnt</div>
+                </div>
+              </form>
+
             </div>
           </div>
         </div>
@@ -2220,27 +2460,5 @@
       </div>
     </div>
   </div>
-  <div id="modal_upload" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_upload_label" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title" id="modal_upload_label">File upload for channel <span></span></h4>
-        </div>
-        <div class="modal-body"> 
-          <form id="upload_form" role="form">
-            <div class="form-group">
-              <input type="file" name="file_select" id="uploaded_file">
-              <input type="hidden" name="file_content" id="uploaded_file_content">
-              <p class="help-block">Select the CSV file to upload.</p>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer" style="margin-top: 0;">
-          <button type="button" class="btn btn-default btn-close-modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="startUpload()">Upload</button>
-        </div>
-      </div>
-    </div>
-  </div>  
 </body>
 </html>
