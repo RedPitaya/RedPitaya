@@ -1110,12 +1110,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                     period = c_min_t_span / 1.5;
                 }
 
-                if(period < 0.1) {
-                    orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
-                } else {
-                     // 0.5 s fits into 1s TimeRange
-                    orig_params[MAX_GUI_PARAM].value  = 0.5 * 1.5 * t_unit_factor;
-                }
+                orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
 
                 orig_params[TIME_UNIT_PARAM].value  = time_unit;
                 orig_params[AUTO_FLAG_PARAM].value  = 0;
