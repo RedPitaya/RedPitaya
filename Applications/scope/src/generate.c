@@ -536,27 +536,28 @@ int generate_update(rp_app_params_t *params)
     ch1_type = (awg_signal_t)params[GEN_SIG_TYPE_CH1].value;
     ch2_type = (awg_signal_t)params[GEN_SIG_TYPE_CH2].value;
 
-    if((ch1_type == eSignalFile)) {
+    if( (ch1_type == eSignalFile) || (params[GEN_AWG_REFRESH].value == 1) ) {
         if((in_smpl_len1 = read_in_file(1, ch1_arb)) < 0) {
             // Invalid file
-            params[GEN_ENABLE_CH1].value=0;
-            params[GEN_SIG_TYPE_CH1].value=eSignalSine;
+            params[GEN_ENABLE_CH1].value = 0;
+            params[GEN_SIG_TYPE_CH1].value = eSignalSine;
             ch1_type = params[GEN_SIG_TYPE_CH1].value;
             ch1_enable = params[GEN_ENABLE_CH1].value;
             //invalid_file=1;
         }
     }
 
-    if((ch2_type == eSignalFile)) {
+    if( (ch2_type == eSignalFile) || (params[GEN_AWG_REFRESH].value == 2) ) {
         if((in_smpl_len2 = read_in_file(2, ch2_arb)) < 0) {
             // Invalid file
-            params[GEN_ENABLE_CH2].value=0;
-            params[GEN_SIG_TYPE_CH2].value=eSignalSine;
+            params[GEN_ENABLE_CH2].value = 0;
+            params[GEN_SIG_TYPE_CH2].value = eSignalSine;
             ch2_type = params[GEN_SIG_TYPE_CH2].value;
             ch2_enable = params[GEN_ENABLE_CH2].value;
             // invalid_file=1;
         }
     }
+    params[GEN_AWG_REFRESH].value = 0;
 
     /* Waveform from signal gets treated differently then others */
     if(ch1_enable > 0) {
