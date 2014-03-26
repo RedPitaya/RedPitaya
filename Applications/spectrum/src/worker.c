@@ -29,12 +29,12 @@
 #include "waterfall.h"
 
 /* JPG outputs: c_jpg_file_path+[1|2]+_+jpg_cnt(3 digits)+c_jpg_file_suf */
-const char c_jpg_dir_path[]="/tmp/";
+const char c_jpg_dir_path[]="/tmp";
 const char c_jpg_file_name[]="wat";
 const char c_jpg_file_path[]="/tmp/wat";
 const char c_jpg_file_suf[]=".jpg";
-const int  c_jpg_max_file  = 99;
-const int  c_save_jpg_cnt  = 10; /* Repetition how ofter the JPG is stored */
+const int  c_jpg_max_file  = 63;
+const int  c_save_jpg_cnt  = 10; /* Repetition how often the JPG is stored */
 char      *jpg_fname_cha = NULL;
 char      *jpg_fname_chb = NULL;
 
@@ -243,11 +243,11 @@ int rp_spectr_clean_tmpdir(const char *dir)
     struct dirent *ep;
     int fname_len = strlen(c_jpg_file_name);
     int fsuf_len = strlen(c_jpg_file_suf);
-    int ret_val = 0;
+    int ret = 0;
 
     if((dp = opendir(dir)) == NULL) {
-        fprintf(stderr, "rp_spectr_clean_tmpdir() opendir() failed: %s\n",
-                strerror(errno));
+        fprintf(stderr, "%s() opendir() failed: %s\n",
+                __FUNCTION__, strerror(errno));
         return -1;
     }
 
@@ -256,24 +256,25 @@ int rp_spectr_clean_tmpdir(const char *dir)
         int f_len = strlen(filename);
 
         if((f_len > fname_len) &&
-           (strncmp(filename, c_jpg_file_name, fname_len) == 0) &&
-           (strncmp(&filename[f_len-fsuf_len], c_jpg_file_suf, fsuf_len) == 0)) {
-            int full_name_len = strlen(dir) + strlen(filename) + 1;
+                (strncmp(filename, c_jpg_file_name, fname_len) == 0) &&
+                (strncmp(&filename[f_len-fsuf_len], c_jpg_file_suf, fsuf_len) == 0)) {
+
+            int full_name_len = strlen(dir) + strlen(filename) + 2;
             char *full_name;
             full_name = (char *)malloc(full_name_len * sizeof(char));
             if(full_name == NULL) {
-                fprintf(stderr, "rp_spect_clean_tmpdir() malloc() failed: %s\n",
-                        strerror(errno));
-                ret_val = -1;
+                fprintf(stderr, "%s() malloc() failed: %s\n",
+                        __FUNCTION__, strerror(errno));
+                ret = -1;
                 break;
             }
-            sprintf(full_name, "%s%s", dir, filename);
+            sprintf(full_name, "%s/%s", dir, filename);
             full_name[full_name_len-1]='\0';
             if(unlink((const char *)full_name) < 0) {
-                fprintf(stderr, "rp_spectr_clean_tmpdir() unlink() for '%s' "
-                        "failed: %s\n", full_name, strerror(errno));
+                fprintf(stderr, "%s() unlink() for '%s' failed: %s\n",
+                        __FUNCTION__, full_name, strerror(errno));
                 /* still continue erasing */
-                ret_val = -1;
+                ret = -1;
             }
 
             free(full_name);
@@ -282,7 +283,7 @@ int rp_spectr_clean_tmpdir(const char *dir)
 
     closedir(dp);
 
-    return ret_val;
+    return ret;
 }
 
 int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result)
@@ -306,7 +307,6 @@ int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result)
     result->peak_pw_chb      = rp_spectr_result.peak_pw_chb;
     result->peak_pw_freq_chb = rp_spectr_result.peak_pw_freq_chb;
 
-
     pthread_mutex_unlock(&rp_spectr_sig_mutex);
     return 0;
 }
@@ -317,7 +317,9 @@ int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result)
     memcpy(&rp_spectr_signals[0][0], &source[0][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
     memcpy(&rp_spectr_signals[1][0], &source[1][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
     memcpy(&rp_spectr_signals[2][0], &source[2][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
+
     rp_spectr_signals_dirty = 1;
+
     rp_spectr_result.jpg_idx          = result.jpg_idx;
     rp_spectr_result.peak_pw_cha      = result.peak_pw_cha;
     rp_spectr_result.peak_pw_freq_cha = result.peak_pw_freq_cha;
@@ -481,7 +483,7 @@ void *rp_spectr_worker_thread(void *args)
         }
 
 
-        /* Copy the resut to the output part - and also the index of 
+        /* Copy the result to the output part - and also the index of
          * last JPEG file index */
         tmp_result.jpg_idx = jpg_fn_cnt;
         rp_spectr_set_signals(rp_tmp_signals, tmp_result);
