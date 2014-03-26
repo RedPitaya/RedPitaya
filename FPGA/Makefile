@@ -41,6 +41,8 @@ clean:
 memtest:
 	cp $(FSBL_ELF) $(INSTALL_DIR)
 	cd $(FPGA_DIR); cat $(THIS_DIR)/patches/*.patch | patch -p2
+	rm $(FSBL_ELF)
+	rm -f `find $(SDK_EXPORT)/fsbl/ -name \*.o`
 	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) fsbl
 	cp $(FSBL_ELF) $(INSTALL_DIR)/memtest.elf
 
