@@ -23,15 +23,6 @@ typedef enum rp_spectr_worker_state_e {
     rp_spectr_nonexisting_state /* must be last */
 } rp_spectr_worker_state_t;
 
-/* Worker results (not signal but calculated peaks and jpeg index */
-typedef struct rp_spectr_worker_res_s {
-    int   jpg_idx;
-    float peak_pw_cha;
-    float peak_pw_freq_cha;
-    float peak_pw_chb;
-    float peak_pw_freq_chb;
-} rp_spectr_worker_res_t;
-
 int rp_spectr_worker_init(void);
 int rp_spectr_worker_clean(void);
 int rp_spectr_worker_exit(void);
@@ -47,11 +38,11 @@ int rp_spectr_clean_tmpdir(const char *dir);
  *  0 - new signals (dirty signal) are copied to the output 
  *  1 - no new signals available (dirty signal was not set - we need to wait)
  */
-int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result);
+int rp_spectr_get_signals(float ***signals);
 
 /* Fills the output signal structure from temp one after calculation is done 
  * and marks it dirty 
  */
-int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result);
+int rp_spectr_set_signals(float **source);
 
 #endif /* __WORKER_H*/
