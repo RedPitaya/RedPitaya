@@ -1105,12 +1105,20 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 
                 orig_params[MIN_GUI_PARAM].value    = 0;
 
-                const float c_min_t_span = 1e-7;
-                if (period < c_min_t_span / 1.5) {
-                    period = c_min_t_span / 1.5;
+                if (period > 0) {
+                    /* Period detected */
+                    const float c_min_t_span = 1e-7;
+                    if (period < c_min_t_span / 1.5) {
+                        period = c_min_t_span / 1.5;
+                    }
+                    orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
+                } else {
+                    /* Period not detected, which means it is longer than ~300 ms */
+                    TRACE("Signal period cannot be determined.\n");
+                    /* Stretch to max 1/4 range. All slow signals should be still visible there */
+                    orig_params[MAX_GUI_PARAM].value = 2.0;
+                    orig_params[TIME_RANGE_PARAM].value = 5;
                 }
-
-                orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
 
                 orig_params[TIME_UNIT_PARAM].value  = time_unit;
                 orig_params[AUTO_FLAG_PARAM].value  = 0;
@@ -1136,7 +1144,6 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 
                 return 0;
             }
-           
         }
     }
     return -1;
