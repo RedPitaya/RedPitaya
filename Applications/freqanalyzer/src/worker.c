@@ -82,12 +82,6 @@ double *rp_chb_resp = NULL;
 double *rp_cha_resp_cal = NULL;
 double *rp_chb_resp_cal = NULL;
 
-
-/* DSP structures */
-/* size = c_dsp_sig_len */
-double *rp_cha_fft = NULL;
-double *rp_chb_fft = NULL;
-
 /* Output 3 x SPECTR_OUT_SIG signals - used internally for calculation */
 float               **rp_tmp_signals = NULL;
 
@@ -130,10 +124,7 @@ int rp_spectr_worker_init(void)
     rp_cha_resp_cal = (double *)malloc(sizeof(double) * SPECTR_OUT_SIG_LEN);
     rp_chb_resp_cal = (double *)malloc(sizeof(double) * SPECTR_OUT_SIG_LEN);
 
-    rp_cha_fft = (double *)malloc(sizeof(double) * c_dsp_sig_len);
-    rp_chb_fft = (double *)malloc(sizeof(double) * c_dsp_sig_len);
-
-    if(!rp_cha_resp ||  !rp_chb_resp || !rp_cha_resp_cal || !rp_chb_resp_cal || !rp_cha_in || !rp_chb_in || !rp_cha_fft || !rp_chb_fft) {
+    if(!rp_cha_resp ||  !rp_chb_resp || !rp_cha_resp_cal || !rp_chb_resp_cal || !rp_cha_in || !rp_chb_in) {
         rp_spectr_worker_clean();
         return -1;
     }
@@ -205,15 +196,6 @@ int rp_spectr_worker_clean(void)
     if(rp_chb_resp_cal) {
         free(rp_chb_resp_cal);
         rp_chb_resp_cal = NULL;
-    }
-
-    if(rp_cha_fft) {
-        free(rp_cha_fft);
-        rp_cha_fft = NULL;
-    }
-    if(rp_chb_fft) {
-        free(rp_chb_fft);
-        rp_chb_fft = NULL;
     }
 
     return 0;
