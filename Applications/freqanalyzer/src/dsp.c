@@ -159,33 +159,6 @@ int rp_spectr_fft_clean()
 }
 
 
-int rp_spectr_fft(double *cha_in, double *chb_in, 
-                  double **cha_out, double **chb_out)
-{
-    double *cha_o = *cha_out;
-    double *chb_o = *chb_out;
-    int i;
-    if(!cha_in || !chb_in || !*cha_out || !*chb_out)
-        return -1;
-
-    if(!rp_kiss_fft_out1 || !rp_kiss_fft_out2 || !rp_kiss_fft_cfg) {
-        fprintf(stderr, "rp_spect_fft not initialized");
-        return -1;
-    }
-
-    kiss_fftr(rp_kiss_fft_cfg, (kiss_fft_scalar *)cha_in, rp_kiss_fft_out1);
-    kiss_fftr(rp_kiss_fft_cfg, (kiss_fft_scalar *)chb_in, rp_kiss_fft_out2);
-
-    for(i = 0; i < c_dsp_sig_len; i++) {                     // FFT limited to fs/2, specter of amplitudes
-        cha_o[i] = sqrt(pow(rp_kiss_fft_out1[i].r, 2) + 
-                        pow(rp_kiss_fft_out1[i].i, 2));
-        chb_o[i] = sqrt(pow(rp_kiss_fft_out2[i].r, 2) + 
-                        pow(rp_kiss_fft_out2[i].i, 2));
-    }
-    return 0;
-}
-
-
 int rp_resp_init_sigs(float **freq_out, float **cha_out, float **chb_out)
 {
     int i;
@@ -205,18 +178,17 @@ int rp_resp_init_sigs(float **freq_out, float **cha_out, float **chb_out)
 }
 
 
-int rp_resp_cnv_to_dB(float *cha_in, float *chb_in, double *cha_resp_in, double *chb_resp_in,
-						 double *cha_resp_cal_in, double *chb_resp_cal_in,
-                         float **cha_out, float **chb_out,
-                         float *peak_power_cha, float *peak_freq_cha,
-                         float *peak_power_chb, float *peak_freq_chb,
-                         float freq_range, int resp_len)
+int rp_resp_cnv_to_dB(double *cha_resp_in, double *chb_resp_in,
+                      double *cha_resp_cal_in, double *chb_resp_cal_in,
+                      float **cha_out, float **chb_out, int resp_len)
 {
     int i;
     float *cha_o = *cha_out;
     float *chb_o = *chb_out;
 
-    if(!cha_resp_in ||!cha_in || !chb_in || !*cha_out || !*chb_out)
+    if(!cha_resp_in || !chb_resp_in || !cha_resp_cal_in || !chb_resp_cal_in)
+        return -1;
+    if(!cha_o || !chb_o)
         return -1;
 
     for(i = 0; i < SPECTR_OUT_SIG_LEN; i++) {
@@ -239,11 +211,6 @@ int rp_resp_cnv_to_dB(float *cha_in, float *chb_in, double *cha_resp_in, double 
             chb_o[i] = chb_o[resp_len-1];
         }
     }
-
-    *peak_power_cha = 0;
-    *peak_freq_cha =  0;
-    *peak_power_chb = 0;
-    *peak_freq_chb =  0;
 
     return 0;
 }

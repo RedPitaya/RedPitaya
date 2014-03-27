@@ -27,20 +27,9 @@ int rp_resp_calc(double *cha_in, double *chb_in, int k1, double scale, int kstp,
 int rp_spectr_fft_init();
 int rp_spectr_fft_clean();
 
-/* Inputs length: SPECTR_FPGA_SIG_LEN
- * Outputs length: floor(SPECTR_FPGA_SIG_LEN/2) 
- * Output is not complex number as usually is from the FFT but abs() value of the
- * calculation.
- */
-int rp_spectr_fft(double *cha_in, double *chb_in, 
-        double **cha_out, double **chb_out);
-
-int rp_resp_cnv_to_dB(float *cha_in, float *chb_in, double *cha_resp_in, double *chb_resp_in,
-        double *cha_resp_cal_in, double *chb_resp_cal_in,
-        float **cha_out, float **chb_out,
-        float *peak_power_cha, float *peak_freq_cha,
-        float *peak_power_chb, float *peak_freq_chb,
-        float freq_range, int resp_len);
+int rp_resp_cnv_to_dB(double *cha_resp_in, double *chb_resp_in,
+                      double *cha_resp_cal_in, double *chb_resp_cal_in,
+                      float **cha_out, float **chb_out, int resp_len);
 
 int rp_resp_init_sigs(float **freq_out, float **cha_out, float **chb_out);
 

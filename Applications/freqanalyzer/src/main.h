@@ -31,21 +31,11 @@ typedef struct rp_app_params_s {
 
 /* Parameters indexes - these defines should be in the same order as
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM             14
-#define MIN_GUI_PARAM          0
-#define MAX_GUI_PARAM          1
-#define FREQ_RANGE_PARAM       2
-#define FREQ_UNIT_PARAM        3
-#define PEAK_PW_FREQ_CHA_PARAM 4
-#define PEAK_PW_CHA_PARAM      5
-#define PEAK_UNIT_CHA_PARAM    6
-#define PEAK_PW_FREQ_CHB_PARAM 7
-#define PEAK_PW_CHB_PARAM      8
-#define PEAK_UNIT_CHB_PARAM    9
-#define JPG_FILE_IDX_PARAM     10
-#define EN_AVG_AT_DEC   	   11
-#define EN_CAL_1	     	   12
-#define EN_CAL_2         	   13
+#define PARAMS_NUM             4
+#define FREQ_RANGE_PARAM       0
+#define FREQ_UNIT_PARAM        1
+#define EN_CAL_1               2
+#define EN_CAL_2               3
 
 /* Output signals */
 #define SPECTR_OUT_SIG_LEN 2048

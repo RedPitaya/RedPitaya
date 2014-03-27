@@ -26,10 +26,6 @@
 
 /* Describe app. parameters with some info/limitations */
 static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
-    { /* xmin - currently ignored */ 
-        "xmin", -1000000, 0, 1, -10000000, +10000000 },
-    { /* xmax - currently ignored   */ 
-        "xmax", +1000000, 0, 1, -10000000, +10000000 },
     { /* freq_range::
        *    0 - 62.5 [MHz]
        *    1 - 7.8 [MHz]
@@ -43,24 +39,6 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    1 - [kHz]
        *    2 - [MHz]   */
         "freq_unit",  0, 0, 1,         0,         2 },
-    { /* peak1_freq */
-        "peak1_freq", 0, 0, 1,         0,         +1e6 },
-    { /* peak1_power    */
-        "peak1_power", 0, 0, 1, -10000000, +10000000 },
-    { /* peak1_unit - same enumeration as freq_unit */
-        "peak1_unit", 0, 0, 1,       0,       2 },
-    { /* peak2_freq */
-        "peak2_freq", 0, 0, 1,         0,         1e6 },
-    { /* time_range */
-        "peak2_power", 0, 0, 1,         -1e7, 1e7 },
-    { /* peak2_unit - same enumeration as freq_unit */
-        "peak2_unit", 0, 0, 1,         0,         2 },
-    { /* JPG Waterfall files index */
-        "w_idx", 0, 0, 1, 0, 1000 },
-	{ /* en_avg_at_dec:
-		   *    0 - disable
-		   *    1 - enable */
-		"en_avg_at_dec", 1, 0, 1,      0,         1 },
 	{ /* en_cal1: Trigger Channel 1 calibration
 		   *    0 - disable
 		   *    1 - enable */
@@ -168,8 +146,6 @@ int rp_set_params(rp_app_params_t *p, int len)
         params_init = 1;
 
         rp_main_params[FREQ_UNIT_PARAM].value = 
-            rp_main_params[PEAK_UNIT_CHA_PARAM].value =
-            rp_main_params[PEAK_UNIT_CHB_PARAM].value =
             spectr_fpga_cnv_freq_range_to_unit(rp_main_params[FREQ_RANGE_PARAM].value);
 
         rp_spectr_worker_update_params((rp_app_params_t *)&rp_main_params[0],
@@ -213,27 +189,18 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 {
     int ret_val;
 
-    rp_spectr_worker_res_t result;
-
     if(*s == NULL)
         return -1;
 
     *sig_num = SPECTR_OUT_SIG_NUM;
     *sig_len = SPECTR_OUT_SIG_LEN;
 
-    ret_val = rp_spectr_get_signals(s, &result);
+    ret_val = rp_spectr_get_signals(s);
 
     /* Old signal */
     if(ret_val < 0) {
         return -1;
     }
-
-    rp_main_params[JPG_FILE_IDX_PARAM].value     = (float)result.jpg_idx;
-    rp_main_params[PEAK_PW_CHA_PARAM].value      = (float)result.peak_pw_cha;
-    rp_main_params[PEAK_PW_FREQ_CHA_PARAM].value = (float)result.peak_pw_freq_cha;
-    rp_main_params[PEAK_PW_CHB_PARAM].value      = (float)result.peak_pw_chb;
-    rp_main_params[PEAK_PW_FREQ_CHB_PARAM].value = (float)result.peak_pw_freq_chb;
-
 
     return 0;
 }

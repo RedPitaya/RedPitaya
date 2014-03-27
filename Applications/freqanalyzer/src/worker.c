@@ -100,7 +100,6 @@ int                   rp_spectr_params_fpga_update;
 
 pthread_mutex_t        rp_spectr_sig_mutex = PTHREAD_MUTEX_INITIALIZER;
 float                **rp_spectr_signals = NULL;
-rp_spectr_worker_res_t rp_spectr_result;
 int                    rp_spectr_signals_dirty = 0;
 
 int rp_spectr_worker_init(void)
@@ -267,7 +266,7 @@ int rp_spectr_clean_signals(void)
 }
 
 
-int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result)
+int rp_spectr_get_signals(float ***signals)
 {
     float **s = *signals;
     pthread_mutex_lock(&rp_spectr_sig_mutex);
@@ -282,30 +281,20 @@ int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result)
 
     rp_spectr_signals_dirty = 0;
 
-    result->jpg_idx          = rp_spectr_result.jpg_idx;
-    result->peak_pw_cha      = rp_spectr_result.peak_pw_cha;
-    result->peak_pw_freq_cha = rp_spectr_result.peak_pw_freq_cha;
-    result->peak_pw_chb      = rp_spectr_result.peak_pw_chb;
-    result->peak_pw_freq_chb = rp_spectr_result.peak_pw_freq_chb;
-
     pthread_mutex_unlock(&rp_spectr_sig_mutex);
+
     return 0;
 }
 
-int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result)
+int rp_spectr_set_signals(float **source)
 {
     pthread_mutex_lock(&rp_spectr_sig_mutex);
+
     memcpy(&rp_spectr_signals[0][0], &source[0][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
     memcpy(&rp_spectr_signals[1][0], &source[1][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
     memcpy(&rp_spectr_signals[2][0], &source[2][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
 
     rp_spectr_signals_dirty = 1;
-
-    rp_spectr_result.jpg_idx          = result.jpg_idx;
-    rp_spectr_result.peak_pw_cha      = result.peak_pw_cha;
-    rp_spectr_result.peak_pw_freq_cha = result.peak_pw_freq_cha;
-    rp_spectr_result.peak_pw_chb      = result.peak_pw_chb;
-    rp_spectr_result.peak_pw_freq_chb = result.peak_pw_freq_chb;
 
     pthread_mutex_unlock(&rp_spectr_sig_mutex);
 
@@ -318,8 +307,6 @@ void *rp_spectr_worker_thread(void *args)
     rp_app_params_t          curr_params[PARAMS_NUM];
     int                      fpga_update = 1;
     int                      params_dirty = 1;
-
-    rp_spectr_worker_res_t   tmp_result;
 
     // TODO: Name these
     int jj_state = 0;
@@ -359,8 +346,7 @@ void *rp_spectr_worker_thread(void *args)
             jj_state = 0;
 
             if(spectr_fpga_update_params(0, 0, 0, 0, 0, 
-                    (int)curr_params[FREQ_RANGE_PARAM].value,
-                    curr_params[EN_AVG_AT_DEC].value) < 0) {
+                    (int)curr_params[FREQ_RANGE_PARAM].value, 0) < 0) {
                 rp_spectr_worker_change_state(rp_spectr_auto_state);
             }
 
@@ -377,7 +363,7 @@ void *rp_spectr_worker_thread(void *args)
         if (synth_ready == 0) {
             // Before preparing buffer visualize some constant signal
             rp_resp_init_sigs(&rp_tmp_signals[0], (float **)&rp_tmp_signals[1], (float **)&rp_tmp_signals[2]);
-            rp_spectr_set_signals(rp_tmp_signals, tmp_result);
+            rp_spectr_set_signals(rp_tmp_signals);
 
             for (iix2 = 0; iix2 < JJ; iix2++) {
                 synthesize_fra_sig(dacamp,  iix2*II*kstp, kstp, II, ch1_data, iix2*NN, &tmpdouble, &awg_par);
@@ -499,18 +485,12 @@ void *rp_spectr_worker_thread(void *args)
 
 
             // Calculate frequency response in dB and implement calibration
-            rp_resp_cnv_to_dB(&rp_tmp_signals[1][0], &rp_tmp_signals[2][0],
-                    &rp_cha_resp[0], &rp_chb_resp[0],
+            rp_resp_cnv_to_dB(&rp_cha_resp[0], &rp_chb_resp[0],
                     &rp_cha_resp_cal[0], &rp_chb_resp_cal[0],
                     (float **)&rp_tmp_signals[1],
-                    (float **)&rp_tmp_signals[2],
-                    &tmp_result.peak_pw_cha,
-                    &tmp_result.peak_pw_freq_cha,
-                    &tmp_result.peak_pw_chb,
-                    &tmp_result.peak_pw_freq_chb,
-                    curr_params[FREQ_RANGE_PARAM].value, II*JJ);
+                    (float **)&rp_tmp_signals[2], II*JJ);
 
-            rp_spectr_set_signals(rp_tmp_signals, tmp_result);
+            rp_spectr_set_signals(rp_tmp_signals);
 
             usleep(10000);
 
@@ -529,7 +509,7 @@ void synthesize_fra_sig(int ampl,  int kstart, int kstep, int II,
     double ddata[NN];
     double maxabs = 0;
 
-    //Varios locally used constants - HW specific parameters
+    // Various locally used constants - HW specific parameters
     const int dcoffs = -155;
 
     awg->offsgain = (dcoffs << 16) + 0x1fff;
