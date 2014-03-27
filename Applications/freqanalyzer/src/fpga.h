@@ -236,10 +236,6 @@ int spectr_fpga_cnv_v_to_cnt(float voltage);
 /* Converts ADC ounts to [V] */
 float spectr_fpga_cnv_cnt_to_v(int cnts);
 
-/* debugging - will be removed */
-extern spectr_fpga_reg_mem_t *g_spectr_fpga_reg_mem;
-extern                int  g_spectr_fpga_mem_fd;
-
 int __spectr_fpga_cleanup_mem(void);
 
 #endif /* __FPGA_H*/

@@ -28,12 +28,7 @@
 spectr_fpga_reg_mem_t *g_spectr_fpga_reg_mem = NULL;
 uint32_t              *g_spectr_fpga_cha_mem = NULL;
 uint32_t              *g_spectr_fpga_chb_mem = NULL;
-
-uint32_t              *g_sgen_fpga_regmem = NULL;
-
-
-/* The memory file descriptor used to mmap() the FPGA space */
-int g_spectr_fpga_mem_fd = -1;
+uint32_t              *g_sgen_fpga_regmem    = NULL;
 
 /* constants */
 /* ADC format = s.13 */
@@ -53,6 +48,7 @@ double __rp_rand()
     return ((double)rand() / (double)RAND_MAX);
 }
 
+
 int __spectr_fpga_cleanup_mem(void)
 {
     if(g_spectr_fpga_reg_mem) {
@@ -67,10 +63,6 @@ int __spectr_fpga_cleanup_mem(void)
             g_spectr_fpga_chb_mem = NULL;
         if(g_sgen_fpga_regmem)
         	g_sgen_fpga_regmem = NULL;
-    }
-    if(g_spectr_fpga_mem_fd >= 0) {
-        close(g_spectr_fpga_mem_fd);
-        g_spectr_fpga_mem_fd = -1;
     }
 
     return 0;
@@ -89,7 +81,7 @@ static int get_hw_rev(hw_rev_t * hw_rev)
     long page_addr, page_size = sysconf(_SC_PAGESIZE);
     const long c_hk_fpga_base_addr = 0x40000000;
     const long c_hk_fpga_base_size = 0x20;
-    int fd = -1;
+    int fd;
 
     fd = open("/dev/mem", O_RDONLY | O_SYNC);
     if(fd < 0) {
@@ -125,15 +117,15 @@ static int get_hw_rev(hw_rev_t * hw_rev)
 static int update_hw_spec_par(void)
 {
     hw_rev_t rev;
-    if(get_hw_rev(&rev)<0){
+    if(get_hw_rev(&rev) < 0){
         return -1;
     }
     switch(rev){
     case eHwRevC:
-        g_spectr_fpga_adc_max_v=c_spectr_fpga_adc_max_v_revC;
+        g_spectr_fpga_adc_max_v = c_spectr_fpga_adc_max_v_revC;
         break;
     case eHwRevD:
-        g_spectr_fpga_adc_max_v=c_spectr_fpga_adc_max_v_revD;
+        g_spectr_fpga_adc_max_v = c_spectr_fpga_adc_max_v_revD;
         break;
     default:
         return -1;
@@ -146,9 +138,10 @@ int spectr_fpga_init(void)
 {
     void *page_ptr;
     long page_addr, page_off, page_size = sysconf(_SC_PAGESIZE);
+    int fd;
 
-    /* update hw specific parmateres */
-    if(update_hw_spec_par()<0){
+    /* update hw specific parameters */
+    if(update_hw_spec_par() < 0){
     	return -1;
     }
 
@@ -156,8 +149,8 @@ int spectr_fpga_init(void)
     if(__spectr_fpga_cleanup_mem() < 0)
         return -1;
 
-    g_spectr_fpga_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if(g_spectr_fpga_mem_fd < 0) {
+    fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if(fd < 0) {
         fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
         return -1;
     }
@@ -166,10 +159,11 @@ int spectr_fpga_init(void)
     page_off  = SPECTR_FPGA_BASE_ADDR - page_addr;
 
     page_ptr = mmap(NULL, SPECTR_FPGA_BASE_SIZE, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, g_spectr_fpga_mem_fd, page_addr);
+                          MAP_SHARED, fd, page_addr);
     if((void *)page_ptr == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
         __spectr_fpga_cleanup_mem();
+        close (fd);
         return -1;
     }
     g_spectr_fpga_reg_mem = page_ptr + page_off;
@@ -179,6 +173,8 @@ int spectr_fpga_init(void)
         (SPECTR_FPGA_CHB_OFFSET / sizeof(uint32_t));
     g_sgen_fpga_regmem = (uint32_t *)g_spectr_fpga_reg_mem +
         (SPECTR_FPGA_SG_OFFSET / sizeof(uint32_t));
+
+    close (fd);
 
     return 0;
 }
@@ -191,8 +187,8 @@ int spectr_fpga_exit(void)
 }
 
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
-                           float trig_delay, float trig_level, int freq_range,
-                           int enable_avg_at_dec)
+                              float trig_delay, float trig_level, int freq_range,
+                              int enable_avg_at_dec)
 {
     /* TODO: Locking of memory map */
     int fpga_trig_source = spectr_fpga_cnv_trig_source(trig_imm, trig_source, 
@@ -321,6 +317,7 @@ int spectr_fpga_get_wr_ptr(int *wr_ptr_curr, int *wr_ptr_trig)
 
     return 0;
 }
+
 int spectr_fpga_cnv_trig_source(int trig_imm, int trig_source, int trig_edge)
 {
     int fpga_trig_source = 0;
