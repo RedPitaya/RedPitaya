@@ -1,0 +1,796 @@
+<!--
+ * Red Pitaya Frequency Response Analyzer client.
+ *
+ * Author: Dakus <info@eskala.eu>
+ *         
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in Javascript & HTML.
+ * Please visit http://en.wikipedia.org/wiki/JavaScript
+ *              http://en.wikipedia.org/wiki/HTML
+ * for more details on the languages used herein.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequency Response Analyzer</title>
+  <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="../assets/style.css?4" rel="stylesheet" type="text/css">
+  <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+  <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+  <script src="../assets/flot/jquery.flot.js"></script>
+  <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+  <script src="../assets/flot/jquery.flot.navigate.min.js"></script>
+  <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+  <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+  <script type="text/javascript">
+
+  // Settings which can be modified
+
+  var app_id = 'freqanalyzer';
+  var root_url = '';
+  //var root_url = 'http://10.0.1.129';  
+  //var root_url = 'http://192.168.1.100';  // Default RedPitaya IP
+  var start_app_url = root_url + '/bazaar?start=' + app_id;
+  var stop_app_url = root_url + '/bazaar?stop=';
+  var get_url = root_url + '/data';
+  var post_url = root_url + '/data';
+  var waterf_img_path = root_url + '/tmp/';
+  
+  var update_interval = 50;          // Update interval for PC, milliseconds
+  var update_interval_mobdev = 500;  // Update interval for mobile devices, milliseconds 
+  var request_timeout = 15000;       // Milliseconds
+  var points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
+  var xdecimal_places = 2;           // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
+    
+  var xmin = 0;
+  var xmax = 60;  
+  var ymax = 20.0;
+  var ymin = -100.0;
+
+  var freq_range_max = [62.5, 7.8, 976, 61, 7.6, 953];
+
+  var plot_options = {
+    colors: ['#3276B1', '#D2322D'],    // channel1, channel2
+    lines: { lineWidth: 1 },
+    selection: { mode: 'xy' },
+    //zoom: { interactive: true },
+    //pan: { interactive: true },
+    xaxis: { min: xmin, max: xmax },
+    yaxis: { min: ymin, max: ymax },
+    grid: { borderWidth: 0 },
+    legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
+    touch: { autoWidth: false, autoHeight: false }
+  };
+  
+  var update_timer = null;
+  var zoompan_timer = null;
+  var downloading = false;
+  var sending = false;
+  var send_que = false;
+  var trig_dragging = false;
+  var touch_last_y = 0;
+  var user_editing = false;
+  
+  var cal_butt1=0;
+  var cal_butt2=0;
+  
+  var autorun = 1;
+  var datasets = [];
+  var plot = null;
+  var params = {
+    original: null,
+    local: null
+  };
+  
+  // default parameters - loaded after application is started 
+  var def_params = {
+	  xmin:         parseFloat(-16384),
+	  xmax:         parseFloat(16384),
+	  trig_mode:    parseInt(0),
+	  trig_source:  parseInt(0),
+	  trig_edge:    parseInt(0),
+	  trig_delay:   parseFloat(0),
+	  trig_level:   parseFloat(0),
+	  single_btn:   parseInt(0), 
+	  time_range:   parseInt(0),
+	  time_units:   parseInt(0),
+	  en_avg_at_dec: parseInt(1)
+  };
+    
+  $(function() {
+    
+    if(window.ontouchstart === undefined) {
+      $('#selzoompan').show();
+    }
+    else {
+      update_interval = update_interval_mobdev;
+    }
+  
+    $('input,select', '#trigger_panel').on('focus', function() {
+      user_editing = true;
+    });
+    
+    $('#freq_range').on('change', function() {
+      params.local.freq_range = parseInt($(this).val());
+      //sendParams();
+      updateZoom();
+      $('#btn_freezech1').data('checked', false).find('.glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+      $('#btn_freezech2').data('checked', false).find('.glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+      $(this).blur();
+      user_editing = false;
+    });
+        
+    $('#btn_selection, #btn_zoompan').on('blur', function() {
+      $(this).removeClass('active');
+    });
+    
+    // Start app, post default params and load first graph data
+    $.get(start_app_url)
+      .done(function() {
+        $.post(post_url, JSON.stringify({ datasets: { params: def_params } } ), function() {
+          updateGraphData();      
+        })
+      })
+      .fail(function() {
+        alert('Could not start the application.\nPlease try to reload.');
+      });
+  });   
+  
+  function updateGraphData() {
+    if(downloading) {
+      return;
+    }
+    if(update_timer) {
+      clearTimeout(update_timer);
+      update_timer = null;
+    }
+    downloading = true;
+    
+    // Send params if there are any unsent changes
+    sendParams();
+    
+    // Don't update data if both channels are frozen and there are already some sets of data
+    if($('#btn_freezech1').data('checked') && $('#btn_freezech2').data('checked') && datasets.length) {
+      downloading = false;
+      update_timer = setTimeout(function() {
+        updateGraphData();
+      }, update_interval);
+      return;
+    }
+    
+    var arun_before_ajax = autorun;
+    
+    $.ajax({
+      url: get_url,
+      timeout: request_timeout,
+      cache: false
+    })
+    .done(function(dresult) {
+      if(typeof dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+        // Apply the params state received from server if not in edit mode
+        if(! user_editing) {
+          loadParams(dresult.datasets.params);
+        }
+        // Frequency units must be always updated
+        else {
+          updateFrequencyUnits(dresult.datasets.params);
+        }
+        
+        // Keep the dataset for frozen channels
+        var frozen_dsets = [
+          ($('#btn_freezech1').data('checked') && datasets[0] !== undefined ? datasets[0] : null),
+          ($('#btn_freezech2').data('checked') && datasets[1] !== undefined ? datasets[1] : null)
+        ];
+         
+        datasets = [];
+        for(var i=0; i<dresult.datasets.g1.length; i++) {
+          // Don't update data for frozen channels
+          if(frozen_dsets[i]) {
+            datasets.push(frozen_dsets[i]);
+          }
+          else {
+            dresult.datasets.g1[i].color = i;
+            dresult.datasets.g1[i].label = 'Channel ' + (i+1);          
+            datasets.push(dresult.datasets.g1[i]);
+          }
+        }
+        
+        if(! plot) {
+          initPlot(datasets);
+        }
+        else {
+          // If autozoom is active, reset min/max to use the mix/max values of received data 
+          if($('#btn_autozoom').find('.glyphicon').hasClass('glyphicon-check')) {
+            $.extend(true, plot_options, {
+              xaxis: { min: null, max: null },
+              yaxis: { min: null, max: null }
+            });
+            plot = $.plot(
+              plot.getPlaceholder(), 
+              filterData(datasets, plot.width()),
+              plot_options
+            );
+          }
+          // If not autozoomed, use a quicker plot redrawing method for better performance 
+          else { 
+            plot.setData(filterData(datasets, plot.width()));
+            plot.setupGrid();
+            plot.draw();
+          } 
+        }
+        
+        if(autorun || dresult.status === 'AGAIN') {
+          if(autorun) {
+            $('#btn_single').prop('disabled', true);
+          }
+          update_timer = setTimeout(function() {
+            updateGraphData();
+          }, update_interval);
+        }
+        else {
+          $('#btn_single').prop('disabled', false);
+        }
+      }
+    })
+    .fail(function() {
+      if(autorun) {
+        autorun = 0;
+        $('#btn_single').prop('disabled', false);
+      }
+    })
+    .always(function() {
+      downloading = false;
+    });
+  }
+  
+  function initPlot(datasets) {
+    var plot_holder = $('#plot_holder');
+    var filtered_data = filterData(datasets, plot_holder.width());
+    
+    // Instead of default mix/max, set the mix/max values of received data
+    $.extend(true, plot_options, {
+      xaxis: { min: null, max: null },
+      yaxis: { min: null, max: null }
+    });
+  
+    // Plot first creation and drawing
+    plot = $.plot(
+      plot_holder, 
+      filtered_data,
+      plot_options
+    );
+    
+    // Selection
+    plot_holder.on('plotselected', function(event, ranges) {
+    
+      $('#btn_autozoom .glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+      
+      // Clamp the zooming to prevent eternal zoom
+      if(ranges.xaxis.to - ranges.xaxis.from < 0.00001) {
+        ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+      }
+      if(ranges.yaxis.to - ranges.yaxis.from < 0.00001) {
+        ranges.yaxis.to = ranges.yaxis.from + 0.00001;
+      }
+  
+      // Do the zooming
+      plot = $.plot(
+        plot_holder, 
+        getData(ranges.xaxis.from, ranges.xaxis.to),
+        $.extend(true, plot_options, {
+          xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+          yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to }
+        })
+      );
+      
+      params.local.xmin = parseFloat(ranges.xaxis.from.toFixed(xdecimal_places));
+      params.local.xmax = parseFloat(ranges.xaxis.to.toFixed(xdecimal_places));
+      
+      sendParams(true);
+    });
+    
+    // Zoom / Pan
+    plot_holder.on('plotzoom plotpan touchmove touchend', function(event) {
+      
+      $('#btn_autozoom .glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+      
+      if(autorun) {
+        return;
+      }
+      
+      if(zoompan_timer) {
+        clearTimeout(zoompan_timer);
+        zoompan_timer = null;
+      }
+      
+      zoompan_timer = setTimeout(function() {
+        zoompan_timer = null;
+        
+        var xaxis = plot.getAxes().xaxis;
+        params.local.xmin = parseFloat(xaxis.min.toFixed(xdecimal_places));
+        params.local.xmax = parseFloat(xaxis.max.toFixed(xdecimal_places));
+        
+        sendParams(true);
+      }, 250);
+    });
+  }
+  
+  function loadParams(orig_params) {
+    if(! $.isPlainObject(orig_params)) {
+      return;
+    }
+    params.original = $.extend({}, orig_params);
+    
+    // Same data in local and original params
+    params.local = $.extend({}, params.original);
+
+    // For spectrum analyzer autorun is always on
+    autorun = 1;
+    
+    // 0 - Hz, 1 - kHz, 2 - MHz
+    var freq_unit1 = (params.original.peak1_unit == 1 ? 'k' : (params.original.peak1_unit == 2 ? 'M' : '')) + 'Hz';
+    var freq_unit2 = (params.original.peak2_unit == 1 ? 'k' : (params.original.peak2_unit == 2 ? 'M' : '')) + 'Hz';
+
+    $('#freq_range').val(params.original.freq_range);
+    $('#peak_ch1').val(floatToLocalString(params.original.peak1_power.toFixed(3)) + ' dBm @ ' + floatToLocalString(params.original.peak1_freq.toFixed(2)) + ' ' + freq_unit1);
+    $('#peak_ch2').val(floatToLocalString(params.original.peak2_power.toFixed(3)) + ' dBm @ ' + floatToLocalString(params.original.peak2_freq.toFixed(2)) + ' ' + freq_unit2);
+    
+    // Update waterfall images
+    var img_num = params.original.w_idx;
+    if(img_num <= 999) { 
+      img_num = ('00' + img_num).slice(-3); 
+    }
+    $('#waterfall_ch1').attr('src', waterf_img_path + 'wat1_' + img_num + '.jpg');
+    $('#waterfall_ch2').attr('src', waterf_img_path + 'wat2_' + img_num + '.jpg');
+
+    updateFrequencyUnits(orig_params);
+    $('#ytitle, .waterfall_title').show();
+  }
+  
+  function updateFrequencyUnits(new_params) {
+    if(! $.isPlainObject(new_params)) {
+      return;
+    } 
+    
+    params.original.freq_unit = params.local.freq_unit = (isNaN(new_params.freq_unit) ? 0 : parseInt(new_params.freq_unit)); 
+    
+    // 0 - Hz, 1 - kHz, 2 - MHz
+    var frequ_lbl = (params.original.freq_unit == 1 ? 'k' : (params.original.freq_unit == 2 ? 'M' : '')) + 'Hz';
+    $('#xtitle').text('Frequency [ ' + frequ_lbl + ' ]');
+  }
+  
+  function isParamChanged() {
+    if(params.original) {
+      for(var key in params.original) {
+        if(params.original[key] != params.local[key]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  function sendParams(refresh_data, force_send) {
+    if(sending || (force_send !== true && !isParamChanged())) {
+      send_que = sending;
+      return;
+    }
+    sending = true;
+    
+	params.local.en_cal1 =  cal_butt1;
+    params.local.en_cal2 =  cal_butt2;
+	
+    $.ajax({
+      type: 'POST',
+      url: post_url,
+      data: JSON.stringify({ datasets: { params: params.local } }),
+      timeout: request_timeout,
+      cache: false
+    })
+    .done(function(dresult) {
+      if(typeof dresult.datasets !== undefined && typeof dresult.datasets.params !== undefined) {      
+        // OK: Load the params received as POST result
+        loadParams(dresult.datasets.params);
+        
+        if(refresh_data && !downloading) {
+          updateGraphData();
+        } 
+      }
+      else {
+        // NOK: Next time the graph will update, it will try to send changed params again
+      }
+    })
+    .always(function() {
+      sending = false;
+      user_editing = false;
+      
+      if(send_que) {
+        send_que = false;
+        setTimeout(function(refresh_data) {
+          sendParams(refresh_data);
+        }, 100);
+      }
+    });
+  }
+  
+  function getData(from, to) {
+    var rangedata = new Array();
+    for(var i=0; i<datasets.length; i++) {
+      if(! $('#btn_ch' + (i+1)).data('checked')) {
+        continue;
+      }
+      rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
+      for(var j=0; j<datasets[i].data.length; j++) {
+        if(datasets[i].data[j][0] > to) {
+          break;
+        }
+        if(datasets[i].data[j][0] >= from) {
+          rangedata[rangedata.length - 1].data.push(datasets[i].data[j]);
+        }
+      }
+    }
+    rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+    return rangedata;
+  }
+  
+  // Use only data for selected channels and do downsamling (data decimation), which is required for 
+  // better performance. On the canvas cannot be shown too much graph points than the canvas width in px. 
+  function filterData(dsets, points) {
+    var filtered = [];
+    var num_of_channels = 2;
+
+    for(var l=0; l<num_of_channels; l++) {
+      if(! $('#btn_ch' + (l+1)).data('checked')) {
+        continue;
+      }
+
+      i = Math.min(l, dsets.length - 1);
+
+      filtered.push({ color: dsets[i].color, label: dsets[i].label, data: [] });
+      
+      if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
+        var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
+        var k = 0;
+        for(var j=0; j<dsets[i].data.length; j++) {
+          if(k > 0 && ++k < step) {
+            continue;
+          }
+          filtered[filtered.length - 1].data.push(dsets[i].data[j]);
+          k = 1;
+        }
+      }
+      else {
+        filtered[filtered.length - 1].data = dsets[i].data.slice(0);
+      }
+    }
+    
+    return filtered;
+  }
+  
+/*
+  function runStop() {
+    if(autorun) {
+      $('#btn_single').prop('disabled', true);
+      updateGraphData();
+    }
+    else {
+      $('#btn_single').prop('disabled', false);
+      if(update_timer) {
+        clearTimeout(update_timer);
+        update_timer = null;
+      }
+    }
+  }
+*/
+  
+  function redrawPlot() {
+    if(! downloading) {
+      if(! plot) {
+        updateGraphData();
+      }
+      else {
+        plot = $.plot(
+          plot.getPlaceholder(), 
+          filterData(datasets, plot.width()),
+          plot_options
+        );        
+      }
+    }
+  }
+  
+  function setVisibleChannels(btn) {
+    var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
+    var btn = $(btn);
+    var checked = !btn.data('checked');
+    
+    btn.data('checked', checked).find('.glyphicon').toggleClass('glyphicon-unchecked glyphicon-check');
+    
+    // At least one button must be checked, so that at least one graph will be visible.
+    if(! checked) {
+      other_btn.data('checked', true).find('.glyphicon').removeClass('glyphicon-unchecked').addClass('glyphicon-check');
+    }
+    
+    redrawPlot();
+  }
+  
+  function freezeChannel(btn) {
+    var btn = $(btn);
+    var checked = !btn.data('checked');
+    
+    btn.data('checked', checked).find('.glyphicon').toggleClass('glyphicon-unchecked glyphicon-check');
+  }
+  
+  function setAutozoom() {
+    if(! plot) {
+      return;
+    }
+    
+    $('#btn_autozoom').find('.glyphicon').toggleClass('glyphicon-unchecked glyphicon-check');
+    
+    // Auto zoom switched off. Set the graph to fixed min/max.
+    if(! $('#btn_autozoom').find('.glyphicon').hasClass('glyphicon-check')) {
+      var axes = plot.getAxes();
+      
+      plot = $.plot(
+        plot.getPlaceholder(), 
+        plot.getData(),
+        $.extend(true, plot_options, {
+          xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+          yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+        })
+      );
+    
+      if(! autorun) {
+        updateGraphData();
+      }   
+    }
+    // Auto zoom switched on. If Single mode, redraw the graph. For Auto and Normal states it will be redrawn automatically on next GET. 
+    else if(params.local.trig_mode == 2) { 
+      $.extend(true, plot_options, {
+        xaxis: { min: null, max: null },
+        yaxis: { min: null, max: null }
+      });
+      redrawPlot();
+    }
+  }
+  
+  function cal1() {
+	cal_butt1=1-cal_butt1;
+	sendParams(true, true);
+  }
+
+  function cal2() {
+   cal_butt2=1-cal_butt2;
+   sendParams(true, true);
+  }
+  
+  function resetZoom() {
+    if(! plot) {
+      return;
+    }
+    
+    $('#btn_autozoom .glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+    
+    $.extend(true, plot_options, {
+      xaxis: { min: null, max: null },
+      yaxis: { min: ymin, max: ymax }
+    });
+         
+    var curr_options = plot.getOptions();
+    curr_options.xaxes[0].min = null;
+    curr_options.xaxes[0].max = null;
+    curr_options.yaxes[0].min = ymin;
+    curr_options.yaxes[0].max = ymax;
+    
+    params.local.xmin = xmin;
+    params.local.xmax = xmax;
+    
+    sendParams(true, true);
+  }
+  
+  function updateZoom() {
+    if(! plot) {
+      return;
+    }
+
+    params.local.xmin = 0;
+    params.local.xmax = freq_range_max[params.local.freq_range];
+  
+    var axes = plot.getAxes();
+    axes.xaxis.min = params.local.xmin;
+    axes.xaxis.max = params.local.xmax;
+  
+    plot = $.plot(
+      plot.getPlaceholder(), 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  
+    //if(! autorun) {
+    // updateGraphData();
+    //}
+
+    sendParams(true, true);
+  }
+
+  function enableSelection() {
+    if(plot_options.hasOwnProperty('selection')) {
+      return;
+    }
+    $('#btn_zoompan').removeClass('btn-info active').addClass('btn-default');
+    $('#btn_selection').removeClass('btn-default active').addClass('btn-info');
+    delete plot_options.zoom;
+    delete plot_options.pan;
+    
+    // Get current Y min/max to use them to fix the current view
+    var yaxis = plot.getAxes().yaxis;
+    
+    plot = $.plot(
+      plot.getPlaceholder(), 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        selection: { mode: 'xy' },
+        yaxis: { min: yaxis.min, max: yaxis.max }
+      })
+    );
+
+    $('#btn_autozoom .glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+  }
+  
+  function enableZoomPan() {
+    if(plot_options.hasOwnProperty('zoom') && plot_options.hasOwnProperty('pan')) {
+      return;
+    }
+    $('#btn_selection').removeClass('btn-info').addClass('btn-default');
+    $('#btn_zoompan').removeClass('btn-default').addClass('btn-info');
+    delete plot_options.selection;
+    
+    // Get current Y min/max to use them to fix the current view
+    var yaxis = plot.getAxes().yaxis;
+    
+    plot = $.plot(
+      plot.getPlaceholder(), 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        zoom: { 
+          interactive: true, 
+          trigger: 'dblclick'
+        },
+        pan: { interactive: true },
+        yaxis: { min: yaxis.min, max: yaxis.max }
+      })
+    );
+
+    $('#btn_autozoom .glyphicon').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
+  }
+  
+  function getLocalDecimalSeparator() {
+    var n = 1.1;
+    return n.toLocaleString().substring(1,2);
+  }
+  
+  function parseLocalFloat(num) {
+    return +(num.replace(getLocalDecimalSeparator(), '.'));
+  }
+  
+  function floatToLocalString(num) {
+    return num.toString().replace('.', getLocalDecimalSeparator());
+  }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="header clearfix">
+      <a class="pull-right" href="/index.html"><img src="../assets/images/logo.png" class="logo"></a>
+      <h2 class="page-title">Frequency Response Analyzer</h2>
+    </div>
+    <div class="row col-xs-12">
+      <div id="btn_toolbar">
+        <button id="btn_autozoom" class="btn btn-info btn-sm" data-autozoom="false" onclick="setAutozoom()">
+          <span class="glyphicon glyphicon-check"></span> Auto zoom
+        </button>
+        <button class="btn btn-info btn-sm" onclick="resetZoom()">
+          <span class="glyphicon glyphicon-zoom-out"></span> Reset zoom
+        </button>  
+        <div id="selzoompan" class="btn-group" data-toggle="buttons" style="display: none">
+          <button id="btn_selection" class="btn btn-info btn-sm" onclick="enableSelection()">Select zoom</button>
+          <button id="btn_zoompan" class="btn btn-default btn-sm" onclick="enableZoomPan()">Zoom / Pan</button>
+        </div>
+        <button id="btn_ch1" class="btn btn-info btn-sm" data-checked="true" onclick="setVisibleChannels(this)">
+          <span class="glyphicon glyphicon-check"></span> Channel 1
+        </button>
+        <button id="btn_ch2" class="btn btn-info btn-sm" data-checked="true" onclick="setVisibleChannels(this)">
+          <span class="glyphicon glyphicon-check"></span> Channel 2
+        </button>
+        <button id="btn_freezech1" class="btn btn-info btn-sm" data-checked="false" onclick="freezeChannel(this)">
+          <span class="glyphicon glyphicon-unchecked"></span> Freeze Ch1
+        </button>
+        <button id="btn_freezech2" class="btn btn-info btn-sm" data-checked="false" onclick="freezeChannel(this)">
+          <span class="glyphicon glyphicon-unchecked"></span> Freeze Ch2
+        </button>
+      </div>
+    </div>   
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-8 clearfix">
+        <div class="allgraphs-holder well well-small">
+          <div class="graph-holder clearfix">
+            <div id="ytitle">Gain [ dBm ]</div>
+            <div id="plot_holder"></div>
+            <div id="xtitle"></div>
+          </div>
+          <!--<div class="waterfall-holder clearfix">
+            <div class="waterfall_title">Channel 1</div>
+            <img id="waterfall_ch1" src="../assets/images/wat_nodata.jpg">
+          </div>
+          <div class="waterfall-holder clearfix">
+            <div class="waterfall_title">Channel 2</div>
+            <img id="waterfall_ch2" src="../assets/images/wat_nodata.jpg">
+          </div>-->
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-4">
+        <div id="trigger_panel" class="panel panel-default">
+          <div class="panel-heading">
+            <strong>Controls</strong>
+          </div>
+          <div class="panel-body">
+            <!--<form class="form-horizontal" role="form">
+              <div class="form-group">
+                <label for="freq_range" class="col-xs-4 control-label" style="white-space: nowrap;">Freq. range:</label>
+                <div class="col-xs-8">
+                  <select id="freq_range" class="form-control input-sm">
+                    <option value="0">62.5 MHz</option>
+                    <option value="1">7.8 MHz</option>
+                    <option value="2">976 KHz</option>
+                    <option value="3">61 KHz</option>
+                    <option value="4">7.6 KHz</option>
+                    <option value="5">953 Hz</option>
+                  </select>
+                </div>
+              </div>
+            </form>-->
+			<button class="btn btn-info btn-sm" onclick="cal1()">
+				<span class="glyphicon glyphicon-cog"></span> Cal. Ch1
+			</button> 
+			<button class="btn btn-info btn-sm" onclick="cal2()">
+				<span class="glyphicon glyphicon-cog"></span> Cal. Ch2
+			</button>
+            <!--<form class="form-horizontal" role="form" onsubmit="return false;">
+            <fieldset disabled>
+              <div class="form-group">
+                <label for="peak_ch1" class="col-xs-4 control-label">Peak Ch1:</label>
+                <div class="col-xs-8 input-group ">
+                  <input type="text" id="peak_ch1" value="0" class="form-control input-sm"/>
+                </div>
+              </div> 
+            </fieldset>
+            </form>
+            <form class="form-horizontal" role="form" onsubmit="return false;">
+            <fieldset disabled>
+              <div class="form-group">
+                <label for="peak_ch2" class="col-xs-4 control-label">Peak Ch2:</label>
+                <div class="col-xs-8 input-group">
+                  <input type="text" id="peak_ch2" value="0" class="form-control input-sm"/>
+                </div>
+              </div> 
+            </fieldset>
+            </form>-->      
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p class="pull-right">&copy; 2014 - Red Pitaya</p>
+    </div>
+  </div>  
+
+  <script src="../assets/redpitaya.custom.js"></script>
+</body>
+</html>
