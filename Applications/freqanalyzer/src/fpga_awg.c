@@ -67,9 +67,6 @@ uint32_t  *g_awg_cha_mem = NULL;
   */
 uint32_t  *g_awg_chb_mem = NULL;
 
-/** The memory file descriptor used to mmap() the FPGA space */
-int g_awg_fd = -1;
-
 /* Constants */
 /** DAC frequency (125 Mspmpls (non-decimated)) */
 const double c_awg_smpl_freq = 125e6;
@@ -98,10 +95,7 @@ int __awg_cleanup_mem(void)
         if(g_awg_chb_mem)
             g_awg_chb_mem = NULL;
     }
-    if(g_awg_fd >= 0) {
-        close(g_awg_fd);
-        g_awg_fd = -1;
-    }
+
     return 0;
 }
 
@@ -121,14 +115,15 @@ int fpga_awg_init(void)
     /* Page variables used to calculate correct mapping addresses */
     void *page_ptr;
     long page_addr, page_off, page_size = sysconf(_SC_PAGESIZE);
+    int fd;
 
     /* If module was already initialized, clean all internals */
     if(__awg_cleanup_mem() < 0)
         return -1;
 
     /* Open /dev/mem to access directly system memory */
-    g_awg_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if(g_awg_fd < 0) {
+    fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if(fd < 0) {
         fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
         return -1;
     }
@@ -141,10 +136,11 @@ int fpga_awg_init(void)
 
     /* Map FPGA memory space to page_ptr. */
     page_ptr = mmap(NULL, AWG_BASE_SIZE, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, g_awg_fd, page_addr);
+                          MAP_SHARED, fd, page_addr);
     if((void *)page_ptr == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
          __awg_cleanup_mem();
+         close (fd);
         return -1;
     }
 
@@ -154,6 +150,8 @@ int fpga_awg_init(void)
         (AWG_CHA_OFFSET / sizeof(uint32_t));
     g_awg_chb_mem = (uint32_t *)g_awg_reg + 
         (AWG_CHB_OFFSET / sizeof(uint32_t));
+
+    close (fd);
 
     return 0;
 }

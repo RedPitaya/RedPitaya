@@ -370,8 +370,8 @@ void *rp_spectr_worker_thread(void *args)
             }
         }
 
-        cal_butt1_old=round(curr_params[EN_CAL_1].value);
-        cal_butt2_old=round(curr_params[EN_CAL_2].value);
+        cal_butt1_old = round(curr_params[EN_CAL_1].value);
+        cal_butt2_old = round(curr_params[EN_CAL_2].value);
 
         // TODO: Implement signal generator part as a separate module
 
@@ -435,14 +435,14 @@ void *rp_spectr_worker_thread(void *args)
             jj_state++;
         } else {
             // Response characterization completed
-            jj_state=0;
+            jj_state = 0;
 
             /* Perform calibration at startup or parameter update.
              * TODO: add a GUI Calibration button for individual channels
              */
             if (cal_ready1 == 0)
             {																		// Provide calibration vector initialization since calibration
-                cal_ready1=1;													    // executed on demand
+                cal_ready1 = 1;													    // executed on demand
                 // The calibration consists in coping the current response data to reference cal. vectors
                 for (iix = 0; iix < SPECTR_OUT_SIG_LEN; iix++) {
                     rp_cha_resp_cal[iix] = rp_cha_resp[iix];
@@ -455,7 +455,7 @@ void *rp_spectr_worker_thread(void *args)
             {																		// Provide calibration vector initialization since calibration
                 cal_ready2 = 1;													    // executed on demand
                 // The calibration consists in coping the current response data to reverence cal. vectors
-                for (iix=0;iix<SPECTR_OUT_SIG_LEN;iix++) {
+                for (iix = 0; iix < SPECTR_OUT_SIG_LEN; iix++) {
                     rp_chb_resp_cal[iix] = rp_chb_resp[iix];
                 }
             }
@@ -498,8 +498,7 @@ void synthesize_fra_sig(int ampl,  int kstart, int kstep, int II,
     awg->step = round(65536 * 1);
     awg->wrap = round(65536 * (NN-1));
 
-    //Fill data[] with appropriate buffer samples
-
+    // Fill data[] with appropriate buffer samples
     for (jx = 0; jx < II; jx++) {
         for (ix = 0; ix < NN; ix++) {
             if (jx == 0) {
