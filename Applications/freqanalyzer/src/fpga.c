@@ -299,7 +299,7 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
         cha_o[out_idx] = g_spectr_fpga_cha_mem[in_idx];
         chb_o[out_idx] = g_spectr_fpga_chb_mem[in_idx];
 
-        // convert to signed
+        /* convert to signed */
         if(cha_o[out_idx] > (double)(1<<13))
             cha_o[out_idx] -= (double)(1<<14);
         if(chb_o[out_idx] > (double)(1<<13))
