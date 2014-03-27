@@ -37,7 +37,6 @@
   var stop_app_url = root_url + '/bazaar?stop=';
   var get_url = root_url + '/data';
   var post_url = root_url + '/data';
-  var waterf_img_path = root_url + '/tmp/';
   
   var update_interval = 50;          // Update interval for PC, milliseconds
   var update_interval_mobdev = 500;  // Update interval for mobile devices, milliseconds 
@@ -87,17 +86,10 @@
   
   // default parameters - loaded after application is started 
   var def_params = {
-	  xmin:         parseFloat(-16384),
-	  xmax:         parseFloat(16384),
-	  trig_mode:    parseInt(0),
-	  trig_source:  parseInt(0),
-	  trig_edge:    parseInt(0),
-	  trig_delay:   parseFloat(0),
-	  trig_level:   parseFloat(0),
-	  single_btn:   parseInt(0), 
-	  time_range:   parseInt(0),
-	  time_units:   parseInt(0),
-	  en_avg_at_dec: parseInt(1)
+	  freq_range:   parseInt(0),
+	  freq_unit:    parseInt(2),
+	  en_cal1:      parseInt(0),
+	  en_cal2:      parseInt(0)
   };
     
   $(function() {
@@ -330,22 +322,8 @@
     // For spectrum analyzer autorun is always on
     autorun = 1;
     
-    // 0 - Hz, 1 - kHz, 2 - MHz
-    var freq_unit1 = (params.original.peak1_unit == 1 ? 'k' : (params.original.peak1_unit == 2 ? 'M' : '')) + 'Hz';
-    var freq_unit2 = (params.original.peak2_unit == 1 ? 'k' : (params.original.peak2_unit == 2 ? 'M' : '')) + 'Hz';
-
     $('#freq_range').val(params.original.freq_range);
-    $('#peak_ch1').val(floatToLocalString(params.original.peak1_power.toFixed(3)) + ' dBm @ ' + floatToLocalString(params.original.peak1_freq.toFixed(2)) + ' ' + freq_unit1);
-    $('#peak_ch2').val(floatToLocalString(params.original.peak2_power.toFixed(3)) + ' dBm @ ' + floatToLocalString(params.original.peak2_freq.toFixed(2)) + ' ' + freq_unit2);
     
-    // Update waterfall images
-    var img_num = params.original.w_idx;
-    if(img_num <= 999) { 
-      img_num = ('00' + img_num).slice(-3); 
-    }
-    $('#waterfall_ch1').attr('src', waterf_img_path + 'wat1_' + img_num + '.jpg');
-    $('#waterfall_ch2').attr('src', waterf_img_path + 'wat2_' + img_num + '.jpg');
-
     updateFrequencyUnits(orig_params);
     $('#ytitle, .waterfall_title').show();
   }
@@ -720,18 +698,10 @@
       <div class="col-xs-12 col-sm-12 col-md-8 clearfix">
         <div class="allgraphs-holder well well-small">
           <div class="graph-holder clearfix">
-            <div id="ytitle">Gain [ dBm ]</div>
+            <div id="ytitle">Gain [ dB ]</div>
             <div id="plot_holder"></div>
             <div id="xtitle"></div>
           </div>
-          <!--<div class="waterfall-holder clearfix">
-            <div class="waterfall_title">Channel 1</div>
-            <img id="waterfall_ch1" src="../assets/images/wat_nodata.jpg">
-          </div>
-          <div class="waterfall-holder clearfix">
-            <div class="waterfall_title">Channel 2</div>
-            <img id="waterfall_ch2" src="../assets/images/wat_nodata.jpg">
-          </div>-->
         </div>
       </div>
       <div class="col-xs-12 col-sm-12 col-md-4">
@@ -755,32 +725,12 @@
                 </div>
               </div>
             </form>-->
-			<button class="btn btn-info btn-sm" onclick="cal1()">
-				<span class="glyphicon glyphicon-cog"></span> Cal. Ch1
-			</button> 
-			<button class="btn btn-info btn-sm" onclick="cal2()">
-				<span class="glyphicon glyphicon-cog"></span> Cal. Ch2
-			</button>
-            <!--<form class="form-horizontal" role="form" onsubmit="return false;">
-            <fieldset disabled>
-              <div class="form-group">
-                <label for="peak_ch1" class="col-xs-4 control-label">Peak Ch1:</label>
-                <div class="col-xs-8 input-group ">
-                  <input type="text" id="peak_ch1" value="0" class="form-control input-sm"/>
-                </div>
-              </div> 
-            </fieldset>
-            </form>
-            <form class="form-horizontal" role="form" onsubmit="return false;">
-            <fieldset disabled>
-              <div class="form-group">
-                <label for="peak_ch2" class="col-xs-4 control-label">Peak Ch2:</label>
-                <div class="col-xs-8 input-group">
-                  <input type="text" id="peak_ch2" value="0" class="form-control input-sm"/>
-                </div>
-              </div> 
-            </fieldset>
-            </form>-->      
+            <button class="btn btn-info btn-sm" onclick="cal1()">
+              <span class="glyphicon glyphicon-cog"></span> Cal. Ch1
+            </button> 
+            <button class="btn btn-info btn-sm" onclick="cal2()">
+              <span class="glyphicon glyphicon-cog"></span> Cal. Ch2
+            </button>
           </div>
         </div>
       </div>

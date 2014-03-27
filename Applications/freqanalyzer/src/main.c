@@ -56,7 +56,7 @@ static int params_init = 0;
 
 const char *rp_app_desc(void)
 {
-    return (const char *)"Red Pitaya spectrum analyser application.\n";
+    return (const char *)"Red Pitaya Frequency Response Analyzer application.\n";
 }
 
 int rp_app_init(void)
