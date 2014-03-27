@@ -156,8 +156,6 @@ typedef struct spectr_fpga_reg_mem_s {
      */
     uint32_t cha_filt_pp;     
     
-    
-    
 
     /** @brief ChB Equalization filter
      * bits [17:0] - AA coefficient (pole)
@@ -181,7 +179,7 @@ typedef struct spectr_fpga_reg_mem_s {
      * bits [24:0] - PP coefficient (pole)
      * bits [31:25] - reserved
      */
-    uint32_t chb_filt_pp;                
+    uint32_t chb_filt_pp;
     
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
@@ -191,12 +189,11 @@ typedef struct spectr_fpga_reg_mem_s {
 int spectr_fpga_init(void);
 int spectr_fpga_exit(void);
 
-
 int set_gen(uint32_t loc, uint32_t val);
 
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
-                           float trig_delay, float trig_level, int time_range,
-                           int enable_avg_at_dec);
+                              float trig_delay, float trig_level, int time_range,
+                              int enable_avg_at_dec);
 int spectr_fpga_reset(void);
 int spectr_fpga_arm_trigger(void);
 int spectr_fpga_set_trigger(uint32_t trig_source);

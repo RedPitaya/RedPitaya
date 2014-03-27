@@ -18,11 +18,11 @@ extern const double c_c2v;
 
 /* Prepare frequency vector (output of size SPECTR_OUT_SIG_LEN) */
 int rp_resp_prepare_freq_vector(float **freq_out, double f_s,
-        float freq_range, int II, int JJ, int k1, int kstp);
+                                float freq_range, int II, int JJ, int k1, int kstp);
 
 /* Calculate frequency response */
 int rp_resp_calc(double *cha_in, double *chb_in, int k1, double scale, int kstp, int II,
-        double **cha_out, double **chb_out);
+                 double **cha_out, double **chb_out);
 
 int rp_spectr_fft_init();
 int rp_spectr_fft_clean();

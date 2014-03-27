@@ -26,7 +26,7 @@
 
 
 /* length of output signals: floor(SPECTR_FPGA_SIG_LEN/2) */
-const int c_dsp_sig_len = SPECTR_FPGA_SIG_LEN>>1;
+const int c_dsp_sig_len = SPECTR_FPGA_SIG_LEN / 2;
 
 /* Internal structures used in DSP  */
 double               *rp_hann_window   = NULL;
@@ -42,7 +42,7 @@ const double c_w2mw = 1000;
 
 
 int rp_resp_prepare_freq_vector(float **freq_out, double f_s,
-                                  float freq_range, int II, int JJ, int k1, int kstp)
+                                float freq_range, int II, int JJ, int k1, int kstp)
 {
     int i;
     float *f = *freq_out;
@@ -85,7 +85,7 @@ int rp_resp_prepare_freq_vector(float **freq_out, double f_s,
 
 
 int rp_resp_calc(double *cha_in, double *chb_in, int k1, double scale, int kstp, int II,
-        double **cha_out, double **chb_out)
+                 double **cha_out, double **chb_out)
 {
 
     // FFT BASED IMPLEMENTATION
