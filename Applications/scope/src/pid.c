@@ -126,7 +126,6 @@ int pid_update(rp_app_params_t *params)
 
         if (params[PID_11_RESET + i * PARAMS_PER_PID].value == 1) {
             ireset |= (1 << i);
-            params[PID_11_RESET + i * PARAMS_PER_PID].value = 0;
         }
     }
     

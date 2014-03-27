@@ -30,7 +30,7 @@
   
   // Settings which can be modified
    
-  var app_id = 'scope+pid';  
+  var app_id = 'scope+pid';
   var root_url = '';
   //var root_url = 'http://10.0.1.221';      // Test local
   //var root_url = 'http://192.168.53.133';  // Test remote and local
@@ -339,6 +339,11 @@
     // Events binding for PID Controller
     
     $('#pid_11_enable, #pid_12_enable, #pid_21_enable, #pid_22_enable').on('change', function() { 
+      params.local[this.id] = ($(this).is(':checked') ? 1 : 0);
+      sendParams(); 
+    });
+
+    $('#pid_11_rst, #pid_12_rst, #pid_21_rst, #pid_22_rst').on('change', function() { 
       params.local[this.id] = ($(this).is(':checked') ? 1 : 0);
       sendParams(); 
     });
@@ -1168,6 +1173,11 @@
     $('#pid_12_enable').prop('checked', (params.original.pid_12_enable ? true : false));
     $('#pid_21_enable').prop('checked', (params.original.pid_21_enable ? true : false));
     $('#pid_22_enable').prop('checked', (params.original.pid_22_enable ? true : false));
+
+    $('#pid_11_rst').prop('checked', (params.original.pid_11_rst ? true : false));
+    $('#pid_12_rst').prop('checked', (params.original.pid_12_rst ? true : false));
+    $('#pid_21_rst').prop('checked', (params.original.pid_21_rst ? true : false));
+    $('#pid_22_rst').prop('checked', (params.original.pid_22_rst ? true : false));
     
     $('#pid_11_sp').val(params.original.pid_11_sp);
     $('#pid_11_kp').val(params.original.pid_11_kp);
@@ -2205,6 +2215,13 @@
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="checkbox" style="padding-bottom: 12px;">
+                  <label class="group-label">
+                    <input type="checkbox" id="pid_11_rst" checked> Integrator reset
+                  </label>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
                   <label for="pid_11_sp" class="col-xs-4 control-label">Setpoint:</label>
                   <div class="col-xs-4 col-sm-5">
@@ -2256,6 +2273,13 @@
                 <div class="checkbox" style="padding-bottom: 12px;">
                   <label class="group-label">
                     <input type="checkbox" id="pid_12_enable" checked> PID 12
+                  </label>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="checkbox" style="padding-bottom: 12px;">
+                  <label class="group-label">
+                    <input type="checkbox" id="pid_12_rst" checked> Integrator reset
                   </label>
                 </div>
               </form>
@@ -2315,6 +2339,13 @@
                 </div>
               </form>
               <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="checkbox" style="padding-bottom: 12px;">
+                  <label class="group-label">
+                    <input type="checkbox" id="pid_21_rst" checked> Integrator reset
+                  </label>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
                   <label for="pid_21_sp" class="col-xs-4 control-label">Setpoint:</label>
                   <div class="col-xs-4 col-sm-5">
@@ -2366,6 +2397,13 @@
                 <div class="checkbox" style="padding-bottom: 12px;">
                   <label class="group-label">
                     <input type="checkbox" id="pid_22_enable" checked> PID 22
+                  </label>
+                </div>
+              </form>
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="checkbox" style="padding-bottom: 12px;">
+                  <label class="group-label">
+                    <input type="checkbox" id="pid_22_rst" checked> Integrator reset
                   </label>
                 </div>
               </form>
