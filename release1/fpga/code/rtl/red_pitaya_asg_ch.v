@@ -151,17 +151,17 @@ always @(posedge dac_clk_i) begin
       endcase
 
 
-      if (set_rst_i || ( set_once_i && (dac_npnt >= {1'b0,set_size_i})) )
-         dac_do <= 1'b0 ;
-      else if (dac_trig)
+      if (dac_trig && !set_rst_i)
          dac_do <= 1'b1 ;
+      else if (set_rst_i || (set_once_i && (dac_npnt >= {1'b0,set_size_i})) )
+         dac_do <= 1'b0 ;
 
 
-      if (set_rst_i) //reset
+      if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
          dac_pnt <= set_ofs_i ;
-      else if (dac_do && !set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //go to zero
-         dac_pnt <= set_ofs_i ;// {RSZ+16{1'b0}} ;
-      else if (dac_do &&  set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //wrap
+      else if (dac_do && !set_once_i && !set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //go to start
+         dac_pnt <= set_ofs_i ;
+      else if (dac_do && !set_once_i &&  set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //wrap
          dac_pnt <= dac_npnt - {1'b0,set_size_i} - 'h10000 ; //transfer difference into next cycle
       else if (dac_do) //normal increase
          dac_pnt <= dac_npnt[RSZ+15:0] ;
