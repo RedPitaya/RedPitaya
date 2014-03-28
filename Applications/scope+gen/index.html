@@ -166,14 +166,16 @@
         $(this).parent().removeClass('input-group');
         
         var tlev = parseLocalFloat($(this).val());
+        var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
         if(! isNaN(tlev)) {
-          params.local.trig_level = tlev;
+          params.local.trig_level = tlev / scale;
           updateTriggerSlider(undefined, false);
           redrawPlot();
           sendParams();
         }
         else {
-          $(this).val(params.local.trig_level)
+	  tlev = params.local.trig_level * scale;
+          $(this).val(tlev)
         }
         user_editing = false;
       })
@@ -867,7 +869,8 @@
     $('#trig_mode').val(params.original.trig_mode);
     $('#trig_source').val(params.original.trig_source);
     $('#trig_edge').val(params.original.trig_edge);
-    $('#trig_level').val(floatToLocalString(params.original.trig_level));
+    var scale = (params.original.trig_source == 0) ? params.original.scale_ch1 : params.original.scale_ch2;
+    $('#trig_level').val(floatToLocalString(params.original.trig_level * scale));
     
     if ((refresh_counter++ % meas_panel_dec) == 0) {
         $('#info_ch1_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch1)));
@@ -1083,11 +1086,15 @@
   
   // Add a data series for the trigger level line
   function addTriggerDataSet(dsets) {
+
+    // Transform trigger level to real values
+    var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+    var tlev = params.local.trig_level * scale;
   
     // Don't add trigger dataset if trigger level is outside the visible area...
     if(plot) {
       var yaxis = plot.getAxes().yaxis;
-      if(params.local.trig_level < yaxis.min || params.local.trig_level > yaxis.max) {
+      if(tlev < yaxis.min || tlev > yaxis.max) {
         return dsets;
       }
     }
@@ -1116,13 +1123,13 @@
         ch2ymax = (ch2ymax === null || ch2ymax < dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymax);
       }
       // Check if trigger level is outside of found values
-      if(params.local.trig_level < Math.min(ch1ymin, ch2ymin) || params.local.trig_level > Math.max(ch1ymax, ch2ymax)) {
+      if(tlev < Math.min(ch1ymin, ch2ymin) || tlev > Math.max(ch1ymax, ch2ymax)) {
         return dsets;
       }
     }
     else {
       // Check if trigger level is outside of found values
-      if(params.local.trig_level < ch1ymin || params.local.trig_level > ch1ymax) {
+      if(tlev < ch1ymin || tlev > ch1ymax) {
         return dsets;
       }
     }
@@ -1137,7 +1144,7 @@
       dxmin = dsets[0].data[0][0];
       dxmax = dsets[0].data[dsets[0].data.length - 1][0];
     }
-    dsets[index] = { color: 2, data: [[dxmin, params.local.trig_level], [dxmax, params.local.trig_level]], shadowSize: 1 };
+    dsets[index] = { color: 2, data: [[dxmin, tlev], [dxmax, tlev]], shadowSize: 1 };
     
     return dsets;
   }
@@ -1408,7 +1415,8 @@
         y = evt.clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
       }
       
-      params.local.trig_level = parseFloat(plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places));           
+      var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+      params.local.trig_level = parseFloat(plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places)) / scale;           
       
       updateTriggerSlider();
       redrawPlot();
@@ -1431,26 +1439,31 @@
     var ymax = params.original.gui_reset_y_range / 2;
     var ymin = ymax * -1;
     
+    // Transform trigger level to real values
+    // TODO: local or original params?
+    var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+    var tlev = params.local.trig_level * scale;
+
     // If trigger level is outside the predefined ymin/ymax, change the level
     
-    if(params.local.trig_level < ymin) {
-      params.local.trig_level = ymin;
+    if(tlev < ymin) {
+      tlev = ymin;
     }
-    else if(params.local.trig_level > ymax) {
-      params.local.trig_level = ymax;
+    else if(tlev > ymax) {
+      tlev = ymax;
     }
     
     if(y === undefined) {
       if(update_input !== false) {
-        $('#trig_level').not(':focus').val(floatToLocalString(params.local.trig_level));
+        $('#trig_level').not(':focus').val(floatToLocalString(tlev));
       }
-      y = plot.getAxes().yaxis.p2c(params.local.trig_level);
+      y = plot.getAxes().yaxis.p2c(tlev);
     }
     
     // If trigger source is external or mode is auto or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
     context.clearRect(0, 0, canvas.width, canvas.height); 
     var yaxis = plot.getAxes().yaxis;
-    if(params.original.trig_mode == 0 || params.local.trig_level < yaxis.min || params.local.trig_level > yaxis.max || params.original.trig_source == 2) {
+    if(params.original.trig_mode == 0 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
       context.lineWidth = 1;
       context.strokeStyle = '#dddddd';
       context.stroke();
