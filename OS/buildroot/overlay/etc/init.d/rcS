@@ -22,6 +22,18 @@ fi
 # Shortcut link to u-boot EEPROM
 ln -s /sys/bus/i2c/devices/0-0050/eeprom /dev/eeprom
 
+echo "++ Bringing up lo"
+ifup lo
+
+echo "++ Bringing up eth0"
+ifup eth0
+
+if [ -e /opt/etc/network/wpa_supplicant.conf ]
+then
+	echo "++ Bringing up wlan0"
+	ifup wlan0
+fi
+
 # Fix keys for SHH
 chmod 600 `find /etc/ -name ssh_host_\*`
 
@@ -49,6 +61,12 @@ for i in `find /etc/init.d/ -name S\* | sort` ;do
             ;;
     esac
 done
+
+if [ -x /opt/sbin/discovery ]
+then
+	echo "++ Starting Red Pitaya IP discovery"
+	/opt/sbin/discovery
+fi
 
 # Start user rcS script from SD card
 OPT_RCS=/opt/etc/init.d/rcS
