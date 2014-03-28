@@ -242,6 +242,7 @@ void *rp_osc_worker_thread(void *args)
 
     rp_osc_meas_res_t ch1_meas, ch2_meas;
     float ch1_max_adc_v = 1, ch2_max_adc_v = 1;
+    float max_adc_norm = osc_fpga_calc_adc_max_v(rp_calib_params->fe_ch1_fs_g_hi, 0);
 
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
     old_state = state = rp_osc_ctrl;
@@ -264,26 +265,17 @@ void *rp_osc_worker_thread(void *args)
                 osc_fpga_cnv_time_range_to_dec(curr_params[TIME_RANGE_PARAM].value);
             time_vect_update = 1;
 
-            if(curr_params[GAIN_CH1].value == 0) {
-                ch1_max_adc_v = 
-                    osc_fpga_calc_adc_max_v(rp_calib_params->fe_ch1_fs_g_hi,
-                                            (int)curr_params[PRB_ATT_CH1].value);
-            } else {
-                ch1_max_adc_v = 
-                    osc_fpga_calc_adc_max_v(rp_calib_params->fe_ch1_fs_g_lo,
-                                            (int)curr_params[PRB_ATT_CH1].value);
-            }
+            uint32_t fe_fsg1 = (curr_params[GAIN_CH1].value == 0) ?
+                    rp_calib_params->fe_ch1_fs_g_hi :
+                    rp_calib_params->fe_ch1_fs_g_lo;
+            ch1_max_adc_v =
+                    osc_fpga_calc_adc_max_v(fe_fsg1, (int)curr_params[PRB_ATT_CH1].value);
 
-            if(curr_params[GAIN_CH2].value == 0) {
-                ch2_max_adc_v = 
-                    osc_fpga_calc_adc_max_v(rp_calib_params->fe_ch2_fs_g_hi,
-                                            (int)curr_params[PRB_ATT_CH2].value);
-            } else {
-                ch2_max_adc_v = 
-                    osc_fpga_calc_adc_max_v(rp_calib_params->fe_ch2_fs_g_lo,
-                                            (int)curr_params[PRB_ATT_CH2].value);
-            }
-
+            uint32_t fe_fsg2 = (curr_params[GAIN_CH2].value == 0) ?
+                    rp_calib_params->fe_ch2_fs_g_hi :
+                    rp_calib_params->fe_ch2_fs_g_lo;
+            ch2_max_adc_v =
+                    osc_fpga_calc_adc_max_v(fe_fsg2, (int)curr_params[PRB_ATT_CH2].value);
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
@@ -323,7 +315,7 @@ void *rp_osc_worker_thread(void *args)
                                       curr_params[MIN_GUI_PARAM].value,
                                       curr_params[TRIG_LEVEL_PARAM].value,
                                       curr_params[TIME_RANGE_PARAM].value,
-                                      ch1_max_adc_v, ch2_max_adc_v,
+                                      max_adc_norm, max_adc_norm,
                                       rp_calib_params->fe_ch1_dc_offs,
                                       curr_params[GEN_DC_OFFS_1].value,
                                       rp_calib_params->fe_ch2_dc_offs,
@@ -926,7 +918,6 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
          * - Y axis - Min/Max + adding extra 200% to average
          */
         int min_y, max_y, ave_y;
-        int max_adc_v = (channel == 0) ? ch1_max_adc_v : ch2_max_adc_v;
 
         orig_params[TRIG_MODE_PARAM].value  = 0;
         orig_params[MIN_GUI_PARAM].value    = 0;      
@@ -944,10 +935,11 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
         min_y = (min_y - ave_y) * 2 + ave_y;
         max_y = (max_y - ave_y) * 2 + ave_y;
 
-        orig_params[MIN_Y_PARAM].value = (min_y * max_adc_v)/
-            (float)(1<<(c_osc_fpga_adc_bits-1));
-        orig_params[MAX_Y_PARAM].value = (max_y * max_adc_v)/
-            (float)(1<<(c_osc_fpga_adc_bits-1));
+        orig_params[MIN_Y_NORM].value = min_y / (float)(1 << (c_osc_fpga_adc_bits - 1));
+        orig_params[MAX_Y_NORM].value = max_y / (float)(1 << (c_osc_fpga_adc_bits - 1));
+
+        // For POST response ...
+        transform_to_iface_units(orig_params);
         return 0;
 
     } else {
@@ -1100,7 +1092,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 orig_params[TRIG_MODE_PARAM].value  = 1; /* 'normal' */
                 orig_params[TIME_RANGE_PARAM].value = time_range;
                 orig_params[TRIG_SRC_PARAM].value   = trig_src_ch;
-                orig_params[TRIG_LEVEL_PARAM].value = ((float)(loc_max + loc_min))/2 * max_adc_v /
+                orig_params[TRIG_LEVEL_PARAM].value = ((float)(loc_max + loc_min))/2 /
                                         (float)(1<<(c_osc_fpga_adc_bits-1));
 
                 orig_params[MIN_GUI_PARAM].value    = 0;
@@ -1137,11 +1129,11 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                 min_y = ave_y - amp_y;
                 max_y = ave_y + amp_y;
 
-                orig_params[MIN_Y_PARAM].value = (min_y * max_adc_v)/
-                    (float)(1<<(c_osc_fpga_adc_bits-1));
-                orig_params[MAX_Y_PARAM].value = (max_y * max_adc_v)/
-                        (float)(1<<(c_osc_fpga_adc_bits-1));
+                orig_params[MIN_Y_NORM].value = min_y / (float)(1 << (c_osc_fpga_adc_bits - 1));
+                orig_params[MAX_Y_NORM].value = max_y / (float)(1 << (c_osc_fpga_adc_bits - 1));
 
+                // For POST response ...
+                transform_to_iface_units(orig_params);
                 return 0;
             }
         }

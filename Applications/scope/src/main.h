@@ -15,6 +15,7 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
+#define DEBUG
 #ifdef DEBUG
 #  define TRACE(args...) fprintf(stderr, args)
 #else
@@ -45,7 +46,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        51
+#define PARAMS_NUM        57
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -60,7 +61,7 @@ typedef struct rp_osc_meas_res_s {
 #define AUTO_FLAG_PARAM   11
 #define MIN_Y_PARAM       12
 #define MAX_Y_PARAM       13
-#define FORCEX_FLAG_PARAM  14
+#define FORCEX_FLAG_PARAM 14
 #define MEAS_MIN_CH1      15
 #define MEAS_MAX_CH1      16
 #define MEAS_AMP_CH1      17
@@ -82,26 +83,32 @@ typedef struct rp_osc_meas_res_s {
 #define GEN_DC_OFFS_2     33
 #define GUI_XMIN          34
 #define GUI_XMAX          35
+#define MIN_Y_NORM        36
+#define MAX_Y_NORM        37
+#define GEN_DC_NORM_1     38
+#define GEN_DC_NORM_2     39
+#define SCALE_CH1         40
+#define SCALE_CH2         41
 /* AWG parameters */
-#define GEN_TRIG_MODE_CH1 36
-#define GEN_SIG_TYPE_CH1  37
-#define GEN_ENABLE_CH1    38
-#define GEN_SINGLE_CH1    39
-#define GEN_SIG_AMP_CH1   40
-#define GEN_SIG_FREQ_CH1  41
-#define GEN_SIG_DCOFF_CH1 42
-#define GEN_TRIG_MODE_CH2 43
-#define GEN_SIG_TYPE_CH2  44
-#define GEN_ENABLE_CH2    45
-#define GEN_SINGLE_CH2    46
-#define GEN_SIG_AMP_CH2   47
-#define GEN_SIG_FREQ_CH2  48
-#define GEN_SIG_DCOFF_CH2 49
-#define GEN_AWG_REFRESH   50
+#define GEN_TRIG_MODE_CH1 42
+#define GEN_SIG_TYPE_CH1  43
+#define GEN_ENABLE_CH1    44
+#define GEN_SINGLE_CH1    45
+#define GEN_SIG_AMP_CH1   46
+#define GEN_SIG_FREQ_CH1  47
+#define GEN_SIG_DCOFF_CH1 48
+#define GEN_TRIG_MODE_CH2 49
+#define GEN_SIG_TYPE_CH2  50
+#define GEN_ENABLE_CH2    51
+#define GEN_SINGLE_CH2    52
+#define GEN_SIG_AMP_CH2   53
+#define GEN_SIG_FREQ_CH2  54
+#define GEN_SIG_DCOFF_CH2 55
+#define GEN_AWG_REFRESH   56
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope or AWG */
-#define PARAMS_AWG_PARAMS 36
+#define PARAMS_AWG_PARAMS 42
 
 /* Output signals */
 #define SIGNAL_LENGTH (1024) /* Must be 2^n! */
@@ -130,6 +137,9 @@ int rp_clean_params(rp_app_params_t *params);
 * parameters are updated it also changed the worker state machine.
  */
 int rp_update_main_params(rp_app_params_t *params);
+void get_scales(rp_app_params_t *p, float *scale1, float *scale2, float *maxv);
+void transform_to_iface_units(rp_app_params_t *p);
+void transform_from_iface_units(rp_app_params_t *p);
 
 /* sets the measurement data to output parameters structure - these parameters
  * are read-only for the client and there is no need to update them internally

@@ -53,8 +53,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "trig_edge", 0, 1, 0,         0,         1 },
     { /* trig_delay     */
         "trig_delay", 0, 1, 1, -10000000, +10000000 },
-    { /* trig_level     */
-        "trig_level", 0, 1, 0,     -1000,     +1000 },
+    { /* trig_level : Trigger level, expressed in normalized 1V  */
+        "trig_level", 0, 1, 0,     -2,     +2 },
     { /* single_button:
        *    0 - ignore 
        *    1 - trigger */
@@ -146,6 +146,18 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "gui_xmin",      0, 0, 1, -10000000, +10000000 },
     { /* gui_xmax - Xmax as specified by GUI - not rounded to sampling engine quanta. */
         "gui_xmax",    131, 0, 1, -10000000, +10000000 },
+    { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
+        "min_y_norm", 0, 0, 0, -1000, +1000 },
+    { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
+        "max_y_norm", 0, 0, 0, -1000, +1000 },
+    { /* gen_DC_norm_1 - DC offset for channel 1 expressed in normalized 1V */
+        "gen_DC_norm_1", 0, 1, 0, -100, 100 },
+    { /* gen_DC_norm_2 - DC offset for channel 2 expressed in normalized 1V */
+        "gen_DC_norm_2", 0, 1, 0, -100, 100 },
+    { /* scale_ch1 - Jumper & probe attenuation dependent Y scaling factor for Channel 1 */
+        "scale_ch1", 0, 0, 1, -1000, 1000 },
+    { /* scale_ch2 - Jumper & probe attenuation dependent Y scaling factor for Channel 2 */
+        "scale_ch2", 0, 0, 1, -1000, 1000 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -215,8 +227,6 @@ static int params_init = 0;
 int auto_in_progress = 0;
 
 rp_calib_params_t rp_main_calib_params;
-float rp_main_ch1_max_adc_v;
-float rp_main_ch2_max_adc_v;
 
 int forcex_state = 0;
 float forced_xmin = 0;
@@ -245,25 +255,6 @@ int rp_app_init(void)
     }
     if(generate_init(&rp_main_calib_params) < 0) {
         return -1;
-    }
-
-    if(rp_main_params[GAIN_CH1].value == 0) {
-        rp_main_ch1_max_adc_v = 
-            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_hi, 
-                                    rp_main_params[PRB_ATT_CH1].value);
-    } else {
-        rp_main_ch1_max_adc_v = 
-            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_lo, 
-                                    rp_main_params[PRB_ATT_CH1].value);
-    }
-    if(rp_main_params[GAIN_CH2].value == 0) {
-        rp_main_ch2_max_adc_v = 
-            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_hi, 
-                                    rp_main_params[PRB_ATT_CH2].value);
-    } else {
-        rp_main_ch2_max_adc_v = 
-            osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_lo, 
-                                    rp_main_params[PRB_ATT_CH2].value);
     }
 
     rp_set_params(&rp_main_params[0], PARAMS_NUM);
@@ -495,6 +486,58 @@ int transform_acq_params(rp_app_params_t *p)
     return ret;
 }
 
+void get_scales(rp_app_params_t *p, float *scale1, float *scale2, float *maxv) {
+
+    /* Max ADC for Ch1, Ch2, both combined, normalized & selected */
+    uint32_t fe_fsg1 = (p[GAIN_CH1].value == 0) ?
+            rp_main_calib_params.fe_ch1_fs_g_hi :
+            rp_main_calib_params.fe_ch1_fs_g_lo;
+    float ch1_max_adc_v =
+            osc_fpga_calc_adc_max_v(fe_fsg1, p[PRB_ATT_CH1].value);
+
+    uint32_t fe_fsg2 = (p[GAIN_CH2].value == 0) ?
+            rp_main_calib_params.fe_ch2_fs_g_hi :
+            rp_main_calib_params.fe_ch2_fs_g_lo;
+    float ch2_max_adc_v =
+            osc_fpga_calc_adc_max_v(fe_fsg2, p[PRB_ATT_CH2].value);
+
+    float max_adc_norm = osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_hi, 0);
+
+    *scale1 = ch1_max_adc_v / max_adc_norm;
+    *scale2 = ch2_max_adc_v / max_adc_norm;
+    *maxv = (ch1_max_adc_v > ch2_max_adc_v) ?
+             ch1_max_adc_v : ch2_max_adc_v;
+}
+
+void transform_to_iface_units(rp_app_params_t *p)
+{
+    float scale, scale1, scale2, maxv;
+    get_scales(p, &scale1, &scale2, &maxv);
+    scale = (scale1 > scale2) ? scale1 : scale2;
+
+    /* Re-calculate output parameters */
+    p[GUI_RST_Y_RANGE].value = 2.0 * maxv;
+
+    p[MIN_Y_PARAM].value = p[MIN_Y_NORM].value * scale;
+    p[MAX_Y_PARAM].value = p[MAX_Y_NORM].value * scale;
+
+    p[GEN_DC_OFFS_1].value = p[GEN_DC_NORM_1].value * scale1;
+    p[GEN_DC_OFFS_2].value = p[GEN_DC_NORM_2].value * scale2;
+
+    p[SCALE_CH1].value = scale1;
+    p[SCALE_CH2].value = scale2;
+}
+
+void transform_from_iface_units(rp_app_params_t *p)
+{
+    float scale1, scale2, maxv;
+    get_scales(p, &scale1, &scale2, &maxv);
+
+    /* Re-calculate input parameters */
+    p[GEN_DC_NORM_1].value = p[GEN_DC_OFFS_1].value / scale1;
+    p[GEN_DC_NORM_2].value = p[GEN_DC_OFFS_2].value / scale2;
+}
+
 int rp_set_params(rp_app_params_t *p, int len)
 {
     int i;
@@ -555,6 +598,7 @@ int rp_set_params(rp_app_params_t *p, int len)
         }
         rp_main_params[p_idx].value = p[i].value;
     }
+    transform_from_iface_units(&rp_main_params[0]);
     pthread_mutex_unlock(&rp_main_params_mutex);
     
 
@@ -593,8 +637,6 @@ int rp_set_params(rp_app_params_t *p, int len)
         int t_start_idx;
         int t_stop_idx;
         int t_step_idx = 0;
-        float ch1_max_adc_v, ch2_max_adc_v;
-        float ch1_delta, ch2_delta;
 
         TRACE("PC: t_stop = %.9f\n", t_stop);
 
@@ -716,57 +758,6 @@ int rp_set_params(rp_app_params_t *p, int len)
         rp_main_params[MIN_GUI_PARAM].value = t_start;
         rp_main_params[MAX_GUI_PARAM].value = t_stop;
 
-        /* Calculate new gui_reset_y_range */
-        if(rp_main_params[GAIN_CH1].value == 0) {
-            ch1_max_adc_v = 
-                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_hi, 
-                                        rp_main_params[PRB_ATT_CH1].value);
-        } else {
-            ch1_max_adc_v = 
-                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch1_fs_g_lo, 
-                                        rp_main_params[PRB_ATT_CH1].value);
-        }
-        if(rp_main_params[GAIN_CH2].value == 0) {
-            ch2_max_adc_v = 
-                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_hi, 
-                                        rp_main_params[PRB_ATT_CH2].value);
-        } else {
-            ch2_max_adc_v = 
-                osc_fpga_calc_adc_max_v(rp_main_calib_params.fe_ch2_fs_g_lo, 
-                                        rp_main_params[PRB_ATT_CH2].value);
-        }
-
-        if(ch1_max_adc_v > ch2_max_adc_v)
-            rp_main_params[GUI_RST_Y_RANGE].value = 2.0 * ch1_max_adc_v;
-        else
-            rp_main_params[GUI_RST_Y_RANGE].value = 2.0 * ch2_max_adc_v;
-
-        /* Re-calculate output parameters */
-        ch1_delta = (ch1_max_adc_v / rp_main_ch1_max_adc_v);
-        ch2_delta = (ch2_max_adc_v / rp_main_ch2_max_adc_v);
-
-        rp_main_ch1_max_adc_v = ch1_max_adc_v;
-        rp_main_ch2_max_adc_v = ch2_max_adc_v;
-
-        if(ch1_delta > ch2_delta) {
-            rp_main_params[MIN_Y_PARAM].value *= ch1_delta;
-            rp_main_params[MAX_Y_PARAM].value *= ch1_delta;
-        } else {
-            rp_main_params[MIN_Y_PARAM].value *= ch2_delta;
-            rp_main_params[MAX_Y_PARAM].value *= ch2_delta;
-        }
-        rp_main_params[GEN_DC_OFFS_1].value *= ch1_delta;
-        rp_main_params[GEN_DC_OFFS_2].value *= ch2_delta;
-
-        if((int)rp_main_params[TRIG_SRC_PARAM].value == 0) {
-            /* Trigger selected on Channel 1 */
-            rp_main_params[TRIG_LEVEL_PARAM].value *= ch1_delta;
-        } else {
-            /* Trigger selected on Channel 2 */
-            rp_main_params[TRIG_LEVEL_PARAM].value *= ch2_delta;
-        }
-
-
         rp_osc_worker_update_params((rp_app_params_t *)&rp_main_params[0], 
                                     fpga_update);
 
@@ -843,6 +834,8 @@ int rp_get_params(rp_app_params_t **p)
     /* Return the original public Xmin & Xmax to client (not the internally modified ones). */
     p_copy[MIN_GUI_PARAM].value = p_copy[GUI_XMIN].value;
     p_copy[MAX_GUI_PARAM].value = p_copy[GUI_XMAX].value;
+
+    transform_to_iface_units(p_copy);
 
     *p = p_copy;
     return PARAMS_NUM;
