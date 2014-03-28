@@ -50,6 +50,9 @@ for i in `find /etc/init.d/ -name S\* | sort` ;do
     esac
 done
 
+# Set user's connman network configuration
+/etc/init.d/connman-config
+
 # Start user rcS script from SD card
 OPT_RCS=/opt/etc/init.d/rcS
 echo "Running user script from SD card ..."
