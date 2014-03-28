@@ -423,7 +423,7 @@ void *rp_osc_worker_thread(void *args)
                 } else if(long_acq) {
                     int trig_ptr, curr_ptr;
                     osc_fpga_get_wr_ptr(&curr_ptr, &trig_ptr);
-                    if((long_acq_init_trig_ptr != trig_ptr) || osc_fpga_triggered()) {
+                    if((trig_source == 1) || (long_acq_init_trig_ptr != trig_ptr) || osc_fpga_triggered()) {
                         /* FPGA wrote new trigger pointer - which means
                          * new trigger happened 
                          */
