@@ -556,8 +556,7 @@ void *rp_osc_worker_thread(void *args)
             rp_osc_meas_avg_amp(&ch2_meas, OSC_FPGA_SIG_LEN);
             
             rp_osc_meas_period(&ch1_meas, &ch2_meas, &rp_fpga_cha_signal[0], 
-                               &rp_fpga_chb_signal[0], 
-                               0, OSC_FPGA_SIG_LEN, dec_factor);
+                               &rp_fpga_chb_signal[0], dec_factor);
             rp_osc_meas_convert(&ch1_meas, ch1_max_adc_v, rp_calib_params->fe_ch1_dc_offs);
             rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
             
@@ -816,7 +815,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
      * 1 - Channel B 
      */
     int channel; 
-    int i, smpl_cnt;
+    int smpl_cnt;
     int iter;
     int time_range = 0;
 
@@ -893,7 +892,13 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
         /* Signal amplitude found & stable? */
         if ( ((ratio[0] < c_inc_thr) && (dy[0] > c_noise_thr)) ||
              ((ratio[1] < c_inc_thr) && (dy[1] > c_noise_thr)) ) {
-            break;
+            /* This is meant for optimizing the time it takes for AUTO to complete,
+             * and is a compromise between the speed and robustness of the AUTO
+             * algorithm.
+             * Since it is fast enough, it is safer to search for amplitude through
+             * all the iterations instead of bailing out sooner.
+             */
+            //break;
         }
 
         /* Still searching? - Increase time range up to 130 ms (D = 1024). */
@@ -917,6 +922,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
          * - X axis - full, from 0 to 130 [us]
          * - Y axis - Min/Max + adding extra 200% to average
          */
+        TRACE("AUTO: No signal detected.\n");
         int min_y, max_y, ave_y;
 
         orig_params[TRIG_MODE_PARAM].value  = 0;
@@ -947,13 +953,13 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
         /* Signal above threshold - loop from lower to higher decimation */
         int min_y, max_y;
         int trig_src_ch;               /* Trigger level in samples, smpls_2 introduced for histeresis */
-        int trig_level, trig_level_2;
+        int trig_level;
         float trig_level_v;            /* Trigger level in [V] */
         int time_range;                /* decimation from 0 to 5 */
         float max_adc_v;
         int calib_dc_off;
 
-       int wr_ptr_curr, wr_ptr_trig, ix_corr;
+       int wr_ptr_curr, wr_ptr_trig;
 
         if(channel == 0) {
             min_y = min_cha;
@@ -969,7 +975,8 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             calib_dc_off = rp_calib_params->fe_ch2_dc_offs;            
         }
         trig_level = (max_y + min_y) >> 1;
-        trig_level_2 = (trig_level + max_y) >> 1;
+        TRACE("AUTO: trig level: %d\n", trig_level);
+        TRACE("AUTO: min,max: %d  %d\n", min_y, max_y);
 
         trig_level_v = (((trig_level + calib_dc_off) * max_adc_v)/
                         (float)(1<<(c_osc_fpga_adc_bits-1))) ;
@@ -979,12 +986,9 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 
         /* Loop over time ranges and search for the best suiting one (Last range removed: too slow) */
         for(time_range = 0; time_range < 5; time_range++) {
-            int trig_cnt = 0;
             float period = 0;
-            int trig_time[3] = { -1, -1, -1 };
             int trig_source = osc_fpga_cnv_trig_source(0, trig_src_ch, 0);
             int *sig_data;
-            int trig_state = 0;
 
             osc_fpga_reset();
             osc_fpga_update_params(0, trig_src_ch, 0, 0, trig_level_v, time_range,
@@ -1018,60 +1022,20 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             }
 
             // Checking where acquisition starts
-            osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
+            osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig);
 
             /* We have a signal in rp_fpga_chX_signal */
             sig_data = (channel == 0) ? rp_fpga_cha_signal : rp_fpga_chb_signal;
-	    
-            /* Count trigger events */
-            for(i = 1; i < OSC_FPGA_SIG_LEN; i++) {
+            int dec_factor = osc_fpga_cnv_time_range_to_dec(time_range);
 
-                ix_corr = i + wr_ptr_trig;
-                if (ix_corr >= OSC_FPGA_SIG_LEN)
-                    ix_corr %= OSC_FPGA_SIG_LEN;
+            rp_osc_meas_res_t meas;
+            rp_osc_meas_clear(&meas);
+            meas.min = min_y;
+            meas.max = max_y;
 
-                int sig_smpl[2];
-                sig_smpl[1] = sig_data[ix_corr];
-                sig_smpl[0] = sig_data[ix_corr-1];
-
-                if(sig_smpl[0] & (1<<(c_osc_fpga_adc_bits-1)))
-                    sig_smpl[0] = 
-                        -1*((sig_smpl[0] ^ ((1<<c_osc_fpga_adc_bits)-1))+1);
-                if(sig_smpl[1] & (1<<(c_osc_fpga_adc_bits-1)))
-                    sig_smpl[1] = 
-                        -1*((sig_smpl[1] ^ ((1<<c_osc_fpga_adc_bits)-1))+1);
-
-                
-                // Another max, min calculation at lower rate to avoid evaluation errors on slower signals
-                if (sig_smpl[1] > loc_max)
-                    loc_max = sig_smpl[1];
-
-                if (sig_smpl[1] < loc_min)
-                    loc_min = sig_smpl[1];
-
-                /* Check for trigger condition 1 (trig_level) */
-                if((sig_smpl[0] < trig_level) && (sig_smpl[1] >= trig_level)) {
-                    trig_state = 1;
-                }
-
-                /* Check for threshold condition 2 (trig_level_2) */
-                if((trig_state == 1) && (sig_smpl[0] < trig_level_2) &&
-                   (sig_smpl[1] >= trig_level_2)) {
-
-                    int dec_factor = 
-                        osc_fpga_cnv_time_range_to_dec(time_range);
-
-                    trig_time[trig_cnt] = i;
-                    trig_cnt++;
-                    trig_state = 0;
-
-                    if(trig_cnt >= 3) {
-                        period = ((trig_time[1] - trig_time[0]) /
-                                (float)c_osc_fpga_smpl_freq * dec_factor);
-                        break;
-                    }
-                }
-            }
+            meas_period(&meas, sig_data, wr_ptr_trig, dec_factor, &loc_min, &loc_max);
+            period = meas.period;
+            TRACE("AUTO: period = %.6f\n", period);
 
             /* We have a winner - calculate the new parameters */
             if ((period > 0) || (time_range >= 4))
@@ -1106,7 +1070,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                     orig_params[MAX_GUI_PARAM].value =  period * 1.5 * t_unit_factor;
                 } else {
                     /* Period not detected, which means it is longer than ~300 ms */
-                    TRACE("Signal period cannot be determined.\n");
+                    TRACE("AUTO: Signal period cannot be determined.\n");
                     /* Stretch to max 1/4 range. All slow signals should be still visible there */
                     orig_params[MAX_GUI_PARAM].value = 2.0;
                     orig_params[TIME_RANGE_PARAM].value = 5;
@@ -1193,111 +1157,94 @@ int rp_osc_meas_avg_amp(rp_osc_meas_res_t *ch_meas, int avg_len)
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas, 
-                       int *in_cha_signal, int *in_chb_signal, 
-                       int start_idx, int stop_idx, int dec_factor)
+                       int *in_cha_signal, int *in_chb_signal, int dec_factor)
+{
+    int wr_ptr_curr, wr_ptr_trig;
+
+    // Checking where acquisition starts
+    osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig);
+
+    int min, max; // Ignored for measurement panel calculations
+    meas_period(ch1_meas, in_cha_signal, wr_ptr_trig, dec_factor, &min, &max);
+    meas_period(ch2_meas, in_chb_signal, wr_ptr_trig, dec_factor, &min, &max);
+
+    return 0;
+}
+
+/*----------------------------------------------------------------------------------*/
+int meas_period(rp_osc_meas_res_t *meas, int *in_signal, int wr_ptr_trig, int dec_factor,
+                int *min, int *max)
 {
     const float c_meas_freq_thr = 100;
     const int c_meas_time_thr = OSC_FPGA_SIG_LEN / 8;
     const float c_min_period = 19.6e-9; // 51 MHz
 
-    float ch1_thr1, ch1_thr2, ch2_thr1, ch2_thr2, ch1_cen, ch2_cen;
-    int ch1_state = 0, ch2_state = 0;
-    int ch1_trig_t[2] = { 0, 0 };
-    int ch2_trig_t[2] = { 0, 0 };
-    int ch1_trig_cnt = 0;
-    int ch2_trig_cnt = 0;
-    int in_idx;
-
-    int ix_corr, wr_ptr_curr, wr_ptr_trig;
+    float thr1, thr2, cen;
+    int state = 0;
+    int trig_t[2] = { 0, 0 };
+    int trig_cnt = 0;
+    int ix, ix_corr;
 
     float acq_dur=(float)(OSC_FPGA_SIG_LEN)/((float) c_osc_fpga_smpl_freq) * (float) dec_factor;
 
-    ch1_cen = (ch1_meas->max + ch1_meas->min) / 2;
-    ch2_cen = (ch2_meas->max + ch2_meas->min) / 2;
+    cen = (meas->max + meas->min) / 2;
 
-    ch1_thr1 = ch1_cen + 0.2 * (ch1_meas->min - ch1_cen);
-    ch1_thr2 = ch1_cen + 0.2 * (ch1_meas->max - ch1_cen);
-    ch2_thr1 = ch2_cen + 0.2 * (ch2_meas->min - ch2_cen);
-    ch2_thr2 = ch2_cen + 0.2 * (ch2_meas->max - ch2_cen);
+    thr1 = cen + 0.2 * (meas->min - cen);
+    thr2 = cen + 0.2 * (meas->max - cen);
 
-    // Checking where acquisition starts
-    osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
+    meas->period = 0;
+    *max = INT_MIN;
+    *min = INT_MAX;
 
-    ch1_meas->period = 0;
-    ch2_meas->period = 0;
-
-    /* Frequency check - it was proposed to be done in the decimation but 
-     * calculation can be inaccurate (depends on the SW decimation used) */
-    for(in_idx = 0; in_idx < (OSC_FPGA_SIG_LEN); in_idx++) {
-        ix_corr = in_idx + wr_ptr_trig;
+    for(ix = 0; ix < (OSC_FPGA_SIG_LEN); ix++) {
+        ix_corr = ix + wr_ptr_trig;
 
         if (ix_corr >= OSC_FPGA_SIG_LEN) {
             ix_corr %= OSC_FPGA_SIG_LEN;
         }
 
-        float sa = rp_osc_adc_sign(in_cha_signal[ix_corr]);
-        float sb = rp_osc_adc_sign(in_chb_signal[ix_corr]);
+        int sa = rp_osc_adc_sign(in_signal[ix_corr]);
+
+        /* Another max, min calculation at lower rate to avoid evaluation errors on slower signals */
+        if (sa > *max)
+            *max = sa;
+        if (sa < *min)
+            *min = sa;
 
         /* Lower transitions */
-        if((ch1_state == 0) && (ix_corr > 0) && (sa < ch1_thr1)) {
-            ch1_state = 1;
-        }
-        if((ch2_state == 0) && (ix_corr > 0) && (sb < ch2_thr1)) {
-            ch2_state = 1;
+        if((state == 0) && (ix_corr > 0) && (sa < thr1)) {
+            state = 1;
         }
 
         /* Upper transitions - count them & store edge times. */
-        if((ch1_state == 1) && (sa >= ch1_thr2) ) {
-            ch1_state = 0;
-            if (ch1_trig_cnt++ == 0) {
-                ch1_trig_t[0] = in_idx;
+        if((state == 1) && (sa >= thr2) ) {
+            state = 0;
+            if (trig_cnt++ == 0) {
+                trig_t[0] = ix;
             } else {
-                ch1_trig_t[1] = in_idx;
-            }
-        }
-        if((ch2_state == 1) && (sb >= ch2_thr2) ) {
-            ch2_state = 0;
-            if (ch2_trig_cnt++ == 0) {
-                ch2_trig_t[0] = in_idx;
-            } else {
-                ch2_trig_t[1] = in_idx;
+                trig_t[1] = ix;
             }
         }
 
-        if ( ((ch1_trig_t[1] - ch1_trig_t[0]) > c_meas_time_thr) &&
-             ((ch2_trig_t[1] - ch2_trig_t[0]) > c_meas_time_thr) ) {
+        if ((trig_t[1] - trig_t[0]) > c_meas_time_thr) {
             break;
         }
     }
 
-    /* Period calculations - taking into account at least meas_time_thr samples */
-    if(ch1_trig_cnt >= 2) {
-        ch1_meas->period = (ch1_trig_t[1] - ch1_trig_t[0]) /
-            ((float)c_osc_fpga_smpl_freq * (ch1_trig_cnt - 1)) * dec_factor;
-    }
-    if(ch2_trig_cnt >= 2) {
-        ch2_meas->period = (ch2_trig_t[1] - ch2_trig_t[0]) /
-            ((float)c_osc_fpga_smpl_freq * (ch2_trig_cnt - 1)) * dec_factor;
+    /* Period calculation - taking into account at least meas_time_thr samples */
+    if(trig_cnt >= 2) {
+        meas->period = (trig_t[1] - trig_t[0]) /
+            ((float)c_osc_fpga_smpl_freq * (trig_cnt - 1)) * dec_factor;
     }
 
-    if( ((ch1_thr2 - ch1_thr1) < c_meas_freq_thr) ||
-         (ch1_meas->period * 3 >= acq_dur)      ||
-         (ch1_meas->period < c_min_period) )
+    if( ((thr2 - thr1) < c_meas_freq_thr) ||
+         (meas->period * 3 >= acq_dur)    ||
+         (meas->period < c_min_period) )
     {
-        ch1_meas->period = 0;
-        ch1_meas->freq   = 0;
+        meas->period = 0;
+        meas->freq   = 0;
     } else {
-        ch1_meas->freq = 1.0 / ch1_meas->period;
-    }
-
-    if( ((ch2_thr2 - ch2_thr1) < c_meas_freq_thr) ||
-         (ch2_meas->period * 3 >= acq_dur)      ||
-         (ch2_meas->period < c_min_period) )
-    {
-        ch2_meas->period = 0;
-        ch2_meas->freq   = 0;
-    } else {
-        ch2_meas->freq = 1.0 / ch2_meas->period;
+        meas->freq = 1.0 / meas->period;
     }
 
     return 0;

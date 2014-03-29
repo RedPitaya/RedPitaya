@@ -15,7 +15,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#define DEBUG
 #ifdef DEBUG
 #  define TRACE(args...) fprintf(stderr, args)
 #else
