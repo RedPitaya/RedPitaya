@@ -1384,12 +1384,12 @@
       value = (value/1000000).toFixed(1);
       unit = '<span class="unit">MHz</span>';
     }
-    else if(value >= 10000) {
+    else if(value >= 1000) {
       value = (value/1000).toFixed(1);
       unit = '<span class="unit">kHz</span>';
     }
     else {
-      value = value.toFixed(2);
+      value = value.toFixed(1);
       unit = '<span class="unit">Hz</span>';
     }
     
@@ -1402,19 +1402,19 @@
     var decsep = getLocalDecimalSeparator();
     
     if(value < 0.000001) {
-      value = (value*1000000000).toFixed(2);
+      value = (value*1000000000).toFixed(1);
       unit = '<span class="unit">ns</span>';
     }
     else if(value < 0.001) {
-      value = (value*1000000).toFixed(2);
+      value = (value*1000000).toFixed(1);
       unit = '<span class="unit">μs</span>';
     }
     else if(value < 1) {
-      value = (value*1000).toFixed(2);
+      value = (value*1000).toFixed(1);
       unit = '<span class="unit">ms</span>';
     }
     else {
-      value = value.toFixed(2);
+      value = value.toFixed(1);
       unit = '<span class="unit">s</span>';
     }
     
