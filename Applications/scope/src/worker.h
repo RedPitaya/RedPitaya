@@ -99,8 +99,9 @@ int rp_osc_meas_min_max(rp_osc_meas_res_t *ch_meas, int sig_data);
 int rp_osc_meas_avg_amp(rp_osc_meas_res_t *ch_meas, int avg_len);
 /* helper function - calculates period and frequency */
 int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas, 
-                       int *in_cha_signal, int *in_chb_signal, 
-                       int start_idx, int stop_idx, int dec_factor);
+                       int *in_cha_signal, int *in_chb_signal, int dec_factor);
+int meas_period(rp_osc_meas_res_t *meas, int *in_signal, int wr_ptr_trig, int dec_factor,
+                int *min, int *max);
 /* helper function - convert CNT to V for meas. data (min, max, amp, avg) */
 int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal_dc_offs);
 

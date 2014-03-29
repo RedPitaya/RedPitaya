@@ -305,7 +305,6 @@ int transform_acq_params(rp_app_params_t *p)
 
     /* Skip the transform in case auto-set is in progress */
     if ( (p[AUTO_FLAG_PARAM].value == 1) || (auto_in_progress == 1)) {
-        TRACE("Skipping TR, due to AUTO (unit = %d)...\n", (int)p[TIME_UNIT_PARAM].value);
         return ret;
     }
 
@@ -318,7 +317,6 @@ int transform_acq_params(rp_app_params_t *p)
 
     int time_unit = p[TIME_UNIT_PARAM].value;
     float t_unit_factor = pow(10, 3*(2 - time_unit));
-    TRACE("TR: TU0: %d\n", time_unit);
 
     /* When exactly this pair is provided by client, Reset Zoom is requested. */
     if ((xmax == 1.0e6) && (xmin == -1.0e6)) {
@@ -383,13 +381,10 @@ int transform_acq_params(rp_app_params_t *p)
     }
 
     TRACE("TR: Dcimation: %6.2f -> %dx\n", rdec, dec);
-    TRACE("TR: Time range: %d\n", i);
-    TRACE("TR: Reset zoom: %d\n", reset_zoom);
 
     /* New time_unit & factor */
     time_unit = time_range_to_time_unit(p[TIME_RANGE_PARAM].value);
     t_unit_factor = pow(10, 3*(2 - time_unit));
-    TRACE("TR: TU1: %d\n", time_unit);
 
     /* Update time unit Min and Max, but not if GUI hasn't responded to "forceX" command. */
     if (forcex_state == 0) {
@@ -398,14 +393,12 @@ int transform_acq_params(rp_app_params_t *p)
         p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
         p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         p[TIME_UNIT_PARAM].value = time_unit;
-        TRACE("TR: TU2: %d\n", (int)p[TIME_UNIT_PARAM].value);
     } else {
         p[MIN_GUI_PARAM].value = forced_xmin;
         p[MAX_GUI_PARAM].value = forced_xmax;
         p[GUI_XMIN].value = p[MIN_GUI_PARAM].value;
         p[GUI_XMAX].value = p[MAX_GUI_PARAM].value;
         p[TIME_UNIT_PARAM].value = forced_units;
-        TRACE("TR: TU3 (forced): %d\n", (int)p[TIME_UNIT_PARAM].value);
     }
 
     /* If time units have changed by server: client MUST configure x axis
@@ -435,8 +428,6 @@ int transform_acq_params(rp_app_params_t *p)
     if (t_delay > c_max_t_delay)
         t_delay = c_max_t_delay;
 
-    TRACE("TR: Trigger delay: %d\n", (int)t_delay);
-
     /* Trigger delay (reconverted in seconds) updated ONLY if client has responded to
      * last forceX command.
      */
@@ -456,7 +447,6 @@ int transform_acq_params(rp_app_params_t *p)
         forced_xmax = p[MAX_GUI_PARAM].value;
         forced_units = p[TIME_UNIT_PARAM].value;
         forced_delay = p[TRIG_DLY_PARAM].value;
-        TRACE("TR: TU4 (forced): %d\n", (int)p[TIME_UNIT_PARAM].value);
     }
 
     /* When client issues a zoom reset, a particular ForceX command with
@@ -478,7 +468,6 @@ int transform_acq_params(rp_app_params_t *p)
         p[TIME_UNIT_PARAM].value = forced_units;
         p[TRIG_DLY_PARAM].value = forced_delay;
         p[TIME_RANGE_PARAM].value = 0;
-        TRACE("TR: TU5 (reset): %d\n", (int)p[TIME_UNIT_PARAM].value);
     }
 
     TRACE("TR: Trigger delay: %.6f\n", p[TRIG_DLY_PARAM].value);
@@ -638,11 +627,8 @@ int rp_set_params(rp_app_params_t *p, int len)
         int t_stop_idx;
         int t_step_idx = 0;
 
-        TRACE("PC: t_stop = %.9f\n", t_stop);
-
         /* If auto-set algorithm was requested do not set other parameters */
         if(rp_main_params[AUTO_FLAG_PARAM].value == 1) {
-            TRACE("PC: AUTO algorithm started.\n");
             auto_in_progress = 1;
             forcex_state = 0;
 
@@ -670,7 +656,6 @@ int rp_set_params(rp_app_params_t *p, int len)
             }
 
             auto_in_progress = 0;
-            TRACE("PC: AUTO algorithm finished.\n");
 
             return 0;
         }
