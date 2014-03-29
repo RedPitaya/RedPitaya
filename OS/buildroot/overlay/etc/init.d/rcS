@@ -25,14 +25,23 @@ ln -s /sys/bus/i2c/devices/0-0050/eeprom /dev/eeprom
 echo "++ Bringing up lo"
 ifup lo
 
-echo "++ Bringing up eth0"
-ifup eth0
+# Allow some time for the USB WiFi device to be detected.
+sleep 1;
 
+# Bring-up wlan0 before eth0 to avoid routing problems due to 192.168.1.100
+# default IP being assigned to eth0 if no cable is plugged in or no reply
+# is received from the DHCP.
+# This way, even if wlan0 gets the IP in 192.168.1.x range (via DHCP), the
+# routing tables will be OK.
 if [ -e /opt/etc/network/wpa_supplicant.conf ]
 then
 	echo "++ Bringing up wlan0"
 	ifup wlan0
 fi
+
+echo "++ Bringing up eth0"
+ifup eth0
+
 
 # Fix keys for SHH
 chmod 600 `find /etc/ -name ssh_host_\*`
