@@ -1028,7 +1028,7 @@
         downloading = false;
         if(params.local) {
           $('#accordion').find('input,select').prop('disabled', false);
-          $('.btn').not('#btn_single, #range_y_plus').prop('disabled', false);
+          $('.btn').not('#btn_single, #range_y_plus, #range_x_plus, #range_x_minus,').prop('disabled', false);
         }
       }
       if(long_timeout_used) {
@@ -1770,11 +1770,14 @@
     var xrange = axes.xaxis.max - axes.xaxis.min;
     var yrange = axes.yaxis.max - axes.yaxis.min;
     var ymaxrange = params.original.gui_reset_y_range;
-    
+    var xmaxrange = 20.0;  // seconds
+    var xminrange = 20e-9; // seconds
+        
     if(xunit == 'μs' && xrange < 1) {
       xrange *= 1000;
       xunit = 'ns';
     }
+    var seconds = (xunit == 'ns' ? 1e-9 : ( xunit == 'μs' ? 1e-6 : (xunit == 'ms' ? 1e-3 : 1)));
     
     if(yrange < 1) {
       yunit = 'mV';
@@ -1787,10 +1790,27 @@
     
     var nearest_x = getNearestRanges(xrange);
     var nearest_y = getNearestRanges(yrange);
+        
+    // X limitations 
+    if(nearest_x.next * seconds > xmaxrange) {
+      nearest_x.next = null;
+      $('#range_x_plus').prop('disabled', true);
+    }
+    else {
+      $('#range_x_plus').prop('disabled', false);
+    }
+    if(nearest_x.prev * seconds < xminrange) {
+      nearest_x.prev = null;
+      $('#range_x_minus').prop('disabled', true);
+    }
+    else {
+      $('#range_x_minus').prop('disabled', false);
+    }
     
     $('#range_x_minus').data({ nearest: nearest_x.prev, unit: xunit }).data('bs.tooltip').options.title = nearest_x.prev;
     $('#range_x_plus').data({ nearest: nearest_x.next, unit: xunit }).data('bs.tooltip').options.title = nearest_x.next;
     
+    // Y limitations
     if(nearest_y.next - nearest_y.prev >= ymaxrange) {
       nearest_y.next = null;
       $('#range_y_plus').prop('disabled', true);
@@ -1853,22 +1873,33 @@
   function shortenFloat(value) {
     return value.toFixed(Math.abs(value) >= 10 ? 1 : 3);
   }
-  
+
   function convertHz(value) {
     var unit = '';
     var decsep = getLocalDecimalSeparator();
     
-    if(value >= 1000000) {
-      value = (value/1000000).toFixed(1);
+    if(value >= 1e6) {
+      value /= 1e6;
       unit = '<span class="unit">MHz</span>';
     }
-    else if(value >= 1000) {
-      value = (value/1000).toFixed(1);
+    else if(value >= 1e3) {
+      value /= 1e3;
       unit = '<span class="unit">kHz</span>';
     }
     else {
-      value = value.toFixed(1);
       unit = '<span class="unit">Hz</span>';
+    }
+
+    // Fix to 4 decimal digits in total regardless of the decimal point placement
+    var eps = 1e-2;
+    if (value >= 100 - eps) {
+      value = value.toFixed(1);
+    }
+    else if  (value >= 10 - eps) {
+      value = value.toFixed(2);
+    }
+    else {
+      value = value.toFixed(3);
     }
     
     value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
@@ -1879,26 +1910,38 @@
     var unit = '';
     var decsep = getLocalDecimalSeparator();
     
-    if(value < 0.000001) {
-      value = (value*1000000000).toFixed(1);
+    if(value < 1e-6) {
+      value *= 1e9;
       unit = '<span class="unit">ns</span>';
     }
-    else if(value < 0.001) {
-      value = (value*1000000).toFixed(1);
+    else if(value < 1e-3) {
+      value *= 1e6;
       unit = '<span class="unit">μs</span>';
     }
     else if(value < 1) {
-      value = (value*1000).toFixed(1);
+      value *= 1e3
       unit = '<span class="unit">ms</span>';
     }
     else {
-      value = value.toFixed(1);
       unit = '<span class="unit">s</span>';
+    }
+
+    // Fix to 4 decimal digits in total regardless of the decimal point placement
+    var eps = 1e-2;
+    if (value >= 100 - eps) {
+      value = value.toFixed(1);
+    }
+    else if  (value >= 10 - eps) {
+      value = value.toFixed(2);
+    }
+    else {
+      value = value.toFixed(3);
     }
     
     value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
     return value + unit;
   }
+  
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
