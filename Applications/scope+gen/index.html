@@ -124,6 +124,12 @@
     
     $('#trigger_canvas').on({
       'mousedown touchstart': function(evt) {
+      
+        // Ignore the event if trigger source is external or mode is auto
+        if(!params.original || params.original.trig_mode == 0 || params.original.trig_source == 2) {
+          return;
+        }
+      
         trig_dragging = true;
         $('input, select', '#accordion').blur();
         mouseDownMove(this, evt);
@@ -166,7 +172,7 @@
         $(this).parent().removeClass('input-group');
         
         var tlev = parseLocalFloat($(this).val());
-        var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+        var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
         if(! isNaN(tlev)) {
           params.local.trig_level = tlev / scale;
           updateTriggerSlider(undefined, false);
@@ -174,7 +180,7 @@
           sendParams();
         }
         else {
-	  tlev = params.local.trig_level * scale;
+          tlev = params.local.trig_level * scale;
           $(this).val(tlev)
         }
         user_editing = false;
@@ -749,11 +755,23 @@
     .always(function() {
       if(! last_get_failed) {
         downloading = false;
+        
         if(params.local) {
-          $('#accordion').find('input,select').prop('disabled', false);
+          // Disable trigger level input if trigger source is external or mode is auto
+          if(params.original.trig_mode == 0 || params.original.trig_source == 2) {
+            $('#trig_level').prop('disabled', true).blur();
+            $('#apply_trig_level').hide().parent().removeClass('input-group');
+          }
+          else {
+            $('#trig_level').prop('disabled', false);
+          }
+          
+          // Manage the state of other components
+          $('#accordion').find('input,select').not('#trig_level').prop('disabled', false);
           $('.btn').not('#btn_single, #range_y_plus, #range_x_plus, #range_x_minus, #gen_ch1_single, #gen_ch2_single').prop('disabled', false);
         }
       }
+      
       if(long_timeout_used) {
         use_long_timeout = false;
       }
