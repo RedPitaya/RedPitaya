@@ -1035,7 +1035,10 @@
         if(params.local) {
           // Disable trigger level input if trigger source is External or mode is not Normal
           if(params.original.trig_mode != 1 || params.original.trig_source == 2) {
-            $('#trig_level').prop('disabled', true).blur();
+            $('#trig_level').prop('disabled', true);
+            if($('#trig_level').is(':focus')) {
+              $('#trig_level').blur();
+            }
             $('#apply_trig_level').hide().parent().removeClass('input-group');
           }
           else {
