@@ -701,7 +701,7 @@
     $('#trig_mode').val(params.original.trig_mode);
     $('#trig_source').val(params.original.trig_source);
     $('#trig_edge').val(params.original.trig_edge);
-    var scale = (params.original.trig_source == 0) ? params.original.scale_ch1 : params.original.scale_ch2;
+    var scale = (params.original.trig_source == 0 ? params.original.scale_ch1 : params.original.scale_ch2);
     $('#trig_level').val(floatToLocalString(params.original.trig_level * scale));
     
     if ((refresh_counter++ % meas_panel_dec) == 0) {
@@ -902,7 +902,7 @@
   function addTriggerDataSet(dsets) {
 
     // Transform trigger level to real values
-    var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+    var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
     var tlev = params.local.trig_level * scale;
   
     // Don't add trigger dataset if trigger level is outside the visible area...
@@ -1229,7 +1229,7 @@
         y = evt.clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
       }
       
-      var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+      var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
       params.local.trig_level = parseFloat(plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places)) / scale;           
       
       updateTriggerSlider();
@@ -1255,7 +1255,7 @@
     
     // Transform trigger level to real values
     // TODO: local or original params?
-    var scale = (params.local.trig_source == 0) ? params.local.scale_ch1 : params.local.scale_ch2;
+    var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
     var tlev = params.local.trig_level * scale;
 
     // If trigger level is outside the predefined ymin/ymax, change the level
