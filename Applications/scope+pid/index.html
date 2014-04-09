@@ -123,6 +123,12 @@
     
     $('#trigger_canvas').on({
       'mousedown touchstart': function(evt) {
+      
+        // Ignore the event if trigger source is External or mode is not Normal
+        if(!params.original || params.original.trig_mode != 1 || params.original.trig_source == 2) {
+          return;
+        }
+      
         trig_dragging = true;
         $('input, select', '#accordion').blur();
         mouseDownMove(this, evt);
@@ -1027,8 +1033,18 @@
       if(! last_get_failed) {
         downloading = false;
         if(params.local) {
-          $('#accordion').find('input,select').prop('disabled', false);
-          $('.btn').not('#btn_single, #range_y_plus, #range_x_plus, #range_x_minus,').prop('disabled', false);
+          // Disable trigger level input if trigger source is External or mode is not Normal
+          if(params.original.trig_mode != 1 || params.original.trig_source == 2) {
+            $('#trig_level').prop('disabled', true).blur();
+            $('#apply_trig_level').hide().parent().removeClass('input-group');
+          }
+          else {
+            $('#trig_level').prop('disabled', false);
+          }
+          
+          // Manage the state of other components
+          $('#accordion').find('input,select').not('#trig_level').prop('disabled', false);
+          $('.btn').not('#btn_single, #range_y_plus, #range_x_plus, #range_x_minus').prop('disabled', false);
         }
       }
       if(long_timeout_used) {
@@ -1735,10 +1751,10 @@
       y = plot.getAxes().yaxis.p2c(params.local.trig_level);
     }
     
-    // If trigger source is external or mode is auto or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
+    // If trigger source is External or mode is not Normal or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
     context.clearRect(0, 0, canvas.width, canvas.height); 
     var yaxis = plot.getAxes().yaxis;
-    if(params.original.trig_mode == 0 || params.local.trig_level < yaxis.min || params.local.trig_level > yaxis.max || params.original.trig_source == 2) {
+    if(params.original.trig_mode != 1 || params.local.trig_level < yaxis.min || params.local.trig_level > yaxis.max || params.original.trig_source == 2) {
       context.lineWidth = 1;
       context.strokeStyle = '#dddddd';
       context.stroke();
