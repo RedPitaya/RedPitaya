@@ -125,8 +125,8 @@
     $('#trigger_canvas').on({
       'mousedown touchstart': function(evt) {
       
-        // Ignore the event if trigger source is external or mode is auto
-        if(!params.original || params.original.trig_mode == 0 || params.original.trig_source == 2) {
+        // Ignore the event if trigger source is External or mode is not Normal
+        if(!params.original || params.original.trig_mode != 1 || params.original.trig_source == 2) {
           return;
         }
       
@@ -757,8 +757,8 @@
         downloading = false;
         
         if(params.local) {
-          // Disable trigger level input if trigger source is external or mode is auto
-          if(params.original.trig_mode == 0 || params.original.trig_source == 2) {
+          // Disable trigger level input if trigger source is External or mode is not Normal
+          if(params.original.trig_mode != 1 || params.original.trig_source == 2) {
             $('#trig_level').prop('disabled', true).blur();
             $('#apply_trig_level').hide().parent().removeClass('input-group');
           }
@@ -1116,8 +1116,8 @@
         return dsets;
       }
     }
-    // ...or trigger mode is auto
-    if(params.local.trig_mode == 0) {
+    // ...or trigger mode is not Normal
+    if(params.local.trig_mode != 1) {
       return dsets;
     }
     // ...or trigger source is external
@@ -1478,10 +1478,10 @@
       y = plot.getAxes().yaxis.p2c(tlev);
     }
     
-    // If trigger source is external or mode is auto or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
+    // If trigger source is External or mode is not Normal or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
     context.clearRect(0, 0, canvas.width, canvas.height); 
     var yaxis = plot.getAxes().yaxis;
-    if(params.original.trig_mode == 0 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
+    if(params.original.trig_mode != 1 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
       context.lineWidth = 1;
       context.strokeStyle = '#dddddd';
       context.stroke();
