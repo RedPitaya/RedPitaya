@@ -581,22 +581,22 @@
       });
 
     // PID 21 Setpoint, Kp, Ki, Kd
-    $('#pid_11_sp')
+    $('#pid_21_sp')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_pid_11_sp').show();
+        $('#apply_pid_21_sp').show();
       })
       .on('blur', function() {
-        $('#apply_pid_11_sp').hide();
+        $('#apply_pid_21_sp').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.pid_11_sp = val;
+          params.local.pid_21_sp = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.pid_11_sp)
+          $(this).val(params.local.pid_21_sp)
         }
         user_editing = false;
       })
@@ -609,22 +609,22 @@
         }
       });
 
-    $('#pid_11_kp')
+    $('#pid_21_kp')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_pid_11_kp').show();
+        $('#apply_pid_21_kp').show();
       })
       .on('blur', function() {
-        $('#apply_pid_11_kp').hide();
+        $('#apply_pid_21_kp').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.pid_11_kp = val;
+          params.local.pid_21_kp = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.pid_11_kp)
+          $(this).val(params.local.pid_21_kp)
         }
         user_editing = false;
       })
@@ -637,22 +637,22 @@
         }
       });
 
-    $('#pid_11_ki')
+    $('#pid_21_ki')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_pid_11_ki').show();
+        $('#apply_pid_21_ki').show();
       })
       .on('blur', function() {
-        $('#apply_pid_11_ki').hide();
+        $('#apply_pid_21_ki').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.pid_11_ki = val;
+          params.local.pid_21_ki = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.pid_11_ki)
+          $(this).val(params.local.pid_21_ki)
         }
         user_editing = false;
       })
@@ -665,22 +665,22 @@
         }
       });
 
-    $('#pid_11_kd')
+    $('#pid_21_kd')
       .on('focus paste', function() {
         $(this).parent().addClass('input-group');
-        $('#apply_pid_11_kd').show();
+        $('#apply_pid_21_kd').show();
       })
       .on('blur', function() {
-        $('#apply_pid_11_kd').hide();
+        $('#apply_pid_21_kd').hide();
         $(this).parent().removeClass('input-group');
         
         var val = parseLocalFloat($(this).val());
         if(! isNaN(val)) {
-          params.local.pid_11_kd = val;
+          params.local.pid_21_kd = val;
           sendParams();
         }
         else {
-          $(this).val(params.local.pid_11_kd)
+          $(this).val(params.local.pid_21_kd)
         }
         user_editing = false;
       })
