@@ -166,6 +166,11 @@ int fpga_awg_init(void)
  */
 int fpga_awg_exit(void)
 {
+    /* Turn the generator off */
+    if (g_awg_reg) {
+        g_awg_reg->state_machine_conf = 0xC000C0;
+    }
+
     return __awg_cleanup_mem();
 }
 
