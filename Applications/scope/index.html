@@ -209,18 +209,11 @@
           nearest /= 1000;
         }
         
-        var half = Math.abs(nearest - (max - min)) / 2;
-        var zoomin = (max - min > nearest ? true : false);
-        
-        if(zoomin) {
-          min += half;
-          max -= half;
-        }
-        else {
-          min -= half;
-          max += half;
-        }
-        
+        var center = (min + max) / 2;
+        var half = nearest / 2;
+        min = center - half;
+        max = center + half;
+
         options.xaxes[0].min = min;
         options.xaxes[0].max = max;
 
@@ -251,17 +244,10 @@
           nearest /= 1000;
         }
         
-        var half = Math.abs(nearest - (max - min)) / 2;
-        var zoomin = (max - min > nearest ? true : false);
-        
-        if(zoomin) {
-          min += half;
-          max -= half;
-        }
-        else {
-          min -= half;
-          max += half;
-        }
+        var center = (min + max) / 2;
+        var half = nearest / 2;
+        min = center - half;
+        max = center + half;
         
         options.yaxes[0].min = min;
         options.yaxes[0].max = max;
@@ -1314,10 +1300,14 @@
     var ymaxrange = params.original.gui_reset_y_range;
     var xmaxrange = 20.0;  // seconds
     var xminrange = 20e-9; // seconds
-        
+    var decimals = 0;
+
     if(xunit == 'μs' && xrange < 1) {
       xrange *= 1000;
       xunit = 'ns';
+    }
+    if(xrange < 1) {
+      decimals = 1;
     }
     var seconds = (xunit == 'ns' ? 1e-9 : ( xunit == 'μs' ? 1e-6 : (xunit == 'ms' ? 1e-3 : 1)));
     
@@ -1327,8 +1317,7 @@
       ymaxrange *= 1000;
     }
 
-    $('#range_x').html(Math.floor(xrange) + ' ' + xunit);
-
+    $('#range_x').html(+(Math.round(xrange + "e+" + decimals) + "e-" + decimals) + ' ' + xunit);
     $('#range_y').html(Math.floor(yrange) + ' ' + yunit);
     
     var nearest_x = getNearestRanges(xrange);
@@ -1374,19 +1363,20 @@
     var next = null;
     
     while(i < range_steps.length - 1) {
+      var ratio = range_steps[i+1] / normalized;
+      if(ratio > 0.99 && ratio < 1.01) {
+        prev = range_steps[i];
+        next = range_steps[i+2];
+        break;
+      }
       if(range_steps[i] < normalized && normalized < range_steps[i+1]) {
         prev = range_steps[i];
         next = range_steps[i+1];
         break;
       }
-      if(range_steps[i] < normalized &&  range_steps[i+1] == normalized) {
-        prev = range_steps[i];
-        next = range_steps[i+2];
-        break;
-      }
       i++;
     }
-    
+
     return { 
       prev: prev * Math.pow(10, log10), 
       next: next * Math.pow(10, log10) 
