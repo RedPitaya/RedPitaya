@@ -1,6 +1,6 @@
 {
     "name": "Oscilloscope & Generator",
-    "version": "0.91-BUILD_NUMBER",
+    "version": "0.92-BUILD_NUMBER",
     "revision": "REVISION",
     "description": "A two channel time domain signal visualization system with integrated two channel waveform generator."
 }
