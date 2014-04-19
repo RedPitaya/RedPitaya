@@ -103,6 +103,15 @@ MD5=$4
     }
 
     rm -f /tmp/app.zip
+
+    # Ecosystem special case - run os-postinstall & schedule a reboot
+    if [ "x${APP}" == "x${OS}" ]; then
+        if [ -x /opt/sbin/os-postinstall ]; then
+            /opt/sbin/os-postinstall
+        fi
+        /bin/sh -c "sleep 5; reboot" &
+    fi
+
     mount -o ro,remount /opt
 
     exit 0;
