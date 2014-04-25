@@ -24,6 +24,7 @@ iface eth0 inet dhcp
     udhcpc_opts -t7 -T3
 
 # Static IP address
+# Don't forget to set the static DNS IP in sd:/etc/init.d/rcS too.
 #iface eth0 inet static
 #    address 192.168.1.101
 #    netmask 255.255.255.0
