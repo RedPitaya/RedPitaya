@@ -936,6 +936,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
         orig_params[TRIG_LEVEL_PARAM].value = 0;
         orig_params[AUTO_FLAG_PARAM].value  = 0;
         orig_params[TIME_UNIT_PARAM].value  = 0;
+        orig_params[TRIG_DLY_PARAM].value   = 0;
 
         min_y = (min_cha < min_chb) ? min_cha : min_chb;
         max_y = (max_cha > max_chb) ? max_cha : max_chb;
@@ -1063,6 +1064,7 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                                         (float)(1<<(c_osc_fpga_adc_bits-1));
 
                 orig_params[MIN_GUI_PARAM].value    = 0;
+                orig_params[TRIG_DLY_PARAM].value   = 0;
 
                 if (period > 0) {
                     /* Period detected */
