@@ -1033,7 +1033,7 @@
           
           // Manage the state of other components
           $('#accordion').find('input,select').not('#trig_level').prop('disabled', false);
-          $('.btn').not('#btn_single, #range_y_plus, #range_x_plus, #range_x_minus').prop('disabled', false);
+          $('.btn').not('#btn_single, #range_y_plus, #range_y_minus, #range_x_plus, #range_x_minus').prop('disabled', false);
         }
       }
       if(long_timeout_used) {
@@ -1774,8 +1774,9 @@
     var axes = plot.getAxes();
     var xrange = axes.xaxis.max - axes.xaxis.min;
     var yrange = axes.yaxis.max - axes.yaxis.min;
+    var yminrange = 5e-3;  // Volts
     var ymaxrange = params.original.gui_reset_y_range;
-    var xmaxrange = 20.0;  // seconds
+    var xmaxrange = 10.0;  // seconds
     var xminrange = 20e-9; // seconds
     var decimals = 0;
 
@@ -1792,6 +1793,7 @@
       yunit = 'mV';
       yrange *= 1000;
       ymaxrange *= 1000;
+      yminrange *= 1000;
     }
 
     $('#range_x').html(+(Math.round(xrange + "e+" + decimals) + "e-" + decimals) + ' ' + xunit);
@@ -1826,6 +1828,13 @@
     }
     else {
       $('#range_y_plus').prop('disabled', false);
+    }
+    if(nearest_y.prev < yminrange) {
+      nearest_y.prev = null;
+      $('#range_y_minus').prop('disabled', true);
+    }
+    else {
+      $('#range_y_minus').prop('disabled', false);
     }
     
     $('#range_y_minus').data({ nearest: nearest_y.prev, unit: yunit }).data('bs.tooltip').options.title = nearest_y.prev;
