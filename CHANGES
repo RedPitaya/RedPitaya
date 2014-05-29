@@ -1,5 +1,5 @@
 
-Changes with RedPitaya 0.92                                      27 May 2014
+Changes with RedPitaya 0.92                                      29 May 2014
 
     Release 0.92 is a bug-fix release, not introducing any new features.
     The bug-fixes resolve mainly the following issues:
@@ -8,8 +8,8 @@ Changes with RedPitaya 0.92                                      27 May 2014
     2) Several zoom related issues.
     3) Several Measure panel improvements (refresh rate, readability, accuracy, relevance).
     4) Manual range controls.
-    5) Artifacts in signal traces at long time ranges (8 s).
-    6) Long delays at incremental acquisitions and long time ranges (8 s).
+    5) Artifacts in signal traces at long time ranges (> 1 s).
+    6) Long delays at incremental acquisitions and long time ranges (> 1 s).
     7) Trigger level visibility in plot area based on trigger mode & source.
     8) Trigger level dependency on gain settings.
     9) Arbitrary waveform generator file upload & immediate new waveform activation.
