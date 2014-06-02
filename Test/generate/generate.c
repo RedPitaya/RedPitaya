@@ -1,5 +1,5 @@
 /**
- * $Id: generate_sweep.c 1246 2014-06-02 09:07am pdorazio $
+ * $Id: generate.c 1246 2014-06-02 09:07am pdorazio $
  *
  * @brief Red Pitaya simple signal/function generator with pre-defined
  *        signal types.
