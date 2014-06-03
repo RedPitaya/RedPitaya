@@ -618,6 +618,7 @@ int rp_set_params(rp_app_params_t *p, int len)
          */
         float t_min = 0;
         float t_max = ((OSC_FPGA_SIG_LEN-1) * smpl_period);
+        float t_max_minus = ((OSC_FPGA_SIG_LEN-6) * smpl_period);
 
         params_init = 1;
         /* in time units time_unit, needs to be converted */
@@ -683,11 +684,11 @@ int rp_set_params(rp_app_params_t *p, int len)
 
         /* Check if trigger delay in correct range, otherwise correct it
          * Correct trigger delay is:
-         *  t_delay >= -t_max
+         *  t_delay >= -t_max_minus
          *  t_delay <= OSC_FPGA_MAX_TRIG_DELAY
          */
-        if(t_delay < -t_max) {
-            t_delay = -t_max;
+        if(t_delay < -t_max_minus) {
+            t_delay = -t_max_minus;
         } else if(t_delay > (OSC_FPGA_TRIG_DLY_MASK * smpl_period)) {
             t_delay = OSC_FPGA_TRIG_DLY_MASK * smpl_period;
         } else {
