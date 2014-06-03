@@ -755,7 +755,7 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
             (t_start + ((next_out_idx*step_wr_ptr)*smpl_period))*t_unit_factor;
 
         /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
-         if ( (dec_factor > 64) && (next_out_idx == 2) ) {
+        if ( (dec_factor > 64) && (next_out_idx == 2) ) {
              int i;
              for (i=0; i < next_out_idx; i++) {
                  cha_out[i] = cha_out[next_out_idx];
