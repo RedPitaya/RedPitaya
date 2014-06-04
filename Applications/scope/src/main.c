@@ -360,7 +360,8 @@ int transform_acq_params(rp_app_params_t *p)
         /* Autotriggering mode => acquisition starts at time t = 0 */
         rdec = (xmax - 0) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
     } else {
-        rdec = (xmax - xmin) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
+        double rxmax = (xmax < 0) ? 0 : xmax;
+        rdec = (rxmax - xmin) * c_osc_fpga_smpl_freq / OSC_FPGA_SIG_LEN;
     }
 
     /* Find optimal decimation setting */
