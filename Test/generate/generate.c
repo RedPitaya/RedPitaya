@@ -1,5 +1,5 @@
 /**
- * $Id: generate.c 1246 2014-02-22 19:05:19Z ales.bardorfer $
+ * $Id: generate.c 1246 2014-06-02 09:07am pdorazio $
  *
  * @brief Red Pitaya simple signal/function generator with pre-defined
  *        signal types.
@@ -73,7 +73,8 @@ const char *g_argv0 = NULL;
 typedef enum {
     eSignalSine,         ///< Sinusoidal waveform.
     eSignalSquare,       ///< Square waveform.
-    eSignalTriangle      ///< Triangular waveform.
+    eSignalTriangle,     ///< Triangular waveform.
+    eSignalSweep         ///< Sinusoidal frequency sweep.
 } signal_e;
 
 /** AWG FPGA parameters */
@@ -84,7 +85,7 @@ typedef struct {
 } awg_param_t;
 
 /* Forward declarations */
-void synthesize_signal(double ampl, double freq, signal_e type,
+void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *params);
 void write_data_fpga(uint32_t ch,
@@ -97,12 +98,13 @@ void usage() {
     const char *format =
         "%s version %s-%s\n"
         "\n"
-        "Usage: %s   channel amplitude frequency <type>\n"
+        "Usage: %s   channel amplitude frequency <type> <end frequency>\n"
         "\n"
         "\tchannel     Channel to generate signal on [1, 2].\n"
         "\tamplitude   Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency   Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\ttype        Signal type [sine, sqr, tri].\n"
+        "\ttype        Signal type [sine, sqr, tri, sweep].\n"
+        "\tend frequency   Sweep-to frequency in Hz [%2.1f - %2.1e].\n"
         "\n";
 
     fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
@@ -139,6 +141,12 @@ int main(int argc, char *argv[])
 
     /* Signal frequency argument parsing */
     double freq = strtod(argv[3], NULL);
+    double endfreq;
+    endfreq = 0;
+
+    if (argc > 5) {
+        endfreq = strtod(argv[5], NULL);
+    }
 
     /* Signal type argument parsing */
     signal_e type = eSignalSine;
@@ -149,6 +157,8 @@ int main(int argc, char *argv[])
             type = eSignalSquare;
         } else if ( strcmp(argv[4], "tri") == 0) {
             type = eSignalTriangle;
+        } else if ( strcmp(argv[4], "sweep") == 0) {
+            type = eSignalSweep;   
         } else {
             fprintf(stderr, "Invalid signal type: %s\n", argv[4]);
             usage();
@@ -165,7 +175,8 @@ int main(int argc, char *argv[])
 
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
-    synthesize_signal(ampl, freq, type, data, &params);
+    
+    synthesize_signal(ampl, freq, type, endfreq, data, &params);
 
     /* Write the data to the FPGA and set FPGA AWG state machine */
     write_data_fpga(ch, data, &params);
@@ -185,18 +196,19 @@ int main(int argc, char *argv[])
  * @param awg   Returned AWG parameters.
  *
  */
-void synthesize_signal(double ampl, double freq, signal_e type,
+void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *awg) {
 
     uint32_t i;
 
-    /* Varios locally used constants - HW specific parameters */
+    /* Various locally used constants - HW specific parameters */
     const int dcoffs = -155;
     const int trans0 = 30;
     const int trans1 = 300;
     const double tt2 = 0.249;
 
+    /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
     awg->wrap = round(65536 * (n-1));
@@ -270,6 +282,19 @@ void synthesize_signal(double ampl, double freq, signal_e type,
         /* Triangle */
         if (type == eSignalTriangle) {
             data[i] = round(-1.0*(double)amp*(acos(cos(2*M_PI*(double)i/(double)n))/M_PI*2-1));
+        }
+
+        /* Sweep */
+        /* Loops from i = 0 to n = 16*1024. Generates a sine wave signal that
+           changes in frequency as the buffer is filled. */
+        double start = 2 * M_PI * freq;
+        double end = 2 * M_PI * endfreq;
+        if (type == eSignalSweep) {
+            double sampFreq = c_awg_smpl_freq; // 125 MHz
+            double t = i / sampFreq; // This particular sample
+            double T = n / sampFreq; // Wave period = # samples / sample frequency
+            /* Actual formula. Frequency changes from start to end. */
+            data[i] = round(amp * (sin((start*T)/log(end/start) * ((exp(t*log(end/start)/T)-1)))));
         }
         
         /* TODO: Remove, not necessary in C/C++. */
