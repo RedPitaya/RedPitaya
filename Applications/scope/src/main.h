@@ -45,7 +45,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        57
+#define PARAMS_NUM        81
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -104,10 +104,40 @@ typedef struct rp_osc_meas_res_s {
 #define GEN_SIG_FREQ_CH2  54
 #define GEN_SIG_DCOFF_CH2 55
 #define GEN_AWG_REFRESH   56
+/* PID parameters */
+#define PID_11_ENABLE     57
+#define PID_11_RESET      58
+#define PID_11_SP         59
+#define PID_11_KP         60
+#define PID_11_KI         61
+#define PID_11_KD         62
+#define PID_12_ENABLE     63
+#define PID_12_RESET      64
+#define PID_12_SP         65
+#define PID_12_KP         66
+#define PID_12_KI         67
+#define PID_12_KD         68
+#define PID_21_ENABLE     69
+#define PID_21_RESET      70
+#define PID_21_SP         71
+#define PID_21_KP         72
+#define PID_21_KI         73
+#define PID_21_KD         74
+#define PID_22_ENABLE     75
+#define PID_22_RESET      76
+#define PID_22_SP         77
+#define PID_22_KP         78
+#define PID_22_KI         79
+#define PID_22_KD         80
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
- * trigger update only on needed part - either Oscilloscope or AWG */
+ * trigger update only on needed part - either Oscilloscope, AWG or PID */
 #define PARAMS_AWG_PARAMS 42
+
+/* Defines from which parameters on are PID parameters (used in set_param() to
+ * trigger update only on needed part - either Oscilloscope, AWG or PID */
+#define PARAMS_PID_PARAMS 57
+#define PARAMS_PER_PID     6
 
 /* Output signals */
 #define SIGNAL_LENGTH (1024) /* Must be 2^n! */

@@ -71,11 +71,8 @@ for i in `find /etc/init.d/ -name S\* | sort` ;do
     esac
 done
 
-if [ -x /opt/sbin/discovery ]
-then
-	echo "++ Starting Red Pitaya IP discovery"
-	/opt/sbin/discovery
-fi
+# Set user's connman network configuration
+/etc/init.d/connman-config
 
 # Start user rcS script from SD card
 OPT_RCS=/opt/etc/init.d/rcS
