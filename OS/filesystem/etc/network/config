@@ -1,0 +1,12 @@
+# Red Pitaya wired network (1000Base-T) configuration
+
+# Choose one of the following:
+#   dhcp   - Use DHCP + Zeroconf/avahi fallback.
+#   static - Use Static IP, NETMASK & GATEWAY as specified below.
+
+NETWORK=dhcp
+
+# Static network configuration parameters (active if NETWORK=static)
+IP=192.168.1.100
+NETMASK=255.255.255.0
+GATEWAY=192.168.1.1
