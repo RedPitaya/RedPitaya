@@ -187,7 +187,6 @@ int main(int argc, char *argv[])
 
     /* Signal frequency argument parsing */
     double freq = strtod(argv[1], NULL);
-    printf("frequency set to :%f\n", freq);
     /* Check frequency limits */
     if ( (freq < c_min_frequency) || (freq > c_max_frequency ) ) {
         fprintf(stderr, "Invalid start frequency: %s\n", argv[1]);
@@ -197,7 +196,6 @@ int main(int argc, char *argv[])
 
     /* Signal amplitude argument parsing */
     double ampl = strtod(argv[2], NULL);
-    printf("amplitude set to :%f\n", ampl);
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
         fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
@@ -206,7 +204,6 @@ int main(int argc, char *argv[])
 
     /* Acqusition size */
     uint32_t size = atoi(argv[3]);
-    printf("number of smaples: %d\n", size);
     if (size > 16384) {
             fprintf(stderr, "Invalid SIZE: %s\n", argv[3]);
             usage();
@@ -258,7 +255,6 @@ int main(int argc, char *argv[])
     synthesize_signal(ampl, freq, type, endfreq, data, &params);
     /* Write the data to the FPGA and set FPGA AWG state machine */ 
     write_data_fpga(ch, data, &params);
-    printf("data for generation of the signal written to fpga \n");
     /* the same for the 2nd output */
     //ch = 2;
     /* loking at psevdokoda the amplitude for the secon signal is 0 */
@@ -294,7 +290,7 @@ int main(int argc, char *argv[])
 
         int retries = 150000;
 
-        s = (float **)malloc(SIGNALS_NUM * sizeof(float *));
+        s = (float **)malloc(SIGNALS_NUM * sizeof(float *)); //SIGNALS_NUM = 3
         for(i = 0; i < SIGNALS_NUM; i++) {
             s[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
         }
@@ -324,8 +320,7 @@ int main(int argc, char *argv[])
         /* LCR mathematical algorythm */
 
         /* removing the DC value from acquired signal */
-        float s_mean_1; /* used to calculate the mean value */
-        float s_mean_2; /* used to calculate the mean value */
+        float s_mean[SIGNALS_NUM]; /* used for calculating the mean value. array has 3 values so it can be consistent with pointer s */
         float *v_1; /* signal without DC value (mean value is removed) */
         float *v_2; /* signal without DC value (mean value is removed) */
         float *U_in_1; /* Transforma signals from  AD - 14 bit 2 Volts AD Suply [??]*/
@@ -335,49 +330,46 @@ int main(int argc, char *argv[])
         v_2 = (float *)malloc(SIGNALS_NUM * sizeof(float));
         U_in_1 = (float *)malloc(SIGNALS_NUM * sizeof(float));
         U_in_2 = (float *)malloc(SIGNALS_NUM * sizeof(float));
-        printf("constructing s_mean value\n");
+
+        //constructing the mean value
         for (i=0; i < MIN(size, sig_len); i++) {
-            s_mean_1 += s[1][i];
-            s_mean_2 += s[2][i];
+            s_mean[1] += s[1][i];
+            s_mean[2] += s[2][i];
+            printf("s_mean[2](%f) += s[2][i](%f)\n",s_mean[2] ,s[2][i] ); /*for troubleshooting purposes*/
         }
-        s_mean_1 = s_mean_1 / MIN(size,sig_len);
-        s_mean_2 = s_mean_2 / MIN(size,sig_len);
-        printf("excluding the DC offset\n");
-        printf("MIN(size, sig_len) = %d\n", MIN(size, sig_len));
-
+        s_mean[1] = s_mean[1] / MIN(size,sig_len);
+        s_mean[2] = s_mean[2] / MIN(size,sig_len);
+        printf("mean values: = %f , %f\n",s_mean[1],s_mean[2]); /*for troubleshooting purposes*/
+/*
         printf("s[1][0] = (%f) - \n", s[1][0] );
-        printf("s_mean_1 = (%f)\n", s_mean_1 );
-        v_1[0] = s[1][0] - s_mean_1;
+        printf("s_mean[1] = (%f)\n", s_mean[1] );
+        v_1[0] = s[1][0] - s_mean[1];
         printf("s[1][0] - s[1][0] = %f\n", v_1[0]);
-
-        for (i=0; i<MIN(size, sig_len); i++) {
-            printf("\n before U_in_1 = %7d U_in_2 = %7d\n", (int)U_in_1[i], (int)U_in_2[i]);
+*/
+        //excluding the DC signal(mean value) from samples
+        for (i=0; i < MIN(size, sig_len); i++) {
             
-            printf("v_1[%d](%f) =",i,v_1[i] );
-            printf("s[1][%d](%f) - ",i, s[1][i] );
-            printf("s_mean_1(%d)(%f)\n",i, s_mean_1 );
+            //printf("v_1[i] and v_2[i] = %f, %f\n", v_1[i],v_2[i]); /*for troubleshooting purposes*/
+            v_1[i] = s[1][i] - s_mean[1];
+            v_2[i] = s[2][i] - s_mean[2];
+            printf("v_1[i] and v_2[i] = %f, %f\n", v_1[i],v_2[i]); /*for troubleshooting purposes*/
 
-            v_1[i] = s[1][i] - s_mean_1;
             //Transform the signal from  AD(14 bit) to Volts AD Suply
+            //printf("U_in_1[i] and U_in_2[i] = %f, %f\n", U_in_1[i],U_in_2[i]);
             U_in_1[i]=( v_1[i] / 16384 ) * 2;
-
-            v_2[i] = s[2][i] - s_mean_2;
-            //Transform the signal from  AD(14 bit) to Volts AD Suply
             U_in_2[i]=( v_2[i] / 16384 ) * 2;
-            printf(" after U_in_1[%d] = %7d U_in_2[%d] = %7d\n",i, (int)U_in_1[i], i, (int)U_in_2[i]);
+            printf("U_in_1[i] and U_in_2[i] = %f, %f\n", U_in_1[i],U_in_2[i]); /*for troubleshooting purposes*/
         }
 
-        //float T = (1/125000000)*g_dec[idx]; //Sampling time [seconds]
+        float T = (1/125000000)*g_dec[idx]; //Sampling time [seconds] decimation is set to 1
         uint32_t N=size;  //Number of samples in respect to numbers of periods T ??
 
         //Frequencies vector there is no sweep function so this vector has a value 10000 on all places
         float *f_out;
         f_out = (float *)malloc(N * sizeof(float));
-        printf("constructing f_out\n");
         for (i=0; i < N; i++) {
             f_out[i] = 1000;
         }
-        printf("constructin dT\n");
 
         float *dT;
         dT = (float *)malloc(N * sizeof(float));
@@ -385,37 +377,34 @@ int main(int argc, char *argv[])
             dT[i] = i;
         }
 
-        printf("constructin' t\n");
         float *t;
         t = (float *)malloc(SIGNALS_NUM * sizeof(float));
         for(i=0; i< 1600; i++) {
             t[i]=i;
         }
 
-
-        //float w_out;
-        //w_out = *f_out * 2 * PI;
-        //dT = (int **)malloc(N * sizeof(int));
+        float w_out;
+        w_out = *f_out * 2 * PI;
         
         // Empty vectors for two lock-in components (X,Y (sin,cos)) for sampled input signals 
+        float *U_in_1_sampled_X;
+        U_in_1_sampled_X = (float *)malloc(N * sizeof(float));
         /*
-        float **U_in_1_sampled_X;
-        U_in_1_sampled_X = (float **)malloc(N * sizeof(float *));
+        float *U_in_2_sampled_X;
+        U_in_2_sampled_X = (float *)malloc(N * sizeof(float));
 
-        float **U_in_1_sampled_Y;
-        U_in_1_sampled_Y = (float **)malloc(N * sizeof(float *));
+        float *U_in_1_sampled_Y;
+        U_in_1_sampled_Y = (float **)malloc(N * sizeof(float));
 
-        float **U_in_2_sampled_X;
-        U_in_2_sampled_X = (float **)malloc(N * sizeof(float *));
-
-        float **U_in_2_sampled_Y;
-        U_in_2_sampled_Y = (float **)malloc(N * sizeof(float *));
+        float *U_in_2_sampled_Y;
+        U_in_2_sampled_Y = (float *)malloc(N * sizeof(float));
         */
-        //float fi_test = 0;
-        // Calculate for Lock in and save in vectors for sampels
-        //for(i=0; i<N; i++) {
-        //    U_in_1_sampled_X=U_in_1[i].*cos(t[i]*T*w_out[i] + fi_test);
-        //}
+        float fi_test = 0;
+        // Lock in method vector preparation
+        for(i = 0 ; i < N ; i++ ) {
+            U_in_1_sampled_X[i] = U_in_1[i] * cos( t[i] * T * w_out + fi_test );
+            printf("U_in_1_sampled_X[%d] = %f\n" , i , U_in_1_sampled_X[i] );
+        }
         
         //U_in_1_sampled_Y=U_in_1.*sin(t*T*w_out+fi_test);
         
