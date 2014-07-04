@@ -404,7 +404,7 @@ uint32_t read_value(uint32_t a_addr) {
 	void* virt_addr = map_base + (a_addr & MAP_MASK);
 	uint32_t read_result = 0;
 	read_result = *((uint32_t *) virt_addr);
-	printf("0x%08x\n", read_result);
+	printf("[16] 0x%08x [10] %d\n", read_result, (int)read_result);
 	fflush(stdout);
 	return read_result;
 }
