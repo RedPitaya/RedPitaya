@@ -323,14 +323,16 @@ int main(int argc, char *argv[])
         float s_mean[SIGNALS_NUM]; /* used for calculating the mean value. array has 3 values so it can be consistent with pointer s */
         float *v_1; /* signal without DC value (mean value is removed) */
         float *v_2; /* signal without DC value (mean value is removed) */
-        float *U_in_1; /* Transforma signals from  AD - 14 bit 2 Volts AD Suply [??]*/
-        float *U_in_2; /* Transforma signals from  AD - 14 bit 2 Volts AD Suply [??]*/
+
+        float **U_in;/* Transform signals from  AD - 14 bit 2 Volts AD Suply [??]*/
+        U_in = (float **)malloc(SIGNALS_NUM * sizeof(float *)); //SIGNALS_NUM = 3
+        for(i = 0; i < SIGNALS_NUM; i++) {
+            U_in[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
+        }
 
         v_1 = (float *)malloc(SIGNALS_NUM * sizeof(float));
         v_2 = (float *)malloc(SIGNALS_NUM * sizeof(float));
-        U_in_1 = (float *)malloc(SIGNALS_NUM * sizeof(float));
-        U_in_2 = (float *)malloc(SIGNALS_NUM * sizeof(float));
-
+        
         //constructing the mean value
         for (i=0; i < MIN(size, sig_len); i++) {
             s_mean[1] += s[1][i];
@@ -356,9 +358,9 @@ int main(int argc, char *argv[])
 
             //Transform the signal from  AD(14 bit) to Volts AD Suply
             //printf("U_in_1[i] and U_in_2[i] = %f, %f\n", U_in_1[i],U_in_2[i]);
-            U_in_1[i]=( v_1[i] / 16384 ) * 2;
-            U_in_2[i]=( v_2[i] / 16384 ) * 2;
-            printf("U_in_1[i] and U_in_2[i] = %f, %f\n", U_in_1[i],U_in_2[i]); /*for troubleshooting purposes*/
+            U_in[1][i] = ( v_1[i] / 16384 ) * 2;
+            U_in[2][i] = ( v_2[i] / 16384 ) * 2;
+            printf("U_in[1][i] and U_in[2][i] = %f, %f\n", U_in[1][i],U_in[2][i]); /*for troubleshooting purposes*/
         }
 
         float T = (1/125000000)*g_dec[idx]; //Sampling time [seconds] decimation is set to 1
@@ -389,28 +391,26 @@ int main(int argc, char *argv[])
         // Empty vectors for two lock-in components (X,Y (sin,cos)) for sampled input signals 
         float *U_in_1_sampled_X;
         U_in_1_sampled_X = (float *)malloc(N * sizeof(float));
-        /*
+        
         float *U_in_2_sampled_X;
         U_in_2_sampled_X = (float *)malloc(N * sizeof(float));
-
+        
         float *U_in_1_sampled_Y;
-        U_in_1_sampled_Y = (float **)malloc(N * sizeof(float));
+        U_in_1_sampled_Y = (float *)malloc(N * sizeof(float));
 
         float *U_in_2_sampled_Y;
         U_in_2_sampled_Y = (float *)malloc(N * sizeof(float));
-        */
+        
         float fi_test = 0;
         // Lock in method vector preparation
         for(i = 0 ; i < N ; i++ ) {
-            U_in_1_sampled_X[i] = U_in_1[i] * cos( t[i] * T * w_out + fi_test );
+            U_in_1_sampled_X[i] = U_in[1][i] * cos( t[i] * T * w_out + fi_test );
+            U_in_2_sampled_X[i] = U_in[2][i] * cos( t[i] * T * w_out + fi_test );
+            U_in_1_sampled_Y[i] = U_in[1][i] * sin( t[i] * T * w_out + fi_test );
+            U_in_2_sampled_Y[i] = U_in[2][i] * sin( t[i] * T * w_out + fi_test );
             printf("U_in_1_sampled_X[%d] = %f\n" , i , U_in_1_sampled_X[i] );
         }
-        
-        //U_in_1_sampled_Y=U_in_1.*sin(t*T*w_out+fi_test);
-        
-        //U_in_2_sampled_X=U_in_2.*cos(t*T*w_out+fi_test);
-        //U_in_2_sampled_Y=U_in_2.*sin(t*T*w_out+fi_test);
-        
+  
     }
 
     if(rp_app_exit() < 0) {
