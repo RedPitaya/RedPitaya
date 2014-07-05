@@ -8,6 +8,12 @@ mkdir -p /dev/pts
 mkdir -p /dev/i2c
 mount -a
 
+# Check if SD card mounted, if not wait and try again
+if ! grep -qs '/opt' /proc/mounts; then
+	sleep 1
+	mount -a
+fi
+
 # Create /tmp structure every time, since it resides in RAM
 mkdir -p /tmp/log/nginx
 
