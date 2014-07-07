@@ -27,7 +27,7 @@
 #include "main_osc.h"
 #include "fpga_osc.h"
 
-#define PI 3.14159265
+#define M_PI 3.14159265358979323846
 /**
  * GENERAL DESCRIPTION:
  *
@@ -373,12 +373,6 @@ int main(int argc, char *argv[])
             f_out[i] = 1000;
         }
 
-        float *dT;
-        dT = (float *)malloc(N * sizeof(float));
-        for (i=0; i<N; i++) {
-            dT[i] = i;
-        }
-
         float *t;
         t = (float *)malloc(SIGNALS_NUM * sizeof(float));
         for(i=0; i< 1600; i++) {
@@ -386,7 +380,7 @@ int main(int argc, char *argv[])
         }
 
         float w_out;
-        w_out = *f_out * 2 * PI;
+        w_out = *f_out * 2 * M_PI;
         
         // Empty vectors for two lock-in components (X,Y (sin,cos)) for sampled input signals 
         float *U_in_1_sampled_X;
@@ -410,7 +404,123 @@ int main(int argc, char *argv[])
             U_in_2_sampled_Y[i] = U_in[2][i] * sin( t[i] * T * w_out + fi_test );
             printf("U_in_1_sampled_X[%d] = %f\n" , i , U_in_1_sampled_X[i] );
         }
-  
+
+        float *dT;
+        dT = (float *)malloc(N * sizeof(float));
+        for (i=0; i<N; i++) {
+            dT[i] = i;
+        }
+
+        //these vectors are used in trapezoidal function
+        float **X_component_lock_in, **Y_component_lock_in;
+        X_component_lock_in = (float **)malloc(N * sizeof(float *));
+        for(i = 0; i < SIGNALS_NUM; i++) {
+            X_component_lock_in[i] = (float *)malloc(N * sizeof(float));
+        }
+        Y_component_lock_in = (float **)malloc(N * sizeof(float *));
+        for(i = 0; i < SIGNALS_NUM; i++) {
+            Y_component_lock_in[i] = (float *)malloc(N * sizeof(float));
+        }
+
+        //trapezoidal function (integration aproximation)
+        for (i =0; i < N; i++) {
+            X_component_lock_in[1][i] = (dT[ i+1 ] - dT[ i ])*( U_in_1_sampled_X[i] - U_in_1_sampled_X[ i+1 ] ) /(float)N; //(float)N - flaoat division must be present
+            X_component_lock_in[2][i] = (dT[ i+1 ] - dT[ i ])*( U_in_2_sampled_X[i] - U_in_2_sampled_X[ i+1 ] ) /(float)N;
+            Y_component_lock_in[1][i] = (dT[ i+1 ] - dT[ i ])*( U_in_1_sampled_Y[i] - U_in_1_sampled_Y[ i+1 ] ) /(float)N;
+            Y_component_lock_in[2][i] = (dT[ i+1 ] - dT[ i ])*( U_in_2_sampled_Y[i] - U_in_2_sampled_Y[ i+1 ] ) /(float)N;
+        }
+
+        //these vectors are used in amplitude and phase calculation
+        float **Amplitude_U_in, **Phase_U_in;
+        Amplitude_U_in = (float **)malloc(N * sizeof(float *));
+        for(i = 0; i < SIGNALS_NUM; i++) {
+            Amplitude_U_in[i] = (float *)malloc(N * sizeof(float));
+        }
+        Phase_U_in = (float **)malloc(N * sizeof(float *));
+        for(i = 0; i < SIGNALS_NUM; i++) {
+            Phase_U_in[i] = (float *)malloc(N * sizeof(float));
+        }
+
+        //Calculating amplitude and angle of U_in[1] and U_in[2] signals
+        for (i=0; i < N; i++) {
+            Amplitude_U_in[1][i] = sqrt( powf(X_component_lock_in[1][i],(float)2) + (powf(Y_component_lock_in[1][i],(float)2)) ) * (float)2;
+            Amplitude_U_in[2][i] = sqrt( powf(X_component_lock_in[2][i],(float)2) + (powf(Y_component_lock_in[2][i],(float)2)) ) * (float)2;
+
+            Phase_U_in[1][i] = atan2( Y_component_lock_in[1][i] , X_component_lock_in[1][i] );
+            Phase_U_in[2][i] = atan2( Y_component_lock_in[2][i] , X_component_lock_in[2][i] );
+        }
+
+        //calculating mean values - just for testing purposes
+        float mean_amplitude1, mean_phase1;
+        for(i=0 ; i < N; i++) {
+            mean_amplitude1 += Amplitude_U_in[1][i];
+            mean_phase1 += Phase_U_in[1][i];
+        }
+        printf("mean_amplitude1 = %.4f\n", (mean_amplitude1/ (float)N ) );
+        printf("mean_phase1 = %.4f\n", (mean_phase1/ (float)N ) );
+
+        //vectors are used for calculating amplitude and impedance
+        float *U_across_Z, *I_trough_Z;
+        U_across_Z = (float *)malloc(N * sizeof(float));
+        I_trough_Z = (float *)malloc(N * sizeof(float));
+
+        // Calculate amplitude of impedance
+        for(i=0; i < N; i++) {
+            U_across_Z[i] = Amplitude_U_in[1][i] - Amplitude_U_in[2][i];
+            I_trough_Z[i] = Amplitude_U_in[2][i] / (float)100;
+        }
+        float *Z_amp;
+        Z_amp = (float *)malloc(N * sizeof(float));
+        for(i=0; i < N; i++) {
+            Z_amp[i] = U_across_Z[i] / I_trough_Z[i];
+        }
+
+        //vectors are used for calculating phase
+        float *Phase_U_across_Z, *Phase_I_across_Z, *Phase_Z_rad, *Phase_Z;
+        Phase_U_across_Z = (float *)malloc(N * sizeof(float));
+        Phase_I_across_Z = (float *)malloc(N * sizeof(float));
+        Phase_Z_rad = (float *)malloc(N * sizeof(float));
+        Phase_Z = (float *)malloc(N * sizeof(float));
+        //// Calculate Phase
+        for(i=0; i<N; i++) {
+            Phase_U_across_Z[i] = Phase_U_in[1][i] - Phase_U_in[2][i];
+            Phase_I_across_Z[i] = Phase_U_in[2][i];
+
+            Phase_Z_rad[i] = (Phase_U_in[1][i] - Phase_I_across_Z[i]);
+            Phase_Z[i] = ( Phase_U_in[1][i] - Phase_I_across_Z[i] ) * (float)180 / M_PI;
+
+            if (Phase_Z[i] > 180) {
+                    Phase_Z[i] = Phase_Z[i] - 360;
+                }
+        }
+        //calculating mean values - just for testing purposes
+        float mean_PhaseU, mean_PhaseI;
+        for(i=0 ; i < N; i++) {
+            mean_PhaseU += Phase_U_across_Z[i];
+            mean_PhaseI += Phase_I_across_Z[i];
+        }
+        printf("mean_PhaseU = %.4f\n", (mean_PhaseU/ (float)N ) );
+        printf("mean_PhaseI = %.4f\n", (mean_PhaseI/ (float)N ) );
+
+        //vectors are used for calculating resistance and phase
+        float *R, *X;
+        R = (float *)malloc(N* sizeof(float));
+        X = (float *)malloc(N* sizeof(float));
+         //// Calculate Resistance and Reactance
+        for(i=0 ; i < N; i++) {
+            R[i] = Z_amp[i] * cos( Phase_Z_rad[i] );
+            X[i] = Z_amp[i] * sin( Phase_Z_rad[i] );
+        }
+
+        //calculating mean values - just for testing purposes
+        float mean_rectance, mean_resistance;
+        for(i=0 ; i < N; i++) {
+            mean_resistance += R[i];
+            mean_rectance += X[i];
+        }
+        printf("mean_resistance = %.4f\n", (mean_resistance/ (float)N ) );
+        printf("mean_rectance = %.4f\n", (mean_rectance/ (float)N ) );
+
     }
 
     if(rp_app_exit() < 0) {
