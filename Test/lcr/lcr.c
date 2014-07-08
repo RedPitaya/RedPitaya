@@ -130,7 +130,6 @@ static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 void usage() {
 
     const char *format =
-        "%s version %s-%s\n"
         "\n"
         "Usage: %s  frequency amplitude samples <DEC> <parameters> <sig. type> <end frequency>\n"
         "\n"
@@ -144,15 +143,7 @@ void usage() {
         "\tend frequency   Sweep-to frequency in Hz [%2.1f - %2.1e].\n"
         "\n";
 
-    fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR, SIGNAL_LENGTH,
-             g_argv0,
-             g_dec[0],
-             g_dec[1],
-             g_dec[2],
-             g_dec[3],
-             g_dec[4],
-             g_dec[5],
-             c_max_amplitude, c_min_frequency, c_max_frequency);
+    fprintf( stderr, format, g_argv0, c_min_frequency, c_max_frequency, c_max_amplitude, SIGNAL_LENGTH,g_dec[0],g_dec[1],g_dec[2],g_dec[3],g_dec[4],g_dec[5],c_min_frequency, c_max_frequency);
 }
 
 
@@ -211,9 +202,28 @@ int main(int argc, char *argv[])
         }
 
     /* Decimation is predefined TODO - let users decide */
+    /* Optional decimation */
     uint32_t idx = 1;
-    t_params[TIME_RANGE_PARAM] = idx;
+    if (argc > 3) {
+        uint32_t dec = atoi(argv[4]);
+        
+        for (idx = 0; idx < DEC_MAX; idx++) {
+            if (dec == g_dec[idx]) {
+                break;
+            }
+        }
+        if (idx != DEC_MAX) {
+            t_params[TIME_RANGE_PARAM] = idx;
+        } else {
+            fprintf(stderr, "Invalid decimation DEC: %s\n", argv[4]);
+            usage();
+            return -1;
+        }
+    }
 
+    /* Filter parameters */
+    t_params[EQUAL_FILT_PARAM] = equal;
+    t_params[SHAPE_FILT_PARAM] = shaping;
     //uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally [LCR ALWAYS USES BOTH OUTPUTS] */
     /*
     if (ch > 1) {
@@ -304,7 +314,7 @@ int main(int argc, char *argv[])
                  */
         
                 for(i = 0; i < MIN(size, sig_len); i++) {
-                    printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
+                    printf("%7d, %7d;\n", (int)s[1][i], (int)s[2][i]);
                 }
                 break;
             }
@@ -337,7 +347,7 @@ int main(int argc, char *argv[])
         for (i=0; i < MIN(size, sig_len); i++) {
             s_mean[1] += s[1][i];
             s_mean[2] += s[2][i];
-            printf("s_mean[2](%f) += s[2][i](%f)\n",s_mean[2] ,s[2][i] ); /*for troubleshooting purposes*/
+            //printf("s_mean[2](%f) += s[2][i](%f)\n",s_mean[2] ,s[2][i] ); /*for troubleshooting purposes*/
         }
         s_mean[1] = s_mean[1] / MIN(size,sig_len);
         s_mean[2] = s_mean[2] / MIN(size,sig_len);
@@ -354,16 +364,16 @@ int main(int argc, char *argv[])
             //printf("v_1[i] and v_2[i] = %f, %f\n", v_1[i],v_2[i]); /*for troubleshooting purposes*/
             v_1[i] = s[1][i] - s_mean[1];
             v_2[i] = s[2][i] - s_mean[2];
-            printf("v_1[i] and v_2[i] = %f, %f\n", v_1[i],v_2[i]); /*for troubleshooting purposes*/
+            //printf("v_1[i] and v_2[i] = %f, %f\n", v_1[i],v_2[i]); /*for troubleshooting purposes*/
 
             //Transform the signal from  AD(14 bit) to Volts AD Suply
             //printf("U_in_1[i] and U_in_2[i] = %f, %f\n", U_in_1[i],U_in_2[i]);
             U_in[1][i] = ( v_1[i] / 16384 ) * 2;
             U_in[2][i] = ( v_2[i] / 16384 ) * 2;
-            printf("U_in[1][i] and U_in[2][i] = %f, %f\n", U_in[1][i],U_in[2][i]); /*for troubleshooting purposes*/
+            //printf("U_in[1][i] and U_in[2][i] = %f, %f\n", U_in[1][i],U_in[2][i]); /*for troubleshooting purposes*/
         }
 
-        float T = (1/125000000)*g_dec[idx]; //Sampling time [seconds] decimation is set to 1
+        float T = (1/125000000)*g_dec[idx]; //Sampling time [seconds]
         uint32_t N=size;  //Number of samples in respect to numbers of periods T ??
 
         //Frequencies vector there is no sweep function so this vector has a value 10000 on all places
@@ -402,7 +412,7 @@ int main(int argc, char *argv[])
             U_in_2_sampled_X[i] = U_in[2][i] * cos( t[i] * T * w_out + fi_test );
             U_in_1_sampled_Y[i] = U_in[1][i] * sin( t[i] * T * w_out + fi_test );
             U_in_2_sampled_Y[i] = U_in[2][i] * sin( t[i] * T * w_out + fi_test );
-            printf("U_in_1_sampled_X[%d] = %f\n" , i , U_in_1_sampled_X[i] );
+            //printf("U_in_1_sampled_X[%d] = %f\n" , i , U_in_1_sampled_X[i] );
         }
 
         float *dT;
