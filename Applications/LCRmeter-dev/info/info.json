@@ -1,0 +1,6 @@
+{
+    "name": "LCR meter",
+    "version": "0.01-1",
+    "revision": "1",
+    "description": "LCR meter capabe of measuring more than 10 impedance parameters."
+}
