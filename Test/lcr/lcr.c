@@ -263,7 +263,13 @@ int main(int argc, char *argv[])
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
     synthesize_signal(ampl, freq, type, endfreq, data, &params);
-    /* Write the data to the FPGA and set FPGA AWG state machine */ 
+    /* Write the data to the FPGA and set FPGA AWG state machine */
+    int i;
+    printf("Generated_signal = [\n" );
+    for (i=0; i < n; i++) {
+        printf("%d\n", data[i]);
+    } 
+    printf("];\n ");
     write_data_fpga(ch, data, &params);
     /* the same for the 2nd output */
     //ch = 2;
@@ -305,6 +311,7 @@ int main(int argc, char *argv[])
             s[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
         }
 
+        printf("acquired_signal = [\n");
         while(retries >= 0) {
             if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
                 /* Signals acquired in s[][]:
@@ -325,7 +332,7 @@ int main(int argc, char *argv[])
             }
             usleep(1000);
         }
-
+        printf("];\n");
 
         /* LCR mathematical algorythm */
 
@@ -351,7 +358,7 @@ int main(int argc, char *argv[])
         }
         s_mean[1] = s_mean[1] / MIN(size,sig_len);
         s_mean[2] = s_mean[2] / MIN(size,sig_len);
-        printf("mean values: = %f , %f\n",s_mean[1],s_mean[2]); /*for troubleshooting purposes*/
+        printf("acq_signal_mean_values = [%f , %f]\n",s_mean[1],s_mean[2]); /*for troubleshooting purposes*/
 /*
         printf("s[1][0] = (%f) - \n", s[1][0] );
         printf("s_mean[1] = (%f)\n", s_mean[1] );
@@ -461,13 +468,15 @@ int main(int argc, char *argv[])
         }
 
         //calculating mean values - just for testing purposes
-        float mean_amplitude1, mean_phase1;
+        float mean_amplitude1,mean_amplitude2, mean_phase1;
         for(i=0 ; i < N; i++) {
             mean_amplitude1 += Amplitude_U_in[1][i];
+            mean_amplitude2 += Amplitude_U_in[2][i];
             mean_phase1 += Phase_U_in[1][i];
         }
-        printf("mean_amplitude1 = %.4f\n", (mean_amplitude1/ (float)N ) );
-        printf("mean_phase1 = %.4f\n", (mean_phase1/ (float)N ) );
+        printf("mean_amplitude1  = [%.4f]\n", (mean_amplitude1/ (float)N ) );
+        printf("mean_amplitude2  = [%.4f]\n", (mean_amplitude1/ (float)N ) );
+        printf("mean_phase1 = [%.4f]\n", (mean_phase1/ (float)N ) );
 
         //vectors are used for calculating amplitude and impedance
         float *U_across_Z, *I_trough_Z;
@@ -520,6 +529,7 @@ int main(int argc, char *argv[])
         for(i=0 ; i < N; i++) {
             R[i] = Z_amp[i] * cos( Phase_Z_rad[i] );
             X[i] = Z_amp[i] * sin( Phase_Z_rad[i] );
+
         }
 
         //calculating mean values - just for testing purposes
@@ -539,10 +549,8 @@ int main(int argc, char *argv[])
     }
 
 
-    
 
-
-    printf("exiting program\n");
+    printf("figure(1);plot(acquired_signal);\nfigure(2);plot(Generated_signal)\n");
     return 0;
 
 }
