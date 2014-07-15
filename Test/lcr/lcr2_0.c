@@ -57,23 +57,6 @@
  * corresponding DACs @ 125 MHz, which in turn produces the synthesized
  * signal on Red Pitaya SMA output connectors labeled DAC1 & DAC2.
  *
- * Then it acquires up to 16k samples on both Red Pitaya input
- * channels labeled ADC1 & ADC2.
- * 
- * It utilizes the routines of the Oscilloscope module for:
- *   - Triggered ADC signal acqusition to the FPGA buffers.
- *   - Parameter defined averaging & decimation.
- *   - Data transfer to SW buffers.
- *
- * Although the Oscilloscope routines export many functionalities, this 
- * simple signal acquisition utility only exploits a few of them:
- *   - Synchronization between triggering & data readout.
- *   - Only AUTO triggering is used by default.
- *   - Only decimation is parsed to t_params[8].
- *
- * Please feel free to exploit any other scope functionalities via 
- * parameters defined in t_params.
- *
  */
 
 /** Maximal signal frequency [Hz] */
@@ -109,13 +92,6 @@ typedef struct {
     uint32_t step;       ///< AWG step interval.
 } awg_param_t;
 
-/* Forward declarations */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
-                       int32_t *data,
-                       awg_param_t *params);
-void write_data_fpga(uint32_t ch,
-                     const int32_t *data,
-                     const awg_param_t *awg);
 /** Oscilloscope module parameters as defined in main module
  * @see rp_main_params
  */
@@ -124,33 +100,35 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 /** Max decimation index */
 #define DEC_MAX 6
 
-/** Decimation translation table [COMENTED BECAUSE NOTU USED AT GENERATOR] */ 
+/** Decimation translation table */
 static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
-/*the most used variable in for loops*/
-int i, i1, i2, i3;
+/* Forward declarations */
+void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+                       int32_t *data,
+                       awg_param_t *params);
+void write_data_fpga(uint32_t ch,
+                     const int32_t *data,
+                     const awg_param_t *awg);
 
 /** Print usage information */
 void usage() {
 
     const char *format =
+        "%s version %s-%s\n"
         "\n"
-        "Usage: %s  frequency amplitude samples <DEC> <parameters> <sig. type> <end frequency>\n"
+        "Usage: %s   channel amplitude frequency <type> <end frequency>\n"
         "\n"
-        "\tfrequency          Signal (start) frequency in Hz [%2.1f - %2.1e].\n"
-        "\tamplitude          Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f] only Output 1 will be set recomended = 1.0V\n"
-        "\tsamples            Number of samples to acquire [0 - %u ].\n"
-        "\tDEC                Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
-        //"\tchannel          Channel to generate signal on [1, 2].\n"
-        //"\ttype               Signal type [sine, sqr, tri, sweep].\n"
-        "\tend frequency      Sweep-to frequency in Hz [%2.1f - %2.1e](set this value to start freq. for measurement_sweep)\n"
-        "\tMeasurement sweep  number of mesurements (averaged resoults) [max 10]\n"
-        "\tCalibration        set to 1 to initiate calibration. default 0\n"
+        "\tchannel     Channel to generate signal on [1, 2].\n"
+        "\tamplitude   Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
+        "\tfrequency   Signal frequency in Hz [%2.1f - %2.1e].\n"
+        "\ttype        Signal type [sine, sqr, tri, sweep].\n"
+        "\tend frequency   Sweep-to frequency in Hz [%2.1f - %2.1e].\n"
         "\n";
 
-    fprintf( stderr, format, g_argv0, c_min_frequency, c_max_frequency, c_max_amplitude, SIGNAL_LENGTH,g_dec[0],g_dec[1],g_dec[2],g_dec[3],g_dec[4],g_dec[5],c_min_frequency, c_max_frequency);
+    fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
+             g_argv0, c_max_amplitude, c_min_frequency, c_max_frequency);
 }
-
 
 /** Gain string (lv/hv) to number (0/1) transformation */
 int get_gain(int *gain, const char *str)
@@ -180,6 +158,7 @@ float *create_table_size(int num_of_el) {
 
 float **create_2D_table_size(int num_of_rows, int num_of_cols) {
     float **new_table = (float **)malloc( num_of_rows * sizeof(float*));
+    int i;
         for(i = 0; i < num_of_rows; i++) {
             new_table[i] = create_table_size(num_of_cols);
         }
@@ -232,132 +211,124 @@ float mean_array_column(float **arrayptr, int length, int column) {
     return (result / length);
 }
 
-/** lcr main */
+/** Signal generator main */
 int main(int argc, char *argv[])
 {
-
-    /*Setting measuring parameters (LCR Pitaya DT)*/
-    double Rs = 8200; // Set value of shunt resistor 
-    double DC_bias = 0; // Set value od DC volatge on outputs 
-    uint32_t averaging_num = 5; // Number of measurments for averaging
-    uint32_t min_periodes =15; // max 20
-    /* frequency sweep */
-    double one_calibration;
-
-
-
-    g_argv0 = argv[0];
-    int equal = 0;
-    int shaping = 0;    
-
-    if ( argc < 3 ) {
+    /* argument check */
+    g_argv0 = argv[0];    
+    /*
+    if ( argc < 4 ) {
 
         usage();
-        exit( EXIT_FAILURE );
+        return -1;
+    }
+    */
+    /* Channel argument parsing */
+    //uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
+    uint32_t ch = 0;
+    if (ch > 1) {
+        fprintf(stderr, "Invalid channel: %s\n", argv[1]);
+        usage();
+        return -1;
     }
 
-    /* Signal frequency argument parsing */
-    //double start_frequency = strtod(argv[1], NULL);
-    double start_frequency = 1000;
-    /* Check frequency limits */
-    if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency ) ) {
-        fprintf(stderr, "Invalid start frequency: %s\n", argv[1]);
-        usage();
-        exit( EXIT_FAILURE );
-    }
-    
     /* Signal amplitude argument parsing */
     //double ampl = strtod(argv[2], NULL);
     double ampl = 2;
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
         fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
-        exit( EXIT_FAILURE );
-    }
-
-    /* Acqusition size */
-    //uint32_t size = atoi(argv[3]);
-    uint32_t size = 16384;
-    if (size > SIGNAL_LENGTH) {
-            fprintf(stderr, "Invalid SIZE: %s\n", argv[3]);
-            usage();
-            exit( EXIT_FAILURE );
-        }
-
-    /*Decimation*/
-    /*uint32_t idx = 1;
-    uint32_t dec = atoi(argv[4]);
-    for (idx = 0; idx < DEC_MAX; idx++) {
-        if (dec == g_dec[idx]) {
-            break;
-        }
-    }
-    if (idx != DEC_MAX) {
-        t_params[TIME_RANGE_PARAM] = idx;
-    } 
-    else {
-        fprintf(stderr, "Invalid decimation DEC: %s\n", argv[4]);
-        usage();
         return -1;
     }
-    */
 
+    /* Signal frequency argument parsing */
+    //double freq = strtod(argv[3], NULL);
+    double start_frequency = 10000;
+    double frequency_step =  10000;
+    double end_frequency =   30000;
+    double endfreq = 0;
+    double frequency; //frequency in a for loop
 
+    double measurement_sweep = 1;
+
+    double one_calibration = 1;
+
+    uint32_t averaging_num = 6; // Number of measurments for averaging
+
+    if (argc > 5) {
+        endfreq = strtod(argv[5], NULL);
+    }
 
     /* Signal type argument parsing */
-    /* LCR meter only uses sine signal for outputs for now; TODO enable other signals */
     signal_e type = eSignalSine;
-    /*
-    if ( strcmp(argv[4], "sine") == 0) {
+    if (argc > 4) {
+        if ( strcmp(argv[4], "sine") == 0) {
             type = eSignalSine;
-        } else if ( strcmp(argv[5], "sqr") == 0) {
+        } else if ( strcmp(argv[4], "sqr") == 0) {
             type = eSignalSquare;
-        } else if ( strcmp(argv[5], "tri") == 0) {
+        } else if ( strcmp(argv[4], "tri") == 0) {
             type = eSignalTriangle;
-        } else if ( strcmp(argv[5], "sweep") == 0) {
+        } else if ( strcmp(argv[4], "sweep") == 0) {
             type = eSignalSweep;   
         } else {
-            fprintf(stderr, "Invalid signal type: %s\n", argv[5]);
+            fprintf(stderr, "Invalid signal type: %s\n", argv[4]);
             usage();
             return -1;
         }
-    */
-
-    /* End frequency */
-    //double end_frequency = 0;
-    double end_frequency = 10000;
-    //end_frequency = strtod(argv[5], NULL);
-    if (end_frequency > c_max_frequency) {
-        end_frequency = c_max_frequency;
-        printf("end frequency set too high. now set to max value (%2.1e)\n",c_max_frequency);
     }
 
-    uint32_t frequency_step = 1000;
-
-    /* Measurement sweep */
-    double measurement_sweep = 5;
-    //measurement_sweep = strtod(argv[6], NULL);
-    if (measurement_sweep > 10) {
-        measurement_sweep = 10;
-        printf("measurement sweep set too high [MAX = 10], changed to max");
+    /* Check frequency limits */
+    if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency ) ) {
+        fprintf(stderr, "Invalid frequency: %s\n", argv[3]);
+        usage();
+        return -1;
     }
 
-    int calibration = 1;
-    //calibration = strtod(argv[7], NULL);
-    if(calibration ==1){
-        printf("calibration initiated\n");
-    }
+    /* initializing the variables and pointers for acquire functionality */
+    uint32_t size = 16384;
+    float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
+    int sig_num, sig_len;
+    int j,i,i1, i2, i3;
+    int ret_val;
+    int retries = 150000;
+    int equal = 0;
+    int shaping = 0;
+    
+    uint32_t DC_bias = 0;
+    int f = 0;
 
-    /* endfreq set to 0 because sweep is done in anothef foor loop */
-    double endfreq = 0;
+    uint32_t Rs = 8500;
 
-    /* only chanel 1 is used */
-    uint32_t ch = 0;
+    uint32_t min_periodes =15; // max 20
 
-    /* if user sets the measuring_sweep and end frequency than end frequency will prevail and program will sweep in frequency domain */
-    if (end_frequency > start_frequency) {                        
-       measurement_sweep = 1;                    
-    }
+    int N;
+    float T;
+    float *dT = create_table_size(16384);
+    float *t = create_table_size(16384);
+
+    float **U_acq = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
+
+    // Used for storing the Voltage and current on the load
+    float *U_load = create_table_size( SIGNAL_LENGTH );
+    float *I_load = create_table_size( SIGNAL_LENGTH );
+
+    //Signals multiplied by the reference signal (sin)
+    float **U_load_ref = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); //U_load_ref[1][i] voltage signal 1, U_load_ref[2][i] - voltage signal 2
+    float **I_load_ref = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); //I_load_ref[1][i] current signal 1, I_load_ref[2][i] - current signal 2
+    //Signals return by trapezoidal method in complex
+    float *X_trapz = create_table_size( SIGNALS_NUM );
+    float *Y_trapz = create_table_size( SIGNALS_NUM );
+
+    // Voltage and its phase and current and its pahse calculated from lock in method
+    float U_load_amp ;
+    float Phase_U_load_amp;
+    float I_load_amp;
+    float Phase_I_load_amp;
+    float complex Z;
+    float Z_phase_deg_imag;  // may cuse errors because not complex
+    //float U_load_max; //comented because not used
+    //float I_load_max; // comented because noy used
+
 
     /*
     * Calibration sequence
@@ -385,99 +356,43 @@ int main(int argc, char *argv[])
         return -1;
       }
     }
-    
 
-
-    /* Memory initialization */
-    // derivative tie for trapezoidal function
-    int N;
-    float T;
-    float *dT = create_table();
-    dT[0] = 20;
-    printf("dt = %f\n",dT[0] );
-    //time vector
-    float *t  = create_table();
-    // Acquired data is stored in s array
-    float **s; //= create_2D_table_size( 16384, 3);
-    s = (float **)malloc(SIGNALS_NUM * sizeof(float *));
-        for(i = 0; i < SIGNALS_NUM; i++) {
-            s[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
-        }
-    // acquired data is converted to volrage and stored in U_acq
-    float **U_acq = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
-    // number of acquired signals
-    int sig_num, sig_len;
-    // return value from acquire
-    int ret_val;
-    // number of acquire retries for acquiring the data
-    int retries = 150000;
-    // acquired signal size
-    int signal_size;
-    // Used for storing the Voltage and current on the load
-    float *U_load = create_table_size( SIGNAL_LENGTH );
-    float *I_load = create_table_size( SIGNAL_LENGTH );
-    //Signals multiplied by the reference signal (sin)
-    float **U_load_ref = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); //U_load_ref[1][i] voltage signal 1, U_load_ref[2][i] - voltage signal 2
-    float **I_load_ref = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); //I_load_ref[1][i] current signal 1, I_load_ref[2][i] - current signal 2
-    //Signals return by trapezoidal method in complex
-    float *X_trapz = create_table_size( SIGNALS_NUM );
-    float *Y_trapz = create_table_size( SIGNALS_NUM );
-
-    // Voltage and its phase and current and its pahse calculated from lock in method
-    float U_load_amp ;
-    float Phase_U_load_amp;
-    float I_load_amp;
-    float Phase_I_load_amp;
-    float complex Z;
-    float Z_phase_deg_imag;  // may cuse errors because not complex
-    //float U_load_max; //comented because not used
-    //float I_load_max; // comented because noy used
 
     /* Data storage calibration */
-    float **Calib_data_short_avreage = create_2D_table_size(averaging_num, 4); //appendin 4 data values
+    float **Calib_data_short_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
     float **Calib_data_short  = create_2D_table_size(averaging_num, 4); //appendin 4 data values
-    /* loop for sweeping trough frequencies */
-    double frequency;
 
-    t_params[EQUAL_FILT_PARAM] = equal;
-    t_params[SHAPE_FILT_PARAM] = shaping;
-
-
-    awg_param_t params;
-        /* Prepare data buffer (calculate from input arguments) */
-        synthesize_signal(ampl, start_frequency, type, endfreq, data, &params);
-
-        /* Write the data to the FPGA and set FPGA AWG state machine */
-        write_data_fpga(ch, data, &params);
-
-
-
-    int equal = 0;
-    int shaping = 0;
-
-    /* data acqusition */
+    /* Acquire the signal */
     /* Filter parameters */
     t_params[EQUAL_FILT_PARAM] = equal;
     t_params[SHAPE_FILT_PARAM] = shaping;
-
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
         return -1;
     }
 
-    /* Setting of parameters in Oscilloscope main module */
+     /* Setting of parameters in Oscilloscope main module */
     if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
         fprintf(stderr, "rp_set_params() failed!\n");
         return -1;
     }
 
-    for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
 
-        printf("zanka 1 frequency sweep \n");
+    for ( frequency = start_frequency; frequency < end_frequency; frequency += frequency_step) {
+
         double w_out = frequency * 2 * M_PI; //omega 
 
-        
+
+                    /* Generate the signal */
+                    awg_param_t params;
+                    /* Prepare data buffer (calculate from input arguments) */
+
+                    synthesize_signal(ampl, frequency, type, endfreq, data, &params);
+
+                    /* Write the data to the FPGA and set FPGA AWG state machine */
+                    write_data_fpga(ch, data, &params);
+
 
 
         /* measurement_sweep defines if   */
@@ -487,113 +402,81 @@ int main(int argc, char *argv[])
         else {
             one_calibration = 0;    //ce je measurment_sweep = 1 potem postavimo one_calibration = 0 in naredimo vec kaibacij ?
         }
-        printf("one_calibration = %f\n",one_calibration );
-
+        printf("frequency = %f\n", frequency);
 
         for (i = 0; i < (measurement_sweep - one_calibration); i++ ) {  // For measurment sweep is 1. calibration   //s = 1:1:(1-0) 
-        
+
             for ( i1 = 0; i1 < averaging_num; i1++ ) {
-                printf("zanka 2 for zanka averaging_num \n");
                 /* seting number of acquired samples */
-                int f;
+                
                 if (frequency >= 160000) {
                     f=0;
                     printf("f = 0\n");
                 }
                 else if (frequency >= 20000) {
                     f=1;
-                    printf("f = 1\n");
                 }    
                 else if (frequency >= 2500) {
                     f=2;
-                    printf("f = 2\n");
                 }    
                 else if (frequency >= 160) {
                     f=3;
-                    printf("f = 3\n");
                 }    
                 else if (frequency >= 20) {
                     f=4;
-                    printf("f = 4\n");
                 }     
                 else if (frequency >= 2.5) {
                     f=5;
-                    printf("f = 5\n");
                 }
 
                 //setting decimtion
                 t_params[TIME_RANGE_PARAM] = f;
-
-                printf("frequency = %e \n", frequency);
-                /*Number of sampels in respect to numbers  of periods T*/
+                    
                 N = round( ( min_periodes * 125e6 ) / ( frequency * g_dec[f] ) );
-                printf("N = %d\n", N );
-                /*Sampling time in seconds*/
 
                 T = ( g_dec[f] / 125e6 );
-                printf("T = %f\n", T);
 
-
-                /*time increment*/
-                
                 for (i2 = 0; i2 < (N - 1); i2++) {
                     dT[i2] = i2 * (float)T;
                 }
-                /*
+
                 for(i2 = 0; i2 < (N - 1); i2++) {
                     t[i2] = i2;
                 }
-                */
-                /*sending the parameters to pitaya*/
-                /* Filter parameters */
 
-                
-                size = 16384;
-                
-                while(retries >= 0) {
-                    stevc++;
-                    printf("st = %d\n",stevc);
-                    //printf("sig_num = %d \n" , sig_num );
-                    //printf("sig_len = %d \n" , sig_len );
-                    if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
-                        /* Signals acquired in s[][]:
-                         * s[0][i] - TODO
-                         * s[1][i] - Channel ADC1 raw signal
-                         * s[2][i] - Channel ADC2 raw signal
-                         */
-                
-                        for(i2 = 0; i2 < MIN(size, sig_len); i2++) {
-                            //printf("%7d %7d\n", (int)s[1][j], (int)s[2][j]);
+                    
+
+                    while(retries >= 0) {  
+                        if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
+                            /* Signals acquired in s[][]:
+                             * s[0][i] - TODO
+                             * s[1][i] - Channel ADC1 raw signal
+                             * s[2][i] - Channel ADC2 raw signal
+                            */
+                        for(j = 0; j < MIN(size, sig_len); j++) {
+                               //printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
                         }
                         break;
                     }
-
                     if(retries-- == 0) {
-                        fprintf(stderr, "Signal scquisition was not triggered!\n");
-                        break;
+                            fprintf(stderr, "Signal scquisition was not triggered!\n");
+                            break;
+                        }
+                        usleep(1000);
                     }
-                    usleep(1000);
-                }
 
 
 
-
-
-
-
-                printf("data acquired!\n");
-                // acquired signal size
-                signal_size = MIN(size, sig_len);
 
                 /* Transform signals from  AD - 14 bit to voltage [ ( s / 2^14 ) * 2 ] */
                 for (i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
-                    for(i3=0; i3 < signal_size; i3++ ) { 
+                    for(i3=0; i3 < size; i3++ ) { 
                         U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / 16384; //division comes after multiplication, this way no accuracy is lost
                     }
                 }
 
                 /* Voltage and current on the load can be calculated from gathered data */
-                for (i2 = 0; i2 < signal_size; i2++) { 
+                for (i2 = 0; i2 < size; i2++) { 
                     U_load[i2] = U_acq[2][i3] - U_acq[1][i2]; // potencial difference gives the voltage
                     I_load[i2] = U_acq[2][i2] / Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
                 }
@@ -604,7 +487,7 @@ int main(int argc, char *argv[])
                 I_load_max = max_array( I_load , SIGNAL_LENGTH );
                 */
                 /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
-                for( i2 = 0; i2 < signal_size; i2++) {
+                for( i2 = 0; i2 < size; i2++) {
                     U_load_ref[1][i2] = U_load[i2] * sin( t[i2] * T * w_out );
                     U_load_ref[2][i2] = U_load[i2] * cos( t[i2] * T * w_out );
                     I_load_ref[1][i2] = I_load[i2] * sin( t[i2] * T * w_out );
@@ -637,24 +520,25 @@ int main(int argc, char *argv[])
                     Z_phase_deg_imag -= 360;
                 }
 
+
             } // for ( i1 = 0; i < averaging_num; i1++ ) {
-            
             /* Saving data */
             Calib_data_short_avreage[i1][0] = i1;
             Calib_data_short_avreage[i1][1] = frequency;
             Calib_data_short_avreage[i1][2] = creal(Z);
             Calib_data_short_avreage[i1][3] = cimag(Z);
+            printf("Calib_data_short_avreage[%d][3] = %f\n",i1, Calib_data_short_avreage[i1][2]);
         } // for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
-        printf("calculating last parameters...\n");
         Calib_data_short[i][0] = i;
         Calib_data_short[i][1] = frequency;
         Calib_data_short[i][2] = mean_array_column(Calib_data_short_avreage, averaging_num, 2); // mean value of real impedance
         Calib_data_short[i][3] = mean_array_column(Calib_data_short_avreage, averaging_num, 3); // mean value of imaginary impedance
-        printf("Calib_data_short[%d][2] = %f\n",i, Calib_data_short[i][2]);       
+        printf("Calib_data_short[%d][3] = %f\n",i, Calib_data_short[i][2]);       
     } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
 
-    
-    return 0;
+
+printf("end! yay!\n");
+return 0;
 
 }
 
