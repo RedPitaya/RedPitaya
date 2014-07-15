@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     if ( argc < 3 ) {
 
         usage();
-        return -1;
+        exit( EXIT_FAILURE );
     }
 
     /* Signal frequency argument parsing */
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency ) ) {
         fprintf(stderr, "Invalid start frequency: %s\n", argv[1]);
         usage();
-        return -1;
+        exit( EXIT_FAILURE );
     }
 
     /* Signal amplitude argument parsing */
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
         fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
-        return -1;
+        exit( EXIT_FAILURE );
     }
 
     /* Acqusition size */
