@@ -247,9 +247,9 @@ int main(int argc, char *argv[])
     /* Signal frequency argument parsing */
     //double freq = strtod(argv[3], NULL);
     /* Frequencies set for later use in the program. Start, end and step frequencies are defined by the user */
-    double start_frequency = 100000;
-    double frequency_step =  100000;
-    double end_frequency =   100000;
+    double start_frequency = 10000;
+    double frequency_step =  10000;
+    double end_frequency =   10000;
     double endfreq = 0;/* endfreq is used in prebuild sweep program and is not needed in lcr meter because sweep is defined in the for loop */
     double frequency; //frequency in a for loop
 
@@ -346,20 +346,12 @@ int main(int argc, char *argv[])
     //float **Calib_data_open_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
     //float **Calib_data_open  = create_2D_table_size(averaging_num, 4); //appendin 4 data values
     double w_out;
-    /* Filter parameters for signal Acquire */
-    t_params[EQUAL_FILT_PARAM] = equal;
-    t_params[SHAPE_FILT_PARAM] = shaping;
     /* Initialization of Oscilloscope application for signal Acquire */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
-        return -1;
+    return -1;
     }
-
-     /* Setting of parameters in Oscilloscope main module for signal Acquire */
-    if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
-        fprintf(stderr, "rp_set_params() failed!\n");
-        return -1;
-    }
+    
 
     /*
     printf("initiate calibration sequence? [1|0] :");
@@ -397,6 +389,7 @@ int main(int argc, char *argv[])
         }
 
         printf("close all;\n");
+        printf("clear all;\n");
         /* LCR algorythm for calibration in open cicuited mode */
         for ( frequency = start_frequency; frequency <= end_frequency; frequency += frequency_step) {
             w_out = frequency * 2 * M_PI; //omega 
@@ -443,13 +436,18 @@ int main(int argc, char *argv[])
                     }
 
                     //setting decimtion
-                    t_params[TIME_RANGE_PARAM] = f;
+                    if (f != DEC_MAX) {
+                        t_params[TIME_RANGE_PARAM] = f;
+                    } else {
+                        fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
+                        usage();
+                        return -1;
+                    }
                         
                     N = round( ( min_periodes * 125e6 ) / ( frequency * g_dec[f] ) );
                     printf("N_short(%d) = %d\n" ,(i1+1),N);
                     printf("dec_short(%d) = %d\n",(i1+1) , g_dec[f]);
                     size = N;
-
                     T = ( g_dec[f] / 125e6 );
                     printf("T_short(%d) = %f\n",(i1+1),T );
                     for (i2 = 0; i2 < (N - 1); i2++) {
@@ -459,30 +457,48 @@ int main(int argc, char *argv[])
                         t[i2] = i2;
                     }
 
-                    /* Signal acquire */
-                    while(retries >= 0) {  
+                    retries = 150000;
+
+
+                    /* Filter parameters for signal Acquire */
+                    t_params[EQUAL_FILT_PARAM] = equal;
+                    t_params[SHAPE_FILT_PARAM] = shaping;
+
+
+
+                     /* Setting of parameters in Oscilloscope main module for signal Acquire */
+                    if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
+                        fprintf(stderr, "rp_set_params() failed!\n");
+                        return -1;
+                    }
+                    usleep(100000); // generator needs some time to start generating
+                    while(retries >= 0) {
                         if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
                             /* Signals acquired in s[][]:
                              * s[0][i] - TODO
                              * s[1][i] - Channel ADC1 raw signal
                              * s[2][i] - Channel ADC2 raw signal
-                            */
+                             */
+                    
                             for(j = 0; j < MIN(size, sig_len); j++) {
-                                printf("s(%d,:) = [%7d, %7d];\n",(j +1) , (int)s[1][i], (int)s[2][i]);
+                                printf("s(%d,%d,:) = [%7d, %7d];\n",(i1 +1),(j +1) , (int)s[1][j], (int)s[2][j]);
                             }
                             break;
                         }
+
                         if(retries-- == 0) {
                             fprintf(stderr, "Signal scquisition was not triggered!\n");
                             break;
                         }
                         usleep(1000);
                     }
-                    printf("j = %d\n",j);
+                    
+                    printf("stevec_zajetih_pordatkov_raw = %d\n",j);
+                    
                     /* Transform signals from  AD - 14 bit to voltage [ ( s / 2^14 ) * 2 ] */
                     for (i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
-                        for(i3=0; i3 < size; i3++ ) { 
-                            U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / 16384; //division comes after multiplication, this way no accuracy is lost
+                        for(i3 = 0; i3 < size; i3 ++ ) { 
+                            U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / (float)16384; //division comes after multiplication, this way no accuracy is lost
                             printf("U_acq_short(%d,%d,%d) = %f;\n",(i1+1), (i2+1), (i3+1), U_acq[i2][i3] );
                         }
                     }
@@ -490,9 +506,9 @@ int main(int argc, char *argv[])
                     /* Voltage and current on the load can be calculated from gathered data */
                     for (i2 = 0; i2 < size; i2++) { 
                         U_load[i2] = U_acq[2][i2] - U_acq[1][i2]; // potencial difference gives the voltage
-                        I_load[i2] = U_acq[2][i2] / Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
-                        printf("U_load_short(%d) = %f;\n",(i2+1), U_load[i2]);
-                        printf("I_load_short(%d) = %f;\n",(i2+1), I_load[i2] );
+                        I_load[i2] = U_acq[2][i2] / (float)Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
+                        printf("U_load_short(%d,%d) = %f;\n",(i1+1),(i2+1), U_load[i2]);
+                        printf("I_load_short(%d,%d) = %f;\n",(i1+1),(i2+1), I_load[i2] );
                     }
 
                     /* Finding max values, used for ploting */
@@ -559,61 +575,89 @@ int main(int argc, char *argv[])
 
         /* Preparing data for ploting */
         
+
+        
+        
+        
         printf("figure\n");
-        printf("subplot(2,1,1);\n");
-        printf("plot(U_load_short(:))\n");
+
+        printf("subplot(4,1,1);\n");
+        printf("plot(U_acq_short(1,2,:),'g');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.1  U_acq = s')\n");
+        printf("ylabel ('vrednost vzorcev')\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(4,1,2);\n");
+        printf("plot(U_acq_short(1,3,:),'b');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.2  U_acq = s');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(4,1,3);\n");
+        printf("plot(U_load_short(1,:))\n");
         printf("title ('Napetost na bremenu U_load_shor (razlika potencjalov obeh kanalov)');\n" );
         printf("ylabel ('vrednost vzorcev');\n" );
         printf("xlabel ('index vzorcev');\n");
         
-        printf("subplot(2,1,2);\n");
-        printf("plot(I_load_short(:))\n");
+        printf("subplot(4,1,4);\n");
+        printf("plot(I_load_short(1,:))\n");
         printf("title ('Tok na bremenu I_load_short (napetost kanala 2 deljena z referencno upornostjo)');\n" );
         printf("ylabel ('vrednost vzorcev');\n" );
         printf("xlabel ('index vzorcev');\n" );
         
-        
+
+
         printf("figure\n");
-        printf("subplot(3,1,1);\n");
-        printf("plot(U_acq_short(1,1,:),'r');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.1');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
 
-        printf("subplot(3,1,2);\n");
-        printf("plot(U_acq_short(1,2,:),'g');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.2')\n");
-        printf("ylabel ('vrednost vzorcev')\n" );
-        printf("xlabel ('index vzorcev');\n" );
-
-        printf("subplot(3,1,3);\n");
-        printf("plot(U_acq_short(1,3,:),'b');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.3');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-        
-        printf("figure\n");
-        printf("subplot(3,1,1);\n");
-        printf("plot(U_acq_short(2,1,:),'r');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.1');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-
-        printf("subplot(3,1,2);\n");
+        printf("subplot(4,1,1);\n");
         printf("plot(U_acq_short(2,2,:),'g');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.2')\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.1  U_acq = s')\n");
         printf("ylabel ('vrednost vzorcev')\n" );
         printf("xlabel ('index vzorcev');\n" );
 
-        printf("subplot(3,1,3);\n");
+        printf("subplot(4,1,2);\n");
         printf("plot(U_acq_short(2,3,:),'b');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.3');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.2  U_acq = s');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(4,1,3);\n");
+        printf("plot(U_load_short(2,:))\n");
+        printf("title ('Napetost na bremenu U_load_shor (razlika potencjalov obeh kanalov)');\n" );
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n");
+        
+        printf("subplot(4,1,4);\n");
+        printf("plot(I_load_short(2,:))\n");
+        printf("title ('Tok na bremenu I_load_short (napetost kanala 2 deljena z referencno upornostjo)');\n" );
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+
+
+
+        printf("figure\n");
+
+        printf("subplot(2,1,1)\n");
+        printf("plot(s(1,:,1),'r');\n");
+        printf("title ('Raw data from pitaya s(1,:)');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+        printf("subplot(2,1,2)\n");
+        printf("plot(s(1,:,2),'g');\n");
+        printf("title ('Raw data from pitaya s(2,:)');\n");
         printf("ylabel ('vrednost vzorcev');\n" );
         printf("xlabel ('index vzorcev');\n" );
 
         printf("figure\n");
-        printf("plot(s(:,1),'b');\n");
-        printf("title ('Raw data from pitaya');\n");
+        printf("subplot(2,1,1)\n");
+        printf("plot(s(2,:,1),'r');\n");
+        printf("title ('Raw data from pitaya s(1,:)');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+        printf("subplot(2,1,2)\n");
+        printf("plot(s(2,:,2),'g');\n");
+        printf("title ('Raw data from pitaya s(2,:)');\n");
         printf("ylabel ('vrednost vzorcev');\n" );
         printf("xlabel ('index vzorcev');\n" );
 
