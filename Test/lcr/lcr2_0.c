@@ -247,9 +247,9 @@ int main(int argc, char *argv[])
     /* Signal frequency argument parsing */
     //double freq = strtod(argv[3], NULL);
     /* Frequencies set for later use in the program. Start, end and step frequencies are defined by the user */
-    double start_frequency = 10000;
-    double frequency_step =  10000;
-    double end_frequency =   10000;
+    double start_frequency = 100000;
+    double frequency_step =  100000;
+    double end_frequency =   100000;
     double endfreq = 0;/* endfreq is used in prebuild sweep program and is not needed in lcr meter because sweep is defined in the for loop */
     double frequency; //frequency in a for loop
 
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
             }
         }
 
-
+        printf("close all;\n");
         /* LCR algorythm for calibration in open cicuited mode */
         for ( frequency = start_frequency; frequency <= end_frequency; frequency += frequency_step) {
             w_out = frequency * 2 * M_PI; //omega 
@@ -455,7 +455,6 @@ int main(int argc, char *argv[])
                     for (i2 = 0; i2 < (N - 1); i2++) {
                         dT[i2] = i2 * (float)T;
                     }
-
                     for(i2 = 0; i2 < (N - 1); i2++) {
                         t[i2] = i2;
                     }
@@ -469,7 +468,7 @@ int main(int argc, char *argv[])
                              * s[2][i] - Channel ADC2 raw signal
                             */
                             for(j = 0; j < MIN(size, sig_len); j++) {
-                                //printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
+                                printf("s(%d,:) = [%7d, %7d];\n",(j +1) , (int)s[1][i], (int)s[2][i]);
                             }
                             break;
                         }
@@ -484,7 +483,7 @@ int main(int argc, char *argv[])
                     for (i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
                         for(i3=0; i3 < size; i3++ ) { 
                             U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / 16384; //division comes after multiplication, this way no accuracy is lost
-                            printf("U_acq_short(%d,%d,%d) = %f\n",(i1+1), (i2+1), (i3+1), U_acq[i2][i3] );
+                            printf("U_acq_short(%d,%d,%d) = %f;\n",(i1+1), (i2+1), (i3+1), U_acq[i2][i3] );
                         }
                     }
 
@@ -492,8 +491,8 @@ int main(int argc, char *argv[])
                     for (i2 = 0; i2 < size; i2++) { 
                         U_load[i2] = U_acq[2][i2] - U_acq[1][i2]; // potencial difference gives the voltage
                         I_load[i2] = U_acq[2][i2] / Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
-                        printf("U_load_short(%d) = %f\n",(i2+1), U_load[i2]);
-                        printf("I_load_short(%d) = %f\n",(i2+1), I_load[i2] );
+                        printf("U_load_short(%d) = %f;\n",(i2+1), U_load[i2]);
+                        printf("I_load_short(%d) = %f;\n",(i2+1), I_load[i2] );
                     }
 
                     /* Finding max values, used for ploting */
@@ -528,7 +527,7 @@ int main(int argc, char *argv[])
 
                     /* Asigning impedance  values (complex value) */
                     Z = (U_load_amp / I_load_amp) + ( Phase_U_load_amp - Phase_I_load_amp ) * I;
-                    printf("Z(%d) = %.2f %+.2fi\n",i1, creal(Z), cimag(Z));
+                    printf("Z(%d) = %.2f %+.2fi\n",(i1+1), creal(Z), cimag(Z));
                     
                     Z_phase_deg_imag = cimag(Z) * (180 / M_PI);
                     if ( Z_phase_deg_imag <= -180 ) {
@@ -554,17 +553,70 @@ int main(int argc, char *argv[])
             Calib_data_short[i][2] = mean_array_column(Calib_data_short_avreage, averaging_num, 2); // mean value of real impedance
             Calib_data_short[i][3] = mean_array_column(Calib_data_short_avreage, averaging_num, 3); // mean value of imaginary impedance
             //printf("mean_array_column(%f, %d, 2) = %f \n",Calib_data_short_avreage[i1][2] ,averaging_num, (mean_array_column(Calib_data_short_avreage, averaging_num, 2)));
-            printf("avr real closed Z(%d) = %f\n",(i+1), Calib_data_short[i][2]); 
-            printf("avr imag closed Z(%d) = %f\n",(i+1), Calib_data_short[i][3]);       
+            printf("avr_real_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][2]); 
+            printf("avr_imag_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][3]);       
         } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
-        printf("figure(1)\n");
+
+        /* Preparing data for ploting */
+        
+        printf("figure\n");
+        printf("subplot(2,1,1);\n");
         printf("plot(U_load_short(:))\n");
-        printf("figure(2)\n");
+        printf("title ('Napetost na bremenu U_load_shor (razlika potencjalov obeh kanalov)');\n" );
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n");
+        
+        printf("subplot(2,1,2);\n");
         printf("plot(I_load_short(:))\n");
-        printf("figure(3)\n");
-        printf("hold on\n");
-        printf("plot(U_acq_short(1;1;:))\n");
-        printf("plot(U_acq_short(1;2;:))\n");
+        printf("title ('Tok na bremenu I_load_short (napetost kanala 2 deljena z referencno upornostjo)');\n" );
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+        
+        
+        printf("figure\n");
+        printf("subplot(3,1,1);\n");
+        printf("plot(U_acq_short(1,1,:),'r');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.1');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(3,1,2);\n");
+        printf("plot(U_acq_short(1,2,:),'g');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.2')\n");
+        printf("ylabel ('vrednost vzorcev')\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(3,1,3);\n");
+        printf("plot(U_acq_short(1,3,:),'b');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.3');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+        
+        printf("figure\n");
+        printf("subplot(3,1,1);\n");
+        printf("plot(U_acq_short(2,1,:),'r');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.1');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(3,1,2);\n");
+        printf("plot(U_acq_short(2,2,:),'g');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.2')\n");
+        printf("ylabel ('vrednost vzorcev')\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("subplot(3,1,3);\n");
+        printf("plot(U_acq_short(2,3,:),'b');\n");
+        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.3');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
+        printf("figure\n");
+        printf("plot(s(:,1),'b');\n");
+        printf("title ('Raw data from pitaya');\n");
+        printf("ylabel ('vrednost vzorcev');\n" );
+        printf("xlabel ('index vzorcev');\n" );
+
 
         return 1;
         /* User prompt short connection calibration */
