@@ -179,12 +179,12 @@ float max_array(float *arrayptr, int numofelements) {
   return max;
 }
 
-float trapz(float *arrayptr, float *dT, int size) {
+float trapz(float *arrayptr, float *dT, int size1) {
   float result;
   int i;
   //printf("size = %d\n", size);
-  for (i =0; i < size ; i++) {
-    result += fabsf((dT[ i+1 ] - dT[ i ]) * ( arrayptr[i] - arrayptr[ i+1 ] )/(float)2);
+  for (i =0; i < size1 ; i++) {
+    result += dT[1] * (arrayptr[i] + fabsf(( arrayptr[i] - arrayptr[ i+1 ] )/(float)2));
   }
     return result;
 }
@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
                         fprintf(stderr, "rp_set_params() failed!\n");
                         return -1;
                     }
-                    usleep(100000); // generator needs some time to start generating
+                    usleep(71754); // generator needs some time to start generating 31754
                     while(retries >= 0) {
                         if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
                             /* Signals acquired in s[][]:
@@ -517,30 +517,40 @@ int main(int argc, char *argv[])
                     I_load_max = max_array( I_load , SIGNAL_LENGTH );
                     */
 
-                    
                     /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
                     for( i2 = 0; i2 < size; i2++) {
                         U_load_ref[1][i2] = U_load[i2] * sin( t[i2] * T * w_out );
                         U_load_ref[2][i2] = U_load[i2] * cos( t[i2] * T * w_out );
                         I_load_ref[1][i2] = I_load[i2] * sin( t[i2] * T * w_out );
                         I_load_ref[2][i2] = I_load[i2] * cos( t[i2] * T * w_out );
+                        printf("U_load_ref(%d,1,%d) = %f;\n",(i1+1),(i2+1),U_load_ref[1][i2]);
+                        printf("U_load_ref(%d,2,%d) = %f;\n",(i1+1),(i2+1),U_load_ref[2][i2]);
+                        printf("I_load_ref(%d,1,%d) = %f;\n",(i1+1),(i2+1),I_load_ref[1][i2]);
+                        printf("I_load_ref(%d,2,%d) = %f;\n",(i1+1),(i2+1),I_load_ref[2][i2]);
                     }
 
                     /* Trapezoidal method for calculating the approximation of an integral */
-                    X_trapz[1] = trapz( U_load_ref[ 1 ], dT, SIGNAL_LENGTH );
-                    X_trapz[2] = trapz( I_load_ref[ 1 ], dT, SIGNAL_LENGTH );
-                    Y_trapz[1] = trapz( U_load_ref[ 2 ], dT, SIGNAL_LENGTH );
-                    Y_trapz[2] = trapz( I_load_ref[ 2 ], dT, SIGNAL_LENGTH );
+                    X_trapz_U[1] = trapz( U_load_ref[ 1 ], dT, size );
+                    X_trapz_I[2] = trapz( I_load_ref[ 1 ], dT, size );
+                    Y_trapz_U[1] = trapz( U_load_ref[ 2 ], dT, size );
+                    Y_trapz_I[2] = trapz( I_load_ref[ 2 ], dT, size );
 
-
+                    printf("X_trapz1 = %f\n",X_trapz_U[1] );
+                    printf("X_trapz2 = %f\n",X_trapz_I[2] );
+                    printf("Y_trapz1 = %f\n",Y_trapz_U[1] );
+                    printf("Y_trapz2 = %f\n",Y_trapz_I[2] );
                     /* Calculating voltage amplitude and phase */
-                    U_load_amp = sqrtf( pow( X_trapz[1] , (float)2 ) + pow( Y_trapz[1] , (float)2 ));
-                    Phase_U_load_amp = atan2f( Y_trapz[1], X_trapz[1] );
+                    U_load_amp = (float)2 * ( sqrtf( pow( X_trapz_U[1] , (float)2 ) + pow( Y_trapz_U[1] , (float)2 )));
+                    Phase_U_load_amp = atan2f( Y_trapz_U[1], X_trapz_U[1] );
 
+                    printf("U_load_amp(%d) = %f\n",(i1+1),U_load_amp );
+                    printf("Phase_U_load_amp(%d) = %f\n",(i1+1),Phase_U_load_amp );
                     /* Calculating current amplitude and phase */
-                    I_load_amp = sqrtf( pow( X_trapz[2] , (float)2 ) + pow( Y_trapz[2] , (float)2 ));
-                    Phase_I_load_amp = atan2f( Y_trapz[2], X_trapz[2] );
+                    I_load_amp =(float)2 * (sqrtf( pow( X_trapz_I[2] , (float)2 ) + pow( Y_trapz_I[2] , (float)2 )));
+                    Phase_I_load_amp = atan2f( Y_trapz_I[2], X_trapz_I[2] );
 
+                    printf("I_load_amp(%d) = %f\n",(i1+1),U_load_amp );
+                    printf("Phase_I_load_amp(%d) = %f\n",(i1+1),Phase_U_load_amp );
                     /* Asigning impedance  values (complex value) */
                     Z = (U_load_amp / I_load_amp) + ( Phase_U_load_amp - Phase_I_load_amp ) * I;
                     printf("Z(%d) = %.2f %+.2fi\n",(i1+1), creal(Z), cimag(Z));
@@ -584,83 +594,49 @@ int main(int argc, char *argv[])
         printf("subplot(4,1,1);\n");
         printf("plot(U_acq_short(1,2,:),'g');\n");
         printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.1  U_acq = s')\n");
-        printf("ylabel ('vrednost vzorcev')\n" );
-        printf("xlabel ('index vzorcev');\n" );
+        printf("ylabel ('U_acq_1/ V');\n" );
+        printf("xlabel ('vzorci');\n" );
 
         printf("subplot(4,1,2);\n");
         printf("plot(U_acq_short(1,3,:),'b');\n");
         printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 1.2  U_acq = s');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
+        printf("ylabel ('U_acq_2/ V');\n" );
+        printf("xlabel ('vzorci');\n" );
 
         printf("subplot(4,1,3);\n");
         printf("plot(U_load_short(1,:))\n");
-        printf("title ('Napetost na bremenu U_load_shor (razlika potencjalov obeh kanalov)');\n" );
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n");
-        
+        printf("title ('U_load_ - on the load');\n");
+        printf("ylabel ('U_load / V');\n" );
+        printf("xlabel ('vzorci');\n" );
+
+
         printf("subplot(4,1,4);\n");
-        printf("plot(I_load_short(1,:))\n");
-        printf("title ('Tok na bremenu I_load_short (napetost kanala 2 deljena z referencno upornostjo)');\n" );
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-        
-
-
-        printf("figure\n");
-
-        printf("subplot(4,1,1);\n");
-        printf("plot(U_acq_short(2,2,:),'g');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.1  U_acq = s')\n");
-        printf("ylabel ('vrednost vzorcev')\n" );
-        printf("xlabel ('index vzorcev');\n" );
-
-        printf("subplot(4,1,2);\n");
-        printf("plot(U_acq_short(2,3,:),'b');\n");
-        printf("title ('Raw Napetost iz zajetih vzorcev na bremenu 2.2  U_acq = s');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-
-        printf("subplot(4,1,3);\n");
-        printf("plot(U_load_short(2,:))\n");
-        printf("title ('Napetost na bremenu U_load_shor (razlika potencjalov obeh kanalov)');\n" );
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n");
-        
-        printf("subplot(4,1,4);\n");
-        printf("plot(I_load_short(2,:))\n");
-        printf("title ('Tok na bremenu I_load_short (napetost kanala 2 deljena z referencno upornostjo)');\n" );
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-
+        printf("plot(I_load_short(1,:))\n");;
+        printf("ylabel ('I_load / A');\n" );
+        printf("xlabel ('vzorci');\n" );
+        printf("title ('I_load_ - on the load');\n");
 
 
 
         printf("figure\n");
 
         printf("subplot(2,1,1)\n");
-        printf("plot(s(1,:,1),'r');\n");
-        printf("title ('Raw data from pitaya s(1,:)');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-        printf("subplot(2,1,2)\n");
-        printf("plot(s(1,:,2),'g');\n");
-        printf("title ('Raw data from pitaya s(2,:)');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
+        printf("hold on\n");
+        printf("plot(U_load_ref(1,1,:),'r');\n");
+        printf("plot(U_load_ref(1,2,:),'g');\n");
+        printf("hold off\n");
+        printf("title ('U_load_ref 1 - voltage multiplied by reference signal');\n");
+        printf("ylabel ('vrednost vzorcev U_load_ref(1,1,:)');\n" );
+        printf("xlabel ('samples');\n" );
 
-        printf("figure\n");
-        printf("subplot(2,1,1)\n");
-        printf("plot(s(2,:,1),'r');\n");
-        printf("title ('Raw data from pitaya s(1,:)');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
         printf("subplot(2,1,2)\n");
-        printf("plot(s(2,:,2),'g');\n");
-        printf("title ('Raw data from pitaya s(2,:)');\n");
-        printf("ylabel ('vrednost vzorcev');\n" );
-        printf("xlabel ('index vzorcev');\n" );
-
+        printf("hold on\n");
+        printf("plot(I_load_ref(1,1,:),'r');\n");
+        printf("plot(I_load_ref(1,2,:),'g');\n");
+        printf("hold off\n");
+        printf("title ('I_load_ref  - voltage multiplied by reference signal');\n");
+        printf("ylabel ('vrednost vzorcev I_load_ref');\n" );
+        printf("xlabel ('samples');\n" );
 
         return 1;
         /* User prompt short connection calibration */
