@@ -179,12 +179,12 @@ float max_array(float *arrayptr, int numofelements) {
   return max;
 }
 
-float trapz(float *arrayptr, float *dT, int size1) {
-  float result;
+float trapz(float *arrayptr, float dT, int size1) {
+  float result = 0;
   int i;
   //printf("size = %d\n", size);
-  for (i =0; i < size1 ; i++) {
-    result += dT[1] * (arrayptr[i] + fabsf(( arrayptr[i] - arrayptr[ i+1 ] )/(float)2));
+  for (i =0; i < size1 - 1 ; i++) {
+    result += (dT / (float)2) * (fabsf( arrayptr[i] + arrayptr[ i+1 ] ));
   }
     return result;
 }
@@ -324,8 +324,10 @@ int main(int argc, char *argv[])
     float **U_load_ref = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); //U_load_ref[1][i] voltage signal 1, U_load_ref[2][i] - voltage signal 2
     float **I_load_ref = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); //I_load_ref[1][i] current signal 1, I_load_ref[2][i] - current signal 2
     /* Signals return by trapezoidal method in complex */
-    float *X_trapz = create_table_size( SIGNALS_NUM );
-    float *Y_trapz = create_table_size( SIGNALS_NUM );
+    float *X_trapz_U = create_table_size( 1 );
+    float *X_trapz_I = create_table_size( 1 );
+    float *Y_trapz_U = create_table_size( 1 );
+    float *Y_trapz_I = create_table_size( 1 );
     /* Voltage, current and their phases calculated */
     float U_load_amp;
     float Phase_U_load_amp;
@@ -337,11 +339,11 @@ int main(int argc, char *argv[])
     float **Calib_data_short_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
     float **Calib_data_short  = create_2D_table_size(averaging_num, 4); //appendin 4 data values
     /* calibrtion results short circuited */
-    float **Calib_data_open_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
-    float **Calib_data_open = create_2D_table_size(averaging_num, 4); //appendin 4 data values
+    //float **Calib_data_open_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
+    //float **Calib_data_open = create_2D_table_size(averaging_num, 4); //appendin 4 data values
     /* calibrtion results short circuited */
-    float **Calib_data_measure_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
-    float **Calib_data_measure = create_2D_table_size(averaging_num, 4); //appendin 4 data values
+    //float **Calib_data_measure_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
+    //float **Calib_data_measure = create_2D_table_size(averaging_num, 4); //appendin 4 data values
     /* calibrtion results open circuited */
     //float **Calib_data_open_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
     //float **Calib_data_open  = create_2D_table_size(averaging_num, 4); //appendin 4 data values
@@ -530,15 +532,15 @@ int main(int argc, char *argv[])
                     }
 
                     /* Trapezoidal method for calculating the approximation of an integral */
-                    X_trapz_U[1] = trapz( U_load_ref[ 1 ], dT, size );
-                    X_trapz_I[2] = trapz( I_load_ref[ 1 ], dT, size );
-                    Y_trapz_U[1] = trapz( U_load_ref[ 2 ], dT, size );
-                    Y_trapz_I[2] = trapz( I_load_ref[ 2 ], dT, size );
+                    X_trapz_U[1] = trapz( U_load_ref[ 1 ], (float)T, size );
+                    X_trapz_I[2] = trapz( I_load_ref[ 1 ], (float)T, size );
+                    Y_trapz_U[1] = trapz( U_load_ref[ 2 ], (float)T, size );
+                    Y_trapz_I[2] = trapz( I_load_ref[ 2 ], (float)T, size );
 
-                    printf("X_trapz1 = %f\n",X_trapz_U[1] );
-                    printf("X_trapz2 = %f\n",X_trapz_I[2] );
-                    printf("Y_trapz1 = %f\n",Y_trapz_U[1] );
-                    printf("Y_trapz2 = %f\n",Y_trapz_I[2] );
+                    printf("X_trapz1(%d) = %f\n",(i1+1),X_trapz_U[1] );
+                    printf("X_trapz2(%d) = %f\n",(i1+1),X_trapz_I[2] );
+                    printf("Y_trapz1(%d) = %f\n",(i1+1),Y_trapz_U[1] );
+                    printf("Y_trapz2(%d) = %f\n",(i1+1),Y_trapz_I[2] );
                     /* Calculating voltage amplitude and phase */
                     U_load_amp = (float)2 * ( sqrtf( pow( X_trapz_U[1] , (float)2 ) + pow( Y_trapz_U[1] , (float)2 )));
                     Phase_U_load_amp = atan2f( Y_trapz_U[1], X_trapz_U[1] );
@@ -638,6 +640,19 @@ int main(int argc, char *argv[])
         printf("ylabel ('vrednost vzorcev I_load_ref');\n" );
         printf("xlabel ('samples');\n" );
 
+
+        printf("figure\n");
+
+        printf("subplot(2,1,1)\n");
+        printf("hold on\n");
+        printf("plot(X_trapz1(1,:),Y_trapz1(1,:),'r');\n");
+        printf("title ('rezultati trapezoidne metode x_trapz 1 in y_trapz1');\n");
+        printf("subplot(2,1,2)\n");
+        printf("plot(X_trapz2(1,:),Y_trapz2(1,:),'r');\n");
+        printf("title ('rezultati trapezoidne metode x_trapz2 in y_trapz2');\n");
+
+
+
         return 1;
         /* User prompt short connection calibration */
         while(1) {
@@ -663,165 +678,7 @@ int main(int argc, char *argv[])
 
 
         /* LCR algorythm for calibration in open cicuited mode */
-        for ( frequency = start_frequency; frequency <= end_frequency; frequency += frequency_step) {
-            w_out = frequency * 2 * M_PI; //omega 
-
-                /* Signal generator sequence */
-                awg_param_t params;
-                /* Prepare data buffer (calculate from input arguments) */
-
-                synthesize_signal(ampl, frequency, type, endfreq, data, &params);
-
-                /* Write the data to the FPGA and set FPGA AWG state machine */
-                write_data_fpga(ch, data, &params);
-
-            /* measurement_sweep defines if */
-            if (measurement_sweep > 1) {
-                one_calibration = measurement_sweep - 1;  //4 = 5 - 1 
-            }
-            else {
-                one_calibration = 0;    //ce je measurment_sweep = 1 potem postavimo one_calibration = 0 in naredimo vec kaibacij ?
-            }
-
-            for (i = 0; i < (measurement_sweep - one_calibration); i++ ) {  // For measurment sweep is 1. calibration   //s = 1:1:(1-0) 
-
-                for ( i1 = 0; i1 < averaging_num; i1++ ) {
-                    /* seting number of acquired samples */
-                    
-                    if (frequency >= 160000) {
-                        f=0;
-                        printf("f = 0\n");
-                    }
-                    else if (frequency >= 20000) {
-                        f=1;
-                    }    
-                    else if (frequency >= 2500) {
-                        f=2;
-                    }    
-                    else if (frequency >= 160) {
-                        f=3;
-                    }    
-                    else if (frequency >= 20) {
-                        f=4;
-                    }     
-                    else if (frequency >= 2.5) {
-                        f=5;
-                    }
-
-                    //setting decimtion
-                    t_params[TIME_RANGE_PARAM] = f;
-                        
-                    N = round( ( min_periodes * 125e6 ) / ( frequency * g_dec[f] ) );
-                    printf("N = %d\n" ,N);
-                    printf("dec = %d\n", g_dec[f]);
-                    size = N;
-
-                    T = ( g_dec[f] / 125e6 );
-
-                    for (i2 = 0; i2 < (N - 1); i2++) {
-                        dT[i2] = i2 * (float)T;
-                    }
-
-                    for(i2 = 0; i2 < (N - 1); i2++) {
-                        t[i2] = i2;
-                    }
-
-                    printf("mark acq\n");
-                    /* Signal acquire */
-                    while(retries >= 0) {  
-                        if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
-                            /* Signals acquired in s[][]:
-                             * s[0][i] - TODO
-                             * s[1][i] - Channel ADC1 raw signal
-                             * s[2][i] - Channel ADC2 raw signal
-                            */
-                            for(j = 0; j < MIN(size, sig_len); j++) {
-                                //printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
-                            }
-                            break;
-                        }
-                        if(retries-- == 0) {
-                            fprintf(stderr, "Signal scquisition was not triggered!\n");
-                            break;
-                        }
-                        usleep(1000);
-                    }
-                    printf("j = %d\n",j);
-                    /* Transform signals from  AD - 14 bit to voltage [ ( s / 2^14 ) * 2 ] */
-                    for (i2 = 0; i2 < size; i2++) { // only the 1 and 2 are used for i2
-                        for(i3=0; i3 < size; i3++ ) { 
-                            U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / 16384; //division comes after multiplication, this way no accuracy is lost
-                            //printf("U_acq[%d][%d] = %f\n",i2,i3, U_acq[i2][i3] );
-                        }
-                    }
-
-                    /* Voltage and current on the load can be calculated from gathered data */
-                    for (i2 = 0; i2 < size; i2++) { 
-                        U_load[i2] = U_acq[2][i2] - U_acq[1][i2]; // potencial difference gives the voltage
-                        I_load[i2] = U_acq[2][i2] / Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
-                    }
-
-                    /* Finding max values, used for ploting */
-                    /* COMENTED BECAUSE NOT USED
-                    U_load_max = max_array( U_load , SIGNAL_LENGTH );
-                    I_load_max = max_array( I_load , SIGNAL_LENGTH );
-                    */
-
-                    
-                    /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
-                    for( i2 = 0; i2 < size; i2++) {
-                        U_load_ref[1][i2] = U_load[i2] * sin( t[i2] * T * w_out );
-                        U_load_ref[2][i2] = U_load[i2] * cos( t[i2] * T * w_out );
-                        I_load_ref[1][i2] = I_load[i2] * sin( t[i2] * T * w_out );
-                        I_load_ref[2][i2] = I_load[i2] * cos( t[i2] * T * w_out );
-                    }
-
-                    /* Trapezoidal method for calculating the approximation of an integral */
-                    X_trapz[1] = trapz( U_load_ref[ 1 ], dT, SIGNAL_LENGTH );
-                    X_trapz[2] = trapz( I_load_ref[ 1 ], dT, SIGNAL_LENGTH );
-                    Y_trapz[1] = trapz( U_load_ref[ 2 ], dT, SIGNAL_LENGTH );
-                    Y_trapz[2] = trapz( I_load_ref[ 2 ], dT, SIGNAL_LENGTH );
-
-
-                    /* Calculating voltage amplitude and phase */
-                    U_load_amp = sqrtf( pow( X_trapz[1] , (float)2 ) + pow( Y_trapz[1] , (float)2 ));
-                    Phase_U_load_amp = atan2f( Y_trapz[1], X_trapz[1] );
-
-                    /* Calculating current amplitude and phase */
-                    I_load_amp = sqrtf( pow( X_trapz[2] , (float)2 ) + pow( Y_trapz[2] , (float)2 ));
-                    Phase_I_load_amp = atan2f( Y_trapz[2], X_trapz[2] );
-
-                    /* Asigning impedance  values (complex value) */
-                    Z = (U_load_amp / I_load_amp) + ( Phase_U_load_amp - Phase_I_load_amp ) * I;
-                    //printf("Z = %.2f %+.2fi\n", creal(Z), cimag(Z));
-                    
-                    Z_phase_deg_imag = cimag(Z) * (180 / M_PI);
-                    if ( Z_phase_deg_imag <= -180 ) {
-                        Z_phase_deg_imag += 360;
-                    }
-                    else if (Z_phase_deg_imag <= 180) {
-                        Z_phase_deg_imag -= 360;
-                    }
-
-
-                } // for ( i1 = 0; i < averaging_num; i1++ ) {
-                /* Saving data */
-                Calib_data_open_avreage[i1][0] = i1;
-                Calib_data_open_avreage[i1][1] = frequency;
-                Calib_data_open_avreage[i1][2] = creal(Z);
-                Calib_data_open_avreage[i1][3] = cimag(Z);
-                //printf("real Z[%d][2] = %f\n",i1, Calib_data_open_avreage[i1][2]);
-                //printf("imag Z[%d][2] = %f\n",i1, Calib_data_open_avreage[i1][3]);
-                //printf("Imag Z[%d][3] = %f\n",i1, Calib_data_open_avreage[i1][3]);
-            } // for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
-            Calib_data_open[i][0] = i;
-            Calib_data_open[i][1] = frequency;
-            Calib_data_open[i][2] = mean_array_column(Calib_data_open_avreage, averaging_num, 2); // mean value of real impedance
-            Calib_data_open[i][3] = mean_array_column(Calib_data_open_avreage, averaging_num, 3); // mean value of imaginary impedance
-            //printf("mean_array_column(%f, %d, 2) = %f \n",Calib_data_open_avreage[i1][2] ,averaging_num, (mean_array_column(Calib_data_open_avreage, averaging_num, 2)));
-            printf("avr real closed Z[%d][2] = %f\n",i, Calib_data_open[i][2]); 
-            printf("avr imag closed Z[%d][3] = %f\n",i, Calib_data_open[i][3]);       
-        } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) { 
+        
 
 
     } //prompt user for skiping the calibration sequence
@@ -859,166 +716,7 @@ int main(int argc, char *argv[])
 
 
     /* LCR algorythm for calibration in open cicuited mode */
-    for ( frequency = start_frequency; frequency <= end_frequency; frequency += frequency_step) {
-        printf("mark abc\n");
-            w_out = frequency * 2 * M_PI; //omega 
-
-                /* Signal generator sequence */
-                awg_param_t params;
-                /* Prepare data buffer (calculate from input arguments) */
-
-                synthesize_signal(ampl, frequency, type, endfreq, data, &params);
-
-                /* Write the data to the FPGA and set FPGA AWG state machine */
-                write_data_fpga(ch, data, &params);
-
-            /* measurement_sweep defines if */
-            if (measurement_sweep > 1) {
-                one_calibration = measurement_sweep - 1;  //4 = 5 - 1 
-            }
-            else {
-                one_calibration = 0;    //ce je measurment_sweep = 1 potem postavimo one_calibration = 0 in naredimo vec kaibacij ?
-            }
-
-            for (i = 0; i < (measurement_sweep - one_calibration); i++ ) {  // For measurment sweep is 1. calibration   //s = 1:1:(1-0) 
-
-                for ( i1 = 0; i1 < averaging_num; i1++ ) {
-                    /* seting number of acquired samples */
-                    
-                    if (frequency >= 160000) {
-                        f=0;
-                        printf("f = 0\n");
-                    }
-                    else if (frequency >= 20000) {
-                        f=1;
-                    }    
-                    else if (frequency >= 2500) {
-                        f=2;
-                    }    
-                    else if (frequency >= 160) {
-                        f=3;
-                    }    
-                    else if (frequency >= 20) {
-                        f=4;
-                    }     
-                    else if (frequency >= 2.5) {
-                        f=5;
-                    }
-
-                    //setting decimtion
-                    t_params[TIME_RANGE_PARAM] = f;
-                        
-                    N = round( ( min_periodes * 125e6 ) / ( frequency * g_dec[f] ) );
-                    printf("N = %d\n" ,N);
-                    printf("dec = %d\n", g_dec[f]);
-                    size = N;
-
-                    T = ( g_dec[f] / 125e6 );
-
-                    for (i2 = 0; i2 < (N - 1); i2++) {
-                        dT[i2] = i2 * (float)T;
-                    }
-
-                    for(i2 = 0; i2 < (N - 1); i2++) {
-                        t[i2] = i2;
-                    }
-
-                    printf("mark acq\n");
-                    /* Signal acquire */
-                    while(retries >= 0) {  
-                        if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
-                            /* Signals acquired in s[][]:
-                             * s[0][i] - TODO
-                             * s[1][i] - Channel ADC1 raw signal
-                             * s[2][i] - Channel ADC2 raw signal
-                            */
-                            for(j = 0; j < MIN(size, sig_len); j++) {
-                                //printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
-                            }
-                            break;
-                        }
-                        if(retries-- == 0) {
-                            fprintf(stderr, "Signal scquisition was not triggered!\n");
-                            break;
-                        }
-                        usleep(1000);
-                    }
-                    printf("j = %d\n",j);
-                    /* Transform signals from  AD - 14 bit to voltage [ ( s / 2^14 ) * 2 ] */
-                    for (i2 = 0; i2 < size; i2++) { // only the 1 and 2 are used for i2
-                        for(i3=0; i3 < size; i3++ ) { 
-                            U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / 16384; //division comes after multiplication, this way no accuracy is lost
-                            //printf("U_acq[%d][%d] = %f\n",i2,i3, U_acq[i2][i3] );
-                        }
-                    }
-
-                    /* Voltage and current on the load can be calculated from gathered data */
-                    for (i2 = 0; i2 < size; i2++) { 
-                        U_load[i2] = U_acq[2][i2] - U_acq[1][i2]; // potencial difference gives the voltage
-                        I_load[i2] = U_acq[2][i2] / Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
-                    }
-
-                    /* Finding max values, used for ploting */
-                    /* COMENTED BECAUSE NOT USED
-                    U_load_max = max_array( U_load , SIGNAL_LENGTH );
-                    I_load_max = max_array( I_load , SIGNAL_LENGTH );
-                    */
-
-                    
-                    /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
-                    for( i2 = 0; i2 < size; i2++) {
-                        U_load_ref[1][i2] = U_load[i2] * sin( t[i2] * T * w_out );
-                        U_load_ref[2][i2] = U_load[i2] * cos( t[i2] * T * w_out );
-                        I_load_ref[1][i2] = I_load[i2] * sin( t[i2] * T * w_out );
-                        I_load_ref[2][i2] = I_load[i2] * cos( t[i2] * T * w_out );
-                    }
-
-                    /* Trapezoidal method for calculating the approximation of an integral */
-                    X_trapz[1] = trapz( U_load_ref[ 1 ], dT, SIGNAL_LENGTH );
-                    X_trapz[2] = trapz( I_load_ref[ 1 ], dT, SIGNAL_LENGTH );
-                    Y_trapz[1] = trapz( U_load_ref[ 2 ], dT, SIGNAL_LENGTH );
-                    Y_trapz[2] = trapz( I_load_ref[ 2 ], dT, SIGNAL_LENGTH );
-
-
-                    /* Calculating voltage amplitude and phase */
-                    U_load_amp = sqrtf( pow( X_trapz[1] , (float)2 ) + pow( Y_trapz[1] , (float)2 ));
-                    Phase_U_load_amp = atan2f( Y_trapz[1], X_trapz[1] );
-
-                    /* Calculating current amplitude and phase */
-                    I_load_amp = sqrtf( pow( X_trapz[2] , (float)2 ) + pow( Y_trapz[2] , (float)2 ));
-                    Phase_I_load_amp = atan2f( Y_trapz[2], X_trapz[2] );
-
-                    /* Asigning impedance  values (complex value) */
-                    Z = (U_load_amp / I_load_amp) + ( Phase_U_load_amp - Phase_I_load_amp ) * I;
-                    //printf("Z = %.2f %+.2fi\n", creal(Z), cimag(Z));
-                    
-                    Z_phase_deg_imag = cimag(Z) * (180 / M_PI);
-                    if ( Z_phase_deg_imag <= -180 ) {
-                        Z_phase_deg_imag += 360;
-                    }
-                    else if (Z_phase_deg_imag <= 180) {
-                        Z_phase_deg_imag -= 360;
-                    }
-
-
-                } // for ( i1 = 0; i < averaging_num; i1++ ) {
-                /* Saving data */
-                Calib_data_measure_avreage[i1][0] = i1;
-                Calib_data_measure_avreage[i1][1] = frequency;
-                Calib_data_measure_avreage[i1][2] = creal(Z);
-                Calib_data_measure_avreage[i1][3] = cimag(Z);
-                //printf("real Z[%d][2] = %f\n",i1, Calib_data_measure_avreage[i1][2]);
-                //printf("imag Z[%d][2] = %f\n",i1, Calib_data_measure_avreage[i1][3]);
-                //printf("Imag Z[%d][3] = %f\n",i1, Calib_data_measure_avreage[i1][3]);
-            } // for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
-            Calib_data_measure[i][0] = i;
-            Calib_data_measure[i][1] = frequency;
-            Calib_data_measure[i][2] = mean_array_column(Calib_data_measure_avreage, averaging_num, 2); // mean value of real impedance
-            Calib_data_measure[i][3] = mean_array_column(Calib_data_measure_avreage, averaging_num, 3); // mean value of imaginary impedance
-            //printf("mean_array_column(%f, %d, 2) = %f \n",Calib_data_measure_avreage[i1][2] ,averaging_num, (mean_array_column(Calib_data_measure_avreage, averaging_num, 2)));
-            printf("avr real closed Z[%d][2] = %f\n",i, Calib_data_measure[i][2]); 
-            printf("avr imag closed Z[%d][3] = %f\n",i, Calib_data_measure[i][3]);       
-    } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
+    
 
 
 
