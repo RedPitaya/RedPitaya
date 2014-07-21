@@ -29,3 +29,5 @@ TO DO:
 -finish the lock in method
 -only sine signal is put on the output ports. Expanding to square and triangle signal is a must!
 
+
+
