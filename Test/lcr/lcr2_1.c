@@ -321,6 +321,10 @@ int main(int argc, char *argv[])
     int shaping = 0;
     int N; //Number of samples in respect to numbers of periods
     float complex *Z = (float complex *)malloc( (averaging_num + 1) * sizeof(float complex));
+    float **Z_short = create_2D_table_size(averaging_num, 4);
+    float **Z_open = create_2D_table_size(averaging_num, 4);
+    float **Z_measure = create_2D_table_size(averaging_num, 4);
+    float **Z_final = create_2D_table_size(averaging_num, 4);
 
     /* Memory allocation for relevant data storage */
     /* calibrtion results short circuited */
@@ -455,7 +459,11 @@ int main(int argc, char *argv[])
                 Calib_data_short[i][2] = mean_array_column(Calib_data_short_avreage, averaging_num, 2); // mean value of real impedance
                 Calib_data_short[i][3] = mean_array_column(Calib_data_short_avreage, averaging_num, 3); // mean value of imaginary impedance
                 printf("avr_real_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][2]); 
-                printf("avr_imag_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][3]);   
+                printf("avr_imag_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][3]);
+                Z_short[i][1] =  Calib_data_short[i][2] * cos(Calib_data_short[i][3]);
+                Z_short[i][1] =  Calib_data_short[i][2] * sin(Calib_data_short[i][3]);
+                printf("Z_short(%d,1) = %f\n",(i+1),Z_short[i][1] );
+                printf("Z_short(%d,2) = %f\n",(i+1),Z_short[i][2] );
             } // for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
                 
         } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
@@ -563,7 +571,12 @@ int main(int argc, char *argv[])
                 Calib_data_open[i][2] = mean_array_column(Calib_data_open_avreage, averaging_num, 2); // mean value of real impedance
                 Calib_data_open[i][3] = mean_array_column(Calib_data_open_avreage, averaging_num, 3); // mean value of imaginary impedance
                 printf("avr_real_open_Z(%d) = %f\n",(i+1), Calib_data_open[i][2]); 
-                printf("avr_imag_open_Z(%d) = %f\n",(i+1), Calib_data_open[i][3]);   
+                printf("avr_imag_open_Z(%d) = %f\n",(i+1), Calib_data_open[i][3]);
+
+                Z_open[i][1] =  Calib_data_open[i][2] * cos(Calib_data_open[i][3]);
+                Z_open[i][2] =  Calib_data_open[i][2] * sin(Calib_data_open[i][3]);
+                printf("Z_open(%d,1) = %f\n",(i+1),Z_open[i][1] );
+                printf("Z_open(%d,2) = %f\n",(i+1),Z_open[i][2] ); 
             } // for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
                 
         } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
@@ -725,18 +738,54 @@ int main(int argc, char *argv[])
                 //printf("Calib_data_open_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_open_avreage[i1][2]);
                 //printf("Calib_data_open_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_open_avreage[i1][3]);
 
-            } // for ( i1 = 0; i < averaging_num; i1++ ) {
+            } // for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
             Calib_data_measure[i][0] = i;
             Calib_data_measure[i][1] = frequency;
             Calib_data_measure[i][2] = mean_array_column(Calib_data_open_avreage, averaging_num, 2); // mean value of real impedance
             Calib_data_measure[i][3] = mean_array_column(Calib_data_open_avreage, averaging_num, 3); // mean value of imaginary impedance
-            printf("avr_real_measure_Z(%d) = %f\n",(i+1), Calib_data_measure[i][2]); 
-            printf("avr_imag_measure_Z(%d) = %f\n",(i+1), Calib_data_measure[i][3]);   
+            printf("avr_real_measure_Z(%d,1) = %f;\n",(i+1), Calib_data_measure[i][0]); 
+            printf("avr_imag_measure_Z(%d,2) = %f;\n",(i+1), Calib_data_measure[i][1]);
+            printf("avr_real_measure_Z(%d,3) = %f\n",(i+1), Calib_data_measure[i][2]); 
+            printf("avr_imag_measure_Z(%d,4) = %f\n",(i+1), Calib_data_measure[i][3]);
+
+            Z_measure[i][1] =  Calib_data_measure[i][2] * cos(Calib_data_measure[i][3]);
+            Z_measure[i][2] =  Calib_data_measure[i][2] * sin(Calib_data_measure[i][3]);
+            printf("Z_measure(%d,1) = %f\n",(i+1),Z_measure[i][1] );
+            printf("Z_measure(%d,2) = %f\n",(i+1),Z_measure[i][2] );
         } // for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
             
     } //for ( frequency = start_frequency ; frequency < end_frequency ; frequency += frequency_step) {
     
+
+    float *Z_amp = create_table_size(measurement_sweep - one_calibration);
+    float *Phase = create_table_size(measurement_sweep - one_calibration);
+
+    /* Corelating measured results with calibration data */
+    if (one_calibration == 1) {
+        for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
+            Z_final[i][1] = (Z_measure[i][1] - Z_short[i][1]) / (( 1 - Z_measure[i][1] - Z_short[i][1]) * (1/Z_open[i][1]));
+            Z_final[i][2] = (Z_measure[i][2] - Z_short[i][2]) / (( 1 - Z_measure[i][2] - Z_short[i][2]) * (1/Z_open[i][2]));
+            Phase[i] = (((atan2(Z_final[i][2],Z_final[i][1]))*180) / M_PI);
+            printf("Phase(%d) = %f\n",(i+1),Phase[i]);
+            Z_amp[i] = fabsf(pow(Z_measure[i][1], 2) + pow(Z_measure[i][1], 2));
+            printf("Z_amp(%d) = %f\n",(i+1),Z_amp[i]);
+        }
+        
+    }
+    else {
+        for (i = 0; i < (measurement_sweep - one_calibration); i++ ) { 
+            Z_final[i][1] = (Z_measure[i][1]);
+            Z_final[i][2] = (Z_measure[i][2]);
+            Phase[i] = (((atan2(Z_final[i][2],Z_final[i][1]))*180) / M_PI);
+            printf("Phase(%d) = %f\n",(i+1),Phase[i]);
+            Z_amp[i] = fabsf(pow(Z_measure[i][1], 2) + pow(Z_measure[i][1], 2));
+            printf("Z_amp(%d) = %f\n",(i+1),Z_amp[i]);
+        }
+    }
+
+
+
 
     printf("end_yay_no_errors = 1\n");
     return 0;
