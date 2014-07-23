@@ -260,12 +260,14 @@ int main(int argc, char *argv[])
     //double freq = strtod(argv[3], NULL);
     /* Frequencies set for later use in the program. Start, end and step frequencies are defined by the user */
     double start_frequency = 100;
-    double frequency_steps_number =  2;
+    double frequency_steps_number =  1;
     double end_frequency =   300;
     double frequency_step = (end_frequency - start_frequency ) / frequency_steps_number;
     double endfreq = 0;/* endfreq is used in prebuild sweep program and is not needed in lcr meter because sweep is defined in the for loop */
     double frequency; //frequency in a for loop
-    int sweep_function = 1; //[1] frequency sweep, [0] measurement sweep
+    int sweep_function = 0; //[1] frequency sweep, [0] measurement sweep
+    /* Argument set user. If there is no frequency sweep, measurement sweep is used  */
+    int measurement_sweep_user_defined = 2;
  
     /* Check frequency limits */
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency ) ) {
@@ -274,14 +276,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    /* Argument set user. If there is no frequency sweep, measurement sweep is used  */
-    int measurement_sweep_user_defined = 2;
+    
     /* if one wants to skip calibration the parameter can be set to 0 */
     int one_calibration;
     one_calibration = 1; // testing purposes one_calibration = 1 (the program calibrates, if !=1 program skips calibration)
 
     /* Number of measurments made and are later averaged */
-    uint32_t averaging_num = 2; // Sequence takes more time and the result are more stable results (not more accurate)
+    uint32_t averaging_num = 1; // Sequence takes more time and the result are more stable results (not more accurate)
 
     if (argc > 5) {
         endfreq = strtod(argv[5], NULL);
@@ -324,17 +325,32 @@ int main(int argc, char *argv[])
     float complex *Z_final = (float complex *)malloc( (measurement_sweep_user_defined + 1) * sizeof(float complex));
     /* Memory allocation for relevant data storage */
     /* calibrtion results short circuited */
-    float **Calib_data_short_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
+    float **Calib_data_short_avreage = create_2D_table_size((averaging_num + 1), 4); //appendin 4 data values
     float **Calib_data_short  = create_2D_table_size(measurement_sweep_user_defined, 4); //appendin 4 data values
     /* calibrtion results open circuited */
-    float **Calib_data_open_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
+    float **Calib_data_open_avreage = create_2D_table_size((averaging_num + 1), 4); //appendin 4 data values
     float **Calib_data_open = create_2D_table_size(measurement_sweep_user_defined, 4); //appendin 4 data values
     /* calibration load results */
-    float **Calib_data_load_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
+    float **Calib_data_load_avreage = create_2D_table_size((averaging_num + 1), 4); //appendin 4 data values
     float **Calib_data_load = create_2D_table_size(measurement_sweep_user_defined, 4); //appendin 4 data values
     /* measure results */
     float **Calib_data_measure_avreage = create_2D_table_size((averaging_num + 1), averaging_num ); //appendin 4 data values
     float **Calib_data_measure = create_2D_table_size(measurement_sweep_user_defined, 4); //appendin 4 data values
+
+    /* results will be saved on the end and this defines which dimensions will reprisent them if we have measurement sweep we will use sweep steps, if fr. sweep that will define the dimension */
+    int end_results_dimension = 0;
+    int dimension_step = 0;
+    if (sweep_function == 0 ) { //sweep_function == 0 (mesurement sweep), sweep_function == 1 (frequency sweep)
+        end_results_dimension = measurement_sweep_user_defined;
+    }
+    else if (sweep_function == 1) { //sweep_function == 0 (mesurement sweep), sweep_function == 0 (frequency sweep)
+        end_results_dimension = frequency_steps_number;
+    }
+
+    float complex *Z_short = (float complex *)malloc( end_results_dimension * sizeof(float complex));
+    float complex *Z_open = (float complex *)malloc( end_results_dimension * sizeof(float complex));
+    float complex *Z_load = (float complex *)malloc( end_results_dimension * sizeof(float complex));
+    float complex *Z_measure = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -355,8 +371,10 @@ int main(int argc, char *argv[])
 
     int h = 0;// [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     
-    for ( frequency = start_frequency; frequency <= end_frequency; frequency += frequency_step) {
-        printf("frequency = %f\n",frequency );
+    for ( frequency = start_frequency; frequency <= end_frequency; frequency = frequency + frequency_step) {
+        printf("frequency_now = %f\n",frequency );
+        printf("frequency_step = %f\n",frequency_step );
+        printf("end_frequency = %f\n",end_frequency );
         w_out = frequency * 2 * M_PI; //omega 
         for (h = 0; h <= 3 ; h++) {
             printf("step(%d) = %d\n",(h+1),h );
@@ -381,7 +399,7 @@ int main(int argc, char *argv[])
                 measurement_sweep = 1;
             }
 
-            for (i = 0; i < measurement_sweep; i++ ) {  // For measurment sweep is 1. calibration   //s = 1:1:(1-0) 
+            for (i = 0; i < measurement_sweep; i++ ) {  // For measurment sweep is 1. calibration
 
                 printf("measurementsweepstep = %d\n",(i+1));
                 for ( i1 = 0; i1 < averaging_num; i1++ ) {
@@ -479,8 +497,8 @@ int main(int argc, char *argv[])
                         printf("error no function set for h = %d, when saving data\n", h);
                     }
 
-                } // for ( i1 = 0; i < averaging_num; i1++ ) {
-
+                } // for ( i1 = 0; i1 < averaging_num; i1++ ) {
+                    printf("i = %d\n",i);
                 /* Saving data */
                 switch (h) {
                 case 0:
@@ -488,8 +506,8 @@ int main(int argc, char *argv[])
                     Calib_data_short[i][1] = frequency;
                     Calib_data_short[i][2] = mean_array_column(Calib_data_short_avreage, averaging_num, 2); // mean value of real impedance
                     Calib_data_short[i][3] = mean_array_column(Calib_data_short_avreage, averaging_num, 3); // mean value of imaginary impedance
-                    printf("avr_real_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][2]); 
-                    printf("avr_imag_closed_Z(%d) = %f\n",(i+1), Calib_data_short[i][3]);
+                    printf("avr_real_short_Z(%d) = %f\n",(i+1), Calib_data_short[i][2]); 
+                    printf("avr_imag_short_Z(%d) = %f\n",(i+1), Calib_data_short[i][3]);
                     break;
                 case 1:
                     Calib_data_open[i][0] = i;
@@ -519,7 +537,27 @@ int main(int argc, char *argv[])
                     printf("error no function set for h = %d, when averaging data\n", h);
                 }
 
-            } // for (i = 0; i < measurement_sweep; i++ ) {  // For measurment sweep is 1. calibration   
+                printf("sweep_function= %d\n",sweep_function);
+                if (sweep_function == 0 ) { //sweep_function == 0 (mesurement sweep), sweep_function == 1 (frequency sweep)
+                    dimension_step = i;
+                    printf("on_the_place_msweep = %d\n",dimension_step);
+                }
+                else if(sweep_function == 1) { //sweep_function == 0 (mesurement sweep), sweep_function == 0 (frequency sweep)
+                   dimension_step = ((int)(frequency / frequency_step)) -1;
+                   printf("on_the_place_fr = %d\n",dimension_step);
+                }
+                
+                
+                Z_short[dimension_step] = Calib_data_short[0][2] + Calib_data_short[0][3] *I; //measurement sweep i je vedno 1 tudi pri fr sweep je i vedno 1
+                printf("Z_short(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_short[dimension_step]), cimag(Z_short[dimension_step]));
+                Z_open[dimension_step] = Calib_data_open[0][2] + Calib_data_open[0][3] *I;
+                printf("Z_open(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_open[dimension_step]), cimag(Z_open[dimension_step]));
+                Z_load[dimension_step] = Calib_data_load[0][2] + Calib_data_load[0][3] *I;
+                printf("Z_load(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_load[dimension_step]), cimag(Z_load[dimension_step]));
+                Z_measure[dimension_step] = Calib_data_measure[i][2] + Calib_data_measure[i][3] *I;
+                printf("Z_measure(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_measure[dimension_step]), cimag(Z_measure[dimension_step]));
+
+            } // for (i = 0; i < measurement_sweep; i++ ) {  // For measurment sweep is 1. calibration
         
         }//  (h = 0; h =< 4 ; h++) { function step
         printf(" step(:) = [1,0,0,0]\n");
@@ -859,7 +897,7 @@ int LCR_data_analasys(float **s ,
     for (i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
         for(i3 = 0; i3 < size; i3 ++ ) { 
             U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / (float)16384; //division comes after multiplication, this way no accuracy is lost
-            printf("U_acq(%d,%d,%d) = %f;\n",(i1+1), (i2+1), (i3+1), U_acq[i2][i3] );
+            //printf("U_acq(%d,%d,%d) = %f;\n",(i1+1), (i2+1), (i3+1), U_acq[i2][i3] );
         }
     }
 
@@ -867,8 +905,8 @@ int LCR_data_analasys(float **s ,
     for (i2 = 0; i2 < size; i2++) { 
         U_load[i2] = U_acq[2][i2] - U_acq[1][i2]; // potencial difference gives the voltage
         I_load[i2] = U_acq[2][i2] / (float)Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
-        printf("U_load(%d,%d) = %f;\n",(i1+1),(i2+1), U_load[i2]);
-        printf("I_load(%d,%d) = %f;\n",(i1+1),(i2+1), I_load[i2] );
+        //printf("U_load(%d,%d) = %f;\n",(i1+1),(i2+1), U_load[i2]);
+        //printf("I_load(%d,%d) = %f;\n",(i1+1),(i2+1), I_load[i2] );
     }
 
     /* Finding max values, used for ploting */
@@ -883,10 +921,12 @@ int LCR_data_analasys(float **s ,
         U_load_ref[2][i2] = U_load[i2] * cos( t[i2] * T * w_out );
         I_load_ref[1][i2] = I_load[i2] * sin( t[i2] * T * w_out );
         I_load_ref[2][i2] = I_load[i2] * cos( t[i2] * T * w_out );
+        /*
         printf("U_load_ref(%d,1,%d) = %f;\n",(i1+1),(i2+1),U_load_ref[1][i2]);
         printf("U_load_ref(%d,2,%d) = %f;\n",(i1+1),(i2+1),U_load_ref[2][i2]);
         printf("I_load_ref(%d,1,%d) = %f;\n",(i1+1),(i2+1),I_load_ref[1][i2]);
         printf("I_load_ref(%d,2,%d) = %f;\n",(i1+1),(i2+1),I_load_ref[2][i2]);
+        */
     }
 
     /* Trapezoidal method for calculating the approximation of an integral */
@@ -894,22 +934,26 @@ int LCR_data_analasys(float **s ,
     X_trapz_I[2] = trapz( I_load_ref[ 1 ], (float)T, size );
     Y_trapz_U[1] = trapz( U_load_ref[ 2 ], (float)T, size );
     Y_trapz_I[2] = trapz( I_load_ref[ 2 ], (float)T, size );
+    /*
     printf("X_trapz1(%d) = %f;\n",(i1+1),X_trapz_U[1] );
     printf("X_trapz2(%d) = %f;\n",(i1+1),X_trapz_I[2] );
     printf("Y_trapz1(%d) = %f;\n",(i1+1),Y_trapz_U[1] );
     printf("Y_trapz2(%d) = %f;\n",(i1+1),Y_trapz_I[2] );
+    */
     /* Calculating voltage amplitude and phase */
     U_load_amp = (float)2 * ( sqrtf( pow( X_trapz_U[1] , (float)2 ) + pow( Y_trapz_U[1] , (float)2 )));
     Phase_U_load_amp = atan2f( Y_trapz_U[1], X_trapz_U[1] );
-
+    /*
     printf("U_load_amp(%d) = %f;\n",(i1+1),U_load_amp );
     printf("Phase_U_load_amp(%d) = %f;\n",(i1+1),Phase_U_load_amp );
+    */
     /* Calculating current amplitude and phase */
     I_load_amp =(float)2 * (sqrtf( pow( X_trapz_I[2] , (float)2 ) + pow( Y_trapz_I[2] , (float)2 )));
     Phase_I_load_amp = atan2f( Y_trapz_I[2], X_trapz_I[2] );
-
+    /*
     printf("I_load_amp(%d) = %f;\n",(i1+1),U_load_amp );
     printf("Phase_I_load_amp(%d) = %f;\n",(i1+1),Phase_U_load_amp );
+    */
     /* Asigning impedance  values (complex value) */
     Z[i1] = (U_load_amp / I_load_amp) + ( Phase_U_load_amp - Phase_I_load_amp ) * I;
     printf("Z(%d) = %.2f + %.2fI;\n",(i1+1), creal(Z[i1]), cimag(Z[i1]));
@@ -921,7 +965,7 @@ int LCR_data_analasys(float **s ,
     else if (Z_phase_deg_imag <= 180) {
         Z_phase_deg_imag -= 360;
     }
-    printf("Z_phase_deg_imag = %f;\n", Z_phase_deg_imag);
+    //printf("Z_phase_deg_imag = %f;\n", Z_phase_deg_imag);
     return 1;
 }
 
