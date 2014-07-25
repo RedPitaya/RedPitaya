@@ -10,6 +10,7 @@ XLINUX_DIR := linux-xlnx
 PATCH := patches
 NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
 INSTALL_DIR ?= .
+CROSS_COMPILE ?= arm-xilinx-linux-gnueabi-
 
 .PHONY : all install clean distclean
 

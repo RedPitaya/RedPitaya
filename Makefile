@@ -64,8 +64,9 @@ export VERSION
 
 all: zip
 
+
 $(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
-	mkdir $(TARGET)
+	mkdir -p $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
 	cp -r OS/filesystem/* $(TARGET)
@@ -76,12 +77,12 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MON
 
 
 $(BUILD):
-	mkdir $(BUILD)
+	mkdir -p $(BUILD)
 
 
 # Linux build provides: uImage kernel, dtc compiler.
 $(LINUX): $(BUILD)
-	make -C $(LINUX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	make -C $(LINUX_DIR)
 	make -C $(LINUX_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 # FPGA build provides: fsbl.elf, fpga.bit, devicetree.dts.
@@ -109,28 +110,29 @@ $(URAMDISK): $(BUILD)
 	$(MAKE) -C $(URAMDISK_DIR)
 	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
+# I don't understand why this has two different cross compilers listed :S
 $(NGINX): $(URAMDISK)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(BUILD))
+	$(MAKE) -C $(NGINX_DIR) install CROSS_COMPILE=arm-xilinx-eabi- DESTDIR=$(abspath $(BUILD))
 
 $(MONITOR):
-	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(GENERATE):
-	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(GENERATE_DIR)
 	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(ACQUIRE):
-	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(CALIB):
-	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(DISCOVERY):
-	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(ECOSYSTEM):
@@ -143,7 +145,7 @@ clean:
 	make -C $(LINUX_DIR) clean
 	make -C $(SOC_DIR) clean
 	make -C $(UBOOT_DIR) clean
-	make -C $(NGINX_DIR) clean	
+	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
@@ -152,3 +154,12 @@ clean:
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
+
+distclean:
+	make -C $(LINUX_DIR) distclean
+	make -C $(UBOOT_DIR) distclean
+
+fpgaclean:
+	make -C $(SOC_DIR) clean
+
+.PHONY:all clean distclean fpgaclean
