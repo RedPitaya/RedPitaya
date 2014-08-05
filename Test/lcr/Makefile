@@ -18,12 +18,12 @@ VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
-OBJS = fpga_awg.o lcr.o fpga_osc.o main_osc.o worker.o
+OBJS = fpga_awg.o lcr2_2.o fpga_osc.o main_osc.o worker.o
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 
 # Executable name
-TARGET=lcr
+TARGET=lcr2_2
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror
