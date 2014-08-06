@@ -179,13 +179,16 @@ float max_array(float *arrayptr, int numofelements) {
   return max;
 }
 
-float trapz(float *arrayptr, float dT, int size1) {
+float trapz(float *arrayptr, float T, int size1) {
   float result = 0;
   int i;
   //printf("size = %d\n", size);
   for (i =0; i < size1 - 1 ; i++) {
-    result += (dT / (float)2) * (fabsf( arrayptr[i] + arrayptr[ i+1 ] ));
+    result +=  ( arrayptr[i] + arrayptr[ i+1 ]  );
+   
   }
+    result = (T / (float)2) * result;
+    //printf("return = %f\n",result);
     return result;
 }
 
@@ -304,7 +307,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int sweep_function = 0; //[1] frequency sweep, [0] measurement sweep
+    int sweep_function = 1; //[1] frequency sweep, [0] measurement sweep
     //int sweep_function = strtod(argv[9], NULL);
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
         fprintf(stderr, "Invalid sweep function:  %s\n", argv[9]);
@@ -312,7 +315,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    double frequency_steps_number =  5;
+    double frequency_steps_number =  100;
     //double frequency_steps_number = strtod(argv[10], NULL);
     if ( (frequency_steps_number < 1) || (frequency_steps_number > 300) ) {
         fprintf(stderr, "Invalid umber of frequency steps:  %s\n", argv[10]);
@@ -321,7 +324,7 @@ int main(int argc, char *argv[])
     }
     
 
-    double end_frequency = 8000; //max = 6.2e+07
+    double end_frequency = 10000; //max = 6.2e+07
     //double end_frequency = strtod(argv[11], NULL);
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
         fprintf(stderr, "Invalid end frequency:  %s\n", argv[11]);
@@ -329,7 +332,7 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    int measurement_sweep_user_defined = 10;
+    int measurement_sweep_user_defined = 1;
     //nt measurement_sweep_user_defined = strtod(argv[10], NULL);
     if ( (measurement_sweep_user_defined < 1) || (measurement_sweep_user_defined > 300) ) {
         fprintf(stderr, "Invalid umber measurement steps steps:  %s\n", argv[10]);
@@ -481,6 +484,7 @@ int main(int argc, char *argv[])
             frequency = start_frequency + (frequency_step * fr);
             printf("frequency_now = %f;\n",frequency );
             w_out = frequency * 2 * M_PI; //omega 
+            printf("w_out = %f\n",w_out );
         
             /* Signal generator */
             awg_param_t params;
@@ -564,26 +568,26 @@ int main(int argc, char *argv[])
                     /* Saving data */
                     switch (h) {
                     case 0:
-                        Calib_data_short_for_avreaging[i1][1] = creal(*Z);
-                        Calib_data_short_for_avreaging[i1][2] = cimag(*Z);
+                        Calib_data_short_for_avreaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_short_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
                         //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
                         //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     case 1:
-                        Calib_data_open_for_avreaging[i1][1] = creal(*Z);
-                        Calib_data_open_for_avreaging[i1][2] = cimag(*Z);
+                        Calib_data_open_for_avreaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_open_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
                         //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
                         //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     case 2:
-                        Calib_data_load_for_avreaging[i1][1] = creal(*Z);
-                        Calib_data_load_for_avreaging[i1][2] = cimag(*Z);
+                        Calib_data_load_for_avreaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_load_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
                         //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
                         //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     case 3:
-                        Calib_data_measure_for_avreaging[i1][1] = creal(*Z);
-                        Calib_data_measure_for_avreaging[i1][2] = cimag(*Z);
+                        Calib_data_measure_for_avreaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_measure_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
                         //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
                         //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
@@ -596,30 +600,30 @@ int main(int argc, char *argv[])
                 switch (h) {
                 case 0:
 
-                    Calib_data_short[i][1] = mean_array_column(Calib_data_short_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_short[i][2] = mean_array_column(Calib_data_short_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
+                    Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 1); // mean value of real impedance
+                    Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
                     printf("avr_real_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][1]); 
                     printf("avr_imag_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][2]);
                     break;
                 case 1:
-                    Calib_data_open[i][1] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_open[i][2] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
+                    Calib_data_open[ i ][ 1 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 1); // mean value of real impedance
+                    Calib_data_open[ i ][ 2 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
                     printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][1]); 
                     printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][2]);
                     break;
                 case 2:
-                    Calib_data_load[i][1] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_load[i][2] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
+                    Calib_data_load[ i ][ 1 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 1); // mean value of real impedance
+                    Calib_data_load[ i ][ 2 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
                     printf("avr_real_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][1]); 
                     printf("avr_imag_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][2]);
                     break;
                 case 3:
-                    Calib_data_measure[i][0] = i;
-                    Calib_data_measure[i][1] = frequency;
-                    Calib_data_measure[i][2] = mean_array_column(Calib_data_measure_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_measure[i][3] = mean_array_column(Calib_data_measure_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    printf("avr_real_measure_Z(%d) = %f;\n",(i+1), Calib_data_measure[i][2]); 
-                    printf("avr_imag_measure_Z(%d) = %f;\n",(dimension_step+1), Calib_data_measure[i][3]);
+                    Calib_data_measure[ i ][ 0 ] = i;
+                    Calib_data_measure[ i ][ 1 ] = frequency;
+                    Calib_data_measure[ i ][ 2 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 1 ); // mean value of real impedance
+                    Calib_data_measure[ i ][ 3 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 2 ); // mean value of imaginary impedance
+                    printf("avr_real_measure_Z(%d) = %f; \n ", ( i+1 ), Calib_data_measure[ i ][ 2 ]); 
+                    printf("avr_imag_measure_Z(%d) = %f; \n ", ( dimension_step + 1 ), Calib_data_measure[ i ][ 3 ]);
                     break;
                 default:
                     printf("error no function set for h = %d, when averaging data\n", h);
@@ -676,21 +680,23 @@ int main(int argc, char *argv[])
 
         if (one_calibration == 1) {
             printf("calibration_was_made_and_data_is_colerated_depending_on_calibration_measurements = 1\n");
-            data_output[1][i] = creal( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
-            data_output[2][i] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+            data_output[ 1 ][ i ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+            data_output[ 2 ][ i ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
         }
         else {
             printf("calibration_was_not_made_and_data_is_not_colerated_with_calibration_measurements = %d\n",i);
-            data_output[1][i] = creal(Z_measure[i]);
-            data_output[2][i] = cimag(Z_measure[i]);
+            data_output[ 1 ][ i ] = creal( Z_measure[ i ]);
+            data_output[ 2 ][ i ] = cimag( Z_measure[ i ]);
         }
         if (draw == 1 ) {
             printf("Z_output(%d) = %f + %f*I\n",i+1, data_output[1][i], data_output[2][i] );
         }
-        PhaseZ[i] = (180/M_PI) * atan2f(data_output[2][i],data_output[1][i]);
-        AmplitudeZ[i] = sqrtf( powf( data_output[1][i] ,2 ) + powf(data_output[2][i],2) );
-        printf("AmplitudeZ(%d) = %f\n",(i+1),AmplitudeZ[i] );
-        printf("PhaseZ(%d) = %f\n",(i+1),PhaseZ[i] );
+        PhaseZ[i] = -90 +  ( - 180 / M_PI) * atan2f( data_output[ 2 ][ i ], data_output[ 1 ][ i ] );
+
+
+        AmplitudeZ[i] = sqrtf( powf( data_output[ 1 ][ i ], 2 ) + powf(data_output[ 2 ][ i ], 2) );
+        printf("AmplitudeZ(%d) = %f\n",( i+1 ), AmplitudeZ[i] );
+        printf("PhaseZ(%d) = %f\n",(i+1),PhaseZ[ i ] );
     }
 
     
@@ -987,21 +993,23 @@ int LCR_data_analasys(float **s ,
     int i2, i3;
     float **U_acq = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
     /* Used for storing the Voltage and current on the load */
-    float *U_load = create_table_size( SIGNAL_LENGTH );
-    float *I_load = create_table_size( SIGNAL_LENGTH );
+    float *U_dut = create_table_size( SIGNAL_LENGTH );
+    float *I_dut = create_table_size( SIGNAL_LENGTH );
     /* Signals multiplied by the reference signal (sin) */
-    float **U_load_ref = create_2D_table_size(SIGNALS_NUM, size); //U_load_ref[1][i] voltage signal 1, U_load_ref[2][i] - voltage signal 2
-    float **I_load_ref = create_2D_table_size(SIGNALS_NUM, size); //I_load_ref[1][i] current signal 1, I_load_ref[2][i] - current signal 2
+    float *U_dut_sampled_X = (float *) malloc( size * sizeof( float ) );
+    float *U_dut_sampled_Y = (float *) malloc( size * sizeof( float ) );
+    float *I_dut_sampled_X = (float *) malloc( size * sizeof( float ) );
+    float *I_dut_sampled_Y = (float *) malloc( size * sizeof( float ) );
     /* Signals return by trapezoidal method in complex */
-    float *X_trapz_U = create_table_size( 1 );
-    float *X_trapz_I = create_table_size( 1 );
-    float *Y_trapz_U = create_table_size( 1 );
-    float *Y_trapz_I = create_table_size( 1 );
+    float *X_component_lock_in_1 = (float *) malloc( size * sizeof( float ) );
+    float *X_component_lock_in_2 = (float *) malloc( size * sizeof( float ) );
+    float *Y_component_lock_in_1 = (float *) malloc( size * sizeof( float ) );
+    float *Y_component_lock_in_2 = (float *) malloc( size * sizeof( float ) );
     /* Voltage, current and their phases calculated */
-    float U_load_amp;
-    float Phase_U_load_amp;
-    float I_load_amp;
-    float Phase_I_load_amp;
+    float U_dut_amp;
+    float Phase_U_dut_amp;
+    float I_dut_amp;
+    float Phase_I_dut_amp;
     float Phase_Z_rad;
     float Z_amp;
     //float Z_phase_deg_imag;  // may cuse errors because not complex
@@ -1014,88 +1022,89 @@ int LCR_data_analasys(float **s ,
     for(i2 = 0; i2 < (size - 1); i2++) {
         t[i2] = i2;
     }
-
+    //printf("size1 = %d\n", size);
 
     /* Transform signals from  AD - 14 bit to voltage [ ( s / 2^14 ) * 2 ] */
     for (i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
         for(i3 = 0; i3 < size; i3 ++ ) { 
-            U_acq[i2][i3] = ( s[i2][i3] * (float)( 2 - DC_bias ) ) / (float)16384; //division comes after multiplication, this way no accuracy is lost
-            //printf("U_acq(%d,%d,%d) = %f;\n",(1), (i2+1), (i3+1), U_acq[i2][i3] );
+            U_acq[i2][i3] = ( ( s[i2][i3] ) * (float)( 2 - DC_bias ) ) / (float)16384 ; //division comes after multiplication, this way no accuracy is lost
+            //printf("data(%d,%d) = %f;\n",(i2+1), (i3+1), U_acq[i2][i3] );
         }
     }
 
     /* Voltage and current on the load can be calculated from gathered data */
     for (i2 = 0; i2 < size; i2++) { 
-        U_load[i2] = U_acq[2][i2] - U_acq[1][i2]; // potencial difference gives the voltage
-        I_load[i2] = U_acq[2][i2] / Rs; // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
-        //printf("U_load(%d,%d) = %f;\n",(1),(i2+1), U_load[i2]);
-        //printf("I_load(%d,%d) = %f;\n",(1),(i2+1), I_load[i2] );
+        U_dut[i2] = (U_acq[2][i2] - U_acq[1][i2]); // potencial difference gives the voltage
+        I_dut[i2] = (U_acq[2][i2] / Rs); // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
+        //printf("U_dut(%d,%d) = %f;\n",(1),(i2+1), U_dut[i2]);
+        //printf("I_dut(%d,%d) = %f;\n",(1),(i2+1), I_dut[i2] );
     }
 
     /* Finding max values, used for ploting */
     /* comented because not used
-    float U_load_max = max_array( U_load , SIGNAL_LENGTH );
-    float I_load_max = max_array( I_load , SIGNAL_LENGTH );
+    float U_load_max = max_array( U_dut , SIGNAL_LENGTH );
+    float I_load_max = max_array( I_dut , SIGNAL_LENGTH );
     printf("U_load_max = %f \n", U_load_max);
     printf("I_load_max = %f\n", I_load_max);
     */
     /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
+    float ang;
     for( i2 = 0; i2 < size; i2++) {
-        U_load_ref[1][i2] = U_load[i2] * sinf( t[i2] * T * w_out );
-        U_load_ref[2][i2] = U_load[i2] * cosf( t[i2] * T * w_out );
+        ang = (i2 * T * w_out);
+        //printf("ang(%d) = %f \n", (i2+1), ang);
+        U_dut_sampled_X[i2] = U_dut[i2] * sin( ang );
+        U_dut_sampled_Y[i2] = U_dut[i2] * cos( ang );
 
-        I_load_ref[1][i2] = I_load[i2] * sinf( t[i2] * T * w_out );
-        I_load_ref[2][i2] = I_load[i2] * cosf( t[i2] * T * w_out );
-        //printf("U_load_ref(%d,1,%d) = %f;\n",(1),(i2+1),U_load_ref[1][i2]);
-        //printf("U_load_ref(%d,2,%d) = %f;\n",(1),(i2+1),U_load_ref[2][i2]);
-        //printf("I_load_ref(%d,1,%d) = %f;\n",(1),(i2+1),I_load_ref[1][i2]);
-        //printf("I_load_ref(%d,2,%d) = %f;\n",(1),(i2+1),I_load_ref[2][i2]);
-        
+        I_dut_sampled_X[i2] = I_dut[i2] * sin( ang );
+        I_dut_sampled_Y[i2] = I_dut[i2] * cos( ang );
+        //printf("U_dut_sampled_X(%d) = %f;\n",(i2+1),U_dut_sampled_X[i2]);
+        //printf("U_dut_sampled_Y(%d) = %f;\n",(i2+1),U_dut_sampled_Y[i2]);
+        //printf("I_dut_sampled_X(%d) = %f;\n",(i2+1),I_dut_sampled_X[i2]);
+        //printf("I_dut_sampled_Y(%d) = %f;\n",(i2+1),I_dut_sampled_Y[i2]);
     }
 
     /* Trapezoidal method for calculating the approximation of an integral */
-    X_trapz_U[1] = trapz( U_load_ref[ 1 ], (float)T, size );
-    Y_trapz_U[1] = trapz( U_load_ref[ 2 ], (float)T, size );
+    X_component_lock_in_1[1] = trapz( U_dut_sampled_X, (float)T, size );
+    Y_component_lock_in_1[1] = trapz( U_dut_sampled_Y, (float)T, size );
 
-    X_trapz_I[1] = trapz( I_load_ref[ 1 ], (float)T, size );
-    Y_trapz_I[1] = trapz( I_load_ref[ 2 ], (float)T, size );
+    X_component_lock_in_2[1] = trapz( I_dut_sampled_X, (float)T, size );
+    Y_component_lock_in_2[1] = trapz( I_dut_sampled_Y, (float)T, size );
     
-    //printf("X_trapz1(%d) = %f;\n",(1),X_trapz_U[1] );
-    //printf("X_trapz2(%d) = %f;\n",(1),X_trapz_I[2] );
-    //printf("Y_trapz1(%d) = %f;\n",(1),Y_trapz_U[1] );
-    //printf("Y_trapz2(%d) = %f;\n",(1),Y_trapz_I[2] );
+    //printf("X_component_lock_in_1(%d) = %f;\n",(1),X_component_lock_in_1[1] );
+    //printf("Y_component_lock_in_1(%d) = %f;\n",(1),Y_component_lock_in_1[1] );
+
+    //printf("X_component_lock_in_2(%d) = %f;\n",( 1 ),X_component_lock_in_2[ 2 ] );
+    //printf("Y_component_lock_in_1(%d) = %f;\n",( 1 ),Y_component_lock_in_2[ 2 ] );
     
     /* Calculating voltage amplitude and phase */
-    U_load_amp = (float)2 * (sqrtf( powf( X_trapz_U[1] , (float)2 ) + powf( Y_trapz_U[1] , (float)2 )));
-    Phase_U_load_amp = atan2f( Y_trapz_U[1], X_trapz_U[1] );
-    
+    U_dut_amp = (float)2 * (sqrtf( powf( X_component_lock_in_1[ 1 ] , (float)2 ) + powf( Y_component_lock_in_1[ 1 ] , (float)2 )));
+    Phase_U_dut_amp = atan2f( Y_component_lock_in_1[ 1 ], X_component_lock_in_1[ 1 ] );
     //printf("U_load_amp(%d) = %f;\n",(1),U_load_amp );
     //printf("Phase_U_load_amp(%d) = %f;\n",(1),Phase_U_load_amp );
 
     /* Calculating current amplitude and phase */
-    I_load_amp = (float)2 * (sqrtf( powf( X_trapz_I[1] , (float)2 ) + powf( Y_trapz_I[1] , (float)2 )));
-    Phase_I_load_amp = atan2f( Y_trapz_I[1], X_trapz_I[1] );
-    
+    I_dut_amp = (float)2 * (sqrtf( powf( X_component_lock_in_2[ 1 ], (float)2 ) + powf( Y_component_lock_in_2[ 1 ] , (float)2 ) ) );
+    Phase_I_dut_amp = atan2f( Y_component_lock_in_2[1], X_component_lock_in_2[1] );
     //printf("I_load_amp(%d) = %f;\n",(1),I_load_amp );
     //printf("Phase_I_load_amp(%d) = %f;\n",(1),Phase_I_load_amp );
     
     /* Asigning impedance  values (complex value) */
 
-    Phase_Z_rad =  Phase_U_load_amp - Phase_I_load_amp;
-    Z_amp = U_load_amp / I_load_amp; // forming resistance
+    Phase_Z_rad =  Phase_U_dut_amp - Phase_I_dut_amp;
+    Z_amp = U_dut_amp / I_dut_amp; // forming resistance
     
 
-    if (Phase_Z_rad <= (M_PI) ) {
-        Phase_Z_rad = Phase_Z_rad + (2*M_PI);
+    if (Phase_Z_rad <= - M_PI ) {
+        Phase_Z_rad = Phase_Z_rad + ( 2 * M_PI );
     }
     else if ( Phase_Z_rad >= M_PI ) {
-        Phase_Z_rad = Phase_Z_rad - (2*M_PI);
+        Phase_Z_rad = Phase_Z_rad - ( 2 * M_PI );
     }
     else {
         Phase_Z_rad = Phase_Z_rad;
     }
 
-    *Z =  (Z_amp) * cosf( Phase_Z_rad ) + (Z_amp) * sinf( Phase_Z_rad ) * I;
+    *Z =  ( ( Z_amp ) * sinf( Phase_Z_rad ) )  +  ( ( Z_amp ) * cosf( Phase_Z_rad ) ) * I; // R + jX
     //*Z =  Z_amp  +  Phase_Z_rad * I;
 
 
