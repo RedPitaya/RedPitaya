@@ -88,7 +88,7 @@ int acquire_data(float t_params[],
 int LCR_data_analasys(float **s ,
                         uint32_t size,
                         uint32_t DC_bias,
-                        uint32_t Rs,
+                        uint32_t R_shunt,
                         float complex *Z,
                         double w_out,
                         int f);
@@ -111,7 +111,7 @@ void usage() {
         "\n"
         "\tchannel              Channel to generate signal on [1, 2].\n"
         "\tamplitude            Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
-        "\tShunt resistior      Rs\n"
+        "\tShunt resistior      R_shunt\n"
         "\tReference element    Z_load_ref real value.\n"
         "\tReference element    Z_load_ref imaginary value.\n"
         "\tDC_bias              for electrolit capacitors default = 0.\n"
@@ -232,6 +232,7 @@ int main(int argc, char *argv[])
     */
     /* Channel argument parsing */
     //uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
+
     uint32_t ch = 0;
     if (ch > 1) {
         fprintf(stderr, "Invalid channel: %s\n", argv[1]);
@@ -241,16 +242,16 @@ int main(int argc, char *argv[])
 
     /* Signal amplitude argument parsing */
     //double ampl = strtod(argv[2], NULL);
-    double ampl = 2;
+    double ampl = 1.8;
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
         fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
         return -1;
     }
 
-    float Rs = 996;// User defines this shunt resirtor (check the circuit, there are 2 elements one is reference other element is measured)
-    //float Rs = strtod(argv[3], NULL);
-    if ( (Rs < 0.0) || (Rs > 50000) ) {
+    float R_shunt = 996;// User defines this shunt resirtor (check the circuit, there are 2 elements one is reference other element is measured)
+    //float R_shunt = strtod(argv[3], NULL);
+    if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
         fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
         usage();
         return -1;
@@ -290,7 +291,7 @@ int main(int argc, char *argv[])
         usage();
         return -1;
     }
-    double start_frequency = 4000;
+    double start_frequency = 20000;
     //double start_frequency = strtod(argv[7], NULL);
     if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
         fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
@@ -324,7 +325,7 @@ int main(int argc, char *argv[])
     }
     
 
-    double end_frequency = 10000; //max = 6.2e+07
+    double end_frequency = 1000000; //max = 6.2e+07
     //double end_frequency = strtod(argv[11], NULL);
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
         fprintf(stderr, "Invalid end frequency:  %s\n", argv[11]);
@@ -332,7 +333,7 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    int measurement_sweep_user_defined = 1;
+    int measurement_sweep_user_defined = 50;
     //nt measurement_sweep_user_defined = strtod(argv[10], NULL);
     if ( (measurement_sweep_user_defined < 1) || (measurement_sweep_user_defined > 300) ) {
         fprintf(stderr, "Invalid umber measurement steps steps:  %s\n", argv[10]);
@@ -381,7 +382,7 @@ int main(int argc, char *argv[])
 
     /* Frequency step used in frequency sweep */
     double frequency_step = (end_frequency - start_frequency ) /( frequency_steps_number - 1);
-    printf("frequency_step = %f\n", frequency_step);
+    // printf("frequency_step = %f\n", frequency_step);
 
     /* Check frequency limits */
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency ) ) {
@@ -440,11 +441,11 @@ int main(int argc, char *argv[])
     int end_results_dimension = 0;
     if (sweep_function == 0 ) { // mesurement sweep defines size of allocated memory
         end_results_dimension = measurement_sweep_user_defined;
-        printf("memory_dimension_defined = %d\n", end_results_dimension);
+        //printf("memory_dimension_defined = %d\n", end_results_dimension);
     }
     else if (sweep_function == 1) { // frequency sweep defines size of allocated memory
         end_results_dimension = frequency_steps_number;
-        printf("memory_dimension_defined = %d\n", end_results_dimension);
+        //printf("memory_dimension_defined = %d\n", end_results_dimension);
     }
 
     /* multidimentional memmory allocation for storing final results */
@@ -482,9 +483,9 @@ int main(int argc, char *argv[])
         //printf("step_h(%d) = %d\n",(h+1),h );
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
             frequency = start_frequency + (frequency_step * fr);
-            printf("frequency_now = %f;\n",frequency );
+            //printf("frequency_now = %f;\n",frequency );
             w_out = frequency * 2 * M_PI; //omega 
-            printf("w_out = %f\n",w_out );
+            //printf("w_out = %f\n",w_out );
         
             /* Signal generator */
             awg_param_t params;
@@ -561,7 +562,7 @@ int main(int argc, char *argv[])
                     }
                     
                     /* data manipulation - returnes Z (complex impedance) */
-                    if( LCR_data_analasys( s, size, DC_bias, Rs, Z, w_out, f) < 0) {
+                    if( LCR_data_analasys( s, size, DC_bias, R_shunt, Z, w_out, f) < 0) {
                         printf("error data analysis LCR_data_analasys\n");
                     }
 
@@ -602,28 +603,28 @@ int main(int argc, char *argv[])
 
                     Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 1); // mean value of real impedance
                     Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    printf("avr_real_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][1]); 
-                    printf("avr_imag_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][2]);
+                    //printf("avr_real_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][1]); 
+                    //printf("avr_imag_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][2]);
                     break;
                 case 1:
                     Calib_data_open[ i ][ 1 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 1); // mean value of real impedance
                     Calib_data_open[ i ][ 2 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][1]); 
-                    printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][2]);
+                    //printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][1]); 
+                    //printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][2]);
                     break;
                 case 2:
                     Calib_data_load[ i ][ 1 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 1); // mean value of real impedance
                     Calib_data_load[ i ][ 2 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    printf("avr_real_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][1]); 
-                    printf("avr_imag_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][2]);
+                    //printf("avr_real_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][1]); 
+                    //printf("avr_imag_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][2]);
                     break;
                 case 3:
                     Calib_data_measure[ i ][ 0 ] = i;
                     Calib_data_measure[ i ][ 1 ] = frequency;
                     Calib_data_measure[ i ][ 2 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 1 ); // mean value of real impedance
                     Calib_data_measure[ i ][ 3 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 2 ); // mean value of imaginary impedance
-                    printf("avr_real_measure_Z(%d) = %f; \n ", ( i+1 ), Calib_data_measure[ i ][ 2 ]); 
-                    printf("avr_imag_measure_Z(%d) = %f; \n ", ( dimension_step + 1 ), Calib_data_measure[ i ][ 3 ]);
+                    //printf("avr_real_measure_Z(%d) = %f; \n ", ( i+1 ), Calib_data_measure[ i ][ 2 ]); 
+                    //printf("avr_imag_measure_Z(%d) = %f; \n ", ( dimension_step + 1 ), Calib_data_measure[ i ][ 3 ]);
                     break;
                 default:
                     printf("error no function set for h = %d, when averaging data\n", h);
@@ -636,7 +637,7 @@ int main(int argc, char *argv[])
                 }
                 else if(sweep_function == 1) { //sweep_function == 0 (mesurement sweep), sweep_function == 1 (frequency sweep)
                    dimension_step = fr;
-                   printf("dimension_step = %d\n",dimension_step );
+                   //printf("dimension_step = %d\n",dimension_step );
                    //printf("on_the_place_fr = %d\n",dimension_step);
                 }
                 
@@ -653,7 +654,7 @@ int main(int argc, char *argv[])
 
                 Z_measure[dimension_step] = Calib_data_measure[i][2] + Calib_data_measure[i][3] *I;
                 if (draw == 1 ) { 
-                    printf("Z_measure(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_measure[dimension_step]), cimag(Z_measure[dimension_step]));
+                   // printf("Z_measure(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_measure[dimension_step]), cimag(Z_measure[dimension_step]));
                 }
                 //data_output[0][dimension_step] = Calib_data_measure[i][1]; // [0] frequency row
                 //printf("frequency_row(%d) = %f\n",(dimension_step+1), data_output[0][dimension_step]);
@@ -679,24 +680,24 @@ int main(int argc, char *argv[])
     for (i = 0; i < end_results_dimension ; i++ ) {
 
         if (one_calibration == 1) {
-            printf("calibration_was_made_and_data_is_colerated_depending_on_calibration_measurements = 1\n");
+          // printf("calibration_was_made_and_data_is_colerated_depending_on_calibration_measurements = 1\n");
             data_output[ 1 ][ i ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
             data_output[ 2 ][ i ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
         }
         else {
-            printf("calibration_was_not_made_and_data_is_not_colerated_with_calibration_measurements = %d\n",i);
+           // printf("calibration_was_not_made_and_data_is_not_colerated_with_calibration_measurements = %d\n",i);
             data_output[ 1 ][ i ] = creal( Z_measure[ i ]);
             data_output[ 2 ][ i ] = cimag( Z_measure[ i ]);
         }
         if (draw == 1 ) {
-            printf("Z_output(%d) = %f + %f*I\n",i+1, data_output[1][i], data_output[2][i] );
+           // printf("Z_output(%d) = %f + %f*I\n",i+1, data_output[1][i], data_output[2][i] );
         }
-        PhaseZ[i] = -90 +  ( - 180 / M_PI) * atan2f( data_output[ 2 ][ i ], data_output[ 1 ][ i ] );
+        PhaseZ[i] = ( 180 / M_PI) * (atan2f( data_output[ 2 ][ i ], data_output[ 1 ][ i ] ));
 
 
         AmplitudeZ[i] = sqrtf( powf( data_output[ 1 ][ i ], 2 ) + powf(data_output[ 2 ][ i ], 2) );
-        printf("AmplitudeZ(%d) = %f\n",( i+1 ), AmplitudeZ[i] );
-        printf("PhaseZ(%d) = %f\n",(i+1),PhaseZ[ i ] );
+        printf("AmplitudeZ(%d) = %f;\n",( i+1 ), AmplitudeZ[i] );
+        printf("PhaseZ(%d) = %f;\n",(i+1),PhaseZ[ i ] );
     }
 
     
@@ -718,7 +719,7 @@ int main(int argc, char *argv[])
         }
         
         printf("title ('Impedance on the load with calibration corelation')\n");
-        printf("ylabel ('Z_output- real');\n" );
+        printf("ylabel ('AmplitudeZ');\n" ); // Z_output- real
         
 
         printf("subplot(2,1,2);\n");
@@ -769,7 +770,7 @@ int main(int argc, char *argv[])
    
 
 
-    printf("end_yay_no_errors = 1\n");
+   // printf("end_yay_no_errors = 1\n");
     return 0;
 
 }
@@ -986,7 +987,7 @@ int acquire_data(float t_params[],
 int LCR_data_analasys(float **s ,
                         uint32_t size,
                         uint32_t DC_bias,
-                        uint32_t Rs,
+                        uint32_t R_shunt,
                         float complex *Z,
                         double w_out,
                         int f) {
@@ -1034,8 +1035,8 @@ int LCR_data_analasys(float **s ,
 
     /* Voltage and current on the load can be calculated from gathered data */
     for (i2 = 0; i2 < size; i2++) { 
-        U_dut[i2] = (U_acq[2][i2] - U_acq[1][i2]); // potencial difference gives the voltage
-        I_dut[i2] = (U_acq[2][i2] / Rs); // Curent trough the load is the same as trough thr Rs. ohm's law is used to calculate the current
+        U_dut[i2] = (U_acq[1][i2] - U_acq[2][i2]); // potencial difference gives the voltage
+        I_dut[i2] = (U_acq[2][i2] / R_shunt); // Curent trough the load is the same as trough thr R_shunt. ohm's law is used to calculate the current
         //printf("U_dut(%d,%d) = %f;\n",(1),(i2+1), U_dut[i2]);
         //printf("I_dut(%d,%d) = %f;\n",(1),(i2+1), I_dut[i2] );
     }
@@ -1053,10 +1054,10 @@ int LCR_data_analasys(float **s ,
         ang = (i2 * T * w_out);
         //printf("ang(%d) = %f \n", (i2+1), ang);
         U_dut_sampled_X[i2] = U_dut[i2] * sin( ang );
-        U_dut_sampled_Y[i2] = U_dut[i2] * cos( ang );
+        U_dut_sampled_Y[i2] = U_dut[i2] * sin( ang+ (M_PI/2) );
 
         I_dut_sampled_X[i2] = I_dut[i2] * sin( ang );
-        I_dut_sampled_Y[i2] = I_dut[i2] * cos( ang );
+        I_dut_sampled_Y[i2] = I_dut[i2] * sin( ang +(M_PI/2) );
         //printf("U_dut_sampled_X(%d) = %f;\n",(i2+1),U_dut_sampled_X[i2]);
         //printf("U_dut_sampled_Y(%d) = %f;\n",(i2+1),U_dut_sampled_Y[i2]);
         //printf("I_dut_sampled_X(%d) = %f;\n",(i2+1),I_dut_sampled_X[i2]);
@@ -1093,19 +1094,24 @@ int LCR_data_analasys(float **s ,
     Phase_Z_rad =  Phase_U_dut_amp - Phase_I_dut_amp;
     Z_amp = U_dut_amp / I_dut_amp; // forming resistance
     
+           
 
-    if (Phase_Z_rad <= - M_PI ) {
-        Phase_Z_rad = Phase_Z_rad + ( 2 * M_PI );
+    if (Phase_Z_rad <=  (-M_PI) )
+    {
+        Phase_Z_rad = Phase_Z_rad +(2*M_PI);
     }
-    else if ( Phase_Z_rad >= M_PI ) {
-        Phase_Z_rad = Phase_Z_rad - ( 2 * M_PI );
+    else if ( Phase_Z_rad >= M_PI )
+    {
+        Phase_Z_rad = Phase_Z_rad -(2*M_PI) ;
     }
-    else {
+    else 
+    {
         Phase_Z_rad = Phase_Z_rad;
-    }
-
-    *Z =  ( ( Z_amp ) * sinf( Phase_Z_rad ) )  +  ( ( Z_amp ) * cosf( Phase_Z_rad ) ) * I; // R + jX
-    //*Z =  Z_amp  +  Phase_Z_rad * I;
+    } 
+ 
+   
+    *Z =  ( ( Z_amp ) * cosf( Phase_Z_rad ) )  +  ( ( Z_amp ) * sinf( Phase_Z_rad ) ) * I; // R + jX
+   
 
 
     return 1;
