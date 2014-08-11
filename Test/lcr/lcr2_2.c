@@ -100,29 +100,33 @@ void usage() {
         "\n"
         "Usage: %s   [channel] "
                     "[amplitude] "
-                    "Rref[real] "
-                    "Rref[imag] "
                     "[DC_bias] "
+                    "[R_shunt] "
                     "[averaging] "
-                    "[frequency] "
+                    "[calib function] "
+                    "Z_load_ref[real] "
+                    "Z_load_ref[imag] "
+                    "[steps] "
                     "[sweep function] "
-                    "[steps] [<end frequency> or <wait>] "
-                    "[graph octave] \n"
+                    "[start frequnecy] "
+                    "[stop frequency]"
+                    "[wait] "
+                    "[NCE output] \n"
         "\n"
         "\tchannel              Channel to generate signal on [1, 2].\n"
         "\tamplitude            Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
-        "\tShunt resistior      R_shunt\n"
-        "\tReference element    Z_load_ref real value.\n"
-        "\tReference element    Z_load_ref imaginary value.\n"
-        "\tDC_bias              for electrolit capacitors default = 0.\n"
+        "\tDC bias              for electrolit capacitors default = 0.\n"
+        "\tshunt resistior      in ohms\n"
         "\taveraging            number of averaging the measurements [1 - 10].\n"
-        "\tfrequency            Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\tcalibration          1 - calibrate, 0 - skip calibration.\n"
-        "\tsweep function       1 - frequency sweep, 0 - measurement sweep.\n"
+        "\tcalib function       0(no calibration), 1(open and short calib), 2(zloadref calib).\n"
+        "\tref impedance real   Z_load_ref real value.\n"
+        "\tref impedance imag   Z_load_ref imaginary value.\n"
         "\tsteps                steps made between frequency limits.\n"
-        "\tend frequency        end frequency in Hz [%2.1f - %2.1e] (if frequency sweep selected).\n"
-        "\twait                 wait for user on each measurement step (if measurement sweep selected).\n"
-        "\tgraph octave         octave users car draw graphs with savind the output data.\n"
+        "\tsweep function       1 - frequency sweep, 0 - measurement sweep.\n"
+        "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
+        "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
+        "\twait                 wait for user before each measurement step\n"
+        "\tNCE output           Numerical Computation Software (optional, default 0)\n"
 
         "\n";
 
@@ -223,17 +227,15 @@ int main(int argc, char *argv[])
 {
     /* argument check */
     g_argv0 = argv[0];    
-    /* all arguments are hardcoded in program and do not need to be acquired from the user
-    if ( argc < 4 ) {
-
+    
+    if ( argc < 15 ) {
         usage();
         return -1;
     }
-    */
+    
     /* Channel argument parsing */
-    //uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
-
-    uint32_t ch = 0;
+    uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
+    //uint32_t ch = 0;
     if (ch > 1) {
         fprintf(stderr, "Invalid channel: %s\n", argv[1]);
         usage();
@@ -241,222 +243,194 @@ int main(int argc, char *argv[])
     }
 
     /* Signal amplitude argument parsing */
-    //double ampl = strtod(argv[2], NULL);
-    double ampl = 1.8;
+    double ampl = strtod(argv[2], NULL);
+    //double ampl = 1.8;
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
         fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
         return -1;
     }
 
-    float R_shunt = 996;// User defines this shunt resirtor (check the circuit, there are 2 elements one is reference other element is measured)
-    //float R_shunt = strtod(argv[3], NULL);
-    if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
-        fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
-        usage();
-        return -1;
-    }
-
-    uint32_t Z_load_ref_imag = 0;// User defines this reference imanginary value (check the circuit, there are 2 elements one is reference other element is measured)
-    //uint32_t Z_load_ref_imag = strtod(argv[4], NULL);
-    if ( (Z_load_ref_imag < -50000.0) || (Z_load_ref_imag > 50000) ) {
-        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
-        usage();
-        return -1;
-    }
-
-    uint32_t Z_load_ref_real = 0;// User defines this reference real value (check the circuit, there are 2 elements one is reference other element is measured)
-    //uint32_t Z_load_ref_real = strtod(argv[4], NULL);
-    if ( (Z_load_ref_real < -50000.0) || (Z_load_ref_real > 50000) ) {
-        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
-        usage();
-        return -1;
-    }
-
-    float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I; // construct of reference load impednce (for load calibration)
-
-    uint32_t DC_bias = 0;
-    //uint32_t DC_bias = strtod(argv[5], NULL);
+    uint32_t DC_bias = strtod(argv[3], NULL);
+    //uint32_t DC_bias = 0;
     if ( (DC_bias < -2.0) || (DC_bias > 2.0) ) {
         fprintf(stderr, "Invalid DC bias:  %s\n", argv[5]);
         usage();
         return -1;
     }
 
+    float R_shunt = strtod(argv[4], NULL);
+    //float R_shunt = 996;
+    if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
+        fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
+        usage();
+        return -1;
+    }
+
     /* Number of measurments made and are later averaged */
-    uint32_t averaging_num = 1; // Sequence takes more time and the result are more stable results (not more accurate)
-    //uint32_t averaging_num = strtod(argv[6], NULL);
+    uint32_t averaging_num = strtod(argv[5], NULL);
+    //uint32_t averaging_num = 1;
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
         fprintf(stderr, "Invalid averaging_num:  %s\n", argv[6]);
         usage();
         return -1;
     }
-    double start_frequency = 20000;
-    //double start_frequency = strtod(argv[7], NULL);
+
+    /* if one wants to skip calibration the parameter can be set to 0 */
+    int calib_function = strtod(argv[6], NULL);
+    //int calib_function = 0;
+    if ( (calib_function < 0) || (calib_function > 2) ) {
+        fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[8]);
+        usage();
+        return -1;
+    }
+
+    uint32_t Z_load_ref_real = strtod(argv[7], NULL);
+    //uint32_t Z_load_ref_real = 0;
+    if ( (Z_load_ref_real < -50000.0) || (Z_load_ref_real > 50000) ) {
+        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
+        usage();
+        return -1;
+    }
+
+    uint32_t Z_load_ref_imag = strtod(argv[8], NULL);
+    //uint32_t Z_load_ref_imag = 0;
+    if ( (Z_load_ref_imag < -50000.0) || (Z_load_ref_imag > 50000) ) {
+        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
+        usage();
+        return -1;
+    }
+
+    // complex number construction
+    float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
+
+    double steps = strtod(argv[9], NULL);
+    //double steps =  100;
+    if ( (steps < 1) || (steps > 300) ) {
+        fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
+        usage();
+        return -1;
+    }
+
+    /* [1] frequency sweep, [0] measurement sweep */
+    int sweep_function = strtod(argv[10], NULL);
+    //int sweep_function = 1; 
+    if ( (sweep_function < 0) || (sweep_function > 1) ) {
+        fprintf(stderr, "Invalid sweep function:  %s\n", argv[10]);
+        usage();
+        return -1;
+    }
+
+    double start_frequency = strtod(argv[11], NULL);
+    //double start_frequency = 20000;
     if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
         fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
         usage();
         return -1;
     }
 
-    /* if one wants to skip calibration the parameter can be set to 0 */
-    int one_calibration = 0;
-    //int one_calibration = strtod(argv[8], NULL);
-    if ( (one_calibration < 0) || (one_calibration > 1) ) {
-        fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[8]);
-        usage();
-        return -1;
-    }
-
-    int sweep_function = 1; //[1] frequency sweep, [0] measurement sweep
-    //int sweep_function = strtod(argv[9], NULL);
-    if ( (sweep_function < 0) || (sweep_function > 1) ) {
-        fprintf(stderr, "Invalid sweep function:  %s\n", argv[9]);
-        usage();
-        return -1;
-    }
-
-    double frequency_steps_number =  100;
-    //double frequency_steps_number = strtod(argv[10], NULL);
-    if ( (frequency_steps_number < 1) || (frequency_steps_number > 300) ) {
-        fprintf(stderr, "Invalid umber of frequency steps:  %s\n", argv[10]);
-        usage();
-        return -1;
-    }
-    
-
-    double end_frequency = 1000000; //max = 6.2e+07
-    //double end_frequency = strtod(argv[11], NULL);
+    double end_frequency = strtod(argv[12], NULL);
+    //double end_frequency = 1000000; //max = 6.2e+07
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
-        fprintf(stderr, "Invalid end frequency:  %s\n", argv[11]);
-        usage();
-        return -1;
-    }
-    
-    int measurement_sweep_user_defined = 50;
-    //nt measurement_sweep_user_defined = strtod(argv[10], NULL);
-    if ( (measurement_sweep_user_defined < 1) || (measurement_sweep_user_defined > 300) ) {
-        fprintf(stderr, "Invalid umber measurement steps steps:  %s\n", argv[10]);
+        fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
         usage();
         return -1;
     }
 
-
-    int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
-    //int wait_on_user = strtod(argv[11], NULL);
+    int wait_on_user = strtod(argv[13], NULL);
+    //int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (wait_on_user < 0) || (wait_on_user > 1) ) {
-        fprintf(stderr, "Invalid decidion: user wait %s\n", argv[11]);
+        fprintf(stderr, "Invalid decidion: user wait argument %s\n", argv[13]);
         usage();
         return -1;
     }
 
-    int draw = 1; //octave output for drawing the graphs of final impedance
-    //int draw = strtod(argv[12], NULL);
-    if ( (draw < 0) || (draw > 1) ) {
-        fprintf(stderr, "Invalid decidion: draw %s\n", argv[12]);
+    int NCE_output = strtod(argv[14], NULL);
+    //int NCE_output = 1; //octave output for drawing the graphs of final impedance
+    if ( (NCE_output < 0) || (NCE_output > 1) ) {
+        fprintf(stderr, "Invalid decidion: NCE output argument %s\n", argv[14]);
         usage();
         return -1;
     }
 
-    double endfreq = 0; // endfreq not needed in lcr algorythm
-    double frequency; // parameter used in one of the foor loops
-    int dimension_step = 0; // saving data on the right place in allocated memory
-    double measurement_sweep;
+    /* depending on sweep funcrion num of steps is given to certan foo loop */
+    double frequency_steps_number;
+    int measurement_sweep_user_defined;
+    double frequency_step;
 
-    /* setting parameters depending on sweep function parameter [1] frequency sweep, [0] measurement sweep */
-    if (sweep_function == 0) {
-        end_frequency = start_frequency + 1;
-        frequency_steps_number = 0.001;
-    }
-    else if (sweep_function == 1) {
+    if (sweep_function == 1){ //frequency sweep
+        frequency_steps_number = steps;
+        /* Frequency step used in frequency sweep */
+        frequency_step = (end_frequency - start_frequency ) /( frequency_steps_number - 1);
         measurement_sweep_user_defined = 1;
-        wait_on_user = 0;
+    }
+    else if (sweep_function == 0){ // measurement sweep
+        measurement_sweep_user_defined = steps;
+        frequency_step = 0;
+        frequency_steps_number = 1;
     }
 
     /* end frequency must always be greather than start frequency */
     if ( end_frequency < start_frequency ) {
-        fprintf(stderr, "End frequency has to be larger than the start frequency! \n");
+        fprintf(stderr, "End frequency has to be greater than the start frequency! \n");
         usage();
         return -1;
     }
 
-    /* Frequency step used in frequency sweep */
-    double frequency_step = (end_frequency - start_frequency ) /( frequency_steps_number - 1);
-    // printf("frequency_step = %f\n", frequency_step);
-
-    /* Check frequency limits */
-    if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency ) ) {
-        fprintf(stderr, "Invalid frequency: %s\n", argv[7]);
-        usage();
-        return -1;
+    /* allocated memory which size depends on sweep function (measurement sweep or frequency sweep) */
+    int end_results_dimension = 0;
+    if (sweep_function == 0 ) { // mesurement sweep defines size of allocated memory
+        end_results_dimension = measurement_sweep_user_defined;
     }
-    if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency ) ) {
-        fprintf(stderr, "Invalid end frequency\n");
-        usage();
-        return -1;
+    else if (sweep_function == 1) { // frequency sweep defines size of allocated memory
+        end_results_dimension = frequency_steps_number;
     }
 
     /* Signal type argument parsing */
     signal_e type = eSignalSine;
-    if (argc > 4) {
-        if ( strcmp(argv[4], "sine") == 0) {
-            type = eSignalSine;
-        } else if ( strcmp(argv[4], "sqr") == 0) {
-            type = eSignalSquare;
-        } else if ( strcmp(argv[4], "tri") == 0) {
-            type = eSignalTriangle;
-        } else if ( strcmp(argv[4], "sweep") == 0) {
-            type = eSignalSweep;   
-        } else {
-            fprintf(stderr, "Invalid signal type\n");
-            usage();
-            return -1;
-        }
-    }
 
-    uint32_t min_periodes = 2; // max 20
-    double w_out; //angular velocity used in the algorythm
-    int f = 0; // used in for lop, seting the decimation
-    /* initializing the variables and pointers for acquire functionality */
-    uint32_t size; // nmber of samples varies with number of periodes
-    float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    int i, i1; // iterators in for loops
-    int equal = 0; //parameter initialized for generator functionality
-    int shaping = 0; //parameter initialized for generator functionality
-    float complex *Z = (float complex *)malloc( (averaging_num + 1) * sizeof(float complex)); // LCR_data_analasys() returnes data saved to this location
+    double endfreq = 0; // endfreq set for inbulild sweep (generate)
+    int dimension_step = 0; // saving data on the right place in allocated memory
+    double measurement_sweep;
+
+    uint32_t  min_periodes = 2; // max 20
+    double    w_out; //angular velocity used in the algorythm
+    int       f = 0; // used in for lop, seting the decimation
+    uint32_t  size; // nmber of samples varies with number of periodes
+    float   **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
+    int       i, i1, fr, h; // iterators in for loops
+    int       equal = 0; //parameter initialized for generator functionality
+    int       shaping = 0; //parameter initialized for generator functionality
+
+    /* LCR_data_analasys() saves data to *Z */
+    float complex *Z = (float complex *)malloc( (averaging_num + 1) * sizeof(float complex));
+    
     /* calibrtion results short circuited */
-    float **Calib_data_short_for_avreaging = create_2D_table_size((averaging_num + 1), 2); //appendin 2 data values
-    float **Calib_data_short  = create_2D_table_size(measurement_sweep_user_defined, 2); //appendin 2 data values
+    float **Calib_data_short_for_avreaging = create_2D_table_size((averaging_num + 1), 2);
+    float **Calib_data_short  = create_2D_table_size(measurement_sweep_user_defined, 2);
+    
     /* calibrtion results open circuited */
-    float **Calib_data_open_for_avreaging = create_2D_table_size((averaging_num + 1), 2); //appendin 2 data values
-    float **Calib_data_open = create_2D_table_size(measurement_sweep_user_defined, 2); //appendin 2 data values
+    float **Calib_data_open_for_avreaging = create_2D_table_size((averaging_num + 1), 2);
+    float **Calib_data_open = create_2D_table_size(measurement_sweep_user_defined, 2);
+    
     /* calibration load results */
-    float **Calib_data_load_for_avreaging = create_2D_table_size((averaging_num + 1), 2); //appendin 2 data values
-    float **Calib_data_load = create_2D_table_size(measurement_sweep_user_defined, 2); //appendin 2 data values
-    /* measure results */
-    float **Calib_data_measure_for_avreaging = create_2D_table_size((averaging_num + 1), 2 ); //appendin 2 data values
-    float **Calib_data_measure = create_2D_table_size(measurement_sweep_user_defined, 4); //appendin 2 data values
-
-    /* results are saved in allocated memory which size depends on sweep function (measurement sweep or frequency sweep) */
-    int end_results_dimension = 0;
-    if (sweep_function == 0 ) { // mesurement sweep defines size of allocated memory
-        end_results_dimension = measurement_sweep_user_defined;
-        //printf("memory_dimension_defined = %d\n", end_results_dimension);
-    }
-    else if (sweep_function == 1) { // frequency sweep defines size of allocated memory
-        end_results_dimension = frequency_steps_number;
-        //printf("memory_dimension_defined = %d\n", end_results_dimension);
-    }
+    float **Calib_data_load_for_avreaging = create_2D_table_size((averaging_num + 1), 2);
+    float **Calib_data_load = create_2D_table_size(measurement_sweep_user_defined, 2);
+    
+    /* measurement results */
+    float **Calib_data_measure_for_avreaging = create_2D_table_size((averaging_num + 1), 2 );
+    float **Calib_data_measure = create_2D_table_size(measurement_sweep_user_defined, 4);
 
     /* multidimentional memmory allocation for storing final results */
     float complex *Z_short = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     float complex *Z_open = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     float complex *Z_load = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     float complex *Z_measure = (float complex *)malloc( end_results_dimension * sizeof(float complex));
-    float **data_output = create_2D_table_size(end_results_dimension + 2, 2); //[0]-frequencies, [1]-real part of imedance, [2]- imaginary part of impendance,
 
+    float *calib_data_combine = (float *)malloc( 2 * sizeof(float)); //[0]-frequencies, [1]-real part of imedance, [2]- imaginary part of impendance,
     float *PhaseZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //phase
-    float *AmplitudeZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //phase
+    float *AmplitudeZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //Amplitude
+    float *frequency = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //frequency
     
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -470,67 +444,55 @@ int main(int argc, char *argv[])
         printf("error user inquiry at inquire_user_wait\n");
     } 
     */
-    if (draw == 1 ) {
+
+    if (NCE_output == 1 ) {
         printf("close all;\n");//octave sintax
         printf("clear all;\n");//octave syntax
     }
-    int fr = 0;
-    int h = 0;// [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
+
+    // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
-        if (!one_calibration) {
+        if (!calib_function) {
             h = 3;
         }
-        //printf("step_h(%d) = %d\n",(h+1),h );
+
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
-            frequency = start_frequency + (frequency_step * fr);
-            //printf("frequency_now = %f;\n",frequency );
-            w_out = frequency * 2 * M_PI; //omega 
-            //printf("w_out = %f\n",w_out );
-        
+
+            frequency[fr] = start_frequency + (frequency_step * fr);
+
+            w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
+
             /* Signal generator */
             awg_param_t params;
             /* Prepare data buffer (calculate from input arguments) */
-            synthesize_signal(ampl, frequency, type, endfreq, data, &params);
+            synthesize_signal(ampl, frequency[fr], type, endfreq, data, &params);
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga(ch, data, &params);
 
-            /* measurement sweep is disabled if frequency sweep is set */
-            /* measurement sweep set to 1 when calibration is executing. when measuring user defines  number of measurements */
+            /* if measurement sweep selected, only one calibration measurement is made */
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
                 if (h == 0 || h == 1|| h == 2) {
                     measurement_sweep = 1;
                 }
-                else {
+                else {// when gathering measurement results sweep is defined by argument for num of steps
                     measurement_sweep = measurement_sweep_user_defined;
                 }
             }
             else if (sweep_function == 1) { // sweep_function == 1 (frequency sweep)
-                measurement_sweep = 1;
+                measurement_sweep = 1; //when frequency sweep selected only one measurement for each fr is made
             }
 
-            for (i = 0; i < measurement_sweep; i++ ) {  // For measurment sweep is 1. calibration
+            for (i = 0; i < measurement_sweep; i++ ) {
 
                 for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
-                    /* selection number for decimation */
-                    if (frequency >= 160000) {
-                        f=0;
-                    }
-                    else if (frequency >= 20000) {
-                        f=1;
-                    }    
-                    else if (frequency >= 2500) {
-                        f=2;
-                    }    
-                    else if (frequency >= 160) {
-                        f=3;
-                    }    
-                    else if (frequency >= 20) {
-                        f=4;
-                    }     
-                    else if (frequency >= 2.5) {
-                        f=5;
-                    }
+                    /* decimation changes depending on frequency */
+                    if (frequency[fr] >= 160000)     {      f=0;    }
+                    else if (frequency[fr] >= 20000) {      f=1;    }    
+                    else if (frequency[fr] >= 2500)  {      f=2;    }    
+                    else if (frequency[fr] >= 160)   {      f=3;    }    
+                    else if (frequency[fr] >= 20)    {      f=4;    }     
+                    else if (frequency[fr] >= 2.5)   {      f=5;    }
 
                     /* setting decimtion */
                     if (f != DEC_MAX) {
@@ -541,9 +503,8 @@ int main(int argc, char *argv[])
                         return -1;
                     }
                     
-                    /* calculating number of samples */
-                    size = round( ( min_periodes * 125e6 ) / ( frequency * g_dec[f] ) );
-                    //printf("size(%d) = %d;\n" ,(i1+1),size);
+                    /* calculating num of samples */
+                    size = round( ( min_periodes * 125e6 ) / ( frequency[fr] * g_dec[f] ) );
 
                     /* Filter parameters for signal Acqusition */
                     t_params[EQUAL_FILT_PARAM] = equal;
@@ -555,7 +516,7 @@ int main(int argc, char *argv[])
                         return -1;
                     }
 
-                    /* Data acqusition - saved to s */
+                    /* ADC Data acqusition - saved to s */
                     if (acquire_data( t_params, s, size) < 0) {
                         printf("error acquiring data @ acquire_data\n");
                         return -1;
@@ -571,100 +532,69 @@ int main(int argc, char *argv[])
                     case 0:
                         Calib_data_short_for_avreaging[ i1 ][ 1 ] = creal(*Z);
                         Calib_data_short_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
-                        //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
-                        //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     case 1:
                         Calib_data_open_for_avreaging[ i1 ][ 1 ] = creal(*Z);
                         Calib_data_open_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
-                        //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
-                        //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     case 2:
                         Calib_data_load_for_avreaging[ i1 ][ 1 ] = creal(*Z);
                         Calib_data_load_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
-                        //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
-                        //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     case 3:
                         Calib_data_measure_for_avreaging[ i1 ][ 1 ] = creal(*Z);
                         Calib_data_measure_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
-                        //printf("Calib_data_short_avreage_Z_real(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][2]);
-                        //printf("Calib_data_short_avreage_Z_imag(%d) = %f\n",(i1+1), Calib_data_short_avreage[i1][3]);
                         break;
                     default:
                         printf("error no function set for h = %d, when saving data\n", h);
                     }
 
-                } // end of for ( i1 = 0; i1 < averaging_num; i1++ ) {
-                /* Saving mean value*/
+                } // avearging loop end
+
+                /* Saving mean values */
                 switch (h) {
                 case 0:
 
-                    Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    //printf("avr_real_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][1]); 
-                    //printf("avr_imag_short_Z(%d) = %f;\n",(i+1), Calib_data_short[i][2]);
+                    Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 1);
+                    Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 2);
                     break;
                 case 1:
-                    Calib_data_open[ i ][ 1 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_open[ i ][ 2 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    //printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][1]); 
-                    //printf("avr_real_open_Z(%d) = %f;\n",(i+1), Calib_data_open[i][2]);
+                    Calib_data_open[ i ][ 1 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 1);
+                    Calib_data_open[ i ][ 2 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 2);
                     break;
                 case 2:
-                    Calib_data_load[ i ][ 1 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 1); // mean value of real impedance
-                    Calib_data_load[ i ][ 2 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 2); // mean value of imaginary impedance
-                    //printf("avr_real_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][1]); 
-                    //printf("avr_imag_load_Z(%d) = %f;\n",(i+1), Calib_data_load[i][2]);
+                    Calib_data_load[ i ][ 1 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 1);
+                    Calib_data_load[ i ][ 2 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 2);
                     break;
                 case 3:
-                    Calib_data_measure[ i ][ 0 ] = i;
-                    Calib_data_measure[ i ][ 1 ] = frequency;
-                    Calib_data_measure[ i ][ 2 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 1 ); // mean value of real impedance
-                    Calib_data_measure[ i ][ 3 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 2 ); // mean value of imaginary impedance
-                    //printf("avr_real_measure_Z(%d) = %f; \n ", ( i+1 ), Calib_data_measure[ i ][ 2 ]); 
-                    //printf("avr_imag_measure_Z(%d) = %f; \n ", ( dimension_step + 1 ), Calib_data_measure[ i ][ 3 ]);
+                    Calib_data_measure[ i ][ 1 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 1 );
+                    Calib_data_measure[ i ][ 2 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 2 );
                     break;
                 default:
                     printf("error no function set for h = %d, when averaging data\n", h);
                 }
 
-                /* Saving data depending on sweep functionality */
-                if (sweep_function == 0 ) { //sweep_function == 0 (mesurement sweep), sweep_function == 1 (frequency sweep)
+                /* dimension step defines index for sorting data depending on sweep function */
+                if (sweep_function == 0 ) { //sweep_function == 0 (mesurement sweep)
                     dimension_step = i;
-                    //printf("on_the_place_msweep = %d\n",dimension_step);
                 }
-                else if(sweep_function == 1) { //sweep_function == 0 (mesurement sweep), sweep_function == 1 (frequency sweep)
+                else if(sweep_function == 1) { //sweep_function == 1 (frequency sweep)
                    dimension_step = fr;
-                   //printf("dimension_step = %d\n",dimension_step );
-                   //printf("on_the_place_fr = %d\n",dimension_step);
                 }
                 
                 /* Saving data for output */
-                printf("frequency(%d) = %f;\n",(dimension_step+1),(double)frequency );
-                Z_short[dimension_step] = Calib_data_short[0][1] + Calib_data_short[0][2] *I; //measurement sweep i je vedno 1 tudi pri fr sweep je i vedno 1
-                //printf("Z_short(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_short[dimension_step]), cimag(Z_short[dimension_step]));
+                //printf("frequency(%d) = %f;\n",(dimension_step),frequency[fr]);
+                /* vector must be populated with the same values when measuremen sweep selected*/
+                Z_short[ dimension_step ] =  Calib_data_short[ 0 ][ 1 ] + Calib_data_short[ 0 ][ 2 ] *I;
+                Z_open[ dimension_step ]  =  Calib_data_open[ 0 ][ 1 ] + Calib_data_open[ 0 ][ 2 ] *I;
+                Z_load[ dimension_step ]  =  Calib_data_load[ 0 ][ 1 ] + Calib_data_load[ 0 ][ 2 ] *I;
 
-                Z_open[dimension_step] = Calib_data_open[0][1] + Calib_data_open[0][2] *I;
-                //printf("Z_open(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_open[dimension_step]), cimag(Z_open[dimension_step]));
-
-                Z_load[dimension_step] = Calib_data_load[0][1] + Calib_data_load[0][2] *I;
-                //printf("Z_load(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_load[dimension_step]), cimag(Z_load[dimension_step]));
-
-                Z_measure[dimension_step] = Calib_data_measure[i][2] + Calib_data_measure[i][3] *I;
-                if (draw == 1 ) { 
-                   // printf("Z_measure(%d) = %f + %f *I\n",(dimension_step+1),creal(Z_measure[dimension_step]), cimag(Z_measure[dimension_step]));
-                }
-                //data_output[0][dimension_step] = Calib_data_measure[i][1]; // [0] frequency row
-                //printf("frequency_row(%d) = %f\n",(dimension_step+1), data_output[0][dimension_step]);
-
-
-            } // for (i = 0; i < measurement_sweep; i++ ) {  // For measurment sweep is 1. calibration
+                Z_measure[dimension_step] = Calib_data_measure[i][1] + Calib_data_measure[i][2] *I;
+            } // end of measurement sweep loop
         
         
-        } // end off for ( fr = 0; fr < frequency_steps_number; fr++ ) {
-    }// end of (h = 0; h =< 4 ; h++) { function step
+        } // end of frequency sweep loop
+    } // end of function step loop
     /* user is inquired to correcty set the connections */
     /**
     if (inquire_user_wait() < 0) {
@@ -673,38 +603,38 @@ int main(int argc, char *argv[])
     */
 
 
-    /* colerating data calibration data and measureents depending on the calibration measurements, 
-    if calibration was not made, only measured values are saved */
-
+    /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
 
     for (i = 0; i < end_results_dimension ; i++ ) {
+        if (calib_function == 1) { // calib. was made including Z_load
+            calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+            calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+        }
 
-        if (one_calibration == 1) {
-          // printf("calibration_was_made_and_data_is_colerated_depending_on_calibration_measurements = 1\n");
-            data_output[ 1 ][ i ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
-            data_output[ 2 ][ i ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+        else if (calib_function == 0) { // no calib. were made, outputing data from measurements
+            calib_data_combine[ 1 ] = creal( Z_measure[ i ]);
+            calib_data_combine[ 2 ] = cimag( Z_measure[ i ]);
+        }
+
+        else if (calib_function == 2) { // calibration without Z_load
+            calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
+            calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
+        }
+        
+        /* Phase and amplitude calculation */
+        PhaseZ[i] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
+        AmplitudeZ[i] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
+        if (!sweep_function) {
+            printf(" %.0f    %.5f    %.5f\n", frequency[0],PhaseZ[ i ],AmplitudeZ[ i ]);
         }
         else {
-           // printf("calibration_was_not_made_and_data_is_not_colerated_with_calibration_measurements = %d\n",i);
-            data_output[ 1 ][ i ] = creal( Z_measure[ i ]);
-            data_output[ 2 ][ i ] = cimag( Z_measure[ i ]);
+            printf(" %.0f    %.5f    %.5f\n", frequency[i],PhaseZ[ i ],AmplitudeZ[ i ]);
         }
-        if (draw == 1 ) {
-           // printf("Z_output(%d) = %f + %f*I\n",i+1, data_output[1][i], data_output[2][i] );
-        }
-        PhaseZ[i] = ( 180 / M_PI) * (atan2f( data_output[ 2 ][ i ], data_output[ 1 ][ i ] ));
-
-
-        AmplitudeZ[i] = sqrtf( powf( data_output[ 1 ][ i ], 2 ) + powf(data_output[ 2 ][ i ], 2) );
-        printf("AmplitudeZ(%d) = %f;\n",( i+1 ), AmplitudeZ[i] );
-        printf("PhaseZ(%d) = %f;\n",(i+1),PhaseZ[ i ] );
+        
     }
 
-    
 
-
-
-    if (draw == 1 ) {
+    if (NCE_output == 1 ) {
 
         printf("figure\n");
 
@@ -733,44 +663,10 @@ int main(int argc, char *argv[])
         }
         printf("title ('Impedance on the load with calibration corelation')\n");
         printf("ylabel ('PhaseZ');\n" );
-
-
-        // drawing raw measured data
-        /*
-        printf("figure\n");
-
-        printf("subplot(2,1,1);\n");
-        if (sweep_function == 1 )  {
-            printf("plot(frequency,real(Z_measure),'r');\n");
-            printf("xlabel ('frequency');\n" );
-        }
-        else {
-            printf("plot(real(Z_measure),'r');\n");
-            printf("xlabel ('samples');\n" );
-        }
-        
-        printf("title ('Impedance without calibration corelation')\n");
-        printf("ylabel ('Z_measure- real');\n" );
-        
-
-        printf("subplot(2,1,2);\n");
-        if (sweep_function == 1 )  {
-            printf("plot(frequency,imag(Z_measure),'r');\n");
-            printf("xlabel ('frequency');\n" );
-        }
-        else {
-            printf("plot(imag(Z_measure),'r');\n");
-            printf("xlabel ('samples');\n" );
-        }
-        printf("title ('Impedance without calibration corelation')\n");
-        printf("ylabel ('Z_measure- imaginary');\n" );
-        */
         
     }
    
 
-
-   // printf("end_yay_no_errors = 1\n");
     return 0;
 
 }
@@ -1111,8 +1007,6 @@ int LCR_data_analasys(float **s ,
  
    
     *Z =  ( ( Z_amp ) * cosf( Phase_Z_rad ) )  +  ( ( Z_amp ) * sinf( Phase_Z_rad ) ) * I; // R + jX
-   
-
 
     return 1;
 }
