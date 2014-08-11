@@ -59,6 +59,7 @@ module red_pitaya_asg_ch
    input      [ 14-1: 0] buf_addr_i      ,  //!< buffer address
    input      [ 14-1: 0] buf_wdata_i     ,  //!< buffer write data
    output reg [ 14-1: 0] buf_rdata_o     ,  //!< buffer read data
+   output reg [RSZ-1: 0] buf_rpnt_o      ,  //!< buffer current read pointer
 
    // configuration
    input     [RSZ+15: 0] set_size_i      ,  //!< set table data size
@@ -93,9 +94,10 @@ reg   [  15-1: 0] dac_sum   ;
 
 // read
 always @(posedge dac_clk_i) begin
-   dac_rp   <= dac_pnt[RSZ+15:16];
-   dac_rd   <= dac_buf[dac_rp] ;
-   dac_rdat <= dac_rd ;  // improve timing
+   buf_rpnt_o <= dac_pnt[RSZ+15:16];
+   dac_rp     <= dac_pnt[RSZ+15:16];
+   dac_rd     <= dac_buf[dac_rp] ;
+   dac_rdat   <= dac_rd ;  // improve timing
 end
 
 // write
