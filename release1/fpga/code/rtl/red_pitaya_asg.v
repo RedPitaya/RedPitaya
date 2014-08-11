@@ -105,6 +105,8 @@ reg               set_a_zero       ;
 reg               buf_a_we         ;
 reg   [ RSZ-1: 0] buf_a_addr       ;
 wire  [  14-1: 0] buf_a_rdata      ;
+wire  [ RSZ-1: 0] buf_a_rpnt       ;
+reg   [  32-1: 0] buf_a_rpnt_rd    ;
 reg               trig_a_sw        ;
 reg   [   3-1: 0] trig_a_src       ;
 wire              trig_a_done      ;
@@ -122,6 +124,8 @@ reg               set_b_zero       ;
 reg               buf_b_we         ;
 reg   [ RSZ-1: 0] buf_b_addr       ;
 wire  [  14-1: 0] buf_b_rdata      ;
+wire  [ RSZ-1: 0] buf_b_rpnt       ;
+reg   [  32-1: 0] buf_b_rpnt_rd    ;
 reg               trig_b_sw        ;
 reg   [   3-1: 0] trig_b_src       ;
 wire              trig_b_done      ;
@@ -145,6 +149,7 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_cha
   .buf_addr_i      (  buf_a_addr       ),  // buffer address
   .buf_wdata_i     (  wdata[14-1:0]    ),  // buffer write data
   .buf_rdata_o     (  buf_a_rdata      ),  // buffer read data
+  .buf_rpnt_o      (  buf_a_rpnt       ),  // buffer current read pointer
 
    // configuration
   .set_size_i      (  set_a_size       ),  // set table data size
@@ -177,6 +182,7 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_chb
   .buf_addr_i      (  buf_b_addr       ),  // buffer address
   .buf_wdata_i     (  wdata[14-1:0]    ),  // buffer write data
   .buf_rdata_o     (  buf_b_rdata      ),  // buffer read data
+  .buf_rpnt_o      (  buf_b_rpnt       ),  // buffer current read pointer
 
    // configuration
   .set_size_i      (  set_b_size       ),  // set table data size
@@ -262,6 +268,11 @@ always @(posedge dac_clk_i) begin
          if (addr[19:0]==20'h30)  set_b_step <= wdata[RSZ+15: 0] ;
       end
 
+      if (ren) begin
+         buf_a_rpnt_rd <= {{32-RSZ-2{1'b0}},buf_a_rpnt,2'h0};
+         buf_b_rpnt_rd <= {{32-RSZ-2{1'b0}},buf_b_rpnt,2'h0};
+      end
+
       ren_dly <= {ren_dly[3-2:0], ren};
       ack_dly <=  ren_dly[3-1] || wen ;
    end
@@ -281,11 +292,13 @@ always @(*) begin
      20'h00008 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_size}     ; end
      20'h0000C : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
      20'h00010 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_step}     ; end
+     20'h00014 : begin ack <= 1'b1;          rdata <= buf_a_rpnt_rd                      ; end
 
      20'h00024 : begin ack <= 1'b1;          rdata <= {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
      20'h00028 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_size}     ; end
      20'h0002C : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
      20'h00030 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_step}     ; end
+     20'h00034 : begin ack <= 1'b1;          rdata <= buf_b_rpnt_rd                      ; end
 
      20'h1zzzz : begin ack <= ack_dly;       rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
      20'h2zzzz : begin ack <= ack_dly;       rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end
