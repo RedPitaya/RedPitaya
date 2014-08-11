@@ -197,6 +197,17 @@ initial begin
     end
 
 
+      //CH1 table data readback
+    k = 0;
+    while (k<20) begin
+      i_bus.bus_read(32'h00014);  // read read pointer
+      i_bus.bus_read(32'h00034);  // read read pointer
+      k= k + 1 ;
+      repeat(1737) @(posedge dac_clk);
+    end
+
+
+
    repeat(20000) @(posedge dac_clk);
 
 end
