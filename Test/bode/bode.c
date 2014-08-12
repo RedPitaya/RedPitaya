@@ -117,7 +117,6 @@ void usage() {
         "\tsteps                steps made between frequency limits.\n"
         "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
         "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\twait                 wait for user before each measurement step\n"
         "\n";
 
     fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
@@ -699,7 +698,7 @@ int bode_data_analasys(float **s ,
     //printf("I_load_amp(%d) = %f;\n",(1),I_load_amp );
     //printf("Phase_I_load_amp(%d) = %f;\n",(1),Phase_I_load_amp );
     
-    Phase_internal =  Phase_U_dut_amp - Phase_I_dut_amp;
+    Phase_internal = Phase_I_dut_amp - Phase_U_dut_amp ;
     
 
     if (Phase_internal <=  (-M_PI) )
@@ -717,7 +716,7 @@ int bode_data_analasys(float **s ,
  
    
     *Amplitude = 10*log( I_dut_amp / U_dut_amp );;
-    *Phase = Phase_internal;
+    *Phase = Phase_internal * (180/M_PI);
 
     return 1;
 }
