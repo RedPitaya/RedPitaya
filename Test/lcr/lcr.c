@@ -111,8 +111,7 @@ void usage() {
                     "[start frequnecy] "
                     "[stop frequency]"
                     "[scale type]"
-                    "[wait] "
-                    "[NCE output] \n"
+                    "[wait]\n"
         "\n"
         "\tchannel              Channel to generate signal on [1, 2].\n"
         "\tamplitude            Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
@@ -128,8 +127,6 @@ void usage() {
         "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
         "\tscale type           x scale 0 - linear 1 -log\n"
         "\twait                 wait for user before each measurement step\n"
-        "\tNCE output           Numerical Computation Software (optional, default 0)\n"
-
         "\n";
 
     fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
@@ -355,13 +352,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int NCE_output = strtod(argv[15], NULL);
-    //int NCE_output = 1; //octave output for drawing the graphs of final impedance
-    if ( (NCE_output < 0) || (NCE_output > 1) ) {
-        fprintf(stderr, "Invalid decidion: NCE output argument %s\n", argv[15]);
-        usage();
-        return -1;
-    }
 
     /* depending on sweep funcrion num of steps is given to certan foo loop */
     double frequency_steps_number;
@@ -458,11 +448,6 @@ int main(int argc, char *argv[])
         printf("error user inquiry at inquire_user_wait\n");
     } 
     */
-
-    if (NCE_output == 1 ) {
-        printf("close all;\n");//octave sintax
-        printf("clear all;\n");//octave syntax
-    }
 
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
@@ -654,41 +639,7 @@ int main(int argc, char *argv[])
         
     }
 
-
-    if (NCE_output == 1 ) {
-
-        printf("figure\n");
-
-        printf("subplot(2,1,1);\n");
-        if (sweep_function == 1 )  {
-            printf("plot(frequency,AmplitudeZ,'r');\n");
-            printf("xlabel ('frequency');\n" );
-        }
-        else {
-            printf("plot(AmplitudeZ,'r');\n");
-            printf("xlabel ('samples');\n" );
-        }
-        
-        printf("title ('Impedance on the load with calibration corelation')\n");
-        printf("ylabel ('AmplitudeZ');\n" ); // Z_output- real
-        
-
-        printf("subplot(2,1,2);\n");
-        if (sweep_function == 1 )  {
-            printf("plot(frequency,PhaseZ,'b');\n");
-            printf("xlabel ('frequency');\n" );
-        }
-        else {
-            printf("plot(PhaseZ,'b');\n");
-            printf("xlabel ('samples');\n" );
-        }
-        printf("title ('Impedance on the load with calibration corelation')\n");
-        printf("ylabel ('PhaseZ');\n" );
-        
-    }
-   
-
-    return 0;
+    return 1;
 
 }
 
