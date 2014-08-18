@@ -88,7 +88,6 @@ int acquire_data(float t_params[],
 int bode_data_analasys(float **s ,
                         uint32_t size,
                         uint32_t DC_bias,
-                        uint32_t R_shunt,
                         float *Amplitude,
                         float *Phase,
                         double w_out,
@@ -102,11 +101,11 @@ void usage() {
         "Usage: %s   [channel] "
                     "[amplitude] "
                     "[DC_bias] "
-                    "[R_shunt] "
                     "[averaging] "
                     "[steps] "
                     "[start frequnecy] "
                     "[stop frequency]"
+                    "[scale type]"
                     "\n"
         "\n"
         "\tchannel              Channel to generate signal on [1, 2].\n"
@@ -117,6 +116,7 @@ void usage() {
         "\tsteps                steps made between frequency limits.\n"
         "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
         "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
+        "\tscale type           x scale 0 - linear 1 -log\n"
         "\n";
 
     fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
@@ -248,47 +248,51 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    float R_shunt = strtod(argv[4], NULL);
-    //float R_shunt = 996;
-    if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
-        fprintf(stderr, "Invalid reference element value: %s\n", argv[4]);
-        usage();
-        return -1;
-    }
-
     /* Number of measurments made and are later averaged */
-    uint32_t averaging_num = strtod(argv[5], NULL);
+    uint32_t averaging_num = strtod(argv[4], NULL);
     //uint32_t averaging_num = 3;
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
-        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[5]);
+        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[4]);
         usage();
         return -1;
     }
 
-    double steps = strtod(argv[6], NULL);
+    double steps = strtod(argv[5], NULL);
     //double steps =  12;
     if ( (steps < 1) || (steps > 300) ) {
-        fprintf(stderr, "Invalid umber of steps:  %s\n", argv[6]);
+        fprintf(stderr, "Invalid umber of steps:  %s\n", argv[5]);
         usage();
         return -1;
     }
 
-    double start_frequency = strtod(argv[7], NULL);
+    double start_frequency = strtod(argv[6], NULL);
     //double start_frequency = 4000;
     if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
-        fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
+        fprintf(stderr, "Invalid start frequency:  %s\n", argv[6]);
         usage();
         return -1;
     }
 
-    double end_frequency = strtod(argv[8], NULL);
+    double end_frequency = strtod(argv[7], NULL);
     //double end_frequency = 10000; //max = 6.2e+07
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
-        fprintf(stderr, "Invalid end frequency: %s\n", argv[8]);
+        fprintf(stderr, "Invalid end frequency: %s\n", argv[7]);
         usage();
         return -1;
     }
 
+    int scale_type = strtod(argv[8], NULL);
+    //int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
+    if ( (scale_type < 0) || (scale_type > 1) ) {
+        fprintf(stderr, "Invalid decidion:scale type %s\n", argv[8]);
+        usage();
+        return -1;
+    }
+
+    if(scale_type) { //if logaritmic scale required start and end frequency are transformed
+        end_frequency   = log10(end_frequency);
+        start_frequency = log10(start_frequency);
+    }
 
     double frequency_step = (end_frequency - start_frequency ) /( steps - 1);
 
@@ -298,6 +302,7 @@ int main(int argc, char *argv[])
         usage();
         return -1;
     }
+
 
     /* Signal type argument parsing */
     signal_e type = eSignalSine;
@@ -309,7 +314,7 @@ int main(int argc, char *argv[])
     int       f = 0; // used in for lop, seting the decimation
     uint32_t  size; // nmber of samples varies with number of periodes
     float   **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    int       i1, fr; // iterators in for loops
+    int       i1, fr, j; // iterators in for loops
     int       equal = 0; //parameter initialized for generator functionality
     int       shaping = 0; //parameter initialized for generator functionality
 
@@ -332,7 +337,14 @@ int main(int argc, char *argv[])
 
     for ( fr = 0; fr < steps; fr++ ) {
 
-        frequency[fr] = start_frequency + (frequency_step * fr);
+        if (scale_type) { //linear scle
+            j = pow(fr, 10);
+        }
+        else { // logaritmic scale
+            j = fr;
+        }
+
+        frequency[fr] = start_frequency + (frequency_step * j);
         w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
 
         /* Signal generator */
@@ -381,7 +393,7 @@ int main(int argc, char *argv[])
             }
             
             /* data manipulation - returnes Z (complex impedance) */
-            if( bode_data_analasys( s, size, DC_bias, R_shunt, Amplitude, Phase, w_out, f) < 0) {
+            if( bode_data_analasys( s, size, DC_bias, Amplitude, Phase, w_out, f) < 0) {
                 printf("error data analysis LCR_data_analasys\n");
             }
 
@@ -614,7 +626,6 @@ int acquire_data(float t_params[],
 int bode_data_analasys(float **s ,
                         uint32_t size,
                         uint32_t DC_bias,
-                        uint32_t R_shunt,
                         float *Amplitude,
                         float *Phase,
                         double w_out,
