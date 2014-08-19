@@ -1,6 +1,6 @@
 %bode pitaya test octave
 %created by martin and zumy  / 11.8.2014
-%version 1.1
+% version 1.1
 
 clear all;
 close all;
@@ -17,11 +17,11 @@ scale_type = '1';
 
 
 user = 'root';
-ip = '192.168.81.161';%change to your ip
+ip = '192.168.81.161'; %change to your ip
 
-command=['ssh root@',ip,' "/opt/bin/bode ',chanel,' ',apmlitude,' ',DC_bias,' ',averaging,' ',steps,' ',start_freq,' ',stop_freq,' ',scale_type,'"'];
+command=['plink -l root -pw root ',ip,' "/opt/bin/bode ',chanel,' ',apmlitude,' ',DC_bias,' ',averaging,' ',steps,' ',start_freq,' ',stop_freq,' ',scale_type,'"'];
 
-[c,data] = system(command);
+[c,data] = dos(command);
 
 data=str2num(data);
 
