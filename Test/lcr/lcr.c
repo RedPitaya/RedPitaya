@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
     int scale_type = strtod(argv[13], NULL);
     //int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (scale_type < 0) || (scale_type > 1) ) {
-        fprintf(stderr, "Invalid decidion:scale type %s\n", argv[13]);
+        fprintf(stderr, "Invalid decidion:scale type: %s\n", argv[13]);
         usage();
         return -1;
     }
@@ -354,13 +354,15 @@ int main(int argc, char *argv[])
 
 
     /* depending on sweep funcrion num of steps is given to certan foo loop */
-    double frequency_steps_number;
-    int measurement_sweep_user_defined;
-    double frequency_step;
+    double  frequency_steps_number;
+    int     measurement_sweep_user_defined;
+    double  frequency_step;
+    double  a,b,c;
 
     if(scale_type) { //if logaritmic scale required start and end frequency are transformed
-        end_frequency   = log10(end_frequency);
-        start_frequency = log10(start_frequency);
+        b = log10( end_frequency );
+        a = log10( start_frequency );
+        c = ( b - a ) /( steps - 1);
     }
 
     if (sweep_function == 1){ //frequency sweep
@@ -393,16 +395,16 @@ int main(int argc, char *argv[])
     /* Signal type argument parsing */
     signal_e type = eSignalSine;
 
-    double endfreq = 0; // endfreq set for inbulild sweep (generate)
-    int dimension_step = 0; // saving data on the right place in allocated memory
-    double measurement_sweep;
+    double  endfreq = 0; // endfreq set for inbulild sweep (generate)
+    int     dimension_step = 0; // saving data on the right place in allocated memory
+    double  measurement_sweep;
 
     uint32_t  min_periodes = 2; // max 20
     double    w_out; //angular velocity used in the algorythm
     int       f = 0; // used in for lop, seting the decimation
     uint32_t  size; // nmber of samples varies with number of periodes
     float   **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    int       i, i1, fr, h, j; // iterators in for loops
+    int       i, i1, fr, h; // iterators in for loops
     int       equal = 0; //parameter initialized for generator functionality
     int       shaping = 0; //parameter initialized for generator functionality
 
@@ -449,6 +451,8 @@ int main(int argc, char *argv[])
     } 
     */
 
+    float k;
+
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
         if (!calib_function) {
@@ -457,14 +461,13 @@ int main(int argc, char *argv[])
 
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
 
-            if (scale_type) { //linear scle
-                j = pow(fr, 10);
+            if ( scale_type ) { //log scle
+                k = powf( 10, ( c * (float)fr ) + a );
+                frequency[ fr ] =  k ;
             }
-            else { // logaritmic scale
-                j = fr;
+            else { // lin scale
+                frequency[ fr ] = start_frequency + ( frequency_step * fr );
             }
-
-            frequency[fr] = start_frequency + (frequency_step * j);
 
             w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
 
@@ -648,7 +651,17 @@ int main(int argc, char *argv[])
  *
  * Generates/synthesized  a signal, based on three pre-defined signal
  * types/shapes, signal amplitude & frequency. The data[] vector of 
- * samples at 125 MHz is generated to be re-played by the FPGA AWG module.
+ * samples at 125 MHz is generated to be re-played by the FPGA AKot obljubljeno pošiljam dokumentacijo. Če so v njej kakšne napake, ali bi moral kateri del opisati bolj podrobno bom vesel če mi to sporočiš.
+
+Koda za logaritemsko skalo je na koncu dokumenta nepravilna. Popraviti jo bo potrebno v prihodnjih dneh.
+
+Razvoj kode je mogoče spremljati na githubu uporabnika PitayaDT https://github.com/PitayaDT/RedPitaya
+
+    
+
+Lep pozdrav
+Martin
+WG module.
  *
  * @param ampl  Signal amplitude [Vpp].
  * @param freq  Signal frequency [Hz].
