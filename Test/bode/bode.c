@@ -111,7 +111,6 @@ void usage() {
         "\tchannel              Channel to generate signal on [1, 2].\n"
         "\tamplitude            Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tDC bias              for electrolit capacitors default = 0.\n"
-        "\tshunt resistior      in ohms\n"
         "\taveraging            number of averaging the measurements [1 - 10].\n"
         "\tsteps                steps made between frequency limits.\n"
         "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
@@ -289,12 +288,18 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    double frequency_step;
+    double a,b,c;
+
     if(scale_type) { //if logaritmic scale required start and end frequency are transformed
-        end_frequency   = log10(end_frequency);
-        start_frequency = log10(start_frequency);
+        b = log10f( end_frequency );
+        a = log10f( start_frequency );
+        c = ( b - a ) /( steps - 1);
     }
 
-    double frequency_step = (end_frequency - start_frequency ) /( steps - 1);
+    else {
+    frequency_step = (end_frequency - start_frequency ) /( steps - 1);
+    }
 
     /* end frequency must always be greather than start frequency */
     if ( end_frequency < start_frequency ) {
@@ -314,7 +319,7 @@ int main(int argc, char *argv[])
     int       f = 0; // used in for lop, seting the decimation
     uint32_t  size; // nmber of samples varies with number of periodes
     float   **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    int       i1, fr, j; // iterators in for loops
+    int       i1, fr; // iterators in for loops
     int       equal = 0; //parameter initialized for generator functionality
     int       shaping = 0; //parameter initialized for generator functionality
 
@@ -335,16 +340,21 @@ int main(int argc, char *argv[])
     return -1;
     }
 
+    double k;
+
     for ( fr = 0; fr < steps; fr++ ) {
-
-        if (scale_type) { //linear scle
-            j = pow(fr, 10);
+        if ( scale_type ) { //log scle
+            k = powf(10, (c * (float)fr) + a );
+            /*printf("fr = %d\n", fr);
+            printf("k = %f\n", k);
+            printf("c = %f\n", c);
+            */
+            frequency[fr] =  k ;
         }
-        else { // logaritmic scale
-            j = fr;
+        else { // lin scale
+            frequency[fr] = start_frequency + ( frequency_step * fr );
         }
 
-        frequency[fr] = start_frequency + (frequency_step * j);
         w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
 
         /* Signal generator */
@@ -633,20 +643,20 @@ int bode_data_analasys(float **s ,
     int i2, i3;
     float **U_acq = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
     /* Signals multiplied by the reference signal (sin) */
-    float *U_dut_sampled_X = (float *) malloc( size * sizeof( float ) );
-    float *U_dut_sampled_Y = (float *) malloc( size * sizeof( float ) );
-    float *I_dut_sampled_X = (float *) malloc( size * sizeof( float ) );
-    float *I_dut_sampled_Y = (float *) malloc( size * sizeof( float ) );
+    float *U1_sampled_X = (float *) malloc( size * sizeof( float ) );
+    float *U1_sampled_Y = (float *) malloc( size * sizeof( float ) );
+    float *U2_sampled_X = (float *) malloc( size * sizeof( float ) );
+    float *U2_sampled_Y = (float *) malloc( size * sizeof( float ) );
     /* Signals return by trapezoidal method in complex */
     float *X_component_lock_in_1 = (float *) malloc( size * sizeof( float ) );
     float *X_component_lock_in_2 = (float *) malloc( size * sizeof( float ) );
     float *Y_component_lock_in_1 = (float *) malloc( size * sizeof( float ) );
     float *Y_component_lock_in_2 = (float *) malloc( size * sizeof( float ) );
     /* Voltage, current and their phases calculated */
-    float U_dut_amp;
-    float Phase_U_dut_amp;
-    float I_dut_amp;
-    float Phase_I_dut_amp;
+    float U1_amp;
+    float Phase_U1_amp;
+    float U2_amp;
+    float Phase_U2_amp;
     float Phase_internal;
     //float Z_phase_deg_imag;  // may cuse errors because not complex
     float T; // Sampling time in seconds
@@ -673,23 +683,19 @@ int bode_data_analasys(float **s ,
     for( i2 = 0; i2 < size; i2++) {
         ang = (i2 * T * w_out);
         //printf("ang(%d) = %f \n", (i2+1), ang);
-        U_dut_sampled_X[i2] = U_acq[1][i2] * sin( ang );
-        U_dut_sampled_Y[i2] = U_acq[1][i2] * sin( ang+ (M_PI/2) );
+        U1_sampled_X[i2] = U_acq[1][i2] * sin( ang );
+        U1_sampled_Y[i2] = U_acq[1][i2] * sin( ang+ (M_PI/2) );
 
-        I_dut_sampled_X[i2] = U_acq[2][i2] * sin( ang );
-        I_dut_sampled_Y[i2] = U_acq[2][i2] * sin( ang +(M_PI/2) );
-        //printf("U_dut_sampled_X(%d) = %f;\n",(i2+1),U_dut_sampled_X[i2]);
-        //printf("U_dut_sampled_Y(%d) = %f;\n",(i2+1),U_dut_sampled_Y[i2]);
-        //printf("I_dut_sampled_X(%d) = %f;\n",(i2+1),I_dut_sampled_X[i2]);
-        //printf("I_dut_sampled_Y(%d) = %f;\n",(i2+1),I_dut_sampled_Y[i2]);
+        U2_sampled_X[i2] = U_acq[2][i2] * sin( ang );
+        U2_sampled_Y[i2] = U_acq[2][i2] * sin( ang +(M_PI/2) );
     }
 
     /* Trapezoidal method for calculating the approximation of an integral */
-    X_component_lock_in_1[1] = trapz( U_dut_sampled_X, (float)T, size );
-    Y_component_lock_in_1[1] = trapz( U_dut_sampled_Y, (float)T, size );
+    X_component_lock_in_1[1] = trapz( U1_sampled_X, (float)T, size );
+    Y_component_lock_in_1[1] = trapz( U1_sampled_Y, (float)T, size );
 
-    X_component_lock_in_2[1] = trapz( I_dut_sampled_X, (float)T, size );
-    Y_component_lock_in_2[1] = trapz( I_dut_sampled_Y, (float)T, size );
+    X_component_lock_in_2[1] = trapz( U2_sampled_X, (float)T, size );
+    Y_component_lock_in_2[1] = trapz( U2_sampled_Y, (float)T, size );
     
     //printf("X_component_lock_in_1(%d) = %f;\n",(1),X_component_lock_in_1[1] );
     //printf("Y_component_lock_in_1(%d) = %f;\n",(1),Y_component_lock_in_1[1] );
@@ -698,18 +704,18 @@ int bode_data_analasys(float **s ,
     //printf("Y_component_lock_in_1(%d) = %f;\n",( 1 ),Y_component_lock_in_2[ 2 ] );
     
     /* Calculating voltage amplitude and phase */
-    U_dut_amp = (float)2 * (sqrtf( powf( X_component_lock_in_1[ 1 ] , (float)2 ) + powf( Y_component_lock_in_1[ 1 ] , (float)2 )));
-    Phase_U_dut_amp = atan2f( Y_component_lock_in_1[ 1 ], X_component_lock_in_1[ 1 ] );
+    U1_amp = (float)2 * (sqrtf( powf( X_component_lock_in_1[ 1 ] , (float)2 ) + powf( Y_component_lock_in_1[ 1 ] , (float)2 )));
+    Phase_U1_amp = atan2f( Y_component_lock_in_1[ 1 ], X_component_lock_in_1[ 1 ] );
     //printf("U_load_amp(%d) = %f;\n",(1),U_load_amp );
     //printf("Phase_U_load_amp(%d) = %f;\n",(1),Phase_U_load_amp );
 
     /* Calculating current amplitude and phase */
-    I_dut_amp = (float)2 * (sqrtf( powf( X_component_lock_in_2[ 1 ], (float)2 ) + powf( Y_component_lock_in_2[ 1 ] , (float)2 ) ) );
-    Phase_I_dut_amp = atan2f( Y_component_lock_in_2[1], X_component_lock_in_2[1] );
+    U2_amp = (float)2 * (sqrtf( powf( X_component_lock_in_2[ 1 ], (float)2 ) + powf( Y_component_lock_in_2[ 1 ] , (float)2 ) ) );
+    Phase_U2_amp = atan2f( Y_component_lock_in_2[1], X_component_lock_in_2[1] );
     //printf("I_load_amp(%d) = %f;\n",(1),I_load_amp );
     //printf("Phase_I_load_amp(%d) = %f;\n",(1),Phase_I_load_amp );
     
-    Phase_internal = Phase_I_dut_amp - Phase_U_dut_amp ;
+    Phase_internal = Phase_U2_amp - Phase_U1_amp ;
     
 
     if (Phase_internal <=  (-M_PI) )
@@ -726,7 +732,7 @@ int bode_data_analasys(float **s ,
     } 
  
    
-    *Amplitude = 10*log( I_dut_amp / U_dut_amp );;
+    *Amplitude = 10*log( U2_amp / U1_amp );;
     *Phase = Phase_internal * (180/M_PI);
 
     return 1;
