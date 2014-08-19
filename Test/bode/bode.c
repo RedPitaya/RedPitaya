@@ -343,16 +343,12 @@ int main(int argc, char *argv[])
     double k;
 
     for ( fr = 0; fr < steps; fr++ ) {
-        if ( scale_type ) { //log scle
-            k = powf(10, (c * (float)fr) + a );
-            /*printf("fr = %d\n", fr);
-            printf("k = %f\n", k);
-            printf("c = %f\n", c);
-            */
-            frequency[fr] =  k ;
+        if ( scale_type ) { // log scle
+            k = powf( 10, ( c * (float)fr ) + a );
+            frequency[ fr ] =  k ;
         }
         else { // lin scale
-            frequency[fr] = start_frequency + ( frequency_step * fr );
+            frequency[ fr ] = start_frequency + ( frequency_step * fr );
         }
 
         w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
