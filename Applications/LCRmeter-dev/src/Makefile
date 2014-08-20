@@ -1,7 +1,7 @@
 CC=$(CROSS_COMPILE)gcc
 RM=rm
 
-OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o
+OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o lcr.o
 
 INCLUDE=
 
