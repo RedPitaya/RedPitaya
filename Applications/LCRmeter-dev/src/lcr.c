@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fpga.h"
+//#include "fpga.h"
 #include "version.h"
 
 #include <unistd.h>
@@ -94,6 +94,9 @@ int LCR_data_analasys(float **s ,
                         float complex *Z,
                         double w_out,
                         int f);
+
+int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t averaging_num, int calib_function,  uint32_t Z_load_ref_real, uint32_t Z_load_ref_imag, 
+        double steps, int sweep_function, double start_frequency, double end_frequency,  int scale_type, int wait_on_user, float *frequency_lcr, float *phase_lcr, float *amplitude_lcr);
 /** Print usage information */
 /*
 void rp_lcr_worker_fill_params(rp_app_params_t *params);
@@ -230,84 +233,85 @@ float mean_array_column(float **arrayptr, int length, int column) {
     return result;
 }
 
-/** Signal generator main */
-int main(int argc, char *argv[])
+/** lcr main */
+int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t averaging_num, int calib_function,  uint32_t Z_load_ref_real, uint32_t Z_load_ref_imag, 
+        double steps, int sweep_function, double start_frequency, double end_frequency,  int scale_type, int wait_on_user, float *frequency_lcr, float *phase_lcr, float *amplitude_lcr)
 {
 
-    /* argument check */
+    /* argument check 
     g_argv0 = argv[0];    
     
     if ( argc < 15 ) {
         usage();
         return -1;
     }
-    
+    */
     
 
     /* Channel argument parsing */
-    uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
-    //uint32_t ch = 0;
+    //uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
+    ch = 0;
     if (ch > 1) {
-        fprintf(stderr, "Invalid channel: %s\n", argv[1]);
+        //fprintf(stderr, "Invalid channel: %s\n", argv[1]);
         usage();
         return -1;
     }
 
     /* Signal amplitude argument parsing */
-    double ampl = strtod(argv[2], NULL);
-    //double ampl = 1.8;
+    //double ampl = strtod(argv[2], NULL);
+    ampl = 1.8;
     if ( (ampl < 0.0) || (ampl > c_max_amplitude_lcr) ) {
-        fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
+        //fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
         return -1;
     }
 
-    uint32_t DC_bias = strtod(argv[3], NULL);
-    //uint32_t DC_bias = 0;
+    //uint32_t DC_bias = strtod(argv[3], NULL);
+    DC_bias = 0;
     if ( (DC_bias < -2.0) || (DC_bias > 2.0) ) {
-        fprintf(stderr, "Invalid DC bias:  %s\n", argv[5]);
+        //fprintf(stderr, "Invalid DC bias:  %s\n", argv[5]);
         usage();
         return -1;
     }
 
-    float R_shunt = strtod(argv[4], NULL);
-    //float R_shunt = 996;
+    //float R_shunt = strtod(argv[4], NULL);
+    R_shunt = 996;
     if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
-        fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
+        //fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
         usage();
         return -1;
     }
 
     /* Number of measurments made and are later averaged */
-    uint32_t averaging_num = strtod(argv[5], NULL);
-    //uint32_t averaging_num = 1;
+    //uint32_t averaging_num = strtod(argv[5], NULL);
+    averaging_num = 1;
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
-        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[6]);
+        //fprintf(stderr, "Invalid averaging_num:  %s\n", argv[6]);
         usage();
         return -1;
     }
 
     /* if one wants to skip calibration the parameter can be set to 0 */
-    int calib_function = strtod(argv[6], NULL);
-    //int calib_function = 0;
+    //int calib_function = strtod(argv[6], NULL);
+    calib_function = 0;
     if ( (calib_function < 0) || (calib_function > 2) ) {
-        fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[8]);
+        //fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[8]);
         usage();
         return -1;
     }
 
-    uint32_t Z_load_ref_real = strtod(argv[7], NULL);
-    //uint32_t Z_load_ref_real = 0;
+    //uint32_t Z_load_ref_real = strtod(argv[7], NULL);
+    Z_load_ref_real = 0;
     if ( (Z_load_ref_real < -50000.0) || (Z_load_ref_real > 50000) ) {
-        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
+        //fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
         usage();
         return -1;
     }
 
-    uint32_t Z_load_ref_imag = strtod(argv[8], NULL);
-    //uint32_t Z_load_ref_imag = 0;
+    //uint32_t Z_load_ref_imag = strtod(argv[8], NULL);
+    Z_load_ref_imag = 0;
     if ( (Z_load_ref_imag < -50000.0) || (Z_load_ref_imag > 50000) ) {
-        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
+        //fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
         usage();
         return -1;
     }
@@ -315,54 +319,55 @@ int main(int argc, char *argv[])
     // complex number construction
     float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
 
-    double steps = strtod(argv[9], NULL);
-    //double steps =  100;
+    //double steps = strtod(argv[9], NULL);
+    steps =  1;
     if ( (steps < 1) || (steps > 300) ) {
-        fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
+        //fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
         usage();
         return -1;
     }
 
     /* [1] frequency sweep, [0] measurement sweep */
-    int sweep_function = strtod(argv[10], NULL);
-    //int sweep_function = 1; 
+    //int sweep_function = strtod(argv[10], NULL);
+    sweep_function = 0; 
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
-        fprintf(stderr, "Invalid sweep function:  %s\n", argv[10]);
+        //fprintf(stderr, "Invalid sweep function:  %s\n", argv[10]);
         usage();
         return -1;
     }
 
-    double start_frequency = strtod(argv[11], NULL);
-    //double start_frequency = 20000;
+    //double start_frequency = strtod(argv[11], NULL);
+    start_frequency = 4000;
     if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
-        fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
+        //fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
         usage();
         return -1;
     }
 
-    double end_frequency = strtod(argv[12], NULL);
-    //double end_frequency = 1000000; //max = 6.2e+07
+    //double end_frequency = strtod(argv[12], NULL);
+    end_frequency = 1000000; //max = 6.2e+07
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
-        fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
+        //fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
         usage();
         return -1;
     }
 
-    int scale_type = strtod(argv[13], NULL);
-    //int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
+    //int scale_type = strtod(argv[13], NULL);
+    scale_type = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (scale_type < 0) || (scale_type > 1) ) {
-        fprintf(stderr, "Invalid decidion:scale type: %s\n", argv[13]);
+        //fprintf(stderr, "Invalid decidion:scale type: %s\n", argv[13]);
         usage();
         return -1;
     }
 
-    int wait_on_user = strtod(argv[14], NULL);
-    //int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
+    //int wait_on_user = strtod(argv[14], NULL);
+    wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (wait_on_user < 0) || (wait_on_user > 1) ) {
-        fprintf(stderr, "Invalid decidion: user wait argument %s\n", argv[14]);
+        //fprintf(stderr, "Invalid decidion: user wait argument %s\n", argv[14]);
         usage();
         return -1;
     }
+
 
     /* depending on sweep funcrion num of steps is given to certan foo loop */
     double  frequency_steps_number;
@@ -637,13 +642,22 @@ int main(int argc, char *argv[])
         PhaseZ[i] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[i] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
         if (!sweep_function) {
-            printf(" %.0f    %.5f    %.5f\n", frequency[0],PhaseZ[ i ],AmplitudeZ[ i ]);
+            //printf(" %.0f    %.5f    %.5f\n", frequency[0],PhaseZ[ i ],AmplitudeZ[ i ]);
+            frequency_lcr[i] = frequency[0];
+            amplitude_lcr[i] = AmplitudeZ[i];
+            phase_lcr[i] = PhaseZ[i];
         }
         else {
-            printf(" %.0f    %.5f    %.5f\n", frequency[i],PhaseZ[ i ],AmplitudeZ[ i ]);
+            //printf(" %.0f    %.5f    %.5f\n", frequency[i],PhaseZ[ i ],AmplitudeZ[ i ]);
+            frequency_lcr[i] = frequency[i];
+            amplitude_lcr[i] = AmplitudeZ[i];
+            phase_lcr[i] = PhaseZ[i];
         }
-        
+    
+       
     }
+
+
 
     return 1;
 
