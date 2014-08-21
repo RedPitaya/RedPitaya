@@ -18,6 +18,7 @@
 
 #include "worker.h"
 #include "fpga.h"
+#include "lcr.h"
 
 pthread_t *rp_osc_thread_handler = NULL;
 void *rp_osc_worker_thread(void *args);
@@ -40,6 +41,8 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 
+    
+
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
@@ -50,6 +53,8 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
     rp_osc_ctrl               = rp_osc_idle_state;
     rp_osc_params_dirty       = 0;
     rp_osc_params_fpga_update = 0;
+
+
 
     rp_copy_params(params, (rp_app_params_t **)&rp_osc_params);
 
@@ -242,6 +247,11 @@ void *rp_osc_worker_thread(void *args)
     old_state = state = rp_osc_ctrl;
     pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
+
+
+
+
+    
 
     while(1) {
         /* update states - we save also old state to see if we need to reset
@@ -545,6 +555,7 @@ void *rp_osc_worker_thread(void *args)
 
         /* We have acquisition - if we are in single put state machine
          * to idle */
+
         if((state == rp_osc_single_state) && (!long_acq)) {
             rp_osc_worker_change_state(rp_osc_idle_state);
         }
@@ -628,7 +639,10 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     float *cha_s = *cha_signal;
     float *chb_s = *chb_signal;
     float *t = *time_signal;
-    
+
+    float *frequency_lcr = (float *)malloc(300 * sizeof(float));
+    float *amplitude_lcr = (float *)malloc(300 * sizeof(float));
+    float *phase_lcr = (float *)malloc(300 * sizeof(float));
     /* If illegal take whole frame */
     if(t_stop <= t_start) {
         t_start = 0;
@@ -669,6 +683,8 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         /* Wrap the pointer */
         if(in_idx >= OSC_FPGA_SIG_LEN)
             in_idx = in_idx % OSC_FPGA_SIG_LEN;
+        
+
 
         cha_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
                                                rp_calib_params->fe_ch1_dc_offs,
@@ -680,6 +696,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
 
         t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
     }
+    
 
     return 0;
 }

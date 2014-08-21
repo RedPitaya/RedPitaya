@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "fpga.h"
+#include "fpga.h"
 #include "version.h"
 
 #include <unistd.h>
@@ -24,6 +24,7 @@
 #include <sys/param.h>
 #include "main.h"
 #include "fpga_awg.h"
+ #include "lcr.h"
 
 #include <complex.h>    /* Standart Library of Complex Numbers */
 #define M_PI 3.14159265358979323846
@@ -47,20 +48,7 @@ int32_t data[n];
 /** Program name */
 const char *g_argv0 = NULL;
 
-/** Signal types */
-typedef enum {
-    eSignalSine_lcr,         ///< Sinusoidal waveform.
-    /*eSignalSquare,       ///< Square waveform.
-    eSignalTriangle,     ///< Triangular waveform.
-    eSignalSweep         ///< Sinusoidal frequency sweep.*/
-} signal_e_lcr;
 
-/** AWG FPGA parameters */
-typedef struct {
-    int32_t  offsgain;   ///< AWG offset & gain.
-    uint32_t wrap;       ///< AWG buffer wrap value.
-    uint32_t step;       ///< AWG step interval.
-} awg_param_t_lcr;
 
 /** Oscilloscope module parameters as defined in main module
  * @see rp_main_params
