@@ -26,7 +26,7 @@
 #include "fpga_awg.h"
  #include "lcr.h"
 
-#include <complex.h>    /* Standart Library of Complex Numbers */
+  /* Standart Library of Complex Numbers */
 #define M_PI 3.14159265358979323846
 
 
@@ -645,8 +645,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
        
     }
 
-
-
     return 1;
 
 }
@@ -1022,4 +1020,13 @@ int inquire_user_wait() {
         }
     }
     return 1;
+}
+
+void run_lcr(){
+
+    float *frequency_lcr = (float *)malloc(300 * sizeof(float));
+    float *amplitude_lcr = (float *)malloc(300 * sizeof(float));
+    float *phase_lcr = (float *)malloc(300 * sizeof(float));
+
+    lcr(0, 1, 0, 996, 1, 0, 0, 0, 1, 1, 4000, 8000,  0, 0, frequency_lcr, phase_lcr, amplitude_lcr);
 }
