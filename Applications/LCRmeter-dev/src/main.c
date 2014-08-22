@@ -22,7 +22,7 @@
 #include "fpga.h"
 #include "calib.h"
 #include "generate.h"
-//#include "lcr.c"
+
 
 /* Describe app. parameters with some info/limitations */
 pthread_mutex_t rp_main_params_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -196,14 +196,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "gen_sig_freq_ch2", 1000, 1, 0, 0.2, 50e6 },
     { /* gen_sig_dcoff_ch2 - DC offset applied to the signal in [V] */
         "gen_sig_dcoff_ch2", 0, 1, 0, -1, 1 },
-    { /** Equalization filter:
-       *    0 - Disabled
-       *    1 - Enabled */   
-       "eq_filter",     0, 0, 0,         0,         1 },
-    { /** Shaping filter:
-       *    0 - Disabled
-       *    1 - Enabled */   
-       "shpng_filter",      0, 0, 0,         0,         1 },
+    
     { /* Must be last! */
         NULL, 0.0, -1, -1, 0.0, 0.0 }     
 };
@@ -228,9 +221,9 @@ const char *rp_app_desc(void)
 
 int rp_app_init(void)
 {
+
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
 
-    //rp_lcr_worker_fill_params(&rp_main_params[0]);//LCR
 
     rp_default_calib_params(&rp_main_calib_params);
     if(rp_read_calib_params(&rp_main_calib_params) < 0) {
@@ -1080,14 +1073,14 @@ float rp_gen_limit_freq(float freq, float gen_type)
 
     return freq;
 }
-/*
-void rp_fill_params(rp_app_params_t *params){
-    rp_app_init();
-    rp_copy_params(&rp_main_params[0], (rp_app_params_t **) &params);
 
-}
-*/
-
+/* Used for setting the time range param in the lcr function in lcr.c */
 void rp_set_time_range(float f){
   rp_main_params[TIME_RANGE_PARAM].value = f;
+}
+
+
+/* For testing purposes only. Sets the value of ch1 minimum to be x */
+void rp_set_mes_data(float x){
+  rp_main_params[MEAS_MIN_CH1].value = x;
 }

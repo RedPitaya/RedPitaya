@@ -20,6 +20,7 @@
 #include "fpga.h"
 #include "lcr.h"
 
+
 pthread_t *rp_osc_thread_handler = NULL;
 void *rp_osc_worker_thread(void *args);
 
@@ -41,6 +42,8 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 
+//float *data;
+
     
 
 
@@ -57,6 +60,7 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
 
 
     rp_copy_params(params, (rp_app_params_t **)&rp_osc_params);
+
 
     rp_cleanup_signals(&rp_osc_signals);
     if(rp_create_signals(&rp_osc_signals) < 0)
@@ -95,6 +99,8 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
                 strerror(errno));
         return -1;
     }
+
+    
 
     return 0;
 }
@@ -246,9 +252,6 @@ void *rp_osc_worker_thread(void *args)
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
     old_state = state = rp_osc_ctrl;
     pthread_mutex_unlock(&rp_osc_ctrl_mutex);
-
-
-
 
 
     
@@ -504,11 +507,22 @@ void *rp_osc_worker_thread(void *args)
 
         if((state != old_state) || params_dirty)
             continue;
+        
 
         if(!long_acq) {
             /* Triggered, decimate & convert the values */
             rp_osc_meas_clear(&ch1_meas);
             rp_osc_meas_clear(&ch2_meas);
+
+            float *frequency_lcr = (float *)malloc(300 * sizeof(float));
+            float *amplitude_lcr = (float *)malloc(300 * sizeof(float));
+            float *phase_lcr = (float *)malloc(300 * sizeof(float));
+
+            lcr(0, 1, 0, 996, 1, 0, 0, 0, 1, 1, 4000, 8000,  0, 0, frequency_lcr, phase_lcr, amplitude_lcr);
+
+            /* Function used for setting parameter data - Testing purposes only. */
+            rp_set_mes_data(amplitude_lcr[0]);
+
             rp_osc_decimate((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
                             (float **)&rp_tmp_signals[0], dec_factor, 
@@ -557,6 +571,7 @@ void *rp_osc_worker_thread(void *args)
          * to idle */
 
         if((state == rp_osc_single_state) && (!long_acq)) {
+            
             rp_osc_worker_change_state(rp_osc_idle_state);
         }
 
@@ -640,9 +655,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     float *chb_s = *chb_signal;
     float *t = *time_signal;
 
-    float *frequency_lcr = (float *)malloc(300 * sizeof(float));
-    float *amplitude_lcr = (float *)malloc(300 * sizeof(float));
-    float *phase_lcr = (float *)malloc(300 * sizeof(float));
+   
     /* If illegal take whole frame */
     if(t_stop <= t_start) {
         t_start = 0;
