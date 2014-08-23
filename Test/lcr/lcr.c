@@ -81,8 +81,7 @@ void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
 
-int acquire_data(float t_params[],
-                float **s , 
+int acquire_data(float **s ,
                 uint32_t size);
 
 int LCR_data_analasys(float **s ,
@@ -526,7 +525,7 @@ int main(int argc, char *argv[])
                     }
 
                     /* ADC Data acqusition - saved to s */
-                    if (acquire_data( t_params, s, size) < 0) {
+                    if (acquire_data(s, size) < 0) {
                         printf("error acquiring data @ acquire_data\n");
                         return -1;
                     }
@@ -833,8 +832,7 @@ void write_data_fpga(uint32_t ch,
  * @param data  AWG data to write to FPGA.
  * @param awg   AWG paramters to write to FPGA.
  */
-int acquire_data(float t_params[],
-                float **s , 
+int acquire_data(float **s ,
                 uint32_t size) {
     int retries = 150000;
     int j, sig_num, sig_len;
