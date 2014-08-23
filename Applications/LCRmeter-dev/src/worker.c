@@ -42,10 +42,24 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 
-//float *data;
+/* LCR parameters */
 
-    
+int thread_return = 0;
 
+typedef struct lcr_struct{
+    float *frequency;
+    float *Phase;
+    float *Amplitude;
+} lcr_t;
+
+/* Thread function */
+
+void* lcr_thread(void* parameters){
+    lcr_t *lcr_s = (lcr_t*)parameters;
+
+    lcr(0, 1, 0, 990, 1, 0,  0, 0 ,2, 0, 4000, 8000, 1,0, lcr_s->frequency, lcr_s->Phase, lcr_s->Amplitude);
+    return 0;
+}
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
@@ -300,6 +314,23 @@ void *rp_osc_worker_thread(void *args)
             rp_clean_params(curr_params);
             return 0;
         }
+        /*
+        float *frequency = malloc(300*sizeof(float));
+        float *Phase     = malloc(300*sizeof(float));
+        float *Amplitude = malloc(300*sizeof(float));
+
+        int a = lcr(0, 1, 0, 990, 1, 0,  0, 0 ,2, 0, 4000, 8000, 1,0, frequency, Phase, Amplitude);
+
+        if (a < 0) {
+            return 0;
+            printf("error at lcr function/n");
+        }
+        curr_params[LCR_TEST].value = frequency[0];
+        */
+
+        //usleep(1000); Pitaya crashes after using the sleep function.
+
+        rp_osc_worker_change_state(rp_osc_idle_state);
 
         if(state == rp_osc_auto_set_state) {
             /* Auto-set algorithm was selected - run it */
@@ -513,15 +544,11 @@ void *rp_osc_worker_thread(void *args)
             /* Triggered, decimate & convert the values */
             rp_osc_meas_clear(&ch1_meas);
             rp_osc_meas_clear(&ch2_meas);
-
-            float *frequency_lcr = (float *)malloc(300 * sizeof(float));
-            float *amplitude_lcr = (float *)malloc(300 * sizeof(float));
-            float *phase_lcr = (float *)malloc(300 * sizeof(float));
-
-            lcr(0, 1, 0, 996, 1, 0, 0, 0, 1, 1, 4000, 8000,  0, 0, frequency_lcr, phase_lcr, amplitude_lcr);
+            
+            
 
             /* Function used for setting parameter data - Testing purposes only. */
-            rp_set_mes_data(amplitude_lcr[0]);
+            
 
             rp_osc_decimate((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
@@ -562,6 +589,7 @@ void *rp_osc_worker_thread(void *args)
             
         }
 
+        
         /* check again for change of state */
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
@@ -576,7 +604,7 @@ void *rp_osc_worker_thread(void *args)
         }
 
        
-       
+       rp_osc_worker_change_state(rp_osc_idle_state); // Always put the worker into idle state.
         
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
@@ -655,7 +683,26 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     float *chb_s = *chb_signal;
     float *t = *time_signal;
 
-   
+    /* Thread handler */
+
+    pthread_t thread_handle;
+
+    float *frequency = malloc(300*sizeof(float));
+    float *Phase = malloc(300*sizeof(float));
+    float *Amplitude = malloc(300*sizeof(float));
+
+    lcr_t lcr = {frequency, Phase, Amplitude};
+
+    int thread_return = pthread_create(&thread_handle, 0, lcr_thread, (void*)&lcr);
+
+    if(thread_return != 0){
+        printf("Thread creation failed.\n");
+    }
+    /* We wait until the thread has finished. */
+    pthread_join(thread_handle, 0);
+
+
+
     /* If illegal take whole frame */
     if(t_stop <= t_start) {
         t_start = 0;
@@ -690,6 +737,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         rp_osc_meas_min_max(ch1_meas, in_cha_signal[out_idx]);
         rp_osc_meas_min_max(ch2_meas, in_chb_signal[out_idx]);
     }
+    
 
     for(out_idx=0, t_idx=0; out_idx < SIGNAL_LENGTH; 
         out_idx++, in_idx+=t_step, t_idx+=t_step) {
@@ -697,17 +745,34 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         if(in_idx >= OSC_FPGA_SIG_LEN)
             in_idx = in_idx % OSC_FPGA_SIG_LEN;
         
+        //if(thread_return == 0){
 
-
-        cha_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
+            cha_s[out_idx] = frequency[0];
+            /*
+            osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
                                                rp_calib_params->fe_ch1_dc_offs,
                                                ch1_user_dc_off);
-
-        chb_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
+            */
+    
+            chb_s[out_idx] = -1;
+            /*
+            osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
                                                rp_calib_params->fe_ch2_dc_offs,
                                                ch2_user_dc_off);
+            */
 
-        t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
+            t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
+        //}
+        /*
+        else{
+            cha_s[out_idx] = frequency[out_idx];
+
+            chb_s = 0;
+
+            t[out_idx] = out_idx;
+        }
+        */
+        
     }
     
 
