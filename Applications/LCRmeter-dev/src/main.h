@@ -40,7 +40,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        49
+#define PARAMS_NUM        50
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -91,6 +91,7 @@ typedef struct rp_osc_meas_res_s {
 #define GEN_SIG_AMP_CH2   46
 #define GEN_SIG_FREQ_CH2  47
 #define GEN_SIG_DCOFF_CH2 48
+#define LCR_TEST          49
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope or AWG */
