@@ -44,6 +44,11 @@ int acquire_data(
                 uint32_t size);
 
 
+/* New function added */
+void write_data_fpga_lcr_single(uint32_t ch, const int32_t *data,
+                     const awg_param_t_lcr *awg);
+
+
 
 int LCR_data_analasys(float **s ,
                         uint32_t size,
@@ -61,8 +66,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
 
 
 /* Helper functions used in lcr main method */
-
-
 
 float *create_table();
 
@@ -94,5 +97,9 @@ void usage();
 int inquire_user_wait();
 
 void run_lcr();
+
+void lcr_acquire();
+
+int rp_osc_set_signals_lcr(float **source, int index);
 
 #endif
