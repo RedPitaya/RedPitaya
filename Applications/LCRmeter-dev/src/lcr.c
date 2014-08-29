@@ -316,7 +316,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
 
     //double steps = strtod(argv[9], NULL);
-    steps =  4;
+    steps =  5;
     if ( (steps < 1) || (steps > 300) ) {
         //fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
         usage();
@@ -341,7 +341,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //double end_frequency = strtod(argv[12], NULL);
-    end_frequency = 1000000; //max = 6.2e+07
+    end_frequency = 8000; //max = 6.2e+07
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
         //fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
         usage();
@@ -493,7 +493,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
 
             printf("signal generation complete\n");
             /* Write the data to the FPGA and set FPGA AWG state machine */
-            write_data_fpga_lcr_single(ch, data, &params);
+            write_data_fpga_lcr(ch, data, &params);
             printf("Wrtie to fpga succesful.\n");
             /* if measurement sweep selected, only one calibration measurement is made */
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
@@ -663,7 +663,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     printf("%f\n", frequency[0]);
     printf("Ending function with no errors what so ever. And also, I'm bataman.\n");
 
-    return 1;
+    return 4000;
 
 }
 
@@ -906,7 +906,7 @@ void write_data_fpga_lcr(uint32_t ch,
 int acquire_data(
                 float **s , 
                 uint32_t size) {
-    int retries = 150000;
+    int retries = 150;
     int j, sig_num, sig_len;
     int ret_val;
     printf("Int acquire function.\n");
@@ -1092,6 +1092,8 @@ int inquire_user_wait() {
     return 1;
 }
 
+
+
 /*
 void run_lcr(){
 
@@ -1103,6 +1105,7 @@ void run_lcr(){
 }
 */
 
+/*
 int rp_osc_set_signals_lcr(float **source, int index)
 {
     //pthread_mutex_lock(&rp_osc_sig_mutex);
@@ -1118,12 +1121,28 @@ int rp_osc_set_signals_lcr(float **source, int index)
     return 0;
 }
 
-void lcr_acquire(){
-    /* Initializing the pointers for the FPGA input signal buffers */
-    osc_fpga_get_sig_ptr(&rp_fpga_cha_signal, &rp_fpga_chb_signal);
-    /* We inicialize our working signal */
+void lcr_acquire(float **rp_osc_signals){
+     Initializing the pointers for the FPGA input signal buffers
+    osc_fpga_get_sig_ptr(&rp_fpga_cha_signal, &rp_fpga_chb_signal);z
+    /We inicialize our working signal 
     rp_create_signals(&rp_lcr_signals);
 
-    /* We fill the rp_lcr_signals with data directly from the FPGA buffer. */
+     We fill the rp_lcr_signals with data directly from the FPGA buffer.
     rp_osc_set_signals_lcr(rp_lcr_signals, SIGNAL_LENGTH-1);
 }
+
+void simple_data_acquisition(float   **s){
+
+    signal_e_lcr type = eSignalSine_lcr;
+    awg_param_t_lcr params;
+    synthesize_signal_lcr(2.0, 9000.0, type, 1000000.0, data, &params);
+
+    write_data_fpga_lcr_single(0, data, &params);
+
+    lcr_acquire(s);
+
+    printf("Succesfuly init synthesize_signal_lcr and write_data_fpga_lcr_single!!\n");
+    
+    
+}
+*/
