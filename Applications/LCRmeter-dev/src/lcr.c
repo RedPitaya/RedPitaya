@@ -903,6 +903,13 @@ void write_data_fpga_lcr(uint32_t ch,
  }
 
 
+/* LCR function problems -- The program gets -1 all the time. Therefore it ussualy does 15000 retries, before stopping.
+   This makes worker.c crash until it can continue ( as lcr uses acquire which can consequently take a very long time to finish)
+   operating. Making worker.c sleep for a very long time has proven to crash it until the sleep function has terminated.
+   Setting retries in acquire_data to a lesser number can solve the problems with the X-scale being defected or at least fixing it in the end. 
+   Still no data can be visible after the acquire function has finished, not even hard coded int numbers. Work is still in progress.
+ */
+
 int acquire_data(
                 float **s , 
                 uint32_t size) {
