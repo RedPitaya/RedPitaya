@@ -1,7 +1,6 @@
 developer: CimeM
 
-Latest version of bode analizator saved to bode.c
+lcr version 2.2
 
-bode.c is the code most of the work has been put in.
-
-binary files have to be created with compiling, before uploading to RedPitaya
+TODO
+- DC_bias has to be tested
