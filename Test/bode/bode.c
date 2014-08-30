@@ -3,8 +3,8 @@
  *
  * @brief Red Pitaya lcr algorythm 
  *
- * @Author cimem 
- *
+ * @Author1 Martin Cimerman   <cim.martin@gmail.com>
+ * @Author2 Zumret Topcacic   <zumret_topcagic@hotmail.co
  *
  * This part of code is written in C programming language.
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
@@ -15,10 +15,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "fpga_awg.h"
 #include "version.h"
-
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/param.h>
@@ -28,6 +26,15 @@
 #include <complex.h>    /* Standart Library of Complex Numbers */
 #define M_PI 3.14159265358979323846
 
+/**
+ * GENERAL DESCRIPTION:
+ *
+ * The code below defines bode analyzer
+ * 
+ * It was built on acquire and generate programs defined in /Test/ folder
+ * data analasys returns: frequency, phase, amplitude
+ *
+ */
 
 /** Maximal signal frequency [Hz] */
 const double c_max_frequency = 62.5e6;
@@ -81,8 +88,7 @@ void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
 
-int acquire_data(float t_params[],
-                float **s , 
+int acquire_data(float **s , 
                 uint32_t size);
 
 int bode_data_analasys(float **s ,
@@ -138,16 +144,13 @@ int get_gain(int *gain, const char *str)
     return -1;
 }
 
-float *create_table() {
-    float *new_table = (float *)malloc( 22 * sizeof(float));
-    return new_table;
-}
-
+/* Allocates a memory with size num_of_el, memory has 1 dimension */
 float *create_table_size(int num_of_el) {
     float *new_table = (float *)malloc( num_of_el * sizeof(float));
     return new_table;
 }
 
+/** Allocates a memory with size of: num_of_cols x num_of_rows */
 float **create_2D_table_size(int num_of_rows, int num_of_cols) {
     float **new_table = (float **)malloc( num_of_rows * sizeof(float*));
     int i;
@@ -171,6 +174,7 @@ float max_array(float *arrayptr, int numofelements) {
   return max;
 }
 
+/* Trapezoidal method for integration interpolation, had to be defined */
 float trapz(float *arrayptr, float T, int size1) {
   float result = 0;
   int i;
@@ -180,10 +184,10 @@ float trapz(float *arrayptr, float T, int size1) {
    
   }
     result = (T / (float)2) * result;
-    //printf("return = %f\n",result);
     return result;
 }
 
+/** Finds a mean value from the memmory arrayptr points to */
 float mean_array(float *arrayptr, int numofelements) {
   int i = 1;
   float mean = 0;
@@ -197,16 +201,15 @@ float mean_array(float *arrayptr, int numofelements) {
   return mean;
 }
 
+/* Finds a mean value from the memmory, acquiring values from rows */
 float mean_array_column(float **arrayptr, int length, int column) {
     float result = 0;
     int i;
 
     for(i = 0; i < length; i++) {
         result = result + arrayptr[i][column];
-        //printf("suma_result = %f\n", result); //troubleshooting purposes
     }
     result = result / length;
-    //printf("final_result = %f\n", result); //troubleshooting
     return result;
 }
 
@@ -223,7 +226,6 @@ int main(int argc, char *argv[])
     
     /* Channel argument parsing */
     uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
-    //uint32_t ch = 0;
     if (ch > 1) {
         fprintf(stderr, "Invalid channel: %s\n", argv[1]);
         usage();
@@ -232,7 +234,6 @@ int main(int argc, char *argv[])
 
     /* Signal amplitude argument parsing */
     double ampl = strtod(argv[2], NULL);
-    //double ampl = 1.8;
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
         fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
@@ -240,7 +241,6 @@ int main(int argc, char *argv[])
     }
 
     uint32_t DC_bias = strtod(argv[3], NULL);
-    //uint32_t DC_bias = 0;
     if ( (DC_bias < -2.0) || (DC_bias > 2.0) ) {
         fprintf(stderr, "Invalid DC bias:  %s\n", argv[3]);
         usage();
@@ -249,39 +249,38 @@ int main(int argc, char *argv[])
 
     /* Number of measurments made and are later averaged */
     uint32_t averaging_num = strtod(argv[4], NULL);
-    //uint32_t averaging_num = 3;
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
         fprintf(stderr, "Invalid averaging_num:  %s\n", argv[4]);
         usage();
         return -1;
     }
 
+    /* Number of steps argument parsing - steps betwen start and end frequency*/
     double steps = strtod(argv[5], NULL);
-    //double steps =  12;
     if ( (steps < 1) || (steps > 300) ) {
         fprintf(stderr, "Invalid umber of steps:  %s\n", argv[5]);
         usage();
         return -1;
     }
 
+    /* Start frequency argument parsing */
     double start_frequency = strtod(argv[6], NULL);
-    //double start_frequency = 4000;
     if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
         fprintf(stderr, "Invalid start frequency:  %s\n", argv[6]);
         usage();
         return -1;
     }
 
+    /* Stop frequency argument parsing */
     double end_frequency = strtod(argv[7], NULL);
-    //double end_frequency = 10000; //max = 6.2e+07
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
         fprintf(stderr, "Invalid end frequency: %s\n", argv[7]);
         usage();
         return -1;
     }
 
+    /* Scale type argument prsing [1] - logaritmic frequency steps [0] - linear steps */
     int scale_type = strtod(argv[8], NULL);
-    //int wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (scale_type < 0) || (scale_type > 1) ) {
         fprintf(stderr, "Invalid decidion:scale type %s\n", argv[8]);
         usage();
@@ -308,31 +307,27 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-
-    /* Signal type argument parsing */
+    /* Signal type set to type sine. */
     signal_e type = eSignalSine;
 
-    double endfreq = 0; // endfreq set for inbulild sweep (generate)
-
-    uint32_t  min_periodes = 2; // max 20
+    double    endfreq = 0; // endfreq set for inbulild sweep (generate)
+    double    k;
     double    w_out; //angular velocity used in the algorythm
-    int       f = 0; // used in for lop, seting the decimation
+    uint32_t  min_periodes = 10; // max 20
     uint32_t  size; // nmber of samples varies with number of periodes
-    float   **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
+    int       f = 0; // used in for lop, seting the decimation
     int       i1, fr; // iterators in for loops
     int       equal = 0; //parameter initialized for generator functionality
     int       shaping = 0; //parameter initialized for generator functionality
+    int       first_delay = 0;//delay required before first acquire
+    float     **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
 
-    float *Amplitude = (float *)malloc( (averaging_num + 1) * sizeof(float));
-    float *Phase     = (float *)malloc( (averaging_num + 1) * sizeof(float));
-    /* measurement results */
-    float **data_for_avreaging = create_2D_table_size((averaging_num + 1), 2 );
-    //float **measured_data = create_2D_table_size(measurement_sweep_user_defined, 4);
-
+    float *Amplitude                = (float *)malloc( (averaging_num + 1) * sizeof(float));
+    float *Phase                    = (float *)malloc( (averaging_num + 1) * sizeof(float));
+    float **data_for_avreaging      = create_2D_table_size((averaging_num + 1), 2 );
     float *measured_data_amplitude  = (float *)malloc((2) * sizeof(float) );
     float *measured_data_phase      = (float *)malloc((2) * sizeof(float) );
-
-    float *frequency = (float *)malloc((steps + 1) * sizeof(float) ); //frequency
+    float *frequency                = (float *)malloc((steps + 1) * sizeof(float) );
     
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -340,9 +335,10 @@ int main(int argc, char *argv[])
     return -1;
     }
 
-    double k;
 
     for ( fr = 0; fr < steps; fr++ ) {
+        
+        /* scale type dictates frequency used in for iterations */
         if ( scale_type ) { // log scle
             k = powf( 10, ( c * (float)fr ) + a );
             frequency[ fr ] =  k ;
@@ -351,9 +347,11 @@ int main(int argc, char *argv[])
             frequency[ fr ] = start_frequency + ( frequency_step * fr );
         }
 
-        w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
+        w_out = frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
-        /* Signal generator */
+        /* Signal generator generates first signal before measuring proces begins
+        *  this has to be set because first results are inaccurate otherwise
+        */
         awg_param_t params;
         /* Prepare data buffer (calculate from input arguments) */
         synthesize_signal(ampl, frequency[fr], type, endfreq, data, &params);
@@ -392,28 +390,33 @@ int main(int argc, char *argv[])
                 return -1;
             }
 
+            if (first_delay == 0)
+            {
+                usleep(71754);
+                first_delay = 1;
+            }
+
             /* ADC Data acqusition - saved to s */
-            if (acquire_data( t_params, s, size) < 0) {
+            if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
             }
-            
+
             /* data manipulation - returnes Z (complex impedance) */
             if( bode_data_analasys( s, size, DC_bias, Amplitude, Phase, w_out, f) < 0) {
-                printf("error data analysis LCR_data_analasys\n");
+                printf("error data analysis bode_data_analasys\n");
+                return -1;
             }
 
             /* Saving data */
             data_for_avreaging[ i1 ][ 1 ] = *Amplitude;
             data_for_avreaging[ i1 ][ 2 ] = *Phase;
         } // avearging loop end
-        /* Saving mean values */
+
+        /* Calculating and saving mean values */
         measured_data_amplitude[ 1 ] = mean_array_column( data_for_avreaging, averaging_num, 1 );
         measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
 
-        //printf("frequnecy (%d) = %f \n",(fr+1),frequency[fr] );
-        //printf("Phase (%d) = %f\n",(fr+1),measured_data_phase[ 1 ] );
-        //printf("amplitude (%d) = %f\n",(fr+1),measured_data_amplitude[ 1 ] );
         printf(" %.0f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
     } // end of frequency sweep loop
    
@@ -461,7 +464,6 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     if (trans <= 10) {
         trans = trans0;
     }
-
 
     /* Fill data[] with appropriate buffer samples */
     for(i = 0; i < n; i++) {
@@ -591,20 +593,17 @@ void write_data_fpga(uint32_t ch,
 }
 
 /**
- * acquire data to memory (s)
+ * acquire data from FPGA to memory (s)
  *
- * @param ch    Channel number [0, 1].
- * @param data  AWG data to write to FPGA.
- * @param awg   AWG paramters to write to FPGA.
+ * @param **s   points to a mmemory where data is saved
+ * @param size  return data size
  */
-int acquire_data(float t_params[],
-                float **s , 
+int acquire_data(float **s , 
                 uint32_t size) {
     int retries = 150000;
     int j, sig_num, sig_len;
     int ret_val;
 
-    usleep(71754); // generator needs some time to start generating 31754
     while(retries >= 0) {
         if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
             /* Signals acquired in s[][]:
@@ -612,23 +611,32 @@ int acquire_data(float t_params[],
              * s[1][i] - Channel ADC1 raw signal
              * s[2][i] - Channel ADC2 raw signal
              */
-    
             for(j = 0; j < MIN(size, sig_len); j++) {
-                //printf("s(%d,%d,:) = [%7d, %7d];\n",(averagingi1 +1),(j +1) , (int)s[1][j], (int)s[2][j]);
+                //printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
             }
             break;
         }
-
         if(retries-- == 0) {
             fprintf(stderr, "Signal scquisition was not triggered!\n");
             break;
         }
         usleep(1000);
     }
-    usleep(41754); // generator needs some time to start generating 31754
     return 1;
 }
 
+/**
+ * Acquired data analasys function.
+ * function returnes phase and frequency.
+ *
+ * @param s        points to a mmemory where data is read from
+ * @param size     size o data s
+ * @param DC_bias  parameter for electrolytic capacitor data manipulation
+ * @param R_shunt  shunt resistor's value ( check the front end circuit in manual )
+ * @param Z        returned impedance data, in complex form
+ * @param w_out    angualr velocity
+ * @param f        decimation selector
+ */
 int bode_data_analasys(float **s ,
                         uint32_t size,
                         uint32_t DC_bias,
@@ -693,26 +701,15 @@ int bode_data_analasys(float **s ,
     X_component_lock_in_2[1] = trapz( U2_sampled_X, (float)T, size );
     Y_component_lock_in_2[1] = trapz( U2_sampled_Y, (float)T, size );
     
-    //printf("X_component_lock_in_1(%d) = %f;\n",(1),X_component_lock_in_1[1] );
-    //printf("Y_component_lock_in_1(%d) = %f;\n",(1),Y_component_lock_in_1[1] );
-
-    //printf("X_component_lock_in_2(%d) = %f;\n",( 1 ),X_component_lock_in_2[ 2 ] );
-    //printf("Y_component_lock_in_1(%d) = %f;\n",( 1 ),Y_component_lock_in_2[ 2 ] );
-    
     /* Calculating voltage amplitude and phase */
     U1_amp = (float)2 * (sqrtf( powf( X_component_lock_in_1[ 1 ] , (float)2 ) + powf( Y_component_lock_in_1[ 1 ] , (float)2 )));
     Phase_U1_amp = atan2f( Y_component_lock_in_1[ 1 ], X_component_lock_in_1[ 1 ] );
-    //printf("U_load_amp(%d) = %f;\n",(1),U_load_amp );
-    //printf("Phase_U_load_amp(%d) = %f;\n",(1),Phase_U_load_amp );
 
     /* Calculating current amplitude and phase */
     U2_amp = (float)2 * (sqrtf( powf( X_component_lock_in_2[ 1 ], (float)2 ) + powf( Y_component_lock_in_2[ 1 ] , (float)2 ) ) );
     Phase_U2_amp = atan2f( Y_component_lock_in_2[1], X_component_lock_in_2[1] );
-    //printf("I_load_amp(%d) = %f;\n",(1),I_load_amp );
-    //printf("Phase_I_load_amp(%d) = %f;\n",(1),Phase_I_load_amp );
     
     Phase_internal = Phase_U2_amp - Phase_U1_amp ;
-    
 
     if (Phase_internal <=  (-M_PI) )
     {
@@ -729,30 +726,9 @@ int bode_data_analasys(float **s ,
  
    
     *Amplitude = 10*log( U2_amp / U1_amp );;
-    *Phase = Phase_internal * (180/M_PI);
+    *Phase = Phase_internal * ( 180/M_PI );
 
-    return 1;
-}
 
-int inquire_user_wait() {
-    while(1) {
-        int calibration_continue;
-        printf("Please connect the wires correctly. Continue? [1 = yes|0 = skip ] :");
-        if (fscanf(stdin, "%d", &calibration_continue) > 0) 
-        {
-            if(calibration_continue == 1)  {
-                calibration_continue = 0;
-                break;
-            }
-            else if(calibration_continue == 0)  {
-                return -1;
-            }
-            else {} //ask again
-            }
-        else {
-            printf("error when readnig from stdinput (scanf)\n");
-            return -1;
-        }
-    }
+    //TODO free allocatec memmory
     return 1;
 }
