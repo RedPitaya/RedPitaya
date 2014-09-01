@@ -1,5 +1,6 @@
-%bode pitaya test octave
+%lcr pitaya test octave
 %created by martin and zumy  / 11.8.2014
+% version 1.1
 
 clear all;
 close all;
