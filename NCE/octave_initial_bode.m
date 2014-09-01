@@ -9,15 +9,15 @@ clc
 chanel = '1';
 apmlitude = '1';
 DC_bias = '0';
-averaging = '1';
+averaging = '3';
 steps = '100';
-start_freq = '200';
-stop_freq = '100000';
+start_freq = '100';
+stop_freq = '80000';
 scale_type = '1';
 
-
 user = 'root';
-ip = '192.168.81.161';%change to your ip
+
+ip = '192.168.81.73';
 
 command=['ssh root@',ip,' "./bode ',chanel,' ',apmlitude,' ',DC_bias,' ',averaging,' ',steps,' ',start_freq,' ',stop_freq,' ',scale_type,'"'];
 [c,data] = system(command);
