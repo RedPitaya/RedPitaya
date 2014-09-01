@@ -473,7 +473,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga(ch, 0, 0, data, &params, 0);
 
-            generate_lcr();
             /* if measurement sweep selected, only one calibration measurement is made */
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
                 if (h == 0 || h == 1|| h == 2) {
