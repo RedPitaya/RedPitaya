@@ -43,7 +43,7 @@ const double c_max_frequency = 62.5e6;
 const double c_min_frequency = 0;
 
 /** Maximal signal amplitude [Vpp] */
-const double c_max_amplitude = 2.0;
+const double c_max_amplitude = 1.0;
 
 /** AWG buffer length [samples]*/
 #define n (16*1024)
@@ -119,15 +119,15 @@ void usage() {
                     "[scale type]"
                     "[wait]\n"
         "\n"
-        "\tchannel              Channel to generate signal on [1, 2].\n"
-        "\tamplitude            Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
-        "\tDC bias              for electrolit capacitors default = 0.\n"
+        "\tchannel              Channel to generate signal [1, 2].\n"
+        "\tamplitude            Peak-to-peak signal amplitude in V [0.0 - %1.1f].\n"
+        "\tDC bias              for electrolit capacitors in V [0 - 1]\n"
         "\tshunt resistior      in ohms\n"
         "\taveraging            number of averaging the measurements [1 - 10].\n"
         "\tcalib function       0(no calibration), 1(open and short calib), 2(zloadref calib).\n"
         "\tref impedance real   Z_load_ref real value.\n"
         "\tref impedance imag   Z_load_ref imaginary value.\n"
-        "\tsteps                steps made between frequency limits.\n"
+        "\tsteps                steps made between frequency limits [1 - 1000].\n"
         "\tsweep function       1 - frequency sweep, 0 - measurement sweep.\n"
         "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
         "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
@@ -246,23 +246,23 @@ int main(int argc, char *argv[])
     /* Signal amplitude argument parsing */
     double ampl = strtod(argv[2], NULL);
     if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
-        fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
+        fprintf(stderr, "Invalid amplitude: %s, it has to be between 0 and 1V\n", argv[2]);
         usage();
         return -1;
     }
 
     /* DC bias argument parsing */
     uint32_t DC_bias = strtod(argv[3], NULL);
-    if ( (DC_bias < -2.0) || (DC_bias > 2.0) ) {
-        fprintf(stderr, "Invalid DC bias:  %s\n", argv[5]);
+    if ( (DC_bias < 0) || (DC_bias > 1.1) ) {
+        fprintf(stderr, "Invalid DC bias:  %s,  it has to be between 0 and 1V\n", argv[3]);
         usage();
         return -1;
     }
 
     /* R shunt argument parsing */
     float R_shunt = strtod(argv[4], NULL);
-    if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
-        fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
+    if ( (R_shunt < 1) || (R_shunt > 1000000) ) {
+        fprintf(stderr, "Invalid reference element value: %s\n", argv[4]);
         usage();
         return -1;
     }
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
     /* Averaging number parsing */
     uint32_t averaging_num = strtod(argv[5], NULL);
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
-        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[6]);
+        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[5]);
         usage();
         return -1;
     }
@@ -279,23 +279,23 @@ int main(int argc, char *argv[])
        if one wants to skip calibration the parameter can be set to 0 */
     int calib_function = strtod(argv[6], NULL);
     if ( (calib_function < 0) || (calib_function > 2) ) {
-        fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[8]);
+        fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[6]);
         usage();
         return -1;
     }
 
     /* Real part of load Impedance argument parsing */
     uint32_t Z_load_ref_real = strtod(argv[7], NULL);
-    if ( (Z_load_ref_real < -50000.0) || (Z_load_ref_real > 50000) ) {
-        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
+    if ( (Z_load_ref_real < -1.0) || (Z_load_ref_real > 1000000.0) ) {
+        fprintf(stderr, "Invalid reference element Z_load_ref_real value:  %s\n", argv[7]);
         usage();
         return -1;
     }
 
     /* Imaginary part of load Impedance argument parsing */
     uint32_t Z_load_ref_imag = strtod(argv[8], NULL);
-    if ( (Z_load_ref_imag < -50000.0) || (Z_load_ref_imag > 50000) ) {
-        fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
+    if ( (Z_load_ref_imag < -1000000.0) || (Z_load_ref_imag > 1000000.0) ) {
+        fprintf(stderr, "Invalid reference element Z_load_ref_imag value:  %s\n", argv[8]);
         usage();
         return -1;
     }
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
      - when using fr. sweep, argument defines number of steps between start and end fr.
     */
     double steps = strtod(argv[9], NULL);
-    if ( (steps < 1) || (steps > 300) ) {
+    if ( (steps < 1) || (steps > 1000) ) {
         fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
         usage();
         return -1;
@@ -316,6 +316,9 @@ int main(int argc, char *argv[])
 
     /* [1] frequency sweep, [0] measurement sweep */
     int sweep_function = strtod(argv[10], NULL);
+    if (sweep_function) {
+    
+    }
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
         fprintf(stderr, "Invalid sweep function:  %s\n", argv[10]);
         usage();
@@ -324,15 +327,15 @@ int main(int argc, char *argv[])
 
     /* Start frequency argument parsing */
     double start_frequency = strtod(argv[11], NULL);
-    if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
-        fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
+    if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
+        fprintf(stderr, "Invalid start frequency:  %s\n", argv[11]);
         usage();
         return -1;
     }
 
     /* Stop frequency argument parsing */
     double end_frequency = strtod(argv[12], NULL);
-    if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
+    if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
         usage();
         return -1;
