@@ -620,8 +620,9 @@ int acquire_data(float **s ,
             fprintf(stderr, "Signal scquisition was not triggered!\n");
             break;
         }
-        usleep(1000);
+        usleep(2000);
     }
+    usleep(30000); // delay for pitaya to operate correctly
     return 1;
 }
 
