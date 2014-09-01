@@ -39,4 +39,11 @@ int generate_exit(void);
 
 int generate_update(rp_app_params_t *params);
 
+void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
+                       float max_dac_v, float user_dc_offs, awg_signal_t type, 
+                       int32_t *data, awg_param_t *awg);
+
+void write_data_fpga(uint32_t ch, int mode, int trigger, const int32_t *data,
+                     const awg_param_t *awg, int wrap);
+
 #endif // __GENERATE_H
