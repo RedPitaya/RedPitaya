@@ -878,6 +878,7 @@ int acquire_data(float **s ,
         }
         usleep(1000);
     }
+    usleep(30000); // delay for pitaya to operate correctly
     return 1;
 }
 
