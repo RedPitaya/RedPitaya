@@ -43,7 +43,7 @@ const double c_max_frequency = 62.5e6;
 const double c_min_frequency = 0;
 
 /** Maximal signal amplitude [Vpp] */
-const double c_max_amplitude = 2.0;
+const double c_max_amplitude = 1.0;
 
 /** AWG buffer length [samples]*/
 #define n (16*1024)
@@ -115,10 +115,10 @@ void usage() {
                     "\n"
         "\n"
         "\tchannel              Channel to generate signal on [1, 2].\n"
-        "\tamplitude            Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
+        "\tamplitude            Peak-to-peak signal amplitude in V [0.0 - %1.1f].\n"
         "\tDC bias              for electrolit capacitors default = 0.\n"
         "\taveraging            number of averaging the measurements [1 - 10].\n"
-        "\tsteps                steps made between frequency limits.\n"
+        "\tsteps                steps made between frequency limits [1 - 1000].\n"
         "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
         "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
         "\tscale type           x scale 0 - linear 1 -log\n"
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
     }
 
     uint32_t DC_bias = strtod(argv[3], NULL);
-    if ( (DC_bias < -2.0) || (DC_bias > 2.0) ) {
+    if ( (DC_bias < -2.0) || (DC_bias > 1.1) ) {
         fprintf(stderr, "Invalid DC bias:  %s\n", argv[3]);
         usage();
         return -1;
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 
     /* Number of steps argument parsing - steps betwen start and end frequency*/
     double steps = strtod(argv[5], NULL);
-    if ( (steps < 1) || (steps > 300) ) {
+    if ( (steps < 1) || (steps > 1000) ) {
         fprintf(stderr, "Invalid umber of steps:  %s\n", argv[5]);
         usage();
         return -1;
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 
     /* Start frequency argument parsing */
     double start_frequency = strtod(argv[6], NULL);
-    if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
+    if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid start frequency:  %s\n", argv[6]);
         usage();
         return -1;
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 
     /* Stop frequency argument parsing */
     double end_frequency = strtod(argv[7], NULL);
-    if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
+    if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid end frequency: %s\n", argv[7]);
         usage();
         return -1;
