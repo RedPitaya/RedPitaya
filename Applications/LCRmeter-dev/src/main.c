@@ -196,7 +196,6 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "gen_sig_freq_ch2", 1000, 1, 0, 0.2, 50e6 },
     { /* gen_sig_dcoff_ch2 - DC offset applied to the signal in [V] */
         "gen_sig_dcoff_ch2", 0, 1, 0, -1, 1 },
-    {"lcr_test", 0, 0, 0, -1000, 10000000},
     
     { /* Must be last! */
         NULL, 0.0, -1, -1, 0.0, 0.0 }     
@@ -845,16 +844,20 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
     *sig_len = SIGNAL_LENGTH;
 
     ret_val = rp_osc_get_signals(s, &sig_idx);
-
-    /* Not finished signal */
+    
+    if(ret_val == 0){
+      printf("Starting OK\n");
+    }
+   //Not finished signal
     if((ret_val != -1) && sig_idx != SIGNAL_LENGTH-1) {
         return -2;
     }
-    /* Old signal */
+    
+    //Old signal
     if(ret_val < 0) {
         return -1;
     }
-
+    
     return 0;
 }
 
@@ -1084,4 +1087,11 @@ void rp_set_time_range(float f){
 /* For testing purposes only. Sets the value of ch1 minimum to be x */
 void rp_set_mes_data(float x){
   rp_main_params[MEAS_MIN_CH1].value = x;
+}
+
+/* testing purposes */
+void generate_lcr(){
+  generate_init(&rp_main_calib_params);
+  generate_update(&rp_main_params[0]);
+  
 }

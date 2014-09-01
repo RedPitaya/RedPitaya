@@ -24,7 +24,7 @@
 #include <sys/param.h>
 #include "main.h"
 #include "fpga_awg.h"
- #include "lcr.h"
+#include "lcr.h"
 
   /* Standart Library of Complex Numbers */
 #define M_PI 3.14159265358979323846
@@ -48,22 +48,10 @@ int32_t data[n];
 /** Program name */
 const char *g_argv0 = NULL;
 
-/** Pointers to the FPGA input signal buffers for Channel A and B */
-int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
-
-/* Working signal for our LCR method */
-float               **rp_lcr_signals;
-
-/* Added things */
-//pthread_mutex_t       rp_osc_sig_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
 /** Oscilloscope module parameters as defined in main module
  * @see rp_main_params
  */
 //float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-rp_app_params_t  *t_params = NULL;
 
 /** Max decimation index */
 #define DEC_MAX 6
@@ -71,13 +59,15 @@ rp_app_params_t  *t_params = NULL;
 /** Decimation translation table */
 static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
-/* Forward declarations */
+/* Forward declarations
 void synthesize_signal_lcr(double ampl, double freq, signal_e_lcr type, double endfreq,
                        int32_t *data,
                        awg_param_t_lcr *params);
+
 void write_data_fpga_lcr(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t_lcr *awg);
+*/
 
 int acquire_data(
                 float **s , 
@@ -93,14 +83,9 @@ int LCR_data_analasys(float **s ,
 
 int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t averaging_num, int calib_function,  uint32_t Z_load_ref_real, uint32_t Z_load_ref_imag, 
         double steps, int sweep_function, double start_frequency, double end_frequency,  int scale_type, int wait_on_user, float *frequency_lcr, float *phase_lcr, float *amplitude_lcr);
-/** Print usage information */
-/*
-void rp_lcr_worker_fill_params(rp_app_params_t *params);
 
-void rp_lcr_worker_fill_params(rp_app_params_t *params){
-    rp_copy_params(params, (rp_app_params_t **)&t_params);
-}
-*/
+/** Print usage information */
+
 void usage() {
 
     const char *format =
@@ -243,10 +228,9 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
     */
     
-    printf("Starting LCR\n");
     /* Channel argument parsing */
     //uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
-    ch = 0;
+    //ch = 1;
     if (ch > 1) {
         //fprintf(stderr, "Invalid channel: %s\n", argv[1]);
         usage();
@@ -255,7 +239,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
 
     /* Signal amplitude argument parsing */
     //double ampl = strtod(argv[2], NULL);
-    ampl = 1.8;
+    //ampl = 1;
     if ( (ampl < 0.0) || (ampl > c_max_amplitude_lcr) ) {
         //fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
         usage();
@@ -263,7 +247,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //uint32_t DC_bias = strtod(argv[3], NULL);
-    DC_bias = 0;
+    //DC_bias = 0;
     if ( (DC_bias < -2.0) || (DC_bias > 2.0) ) {
         //fprintf(stderr, "Invalid DC bias:  %s\n", argv[5]);
         usage();
@@ -271,7 +255,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //float R_shunt = strtod(argv[4], NULL);
-    R_shunt = 996;
+    //R_shunt = 999;
     if ( (R_shunt < 0.0) || (R_shunt > 50000) ) {
         //fprintf(stderr, "Invalid reference element value: %s\n", argv[3]);
         usage();
@@ -280,7 +264,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
 
     /* Number of measurments made and are later averaged */
     //uint32_t averaging_num = strtod(argv[5], NULL);
-    averaging_num = 1;
+    //averaging_num = 1;
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
         //fprintf(stderr, "Invalid averaging_num:  %s\n", argv[6]);
         usage();
@@ -289,7 +273,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
 
     /* if one wants to skip calibration the parameter can be set to 0 */
     //int calib_function = strtod(argv[6], NULL);
-    calib_function = 0;
+    //calib_function = 0;
     if ( (calib_function < 0) || (calib_function > 2) ) {
         //fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[8]);
         usage();
@@ -297,7 +281,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //uint32_t Z_load_ref_real = strtod(argv[7], NULL);
-    Z_load_ref_real = 0;
+    //Z_load_ref_real = 0;
     if ( (Z_load_ref_real < -50000.0) || (Z_load_ref_real > 50000) ) {
         //fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
         usage();
@@ -305,7 +289,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //uint32_t Z_load_ref_imag = strtod(argv[8], NULL);
-    Z_load_ref_imag = 0;
+    //Z_load_ref_imag = 0;
     if ( (Z_load_ref_imag < -50000.0) || (Z_load_ref_imag > 50000) ) {
         //fprintf(stderr, "Invalid reference element value:  %s\n", argv[4]);
         usage();
@@ -316,7 +300,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
 
     //double steps = strtod(argv[9], NULL);
-    steps =  5;
+    //steps =  5;
     if ( (steps < 1) || (steps > 300) ) {
         //fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
         usage();
@@ -325,7 +309,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
 
     /* [1] frequency sweep, [0] measurement sweep */
     //int sweep_function = strtod(argv[10], NULL);
-    sweep_function = 0; 
+    //sweep_function = 1; 
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
         //fprintf(stderr, "Invalid sweep function:  %s\n", argv[10]);
         usage();
@@ -333,7 +317,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //double start_frequency = strtod(argv[11], NULL);
-    start_frequency = 4000;
+    //start_frequency = 2000;
     if ( (start_frequency < 1) || (start_frequency > 1000000) ) {
         //fprintf(stderr, "Invalid start frequency:  %s\n", argv[7]);
         usage();
@@ -341,7 +325,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //double end_frequency = strtod(argv[12], NULL);
-    end_frequency = 8000; //max = 6.2e+07
+    //end_frequency = 3000; //max = 6.2e+07
     if ( (end_frequency < 1) || (end_frequency > 1000000) ) {
         //fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
         usage();
@@ -349,7 +333,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //int scale_type = strtod(argv[13], NULL);
-    scale_type = 0; //the program will wait for user to correctly connect the leads before next step
+    //scale_type = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (scale_type < 0) || (scale_type > 1) ) {
         //fprintf(stderr, "Invalid decidion:scale type: %s\n", argv[13]);
         usage();
@@ -357,7 +341,7 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     }
 
     //int wait_on_user = strtod(argv[14], NULL);
-    wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
+    //wait_on_user = 0; //the program will wait for user to correctly connect the leads before next step
     if ( (wait_on_user < 0) || (wait_on_user > 1) ) {
         //fprintf(stderr, "Invalid decidion: user wait argument %s\n", argv[14]);
         usage();
@@ -370,7 +354,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     int     measurement_sweep_user_defined;
     double  frequency_step;
     double  a,b,c;
-    printf("Definition of arguments passed.\n");
     if(scale_type) { //if logaritmic scale required start and end frequency are transformed
         b = log10( end_frequency );
         a = log10( start_frequency );
@@ -403,11 +386,10 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     else if (sweep_function == 1) { // frequency sweep defines size of allocated memory
         end_results_dimension = frequency_steps_number;
     }
-    printf("Starting signal type.\n");
+
     /* Signal type argument parsing */
-    signal_e_lcr type = eSignalSine_lcr;
-    printf("Signal type set succesfuly\n");
-    double  endfreq = 0; // endfreq set for inbulild sweep (generate)
+    //awg_signal_t type = eSignalSine;
+    //double  endfreq = 0; // endfreq set for inbulild sweep (generate)
     int     dimension_step = 0; // saving data on the right place in allocated memory
     double  measurement_sweep;
 
@@ -449,7 +431,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     float *PhaseZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //phase
     float *AmplitudeZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //Amplitude
     float *frequency = (float *)malloc((end_results_dimension + 1) * sizeof(float) ); //frequency
-    printf("Init of variables started succesfully.\n");
 
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -465,7 +446,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     */
 
     float k;
-    printf("Starting the double for loop.\n");
 
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
@@ -486,15 +466,14 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
             w_out = frequency[fr] * 2 * M_PI; // omega - angular velocity
 
             
-            awg_param_t_lcr params;
-            printf("Starting fpga write.\n");
+            awg_param_t params;
             /* Prepare data buffer (calculate from input arguments) */
-            synthesize_signal_lcr(ampl, frequency[fr], type, endfreq, data, &params);
+            synthesize_signal(ampl, frequency[fr], 0, 0, 0.0, 0.0, eSignalSine, data, &params);
 
-            printf("signal generation complete\n");
             /* Write the data to the FPGA and set FPGA AWG state machine */
-            write_data_fpga_lcr(ch, data, &params);
-            printf("Wrtie to fpga succesful.\n");
+            write_data_fpga(ch, 0, 0, data, &params, 0);
+
+            generate_lcr();
             /* if measurement sweep selected, only one calibration measurement is made */
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
                 if (h == 0 || h == 1|| h == 2) {
@@ -524,7 +503,6 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
                     /* setting decimtion */
                     if (f != DEC_MAX) {
                         //Function for setting the time range parameter
-                        printf("Statting to write data to rp_main_params\n");
                         rp_set_time_range(f);     
                     } else {
                         fprintf(stderr, "Invalid decimation DEC\n");
@@ -536,13 +514,10 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
                     size = round( ( min_periodes * 125e6 ) / ( frequency[fr] * g_dec[(int)f] ) );
 
                     /* ADC Data acqusition - saved to s */
-                    printf("Starting acqusition data\n");
                     if (acquire_data(s, size) < 0) {
                         printf("error acquiring data @ acquire_data\n");
                         return -1;
                     }
-                    printf("Acquisition data succesful\n");
-                    printf("Statting LCR analysis function.\n");
                     /* data manipulation - returnes Z (complex impedance) */
                     if( LCR_data_analasys( s, size, DC_bias, R_shunt, Z, w_out, f) < 0) {
                         printf("error data analysis LCR_data_analasys\n");
@@ -660,269 +635,25 @@ int lcr(uint32_t ch, double ampl, uint32_t DC_bias, float R_shunt, uint32_t aver
     
        
     }
-    printf("%f\n", frequency[0]);
-    printf("Ending function with no errors what so ever. And also, I'm bataman.\n");
-
-    return 4000;
-
-}
-
-/**
- * Synthesize a desired signal.
- *
- * Generates/synthesized  a signal, based on three pre-defined signal
- * types/shapes, signal amplitude & frequency. The data[] vector of 
- * samples at 125 MHz is generated to be re-played by the FPGA AKot obljubljeno pošiljam dokumentacijo. Če so v njej kakšne napake, ali bi moral kateri del opisati bolj podrobno bom vesel če mi to sporočiš.
-
-Koda za logaritemsko skalo je na koncu dokumenta nepravilna. Popraviti jo bo potrebno v prihodnjih dneh.
-
-Razvoj kode je mogoče spremljati na githubu uporabnika PitayaDT https://github.com/PitayaDT/RedPitaya
-
+    
     
 
-Lep pozdrav
-Martin
-WG module.
- *
- * @param ampl  Signal amplitude [Vpp].
- * @param freq  Signal frequency [Hz].
- * @param type  Signal type/shape [Sine, Square, Triangle].
- * @param data  Returned synthesized AWG data vector.
- * @param awg   Returned AWG parameters.
- *
- */
-void synthesize_signal_lcr(double ampl, double freq, signal_e_lcr type, double endfreq,
-                       int32_t *data,
-                       awg_param_t_lcr *awg) {
+    return 0;
 
-    uint32_t i;
-
-    /* Various locally used constants - HW specific parameters */
-    const int dcoffs = -155;
-    const int trans0 = 30;
-    const int trans1 = 300;
-    //const double tt2 = 0.249;
-
-    /* This is where frequency is used... */
-    awg->offsgain = (dcoffs << 16) + 0x1fff;
-    awg->step = round(65536 * freq/c_awg_smpl_freq * n);
-    awg->wrap = round(65536 * (n-1));
-
-    int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
-    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
-    if (amp > 8191) {
-        /* Truncate to max value if needed */
-        amp = 8191;
-    }
-
-    if (trans <= 10) {
-        trans = trans0;
-    }
-
-
-    /* Fill data[] with appropriate buffer samples */
-    for(i = 0; i < n; i++) {
-        
-        /* Sine */
-        if (type == eSignalSine_lcr) {
-            data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
-        }
- 
-        /* Square 
-        if (type == eSignalSquare) {
-            data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
-            if (data[i] > 0)
-                data[i] = amp;
-            else 
-                data[i] = -amp;
-
-            
-            double mm, qq, xx, xm;
-            double x1, x2, y1, y2;    
-
-            xx = i;       
-            xm = n;
-            mm = -2.0*(double)amp/(double)trans; 
-            qq = (double)amp * (2 + xm/(2.0*(double)trans));
-            
-            x1 = xm * tt2;
-            x2 = xm * tt2 + (double)trans;
-            
-            if ( (xx > x1) && (xx <= x2) ) {  
-                
-                y1 = (double)amp;
-                y2 = -(double)amp;
-                
-                mm = (y2 - y1) / (x2 - x1);
-                qq = y1 - mm * x1;
-
-                data[i] = round(mm * xx + qq); 
-            }
-            
-            x1 = xm * 0.75;
-            x2 = xm * 0.75 + trans;
-            
-            if ( (xx > x1) && (xx <= x2)) {  
-                    
-                y1 = -(double)amp;
-                y2 = (double)amp;
-                
-                mm = (y2 - y1) / (x2 - x1);
-                qq = y1 - mm * x1;
-                
-                data[i] = round(mm * xx + qq); 
-            }
-        }*/
-        
-        /* Triangle 
-        if (type == eSignalTriangle) {
-            data[i] = round(-1.0*(double)amp*(acos(cos(2*M_PI*(double)i/(double)n))/M_PI*2-1));
-        }*/
-
-        /* Sweep */
-        /* Loops from i = 0 to n = 16*1024. Generates a sine wave signal that
-           changes in frequency as the buffer is filled. 
-        double start = 2 * M_PI * freq;
-        double end = 2 * M_PI * endfreq;
-        if (type == eSignalSweep) {
-            double sampFreq = c_awg_smpl_freq; // 125 MHz
-            double t = i / sampFreq; // This particular sample
-            double T = n / sampFreq; // Wave period = # samples / sample frequency
-            // Actual formula. Frequency changes from start to end. 
-            data[i] = round(amp * (sin((start*T)/log(end/start) * ((exp(t*log(end/start)/T)-1)))));
-        }*/
-        
-        /* TODO: Remove, not necessary in C/C++. */
-        if(data[i] < 0)
-            data[i] += (1 << 14);
-    }
 }
 
-/**
- * Write synthesized data[] to FPGA buffer.
- *
- * @param ch    Channel number [0, 1].
- * @param data  AWG data to write to FPGA.
- * @param awg   AWG paramters to write to FPGA.
- */
-void write_data_fpga_lcr(uint32_t ch,
-                     const int32_t *data,
-                     const awg_param_t_lcr *awg) {
-
-    uint32_t i;
-    uint32_t state_machine = g_awg_reg->state_machine_conf;
-    fpga_awg_init();
-
-    if(ch == 0) {
-        /* Channel A */
-
-        g_awg_reg->state_machine_conf = 0x000041;
-        g_awg_reg->state_machine_conf = state_machine | 0xC0;
-        g_awg_reg->cha_scale_off      = awg->offsgain;
-        g_awg_reg->cha_count_wrap     = awg->wrap;
-        g_awg_reg->cha_count_step     = awg->step;
-        g_awg_reg->cha_start_off      = 0;
-
-        for(i = 0; i < n; i++) {
-            g_awg_cha_mem[i] = data[i];
-        }
-    } else {
-        /* Channel B */
-        g_awg_reg->state_machine_conf = 0x410000;
-        g_awg_reg->chb_scale_off      = awg->offsgain;
-        g_awg_reg->chb_count_wrap     = awg->wrap;
-        g_awg_reg->chb_count_step     = awg->step;
-        g_awg_reg->chb_start_off      = 0;
-
-        for(i = 0; i < n; i++) {
-            g_awg_chb_mem[i] = data[i];
-        }
-    }
-
-    /* Enable both channels */
-    /* TODO: Should this only happen for the specified channel?
-     *       Otherwise, the not-to-be-affected channel is restarted as well
-     *       causing unwanted disturbances on that channel.
-     */
-     /* Added */
-    //g_awg_reg->state_machine_conf = state_machine | (mode_mask<<16);
-    g_awg_reg->state_machine_conf = 0x110011;
-
-    fpga_awg_exit();
-}
-
-/**
- * acquire data to memory (s)
- *
- * @param ch    Channel number [0, 1].
- * @param data  AWG data to write to FPGA.
- * @param awg   AWG paramters to write to FPGA.
- */
-
- /* Write fpga made to work with trigged mode set to single and fixed adress pointers */
-
- void write_data_fpga_lcr_single(uint32_t ch, const int32_t *data,
-                     const awg_param_t_lcr *awg){
-    uint32_t i;
-    uint32_t state_machine = g_awg_reg->state_machine_conf;
-
-    /* Triger mode always to be single */
-    int mode_mask = 0x20;
-
-    if(ch == 0) {
-        /* Channel A */
-        state_machine &= ~0xff;
-
-        g_awg_reg->state_machine_conf = state_machine | 0xC0;
-        g_awg_reg->cha_scale_off      = awg->offsgain;
-        g_awg_reg->cha_count_wrap     = awg->wrap;
-        g_awg_reg->cha_count_step     = awg->step;
-        g_awg_reg->cha_start_off      = 0;
-
-        for(i = 0; i < AWG_SIG_LEN; i++) {
-            g_awg_cha_mem[i] = data[i];
-        }
-
-        g_awg_reg->state_machine_conf = state_machine | mode_mask;
-    } else {
-        /* Channel B */
-        state_machine &= ~0xff0000;
-
-        g_awg_reg->state_machine_conf = state_machine | 0xC00000;
-        g_awg_reg->chb_scale_off      = awg->offsgain;
-        g_awg_reg->chb_count_wrap     = awg->wrap;
-        g_awg_reg->chb_count_step     = awg->step;
-        g_awg_reg->chb_start_off      = 0;
-
-        for(i = 0; i < AWG_SIG_LEN; i++) {
-            g_awg_chb_mem[i] = data[i];
-        }
-
-        g_awg_reg->state_machine_conf = state_machine | (mode_mask<<16);
-    }
- }
-
-
-/* LCR function problems -- The program gets -1 all the time. Therefore it ussualy does 15000 retries, before stopping.
-   This makes worker.c crash until it can continue ( as lcr uses acquire which can consequently take a very long time to finish)
-   operating. Making worker.c sleep for a very long time has proven to crash it until the sleep function has terminated.
-   Setting retries in acquire_data to a lesser number can solve the problems with the X-scale being defected or at least fixing it in the end. 
-   Still no data can be visible after the acquire function has finished, not even hard coded int numbers. Work is still in progress.
- */
 
 int acquire_data(
                 float **s , 
                 uint32_t size) {
-    int retries = 150;
+    int retries = 150000;
     int j, sig_num, sig_len;
     int ret_val;
-    printf("Int acquire function.\n");
 
     usleep(71754); // generator needs some time to start generating 31754
-    printf("Starting while loop.\n");
+    
     while(retries >= 0) {
         if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
-            printf("Signal acquire succesful.\n");
             /* Signals acquired in s[][]:
              * s[0][i] - TODO
              * s[1][i] - Channel ADC1 raw signal
@@ -1099,57 +830,3 @@ int inquire_user_wait() {
     return 1;
 }
 
-
-
-/*
-void run_lcr(){
-
-    float *frequency_lcr = (float *)malloc(300 * sizeof(float));
-    float *amplitude_lcr = (float *)malloc(300 * sizeof(float));
-    float *phase_lcr = (float *)malloc(300 * sizeof(float));
-
-    lcr(0, 1, 0, 996, 1, 0, 0, 0, 1, 1, 4000, 8000,  0, 0, frequency_lcr, phase_lcr, amplitude_lcr);
-}
-*/
-
-/*
-int rp_osc_set_signals_lcr(float **source, int index)
-{
-    //pthread_mutex_lock(&rp_osc_sig_mutex);
-
-    memcpy(&rp_lcr_signals[0][0], &source[0][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&rp_lcr_signals[1][0], &source[1][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&rp_lcr_signals[2][0], &source[2][0], sizeof(float)*SIGNAL_LENGTH);
-    //rp_osc_sig_last_idx = index;
-
-    //rp_osc_signals_dirty = 1;
-    //pthread_mutex_unlock(&rp_osc_sig_mutex);
-
-    return 0;
-}
-
-void lcr_acquire(float **rp_osc_signals){
-     Initializing the pointers for the FPGA input signal buffers
-    osc_fpga_get_sig_ptr(&rp_fpga_cha_signal, &rp_fpga_chb_signal);z
-    /We inicialize our working signal 
-    rp_create_signals(&rp_lcr_signals);
-
-     We fill the rp_lcr_signals with data directly from the FPGA buffer.
-    rp_osc_set_signals_lcr(rp_lcr_signals, SIGNAL_LENGTH-1);
-}
-
-void simple_data_acquisition(float   **s){
-
-    signal_e_lcr type = eSignalSine_lcr;
-    awg_param_t_lcr params;
-    synthesize_signal_lcr(2.0, 9000.0, type, 1000000.0, data, &params);
-
-    write_data_fpga_lcr_single(0, data, &params);
-
-    lcr_acquire(s);
-
-    printf("Succesfuly init synthesize_signal_lcr and write_data_fpga_lcr_single!!\n");
-    
-    
-}
-*/

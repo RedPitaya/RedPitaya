@@ -3,40 +3,42 @@
 #define __LCR_H_INCLUDED
 
 #include <stdint.h>
-#include <complex.h>  
-
+#include <complex.h> 
+#include "generate.h"
 
 
 #define M_PI 3.14159265358979323846
 
 
 
-/** Signal types */
+/** Signal types 
 typedef enum {
-	/* Always sine */
-    eSignalSine_lcr,         ///< Sinusoidal waveform.
-    /*eSignalSquare,       ///< Square waveform.
+	 Always sine
+    eSignalSine_lcr,
+             ///< Sinusoidal waveform.
+    eSignalSquare,       ///< Square waveform.
     eSignalTriangle,     ///< Triangular waveform.
-    eSignalSweep         ///< Sinusoidal frequency sweep.*/
+    eSignalSweep         ///< Sinusoidal frequency sweep.
 } signal_e_lcr;
 
-/** AWG FPGA parameters */
+ //AWG FPGA parameters 
 typedef struct {
     int32_t  offsgain;   ///< AWG offset & gain.
     uint32_t wrap;       ///< AWG buffer wrap value.
     uint32_t step;       ///< AWG step interval.
 } awg_param_t_lcr;
 
-
+*/
 /* Forward declarations */
 
-/* Functions for signal generation */
-void synthesize_signal_lcr(double ampl, double freq, signal_e_lcr type, double endfreq,
+/* Functions for signal generation 
+void synthesize_signal_lcr(double ampl, double freq, awg_signal_t type, double endfreq,
                        int32_t *data,
-                       awg_param_t_lcr *params);
+                       awg_param_t *params);
 void write_data_fpga_lcr(uint32_t ch,
                      const int32_t *data,
-                     const awg_param_t_lcr *awg);
+                     const awg_param_t *awg);
+*/
 
 /* Data acquisition function */
 int acquire_data(
@@ -46,7 +48,7 @@ int acquire_data(
 
 /* New function added */
 void write_data_fpga_lcr_single(uint32_t ch, const int32_t *data,
-                     const awg_param_t_lcr *awg);
+                     const awg_param_t *awg);
 
 
 
@@ -96,10 +98,13 @@ void usage();
 
 int inquire_user_wait();
 
-void run_lcr();
+float run_lcr();
 
-void lcr_acquire();
+void lcr_acquire(float **rp_osc_signals);
 
 int rp_osc_set_signals_lcr(float **source, int index);
+
+/* Testing data acquisition */
+//void simple_data_acquisition(float   **s);
 
 #endif
