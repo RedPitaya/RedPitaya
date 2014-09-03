@@ -144,6 +144,16 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
 
+    { /* flag_button - General flag used for sending params from the RedPitaya browser. 
+       *    0 - negative
+       *    1 - positive 
+       *    2 - Other ( Change the max value for more states )
+       *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
+       *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
+       *    code in index.html as well as from the C controller code.
+       */
+        "flag_button", 0, 0, 0, 0, 2 },
+
     /* Arbitrary Waveform Generator parameters from here on */
 
     { /* gen_trig_mod_ch1 - Selects the trigger mode for channel 1:
@@ -1089,9 +1099,6 @@ void rp_set_mes_data(float x){
   rp_main_params[MEAS_MIN_CH1].value = x;
 }
 
-/* testing purposes */
-void generate_lcr(){
-  generate_init(&rp_main_calib_params);
-  generate_update(&rp_main_params[0]);
-  
+void rp_set_flag(float val){
+  rp_main_params[FLAG_BUTTON].value = val;
 }

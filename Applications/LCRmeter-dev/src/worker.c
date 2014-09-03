@@ -15,11 +15,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <pthread.h>
 
 #include "worker.h"
 #include "fpga.h"
-#include "lcr.h"
-
 
 pthread_t *rp_osc_thread_handler = NULL;
 void *rp_osc_worker_thread(void *args);
@@ -42,24 +41,13 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 
-/* LCR parameters */
 
-int thread_return = 0;
+/* Thread variables - PIPE version */
 
-typedef struct lcr_struct{
-    float *frequency;
-    float *Phase;
-    float *Amplitude;
-} lcr_t;
-
-/* Thread function */
-
-void* lcr_thread(void* parameters){
-    lcr_t *lcr_s = (lcr_t*)parameters;
-
-    lcr(0, 1, 0, 990, 1, 0,  0, 0 ,2, 0, 4000, 8000, 1,0, lcr_s->frequency, lcr_s->Phase, lcr_s->Amplitude);
-    return 0;
-}
+pthread_t tid[1];
+int fd1[2];
+int fd2[2];
+double lcrpPrams[6];
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
@@ -71,10 +59,7 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
     rp_osc_params_dirty       = 0;
     rp_osc_params_fpga_update = 0;
 
-
-
     rp_copy_params(params, (rp_app_params_t **)&rp_osc_params);
-
 
     rp_cleanup_signals(&rp_osc_signals);
     if(rp_create_signals(&rp_osc_signals) < 0)
@@ -113,8 +98,6 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
                 strerror(errno));
         return -1;
     }
-
-    
 
     return 0;
 }
@@ -267,6 +250,25 @@ void *rp_osc_worker_thread(void *args)
     old_state = state = rp_osc_ctrl;
     pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
+    /* Declaration of thread function passed with arguments */
+
+    int pipecreation_result;
+    /* creating pipes 0-reading, 1-writig */
+    pipecreation_result = pipe(fd1);
+
+    /* Error checking*/
+    if (pipecreation_result < 0){
+       perror("error pipe 1 creation ");
+       exit(1);
+    }
+
+    pipecreation_result = pipe(fd2);
+
+    /* Error checking */
+    if (pipecreation_result < 0){
+       perror("error pipe 2 creation ");
+       exit(1);
+    }
 
     
 
@@ -308,29 +310,24 @@ void *rp_osc_worker_thread(void *args)
 
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
+        
+
+        pthread_t thread_handler;
+
+        int ret = pthread_create(&thread_handler, 0, test_thread, 0);
+
+        pthread_join(thread_handler, 0);
+
+        rp_set_flag((ret+2));
+
+
+        
 
         /* request to stop worker thread, we will shut down */
         if(state == rp_osc_quit_state) {
             rp_clean_params(curr_params);
             return 0;
         }
-        /*
-        float *frequency = malloc(300*sizeof(float));
-        float *Phase     = malloc(300*sizeof(float));
-        float *Amplitude = malloc(300*sizeof(float));
-
-        int a = lcr(0, 1, 0, 990, 1, 0,  0, 0 ,2, 0, 4000, 8000, 1,0, frequency, Phase, Amplitude);
-
-        if (a < 0) {
-            return 0;
-            printf("error at lcr function/n");
-        }
-        curr_params[LCR_TEST].value = frequency[0];
-        */
-
-        //usleep(1000); Pitaya crashes after using the sleep function.
-
-        rp_osc_worker_change_state(rp_osc_idle_state);
 
         if(state == rp_osc_auto_set_state) {
             /* Auto-set algorithm was selected - run it */
@@ -340,7 +337,7 @@ void *rp_osc_worker_thread(void *args)
                             curr_params[PRB_ATT_CH1].value,
                             curr_params[PRB_ATT_CH2].value, 
                             curr_params[GAIN_CH1].value,
-                            curr_params[GAIN_CH2].value, 			    
+                            curr_params[GAIN_CH2].value,                
                             curr_params[EN_AVG_AT_DEC].value);
             /* Return calculated parameters to main module */
             rp_update_main_params(curr_params);
@@ -370,7 +367,7 @@ void *rp_osc_worker_thread(void *args)
                                       curr_params[PRB_ATT_CH1].value,
                                       curr_params[PRB_ATT_CH2].value,
                                       curr_params[GAIN_CH1].value,
-                                      curr_params[GAIN_CH2].value,				      
+                                      curr_params[GAIN_CH2].value,                    
                                       curr_params[EN_AVG_AT_DEC].value) < 0) {
                 fprintf(stderr, "Setting of FPGA registers failed\n");
                 rp_osc_worker_change_state(rp_osc_idle_state);
@@ -538,18 +535,11 @@ void *rp_osc_worker_thread(void *args)
 
         if((state != old_state) || params_dirty)
             continue;
-        
 
         if(!long_acq) {
             /* Triggered, decimate & convert the values */
             rp_osc_meas_clear(&ch1_meas);
             rp_osc_meas_clear(&ch2_meas);
-            
-            
-
-            /* Function used for setting parameter data - Testing purposes only. */
-            
-
             rp_osc_decimate((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
                             (float **)&rp_tmp_signals[0], dec_factor, 
@@ -588,7 +578,6 @@ void *rp_osc_worker_thread(void *args)
             }
             
         }
-
         
         /* check again for change of state */
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
@@ -597,14 +586,12 @@ void *rp_osc_worker_thread(void *args)
 
         /* We have acquisition - if we are in single put state machine
          * to idle */
-
         if((state == rp_osc_single_state) && (!long_acq)) {
-            
             rp_osc_worker_change_state(rp_osc_idle_state);
         }
 
        
-       rp_osc_worker_change_state(rp_osc_idle_state); // Always put the worker into idle state.
+       
         
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
@@ -682,27 +669,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     float *cha_s = *cha_signal;
     float *chb_s = *chb_signal;
     float *t = *time_signal;
-
-    /* Thread handler */
-
-    pthread_t thread_handle;
-
-    float *frequency = malloc(300*sizeof(float));
-    float *Phase = malloc(300*sizeof(float));
-    float *Amplitude = malloc(300*sizeof(float));
-
-    lcr_t lcr = {frequency, Phase, Amplitude};
-
-    int thread_return = pthread_create(&thread_handle, 0, lcr_thread, (void*)&lcr);
-
-    if(thread_return != 0){
-        printf("Thread creation failed.\n");
-    }
-    /* We wait until the thread has finished. */
-    pthread_join(thread_handle, 0);
-
-
-
+    
     /* If illegal take whole frame */
     if(t_stop <= t_start) {
         t_start = 0;
@@ -737,44 +704,25 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         rp_osc_meas_min_max(ch1_meas, in_cha_signal[out_idx]);
         rp_osc_meas_min_max(ch2_meas, in_chb_signal[out_idx]);
     }
-    
 
+    
+    
     for(out_idx=0, t_idx=0; out_idx < SIGNAL_LENGTH; 
         out_idx++, in_idx+=t_step, t_idx+=t_step) {
         /* Wrap the pointer */
         if(in_idx >= OSC_FPGA_SIG_LEN)
             in_idx = in_idx % OSC_FPGA_SIG_LEN;
-        
-        //if(thread_return == 0){
 
-            cha_s[out_idx] = frequency[0];
-            /*
-            osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
+        cha_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
                                                rp_calib_params->fe_ch1_dc_offs,
                                                ch1_user_dc_off);
-            */
-    
-            chb_s[out_idx] = -1;
-            /*
-            osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
+        
+        chb_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
                                                rp_calib_params->fe_ch2_dc_offs,
                                                ch2_user_dc_off);
-            */
 
-            t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
-        //}
-        /*
-        else{
-            cha_s[out_idx] = frequency[out_idx];
-
-            chb_s = 0;
-
-            t[out_idx] = out_idx;
-        }
-        */
-        
+        t[out_idx] = (t_start + (t_idx * smpl_period)) * t_unit_factor;
     }
-    
 
     return 0;
 }
@@ -1079,9 +1027,9 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
             else
                 sig_data = rp_fpga_chb_signal;
 
-	    
-	    
-	    
+        
+        
+        
             /* Count trigger events */
             for(i = 1; i < OSC_FPGA_SIG_LEN; i++) {
                 ix_corr=i+wr_ptr_trig;
@@ -1183,11 +1131,11 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
                     (float)(1<<(c_osc_fpga_adc_bits-1));
                 orig_params[MAX_Y_PARAM].value = (max_y * max_adc_v)/
                     (float)(1<<(c_osc_fpga_adc_bits-1));
-		
-		orig_params[TRIG_LEVEL_PARAM].value =((float)(loc_max+loc_min))/2* max_adc_v/
-			(float)(1<<(c_osc_fpga_adc_bits-1));    
+        
+        orig_params[TRIG_LEVEL_PARAM].value =((float)(loc_max+loc_min))/2* max_adc_v/
+            (float)(1<<(c_osc_fpga_adc_bits-1));    
 
-		    
+            
                 return 0;
             }
            
@@ -1360,5 +1308,103 @@ int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal
     ch_meas->amp = rp_osc_meas_cnv_cnt(ch_meas->amp, adc_max_v);
     ch_meas->avg = rp_osc_meas_cnv_cnt(ch_meas->avg+cal_dc_offs, adc_max_v);
 
+    return 0;
+}
+
+
+/* Thread functions declaration - PIPE version */
+
+void* lcr_thread(void *conversation_pipes)
+{
+    int     writing_result, reading_result;;
+    float   ret_val = 0;
+
+    /* Double read buffer */
+     while(1){
+
+
+        /* Reading from pipe no#2 */
+        reading_result = read(fd2[0], &ret_val, 1);
+
+        /* Error checking */
+        if (reading_result != 1) {
+          perror("read error");
+          exit(3);
+        }
+
+        ret_val = *&ret_val + 1;
+
+        /* Writing to pipe no#1 */
+        writing_result = write(fd1[1], &ret_val ,1);
+
+        /* More error checking */
+        if (writing_result != 1){
+            perror ("write to pipe 1 error");
+            exit (2);
+        }
+        
+
+   }
+
+    return NULL;
+}
+
+
+
+float thread_function(float argv)
+{
+    int err;
+    int sending_to_lcr, result1;
+
+    /* creating thread 
+     * new thread will share file descriptors to the parent (main())
+    */
+    err = pthread_create(tid, NULL, &lcr_thread, (void *) NULL);
+
+    /* Error checking */
+    if (err != 0)
+        printf("\ncan't create thread :[%s]", strerror(err));
+    else
+        printf("\n Thread created successfully\n");
+
+    float param = argv;
+
+    while(1){
+        
+        /*  */
+        lcrpPrams[0] = 1;
+        lcrpPrams[1] = 2;
+        lcrpPrams[2] = 3;
+        lcrpPrams[3] = 4;
+        lcrpPrams[4] = 5;
+
+        /* wrinting to a pipe to send arguments to lcr thread */
+        sending_to_lcr = write (fd2[1], &param, 1);
+
+        if (sending_to_lcr != 1){
+            perror ("error at to pipe 2 (sendong data to lcr)");
+        }
+
+
+        /* reading from a pipe */
+        //close (fd1[1]);
+
+
+        result1 = read(fd1[0], &param, 1);
+
+        if (result1 != 1) {
+          perror("read error");
+          exit(3);
+        } 
+        break;
+    }
+
+    //sleep(1);
+    return (float)*&param;
+}
+
+void* test_thread(void* parameter){
+    usleep(1000000);
+    while(1){}
     return 0;
 }

@@ -99,4 +99,12 @@ int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
 /* helper function - convert CNT to V for meas. data (min, max, amp, avg) */
 int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal_dc_offs);
 
+/* Thread functions declared here */
+
+void* lcr_thread(void *conversation_pipes);
+
+float thread_function(float argv);
+
+void* test_thread(void* parameter);
+
 #endif /* __WORKER_H*/
