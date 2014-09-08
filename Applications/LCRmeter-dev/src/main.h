@@ -143,4 +143,6 @@ void rp_set_mes_data(float x);
 
 void rp_set_flag(float val);
 
+float rp_get_flag();
+
 #endif /*  __MAIN_H */

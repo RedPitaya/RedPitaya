@@ -1102,3 +1102,7 @@ void rp_set_mes_data(float x){
 void rp_set_flag(float val){
   rp_main_params[FLAG_BUTTON].value = val;
 }
+
+float rp_get_flag(){
+  return rp_main_params[FLAG_BUTTON].value;
+}
