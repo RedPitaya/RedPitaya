@@ -636,7 +636,13 @@ int main(int argc, char *argv[])
     } 
     */
 
+    /* Opening files */
+    FILE *file_frequency = fopen("data_frequency.txt", "w");
+    FILE *file_phase = fopen("data_phase.txt", "w");
+
     /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
+
+
 
     for ( i = 0; i < end_results_dimension ; i++ ) {
 
@@ -665,7 +671,36 @@ int main(int argc, char *argv[])
             printf(" %.0f    %.5f    %.5f\n", frequency[i],PhaseZ[ i ],AmplitudeZ[ i ]);
         }
         
+        
+        if(file_frequency == NULL || file_phase == NULL){
+            printf("Error opening file!\n");
+        }
+
+        fprintf(file_frequency, "%.2f\n", frequency[i]);
+        fprintf(file_phase, "%.2f\n", PhaseZ[i]);
+
+
+        /*Var declaration 
+        char command[50];
+        char string[20];
+
+        Float to char conversion
+        snprintf(string, 20, "%f", frequency[i]);
+
+        Concatenating both strings 
+        strcpy(command, "echo ");
+        strcpy(command, string);
+        strcpy(command, " >> data_frequency.txt");
+
+        Exec command 
+        system(command); */
+
     }
+
+    /* Closing files */
+
+    fclose(file_frequency);
+    fclose(file_phase);
 
     return 1;
 
