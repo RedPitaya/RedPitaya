@@ -24,4 +24,4 @@ GATEWAY=192.168.1.1
 #         Ethernet (WAN) as well. This allows you to access the
 #         Internet from the Red Pitaya WiFi network.
 #
-WIFI=client
+WIFI=ap
