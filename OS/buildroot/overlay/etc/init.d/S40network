@@ -70,7 +70,7 @@ case "$1" in
 
 
   stop)
-        echo -n "Stopping network..."
+        echo "Stopping network..."
         # Stop routing 
         echo 0 > /proc/sys/net/ipv4/ip_forward
         iptables --policy INPUT   ACCEPT;
