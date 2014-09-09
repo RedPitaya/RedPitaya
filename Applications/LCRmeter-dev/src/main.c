@@ -90,7 +90,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * Client checks this flag, when set the server's xmin:xmax define the visualization range 
        *    0 - normal operation
        *    1 - Server forces xmin, xmax  */
-        "forcex_flag", 0, 0, 0, 0, 1 },	
+        "forcex_flag", 0, 0, 0, 0, 1 }, 
       /* Measurement parameters for both channels. All are read-only and they
        * are calculated on FPGA buffer (non decimated in SW):
        * min, max [V] - minimum and maximum value in the buffer (non-decimated)
@@ -150,9 +150,28 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    2 - Other ( Change the max value for more states )
        *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
        *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
-       *    code in index.html as well as from the C controller code.
-       */
+       *    code in index.html as well as from the C controller code. */
         "flag_button", 0, 0, 0, 0, 2 },
+
+    { /* LCR amplitude. User defined.
+       *    Min value - 0
+       *    Max value - 2 */
+        "gen_amp", 0, 0, 0, 0, 2 },
+
+    { /* Averaging parameter.
+       *    Min value - 0
+       *    Max value - 10 */
+        "gen_avg", 0, 0, 0, 0, 10 },
+
+    { /* DC bias parameter.
+       *    Min value - (-2)
+       *    Max value -   2 */
+        "gen_DC_bias", 0, 0, 0, -2, 2 },
+
+    { /* DC bias parameter.
+       *    Min value - (-2)
+       *    Max value -   2  */
+       "gen_R_shunt", 0, 0, 0, 0, 50000 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -380,9 +399,9 @@ int transform_acq_params(rp_app_params_t *p)
     
     // Optimal decimation setting identified
     
-	
+    
     // Apply decimation parameter (time range), but not when forcing GUI client or during reset zoom.
-	
+    
     if ((forcex_state==0) && (reset_zoom==0))  
     p[TIME_RANGE_PARAM].value = i;
 
@@ -1106,3 +1125,4 @@ void rp_set_flag(float val){
 float rp_get_flag(){
   return rp_main_params[FLAG_BUTTON].value;
 }
+
