@@ -915,7 +915,7 @@
     
     updateTimeUnits(orig_params);
     $('#ytitle').show();
-	
+  
   }
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
@@ -930,35 +930,35 @@
   
   
   if(flag_graph==1)
-	{
-		var di=document.getElementById("apply_Yaxis").selectedIndex;
-		var ytitl=document.getElementById("apply_Yaxis").options[di].text;
-		$('#ytitle').text(ytitl);
-			var id=document.getElementById("apply_Xaxis").selectedIndex;
-		var xtitl=document.getElementById("apply_Xaxis").options[id].text;
-		$('#xtitle').text(xtitl);
-		flag_graph=0;
-	}
-	
-	if(flag_table==1)
-	{
-		var i1 = document.getElementById("column_one").selectedIndex;
-		var i2 = document.getElementById("column_two").selectedIndex;
-		var i3 = document.getElementById("column_three").selectedIndex;
-		var i4 = document.getElementById("column_four").selectedIndex;
-		
-		i1 = document.getElementById("column_one").options[i1].text;
-		i2 = document.getElementById("column_two").options[i2].text;
-		i3 = document.getElementById("column_three").options[i3].text;
-		i4 = document.getElementById("column_four").options[i4].text;
-		
-		document.getElementById("c_1").innerHTML=i1;
-		document.getElementById("c_2").innerHTML=i2;
-		document.getElementById("c_3").innerHTML=i3;
-		document.getElementById("c_4").innerHTML=i4;
-		
-		flag_table=0;
-	}
+  {
+    var di=document.getElementById("apply_Yaxis").selectedIndex;
+    var ytitl=document.getElementById("apply_Yaxis").options[di].text;
+    $('#ytitle').text(ytitl);
+      var id=document.getElementById("apply_Xaxis").selectedIndex;
+    var xtitl=document.getElementById("apply_Xaxis").options[id].text;
+    $('#xtitle').text(xtitl);
+    flag_graph=0;
+  }
+  
+  if(flag_table==1)
+  {
+    var i1 = document.getElementById("column_one").selectedIndex;
+    var i2 = document.getElementById("column_two").selectedIndex;
+    var i3 = document.getElementById("column_three").selectedIndex;
+    var i4 = document.getElementById("column_four").selectedIndex;
+    
+    i1 = document.getElementById("column_one").options[i1].text;
+    i2 = document.getElementById("column_two").options[i2].text;
+    i3 = document.getElementById("column_three").options[i3].text;
+    i4 = document.getElementById("column_four").options[i4].text;
+    
+    document.getElementById("c_1").innerHTML=i1;
+    document.getElementById("c_2").innerHTML=i2;
+    document.getElementById("c_3").innerHTML=i3;
+    document.getElementById("c_4").innerHTML=i4;
+    
+    flag_table=0;
+  }
   }
   
   function isParamChanged() {
@@ -1819,17 +1819,17 @@
  
  function change_graph()
  {
-	flag_graph=1;
+  flag_graph=1;
  }
  
  function change_table()
  {
-	flag_table=1;
+  flag_table=1;
  }
  
 
  $(document).ready(function(e) {
-	$(".logo").click(function(e) { updateGraphData(); alert("dela"); });
+  $(".logo").click(function(e) { updateGraphData(); alert("dela"); });
  });
  
  
@@ -1841,6 +1841,10 @@
       params.local.gen_avg = parseLocalFloat(document.getElementById('gen_avg').value);
       params.local.gen_DC_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
       params.local.gen_R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
+      //params.local.lcr_steps = parseLocalFloat(document.getElementById('gen_fs_step').value);
+      params.local.start_freq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
+      params.local.end_freq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
+
       
       params.local.flag_button = 1;
     }
@@ -1882,12 +1886,12 @@
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
           </button>
         </div>
-		<div hidden>
+    <div hidden>
         <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
         <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
         <button hidden id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
         <button hidden id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
-	    </div>
+      </div>
       </div>
     </div>
     <div class="row">
@@ -1903,13 +1907,13 @@
         </div>  
         <div class="table-holder well">
           <table id="table">
-		    <tr>
-      			<th id="c_1">  </th>
-      			<th id="c_2">  </th>
-      			<th id="c_3">  </th>
-      			<th id="c_4">  </th>
-      		</tr>
-    	  </table><br>
+        <tr>
+            <th id="c_1">  </th>
+            <th id="c_2">  </th>
+            <th id="c_3">  </th>
+            <th id="c_4">  </th>
+          </tr>
+        </table><br>
         </div>
       </div>  
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
@@ -1932,7 +1936,7 @@
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-				  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_amp_unit">V</div>
+          <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_amp_unit">V</div>
                 </div>
                 <div class="form-group">
                   <label for="gen_avg" class="col-xs-4 control-label">Averaging:</label>
@@ -1951,7 +1955,7 @@
                       <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                     </span>
                   </div>
-				  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_DC_bias_unit">V</div>
+          <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_DC_bias_unit">V</div>
                 </div>
                 <div class="form-group">
                   <label for="gen_R_shunt" class="col-xs-4 control-label">R_shunt:</label>
@@ -1967,7 +1971,7 @@
             </div>
           </div>
         </div>
-		<div class="panel panel-default">
+    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#sweep_func">
@@ -1977,16 +1981,16 @@
           </div>
           <div id="sweep_func" class="panel-collapse collapse">
             <div class="panel-body">
-			  <form class="form-horizontal" role="form" onsubmit="return false;">
-			  
-			    <div class="panel-heading">
-			      <h4 class="panel-title">
-					  <a data-toggle="collapse" href="#meas_sweep">
-					    Measurement sweep
-					  </a>
-				  </h4>
-			    </div>
-				<div id="meas_sweep" class="panel-collapse collapse">
+        <form class="form-horizontal" role="form" onsubmit="return false;">
+        
+          <div class="panel-heading">
+            <h4 class="panel-title">
+            <a data-toggle="collapse" href="#meas_sweep">
+              Measurement sweep
+            </a>
+          </h4>
+          </div>
+        <div id="meas_sweep" class="panel-collapse collapse">
                   <div class="form-group">
                     <label for="gen_ms_freq" class="col-xs-4 control-label">Frequency:</label>
                     <div class="col-xs-5">
@@ -1997,7 +2001,7 @@
                     </div>
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
-				  <div class="form-group">
+          <div class="form-group">
                     <label for="gen_ms_step" class="col-xs-4 control-label">Step:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="1" id="gen_ms_step">
@@ -2006,34 +2010,34 @@
                       </span>
                     </div>
                   </div>
-				  <div class="form-group">
-				    <label for="gen_ms_wait" class="col-xs-4 control-label">Wait:</label>
-					<div class="col-xs-4 col-sm-5">
+          <div class="form-group">
+            <label for="gen_ms_wait" class="col-xs-4 control-label">Wait:</label>
+          <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_ms_wait">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                       </select>
                   </div>
-				  </div>
-				  <div class="form-group">
-				    <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
-					<div class="col-xs-4 col-sm-5">
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
+          <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_OSCalib">
                         <option value="0">Yes</option>
                         <option value="1">No</option>
                       </select>
                     </div>
-				  </div>
-				  <div class="form-group">
-				    <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
-					<div class="col-xs-4 col-sm-5">
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
+          <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_LoadCalib">
                         <option value="0">Yes</option>
                         <option value="1">No</option>
                       </select>
                     </div>
-				  </div>
-				  <div class="form-group">
+          </div>
+          <div class="form-group">
                     <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
@@ -2043,7 +2047,7 @@
                     </div>
                     <div id="fs_LoadRe_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
-				  <div class="form-group">
+          <div class="form-group">
                     <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
@@ -2053,76 +2057,76 @@
                     </div>
                     <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
-				  <div>
-				  <button id="btn_start_measurment_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
-				  </div>
-				</div>
-				
-				<div class="panel-heading">
-			      <h4 class="panel-title">
-					<a data-toggle="collapse" href="#freq_sweep">
-					  Frequency sweep
-					  </a>
-				  </h4>
-			    </div>
-				<div id="freq_sweep" class="panel-collapse collapse">
+          <div>
+          <button id="btn_start_measurment_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
+          </div>
+        </div>
+        
+        <div class="panel-heading">
+            <h4 class="panel-title">
+          <a data-toggle="collapse" href="#freq_sweep">
+            Frequency sweep
+            </a>
+          </h4>
+          </div>
+        <div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
                     <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start f.:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fs_Sfreq">
+                      <input type="number" autocomplete="off" class="form-control" value="10000" id="gen_fs_Sfreq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
-				  <div class="form-group">
+          <div class="form-group">
                     <label for="gen_fs_Efreq" class="col-xs-4 control-label">Stop f.:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fs_Efreq">
+                      <input type="number" autocomplete="off" class="form-control" value="10000" id="gen_fs_Efreq">
                       <span id="apply_gen_fs_Efreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
-				  <div class="form-group">
+          <div class="form-group">
                     <label for="gen_fs_step" class="col-xs-4 control-label">Step:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="1" id="gen_fs_step">
+                      <input type="number" autocomplete="off" class="form-control" value="1" id="gen_fs_step">
                       <span id="apply_gen_fs_step" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                   </div>
-				  <div class="form-group">
-				    <label for="gen_fs_scale" class="col-xs-4 control-label">Scale:</label>
-					<div class="col-xs-4 col-sm-5">
+          <div class="form-group">
+            <label for="gen_fs_scale" class="col-xs-4 control-label">Scale:</label>
+          <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_scale">
                         <option value="0">Lin</option>
                         <option value="1">Log</option>
                       </select>
                   </div>
-				  </div>
-				  <div class="form-group">
-				    <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
-					<div class="col-xs-4 col-sm-5">
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_OSCalib" class="col-xs-4 control-label">Open/Short Calib:</label>
+          <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_OSCalib">
                         <option value="0">Yes</option>
                         <option value="1">No</option>
                       </select>
                     </div>
-				  </div>
-				  <div class="form-group">
-				    <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
-					<div class="col-xs-4 col-sm-5">
+          </div>
+          <div class="form-group">
+            <label for="gen_fs_LoadCalib" class="col-xs-4 control-label">Load Calib:</label>
+          <div class="col-xs-4 col-sm-5">
                       <select class="form-control" id="apply_gen_fs_LoadCalib">
                         <option value="0">Yes</option>
                         <option value="1">No</option>
                       </select>
                     </div>
-				  </div>
-				  <div class="form-group">
+          </div>
+          <div class="form-group">
                     <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
@@ -2132,7 +2136,7 @@
                     </div>
                     <div id="fs_LoadRe_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
-				  <div class="form-group">
+          <div class="form-group">
                     <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
@@ -2142,16 +2146,16 @@
                     </div>
                     <div id="fs_LoadIm_units" class="col-xs-3" style="padding: 7px 0 0;">Ω</div>
                   </div>
-				  <div>
-				  <button id="btn_start_frequency_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
-				  </div>
-				</div>
-				
+          <div>
+          <button id="btn_start_frequency_sweep" class="btn btn-primary btn-lg" data-checked="true" onclick="startMeasure(this.id)">Start</button>
+          </div>
+        </div>
+        
               </form>
             </div>
           </div>
         </div>
-		<div class="panel panel-default">
+    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#choose">
@@ -2159,33 +2163,33 @@
               </a>
             </h4>
           </div>
-		  <div id="choose" class="panel-collapse collapse">
+      <div id="choose" class="panel-collapse collapse">
             <div class="panel-body">
-			  <form class="form-horizontal" role="form" onsubmit="return false;">
-				<div>
-			      <button id="Rs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rs</button>
-				  <button id="Ls_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Ls</button>
-				  <button id="Cp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cp</button>
-				  <button id="Cs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cs</button>
-				</div>
-				<div></div>
-				<div>
-				  <button id="Rp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rp</button>
-				  <button id="Q_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Q</button>
-				  <button id="D_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">D</button>
-				  <button id="Y_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Y</button>
-				</div>
-				<div>
-				  <button id="Z_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Z</button>
-				  <button id="Zz_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Z|</button>
-				  <button id="Yy_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Y|</button>
-				  <button id="lol_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">:)</button>
-				</div>
-			  </form>
-			</div>
-		  </div>
-		</div>
-		<div class="panel panel-default">
+        <form class="form-horizontal" role="form" onsubmit="return false;">
+        <div>
+            <button id="Rs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rs</button>
+          <button id="Ls_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Ls</button>
+          <button id="Cp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cp</button>
+          <button id="Cs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cs</button>
+        </div>
+        <div></div>
+        <div>
+          <button id="Rp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rp</button>
+          <button id="Q_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Q</button>
+          <button id="D_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">D</button>
+          <button id="Y_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Y</button>
+        </div>
+        <div>
+          <button id="Z_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Z</button>
+          <button id="Zz_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Z|</button>
+          <button id="Yy_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Y|</button>
+          <button id="lol_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">:)</button>
+        </div>
+        </form>
+      </div>
+      </div>
+    </div>
+    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#table_meas">
@@ -2197,76 +2201,76 @@
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
-			      <div class="col-xs-3 col-sm-3">
+            <div class="col-xs-3 col-sm-3">
                     <select class="form-control" id="column_one">
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
                     </select>
                   </div>
-				  <div class="col-xs-3 col-sm-3">
+          <div class="col-xs-3 col-sm-3">
                     <select class="form-control" id="column_two">
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
                     </select>
                   </div>
-				  <div class="col-xs-3 col-sm-3">
+          <div class="col-xs-3 col-sm-3">
                     <select class="form-control" id="column_three">
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
                     </select>
                   </div>
-			  	  <div class="col-xs-3 col-sm-3">
+            <div class="col-xs-3 col-sm-3">
                     <select class="form-control" id="column_four">
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
                     </select>
                   </div>
-			    </div>
-				<div>
-				  <button id="btn_prep_table" class="btn btn-primary btn-lg" data-checked="true" onclick="change_table()">Prepare table</button>
-				  <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="add()">Show table</button>
-				</div>
+          </div>
+        <div>
+          <button id="btn_prep_table" class="btn btn-primary btn-lg" data-checked="true" onclick="change_table()">Prepare table</button>
+          <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="add()">Show table</button>
+        </div>
               </form>
             </div>
           </div>
         </div>
-		<div class="panel panel-default">
+    <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
               <a data-toggle="collapse" href="#plot_meas">
@@ -2277,46 +2281,46 @@
           <div id="plot_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
-			    <div class="form-group">
-				  <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
-			      <div class="col-xs-4 col-sm-5">
+          <div class="form-group">
+          <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
+            <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Xaxis">
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
                     </select>
                   </div>
-				</div>
-				<div class="form-group">
-				  <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
-			      <div class="col-xs-4 col-sm-5">
+        </div>
+        <div class="form-group">
+          <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
+            <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Yaxis">
                       <option value="0">Rs</option>
                       <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+            <option value="2">Cp</option>
+            <option value="3">Cs</option>
+            <option value="4">Rp</option>
+            <option value="5">Q</option>
+            <option value="6">D</option>
+            <option value="7">Y</option>
+            <option value="8">Z</option>
+            <option value="9">|Z|</option>
+            <option value="10">|Y|</option>
                     </select>
                   </div>
-				</div>
+        </div>
                 <div>
-				  <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
-				  <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
-				</div>
+          <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
+          <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
+        </div>
               </form>
             </div>
           </div>
