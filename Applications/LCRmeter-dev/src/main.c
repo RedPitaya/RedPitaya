@@ -151,27 +151,39 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
        *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
        *    code in index.html as well as from the C controller code. */
-        "flag_button", 0, 0, 0, 0, 2 },
+        "flag_button", 0, 1, 0, 0, 2 },
 
     { /* LCR amplitude. User defined.
        *    Min value - 0
        *    Max value - 2 */
-        "gen_amp", 0, 0, 0, 0, 2 },
+        "gen_amp", 0, 1, 0, 0, 2 },
 
     { /* Averaging parameter.
        *    Min value - 0
        *    Max value - 10 */
-        "gen_avg", 0, 0, 0, 0, 10 },
+        "gen_avg", 0, 1, 0, 0, 10 },
 
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2 */
-        "gen_DC_bias", 0, 0, 0, -2, 2 },
+        "gen_DC_bias", 0, 1, 0, -2, 2 },
 
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2  */
-       "gen_R_shunt", 0, 0, 0, 0, 50000 },
+       "gen_R_shunt", 0, 1, 0, 0, 50000 },
+
+    {"lcr_steps", 0, 1, 0, 0, 1000},
+
+    { /* Start frequency for frequency sweep.
+       *    Min value - 200
+       *    Max value - 1000000    */
+       "start_freq", 200, 1, 0, 0, 100000 },
+
+    { /* End frequency for frequency sweep.
+    *    Min value - 200
+    *    Max value - 1000000    */
+       "end_freq", 200, 1, 0, 0, 100000 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -243,6 +255,8 @@ float forced_units=0;
 float forced_delay=0;
 
 
+
+
 const char *rp_app_desc(void)
 {
     return (const char *)"Red Pitaya osciloscope application.\n";
@@ -250,7 +264,7 @@ const char *rp_app_desc(void)
 
 int rp_app_init(void)
 {
-
+    
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
 
 
@@ -1124,5 +1138,28 @@ void rp_set_flag(float val){
 
 float rp_get_flag(){
   return rp_main_params[FLAG_BUTTON].value;
+}
+
+float rp_get_params_lcr(int pos){
+  switch (pos){
+    case 0:
+      return rp_main_params[FLAG_BUTTON].value;
+    case 1:
+      return rp_main_params[LCR_STEPS].value;
+    case 2:
+      return rp_main_params[GEN_AMP].value;
+    case 3:
+      return rp_main_params[GEN_AVG].value;
+    case 4:
+      return rp_main_params[GEN_DC_BIAS].value;
+    case 5:
+      return rp_main_params[GEN_R_SHUNT].value;
+    case 6:
+      return rp_main_params[START_FREQ].value;
+    case 7:
+      return rp_main_params[END_FREQ].value;
+    default:
+      return -1;
+  }
 }
 
