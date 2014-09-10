@@ -40,7 +40,7 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
-
+int counter = 0;
 
 /* Thread variables - PIPE version */
 
@@ -311,27 +311,27 @@ void *rp_osc_worker_thread(void *args)
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
         
-        /* Simple thread
-        pthread_t thread_handler;
-
-        int ret = pthread_create(&thread_handler, 0, test_thread, 0);
-
-        pthread_join(thread_handler, 0);
-
-        rp_set_flag((ret+2));
-        */
         float start = rp_get_flag();
         if(start == 1){
-            char command[50];
-            strcpy(command, "lcr 1 1 0 999 1 0 0 0 100 1 200 8000 0 0");
+            float start_freq = rp_get_params_lcr(6);
+            float end_freq = rp_get_params_lcr(7);
+
+            char sF[20];
+            char eF[20];
+            snprintf(sF, 20, "%f", start_freq);
+            snprintf(eF, 20, "%f", end_freq);
+
+            char command[100];
+            
+            strcpy(command, "lcr 1 1 0 999 1 0 0 0 100 1 ");
+            strcat(command, sF);
+            strcat(command, " "),
+            strcat(command, eF);
+            strcat(command, " 1 0");
             system(command);
             //rp_set_flag(0);
         }
         
-
-
-        
-
         /* request to stop worker thread, we will shut down */
         if(state == rp_osc_quit_state) {
             rp_clean_params(curr_params);
@@ -717,7 +717,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
 
     float *frequency = *time_signal;
     
-    int counter = 0;
+    
     
     FILE *frequency_data = fopen("data_frequency.txt", "r");
     FILE *phase_data = fopen("data_phase.txt", "r");
@@ -764,7 +764,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         //(t_start + (t_idx * smpl_period)) * t_unit_factor;
     }
     
-    
+    counter = 0;
 
     return 0;
 }
