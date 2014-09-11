@@ -1888,20 +1888,7 @@
           </div>
           <div id="plot_holder"></div>
           <div id="xtitle"></div>
-        </div>
-
-<div class="graph-holder well well-small">
-          <div id="ytitle"></div>
-          <div id="trigger_cnv_holder">
-            <canvas id="trigger_canvas" width="25" height="460"></canvas>
-            <div id="trigger_tooltip"></div>
-          </div>
-          <div id="plot_holder"></div>
-          <div id="xtitle"></div>
-        </div> 		
-
-<!--
-		
+        </div>  
         <div class="table-holder well">
           <table id="table">
 		    <tr>
@@ -1912,15 +1899,7 @@
       		</tr>
     	  </table><br>
         </div>
-		
-		
-		-->
-		
-      </div> 
-
-
-
-	  
+      </div>  
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
         <div class="panel panel-default">
           <div class="panel-heading">
@@ -2024,13 +2003,51 @@
           <div id="plot_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
-				<div>
-				  <button id="btn_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Plot</button>
+			    <div class="form-group">
+				  <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
+			      <div class="col-xs-4 col-sm-5">
+                    <select class="form-control" id="apply_Xaxis">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+					  <option value="2">Cp</option>
+					  <option value="3">Cs</option>
+					  <option value="4">Rp</option>
+					  <option value="5">Q</option>
+					  <option value="6">D</option>
+					  <option value="7">Y</option>
+					  <option value="8">Z</option>
+					  <option value="9">|Z|</option>
+					  <option value="10">|Y|</option>
+                    </select>
+                  </div>
+				</div>
+				<div class="form-group">
+				  <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
+			      <div class="col-xs-4 col-sm-5">
+                    <select class="form-control" id="apply_Yaxis">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+					  <option value="2">Cp</option>
+					  <option value="3">Cs</option>
+					  <option value="4">Rp</option>
+					  <option value="5">Q</option>
+					  <option value="6">D</option>
+					  <option value="7">Y</option>
+					  <option value="8">Z</option>
+					  <option value="9">|Z|</option>
+					  <option value="10">|Y|</option>
+                    </select>
+                  </div>
+				</div>
+                <div>
+				  <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
+				  <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
 				</div>
               </form>
             </div>
           </div>
         </div>
+		
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2042,8 +2059,71 @@
           <div id="table_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div>
-				  <button id="btn_table" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show table</button>
+                <div class="form-group">
+			      <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_one">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+					  <option value="2">Cp</option>
+					  <option value="3">Cs</option>
+					  <option value="4">Rp</option>
+					  <option value="5">Q</option>
+					  <option value="6">D</option>
+					  <option value="7">Y</option>
+					  <option value="8">Z</option>
+					  <option value="9">|Z|</option>
+					  <option value="10">|Y|</option>
+                    </select>
+                  </div>
+				  <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_two">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+					  <option value="2">Cp</option>
+					  <option value="3">Cs</option>
+					  <option value="4">Rp</option>
+					  <option value="5">Q</option>
+					  <option value="6">D</option>
+					  <option value="7">Y</option>
+					  <option value="8">Z</option>
+					  <option value="9">|Z|</option>
+					  <option value="10">|Y|</option>
+                    </select>
+                  </div>
+				  <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_three">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+					  <option value="2">Cp</option>
+					  <option value="3">Cs</option>
+					  <option value="4">Rp</option>
+					  <option value="5">Q</option>
+					  <option value="6">D</option>
+					  <option value="7">Y</option>
+					  <option value="8">Z</option>
+					  <option value="9">|Z|</option>
+					  <option value="10">|Y|</option>
+                    </select>
+                  </div>
+			  	  <div class="col-xs-3 col-sm-3">
+                    <select class="form-control" id="column_four">
+                      <option value="0">Rs</option>
+                      <option value="1">Ls</option>
+					  <option value="2">Cp</option>
+					  <option value="3">Cs</option>
+					  <option value="4">Rp</option>
+					  <option value="5">Q</option>
+					  <option value="6">D</option>
+					  <option value="7">Y</option>
+					  <option value="8">Z</option>
+					  <option value="9">|Z|</option>
+					  <option value="10">|Y|</option>
+                    </select>
+                  </div>
+			    </div>
+				<div>
+				  <button id="btn_prep_table" class="btn btn-primary btn-lg" data-checked="true" onclick="change_table()">Prepare table</button>
+				  <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="add()">Show table</button>
 				</div>
               </form>
             </div>
