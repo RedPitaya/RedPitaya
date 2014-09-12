@@ -639,6 +639,7 @@ int main(int argc, char *argv[])
     /* Opening files */
     FILE *file_frequency = fopen("data_frequency.txt", "w");
     FILE *file_phase = fopen("data_phase.txt", "w");
+    FILE *file_amplitude = fopen("data_amplitude.txt", "w");
 
     /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
 
@@ -678,6 +679,7 @@ int main(int argc, char *argv[])
 
         fprintf(file_frequency, "%.2f\n", frequency[i]);
         fprintf(file_phase, "%.2f\n", PhaseZ[i]);
+        fprintf(file_amplitude, "%.2f\n", AmplitudeZ[i]);
 
 
         /*Var declaration 
@@ -701,6 +703,7 @@ int main(int argc, char *argv[])
 
     fclose(file_frequency);
     fclose(file_phase);
+    fclose(file_amplitude);
 
     return 1;
 
