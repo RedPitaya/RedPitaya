@@ -313,23 +313,58 @@ void *rp_osc_worker_thread(void *args)
         
         float start = rp_get_flag();
         if(start == 1){
+
+            float lcr_amp = rp_get_params_lcr(2);
+            float lcr_avg = rp_get_params_lcr(3);
+            float lcr_dc_bias = rp_get_params_lcr(4);
+            float lcr_r_shunt = rp_get_params_lcr(5);
             float start_freq = rp_get_params_lcr(6);
             float end_freq = rp_get_params_lcr(7);
+            float lcr_Scale = rp_get_params_lcr(8);
 
             char sF[20];
             char eF[20];
+            char amp[20];
+            char avg[20];
+            char dc_bias[20];
+            char r_shunt[20];
+            char scale[20];
+
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
+            snprintf(amp, 20, "%f", lcr_amp);
+            snprintf(avg, 20, "%f", lcr_avg);
+            snprintf(dc_bias, 20, "%f", lcr_dc_bias);
+            snprintf(r_shunt, 20, "%f", lcr_r_shunt);
+            snprintf(scale, 20, "%f", lcr_Scale);
 
             char command[100];
             
-            strcpy(command, "lcr 1 1 0 999 1 0 0 0 100 1 ");
+            strcpy(command, "/opt/bin/lcr 1 ");
+            strcat(command, amp);
+            strcat(command, " ");
+
+            strcat(command, dc_bias);
+            strcat(command, " ");
+
+            strcat(command, r_shunt);
+            strcat(command, " ");
+
+            strcat(command, avg);
+            strcat(command, " ");
+
+            strcat(command, "0 0 0 100 1 "),
+
             strcat(command, sF);
-            strcat(command, " "),
+            strcat(command, " ");
             strcat(command, eF);
-            strcat(command, " 1 0");
+            strcat(command, " ");
+
+            strcat(command, "1 0");
+
             system(command);
-            //rp_set_flag(0);
+            
+            rp_set_flag(0);
         }
         
         /* request to stop worker thread, we will shut down */
@@ -721,8 +756,10 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     
     FILE *frequency_data = fopen("data_frequency.txt", "r");
     FILE *phase_data = fopen("data_phase.txt", "r");
+    FILE *amplitude_data = fopen("data_amplitude.txt", "r");
 
-    if(frequency_data == NULL || phase_data == NULL){
+    /* Error checking */
+    if(frequency_data == NULL || phase_data == NULL || amplitude_data == NULL){
         printf("Error opening file!\n");
     }
 
@@ -730,16 +767,24 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         fscanf(frequency_data, "%f", &frequency[counter]);
         counter++;
     }
+
     float *phase = malloc(counter * sizeof(float));
+    float *amplitude = malloc(counter * sizeof(float));
 
     int p_counter = 0;
     while(!feof(phase_data)){
         fscanf(phase_data, "%f", &phase[p_counter]);
         p_counter++;
     }
+    int a_counter = 0;
+    while(!feof(amplitude_data)){
+        fscanf(amplitude_data, "%f", &amplitude[a_counter]);
+        a_counter++;
+    }
 
     fclose(frequency_data);
     fclose(phase_data);
+    fclose(amplitude_data);
 
     for(out_idx=0, t_idx=0; out_idx < counter; 
         out_idx++, in_idx+=t_step, t_idx+=t_step) {
@@ -748,7 +793,11 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         if(in_idx >= OSC_FPGA_SIG_LEN)
             in_idx = in_idx % OSC_FPGA_SIG_LEN;
         */
-        cha_s[out_idx] = phase[out_idx];
+        if(rp_get_params_lcr(15) == 1){
+            cha_s[out_idx] = amplitude[out_idx];
+        }else{
+           cha_s[out_idx] = phase[out_idx]; 
+       }
 
 /*
         osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
