@@ -42,6 +42,9 @@
   var xmin = -1000000;
   var xmax = 1000000;  
 
+  /* LCR data type. Zero (default) phase, 1 - amplitude*/
+  var data_type = 0;
+
   var time_range_max = [130, 1000, 8, 130, 1, 8];
   var range_steps = [0];
   
@@ -1832,6 +1835,17 @@
   $(".logo").click(function(e) { updateGraphData(); alert("dela"); });
  });
  
+ function selectAmpPhase(toggle_id) {
+    $('#toggle .btn').removeClass('btn-primary').addClass('btn-default');
+    $('#toggle .toggle_phase').toggleClass('btn-default btn-primary');
+
+    if(toggle_id == 'toggle_amp') {
+      data_type = 1;
+    }else{
+      data_type = 0;
+    }
+    
+  }
  
  function startMeasure(clicked_measure){
     if(clicked_measure == 'btn_start_frequency_sweep'){
@@ -1844,12 +1858,23 @@
       //params.local.lcr_steps = parseLocalFloat(document.getElementById('gen_fs_step').value);
       params.local.start_freq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
       params.local.end_freq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
+      params.local.plot_Y_scale_data = data_type;
+      params.local.gen_fs_LoadRe = parseLocalFloat(document.getElementById('gen_fs_LoadRe').value);
+      params.local.gen_fs_LoadIm = parseLocalFloat(document.getElementById('gen_fs_LoadIm').value);
 
-      
+
+      /* Pulling data from dl Scale */
+      params.local.lcr_scale_type = parseLocalFloat(document.getElementById('apply_gen_fs_scale').value);
+
       params.local.flag_button = 1;
+      sendParams();
+
+    }else if(clicked_measure == 'btn_start_measurment_sweep'){
+
     }
-    sendParams();
     
+
+
  }
   
   </script>
@@ -1882,10 +1907,21 @@
           <button id="btn_pan" class="btn btn-default" onclick="selectTool.call(this, 'pan')" style="display: none">
             <span class="glyphicon glyphicon-move"></span>
           </button>
-          <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
-            <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
-          </button>
         </div>
+
+        <!-- Div for selecting type of data plot -->
+          <div id="toggle" class="btn-group" data-toggle="buttons">
+          <!-- Primary data display is going to be amplitude--> 
+            <button id="toggle_amp" class="btn btn-primary" onclick="selectAmpPhase.call(this, 'toggle_amp')">
+              <span>Amp</span>
+            </button>
+            <!-- Secondary data display -->
+            <button id="toggle_phase" class="btn btn-default" onclick="selectAmpPhase(this, 'toggle_phase')">
+              <span>Phase</span>
+            </button>
+          </div>
+
+
     <div hidden>
         <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
         <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
@@ -2040,7 +2076,7 @@
           <div class="form-group">
                     <label for="gen_fs_LoadRe" class="col-xs-4 control-label"> Load Re:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadRe">
+                      <input type="number" autocomplete="off" class="form-control" value="" id="gen_ms_LoadRe">
                       <span id="apply_gen_fs_LoadRe" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2050,7 +2086,7 @@
           <div class="form-group">
                     <label for="gen_fs_LoadIm" class="col-xs-4 control-label"> Load Im:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="" id="gen_fs_LoadIm">
+                      <input type="number" autocomplete="off" class="form-control" value="" id="gen_ms_LoadIm">
                       <span id="apply_gen_fs_LoadIm" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2071,9 +2107,9 @@
           </div>
         <div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
-                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start f.:</label>
+                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
                     <div class="col-xs-5">
-                      <input type="number" autocomplete="off" class="form-control" value="10000" id="gen_fs_Sfreq">
+                      <input type="number" autocomplete="off" class="form-control" value="200" id="gen_fs_Sfreq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2081,7 +2117,7 @@
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
           <div class="form-group">
-                    <label for="gen_fs_Efreq" class="col-xs-4 control-label">Stop f.:</label>
+                    <label for="gen_fs_Efreq" class="col-xs-4 control-label">End frequency:</label>
                     <div class="col-xs-5">
                       <input type="number" autocomplete="off" class="form-control" value="10000" id="gen_fs_Efreq">
                       <span id="apply_gen_fs_Efreq" class="input-group-btn" style="display: none;">
