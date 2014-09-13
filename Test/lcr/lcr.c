@@ -637,9 +637,9 @@ int main(int argc, char *argv[])
     */
 
     /* Opening files */
-    FILE *file_frequency = fopen("data_frequency.txt", "w");
-    FILE *file_phase = fopen("data_phase.txt", "w");
-    FILE *file_amplitude = fopen("data_amplitude.txt", "w");
+    FILE *file_frequency = fopen("/opt/www/apps/scope+gen/lcr_data/data_frequency.txt", "w");
+    FILE *file_phase = fopen("/opt/www/apps/scope+gen/lcr_data/data_phase.txt", "w");
+    FILE *file_amplitude = fopen("/opt/www/apps/scope+gen/lcr_data/data_amplitude.txt", "w");
 
     /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
 
@@ -672,30 +672,15 @@ int main(int argc, char *argv[])
             printf(" %.0f    %.5f    %.5f\n", frequency[i],PhaseZ[ i ],AmplitudeZ[ i ]);
         }
         
-        
+        /* Error checking */
         if(file_frequency == NULL || file_phase == NULL){
             printf("Error opening file!\n");
         }
 
+        /* Saving data into files */
         fprintf(file_frequency, "%.2f\n", frequency[i]);
         fprintf(file_phase, "%.2f\n", PhaseZ[i]);
         fprintf(file_amplitude, "%.2f\n", AmplitudeZ[i]);
-
-
-        /*Var declaration 
-        char command[50];
-        char string[20];
-
-        Float to char conversion
-        snprintf(string, 20, "%f", frequency[i]);
-
-        Concatenating both strings 
-        strcpy(command, "echo ");
-        strcpy(command, string);
-        strcpy(command, " >> data_frequency.txt");
-
-        Exec command 
-        system(command); */
 
     }
 
@@ -714,17 +699,7 @@ int main(int argc, char *argv[])
  *
  * Generates/synthesized  a signal, based on three pre-defined signal
  * types/shapes, signal amplitude & frequency. The data[] vector of 
- * samples at 125 MHz is generated to be re-played by the FPGA AKot obljubljeno pošiljam dokumentacijo. Če so v njej kakšne napake, ali bi moral kateri del opisati bolj podrobno bom vesel če mi to sporočiš.
-
-Koda za logaritemsko skalo je na koncu dokumenta nepravilna. Popraviti jo bo potrebno v prihodnjih dneh.
-
-Razvoj kode je mogoče spremljati na githubu uporabnika PitayaDT https://github.com/PitayaDT/RedPitaya
-
-    
-
-Lep pozdrav
-Martin
-WG module.
+ * samples at 125 MHz is generated to be re-played by the FPGA AWG module.
  *
  * @param ampl  Signal amplitude [Vpp].
  * @param freq  Signal frequency [Hz].
