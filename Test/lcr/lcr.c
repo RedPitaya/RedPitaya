@@ -34,7 +34,7 @@
  * The code below defines the lcr meter
  * 
  * It uses acquire and generate defined in Test/ folder
- * data analasys returns: frequency, phase, amplitude *
+ * data analysis returns: frequency, phase, amplitude *
  */
 
 /** Maximal signal frequency [Hz] */
@@ -93,7 +93,7 @@ void write_data_fpga(uint32_t ch,
 int acquire_data(float **s ,
                 uint32_t size);
 
-int LCR_data_analasys(float **s,
+int LCR_data_analysis(float **s,
                       uint32_t size,
                       uint32_t DC_bias,
                       uint32_t R_shunt,
@@ -109,16 +109,16 @@ void usage() {
         "\n"
         "Usage: %s [channel] "
                   "[amplitude] "
-                  "[DC_bias] "
-                  "[R_shunt] "
+                  "[DC bias] "
+                  "[Rshunt] "
                   "[averaging] "
-                  "[calib function] "
-                  "[Z_load_ref[real] "
-                  "[Z_load_ref[imag] "
-                  "[steps] "
-                  "[sweep function] "
-                  "[start frequnecy] "
-                  "[stop frequency] "
+                  "[calibration mode] "
+                  "[Zloadref real] "
+                  "[Zloadref imag] "
+                  "[count/steps] "
+                  "[sweep mode] "
+                  "[start freq] "
+                  "[stop freq] "
                   "[scale type] "
                   "[wait]\n"
         "\n"
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
     int       shaping = 0; //parameter initialized for generator functionality
     int       first_delay = 0; //delay required before first acquire
 
-    /* LCR_data_analasys() saves data to *Z */
+    /* LCR_data_analysis() saves data to *Z */
     float complex *Z = (float complex *)malloc( (averaging_num + 1) * sizeof(float complex));
     
     /* calibrtion results short circuited */
@@ -557,8 +557,8 @@ int main(int argc, char *argv[])
                     }
 
                     /* Data analyzer, saves darta to Z (complex impedance) */
-                    if( LCR_data_analasys( s, size, DC_bias, R_shunt, Z, w_out, f ) < 0) {
-                        printf("error data analysis LCR_data_analasys\n");
+                    if( LCR_data_analysis( s, size, DC_bias, R_shunt, Z, w_out, f ) < 0) {
+                        printf("error data analysis LCR_data_analysis\n");
                         return -1;
                     }
 
@@ -905,7 +905,7 @@ int acquire_data(float **s ,
 }
 
 /**
- * Acquired data analasys function.
+ * Acquired data analysis function.
  * function returnes impedance Z in a complex form.
  *
  * @param s        points to a mmemory where data is read from
@@ -916,7 +916,7 @@ int acquire_data(float **s ,
  * @param w_out    angualr velocity
  * @param f        decimation selector
  */
-int LCR_data_analasys(float **s ,
+int LCR_data_analysis(float **s ,
                         uint32_t size,
                         uint32_t DC_bias,
                         uint32_t R_shunt,
