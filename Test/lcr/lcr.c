@@ -1,10 +1,11 @@
 /**
  * $Id: lcr.c 1246  $
  *
- * @brief PitayaDT LCR meter 
+ * @brief PitayaDT LCR meter
  *
  * @Author1 Martin Cimerman   <cim.martin@gmail.com>
  * @Author2 Zumret Topcacic   <zumret_topcagic@hotmail.com>
+ * 
  *
  * VERSION : 2.2
  * This part of code is written in C programming language.
@@ -23,8 +24,8 @@
 #include <sys/param.h>
 #include "main_osc.h"
 #include "fpga_osc.h"
+#include <complex.h>    /* Standard library for complex numbers */
 
-#include <complex.h>    /* Standart Library of Complex Numbers */
 #define M_PI 3.14159265358979323846
 
 /**
@@ -42,7 +43,7 @@ const double c_max_frequency = 62.5e6;
 /** Minimal signal frequency [Hz] */
 const double c_min_frequency = 0;
 
-/** Maximal signal amplitude [Vpp] */
+/** Maximal signal amplitude [V] */
 const double c_max_amplitude = 1.0;
 
 /** AWG buffer length [samples]*/
@@ -59,7 +60,8 @@ typedef enum {
     eSignalSine,         ///< Sinusoidal waveform.
     eSignalSquare,       ///< Square waveform.
     eSignalTriangle,     ///< Triangular waveform.
-    eSignalSweep         ///< Sinusoidal frequency sweep.
+    eSignalSweep,        ///< Sinusoidal frequency sweep.
+	eSignalConst         ///< Constant signal.
 } signal_e;
 
 /** AWG FPGA parameters */
@@ -91,52 +93,53 @@ void write_data_fpga(uint32_t ch,
 int acquire_data(float **s ,
                 uint32_t size);
 
-int LCR_data_analasys(float **s ,
-                        uint32_t size,
-                        uint32_t DC_bias,
-                        uint32_t R_shunt,
-                        float complex *Z,
-                        double w_out,
-                        int f);
+int LCR_data_analasys(float **s,
+                      uint32_t size,
+                      uint32_t DC_bias,
+                      uint32_t R_shunt,
+                      float complex *Z,
+                      double w_out,
+                      int f);
+
 /** Print usage information */
 void usage() {
 
     const char *format =
         "%s version %s-%s\n"
         "\n"
-        "Usage: %s   [channel] "
-                    "[amplitude] "
-                    "[DC_bias] "
-                    "[R_shunt] "
-                    "[averaging] "
-                    "[calib function] "
-                    "[Z_load_ref[real] "
-                    "[Z_load_ref[imag] "
-                    "[steps] "
-                    "[sweep function] "
-                    "[start frequnecy] "
-                    "[stop frequency]"
-                    "[scale type]"
-                    "[wait]\n"
+        "Usage: %s [channel] "
+                  "[amplitude] "
+                  "[DC_bias] "
+                  "[R_shunt] "
+                  "[averaging] "
+                  "[calib function] "
+                  "[Z_load_ref[real] "
+                  "[Z_load_ref[imag] "
+                  "[steps] "
+                  "[sweep function] "
+                  "[start frequnecy] "
+                  "[stop frequency] "
+                  "[scale type] "
+                  "[wait]\n"
         "\n"
-        "\tchannel              Channel to generate signal [1, 2].\n"
-        "\tamplitude            Peak-to-peak signal amplitude in V [0.0 - %1.1f].\n"
-        "\tDC bias              for electrolit capacitors in V [0 - 1]\n"
-        "\tshunt resistior      in ohms\n"
-        "\taveraging            number of averaging the measurements [1 - 10].\n"
-        "\tcalib function       0(no calibration), 1(open and short calib), 2(zloadref calib).\n"
-        "\tref impedance real   Z_load_ref real value.\n"
-        "\tref impedance imag   Z_load_ref imaginary value.\n"
-        "\tsteps                steps made between frequency limits [1 - 1000].\n"
-        "\tsweep function       1 - frequency sweep, 0 - measurement sweep.\n"
-        "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\tscale type           x scale 0 - linear 1 -log\n"
-        "\twait                 wait for user before each measurement step\n"
+        "\tchannel            Channel to generate signal on [1, 2].\n"
+        "\tamplitude          Signal amplitude in V [0 - 1], which means max 2Vpp.\n"
+        "\tDC bias            Useful for measuring electrolytic capacitors, in V [0 - 1]\n"
+        "\tRshunt             Shunt resistor value in Ohms. [1 - 1e6]\n"
+        "\taveraging          Number of samples per one measurement [1 - 10].\n"
+        "\tcalibration mode   0 - none, 1 - open and short, 2 - Zloadref.\n"
+        "\tZloadref real      Zloadref real part.\n"
+        "\tZloadref imag      Zloadref imaginary part.\n"
+        "\tcount/steps        Measurement count when performing measurement sweep OR"
+        "                     steps made between frequency limits [1 - 1000].\n"
+        "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
+        "\tstart freq         Lower frequency limit in Hz [0 - 62.5e6].\n"
+        "\tstop freq          Upper frequency limit in Hz [0 - 62.5e6].\n"
+        "\tscale type         0 - linear, 1 - logarithmic.\n"
+        "\twait               Wait for user before performing each step.\n"
         "\n";
 
-    fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, c_max_amplitude, c_min_frequency, c_max_frequency);
+    fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, g_argv0);
 }
 
 /** Gain string (lv/hv) to number (0/1) transformation */
@@ -421,19 +424,19 @@ int main(int argc, char *argv[])
     float complex *Z = (float complex *)malloc( (averaging_num + 1) * sizeof(float complex));
     
     /* calibrtion results short circuited */
-    float **Calib_data_short_for_avreaging = create_2D_table_size((averaging_num + 1), 2);
+    float **Calib_data_short_for_averaging = create_2D_table_size((averaging_num + 1), 2);
     float **Calib_data_short  = create_2D_table_size(measurement_sweep_user_defined, 2);
     
     /* calibrtion results open circuited */
-    float **Calib_data_open_for_avreaging = create_2D_table_size((averaging_num + 1), 2);
+    float **Calib_data_open_for_averaging = create_2D_table_size((averaging_num + 1), 2);
     float **Calib_data_open = create_2D_table_size(measurement_sweep_user_defined, 2);
     
     /* calibration load results */
-    float **Calib_data_load_for_avreaging = create_2D_table_size((averaging_num + 1), 2);
+    float **Calib_data_load_for_averaging = create_2D_table_size((averaging_num + 1), 2);
     float **Calib_data_load = create_2D_table_size(measurement_sweep_user_defined, 2);
     
     /* measurement results */
-    float **Calib_data_measure_for_avreaging = create_2D_table_size((averaging_num + 1), 2 );
+    float **Calib_data_measure_for_averaging = create_2D_table_size((averaging_num + 1), 2 );
     float **Calib_data_measure = create_2D_table_size(measurement_sweep_user_defined, 4);
 
     /* multidimentional memmory allocation for storing final results */
@@ -562,20 +565,20 @@ int main(int argc, char *argv[])
                     /* Saving data */
                     switch ( h ) {
                     case 0:
-                        Calib_data_short_for_avreaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_short_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
+                        Calib_data_short_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_short_for_averaging[ i1 ][ 2 ] = cimag(*Z);
                         break;
                     case 1:
-                        Calib_data_open_for_avreaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_open_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
+                        Calib_data_open_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_open_for_averaging[ i1 ][ 2 ] = cimag(*Z);
                         break;
                     case 2:
-                        Calib_data_load_for_avreaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_load_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
+                        Calib_data_load_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_load_for_averaging[ i1 ][ 2 ] = cimag(*Z);
                         break;
                     case 3:
-                        Calib_data_measure_for_avreaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_measure_for_avreaging[ i1 ][ 2 ] = cimag(*Z);
+                        Calib_data_measure_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                        Calib_data_measure_for_averaging[ i1 ][ 2 ] = cimag(*Z);
                         break;
                     default:
                         printf("error no function set for h = %d, when saving data\n", h);
@@ -587,20 +590,20 @@ int main(int argc, char *argv[])
                 switch ( h ) {
                 case 0:
 
-                    Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 1);
-                    Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_avreaging, averaging_num, 2);
+                    Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_averaging, averaging_num, 1);
+                    Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_averaging, averaging_num, 2);
                     break;
                 case 1:
-                    Calib_data_open[ i ][ 1 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 1);
-                    Calib_data_open[ i ][ 2 ] = mean_array_column(Calib_data_open_for_avreaging, averaging_num, 2);
+                    Calib_data_open[ i ][ 1 ] = mean_array_column(Calib_data_open_for_averaging, averaging_num, 1);
+                    Calib_data_open[ i ][ 2 ] = mean_array_column(Calib_data_open_for_averaging, averaging_num, 2);
                     break;
                 case 2:
-                    Calib_data_load[ i ][ 1 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 1);
-                    Calib_data_load[ i ][ 2 ] = mean_array_column(Calib_data_load_for_avreaging, averaging_num, 2);
+                    Calib_data_load[ i ][ 1 ] = mean_array_column(Calib_data_load_for_averaging, averaging_num, 1);
+                    Calib_data_load[ i ][ 2 ] = mean_array_column(Calib_data_load_for_averaging, averaging_num, 2);
                     break;
                 case 3:
-                    Calib_data_measure[ i ][ 1 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 1 );
-                    Calib_data_measure[ i ][ 2 ] = mean_array_column( Calib_data_measure_for_avreaging, averaging_num, 2 );
+                    Calib_data_measure[ i ][ 1 ] = mean_array_column( Calib_data_measure_for_averaging, averaging_num, 1 );
+                    Calib_data_measure[ i ][ 2 ] = mean_array_column( Calib_data_measure_for_averaging, averaging_num, 2 );
                     break;
                 default:
                     printf("error no function set for h = %d, when averaging data\n", h);
@@ -701,9 +704,9 @@ int main(int argc, char *argv[])
  * types/shapes, signal amplitude & frequency. The data[] vector of 
  * samples at 125 MHz is generated to be re-played by the FPGA AWG module.
  *
- * @param ampl  Signal amplitude [Vpp].
+ * @param ampl  Signal amplitude [V].
  * @param freq  Signal frequency [Hz].
- * @param type  Signal type/shape [Sine, Square, Triangle].
+ * @param type  Signal type/shape [Sine, Square, Triangle, Constant].
  * @param data  Returned synthesized AWG data vector.
  * @param awg   Returned AWG parameters.
  *
@@ -726,7 +729,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     awg->wrap = round(65536 * (n-1));
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
-    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
+    uint32_t amp = ampl * 4000.0;    /* 1 V ==> 4000 DAC counts */
     if (amp > 8191) {
         /* Truncate to max value if needed */
         amp = 8191;
@@ -808,6 +811,9 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
             /* Actual formula. Frequency changes from start to end. */
             data[i] = round(amp * (sin((start*T)/log(end/start) * ((exp(t*log(end/start)/T)-1)))));
         }
+        
+        /* Constant */
+		if (type == eSignalConst) data[i] = amp;
         
         /* TODO: Remove, not necessary in C/C++. */
         if(data[i] < 0)
