@@ -42,12 +42,7 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 rp_calib_params_t *rp_calib_params = NULL;
 int counter = 0;
 
-/* Thread variables - PIPE version */
-
-pthread_t tid[1];
-int fd1[2];
-int fd2[2];
-double lcrpPrams[6];
+int measure_method = 0;
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
@@ -250,28 +245,6 @@ void *rp_osc_worker_thread(void *args)
     old_state = state = rp_osc_ctrl;
     pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
-    /* Declaration of thread function passed with arguments */
-
-    int pipecreation_result;
-    /* creating pipes 0-reading, 1-writig */
-    pipecreation_result = pipe(fd1);
-
-    /* Error checking*/
-    if (pipecreation_result < 0){
-       perror("error pipe 1 creation ");
-       exit(1);
-    }
-
-    pipecreation_result = pipe(fd2);
-
-    /* Error checking */
-    if (pipecreation_result < 0){
-       perror("error pipe 2 creation ");
-       exit(1);
-    }
-
-    
-
     while(1) {
         /* update states - we save also old state to see if we need to reset
          * FPGA 
@@ -316,6 +289,7 @@ void *rp_osc_worker_thread(void *args)
         /* Frequency sweep */
         if(measure_option == 1){
 
+
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
             float lcr_dc_bias = rp_get_params_lcr(4);
@@ -326,6 +300,7 @@ void *rp_osc_worker_thread(void *args)
             float lcr_load_re = rp_get_params_lcr(9);
             float lcr_load_im = rp_get_params_lcr(10);
             float lcr_calibration = rp_get_params_lcr(11);
+
 
             //TODO: Change appropriate number for command length.
             char sF[20];
@@ -366,7 +341,7 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, avg);
             strcat(command, " ");
 
-            strcat(command, "0 ");
+            strcat(command, "0 "); // calib functio todo
 
             strcat(command, re);
             strcat(command, " ");
@@ -387,7 +362,8 @@ void *rp_osc_worker_thread(void *args)
 
         /* Measurment sweep */
         }else if(measure_option == 2){
-
+            
+            float lcr_steps = rp_get_params_lcr(1);
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
             float lcr_dc_bias = rp_get_params_lcr(4);
@@ -409,8 +385,10 @@ void *rp_osc_worker_thread(void *args)
             char scale[20];
             char re[10];
             char im[10];
-            char calib[1];   
+            char calib[10]; 
+            char steps[10];  
 
+            snprintf(steps, 10, "%f", lcr_steps);
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
             snprintf(amp, 20, "%f", lcr_amp);
@@ -421,10 +399,8 @@ void *rp_osc_worker_thread(void *args)
             snprintf(re, 10, "%f", lcr_load_re);
             snprintf(im, 10, "%f", lcr_load_im);
             snprintf(calib, 1, "%f", lcr_calibration);
-
-            char command[100];
             
-            strcpy(command, "/opt/bin/lcr 1 ");
+            
             strcat(command, amp);
             strcat(command, " ");
 
@@ -437,13 +413,14 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, avg);
             strcat(command, " ");
 
-            strcat(command, "0 ");
+            strcat(command, "0 "); // Calib function todo
 
             strcat(command, re);
             strcat(command, " ");
             strcat(command, im);
-
-            strcat(command, " 100 0 "); // Sweep function set to 0 for measurment sweep.
+            strcat(command, " ");
+            strcat(command, steps);
+            strcat(command, " 0 "); // Sweep function set to 0 for measurment sweep.
 
             strcat(command, sF);
             strcat(command, " ");
@@ -451,7 +428,7 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " ");
             strcat(command, scale);
             strcat(command, " 0");
-
+            
             system(command);
             
             
@@ -888,8 +865,11 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                                                rp_calib_params->fe_ch1_dc_offs,
                                                ch1_user_dc_off);
 */      
-        chb_s[out_idx] = 1;
-        if(rp_get_params_lcr(0) == 2){
+        chb_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
+                                               rp_calib_params->fe_ch2_dc_offs,
+                                               ch2_user_dc_off);
+
+        if((frequency[0] == frequency[1])){
             t[out_idx] = out_idx;
         }else{
             t[out_idx] = frequency[out_idx];
@@ -900,7 +880,6 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     }
     
     counter = 0;
-    rp_set_params_lcr(0, 0);
     return 0;
 }
 
