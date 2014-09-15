@@ -24,7 +24,7 @@
 #include <sys/param.h>
 #include "main_osc.h"
 #include "fpga_osc.h"
-#include <complex.h> // Standard library for complex numbers
+#include <complex.h> // Standard library for complex numbers. Yahoo
 
 #define M_PI 3.14159265358979323846
 
