@@ -143,48 +143,66 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* gen_DC_offs_2 - DC offset for channel 2 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
-
     { /* flag_button - General flag used for sending params from the RedPitaya browser. 
        *    0 - negative
-       *    1 - positive 
-       *    2 - Other ( Change the max value for more states )
+       *    1 - Frequency Sweep
+       *    2 - Measurment sweep 
+       *    3 - Other ( Change the max value for more states )
        *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
        *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
        *    code in index.html as well as from the C controller code. */
-        "flag_button", 0, 1, 0, 0, 2 },
-
+        "start_measure", 0, 1, 0, 0, 3 },
     { /* LCR amplitude. User defined.
        *    Min value - 0
        *    Max value - 2 */
         "gen_amp", 0, 1, 0, 0, 2 },
-
     { /* Averaging parameter.
        *    Min value - 0
        *    Max value - 10 */
         "gen_avg", 0, 1, 0, 0, 10 },
-
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2 */
         "gen_DC_bias", 0, 1, 0, -2, 2 },
-
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2  */
        "gen_R_shunt", 0, 1, 0, 0, 50000 },
-
-    {"lcr_steps", 0, 1, 0, 0, 1000},
-
+    { /* LCR steps declared by user
+       * Minimum value - 1
+       * Maximum value - 1000  */
+      "lcr_steps", 0, 1, 0, 0, 1000},
     { /* Start frequency for frequency sweep.
        *    Min value - 200
        *    Max value - 1000000    */
-       "start_freq", 200, 1, 0, 0, 100000 },
-
+       "start_freq", 200, 1, 0, 0, 1000000 },
     { /* End frequency for frequency sweep.
-    *    Min value - 200
-    *    Max value - 1000000    */
-       "end_freq", 200, 1, 0, 0, 100000 },
-
+       * Min value - 200
+       * Max value - 1000000 */
+       "end_freq", 200, 1, 0, 0, 1000000 },
+    { /* Plots different data depending on user choice
+       * 0 - Plots amplitude
+       * 1 - Plots phase
+       * 5 - TODO: Adding multiple data acquisition. */
+      "plot_y_scale_data", 0, 1, 0, 0, 5 },
+    { /* Lcr scale type. Defined by user.
+       * 0 - Linear scale
+       * 1 - Logarithmic scale */
+      "lcr_scale_type", 0 , 1, 0, 0, 1 },
+    { /* Lcr LoadRE
+       * */
+      "gen_fs_LoadRe", 0, 1, 0, 0, 1 },
+    
+    { /* Lcr LoadIm
+       * */
+      "gen_fs_LoadIm", 0, 1, 0, 0, 1 },
+    { /* Calibration type. Defined by user in browser.
+       * 0 - Open calibration
+       * 1 - Short alibration
+       * 2 - Load calibration
+       * 3 - None */
+       "lcr_calibration", 0, 1, 0, 0, 3 },
+    
     /* Arbitrary Waveform Generator parameters from here on */
 
     { /* gen_trig_mod_ch1 - Selects the trigger mode for channel 1:
@@ -1132,18 +1150,12 @@ void rp_set_mes_data(float x){
   rp_main_params[MEAS_MIN_CH1].value = x;
 }
 
-void rp_set_flag(float val){
-  rp_main_params[FLAG_BUTTON].value = val;
-}
 
-float rp_get_flag(){
-  return rp_main_params[FLAG_BUTTON].value;
-}
 
 float rp_get_params_lcr(int pos){
   switch (pos){
     case 0:
-      return rp_main_params[FLAG_BUTTON].value;
+      return rp_main_params[START_MEASURE].value;
     case 1:
       return rp_main_params[LCR_STEPS].value;
     case 2:
@@ -1158,8 +1170,25 @@ float rp_get_params_lcr(int pos){
       return rp_main_params[START_FREQ].value;
     case 7:
       return rp_main_params[END_FREQ].value;
+    case 8:
+      return rp_main_params[LCR_SCALE_TYPE].value;
+    case 9:
+      return rp_main_params[GEN_FS_LOADRE].value;
+    case 10:
+      return rp_main_params[GEN_FS_LOADIM].value;
+    case 11:
+      return rp_main_params[LCR_CALIBRATION].value;
+    case 15:
+      return rp_main_params[PLOT_Y_SCALE_DATA].value;
     default:
       return -1;
+  }
+}
+
+void rp_set_params_lcr(int pos, float val){
+  switch(pos){
+    case 0:
+      rp_main_params[START_MEASURE].value = val;
   }
 }
 

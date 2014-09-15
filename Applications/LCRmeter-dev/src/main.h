@@ -40,7 +40,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        61
+#define PARAMS_NUM        62
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -76,7 +76,7 @@ typedef struct rp_osc_meas_res_s {
 #define PREPARE_WAVE      32
 #define GEN_DC_OFFS_1     33
 #define GEN_DC_OFFS_2     34
-#define FLAG_BUTTON       35
+#define START_MEASURE     35
 #define GEN_AMP           36
 #define GEN_AVG           37
 #define GEN_DC_BIAS       38
@@ -88,25 +88,26 @@ typedef struct rp_osc_meas_res_s {
 #define LCR_SCALE_TYPE    44
 #define GEN_FS_LOADRE     45
 #define GEN_FS_LOADIM     46
+#define LCR_CALIBRATION   47
 /* AWG parameters */
-#define GEN_TRIG_MODE_CH1 47
-#define GEN_SIG_TYPE_CH1  48
-#define GEN_ENABLE_CH1    49
-#define GEN_SINGLE_CH1    50
-#define GEN_SIG_AMP_CH1   51
-#define GEN_SIG_FREQ_CH1  52
-#define GEN_SIG_DCOFF_CH1 53
-#define GEN_TRIG_MODE_CH2 54
-#define GEN_SIG_TYPE_CH2  55
-#define GEN_ENABLE_CH2    56
-#define GEN_SINGLE_CH2    57
-#define GEN_SIG_AMP_CH2   58
-#define GEN_SIG_FREQ_CH2  59
-#define GEN_SIG_DCOFF_CH2 60
+#define GEN_TRIG_MODE_CH1 48
+#define GEN_SIG_TYPE_CH1  49
+#define GEN_ENABLE_CH1    50
+#define GEN_SINGLE_CH1    51
+#define GEN_SIG_AMP_CH1   52
+#define GEN_SIG_FREQ_CH1  53
+#define GEN_SIG_DCOFF_CH1 54
+#define GEN_TRIG_MODE_CH2 55
+#define GEN_SIG_TYPE_CH2  56
+#define GEN_ENABLE_CH2    57
+#define GEN_SINGLE_CH2    58
+#define GEN_SIG_AMP_CH2   59
+#define GEN_SIG_FREQ_CH2  60
+#define GEN_SIG_DCOFF_CH2 62
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope or AWG */
-#define PARAMS_AWG_PARAMS 47
+#define PARAMS_AWG_PARAMS 48
 
 /* Output signals */
 #define SIGNALS_NUM   3
@@ -152,11 +153,10 @@ void rp_set_time_range(float f);
 /* For testing purposes only. */
 void rp_set_mes_data(float x);
 
-void rp_set_flag(float val);
-
-float rp_get_flag();
-
 float rp_get_params_lcr(int pos);
+
+void rp_set_params_lcr(int pos, float val);
+
 
 void rp_set_trig_mode();
 
