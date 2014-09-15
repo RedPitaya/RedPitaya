@@ -311,8 +311,10 @@ void *rp_osc_worker_thread(void *args)
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
         
-        float start = rp_get_flag();
-        if(start == 1){
+        float measure_option = rp_get_params_lcr(0);
+
+        /* Frequency sweep */
+        if(measure_option == 1){
 
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
@@ -321,7 +323,11 @@ void *rp_osc_worker_thread(void *args)
             float start_freq = rp_get_params_lcr(6);
             float end_freq = rp_get_params_lcr(7);
             float lcr_Scale = rp_get_params_lcr(8);
+            float lcr_load_re = rp_get_params_lcr(9);
+            float lcr_load_im = rp_get_params_lcr(10);
+            float lcr_calibration = rp_get_params_lcr(11);
 
+            //TODO: Change appropriate number for command length.
             char sF[20];
             char eF[20];
             char amp[20];
@@ -329,6 +335,10 @@ void *rp_osc_worker_thread(void *args)
             char dc_bias[20];
             char r_shunt[20];
             char scale[20];
+            char re[10];
+            char im[10];
+            char calib[1];
+
 
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
@@ -337,6 +347,9 @@ void *rp_osc_worker_thread(void *args)
             snprintf(dc_bias, 20, "%f", lcr_dc_bias);
             snprintf(r_shunt, 20, "%f", lcr_r_shunt);
             snprintf(scale, 20, "%f", lcr_Scale);
+            snprintf(re, 10, "%f", lcr_load_re);
+            snprintf(im, 10, "%f", lcr_load_im);
+            snprintf(calib, 1, "%f", lcr_calibration);
 
             char command[100];
             
@@ -353,18 +366,95 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, avg);
             strcat(command, " ");
 
-            strcat(command, "0 0 0 100 1 "),
+            strcat(command, "0 ");
+
+            strcat(command, re);
+            strcat(command, " ");
+            strcat(command, im);
+
+            strcat(command, " 100 1 ");
 
             strcat(command, sF);
             strcat(command, " ");
             strcat(command, eF);
             strcat(command, " ");
-
-            strcat(command, "1 0");
+            strcat(command, scale);
+            strcat(command, " 0");
 
             system(command);
             
-            rp_set_flag(0);
+            rp_set_params_lcr(0, 0);
+
+        /* Measurment sweep */
+        }else if(measure_option == 2){
+
+            float lcr_amp = rp_get_params_lcr(2);
+            float lcr_avg = rp_get_params_lcr(3);
+            float lcr_dc_bias = rp_get_params_lcr(4);
+            float lcr_r_shunt = rp_get_params_lcr(5);
+            float start_freq = rp_get_params_lcr(6);
+            float end_freq = rp_get_params_lcr(7);
+            float lcr_Scale = rp_get_params_lcr(8);
+            float lcr_load_re = rp_get_params_lcr(9);
+            float lcr_load_im = rp_get_params_lcr(10);
+            float lcr_calibration = rp_get_params_lcr(11);
+
+            //TODO: Change appropriate number for command length.
+            char sF[20];
+            char eF[20];
+            char amp[20];
+            char avg[20];
+            char dc_bias[20];
+            char r_shunt[20];
+            char scale[20];
+            char re[10];
+            char im[10];
+            char calib[1];   
+
+            snprintf(sF, 20, "%f", start_freq);
+            snprintf(eF, 20, "%f", end_freq);
+            snprintf(amp, 20, "%f", lcr_amp);
+            snprintf(avg, 20, "%f", lcr_avg);
+            snprintf(dc_bias, 20, "%f", lcr_dc_bias);
+            snprintf(r_shunt, 20, "%f", lcr_r_shunt);
+            snprintf(scale, 20, "%f", lcr_Scale);
+            snprintf(re, 10, "%f", lcr_load_re);
+            snprintf(im, 10, "%f", lcr_load_im);
+            snprintf(calib, 1, "%f", lcr_calibration);
+
+            char command[100];
+            
+            strcpy(command, "/opt/bin/lcr 1 ");
+            strcat(command, amp);
+            strcat(command, " ");
+
+            strcat(command, dc_bias);
+            strcat(command, " ");
+
+            strcat(command, r_shunt);
+            strcat(command, " ");
+
+            strcat(command, avg);
+            strcat(command, " ");
+
+            strcat(command, "0 ");
+
+            strcat(command, re);
+            strcat(command, " ");
+            strcat(command, im);
+
+            strcat(command, " 100 0 "); // Sweep function set to 0 for measurment sweep.
+
+            strcat(command, sF);
+            strcat(command, " ");
+            strcat(command, eF);
+            strcat(command, " ");
+            strcat(command, scale);
+            strcat(command, " 0");
+
+            system(command);
+            
+            
         }
         
         /* request to stop worker thread, we will shut down */
@@ -633,10 +723,6 @@ void *rp_osc_worker_thread(void *args)
         if((state == rp_osc_single_state) && (!long_acq)) {
             rp_osc_worker_change_state(rp_osc_idle_state);
         }
-
-       
-       
-        
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
             /* Finish the measurement */
@@ -752,11 +838,9 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
 
     float *frequency = *time_signal;
     
-    
-    
-    FILE *frequency_data = fopen("data_frequency.txt", "r");
-    FILE *phase_data = fopen("data_phase.txt", "r");
-    FILE *amplitude_data = fopen("data_amplitude.txt", "r");
+    FILE *frequency_data = fopen("/opt/www/apps/scope+gen/lcr_data/data_frequency.txt", "r");
+    FILE *phase_data = fopen("/opt/www/apps/scope+gen/lcr_data/data_phase.txt", "r");
+    FILE *amplitude_data = fopen("/opt/www/apps/scope+gen/lcr_data/data_amplitude.txt", "r");
 
     /* Error checking */
     if(frequency_data == NULL || phase_data == NULL || amplitude_data == NULL){
@@ -804,17 +888,19 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                                                rp_calib_params->fe_ch1_dc_offs,
                                                ch1_user_dc_off);
 */      
-        chb_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
-                                               rp_calib_params->fe_ch2_dc_offs,
-                                               ch2_user_dc_off);
-
-        t[out_idx] = frequency[out_idx];
+        chb_s[out_idx] = 1;
+        if(rp_get_params_lcr(0) == 2){
+            t[out_idx] = out_idx;
+        }else{
+            t[out_idx] = frequency[out_idx];
+        }
+        
 
         //(t_start + (t_idx * smpl_period)) * t_unit_factor;
     }
     
     counter = 0;
-
+    rp_set_params_lcr(0, 0);
     return 0;
 }
 
