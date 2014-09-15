@@ -130,7 +130,7 @@ void usage() {
         "\tcalibration mode   0 - none, 1 - open and short, 2 - Zloadref.\n"
         "\tZloadref real      Zloadref real part.\n"
         "\tZloadref imag      Zloadref imaginary part.\n"
-        "\tcount/steps        Measurement count when performing measurement sweep OR"
+        "\tcount/steps        Measurement count when performing measurement sweep OR\n"
         "                     steps made between frequency limits [1 - 1000].\n"
         "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
         "\tstart freq         Lower frequency limit in Hz [0 - 62.5e6].\n"
