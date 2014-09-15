@@ -641,9 +641,8 @@ int main(int argc, char *argv[])
     FILE *file_phase = fopen("/opt/www/apps/scope+gen/lcr_data/data_phase.txt", "w");
     FILE *file_amplitude = fopen("/opt/www/apps/scope+gen/lcr_data/data_amplitude.txt", "w");
 
+
     /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
-
-
 
     for ( i = 0; i < end_results_dimension ; i++ ) {
 
@@ -673,12 +672,17 @@ int main(int argc, char *argv[])
         }
         
         /* Error checking */
-        if(file_frequency == NULL || file_phase == NULL){
+        if(file_frequency == NULL || file_phase == NULL || file_amplitude == NULL ){
             printf("Error opening file!\n");
         }
 
         /* Saving data into files */
-        fprintf(file_frequency, "%.2f\n", frequency[i]);
+        if(!sweep_function){
+            fprintf(file_frequency, "%.2f\n", frequency[0]);
+        }else{
+            fprintf(file_frequency, "%.2f\n", frequency[i]);
+        }
+        
         fprintf(file_phase, "%.2f\n", PhaseZ[i]);
         fprintf(file_amplitude, "%.2f\n", AmplitudeZ[i]);
 
