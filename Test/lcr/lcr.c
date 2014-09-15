@@ -7,7 +7,7 @@
  * @Author2 Zumret Topcacic   <zumret_topcagic@hotmail.com>
  * 
  *
- * VERSION : 2.2
+ * VERSION : 0-dev
  * This part of code is written in C programming language.
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
  * for more details on the language used herein.
@@ -24,7 +24,7 @@
 #include <sys/param.h>
 #include "main_osc.h"
 #include "fpga_osc.h"
-#include <complex.h> // Standard library for complex numbers. Yahoo
+#include <complex.h> // Standard library for complex numbers
 
 #define M_PI 3.14159265358979323846
 
