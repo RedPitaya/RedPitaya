@@ -495,27 +495,115 @@ int main(int argc, char *argv[])
         fprintf(stderr,"error alocating memmory for Z_measure\n");
         return -1;
     }
+
     float *calib_data_combine = (float *)malloc( 2 * sizeof(float)); //[0]-frequencies, [1]-real part of imedance, [2]- imaginary part of impendance,
     if (calib_data_combine == NULL){
         fprintf(stderr,"error alocating memmory for calib_data_combine\n");
         return -1;
     }
+    float complex *Z_final  = (float complex *)malloc( end_results_dimension * sizeof(float complex));
+    if (Z_final == NULL){
+        fprintf(stderr,"error alocating memmory for Z_final\n");
+        return -1;
+    }
 
-    float *PhaseZ             = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    float *PhaseZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (PhaseZ == NULL){
         fprintf(stderr,"error alocating memmory for PhaseZ\n");
         return -1;
     }
-    float *AmplitudeZ         = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+
+    float *AmplitudeZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (AmplitudeZ == NULL){
         fprintf(stderr,"error alocating memmory for AmplitudeZ\n");
         return -1;
     }
-    float *Frequency          = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+
+    float *Frequency = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (Frequency == NULL){
         fprintf(stderr,"error alocating memmory for Frequency\n");
         return -1;
     }
+
+    float *R_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (R_s == NULL){
+        fprintf(stderr,"error alocating memmory for R_s\n");
+        return -1;
+    }
+
+    float *X_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (X_s == NULL){
+        fprintf(stderr,"error alocating memmory for X_s\n");
+        return -1;
+    }
+
+    float complex *Y  = (float complex *)malloc( end_results_dimension * sizeof(float complex));
+    if (Y == NULL){
+        fprintf(stderr,"error alocating memmory for Z_final\n");
+        return -1;
+    }
+    
+
+    float *Y_abs  = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (Y_abs == NULL){
+        fprintf(stderr,"error alocating memmory for Y_abs\n");
+        return -1;
+    }
+
+    float *G_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (G_p == NULL){
+        fprintf(stderr,"error alocating memmory for G_p\n");
+        return -1;
+    }
+
+    float *B_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (B_p == NULL){
+        fprintf(stderr,"error alocating memmory for B_p\n");
+        return -1;
+    }
+
+    float *C_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (C_s == NULL){
+        fprintf(stderr,"error alocating memmory for C_s\n");
+        return -1;
+    }
+
+    float *C_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (C_p == NULL){
+        fprintf(stderr,"error alocating memmory for C_p\n");
+        return -1;
+    }
+
+    float *L_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (L_s == NULL){
+        fprintf(stderr,"error alocating memmory for L_s\n");
+        return -1;
+    }
+
+    float *L_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (L_p == NULL){
+        fprintf(stderr,"error alocating memmory for L_p\n");
+        return -1;
+    }
+
+    float *R_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (R_p == NULL){
+        fprintf(stderr,"error alocating memmory for R_p\n");
+        return -1;
+    }
+
+    float *Q = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (Q == NULL){
+        fprintf(stderr,"error alocating memmory for Q\n");
+        return -1;
+    }
+
+    float *D = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (D == NULL){
+        fprintf(stderr,"error alocating memmory for D\n");
+        return -1;
+    }
+
 
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -731,15 +819,61 @@ int main(int argc, char *argv[])
             calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
+        w_out = 2 * M_PI *Frequency[ i ];
         
         /* Phase and amplitude calculation */
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
+
+        Z_final[ i ] = calib_data_combine[ 1 ] + calib_data_combine[ 2 ]*I;//Z=Z_abs*exp(i*Phase_rad);;
+        R_s[ i ] =  calib_data_combine[ 1 ];//X_s=imag(Z);
+        X_s[ i ] = calib_data_combine[ 2 ];//Y=1/Z;
+        
+        Y [ i ] = 1 / Z_final[ i ];//Y_abs=abs(Y);
+        Y_abs [ i ] = sqrtf( powf( creal(Y[ i ]), 2 ) + powf(cimag(Y[ i ]), 2 ) );//G_p=real(Y);
+        G_p [ i ] = creal(Y[ i ]);//B_p=imag(Y);
+        B_p [ i ] = cimag(Y[ i ]);//C_s=-1/(w*X_s);
+        
+        C_s [ i ] = -1 / (w_out * X_s[ i ]);//C_s=-1/(w*X_s);
+        C_p [ i ] = B_p[ i ] / w_out;//C_p=B_p/w;
+        L_s [ i ] = X_s[ i ] / w_out;//L_p=-1/(w*B_p);
+        L_p [ i ] = -1 / (w_out * B_p[ i ]);//R_p=1/G_p;
+        R_p [ i ] = 1 / G_p [ i ]; //R_p=1/G_p;
+        
+        Q[ i ] =X_s[ i ] / R_s[ i ]; //Q=X_s/R_s;
+        D[ i ] = -1 / Q [ i ]; //D=-1/Q;
+
         if ( !sweep_function ) {
-            printf(" %.0f    %.5f    %.5f\n", Frequency[ 0 ],PhaseZ[ i ],AmplitudeZ[ i ]);
+            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
+                Frequency[ i ],
+                PhaseZ[ i ],
+                AmplitudeZ[ i ],
+                Y_abs[ i ],
+                G_p[ i ],
+                B_p[ i ],
+                C_s[ i ],
+                L_s[ i ],
+                L_p[ i ],
+                R_p[ i ],
+                Q[ i ],
+                D[ i ]
+                );
         }
         else {
-            printf(" %.0f    %.5f    %.5f\n", Frequency[ i ],PhaseZ[ i ],AmplitudeZ[ i ]);
+            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
+                Frequency[ i ],
+                PhaseZ[ i ],
+                AmplitudeZ[ i ],
+                Y_abs[ i ],
+                G_p[ i ],
+                B_p[ i ],
+                C_s[ i ],
+                L_s[ i ],
+                L_p[ i ],
+                R_p[ i ],
+                Q[ i ],
+                D[ i ]
+                );
         }
         
         /* Error checking */
@@ -954,7 +1088,7 @@ int acquire_data(float **s ,
     int retries = 150000;
     int j, sig_num, sig_len;
     int ret_val;
-
+    usleep(50000);
     while(retries >= 0) {
         if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
             /* Signals acquired in s[][]:
