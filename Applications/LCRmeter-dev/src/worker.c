@@ -284,8 +284,14 @@ void *rp_osc_worker_thread(void *args)
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
         
-        float start = rp_get_flag();
-        if(start == 1){
+        /* Start lcr measurment */
+        float measure_option = rp_get_params_lcr(0);
+
+        /* Set max length to 100 */
+        char command[100];
+
+        /* Frequency sweep */
+        if(measure_option == 1){
 
 
             float lcr_amp = rp_get_params_lcr(2);
@@ -312,8 +318,9 @@ void *rp_osc_worker_thread(void *args)
             snprintf(dc_bias, 20, "%f", lcr_dc_bias);
             snprintf(r_shunt, 20, "%f", lcr_r_shunt);
             snprintf(scale, 20, "%f", lcr_Scale);
-
-            char command[100];
+            snprintf(re, 10, "%f", lcr_load_re);
+            snprintf(im, 10, "%f", lcr_load_im);
+            snprintf(calib, 1, "%f", lcr_calibration);
             
             strcpy(command, "/opt/bin/lcr 1 ");
             strcat(command, amp);
@@ -347,9 +354,10 @@ void *rp_osc_worker_thread(void *args)
             
             rp_set_params_lcr(0, 0);
 
-        /* Measurment sweep */
+        /* Measurment sweep -- work in progress 18.9.2014 */
         }else if(measure_option == 2){
-            
+
+                        
             float lcr_steps = rp_get_params_lcr(1);
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
@@ -806,11 +814,9 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
 
     float *frequency = *time_signal;
     
-    
-    
-    FILE *frequency_data = fopen("data_frequency.txt", "r");
-    FILE *phase_data = fopen("data_phase.txt", "r");
-    FILE *amplitude_data = fopen("data_amplitude.txt", "r");
+    FILE *frequency_data = fopen("/tmp/lcr_data/data_frequency.txt", "r");
+    FILE *phase_data = fopen("/tmp/lcr_data/data_phase.txt", "r");
+    FILE *amplitude_data = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
 
     /* Error checking */
     if(frequency_data == NULL || phase_data == NULL || amplitude_data == NULL){
@@ -843,10 +849,7 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
     for(out_idx=0, t_idx=0; out_idx < counter; 
         out_idx++, in_idx+=t_step, t_idx+=t_step) {
 
-         /*Wrap the pointer 
-        if(in_idx >= OSC_FPGA_SIG_LEN)
-            in_idx = in_idx % OSC_FPGA_SIG_LEN;
-        */
+        /* Data check */
         if(rp_get_params_lcr(15) == 1){
             cha_s[out_idx] = amplitude[out_idx];
         }else{
