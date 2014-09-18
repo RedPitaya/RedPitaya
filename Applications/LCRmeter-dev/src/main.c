@@ -143,7 +143,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* gen_DC_offs_2 - DC offset for channel 2 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
-    { /* flag_button - General flag used for sending params from the RedPitaya browser.
+    { /* start_measure - General flag used for sending params from the RedPitaya browser.
        *   -1 - Application not loaded yet
        *    0 - negative
        *    1 - Frequency Sweep
