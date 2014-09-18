@@ -143,7 +143,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* gen_DC_offs_2 - DC offset for channel 2 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
-    { /* flag_button - General flag used for sending params from the RedPitaya browser. 
+    { /* flag_button - General flag used for sending params from the RedPitaya browser.
+       *   -1 - Application not loaded yet
        *    0 - negative
        *    1 - Frequency Sweep
        *    2 - Measurment sweep 
@@ -151,7 +152,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
        *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
        *    code in index.html as well as from the C controller code. */
-        "start_measure", 0, 1, 0, 0, 3 },
+        "start_measure", -1, 1, 0, -1, 3 },
     { /* LCR amplitude. User defined.
        *    Min value - 0
        *    Max value - 2 */
