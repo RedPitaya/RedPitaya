@@ -286,10 +286,8 @@ void *rp_osc_worker_thread(void *args)
         
         /* Start lcr measurment */
         float measure_option = rp_get_params_lcr(0);
-
-        /* Set max length to 100 */
+        /* Set max command lenght */
         char command[100];
-
         /* Frequency sweep */
         if(measure_option == 1){
 
@@ -329,6 +327,8 @@ void *rp_osc_worker_thread(void *args)
             snprintf(re, 10, "%f", lcr_load_re);
             snprintf(im, 10, "%f", lcr_load_im);
             snprintf(calib, 1, "%f", lcr_calibration);
+
+            char command[100];
             
             strcpy(command, "/opt/bin/lcr 1 ");
             strcat(command, amp);
@@ -365,7 +365,7 @@ void *rp_osc_worker_thread(void *args)
         /* Measurment sweep -- work in progress 18.9.2014 */
         }else if(measure_option == 2){
 
-                        
+            
             float lcr_steps = rp_get_params_lcr(1);
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
@@ -769,116 +769,86 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                     float ch1_max_adc_v, float ch2_max_adc_v,
                     float ch1_user_dc_off, float ch2_user_dc_off)
 {
-    int t_start_idx, t_stop_idx;
-    float smpl_period = c_osc_fpga_smpl_period * dec_factor;
-    //int   t_unit_factor = rp_osc_get_time_unit_factor(time_unit);
-    int t_step;
-    int in_idx, out_idx, t_idx;
-    int wr_ptr_curr, wr_ptr_trig;
-
+    
+    int out_idx;
     float *cha_s = *cha_signal;
     float *chb_s = *chb_signal;
     float *t = *time_signal;
     
-    /* If illegal take whole frame */
-    if(t_stop <= t_start) {
-        t_start = 0;
-        t_stop = (OSC_FPGA_SIG_LEN-1) * smpl_period;
-    }
-    
-    /* convert time to samples */
-    t_start_idx = round(t_start / smpl_period);
-    t_stop_idx  = round(t_stop / smpl_period);
-
-    if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) < 1)
-        t_step = 1;
-    else {
-        /* ceil was used already in rp_osc_main() for parameters, so we can easily
-         * use round() here 
-         */
-        t_step = round((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1));
-    }
-    osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig);
-    in_idx = wr_ptr_trig + t_start_idx - 3;
-    if(in_idx < 0) 
-        in_idx = OSC_FPGA_SIG_LEN + in_idx;
-    if(in_idx >= OSC_FPGA_SIG_LEN)
-        in_idx = in_idx % OSC_FPGA_SIG_LEN;
-
-    /* First perform measurements on non-decimated signal:
-     *  - min, max - performed in the loop
-     *  - avg, amp - performed after the loop
-     *  - freq, period - performed in the next decimation loop
-     */
-    for(out_idx=0; out_idx < OSC_FPGA_SIG_LEN; out_idx++) {
-        rp_osc_meas_min_max(ch1_meas, in_cha_signal[out_idx]);
-        rp_osc_meas_min_max(ch2_meas, in_chb_signal[out_idx]);
-    }
-
 
     float *frequency = *time_signal;
-    
-    FILE *frequency_data = fopen("/tmp/lcr_data/data_frequency.txt", "r");
-    FILE *phase_data = fopen("/tmp/lcr_data/data_phase.txt", "r");
-    FILE *amplitude_data = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
 
-    /* Error checking */
-    if(frequency_data == NULL || phase_data == NULL || amplitude_data == NULL){
-        printf("Error opening file!\n");
-    }
+    if(rp_get_params_lcr(0) != -1){
 
-    while(!feof(frequency_data)){
-        fscanf(frequency_data, "%f", &frequency[counter]);
-        counter++;
-    }
+        FILE *frequency_data = fopen("/tmp/lcr_data/data_frequency.txt", "r");
+        FILE *phase_data = fopen("/tmp/lcr_data/data_phase.txt", "r");
+        FILE *amplitude_data = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
 
-    float *phase = malloc(counter * sizeof(float));
-    float *amplitude = malloc(counter * sizeof(float));
-
-    int p_counter = 0;
-    while(!feof(phase_data)){
-        fscanf(phase_data, "%f", &phase[p_counter]);
-        p_counter++;
-    }
-    int a_counter = 0;
-    while(!feof(amplitude_data)){
-        fscanf(amplitude_data, "%f", &amplitude[a_counter]);
-        a_counter++;
-    }
-
-    fclose(frequency_data);
-    fclose(phase_data);
-    fclose(amplitude_data);
-
-    for(out_idx=0, t_idx=0; out_idx < counter; 
-        out_idx++, in_idx+=t_step, t_idx+=t_step) {
-
-        /* Data check */
-        if(rp_get_params_lcr(15) == 1){
-            cha_s[out_idx] = amplitude[out_idx];
-        }else{
-           cha_s[out_idx] = phase[out_idx]; 
-       }
-
-/*
-        osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
-                                               rp_calib_params->fe_ch1_dc_offs,
-                                               ch1_user_dc_off);
-*/      
-        chb_s[out_idx] = osc_fpga_cnv_cnt_to_v(in_chb_signal[in_idx], ch2_max_adc_v,
-                                               rp_calib_params->fe_ch2_dc_offs,
-                                               ch2_user_dc_off);
-
-        if((frequency[0] == frequency[1])){
-            t[out_idx] = out_idx;
-        }else{
-            t[out_idx] = frequency[out_idx];
+        /* Error checking */
+        if(frequency_data == NULL || phase_data == NULL || amplitude_data == NULL){
+            printf("Error opening file!\n");
         }
-        
 
-        //(t_start + (t_idx * smpl_period)) * t_unit_factor;
-    }
+        while(!feof(frequency_data)){
+            fscanf(frequency_data, "%f", &frequency[counter]);
+            counter++;
+        }
+
+        float *phase = malloc(counter * sizeof(float));
+        float *amplitude = malloc(counter * sizeof(float));
+
+        int p_counter = 0;
+        while(!feof(phase_data)){
+            fscanf(phase_data, "%f", &phase[p_counter]);
+            p_counter++;
+        }
+        int a_counter = 0;
+        while(!feof(amplitude_data)){
+            fscanf(amplitude_data, "%f", &amplitude[a_counter]);
+            a_counter++;
+        }
+
+        fclose(frequency_data);
+        fclose(phase_data);
+        fclose(amplitude_data);
+
+        for(out_idx=0; out_idx < counter; out_idx++) {
+
+            /* Data check */
+            if(rp_get_params_lcr(15) == 1){
+                cha_s[out_idx] = amplitude[out_idx];
+            }else{
+               cha_s[out_idx] = phase[out_idx]; 
+           }
+
+    /*
+            osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
+                                                   rp_calib_params->fe_ch1_dc_offs,
+                                                   ch1_user_dc_off);
+    */      
+            chb_s[out_idx] = 0;
+
+            if((frequency[0] == frequency[1])){
+                t[out_idx] = out_idx;
+            }else{
+                t[out_idx] = frequency[out_idx];
+            }
+            
+        }
+        /* Case we are in first boot */
+    }else{
+
+        for(out_idx=0; out_idx < counter; out_idx++) {
+
+            cha_s[out_idx] = 0;
+     
+            chb_s[out_idx] = 0;
+
+            t[out_idx] = out_idx;
     
+        }
+    }
+
     counter = 0;
     return 0;
 }
