@@ -513,6 +513,12 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    float *PhaseY = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
+    if (PhaseY == NULL){
+        fprintf(stderr,"error alocating memmory for PhaseY\n");
+        return -1;
+    }
+
     float *AmplitudeZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (AmplitudeZ == NULL){
         fprintf(stderr,"error alocating memmory for AmplitudeZ\n");
@@ -626,7 +632,7 @@ int main(int argc, char *argv[])
     synthesize_signal( ampl, start_frequency, type, endfreq, data, &params );
     /* Write the data to the FPGA and set FPGA AWG state machine */
     write_data_fpga( ch, data, &params );
-
+    usleep(1000);
 
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
@@ -635,6 +641,8 @@ int main(int argc, char *argv[])
         }
 
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
+
+            
 
             if ( scale_type ) { //log scle
                 k = powf( 10, ( c * (float)fr ) + a );
@@ -826,11 +834,12 @@ int main(int argc, char *argv[])
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
 
         Z_final[ i ] = calib_data_combine[ 1 ] + calib_data_combine[ 2 ]*I;//Z=Z_abs*exp(i*Phase_rad);;
-        R_s[ i ] =  calib_data_combine[ 1 ];//X_s=imag(Z);
-        X_s[ i ] = calib_data_combine[ 2 ];//Y=1/Z;
+        R_s[ i ] =  calib_data_combine[ 1 ];//_s=real(Z);
+        X_s[ i ] = calib_data_combine[ 2 ];//X_s=imag(Z);
         
         Y [ i ] = 1 / Z_final[ i ];//Y_abs=abs(Y);
         Y_abs [ i ] = sqrtf( powf( creal(Y[ i ]), 2 ) + powf(cimag(Y[ i ]), 2 ) );//G_p=real(Y);
+        PhaseY[ i ] = -PhaseZ[ i ];
         G_p [ i ] = creal(Y[ i ]);//B_p=imag(Y);
         B_p [ i ] = cimag(Y[ i ]);//C_s=-1/(w*X_s);
         
@@ -844,14 +853,18 @@ int main(int argc, char *argv[])
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
 
         if ( !sweep_function ) {
-            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
-                Frequency[ i ],
+            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
+                Frequency[ 0 ],
                 PhaseZ[ i ],
                 AmplitudeZ[ i ],
                 Y_abs[ i ],
+                PhaseY[ i ],
+                R_s[ i ],
+                X_s[ i ],
                 G_p[ i ],
                 B_p[ i ],
                 C_s[ i ],
+                C_p[ i ],
                 L_s[ i ],
                 L_p[ i ],
                 R_p[ i ],
@@ -860,14 +873,18 @@ int main(int argc, char *argv[])
                 );
         }
         else {
-            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
+            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
                 Frequency[ i ],
                 PhaseZ[ i ],
                 AmplitudeZ[ i ],
                 Y_abs[ i ],
+                PhaseY[ i ],
+                R_s[ i ],
+                X_s[ i ],
                 G_p[ i ],
                 B_p[ i ],
                 C_s[ i ],
+                C_p[ i ],
                 L_s[ i ],
                 L_p[ i ],
                 R_p[ i ],
