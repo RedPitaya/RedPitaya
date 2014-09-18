@@ -803,10 +803,110 @@ int main(int argc, char *argv[])
     } 
     */
 
-    /* Opening files */
-    FILE *file_frequency = fopen("/tmp/data_frequency.txt", "w");
-    FILE *file_phase = fopen("/tmp/data_phase.txt", "w");
-    FILE *file_amplitude = fopen("/tmp/data_amplitude.txt", "w");
+    /* Opening frequency data */
+    FILE *try_open = fopen("/tmp/lcr_data/data_frequency.txt", "w");
+
+    /* If files don't exists yet, we first have to create them ( First boot ), as we are storing them in /tmp */
+        if(try_open == NULL){
+
+            int f_number;
+            char command[100];
+
+            strcpy(command, "mkdir /tmp/lcr_data");
+            system(command);
+
+            /* We loop X ( Where X is the number of data we want to have ) times and create a file for each data type */
+            for(f_number = 0; f_number < 16; f_number++){
+                switch(f_number){
+                    case 0:
+                        strcpy(command, "touch /tmp/lcr_data/data_frequency.txt");
+                        system(command);
+                        break;
+                    case 1:
+                        strcpy(command, "touch /tmp/lcr_data/data_amplitude.txt");
+                        system(command);
+                        break;
+                    case 2:
+                        strcpy(command, "touch /tmp/lcr_data/data_phase.txt");
+                        system(command);
+                        break;
+                    case 3:
+                        strcpy(command, "touch /tmp/lcr_data/data_R_s.txt");
+                        system(command);
+                        break;
+                    case 4:
+                        strcpy(command, "touch /tmp/lcr_data/data_X_s.txt");
+                        system(command);
+                        break;
+                    case 5:
+                        strcpy(command, "touch /tmp/lcr_data/data_G_p.txt");
+                        system(command);
+                        break;
+                    case 6:
+                        strcpy(command, "touch /tmp/lcr_data/data_B_p.txt");
+                        system(command);
+                        break;
+                    case 7:
+                        strcpy(command, "touch /tmp/lcr_data/data_C_s.txt");
+                        system(command);
+                        break;
+                    case 8:
+                        strcpy(command, "touch /tmp/lcr_data/data_C_p.txt");
+                        system(command);
+                        break;
+                    case 9:
+                        strcpy(command, "touch /tmp/lcr_data/data_L_s.txt");
+                        system(command);
+                        break;
+                    case 10:
+                        strcpy(command, "touch /tmp/lcr_data/data_L_p.txt");
+                        system(command);
+                        break;
+                    case 11:
+                        strcpy(command, "touch /tmp/lcr_data/data_R_p.txt");
+                        system(command);
+                        break;
+                    case 12:
+                        strcpy(command, "touch /tmp/lcr_data/data_Q.txt");
+                        system(command);
+                        break;
+                    case 13:
+                        strcpy(command, "touch /tmp/lcr_data/data_D.txt");
+                        system(command);
+                        break;
+                    case 14:
+                        strcpy(command, "touch /tmp/lcr_data/data_Y_abs.txt");
+                        system(command);
+                        break;
+                    case 15:
+                        strcpy(command, "touch /tmp/lcr_data/data_phaseY.txt");
+                        system(command);
+                        break;
+
+                }
+            }
+            strcpy(command, "chmod -R 777 /tmp/lcr_data");
+            system(command);
+        }
+
+        /* Opening files */
+        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "w");
+        FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "w");
+        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "w");
+        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "w");
+        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "w");
+        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "w");
+        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "w");
+        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "w");
+        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "w");
+        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "w");
+        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "w");
+        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "w");
+        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "w");
+        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "w");
+        FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "w");
+        FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "w");
+
 
 
     /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
@@ -892,30 +992,49 @@ int main(int argc, char *argv[])
                 D[ i ]
                 );
         }
-        
-        /* Error checking */
-        if(file_frequency == NULL || file_phase == NULL || file_amplitude == NULL ){
-            printf("Error opening file!\n");
-            exit(1);
-        }
 
+        
         /* Saving data into files */
         if(!sweep_function){
-            fprintf(file_frequency, "%.2f\n", Frequency[0]);
+            fprintf(file_frequency, "%.5f\n", Frequency[0]);
         }else{
-            fprintf(file_frequency, "%.2f\n", Frequency[i]);
+            fprintf(file_frequency, "%.5f\n", Frequency[i]);
         }
         
-        fprintf(file_phase, "%.2f\n", PhaseZ[i]);
-        fprintf(file_amplitude, "%.2f\n", AmplitudeZ[i]);
-
+        fprintf(file_phase, "%.5f\n", PhaseZ[i]);
+        fprintf(file_amplitude, "%.5f\n", AmplitudeZ[i]);
+        fprintf(file_R_s, "%.5f\n", R_s[i]);
+        fprintf(file_Y_abs, "%.5f\n", Y_abs[i]);
+        fprintf(file_PhaseY, "%.5f\n", PhaseY[i]);
+        fprintf(file_X_s, "%.5f\n", X_s[i]);
+        fprintf(file_G_p, "%.5f\n", G_p[i]);
+        fprintf(file_B_p, "%.5f\n", B_p[i]);
+        fprintf(file_C_s, "%.5f\n", C_s[i]);
+        fprintf(file_C_p, "%.5f\n", C_p[i]);
+        fprintf(file_L_s, "%.5f\n", L_s[i]);
+        fprintf(file_L_p, "%.5f\n", L_p[i]);
+        fprintf(file_R_p, "%.5f\n", R_p[i]);
+        fprintf(file_Q, "%.5f\n", Q[i]);
+        fprintf(file_D, "%.5f\n", D[i]);
     }
 
     /* Closing files */
-
     fclose(file_frequency);
     fclose(file_phase);
     fclose(file_amplitude);
+    fclose(file_R_s);
+    fclose(file_Y_abs);
+    fclose(file_PhaseY);
+    fclose(file_X_s);
+    fclose(file_G_p);
+    fclose(file_B_p);
+    fclose(file_C_s);
+    fclose(file_C_p);
+    fclose(file_L_s);
+    fclose(file_L_p);
+    fclose(file_R_p);
+    fclose(file_Q);
+    fclose(file_D);
 
     return 1;
 
