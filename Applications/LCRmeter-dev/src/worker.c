@@ -758,17 +758,40 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
                     float **chb_signal, int *in_chb_signal,
                     float **time_signal)
 {
-    
+    /* Output signal index */
     int out_idx;
+
+    /* Raw A and B channel signal */
     float *cha_s = *cha_signal;
     float *chb_s = *chb_signal;
-    float *t = *time_signal;
-    
 
+    /* rp_tmp_signal[0] for X-coordinate set to frequency */
+    float *t = *time_signal;
     float *frequency = *time_signal;
 
-    if(rp_get_params_lcr(0) != -1){
+    /* If we are in first boot, start_measure will always be set to -1 
+     * rp_get_params_lcr(0):
+     * ret_val: -1 --> First boot 
+     *           0 --> No measurment
+     *           1 --> Frequency sweep
+     *           2 --> Measurment sweep  */
 
+    if(rp_get_params_lcr(0) == -1){
+
+        for(out_idx=0; out_idx < counter; out_idx++) {
+
+            cha_s[out_idx] = 0;
+     
+            chb_s[out_idx] = 0;
+
+            t[out_idx] = out_idx;
+        }
+
+    
+    }else{
+
+
+        /* Opening files */
         FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "r");
         FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "r");
         FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
@@ -792,6 +815,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             counter++;
         }
 
+        /* Allocationg memory. TODO: Free up memory after use */
         float *phase = malloc(counter * sizeof(float));
         float *amplitude = malloc(counter * sizeof(float));
         float *Y_abs = malloc(counter * sizeof(float));
@@ -808,7 +832,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
         float *Q = malloc(counter * sizeof(float));
         float *D = malloc(counter * sizeof(float));
 
-
+        /* Reading data from files into mem-allocated variables */
         int B_p_counter = 0;
         while(!feof(file_B_p)){
             fscanf(file_B_p, "%f", &B_p[B_p_counter]);
@@ -900,7 +924,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             G_p_counter++;
         }
         
-
+        /* Closing all the files */
         fclose(file_frequency);
         fclose(file_amplitude);
         fclose(file_phase);
@@ -921,6 +945,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
         for(out_idx=0; out_idx < counter; out_idx++) {
 
             /* Data check: TODO add switch statment for a niftier code */
+
             float scale = rp_get_params_lcr(15);
             if(scale == 0){
                 cha_s[out_idx] = amplitude[out_idx];
@@ -956,27 +981,16 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
    
             chb_s[out_idx] = 0;
 
+            /* Measurment sweep */
             if((frequency[0] == frequency[1])){
                 t[out_idx] = out_idx;
+
+            /* Frequency sweep */
             }else{
                 t[out_idx] = frequency[out_idx];
             }
-            
-
-            //(t_start + (t_idx * smpl_period)) * t_unit_factor;
         }
-        /* Case we are in first boot */
-    }else{
-
-        for(out_idx=0; out_idx < counter; out_idx++) {
-
-            cha_s[out_idx] = 0;
-     
-            chb_s[out_idx] = 0;
-
-            t[out_idx] = out_idx;
-    
-        }
+        
     }
 
     counter = 0;
