@@ -683,7 +683,6 @@ void *rp_osc_worker_thread(void *args)
             /* Acquisition over, start one more! */
             if(long_acq_idx >= SIGNAL_LENGTH-1) {
                 long_acq_idx = 0;
-
                 osc_fpga_get_wr_ptr(NULL, &long_acq_init_trig_ptr);
 
                 if(state == rp_osc_single_state) {
@@ -780,52 +779,112 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
 
     if(rp_get_params_lcr(0) != -1){
 
-        FILE *frequency_data = fopen("/tmp/lcr_data/data_frequency.txt", "r");
-        FILE *phase_data = fopen("/tmp/lcr_data/data_phase.txt", "r");
-        FILE *amplitude_data = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
+        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "r");
+        FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "r");
+        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
+        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "r");
+        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "r");
+        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "r");
+        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "r");
+        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "r");
+        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "r");
+        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "r");
+        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "r");
+        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "r");
+        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "r");
+        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "r");
+        FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "r");
+        FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "r");
+        
 
-        /* Error checking */
-        if(frequency_data == NULL || phase_data == NULL || amplitude_data == NULL){
-            printf("Error opening file!\n");
-        }
-
-        while(!feof(frequency_data)){
-            fscanf(frequency_data, "%f", &frequency[counter]);
+        while(!feof(file_frequency)){
+            fscanf(file_frequency, "%f", &frequency[counter]);
             counter++;
         }
 
         float *phase = malloc(counter * sizeof(float));
         float *amplitude = malloc(counter * sizeof(float));
-
+        float *Y_abs = malloc(counter * sizeof(float));
+        float *R_s = malloc(counter * sizeof(float));
+        float *phaseY = malloc(counter * sizeof(float));
+        float *X_s = malloc(counter * sizeof(float));
+        float *G_p = malloc(counter * sizeof(float));
+        float *B_p = malloc(counter * sizeof(float));
+        
+        
         int p_counter = 0;
-        while(!feof(phase_data)){
-            fscanf(phase_data, "%f", &phase[p_counter]);
+        while(!feof(file_phase)){
+            fscanf(file_phase, "%f", &phase[p_counter]);
             p_counter++;
         }
+
         int a_counter = 0;
-        while(!feof(amplitude_data)){
-            fscanf(amplitude_data, "%f", &amplitude[a_counter]);
+        while(!feof(file_amplitude)){
+            fscanf(file_amplitude, "%f", &amplitude[a_counter]);
             a_counter++;
         }
+        
+        int y_abs_counter = 0;
+        while(!feof(file_Y_abs)){
+            fscanf(file_Y_abs, "%f", &Y_abs[y_abs_counter]);
+            y_abs_counter++;
+        }
 
-        fclose(frequency_data);
-        fclose(phase_data);
-        fclose(amplitude_data);
+        
+        int phaseY_counter = 0;
+        while(!feof(file_PhaseY)){
+            fscanf(file_PhaseY, "%f", &phaseY[phaseY_counter]);
+            phaseY_counter++;
+        }
+        
+        int R_s_counter = 0;
+        while(!feof(file_R_s)){
+            fscanf(file_R_s, "%f", &R_s[R_s_counter]);
+            R_s_counter++;
+        }
+        
+        int X_s_counter = 0;
+        while(!feof(file_X_s)){
+            fscanf(file_X_s, "%f", &X_s[X_s_counter]);
+            X_s_counter++;
+        }
 
+        int G_p_counter = 0;
+        while(!feof(file_G_p)){
+            fscanf(file_G_p, "%f", &G_p[G_p_counter]);
+            G_p_counter++;
+        }
+        
+
+        fclose(file_frequency);
+        fclose(file_amplitude);
+        fclose(file_phase);
+        fclose(file_Y_abs);
+        fclose(file_PhaseY);
+        fclose(file_R_s);
+        fclose(file_X_s);
+        fclose(file_G_p);
+        
         for(out_idx=0; out_idx < counter; out_idx++) {
 
             /* Data check */
-            if(rp_get_params_lcr(15) == 1){
+            float scale = rp_get_params_lcr(15);
+            if(scale == 0){
                 cha_s[out_idx] = amplitude[out_idx];
-            }else{
+            }else if(scale == 1){
                cha_s[out_idx] = phase[out_idx]; 
-           }
-
-    /*
-            osc_fpga_cnv_cnt_to_v(in_cha_signal[in_idx], ch1_max_adc_v,
-                                                   rp_calib_params->fe_ch1_dc_offs,
-                                                   ch1_user_dc_off);
-    */      
+            }else if(scale == 2){
+                cha_s[out_idx] = Y_abs[out_idx];
+            }else if(scale == 3){
+                cha_s[out_idx] = phaseY[out_idx];
+            }else if(scale == 4){
+                cha_s[out_idx] = R_s[out_idx];
+            }else if(scale == 5){
+                cha_s[out_idx] = X_s[out_idx];
+            }else if(scale == 6){
+                cha_s[out_idx] = G_p[out_idx];
+            }
+   
             chb_s[out_idx] = 0;
 
             if((frequency[0] == frequency[1])){
@@ -834,6 +893,8 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                 t[out_idx] = frequency[out_idx];
             }
             
+
+            //(t_start + (t_idx * smpl_period)) * t_unit_factor;
         }
         /* Case we are in first boot */
     }else{

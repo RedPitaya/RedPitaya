@@ -185,7 +185,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * 0 - Plots amplitude
        * 1 - Plots phase
        * 5 - TODO: Adding multiple data acquisition. */
-      "plot_y_scale_data", 0, 1, 0, 0, 5 },
+      "plot_y_scale_data", 0, 1, 0, 0, 15 },
     { /* Lcr scale type. Defined by user.
        * 0 - Linear scale
        * 1 - Logarithmic scale */
