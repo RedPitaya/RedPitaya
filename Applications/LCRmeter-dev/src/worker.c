@@ -810,7 +810,62 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         float *X_s = malloc(counter * sizeof(float));
         float *G_p = malloc(counter * sizeof(float));
         float *B_p = malloc(counter * sizeof(float));
-        
+        float *C_s = malloc(counter * sizeof(float));
+        float *C_p = malloc(counter * sizeof(float));
+        float *L_s = malloc(counter * sizeof(float));
+        float *L_p = malloc(counter * sizeof(float));
+        float *R_p = malloc(counter * sizeof(float));
+        float *Q = malloc(counter * sizeof(float));
+        float *D = malloc(counter * sizeof(float));
+
+
+        int B_p_counter = 0;
+        while(!feof(file_B_p)){
+            fscanf(file_B_p, "%f", &B_p[B_p_counter]);
+            B_p_counter++;
+        }
+
+        int C_s_counter = 0;
+        while(!feof(file_C_s)){
+            fscanf(file_C_s, "%f", &C_s[C_s_counter]);
+            C_s_counter++;
+        }
+
+        int C_p_counter = 0;
+        while(!feof(file_C_p)){
+            fscanf(file_C_p, "%f", &C_p[C_p_counter]);
+            C_p_counter++;
+        }
+
+        int L_s_counter = 0;
+        while(!feof(file_L_s)){
+            fscanf(file_L_s, "%f", &L_s[L_s_counter]);
+            L_s_counter++;
+        }
+
+        int L_p_counter = 0;
+        while(!feof(file_L_p)){
+            fscanf(file_L_p, "%f", &L_p[L_p_counter]);
+            L_p_counter++;
+        }
+
+        int R_p_counter = 0;
+        while(!feof(file_R_p)){
+            fscanf(file_R_p, "%f", &R_p[R_p_counter]);
+            R_p_counter++;
+        }
+
+        int q_counter = 0;
+        while(!feof(file_Q)){
+            fscanf(file_Q, "%f", &Q[q_counter]);
+            q_counter++;
+        }
+
+        int d_counter = 0;
+        while(!feof(file_D)){
+            fscanf(file_D, "%f", &D[d_counter]);
+            d_counter++;
+        }
         
         int p_counter = 0;
         while(!feof(file_phase)){
@@ -864,10 +919,18 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
         fclose(file_R_s);
         fclose(file_X_s);
         fclose(file_G_p);
+        fclose(file_B_p);
+        fclose(file_C_s);
+        fclose(file_C_p);
+        fclose(file_L_s);
+        fclose(file_L_p);
+        fclose(file_R_p);
+        fclose(file_Q);
+        fclose(file_D);
         
         for(out_idx=0; out_idx < counter; out_idx++) {
 
-            /* Data check */
+            /* Data check: TODO add switch statment for a niftier code */
             float scale = rp_get_params_lcr(15);
             if(scale == 0){
                 cha_s[out_idx] = amplitude[out_idx];
@@ -883,6 +946,22 @@ int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
                 cha_s[out_idx] = X_s[out_idx];
             }else if(scale == 6){
                 cha_s[out_idx] = G_p[out_idx];
+            }else if(scale == 7){
+                cha_s[out_idx] = B_p[out_idx];
+            }else if(scale == 8){
+                cha_s[out_idx] = C_s[out_idx];
+            }else if(scale == 9){
+                cha_s[out_idx] = C_p[out_idx];
+            }else if(scale == 10){
+                cha_s[out_idx] = L_s[out_idx];
+            }else if(scale == 11){
+                cha_s[out_idx] = L_p[out_idx];
+            }else if(scale == 12){
+                cha_s[out_idx] = R_s[out_idx];
+            }else if(scale == 13){
+                cha_s[out_idx] = Q[out_idx];
+            }else if(scale == 14){
+                cha_s[out_idx] = D[out_idx];
             }
    
             chb_s[out_idx] = 0;
