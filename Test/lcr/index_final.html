@@ -1900,33 +1900,11 @@
     sendParams();
  }
 
- function showMeasure(){
-  var y_axis = document.getElementById('apply_Yaxis').value;
 
-  if(y_axis == 0){
-    params.local.plot_y_scale_data = 0;
-  }else if(y_axis == 8){
-    params.local.plot_y_scale_data = 1;
-  }
-
-  /* TODO: Switch Axis
-  switch(y_axis){
-    case 0:
-      params.local.plot_y_scale_data = 0;
-      break;
-    case 8:
-      params.local.plot_y_scale_data = 1;
-      break;
-  }
-  */
-  //alert(params.local.plot_y_scale_data);
-  
-  //TODO:Getter, setter for variable change params.local.fla_gutton as var 2;
-
-
-sendParams();
-
-  
+/* Function for setting the desired data in plot */
+function showMeasure(){
+  params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+  sendParams();
 }
 
   
@@ -2372,17 +2350,6 @@ sendParams();
             <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Xaxis">
                       <option value="0">Frequency</option>
-                      <option value="11">Rs</option>
-                      <option value="1">Ls</option>
-                      <option value="2">Cp</option>
-                      <option value="3">Cs</option>
-                      <option value="4">Rp</option>
-                      <option value="5">Q</option>
-                      <option value="6">D</option>
-                      <option value="7">Y</option>
-                      <option value="8">Z</option>
-                      <option value="9">|Z|</option>
-                      <option value="10">|Y|</option>
                     </select>
             </div>
         </div>
@@ -2390,18 +2357,13 @@ sendParams();
           <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
             <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Yaxis">
-                      <option value="8">Amplitude</option>
-                      <option value="11">Rs</option>
-                      <option value="1">Ls</option>
-                      <option value="2">Cp</option>
-                      <option value="3">Cs</option>
-                      <option value="4">Rp</option>
-                      <option value="5">Q</option>
-                      <option value="6">D</option>
-                      <option value="7">Y</option>
-                      <option value="9">|Z|</option>
-                      <option value="10">|Y|</option>
-                      <option value="0">Phase</option>
+                      <option value="0">Amplitude</option>
+                      <option value="1">Phase</option>
+                      <option value="2">Y abs</option>
+                      <option value="3">Phase Y</option>
+                      <option value="4">Rs</option>
+                      <option value="5">Xs</option>
+                      <option value="6">Gp</option>
                     </select>
                   </div>
         </div>
