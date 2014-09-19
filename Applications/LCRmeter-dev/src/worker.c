@@ -303,8 +303,75 @@ void *rp_osc_worker_thread(void *args)
             float lcr_load_im = rp_get_params_lcr(10);
             float lcr_calibration = rp_get_params_lcr(11);
 
+            char sF[20];
+            char eF[20];
+            char amp[20];
+            char avg[20];
+            char dc_bias[20];
+            char r_shunt[20];
+            char scale[20];
+            char re[10];
+            char im[10];
+            char calib[1];
 
-            //TODO: Change appropriate number for command length.
+            snprintf(sF, 20, "%f", start_freq);
+            snprintf(eF, 20, "%f", end_freq);
+            snprintf(amp, 20, "%f", lcr_amp);
+            snprintf(avg, 20, "%f", lcr_avg);
+            snprintf(dc_bias, 20, "%f", lcr_dc_bias);
+            snprintf(r_shunt, 20, "%f", lcr_r_shunt);
+            snprintf(scale, 20, "%f", lcr_Scale);
+            snprintf(re, 10, "%f", lcr_load_re);
+            snprintf(im, 10, "%f", lcr_load_im);
+            snprintf(calib, 1, "%f", lcr_calibration);
+            
+            strcpy(command, "/opt/bin/lcr 1 ");
+            strcat(command, amp);
+            strcat(command, " ");
+
+            strcat(command, dc_bias);
+            strcat(command, " ");
+
+            strcat(command, r_shunt);
+            strcat(command, " ");
+
+            strcat(command, avg);
+
+            strcat(command, " 0 ");
+
+            strcat(command, re);
+            strcat(command, " ");
+            strcat(command, im);
+
+            strcat(command, " 100 1 ");
+
+            strcat(command, sF);
+            strcat(command, " ");
+            strcat(command, eF);
+            strcat(command, " ");
+            strcat(command, scale);
+            strcat(command, " 0");
+
+            system(command);
+            
+            rp_set_params_lcr(0, 0);
+
+        /* Measurment sweep */
+        }else if(measure_option == 2){
+
+            
+            float lcr_amp = rp_get_params_lcr(2);
+            float lcr_avg = rp_get_params_lcr(3);
+            float lcr_dc_bias = rp_get_params_lcr(4);
+            float lcr_r_shunt = rp_get_params_lcr(5);
+            float start_freq = rp_get_params_lcr(6);
+            float end_freq = rp_get_params_lcr(7);
+            float lcr_Scale = rp_get_params_lcr(8);
+            float lcr_load_re = rp_get_params_lcr(9);
+            float lcr_load_im = rp_get_params_lcr(10);
+            float lcr_calibration = rp_get_params_lcr(11);
+
+
             char sF[20];
             char eF[20];
             char amp[20];
@@ -330,7 +397,8 @@ void *rp_osc_worker_thread(void *args)
 
             char command[100];
             
-            strcpy(command, "/opt/bin/lcr 1 ");
+            strcpy(command, "/opt/bin/lcr 1 "); 
+            
             strcat(command, amp);
             strcat(command, " ");
 
@@ -340,100 +408,26 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, r_shunt);
             strcat(command, " ");
 
+            
+            
             strcat(command, avg);
-            strcat(command, " ");
-
-            strcat(command, "0 "); // calib functio todo
+            strcat(command, " 0 ");
 
             strcat(command, re);
             strcat(command, " ");
             strcat(command, im);
-
-            strcat(command, " 100 1 ");
+            
+            strcat(command, " 100 0 ");
 
             strcat(command, sF);
             strcat(command, " ");
-            strcat(command, eF);
-            strcat(command, " ");
+            strcat(command, " 1000 ");
             strcat(command, scale);
             strcat(command, " 0");
-
+            
             system(command);
             
             rp_set_params_lcr(0, 0);
-
-        /* Measurment sweep -- work in progress 18.9.2014 */
-        }else if(measure_option == 2){
-
-            
-            float lcr_steps = rp_get_params_lcr(1);
-            float lcr_amp = rp_get_params_lcr(2);
-            float lcr_avg = rp_get_params_lcr(3);
-            float lcr_dc_bias = rp_get_params_lcr(4);
-            float lcr_r_shunt = rp_get_params_lcr(5);
-            float start_freq = rp_get_params_lcr(6);
-            float end_freq = rp_get_params_lcr(7);
-            float lcr_Scale = rp_get_params_lcr(8);
-            float lcr_load_re = rp_get_params_lcr(9);
-            float lcr_load_im = rp_get_params_lcr(10);
-            float lcr_calibration = rp_get_params_lcr(11);
-
-            //TODO: Change appropriate number for command length.
-            char sF[20];
-            char eF[20];
-            char amp[20];
-            char avg[20];
-            char dc_bias[20];
-            char r_shunt[20];
-            char scale[20];
-            char re[10];
-            char im[10];
-            char calib[10]; 
-            char steps[10];  
-
-            snprintf(steps, 10, "%f", lcr_steps);
-            snprintf(sF, 20, "%f", start_freq);
-            snprintf(eF, 20, "%f", end_freq);
-            snprintf(amp, 20, "%f", lcr_amp);
-            snprintf(avg, 20, "%f", lcr_avg);
-            snprintf(dc_bias, 20, "%f", lcr_dc_bias);
-            snprintf(r_shunt, 20, "%f", lcr_r_shunt);
-            snprintf(scale, 20, "%f", lcr_Scale);
-            snprintf(re, 10, "%f", lcr_load_re);
-            snprintf(im, 10, "%f", lcr_load_im);
-            snprintf(calib, 1, "%f", lcr_calibration);
-            
-            
-            strcat(command, amp);
-            strcat(command, " ");
-
-            strcat(command, dc_bias);
-            strcat(command, " ");
-
-            strcat(command, r_shunt);
-            strcat(command, " ");
-
-            strcat(command, avg);
-            strcat(command, " ");
-
-            strcat(command, "0 "); // Calib function todo
-
-            strcat(command, re);
-            strcat(command, " ");
-            strcat(command, im);
-            strcat(command, " ");
-            strcat(command, steps);
-            strcat(command, " 0 "); // Sweep function set to 0 for measurment sweep.
-
-            strcat(command, sF);
-            strcat(command, " ");
-            strcat(command, eF);
-            strcat(command, " ");
-            strcat(command, scale);
-            strcat(command, " 0");
-            
-            system(command);
-            
             
         }
         
