@@ -180,10 +180,32 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        "start_freq", 200, 1, 0, 0, 100000 },
 
     { /* End frequency for frequency sweep.
-    *    Min value - 200
-    *    Max value - 1000000    */
-       "end_freq", 200, 1, 0, 0, 100000 },
-
+       * Min value - 200
+       * Max value - 1000000 */
+       "end_freq", 200, 1, 0, 0, 1000000 },
+    { /* Plots different data depending on user choice
+       * 0 - Plots amplitude
+       * 1 - Plots phase
+       * 5 - TODO: Adding multiple data acquisition. */
+      "plot_y_scale_data", 0, 1, 0, 0, 15 },
+    { /* Lcr scale type. Defined by user.
+       * 0 - Linear scale
+       * 1 - Logarithmic scale */
+      "lcr_scale_type", 0 , 1, 0, 0, 1 },
+    { /* Lcr LoadRE
+       * */
+      "gen_fs_LoadRe", 0, 1, 0, 0, 1 },
+    
+    { /* Lcr LoadIm
+       * */
+      "gen_fs_LoadIm", 0, 1, 0, 0, 1 },
+    { /* Calibration type. Defined by user in browser.
+       * 0 - Open calibration
+       * 1 - Short alibration
+       * 2 - Load calibration
+       * 3 - None */
+       "lcr_calibration", 0, 1, 0, 0, 3 },
+    
     /* Arbitrary Waveform Generator parameters from here on */
 
     { /* gen_trig_mod_ch1 - Selects the trigger mode for channel 1:
