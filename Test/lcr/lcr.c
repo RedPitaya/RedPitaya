@@ -387,12 +387,17 @@ int main(int argc, char *argv[])
         frequency_steps_number = 1;
     }
 
-    /* end frequency must always be greather than start frequency */
-    if ( end_frequency < start_frequency ) {
-        fprintf(stderr, "End frequency has to be greater than the start frequency! \n");
-        usage();
-        return -1;
+
+    /* end frequency must always be greather than start frequency if not measurment sweep */
+    if(sweep_function == 1){
+
+        if ( end_frequency < start_frequency ) {
+            fprintf(stderr, "End frequency has to be greater than the start frequency! \n");
+            usage();
+            return -1;
+        }
     }
+    
 
     /* allocated memory which size depends on sweep function (measurement sweep or frequency sweep) */
     int end_results_dimension = 0;
@@ -943,10 +948,10 @@ int main(int argc, char *argv[])
         G_p [ i ] = creal(Y[ i ]);//B_p=imag(Y);
         B_p [ i ] = cimag(Y[ i ]);//C_s=-1/(w*X_s);
         
-        C_s [ i ] = -1 / (w_out * X_s[ i ]);//C_s=-1/(w*X_s);
-        C_p [ i ] = B_p[ i ] / w_out;//C_p=B_p/w;
-        L_s [ i ] = X_s[ i ] / w_out;//L_p=-1/(w*B_p);
-        L_p [ i ] = -1 / (w_out * B_p[ i ]);//R_p=1/G_p;
+        C_s [ i ] = -1 / (w_out * X_s[ i ]);//C_s=-1/(w*X_s); //inf
+        C_p [ i ] = B_p[ i ] / w_out;//C_p=B_p/w; //inf
+        L_s [ i ] = X_s[ i ] / w_out;//L_p=-1/(w*B_p); //inf
+        L_p [ i ] = -1 / (w_out * B_p[ i ]);//R_p=1/G_p; //inf
         R_p [ i ] = 1 / G_p [ i ]; //R_p=1/G_p;
         
         Q[ i ] =X_s[ i ] / R_s[ i ]; //Q=X_s/R_s;
