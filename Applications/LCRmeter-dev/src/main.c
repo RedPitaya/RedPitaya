@@ -1140,19 +1140,8 @@ float rp_gen_limit_freq(float freq, float gen_type)
     return freq;
 }
 
-/* Used for setting the time range param in the lcr function in lcr.c */
-void rp_set_time_range(float f){
-  rp_main_params[TIME_RANGE_PARAM].value = f;
-}
 
-
-/* For testing purposes only. Sets the value of ch1 minimum to be x */
-void rp_set_mes_data(float x){
-  rp_main_params[MEAS_MIN_CH1].value = x;
-}
-
-
-
+/* General function for returning parameters */
 float rp_get_params_lcr(int pos){
   switch (pos){
     case 0:
@@ -1181,11 +1170,14 @@ float rp_get_params_lcr(int pos){
       return rp_main_params[LCR_CALIBRATION].value;
     case 15:
       return rp_main_params[PLOT_Y_SCALE_DATA].value;
+
+    /* -1 Reserver for START_MEASURE */
     default:
-      return -1;
+      return -2;
   }
 }
 
+/* General function for setting parameters */
 void rp_set_params_lcr(int pos, float val){
   switch(pos){
     case 0:
