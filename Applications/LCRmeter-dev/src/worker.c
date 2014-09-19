@@ -654,15 +654,9 @@ void *rp_osc_worker_thread(void *args)
             /* Triggered, decimate & convert the values */
             rp_osc_meas_clear(&ch1_meas);
             rp_osc_meas_clear(&ch2_meas);
-            rp_osc_decimate((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
+            lcr_start_Measure((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
-                            (float **)&rp_tmp_signals[0], dec_factor, 
-                            curr_params[MIN_GUI_PARAM].value,
-                            curr_params[MAX_GUI_PARAM].value,
-                            curr_params[TIME_UNIT_PARAM].value, 
-                            &ch1_meas, &ch2_meas, ch1_max_adc_v, ch2_max_adc_v,
-                            curr_params[GEN_DC_OFFS_1].value,
-                            curr_params[GEN_DC_OFFS_2].value);
+                            (float **)&rp_tmp_signals[0]);
         } else {
             long_acq_idx = rp_osc_decimate_partial((float **)&rp_tmp_signals[1], 
                                              &rp_fpga_cha_signal[0], 
@@ -760,13 +754,9 @@ int rp_osc_prepare_time_vector(float **out_signal, int dec_factor,
 
 
 /*----------------------------------------------------------------------------------*/
-int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
+int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
                     float **chb_signal, int *in_chb_signal,
-                    float **time_signal, int dec_factor, 
-                    float t_start, float t_stop, int time_unit,
-                    rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
-                    float ch1_max_adc_v, float ch2_max_adc_v,
-                    float ch1_user_dc_off, float ch2_user_dc_off)
+                    float **time_signal)
 {
     
     int out_idx;
