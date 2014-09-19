@@ -113,10 +113,10 @@ void usage() {
             "\tr_shunt            Shunt resistor value in Ohms [1 - 1e6].\n"
             "\taveraging          Number of samples per one measurement [1 - 10].\n"
             "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
-            "\tz_ref real         Reference impedance, real part.\n"
-            "\tz_ref imag         Reference impedance, imaginary part.\n"
+            "\tz_ref real         Reference impedance, real part [0 - 1e6].\n"
+            "\tz_ref imag         Reference impedance, imaginary part [-1e6 - 1e6].\n"
             "\tcount/steps        Measurement count when doing measurement sweep OR\n"
-            "                           steps made between frequency limits [2 - 1000].\n"
+            "                           steps made between frequency limits [2 - 1e3].\n"
             "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
             "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
@@ -127,7 +127,7 @@ void usage() {
     fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, __TIMESTAMP__, g_argv0);
 }
 
-/** Gain string (lv/hv) to number (0/1) transformation */
+/* Gain string (lv/hv) to number (0/1) transformation, currently not needed
 int get_gain(int *gain, const char *str) {
     if ( (strncmp(str, "lv", 2) == 0) || (strncmp(str, "LV", 2) == 0) ) {
         *gain = 0;
@@ -141,6 +141,7 @@ int get_gain(int *gain, const char *str) {
     fprintf(stderr, "Unknown gain: %s\n", str);
     return -1;
 }
+*/
 
 /** Allocates a memory with size num_of_el, memory has 1 dimension */
 float *create_table_size(int num_of_el) {
@@ -210,151 +211,132 @@ float mean_array_column(float **arrayptr, int length, int column) {
     return result;
 }
 
-/** LCR meter main */
+/** LCR meter */
 int main(int argc, char *argv[]) {
-    /* argument check */
-    g_argv0 = argv[0];    
+    /** Set program name */
+    g_argv0 = argv[0];
     
+    /** Argument check */
     if ( argc < 15 ) {
+        fprintf(stderr, "Too few arguments!\n\n");
         usage();
         return -1;
     }
     
-    /* Channel argument parsing */
-    uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
+    /** Argument parsing */
+    /// Channel
+    unsigned int ch = atoi(argv[1])-1; // Zero-based internally
     if (ch > 1) {
-        fprintf(stderr, "Invalid channel: %s\n", argv[1]);
+        fprintf(stderr, "Invalid channel value: %s\n\n", argv[1]);
         usage();
         return -1;
     }
-
-    /* Signal amplitude argument parsing */
+    /// Amplitude
     double ampl = strtod(argv[2], NULL);
-    if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
-        fprintf(stderr, "Invalid amplitude: %s, it has to be between 0 and 1V\n", argv[2]);
+    if ( (ampl < 0) || (ampl > c_max_amplitude) ) {
+        fprintf(stderr, "Invalid amplitude value: %s\n\n", argv[2]);
         usage();
         return -1;
     }
-
-    /* DC bias argument parsing */
-    uint32_t DC_bias = strtod(argv[3], NULL);
-    if ( (DC_bias < 0) || (DC_bias > 1.1) ) {
-        fprintf(stderr, "Invalid DC bias:  %s,  it has to be between 0 and 1V\n", argv[3]);
+    /// DC bias
+    unsigned int DC_bias = strtod(argv[3], NULL);
+    if ( (DC_bias < 0) || (DC_bias > 1) ) {
+        fprintf(stderr, "Invalid dc bias value: %s\n\n", argv[3]);
         usage();
         return -1;
     }
-
-    /* R shunt argument parsing */
+    /// R_shunt
     float R_shunt = strtod(argv[4], NULL);
     if ( (R_shunt < 1) || (R_shunt > 1000000) ) {
-        fprintf(stderr, "Invalid reference element value: %s\n", argv[4]);
+        fprintf(stderr, "Invalid r_shunt value: %s\n\n", argv[4]);
         usage();
         return -1;
     }
-
-    /* Averaging number parsing */
-    uint32_t averaging_num = strtod(argv[5], NULL);
+    /// Averaging
+    unsigned int averaging_num = strtod(argv[5], NULL);
     if ( (averaging_num < 1) || (averaging_num > 10) ) {
-        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[5]);
+        fprintf(stderr, "Invalid averaging value: %s\n\n", argv[5]);
         usage();
         return -1;
     }
-
-    /* Calibration functionality argument parsing
-       if one wants to skip calibration the parameter can be set to 0 */
-    int calib_function = strtod(argv[6], NULL);
-    if ( (calib_function < 0) || (calib_function > 2) ) {
-        fprintf(stderr, "Invalid one calibration parameter: %s\n", argv[6]);
+    /// Calibration mode (0-none, 1-open&short, 2-z_ref)
+    unsigned int calib_function = strtod(argv[6], NULL);
+    if ( calib_function > 2) {
+        fprintf(stderr, "Invalid calibration mode: %s\n\n", argv[6]);
         usage();
         return -1;
     }
-
-    /* Real part of load Impedance argument parsing */
-    uint32_t Z_load_ref_real = strtod(argv[7], NULL);
-    if ( (Z_load_ref_real < -1.0) || (Z_load_ref_real > 1000000.0) ) {
-        fprintf(stderr, "Invalid reference element Z_load_ref_real value:  %s\n", argv[7]);
+    /// Z_ref real part
+    float Z_load_ref_real = strtod(argv[7], NULL);
+    if ( (Z_load_ref_real < 0) || (Z_load_ref_real > 1000000.0) ) {
+        fprintf(stderr, "Invalid z_ref real value: %s\n\n", argv[7]);
         usage();
         return -1;
     }
-
-    /* Imaginary part of load Impedance argument parsing */
-    uint32_t Z_load_ref_imag = strtod(argv[8], NULL);
+    /// Z_ref imaginary part
+    float Z_load_ref_imag = strtod(argv[8], NULL);
     if ( (Z_load_ref_imag < -1000000.0) || (Z_load_ref_imag > 1000000.0) ) {
-        fprintf(stderr, "Invalid reference element Z_load_ref_imag value:  %s\n", argv[8]);
+        fprintf(stderr, "Invalid z_ref imag value: %s\n\n", argv[8]);
         usage();
         return -1;
     }
-
-    // Load impedance is being constructed in a complex format
-    float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
-
-    /* Number of steps argument parsing
-     - when using measurement sweep, argument defines number of measuremnets at start freq.
-     - when using fr. sweep, argument defines number of steps between start and end fr.
-    */
-    double steps = strtod(argv[9], NULL);
+    /// Count/steps
+    unsigned int steps = strtod(argv[9], NULL);
     if ( (steps < 1) || (steps > 1000) ) {
-        fprintf(stderr, "Invalid number of steps:  %s\n", argv[9]);
+        fprintf(stderr, "Invalid count/steps value: %s\n\n", argv[9]);
         usage();
         return -1;
     }
-
-    /* [1] frequency sweep, [0] measurement sweep */
-    int sweep_function = strtod(argv[10], NULL);
-    if (sweep_function) {
-    
-    }
+    /// Sweep mode (0-measurement, 1-frequency)
+    unsigned int sweep_function = strtod(argv[10], NULL);
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
-        fprintf(stderr, "Invalid sweep function:  %s\n", argv[10]);
+        fprintf(stderr, "Invalid sweep mode: %s\n\n", argv[10]);
         usage();
         return -1;
     }
-
-    /* Start frequency argument parsing */
+    /// Start frequency
     double start_frequency = strtod(argv[11], NULL);
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid start frequency:  %s\n", argv[11]);
+        fprintf(stderr, "Invalid start freq: %s\n\n", argv[11]);
         usage();
         return -1;
     }
-
-    /* Stop frequency argument parsing */
+    /// Stop frequency
     double end_frequency = strtod(argv[12], NULL);
     if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid end frequency: %s\n", argv[12]);
+        fprintf(stderr, "Invalid end freq: %s\n\n", argv[12]);
         usage();
         return -1;
     }
-
-    /* Scale type argument prsing [1] - logaritmic frequency steps [0] - linear steps */
-    int scale_type = strtod(argv[13], NULL);
-    if ( (scale_type < 0) || (scale_type > 1) ) {
-        fprintf(stderr, "Invalid decidion:scale type: %s\n", argv[13]);
+    /// Scale type (0-lin, 1-log)
+    unsigned int scale_type = strtod(argv[13], NULL);
+    if ( scale_type > 1 ) {
+        fprintf(stderr, "Invalid scale type: %s\n\n", argv[13]);
         usage();
         return -1;
     }
-
-    /* Wait argument parsing
-        The program will wait for user before every measure when measurement sweep seleced 
-        TODO: remove comented waiting function calls
+    /* /// Wait
+       The program will wait for user before every measurement when measurement sweep seleced 
+       TODO: remove commented waiting function calls
     */
-    int wait_on_user = strtod(argv[14], NULL);
-    if ( (wait_on_user < 0) || (wait_on_user > 1) ) {
-        fprintf(stderr, "Invalid decidion: user wait argument %s\n", argv[14]);
+    unsigned int wait_on_user = strtod(argv[14], NULL);
+    if ( wait_on_user > 1 ) {
+        fprintf(stderr, "Invalid wait value: %s\n\n", argv[14]);
         usage();
         return -1;
     }
 
-    double  frequency_steps_number;
-    int     measurement_sweep_user_defined;
-    double  frequency_step;
-    double  a,b,c;
+    float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
+    double frequency_steps_number;
+    double frequency_step;
+    double a,b,c;
+    int measurement_sweep_user_defined;
 
-    /* If logaritmic scale selected start and end frequencies are defined to compliment logaritmic output */
+    /* If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output */
     if( scale_type ) {
         b = log10( end_frequency );
         a = log10( start_frequency );
-        c = ( b - a ) /( steps - 1);
+        c = ( b - a ) / ( steps - 1);
     }
 
     /* When sweep function selected some for loops have to iterate only once */
