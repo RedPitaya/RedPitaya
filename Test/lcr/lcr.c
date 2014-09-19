@@ -4,71 +4,61 @@
  * @brief PitayaDT LCR meter
  *
  * @Author1 Martin Cimerman   <cim.martin@gmail.com>
- * @Author2 Zumret Topcacic   <zumret_topcagic@hotmail.com>
- * 
+ * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
+ * @Author3 Peter Miklavcic   <miklavcic.peter@gmail.com>
  *
- * VERSION : 0-dev
+ * GENERAL DESCRIPTION:
+ *
+ * The code below defines the LCR meter on a Red Pitaya.
+ * It uses acquire and generate from the Test/ folder.
+ * Data analysis returns frequency, phase and amplitude.
+ * 
+ * VERSION: 0-dev
+ * 
  * This part of code is written in C programming language.
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
  * for more details on the language used herein.
  */
 
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
+#include <math.h>
+#include <complex.h>
 #include <string.h>
-#include "fpga_awg.h"
-#include "version.h"
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/param.h>
+
 #include "main_osc.h"
 #include "fpga_osc.h"
-#include <complex.h> // Standard library for complex numbers
+#include "fpga_awg.h"
+#include "version.h"
 
 #define M_PI 3.14159265358979323846
 
-/**
- * GENERAL DESCRIPTION:
- *
- * The code below defines the lcr meter
- * 
- * It uses acquire and generate defined in Test/ folder
- * data analysis returns: frequency, phase, amplitude *
- */
+const char *g_argv0 = NULL; // Program name
 
-/** Maximal signal frequency [Hz] */
-const double c_max_frequency = 62.5e6;
+const double c_max_frequency = 62.5e6; // Maximal signal frequency [Hz]
+const double c_min_frequency = 0; // Minimal signal frequency [Hz]
+const double c_max_amplitude = 1.0; // Maximal signal amplitude [V]
 
-/** Minimal signal frequency [Hz] */
-const double c_min_frequency = 0;
-
-/** Maximal signal amplitude [V] */
-const double c_max_amplitude = 1.0;
-
-/** AWG buffer length [samples]*/
-#define n (16*1024)
-
-/** AWG data buffer */
-int32_t data[n];
-
-/** Program name */
-const char *g_argv0 = NULL;
+#define n (16*1024) // AWG buffer length [samples]
+int32_t data[n]; // AWG data buffer
 
 /** Signal types */
 typedef enum {
-    eSignalSine,         ///< Sinusoidal waveform.
-    eSignalSquare,       ///< Square waveform.
-    eSignalTriangle,     ///< Triangular waveform.
-    eSignalSweep,        ///< Sinusoidal frequency sweep.
-	eSignalConst         ///< Constant signal.
+    eSignalSine,         // Sinusoidal waveform
+    eSignalSquare,       // Square waveform
+    eSignalTriangle,     // Triangular waveform
+    eSignalSweep,        // Sinusoidal frequency sweep
+	eSignalConst         // Constant signal
 } signal_e;
 
 /** AWG FPGA parameters */
 typedef struct {
-    int32_t  offsgain;   ///< AWG offset & gain.
-    uint32_t wrap;       ///< AWG buffer wrap value.
-    uint32_t step;       ///< AWG step interval.
+    int32_t  offsgain;   // AWG offset & gain
+    uint32_t wrap;       // AWG buffer wrap value
+    uint32_t step;       // AWG step interval
 } awg_param_t;
 
 /** Oscilloscope module parameters as defined in main module
@@ -76,23 +66,19 @@ typedef struct {
  */
 float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/** Max decimation index */
-#define DEC_MAX 6
-
 /** Decimation translation table */
+#define DEC_MAX 6 // Max decimation index
 static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
-/* Forward declarations */
+/** Forward declarations */
 void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *params);
 void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
-
 int acquire_data(float **s ,
-                uint32_t size);
-
+                 uint32_t size);
 int LCR_data_analysis(float **s,
                       uint32_t size,
                       uint32_t DC_bias,
@@ -103,18 +89,17 @@ int LCR_data_analysis(float **s,
 
 /** Print usage information */
 void usage() {
-
     const char *format =
-            "%s version %s-%s\n"
+            "%s version %s-%s, compiled at %s\n"
             "\n"
             "Usage: %s [channel] "
                       "[amplitude] "
-                      "[DC bias] "
-                      "[Rshunt] "
+                      "[dc bias] "
+                      "[rshunt] "
                       "[averaging] "
                       "[calibration mode] "
-                      "[Zloadref real] "
-                      "[Zloadref imag] "
+                      "[zloadref real] "
+                      "[zloadref imag] "
                       "[count/steps] "
                       "[sweep mode] "
                       "[start freq] "
@@ -124,27 +109,26 @@ void usage() {
             "\n"
             "\tchannel            Channel to generate signal on [1, 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1], which means max 2Vpp.\n"
-            "\tDC bias            DC bias/offset/component in V [0 - 1]\n"
-            "\tRshunt             Shunt resistor value in Ohms. [1 - 1e6]\n"
+            "\tdc bias            DC bias/offset/component in V [0 - 1]\n"
+            "\tr shunt            Shunt resistor value in Ohms. [1 - 1e6]\n"
             "\taveraging          Number of samples per one measurement [1 - 10].\n"
             "\tcalibration mode   0 - none, 1 - open and short, 2 - Zloadref.\n"
             "\tZloadref real      Zloadref real part.\n"
             "\tZloadref imag      Zloadref imaginary part.\n"
             "\tcount/steps        Measurement count when doing measurement sweep OR\n"
-            "                           steps made between frequency limits [1 - 1000].\n"
+            "                           steps made between frequency limits [2 - 1000].\n"
             "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
-            "\tstart freq         Lower frequency limit in Hz [0 - 62.5e6].\n"
-            "\tstop freq          Upper frequency limit in Hz [0 - 62.5e6].\n"
+            "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
+            "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
             "\twait               Wait for user before performing each step.\n"
             "\n";
 
-        fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, g_argv0);
+    fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, __TIMESTAMP__, g_argv0);
 }
 
 /** Gain string (lv/hv) to number (0/1) transformation */
-int get_gain(int *gain, const char *str)
-{
+int get_gain(int *gain, const char *str) {
     if ( (strncmp(str, "lv", 2) == 0) || (strncmp(str, "LV", 2) == 0) ) {
         *gain = 0;
         return 0;
@@ -158,13 +142,13 @@ int get_gain(int *gain, const char *str)
     return -1;
 }
 
-/* Allocates a memory with size num_of_el, memory has 1 dimension */
+/** Allocates a memory with size num_of_el, memory has 1 dimension */
 float *create_table_size(int num_of_el) {
     float *new_table = (float *)malloc( num_of_el * sizeof(float));
     return new_table;
 }
 
-/** Allocates a memory with size of: num_of_cols x num_of_rows */
+/** Allocates a memory with size num_of_cols*num_of_rows */
 float **create_2D_table_size(int num_of_rows, int num_of_cols) {
     float **new_table = (float **)malloc( num_of_rows * sizeof(float*));
     int i;
@@ -176,7 +160,7 @@ float **create_2D_table_size(int num_of_rows, int num_of_cols) {
 
 float max_array(float *arrayptr, int numofelements) {
   int i = 0;
-  float max = -100000;//seting the minimum value possible
+  float max = -100000; // Setting the minimum value possible
 
   for(i = 0; i < numofelements; i++)
   {
@@ -188,19 +172,18 @@ float max_array(float *arrayptr, int numofelements) {
   return max;
 }
 
-/* Trapezoidal method for integration interpolation, had to be defined */
+/** Trapezoidal method for integration */
 float trapz(float *arrayptr, float T, int size1) {
   float result = 0;
   int i;
   for (i =0; i < size1 - 1 ; i++) {
-    result +=  ( arrayptr[i] + arrayptr[ i+1 ]  );
-   
+    result += ( arrayptr[i] + arrayptr[ i+1 ]  );
   }
-    result = (T / (float)2) * result;
-    return result;
+  result = (T / (float)2) * result;
+  return result;
 }
 
-/** Finds a mean value from the memmory arrayptr points to */
+/** Finds a mean value of an array */
 float mean_array(float *arrayptr, int numofelements) {
   int i = 1;
   float mean = 0;
@@ -214,8 +197,7 @@ float mean_array(float *arrayptr, int numofelements) {
   return mean;
 }
 
-
-/* Finds a mean value from the memmory, acquiring values from rows */
+/** Finds a mean value of an array by columns, acquiring values from rows */
 float mean_array_column(float **arrayptr, int length, int column) {
     float result = 0;
     int i;
@@ -223,13 +205,13 @@ float mean_array_column(float **arrayptr, int length, int column) {
     for(i = 0; i < length; i++) {
         result = result + arrayptr[i][column];
     }
+    
     result = result / length;
     return result;
 }
 
 /** LCR meter main */
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     /* argument check */
     g_argv0 = argv[0];    
     
@@ -312,7 +294,7 @@ int main(int argc, char *argv[])
     */
     double steps = strtod(argv[9], NULL);
     if ( (steps < 1) || (steps > 1000) ) {
-        fprintf(stderr, "Invalid umber of steps:  %s\n", argv[9]);
+        fprintf(stderr, "Invalid number of steps:  %s\n", argv[9]);
         usage();
         return -1;
     }
@@ -1214,10 +1196,10 @@ void write_data_fpga(uint32_t ch,
 }
 
 /**
- * acquire data from FPGA to memory (s)
+ * Acquire data from FPGA to memory (s).
  *
- * @param **s   points to a mmemory where data is saved
- * @param size  return data size
+ * @param **s   Points to a memory where data is saved.
+ * @param size  Size of data.
  */
 int acquire_data(float **s ,
                 uint32_t size) {
@@ -1248,24 +1230,24 @@ int acquire_data(float **s ,
 }
 
 /**
- * Acquired data analysis function.
- * function returnes impedance Z in a complex form.
+ * Acquired data analysis function for LCR meter.
+ * Function returns the impedance (Z) in a complex form.
  *
- * @param s        points to a mmemory where data is read from
- * @param size     size o data s
- * @param DC_bias  parameter for electrolytic capacitor data manipulation
- * @param R_shunt  shunt resistor's value ( check the front end circuit in manual )
- * @param Z        returned impedance data, in complex form
- * @param w_out    angualr velocity
- * @param f        decimation selector
+ * @param s        Points to a memory where data is read from.
+ * @param size     Size of data.
+ * @param DC_bias  DC component.
+ * @param R_shunt  Shunt resistor value in Ohms.
+ * @param Z        Returned impedance data (in complex form).
+ * @param w_out    Angular velocity (2*pi*freq).
+ * @param f        Decimation selector index.
  */
-int LCR_data_analysis(float **s ,
-                        uint32_t size,
-                        uint32_t DC_bias,
-                        uint32_t R_shunt,
-                        float complex *Z,
-                        double w_out,
-                        int f) {
+int LCR_data_analysis(float **s,
+                      uint32_t size,
+                      uint32_t DC_bias,
+                      uint32_t R_shunt,
+                      float complex *Z,
+                      double w_out,
+                      int f) {
     int i2, i3;
     float **U_acq = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
     /* Used for storing the Voltage and current on the load */
