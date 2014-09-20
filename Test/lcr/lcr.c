@@ -81,8 +81,8 @@ int acquire_data(float **s ,
                  uint32_t size);
 int LCR_data_analysis(float **s,
                       uint32_t size,
-                      uint32_t DC_bias,
-                      uint32_t R_shunt,
+                      double DC_bias,
+                      double R_shunt,
                       float complex *Z,
                       double w_out,
                       int f);
@@ -107,21 +107,20 @@ void usage() {
                       "[scale type] "
                       "[wait]\n"
             "\n"
-            "\tchannel            Channel to generate signal on [1, 2].\n"
-            "\tamplitude          Signal amplitude in V [0 - 1], which means max 2Vpp.\n"
+            "\tchannel            Channel to generate signal on [1 / 2].\n"
+            "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\tr_shunt            Shunt resistor value in Ohms [1 - 1e6].\n"
-            "\taveraging          Number of samples per one measurement [1 - 10].\n"
+            "\tr_shunt            Shunt resistor value in Ohms [>0].\n"
+            "\taveraging          Number of samples per one measurement [>1].\n"
             "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
-            "\tz_ref real         Reference impedance, real part [0 - 1e6].\n"
-            "\tz_ref imag         Reference impedance, imaginary part [-1e6 - 1e6].\n"
-            "\tcount/steps        Measurement count when doing measurement sweep OR\n"
-            "                           steps made between frequency limits [2 - 1e3].\n"
+            "\tz_ref real         Reference impedance, real part.\n"
+            "\tz_ref imag         Reference impedance, imaginary part.\n"
+            "\tcount/steps        Number of measurements [>1 / >2, dep. on sweep mode].\n"
             "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
             "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
-            "\twait               Wait for user before performing each step.\n"
+            "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n";
 
     fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, __TIMESTAMP__, g_argv0);
@@ -161,15 +160,12 @@ float **create_2D_table_size(int num_of_rows, int num_of_cols) {
 
 float max_array(float *arrayptr, int numofelements) {
   int i = 0;
-  float max = -100000; // Setting the minimum value possible
+  float max = -1e6; // Setting the minimum value possible
 
-  for(i = 0; i < numofelements; i++)
-  {
-    if(max < arrayptr[ i ])
-    {
-      max = arrayptr[ i ];
-    }
+  for(i = 0; i < numofelements; i++) {
+    if(max < arrayptr[ i ]) max = arrayptr[ i ];
   }
+
   return max;
 }
 
@@ -177,9 +173,11 @@ float max_array(float *arrayptr, int numofelements) {
 float trapz(float *arrayptr, float T, int size1) {
   float result = 0;
   int i;
+  
   for (i =0; i < size1 - 1 ; i++) {
     result += ( arrayptr[i] + arrayptr[ i+1 ]  );
   }
+  
   result = (T / (float)2) * result;
   return result;
 }
@@ -189,8 +187,7 @@ float mean_array(float *arrayptr, int numofelements) {
   int i = 1;
   float mean = 0;
 
-  for(i = 0; i < numofelements; i++)
-  {
+  for(i = 0; i < numofelements; i++) {
     mean += arrayptr[i];
   }
 
@@ -210,14 +207,24 @@ float mean_array_column(float **arrayptr, int length, int column) {
     result = result / length;
     return result;
 }
-
 /** LCR meter */
 int main(int argc, char *argv[]) {
     /** Set program name */
     g_argv0 = argv[0];
     
+    /**
+     * Manpage
+     * 
+     * usage() prints its output to stderr, nevertheless main returns
+     * zero as calling lcr without any arguments is not an error.
+     */
+    if (argc==1) {
+		usage();
+		return 0;
+	}
+    
     /** Argument check */
-    if ( argc < 15 ) {
+    if (argc<15) {
         fprintf(stderr, "Too few arguments!\n\n");
         usage();
         return -1;
@@ -239,27 +246,27 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     /// DC bias
-    unsigned int DC_bias = strtod(argv[3], NULL);
+    double DC_bias = strtod(argv[3], NULL);
     if ( (DC_bias < 0) || (DC_bias > 1) ) {
         fprintf(stderr, "Invalid dc bias value: %s\n\n", argv[3]);
         usage();
         return -1;
     }
     /// R_shunt
-    float R_shunt = strtod(argv[4], NULL);
-    if ( (R_shunt < 1) || (R_shunt > 1000000) ) {
+    double R_shunt = strtod(argv[4], NULL);
+    if ( !(R_shunt > 0) ) {
         fprintf(stderr, "Invalid r_shunt value: %s\n\n", argv[4]);
         usage();
         return -1;
     }
     /// Averaging
     unsigned int averaging_num = strtod(argv[5], NULL);
-    if ( (averaging_num < 1) || (averaging_num > 10) ) {
+    if ( averaging_num < 1 ) {
         fprintf(stderr, "Invalid averaging value: %s\n\n", argv[5]);
         usage();
         return -1;
     }
-    /// Calibration mode (0-none, 1-open&short, 2-z_ref)
+    /// Calibration mode (0=none, 1=open&short, 2=z_ref)
     unsigned int calib_function = strtod(argv[6], NULL);
     if ( calib_function > 2) {
         fprintf(stderr, "Invalid calibration mode: %s\n\n", argv[6]);
@@ -267,48 +274,52 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     /// Z_ref real part
-    float Z_load_ref_real = strtod(argv[7], NULL);
-    if ( (Z_load_ref_real < 0) || (Z_load_ref_real > 1000000.0) ) {
+    double Z_load_ref_real = strtod(argv[7], NULL);
+    if ( Z_load_ref_real < 0 ) {
         fprintf(stderr, "Invalid z_ref real value: %s\n\n", argv[7]);
         usage();
         return -1;
     }
     /// Z_ref imaginary part
-    float Z_load_ref_imag = strtod(argv[8], NULL);
-    if ( (Z_load_ref_imag < -1000000.0) || (Z_load_ref_imag > 1000000.0) ) {
-        fprintf(stderr, "Invalid z_ref imag value: %s\n\n", argv[8]);
-        usage();
-        return -1;
-    }
+    double Z_load_ref_imag = strtod(argv[8], NULL);
     /// Count/steps
     unsigned int steps = strtod(argv[9], NULL);
-    if ( (steps < 1) || (steps > 1000) ) {
+    if ( steps < 1 ) {
         fprintf(stderr, "Invalid count/steps value: %s\n\n", argv[9]);
         usage();
         return -1;
     }
-    /// Sweep mode (0-measurement, 1-frequency)
+    /// Sweep mode (0=measurement, 1=frequency)
     unsigned int sweep_function = strtod(argv[10], NULL);
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
         fprintf(stderr, "Invalid sweep mode: %s\n\n", argv[10]);
         usage();
         return -1;
     }
-    /// Start frequency
+    if (sweep_function==1 && steps==1) {
+        fprintf(stderr, "Invalid count/steps value: %s\n\n", argv[9]);
+        usage();
+        return -1;
+    }
+    /// Frequency
     double start_frequency = strtod(argv[11], NULL);
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid start freq: %s\n\n", argv[11]);
         usage();
         return -1;
     }
-    /// Stop frequency
     double end_frequency = strtod(argv[12], NULL);
     if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid end freq: %s\n\n", argv[12]);
         usage();
         return -1;
     }
-    /// Scale type (0-lin, 1-log)
+    if ( end_frequency < start_frequency ) {
+        fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
+        usage();
+        return -1;
+    }
+    /// Scale type (0=lin, 1=log)
     unsigned int scale_type = strtod(argv[13], NULL);
     if ( scale_type > 1 ) {
         fprintf(stderr, "Invalid scale type: %s\n\n", argv[13]);
@@ -326,281 +337,268 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    float complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
-    double frequency_steps_number;
-    double frequency_step;
-    double a,b,c;
-    int measurement_sweep_user_defined;
-
-    /* If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output */
-    if( scale_type ) {
-        b = log10( end_frequency );
-        a = log10( start_frequency );
-        c = ( b - a ) / ( steps - 1);
-    }
-
-    /* When sweep function selected some for loops have to iterate only once */
-    if ( sweep_function == 1 ){ //frequency sweep
-        frequency_steps_number = steps;
-        frequency_step = ( end_frequency - start_frequency ) / ( frequency_steps_number - 1 );
-        measurement_sweep_user_defined = 1;
-    }
-    else if (sweep_function == 0){ // measurement sweep
-        measurement_sweep_user_defined = steps;
-        frequency_step = 0;
-        frequency_steps_number = 1;
-    }
-
-
-    /* end frequency must always be greather than start frequency if not measurment sweep */
-    if(sweep_function == 1){
-
-        if ( end_frequency < start_frequency ) {
-            fprintf(stderr, "End frequency has to be greater than the start frequency! \n");
-            usage();
-            return -1;
-        }
-    }
-    
-
-    /* allocated memory which size depends on sweep function (measurement sweep or frequency sweep) */
-    int end_results_dimension = 0;
-    if (sweep_function == 0 ) { // mesurement sweep defines size of allocated memory
-        end_results_dimension = measurement_sweep_user_defined;
-    }
-    else if ( sweep_function == 1 ) { // frequency sweep defines size of allocated memory
-        end_results_dimension = frequency_steps_number;
-    }
-
-    /* Signal type set to type sine. */
+    /** Parameters initialization and calculation */
+    double complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
+    double frequency_steps_number, frequency_step, a, b, c;
+    int    measurement_sweep_user_defined, end_results_dimension;
     signal_e type = eSignalSine;
+    float    k;
+    float    **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
+    double   endfreq = 0; // endfreq set for generate's sweep
+    int      dimension_step = 0; // saving data on the right place in allocated memory this is iterator
+    double   measurement_sweep;
+    uint32_t min_periodes = 10; // max 20
+    uint32_t size; // number of samples varies with number of periodes
+    double   w_out; //a ngular velocity
+    int      f = 0; // used in for lop, seting the decimation
+    int      i, i1, fr, h; // iterators in for loops
+    int      equal = 0; // parameter initialized for generator functionality
+    int      shaping = 0; // parameter initialized for generator functionality
+    int      first_delay = 0; // delay required before first acquire
+    /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
+    if ( scale_type ) {
+        a = log10(start_frequency);
+        b = log10(end_frequency);
+        if (steps==1) { // Preventing division by zero.
+			c = (b - a);
+	    } else {
+			c = (b - a)/(steps - 1);
+		}
+    }
+    /// Based on which sweep mode is selected some for loops have to iterate only once
+    if ( sweep_function ){ // Frequency sweep
+		measurement_sweep_user_defined = 1;
+        frequency_steps_number = steps;
+        if (steps==1) { // Preventing division by zero.
+			frequency_step = ( end_frequency - start_frequency );
+		} else {
+			frequency_step = ( end_frequency - start_frequency ) / ( frequency_steps_number - 1 );
+		}
+    }
+    else { // Measurement sweep
+        measurement_sweep_user_defined = steps;
+		frequency_steps_number = 1;
+        frequency_step = 0;
+    }
+    /// Allocated memory size depends on the sweep function
+    if ( sweep_function ){ // Frequency sweep
+		end_results_dimension = frequency_steps_number;
+    }
+    else { // Measurement sweep
+        end_results_dimension = measurement_sweep_user_defined;
+    }  
 
-    float     k;
-    float     **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
-    double    endfreq = 0; // endfreq set for generate's sweep
-    int       dimension_step = 0; // saving data on the right place in allocated memory this is iterator
-    double    measurement_sweep;
-    uint32_t  min_periodes = 10; // max 20
-    uint32_t  size; // nmber of samples varies with number of periodes
-    double    w_out; //angular velocity
-    int       f = 0; // used in for lop, seting the decimation
-    int       i, i1, fr, h; // iterators in for loops
-    int       equal = 0; //parameter initialized for generator functionality
-    int       shaping = 0; //parameter initialized for generator functionality
-    int       first_delay = 0; //delay required before first acquire
+    /** Memory allocation */
 
-    /* LCR_data_analysis() saves data to *Z */
     float complex *Z = (float complex *)malloc( (averaging_num + 1) * sizeof(float complex));
     if (Z == NULL){
-        fprintf(stderr,"error alocating memmory for complex Z\n");
+        fprintf(stderr,"error allocating memory for complex Z\n");
         return -1;
     }
-    
-    /* calibrtion results short circuited */
+
     float **Calib_data_short_for_averaging = create_2D_table_size((averaging_num + 1), 2);
     if (Calib_data_short_for_averaging == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_short_for_averaging\n");
+        fprintf(stderr,"error allocating memory for Calib_data_short_for_averaging\n");
         return -1;
     }
     float **Calib_data_short  = create_2D_table_size(measurement_sweep_user_defined, 2);
     if (Calib_data_short == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_short\n");
+        fprintf(stderr,"error allocating memory for Calib_data_short\n");
         return -1;
     }
 
-    /* calibrtion results open circuited */
     float **Calib_data_open_for_averaging = create_2D_table_size((averaging_num + 1), 2);
     if (Calib_data_open_for_averaging == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_open_for_averaging\n");
+        fprintf(stderr,"error allocating memory for Calib_data_open_for_averaging\n");
         return -1;
     }
     float **Calib_data_open = create_2D_table_size(measurement_sweep_user_defined, 2);
     if (Calib_data_open == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_open\n");
+        fprintf(stderr,"error allocating memory for Calib_data_open\n");
         return -1;
     }
 
-    /* calibration load results */
     float **Calib_data_load_for_averaging = create_2D_table_size((averaging_num + 1), 2);
     if (Calib_data_load_for_averaging == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_load_for_averaging\n");
+        fprintf(stderr,"error allocating memory for Calib_data_load_for_averaging\n");
         return -1;
     }
     float **Calib_data_load = create_2D_table_size(measurement_sweep_user_defined, 2);
     if (Calib_data_load == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_load\n");
+        fprintf(stderr,"error allocating memory for Calib_data_load\n");
         return -1;
     }
 
-    /* measurement results */
     float **Calib_data_measure_for_averaging = create_2D_table_size((averaging_num + 1), 2 );
     if (Calib_data_measure_for_averaging == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_measure_for_averaging\n");
+        fprintf(stderr,"error allocating memory for Calib_data_measure_for_averaging\n");
         return -1;
     }
     float **Calib_data_measure = create_2D_table_size(measurement_sweep_user_defined, 4);
     if (Calib_data_measure == NULL){
-        fprintf(stderr,"error alocating memmory for Calib_data_measure\n");
+        fprintf(stderr,"error allocating memory for Calib_data_measure\n");
         return -1;
     }
-    /* multidimentional memmory allocation for storing final results */
+    
     float complex *Z_short    = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Z_short == NULL){
-        fprintf(stderr,"error alocating memmory for Z_short\n");
+        fprintf(stderr,"error allocating memory for Z_short\n");
         return -1;
     }
     float complex *Z_open     = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Z_open == NULL){
-        fprintf(stderr,"error alocating memmory for Z_open\n");
+        fprintf(stderr,"error allocating memory for Z_open\n");
         return -1;
     }
     float complex *Z_load     = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Z_load == NULL){
-        fprintf(stderr,"error alocating memmory for Z_load\n");
+        fprintf(stderr,"error allocating memory for Z_load\n");
         return -1;
     }
     float complex *Z_measure  = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Z_measure == NULL){
-        fprintf(stderr,"error alocating memmory for Z_measure\n");
+        fprintf(stderr,"error allocating memory for Z_measure\n");
         return -1;
     }
 
-    float *calib_data_combine = (float *)malloc( 2 * sizeof(float)); //[0]-frequencies, [1]-real part of imedance, [2]- imaginary part of impendance,
+    float *calib_data_combine = (float *)malloc( 2 * sizeof(float)); // 0=f, 1=Zreal, 2=Zimag
     if (calib_data_combine == NULL){
-        fprintf(stderr,"error alocating memmory for calib_data_combine\n");
+        fprintf(stderr,"error allocating memory for calib_data_combine\n");
         return -1;
     }
     float complex *Z_final  = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Z_final == NULL){
-        fprintf(stderr,"error alocating memmory for Z_final\n");
+        fprintf(stderr,"error allocating memory for Z_final\n");
         return -1;
     }
 
     float *PhaseZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (PhaseZ == NULL){
-        fprintf(stderr,"error alocating memmory for PhaseZ\n");
+        fprintf(stderr,"error allocating memory for PhaseZ\n");
         return -1;
     }
 
     float *PhaseY = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (PhaseY == NULL){
-        fprintf(stderr,"error alocating memmory for PhaseY\n");
+        fprintf(stderr,"error allocating memory for PhaseY\n");
         return -1;
     }
 
     float *AmplitudeZ = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (AmplitudeZ == NULL){
-        fprintf(stderr,"error alocating memmory for AmplitudeZ\n");
+        fprintf(stderr,"error allocating memory for AmplitudeZ\n");
         return -1;
     }
 
     float *Frequency = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (Frequency == NULL){
-        fprintf(stderr,"error alocating memmory for Frequency\n");
+        fprintf(stderr,"error allocating memory for Frequency\n");
         return -1;
     }
 
     float *R_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (R_s == NULL){
-        fprintf(stderr,"error alocating memmory for R_s\n");
+        fprintf(stderr,"error allocating memory for R_s\n");
         return -1;
     }
 
     float *X_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (X_s == NULL){
-        fprintf(stderr,"error alocating memmory for X_s\n");
+        fprintf(stderr,"error allocating memory for X_s\n");
         return -1;
     }
 
     float complex *Y  = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Y == NULL){
-        fprintf(stderr,"error alocating memmory for Z_final\n");
+        fprintf(stderr,"error allocating memory for Z_final\n");
         return -1;
     }
     
 
     float *Y_abs  = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (Y_abs == NULL){
-        fprintf(stderr,"error alocating memmory for Y_abs\n");
+        fprintf(stderr,"error allocating memory for Y_abs\n");
         return -1;
     }
 
     float *G_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (G_p == NULL){
-        fprintf(stderr,"error alocating memmory for G_p\n");
+        fprintf(stderr,"error allocating memory for G_p\n");
         return -1;
     }
 
     float *B_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (B_p == NULL){
-        fprintf(stderr,"error alocating memmory for B_p\n");
+        fprintf(stderr,"error allocating memory for B_p\n");
         return -1;
     }
 
     float *C_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (C_s == NULL){
-        fprintf(stderr,"error alocating memmory for C_s\n");
+        fprintf(stderr,"error allocating memory for C_s\n");
         return -1;
     }
 
     float *C_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (C_p == NULL){
-        fprintf(stderr,"error alocating memmory for C_p\n");
+        fprintf(stderr,"error allocating memory for C_p\n");
         return -1;
     }
 
     float *L_s = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (L_s == NULL){
-        fprintf(stderr,"error alocating memmory for L_s\n");
+        fprintf(stderr,"error allocating memory for L_s\n");
         return -1;
     }
 
     float *L_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (L_p == NULL){
-        fprintf(stderr,"error alocating memmory for L_p\n");
+        fprintf(stderr,"error allocating memory for L_p\n");
         return -1;
     }
 
     float *R_p = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (R_p == NULL){
-        fprintf(stderr,"error alocating memmory for R_p\n");
+        fprintf(stderr,"error allocating memory for R_p\n");
         return -1;
     }
 
     float *Q = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (Q == NULL){
-        fprintf(stderr,"error alocating memmory for Q\n");
+        fprintf(stderr,"error allocating memory for Q\n");
         return -1;
     }
 
     float *D = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (D == NULL){
-        fprintf(stderr,"error alocating memmory for D\n");
+        fprintf(stderr,"error allocating memory for D\n");
         return -1;
     }
-
 
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
-    return -1;
+        return -1;
     }
     
-    /* user is inquired to correcty set the connections */
-    /**
+    /** User is inquired to correctly set the connections. */
+    /*
     if (inquire_user_wait() < 0) {
         printf("error user inquiry at inquire_user_wait\n");
     } 
     */
 
-    /* Signal generator generates first signal before measuring proces begins
-    *  this has to be set because first results are inaccurate otherwise
-    */
+    /**
+     * Showtime.
+     * 
+     * At first the signal generator generates a signal before the
+     * measuring proces begins. First results are inaccurate otherwise.
+     */
     awg_param_t params;
-    /* Prepare data buffer (calculate from input arguments) */
-    synthesize_signal( ampl, start_frequency, type, endfreq, data, &params );
-    /* Write the data to the FPGA and set FPGA AWG state machine */
-    write_data_fpga( ch, data, &params );
+    /// Prepare data buffer (calculate from input arguments)
+    synthesize_signal(ampl, start_frequency, type, endfreq, data, &params);
+    /// Write the data to the FPGA and set FPGA AWG state machine
+    write_data_fpga(ch, data, &params);
     usleep(1000);
 
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
@@ -611,9 +609,7 @@ int main(int argc, char *argv[]) {
 
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
 
-            
-
-            if ( scale_type ) { //log scle
+            if ( scale_type ) { // log scle
                 k = powf( 10, ( c * (float)fr ) + a );
                 Frequency[ fr ] =  (int)k ;
             }
@@ -717,7 +713,7 @@ int main(int argc, char *argv[]) {
                         printf("error no function set for h = %d, when saving data\n", h);
                     }
 
-                } // avearging loop ends here
+                } // averaging loop ends here
 
                 /* Calculating and saving mean values */
                 switch ( h ) {
@@ -765,14 +761,14 @@ int main(int argc, char *argv[]) {
 
     } // function step loop ends here
 
-    /* user is inquired to correcty set the connections */
-    /**
+    /** User is inquired to correcty set the connections. */
+    /*
     if (inquire_user_wait() < 0) {
         printf("error user inquiry at inquire_user_wait\n");
     } 
     */
 
-    /* Opening frequency data */
+    /** Opening frequency data */
     FILE *try_open = fopen("/tmp/lcr_data/data_frequency.txt", "w");
 
     /* If files don't exists yet, we first have to create them ( First boot ), as we are storing them in /tmp */
@@ -858,7 +854,7 @@ int main(int argc, char *argv[]) {
             system(command);
         }
 
-        /* Opening files */
+        /** Opening files */
         FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "w");
         FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "w");
         FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "w");
@@ -877,9 +873,7 @@ int main(int argc, char *argv[]) {
         FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "w");
 
 
-
-    /* combining data from calibration measureents, if calibration wasn't made, only measurement data is saved */
-
+    /** Combining all the data and printing it to stdout */
     for ( i = 0; i < end_results_dimension ; i++ ) {
 
         if ( calib_function == 1 ) { // calib. was made including Z_load
@@ -898,7 +892,6 @@ int main(int argc, char *argv[]) {
         }
         w_out = 2 * M_PI *Frequency[ i ];
         
-        /* Phase and amplitude calculation */
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
 
@@ -920,7 +913,8 @@ int main(int argc, char *argv[]) {
         
         Q[ i ] =X_s[ i ] / R_s[ i ]; //Q=X_s/R_s;
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
-
+        
+        /// Output
         if ( !sweep_function ) {
             printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
                 Frequency[ 0 ],
@@ -940,8 +934,7 @@ int main(int argc, char *argv[]) {
                 Q[ i ],
                 D[ i ]
                 );
-        }
-        else {
+        } else {
             printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
                 Frequency[ i ],
                 PhaseZ[ i ],
@@ -961,12 +954,11 @@ int main(int argc, char *argv[]) {
                 D[ i ]
                 );
         }
-
         
-        /* Saving data into files */
-        if(!sweep_function){
+        /** Saving files */
+        if (!sweep_function) {
             fprintf(file_frequency, "%.5f\n", Frequency[0]);
-        }else{
+        } else {
             fprintf(file_frequency, "%.5f\n", Frequency[i]);
         }
         
@@ -987,7 +979,7 @@ int main(int argc, char *argv[]) {
         fprintf(file_D, "%.5f\n", D[i]);
     }
 
-    /* Closing files */
+    /** Closing files */
     fclose(file_frequency);
     fclose(file_phase);
     fclose(file_amplitude);
@@ -1005,6 +997,7 @@ int main(int argc, char *argv[]) {
     fclose(file_Q);
     fclose(file_D);
 
+    /** All's well that ends well. */
     return 1;
 
 }
@@ -1230,8 +1223,8 @@ int acquire_data(float **s ,
  */
 int LCR_data_analysis(float **s,
                       uint32_t size,
-                      uint32_t DC_bias,
-                      uint32_t R_shunt,
+                      double DC_bias,
+                      double R_shunt,
                       float complex *Z,
                       double w_out,
                       int f) {
@@ -1316,20 +1309,16 @@ int LCR_data_analysis(float **s,
 
 
     /* Phase has to be limited between 180 and -180 deg. */
-    if (Phase_Z_rad <=  (-M_PI) )
-    {
+    if (Phase_Z_rad <=  (-M_PI) ) {
         Phase_Z_rad = Phase_Z_rad +(2*M_PI);
     }
-    else if ( Phase_Z_rad >= M_PI )
-    {
+    else if ( Phase_Z_rad >= M_PI ) {
         Phase_Z_rad = Phase_Z_rad -(2*M_PI) ;
     }
-    else 
-    {
+    else {
         Phase_Z_rad = Phase_Z_rad;
     } 
- 
-   
+    
     *Z =  ( ( Z_amp ) * cosf( Phase_Z_rad ) )  +  ( ( Z_amp ) * sinf( Phase_Z_rad ) ) * I; // R + jX
 
     return 1;
