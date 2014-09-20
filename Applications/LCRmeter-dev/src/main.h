@@ -112,7 +112,8 @@ typedef struct rp_osc_meas_res_s {
 /* Output signals */
 #define SIGNALS_NUM   3
 
-#define SIGNAL_LENGTH 100
+/* Measurment length - always 1024. Stripped in JS */
+#define SIGNAL_LENGTH 1024
 
 /* module entry points */
 int rp_app_init(void);
@@ -146,19 +147,11 @@ int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas);
 /* Waveform generator frequency limiter. */
 float rp_gen_limit_freq(float freq, float gen_type);
 
-/* Function for setting the time range parameter from the lcr function */
-
-void rp_set_time_range(float f);
-
-/* For testing purposes only. */
-void rp_set_mes_data(float x);
-
+/* LCR get parameters */
 float rp_get_params_lcr(int pos);
 
+/* LCR set parameters */
 void rp_set_params_lcr(int pos, float val);
-
-
-void rp_set_trig_mode();
 
 
 #endif /*  __MAIN_H */
