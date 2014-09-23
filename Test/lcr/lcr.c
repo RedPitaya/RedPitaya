@@ -6,6 +6,7 @@
  * @Author1 Martin Cimerman   <cim.martin@gmail.com>
  * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
  * @Author3 Peter Miklavcic   <miklavcic.peter@gmail.com>
+ * @Author4 Luka Golinar      <luka.golinar@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
