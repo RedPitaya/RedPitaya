@@ -37,10 +37,12 @@ float               **rp_tmp_signals; /* used for calculation, only from worker 
 
 /* Signals directly pointing at the FPGA mem space */
 int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
+lcr_meas_data_t lcr_mes;
 
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 int counter = 0;
+int measure_counter = 0;
 
 int measure_method = 0;
 
@@ -703,15 +705,17 @@ void *rp_osc_worker_thread(void *args)
             rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
             
             rp_osc_set_meas_data(ch1_meas, ch2_meas);
+            lcr_update_meas_data(lcr_mes);
             rp_osc_set_signals(rp_tmp_signals, SIGNAL_LENGTH-1);
         } else {
             rp_osc_set_signals(rp_tmp_signals, long_acq_idx);
         }
         /* do not loop too fast */
-        usleep(10000);
+        usleep(1000);
     }
 
     rp_clean_params(curr_params);
+
     return 0;
 }
 
@@ -985,8 +989,31 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             }
         }
         
-    }
+        if(measure_counter < 99){
 
+            lcr_mes.frequency = frequency[measure_counter];
+                
+            lcr_mes.phaseZ = phase[measure_counter];
+            lcr_mes.amplitudeZ = amplitude[measure_counter];
+            lcr_mes.y_abs = Y_abs[measure_counter];
+            lcr_mes.phaseY = phaseY[measure_counter];
+            
+            lcr_mes.R_s = R_s[measure_counter];
+            lcr_mes.X_s = X_s[measure_counter];
+            lcr_mes.G_p = G_p[measure_counter];
+            lcr_mes.B_p = B_p[measure_counter];
+            lcr_mes.C_s = C_s[measure_counter];
+            lcr_mes.C_p = C_p[measure_counter];
+            lcr_mes.L_s = L_s[measure_counter];
+            lcr_mes.L_p = L_p[measure_counter]; 
+            lcr_mes.R_p = R_p[measure_counter];
+            lcr_mes.Q = Q[measure_counter];
+            lcr_mes.D = D[measure_counter];
+
+            measure_counter++;
+        }       
+    }
+    
     counter = 0;
     return 0;
 }
