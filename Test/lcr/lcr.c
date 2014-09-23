@@ -91,7 +91,7 @@ int LCR_data_analysis(float **s,
 /** Print usage information */
 void usage() {
     const char *format =
-            "%s version %s-%s, compiled at %s\n"
+            "%s version %sv, compiled at %s\n"
             "\n"
             "Usage: %s [channel] "
                       "[amplitude] "
@@ -124,7 +124,7 @@ void usage() {
             "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n";
 
-    fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, __TIMESTAMP__, g_argv0);
+    fprintf(stderr, format, g_argv0, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
 
 /* Gain string (lv/hv) to number (0/1) transformation, currently not needed
