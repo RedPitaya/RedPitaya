@@ -20,7 +20,7 @@
 #define STR(s) #s
  
 #ifndef VERSION
-#define VERSION_STR "0.25"
+#define VERSION_STR "0.x"
 #else
 #define VERSION_STR XSTR(VERSION)
 #endif
