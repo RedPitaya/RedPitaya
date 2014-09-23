@@ -14,7 +14,7 @@
  * It uses acquire and generate from the Test/ folder.
  * Data analysis returns frequency, phase and amplitude.
  * 
- * VERSION: 0-dev
+ * VERSION: VERSION defined in Makefile
  * 
  * This part of code is written in C programming language.
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
@@ -91,7 +91,7 @@ int LCR_data_analysis(float **s,
 /** Print usage information */
 void usage() {
     const char *format =
-            "%s version %sv, compiled at %s\n"
+            "LCR meter version %s, compiled at %s\n"
             "\n"
             "Usage: %s [channel] "
                       "[amplitude] "
@@ -111,6 +111,7 @@ void usage() {
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
+            "\t                   Max sum of amplitude and DC bias is 1V.\n"
             "\tr_shunt            Shunt resistor value in Ohms [>0].\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
             "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
@@ -124,7 +125,7 @@ void usage() {
             "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n";
 
-    fprintf(stderr, format, g_argv0, VERSION_STR, __TIMESTAMP__, g_argv0);
+    fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
 
 /* Gain string (lv/hv) to number (0/1) transformation, currently not needed
@@ -235,49 +236,54 @@ int main(int argc, char *argv[]) {
     /// Channel
     unsigned int ch = atoi(argv[1])-1; // Zero-based internally
     if (ch > 1) {
-        fprintf(stderr, "Invalid channel value: %s\n\n", argv[1]);
+        fprintf(stderr, "Invalid channel value!\n\n");
         usage();
         return -1;
     }
     /// Amplitude
     double ampl = strtod(argv[2], NULL);
     if ( (ampl < 0) || (ampl > c_max_amplitude) ) {
-        fprintf(stderr, "Invalid amplitude value: %s\n\n", argv[2]);
+        fprintf(stderr, "Invalid amplitude value!\n\n");
         usage();
         return -1;
     }
     /// DC bias
     double DC_bias = strtod(argv[3], NULL);
     if ( (DC_bias < 0) || (DC_bias > 1) ) {
-        fprintf(stderr, "Invalid dc bias value: %s\n\n", argv[3]);
+        fprintf(stderr, "Invalid dc bias value!\n\n");
+        usage();
+        return -1;
+    }
+    if ( ampl+DC_bias > 1 ) {
+        fprintf(stderr, "Invalid ampl+dc value!\n\n");
         usage();
         return -1;
     }
     /// R_shunt
     double R_shunt = strtod(argv[4], NULL);
     if ( !(R_shunt > 0) ) {
-        fprintf(stderr, "Invalid r_shunt value: %s\n\n", argv[4]);
+        fprintf(stderr, "Invalid r_shunt value!\n\n");
         usage();
         return -1;
     }
     /// Averaging
     unsigned int averaging_num = strtod(argv[5], NULL);
     if ( averaging_num < 1 ) {
-        fprintf(stderr, "Invalid averaging value: %s\n\n", argv[5]);
+        fprintf(stderr, "Invalid averaging value!\n\n");
         usage();
         return -1;
     }
     /// Calibration mode (0=none, 1=open&short, 2=z_ref)
     unsigned int calib_function = strtod(argv[6], NULL);
     if ( calib_function > 2 ) {
-        fprintf(stderr, "Invalid calibration mode: %s\n\n", argv[6]);
+        fprintf(stderr, "Invalid calibration mode!\n\n");
         usage();
         return -1;
     }
     /// Z_ref real part
     double Z_load_ref_real = strtod(argv[7], NULL);
     if ( Z_load_ref_real < 0 ) {
-        fprintf(stderr, "Invalid z_ref real value: %s\n\n", argv[7]);
+        fprintf(stderr, "Invalid z_ref real value!\n\n");
         usage();
         return -1;
     }
@@ -286,32 +292,32 @@ int main(int argc, char *argv[]) {
     /// Count/steps
     unsigned int steps = strtod(argv[9], NULL);
     if ( steps < 1 ) {
-        fprintf(stderr, "Invalid count/steps value: %s\n\n", argv[9]);
+        fprintf(stderr, "Invalid count/steps value!\n\n");
         usage();
         return -1;
     }
     /// Sweep mode (0=measurement, 1=frequency)
     unsigned int sweep_function = strtod(argv[10], NULL);
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
-        fprintf(stderr, "Invalid sweep mode: %s\n\n", argv[10]);
+        fprintf(stderr, "Invalid sweep mode!\n\n");
         usage();
         return -1;
     }
     if (sweep_function==1 && steps==1) {
-        fprintf(stderr, "Invalid count/steps value: %s\n\n", argv[9]);
+        fprintf(stderr, "Invalid count/steps value!\n\n");
         usage();
         return -1;
     }
     /// Frequency
     double start_frequency = strtod(argv[11], NULL);
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid start freq: %s\n\n", argv[11]);
+        fprintf(stderr, "Invalid start freq!\n\n");
         usage();
         return -1;
     }
     double end_frequency = strtod(argv[12], NULL);
     if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid end freq: %s\n\n", argv[12]);
+        fprintf(stderr, "Invalid end freq!\n\n");
         usage();
         return -1;
     }
@@ -323,7 +329,7 @@ int main(int argc, char *argv[]) {
     /// Scale type (0=lin, 1=log)
     unsigned int scale_type = strtod(argv[13], NULL);
     if ( scale_type > 1 ) {
-        fprintf(stderr, "Invalid scale type: %s\n\n", argv[13]);
+        fprintf(stderr, "Invalid scale type!\n\n");
         usage();
         return -1;
     }
@@ -333,7 +339,7 @@ int main(int argc, char *argv[]) {
     */
     unsigned int wait_on_user = strtod(argv[14], NULL);
     if ( wait_on_user > 1 ) {
-        fprintf(stderr, "Invalid wait value: %s\n\n", argv[14]);
+        fprintf(stderr, "Invalid wait value!\n\n");
         usage();
         return -1;
     }
