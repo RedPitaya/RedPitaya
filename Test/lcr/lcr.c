@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
     }
     /// Calibration mode (0=none, 1=open&short, 2=z_ref)
     unsigned int calib_function = strtod(argv[6], NULL);
-    if ( calib_function > 2) {
+    if ( calib_function > 2 ) {
         fprintf(stderr, "Invalid calibration mode: %s\n\n", argv[6]);
         usage();
         return -1;
