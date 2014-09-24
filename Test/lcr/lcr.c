@@ -601,7 +601,7 @@ int main(int argc, char *argv[]) {
     /// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch, data, &params);
     usleep(1000);
-
+    int testt = 1;
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
         if (!calib_function) {
@@ -616,6 +616,20 @@ int main(int argc, char *argv[]) {
             }
             else { // lin scale
                 Frequency[ fr ] = (int)(start_frequency + ( frequency_step * fr ));
+            }
+
+            //this section eliminates transient effect that spoiles the measuremets
+            // it outputs frequencies below start frequency and increses it to the strat frequency
+            if (sweep_function == 1 && testt <= 10){
+                if (testt < 10){
+                    Frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*testt/10) ) ;
+                    //printf("freq = %f\n",Frequency[ fr ]);
+                }
+                else if (testt == 10){
+                    fr = 0;
+                    Frequency[fr] = start_frequency;
+                }
+                testt++;
             }
 
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
