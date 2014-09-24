@@ -203,7 +203,42 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * 2 - Load calibration
        * 3 - None */
        "lcr_calibration", 0, 1, 0, 0, 3 },
-    
+
+    /* LCR measurment parameters from here on: TODO - Write detailed description
+     * Frequency - 
+     * AmplitudeZ - 
+     * PhaseZ - 
+     * Y_abs - 
+     * PhaseY -
+     * R_s - 
+     * X_s - 
+     * G_p -
+     * B_p -
+     * C_s - 
+     * C_p -
+     * L_s -
+     * L_p -
+     * R_p
+     * Q 
+     * D                                                                      */
+     {  "frequency_meas", 0, 0, 1, 0, +2500000 },
+     {  "phaseZ", 0, 0, 1, -1000, +1000 },
+     {  "amplitude_meas", 0, 0, 1, -1000, +1000 },
+     {  "y_abs", 0, 0, 1, -1000, +1000 },
+     {  "phaseY", 0, 0, 1, -1000, +1000 },
+     {  "R_s", 0, 0, 1, -1000, +1000 },
+     {  "X_s", 0, 0, 1, -1000, +1000 },
+     {  "G_p", 0, 0, 1, -1000, +1000 },
+     {  "B_p", 0, 0, 1, -1000, +1000 },
+     {  "C_s", 0, 0, 1, -1000, +1000 },
+     {  "C_p", 0, 0, 1, -1000, +1000 },
+     {  "L_s", 0, 0, 1, -1000, +1000 },
+     {  "L_p", 0, 0, 1, -1000, +1000 },
+     {  "R_p", 0, 0, 1, -1000, +1000 },
+     {  "Q", 0, 0, 1, -1000, +1000 },
+     {  "D", 0, 0, 1, -1000, +1000 },
+
+
     /* Arbitrary Waveform Generator parameters from here on */
 
     { /* gen_trig_mod_ch1 - Selects the trigger mode for channel 1:
@@ -1090,25 +1125,29 @@ int rp_update_main_params(rp_app_params_t *params)
     return 0;
 }
 
-int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
-{
-    pthread_mutex_lock(&rp_main_params_mutex);
-    rp_main_params[MEAS_MIN_CH1].value = ch1_meas.min;
-    rp_main_params[MEAS_MAX_CH1].value = ch1_meas.max;
-    rp_main_params[MEAS_AMP_CH1].value = ch1_meas.amp;
-    rp_main_params[MEAS_AVG_CH1].value = ch1_meas.avg;
-    rp_main_params[MEAS_FREQ_CH1].value = ch1_meas.freq;
-    rp_main_params[MEAS_PER_CH1].value = ch1_meas.period;
+int lcr_update_meas_data(lcr_meas_data_t lcr_meas){
 
-    rp_main_params[MEAS_MIN_CH2].value = ch2_meas.min;
-    rp_main_params[MEAS_MAX_CH2].value = ch2_meas.max;
-    rp_main_params[MEAS_AMP_CH2].value = ch2_meas.amp;
-    rp_main_params[MEAS_AVG_CH2].value = ch2_meas.avg;
-    rp_main_params[MEAS_FREQ_CH2].value = ch2_meas.freq;
-    rp_main_params[MEAS_PER_CH2].value = ch2_meas.period;
-
-    pthread_mutex_unlock(&rp_main_params_mutex);
-    return 0;
+  pthread_mutex_lock(&rp_main_params_mutex);
+  rp_main_params[MEAS_FREQ_LCR].value = lcr_meas.frequency;
+  rp_main_params[MEAS_PHASEZ_LCR].value = lcr_meas.phaseZ;
+  rp_main_params[MEAS_AMPZ_LCR].value = lcr_meas.amplitudeZ;
+  rp_main_params[MEAS_Y_ABS].value = lcr_meas.y_abs;
+  rp_main_params[MEAS_PHASEY_LCR].value = lcr_meas.phaseY;
+  
+  rp_main_params[MEAS_R_S_LCR].value = lcr_meas.R_s;
+  rp_main_params[MEAS_X_S_LCR].value = lcr_meas.X_s;
+  rp_main_params[MEAS_G_P_LCR].value = lcr_meas.G_p;
+  rp_main_params[MEAS_B_P_LCR].value = lcr_meas.B_p;
+  rp_main_params[MEAS_C_S_LCR].value = lcr_meas.C_s;
+  rp_main_params[MEAS_C_P_LCR].value = lcr_meas.C_p;
+  rp_main_params[MEAS_L_S_LCR].value = lcr_meas.L_s;
+  rp_main_params[MEAS_L_P_LCR].value = lcr_meas.L_p;
+  rp_main_params[MEAS_R_P_LCR].value = lcr_meas.R_p;
+  rp_main_params[MEAS_Q_LCR].value = lcr_meas.Q;
+  rp_main_params[MEAS_D_LCR].value = lcr_meas.D;
+  
+  pthread_mutex_unlock(&rp_main_params_mutex);
+  return 0;
 }
 
 float rp_gen_limit_freq(float freq, float gen_type)

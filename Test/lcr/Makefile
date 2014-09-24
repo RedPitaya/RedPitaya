@@ -14,7 +14,7 @@
 #
 
 # Versioning system
-VERSION ?= 0.00-0000
+VERSION ?= 0.25
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
