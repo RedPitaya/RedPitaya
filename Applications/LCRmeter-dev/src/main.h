@@ -176,12 +176,6 @@ int rp_clean_params(rp_app_params_t *params);
  */
 int rp_update_main_params(rp_app_params_t *params);
 
-/* sets the measurement data to output parameters structure - these parameters
- * are read-only for the client and there is no need to update them internally
- * in the application 
- */
-int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas);
-
 /* Waveform generator frequency limiter. */
 float rp_gen_limit_freq(float freq, float gen_type);
 

@@ -1150,27 +1150,6 @@ int lcr_update_meas_data(lcr_meas_data_t lcr_meas){
   return 0;
 }
 
-int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
-{
-    pthread_mutex_lock(&rp_main_params_mutex);
-    rp_main_params[MEAS_MIN_CH1].value = ch1_meas.min;
-    rp_main_params[MEAS_MAX_CH1].value = ch1_meas.max;
-    rp_main_params[MEAS_AMP_CH1].value = ch1_meas.amp;
-    rp_main_params[MEAS_AVG_CH1].value = ch1_meas.avg;
-    rp_main_params[MEAS_FREQ_CH1].value = ch1_meas.freq;
-    rp_main_params[MEAS_PER_CH1].value = ch1_meas.period;
-
-    rp_main_params[MEAS_MIN_CH2].value = ch2_meas.min;
-    rp_main_params[MEAS_MAX_CH2].value = ch2_meas.max;
-    rp_main_params[MEAS_AMP_CH2].value = ch2_meas.amp;
-    rp_main_params[MEAS_AVG_CH2].value = ch2_meas.avg;
-    rp_main_params[MEAS_FREQ_CH2].value = ch2_meas.freq;
-    rp_main_params[MEAS_PER_CH2].value = ch2_meas.period;
-
-    pthread_mutex_unlock(&rp_main_params_mutex);
-    return 0;
-}
-
 float rp_gen_limit_freq(float freq, float gen_type)
 {
     int type = (int)gen_type;

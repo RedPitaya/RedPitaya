@@ -214,14 +214,6 @@ int rp_osc_set_signals(float **source, int index)
 
 
 /*----------------------------------------------------------------------------------*/
-int rp_osc_set_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
-{
-    rp_update_meas_data(ch1_meas, ch2_meas);
-    return 0;
-}
-
-
-/*----------------------------------------------------------------------------------*/
 void *rp_osc_worker_thread(void *args)
 {
     rp_osc_worker_state_t old_state, state;
@@ -704,7 +696,6 @@ void *rp_osc_worker_thread(void *args)
             rp_osc_meas_convert(&ch1_meas, ch1_max_adc_v, rp_calib_params->fe_ch1_dc_offs);
             rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
             
-            rp_osc_set_meas_data(ch1_meas, ch2_meas);
             lcr_update_meas_data(lcr_mes);
             rp_osc_set_signals(rp_tmp_signals, SIGNAL_LENGTH-1);
         } else {
@@ -1012,6 +1003,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
 
             measure_counter++;
         }       
+        
     }
     
     counter = 0;
