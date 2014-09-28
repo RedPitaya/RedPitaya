@@ -1,7 +1,7 @@
 /**
  * $Id: bode.c 1246  $
  *
- * @brief Red Pitaya LCR meter
+ * @brief Red Pitaya Bode plotter
  *
  * @Author1 Martin Cimerman   <cim.martin@gmail.com>
  * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
@@ -328,6 +328,44 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    /* We try to open a data file */
+    FILE *try_open = fopen("/tmp/bode_data/data_frequency", "w");
+
+    /* If the directory doesn't exist yet, we first have to create it. */
+    if(try_open == NULL){
+
+        int b_number;
+        char command[30];
+        strcpy(command, "mkdir /tmp/bode_data");
+        system(command);
+
+        /* We must also create all the files for storing the data */
+        for(b_number = 0; b_number < 3; b_number++){
+
+            switch(b_number){
+                case 0:
+                    strcpy(command, "touch /tmp/bode_data/data_frequency");
+                    break;
+                case 1:
+                    strcpy(command, "touch /tmp/bode_data/data_amplitude");
+                    break;
+                case 2:
+                    strcpy(command, "touch /tmp/bode_data/data_phase");
+                    break;
+            }
+            /* Execute the command */
+            system(command);
+        }
+        /* Change permissions */
+        strcpy(command, "chmod -R 777 /tmp/bode_data");
+        system(command);
+    }
+
+    /* Opening files */
+    FILE *file_frequency = fopen("/tmp/bode_data/data_frequency", "w");
+    FILE *file_amplitude = fopen("/tmp/bode_data/data_amplitude", "w");
+    FILE *file_phase = fopen("/tmp/bode_data/data_phase", "w");
+
     /// Showtime.
     for ( fr = 0; fr < steps; fr++ ) {
         
@@ -352,6 +390,7 @@ int main(int argc, char *argv[]) {
         /// Write the data to the FPGA and set FPGA AWG state machine
         write_data_fpga(ch, data, &params);
         usleep(1000);
+
 
         for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
@@ -413,8 +452,22 @@ int main(int argc, char *argv[]) {
         measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
 
         printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
+
+        /* Writing data into files */
+        fprintf(file_frequency, "%.5f\n", frequency[fr]);
+        fprintf(file_amplitude, "%.5f\n", measured_data_amplitude[1]);
+        fprintf(file_phase, "%.5f\n", measured_data_phase[1]);
+
+        
+
     } // end of frequency sweep loop
    
+    /* Closing files */
+    fclose(file_frequency);
+    fclose(file_phase);
+    fclose(file_amplitude);
+    
+
     return 0;
 }
 
