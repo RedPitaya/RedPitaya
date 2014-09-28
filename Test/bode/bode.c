@@ -93,15 +93,15 @@ void usage() {
     const char *format =
             "Bode analyzer version %s, compiled at %s\n"
             "\n"
-            "Usage: %s [channel] "
-                      "[amplitude] "
-                      "[dc bias] "
-                      "[averaging] "
-                      "[count/steps] "
-                      "[start freq] "
-                      "[stop freq] "
-                      "[scale type]"
-            "\n\n"
+            "Usage:\t%s [channel] "
+                       "[amplitude] "
+                       "[dc bias] "
+                       "[averaging] "
+                       "[count/steps] "
+                       "[start freq] "
+                       "[stop freq] "
+                       "[scale type]\n"
+            "\n"
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
@@ -111,7 +111,8 @@ void usage() {
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
             "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
-            "\n";
+            "\n"
+            "Output:\tfrequency [Hz], phase [deg], amplitude [dB]\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -411,7 +412,7 @@ int main(int argc, char *argv[]) {
         measured_data_amplitude[ 1 ] = mean_array_column( data_for_avreaging, averaging_num, 1 );
         measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
 
-        printf(" %.0f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
+        printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
     } // end of frequency sweep loop
    
     return 0;
@@ -725,5 +726,6 @@ int bode_data_analysis(float **s ,
     *Amplitude = 10*log( U2_amp / U1_amp );;
     *Phase = Phase_internal * ( 180/M_PI );
 
+    /** All's well that ends well. */
     return 1;
 }
