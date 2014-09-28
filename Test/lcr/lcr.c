@@ -209,8 +209,10 @@ float mean_array_column(float **arrayptr, int length, int column) {
     result = result / length;
     return result;
 }
+
 /** LCR meter */
 int main(int argc, char *argv[]) {
+	
     /** Set program name */
     g_argv0 = argv[0];
     
@@ -356,8 +358,8 @@ int main(int argc, char *argv[]) {
     double   measurement_sweep;
     uint32_t min_periodes = 10; // max 20
     uint32_t size; // number of samples varies with number of periodes
-    double   w_out; //a ngular velocity
-    int      f = 0; // used in for lop, seting the decimation
+    double   w_out; // angular velocity
+    int      f = 0; // used in for lop, setting the decimation
     int      i, i1, fr, h; // iterators in for loops
     int      equal = 0; // parameter initialized for generator functionality
     int      shaping = 0; // parameter initialized for generator functionality
@@ -1232,13 +1234,12 @@ int acquire_data(float **s ,
 
 /**
  * Acquired data analysis function for LCR meter.
- * Function returns the impedance (Z) in a complex form.
- *
- * @param s        Points to a memory where data is read from.
+ * 
+ * @param s        Pointer where data is read from.
  * @param size     Size of data.
  * @param DC_bias  DC component.
  * @param R_shunt  Shunt resistor value in Ohms.
- * @param Z        Returned impedance data (in complex form).
+ * @param Z        Pointer where to write impedance data (in complex form).
  * @param w_out    Angular velocity (2*pi*freq).
  * @param f        Decimation selector index.
  */
