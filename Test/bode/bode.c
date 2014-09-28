@@ -80,7 +80,7 @@ void write_data_fpga(uint32_t ch,
                      const awg_param_t *awg);
 int acquire_data(float **s ,
                  uint32_t size);
-int bode_data_analasys(float **s ,
+int bode_data_analysis(float **s ,
                        uint32_t size,
                        double DC_bias,
                        float *Amplitude,
@@ -116,9 +116,8 @@ void usage() {
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
 
-/** Gain string (lv/hv) to number (0/1) transformation */
-int get_gain(int *gain, const char *str)
-{
+/* Gain string (lv/hv) to number (0/1) transformation, currently not needed
+int get_gain(int *gain, const char *str) {
     if ( (strncmp(str, "lv", 2) == 0) || (strncmp(str, "LV", 2) == 0) ) {
         *gain = 0;
         return 0;
@@ -131,14 +130,15 @@ int get_gain(int *gain, const char *str)
     fprintf(stderr, "Unknown gain: %s\n", str);
     return -1;
 }
+*/
 
-/* Allocates a memory with size num_of_el, memory has 1 dimension */
+/** Allocates a memory with size num_of_el, memory has 1 dimension */
 float *create_table_size(int num_of_el) {
     float *new_table = (float *)malloc( num_of_el * sizeof(float));
     return new_table;
 }
 
-/** Allocates a memory with size of: num_of_cols x num_of_rows */
+/** Allocates a memory with size num_of_cols*num_of_rows */
 float **create_2D_table_size(int num_of_rows, int num_of_cols) {
     float **new_table = (float **)malloc( num_of_rows * sizeof(float*));
     int i;
@@ -150,38 +150,34 @@ float **create_2D_table_size(int num_of_rows, int num_of_cols) {
 
 float max_array(float *arrayptr, int numofelements) {
   int i = 0;
-  float max = -100000;//seting the minimum value possible
+  float max = -1e6; // Setting the minimum value possible
 
-  for(i = 0; i < numofelements; i++)
-  {
-    if(max < arrayptr[i])
-    {
-      max = arrayptr[i];
-    }
+  for(i = 0; i < numofelements; i++) {
+    if(max < arrayptr[ i ]) max = arrayptr[ i ];
   }
+
   return max;
 }
 
-/* Trapezoidal method for integration interpolation, had to be defined */
+/** Trapezoidal method for integration */
 float trapz(float *arrayptr, float T, int size1) {
   float result = 0;
   int i;
-  //printf("size = %d\n", size);
+  
   for (i =0; i < size1 - 1 ; i++) {
-    result +=  ( arrayptr[i] + arrayptr[ i+1 ]  );
-   
+    result += ( arrayptr[i] + arrayptr[ i+1 ]  );
   }
-    result = (T / (float)2) * result;
-    return result;
+  
+  result = (T / (float)2) * result;
+  return result;
 }
 
-/** Finds a mean value from the memmory arrayptr points to */
+/** Finds a mean value of an array */
 float mean_array(float *arrayptr, int numofelements) {
   int i = 1;
   float mean = 0;
 
-  for(i = 0; i < numofelements; i++)
-  {
+  for(i = 0; i < numofelements; i++) {
     mean += arrayptr[i];
   }
 
@@ -189,7 +185,7 @@ float mean_array(float *arrayptr, int numofelements) {
   return mean;
 }
 
-/* Finds a mean value from the memmory, acquiring values from rows */
+/** Finds a mean value of an array by columns, acquiring values from rows */
 float mean_array_column(float **arrayptr, int length, int column) {
     float result = 0;
     int i;
@@ -197,119 +193,127 @@ float mean_array_column(float **arrayptr, int length, int column) {
     for(i = 0; i < length; i++) {
         result = result + arrayptr[i][column];
     }
+    
     result = result / length;
     return result;
 }
 
-/** Signal generator main */
-int main(int argc, char *argv[])
-{
-    /* argument check */
-    g_argv0 = argv[0];    
+/** Bode analyzer */
+int main(int argc, char *argv[]) {
+	
+	/** Set program name */
+    g_argv0 = argv[0];
     
-    if ( argc < 9 ) {
+    /**
+     * Manpage
+     * 
+     * usage() prints its output to stderr, nevertheless main returns
+     * zero as calling lcr without any arguments is not an error.
+     */
+    if (argc==1) {
+		usage();
+		return 0;
+	}
+    
+    /** Argument check */
+    if (argc<9) {
+        fprintf(stderr, "Too few arguments!\n\n");
         usage();
         return -1;
     }
     
-    /* Channel argument parsing */
-    uint32_t ch = atoi(argv[1]) - 1; /* Zero based internally */
+    /** Argument parsing */
+    /// Channel
+    unsigned int ch = atoi(argv[1])-1; // Zero-based internally
     if (ch > 1) {
-        fprintf(stderr, "Invalid channel: %s\n", argv[1]);
+        fprintf(stderr, "Invalid channel value!\n\n");
         usage();
         return -1;
     }
-
-    /* Signal amplitude argument parsing */
+    /// Amplitude
     double ampl = strtod(argv[2], NULL);
-    if ( (ampl < 0.0) || (ampl > c_max_amplitude) ) {
-        fprintf(stderr, "Invalid amplitude: %s\n", argv[2]);
+    if ( (ampl < 0) || (ampl > c_max_amplitude) ) {
+        fprintf(stderr, "Invalid amplitude value!\n\n");
         usage();
         return -1;
     }
-
-    uint32_t DC_bias = strtod(argv[3], NULL);
-    if ( (DC_bias < -2.0) || (DC_bias > 1.1) ) {
-        fprintf(stderr, "Invalid DC bias:  %s\n", argv[3]);
+    /// DC bias
+    double DC_bias = strtod(argv[3], NULL);
+    if ( (DC_bias < 0) || (DC_bias > 1) ) {
+        fprintf(stderr, "Invalid dc bias value!\n\n");
         usage();
         return -1;
     }
-
-    /* Number of measurments made and are later averaged */
-    uint32_t averaging_num = strtod(argv[4], NULL);
-    if ( (averaging_num < 1) || (averaging_num > 10) ) {
-        fprintf(stderr, "Invalid averaging_num:  %s\n", argv[4]);
+    if ( ampl+DC_bias > 1 ) {
+        fprintf(stderr, "Invalid ampl+dc value!\n\n");
         usage();
         return -1;
     }
-
-    /* Number of steps argument parsing - steps betwen start and end frequency*/
-    double steps = strtod(argv[5], NULL);
-    if ( (steps < 1) || (steps > 1000) ) {
-        fprintf(stderr, "Invalid umber of steps:  %s\n", argv[5]);
+    /// Averaging
+    unsigned int averaging_num = strtod(argv[4], NULL);
+    if ( averaging_num < 1 ) {
+        fprintf(stderr, "Invalid averaging value!\n\n");
         usage();
         return -1;
     }
-
-    /* Start frequency argument parsing */
+    /// Count/steps
+    unsigned int steps = strtod(argv[5], NULL);
+    if ( steps < 2 ) {
+        fprintf(stderr, "Invalid count/steps value!\n\n");
+        usage();
+        return -1;
+    }
+    /// Frequency
     double start_frequency = strtod(argv[6], NULL);
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid start frequency:  %s\n", argv[6]);
+        fprintf(stderr, "Invalid start freq!\n\n");
         usage();
         return -1;
     }
-
-    /* Stop frequency argument parsing */
     double end_frequency = strtod(argv[7], NULL);
     if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid end frequency: %s\n", argv[7]);
+        fprintf(stderr, "Invalid end freq!\n\n");
+        usage();
+        return -1;
+    }
+    if ( end_frequency < start_frequency ) {
+        fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
+        usage();
+        return -1;
+    }
+    /// Scale type (0=lin, 1=log)
+    unsigned int scale_type = strtod(argv[8], NULL);
+    if ( scale_type > 1 ) {
+        fprintf(stderr, "Invalid scale type!\n\n");
         usage();
         return -1;
     }
 
-    /* Scale type argument prsing [1] - logaritmic frequency steps [0] - linear steps */
-    int scale_type = strtod(argv[8], NULL);
-    if ( (scale_type < 0) || (scale_type > 1) ) {
-        fprintf(stderr, "Invalid decidion:scale type %s\n", argv[8]);
-        usage();
-        return -1;
-    }
-
+    /** Parameters initialization and calculation */
     double frequency_step;
     double a,b,c;
-
-    if(scale_type) { //if logaritmic scale required start and end frequency are transformed
+    signal_e type = eSignalSine;
+    double    endfreq = 0; // endfreq set for generate's sweep
+    double    k;
+    double    w_out; // angular velocity
+    uint32_t  min_periodes = 10; // max 20
+    uint32_t  size; // number of samples varies with number of periodes
+    int       f = 0; // used in for lop, setting the decimation
+    int       i1, fr; // iterators in for loops
+    int       equal = 0; // parameter initialized for generator functionality
+    int       shaping = 0; // parameter initialized for generator functionality
+    int       first_delay = 0; // delay required before first acquire
+    float     **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
+    /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
+    if(scale_type) {
         b = log10f( end_frequency );
         a = log10f( start_frequency );
         c = ( b - a ) /( steps - 1);
+    } else {
+        frequency_step = ( end_frequency - start_frequency ) / ( steps - 1);
     }
-
-    else {
-    frequency_step = (end_frequency - start_frequency ) /( steps - 1);
-    }
-
-    /* end frequency must always be greather than start frequency */
-    if ( end_frequency < start_frequency ) {
-        fprintf(stderr, "End frequency has to be greater than the start frequency! \n");
-        usage();
-        return -1;
-    }
-
-    /* Signal type set to type sine. */
-    signal_e type = eSignalSine;
-
-    double    endfreq = 0; // endfreq set for inbulild sweep (generate)
-    double    k;
-    double    w_out; //angular velocity used in the algorythm
-    uint32_t  min_periodes = 10; // max 20
-    uint32_t  size; // nmber of samples varies with number of periodes
-    int       f = 0; // used in for lop, seting the decimation
-    int       i1, fr; // iterators in for loops
-    int       equal = 0; //parameter initialized for generator functionality
-    int       shaping = 0; //parameter initialized for generator functionality
-    int       first_delay = 0;//delay required before first acquire
-    float     **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-
+    
+    /** Memory allocation */
     float *Amplitude                = (float *)malloc( (averaging_num + 1) * sizeof(float));
     float *Phase                    = (float *)malloc( (averaging_num + 1) * sizeof(float));
     float **data_for_avreaging      = create_2D_table_size((averaging_num + 1), 2 );
@@ -320,10 +324,10 @@ int main(int argc, char *argv[])
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
-    return -1;
+        return -1;
     }
 
-
+    /// Showtime.
     for ( fr = 0; fr < steps; fr++ ) {
         
         /* scale type dictates frequency used in for iterations */
@@ -337,14 +341,16 @@ int main(int argc, char *argv[])
 
         w_out = frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
-        /* Signal generator generates first signal before measuring proces begins
-        *  this has to be set because first results are inaccurate otherwise
+       /**
+        * At first the signal generator generates a signal before the
+        * measuring proces begins. First results are inaccurate otherwise.
         */
         awg_param_t params;
-        /* Prepare data buffer (calculate from input arguments) */
+        /// Prepare data buffer (calculate from input arguments)
         synthesize_signal(ampl, frequency[fr], type, endfreq, data, &params);
-        /* Write the data to the FPGA and set FPGA AWG state machine */
+        /// Write the data to the FPGA and set FPGA AWG state machine
         write_data_fpga(ch, data, &params);
+        usleep(1000);
 
         for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
@@ -391,8 +397,8 @@ int main(int argc, char *argv[])
             }
 
             /* data manipulation - returnes Z (complex impedance) */
-            if( bode_data_analasys( s, size, DC_bias, Amplitude, Phase, w_out, f) < 0) {
-                printf("error data analysis bode_data_analasys\n");
+            if( bode_data_analysis( s, size, DC_bias, Amplitude, Phase, w_out, f) < 0) {
+                printf("error data analysis bode_data_analysis\n");
                 return -1;
             }
 
@@ -418,9 +424,9 @@ int main(int argc, char *argv[])
  * types/shapes, signal amplitude & frequency. The data[] vector of 
  * samples at 125 MHz is generated to be re-played by the FPGA AWG module.
  *
- * @param ampl  Signal amplitude [Vpp].
- * @param freq  Signal frequency [Hz].
- * @param type  Signal type/shape [Sine, Square, Triangle].
+ * @param ampl  Signal amplitude [V].
+ * @param freq  Signal Frequency [Hz].
+ * @param type  Signal type/shape [Sine, Square, Triangle, Constant].
  * @param data  Returned synthesized AWG data vector.
  * @param awg   Returned AWG parameters.
  *
@@ -443,7 +449,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     awg->wrap = round(65536 * (n-1));
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
-    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
+    uint32_t amp = ampl * 4000.0;    /* 1 V ==> 4000 DAC counts */
     if (amp > 8191) {
         /* Truncate to max value if needed */
         amp = 8191;
@@ -452,6 +458,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     if (trans <= 10) {
         trans = trans0;
     }
+
 
     /* Fill data[] with appropriate buffer samples */
     for(i = 0; i < n; i++) {
@@ -525,6 +532,9 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
             data[i] = round(amp * (sin((start*T)/log(end/start) * ((exp(t*log(end/start)/T)-1)))));
         }
         
+        /* Constant */
+		if (type == eSignalConst) data[i] = amp;
+        
         /* TODO: Remove, not necessary in C/C++. */
         if(data[i] < 0)
             data[i] += (1 << 14);
@@ -581,17 +591,17 @@ void write_data_fpga(uint32_t ch,
 }
 
 /**
- * acquire data from FPGA to memory (s)
+ * Acquire data from FPGA to memory (s).
  *
- * @param **s   points to a mmemory where data is saved
- * @param size  return data size
+ * @param **s   Points to a memory where data is saved.
+ * @param size  Size of data.
  */
-int acquire_data(float **s , 
+int acquire_data(float **s ,
                 uint32_t size) {
     int retries = 150000;
     int j, sig_num, sig_len;
     int ret_val;
-
+    usleep(50000);
     while(retries >= 0) {
         if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
             /* Signals acquired in s[][]:
@@ -608,31 +618,30 @@ int acquire_data(float **s ,
             fprintf(stderr, "Signal scquisition was not triggered!\n");
             break;
         }
-        usleep(2000);
+        usleep(1000);
     }
     usleep(30000); // delay for pitaya to operate correctly
     return 1;
 }
 
 /**
- * Acquired data analasys function.
- * function returnes phase and frequency.
+ * Acquired data analysis function for Bode analyzer.
  *
- * @param s        points to a mmemory where data is read from
- * @param size     size o data s
- * @param DC_bias  parameter for electrolytic capacitor data manipulation
- * @param R_shunt  shunt resistor's value ( check the front end circuit in manual )
- * @param Z        returned impedance data, in complex form
- * @param w_out    angualr velocity
- * @param f        decimation selector
+ * @param s          Pointer where data is read from.
+ * @param size       Size of data.
+ * @param DC_bias    DC component.
+ * @param Amplitude  Pointer where to write amplitude data.
+ * @param Phase      Pointer where to write phase data.
+ * @param w_out      Angular velocity (2*pi*freq).
+ * @param f          Decimation selector index.
  */
-int bode_data_analasys(float **s ,
-                        uint32_t size,
-                        uint32_t DC_bias,
-                        float *Amplitude,
-                        float *Phase,
-                        double w_out,
-                        int f) {
+int bode_data_analysis(float **s ,
+                       uint32_t size,
+                       double DC_bias,
+                       float *Amplitude,
+                       float *Phase,
+                       double w_out,
+                       int f) {
     int i2, i3;
     float **U_acq = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH);
     /* Signals multiplied by the reference signal (sin) */
@@ -711,13 +720,10 @@ int bode_data_analasys(float **s ,
     else 
     {
         Phase_internal = Phase_internal;
-    } 
- 
+    }
    
     *Amplitude = 10*log( U2_amp / U1_amp );;
     *Phase = Phase_internal * ( 180/M_PI );
 
-
-    //TODO free allocatec memmory
     return 1;
 }
