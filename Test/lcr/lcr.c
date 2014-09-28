@@ -93,21 +93,21 @@ void usage() {
     const char *format =
             "LCR meter version %s, compiled at %s\n"
             "\n"
-            "Usage: %s [channel] "
-                      "[amplitude] "
-                      "[dc bias] "
-                      "[r_shunt] "
-                      "[averaging] "
-                      "[calibration mode] "
-                      "[z_ref real] "
-                      "[z_ref imag] "
-                      "[count/steps] "
-                      "[sweep mode] "
-                      "[start freq] "
-                      "[stop freq] "
-                      "[scale type] "
-                      "[wait]"
-            "\n\n"
+            "Usage:\t%s [channel] "
+                       "[amplitude] "
+                       "[dc bias] "
+                       "[r_shunt] "
+                       "[averaging] "
+                       "[calibration mode] "
+                       "[z_ref real] "
+                       "[z_ref imag] "
+                       "[count/steps] "
+                       "[sweep mode] "
+                       "[start freq] "
+                       "[stop freq] "
+                       "[scale type] "
+                       "[wait]\n"
+            "\n"
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
@@ -123,7 +123,8 @@ void usage() {
             "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
             "\twait               Wait for user before performing each step [0 / 1].\n"
-            "\n";
+            "\n"
+            "Output:\tfrequency [Hz], phase [deg], amplitude [Ohm]\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -913,7 +914,7 @@ int main(int argc, char *argv[]) {
             calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
-        w_out = 2 * M_PI *Frequency[ i ];
+        w_out = 2 * M_PI * Frequency[ i ];
         
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
@@ -939,42 +940,16 @@ int main(int argc, char *argv[]) {
         
         /// Output
         if ( !sweep_function ) {
-            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
+            printf("%.2f    %.5f    %.5f\n", 
                 Frequency[ 0 ],
                 PhaseZ[ i ],
-                AmplitudeZ[ i ],
-                Y_abs[ i ],
-                PhaseY[ i ],
-                R_s[ i ],
-                X_s[ i ],
-                G_p[ i ],
-                B_p[ i ],
-                C_s[ i ],
-                C_p[ i ],
-                L_s[ i ],
-                L_p[ i ],
-                R_p[ i ],
-                Q[ i ],
-                D[ i ]
+                AmplitudeZ[ i ]
                 );
         } else {
-            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n", 
+            printf("%.2f    %.5f    %.5f\n", 
                 Frequency[ i ],
                 PhaseZ[ i ],
-                AmplitudeZ[ i ],
-                Y_abs[ i ],
-                PhaseY[ i ],
-                R_s[ i ],
-                X_s[ i ],
-                G_p[ i ],
-                B_p[ i ],
-                C_s[ i ],
-                C_p[ i ],
-                L_s[ i ],
-                L_p[ i ],
-                R_p[ i ],
-                Q[ i ],
-                D[ i ]
+                AmplitudeZ[ i ]
                 );
         }
         
