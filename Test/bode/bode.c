@@ -1,72 +1,65 @@
 /**
- * $Id: lcr2.2.c 1246  $
+ * $Id: bode.c 1246  $
  *
- * @brief Red Pitaya lcr algorythm 
+ * @brief Red Pitaya LCR meter
  *
  * @Author1 Martin Cimerman   <cim.martin@gmail.com>
- * @Author2 Zumret Topcacic   <zumret_topcagic@hotmail.co
+ * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
+ * @Author3 Peter Miklavcic   <miklavcic.peter@gmail.com>
+ * @Author4 Luka Golinar      <luka.golinar@gmail.com>
  *
+ * GENERAL DESCRIPTION:
+ *
+ * The code below defines the Bode analyzer on a Red Pitaya.
+ * It uses acquire and generate from the Test/ folder.
+ * Data analysis returns frequency, phase and amplitude.
+ * 
+ * VERSION: VERSION defined in Makefile
+ * 
  * This part of code is written in C programming language.
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
  * for more details on the language used herein.
  */
 
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
+#include <math.h>
+#include <complex.h>
 #include <string.h>
-#include "fpga_awg.h"
-#include "version.h"
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/param.h>
+
 #include "main_osc.h"
 #include "fpga_osc.h"
+#include "fpga_awg.h"
+#include "version.h"
 
-#include <complex.h>    /* Standart Library of Complex Numbers */
 #define M_PI 3.14159265358979323846
 
-/**
- * GENERAL DESCRIPTION:
- *
- * The code below defines bode analyzer
- * 
- * It was built on acquire and generate programs defined in /Test/ folder
- * data analasys returns: frequency, phase, amplitude
- *
- */
+const char *g_argv0 = NULL; // Program name
 
-/** Maximal signal frequency [Hz] */
-const double c_max_frequency = 62.5e6;
+const double c_max_frequency = 62.5e6; // Maximal signal frequency [Hz]
+const double c_min_frequency = 0; // Minimal signal frequency [Hz]
+const double c_max_amplitude = 1.0; // Maximal signal amplitude [V]
 
-/** Minimal signal frequency [Hz] */
-const double c_min_frequency = 0;
-
-/** Maximal signal amplitude [Vpp] */
-const double c_max_amplitude = 1.0;
-
-/** AWG buffer length [samples]*/
-#define n (16*1024)
-
-/** AWG data buffer */
-int32_t data[n];
-
-/** Program name */
-const char *g_argv0 = NULL;
+#define n (16*1024) // AWG buffer length [samples]
+int32_t data[n]; // AWG data buffer
 
 /** Signal types */
 typedef enum {
-    eSignalSine,         ///< Sinusoidal waveform.
-    eSignalSquare,       ///< Square waveform.
-    eSignalTriangle,     ///< Triangular waveform.
-    eSignalSweep         ///< Sinusoidal frequency sweep.
+    eSignalSine,         // Sinusoidal waveform
+    eSignalSquare,       // Square waveform
+    eSignalTriangle,     // Triangular waveform
+    eSignalSweep,        // Sinusoidal frequency sweep
+	eSignalConst         // Constant signal
 } signal_e;
 
 /** AWG FPGA parameters */
 typedef struct {
-    int32_t  offsgain;   ///< AWG offset & gain.
-    uint32_t wrap;       ///< AWG buffer wrap value.
-    uint32_t step;       ///< AWG step interval.
+    int32_t  offsgain;   // AWG offset & gain
+    uint32_t wrap;       // AWG buffer wrap value
+    uint32_t step;       // AWG step interval
 } awg_param_t;
 
 /** Oscilloscope module parameters as defined in main module
@@ -74,58 +67,53 @@ typedef struct {
  */
 float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/** Max decimation index */
-#define DEC_MAX 6
-
 /** Decimation translation table */
+#define DEC_MAX 6 // Max decimation index
 static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
-/* Forward declarations */
+/** Forward declarations */
 void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *params);
 void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
-
-int acquire_data(float **s , 
-                uint32_t size);
-
+int acquire_data(float **s ,
+                 uint32_t size);
 int bode_data_analasys(float **s ,
-                        uint32_t size,
-                        uint32_t DC_bias,
-                        float *Amplitude,
-                        float *Phase,
-                        double w_out,
-                        int f);
+                       uint32_t size,
+                       double DC_bias,
+                       float *Amplitude,
+                       float *Phase,
+                       double w_out,
+                       int f);
+                       
 /** Print usage information */
 void usage() {
-
     const char *format =
-        "%s version %s-%s\n"
-        "\n"
-        "Usage: %s   [channel] "
-                    "[amplitude] "
-                    "[DC_bias] "
-                    "[averaging] "
-                    "[steps] "
-                    "[start frequnecy] "
-                    "[stop frequency]"
-                    "[scale type]"
-                    "\n"
-        "\n"
-        "\tchannel              Channel to generate signal on [1, 2].\n"
-        "\tamplitude            Peak-to-peak signal amplitude in V [0.0 - %1.1f].\n"
-        "\tDC bias              for electrolit capacitors default = 0.\n"
-        "\taveraging            number of averaging the measurements [1 - 10].\n"
-        "\tsteps                steps made between frequency limits [1 - 1000].\n"
-        "\tstart frequency      Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\tstop frequency       Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\tscale type           x scale 0 - linear 1 -log\n"
-        "\n";
+            "Bode analyzer version %s, compiled at %s\n"
+            "\n"
+            "Usage: %s [channel] "
+                      "[amplitude] "
+                      "[dc bias] "
+                      "[averaging] "
+                      "[count/steps] "
+                      "[start freq] "
+                      "[stop freq] "
+                      "[scale type]"
+            "\n\n"
+            "\tchannel            Channel to generate signal on [1 / 2].\n"
+            "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
+            "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
+            "\t                   Max sum of amplitude and DC bias is 1V.\n"
+            "\taveraging          Number of samples per one measurement [>1].\n"
+            "\tcount/steps        Number of measurements [>2].\n"
+            "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
+            "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
+            "\tscale type         0 - linear, 1 - logarithmic.\n"
+            "\n";
 
-    fprintf( stderr, format, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, c_max_amplitude, c_min_frequency, c_max_frequency);
+    fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
 
 /** Gain string (lv/hv) to number (0/1) transformation */

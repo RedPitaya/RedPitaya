@@ -1,7 +1,7 @@
 /**
  * $Id: lcr.c 1246  $
  *
- * @brief PitayaDT LCR meter
+ * @brief Red Pitaya LCR meter
  *
  * @Author1 Martin Cimerman   <cim.martin@gmail.com>
  * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
@@ -106,8 +106,8 @@ void usage() {
                       "[start freq] "
                       "[stop freq] "
                       "[scale type] "
-                      "[wait]\n"
-            "\n"
+                      "[wait]"
+            "\n\n"
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
