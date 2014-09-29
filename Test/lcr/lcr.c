@@ -12,7 +12,7 @@
  *
  * The code below defines the LCR meter on a Red Pitaya.
  * It uses acquire and generate from the Test/ folder.
- * Data analysis returns frequency, phase and amplitude.
+ * Data analysis returns frequency, phase and amplitude and other parameters.
  * 
  * VERSION: VERSION defined in Makefile
  * 
@@ -35,6 +35,7 @@
 #include "fpga_awg.h"
 #include "version.h"
 
+// number PI defined
 #define M_PI 3.14159265358979323846
 
 const char *g_argv0 = NULL; // Program name
@@ -111,7 +112,7 @@ void usage() {
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                   Max sum of amplitude and DC bias is 1V.\n"
+            "\t                      Max sum of amplitude and DC bias is 1V.\n"
             "\tr_shunt            Shunt resistor value in Ohms [>0].\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
             "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
@@ -161,6 +162,7 @@ float **create_2D_table_size(int num_of_rows, int num_of_cols) {
     return new_table;
 }
 
+/** Finds maximum value from array "arrayptr" with the size of "numofelements" */
 float max_array(float *arrayptr, int numofelements) {
   int i = 0;
   float max = -1e6; // Setting the minimum value possible
@@ -211,7 +213,7 @@ float mean_array_column(float **arrayptr, int length, int column) {
     return result;
 }
 
-/** LCR meter */
+/** LCR meter  main function it includea all the functionality */
 int main(int argc, char *argv[]) {
 	
     /** Set program name */
@@ -257,12 +259,12 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
-    if ( ampl+DC_bias > 1 ) {
+    if ( ampl + DC_bias > 1 ) {
         fprintf(stderr, "Invalid ampl+dc value!\n\n");
         usage();
         return -1;
     }
-    /// R_shunt
+    /// Shunt resistor
     double R_shunt = strtod(argv[4], NULL);
     if ( !(R_shunt > 0) ) {
         fprintf(stderr, "Invalid r_shunt value!\n\n");
@@ -276,13 +278,14 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
-    /// Calibration mode (0=none, 1=open&short, 2=z_ref)
+    /// Calibration mode ( 0 = none, 1 = open&short, 2 = z_ref )
     unsigned int calib_function = strtod(argv[6], NULL);
     if ( calib_function > 2 ) {
         fprintf(stderr, "Invalid calibration mode!\n\n");
         usage();
         return -1;
     }
+    /* Reference impedance for calibration purposes */
     /// Z_ref real part
     double Z_load_ref_real = strtod(argv[7], NULL);
     if ( Z_load_ref_real < 0 ) {
@@ -299,25 +302,26 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
-    /// Sweep mode (0=measurement, 1=frequency)
+    /// Sweep mode (0 = measurement, 1 = frequency)
     unsigned int sweep_function = strtod(argv[10], NULL);
     if ( (sweep_function < 0) || (sweep_function > 1) ) {
         fprintf(stderr, "Invalid sweep mode!\n\n");
         usage();
         return -1;
     }
-    if (sweep_function==1 && steps==1) {
+    if ( sweep_function == 1 && steps == 1) {
         fprintf(stderr, "Invalid count/steps value!\n\n");
         usage();
         return -1;
     }
-    /// Frequency
+    /// Start frequency for fr.sweep, if measurement sweep selected lcr uses this fr. as main fr.
     double start_frequency = strtod(argv[11], NULL);
     if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid start freq!\n\n");
         usage();
         return -1;
     }
+    /// end frequency used just for fr.sweep
     double end_frequency = strtod(argv[12], NULL);
     if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
         fprintf(stderr, "Invalid end freq!\n\n");
@@ -329,7 +333,8 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
-    /// Scale type (0=lin, 1=log)
+
+    /// Scale type ( 0 = lin, 1 = log )
     unsigned int scale_type = strtod(argv[13], NULL);
     if ( scale_type > 1 ) {
         fprintf(stderr, "Invalid scale type!\n\n");
@@ -338,7 +343,7 @@ int main(int argc, char *argv[]) {
     }
     /* /// Wait
        The program will wait for user before every measurement when measurement sweep seleced 
-       TODO: remove commented waiting function calls
+       TODO: remove comented code to enable wait functionality
     */
     unsigned int wait_on_user = strtod(argv[14], NULL);
     if ( wait_on_user > 1 ) {
@@ -604,13 +609,23 @@ int main(int argc, char *argv[]) {
      * At first the signal generator generates a signal before the
      * measuring proces begins. First results are inaccurate otherwise.
      */
-    awg_param_t params;
-    /// Prepare data buffer (calculate from input arguments)
-    synthesize_signal(ampl, start_frequency, type, endfreq, data, &params);
-    /// Write the data to the FPGA and set FPGA AWG state machine
-    write_data_fpga(ch, data, &params);
-    usleep(1000);
-    int testt = 1;
+    if (sweep_function == 0){
+        awg_param_t params;
+        /// Prepare data buffer (calculate from input arguments)
+        synthesize_signal(ampl, start_frequency, type, endfreq, data, &params);
+        /// Write the data to the FPGA and set FPGA AWG state machine
+        write_data_fpga(ch, data, &params);
+        usleep(1000);
+    }
+
+
+    int transientEffectFlag = 1;
+    int stepsTE = 10; // number of steps for transient effect elimination
+    //if user sets less than 10 steps than stepsTE is decresed
+    // for transient efect to be eliminated only 10 steps of measurements is eliminated
+    if (steps < 10){
+        stepsTE = steps;
+    }
     // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     for (h = 0; h <= 3 ; h++) {
         if (!calib_function) {
@@ -629,16 +644,17 @@ int main(int argc, char *argv[]) {
 
             //this section eliminates transient effect that spoiles the measuremets
             // it outputs frequencies below start frequency and increses it to the strat frequency
-            if (sweep_function == 1 && testt <= 10){
-                if (testt < 10){
-                    Frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*testt/10) ) ;
+            if (sweep_function == 1 && transientEffectFlag <= stepsTE){
+                if (transientEffectFlag < stepsTE){
+                    Frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*transientEffectFlag/stepsTE) ) ;
                     //printf("freq = %f\n",Frequency[ fr ]);
                 }
-                else if (testt == 10){
+                else if (transientEffectFlag == stepsTE){
                     fr = 0;
                     Frequency[fr] = start_frequency;
                 }
-                testt++;
+                transientEffectFlag++;
+                
             }
 
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
