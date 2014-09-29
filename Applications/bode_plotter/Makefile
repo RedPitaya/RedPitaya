@@ -10,7 +10,8 @@ FPGA=fpga.bit
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+VER:=$(shell awk -F\" '/version/ {print $$4}' info/info.json)
+# VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//') # this line has bug!
 
 INSTALL_DIR ?= ../
 
