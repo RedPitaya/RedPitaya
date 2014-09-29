@@ -64,13 +64,9 @@ int rp_osc_prepare_time_vector(float **out_signal, int dec_factor,
  * TODO: Remove time vector generation from these functions, it should
  * be created at the beginning
  */
-int rp_osc_decimate(float **cha_signal, int *in_cha_signal,
-                    float **chb_signal, int *in_chb_signal,
-                    float **time_signal, int dec_factor, 
-                    float t_start, float t_stop, int time_unit,
-                    rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas,
-                    float ch1_max_adc_v, float ch2_max_adc_v,
-                    float ch1_user_dc_off, float ch2_user_dc_off);
+int bode_start_measure(float **cha_signal, int *in_cha_signal,
+                       float **chb_signal, int *in_chb_signal,
+                       float **time_signal);
 
 int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal, 
                             float **chb_out_signal, int *chb_in_signal,
