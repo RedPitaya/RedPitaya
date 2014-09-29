@@ -144,9 +144,9 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
     { /* gui_xmin - Xmin as specified by GUI - not rounded to sampling engine quanta. */
-        "gui_xmin",      0, 0, 1, -10000000, +10000000 },
+        "gui_xmin",      0, 0, 0, -10000000, +10000000 },
     { /* gui_xmax - Xmax as specified by GUI - not rounded to sampling engine quanta. */
-        "gui_xmax",    131, 0, 1, -10000000, +10000000 },
+        "gui_xmax",    100, 0, 0, -10000000, +10000000 },
     { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
         "min_y_norm", 0, 0, 0, -1000, +1000 },
     { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
@@ -954,7 +954,7 @@ int rp_get_params(rp_app_params_t **p)
     *p = p_copy;
     return PARAMS_NUM;
 }
-
+/* Do not delete */
 int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 {
     int ret_val;
@@ -980,6 +980,8 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
     return 0;
 }
 
+
+/* Do not delete */
 int rp_create_signals(float ***a_signals)
 {
     int i;
@@ -1144,27 +1146,6 @@ int rp_update_main_params(rp_app_params_t *params)
     params_init = 0;
     rp_set_params(&rp_main_params[0], PARAMS_NUM);
 
-    return 0;
-}
-
-int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
-{
-    pthread_mutex_lock(&rp_main_params_mutex);
-    rp_main_params[MEAS_MIN_CH1].value = ch1_meas.min;
-    rp_main_params[MEAS_MAX_CH1].value = ch1_meas.max;
-    rp_main_params[MEAS_AMP_CH1].value = ch1_meas.amp;
-    rp_main_params[MEAS_AVG_CH1].value = ch1_meas.avg;
-    rp_main_params[MEAS_FREQ_CH1].value = ch1_meas.freq;
-    rp_main_params[MEAS_PER_CH1].value = ch1_meas.period;
-
-    rp_main_params[MEAS_MIN_CH2].value = ch2_meas.min;
-    rp_main_params[MEAS_MAX_CH2].value = ch2_meas.max;
-    rp_main_params[MEAS_AMP_CH2].value = ch2_meas.amp;
-    rp_main_params[MEAS_AVG_CH2].value = ch2_meas.avg;
-    rp_main_params[MEAS_FREQ_CH2].value = ch2_meas.freq;
-    rp_main_params[MEAS_PER_CH2].value = ch2_meas.period;
-
-    pthread_mutex_unlock(&rp_main_params_mutex);
     return 0;
 }
 

@@ -149,7 +149,7 @@ typedef struct rp_osc_meas_res_s {
 #define PARAMS_PER_PID     6
 
 /* Output signals */
-#define SIGNAL_LENGTH (100) /* Must be 2^n! */
+#define SIGNAL_LENGTH (101) /* Must be 2^n! */
 #define SIGNALS_NUM   3
 
 
