@@ -3,10 +3,10 @@
  *
  * @brief Red Pitaya LCR meter
  *
- * @Author1 Martin Cimerman  (main developer, debuging)
- * @Author2 Zumret Topcagic (concept code developer, functionality review)
- * @Author3 Luka Golinar (browser UI developer)
- * @Author4 Peter Miklavcic (developer)
+ * @Author1 Martin Cimerman  
+ * @Author2 Zumret Topcagic 
+ * @Author3 Luka Golinar 
+ * @Author4 Peter Miklavcic
  * Contact:  <cim.martin@gmail.com>
  *
  * GENERAL DESCRIPTION:
