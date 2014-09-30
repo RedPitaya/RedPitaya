@@ -793,7 +793,7 @@ int bode_data_analysis(float **s ,
         Phase_internal = Phase_internal;
     }
    
-    *Amplitude = 10*log( U2_amp / U1_amp );;
+    *Amplitude = 10*log( U2_amp / U1_amp );
     *Phase = Phase_internal * ( 180/M_PI );
 
     return 1;
