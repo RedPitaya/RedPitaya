@@ -3,10 +3,11 @@
  *
  * @brief Red Pitaya LCR meter
  *
- * @Author1 Martin Cimerman   <cim.martin@gmail.com>
- * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
- * @Author3 Peter Miklavcic   <miklavcic.peter@gmail.com>
- * @Author4 Luka Golinar      <luka.golinar@gmail.com>
+ * @Author1 Martin Cimerman  (main developer, debuging)
+ * @Author2 Zumret Topcagic (concept code developer, functionality review)
+ * @Author3 Luka Golinar (browser UI developer)
+ * @Author4 Peter Miklavcic (developer)
+ * Contact:  <cim.martin@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
@@ -24,10 +25,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <complex.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <complex.h>
 #include <sys/param.h>
 
 #include "main_osc.h"
@@ -343,7 +344,7 @@ int main(int argc, char *argv[]) {
     }
     /* /// Wait
        The program will wait for user before every measurement when measurement sweep seleced 
-       TODO: remove comented code to enable wait functionality
+       TODO: remove comented code to enable wait function
     */
     unsigned int wait_on_user = strtod(argv[14], NULL);
     if ( wait_on_user > 1 ) {
@@ -369,7 +370,6 @@ int main(int argc, char *argv[]) {
     int      i, i1, fr, h; // iterators in for loops
     int      equal = 0; // parameter initialized for generator functionality
     int      shaping = 0; // parameter initialized for generator functionality
-    int      first_delay = 0; // delay required before first acquire
     /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
     if ( scale_type ) {
         a = log10(start_frequency);
@@ -620,18 +620,25 @@ int main(int argc, char *argv[]) {
 
 
     int transientEffectFlag = 1;
-    int stepsTE = 10; // number of steps for transient effect elimination
-    //if user sets less than 10 steps than stepsTE is decresed
+    int stepsTE = 10; // number of steps for transient effect(TE) elimination
+    // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
         stepsTE = steps;
     }
-    // [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
+    /* 
+    * for loop defines measurement purpose switching
+    * there are 4 sorts of measurement purposes , 3 pof them reprisent calibration sequence
+    * [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment  
+    */
     for (h = 0; h <= 3 ; h++) {
         if (!calib_function) {
             h = 3;
         }
-
+        /* 
+        * for floop dedicated to run through the frequency range defined by user
+        * the loop also includes the start and end frequency  
+        */
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
 
             if ( scale_type ) { // log scle
@@ -659,7 +666,8 @@ int main(int argc, char *argv[]) {
 
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
-            /* Signal generator */
+            /* Signal generator
+             * fills the vector with amplitude values and then sends it to fpga buffer  */
             awg_param_t params;
             /* Prepare data buffer (calculate from input arguments) */
             synthesize_signal( ampl, Frequency[fr], type, endfreq, data, &params );
@@ -678,9 +686,11 @@ int main(int argc, char *argv[]) {
             else if (sweep_function == 1) { // sweep_function == 1 (frequency sweep)
                 measurement_sweep = 1; //when frequency sweep selected only one measurement for each fr is made
             }
-
+            /*
+            * Measurement sweep defined by user, if frequency sweep is used, the for loop goes through only once
+            */
             for (i = 0; i < measurement_sweep; i++ ) {
-
+                
                 for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
                     /* decimation changes depending on frequency */
@@ -713,12 +723,6 @@ int main(int argc, char *argv[]) {
                         return -1;
                     }
 
-                    if (first_delay == 0)
-                    {
-                        usleep(71754);
-                        first_delay = 1;
-                    }
-
                     /* Data acqusition function, data saved to s */
                     if (acquire_data(s, size) < 0) {
                         printf("error acquiring data @ acquire_data\n");
@@ -731,7 +735,9 @@ int main(int argc, char *argv[]) {
                         return -1;
                     }
 
-                    /* Saving data */
+                    /* Saving data for averaging here all the data is saved the dimention of memmory allocated
+                     * depends on averaging argument user sets
+                    */
                     switch ( h ) {
                     case 0:
                         Calib_data_short_for_averaging[ i1 ][ 1 ] = creal(*Z);
@@ -758,7 +764,6 @@ int main(int argc, char *argv[]) {
                 /* Calculating and saving mean values */
                 switch ( h ) {
                 case 0:
-
                     Calib_data_short[ i ][ 1 ] = mean_array_column( Calib_data_short_for_averaging, averaging_num, 1);
                     Calib_data_short[ i ][ 2 ] = mean_array_column( Calib_data_short_for_averaging, averaging_num, 2);
                     break;
@@ -812,108 +817,110 @@ int main(int argc, char *argv[]) {
     FILE *try_open = fopen("/tmp/lcr_data/data_frequency.txt", "w");
 
     /* If files don't exists yet, we first have to create them ( First boot ), as we are storing them in /tmp */
-        if(try_open == NULL){
+    if(try_open == NULL){
 
-            int f_number;
-            char command[100];
+        int f_number;
+        char command[100];
 
-            strcpy(command, "mkdir /tmp/lcr_data");
-            system(command);
+        strcpy(command, "mkdir /tmp/lcr_data");
+        system(command);
 
-            /* We loop X ( Where X is the number of data we want to have ) times and create a file for each data type */
-            for(f_number = 0; f_number < 16; f_number++){
-                switch(f_number){
-                    case 0:
-                        strcpy(command, "touch /tmp/lcr_data/data_frequency.txt");
-                        system(command);
-                        break;
-                    case 1:
-                        strcpy(command, "touch /tmp/lcr_data/data_amplitude.txt");
-                        system(command);
-                        break;
-                    case 2:
-                        strcpy(command, "touch /tmp/lcr_data/data_phase.txt");
-                        system(command);
-                        break;
-                    case 3:
-                        strcpy(command, "touch /tmp/lcr_data/data_R_s.txt");
-                        system(command);
-                        break;
-                    case 4:
-                        strcpy(command, "touch /tmp/lcr_data/data_X_s.txt");
-                        system(command);
-                        break;
-                    case 5:
-                        strcpy(command, "touch /tmp/lcr_data/data_G_p.txt");
-                        system(command);
-                        break;
-                    case 6:
-                        strcpy(command, "touch /tmp/lcr_data/data_B_p.txt");
-                        system(command);
-                        break;
-                    case 7:
-                        strcpy(command, "touch /tmp/lcr_data/data_C_s.txt");
-                        system(command);
-                        break;
-                    case 8:
-                        strcpy(command, "touch /tmp/lcr_data/data_C_p.txt");
-                        system(command);
-                        break;
-                    case 9:
-                        strcpy(command, "touch /tmp/lcr_data/data_L_s.txt");
-                        system(command);
-                        break;
-                    case 10:
-                        strcpy(command, "touch /tmp/lcr_data/data_L_p.txt");
-                        system(command);
-                        break;
-                    case 11:
-                        strcpy(command, "touch /tmp/lcr_data/data_R_p.txt");
-                        system(command);
-                        break;
-                    case 12:
-                        strcpy(command, "touch /tmp/lcr_data/data_Q.txt");
-                        system(command);
-                        break;
-                    case 13:
-                        strcpy(command, "touch /tmp/lcr_data/data_D.txt");
-                        system(command);
-                        break;
-                    case 14:
-                        strcpy(command, "touch /tmp/lcr_data/data_Y_abs.txt");
-                        system(command);
-                        break;
-                    case 15:
-                        strcpy(command, "touch /tmp/lcr_data/data_phaseY.txt");
-                        system(command);
-                        break;
+        /* We loop X ( Where X is the number of data we want to have ) times and create a file for each data type */
+        for(f_number = 0; f_number < 16; f_number++){
+            switch(f_number){
+                case 0:
+                    strcpy(command, "touch /tmp/lcr_data/data_frequency.txt");
+                    system(command);
+                    break;
+                case 1:
+                    strcpy(command, "touch /tmp/lcr_data/data_amplitude.txt");
+                    system(command);
+                    break;
+                case 2:
+                    strcpy(command, "touch /tmp/lcr_data/data_phase.txt");
+                    system(command);
+                    break;
+                case 3:
+                    strcpy(command, "touch /tmp/lcr_data/data_R_s.txt");
+                    system(command);
+                    break;
+                case 4:
+                    strcpy(command, "touch /tmp/lcr_data/data_X_s.txt");
+                    system(command);
+                    break;
+                case 5:
+                    strcpy(command, "touch /tmp/lcr_data/data_G_p.txt");
+                    system(command);
+                    break;
+                case 6:
+                    strcpy(command, "touch /tmp/lcr_data/data_B_p.txt");
+                    system(command);
+                    break;
+                case 7:
+                    strcpy(command, "touch /tmp/lcr_data/data_C_s.txt");
+                    system(command);
+                    break;
+                case 8:
+                    strcpy(command, "touch /tmp/lcr_data/data_C_p.txt");
+                    system(command);
+                    break;
+                case 9:
+                    strcpy(command, "touch /tmp/lcr_data/data_L_s.txt");
+                    system(command);
+                    break;
+                case 10:
+                    strcpy(command, "touch /tmp/lcr_data/data_L_p.txt");
+                    system(command);
+                    break;
+                case 11:
+                    strcpy(command, "touch /tmp/lcr_data/data_R_p.txt");
+                    system(command);
+                    break;
+                case 12:
+                    strcpy(command, "touch /tmp/lcr_data/data_Q.txt");
+                    system(command);
+                    break;
+                case 13:
+                    strcpy(command, "touch /tmp/lcr_data/data_D.txt");
+                    system(command);
+                    break;
+                case 14:
+                    strcpy(command, "touch /tmp/lcr_data/data_Y_abs.txt");
+                    system(command);
+                    break;
+                case 15:
+                    strcpy(command, "touch /tmp/lcr_data/data_phaseY.txt");
+                    system(command);
+                    break;
 
-                }
             }
-            strcpy(command, "chmod -R 777 /tmp/lcr_data");
-            system(command);
         }
+        strcpy(command, "chmod -R 777 /tmp/lcr_data");
+        system(command);
+    }
 
-        /** Opening files */
-        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "w");
-        FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "w");
-        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "w");
-        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "w");
-        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "w");
-        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "w");
-        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "w");
-        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "w");
-        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "w");
-        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "w");
-        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "w");
-        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "w");
-        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "w");
-        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "w");
-        FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "w");
-        FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "w");
+    /** Opening files */
+    FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "w");
+    FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "w");
+    FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "w");
+    FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "w");
+    FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "w");
+    FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "w");
+    FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "w");
+    FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "w");
+    FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "w");
+    FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "w");
+    FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "w");
+    FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "w");
+    FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "w");
+    FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "w");
+    FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "w");
+    FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "w");
 
 
-    /** Combining all the data and printing it to stdout */
+    /** Combining all the data and printing it to stdout 
+     * depending on calibration argument output data is calculated
+     */
     for ( i = 0; i < end_results_dimension ; i++ ) {
 
         if ( calib_function == 1 ) { // calib. was made including Z_load
@@ -930,25 +937,25 @@ int main(int argc, char *argv[]) {
             calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
-        w_out = 2 * M_PI * Frequency[ i ];
+        w_out = 2 * M_PI * Frequency[ i ]; // angular velocity
         
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
 
         Z_final[ i ] = calib_data_combine[ 1 ] + calib_data_combine[ 2 ]*I;//Z=Z_abs*exp(i*Phase_rad);;
-        R_s[ i ] =  calib_data_combine[ 1 ];//_s=real(Z);
+        R_s[ i ] =  calib_data_combine[ 1 ];//R_s=real(Z);
         X_s[ i ] = calib_data_combine[ 2 ];//X_s=imag(Z);
         
-        Y [ i ] = 1 / Z_final[ i ];//Y_abs=abs(Y);
-        Y_abs [ i ] = sqrtf( powf( creal(Y[ i ]), 2 ) + powf(cimag(Y[ i ]), 2 ) );//G_p=real(Y);
-        PhaseY[ i ] = -PhaseZ[ i ];
-        G_p [ i ] = creal(Y[ i ]);//B_p=imag(Y);
-        B_p [ i ] = cimag(Y[ i ]);//C_s=-1/(w*X_s);
+        Y [ i ] = 1 / Z_final[ i ];//Y=1/Z;
+        Y_abs [ i ] = sqrtf( powf( creal(Y[ i ]), 2 ) + powf(cimag(Y[ i ]), 2 ) );//Y_abs=abs(Y);
+        PhaseY[ i ] = -PhaseZ[ i ];// PhaseY=-Phase_rad;
+        G_p [ i ] = creal(Y[ i ]);//G_p=real(Y);;
+        B_p [ i ] = cimag(Y[ i ]);//B_p=imag(Y);
         
-        C_s [ i ] = -1 / (w_out * X_s[ i ]);//C_s=-1/(w*X_s); //inf
+        C_s [ i ] = -1 / (w_out * X_s[ i ]);//C_s=-1/(w*X_s);
         C_p [ i ] = B_p[ i ] / w_out;//C_p=B_p/w; //inf
-        L_s [ i ] = X_s[ i ] / w_out;//L_p=-1/(w*B_p); //inf
-        L_p [ i ] = -1 / (w_out * B_p[ i ]);//R_p=1/G_p; //inf
+        L_s [ i ] = X_s[ i ] / w_out;//L_s=X_s/w; //inf
+        L_p [ i ] = -1 / (w_out * B_p[ i ]);//L_p=-1/(w*B_p); //inf
         R_p [ i ] = 1 / G_p [ i ]; //R_p=1/G_p;
         
         Q[ i ] =X_s[ i ] / R_s[ i ]; //Q=X_s/R_s;
@@ -1337,7 +1344,10 @@ int LCR_data_analysis(float **s,
     return 1;
 }
 
-/* user wait defined for user interaction */
+/* user wait defined for user inquiry regarding measurement sweep
+ * its functionality is not used and will be avaliable in the future if needed 
+ * it lets the user know to connect the wires correctly and inquires for input
+ */
 int inquire_user_wait() {
     while(1) {
         int calibration_continue;
