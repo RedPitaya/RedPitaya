@@ -36,7 +36,6 @@
 #include "fpga_awg.h"
 #include "version.h"
 
-// number PI defined
 #define M_PI 3.14159265358979323846
 
 const char *g_argv0 = NULL; // Program name
@@ -355,21 +354,30 @@ int main(int argc, char *argv[]) {
 
     /** Parameters initialization and calculation */
     double complex Z_load_ref = Z_load_ref_real + Z_load_ref_imag*I;
-    double frequency_steps_number, frequency_step, a, b, c;
-    int    measurement_sweep_user_defined, end_results_dimension;
-    signal_e type = eSignalSine;
-    float    k;
-    float    **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
-    double   endfreq = 0; // endfreq set for generate's sweep
-    int      dimension_step = 0; // saving data on the right place in allocated memory this is iterator
+    double frequency_steps_number, frequency_step, a, b, c;// a,b and c used for logaritmic scale functionality
     double   measurement_sweep;
+    double   w_out; // angular velocity
+    double   endfreq = 0; // endfreq set for generate's sweep
+    signal_e type = eSignalSine;
+    float    log_Frequency;
+    float    **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
     uint32_t min_periodes = 10; // max 20
     uint32_t size; // number of samples varies with number of periodes
-    double   w_out; // angular velocity
+    int      dimension_step = 0; // saving data on the right place in allocated memory this is iterator
+    int    measurement_sweep_user_defined;
+    int    end_results_dimension;
     int      f = 0; // used in for lop, setting the decimation
     int      i, i1, fr, h; // iterators in for loops
     int      equal = 0; // parameter initialized for generator functionality
     int      shaping = 0; // parameter initialized for generator functionality
+    int transientEffectFlag = 1;
+    int stepsTE = 10; // number of steps for transient effect(TE) elimination
+    // if user sets less than 10 steps than stepsTE is decresed
+    // for transient efect to be eliminated only 10 steps of measurements is eliminated
+    if (steps < 10){
+        stepsTE = steps;
+    }
+    
     /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
     if ( scale_type ) {
         a = log10(start_frequency);
@@ -618,14 +626,6 @@ int main(int argc, char *argv[]) {
         usleep(1000);
     }
 
-
-    int transientEffectFlag = 1;
-    int stepsTE = 10; // number of steps for transient effect(TE) elimination
-    // if user sets less than 10 steps than stepsTE is decresed
-    // for transient efect to be eliminated only 10 steps of measurements is eliminated
-    if (steps < 10){
-        stepsTE = steps;
-    }
     /* 
     * for loop defines measurement purpose switching
     * there are 4 sorts of measurement purposes , 3 pof them reprisent calibration sequence
@@ -642,8 +642,8 @@ int main(int argc, char *argv[]) {
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
 
             if ( scale_type ) { // log scle
-                k = powf( 10, ( c * (float)fr ) + a );
-                Frequency[ fr ] =  (int)k ;
+                log_Frequency = powf( 10, ( c * (float)fr ) + a );
+                Frequency[ fr ] =  (int)log_Frequency ;
             }
             else { // lin scale
                 Frequency[ fr ] = (int)(start_frequency + ( frequency_step * fr ));
