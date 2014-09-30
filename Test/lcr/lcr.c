@@ -3,11 +3,11 @@
  *
  * @brief Red Pitaya LCR meter
  *
- * @Author1 Martin Cimerman  
- * @Author2 Zumret Topcagic 
- * @Author3 Luka Golinar 
- * @Author4 Peter Miklavcic
- * Contact:  <cim.martin@gmail.com>
+ * @Author1 Martin Cimerman
+ * @Author2 Zumret Topcagic
+ * @Author3 Luka Golinar
+ * @Author4 Peter Miklavcic (code review and cleanup, manpage, debugging, fixed datatypes)
+ * Contact: <cim.martin@gmail.com>, <miklavcic.peter@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
@@ -112,7 +112,7 @@ void usage() {
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                      Max sum of amplitude and DC bias is 1V.\n"
+            "\t                   Max sum of amplitude and DC bias is 1V.\n"
             "\tr_shunt            Shunt resistor value in Ohms [>0].\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
             "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
@@ -125,7 +125,7 @@ void usage() {
             "\tscale type         0 - linear, 1 - logarithmic.\n"
             "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n"
-            "Output:\tfrequency [Hz], phase [deg], amplitude [Ohm]\n";
+            "Output:\tfrequency [Hz], phase [deg], Z [Ohm], Y, PhaseY, R_s, X_s, G_p, B_p, C_s, C_p, L_s, L_p, R_p, Q, D\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -963,16 +963,42 @@ int main(int argc, char *argv[]) {
         
         /// Output
         if ( !sweep_function ) {
-            printf("%.2f    %.5f    %.5f\n", 
+            printf(" %.2f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
                 Frequency[ 0 ],
                 PhaseZ[ i ],
-                AmplitudeZ[ i ]
+                AmplitudeZ[ i ],
+                Y_abs[ i ],
+                PhaseY[ i ],
+                R_s[ i ],
+                X_s[ i ],
+                G_p[ i ],
+                B_p[ i ],
+                C_s[ i ],
+                C_p[ i ],
+                L_s[ i ],
+                L_p[ i ],
+                R_p[ i ],
+                Q[ i ],
+                D[ i ]
                 );
         } else {
-            printf("%.2f    %.5f    %.5f\n", 
+            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
                 Frequency[ i ],
                 PhaseZ[ i ],
-                AmplitudeZ[ i ]
+                AmplitudeZ[ i ],
+                Y_abs[ i ],
+                PhaseY[ i ],
+                R_s[ i ],
+                X_s[ i ],
+                G_p[ i ],
+                B_p[ i ],
+                C_s[ i ],
+                C_p[ i ],
+                L_s[ i ],
+                L_p[ i ],
+                R_p[ i ],
+                Q[ i ],
+                D[ i ]
                 );
         }
         
