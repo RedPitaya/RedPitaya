@@ -293,18 +293,24 @@ int main(int argc, char *argv[]) {
     /** Parameters initialization and calculation */
     double frequency_step;
     double a,b,c;
-    signal_e type = eSignalSine;
     double    endfreq = 0; // endfreq set for generate's sweep
     double    k;
     double    w_out; // angular velocity
     uint32_t  min_periodes = 10; // max 20
     uint32_t  size; // number of samples varies with number of periodes
+    signal_e type = eSignalSine;
     int       f = 0; // used in for lop, setting the decimation
     int       i1, fr; // iterators in for loops
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
-    int       first_delay = 0; // delay required before first acquire
-    float     **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
+    int transientEffectFlag = 1;
+    int stepsTE = 10; // number of steps for transient effect(TE) elimination
+    // if user sets less than 10 steps than stepsTE is decresed
+    // for transient efect to be eliminated only 10 steps of measurements is eliminated
+    if (steps < 10){
+        stepsTE = steps;
+    }
+
     /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
     if(scale_type) {
         b = log10f( end_frequency );
@@ -314,7 +320,9 @@ int main(int argc, char *argv[]) {
         frequency_step = ( end_frequency - start_frequency ) / ( steps - 1);
     }
     
+
     /** Memory allocation */
+    float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
     float *Amplitude                = (float *)malloc( (averaging_num + 1) * sizeof(float));
     float *Phase                    = (float *)malloc( (averaging_num + 1) * sizeof(float));
     float **data_for_avreaging      = create_2D_table_size((averaging_num + 1), 2 );
@@ -378,6 +386,21 @@ int main(int argc, char *argv[]) {
             frequency[ fr ] = start_frequency + ( frequency_step * fr );
         }
 
+        //this section eliminates transient effect that spoiles the measuremets
+        // it outputs frequencies below start frequency and increses it to the strat frequency
+        if ( transientEffectFlag <= stepsTE){
+            if (transientEffectFlag < stepsTE){
+                frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*transientEffectFlag/stepsTE) ) ;
+                //printf("freq = %f\n",frequency[ fr ]);
+            }
+            else if (transientEffectFlag == stepsTE){
+                fr = 0;
+                frequency[fr] = start_frequency;
+            }
+            transientEffectFlag++;
+            
+        }
+
         w_out = frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
        /**
@@ -422,12 +445,6 @@ int main(int argc, char *argv[]) {
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
                 fprintf(stderr, "rp_set_params() failed!\n");
                 return -1;
-            }
-
-            if (first_delay == 0)
-            {
-                usleep(71754);
-                first_delay = 1;
             }
 
             /* ADC Data acqusition - saved to s */
