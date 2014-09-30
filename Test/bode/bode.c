@@ -484,8 +484,8 @@ int main(int argc, char *argv[]) {
     fclose(file_phase);
     fclose(file_amplitude);
     
-
-    return 0;
+    /** All's well that ends well. */
+    return 1;
 }
 
 /**
@@ -796,6 +796,5 @@ int bode_data_analysis(float **s ,
     *Amplitude = 10*log( U2_amp / U1_amp );;
     *Phase = Phase_internal * ( 180/M_PI );
 
-    /** All's well that ends well. */
     return 1;
 }
