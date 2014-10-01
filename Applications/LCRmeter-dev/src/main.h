@@ -103,6 +103,7 @@ typedef struct lcr_meas_data_s {
 #define GEN_AVG           37
 #define GEN_DC_BIAS       38
 #define GEN_R_SHUNT       39
+/* LCR parameters */
 #define LCR_STEPS         40
 #define START_FREQ        41
 #define END_FREQ          42
@@ -151,7 +152,7 @@ typedef struct lcr_meas_data_s {
 #define SIGNALS_NUM   3
 
 /* Measurment length - always 1024. Stripped in JS */
-#define SIGNAL_LENGTH 100
+//#define SIGNAL_LENGTH 1000
 
 /* module entry points */
 int rp_app_init(void);
@@ -187,8 +188,6 @@ void rp_set_params_lcr(int pos, float val);
 
 /* Update main lcr measurment data */
 int lcr_update_meas_data(lcr_meas_data_t ch1_meas);
-
-
 
 
 #endif /*  __MAIN_H */
