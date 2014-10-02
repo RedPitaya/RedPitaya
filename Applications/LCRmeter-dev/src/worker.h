@@ -42,9 +42,6 @@ int rp_osc_get_signals(float ***signals, int *sig_idx);
  * and marks it dirty 
  */
 int rp_osc_set_signals(float **source, int index);
-/* Fills the output measuremenet data with last measurements
- */
-int rp_osc_set_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas);
 
 /* Prepares time vector (only where there is a need for it) */
 int rp_osc_prepare_time_vector(float **out_signal, int dec_factor,

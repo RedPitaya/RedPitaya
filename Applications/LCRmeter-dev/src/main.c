@@ -143,6 +143,10 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* gen_DC_offs_2 - DC offset for channel 2 expressed in [V] requested by 
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
+
+  /*   LCR parameters 
+  *--------------------------------------------------------------------------------------------------------------------*/
+
     { /* start_measure - General flag used for sending params from the RedPitaya browser.
        *   -1 - Application not loaded yet
        *    0 - negative
@@ -171,8 +175,9 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        "gen_R_shunt", 0, 1, 0, 0, 50000 },
     { /* LCR steps declared by user
        * Minimum value - 1
-       * Maximum value - 1000  */
-      "lcr_steps", 0, 1, 0, 0, 1000},
+       * Maximum value - 1000
+       * Default value - 100  */
+      "lcr_steps", 1000, 1, 0, 0, 1000},
     { /* Start frequency for frequency sweep.
        *    Min value - 200
        *    Max value - 1000000    */
@@ -237,7 +242,6 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
      {  "R_p", 0, 0, 1, -1000, +1000 },
      {  "Q", 0, 0, 1, -1000, +1000 },
      {  "D", 0, 0, 1, -1000, +1000 },
-
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -310,7 +314,6 @@ float forced_delay=0;
 
 
 
-
 const char *rp_app_desc(void)
 {
     return (const char *)"Red Pitaya osciloscope application.\n";
@@ -355,7 +358,6 @@ int rp_app_init(void)
     }
 
     rp_set_params(&rp_main_params[0], PARAMS_NUM);
-
 
     return 0;
 }
@@ -780,16 +782,16 @@ int rp_set_params(rp_app_params_t *p, int len)
         t_start_idx = round(t_start / smpl_period);
         t_stop_idx  = round(t_stop / smpl_period);
 
-        if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) < 1)
+        if((((t_stop_idx-t_start_idx)/(float)((rp_main_params[LCR_STEPS].value)-1))) < 1)
             t_step_idx = 1;
         else {
-            t_step_idx = ceil((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1));
-            int max_step = OSC_FPGA_SIG_LEN/SIGNAL_LENGTH;
+            t_step_idx = ceil((t_stop_idx-t_start_idx)/(float)((rp_main_params[LCR_STEPS].value)-1));
+            int max_step = OSC_FPGA_SIG_LEN/(rp_main_params[LCR_STEPS].value);
             if(t_step_idx > max_step)
                 t_step_idx = max_step;
         }
 
-        t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
+        t_stop = t_start + (rp_main_params[LCR_STEPS].value) * t_step_idx * smpl_period;
 
         /* write back and convert to set units */
         rp_main_params[MIN_GUI_PARAM].value = t_start;
@@ -938,7 +940,7 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
         return -1;
 
     *sig_num = SIGNALS_NUM;
-    *sig_len = SIGNAL_LENGTH;
+    *sig_len = (rp_main_params[LCR_STEPS].value);
 
     ret_val = rp_osc_get_signals(s, &sig_idx);
     
@@ -946,7 +948,7 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
       printf("Starting OK\n");
     }
    //Not finished signal
-    if((ret_val != -1) && sig_idx != SIGNAL_LENGTH-1) {
+    if((ret_val != -1) && sig_idx != (rp_main_params[LCR_STEPS].value)-1) {
         return -2;
     }
     
@@ -971,12 +973,12 @@ int rp_create_signals(float ***a_signals)
         s[i] = NULL;
 
     for(i = 0; i < SIGNALS_NUM; i++) {
-        s[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
+        s[i] = (float *)malloc((rp_main_params[LCR_STEPS].value) * sizeof(float));
         if(s[i] == NULL) {
             rp_cleanup_signals(a_signals);
             return -1;
         }
-        memset(&s[i][0], 0, SIGNAL_LENGTH * sizeof(float));
+        memset(&s[i][0], 0, (rp_main_params[LCR_STEPS].value) * sizeof(float));
     }
     *a_signals = s;
 
@@ -989,7 +991,7 @@ void rp_cleanup_signals(float ***a_signals)
     float **s = *a_signals;
 
     if(s) {
-        for(i = 0; i < SIGNALS_NUM; i++) {
+        for(i = 0; i < (rp_main_params[LCR_STEPS].value); i++) {
             if(s[i]) {
                 free(s[i]);
                 s[i] = NULL;

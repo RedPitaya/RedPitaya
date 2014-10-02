@@ -43,7 +43,7 @@ lcr_meas_data_t lcr_mes;
 rp_calib_params_t *rp_calib_params = NULL;
 int counter = 0;
 int measure_counter = 0;
-
+int steps_counter = 0;
 int measure_method = 0;
 
 /*----------------------------------------------------------------------------------*/
@@ -184,9 +184,9 @@ int rp_osc_get_signals(float ***signals, int *sig_idx)
         return -1;
     }
 
-    memcpy(&s[0][0], &rp_osc_signals[0][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&s[1][0], &rp_osc_signals[1][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&s[2][0], &rp_osc_signals[2][0], sizeof(float)*SIGNAL_LENGTH);
+    memcpy(&s[0][0], &rp_osc_signals[0][0], sizeof(float)*((int)rp_get_params_lcr(1)));
+    memcpy(&s[1][0], &rp_osc_signals[1][0], sizeof(float)*((int)rp_get_params_lcr(1)));
+    memcpy(&s[2][0], &rp_osc_signals[2][0], sizeof(float)*((int)rp_get_params_lcr(1)));
 
     *sig_idx = rp_osc_sig_last_idx;
 
@@ -201,9 +201,9 @@ int rp_osc_set_signals(float **source, int index)
 {
     pthread_mutex_lock(&rp_osc_sig_mutex);
 
-    memcpy(&rp_osc_signals[0][0], &source[0][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&rp_osc_signals[1][0], &source[1][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&rp_osc_signals[2][0], &source[2][0], sizeof(float)*SIGNAL_LENGTH);
+    memcpy(&rp_osc_signals[0][0], &source[0][0], sizeof(float)*((int)rp_get_params_lcr(1)));
+    memcpy(&rp_osc_signals[1][0], &source[1][0], sizeof(float)*((int)rp_get_params_lcr(1)));
+    memcpy(&rp_osc_signals[2][0], &source[2][0], sizeof(float)*((int)rp_get_params_lcr(1)));
     rp_osc_sig_last_idx = index;
 
     rp_osc_signals_dirty = 1;
@@ -243,6 +243,7 @@ void *rp_osc_worker_thread(void *args)
         /* update states - we save also old state to see if we need to reset
          * FPGA 
          */
+        
         old_state = state;
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
@@ -286,6 +287,7 @@ void *rp_osc_worker_thread(void *args)
         if(measure_option == 1){
 
 
+            float lcr_steps = rp_get_params_lcr(1);
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
             float lcr_dc_bias = rp_get_params_lcr(4);
@@ -297,6 +299,7 @@ void *rp_osc_worker_thread(void *args)
             float lcr_load_im = rp_get_params_lcr(10);
             float lcr_calibration = rp_get_params_lcr(11);
 
+            char steps[10];
             char sF[20];
             char eF[20];
             char amp[20];
@@ -308,6 +311,7 @@ void *rp_osc_worker_thread(void *args)
             char im[10];
             char calib[1];
 
+            snprintf(steps, 10, "%f", lcr_steps);
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
             snprintf(amp, 20, "%f", lcr_amp);
@@ -336,8 +340,9 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, re);
             strcat(command, " ");
             strcat(command, im);
-
-            strcat(command, " 100 1 ");
+            strcat(command, " ");
+            strcat(command, steps);
+            strcat(command, " 1 ");
 
             strcat(command, sF);
             strcat(command, " ");
@@ -347,13 +352,14 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " 0");
 
             system(command);
-            
+            measure_method = 2;
             rp_set_params_lcr(0, 0);
+
 
         /* Measurment sweep */
         }else if(measure_option == 2){
 
-            
+            float lcr_counts = rp_get_params_lcr(1);
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
             float lcr_dc_bias = rp_get_params_lcr(4);
@@ -366,6 +372,7 @@ void *rp_osc_worker_thread(void *args)
             float lcr_calibration = rp_get_params_lcr(11);
 
 
+            char ms_counts[20];
             char sF[20];
             char eF[20];
             char amp[20];
@@ -378,6 +385,7 @@ void *rp_osc_worker_thread(void *args)
             char calib[1];
 
 
+            snprintf(ms_counts, 20, "%f", lcr_counts);
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
             snprintf(amp, 20, "%f", lcr_amp);
@@ -401,8 +409,6 @@ void *rp_osc_worker_thread(void *args)
 
             strcat(command, r_shunt);
             strcat(command, " ");
-
-            
             
             strcat(command, avg);
             strcat(command, " 0 ");
@@ -410,8 +416,10 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, re);
             strcat(command, " ");
             strcat(command, im);
-            
-            strcat(command, " 100 0 ");
+            strcat(command, " ");
+
+            strcat(command, ms_counts);
+            strcat(command, " 0 ");
 
             strcat(command, sF);
             strcat(command, " ");
@@ -420,7 +428,7 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " 0");
             
             system(command);
-            
+            measure_method = 1; // MS
             rp_set_params_lcr(0, 0);
             
         }
@@ -614,12 +622,12 @@ void *rp_osc_worker_thread(void *args)
                 long_acq_last_wr_ptr = long_acq_last_wr_ptr % OSC_FPGA_SIG_LEN;
 
                 if(round((t_acq / (c_osc_fpga_smpl_period * dec_factor) /
-                         (SIGNAL_LENGTH-1))) < 0)
+                         (((int)rp_get_params_lcr(1))-1))) < 0)
                     long_acq_step = 1;
                 else
                     long_acq_step = 
                         round((t_acq / (c_osc_fpga_smpl_period * dec_factor)) / 
-                              (SIGNAL_LENGTH-1));
+                              (((int)rp_get_params_lcr(1))-1));
 
                 rp_osc_meas_clear(&ch1_meas);
                 rp_osc_meas_clear(&ch2_meas);
@@ -642,6 +650,7 @@ void *rp_osc_worker_thread(void *args)
             /* Triggered, decimate & convert the values */
             rp_osc_meas_clear(&ch1_meas);
             rp_osc_meas_clear(&ch2_meas);
+
             lcr_start_Measure((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
                             (float **)&rp_tmp_signals[0]);
@@ -663,13 +672,13 @@ void *rp_osc_worker_thread(void *args)
                                              curr_params[GEN_DC_OFFS_2].value);
 
             /* Acquisition over, start one more! */
-            if(long_acq_idx >= SIGNAL_LENGTH-1) {
+            if(long_acq_idx >= ((int)rp_get_params_lcr(1))-1) {
                 long_acq_idx = 0;
                 osc_fpga_get_wr_ptr(NULL, &long_acq_init_trig_ptr);
 
-                if(state == rp_osc_single_state) {
-                    rp_osc_worker_change_state(rp_osc_idle_state);
-                }
+                
+                rp_osc_worker_change_state(rp_osc_idle_state);
+                
             }
             
         }
@@ -696,8 +705,8 @@ void *rp_osc_worker_thread(void *args)
             rp_osc_meas_convert(&ch1_meas, ch1_max_adc_v, rp_calib_params->fe_ch1_dc_offs);
             rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
             
-            lcr_update_meas_data(lcr_mes);
-            rp_osc_set_signals(rp_tmp_signals, SIGNAL_LENGTH-1);
+            
+            rp_osc_set_signals(rp_tmp_signals, ((int)rp_get_params_lcr(1))-1);
         } else {
             rp_osc_set_signals(rp_tmp_signals, long_acq_idx);
         }
@@ -728,12 +737,12 @@ int rp_osc_prepare_time_vector(float **out_signal, int dec_factor,
         t_stop  = OSC_FPGA_SIG_LEN * smpl_period;
     }
 
-    t_step = (t_stop - t_start) / (SIGNAL_LENGTH-1);
+    t_step = (t_stop - t_start) / (((int)rp_get_params_lcr(1))-1);
     idx_step = (int)(ceil(t_step/smpl_period));
     if(idx_step > 8)
         idx_step = 8;
 
-    for(out_idx = 0, in_idx = 0, t_curr=t_start; out_idx < SIGNAL_LENGTH; 
+    for(out_idx = 0, in_idx = 0, t_curr=t_start; out_idx < ((int)rp_get_params_lcr(1)); 
         out_idx++, t_curr += t_step, in_idx += idx_step) {
         s[out_idx] = t_curr * t_unit_factor;
     }
@@ -803,6 +812,8 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             fscanf(file_frequency, "%f", &frequency[counter]);
             counter++;
         }
+
+        
 
         /* Allocationg memory. TODO: Free up memory after use */
         float *phase = malloc(counter * sizeof(float));
@@ -971,11 +982,11 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             chb_s[out_idx] = 0;
 
             /* Measurment sweep */
-            if((frequency[0] == frequency[1])){
+            if(measure_method == 1){
                 t[out_idx] = out_idx;
-
+        
             /* Frequency sweep */
-            }else{
+            }else if(measure_method == 2){
                 t[out_idx] = frequency[out_idx];
             }
         }
@@ -1006,7 +1017,9 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
         
     }
     
+    steps_counter = out_idx;
     counter = 0;
+
     return 0;
 }
 
@@ -1043,7 +1056,7 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
 
     in_idx = *next_wr_ptr;
 
-    for(; (next_out_idx < SIGNAL_LENGTH); next_out_idx++, 
+    for(; (next_out_idx < ((int)rp_get_params_lcr(1))); next_out_idx++, 
             in_idx += step_wr_ptr) {
         int curr_ptr;
         int diff_ptr;
