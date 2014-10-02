@@ -352,14 +352,14 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " 0");
 
             system(command);
-            
+            measure_method = 2;
             rp_set_params_lcr(0, 0);
 
 
         /* Measurment sweep */
         }else if(measure_option == 2){
 
-            
+            float lcr_counts = rp_get_params_lcr(1);
             float lcr_amp = rp_get_params_lcr(2);
             float lcr_avg = rp_get_params_lcr(3);
             float lcr_dc_bias = rp_get_params_lcr(4);
@@ -372,6 +372,7 @@ void *rp_osc_worker_thread(void *args)
             float lcr_calibration = rp_get_params_lcr(11);
 
 
+            char ms_counts[20];
             char sF[20];
             char eF[20];
             char amp[20];
@@ -384,6 +385,7 @@ void *rp_osc_worker_thread(void *args)
             char calib[1];
 
 
+            snprintf(ms_counts, 20, "%f", lcr_counts);
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
             snprintf(amp, 20, "%f", lcr_amp);
@@ -407,8 +409,6 @@ void *rp_osc_worker_thread(void *args)
 
             strcat(command, r_shunt);
             strcat(command, " ");
-
-            
             
             strcat(command, avg);
             strcat(command, " 0 ");
@@ -416,8 +416,10 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, re);
             strcat(command, " ");
             strcat(command, im);
-            
-            strcat(command, " 100 0 ");
+            strcat(command, " ");
+
+            strcat(command, ms_counts);
+            strcat(command, " 0 ");
 
             strcat(command, sF);
             strcat(command, " ");
@@ -426,7 +428,7 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " 0");
             
             system(command);
-            
+            measure_method = 1; // MS
             rp_set_params_lcr(0, 0);
             
         }
@@ -980,11 +982,11 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             chb_s[out_idx] = 0;
 
             /* Measurment sweep */
-            if((frequency[0] == frequency[1])){
+            if(measure_method == 1){
                 t[out_idx] = out_idx;
-
+        
             /* Frequency sweep */
-            }else{
+            }else if(measure_method == 2){
                 t[out_idx] = frequency[out_idx];
             }
         }
@@ -1017,6 +1019,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
     
     steps_counter = out_idx;
     counter = 0;
+
     return 0;
 }
 
