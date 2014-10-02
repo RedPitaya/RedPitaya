@@ -2000,7 +2000,6 @@
       
     }else if(clicked_measure == 'btn_start_measurment_sweep'){
       
-      window.alert("Hello");
       /* MS specific parameters */
       var ms_step = parseLocalFloat(document.getElementById('gen_ms_step').value);
       var ms_freq = parseLocalFloat(document.getElementById('gen_ms_freq').value);
@@ -2051,7 +2050,7 @@
       params.local.lcr_calibration = parseLocalFloat(document.getElementById('apply_gen_ms_OSCalib').value);
 
       params.local.start_measure = 2;
-      window.alert("s_m");
+      
     }
 
     lcr_modal.showPleaseWait();
