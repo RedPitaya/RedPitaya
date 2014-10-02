@@ -328,7 +328,7 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
-    if ( end_frequency < start_frequency ) {
+    if ( (end_frequency < start_frequency) && (sweep_function == 1) ) {
         fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
         usage();
         return -1;
@@ -362,6 +362,11 @@ int main(int argc, char *argv[]) {
     float    log_Frequency;
     float    **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
     uint32_t min_periodes = 10; // max 20
+    // when frequency lies below 100Hz number of acquired periodes reduces to 2
+    // this reduces measurement time
+    if (start_frequency < 100 && sweep_function == 0) {
+        min_periodes = 2;
+    }
     uint32_t size; // number of samples varies with number of periodes
     int      dimension_step = 0; // saving data on the right place in allocated memory this is iterator
     int    measurement_sweep_user_defined;
@@ -400,7 +405,7 @@ int main(int argc, char *argv[]) {
     }
     else { // Measurement sweep
         measurement_sweep_user_defined = steps;
-		frequency_steps_number = 1;
+		frequency_steps_number = 2; // the first one is for removing 
         frequency_step = 0;
     }
     /// Allocated memory size depends on the sweep function
@@ -616,7 +621,6 @@ int main(int argc, char *argv[]) {
      * 
      * At first the signal generator generates a signal before the
      * measuring proces begins. First results are inaccurate otherwise.
-     */
     if (sweep_function == 0){
         awg_param_t params;
         /// Prepare data buffer (calculate from input arguments)
@@ -625,6 +629,7 @@ int main(int argc, char *argv[]) {
         write_data_fpga(ch, data, &params);
         usleep(1000);
     }
+    */
 
     /* 
     * for loop defines measurement purpose switching
@@ -663,7 +668,13 @@ int main(int argc, char *argv[]) {
                 transientEffectFlag++;
                 
             }
-
+            else if(transientEffectFlag == 1 && sweep_function == 0){
+                if (fr == 1){
+                    Frequency[ fr ] = Frequency[ 0 ];
+                    transientEffectFlag = 0;
+                }
+            }
+            
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
             /* Signal generator
@@ -1258,6 +1269,10 @@ int acquire_data(float **s ,
 
 /**
  * Acquired data analysis function for LCR meter.
+ * returnes 1 if execution was successful
+ * the function recives data stored in memmory with the pointer "s"
+ * data manipulation returnes Phase and Amplitude which is at the end 
+ * transformed to complex impedance.
  * 
  * @param s        Pointer where data is read from.
  * @param size     Size of data.
