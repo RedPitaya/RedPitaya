@@ -44,6 +44,8 @@
 
   /* LCR data type. 0 - phase, 1 - amplitude */
   var data_type = 1;
+  var lcr_modal;
+  var input_control = 0;
 
   var time_range_max = [130, 1000, 8, 130, 1, 8];
   var range_steps = [0];
@@ -526,7 +528,11 @@
     $('.btn-close-modal').on('click', function() {
       $(this).closest('.modal').modal('hide');
     });
-    
+
+    $('#btn_lcr_params').on('click', function() {
+      $('#modal_params').modal('hide');
+      updateGraphData();
+    });
     // Reset the upload form to prevent browser caching of the uploaded file name
     $('#upload_form')[0].reset();
       
@@ -944,6 +950,13 @@
   }
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
+
+    if(params.local.start_measure == 0){
+      lcr_modal.hidePleaseWait();
+      var show_lcr_channel = $('#btn_ch1');
+      show_lcr_channel.data('checked', true);
+    }
+
     if(! $.isPlainObject(new_params)) {
       return;
     } 
@@ -995,6 +1008,9 @@
         }
       }
     }
+
+    
+
     return false;
   }
   
@@ -1875,19 +1891,89 @@
     
   }
  
- function startMeasure(clicked_measure){
+  function startMeasure(clicked_measure){
+
+    /* Set inputs back to GRAY */
+    document.getElementById('gen_R_shunt').style.borderColor = "#cccccc";
+    document.getElementById('gen_avg').style.borderColor = "#cccccc";
+    document.getElementById('gen_DC_bias').style.borderColor = "#cccccc";
+    document.getElementById('gen_amp').style.borderColor = "#cccccc";
+    document.getElementById('gen_fs_step').style.borderColor = "#cccccc";
+    document.getElementById('gen_fs_Sfreq').style.borderColor = "#cccccc";
+    document.getElementById('gen_fs_Efreq').style.borderColor = "#cccccc";
+    document.getElementById('gen_fs_LoadIm').style.borderColor = "#cccccc";
+    document.getElementById('gen_fs_LoadRe').style.borderColor = "#cccccc";
+
+    
     if(clicked_measure == 'btn_start_frequency_sweep'){
-      //TODO: Add parameter check!
       
-      params.local.gen_amp = parseLocalFloat(document.getElementById('gen_amp').value);
-      params.local.gen_avg = parseLocalFloat(document.getElementById('gen_avg').value);
-      params.local.gen_DC_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
-      params.local.gen_R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
-      params.local.lcr_steps = parseLocalFloat(document.getElementById('gen_fs_step').value);
-      params.local.start_freq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
-      params.local.end_freq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
-      params.local.gen_fs_LoadRe = parseLocalFloat(document.getElementById('gen_fs_LoadRe').value);
-      params.local.gen_fs_LoadIm = parseLocalFloat(document.getElementById('gen_fs_LoadIm').value);
+      /* Read the values from input fields */
+      var amp = parseLocalFloat(document.getElementById('gen_amp').value);
+      var avg = parseLocalFloat(document.getElementById('gen_avg').value);
+      var dc_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
+      var R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
+      var fs_step = parseLocalFloat(document.getElementById('gen_fs_step').value);
+      var fs_Sfreq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
+      var fs_Efreq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
+      var fs_LoadIm = parseLocalFloat(document.getElementById('gen_fs_LoadIm').value);
+      var fs_LoadRe = parseLocalFloat(document.getElementById('gen_fs_LoadRe').value);
+
+
+      /* Argument check */
+      if(amp > 2 || amp < 0){
+        document.getElementById('gen_amp').style.borderColor = "red";
+      }
+      if(avg < 0){
+        document.getElementById('gen_avg').style.borderColor = "red";
+      }
+      if(dc_bias < 0 || dc_bias > 1){
+        document.getElementById('gen_DC_bias').style.borderColor = "red";
+        
+      }
+      if(fs_step < 0 || fs_step >  1000){
+        document.getElementById('gen_fs_step').style.borderColor = "red";
+      }
+      if(R_shunt < 0){
+        document.getElementById('gen_R_shunt').style.borderColor = "red";
+      }
+      if(fs_Sfreq < 0 || fs_Sfreq > 100000000){
+        document.getElementById('gen_fs_Sfreq').style.borderColor = "red";
+      }
+      if(fs_Efreq < 0 || fs_Efreq > 100000000 || fs_Efreq < fs_Sfreq){
+        document.getElementById('gen_fs_Efreq').style.borderColor = "red";
+      }
+      if(fs_LoadIm < 0){
+        document.getElementById('gen_fs_LoadIm').style.borderColor = "red";
+      }
+      if(fs_LoadRe < 0){
+        document.getElementById('gen_fs_LoadRe').style.borderColor = "red";
+      }
+
+
+      /* End function if input error */
+      if(document.getElementById('gen_amp').style.borderColor == "red" ||
+       document.getElementById('gen_avg').style.borderColor == "red" ||
+       document.getElementById('gen_DC_bias').style.borderColor == "red" ||
+       document.getElementById('gen_R_shunt').style.borderColor == "red" ||
+       document.getElementById('gen_fs_step').style.borderColor == "red" ||
+       document.getElementById('gen_fs_Sfreq').style.borderColor == "red" || 
+       document.getElementById('gen_fs_Efreq').style.borderColor == "red" || 
+       document.getElementById('gen_fs_LoadIm').style.borderColor == "red" || 
+       document.getElementById('gen_fs_LoadRe').style.borderColor == "red"){
+
+          return;
+      }
+
+      /* If everything was OK, write data to local params */
+      params.local.gen_amp = amp;
+      params.local.gen_avg = avg;
+      params.local.gen_DC_bias = dc_bias;
+      params.local.gen_R_shunt = R_shunt;
+      params.local.lcr_steps = fs_step;
+      params.local.start_freq = fs_Sfreq;
+      params.local.end_freq = fs_Efreq;
+      params.local.gen_fs_LoadRe = fs_LoadRe;
+      params.local.gen_fs_LoadIm = fs_LoadIm;
 
 
       /* Pulling data from dropdown list for Scale type */
@@ -1900,7 +1986,7 @@
       
       
     }else if(clicked_measure == 'btn_start_measurment_sweep'){
-      //TODO: Add parameter check!
+      
       
       params.local.gen_amp = parseLocalFloat(document.getElementById('gen_amp').value);
       params.local.gen_avg = parseLocalFloat(document.getElementById('gen_avg').value);
@@ -1917,15 +2003,47 @@
 
       /* Pulling data from dropdown list for calibration type */
       params.local.lcr_calibration = parseLocalFloat(document.getElementById('apply_gen_ms_OSCalib').value);
-      params.local.start_measure = 2;
+      //params.local.start_measure = 2;
+
+      
       
     }
+
+    lcr_modal.showPleaseWait();
+    var hide_channel_lcr = $('#btn_ch1');
+    hide_channel_lcr.data('checked', false);
+
+
+    /* Send params to C controller */
     sendParams();
  }
 
   function showMeasure(){
     params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
     sendParams();
+  }
+
+  $('#pleaseWaitDialog').css({
+    'background-image': 'none',
+    'background-color': '#D5273A'
+    });
+
+  lcr_modal = lcr_modal || (function () {
+    var pleaseWaitDiv = $('<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1>Measuring...</h1></div><div class="modal-body"><div class="progress progress-bar-danger progress-striped active"><div class="bar" style="width: 100%; "></div></div></div></div></div></div>');
+    return {
+        showPleaseWait: function() {
+            pleaseWaitDiv.modal();
+        },
+        hidePleaseWait: function () {
+            pleaseWaitDiv.modal('hide');
+        },
+
+    };
+  })();
+
+  function hideWaitBar()
+  {
+    lcr_modal.hidePleaseWait();
   }
 
   
@@ -2003,7 +2121,9 @@
         </table><br>
         </div>
       </div>  
+
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
+
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2012,7 +2132,9 @@
               </a>
             </h4>
           </div>
+
           <div id="meas_param" class="panel-collapse collapse">
+
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
                 <div class="form-group">
@@ -2045,7 +2167,7 @@
           <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_DC_bias_unit">V</div>
                 </div>
                 <div class="form-group">
-                  <label for="gen_R_shunt" class="col-xs-4 control-label">R_shunt:</label>
+                  <label for="gen_R_shunt_label" class="col-xs-4 control-label">R_shunt:</label>
                   <div class="col-xs-5">
                     <input type="number" autocomplete="off" class="form-control" value="1000" id="gen_R_shunt">
                     <span id="apply_gen_R_shunt" class="input-group-btn" style="display: none;">
@@ -2487,6 +2609,7 @@
       <p class="pull-right" style="margin: 4px 0 0">&copy; 2014 - Red Pitaya</p>
     </div>
   </div>
+
   <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -2502,6 +2625,7 @@
       </div>
     </div>
   </div>
+
   <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -2520,6 +2644,7 @@
       </div>
     </div>
   </div>
+
   <div id="modal_upload" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_upload_label" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -2543,6 +2668,19 @@
     </div>
   </div> 
 
+  <div id="modal_params" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="parameter_input_fail">Parameter input error</h4>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-app-restart" id="btn_lcr_params">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 </body>
