@@ -144,9 +144,9 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * GUI */
         "gen_DC_offs_2", 0, 1, 0, -100, 100 },
     { /* gui_xmin - Xmin as specified by GUI - not rounded to sampling engine quanta. */
-        "gui_xmin",      0, 0, 0, -10000000, +10000000 },
+        "gui_xmin",      0, 0, 1, -10000000, +10000000 },
     { /* gui_xmax - Xmax as specified by GUI - not rounded to sampling engine quanta. */
-        "gui_xmax",    100, 0, 0, -10000000, +10000000 },
+        "gui_xmax",    131, 0, 1, -10000000, +10000000 },
     { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
         "min_y_norm", 0, 0, 0, -1000, +1000 },
     { /* min_y_norm, max_y_norm - Normalized controller defined Y range when using auto-set */
@@ -160,7 +160,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* scale_ch2 - Jumper & probe attenuation dependent Y scaling factor for Channel 2 */
         "scale_ch2", 0, 0, 1, -1000, 1000 },
 
-    /* BODE PLOTTER PARAMETERS FROM HERE ON (VERSION 1.0 - TODO CLEAR REST OF PARAMTERTS) */
+    /* BODE PLOTTER PARAMETERS FROM HERE ON (VERSION 1.0 - TODO CLEAR REST OF PARAMETERS) */
     { /* General bode plotter flag:
        *   -1 - First boot -> No measurment yet made.
        *    0 - Negative -> We have data aquisition, but we aren't doing any more measurments
@@ -194,8 +194,6 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    0 - Linear
        *    1 - Logarithmic */
         "bode_scale_type", 0, 1, 0, 0, 1},
-
-    /* TODO: Add scale and steps */
 
     /********************************************************/
     /* Arbitrary Waveform Generator parameters from here on */
@@ -258,7 +256,6 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        */
         "gen_awg_refresh",   0, 0, 0, 0, 2 },
 
-    
     /******************************************/
     /* PID Controller parameters from here on */
     /******************************************/
@@ -954,7 +951,7 @@ int rp_get_params(rp_app_params_t **p)
     *p = p_copy;
     return PARAMS_NUM;
 }
-/* Do not delete */
+
 int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 {
     int ret_val;
@@ -980,8 +977,6 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
     return 0;
 }
 
-
-/* Do not delete */
 int rp_create_signals(float ***a_signals)
 {
     int i;
@@ -1149,6 +1144,27 @@ int rp_update_main_params(rp_app_params_t *params)
     return 0;
 }
 
+int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
+{
+    pthread_mutex_lock(&rp_main_params_mutex);
+    rp_main_params[MEAS_MIN_CH1].value = ch1_meas.min;
+    rp_main_params[MEAS_MAX_CH1].value = ch1_meas.max;
+    rp_main_params[MEAS_AMP_CH1].value = ch1_meas.amp;
+    rp_main_params[MEAS_AVG_CH1].value = ch1_meas.avg;
+    rp_main_params[MEAS_FREQ_CH1].value = ch1_meas.freq;
+    rp_main_params[MEAS_PER_CH1].value = ch1_meas.period;
+
+    rp_main_params[MEAS_MIN_CH2].value = ch2_meas.min;
+    rp_main_params[MEAS_MAX_CH2].value = ch2_meas.max;
+    rp_main_params[MEAS_AMP_CH2].value = ch2_meas.amp;
+    rp_main_params[MEAS_AVG_CH2].value = ch2_meas.avg;
+    rp_main_params[MEAS_FREQ_CH2].value = ch2_meas.freq;
+    rp_main_params[MEAS_PER_CH2].value = ch2_meas.period;
+
+    pthread_mutex_unlock(&rp_main_params_mutex);
+    return 0;
+}
+
 float rp_gen_limit_freq(float freq, float gen_type)
 {
     int type = (int)gen_type;
@@ -1178,45 +1194,26 @@ float rp_gen_limit_freq(float freq, float gen_type)
     return freq;
 }
 
-/* Bode params return depending on specific position */
+
 float rp_get_params_bode(int pos){
   switch(pos){
     case 0:
       return rp_main_params[BODE_S_MEASURE].value;
-      break;
     case 1:
       return rp_main_params[BODE_GEN_AMP].value;
-      break;
     case 2:
       return rp_main_params[BODE_GEN_AVG].value;
-      break;
     case 3:
       return rp_main_params[BODE_GEN_DC_BIAS].value;
-      break;
     case 4:
       return rp_main_params[BODE_STAR_FREQ].value;
-      break;
     case 5:
       return rp_main_params[BODE_END_FREQ].value;
-      break;
     case 6:
-      return rp_main_params[BODE_SCALE_TYPE].value;
-      break;
-    case 10:
       return rp_main_params[DATA_PLOT].value;
-      break;
+    case 7:
+      return rp_a,main_params[BODE_SCALE_TYPE].value;
     default:
       return -1;
-      break;
   }
-
-
-}
-
-void rp_set_params_bode(int pos, int val){
-    switch(pos){
-      case 0:
-        rp_main_params[BODE_S_MEASURE].value = val;
-        break;
-    }
 }

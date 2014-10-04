@@ -1,6 +1,6 @@
 {
     "name": "Bode plotter",
-    "version": "1.0",
+    "version": "0.92",
     "revision": "REVISION",
-    "description": "Bode plotter"
+    "description": "Bode analyzer."
 }
