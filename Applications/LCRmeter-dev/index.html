@@ -54,8 +54,8 @@
   var plot_options = {
     colors: ['#3276B1', '#D2322D', '#009900'],    // channel1, channel2, trigger line
     lines: { lineWidth: 1 },
-    selection: { mode: 'xy' },
-    zoom: { interactive: true, trigger: null },
+    selection: { mode: null }, //comment mode: 'xy'
+    zoom: { interactive: false, trigger: null }, //comment interactive: true
     xaxis: { min: xmin, max: xmax },
     grid: { borderWidth: 0 },
     legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
@@ -99,13 +99,13 @@
       $('.btn-lg').removeClass('btn-lg');
       $('#accordion .btn, .modal .btn').addClass('btn-sm');
       $('#btn_zoompan').remove();
-      $('#btn_zoomin, #btn_zoomout, #btn_pan').show();
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').hide(); //comment .show()
     }
     else {
       update_interval = update_interval_mobdev;
       meas_panel_dec = meas_panel_dec_mobdev;
       $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
-      $('#btn_zoompan').show();
+      $('#btn_zoompan').hide(); //comment .show()
     }
     
     // Add application ID in the message from modal popup
@@ -2106,12 +2106,12 @@
   <div class="container">
     <div class="row">
       <div id="btn_toolbar" class="col-xs-12">
-        <button id="btn_autoscale_y" class="btn btn-primary btn-lg" data-autozoom="false" onclick="autoscaleY()">
+        <!-- //comment <button id="btn_autoscale_y" class="btn btn-primary btn-lg" data-autozoom="false" onclick="autoscaleY()">
           <span class="glyphicon glyphicon-resize-vertical"></span> Autoscale
         </button>
         <button class="btn btn-primary btn-lg" onclick="resetZoom()">
           <span class="glyphicon glyphicon-retweet"></span> Reset zoom
-        </button>  
+        </button> --> 
         <div id="selzoompan" class="btn-group" data-toggle="buttons">
           <button id="btn_zoomin" class="btn btn-primary" onclick="selectTool.call(this, 'zoomin')" style="display: none">
             <span class="glyphicon glyphicon-zoom-in"></span>
