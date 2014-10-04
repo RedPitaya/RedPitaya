@@ -149,7 +149,7 @@ typedef struct rp_osc_meas_res_s {
 #define PARAMS_PER_PID     6
 
 /* Output signals */
-#define SIGNAL_LENGTH (101) /* Must be 2^n! */
+#define SIGNAL_LENGTH (1024) /* Must be 2^n! */
 #define SIGNALS_NUM   3
 
 
@@ -188,10 +188,7 @@ int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas);
 /* Waveform generator frequency limiter. */
 float rp_gen_limit_freq(float freq, float gen_type);
 
-/* Bode param return */
+/* Bode parameter get function */
 float rp_get_params_bode(int pos);
-
-/* Bode set params */
-void rp_set_params_bode(int pos, int val);
 
 #endif /*  __MAIN_H */

@@ -65,8 +65,8 @@ int rp_osc_prepare_time_vector(float **out_signal, int dec_factor,
  * be created at the beginning
  */
 int bode_start_measure(float **cha_signal, int *in_cha_signal,
-                       float **chb_signal, int *in_chb_signal,
-                       float **time_signal);
+                    float **chb_signal, int *in_chb_signal,
+                    float **time_signal);
 
 int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal, 
                             float **chb_out_signal, int *chb_in_signal,

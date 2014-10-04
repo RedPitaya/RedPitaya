@@ -45,8 +45,6 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 
-int counter = 0;
-
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
@@ -281,64 +279,11 @@ void *rp_osc_worker_thread(void *args)
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
-        
-        int start_measure = rp_get_params_bode(0);
-        if(start_measure == 1){
-            char command[100];
-            float read_amp = rp_get_params_bode(1);
-            float read_avg = rp_get_params_bode(2);
-            float read_dc_bias = rp_get_params_bode(3);
-            float read_start_freq = rp_get_params_bode(4);
-            float read_end_freq = rp_get_params_bode(5);
-            float read_scale = rp_get_params_bode(6);
-
-            char amp[5];
-            char avg[5];
-            char dc_bias[5];
-            char s_freq[20];
-            char e_freq[20];
-            char scale[5];
-
-            snprintf(amp, 5, "%f", read_amp);
-            snprintf(avg, 5, "%f", read_avg);
-            snprintf(dc_bias, 5, "%f", read_dc_bias);
-            snprintf(s_freq, 20, "%f", read_start_freq);
-            snprintf(e_freq, 20, "%f", read_end_freq);
-            snprintf(scale, 5, "%f", read_scale);
-
-            strcpy(command, "/opt/bin/bode 1 ");
-            
-            strcat(command, amp);
-            strcat(command, " ");
-
-            strcat(command, dc_bias);
-            strcat(command, " ");
-
-            strcat(command, avg);
-            strcat(command, " 100 ");
-
-            strcat(command, s_freq);
-            strcat(command, " ");
-
-            strcat(command, e_freq);
-            strcat(command, " ");
-            strcat(command, scale);
-            
-            system(command);
-
-            rp_set_params_bode(0, 0);
-
-        }
-
-
-
         /* request to stop worker thread, we will shut down */
         if(state == rp_osc_quit_state) {
             rp_clean_params(curr_params);
             return 0;
         }
-
-
 
         if(state == rp_osc_auto_set_state) {
             /* Auto-set algorithm was selected - run it */
@@ -668,63 +613,15 @@ int bode_start_measure(float **cha_signal, int *in_cha_signal,
     float *chb_s = *chb_signal;
     float *t = *time_signal;
     
-    /* If we are in first boot and we didn't do any measurments yet, set the channels to a static number */
-    if(rp_get_params_bode(0) == -1){
-       for(out_idx=0; out_idx < SIGNAL_LENGTH; out_idx++) {
-            cha_s[out_idx] = -1;
-            chb_s[out_idx] = 1;
-            t[out_idx] = out_idx;
-        } 
-    }else if(rp_get_params_bode(0) == 0){
 
-        /* Opening files */
-        FILE *file_frequency = fopen("/tmp/bode_data/data_frequency", "r");
-        FILE *file_amplitude = fopen("/tmp/bode_data/data_amplitude", "r");
-        FILE *file_phase = fopen("/tmp/bode_data/data_phase", "r");
+    for(out_idx = 0; out_idx < SIGNAL_LENGTH; out_idx++){
 
-        /* Allocating memory */
-        float *frequency = malloc(100 * sizeof(float)); // Here we will change it to steps_bode
-        float *amplitude = malloc(100 * sizeof(float));
-        float *phase = malloc(100 * sizeof(float)); 
+        cha_s[out_idx] = 0.5;
 
-        /* Writing data into mem allocated arrays */
-        while(!feof(file_frequency)){
-            fscanf(file_frequency, "%f", &frequency[counter]);
-            counter++;
-        }
+        chb_s[out_idx] = -1;
 
-        int amp_counter = 0;
-        while(!feof(file_amplitude)){
-            fscanf(file_amplitude, "%f", &amplitude[amp_counter]);
-            amp_counter++;
-        }
-
-        int phase_counter = 0;
-        while(!feof(file_phase)){
-            fscanf(file_phase, "%f", &phase[phase_counter]);
-            phase_counter++;
-        }
-
-        /* Tenth parameter defining what data to plot */
-        for(out_idx=0; out_idx < SIGNAL_LENGTH; out_idx++) {
-            if(rp_get_params_bode(10) == 0){
-                cha_s[out_idx] = amplitude[out_idx];
-                chb_s[out_idx] = 1;
-                t[out_idx] = frequency[out_idx];
-            }else if(rp_get_params_bode(10) == 1){
-                cha_s[out_idx] = phase[out_idx];
-                chb_s[out_idx] = 1;
-                t[out_idx] = frequency[out_idx];
-            }
-        }
-        /* Closing files */
-        fclose(file_phase);
-        fclose(file_amplitude);
-        fclose(file_frequency);
+        t[out_idx] = out_idx;
     }
-
-    
-    counter = 0;
 
     return 0;
 }
