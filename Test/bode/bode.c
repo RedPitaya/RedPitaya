@@ -3,10 +3,11 @@
  *
  * @brief Red Pitaya Bode plotter
  *
- * @Author1 Martin Cimerman   <cim.martin@gmail.com>
- * @Author2 Zumret Topcagic   <zumret_topcagic@hotmail.com>
- * @Author3 Peter Miklavcic   <miklavcic.peter@gmail.com>
- * @Author4 Luka Golinar      <luka.golinar@gmail.com>
+ * @Author1 Martin Cimerman   (main developer & organiser, code review)
+ * @Author2 Zumret Topcagic   (concept code developer, code review)
+ * @Author3 Luka Golinar      (web interface developer)
+ * @Author4 Peter Miklavcic   (cleanup, manpage, fixed datatypes)
+ * Contact: <cim.martin@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
@@ -502,9 +503,12 @@ int main(int argc, char *argv[]) {
  * @param awg   Returned AWG parameters.
  *
  */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
-                       int32_t *data,
-                       awg_param_t *awg) {
+void synthesize_signal(double ampl, 
+                        double freq, 
+                        signal_e type, 
+                        double endfreq,
+                        int32_t *data,
+                        awg_param_t *awg) {
 
     uint32_t i;
 
@@ -667,8 +671,8 @@ void write_data_fpga(uint32_t ch,
  * @param **s   Points to a memory where data is saved.
  * @param size  Size of data.
  */
-int acquire_data(float **s ,
-                uint32_t size) {
+int acquire_data(float **s ,uint32_t size) {
+
     int retries = 150000;
     int j, sig_num, sig_len;
     int ret_val;
