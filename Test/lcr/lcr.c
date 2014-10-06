@@ -3,11 +3,11 @@
  *
  * @brief Red Pitaya LCR meter
  *
- * @Author1 Martin Cimerman
- * @Author2 Zumret Topcagic
- * @Author3 Luka Golinar
- * @Author4 Peter Miklavcic (code review and cleanup, manpage, debugging, fixed datatypes)
- * Contact: <cim.martin@gmail.com>, <miklavcic.peter@gmail.com>
+ * @Author1 Martin Cimerman (main developer & organiser, code review)
+ * @Author2 Zumret Topcagic (concept code developer, code review)
+ * @Author3 Luka Golinar (web interface developer)
+ * @Author4 Peter Miklavcic (cleanup, manpage, fixed datatypes)
+ * Contact: <cim.martin@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
@@ -616,21 +616,6 @@ int main(int argc, char *argv[]) {
     } 
     */
 
-    /**
-     * Showtime.
-     * 
-     * At first the signal generator generates a signal before the
-     * measuring proces begins. First results are inaccurate otherwise.
-    if (sweep_function == 0){
-        awg_param_t params;
-        /// Prepare data buffer (calculate from input arguments)
-        synthesize_signal(ampl, start_frequency, type, endfreq, data, &params);
-        /// Write the data to the FPGA and set FPGA AWG state machine
-        write_data_fpga(ch, data, &params);
-        usleep(1000);
-    }
-    */
-
     /* 
     * for loop defines measurement purpose switching
     * there are 4 sorts of measurement purposes , 3 pof them reprisent calibration sequence
@@ -654,7 +639,7 @@ int main(int argc, char *argv[]) {
                 Frequency[ fr ] = (int)(start_frequency + ( frequency_step * fr ));
             }
 
-            //this section eliminates transient effect that spoiles the measuremets
+            // eliminates transient effect that spoiles the measuremets
             // it outputs frequencies below start frequency and increses it to the strat frequency
             if (sweep_function == 1 && transientEffectFlag <= stepsTE){
                 if (transientEffectFlag < stepsTE){
