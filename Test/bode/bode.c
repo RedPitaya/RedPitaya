@@ -106,7 +106,7 @@ void usage() {
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                   Max sum of amplitude and DC bias is 1V.\n"
+            "\t                   Max sum of amplitude and DC bias is (0,1]V.\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
             "\tcount/steps        Number of measurements [>2].\n"
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
-    if ( ampl+DC_bias > 1 ) {
+    if ( ampl+DC_bias>1 || ampl+DC_bias<=0 ) {
         fprintf(stderr, "Invalid ampl+dc value!\n\n");
         usage();
         return -1;
