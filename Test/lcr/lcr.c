@@ -3,11 +3,11 @@
  *
  * @brief Red Pitaya LCR meter
  *
- * @Author1 Martin Cimerman (main developer & organiser, code review)
- * @Author2 Zumret Topcagic (concept code developer, code review)
- * @Author3 Luka Golinar (web interface developer)
- * @Author4 Peter Miklavcic (cleanup, manpage, fixed datatypes)
- * Contact: <cim.martin@gmail.com>
+ * @Author1 Martin Cimerman (main developer, matlab>c translation)
+ * @Author2 Zumret Topcagic (concept code developer)
+ * @Author3 Luka Golinar (web interface implementation)
+ * @Author4 Peter Miklavcic (main() developer, code review and cleanup, manpage)
+ * Contact: <cim.martin@gmail.com>, <miklavcic.peter@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
