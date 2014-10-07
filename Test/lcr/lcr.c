@@ -6,8 +6,8 @@
  * @Author1 Martin Cimerman (main developer, matlab>c translation)
  * @Author2 Zumret Topcagic (concept code developer)
  * @Author3 Luka Golinar (web interface implementation)
- * @Author4 Peter Miklavcic (main() developer, code review and cleanup, manpage)
- * Contact: <cim.martin@gmail.com>, <miklavcic.peter@gmail.com>
+ * @Author4 Peter Miklavcic (manpage and code review)
+ * Contact: <cim.martin@gmail.com>, <luka.golinar@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
