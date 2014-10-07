@@ -6,8 +6,8 @@
  * @Author1 Martin Cimerman (main developer, matlab>c translation)
  * @Author2 Zumret Topcagic (concept code developer)
  * @Author3 Luka Golinar (web interface implementation)
- * @Author4 Peter Miklavcic (main() developer, code review and cleanup, manpage)
- * Contact: <cim.martin@gmail.com>, <miklavcic.peter@gmail.com>
+ * @Author4 Peter Miklavcic (manpage and code review)
+ * Contact: <cim.martin@gmail.com>, <luka.golinar@gmail.com>
  *
  * GENERAL DESCRIPTION:
  *
@@ -106,7 +106,7 @@ void usage() {
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
             "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                   Max sum of amplitude and DC bias is (0,1]V.\n"
+            "\t                   Max sum of amplitude and DC bias is (0-1]V.\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
             "\tcount/steps        Number of measurements [>2].\n"
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
