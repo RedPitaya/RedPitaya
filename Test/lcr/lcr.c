@@ -812,7 +812,7 @@ int main(int argc, char *argv[]) {
     /** Opening frequency data */
     FILE *try_open = fopen("/tmp/lcr_data/data_frequency.txt", "w");
 
-    /* If files don't exists yet, we first have to create them ( First boot ), as we are storing them in /tmp */
+    /* If files don't exists yet, we first have to create them (First boot), as we are storing them in /tmp */
     if(try_open == NULL){
 
         int f_number;
@@ -821,7 +821,7 @@ int main(int argc, char *argv[]) {
         strcpy(command, "mkdir /tmp/lcr_data");
         system(command);
 
-        /* We loop X ( Where X is the number of data we want to have ) times and create a file for each data type */
+        /* We loop X (Where X is the number of data we want to have) times and create a file for each data type */
         for(f_number = 0; f_number < 16; f_number++){
             switch(f_number){
                 case 0:
@@ -891,7 +891,10 @@ int main(int argc, char *argv[]) {
 
             }
         }
+        /* We change the mode to write and add permission. */
         strcpy(command, "chmod -R 777 /tmp/lcr_data");
+        
+        /* Command execution for before the next loop */
         system(command);
     }
 
