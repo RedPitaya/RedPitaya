@@ -45,7 +45,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        89
+#define PARAMS_NUM        90
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -94,62 +94,63 @@ typedef struct rp_osc_meas_res_s {
 #define BODE_GEN_AVG      44
 #define BODE_GEN_DC_BIAS  45
 #define BODE_STAR_FREQ    46
-#define BODE_END_FREQ     47
+#define BODE_COUNTS       47
 #define DATA_PLOT         48
 #define BODE_SCALE_TYPE   49
+#define BODE_DATA_PLOT    50
 /* AWG parameters */
-#define GEN_TRIG_MODE_CH1 50
-#define GEN_SIG_TYPE_CH1  51
-#define GEN_ENABLE_CH1    52
-#define GEN_SINGLE_CH1    53
-#define GEN_SIG_AMP_CH1   54
-#define GEN_SIG_FREQ_CH1  55
-#define GEN_SIG_DCOFF_CH1 56
-#define GEN_TRIG_MODE_CH2 57
-#define GEN_SIG_TYPE_CH2  58
-#define GEN_ENABLE_CH2    59
-#define GEN_SINGLE_CH2    60
-#define GEN_SIG_AMP_CH2   61
-#define GEN_SIG_FREQ_CH2  62
-#define GEN_SIG_DCOFF_CH2 63
-#define GEN_AWG_REFRESH   64
+#define GEN_TRIG_MODE_CH1 51
+#define GEN_SIG_TYPE_CH1  52
+#define GEN_ENABLE_CH1    53
+#define GEN_SINGLE_CH1    54
+#define GEN_SIG_AMP_CH1   55
+#define GEN_SIG_FREQ_CH1  56
+#define GEN_SIG_DCOFF_CH1 57
+#define GEN_TRIG_MODE_CH2 58
+#define GEN_SIG_TYPE_CH2  59
+#define GEN_ENABLE_CH2    60
+#define GEN_SINGLE_CH2    61
+#define GEN_SIG_AMP_CH2   62
+#define GEN_SIG_FREQ_CH2  63
+#define GEN_SIG_DCOFF_CH2 64
+#define GEN_AWG_REFRESH   65
 /* PID parameters */
-#define PID_11_ENABLE     65
-#define PID_11_RESET      66
-#define PID_11_SP         67
-#define PID_11_KP         68
-#define PID_11_KI         69
-#define PID_11_KD         70
-#define PID_12_ENABLE     71
-#define PID_12_RESET      72
-#define PID_12_SP         73
-#define PID_12_KP         74
-#define PID_12_KI         75
-#define PID_12_KD         76
-#define PID_21_ENABLE     77
-#define PID_21_RESET      78
-#define PID_21_SP         79
-#define PID_21_KP         80
-#define PID_21_KI         81
-#define PID_21_KD         82
-#define PID_22_ENABLE     83
-#define PID_22_RESET      84
-#define PID_22_SP         85
-#define PID_22_KP         86
-#define PID_22_KI         87
-#define PID_22_KD         88
+#define PID_11_ENABLE     66
+#define PID_11_RESET      67
+#define PID_11_SP         68
+#define PID_11_KP         69
+#define PID_11_KI         70
+#define PID_11_KD         71
+#define PID_12_ENABLE     72
+#define PID_12_RESET      73
+#define PID_12_SP         74
+#define PID_12_KP         75
+#define PID_12_KI         76
+#define PID_12_KD         77
+#define PID_21_ENABLE     78
+#define PID_21_RESET      79
+#define PID_21_SP         80
+#define PID_21_KP         81
+#define PID_21_KI         82
+#define PID_21_KD         83
+#define PID_22_ENABLE     84
+#define PID_22_RESET      85
+#define PID_22_SP         86
+#define PID_22_KP         87
+#define PID_22_KI         88
+#define PID_22_KD         89
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope, AWG or PID */
-#define PARAMS_AWG_PARAMS 50
+#define PARAMS_AWG_PARAMS 51
 
 /* Defines from which parameters on are PID parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope, AWG or PID */
-#define PARAMS_PID_PARAMS 65
+#define PARAMS_PID_PARAMS 66
 #define PARAMS_PER_PID     6
 
 /* Output signals */
-#define SIGNAL_LENGTH (1024) /* Must be 2^n! */
+#define SIGNAL_LENGTH (100) /* Must be 2^n! */
 #define SIGNALS_NUM   3
 
 
@@ -190,5 +191,8 @@ float rp_gen_limit_freq(float freq, float gen_type);
 
 /* Bode parameter get function */
 float rp_get_params_bode(int pos);
+
+/* Bode parameter set function */
+void rp_set_params_bode(int pos, float val);
 
 #endif /*  __MAIN_H */

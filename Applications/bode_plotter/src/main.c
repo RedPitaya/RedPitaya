@@ -182,10 +182,10 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    Max value: +1000000
        *    Min value: +0 */
         "bode_start_f", 0, 1, 0, 0, 1000000},
-    { /* End frequency parameter:
+    { /* Bode counts:
        *    Max value: +1000000
        *    Min value: +0 */
-        "bode_end_f", 0, 1, 0, 0, 1000000},
+        "bode_counts", 25, 1, 0, 0, 1024},
     { /* Parameter for selecting data plot:
        *    0 - Amplitude
        *    1 - Phase */
@@ -194,6 +194,10 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    0 - Linear
        *    1 - Logarithmic */
         "bode_scale_type", 0, 1, 0, 0, 1},
+    { /* Scale type parameter:
+       *    0 - Linear
+       *    1 - Logarithmic */
+        "bode_data_plot", 0, 1, 0, 0, 1},
 
     /********************************************************/
     /* Arbitrary Waveform Generator parameters from here on */
@@ -1208,12 +1212,22 @@ float rp_get_params_bode(int pos){
     case 4:
       return rp_main_params[BODE_STAR_FREQ].value;
     case 5:
-      return rp_main_params[BODE_END_FREQ].value;
+      return rp_main_params[BODE_COUNTS].value;
     case 6:
       return rp_main_params[DATA_PLOT].value;
     case 7:
-      return rp_a,main_params[BODE_SCALE_TYPE].value;
+      return rp_main_params[BODE_SCALE_TYPE].value;
+    case 8:
+      return rp_main_params[BODE_DATA_PLOT].value;
     default:
       return -1;
+  }
+}
+
+void rp_set_params_bode(int pos, float val){
+  switch(pos){
+    case 0:
+      rp_main_params[BODE_S_MEASURE].value = val;
+      break;
   }
 }

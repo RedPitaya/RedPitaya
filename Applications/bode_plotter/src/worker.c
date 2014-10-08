@@ -45,6 +45,8 @@ int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
 
+int counter = 0;
+
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
@@ -253,6 +255,51 @@ void *rp_osc_worker_thread(void *args)
         /* update states - we save also old state to see if we need to reset
          * FPGA 
          */
+
+        int start_measure = rp_get_params_bode(0);
+        if(start_measure == 1){
+
+            char command[100];
+            float read_amp = rp_get_params_bode(1);
+            float read_avg = rp_get_params_bode(2);
+            float read_dc_bias = rp_get_params_bode(3);
+            float read_start_freq = rp_get_params_bode(4);
+            //float read_counts = rp_get_params_bode(5);
+            float read_scale = rp_get_params_bode(6);
+
+            char amp[5];
+            char avg[5];
+            char dc_bias[5];
+            char s_freq[20];
+            char scale[5];
+
+            snprintf(amp, 5, "%f", read_amp);
+            snprintf(avg, 5, "%f", read_avg);
+            snprintf(dc_bias, 5, "%f", read_dc_bias);
+            snprintf(s_freq, 20, "%f", read_start_freq);
+            snprintf(scale, 5, "%f", read_scale);
+
+            strcpy(command, "/opt/bin/bode 1 ");
+            
+            strcat(command, amp);
+            strcat(command, " ");
+
+            strcat(command, dc_bias);
+            strcat(command, " ");
+
+            strcat(command, avg);
+            strcat(command, " 100 ");
+
+            strcat(command, s_freq);
+            strcat(command, " 100000 ");
+            strcat(command, scale);
+            
+            system(command);
+
+            rp_set_params_bode(0, 0);
+
+        }
+
         old_state = state;
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
@@ -612,17 +659,76 @@ int bode_start_measure(float **cha_signal, int *in_cha_signal,
     float *cha_s = *cha_signal;
     float *chb_s = *chb_signal;
     float *t = *time_signal;
+    float *frequency = *time_signal;
+
+    
+    //FILE *file_phase = fopen("/tmp/bode_data/data_phase", "r");
+
     
 
-    for(out_idx = 0; out_idx < SIGNAL_LENGTH; out_idx++){
+   
+    
+    /* We have data aquisition */
+    if(rp_get_params_bode(0) != 0){
 
-        cha_s[out_idx] = 0.5;
+        for(out_idx = 0; out_idx < SIGNAL_LENGTH; out_idx++){
+            t[out_idx] = out_idx;
+            cha_s[out_idx] = 1;
+            chb_s[out_idx] = -1;
+        }
 
-        chb_s[out_idx] = -1;
-
-        t[out_idx] = out_idx;
     }
+     
+    else{
 
+        /* Opening files */
+        FILE *file_frequency = fopen("/tmp/bode_data/data_frequency", "r");
+        FILE *file_amplitude = fopen("/tmp/bode_data/data_amplitude", "r");
+        FILE *file_phase = fopen("/tmp/bode_data/data_phase", "r");
+
+        while(!feof(file_frequency)){
+            fscanf(file_frequency, "%f", &frequency[counter]);
+            counter++;
+        }
+
+        /* Allocation memory */
+        float *amplitude = malloc(counter * sizeof(float));
+        float *phase = malloc(counter * sizeof(float));
+
+        int amp_counter = 0;
+        while(!feof(file_amplitude)){
+            fscanf(file_amplitude, "%f", &amplitude[amp_counter]);
+            amp_counter++;
+        }
+
+        int p_counter = 0;
+        while(!feof(file_phase)){
+            fscanf(file_phase, "%f", &phase[p_counter]);
+            p_counter++;
+        }
+
+        for(out_idx = 0; out_idx < SIGNAL_LENGTH; out_idx++){
+
+            t[out_idx] = frequency[out_idx];
+            
+            if(rp_get_params_bode(8) == 0){
+                cha_s[out_idx] = amplitude[out_idx];
+            }else{
+                cha_s[out_idx] = phase[out_idx];
+            }
+            
+            chb_s[out_idx] = -1;
+        }
+
+        /* Closing files */
+        fclose(file_frequency);
+        fclose(file_amplitude);
+        fclose(file_phase);
+    }
+    
+
+    
+    counter = 0;
     return 0;
 }
 
