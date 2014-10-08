@@ -55,6 +55,8 @@
     legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
     touch: { autoWidth: false, autoHeight: false }
   };
+
+  var bode_modal;
   
   // Settings which should not be modified
   
@@ -592,6 +594,9 @@
     .fail(function() {
       showModalError('Could not start the application.', true);
     });
+
+    var hide_channel_bode = $('#btn_ch2');
+    hide_channel_bode.data('checked', false);
   }
   
   function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
@@ -752,7 +757,11 @@
       if(long_timeout_used) {
         use_long_timeout = false;
       }
+
+      autoscaleY();
     });
+
+    
   }
   
   function initPlot(init_params) {
@@ -919,6 +928,10 @@
   }
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
+    if(params.local.bode_start_measure == 0){
+      bode_modal.hidePleaseWait();
+      $('#btn_ch1').data('checked', true);
+    }
     if(! $.isPlainObject(new_params)) {
       return;
     } 
@@ -1829,12 +1842,101 @@
   
 
 function startMeasure(){
-  var bode_amp = document.getElementById('gen_amp').value;
-  var bode_avg = document.getElementById('gen_avg').value;
+
+  /* Setting inputs to GRAY */
+  document.getElementById('gen_amp').style.borderColor = "#cccccc";
+  document.getElementById('gen_avg').style.borderColor = "#cccccc";
+  document.getElementById('gen_dc_bias').style.borderColor = "#cccccc";
+  document.getElementById('gen_freq').style.borderColor = "#cccccc";
+  document.getElementById('gen_counts').style.borderColor = "#cccccc";
+
+
+  /* Pulling data from input */
+  var amp = parseLocalFloat(document.getElementById('gen_amp').value);
+  var avg = parseLocalFloat(document.getElementById('gen_avg').value);
+  var dc_bias = parseLocalFloat(document.getElementById('gen_dc_bias').value);
+  var frequncy = parseLocalFloat(document.getElementById('gen_freq').value);
+  var counts = parseLocalFloat(document.getElementById('gen_counts').value);
+  var scale = parseLocalFloat(document.getElementById('gen_scale').value);
+
+  /* Argument check */
+  if(amp > 2 || amp <= 0){
+    document.getElementById('gen_amp').style.borderColor = "red";
+  }
+  if(dc_bias < 0 || dc_bias > 1){
+    document.getElementById('gen_dc_bias').style.borderColor = "red";
+  }
+  if(dc_bias + amp <= 0 || amp + dc_bias > 1){
+    document.getElementById('gen_dc_bias').style.borderColor = "red";
+    document.getElementById('gen_amp').style.borderColor = "red";
+  }
+  if(counts < 0 || counts > 1000){
+    document.getElementById('gen_counts').style.borderColor = "red";
+  }
+
+  /* End function if input error */
+    if(document.getElementById('gen_amp').style.borderColor == "red" ||
+      document.getElementById('gen_avg').style.borderColor == "red" ||
+      document.getElementById('gen_dc_bias').style.borderColor == "red" ||
+      document.getElementById('gen_freq').borderColor == "red" || 
+      document.getElementById('gen_counts').borderColor == "red" ) {
+
+        return;
+    }
+
+  /* Setting params if argument check passed */
+  params.local.bode_amp = amp;
+  params.local.bode_avg = avg;
+  params.local.bode_dc_bias = dc_bias;
+  params.local.bode_start_f = frequncy;
+  params.local.bode_counts = counts;
+  params.local.bode_scale_type = scale;
+
+  params.local.bode_start_measure = 1;
+
+  lcr_modal.showPleaseWait();
+  var hide_channel_bode1 = $('#btn_ch1');
+  hide_channel_bode1.data('checked', false);
+
+  bode_modal.showPleaseWait();
 
   sendParams();
 
 }
+
+function changeData(){
+  change_graph();
+
+  params.local.bode_data_plot = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+
+  sendParams();
+}
+
+
+  $('#pleaseWaitDialog').css({
+    'background-image': 'none',
+    'background-color': '#D5273A'
+    });
+
+  bode_modal = bode_modal || (function () {
+    var pleaseWaitDiv = $('<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1>Measuring...</h1></div><div class="modal-body"><div class="progress progress-bar-danger progress-striped active"><div class="bar" style="width: 100%; "></div></div></div></div></div></div>');
+    return {
+        showPleaseWait: function() {
+            pleaseWaitDiv.modal();
+        },
+        hidePleaseWait: function () {
+            pleaseWaitDiv.modal('hide');
+        },
+
+    };
+  })();
+
+  function hideWaitBar()
+  {
+    bode_modal.hidePleaseWait();
+  }
+
+
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
 </head>
@@ -1868,7 +1970,11 @@ function startMeasure(){
           <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
           </button>
+
         </div>
+
+        
+
 		<div hidden>
         <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
         <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
@@ -1926,7 +2032,7 @@ function startMeasure(){
                 <div class="form-group">
                   <label for="gen_dc_bias" class="col-xs-4 control-label">DC bias:</label>
                   <div class="col-xs-4 col-sm-5">
-                        <input type="number" autocomplete="off" class="form-control" value="1" id="gen_dc_bias">
+                        <input type="number" autocomplete="off" class="form-control" value="0" id="gen_dc_bias">
                         <span style="display: none;" class="input-group-btn" id="apply_gen_dc_bias">
                           <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
                         </span>
@@ -1934,16 +2040,16 @@ function startMeasure(){
   			          <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_dc_bias_unit">V</div>
                 </div>
 
-                  <div class="form-group">
-                    <label for="gen_avg" class="col-xs-4 control-label">Averaging:</label>
-                    <div class="col-xs-4 col-sm-5">
-                          <input type="number" autocomplete="off" class="form-control" value="1" id="gen_avg">
-                          <span style="display: none;" class="input-group-btn" id="apply_gen_avg">
-                            <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                          </span>
-                    </div>
-                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_avg_unit">V</div>
+                <div class="form-group">
+                  <label for="gen_avg" class="col-xs-4 control-label">Averaging:</label>
+                  <div class="col-xs-4 col-sm-5">
+                        <input type="number" autocomplete="off" class="form-control" value="1" id="gen_avg">
+                        <span style="display: none;" class="input-group-btn" id="apply_gen_avg">
+                          <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                        </span>
                   </div>
+                  <div style="padding: 7px 0 0;" class="col-xs-2" id="gen_avg_unit">V</div>
+                </div>
 
               </form>
             </div>
@@ -1961,38 +2067,30 @@ function startMeasure(){
             <div class="panel-body">
 			  <form class="form-horizontal" role="form" onsubmit="return false;">
                   <div class="form-group">
-                    <label for="gen_fr_Sfreq" class="col-xs-4 control-label">Start f.:</label>
+                    <label for="gen_fr_Sfreq" class="col-xs-4 control-label">Frequency:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fr_Sfreq">
+                      <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_freq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
-				  <div class="form-group">
-                    <label for="gen_fr_Efreq" class="col-xs-4 control-label">Stop f.:</label>
+
+				          <div class="form-group">
+                    <label for="gen_fr_step" class="col-xs-4 control-label">Counts:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="10000" id="gen_fr_Efreq">
-                      <span id="apply_gen_fs_Efreq" class="input-group-btn" style="display: none;">
-                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
-                      </span>
-                    </div>
-                    <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
-                  </div>
-				  <div class="form-group">
-                    <label for="gen_fr_step" class="col-xs-4 control-label">Steps:</label>
-                    <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="1" id="gen_fr_step">
+                      <input type="text" autocomplete="off" class="form-control" value="25" id="gen_counts">
                       <span id="apply_gen_fs_step" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
                   </div>
+
 				  <div class="form-group">
 				    <label for="gen_fs_scale" class="col-xs-4 control-label">Scale:</label>
 					<div class="col-xs-4 col-sm-5">
-                      <select class="form-control" id="apply_gen_fs_scale">
+                      <select class="form-control" id="gen_scale">
                         <option value="0">Lin</option>
                         <option value="1">Log</option>
                       </select>
@@ -2020,41 +2118,22 @@ function startMeasure(){
 				  <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
 			      <div class="col-xs-4 col-sm-5">
                     <select class="form-control" id="apply_Xaxis">
-                      <option value="0">Rs</option>
-                      <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
+                      <option value="0">Frequency</option>
                     </select>
                   </div>
 				</div>
 				<div class="form-group">
 				  <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
-			      <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="apply_Yaxis">
-                      <option value="0">Rs</option>
-                      <option value="1">Ls</option>
-					  <option value="2">Cp</option>
-					  <option value="3">Cs</option>
-					  <option value="4">Rp</option>
-					  <option value="5">Q</option>
-					  <option value="6">D</option>
-					  <option value="7">Y</option>
-					  <option value="8">Z</option>
-					  <option value="9">|Z|</option>
-					  <option value="10">|Y|</option>
-                    </select>
-                  </div>
+			    <div class="col-xs-4 col-sm-5">
+              <select class="form-control" id="apply_Yaxis">
+                <option value="0">Amplitude</option>
+                <option value="1">Phase</option>
+              </select>
+          </div>
 				</div>
-                <div>
-				  <button id="btn_prep_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="change_graph()">Prepare plot</button>
-				  <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="">Show plot</button>
+
+        <div>
+				  <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="changeData()">Show plot</button>
 				</div>
               </form>
             </div>
