@@ -47,6 +47,7 @@
   var lcr_modal;
   var input_control = 0;
   var lcr_modal;
+  var change_Measure = 0;
 
   var time_range_max = [130, 1000, 8, 130, 1, 8];
   var range_steps = [0];
@@ -763,23 +764,7 @@
       if(long_timeout_used) {
         use_long_timeout = false;
       }
-    /*
-    var table = document.getElementById('measurment_table');
-
-    if(counter < 100 && params.local.start_measure == 0){
-      var tr = document.createElement('tr');
-
-      var td = document.createElement('td');
-
-
-      var frequency = document.createTextNode(params.local.frequency_meas);
-
-      td.appendChild(frequency);
-      tr.appendChild(td);
-      table.appendChild(tr);
-      counter++;
-    }
-    */
+    
     });
     autoscaleY();
 
@@ -968,17 +953,26 @@
    // $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
   
   
-  if(flag_graph==1)
+  if(change_Measure == 1)
   {
-    var di=document.getElementById("apply_Yaxis").selectedIndex;
-    var ytitl=document.getElementById("apply_Yaxis").options[di].text;
+
+    var di = document.getElementById("apply_Yaxis").selectedIndex;
+    var ytitl = document.getElementById("apply_Yaxis").options[di].text;
+
+    /* Set Y tittle */
     $('#ytitle').text(ytitl);
-      var id=document.getElementById("apply_Xaxis").selectedIndex;
-    var xtitl=document.getElementById("apply_Xaxis").options[id].text;
+
+    var id = document.getElementById("apply_Xaxis").selectedIndex;
+    var xtitl = document.getElementById("apply_Xaxis").options[id].text;
+
+    /* Set X tittle */
     $('#xtitle').text(xtitl);
-    flag_graph=0;
+
+    /* We don't want to IF everytime */
+    change_Measure = 0;
   }
   
+  /*
   if(flag_table==1)
   {
     var i1 = document.getElementById("column_one").selectedIndex;
@@ -998,7 +992,8 @@
     
     flag_table=0;
   }
-  showMeasure();
+  */
+  
   }
   
   function isParamChanged() {
@@ -1859,20 +1854,6 @@
     });
 });
  
- 
- var flag_table = 1;
- var flag_graph = 0;
- 
- function change_graph()
- {
-  flag_graph=1;
- }
- 
- function change_table()
- {
-  flag_table=1;
- }
- 
 
  $(document).ready(function(e) {
   $(".logo").click(function(e) { updateGraphData(); alert("dela"); });
@@ -2059,12 +2040,18 @@
     hide_channel_lcr.data('checked', false);
 
 
+
     /* Send params to C controller */
     sendParams();
  }
 
-  function showMeasure(){
+  function changeData(){
+
     params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+
+    /* Change the graph X and Y axis */
+    change_Measure = 1;
+    /* Send params with same measure */
     sendParams();
   }
 
@@ -2407,40 +2394,8 @@
             </div>
           </div>
         </div>
-    <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#choose">
-                Choose wisely
-              </a>
-            </h4>
-          </div>
-      <div id="choose" class="panel-collapse collapse">
-            <div class="panel-body">
-        <form class="form-horizontal" role="form" onsubmit="return false;">
-        <div>
-            <button id="Rs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rs</button>
-          <button id="Ls_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Ls</button>
-          <button id="Cp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cp</button>
-          <button id="Cs_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Cs</button>
-        </div>
-        <div></div>
-        <div>
-          <button id="Rp_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Rp</button>
-          <button id="Q_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Q</button>
-          <button id="D_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">D</button>
-          <button id="Y_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">Y</button>
-        </div>
-        <div>
-          <button id="Z_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 15px">Z</button>
-          <button id="Zz_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Z|</button>
-          <button id="Yy_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">|Y|</button>
-          <button id="lol_button" class="btn btn-choose btn-lg" data-checked="true"  style="margin-left: 6px">:)</button>
-        </div>
-        </form>
-      </div>
-      </div>
-    </div>
+    
+        <!--
     <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2522,6 +2477,9 @@
             </div>
           </div>
         </div>
+
+      -->
+
     <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2533,44 +2491,48 @@
           <div id="plot_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
-          <div class="form-group">
-          <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
-            <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="apply_Xaxis">
-                      <option value="0">Frequency</option>
-                    </select>
-            </div>
-        </div>
-        <div class="form-group">
-          <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
-            <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="apply_Yaxis">
-                      <option value="0">Amplitude</option>
-                      <option value="1">Phase</option>
-                      <option value="2">Y abs</option>
-                      <option value="3">Phase Y</option>
-                      <option value="4">Rs</option>
-                      <option value="5">Xs</option>
-                      <option value="6">Gp</option>
-                      <option value="7">Cs</option>
-                      <option value="8">Cp</option>
-                      <option value="9">Ls</option>
-                      <option value="10">Lp</option>
-                      <option value="11">Rp</option>
-                      <option value="12">Q</option>
-                      <option value="13">D</option>
-                    </select>
-                  </div>
-        </div>
 
-        <div>
-          <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="false" onclick="change_graph()">Show plot</button>
-        </div>
+              <div class="form-group">
+                <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
+                <div class="col-xs-4 col-sm-5">
+                        <select class="form-control" id="apply_Xaxis">
+                          <option value="0">Frequency</option>
+                        </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
+                  <div class="col-xs-4 col-sm-5">
+                          <select class="form-control" id="apply_Yaxis">
+                            <option value="0">|Z|</option>
+                            <option value="1">Phase Z</option>
+                            <option value="2">|Y|</option>
+                            <option value="3">Phase Y</option>
+                            <option value="4">Rs</option>
+                            <option value="5">Xs</option>
+                            <option value="6">Gp</option>
+                            <option value="7">Cs</option>
+                            <option value="8">Cp</option>
+                            <option value="9">Ls</option>
+                            <option value="10">Lp</option>
+                            <option value="11">Rp</option>
+                            <option value="12">Q</option>
+                            <option value="13">D</option>
+                          </select>
+                        </div>
+              </div>
+
+              <div>
+                <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="changeData()">Show plot</button>
+              </div>
 
               </form>
             </div>
           </div>
         </div>
+
+
         <div hidden class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
