@@ -3,9 +3,9 @@
  *
  * @brief Red Pitaya Bode plotter
  *
- * @Author1 Martin Cimerman (main developer, matlab>c translation)
+ * @Author1 Martin Cimerman (main developer,concept program translation)
  * @Author2 Zumret Topcagic (concept code developer)
- * @Author3 Luka Golinar (web interface implementation)
+ * @Author3 Luka Golinar (functioanlity of web interface)
  * @Author4 Peter Miklavcic (manpage and code review)
  * Contact: <cim.martin@gmail.com>, <luka.golinar@gmail.com>
  *
@@ -469,12 +469,14 @@ int main(int argc, char *argv[]) {
         measured_data_amplitude[ 1 ] = mean_array_column( data_for_avreaging, averaging_num, 1 );
         measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
 
-        printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
+        if (transientEffectFlag >= (stepsTE + 1)) {
+            printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
 
-        /* Writing data into files */
-        fprintf(file_frequency, "%.5f\n", frequency[fr]);
-        fprintf(file_amplitude, "%.5f\n", measured_data_amplitude[1]);
-        fprintf(file_phase, "%.5f\n", measured_data_phase[1]);
+            /* Writing data into files */
+            fprintf(file_frequency, "%.5f\n", frequency[fr]);
+            fprintf(file_amplitude, "%.5f\n", measured_data_amplitude[1]);
+            fprintf(file_phase, "%.5f\n", measured_data_phase[1]);
+        }
 
         
 
