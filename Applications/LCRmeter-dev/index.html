@@ -2039,7 +2039,9 @@
     var hide_channel_lcr = $('#btn_ch1');
     hide_channel_lcr.data('checked', false);
 
-
+    /* Show tittle for X and Y axis */
+    change_Measure = 1;
+    params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
 
     /* Send params to C controller */
     sendParams();
