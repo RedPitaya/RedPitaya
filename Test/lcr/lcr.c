@@ -802,6 +802,13 @@ int main(int argc, char *argv[]) {
 
     } // function step loop ends here
 
+    /* Setting amplitude to 0V - turning off the output. */
+    awg_param_t params;
+    /* Prepare data buffer (calculate from input arguments) */
+    synthesize_signal( 0, 1000, type, endfreq, data, &params );
+    /* Write the data to the FPGA and set FPGA AWG state machine */
+    write_data_fpga( ch, data, &params );
+
     /** User is inquired to correcty set the connections. */
     /*
     if (inquire_user_wait() < 0) {

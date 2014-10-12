@@ -487,6 +487,13 @@ int main(int argc, char *argv[]) {
     fclose(file_phase);
     fclose(file_amplitude);
     
+    /* Setting amplitude to 0V - turning off the output. */
+    awg_param_t params;
+    /* Prepare data buffer (calculate from input arguments) */
+    synthesize_signal( 0, 1000, type, endfreq, data, &params );
+    /* Write the data to the FPGA and set FPGA AWG state machine */
+    write_data_fpga( ch, data, &params );
+
     /** All's well that ends well. */
     return 1;
 }
