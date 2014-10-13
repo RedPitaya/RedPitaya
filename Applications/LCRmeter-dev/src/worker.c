@@ -323,7 +323,7 @@ void *rp_osc_worker_thread(void *args)
             snprintf(im, 10, "%f", lcr_load_im);
             snprintf(calib, 1, "%f", lcr_calibration);
             
-            strcpy(command, "/opt/bin/lcr 1 ");
+            strcpy(command, "/opt/www/apps/lcr_meter/lcr 1 ");
             strcat(command, amp);
             strcat(command, " ");
 
@@ -399,7 +399,7 @@ void *rp_osc_worker_thread(void *args)
 
             char command[100];
             
-            strcpy(command, "/opt/bin/lcr 1 "); 
+            strcpy(command, "/opt/www/apps/lcr_meter/lcr 1 "); 
             
             strcat(command, amp);
             strcat(command, " ");
@@ -777,15 +777,10 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
     if(rp_get_params_lcr(0) == -1){
 
         for(out_idx=0; out_idx < counter; out_idx++) {
-
             cha_s[out_idx] = 0;
-     
             chb_s[out_idx] = 0;
-
             t[out_idx] = out_idx;
         }
-
-    
     }else{
 
 
