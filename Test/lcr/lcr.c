@@ -377,12 +377,14 @@ int main(int argc, char *argv[]) {
     int      shaping = 0; // parameter initialized for generator functionality
     int transientEffectFlag = 1;
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
+    int TE_step_counter;
     int progress_int = 0;
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
         stepsTE = steps;
     }
+    TE_step_counter = stepsTE;
     
     /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
     if ( scale_type ) {
@@ -642,32 +644,41 @@ int main(int argc, char *argv[]) {
                 Frequency[ fr ] = (int)(start_frequency + ( frequency_step * fr ));
             }
 
+
+
             // eliminates transient effect that spoiles the measuremets
-            // it outputs frequencies below start frequency and increses it to the strat frequency
-            if (sweep_function == 1 && transientEffectFlag <= stepsTE){
-                if (transientEffectFlag < stepsTE){
-                    Frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*transientEffectFlag/stepsTE) ) ;
-                    //printf("freq = %f\n",Frequency[ fr ]);
+            // it outputs frequencies below start frequency and increses 
+            // it to the strat frequency
+            if (sweep_function == 1 && transientEffectFlag == 1){
+                if (TE_step_counter > 0){
+                    Frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*TE_step_counter/stepsTE) );
+                    TE_step_counter--;
                 }
-                else if (transientEffectFlag == stepsTE){
+                if (TE_step_counter == 0){
                     fr = 0;
                     Frequency[fr] = start_frequency;
+                    transientEffectFlag = 0;
                 }
-                transientEffectFlag++;
                 
             }
+
             //measurement sweep transient effect
-            else if(transientEffectFlag == 1 && sweep_function == 0){
-                //printf("stepsTE = %d\n",stepsTE); 
-                measurement_sweep = 10;
-                transientEffectFlag = 0;
-                
-                //printf(" measurement sweep = %f\n",measurement_sweep);
+            else if(sweep_function == 0 && transientEffectFlag == 1 ){
+
+                //printf("stepsTE = %d\n",stepsTE);
+                if (TE_step_counter > 0){
+                    measurement_sweep = TE_step_counter;
+                    TE_step_counter = 0;
+                }
+                else if (TE_step_counter == 0){
+                    transientEffectFlag = 0;
+                    measurement_sweep = measurement_sweep_user_defined;
+                    //printf(" measurement sweep = %f\n",measurement_sweep);
+                }
             }
-            else if ((transientEffectFlag == 0) && (sweep_function == 0)){
-                stepsTE = 0;
-                measurement_sweep = measurement_sweep_user_defined;
-            }
+
+
+            
             
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
@@ -679,7 +690,8 @@ int main(int argc, char *argv[]) {
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga( ch, data, &params );
 
-            /* if measurement sweep selected, only one calibration measurement is made 
+            /* TODO calibration sequence parameters adjustments
+            // if measurement sweep selected, only one calibration measurement is made 
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
                 if (h == 0 || h == 1|| h == 2) {
                     measurement_sweep = 1;
@@ -696,21 +708,37 @@ int main(int argc, char *argv[]) {
             */
             for (i = 0; i < measurement_sweep; i++ ) {
                 
-
                 /*Opens, empties a file and inuts the prorgress number*/
-                if(sweep_function == 0 && stepsTE == 0){
-                    progress_int = (int)(100*(i/(measurement_sweep-1)));
-                } 
-                else if(sweep_function == 1){
-                    progress_int = (int)(100*((fr+transientEffectFlag)/(frequency_steps_number+stepsTE-1)));
+                if(sweep_function == 0 ){
+                    //printf("transient flag = %d\n", transientEffectFlag);
+                    if(transientEffectFlag == 1){
+                        progress_int = (int)(100*(  ( i)   / (measurement_sweep + stepsTE -1)));
+                        
+                    }
+                    else if (transientEffectFlag == 0){
+                        progress_int = (int)(100*( (i + stepsTE)  / (measurement_sweep + stepsTE - 1 )));
+                    }
                 }
+                else if(sweep_function == 1 ){
+                    if (TE_step_counter > 0){
+                        progress_int = (int)(100*(( stepsTE - TE_step_counter )/( frequency_steps_number + stepsTE - 1 )) );
+                    }
+                    else  if (TE_step_counter < 1){
+                        progress_int = (int)(100*((fr + stepsTE  )/( frequency_steps_number + stepsTE - 1 )) );
+                    }
+
+                }
+
+                // writing data to a file
                 FILE *progress_file = fopen("/tmp/lcr_data/progress.txt", "w");
                 if (progress_int <= 100){
                     fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
-                    //printf(" progress: %d \n",progress_int );
+                   // printf(" progress: %d  \n",progress_int);
+                    
                     fclose(progress_file);
                 }
+                
                 
                 
                 for ( i1 = 0; i1 < averaging_num; i1++ ) {

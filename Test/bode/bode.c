@@ -306,11 +306,14 @@ int main(int argc, char *argv[]) {
     int       shaping = 0; // parameter initialized for generator functionality
     int transientEffectFlag = 1;
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
+    int TE_step_counter;
+    int progress_int;
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
         stepsTE = steps;
     }
+    TE_step_counter = stepsTE ;
 
     /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
     if(scale_type) {
@@ -389,18 +392,38 @@ int main(int argc, char *argv[]) {
 
         //this section eliminates transient effect that spoiles the measuremets
         // it outputs frequencies below start frequency and increses it to the strat frequency
-        if ( transientEffectFlag <= stepsTE){
-            if (transientEffectFlag < stepsTE){
-                frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*transientEffectFlag/stepsTE) ) ;
-                //printf("freq = %f\n",frequency[ fr ]);
+        if (transientEffectFlag == 1){
+            if (TE_step_counter > 0){
+                frequency[fr] = (int)(start_frequency - (start_frequency/2) + ((start_frequency/2)*TE_step_counter/stepsTE) );
+                TE_step_counter--;
             }
-            else if (transientEffectFlag == stepsTE){
+            if (TE_step_counter == 0){
                 fr = 0;
                 frequency[fr] = start_frequency;
+                transientEffectFlag = 0;
             }
-            transientEffectFlag++;
             
         }
+
+
+        if(transientEffectFlag == 1){
+            //printf("tran flag = %d\n", transientEffectFlag);
+            progress_int = (int)100*(stepsTE - TE_step_counter)/(steps+stepsTE-1);
+        }
+        else {
+            progress_int = (int)100*(stepsTE + fr)/(steps+stepsTE-1);
+        }
+        
+        if (progress_int <= 100){
+            FILE *progress_file = fopen("/tmp/bode_data/progress.txt", "w");
+            //printf("progress = %d\n", progress_int);
+            fprintf(progress_file , "%d \n" ,  progress_int );
+            fclose(progress_file);
+        }
+
+
+
+
 
         w_out = frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
