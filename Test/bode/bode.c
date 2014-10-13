@@ -492,7 +492,7 @@ int main(int argc, char *argv[]) {
         measured_data_amplitude[ 1 ] = mean_array_column( data_for_avreaging, averaging_num, 1 );
         measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
 
-        if (transientEffectFlag >= (stepsTE + 1)) {
+        if (transientEffectFlag == 0) {
             printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
 
             /* Writing data into files */
