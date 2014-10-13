@@ -1,6 +1,6 @@
 {
-    "name": "LCR meter",
-    "version": "0.01-1",
+    "name": "lcr_meter",
+    "version": "0.93-1",
     "revision": "1",
-    "description": "LCR meter capabe of measuring more than 10 impedance parameters."
+    "description": "Inductance, capacitance and resistance measurement system. Requires a shunt resistor. Guide available at: http://goo.gl/2lnbeN"
 }
