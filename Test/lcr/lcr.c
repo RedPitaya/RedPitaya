@@ -377,6 +377,7 @@ int main(int argc, char *argv[]) {
     int      shaping = 0; // parameter initialized for generator functionality
     int transientEffectFlag = 1;
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
+    int progress_int = 0;
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
@@ -395,6 +396,7 @@ int main(int argc, char *argv[]) {
     }
     /// Based on which sweep mode is selected some for loops have to iterate only once
     if ( sweep_function ){ // Frequency sweep
+        measurement_sweep = 1;
 		measurement_sweep_user_defined = 1;
         frequency_steps_number = steps;
         if (steps==1) { // Preventing division by zero.
@@ -621,6 +623,7 @@ int main(int argc, char *argv[]) {
     * there are 4 sorts of measurement purposes , 3 pof them reprisent calibration sequence
     * [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment  
     */
+    //FILE *progress_file = fopen("/tmp/lcr_data/progress.txt", "w");
     for (h = 0; h <= 3 ; h++) {
         if (!calib_function) {
             h = 3;
@@ -653,11 +656,17 @@ int main(int argc, char *argv[]) {
                 transientEffectFlag++;
                 
             }
+            //measurement sweep transient effect
             else if(transientEffectFlag == 1 && sweep_function == 0){
-                if (fr == 1){
-                    Frequency[ fr ] = Frequency[ 0 ];
-                    transientEffectFlag = 0;
-                }
+                //printf("stepsTE = %d\n",stepsTE); 
+                measurement_sweep = 10;
+                transientEffectFlag = 0;
+                
+                //printf(" measurement sweep = %f\n",measurement_sweep);
+            }
+            else if ((transientEffectFlag == 0) && (sweep_function == 0)){
+                stepsTE = 0;
+                measurement_sweep = measurement_sweep_user_defined;
             }
             
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
@@ -670,7 +679,7 @@ int main(int argc, char *argv[]) {
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga( ch, data, &params );
 
-            /* if measurement sweep selected, only one calibration measurement is made */
+            /* if measurement sweep selected, only one calibration measurement is made 
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
                 if (h == 0 || h == 1|| h == 2) {
                     measurement_sweep = 1;
@@ -681,11 +690,28 @@ int main(int argc, char *argv[]) {
             }
             else if (sweep_function == 1) { // sweep_function == 1 (frequency sweep)
                 measurement_sweep = 1; //when frequency sweep selected only one measurement for each fr is made
-            }
+            }*/
             /*
             * Measurement sweep defined by user, if frequency sweep is used, the for loop goes through only once
             */
             for (i = 0; i < measurement_sweep; i++ ) {
+                
+
+                /*Opens, empties a file and inuts the prorgress number*/
+                if(sweep_function == 0 && stepsTE == 0){
+                    progress_int = (int)(100*(i/(measurement_sweep-1)));
+                } 
+                else if(sweep_function == 1){
+                    progress_int = (int)(100*((fr+transientEffectFlag)/(frequency_steps_number+stepsTE-1)));
+                }
+                FILE *progress_file = fopen("/tmp/lcr_data/progress.txt", "w");
+                if (progress_int <= 100){
+                    fprintf(progress_file , "%d \n" ,  progress_int );
+                    //system("clear");
+                    //printf(" progress: %d \n",progress_int );
+                    fclose(progress_file);
+                }
+                
                 
                 for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
