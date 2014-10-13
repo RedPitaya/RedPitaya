@@ -186,9 +186,9 @@ int rp_osc_get_signals(float ***signals, int *sig_idx)
         return -1;
     }
 
-    memcpy(&s[0][0], &rp_osc_signals[0][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&s[1][0], &rp_osc_signals[1][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&s[2][0], &rp_osc_signals[2][0], sizeof(float)*SIGNAL_LENGTH);
+    memcpy(&s[0][0], &rp_osc_signals[0][0], sizeof(float)*((int)rp_get_params_bode(5)));
+    memcpy(&s[1][0], &rp_osc_signals[1][0], sizeof(float)*((int)rp_get_params_bode(5)));
+    memcpy(&s[2][0], &rp_osc_signals[2][0], sizeof(float)*((int)rp_get_params_bode(5)));
 
     *sig_idx = rp_osc_sig_last_idx;
 
@@ -203,9 +203,9 @@ int rp_osc_set_signals(float **source, int index)
 {
     pthread_mutex_lock(&rp_osc_sig_mutex);
 
-    memcpy(&rp_osc_signals[0][0], &source[0][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&rp_osc_signals[1][0], &source[1][0], sizeof(float)*SIGNAL_LENGTH);
-    memcpy(&rp_osc_signals[2][0], &source[2][0], sizeof(float)*SIGNAL_LENGTH);
+    memcpy(&rp_osc_signals[0][0], &source[0][0], sizeof(float)*((int)rp_get_params_bode(5)));
+    memcpy(&rp_osc_signals[1][0], &source[1][0], sizeof(float)*((int)rp_get_params_bode(5)));
+    memcpy(&rp_osc_signals[2][0], &source[2][0], sizeof(float)*((int)rp_get_params_bode(5)));
     rp_osc_sig_last_idx = index;
 
     rp_osc_signals_dirty = 1;
@@ -264,7 +264,7 @@ void *rp_osc_worker_thread(void *args)
             float read_avg = rp_get_params_bode(2);
             float read_dc_bias = rp_get_params_bode(3);
             float read_start_freq = rp_get_params_bode(4);
-            //float read_counts = rp_get_params_bode(5);
+            float read_counts = rp_get_params_bode(5);
             float read_scale = rp_get_params_bode(6);
 
             char amp[5];
@@ -272,14 +272,16 @@ void *rp_osc_worker_thread(void *args)
             char dc_bias[5];
             char s_freq[20];
             char scale[5];
+            char counts[5];
 
             snprintf(amp, 5, "%f", read_amp);
             snprintf(avg, 5, "%f", read_avg);
             snprintf(dc_bias, 5, "%f", read_dc_bias);
             snprintf(s_freq, 20, "%f", read_start_freq);
             snprintf(scale, 5, "%f", read_scale);
+            snprintf(counts, 5, "%f", read_counts);
 
-            strcpy(command, "/opt/bin/bode 1 ");
+            strcpy(command, "/opt/www/apps/bode_plotter/bode 1 ");
             
             strcat(command, amp);
             strcat(command, " ");
@@ -288,7 +290,9 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " ");
 
             strcat(command, avg);
-            strcat(command, " 100 ");
+            strcat(command, " ");
+            strcat(command, counts);
+            strcat(command, " ");
 
             strcat(command, s_freq);
             strcat(command, " 100000 ");
@@ -518,12 +522,12 @@ void *rp_osc_worker_thread(void *args)
                 long_acq_last_wr_ptr = long_acq_last_wr_ptr % OSC_FPGA_SIG_LEN;
 
                 if(round((t_acq / (c_osc_fpga_smpl_period * dec_factor) /
-                         (SIGNAL_LENGTH-1))) < 0)
+                         (((int)rp_get_params_bode(5))-1))) < 0)
                     long_acq_step = 1;
                 else
                     long_acq_step = 
                         round((t_acq / (c_osc_fpga_smpl_period * dec_factor)) / 
-                              (SIGNAL_LENGTH-1));
+                              (((int)rp_get_params_bode(5))-1));
 
                 rp_osc_meas_clear(&ch1_meas);
                 rp_osc_meas_clear(&ch2_meas);
@@ -567,7 +571,7 @@ void *rp_osc_worker_thread(void *args)
                                              curr_params[GEN_DC_OFFS_2].value);
 
             /* Acquisition over, start one more! */
-            if(long_acq_idx >= SIGNAL_LENGTH-1) {
+            if(long_acq_idx >= ((int)rp_get_params_bode(5))-1) {
                 long_acq_idx = 0;
 
                 osc_fpga_get_wr_ptr(NULL, &long_acq_init_trig_ptr);
@@ -605,7 +609,7 @@ void *rp_osc_worker_thread(void *args)
             rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
             
             rp_osc_set_meas_data(ch1_meas, ch2_meas);
-            rp_osc_set_signals(rp_tmp_signals, SIGNAL_LENGTH-1);
+            rp_osc_set_signals(rp_tmp_signals, ((int)rp_get_params_bode(5))-1);
         } else {
             rp_osc_set_signals(rp_tmp_signals, long_acq_idx);
         }
@@ -635,12 +639,12 @@ int rp_osc_prepare_time_vector(float **out_signal, int dec_factor,
         t_stop  = OSC_FPGA_SIG_LEN * smpl_period;
     }
 
-    t_step = (t_stop - t_start) / (SIGNAL_LENGTH-1);
+    t_step = (t_stop - t_start) / (((int)rp_get_params_bode(5))-1);
     idx_step = (int)(ceil(t_step/smpl_period));
     if(idx_step > 8)
         idx_step = 8;
 
-    for(out_idx = 0, in_idx = 0, t_curr=t_start; out_idx < SIGNAL_LENGTH; 
+    for(out_idx = 0, in_idx = 0, t_curr=t_start; out_idx < ((int)rp_get_params_bode(5)); 
         out_idx++, t_curr += t_step, in_idx += idx_step) {
         s[out_idx] = t_curr * t_unit_factor;
     }
@@ -671,7 +675,7 @@ int bode_start_measure(float **cha_signal, int *in_cha_signal,
     /* We have data aquisition */
     if(rp_get_params_bode(0) != 0){
 
-        for(out_idx = 0; out_idx < SIGNAL_LENGTH; out_idx++){
+        for(out_idx = 0; out_idx < ((int)rp_get_params_bode(5)); out_idx++){
             t[out_idx] = out_idx;
             cha_s[out_idx] = 1;
             chb_s[out_idx] = -1;
@@ -680,7 +684,8 @@ int bode_start_measure(float **cha_signal, int *in_cha_signal,
     }
      
     else{
-
+        
+        counter = 0;
         /* Opening files */
         FILE *file_frequency = fopen("/tmp/bode_data/data_frequency", "r");
         FILE *file_amplitude = fopen("/tmp/bode_data/data_amplitude", "r");
@@ -707,7 +712,7 @@ int bode_start_measure(float **cha_signal, int *in_cha_signal,
             p_counter++;
         }
 
-        for(out_idx = 0; out_idx < SIGNAL_LENGTH; out_idx++){
+        for(out_idx = 0; out_idx < counter; out_idx++){
 
             t[out_idx] = frequency[out_idx];
             
@@ -728,7 +733,7 @@ int bode_start_measure(float **cha_signal, int *in_cha_signal,
     
 
     
-    counter = 0;
+    
     return 0;
 }
 
@@ -765,7 +770,7 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
 
     in_idx = *next_wr_ptr;
 
-    for(; (next_out_idx < SIGNAL_LENGTH); next_out_idx++, 
+    for(; (next_out_idx < ((int)rp_get_params_bode(5))); next_out_idx++, 
             in_idx += step_wr_ptr) {
         int curr_ptr;
         int diff_ptr;

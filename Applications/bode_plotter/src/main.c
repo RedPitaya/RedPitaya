@@ -852,13 +852,13 @@ int rp_set_params(rp_app_params_t *p, int len)
         t_start_idx = round(t_start / smpl_period);
         t_stop_idx  = round(t_stop / smpl_period);
 
-        if((((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1))) >= 1) {
-            t_step_idx = ceil((t_stop_idx-t_start_idx)/(float)(SIGNAL_LENGTH-1));
-            int max_step = OSC_FPGA_SIG_LEN/SIGNAL_LENGTH;
+        if((((t_stop_idx-t_start_idx)/(float)(((int)rp_get_params_bode(5))-1))) >= 1) {
+            t_step_idx = ceil((t_stop_idx-t_start_idx)/(float)(((int)rp_get_params_bode(5))-1));
+            int max_step = OSC_FPGA_SIG_LEN/((int)rp_get_params_bode(5));
             if(t_step_idx > max_step)
                 t_step_idx = max_step;
 
-            t_stop = t_start + SIGNAL_LENGTH * t_step_idx * smpl_period;
+            t_stop = t_start + ((int)rp_get_params_bode(5)) * t_step_idx * smpl_period;
         }
 
         TRACE("PC: t_stop (rounded) = %.9f\n", t_stop);
@@ -965,12 +965,12 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
         return -1;
 
     *sig_num = SIGNALS_NUM;
-    *sig_len = SIGNAL_LENGTH;
+    *sig_len = ((int)rp_get_params_bode(5));
 
     ret_val = rp_osc_get_signals(s, &sig_idx);
 
     /* Not finished signal */
-    if((ret_val != -1) && sig_idx != SIGNAL_LENGTH-1) {
+    if((ret_val != -1) && sig_idx != ((int)rp_get_params_bode(5))-1) {
         return -2;
     }
     /* Old signal */
@@ -994,12 +994,12 @@ int rp_create_signals(float ***a_signals)
         s[i] = NULL;
 
     for(i = 0; i < SIGNALS_NUM; i++) {
-        s[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
+        s[i] = (float *)malloc(((int)rp_get_params_bode(5)) * sizeof(float));
         if(s[i] == NULL) {
             rp_cleanup_signals(a_signals);
             return -1;
         }
-        memset(&s[i][0], 0, SIGNAL_LENGTH * sizeof(float));
+        memset(&s[i][0], 0, ((int)rp_get_params_bode(5)) * sizeof(float));
     }
     *a_signals = s;
 
@@ -1197,7 +1197,6 @@ float rp_gen_limit_freq(float freq, float gen_type)
 
     return freq;
 }
-
 
 float rp_get_params_bode(int pos){
   switch(pos){
