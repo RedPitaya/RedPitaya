@@ -308,6 +308,8 @@ int main(int argc, char *argv[]) {
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
     int TE_step_counter;
     int progress_int;
+    char command[70];
+    char hex[45];
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
@@ -328,7 +330,9 @@ int main(int argc, char *argv[]) {
     /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
     float *Amplitude                = (float *)malloc( (averaging_num + 1) * sizeof(float));
+    float *Amplitude_output         = (float *)malloc( (steps + 1) * sizeof(float));
     float *Phase                    = (float *)malloc( (averaging_num + 1) * sizeof(float));
+    float *Phase_output             = (float *)malloc( (steps + 1) * sizeof(float));
     float **data_for_avreaging      = create_2D_table_size((averaging_num + 1), 2 );
     float *measured_data_amplitude  = (float *)malloc((2) * sizeof(float) );
     float *measured_data_phase      = (float *)malloc((2) * sizeof(float) );
@@ -416,6 +420,11 @@ int main(int argc, char *argv[]) {
         
         if (progress_int <= 100){
             FILE *progress_file = fopen("/tmp/bode_data/progress.txt", "w");
+            sprintf(hex, "%x", (int)(255 - (255*progress_int/100)));
+            strcpy(command, "/opt/bin/monitor 0x40000030 0x" );
+            strcat(command, hex);
+            
+            system(command);
             //printf("progress = %d\n", progress_int);
             fprintf(progress_file , "%d \n" ,  progress_int );
             fclose(progress_file);
@@ -493,7 +502,10 @@ int main(int argc, char *argv[]) {
         measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
 
         if (transientEffectFlag == 0) {
-            printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
+            Amplitude_output[fr] = measured_data_amplitude[ 1 ];
+            Phase_output[fr] = measured_data_phase[ 1 ];
+
+            //printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
 
             /* Writing data into files */
             fprintf(file_frequency, "%.5f\n", frequency[fr]);
@@ -517,6 +529,11 @@ int main(int argc, char *argv[]) {
     /* Write the data to the FPGA and set FPGA AWG state machine */
     write_data_fpga( ch, data, &params );
 
+
+    for (int po = 0; po < steps; ++po)
+    {
+        printf("%.2f    %.5f    %.5f\n", frequency[po],Phase_output[po], Amplitude_output[ po ]);
+    }
     /** All's well that ends well. */
     return 1;
 }
