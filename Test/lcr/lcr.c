@@ -379,6 +379,8 @@ int main(int argc, char *argv[]) {
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
     int TE_step_counter;
     int progress_int = 0;
+    char command[70];
+    char hex[45];
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
@@ -712,7 +714,7 @@ int main(int argc, char *argv[]) {
                 if(sweep_function == 0 ){
                     //printf("transient flag = %d\n", transientEffectFlag);
                     if(transientEffectFlag == 1){
-                        progress_int = (int)(100*(  ( i)   / (measurement_sweep + stepsTE -1)));
+                        progress_int = (int)(100*(  ( i)   / (measurement_sweep_user_defined + stepsTE -1)));
                         
                     }
                     else if (transientEffectFlag == 0){
@@ -730,11 +732,18 @@ int main(int argc, char *argv[]) {
                 }
 
                 // writing data to a file
-                FILE *progress_file = fopen("/tmp/lcr_data/progress.txt", "w");
+                FILE *progress_file = fopen("/tmp/progress.txt", "w");
                 if (progress_int <= 100){
                     fprintf(progress_file , "%d \n" ,  progress_int );
+
+                    sprintf(hex, "%x", (int)(255 - (255*progress_int/100)));
+                    strcpy(command, "/opt/bin/monitor 0x40000030 0x" );
+                    strcat(command, hex);
+                    
+                    system(command);
+                    fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
-                   // printf(" progress: %d  \n",progress_int);
+                    //printf(" progress: %d  \n",progress_int);
                     
                     fclose(progress_file);
                 }
