@@ -942,18 +942,22 @@
    // $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
   
   
-  if(flag_graph==1)
+  if(flag_graph == 1)
 	{
-		var di=document.getElementById("apply_Yaxis").selectedIndex;
+		var di = document.getElementById("apply_Yaxis").selectedIndex;
 		var ytitl=document.getElementById("apply_Yaxis").options[di].text;
+
 		$('#ytitle').text(ytitl);
-			var id=document.getElementById("apply_Xaxis").selectedIndex;
-		var xtitl=document.getElementById("apply_Xaxis").options[id].text;
+
+		var id = document.getElementById("apply_Xaxis").selectedIndex;
+		var xtitl = document.getElementById("apply_Xaxis").options[id].text;
+
 		$('#xtitle').text(xtitl);
-		flag_graph=0;
+
+		flag_graph = 0;
 	}
 	
-	if(flag_table==1)
+	if(flag_table == 1)
 	{
 		var i1 = document.getElementById("column_one").selectedIndex;
 		var i2 = document.getElementById("column_two").selectedIndex;
@@ -1875,11 +1879,11 @@ function startMeasure(){
   }
 
   /* End function if input error */
-    if(document.getElementById('gen_amp').style.borderColor == "red" ||
-      document.getElementById('gen_avg').style.borderColor == "red" ||
-      document.getElementById('gen_dc_bias').style.borderColor == "red" ||
-      document.getElementById('gen_freq').borderColor == "red" || 
-      document.getElementById('gen_counts').borderColor == "red" ) {
+  if(document.getElementById('gen_amp').style.borderColor == "red" ||
+    document.getElementById('gen_avg').style.borderColor == "red" ||
+    document.getElementById('gen_dc_bias').style.borderColor == "red" ||
+    document.getElementById('gen_freq').style.borderColor == "red" || 
+    document.getElementById('gen_counts').style.borderColor == "red") {
 
         return;
     }
@@ -1894,7 +1898,7 @@ function startMeasure(){
 
   params.local.bode_start_measure = 1;
 
-  lcr_modal.showPleaseWait();
+  bode_modal.showPleaseWait();
   var hide_channel_bode1 = $('#btn_ch1');
   hide_channel_bode1.data('checked', false);
 
@@ -2103,6 +2107,7 @@ function changeData(){
             </div>
           </div>
         </div>
+
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2114,14 +2119,16 @@ function changeData(){
           <div id="plot_meas" class="panel-collapse collapse">
             <div class="panel-body">
               <form class="form-horizontal" role="form" onsubmit="return false;">
-			    <div class="form-group">
-				  <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
-			      <div class="col-xs-4 col-sm-5">
-                    <select class="form-control" id="apply_Xaxis">
-                      <option value="0">Frequency</option>
-                    </select>
-                  </div>
-				</div>
+			    
+          <div class="form-group">
+				    <label for="gen_Xaxis" class="col-xs-4 control-label">X Axis:</label>
+	            <div class="col-xs-4 col-sm-5">
+                <select class="form-control" id="apply_Xaxis">
+                  <option value="0">Frequency</option>
+                </select>
+              </div>
+				  </div>
+
 				<div class="form-group">
 				  <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
 			    <div class="col-xs-4 col-sm-5">
