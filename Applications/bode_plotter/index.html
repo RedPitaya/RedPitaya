@@ -928,6 +928,8 @@
   }
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
+
+
     if(params.local.bode_start_measure == 0){
       bode_modal.hidePleaseWait();
       $('#btn_ch1').data('checked', true);
@@ -954,9 +956,10 @@
 
 		$('#xtitle').text(xtitl);
 
-		flag_graph = 0;
+		//flag_graph = 0;
 	}
 	
+  /*
 	if(flag_table == 1)
 	{
 		var i1 = document.getElementById("column_one").selectedIndex;
@@ -976,6 +979,8 @@
 		
 		flag_table=0;
 	}
+  */
+
   }
   
   function isParamChanged() {
@@ -2146,7 +2151,7 @@ function changeData(){
             </div>
           </div>
         </div>
-		
+		<!--
 		<div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -2228,6 +2233,8 @@ function changeData(){
             </div>
           </div>
         </div>
+
+        -->
         <div hidden class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
