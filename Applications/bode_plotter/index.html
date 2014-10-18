@@ -48,8 +48,8 @@
   var plot_options = {
     colors: ['#3276B1', '#D2322D', '#009900'],    // channel1, channel2, trigger line
     lines: { lineWidth: 1 },
-    selection: { mode: 'xy' },
-    zoom: { interactive: true, trigger: null },
+    selection: { mode: null },
+    zoom: { interactive: false, trigger: null },
     xaxis: { min: xmin, max: xmax },
     grid: { borderWidth: 0 },
     legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
@@ -1566,6 +1566,7 @@
       yminrange *= 1000;
     }
 
+    /* Round ranges */
     $('#range_x').html(+(Math.round(xrange + "e+" + decimals) + "e-" + decimals) + ' ' + xunit);
     $('#range_y').html(Math.floor(yrange) + ' ' + yunit);
     
@@ -1901,7 +1902,16 @@ function startMeasure(){
   params.local.bode_counts = counts;
   params.local.bode_scale_type = scale;
 
+
+
   params.local.bode_start_measure = 1;
+
+  
+  $.extend(true, plot_options, {
+    lines: { show: false },
+    grid: { hooverable: true, clickable: true }
+  });
+  
 
   bode_modal.showPleaseWait();
   var hide_channel_bode1 = $('#btn_ch1');
@@ -1960,13 +1970,16 @@ function changeData(){
   <div class="container">
     <div class="row">
       <div id="btn_toolbar" class="col-xs-12">
+      <!--
         <button id="btn_autoscale_y" class="btn btn-primary btn-lg" data-autozoom="false" onclick="autoscaleY()">
           <span class="glyphicon glyphicon-resize-vertical"></span> Autoscale
         </button>
         <button class="btn btn-primary btn-lg" onclick="resetZoom()">
           <span class="glyphicon glyphicon-retweet"></span> Reset zoom
         </button>  
+        -->
         <div id="selzoompan" class="btn-group" data-toggle="buttons">
+          <!--
           <button id="btn_zoomin" class="btn btn-primary" onclick="selectTool.call(this, 'zoomin')" style="display: none">
             <span class="glyphicon glyphicon-zoom-in"></span>
           </button>
@@ -1979,7 +1992,7 @@ function changeData(){
           <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
             <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
           </button>
-
+          -->
         </div>
 
         
@@ -2003,6 +2016,7 @@ function changeData(){
           <div id="plot_holder"></div>
           <div id="xtitle"></div>
         </div>  
+        <!--
         <div class="table-holder well">
           <table id="table">
 		    <tr>
@@ -2013,6 +2027,7 @@ function changeData(){
       		</tr>
     	  </table><br>
         </div>
+        -->
       </div>  
       <div class="panel-group col-xs-12 col-sm-12 col-md-4" id="accordion">
         <div class="panel panel-default">
