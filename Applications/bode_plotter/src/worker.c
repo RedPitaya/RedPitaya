@@ -27,13 +27,14 @@
 pthread_t *rp_osc_thread_handler = NULL;
 void *rp_osc_worker_thread(void *args);
 
+
 pthread_mutex_t       rp_osc_ctrl_mutex = PTHREAD_MUTEX_INITIALIZER;
 rp_osc_worker_state_t rp_osc_ctrl;
 rp_app_params_t       *rp_osc_params = NULL;
 int                   rp_osc_params_dirty;
-int                   rp_osc_params_fpga_update;
+int                   rp_osc_params_fpga_update; //LukaG?
 
-pthread_mutex_t       rp_osc_sig_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t       rp_osc_sig_mutex = PTHREAD_MUTEX_INITIALIZER;//Worker mutex
 float               **rp_osc_signals;
 int                   rp_osc_signals_dirty = 0;
 int                   rp_osc_sig_last_idx = 0;
@@ -58,41 +59,53 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
     rp_osc_params_dirty       = 0;
     rp_osc_params_fpga_update = 0;
 
+    /* First copy of main params from main.c */
     rp_copy_params(params, (rp_app_params_t **)&rp_osc_params);
 
+    /* First cleans up the params, case mem is already allocated */
     rp_cleanup_signals(&rp_osc_signals);
+    /* Creates a double dimension vector with 3 values - s[i], where i is from 0 - 2 */
     if(rp_create_signals(&rp_osc_signals) < 0)
         return -1;
-
+    /* Same for tmp_signals */
     rp_cleanup_signals(&rp_tmp_signals);
     if(rp_create_signals(&rp_tmp_signals) < 0) {
         rp_cleanup_signals(&rp_osc_signals);
         return -1;
     }
 
+    /* cleans up FPGA memory buffer, if -1, we stop. */
     if(osc_fpga_init() < 0) {
         rp_cleanup_signals(&rp_osc_signals);
         rp_cleanup_signals(&rp_tmp_signals);
         return -1;
     }
 
+    /* Calibration parameters */
     rp_calib_params = calib_params;
 
+    /* Signal pointer directly to memory for channel A and B */
     osc_fpga_get_sig_ptr(&rp_fpga_cha_signal, &rp_fpga_chb_signal);
 
+    /* Thread creation */
     rp_osc_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
+
     if(rp_osc_thread_handler == NULL) {
         rp_cleanup_signals(&rp_osc_signals);
         rp_cleanup_signals(&rp_tmp_signals);
         return -1;
     }
-    ret_val = 
-        pthread_create(rp_osc_thread_handler, NULL, rp_osc_worker_thread, NULL);
+
+    ret_val = pthread_create(rp_osc_thread_handler, NULL, rp_osc_worker_thread, NULL);
+    
+    /* If thread creation failed */
+
     if(ret_val != 0) {
         osc_fpga_exit();
 
         rp_cleanup_signals(&rp_osc_signals);
         rp_cleanup_signals(&rp_tmp_signals);
+        
         fprintf(stderr, "pthread_create() failed: %s\n", 
                 strerror(errno));
         return -1;
@@ -107,12 +120,17 @@ int rp_osc_worker_exit(void)
 {
     int ret_val = 0; 
 
+    /* Change worker state to quite state */
     rp_osc_worker_change_state(rp_osc_quit_state);
+
     if(rp_osc_thread_handler) {
         ret_val = pthread_join(*rp_osc_thread_handler, NULL);
+        /* Free thread memory space */
         free(rp_osc_thread_handler);
+
         rp_osc_thread_handler = NULL;
     }
+
     if(ret_val != 0) {
         fprintf(stderr, "pthread_join() failed: %s\n", 
                 strerror(errno));
@@ -129,6 +147,8 @@ int rp_osc_worker_exit(void)
 
 
 /*----------------------------------------------------------------------------------*/
+
+/* This function just changes the worker state (To idle, for example)*/
 int rp_osc_worker_change_state(rp_osc_worker_state_t new_state)
 {
     if(new_state >= rp_osc_nonexisting_state)
@@ -141,6 +161,8 @@ int rp_osc_worker_change_state(rp_osc_worker_state_t new_state)
 
 
 /*----------------------------------------------------------------------------------*/
+
+/* This functions gets the current worker state */
 int rp_osc_worker_get_state(rp_osc_worker_state_t *state)
 {
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
@@ -156,7 +178,11 @@ int rp_osc_worker_update_params(rp_app_params_t *params, int fpga_update)
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
     rp_copy_params(params, (rp_app_params_t **)&rp_osc_params);
     rp_osc_params_dirty       = 1;
+
+    /* LG - FPGA TODO */
     rp_osc_params_fpga_update = fpga_update;
+
+    /* Name of idx at PARAMS_NUM is already NULL, why redefine it ? Error check -> Is it possible, to change the last param in worker? */
     rp_osc_params[PARAMS_NUM].name = NULL;
     rp_osc_params[PARAMS_NUM].value = -1;
 
@@ -166,6 +192,8 @@ int rp_osc_worker_update_params(rp_app_params_t *params, int fpga_update)
 
 
 /*----------------------------------------------------------------------------------*/
+
+/* No new signals are needed */
 int rp_osc_clean_signals(void)
 {
     pthread_mutex_lock(&rp_osc_sig_mutex);
@@ -176,10 +204,15 @@ int rp_osc_clean_signals(void)
 
 
 /*----------------------------------------------------------------------------------*/
+
+/* Copies the mem location of rp_sc_signals to arg[0] -- signals */
+
 int rp_osc_get_signals(float ***signals, int *sig_idx)
 {
     float **s = *signals;
     pthread_mutex_lock(&rp_osc_sig_mutex);
+
+    /* If new signals are avaliable */
     if(rp_osc_signals_dirty == 0) {
         *sig_idx = rp_osc_sig_last_idx;
         pthread_mutex_unlock(&rp_osc_sig_mutex);
@@ -190,6 +223,7 @@ int rp_osc_get_signals(float ***signals, int *sig_idx)
     memcpy(&s[1][0], &rp_osc_signals[1][0], sizeof(float)*((int)rp_get_params_bode(5)));
     memcpy(&s[2][0], &rp_osc_signals[2][0], sizeof(float)*((int)rp_get_params_bode(5)));
 
+    /* Index of newly copied params */
     *sig_idx = rp_osc_sig_last_idx;
 
     rp_osc_signals_dirty = 0;
@@ -199,10 +233,12 @@ int rp_osc_get_signals(float ***signals, int *sig_idx)
 
 
 /*----------------------------------------------------------------------------------*/
+
+/* Copies source to rp_osc_signals */
 int rp_osc_set_signals(float **source, int index)
 {
+    
     pthread_mutex_lock(&rp_osc_sig_mutex);
-
     memcpy(&rp_osc_signals[0][0], &source[0][0], sizeof(float)*((int)rp_get_params_bode(5)));
     memcpy(&rp_osc_signals[1][0], &source[1][0], sizeof(float)*((int)rp_get_params_bode(5)));
     memcpy(&rp_osc_signals[2][0], &source[2][0], sizeof(float)*((int)rp_get_params_bode(5)));
@@ -224,6 +260,8 @@ int rp_osc_set_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
 
 
 /*----------------------------------------------------------------------------------*/
+
+/* Main worker thread */
 void *rp_osc_worker_thread(void *args)
 {
     rp_osc_worker_state_t old_state, state;
@@ -252,7 +290,7 @@ void *rp_osc_worker_thread(void *args)
 
 
     while(1) {
-        /* update states - we save also old state to see if we need to reset
+        /* update states - we also save old state to see if we need to reset
          * FPGA 
          */
 
@@ -307,14 +345,18 @@ void *rp_osc_worker_thread(void *args)
         old_state = state;
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
+
+        /* If there are no new params */
         if(rp_osc_params_dirty) {
             rp_copy_params(rp_osc_params, (rp_app_params_t **)&curr_params);
             fpga_update = rp_osc_params_fpga_update;
 
             rp_osc_params_dirty = 0;
+
             dec_factor = 
                 osc_fpga_cnv_time_range_to_dec(curr_params[TIME_RANGE_PARAM].value);
             time_vect_update = 1;
+
 
             uint32_t fe_fsg1 = (curr_params[GAIN_CH1].value == 0) ?
                     rp_calib_params->fe_ch1_fs_g_hi :
@@ -328,6 +370,7 @@ void *rp_osc_worker_thread(void *args)
             ch2_max_adc_v =
                     osc_fpga_calc_adc_max_v(fe_fsg2, (int)curr_params[PRB_ATT_CH2].value);
         }
+
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
         /* request to stop worker thread, we will shut down */
@@ -348,9 +391,11 @@ void *rp_osc_worker_thread(void *args)
                             curr_params[EN_AVG_AT_DEC].value);
             /* Return calculated parameters to main module */
             rp_update_main_params(curr_params);
+            /* while(1) - loop until break */
             continue;
         }
         if(fpga_update) {
+            /* Reset write state machine? LG */
             osc_fpga_reset();
             if(osc_fpga_update_params((curr_params[TRIG_MODE_PARAM].value == 0),
                                       curr_params[TRIG_SRC_PARAM].value, 
@@ -359,7 +404,7 @@ void *rp_osc_worker_thread(void *args)
                                        * to use start GUI value (it was recalculated
                                        * correctly already in rp_osc_main() so we
                                        * can use it and be sure that all signal 
-                                       * (even if extended becuase of decimation
+                                       * (even if extended because of decimation
                                        * will be covered in the acquisition 
                                        */
                                       /*curr_params[TRIG_DLY_PARAM].value,*/
@@ -391,12 +436,14 @@ void *rp_osc_worker_thread(void *args)
             usleep(10000);
             continue;
         }
-
+        /* Time vector update? */
+        
         if(time_vect_update) {
             float unit_factor = 
                 rp_osc_get_time_unit_factor(curr_params[TIME_UNIT_PARAM].value);
             float t_acq = (curr_params[MAX_GUI_PARAM].value - 
                            curr_params[MIN_GUI_PARAM].value) / unit_factor;
+
 
             rp_osc_prepare_time_vector((float **)&rp_tmp_signals[0], 
                                        dec_factor,
