@@ -304,11 +304,13 @@ void *rp_osc_worker_thread(void *args)
             float read_start_freq = rp_get_params_bode(4);
             float read_counts = rp_get_params_bode(5);
             float read_scale = rp_get_params_bode(6);
+            float read_end_freq = rp_get_params_bode(9);
 
             char amp[5];
             char avg[5];
             char dc_bias[5];
             char s_freq[20];
+            char e_freq[20];
             char scale[5];
             char counts[5];
 
@@ -316,6 +318,7 @@ void *rp_osc_worker_thread(void *args)
             snprintf(avg, 5, "%f", read_avg);
             snprintf(dc_bias, 5, "%f", read_dc_bias);
             snprintf(s_freq, 20, "%f", read_start_freq);
+            snprintf(e_freq,20, "%f", read_end_freq);
             snprintf(scale, 5, "%f", read_scale);
             snprintf(counts, 5, "%f", read_counts);
 
@@ -333,7 +336,9 @@ void *rp_osc_worker_thread(void *args)
             strcat(command, " ");
 
             strcat(command, s_freq);
-            strcat(command, " 100000 ");
+            strcat(command, " ");
+            strcat(command, e_freq);
+            strcat(command, " ");
             strcat(command, scale);
             
             system(command);
@@ -437,7 +442,7 @@ void *rp_osc_worker_thread(void *args)
             continue;
         }
         /* Time vector update? */
-        
+
         if(time_vect_update) {
             float unit_factor = 
                 rp_osc_get_time_unit_factor(curr_params[TIME_UNIT_PARAM].value);

@@ -182,10 +182,14 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    Max value: +1000000
        *    Min value: +0 */
         "bode_start_f", 0, 1, 0, 0, 1000000},
+    { /* Start frequency parameter:
+       *    Max value: +1000000
+       *    Min value: +0 */
+        "bode_end_f", 1, 1, 0, 0, 1000000},
     { /* Bode counts:
        *    Max value: +1000000
        *    Min value: +0 */
-        "bode_counts", 25, 1, 0, 0, 1024},
+        "bode_counts", 1024, 1, 0, 0, 1024},
     { /* Parameter for selecting data plot:
        *    0 - Amplitude
        *    1 - Phase */
@@ -1218,6 +1222,8 @@ float rp_get_params_bode(int pos){
       return rp_main_params[BODE_SCALE_TYPE].value;
     case 8:
       return rp_main_params[BODE_DATA_PLOT].value;
+    case 9:
+      return rp_main_params[BODE_END_FREQ].value;
     default:
       return -1;
   }
