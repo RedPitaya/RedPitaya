@@ -1859,13 +1859,15 @@ function startMeasure(){
   document.getElementById('gen_dc_bias').style.borderColor = "#cccccc";
   document.getElementById('gen_freq').style.borderColor = "#cccccc";
   document.getElementById('gen_counts').style.borderColor = "#cccccc";
+  document.getElementById('gen_end_freq').style.borderColor = "#cccccc";
 
 
   /* Pulling data from input */
   var amp = parseLocalFloat(document.getElementById('gen_amp').value);
   var avg = parseLocalFloat(document.getElementById('gen_avg').value);
   var dc_bias = parseLocalFloat(document.getElementById('gen_dc_bias').value);
-  var frequncy = parseLocalFloat(document.getElementById('gen_freq').value);
+  var start_frequency = parseLocalFloat(document.getElementById('gen_freq').value);
+  var end_frequency = parseLocalFloat(document.getElementById('gen_end_freq').value);
   var counts = parseLocalFloat(document.getElementById('gen_counts').value);
   var scale = parseLocalFloat(document.getElementById('gen_scale').value);
 
@@ -1884,14 +1886,26 @@ function startMeasure(){
     document.getElementById('gen_counts').style.borderColor = "red";
   }
 
+  if(end_frequency < 0 || end_frequency > 100000000){
+    document.getElementById('gen_end_freq').style.borderColor = "red";
+  }
+
+  if(start_frequency < 0 || start_frequency > 100000000){
+    document.getElementById('gen_freq').style.borderColor = "red";
+  }
+
+  if(end_frequency < start_frequency){
+    document.getElementById('gen_freq').style.borderColor = "red";
+    document.getElementById('gen_end_freq').style.borderColor = "red";
+  }
   /* End function if input error */
   if(document.getElementById('gen_amp').style.borderColor == "red" ||
     document.getElementById('gen_avg').style.borderColor == "red" ||
     document.getElementById('gen_dc_bias').style.borderColor == "red" ||
     document.getElementById('gen_freq').style.borderColor == "red" || 
-    document.getElementById('gen_counts').style.borderColor == "red") {
-
-        return;
+    document.getElementById('gen_counts').style.borderColor == "red" ||
+    document.getElementById('gen_end_freq').style.borderColor == "red") {
+      return;
     }
 
   /* Setting params if argument check passed */
@@ -1901,7 +1915,7 @@ function startMeasure(){
   params.local.bode_start_f = frequncy;
   params.local.bode_counts = counts;
   params.local.bode_scale_type = scale;
-
+  params.local.bode_end_f  = end_frequency;
 
 
   params.local.bode_start_measure = 1;
@@ -2091,7 +2105,7 @@ function changeData(){
             <div class="panel-body">
 			  <form class="form-horizontal" role="form" onsubmit="return false;">
                   <div class="form-group">
-                    <label for="gen_fr_Sfreq" class="col-xs-4 control-label">Frequency:</label>
+                    <label for="gen_fr_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
                     <div class="col-xs-5">
                       <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_freq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
@@ -2100,6 +2114,18 @@ function changeData(){
                     </div>
                     <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
+
+                  <div class="form-group">
+                    <label for="gen_fr_Efreq" class="col-xs-4 control-label">End frequency:</label>
+                    <div class="col-xs-5">
+                      <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_end_freq">
+                      <span id="apply_gen_fs_Efreq" class="input-group-btn" style="display: none;">
+                        <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                      </span>
+                    </div>
+                    <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+                  </div>
+
 
 				          <div class="form-group">
                     <label for="gen_fr_step" class="col-xs-4 control-label">Counts:</label>
