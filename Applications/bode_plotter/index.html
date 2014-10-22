@@ -1912,10 +1912,10 @@ function startMeasure(){
   params.local.bode_amp = amp;
   params.local.bode_avg = avg;
   params.local.bode_dc_bias = dc_bias;
-  params.local.bode_start_f = frequncy;
+  params.local.bode_start_f = start_frequency;
   params.local.bode_counts = counts;
   params.local.bode_scale_type = scale;
-  params.local.bode_end_f  = end_frequency;
+  params.local.bode_end_f = end_frequency;
 
 
   params.local.bode_start_measure = 1;
@@ -2107,7 +2107,7 @@ function changeData(){
                   <div class="form-group">
                     <label for="gen_fr_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
                     <div class="col-xs-5">
-                      <input type="text" autocomplete="off" class="form-control" value="1000" id="gen_freq">
+                      <input type="text" autocomplete="off" class="form-control" value="200" id="gen_freq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
@@ -2123,7 +2123,7 @@ function changeData(){
                         <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
                       </span>
                     </div>
-                    <div id="freq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+                    <div id="Efreq_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
                   </div>
 
 
