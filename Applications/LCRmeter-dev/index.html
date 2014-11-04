@@ -96,20 +96,23 @@
   $(function() {
     
     // Show different buttons on touch screens    
-    if(window.ontouchstart === undefined) {
+    if(window.ontouchstart === undefined) { //If we aren't in a touch environment
       $('.btn-lg').removeClass('btn-lg');
       $('#accordion .btn, .modal .btn').addClass('btn-sm');
       $('#btn_zoompan').remove();
       $('#btn_zoomin, #btn_zoomout, #btn_pan').hide(); //comment .show()
     }
+
+    //Here we are in a tablet or a mobile phone
     else {
       update_interval = update_interval_mobdev;
       meas_panel_dec = meas_panel_dec_mobdev;
+      //Remove all these buttons, as the zooming and panning is done by finger
       $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
-      $('#btn_zoompan').hide(); //comment .show()
+      $('#btn_zoompan').show();
     }
     
-    // Add application ID in the message from modal popup
+    // Add application ID in the message from modal popup. If we started an app else-where
     $('.app-id').text(app_id);
     
     // Disable all controls until the params state is loaded for the first time 
@@ -118,6 +121,7 @@
     // Events binding for trigger controls
     
     $('#trigger_canvas').on({
+
       'mousedown touchstart': function(evt) {
       
         // Ignore the event if trigger source is External or mode is not Normal
@@ -190,7 +194,7 @@
       });
     
     // Events binding for range controls
-    
+    //If the users clicks on X +/-
     $('#range_x_minus, #range_x_plus').on('click', function() {
       var nearest = $(this).data('nearest');
       
@@ -225,7 +229,7 @@
         sendParams(true);
       }
     });
-    
+    //If the user clicks on  Y -/+
     $('#range_y_minus, #range_y_plus').on('click', function() {
       var nearest = $(this).data('nearest');
       
