@@ -331,7 +331,7 @@
             options.xaxes[0].max = dresult.datasets.params.xmax;
           }
           
-          // Redraw the plot using new datasets
+          // Redraw the plot using new datasets 
           plot.setData(filterData(datasets, plot.width()));
           plot.setupGrid();
           plot.draw();
@@ -383,7 +383,7 @@
       if(long_timeout_used) {
         use_long_timeout = false;
       }
-    
+      
     });
 
     //Autoscale every result we get (For LCR purposes)
@@ -550,12 +550,12 @@
         }      
       
         loadParams(dresult.datasets.params);
-        updateTriggerSlider();
-        
+                
         if(refresh_data && !downloading) {
           updateGraphData();
         } 
       }
+
       else if(dresult.status == 'ERROR') {
         showModalError((dresult.reason ? dresult.reason : 'Error while sending data (E1).'), false, true, true);
         send_que = false;
@@ -580,14 +580,20 @@
     });
   }
   
+  //This function plots only the defined data.
   function getData(from, to) {
     var rangedata = new Array();
+
     for(var i=0; i<datasets.length; i++) {
-      if(! $('#btn_ch' + (i+1)).data('checked')) {
+      
+      //If the channel isn't checked - So we can skip channel 2 in our case.
+      if(!$('#btn_ch' + (i+1)).data('checked')) {
         continue;
       }
+
       rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
-      for(var j=0; j<datasets[i].data.length; j++) {
+
+      for(var j=0; j < datasets[i].data.length; j++) {
         if(datasets[i].data[j][0] > to) {
           break;
         }
@@ -602,8 +608,8 @@
     return rangedata;
   }
   
-  // Use only data for selected channels and do downsamling (data decimation), which is required for 
-  // better performance. On the canvas cannot be shown too much graph points. 
+  // Use only data for selected channels and do downsampling (data decimation), which is required for 
+  // better performance. Too many points cannot be shown on the canvas. 
   function filterData(dsets, points) {
     var filtered = [];
     var num_of_channels = 2;
@@ -743,19 +749,6 @@
     //setVisibleChannels('#btn_ch2');
   }
   
-  function setVisibleChannels(btn) {
-    var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
-    var btn = $(btn);
-    var checked = !btn.data('checked');
-    
-    btn.data('checked', checked).toggleClass('btn-default btn-primary');
-    
-    // At least one button must be checked, so that at least one graph will be visible.
-    if(! checked) {
-      other_btn.data('checked', true).removeClass('btn-default').addClass('btn-primary');
-    }
-    redrawPlot();
-  }
   
   function autoscaleY() {
     if(! plot) {
@@ -776,211 +769,7 @@
     updateTriggerSlider();
   }
   
-  function setAvgAtDec() {
-    if(! plot) {
-      return;
-    }
-    
-    $('#btn_avg').toggleClass('btn-default btn-primary');
-
-    if($('#btn_avg').hasClass('btn-primary')) {
-      params.local.en_avg_at_dec = 1;
-    }
-    else{
-      params.local.en_avg_at_dec = 0;
-    }
-
-    sendParams(true, true);
-  }
-
-  function resetZoom() {
-    if(! plot) {
-      return;
-    }
-    
-    $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
-    
-    var ymax = params.original.gui_reset_y_range / 2;
-    var ymin = ymax * -1;
-    
-    $.extend(true, plot_options, {
-      xaxis: { min: null, max: null },
-      yaxis: { min: ymin, max: ymax }
-    });
-         
-    var options = plot.getOptions();
-    options.xaxes[0].min = null;
-    options.xaxes[0].max = null;
-    options.yaxes[0].min = ymin;
-    options.yaxes[0].max = ymax;
-    
-    plot.setupGrid();
-    plot.draw();
-    
-    params.local.xmin = datasets[0][1];
-    params.local.xmax = datasets[datasets.length-1][1];
-    
-    sendParams(true, true);
-  }
-
-  function updateZoom() {
-    if(! plot) {
-      return;
-    }
-    
-    params.local.xmin = 0;
-    params.local.xmax = time_range_max[params.local.time_range];
-  
-    var axes = plot.getAxes();
-    var options = plot.getOptions();
-    
-    options.xaxes[0].min = params.local.xmin;
-    options.xaxes[0].max = params.local.xmax;
-    options.yaxes[0].min = axes.yaxis.min;
-    options.yaxes[0].max = axes.yaxis.max;
-    
-    plot.setupGrid();
-    plot.draw();
-
-    sendParams(true, true);
-  }
-  
-  function selectTool(toolname) {
-    $('#selzoompan .btn').removeClass('btn-primary').addClass('btn-default');
-    $(this).toggleClass('btn-default btn-primary');
-  
-    if(toolname == 'zoomin') {
-      enableZoomInSelection();
-    }
-    if(toolname == 'zoomout') {
-      enableZoomOut();
-    }
-    else if(toolname == 'pan') {
-      enablePanning();
-    }
-  }
-
-  function enableZoomInSelection() {
-    if(plot_options.hasOwnProperty('selection')) {
-      return;
-    }
-    
-    var plot_pholder = plot.getPlaceholder();
-
-    // Disable panning and zoom out
-    delete plot_options.pan;
-    plot_pholder.off('click.rp');
-    
-    // Get current min/max for both axes to use them to fix the current view
-    var axes = plot.getAxes();
-    
-    plot = $.plot(
-      plot_pholder, 
-      plot.getData(),
-      $.extend(true, plot_options, {
-        selection: { mode: 'xy' },
-        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
-        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
-      })
-    );
-  }
-  
-  function enableZoomOut() {
-    var plot_pholder = plot.getPlaceholder();
-    
-    plot_pholder.on('click.rp', function(event) {
-      var offset = $(event.target).offset();
-      
-      plot.zoomOut({
-        center: { left: event.pageX - offset.left, top: event.pageY - offset.top },
-        amount: 1.2
-      });
-    });
-    
-    // Disable zoom in selection and panning
-    delete plot_options.selection;
-    delete plot_options.pan;
-    
-    // Get current min/max for both axes to use them to fix the current view
-    var axes = plot.getAxes();
-    
-    plot = $.plot(
-      plot_pholder, 
-      plot.getData(),
-      $.extend(true, plot_options, {
-        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
-        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
-      })
-    );
-  }
-  
-  function enablePanning() {
-    if(plot_options.hasOwnProperty('pan')) {
-      return;
-    }
-    
-    var plot_pholder = plot.getPlaceholder();
-    
-    // Disable selection zooming and zoom out
-    delete plot_options.selection;
-    plot_pholder.off('click.rp');
-    
-    // Get current min/max for both axes to use them to fix the current view
-    var axes = plot.getAxes();
-    
-    plot = $.plot(
-      plot_pholder, 
-      plot.getData(),
-      $.extend(true, plot_options, {
-        pan: { interactive: true },
-        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
-        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
-      })
-    );
-  }
-  
-  function mouseDownMove(that, evt) {
-    var y;
-    user_editing = true;
-    
-    if(evt.type.indexOf('touch') > -1) {
-      y = evt.originalEvent.touches[0].clientY - that.getBoundingClientRect().top - plot.getPlotOffset().top;
-      touch_last_y = y;
-    }
-    else {
-      y = evt.clientY - that.getBoundingClientRect().top - plot.getPlotOffset().top;
-    }
-    updateTriggerSlider(y);
-    
-    $('#trigger_tooltip').data('bs.tooltip').options.title = plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places);
-    $('#trigger_tooltip').tooltip('show');
-  }
-
-  function mouseUpOut(evt) {
-    if(trig_dragging) {
-      trig_dragging = false;
-      
-      var y;
-      if(evt.type.indexOf('touch') > -1) {
-        //y = evt.originalEvent.touches[0].clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
-        y = touch_last_y;
-      }
-      else {
-        y = evt.clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
-      }
-      
-      var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
-      params.local.trig_level = parseFloat(plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places)) / scale;           
-      
-      updateTriggerSlider();
-      redrawPlot();
-      sendParams();
-    }
-    else {
-      user_editing = false;
-    }
-    $('#trigger_tooltip').tooltip('hide');
-  }
+ 
   
   function updateTriggerSlider(y, update_input) {
     if(! plot) {
