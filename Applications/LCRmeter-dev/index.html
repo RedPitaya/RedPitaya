@@ -49,14 +49,13 @@
   var lcr_modal;
   var change_Measure = 0;
 
-  var time_range_max = [130, 1000, 8, 130, 1, 8];
   var range_steps = [0];
   
   var plot_options = {
     colors: ['#3276B1', '#D2322D', '#009900'],    // channel1, channel2, trigger line
     lines: { lineWidth: 1 },
-    xaxis: { min: xmin, max: xmax},
-    grid: { borderWidth: 0 },
+    xaxis: { min: xmin, max: xmax },
+    grid: { borderWidth: 0, hoverable: true, clickable: true, autoHighlight: true },
     legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
     touch: { autoWidth: false, autoHeight: false }
   };
@@ -141,6 +140,15 @@
       $(this).closest('.modal').modal('hide');
     });
 
+
+    /*
+    $("#plot_holder").bind("plotclick", function (event, pos, item) {
+      window.alert(pos.y / 0.01);
+    });
+    
+    */
+
+
     // Reset the upload form to prevent browser caching of the uploaded file name
     $('#upload_form')[0].reset();
       
@@ -171,6 +179,9 @@
     $('#range_x_minus, #range_x_plus, #range_y_minus, #range_y_plus').tooltip({
       container: 'body'
     });
+
+
+    
     
     // Load first data
     updateGraphData();
@@ -181,10 +192,12 @@
         url: stop_app_url,
         async: false
       });
-    };
-            
+    };      
   });
   
+
+  
+
   function startApp() {
     $.get(
       start_app_url
@@ -637,93 +650,8 @@
       }
     }
     
-    filtered = addTriggerDataSet(filtered);
+    //filtered = addTriggerDataSet(filtered);
     return filtered;
-  }
-  
-  // Add a data series for the trigger level line
-  function addTriggerDataSet(dsets) {
-
-    // Transform trigger level to real values
-    var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
-    var tlev = params.local.trig_level * scale;
-  
-    // Don't add trigger dataset if trigger level is outside the visible area...
-    if(plot) {
-      var yaxis = plot.getAxes().yaxis;
-      if(tlev < yaxis.min || tlev > yaxis.max) {
-        return dsets;
-      }
-    }
-    // ...or trigger mode is not Normal
-    if(params.local.trig_mode != 1) {
-      return dsets;
-    }
-    // ...or trigger source is external
-    if(params.local.trig_source == 2) {
-      return dsets;
-    }
-    // ...or outside of received data for Y axis
-    var ch1ymin = null, 
-        ch1ymax = null;
-    // Find Y min/max values from data for first visible channel
-    for(var i=0; i<dsets[0].data.length; i++) {
-      ch1ymin = (ch1ymin === null || ch1ymin > dsets[0].data[i][1] ? dsets[0].data[i][1] : ch1ymin);
-      ch1ymax = (ch1ymax === null || ch1ymax < dsets[0].data[i][1] ? dsets[0].data[i][1] : ch1ymax);
-    }
-    if(dsets.length > 1) {
-      var ch2ymin = null, 
-          ch2ymax = null;
-      // Find Y min/max values from data for second visible channel
-      for(var i=0; i<dsets[1].data.length; i++) {
-        ch2ymin = (ch2ymin === null || ch2ymin > dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymin);
-        ch2ymax = (ch2ymax === null || ch2ymax < dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymax);
-      }
-      // Check if trigger level is outside of found values
-      if(tlev < Math.min(ch1ymin, ch2ymin) || tlev > Math.max(ch1ymax, ch2ymax)) {
-        return dsets;
-      }
-    }
-    else {
-      // Check if trigger level is outside of found values
-      if(tlev < ch1ymin || tlev > ch1ymax) {
-        return dsets;
-      }
-    }
-  
-    var index = 0;
-    var dxmin = 0;
-    var dxmax = 1;
-    
-    if(dsets.length && dsets[0].data[0]) {
-      index = dsets.length;
-      
-      dxmin = dsets[0].data[0][0];
-      dxmax = dsets[0].data[dsets[0].data.length - 1][0];
-    }
-    dsets[index] = { color: 2, data: [[dxmin, tlev], [dxmax, tlev]], shadowSize: 1 };
-    
-    return dsets;
-  }
-  
-  function runStop() {
-    if(autorun) {
-      $('#btn_single').prop('disabled', true);
-      updateGraphData();
-    }
-    else {
-      $('#btn_single').prop('disabled', false);
-      if(update_timer) {
-        clearTimeout(update_timer);
-        update_timer = null;
-      }
-    }
-  }
-  
-  function singleUpdate() {
-    if(! autorun) {
-      sendParams(true, true, true);
-    }
   }
   
   function redrawPlot() {
@@ -741,10 +669,9 @@
             yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
           })
         );
-        updateTriggerSlider();        
+               
       }
     }
-    //setVisibleChannels('#btn_ch2');
   }
   
   
@@ -767,95 +694,30 @@
     updateTriggerSlider();
   }
   
- 
-  
-  function updateTriggerSlider(y, update_input) {
-    if(! plot) {
-      return;
-    }
-    
-    var canvas = $('#trigger_canvas')[0];
-    var context = canvas.getContext('2d');
-    var plot_offset = plot.getPlotOffset();
-    var ymax = params.original.gui_reset_y_range / 2;
-    var ymin = ymax * -1;
-    
-    // Transform trigger level to real values
-    // TODO: local or original params?
-    var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
-    var tlev = params.local.trig_level * scale;
 
-    // If trigger level is outside the predefined ymin/ymax, change the level
-    
-    if(tlev < ymin) {
-      tlev = ymin;
-    }
-    else if(tlev > ymax) {
-      tlev = ymax;
-    }
-    
-    if(y === undefined) {
-      if(update_input !== false) {
-        $('#trig_level').not(':focus').val(floatToLocalString(tlev));
-      }
-      y = plot.getAxes().yaxis.p2c(tlev);
-    }
-    
-    // If trigger source is External or mode is not Normal or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
-    context.clearRect(0, 0, canvas.width, canvas.height); 
-    var yaxis = plot.getAxes().yaxis;
-    if(params.original.trig_mode != 1 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
-      context.lineWidth = 1;
-      context.strokeStyle = '#dddddd';
-      context.stroke();
-      context.beginPath();
-      context.moveTo(10, plot_offset.top);
-      context.lineTo(10, canvas.height - plot_offset.bottom + 1);
-      context.stroke();
-    }
-    else {
-      context.beginPath();
-      context.arc(10, y + plot_offset.top, 8, 0, 2 * Math.PI, false);
-      context.fillStyle = '#009900';
-      context.fill();
-      context.lineWidth = 1;
-      context.strokeStyle = '#007700';
-      context.stroke();
-      context.beginPath();
-      context.moveTo(10, plot_offset.top);
-      context.lineTo(10, canvas.height - plot_offset.bottom + 1);
-      context.stroke();
-    }
-    $('#trigger_tooltip').css({ top: y + plot_offset.top });  
-  }
-  
+  /* This function serves for plotting graph data and zooming-in */
   function updateRanges() {
-    var xunit = (params.local.time_units == 0 ? 'μs' : (params.local.time_units == 1 ? 'ms' : 's'));
-    var yunit = 'V';
+    var xunit = 'Hz'
+    var yunit = '';
+    /*Get the axes*/
     var axes = plot.getAxes();
+
+    /* Plot range on the graph */
     var xrange = axes.xaxis.max - axes.xaxis.min;
     var yrange = axes.yaxis.max - axes.yaxis.min;
-    var yminrange = 5e-3;  // Volts
-    var ymaxrange = params.original.gui_reset_y_range;
-    var xmaxrange = 10.0;  // seconds
-    var xminrange = 20e-9; // seconds
-    var decimals = 0;
 
-    if(xunit == 'μs' && xrange < 1) {
-      xrange *= 1000;
-      xunit = 'ns';
-    }
+    var yminrange = 1000;  // 
+    var ymaxrange = 1000;
+    var xmaxrange = params.original.end_freq;  // Herth
+    var xminrange = params.local.start_freq - params.original.start_freq;
+    
+    var decimals = 1;
+
     if(xrange < 1) {
       decimals = 1;
     }
+
     var seconds = (xunit == 'ns' ? 1e-9 : ( xunit == 'μs' ? 1e-6 : (xunit == 'ms' ? 1e-3 : 1)));
-    
-    if(yrange < 1) {
-      yunit = 'mV';
-      yrange *= 1000;
-      ymaxrange *= 1000;
-      yminrange *= 1000;
-    }
 
     $('#range_x').html(+(Math.round(xrange + "e+" + decimals) + "e-" + decimals) + ' ' + xunit);
     $('#range_y').html(Math.floor(yrange) + ' ' + yunit);
@@ -934,105 +796,7 @@
     params.local.auto_flag = 1;
     sendParams(true);
   }
-  
-  function postGenSingle(channel) {
-    if(params.local['gen_trig_mod_ch' + channel] == 1) {
-      params.local['gen_single_ch' + channel] = 1;
-      sendParams();
-    }
-    else {
-      $('#gen_ch' + channel + '_single').prop('disabled', true);
-    }
-    return false;
-  }
-  
-  function showUploadForm(channel) {
-    var file_elem = $('#uploaded_file');
-    var fcontent_elem = $('#uploaded_file_content');
-    var hint_elem = $('#upload_form .help-block');
-    
-    fcontent_elem.val('');
-    hint_elem.html('Select the CSV file to upload.');
-    $('#upload_form')[0].reset();
-    $('#modal_upload_label span').text(channel);
-    
-    if(file_elem[0].files === undefined) {
-      file_elem.hide().parent().addClass('has-error');
-      hint_elem.html('Your browser is too old and do not support this feature.');
-    }
-    else {
-      file_elem.show().parent().removeClass('has-error');
-      file_elem.off('change').on('change', function() {
-        var file = this.files[0];
-        var freader = new FileReader();
-        
-        // File validation
-        //var size = file.size;
-        var type = file.type;
-        if(file.type !== 'text/csv' && file.type !== 'text/comma-separated-values' && file.type !== 'application/vnd.ms-excel') {
-          file_elem.parent().addClass('has-error');
-          hint_elem.html('Wrong file type: ' + file.type);
-          $('#upload_form')[0].reset();
-        }
-        else {
-          file_elem.parent().removeClass('has-error');
-          hint_elem.html('File size: ' + file.size + ' bytes');
-          freader.onload = function(data) {
-            fcontent_elem.val(this.result);
-          };
-          freader.readAsText(file);
-        }
-      });
-    }
-    
-    $('#modal_upload').modal('show');
-    
-    return false;
-  }
-  
-  function startUpload() {
-    var mbody = $('#modal_upload .modal-body');
-    var file_elem = $('#uploaded_file');
-    var hint_elem = $('#upload_form .help-block');
-    var channel = $('#modal_upload_label span').text();
-    
-    if(mbody.data('errtimer')) {
-      clearTimeout(mbody.data('errtimer'));
-      mbody.removeData('errtimer');
-    }
-    
-    if(! $('#uploaded_file').val().length) {
-      mbody.addClass('alert-danger').data('errtimer', setTimeout(function() { 
-        $('#modal_upload .modal-body').removeClass('alert-danger'); 
-      }, 1000));
-      return;
-    }
-    
-    file_elem.hide();
-    hint_elem.html('Uploading file...');
-    
-    $.post(upload_url + channel, $('#uploaded_file_content').val(), function(dresult) {
-      if($.type(dresult) == 'string' && dresult.trim() == 'OK') {
-        $('#upload_form')[0].reset();
-        $('#modal_upload').modal('hide');
-        
-        user_editing = true;
-        params.local.gen_awg_refresh = parseInt(channel);
-        sendParams();
-      }
-      else {
-        file_elem.show();
-        hint_elem.html('Error while uploading the file.');
-        file_elem.parent().addClass('has-error');
-      }
-    })
-    .fail(function() {
-      file_elem.show();
-      hint_elem.html('Error while uploading the selected file.');
-      file_elem.parent().addClass('has-error');
-    });
-  }
-  
+
   function getLocalDecimalSeparator() {
     var n = 1.1;
     return n.toLocaleString().substring(1,2);
@@ -1050,99 +814,6 @@
   
   function shortenFloat(value) {
     return value.toFixed(Math.abs(value) >= 10 ? 1 : 3);
-  }
-
-  function convertHz(value) {
-    var unit = '';
-    var decsep = getLocalDecimalSeparator();
-    
-    if(value >= 1e6) {
-      value /= 1e6;
-      unit = '<span class="unit">MHz</span>';
-    }
-    else if(value >= 1e3) {
-      value /= 1e3;
-      unit = '<span class="unit">kHz</span>';
-    }
-    else {
-      unit = '<span class="unit">Hz</span>';
-    }
-
-    // Fix to 4 decimal digits in total regardless of the decimal point placement
-    var eps = 1e-2;
-    if (value >= 100 - eps) {
-      value = value.toFixed(1);
-    }
-    else if  (value >= 10 - eps) {
-      value = value.toFixed(2);
-    }
-    else {
-      value = value.toFixed(3);
-    }
-    
-    value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
-    return value + unit;
-  }
-  
-  function convertSec(value) {
-    var unit = '';
-    var decsep = getLocalDecimalSeparator();
-    
-    if(value < 1e-6) {
-      value *= 1e9;
-      unit = '<span class="unit">ns</span>';
-    }
-    else if(value < 1e-3) {
-      value *= 1e6;
-      unit = '<span class="unit">μs</span>';
-    }
-    else if(value < 1) {
-      value *= 1e3
-      unit = '<span class="unit">ms</span>';
-    }
-    else {
-      unit = '<span class="unit">s</span>';
-    }
-
-    // Fix to 4 decimal digits in total regardless of the decimal point placement
-    var eps = 1e-2;
-    if (value >= 100 - eps) {
-      value = value.toFixed(1);
-    }
-    else if  (value >= 10 - eps) {
-      value = value.toFixed(2);
-    }
-    else {
-      value = value.toFixed(3);
-    }
-    
-    value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
-    return value + unit;
-  }
-  
-  $(function(){
-    $('.btn-choose').click(function() { 
-        $(this).toggleClass('stay-active');
-    });
-});
- 
-
- $(document).ready(function(e) {
-  $(".logo").click(function(e) { updateGraphData(); alert("dela"); });
- });
- 
- function selectAmpPhase(toggle_id) {
-    $('#toggle .btn').removeClass('btn-primary').addClass('btn-default');
-    $(this).toggleClass('btn-default btn-primary');
-
-    if(toggle_id == 'toggle_amp') {
-
-      data_type = 1;
-      alert(data_type);
-    }else{
-      data_type = 0;
-    }
-    
   }
  
   function startMeasure(clicked_measure){
@@ -1217,15 +888,7 @@
 
 
       /* End function if input error */
-      if(document.getElementById('gen_amp').style.borderColor == "red" ||
-       document.getElementById('gen_avg').style.borderColor == "red" ||
-       document.getElementById('gen_DC_bias').style.borderColor == "red" ||
-       document.getElementById('gen_R_shunt').style.borderColor == "red" ||
-       document.getElementById('gen_fs_step').style.borderColor == "red" ||
-       document.getElementById('gen_fs_Sfreq').style.borderColor == "red" || 
-       document.getElementById('gen_fs_Efreq').style.borderColor == "red" || 
-       document.getElementById('gen_fs_LoadIm').style.borderColor == "red" || 
-       document.getElementById('gen_fs_LoadRe').style.borderColor == "red"){
+      if($('form-control').borderColor.style == "red"){
 
           return;
       }
@@ -1275,16 +938,8 @@
       }
 
       /* End function if input error */
-      if(document.getElementById('gen_amp').style.borderColor == "red" ||
-       document.getElementById('gen_avg').style.borderColor == "red" ||
-       document.getElementById('gen_DC_bias').style.borderColor == "red" ||
-       document.getElementById('gen_R_shunt').style.borderColor == "red" ||
-       document.getElementById('gen_ms_step').style.borderColor == "red" ||
-       document.getElementById('gen_ms_freq').style.borderColor == "red" || 
-       document.getElementById('gen_ms_LoadRe').style.borderColor == "red" || 
-       document.getElementById('gen_ms_LoadIm').style.borderColor == "red"){
-
-          return;
+      if($('form-control').borderColor.style == "red"){
+        return;
       }
 
       /* Like in FS, if everything was OK, we write it in params */
