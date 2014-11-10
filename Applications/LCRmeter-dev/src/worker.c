@@ -784,22 +784,22 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
 
 
         /* Opening files */
-        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "r");
-        FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "r");
-        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
-        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "r");
-        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "r");
-        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "r");
-        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "r");
-        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "r");
-        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "r");
-        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "r");
-        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "r");
-        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "r");
-        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "r");
-        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "r");
-        FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "r");
-        FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "r");
+        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency", "r");
+        FILE *file_phase = fopen("/tmp/lcr_data/data_phase", "r");
+        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude", "r");
+        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs", "r");
+        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY", "r");
+        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s", "r");
+        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s", "r");
+        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p", "r");
+        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p", "r");
+        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s", "r");
+        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p", "r");
+        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s", "r");
+        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p", "r");
+        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p", "r");
+        FILE *file_Q = fopen("/tmp/lcr_data/data_Q", "r");
+        FILE *file_D = fopen("/tmp/lcr_data/data_D", "r");
         
 
         while(!feof(file_frequency)){
