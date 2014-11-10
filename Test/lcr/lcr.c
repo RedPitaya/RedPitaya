@@ -732,7 +732,7 @@ int main(int argc, char *argv[]) {
                 }
 
                 // writing data to a file
-                FILE *progress_file = fopen("/tmp/progress.txt", "w");
+                FILE *progress_file = fopen("/tmp/progress", "w");
                 if (progress_int <= 100){
                     fprintf(progress_file , "%d \n" ,  progress_int );
 
@@ -880,7 +880,7 @@ int main(int argc, char *argv[]) {
     */
 
     /** Opening frequency data */
-    FILE *try_open = fopen("/tmp/lcr_data/data_frequency.txt", "w");
+    FILE *try_open = fopen("/tmp/lcr_data/data_frequency", "w");
 
     /* If files don't exists yet, we first have to create them (First boot), as we are storing them in /tmp */
     if(try_open == NULL){
@@ -895,67 +895,67 @@ int main(int argc, char *argv[]) {
         for(f_number = 0; f_number < 16; f_number++){
             switch(f_number){
                 case 0:
-                    strcpy(command, "touch /tmp/lcr_data/data_frequency.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_frequency");
                     system(command);
                     break;
                 case 1:
-                    strcpy(command, "touch /tmp/lcr_data/data_amplitude.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_amplitude");
                     system(command);
                     break;
                 case 2:
-                    strcpy(command, "touch /tmp/lcr_data/data_phase.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_phase");
                     system(command);
                     break;
                 case 3:
-                    strcpy(command, "touch /tmp/lcr_data/data_R_s.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_R_s");
                     system(command);
                     break;
                 case 4:
-                    strcpy(command, "touch /tmp/lcr_data/data_X_s.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_X_s");
                     system(command);
                     break;
                 case 5:
-                    strcpy(command, "touch /tmp/lcr_data/data_G_p.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_G_p");
                     system(command);
                     break;
                 case 6:
-                    strcpy(command, "touch /tmp/lcr_data/data_B_p.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_B_p");
                     system(command);
                     break;
                 case 7:
-                    strcpy(command, "touch /tmp/lcr_data/data_C_s.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_C_s");
                     system(command);
                     break;
                 case 8:
-                    strcpy(command, "touch /tmp/lcr_data/data_C_p.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_C_p");
                     system(command);
                     break;
                 case 9:
-                    strcpy(command, "touch /tmp/lcr_data/data_L_s.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_L_s");
                     system(command);
                     break;
                 case 10:
-                    strcpy(command, "touch /tmp/lcr_data/data_L_p.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_L_p");
                     system(command);
                     break;
                 case 11:
-                    strcpy(command, "touch /tmp/lcr_data/data_R_p.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_R_p");
                     system(command);
                     break;
                 case 12:
-                    strcpy(command, "touch /tmp/lcr_data/data_Q.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_Q");
                     system(command);
                     break;
                 case 13:
-                    strcpy(command, "touch /tmp/lcr_data/data_D.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_D");
                     system(command);
                     break;
                 case 14:
-                    strcpy(command, "touch /tmp/lcr_data/data_Y_abs.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_Y_abs");
                     system(command);
                     break;
                 case 15:
-                    strcpy(command, "touch /tmp/lcr_data/data_phaseY.txt");
+                    strcpy(command, "touch /tmp/lcr_data/data_phaseY");
                     system(command);
                     break;
 
@@ -969,22 +969,22 @@ int main(int argc, char *argv[]) {
     }
 
     /** Opening files */
-    FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "w");
-    FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "w");
-    FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "w");
-    FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "w");
-    FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "w");
-    FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "w");
-    FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "w");
-    FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "w");
-    FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "w");
-    FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "w");
-    FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "w");
-    FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "w");
-    FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "w");
-    FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "w");
-    FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "w");
-    FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "w");
+    FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency", "w");
+    FILE *file_phase = fopen("/tmp/lcr_data/data_phase", "w");
+    FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude", "w");
+    FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs", "w");
+    FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY", "w");
+    FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s", "w");
+    FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s", "w");
+    FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p", "w");
+    FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p", "w");
+    FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s", "w");
+    FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p", "w");
+    FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s", "w");
+    FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p", "w");
+    FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p", "w");
+    FILE *file_Q = fopen("/tmp/lcr_data/data_Q", "w");
+    FILE *file_D = fopen("/tmp/lcr_data/data_D", "w");
 
 
     /** Combining all the data and printing it to stdout 
