@@ -37,7 +37,6 @@ float               **rp_tmp_signals; /* used for calculation, only from worker 
 
 /* Signals directly pointing at the FPGA mem space */
 int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
-lcr_meas_data_t lcr_mes;
 
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
@@ -984,31 +983,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             }else if(measure_method == 2){
                 t[out_idx] = frequency[out_idx];
             }
-        }
-        
-        if(measure_counter < 99){
-
-            lcr_mes.frequency = frequency[measure_counter];
-                
-            lcr_mes.phaseZ = phase[measure_counter];
-            lcr_mes.amplitudeZ = amplitude[measure_counter];
-            lcr_mes.y_abs = Y_abs[measure_counter];
-            lcr_mes.phaseY = phaseY[measure_counter];
-            
-            lcr_mes.R_s = R_s[measure_counter];
-            lcr_mes.X_s = X_s[measure_counter];
-            lcr_mes.G_p = G_p[measure_counter];
-            lcr_mes.B_p = B_p[measure_counter];
-            lcr_mes.C_s = C_s[measure_counter];
-            lcr_mes.C_p = C_p[measure_counter];
-            lcr_mes.L_s = L_s[measure_counter];
-            lcr_mes.L_p = L_p[measure_counter]; 
-            lcr_mes.R_p = R_p[measure_counter];
-            lcr_mes.Q = Q[measure_counter];
-            lcr_mes.D = D[measure_counter];
-
-            measure_counter++;
-        }       
+        }     
         
     }
     

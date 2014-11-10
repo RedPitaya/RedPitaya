@@ -41,28 +41,9 @@ typedef struct rp_osc_meas_res_s {
 } rp_osc_meas_res_t;
 
 
-typedef struct lcr_meas_data_s {
-    float frequency;
-    float phaseZ;
-    float amplitudeZ;
-    float y_abs;
-    float phaseY;
-    float R_s;
-    float X_s;
-    float G_p;
-    float B_p;
-    float C_s;
-    float C_p;
-    float L_s;
-    float L_p;
-    float R_p;
-    float Q;
-    float D;
-} lcr_meas_data_t;
-
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        78
+#define PARAMS_NUM        62
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -112,41 +93,25 @@ typedef struct lcr_meas_data_s {
 #define GEN_FS_LOADRE     45
 #define GEN_FS_LOADIM     46
 #define LCR_CALIBRATION   47
-#define MEAS_FREQ_LCR     48
-#define MEAS_PHASEZ_LCR   49
-#define MEAS_AMPZ_LCR     50
-#define MEAS_Y_ABS        51
-#define MEAS_PHASEY_LCR   52
-#define MEAS_R_S_LCR      53
-#define MEAS_X_S_LCR      54
-#define MEAS_G_P_LCR      55
-#define MEAS_B_P_LCR      56
-#define MEAS_C_S_LCR      57
-#define MEAS_C_P_LCR      58
-#define MEAS_L_S_LCR      59
-#define MEAS_L_P_LCR      60
-#define MEAS_R_P_LCR      61
-#define MEAS_Q_LCR        62
-#define MEAS_D_LCR        63
 /* AWG parameters */
-#define GEN_TRIG_MODE_CH1 64
-#define GEN_SIG_TYPE_CH1  65
-#define GEN_ENABLE_CH1    66
-#define GEN_SINGLE_CH1    67
-#define GEN_SIG_AMP_CH1   68
-#define GEN_SIG_FREQ_CH1  69
-#define GEN_SIG_DCOFF_CH1 70
-#define GEN_TRIG_MODE_CH2 71
-#define GEN_SIG_TYPE_CH2  72
-#define GEN_ENABLE_CH2    73
-#define GEN_SINGLE_CH2    74
-#define GEN_SIG_AMP_CH2   75
-#define GEN_SIG_FREQ_CH2  76
-#define GEN_SIG_DCOFF_CH2 77
+#define GEN_TRIG_MODE_CH1 48
+#define GEN_SIG_TYPE_CH1  49
+#define GEN_ENABLE_CH1    50
+#define GEN_SINGLE_CH1    51
+#define GEN_SIG_AMP_CH1   52
+#define GEN_SIG_FREQ_CH1  53
+#define GEN_SIG_DCOFF_CH1 54
+#define GEN_TRIG_MODE_CH2 55
+#define GEN_SIG_TYPE_CH2  56
+#define GEN_ENABLE_CH2    57
+#define GEN_SINGLE_CH2    58
+#define GEN_SIG_AMP_CH2   59
+#define GEN_SIG_FREQ_CH2  60
+#define GEN_SIG_DCOFF_CH2 61
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope or AWG */
-#define PARAMS_AWG_PARAMS 64
+#define PARAMS_AWG_PARAMS 48
 
 /* Output signals */
 #define SIGNALS_NUM   3
@@ -185,9 +150,5 @@ float rp_get_params_lcr(int pos);
 
 /* LCR set parameters */
 void rp_set_params_lcr(int pos, float val);
-
-/* Update main lcr measurment data */
-int lcr_update_meas_data(lcr_meas_data_t ch1_meas);
-
 
 #endif /*  __MAIN_H */
