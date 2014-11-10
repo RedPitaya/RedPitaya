@@ -79,19 +79,6 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 /* helper function - returns the factor for time unit conversion */
 int rp_osc_get_time_unit_factor(int time_unit);
 
-/* helper function - clears the measurement structure */
-int rp_osc_meas_clear(rp_osc_meas_res_t *ch_meas);
-/* helper function - calculates min, max and accumulates average value */
-int rp_osc_meas_min_max(rp_osc_meas_res_t *ch_meas, int sig_data);
-/* helper function - calculates average and amplitude */
-int rp_osc_meas_avg_amp(rp_osc_meas_res_t *ch_meas, int avg_len);
-/* helper function - calculates period and frequency */
-int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas, 
-                       int *in_cha_signal, int *in_chb_signal, 
-                       int start_idx, int stop_idx, int dec_factor);
-/* helper function - convert CNT to V for meas. data (min, max, amp, avg) */
-int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal_dc_offs);
-
 /* Thread functions declared here */
 
 void* lcr_thread(void *conversation_pipes);

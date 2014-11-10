@@ -230,9 +230,8 @@ void *rp_osc_worker_thread(void *args)
     int long_acq_last_wr_ptr = 0;
     int long_acq_step = 0;
     int long_acq_init_trig_ptr;
-
-    rp_osc_meas_res_t ch1_meas, ch2_meas;
     float ch1_max_adc_v = 1, ch2_max_adc_v = 1;
+    rp_osc_meas_res_t ch1_meas, ch2_meas;
 
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
     old_state = state = rp_osc_ctrl;
@@ -517,8 +516,6 @@ void *rp_osc_worker_thread(void *args)
                  * when it changes we will act like official 'trigger' 
                  * came
                  */
-                rp_osc_meas_clear(&ch1_meas);
-                rp_osc_meas_clear(&ch2_meas);
                 osc_fpga_get_wr_ptr(NULL, &long_acq_init_trig_ptr);
             } else {
                 long_acq_first_wr_ptr  = 0;
@@ -628,8 +625,6 @@ void *rp_osc_worker_thread(void *args)
                         round((t_acq / (c_osc_fpga_smpl_period * dec_factor)) / 
                               (((int)rp_get_params_lcr(1))-1));
 
-                rp_osc_meas_clear(&ch1_meas);
-                rp_osc_meas_clear(&ch2_meas);
             }
              
             /* we are after trigger - so let's wait a while to collect some 
@@ -647,8 +642,6 @@ void *rp_osc_worker_thread(void *args)
 
         if(!long_acq) {
             /* Triggered, decimate & convert the values */
-            rp_osc_meas_clear(&ch1_meas);
-            rp_osc_meas_clear(&ch2_meas);
 
             lcr_start_Measure((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
@@ -695,15 +688,6 @@ void *rp_osc_worker_thread(void *args)
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
             /* Finish the measurement */
-            rp_osc_meas_avg_amp(&ch1_meas, OSC_FPGA_SIG_LEN);
-            rp_osc_meas_avg_amp(&ch2_meas, OSC_FPGA_SIG_LEN);
-            
-            rp_osc_meas_period(&ch1_meas, &ch2_meas, &rp_fpga_cha_signal[0], 
-                               &rp_fpga_chb_signal[0], 
-                               0, OSC_FPGA_SIG_LEN, dec_factor);
-            rp_osc_meas_convert(&ch1_meas, ch1_max_adc_v, rp_calib_params->fe_ch1_dc_offs);
-            rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
-            
             
             rp_osc_set_signals(rp_tmp_signals, ((int)rp_get_params_lcr(1))-1);
         } else {
@@ -1020,8 +1004,6 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
     for(; in_idx < curr_ptr; in_idx++) {
         if(in_idx >= OSC_FPGA_SIG_LEN)
             in_idx = in_idx % OSC_FPGA_SIG_LEN;
-        rp_osc_meas_min_max(ch1_meas, cha_in_signal[in_idx]);
-        rp_osc_meas_min_max(ch2_meas, chb_in_signal[in_idx]);
     }
 
     in_idx = *next_wr_ptr;
@@ -1411,19 +1393,6 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 }
 
 
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_clear(rp_osc_meas_res_t *ch_meas)
-{
-    ch_meas->min = 1e9;
-    ch_meas->max = -1e9;
-    ch_meas->amp = 0;
-    ch_meas->avg = 0;
-    ch_meas->freq = 0;
-    ch_meas->period = 0;
-
-    return 0;
-}
-
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_adc_sign(int in_data)
@@ -1434,145 +1403,3 @@ int rp_osc_adc_sign(int in_data)
     return s_data;
 }
 
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_min_max(rp_osc_meas_res_t *ch_meas, int sig_data)
-{
-    int s_data = rp_osc_adc_sign(sig_data);
-
-    if(ch_meas->min > s_data)
-        ch_meas->min = s_data;
-    if(ch_meas->max < s_data)
-        ch_meas->max = s_data;
-
-    ch_meas->avg += s_data;
-
-    return 0;
-}
-
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_avg_amp(rp_osc_meas_res_t *ch_meas, int avg_len)
-{
-    ch_meas->avg /= avg_len;
-    ch_meas->amp = ch_meas->max - ch_meas->min;
-    return 0;
-}
-
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas, 
-                       int *in_cha_signal, int *in_chb_signal, 
-                       int start_idx, int stop_idx, int dec_factor)
-{
-    const float meas_freq_thr = 100;
-
-    float ch1_thr1, ch1_thr2, ch2_thr1, ch2_thr2, ch1_cen, ch2_cen;
-    int ch1_state = 0, ch2_state = 0;
-    int ch1_trig_t[3] = { -1, -1, -1 };
-    int ch2_trig_t[3] = { -1, -1, -1 };
-    int ch1_trig_cnt = 0;
-    int ch2_trig_cnt = 0;
-    int in_idx;
-
-    int ix_corr, wr_ptr_curr, wr_ptr_trig;
-
-    float acq_dur=(float)(OSC_FPGA_SIG_LEN)/((float) c_osc_fpga_smpl_freq) * (float) dec_factor;
-
-    ch1_cen = (ch1_meas->max + ch1_meas->min) / 2;
-    ch2_cen = (ch2_meas->max + ch2_meas->min) / 2;
-
-    ch1_thr1 = (ch1_meas->min + ch1_cen) / 2;
-    ch1_thr2 = (ch1_meas->max + ch1_cen) / 2;
-    ch2_thr1 = (ch2_meas->min + ch2_cen) / 2;
-    ch2_thr2 = (ch2_meas->max + ch2_cen) / 2;
-
-    // Checking where acquisition starts
-    osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
-
-    ch1_meas->period =0;
-    ch2_meas->period =0;
-
-    /* Frequency check - it was proposed to be done in the decimation but 
-     * calculation can be inaccurate (depends on the SW decimation used) */
-    for(in_idx = 0; in_idx < (OSC_FPGA_SIG_LEN); in_idx++) {
-        ix_corr=in_idx+wr_ptr_trig;
-
-        if (ix_corr>=(OSC_FPGA_SIG_LEN)) 
-            ix_corr=ix_corr-OSC_FPGA_SIG_LEN;
-
-        float s_a_0 = rp_osc_adc_sign(in_cha_signal[ix_corr-1]);
-        float s_a_1 = rp_osc_adc_sign(in_cha_signal[ix_corr]);
-        float s_b_0 = rp_osc_adc_sign(in_chb_signal[ix_corr-1]);
-        float s_b_1 = rp_osc_adc_sign(in_chb_signal[ix_corr]);
-        /* Period/frequency measurement */
-        if((ch1_state == 0) && (ix_corr > 0) 
-            && (s_a_0<ch1_thr1)) {
-            ch1_state = 1;
-        }
-        if((ch2_state == 0) && (ix_corr > 0) &&
-            (s_b_0<ch2_thr1)) {
-            ch2_state = 1;
-        }
-        if((ch1_state == 1) && (ch1_trig_cnt < 3) && 
-           (s_a_1>=ch1_thr2) ) {
-            ch1_state = 0;
-            ch1_trig_t[ch1_trig_cnt] = in_idx;
-            ch1_trig_cnt++;
-            if(ch1_trig_cnt >= 2) {
-                ch1_meas->period = (ch1_trig_t[1]-ch1_trig_t[0]) /
-                    (float)c_osc_fpga_smpl_freq * dec_factor;
-            }
-        }
-
-        if((ch2_state == 1) && (ch2_trig_cnt < 3) && 
-           (s_b_1>=ch2_thr2) ) {
-            ch2_state = 0;
-            ch2_trig_t[ch2_trig_cnt] = in_idx;
-            ch2_trig_cnt++;
-            if(ch2_trig_cnt >= 2) {
-                ch2_meas->period = (ch2_trig_t[1]-ch2_trig_t[0]) /
-                    (float)c_osc_fpga_smpl_freq * dec_factor;
-            }
-           
-        }
-
-        if((ch1_trig_cnt > 1) && (ch2_trig_cnt > 1))
-            break;
-    }
-
-    if(((ch1_thr2-ch1_thr1) < meas_freq_thr) || (ch1_meas->period * 3 >=acq_dur) || (ch1_meas->period<=(2/(float)c_osc_fpga_smpl_freq))) {  //16 ns is the minimum period (62.5 MHz)
-        ch1_meas->period = 0;
-        ch1_meas->freq = 0;
-    } else {
-        ch1_meas->freq = 1 / ch1_meas->period;
-    }
-
-    if(((ch2_thr2-ch2_thr1) < meas_freq_thr) || (ch2_meas->period *3 >= acq_dur) || (ch2_meas->period<=(2/(float)c_osc_fpga_smpl_freq))) {
-        ch2_meas->period = 0;
-        ch2_meas->freq = 0;
-    } else {
-        ch2_meas->freq = 1 / ch2_meas->period;
-    }
-
-    return 0;
-}
-
-
-/*----------------------------------------------------------------------------------*/
-float rp_osc_meas_cnv_cnt(float data, float adc_max_v)
-{
-    return (data * adc_max_v / (float)(1<<(c_osc_fpga_adc_bits-1)));
-}
-
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal_dc_offs)
-{
-    ch_meas->min = rp_osc_meas_cnv_cnt(ch_meas->min+cal_dc_offs, adc_max_v);
-    ch_meas->max = rp_osc_meas_cnv_cnt(ch_meas->max+cal_dc_offs, adc_max_v);
-    ch_meas->amp = rp_osc_meas_cnv_cnt(ch_meas->amp, adc_max_v);
-    ch_meas->avg = rp_osc_meas_cnv_cnt(ch_meas->avg+cal_dc_offs, adc_max_v);
-
-    return 0;
-}
