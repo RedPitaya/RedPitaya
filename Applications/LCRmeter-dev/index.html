@@ -888,7 +888,14 @@
 
 
       /* End function if input error */
-      if($('form-control').borderColor.style == "red"){
+      if(document.getElementById('gen_amp').style.borderColor == "red" ||
+         document.getElementById('gen_avg').style.borderColor == "red" ||
+         document.getElementById('gen_DC_bias').style.borderColor == "red" ||
+         document.getElementById('gen_R_shunt').style.borderColor == "red" ||
+         document.getElementById('gen_ms_step').style.borderColor == "red" ||
+         document.getElementById('gen_ms_freq').style.borderColor == "red" || 
+         document.getElementById('gen_ms_LoadRe').style.borderColor == "red" || 
+         document.getElementById('gen_ms_LoadIm').style.borderColor == "red"){
 
           return;
       }
