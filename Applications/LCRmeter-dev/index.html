@@ -192,7 +192,8 @@
         url: stop_app_url,
         async: false
       });
-    };      
+    };
+
   });
   
 
@@ -470,6 +471,10 @@
       lcr_modal.hidePleaseWait();
       var show_lcr_channel = $('#btn_ch1');
       show_lcr_channel.data('checked', true);
+
+      /* Table proprieties */
+      var t_m = document.getElementById('t_measurment_data');
+      t_m.style.display = 'block';
     }
 
     if(! $.isPlainObject(new_params)) {
@@ -496,6 +501,7 @@
       /* We don't want to IF everytime */
       change_Measure = 0;
     }
+
   
   }
   
@@ -977,6 +983,8 @@
     change_Measure = 1;
     params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
 
+    append_table(10);
+
     /* Send params to C controller */
     sendParams();
  }
@@ -1014,6 +1022,20 @@
     lcr_modal.hidePleaseWait();
   }
 
+  /*
+  function append_table(params){
+    for(var i=0; i < params; i++){
+      var t = document.getElementById('t_measurment_data');
+      var tr = document.createElement('tr');
+      for(var j=0; j< 15; j++){
+        var td = document.createElement('td');
+      }
+      
+      td.innerHTML = t;
+      document.getElementById('t_measurment_data').appendChild(tr);
+    }
+  }
+  */
   
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
@@ -1078,14 +1100,28 @@
           <div id="plot_holder"></div>
           <div id="xtitle"></div>
         </div>  
-        <div  hidden class="table-holder well">
-          <table id="measurment_table">
-        <tr>
-            <th id="c_1">Frequency</th>
-            <th id="c_2"></th>
-            <th id="c_3">  </th>
-            <th id="c_4">  </th>
-          </tr>
+
+        <div style="display:none" id="t_measurment_data">
+          <table id="measurment_table" style="width:100%" border="1px solid black" border-collapse="collapse" padding="5px">
+            <tr>        
+              <th id="c_amplitude">Amplitude</th>
+              <th id="c_phase">Phase</th>
+              <th id="c_y_abs">|Y|</th>
+              <th id="c_r_s">Rs</th>
+              <th id="c_phaseY">PhaseY</th>
+              <th id="c_x_s">Xs</th>
+              <th id="c_g_p">Gp</th>
+              <th id="c_b_p">Bp</th>
+              <th id="c_c_s">Cs</th>
+              <th id="c_c_p">Cp</th>
+              <th id="c_l_s">Ls</th>
+              <th id="c_l_p">Lp</th>
+              <th id="c_r_p">Rp</th>
+              <th id="c_q">Q</th>
+              <th id="c_d">D</th>
+            </tr>
+
+
         </table><br>
         </div>
       </div>  
@@ -1331,91 +1367,6 @@
             </div>
           </div>
         </div>
-    
-        <!--
-    <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#table_meas">
-                Table of measurements
-              </a>
-            </h4>
-          </div>
-          <div id="table_meas" class="panel-collapse collapse">
-            <div class="panel-body">
-              <form class="form-horizontal" role="form" onsubmit="return false;">
-                <div class="form-group">
-            <div class="col-xs-3 col-sm-3">
-                    <select class="form-control" id="column_one">
-                      <option value="0">Rs</option>
-                      <option value="1">Ls</option>
-            <option value="2">Cp</option>
-            <option value="3">Cs</option>
-            <option value="4">Rp</option>
-            <option value="5">Q</option>
-            <option value="6">D</option>
-            <option value="7">Y</option>
-            <option value="8">Z</option>
-            <option value="9">|Z|</option>
-            <option value="10">|Y|</option>
-                    </select>
-                  </div>
-          <div class="col-xs-3 col-sm-3">
-                    <select class="form-control" id="column_two">
-                      <option value="0">Rs</option>
-                      <option value="1">Ls</option>
-            <option value="2">Cp</option>
-            <option value="3">Cs</option>
-            <option value="4">Rp</option>
-            <option value="5">Q</option>
-            <option value="6">D</option>
-            <option value="7">Y</option>
-            <option value="8">Z</option>
-            <option value="9">|Z|</option>
-            <option value="10">|Y|</option>
-                    </select>
-                  </div>
-          <div class="col-xs-3 col-sm-3">
-                    <select class="form-control" id="column_three">
-                      <option value="0">Rs</option>
-                      <option value="1">Ls</option>
-            <option value="2">Cp</option>
-            <option value="3">Cs</option>
-            <option value="4">Rp</option>
-            <option value="5">Q</option>
-            <option value="6">D</option>
-            <option value="7">Y</option>
-            <option value="8">Z</option>
-            <option value="9">|Z|</option>
-            <option value="10">|Y|</option>
-                    </select>
-                  </div>
-            <div class="col-xs-3 col-sm-3">
-                    <select class="form-control" id="column_four">
-                      <option value="0">Rs</option>
-                      <option value="1">Ls</option>
-            <option value="2">Cp</option>
-            <option value="3">Cs</option>
-            <option value="4">Rp</option>
-            <option value="5">Q</option>
-            <option value="6">D</option>
-            <option value="7">Y</option>
-            <option value="8">Z</option>
-            <option value="9">|Z|</option>
-            <option value="10">|Y|</option>
-                    </select>
-                  </div>
-          </div>
-        <div>
-          <button id="btn_prep_table" class="btn btn-primary btn-lg" data-checked="true" onclick="change_table()">Prepare table</button>
-          <button id="btn_start_table" class="btn btn-primary btn-lg" data-checked="true" onclick="add()">Show table</button>
-        </div>
-              </form>
-            </div>
-          </div>
-        </div>
-
-      -->
 
     <div class="panel panel-default">
           <div class="panel-heading">
