@@ -208,6 +208,10 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * 2 - Load calibration
        * 3 - None */
        "lcr_calibration", 0, 1, 0, 0, 3 },
+    { /* Lcr progress status. Used for progress bar while measuring.
+       * 0 -   default/min val
+       * 100 - max val */
+       "lcr_progress", 0, 1, 0, 0, 100 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -1164,6 +1168,9 @@ void rp_set_params_lcr(int pos, float val){
   switch(pos){
     case 0:
       rp_main_params[START_MEASURE].value = val;
+      break;
+    case 1:
+      rp_main_params[LCR_PROGRESS].value = val;
   }
 }
 
