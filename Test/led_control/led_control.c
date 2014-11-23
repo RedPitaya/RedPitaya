@@ -88,6 +88,7 @@ int main(void){
 		led_struct->led_control = pow(2, j);
 		usleep(100000);
 	}
-	
+	usleep(10000);
+	led_struct->led_control = 0;
 	return 0;
 }
