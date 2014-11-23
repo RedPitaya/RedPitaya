@@ -6,12 +6,14 @@
 #ifndef __LED_CONTROL_H
 #define __LED_CONTROL_H
 
-/** Base AWG FPGA address */
+/** Base Housekeeping adress */
 #define LED_BASE_ADDR        0x40000000
 #define LED_BASE_SIZE        0x30
 
 
-/* Base mapping function */
+/* Base mapping function -- This structure is a complete mirror of the FPGA memory map documented in the document linked below:
+ *
+ * https://github.com/RedPitaya/RedPitaya/blob/master/FPGA/release1/doc/RedPitaya_HDL_memory_map.odt?raw=true  */
 typedef struct led_struct_s {
 	//OxO
 	uint32_t id;
