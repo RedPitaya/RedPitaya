@@ -14,7 +14,7 @@
 #include "led_control.h"
 
 
-/* House keeping strucure init */
+/* Init of the led structure */
 led_struct_t *led_struct = NULL;
 
 /** The memory file descriptor used to mmap() the FPGA space */
@@ -22,7 +22,7 @@ int led_control_fd = -1;
 
 
 int led_control_cleanup(void){
-	//We only need to clean-up, if hk_struc isn't null
+	//We only need to clean-up, if led_struct_t isn't null
 	if(led_struct){
 		if(munmap(led_struct, LED_BASE_ADDR) < 0){
 			fprintf(stderr, "munmap failed %s\n", strerror(errno));
