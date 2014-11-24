@@ -122,9 +122,9 @@ int main(int argc, char *argv[]){
 		/* Init the temperature memory space */
 		control_init(2);
 
-		float ret_temp = (float)((temp_struct->temp_control)*503.975) / ADC_FULL_RANGE_CN0T - 273.15;
+		float ret_temp = (float)((temp_struct->temp_control)*503.975) / ADC_FULL_RANGE_CNT;
 
-		printf("Temperature: %.2f\n", ret_temp);
+		printf("Temperature: %.2f°C | %.2f K\n", (ret_temp-273.15), ret_temp );
 
 	}
 	control_cleanup();
