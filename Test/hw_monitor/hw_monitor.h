@@ -84,7 +84,7 @@ public:
 	void usage();
 	int init(int argv);
 	int exit();
-	void power_led();
+	void power_led(int l);
 	void temp_control();
 };
 
@@ -161,21 +161,24 @@ void hw_monitor::usage(){
 
 
 /* Sample function, can be turned into anything */
-void hw_monitor::power_led(){
+void hw_monitor::power_led(int l){
 	/* Initialize mmap process for led map address */
 	this->init(1);
 
-	/* Turining on all the leds */
+	/* Turining on all the leds
 	for(int i = 1; i < 9; i++){
 		led_struct->led_control = pow(2, i);
 		usleep(100000);
 	}
 
-	/* Powering off all the leds */
+	/* Powering off all the leds
 	for(int j = 9; j >= 0; j--){
 		led_struct->led_control = pow(2, j);
 		usleep(100000);
 	}
+	*/
+
+	led_struct->led_control = pow(2, l);
 
 	hw_monitor::exit();
 }
