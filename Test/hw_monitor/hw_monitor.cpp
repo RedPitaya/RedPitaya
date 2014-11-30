@@ -17,7 +17,7 @@ int main(){
 	hw_monitor object;
 
 	/* Power on leds */
-	object.power_led();
+	object.power_led(3);
 
 	/* Cout temperature */
 	object.temp_control();
