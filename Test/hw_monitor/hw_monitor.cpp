@@ -11,15 +11,14 @@
 using namespace std;
 
 /* User defined commands*/
-int main(int argc, char *argv[]){
+int main(){
 
 	/* Create a hw monitor object */
 	hw_monitor object;
 
-	if(argc > 2){
-		object.usage();
-	}
-
-	object.led_map();
+	/* Power on leds */
 	object.power_led();
+
+	/* Cout temperature */
+	object.temp_control();
 }
