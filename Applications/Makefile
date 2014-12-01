@@ -19,4 +19,4 @@ clean:
 	for app in $(APPS); do \
 		$(MAKE) -C $$app clean; \
 	done
-	$(RM) redpitaya-*.zip
+	$(RM) *.zip
