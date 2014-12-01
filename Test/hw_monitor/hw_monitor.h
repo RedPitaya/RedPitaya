@@ -84,11 +84,8 @@ public:
 public:
 	hw_monitor();
 	~hw_monitor();
-	void usage();
-	int init(int argv);
-	int exit();
 	void power_led(int l);
-	void temp_control();
+	float temp_control();
 };
 
 #endif /* HW_MONITOR_HW_MONITOR_H_ */
