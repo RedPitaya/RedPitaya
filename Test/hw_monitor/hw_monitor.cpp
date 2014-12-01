@@ -13,6 +13,8 @@ using namespace std;
 
 /* Constructor */
 hw_monitor::hw_monitor(){
+
+	fd_control = -1;
 	/* Page variables used to calculate correct mapping addresses for temperature control */
 	char *page_ptr_led, *page_ptr_temp;
 	long page_addr_led, page_addr_temp, page_off_led, page_off_temp, page_size = sysconf(_SC_PAGESIZE);
