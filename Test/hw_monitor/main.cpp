@@ -6,12 +6,25 @@
  */
 
 #include <iostream>
+#include <stdlib.h>
 using namespace std;
 
 #include "hw_monitor.h"
 
 int main(){
 	hw_monitor hw;
-	hw.power_led(5);
+	while(1){
+		for(int i = 1; i < 8; i++){
+			hw.power_led(i);
+			usleep(100000);
+		}
+		for(int j = 8; j >= 0; j--){
+				hw.power_led(j);
+				usleep(10000);
+			}
+	}
+	hw.exit();
+
+	hw.temp_control();
 }
 
