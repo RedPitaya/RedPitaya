@@ -30,7 +30,7 @@ const int LED_BASE_SIZE = 0x30;
 
 /* Base AMS address */
 const int TEMP_BASE_ADDR = 0x40400000;
-const int TEMP_BASE_SIZE = 0x31;
+const int TEMP_BASE_SIZE = 0x30;
 
 const int ADC_FULL_RANGE_CNT =  0xfff;
 
@@ -79,6 +79,7 @@ public:
 	/* Address structure set to null */
 	led_control_t *led_struct = NULL;
 	temp_struct_t *temp_struct = NULL;
+
 /*Function declarations */
 public:
 	hw_monitor();
