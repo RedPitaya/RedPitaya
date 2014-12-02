@@ -4,8 +4,7 @@
 # Linux kernel Makefile
 #
 
-LINUX_GIT := /var/git/linux-xlnx.git
-LINUX_TAG := xilinx-v14.6.02
+LINUX_GIT_ARCHIVE := https://github.com/Xilinx/linux-xlnx/archive/xilinx-v14.6.02.tar.gz
 XLINUX_DIR := linux-xlnx
 PATCH := patches
 NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
@@ -19,7 +18,7 @@ all: $(XLINUX_DIR)
 
 $(XLINUX_DIR):
 	mkdir $(XLINUX_DIR)
-	cd $(XLINUX_DIR); git archive --remote $(LINUX_GIT) $(LINUX_TAG) | tar x
+	cd $(XLINUX_DIR); curl -L $(LINUX_GIT_ARCHIVE) | tar xz --strip-components 1
 	cat $(PATCH)/*.patch | patch -p1 -d $(XLINUX_DIR)
 	cp ./config/rp_defconfig $(XLINUX_DIR)/arch/arm/configs/
 	make -C $(XLINUX_DIR) mrproper
