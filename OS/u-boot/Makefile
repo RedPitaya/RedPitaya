@@ -9,8 +9,7 @@
 #
 
 
-UBOOT_GIT := /var/git/u-boot-xlnx.git
-UBOOT_TAG := xilinx-v14.6.01
+UBOOT_GIT_ARCHIVE := https://github.com/Xilinx/u-boot-xlnx/archive/xilinx-v14.6.01.tar.gz
 UBOOT_DIR := u-boot-xlnx
 UBOOT := $(UBOOT_DIR)/u-boot
 PATCH := patches
@@ -25,7 +24,7 @@ all: $(UBOOT_DIR)
 
 $(UBOOT_DIR):
 	mkdir $(UBOOT_DIR)
-	cd $(UBOOT_DIR); git archive --remote $(UBOOT_GIT) $(UBOOT_TAG) | tar x
+	cd $(UBOOT_DIR); curl -L $(UBOOT_GIT_ARCHIVE) | tar xz --strip-components 1
 	cat $(PATCH)/*.patch | patch -p1 -d $(UBOOT_DIR)
 	make -C $(UBOOT_DIR) arch=ARM zynq_red_pitaya_config
 
