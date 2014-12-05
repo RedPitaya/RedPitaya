@@ -1,5 +1,5 @@
 /*
- * led.cpp
+ * hw_monitor.cpp
  *
  *  Created on: Nov 27, 2014
  *      Author: infused
@@ -69,16 +69,12 @@ hw_monitor::~hw_monitor(){
 		 temp_struct = NULL;
 	 }
 }
-/*
-void hw_monitor::usage(){
-	char argv_max[] = "Too many arguments. Hw_control takes 0 arguments.\n\n"
-			 	 	 "Usage: \n"
-					 "\t- Argument 1: Led control\n"
-			 	 	 "\t- Argument 2: Temperature control.\n";
 
+
+void hw_monitor::usage(){
+	char argv_max[] = "Too many arguments. Hw_control takes 0 arguments.\n\n";
 	cout << argv_max << "\n";
 }
-*/
 
 /* Sample function, can be turned into anything */
 void hw_monitor::power_led(int l){
@@ -94,6 +90,7 @@ float hw_monitor::temp_control(){
 
 	return (celsius);
 }
+
 
 
 
