@@ -11,8 +11,10 @@ using namespace std;
 
 #include "hw_monitor.h"
 
-int main(){
+int main(int argc){
 	hw_monitor hw;
+
+	hw.temp_control();
 
 	while(1){
 		for(int i = 1; i < 8; i++){
@@ -24,6 +26,8 @@ int main(){
 			usleep(10000);
 		}
 	}
+
+
 
 	/*
 	float avg = 0;
