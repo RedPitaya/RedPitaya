@@ -34,6 +34,8 @@ const int TEMP_BASE_SIZE = 0x30;
 
 const int ADC_FULL_RANGE_CNT =  0xfff;
 
+
+
 /* Led structure declaration */
 typedef struct led_control_s{
 	unsigned long int id;
