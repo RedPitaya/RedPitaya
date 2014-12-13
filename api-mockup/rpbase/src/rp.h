@@ -95,6 +95,9 @@ typedef enum {
 } rp_pinDirection_t;
 
 
+/** @name General
+ */
+///@{
 
 
 /**
@@ -124,6 +127,12 @@ const char* rp_GetVersion();
  * @return Textual representation of error given error code.
  */
 const char* rp_GetError(int errorCode);
+
+///@}
+
+/** @name Digital Input/Output
+ */
+///@{
 
 /**
  * Sets digital input output pin state.
@@ -162,6 +171,9 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
  */
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
+
+///@}
+
 
 #ifdef __cplusplus
 }

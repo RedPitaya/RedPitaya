@@ -29,7 +29,11 @@ $(RPLIB):
 $(TEST):
 	$(MAKE) -C test
 
+docapi:
+	$(MAKE) -C doc
+
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
+	$(MAKE) -C doc clean
 
