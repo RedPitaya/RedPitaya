@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern int hk_Init();
-extern int hk_Release();
+int hk_Init();
+int hk_Release();
 
 int hk_SetLedBits(uint32_t bits);
 int hk_UnsetLedBits(uint32_t bits);
