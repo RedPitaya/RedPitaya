@@ -1,0 +1,19 @@
+
+<Root MajorVersion="0" MinorVersion="20" xmlns="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Compositefile.xsd">
+
+  <CompositeFile CanBeSetAsTop="false" CanDisplayChildGraph="false" CompositeFileTopName="system" Part="xc7z010clg400-1">
+    <Description>A description of the composite file</Description>
+    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1386859951"/>
+    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1386859951"/>
+    <Generation Name="SIMULATION" State="RESET" Timestamp="1386859951"/>
+    <FileCollection Name="SOURCES" Type="SOURCES">
+      <Description>A description for this file collection</Description>
+      <File Name="system.mhs" Type="MHS">
+        <Description>This is MHS file</Description>
+        <Properties IsDisabled="false" IsEditable="true" IsTrackable="true" IsUserDisableable="false" IsVisible="true" Timestamp="1386344356"/>
+        <UsedIn Val="NONE"/>
+      </File>
+    </FileCollection>
+  </CompositeFile>
+
+</Root>
