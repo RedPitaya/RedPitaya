@@ -1,0 +1,879 @@
+<!--
+ * Red Pitaya Frequency Response Analyzer client.
+ *
+ * Author: Dakus <info@eskala.eu>
+ *         
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in Javascript & HTML.
+ * Please visit http://en.wikipedia.org/wiki/JavaScript
+ *              http://en.wikipedia.org/wiki/HTML
+ * for more details on the languages used herein.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequency Response Analyzer</title>
+  <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+  <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+  <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+  <script src="../assets/flot/jquery.flot.js"></script>
+  <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+  <script src="../assets/flot/jquery.flot.navigate.js"></script>
+  <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+  <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+  <script type="text/javascript">
+
+  // Settings which can be modified
+
+  var app_id = 'freqanalyzer';
+  var root_url = '';
+  //var root_url = 'http://10.0.1.221';      // Test local
+  //var root_url = 'http://192.168.53.133';  // Test remote and local  
+  //var root_url = 'http://192.168.1.100';   // Default RedPitaya IP
+  var start_app_url = root_url + '/bazaar?start=' + app_id;
+  var stop_app_url = root_url + '/bazaar?stop=';
+  var get_url = root_url + '/data';
+  var post_url = root_url + '/data';
+  
+  var update_interval = 50;          // Update interval for PC, milliseconds
+  var update_interval_mobdev = 500;  // Update interval for mobile devices, milliseconds 
+  var request_timeout = 15000;       // Milliseconds
+  var points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
+  var xdecimal_places = 2;           // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
+    
+  var xmin = 0;
+  var xmax = 60;  
+  var ymax = 20.0;
+  var ymin = -100.0;
+
+  var freq_range_max = [62.5, 7.8, 976, 61, 7.6, 953];
+
+  var plot_options = {
+    colors: ['#3276B1', '#D2322D'],    // channel1, channel2
+    lines: { lineWidth: 1 },
+    selection: { mode: 'xy' },
+    //zoom: { interactive: true },
+    //pan: { interactive: true },
+    xaxis: { min: xmin, max: xmax },
+    yaxis: { min: ymin, max: ymax },
+    grid: { borderWidth: 0 },
+    legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
+    touch: { autoWidth: false, autoHeight: false }
+  };
+  
+  // Settings which should not be modified
+  
+  var update_timer = null;
+  var zoompan_timer = null;
+  var downloading = false;
+  var sending = false;
+  var send_que = false;
+  var trig_dragging = false;
+  var touch_last_y = 0;
+  var user_editing = false;
+  var cal_butt1 = 0;
+  var cal_butt2 = 0;
+  var app_started = false;
+  var last_get_failed = false;
+  var autorun = 1;
+  var datasets = [];
+  var plot = null;
+  var params = {
+    original: null,
+    local: null
+  };
+  
+  // Default parameters - posted after server side app is started 
+  var def_params = {
+	  freq_range:   parseInt(0),
+	  freq_unit:    parseInt(2),
+	  en_cal1:      parseInt(0),
+	  en_cal2:      parseInt(0)
+  };
+  
+  // On page loaded
+    
+  $(function() {
+    
+    // Show different buttons on touch screens
+    if(window.ontouchstart === undefined) {
+      $('.btn-lg').removeClass('btn-lg');
+      $('.modal .btn').addClass('btn-sm');
+      $('#btn_zoompan').remove();
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').show();
+    }
+    else {
+      update_interval = update_interval_mobdev;
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
+      $('#btn_zoompan').show();
+    }
+    
+    // Add application ID in the message from modal popup
+    $('.app-id').text(app_id);
+    
+    // Disable all controls until the params state is loaded for the first time 
+    $('input, select, button', '.container').prop('disabled', true);
+    
+    // Events binding
+  
+        
+    $('#btn_selection, #btn_zoompan').on('blur', function() {
+      $(this).removeClass('active');
+    });
+    
+    // Modal popups
+    
+    $('#modal_err, #modal_app').modal({ show: false, backdrop: 'static', keyboard: false });
+    
+    $('#btn_switch_app').on('click', function() {
+      var newapp_id = $('#new_app_id').text();
+      if(newapp_id.length) {
+        location.href = location.href.replace(app_id, newapp_id);
+      }
+    });
+    
+    $('.btn-app-restart').on('click', function() {
+      location.reload();
+    });
+    
+    $('#btn_retry_get').on('click', function() {
+      $('#modal_err').modal('hide');
+      updateGraphData();
+    });
+    
+    $('.btn-close-modal').on('click', function() {
+      $(this).closest('.modal').modal('hide');
+    });
+    
+    // Load first data
+    updateGraphData();
+    
+    // Stop the application when page is unloaded
+    window.onbeforeunload = function() { 
+      $.ajax({
+        url: stop_app_url,
+        async: false
+      });
+    };
+    
+  });
+  
+  function startApp() {
+    $.get(
+      start_app_url
+    )
+    .done(function(dresult) {
+      if(dresult.status == 'ERROR') {
+        showModalError((dresult.reason ? dresult.reason : 'Could not start the application.'), true);
+      }
+      else {
+        $.post(
+          post_url, 
+          JSON.stringify({ datasets: { params: def_params } })
+        )
+        .done(function(dresult) {
+          app_started = true;
+          updateGraphData();      
+        })
+        .fail(function() {
+          showModalError('Could not initialize the application with default parameters.', false, true);
+        });
+      }
+    })
+    .fail(function() {
+      showModalError('Could not start the application.', true);
+    });
+  }
+  
+  function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+    var err_modal = $('#modal_err');
+    
+    err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+    err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+    err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+    err_modal.find('.modal-body').html(err_msg);
+    err_modal.modal('show');
+  }    
+  
+  function updateGraphData() {
+    if(downloading) {
+      return;
+    }
+    if(update_timer) {
+      clearTimeout(update_timer);
+      update_timer = null;
+    }
+    downloading = true;
+    
+    // Send params if there are any unsent changes
+    sendParams();
+    
+    // Don't update data if both channels are frozen and there are already some sets of data
+    if($('#btn_freezech1').data('checked') && $('#btn_freezech2').data('checked') && datasets.length) {
+      downloading = false;
+      update_timer = setTimeout(function() {
+        updateGraphData();
+      }, update_interval);
+      return;
+    }
+    
+    var arun_before_ajax = autorun;
+    
+    $.ajax({
+      url: get_url,
+      timeout: request_timeout,
+      cache: false
+    })
+    .done(function(dresult) {
+      last_get_failed = false;
+      
+      if(dresult.status === 'ERROR') {
+        if(! app_started) {
+          startApp();
+        }
+        else {
+          showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
+        }
+      }
+      else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+        // Check if the application started on the server is the same as on client
+        if(app_id !== dresult.app.id) {
+          if(! app_started) {
+            startApp();
+          }
+          else {
+            $('#new_app_id').text(dresult.app.id);
+            $('#modal_app').modal('show');
+          }
+          return;
+        }
+        
+        app_started = true;
+        
+        // Keep the datasets for frozen channels
+        var frozen_dsets = [
+          ($('#btn_freezech1').data('checked') && datasets[0] !== undefined ? datasets[0] : null),
+          ($('#btn_freezech2').data('checked') && datasets[1] !== undefined ? datasets[1] : null)
+        ];
+         
+        datasets = [];
+        for(var i=0; i<dresult.datasets.g1.length; i++) {
+          // Don't update data for frozen channels
+          if(frozen_dsets[i]) {
+            datasets.push(frozen_dsets[i]);
+          }
+          else {
+            dresult.datasets.g1[i].color = i;
+            dresult.datasets.g1[i].label = 'Channel ' + (i+1);          
+            datasets.push(dresult.datasets.g1[i]);
+          }
+        }
+
+        if(! plot) {
+          initPlot(dresult.datasets.params);
+        }
+        else {
+          // Apply the params state received from server if not in edit mode
+          if(! user_editing) {
+            loadParams(dresult.datasets.params);
+          }
+          // Frequency units must be always updated
+          else {
+            updateFrequencyUnits(dresult.datasets.params);
+          }
+          
+          // Redraw the plot using new datasets
+          plot.setData(filterData(datasets, plot.width()));
+          plot.setupGrid();
+          plot.draw();
+        }
+        
+        if(autorun || dresult.status === 'AGAIN') {
+          update_timer = setTimeout(function() {
+            updateGraphData();
+          }, update_interval);
+        }
+      }
+      else {
+        showModalError('Wrong application data received.', true, true);
+      }
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      if(last_get_failed) {
+        showModalError('Data receiving failed.<br>Error status: ' + textStatus, true, true);
+        last_get_failed = false;
+      }
+      else {
+        last_get_failed = true;
+        downloading = false;
+        updateGraphData();  // One more try
+      }
+    })
+    .always(function() {
+      if(! last_get_failed) {
+        downloading = false;
+        if(params.local) {
+          $('.btn, #freq_range').prop('disabled', false);
+        }
+      }
+    });
+  }
+  
+  function initPlot(init_params) {
+    var plot_holder = $('#plot_holder');
+    
+    // Load received params
+    loadParams(init_params);
+    
+    // When xmin/xmax are null, the min/max values of received data will be used. For ymin/ymax use the predefined values.
+    $.extend(true, plot_options, {
+      xaxis: { min: null, max: null },
+      yaxis: { min: ymin, max: ymax }
+    });
+    
+    // Local optimization    
+    var filtered_data = filterData(datasets, plot_holder.width());
+  
+    // Plot first creation and drawing
+    plot = $.plot(
+      plot_holder, 
+      filtered_data,
+      plot_options
+    );
+    
+    // Selection
+    plot_holder.on('plotselected', function(event, ranges) {
+    
+      // Clamp the zooming to prevent eternal zoom
+      if(ranges.xaxis.to - ranges.xaxis.from < 0.00001) {
+        ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+      }
+      if(ranges.yaxis.to - ranges.yaxis.from < 0.00001) {
+        ranges.yaxis.to = ranges.yaxis.from + 0.00001;
+      }
+  
+      // Do the zooming
+      plot = $.plot(
+        plot_holder, 
+        getData(ranges.xaxis.from, ranges.xaxis.to),
+        $.extend(true, plot_options, {
+          xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+          yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to }
+        })
+      );
+      
+      params.local.xmin = parseFloat(ranges.xaxis.from.toFixed(xdecimal_places));
+      params.local.xmax = parseFloat(ranges.xaxis.to.toFixed(xdecimal_places));
+      
+      sendParams(true);
+    });
+    
+    // Zoom / Pan
+    plot_holder.on('plotzoom plotpan touchmove touchend', function(event) {
+      
+      if(zoompan_timer) {
+        clearTimeout(zoompan_timer);
+        zoompan_timer = null;
+      }
+      
+      zoompan_timer = setTimeout(function() {
+        zoompan_timer = null;
+        
+        var xaxis = plot.getAxes().xaxis;
+        params.local.xmin = parseFloat(xaxis.min.toFixed(xdecimal_places));
+        params.local.xmax = parseFloat(xaxis.max.toFixed(xdecimal_places));
+        
+        sendParams(true);
+      }, 250);
+    });
+  }
+  
+  function loadParams(orig_params) {
+    if(! $.isPlainObject(orig_params)) {
+      return;
+    }
+    params.original = $.extend({}, orig_params);
+    
+    // Same data in local and original params
+    params.local = $.extend({}, params.original);
+
+    // For spectrum analyzer autorun is always on
+    autorun = 1;
+    
+    $('#freq_range').val(params.original.freq_range);
+    
+    updateFrequencyUnits(orig_params);
+    $('#ytitle, .waterfall_title').show();
+  }
+  
+  function updateFrequencyUnits(new_params) {
+    if(! $.isPlainObject(new_params)) {
+      return;
+    } 
+    
+    params.original.freq_unit = params.local.freq_unit = (isNaN(new_params.freq_unit) ? 0 : parseInt(new_params.freq_unit)); 
+    
+    // 0 - Hz, 1 - kHz, 2 - MHz
+    var frequ_lbl = (params.original.freq_unit == 1 ? 'k' : (params.original.freq_unit == 2 ? 'M' : '')) + 'Hz';
+    $('#xtitle').text('Frequency [ ' + frequ_lbl + ' ]');
+  }
+  
+  function isParamChanged() {
+    if(params.original) {
+      for(var key in params.original) {
+        if(params.original[key] != params.local[key]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  function sendParams(refresh_data, force_send) {
+    if(sending || (force_send !== true && !isParamChanged())) {
+      send_que = sending;
+      return;
+    }
+    sending = true;
+    
+	params.local.en_cal1 =  cal_butt1;
+    params.local.en_cal2 =  cal_butt2;
+	
+    $.ajax({
+      type: 'POST',
+      url: post_url,
+      data: JSON.stringify({ datasets: { params: params.local } }),
+      timeout: request_timeout,
+      cache: false
+    })
+    .done(function(dresult) {
+      // OK: Load the params received as POST result
+      if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+        loadParams(dresult.datasets.params);
+        
+        if(refresh_data && !downloading) {
+          updateGraphData();
+        } 
+      }
+      else if(dresult.status == 'ERROR') {
+        showModalError((dresult.reason ? dresult.reason : 'Error while sending data (E1).'), false, true, true);
+        send_que = false;
+      }
+      else {
+        showModalError('Error while sending data (E2).', false, true, true);
+      }
+    })
+    .fail(function() {
+      showModalError('Error while sending data (E3).', false, true, true);
+    })
+    .always(function() {
+      sending = false;
+      user_editing = false;
+      
+      if(send_que) {
+        send_que = false;
+        setTimeout(function(refresh_data) {
+          sendParams(refresh_data);
+        }, 100);
+      }
+    });
+  }
+  
+  function getData(from, to) {
+    var rangedata = new Array();
+    for(var i=0; i<datasets.length; i++) {
+      if(! $('#btn_ch' + (i+1)).data('checked')) {
+        continue;
+      }
+      rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
+      for(var j=0; j<datasets[i].data.length; j++) {
+        if(datasets[i].data[j][0] > to) {
+          break;
+        }
+        if(datasets[i].data[j][0] >= from) {
+          rangedata[rangedata.length - 1].data.push(datasets[i].data[j]);
+        }
+      }
+    }
+    rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+    return rangedata;
+  }
+  
+  // Use only data for selected channels and do downsamling (data decimation), which is required for 
+  // better performance. On the canvas cannot be shown too much graph points. 
+  function filterData(dsets, points) {
+    var filtered = [];
+    var num_of_channels = 2;
+
+    for(var l=0; l<num_of_channels; l++) {
+      if(! $('#btn_ch' + (l+1)).data('checked')) {
+        continue;
+      }
+
+      i = Math.min(l, dsets.length - 1);
+
+      filtered.push({ color: dsets[i].color, label: dsets[i].label, data: [] });
+      
+      if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
+        var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
+        var k = 0;
+        for(var j=0; j<dsets[i].data.length; j++) {
+          if(k > 0 && ++k < step) {
+            continue;
+          }
+          filtered[filtered.length - 1].data.push(dsets[i].data[j]);
+          k = 1;
+        }
+      }
+      else {
+        filtered[filtered.length - 1].data = dsets[i].data.slice(0);
+      }
+    }
+    
+    return filtered;
+  }
+  
+  function redrawPlot() {
+    if(! downloading) {
+      if(! plot) {
+        updateGraphData();
+      }
+      else {
+        var options = plot.getOptions();
+        plot = $.plot(
+          plot.getPlaceholder(), 
+          filterData(datasets, plot.width()),
+          $.extend(true, plot_options, {
+            xaxis: { min: options.xaxes[0].min, max: options.xaxes[0].max },
+            yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
+          })
+        );      
+      }
+    }
+  }
+  
+  function setVisibleChannels(btn) {
+    var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
+    var btn = $(btn);
+    var checked = !btn.data('checked');
+    
+    btn.data('checked', checked).toggleClass('btn-default btn-primary');
+    
+    // At least one button must be checked, so that at least one graph will be visible.
+    if(! checked) {
+      other_btn.data('checked', true).removeClass('btn-default').addClass('btn-primary');
+    }
+    redrawPlot();
+  }
+  
+  function freezeChannel(btn) {
+    var btn = $(btn);
+    var checked = !btn.data('checked');
+    
+    btn.data('checked', checked).toggleClass('btn-default btn-primary');
+  }
+  
+  function autoscaleY() {
+    if(! plot) {
+      return;
+    }
+    
+    var options = plot.getOptions();
+    var axes = plot.getAxes();
+    
+    // Set Y scale to data min/max + 10%
+    options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - axes.yaxis.datamin * 0.1); 
+    options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + axes.yaxis.datamax * 0.1);
+
+    plot.setupGrid();
+    plot.draw();
+  }
+  
+  function cal1() {
+	cal_butt1=1-cal_butt1;
+	sendParams(true, true);
+  }
+
+  function cal2() {
+   cal_butt2=1-cal_butt2;
+   sendParams(true, true);
+  }
+  
+  function resetZoom() {
+    if(! plot) {
+      return;
+    }
+
+    $('#btn_ch1, #btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');    
+    $('#btn_freezech1, #btn_freezech2').data('checked', false).removeClass('btn-primary').addClass('btn-default');
+    
+    $.extend(true, plot_options, {
+      xaxis: { min: null, max: null },
+      yaxis: { min: ymin, max: ymax }
+    });
+         
+    var curr_options = plot.getOptions();
+    curr_options.xaxes[0].min = null;
+    curr_options.xaxes[0].max = null;
+    curr_options.yaxes[0].min = ymin;
+    curr_options.yaxes[0].max = ymax;
+    
+    plot.setupGrid();
+    plot.draw();
+    
+    params.local.xmin = xmin;
+    params.local.xmax = xmax;
+    
+    sendParams(true, true);
+  }
+  
+  function updateZoom() {
+    if(! plot) {
+      return;
+    }
+
+    params.local.xmin = 0;
+    params.local.xmax = freq_range_max[params.local.freq_range];
+  
+    var axes = plot.getAxes();
+    var options = plot.getOptions();
+    
+    options.xaxes[0].min = params.local.xmin;
+    options.xaxes[0].max = params.local.xmax;
+    options.yaxes[0].min = axes.yaxis.min;
+    options.yaxes[0].max = axes.yaxis.max;
+    
+    plot.setupGrid();
+    plot.draw();
+
+    sendParams(true, true);
+  }
+  
+  function selectTool(toolname) {
+    $('#selzoompan .btn').removeClass('btn-primary').addClass('btn-default');
+    $(this).toggleClass('btn-default btn-primary');
+  
+    if(toolname == 'zoomin') {
+      enableZoomInSelection();
+    }
+    if(toolname == 'zoomout') {
+      enableZoomOut();
+    }
+    else if(toolname == 'pan') {
+      enablePanning();
+    }
+  }
+
+  function enableZoomInSelection() {
+    if(plot_options.hasOwnProperty('selection')) {
+      return;
+    }
+    
+    var plot_pholder = plot.getPlaceholder();
+
+    // Disable panning and zoom out
+    delete plot_options.pan;
+    plot_pholder.off('click.rp');
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        selection: { mode: 'xy' },
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  }
+  
+  function enableZoomOut() {
+    var plot_pholder = plot.getPlaceholder();
+    
+    plot_pholder.on('click.rp', function(event) {
+      var offset = $(event.target).offset();
+      
+      plot.zoomOut({
+        center: { left: event.pageX - offset.left, top: event.pageY - offset.top },
+        amount: 1.2
+      });
+    });
+    
+    // Disable zoom in selection and panning
+    delete plot_options.selection;
+    delete plot_options.pan;
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  }
+  
+  function enablePanning() {
+    if(plot_options.hasOwnProperty('pan')) {
+      return;
+    }
+    
+    var plot_pholder = plot.getPlaceholder();
+    
+    // Disable selection zooming and zoom out
+    delete plot_options.selection;
+    plot_pholder.off('click.rp');
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        pan: { interactive: true },
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  }
+  
+  function getLocalDecimalSeparator() {
+    var n = 1.1;
+    return n.toLocaleString().substring(1,2);
+  }
+  
+  function parseLocalFloat(num) {
+    return +(num.replace(getLocalDecimalSeparator(), '.'));
+  }
+  
+  function floatToLocalString(num) {
+    // Workaround for a bug in Safari 6 (reference: https://github.com/mleibman/SlickGrid/pull/472)
+    //return num.toString().replace('.', getLocalDecimalSeparator());
+    return (num + '').replace('.', getLocalDecimalSeparator());
+  }
+  </script>
+  <script src="../assets/redpitaya.custom.js"></script>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
+      <img class="logo pull-left" src="../assets/images/logo_white.png">
+      <h2 class="page-title">Frequency Response Analyzer</h2>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div id="btn_toolbar" class="col-xs-12">
+        <button id="btn_autoscale_y" class="btn btn-primary btn-lg" data-autozoom="false" onclick="autoscaleY()">
+          <span class="glyphicon glyphicon-resize-vertical"></span> Autoscale
+        </button>
+        <button class="btn btn-primary btn-lg" onclick="resetZoom()">
+          <span class="glyphicon glyphicon-retweet"></span> Reset zoom
+        </button>  
+        <div id="selzoompan" class="btn-group" data-toggle="buttons">
+          <button id="btn_zoomin" class="btn btn-primary" onclick="selectTool.call(this, 'zoomin')" style="display: none">
+            <span class="glyphicon glyphicon-zoom-in"></span>
+          </button>
+          <button id="btn_zoomout" class="btn btn-default" onclick="selectTool.call(this, 'zoomout')" style="display: none">
+            <span class="glyphicon glyphicon-zoom-out"></span>
+          </button>
+          <button id="btn_pan" class="btn btn-default" onclick="selectTool.call(this, 'pan')" style="display: none">
+            <span class="glyphicon glyphicon-move"></span>
+          </button>
+          <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
+            <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
+          </button>
+        </div>
+        <button id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
+        <button id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 2</button>
+        <button id="btn_freezech1" class="btn btn-default btn-lg" data-checked="false" onclick="freezeChannel(this)">Freeze Ch1</button>
+        <button id="btn_freezech2" class="btn btn-default btn-lg" data-checked="false" onclick="freezeChannel(this)">Freeze Ch2</button>
+      </div>
+    </div>  
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-8">
+        <div class="allgraphs-holder well well-small">
+          <div class="graph-holder clearfix">
+            <div id="ytitle">Gain [ dB ]</div>
+            <div id="plot_holder" class="spectrum"></div>
+            <div id="xtitle"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-4">
+        <div id="trigger_panel" class="panel panel-default">
+          <div class="panel-heading">
+            <strong>Controls</strong>
+          </div>
+          <div class="panel-body">
+            <!--<form class="form-horizontal" role="form">
+              <div class="form-group">
+                <label for="freq_range" class="col-xs-4 control-label" style="white-space: nowrap;">Freq. range:</label>
+                <div class="col-xs-8">
+                  <select id="freq_range" class="form-control input-sm">
+                    <option value="0">62.5 MHz</option>
+                    <option value="1">7.8 MHz</option>
+                    <option value="2">976 KHz</option>
+                    <option value="3">61 KHz</option>
+                    <option value="4">7.6 KHz</option>
+                    <option value="5">953 Hz</option>
+                  </select>
+                </div>
+              </div>
+            </form>-->
+            <button class="btn btn-primary btn-lg" onclick="cal1()">Calibrate Ch1</button> 
+            <button class="btn btn-primary btn-lg" onclick="cal2()">Calibrate Ch2</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer clearfix">
+      <p class="pull-right" style="margin: 4px 0 0">&copy; 2014 - Red Pitaya</p>
+    </div>
+  </div>
+  <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_err_label">Application error</h4>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-close-modal" id="btn_ignore">Ignore</button>
+          <button type="button" class="btn btn-default" id="btn_retry_get">Retry</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+        </div>
+        <div class="modal-body">
+          The <strong><span class="app-id"></span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br />
+          Do you want to switch to newly started application or to restart <strong><span class="app-id"></span></strong>?
+        </div>
+        <div class="modal-footer">
+          <a href="/index.html" class="btn btn-danger pull-left">Exit app</a>
+          <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
