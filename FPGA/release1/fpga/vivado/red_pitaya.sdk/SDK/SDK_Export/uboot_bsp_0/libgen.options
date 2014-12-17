@@ -1,0 +1,3 @@
+PROCESSOR=ps7_cortexa9_0
+REPOSITORIES=-lp ../bsp_repos
+HWSPEC=../hw/system.xml
