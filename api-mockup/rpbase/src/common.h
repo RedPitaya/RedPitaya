@@ -17,6 +17,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "rp.h"
 
@@ -28,12 +29,13 @@
   } \
 }
 
-#define SET_BITS(x,b) (x |= b)
-#define UNSET_BITS(x,b) (x &= ~b)
-#define ARE_BITS_SET(x,b) ((x & b) == b)
+#define SET_BITS(x,b) ((x) |= (b))
+#define UNSET_BITS(x,b) ((x) &= ~(b))
+#define SET_VALUE(x,b) ((x) = (b))
+#define ARE_BITS_SET(x,b) (((x) & (b)) == (b))
 
 #define VALIDATE_BITS(b,m) { \
-	if ((b & ~m) != 0) return RP_EOOR; \
+	if (((b) & ~(m)) != 0) return RP_EOOR; \
 }
 
 
@@ -46,6 +48,9 @@ int cmn_Unmap(size_t size, void** mapped);
 
 int cmn_SetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
 int cmn_UnsetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
+int cmn_SetBitsValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSet);
+int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
+int cmn_GetBitsValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
 int cmn_AreBitsSet(uint32_t field, uint32_t bits, uint32_t mask, bool* result);
 
 #endif /* COMMON_H_ */
