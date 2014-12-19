@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <stdio.h>
 
 #include "common.h"
 
@@ -36,6 +37,7 @@ int cmn_Release()
 		 if(close(fd) < 0) {
 			 return RP_ECMD;
 		 }
+		fd = -1;
 	}
 
 	return RP_OK;
@@ -61,6 +63,33 @@ int cmn_Unmap(size_t size, void** mapped)
 	return RP_OK;
 }
 
+int cmn_SetBitsValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSetShift)
+{
+	VALIDATE_BITS(value, mask);
+
+	// Construct data to write. Only one write - pin output is stable
+	value = value << bitsToSetShift;
+	uint32_t currentValue;
+	cmn_GetValue(field, &currentValue, 0xffffffff);
+	SET_BITS(currentValue, value);
+	UNSET_BITS(currentValue, (~value) & (mask << bitsToSetShift));
+
+	SET_VALUE(*field, currentValue);
+	return RP_OK;
+}
+
+int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask)
+{
+	*value = *field & mask;
+	return RP_OK;
+}
+
+int cmn_GetBitsValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift)
+{
+	*value = (*field >> bitsToSetShift) & mask;
+	return RP_OK;
+}
+
 int cmn_SetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask)
 {
 	VALIDATE_BITS(bits, mask);
@@ -81,5 +110,3 @@ int cmn_AreBitsSet(uint32_t field, uint32_t bits, uint32_t mask, bool* result)
 	*result = ARE_BITS_SET(field, bits);
 	return RP_OK;
 }
-
-
