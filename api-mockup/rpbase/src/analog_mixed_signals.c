@@ -21,7 +21,7 @@
 
 // Base Analog Mixed Signals address
 static const int ANALOG_MIXED_SIGNALS_BASE_ADDR = 0x40400000;
-static const int ANALOG_MIXED_SIGNALS_BASE_SIZE = 0x2C;
+static const int ANALOG_MIXED_SIGNALS_BASE_SIZE = 0x30;
 
 typedef struct analog_mixed_signals_control_s {
 	uint32_t aif0;
@@ -63,36 +63,36 @@ int ams_Release()
 int ams_SetValueDAC0(uint32_t value)
 {
 	if (value > ANALOG_OUT_MAX) {
-		return RP_EOR;
+		return RP_EOOR;
 	}
-    return cmn_SetBitsValue(&ams->dac0, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+    return cmn_SetShiftedValue(&ams->dac0, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
     return RP_OK;
 }
 
 int ams_SetValueDAC1(uint32_t value)
 {
 	if (value > ANALOG_OUT_MAX) {
-		return RP_EOR;
+		return RP_EOOR;
 	}
-	return cmn_SetBitsValue(&ams->dac1, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+	return cmn_SetShiftedValue(&ams->dac1, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
 	return RP_OK;
 }
 
 int ams_SetValueDAC2(uint32_t value)
 {
 	if (value > ANALOG_OUT_MAX) {
-		return RP_EOR;
+		return RP_EOOR;
 	}
-	return cmn_SetBitsValue(&ams->dac2, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+	return cmn_SetShiftedValue(&ams->dac2, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
 	return RP_OK;
 }
 
 int ams_SetValueDAC3(uint32_t value)
 {
 	if (value > ANALOG_OUT_MAX) {
-		return RP_EOR;
+		return RP_EOOR;
 	}
-	return cmn_SetBitsValue(&ams->dac3, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+	return cmn_SetShiftedValue(&ams->dac3, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
 	return RP_OK;
 }
 
@@ -118,22 +118,22 @@ int ams_GetValueADC3(uint32_t* value)
 
 int ams_GetValueDAC0(uint32_t* value)
 {
-	return cmn_GetBitsValue(&ams->dac0, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+	return cmn_GetShiftedValue(&ams->dac0, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetValueDAC1(uint32_t* value)
 {
-	return cmn_GetBitsValue(&ams->dac1, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+	return cmn_GetShiftedValue(&ams->dac1, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetValueDAC2(uint32_t* value)
 {
-	return cmn_GetBitsValue(&ams->dac2, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+	return cmn_GetShiftedValue(&ams->dac2, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetValueDAC3(uint32_t* value)
 {
-	return cmn_GetBitsValue(&ams->dac3, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+	return cmn_GetShiftedValue(&ams->dac3, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetRangeInput(float *min_val, float *max_val) {
