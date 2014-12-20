@@ -63,17 +63,13 @@ int cmn_Unmap(size_t size, void** mapped)
 	return RP_OK;
 }
 
-int cmn_SetBitsValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSetShift)
+int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSetShift)
 {
 	VALIDATE_BITS(value, mask);
-
-	// Construct data to write. Only one write - pin output is stable
-	value = value << bitsToSetShift;
 	uint32_t currentValue;
 	cmn_GetValue(field, &currentValue, 0xffffffff);
-	SET_BITS(currentValue, value);
-	UNSET_BITS(currentValue, (~value) & (mask << bitsToSetShift));
-
+	currentValue &=  ~(mask << bitsToSetShift);
+	currentValue +=  (value << bitsToSetShift);
 	SET_VALUE(*field, currentValue);
 	return RP_OK;
 }
@@ -84,7 +80,7 @@ int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask)
 	return RP_OK;
 }
 
-int cmn_GetBitsValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift)
+int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift)
 {
 	*value = (*field >> bitsToSetShift) & mask;
 	return RP_OK;
