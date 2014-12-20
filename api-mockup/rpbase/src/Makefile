@@ -37,6 +37,8 @@ OBJECTS =	common.o \
 			dpin_handler.o \
 			analog_mixed_signals.o \
 			apin_handler.o \
+			health.o \
+			health_handler.o \
 			rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
