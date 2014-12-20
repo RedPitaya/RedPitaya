@@ -5,6 +5,23 @@
 
 #include "../src/rp.h"
 
+
+
+const char HEALTH_OIN_NAME[11][20]={
+        "Tempereature",
+        "VCCPINT(1V0)",
+        "VCCPAUX(1V8)",
+        "VCCBRAM(1V0)",
+        "VCCINT(1V0)",
+        "VCCAUX(1V8)",
+        "VCCDDR(1V5)",
+        "AO0(0-1.8V)",
+        "AO1(0-1.8V)",
+        "AO2(0-1.8V)",
+        "AO3(0-1.8V)",
+};
+
+
 int main(int argc, char **argv) {
 
 	int result;
@@ -16,38 +33,49 @@ int main(int argc, char **argv) {
 	result = rp_Init();
 	printf("Initializing library: %s\n", rp_GetError(result));
 
+    printf("\n---------Testing HEALTH---------\n");
+    printf("%s\t%s\t\t%s\n", "#ID", "Desc", "Val");
+    float valFloat;
+    int i;
+    for (i = RP_TEMP_FPGA; i <= RP_VCC_DDR; i++)
+    {
+        result = rp_HealthGetValue((rp_health_t) i, &valFloat);
+        if (result == RP_OK) {
+            printf("%d\t%s\t%.3f\n",i, &HEALTH_OIN_NAME[i][0], valFloat);
+        } else {
+            printf("%d\t%s\tError:%s\n",i, &HEALTH_OIN_NAME[i][0], rp_GetError(result));
+        }
+    }
+
 
 
     printf("\n---------Testing AMS---------\n");
-
-    float val1, min, max;
-    uint32_t val;
-
-
+    uint32_t valInt;
+    float min, max;
     result = rp_ApinSetValueRaw(RP_AOUT0, 0x9c);
-    printf("Writing %s\n.", rp_GetError(result));
+    printf("Writing Raw %s.\n", rp_GetError(result));
     result = rp_ApinSetValueRaw(RP_AOUT1, 0x57);
-    printf("Writing %s\n.", rp_GetError(result));
+    printf("Writing Raw %s.\n", rp_GetError(result));
 
-    result = rp_ApinGetValueRaw(RP_AOUT0, &val);
-    printf("Reading %s. State on pin: %d is %x. Test: %s\n", rp_GetError(result), RP_AIN0, val, val==0x9c ? "OK" : "FAIL");
-    result = rp_ApinGetValueRaw(RP_AOUT1, &val);
-    printf("Reading %s. State on pin: %d is %x. Test: %s\n", rp_GetError(result), RP_AIN1, val, val==0x57 ? "OK" : "FAIL");
+    result = rp_ApinGetValueRaw(RP_AOUT0, &valInt);
+    printf("Reading Raw %s. State on pin: %d is %x. Test: %s.\n", rp_GetError(result), RP_AOUT0, valInt, valInt==0x9c ? "OK" : "FAIL");
+    result = rp_ApinGetValueRaw(RP_AOUT1, &valInt);
+    printf("Reading Raw %s. State on pin: %d is %x. Test: %s.\n", rp_GetError(result), RP_AOUT1, valInt, valInt==0x57 ? "OK" : "FAIL");
 
-    result = rp_ApinSetValue(RP_AOUT0, 1.8);
-    printf("Writing %s\n.", rp_GetError(result));
-    result = rp_ApinSetValueRaw(RP_AOUT1, 1);
-    printf("Writing %s\n.", rp_GetError(result));
+    result = rp_ApinSetValue(RP_AOUT2, 0.3);
+    printf("Writing Volts %s.\n", rp_GetError(result));
+    result = rp_ApinSetValue(RP_AOUT3, 1.1);
+    printf("Writing Volts %s.\n", rp_GetError(result));
 
-    result = rp_ApinGetValue(RP_AOUT0, &val1);
-    printf("Reading %s. State on pin: %d is %.3f. Test: %s\n", rp_GetError(result), RP_AIN0, val1, fabs(val1-1.8) < 0.05 ? "OK" : "FAIL");
-    result = rp_ApinGetValue(RP_AOUT1, &val1);
-    printf("Reading %s. State on pin: %d is %.3f. Test: %s\n", rp_GetError(result), RP_AIN1, val1, fabs(val1-1.0) < 0.05 ? "OK" : "FAIL");
+    result = rp_ApinGetValue(RP_AOUT2, &valFloat);
+    printf("Reading Volts %s. State on pin: %d is %.3f. Test: %s.\n", rp_GetError(result), RP_AOUT2, valFloat, fabs(valFloat-0.3) < 0.1 ? "OK" : "FAIL");
+    result = rp_ApinGetValue(RP_AOUT3, &valFloat);
+    printf("Reading Volts %s. State on pin: %d is %.3f. Test: %s.\n", rp_GetError(result), RP_AOUT3, valFloat, fabs(valFloat-1.1) < 0.1 ? "OK" : "FAIL");
 
     result = rp_ApinGetRange(RP_AIN2, &min, &max);
-    printf("GetRange%s. Range on pin: %d is: min:%.2f  max:%.2f  Test: %s\n", rp_GetError(result), RP_AIN1, min, max, fabs(min)< 0.05 && fabs(max-3.5)< 0.05  ? "OK" : "FAIL");
+    printf("GetRange%s. Range on pin: %d is: min:%.2f  max:%.2f  Test: %s.\n", rp_GetError(result), RP_AIN1, min, max, fabs(min)< 0.05 && fabs(max-3.5)< 0.1  ? "OK" : "FAIL");
     result = rp_ApinGetRange(RP_AOUT3, &min, &max);
-    printf("GetRange%s. Range on pin: %d is: min:%.2f  max:%.2f  Test: %s\n", rp_GetError(result), RP_AIN1, min, max, fabs(min)< 0.05 && fabs(max-1.8)< 0.05  ? "OK" : "FAIL");
+    printf("GetRange%s. Range on pin: %d is: min:%.2f  max:%.2f  Test: %s.\n", rp_GetError(result), RP_AIN1, min, max, fabs(min)< 0.05 && fabs(max-1.8)< 0.1  ? "OK" : "FAIL");
 
 
     printf("\n---------Testing LEDs---------\n");
@@ -59,7 +87,7 @@ int main(int argc, char **argv) {
 	printf("PIN1 direction to input: %s\n", rp_GetError(result));
 
     // Go 10 times through all LEDS
-    int i = 7*10;
+    i = 7*10;
 	while (i--) {
 
 		result = rp_DpinSetState(pin, RP_LOW);
