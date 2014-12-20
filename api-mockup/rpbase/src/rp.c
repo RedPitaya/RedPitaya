@@ -21,10 +21,11 @@
 #include "dpin_handler.h"
 #include "analog_mixed_signals.h"
 #include "apin_handler.h"
+#include "health.h"
+#include "health_handler.h"
 #include "rp.h"
 
 static char version[50];
-
 
 /**
  * Global methods
@@ -34,6 +35,7 @@ int rp_Init()
 {
 	ECHECK(hk_Init());
     ECHECK(ams_Init());
+	ECHECK(health_Init());
     // TODO: Place other module initializations here
 	return RP_OK;
 }
@@ -42,6 +44,7 @@ int rp_Release()
 {
 	ECHECK(hk_Release());
     ECHECK(ams_Release());
+	ECHECK(health_Release());
     // TODO: Place other module releasing here
 	return RP_OK;
 }
@@ -75,8 +78,6 @@ const char* rp_GetError(int errorCode)
 			return "Writing to input pin is not valid.";
         case RP_EPN:
             return "Invalid Pin number.";
-		case RP_EOR:
-			return "Value out of range";
 		default:
 			return "Unknown error";
 	}
@@ -134,4 +135,9 @@ int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value)
 int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
 {
     return apin_GetRange(pin, min_val, max_val);
+}
+
+int rp_HealthGetValue(rp_health_t sensor, float* value)
+{
+	return health_GetValue(sensor, value);
 }

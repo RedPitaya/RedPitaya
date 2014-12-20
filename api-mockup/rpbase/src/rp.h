@@ -49,8 +49,6 @@ extern "C" {
 #define RP_EWIP   8
 /** Invalid Pin number */
 #define RP_EPN    9
-/** Value out of range */
-#define RP_EOR   10
 
 ///@}
 
@@ -84,17 +82,6 @@ typedef enum {
 	RP_DIO7_N      //!< DIO_N 7
 } rp_dpin_t;
 
-typedef enum {
-	RP_AOUT0,      //!< Analog output 0
-	RP_AOUT1,      //!< Analog output 1
-	RP_AOUT2,      //!< Analog output 2
-	RP_AOUT3,      //!< Analog output 3
-	RP_AIN0,       //!< Analog input 0
-	RP_AIN1,       //!< Analog input 1
-	RP_AIN2,       //!< Analog input 2
-	RP_AIN3,       //!< Analog input 3
-} rp_apin_t;
-
 /**
  * Type representing pin's high or low state (on/off).
  */
@@ -103,7 +90,6 @@ typedef enum {
 	RP_HIGH //!< High state
 } rp_pinState_t;
 
-
 /**
  * Type representing pin's input or output direction.
  */
@@ -111,6 +97,34 @@ typedef enum {
 	RP_IN, //!< Input direction
 	RP_OUT //!< Output direction
 } rp_pinDirection_t;
+
+/**
+* Type representing analog input output pins.
+*/
+typedef enum {
+	RP_AOUT0,      //!< Analog output 0
+	RP_AOUT1,      //!< Analog output 1
+	RP_AOUT2,      //!< Analog output 2
+	RP_AOUT3,      //!< Analog output 3
+	RP_AIN0,       //!< Analog input 0
+	RP_AIN1,       //!< Analog input 1
+	RP_AIN2,       //!< Analog input 2
+	RP_AIN3        //!< Analog input 3
+} rp_apin_t;
+
+/**
+* Type representing health pins.
+*/
+typedef enum {
+	RP_TEMP_FPGA,  //!< FPGA temperature
+	RP_VCC_PINT,   //!< VCC PINT
+	RP_VCC_PAUX,   //!< VCC PAUX
+	RP_VCC_BRAM,   //!< VCC BRAM
+	RP_VCC_INT,    //!< VCC INT
+	RP_VCC_AUX,    //!< VCC AUX
+	RP_VCC_DDR     //!< VCC DDR
+} rp_health_t;
+
 
 
 /** @name General
@@ -235,13 +249,29 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value);
 /**
 * Gets range in volts on specific pin.
 * @param pin      Analog input output pin.
-* @param min_val  Minimum value in volts on given pin..
+* @param min_val  Minimum value in volts on given pin.
 * @param max_val  Maximum value in volts on given pin.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
 */
 int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 
+
+///@}
+
+/** @name Health
+*/
+///@{
+
+
+/**
+* Gets data about system health like temperature
+* @param sensor   From witch sensor the data is read
+* @param value    The returned value
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+*/
+int rp_HealthGetValue(rp_health_t sensor, float* value);
 
 ///@}
 
