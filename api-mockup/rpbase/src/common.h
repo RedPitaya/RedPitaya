@@ -39,7 +39,6 @@
 }
 
 
-
 int cmn_Init();
 int cmn_Release();
 
@@ -48,9 +47,9 @@ int cmn_Unmap(size_t size, void** mapped);
 
 int cmn_SetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
 int cmn_UnsetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
-int cmn_SetBitsValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSet);
+int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSet);
 int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
-int cmn_GetBitsValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
+int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
 int cmn_AreBitsSet(uint32_t field, uint32_t bits, uint32_t mask, bool* result);
 
 #endif /* COMMON_H_ */

@@ -20,6 +20,9 @@
 #include "apin_handler.h"
 
 
+static const uint32_t ANALOG_OUT_MAX = 156;
+
+
 int apin_SetValue(rp_apin_t pin, float value)
 {
     uint32_t value_raw;
@@ -105,7 +108,7 @@ int toVolts(rp_apin_t pin, uint32_t value, float* returnValue)
     float min, max;
     int result = apin_GetRange(pin, &min, &max);
     if (result == RP_OK) {
-        *returnValue = (value * (max - min)) + min;
+        *returnValue = (((float)value / ANALOG_OUT_MAX) * (max - min)) + min;
         return RP_OK;
     } else {
         return result;
@@ -117,7 +120,7 @@ int fromVolts(rp_apin_t pin, float value, uint32_t* returnValue)
     float min, max;
     int result = apin_GetRange(pin, &min, &max);
     if (result == RP_OK) {
-        *returnValue = (uint32_t) ((value - min) / (max - min));
+        *returnValue = (uint32_t) (((value - min) / (max - min)) * ANALOG_OUT_MAX);
         return RP_OK;
     } else {
         return result;
