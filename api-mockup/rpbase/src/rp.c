@@ -137,6 +137,10 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
     return apin_GetRange(pin, min_val, max_val);
 }
 
+/**
+ * Health methods
+ */
+
 int rp_HealthGetValue(rp_health_t sensor, float* value)
 {
 	return health_GetValue(sensor, value);

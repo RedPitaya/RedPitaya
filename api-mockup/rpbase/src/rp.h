@@ -113,7 +113,7 @@ typedef enum {
 } rp_apin_t;
 
 /**
-* Type representing health pins.
+* Type representing system health information.
 */
 typedef enum {
 	RP_TEMP_FPGA,  //!< FPGA temperature

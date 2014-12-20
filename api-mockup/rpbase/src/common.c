@@ -68,8 +68,8 @@ int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask,
 	VALIDATE_BITS(value, mask);
 	uint32_t currentValue;
 	cmn_GetValue(field, &currentValue, 0xffffffff);
-	currentValue &=  ~(mask << bitsToSetShift);
-	currentValue +=  (value << bitsToSetShift);
+	currentValue &=  ~(mask << bitsToSetShift); // Clear all bits at specified location
+	currentValue +=  (value << bitsToSetShift); // Set value at specified location
 	SET_VALUE(*field, currentValue);
 	return RP_OK;
 }
