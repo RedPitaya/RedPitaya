@@ -137,10 +137,23 @@ void ws_prepare_data_synth(float *fbuf, struct session_data *data)
 
 void ws_prepare_data(float *fbuf, struct session_data *data)
 {
+    rp_app_params_t *rp_params = NULL;
+    int rp_params_cnt;
+
     int rp_sig_num, rp_sig_len;
     int ret;
     int i, j;
 
+    data->payload = 0;
+
+    /* Get the parameters */
+    rp_params_cnt = rp_module_ctx.app.get_params_func(&rp_params);
+    if(rp_params == NULL) {
+        fprintf(stderr, "Error retrieving RP parameters.\n");
+        return;
+    }
+
+    /* Get the signals */
     int retries = 200; // ms
     do {
         ret = rp_module_ctx.app.get_signals_func((float ***)&rp_signals, &rp_sig_num, &rp_sig_len);
@@ -155,16 +168,23 @@ void ws_prepare_data(float *fbuf, struct session_data *data)
         }
     } while (ret == -1);
 
-    fprintf(stderr, "Got RP data after %d ms.\n", 200 - retries);
+    //fprintf(stderr, "Got RP data after %d ms.\n", 200 - retries);
 
+    /* Populate arrayBuffer */
     rp_sig_len = 50;
     int k = 0;
     for (i = 0; i < PARAM_LEN; i++) {
-        fbuf[k++] = 0.0;
+        if (i < rp_params_cnt) {
+            fbuf[k++] = rp_params[i].value;
+        } else {
+            fbuf[k++] = 0.0;
+        }
     }
+    /* X vector */
     for (i = 0; i < rp_sig_len; i++) {
         fbuf[k++] = rp_signals[0][i];
     }
+    /* All the selected Y vectors follow */
     for (i = 0; i < rp_sig_len; i++) {
         fbuf[k++] = rp_signals[1][i]*100;
     }
@@ -174,7 +194,7 @@ void ws_prepare_data(float *fbuf, struct session_data *data)
         }
     }
 
-    data->payload = (PARAM_LEN + 5*rp_sig_len) * sizeof(float);
+    data->payload = k * sizeof(float);
 
 }
 
