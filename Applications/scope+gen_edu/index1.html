@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="1000" height="500" style="display: fixed; border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<div id="fps"></div>
+
+<script>
+
+"use strict"
+
+ var div = document.getElementById("fps"),
+    ctx = document.getElementById("myCanvas").getContext("2d"),
+    ctr = 0,
+    paramLen = 10,
+    sigLen = 50,
+    dataLen = paramLen + sigLen * 5,
+    avgFps = 30,
+    data = new Float32Array(dataLen);
+
+var sig1Start = paramLen;
+var sig1End = paramLen + sigLen -1;
+var sig2Start = sig1End + 1;
+var sig2End = sig2Start + sigLen - 1;
+var sig3Start = sig2End + 1;
+var sig3End = sig3Start + sigLen - 1;
+var sig4Start = sig3End + 1;
+var sig4End = sig4Start + sigLen - 1;
+var sig5Start = sig3End + 1;
+var sig5End = sig5Start + sigLen - 1;
+
+var black = "#000000";
+var red = "#FF0000";
+var green = "#00FF00";
+var blue = "#0000FF";
+var grey = "#cccccc";
+
+
+var conn = new WebSocket('ws://192.168.128.1:8080', 'redpitaya-binary');
+conn.binaryType = "arraybuffer";
+var last = (new Date).getTime();
+
+function d(data, y) {
+    ctx.moveTo(0, y);
+    var f = 0;
+    for (var i = 0; i < sigLen; i++) {
+        f = (y + 0.5 + data[i]) | 0
+        ctx.lineTo(i, f)
+        ctx.moveTo(i, f)
+    }
+}
+
+function drawAll() {
+    ctx.beginPath();
+
+    ctx.clearRect(0, 0, 1E3, 500); // clear canvas
+
+    ctx.strokeStyle = black;
+    d(data.subarray(sig1Start, sig1End), 0);
+    ctx.stroke();
+    ctx.closePath();
+
+    ctx.beginPath();
+    ctx.strokeStyle = red;
+    d(data.subarray(sig2Start, sig2End), 50);
+    ctx.stroke();
+    ctx.closePath();
+
+    ctx.beginPath();
+    ctx.strokeStyle = green;
+    d(data.subarray(sig3Start, sig3End), 100);
+    ctx.stroke();
+    ctx.closePath();
+
+    ctx.beginPath();
+    ctx.strokeStyle = blue;
+    d(data.subarray(sig4Start, sig4End), 150);
+    ctx.stroke();
+    ctx.closePath();
+
+    ctx.beginPath();
+    ctx.strokeStyle = grey;
+    d(data.subarray(sig5Start, sig5End), 200);
+    ctx.stroke();
+    ctx.closePath();
+
+    conn.send(sigLen); // request new data via WS
+    ctr++;
+}
+
+function getDataAndDraw(e) {
+    data.set(new Float32Array(e.data));
+    window.requestAnimationFrame(drawAll);
+};
+
+conn.onopen = function() {
+    conn.send(sigLen)
+};
+
+conn.onmessage = getDataAndDraw;
+
+setInterval(function() {
+    var delta = ((new Date).getTime() - last) / 1E3;
+    last = (new Date).getTime();
+    var fps = ctr / delta;
+    avgFps = 0.25 * avgFps + 0.75 * fps;
+    
+    div.innerHTML = sigLen + ":" + parseInt(fps) + ":" + parseInt(avgFps);
+
+    ctr = 0;
+}, 1000)
+
+setInterval(function() {
+
+    if (avgFps < 10) {
+        sigLen = sigLen / 2;
+        dataLen = sigLen * 5;
+
+        sig1End = sigLen -1;
+        sig2Start = sig1End + 1;
+        sig2End = sig2Start + sigLen - 1;
+        sig3Start = sig2End + 1;
+        sig3End = sig3Start + sigLen - 1;
+        sig4Start = sig3End + 1;
+        sig4End = sig4Start + sigLen - 1;
+        sig5Start = sig3End + 1;
+        sig5End = sig5Start + sigLen - 1;
+    }
+
+}, 5000)
+
+</script>
+
+</body>
+</html>
+
