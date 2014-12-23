@@ -28,7 +28,6 @@
 #include "calib.h"
 #include "generate.h"
 #include "pid.h"
-#include "websocket.h"
 
 
 /* Describe app. parameters with some info/limitations */
@@ -340,8 +339,6 @@ int rp_app_init(void)
 
     rp_set_params(&rp_main_params[0], PARAMS_NUM);
 
-    ws_init();
-
     return 0;
 }
 
@@ -349,7 +346,6 @@ int rp_app_exit(void)
 {
     fprintf(stderr, "Unloading scope (with gen+pid extensions) version %s-%s.\n", VERSION_STR, REVISION_STR);
 
-    ws_exit();
     rp_osc_worker_exit();
     generate_exit();
     pid_exit();
