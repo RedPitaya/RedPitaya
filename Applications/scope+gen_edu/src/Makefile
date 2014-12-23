@@ -1,13 +1,13 @@
 CC=$(CROSS_COMPILE)gcc
 RM=rm
 
-OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o fpga_pid.o pid.o websocket.o
+OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o fpga_pid.o pid.o
 
-INCLUDE= -I../../../OS/buildroot/buildroot-2014.02/output/build/libwebsockets-v1.22-chrome26-firefox18/lib/
+INCLUDE=
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
-LDFLAGS= -shared -L../../../OS/buildroot/buildroot-2014.02/output/target/usr/lib/ -lwebsockets
+LDFLAGS=-shared
 
 
 OUT_DIR=../

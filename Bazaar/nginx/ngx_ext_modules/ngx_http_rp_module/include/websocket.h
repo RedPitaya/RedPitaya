@@ -3,7 +3,7 @@
  *
  * @brief Red Pitaya Oscilloscope worker.
  *
- * @Author Jure Menart <juremenart@gmail.com>
+ * @Author Ales Bardorfer <ales.bardorfer@redpitaya.com>
  *         
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -15,8 +15,7 @@
 #ifndef __WEBSOCKET_H
 #define __WEBSOCKET_H
 
-
-int ws_init(void);
-int ws_exit(void);
+int websocket_init(void);
+int websocket_exit(void);
 
 #endif /* __WEBSOCKET_H */

@@ -22,6 +22,7 @@
 #include "ngx_http_rp_module.h"
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"
+#include "websocket.h"
 #include "cJSON.h"
 
 #include <stdlib.h>
@@ -496,6 +497,20 @@ int rp_bazaar_start(ngx_http_request_t *r,
             free(fpga_name);
         return -1;
     }
+
+    /* Establish a Websocket */
+    if (websocket_init() < 0) {
+        rp_module_cmd_error(json_root,
+                            "Websocket init failed, aborting",
+                            NULL, r->pool);
+        rp_bazaar_app_unload_module(&rp_module_ctx.app);
+        if(app_name)
+            free(app_name);
+        if(fpga_name)
+            free(fpga_name);
+        return -1;
+    }
+
     rp_module_ctx.app.initialized=1;
     rp_debug(r->connection->log, "Application %s loaded succesfully!");
 
@@ -516,6 +531,8 @@ int rp_bazaar_stop(ngx_http_request_t *r,
                                 "Incorrect number of arguments (should be 0)",
                                    NULL, r->pool);
     }
+
+    websocket_exit();
 
     if(rp_module_ctx.app.handle == NULL) {
         /* Ignore requests to unload the application controller, if none is loaded. */
