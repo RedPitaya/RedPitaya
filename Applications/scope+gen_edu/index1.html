@@ -13,11 +13,17 @@ Your browser does not support the HTML5 canvas tag.</canvas>
  var div = document.getElementById("fps"),
     ctx = document.getElementById("myCanvas").getContext("2d"),
     ctr = 0,
-    paramLen = 10,
+    paramLen = 100,
     sigLen = 50,
     dataLen = paramLen + sigLen * 5,
     avgFps = 30,
-    data = new Float32Array(dataLen);
+    data = new Float32Array(dataLen),
+    params = new Float32Array(paramLen);
+
+// Some dummy parameters
+params[0] = 10.0;
+params[1] = 20.0;
+
 
 var sig1Start = paramLen;
 var sig1End = paramLen + sigLen -1;
@@ -37,8 +43,11 @@ var blue = "#0000FF";
 var grey = "#cccccc";
 
 
-var conn = new WebSocket('ws://192.168.128.1:8080', 'redpitaya-binary');
+var conn = new WebSocket('ws://192.168.128.1:8080', 'redpitaya-data');
 conn.binaryType = "arraybuffer";
+var connparams = new WebSocket('ws://192.168.128.1:8080', 'redpitaya-params');
+connparams.binaryType = "arraybuffer";
+
 var last = (new Date).getTime();
 
 function d(data, y) {
@@ -98,6 +107,10 @@ conn.onopen = function() {
     conn.send(sigLen)
 };
 
+//connparams.onopen = function() {
+//    connparams.send(params)
+//};
+
 conn.onmessage = getDataAndDraw;
 
 setInterval(function() {
@@ -111,24 +124,6 @@ setInterval(function() {
     ctr = 0;
 }, 1000)
 
-setInterval(function() {
-
-    if (avgFps < 10) {
-        sigLen = sigLen / 2;
-        dataLen = sigLen * 5;
-
-        sig1End = sigLen -1;
-        sig2Start = sig1End + 1;
-        sig2End = sig2Start + sigLen - 1;
-        sig3Start = sig2End + 1;
-        sig3End = sig3Start + sigLen - 1;
-        sig4Start = sig3End + 1;
-        sig4End = sig4Start + sigLen - 1;
-        sig5Start = sig3End + 1;
-        sig5End = sig5Start + sigLen - 1;
-    }
-
-}, 5000)
 
 </script>
 
