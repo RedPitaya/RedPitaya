@@ -14,19 +14,29 @@
 #include "websocket.h"
 
 
+#define PARAM_LEN 100
+#define WAVE_LEN  50
+#define SIG_NUM    5
+
 #define MIN(a, b)    ( (a) < (b) ? (a) : (b) )
 
 extern ngx_http_rp_module_ctx_t rp_module_ctx;
 
+struct session_data {
+    int   payload;
+    int   pos;
+};
+
 pthread_t *sw_thread_handler = NULL;
 void *ws_worker_thread(void *args);
-int rp_websocket(int *stop);
+int   rp_websocket(int *stop);
 int   ws_stop;
 
 static float **rp_signals = NULL;
-
-char *buf = NULL;
+float waveform[WAVE_LEN];
+char  *buf  = NULL;
 float *fbuf = NULL;
+
 
 int websocket_init(void)
 {
@@ -76,12 +86,6 @@ void *ws_worker_thread(void *arg)
 }
 
 
-
-#define PARAM_LEN 10
-#define WAVE_LEN  50
-#define SIG_NUM    5
-float waveform[WAVE_LEN];
-
 int align(size_t in, size_t size) {
 
     int ret = in;
@@ -94,10 +98,54 @@ int align(size_t in, size_t size) {
     return ret;
 }
 
-struct session_data {
-    int   payload;
-    int   pos;
-};
+
+int ws_interpret_params(void *in, int len)
+{
+    int param_cnt = MIN(len/sizeof(float), PARAM_LEN);
+    rp_app_params_t *rp_params;
+    float *in_params;
+    int ret = 0;
+    int i;
+
+    if (len % sizeof(float)) {
+        fprintf(stderr, "WARNING: Websocket RX data size (%d) not aligned to float size.\n", len);
+    }
+
+    /* The void *in is not float (4-byte) aligned. Therefore, realign by copying. */
+    in_params = (float *)malloc(param_cnt*sizeof(float));
+    if(in_params == NULL) {
+        return -1;
+    }
+    memcpy(in_params, in, param_cnt*sizeof(float));
+
+    rp_params = (rp_app_params_t *)malloc((PARAM_LEN+1) * sizeof(rp_app_params_t));
+    if(rp_params == NULL) {
+        if (in_params)
+            free(in_params);
+        return -1;
+    }
+
+    fprintf(stderr, "Param RX: ");
+    for(i = 0; i < param_cnt; i++) {
+        rp_params[i].name = "redpitaya-binary";
+        rp_params[i].value = in_params[i];
+        fprintf(stderr, "%7.3f ", rp_params[i].value);
+    }
+    rp_params[param_cnt].name = NULL;
+    fprintf(stderr, "\n");
+
+    /* call application specific function for handling POST requests */
+    if(rp_module_ctx.app.set_params_func(rp_params, param_cnt) < 0) {
+        ret = -1;
+    }
+
+    if(rp_params)
+        free(rp_params);
+    if (in_params)
+        free(in_params);
+
+    return ret;
+}
 
 
 void ws_prepare_data_synth(float *fbuf, struct session_data *data)
@@ -186,11 +234,11 @@ void ws_prepare_data(float *fbuf, struct session_data *data)
     }
     /* All the selected Y vectors follow */
     for (i = 0; i < rp_sig_len; i++) {
-        fbuf[k++] = rp_signals[1][i]*100;
+        fbuf[k++] = rp_signals[1][i];
     }
     for (j = 0; j < 3; j++) {
         for (i = 0; i < rp_sig_len; i++) {
-            fbuf[k++] = rp_signals[2][i]*100;
+            fbuf[k++] = rp_signals[2][i];
         }
     }
 
@@ -198,7 +246,36 @@ void ws_prepare_data(float *fbuf, struct session_data *data)
 
 }
 
-static int callback_redpitaya_binary(struct libwebsocket_context *context,
+static int callback_redpitaya_params(struct libwebsocket_context *context,
+        struct libwebsocket *wsi,
+        enum libwebsocket_callback_reasons reason,
+        void *user, void *in, size_t len)
+{
+
+    switch (reason) {
+
+    case LWS_CALLBACK_ESTABLISHED:
+        fprintf(stderr, "PARAMS_CALLBACK_ESTABLISHED\n");
+        break;
+
+    case LWS_CALLBACK_RECEIVE: {
+
+        ws_interpret_params(in, len);
+        break;
+    }
+
+    case LWS_CALLBACK_CLOSED:
+        fprintf(stderr, "PARAMS_CALLBACK_CLOSED\n");
+        break;
+
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+static int callback_redpitaya_data(struct libwebsocket_context *context,
         struct libwebsocket *wsi,
         enum libwebsocket_callback_reasons reason,
         void *user, void *in, size_t len)
@@ -208,7 +285,7 @@ static int callback_redpitaya_binary(struct libwebsocket_context *context,
     switch (reason) {
 
     case LWS_CALLBACK_ESTABLISHED:
-        fprintf(stderr, "LWS_CALLBACK_ESTABLISHED\n");
+        fprintf(stderr, "DATA_CALLBACK_ESTABLISHED\n");
         break;
 
     case LWS_CALLBACK_RECEIVE: {
@@ -244,7 +321,7 @@ static int callback_redpitaya_binary(struct libwebsocket_context *context,
     }
 
     case LWS_CALLBACK_CLOSED:
-        fprintf(stderr, "LWS_CALLBACK_CLOSED\n");
+        fprintf(stderr, "DATA_CALLBACK_CLOSED\n");
         break;
 
     default:
@@ -274,8 +351,16 @@ static struct libwebsocket_protocols protocols[] = {
                 0
         },
         {
-                "redpitaya-binary",
-                callback_redpitaya_binary,
+                "redpitaya-params",
+                callback_redpitaya_params,
+                0,
+                0,
+                NULL,
+                0
+        },
+        {
+                "redpitaya-data",
+                callback_redpitaya_data,
                 sizeof(struct session_data),
                 0,
                 NULL,
@@ -319,8 +404,8 @@ int rp_websocket(int *stop) {
     unsigned char *buf = (unsigned char*) malloc(preamble + payload + LWS_SEND_BUFFER_POST_PADDING);
     fbuf = (float *)&buf[preamble];
 
-    rp_signals = (float **)malloc(3 * sizeof(float *));
-    for(i = 0; i < 3; i++) {
+    rp_signals = (float **)malloc(SIG_NUM * sizeof(float *));
+    for(i = 0; i < SIG_NUM; i++) {
         rp_signals[i] = (float *)malloc(2048 * sizeof(float));
     }
 
@@ -339,7 +424,7 @@ int rp_websocket(int *stop) {
 
     free(buf);
 
-    for(i = 0; i < 3; i++) {
+    for(i = 0; i < SIG_NUM; i++) {
         free(rp_signals[i]);
     }
     free(rp_signals);
