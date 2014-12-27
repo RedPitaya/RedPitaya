@@ -62,7 +62,11 @@ int main(int argc, char *argv[])
 
 
       
-   strcpy(recvBuff, "SOUR:DIG:DATA:BIT LED4,1;\r\nSOUR:DIG:DATA:BIT LED5,1;\r\nSOUR:DIG:DATA:BIT LED6,1;\r\n");
+   //strcpy(recvBuff, "SOUR:DIG:DATA:BIT LED4,1;\r\nSOUR:DIG:DATA:BIT LED5,1;\r\nSOUR:DIG:DATA:BIT LED6,1;\r\n");
+
+    strcpy(recvBuff,
+            /* LED ON */
+            "DIG:PIN LED4,1;\r\nDIG:PIN LED5,1;\r\nDIG:PIN LED6,1;\r\nDIG:PIN:DIR IN,DIO1_P;\r\nANALOG:PIN AOUT0,1;\r\nANALOG:PIN? AOUT2\r\n");
 
     if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
         perror("send");
@@ -72,15 +76,15 @@ int main(int argc, char *argv[])
    printf("Sent message %s\n", recvBuff	);
 	
 
-    while ( (n = read(sockfd, recvBuff, sizeof(recvBuff)-1)) > 0)
+    while ( (n = (int) read(sockfd, recvBuff, sizeof(recvBuff)-1)) > 0)
     {
         recvBuff[n] = 0;
-	fputs("Received: ", stdout);
+	    fputs("Received: ", stdout);
         if(fputs(recvBuff, stdout) == EOF)
         {
             printf("\n Error : Fputs error\n");
         }
-	fflush(stdout);
+	    fflush(stdout);
 
     } 
 
