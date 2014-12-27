@@ -35,6 +35,7 @@ TARGET=$(OUTPUT_DIR)/scpi-server
 OBJECTS =	scpi-commands.o \
 			scpi-server.o \
 			dpin.o \
+			apin.o \
 			utils.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
