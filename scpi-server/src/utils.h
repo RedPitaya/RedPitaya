@@ -21,7 +21,8 @@
     	SCPI_ResultString(cont, "OK"); \
     	return SCPI_RES_OK;
 
-int getRpPin(const char* pinStr, rp_dpin_t *rpPin);
-
+int getRpDpin(const char* pinStr, rp_dpin_t *rpPin);
+int getRpDirection(const char *dirStr, rp_pinDirection_t *direction);
+int getRpApin(const char *pinStr, rp_apin_t *rpPin);
 
 #endif /* UTILS_H_ */

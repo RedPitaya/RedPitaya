@@ -23,6 +23,7 @@
 
 #include "utils.h"
 #include "dpin.h"
+#include "apin.h"
 
 /**
  * Interface general commands
@@ -123,8 +124,12 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
     /* RedPitaya */
-	{.pattern = "SOUR:DIG:DATA:BIT", .callback = RP_DigitalPinSetState,},
-	{.pattern = "MEAS:DIG:DATA:BIT?", .callback = RP_DigitalPinGetStateQ,},
+	{.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
+	{.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
+        {.pattern = "DIG:PIN:DIR", .callback = RP_DigitalPinSetDirection,},
+
+        {.pattern = "ANALOG:PIN", .callback = RP_AnalogPinSetValue,},
+        {.pattern = "ANALOG:PIN?", .callback = RP_AnalogPinGetValue,},
 
     //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
 
