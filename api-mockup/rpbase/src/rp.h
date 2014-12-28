@@ -126,6 +126,18 @@ typedef enum {
 } rp_health_t;
 
 
+/**
+* Type representing acquire signal sampling rate.
+*/
+typedef enum {
+	RP_SMP_125M,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+	RP_SMP_15_625M,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+	RP_SMP_1_953M,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+	RP_SMP_122_070K, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+	RP_SMP_15_258K,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+	RP_SMP_1_907K    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+} rp_acq_sampling_rate_t;
+
 
 /** @name General
  */
@@ -135,7 +147,7 @@ typedef enum {
 /**
  * Initializes the library. It must be called first, before any other library method.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_Init();
 
@@ -143,7 +155,7 @@ int rp_Init();
  * Releases the library resources. It must be called last, after library is not used anymore. Typically before
  * application exits.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_Release();
 
@@ -171,7 +183,7 @@ const char* rp_GetError(int errorCode);
  * @param pin    Digital input output pin.
  * @param state  High/Low state that will be set at the given pin.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state);
 
@@ -180,7 +192,7 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state);
  * @param pin    Digital input output pin.
  * @param state  High/Low state that is set at the given pin.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state);
 
@@ -191,7 +203,7 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state);
  * @param pin        Digital input output pin.
  * @param direction  In/Out direction that will be set at the given pin.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
 
@@ -200,7 +212,7 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
  * @param pin        Digital input output pin.
  * @param direction  In/Out direction that is set at the given pin.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 
@@ -215,7 +227,7 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 * @param pin    Analog pin.
 * @param value  Value on analog pin in volts
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_ApinGetValue(rp_apin_t pin, float* value);
 
@@ -224,7 +236,7 @@ int rp_ApinGetValue(rp_apin_t pin, float* value);
 * @param pin    Analog pin.
 * @param value  Raw value on analog pin
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value);
 
@@ -233,7 +245,7 @@ int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value);
 * @param pin    Analog output pin.
 * @param value  Value in volts to be set on given output pin.
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_ApinSetValue(rp_apin_t pin, float value);
 
@@ -242,7 +254,7 @@ int rp_ApinSetValue(rp_apin_t pin, float value);
 * @param pin    Analog output pin.
 * @param value  Raw value to be set on given output pin.
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value);
 
@@ -252,9 +264,45 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value);
 * @param min_val  Minimum value in volts on given pin.
 * @param max_val  Maximum value in volts on given pin.
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
+
+
+/** @name Acquire
+*/
+///@{
+
+/**
+ * Sets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
+ * values which can be specified. See the #rp_acq_sampling_rate_t enum values.
+ * @param sampling_rate Specify one of pre-defined sampling rate value
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
+
+/**
+ * Gets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
+ * values which can be returned. See the #rp_acq_sampling_rate_t enum values.
+ * @param sampling_rate returns one of pre-defined sampling rate value which is currently set
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
+
+/**
+ * Gets the sampling rate for acquiring signal in a numerical form. Although this method returns a float
+ * value representing the current value of the sampling rate, there is only a set of pre-defined sampling rate
+ * values which can be returned. See the #rp_acq_sampling_rate_t enum values.
+ * @param sampling_rate returns currently set sampling rate
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetSamplingRateNum(float* sampling_rate);
+
+
+///@}
 
 
 ///@}
@@ -269,7 +317,7 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 * @param sensor   From witch sensor the data is read
 * @param value    The returned value
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate error.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_HealthGetValue(rp_health_t sensor, float* value);
 

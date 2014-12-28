@@ -186,6 +186,9 @@ static volatile uint32_t *osc_cha = NULL;
 // The FPGA input signal buffer pointer for channel B */
 static volatile uint32_t *osc_chb = NULL;
 
+
+static const uint32_t DATA_DEC_MASK = 0xFFFF;
+
 /**
 * general
 */
@@ -208,3 +211,17 @@ int osc_Release()
 	return RP_OK;
 }
 
+
+/**
+* decimation
+*/
+
+int osc_SetDecimation(uint32_t decimation)
+{
+	return cmn_SetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
+}
+
+int osc_GetDecimation(uint32_t* decimation)
+{
+	return cmn_GetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
+}

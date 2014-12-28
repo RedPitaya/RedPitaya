@@ -23,4 +23,7 @@ int osc_Init();
 int osc_Release();
 
 
+int osc_SetDecimation(uint32_t decimation);
+int osc_GetDecimation(uint32_t* decimation);
+
 #endif /* SRC_OSCILLOSCOPE_H_ */

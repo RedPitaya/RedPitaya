@@ -36,6 +36,7 @@ OBJECTS =	common.o \
 			housekeeping.o \
 			dpin_handler.o \
 			oscilloscope.o \
+			acq_handler.o \
 			analog_mixed_signals.o \
 			apin_handler.o \
 			health.o \

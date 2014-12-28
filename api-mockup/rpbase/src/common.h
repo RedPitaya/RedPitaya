@@ -47,6 +47,7 @@ int cmn_Unmap(size_t size, void** mapped);
 
 int cmn_SetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
 int cmn_UnsetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
+int cmn_SetValue(volatile uint32_t* field, uint32_t value, uint32_t mask);
 int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSet);
 int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
