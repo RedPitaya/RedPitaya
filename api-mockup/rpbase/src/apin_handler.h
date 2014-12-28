@@ -23,6 +23,7 @@ int apin_GetValue(rp_apin_t pin, float* value);
 int apin_SetValueRaw(rp_apin_t pin, uint32_t value);
 int apin_GetValueRaw(rp_apin_t pin, uint32_t* value);
 int apin_GetRange(rp_apin_t pin, float* min_val, float* max_val);
+int apin_GetRangeWithInt(rp_apin_t pin, float* min_val, float* max_val, uint32_t *int_max_val);
 
 int toVolts(rp_apin_t pin, uint32_t value, float* returnValue);
 int fromVolts(rp_apin_t pin, float value, uint32_t* returnValue);
