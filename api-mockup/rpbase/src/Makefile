@@ -35,6 +35,7 @@ TARGET=$(OUTPUT_DIR)/librp.so
 OBJECTS =	common.o \
 			housekeeping.o \
 			dpin_handler.o \
+			oscilloscope.o \
 			analog_mixed_signals.o \
 			apin_handler.o \
 			health.o \

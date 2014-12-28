@@ -19,6 +19,7 @@
 #include "common.h"
 #include "housekeeping.h"
 #include "dpin_handler.h"
+#include "oscilloscope.h"
 #include "analog_mixed_signals.h"
 #include "apin_handler.h"
 #include "health.h"
@@ -36,6 +37,7 @@ int rp_Init()
 	ECHECK(hk_Init());
     ECHECK(ams_Init());
 	ECHECK(health_Init());
+	ECHECK(osc_Init());
     // TODO: Place other module initializations here
 	return RP_OK;
 }
@@ -45,6 +47,7 @@ int rp_Release()
 	ECHECK(hk_Release());
     ECHECK(ams_Release());
 	ECHECK(health_Release());
+	ECHECK(osc_Release());
     // TODO: Place other module releasing here
 	return RP_OK;
 }
