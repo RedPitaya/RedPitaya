@@ -36,11 +36,16 @@ typedef struct analog_mixed_signals_control_s {
 } analog_mixed_signals_control_t;
 
 
-static const uint32_t ANALOG_OUT_MASK  = 0xFF;
-static const uint32_t ANALOG_OUT_MAX   = 156;
-static const uint32_t ANALOG_OUT_BITS  = 16;
-static const uint32_t ANALOG_IN_MASK   = 0xFFF;
+static const uint32_t ANALOG_OUT_MASK            = 0xFF;
+static const uint32_t ANALOG_OUT_BITS            = 16;
+static const uint32_t ANALOG_IN_MASK             = 0xFFF;
 
+static const float ANALOG_IN_MAX_VAL             = 3.5;
+static const float ANALOG_IN_MIN_VAL             = 0.0;
+static const uint32_t ANALOG_IN_MAX_VAL_INTEGER  = 0x7FF;
+static const float ANALOG_OUT_MAX_VAL            = 1.8;
+static const float ANALOG_OUT_MIN_VAL            = 0.0;
+static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 156;
 
 
 static volatile analog_mixed_signals_control_t *ams = NULL;
@@ -62,7 +67,7 @@ int ams_Release()
 
 int ams_SetValueDAC0(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX) {
+	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
 		return RP_EOOR;
 	}
     return cmn_SetShiftedValue(&ams->dac0, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
@@ -71,7 +76,7 @@ int ams_SetValueDAC0(uint32_t value)
 
 int ams_SetValueDAC1(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX) {
+	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
 		return RP_EOOR;
 	}
 	return cmn_SetShiftedValue(&ams->dac1, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
@@ -80,7 +85,7 @@ int ams_SetValueDAC1(uint32_t value)
 
 int ams_SetValueDAC2(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX) {
+	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
 		return RP_EOOR;
 	}
 	return cmn_SetShiftedValue(&ams->dac2, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
@@ -89,7 +94,7 @@ int ams_SetValueDAC2(uint32_t value)
 
 int ams_SetValueDAC3(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX) {
+	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
 		return RP_EOOR;
 	}
 	return cmn_SetShiftedValue(&ams->dac3, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
@@ -136,14 +141,16 @@ int ams_GetValueDAC3(uint32_t* value)
 	return cmn_GetShiftedValue(&ams->dac3, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
-int ams_GetRangeInput(float *min_val, float *max_val) {
-	*min_val = 0.0;
-	*max_val = 3.5;
+int ams_GetRangeInput(float *min_val, float *max_val, uint32_t *int_max_val) {
+	*min_val = ANALOG_IN_MIN_VAL;
+	*max_val = ANALOG_IN_MAX_VAL;
+	*int_max_val = ANALOG_IN_MAX_VAL_INTEGER;
 	return RP_OK;
 }
 
-int ams_GetRangeOutput(float *min_val, float *max_val) {
-	*min_val = 0.0;
-	*max_val = 1.8;
+int ams_GetRangeOutput(float *min_val, float *max_val, uint32_t *int_max_val) {
+	*min_val = ANALOG_OUT_MIN_VAL;
+	*max_val = ANALOG_OUT_MAX_VAL;
+	*int_max_val = ANALOG_OUT_MAX_VAL_INTEGER;
 	return RP_OK;
 }
