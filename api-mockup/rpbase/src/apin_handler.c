@@ -20,9 +20,6 @@
 #include "apin_handler.h"
 
 
-static const uint32_t ANALOG_OUT_MAX = 156;
-
-
 int apin_SetValue(rp_apin_t pin, float value)
 {
     uint32_t value_raw;
@@ -87,17 +84,22 @@ int apin_GetValueRaw(rp_apin_t pin, uint32_t* value)
 
 int apin_GetRange(rp_apin_t pin, float* min_val, float* max_val)
 {
+    uint32_t unused;
+    return apin_GetRangeWithInt(pin, min_val, max_val, &unused);
+}
+
+int apin_GetRangeWithInt(rp_apin_t pin, float *min_val, float *max_val, uint32_t *int_max_val) {
     switch (pin) {
         case RP_AIN0:
         case RP_AIN1:
         case RP_AIN2:
         case RP_AIN3:
-            return ams_GetRangeInput(min_val, max_val);
+            return ams_GetRangeInput(min_val, max_val, int_max_val);
         case RP_AOUT0:
         case RP_AOUT1:
         case RP_AOUT2:
         case RP_AOUT3:
-            return ams_GetRangeOutput(min_val, max_val);
+            return ams_GetRangeOutput(min_val, max_val, int_max_val);
         default:
             return RP_EPN;
     }
@@ -106,9 +108,10 @@ int apin_GetRange(rp_apin_t pin, float* min_val, float* max_val)
 int toVolts(rp_apin_t pin, uint32_t value, float* returnValue)
 {
     float min, max;
-    int result = apin_GetRange(pin, &min, &max);
+    uint32_t max_int;
+    int result = apin_GetRangeWithInt(pin, &min, &max, &max_int);
     if (result == RP_OK) {
-        *returnValue = (((float)value / ANALOG_OUT_MAX) * (max - min)) + min;
+        *returnValue = (((float)value / max_int) * (max - min)) + min;
         return RP_OK;
     } else {
         return result;
@@ -118,9 +121,10 @@ int toVolts(rp_apin_t pin, uint32_t value, float* returnValue)
 int fromVolts(rp_apin_t pin, float value, uint32_t* returnValue)
 {
     float min, max;
-    int result = apin_GetRange(pin, &min, &max);
+    uint32_t max_int;
+    int result = apin_GetRangeWithInt(pin, &min, &max, &max_int);
     if (result == RP_OK) {
-        *returnValue = (uint32_t) (((value - min) / (max - min)) * ANALOG_OUT_MAX);
+        *returnValue = (uint32_t) (((value - min) / (max - min)) * max_int);
         return RP_OK;
     } else {
         return result;
