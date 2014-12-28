@@ -66,7 +66,11 @@ int main(int argc, char *argv[])
 
     strcpy(recvBuff,
             /* LED ON */
-            "DIG:PIN LED4,1;\r\nDIG:PIN LED5,1;\r\nDIG:PIN LED6,1;\r\nDIG:PIN:DIR IN,DIO1_P;\r\nANALOG:PIN AOUT0,1;\r\nANALOG:PIN? AOUT2\r\n");
+            "DIG:PIN LED4,1;\r\nDIG:PIN LED5,1;\r\nDIG:PIN LED6,1;\r\nDIG:PIN:DIR INP,DIO1_P;\r\n"
+                    /* ANALOG WRITE */
+                    "ANALOG:PIN AOUT0,1;\r\nANALOG:PIN AOUT1,1.5;\r\nANALOG:PIN AOUT2,0.75;\r\nANALOG:PIN AOUT3,0.12345;\r\n"
+                    /* ANALOG READ */
+                    "ANALOG:PIN? AOUT0;\r\nANALOG:PIN? AOUT1;\r\nANALOG:PIN? AOUT2;\r\nANALOG:PIN? AOUT3\r\n");
 
     if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
         perror("send");

@@ -109,7 +109,7 @@ int getRpDirection(const char *dirStr, rp_pinDirection_t *direction) {
 	if (strcasecmp(dirStr, "OUTP") == 0) {
 		*direction = RP_OUT;
 	}
-	else if(strcasecmp(dirStr, "IN") == 0) {
+	else if(strcasecmp(dirStr, "INP") == 0) {
 		*direction = RP_IN;
 	}
 	else {

@@ -111,7 +111,7 @@ scpi_result_t RP_AnalogPinSetValue(scpi_t * context) {
 
     char *endptr;
     errno = 0;    /* To distinguish success/failure after call */
-    value = strtol(value_string, &endptr, 10);
+    value = strtof(value_string, &endptr);
     if ((errno == ERANGE && (value == LONG_MAX || value == LONG_MIN)) || (errno != 0 && value == 0) || endptr == value_string) {
         syslog(LOG_ERR, "*ANALOG:PIN parameter value is invalid.");
         return SCPI_RES_ERR;
