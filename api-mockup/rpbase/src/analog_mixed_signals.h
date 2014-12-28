@@ -32,7 +32,7 @@ int ams_GetValueDAC1(uint32_t* value);
 int ams_GetValueDAC2(uint32_t* value);
 int ams_GetValueDAC3(uint32_t* value);
 
-int ams_GetRangeInput(float *min_val, float *max_val);
-int ams_GetRangeOutput(float *min_val, float *max_val);
+int ams_GetRangeInput(float *min_val, float *max_val, uint32_t *int_max_val);
+int ams_GetRangeOutput(float *min_val, float *max_val, uint32_t *int_max_val);
 
 #endif //__ANALOG_MIXED_SIGNALS_H
