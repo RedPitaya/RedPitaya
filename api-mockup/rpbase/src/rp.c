@@ -20,6 +20,7 @@
 #include "housekeeping.h"
 #include "dpin_handler.h"
 #include "oscilloscope.h"
+#include "acq_handler.h"
 #include "analog_mixed_signals.h"
 #include "apin_handler.h"
 #include "health.h"
@@ -35,7 +36,7 @@ static char version[50];
 int rp_Init()
 {
 	ECHECK(hk_Init());
-    ECHECK(ams_Init());
+	ECHECK(ams_Init());
 	ECHECK(health_Init());
 	ECHECK(osc_Init());
     // TODO: Place other module initializations here
@@ -45,7 +46,7 @@ int rp_Init()
 int rp_Release()
 {
 	ECHECK(hk_Release());
-    ECHECK(ams_Release());
+	ECHECK(ams_Release());
 	ECHECK(health_Release());
 	ECHECK(osc_Release());
     // TODO: Place other module releasing here
@@ -139,6 +140,27 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
 {
     return apin_GetRange(pin, min_val, max_val);
 }
+
+
+/**
+ * Acquire methods
+ */
+
+int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
+{
+	return acq_SetSamplingRate(sampling_rate);
+}
+
+int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
+{
+	return acq_GetSamplingRate(sampling_rate);
+}
+
+int rp_AcqGetSamplingRateNum(float* sampling_rate)
+{
+	return acq_GetSamplingRateNum(sampling_rate);
+}
+
 
 /**
  * Health methods

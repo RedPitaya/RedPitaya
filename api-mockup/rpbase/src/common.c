@@ -74,16 +74,20 @@ int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask,
 	return RP_OK;
 }
 
-int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask)
+int cmn_SetValue(volatile uint32_t* field, uint32_t value, uint32_t mask)
 {
-	*value = *field & mask;
-	return RP_OK;
+	return cmn_SetShiftedValue(field, value, mask, 0);
 }
 
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift)
 {
 	*value = (*field >> bitsToSetShift) & mask;
 	return RP_OK;
+}
+
+int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask)
+{
+	return cmn_GetShiftedValue(field, value, mask, 0);
 }
 
 int cmn_SetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask)
