@@ -19,6 +19,9 @@
 #include <stdbool.h>
 #include "rp.h"
 
+int acq_SetDecimation(rp_acq_decimation_t decimation);
+int acq_GetDecimation(rp_acq_decimation_t* decimation);
+int acq_GetDecimationNum(uint32_t* decimation);
 int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
 int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
 int acq_GetSamplingRateHz(float* sampling_rate);
