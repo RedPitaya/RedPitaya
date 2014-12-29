@@ -112,3 +112,13 @@ int acq_GetSamplingRateNum(float* sampling_rate)
 			return RP_EOOR;
 	}
 }
+
+int acq_SetAveraging(bool enable)
+{
+	return osc_SetAveraging(enable);
+}
+
+int acq_GetAveraging(bool* enable)
+{
+	return osc_GetAveraging(enable);
+}
