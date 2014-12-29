@@ -140,6 +140,19 @@ typedef enum {
 } rp_acq_sampling_rate_t;
 
 
+/**
+* Type representing decimation used at acquiring signal.
+*/
+typedef enum {
+	RP_DEC_1,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+	RP_DEC_8,     //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+	RP_DEC_64,    //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+	RP_DEC_1024,  //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+	RP_DEC_8192,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+	RP_DEC_65536  //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+} rp_acq_decimation_t;
+
+
 /** @name General
  */
 ///@{
@@ -275,6 +288,34 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 ///@{
 
 /**
+ * Sets the decimation used at acquiring signal. There is only a set of pre-defined decimation
+ * values which can be specified. See the #rp_acq_decimation_t enum values.
+ * @param decimation Specify one of pre-defined decimation values
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_SetDecimation(rp_acq_decimation_t decimation);
+
+/**
+ * Gets the decimation used at acquiring signal. There is only a set of pre-defined decimation
+ * values which can be specified. See the #rp_acq_decimation_t enum values.
+ * @param decimation Returns one of pre-defined decimation values which is currently set.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetDecimation(rp_acq_decimation_t* decimation);
+
+/**
+ * Gets the decimation used at acquiring signal in a numerical form. Although this method returns an integer
+ * value representing the current value of the decimation, there is only a set of pre-defined decimation
+ * values which can be returned. See the #rp_acq_decimation_t enum values.
+ * @param decimation Returns decimation value which is currently set.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetDecimationNum(uint32_t* decimation);
+
+/**
  * Sets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
  * values which can be specified. See the #rp_acq_sampling_rate_t enum values.
  * @param sampling_rate Specify one of pre-defined sampling rate value
@@ -286,7 +327,7 @@ int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
 /**
  * Gets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
  * values which can be returned. See the #rp_acq_sampling_rate_t enum values.
- * @param sampling_rate returns one of pre-defined sampling rate value which is currently set
+ * @param sampling_rate Returns one of pre-defined sampling rate value which is currently set
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
