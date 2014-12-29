@@ -22,5 +22,7 @@
 int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
 int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
 int acq_GetSamplingRateNum(float* sampling_rate);
+int acq_SetAveraging(bool enable);
+int acq_GetAveraging(bool* enable);
 
 #endif /* SRC_ACQ_HANDLER_H_ */
