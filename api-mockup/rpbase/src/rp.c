@@ -156,9 +156,9 @@ int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 	return acq_GetSamplingRate(sampling_rate);
 }
 
-int rp_AcqGetSamplingRateNum(float* sampling_rate)
+int rp_AcqGetSamplingRateHz(float* sampling_rate)
 {
-	return acq_GetSamplingRateNum(sampling_rate);
+	return acq_GetSamplingRateHz(sampling_rate);
 }
 
 int rp_AcqSetAveraging(bool enabled)

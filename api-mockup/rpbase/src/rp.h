@@ -22,6 +22,7 @@ extern "C" {
 
 
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /** @name Error codes
@@ -299,7 +300,7 @@ int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetSamplingRateNum(float* sampling_rate);
+int rp_AcqGetSamplingRateHz(float* sampling_rate);
 
 /**
  * Enables or disables averaging of data between samples.
