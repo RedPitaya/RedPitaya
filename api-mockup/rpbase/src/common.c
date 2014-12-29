@@ -104,7 +104,7 @@ int cmn_UnsetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask)
 	return RP_OK;
 }
 
-int cmn_AreBitsSet(uint32_t field, uint32_t bits, uint32_t mask, bool* result)
+int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* result)
 {
 	VALIDATE_BITS(bits, mask);
 	*result = ARE_BITS_SET(field, bits);

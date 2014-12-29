@@ -161,6 +161,16 @@ int rp_AcqGetSamplingRateNum(float* sampling_rate)
 	return acq_GetSamplingRateNum(sampling_rate);
 }
 
+int rp_AcqSetAveraging(bool enabled)
+{
+	return acq_SetAveraging(enabled);
+}
+
+int rp_AcqGetAveraging(bool *enabled)
+{
+	return acq_GetAveraging(enabled);
+}
+
 
 /**
  * Health methods
