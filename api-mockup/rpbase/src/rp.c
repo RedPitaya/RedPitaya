@@ -146,6 +146,21 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
  * Acquire methods
  */
 
+int rp_SetDecimation(rp_acq_decimation_t decimation)
+{
+	return acq_SetDecimation(decimation);
+}
+
+int rp_GetDecimation(rp_acq_decimation_t* decimation)
+{
+	return acq_GetDecimation(decimation);
+}
+
+int rp_GetDecimationNum(uint32_t* decimation)
+{
+	return acq_GetDecimationNum(decimation);
+}
+
 int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
 {
 	return acq_SetSamplingRate(sampling_rate);
