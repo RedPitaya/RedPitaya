@@ -29,58 +29,144 @@ static const uint32_t DEC_1024  = 1024;
 static const uint32_t DEC_8192  = 8192;
 static const uint32_t DEC_65536 = 65536;
 
+// Sampling rate constants
+static const uint32_t SR_125MHZ = 125.0 * 1024 * 1024;
+static const uint32_t SR_15_625MHZ = 15.625 * 1024 * 1024;
+static const uint32_t SR_1_953MHZ = 1.953 * 1024 * 1024;
+static const uint32_t SR_122_070KHZ = 122.070 * 1024;
+static const uint32_t SR_15_258KHZ = 15.258 * 1024;
+static const uint32_t SR_1_907KHZ = 1.907 * 1024;
 
-int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
+int acq_SetDecimation(rp_acq_decimation_t decimation)
 {
-	switch (sampling_rate) {
-	case RP_SMP_125M:
+	switch (decimation) {
+	case RP_DEC_1:
 		return osc_SetDecimation(DEC_1);
-	case RP_SMP_15_625M:
+	case RP_DEC_8:
 		return osc_SetDecimation(DEC_8);
-	case RP_SMP_1_953M:
+	case RP_DEC_64:
 		return osc_SetDecimation(DEC_64);
-	case RP_SMP_122_070K:
+	case RP_DEC_1024:
 		return osc_SetDecimation(DEC_1024);
-	case RP_SMP_15_258K:
+	case RP_DEC_8192:
 		return osc_SetDecimation(DEC_8192);
-	case RP_SMP_1_907K:
+	case RP_DEC_65536:
 		return osc_SetDecimation(DEC_65536);
 	default:
 		return RP_EOOR;
 	}
 }
 
-int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
+int acq_GetDecimation(rp_acq_decimation_t* decimation)
 {
-	uint32_t decimation;
-	ECHECK(osc_GetDecimation(&decimation));
+	uint32_t decimationVal;
+	ECHECK(osc_GetDecimation(&decimationVal));
 
-	if (decimation == DEC_1) {
-		*sampling_rate = RP_SMP_125M;
+	if (decimationVal == DEC_1) {
+		*decimation = RP_DEC_1;
 		return RP_OK;
 	}
-	else if (decimation == DEC_8) {
-		*sampling_rate = RP_SMP_15_625M;
+	else if (decimationVal == DEC_8) {
+		*decimation = RP_DEC_8;
 		return RP_OK;
 	}
-	else if (decimation == DEC_64) {
-		*sampling_rate = RP_SMP_1_953M;
+	else if (decimationVal == DEC_64) {
+		*decimation = RP_DEC_64;
 		return RP_OK;
 	}
-	else if (decimation == DEC_1024) {
-		*sampling_rate = RP_SMP_122_070K;
+	else if (decimationVal == DEC_1024) {
+		*decimation = RP_DEC_1024;
 		return RP_OK;
 	}
-	else if (decimation == DEC_8192) {
-		*sampling_rate = RP_SMP_15_258K;
+	else if (decimationVal == DEC_8192) {
+		*decimation = RP_DEC_8192;
 		return RP_OK;
 	}
-	else if (decimation == DEC_65536) {
-		*sampling_rate = RP_SMP_1_907K;
+	else if (decimationVal == DEC_65536) {
+		*decimation = RP_DEC_65536;
 		return RP_OK;
 	}
 	else {
 		return RP_EOOR;
+	}
+}
+
+int acq_GetDecimationNum(uint32_t* decimation)
+{
+	rp_acq_decimation_t decimationVal;
+	ECHECK(acq_GetDecimation(&decimationVal));
+
+	switch (decimationVal) {
+		case RP_DEC_1:
+			*decimation = DEC_1;
+			return RP_OK;
+		case RP_DEC_8:
+			*decimation = DEC_8;
+			return RP_OK;
+		case RP_DEC_64:
+			*decimation = DEC_64;
+			return RP_OK;
+		case RP_DEC_1024:
+			*decimation = DEC_1024;
+			return RP_OK;
+		case RP_DEC_8192:
+			*decimation = DEC_8192;
+			return RP_OK;
+		case RP_DEC_65536:
+			*decimation = DEC_65536;
+			return RP_OK;
+		default:
+			return RP_EOOR;
+	}
+}
+
+
+int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
+{
+	switch (sampling_rate) {
+		case RP_SMP_125M:
+			return acq_SetDecimation(RP_DEC_1);
+		case RP_SMP_15_625M:
+			return acq_SetDecimation(RP_DEC_8);
+		case RP_SMP_1_953M:
+			return acq_SetDecimation(RP_DEC_64);
+		case RP_SMP_122_070K:
+			return acq_SetDecimation(RP_DEC_1024);
+		case RP_SMP_15_258K:
+			return acq_SetDecimation(RP_DEC_8192);
+		case RP_SMP_1_907K:
+			return acq_SetDecimation(RP_DEC_65536);
+		default:
+			return RP_EOOR;
+	}
+}
+
+int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
+{
+	rp_acq_decimation_t decimation;
+	ECHECK(acq_GetDecimation(&decimation));
+
+	switch (decimation) {
+		case RP_DEC_1:
+			*sampling_rate = RP_SMP_125M;
+			return RP_OK;
+		case RP_DEC_8:
+			*sampling_rate = RP_SMP_15_625M;
+			return RP_OK;
+		case RP_DEC_64:
+			*sampling_rate = RP_SMP_1_953M;
+			return RP_OK;
+		case RP_DEC_1024:
+			*sampling_rate = RP_SMP_122_070K;
+			return RP_OK;
+		case RP_DEC_8192:
+			*sampling_rate = RP_SMP_15_258K;
+			return RP_OK;
+		case RP_DEC_65536:
+			*sampling_rate = RP_SMP_1_907K;
+			return RP_OK;
+		default:
+			return RP_EOOR;
 	}
 }
 
@@ -91,22 +177,22 @@ int acq_GetSamplingRateHz(float* sampling_rate)
 
 	switch (rate) {
 		case RP_SMP_125M:
-			*sampling_rate = 125.0 * 1024 * 1024;
+			*sampling_rate = SR_125MHZ;
 			return RP_OK;
 		case RP_SMP_15_625M:
-			*sampling_rate =  15.625 * 1024 * 1024;
+			*sampling_rate =  SR_15_625MHZ;
 			return RP_OK;
 		case RP_SMP_1_953M:
-			*sampling_rate =  1.953 * 1024 * 1024;
+			*sampling_rate =  SR_1_953MHZ;
 			return RP_OK;
 		case RP_SMP_122_070K:
-			*sampling_rate =  122.070 * 1024;
+			*sampling_rate =  SR_122_070KHZ;
 			return RP_OK;
 		case RP_SMP_15_258K:
-			*sampling_rate =  15.258 * 1024;
+			*sampling_rate =  SR_15_258KHZ;
 			return RP_OK;
 		case RP_SMP_1_907K:
-			*sampling_rate =  1.907 * 1024;
+			*sampling_rate =  SR_1_907KHZ;
 			return RP_OK;
 		default:
 			return RP_EOOR;
