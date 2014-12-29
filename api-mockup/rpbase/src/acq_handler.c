@@ -84,7 +84,7 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 	}
 }
 
-int acq_GetSamplingRateNum(float* sampling_rate)
+int acq_GetSamplingRateHz(float* sampling_rate)
 {
 	rp_acq_sampling_rate_t rate;
 	ECHECK(acq_GetSamplingRate(&rate));
