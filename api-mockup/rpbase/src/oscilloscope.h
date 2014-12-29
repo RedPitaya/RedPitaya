@@ -25,5 +25,7 @@ int osc_Release();
 
 int osc_SetDecimation(uint32_t decimation);
 int osc_GetDecimation(uint32_t* decimation);
+int osc_SetAveraging(bool enable);
+int osc_GetAveraging(bool* enable);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

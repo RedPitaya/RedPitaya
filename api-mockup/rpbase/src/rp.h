@@ -301,6 +301,23 @@ int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
  */
 int rp_AcqGetSamplingRateNum(float* sampling_rate);
 
+/**
+ * Enables or disables averaging of data between samples.
+ * Data between samples can be averaged by setting the averaging flag in the Data decimation register.
+ * @param enabled When true, the averaging is enabled, otherwise it is disabled.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetAveraging(bool enabled);
+
+/**
+ * Returns information if averaging of data between samples is enabled or disabled.
+ * Data between samples can be averaged by setting the averaging flag in the Data decimation register.
+ * @param enabled Set to true when the averaging is enabled, otherwise is it set to false.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetAveraging(bool *enabled);
 
 ///@}
 

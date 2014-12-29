@@ -122,7 +122,8 @@ typedef struct osc_control_s {
 	* bits [31:1] - reserved
 	*/
 	uint32_t other;
-	uint32_t reseved;
+
+	uint32_t reseved; // Empty space...
 
 	/** @brief ChA Equalization filter
 	* bits [17:0] - AA coefficient (pole)
@@ -188,6 +189,7 @@ static volatile uint32_t *osc_chb = NULL;
 
 
 static const uint32_t DATA_DEC_MASK = 0xFFFF;
+static const uint32_t DATA_AVG_MASK = 0x1;
 
 /**
 * general
@@ -224,4 +226,19 @@ int osc_SetDecimation(uint32_t decimation)
 int osc_GetDecimation(uint32_t* decimation)
 {
 	return cmn_GetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
+}
+
+int osc_SetAveraging(bool enable)
+{
+	if (enable) {
+		return cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+	}
+	else {
+		return cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+	}
+}
+
+int osc_GetAveraging(bool* enable)
+{
+	return cmn_AreBitsSet(osc_reg->other, 0x1, DATA_AVG_MASK, enable);
 }
