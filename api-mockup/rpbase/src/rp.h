@@ -292,10 +292,10 @@ int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
 int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
 
 /**
- * Gets the sampling rate for acquiring signal in a numerical form. Although this method returns a float
+ * Gets the sampling rate for acquiring signal in a numerical form in Hz. Although this method returns a float
  * value representing the current value of the sampling rate, there is only a set of pre-defined sampling rate
  * values which can be returned. See the #rp_acq_sampling_rate_t enum values.
- * @param sampling_rate returns currently set sampling rate
+ * @param sampling_rate returns currently set sampling rate in Hz
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
