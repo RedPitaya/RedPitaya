@@ -39,7 +39,7 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
         	size_t written =  write(fd, data, len);
         	if (written < 0) {
 				syslog(LOG_ERR,
-						"Failed to write into the socket. Should send %u bytes. Could send only %u bytes",
+						"Failed to write into the socket. Should send %zu bytes. Could send only %zu bytes",
 						len, written);
 				return total;
         	}
