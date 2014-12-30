@@ -37,6 +37,9 @@ static const uint32_t SR_122_070KHZ = 122.070 * 1024;
 static const uint32_t SR_15_258KHZ = 15.258 * 1024;
 static const uint32_t SR_1_907KHZ = 1.907 * 1024;
 
+// Caching variables, which are pushed to FPGA when acquiring starts
+static rp_acq_trig_src_t triggerSource;
+
 int acq_SetDecimation(rp_acq_decimation_t decimation)
 {
 	switch (decimation) {
@@ -207,4 +210,16 @@ int acq_SetAveraging(bool enable)
 int acq_GetAveraging(bool* enable)
 {
 	return osc_GetAveraging(enable);
+}
+
+int acq_SetTriggerSrc(rp_acq_trig_src_t source)
+{
+	triggerSource = source;
+	return RP_OK;
+}
+
+int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
+{
+	*source = triggerSource;
+	return RP_OK;
 }
