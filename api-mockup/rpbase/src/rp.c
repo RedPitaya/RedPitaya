@@ -146,17 +146,17 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
  * Acquire methods
  */
 
-int rp_SetDecimation(rp_acq_decimation_t decimation)
+int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
 	return acq_SetDecimation(decimation);
 }
 
-int rp_GetDecimation(rp_acq_decimation_t* decimation)
+int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
 {
 	return acq_GetDecimation(decimation);
 }
 
-int rp_GetDecimationNum(uint32_t* decimation)
+int rp_AcqGetDecimationNum(uint32_t* decimation)
 {
 	return acq_GetDecimationNum(decimation);
 }
@@ -186,6 +186,15 @@ int rp_AcqGetAveraging(bool *enabled)
 	return acq_GetAveraging(enabled);
 }
 
+int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source)
+{
+	return acq_SetTriggerSrc(source);
+}
+
+int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
+{
+	return acq_GetTriggerSrc(source);
+}
 
 /**
  * Health methods
