@@ -27,5 +27,7 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
 int acq_GetSamplingRateHz(float* sampling_rate);
 int acq_SetAveraging(bool enable);
 int acq_GetAveraging(bool* enable);
+int acq_SetTriggerSrc(rp_acq_trig_src_t source);
+int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
 
 #endif /* SRC_ACQ_HANDLER_H_ */
