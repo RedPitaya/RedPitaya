@@ -153,6 +153,17 @@ typedef enum {
 } rp_acq_decimation_t;
 
 
+/**
+* Type representing different trigger sources used at acquiring signal.
+*/
+typedef enum {
+	RP_TRG_CHA,  //!< Trigger set to Channel A threshold
+	RP_TRG_CHB,  //!< Trigger set to Channel B threshold
+	RP_TRG_EXT,  //!< External trigger
+	RP_TRG_AWG,  //!< Trigger set to arbitrary wave generator application
+} rp_acq_trig_src_t;
+
+
 /** @name General
  */
 ///@{
@@ -294,7 +305,7 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_SetDecimation(rp_acq_decimation_t decimation);
+int rp_AcqSetDecimation(rp_acq_decimation_t decimation);
 
 /**
  * Gets the decimation used at acquiring signal. There is only a set of pre-defined decimation
@@ -303,7 +314,7 @@ int rp_SetDecimation(rp_acq_decimation_t decimation);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetDecimation(rp_acq_decimation_t* decimation);
+int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
 
 /**
  * Gets the decimation used at acquiring signal in a numerical form. Although this method returns an integer
@@ -313,7 +324,7 @@ int rp_GetDecimation(rp_acq_decimation_t* decimation);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetDecimationNum(uint32_t* decimation);
+int rp_AcqGetDecimationNum(uint32_t* decimation);
 
 /**
  * Sets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
@@ -360,6 +371,26 @@ int rp_AcqSetAveraging(bool enabled);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetAveraging(bool *enabled);
+
+/**
+ * Sets the trigger source used at acquiring signal. When acquiring is started,
+ * the FPGA waits for the trigger condition on the specified source and when the condition is met, it
+ * starts writing the signal to the buffer.
+ * @param source Trigger source.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source);
+
+/**
+ * Gets the trigger source used at acquiring signal. When acquiring is started,
+ * the FPGA waits for the trigger condition on the specified source and when the condition is met, it
+ * starts writing the signal to the buffer.
+ * @param source Currently set trigger source.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source);
 
 ///@}
 
