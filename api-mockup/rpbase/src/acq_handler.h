@@ -29,5 +29,8 @@ int acq_SetAveraging(bool enable);
 int acq_GetAveraging(bool* enable);
 int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
+int acq_Start();
+int acq_Stop();
+
 
 #endif /* SRC_ACQ_HANDLER_H_ */
