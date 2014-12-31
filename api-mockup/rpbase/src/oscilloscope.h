@@ -29,5 +29,6 @@ int osc_SetAveraging(bool enable);
 int osc_GetAveraging(bool* enable);
 int osc_SetTriggerSource(uint32_t source);
 int osc_GetTriggerSource(uint32_t* source);
+int osc_WriteDataIntoMemory(bool enable);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

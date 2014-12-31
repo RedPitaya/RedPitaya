@@ -196,6 +196,17 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
 	return acq_GetTriggerSrc(source);
 }
 
+int rp_AcqStart()
+{
+	return acq_Start();
+}
+
+int rp_AcqStop()
+{
+	return acq_Stop();
+}
+
+
 /**
  * Health methods
  */
