@@ -157,10 +157,16 @@ typedef enum {
 * Type representing different trigger sources used at acquiring signal.
 */
 typedef enum {
-	RP_TRG_CHA,  //!< Trigger set to Channel A threshold
-	RP_TRG_CHB,  //!< Trigger set to Channel B threshold
-	RP_TRG_EXT,  //!< External trigger
-	RP_TRG_AWG,  //!< Trigger set to arbitrary wave generator application
+	RP_TRIG_SRC_DISABLED, //!< Trigger is disabled
+	RP_TRIG_SRC_NOW,      //!< Trigger triggered now (immediately)
+	RP_TRIG_SRC_CHA_PE,   //!< Trigger set to Channel A threshold positive edge
+	RP_TRIG_SRC_CHA_NE,   //!< Trigger set to Channel A threshold negative edge
+	RP_TRIG_SRC_CHB_PE,   //!< Trigger set to Channel B threshold positive edge
+	RP_TRIG_SRC_CHB_NE,   //!< Trigger set to Channel B threshold negative edge
+	RP_TRIG_SRC_EXT_PE,   //!< Trigger set to external trigger positive edge (DIO0_P pin)
+	RP_TRIG_SRC_EXT_NE,   //!< Trigger set to external trigger negative edge (DIO0_P pin)
+	RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
+	RP_TRIG_SRC_AWG_NE    //!< Trigger set to arbitrary wave generator application negative edge
 } rp_acq_trig_src_t;
 
 

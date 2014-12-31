@@ -190,6 +190,7 @@ static volatile uint32_t *osc_chb = NULL;
 
 static const uint32_t DATA_DEC_MASK = 0xFFFF;
 static const uint32_t DATA_AVG_MASK = 0x1;
+static const uint32_t TRIG_SRC_MASK = 0x7; // (3 bits)
 
 /**
 * general
@@ -241,4 +242,19 @@ int osc_SetAveraging(bool enable)
 int osc_GetAveraging(bool* enable)
 {
 	return cmn_AreBitsSet(osc_reg->other, 0x1, DATA_AVG_MASK, enable);
+}
+
+
+/**
+* trigger source
+*/
+
+int osc_SetTriggerSource(uint32_t source)
+{
+	return cmn_SetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK);
+}
+
+int osc_GetTriggerSource(uint32_t* source)
+{
+	return cmn_GetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK);
 }
