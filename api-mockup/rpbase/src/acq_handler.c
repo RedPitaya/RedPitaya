@@ -219,3 +219,13 @@ int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
 {
 	return osc_GetTriggerSource(source);
 }
+
+int acq_Start()
+{
+	return osc_WriteDataIntoMemory(true);
+}
+
+int acq_Stop()
+{
+	return osc_WriteDataIntoMemory(false);
+}

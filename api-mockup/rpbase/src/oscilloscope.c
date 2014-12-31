@@ -191,6 +191,7 @@ static volatile uint32_t *osc_chb = NULL;
 static const uint32_t DATA_DEC_MASK = 0xFFFF;
 static const uint32_t DATA_AVG_MASK = 0x1;
 static const uint32_t TRIG_SRC_MASK = 0x7; // (3 bits)
+static const uint32_t START_DATA_WRITE_MASK = 0x1;
 
 /**
 * general
@@ -257,4 +258,14 @@ int osc_SetTriggerSource(uint32_t source)
 int osc_GetTriggerSource(uint32_t* source)
 {
 	return cmn_GetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK);
+}
+
+int osc_WriteDataIntoMemory(bool enable)
+{
+	if (enable) {
+		return cmn_SetBits(&osc_reg->conf, 0x1, START_DATA_WRITE_MASK);
+	}
+	else {
+		return cmn_UnsetBits(&osc_reg->conf, 0x1, START_DATA_WRITE_MASK);
+	}
 }
