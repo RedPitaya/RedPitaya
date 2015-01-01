@@ -298,13 +298,21 @@
 			xlnx,has-ss1 = <0x1>;
 			xlnx,has-ss2 = <0x1>;
 			xlnx,spi-clk-freq-hz = <0x9ef21aa>;
-		} ;
+
+			spidev@0 {
+				compatible="spidev";
+				reg =<0>;
+				spi-max-frequency = <10000000>;
+	        };
+		};
+
 		ps7_ttc_0: ps7-ttc@f8001000 {
 			compatible = "xlnx,ps7-ttc-1.00.a", "cdns,ttc";
 			interrupt-parent = <&ps7_scugic_0>;
 			interrupts = < 0 10 4 0 11 4 0 12 4 >;
 			reg = < 0xf8001000 0x1000 >;
-		} ;
+		};
+
 		ps7_uart_0: serial@e0000000 {
 			compatible = "xlnx,ps7-uart-1.00.a", "xlnx,xuartps";
 			current-speed = <115200>;
