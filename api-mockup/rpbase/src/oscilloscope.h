@@ -30,5 +30,9 @@ int osc_GetAveraging(bool* enable);
 int osc_SetTriggerSource(uint32_t source);
 int osc_GetTriggerSource(uint32_t* source);
 int osc_WriteDataIntoMemory(bool enable);
+int osc_SetThresholdChA(uint32_t threshold);
+int osc_GetThresholdChA(uint32_t* threshold);
+int osc_SetThresholdChB(uint32_t threshold);
+int osc_GetThresholdChB(uint32_t* threshold);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

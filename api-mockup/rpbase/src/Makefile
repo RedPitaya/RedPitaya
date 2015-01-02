@@ -90,7 +90,7 @@ $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LDFLAGS)
 
 # Version header for traceability
 version.h:

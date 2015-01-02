@@ -135,6 +135,13 @@ typedef enum {
 	RP_VCC_DDR     //!< VCC DDR
 } rp_health_t;
 
+/**
+ * Type representing Input/Output channels.
+ */
+typedef enum {
+	RP_CH_A, //!< Channel A
+	RP_CH_B  //!< Channel B
+} rp_channel_t;
 
 /**
 * Type representing acquire signal sampling rate.
@@ -430,6 +437,51 @@ int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source);
+
+/**
+ * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya
+ * hardware by the LV/HV gain jumpers. LV = 1V; HV = 20V.
+ * @param state High or Low state
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetGain(rp_pinState_t state);
+
+/**
+ * Returns the currently set acquire gain state in the library. It may not be set to the same value as
+ * it is set on the Red Pitaya hardware by the LV/HV gain jumpers. LV = 1V; HV = 20V.
+ * @param state Currently set High or Low state in the library.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetGain(rp_pinState_t* state);
+
+/**
+ * Returns the currently set acquire gain in the library. It may not be set to the same value as
+ * it is set on the Red Pitaya hardware by the LV/HV gain jumpers. Returns value in Volts.
+ * @param gain Currently set gain in the library. 1.0 or 20.0 Volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetGainV(float* gain);
+
+/**
+ * Sets trigger threshold value for channel in volts.
+ * @param channel The selected channel (A or B)
+ * @param voltage Threshold value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage);
+
+/**
+ * Gets currently set trigger threshold value for 		channel in volts
+ * @param channel The selected channel (A or B)
+ * @param voltage Current threshold value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetChannelThreshold(rp_channel_t channel, float* voltage);
 
 /**
  * Starts the acquire. Signals coming from the input channels are acquired and written into memory.
