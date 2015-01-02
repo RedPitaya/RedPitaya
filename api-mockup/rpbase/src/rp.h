@@ -32,24 +32,33 @@ extern "C" {
 
 /** Success */
 #define RP_OK     0
+/** Failed to Open EEPROM Device */
+#define RP_EOED   1
 /** Failed to Open Memory Device */
-#define RP_EOMD   1
+#define RP_EOMD   2
 /** Failed to Close Memory Device*/
-#define RP_ECMD   2
+#define RP_ECMD   3
 /** Failed to Map Memory Device */
-#define RP_EMMD   3
+#define RP_EMMD   4
 /** Failed to Unmap Memory Device */
-#define RP_EUMD   4
+#define RP_EUMD   5
 /** Value Out Of Range */
-#define RP_EOOR   5
+#define RP_EOOR   6
 /** LED Input Direction is not valid */
-#define RP_ELID   6
+#define RP_ELID   7
 /** Modifying Read Only field */
-#define RP_EMRO   7
+#define RP_EMRO   8
 /** Writing to Input Pin is not valid */
-#define RP_EWIP   8
+#define RP_EWIP   9
 /** Invalid Pin number */
-#define RP_EPN    9
+#define RP_EPN    10
+/** Uninitialized Input Argument */
+#define RP_UIA    11
+/** Failed to Find Calibration Parameters */
+#define RP_FCA    12
+/** Failed to Read Calibration Parameters */
+#define RP_RCA    13
+
 
 ///@}
 
