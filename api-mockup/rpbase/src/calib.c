@@ -33,7 +33,7 @@ static const int  eeprom_calib_off=0x0008;
  * @retval       >0 Failure
  *
  */
-int calib_ReadParams(calib_params_t *calib_params)
+int calib_ReadParams(rp_calib_params_t *calib_params)
 {
     FILE   *fp;
     size_t  size;
@@ -56,8 +56,8 @@ int calib_ReadParams(calib_params_t *calib_params)
     }
 
     /* read data from EEPROM component and store it to the specified buffer */
-    size = fread(calib_params, sizeof(char), sizeof(calib_params_t), fp);
-    if(size != sizeof(calib_params_t)) {
+    size = fread(calib_params, sizeof(char), sizeof(rp_calib_params_t), fp);
+    if(size != sizeof(rp_calib_params_t)) {
         fclose(fp);
         return RP_RCA;
     }
@@ -67,26 +67,22 @@ int calib_ReadParams(calib_params_t *calib_params)
 }
 
 
-/*----------------------------------------------------------------------------*/
-/**
+/*
  * Initialize calibration parameters to default values.
- *
- * @param[out] calib_params  Pointer to target buffer to be initialized.
- * @retval 0 Success, could never fail.
- */
 
-int calib_GetDefaultParams(calib_params_t *calib_params)
+int calib_GetDefaultParams(rp_calib_params_t *calib_params)
 {
-    calib_params->fe_ch1_fs_g_hi = 28101971; /* 0.6543 [V] */
-    calib_params->fe_ch2_fs_g_hi = 28101971; /* 0.6543 [V] */
-    calib_params->fe_ch1_fs_g_lo = 625682246; /* 14.56 [V] */
-    calib_params->fe_ch2_fs_g_lo = 625682246; /* 14.56 [V] */
+    calib_params->fe_ch1_fs_g_hi = 28101971; // 0.6543 [V]
+    calib_params->fe_ch2_fs_g_hi = 28101971; // 0.6543 [V]
+    calib_params->fe_ch1_fs_g_lo = 625682246; // 14.56 [V]
+    calib_params->fe_ch2_fs_g_lo = 625682246; // 14.56 [V]
     calib_params->fe_ch1_dc_offs = 585;
     calib_params->fe_ch2_dc_offs = 585;
-    calib_params->be_ch1_fs = 42949673; /* 1 [V] */
-    calib_params->be_ch2_fs = 42949673; /* 1 [V] */
+    calib_params->be_ch1_fs = 42949673; // 1 [V]
+    calib_params->be_ch2_fs = 42949673; // 1 [V]
     calib_params->be_ch1_dc_offs = 0x3eac;
     calib_params->be_ch2_dc_offs = 0x3eac;
 
     return 0;
 }
+*/

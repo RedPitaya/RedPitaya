@@ -25,9 +25,13 @@
 #include "apin_handler.h"
 #include "health.h"
 #include "health_handler.h"
+#include "calib.h"
 #include "rp.h"
 
 static char version[50];
+
+// Calibration settings are read only once at rp_Init().
+rp_calib_params_t g_calib;
 
 /**
  * Global methods
@@ -35,6 +39,7 @@ static char version[50];
 
 int rp_Init()
 {
+	ECHECK(calib_ReadParams(&g_calib));
 	ECHECK(hk_Init());
 	ECHECK(ams_Init());
 	ECHECK(health_Init());
@@ -57,6 +62,11 @@ const char* rp_GetVersion()
 {
 	sprintf(version, "%s (%s)", VERSION_STR, REVISION_STR);
 	return version;
+}
+
+rp_calib_params_t rp_GetCalibrationSettings()
+{
+	return g_calib;
 }
 
 const char* rp_GetError(int errorCode)
