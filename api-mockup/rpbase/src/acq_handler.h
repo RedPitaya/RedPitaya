@@ -19,6 +19,9 @@
 #include <stdbool.h>
 #include "rp.h"
 
+int acq_SetGain(rp_pinState_t state);
+int acq_GetGain(rp_pinState_t* state);
+int acq_GetGainV(float* gain);
 int acq_SetDecimation(rp_acq_decimation_t decimation);
 int acq_GetDecimation(rp_acq_decimation_t* decimation);
 int acq_GetDecimationNum(uint32_t* decimation);
@@ -29,6 +32,8 @@ int acq_SetAveraging(bool enable);
 int acq_GetAveraging(bool* enable);
 int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
+int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
+int acq_GetChannelThreshold(rp_channel_t channel, float* voltage);
 int acq_Start();
 int acq_Stop();
 

@@ -192,6 +192,7 @@ static const uint32_t DATA_DEC_MASK = 0xFFFF;
 static const uint32_t DATA_AVG_MASK = 0x1;
 static const uint32_t TRIG_SRC_MASK = 0x7; // (3 bits)
 static const uint32_t START_DATA_WRITE_MASK = 0x1;
+static const uint32_t THRESHOLD_MASK = 0x1FFF; // (13 bits)
 
 /**
 * general
@@ -269,3 +270,28 @@ int osc_WriteDataIntoMemory(bool enable)
 		return cmn_UnsetBits(&osc_reg->conf, 0x1, START_DATA_WRITE_MASK);
 	}
 }
+
+/**
+* Threshold
+*/
+
+int osc_SetThresholdChA(uint32_t threshold)
+{
+	return cmn_SetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK);
+}
+
+int osc_GetThresholdChA(uint32_t* threshold)
+{
+	return cmn_GetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK);
+}
+
+int osc_SetThresholdChB(uint32_t threshold)
+{
+	return cmn_SetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK);
+}
+
+int osc_GetThresholdChB(uint32_t* threshold)
+{
+	return cmn_GetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK);
+}
+

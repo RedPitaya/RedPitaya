@@ -213,6 +213,31 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
 	return acq_GetTriggerSrc(source);
 }
 
+int rp_AcqGetGain(rp_pinState_t* state)
+{
+	return acq_GetGain(state);
+}
+
+int rp_AcqGetGainV(float* gain)
+{
+	return acq_GetGainV(gain);
+}
+
+int rp_AcqSetGain(rp_pinState_t state)
+{
+	return acq_SetGain(state);
+}
+
+int rp_AcqGetChannelThreshold(rp_channel_t channel, float* voltage)
+{
+	return acq_GetChannelThreshold(channel, voltage);
+}
+
+int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage)
+{
+	return acq_SetChannelThreshold(channel, voltage);
+}
+
 int rp_AcqStart()
 {
 	return acq_Start();
