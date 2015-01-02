@@ -19,8 +19,11 @@
 
 #include "rp.h"
 
-int calib_ReadParams(rp_calib_params_t *calib_params);
+int calib_Init();
+int calib_Release();
 
-int calib_GetDefaultParams(rp_calib_params_t *calib_params);
+rp_calib_params_t calib_GetParams();
+
+int calib_ReadParams(rp_calib_params_t *calib_params);
 
 #endif //__CALIB_H
