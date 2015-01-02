@@ -16,6 +16,8 @@
 #include "common.h"
 #include "calib.h"
 
+int calib_ReadParams(rp_calib_params_t *calib_params);
+
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
 
