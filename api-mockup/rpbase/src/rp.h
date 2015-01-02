@@ -179,6 +179,22 @@ typedef enum {
 } rp_acq_trig_src_t;
 
 
+/**
+ * Calibration parameters, stored in the EEPROM device
+ */
+typedef struct {
+    uint32_t fe_ch1_fs_g_hi; //!< High gain front end full scale voltage, channel 1
+    uint32_t fe_ch2_fs_g_hi; //!< High gain front end full scale voltage, channel 2
+    uint32_t fe_ch1_fs_g_lo; //!< Low gain front end full scale voltage, channel 1
+    uint32_t fe_ch2_fs_g_lo; //!< Low gain front end full scale voltage, channel 2
+    int32_t  fe_ch1_dc_offs; //!< Front end DC offset, channel 1
+    int32_t  fe_ch2_dc_offs; //!< Front end DC offset, channel 2
+    uint32_t be_ch1_fs;      //!< Back end full scale voltage, channel 1
+    uint32_t be_ch2_fs;      //!< Back end full scale voltage, channel 2
+    int32_t  be_ch1_dc_offs; //!< Back end DC offset, channel 1
+    int32_t  be_ch2_dc_offs; //!< Back end DC offset, on channel 2
+} rp_calib_params_t;
+
 /** @name General
  */
 ///@{
@@ -204,6 +220,14 @@ int rp_Release();
  * @return Library version
  */
 const char* rp_GetVersion();
+
+/**
+ * Returns calibration settings.
+ * These calibration settings are populated only once from EEPROM at rp_Init().
+ * Each rp_GetCalibrationSettings call returns the same cached setting values.
+ * @return Calibration settings
+ */
+rp_calib_params_t rp_GetCalibrationSettings();
 
 /**
  * Returns textual representation of error code.
