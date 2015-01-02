@@ -64,6 +64,8 @@ const char* rp_GetError(int errorCode)
 	switch (errorCode) {
 		case RP_OK:
 			return "OK";
+		case RP_EOED:
+			return "Failed to Open EEPROM Device.";
 		case RP_EOMD:
 			return "Failed to open memory device.";
 		case RP_ECMD:
@@ -82,7 +84,13 @@ const char* rp_GetError(int errorCode)
 			return "Writing to input pin is not valid.";
         case RP_EPN:
             return "Invalid Pin number.";
-		default:
+        case RP_UIA:
+        	return "Uninitialized Input Argument.";
+        case RP_FCA:
+        	return "Failed to Find Calibration Parameters.";
+        case RP_RCA:
+        	return "Failed to Read Calibration Parameters.";
+        default:
 			return "Unknown error";
 	}
 }
