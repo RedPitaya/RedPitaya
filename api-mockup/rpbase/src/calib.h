@@ -1,7 +1,7 @@
 /**
  * $Id: $
  *
- * @brief Red Pitaya Oscilloscope Calibration Module.
+ * @brief Red Pitaya Calibration Module.
  *
  * @Author Red Pitaya
  *
@@ -12,8 +12,8 @@
  * for more details on the language used herein.
  */
 
-#ifndef __OSCILLOSCOPE_CALIB_H
-#define __OSCILLOSCOPE_CALIB_H
+#ifndef __CALIB_H
+#define __CALIB_H
 
 #include <stdint.h>
 
@@ -38,4 +38,4 @@ int calib_ReadParams(calib_params_t *calib_params);
 
 int calib_GetDefaultParams(calib_params_t *calib_params);
 
-#endif //__OSCILLOSCOPE_CALIB_H
+#endif //__CALIB_H
