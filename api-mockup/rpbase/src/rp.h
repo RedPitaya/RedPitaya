@@ -475,7 +475,7 @@ int rp_AcqGetGainV(float* gain);
 int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage);
 
 /**
- * Gets currently set trigger threshold value for 		channel in volts
+ * Gets currently set trigger threshold value for channel in volts
  * @param channel The selected channel (A or B)
  * @param voltage Current threshold value for the channel
  * @return If the function is successful, the return value is RP_OK.
