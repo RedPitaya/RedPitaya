@@ -30,16 +30,13 @@
 
 static char version[50];
 
-// Calibration settings are read only once at rp_Init().
-rp_calib_params_t g_calib;
-
 /**
  * Global methods
  */
 
 int rp_Init()
 {
-	ECHECK(calib_ReadParams(&g_calib));
+	ECHECK(calib_Init());
 	ECHECK(hk_Init());
 	ECHECK(ams_Init());
 	ECHECK(health_Init());
@@ -50,11 +47,13 @@ int rp_Init()
 
 int rp_Release()
 {
-	ECHECK(hk_Release());
-	ECHECK(ams_Release());
-	ECHECK(health_Release());
 	ECHECK(osc_Release());
-    // TODO: Place other module releasing here
+	ECHECK(health_Release());
+	ECHECK(ams_Release());
+	ECHECK(hk_Release());
+	ECHECK(calib_Release());
+
+    // TODO: Place other module releasing here (in reverse order)
 	return RP_OK;
 }
 
@@ -66,7 +65,7 @@ const char* rp_GetVersion()
 
 rp_calib_params_t rp_GetCalibrationSettings()
 {
-	return g_calib;
+	return calib_GetParams();
 }
 
 const char* rp_GetError(int errorCode)

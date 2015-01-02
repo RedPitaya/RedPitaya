@@ -13,13 +13,35 @@
  */
 
 #include <stdio.h>
+#include "common.h"
 #include "calib.h"
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
 
+// Cached parameter values.
+static rp_calib_params_t calib;
 
-/*----------------------------------------------------------------------------*/
+int calib_Init()
+{
+	ECHECK(calib_ReadParams(&calib));
+	return RP_OK;
+}
+
+int calib_Release()
+{
+	return RP_OK;
+}
+
+/**
+ * Returns cached parameter values
+ * @return Cached parameters.
+ */
+rp_calib_params_t calib_GetParams()
+{
+	return calib;
+}
+
 /**
  * @brief Read calibration parameters from EEPROM device.
  *
