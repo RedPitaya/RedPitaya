@@ -14,9 +14,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "version.h"
 #include "common.h"
+#include "calib.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
 
@@ -37,6 +39,133 @@ static const uint32_t SR_122_070KHZ = 122.070 * 1024;
 static const uint32_t SR_15_258KHZ = 15.258 * 1024;
 static const uint32_t SR_1_907KHZ = 1.907 * 1024;
 
+
+/* @brief Number of ADC acquisition bits. */
+static const int ADC_BITS = 14;
+
+/* @brief Currently set Gain state */
+static rp_pinState_t gain = RP_LOW;
+
+
+/*----------------------------------------------------------------------------*/
+/**
+* @brief Converts ADC counts to voltage [V]
+*
+* Function is used to publish captured signal data to external world in user units.
+* Calculation is based on maximal voltage, which can be applied on ADC inputs and
+* calibrated and user defined DC offsets.
+*
+* @param[in] cnts Captured Signal Value, expressed in ADC counts
+* @param[in] adc_max_v Maximal ADC voltage, specified in [V]
+* @param[in] calib_dc_off Calibrated DC offset, specified in ADC counts
+* @param[in] user_dc_off User specified DC offset, specified in [V]
+* @retval float Signal Value, expressed in user units [V]
+*/
+
+static float cnvCntToV(uint32_t cnts, float adc_max_v, int calib_dc_off, float user_dc_off)
+{
+	int m;
+	float ret_val;
+	/* check sign */
+	if(cnts & (1 << (ADC_BITS - 1))) {
+		/* negative number */
+		m = -1 *((cnts ^ ((1 << ADC_BITS) - 1)) + 1);
+	} else {
+		/* positive number */
+		m = cnts;
+	}
+
+	/* adopt ADC count with calibrated DC offset */
+	m += calib_dc_off;
+
+	/* map ADC counts into user units */
+	if(m < (-1 * (1 << (ADC_BITS - 1))))
+		m = (-1 * (1 << (ADC_BITS - 1)));
+	else if(m > (1 << (ADC_BITS - 1)))
+		m = (1 << (ADC_BITS - 1));
+
+	ret_val = (m * adc_max_v / (float)(1 << (ADC_BITS - 1)));
+
+	/* and adopt the calculation with user specified DC offset */
+	ret_val += user_dc_off;
+
+	return ret_val;
+}
+
+/**
+* @brief Converts voltage in [V] to ADC counts
+*
+* Function is used for setting up trigger threshold value, which is written into
+* appropriate FPGA register. This value needs to be specified in ADC counts, while
+* user specifies this information in Voltage. The resulting value is based on the
+* specified threshold voltage, maximal ADC voltage, calibrated and user specified
+* DC offsets.
+*
+* @param[in] voltage Voltage, specified in [V]
+* @param[in] adc_max_v Maximal ADC voltage, specified in [V]
+* @param[in] calib_dc_off Calibrated DC offset, specified in ADC counts
+* @param[in] user_dc_off User specified DC offset, , specified in [V]
+* @retval int ADC counts
+*/
+static uint32_t cnvVToCnt(float voltage, float adc_max_v, int calib_dc_off, float user_dc_off)
+{
+	int adc_cnts = 0;
+
+	/* check and limit the specified voltage arguments towards */
+	/* maximal voltages which can be applied on ADC inputs */
+	if(voltage > adc_max_v)
+		voltage = adc_max_v;
+	else if(voltage < -adc_max_v)
+		voltage = -adc_max_v;
+
+	/* adopt the specified voltage with user defined DC offset */
+	voltage -= user_dc_off;
+
+	/* map voltage units into FPGA adc counts */
+	adc_cnts = (int)round(voltage * (float)((int)(1 << ADC_BITS)) / (2 * adc_max_v));
+
+	/* clip to the highest value (we are dealing with 14 bits only) */
+	if((voltage > 0) && (adc_cnts & (1 << (ADC_BITS - 1))))
+		adc_cnts = (1 << (ADC_BITS - 1)) - 1;
+	else
+		adc_cnts = adc_cnts & ((1 << (ADC_BITS)) - 1);
+
+	/* adopt calculated ADC counts with calibration DC offset */
+	adc_cnts -= calib_dc_off;
+
+	return (uint32_t)adc_cnts;
+}
+
+
+/*----------------------------------------------------------------------------*/
+
+int acq_SetGain(rp_pinState_t state)
+{
+	gain = state;
+	return RP_OK;
+}
+
+int acq_GetGain(rp_pinState_t* state)
+{
+	*state = gain;
+	return RP_OK;
+}
+
+/**
+ * Returns currently set gain in Volts
+ * @param state
+ * @return
+ */
+int acq_GetGainV(float* gain)
+{
+	if (gain == RP_LOW) {
+		*gain = 1.0;
+	}
+	else {
+		*gain = 20.0;
+	}
+	return RP_OK;
+}
 
 int acq_SetDecimation(rp_acq_decimation_t decimation)
 {
@@ -229,3 +358,41 @@ int acq_Stop()
 {
 	return osc_WriteDataIntoMemory(false);
 }
+
+int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
+{
+	float gain;
+
+	ECHECK(acq_GetGainV(&gain));
+	rp_calib_params_t calib = calib_GetParams();
+	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+	uint32_t cnt = cnvVToCnt(voltage, gain, dc_offs, 0.0);
+	if (channel == RP_CH_A) {
+		return osc_SetThresholdChA(cnt);
+	}
+	else {
+		return osc_SetThresholdChB(cnt);
+	}
+}
+
+int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
+{
+	float gain;
+	uint32_t cnts;
+
+	if (channel == RP_CH_A) {
+		ECHECK(osc_GetThresholdChA(&cnts));
+	}
+	else {
+		ECHECK(osc_GetThresholdChB(&cnts));
+	}
+
+	ECHECK(acq_GetGainV(&gain));
+	rp_calib_params_t calib = calib_GetParams();
+
+	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+	*voltage = cnvCntToV(cnts, gain, dc_offs, 0.0);
+
+	return RP_OK;
+}
+
