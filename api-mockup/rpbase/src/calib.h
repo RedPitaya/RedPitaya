@@ -24,6 +24,4 @@ int calib_Release();
 
 rp_calib_params_t calib_GetParams();
 
-int calib_ReadParams(rp_calib_params_t *calib_params);
-
 #endif //__CALIB_H
