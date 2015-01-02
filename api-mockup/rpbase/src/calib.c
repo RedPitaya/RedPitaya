@@ -1,7 +1,7 @@
 /**
  * $Id: $
  *
- * @brief Red Pitaya Oscilloscope Calibration Module.
+ * @brief Red Pitaya Calibration Module.
  *
  * @Author Red Pitaya
  *
@@ -12,9 +12,8 @@
  * for more details on the language used herein.
  */
 
-#include "oscilloscope_calib.h"
-
 #include <stdio.h>
+#include "calib.h"
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;

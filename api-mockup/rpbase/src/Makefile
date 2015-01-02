@@ -36,12 +36,12 @@ OBJECTS =	common.o \
 			housekeeping.o \
 			dpin_handler.o \
 			oscilloscope.o \
-			oscilloscope_calib.o \
 			acq_handler.o \
 			analog_mixed_signals.o \
 			apin_handler.o \
 			health.o \
 			health_handler.o \
+			calib.o \
 			rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
