@@ -238,6 +238,17 @@ int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage)
 	return acq_SetChannelThreshold(channel, voltage);
 }
 
+int rp_AcqGetChannelThresholdHyst(rp_channel_t channel, float* voltage)
+{
+	return acq_GetChannelThresholdHyst(channel, voltage);
+}
+
+int rp_AcqSetChannelThresholdHyst(rp_channel_t channel, float voltage)
+{
+	return acq_SetChannelThresholdHyst(channel, voltage);
+}
+
+
 int rp_AcqStart()
 {
 	return acq_Start();

@@ -34,5 +34,9 @@ int osc_SetThresholdChA(uint32_t threshold);
 int osc_GetThresholdChA(uint32_t* threshold);
 int osc_SetThresholdChB(uint32_t threshold);
 int osc_GetThresholdChB(uint32_t* threshold);
+int osc_SetHysteresisChA(uint32_t hysteresis);
+int osc_GetHysteresisChA(uint32_t* hysteresis);
+int osc_SetHysteresisChB(uint32_t hysteresis);
+int osc_GetHysteresisChB(uint32_t* hysteresis);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */
