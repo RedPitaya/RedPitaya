@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "common.h"
 
@@ -109,4 +110,96 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
 	VALIDATE_BITS(bits, mask);
 	*result = ARE_BITS_SET(field, bits);
 	return RP_OK;
+}
+
+
+/*----------------------------------------------------------------------------*/
+/**
+* @brief Converts ADC/DAC/Buffer counts to voltage [V]
+*
+* Function is used to publish captured signal data to external world in user units.
+* Calculation is based on maximal voltage, which can be applied on ADC/DAC inputs and
+* calibrated and user defined DC offsets.
+*
+* @param[in] field_len Number of field (ADC/DAC/Buffer) bits
+* @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
+* @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+* @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
+* @param[in] user_dc_off User specified DC offset, specified in [V]
+* @retval float Signal Value, expressed in user units [V]
+*/
+
+float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int calib_dc_off, float user_dc_off)
+{
+	int m;
+	float ret_val;
+	/* check sign */
+	if(cnts & (1 << (field_len - 1))) {
+		/* negative number */
+		m = -1 *((cnts ^ ((1 << field_len) - 1)) + 1);
+	} else {
+		/* positive number */
+		m = cnts;
+	}
+
+	/* adopt ADC count with calibrated DC offset */
+	m += calib_dc_off;
+
+	/* map ADC counts into user units */
+	if(m < (-1 * (1 << (field_len - 1))))
+		m = (-1 * (1 << (field_len - 1)));
+	else if(m > (1 << (field_len - 1)))
+		m = (1 << (field_len - 1));
+
+	ret_val = (m * adc_max_v / (float)(1 << (field_len - 1)));
+
+	/* and adopt the calculation with user specified DC offset */
+	ret_val += user_dc_off;
+
+	return ret_val;
+}
+
+/**
+* @brief Converts voltage in [V] to ADC/DAC/Buffer counts
+*
+* Function is used for setting up trigger threshold value, which is written into
+* appropriate FPGA register. This value needs to be specified in ADC/DAC counts, while
+* user specifies this information in Voltage. The resulting value is based on the
+* specified threshold voltage, maximal ADC/DAC voltage, calibrated and user specified
+* DC offsets.
+*
+* @param[in] field_len Number of field (ADC/DAC/Buffer) bits
+* @param[in] voltage Voltage, specified in [V]
+* @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+* @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
+* @param[in] user_dc_off User specified DC offset, , specified in [V]
+* @retval int ADC/DAC counts
+*/
+uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int calib_dc_off, float user_dc_off)
+{
+	int adc_cnts = 0;
+
+	/* check and limit the specified voltage arguments towards */
+	/* maximal voltages which can be applied on ADC inputs */
+	if(voltage > adc_max_v)
+		voltage = adc_max_v;
+	else if(voltage < -adc_max_v)
+		voltage = -adc_max_v;
+
+	/* adopt the specified voltage with user defined DC offset */
+	voltage -= user_dc_off;
+
+	/* map voltage units into FPGA adc counts */
+	adc_cnts = (int)round(voltage * (float)((int)(1 << field_len)) / (2 * adc_max_v));
+
+	/* clip to the highest value (we are dealing with 14 bits only) */
+	if((voltage > 0) && (adc_cnts & (1 << (field_len - 1))))
+		adc_cnts = (1 << (field_len - 1)) - 1;
+	else
+		adc_cnts = adc_cnts & ((1 << (field_len)) - 1);
+
+	/* adopt calculated ADC counts with calibration DC offset */
+	adc_cnts -= calib_dc_off;
+
+	return (uint32_t)adc_cnts;
 }
