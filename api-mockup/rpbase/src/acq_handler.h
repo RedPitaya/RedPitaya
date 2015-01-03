@@ -38,6 +38,8 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage);
 int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage);
 int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage);
+int acq_GetWritePointer(uint32_t* pos);
+int acq_GetWritePointerAtTrig(uint32_t* pos);
 int acq_Start();
 int acq_Stop();
 

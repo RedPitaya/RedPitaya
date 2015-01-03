@@ -365,6 +365,16 @@ int acq_GetTriggerDelay(uint32_t* decimated_data_num)
 	return osc_GetTriggerDelay(decimated_data_num);
 }
 
+int acq_GetWritePointer(uint32_t* pos)
+{
+	return osc_GetWritePointer(pos);
+}
+
+int acq_GetWritePointerAtTrig(uint32_t* pos)
+{
+	return osc_GetWritePointerAtTrig(pos);
+}
+
 int acq_Start()
 {
 	return osc_WriteDataIntoMemory(true);

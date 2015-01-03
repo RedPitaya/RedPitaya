@@ -258,6 +258,15 @@ int rp_AcqSetChannelThresholdHyst(rp_channel_t channel, float voltage)
 	return acq_SetChannelThresholdHyst(channel, voltage);
 }
 
+int rp_AcqGetWritePointer(uint32_t* pos)
+{
+	return acq_GetWritePointer(pos);
+}
+
+int rp_AcqGetWritePointerAtTrig(uint32_t* pos)
+{
+	return acq_GetWritePointerAtTrig(pos);
+}
 
 int rp_AcqStart()
 {
