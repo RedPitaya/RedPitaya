@@ -519,6 +519,22 @@ int rp_AcqSetChannelThresholdHyst(rp_channel_t channel, float voltage);
 int rp_AcqGetChannelThresholdHyst(rp_channel_t channel, float* voltage);
 
 /**
+ * Returns current position of ADC write pointer.
+ * @param pos Write pointer position
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetWritePointer(uint32_t* pos);
+
+/**
+ * Returns position of ADC write pointer at time when trigger arrived.
+ * @param pos Write pointer position
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetWritePointerAtTrig(uint32_t* pos);
+
+/**
  * Starts the acquire. Signals coming from the input channels are acquired and written into memory.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
