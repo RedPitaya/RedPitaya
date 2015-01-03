@@ -38,5 +38,7 @@ int osc_SetHysteresisChA(uint32_t hysteresis);
 int osc_GetHysteresisChA(uint32_t* hysteresis);
 int osc_SetHysteresisChB(uint32_t hysteresis);
 int osc_GetHysteresisChB(uint32_t* hysteresis);
+int osc_SetTriggerDelay(uint32_t decimated_data_num);
+int osc_GetTriggerDelay(uint32_t* decimated_data_num);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

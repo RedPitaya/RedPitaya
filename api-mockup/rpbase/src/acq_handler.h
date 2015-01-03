@@ -32,6 +32,8 @@ int acq_SetAveraging(bool enable);
 int acq_GetAveraging(bool* enable);
 int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
+int acq_SetTriggerDelay(uint32_t decimated_data_num);
+int acq_GetTriggerDelay(uint32_t* decimated_data_num);
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage);
 int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage);
