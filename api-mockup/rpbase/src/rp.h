@@ -466,7 +466,7 @@ int rp_AcqGetGain(rp_pinState_t* state);
 int rp_AcqGetGainV(float* gain);
 
 /**
- * Sets trigger threshold value for channel in volts.
+ * Sets the trigger threshold value for a channel in volts.
  * @param channel The selected channel (A or B)
  * @param voltage Threshold value for the channel
  * @return If the function is successful, the return value is RP_OK.
@@ -482,6 +482,24 @@ int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetChannelThreshold(rp_channel_t channel, float* voltage);
+
+/**
+ * Sets the trigger threshold hysteresis value for a channel in volts.
+ * @param channel The selected channel (A or B)
+ * @param voltage Threshold hysteresis value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetChannelThresholdHyst(rp_channel_t channel, float voltage);
+
+/**
+ * Gets currently set trigger threshold hysteresis value for channel in volts
+ * @param channel The selected channel (A or B)
+ * @param voltage Current threshold hysteresis value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetChannelThresholdHyst(rp_channel_t channel, float* voltage);
 
 /**
  * Starts the acquire. Signals coming from the input channels are acquired and written into memory.
