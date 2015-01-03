@@ -213,6 +213,16 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
 	return acq_GetTriggerSrc(source);
 }
 
+int rp_AcqSetTriggerDelay(uint32_t decimated_data_num)
+{
+	return acq_SetTriggerDelay(decimated_data_num);
+}
+
+int rp_AcqGetTriggerDelay(uint32_t* decimated_data_num)
+{
+	return acq_GetTriggerDelay(decimated_data_num);
+}
+
 int rp_AcqGetGain(rp_pinState_t* state)
 {
 	return acq_GetGain(state);
