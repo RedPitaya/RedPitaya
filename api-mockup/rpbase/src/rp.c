@@ -238,9 +238,9 @@ int rp_AcqGetGain(rp_pinState_t* state)
 	return acq_GetGain(state);
 }
 
-int rp_AcqGetGainV(float* gain)
+int rp_AcqGetGainV(float* voltage)
 {
-	return acq_GetGainV(gain);
+	return acq_GetGainV(voltage);
 }
 
 int rp_AcqSetGain(rp_pinState_t state)
