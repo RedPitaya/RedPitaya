@@ -173,9 +173,9 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
 	return acq_GetDecimation(decimation);
 }
 
-int rp_AcqGetDecimationNum(uint32_t* decimation)
+int rp_AcqGetDecimationFactor(uint32_t* decimation)
 {
-	return acq_GetDecimationNum(decimation);
+	return acq_GetDecimationFactor(decimation);
 }
 
 int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
@@ -215,12 +215,22 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
 
 int rp_AcqSetTriggerDelay(uint32_t decimated_data_num)
 {
-	return acq_SetTriggerDelay(decimated_data_num);
+	return acq_SetTriggerDelay(decimated_data_num, false);
 }
 
 int rp_AcqGetTriggerDelay(uint32_t* decimated_data_num)
 {
 	return acq_GetTriggerDelay(decimated_data_num);
+}
+
+int rp_AcqSetTriggerDelayNs(uint64_t time_ns)
+{
+	return acq_SetTriggerDelayNs(time_ns, false);
+}
+
+int rp_AcqGetTriggerDelayNs(uint64_t* time_ns)
+{
+	return acq_GetTriggerDelayNs(time_ns);
 }
 
 int rp_AcqGetGain(rp_pinState_t* state)

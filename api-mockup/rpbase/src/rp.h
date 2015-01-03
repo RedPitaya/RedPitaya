@@ -363,14 +363,14 @@ int rp_AcqSetDecimation(rp_acq_decimation_t decimation);
 int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
 
 /**
- * Gets the decimation used at acquiring signal in a numerical form. Although this method returns an integer
- * value representing the current value of the decimation, there is only a set of pre-defined decimation
- * values which can be returned. See the #rp_acq_decimation_t enum values.
- * @param decimation Returns decimation value which is currently set.
+ * Gets the decimation factor used at acquiring signal in a numerical form. Although this method returns an integer
+ * value representing the current factor of the decimation, there is only a set of pre-defined decimation
+ * factor values which can be returned. See the #rp_acq_decimation_t enum values.
+ * @param decimation Returns decimation factor value which is currently set.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDecimationNum(uint32_t* decimation);
+int rp_AcqGetDecimationFactor(uint32_t* decimation);
 
 /**
  * Sets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
@@ -453,6 +453,23 @@ int rp_AcqSetTriggerDelay(uint32_t decimated_data_num);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetTriggerDelay(uint32_t* decimated_data_num);
+
+/**
+ * Sets the amount of decimated data in nanoseconds after trigger written into memory.
+ * @param time_ns Time in nanoseconds. Number of ADC samples within the specified
+ * time must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerDelayNs(uint64_t time_ns);
+
+/**
+ * Returns the current amount of decimated data in nanoseconds after trigger written into memory.
+ * @param time_ns Time in nanoseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerDelayNs(uint64_t* time_ns);
 
 /**
  * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya
