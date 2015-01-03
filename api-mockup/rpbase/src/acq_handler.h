@@ -34,6 +34,8 @@ int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage);
+int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage);
+int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage);
 int acq_Start();
 int acq_Stop();
 
