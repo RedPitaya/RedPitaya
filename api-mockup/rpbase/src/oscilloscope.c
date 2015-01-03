@@ -188,12 +188,13 @@ static volatile uint32_t *osc_cha = NULL;
 static volatile uint32_t *osc_chb = NULL;
 
 
-static const uint32_t DATA_DEC_MASK = 0x1FFFF;     // (17 bits)
-static const uint32_t DATA_AVG_MASK = 0x1;         // (1 bit)
-static const uint32_t TRIG_SRC_MASK = 0xF;         // (4 bits)
-static const uint32_t START_DATA_WRITE_MASK = 0x1; // (1 bit)
-static const uint32_t THRESHOLD_MASK = 0x3FFF;     // (14 bits)
-static const uint32_t HYSTERESIS_MASK = 0x3FFF;    // (14 bits)
+static const uint32_t DATA_DEC_MASK = 0x1FFFF;      // (17 bits)
+static const uint32_t DATA_AVG_MASK = 0x1;          // (1 bit)
+static const uint32_t TRIG_SRC_MASK = 0xF;          // (4 bits)
+static const uint32_t START_DATA_WRITE_MASK = 0x1;  // (1 bit)
+static const uint32_t THRESHOLD_MASK = 0x3FFF;      // (14 bits)
+static const uint32_t HYSTERESIS_MASK = 0x3FFF;     // (14 bits)
+static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF; // (32 bits)
 
 /**
 * general
@@ -247,7 +248,6 @@ int osc_GetAveraging(bool* enable)
 	return cmn_AreBitsSet(osc_reg->other, 0x1, DATA_AVG_MASK, enable);
 }
 
-
 /**
 * trigger source
 */
@@ -270,6 +270,20 @@ int osc_WriteDataIntoMemory(bool enable)
 	else {
 		return cmn_UnsetBits(&osc_reg->conf, 0x1, START_DATA_WRITE_MASK);
 	}
+}
+
+/**
+ * trigger delay
+ */
+
+int osc_SetTriggerDelay(uint32_t decimated_data_num)
+{
+	return cmn_SetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
+}
+
+int osc_GetTriggerDelay(uint32_t* decimated_data_num)
+{
+	return cmn_GetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
 }
 
 /**

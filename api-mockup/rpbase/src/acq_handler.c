@@ -39,12 +39,15 @@ static const uint32_t SR_122_070KHZ = 122.070 * 1024;
 static const uint32_t SR_15_258KHZ = 15.258 * 1024;
 static const uint32_t SR_1_907KHZ = 1.907 * 1024;
 
+/* @brief ADC buffer size is 16 k samples. */
+static const uint32_t ADC_BUFFER_SIZE = 16 * 1024;
 
 /* @brief Number of ADC acquisition bits. */
 static const int ADC_BITS = 14;
 
 /* @brief Currently set Gain state */
 static rp_pinState_t gain = RP_LOW;
+
 
 
 /*----------------------------------------------------------------------------*/
@@ -347,6 +350,19 @@ int acq_SetTriggerSrc(rp_acq_trig_src_t source)
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
 {
 	return osc_GetTriggerSource(source);
+}
+
+int acq_SetTriggerDelay(uint32_t decimated_data_num)
+{
+	if (decimated_data_num > ADC_BUFFER_SIZE) {
+		return RP_EOOR;
+	}
+	return osc_SetTriggerDelay(decimated_data_num);
+}
+
+int acq_GetTriggerDelay(uint32_t* decimated_data_num)
+{
+	return osc_GetTriggerDelay(decimated_data_num);
 }
 
 int acq_Start()
