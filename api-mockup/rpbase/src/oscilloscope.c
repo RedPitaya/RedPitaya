@@ -195,6 +195,8 @@ static const uint32_t START_DATA_WRITE_MASK = 0x1;  // (1 bit)
 static const uint32_t THRESHOLD_MASK = 0x3FFF;      // (14 bits)
 static const uint32_t HYSTERESIS_MASK = 0x3FFF;     // (14 bits)
 static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF; // (32 bits)
+static const uint32_t WRITE_POINTER_MASK = 0x3FFF;  // (14 bits)
+
 
 /**
 * general
@@ -332,3 +334,18 @@ int osc_GetHysteresisChB(uint32_t* hysteresis)
 {
 	return cmn_GetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK);
 }
+
+
+/**
+ * Write pointer
+ */
+int osc_GetWritePointer(uint32_t* pos)
+{
+	return cmn_GetValue(&osc_reg->wr_ptr_cur, pos, WRITE_POINTER_MASK);
+}
+
+int osc_GetWritePointerAtTrig(uint32_t* pos)
+{
+	return cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
+}
+
