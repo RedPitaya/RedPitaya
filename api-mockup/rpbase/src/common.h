@@ -53,4 +53,7 @@ int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
 int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* result);
 
+float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int calib_dc_off, float user_dc_off);
+uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int calib_dc_off, float user_dc_off);
+
 #endif /* COMMON_H_ */
