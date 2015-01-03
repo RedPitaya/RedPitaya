@@ -396,3 +396,40 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 	return RP_OK;
 }
 
+
+int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
+{
+	float gain;
+
+	ECHECK(acq_GetGainV(&gain));
+	rp_calib_params_t calib = calib_GetParams();
+	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+	uint32_t cnt = cnvVToCnt(voltage, gain, dc_offs, 0.0);
+	if (channel == RP_CH_A) {
+		return osc_SetHysteresisChA(cnt);
+	}
+	else {
+		return osc_SetHysteresisChB(cnt);
+	}
+}
+
+int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
+{
+	float gain;
+	uint32_t cnts;
+
+	if (channel == RP_CH_A) {
+		ECHECK(osc_GetHysteresisChA(&cnts));
+	}
+	else {
+		ECHECK(osc_GetHysteresisChB(&cnts));
+	}
+
+	ECHECK(acq_GetGainV(&gain));
+	rp_calib_params_t calib = calib_GetParams();
+
+	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+	*voltage = cnvCntToV(cnts, gain, dc_offs, 0.0);
+
+	return RP_OK;
+}

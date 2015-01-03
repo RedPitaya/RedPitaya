@@ -188,11 +188,12 @@ static volatile uint32_t *osc_cha = NULL;
 static volatile uint32_t *osc_chb = NULL;
 
 
-static const uint32_t DATA_DEC_MASK = 0xFFFF;
-static const uint32_t DATA_AVG_MASK = 0x1;
-static const uint32_t TRIG_SRC_MASK = 0x7; // (3 bits)
-static const uint32_t START_DATA_WRITE_MASK = 0x1;
-static const uint32_t THRESHOLD_MASK = 0x1FFF; // (13 bits)
+static const uint32_t DATA_DEC_MASK = 0x1FFFF;     // (17 bits)
+static const uint32_t DATA_AVG_MASK = 0x1;         // (1 bit)
+static const uint32_t TRIG_SRC_MASK = 0xF;         // (4 bits)
+static const uint32_t START_DATA_WRITE_MASK = 0x1; // (1 bit)
+static const uint32_t THRESHOLD_MASK = 0x3FFF;     // (14 bits)
+static const uint32_t HYSTERESIS_MASK = 0x3FFF;    // (14 bits)
 
 /**
 * general
@@ -295,3 +296,25 @@ int osc_GetThresholdChB(uint32_t* threshold)
 	return cmn_GetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK);
 }
 
+/**
+ * Hysteresis
+ */
+int osc_SetHysteresisChA(uint32_t hysteresis)
+{
+	return cmn_SetValue(&osc_reg->cha_hystersis, hysteresis, HYSTERESIS_MASK);
+}
+
+int osc_GetHysteresisChA(uint32_t* hysteresis)
+{
+	return cmn_GetValue(&osc_reg->cha_hystersis, hysteresis, HYSTERESIS_MASK);
+}
+
+int osc_SetHysteresisChB(uint32_t hysteresis)
+{
+	return cmn_SetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK);
+}
+
+int osc_GetHysteresisChB(uint32_t* hysteresis)
+{
+	return cmn_GetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK);
+}
