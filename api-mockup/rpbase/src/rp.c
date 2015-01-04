@@ -233,19 +233,19 @@ int rp_AcqGetTriggerDelayNs(uint64_t* time_ns)
 	return acq_GetTriggerDelayNs(time_ns);
 }
 
-int rp_AcqGetGain(rp_pinState_t* state)
+int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state)
 {
-	return acq_GetGain(state);
+	return acq_GetGain(channel, state);
 }
 
-int rp_AcqGetGainV(float* voltage)
+int rp_AcqGetGainV(rp_channel_t channel, float* voltage)
 {
-	return acq_GetGainV(voltage);
+	return acq_GetGainV(channel, voltage);
 }
 
-int rp_AcqSetGain(rp_pinState_t state)
+int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
 {
-	return acq_SetGain(state);
+	return acq_SetGain(channel, state);
 }
 
 int rp_AcqGetChannelThreshold(rp_channel_t channel, float* voltage)
