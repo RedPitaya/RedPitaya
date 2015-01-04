@@ -474,29 +474,32 @@ int rp_AcqGetTriggerDelayNs(uint64_t* time_ns);
 /**
  * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya
  * hardware by the LV/HV gain jumpers. LV = 1V; HV = 20V.
+ * @param channel Channel A or B
  * @param state High or Low state
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetGain(rp_pinState_t state);
+int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state);
 
 /**
  * Returns the currently set acquire gain state in the library. It may not be set to the same value as
  * it is set on the Red Pitaya hardware by the LV/HV gain jumpers. LV = 1V; HV = 20V.
+ * @param channel Channel A or B
  * @param state Currently set High or Low state in the library.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetGain(rp_pinState_t* state);
+int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state);
 
 /**
  * Returns the currently set acquire gain in the library. It may not be set to the same value as
  * it is set on the Red Pitaya hardware by the LV/HV gain jumpers. Returns value in Volts.
+ * @param channel Channel A or B
  * @param voltage Currently set gain in the library. 1.0 or 20.0 Volts
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetGainV(float* voltage);
+int rp_AcqGetGainV(rp_channel_t channel, float* voltage);
 
 /**
  * Sets the trigger threshold value for a channel in volts. Makes the trigger when ADC value crosses this value.

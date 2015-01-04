@@ -49,7 +49,8 @@ static const uint64_t ADC_SAMPLE_PERIOD = 8;
 static const int ADC_BITS = 14;
 
 /* @brief Currently set Gain state */
-static rp_pinState_t gain = RP_LOW;
+static rp_pinState_t gain_ch_a = RP_LOW;
+static rp_pinState_t gain_ch_b = RP_LOW;
 
 /* @brief Determines whether TriggerDelay was set in time or sample units */
 static bool triggerDelayInNs = false;
@@ -94,53 +95,58 @@ uint64_t cnvSmplsToTime(uint32_t samples)
 
 /*----------------------------------------------------------------------------*/
 
-int acq_SetGain(rp_pinState_t state)
+int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 {
+
+	rp_pinState_t *gain = NULL;
+
+	if (channel == RP_CH_A) {
+		gain = &gain_ch_a;
+	}
+	else {
+		gain = &gain_ch_b;
+	}
+
 	// Gain is already at the same state. Nothing to do...
-	if (gain == state) {
+	if (*gain == state) {
 		return RP_OK;
 	}
 
 	// Read old values which are dependent on the gain...
 	rp_pinState_t old_gain;
-	float cha_thr, cha_hyst, chb_thr, chb_hyst;
-	old_gain = gain;
-	ECHECK(acq_GetChannelThreshold(RP_CH_A, &cha_thr));
-	ECHECK(acq_GetChannelThreshold(RP_CH_B, &chb_thr));
-	ECHECK(acq_GetChannelThresholdHyst(RP_CH_A, &cha_hyst));
-	ECHECK(acq_GetChannelThresholdHyst(RP_CH_B, &chb_hyst));
+	float ch_thr, ch_hyst;
+	old_gain = *gain;
+	ECHECK(acq_GetChannelThreshold(channel, &ch_thr));
+	ECHECK(acq_GetChannelThresholdHyst(channel, &ch_hyst));
 
 	// Now update the gain
-	gain = state;
+	*gain = state;
 
 	// And recalculate new values...
 	int status = RP_OK;
-	status = acq_SetChannelThreshold(RP_CH_A, cha_thr);
+	status = acq_SetChannelThreshold(channel, ch_thr);
 	if (status == RP_OK) {
-		status = acq_SetChannelThreshold(RP_CH_B, chb_thr);
-	}
-	if (status == RP_OK) {
-		status = acq_SetChannelThresholdHyst(RP_CH_A, cha_hyst);
-	}
-	if (status == RP_OK) {
-		status = acq_SetChannelThresholdHyst(RP_CH_B, chb_hyst);
+		status = acq_SetChannelThresholdHyst(channel, ch_hyst);
 	}
 
 	// In case of an error, put old values back and report the error
 	if (status != RP_OK) {
-		gain = old_gain;
-		acq_SetChannelThreshold(RP_CH_A, cha_thr);
-		acq_SetChannelThreshold(RP_CH_B, chb_thr);
-		acq_SetChannelThresholdHyst(RP_CH_A, cha_hyst);
-		acq_SetChannelThresholdHyst(RP_CH_B, chb_hyst);
+		*gain = old_gain;
+		acq_SetChannelThreshold(channel, ch_thr);
+		acq_SetChannelThresholdHyst(channel, ch_hyst);
 	}
 
 	return status;
 }
 
-int acq_GetGain(rp_pinState_t* state)
+int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
 {
-	*state = gain;
+	if (channel == RP_CH_A) {
+		*state = gain_ch_a;
+	}
+	else {
+		*state = gain_ch_b;
+	}
 	return RP_OK;
 }
 
@@ -149,13 +155,22 @@ int acq_GetGain(rp_pinState_t* state)
  * @param state
  * @return
  */
-int acq_GetGainV(float* gain)
+int acq_GetGainV(rp_channel_t channel, float* voltage)
 {
-	if (gain == RP_LOW) {
-		*gain = 1.0;
+	rp_pinState_t *gain = NULL;
+
+	if (channel == RP_CH_A) {
+		gain = &gain_ch_a;
 	}
 	else {
-		*gain = 20.0;
+		gain = &gain_ch_b;
+	}
+
+	if (*gain == RP_LOW) {
+		*voltage = 1.0;
+	}
+	else {
+		*voltage = 20.0;
 	}
 	return RP_OK;
 }
@@ -411,7 +426,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 {
 	float gain;
 
-	ECHECK(acq_GetGainV(&gain));
+	ECHECK(acq_GetGainV(channel, &gain));
 	rp_calib_params_t calib = calib_GetParams();
 	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
 	uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
@@ -435,7 +450,7 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 		ECHECK(osc_GetThresholdChB(&cnts));
 	}
 
-	ECHECK(acq_GetGainV(&gain));
+	ECHECK(acq_GetGainV(channel, &gain));
 	rp_calib_params_t calib = calib_GetParams();
 
 	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
@@ -449,7 +464,7 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
 {
 	float gain;
 
-	ECHECK(acq_GetGainV(&gain));
+	ECHECK(acq_GetGainV(channel, &gain));
 	rp_calib_params_t calib = calib_GetParams();
 	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
 	uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
@@ -473,7 +488,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 		ECHECK(osc_GetHysteresisChB(&cnts));
 	}
 
-	ECHECK(acq_GetGainV(&gain));
+	ECHECK(acq_GetGainV(channel, &gain));
 	rp_calib_params_t calib = calib_GetParams();
 
 	int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
