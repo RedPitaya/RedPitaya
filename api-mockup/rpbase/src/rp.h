@@ -583,6 +583,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_
 /**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
+ * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param size Length of the ADC buffer to retrieve.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
@@ -617,6 +618,7 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t size, float* buf
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
+ * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param size Length of the ADC buffer to retrieve.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
