@@ -594,24 +594,54 @@ static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
     }
 }
 
-int acq_GetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_t* buffer)
+static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos)
 {
 
-    size = MIN(size, ADC_BUFFER_SIZE);
+    end_pos = acq_GetNormalizedDataPos(end_pos);
+    start_pos = acq_GetNormalizedDataPos(start_pos);
+
+    if (end_pos < start_pos) {
+        end_pos += ADC_BUFFER_SIZE;
+    }
+
+    return end_pos - start_pos;
+}
+
+uint32_t acq_GetNormalizedDataPos(uint32_t pos)
+{
+    return (pos % ADC_BUFFER_SIZE);
+}
+
+int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, uint16_t* buffer)
+{
+
+    *size = MIN(*size, ADC_BUFFER_SIZE);
 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
-    for (uint32_t i = 0; i < size; ++i) {
+    for (uint32_t i = 0; i < (*size); ++i) {
         buffer[i] = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
     }
 
     return RP_OK;
 }
 
+int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, uint16_t* buffer, uint32_t *buffer_size)
+{
+    uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
+
+    if (size > *buffer_size) {
+        return RP_BTS;
+    }
+
+    *buffer_size = size;
+    return acq_GetDataRaw(channel, start_pos, buffer_size, buffer);
+}
+
 /**
  * Use only when write pointer has stopped...
  */
-int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
 {
     uint32_t pos;
 
@@ -621,24 +651,24 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
-int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
 {
-    size = MIN(size, ADC_BUFFER_SIZE);
+    *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
     ECHECK(acq_GetWritePointer(&pos));
-    pos -= size;
-    if (pos < 0) {
+
+    if ((*size) > pos) {
         pos += ADC_BUFFER_SIZE;
     }
+    pos -= (*size);
 
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
-int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t size, float* buffer)
+int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buffer)
 {
-
-    size = MIN(size, ADC_BUFFER_SIZE);
+    *size = MIN(*size, ADC_BUFFER_SIZE);
 
     float gain;
     ECHECK(acq_GetGainV(channel, &gain));
@@ -649,7 +679,7 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t size, float* buff
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     uint32_t cnts;
-    for (uint32_t i = 0; i < size; ++i) {
+    for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
         buffer[i] = cmn_CnvCntToV(ADC_BUFFER_BITS, cnts, gain, dc_offs, 0.0);
     }
@@ -657,10 +687,20 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t size, float* buff
     return RP_OK;
 }
 
+int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
+{
+    uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
+    if (size > *buffer_size) {
+        return RP_BTS;
+    }
+    *buffer_size = size;
+    return acq_GetDataV(channel, start_pos, buffer_size, buffer);
+}
+
 /**
  * Use only when write pointer has stopped...
  */
-int acq_GetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     uint32_t pos;
 
@@ -670,17 +710,18 @@ int acq_GetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer)
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
-int acq_GetLatestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
-    size = MIN(size, ADC_BUFFER_SIZE);
+    *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
     ECHECK(acq_GetWritePointer(&pos));
-    pos -= size;
-    if (pos < 0) {
+
+    if ((*size) > pos) {
         pos += ADC_BUFFER_SIZE;
     }
 
+    pos -= (*size);
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
