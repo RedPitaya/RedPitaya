@@ -389,3 +389,15 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
     return cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
 }
 
+/**
+ * Raw buffers
+ */
+const volatile uint32_t* osc_GetDataBufferChA()
+{
+    return osc_cha;
+}
+
+const volatile uint32_t* osc_GetDataBufferChB()
+{
+    return osc_chb;
+}

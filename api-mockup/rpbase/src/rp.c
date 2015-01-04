@@ -292,6 +292,36 @@ int rp_AcqStop()
     return acq_Stop();
 }
 
+int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_t* buffer)
+{
+    return acq_GetDataRaw(channel, pos, size, buffer);
+}
+
+int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+{
+    return acq_GetOldestDataRaw(channel, size, buffer);
+}
+
+int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+{
+    return acq_GetLatestDataRaw(channel, size, buffer);
+}
+
+int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t size, float* buffer)
+{
+    return acq_GetDataV(channel, pos, size, buffer);
+}
+
+int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+{
+    return acq_GetOldestDataV(channel, size, buffer);
+}
+
+int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+{
+    return acq_GetLatestDataV(channel, size, buffer);
+}
+
 
 /**
  * Health methods

@@ -38,6 +38,9 @@
         if (((b) & ~(m)) != 0) return RP_EOOR; \
 }
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
 
 int cmn_Init();
 int cmn_Release();
