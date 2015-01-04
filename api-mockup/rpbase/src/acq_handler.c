@@ -48,6 +48,9 @@ static const uint64_t ADC_SAMPLE_PERIOD = 8;
 /* @brief Number of ADC acquisition bits. */
 static const int ADC_BITS = 14;
 
+/* @brief Number of ADC buffer bits. */
+static const int ADC_BUFFER_BITS = 16;
+
 /* @brief Currently set Gain state */
 static rp_pinState_t gain_ch_a = RP_LOW;
 static rp_pinState_t gain_ch_b = RP_LOW;
@@ -580,6 +583,108 @@ int acq_Stop()
 {
     return osc_WriteDataIntoMemory(false);
 }
+
+static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
+{
+    if (channel == RP_CH_A) {
+        return osc_GetDataBufferChA();
+    }
+    else {
+        return osc_GetDataBufferChB();
+    }
+}
+
+int acq_GetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_t* buffer)
+{
+
+    size = MIN(size, ADC_BUFFER_SIZE);
+
+    const volatile uint32_t* raw_buffer = getRawBuffer(channel);
+
+    for (uint32_t i = 0; i < size; ++i) {
+        buffer[i] = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
+    }
+
+    return RP_OK;
+}
+
+/**
+ * Use only when write pointer has stopped...
+ */
+int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+{
+    uint32_t pos;
+
+    ECHECK(acq_GetWritePointer(&pos));
+    pos++;
+
+    return acq_GetDataRaw(channel, pos, size, buffer);
+}
+
+int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+{
+    size = MIN(size, ADC_BUFFER_SIZE);
+
+    uint32_t pos;
+    ECHECK(acq_GetWritePointer(&pos));
+    pos -= size;
+    if (pos < 0) {
+        pos += ADC_BUFFER_SIZE;
+    }
+
+    return acq_GetDataRaw(channel, pos, size, buffer);
+}
+
+int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t size, float* buffer)
+{
+
+    size = MIN(size, ADC_BUFFER_SIZE);
+
+    float gain;
+    ECHECK(acq_GetGainV(channel, &gain));
+
+    rp_calib_params_t calib = calib_GetParams();
+    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+
+    const volatile uint32_t* raw_buffer = getRawBuffer(channel);
+
+    uint32_t cnts;
+    for (uint32_t i = 0; i < size; ++i) {
+        cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
+        buffer[i] = cmn_CnvCntToV(ADC_BUFFER_BITS, cnts, gain, dc_offs, 0.0);
+    }
+
+    return RP_OK;
+}
+
+/**
+ * Use only when write pointer has stopped...
+ */
+int acq_GetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+{
+    uint32_t pos;
+
+    ECHECK(acq_GetWritePointer(&pos));
+    pos++;
+
+    return acq_GetDataV(channel, pos, size, buffer);
+}
+
+int acq_GetLatestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+{
+    size = MIN(size, ADC_BUFFER_SIZE);
+
+    uint32_t pos;
+    ECHECK(acq_GetWritePointer(&pos));
+    pos -= size;
+    if (pos < 0) {
+        pos += ADC_BUFFER_SIZE;
+    }
+
+    return acq_GetDataV(channel, pos, size, buffer);
+}
+
+
 
 /**
  * Sets default configuration

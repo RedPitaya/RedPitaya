@@ -45,6 +45,14 @@ int acq_GetWritePointerAtTrig(uint32_t* pos);
 int acq_Start();
 int acq_Stop();
 
+int acq_GetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_t* buffer);
+int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer);
+int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer);
+int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t size, float* buffer);
+int acq_GetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer);
+int acq_GetLatestDataV(rp_channel_t channel, uint32_t size, float* buffer);
+
+
 int acq_SetDefault();
 
 
