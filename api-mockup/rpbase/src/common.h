@@ -22,11 +22,11 @@
 #include "rp.h"
 
 #define ECHECK(x) { \
-  int retval = (x); \
-  if (retval != RP_OK) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    return retval; \
-  } \
+        int retval = (x); \
+        if (retval != RP_OK) { \
+            fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+            return retval; \
+        } \
 }
 
 #define SET_BITS(x,b) ((x) |= (b))
@@ -35,7 +35,7 @@
 #define ARE_BITS_SET(x,b) (((x) & (b)) == (b))
 
 #define VALIDATE_BITS(b,m) { \
-	if (((b) & ~(m)) != 0) return RP_EOOR; \
+        if (((b) & ~(m)) != 0) return RP_EOOR; \
 }
 
 

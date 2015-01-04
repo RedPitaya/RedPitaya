@@ -66,123 +66,123 @@ extern "C" {
  * Type representing digital input output pins.
  */
 typedef enum {
-	RP_LED0,       //!< LED 0
-	RP_LED1,       //!< LED 1
-	RP_LED2,       //!< LED 2
-	RP_LED3,       //!< LED 3
-	RP_LED4,       //!< LED 4
-	RP_LED5,       //!< LED 5
-	RP_LED6,       //!< LED 6
-	RP_LED7,       //!< LED 7
-	RP_DIO0_P,     //!< DIO_P 0
-	RP_DIO1_P,     //!< DIO_P 1
-	RP_DIO2_P,     //!< DIO_P 2
-	RP_DIO3_P,     //!< DIO_P 3
-	RP_DIO4_P,     //!< DIO_P 4
-	RP_DIO5_P,     //!< DIO_P 5
-	RP_DIO6_P,     //!< DIO_P 6
-	RP_DIO7_P,	   //!< DIO_P 7
-	RP_DIO0_N,     //!< DIO_N 0
-	RP_DIO1_N,     //!< DIO_N 1
-	RP_DIO2_N,     //!< DIO_N 2
-	RP_DIO3_N,     //!< DIO_N 3
-	RP_DIO4_N,     //!< DIO_N 4
-	RP_DIO5_N,     //!< DIO_N 5
-	RP_DIO6_N,     //!< DIO_N 6
-	RP_DIO7_N      //!< DIO_N 7
+    RP_LED0,       //!< LED 0
+    RP_LED1,       //!< LED 1
+    RP_LED2,       //!< LED 2
+    RP_LED3,       //!< LED 3
+    RP_LED4,       //!< LED 4
+    RP_LED5,       //!< LED 5
+    RP_LED6,       //!< LED 6
+    RP_LED7,       //!< LED 7
+    RP_DIO0_P,     //!< DIO_P 0
+    RP_DIO1_P,     //!< DIO_P 1
+    RP_DIO2_P,     //!< DIO_P 2
+    RP_DIO3_P,     //!< DIO_P 3
+    RP_DIO4_P,     //!< DIO_P 4
+    RP_DIO5_P,     //!< DIO_P 5
+    RP_DIO6_P,     //!< DIO_P 6
+    RP_DIO7_P,	   //!< DIO_P 7
+    RP_DIO0_N,     //!< DIO_N 0
+    RP_DIO1_N,     //!< DIO_N 1
+    RP_DIO2_N,     //!< DIO_N 2
+    RP_DIO3_N,     //!< DIO_N 3
+    RP_DIO4_N,     //!< DIO_N 4
+    RP_DIO5_N,     //!< DIO_N 5
+    RP_DIO6_N,     //!< DIO_N 6
+    RP_DIO7_N      //!< DIO_N 7
 } rp_dpin_t;
 
 /**
  * Type representing pin's high or low state (on/off).
  */
 typedef enum {
-	RP_LOW, //!< Low state
-	RP_HIGH //!< High state
+    RP_LOW, //!< Low state
+    RP_HIGH //!< High state
 } rp_pinState_t;
 
 /**
  * Type representing pin's input or output direction.
  */
 typedef enum {
-	RP_IN, //!< Input direction
-	RP_OUT //!< Output direction
+    RP_IN, //!< Input direction
+    RP_OUT //!< Output direction
 } rp_pinDirection_t;
 
 /**
-* Type representing analog input output pins.
-*/
+ * Type representing analog input output pins.
+ */
 typedef enum {
-	RP_AOUT0,      //!< Analog output 0
-	RP_AOUT1,      //!< Analog output 1
-	RP_AOUT2,      //!< Analog output 2
-	RP_AOUT3,      //!< Analog output 3
-	RP_AIN0,       //!< Analog input 0
-	RP_AIN1,       //!< Analog input 1
-	RP_AIN2,       //!< Analog input 2
-	RP_AIN3        //!< Analog input 3
+    RP_AOUT0,      //!< Analog output 0
+    RP_AOUT1,      //!< Analog output 1
+    RP_AOUT2,      //!< Analog output 2
+    RP_AOUT3,      //!< Analog output 3
+    RP_AIN0,       //!< Analog input 0
+    RP_AIN1,       //!< Analog input 1
+    RP_AIN2,       //!< Analog input 2
+    RP_AIN3        //!< Analog input 3
 } rp_apin_t;
 
 /**
-* Type representing system health information.
-*/
+ * Type representing system health information.
+ */
 typedef enum {
-	RP_TEMP_FPGA,  //!< FPGA temperature
-	RP_VCC_PINT,   //!< VCC PINT
-	RP_VCC_PAUX,   //!< VCC PAUX
-	RP_VCC_BRAM,   //!< VCC BRAM
-	RP_VCC_INT,    //!< VCC INT
-	RP_VCC_AUX,    //!< VCC AUX
-	RP_VCC_DDR     //!< VCC DDR
+    RP_TEMP_FPGA,  //!< FPGA temperature
+    RP_VCC_PINT,   //!< VCC PINT
+    RP_VCC_PAUX,   //!< VCC PAUX
+    RP_VCC_BRAM,   //!< VCC BRAM
+    RP_VCC_INT,    //!< VCC INT
+    RP_VCC_AUX,    //!< VCC AUX
+    RP_VCC_DDR     //!< VCC DDR
 } rp_health_t;
 
 /**
  * Type representing Input/Output channels.
  */
 typedef enum {
-	RP_CH_A, //!< Channel A
-	RP_CH_B  //!< Channel B
+    RP_CH_A, //!< Channel A
+    RP_CH_B  //!< Channel B
 } rp_channel_t;
 
 /**
-* Type representing acquire signal sampling rate.
-*/
+ * Type representing acquire signal sampling rate.
+ */
 typedef enum {
-	RP_SMP_125M,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-	RP_SMP_15_625M,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-	RP_SMP_1_953M,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-	RP_SMP_122_070K, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-	RP_SMP_15_258K,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-	RP_SMP_1_907K    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_SMP_125M,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_SMP_15_625M,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_SMP_1_953M,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_SMP_122_070K, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_SMP_15_258K,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_SMP_1_907K    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_sampling_rate_t;
 
 
 /**
-* Type representing decimation used at acquiring signal.
-*/
+ * Type representing decimation used at acquiring signal.
+ */
 typedef enum {
-	RP_DEC_1,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-	RP_DEC_8,     //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-	RP_DEC_64,    //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-	RP_DEC_1024,  //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-	RP_DEC_8192,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-	RP_DEC_65536  //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_DEC_1,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_DEC_8,     //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_DEC_64,    //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_DEC_1024,  //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_DEC_8192,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_DEC_65536  //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_decimation_t;
 
 
 /**
-* Type representing different trigger sources used at acquiring signal.
-*/
+ * Type representing different trigger sources used at acquiring signal.
+ */
 typedef enum {
-	RP_TRIG_SRC_DISABLED, //!< Trigger is disabled
-	RP_TRIG_SRC_NOW,      //!< Trigger triggered now (immediately)
-	RP_TRIG_SRC_CHA_PE,   //!< Trigger set to Channel A threshold positive edge
-	RP_TRIG_SRC_CHA_NE,   //!< Trigger set to Channel A threshold negative edge
-	RP_TRIG_SRC_CHB_PE,   //!< Trigger set to Channel B threshold positive edge
-	RP_TRIG_SRC_CHB_NE,   //!< Trigger set to Channel B threshold negative edge
-	RP_TRIG_SRC_EXT_PE,   //!< Trigger set to external trigger positive edge (DIO0_P pin)
-	RP_TRIG_SRC_EXT_NE,   //!< Trigger set to external trigger negative edge (DIO0_P pin)
-	RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
-	RP_TRIG_SRC_AWG_NE    //!< Trigger set to arbitrary wave generator application negative edge
+    RP_TRIG_SRC_DISABLED, //!< Trigger is disabled
+    RP_TRIG_SRC_NOW,      //!< Trigger triggered now (immediately)
+    RP_TRIG_SRC_CHA_PE,   //!< Trigger set to Channel A threshold positive edge
+    RP_TRIG_SRC_CHA_NE,   //!< Trigger set to Channel A threshold negative edge
+    RP_TRIG_SRC_CHB_PE,   //!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHB_NE,   //!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_EXT_PE,   //!< Trigger set to external trigger positive edge (DIO0_P pin)
+    RP_TRIG_SRC_EXT_NE,   //!< Trigger set to external trigger negative edge (DIO0_P pin)
+    RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
+    RP_TRIG_SRC_AWG_NE    //!< Trigger set to arbitrary wave generator application negative edge
 } rp_acq_trig_src_t;
 
 
@@ -290,58 +290,58 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 ///@}
 
 /** @name Analog Input/Output
-*/
+ */
 ///@{
 
 /**
-* Gets value from analog pin in volts.
-* @param pin    Analog pin.
-* @param value  Value on analog pin in volts
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+ * Gets value from analog pin in volts.
+ * @param pin    Analog pin.
+ * @param value  Value on analog pin in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
 int rp_ApinGetValue(rp_apin_t pin, float* value);
 
 /**
-* Gets raw value from analog pin.
-* @param pin    Analog pin.
-* @param value  Raw value on analog pin
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+ * Gets raw value from analog pin.
+ * @param pin    Analog pin.
+ * @param value  Raw value on analog pin
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
 int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value);
 
 /**
-* Sets value in volts on analog output pin.
-* @param pin    Analog output pin.
-* @param value  Value in volts to be set on given output pin.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+ * Sets value in volts on analog output pin.
+ * @param pin    Analog output pin.
+ * @param value  Value in volts to be set on given output pin.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
 int rp_ApinSetValue(rp_apin_t pin, float value);
 
 /**
-* Sets raw value on analog output pin.
-* @param pin    Analog output pin.
-* @param value  Raw value to be set on given output pin.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+ * Sets raw value on analog output pin.
+ * @param pin    Analog output pin.
+ * @param value  Raw value to be set on given output pin.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
 int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value);
 
 /**
-* Gets range in volts on specific pin.
-* @param pin      Analog input output pin.
-* @param min_val  Minimum value in volts on given pin.
-* @param max_val  Maximum value in volts on given pin.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+ * Gets range in volts on specific pin.
+ * @param pin      Analog input output pin.
+ * @param min_val  Minimum value in volts on given pin.
+ * @param max_val  Maximum value in volts on given pin.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
 int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 
 
 /** @name Acquire
-*/
+ */
 ///@{
 
 /**
@@ -574,17 +574,17 @@ int rp_AcqStop();
 ///@}
 
 /** @name Health
-*/
+ */
 ///@{
 
 
 /**
-* Gets data about system health like temperature
-* @param sensor   From witch sensor the data is read
-* @param value    The returned value
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+ * Gets data about system health like temperature
+ * @param sensor   From witch sensor the data is read
+ * @param value    The returned value
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
 int rp_HealthGetValue(rp_health_t sensor, float* value);
 
 ///@}
