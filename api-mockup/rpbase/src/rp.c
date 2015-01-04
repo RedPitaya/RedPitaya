@@ -103,6 +103,8 @@ const char* rp_GetError(int errorCode)
         return "Failed to Find Calibration Parameters.";
     case RP_RCA:
         return "Failed to Read Calibration Parameters.";
+    case RP_BTS:
+        return "Buffer too small";
     default:
         return "Unknown error";
     }
@@ -292,32 +294,47 @@ int rp_AcqStop()
     return acq_Stop();
 }
 
-int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_t* buffer)
+uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos)
+{
+    return acq_GetNormalizedDataPos(pos);
+}
+
+int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, uint16_t* buffer, uint32_t* buffer_size)
+{
+    return acq_GetDataPosRaw(channel, start_pos, end_pos, buffer, buffer_size);
+}
+
+int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t* buffer_size)
+{
+    return acq_GetDataPosV(channel, start_pos, end_pos, buffer, buffer_size);
+}
+
+int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, uint16_t* buffer)
 {
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
-int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
 {
     return acq_GetOldestDataRaw(channel, size, buffer);
 }
 
-int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer)
+int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
 {
     return acq_GetLatestDataRaw(channel, size, buffer);
 }
 
-int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t size, float* buffer)
+int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer)
 {
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
-int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetOldestDataV(channel, size, buffer);
 }
 
-int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t size, float* buffer)
+int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetLatestDataV(channel, size, buffer);
 }

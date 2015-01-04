@@ -58,6 +58,8 @@ extern "C" {
 #define RP_FCA    12
 /** Failed to Read Calibration Parameters */
 #define RP_RCA    13
+/** Buffer too small */
+#define RP_BTS    14
 
 
 ///@}
@@ -569,74 +571,107 @@ int rp_AcqStart();
 int rp_AcqStop();
 
 /**
+ * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
+ * @param pos position to be normalized
+ * @return Normalized position (pos % ADC_BUFFER_SIZE)
+ */
+uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos);
+
+/**
+ * Returns the ADC buffer in raw units from start to end position.
+ *
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param start_pos Starting position of the ADC buffer to retrieve.
+ * @param end_pos Ending position of the ADC buffer to retrieve.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @param buffer_size Length of input buffer. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, uint16_t* buffer, uint32_t *buffer_size);
+
+/**
+ * Returns the ADC buffer in Volt units from start to end position.
+ *
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param start_pos Starting position of the ADC buffer to retrieve.
+ * @param end_pos Ending position of the ADC buffer to retrieve.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @param buffer_size Length of input buffer. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
+
+/**
  * Returns the ADC buffer in raw units from specified position and desired size.
  * Output buffer must be at least 'size' long.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
- * @param pos Starting position of the ADC buffer to retrieve
- * @param size Length of the ADC buffer to retrieve.
+ * @param pos Starting position of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t size, uint16_t* buffer);
+int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, uint16_t* buffer);
 
 /**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
  * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
- * @param size Length of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer);
+int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer);
 
 /**
  * Returns the latest ADC buffer samples in raw units.
  * Output buffer must be at least 'size' long.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
- * @param size Length of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t size, uint16_t* buffer);
+int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer);
 
 /**
  * Returns the ADC buffer in Volt units from specified position and desired size.
  * Output buffer must be at least 'size' long.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param pos Starting position of the ADC buffer to retrieve
- * @param size Length of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t size, float* buffer);
+int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
 
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
  * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
- * @param size Length of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t size, float* buffer);
+int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 /**
  * Returns the latest ADC buffer samples in Volt units.
  * Output buffer must be at least 'size' long.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
- * @param size Length of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t size, float* buffer);
+int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 ///@}
 
