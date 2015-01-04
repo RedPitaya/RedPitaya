@@ -121,27 +121,43 @@ static int setEqFilters(rp_channel_t channel)
     rp_pinState_t gain;
     ECHECK(acq_GetGain(channel, &gain));
 
-    // Updating equalization filter with default coefficients
+    // Update equalization filter with default coefficients
     if (channel == RP_CH_A)
     {
         if (gain == RP_HIGH)
         {
-            return osc_SetEqFiltersChA(GAIN_HI_CHA_FILT_AA, GAIN_HI_CHA_FILT_BB, GAIN_HI_CHA_FILT_KK, GAIN_HI_CHA_FILT_PP);
+            return osc_SetEqFiltersChA(
+                    GAIN_HI_CHA_FILT_AA,
+                    GAIN_HI_CHA_FILT_BB,
+                    GAIN_HI_CHA_FILT_KK,
+                    GAIN_HI_CHA_FILT_PP);
         }
         else
         {
-            return osc_SetEqFiltersChA(GAIN_LO_CHA_FILT_AA, GAIN_LO_CHA_FILT_BB, GAIN_LO_CHA_FILT_KK, GAIN_LO_CHA_FILT_PP);
+            return osc_SetEqFiltersChA(
+                    GAIN_LO_CHA_FILT_AA,
+                    GAIN_LO_CHA_FILT_BB,
+                    GAIN_LO_CHA_FILT_KK,
+                    GAIN_LO_CHA_FILT_PP);
         }
     }
     else
     {
         if (gain == RP_HIGH)
         {
-            return osc_SetEqFiltersChA(GAIN_HI_CHB_FILT_AA, GAIN_HI_CHB_FILT_BB, GAIN_HI_CHB_FILT_KK, GAIN_HI_CHB_FILT_PP);
+            return osc_SetEqFiltersChA(
+                    GAIN_HI_CHB_FILT_AA,
+                    GAIN_HI_CHB_FILT_BB,
+                    GAIN_HI_CHB_FILT_KK,
+                    GAIN_HI_CHB_FILT_PP);
         }
         else
         {
-            return osc_SetEqFiltersChA(GAIN_LO_CHB_FILT_AA, GAIN_LO_CHB_FILT_BB, GAIN_LO_CHB_FILT_KK, GAIN_LO_CHB_FILT_PP);
+            return osc_SetEqFiltersChA(
+                    GAIN_LO_CHB_FILT_AA,
+                    GAIN_LO_CHB_FILT_BB,
+                    GAIN_LO_CHB_FILT_KK,
+                    GAIN_LO_CHB_FILT_PP);
         }
     }
 }
