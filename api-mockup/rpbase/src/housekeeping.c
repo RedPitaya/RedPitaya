@@ -27,19 +27,19 @@ static const int HOUSEKEEPING_BASE_SIZE = 0x30;
 
 // Housekeeping structure declaration
 typedef struct housekeeping_control_s {
-	uint32_t id;
-	uint32_t dna_part1;
-	uint32_t dna_part2;
-	uint32_t reserved_1;
-	uint32_t ex_cd_p;
-	uint32_t ex_cd_n;
-	uint32_t ex_co_p;
-	uint32_t ex_co_n;
-	uint32_t ex_ci_p;
-	uint32_t ex_ci_n;
-	uint32_t reserved_2;
-	uint32_t reserved_3;
-	uint32_t led_control;
+    uint32_t id;
+    uint32_t dna_part1;
+    uint32_t dna_part2;
+    uint32_t reserved_1;
+    uint32_t ex_cd_p;
+    uint32_t ex_cd_n;
+    uint32_t ex_co_p;
+    uint32_t ex_co_n;
+    uint32_t ex_ci_p;
+    uint32_t ex_ci_n;
+    uint32_t reserved_2;
+    uint32_t reserved_3;
+    uint32_t led_control;
 } housekeeping_control_t;
 
 
@@ -56,147 +56,147 @@ static const uint32_t EX_CI_N_MASK = 0xFF;
 static volatile housekeeping_control_t *hk = NULL;
 
 /**
-* general
-*/
+ * general
+ */
 
 
 int hk_Init()
 {
-	ECHECK(cmn_Init());
-	ECHECK(cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk));
-	return RP_OK;
+    ECHECK(cmn_Init());
+    ECHECK(cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk));
+    return RP_OK;
 }
 
 int hk_Release()
 {
-	ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
-	ECHECK(cmn_Release());
-	return RP_OK;
+    ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
+    ECHECK(cmn_Release());
+    return RP_OK;
 }
 
 
 /**
-* led_control
-*/
+ * led_control
+ */
 
 int hk_SetLedBits(uint32_t bits)
 {
-	// First led is read only
-	if (bits == 0x1) {
-		return RP_EMRO;
-	}
-	return cmn_SetBits(&hk->led_control, bits, LED_CONTROL_MASK);
+    // First led is read only
+    if (bits == 0x1) {
+        return RP_EMRO;
+    }
+    return cmn_SetBits(&hk->led_control, bits, LED_CONTROL_MASK);
 }
 
 int hk_UnsetLedBits(uint32_t bits)
 {
-	return cmn_UnsetBits(&hk->led_control, bits, LED_CONTROL_MASK);
+    return cmn_UnsetBits(&hk->led_control, bits, LED_CONTROL_MASK);
 }
 
 int hk_AreLedBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->led_control, bits, LED_CONTROL_MASK, result);
+    return cmn_AreBitsSet(hk->led_control, bits, LED_CONTROL_MASK, result);
 }
 
 
 /**
-* ex_cd_p
-*/
+ * ex_cd_p
+ */
 
 int hk_SetExCdPBits(uint32_t bits)
 {
-	return cmn_SetBits(&hk->ex_cd_p, bits, EX_CD_P_MASK);
+    return cmn_SetBits(&hk->ex_cd_p, bits, EX_CD_P_MASK);
 }
 
 int hk_UnsetExCdPBits(uint32_t bits)
 {
-	return cmn_UnsetBits(&hk->ex_cd_p, bits, EX_CD_P_MASK);
+    return cmn_UnsetBits(&hk->ex_cd_p, bits, EX_CD_P_MASK);
 }
 
 int hk_AreExCdPBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->ex_cd_p, bits, EX_CD_P_MASK, result);
+    return cmn_AreBitsSet(hk->ex_cd_p, bits, EX_CD_P_MASK, result);
 }
 
 
 /**
-* ex_cd_n
-*/
+ * ex_cd_n
+ */
 
 int hk_SetExCdNBits(uint32_t bits)
 {
-	return cmn_SetBits(&hk->ex_cd_n, bits, EX_CD_N_MASK);
+    return cmn_SetBits(&hk->ex_cd_n, bits, EX_CD_N_MASK);
 }
 
 int hk_UnsetExCdNBits(uint32_t bits)
 {
-	return cmn_UnsetBits(&hk->ex_cd_n, bits, EX_CD_N_MASK);
+    return cmn_UnsetBits(&hk->ex_cd_n, bits, EX_CD_N_MASK);
 }
 
 int hk_AreExCdNBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->ex_cd_n, bits, EX_CD_N_MASK, result);
+    return cmn_AreBitsSet(hk->ex_cd_n, bits, EX_CD_N_MASK, result);
 }
 
 
 /**
-* ex_co_p
-*/
+ * ex_co_p
+ */
 
 int hk_SetExCoPBits(uint32_t bits)
 {
-	return cmn_SetBits(&hk->ex_co_p, bits, EX_CO_P_MASK);
+    return cmn_SetBits(&hk->ex_co_p, bits, EX_CO_P_MASK);
 }
 
 int hk_UnsetExCoPBits(uint32_t bits)
 {
-	return cmn_UnsetBits(&hk->ex_co_p, bits, EX_CO_P_MASK);
+    return cmn_UnsetBits(&hk->ex_co_p, bits, EX_CO_P_MASK);
 }
 
 int hk_AreExCoPBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->ex_co_p, bits, EX_CO_P_MASK, result);
+    return cmn_AreBitsSet(hk->ex_co_p, bits, EX_CO_P_MASK, result);
 }
 
 
 
 /**
-* ex_co_n
-*/
+ * ex_co_n
+ */
 
 int hk_SetExCoNBits(uint32_t bits)
 {
-	return cmn_SetBits(&hk->ex_co_n, bits, EX_CO_N_MASK);
+    return cmn_SetBits(&hk->ex_co_n, bits, EX_CO_N_MASK);
 }
 
 int hk_UnsetExCoNBits(uint32_t bits)
 {
-	return cmn_UnsetBits(&hk->ex_co_n, bits, EX_CO_N_MASK);
+    return cmn_UnsetBits(&hk->ex_co_n, bits, EX_CO_N_MASK);
 }
 
 int hk_AreExCoNBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->ex_co_n, bits, EX_CO_N_MASK, result);
+    return cmn_AreBitsSet(hk->ex_co_n, bits, EX_CO_N_MASK, result);
 }
 
 
 
 /**
-* ex_ci_p
-*/
+ * ex_ci_p
+ */
 
 int hk_AreExCiPBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->ex_ci_p, bits, EX_CI_P_MASK, result);
+    return cmn_AreBitsSet(hk->ex_ci_p, bits, EX_CI_P_MASK, result);
 }
 
 
 
 /**
-* ex_ci_n
-*/
+ * ex_ci_n
+ */
 
 int hk_AreExCiNBitsSet(uint32_t bits, bool* result)
 {
-	return cmn_AreBitsSet(hk->ex_ci_n, bits, EX_CI_N_MASK, result);
+    return cmn_AreBitsSet(hk->ex_ci_n, bits, EX_CI_N_MASK, result);
 }

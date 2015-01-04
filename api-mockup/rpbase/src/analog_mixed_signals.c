@@ -24,15 +24,15 @@ static const int ANALOG_MIXED_SIGNALS_BASE_ADDR = 0x40400000;
 static const int ANALOG_MIXED_SIGNALS_BASE_SIZE = 0x30;
 
 typedef struct analog_mixed_signals_control_s {
-	uint32_t aif0;
-	uint32_t aif1;
-	uint32_t aif2;
-	uint32_t aif3;
-	uint32_t reserved[4];
-	uint32_t dac0;
-	uint32_t dac1;
-	uint32_t dac2;
-	uint32_t dac3;
+    uint32_t aif0;
+    uint32_t aif1;
+    uint32_t aif2;
+    uint32_t aif3;
+    uint32_t reserved[4];
+    uint32_t dac0;
+    uint32_t dac1;
+    uint32_t dac2;
+    uint32_t dac3;
 } analog_mixed_signals_control_t;
 
 
@@ -53,52 +53,52 @@ static volatile analog_mixed_signals_control_t *ams = NULL;
 
 int ams_Init()
 {
-	ECHECK(cmn_Init());
-	ECHECK(cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams));
-	return RP_OK;
+    ECHECK(cmn_Init());
+    ECHECK(cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams));
+    return RP_OK;
 }
 
 int ams_Release()
 {
-	ECHECK(cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams));
-	ECHECK(cmn_Release());
-	return RP_OK;
+    ECHECK(cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams));
+    ECHECK(cmn_Release());
+    return RP_OK;
 }
 
 int ams_SetValueDAC0(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
-		return RP_EOOR;
-	}
+    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+        return RP_EOOR;
+    }
     return cmn_SetShiftedValue(&ams->dac0, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
     return RP_OK;
 }
 
 int ams_SetValueDAC1(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
-		return RP_EOOR;
-	}
-	return cmn_SetShiftedValue(&ams->dac1, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
-	return RP_OK;
+    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+        return RP_EOOR;
+    }
+    return cmn_SetShiftedValue(&ams->dac1, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+    return RP_OK;
 }
 
 int ams_SetValueDAC2(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
-		return RP_EOOR;
-	}
-	return cmn_SetShiftedValue(&ams->dac2, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
-	return RP_OK;
+    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+        return RP_EOOR;
+    }
+    return cmn_SetShiftedValue(&ams->dac2, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+    return RP_OK;
 }
 
 int ams_SetValueDAC3(uint32_t value)
 {
-	if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
-		return RP_EOOR;
-	}
-	return cmn_SetShiftedValue(&ams->dac3, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
-	return RP_OK;
+    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+        return RP_EOOR;
+    }
+    return cmn_SetShiftedValue(&ams->dac3, value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+    return RP_OK;
 }
 
 int ams_GetValueADC0(uint32_t* value)
@@ -123,34 +123,34 @@ int ams_GetValueADC3(uint32_t* value)
 
 int ams_GetValueDAC0(uint32_t* value)
 {
-	return cmn_GetShiftedValue(&ams->dac0, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+    return cmn_GetShiftedValue(&ams->dac0, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetValueDAC1(uint32_t* value)
 {
-	return cmn_GetShiftedValue(&ams->dac1, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+    return cmn_GetShiftedValue(&ams->dac1, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetValueDAC2(uint32_t* value)
 {
-	return cmn_GetShiftedValue(&ams->dac2, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+    return cmn_GetShiftedValue(&ams->dac2, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetValueDAC3(uint32_t* value)
 {
-	return cmn_GetShiftedValue(&ams->dac3, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
+    return cmn_GetShiftedValue(&ams->dac3, value, ANALOG_IN_MASK, ANALOG_OUT_BITS);
 }
 
 int ams_GetRangeInput(float *min_val, float *max_val, uint32_t *int_max_val) {
-	*min_val = ANALOG_IN_MIN_VAL;
-	*max_val = ANALOG_IN_MAX_VAL;
-	*int_max_val = ANALOG_IN_MAX_VAL_INTEGER;
-	return RP_OK;
+    *min_val = ANALOG_IN_MIN_VAL;
+    *max_val = ANALOG_IN_MAX_VAL;
+    *int_max_val = ANALOG_IN_MAX_VAL_INTEGER;
+    return RP_OK;
 }
 
 int ams_GetRangeOutput(float *min_val, float *max_val, uint32_t *int_max_val) {
-	*min_val = ANALOG_OUT_MIN_VAL;
-	*max_val = ANALOG_OUT_MAX_VAL;
-	*int_max_val = ANALOG_OUT_MAX_VAL_INTEGER;
-	return RP_OK;
+    *min_val = ANALOG_OUT_MIN_VAL;
+    *max_val = ANALOG_OUT_MAX_VAL;
+    *int_max_val = ANALOG_OUT_MAX_VAL_INTEGER;
+    return RP_OK;
 }

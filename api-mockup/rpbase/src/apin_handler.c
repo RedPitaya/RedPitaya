@@ -45,40 +45,40 @@ int apin_GetValue(rp_apin_t pin, float* value)
 int apin_SetValueRaw(rp_apin_t pin, uint32_t value)
 {
     switch (pin) {
-        case RP_AOUT0:
-            return ams_SetValueDAC0(value);
-        case RP_AOUT1:
-            return ams_SetValueDAC1(value);
-        case RP_AOUT2:
-            return ams_SetValueDAC2(value);
-        case RP_AOUT3:
-            return ams_SetValueDAC3(value);
-        default:
-            return RP_EPN;
+    case RP_AOUT0:
+        return ams_SetValueDAC0(value);
+    case RP_AOUT1:
+        return ams_SetValueDAC1(value);
+    case RP_AOUT2:
+        return ams_SetValueDAC2(value);
+    case RP_AOUT3:
+        return ams_SetValueDAC3(value);
+    default:
+        return RP_EPN;
     }
 }
 
 int apin_GetValueRaw(rp_apin_t pin, uint32_t* value)
 {
     switch (pin) {
-        case RP_AIN0:
-            return ams_GetValueADC0(value);
-        case RP_AIN1:
-            return ams_GetValueADC1(value);
-        case RP_AIN2:
-            return ams_GetValueADC2(value);
-        case RP_AIN3:
-            return ams_GetValueADC3(value);
-        case RP_AOUT0:
-            return ams_GetValueDAC0(value);
-        case RP_AOUT1:
-            return ams_GetValueDAC1(value);
-        case RP_AOUT2:
-            return ams_GetValueDAC2(value);
-        case RP_AOUT3:
-            return ams_GetValueDAC3(value);
-        default:
-            return RP_EPN;
+    case RP_AIN0:
+        return ams_GetValueADC0(value);
+    case RP_AIN1:
+        return ams_GetValueADC1(value);
+    case RP_AIN2:
+        return ams_GetValueADC2(value);
+    case RP_AIN3:
+        return ams_GetValueADC3(value);
+    case RP_AOUT0:
+        return ams_GetValueDAC0(value);
+    case RP_AOUT1:
+        return ams_GetValueDAC1(value);
+    case RP_AOUT2:
+        return ams_GetValueDAC2(value);
+    case RP_AOUT3:
+        return ams_GetValueDAC3(value);
+    default:
+        return RP_EPN;
     }
 }
 
@@ -90,18 +90,18 @@ int apin_GetRange(rp_apin_t pin, float* min_val, float* max_val)
 
 int apin_GetRangeWithInt(rp_apin_t pin, float *min_val, float *max_val, uint32_t *int_max_val) {
     switch (pin) {
-        case RP_AIN0:
-        case RP_AIN1:
-        case RP_AIN2:
-        case RP_AIN3:
-            return ams_GetRangeInput(min_val, max_val, int_max_val);
-        case RP_AOUT0:
-        case RP_AOUT1:
-        case RP_AOUT2:
-        case RP_AOUT3:
-            return ams_GetRangeOutput(min_val, max_val, int_max_val);
-        default:
-            return RP_EPN;
+    case RP_AIN0:
+    case RP_AIN1:
+    case RP_AIN2:
+    case RP_AIN3:
+        return ams_GetRangeInput(min_val, max_val, int_max_val);
+    case RP_AOUT0:
+    case RP_AOUT1:
+    case RP_AOUT2:
+    case RP_AOUT3:
+        return ams_GetRangeOutput(min_val, max_val, int_max_val);
+    default:
+        return RP_EPN;
     }
 }
 
