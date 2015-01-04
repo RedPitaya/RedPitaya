@@ -42,5 +42,9 @@ int osc_SetTriggerDelay(uint32_t decimated_data_num);
 int osc_GetTriggerDelay(uint32_t* decimated_data_num);
 int osc_GetWritePointer(uint32_t* pos);
 int osc_GetWritePointerAtTrig(uint32_t* pos);
+int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
+int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
+int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */
