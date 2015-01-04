@@ -96,11 +96,46 @@ uint64_t cnvSmplsToTime(uint32_t samples)
 
 int acq_SetGain(rp_pinState_t state)
 {
+	// Gain is already at the same state. Nothing to do...
+	if (gain == state) {
+		return RP_OK;
+	}
+
+	// Read old values which are dependent on the gain...
+	rp_pinState_t old_gain;
+	float cha_thr, cha_hyst, chb_thr, chb_hyst;
+	old_gain = gain;
+	ECHECK(acq_GetChannelThreshold(RP_CH_A, &cha_thr));
+	ECHECK(acq_GetChannelThreshold(RP_CH_B, &chb_thr));
+	ECHECK(acq_GetChannelThresholdHyst(RP_CH_A, &cha_hyst));
+	ECHECK(acq_GetChannelThresholdHyst(RP_CH_B, &chb_hyst));
+
+	// Now update the gain
 	gain = state;
 
-	// TODO: Update channel treshold and channel treshold hyst if it was set in volts
+	// And recalculate new values...
+	int status = RP_OK;
+	status = acq_SetChannelThreshold(RP_CH_A, cha_thr);
+	if (status == RP_OK) {
+		status = acq_SetChannelThreshold(RP_CH_B, chb_thr);
+	}
+	if (status == RP_OK) {
+		status = acq_SetChannelThresholdHyst(RP_CH_A, cha_hyst);
+	}
+	if (status == RP_OK) {
+		status = acq_SetChannelThresholdHyst(RP_CH_B, chb_hyst);
+	}
 
-	return RP_OK;
+	// In case of an error, put old values back and report the error
+	if (status != RP_OK) {
+		gain = old_gain;
+		acq_SetChannelThreshold(RP_CH_A, cha_thr);
+		acq_SetChannelThreshold(RP_CH_B, chb_thr);
+		acq_SetChannelThresholdHyst(RP_CH_A, cha_hyst);
+		acq_SetChannelThresholdHyst(RP_CH_B, chb_hyst);
+	}
+
+	return status;
 }
 
 int acq_GetGain(rp_pinState_t* state)
@@ -372,16 +407,6 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
 	return osc_GetWritePointerAtTrig(pos);
 }
 
-int acq_Start()
-{
-	return osc_WriteDataIntoMemory(true);
-}
-
-int acq_Stop()
-{
-	return osc_WriteDataIntoMemory(false);
-}
-
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 {
 	float gain;
@@ -455,4 +480,14 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 	*voltage = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
 
 	return RP_OK;
+}
+
+int acq_Start()
+{
+	return osc_WriteDataIntoMemory(true);
+}
+
+int acq_Stop()
+{
+	return osc_WriteDataIntoMemory(false);
 }
