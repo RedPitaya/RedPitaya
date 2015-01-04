@@ -26,13 +26,13 @@ static rp_calib_params_t calib;
 
 int calib_Init()
 {
-	ECHECK(calib_ReadParams(&calib));
-	return RP_OK;
+    ECHECK(calib_ReadParams(&calib));
+    return RP_OK;
 }
 
 int calib_Release()
 {
-	return RP_OK;
+    return RP_OK;
 }
 
 /**
@@ -41,7 +41,7 @@ int calib_Release()
  */
 rp_calib_params_t calib_GetParams()
 {
-	return calib;
+    return calib;
 }
 
 /**
@@ -70,7 +70,7 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
     /* open EEPROM device */
     fp = fopen(eeprom_device, "r");
     if(fp == NULL) {
-       return RP_EOED;
+        return RP_EOED;
     }
 
     /* ...and seek to the appropriate storage offset */
@@ -109,4 +109,4 @@ int calib_GetDefaultParams(rp_calib_params_t *calib_params)
 
     return 0;
 }
-*/
+ */
