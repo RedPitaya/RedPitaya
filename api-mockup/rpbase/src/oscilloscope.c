@@ -196,6 +196,8 @@ static const uint32_t THRESHOLD_MASK = 0x3FFF;      // (14 bits)
 static const uint32_t HYSTERESIS_MASK = 0x3FFF;     // (14 bits)
 static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF; // (32 bits)
 static const uint32_t WRITE_POINTER_MASK = 0x3FFF;  // (14 bits)
+static const uint32_t EQ_FILTER_AA = 0x3FFFF;       // (18 bits)
+static const uint32_t EQ_FILTER   = 0x1FFFFFF;      // (25 bits)
 
 
 /**
@@ -335,6 +337,44 @@ int osc_GetHysteresisChB(uint32_t* hysteresis)
 	return cmn_GetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK);
 }
 
+/**
+ * Equalization filters
+ */
+int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
+{
+	ECHECK(cmn_SetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA));
+	ECHECK(cmn_SetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER));
+	ECHECK(cmn_SetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER));
+	ECHECK(cmn_SetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER));
+	return RP_OK;
+}
+
+int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp)
+{
+	ECHECK(cmn_GetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA));
+	ECHECK(cmn_GetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER));
+	ECHECK(cmn_GetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER));
+	ECHECK(cmn_GetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER));
+	return RP_OK;
+}
+
+int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
+{
+	ECHECK(cmn_SetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA));
+	ECHECK(cmn_SetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER));
+	ECHECK(cmn_SetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER));
+	ECHECK(cmn_SetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER));
+	return RP_OK;
+}
+
+int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp)
+{
+	ECHECK(cmn_GetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA));
+	ECHECK(cmn_GetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER));
+	ECHECK(cmn_GetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER));
+	ECHECK(cmn_GetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER));
+	return RP_OK;
+}
 
 /**
  * Write pointer

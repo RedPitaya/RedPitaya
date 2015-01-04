@@ -45,5 +45,7 @@ int acq_GetWritePointerAtTrig(uint32_t* pos);
 int acq_Start();
 int acq_Stop();
 
+int acq_SetDefault();
+
 
 #endif /* SRC_ACQ_HANDLER_H_ */

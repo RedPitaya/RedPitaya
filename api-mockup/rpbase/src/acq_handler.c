@@ -55,6 +55,25 @@ static rp_pinState_t gain_ch_b = RP_LOW;
 /* @brief Determines whether TriggerDelay was set in time or sample units */
 static bool triggerDelayInNs = false;
 
+
+/* @brief Default filter equalization coefficients */
+static const uint32_t GAIN_HI_CHA_FILT_AA = 0x7D93;
+static const uint32_t GAIN_HI_CHA_FILT_BB = 0x437C7;
+static const uint32_t GAIN_HI_CHA_FILT_PP = 0x2666;
+static const uint32_t GAIN_HI_CHA_FILT_KK = 0xd9999a;
+static const uint32_t GAIN_HI_CHB_FILT_AA = 0x7D93;
+static const uint32_t GAIN_HI_CHB_FILT_BB = 0x437C7;
+static const uint32_t GAIN_HI_CHB_FILT_PP = 0x2666;
+static const uint32_t GAIN_HI_CHB_FILT_KK = 0xd9999a;
+static const uint32_t GAIN_LO_CHA_FILT_AA = 0x4C5F;
+static const uint32_t GAIN_LO_CHA_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_LO_CHA_FILT_PP = 0x2666;
+static const uint32_t GAIN_LO_CHA_FILT_KK = 0xd9999a;
+static const uint32_t GAIN_LO_CHB_FILT_AA = 0x4C5F;
+static const uint32_t GAIN_LO_CHB_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_LO_CHB_FILT_PP = 0x2666;
+static const uint32_t GAIN_LO_CHB_FILT_KK = 0xd9999a;
+
 /*----------------------------------------------------------------------------*/
 /**
 * @brief Converts time in [ns] to ADC samples
@@ -63,7 +82,7 @@ static bool triggerDelayInNs = false;
 * @param[in] time time, specified in [ns]
 * @retval int number of ADC samples
 */
-uint32_t cnvTimeToSmpls(uint64_t time_ns)
+static uint32_t cnvTimeToSmpls(uint64_t time_ns)
 {
 	/* Calculate sampling period (including decimation) */
 
@@ -82,7 +101,7 @@ uint32_t cnvTimeToSmpls(uint64_t time_ns)
 * @param[in] samples, number of ADC samples
 * @retval int time, specified in [ns]
 */
-uint64_t cnvSmplsToTime(uint32_t samples)
+static uint64_t cnvSmplsToTime(uint32_t samples)
 {
 	/* Calculate time (including decimation) */
 
@@ -92,6 +111,40 @@ uint64_t cnvSmplsToTime(uint32_t samples)
 	return (uint64_t)samples * ADC_SAMPLE_PERIOD * decimation;
 }
 
+/**
+ * Sets equalization filter with default coefficients per channel
+ * @param channel Channel A or B
+ * @return 0 when successful
+ */
+static int setEqFilters(rp_channel_t channel)
+{
+	rp_pinState_t gain;
+	ECHECK(acq_GetGain(channel, &gain));
+
+	// Updating equalization filter with default coefficients
+	if (channel == RP_CH_A)
+	{
+		if (gain == RP_HIGH)
+		{
+			return osc_SetEqFiltersChA(GAIN_HI_CHA_FILT_AA, GAIN_HI_CHA_FILT_BB, GAIN_HI_CHA_FILT_KK, GAIN_HI_CHA_FILT_PP);
+		}
+		else
+		{
+			return osc_SetEqFiltersChA(GAIN_LO_CHA_FILT_AA, GAIN_LO_CHA_FILT_BB, GAIN_LO_CHA_FILT_KK, GAIN_LO_CHA_FILT_PP);
+		}
+	}
+	else
+	{
+		if (gain == RP_HIGH)
+		{
+			return osc_SetEqFiltersChA(GAIN_HI_CHB_FILT_AA, GAIN_HI_CHB_FILT_BB, GAIN_HI_CHB_FILT_KK, GAIN_HI_CHB_FILT_PP);
+		}
+		else
+		{
+			return osc_SetEqFiltersChA(GAIN_LO_CHB_FILT_AA, GAIN_LO_CHB_FILT_BB, GAIN_LO_CHB_FILT_KK, GAIN_LO_CHB_FILT_PP);
+		}
+	}
+}
 
 /*----------------------------------------------------------------------------*/
 
@@ -134,6 +187,11 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 		*gain = old_gain;
 		acq_SetChannelThreshold(channel, ch_thr);
 		acq_SetChannelThresholdHyst(channel, ch_hyst);
+	}
+	// At the end if everything is ok, update also equalization filters based on the new gain.
+	// Updating eq filters should never fail...
+	else {
+		status = setEqFilters(channel);
 	}
 
 	return status;
@@ -506,3 +564,14 @@ int acq_Stop()
 {
 	return osc_WriteDataIntoMemory(false);
 }
+
+/**
+ * Sets default configuration
+ * @return
+ */
+int acq_SetDefault() {
+	ECHECK(acq_SetGain(RP_CH_A, RP_LOW));
+	ECHECK(acq_SetGain(RP_CH_B, RP_LOW));
+	return RP_OK;
+}
+

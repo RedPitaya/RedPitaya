@@ -42,6 +42,10 @@ int rp_Init()
 	ECHECK(health_Init());
 	ECHECK(osc_Init());
     // TODO: Place other module initializations here
+
+	// Set default configuration per handler
+	acq_SetDefault();
+
 	return RP_OK;
 }
 
