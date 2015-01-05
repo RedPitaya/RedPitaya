@@ -41,6 +41,7 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
+#define FLOAT_EPS 0.00001f
 
 int cmn_Init();
 int cmn_Release();

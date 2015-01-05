@@ -504,6 +504,11 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     float gain;
 
     ECHECK(acq_GetGainV(channel, &gain));
+
+    if (fabs(voltage) - fabs(gain) > FLOAT_EPS) {
+        return RP_EOOR;
+    }
+
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
@@ -542,6 +547,11 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
     float gain;
 
     ECHECK(acq_GetGainV(channel, &gain));
+
+    if (fabs(voltage) - fabs(gain) > FLOAT_EPS) {
+        return RP_EOOR;
+    }
+
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
