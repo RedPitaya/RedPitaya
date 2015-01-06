@@ -276,7 +276,45 @@ void *rp_osc_worker_thread(void *args)
 
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
-        
+
+
+        float save_data = rp_get_params_lcr(16);
+        /* Check if we want to save param data to a file */
+        if(save_data == 1){
+            char f_command[100];
+
+            /* Create a non-txt file, as txt is a just an interpreter abriviation */
+            strcpy(f_command, "touch /opt/www/apps/lcr_meter/lcr_param_data");
+            system(f_command);
+
+            /* Open file for writing */
+            FILE *data = fopen("/opt/www/apps/lcr_meter/lcr_param_data", "w");
+            /* We have saved data */
+
+            /* Write parameter data */
+            fprintf(data, "%f\n", rp_get_params_lcr(1));
+            fprintf(data, "%f\n", rp_get_params_lcr(2));
+            fprintf(data, "%f\n", rp_get_params_lcr(3));
+            fprintf(data, "%f\n", rp_get_params_lcr(4));
+            fprintf(data, "%f\n", rp_get_params_lcr(5));
+            fprintf(data, "%f\n", rp_get_params_lcr(6));
+            fprintf(data, "%f\n", rp_get_params_lcr(7));
+            fprintf(data, "%f\n", rp_get_params_lcr(8));
+            fprintf(data, "%f\n", rp_get_params_lcr(9));
+            fprintf(data, "%f\n", rp_get_params_lcr(10));
+            fprintf(data, "%f\n", rp_get_params_lcr(11));
+            fprintf(data, "%f\n", rp_get_params_lcr(15));
+
+            rp_set_params_lcr(2,0);
+            fclose(data);
+
+        }
+
+        /* Load parameters if user input is true */
+        if(rp_load_data(save_data) == -1){
+            printf("Loading parameters failed!\n");
+        }
+
         /* Start lcr measurment */
         float measure_option = rp_get_params_lcr(0);
         /* Set max command lenght */
@@ -758,6 +796,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
      *           2 --> Measurment sweep  */
 
     if(rp_get_params_lcr(0) == -1){
+
 
         for(out_idx=0; out_idx < counter; out_idx++) {
             cha_s[out_idx] = 0;
@@ -1401,5 +1440,34 @@ int rp_osc_adc_sign(int in_data)
     if(s_data & (1<<(c_osc_fpga_adc_bits-1)))
         s_data = -1 * ((s_data ^ ((1<<c_osc_fpga_adc_bits)-1)) + 1);
     return s_data;
+}
+
+int rp_load_data(float save_data){
+    /* If the user wants to load all the data */
+    if(save_data == 2){
+        float val = 0;
+        
+        if(fopen("/opt/www/apps/lcr_meter/lcr_param_data", "r") == NULL){
+            printf("Parameter data failure!\n");
+            return -1;
+        }
+
+        /* Read data */
+        FILE *data = fopen("/opt/www/apps/lcr_meter/lcr_param_data", "r");
+
+        int counter = 3;
+        while(!feof(data)){
+            val = 0;
+            /* Read data into val */
+            fscanf(data, "%f", &val);
+            /* Set according paramters with value val */
+            rp_set_params_lcr(counter, val);
+            counter++;
+        }
+        rp_set_params_lcr(2, 3);
+        fclose(data);
+
+    }
+    return 0;
 }
 
