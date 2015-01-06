@@ -499,6 +499,25 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
     return osc_GetWritePointerAtTrig(pos);
 }
 
+int acq_SetTriggerLevel(float voltage)
+{
+    ECHECK(acq_SetChannelThreshold(RP_CH_A, voltage));
+    return acq_SetChannelThreshold(RP_CH_B, voltage);
+}
+
+int acq_GetTriggerLevel(float *voltage)
+{
+    float v1, v2;
+    ECHECK(acq_GetChannelThreshold(RP_CH_A, &v1));
+    ECHECK(acq_GetChannelThreshold(RP_CH_B, &v2));
+
+    if (fabs(v1 - v2) > FLOAT_EPS) {
+        return RP_EOOR;
+    }
+
+    return RP_OK;
+}
+
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 {
     float gain;
@@ -537,6 +556,25 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 
     int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
+
+    return RP_OK;
+}
+
+int acq_SetTriggerHyst(float voltage)
+{
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_A, voltage));
+    return acq_SetChannelThresholdHyst(RP_CH_B, voltage);
+}
+
+int acq_GetTriggerHyst(float *voltage)
+{
+    float v1, v2;
+    ECHECK(acq_GetChannelThresholdHyst(RP_CH_A, &v1));
+    ECHECK(acq_GetChannelThresholdHyst(RP_CH_B, &v2));
+
+    if (fabs(v1 - v2) > FLOAT_EPS) {
+        return RP_EOOR;
+    }
 
     return RP_OK;
 }

@@ -254,24 +254,24 @@ int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
     return acq_SetGain(channel, state);
 }
 
-int rp_AcqGetChannelThreshold(rp_channel_t channel, float* voltage)
+int rp_AcqGetTriggerLevel(float* voltage)
 {
-    return acq_GetChannelThreshold(channel, voltage);
+    return acq_GetTriggerLevel(voltage);
 }
 
-int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage)
+int rp_AcqSetTriggerLevel(float voltage)
 {
-    return acq_SetChannelThreshold(channel, voltage);
+    return acq_SetTriggerLevel(voltage);
 }
 
-int rp_AcqGetChannelThresholdHyst(rp_channel_t channel, float* voltage)
+int rp_AcqGetTriggerHyst(float* voltage)
 {
-    return acq_GetChannelThresholdHyst(channel, voltage);
+    return acq_GetTriggerHyst(voltage);
 }
 
-int rp_AcqSetChannelThresholdHyst(rp_channel_t channel, float voltage)
+int rp_AcqSetTriggerHyst(float voltage)
 {
-    return acq_SetChannelThresholdHyst(channel, voltage);
+    return acq_SetTriggerHyst(voltage);
 }
 
 int rp_AcqGetWritePointer(uint32_t* pos)
