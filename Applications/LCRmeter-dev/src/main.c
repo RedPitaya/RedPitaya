@@ -177,7 +177,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * Minimum value - 1
        * Maximum value - 1000
        * Default value - 100  */
-      "lcr_steps", 1000, 1, 0, 0, 1000},
+      "lcr_steps", 10, 1, 0, 0, 1000},
     { /* Start frequency for frequency sweep.
        *    Min value - 200
        *    Max value - 1000000    */
@@ -212,6 +212,10 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * 0 -   default/min val
        * 100 - max val */
        "lcr_progress", 0, 1, 0, 0, 100 },
+    {/* Lcr save/load data parameter 
+      * -1 - Do not save any parameter data
+      *  1 - Save parameter data */ 
+       "lcr_save_data", -1, 1, 0, -1, 3 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -1156,6 +1160,8 @@ float rp_get_params_lcr(int pos){
       return rp_main_params[LCR_CALIBRATION].value;
     case 15:
       return rp_main_params[PLOT_Y_SCALE_DATA].value;
+    case 16:
+      return rp_main_params[LCR_SAVE_DATA].value;
 
     /* -1 Reserver for START_MEASURE */
     default:
@@ -1171,6 +1177,46 @@ void rp_set_params_lcr(int pos, float val){
       break;
     case 1:
       rp_main_params[LCR_PROGRESS].value = val;
+      break;
+    case 2:
+      rp_main_params[LCR_SAVE_DATA].value = val;
+      break;
+    case 3:
+      rp_main_params[LCR_STEPS].value = val;
+      break;
+    case 4:
+      rp_main_params[GEN_AMP].value = val;
+      break;
+    case 5:
+      rp_main_params[GEN_AVG].value = val;
+      break;
+    case 6:
+      rp_main_params[GEN_DC_BIAS].value = val;
+      break;
+    case 7:
+      rp_main_params[GEN_R_SHUNT].value = val;
+      break;
+    case 8:
+      rp_main_params[START_FREQ].value = val;
+      break;
+    case 9:
+      rp_main_params[END_FREQ].value = val;
+      break;
+    case 10:
+      rp_main_params[LCR_SCALE_TYPE].value = val;
+      break;
+    case 11:
+      rp_main_params[GEN_FS_LOADRE].value = val;
+      break;
+    case 12:
+      rp_main_params[GEN_FS_LOADIM].value = val;
+      break;
+    case 13:
+      rp_main_params[LCR_CALIBRATION].value = val;
+      break;
+    case 14:
+      rp_main_params[PLOT_Y_SCALE_DATA].value = val;
+      break;
   }
 }
 
