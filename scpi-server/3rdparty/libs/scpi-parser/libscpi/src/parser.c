@@ -2,7 +2,7 @@
  * Copyright (c) 2012-2013 Jan Breuer,
  *
  * All Rights Reserved
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -11,7 +11,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -28,20 +28,22 @@
 /**
  * @file   scpi_parser.c
  * @date   Thu Nov 15 10:58:45 UTC 2012
- * 
+ *
  * @brief  SCPI parser implementation
- * 
- * 
+ *
+ *
  */
 
-#include <ctype.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <elf.h>
 
 #include "scpi/config.h"
 #include "scpi/parser.h"
 #include "scpi/utils_private.h"
 #include "scpi/error.h"
 #include "scpi/constants.h"
+#include "../inc/scpi/types.h"
 
 
 static size_t cmdTerminatorPos(const char * cmd, size_t len);
@@ -307,7 +309,7 @@ void SCPI_Init(scpi_t * context) {
     if (context->idn[3] == NULL) {
         context->idn[3] = SCPI_DEFAULT_4_REVISION;
     }
-    
+
     context->buffer.position = 0;
     SCPI_ErrorInit(context);
 }
@@ -316,11 +318,11 @@ void SCPI_Init(scpi_t * context) {
  * Interface to the application. Adds data to system buffer and try to search
  * command line termination. If the termination is found or if len=0, command
  * parser is called.
- * 
+ *
  * @param context
  * @param data - data to process
  * @param len - length of data
- * @return 
+ * @return
  */
 int SCPI_Input(scpi_t * context, const char * data, size_t len) {
     int result = 0;
@@ -347,7 +349,7 @@ int SCPI_Input(scpi_t * context, const char * data, size_t len) {
             result = SCPI_Parse(context, context->buffer.data + ws, curr_len - ws);
             memmove(context->buffer.data, cmd_term, context->buffer.position - curr_len);
             context->buffer.position -= curr_len;
-    
+
             ws = skipWhitespace(context->buffer.data, context->buffer.position);
             cmd_term = cmdlineTerminator(context->buffer.data + ws, context->buffer.position - ws);
         }
@@ -362,7 +364,7 @@ int SCPI_Input(scpi_t * context, const char * data, size_t len) {
  * Write raw string result to the output
  * @param context
  * @param data
- * @return 
+ * @return
  */
 size_t SCPI_ResultString(scpi_t * context, const char * data) {
     size_t len = strlen(data);
@@ -377,9 +379,45 @@ size_t SCPI_ResultString(scpi_t * context, const char * data) {
  * Write integer value to the result
  * @param context
  * @param val
- * @return 
+ * @return
  */
 size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
+    char buffer[12];
+    size_t result = 0;
+    size_t len = longToStr(val, buffer, sizeof (buffer));
+    result += writeDelimiter(context);
+    result += writeData(context, buffer, len);
+    context->output_count++;
+    return result;
+}
+
+size_t SCPI_ResultUInt(scpi_t *context, uint32_t val) {
+    char buffer[12];
+    size_t result = 0;
+    size_t len = longToStr(val, buffer, sizeof (buffer));
+    result += writeDelimiter(context);
+    result += writeData(context, buffer, len);
+    context->output_count++;
+    return result;
+}
+
+/**
+* Write long value to the result
+* @param context
+* @param val
+* @return
+*/
+size_t SCPI_ResultLong(scpi_t * context, int64_t val) {
+    char buffer[12];
+    size_t result = 0;
+    size_t len = longToStr(val, buffer, sizeof (buffer));
+    result += writeDelimiter(context);
+    result += writeData(context, buffer, len);
+    context->output_count++;
+    return result;
+}
+
+size_t SCPI_ResultULong(scpi_t *context, uint64_t val) {
     char buffer[12];
     size_t result = 0;
     size_t len = longToStr(val, buffer, sizeof (buffer));
@@ -393,7 +431,7 @@ size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
  * Write boolean value to the result
  * @param context
  * @param val
- * @return 
+ * @return
  */
 size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val) {
 	return SCPI_ResultInt(context, val ? 1 : 0);
@@ -403,7 +441,7 @@ size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val) {
  * Write double walue to the result
  * @param context
  * @param val
- * @return 
+ * @return
  */
 size_t SCPI_ResultDouble(scpi_t * context, double val) {
     char buffer[32];
@@ -420,7 +458,7 @@ size_t SCPI_ResultDouble(scpi_t * context, double val) {
  * Write string withn " to the result
  * @param context
  * @param data
- * @return 
+ * @return
  */
 size_t SCPI_ResultText(scpi_t * context, const char * data) {
     size_t result = 0;
@@ -431,6 +469,48 @@ size_t SCPI_ResultText(scpi_t * context, const char * data) {
     context->output_count++;
     return result;
 }
+
+
+size_t SCPI_ResultBufferUInt16(scpi_t * context, const uint16_t *data, uint32_t size) {
+    size_t result = 0;
+    result += writeDelimiter(context);
+    result += writeData(context, "{", 1);
+
+    uint32_t i;
+    size_t len;
+    char buffer[12];
+    for (i = 0; i < size-1; i++) {
+        len = longToStr(data[i], buffer, sizeof (buffer));
+        result += writeData(context, buffer, len);
+        result += writeData(context, ",", 1);
+    }
+    len = longToStr(data[i], buffer, sizeof (buffer));
+    result += writeData(context, buffer, len);
+    result += writeData(context, "}", 1);
+    context->output_count++;
+    return result;
+}
+
+size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size) {
+    size_t result = 0;
+    result += writeDelimiter(context);
+    result += writeData(context, "{", 1);
+
+    uint32_t i;
+    size_t len;
+    char buffer[12];
+    for (i = 0; i < size-1; i++) {
+        len = doubleToStr(data[i], buffer, sizeof (buffer));
+        result += writeData(context, buffer, len);
+        result += writeData(context, ",", 1);
+    }
+    len = doubleToStr(data[i], buffer, sizeof (buffer));
+    result += writeData(context, buffer, len);
+    result += writeData(context, "}", 1);
+    context->output_count++;
+    return result;
+}
+
 
 /* parsing parameters */
 
@@ -460,7 +540,7 @@ void paramSkipWhitespace(scpi_t * context) {
  * Find next parameter
  * @param context
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t paramNext(scpi_t * context, scpi_bool_t mandatory) {
     paramSkipWhitespace(context);
@@ -488,7 +568,7 @@ scpi_bool_t paramNext(scpi_t * context, scpi_bool_t mandatory) {
  * @param context
  * @param value
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandatory) {
     const char * param;
@@ -513,12 +593,83 @@ scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandato
     return TRUE;
 }
 
+
+scpi_bool_t SCPI_ParamUInt(scpi_t *context, uint32_t *value, scpi_bool_t mandatory) {
+    const char * param;
+    size_t param_len;
+    size_t num_len;
+
+    if (!value) {
+        return FALSE;
+    }
+
+    if (!SCPI_ParamString(context, &param, &param_len, mandatory)) {
+        return FALSE;
+    }
+
+    num_len = strToLong(param, value);
+
+    if (num_len != param_len) {
+        SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+scpi_bool_t SCPI_ParamLong(scpi_t *context, int64_t *value, scpi_bool_t mandatory) {
+    const char * param;
+    size_t param_len;
+    size_t num_len;
+
+    if (!value) {
+        return FALSE;
+    }
+
+    if (!SCPI_ParamString(context, &param, &param_len, mandatory)) {
+        return FALSE;
+    }
+
+    num_len = strToLong(param, value);
+
+    if (num_len != param_len) {
+        SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+scpi_bool_t SCPI_ParamULong(scpi_t *context, uint64_t *value, scpi_bool_t mandatory) {
+    const char * param;
+    size_t param_len;
+    size_t num_len;
+
+    if (!value) {
+        return FALSE;
+    }
+
+    if (!SCPI_ParamString(context, &param, &param_len, mandatory)) {
+        return FALSE;
+    }
+
+    num_len = strToLong(param, value);
+
+    if (num_len != param_len) {
+        SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 /**
  * Parse double parameter
  * @param context
  * @param value
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t SCPI_ParamDouble(scpi_t * context, double * value, scpi_bool_t mandatory) {
     const char * param;
@@ -549,7 +700,7 @@ scpi_bool_t SCPI_ParamDouble(scpi_t * context, double * value, scpi_bool_t manda
  * @param value Pointer to string buffer where pointer to non-null terminated string will be returned
  * @param len Length of returned non-null terminated string
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t SCPI_ParamString(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory) {
     size_t length;
@@ -580,7 +731,7 @@ scpi_bool_t SCPI_ParamString(scpi_t * context, const char ** value, size_t * len
  * @param value Pointer to string buffer where pointer to non-null terminated string will be returned
  * @param len Length of returned non-null terminated string
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t SCPI_ParamText(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory) {
     size_t length;
@@ -609,7 +760,7 @@ scpi_bool_t SCPI_ParamText(scpi_t * context, const char ** value, size_t * len, 
  * @param context
  * @param value
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t SCPI_ParamBool(scpi_t * context, scpi_bool_t * value, scpi_bool_t mandatory) {
     const char * param;
@@ -649,7 +800,7 @@ scpi_bool_t SCPI_ParamBool(scpi_t * context, scpi_bool_t * value, scpi_bool_t ma
  * @param options
  * @param value
  * @param mandatory
- * @return 
+ * @return
  */
 scpi_bool_t SCPI_ParamChoice(scpi_t * context, const char * options[], int32_t * value, scpi_bool_t mandatory) {
     const char * param;
