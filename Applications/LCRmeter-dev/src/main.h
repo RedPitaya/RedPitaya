@@ -43,7 +43,7 @@ typedef struct rp_osc_meas_res_s {
 
 /* Parameters indexes - these defines should be in the same order as 
  * rp_app_params_t structure defined in main.c */
-#define PARAMS_NUM        63
+#define PARAMS_NUM        64
 #define MIN_GUI_PARAM     0
 #define MAX_GUI_PARAM     1
 #define TRIG_MODE_PARAM   2
@@ -94,25 +94,26 @@ typedef struct rp_osc_meas_res_s {
 #define GEN_FS_LOADIM     46
 #define LCR_CALIBRATION   47
 #define LCR_PROGRESS      48
+#define LCR_SAVE_DATA     49
 /* AWG parameters */
-#define GEN_TRIG_MODE_CH1 49
-#define GEN_SIG_TYPE_CH1  50
-#define GEN_ENABLE_CH1    51
-#define GEN_SINGLE_CH1    52
-#define GEN_SIG_AMP_CH1   53
-#define GEN_SIG_FREQ_CH1  54
-#define GEN_SIG_DCOFF_CH1 55
-#define GEN_TRIG_MODE_CH2 56
-#define GEN_SIG_TYPE_CH2  57
-#define GEN_ENABLE_CH2    58
-#define GEN_SINGLE_CH2    59
-#define GEN_SIG_AMP_CH2   60
-#define GEN_SIG_FREQ_CH2  61
-#define GEN_SIG_DCOFF_CH2 62
+#define GEN_TRIG_MODE_CH1 50
+#define GEN_SIG_TYPE_CH1  51
+#define GEN_ENABLE_CH1    52
+#define GEN_SINGLE_CH1    53
+#define GEN_SIG_AMP_CH1   54
+#define GEN_SIG_FREQ_CH1  55
+#define GEN_SIG_DCOFF_CH1 56
+#define GEN_TRIG_MODE_CH2 57
+#define GEN_SIG_TYPE_CH2  58
+#define GEN_ENABLE_CH2    59
+#define GEN_SINGLE_CH2    60
+#define GEN_SIG_AMP_CH2   61
+#define GEN_SIG_FREQ_CH2  62
+#define GEN_SIG_DCOFF_CH2 63
 
 /* Defines from which parameters on are AWG parameters (used in set_param() to
  * trigger update only on needed part - either Oscilloscope or AWG */
-#define PARAMS_AWG_PARAMS 49
+#define PARAMS_AWG_PARAMS 50
 
 /* Output signals */
 #define SIGNALS_NUM   3
