@@ -1282,11 +1282,11 @@
         
         <div class="panel-heading">
             <h4 class="panel-title">
-          <a data-toggle="collapse" href="#freq_sweep">
-            <b>Frequency sweep</b>
+              <a data-toggle="collapse" href="#freq_sweep">
+                <b>Frequency sweep</b>
             </a>
-          </h4>
-          </div>
+            </h4>
+        </div>
         <div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
                     <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
@@ -1392,7 +1392,7 @@
               <div class="form-group">
                 <label for="gen_Yaxis" class="col-xs-4 control-label">Y Axis:</label>
                   <div class="col-xs-4 col-sm-5">
-                          <select class="form-control" id="apply_Yaxis">
+                          <select class="_shunt:form-control" id="apply_Yaxis">
                             <option value="0">|Z|</option>
                             <option value="1">Phase Z</option>
                             <option value="2">|Y|</option>
@@ -1413,6 +1413,42 @@
 
               <div>
                 <button id="btn_start_plot" class="btn btn-primary btn-lg" data-checked="true" onclick="changeData()">Show plot</button>
+              </div>
+
+              </form>
+            </div>
+          </div>
+        </div>
+
+         <div class="panel panel-default">
+
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#plot_meas">
+                Save parameter data
+              </a>
+            </h4>
+          </div>
+
+          <div id="save_data" class="panel-collapse collapse">
+            <div class="panel-body">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+
+
+              <div class="form-group">
+                <div><label id="lb_save_data" class="col-xs-4 control-label"><b>Save data</b></label></div>
+
+                <div class="col-xs-5">
+                  <button id="bt_save_data" class="btn btn-primary btn-lg" data-checked="true" onclick="">Save data</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div><label id="lb_load_data" class="col-xs-4 control-label"><b>Load data</b></label></div>
+
+                <div class="col-xs-5">
+                  <button id="bt_load_data" class="btn btn-primary btn-lg" data-checked="true" onclick="">Load data</button>
+                </div>
               </div>
 
               </form>
