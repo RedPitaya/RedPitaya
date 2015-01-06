@@ -61,7 +61,6 @@ extern "C" {
 /** Buffer too small */
 #define RP_BTS    14
 
-
 ///@}
 
 /**
@@ -474,6 +473,39 @@ int rp_AcqSetTriggerDelayNs(uint64_t time_ns);
 int rp_AcqGetTriggerDelayNs(uint64_t* time_ns);
 
 /**
+ * Sets the trigger threshold value in volts. Makes the trigger when ADC value crosses this value.
+ * @param voltage Threshold value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerLevel(float voltage);
+
+/**
+ * Gets currently set trigger threshold value in volts
+ * @param voltage Current threshold value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerLevel(float* voltage);
+
+/**
+ * Sets the trigger threshold hysteresis value in volts.
+ * Value must be outside to enable the trigger again.
+ * @param voltage Threshold hysteresis value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerHyst(float voltage);
+
+/**
+ * Gets currently set trigger threshold hysteresis value in volts
+ * @param voltage Current threshold hysteresis value for the channel
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerHyst(float* voltage);
+
+/**
  * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya
  * hardware by the LV/HV gain jumpers. LV = 1V; HV = 20V.
  * @param channel Channel A or B
@@ -502,43 +534,6 @@ int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetGainV(rp_channel_t channel, float* voltage);
-
-/**
- * Sets the trigger threshold value for a channel in volts. Makes the trigger when ADC value crosses this value.
- * @param channel The selected channel (A or B)
- * @param voltage Threshold value for the channel
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqSetChannelThreshold(rp_channel_t channel, float voltage);
-
-/**
- * Gets currently set trigger threshold value for a channel in volts
- * @param channel The selected channel (A or B)
- * @param voltage Current threshold value for the channel
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqGetChannelThreshold(rp_channel_t channel, float* voltage);
-
-/**
- * Sets the trigger threshold hysteresis value for a channel in volts.
- * Value must be outside to enable the trigger again.
- * @param channel The selected channel (A or B)
- * @param voltage Threshold hysteresis value for the channel
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqSetChannelThresholdHyst(rp_channel_t channel, float voltage);
-
-/**
- * Gets currently set trigger threshold hysteresis value for a channel in volts
- * @param channel The selected channel (A or B)
- * @param voltage Current threshold hysteresis value for the channel
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqGetChannelThresholdHyst(rp_channel_t channel, float* voltage);
 
 /**
  * Returns current position of ADC write pointer.
