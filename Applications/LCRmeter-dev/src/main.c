@@ -177,7 +177,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * Minimum value - 1
        * Maximum value - 1000
        * Default value - 100  */
-      "lcr_steps", 10, 1, 0, 0, 1000},
+      "lcr_steps", 1000, 1, 0, 0, 1000},
     { /* Start frequency for frequency sweep.
        *    Min value - 200
        *    Max value - 1000000    */
