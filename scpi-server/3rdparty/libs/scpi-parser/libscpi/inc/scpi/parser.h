@@ -39,6 +39,7 @@
 
 #include "scpi/types.h"
 #include "scpi/debug.h"
+#include "types.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -53,11 +54,19 @@ extern "C" {
 
     size_t SCPI_ResultString(scpi_t * context, const char * data);
     size_t SCPI_ResultInt(scpi_t * context, int32_t val);
+    size_t SCPI_ResultUInt(scpi_t * context, uint32_t val);
+    size_t SCPI_ResultLong(scpi_t * context, int64_t val);
+    size_t SCPI_ResultULong(scpi_t * context, uint64_t val);
     size_t SCPI_ResultDouble(scpi_t * context, double val);
     size_t SCPI_ResultText(scpi_t * context, const char * data);
     size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val);
+    size_t SCPI_ResultBufferUInt16(scpi_t * context, const uint16_t *data, uint32_t size);
+    size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size);
 
     scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandatory);
+    scpi_bool_t SCPI_ParamUInt(scpi_t * context, uint32_t * value, scpi_bool_t mandatory);
+    scpi_bool_t SCPI_ParamLong(scpi_t * context, int64_t * value, scpi_bool_t mandatory);
+    scpi_bool_t SCPI_ParamULong(scpi_t * context, uint64_t * value, scpi_bool_t mandatory);
     scpi_bool_t SCPI_ParamDouble(scpi_t * context, double * value, scpi_bool_t mandatory);
     scpi_bool_t SCPI_ParamString(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);
     scpi_bool_t SCPI_ParamText(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);    

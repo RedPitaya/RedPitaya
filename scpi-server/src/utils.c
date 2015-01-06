@@ -13,6 +13,7 @@
  */
 
 #include <strings.h>
+#include <string.h>
 
 #include "utils.h"
 
@@ -150,4 +151,203 @@ int getRpApin(const char *pinStr, rp_apin_t *rpPin) {
 	}
 
 	return 0; // OK
+}
+
+int getRpDecimation(int decimationInt, rp_acq_decimation_t *decimation) {
+	switch (decimationInt) {
+		case 1:
+			*decimation = RP_DEC_1;
+			return RP_OK;
+		case 8:
+			*decimation = RP_DEC_8;
+			return RP_OK;
+		case 64:
+			*decimation = RP_DEC_64;
+			return RP_OK;
+		case 1024:
+			*decimation = RP_DEC_1024;
+			return RP_OK;
+		case 8192:
+			*decimation = RP_DEC_8192;
+			return RP_OK;
+		case 65536:
+			*decimation = RP_DEC_65536;
+			return RP_OK;
+		default:
+			return RP_EOOR;
+	}
+}
+
+
+int getRpDecimationInt(rp_acq_decimation_t decimation, int *decimationInt) {
+	switch (decimation) {
+		case RP_DEC_1:
+			*decimationInt = 1;
+			return RP_OK;
+		case RP_DEC_8:
+			*decimationInt = 8;
+			return RP_OK;
+		case RP_DEC_64:
+			*decimationInt = 64;
+			return RP_OK;
+		case RP_DEC_1024:
+			*decimationInt = 1024;
+			return RP_OK;
+		case RP_DEC_8192:
+			*decimationInt = 8192;
+			return RP_OK;
+		case RP_DEC_65536:
+			*decimationInt = 65536;
+			return RP_OK;
+		default:
+			return RP_EOOR;
+	}
+}
+
+int getRpSamplingRateString(rp_acq_sampling_rate_t decimation, char *decimationString) {
+	switch (decimation) {
+		case RP_SMP_125M:
+			strcpy(decimationString, "125MHz");
+			return RP_OK;
+		case RP_SMP_15_625M:
+			strcpy(decimationString, "15_6MHz");
+			return RP_OK;
+		case RP_SMP_1_953M:
+			strcpy(decimationString, "1_9MHz");
+			return RP_OK;
+		case RP_SMP_122_070K:
+			strcpy(decimationString, "103_8kHz");
+			return RP_OK;
+		case RP_SMP_15_258K:
+			strcpy(decimationString, "15_2kHz");
+			return RP_OK;
+		case RP_SMP_1_907K:
+			strcpy(decimationString, "1_9kHz");
+			return RP_OK;
+		default:
+			return RP_EOOR;
+	}
+}
+
+int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *decimation) {
+	if (strcmp(decimationString, "125MHz") == 0) {
+		*decimation = RP_SMP_125M;
+	}
+	else if (strcmp(decimationString, "15_6MHz") == 0) {
+		*decimation = RP_SMP_15_625M;
+	}
+	else if (strcmp(decimationString, "1_9MHz") == 0) {
+		*decimation = RP_SMP_1_953M;
+	}
+	else if (strcmp(decimationString, "103_8kHz") == 0) {
+		*decimation = RP_SMP_122_070K;
+	}
+	else if (strcmp(decimationString, "15_2kHz") == 0) {
+		*decimation = RP_SMP_15_258K;
+	}
+	else if (strcmp(decimationString, "1_9kHz") == 0) {
+		*decimation = RP_SMP_1_907K;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+
+	int getRpGain(const char *gainStr, rp_pinState_t *state) {
+	if (strcmp(gainStr, "LV") == 0) {
+		*state = RP_LOW;
+	}
+	else if (strcmp(gainStr, "HV") == 0) {
+		*state = RP_HIGH;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+int getRpTriggerSource(const char *sourceStr, rp_acq_trig_src_t *source) {
+	if (strcmp(sourceStr, "DISABLED") == 0) {
+		*source = RP_TRIG_SRC_DISABLED;
+	}
+	else if (strcmp(sourceStr, "NOW") == 0) {
+		*source = RP_TRIG_SRC_NOW;
+	}
+	else if (strcmp(sourceStr, "CH1_PE") == 0) {
+		*source = RP_TRIG_SRC_CHA_PE;
+	}
+	else if (strcmp(sourceStr, "CH1_NE") == 0) {
+		*source = RP_TRIG_SRC_CHA_NE;
+	}
+	else if (strcmp(sourceStr, "CH2_PE") == 0) {
+		*source = RP_TRIG_SRC_CHB_PE;
+	}
+	else if (strcmp(sourceStr, "CH2_NE") == 0) {
+		*source = RP_TRIG_SRC_CHB_NE;
+	}
+	else if (strcmp(sourceStr, "EXT_PE") == 0) {
+		*source = RP_TRIG_SRC_EXT_PE;
+	}
+	else if (strcmp(sourceStr, "EXT_NE") == 0) {
+		*source = RP_TRIG_SRC_EXT_NE;
+	}
+	else if (strcmp(sourceStr, "AWG_PE") == 0) {
+		*source = RP_TRIG_SRC_AWG_PE;
+	}
+	else if (strcmp(sourceStr, "AWG_NE") == 0) {
+		*source = RP_TRIG_SRC_AWG_NE;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString) {
+	switch (source) {
+		case RP_TRIG_SRC_DISABLED:
+			strcpy(triggSourceString, "TD");
+			break;
+		case RP_TRIG_SRC_NOW:
+		case RP_TRIG_SRC_CHA_PE:
+		case RP_TRIG_SRC_CHA_NE:
+		case RP_TRIG_SRC_CHB_PE:
+		case RP_TRIG_SRC_CHB_NE:
+		case RP_TRIG_SRC_EXT_PE:
+		case RP_TRIG_SRC_EXT_NE:
+		case RP_TRIG_SRC_AWG_PE:
+		case RP_TRIG_SRC_AWG_NE:
+			strcpy(triggSourceString, "WAIT");
+		default:
+			return RP_EOOR;
+	}
+	return  RP_OK;
+}
+
+int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit) {
+	if (strcmp(unitString, "VOLTS") == 0) {
+		*unit = RP_SCPI_VOLTS;
+	}
+	else if (strcmp(unitString, "RAW") == 0) {
+		*unit = RP_SCPI_RAW;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format) {
+	if (strcmp(formatString, "FLOAT") == 0) {
+		*format = RP_SCPI_FLAOT;
+	}
+	else if (strcmp(formatString, "ASCII") == 0) {
+		*format = RP_SCPI_ADCII;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
 }

@@ -12,10 +12,7 @@
  * for more details on the language used herein.
  */
 
-#include "scpi-commands.h"
-
 #include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -130,6 +127,42 @@ static const scpi_command_t scpi_commands[] = {
 
         {.pattern = "ANALOG:PIN", .callback = RP_AnalogPinSetValue,},
         {.pattern = "ANALOG:PIN?", .callback = RP_AnalogPinGetValue,},
+
+        /* Acquire */
+        {.pattern = "ACQ:START", .callback = RP_AcqStart,},
+        {.pattern = "ACQ:STOP", .callback = RP_AcqStop,},
+        {.pattern = "ACQ:DEC", .callback = RP_AcqSetDecimation,},
+        {.pattern = "ACQ:DEC?", .callback = RP_AcqGetDecimation,},
+        {.pattern = "ACQ:SRAT", .callback = RP_AcqSetSamplingRate,},
+        {.pattern = "ACQ:SRAT?", .callback = RP_AcqGetSamplingRate,},
+        {.pattern = "ACQ:SRA:HZ?", .callback = RP_AcqGetSamplingRateHz,},
+        {.pattern = "ACQ:AVG", .callback = RP_AcqSetAveraging,},
+        {.pattern = "ACQ:AVG?", .callback = RP_AcqGetAveraging,},
+        {.pattern = "ACQ:TRIG:SRC", .callback = RP_AcqSetTriggerSrc,},
+        {.pattern = "ACQ:TRIG:SRC?", .callback = RP_AcqGetTriggerSrc,},
+        {.pattern = "ACQ:TRIG:DLY", .callback = RP_AcqSetTriggerDelay,},
+        {.pattern = "ACQ:TRIG:DLY?", .callback = RP_AcqGetTriggerDelay,},
+        {.pattern = "ACQ:TRIG:DLY:NS", .callback = RP_AcqSetTriggerDelayNs,},
+        {.pattern = "ACQ:TRIG:DLY:NS?", .callback = RP_AcqGetTriggerDelayNs,},
+        {.pattern = "ACQ:SOUR1GAIN?", .callback = RP_AcqGetChannel1Gain,},
+        {.pattern = "ACQ:SOUR2GAIN?", .callback = RP_AcqGetChannel2Gain,},
+        {.pattern = "ACQ:TRIG:LEV", .callback = RP_AcqSetTriggerLevel,},
+        {.pattern = "ACQ:TRIG:LEV?", .callback = RP_AcqGetTriggerLevel,},
+        {.pattern = "ACQ:WPOS?", .callback = RP_AcqGetWritePointer,},
+        {.pattern = "ACQ:TPOS?", .callback = RP_AcqGetWritePointerAtTrig,},
+        {.pattern = "ACQ:DATA:UNITS", .callback = RP_AcqScpiDataUnits,},
+        {.pattern = "ACQ:DATA:FORMAT", .callback = RP_AcqScpiDataFormat,},
+        {.pattern = "ACQ:SOUR1:DATA:STA:END?", .callback = RP_AcqGetChanel1DataPos,},
+        {.pattern = "ACQ:SOUR2:DATA:STA:END?", .callback = RP_AcqGetChanel2DataPos,},
+        {.pattern = "ACQ:SOUR1:DATA:STA:N?", .callback = RP_AcqGetChanel1Data,},
+        {.pattern = "ACQ:SOUR1:DATA:STA:N?", .callback = RP_AcqGetChanel2Data,},
+        {.pattern = "ACQ:SOUR1:DATA?", .callback = RP_AcqGetChanel1OldestDataAll,},
+        {.pattern = "ACQ:SOUR2:DATA?", .callback = RP_AcqGetChanel2OldestDataAll,},
+        {.pattern = "ACQ:SOUR1:DATA:OLD:N?", .callback = RP_AcqGetChanel1OldestData,},
+        {.pattern = "ACQ:SOUR2:DATA:OLD:N?", .callback = RP_AcqGetChanel2OldestData,},
+        {.pattern = "ACQ:SOUR1:DATA:LAT:N?", .callback = RP_AcqGetChanel1LatestData,},
+        {.pattern = "ACQ:SOUR2:DATA:LAT:N?", .callback = RP_AcqGetChanel2LatestData,},
+
 
     //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
 

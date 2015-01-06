@@ -36,6 +36,7 @@ OBJECTS =	scpi-commands.o \
 			scpi-server.o \
 			dpin.o \
 			apin.o \
+			acquire.o \
 			utils.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
