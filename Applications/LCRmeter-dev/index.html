@@ -467,6 +467,27 @@
   //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
   function updateTimeUnits(new_params) {
 
+    
+    /* Load new param data */
+    if(params.local.lcr_save_data == 3){
+      document.getElementById("gen_fs_Sfreq").value = params.local.start_freq;
+
+      document.getElementById('gen_amp').value = params.local.gen_amp;
+      document.getElementById('gen_avg').value = params.local.gen_avg;
+      document.getElementById('gen_DC_bias').value = params.local.gen_DC_bias;;
+      document.getElementById('gen_R_shunt').value = params.local.gen_R_shunt;
+
+      document.getElementById('gen_fs_step').value = params.local.lcr_steps;
+      document.getElementById('gen_fs_Efreq').value = params.local.end_freq;
+      document.getElementById('gen_fs_LoadIm').value = params.local.gen_fs_LoadIm;
+      document.getElementById('gen_fs_LoadRe').value = params.local.gen_fs_LoadRe;  
+
+      params.local.lcr_save_data = 0;
+      sendParams();
+      
+    }
+    
+
     if(params.local.start_measure == 0){
       lcr_modal.hidePleaseWait();
       var show_lcr_channel = $('#btn_ch1');
@@ -1022,6 +1043,38 @@
     lcr_modal.hidePleaseWait();
   }
 
+  function saveData(){
+    params.local.lcr_save_data = 1;
+
+    var amp = parseLocalFloat(document.getElementById('gen_amp').value);
+    var avg = parseLocalFloat(document.getElementById('gen_avg').value);
+    var dc_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
+    var R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
+
+    var fs_Sfreq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
+    var fs_Efreq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
+    var fs_LoadIm = parseLocalFloat(document.getElementById('gen_fs_LoadIm').value);
+    var fs_LoadRe = parseLocalFloat(document.getElementById('gen_fs_LoadRe').value);
+
+    params.local.gen_amp = amp;
+    params.local.gen_avg = avg;
+    params.local.gen_DC_bias = dc_bias;
+    params.local.gen_R_shunt = R_shunt;
+    params.local.start_freq = fs_Sfreq;
+    params.local.end_freq = fs_Efreq;
+    params.local.gen_fs_LoadRe = fs_LoadRe;
+    params.local.gen_fs_LoadIm = fs_LoadIm;  
+      
+    sendParams();
+  }
+
+  function loadData(){
+    /* We want to load all the saved parameters */
+    params.local.lcr_save_data = 2;
+    sendParams();
+
+  }
+
   /*
   function append_table(params){
     for(var i=0; i < params; i++){
@@ -1289,7 +1342,7 @@
         </div>
         <div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
-                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
+                    <label for="gen_fs_Sfreqa" class="col-xs-4 control-label">Start frequency:</label>
                     <div class="col-xs-5">
                       <input type="number" autocomplete="off" class="form-control" value="200" id="gen_fs_Sfreq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
@@ -1439,7 +1492,7 @@
                 <div><label id="lb_save_data" class="col-xs-4 control-label"><b>Save data</b></label></div>
 
                 <div class="col-xs-5">
-                  <button id="bt_save_data" class="btn btn-primary btn-lg" data-checked="true" onclick="">Save data</button>
+                  <button id="bt_save_data" class="btn btn-primary btn-lg" data-checked="true" onclick="saveData()">Save data</button>
                 </div>
               </div>
 
@@ -1447,7 +1500,7 @@
                 <div><label id="lb_load_data" class="col-xs-4 control-label"><b>Load data</b></label></div>
 
                 <div class="col-xs-5">
-                  <button id="bt_load_data" class="btn btn-primary btn-lg" data-checked="true" onclick="">Load data</button>
+                  <button id="bt_load_data" class="btn btn-primary btn-lg" data-checked="true" onclick="loadData()">Load data</button>
                 </div>
               </div>
 
