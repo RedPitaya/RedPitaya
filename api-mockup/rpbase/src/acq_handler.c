@@ -453,6 +453,17 @@ int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
     return osc_GetTriggerSource(source);
 }
 
+int acq_GetTriggerState(rp_acq_trig_state_t* state)
+{
+    rp_acq_trig_src_t source;
+    ECHECK(osc_GetTriggerSource(&source));
+
+    if (source != RP_TRIG_SRC_DISABLED) {
+        return RP_TRIG_STATE_WAITING;
+    }
+    return RP_TRIG_STATE_TRIGGERED;
+}
+
 int acq_SetTriggerDelay(uint32_t decimated_data_num, bool updateMaxValue)
 {
     if (decimated_data_num > ADC_BUFFER_SIZE) {
