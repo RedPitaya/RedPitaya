@@ -61,6 +61,7 @@ scpi_result_t RP_AcqGetChanel1OldestData(scpi_t * context);
 scpi_result_t RP_AcqGetChanel2OldestData(scpi_t * context);
 scpi_result_t RP_AcqGetChanel1LatestData(scpi_t * context);
 scpi_result_t RP_AcqGetChanel2LatestData(scpi_t * context);
+scpi_result_t RP_AcqGetBufferSize(scpi_t * context);
 
 scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t * context);

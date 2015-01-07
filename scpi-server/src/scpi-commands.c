@@ -162,6 +162,8 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:SOUR2:DATA:OLD:N?", .callback = RP_AcqGetChanel2OldestData,},
         {.pattern = "ACQ:SOUR1:DATA:LAT:N?", .callback = RP_AcqGetChanel1LatestData,},
         {.pattern = "ACQ:SOUR2:DATA:LAT:N?", .callback = RP_AcqGetChanel2LatestData,},
+        {.pattern = "ACQ:BUF:SIZE?", .callback = RP_AcqGetBufferSize,},
+
 
 
     //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},

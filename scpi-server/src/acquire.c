@@ -119,7 +119,7 @@ scpi_result_t RP_AcqSetSamplingRate(scpi_t *context) {
     // Convert samplingRate to rp_acq_sampling_rate_t
     rp_acq_sampling_rate_t samplingRate;
     if (getRpSamplingRate(samplingRateStr, &samplingRate)) {
-        syslog(LOG_ERR, "*ACQ:SRAT parameter samplingRate is invalid.");
+        syslog(LOG_ERR, "*ACQ:SRAT parameter sampling rate is invalid.");
         return SCPI_RES_ERR;
     }
 
@@ -318,38 +318,38 @@ scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
 scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t *context) {
     uint64_t triggerDelay;
 
-    // read first parameter TRIGGER DELAY Ns (value in ns)
+    // read first parameter TRIGGER DELAY ns (value in ns)
     if (!SCPI_ParamULong(context, &triggerDelay, false)) {
         triggerDelay = 0;
     }
 
-    // Now set the trigger delay
+    // Now set the trigger delay in ns
     int result = rp_AcqSetTriggerDelayNs(triggerDelay);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:DLY:NS Failed to set trigger delay: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TRIG:DLY:NS Failed to set trigger delay in ns: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS Successfully set trigger delay to %lu.", (unsigned long)triggerDelay);
+    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS Successfully set trigger delay to %lu ns.", (unsigned long)triggerDelay);
 
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
-    // get trigger delay Ns
+    // get trigger delay ns
     uint64_t value;
     int result = rp_AcqGetTriggerDelayNs(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:DLY:NS? Failed to get trigger delay: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TRIG:DLY:NS? Failed to get trigger delay in ns: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultULong(context, value);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS? Successfully returned trigger delay.");
+    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS? Successfully returned trigger delay in ns.");
 
     return SCPI_RES_OK;
 }
@@ -389,14 +389,14 @@ scpi_result_t RP_AcqGetTriggerLevel(scpi_t *context) {
     int result = rp_AcqGetTriggerLevel(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:LEV? Failed to get trigger delay: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TRIG:LEV? Failed to get trigger level: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:LEV? Successfully returned trigger delay.");
+    syslog(LOG_INFO, "*ACQ:TRIG:LEV? Successfully returned trigger level.");
 
     return SCPI_RES_OK;
 }
@@ -425,14 +425,14 @@ scpi_result_t RP_AcqGetWritePointerAtTrig(scpi_t *context) {
     int result = rp_AcqGetWritePointerAtTrig(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:WPOS? Failed to get writer position at trigger: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TPOS? Failed to get writer position at trigger: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultUInt(context, value);
 
-    syslog(LOG_INFO, "*ACQ:WPOS? Successfully returned writer position at trigger.");
+    syslog(LOG_INFO, "*ACQ:TPOS? Successfully returned writer position at trigger.");
 
     return SCPI_RES_OK;
 }
@@ -529,7 +529,21 @@ scpi_result_t RP_AcqGetChanel2OldestDataAll(scpi_t *context) {
     return RP_AcqGetOldestDataAll(RP_CH_B, context);
 }
 
+scpi_result_t RP_AcqGetBufferSize(scpi_t *context) {
+    uint32_t size;
+    int result = rp_AcqGetBufSize(&size);
 
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*ACQ:BUF:SIZE? Failed to get buffer size: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultUInt(context, size);
+
+    syslog(LOG_INFO, "*ACQ:BUF:SIZE?? Successfully returned buffer size.");
+
+    return SCPI_RES_OK;
+}
 
 scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
     const char * param;
@@ -610,13 +624,13 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
     uint32_t start, size;
     // read first parameter START POSITION
     if (!SCPI_ParamUInt(context, &start, true)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? is missing first parameter.");
+        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:N? is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
     // read second parameter SIZE
     if (!SCPI_ParamUInt(context, &size, true)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? is missing second parameter.");
+        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:N? is missing second parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -626,7 +640,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
         result = rp_AcqGetDataV(channel, start, &size, buffer);
 
         if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get trigger delay: %s", rp_GetError(result));
+            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:N? Failed to get data in volts: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
 
@@ -638,7 +652,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
         result = rp_AcqGetDataRaw(channel, start, &size, buffer);
 
         if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get trigger delay: %s", rp_GetError(result));
+            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:N? Failed to get raw data: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
 
@@ -646,7 +660,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferUInt16(context, buffer, size);
     }
 
-    syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:STA:END? Successfully returned trigger delay.");
+    syslog(LOG_INFO, "ACQ:SOUR<n>:DATA:STA:N? Successfully returned data.");
 
     return SCPI_RES_OK;
 }
@@ -711,7 +725,7 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
         result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
 
         if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get dataPos: %s", rp_GetError(result));
+            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get data at position: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
 
@@ -723,7 +737,7 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
         result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
 
         if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get dataPos: %s", rp_GetError(result));
+            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get data at position: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
 
@@ -731,42 +745,47 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferUInt16(context, buffer, size);
     }
 
-    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned dataPosy.");
+    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.");
 
     return SCPI_RES_OK;
 }
 
 
 scpi_result_t RP_AcqGetOldestDataAll(rp_channel_t channel, scpi_t *context) {
-    return SCPI_RES_ERR;
-    /*int result;
-    uint32_t size = rp_AcqGetBufSize()//TODO;
+    int result;
+    uint32_t size;
+    result = rp_AcqGetBufSize(&size);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA? Failed to get buffer size: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
     if (unit == RP_SCPI_VOLTS) {
         float buffer[size];
         result = rp_AcqGetOldestDataV(channel, &size, buffer);
 
         if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get oldest data: %s", rp_GetError(result));
+            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA? Failed to get all oldest data: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
 
         // Return back result
-        SCPI_ResultBuffer(context, buffer, size);
+        SCPI_ResultBufferFloat(context, buffer, size);
     }
     else {
         uint16_t buffer[size];
         result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
 
         if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get oldest data: %s", rp_GetError(result));
+            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA? Failed to get all oldest data: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
 
         // Return back result
-        SCPI_ResultBuffer(context, buffer, size);
+        SCPI_ResultBufferUInt16(context, buffer, size);
     }
 
-    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned oldest data.");
+    syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA? Successfully returned all oldest data.");
 
-    return SCPI_RES_OK;*/
+    return SCPI_RES_OK;
 }
