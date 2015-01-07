@@ -59,6 +59,7 @@ int acq_GetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buff
 int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
+int acq_GetBufferSize(uint32_t *size);
 
 int acq_SetDefault();
 
