@@ -32,6 +32,7 @@ int acq_SetAveraging(bool enable);
 int acq_GetAveraging(bool* enable);
 int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
+int acq_GetTriggerState(rp_acq_trig_state_t* state);
 int acq_SetTriggerDelay(uint32_t decimated_data_num, bool updateMaxValue);
 int acq_GetTriggerDelay(uint32_t* decimated_data_num);
 int acq_SetTriggerDelayNs(uint64_t time_ns, bool updateMaxValue);

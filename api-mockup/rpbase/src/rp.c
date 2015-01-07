@@ -219,6 +219,11 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
     return acq_GetTriggerSrc(source);
 }
 
+int rp_AcqGetTriggerState(rp_acq_trig_state_t* state)
+{
+    return acq_GetTriggerState(state);
+}
+
 int rp_AcqSetTriggerDelay(uint32_t decimated_data_num)
 {
     return acq_SetTriggerDelay(decimated_data_num, false);
