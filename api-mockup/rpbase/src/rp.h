@@ -188,6 +188,15 @@ typedef enum {
 
 
 /**
+ * Type representing different trigger states.
+ */
+typedef enum {
+    RP_TRIG_STATE_TRIGGERED, //!< Trigger is triggered/disabled
+    RP_TRIG_STATE_WAITING,   //!< Trigger is set up and waiting (to be triggered)
+} rp_acq_trig_state_t;
+
+
+/**
  * Calibration parameters, stored in the EEPROM device
  */
 typedef struct {
@@ -438,6 +447,15 @@ int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source);
+
+/**
+ * Returns the trigger state. Either it is waiting for a trigger to happen, or it has already been triggered.
+ * By default it is in the triggered state, which is treated the same as disabled.
+ * @param state Trigger state
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerState(rp_acq_trig_state_t* state);
 
 /**
  * Sets the number of decimated data after trigger written into memory.
