@@ -339,6 +339,9 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
     return acq_GetLatestDataV(channel, size, buffer);
 }
 
+int rp_AcqGetBufSize(uint32_t *size) {
+    return acq_GetBufferSize(size);
+}
 
 /**
  * Health methods

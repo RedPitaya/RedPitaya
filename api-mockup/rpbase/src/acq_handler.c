@@ -774,6 +774,10 @@ int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 }
 
 
+int acq_GetBufferSize(uint32_t *size) {
+    *size = ADC_BUFFER_SIZE;
+    return RP_OK;
+}
 
 /**
  * Sets default configuration
@@ -784,4 +788,3 @@ int acq_SetDefault() {
     ECHECK(acq_SetGain(RP_CH_B, RP_LOW));
     return RP_OK;
 }
-
