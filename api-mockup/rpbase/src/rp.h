@@ -668,6 +668,9 @@ int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
  */
 int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
+
+int rp_AcqGetBufSize(uint32_t* size);
+
 ///@}
 
 
