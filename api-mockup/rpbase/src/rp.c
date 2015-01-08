@@ -294,9 +294,9 @@ int rp_AcqStart()
     return acq_Start();
 }
 
-int rp_AcqStop()
+int rp_AcqReset()
 {
-    return acq_Stop();
+    return acq_Reset();
 }
 
 uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos)

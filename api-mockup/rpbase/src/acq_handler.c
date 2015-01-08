@@ -635,9 +635,9 @@ int acq_Start()
     return osc_WriteDataIntoMemory(true);
 }
 
-int acq_Stop()
+int acq_Reset()
 {
-    return osc_WriteDataIntoMemory(false);
+    return osc_ResetWriteStateMachine();
 }
 
 static const volatile uint32_t* getRawBuffer(rp_channel_t channel)

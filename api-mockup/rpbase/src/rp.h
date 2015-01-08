@@ -577,11 +577,11 @@ int rp_AcqGetWritePointerAtTrig(uint32_t* pos);
 int rp_AcqStart();
 
 /**
- * Stops the acquire. Writing acquired data into memory stops.
+ * Resets the acquire writing state machine.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqStop();
+int rp_AcqReset();
 
 /**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
