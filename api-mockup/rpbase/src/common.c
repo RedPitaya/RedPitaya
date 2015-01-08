@@ -112,6 +112,69 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
     return RP_OK;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief Calibrates ADC/DAC/Buffer counts and checks for limits
+ *
+ * Function is used to publish captured signal data to external world in calibrated +- units.
+ * Calculation is based on ADC/DAC inputs and calibrated and user defined DC offsets.
+ *
+ * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
+ * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
+ * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
+ * @retval Calibrated counts
+ */
+
+int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
+{
+    int32_t m;
+
+    /* check sign */
+    if(cnts & (1 << (field_len - 1))) {
+        /* negative number */
+        m = -1 *((cnts ^ ((1 << field_len) - 1)) + 1);
+    } else {
+        /* positive number */
+        m = cnts;
+    }
+
+    /* adopt ADC count with calibrated DC offset */
+    m += calib_dc_off;
+
+    /* check limits */
+    if(m < (-1 * (1 << (field_len - 1))))
+        m = (-1 * (1 << (field_len - 1)));
+    else if(m > (1 << (field_len - 1)))
+        m = (1 << (field_len - 1));
+
+    return m;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief Converts ADC/DAC/Buffer counts to voltage [V]
+ *
+ * Function is used to publish captured signal data to external world in user units.
+ * Calculation is based on maximal voltage, which can be applied on ADC/DAC inputs and
+ * calibrated and user defined DC offsets.
+ *
+ * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
+ * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
+ * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+ * @param[in] user_dc_off User specified DC offset, specified in [V]
+ * @retval float Signal Value, expressed in user units [V]
+ */
+
+float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float user_dc_off)
+{
+    /* map ADC counts into user units */
+    float ret_val = (calib_cnts * adc_max_v / (float)(1 << (field_len - 1)));
+
+    /* and adopt the calculation with user specified DC offset */
+    ret_val += user_dc_off;
+
+    return ret_val;
+}
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -131,32 +194,8 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
 
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int calib_dc_off, float user_dc_off)
 {
-    int m;
-    float ret_val;
-    /* check sign */
-    if(cnts & (1 << (field_len - 1))) {
-        /* negative number */
-        m = -1 *((cnts ^ ((1 << field_len) - 1)) + 1);
-    } else {
-        /* positive number */
-        m = cnts;
-    }
-
-    /* adopt ADC count with calibrated DC offset */
-    m += calib_dc_off;
-
-    /* map ADC counts into user units */
-    if(m < (-1 * (1 << (field_len - 1))))
-        m = (-1 * (1 << (field_len - 1)));
-    else if(m > (1 << (field_len - 1)))
-        m = (1 << (field_len - 1));
-
-    ret_val = (m * adc_max_v / (float)(1 << (field_len - 1)));
-
-    /* and adopt the calculation with user specified DC offset */
-    ret_val += user_dc_off;
-
-    return ret_val;
+    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, calib_dc_off);
+    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, user_dc_off);
 }
 
 /**
