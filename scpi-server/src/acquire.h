@@ -29,7 +29,7 @@ typedef enum {
 } rp_scpi_acq_format_t;
 
 scpi_result_t RP_AcqStart(scpi_t * context);
-scpi_result_t RP_AcqStop(scpi_t * context);
+scpi_result_t RP_AcqReset(scpi_t * context);
 scpi_result_t RP_AcqSetDecimation(scpi_t * context);
 scpi_result_t RP_AcqGetDecimation(scpi_t * context);
 scpi_result_t RP_AcqSetSamplingRate(scpi_t * context);

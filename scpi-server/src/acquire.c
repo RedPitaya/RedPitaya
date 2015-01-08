@@ -38,15 +38,15 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqStop(scpi_t *context) {
-    int result = rp_AcqStop();
+scpi_result_t RP_AcqReset(scpi_t *context) {
+    int result = rp_AcqReset();
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:STOP Failed: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:RST Failed: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:STOP Successful.");
+    syslog(LOG_INFO, "*ACQ:RST Successful.");
     return SCPI_RES_OK;
 }
 
@@ -602,7 +602,7 @@ scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferFloat(context, buffer, size);
     }
     else {
-        uint16_t buffer[size];
+        int16_t buffer[size];
         result = rp_AcqGetLatestDataRaw(channel, &size, buffer);
 
         if (RP_OK != result) {
@@ -611,7 +611,7 @@ scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
         }
 
         // Return back result
-        SCPI_ResultBufferUInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size);
     }
 
     syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned  latest data.");
@@ -648,7 +648,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferFloat(context, buffer, size);
     }
     else {
-        uint16_t buffer[size];
+        int16_t buffer[size];
         result = rp_AcqGetDataRaw(channel, start, &size, buffer);
 
         if (RP_OK != result) {
@@ -657,7 +657,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
         }
 
         // Return back result
-        SCPI_ResultBufferUInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size);
     }
 
     syslog(LOG_INFO, "ACQ:SOUR<n>:DATA:STA:N? Successfully returned data.");
@@ -687,7 +687,7 @@ scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferFloat(context, buffer, size);
     }
     else {
-        uint16_t buffer[size];
+        int16_t buffer[size];
         result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
 
         if (RP_OK != result) {
@@ -696,7 +696,7 @@ scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t *context) {
         }
 
         // Return back result
-        SCPI_ResultBufferUInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size);
     }
 
     syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:OLD:N? Successfully returned oldest data.");
@@ -733,7 +733,7 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferFloat(context, buffer, size);
     }
     else {
-        uint16_t buffer[size];
+        int16_t buffer[size];
         result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
 
         if (RP_OK != result) {
@@ -742,7 +742,7 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
         }
 
         // Return back result
-        SCPI_ResultBufferUInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size);
     }
 
     syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.");
@@ -773,7 +773,7 @@ scpi_result_t RP_AcqGetOldestDataAll(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferFloat(context, buffer, size);
     }
     else {
-        uint16_t buffer[size];
+        int16_t buffer[size];
         result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
 
         if (RP_OK != result) {
@@ -782,7 +782,7 @@ scpi_result_t RP_AcqGetOldestDataAll(rp_channel_t channel, scpi_t *context) {
         }
 
         // Return back result
-        SCPI_ResultBufferUInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size);
     }
 
     syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA? Successfully returned all oldest data.");
