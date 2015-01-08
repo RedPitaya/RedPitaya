@@ -22,72 +22,7 @@ const char HEALTH_OIN_NAME[11][20]={
         "AO3(0-1.8V)",
 };
 
-int main(int argc, char **argv) {
 
-    int result;
-
-    printf("APP START\n");
-
-    printf("Library version: %s\n", rp_GetVersion());
-
-    result = rp_Init();
-    printf("Initializing library: %s\n", rp_GetError(result));
-
-    result = rp_AcqSetTriggerLevel (-0.41);
-    printf("Set CHA threshold: %s\n", rp_GetError(result));
-
-    float thr;
-    result = rp_AcqGetTriggerLevel(&thr);
-    printf("Get CHA threshold: %s. Result = %f\n", rp_GetError(result), thr);
-
-    uint32_t pos1;
-    result = rp_AcqGetWritePointer (&pos1);
-    printf("Get Write Pointer: %s. Result = %d\n", rp_GetError(result), pos1);
-
-    result = rp_AcqStart();
-    printf("Acquire start: %s\n", rp_GetError(result));
-
-    usleep(1000 * 1000);
-
-
-
-    result = rp_AcqStop();
-    printf("Acquire stop: %s\n", rp_GetError(result));
-
-    result = rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
-    printf("Acquire Trigger NOW: %s\n", rp_GetError(result));
-
-    uint32_t pos2;
-    result = rp_AcqGetWritePointer (&pos2);
-    printf("Get Write Pointer: %s. Result = %d\n", rp_GetError(result), pos2);
-
-    usleep(100 * 1000);
-
-    result = rp_AcqGetWritePointer (&pos2);
-    printf("Get Write Pointer: %s. Result = %d\n", rp_GetError(result), pos2);
-
-    usleep(100 * 1000);
-
-    result = rp_AcqGetWritePointer (&pos2);
-    printf("Get Write Pointer: %s. Result = %d\n", rp_GetError(result), pos2);
-
-    uint32_t size = 20;
-    float* buffer = malloc(20 * sizeof(float));
-    result = rp_AcqGetLatestDataV (RP_CH_A, &size, buffer);
-    printf("Retrieved buffer: %s\n", rp_GetError(result));
-
-    for (int k = 0; k < 20; ++k) {
-        printf("%f\n", buffer[k]);
-    }
-
-    result = rp_Release();
-    printf("Releasing library: %s\n", rp_GetError(result));
-    return 0;
-}
-
-
-
-/*
 int main(int argc, char **argv) {
 
 	int result;
@@ -216,4 +151,4 @@ int main(int argc, char **argv) {
 	printf("Releasing library: %s\n", rp_GetError(result));
     return 0;
 }
-*/
+
