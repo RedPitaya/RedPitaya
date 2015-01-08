@@ -671,7 +671,7 @@ uint32_t acq_GetNormalizedDataPos(uint32_t pos)
     return (pos % ADC_BUFFER_SIZE);
 }
 
-int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, uint16_t* buffer)
+int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer)
 {
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
@@ -685,7 +685,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, uint16_t*
     return RP_OK;
 }
 
-int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, uint16_t* buffer, uint32_t *buffer_size)
+int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size)
 {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
 
@@ -700,7 +700,7 @@ int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 /**
  * Use only when write pointer has stopped...
  */
-int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
+int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     uint32_t pos;
 
@@ -710,7 +710,7 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
-int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer)
+int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
