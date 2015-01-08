@@ -471,7 +471,7 @@ size_t SCPI_ResultText(scpi_t * context, const char * data) {
 }
 
 
-size_t SCPI_ResultBufferUInt16(scpi_t * context, const uint16_t *data, uint32_t size) {
+size_t SCPI_ResultBufferInt16(scpi_t * context, const int16_t *data, uint32_t size) {
     size_t result = 0;
     result += writeDelimiter(context);
     result += writeData(context, "{", 1);

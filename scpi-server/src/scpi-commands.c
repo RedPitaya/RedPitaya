@@ -130,7 +130,7 @@ static const scpi_command_t scpi_commands[] = {
 
         /* Acquire */
         {.pattern = "ACQ:START", .callback = RP_AcqStart,},
-        {.pattern = "ACQ:STOP", .callback = RP_AcqStop,},
+        {.pattern = "ACQ:RST", .callback = RP_AcqReset,},
         {.pattern = "ACQ:DEC", .callback = RP_AcqSetDecimation,},
         {.pattern = "ACQ:DEC?", .callback = RP_AcqGetDecimation,},
         {.pattern = "ACQ:SRAT", .callback = RP_AcqSetSamplingRate,},
