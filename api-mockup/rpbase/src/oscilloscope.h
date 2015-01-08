@@ -30,6 +30,7 @@ int osc_GetAveraging(bool* enable);
 int osc_SetTriggerSource(uint32_t source);
 int osc_GetTriggerSource(uint32_t* source);
 int osc_WriteDataIntoMemory(bool enable);
+int osc_ResetWriteStateMachine();
 int osc_SetThresholdChA(uint32_t threshold);
 int osc_GetThresholdChA(uint32_t* threshold);
 int osc_SetThresholdChB(uint32_t threshold);
