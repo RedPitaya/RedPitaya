@@ -48,9 +48,6 @@ static const uint64_t ADC_SAMPLE_PERIOD = 8;
 /* @brief Number of ADC acquisition bits. */
 static const int ADC_BITS = 14;
 
-/* @brief Number of ADC buffer bits. */
-static const int ADC_BUFFER_BITS = 16;
-
 /* @brief Currently set Gain state */
 static rp_pinState_t gain_ch_a = RP_LOW;
 static rp_pinState_t gain_ch_b = RP_LOW;
@@ -676,10 +673,17 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
+    uint32_t cnts;
+
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
+    rp_calib_params_t calib = calib_GetParams();
+    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+
     for (uint32_t i = 0; i < (*size); ++i) {
-        buffer[i] = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
+        cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS;
+
+        buffer[i] = cmn_CalibCnts(ADC_BITS, cnts, dc_offs);
     }
 
     return RP_OK;
@@ -740,7 +744,7 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
-        buffer[i] = cmn_CnvCntToV(ADC_BUFFER_BITS, cnts, gain, dc_offs, 0.0);
+        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
     }
 
     return RP_OK;
