@@ -601,7 +601,7 @@ uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, uint16_t* buffer, uint32_t *buffer_size);
+int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
 
 /**
  * Returns the ADC buffer in Volt units from start to end position.
@@ -626,7 +626,7 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, uint16_t* buffer);
+int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
@@ -638,7 +638,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, uint16
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer);
+int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the latest ADC buffer samples in raw units.
@@ -649,7 +649,7 @@ int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffe
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, uint16_t* buffer);
+int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the ADC buffer in Volt units from specified position and desired size.
