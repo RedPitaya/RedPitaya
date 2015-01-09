@@ -198,7 +198,7 @@ static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF; // (32 bits)
 static const uint32_t WRITE_POINTER_MASK = 0x3FFF;  // (14 bits)
 static const uint32_t EQ_FILTER_AA = 0x3FFFF;       // (18 bits)
 static const uint32_t EQ_FILTER   = 0x1FFFFFF;      // (25 bits)
-static const uint32_t RST_WR_ST_MCH_MASK = 0x1;     // (1 bit)
+static const uint32_t RST_WR_ST_MCH_MASK = 0x2;     // (1st bit)
 
 
 /**
