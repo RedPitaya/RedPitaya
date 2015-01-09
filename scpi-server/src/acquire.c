@@ -259,7 +259,7 @@ scpi_result_t RP_AcqGetTriggerSrc(scpi_t *context) {
 
     if (RP_OK != result) {
         syslog(LOG_ERR, "*ACQ:TRIG:SRC? Failed to get trigger source: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
+        source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
     char sourceString[15];
@@ -354,12 +354,20 @@ scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetChannel1Gain(scpi_t *context) {
+scpi_result_t RP_AcqSetChannel1Gain(scpi_t *context) {
     return RP_AcqSetGain(RP_CH_A, context);
 }
 
-scpi_result_t RP_AcqGetChannel2Gain(scpi_t *context) {
+scpi_result_t RP_AcqSetChannel2Gain(scpi_t *context) {
     return RP_AcqSetGain(RP_CH_B, context);
+}
+
+scpi_result_t RP_AcqGetChannel1Gain(scpi_t *context) {
+    return RP_AcqGetGain(RP_CH_A, context);
+}
+
+scpi_result_t RP_AcqGetChannel2Gain(scpi_t *context) {
+    return RP_AcqGetGain(RP_CH_B, context);
 }
 
 scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context) {
@@ -370,6 +378,7 @@ scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context) {
         syslog(LOG_ERR, "*ACQ:TRIG:LEV is missing first parameter.");
         return SCPI_RES_ERR;
     }
+    value = value / 1000.0;     // convert to to volts
 
     // Now set threshold
     int result = rp_AcqSetTriggerLevel((float) value);
@@ -392,7 +401,7 @@ scpi_result_t RP_AcqGetTriggerLevel(scpi_t *context) {
         syslog(LOG_ERR, "*ACQ:TRIG:LEV? Failed to get trigger level: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
+    value = value * 1000;       // convert to milli volts
     // Return back result
     SCPI_ResultDouble(context, value);
 
@@ -576,6 +585,23 @@ scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*ACQ:SOUR<n>:GAIN Successfully set gain %s.", gainString);
+
+    return SCPI_RES_OK;
+}
+
+
+scpi_result_t RP_AcqGetGain(rp_channel_t channel, scpi_t *context) {
+    rp_pinState_t state;
+    int result = rp_AcqGetGain(channel, &state);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:LAT:N? Failed to get latest data: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultString(context, state == RP_HIGH ? "HV" : "LV");
+
+    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned  latest data.");
 
     return SCPI_RES_OK;
 }

@@ -43,6 +43,8 @@ scpi_result_t RP_AcqSetTriggerDelay(scpi_t * context);
 scpi_result_t RP_AcqGetTriggerDelay(scpi_t * context);
 scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t * context);
 scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t * context);
+scpi_result_t RP_AcqSetChannel1Gain(scpi_t * context);
+scpi_result_t RP_AcqSetChannel2Gain(scpi_t * context);
 scpi_result_t RP_AcqGetChannel1Gain(scpi_t * context);
 scpi_result_t RP_AcqGetChannel2Gain(scpi_t * context);
 scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context);
@@ -63,7 +65,8 @@ scpi_result_t RP_AcqGetChanel1LatestData(scpi_t * context);
 scpi_result_t RP_AcqGetChanel2LatestData(scpi_t * context);
 scpi_result_t RP_AcqGetBufferSize(scpi_t * context);
 
-scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context);
+scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t * context);
+scpi_result_t RP_AcqGetGain(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_AcqGetOldestDataAll(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t * context);
