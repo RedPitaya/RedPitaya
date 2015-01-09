@@ -37,7 +37,11 @@ int getRpGain(const char *gainStr, rp_pinState_t *state);
 int getRpTriggerSource(const char *sourceStr, rp_acq_trig_src_t *source);
 int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString);
 
+int getRpWaveform(const char *waveformString, rp_waveform_t *waveform);
+int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource);
+
 int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit);
 int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format);
+
 
 #endif /* UTILS_H_ */

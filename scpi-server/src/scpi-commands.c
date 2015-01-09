@@ -21,6 +21,7 @@
 #include "utils.h"
 #include "dpin.h"
 #include "apin.h"
+#include "generate.h"
 
 /**
  * Interface general commands
@@ -166,7 +167,32 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:SOUR2:DATA:LAT:N?", .callback = RP_AcqGetChanel2LatestData,},
         {.pattern = "ACQ:BUF:SIZE?", .callback = RP_AcqGetBufferSize,},
 
-
+        /* Generate */
+        {.pattern = "OUTPUT1:STATE", .callback = RP_GenChannel1SetState,},
+        {.pattern = "OUTPUT2:STATE", .callback = RP_GenChannel2SetState,},
+        {.pattern = "SOUR1:FREQ:FIX", .callback = RP_GenChannel1SetFrequency,},
+        {.pattern = "SOUR2:FREQ:FIX", .callback = RP_GenChannel2SetFrequency,},
+        {.pattern = "SOUR1:FUNC", .callback = RP_GenChannel1SetWaveForm,},
+        {.pattern = "SOUR2:FUNC", .callback = RP_GenChannel2SetWaveForm,},
+        {.pattern = "SOUR1:VOLT", .callback = RP_GenChannel1SetAmplitude,},
+        {.pattern = "SOUR2:VOLT", .callback = RP_GenChannel2SetAmplitude,},
+        {.pattern = "SOUR1:VOLT:OFFS", .callback = RP_GenChannel1SetOffset,},
+        {.pattern = "SOUR2:VOLT:OFFS", .callback = RP_GenChannel2SetOffset,},
+        {.pattern = "SOUR1:PHAS", .callback = RP_GenChannel1SetPhase,},
+        {.pattern = "SOUR2:PHAS", .callback = RP_GenChannel2SetPhase,},
+        {.pattern = "SOUR1:DCYC", .callback = RP_GenChannel1SetDutyCycle,},
+        {.pattern = "SOUR2:DCYC", .callback = RP_GenChannel2SetDutyCycle,},
+        {.pattern = "SOUR1:TRAC:DATA:DATA", .callback = RP_GenChannel1SetArbitraryWaveForm,},
+        {.pattern = "SOUR2:TRAC:DATA:DATA", .callback = RP_GenChannel2SetArbitraryWaveForm,},
+        {.pattern = "SOUR1:BURS:STAT", .callback = RP_GenChannel1SetGenerateMode,},
+        {.pattern = "SOUR2:BURS:STAT", .callback = RP_GenChannel2SetGenerateMode,},
+        {.pattern = "SOUR1:BURS:NCYC", .callback = RP_GenChannel1SetBurstCount,},
+        {.pattern = "SOUR2:BURS:NCYC", .callback = RP_GenChannel2SetBurstCount,},
+        {.pattern = "SOUR1:TRIG:SOUR", .callback = RP_GenChannel1SetTriggerSource,},
+        {.pattern = "SOUR2:TRIG:SOUR", .callback = RP_GenChannel2SetTriggerSource,},
+        {.pattern = "SOUR1:TRIG:IMM", .callback = RP_GenChannel1SetTrigger,},
+        {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2SetTrigger,},
+        {.pattern = "TRIG:IMM", .callback = RP_GenChannel3SetTrigger,},
 
     //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
 
