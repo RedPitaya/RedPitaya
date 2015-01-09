@@ -341,3 +341,33 @@ int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format) {
 	}
 	return RP_OK;
 }
+
+int getRpWaveform(const char *waveformString, rp_waveform_t *waveform) {
+	if (strcmp(waveformString, "SINE") == 0) {
+		*waveform = RP_WAVEFORM_SINE;
+	}
+	else if (strcmp(waveformString, "SQUARE") == 0) {
+		*waveform = RP_WAVEFORM_SQUARE;
+	}
+	else if (strcmp(waveformString, "TRIANGLE") == 0) {
+		*waveform = RP_WAVEFORM_TRIANGLE;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource) {
+	if (strcmp(triggerSourceString, "EXT") == 0) {
+		*triggerSource = RP_TRIG_SRC_EXTERNAL;
+	}
+	else if (strcmp(triggerSourceString, "INT") == 0) {
+		*triggerSource = RP_TRIG_SRC_INTERNAL;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+

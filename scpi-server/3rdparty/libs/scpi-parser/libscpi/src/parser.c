@@ -37,6 +37,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <elf.h>
+#include <stdio.h>
 
 #include "scpi/config.h"
 #include "scpi/parser.h"
@@ -44,6 +45,8 @@
 #include "scpi/error.h"
 #include "scpi/constants.h"
 #include "../inc/scpi/types.h"
+#include "../inc/scpi/utils_private.h"
+#include "../inc/scpi/error.h"
 
 
 static size_t cmdTerminatorPos(const char * cmd, size_t len);
@@ -825,6 +828,22 @@ scpi_bool_t SCPI_ParamChoice(scpi_t * context, const char * options[], int32_t *
     SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
     return FALSE;
 }
+
+
+size_t SCPI_ParamBufferFloat(scpi_t * context, float *data, uint32_t *size, scpi_bool_t mandatory) {
+    *size = 0;
+    double value;
+    while (true) {
+        if (!SCPI_ParamDouble(context, &value, mandatory)) {
+            break;
+        }
+        data[*size] = (float) value;
+        *size = *size + 1;
+        mandatory = false;          // only first is mandatory
+    }
+    return true;
+}
+
 
 scpi_bool_t SCPI_IsCmd(scpi_t * context, const char * cmd) {
     if (! context->paramlist.cmd) {
