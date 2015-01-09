@@ -310,18 +310,8 @@ int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString) 
 		case RP_TRIG_SRC_DISABLED:
 			strcpy(triggSourceString, "TD");
 			break;
-		case RP_TRIG_SRC_NOW:
-		case RP_TRIG_SRC_CHA_PE:
-		case RP_TRIG_SRC_CHA_NE:
-		case RP_TRIG_SRC_CHB_PE:
-		case RP_TRIG_SRC_CHB_NE:
-		case RP_TRIG_SRC_EXT_PE:
-		case RP_TRIG_SRC_EXT_NE:
-		case RP_TRIG_SRC_AWG_PE:
-		case RP_TRIG_SRC_AWG_NE:
-			strcpy(triggSourceString, "WAIT");
 		default:
-			return RP_EOOR;
+			strcpy(triggSourceString, "WAIT");
 	}
 	return  RP_OK;
 }
