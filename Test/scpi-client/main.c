@@ -30,9 +30,9 @@ int main(int argc, char *argv[])
     char recvBuff[1024];
     struct sockaddr_in serv_addr; 
 
-    if(argc != 2)
+    if(argc != 3)
     {
-        printf("\n Usage: %s <ip of server> \n",argv[0]);
+        printf("\n Usage: %s <ip of server> <SCPI command> \n",argv[0]);
         return 1;
     } 
 
@@ -60,30 +60,22 @@ int main(int argc, char *argv[])
        return 1;
     } 
 
-
-      
-   //strcpy(recvBuff, "SOUR:DIG:DATA:BIT LED4,1;\r\nSOUR:DIG:DATA:BIT LED5,1;\r\nSOUR:DIG:DATA:BIT LED6,1;\r\n");
-
-    strcpy(recvBuff,
-            /* LED ON */
-            "DIG:PIN LED4,1;\r\nDIG:PIN LED5,1;\r\nDIG:PIN LED6,1;\r\nDIG:PIN:DIR INP,DIO1_P;\r\n"
-                    /* ANALOG WRITE */
-                    "ANALOG:PIN AOUT0,1;\r\nANALOG:PIN AOUT1,1.5;\r\nANALOG:PIN AOUT2,0.75;\r\nANALOG:PIN AOUT3,0.12345;\r\n"
-                    /* ANALOG READ */
-                    "ANALOG:PIN? AOUT0;\r\nANALOG:PIN? AOUT1;\r\nANALOG:PIN? AOUT2;\r\nANALOG:PIN? AOUT3\r\n");
-
+    strcpy(recvBuff, argv[2]);
+    strcat(recvBuff, "\r\n");
     if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
         perror("send");
     }
 
 
-   printf("Sent message %s\n", recvBuff	);
-	
+   printf("Sent message %s\n", recvBuff	);	
+ fputs("Received: ", stdout);
+   fflush(stdout);
+
 
     while ( (n = (int) read(sockfd, recvBuff, sizeof(recvBuff)-1)) > 0)
     {
         recvBuff[n] = 0;
-	    fputs("Received: ", stdout);
+	   
         if(fputs(recvBuff, stdout) == EOF)
         {
             printf("\n Error : Fputs error\n");
