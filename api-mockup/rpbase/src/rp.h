@@ -60,6 +60,10 @@ extern "C" {
 #define RP_RCA    13
 /** Buffer too small */
 #define RP_BTS    14
+/** Invalid parameter value */
+#define RP_EIPV    15
+/** Unsupported Feature */
+#define RP_EUF    16
 
 ///@}
 
@@ -135,6 +139,29 @@ typedef enum {
     RP_VCC_AUX,    //!< VCC AUX
     RP_VCC_DDR     //!< VCC DDR
 } rp_health_t;
+
+typedef enum {
+    RP_WAVEFORM_SINE,       //!< Wave form sine
+    RP_WAVEFORM_SQUARE,     //!< Wave form square
+    RP_WAVEFORM_TRIANGLE,   //!< Wave form triangle
+    RP_WAVEFORM_RAMP_UP,    //!< Wave form sawtooth (/|)
+    RP_WAVEFORM_RAMP_DOWN,  //!< Wave form reversed sawtooth (|\)
+    RP_WAVEFORM_DC,         //!< Wave form dc
+    RP_WAVEFORM_PWM,        //!< Wave form pwm
+    RP_WAVEFORM_ARBITRARY   //!< Use defined wave form
+} rp_waveform_t;
+
+typedef enum {
+    RP_GEN_MODE_CONTINUOUS, //!< Continuous signal generation
+    RP_GEN_MODE_BURST,      //!< Signal is generated N times, wher N is defined with rp_GenBurstCount method
+    RP_GEN_MODE_STREAM      //!< User can continuously write data to buffer
+} rp_gen_mode_t;
+
+
+typedef enum {
+    RP_TRIG_SRC_INTERNAL,   //!< Internal trigger source
+    RP_TRIG_SRC_EXTERNAL    //!< External trigger source
+} rp_trig_src_t;
 
 /**
  * Type representing Input/Output channels.
@@ -710,6 +737,129 @@ int rp_HealthGetValue(rp_health_t sensor, float* value);
 
 ///@}
 
+///@}
+
+/** @name Generate
+*/
+///@{
+
+/**
+* Enables output
+* @param channel Channel A or B which we want to enable
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenOutEnable(rp_channel_t channel);
+
+/**
+* Disables output
+* @param channel Channel A or B which we want to disable
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenOutDisable(rp_channel_t channel);
+
+/**
+* Sets channel signal peak to peak amplitude.
+* @param channel Channel A or B which we want to enable
+* @param amplitude Amplitude of the generated signal. Max amplitude is 2
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenAmp(rp_channel_t channel, float amplitude);
+
+/**
+* Sets DC offset of the signal. signal = signal + DC_offset
+* @param channel Channel A or B which we want to enable
+* @param offset DC offset of the generated signal. Max offset is 2
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenOffset(rp_channel_t channel, float offset);
+
+/**
+* Sets channel signal frequency
+* @param channel Channel A or B which we want to enable
+* @param frequency Frequency of the generated signal
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenFreq(rp_channel_t channel, float frequency);
+
+/**
+* Sets channel signal phase. This shifts the signal in time
+* @param channel Channel A or B which we want to enable
+* @param phase Phase in degrees of the generated signal. From 0 deg to 180 deg
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenPhase(rp_channel_t channel, float phase);
+
+/**
+* Sets channel signal form. This determines how the signal looks
+* @param channel Channel A or B which we want to enable
+* @param form Wave form of the generated signal [SINE, SQUARE, TRIANGLE, SAWTOOTH, PWM, DC, ARBITRARY]
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
+
+/**
+* Sets user defined wave form
+* @param channel Channel A or B which we want to enable
+* @param waveform Use defined wave form, where min is -1V an max is 1V
+* @param length Length of waveform
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenArbWaveform(rp_channel_t channel, float* waveform, uint32_t length);
+
+/**
+* Sets duty cycle of PWM signal
+* @param channel Channel A or B which we want to enable
+* @param ratio Ratio betwen the time when signal in HIGH vs the time when signal is LOW.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenDutyCycle(rp_channel_t channel, float ratio);
+
+/**
+* Sets geenration mode
+* @param channel Channel A or B which we want to enable
+* @param mode Type of signal generation (CONTINUOUS, BURST, STREAM)
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode);
+
+/**
+* Sets number of generated waveforms
+* @param channel Channel A or B which we want to enable
+* @param num Number of generated waveforms
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenBurstCount(rp_channel_t channel, int num);
+
+/**
+* Sets trigger source
+* @param channel Channel A or B which we want to enable
+* @param src Trigger source (INTERNAL, EXTERNAL)
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
+
+/**
+* Sets Trigger for specified channel/channels
+* @param channel Channel A or B which we want to enable
+* @param mask Mask determines channel: 1->ch1, 2->ch2, 3->ch1&ch2
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenTrigger(int mask);
+
+///@}
 
 #ifdef __cplusplus
 }

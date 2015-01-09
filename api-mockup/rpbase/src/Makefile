@@ -41,6 +41,8 @@ OBJECTS =	common.o \
 			apin_handler.o \
 			health.o \
 			health_handler.o \
+			generate.o \
+			gen_handler.o \
 			calib.o \
 			rp.o
 
