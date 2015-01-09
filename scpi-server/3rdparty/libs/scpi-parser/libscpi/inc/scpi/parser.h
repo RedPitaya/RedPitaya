@@ -72,6 +72,7 @@ extern "C" {
     scpi_bool_t SCPI_ParamText(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);    
     scpi_bool_t SCPI_ParamBool(scpi_t * context, scpi_bool_t * value, scpi_bool_t mandatory);
     scpi_bool_t SCPI_ParamChoice(scpi_t * context, const char * options[], int32_t * value, scpi_bool_t mandatory);
+    size_t SCPI_ParamBufferFloat(scpi_t * context, float *data, uint32_t *size, scpi_bool_t mandatory);
 
 
 #ifdef	__cplusplus
