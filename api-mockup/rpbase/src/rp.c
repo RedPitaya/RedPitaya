@@ -26,7 +26,8 @@
 #include "health.h"
 #include "health_handler.h"
 #include "calib.h"
-#include "rp.h"
+#include "generate.h"
+#include "gen_handler.h"
 
 static char version[50];
 
@@ -40,6 +41,7 @@ int rp_Init()
     ECHECK(hk_Init());
     ECHECK(ams_Init());
     ECHECK(health_Init());
+    ECHECK(generate_Init());
     ECHECK(osc_Init());
     // TODO: Place other module initializations here
 
@@ -55,6 +57,7 @@ int rp_Release()
     ECHECK(health_Release());
     ECHECK(ams_Release());
     ECHECK(hk_Release());
+    ECHECK(generate_Release());
     ECHECK(calib_Release());
 
     // TODO: Place other module releasing here (in reverse order)
@@ -105,6 +108,10 @@ const char* rp_GetError(int errorCode)
         return "Failed to Read Calibration Parameters.";
     case RP_BTS:
         return "Buffer too small";
+    case RP_EIPV:
+        return "Invalid parameter value";
+    case RP_EUF:
+        return "Unsupported Feature";
     default:
         return "Unknown error";
     }
@@ -355,4 +362,60 @@ int rp_AcqGetBufSize(uint32_t *size) {
 int rp_HealthGetValue(rp_health_t sensor, float* value)
 {
     return health_GetValue(sensor, value);
+}
+
+/**
+* Generate methods
+*/
+
+int rp_GenOutDisable(rp_channel_t channel) {
+    return gen_Disable(channel);
+}
+
+int rp_GenOutEnable(rp_channel_t channel) {
+    return gen_Enable(channel);
+}
+
+int rp_GenAmp(rp_channel_t channel, float amplitude) {
+    return gen_setAmplitude(channel, amplitude);
+}
+
+int rp_GenOffset(rp_channel_t channel, float offset) {
+    return gen_Offset(channel, offset);
+}
+
+int rp_GenFreq(rp_channel_t channel, float frequency) {
+    return gen_Frequency(channel, frequency);
+}
+
+int rp_GenPhase(rp_channel_t channel, float phase) {
+    return gen_Phase(channel, phase);
+}
+
+int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
+    return gen_Waveform(channel, type);
+}
+
+int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
+    return gen_ArbWaveform(channel, waveform, length);
+}
+
+int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
+    return gen_DutyCycle(channel, ratio);
+}
+
+int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
+    return gen_GenMode(channel, mode);
+}
+
+int rp_GenBurstCount(rp_channel_t channel, int num) {
+    return gen_BurstCount(channel, num);
+}
+
+int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
+    return gen_TriggerSource(channel, src);
+}
+
+int rp_GenTrigger(int mask) {
+    return gen_Trigger(mask);
 }
