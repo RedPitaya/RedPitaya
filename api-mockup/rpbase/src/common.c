@@ -240,5 +240,9 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int c
     /* adopt calculated ADC counts with calibration DC offset */
     adc_cnts -= calib_dc_off;
 
+    // If offset is negative and turns adc_cnts from negative to positive, we just need to
+    // keep field_len bits
+    adc_cnts = adc_cnts & ((1 << (field_len)) - 1);
+
     return (uint32_t)adc_cnts;
 }
