@@ -523,6 +523,8 @@ int acq_GetTriggerLevel(float *voltage)
         return RP_EOOR;
     }
 
+    *voltage = v1;
+
     return RP_OK;
 }
 
