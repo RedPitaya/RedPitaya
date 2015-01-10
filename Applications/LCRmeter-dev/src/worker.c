@@ -279,32 +279,36 @@ void *rp_osc_worker_thread(void *args)
 
 
         float save_data = rp_get_params_lcr(16);
+
         /* Check if we want to save param data to a file */
         if(save_data == 1){
+
             char f_command[100];
 
-            /* Create a non-txt file, as txt is a just an interpreter abriviation */
-            strcpy(f_command, "touch /opt/www/apps/lcr_meter/lcr_param_data");
-            system(f_command);
+            /* If the file doesn't exists yet */
+            if(fopen("/opt/www/apps/lcr_meter/lcr_param_data", "w") == NULL){
+                /* Create a normal file, as txt is a just an interpreter */
+                strcpy(f_command, "touch /opt/www/apps/lcr_meter/lcr_param_data");
+                system(f_command);
+            }
 
             /* Open file for writing */
             FILE *data = fopen("/opt/www/apps/lcr_meter/lcr_param_data", "w");
-            /* We have saved data */
 
             /* Write parameter data */
-            fprintf(data, "%f\n", rp_get_params_lcr(1));
-            fprintf(data, "%f\n", rp_get_params_lcr(2));
-            fprintf(data, "%f\n", rp_get_params_lcr(3));
-            fprintf(data, "%f\n", rp_get_params_lcr(4));
-            fprintf(data, "%f\n", rp_get_params_lcr(5));
-            fprintf(data, "%f\n", rp_get_params_lcr(6));
-            fprintf(data, "%f\n", rp_get_params_lcr(7));
-            fprintf(data, "%f\n", rp_get_params_lcr(8));
-            fprintf(data, "%f\n", rp_get_params_lcr(9));
-            fprintf(data, "%f\n", rp_get_params_lcr(10));
-            fprintf(data, "%f\n", rp_get_params_lcr(11));
-            fprintf(data, "%f\n", rp_get_params_lcr(15));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(2));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(3));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(4));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(5));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(6));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(7));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(8));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(9));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(10));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(11));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(15));
 
+            /* Set lcr_save_data to 0, so we don't access this IF everytime */
             rp_set_params_lcr(2,0);
             fclose(data);
 
@@ -348,6 +352,7 @@ void *rp_osc_worker_thread(void *args)
             char calib[1];
 
             snprintf(steps, 10, "%f", lcr_steps);
+            printf("STEPS: %s\n", steps);
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
             snprintf(amp, 20, "%f", lcr_amp);
@@ -1455,12 +1460,12 @@ int rp_load_data(float save_data){
         /* Read data */
         FILE *data = fopen("/opt/www/apps/lcr_meter/lcr_param_data", "r");
 
-        int counter = 3;
+        int counter = 4;
         while(!feof(data)){
             val = 0;
             /* Read data into val */
             fscanf(data, "%f", &val);
-            /* Set according paramters with value val */
+            /* Set according parameters with value val */
             rp_set_params_lcr(counter, val);
             counter++;
         }
