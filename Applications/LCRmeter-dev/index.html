@@ -476,8 +476,6 @@
       document.getElementById('gen_avg').value = params.local.gen_avg;
       document.getElementById('gen_DC_bias').value = params.local.gen_DC_bias;;
       document.getElementById('gen_R_shunt').value = params.local.gen_R_shunt;
-
-      document.getElementById('gen_fs_step').value = params.local.lcr_steps;
       document.getElementById('gen_fs_Efreq').value = params.local.end_freq;
       document.getElementById('gen_fs_LoadIm').value = params.local.gen_fs_LoadIm;
       document.getElementById('gen_fs_LoadRe').value = params.local.gen_fs_LoadRe;  
@@ -718,7 +716,7 @@
     plot.draw();
     
     updateRanges();
-    updateTriggerSlider();
+    //updateTriggerSlider();
   }
   
 
@@ -855,7 +853,6 @@
     document.getElementById('gen_fs_Efreq').style.borderColor = "#cccccc";
     document.getElementById('gen_fs_LoadIm').style.borderColor = "#cccccc";
     document.getElementById('gen_fs_LoadRe').style.borderColor = "#cccccc";
-
     document.getElementById('gen_ms_step').style.borderColor = "#cccccc";
     document.getElementById('gen_ms_freq').style.borderColor = "#cccccc";
     document.getElementById('gen_ms_LoadIm').style.borderColor = "#cccccc";
@@ -915,17 +912,20 @@
 
 
       /* End function if input error */
-      if(document.getElementById('gen_amp').style.borderColor == "red" ||
-         document.getElementById('gen_avg').style.borderColor == "red" ||
-         document.getElementById('gen_DC_bias').style.borderColor == "red" ||
-         document.getElementById('gen_R_shunt').style.borderColor == "red" ||
-         document.getElementById('gen_ms_step').style.borderColor == "red" ||
-         document.getElementById('gen_ms_freq').style.borderColor == "red" || 
-         document.getElementById('gen_ms_LoadRe').style.borderColor == "red" || 
-         document.getElementById('gen_ms_LoadIm').style.borderColor == "red"){
+      
+      if(document.getElementById('gen_amp').style.borderColor == "red"       ||
+         document.getElementById('gen_avg').style.borderColor == "red"       ||
+         document.getElementById('gen_DC_bias').style.borderColor == "red"   ||
+         document.getElementById('gen_R_shunt').style.borderColor == "red"   ||
+         document.getElementById('gen_fs_step').style.borderColor == "red"   ||
+         document.getElementById('gen_fs_Sfreq').style.borderColor == "red"  ||
+         document.getElementById('gen_fs_Efreq').style.borderColor == "red"  ||
+         document.getElementById('gen_fs_LoadRe').style.borderColor == "red" ||
+         document.getElementById('gen_fs_LoadIm').style.borderColor == "red"){
 
-          return;
+        return;
       }
+
 
       /* If everything was OK, write data to local params */
       params.local.gen_amp = amp;
@@ -970,12 +970,19 @@
       if(ms_im < 0){
         document.getElementById('gen_ms_LoadIm').style.borderColor = "red";
       }
-
+      
       /* End function if input error */
-      if($('form-control').borderColor.style == "red"){
-        return;
+      if(document.getElementById('gen_amp').style.borderColor == "red" ||
+         document.getElementById('gen_avg').style.borderColor == "red" ||
+         document.getElementById('gen_DC_bias').style.borderColor == "red" ||
+         document.getElementById('gen_R_shunt').style.borderColor == "red" ||
+         document.getElementById('gen_ms_step').style.borderColor == "red" ||
+         document.getElementById('gen_ms_freq').style.borderColor == "red" || 
+         document.getElementById('gen_ms_LoadRe').style.borderColor == "red" || 
+         document.getElementById('gen_ms_LoadIm').style.borderColor == "red"){
+          return;
       }
-
+      
       /* Like in FS, if everything was OK, we write it in params */
       params.local.gen_amp = amp;
       params.local.gen_avg = avg;
@@ -995,7 +1002,7 @@
       params.local.start_measure = 2;
       
     }
-
+    
     lcr_modal.showPleaseWait();
     var hide_channel_lcr = $('#btn_ch1');
     hide_channel_lcr.data('checked', false);
@@ -1004,7 +1011,7 @@
     change_Measure = 1;
     params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
 
-    append_table(10);
+    //append_table(10);
 
     /* Send params to C controller */
     sendParams();
@@ -1342,7 +1349,7 @@
         </div>
         <div id="freq_sweep" class="panel-collapse collapse">
                   <div class="form-group">
-                    <label for="gen_fs_Sfreqa" class="col-xs-4 control-label">Start frequency:</label>
+                    <label for="gen_fs_Sfreq" class="col-xs-4 control-label">Start frequency:</label>
                     <div class="col-xs-5">
                       <input type="number" autocomplete="off" class="form-control" value="200" id="gen_fs_Sfreq">
                       <span id="apply_gen_fs_Sfreq" class="input-group-btn" style="display: none;">
