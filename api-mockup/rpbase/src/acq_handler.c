@@ -803,5 +803,7 @@ int acq_GetBufferSize(uint32_t *size) {
 int acq_SetDefault() {
     ECHECK(acq_SetGain(RP_CH_A, RP_LOW));
     ECHECK(acq_SetGain(RP_CH_B, RP_LOW));
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_A, 0.0));
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_B, 0.0));
     return RP_OK;
 }
