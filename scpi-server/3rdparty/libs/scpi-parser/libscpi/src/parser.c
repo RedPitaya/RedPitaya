@@ -501,7 +501,7 @@ size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size
 
     uint32_t i;
     size_t len;
-    char buffer[12];
+    char buffer[50];
     for (i = 0; i < size-1; i++) {
         len = doubleToStr(data[i], buffer, sizeof (buffer));
         result += writeData(context, buffer, len);
