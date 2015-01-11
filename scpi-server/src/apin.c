@@ -14,10 +14,7 @@
 
 #include <syslog.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <limits.h>
 
 #include "scpi/scpi.h"
 #include "rp.h"
@@ -25,8 +22,6 @@
 #include "utils.h"
 #include "apin.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
-#include "../../api-mockup/rpbase/src/rp.h"
 
 
 /**
@@ -82,9 +77,8 @@ scpi_result_t RP_AnalogPinSetValue(scpi_t * context) {
     const char * param;
     size_t param_len;
 
-    float value;
+    double value;
 	char port[15];
-    char value_string[15];
 
     // read first parameter PORT (RP_AOUT0, RP_AIN0, ...)
     if (!SCPI_ParamString(context, &param, &param_len, true)) {
@@ -95,13 +89,10 @@ scpi_result_t RP_AnalogPinSetValue(scpi_t * context) {
     port[param_len] = '\0';
 
     // read second parameter VALUE (2.45)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamDouble(context, &value, true)) {
         syslog(LOG_ERR, "*ANALOG:PIN is missing second parameter.");
         return SCPI_RES_ERR;
     }
-    strncpy(value_string, param, param_len);
-    value_string[param_len] = '\0';
-
     // Convert port into pin id
     rp_apin_t pin;
     if (getRpApin(port, &pin)) {
@@ -109,16 +100,8 @@ scpi_result_t RP_AnalogPinSetValue(scpi_t * context) {
     	return SCPI_RES_ERR;
     }
 
-    char *endptr;
-    errno = 0;    /* To distinguish success/failure after call */
-    value = strtof(value_string, &endptr);
-    if ((errno == ERANGE && (value == LONG_MAX || value == LONG_MIN)) || (errno != 0 && value == 0) || endptr == value_string) {
-        syslog(LOG_ERR, "*ANALOG:PIN parameter value is invalid.");
-        return SCPI_RES_ERR;
-    }
-
     // Now set the pin state
-    int result = rp_ApinSetValue(pin, value);
+    int result = rp_ApinSetValue(pin, (float) value);
 
     if (RP_OK != result)
 	{

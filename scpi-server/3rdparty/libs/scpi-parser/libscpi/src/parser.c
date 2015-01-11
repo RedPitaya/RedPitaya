@@ -385,7 +385,7 @@ size_t SCPI_ResultString(scpi_t * context, const char * data) {
  * @return
  */
 size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
-    char buffer[12];
+    char buffer[15];
     size_t result = 0;
     size_t len = longToStr(val, buffer, sizeof (buffer));
     result += writeDelimiter(context);
@@ -395,7 +395,7 @@ size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
 }
 
 size_t SCPI_ResultUInt(scpi_t *context, uint32_t val) {
-    char buffer[12];
+    char buffer[15];
     size_t result = 0;
     size_t len = longToStr(val, buffer, sizeof (buffer));
     result += writeDelimiter(context);
@@ -411,7 +411,7 @@ size_t SCPI_ResultUInt(scpi_t *context, uint32_t val) {
 * @return
 */
 size_t SCPI_ResultLong(scpi_t * context, int64_t val) {
-    char buffer[12];
+    char buffer[25];
     size_t result = 0;
     size_t len = longToStr(val, buffer, sizeof (buffer));
     result += writeDelimiter(context);
@@ -421,7 +421,7 @@ size_t SCPI_ResultLong(scpi_t * context, int64_t val) {
 }
 
 size_t SCPI_ResultULong(scpi_t *context, uint64_t val) {
-    char buffer[12];
+    char buffer[25];
     size_t result = 0;
     size_t len = longToStr(val, buffer, sizeof (buffer));
     result += writeDelimiter(context);
