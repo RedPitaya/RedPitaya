@@ -46,22 +46,32 @@ int rp_Init()
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
-    acq_SetDefault();
+    rp_Reset();
 
     return RP_OK;
 }
 
 int rp_Release()
 {
-    ECHECK(osc_Release());
+    ECHECK(osc_Release())
+    ECHECK(generate_Release());;
     ECHECK(health_Release());
     ECHECK(ams_Release());
     ECHECK(hk_Release());
-    ECHECK(generate_Release());
     ECHECK(calib_Release());
 
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
+}
+
+int rp_Reset()
+{
+    ECHECK(rp_DpinReset());
+    ECHECK(rp_ApinReset());
+    ECHECK(rp_GenReset());
+    ECHECK(rp_AcqReset());
+    // TODO: Place other module resetting here (in reverse order)
+    return 0;
 }
 
 const char* rp_GetVersion()
@@ -122,6 +132,10 @@ const char* rp_GetError(int errorCode)
  * Digital Pin Input Output methods
  */
 
+int rp_DpinReset() {
+    return dpin_SetDefaultValues();
+}
+
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction)
 {
     return dpin_SetDirection(pin, direction);
@@ -145,6 +159,10 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state)
 /**
  * Analog In Output methods
  */
+
+int rp_ApinReset() {
+    return apin_SetDefaultValues();
+}
 
 int rp_ApinSetValue(rp_apin_t pin, float value)
 {
@@ -367,6 +385,10 @@ int rp_HealthGetValue(rp_health_t sensor, float* value)
 /**
 * Generate methods
 */
+
+int rp_GenReset() {
+    return gen_SetDefaultValues();
+}
 
 int rp_GenOutDisable(rp_channel_t channel) {
     return gen_Disable(channel);

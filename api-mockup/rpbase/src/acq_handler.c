@@ -639,6 +639,7 @@ int acq_Start()
 
 int acq_Reset()
 {
+    ECHECK(acq_SetDefault());
     return osc_ResetWriteStateMachine();
 }
 
@@ -805,5 +806,13 @@ int acq_SetDefault() {
     ECHECK(acq_SetGain(RP_CH_B, RP_LOW));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_A, 0.0));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_B, 0.0));
+    ECHECK(acq_SetDecimation(RP_DEC_1));
+    ECHECK(acq_SetSamplingRate(RP_SMP_125M));
+    ECHECK(acq_SetAveraging(true));
+    ECHECK(acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED));
+    ECHECK(acq_SetTriggerDelay(0, false));
+    ECHECK(acq_SetTriggerDelayNs(0, false));
+    ECHECK(acq_SetTriggerLevel(0));
+
     return RP_OK;
 }
