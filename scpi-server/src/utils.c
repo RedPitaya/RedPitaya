@@ -352,6 +352,15 @@ int getRpWaveform(const char *waveformString, rp_waveform_t *waveform) {
 	else if (strcmp(waveformString, "TRIANGLE") == 0) {
 		*waveform = RP_WAVEFORM_TRIANGLE;
 	}
+	else if (strcmp(waveformString, "PWM") == 0) {
+		*waveform = RP_WAVEFORM_PWM;
+	}
+	else if (strcmp(waveformString, "SAWD") == 0) {
+		*waveform = RP_WAVEFORM_RAMP_DOWN;
+	}
+	else if (strcmp(waveformString, "SAWU") == 0) {
+		*waveform = RP_WAVEFORM_RAMP_UP;
+	}
 	else {
 		return RP_EOOR;
 	}
