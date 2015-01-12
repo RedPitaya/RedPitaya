@@ -362,19 +362,19 @@ scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSetChannel1Gain(scpi_t *context) {
-    return RP_AcqSetGain(RP_CH_A, context);
+    return RP_AcqSetGain(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqSetChannel2Gain(scpi_t *context) {
-    return RP_AcqSetGain(RP_CH_B, context);
+    return RP_AcqSetGain(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqGetChannel1Gain(scpi_t *context) {
-    return RP_AcqGetGain(RP_CH_A, context);
+    return RP_AcqGetGain(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqGetChannel2Gain(scpi_t *context) {
-    return RP_AcqGetGain(RP_CH_B, context);
+    return RP_AcqGetGain(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context) {
@@ -508,43 +508,43 @@ scpi_result_t RP_AcqScpiDataFormat(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqGetChanel1DataPos(scpi_t *context) {
-    return RP_AcqGetDataPos(RP_CH_A, context);
+    return RP_AcqGetDataPos(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqGetChanel2DataPos(scpi_t *context) {
-    return RP_AcqGetDataPos(RP_CH_B, context);
+    return RP_AcqGetDataPos(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqGetChanel1Data(scpi_t *context) {
-    return RP_AcqGetData(RP_CH_A, context);
+    return RP_AcqGetData(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqGetChanel2Data(scpi_t *context) {
-    return RP_AcqGetData(RP_CH_B, context);
+    return RP_AcqGetData(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqGetChanel1OldestData(scpi_t *context) {
-    return RP_AcqGetOldestData(RP_CH_A, context);
+    return RP_AcqGetOldestData(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqGetChanel2OldestData(scpi_t *context) {
-    return RP_AcqGetOldestData(RP_CH_B, context);
+    return RP_AcqGetOldestData(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqGetChanel1LatestData(scpi_t *context) {
-    return RP_AcqGetLatestData(RP_CH_A, context);
+    return RP_AcqGetLatestData(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqGetChanel2LatestData(scpi_t *context) {
-    return RP_AcqGetLatestData(RP_CH_B, context);
+    return RP_AcqGetLatestData(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqGetChanel1OldestDataAll(scpi_t *context) {
-    return RP_AcqGetOldestDataAll(RP_CH_A, context);
+    return RP_AcqGetOldestDataAll(RP_CH_1, context);
 }
 
 scpi_result_t RP_AcqGetChanel2OldestDataAll(scpi_t *context) {
-    return RP_AcqGetOldestDataAll(RP_CH_B, context);
+    return RP_AcqGetOldestDataAll(RP_CH_2, context);
 }
 
 scpi_result_t RP_AcqGetBufferSize(scpi_t *context) {

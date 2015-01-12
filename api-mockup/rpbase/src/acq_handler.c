@@ -122,7 +122,7 @@ static int setEqFilters(rp_channel_t channel)
     ECHECK(acq_GetGain(channel, &gain));
 
     // Update equalization filter with default coefficients
-    if (channel == RP_CH_A)
+    if (channel == RP_CH_1)
     {
         if (gain == RP_HIGH)
         {
@@ -169,7 +169,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 
     rp_pinState_t *gain = NULL;
 
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         gain = &gain_ch_a;
     }
     else {
@@ -215,7 +215,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
 {
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         *state = gain_ch_a;
     }
     else {
@@ -233,7 +233,7 @@ int acq_GetGainV(rp_channel_t channel, float* voltage)
 {
     rp_pinState_t *gain = NULL;
 
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         gain = &gain_ch_a;
     }
     else {
@@ -509,15 +509,15 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
 
 int acq_SetTriggerLevel(float voltage)
 {
-    ECHECK(acq_SetChannelThreshold(RP_CH_A, voltage));
-    return acq_SetChannelThreshold(RP_CH_B, voltage);
+    ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
+    return acq_SetChannelThreshold(RP_CH_2, voltage);
 }
 
 int acq_GetTriggerLevel(float *voltage)
 {
     float v1, v2;
-    ECHECK(acq_GetChannelThreshold(RP_CH_A, &v1));
-    ECHECK(acq_GetChannelThreshold(RP_CH_B, &v2));
+    ECHECK(acq_GetChannelThreshold(RP_CH_1, &v1));
+    ECHECK(acq_GetChannelThreshold(RP_CH_2, &v2));
 
     if (fabs(v1 - v2) > FLOAT_EPS) {
         return RP_EOOR;
@@ -539,9 +539,9 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     }
 
     rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         return osc_SetThresholdChA(cnt);
     }
     else {
@@ -554,7 +554,7 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     float gain;
     uint32_t cnts;
 
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         ECHECK(osc_GetThresholdChA(&cnts));
     }
     else {
@@ -564,7 +564,7 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGainV(channel, &gain));
     rp_calib_params_t calib = calib_GetParams();
 
-    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
 
     return RP_OK;
@@ -572,15 +572,15 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 
 int acq_SetTriggerHyst(float voltage)
 {
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_A, voltage));
-    return acq_SetChannelThresholdHyst(RP_CH_B, voltage);
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
+    return acq_SetChannelThresholdHyst(RP_CH_2, voltage);
 }
 
 int acq_GetTriggerHyst(float *voltage)
 {
     float v1, v2;
-    ECHECK(acq_GetChannelThresholdHyst(RP_CH_A, &v1));
-    ECHECK(acq_GetChannelThresholdHyst(RP_CH_B, &v2));
+    ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, &v1));
+    ECHECK(acq_GetChannelThresholdHyst(RP_CH_2, &v2));
 
     if (fabs(v1 - v2) > FLOAT_EPS) {
         return RP_EOOR;
@@ -601,9 +601,9 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
     }
 
     rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         return osc_SetHysteresisChA(cnt);
     }
     else {
@@ -616,7 +616,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
     float gain;
     uint32_t cnts;
 
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         ECHECK(osc_GetHysteresisChA(&cnts));
     }
     else {
@@ -626,7 +626,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGainV(channel, &gain));
     rp_calib_params_t calib = calib_GetParams();
 
-    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
 
     return RP_OK;
@@ -645,7 +645,7 @@ int acq_Reset()
 
 static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
 {
-    if (channel == RP_CH_A) {
+    if (channel == RP_CH_1) {
         return osc_GetDataBufferChA();
     }
     else {
@@ -681,7 +681,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
 
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS;
@@ -740,7 +740,7 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
     ECHECK(acq_GetGainV(channel, &gain));
 
     rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = (channel == RP_CH_A ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
@@ -802,10 +802,10 @@ int acq_GetBufferSize(uint32_t *size) {
  * @return
  */
 int acq_SetDefault() {
-    ECHECK(acq_SetGain(RP_CH_A, RP_LOW));
-    ECHECK(acq_SetGain(RP_CH_B, RP_LOW));
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_A, 0.0));
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_B, 0.0));
+    ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
+    ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, 0.0));
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, 0.0));
     ECHECK(acq_SetDecimation(RP_DEC_1));
     ECHECK(acq_SetSamplingRate(RP_SMP_125M));
     ECHECK(acq_SetAveraging(true));

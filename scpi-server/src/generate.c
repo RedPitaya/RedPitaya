@@ -37,91 +37,91 @@ scpi_result_t RP_GenReset(scpi_t *context) {
 }
 
 enum _scpi_result_t RP_GenChannel1SetState(scpi_t *context) {
-    return RP_GenSetState(RP_CH_A, context);
+    return RP_GenSetState(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetState(scpi_t *context) {
-    return RP_GenSetState(RP_CH_B, context);
+    return RP_GenSetState(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetFrequency(scpi_t *context) {
-    return RP_GenSetFrequency(RP_CH_A, context);
+    return RP_GenSetFrequency(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetFrequency(scpi_t *context) {
-    return RP_GenSetFrequency(RP_CH_B, context);
+    return RP_GenSetFrequency(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetWaveForm(scpi_t *context) {
-    return RP_GenSetWaveForm(RP_CH_A, context);
+    return RP_GenSetWaveForm(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetWaveForm(scpi_t *context) {
-    return RP_GenSetWaveForm(RP_CH_B, context);
+    return RP_GenSetWaveForm(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetAmplitude(scpi_t *context) {
-    return RP_GenSetAmplitude(RP_CH_A, context);
+    return RP_GenSetAmplitude(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetAmplitude(scpi_t *context) {
-    return RP_GenSetAmplitude(RP_CH_B, context);
+    return RP_GenSetAmplitude(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetOffset(scpi_t *context) {
-    return RP_GenSetOffset(RP_CH_A, context);
+    return RP_GenSetOffset(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetOffset(scpi_t *context) {
-    return RP_GenSetOffset(RP_CH_B, context);
+    return RP_GenSetOffset(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetPhase(scpi_t *context) {
-    return RP_GenSetPhase(RP_CH_A, context);
+    return RP_GenSetPhase(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetPhase(scpi_t *context) {
-    return RP_GenSetPhase(RP_CH_B, context);
+    return RP_GenSetPhase(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetDutyCycle(scpi_t *context) {
-    return RP_GenSetDutyCycle(RP_CH_A, context);
+    return RP_GenSetDutyCycle(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetDutyCycle(scpi_t *context) {
-    return RP_GenSetDutyCycle(RP_CH_B, context);
+    return RP_GenSetDutyCycle(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetArbitraryWaveForm(scpi_t *context) {
-    return RP_GenSetArbitraryWaveForm(RP_CH_A, context);
+    return RP_GenSetArbitraryWaveForm(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetArbitraryWaveForm(scpi_t *context) {
-    return RP_GenSetArbitraryWaveForm(RP_CH_B, context);
+    return RP_GenSetArbitraryWaveForm(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetGenerateMode(scpi_t *context) {
-    return RP_GenSetGenerateMode(RP_CH_A, context);
+    return RP_GenSetGenerateMode(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetGenerateMode(scpi_t *context) {
-    return RP_GenSetGenerateMode(RP_CH_B, context);
+    return RP_GenSetGenerateMode(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetBurstCount(scpi_t *context) {
-    return RP_GenSetBurstCount(RP_CH_A, context);
+    return RP_GenSetBurstCount(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetBurstCount(scpi_t *context) {
-    return RP_GenSetBurstCount(RP_CH_B, context);
+    return RP_GenSetBurstCount(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetTriggerSource(scpi_t *context) {
-    return RP_GenSetTriggerSource(RP_CH_A, context);
+    return RP_GenSetTriggerSource(RP_CH_1, context);
 }
 
 enum _scpi_result_t RP_GenChannel2SetTriggerSource(scpi_t *context) {
-    return RP_GenSetTriggerSource(RP_CH_B, context);
+    return RP_GenSetTriggerSource(RP_CH_2, context);
 }
 
 enum _scpi_result_t RP_GenChannel1SetTrigger(scpi_t *context) {
