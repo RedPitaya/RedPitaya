@@ -35,10 +35,10 @@
 #define DATA_BIT_LENGTH 14
 
 #define CHECK_OUTPUT(X, Y) { \
-if (chanel == RP_CH_A) { \
+if (chanel == RP_CH_1) { \
 	X; \
 } \
-else if (chanel == RP_CH_B) { \
+else if (chanel == RP_CH_2) { \
 	Y; \
 } \
 else { \

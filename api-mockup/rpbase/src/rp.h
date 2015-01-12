@@ -167,8 +167,8 @@ typedef enum {
  * Type representing Input/Output channels.
  */
 typedef enum {
-    RP_CH_A, //!< Channel A
-    RP_CH_B  //!< Channel B
+    RP_CH_1, //!< Channel A
+    RP_CH_2  //!< Channel B
 } rp_channel_t;
 
 /**
