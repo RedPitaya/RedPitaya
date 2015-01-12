@@ -158,7 +158,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:SOUR1:DATA:STA:END?", .callback = RP_AcqGetChanel1DataPos,},
         {.pattern = "ACQ:SOUR2:DATA:STA:END?", .callback = RP_AcqGetChanel2DataPos,},
         {.pattern = "ACQ:SOUR1:DATA:STA:N?", .callback = RP_AcqGetChanel1Data,},
-        {.pattern = "ACQ:SOUR1:DATA:STA:N?", .callback = RP_AcqGetChanel2Data,},
+        {.pattern = "ACQ:SOUR2:DATA:STA:N?", .callback = RP_AcqGetChanel2Data,},
         {.pattern = "ACQ:SOUR1:DATA?", .callback = RP_AcqGetChanel1OldestDataAll,},
         {.pattern = "ACQ:SOUR2:DATA?", .callback = RP_AcqGetChanel2OldestDataAll,},
         {.pattern = "ACQ:SOUR1:DATA:OLD:N?", .callback = RP_AcqGetChanel1OldestData,},
