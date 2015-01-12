@@ -762,7 +762,7 @@ int rp_GenOutDisable(rp_channel_t channel);
 /**
 * Sets channel signal peak to peak amplitude.
 * @param channel Channel A or B which we want to enable
-* @param amplitude Amplitude of the generated signal. Max amplitude is 2
+* @param amplitude Amplitude of the generated signal. From 0 to max value. Max amplitude is 1
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
@@ -780,7 +780,7 @@ int rp_GenOffset(rp_channel_t channel, float offset);
 /**
 * Sets channel signal frequency
 * @param channel Channel A or B which we want to enable
-* @param frequency Frequency of the generated signal
+* @param frequency Frequency of the generated signal in Hz
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
