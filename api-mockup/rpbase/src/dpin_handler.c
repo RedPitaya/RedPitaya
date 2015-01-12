@@ -20,6 +20,25 @@
 #include "housekeeping.h"
 #include "dpin_handler.h"
 
+int dpin_SetDefaultValues() {
+    rp_dpin_t pin;
+    for (pin = RP_DIO1_P; pin <= RP_DIO7_P; pin++) {
+        ECHECK(dpin_SetDirection(pin, RP_OUT));
+        ECHECK(rp_DpinSetState(pin, RP_LOW));
+    }
+
+    for (pin = RP_DIO0_N; pin <= RP_DIO7_N; pin++) {
+        ECHECK(dpin_SetDirection((rp_dpin_t) pin, RP_OUT));
+        ECHECK(dpin_SetState(pin, RP_LOW));
+    }
+
+    for (pin = RP_LED1; pin <= RP_LED7; pin++) {
+        ECHECK(dpin_SetState(pin, RP_LOW));
+    }
+
+    return RP_OK;
+}
+
 int dpin_SetDirection(rp_dpin_t pin, rp_pinDirection_t direction)
 {
     // LEDS

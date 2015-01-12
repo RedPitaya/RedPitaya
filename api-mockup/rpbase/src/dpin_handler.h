@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include "rp.h"
 
+int dpin_SetDefaultValues();
 int dpin_SetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
 int dpin_GetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 int dpin_SetState(rp_dpin_t pin, rp_pinState_t state);
