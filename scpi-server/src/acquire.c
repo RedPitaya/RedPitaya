@@ -35,7 +35,7 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*ACQ:START Successful.");
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqReset(scpi_t *context) {
@@ -47,7 +47,7 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*ACQ:RST Successful.");
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqSetDecimation(scpi_t *context) {
@@ -75,7 +75,7 @@ scpi_result_t RP_AcqSetDecimation(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:DEC Successfully set decimation to %d.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetDecimation(scpi_t *context) {
@@ -133,7 +133,7 @@ scpi_result_t RP_AcqSetSamplingRate(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:SRAT Successfully set sampling rate to %s.", samplingRateStr);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetSamplingRate(scpi_t *context) {
@@ -196,7 +196,7 @@ scpi_result_t RP_AcqSetAveraging(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:AVG Successfully set averaging to %s.", value ? "ON" : "OFF");
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetAveraging(scpi_t *context) {
@@ -249,7 +249,7 @@ scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:TRIG:SRC Successfully set trigger source to %s.", triggerSource);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerSrc(scpi_t *context) {
@@ -294,7 +294,7 @@ scpi_result_t RP_AcqSetTriggerDelay(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:TRIG:DLY Successfully set trigger delay to %u.", triggerDelay);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
@@ -333,7 +333,7 @@ scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS Successfully set trigger delay to %lu ns.", (unsigned long)triggerDelay);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
@@ -390,7 +390,7 @@ scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:TRIG:LEV Successfully set trigger level %.2f.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerLevel(scpi_t *context) {
@@ -469,7 +469,7 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:DATA:UNITS Successfully set unit to %s.", unitString);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqScpiDataFormat(scpi_t *context) {
@@ -495,7 +495,7 @@ scpi_result_t RP_AcqScpiDataFormat(scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:DATA:FORMAT Successfully set format to %s.", formatString);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetChanel1DataPos(scpi_t *context) {
@@ -586,7 +586,7 @@ scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:SOUR<n>:GAIN Successfully set gain %s.", gainString);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 

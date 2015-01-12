@@ -118,7 +118,7 @@ scpi_result_t RP_DigitalPinSetState(scpi_t * context) {
 	syslog(LOG_INFO, "*SOUR:DIG:DATA:BIT Successfully set port %s to value %d.", port, (bit == RP_HIGH ? 1 : 0));
 
 
-	SET_OK(context);
+	return SCPI_RES_OK;
 }
 
 /**
@@ -174,5 +174,5 @@ scpi_result_t RP_DigitalPinSetDirection(scpi_t * context) {
 
     syslog(LOG_INFO, "*SOUR:DIG:DATA:BIT Successfully set port %s direction to %s.", port, (direction == RP_OUT ? "OUTPUT" : "INPUT"));
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
