@@ -18,6 +18,7 @@
 
 #include "rp.h"
 
+int apin_SetDefaultValues();
 int apin_SetValue(rp_apin_t pin, float value);
 int apin_GetValue(rp_apin_t pin, float* value);
 int apin_SetValueRaw(rp_apin_t pin, uint32_t value);

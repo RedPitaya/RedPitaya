@@ -24,6 +24,32 @@ double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
 rp_waveform_t chA_waveform, chB_waveform;
 
+
+int gen_SetDefaultValues() {
+    ECHECK(gen_Disable(RP_CH_A));
+    ECHECK(gen_Disable(RP_CH_B));
+    ECHECK(generate_setFrequency(RP_CH_A, 1000));
+    ECHECK(generate_setFrequency(RP_CH_B, 1000));
+    ECHECK(gen_Waveform(RP_CH_A, RP_WAVEFORM_SINE));
+    ECHECK(gen_Waveform(RP_CH_B, RP_WAVEFORM_SINE));
+    ECHECK(gen_setAmplitude(RP_CH_A, 1));
+    ECHECK(gen_setAmplitude(RP_CH_B, 1));
+    ECHECK(generate_setDCOffset(RP_CH_A, 0));
+    ECHECK(generate_setDCOffset(RP_CH_B, 0));
+    ECHECK(gen_Phase(RP_CH_A, 0));
+    ECHECK(gen_Phase(RP_CH_A, 0));
+    ECHECK(gen_DutyCycle(RP_CH_A, 0.5));
+    ECHECK(gen_DutyCycle(RP_CH_B, 0.5));
+    ECHECK(gen_GenMode(RP_CH_A, RP_GEN_MODE_CONTINUOUS));
+    ECHECK(gen_GenMode(RP_CH_B, RP_GEN_MODE_CONTINUOUS));
+    ECHECK(gen_BurstCount(RP_CH_A, 1));
+    ECHECK(gen_BurstCount(RP_CH_B, 1));
+    ECHECK(gen_TriggerSource(RP_CH_A, RP_TRIG_SRC_INTERNAL));
+    ECHECK(gen_TriggerSource(RP_CH_B, RP_TRIG_SRC_INTERNAL));
+
+    return RP_OK;
+}
+
 int gen_Disable(rp_channel_t chanel) {
     return generate_setOutputDisable(chanel, true);
 }

@@ -20,6 +20,15 @@
 #include "apin_handler.h"
 
 
+int apin_SetDefaultValues() {
+    rp_apin_t pin;
+    for (pin = RP_AOUT0; pin <= RP_AOUT3; pin++) {
+        ECHECK(apin_SetValue(pin, 0));
+    }
+
+    return RP_OK;
+}
+
 int apin_SetValue(rp_apin_t pin, float value)
 {
     uint32_t value_raw;
