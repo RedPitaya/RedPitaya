@@ -16,8 +16,9 @@
 #define __GENERATE_H
 
 
+#define LEVEL_MAX	   1.0	   // V
 #define AMPLITUDE_MIN  0.0	   // V
-#define AMPLITUDE_MAX  2.0     // V
+#define AMPLITUDE_MAX  1.0     // V
 #define OFFSET_MIN     0.0     // V
 #define OFFSET_MAX     2.0     // V
 #define FREQUENCY_MIN  0	   // Hz
