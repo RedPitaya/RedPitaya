@@ -111,5 +111,5 @@ scpi_result_t RP_AnalogPinSetValue(scpi_t * context) {
 
 	syslog(LOG_INFO, "*ANALOG:PIN Successfully set port %s to value %.3f.", port, value);
 
-	SET_OK(context);
+	return SCPI_RES_OK;
 }

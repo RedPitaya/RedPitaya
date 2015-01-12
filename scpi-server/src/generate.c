@@ -148,7 +148,7 @@ enum _scpi_result_t RP_GenSetState(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*OUTPUT<n>:STATE Successfully %s channel.", state ? "enabled" : "disabled");
     
-   SET_OK(context);
+   return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetFrequency(rp_channel_t channel, scpi_t *context) {
@@ -168,7 +168,7 @@ enum _scpi_result_t RP_GenSetFrequency(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:FREQ:FIX Successfully set frequancy to %.2f Hz.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t *context) {
@@ -200,7 +200,7 @@ enum _scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:FUNC Successfully set waveform to %s.", waveformString);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetAmplitude(rp_channel_t channel, scpi_t *context) {
@@ -220,7 +220,7 @@ enum _scpi_result_t RP_GenSetAmplitude(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:VOLT Successfully set amplitude to %.2f V.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t *context) {
@@ -240,7 +240,7 @@ enum _scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:VOLT:OFFS Successfully set offset to %.2f V.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetPhase(rp_channel_t channel, scpi_t *context) {
@@ -260,7 +260,7 @@ enum _scpi_result_t RP_GenSetPhase(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:PHAS Successfully set phase to %.2f deg.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetDutyCycle(rp_channel_t channel, scpi_t *context) {
@@ -280,7 +280,7 @@ enum _scpi_result_t RP_GenSetDutyCycle(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:DCYC Successfully set duty cycle to %.2f.", value);
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetArbitraryWaveForm(rp_channel_t channel, scpi_t *context) {
@@ -301,7 +301,7 @@ enum _scpi_result_t RP_GenSetArbitraryWaveForm(rp_channel_t channel, scpi_t *con
 
     syslog(LOG_INFO, "*SOUR<n>:TRAC:DATA:DATA Successfully set arbitrary waveform");
     
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetGenerateMode(rp_channel_t channel, scpi_t *context) {
@@ -327,7 +327,7 @@ enum _scpi_result_t RP_GenSetGenerateMode(rp_channel_t channel, scpi_t *context)
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:STAT Successfully set generate mode");
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
@@ -347,7 +347,7 @@ enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:NCYC Successfully set burst count");
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetTriggerSource(rp_channel_t channel, scpi_t *context) {
@@ -379,7 +379,7 @@ enum _scpi_result_t RP_GenSetTriggerSource(rp_channel_t channel, scpi_t *context
 
     syslog(LOG_INFO, "*SOUR<n>:TRIG:SOUR Successfully set trigger source");
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetTrigger(int channel, scpi_t *context) {
@@ -392,5 +392,5 @@ enum _scpi_result_t RP_GenSetTrigger(int channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*%s Successfully set trigger", channel==3 ? "TRIG:IMM" : "SOUR<n>:TRIG:IMM");
 
-    SET_OK(context);
+    return SCPI_RES_OK;
 }
