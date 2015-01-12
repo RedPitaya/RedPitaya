@@ -21,8 +21,34 @@
 
 #include "utils.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "../../api-mockup/rpbase/src/common.h"
 
 
+int RP_GenSetDefaultValues() {
+    // Setting default parameter
+    ECHECK(rp_GenOutDisable(RP_CH_A));
+    ECHECK(rp_GenOutDisable(RP_CH_B));
+    ECHECK(rp_GenFreq(RP_CH_A, 1000));
+    ECHECK(rp_GenFreq(RP_CH_B, 1000));
+    ECHECK(rp_GenWaveform(RP_CH_A, RP_WAVEFORM_SINE));
+    ECHECK(rp_GenWaveform(RP_CH_B, RP_WAVEFORM_SINE));
+    ECHECK(rp_GenAmp(RP_CH_A, 1));
+    ECHECK(rp_GenAmp(RP_CH_B, 1));
+    ECHECK(rp_GenOffset(RP_CH_A, 0));
+    ECHECK(rp_GenOffset(RP_CH_B, 0));
+    ECHECK(rp_GenPhase(RP_CH_A, 0));
+    ECHECK(rp_GenPhase(RP_CH_A, 0));
+    ECHECK(rp_GenDutyCycle(RP_CH_A, 0.5));
+    ECHECK(rp_GenDutyCycle(RP_CH_B, 0.5));
+    ECHECK(rp_GenMode(RP_CH_A, RP_GEN_MODE_CONTINUOUS));
+    ECHECK(rp_GenMode(RP_CH_B, RP_GEN_MODE_CONTINUOUS));
+    ECHECK(rp_GenBurstCount(RP_CH_A, 1));
+    ECHECK(rp_GenBurstCount(RP_CH_B, 1));
+    ECHECK(rp_GenTriggerSource(RP_CH_A, RP_TRIG_SRC_INTERNAL));
+    ECHECK(rp_GenTriggerSource(RP_CH_B, RP_TRIG_SRC_INTERNAL));
+
+    return RP_OK;
+}
 
 enum _scpi_result_t RP_GenChannel1SetState(scpi_t *context) {
     return RP_GenSetState(RP_CH_A, context);

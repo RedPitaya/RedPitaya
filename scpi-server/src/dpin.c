@@ -17,12 +17,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "scpi/scpi.h"
-#include "rp.h"
-
 #include "utils.h"
 #include "dpin.h"
+#include "../../api-mockup/rpbase/src/common.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
+
+int RP_DpinSetDefaultValues() {
+    // Setting default parameter
+    rp_dpin_t pin;
+    for (pin = RP_DIO1_P; pin <= RP_DIO7_P; pin++) {
+        ECHECK(rp_DpinSetDirection(pin, RP_OUT));
+        ECHECK(rp_DpinSetState(pin, RP_LOW));
+    }
+
+    for (pin = RP_DIO0_N; pin <= RP_DIO7_N; pin++) {
+        ECHECK(rp_DpinSetDirection((rp_dpin_t) pin, RP_OUT));
+        ECHECK(rp_DpinSetState(pin, RP_LOW));
+    }
+
+    for (pin = RP_LED1; pin <= RP_LED7; pin++) {
+        ECHECK(rp_DpinSetState(pin, RP_LOW));
+    }
+
+    return RP_OK;
+}
 
 /**
  * Returns Digital Pin state to SCPI context

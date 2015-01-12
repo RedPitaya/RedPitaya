@@ -16,9 +16,10 @@
 #ifndef DPIN_H_
 #define DPIN_H_
 
+int RP_DpinSetDefaultValues();
+
 scpi_result_t RP_DigitalPinGetStateQ(scpi_t * context);
 scpi_result_t RP_DigitalPinSetState(scpi_t * context);
 scpi_result_t RP_DigitalPinSetDirection(scpi_t * context);
-
 
 #endif /* DPIN_H_ */

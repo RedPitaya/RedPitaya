@@ -28,6 +28,8 @@ typedef enum {
     RP_SCPI_ADCII,
 } rp_scpi_acq_format_t;
 
+int RP_AcqSetDefaultValues();
+
 scpi_result_t RP_AcqStart(scpi_t * context);
 scpi_result_t RP_AcqReset(scpi_t * context);
 scpi_result_t RP_AcqSetDecimation(scpi_t * context);

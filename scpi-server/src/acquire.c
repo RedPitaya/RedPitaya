@@ -21,10 +21,29 @@
 
 #include "utils.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "../../api-mockup/rpbase/src/common.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 rp_scpi_acq_format_t format = RP_SCPI_FLAOT;        // default value
 
+
+int RP_AcqSetDefaultValues() {
+    // Setting default parameter
+    ECHECK(rp_AcqSetDecimation(RP_DEC_1));
+    ECHECK(rp_AcqSetSamplingRate(RP_SMP_125M));
+    ECHECK(rp_AcqSetAveraging(true));
+    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
+    ECHECK(rp_AcqSetTriggerDelay(0));
+    ECHECK(rp_AcqSetTriggerDelayNs(0));
+    ECHECK(rp_AcqSetGain(RP_CH_A, RP_LOW));
+    ECHECK(rp_AcqSetGain(RP_CH_B, RP_LOW));
+    ECHECK(rp_AcqSetTriggerLevel(0));
+
+    unit = RP_SCPI_VOLTS;
+    format = RP_SCPI_FLAOT;
+
+    return RP_OK;
+}
 
 scpi_result_t RP_AcqStart(scpi_t *context) {
     int result = rp_AcqStart();
@@ -46,6 +65,13 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
+    result = RP_AcqSetDefaultValues();
+
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*ACQ:RST Failed to set default settings: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
     syslog(LOG_INFO, "*ACQ:RST Successful.");
     return SCPI_RES_OK;
 }
@@ -55,7 +81,8 @@ scpi_result_t RP_AcqSetDecimation(scpi_t *context) {
 
     // read first parameter DECIMATION (1,8,64,1024,8192,65536)
     if (!SCPI_ParamInt(context, &value, false)) {
-        value = 1;              // default value
+        syslog(LOG_ERR, "*ACQ:DEC is missing first parameter.");
+        return SCPI_RES_ERR;
     }
 
     // Convert decimation to rp_acq_decimation_t
@@ -183,7 +210,8 @@ scpi_result_t RP_AcqSetAveraging(scpi_t *context) {
 
     // read first parameter AVERAGING (OFF,ON)
     if (!SCPI_ParamBool(context, &value, false)) {
-        value = true;            // default value
+        syslog(LOG_ERR, "*ACQ:AVGT is missing first parameter.");
+        return SCPI_RES_ERR;
     }
 
     // Now set the averaging
@@ -225,7 +253,8 @@ scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
 
     // read first parameter TRIGGER SOURCE (DISABLED,NOW,CH1_PE,CH1_NE,CH2_PE,CH2_NE,EXT_PE,EXT_NE,AWG_PE)
     if (!SCPI_ParamString(context, &param, &param_len, false)) {
-        strcpy(triggerSource, "DISABLED");          // default value
+        syslog(LOG_ERR, "*ACQ:TRIG:SRC is missing first parameter.");
+        return SCPI_RES_ERR;
     }
     else {
         strncpy(triggerSource, param, param_len);
@@ -454,7 +483,8 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
 
     // read first parameter UNITS (RAW, VOLTS)
     if (!SCPI_ParamString(context,  &param, &param_len, false)) {
-        strcpy(unitString, "VOLTS");            // default value
+        syslog(LOG_ERR, "*ACQ:DATA:UNITSis missing first parameter.");
+        return SCPI_RES_ERR;
     }
     else {
         strncpy(unitString, param, param_len);
@@ -480,7 +510,8 @@ scpi_result_t RP_AcqScpiDataFormat(scpi_t *context) {
 
     // read first parameter UNITS (ASCII, FLOAT)
     if (!SCPI_ParamString(context,  &param, &param_len, false)) {
-        strcpy(formatString, "FLOAT");            // default value
+        syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
+        return SCPI_RES_ERR;
     }
     else {
         strncpy(formatString, param, param_len);
@@ -562,7 +593,8 @@ scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
 
     // read first parameter GAIN (LV,HV)
     if (!SCPI_ParamString(context, &param, &param_len, false)) {
-        strcpy(gainString, "HV");       //default value
+        syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN is missing first parameter.");
+        return SCPI_RES_ERR;
     }
     else {
         strncpy(gainString, param, param_len);
