@@ -87,12 +87,12 @@ int generate_setOutputDisable(rp_channel_t chanel, bool disable) {
 }
 
 int generate_GenTrigger(rp_channel_t chanel) {
-	if (chanel == RP_CH_A) {
+	if (chanel == RP_CH_1) {
 		generate->ASM_OneTimeTrigger = 1;
 		generate->AtriggerSelector = 1;
 		return RP_OK;
 	}
-	else if (chanel == RP_CH_B) {
+	else if (chanel == RP_CH_2) {
 		generate->BSM_OneTimeTrigger = 1;
 		generate->BtriggerSelector = 1;
 		return RP_OK;
