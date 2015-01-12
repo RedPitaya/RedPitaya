@@ -18,6 +18,7 @@
 
 #include "rp.h"
 
+int gen_SetDefaultValues();
 int gen_Disable(rp_channel_t chanel);
 int gen_Enable(rp_channel_t chanel);
 int gen_setAmplitude(rp_channel_t chanel, double amplitude);

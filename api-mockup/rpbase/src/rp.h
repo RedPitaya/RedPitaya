@@ -260,6 +260,14 @@ int rp_Init();
 int rp_Release();
 
 /**
+* Resets all modules. Typically calles after rp_Init()
+* application exits.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_Reset();
+
+/**
  * Retrieves the library version number
  * @return Library version
  */
@@ -285,6 +293,11 @@ const char* rp_GetError(int errorCode);
 /** @name Digital Input/Output
  */
 ///@{
+
+/**
+* Sets digital pins to default values. Pins DIO1_P - DIO7_P, RP_DIO0_N - RP_DIO7_N are set al OUTPUT and to LOW. LEDs are set to LOW/OFF
+*/
+int rp_DpinReset();
 
 /**
  * Sets digital input output pin state.
@@ -329,6 +342,13 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 /** @name Analog Input/Output
  */
 ///@{
+
+
+/**
+* Sets analog pins to default values. Output pins are set to 0 V.
+*/
+int rp_ApinReset();
+
 
 /**
  * Gets value from analog pin in volts.
@@ -742,6 +762,13 @@ int rp_HealthGetValue(rp_health_t sensor, float* value);
 /** @name Generate
 */
 ///@{
+
+
+
+/**
+* Sets generate to default values.
+*/
+int rp_GenReset();
 
 /**
 * Enables output
