@@ -122,10 +122,12 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
     /* RedPitaya */
+    {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
 	{.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
 	{.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
         {.pattern = "DIG:PIN:DIR", .callback = RP_DigitalPinSetDirection,},
 
+        {.pattern = "ANALOG:RST", .callback = RP_AnalogPinReset,},
         {.pattern = "ANALOG:PIN", .callback = RP_AnalogPinSetValue,},
         {.pattern = "ANALOG:PIN?", .callback = RP_AnalogPinGetValue,},
 
@@ -170,6 +172,7 @@ static const scpi_command_t scpi_commands[] = {
         /* Generate */
         {.pattern = "OUTPUT1:STATE", .callback = RP_GenChannel1SetState,},
         {.pattern = "OUTPUT2:STATE", .callback = RP_GenChannel2SetState,},
+        {.pattern = "GEN:RST", .callback = RP_GenReset,},
         {.pattern = "SOUR1:FREQ:FIX", .callback = RP_GenChannel1SetFrequency,},
         {.pattern = "SOUR2:FREQ:FIX", .callback = RP_GenChannel2SetFrequency,},
         {.pattern = "SOUR1:FUNC", .callback = RP_GenChannel1SetWaveForm,},

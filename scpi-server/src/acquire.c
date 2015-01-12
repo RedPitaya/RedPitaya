@@ -27,24 +27,6 @@ rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 rp_scpi_acq_format_t format = RP_SCPI_FLAOT;        // default value
 
 
-int RP_AcqSetDefaultValues() {
-    // Setting default parameter
-    ECHECK(rp_AcqSetDecimation(RP_DEC_1));
-    ECHECK(rp_AcqSetSamplingRate(RP_SMP_125M));
-    ECHECK(rp_AcqSetAveraging(true));
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-    ECHECK(rp_AcqSetTriggerDelay(0));
-    ECHECK(rp_AcqSetTriggerDelayNs(0));
-    ECHECK(rp_AcqSetGain(RP_CH_A, RP_LOW));
-    ECHECK(rp_AcqSetGain(RP_CH_B, RP_LOW));
-    ECHECK(rp_AcqSetTriggerLevel(0));
-
-    unit = RP_SCPI_VOLTS;
-    format = RP_SCPI_FLAOT;
-
-    return RP_OK;
-}
-
 scpi_result_t RP_AcqStart(scpi_t *context) {
     int result = rp_AcqStart();
 
@@ -65,12 +47,8 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = RP_AcqSetDefaultValues();
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:RST Failed to set default settings: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
+    unit = RP_SCPI_VOLTS;
+    format = RP_SCPI_FLAOT;
 
     syslog(LOG_INFO, "*ACQ:RST Successful.");
     return SCPI_RES_OK;
@@ -804,6 +782,8 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.");
+
+    printf("*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.\n");
 
     return SCPI_RES_OK;
 }
