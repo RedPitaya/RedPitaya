@@ -19,6 +19,8 @@
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
 #include "../../api-mockup/rpbase/src/rp.h"
 
+int RP_GenSetDefaultValues();
+
 scpi_result_t RP_GenChannel1SetState(scpi_t * context);
 scpi_result_t RP_GenChannel2SetState(scpi_t * context);
 scpi_result_t RP_GenChannel1SetFrequency(scpi_t * context);

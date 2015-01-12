@@ -16,13 +16,21 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "scpi/scpi.h"
-#include "rp.h"
-
 #include "utils.h"
 #include "apin.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "../../api-mockup/rpbase/src/common.h"
 
+
+int RP_ApinSetDefaultValues() {
+    // Setting default parameter
+    rp_apin_t pin;
+    for (pin = RP_AOUT0; pin <= RP_AOUT3; pin++) {
+        ECHECK(rp_ApinSetValue(pin, 0));
+    }
+
+    return RP_OK;
+}
 
 /**
  * Returns Analog Pin value in volts to SCPI context

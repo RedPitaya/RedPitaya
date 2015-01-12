@@ -18,9 +18,6 @@
 #include <string.h>
 
 #include <netinet/in.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
 #include <arpa/inet.h>
@@ -28,10 +25,13 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#include "scpi/scpi.h"
 #include "scpi-commands.h"
 
-#include "rp.h"
+#include "dpin.h"
+#include "apin.h"
+#include "generate.h"
+#include "acquire.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 #define LISTEN_BACKLOG 50
 #define LISTEN_PORT 5000
@@ -41,6 +41,17 @@
 static bool app_exit = false;
 static char delimiter[] = "\r\n";
 
+
+
+int setDefaultValues() {
+	RP_DpinSetDefaultValues();
+	RP_ApinSetDefaultValues();
+	RP_GenSetDefaultValues();
+	RP_AcqSetDefaultValues();
+	// TODO: Place other SCPI module default values here
+
+	return 0;
+}
 
 static void handleCloseChildEvents()
 {
@@ -216,6 +227,12 @@ int main(int argc, char *argv[])
     	return (EXIT_FAILURE);
     }
 
+	result = setDefaultValues(); 			// set Red Pitaya default values
+	if (result != RP_OK) {
+		syslog(LOG_ERR, "Failed to set default values on RP: %s", rp_GetError(result));
+		return (EXIT_FAILURE);
+	}
+
     // user_context will be pointer to socket
     scpi_context.user_context = NULL;
     SCPI_Init(&scpi_context);
@@ -280,7 +297,7 @@ int main(int argc, char *argv[])
 
         	scpi_context.user_context = &connfd;
 
-        	int result = handleConnection(connfd);
+        	result = handleConnection(connfd);
 
         	close(connfd);
 
