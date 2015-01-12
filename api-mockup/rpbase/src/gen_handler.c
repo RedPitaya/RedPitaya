@@ -19,6 +19,7 @@
 #include "gen_handler.h"
 
 double chA_amplitude = 1, chB_amplitude = 1;
+double chA_offset = 0, chB_offset = 0;
 double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
 rp_waveform_t chA_waveform, chB_waveform;
@@ -31,10 +32,24 @@ int gen_Enable(rp_channel_t chanel) {
     return generate_setOutputDisable(chanel, false);
 }
 
-int gen_setAmplitude(rp_channel_t chanel, double amplitude) {
-    if (amplitude < AMPLITUDE_MIN || amplitude > AMPLITUDE_MAX) {
+int gen_checkAmplitudeAndOffset(double amplitude, double offset) {
+    if (MAX(amplitude + offset, -amplitude + offset) > LEVEL_MAX) {
         return RP_EOOR;
     }
+    return RP_OK;
+}
+
+int gen_setAmplitude(rp_channel_t chanel, double amplitude) {
+    if (fabs(amplitude) < AMPLITUDE_MIN || fabs(amplitude) > AMPLITUDE_MAX) {
+        return RP_EOOR;
+    }
+    amplitude = fabs(amplitude);
+
+    double offset;
+    CHECK_OUTPUT(offset = chA_offset,
+                 offset = chB_offset)
+    ECHECK(gen_checkAmplitudeAndOffset(amplitude, offset));
+
     CHECK_OUTPUT(chA_amplitude = amplitude,
                  chB_amplitude = amplitude)
 
@@ -46,6 +61,15 @@ int gen_Offset(rp_channel_t chanel, double offset) {
     if (offset < OFFSET_MIN || offset > OFFSET_MAX) {
         return RP_EOOR;
     }
+
+    double amplitude;
+    CHECK_OUTPUT(amplitude = chA_amplitude,
+                 amplitude = chB_amplitude)
+    ECHECK(gen_checkAmplitudeAndOffset(amplitude, offset));
+
+    CHECK_OUTPUT(chA_offset = offset,
+                 chB_offset = offset)
+
     ECHECK(generate_setDCOffset(chanel, cmn_CnvVToCnt(DATA_BIT_LENGTH, (float) offset, OFFSET_MAX/2, 0, 0)));
     ECHECK(synthesize_signal(chanel));
     return RP_OK;
