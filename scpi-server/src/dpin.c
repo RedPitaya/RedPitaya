@@ -23,24 +23,17 @@
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 
-int RP_DpinSetDefaultValues() {
-    // Setting default parameter
-    rp_dpin_t pin;
-    for (pin = RP_DIO1_P; pin <= RP_DIO7_P; pin++) {
-        ECHECK(rp_DpinSetDirection(pin, RP_OUT));
-        ECHECK(rp_DpinSetState(pin, RP_LOW));
+scpi_result_t RP_DigitalPinReset(scpi_t *context) {
+    int result = rp_DpinReset();
+
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "DIG:RST Failed to: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
     }
 
-    for (pin = RP_DIO0_N; pin <= RP_DIO7_N; pin++) {
-        ECHECK(rp_DpinSetDirection((rp_dpin_t) pin, RP_OUT));
-        ECHECK(rp_DpinSetState(pin, RP_LOW));
-    }
+    syslog(LOG_INFO, "*DIG:RST Successfully");
 
-    for (pin = RP_LED1; pin <= RP_LED7; pin++) {
-        ECHECK(rp_DpinSetState(pin, RP_LOW));
-    }
-
-    return RP_OK;
+    return SCPI_RES_OK;
 }
 
 /**

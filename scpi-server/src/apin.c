@@ -22,14 +22,17 @@
 #include "../../api-mockup/rpbase/src/common.h"
 
 
-int RP_ApinSetDefaultValues() {
-    // Setting default parameter
-    rp_apin_t pin;
-    for (pin = RP_AOUT0; pin <= RP_AOUT3; pin++) {
-        ECHECK(rp_ApinSetValue(pin, 0));
+scpi_result_t RP_AnalogPinReset(scpi_t *context) {
+    int result = rp_ApinReset();
+
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "ANALOG:RST Failed to: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
     }
 
-    return RP_OK;
+    syslog(LOG_INFO, "*ANALOG:RST Successfully");
+
+    return SCPI_RES_OK;
 }
 
 /**

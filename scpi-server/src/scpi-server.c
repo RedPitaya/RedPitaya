@@ -42,17 +42,6 @@ static bool app_exit = false;
 static char delimiter[] = "\r\n";
 
 
-
-int setDefaultValues() {
-	RP_DpinSetDefaultValues();
-	RP_ApinSetDefaultValues();
-	RP_GenSetDefaultValues();
-	RP_AcqSetDefaultValues();
-	// TODO: Place other SCPI module default values here
-
-	return 0;
-}
-
 static void handleCloseChildEvents()
 {
     struct sigaction sigchld_action = {
@@ -227,9 +216,9 @@ int main(int argc, char *argv[])
     	return (EXIT_FAILURE);
     }
 
-	result = setDefaultValues(); 			// set Red Pitaya default values
+	result = rp_Reset();
 	if (result != RP_OK) {
-		syslog(LOG_ERR, "Failed to set default values on RP: %s", rp_GetError(result));
+		syslog(LOG_ERR, "Failed to reset RP: %s", rp_GetError(result));
 		return (EXIT_FAILURE);
 	}
 
