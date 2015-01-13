@@ -32,6 +32,7 @@ typedef struct ch_properties {
 	uint32_t startOffset;
 	uint32_t counterStep;
 	uint32_t buffReadPointer;
+	int8_t   unused[10];
 } ch_properties_t;
 
 typedef struct generate_control_s {
@@ -81,8 +82,17 @@ int getChanelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_chan
 }
 
 int generate_setOutputDisable(rp_channel_t chanel, bool disable) {
-	CHECK_OUTPUT(generate->AsetOutputTo0 = disable ? 1 : 0,
-			     generate->BsetOutputTo0 = disable ? 1 : 0)
+	if (chanel == RP_CH_1) {
+		generate->ASM_reset = 0;
+		generate->AsetOutputTo0 = disable ? 1 : 0;
+	}
+	else if (chanel == RP_CH_2) {
+		generate->BSM_reset = 0;
+		generate->BsetOutputTo0 = disable ? 1 : 0;
+	}
+	else {
+		return RP_EPN;
+	}
 	return RP_OK;
 }
 
