@@ -1,16 +1,16 @@
 /**
- * $Id: $
- *
- * @brief Red Pitaya library Generate handler interface
- *
- * @Author Red Pitaya
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
- */
+* $Id: $
+*
+* @brief Red Pitaya library Generate handler interface
+*
+* @Author Red Pitaya
+*
+* (c) Red Pitaya  http://www.redpitaya.com
+*
+* This part of code is written in C programming language.
+* Please visit http://en.wikipedia.org/wiki/C_(programming_language)
+* for more details on the language used herein.
+*/
 
 #include <sys/socket.h>
 #include "math.h"
@@ -28,8 +28,8 @@ rp_waveform_t chA_waveform, chB_waveform;
 int gen_SetDefaultValues() {
     ECHECK(gen_Disable(RP_CH_1));
     ECHECK(gen_Disable(RP_CH_2));
-    ECHECK(generate_setFrequency(RP_CH_1, 1000));
-    ECHECK(generate_setFrequency(RP_CH_2, 1000));
+    ECHECK(gen_Frequency(RP_CH_1, 1000));
+    ECHECK(gen_Frequency(RP_CH_2, 1000));
     ECHECK(gen_Waveform(RP_CH_1, RP_WAVEFORM_SINE));
     ECHECK(gen_Waveform(RP_CH_2, RP_WAVEFORM_SINE));
     ECHECK(gen_setAmplitude(RP_CH_1, 1));
@@ -37,7 +37,7 @@ int gen_SetDefaultValues() {
     ECHECK(generate_setDCOffset(RP_CH_1, 0));
     ECHECK(generate_setDCOffset(RP_CH_2, 0));
     ECHECK(gen_Phase(RP_CH_1, 0));
-    ECHECK(gen_Phase(RP_CH_1, 0));
+    ECHECK(gen_Phase(RP_CH_2, 0));
     ECHECK(gen_DutyCycle(RP_CH_1, 0.5));
     ECHECK(gen_DutyCycle(RP_CH_2, 0.5));
     ECHECK(gen_GenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS));
@@ -153,7 +153,8 @@ int gen_GenMode(rp_channel_t chanel, rp_gen_mode_t mode) {
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_BURST) {
-        return RP_EUF;
+        CHECK_OUTPUT(return generate_GenTrigger(RP_CH_1),
+                     return generate_GenTrigger(RP_CH_2))
     }
     else if (mode == RP_GEN_MODE_STREAM) {
         //TODO
@@ -253,7 +254,7 @@ int synthesize_signal(rp_channel_t chanel) {
 int synthesis_sin(double amplitude, float *data_out) {
     int i;
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (amplitude * cos(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
+        data_out[i] = (float) (amplitude * sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
     }
     return RP_OK;
 }
@@ -261,15 +262,16 @@ int synthesis_sin(double amplitude, float *data_out) {
 int synthesis_triangle(double amplitude, float *data_out) {
     int i;
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (-1.0 * amplitude * (acos(cos(2 * M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI * 2 - 1));
+        data_out[i] = (float) (amplitude * (asin(sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI * 2));
     }
     return RP_OK;
 }
 
 int synthesis_rampUp(double amplitude, float *data_out) {
     int i;
-    for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[BUFFER_LENGTH - i-1] = (float) (-amplitude * (acos(cos(M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI - 1));
+    data_out[BUFFER_LENGTH -1] = 0;
+    for(i = 0; i < BUFFER_LENGTH-1; i++) {
+        data_out[BUFFER_LENGTH - i-2] = (float) (-amplitude * (acos(cos(M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI - 1));
     }
     return RP_OK;
 }
@@ -322,7 +324,7 @@ int synthesis_square(double amplitude, double frequency, float *data_out) {
     }
 
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (amplitude * cos(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
+        data_out[i] = (float) (amplitude * sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
         if (data_out[i] > 0)
             data_out[i] = (float) amplitude;
         else
