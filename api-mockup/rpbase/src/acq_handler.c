@@ -663,7 +663,7 @@ static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos)
         end_pos += ADC_BUFFER_SIZE;
     }
 
-    return end_pos - start_pos;
+    return end_pos - start_pos + 1;
 }
 
 uint32_t acq_GetNormalizedDataPos(uint32_t pos)

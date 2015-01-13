@@ -21,7 +21,6 @@
 
 #include "utils.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
-#include "../../api-mockup/rpbase/src/common.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 rp_scpi_acq_format_t format = RP_SCPI_FLAOT;        // default value
@@ -755,7 +754,9 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
     }
 
     int result;
-    uint32_t size = end-start;
+    uint32_t size;
+    rp_AcqGetBufSize(&size);
+
     if (unit == RP_SCPI_VOLTS) {
         float buffer[size];
         result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
