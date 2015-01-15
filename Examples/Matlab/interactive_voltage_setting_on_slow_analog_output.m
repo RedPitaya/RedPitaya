@@ -1,3 +1,6 @@
+
+function sliderDemo
+
 f = figure(1);
     global p  
     
