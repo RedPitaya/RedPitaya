@@ -1,11 +1,10 @@
-
 %% Define Red Pitaya as TCP/IP object
 clear all
 close all
 clc
-IP= '192.168.178.56';                % Input IP of your Red Pitaya...
-port = 5000;                         % If you are using WiFi then IP is:                  
-tcpipObj = tcpip(IP, port);          % 192.168.128.1
+IP= '192.168.178.56';                 % Input IP of your Red Pitaya...
+port = 5000;                          % If you are using WiFi then IP is:                  
+tcpipObj = tcpip(IP, port);           % 192.168.128.1
 tcpipObj.InputBufferSize = 16384*32;
 
 %% Open connection with your Red Pitaya
@@ -37,16 +36,17 @@ pause(0.1) % Wait for data writing
 
 %% Start & Trigg
 % Trigger source setting must be after ACQ:START
-% Set trigger to source 1 positive edge
+% Set trigger to external source and positive edge
 
 
 fprintf(tcpipObj,'ACQ:START');
-fprintf(tcpipObj,'ACQ:TRIG CH1_PE');  
+fprintf(tcpipObj,'ACQ:TRIG EXT_PE');  
  
 % Wait for trigger
 % Until trigger is true wait with acquiring
 % Be aware of while loop if trigger is not achieved
 % Ctrl+C will stop code executing in Matlab  
+
 
 
 while 1

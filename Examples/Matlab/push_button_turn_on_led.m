@@ -32,7 +32,7 @@ state=str2num(query(tcpipObj,'DIG:PIN? DIO5_N'));
 
 pause(0.1)                     				% Set time delay for Red Pitaya response 
 
-i++
+i=i+1
 
 end    
 
