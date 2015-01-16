@@ -5,6 +5,7 @@
 #
 # Versioning system
 VERSION ?= 0.00-0000
+
 REVISION ?= devbuild
 
 CROSS_COMPILE = arm-linux-gnueabi-
@@ -20,18 +21,21 @@ CC = $(CROSS_COMPILE)gcc
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
 #Objects
-OBJECTS = blink_led.o
+OBJECTS = blink_diode.o
 #Target file
-TARGET = blink_led
+TARGET = api_test
 
 $(TARGET): $(OBJECTS)
-	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE) $(RP_PATH_INCLUDE)
+	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE)
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(RP_PATH_INCLUDE) $< -o $@
+
+#Build the executable
+all: $(TARGET)
 
 clean:
-	$(RM) $(TARGET) *.o
+	$(RM) $(TARGET) *.o ~*
 
 
 #  -----Error----- I have no idea what was wrong. 
