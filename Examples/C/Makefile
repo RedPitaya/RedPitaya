@@ -31,7 +31,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(TARGET) *.o
 
 
 #  -----Error----- I have no idea what was wrong. 
