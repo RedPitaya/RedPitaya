@@ -34,7 +34,7 @@ clean:
 	$(RM) $(TARGET)
 
 
-#  -----Error-----
+#  -----Error----- I have no idea what was wrong. 
 #  ../../api-mockup/rpbase/librp.so: file not recognized: File format not recognized
 #
 # 
