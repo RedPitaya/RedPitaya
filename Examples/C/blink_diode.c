@@ -30,5 +30,8 @@ int main(int argc, char **argv){
 		usleep(20000);
 	}
 
+	/* Releasing resources */
+	rp_Release();
+	
 	return 0;
 }
