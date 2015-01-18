@@ -46,7 +46,7 @@ int rp_Init()
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
-    rp_Reset();
+    ECHECK(rp_Reset());
 
     return RP_OK;
 }
@@ -85,47 +85,49 @@ rp_calib_params_t rp_GetCalibrationSettings()
     return calib_GetParams();
 }
 
-const char* rp_GetError(int errorCode)
-{
+const char* rp_GetError(int errorCode) {
     switch (errorCode) {
-    case RP_OK:
-        return "OK";
-    case RP_EOED:
-        return "Failed to Open EEPROM Device.";
-    case RP_EOMD:
-        return "Failed to open memory device.";
-    case RP_ECMD:
-        return "Failed to close memory device.";
-    case RP_EMMD:
-        return "Failed to map memory device.";
-    case RP_EUMD:
-        return "Failed to unmap memory device.";
-    case RP_EOOR:
-        return "Value out of range.";
-    case RP_ELID:
-        return "LED input direction is not valid.";
-    case RP_EMRO:
-        return "Modifying read only filed is not allowed.";
-    case RP_EWIP:
-        return "Writing to input pin is not valid.";
-    case RP_EPN:
-        return "Invalid Pin number.";
-    case RP_UIA:
-        return "Uninitialized Input Argument.";
-    case RP_FCA:
-        return "Failed to Find Calibration Parameters.";
-    case RP_RCA:
-        return "Failed to Read Calibration Parameters.";
-    case RP_BTS:
-        return "Buffer too small";
-    case RP_EIPV:
-        return "Invalid parameter value";
-    case RP_EUF:
-        return "Unsupported Feature";
-    default:
-        return "Unknown error";
+        case RP_OK:
+            return "OK";
+        case RP_EOED:
+            return "Failed to Open EEPROM Device.";
+        case RP_EOMD:
+            return "Failed to open memory device.";
+        case RP_ECMD:
+            return "Failed to close memory device.";
+        case RP_EMMD:
+            return "Failed to map memory device.";
+        case RP_EUMD:
+            return "Failed to unmap memory device.";
+        case RP_EOOR:
+            return "Value out of range.";
+        case RP_ELID:
+            return "LED input direction is not valid.";
+        case RP_EMRO:
+            return "Modifying read only filed is not allowed.";
+        case RP_EWIP:
+            return "Writing to input pin is not valid.";
+        case RP_EPN:
+            return "Invalid Pin number.";
+        case RP_UIA:
+            return "Uninitialized Input Argument.";
+        case RP_FCA:
+            return "Failed to Find Calibration Parameters.";
+        case RP_RCA:
+            return "Failed to Read Calibration Parameters.";
+        case RP_BTS:
+            return "Buffer too small";
+        case RP_EIPV:
+            return "Invalid parameter value";
+        case RP_EUF:
+            return "Unsupported Feature";
+        case RP_ENN:
+            return "Data not normalized";
+        default:
+            return "Unknown error";
     }
 }
+
 
 
 /**
