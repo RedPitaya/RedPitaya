@@ -211,7 +211,7 @@ static scpi_interface_t scpi_interface = {
     .test = SCPI_Test,
 };
 
-#define SCPI_INPUT_BUFFER_LENGTH 1024
+#define SCPI_INPUT_BUFFER_LENGTH 262144
 static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
 
 static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];
