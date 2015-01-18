@@ -35,7 +35,7 @@
 
 #define LISTEN_BACKLOG 50
 #define LISTEN_PORT 5000
-#define MAX_BUFF_SIZE 1024
+#define MAX_BUFF_SIZE 1048576
 #define MAX_MESSAGE_SIZE (MAX_BUFF_SIZE * 2)
 
 static bool app_exit = false;
