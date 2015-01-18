@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "rp.h"
 #include "common.h"
 #include "generate.h"
@@ -75,19 +76,21 @@ int generate_Release() {
 	return RP_OK;
 }
 
-int getChanelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t chanel) {
+int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {
 	CHECK_OUTPUT(*ch_properties = &generate->properties_chA,
 			     *ch_properties = &generate->properties_chB)
 	return RP_OK;
 }
 
-int generate_setOutputDisable(rp_channel_t chanel, bool disable) {
-	if (chanel == RP_CH_1) {
+int generate_setOutputDisable(rp_channel_t channel, bool disable) {
+	if (channel == RP_CH_1) {
 		generate->ASM_reset = 0;
+		generate->ASM_WrapPointer = 0;
 		generate->AsetOutputTo0 = disable ? 1 : 0;
 	}
-	else if (chanel == RP_CH_2) {
+	else if (channel == RP_CH_2) {
 		generate->BSM_reset = 0;
+		generate->BSM_WrapPointer = 0;
 		generate->BsetOutputTo0 = disable ? 1 : 0;
 	}
 	else {
@@ -96,13 +99,20 @@ int generate_setOutputDisable(rp_channel_t chanel, bool disable) {
 	return RP_OK;
 }
 
-int generate_GenTrigger(rp_channel_t chanel) {
-	if (chanel == RP_CH_1) {
+int generate_setAmplitude(rp_channel_t channel, float amplitude) {
+	volatile ch_properties_t *ch_properties;
+	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+	ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX, 0, 0);
+	return RP_OK;
+}
+
+int generate_GenTrigger(rp_channel_t channel) {
+	if (channel == RP_CH_1) {
 		generate->ASM_OneTimeTrigger = 1;
 		generate->AtriggerSelector = 1;
 		return RP_OK;
 	}
-	else if (chanel == RP_CH_2) {
+	else if (channel == RP_CH_2) {
 		generate->BSM_OneTimeTrigger = 1;
 		generate->BtriggerSelector = 1;
 		return RP_OK;
@@ -112,51 +122,56 @@ int generate_GenTrigger(rp_channel_t chanel) {
 	}
 }
 
-int generate_setDCOffset(rp_channel_t chanel, uint32_t offset) {
+int generate_setDCOffset(rp_channel_t channel, float offset) {
 	volatile ch_properties_t *ch_properties;
-	ECHECK(getChanelPropertiesAddress(&ch_properties, chanel));
-	ch_properties->amplitudeOffset = offset;
+	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+	ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2), 0, 0);
 	return RP_OK;
 }
 
-int generate_setFrequency(rp_channel_t chanel, uint32_t frequency) {
+int generate_setFrequency(rp_channel_t channel, float frequency) {
 	volatile ch_properties_t *ch_properties;
-	ECHECK(getChanelPropertiesAddress(&ch_properties, chanel));
-	ch_properties->counterStep = frequency;
+	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+	ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
 	return RP_OK;
 }
 
-int generate_setPhase(rp_channel_t chanel, uint32_t phase) {
+int generate_setPhase(rp_channel_t channel, float phase) {
 	volatile ch_properties_t *ch_properties;
-	ECHECK(getChanelPropertiesAddress(&ch_properties, chanel));
-	ch_properties->startOffset = phase;
+	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+	ch_properties->startOffset = (uint32_t) (phase / PHASE_MAX * BUFFER_LENGTH / 2);
 	return RP_OK;
 }
 
-int generate_setTriggerSource(rp_channel_t chanel, unsigned short value) {
+int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
+	CHECK_OUTPUT(generate->properties_chA.counterWrap = 65536 * (size-1),
+			     generate->properties_chB.counterWrap = 65536 * (size-1))
+	return RP_OK;
+}
+
+int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
 	CHECK_OUTPUT(generate->AtriggerSelector = value,
 			     generate->BtriggerSelector = value)
 	return RP_OK;
 }
 
-
-int generate_setOneTimeTrigger(rp_channel_t chanel, uint32_t value) {
+int generate_setOneTimeTrigger(rp_channel_t channel, uint32_t value) {
 	CHECK_OUTPUT(generate->ASM_OneTimeTrigger = value,
 			     generate->BSM_OneTimeTrigger = value)
 	return RP_OK;
 }
 
-int generate_writeData(rp_channel_t chanel, float *data, uint32_t length) {
+int generate_writeData(rp_channel_t channel, float *data, uint32_t length) {
 	volatile int32_t *dataOut;
 	CHECK_OUTPUT(dataOut = data_chA,
-			dataOut = data_chB)
+			     dataOut = data_chB)
 
 	volatile ch_properties_t *properties;
-	ECHECK(getChanelPropertiesAddress(&properties, chanel));
-	properties->counterWrap = (length-1) * 65536;
+	ECHECK(getChannelPropertiesAddress(&properties, channel));
+	generate_setWrapCounter(channel, length);
 
 	uint32_t i;
-	for(i = 0; i < length; i++) {
+	for(i = 0; i < BUFFER_LENGTH; i++) {
 		dataOut[i] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i], AMPLITUDE_MAX, 0, 0);
 	}
 	return RP_OK;
