@@ -361,6 +361,9 @@ int getRpWaveform(const char *waveformString, rp_waveform_t *waveform) {
 	else if (strcmp(waveformString, "SAWU") == 0) {
 		*waveform = RP_WAVEFORM_RAMP_UP;
 	}
+	else if (strcmp(waveformString, "ARBITRARY") == 0) {
+		*waveform = RP_WAVEFORM_ARBITRARY;
+	}
 	else {
 		return RP_EOOR;
 	}
