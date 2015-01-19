@@ -11,15 +11,13 @@
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
  * for more details on the language used herein.
  */
-
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-
 #define LEVEL_MAX	   1.0	   // V
-#define AMPLITUDE_MIN  0.0	   // V
 #define AMPLITUDE_MAX  1.0     // V
-#define OFFSET_MIN     0.0     // V
+#define ARBITRARY_MIN -1.0	   // V
+#define ARBITRARY_MAX  1.0     // V
 #define OFFSET_MAX     2.0     // V
 #define FREQUENCY_MIN  0	   // Hz
 #define FREQUENCY_MAX  62.5e6  // Hz
@@ -35,10 +33,10 @@
 #define DATA_BIT_LENGTH 14
 
 #define CHECK_OUTPUT(X, Y) { \
-if (chanel == RP_CH_1) { \
+if (channel == RP_CH_1) { \
 	X; \
 } \
-else if (chanel == RP_CH_2) { \
+else if (channel == RP_CH_2) { \
 	Y; \
 } \
 else { \
@@ -50,9 +48,11 @@ int generate_Init();
 int generate_Release();
 
 int generate_setOutputDisable(rp_channel_t out, bool disable);
-int generate_setDCOffset(rp_channel_t out, uint32_t offset);
-int generate_setFrequency(rp_channel_t out, uint32_t frequency);
-int generate_setPhase(rp_channel_t out, uint32_t phase);
+int generate_setAmplitude(rp_channel_t out, float amplitude);
+int generate_setDCOffset(rp_channel_t out, float offset);
+int generate_setFrequency(rp_channel_t out, float frequency);
+int generate_setPhase(rp_channel_t out, float phase);
+int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
 int generate_setTriggerSource(rp_channel_t out, unsigned short value);
 int generate_GenTrigger(rp_channel_t out);
 int generate_setOneTimeTrigger(rp_channel_t out, uint32_t value);

@@ -724,6 +724,8 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
     uint32_t pos;
     ECHECK(acq_GetWritePointer(&pos));
 
+    pos++;
+
     if ((*size) > pos) {
         pos += ADC_BUFFER_SIZE;
     }
@@ -782,6 +784,8 @@ int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 
     uint32_t pos;
     ECHECK(acq_GetWritePointer(&pos));
+
+    pos++;
 
     if ((*size) > pos) {
         pos += ADC_BUFFER_SIZE;

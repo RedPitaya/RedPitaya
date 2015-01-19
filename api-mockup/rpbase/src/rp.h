@@ -64,6 +64,8 @@ extern "C" {
 #define RP_EIPV    15
 /** Unsupported Feature */
 #define RP_EUF    16
+/** Data not normalized */
+#define RP_ENN    17
 
 ///@}
 
