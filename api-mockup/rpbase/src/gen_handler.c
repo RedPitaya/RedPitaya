@@ -13,6 +13,7 @@
 */
 
 #include <sys/socket.h>
+#include <float.h>
 #include "math.h"
 #include "common.h"
 #include "generate.h"
@@ -23,6 +24,9 @@ double chA_offset = 0, chB_offset = 0;
 double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
 rp_waveform_t chA_waveform, chB_waveform;
+float chA_arbitraryData[BUFFER_LENGTH];
+float chB_arbitraryData[BUFFER_LENGTH];
+uint32_t chA_size = BUFFER_LENGTH, chB_size = BUFFER_LENGTH;
 
 
 int gen_SetDefaultValues() {
@@ -46,31 +50,25 @@ int gen_SetDefaultValues() {
     ECHECK(gen_BurstCount(RP_CH_2, 1));
     ECHECK(gen_TriggerSource(RP_CH_1, RP_TRIG_SRC_INTERNAL));
     ECHECK(gen_TriggerSource(RP_CH_2, RP_TRIG_SRC_INTERNAL));
-
     return RP_OK;
 }
 
-int gen_Disable(rp_channel_t chanel) {
-    return generate_setOutputDisable(chanel, true);
+int gen_Disable(rp_channel_t channel) {
+    return generate_setOutputDisable(channel, true);
 }
 
-int gen_Enable(rp_channel_t chanel) {
-    return generate_setOutputDisable(chanel, false);
+int gen_Enable(rp_channel_t channel) {
+    return generate_setOutputDisable(channel, false);
 }
 
 int gen_checkAmplitudeAndOffset(double amplitude, double offset) {
-    if (MAX(amplitude + offset, -amplitude + offset) > LEVEL_MAX) {
+    if (fabs(amplitude) + fabs(offset) > LEVEL_MAX) {
         return RP_EOOR;
     }
     return RP_OK;
 }
 
-int gen_setAmplitude(rp_channel_t chanel, double amplitude) {
-    if (fabs(amplitude) < AMPLITUDE_MIN || fabs(amplitude) > AMPLITUDE_MAX) {
-        return RP_EOOR;
-    }
-    amplitude = fabs(amplitude);
-
+int gen_setAmplitude(rp_channel_t channel, double amplitude) {
     double offset;
     CHECK_OUTPUT(offset = chA_offset,
                  offset = chB_offset)
@@ -78,16 +76,10 @@ int gen_setAmplitude(rp_channel_t chanel, double amplitude) {
 
     CHECK_OUTPUT(chA_amplitude = amplitude,
                  chB_amplitude = amplitude)
-
-    ECHECK(synthesize_signal(chanel));
-    return RP_OK;
+    return generate_setAmplitude(channel, (float) amplitude);
 }
 
-int gen_Offset(rp_channel_t chanel, double offset) {
-    if (offset < OFFSET_MIN || offset > OFFSET_MAX) {
-        return RP_EOOR;
-    }
-
+int gen_Offset(rp_channel_t channel, double offset) {
     double amplitude;
     CHECK_OUTPUT(amplitude = chA_amplitude,
                  amplitude = chB_amplitude)
@@ -95,61 +87,87 @@ int gen_Offset(rp_channel_t chanel, double offset) {
 
     CHECK_OUTPUT(chA_offset = offset,
                  chB_offset = offset)
-
-    ECHECK(generate_setDCOffset(chanel, cmn_CnvVToCnt(DATA_BIT_LENGTH, (float) offset, OFFSET_MAX/2, 0, 0)));
-    ECHECK(synthesize_signal(chanel));
-    return RP_OK;
+    return generate_setDCOffset(channel, (float)offset);
 }
 
-int gen_Frequency(rp_channel_t chanel, double frequency) {
+int gen_Frequency(rp_channel_t channel, double frequency) {
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
         return RP_EOOR;
     }
     CHECK_OUTPUT(chA_frequency = frequency,
                  chB_frequency = frequency)
-    ECHECK(generate_setFrequency(chanel, (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH)));
-    ECHECK(synthesize_signal(chanel));
-    return RP_OK;
+    ECHECK(generate_setFrequency(channel, (float)frequency));
+    return synthesize_signal(channel);
 }
 
-int gen_Phase(rp_channel_t chanel, double phase) {
+int gen_Phase(rp_channel_t channel, double phase) {
     if (phase < PHASE_MIN || phase > PHASE_MAX) {
         return RP_EOOR;
     }
-    ECHECK(generate_setPhase(chanel, (uint32_t) (phase / PHASE_MAX * BUFFER_LENGTH / 2)));
-    ECHECK(synthesize_signal(chanel));
-    return RP_OK;
+    return generate_setPhase(channel, (float)phase);
 }
 
-int gen_Waveform(rp_channel_t chanel, rp_waveform_t type) {
+int gen_Waveform(rp_channel_t channel, rp_waveform_t type) {
     CHECK_OUTPUT(chA_waveform = type,
                  chB_waveform = type)
-
-    ECHECK(synthesize_signal(chanel));
-    return RP_OK;
+    if (type != RP_WAVEFORM_ARBITRARY) {
+        CHECK_OUTPUT(chA_size = BUFFER_LENGTH,
+                     chB_size = BUFFER_LENGTH)
+    }
+    return synthesize_signal(channel);
 }
 
-int gen_ArbWaveform(rp_channel_t chanel, float *waveform, uint32_t length) {
-    CHECK_OUTPUT(chA_waveform = RP_WAVEFORM_ARBITRARY,
-                 chB_waveform = RP_WAVEFORM_ARBITRARY)
+int gen_ArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
+    // Check if data is normalized
+    float min = FLT_MAX, max = FLT_MIN; // initial values
+    int i;
+    for(i = 0; i < length; i++) {
+        if (data[i] < min)
+            min = data[i];
+        if (data[i] > max)
+            max = data[i];
+    }
+    if (min < ARBITRARY_MIN || max > ARBITRARY_MAX) {
+        return RP_ENN;
+    }
 
-    return generate_writeData(chanel, waveform, length);
+    // Save data
+    float *pointer;
+    CHECK_OUTPUT(pointer = chA_arbitraryData,
+                 pointer = chB_arbitraryData)
+    for(i = 0; i < length; i++) {
+        pointer[i] = data[i];
+    }
+    for(i = length; i < BUFFER_LENGTH; i++) { // clear the rest of the buffer
+        pointer[i] = 0;
+    }
+
+    if (channel == RP_CH_1) {
+        chA_waveform = RP_WAVEFORM_ARBITRARY;
+        chA_size = length;
+    }
+    else if (channel == RP_CH_2) {
+        chB_waveform = RP_WAVEFORM_ARBITRARY;
+        chB_size = length;
+    }
+    else {
+        return RP_EPN;
+    }
+    return synthesize_signal(channel);
 }
 
-int gen_DutyCycle(rp_channel_t chanel, double ratio) {
+int gen_DutyCycle(rp_channel_t channel, double ratio) {
     if (ratio < DUTY_CYCLE_MIN || ratio > DUTY_CYCLE_MAX) {
         return RP_EOOR;
     }
     CHECK_OUTPUT(chA_dutyCycle = ratio,
                  chB_dutyCycle = ratio)
-
-    ECHECK(synthesize_signal(chanel));
-    return RP_OK;
+    return synthesize_signal(channel);
 }
 
-int gen_GenMode(rp_channel_t chanel, rp_gen_mode_t mode) {
+int gen_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
     if (mode == RP_GEN_MODE_CONTINUOUS) {
-        generate_setOneTimeTrigger(chanel, 0);
+        generate_setOneTimeTrigger(channel, 0);
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_BURST) {
@@ -165,19 +183,19 @@ int gen_GenMode(rp_channel_t chanel, rp_gen_mode_t mode) {
     }
 }
 
-int gen_BurstCount(rp_channel_t chanel, int num) {
+int gen_BurstCount(rp_channel_t channel, int num) {
     if (num != 1) {
         return RP_EUF;
     }
     return RP_OK;
 }
 
-int gen_TriggerSource(rp_channel_t chanel, rp_trig_src_t src) {
+int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (src == RP_TRIG_SRC_INTERNAL) {
-        return generate_setTriggerSource(chanel, 1);
+        return generate_setTriggerSource(channel, 1);
     }
     else if(src == RP_TRIG_SRC_EXTERNAL) {
-        return generate_setTriggerSource(chanel, 3);
+        return generate_setTriggerSource(channel, 2);
     }
     else {
         return RP_EIPV;
@@ -199,22 +217,23 @@ int gen_Trigger(int mask) {
     }
 }
 
-int synthesize_signal(rp_channel_t chanel) {
+int synthesize_signal(rp_channel_t channel) {
     float data[BUFFER_LENGTH];
     rp_waveform_t waveform;
-    double amplitude, dutyCycle, frequency;
+    double dutyCycle, frequency;
+    uint32_t size;
 
-    if (chanel == RP_CH_1) {
+    if (channel == RP_CH_1) {
         waveform = chA_waveform;
-        amplitude = chA_amplitude;
         dutyCycle = chA_dutyCycle;
         frequency = chA_frequency;
+        size = chA_size;
     }
-    else if (chanel == RP_CH_2) {
+    else if (channel == RP_CH_2) {
         waveform = chB_waveform;
-        amplitude = chB_amplitude;
         dutyCycle = chB_dutyCycle;
         frequency = chB_frequency;
+        size = chB_size;
     }
     else{
         return RP_EPN;
@@ -222,77 +241,77 @@ int synthesize_signal(rp_channel_t chanel) {
 
     switch (waveform) {
         case RP_WAVEFORM_SINE:
-            synthesis_sin(amplitude, data);
+            synthesis_sin(data);
             break;
         case RP_WAVEFORM_TRIANGLE:
-            synthesis_triangle(amplitude, data);
+            synthesis_triangle(data);
             break;
         case RP_WAVEFORM_SQUARE:
-            synthesis_square(amplitude, frequency, data);
+            synthesis_square(frequency, data);
             break;
         case RP_WAVEFORM_RAMP_UP:
-            synthesis_rampUp(amplitude, data);
+            synthesis_rampUp(data);
             break;
         case RP_WAVEFORM_RAMP_DOWN:
-            synthesis_rampDown(amplitude, data);
+            synthesis_rampDown(data);
             break;
         case RP_WAVEFORM_DC:
-            synthesis_DC(amplitude, data);
+            synthesis_DC(data);
             break;
         case RP_WAVEFORM_PWM:
-            synthesis_PWM(amplitude, dutyCycle, data);
+            synthesis_PWM(dutyCycle, data);
             break;
         case RP_WAVEFORM_ARBITRARY:
-            // don't do anything
+            synthesis_arbitrary(channel, data);
             break;
         default:
             return RP_EIPV;
     }
-    return generate_writeData(chanel, data, BUFFER_LENGTH);
+    return generate_writeData(channel, data, size);
 }
 
-int synthesis_sin(double amplitude, float *data_out) {
+int synthesis_sin(float *data_out) {
     int i;
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (amplitude * sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
+        data_out[i] = (float) (sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
     }
     return RP_OK;
 }
 
-int synthesis_triangle(double amplitude, float *data_out) {
+int synthesis_triangle(float *data_out) {
     int i;
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (amplitude * (asin(sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI * 2));
+        data_out[i] = (float) ((asin(sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI * 2));
     }
     return RP_OK;
 }
 
-int synthesis_rampUp(double amplitude, float *data_out) {
+int synthesis_rampUp(float *data_out) {
     int i;
     data_out[BUFFER_LENGTH -1] = 0;
     for(i = 0; i < BUFFER_LENGTH-1; i++) {
-        data_out[BUFFER_LENGTH - i-2] = (float) (-amplitude * (acos(cos(M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI - 1));
+        data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI - 1));
     }
     return RP_OK;
 }
 
-int synthesis_rampDown(double amplitude, float *data_out) {
+int synthesis_rampDown(float *data_out) {
     int i;
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (-amplitude * (acos(cos(M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI - 1));
+        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (double) i / (double) BUFFER_LENGTH)) / M_PI - 1));
     }
     return RP_OK;
 }
 
-int synthesis_DC(double amplitude, float *data_out) {
+int synthesis_DC(float *data_out) {
     int i;
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) amplitude;
+        data_out[i] = 1.0;
     }
     return RP_OK;
 }
 
-int synthesis_PWM(double amplitude, double ratio, float *data_out) {
+int synthesis_PWM(double ratio, float *data_out) {
     int i;
 
     // calculate number of samples that need to be high
@@ -300,16 +319,26 @@ int synthesis_PWM(double amplitude, double ratio, float *data_out) {
 
     for(i = 0; i < BUFFER_LENGTH; i++) {
         if (i < h || i >= BUFFER_LENGTH - h) {
-            data_out[i] = (float) amplitude;
+            data_out[i] = 1.0;
         }
         else {
-            data_out[i] = (float) -amplitude;
+            data_out[i] = (float) -1.0;
         }
     }
-    return 0;
+    return RP_OK;
 }
 
-int synthesis_square(double amplitude, double frequency, float *data_out) {
+int synthesis_arbitrary(rp_channel_t channel, float *data_out) {
+    float *pointer;
+    CHECK_OUTPUT(pointer = chA_arbitraryData,
+                 pointer = chB_arbitraryData)
+    for (int i = 0; i < BUFFER_LENGTH; i++) {
+        data_out[i] = pointer[i];
+    }
+    return RP_OK;
+}
+
+int synthesis_square(double frequency, float *data_out) {
     uint32_t i;
 
     // Various locally used constants - HW specific parameters
@@ -324,11 +353,11 @@ int synthesis_square(double amplitude, double frequency, float *data_out) {
     }
 
     for(i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (amplitude * sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
+        data_out[i] = (float) (sin(2 * M_PI * (double) i / (double) BUFFER_LENGTH));
         if (data_out[i] > 0)
-            data_out[i] = (float) amplitude;
+            data_out[i] = 1.0;
         else
-            data_out[i] = (float) -amplitude;
+            data_out[i] = (float) -1.0;
 
         // Soft linear transitions
         double mm, qq, xx, xm;
@@ -342,8 +371,8 @@ int synthesis_square(double amplitude, double frequency, float *data_out) {
 
         if ((xx > x1) && (xx <= x2)) {
 
-            y1 = amplitude;
-            y2 = -amplitude;
+            y1 = 1.0;
+            y2 = -1.0;
 
             mm = (y2 - y1) / (x2 - x1);
             qq = y1 - mm * x1;
@@ -356,8 +385,8 @@ int synthesis_square(double amplitude, double frequency, float *data_out) {
 
         if ((xx > x1) && (xx <= x2)) {
 
-            y1 = -amplitude;
-            y2 = amplitude;
+            y1 = -1.0;
+            y2 = 1.0;
 
             mm = (y2 - y1) / (x2 - x1);
             qq = y1 - mm * x1;
