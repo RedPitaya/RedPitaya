@@ -39,8 +39,98 @@
 #define MAX_MESSAGE_SIZE (MAX_BUFF_SIZE * 2)
 
 static bool app_exit = false;
-static char delimiter[] = "\r\n";
+static char delimiter[2] = "\r\n";
 
+// ring buffer
+//#include <lcthw/bstrlib.h>
+
+#define RingBuffer_available_data(B) (((B)->end + 1) % (B)->length - (B)->start - 1)
+
+#define RingBuffer_available_space(B) ((B)->length - (B)->end - 1)
+
+#define RingBuffer_full(B) (RingBuffer_available_data((B)) - (B)->length == 0)
+
+#define RingBuffer_empty(B) (RingBuffer_available_data((B)) == 0)
+
+#define RingBuffer_get_all(B) RingBuffer_gets((B), RingBuffer_available_data((B)))
+
+#define RingBuffer_starts_at(B) ((B)->buffer + (B)->start)
+
+#define RingBuffer_ends_at(B) ((B)->buffer + (B)->end)
+
+#define RingBuffer_commit_read(B, A) ((B)->start = ((B)->start + (A)) % (B)->length)
+
+#define RingBuffer_commit_write(B, A) ((B)->end = ((B)->end + (A)) % (B)->length)
+
+typedef struct {
+    char *buffer;
+    int length;
+    int start;
+    int end;
+} RingBuffer;
+
+RingBuffer *RingBuffer_create(int length)
+{
+    RingBuffer *buffer = calloc(1, sizeof(RingBuffer));
+    buffer->length  = length + 1;
+    buffer->start = 0;
+    buffer->end = 0;
+    buffer->buffer = calloc(buffer->length, 1);
+
+    return buffer;
+}
+
+void RingBuffer_destroy(RingBuffer *buffer)
+{
+    if(buffer) {
+        free(buffer->buffer);
+        free(buffer);
+    }
+}
+
+int RingBuffer_write(RingBuffer *buffer, char *data, int length)
+{
+    if(RingBuffer_available_space(buffer) == 0) {
+        buffer->start = buffer->end = 0;
+    }
+
+    if(length >= RingBuffer_available_space(buffer)){
+    	//printf("Not enough space: %d request, %d available\r\n",
+    	//		length, RingBuffer_available_space(buffer));
+    	return -1;
+    }
+
+    void *result = memcpy(RingBuffer_ends_at(buffer), data, length);
+    if(result == NULL){
+    	//printf("Failed to write data into buffer.\r\n");
+    	return -1;
+    }
+    RingBuffer_commit_write(buffer, length);
+    return length;
+}
+
+int RingBuffer_read(RingBuffer *buffer, char *target, int amount)
+{
+    if(amount > RingBuffer_available_data(buffer)){
+    	//printf("Not enough in the buffer: has %d, needs %d\r\n",
+    	//		RingBuffer_available_data(buffer), amount);
+        return -1;
+    }
+
+    void *result = memcpy(target, RingBuffer_starts_at(buffer), amount);
+    if(result == NULL){
+    	//printf("Failed to write buffer into data.\r\n");
+        return -1;
+    }
+
+    RingBuffer_commit_read(buffer, amount);
+
+    if(buffer->end == buffer->start) {
+        buffer->start = buffer->end = 0;
+    }
+
+    return amount;
+}
 
 static void handleCloseChildEvents()
 {
@@ -68,39 +158,21 @@ static void installTermSignalHandler()
 	    sigaction(SIGINT, &action, NULL);
 }
 
-/**
- * Helper method which returns next command position from the buffer.
- * @param buffer     Input buffer
- * @param bufferLen  Input buffer length
- * @return Position of next command within buffer, or -1 if not found.
- */
-static size_t getNextCommand(const char* buffer, size_t bufferLen)
+size_t RingBuffer_getCmd(RingBuffer *buffer, char* cmd)
 {
-	size_t delimiterLen = sizeof(delimiter) - 1; // dont count last null char.
-	size_t i = 0;
-	for (i = 0; i < bufferLen; i++) {
-
-		// Find match for end of delimiter
-		if (buffer[i] == delimiter[delimiterLen - 1]) {
-
-			// Now go back checking if all delimiter character matches
-			size_t dist = 0;
-			while (i - dist >= 0 && delimiterLen - dist > 0) {
-				if (buffer[i - dist] != delimiter[delimiterLen - dist - 1]) {
-					break;
-				}
-				if (delimiterLen - dist - 1 == 0) {
-					return i + 1; // Position of next command
-				}
-
-				dist++;
-			}
-		}
+	char *ptr = strstr(&buffer->buffer[buffer->start],delimiter);
+	if(ptr==NULL){
+		return 0;
 	}
-
-	// No match found
-	return -1;
+    int cmdLen=ptr-&buffer->buffer[buffer->start]+sizeof(delimiter);
+    int len=RingBuffer_read(buffer, cmd, cmdLen);
+    if(len!=cmdLen){
+		return 0;
+    }
+    cmd[cmdLen]='\0';
+    return len;
 }
+
 
 /**
  * This is main method of every child process. Here communication with client is handled.
@@ -108,11 +180,11 @@ static size_t getNextCommand(const char* buffer, size_t bufferLen)
  * @return
  */
 static int handleConnection(int connfd) {
-	int read_size;
 
-	char message[MAX_MESSAGE_SIZE + 1];
-	char buffer[MAX_BUFF_SIZE];
-	size_t msgEnd = 0;
+	RingBuffer * ringBuf;
+	ringBuf=RingBuffer_create(MAX_BUFF_SIZE);
+	char * buffer = malloc(MAX_BUFF_SIZE);
+	char * cmdBuf = malloc(MAX_BUFF_SIZE);
 
 	installTermSignalHandler();
 
@@ -122,58 +194,43 @@ static int handleConnection(int connfd) {
 
 	    syslog(LOG_INFO, "Waiting for a message.");
 
+		int read_size;
 		//Receive a message from client
-		while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
-		{
+		while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 ){
+
 			if (app_exit) {
 				break;
 			}
 
-			char *b = buffer;
+			int len=RingBuffer_write(ringBuf,buffer,read_size);
+			if(len!=read_size){
+				syslog(LOG_ERR, "Error writing circular buffer %d,%d\r\n",len,read_size);
+			}
+
 			do {
-				size_t pos = getNextCommand(b, read_size);
-
-				// Next command not found, just copy all buffer (part of current command) to message...
-				if (pos == -1) {
-					if (msgEnd + read_size <= MAX_MESSAGE_SIZE)
-					{
-						memcpy(message + msgEnd, b, read_size);
-						msgEnd += read_size;
-					}
-					else {
-						msgEnd = MAX_MESSAGE_SIZE + 1;
-					}
-
+				len=RingBuffer_getCmd(ringBuf,cmdBuf);
+				if(len){
+					//Parse the message and return response
+					syslog(LOG_INFO, "Processing message %s", cmdBuf);
+					SCPI_Input(&scpi_context, cmdBuf, len);
+				}
+				else{
+			      	// no command available
 					break;
 				}
-				// Found next command - process the current one
-				else {
-					if (msgEnd + pos <= MAX_MESSAGE_SIZE)
-					{
-						memcpy(message + msgEnd, b, pos);
-						read_size -= pos;
-						b += pos;
-
-						message[msgEnd + pos] = '\0';
-						syslog(LOG_ERR, "Processing message %s", message);
-
-						//Parse the message and return response
-						SCPI_Input(&scpi_context, message, (pos + msgEnd));
-					}
-					else {
-						message[MAX_MESSAGE_SIZE > 15 ? 15 : MAX_MESSAGE_SIZE] = '\0';
-						syslog(LOG_ERR, "Skipping too large message %s...", message);
-						msgEnd = 0;
-					}
-				}
 			} while (1);
-	    }
+		}
+
+		RingBuffer_destroy(ringBuf);
+		free(buffer);
+		free(cmdBuf);
 
 	    if(read_size == 0)
 	    {
 		    syslog(LOG_INFO, "Client is disconnected");
 	        return 0;
 	    }
+
 	    else if(read_size == -1)
 	    {
 	    	syslog(LOG_ERR, "Receive message failed (%s)", strerror(errno));
