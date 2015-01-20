@@ -1,0 +1,23 @@
+/* Red Pitaya C API example one --TODO-- add exact example name */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <rp.h>
+
+int main(int argv, char **argc){
+
+	/* Print error, if rp_Init() function failed */
+	if(rp_Init() != RP_OK){
+		fprintf(stderr, "Rp api init failed!\n");
+	}
+	float value = 3.14;
+
+	int status = rp_ApinSetValue(RP_AOUT3, value);
+
+	if(status != RP_OK){
+		printf("Could not set pin voltage.\n");
+	}
+
+	rp_Release();
+}
