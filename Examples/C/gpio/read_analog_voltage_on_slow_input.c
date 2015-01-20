@@ -1,4 +1,4 @@
-/* Red Pitaya C API example one --TODO-- add exact example name */
+/* Read analog voltage on slow analog input */
 
 #include <stdio.h>
 #include <stdlib.h>
