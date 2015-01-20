@@ -11,9 +11,9 @@ int main(int argv, char **argc){
 	if(rp_Init() != RP_OK){
 		fprintf(stderr, "Rp api init failed!\n");
 	}
-	float value = 3.14;
+	float value = 1.34;
 
-	int status = rp_ApinSetValue(RP_AOUT3, value);
+	int status = rp_ApinSetValue(RP_AOUT2, value);
 
 	if(status != RP_OK){
 		printf("Could not set pin voltage.\n");
