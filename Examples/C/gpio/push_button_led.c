@@ -14,21 +14,26 @@ int main(int argc, char **argv){
 
 	rp_dpin_t pin = RP_DIO5_N;
 	rp_pinDirection_t direction = RP_IN;
-	rp_pinState_t *stat = NULL;
+	rp_pinState_t stat = RP_LOW;
 
 	rp_DpinSetDirection(pin, direction);
 
 	rp_dpin_t led_pin = RP_LED5;
 
-	int i = 0;
-	while(i++ < 1000){
-		rp_DpinGetState(pin, stat);
-		
+	/* You can set a timeout */
+	//int i = 0;
+	while(1){
+		printf("Getting pin state.\n");
+		rp_DpinGetState(pin, &stat);
+		printf("Setting pin state.\n");
 		if(stat == RP_LOW){
 			rp_DpinSetState(led_pin, RP_HIGH);
+			printf("Setting pin state: HIGH\n");
 		}else{
 			rp_DpinSetState(led_pin, RP_LOW);
+			printf("Setting pin state: LOW\n");
 		}
+		//i++;
 	}
 
 	rp_Release();

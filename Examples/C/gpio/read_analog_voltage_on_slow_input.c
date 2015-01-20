@@ -16,6 +16,7 @@ int main(int argc, char **argv){
 
 	float volts;
 	rp_ApinGetValue(pin, &volts);
+	printf("Volts: %f\n", volts);
 
 	rp_dpin_t led_pin = 0;
 
