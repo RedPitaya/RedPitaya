@@ -161,8 +161,9 @@ typedef enum {
 
 
 typedef enum {
-    RP_TRIG_SRC_INTERNAL,   //!< Internal trigger source
-    RP_TRIG_SRC_EXTERNAL    //!< External trigger source
+    RP_GEN_TRIG_SRC_INTERNAL,   //!< Internal trigger source
+    RP_GEN_TRIG_SRC_EXT_PE,     //!< External trigger source positive edge
+	RP_GEN_TRIG_SRC_EXT_NE      //!< External trigger source negative edge
 } rp_trig_src_t;
 
 /**
