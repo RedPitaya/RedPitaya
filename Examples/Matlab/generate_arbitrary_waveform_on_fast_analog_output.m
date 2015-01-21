@@ -29,8 +29,7 @@ grid on
 waveform_ch_1_0 =num2str(x,'%1.5f,');
 waveform_ch_2_0 =num2str(y,'%1.5f,');
 
-%First character in string is “{“   
-% and 2 latest are empty spaces and last is “}”.  
+% latest are empty spaces and last is “,”.  
 waveform_ch_1 =waveform_ch_1_0(1,1:length(waveform_ch_1_0)-3);
 waveform_ch_2 =waveform_ch_2_0(1,1:length(waveform_ch_2_0)-3);
 
