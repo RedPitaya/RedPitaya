@@ -28,7 +28,7 @@ fprintf(tcpipObj,'SOUR1:BURS:STAT ON');       % Set burst mode to ON
 
 fprintf(tcpipObj,'ACQ:DEC 1');
 fprintf(tcpipObj,'ACQ:TRIG:LEV 50');
-fprintf(tcpipObj,'ACQ:TRIG:DLY 16384');
+fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
 
 pause(0.01)
 
