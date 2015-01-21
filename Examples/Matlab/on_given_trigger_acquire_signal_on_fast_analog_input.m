@@ -25,13 +25,13 @@ fprintf(tcpipObj,'ACQ:DEC 8');
 
 fprintf(tcpipObj,'ACQ:TRIG:LEV 100');
 
-% Set trigger delay to 8192 samples
-% 8192 samples delay set trigger to center of the buffer
+% Set trigger delay to 0 samples
+% 0 samples delay set trigger to center of the buffer
 % Signal on your graph will have trigger in the center (symmetrical)
 % Samples from left to the center are samples before trigger 
 % Samples from center to the right are samples after trigger
 
-fprintf(tcpipObj,'ACQ:TRIG:DLY 8192');
+fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
 
 pause(0.1) % Wait for data writing
 
