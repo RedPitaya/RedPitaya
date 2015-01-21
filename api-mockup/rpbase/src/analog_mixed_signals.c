@@ -103,22 +103,38 @@ int ams_SetValueDAC3(uint32_t value)
 
 int ams_GetValueADC0(uint32_t* value)
 {
-    return cmn_GetValue(&ams->aif0, value, ANALOG_IN_MASK);
+    int r=cmn_GetValue(&ams->aif0, value, ANALOG_IN_MASK);
+    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
+    	*value=0;
+    }
+    return r;
 }
 
 int ams_GetValueADC1(uint32_t* value)
 {
-    return cmn_GetValue(&ams->aif1, value, ANALOG_IN_MASK);
+    int r=cmn_GetValue(&ams->aif1, value, ANALOG_IN_MASK);
+    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
+    	*value=0;
+    }
+    return r;
 }
 
 int ams_GetValueADC2(uint32_t* value)
 {
-    return cmn_GetValue(&ams->aif2, value, ANALOG_IN_MASK);
+    int r=cmn_GetValue(&ams->aif2, value, ANALOG_IN_MASK);
+    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
+    	*value=0;
+    }
+    return r;
 }
 
 int ams_GetValueADC3(uint32_t* value)
 {
-    return cmn_GetValue(&ams->aif3, value, ANALOG_IN_MASK);
+    int r=cmn_GetValue(&ams->aif3, value, ANALOG_IN_MASK);
+    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
+    	*value=0;
+    }
+    return r;
 }
 
 int ams_GetValueDAC0(uint32_t* value)

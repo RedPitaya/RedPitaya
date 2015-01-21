@@ -36,7 +36,7 @@ int gen_Trigger(int mask);
 int synthesize_signal(rp_channel_t chanel);
 int synthesis_sin(float *data_out);
 int synthesis_triangle(float *data_out);
-int synthesis_arbitrary(rp_channel_t channel, float *data_out);
+int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size);
 int synthesis_square(double frequency, float *data_out);
 int synthesis_rampUp(float *data_out);
 int synthesis_rampDown(float *data_out);

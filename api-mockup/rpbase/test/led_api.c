@@ -53,7 +53,7 @@ int main(int argc, char **argv){
 	/*
 	rp_waveform_t signal_form = RP_WAVEFORM_SQUARE;
 	rp_channel_t channel = RP_CH_1; //0
-	//rp_trig_src_t trig_source = RP_TRIG_SRC_INTERNAL;
+	//rp_trig_src_t trig_source = RP_GEN_TRIG_SRC_INTERNAL;
 	
 	if(rp_GenFreq(channel, 10000.0) == RP_OK){
 		printf("Succesfuly set frequency.\n");
