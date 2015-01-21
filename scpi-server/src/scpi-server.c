@@ -33,10 +33,12 @@
 #include "acquire.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
 #define LISTEN_BACKLOG 50
 #define LISTEN_PORT 5000
-#define MAX_BUFF_SIZE 1048576
-#define MAX_MESSAGE_SIZE (MAX_BUFF_SIZE * 2)
+#define MAX_BUFF_SIZE 1024
 
 static bool app_exit = false;
 static char delimiter[] = "\r\n";
@@ -102,6 +104,17 @@ static size_t getNextCommand(const char* buffer, size_t bufferLen)
 	return -1;
 }
 
+void LogMessage(char *m, size_t len) {
+    const size_t buff_len = 50;
+    char buff[buff_len];
+
+    len = MIN(len, buff_len);
+    strncpy(buff, m, len);
+    buff[len - 1] = '\0';
+
+    syslog(LOG_INFO, "Processing command: %s", buff);
+}
+
 /**
  * This is main method of every child process. Here communication with client is handled.
  * @param connfd The communication port
@@ -110,77 +123,72 @@ static size_t getNextCommand(const char* buffer, size_t bufferLen)
 static int handleConnection(int connfd) {
 	int read_size;
 
-	char message[MAX_MESSAGE_SIZE + 1];
+	size_t message_len = MAX_BUFF_SIZE;
+	char *message_buff = malloc(message_len);
 	char buffer[MAX_BUFF_SIZE];
-	size_t msgEnd = 0;
+	size_t msg_end = 0;
 
 	installTermSignalHandler();
 
 	prctl( 1, SIGTERM );
 
-	while (1) {
+    syslog(LOG_INFO, "Waiting for first client request.");
 
-	    syslog(LOG_INFO, "Waiting for a message.");
+    //Receive a message from client
+    while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
+    {
+        if (app_exit) {
+            break;
+        }
 
-		//Receive a message from client
-		while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
-		{
-			if (app_exit) {
-				break;
-			}
+        // First make sure that message buffer is large enough
+        while (msg_end + read_size >= message_len) {
+            message_len *= 2;
+            message_buff = realloc(message_buff, message_len);
+        }
 
-			char *b = buffer;
-			do {
-				size_t pos = getNextCommand(b, read_size);
+        // Copy read buffer into message buffer
+        memcpy(message_buff + msg_end, buffer, read_size);
+        msg_end += read_size;
 
-				// Next command not found, just copy all buffer (part of current command) to message...
-				if (pos == -1) {
-					if (msgEnd + read_size <= MAX_MESSAGE_SIZE)
-					{
-						memcpy(message + msgEnd, b, read_size);
-						msgEnd += read_size;
-					}
-					else {
-						msgEnd = MAX_MESSAGE_SIZE + 1;
-					}
+        // Now try to parse each command out
+        char *m = message_buff;
+        size_t pos = -1;
+        while ((pos = getNextCommand(m, msg_end)) != -1) {
 
-					break;
-				}
-				// Found next command - process the current one
-				else {
-					if (msgEnd + pos <= MAX_MESSAGE_SIZE)
-					{
-						memcpy(message + msgEnd, b, pos);
-						read_size -= pos;
-						b += pos;
+            // Log out message
+            LogMessage(m, pos);
 
-						message[msgEnd + pos] = '\0';
-						syslog(LOG_ERR, "Processing message %s", message);
+            //Parse the message and return response
+            SCPI_Input(&scpi_context, m, pos);
+            m += pos;
+            msg_end -= pos;
+        }
 
-						//Parse the message and return response
-						SCPI_Input(&scpi_context, message, (pos + msgEnd));
-					}
-					else {
-						message[MAX_MESSAGE_SIZE > 15 ? 15 : MAX_MESSAGE_SIZE] = '\0';
-						syslog(LOG_ERR, "Skipping too large message %s...", message);
-						msgEnd = 0;
-					}
-				}
-			} while (1);
-	    }
+        // Move the rest of the message to the beginning of the buffer
+        if (message_buff != m && msg_end > 0) {
+            memmove(message_buff, m, msg_end);
+        }
 
-	    if(read_size == 0)
-	    {
-		    syslog(LOG_INFO, "Client is disconnected");
-	        return 0;
-	    }
-	    else if(read_size == -1)
-	    {
-	    	syslog(LOG_ERR, "Receive message failed (%s)", strerror(errno));
-	        perror("Receive message failed");
-	        return 1;
-	    }
-	}
+        syslog(LOG_INFO, "Waiting for next client request.");
+    }
+
+    free(message_buff);
+
+    syslog(LOG_INFO, "Closing client connection...");
+
+	if(read_size == 0)
+	{
+        syslog(LOG_INFO, "Client is disconnected");
+        return 0;
+    }
+    else if(read_size == -1)
+    {
+        syslog(LOG_ERR, "Receive message failed (%s)", strerror(errno));
+        perror("Receive message failed");
+        return 1;
+    }
+	return 0;
 }
 
 
