@@ -24,10 +24,11 @@ double chA_offset = 0, chB_offset = 0;
 double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
 rp_waveform_t chA_waveform, chB_waveform;
-float chA_arbitraryData[BUFFER_LENGTH];
-float chB_arbitraryData[BUFFER_LENGTH];
 uint32_t chA_size = BUFFER_LENGTH, chB_size = BUFFER_LENGTH;
 
+float chA_arbitraryData[BUFFER_LENGTH];
+float chB_arbitraryData[BUFFER_LENGTH];
+uint32_t chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 
 int gen_SetDefaultValues() {
     ECHECK(gen_Disable(RP_CH_1));
@@ -48,8 +49,8 @@ int gen_SetDefaultValues() {
     ECHECK(gen_GenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS));
     ECHECK(gen_BurstCount(RP_CH_1, 1));
     ECHECK(gen_BurstCount(RP_CH_2, 1));
-    ECHECK(gen_TriggerSource(RP_CH_1, RP_TRIG_SRC_INTERNAL));
-    ECHECK(gen_TriggerSource(RP_CH_2, RP_TRIG_SRC_INTERNAL));
+    ECHECK(gen_TriggerSource(RP_CH_1, RP_GEN_TRIG_SRC_INTERNAL));
+    ECHECK(gen_TriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL));
     return RP_OK;
 }
 
@@ -110,7 +111,11 @@ int gen_Phase(rp_channel_t channel, double phase) {
 int gen_Waveform(rp_channel_t channel, rp_waveform_t type) {
     CHECK_OUTPUT(chA_waveform = type,
                  chB_waveform = type)
-    if (type != RP_WAVEFORM_ARBITRARY) {
+    if (type == RP_WAVEFORM_ARBITRARY) {
+        CHECK_OUTPUT(chA_size = chA_arb_size,
+                     chB_size = chB_arb_size)
+    }
+    else{
         CHECK_OUTPUT(chA_size = BUFFER_LENGTH,
                      chB_size = BUFFER_LENGTH)
     }
@@ -142,18 +147,23 @@ int gen_ArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
         pointer[i] = 0;
     }
 
-    if (channel == RP_CH_1) {
-        chA_waveform = RP_WAVEFORM_ARBITRARY;
-        chA_size = length;
+    if ((channel == RP_CH_1)) {
+        chA_arb_size = length;
+        if(chA_waveform==RP_WAVEFORM_ARBITRARY){
+        	return synthesize_signal(channel);
+        }
     }
     else if (channel == RP_CH_2) {
-        chB_waveform = RP_WAVEFORM_ARBITRARY;
-        chB_size = length;
+    	chA_arb_size = length;
+        if(chB_waveform==RP_WAVEFORM_ARBITRARY){
+        	return synthesize_signal(channel);
+        }
     }
     else {
         return RP_EPN;
     }
-    return synthesize_signal(channel);
+
+    return RP_OK;
 }
 
 int gen_DutyCycle(rp_channel_t channel, double ratio) {
@@ -171,6 +181,7 @@ int gen_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_BURST) {
+    	generate_setOneTimeTrigger(channel, 1);
         CHECK_OUTPUT(return generate_GenTrigger(RP_CH_1),
                      return generate_GenTrigger(RP_CH_2))
     }
@@ -191,11 +202,14 @@ int gen_BurstCount(rp_channel_t channel, int num) {
 }
 
 int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
-    if (src == RP_TRIG_SRC_INTERNAL) {
+    if (src == RP_GEN_TRIG_SRC_INTERNAL) {
         return generate_setTriggerSource(channel, 1);
     }
-    else if(src == RP_TRIG_SRC_EXTERNAL) {
+    else if(src == RP_GEN_TRIG_SRC_EXT_PE) {
         return generate_setTriggerSource(channel, 2);
+    }
+    else if(src == RP_GEN_TRIG_SRC_EXT_NE) {
+        return generate_setTriggerSource(channel, 3);
     }
     else {
         return RP_EIPV;
@@ -233,11 +247,13 @@ int synthesize_signal(rp_channel_t channel) {
         waveform = chB_waveform;
         dutyCycle = chB_dutyCycle;
         frequency = chB_frequency;
-        size = chB_size;
+    	size = chB_size;
     }
     else{
         return RP_EPN;
     }
+
+
 
     switch (waveform) {
         case RP_WAVEFORM_SINE:
@@ -262,7 +278,7 @@ int synthesize_signal(rp_channel_t channel) {
             synthesis_PWM(dutyCycle, data);
             break;
         case RP_WAVEFORM_ARBITRARY:
-            synthesis_arbitrary(channel, data);
+            synthesis_arbitrary(channel, data, &size);
             break;
         default:
             return RP_EIPV;
@@ -328,13 +344,24 @@ int synthesis_PWM(double ratio, float *data_out) {
     return RP_OK;
 }
 
-int synthesis_arbitrary(rp_channel_t channel, float *data_out) {
+int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) {
     float *pointer;
     CHECK_OUTPUT(pointer = chA_arbitraryData,
                  pointer = chB_arbitraryData)
     for (int i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = pointer[i];
     }
+
+    if (channel == RP_CH_1) {
+    	*size = chA_arb_size;
+    }
+    else if (channel == RP_CH_2) {
+    	*size = chB_arb_size;
+    }
+    else{
+        return RP_EPN;
+    }
+
     return RP_OK;
 }
 
