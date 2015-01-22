@@ -42,6 +42,9 @@ static const uint32_t SR_1_907KHZ = 1.907 * 1024;
 /* @brief ADC buffer size is 16 k samples. */
 static const uint32_t ADC_BUFFER_SIZE = 16 * 1024;
 
+/* @brief Trig. reg. value offset when set to 0 */
+static const int32_t TRIG_DELAY_ZERO_OFFSET = 8192;
+
 /* @brief Sampling period (non-decimated) - 8 [ns]. */
 static const uint64_t ADC_SAMPLE_PERIOD = 8;
 
@@ -82,15 +85,15 @@ static const uint32_t GAIN_LO_CHB_FILT_KK = 0xd9999a;
  * @param[in] time time, specified in [ns]
  * @retval int number of ADC samples
  */
-static uint32_t cnvTimeToSmpls(uint64_t time_ns)
+static uint32_t cnvTimeToSmpls(int64_t time_ns)
 {
     /* Calculate sampling period (including decimation) */
 
     uint32_t decimation;
     ECHECK(acq_GetDecimationFactor(&decimation));
 
-    uint64_t smpl_p = (ADC_SAMPLE_PERIOD * decimation);
-    return (uint32_t)round((double)time_ns / smpl_p);
+    int64_t smpl_p = (ADC_SAMPLE_PERIOD * (int64_t)decimation);
+    return (int32_t)round((double)time_ns / smpl_p);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -101,14 +104,14 @@ static uint32_t cnvTimeToSmpls(uint64_t time_ns)
  * @param[in] samples, number of ADC samples
  * @retval int time, specified in [ns]
  */
-static uint64_t cnvSmplsToTime(uint32_t samples)
+static int64_t cnvSmplsToTime(int32_t samples)
 {
     /* Calculate time (including decimation) */
 
     uint32_t decimation;
     ECHECK(acq_GetDecimationFactor(&decimation));
 
-    return (uint64_t)samples * ADC_SAMPLE_PERIOD * decimation;
+    return (int64_t)samples * ADC_SAMPLE_PERIOD * (int32_t)decimation;
 }
 
 /**
@@ -251,7 +254,7 @@ int acq_GetGainV(rp_channel_t channel, float* voltage)
 
 int acq_SetDecimation(rp_acq_decimation_t decimation)
 {
-    uint64_t time_ns = 0;
+    int64_t time_ns = 0;
 
     if (triggerDelayInNs) {
         ECHECK(acq_GetTriggerDelayNs(&time_ns));
@@ -461,40 +464,53 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
     return RP_TRIG_STATE_TRIGGERED;
 }
 
-int acq_SetTriggerDelay(uint32_t decimated_data_num, bool updateMaxValue)
+int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 {
-    if (decimated_data_num > ADC_BUFFER_SIZE) {
+	int32_t trig_dly;
+	if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
+    		trig_dly=0;
+	}
+	else{
+		trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
+	}
+
+	/*
+    if (trig_dly > ADC_BUFFER_SIZE) {
         if (updateMaxValue) {
-            decimated_data_num = ADC_BUFFER_SIZE;
+        	trig_dly = ADC_BUFFER_SIZE;
         }
         else {
             return RP_EOOR;
         }
     }
-    ECHECK(osc_SetTriggerDelay(decimated_data_num));
+    */
+    ECHECK(osc_SetTriggerDelay(trig_dly));
     triggerDelayInNs = false;
     return RP_OK;
 }
 
-int acq_SetTriggerDelayNs(uint64_t time_ns, bool updateMaxValue)
+int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue)
 {
-    uint32_t samples = cnvTimeToSmpls(time_ns);
+    int32_t samples = cnvTimeToSmpls(time_ns);
     ECHECK(acq_SetTriggerDelay(samples, updateMaxValue));
-
     triggerDelayInNs = true;
     return RP_OK;
 }
 
-int acq_GetTriggerDelay(uint32_t* decimated_data_num)
+int acq_GetTriggerDelay(int32_t* decimated_data_num)
 {
-    return osc_GetTriggerDelay(decimated_data_num);
+	uint32_t trig_dly;
+	int r=osc_GetTriggerDelay(&trig_dly);
+	*decimated_data_num=(int32_t)trig_dly-TRIG_DELAY_ZERO_OFFSET;
+    return r;
 }
 
-int acq_GetTriggerDelayNs(uint64_t* time_ns)
+int acq_GetTriggerDelayNs(int64_t* time_ns)
 {
-    uint32_t samples;
+    int32_t samples;
     ECHECK(acq_GetTriggerDelay(&samples));
-    return cnvSmplsToTime(samples);
+    *time_ns=cnvSmplsToTime(samples);
+    return RP_OK;
 }
 
 int acq_GetWritePointer(uint32_t* pos)

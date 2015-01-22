@@ -161,8 +161,9 @@ typedef enum {
 
 
 typedef enum {
-    RP_TRIG_SRC_INTERNAL,   //!< Internal trigger source
-    RP_TRIG_SRC_EXTERNAL    //!< External trigger source
+    RP_GEN_TRIG_SRC_INTERNAL,   //!< Internal trigger source
+    RP_GEN_TRIG_SRC_EXT_PE,     //!< External trigger source positive edge
+	RP_GEN_TRIG_SRC_EXT_NE      //!< External trigger source negative edge
 } rp_trig_src_t;
 
 /**
@@ -512,7 +513,7 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerDelay(uint32_t decimated_data_num);
+int rp_AcqSetTriggerDelay(int32_t decimated_data_num);
 
 /**
  * Returns current number of decimated data after trigger written into memory.
@@ -520,7 +521,7 @@ int rp_AcqSetTriggerDelay(uint32_t decimated_data_num);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerDelay(uint32_t* decimated_data_num);
+int rp_AcqGetTriggerDelay(int32_t* decimated_data_num);
 
 /**
  * Sets the amount of decimated data in nanoseconds after trigger written into memory.
@@ -529,7 +530,7 @@ int rp_AcqGetTriggerDelay(uint32_t* decimated_data_num);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerDelayNs(uint64_t time_ns);
+int rp_AcqSetTriggerDelayNs(int64_t time_ns);
 
 /**
  * Returns the current amount of decimated data in nanoseconds after trigger written into memory.
@@ -537,7 +538,7 @@ int rp_AcqSetTriggerDelayNs(uint64_t time_ns);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerDelayNs(uint64_t* time_ns);
+int rp_AcqGetTriggerDelayNs(int64_t* time_ns);
 
 /**
  * Sets the trigger threshold value in volts. Makes the trigger when ADC value crosses this value.
