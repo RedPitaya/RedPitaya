@@ -371,11 +371,14 @@ int getRpWaveform(const char *waveformString, rp_waveform_t *waveform) {
 }
 
 int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource) {
-	if (strcmp(triggerSourceString, "EXT") == 0) {
-		*triggerSource = RP_TRIG_SRC_EXTERNAL;
+	if (strcmp(triggerSourceString, "INT") == 0) {
+		*triggerSource = RP_GEN_TRIG_SRC_INTERNAL;
 	}
-	else if (strcmp(triggerSourceString, "INT") == 0) {
-		*triggerSource = RP_TRIG_SRC_INTERNAL;
+	else if (strcmp(triggerSourceString, "EXT_PE") == 0) {
+		*triggerSource = RP_GEN_TRIG_SRC_EXT_PE;
+	}
+	else if (strcmp(triggerSourceString, "EXT_NE") == 0) {
+		*triggerSource = RP_GEN_TRIG_SRC_EXT_NE;
 	}
 	else {
 		return RP_EOOR;

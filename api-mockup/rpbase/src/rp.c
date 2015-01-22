@@ -251,22 +251,22 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state)
     return acq_GetTriggerState(state);
 }
 
-int rp_AcqSetTriggerDelay(uint32_t decimated_data_num)
+int rp_AcqSetTriggerDelay(int32_t decimated_data_num)
 {
     return acq_SetTriggerDelay(decimated_data_num, false);
 }
 
-int rp_AcqGetTriggerDelay(uint32_t* decimated_data_num)
+int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
 {
     return acq_GetTriggerDelay(decimated_data_num);
 }
 
-int rp_AcqSetTriggerDelayNs(uint64_t time_ns)
+int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 {
     return acq_SetTriggerDelayNs(time_ns, false);
 }
 
-int rp_AcqGetTriggerDelayNs(uint64_t* time_ns)
+int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
 {
     return acq_GetTriggerDelayNs(time_ns);
 }
