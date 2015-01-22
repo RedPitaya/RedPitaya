@@ -35,6 +35,7 @@ ACQUIRE_DIR=Test/acquire
 CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
+SCPI_SERVER_DIR=scpi-server/
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -52,6 +53,7 @@ ACQUIRE=$(BUILD)/bin/acquire
 CALIB=$(BUILD)/bin/calib
 DISCOVERY=$(BUILD)/sbin/discovery
 ECOSYSTEM=$(BUILD)/www/apps/info/info.json
+SCPI_SERVER = $(BUILD)/bin/scpi-server
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -64,7 +66,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER)
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -115,7 +117,6 @@ $(NGINX): $(URAMDISK)
 
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(GENERATE):
 	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
@@ -136,6 +137,10 @@ $(DISCOVERY):
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
+$(SCPI_SERVER):
+	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
@@ -149,6 +154,7 @@ clean:
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
+	make -C $(SCPI_SERVER) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
