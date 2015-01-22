@@ -6,4 +6,18 @@
 # network configuration is static.
 # echo "nameserver <DNS_IP>" > /tmp/resolv.conf
 
+#TODO: This is a temporay solutio, fix to include librp in /lib dir on system boot.
+
+rw
+
+#Copy rplib
+cp /opt/bin/librp.so /lib
+
+#Copy scpi lib
+cp /opt/bin/libscpi.so /lib
+cp /opt/bin/libscpi.so.0.3.0 /lib
+#rm /opt/bin/libscpi.so
+#rm /opt/bin/libscpi.so.0.3.0
+
+
 echo "Feel free to add custom initialization commands here."
