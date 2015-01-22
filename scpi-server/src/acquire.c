@@ -283,10 +283,10 @@ scpi_result_t RP_AcqGetTriggerSrc(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSetTriggerDelay(scpi_t *context) {
-    uint32_t triggerDelay;
+    int32_t triggerDelay;
 
     // read first parameter TRIGGER DELAY (value in samples)
-    if (!SCPI_ParamUInt(context, &triggerDelay, false)) {
+    if (!SCPI_ParamInt(context, &triggerDelay, false)) {
         triggerDelay = 0;
     }
 
@@ -298,14 +298,14 @@ scpi_result_t RP_AcqSetTriggerDelay(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY Successfully set trigger delay to %u.", triggerDelay);
+    syslog(LOG_INFO, "*ACQ:TRIG:DLY Successfully set trigger delay to %d.", triggerDelay);
 
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
     // get trigger delay
-    uint32_t value;
+    int32_t value;
     int result = rp_AcqGetTriggerDelay(&value);
 
     if (RP_OK != result) {
@@ -314,7 +314,7 @@ scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultUInt(context, value);
+    SCPI_ResultInt(context, value);
 
     syslog(LOG_INFO, "*ACQ:TRIG:DLY? Successfully returned trigger delay.");
 
@@ -322,10 +322,10 @@ scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t *context) {
-    uint64_t triggerDelay;
+    int64_t triggerDelay;
 
     // read first parameter TRIGGER DELAY ns (value in ns)
-    if (!SCPI_ParamULong(context, &triggerDelay, false)) {
+    if (!SCPI_ParamLong(context, &triggerDelay, false)) {
         triggerDelay = 0;
     }
 
@@ -337,14 +337,14 @@ scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS Successfully set trigger delay to %lu ns.", (unsigned long)triggerDelay);
+    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS Successfully set trigger delay to %ld ns.", (signed long)triggerDelay);
 
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
     // get trigger delay ns
-    uint64_t value;
+    int64_t value;
     int result = rp_AcqGetTriggerDelayNs(&value);
 
     if (RP_OK != result) {
@@ -353,7 +353,7 @@ scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultULong(context, value);
+    SCPI_ResultLong(context, value);
 
     syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS? Successfully returned trigger delay in ns.");
 

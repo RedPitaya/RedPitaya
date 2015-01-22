@@ -140,6 +140,7 @@ int generate_setPhase(rp_channel_t channel, float phase) {
 	volatile ch_properties_t *ch_properties;
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
 	ch_properties->startOffset = (uint32_t) (phase / PHASE_MAX * BUFFER_LENGTH / 2);
+	// TODO: restart gen. SM
 	return RP_OK;
 }
 

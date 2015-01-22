@@ -12,7 +12,8 @@ FPGA=fpga.bit
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-# INSTALL_DIR ?= ../
+# Installation directory. It is changed when using the main Makefile++++++
+INSTALL_DIR ?= .
 
 
 SCPIPARSER=3rdparty/libs/scpi-parser/libscpi/dist/libscpi.so
@@ -33,6 +34,14 @@ $(SCPISRV):
 
 $(SCPIPARSER):
 	$(MAKE) -C 3rdparty/libs/scpi-parser
+
+install:
+	mkdir -p $(INSTALL_DIR)/bin
+	cp $(SCPISRV) $(INSTALL_DIR)/bin
+	mkdir -p $(INSTALL_DIR)/src/utils/$(TARGET)
+	-rm -f $(TARGET) *.o
+	cp -r * $(INSTALL_DIR)/src/utils/$(TARGET)/
+	-rm `find $(INSTALL_DIR)/src/tools/$(TARGET)/ -iname .svn` -rf
 
 clean:
 	$(MAKE) -C src clean
