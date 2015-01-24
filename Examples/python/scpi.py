@@ -1,9 +1,6 @@
 
 __author__ = 'infused'
 
-#Defined functions are each a mirror example from
-# MathLab - std functions such as __init__, rp_rcv,...
-
 import socket
 import time
 
@@ -13,12 +10,10 @@ class SCPI(object):
     HOST = None
     PORT = 5000
     TIME_OUT = None
-    MSG_LEN = 1024 #TODO Fix size
+    BUFF_SIZE = 16384 * 32 #TODO Fix size
 
     #SCPI delimiter
     delimiter = '\r\n'
-
-
 
     def __init__(self, host, time_out, port=PORT):
         self.HOST = host
@@ -36,15 +31,15 @@ class SCPI(object):
             print 'SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e)
 
     #Receive function
-    def rp_rcv(self, MSG_LEN):
+    def rp_rcv(self, buff_size):
         chunks = []
-        bytes_rcd = 0
-        while bytes_rcd < MSG_LEN:
-            chunk = self._socket.recv(min(MSG_LEN - bytes_rcd, 1024))
-            if chunk == b'':
-                raise RuntimeError("Socket connection broken")
+        bytes_read = 0
+        while 1:
+            chunk = (self._socket.recv(buff_size)) #Receive chunk size of 2^n preferably
             chunks.append(chunk)
-            bytes_rcd += len(chunk)
+            bytes_read += len(chunk)
+            if(len(chunk) and chunk[-1] == '\n'):
+                break
         return b''.join(chunks)
 
 
@@ -52,21 +47,22 @@ class SCPI(object):
     def rp_write(self, message):
         return self._socket.send(message)
 
-    #RP help function
+    #RP help functions
+
     def choose_state(self, led, state):
-        return 'DIG:PIN LED' + str(led) + str(state) + self.delimiter
+        return 'DIG:PIN LED' + str(led) + ', ' + str(state) + self.delimiter
 
 
-    #----------------------------------------------------- SCPI EXAMPLES PYTHON -----------------------------------------------------#
+#----------------------------------------------------- SCPI EXAMPLES PYTHON -----------------------------------------------------#
 
     #Example 1
     #This functions blinks diode with a period of time_out(seconds)
     def blink_diode(self, diode, time_out):
         while 1:
             time.sleep(time_out)
-            self.rp_write(self.choose_state(1, diode))
+            self.rp_write(self.choose_state(diode, 1))
             time.sleep(time_out)
-            self.rp_write(self.choose_state(0, diode))
+            self.rp_write(self.choose_state(diode, 0))
         return 0
 
     #Example 2
@@ -111,19 +107,17 @@ class SCPI(object):
     #Example X + Y
     #This example acquires a whole signal buffer
 
-    #TODO Fix this example - Returns NULL pointer EXCEPTION.
     def acq_buff(self):
-        buff_len = 16384 * 32
         buff = []
+        buff_string = ''
         self.rp_write('ACQ:START' + self.delimiter)
         self.rp_write('ACQ:TRIG NOW' + self.delimiter)
         self.rp_write('ACQ:TRIG:STAT?' + self.delimiter)
-
-
-        buff = self.rp_rcv(self.rp_write('ACQ:SOUR1:DATA?' + self.delimiter))
-
-        for i in range(0, buff_len):
-            print buff[i]
+        self.rp_rcv(2)
+        self.rp_write('ACQ:SOUR1:DATA?' + self.delimiter)
+        buff_string = self.rp_rcv(self.BUFF_SIZE)
+        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+        buff = map(float, buff_string)
 
         return 0
 
