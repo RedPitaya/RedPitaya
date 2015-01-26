@@ -7,10 +7,7 @@
 
 #include "rp.h"
 
-#define Istrue(e) ((e) != 0) //Helper function. Int > 0 is true, while 0 = false
-
-const rp_pinState_t high_state = RP_HIGH;
-const rp_pinState_t low_state = RP_LOW;
+#define Istrue(e) ((e) != 0) //Helper function. Int > 0 is true, else == 0 is false
 
 int main(int argc, char **argv){
 	/* Print error, if rp_Init() function failed */
@@ -24,9 +21,9 @@ int main(int argc, char **argv){
 	int retries = 1000; //ms
 	while(Istrue(retries--)){
 		/* Setting pin to 1 */
-		rp_DpinSetState(pin, high_state);
+		rp_DpinSetState(pin, RP_HIGH);
 		usleep(20000);
-		rp_DpinSetState(pin, low_state);
+		rp_DpinSetState(pin, RP_LOW);
 		usleep(20000);
 	}
 

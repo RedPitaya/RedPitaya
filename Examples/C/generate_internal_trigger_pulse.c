@@ -17,25 +17,20 @@ int main(int argc, char **argv){
 	if(rp_Init() != RP_OK){
 		fprintf(stderr, "Rp api init failed!\n");
 	}
-
-	//rp_acq_trig_src_t trig_source = RP_TRIG_SRC_NOW; //External trigger on positive edge
-	rp_channel_t channel = RP_CH_1;
-	rp_waveform_t wave_form = RP_WAVEFORM_SINE;
-	rp_gen_mode_t gen_mode = RP_GEN_MODE_BURST;
-
-	rp_GenFreq(channel, 100);
-	rp_GenAmp(channel, 1.0);
-	rp_GenWaveform(channel, wave_form);
+	
+	rp_GenFreq(RP_CH_1, 100);
+	rp_GenAmp(RP_CH_1, 1.0);
+	rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
 
 	/* Enable output channel */
-	rp_GenOutEnable(channel);
+	rp_GenOutEnable(RP_CH_1);
 
 	/* Commented for loop */
 	for(i = 0; i < 100; i++){
 		usleep(200000);
-		rp_GenBurstCount(channel, 1);
+		rp_GenBurstCount(RP_CH_1, 1);
 		usleep(200000);
-		rp_GenMode(channel, gen_mode);
+		rp_GenMode(RP_CH_1, RP_GEN_MODE_BURST);
 	} 
 
 	/*
