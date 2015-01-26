@@ -458,10 +458,14 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
     rp_acq_trig_src_t source;
     ECHECK(osc_GetTriggerSource(&source));
 
-    if (source != RP_TRIG_SRC_DISABLED) {
-        return RP_TRIG_STATE_WAITING;
+    if (source == RP_TRIG_SRC_DISABLED) {
+        *state=RP_TRIG_STATE_TRIGGERED;
     }
-    return RP_TRIG_STATE_TRIGGERED;
+    else{
+    	*state=RP_TRIG_STATE_WAITING;
+    }
+
+    return RP_OK;
 }
 
 int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
