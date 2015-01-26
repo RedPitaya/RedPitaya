@@ -10,7 +10,6 @@ class SCPI(object):
     HOST = None
     PORT = 5000
     TIME_OUT = None
-    BUFF_SIZE = 16384 * 32
     #SCPI delimiter
     delimiter = '\r\n'
 
@@ -49,29 +48,6 @@ class SCPI(object):
     def choose_state(self, led, state):
         return 'DIG:PIN LED' + str(led) + ', ' + str(state) + self.delimiter
 
-
-#----------------------------------------------------- SCPI EXAMPLES PYTHON -----------------------------------------------------#
-
-
-    #Example X+1
-    #This example generates N pulses
-    #This example acquires a whole signal buffer
-
-    def acq_buff(self):
-        buff = []
-        buff_string = ''
-        self.rp_write('ACQ:START' + self.delimiter)
-        self.rp_write('ACQ:TRIG NOW' + self.delimiter)
-        self.rp_write('ACQ:TRIG:STAT?' + self.delimiter)
-        self.rp_rcv(2)
-        self.rp_write('ACQ:SOUR1:DATA?' + self.delimiter)
-        buff_string = self.rp_rcv(self.BUFF_SIZE)
-        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-        buff = map(float, buff_string)
-
-        return 0
-
-
     def close(self):
         self.__del__()
 
@@ -79,5 +55,16 @@ class SCPI(object):
         if self._socket is not None:
             self._socket.close()
         self._socket = None
+
+
+rp_s = SCPI('IP', None)
+test_parameter = 67
+diode = 5
+
+for i in range(1, 7):
+    if(test_parameter >= ((100/7) * i)):
+        rp_s.rp_write(rp_s.choose_state(str(i), 1))
+    else:
+        rp_s.rp_write(rp_s.choose_state(str(i), 0))
 
 
