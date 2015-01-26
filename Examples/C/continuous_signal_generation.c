@@ -15,20 +15,17 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Rp api init failed!\n");
 	}
 
-	rp_waveform_t wave_form = RP_WAVEFORM_SINE;
-	rp_channel_t channel = RP_CH_1;
-
 	/* Generating frequency */
-	rp_GenFreq(channel, 10000.0);
+	rp_GenFreq(RP_CH_1, 10000.0);
 
 	/* Generating amplitude */
-	rp_GenAmp(channel, 1.0);
+	rp_GenAmp(RP_CH_1, 1.0);
 
 	/* Generating wave form */
-	rp_GenWaveform(channel, wave_form);
+	rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
 
 	/* Enable channel */
-	rp_GenOutEnable(channel);
+	rp_GenOutEnable(RP_CH_1);
 
 	/* Releasing resources */
 	rp_Release();

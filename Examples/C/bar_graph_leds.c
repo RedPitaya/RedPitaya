@@ -13,10 +13,6 @@ int main(int arc, char **argv){
 	if(rp_Init() != RP_OK){
 		fprintf(stderr, "Rp api init failed!\n");
 	}
-
-	rp_pinState_t high_state = RP_HIGH;
-	rp_pinState_t low_state = RP_LOW;
-
 	rp_dpin_t pin;
 
 	float p = 67;
@@ -24,16 +20,16 @@ int main(int arc, char **argv){
 	/* Turning on leds based on parameter p */
 	for(pin = RP_LED1; pin < RP_LED7; pin++){
 		if(p >= (100/7)*pin){
-			rp_DpinSetState(pin, high_state);
+			rp_DpinSetState(pin, RP_HIGH);
 		}else{
-			rp_DpinSetState(pin, low_state);
+			rp_DpinSetState(pin, RP_LOW);
 		}
 		usleep(100000);
 	}
 
 	/* Turning off the leds with a short delay */
 	for(pin = RP_LED1; pin < RP_LED7; pin++){
-		rp_DpinSetState(pin, low_state);
+		rp_DpinSetState(pin, RP_LOW);
 	}
 
 	/* Releasing resources */
