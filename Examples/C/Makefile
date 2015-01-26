@@ -21,7 +21,7 @@ CC = $(CROSS_COMPILE)gcc
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
 #Objects
-OBJECTS = blink_diode.o
+OBJECTS = acquire_signal_on_given_trigger.o
 #Target file
 TARGET = api_test
 
