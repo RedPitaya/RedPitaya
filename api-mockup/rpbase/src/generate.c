@@ -32,7 +32,9 @@ typedef struct ch_properties {
 	uint32_t counterWrap;
 	uint32_t startOffset;
 	uint32_t counterStep;
-	uint32_t buffReadPointer;
+    uint32_t reserved_ReadPointer1  :2;
+	uint32_t buffReadPointer        :14;
+    uint32_t reserved_ReadPointer2  :16;
 	int8_t   unused[10];
 } ch_properties_t;
 
@@ -84,12 +86,10 @@ int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_cha
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
 	if (channel == RP_CH_1) {
-		generate->ASM_reset = 0;
 		generate->ASM_WrapPointer = 0;
 		generate->AsetOutputTo0 = disable ? 1 : 0;
 	}
 	else if (channel == RP_CH_2) {
-		generate->BSM_reset = 0;
 		generate->BSM_WrapPointer = 0;
 		generate->BsetOutputTo0 = disable ? 1 : 0;
 	}
@@ -136,14 +136,6 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
 	return RP_OK;
 }
 
-int generate_setPhase(rp_channel_t channel, float phase) {
-	volatile ch_properties_t *ch_properties;
-	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-	ch_properties->startOffset = (uint32_t) (phase / PHASE_MAX * BUFFER_LENGTH / 2);
-	// TODO: restart gen. SM
-	return RP_OK;
-}
-
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
 	CHECK_OUTPUT(generate->properties_chA.counterWrap = 65536 * (size-1),
 			     generate->properties_chB.counterWrap = 65536 * (size-1))
@@ -162,7 +154,14 @@ int generate_setOneTimeTrigger(rp_channel_t channel, uint32_t value) {
 	return RP_OK;
 }
 
-int generate_writeData(rp_channel_t channel, float *data, uint32_t length) {
+int generate_Synchronise() {
+    // Both channels must be reset simultaneously
+    ECHECK(cmn_SetBits((uint32_t *) generate, 0x00400040, 0xFFFFFFFF));
+    ECHECK(cmn_UnsetBits((uint32_t *) generate, 0x00400040, 0xFFFFFFFF));
+    return RP_OK;
+}
+
+int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length) {
 	volatile int32_t *dataOut;
 	CHECK_OUTPUT(dataOut = data_chA,
 			     dataOut = data_chB)
@@ -172,8 +171,8 @@ int generate_writeData(rp_channel_t channel, float *data, uint32_t length) {
 	generate_setWrapCounter(channel, length);
 
 	uint32_t i;
-	for(i = 0; i < BUFFER_LENGTH; i++) {
-		dataOut[i] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i], AMPLITUDE_MAX, 0, 0);
+	for(i = start; i < start+BUFFER_LENGTH; i++) {
+		dataOut[i % BUFFER_LENGTH] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start], AMPLITUDE_MAX, 0, 0);
 	}
 	return RP_OK;
 }
