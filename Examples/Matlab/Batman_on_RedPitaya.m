@@ -20,8 +20,8 @@ tcpipObj.Terminator = 'CR/LF';
 % Donwload ch1.csv and ch2.csv and copy them to
 % your Matlab/bin folder
 t=1:1:16384;
-x=dlmread('ch1.csv')';
-y=dlmread('ch2.csv')';
+x=dlmread('batman_ch1.csv')';
+y=dlmread('batman_ch2.csv')';
 plot(t,x,t,y)
 grid on
 
