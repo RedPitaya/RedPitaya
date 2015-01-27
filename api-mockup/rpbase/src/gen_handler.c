@@ -23,6 +23,7 @@ double chA_amplitude = 1, chB_amplitude = 1;
 double chA_offset = 0, chB_offset = 0;
 double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
+double chA_phase,     chB_phase;
 rp_waveform_t chA_waveform, chB_waveform;
 uint32_t chA_size = BUFFER_LENGTH, chB_size = BUFFER_LENGTH;
 
@@ -41,8 +42,6 @@ int gen_SetDefaultValues() {
     ECHECK(gen_setAmplitude(RP_CH_2, 1));
     ECHECK(generate_setDCOffset(RP_CH_1, 0));
     ECHECK(generate_setDCOffset(RP_CH_2, 0));
-    ECHECK(gen_Phase(RP_CH_1, 0));
-    ECHECK(gen_Phase(RP_CH_2, 0));
     ECHECK(gen_DutyCycle(RP_CH_1, 0.5));
     ECHECK(gen_DutyCycle(RP_CH_2, 0.5));
     ECHECK(gen_GenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS));
@@ -51,6 +50,8 @@ int gen_SetDefaultValues() {
     ECHECK(gen_BurstCount(RP_CH_2, 1));
     ECHECK(gen_TriggerSource(RP_CH_1, RP_GEN_TRIG_SRC_INTERNAL));
     ECHECK(gen_TriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL));
+    ECHECK(gen_Phase(RP_CH_1, 0.0));
+    ECHECK(gen_Phase(RP_CH_2, 0.0));
     return RP_OK;
 }
 
@@ -98,14 +99,22 @@ int gen_Frequency(rp_channel_t channel, double frequency) {
     CHECK_OUTPUT(chA_frequency = frequency,
                  chB_frequency = frequency)
     ECHECK(generate_setFrequency(channel, (float)frequency));
-    return synthesize_signal(channel);
+    ECHECK(synthesize_signal(channel));
+    return gen_Synchronise();
 }
 
 int gen_Phase(rp_channel_t channel, double phase) {
     if (phase < PHASE_MIN || phase > PHASE_MAX) {
         return RP_EOOR;
     }
-    return generate_setPhase(channel, (float)phase);
+    if (phase < 0) {
+        phase += 360;
+    }
+    CHECK_OUTPUT(chA_phase = phase,
+                 chB_phase = phase)
+
+    ECHECK(synthesize_signal(channel));
+    return gen_Synchronise();
 }
 
 int gen_Waveform(rp_channel_t channel, rp_waveform_t type) {
@@ -147,7 +156,7 @@ int gen_ArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
         pointer[i] = 0;
     }
 
-    if ((channel == RP_CH_1)) {
+    if (channel == RP_CH_1) {
         chA_arb_size = length;
         if(chA_waveform==RP_WAVEFORM_ARBITRARY){
         	return synthesize_signal(channel);
@@ -203,12 +212,15 @@ int gen_BurstCount(rp_channel_t channel, int num) {
 
 int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (src == RP_GEN_TRIG_SRC_INTERNAL) {
+        ECHECK(generate_setOneTimeTrigger(channel, 0));
         return generate_setTriggerSource(channel, 1);
     }
     else if(src == RP_GEN_TRIG_SRC_EXT_PE) {
+        ECHECK(generate_setOneTimeTrigger(channel, 1));
         return generate_setTriggerSource(channel, 2);
     }
     else if(src == RP_GEN_TRIG_SRC_EXT_NE) {
+        ECHECK(generate_setOneTimeTrigger(channel, 1));
         return generate_setTriggerSource(channel, 3);
     }
     else {
@@ -231,28 +243,33 @@ int gen_Trigger(int mask) {
     }
 }
 
+int gen_Synchronise() {
+    return generate_Synchronise();
+}
+
 int synthesize_signal(rp_channel_t channel) {
     float data[BUFFER_LENGTH];
     rp_waveform_t waveform;
     double dutyCycle, frequency;
-    uint32_t size;
+    uint32_t size, phase;
 
     if (channel == RP_CH_1) {
         waveform = chA_waveform;
         dutyCycle = chA_dutyCycle;
         frequency = chA_frequency;
         size = chA_size;
+        phase = (uint32_t) (chA_phase * BUFFER_LENGTH / 360.0);
     }
     else if (channel == RP_CH_2) {
         waveform = chB_waveform;
         dutyCycle = chB_dutyCycle;
         frequency = chB_frequency;
     	size = chB_size;
+        phase = (uint32_t) (chB_phase * BUFFER_LENGTH / 360.0);
     }
     else{
         return RP_EPN;
     }
-
 
 
     switch (waveform) {
@@ -283,7 +300,7 @@ int synthesize_signal(rp_channel_t channel) {
         default:
             return RP_EIPV;
     }
-    return generate_writeData(channel, data, size);
+    return generate_writeData(channel, data, phase, size);
 }
 
 int synthesis_sin(float *data_out) {
