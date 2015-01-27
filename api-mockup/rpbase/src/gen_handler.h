@@ -32,6 +32,7 @@ int gen_GenMode(rp_channel_t chanel, rp_gen_mode_t mode);
 int gen_BurstCount(rp_channel_t channel, int num);
 int gen_TriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_Trigger(int mask);
+int gen_Synchronise();
 
 int synthesize_signal(rp_channel_t chanel);
 int synthesis_sin(float *data_out);
