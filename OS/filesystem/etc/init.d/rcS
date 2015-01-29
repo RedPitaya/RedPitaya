@@ -10,14 +10,9 @@
 
 rw
 
-#Copy rplib
-cp /opt/bin/librp.so /lib
-
 #Copy scpi lib
-cp /opt/bin/libscpi.so /lib
-cp /opt/bin/libscpi.so.0.3.0 /lib
-#rm /opt/bin/libscpi.so
-#rm /opt/bin/libscpi.so.0.3.0
+cp /opt/lib/* /lib
 
+ro
 
 echo "Feel free to add custom initialization commands here."
