@@ -145,7 +145,7 @@ $(SCPI_SERVER):
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(RPLIB):
-	$(MAKE) -C $(RPLIB_DIR) CROSS_COMPILE=arm-linux-gnueabi-
+	$(MAKE) -C $(RPLIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(RPLIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
 
 #Gdb server for remote debugging
