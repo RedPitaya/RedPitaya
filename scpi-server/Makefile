@@ -18,7 +18,7 @@ INSTALL_DIR ?= .
 
 SCPIPARSER=3rdparty/libs/scpi-parser/libscpi/dist/libscpi.so
 SCPISRV=scpi-server
-RPLIB=../api-mockup/rpbase/librp.so
+RPLIB=../api-mockup/rpbase/src/librp.so
 ARTIFACTS= $(RPLIB) $(SCPIPARSER) $(SCPISRV)
 
 #CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
@@ -37,11 +37,13 @@ $(SCPIPARSER):
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
+	mkdir -p $(INSTALL_DIR)/lib
 	cp $(SCPISRV) $(INSTALL_DIR)/bin
-	mkdir -p $(INSTALL_DIR)/src/utils/$(TARGET)
-	-rm -f $(TARGET) *.o
-	cp -r * $(INSTALL_DIR)/src/utils/$(TARGET)/
-	-rm `find $(INSTALL_DIR)/src/tools/$(TARGET)/ -iname .svn` -rf
+	cp $(SCPIPARSER) $(INSTALL_DIR)/lib
+	#mkdir -p $(INSTALL_DIR)/src/utils/$(TARGET)
+	#-rm -f $(TARGET) *.o
+	#cp -r * $(INSTALL_DIR)/src/utils/$(TARGET)/
+	#-rm `find $(INSTALL_DIR)/src/tools/$(TARGET)/ -iname .svn` -rf
 
 clean:
 	$(MAKE) -C src clean

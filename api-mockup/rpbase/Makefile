@@ -12,8 +12,6 @@ FPGA=fpga.bit
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-# INSTALL_DIR ?= ../
-
 RPLIB=rplib.so
 TEST=testApp
 ARTIFACTS=$(RPLIB) $(TEST)
