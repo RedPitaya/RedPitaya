@@ -52,7 +52,7 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api-mockup/rpbase
+LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api-mockup/rpbase/src
 LIBS= -lm -lpthread -lrp -lscpi
 
 INC= -I../3rdparty/libs/scpi-parser/libscpi/inc -I ../../api-mockup/rpbase/src

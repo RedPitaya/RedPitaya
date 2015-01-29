@@ -25,11 +25,11 @@ OBJEXT   = .o
 # Input/Output directories
 
 OBJECTS_DIR = ../obj
-OUTPUT_DIR  = ../
+INSTALL_DIR  ?= .
 SOURCE_DIR  = .
 
 # Library name
-TARGET=$(OUTPUT_DIR)/librp.so
+TARGET=librp.so
 
 # List of compiled object files
 OBJECTS =	common.o \
@@ -101,9 +101,10 @@ version.h:
 # Clean target - when called it cleans all object files and executables.
 clean:
 	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
+	rm -rf $(INSTALL_DIR)/lib
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
-	mkdir -p $(INSTALL_DIR)/bin
-	cp $(TARGET) $(INSTALL_DIR)/bin
+	mkdir -p $(INSTALL_DIR)/lib
+	cp  $(TARGET) $(INSTALL_DIR)/lib
