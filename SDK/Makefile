@@ -18,9 +18,7 @@ ZIP_NAME = SDK
 RP_INCLUDE = ./include
 GREET_MSG = "\n---------- INSTALLING REDPITAYA SDK ZIP ----------\n"
 
-all: install
-
-install:
+all:
 	@echo "\n---------- INSTALLING REDPITAYA SDK ZIP ----------\n"
 	chmod +x ./install.sh
 	zip -r $(ZIP_NAME)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
