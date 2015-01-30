@@ -1,0 +1,3 @@
+eclipse.preferences.version=1
+org.eclipse.rse.internal.ui.view.SystemViewConnectionAdapter\:org.eclipse.rse.ui.view.SystemTableView=org.eclipse.rse.ui.profile;org.eclipse.rse.ui.systemType;org.eclipse.rse.ui.connected;org.eclipse.rse.ui.hostname;org.eclipse.rse.ui.defaultuserid;org.eclipse.rse.ui.description
+org.eclipse.rse.preferences.order.connections=foo.Local;foo.RP
