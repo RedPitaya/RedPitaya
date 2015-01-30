@@ -1,0 +1,8 @@
+19:21:36 **** Build of configuration Default for project generate1 ****
+make CROSS_COMPILE=arm-linux-gnueabi- all 
+arm-linux-gnueabi-gcc -c -g -std=gnu99 -Wall -Werror -DVERSION=0.00-0000 -DREVISION=devbuild fpga_awg.c -o fpga_awg.o
+arm-linux-gnueabi-gcc -c -g -std=gnu99 -Wall -Werror -DVERSION=0.00-0000 -DREVISION=devbuild generate.c -o generate.o
+arm-linux-gnueabi-gcc -o generate fpga_awg.o generate.o -g -std=gnu99 -Wall -Werror -DVERSION=0.00-0000 -DREVISION=devbuild -lm
+
+19:21:36 Build Finished (took 168ms)
+
