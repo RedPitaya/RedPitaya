@@ -22,7 +22,7 @@ all: install
 
 install:
 	@echo "\n---------- INSTALLING REDPITAYA SDK ZIP ----------\n"
-	chmod +x 777 ./install.sh
+	chmod +x ./install.sh
 	zip -r $(ZIP_NAME)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
 
 clean:
