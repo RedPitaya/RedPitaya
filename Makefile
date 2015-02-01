@@ -37,7 +37,7 @@ DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
 SCPI_SERVER_DIR=scpi-server/
 RPLIB_DIR=api-mockup/rpbase/src
-SDK_DIR=SDK
+SDK_DIR=SDK/
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -70,7 +70,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(GDBSERVER) sdk
+$(TARGET): sdk $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(GDBSERVER) sdk
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
