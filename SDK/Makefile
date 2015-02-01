@@ -25,7 +25,7 @@ GREET_MSG = "\nINSTALLING REDPITAYA SDK ZIP...\n"
 
 all: zip
 	
-zip: clean
+zip:
 	@echo $(GREET_MSG)
 	mkdir -p include
 	cp $(RP_LIBRARY_INCLUDE)/rp.h ./include
