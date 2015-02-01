@@ -16,11 +16,11 @@ REVISION ?= devbuild
 
 CC = CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 NAME = SDK
-#Here I use the same var for rplib and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two files location.
+#Here I use the same var for rplib and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
 #We could make another var just for rp.h
 RP_LIBRARY_INCLUDE = ../api-mockup/rpbase/src
 
-RP_SCPI_LIB_INCLUDE = ../scpi-server/src/utils/3rdparty/libs/scpi-parser/libscpi/dist
+RP_SCPI_LIB_INCLUDE = ../scpi-server/3rdparty/libs/scpi-parser/libscpi/dist/
 GREET_MSG = "\nINSTALLING REDPITAYA SDK ZIP...\n"
 
 all: zip
@@ -38,7 +38,7 @@ zip:
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
 	chmod +x ./install.sh
-	zip -r $(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
+	zip -r $(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
 
 clean:
 	rm -rf include
