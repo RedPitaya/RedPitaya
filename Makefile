@@ -37,6 +37,7 @@ DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
 SCPI_SERVER_DIR=scpi-server/
 RPLIB_DIR=api-mockup/rpbase/src
+SDK_DIR=SDK
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -69,7 +70,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(GDBSERVER)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(GDBSERVER) sdk
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -151,8 +152,10 @@ $(RPLIB):
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
 	cp Test/gdb-server/gdbserver $(abspath $(BUILD))/bin
-	
 
+sdk:
+	$(MAKE) -C $(SDK_DIR)
+	
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
@@ -168,6 +171,7 @@ clean:
 	make -C $(DISCOVERY_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(RPLIB_DIR) clean
+	make -C $(SDK_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
