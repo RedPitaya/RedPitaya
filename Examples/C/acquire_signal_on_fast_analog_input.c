@@ -31,7 +31,7 @@ int main(int argc, char **argv){
 	}
 
 	/* Releasing resources */
-	free(buff)
+	free(buff);
 	rp_Release();
 
 	return 0;
