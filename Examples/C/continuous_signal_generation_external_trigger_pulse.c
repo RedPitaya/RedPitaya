@@ -26,4 +26,6 @@ int main(int argc, char **argv){
 
 	/* Release rp resources */
 	rp_Release();
+
+	return 0;
 }
