@@ -23,13 +23,12 @@ int main(int argc, char **argv){
 
 	rp_AcqStart();
 
-	rp_AcqSetTriggerSrc(RP_GEN_TRIG_SRC_EXT_PE);
+	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
 
 	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
 
 	while(1){
 		rp_AcqGetTriggerState(&state);
-		printf("%d\n", state);
 		if(state == RP_TRIG_STATE_TRIGGERED){
 			break;
 		}
@@ -40,6 +39,9 @@ int main(int argc, char **argv){
 	for(i = 0; i < buff_size; i++){
 		printf("%f\n", buff[i]);
 	}
-
+	/* Releasing resources */
+	free(buff)
 	rp_Release();
+
+	return 0;
 }
