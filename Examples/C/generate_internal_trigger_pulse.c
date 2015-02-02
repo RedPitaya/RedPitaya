@@ -10,7 +10,6 @@
 int main(int argc, char **argv){
 
 	/* Burst count */
-	//int n = 10;
 	int i;
 
 	/* Print error, if rp_Init() function failed */
@@ -25,7 +24,6 @@ int main(int argc, char **argv){
 	/* Enable output channel */
 	rp_GenOutEnable(RP_CH_1);
 
-	/* Commented for loop */
 	for(i = 0; i < 100; i++){
 		usleep(200000);
 		rp_GenBurstCount(RP_CH_1, 1);
