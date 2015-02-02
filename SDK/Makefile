@@ -38,7 +38,7 @@ zip:
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
 	chmod +x ./install.sh
-	zip -r $(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
+	zip -r ../$(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
 
 clean:
 	rm -rf include
