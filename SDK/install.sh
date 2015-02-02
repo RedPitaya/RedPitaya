@@ -43,6 +43,6 @@ sudo mv $GCC_LINARO_DL gcc_linaro
 rm -rf $GCC_LINARO_DL.tar.bz2
 
 sudo chmod 777 /etc/bash.bashrc
-export PATH=$PATH:$PWD/$GCC_LINARO_DIR
+echo export PATH=$PATH:$PWD/$GCC_LINARO_DIR
 
 
