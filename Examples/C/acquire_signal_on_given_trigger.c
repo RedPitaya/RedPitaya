@@ -40,7 +40,7 @@ int main(int argc, char **argv){
 		printf("%f\n", buff[i]);
 	}
 	/* Releasing resources */
-	free(buff)
+	free(buff);
 	rp_Release();
 
 	return 0;
