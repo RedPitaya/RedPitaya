@@ -12,15 +12,6 @@ ECLIPSE_DL=.
 GCC_LINARO_DL=gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux
 GCC_LINARO_DIR=./gcc_linaro/bin
 
-#Create run.sh script.
-touch run.sh
-chmod +x run.sh
-
-echo '#!/bin/bash' >> run.sh 
-echo 'echo -e "STARTING ECLIPSE...\n"' >> run.sh
-echo './eclipse/eclipse -data pitaya_remote_debug_example' >> run.sh
-
-
 echo -e $GREET_MSG
 echo -e "DOWNLOADING CURL...\n"
 sudo apt-get install curl
@@ -63,4 +54,13 @@ rm -rf $GCC_LINARO_DL.tar.bz2
 
 sudo chmod 777 /etc/bash.bashrc
 echo export PATH=$PATH:$PWD/$GCC_LINARO_DIR
+
+#If everything went well, create a run.sh script for starting eclipse with target workspace
+touch run.sh
+chmod +x run.sh
+
+echo '#!/bin/bash' > run.sh 
+echo 'echo -e "STARTING ECLIPSE...\n"' >> run.sh
+echo './eclipse/eclipse -data pitaya_remote_debug_example' >> run.sh
+
 
