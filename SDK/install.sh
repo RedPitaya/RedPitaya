@@ -11,10 +11,14 @@ RP_INCLUDE=./include
 ECLIPSE_DL=.
 GCC_LINARO_DL=gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux
 GCC_LINARO_DIR=./gcc_linaro/bin
+API_BLINK_EXAMPLE_DIR=pitaya_remote_debug_example/
 
 echo -e $GREET_MSG
 echo -e "DOWNLOADING CURL...\n"
 sudo apt-get install curl
+
+echo -e "DOWNLOADING PLINK...\n"
+sudo apt-get install putty-tools
 
 echo -e "\nINSTALLING DEPENDENCIES...\n"
 sudo apt-get install default-jre
@@ -24,7 +28,6 @@ sudo apt-get update
 sudo apt-get install ia32-libs
 
 echo -e "\nDOWNLOADING ECLIPSE..."
-
 #Determine machine type
 MACHINE_TYPE=`uname -m`
 if [ ${MACHINE_TYPE} == 'x86_64' ]; then
@@ -53,14 +56,25 @@ sudo mv $GCC_LINARO_DL gcc_linaro
 rm -rf $GCC_LINARO_DL.tar.bz2
 
 sudo chmod 777 /etc/bash.bashrc
-echo export PATH=$PATH:$PWD/$GCC_LINARO_DIR
+echo PATH=$PATH:$PWD/$GCC_LINARO_DIR >> /etc/bash.bashrc
 
 #If everything went well, create a run.sh script for starting eclipse with target workspace
-touch run.sh
-chmod +x run.sh
+touch run_eclipse.sh
+chmod +x run_eclipse.sh
 
-echo '#!/bin/bash' > run.sh 
-echo 'echo -e "STARTING ECLIPSE...\n"' >> run.sh
-echo './eclipse/eclipse -data pitaya_remote_debug_example' >> run.sh
+echo '#!/bin/bash' > run_eclipse.sh 
+echo 'echo -e "STARTING ECLIPSE...\n"' >> run_eclipse.sh
+echo './eclipse/eclipse -data pitaya_remote_debug_example' >> run_eclipse.sh
 
+#Create remote scp and execture script
+touch rp_remote_exe.sh
+chmod +x rp_remote_exe.sh
 
+echo '#!/bin/bash' > rp_remote_exe.sh
+echo 'echo -ne "\nInput your red pitaya ip address and press [ENTER]:"' >> rp_remote_exe.sh
+echo 'read RP_IP' >> rp_remote_exe.sh
+
+#TODO add a real executable file.
+make -C $API_BLINK_EXAMPLE_DIR/blink_diode
+echo 'scp '$API_BLINK_EXAMPLE_DIR'/api-test root@$RP_IP:/opt/' >> rp_remote_exe.sh
+echo 'plink -v root@$RP_IP:/opt/' >> rp_remote_exe.sh
