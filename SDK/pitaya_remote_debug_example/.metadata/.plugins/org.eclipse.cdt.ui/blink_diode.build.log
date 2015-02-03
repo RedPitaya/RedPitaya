@@ -1,0 +1,7 @@
+13:05:22 **** Incremental Build of configuration Default for project blink_diode ****
+make all 
+arm-linux-gnueabi-gcc -c -g -std=gnu99 -Wall -Werror -I../../api-mockup/rpbase/src/ blink_diode.c -o blink_diode.o
+arm-linux-gnueabi-gcc -o api_test blink_diode.o -g -std=gnu99 -Wall -Werror -L ../../api-mockup/rpbase -lm -lpthread -lrp
+
+13:05:22 Build Finished (took 236ms)
+
