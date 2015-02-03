@@ -39,9 +39,9 @@ zip:
 	rm ./include/libscpi.a
 	chmod +x ./install.sh
 	
-	mkdir -p ./pitaya_remote_debug_example/blink_diode
-	cp ../Examples/C/blink_diode.c ./pitaya_remote_debug_example/blink_diode
-	cp ../Examples/C/Makefile ./pitaya_remote_debug_example/blink_diode
+	mkdir -p ./pitaya_example/blink_diode
+	cp ../Examples/C/blink_diode.c ./pitaya_example/blink_diode
+	cp ../Examples/C/Makefile ./pitaya_example/blink_diode
 	zip -r ../$(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile" 
 
 clean:
