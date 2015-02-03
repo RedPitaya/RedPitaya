@@ -38,7 +38,9 @@ zip:
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
 	chmod +x ./install.sh
-	zip -r ../$(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"
+	
+	cp ../Examples/C/blink_diode.c ./pitaya_remote_debug_example
+	zip -r ../$(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile"g 
 
 clean:
 	rm -rf include
