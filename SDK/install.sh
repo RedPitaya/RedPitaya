@@ -56,7 +56,8 @@ sudo mv $GCC_LINARO_DL gcc_linaro
 rm -rf $GCC_LINARO_DL.tar.bz2
 
 sudo chmod 777 /etc/bash.bashrc
-echo PATH=$PATH:$PWD/$GCC_LINARO_DIR >> /etc/bash.bashrc
+echo PATH=$PATH:"$PWD"/$GCC_LINARO_DIR >> /etc/bash.bashrc
+source ~/.bashrc
 
 #If everything went well, create a run.sh script for starting eclipse with target workspace
 touch run_eclipse.sh
@@ -71,10 +72,8 @@ touch rp_remote_exe.sh
 chmod +x rp_remote_exe.sh
 
 echo '#!/bin/bash' > rp_remote_exe.sh
-echo 'echo -ne "\nInput your red pitaya ip address and press [ENTER]:"' >> rp_remote_exe.sh
-echo 'read RP_IP' >> rp_remote_exe.sh
 
 #TODO add a real executable file.
-make -C $API_BLINK_EXAMPLE_DIR/blink_diode
-echo 'scp '$API_BLINK_EXAMPLE_DIR'/api-test root@$RP_IP:/opt/' >> rp_remote_exe.sh
-echo 'plink -v root@$RP_IP:/opt/' >> rp_remote_exe.sh
+echo 'make -C '$API_BLINK_EXAMPLE_DIR'/blink_diode' >> rp_remote_exe.sh
+echo 'scp $PWD/'$API_BLINK_EXAMPLE_DIR'blink_diode/api-test root@$1:/opt/' >> rp_remote_exe.sh
+echo 'plink -v root@$RP_IP:/opt/api-test' >> rp_remote_exe.sh
