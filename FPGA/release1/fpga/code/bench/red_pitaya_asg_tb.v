@@ -126,15 +126,15 @@ always begin
           trig <= 1'b0 ;
    repeat(100000) @(posedge dac_clk);
       trig <= 1'b1 ;
-   repeat(800) @(posedge dac_clk);
+   repeat(1200) @(posedge dac_clk);
       trig <= 1'b0 ;
 end
 
 
 
 
-reg [8-1: 0] ch0_set;
-reg [8-1: 0] ch1_set;
+reg [9-1: 0] ch0_set;
+reg [9-1: 0] ch1_set;
 integer k;
 
 initial begin
@@ -155,8 +155,11 @@ initial begin
       i_bus.bus_write(32'h00008,{2'h0, 14'd7, 16'd0}             );  // table size
       i_bus.bus_write(32'h0000C,{2'h0, 14'h1, 16'h0}             );  // reset offset
       i_bus.bus_write(32'h00010,{2'h0, 14'h2, 16'h0}             );  // table step
+      i_bus.bus_write(32'h00018,{16'h0, 16'd0}                   );  // number of cycles
+      i_bus.bus_write(32'h0001C,{16'h0, 16'd0}                   );  // number of repetitions
+      i_bus.bus_write(32'h00020,{32'd3}                          );  // number of 1us delay between repetitions
 
-      ch0_set = {1'b0, 1'b0, 1'b0, 1'b1,    1'b0, 3'h2} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
+      ch0_set = {1'b0 ,1'b0, 1'b0, 1'b0, 1'b1,    1'b0, 3'h2} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
 
 
@@ -172,8 +175,11 @@ initial begin
       i_bus.bus_write(32'h00028,{2'h0, 14'd7999, 16'd0}          );  // table size
       i_bus.bus_write(32'h0002C,{2'h0, 14'h5, 16'h0}             );  // reset offset
       i_bus.bus_write(32'h00030,{2'h0, 14'h9, 16'h0}             );  // table step
+      i_bus.bus_write(32'h00038,{16'h0, 16'd0}                   );  // number of cycles
+      i_bus.bus_write(32'h0003C,{16'h0, 16'd5}                   );  // number of repetitions
+      i_bus.bus_write(32'h00040,{32'd10}                         );  // number of 1us delay between repetitions
 
-      ch1_set = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
+      ch1_set = {1'b0, 1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
       i_bus.bus_write(32'h00000,{8'h0, ch1_set,  8'h0, ch0_set}  ); // write configuration
 
@@ -183,7 +189,7 @@ initial begin
 
       ch1_set = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
 
-      i_bus.bus_write(32'h00000,{8'h0, ch1_set,  8'h0, ch0_set}  ); // write configuration
+      i_bus.bus_write(32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
 
 
 
