@@ -28,6 +28,9 @@ sudo apt-get update
 sudo apt-get install ia32-libs
 sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
 
+#Install sshpass application
+sudo apt-get install sshpass
+
 #echo -e "\nDOWNLOADING ECLIPSE..."
 #Determine machine type
 #MACHINE_TYPE=`uname -m`
