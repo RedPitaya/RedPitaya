@@ -66,12 +66,15 @@ module red_pitaya_asg_ch
    input     [RSZ+15: 0] set_step_i      ,  //!< set pointer step
    input     [RSZ+15: 0] set_ofs_i       ,  //!< set reset offset
    input                 set_rst_i       ,  //!< set FSM to reset
-   input                 set_once_i      ,  //!< set only once
+   input                 set_once_i      ,  //!< set only once  -- not used
    input                 set_wrap_i      ,  //!< set wrap enable
    input     [  14-1: 0] set_amp_i       ,  //!< set amplitude scale
    input     [  14-1: 0] set_dc_i        ,  //!< set output offset
-   input                 set_zero_i         //!< set output to zero
-
+   input                 set_zero_i      ,  //!< set output to zero
+   input     [  16-1: 0] set_ncyc_i      ,  //!< set number of cycle
+   input     [  16-1: 0] set_rnum_i      ,  //!< set number of repetitions
+   input     [  32-1: 0] set_rdly_i      ,  //!< set delay between repetitions
+   input                 set_rgate_i        //!< set external gated repetition
 );
 
 
@@ -85,10 +88,8 @@ reg   [  14-1: 0] dac_rd    ;
 reg   [  14-1: 0] dac_rdat  ;
 reg   [ RSZ-1: 0] dac_rp    ;
 reg   [RSZ+15: 0] dac_pnt   ; // read pointer
+reg   [RSZ+15: 0] dac_pntp  ; // previour read pointer
 
-reg               dac_do    ;
-reg               dac_trig  ;
-wire  [RSZ+16: 0] dac_npnt  ; // next read pointer
 reg   [  28-1: 0] dac_mult  ;
 reg   [  15-1: 0] dac_sum   ;
 
@@ -134,36 +135,109 @@ end
 //
 //  read pointer & state machine
 
-wire              ext_trig_p       ;
-wire              ext_trig_n       ;
+reg              trig_in      ;
+wire             ext_trig_p   ;
+wire             ext_trig_n   ;
 
+reg  [  16-1: 0] cyc_cnt      ;
+reg  [  16-1: 0] rep_cnt      ;
+reg  [  32-1: 0] dly_cnt      ;
+reg  [   8-1: 0] dly_tick     ;
+
+reg              dac_do       ;
+reg              dac_rep      ;
+wire             dac_trig     ;
+reg              dac_trigr    ;
+wire [RSZ+16: 0] dac_npnt     ; // next read pointer
+
+// state machine
 always @(posedge dac_clk_i) begin
    if (dac_rstn_i == 1'b0) begin
-      dac_do   <= 1'b0 ;
-      dac_pnt  <= {RSZ+16{1'b0}} ;
-      dac_trig <= 1'h0 ;
+      cyc_cnt   <= 16'h0 ;
+      rep_cnt   <= 16'h0 ;
+      dly_cnt   <= 32'h0 ;
+      dly_tick  <=  8'h0 ;
+      dac_do    <=  1'b0 ;
+      dac_rep   <=  1'b0 ;
+      trig_in   <=  1'b0 ;
+      dac_pntp  <= {RSZ+16{1'b0}} ;
+      dac_trigr <=  1'b0 ;
    end
    else begin
 
+      // make 1us tick
+      if (dac_do || (dly_tick == 8'd124))
+         dly_tick <= 8'h0 ;
+      else
+         dly_tick <= dly_tick + 8'h1 ;
+
+      // delay between repetitions 
+      if (set_rst_i || dac_do)
+         dly_cnt <= set_rdly_i ;
+      else if (|dly_cnt && (dly_tick == 8'd124))
+         dly_cnt <= dly_cnt - 32'h1 ;
+
+
+      // repetitions counter
+      if (trig_in && !dac_do)
+         rep_cnt <= set_rnum_i ;
+      else if (!set_rgate_i && (|rep_cnt && dac_rep && (dac_trig && !dac_do)))
+         rep_cnt <= rep_cnt - 16'h1 ;
+      else if (set_rgate_i && ((!trig_ext_i && trig_src_i==3'd2) || (trig_ext_i && trig_src_i==3'd3)))
+         rep_cnt <= 16'h0 ;
+
+      // count number of table read cycles
+      dac_pntp  <= dac_pnt;
+      dac_trigr <= dac_trig; // ignore trigger when count
+      if (dac_trig)
+         cyc_cnt <= set_ncyc_i ;
+      else if (!dac_trigr && |cyc_cnt && ({1'b0,dac_pntp} > {1'b0,dac_pnt}))
+         cyc_cnt <= cyc_cnt - 16'h1 ;
+
+
+      // trigger arrived
       case (trig_src_i)
-          3'd1 : dac_trig <= trig_sw_i   ; // sw
-          3'd2 : dac_trig <= ext_trig_p  ; // external positive edge
-          3'd3 : dac_trig <= ext_trig_n  ; // external negative edge
-       default : dac_trig <= 1'b0        ;
+          3'd1 : trig_in <= trig_sw_i   ; // sw
+          3'd2 : trig_in <= ext_trig_p  ; // external positive edge
+          3'd3 : trig_in <= ext_trig_n  ; // external negative edge
+       default : trig_in <= 1'b0        ;
       endcase
 
 
+      // in cycle mode
       if (dac_trig && !set_rst_i)
          dac_do <= 1'b1 ;
-      else if (set_rst_i || (set_once_i && (dac_npnt >= {1'b0,set_size_i})) )
+      else if (set_rst_i || ((cyc_cnt==16'h1) && (dac_npnt >= {1'b0,set_size_i})) )
          dac_do <= 1'b0 ;
 
+      // in repetition mode
+      if (dac_trig && !set_rst_i)
+         dac_rep <= 1'b1 ;
+      else if (set_rst_i || (rep_cnt==16'h0))
+         dac_rep <= 1'b0 ;
 
+   end
+end
+
+assign dac_trig = (!dac_rep && trig_in) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
+
+
+
+
+
+
+
+// read pointer logic
+always @(posedge dac_clk_i) begin
+   if (dac_rstn_i == 1'b0) begin
+      dac_pnt  <= {RSZ+16{1'b0}} ;
+   end
+   else begin
       if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
          dac_pnt <= set_ofs_i ;
-      else if (dac_do && !set_once_i && !set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //go to start
+      else if (dac_do && !set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //go to start
          dac_pnt <= set_ofs_i ;
-      else if (dac_do && !set_once_i &&  set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //wrap
+      else if (dac_do &&  set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //wrap
          dac_pnt <= dac_npnt - {1'b0,set_size_i} - 'h10000 ; //transfer difference into next cycle
       else if (dac_do) //normal increase
          dac_pnt <= dac_npnt[RSZ+15:0] ;
@@ -171,7 +245,7 @@ always @(posedge dac_clk_i) begin
 end
 
 assign dac_npnt = dac_pnt + set_step_i;
-assign trig_done_o = dac_trig ;
+assign trig_done_o = !dac_rep && trig_in;
 
 
 
