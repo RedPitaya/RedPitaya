@@ -154,7 +154,7 @@ $(GDBSERVER): #TODO: This is a temporary solution
 	cp Test/gdb-server/gdbserver $(abspath $(BUILD))/bin
 
 #sdk:
-	#$(MAKE) -C $(SDK_DIR)
+#	$(MAKE) -C $(SDK_DIR)
 	
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
