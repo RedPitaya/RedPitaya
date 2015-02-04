@@ -26,6 +26,7 @@ sudo chmod 777 /etc/apt/sources.list.d/ia32-libs-raring.list
 sudo echo "deb http://old-releases.ubuntu.com/ubuntu/ raring main restricted universe multiverse" > /etc/apt/sources.list.d/ia32-libs-raring.list
 sudo apt-get update
 sudo apt-get install ia32-libs
+sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
 
 echo -e "\nDOWNLOADING ECLIPSE..."
 #Determine machine type
@@ -76,4 +77,4 @@ echo '#!/bin/bash' > rp_remote_exe.sh
 #TODO add a real executable file.
 echo 'make -C '$API_BLINK_EXAMPLE_DIR'/blink_diode' >> rp_remote_exe.sh
 echo 'scp $PWD/'$API_BLINK_EXAMPLE_DIR'blink_diode/api-test root@$1:/opt/' >> rp_remote_exe.sh
-echo 'plink -v root@$RP_IP:/opt/api-test' >> rp_remote_exe.sh
+echo 'plink -v root@$1:/opt/api-test' >> rp_remote_exe.sh
