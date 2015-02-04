@@ -55,7 +55,7 @@ const char *g_argv0 = NULL;
 /** Oscilloscope module parameters as defined in main module
  * @see rp_main_params
  */
-float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+float t_params[PARAMS_NUM] = { 0, 1e6, 1, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Max decimation index */
 #define DEC_MAX 6
