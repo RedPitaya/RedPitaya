@@ -14,7 +14,7 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 #VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-CC = CROSS_COMPILE=arm-linux-gnueabi-
+CC = CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 NAME = SDK
 #Here I use the same var for rplib and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
 #We could make another var just for rp.h
