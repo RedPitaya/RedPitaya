@@ -11,10 +11,10 @@ REVISION ?= devbuild
 CROSS_COMPILE = arm-linux-gnueabi-
 
 #Define header includes
-RP_PATH_INCLUDE = -I../../api-mockup/rpbase/src/
+RP_PATH_INCLUDE = -I ../../include/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../api-mockup/rpbase -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L ../../include/ -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
@@ -25,15 +25,14 @@ OBJECTS = blink_diode.o
 #Target file
 TARGET = api_test
 
-#Build the executable
-all: $(TARGET)
-
 $(TARGET): $(OBJECTS)
 	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE)
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(RP_PATH_INCLUDE) $< -o $@
 
+#Build the executable
+all: $(TARGET)
 
 clean:
 	$(RM) $(TARGET) *.o ~*
