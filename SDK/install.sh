@@ -21,7 +21,7 @@ echo -e "DOWNLOADING PLINK...\n"
 sudo apt-get install putty-tools
 
 echo -e "\nINSTALLING DEPENDENCIES...\n"
-sudo apt-get install default-jre
+#sudo apt-get install default-jre
 sudo chmod 777 /etc/apt/sources.list.d/ia32-libs-raring.list
 sudo echo "deb http://old-releases.ubuntu.com/ubuntu/ raring main restricted universe multiverse" > /etc/apt/sources.list.d/ia32-libs-raring.list
 sudo apt-get update
