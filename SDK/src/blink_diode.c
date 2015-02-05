@@ -9,7 +9,7 @@
 int main(int argc, char **argv){
 
 	/* Plink Hello message */
-	printf("HELLO RED PITAYA!\n");
+	fprintf(stderr, "HELLO RED PITAYA!\n");
 	usleep(30000);
 
 	/* Print error, if rp_Init() function failed */

@@ -11,10 +11,10 @@ REVISION ?= devbuild
 CROSS_COMPILE = arm-linux-gnueabi-
 
 #Define header includes
-RP_PATH_INCLUDE = -I ../../include/
+RP_PATH_INCLUDE = -I ../include/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../include/ -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L ../include/ -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
