@@ -10,7 +10,7 @@ GCC_LINARO_MSG="INSTALLING GCC LINARO...\n"
 RP_INCLUDE=./include
 #ECLIPSE_DL=.
 GCC_LINARO_DL=gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux
-GCC_LINARO_DIR=./gcc_linaro/bin
+GCC_LINARO_DIR=gcc_linaro/bin
 API_BLINK_EXAMPLE_DIR=pitaya_example/
 
 echo -e $GREET_MSG
@@ -60,8 +60,8 @@ sudo mv $GCC_LINARO_DL gcc_linaro
 rm -rf $GCC_LINARO_DL.tar.bz2
 
 sudo chmod 777 /etc/bash.bashrc
-echo PATH=$PATH:"$PWD"/$GCC_LINARO_DIR >> /etc/bash.bashrc
-source ~/.bashrc
+echo PATH=$PATH:$PWD/$GCC_LINARO_DIR >> /etc/bash.bashrc
+bash --login
 
 #If everything went well, create a run.sh script for starting eclipse with target workspace
 #touch run_eclipse.sh
