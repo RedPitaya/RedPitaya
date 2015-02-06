@@ -24,6 +24,8 @@ double chA_offset = 0, chB_offset = 0;
 double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
 double chA_phase,     chB_phase;
+int chA_burstCount, chB_burstCount;
+uint32_t chA_burstPeriod, chB_burstPeriod;
 rp_waveform_t chA_waveform, chB_waveform;
 uint32_t chA_size = BUFFER_LENGTH, chB_size = BUFFER_LENGTH;
 
@@ -34,6 +36,10 @@ uint32_t chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 int gen_SetDefaultValues() {
     ECHECK(gen_Disable(RP_CH_1));
     ECHECK(gen_Disable(RP_CH_2));
+    ECHECK(gen_BurstRepetitions(RP_CH_1, 1));
+    ECHECK(gen_BurstRepetitions(RP_CH_2, 1));
+    ECHECK(gen_BurstPeriod(RP_CH_1, (uint32_t)(1/1000.0 * MICRO)));   // period = 1/frequency in us
+    ECHECK(gen_BurstPeriod(RP_CH_2, (uint32_t)(1/1000.0 * MICRO)));   // period = 1/frequency in us
     ECHECK(gen_Frequency(RP_CH_1, 1000));
     ECHECK(gen_Frequency(RP_CH_2, 1000));
     ECHECK(gen_Waveform(RP_CH_1, RP_WAVEFORM_SINE));
@@ -96,8 +102,19 @@ int gen_Frequency(rp_channel_t channel, double frequency) {
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
         return RP_EOOR;
     }
-    CHECK_OUTPUT(chA_frequency = frequency,
-                 chB_frequency = frequency)
+
+    if (channel == RP_CH_1) {
+        chA_frequency = frequency;
+        gen_BurstPeriod(channel, chA_burstPeriod);
+    }
+    else if (channel == RP_CH_2) {
+        chB_frequency = frequency;
+        gen_BurstPeriod(channel, chB_burstPeriod);
+    }
+    else {
+        return RP_EPN;
+    }
+
     ECHECK(generate_setFrequency(channel, (float)frequency));
     ECHECK(synthesize_signal(channel));
     return gen_Synchronise();
@@ -186,17 +203,21 @@ int gen_DutyCycle(rp_channel_t channel, double ratio) {
 
 int gen_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
     if (mode == RP_GEN_MODE_CONTINUOUS) {
-        generate_setOneTimeTrigger(channel, 0);
-        return RP_OK;
+        ECHECK(generate_setGatedBurst(channel, 0));
+        CHECK_OUTPUT(chA_burstCount = 0,
+                     chB_burstCount = 0)
+        return generate_setBurstCount(channel, 0);
     }
     else if (mode == RP_GEN_MODE_BURST) {
-    	generate_setOneTimeTrigger(channel, 1);
-        CHECK_OUTPUT(return generate_GenTrigger(RP_CH_1),
-                     return generate_GenTrigger(RP_CH_2))
+        ECHECK(gen_BurstCount(channel, 1));
+        ECHECK(gen_BurstRepetitions(channel, 1));
+        CHECK_OUTPUT(gen_BurstPeriod(channel, (uint32_t)(1/chA_frequency * MICRO)),
+                     gen_BurstPeriod(channel, (uint32_t)(1/chB_frequency * MICRO)))
+        return RP_OK;
     }
     else if (mode == RP_GEN_MODE_STREAM) {
         //TODO
-        return RP_OK;
+        return RP_EUF;
     }
     else {
         return RP_EIPV;
@@ -204,23 +225,55 @@ int gen_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
 }
 
 int gen_BurstCount(rp_channel_t channel, int num) {
-    if (num != 1) {
-        return RP_EUF;
+    if ((num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) && num == 0) {
+        return RP_EOOR;
     }
-    return RP_OK;
+    if (num == -1) {    // -1 represents infinity. In FPGA value 0 represents infinity
+        num = 0;
+    }
+    CHECK_OUTPUT(chA_burstCount = num,
+                 chB_burstCount = num)
+    return generate_setBurstCount(channel, num);
+}
+
+int gen_BurstRepetitions(rp_channel_t channel, int repetitions) {
+    if (repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) {
+        return RP_EOOR;
+    }
+    return generate_setBurstRepetitions(channel, repetitions-1);
+}
+
+int gen_BurstPeriod(rp_channel_t channel, uint32_t period) {
+    if (period < BURST_PERIOD_MIN || period > BURST_PERIOD_MAX) {
+        return RP_EOOR;
+    }
+    int burstCount;
+    CHECK_OUTPUT(burstCount = chA_burstCount,
+                 burstCount = chB_burstCount)
+    // period = signal_time * burst_count + delay_time
+    int delay = (int) (period - (1 / (channel == RP_CH_1 ? chA_frequency : chB_frequency) * MICRO) * burstCount);
+    if (delay < 0) {
+        return RP_EOOR;
+    }
+    if (delay == 0) {      // if delay is 0, then FPGA generates continuous signal
+        delay = 1;
+    }
+    CHECK_OUTPUT(chA_burstPeriod = period,
+                 chB_burstPeriod = period)
+    return generate_setBurstDelay(channel, delay);
 }
 
 int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (src == RP_GEN_TRIG_SRC_INTERNAL) {
-        ECHECK(generate_setOneTimeTrigger(channel, 0));
+        ECHECK(gen_GenMode(channel, RP_GEN_MODE_CONTINUOUS));
         return generate_setTriggerSource(channel, 1);
     }
     else if(src == RP_GEN_TRIG_SRC_EXT_PE) {
-        ECHECK(generate_setOneTimeTrigger(channel, 1));
+        ECHECK(gen_GenMode(channel, RP_GEN_MODE_BURST));
         return generate_setTriggerSource(channel, 2);
     }
     else if(src == RP_GEN_TRIG_SRC_EXT_NE) {
-        ECHECK(generate_setOneTimeTrigger(channel, 1));
+        ECHECK(gen_GenMode(channel, RP_GEN_MODE_BURST));
         return generate_setTriggerSource(channel, 3);
     }
     else {
@@ -231,13 +284,15 @@ int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
 int gen_Trigger(int mask) {
     switch (mask) {
         case 1:
-            return generate_GenTrigger(RP_CH_1);
+            ECHECK(gen_GenMode(RP_CH_1, RP_GEN_MODE_BURST));
+            return generate_setTriggerSource(RP_CH_1, RP_GEN_TRIG_SRC_INTERNAL);
         case 2:
-            return generate_GenTrigger(RP_CH_2);
+            ECHECK(gen_GenMode(RP_CH_2, RP_GEN_MODE_BURST));
+            return generate_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
         case 3:
-            ECHECK(generate_GenTrigger(RP_CH_1));
-            ECHECK(generate_GenTrigger(RP_CH_2));
-            return RP_OK;
+            ECHECK(gen_GenMode(RP_CH_1, RP_GEN_MODE_BURST));
+            ECHECK(gen_GenMode(RP_CH_2, RP_GEN_MODE_BURST));
+            return generate_simultaneousTrigger();
         default:
             return RP_EOOR;
     }
@@ -368,17 +423,8 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
     for (int i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = pointer[i];
     }
-
-    if (channel == RP_CH_1) {
-    	*size = chA_arb_size;
-    }
-    else if (channel == RP_CH_2) {
-    	*size = chB_arb_size;
-    }
-    else{
-        return RP_EPN;
-    }
-
+    CHECK_OUTPUT(*size = chA_arb_size,
+                 *size = chB_arb_size)
     return RP_OK;
 }
 

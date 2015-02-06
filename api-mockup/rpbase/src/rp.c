@@ -436,6 +436,14 @@ int rp_GenBurstCount(rp_channel_t channel, int num) {
     return gen_BurstCount(channel, num);
 }
 
+int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
+    return gen_BurstRepetitions(channel, repetitions);
+}
+
+int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
+    return gen_BurstPeriod(channel, period);
+}
+
 int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     return gen_TriggerSource(channel, src);
 }
