@@ -14,6 +14,7 @@
 
 #include <strings.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "utils.h"
 
@@ -386,3 +387,12 @@ int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *trigge
 	return RP_OK;
 }
 
+int getRpInfinityInteger(const char *string, int32_t *value) {
+    if (strcmp(string, "INF") == 0) {
+        *value = -1;
+    }
+    else {
+        *value = atoi(string);
+    }
+    return RP_OK;
+}

@@ -40,6 +40,7 @@ int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString);
 int getRpWaveform(const char *waveformString, rp_waveform_t *waveform);
 int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource);
 
+int getRpInfinityInteger(const char *string, int32_t *value);
 int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit);
 int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format);
 
