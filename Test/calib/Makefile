@@ -37,6 +37,7 @@ SHARED=../../shared/
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBS=
 
+CROSS_COMPILE ?= arm-xilinx-linux-gnueabi-
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
 # Installation directory
@@ -83,3 +84,4 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(TARGET) $(INSTALL_DIR)/bin
+	-rm -f $(TARGET) *.o

@@ -1,7 +1,7 @@
 #
 # $Id: Makefile 934 2014-01-09 07:48:05Z matej.oblak $
 #
-# Red Pitaya FPGA/SoC Makefile 
+# Red Pitaya FPGA/SoC Makefile
 #
 # Produces:
 #   1. First stage bootloader (FSBL) ELF binary.
@@ -27,10 +27,19 @@ DEV_TREE=$(SDK_EXPORT)/device-tree_bsp_0/ps7_cortexa9_0/libsrc/device-tree_v0_00
 
 .PHONY: all clean install memtest
 
-all: $(FPGA_BIT) $(FSBL_ELF) $(DEV_TREE)
+
+# dev_tree is required by FSBL_ELF
+# because they are set as .PHONY, basically they will always be remade
+# so only depend on the ELF instead of both (instead of making things twice
+#all: $(FPGA_BIT) $(FSBL_ELF) $(DEV_TREE)
+all: $(FPGA_BIT) $(FSBL_ELF)
 
 $(FPGA_BIT):
 	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) fpga
+
+# such a weird dependency,
+# actually FSBL_ELF is dependent on DEV_TREE in some lower Makefil
+$(DEV_TREE):$(FSBL_ELF)
 
 $(FSBL_ELF):
 	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) sw_package
@@ -50,3 +59,6 @@ install: memtest
 	cp $(FPGA_BIT) $(INSTALL_DIR)/fpga.bit
 	cp $(DEV_TREE) $(INSTALL_DIR)/devicetree.dts
 	patch $(INSTALL_DIR)/devicetree.dts $(FPGA_DIR)/image/src/device_tree_$(FPGA_TOOL).patch
+
+# these need to be phony because the Makefile cannot check for dependencies
+.PHONY:$(FPGA_BIT) $(FSBL_ELF) $(DEV_TREE)

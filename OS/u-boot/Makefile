@@ -15,12 +15,14 @@ UBOOT := $(UBOOT_DIR)/u-boot
 PATCH := patches
 ENVTOOLS := envtools
 INSTALL_DIR ?= .
+CROSS_COMPILE ?= arm-xilinx-eabi-
+HOST_COMPILE ?= arm-xilinx-linux-gnueabi-
 
 .PHONY : all install clean envtools
 
 all: $(UBOOT_DIR)
-	make -C $(UBOOT_DIR) arch=ARM all
-	make -C $(UBOOT_DIR) arch=ARM HOSTCC=arm-xilinx-linux-gnueabi-gcc HOSTSTRIP=arm-xilinx-linux-gnueabi-strip env
+	make -C $(UBOOT_DIR) arch=ARM CROSS_COMPILE=$(CROSS_COMPILE) all
+	make -C $(UBOOT_DIR) arch=ARM HOSTCC=$(HOST_COMPILE)gcc HOSTSTRIP=$(HOST_COMPILE)strip env
 
 $(UBOOT_DIR):
 	mkdir $(UBOOT_DIR)
@@ -37,7 +39,7 @@ install: all
 	cp $(ENVTOOLS)/fw_env.config $(INSTALL_DIR)/etc
 
 clean:
-	make -C $(UBOOT_DIR) arch=ARM clean
+	-make -C $(UBOOT_DIR) CROSS_COMPILE=$(CROSS_COMPILE) arch=ARM clean
 
 distclean:
 	rm -rf $(UBOOT_DIR)
