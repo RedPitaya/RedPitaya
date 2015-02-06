@@ -21,8 +21,8 @@
 #include "generate.h"
 
 // Base Health address
-static const int GENERATE_BASE_ADDR = 0x40200000;
-static const int GENERATE_BASE_SIZE = 0x30000;
+static size_t GENERATE_BASE_ADDR = 0x40200000;
+static size_t GENERATE_BASE_SIZE = 0x30000;
 
 typedef struct ch_properties {
 	unsigned int amplitudeScale		:14;
@@ -32,26 +32,30 @@ typedef struct ch_properties {
 	uint32_t counterWrap;
 	uint32_t startOffset;
 	uint32_t counterStep;
-    uint32_t reserved_ReadPointer1  :2;
+    unsigned int                    :2;
 	uint32_t buffReadPointer        :14;
-    uint32_t reserved_ReadPointer2  :16;
-	int8_t   unused[10];
+    unsigned int                    :16;
+    uint32_t cyclesInOneBurst;
+    uint32_t burstRepetitions;
+    uint32_t delayBetweenBurstRepetitions;
 } ch_properties_t;
 
 typedef struct generate_control_s {
 	unsigned int AtriggerSelector   :4;
 	unsigned int ASM_WrapPointer    :1;
-	unsigned int ASM_OneTimeTrigger :1;
+	unsigned int                    :1;
 	unsigned int ASM_reset 		   	:1;
 	unsigned int AsetOutputTo0 	   	:1;
-	unsigned int 				   	:8;
+    unsigned int AgatedBursts       :1;
+	unsigned int 				   	:7;
 
 	unsigned int BtriggerSelector   :4;
 	unsigned int BSM_WrapPointer    :1;
-	unsigned int BSM_OneTimeTrigger :1;
+	unsigned int                    :1;
 	unsigned int BSM_reset 		   	:1;
 	unsigned int BsetOutputTo0 	   	:1;
-	unsigned int 				   	:8;
+    unsigned int BgatedBursts       :1;
+    unsigned int 				   	:7;
 
 	ch_properties_t properties_chA;
 	ch_properties_t properties_chB;
@@ -106,22 +110,6 @@ int generate_setAmplitude(rp_channel_t channel, float amplitude) {
 	return RP_OK;
 }
 
-int generate_GenTrigger(rp_channel_t channel) {
-	if (channel == RP_CH_1) {
-		generate->ASM_OneTimeTrigger = 1;
-		generate->AtriggerSelector = 1;
-		return RP_OK;
-	}
-	else if (channel == RP_CH_2) {
-		generate->BSM_OneTimeTrigger = 1;
-		generate->BtriggerSelector = 1;
-		return RP_OK;
-	}
-	else {
-		return RP_EPN;
-	}
-}
-
 int generate_setDCOffset(rp_channel_t channel, float offset) {
 	volatile ch_properties_t *ch_properties;
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
@@ -148,10 +136,36 @@ int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
 	return RP_OK;
 }
 
-int generate_setOneTimeTrigger(rp_channel_t channel, uint32_t value) {
-	CHECK_OUTPUT(generate->ASM_OneTimeTrigger = value,
-			     generate->BSM_OneTimeTrigger = value)
-	return RP_OK;
+int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
+    CHECK_OUTPUT(generate->AgatedBursts = value,
+                 generate->BgatedBursts = value)
+    return RP_OK;
+}
+
+int generate_setBurstCount(rp_channel_t channel, int num) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    ch_properties->cyclesInOneBurst = (uint32_t) num;
+    return RP_OK;
+}
+
+int generate_setBurstRepetitions(rp_channel_t channel, int repetitions) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    ch_properties->burstRepetitions = (uint32_t) repetitions;
+    return RP_OK;
+}
+
+int generate_setBurstDelay(rp_channel_t channel, int delay) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    ch_properties->delayBetweenBurstRepetitions = (uint32_t) delay;
+    return RP_OK;
+}
+
+int generate_simultaneousTrigger() {
+    // simultaneously trigger both channels
+    return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
 }
 
 int generate_Synchronise() {

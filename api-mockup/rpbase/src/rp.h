@@ -863,13 +863,34 @@ int rp_GenDutyCycle(rp_channel_t channel, float ratio);
 int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode);
 
 /**
-* Sets number of generated waveforms
+* Sets number of generated waveforms in a burst.
 * @param channel Channel A or B which we want to enable
-* @param num Number of generated waveforms
+* @param num Number of generated waveforms. If -1 a continuous signal will be generated.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenBurstCount(rp_channel_t channel, int num);
+
+
+/**
+* Sets number of burst repetitions. This determines how many bursts will be generated.
+* @param channel Channel A or B which we want to enable
+* @param nrepetitions Number of generated bursts
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions);
+
+
+/**
+* Sets the time/period of one burst in micro seconds. Period must be equal or greater then the time of one burst.
+* If it is greater than the difference will be the delay between two consequential bursts.
+* @param channel Channel A or B which we want to enable
+* @param period Time in micro seconds
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
 
 /**
 * Sets trigger source

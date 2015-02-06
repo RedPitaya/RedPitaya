@@ -30,6 +30,8 @@ int gen_ArbWaveform(rp_channel_t chanel, float *data, uint32_t length);
 int gen_DutyCycle(rp_channel_t chanel, double ratio);
 int gen_GenMode(rp_channel_t chanel, rp_gen_mode_t mode);
 int gen_BurstCount(rp_channel_t channel, int num);
+int gen_BurstRepetitions(rp_channel_t channel, int repetitions);
+int gen_BurstPeriod(rp_channel_t channel, uint32_t period);
 int gen_TriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_Trigger(int mask);
 int gen_Synchronise();
