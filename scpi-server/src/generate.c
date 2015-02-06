@@ -116,6 +116,22 @@ enum _scpi_result_t RP_GenChannel2SetBurstCount(scpi_t *context) {
     return RP_GenSetBurstCount(RP_CH_2, context);
 }
 
+scpi_result_t RP_GenChannel1SetBurstRepetitions(scpi_t *context) {
+    return RP_GenSetBurstRepetitions(RP_CH_1, context);
+}
+
+scpi_result_t RP_GenChannel2SetBurstRepetitions(scpi_t *context) {
+    return RP_GenSetBurstRepetitions(RP_CH_2, context);
+}
+
+scpi_result_t RP_GenChannel1SetBurstPeriod(scpi_t *context) {
+    return RP_GenSetBurstPeriod(RP_CH_1, context);
+}
+
+scpi_result_t RP_GenChannel2SetBurstPeriod(scpi_t *context) {
+    return RP_GenSetBurstPeriod(RP_CH_2, context);
+}
+
 enum _scpi_result_t RP_GenChannel1SetTriggerSource(scpi_t *context) {
     return RP_GenSetTriggerSource(RP_CH_1, context);
 }
@@ -196,7 +212,7 @@ enum _scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t *context) {
     strncpy(waveformString, param, param_len);
     waveformString[param_len] = '\0';
 
-    // Convert samplingRate to rp_acq_sampling_rate_t
+    // Convert waveform
     rp_waveform_t waveform;
     if (getRpWaveform(waveformString, &waveform)) {
         syslog(LOG_ERR, "*SOUR<n>:FUNC parameter waveform is invalid.");
@@ -312,7 +328,7 @@ enum _scpi_result_t RP_GenSetArbitraryWaveForm(rp_channel_t channel, scpi_t *con
     }
 
     syslog(LOG_INFO, "*SOUR<n>:TRAC:DATA:DATA Successfully set arbitrary waveform");
-    
+
     return SCPI_RES_OK;
 }
 
@@ -343,10 +359,22 @@ enum _scpi_result_t RP_GenSetGenerateMode(rp_channel_t channel, scpi_t *context)
 }
 
 enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
-    int32_t value;
+    const char * param;
+    size_t param_len;
+    char string[15];
+
     // read first parameter NUMBER OF CYCLES (integer value)
-    if (!SCPI_ParamInt(context, &value, true)) {
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:BURS:NCYC is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    strncpy(string, param, param_len);
+    string[param_len] = '\0';
+
+    // Convert String to int
+    int32_t value;
+    if (getRpInfinityInteger(string, &value)) {
+        syslog(LOG_ERR, "*SOUR<n>:BURS:NCYC parameter cycles is invalid.");
         return SCPI_RES_ERR;
     }
 
@@ -358,6 +386,48 @@ enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:NCYC Successfully set burst count");
+
+    return SCPI_RES_OK;
+}
+
+
+scpi_result_t RP_GenSetBurstRepetitions(rp_channel_t channel, scpi_t *context) {
+    int32_t value;
+    // read first parameter NUMBER OF REPETITIONS (integer value)
+    if (!SCPI_ParamInt(context, &value, true)) {
+        syslog(LOG_ERR, "*SOUR<n>:BURS:NOR is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_GenBurstRepetitions(channel, value);
+
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SOUR<n>:BURS:NOR Failed to set burst repetitions: %s",rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    syslog(LOG_INFO, "*SOUR<n>:BURS:NOR Successfully set burst repetitions");
+
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenSetBurstPeriod(rp_channel_t channel, scpi_t *context) {
+    uint32_t value;
+
+    // read first parameter PERIOD TIME (unsigned integer value)
+    if (!SCPI_ParamUInt(context, &value, true)) {
+        syslog(LOG_ERR, "*SOUR<n>:BURS:INT:PER is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_GenBurstPeriod(channel, value);
+
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SOUR<n>:BURS:INT:PER Failed to set burst period: %s",rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    syslog(LOG_INFO, "*SOUR<n>:BURS:INT:PER Successfully set burst period");
 
     return SCPI_RES_OK;
 }
