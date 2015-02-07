@@ -267,6 +267,7 @@ int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (src == RP_GEN_TRIG_GATED_BURST) {
         ECHECK(generate_setGatedBurst(channel, 1));
         ECHECK(gen_GenMode(channel, RP_GEN_MODE_BURST));
+        return generate_setTriggerSource(channel, 2);
     }
     else {
         ECHECK(generate_setGatedBurst(channel, 0));
