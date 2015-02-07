@@ -264,15 +264,23 @@ int gen_BurstPeriod(rp_channel_t channel, uint32_t period) {
 }
 
 int gen_TriggerSource(rp_channel_t channel, rp_trig_src_t src) {
+    if (src == RP_GEN_TRIG_GATED_BURST) {
+        ECHECK(generate_setGatedBurst(channel, 1));
+        ECHECK(gen_GenMode(channel, RP_GEN_MODE_BURST));
+    }
+    else {
+        ECHECK(generate_setGatedBurst(channel, 0));
+    }
+
     if (src == RP_GEN_TRIG_SRC_INTERNAL) {
         ECHECK(gen_GenMode(channel, RP_GEN_MODE_CONTINUOUS));
         return generate_setTriggerSource(channel, 1);
     }
-    else if(src == RP_GEN_TRIG_SRC_EXT_PE) {
+    else if (src == RP_GEN_TRIG_SRC_EXT_PE) {
         ECHECK(gen_GenMode(channel, RP_GEN_MODE_BURST));
         return generate_setTriggerSource(channel, 2);
     }
-    else if(src == RP_GEN_TRIG_SRC_EXT_NE) {
+    else if (src == RP_GEN_TRIG_SRC_EXT_NE) {
         ECHECK(gen_GenMode(channel, RP_GEN_MODE_BURST));
         return generate_setTriggerSource(channel, 3);
     }
