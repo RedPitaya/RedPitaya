@@ -381,6 +381,9 @@ int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *trigge
 	else if (strcmp(triggerSourceString, "EXT_NE") == 0) {
 		*triggerSource = RP_GEN_TRIG_SRC_EXT_NE;
 	}
+    else if (strcmp(triggerSourceString, "GATED") == 0) {
+        *triggerSource = RP_GEN_TRIG_GATED_BURST;
+    }
 	else {
 		return RP_EOOR;
 	}
