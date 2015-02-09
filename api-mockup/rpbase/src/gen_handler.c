@@ -24,8 +24,9 @@ double chA_offset = 0, chB_offset = 0;
 double chA_dutyCycle, chB_dutyCycle;
 double chA_frequency, chB_frequency;
 double chA_phase,     chB_phase;
-int chA_burstCount, chB_burstCount;
-uint32_t chA_burstPeriod, chB_burstPeriod;
+int chA_burstCount = 1, chB_burstCount = 1;
+int chA_burstRepetition = 1, chB_burstRepetition = 1;
+uint32_t chA_burstPeriod = 0, chB_burstPeriod = 0;
 rp_waveform_t chA_waveform, chB_waveform;
 uint32_t chA_size = BUFFER_LENGTH, chB_size = BUFFER_LENGTH;
 
@@ -36,12 +37,12 @@ uint32_t chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 int gen_SetDefaultValues() {
     ECHECK(gen_Disable(RP_CH_1));
     ECHECK(gen_Disable(RP_CH_2));
+    ECHECK(gen_Frequency(RP_CH_1, 1000));
+    ECHECK(gen_Frequency(RP_CH_2, 1000));
     ECHECK(gen_BurstRepetitions(RP_CH_1, 1));
     ECHECK(gen_BurstRepetitions(RP_CH_2, 1));
     ECHECK(gen_BurstPeriod(RP_CH_1, (uint32_t)(1/1000.0 * MICRO)));   // period = 1/frequency in us
     ECHECK(gen_BurstPeriod(RP_CH_2, (uint32_t)(1/1000.0 * MICRO)));   // period = 1/frequency in us
-    ECHECK(gen_Frequency(RP_CH_1, 1000));
-    ECHECK(gen_Frequency(RP_CH_2, 1000));
     ECHECK(gen_Waveform(RP_CH_1, RP_WAVEFORM_SINE));
     ECHECK(gen_Waveform(RP_CH_2, RP_WAVEFORM_SINE));
     ECHECK(gen_setAmplitude(RP_CH_1, 1));
@@ -204,19 +205,17 @@ int gen_DutyCycle(rp_channel_t channel, double ratio) {
 int gen_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
     if (mode == RP_GEN_MODE_CONTINUOUS) {
         ECHECK(generate_setGatedBurst(channel, 0));
-        CHECK_OUTPUT(chA_burstCount = 0,
-                     chB_burstCount = 0)
+        ECHECK(generate_setBurstDelay(channel, 0));
+        ECHECK(generate_setBurstRepetitions(channel, 0));
         return generate_setBurstCount(channel, 0);
     }
     else if (mode == RP_GEN_MODE_BURST) {
-        ECHECK(gen_BurstCount(channel, 1));
-        ECHECK(gen_BurstRepetitions(channel, 1));
-        CHECK_OUTPUT(gen_BurstPeriod(channel, (uint32_t)(1/chA_frequency * MICRO)),
-                     gen_BurstPeriod(channel, (uint32_t)(1/chB_frequency * MICRO)))
+        ECHECK(gen_BurstCount(channel,       channel == RP_CH_1 ? chA_burstCount : chB_burstCount));
+        ECHECK(gen_BurstRepetitions(channel, channel == RP_CH_1 ? chA_burstRepetition : chB_burstRepetition));
+        ECHECK(gen_BurstPeriod(channel,      channel == RP_CH_1 ? chA_burstPeriod : chB_burstPeriod));
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_STREAM) {
-        //TODO
         return RP_EUF;
     }
     else {
@@ -240,6 +239,8 @@ int gen_BurstRepetitions(rp_channel_t channel, int repetitions) {
     if (repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) {
         return RP_EOOR;
     }
+    CHECK_OUTPUT(chA_burstRepetition = repetitions,
+                 chB_burstRepetition = repetitions)
     return generate_setBurstRepetitions(channel, repetitions-1);
 }
 
@@ -252,10 +253,8 @@ int gen_BurstPeriod(rp_channel_t channel, uint32_t period) {
                  burstCount = chB_burstCount)
     // period = signal_time * burst_count + delay_time
     int delay = (int) (period - (1 / (channel == RP_CH_1 ? chA_frequency : chB_frequency) * MICRO) * burstCount);
-    if (delay < 0) {
-        return RP_EOOR;
-    }
-    if (delay == 0) {      // if delay is 0, then FPGA generates continuous signal
+    if (delay <= 0) {
+        // if delay is 0, then FPGA generates continuous signal
         delay = 1;
     }
     CHECK_OUTPUT(chA_burstPeriod = period,
