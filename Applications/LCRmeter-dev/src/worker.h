@@ -87,4 +87,6 @@ float thread_function(float argv);
 
 void* test_thread(void* parameter);
 
+int rp_load_data(float save_flag);
+
 #endif /* __WORKER_H*/
