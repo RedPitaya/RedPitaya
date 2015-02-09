@@ -50,12 +50,13 @@ module red_pitaya_scope_tb #(
 // ADC signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
-function [ADC_DW-1:0] saw_a (int unsigned cyc);
-  saw_a = ADC_DW'(cyc*14);
+function [ADC_DW-1:0] saw_a (input int unsigned cyc);
+  saw_a = ADC_DW'(cyc*23);
 endfunction: saw_a
 
-function [ADC_DW-1:0] saw_b (int unsigned cyc);
-  saw_b = ADC_DW'(cyc*14);
+function [ADC_DW-1:0] saw_b (input int unsigned cyc);
+  cyc = cyc % (2**ADC_DW/5);
+  saw_b = -2**(ADC_DW-1) + ADC_DW'(cyc*5);
 endfunction: saw_b
 
 logic              adc_clk ;
@@ -64,6 +65,12 @@ logic              adc_rstn;
 logic [ADC_DW-1:0] adc_a    ;
 logic [ADC_DW-1:0] adc_b    ;
 logic              adc_b_dir;
+
+logic [ADC_DW-1:0] saw_adc_a    ;
+logic [ADC_DW-1:0] saw_adc_b    ;
+
+assign saw_adc_a = saw_a(adc_cyc);
+assign saw_adc_b = saw_b(adc_cyc);
 
 // ADC clock
 initial            adc_clk = 1'b0;
@@ -80,7 +87,6 @@ end
 int unsigned adc_cyc=0;
 always_ff @ (posedge adc_clk)
 adc_cyc <= adc_cyc+1;
-
 
 initial begin
   adc_a = 0;
@@ -134,24 +140,31 @@ initial begin
    wait (sys_rstn && adc_rstn)
    repeat(10) @(posedge sys_clk);
 
-   bus.bus_write(32'h10,32'd10000);  // after trigger delay
-   bus.bus_write(32'h14,32'd8    );  // data decimation
-   bus.bus_write(32'hC,-32'd7000 );  // trigger treshold
-   bus.bus_write(32'h20,32'd20   );  // hysteresis
-   bus.bus_write(32'h24,32'd200  );  // hysteresis
+   bus.bus_write(32'h08,-32'd0000 );  // A trigger treshold  (trigger at treshold     0 where signal range is -8192:+8191)
+   bus.bus_write(32'h0C,-32'd7000 );  // B trigger treshold  (trigger at treshold -7000 where signal range is -8192:+8191)
+   bus.bus_write(32'h10, 32'd10000);  // after trigger delay (the buffer contains 2**14=16384 locations, 6384 before and 10000 after trigger)
+   bus.bus_write(32'h14, 32'd8    );  // data decimation     (data is decimated by a factor of 8)
+   bus.bus_write(32'h20, 32'd20   );  // A hysteresis
+   bus.bus_write(32'h24, 32'd200  );  // B hysteresis
 
-   bus.bus_write(32'h0,32'h1     );  // start aquisition
+   // software trigger
+   bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
+   repeat(800) @(posedge sys_clk);
+   bus.bus_write(32'h04, 32'h1    );  // do SW trigger
+   repeat(100) @(posedge sys_clk);
+   bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
+   repeat(100) @(posedge sys_clk);
+
+   // A ch rising edge trigger
+   bus.bus_write(32'h04, 32'h2    );  // configure trigger mode
+   repeat(800) @(posedge sys_clk);
+   bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
+   repeat(100) @(posedge sys_clk);
+
 //   repeat(800) @(posedge sys_clk);
-//   bus.bus_write(32'h4,32'h1     );  // do trigger
-//   repeat(100) @(posedge sys_clk);
-//   bus.bus_write(32'h0,32'h2     );  // reset
-//   repeat(800) @(posedge sys_clk);
-//   bus.bus_write(32'h4,32'h1     );  // do trigger
-//
-//   repeat(800) @(posedge sys_clk);
-//   bus.bus_write(32'h0,32'h1     );  // start aquisition
+//   bus.bus_write(32'h00,32'h1     );  // start aquisition
 //   repeat(100000) @(posedge sys_clk);
-//   bus.bus_write(32'h4,32'h5     );  // do trigger
+//   bus.bus_write(32'h04,32'h5     );  // do trigger
 //
 //   repeat(20000) @(posedge adc_clk);
 //   repeat(1) @(posedge sys_clk);
