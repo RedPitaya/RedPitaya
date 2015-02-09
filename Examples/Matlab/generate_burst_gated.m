@@ -20,11 +20,13 @@ tcpipObj.Terminator = 'CR/LF';
 
 fprintf(tcpipObj,'GEN:RST')                     % Reset to default settings
 
+fprintf(tcpipObj,'SOUR1:FUNC SINE');            % Set function of output signal     
+fprintf(tcpipObj,'SOUR1:VOLT 1');               % Set amplitude of output signal
+
+
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 5');           % Set a slow frequency of output signal
 
 fprintf(tcpipObj,'SOUR1:TRIG:SOUR GATED');      % Enter gated burst mode. This sets delaut parameters to burst mode
-                                                % This must be called before setting burst parameters
-
 fprintf(tcpipObj,'SOUR1:BURS:NCYC 3');          % Set number of generated signals in one burst
 
 fprintf(tcpipObj,'OUTPUT1:STATE ON'); 
