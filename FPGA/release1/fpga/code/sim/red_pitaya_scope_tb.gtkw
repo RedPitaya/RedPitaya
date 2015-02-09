@@ -1,0 +1,70 @@
+[*]
+[*] GTKWave Analyzer v3.3.64 (w)1999-2014 BSI
+[*] Mon Feb  9 14:29:45 2015
+[*]
+[dumpfile] "/home/izi/Workplace/redpitaya-edu/FPGA/release1/fpga/code/sim/red_pitaya_scope_tb.vcd"
+[dumpfile_mtime] "Mon Feb  9 14:26:26 2015"
+[dumpfile_size] 146549
+[savefile] "/home/izi/Workplace/redpitaya-edu/FPGA/release1/fpga/code/sim/red_pitaya_scope_tb.gtkw"
+[timestart] 0
+[size] 1301 744
+[pos] -1 -1
+*-14.000000 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 223
+[signals_width] 238
+[sst_expanded] 1
+[sst_vpaned_height] 211
+@24
+red_pitaya_scope_tb.RSZ[31:0]
+@28
+red_pitaya_scope_tb.TP_ADC
+red_pitaya_scope_tb.TP_SYS
+@800200
+-ADC
+@28
+red_pitaya_scope_tb.adc_clk
+red_pitaya_scope_tb.adc_rstn
+@22
+red_pitaya_scope_tb.adc_a[13:0]
+red_pitaya_scope_tb.adc_b[13:0]
+@28
+red_pitaya_scope_tb.adc_b_dir
+@1000200
+-ADC
+@800200
+-ADC dbg
+@24
+red_pitaya_scope_tb.adc_cyc[31:0]
+@10421
+red_pitaya_scope_tb.adc_a[13:0]
+@20000
+-
+@10420
+red_pitaya_scope_tb.adc_b[13:0]
+@20000
+-
+@1000200
+-ADC dbg
+@800200
+-SYS
+@28
+red_pitaya_scope_tb.sys_clk
+red_pitaya_scope_tb.sys_rstn
+red_pitaya_scope_tb.sys_ack
+@22
+red_pitaya_scope_tb.sys_addr[31:0]
+@28
+red_pitaya_scope_tb.sys_err
+@22
+red_pitaya_scope_tb.sys_rdata[31:0]
+@28
+red_pitaya_scope_tb.sys_ren
+@22
+red_pitaya_scope_tb.sys_sel[3:0]
+red_pitaya_scope_tb.sys_wdata[31:0]
+@28
+red_pitaya_scope_tb.sys_wen
+@1000200
+-SYS
+[pattern_trace] 1
+[pattern_trace] 0
