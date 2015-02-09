@@ -236,8 +236,11 @@ int gen_BurstCount(rp_channel_t channel, int num) {
 }
 
 int gen_BurstRepetitions(rp_channel_t channel, int repetitions) {
-    if (repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) {
+    if (repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX || repetitions == -1) {
         return RP_EOOR;
+    }
+    if (repetitions == -1) {
+        repetitions = 0;
     }
     CHECK_OUTPUT(chA_burstRepetition = repetitions,
                  chB_burstRepetition = repetitions)
