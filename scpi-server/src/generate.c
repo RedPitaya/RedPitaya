@@ -392,10 +392,22 @@ enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
 
 
 scpi_result_t RP_GenSetBurstRepetitions(rp_channel_t channel, scpi_t *context) {
-    int32_t value;
+    const char * param;
+    size_t param_len;
+    char string[15];
+
     // read first parameter NUMBER OF REPETITIONS (integer value)
-    if (!SCPI_ParamInt(context, &value, true)) {
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:BURS:NOR is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    strncpy(string, param, param_len);
+    string[param_len] = '\0';
+
+    // Convert String to int
+    int32_t value;
+    if (getRpInfinityInteger(string, &value)) {
+        syslog(LOG_ERR, "*SOUR<n>:BURS:NOR parameter cycles is invalid.");
         return SCPI_RES_ERR;
     }
 
