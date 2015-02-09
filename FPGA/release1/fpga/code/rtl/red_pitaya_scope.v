@@ -47,25 +47,28 @@
  * 
  */
 
-module red_pitaya_scope (
+module red_pitaya_scope #(
+  parameter RSZ = 14  // RAM size 2^RSZ
+)(
    // ADC
-   input      [ 14-1: 0] adc_a_i         ,  //!< ADC data CHA
-   input      [ 14-1: 0] adc_b_i         ,  //!< ADC data CHB
-   input                 adc_clk_i       ,  //!< ADC clock
-   input                 adc_rstn_i      ,  //!< ADC reset - active low
-   input                 trig_ext_i      ,  //!< external trigger
-   input                 trig_asg_i      ,  //!< ASG trigger
+   input                 adc_clk_i       ,  // ADC clock
+   input                 adc_rstn_i      ,  // ADC reset - active low
+   input      [ 14-1: 0] adc_a_i         ,  // ADC data CHA
+   input      [ 14-1: 0] adc_b_i         ,  // ADC data CHB
+   // trigger sources
+   input                 trig_ext_i      ,  // external trigger
+   input                 trig_asg_i      ,  // ASG trigger
    // System bus
-   input                 sys_clk_i       ,  //!< bus clock
-   input                 sys_rstn_i      ,  //!< bus reset - active low
-   input      [ 32-1: 0] sys_addr_i      ,  //!< bus saddress
-   input      [ 32-1: 0] sys_wdata_i     ,  //!< bus write data
-   input      [  4-1: 0] sys_sel_i       ,  //!< bus write byte select
-   input                 sys_wen_i       ,  //!< bus write enable
-   input                 sys_ren_i       ,  //!< bus read enable
-   output     [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
-   output                sys_err_o       ,  //!< bus error indicator
-   output                sys_ack_o          //!< bus acknowledge signal
+   input                 sys_clk_i       ,  // bus clock
+   input                 sys_rstn_i      ,  // bus reset - active low
+   input      [ 32-1: 0] sys_addr_i      ,  // bus saddress
+   input      [ 32-1: 0] sys_wdata_i     ,  // bus write data
+   input      [  4-1: 0] sys_sel_i       ,  // bus write byte select
+   input                 sys_wen_i       ,  // bus write enable
+   input                 sys_ren_i       ,  // bus read enable
+   output     [ 32-1: 0] sys_rdata_o     ,  // bus read data
+   output                sys_err_o       ,  // bus error indicator
+   output                sys_ack_o          // bus acknowledge signal
 );
 
 wire [ 32-1: 0] addr         ;
@@ -169,10 +172,8 @@ end
 //---------------------------------------------------------------------------------
 //  ADC buffer RAM
 
-localparam RSZ = 14 ;  // RAM size 2^RSZ
-
-reg   [  14-1: 0] adc_a_buf [0:(1<<RSZ)-1] ;
-reg   [  14-1: 0] adc_b_buf [0:(1<<RSZ)-1] ;
+reg   [  14-1: 0] adc_a_buf [0:2**RSZ-1] ;
+reg   [  14-1: 0] adc_b_buf [0:2**RSZ-1] ;
 reg   [  14-1: 0] adc_a_rd      ;
 reg   [  14-1: 0] adc_b_rd      ;
 reg   [ RSZ-1: 0] adc_wp        ;
