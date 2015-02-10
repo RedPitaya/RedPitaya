@@ -62,15 +62,11 @@ endfunction: saw_b
 logic              adc_clk ;
 logic              adc_rstn;
 
-logic [ADC_DW-1:0] adc_a    ;
-logic [ADC_DW-1:0] adc_b    ;
-logic              adc_b_dir;
+logic [ADC_DW-1:0] adc_a;
+logic [ADC_DW-1:0] adc_b;
 
-logic [ADC_DW-1:0] saw_adc_a    ;
-logic [ADC_DW-1:0] saw_adc_b    ;
-
-assign saw_adc_a = saw_a(adc_cyc);
-assign saw_adc_b = saw_b(adc_cyc);
+assign adc_a = saw_a(adc_cyc);
+assign adc_b = saw_b(adc_cyc);
 
 // ADC clock
 initial            adc_clk = 1'b0;
@@ -87,21 +83,6 @@ end
 int unsigned adc_cyc=0;
 always_ff @ (posedge adc_clk)
 adc_cyc <= adc_cyc+1;
-
-initial begin
-  adc_a = 0;
-  adc_b = -2**(ADC_DW-1);
-  adc_b_dir = 1'b1;
-end
-
-always @(posedge adc_clk)
-adc_a <= adc_a + 14'h17;
-
-always @(posedge adc_clk) begin
-  if      ($signed(adc_b) > $signed( 14'd8000)) adc_b_dir <= 1'b0;
-  else if ($signed(adc_b) < $signed(-14'd8000)) adc_b_dir <= 1'b1;
-  adc_b <= adc_b_dir ? adc_b + 14'h5 : adc_b - 14'h5;
-end
 
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
@@ -161,6 +142,13 @@ initial begin
    bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
    repeat(100) @(posedge sys_clk);
 
+   // external rising edge trigger
+   bus.bus_write(32'h50, 32'h0    );  // configure trigger mode
+   bus.bus_write(32'h04, 32'h6    );  // configure trigger mode
+   repeat(100) @(posedge sys_clk);
+   trig_ext = 1'b1;
+   repeat(100) @(posedge sys_clk);
+
 //   repeat(800) @(posedge sys_clk);
 //   bus.bus_write(32'h00,32'h1     );  // start aquisition
 //   repeat(100000) @(posedge sys_clk);
@@ -172,7 +160,7 @@ initial begin
 //   bus.bus_read(32'h10004, rdata);  // read value from memory
 //   bus.bus_read(32'h20000, rdata);  // read value from memory
 //   bus.bus_read(32'h20004, rdata);  // read value from memory
-//
+
    $finish ();
 end
 

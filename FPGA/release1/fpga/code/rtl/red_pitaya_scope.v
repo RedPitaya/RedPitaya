@@ -318,6 +318,8 @@ reg  [ 14-1: 0] set_b_treshm ;
 reg  [ 14-1: 0] set_a_hyst   ;
 reg  [ 14-1: 0] set_b_hyst   ;
 
+reg  [ 20-1: 0] set_deb_len  ;
+
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
    adc_scht_ap  <=  2'h0 ;
@@ -390,12 +392,12 @@ end else begin
 
    // look for input changes
    if ((ext_trig_debp == 20'h0) && (ext_trig_in[1] && !ext_trig_in[2]))
-      ext_trig_debp <= 20'd62500 ; // ~0.5ms
+      ext_trig_debp <= set_deb_len ; // ~0.5ms
    else if (ext_trig_debp != 20'h0)
       ext_trig_debp <= ext_trig_debp - 20'd1 ;
 
    if ((ext_trig_debn == 20'h0) && (!ext_trig_in[1] && ext_trig_in[2]))
-      ext_trig_debn <= 20'd62500 ; // ~0.5ms
+      ext_trig_debn <= set_deb_len ; // ~0.5ms
    else if (ext_trig_debn != 20'h0)
       ext_trig_debn <= ext_trig_debn - 20'd1 ;
 
@@ -414,12 +416,12 @@ end else begin
 
    // look for input changes
    if ((asg_trig_debp == 20'h0) && (asg_trig_in[1] && !asg_trig_in[2]))
-      asg_trig_debp <= 20'd62500 ; // ~0.5ms
+      asg_trig_debp <= set_deb_len ; // ~0.5ms
    else if (asg_trig_debp != 20'h0)
       asg_trig_debp <= asg_trig_debp - 20'd1 ;
 
    if ((asg_trig_debn == 20'h0) && (!asg_trig_in[1] && asg_trig_in[2]))
-      asg_trig_debn <= 20'd62500 ; // ~0.5ms
+      asg_trig_debn <= set_deb_len ; // ~0.5ms
    else if (asg_trig_debn != 20'h0)
       asg_trig_debn <= asg_trig_debn - 20'd1 ;
 
@@ -458,6 +460,7 @@ if (adc_rstn_i == 1'b0) begin
    set_b_filt_bb <=  25'h0      ;
    set_b_filt_kk <=  25'hFFFFFF ;
    set_b_filt_pp <=  25'h0      ;
+   set_deb_len   <=  20'd62500  ;
 end else begin
    if (wen) begin
       if (addr[19:0]==20'h8)    set_a_tresh <= wdata[14-1:0] ;
@@ -476,6 +479,8 @@ end else begin
       if (addr[19:0]==20'h44)   set_b_filt_bb <= wdata[25-1:0] ;
       if (addr[19:0]==20'h48)   set_b_filt_kk <= wdata[25-1:0] ;
       if (addr[19:0]==20'h4C)   set_b_filt_pp <= wdata[25-1:0] ;
+
+      if (addr[19:0]==20'h50)   set_deb_len <= wdata[20-1:0] ;
    end
 end
 
@@ -509,6 +514,8 @@ always @(*) begin
 
      20'h1???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
      20'h2???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
+
+     20'h00050 : begin ack <= 1'b1;          rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
 
        default : begin ack <= 1'b1;          rdata <=  32'h0                              ; end
    endcase
