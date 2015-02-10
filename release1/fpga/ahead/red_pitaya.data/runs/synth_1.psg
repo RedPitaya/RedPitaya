@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<Strategy Version="1" Minor="2">
+	<StratHandle Name="PlanAhead Defaults" Flow="XST14">
+		<Desc>PlanAhead Defaults (XST defaults with hierarchy)</Desc>
+	</StratHandle>
+	<Step Id="xst">
+	</Step>
+</Strategy>
+
