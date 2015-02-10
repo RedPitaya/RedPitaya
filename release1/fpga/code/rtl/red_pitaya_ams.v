@@ -66,9 +66,9 @@ module red_pitaya_ams
    input      [  4-1: 0] sys_sel_i       ,  //!< bus write byte select
    input                 sys_wen_i       ,  //!< bus write enable
    input                 sys_ren_i       ,  //!< bus read enable
-   output reg [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
-   output reg            sys_err_o       ,  //!< bus error indicator
-   output reg            sys_ack_o          //!< bus acknowledge signal
+   output     [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
+   output                sys_err_o       ,  //!< bus error indicator
+   output                sys_ack_o          //!< bus acknowledge signal
 );
 
 
@@ -78,6 +78,14 @@ module red_pitaya_ams
 //---------------------------------------------------------------------------------
 //
 //  System bus connection
+
+wire  [ 32-1: 0] addr         ;
+wire  [ 32-1: 0] wdata        ;
+wire             wen          ;
+wire             ren          ;
+reg   [ 32-1: 0] rdata        ;
+reg              err          ;
+reg              ack          ;
 
 reg   [ 12-1: 0] adc_a_r      ;
 reg   [ 12-1: 0] adc_b_r      ;
@@ -98,19 +106,19 @@ reg   [ 24-1: 0] dac_b_r      ;
 reg   [ 24-1: 0] dac_c_r      ;
 reg   [ 24-1: 0] dac_d_r      ;
 
-always @(posedge sys_clk_i) begin
-   if (sys_rstn_i == 1'b0) begin
+always @(posedge clk_i) begin
+   if (rstn_i == 1'b0) begin
       dac_a_r     <= 24'h0F_0000 ;
       dac_b_r     <= 24'h4E_0000 ;
       dac_c_r     <= 24'h75_0000 ;
       dac_d_r     <= 24'h9C_0000 ;
    end
    else begin
-      if (sys_wen_i) begin
-         if (sys_addr_i[19:0]==16'h20)   dac_a_r <= sys_wdata_i[24-1: 0] ;
-         if (sys_addr_i[19:0]==16'h24)   dac_b_r <= sys_wdata_i[24-1: 0] ;
-         if (sys_addr_i[19:0]==16'h28)   dac_c_r <= sys_wdata_i[24-1: 0] ;
-         if (sys_addr_i[19:0]==16'h2C)   dac_d_r <= sys_wdata_i[24-1: 0] ;
+      if (wen) begin
+         if (addr[19:0]==16'h20)   dac_a_r <= wdata[24-1: 0] ;
+         if (addr[19:0]==16'h24)   dac_b_r <= wdata[24-1: 0] ;
+         if (addr[19:0]==16'h28)   dac_c_r <= wdata[24-1: 0] ;
+         if (addr[19:0]==16'h2C)   dac_d_r <= wdata[24-1: 0] ;
       end
    end
 end
@@ -118,32 +126,30 @@ end
 
 
 
-wire ack = sys_wen_i || sys_ren_i ;
+always @(posedge clk_i) begin
+   err <= 1'b0 ;
 
-always @(posedge sys_clk_i) begin
-   sys_err_o <= 1'b0 ;
+   casez (addr[19:0])
+     20'h00000 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_a_r}          ; end
+     20'h00004 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_b_r}          ; end
+     20'h00008 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_c_r}          ; end
+     20'h0000C : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_d_r}          ; end
+     20'h00010 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_v_r}          ; end
 
-   casez (sys_addr_i[19:0])
-     20'h00000 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_a_r}          ; end
-     20'h00004 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_b_r}          ; end
-     20'h00008 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_c_r}          ; end
-     20'h0000C : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_d_r}          ; end
-     20'h00010 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_v_r}          ; end
+     20'h00020 : begin ack <= 1'b1;         rdata <= {{32-24{1'b0}}, dac_a_r}          ; end
+     20'h00024 : begin ack <= 1'b1;         rdata <= {{32-24{1'b0}}, dac_b_r}          ; end
+     20'h00028 : begin ack <= 1'b1;         rdata <= {{32-24{1'b0}}, dac_c_r}          ; end
+     20'h0002C : begin ack <= 1'b1;         rdata <= {{32-24{1'b0}}, dac_d_r}          ; end
 
-     20'h00020 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-24{1'b0}}, dac_a_r}          ; end
-     20'h00024 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-24{1'b0}}, dac_b_r}          ; end
-     20'h00028 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-24{1'b0}}, dac_c_r}          ; end
-     20'h0002C : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-24{1'b0}}, dac_d_r}          ; end
+     20'h00030 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_temp_r}       ; end
+     20'h00034 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_pint_r}       ; end
+     20'h00038 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_paux_r}       ; end
+     20'h0003C : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_bram_r}       ; end
+     20'h00040 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_int_r}        ; end
+     20'h00044 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_aux_r}        ; end
+     20'h00048 : begin ack <= 1'b1;         rdata <= {{32-12{1'b0}}, adc_ddr_r}        ; end
 
-     20'h00030 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_temp_r}       ; end
-     20'h00034 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_pint_r}       ; end
-     20'h00038 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_paux_r}       ; end
-     20'h0003C : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_bram_r}       ; end
-     20'h00040 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_int_r}        ; end
-     20'h00044 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_aux_r}        ; end
-     20'h00048 : begin sys_ack_o <= ack;          sys_rdata_o <= {{32-12{1'b0}}, adc_ddr_r}        ; end
-
-       default : begin sys_ack_o <= 1'b1;         sys_rdata_o <=   32'h0                           ; end
+       default : begin ack <= 1'b1;         rdata <=   32'h0                           ; end
    endcase
 end
 
@@ -270,6 +276,35 @@ always @(posedge clk_i) begin
    end
 end
 
+
+
+
+
+
+// bridge between ADC and sys clock
+bus_clk_bridge i_bridge
+(
+   .sys_clk_i     (  sys_clk_i      ),
+   .sys_rstn_i    (  sys_rstn_i     ),
+   .sys_addr_i    (  sys_addr_i     ),
+   .sys_wdata_i   (  sys_wdata_i    ),
+   .sys_sel_i     (  sys_sel_i      ),
+   .sys_wen_i     (  sys_wen_i      ),
+   .sys_ren_i     (  sys_ren_i      ),
+   .sys_rdata_o   (  sys_rdata_o    ),
+   .sys_err_o     (  sys_err_o      ),
+   .sys_ack_o     (  sys_ack_o      ),
+
+   .clk_i         (  clk_i          ),
+   .rstn_i        (  rstn_i         ),
+   .addr_o        (  addr           ),
+   .wdata_o       (  wdata          ),
+   .wen_o         (  wen            ),
+   .ren_o         (  ren            ),
+   .rdata_i       (  rdata          ),
+   .err_i         (  err            ),
+   .ack_i         (  ack            )
+);
 
 
 
