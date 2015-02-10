@@ -318,7 +318,9 @@ reg  [ 14-1: 0] set_b_treshm ;
 reg  [ 14-1: 0] set_a_hyst   ;
 reg  [ 14-1: 0] set_b_hyst   ;
 
-reg  [ 20-1: 0] set_deb_len  ;
+reg  [ 20-1: 0] set_deb_len  ; // debouncing length (glitch free time after a posedge)
+reg  [ 32-1: 0] set_acu_len  ; // accumulation length
+reg  [ 20-1: 0] set_acu_len  ; // accumulation length
 
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin

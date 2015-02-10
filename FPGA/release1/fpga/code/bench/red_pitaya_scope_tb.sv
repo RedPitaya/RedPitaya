@@ -123,31 +123,33 @@ initial begin
 
    bus.bus_write(32'h08,-32'd0000 );  // A trigger treshold  (trigger at treshold     0 where signal range is -8192:+8191)
    bus.bus_write(32'h0C,-32'd7000 );  // B trigger treshold  (trigger at treshold -7000 where signal range is -8192:+8191)
-   bus.bus_write(32'h10, 32'd10000);  // after trigger delay (the buffer contains 2**14=16384 locations, 6384 before and 10000 after trigger)
+   bus.bus_write(32'h10, 32'd10   );  // after trigger delay (the buffer contains 2**14=16384 locations, 16384-10 before and 32 after trigger)
    bus.bus_write(32'h14, 32'd8    );  // data decimation     (data is decimated by a factor of 8)
    bus.bus_write(32'h20, 32'd20   );  // A hysteresis
    bus.bus_write(32'h24, 32'd200  );  // B hysteresis
 
    // software trigger
    bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
-   repeat(800) @(posedge sys_clk);
+   repeat(200) @(posedge sys_clk);
    bus.bus_write(32'h04, 32'h1    );  // do SW trigger
-   repeat(100) @(posedge sys_clk);
+   repeat(200) @(posedge sys_clk);
    bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
-   repeat(100) @(posedge sys_clk);
+   repeat(200) @(posedge sys_clk);
 
    // A ch rising edge trigger
    bus.bus_write(32'h04, 32'h2    );  // configure trigger mode
-   repeat(800) @(posedge sys_clk);
+   bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
+   repeat(200) @(posedge sys_clk);
    bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
-   repeat(100) @(posedge sys_clk);
+   repeat(200) @(posedge sys_clk);
 
    // external rising edge trigger
-   bus.bus_write(32'h50, 32'h0    );  // configure trigger mode
+   bus.bus_write(32'h50, 32'h0    );  // set debouncer length to zero
    bus.bus_write(32'h04, 32'h6    );  // configure trigger mode
-   repeat(100) @(posedge sys_clk);
+   bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
+   repeat(200) @(posedge sys_clk);
    trig_ext = 1'b1;
-   repeat(100) @(posedge sys_clk);
+   repeat(200) @(posedge sys_clk);
 
 //   repeat(800) @(posedge sys_clk);
 //   bus.bus_write(32'h00,32'h1     );  // start aquisition
