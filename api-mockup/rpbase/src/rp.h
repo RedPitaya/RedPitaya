@@ -161,9 +161,9 @@ typedef enum {
 
 
 typedef enum {
-    RP_GEN_TRIG_SRC_INTERNAL,   //!< Internal trigger source
-    RP_GEN_TRIG_SRC_EXT_PE,     //!< External trigger source positive edge
-	RP_GEN_TRIG_SRC_EXT_NE,     //!< External trigger source negative edge
+    RP_GEN_TRIG_SRC_INTERNAL = 1,   //!< Internal trigger source
+    RP_GEN_TRIG_SRC_EXT_PE = 2,     //!< External trigger source positive edge
+	RP_GEN_TRIG_SRC_EXT_NE = 3,     //!< External trigger source negative edge
     RP_GEN_TRIG_GATED_BURST     //!< External trigger gated burst
 } rp_trig_src_t;
 
@@ -740,10 +740,6 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 int rp_AcqGetBufSize(uint32_t* size);
 
-///@}
-
-
-///@}
 
 /** @name Health
  */
@@ -759,9 +755,6 @@ int rp_AcqGetBufSize(uint32_t* size);
  */
 int rp_HealthGetValue(rp_health_t sensor, float* value);
 
-///@}
-
-///@}
 
 /** @name Generate
 */
@@ -876,7 +869,7 @@ int rp_GenBurstCount(rp_channel_t channel, int num);
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.
 * @param channel Channel A or B which we want to enable
-* @param nrepetitions Number of generated bursts
+* @param repetitions Number of generated bursts. If -1, infinite bursts will be generated.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
