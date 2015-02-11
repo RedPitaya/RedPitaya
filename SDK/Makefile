@@ -30,11 +30,11 @@ include:
 	mkdir -p include
 	cp $(RP_LIBRARY_INCLUDE)/rp.h ./include
 	#Make rplib, if we are making SDK without the main makefile
-	$(MAKE) -C $(RP_LIBRARY_INCLUDE)
+	$(MAKE) -C $(RP_LIBRARY_INCLUDE) $(CC)
 	cp $(RP_LIBRARY_INCLUDE)/librp.so ./include
 	#Make scpi server, if we are making SDK without the main makefile
 	$(MAKE) -C ../scpi-server clean
-	$(MAKE) -C ../scpi-server/
+	$(MAKE) -C ../scpi-server/ $(CC)
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
 	
