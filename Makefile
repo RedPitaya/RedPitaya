@@ -35,6 +35,7 @@ ACQUIRE_DIR=Test/acquire
 CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
+SDK=sdk
 SDK_DIR=SDK/
 
 LINUX=$(BUILD)/uImage
@@ -137,10 +138,10 @@ $(DISCOVERY):
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-sdk:
+$(SDK):
 	$(MAKE) -C $(SDK_DIR) zip
 
-zip: $(TARGET)
+zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
