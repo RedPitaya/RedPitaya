@@ -1,4 +1,4 @@
-#
+ #
 # $Id: Makefile 1253 2014-02-23 21:09:06Z ales.bardorfer $
 #
 # Red Pitaya OS/Ecosystem main Makefile
@@ -35,6 +35,7 @@ ACQUIRE_DIR=Test/acquire
 CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
+SDK_DIR=SDK/
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
