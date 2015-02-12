@@ -6,4 +6,6 @@
 # network configuration is static.
 # echo "nameserver <DNS_IP>" > /tmp/resolv.conf
 
+LD_LIBRARY_PATH=/opt/lib
+
 echo "Feel free to add custom initialization commands here."
