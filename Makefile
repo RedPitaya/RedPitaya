@@ -54,6 +54,8 @@ ACQUIRE=$(BUILD)/bin/acquire
 CALIB=$(BUILD)/bin/calib
 DISCOVERY=$(BUILD)/sbin/discovery
 ECOSYSTEM=$(BUILD)/www/apps/info/info.json
+SCPI_SERVER=$(BUILD)/bin/scpi-server
+SCPI_SERVER_DIR=scpi-server
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -66,7 +68,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(SCPI_SERVER) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -126,6 +128,9 @@ $(GENERATE):
 $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+
+$(SCPI_SERVER):
+    $(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
