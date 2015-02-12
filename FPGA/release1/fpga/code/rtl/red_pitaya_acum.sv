@@ -9,7 +9,7 @@ module red_pitaya_acum #(
   int unsigned IDN = 1,           // input data number (paralel processing of multiple samples)
   // accumulation parameters
   int unsigned ACW = 32,          // accumulation counter width
-  int unsigned AMS = 2*14,        // accumulation memory size
+  int unsigned AMS = 2**14,       // accumulation memory size
   int unsigned AAW = $clog2(AMS), // accumulation address width
   // output stream parameters
   int unsigned ODW = IDW+ACW,     // output data width
@@ -21,7 +21,10 @@ module red_pitaya_acum #(
   input  logic                     clr,  // clear (synchronous)
   // configuration
   input  logic           [ACW-1:0] cfg_cnt,  // accumulation count
-  input  logic           [AAW-1:0] cfg_len,  // buffer length
+  // control
+  input  logic                     ctl_run,  // enable pulse
+  // status
+  input  logic                     sts_end,  // end of sequence
   // input data stream
 //input  logic                     sti_tkeep ,
   input  logic                     sti_tlast ,
@@ -33,7 +36,11 @@ module red_pitaya_acum #(
   output logic                     sto_tlast ,
   output logic [ODN-1:0] [ODW-1:0] sto_tdata ,
   output logic                     sto_tvalid,
-  input  logic                     sto_tready
+  input  logic                     sto_tready,
+  // memmory interface (read only)
+  input  logic                     bus_ren,
+  input  logic           [AAW-1:0] bus_adr,
+  output logic [ODN-1:0] [ODW-1:0] bus_rdt
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +78,11 @@ assign sto_trnsfr = sto_tvalid & sto_tready;
 
 // accumulation counter
 always_ff @ (posedge clk) //, posedge rst)
-if (rst)                          acu_cnt <=           ACW'(0);
-else if (sti_trnsfr & sti_tlast)  acu_cnt <= acu_end ? ACW'(0) : acu_cnt + ACW'(1);
+if (rst)                            acu_cnt <=           ACW'(0);
+else begin
+  if (clr)                          acu_cnt <=           ACW'(0);
+  else if (sti_trnsfr & sti_tlast)  acu_cnt <= acu_end ? ACW'(0) : acu_cnt + ACW'(1);
+end
 
 assign acu_end = (acu_cnt == cfg_cnt);
 assign acu_beg = (acu_cnt == ACW'(0));
@@ -89,12 +99,18 @@ assign sti_tready = sto_tready;
 
 // output stream valid
 always_ff @ (posedge clk) //, posedge rst)
-if (rst)  sto_tvalid <= 1'b0;
-else      sto_tvalid <= mem_wen & acu_end;
+if (rst)    sto_tvalid <= 1'b0;
+else begin
+  if (clr)  sto_tvalid <= 1'b0;
+  else      sto_tvalid <= mem_wen & acu_end;
+end
 
 // output stream data
 always_ff @ (posedge clk)
 if (mem_wen & acu_end)  sto_tdata <= mem_wdt;
+
+// end status pulse
+assign sts_end = sti_trnsfr & sti_tlast & acu_end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // memory access
@@ -105,19 +121,27 @@ assign mem_wdt = ODW'($signed(buf_tdata)) + $signed(acu_beg ? ODW'(0) : mem_rdt)
 
 // read enable
 assign mem_ren = sti_trnsfr;
+// address end
+assign mem_end = sti_tlast;
 
 // address
 always_ff @ (posedge clk) //, posedge rst)
-if (rst)           mem_rad <=           AAW'(0);
-else if (mem_ren)  mem_rad <= mem_end ? AAW'(0) : mem_nxt;
+if (rst)             mem_rad <=           AAW'(0);
+else begin
+  if (clr)           mem_rad <=           AAW'(0);
+  else if (mem_ren)  mem_rad <= mem_end ? AAW'(0) : mem_nxt;
+end
 
+// address next
 assign mem_nxt = mem_rad + AAW'(1);
-assign mem_end = mem_nxt == cfg_len;
 
 // write enable
 always_ff @ (posedge clk) //, posedge rst)
 if (rst)  mem_wen <= 1'b0;
-else      mem_wen <= mem_ren;
+else begin
+  if (clr)  mem_wen <= 1'b0;
+  else      mem_wen <= mem_ren;
+end
 
 // write address, is a delayed read address
 always_ff @ (posedge clk)

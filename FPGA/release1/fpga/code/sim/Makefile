@@ -18,6 +18,7 @@ RTL=$(PATH_RTL)/axi_slave.v \
     $(PATH_RTL)/red_pitaya_pid_block.v \
     $(PATH_RTL)/red_pitaya_pid.v \
     $(PATH_RTL)/red_pitaya_ps.v \
+    $(PATH_RTL)/red_pitaya_acum.sv \
     $(PATH_RTL)/red_pitaya_scope.v \
     $(PATH_RTL)/red_pitaya_test.v \
     $(PATH_RTL)/red_pitaya_top.v

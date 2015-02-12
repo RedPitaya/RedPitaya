@@ -191,6 +191,11 @@ reg   [  32-1: 0] set_dly       ;
 reg   [  32-1: 0] adc_dly_cnt   ;
 reg               adc_dly_do    ;
 
+reg    [ 20-1: 0] set_deb_len; // debouncing length (glitch free time after a posedge)
+reg               set_acu_ena; // accumulation enable
+reg    [ 32-1: 0] set_acu_cnt; // accumulation counter 
+reg    [  5-1: 0] set_acu_shf; // accumulation output shift
+
 // Write
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
@@ -201,7 +206,7 @@ if (adc_rstn_i == 1'b0) begin
    adc_dly_cnt <= 32'h0      ;
    adc_dly_do  <=  1'b0      ;
 end
-else begin
+else if (~set_acu_ena) begin
    if (adc_arm_do)
       adc_we <= 1'b1 ;
    else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
@@ -256,6 +261,104 @@ begin
    adc_a_rd    <= adc_a_buf[adc_a_raddr] ;
    adc_b_rd    <= adc_b_buf[adc_b_raddr] ;
 end
+
+//---------------------------------------------------------------------------------
+// averaging accumulator module instances
+
+reg            acu_ctl_run;
+wire           acu_sts_end;
+
+reg  [RSZ-1:0] acu_len_cnt;
+wire           acu_len_end;
+wire           acu_valid;
+
+reg            acu_rd_dv;
+
+wire           acu_a_mem_ren, acu_b_mem_ren;
+wire [RSZ-1:0] acu_a_mem_adr, acu_b_mem_adr;
+wire  [46-1:0] acu_a_mem_tmp, acu_b_mem_tmp; // 14+32 = 46
+wire  [32-1:0] acu_a_mem_rdt, acu_b_mem_rdt;
+
+// run control signal is triggered by a write into the arm register
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0)  acu_ctl_run <= 1'b0;
+else if (set_acu_ena) begin
+  if (wen & (addr[19:0]==20'h94) & wdata[1])  acu_ctl_run <= 1'b1;
+  else if (acu_sts_end)                       acu_ctl_run <= 1'b0;
+end
+
+assign acu_valid = acu_ctl_run & (adc_trig | (|acu_len_cnt));
+
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0)  acu_len_cnt <= 0;
+else if (acu_valid)      acu_len_cnt <= acu_len_end ? 0 : acu_len_cnt + 1;
+
+assign acu_len_end = acu_len_cnt == set_dly;
+
+// memory read data valid
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0)  acu_rd_dv <= 1'b0;
+else                     acu_rd_dv <= acu_a_mem_ren | acu_b_mem_ren;
+
+red_pitaya_acum acum_a (
+  // system signals
+  .clk        (adc_clk_i),
+  .rst        (~adc_rstn_i),
+  .clr        (adc_rst_do),
+  // configuration
+  .cfg_cnt    (set_acu_cnt),
+  // control/status
+  .ctl_run    (acu_ctl_run),
+  .sts_end    (acu_sts_end),
+  // input data stream
+  .sti_tlast  (acu_len_end),
+  .sti_tdata  (adc_a_dat),
+  .sti_tvalid (acu_valid),
+  .sti_tready (),
+  // output data stream
+  .sto_tlast  (),
+  .sto_tdata  (),
+  .sto_tvalid (),
+  .sto_tready (1'b1),
+  // memmory interface (read only)
+  .bus_ren    (acu_a_mem_ren),
+  .bus_adr    (acu_a_mem_adr),
+  .bus_rdt    (acu_a_mem_tmp)
+);
+
+assign acu_a_mem_ren = ren & (addr[17:16] == 2'h3);
+assign acu_a_mem_adr =        addr[RSZ+1:2];
+assign acu_a_mem_rdt = acu_a_mem_tmp << set_acu_shf;
+
+red_pitaya_acum acum_b (
+  // system signals
+  .clk        (adc_clk_i),
+  .rst        (~adc_rstn_i),
+  .clr        (adc_rst_do),
+  // configuration
+  .cfg_cnt    (set_acu_cnt),
+  // control/status
+  .ctl_run    (acu_ctl_run),
+  .sts_end    (           ),
+  // input data stream
+  .sti_tlast  (acu_len_end),
+  .sti_tdata  (adc_b_dat),
+  .sti_tvalid (acu_valid),
+  .sti_tready (),
+  // output data stream
+  .sto_tlast  (),
+  .sto_tdata  (),
+  .sto_tvalid (),
+  .sto_tready (1'b1),
+  // memmory interface (read only)
+  .bus_ren    (acu_b_mem_ren),
+  .bus_adr    (acu_b_mem_adr),
+  .bus_rdt    (acu_b_mem_tmp)
+);
+
+assign acu_b_mem_ren = ren & (addr[17:16] == 2'h3);
+assign acu_b_mem_adr =        addr[RSZ+1:2];
+assign acu_b_mem_rdt = acu_b_mem_tmp << set_acu_shf;
 
 //---------------------------------------------------------------------------------
 //  Trigger source selector
@@ -317,10 +420,6 @@ reg  [ 14-1: 0] set_b_treshp ;
 reg  [ 14-1: 0] set_b_treshm ;
 reg  [ 14-1: 0] set_a_hyst   ;
 reg  [ 14-1: 0] set_b_hyst   ;
-
-reg  [ 20-1: 0] set_deb_len  ; // debouncing length (glitch free time after a posedge)
-reg  [ 32-1: 0] set_acu_len  ; // accumulation length
-reg  [ 20-1: 0] set_acu_len  ; // accumulation length
 
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
@@ -462,7 +561,11 @@ if (adc_rstn_i == 1'b0) begin
    set_b_filt_bb <=  25'h0      ;
    set_b_filt_kk <=  25'hFFFFFF ;
    set_b_filt_pp <=  25'h0      ;
+
    set_deb_len   <=  20'd62500  ;
+   set_acu_ena   <=   1'd0      ;
+   set_acu_cnt   <=  32'd0      ;
+   set_acu_shf   <=   5'd0      ;
 end else begin
    if (wen) begin
       if (addr[19:0]==20'h8)    set_a_tresh <= wdata[14-1:0] ;
@@ -482,7 +585,10 @@ end else begin
       if (addr[19:0]==20'h48)   set_b_filt_kk <= wdata[25-1:0] ;
       if (addr[19:0]==20'h4C)   set_b_filt_pp <= wdata[25-1:0] ;
 
-      if (addr[19:0]==20'h50)   set_deb_len <= wdata[20-1:0] ;
+      if (addr[19:0]==20'h90)   set_deb_len <= wdata[20-1:0] ;
+      if (addr[19:0]==20'h94)   set_acu_ena <= wdata[     0] ;
+      if (addr[19:0]==20'h98)   set_acu_cnt <= wdata[32-1:0] ;
+      if (addr[19:0]==20'h9c)   set_acu_shf <= wdata[ 5-1:0] ;
    end
 end
 
@@ -514,10 +620,17 @@ always @(*) begin
      20'h00048 : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_kk}      ; end
      20'h0004C : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_pp}      ; end
 
+     20'h00090 : begin ack <= 1'b1;          rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
+     20'h00094 : begin ack <= 1'b1;          rdata <= {{32- 2{1'b0}}, acu_ctl_run,
+                                                                      set_acu_ena}        ; end
+     20'h00098 : begin ack <= 1'b1;          rdata <= {               set_acu_cnt}        ; end
+     20'h0009c : begin ack <= 1'b1;          rdata <= {{32- 5{1'b0}}, set_acu_shf}        ; end
+
      20'h1???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
      20'h2???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
 
-     20'h00050 : begin ack <= 1'b1;          rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
+     20'h3???? : begin ack <= acu_rd_dv;     rdata <= acu_a_mem_rdt                       ; end
+     20'h4???? : begin ack <= acu_rd_dv;     rdata <= acu_b_mem_rdt                       ; end
 
        default : begin ack <= 1'b1;          rdata <=  32'h0                              ; end
    endcase

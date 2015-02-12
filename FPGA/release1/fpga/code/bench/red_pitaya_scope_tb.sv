@@ -102,6 +102,8 @@ logic            sys_err  ;
 logic            sys_ack  ;
 
 logic [ 32-1: 0] rdata;
+logic [ 32-1: 0] rdata_blk [];
+int unsigned     blk_size;
 
 // system clock & reset
 initial begin
@@ -113,17 +115,30 @@ end
 initial          sys_clk = 1'b0;
 always #(TP_SYS) sys_clk = ~sys_clk;
 
+task bus_read_blk (
+  input int          adr,
+  input int unsigned len
+);
+  rdata_blk = new [len];
+  for (int unsigned i=0; i<len; i++) begin
+    bus.bus_read(adr+4*i, rdata_blk[i]);
+  end 
+endtask: bus_read_blk
+
+
 // State machine programming
 initial begin
    // external trigger
    trig_ext = 1'b0;
+
+   blk_size = 10;
 
    wait (sys_rstn && adc_rstn)
    repeat(10) @(posedge sys_clk);
 
    bus.bus_write(32'h08,-32'd0000 );  // A trigger treshold  (trigger at treshold     0 where signal range is -8192:+8191)
    bus.bus_write(32'h0C,-32'd7000 );  // B trigger treshold  (trigger at treshold -7000 where signal range is -8192:+8191)
-   bus.bus_write(32'h10, 32'd10   );  // after trigger delay (the buffer contains 2**14=16384 locations, 16384-10 before and 32 after trigger)
+   bus.bus_write(32'h10, blk_size );  // after trigger delay (the buffer contains 2**14=16384 locations, 16384-10 before and 32 after trigger)
    bus.bus_write(32'h14, 32'd8    );  // data decimation     (data is decimated by a factor of 8)
    bus.bus_write(32'h20, 32'd20   );  // A hysteresis
    bus.bus_write(32'h24, 32'd200  );  // B hysteresis
@@ -144,12 +159,56 @@ initial begin
    repeat(200) @(posedge sys_clk);
 
    // external rising edge trigger
-   bus.bus_write(32'h50, 32'h0    );  // set debouncer length to zero
+   bus.bus_write(32'h90, 32'h0    );  // set debouncer length to zero
    bus.bus_write(32'h04, 32'h6    );  // configure trigger mode
    bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
    repeat(200) @(posedge sys_clk);
    trig_ext = 1'b1;
    repeat(200) @(posedge sys_clk);
+   trig_ext = 1'b0;
+
+   // accumulator
+   bus.bus_write(32'h04, 32'h6    );  // configure trigger mode (external rising edge)
+   bus.bus_write(32'h98, 32'd8    );  // accumulate 8 triggers
+   bus.bus_write(32'ha0, blk_size );  // block length
+   bus.bus_write(32'h9c, 32'd3    );  // shift accumulator output by 3 bit to get the result
+   bus.bus_write(32'h94, 32'd1    );  // enable accumulator
+   bus.bus_write(32'h94, 32'd3    );  // run accumulation
+
+   fork
+     // provide external trigger
+     begin: acu_trg
+       // short trigger pulse
+       repeat(20) @(posedge sys_clk);       trig_ext = 1'b1;
+       repeat( 1) @(posedge sys_clk);       trig_ext = 1'b0;
+       repeat(20) @(posedge sys_clk);
+       // long trigger pulse
+       repeat(20) @(posedge sys_clk);       trig_ext = 1'b1;
+       repeat(20) @(posedge sys_clk);       trig_ext = 1'b0;
+       repeat(20) @(posedge sys_clk);
+       // ignored trigger pulse 
+       repeat(20) @(posedge sys_clk);       trig_ext = 1'b1;
+       repeat( 2) @(posedge sys_clk);       trig_ext = 1'b0;
+       repeat( 2) @(posedge sys_clk);       trig_ext = 1'b1;
+       repeat( 2) @(posedge sys_clk);       trig_ext = 1'b0;
+       repeat(20) @(posedge sys_clk);
+       // a sequence of 10 short triggers
+       repeat (blk_size) begin
+         repeat( 1) @(posedge sys_clk);       trig_ext = 1'b1;
+         repeat( 1) @(posedge sys_clk);       trig_ext = 1'b0;
+         repeat(20) @(posedge sys_clk);
+       end
+     end
+     // pool accumulation run status
+     begin: acu_run
+       do begin
+         bus.bus_read(32'h94, rdata);  // read value from memory
+         repeat(20) @(posedge sys_clk);
+       end while (rdata & 2);
+       repeat(20) @(posedge sys_clk);
+       bus_read_blk (32'h30000, blk_size);
+     end
+   join
 
 //   repeat(800) @(posedge sys_clk);
 //   bus.bus_write(32'h00,32'h1     );  // start aquisition
