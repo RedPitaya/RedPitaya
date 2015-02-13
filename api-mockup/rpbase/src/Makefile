@@ -44,6 +44,7 @@ OBJECTS =	common.o \
 			generate.o \
 			gen_handler.o \
 			calib.o \
+			i2c.o \
 			rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
