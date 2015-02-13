@@ -61,11 +61,21 @@ extern "C" {
 /** Buffer too small */
 #define RP_BTS    14
 /** Invalid parameter value */
-#define RP_EIPV    15
+#define RP_EIPV   15
 /** Unsupported Feature */
 #define RP_EUF    16
 /** Data not normalized */
 #define RP_ENN    17
+/** Failed to open bus */
+#define RP_EFOB   18
+/** Failed to close bus */
+#define RP_EFCB   19
+/** Failed to acquire bus access */
+#define RP_EABA   20
+/** Failed to read from the bus */
+#define RP_EFRB   21
+/** Failed to write to the bus */
+#define RP_EFWB   22
 
 ///@}
 
@@ -903,6 +913,32 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenTrigger(int mask);
+
+
+/** @name I2C
+*/
+///@{
+
+/**
+* Read from I2C device
+* @param addr Address of the I2C device
+* @param data Pointer to where data will be read
+* @param length Number of bytes to be read
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_I2cRead(int addr, char* data, int length);
+
+
+/**
+* Write to I2C device
+* @param addr Address of the I2C device
+* @param data Pointer From of data to be written to I2C device
+* @param length Number of bytes to be written
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_I2cWrite(int addr, char* data, int length);
 
 ///@}
 
