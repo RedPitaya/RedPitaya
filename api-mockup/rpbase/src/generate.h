@@ -65,6 +65,7 @@ int generate_setBurstCount(rp_channel_t channel, int num);
 int generate_setBurstRepetitions(rp_channel_t channel, int repetitions);
 int generate_setBurstDelay(rp_channel_t channel, int delay);
 int generate_simultaneousTrigger();
+int generate_triggerIfInternal(rp_channel_t channel);
 int generate_Synchronise();
 
 int generate_writeData(rp_channel_t out, float *data, uint32_t start, uint32_t length);
