@@ -25,6 +25,7 @@ module red_pitaya_acum #(
   input  logic                     ctl_run,  // enable pulse
   // status
   input  logic                     sts_end,  // end of sequence
+  output logic           [ACW-1:0] sts_cnt,  // accumulation count
   // input data stream
 //input  logic                     sti_tkeep ,
   input  logic                     sti_tlast ,
@@ -52,7 +53,7 @@ logic           sti_trnsfr;
 logic           sto_trnsfr;
 
 // accumulation counter
-logic [ACW-1:0] acu_cnt;
+logic [ACW-1:0] acu_cnt,  // accumulation counter
 logic           acu_end;  // counter reached the end
 logic           acu_beg;  // counter at the beginning
 
@@ -84,6 +85,7 @@ else begin
   else if (sti_trnsfr & sti_tlast)  acu_cnt <= acu_end ? ACW'(0) : acu_cnt + ACW'(1);
 end
 
+assign sts_cnt = acu_cnt;
 assign acu_end = (acu_cnt == cfg_cnt);
 assign acu_beg = (acu_cnt == ACW'(0));
 

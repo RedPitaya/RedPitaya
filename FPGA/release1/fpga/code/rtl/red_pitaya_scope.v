@@ -193,8 +193,10 @@ reg               adc_dly_do    ;
 
 reg    [ 20-1: 0] set_deb_len; // debouncing length (glitch free time after a posedge)
 reg               set_acu_ena; // accumulation enable
-reg    [ 32-1: 0] set_acu_cnt; // accumulation counter 
+reg    [ 32-1: 0] set_acu_cnt; // accumulation counter length
+reg    [ 32-1: 0] set_sts_cnt; // accumulation counter current status
 reg    [  5-1: 0] set_acu_shf; // accumulation output shift
+reg    [ 14-1: 0] set_acu_len; // accumulation sequence length
 
 // Write
 always @(posedge adc_clk_i)
@@ -293,7 +295,7 @@ always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0)  acu_len_cnt <= 0;
 else if (acu_valid)      acu_len_cnt <= acu_len_end ? 0 : acu_len_cnt + 1;
 
-assign acu_len_end = acu_len_cnt == set_dly;
+assign acu_len_end = acu_len_cnt == set_acu_len;
 
 // memory read data valid
 always @(posedge adc_clk_i)
@@ -310,6 +312,7 @@ red_pitaya_acum acum_a (
   // control/status
   .ctl_run    (acu_ctl_run),
   .sts_end    (acu_sts_end),
+  .sts_cnt    (acu_sts_cnt),
   // input data stream
   .sti_tlast  (acu_len_end),
   .sti_tdata  (adc_a_dat),
@@ -340,6 +343,7 @@ red_pitaya_acum acum_b (
   // control/status
   .ctl_run    (acu_ctl_run),
   .sts_end    (           ),
+  .sts_cnt    (           ),
   // input data stream
   .sti_tlast  (acu_len_end),
   .sti_tdata  (adc_b_dat),
@@ -589,6 +593,7 @@ end else begin
       if (addr[19:0]==20'h94)   set_acu_ena <= wdata[     0] ;
       if (addr[19:0]==20'h98)   set_acu_cnt <= wdata[32-1:0] ;
       if (addr[19:0]==20'h9c)   set_acu_shf <= wdata[ 5-1:0] ;
+      if (addr[19:0]==20'ha0)   set_acu_len <= wdata[14-1:0] ;
    end
 end
 
@@ -623,8 +628,9 @@ always @(*) begin
      20'h00090 : begin ack <= 1'b1;          rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
      20'h00094 : begin ack <= 1'b1;          rdata <= {{32- 2{1'b0}}, acu_ctl_run,
                                                                       set_acu_ena}        ; end
-     20'h00098 : begin ack <= 1'b1;          rdata <= {               set_acu_cnt}        ; end
+     20'h00098 : begin ack <= 1'b1;          rdata <= {               set_sts_cnt}        ; end
      20'h0009c : begin ack <= 1'b1;          rdata <= {{32- 5{1'b0}}, set_acu_shf}        ; end
+     20'h000a0 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_acu_len}        ; end
 
      20'h1???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
      20'h2???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
