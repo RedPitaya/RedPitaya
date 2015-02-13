@@ -168,6 +168,17 @@ int generate_simultaneousTrigger() {
     return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
 }
 
+
+int generate_triggerIfInternal(rp_channel_t channel) {
+    if (channel == RP_CH_1 && generate->AtriggerSelector == 1) {
+        generate->AtriggerSelector = 1;
+    }
+    else if (channel == RP_CH_2 && generate->BtriggerSelector == 1) {
+        generate->BtriggerSelector = 1;
+    }
+    return RP_OK;
+}
+
 int generate_Synchronise() {
     // Both channels must be reset simultaneously
     ECHECK(cmn_SetBits((uint32_t *) generate, 0x00400040, 0xFFFFFFFF));
