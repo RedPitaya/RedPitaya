@@ -24,7 +24,7 @@
 #define ECHECK(x) { \
         int retval = (x); \
         if (retval != RP_OK) { \
-            fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+            fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rp_GetError(retval), __FILE__, __LINE__); \
             return retval; \
         } \
 }
