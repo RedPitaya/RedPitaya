@@ -227,12 +227,13 @@ int gen_BurstCount(rp_channel_t channel, int num) {
     if ((num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) && num == 0) {
         return RP_EOOR;
     }
+    CHECK_OUTPUT(chA_burstCount = num,
+            chB_burstCount = num)
     if (num == -1) {    // -1 represents infinity. In FPGA value 0 represents infinity
         num = 0;
     }
-    CHECK_OUTPUT(chA_burstCount = num,
-                 chB_burstCount = num)
-    return generate_setBurstCount(channel, num);
+    ECHECK(generate_setBurstCount(channel, num));
+    return generate_triggerIfInternal(channel);
 }
 
 int gen_BurstRepetitions(rp_channel_t channel, int repetitions) {
