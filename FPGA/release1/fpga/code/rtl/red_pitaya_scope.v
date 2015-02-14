@@ -194,7 +194,7 @@ reg               adc_dly_do    ;
 reg    [ 20-1: 0] set_deb_len; // debouncing length (glitch free time after a posedge)
 reg               set_acu_ena; // accumulation enable
 reg    [ 32-1: 0] set_acu_cnt; // accumulation counter length
-reg    [ 32-1: 0] set_sts_cnt; // accumulation counter current status
+wire   [ 32-1: 0] set_sts_cnt; // accumulation counter current status
 reg    [  5-1: 0] set_acu_shf; // accumulation output shift
 reg    [ 14-1: 0] set_acu_len; // accumulation sequence length
 
@@ -312,7 +312,7 @@ red_pitaya_acum acum_a (
   // control/status
   .ctl_run    (acu_ctl_run),
   .sts_end    (acu_sts_end),
-  .sts_cnt    (acu_sts_cnt),
+  .sts_cnt    (set_sts_cnt),
   // input data stream
   .sti_tlast  (acu_len_end),
   .sti_tdata  (adc_a_dat),

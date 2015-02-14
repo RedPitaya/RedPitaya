@@ -53,7 +53,7 @@ logic           sti_trnsfr;
 logic           sto_trnsfr;
 
 // accumulation counter
-logic [ACW-1:0] acu_cnt,  // accumulation counter
+logic [ACW-1:0] acu_cnt;  // accumulation counter
 logic           acu_end;  // counter reached the end
 logic           acu_beg;  // counter at the beginning
 
