@@ -222,6 +222,7 @@ initial begin
 //   bus.bus_read(32'h20000, rdata);  // read value from memory
 //   bus.bus_read(32'h20004, rdata);  // read value from memory
 
+   repeat(100) @(posedge sys_clk);
    $finish ();
 end
 

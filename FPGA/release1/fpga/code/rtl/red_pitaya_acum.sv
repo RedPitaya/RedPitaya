@@ -22,7 +22,7 @@ module red_pitaya_acum #(
   // configuration
   input  logic           [ACW-1:0] cfg_cnt,  // accumulation count
   // control
-  input  logic                     ctl_run,  // enable pulse
+  input  logic                     ctl_run,  // accumulation running status
   // status
   input  logic                     sts_end,  // end of sequence
   output logic           [ACW-1:0] sts_cnt,  // accumulation count
@@ -62,7 +62,9 @@ logic                     buf_tlast;
 logic [IDN-1:0] [IDW-1:0] buf_tdata;
 
 // memory access
+logic                     mem_vld;  // memory valid
 logic                     mem_end;  // memory size end
+logic           [AAW-1:0] mem_adr;  // address counter
 logic           [AAW-1:0] mem_nxt;  // address next
 logic [ODN-1:0] [ODW-1:0] mem [0:AMS/IDN-1];
 logic                     mem_wen, mem_ren;  // write/read enable
@@ -122,32 +124,32 @@ assign sts_end = sti_trnsfr & sti_tlast & acu_end;
 assign mem_wdt = ODW'($signed(buf_tdata)) + $signed(acu_beg ? ODW'(0) : mem_rdt);
 
 // read enable
-assign mem_ren = sti_trnsfr;
+assign mem_vld = sti_trnsfr;
 // address end
 assign mem_end = sti_tlast;
 
 // address
 always_ff @ (posedge clk) //, posedge rst)
-if (rst)             mem_rad <=           AAW'(0);
+if (rst)             mem_adr <=           AAW'(0);
 else begin
-  if (clr)           mem_rad <=           AAW'(0);
-  else if (mem_ren)  mem_rad <= mem_end ? AAW'(0) : mem_nxt;
+  if (clr)           mem_adr <=           AAW'(0);
+  else if (mem_vld)  mem_adr <= mem_end ? AAW'(0) : mem_nxt;
 end
 
 // address next
-assign mem_nxt = mem_rad + AAW'(1);
+assign mem_nxt = mem_adr + AAW'(1);
 
 // write enable
 always_ff @ (posedge clk) //, posedge rst)
 if (rst)  mem_wen <= 1'b0;
 else begin
   if (clr)  mem_wen <= 1'b0;
-  else      mem_wen <= mem_ren;
+  else      mem_wen <= mem_vld;
 end
 
 // write address, is a delayed read address
 always_ff @ (posedge clk)
-if (mem_ren)  mem_wad <= mem_rad;
+if (mem_vld)  mem_wad <= mem_adr;
 
 // write access
 always_ff @ (posedge clk)
@@ -155,6 +157,15 @@ if (mem_wen)  mem [mem_wad] <= mem_wdt;
 
 // read access
 always_ff @ (posedge clk)
-if (mem_ren)  mem [mem_rad] <= mem_rdt;
+if (mem_ren)  mem_rdt <= mem [mem_rad];
+
+// read enable mux between stream and read bus
+assign mem_ren = ctl_run ? mem_vld : bus_ren;
+
+// read address mux between stream and read bus
+assign mem_rad = ctl_run ? mem_adr : bus_adr;
+
+// read bus data
+assign bus_rdt = mem_rdt;
 
 endmodule: red_pitaya_acum
