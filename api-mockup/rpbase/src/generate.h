@@ -54,20 +54,29 @@ else { \
 int generate_Init();
 int generate_Release();
 
-int generate_setOutputDisable(rp_channel_t out, bool disable);
-int generate_setAmplitude(rp_channel_t out, float amplitude);
-int generate_setDCOffset(rp_channel_t out, float offset);
-int generate_setFrequency(rp_channel_t out, float frequency);
+int generate_setOutputDisable(rp_channel_t channel, bool disable);
+int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
+int generate_setAmplitude(rp_channel_t channel, float amplitude);
+int generate_getAmplitude(rp_channel_t channel, float *amplitude);
+int generate_setDCOffset(rp_channel_t channel, float offset);
+int generate_getDCOffset(rp_channel_t channel, float *offset);
+int generate_setFrequency(rp_channel_t channel, float frequency);
+int generate_getFrequency(rp_channel_t channel, float *frequency);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
-int generate_setTriggerSource(rp_channel_t out, unsigned short value);
+int generate_setTriggerSource(rp_channel_t channel, unsigned short value);
+int generate_getTriggerSource(rp_channel_t channel, uint32_t *value);
 int generate_setGatedBurst(rp_channel_t channel, uint32_t value);
-int generate_setBurstCount(rp_channel_t channel, int num);
-int generate_setBurstRepetitions(rp_channel_t channel, int repetitions);
-int generate_setBurstDelay(rp_channel_t channel, int delay);
+int generate_getGatedBurst(rp_channel_t channel, uint32_t *value);
+int generate_setBurstCount(rp_channel_t channel, uint32_t num);
+int generate_getBurstCount(rp_channel_t channel, uint32_t *num);
+int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
+int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
+int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
+int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
+
 int generate_simultaneousTrigger();
-int generate_triggerIfInternal(rp_channel_t channel);
 int generate_Synchronise();
 
-int generate_writeData(rp_channel_t out, float *data, uint32_t start, uint32_t length);
+int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length);
 
 #endif //__GENERATE_H
