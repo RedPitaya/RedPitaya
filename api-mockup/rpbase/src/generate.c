@@ -103,11 +103,26 @@ int generate_setOutputDisable(rp_channel_t channel, bool disable) {
 	return RP_OK;
 }
 
+int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
+    uint32_t value;
+    CHECK_OUTPUT(value = generate->AsetOutputTo0,
+                 value = generate->BsetOutputTo0)
+    *enabled = value == 1 ? false : true;
+    return RP_OK;
+}
+
 int generate_setAmplitude(rp_channel_t channel, float amplitude) {
 	volatile ch_properties_t *ch_properties;
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
 	ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX, 0, 0);
 	return RP_OK;
+}
+
+int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    *amplitude = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX, 0, 0);
+    return RP_OK;
 }
 
 int generate_setDCOffset(rp_channel_t channel, float offset) {
@@ -117,11 +132,25 @@ int generate_setDCOffset(rp_channel_t channel, float offset) {
 	return RP_OK;
 }
 
+int generate_getDCOffset(rp_channel_t channel, float *offset) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2), 0, 0);
+    return RP_OK;
+}
+
 int generate_setFrequency(rp_channel_t channel, float frequency) {
 	volatile ch_properties_t *ch_properties;
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
 	ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
 	return RP_OK;
+}
+
+int generate_getFrequency(rp_channel_t channel, float *frequency) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    *frequency = (float) (ch_properties->counterStep / 65536 * DAC_FREQUENCY / BUFFER_LENGTH);
+    return RP_OK;
 }
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
@@ -136,47 +165,69 @@ int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
 	return RP_OK;
 }
 
+int generate_getTriggerSource(rp_channel_t channel, uint32_t *value) {
+    CHECK_OUTPUT(*value = generate->AtriggerSelector,
+                 *value = generate->BtriggerSelector)
+    return RP_OK;
+}
+
 int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
     CHECK_OUTPUT(generate->AgatedBursts = value,
                  generate->BgatedBursts = value)
     return RP_OK;
 }
 
-int generate_setBurstCount(rp_channel_t channel, int num) {
-    volatile ch_properties_t *ch_properties;
-    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-    ch_properties->cyclesInOneBurst = (uint32_t) num;
+int generate_getGatedBurst(rp_channel_t channel, uint32_t *value) {
+    CHECK_OUTPUT(*value = generate->AgatedBursts,
+                 *value = generate->BgatedBursts)
     return RP_OK;
 }
 
-int generate_setBurstRepetitions(rp_channel_t channel, int repetitions) {
+int generate_setBurstCount(rp_channel_t channel, uint32_t num) {
     volatile ch_properties_t *ch_properties;
     ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-    ch_properties->burstRepetitions = (uint32_t) repetitions;
+    ch_properties->cyclesInOneBurst = num;
     return RP_OK;
 }
 
-int generate_setBurstDelay(rp_channel_t channel, int delay) {
+int generate_getBurstCount(rp_channel_t channel, uint32_t *num) {
     volatile ch_properties_t *ch_properties;
     ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-    ch_properties->delayBetweenBurstRepetitions = (uint32_t) delay;
+    *num = ch_properties->cyclesInOneBurst;
+    return RP_OK;
+}
+
+int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    ch_properties->burstRepetitions = repetitions;
+    return RP_OK;
+}
+
+int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    *repetitions = ch_properties->burstRepetitions;
+    return RP_OK;
+}
+
+int generate_setBurstDelay(rp_channel_t channel, uint32_t delay) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    ch_properties->delayBetweenBurstRepetitions = delay;
+    return RP_OK;
+}
+
+int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay) {
+    volatile ch_properties_t *ch_properties;
+    ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
+    *delay = ch_properties->delayBetweenBurstRepetitions;
     return RP_OK;
 }
 
 int generate_simultaneousTrigger() {
     // simultaneously trigger both channels
     return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
-}
-
-
-int generate_triggerIfInternal(rp_channel_t channel) {
-    if (channel == RP_CH_1 && generate->AtriggerSelector == 1) {
-        generate->AtriggerSelector = 1;
-    }
-    else if (channel == RP_CH_2 && generate->BtriggerSelector == 1) {
-        generate->BtriggerSelector = 1;
-    }
-    return RP_OK;
 }
 
 int generate_Synchronise() {

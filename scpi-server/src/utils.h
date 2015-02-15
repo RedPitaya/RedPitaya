@@ -16,7 +16,6 @@
 #define UTILS_H_
 
 #include <stdbool.h>
-#include "rp.h"
 #include "../../api-mockup/rpbase/src/rp.h"
 #include "acquire.h"
 
@@ -38,9 +37,12 @@ int getRpTriggerSource(const char *sourceStr, rp_acq_trig_src_t *source);
 int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString);
 
 int getRpWaveform(const char *waveformString, rp_waveform_t *waveform);
+int getRpWaveformString(rp_waveform_t waveform, char *waveformString);
 int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource);
+int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string);
 
 int getRpInfinityInteger(const char *string, int32_t *value);
+int getRpInfinityIntegerString(int32_t value, char *string);
 int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit);
 int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format);
 
