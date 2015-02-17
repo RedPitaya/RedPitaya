@@ -104,7 +104,27 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PPRDIR/../code/rtl/axi_wr_fifo.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="1"/>
+        <Attr Name="UsedInImplementation" Val="1"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PPRDIR/../code/rtl/axi_slave.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="1"/>
+        <Attr Name="UsedInImplementation" Val="1"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/rtl/axi_master.v">
       <FileInfo>
         <Attr Name="UsedInSynthesis" Val="1"/>
         <Attr Name="UsedInImplementation" Val="1"/>
@@ -218,6 +238,94 @@
       <FileInfo SFType="PortsDb">
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_hk_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_asg_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/sys_bus_model.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_pid_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/axi_slave_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_analog_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_scope_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_ams_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/axi_master_model.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_daisy_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../code/bench/red_pitaya_dfilt1_tb.v">
+      <FileInfo>
+        <Attr Name="UsedInSynthesis" Val="0"/>
+        <Attr Name="UsedInImplementation" Val="0"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
