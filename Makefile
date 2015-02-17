@@ -1,4 +1,4 @@
-#
+ #
 # $Id: Makefile 1253 2014-02-23 21:09:06Z ales.bardorfer $
 #
 # Red Pitaya OS/Ecosystem main Makefile
@@ -35,6 +35,9 @@ ACQUIRE_DIR=Test/acquire
 CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
+SCPI_SERVER_DIR=scpi-server/
+RPLIB_DIR=api-mockup/rpbase/src
+SDK_DIR=SDK/
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -52,6 +55,9 @@ ACQUIRE=$(BUILD)/bin/acquire
 CALIB=$(BUILD)/bin/calib
 DISCOVERY=$(BUILD)/sbin/discovery
 ECOSYSTEM=$(BUILD)/www/apps/info/info.json
+SCPI_SERVER = $(BUILD)/bin/scpi-server
+RPLIB = $(BUILD)/lib/librp.so
+GDBSERVER  = $(BUILD)/bin/gdbserver
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -64,7 +70,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(GDBSERVER) sdk
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -136,6 +142,24 @@ $(DISCOVERY):
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
+$(SCPI_SERVER):
+	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+
+$(RPLIB):
+	$(MAKE) -C $(RPLIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(RPLIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
+
+#Gdb server for remote debugging
+$(GDBSERVER): #TODO: This is a temporary solution
+	cp Test/gdb-server/gdbserver $(abspath $(BUILD))/bin
+
+sdk:
+	$(MAKE) -C $(SDK_DIR) clean include
+
+sdkPub:
+	$(MAKE) -C $(SDK_DIR) zip
+
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
@@ -149,6 +173,9 @@ clean:
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
+	make -C $(SCPI_SERVER_DIR) clean
+	make -C $(RPLIB_DIR) clean
+	make -C $(SDK_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip

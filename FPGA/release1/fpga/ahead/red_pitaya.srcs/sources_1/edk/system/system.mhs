@@ -85,6 +85,86 @@
  PORT processing_system7_0_SPI0_SCLK_T_pin = processing_system7_0_SPI0_SCLK_T, DIR = O, SIGIS = CLK
  PORT processing_system7_0_SPI0_MISO_T_pin = processing_system7_0_SPI0_MISO_T, DIR = O
  PORT processing_system7_0_SPI0_SCLK_O_pin = processing_system7_0_SPI0_SCLK_O, DIR = O, SIGIS = CLK
+ PORT processing_system7_0_S_AXI_HP0_ARESETN_pin = processing_system7_0_S_AXI_HP0_ARESETN, DIR = O, SIGIS = RST
+ PORT processing_system7_0_S_AXI_HP1_ARESETN_pin = processing_system7_0_S_AXI_HP1_ARESETN, DIR = O, SIGIS = RST
+ PORT processing_system7_0_S_AXI_HP0_ARREADY_pin = processing_system7_0_S_AXI_HP0_ARREADY, DIR = O
+ PORT processing_system7_0_S_AXI_HP0_AWREADY_pin = processing_system7_0_S_AXI_HP0_AWREADY, DIR = O
+ PORT processing_system7_0_S_AXI_HP0_BVALID_pin = processing_system7_0_S_AXI_HP0_BVALID, DIR = O
+ PORT processing_system7_0_S_AXI_HP0_RLAST_pin = processing_system7_0_S_AXI_HP0_RLAST, DIR = O
+ PORT processing_system7_0_S_AXI_HP0_RVALID_pin = processing_system7_0_S_AXI_HP0_RVALID, DIR = O
+ PORT processing_system7_0_S_AXI_HP0_WREADY_pin = processing_system7_0_S_AXI_HP0_WREADY, DIR = O
+ PORT processing_system7_0_S_AXI_HP0_BRESP_pin = processing_system7_0_S_AXI_HP0_BRESP, DIR = O, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP0_RRESP_pin = processing_system7_0_S_AXI_HP0_RRESP, DIR = O, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP0_BID_pin = processing_system7_0_S_AXI_HP0_BID, DIR = O, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP0_RID_pin = processing_system7_0_S_AXI_HP0_RID, DIR = O, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP0_RDATA_pin = processing_system7_0_S_AXI_HP0_RDATA, DIR = O, VEC = [63:0]
+ PORT processing_system7_0_S_AXI_HP0_ACLK_pin = processing_system7_0_S_AXI_HP0_ACLK, DIR = I, SIGIS = CLK
+ PORT processing_system7_0_S_AXI_HP0_ARVALID_pin = processing_system7_0_S_AXI_HP0_ARVALID, DIR = I
+ PORT processing_system7_0_S_AXI_HP0_AWVALID_pin = processing_system7_0_S_AXI_HP0_AWVALID, DIR = I
+ PORT processing_system7_0_S_AXI_HP0_BREADY_pin = processing_system7_0_S_AXI_HP0_BREADY, DIR = I
+ PORT processing_system7_0_S_AXI_HP0_RREADY_pin = processing_system7_0_S_AXI_HP0_RREADY, DIR = I
+ PORT processing_system7_0_S_AXI_HP0_WLAST_pin = processing_system7_0_S_AXI_HP0_WLAST, DIR = I
+ PORT processing_system7_0_S_AXI_HP0_WVALID_pin = processing_system7_0_S_AXI_HP0_WVALID, DIR = I
+ PORT processing_system7_0_S_AXI_HP0_ARBURST_pin = processing_system7_0_S_AXI_HP0_ARBURST, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP0_ARLOCK_pin = processing_system7_0_S_AXI_HP0_ARLOCK, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP0_ARSIZE_pin = processing_system7_0_S_AXI_HP0_ARSIZE, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP0_AWBURST_pin = processing_system7_0_S_AXI_HP0_AWBURST, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP0_AWLOCK_pin = processing_system7_0_S_AXI_HP0_AWLOCK, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP0_AWSIZE_pin = processing_system7_0_S_AXI_HP0_AWSIZE, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP0_ARPROT_pin = processing_system7_0_S_AXI_HP0_ARPROT, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP0_AWPROT_pin = processing_system7_0_S_AXI_HP0_AWPROT, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP0_ARADDR_pin = processing_system7_0_S_AXI_HP0_ARADDR, DIR = I, VEC = [31:0]
+ PORT processing_system7_0_S_AXI_HP0_AWADDR_pin = processing_system7_0_S_AXI_HP0_AWADDR, DIR = I, VEC = [31:0]
+ PORT processing_system7_0_S_AXI_HP0_ARCACHE_pin = processing_system7_0_S_AXI_HP0_ARCACHE, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP0_ARLEN_pin = processing_system7_0_S_AXI_HP0_ARLEN, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP0_ARQOS_pin = processing_system7_0_S_AXI_HP0_ARQOS, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP0_AWCACHE_pin = processing_system7_0_S_AXI_HP0_AWCACHE, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP0_AWLEN_pin = processing_system7_0_S_AXI_HP0_AWLEN, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP0_AWQOS_pin = processing_system7_0_S_AXI_HP0_AWQOS, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP0_ARID_pin = processing_system7_0_S_AXI_HP0_ARID, DIR = I, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP0_AWID_pin = processing_system7_0_S_AXI_HP0_AWID, DIR = I, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP0_WID_pin = processing_system7_0_S_AXI_HP0_WID, DIR = I, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP0_WDATA_pin = processing_system7_0_S_AXI_HP0_WDATA, DIR = I, VEC = [63:0]
+ PORT processing_system7_0_S_AXI_HP0_WSTRB_pin = processing_system7_0_S_AXI_HP0_WSTRB, DIR = I, VEC = [7:0]
+ PORT processing_system7_0_S_AXI_HP1_ARREADY_pin = processing_system7_0_S_AXI_HP1_ARREADY, DIR = O
+ PORT processing_system7_0_S_AXI_HP1_AWREADY_pin = processing_system7_0_S_AXI_HP1_AWREADY, DIR = O
+ PORT processing_system7_0_S_AXI_HP1_BVALID_pin = processing_system7_0_S_AXI_HP1_BVALID, DIR = O
+ PORT processing_system7_0_S_AXI_HP1_RLAST_pin = processing_system7_0_S_AXI_HP1_RLAST, DIR = O
+ PORT processing_system7_0_S_AXI_HP1_RVALID_pin = processing_system7_0_S_AXI_HP1_RVALID, DIR = O
+ PORT processing_system7_0_S_AXI_HP1_WREADY_pin = processing_system7_0_S_AXI_HP1_WREADY, DIR = O
+ PORT processing_system7_0_S_AXI_HP1_BRESP_pin = processing_system7_0_S_AXI_HP1_BRESP, DIR = O, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP1_RRESP_pin = processing_system7_0_S_AXI_HP1_RRESP, DIR = O, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP1_BID_pin = processing_system7_0_S_AXI_HP1_BID, DIR = O, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP1_RID_pin = processing_system7_0_S_AXI_HP1_RID, DIR = O, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP1_RDATA_pin = processing_system7_0_S_AXI_HP1_RDATA, DIR = O, VEC = [63:0]
+ PORT processing_system7_0_S_AXI_HP1_ACLK_pin = processing_system7_0_S_AXI_HP1_ACLK, DIR = I, SIGIS = CLK
+ PORT processing_system7_0_S_AXI_HP1_ARVALID_pin = processing_system7_0_S_AXI_HP1_ARVALID, DIR = I
+ PORT processing_system7_0_S_AXI_HP1_AWVALID_pin = processing_system7_0_S_AXI_HP1_AWVALID, DIR = I
+ PORT processing_system7_0_S_AXI_HP1_BREADY_pin = processing_system7_0_S_AXI_HP1_BREADY, DIR = I
+ PORT processing_system7_0_S_AXI_HP1_RREADY_pin = processing_system7_0_S_AXI_HP1_RREADY, DIR = I
+ PORT processing_system7_0_S_AXI_HP1_WLAST_pin = processing_system7_0_S_AXI_HP1_WLAST, DIR = I
+ PORT processing_system7_0_S_AXI_HP1_WVALID_pin = processing_system7_0_S_AXI_HP1_WVALID, DIR = I
+ PORT processing_system7_0_S_AXI_HP1_ARBURST_pin = processing_system7_0_S_AXI_HP1_ARBURST, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP1_ARLOCK_pin = processing_system7_0_S_AXI_HP1_ARLOCK, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP1_ARSIZE_pin = processing_system7_0_S_AXI_HP1_ARSIZE, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP1_AWBURST_pin = processing_system7_0_S_AXI_HP1_AWBURST, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP1_AWLOCK_pin = processing_system7_0_S_AXI_HP1_AWLOCK, DIR = I, VEC = [1:0]
+ PORT processing_system7_0_S_AXI_HP1_AWSIZE_pin = processing_system7_0_S_AXI_HP1_AWSIZE, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP1_ARPROT_pin = processing_system7_0_S_AXI_HP1_ARPROT, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP1_AWPROT_pin = processing_system7_0_S_AXI_HP1_AWPROT, DIR = I, VEC = [2:0]
+ PORT processing_system7_0_S_AXI_HP1_ARADDR_pin = processing_system7_0_S_AXI_HP1_ARADDR, DIR = I, VEC = [31:0]
+ PORT processing_system7_0_S_AXI_HP1_AWADDR_pin = processing_system7_0_S_AXI_HP1_AWADDR, DIR = I, VEC = [31:0]
+ PORT processing_system7_0_S_AXI_HP1_ARCACHE_pin = processing_system7_0_S_AXI_HP1_ARCACHE, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP1_ARLEN_pin = processing_system7_0_S_AXI_HP1_ARLEN, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP1_ARQOS_pin = processing_system7_0_S_AXI_HP1_ARQOS, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP1_AWCACHE_pin = processing_system7_0_S_AXI_HP1_AWCACHE, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP1_AWLEN_pin = processing_system7_0_S_AXI_HP1_AWLEN, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP1_AWQOS_pin = processing_system7_0_S_AXI_HP1_AWQOS, DIR = I, VEC = [3:0]
+ PORT processing_system7_0_S_AXI_HP1_ARID_pin = processing_system7_0_S_AXI_HP1_ARID, DIR = I, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP1_AWID_pin = processing_system7_0_S_AXI_HP1_AWID, DIR = I, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP1_WID_pin = processing_system7_0_S_AXI_HP1_WID, DIR = I, VEC = [5:0]
+ PORT processing_system7_0_S_AXI_HP1_WDATA_pin = processing_system7_0_S_AXI_HP1_WDATA, DIR = I, VEC = [63:0]
+ PORT processing_system7_0_S_AXI_HP1_WSTRB_pin = processing_system7_0_S_AXI_HP1_WSTRB, DIR = I, VEC = [7:0]
 
 
 BEGIN processing_system7
@@ -148,6 +228,8 @@ BEGIN processing_system7
  PARAMETER C_USE_M_AXI_GP0 = 1
  PARAMETER C_DDR_RAM_BASEADDR = 0x00000000
  PARAMETER C_DDR_RAM_HIGHADDR = 0x1FFFFFFF
+ PARAMETER C_USE_S_AXI_HP0 = 1
+ PARAMETER C_USE_S_AXI_HP1 = 1
  PORT MIO = processing_system7_0_MIO
  PORT PS_SRSTB = processing_system7_0_PS_SRSTB
  PORT PS_CLK = processing_system7_0_PS_CLK
@@ -231,5 +313,85 @@ BEGIN processing_system7
  PORT SPI0_SCLK_T = processing_system7_0_SPI0_SCLK_T
  PORT SPI0_MISO_T = processing_system7_0_SPI0_MISO_T
  PORT SPI0_SCLK_O = processing_system7_0_SPI0_SCLK_O
+ PORT S_AXI_HP0_ARESETN = processing_system7_0_S_AXI_HP0_ARESETN
+ PORT S_AXI_HP1_ARESETN = processing_system7_0_S_AXI_HP1_ARESETN
+ PORT S_AXI_HP0_ARREADY = processing_system7_0_S_AXI_HP0_ARREADY
+ PORT S_AXI_HP0_AWREADY = processing_system7_0_S_AXI_HP0_AWREADY
+ PORT S_AXI_HP0_BVALID = processing_system7_0_S_AXI_HP0_BVALID
+ PORT S_AXI_HP0_RLAST = processing_system7_0_S_AXI_HP0_RLAST
+ PORT S_AXI_HP0_RVALID = processing_system7_0_S_AXI_HP0_RVALID
+ PORT S_AXI_HP0_WREADY = processing_system7_0_S_AXI_HP0_WREADY
+ PORT S_AXI_HP0_BRESP = processing_system7_0_S_AXI_HP0_BRESP
+ PORT S_AXI_HP0_RRESP = processing_system7_0_S_AXI_HP0_RRESP
+ PORT S_AXI_HP0_BID = processing_system7_0_S_AXI_HP0_BID
+ PORT S_AXI_HP0_RID = processing_system7_0_S_AXI_HP0_RID
+ PORT S_AXI_HP0_RDATA = processing_system7_0_S_AXI_HP0_RDATA
+ PORT S_AXI_HP0_ACLK = processing_system7_0_S_AXI_HP0_ACLK
+ PORT S_AXI_HP0_ARVALID = processing_system7_0_S_AXI_HP0_ARVALID
+ PORT S_AXI_HP0_AWVALID = processing_system7_0_S_AXI_HP0_AWVALID
+ PORT S_AXI_HP0_BREADY = processing_system7_0_S_AXI_HP0_BREADY
+ PORT S_AXI_HP0_RREADY = processing_system7_0_S_AXI_HP0_RREADY
+ PORT S_AXI_HP0_WLAST = processing_system7_0_S_AXI_HP0_WLAST
+ PORT S_AXI_HP0_WVALID = processing_system7_0_S_AXI_HP0_WVALID
+ PORT S_AXI_HP0_ARBURST = processing_system7_0_S_AXI_HP0_ARBURST
+ PORT S_AXI_HP0_ARLOCK = processing_system7_0_S_AXI_HP0_ARLOCK
+ PORT S_AXI_HP0_ARSIZE = processing_system7_0_S_AXI_HP0_ARSIZE
+ PORT S_AXI_HP0_AWBURST = processing_system7_0_S_AXI_HP0_AWBURST
+ PORT S_AXI_HP0_AWLOCK = processing_system7_0_S_AXI_HP0_AWLOCK
+ PORT S_AXI_HP0_AWSIZE = processing_system7_0_S_AXI_HP0_AWSIZE
+ PORT S_AXI_HP0_ARPROT = processing_system7_0_S_AXI_HP0_ARPROT
+ PORT S_AXI_HP0_AWPROT = processing_system7_0_S_AXI_HP0_AWPROT
+ PORT S_AXI_HP0_ARADDR = processing_system7_0_S_AXI_HP0_ARADDR
+ PORT S_AXI_HP0_AWADDR = processing_system7_0_S_AXI_HP0_AWADDR
+ PORT S_AXI_HP0_ARCACHE = processing_system7_0_S_AXI_HP0_ARCACHE
+ PORT S_AXI_HP0_ARLEN = processing_system7_0_S_AXI_HP0_ARLEN
+ PORT S_AXI_HP0_ARQOS = processing_system7_0_S_AXI_HP0_ARQOS
+ PORT S_AXI_HP0_AWCACHE = processing_system7_0_S_AXI_HP0_AWCACHE
+ PORT S_AXI_HP0_AWLEN = processing_system7_0_S_AXI_HP0_AWLEN
+ PORT S_AXI_HP0_AWQOS = processing_system7_0_S_AXI_HP0_AWQOS
+ PORT S_AXI_HP0_ARID = processing_system7_0_S_AXI_HP0_ARID
+ PORT S_AXI_HP0_AWID = processing_system7_0_S_AXI_HP0_AWID
+ PORT S_AXI_HP0_WID = processing_system7_0_S_AXI_HP0_WID
+ PORT S_AXI_HP0_WDATA = processing_system7_0_S_AXI_HP0_WDATA
+ PORT S_AXI_HP0_WSTRB = processing_system7_0_S_AXI_HP0_WSTRB
+ PORT S_AXI_HP1_ARREADY = processing_system7_0_S_AXI_HP1_ARREADY
+ PORT S_AXI_HP1_AWREADY = processing_system7_0_S_AXI_HP1_AWREADY
+ PORT S_AXI_HP1_BVALID = processing_system7_0_S_AXI_HP1_BVALID
+ PORT S_AXI_HP1_RLAST = processing_system7_0_S_AXI_HP1_RLAST
+ PORT S_AXI_HP1_RVALID = processing_system7_0_S_AXI_HP1_RVALID
+ PORT S_AXI_HP1_WREADY = processing_system7_0_S_AXI_HP1_WREADY
+ PORT S_AXI_HP1_BRESP = processing_system7_0_S_AXI_HP1_BRESP
+ PORT S_AXI_HP1_RRESP = processing_system7_0_S_AXI_HP1_RRESP
+ PORT S_AXI_HP1_BID = processing_system7_0_S_AXI_HP1_BID
+ PORT S_AXI_HP1_RID = processing_system7_0_S_AXI_HP1_RID
+ PORT S_AXI_HP1_RDATA = processing_system7_0_S_AXI_HP1_RDATA
+ PORT S_AXI_HP1_ACLK = processing_system7_0_S_AXI_HP1_ACLK
+ PORT S_AXI_HP1_ARVALID = processing_system7_0_S_AXI_HP1_ARVALID
+ PORT S_AXI_HP1_AWVALID = processing_system7_0_S_AXI_HP1_AWVALID
+ PORT S_AXI_HP1_BREADY = processing_system7_0_S_AXI_HP1_BREADY
+ PORT S_AXI_HP1_RREADY = processing_system7_0_S_AXI_HP1_RREADY
+ PORT S_AXI_HP1_WLAST = processing_system7_0_S_AXI_HP1_WLAST
+ PORT S_AXI_HP1_WVALID = processing_system7_0_S_AXI_HP1_WVALID
+ PORT S_AXI_HP1_ARBURST = processing_system7_0_S_AXI_HP1_ARBURST
+ PORT S_AXI_HP1_ARLOCK = processing_system7_0_S_AXI_HP1_ARLOCK
+ PORT S_AXI_HP1_ARSIZE = processing_system7_0_S_AXI_HP1_ARSIZE
+ PORT S_AXI_HP1_AWBURST = processing_system7_0_S_AXI_HP1_AWBURST
+ PORT S_AXI_HP1_AWLOCK = processing_system7_0_S_AXI_HP1_AWLOCK
+ PORT S_AXI_HP1_AWSIZE = processing_system7_0_S_AXI_HP1_AWSIZE
+ PORT S_AXI_HP1_ARPROT = processing_system7_0_S_AXI_HP1_ARPROT
+ PORT S_AXI_HP1_AWPROT = processing_system7_0_S_AXI_HP1_AWPROT
+ PORT S_AXI_HP1_ARADDR = processing_system7_0_S_AXI_HP1_ARADDR
+ PORT S_AXI_HP1_AWADDR = processing_system7_0_S_AXI_HP1_AWADDR
+ PORT S_AXI_HP1_ARCACHE = processing_system7_0_S_AXI_HP1_ARCACHE
+ PORT S_AXI_HP1_ARLEN = processing_system7_0_S_AXI_HP1_ARLEN
+ PORT S_AXI_HP1_ARQOS = processing_system7_0_S_AXI_HP1_ARQOS
+ PORT S_AXI_HP1_AWCACHE = processing_system7_0_S_AXI_HP1_AWCACHE
+ PORT S_AXI_HP1_AWLEN = processing_system7_0_S_AXI_HP1_AWLEN
+ PORT S_AXI_HP1_AWQOS = processing_system7_0_S_AXI_HP1_AWQOS
+ PORT S_AXI_HP1_ARID = processing_system7_0_S_AXI_HP1_ARID
+ PORT S_AXI_HP1_AWID = processing_system7_0_S_AXI_HP1_AWID
+ PORT S_AXI_HP1_WID = processing_system7_0_S_AXI_HP1_WID
+ PORT S_AXI_HP1_WDATA = processing_system7_0_S_AXI_HP1_WDATA
+ PORT S_AXI_HP1_WSTRB = processing_system7_0_S_AXI_HP1_WSTRB
 END
 
