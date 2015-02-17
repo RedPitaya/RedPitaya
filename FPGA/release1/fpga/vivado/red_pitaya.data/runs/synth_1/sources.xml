@@ -12,6 +12,18 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PSRCDIR/sources_1/imports/rtl/red_pitaya_acum.sv">
+      <FileInfo>
+        <Attr Name="ImportPath" Val="$PPRDIR/../code/rtl/red_pitaya_acum.sv"/>
+        <Attr Name="ImportTime" Val="1424208956"/>
+        <Attr Name="UsedInSynthesis" Val="1"/>
+        <Attr Name="UsedInImplementation" Val="1"/>
+        <Attr Name="UsedInSimulation" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PSRCDIR/sources_1/bd/system/hdl/system_wrapper.v">
       <FileInfo>
         <Attr Name="UsedInSynthesis" Val="1"/>
@@ -223,11 +235,7 @@
       </FileInfo>
     </File>
     <File Path="$PDATADIR/sources_1/ports.xml">
-      <FileInfo SFType="PortsDb">
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
+      <FileInfo SFType="PortsDb"/>
     </File>
     <File Path="$PPRDIR/../code/bench/red_pitaya_hk_tb.v">
       <FileInfo>
