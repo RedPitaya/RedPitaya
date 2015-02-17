@@ -3,7 +3,9 @@ MODELSIM_BIN=$(HOME)/altera/14.1/modelsim_ase/bin
 PATH_RTL=../rtl
 PATH_TBN=../bench
 
-RTL=$(PATH_RTL)/axi_slave.v \
+RTL=$(PATH_RTL)/axi_master.v \
+    $(PATH_RTL)/axi_slave.v \
+    $(PATH_RTL)/axi_wr_fifo.v \
     $(PATH_RTL)/bus_clk_bridge.v \
     $(PATH_RTL)/red_pitaya_ams.v \
     $(PATH_RTL)/red_pitaya_analog.v \
