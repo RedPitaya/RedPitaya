@@ -15,6 +15,7 @@
 #include <strings.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "utils.h"
 
@@ -371,6 +372,36 @@ int getRpWaveform(const char *waveformString, rp_waveform_t *waveform) {
 	return RP_OK;
 }
 
+
+int getRpWaveformString(rp_waveform_t waveform, char *waveformString) {
+    switch (waveform) {
+        case RP_WAVEFORM_SINE:
+            strcpy(waveformString, "SINE");
+            break;
+        case RP_WAVEFORM_SQUARE:
+            strcpy(waveformString, "SQUARE");
+            break;
+        case RP_WAVEFORM_TRIANGLE:
+            strcpy(waveformString, "TRIANGLE");
+            break;
+        case RP_WAVEFORM_PWM:
+            strcpy(waveformString, "PWM");
+            break;
+        case RP_WAVEFORM_RAMP_DOWN:
+            strcpy(waveformString, "SAWD");
+            break;
+        case RP_WAVEFORM_RAMP_UP:
+            strcpy(waveformString, "SAWU");
+            break;
+        case RP_WAVEFORM_ARBITRARY:
+            strcpy(waveformString, "ARBITRARY");
+            break;
+        default:
+            return RP_EOOR;
+    }
+    return RP_OK;
+}
+
 int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource) {
 	if (strcmp(triggerSourceString, "INT") == 0) {
 		*triggerSource = RP_GEN_TRIG_SRC_INTERNAL;
@@ -390,12 +421,42 @@ int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *trigge
 	return RP_OK;
 }
 
+int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
+    switch (triggerSource) {
+        case RP_GEN_TRIG_SRC_INTERNAL:
+            strcpy(string, "INT");
+            break;
+        case RP_GEN_TRIG_SRC_EXT_PE:
+            strcpy(string, "EXT_PE");
+            break;
+        case RP_GEN_TRIG_SRC_EXT_NE:
+            strcpy(string, "EXT_NE");
+            break;
+        case RP_GEN_TRIG_GATED_BURST:
+            strcpy(string, "GATED");
+            break;
+        default:
+            return RP_EOOR;
+    }
+    return RP_OK;
+}
+
 int getRpInfinityInteger(const char *string, int32_t *value) {
     if (strcmp(string, "INF") == 0) {
         *value = -1;
     }
     else {
         *value = atoi(string);
+    }
+    return RP_OK;
+}
+
+int getRpInfinityIntegerString(int32_t value, char *string) {
+    if (value == -1) {
+        strcpy(string, "INF");
+    }
+    else {
+        sprintf(string, "%d", value);
     }
     return RP_OK;
 }
