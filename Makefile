@@ -121,6 +121,7 @@ $(NGINX): $(URAMDISK)
 
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(GENERATE):
 	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
@@ -154,8 +155,11 @@ $(GDBSERVER): #TODO: This is a temporary solution
 	cp Test/gdb-server/gdbserver $(abspath $(BUILD))/bin
 
 sdk:
-	$(MAKE) -C $(SDK_DIR)
-	
+	$(MAKE) -C $(SDK_DIR) clean include
+
+sdkPub:
+	$(MAKE) -C $(SDK_DIR) zip
+
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 

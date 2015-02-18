@@ -24,8 +24,8 @@ RP_SCPI_LIB_INCLUDE = ../scpi-server/3rdparty/libs/scpi-parser/libscpi/dist/
 GREET_MSG = "\nINSTALLING REDPITAYA SDK ZIP...\n"
 
 all: zip
-	
-zip:
+
+include:
 	@echo $(GREET_MSG)
 	mkdir -p include
 	cp $(RP_LIBRARY_INCLUDE)/rp.h ./include
@@ -37,6 +37,8 @@ zip:
 	$(MAKE) -C ../scpi-server/ $(CC)
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
+	
+zip: include
 	chmod +x ./install.sh
 	chmod +x ./run.sh
 	#cp ../Examples/C/blink_diode.c ./pitaya_example/blink_diode
@@ -45,7 +47,7 @@ zip:
 
 clean:
 	rm -rf include
-	rm -rf *.zip
+	rm -rf ../SDK*.zip
 	
 	
 

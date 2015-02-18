@@ -16,12 +16,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-#include "scpi/scpi.h"
 
 #include "utils.h"
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/units.h"
 
 /**
  * Interface general commands
@@ -172,31 +175,57 @@ static const scpi_command_t scpi_commands[] = {
         /* Generate */
         {.pattern = "OUTPUT1:STATE", .callback = RP_GenChannel1SetState,},
         {.pattern = "OUTPUT2:STATE", .callback = RP_GenChannel2SetState,},
+        {.pattern = "OUTPUT1:STATE?", .callback = RP_GenChannel1GetState,},
+        {.pattern = "OUTPUT2:STATE?", .callback = RP_GenChannel2GetState,},
         {.pattern = "GEN:RST", .callback = RP_GenReset,},
         {.pattern = "SOUR1:FREQ:FIX", .callback = RP_GenChannel1SetFrequency,},
         {.pattern = "SOUR2:FREQ:FIX", .callback = RP_GenChannel2SetFrequency,},
+        {.pattern = "SOUR1:FREQ:FIX?", .callback = RP_GenChannel1GetFrequency,},
+        {.pattern = "SOUR2:FREQ:FIX?", .callback = RP_GenChannel2GetFrequency,},
         {.pattern = "SOUR1:FUNC", .callback = RP_GenChannel1SetWaveForm,},
         {.pattern = "SOUR2:FUNC", .callback = RP_GenChannel2SetWaveForm,},
+        {.pattern = "SOUR1:FUNC?", .callback = RP_GenChannel1GetWaveForm,},
+        {.pattern = "SOUR2:FUNC?", .callback = RP_GenChannel2GetWaveForm,},
         {.pattern = "SOUR1:VOLT", .callback = RP_GenChannel1SetAmplitude,},
         {.pattern = "SOUR2:VOLT", .callback = RP_GenChannel2SetAmplitude,},
+        {.pattern = "SOUR1:VOLT?", .callback = RP_GenChannel1GetAmplitude,},
+        {.pattern = "SOUR2:VOLT?", .callback = RP_GenChannel2GetAmplitude,},
         {.pattern = "SOUR1:VOLT:OFFS", .callback = RP_GenChannel1SetOffset,},
         {.pattern = "SOUR2:VOLT:OFFS", .callback = RP_GenChannel2SetOffset,},
+        {.pattern = "SOUR1:VOLT:OFFS?", .callback = RP_GenChannel1GetOffset,},
+        {.pattern = "SOUR2:VOLT:OFFS?", .callback = RP_GenChannel2GetOffset,},
         {.pattern = "SOUR1:PHAS", .callback = RP_GenChannel1SetPhase,},
         {.pattern = "SOUR2:PHAS", .callback = RP_GenChannel2SetPhase,},
+        {.pattern = "SOUR1:PHAS?", .callback = RP_GenChannel1GetPhase,},
+        {.pattern = "SOUR2:PHAS?", .callback = RP_GenChannel2GetPhase,},
         {.pattern = "SOUR1:DCYC", .callback = RP_GenChannel1SetDutyCycle,},
         {.pattern = "SOUR2:DCYC", .callback = RP_GenChannel2SetDutyCycle,},
+        {.pattern = "SOUR1:DCYC?", .callback = RP_GenChannel1GetDutyCycle,},
+        {.pattern = "SOUR2:DCYC?", .callback = RP_GenChannel2GetDutyCycle,},
         {.pattern = "SOUR1:TRAC:DATA:DATA", .callback = RP_GenChannel1SetArbitraryWaveForm,},
         {.pattern = "SOUR2:TRAC:DATA:DATA", .callback = RP_GenChannel2SetArbitraryWaveForm,},
+        {.pattern = "SOUR1:TRAC:DATA:DATA?", .callback = RP_GenChannel1GetArbitraryWaveForm,},
+        {.pattern = "SOUR2:TRAC:DATA:DATA?", .callback = RP_GenChannel2GetArbitraryWaveForm,},
         {.pattern = "SOUR1:BURS:STAT", .callback = RP_GenChannel1SetGenerateMode,},
         {.pattern = "SOUR2:BURS:STAT", .callback = RP_GenChannel2SetGenerateMode,},
+        {.pattern = "SOUR1:BURS:STAT?", .callback = RP_GenChannel1GetGenerateMode,},
+        {.pattern = "SOUR2:BURS:STAT?", .callback = RP_GenChannel2GetGenerateMode,},
         {.pattern = "SOUR1:BURS:NCYC", .callback = RP_GenChannel1SetBurstCount,},
         {.pattern = "SOUR2:BURS:NCYC", .callback = RP_GenChannel2SetBurstCount,},
+        {.pattern = "SOUR1:BURS:NCYC?", .callback = RP_GenChannel1GetBurstCount,},
+        {.pattern = "SOUR2:BURS:NCYC?", .callback = RP_GenChannel2GetBurstCount,},
         {.pattern = "SOUR1:BURS:INT:PER", .callback = RP_GenChannel1SetBurstPeriod,},
         {.pattern = "SOUR2:BURS:INT:PER", .callback = RP_GenChannel2SetBurstPeriod,},
+        {.pattern = "SOUR1:BURS:INT:PER?", .callback = RP_GenChannel1GetBurstPeriod,},
+        {.pattern = "SOUR2:BURS:INT:PER?", .callback = RP_GenChannel2GetBurstPeriod,},
         {.pattern = "SOUR1:BURS:NOR", .callback = RP_GenChannel1SetBurstRepetitions,},
         {.pattern = "SOUR2:BURS:NOR", .callback = RP_GenChannel2SetBurstRepetitions,},
+        {.pattern = "SOUR1:BURS:NOR?", .callback = RP_GenChannel1GetBurstRepetitions,},
+        {.pattern = "SOUR2:BURS:NOR?", .callback = RP_GenChannel2GetBurstRepetitions,},
         {.pattern = "SOUR1:TRIG:SOUR", .callback = RP_GenChannel1SetTriggerSource,},
         {.pattern = "SOUR2:TRIG:SOUR", .callback = RP_GenChannel2SetTriggerSource,},
+        {.pattern = "SOUR1:TRIG:SOUR?", .callback = RP_GenChannel1GetTriggerSource,},
+        {.pattern = "SOUR2:TRIG:SOUR?", .callback = RP_GenChannel2GetTriggerSource,},
         {.pattern = "SOUR1:TRIG:IMM", .callback = RP_GenChannel1SetTrigger,},
         {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2SetTrigger,},
         {.pattern = "TRIG:IMM", .callback = RP_GenChannel3SetTrigger,},

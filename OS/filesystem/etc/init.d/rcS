@@ -7,12 +7,9 @@
 # echo "nameserver <DNS_IP>" > /tmp/resolv.conf
 
 #TODO: This is a temporay solutio, fix to include librp in /lib dir on system boot.
-
 rw
-
 #Copy scpi lib
 cp /opt/lib/* /lib
-
 ro
 
 echo "Feel free to add custom initialization commands here."
