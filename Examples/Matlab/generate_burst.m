@@ -20,7 +20,7 @@ tcpipObj.Terminator = 'CR/LF';
 
 fprintf(tcpipObj,'GEN:RST')                       % Reset to default settings
 
-fprintf(tcpipObj,'SOUR1:FUNC SINE');       % Set function of output signal     
+fprintf(tcpipObj,'SOUR1:FUNC SINE');       % Set function of output signal
 fprintf(tcpipObj,'SOUR1:VOLT 1');          % Set amplitude of output signal
 
 
@@ -29,8 +29,8 @@ fprintf(tcpipObj,'SOUR1:FREQ:FIX 5');             % Set a slow frequency of outp
 fprintf(tcpipObj,'SOUR1:BURS:NCYC 3');            % Set number of generated signals in one burst
 fprintf(tcpipObj,'SOUR1:BURS:NOR 5');             % Set number of repeated bursts
 fprintf(tcpipObj,'SOUR1:BURS:INT:PER 1000000');   % Set time of burst period in microseconds = 6 * 1/Frequency * 1000000
-                                                  
-fprintf(tcpipObj,'OUTPUT1:STATE ON'); 
+
+fprintf(tcpipObj,'OUTPUT1:STATE ON');
 
 fclose(tcpipObj);
 
