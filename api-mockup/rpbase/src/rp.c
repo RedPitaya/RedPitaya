@@ -28,6 +28,7 @@
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
+#include "i2c.h"
 
 static char version[50];
 
@@ -43,6 +44,7 @@ int rp_Init()
     ECHECK(health_Init());
     ECHECK(generate_Init());
     ECHECK(osc_Init());
+    ECHECK(i2c_Init());
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
@@ -59,6 +61,7 @@ int rp_Release()
     ECHECK(ams_Release());
     ECHECK(hk_Release());
     ECHECK(calib_Release());
+    ECHECK(i2c_Release());
 
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
@@ -123,6 +126,16 @@ const char* rp_GetError(int errorCode) {
             return "Unsupported Feature";
         case RP_ENN:
             return "Data not normalized";
+        case RP_EFOB:
+            return "Failed to open bus";
+        case RP_EFCB:
+            return "Failed to close bus";
+        case RP_EABA:
+            return "Failed to acquire bus access";
+        case RP_EFRB:
+            return "Failed to read from the bus";
+        case RP_EFWB:
+            return "Failed to write to the bus";
         default:
             return "Unknown error";
     }
@@ -400,54 +413,118 @@ int rp_GenOutEnable(rp_channel_t channel) {
     return gen_Enable(channel);
 }
 
+int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
+    return gen_IsEnable(channel, value);
+}
+
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
     return gen_setAmplitude(channel, amplitude);
 }
 
+int rp_GenGetAmp(rp_channel_t channel, float *amplitude) {
+    return gen_getAmplitude(channel, amplitude);
+}
+
 int rp_GenOffset(rp_channel_t channel, float offset) {
-    return gen_Offset(channel, offset);
+    return gen_setOffset(channel, offset);
+}
+
+int rp_GenGetOffset(rp_channel_t channel, float *offset) {
+    return gen_getOffset(channel, offset);
 }
 
 int rp_GenFreq(rp_channel_t channel, float frequency) {
-    return gen_Frequency(channel, frequency);
+    return gen_setFrequency(channel, frequency);
+}
+
+int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
+    return gen_getFrequency(channel, frequency);
 }
 
 int rp_GenPhase(rp_channel_t channel, float phase) {
-    return gen_Phase(channel, phase);
+    return gen_setPhase(channel, phase);
+}
+
+int rp_GenGetPhase(rp_channel_t channel, float *phase) {
+    return gen_getPhase(channel, phase);
 }
 
 int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
-    return gen_Waveform(channel, type);
+    return gen_setWaveform(channel, type);
+}
+
+int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type) {
+    return gen_getWaveform(channel, type);
 }
 
 int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
-    return gen_ArbWaveform(channel, waveform, length);
+    return gen_setArbWaveform(channel, waveform, length);
+}
+
+int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length) {
+    return gen_getArbWaveform(channel, waveform, length);
 }
 
 int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
-    return gen_DutyCycle(channel, ratio);
+    return gen_setDutyCycle(channel, ratio);
+}
+
+int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
+    return gen_getDutyCycle(channel, ratio);
 }
 
 int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
-    return gen_GenMode(channel, mode);
+    return gen_setGenMode(channel, mode);
+}
+
+int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode) {
+    return gen_getGenMode(channel, mode);
 }
 
 int rp_GenBurstCount(rp_channel_t channel, int num) {
-    return gen_BurstCount(channel, num);
+    return gen_setBurstCount(channel, num);
+}
+
+int rp_GenGetBurstCount(rp_channel_t channel, int *num) {
+    return gen_getBurstCount(channel, num);
 }
 
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
-    return gen_BurstRepetitions(channel, repetitions);
+    return gen_setBurstRepetitions(channel, repetitions);
+}
+
+int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions) {
+    return gen_getBurstRepetitions(channel, repetitions);
 }
 
 int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
-    return gen_BurstPeriod(channel, period);
+    return gen_setBurstPeriod(channel, period);
+}
+
+int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period) {
+    return gen_getBurstPeriod(channel, period);
 }
 
 int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
-    return gen_TriggerSource(channel, src);
+    return gen_setTriggerSource(channel, src);
+}
+
+int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
+    return gen_getTriggerSource(channel, src);
 }
 
 int rp_GenTrigger(int mask) {
     return gen_Trigger(mask);
+}
+
+/**
+* I2C methods
+*/
+
+int rp_I2cRead(int addr, char *data, int length) {
+    return i2c_read(addr, data, length);
+}
+
+int rp_I2cWrite(int addr, char *data, int length) {
+    return i2c_write(addr, data, length);
 }
