@@ -202,10 +202,8 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/rtl/red_pitaya_acum.sv">
+    <File Path="$PPRDIR/../code/rtl/red_pitaya_acum.sv">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../code/rtl/red_pitaya_acum.sv"/>
-        <Attr Name="ImportTime" Val="1423950193"/>
         <Attr Name="UsedInSynthesis" Val="1"/>
         <Attr Name="UsedInImplementation" Val="1"/>
         <Attr Name="UsedInSimulation" Val="1"/>
