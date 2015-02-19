@@ -469,12 +469,12 @@ end
 
 %Red Pitaya
 
-handles.asgdata.frequencyMAX = 62e7;
+handles.asgdata.frequencyMAX = 62.5e6;
 handles.asgdata.frequencyMIN = 0;
 handles.IP = '192.168.178.66';
 handles.port = 5000;
 handles.asgdata.connectionstate = 'offline';
-handles.asgdata.connectmessage = 'Please to the instrument first. Instructions for instaling and runing SCPI server on Red Pitaya can be found on www.redpitaya.com';
+handles.asgdata.connectmessage = 'Please connect to the instrument first. If you are experiencing difficulties search for instructions or support at www.redpitaya.com';
 
 %ch1
 handles.asgdata.enablech1 = 'OFF';
@@ -543,14 +543,23 @@ end
 
 
 frequency = handles.asgdata.frequencych1 * handles.asgdata.fr_prefixch1;
-frequencystr = num2str(frequency);
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
-invoke(groupObj, 'frequency', frequencystr);
 
+if (frequency > handles.asgdata.frequencyMAX)
+    errordlg('Frequnecy excedes maximum value!');
+    
+elseif(frequency < handles.asgdata.frequencyMIN)
+    errordlg('Frequnecy excedes minimum value!');
+end
+    
+    frequencystr = num2str(frequency);
+    deviceObj = instrfind('Type', 'fcngen');
+    groupObj = get(deviceObj, 'Arbitrarywaveformch1');
+    groupObj = groupObj(1);
+    invoke(groupObj, 'frequency', frequencystr);
+    
+    
+    guidata(hObject,handles);
 
-guidata(hObject,handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -580,13 +589,13 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
     
-frequency = (str2double(get(hObject, 'String')));
+frequencyinput = (str2double(get(hObject, 'String')));
 
-if isnan(frequency)
+if isnan(frequencyinput)
     set(hObject, 'String', 1000);
     errordlg('Input must be a number','Error');
 end
-frequency = frequency * handles.asgdata.fr_prefixch1;
+frequency = frequencyinput * handles.asgdata.fr_prefixch1;
 if (frequency > handles.asgdata.frequencyMAX)
     errordlg('Frequnecy excedes maximum value!');
     
@@ -602,7 +611,7 @@ groupObj = get(deviceObj, 'Arbitrarywaveformch1');
 groupObj = groupObj(1);
 invoke(groupObj, 'frequency', frequencystr);
 
-handles.asgdata.frequencych1 = frequency;
+handles.asgdata.frequencych1 = frequencyinput;
 guidata(hObject,handles);
 end
 
@@ -1447,17 +1456,23 @@ for childtag = 1:length(children)
     end
 end
 data=[];
-data= dlmread(file);
-%data = csvread(file);
-datastr = sprintf('%0.6f,',data);
 
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Arbitrarywaveformch1'); %144000 characters
-groupObj = groupObj(1);
-invoke(groupObj, 'customForm', '0.000063,0.000125,0.000188,0.000063,0.000125,0.000188');
+if (exist(file)==2)
+    data= dlmread(file);
+    %data = csvread(file);
+    datastr = sprintf('%0.6f,',data);
+    
+    deviceObj = instrfind('Type', 'fcngen');
+    groupObj = get(deviceObj, 'Arbitrarywaveformch1'); %144000 characters
+    groupObj = groupObj(1);
+    invoke(groupObj, 'customForm', '0.000063,0.000125,0.000188,0.000063,0.000125,0.000188');
+    
+    handle.asgdata.arbitrarydatach1 = data;
+    guidata(hObject,handles);
+else
+    errordlg('Please provide existing file!');
+end
 
-handle.asgdata.arbitrarydatach1 = data;
-guidata(hObject,handles);
 
 end
 % --- Executes on button press in Send.
@@ -1683,13 +1698,13 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-frequency = (str2double(get(hObject, 'String')));
+frequencyinput = (str2double(get(hObject, 'String')));
 
-if isnan(frequency)
+if isnan(frequencyinput)
     set(hObject, 'String', 1000);
     errordlg('Input must be a number','Error');
 end
-frequency = frequency * handles.asgdata.fr_prefixch2;
+frequency = frequencyinput * handles.asgdata.fr_prefixch2;
 if (frequency > handles.asgdata.frequencyMAX)
     errordlg('Value must be lower than 0!');
     
@@ -1703,7 +1718,7 @@ groupObj = get(deviceObj, 'Arbitrarywaveformch2');
 groupObj = groupObj(1);
 invoke(groupObj, 'frequency', frequencystr);
 
-handles.asgdata.frequencych2 = frequency;
+handles.asgdata.frequencych2 = frequencyinput;
 guidata(hObject,handles);
 
 end
@@ -1745,6 +1760,12 @@ end
 
 
 frequency = handles.asgdata.frequencych2 * handles.asgdata.fr_prefixch2;
+if (frequency > handles.asgdata.frequencyMAX)
+    errordlg('Frequnecy excedes maximum value!');
+    
+elseif(frequency < handles.asgdata.frequencyMIN)
+    errordlg('Frequnecy excedes minimum value!');
+end
 frequencystr = num2str(frequency);
 deviceObj = instrfind('Type', 'fcngen');
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
@@ -1996,15 +2017,19 @@ for childtag = 1:length(children)
     end
 end
 data=[];
-data= dlmread(file);
-datastr = sprintf('%0.5f,',data);
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Arbitrarywaveformch2'); %144000 characters
-groupObj = groupObj(1);
-invoke(groupObj, 'CustomForm', datastr);
-
-handle.asgdata.arbitrarydatach2 = data;
-guidata(hObject,handles);
+if (exist(file)==2)
+    data= dlmread(file);
+    datastr = sprintf('%0.5f,',data);
+    deviceObj = instrfind('Type', 'fcngen');
+    groupObj = get(deviceObj, 'Arbitrarywaveformch2'); %144000 characters
+    groupObj = groupObj(1);
+    invoke(groupObj, 'CustomForm', datastr);
+    
+    handle.asgdata.arbitrarydatach2 = data;
+    guidata(hObject,handles);
+else
+    errordlg('Please provide existing file!');
+end
 end
 % --- Executes on button press in SINE_togg_ch2.
 function SINE_togg_ch2_Callback(hObject, eventdata, handles)
