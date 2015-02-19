@@ -24,19 +24,6 @@ RP_SCPI_LIB_INCLUDE = ../scpi-server/3rdparty/libs/scpi-parser/libscpi/dist/
 GREET_MSG = "\nINSTALLING REDPITAYA SDK ZIP...\n"
 
 all: zip
-
-include:
-	@echo $(GREET_MSG)
-	mkdir -p include
-	cp $(RP_LIBRARY_INCLUDE)/rp.h ./include
-	#Make rplib, if we are making SDK without the main makefile
-	$(MAKE) -C $(RP_LIBRARY_INCLUDE)
-	cp $(RP_LIBRARY_INCLUDE)/librp.so ./include
-	#Make scpi server, if we are making SDK without the main makefile
-	$(MAKE) -C ../scpi-server clean
-	$(MAKE) -C ../scpi-server/
-	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
-	rm ./include/libscpi.a
 	
 zip: include
 	chmod +x ./install.sh
