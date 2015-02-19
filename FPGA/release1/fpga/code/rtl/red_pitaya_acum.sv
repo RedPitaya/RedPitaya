@@ -156,7 +156,8 @@ if (mem_wen)  mem [mem_wad] <= mem_wdt;
 
 // read access
 always_ff @ (posedge clk)
-if (mem_ren)  mem_rdt <= mem [mem_rad];
+mem_rdt <= mem [mem_rad];
+//if (mem_ren)  mem_rdt <= mem [mem_rad];
 
 // read enable mux between stream and read bus
 assign mem_ren = ctl_run ? mem_vld : bus_ren;

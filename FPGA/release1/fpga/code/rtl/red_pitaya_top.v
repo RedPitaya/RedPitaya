@@ -185,6 +185,32 @@ wire  [ 32-1: 0] ps_sys_rdata       ;
 wire             ps_sys_err         ;
 wire             ps_sys_ack         ;
 
+// AXI0 master
+wire             axi0_clk           ;
+wire             axi0_rstn          ;
+wire  [ 32-1: 0] axi0_waddr         ;
+wire  [ 64-1: 0] axi0_wdata         ;
+wire  [  8-1: 0] axi0_wsel          ;
+wire             axi0_wvalid        ;
+wire  [  4-1: 0] axi0_wlen          ;
+wire             axi0_wfixed        ;
+wire             axi0_werr          ;
+wire             axi0_wrdy          ;
+wire             axi0_rstn_ps       ;
+
+// AXI1 master
+wire             axi1_clk           ;
+wire             axi1_rstn          ;
+wire  [ 32-1: 0] axi1_waddr         ;
+wire  [ 64-1: 0] axi1_wdata         ;
+wire  [  8-1: 0] axi1_wsel          ;
+wire             axi1_wvalid        ;
+wire  [  4-1: 0] axi1_wlen          ;
+wire             axi1_wfixed        ;
+wire             axi1_werr          ;
+wire             axi1_wrdy          ;
+wire             axi1_rstn_ps       ;
+
   
 red_pitaya_ps i_ps
 (
@@ -262,8 +288,33 @@ red_pitaya_ps i_ps
   .spi_ss_i        (  1'b1               ),  // slave selected
   .spi_sclk_i      (  1'b0               ),  // serial clock
   .spi_mosi_i      (  1'b0               ),  // master out slave in
-  .spi_miso_o      (                     )   // master in slave out
+  .spi_miso_o      (                     ),  // master in slave out
 
+   // AXI0 master
+  .axi0_clk_i      (  axi0_clk           ),  // global clock
+  .axi0_rstn_i     (  axi0_rstn          ),  // global reset
+  .axi0_waddr_i    (  axi0_waddr         ),  // system write address
+  .axi0_wdata_i    (  axi0_wdata         ),  // system write data
+  .axi0_wsel_i     (  axi0_wsel          ),  // system write byte select
+  .axi0_wvalid_i   (  axi0_wvalid        ),  // system write data valid
+  .axi0_wlen_i     (  axi0_wlen          ),  // system write burst length
+  .axi0_wfixed_i   (  axi0_wfixed        ),  // system write burst type (fixed / incremental)
+  .axi0_werr_o     (  axi0_werr          ),  // system write error
+  .axi0_wrdy_o     (  axi0_wrdy          ),  // system write ready
+  .axi0_rstn_o     (  axi0_rstn_ps       ),  // reset from PS
+
+   // AXI1 master
+  .axi1_clk_i      (  axi1_clk           ),  // global clock
+  .axi1_rstn_i     (  axi1_rstn          ),  // global reset
+  .axi1_waddr_i    (  axi1_waddr         ),  // system write address
+  .axi1_wdata_i    (  axi1_wdata         ),  // system write data
+  .axi1_wsel_i     (  axi1_wsel          ),  // system write byte select
+  .axi1_wvalid_i   (  axi1_wvalid        ),  // system write data valid
+  .axi1_wlen_i     (  axi1_wlen          ),  // system write burst length
+  .axi1_wfixed_i   (  axi1_wfixed        ),  // system write burst type (fixed / incremental)
+  .axi1_werr_o     (  axi1_werr          ),  // system write error
+  .axi1_wrdy_o     (  axi1_wrdy          ),  // system write ready
+  .axi1_rstn_o     (  axi1_rstn_ps       )   // reset from PS
 );
 
 
@@ -484,6 +535,32 @@ red_pitaya_scope i_scope
   .adc_rstn_i      (  adc_rstn                   ),  // reset - active low
   .trig_ext_i      (  exp_p_in[0]                ),  // external trigger
   .trig_asg_i      (  trig_asg_out               ),  // ASG trigger
+
+  // AXI0 master
+  .axi0_clk_o      (  axi0_clk                   ),  // global clock
+  .axi0_rstn_o     (  axi0_rstn                  ),  // global reset
+  .axi0_waddr_o    (  axi0_waddr                 ),  // system write address
+  .axi0_wdata_o    (  axi0_wdata                 ),  // system write data
+  .axi0_wsel_o     (  axi0_wsel                  ),  // system write byte select
+  .axi0_wvalid_o   (  axi0_wvalid                ),  // system write data valid
+  .axi0_wlen_o     (  axi0_wlen                  ),  // system write burst length
+  .axi0_wfixed_o   (  axi0_wfixed                ),  // system write burst type (fixed / incremental)
+  .axi0_werr_i     (  axi0_werr                  ),  // system write error
+  .axi0_wrdy_i     (  axi0_wrdy                  ),  // system write ready
+  .axi0_rstn_i     (  axi0_rstn_ps               ),  // reset from PS
+
+  // AXI1 master
+  .axi1_clk_o      (  axi1_clk                   ),  // global clock
+  .axi1_rstn_o     (  axi1_rstn                  ),  // global reset
+  .axi1_waddr_o    (  axi1_waddr                 ),  // system write address
+  .axi1_wdata_o    (  axi1_wdata                 ),  // system write data
+  .axi1_wsel_o     (  axi1_wsel                  ),  // system write byte select
+  .axi1_wvalid_o   (  axi1_wvalid                ),  // system write data valid
+  .axi1_wlen_o     (  axi1_wlen                  ),  // system write burst length
+  .axi1_wfixed_o   (  axi1_wfixed                ),  // system write burst type (fixed / incremental)
+  .axi1_werr_i     (  axi1_werr                  ),  // system write error
+  .axi1_wrdy_i     (  axi1_wrdy                  ),  // system write ready
+  .axi1_rstn_i     (  axi1_rstn_ps               ),  // reset from PS
 
    // System bus
   .sys_clk_i       (  sys_clk                    ),  // clock
