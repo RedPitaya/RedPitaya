@@ -222,7 +222,7 @@ reg    [ 20-1: 0] set_deb_len; // debouncing length (glitch free time after a po
 reg               set_acu_ena; // accumulation enable
 reg    [ 32-1: 0] set_acu_cnt; // accumulation counter length
 wire   [ 32-1: 0] set_sts_cnt; // accumulation counter current status
-reg    [  5-1: 0] set_acu_shf; // accumulation output shift
+reg    [  4-1: 0] set_acu_shf; // accumulation output shift
 reg    [ 14-1: 0] set_acu_len; // accumulation sequence length
 
 // Write
@@ -837,7 +837,7 @@ if (adc_rstn_i == 1'b0) begin
    set_deb_len   <=  20'd62500  ;
    set_acu_ena   <=   1'd0      ;
    set_acu_cnt   <=  32'd0      ;
-   set_acu_shf   <=   5'd0      ;
+   set_acu_shf   <=   4'd0      ;
 
    set_a_axi_en  <=   1'b0      ;
    set_b_axi_en  <=   1'b0      ;
@@ -863,7 +863,7 @@ end else begin
       if (addr[19:0]==20'h90)   set_deb_len <= wdata[20-1:0] ;
       if (addr[19:0]==20'h94)   set_acu_ena <= wdata[     0] ;
       if (addr[19:0]==20'h98)   set_acu_cnt <= wdata[32-1:0] ;
-      if (addr[19:0]==20'h9c)   set_acu_shf <= wdata[ 5-1:0] ;
+      if (addr[19:0]==20'h9c)   set_acu_shf <= wdata[ 4-1:0] ;
       if (addr[19:0]==20'ha0)   set_acu_len <= wdata[14-1:0] ;
 
       if (addr[19:0]==20'h50)   set_a_axi_start <= wdata[32-1:0] ;
@@ -910,7 +910,7 @@ always @(*) begin
      20'h00094 : begin ack <= 1'b1;          rdata <= {{32- 2{1'b0}}, acu_ctl_run,
                                                                       set_acu_ena}        ; end
      20'h00098 : begin ack <= 1'b1;          rdata <= {               set_sts_cnt}        ; end
-     20'h0009c : begin ack <= 1'b1;          rdata <= {{32- 5{1'b0}}, set_acu_shf}        ; end
+     20'h0009c : begin ack <= 1'b1;          rdata <= {{32- 4{1'b0}}, set_acu_shf}        ; end
      20'h000a0 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_acu_len}        ; end
 
      20'h00050 : begin ack <= 1'b1;          rdata <=                 set_a_axi_start     ; end
