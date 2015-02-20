@@ -583,6 +583,7 @@ red_pitaya_acum acum_a (
   // input data stream
   .sti_tlast  (acu_len_end),
   .sti_tdata  (adc_a_dat),
+//.sti_tdata  (adc_a_i),  // TODO remove debug code
   .sti_tvalid (acu_valid),
   .sti_tready (),
   // output data stream
@@ -598,7 +599,7 @@ red_pitaya_acum acum_a (
 
 assign acu_a_mem_ren = ren & (addr[17:16] == 2'h3);
 assign acu_a_mem_adr =        addr[RSZ+1:2];
-assign acu_a_mem_rdt = acu_a_mem_tmp << set_acu_shf;
+assign acu_a_mem_rdt = acu_a_mem_tmp >>> set_acu_shf;
 
 red_pitaya_acum acum_b (
   // system signals
@@ -627,9 +628,9 @@ red_pitaya_acum acum_b (
   .bus_rdt    (acu_b_mem_tmp)
 );
 
-assign acu_b_mem_ren = ren & (addr[17:16] == 2'h3);
+assign acu_b_mem_ren = ren & (addr[17:16] == 2'h4);
 assign acu_b_mem_adr =        addr[RSZ+1:2];
-assign acu_b_mem_rdt = acu_b_mem_tmp << set_acu_shf;
+assign acu_b_mem_rdt = acu_b_mem_tmp >>> set_acu_shf;
 
 //---------------------------------------------------------------------------------
 //  Trigger source selector
