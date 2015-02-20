@@ -101,11 +101,12 @@ logic [ 32-1: 0] sys_rdata;
 logic            sys_err  ;
 logic            sys_ack  ;
 
-logic [ 32-1: 0] rdata;
-logic [ 32-1: 0] rdata_blk [];
-bit   [ 32-1: 0] rdata_ref [];
-int unsigned     rdata_trg [$];
-int unsigned     blk_size;
+logic        [ 32-1: 0] rdata;
+logic signed [ 32-1: 0] rdata_blk [];
+bit   signed [ 32-1: 0] rdata_ref [];
+int unsigned            rdata_trg [$];
+int unsigned            blk_size;
+int unsigned            shift;
 
 // system clock & reset
 initial begin
@@ -170,12 +171,12 @@ initial begin
    trig_ext = 1'b0;
 
    // accumulator
-   bus.bus_write(32'h04, 32'h6    );  // configure trigger mode (external rising edge)
-   bus.bus_write(32'h98, 32'd8    );  // accumulate 8 triggers
-   bus.bus_write(32'ha0, blk_size );  // block length
-   bus.bus_write(32'h9c, 32'd3    );  // shift accumulator output by 3 bit to get the result
-   bus.bus_write(32'h94, 32'd1    );  // enable accumulator
-   bus.bus_write(32'h94, 32'd3    );  // run accumulation
+   bus.bus_write(32'h04, 32'h6     );  // configure trigger mode (external rising edge)
+   bus.bus_write(32'h98, 32'd8     );  // accumulate 8 triggers
+   bus.bus_write(32'ha0, blk_size-1);  // block length
+   bus.bus_write(32'h9c, shift     );  // shift accumulator output by 3 bit to get the result
+   bus.bus_write(32'h94, 32'd1     );  // enable accumulator
+   bus.bus_write(32'h94, 32'd3     );  // run accumulation
 
    fork
      // provide external trigger
@@ -215,8 +216,14 @@ initial begin
        rdata_ref = new [blk_size];
        for (int unsigned i=0; i<rdata_trg.size(); i++) begin
          for (int unsigned j=0; j<blk_size; j++) begin
-           rdata_ref[j] = (i ? rdata_ref[j] : 0) + saw_a(rdata_trg[i]+j);
+           rdata_ref[j] = (i ? $signed(rdata_ref[j]) : 'sd0) + $signed(saw_a(rdata_trg[i]+j));
+           $write (":%6d>%6d ", $signed(saw_a(rdata_trg[i]+j)), $signed(rdata_ref[j]));
          end
+         $write ("\n");
+       end
+       // readout shift for reference
+       for (int unsigned j=0; j<blk_size; j++) begin
+         rdata_ref[j] = $signed(rdata_ref[j]) >>> shift;
        end
        // check
        $display ("trigger positions: %p", rdata_trg);
