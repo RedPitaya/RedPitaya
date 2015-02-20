@@ -103,6 +103,8 @@ logic            sys_ack  ;
 
 logic [ 32-1: 0] rdata;
 logic [ 32-1: 0] rdata_blk [];
+bit   [ 32-1: 0] rdata_ref [];
+int unsigned     rdata_trg [$];
 int unsigned     blk_size;
 
 // system clock & reset
@@ -201,12 +203,25 @@ initial begin
      end
      // pool accumulation run status
      begin: acu_run
+       // pooling loop
        do begin
          bus.bus_read(32'h94, rdata);  // read value from memory
          repeat(20) @(posedge sys_clk);
        end while (rdata & 2);
        repeat(20) @(posedge sys_clk);
+       // readout
        bus_read_blk (32'h30000, blk_size);
+       // build reference:
+       rdata_ref = new [blk_size];
+       for (int unsigned i=0; i<rdata_trg.size(); i++) begin
+         for (int unsigned j=0; j<blk_size; j++) begin
+           rdata_ref[j] = (i ? rdata_ref[j] : 0) + saw_a(rdata_trg[i]+j);
+         end
+       end
+       // check
+       $display ("trigger positions: %p", rdata_trg);
+       $display ("data reference: %p", rdata_ref);
+       $display ("data read     : %p", rdata_blk);
      end
    join
 
@@ -224,6 +239,12 @@ initial begin
 
    repeat(100) @(posedge sys_clk);
    $finish ();
+end
+
+// trigger log
+always_ff @ (posedge adc_clk)
+if (scope.acu_ctl_run & scope.adc_trig & ~(|scope.acu_len_cnt)) begin
+  rdata_trg.push_back(adc_cyc);
 end
 
 ////////////////////////////////////////////////////////////////////////////////
