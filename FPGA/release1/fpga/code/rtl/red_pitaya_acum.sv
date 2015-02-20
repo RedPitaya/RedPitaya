@@ -87,7 +87,13 @@ end
 
 assign sts_cnt = acu_cnt;
 assign acu_end = (acu_cnt == cfg_cnt);
-assign acu_beg = (acu_cnt == 0);
+
+always_ff @ (posedge clk) //, posedge rst)
+if (rst)    acu_beg <= 1'b0;
+else begin
+  if (clr)  acu_beg <= 1'b0;
+  else      acu_beg <= (acu_cnt == 0);
+end
 
 // input data/last delayed
 always_ff @ (posedge clk)
