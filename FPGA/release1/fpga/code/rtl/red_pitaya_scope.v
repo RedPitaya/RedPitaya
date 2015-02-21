@@ -541,12 +541,13 @@ reg  [RSZ-1:0] acu_len_cnt;
 wire           acu_len_end;
 wire           acu_valid;
 
+reg            acu_rd   ;
 reg            acu_rd_dv;
 
 wire           acu_a_mem_ren, acu_b_mem_ren;
 wire [RSZ-1:0] acu_a_mem_adr, acu_b_mem_adr;
 wire  [46-1:0] acu_a_mem_tmp, acu_b_mem_tmp; // 14+32 = 46
-wire  [32-1:0] acu_a_mem_rdt, acu_b_mem_rdt;
+reg   [32-1:0] acu_a_mem_rdt, acu_b_mem_rdt;
 
 // run control signal is triggered by a write into the arm register
 always @(posedge adc_clk_i)
@@ -566,8 +567,13 @@ assign acu_len_end = acu_len_cnt == set_acu_len;
 
 // memory read data valid
 always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0)  acu_rd_dv <= 1'b0;
-else                     acu_rd_dv <= acu_a_mem_ren | acu_b_mem_ren;
+if (adc_rstn_i == 1'b0) begin
+  acu_rd    <= 1'b0;
+  acu_rd_dv <= 1'b0;
+end else begin
+  acu_rd    <= acu_a_mem_ren | acu_b_mem_ren;
+  acu_rd_dv <= acu_rd;
+end
 
 red_pitaya_acum acum_a (
   // system signals
@@ -599,7 +605,9 @@ red_pitaya_acum acum_a (
 
 assign acu_a_mem_ren = ren & (addr[17:16] == 2'h3);
 assign acu_a_mem_adr =        addr[RSZ+1:2];
-assign acu_a_mem_rdt = acu_a_mem_tmp >>> set_acu_shf;
+
+always @ (posedge adc_clk_i)
+acu_a_mem_rdt <= acu_a_mem_tmp >>> set_acu_shf;
 
 red_pitaya_acum acum_b (
   // system signals
@@ -630,7 +638,9 @@ red_pitaya_acum acum_b (
 
 assign acu_b_mem_ren = ren & (addr[17:16] == 2'h4);
 assign acu_b_mem_adr =        addr[RSZ+1:2];
-assign acu_b_mem_rdt = acu_b_mem_tmp >>> set_acu_shf;
+
+always @ (posedge adc_clk_i)
+acu_b_mem_rdt <= acu_b_mem_tmp >>> set_acu_shf;
 
 //---------------------------------------------------------------------------------
 //  Trigger source selector
