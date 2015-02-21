@@ -53,6 +53,7 @@ logic           sto_trnsfr;
 // accumulation counter
 logic [ACW-1:0] acu_cnt;  // accumulation counter
 logic           acu_end;  // counter reached the end
+logic           acu_lst;  // counter reached the end (registered version or last)
 logic           acu_beg;  // counter at the beginning
 
 // buffered data/last
@@ -65,9 +66,12 @@ logic           mem_end;  // memory size end
 logic [AAW-1:0] mem_adr;  // address counter
 logic [AAW-1:0] mem_nxt;  // address next
 logic [ODW-1:0] mem [0:AMS-1];
-logic           mem_wen, mem_ren;  // write/read enable
-logic [AAW-1:0] mem_wad, mem_rad;  // write/read address
-logic [ODW-1:0] mem_wdt, mem_rdt;  // write/read data
+logic           mem_ten, mem_wen, mem_ren;  // tmp/write/read enable
+logic [AAW-1:0] mem_tad, mem_wad, mem_rad;  // tmp/write/read address
+logic [ODW-1:0] mem_tdt, mem_wdt, mem_rdt;  // tmp/write/read data
+logic           mem_tcr;                    // addition tmp carry
+logic           mem_tsg;                    // addition tmp sign
+logic [ODW-1:IDW] mem_tts;
 
 ////////////////////////////////////////////////////////////////////////////////
 // I/O stream
@@ -110,12 +114,12 @@ always_ff @ (posedge clk) //, posedge rst)
 if (rst)    sto_tvalid <= 1'b0;
 else begin
   if (clr)  sto_tvalid <= 1'b0;
-  else      sto_tvalid <= mem_wen & acu_end;
+  else      sto_tvalid <= mem_wen & acu_lst;
 end
 
 // output stream data
 always_ff @ (posedge clk)
-if (mem_wen & acu_end)  sto_tdata <= mem_wdt;
+if (mem_wen & acu_lst)  sto_tdata <= mem_wdt;
 
 // end status pulse
 assign sts_end = sti_trnsfr & sti_tlast & acu_end;
@@ -126,7 +130,17 @@ assign sts_end = sti_trnsfr & sti_tlast & acu_end;
 
 // write data
 //assign mem_wdt = ODW'($signed(buf_tdata)) + $signed(acu_beg ? ODW'(0) : mem_rdt);
-assign mem_wdt = $signed(buf_tdata) + $signed(acu_beg ? 0 : mem_rdt);
+always_ff @ (posedge clk)
+begin
+            mem_tdt [ODW-1:IDW]  <= (acu_beg ? 0 : mem_rdt [ODW-1:IDW])            ;
+  {mem_tcr, mem_tdt [IDW-1:  0]} <= (acu_beg ? 0 : mem_rdt [IDW-1:  0]) + buf_tdata;
+   mem_tsg                       <= buf_tdata[IDW-1];
+end
+
+assign mem_tts = $signed(mem_tsg) + $signed({1'b0, mem_tcr});
+
+assign      mem_wdt [ODW-1:IDW]   = mem_tdt [ODW-1:IDW] + mem_tts;
+assign      mem_wdt [IDW-1:  0]   = mem_tdt [IDW-1:  0]          ;
 
 // read enable
 assign mem_vld = sti_trnsfr;
@@ -146,15 +160,22 @@ assign mem_nxt = mem_adr + 1;
 
 // write enable
 always_ff @ (posedge clk) //, posedge rst)
-if (rst)  mem_wen <= 1'b0;
-else begin
+if (rst) begin
+  mem_ten <= 1'b0;
+  mem_wen <= 1'b0;
+end else begin
+  if (clr)  mem_ten <= 1'b0;
+  else      mem_ten <= mem_vld;
   if (clr)  mem_wen <= 1'b0;
-  else      mem_wen <= mem_vld;
+  else      mem_wen <= mem_ten;
 end
 
 // write address, is a delayed read address
 always_ff @ (posedge clk)
-if (mem_vld)  mem_wad <= mem_adr;
+begin
+  if (mem_vld)  mem_tad <= mem_adr;
+  if (mem_ten)  mem_wad <= mem_tad;
+end
 
 // write access
 always_ff @ (posedge clk)
