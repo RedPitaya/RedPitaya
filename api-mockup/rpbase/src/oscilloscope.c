@@ -29,6 +29,12 @@ static const int OSC_BASE_SIZE = 0x30000;
 // Oscilloscope Channel B input signal buffer offset
 #define OSC_CHB_OFFSET 0x20000
 
+//Oscilloscope Channel A accumulated signal buffer offset
+#define OSC_ACC_CHA_OFFSET 0x30000
+
+//Oscilloscope Channel B accumulated signal buffer offset
+#define OSC_ACC_CHB_OFFSET 0x40000
+
 // Oscilloscope signal A and B length
 #define OSC_SIG_LEN (16*1024)
 
@@ -173,8 +179,129 @@ typedef struct osc_control_s {
      */
     uint32_t chb_filt_pp;
 
+    /** @brief ChA AXI lower address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t cha_axi_low;
+
+    /** @brief ChA AXI High address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t cha_axi_high;
+
+    /** @brief ChA AXI delay after trigger
+    * bits [31:0] - Number of decimated data 
+    * after trig written into memory
+    */
+    uint32_t cha_trig_delay;
+
+    /**@brief ChB AXI enable master
+    * bits [0] Enable AXI master
+    * bits [31:0] reserved
+    */
+    uint32_t cha_enable_axi_m;
+
+    /**@brief ChA AXI write pointer trigger
+    * Write pointer at time the trigger arrived
+    */
+    uint32_t cha_w_ptr_trig;
+
+    /**@brief ChA AXI write pointer current
+    * Current write pointer
+    */
+    uint32_t cha_w_ptr_curr;
+
+    /* Reserved 0x68 & 0x6C */
+    uint32_t reserved_2;
+    uint32_t reserved_3;
+
+    /** @brief ChB AXI lower address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t chb_axi_low;
+
+    /** @brief ChB AXI High address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t chb_axi_high;
+
+    /** @brief ChB AXI delay after trigger
+    * bits [31:0] - Number of decimated data 
+    * after trig written into memory
+    */
+    uint32_t chb_trig_delay;
+
+    /**@brief ChB AXI enable master
+    * bits [0] Enable AXI master
+    * bits [31:0] reserved
+    */
+    uint32_t chb_enable_axi_m;
+
+    /**@brief ChB AXI write pointer trigger
+    * Write pointer at time the trigger arrived
+    */
+    uint32_t chb_w_ptr_trig;
+
+    /**@brief ChB AXI write pointer current
+    * Current write pointer
+    */
+    uint32_t chb_w_ptr_curr;
+
+    /* Reserved 0x88 & 0x8C */
+    uint32_t reserved_4;
+    uint32_t reserved_5;
+
+    /**@brief Trigger debuncer time
+    * bits [19:0] Number of ADC clock periods 
+    * trigger is disabled after activation
+    * reset value is decimal 62500 
+    * or equivalent to 0.5ms
+    */
+    uint32_t trig_dbc_t;
+
+    /**@brief Acumulation contro/status:
+    * bits [31:2] reserved
+    * bits [1] Accumulation run:
+    * writing an 1 will start accumulating data, 
+    * writing 0 should not be used, the main 
+    * configuration register should be used for reset
+    * reading will show the status of the 
+    * accumulation process (1 – running, 0 - finished)
+    */
+    uint32_t acum_ctrl_stat;
+
+    /**@brief Accumulation counter:
+    * bits [31:0] 
+    * on write: the number of accumulated 
+    * samples is specified
+    * on read: the status of the increment counter
+    * is provided for monitoring 
+    * (0x0 – accumulate 1 sample, 0xffffffff – accumulate 4294967296 samples)
+    */
+    uint32_t acum_count;
+
+    /**@brief Accumulator output shift:
+    * bits [31:5] reserved 
+    * bits [4:0] specifies how many LSBbits from the
+    * accumulated storaged (up to 48bits) are removed
+    * before reaching software, which is limited to 32 bits
+    */
+    uint32_t acum_out_sft;
+
+    /**@brief Accumulator data sequence length
+    * bits [31:14] reserved
+    * bits [13:0] specifies the number of samples accumulated after a
+    * trigger. It is limited by the length of the accumulation buffer to
+    * 2^14 locations (0x0 - sequence of 1 sample, 0xffffffff - sequence
+    * of 16384 samples)
+    */
+    uint32_t acum_data_seq_len;
+
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
+
+    /* ChA & ChB accumulated memory data. Starts from 0x30000 and 
+     * 0x40000 and are each 16k samples long */ 
 } osc_control_t;
 
 
@@ -186,6 +313,12 @@ static volatile uint32_t *osc_cha = NULL;
 
 // The FPGA input signal buffer pointer for channel B */
 static volatile uint32_t *osc_chb = NULL;
+
+// The FPGA accumulated signal buffer pointer for channel A
+static volatile uint32_t *osc_acc_cha = NULL;
+
+// The FPGA accumulated signal buffer pointer for channel B
+static volatile uint32_t *osc_acc_chb = NULL;
 
 
 static const uint32_t DATA_DEC_MASK = 0x1FFFF;      // (17 bits)
@@ -211,6 +344,8 @@ int osc_Init()
     ECHECK(cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg));
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
+    osc_acc_cha = (uint32_t*)((char*)osc_reg + OSC_ACC_CHA_OFFSET);
+    osc_acc_chb = (uint32_t*)((char*)osc_reg + OSC_ACC_CHB_OFFSET);
     return RP_OK;
 }
 
@@ -219,6 +354,8 @@ int osc_Release()
     ECHECK(cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg));
     osc_cha = NULL;
     osc_chb = NULL;
+    osc_acc_cha = NULL;
+    osc_acc_chb = NULL;
     ECHECK(cmn_Release());
     return RP_OK;
 }
@@ -396,6 +533,10 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
 }
 
 /**
+ * Deep averaging
+ */
+
+/**
  * Raw buffers
  */
 const volatile uint32_t* osc_GetDataBufferChA()
@@ -406,4 +547,12 @@ const volatile uint32_t* osc_GetDataBufferChA()
 const volatile uint32_t* osc_GetDataBufferChB()
 {
     return osc_chb;
+}
+
+const volatile uint32_t* osc_GetAccDataBufferChA(){
+    return osc_acc_cha;
+}
+
+const volatile uint32_t* osc_GetAccDataBufferChb(){
+    return osc_acc_chb;
 }
