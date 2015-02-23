@@ -1,4 +1,4 @@
- #
+#
 # $Id: Makefile 1253 2014-02-23 21:09:06Z ales.bardorfer $
 #
 # Red Pitaya OS/Ecosystem main Makefile
@@ -35,8 +35,6 @@ ACQUIRE_DIR=Test/acquire
 CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
-SDK=sdk
-SDK_DIR=SDK/
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -54,8 +52,6 @@ ACQUIRE=$(BUILD)/bin/acquire
 CALIB=$(BUILD)/bin/calib
 DISCOVERY=$(BUILD)/sbin/discovery
 ECOSYSTEM=$(BUILD)/www/apps/info/info.json
-SCPI_SERVER=$(BUILD)/bin/scpi-server
-SCPI_SERVER_DIR=scpi-server
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -68,7 +64,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(SCPI_SERVER) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -129,9 +125,6 @@ $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-$(SCPI_SERVER):
-    $(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
-
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))
@@ -143,10 +136,7 @@ $(DISCOVERY):
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-$(SDK):
-	$(MAKE) -C $(SDK_DIR) zip
-
-zip: $(TARGET) $(SDK)
+zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
@@ -159,7 +149,6 @@ clean:
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
-	make -C $(SDK_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip

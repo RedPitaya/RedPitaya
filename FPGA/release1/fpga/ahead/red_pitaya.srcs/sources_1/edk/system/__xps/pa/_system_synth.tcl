@@ -5,7 +5,7 @@
 ######################################################
 
 proc _main_ {} {
-  cd "/home/matej/WORK/red_pitaya/redpitaya_git/FPGA/release1/fpga/ahead/red_pitaya.srcs/sources_1/edk/system"
+  cd "/home/matej/WORK/red_pitaya/redpitaya_svn/FPGA/release1/fpga/ahead/red_pitaya.srcs/sources_1/edk/system"
   if { [ catch {xload xmp system.xmp} result ] } {
     exit 10
   }
