@@ -79,32 +79,6 @@ red_pitaya_scope i_scope
   .trig_ext_i      (  trig_ext      ),  // external trigger
   .trig_asg_i      (  trig_ext      ),  // ASG trigger
 
-  // AXI0 master
-  .axi0_clk_o      (        ),  // global clock
-  .axi0_rstn_o     (        ),  // global reset
-  .axi0_waddr_o    (        ),  // system write address
-  .axi0_wdata_o    (        ),  // system write data
-  .axi0_wsel_o     (        ),  // system write byte select
-  .axi0_wvalid_o   (        ),  // system write data valid
-  .axi0_wlen_o     (        ),  // system write burst length
-  .axi0_wfixed_o   (        ),  // system write burst type (fixed / incremental)
-  .axi0_werr_i     (  1'b0  ),  // system write error
-  .axi0_wrdy_i     (  1'b1  ),  // system write ready
-  .axi0_rstn_i     (  1'b1  ),  // reset from PS
-
-   // AXI1 master
-  .axi1_clk_o      (        ),  // global clock
-  .axi1_rstn_o     (        ),  // global reset
-  .axi1_waddr_o    (        ),  // system write address
-  .axi1_wdata_o    (        ),  // system write data
-  .axi1_wsel_o     (        ),  // system write byte select
-  .axi1_wvalid_o   (        ),  // system write data valid
-  .axi1_wlen_o     (        ),  // system write burst length
-  .axi1_wfixed_o   (        ),  // system write burst type (fixed / incremental)
-  .axi1_werr_i     (  1'b0  ),  // system write error
-  .axi1_wrdy_i     (  1'b1  ),  // system write ready
-  .axi1_rstn_i     (  1'b1  ),  // reset from PS
-
    // System bus
   .sys_clk_i       (  sys_clk       ),  // clock
   .sys_rstn_i      (  sys_rstn      ),  // reset - active low
@@ -228,21 +202,10 @@ initial begin
    repeat(10) @(posedge sys_clk);
 
    i_bus.bus_write(32'h10,32'd10000);  // after trigger delay
-   i_bus.bus_write(32'h14,32'd1);  // data decimation
+   i_bus.bus_write(32'h14,32'd8);  // data decimation
    i_bus.bus_write(32'hC,-32'd7000);  // trigger treshold
    i_bus.bus_write(32'h20,32'd20);  // hysteresis
    i_bus.bus_write(32'h24,32'd200);  // hysteresis
-
-   i_bus.bus_write(32'h50,32'h300);   // a_axi_start
-   i_bus.bus_write(32'h54,32'h50000); // a_axi_stop
-   i_bus.bus_write(32'h58,32'd50);    // a_axi_dly
-   i_bus.bus_write(32'h5C,32'd1);     // a_axi_en
-
-   i_bus.bus_write(32'h70,32'h500);   // a_axi_start
-   i_bus.bus_write(32'h74,32'h5000); // a_axi_stop
-   i_bus.bus_write(32'h78,32'd900);    // a_axi_dly
-   i_bus.bus_write(32'h7C,32'd1);     // a_axi_en
-
 
 
    i_bus.bus_write(32'h0,32'h1);  // start aquisition

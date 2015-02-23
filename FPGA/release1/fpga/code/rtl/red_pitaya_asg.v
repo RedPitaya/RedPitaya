@@ -102,10 +102,6 @@ reg               set_a_wrap       ;
 reg   [  14-1: 0] set_a_amp        ;
 reg   [  14-1: 0] set_a_dc         ;
 reg               set_a_zero       ;
-reg   [  16-1: 0] set_a_ncyc       ;
-reg   [  16-1: 0] set_a_rnum       ;
-reg   [  32-1: 0] set_a_rdly       ;
-reg               set_a_rgate      ;
 reg               buf_a_we         ;
 reg   [ RSZ-1: 0] buf_a_addr       ;
 wire  [  14-1: 0] buf_a_rdata      ;
@@ -114,7 +110,6 @@ reg   [  32-1: 0] buf_a_rpnt_rd    ;
 reg               trig_a_sw        ;
 reg   [   3-1: 0] trig_a_src       ;
 wire              trig_a_done      ;
-
 
 
 reg   [RSZ+15: 0] set_b_size       ;
@@ -126,10 +121,6 @@ reg               set_b_wrap       ;
 reg   [  14-1: 0] set_b_amp        ;
 reg   [  14-1: 0] set_b_dc         ;
 reg               set_b_zero       ;
-reg   [  16-1: 0] set_b_ncyc       ;
-reg   [  16-1: 0] set_b_rnum       ;
-reg   [  32-1: 0] set_b_rdly       ;
-reg               set_b_rgate      ;
 reg               buf_b_we         ;
 reg   [ RSZ-1: 0] buf_b_addr       ;
 wire  [  14-1: 0] buf_b_rdata      ;
@@ -169,11 +160,7 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_cha
   .set_wrap_i      (  set_a_wrap       ),  // set wrap pointer
   .set_amp_i       (  set_a_amp        ),  // set amplitude scale
   .set_dc_i        (  set_a_dc         ),  // set output offset
-  .set_zero_i      (  set_a_zero       ),  // set output to zero
-  .set_ncyc_i      (  set_a_ncyc       ),  // set number of cycle
-  .set_rnum_i      (  set_a_rnum       ),  // set number of repetitions
-  .set_rdly_i      (  set_a_rdly       ),  // set delay between repetitions
-  .set_rgate_i     (  set_a_rgate      )   // set external gated repetition
+  .set_zero_i      (  set_a_zero       )   // set output to zero
 );
 
 
@@ -206,11 +193,7 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_chb
   .set_wrap_i      (  set_b_wrap       ),  // set wrap pointer
   .set_amp_i       (  set_b_amp        ),  // set amplitude scale
   .set_dc_i        (  set_b_dc         ),  // set output offset
-  .set_zero_i      (  set_b_zero       ),  // set output to zero
-  .set_ncyc_i      (  set_b_ncyc       ),  // set number of cycle
-  .set_rnum_i      (  set_b_rnum       ),  // set number of repetitions
-  .set_rdly_i      (  set_b_rdly       ),  // set delay between repetitions
-  .set_rgate_i     (  set_b_rgate      )   // set external gated repetition
+  .set_zero_i      (  set_b_zero       )   // set output to zero
 );
 
 always @(posedge dac_clk_i) begin
@@ -231,38 +214,30 @@ reg           ack_dly ;
 
 always @(posedge dac_clk_i) begin
    if (dac_rstn_i == 1'b0) begin
-      trig_a_sw   <=  1'b0    ;
-      trig_a_src  <=  3'h0    ;
-      set_a_amp   <= 14'h2000 ;
-      set_a_dc    <= 14'h0    ;
-      set_a_zero  <=  1'b0    ;
-      set_a_rst   <=  1'b0    ;
-      set_a_once  <=  1'b0    ;
-      set_a_wrap  <=  1'b0    ;
-      set_a_size  <= {RSZ+16{1'b1}} ;
-      set_a_ofs   <= {RSZ+16{1'b0}} ;
-      set_a_step  <={{RSZ+15{1'b0}},1'b0} ;
-      set_a_ncyc  <= 16'h0    ;
-      set_a_rnum  <= 16'h0    ;
-      set_a_rdly  <= 32'h0    ;
-      set_a_rgate <=  1'b0    ;
-      trig_b_sw   <=  1'b0    ;
-      trig_b_src  <=  3'h0    ;
-      set_b_amp   <= 14'h2000 ;
-      set_b_dc    <= 14'h0    ;
-      set_b_zero  <=  1'b0    ;
-      set_b_rst   <=  1'b0    ;
-      set_b_once  <=  1'b0    ;
-      set_b_wrap  <=  1'b0    ;
-      set_b_size  <= {RSZ+16{1'b1}} ;
-      set_b_ofs   <= {RSZ+16{1'b0}} ;
-      set_b_step  <={{RSZ+15{1'b0}},1'b0} ;
-      set_b_ncyc  <= 16'h0    ;
-      set_b_rnum  <= 16'h0    ;
-      set_b_rdly  <= 32'h0    ;
-      set_b_rgate <=  1'b0    ;
-      ren_dly     <=  3'h0    ;
-      ack_dly     <=  1'b0    ;
+      trig_a_sw  <=  1'b0    ;
+      trig_a_src <=  3'h0    ;
+      set_a_amp  <= 14'h2000 ;
+      set_a_dc   <= 14'h0    ;
+      set_a_zero <=  1'b0    ;
+      set_a_rst  <=  1'b0    ;
+      set_a_once <=  1'b0    ;
+      set_a_wrap <=  1'b0    ;
+      set_a_size <= {RSZ+16{1'b1}} ;
+      set_a_ofs  <= {RSZ+16{1'b0}} ;
+      set_a_step <={{RSZ+15{1'b0}},1'b0} ;
+      trig_b_sw  <=  1'b0    ;
+      trig_b_src <=  3'h0    ;
+      set_b_amp  <= 14'h2000 ;
+      set_b_dc   <= 14'h0    ;
+      set_b_zero <=  1'b0    ;
+      set_b_rst  <=  1'b0    ;
+      set_b_once <=  1'b0    ;
+      set_b_wrap <=  1'b0    ;
+      set_b_size <= {RSZ+16{1'b1}} ;
+      set_b_ofs  <= {RSZ+16{1'b0}} ;
+      set_b_step <={{RSZ+15{1'b0}},1'b0} ;
+      ren_dly    <=  3'h0    ;
+      ack_dly    <=  1'b0    ;
    end
    else begin
 
@@ -277,26 +252,20 @@ always @(posedge dac_clk_i) begin
 
 
       if (wen) begin
-         if (addr[19:0]==20'h0)   {set_a_rgate, set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= wdata[ 8: 4] ;
-         if (addr[19:0]==20'h0)   {set_b_rgate, set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= wdata[24:20] ;
+         if (addr[19:0]==20'h0)   {set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= wdata[ 7: 4] ;
+         if (addr[19:0]==20'h0)   {set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= wdata[23:20] ;
 
          if (addr[19:0]==20'h4)   set_a_amp  <= wdata[  0+13: 0] ;
          if (addr[19:0]==20'h4)   set_a_dc   <= wdata[ 16+13:16] ;
          if (addr[19:0]==20'h8)   set_a_size <= wdata[RSZ+15: 0] ;
          if (addr[19:0]==20'hC)   set_a_ofs  <= wdata[RSZ+15: 0] ;
          if (addr[19:0]==20'h10)  set_a_step <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h18)  set_a_ncyc <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h1C)  set_a_rnum <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h20)  set_a_rdly <= wdata[  32-1: 0] ;
 
          if (addr[19:0]==20'h24)  set_b_amp  <= wdata[  0+13: 0] ;
          if (addr[19:0]==20'h24)  set_b_dc   <= wdata[ 16+13:16] ;
          if (addr[19:0]==20'h28)  set_b_size <= wdata[RSZ+15: 0] ;
          if (addr[19:0]==20'h2C)  set_b_ofs  <= wdata[RSZ+15: 0] ;
          if (addr[19:0]==20'h30)  set_b_step <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h38)  set_b_ncyc <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h3C)  set_b_rnum <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h40)  set_b_rdly <= wdata[  32-1: 0] ;
       end
 
       if (ren) begin
@@ -309,8 +278,8 @@ always @(posedge dac_clk_i) begin
    end
 end
 
-wire [32-1: 0] r0_rd = {7'h0,set_b_rgate, set_b_zero,set_b_rst,set_b_once,set_b_wrap, 1'b0,trig_b_src,
-                        7'h0,set_a_rgate, set_a_zero,set_a_rst,set_a_once,set_a_wrap, 1'b0,trig_a_src };
+wire [32-1: 0] r0_rd = {8'h0,set_b_zero,set_b_rst,set_b_once,set_b_wrap, 1'b0,trig_b_src,
+                        8'h0,set_a_zero,set_a_rst,set_a_once,set_a_wrap, 1'b0,trig_a_src };
 
 
 always @(*) begin
@@ -324,18 +293,12 @@ always @(*) begin
      20'h0000C : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
      20'h00010 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_step}     ; end
      20'h00014 : begin ack <= 1'b1;          rdata <= buf_a_rpnt_rd                      ; end
-     20'h00018 : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_a_ncyc}         ; end
-     20'h0001C : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_a_rnum}         ; end
-     20'h00020 : begin ack <= 1'b1;          rdata <= set_a_rdly                         ; end
 
      20'h00024 : begin ack <= 1'b1;          rdata <= {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
      20'h00028 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_size}     ; end
      20'h0002C : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
      20'h00030 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_step}     ; end
      20'h00034 : begin ack <= 1'b1;          rdata <= buf_b_rpnt_rd                      ; end
-     20'h00038 : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
-     20'h0003C : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
-     20'h00040 : begin ack <= 1'b1;          rdata <= set_b_rdly                         ; end
 
      20'h1zzzz : begin ack <= ack_dly;       rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
      20'h2zzzz : begin ack <= ack_dly;       rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end
