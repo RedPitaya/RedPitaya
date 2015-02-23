@@ -6,7 +6,6 @@
 	<Step Id="init_design">
 	</Step>
 	<Step Id="opt_design">
-		<Option Id="Verbose">1</Option>
 	</Step>
 	<Step Id="power_opt_design">
 	</Step>
