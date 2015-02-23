@@ -268,7 +268,7 @@ typedef struct osc_control_s {
     * reading will show the status of the 
     * accumulation process (1 – running, 0 - finished)
     */
-    uint32_t acum_ctrl_stat;
+    uint32_t ac_ctrl_stat;
 
     /**@brief Accumulation counter:
     * bits [31:0] 
@@ -278,7 +278,7 @@ typedef struct osc_control_s {
     * is provided for monitoring 
     * (0x0 – accumulate 1 sample, 0xffffffff – accumulate 4294967296 samples)
     */
-    uint32_t acum_count;
+    uint32_t ac_count;
 
     /**@brief Accumulator output shift:
     * bits [31:5] reserved 
@@ -286,7 +286,7 @@ typedef struct osc_control_s {
     * accumulated storaged (up to 48bits) are removed
     * before reaching software, which is limited to 32 bits
     */
-    uint32_t acum_out_sft;
+    uint32_t ac_out_sft;
 
     /**@brief Accumulator data sequence length
     * bits [31:14] reserved
@@ -295,7 +295,7 @@ typedef struct osc_control_s {
     * 2^14 locations (0x0 - sequence of 1 sample, 0xffffffff - sequence
     * of 16384 samples)
     */
-    uint32_t acum_data_seq_len;
+    uint32_t ac_data_seq_len;
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -332,6 +332,9 @@ static const uint32_t WRITE_POINTER_MASK = 0x3FFF;  // (14 bits)
 static const uint32_t EQ_FILTER_AA = 0x3FFFF;       // (18 bits)
 static const uint32_t EQ_FILTER   = 0x1FFFFFF;      // (25 bits)
 static const uint32_t RST_WR_ST_MCH_MASK = 0x2;     // (1st bit)
+static const uint32_t AC_DATA_SEQ_MASK = 0x2FFF;    // (13 bits)
+static const uint32_t SHIFT_MASK       = 0xF;       // (4 bits)
+static const uint32_t COUNT_MASK       = 0xFFFFFFFF // (32 bits)
 
 
 /**
@@ -353,7 +356,7 @@ int osc_Release()
 {
     ECHECK(cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg));
     osc_cha = NULL;
-    osc_chb = NULL;
+    osc_chb = NULL;F
     osc_acc_cha = NULL;
     osc_acc_chb = NULL;
     ECHECK(cmn_Release());
@@ -535,6 +538,20 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
 /**
  * Deep averaging
  */
+int osc_SetDeepAvgCount(uint32_t count){
+    ECHECK(cmn_SetValue(osc_reg->ac_count, count, AC_DATA_MASK));
+    return RP_OK;
+}
+
+int osc_SetDeepAvgShift(uint32_t shift){
+    ECHECK(cmn_SetValue(osc_reg->ac_out_sft, shift, SHIFT_MASK));
+    return RP_OK;
+}
+
+int osc_SetDataSeqLen(uint32_t len){
+    ECHECK(cmn_SetValue(osc_reg->ac_data_seq_len), len, AC_DATA_SEQ_MASK);
+    return RP_OK;
+}
 
 /**
  * Raw buffers

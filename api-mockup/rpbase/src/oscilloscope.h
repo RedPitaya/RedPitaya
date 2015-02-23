@@ -47,7 +47,13 @@ int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
-
+/* Deep Avgeraging */
+int osc_SetDeepAvgCount(uint32_t count);
+int osc_SetDeepAvgShift(uint32_t shift);
+int osc_SetDataSeqLen(uint32_t len);
+int osc_GetDeepAvgCount(uint32_t *count);
+int osc_GetDeepAvgShift(uint32_t *shift);
+int osc_GetDataSeqLen(uint32_t *len);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();
