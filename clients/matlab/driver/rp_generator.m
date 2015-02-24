@@ -22,7 +22,7 @@ function varargout = rp_generator(varargin)
 
 % Edit the above text to modify the response to help rp_generator
 
-% Last Modified by GUIDE v2.5 18-Feb-2015 05:48:03
+% Last Modified by GUIDE v2.5 24-Feb-2015 00:01:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -261,7 +261,9 @@ for id = 1 : length(parents)
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigg_source_ch1')
                     set(children(childidrst),'Enable','off');
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch1')
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch1')
+                    set(children(childidrst),'Enable','off');
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch1')
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch1')
                     set(children(childidrst),'Enable','off');
@@ -281,7 +283,9 @@ for id = 1 : length(parents)
             for childidrst = 1 :  length(children)
                 if strcmp(get(children(childidrst), 'Tag'),'trigger_gated_radio_ch1')
                     set(children(childidrst),'Value',0);
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch1')
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch1')
+                    set(children(childidrst),'Value',0);
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch1')
                     set(children(childidrst),'Value',0);
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch1')
                     set(children(childidrst),'Value',1);
@@ -389,9 +393,11 @@ for id = 1 : length(parents)
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigg_source_ch2')
                     set(children(childidrst),'Enable','off');
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch2')
-                    set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch2')
+                    set(children(childidrst),'Enable','off');
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch2')
+                    set(children(childidrst),'Enable','off');
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch2')
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_gated_radio_ch2')
                     set(children(childidrst),'Enable','off');
@@ -409,7 +415,9 @@ for id = 1 : length(parents)
             for childidrst = 1 :  length(children)
                 if strcmp(get(children(childidrst), 'Tag'),'trigger_gated_radio_ch2')
                     set(children(childidrst),'Value',0);
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch2')
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch2')
+                    set(children(childidrst),'Value',0);
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch2')
                     set(children(childidrst),'Value',0);
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch2')
                     set(children(childidrst),'Value',1);
@@ -1220,7 +1228,9 @@ if((get(hObject,'BackgroundColor') == [0.68  0.92 1]))
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch1')
             set(children(childid),'Enable','off');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+            set(children(childid),'Enable','off');
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
             set(children(childid),'Enable','off');
@@ -1244,7 +1254,9 @@ else
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch1')
             set(children(childid),'Enable','on');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+            set(children(childid),'Enable','on');
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
             set(children(childid),'Enable','on');
@@ -2655,7 +2667,9 @@ if((get(hObject,'BackgroundColor') == [0.68  0.92 1]))
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch2')
             set(children(childid),'Enable','off');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+            set(children(childid),'Enable','off');
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
             set(children(childid),'Enable','off');
@@ -2678,8 +2692,10 @@ else
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch2')
             set(children(childid),'Enable','on');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
             set(children(childid),'Enable','on');
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
+            set(children(childid),'Enable','on');    
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
@@ -2719,7 +2735,9 @@ children = get(parent,'Children');
 for childid = 1:length(children)
     if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',1);
@@ -2746,7 +2764,9 @@ children = get(parent,'Children');
 for childid = 1:length(children)
     if strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',1);
@@ -2758,17 +2778,17 @@ handles.asgdata.triggersourcech1 = 'INT';
 guidata(hObject,handles);
 
 
-% --- Executes on button press in trigger_external_radio_ch2.
-function trigger_external_radio_ch2_Callback(hObject, eventdata, handles)
-% hObject    handle to trigger_external_radio_ch2 (see GCBO)
+% --- Executes on button press in trigger_external_N_radio_ch2.
+function trigger_external_N_radio_ch2_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_N_radio_ch2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of trigger_external_radio_ch2
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch2
 deviceObj = instrfind('Type', 'fcngen');
 groupObj = get(deviceObj, 'Triggerch2');
 groupObj = groupObj(1);
-invoke(groupObj, 'Source', 'EXT');
+invoke(groupObj, 'Source', 'EXT_NE');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 
@@ -2777,14 +2797,16 @@ for childid = 1:length(children)
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
         set(children(childid),'Value',1);
     end
 end
 
 
 
-handles.asgdata.triggersourcech2 = 'EXT';
+handles.asgdata.triggersourcech2 = 'EXT_NE';
 guidata(hObject,handles);
 
 % --- Executes on button press in trigger_gated_radio_ch2.
@@ -2803,7 +2825,9 @@ children = get(parent,'Children');
 for childid = 1:length(children)
     if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
         set(children(childid),'Value',1);
@@ -2827,9 +2851,11 @@ invoke(groupObj, 'Source', 'INT');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 for childid = 1:length(children)
-    if strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+    if strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
         set(children(childid),'Value',1);
@@ -2840,42 +2866,44 @@ handles.asgdata.triggersourcech2 = 'INT';
 guidata(hObject,handles);
 
 
-% --- Executes on button press in trigger_external_radio_ch2.
+% --- Executes on button press in trigger_external_N_radio_ch2.
 function radiobutton26_Callback(hObject, eventdata, handles)
-% hObject    handle to trigger_external_radio_ch2 (see GCBO)
+% hObject    handle to trigger_external_N_radio_ch2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of trigger_external_radio_ch2
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch2
 %
 
-% --- Executes on button press in trigger_external_radio_ch1.
-function trigger_external_radio_ch1_Callback(hObject, eventdata, handles)
-% hObject    handle to trigger_external_radio_ch1 (see GCBO)
+% --- Executes on button press in trigger_external_N_radio_ch1.
+function trigger_external_N_radio_ch1_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_N_radio_ch1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of trigger_external_radio_ch1
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch1
 deviceObj = instrfind('Type', 'fcngen');
 groupObj = get(deviceObj, 'Triggerch1');
 groupObj = groupObj(1);
-invoke(groupObj, 'Source', 'EXT');
+invoke(groupObj, 'Source', 'EXT_NE');
 
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 %get(children(1))
 
 for childid = 1:length(children)
-    if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+    if strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+        set(children(childid),'Value',1);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
-        set(children(childid),'Value',1);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
     end
 end
 
-handles.asgdata.triggersourcech2 = 'EXT';
+handles.asgdata.triggersourcech2 = 'EXT_NE';
 guidata(hObject,handles);
 
 
@@ -3118,3 +3146,71 @@ function edit55_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in trigger_external_P_radio_ch2.
+function trigger_external_P_radio_ch2_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_P_radio_ch2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_P_radio_ch2
+deviceObj = instrfind('Type', 'fcngen');
+groupObj = get(deviceObj, 'Triggerch2');
+groupObj = groupObj(1);
+invoke(groupObj, 'Source', 'EXT_PE');
+
+parent = get(hObject,'parent');
+children = get(parent,'Children');
+%get(children(1))
+
+for childid = 1:length(children)
+    if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',1);
+    end
+end
+
+handles.asgdata.triggersourcech2 = 'EXT_PE';
+guidata(hObject,handles);
+
+% --- Executes on button press in trigger_external_P_radio_ch1.
+function trigger_external_P_radio_ch1_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_P_radio_ch1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_P_radio_ch1
+% hObject    handle to trigger_external_N_radio_ch1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch1
+deviceObj = instrfind('Type', 'fcngen');
+groupObj = get(deviceObj, 'Triggerch1');
+groupObj = groupObj(1);
+invoke(groupObj, 'Source', 'EXT_PE');
+
+parent = get(hObject,'parent');
+children = get(parent,'Children');
+%get(children(1))
+
+for childid = 1:length(children)
+    if strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',1);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+        set(children(childid),'Value',0);
+    end
+end
+
+handles.asgdata.triggersourcech2 = 'EXT_PE';
+guidata(hObject,handles);
