@@ -22,7 +22,7 @@ function varargout = rp_generator(varargin)
 
 % Edit the above text to modify the response to help rp_generator
 
-% Last Modified by GUIDE v2.5 24-Feb-2015 00:01:05
+% Last Modified by GUIDE v2.5 24-Feb-2015 01:01:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -3214,3 +3214,10 @@ end
 
 handles.asgdata.triggersourcech2 = 'EXT_PE';
 guidata(hObject,handles);
+
+
+% --- Executes when figure1 is resized.
+function figure1_ResizeFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
