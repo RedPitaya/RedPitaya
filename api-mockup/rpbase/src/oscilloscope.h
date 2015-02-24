@@ -50,10 +50,14 @@ int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 /* Deep Avgeraging */
 int osc_SetDeepAvgCount(uint32_t count);
 int osc_SetDeepAvgShift(uint32_t shift);
-int osc_SetDataSeqLen(uint32_t len);
+int osc_SetDeepDataSeqLen(uint32_t len);
+int osc_SetDeepAvgDebTim(uint32_t deb_t);
 int osc_GetDeepAvgCount(uint32_t *count);
 int osc_GetDeepAvgShift(uint32_t *shift);
-int osc_GetDataSeqLen(uint32_t *len);
+int osc_GetDeepDataSeqLen(uint32_t *len);
+int osc_GetDeepAvgDebTim(uint32_t *deb_t);
+int osc_GetDeepAvgTriggState(uint32_t *state);
+int osc_WriteDataIntoMemoryDeepAvg(bool eanble);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();

@@ -375,6 +375,46 @@ int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
 }
 
+/** 
+ * Deep averaging acquire functions
+ */
+
+int rp_DeepAvgStart(){
+    return acq_DeepAvgStart();
+}
+
+int rp_SetDeepAvgCount(uint32_t count){
+    return acq_SetDeepAvgCount(count);
+}
+
+int rp_SetDeepAvgShift(uint32_t shift){
+    return acq_SetDeepAvgShift(shift);
+}
+
+int rp_SetDeepDataSeqLen(uint32_t len){
+    return acq_SetDeepDataSeqLen(len);
+}
+
+int rp_SetDeepAvgDebTim(uint32_t deb_t){
+    return acq_SetDeepAvgDebTim(deb_t);
+}
+
+int rp_GetDeepAvgCount(uint32_t *count){
+    return acq_GetDeepAvgCount(count);
+}
+
+int rp_GetDeepAvgShift(uint32_t *shift){
+    return acq_GetDeepAvgShift(shift);
+}
+
+int rp_GetDeepDataSeqLen(uint32_t *len){
+    return acq_GetDeepDataSeqLen(len);
+}
+
+int rp_GetDeepAvgDebTim(uint32_t *deb_t){
+    return acq_GetDeepAvgDebTim(deb_t);
+}
+
 /**
  * Health methods
  */

@@ -321,20 +321,22 @@ static volatile uint32_t *osc_acc_cha = NULL;
 static volatile uint32_t *osc_acc_chb = NULL;
 
 
-static const uint32_t DATA_DEC_MASK = 0x1FFFF;      // (17 bits)
-static const uint32_t DATA_AVG_MASK = 0x1;          // (1 bit)
-static const uint32_t TRIG_SRC_MASK = 0xF;          // (4 bits)
-static const uint32_t START_DATA_WRITE_MASK = 0x1;  // (1 bit)
-static const uint32_t THRESHOLD_MASK = 0x3FFF;      // (14 bits)
-static const uint32_t HYSTERESIS_MASK = 0x3FFF;     // (14 bits)
-static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF; // (32 bits)
-static const uint32_t WRITE_POINTER_MASK = 0x3FFF;  // (14 bits)
-static const uint32_t EQ_FILTER_AA = 0x3FFFF;       // (18 bits)
-static const uint32_t EQ_FILTER   = 0x1FFFFFF;      // (25 bits)
-static const uint32_t RST_WR_ST_MCH_MASK = 0x2;     // (1st bit)
-static const uint32_t AC_DATA_SEQ_MASK = 0x2FFF;    // (13 bits)
-static const uint32_t SHIFT_MASK       = 0xF;       // (4 bits)
-static const uint32_t COUNT_MASK       = 0xFFFFFFFF // (32 bits)
+static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
+static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
+static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
+static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
+static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
+static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
+static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
+static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
+static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
+static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
+static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
+static const uint32_t AC_DATA_SEQ_MASK      = 0x3FFF;       // (14 bits)
+static const uint32_t SHIFT_MASK            = 0xF;          // (4 bits)
+static const uint32_t COUNT_MASK            = 0xFFFFFFFF;   // (32 bits)
+static const uint32_t DEB_TIM_MASK          = 0xFFFFF;      // (20 bits)
+static const uint32_t AC_CTRL_STAT          = 0x3;          // (2 bits)
 
 
 /**
@@ -356,7 +358,7 @@ int osc_Release()
 {
     ECHECK(cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg));
     osc_cha = NULL;
-    osc_chb = NULL;F
+    osc_chb = NULL;
     osc_acc_cha = NULL;
     osc_acc_chb = NULL;
     ECHECK(cmn_Release());
@@ -539,19 +541,61 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
  * Deep averaging
  */
 int osc_SetDeepAvgCount(uint32_t count){
-    ECHECK(cmn_SetValue(osc_reg->ac_count, count, AC_DATA_MASK));
+    ECHECK(cmn_SetValue(&osc_reg->ac_count, count, COUNT_MASK));
     return RP_OK;
 }
 
 int osc_SetDeepAvgShift(uint32_t shift){
-    ECHECK(cmn_SetValue(osc_reg->ac_out_sft, shift, SHIFT_MASK));
+    ECHECK(cmn_SetValue(&osc_reg->ac_out_sft, shift, SHIFT_MASK));
     return RP_OK;
 }
 
-int osc_SetDataSeqLen(uint32_t len){
-    ECHECK(cmn_SetValue(osc_reg->ac_data_seq_len), len, AC_DATA_SEQ_MASK);
+int osc_SetDeepDataSeqLen(uint32_t len){
+    ECHECK(cmn_SetValue(&osc_reg->ac_data_seq_len, len, AC_DATA_SEQ_MASK));
     return RP_OK;
 }
+
+int osc_SetDeepAvgDebTim(uint32_t deb_t){
+    ECHECK(cmn_SetValue(&osc_reg->trig_dbc_t, deb_t, DEB_TIM_MASK));
+    return RP_OK;
+}
+
+int osc_GetDeepAvgCount(uint32_t *count){
+    return cmn_GetValue(&osc_reg->ac_count, count, COUNT_MASK);
+}
+
+int osc_GetDeepAvgShift(uint32_t *shift){
+    return cmn_GetValue(&osc_reg->ac_out_sft, shift, SHIFT_MASK);
+}
+
+int osc_GetDeepDataSeqLen(uint32_t *len){
+    return cmn_GetValue(&osc_reg->ac_data_seq_len, len, AC_DATA_SEQ_MASK);
+}
+
+int osc_GetDeepAvgDebTim(uint32_t *deb_t){
+    return cmn_GetValue(&osc_reg->trig_dbc_t, deb_t, DEB_TIM_MASK);
+}
+
+int osc_GetDeepAvgTriggState(uint32_t *state){
+    return cmn_GetValue(&osc_reg->ac_ctrl_stat, state, AC_CTRL_STAT);
+}
+
+/* osc_WriteDataIntoMemoryDeepAvg
+ * First write enable and then write run
+ * Must be set separately 
+ */
+int osc_WriteDataIntoMemoryDeepAvg(bool enable){
+
+    if(enable){
+        cmn_SetBits(&osc_reg->ac_ctrl_stat, 0x1, AC_CTRL_STAT);
+        cmn_SetBits(&osc_reg->ac_ctrl_stat, 0x3, AC_CTRL_STAT);
+    }else{
+        cmn_UnsetBits(&osc_reg->ac_ctrl_stat, 0x1, AC_CTRL_STAT);
+        cmn_UnsetBits(&osc_reg->ac_ctrl_stat, 0x3, AC_CTRL_STAT);
+    }
+    return RP_OK;
+}
+
 
 /**
  * Raw buffers

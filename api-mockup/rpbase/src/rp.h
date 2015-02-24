@@ -740,6 +740,20 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 int rp_AcqGetBufSize(uint32_t* size);
 
+/* Deep averagning functions */
+int rp_DeepAvgStart();
+int rp_SetDeepAvgCount(uint32_t count);
+int rp_SetDeepAvgShift(uint32_t shift);
+int rp_SetDeepDataSeqLen(uint32_t len);
+int rp_SetDeepAvgDebTim(uint32_t deb_t);
+
+int rp_GetDeepAvgCount(uint32_t *count);
+int rp_GetDeepAvgShift(uint32_t *shift);
+int rp_GetDeepDataSeqLen(uint32_t *len);
+int rp_GetDeepAvgDebTim(uint32_t *deb_t);
+
+int acq_GetDeepAvgTriggerState(rp_acq_trig_src_t *source);
+
 
 /** @name Health
  */

@@ -822,6 +822,62 @@ int acq_GetBufferSize(uint32_t *size) {
 }
 
 /**
+ * Deep averaging functions
+ */
+
+/* Deep averagning setters */
+int acq_SetDeepAvgCount(uint32_t count){
+    return osc_SetDeepAvgCount(count);
+}
+
+int acq_SetDeepAvgShift(uint32_t shift){
+    return osc_SetDeepAvgShift(shift);
+}
+
+int acq_SetDeepDataSeqLen(uint32_t len){
+    return osc_SetDeepDataSeqLen(len);
+}
+
+int acq_SetDeepAvgDebTim(uint32_t deb_t){
+    return osc_SetDeepAvgDebTim(deb_t);
+}
+/* Deep averaging getters */
+int acq_GetDeepAvgCount(uint32_t *count){
+    return osc_GetDeepAvgCount(count);
+}
+
+int acq_GetDeepAvgShift(uint32_t *shift){
+    return osc_GetDeepAvgShift(shift);
+}
+
+int acq_GetDeepDataSeqLen(uint32_t *len){
+    return osc_GetDeepDataSeqLen(len);
+}
+
+int acq_GetDeepAvgDebTim(uint32_t *deb_t){
+    return osc_GetDeepAvgDebTim(deb_t);
+}
+
+int acq_GetDeepAvgTriggerState(rp_acq_trig_src_t *source){
+    
+    uint32_t *state = NULL;
+    ECHECK(osc_GetDeepAvgTriggState(state));
+
+    if(state == 0){
+        *source = RP_TRIG_STATE_TRIGGERED;
+    }else{
+        *source = RP_TRIG_STATE_WAITING;
+    }
+
+    return RP_OK;
+}
+
+int acq_DeepAvgStart(){   
+    return osc_WriteDataIntoMemoryDeepAvg(true);
+}
+
+
+/**
  * Sets default configuration
  * @return
  */
