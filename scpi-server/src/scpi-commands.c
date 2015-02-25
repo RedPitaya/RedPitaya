@@ -169,6 +169,8 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:SOUR2:DATA:LAT:N?", .callback = RP_AcqGetChanel2LatestData,},
         {.pattern = "ACQ:BUF:SIZE?", .callback = RP_AcqGetBufferSize,},
 
+        /* Deep averagning acquire */
+
         /* Generate */
         {.pattern = "OUTPUT1:STATE", .callback = RP_GenChannel1SetState,},
         {.pattern = "OUTPUT2:STATE", .callback = RP_GenChannel2SetState,},

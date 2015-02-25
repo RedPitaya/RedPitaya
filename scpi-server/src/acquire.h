@@ -75,4 +75,16 @@ scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t * context);
 
+/* Deep averaging */
+scpi_result_t RP_SetDeepAvgCount(scpi_t *context);
+scpi_result_t RP_SetDeepAvgShift(scpi_t *context);
+scpi_result_t RP_SetDeepDataSewLen(scpi_t *context);
+scpi_result_t RP_SetDeepAvgDebTim(scpi_t *context);
+scpi_result_t RP_GetDeepAvgCount(scpi_t *context);
+scpi_result_t RP_GetDeepAvgShift(scpi_t *context);
+scpi_result_t RP_GetDeepDataSeqLen(scpi_t *context);
+scpi_result_t RP_GetDeepAvgDebTim(scpi_t *context);
+scpi_result_t RP_GetDeepAvgRawData(rp_channel_t channel, scpi_t *context);
+scpi_result_t RP_GetDeepAvgTriggerState(scpi_t *context);
+
 #endif /* ACQUIRE_H_ */
