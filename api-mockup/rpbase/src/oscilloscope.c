@@ -318,6 +318,7 @@ static volatile uint32_t *osc_chb = NULL;
 static volatile uint32_t *osc_dp_avg_cha = NULL;
 
 // The FPGA accumulated signal buffer pointer for channel B
+
 static volatile uint32_t *osc_dp_avg_chb = NULL;
 
 
@@ -361,6 +362,7 @@ int osc_Release()
     osc_chb = NULL;
     osc_dp_avg_cha = NULL;
     osc_dp_avg_chb = NULL;
+
     ECHECK(cmn_Release());
     return RP_OK;
 }

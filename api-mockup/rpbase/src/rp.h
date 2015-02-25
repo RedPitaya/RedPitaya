@@ -752,7 +752,9 @@ int rp_GetDeepAvgShift(uint32_t *shift);
 int rp_GetDeepDataSeqLen(uint32_t *len);
 int rp_GetDeepAvgDebTim(uint32_t *deb_t);
 
+
 int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int16_t *buffer);
+
 int acq_GetDeepAvgTriggerState(rp_acq_trig_src_t *source);
 
 

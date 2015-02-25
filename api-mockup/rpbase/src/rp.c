@@ -415,6 +415,7 @@ int rp_GetDeepAvgDebTim(uint32_t *deb_t){
     return acq_GetDeepAvgDebTim(deb_t);
 }
 
+
 int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int16_t *buffer){
     return acq_GetDeepAvgDataRaw(channel, size, buffer);
 }

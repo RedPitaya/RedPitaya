@@ -907,7 +907,6 @@ int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int16_t *buffer)
     return RP_OK;
 }
 
-
 /**
  * Sets default configuration
  * @return
