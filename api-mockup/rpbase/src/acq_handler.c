@@ -673,6 +673,8 @@ static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
     }
 }
 
+
+
 static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos)
 {
 
@@ -820,6 +822,91 @@ int acq_GetBufferSize(uint32_t *size) {
     *size = ADC_BUFFER_SIZE;
     return RP_OK;
 }
+
+/**
+ * Deep averaging functions
+ */
+
+/* Deep averagning setters */
+int acq_SetDeepAvgCount(uint32_t count){
+    return osc_SetDeepAvgCount(count);
+}
+
+int acq_SetDeepAvgShift(uint32_t shift){
+    return osc_SetDeepAvgShift(shift);
+}
+
+int acq_SetDeepDataSeqLen(uint32_t len){
+    return osc_SetDeepDataSeqLen(len);
+}
+
+int acq_SetDeepAvgDebTim(uint32_t deb_t){
+    return osc_SetDeepAvgDebTim(deb_t);
+}
+/* Deep averaging getters */
+int acq_GetDeepAvgCount(uint32_t *count){
+    return osc_GetDeepAvgCount(count);
+}
+
+int acq_GetDeepAvgShift(uint32_t *shift){
+    return osc_GetDeepAvgShift(shift);
+}
+
+int acq_GetDeepDataSeqLen(uint32_t *len){
+    return osc_GetDeepDataSeqLen(len);
+}
+
+int acq_GetDeepAvgDebTim(uint32_t *deb_t){
+    return osc_GetDeepAvgDebTim(deb_t);
+}
+
+int acq_GetDeepAvgTriggerState(rp_acq_trig_src_t *source){
+    
+    uint32_t *state = NULL;
+    ECHECK(osc_GetDeepAvgTriggState(state));
+
+    if(state == 0){
+        *source = RP_TRIG_STATE_TRIGGERED;
+    }else{
+        *source = RP_TRIG_STATE_WAITING;
+    }
+
+    return RP_OK;
+}
+
+int acq_DeepAvgStart(){   
+    return osc_WriteDataIntoMemoryDeepAvg(true);
+}
+
+/* Data acq for deep avg buff */
+static const volatile uint32_t *getDeepAvgRawBuffer(rp_channel_t channel){
+    
+    if(channel == RP_CH_1){
+        return osc_GetDeepAvgDataBufferChA();
+    }else{
+        return osc_GetDeepAvgDataBufferChB();
+    }
+}
+
+/* Acquisition for both channels made in user level */
+int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int16_t *buffer){
+
+    /* Same as osc buff */
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+    uint32_t cnts;
+    const volatile uint32_t *raw_buffer = getDeepAvgRawBuffer(channel);
+
+    rp_calib_params_t calib = calib_GetParams();
+    int32_t dc_offs = (channel = RP_DEC_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+
+    for(uint32_t i = 0; i < (*size); i++){
+        cnts = (raw_buffer[i % ADC_BUFFER_SIZE] & ADC_BITS);
+        buffer[i] = cmn_CalibCnts(ADC_BITS, cnts, dc_offs);
+    }
+
+    return RP_OK;
+}
+
 
 /**
  * Sets default configuration
