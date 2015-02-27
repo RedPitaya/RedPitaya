@@ -3,7 +3,8 @@
 // (C) 2015 Iztok Jeras
 ////////////////////////////////////////////////////////////////////////////////
 
-interface fir #(
+module fir #(
+  // data stream
   int unsigned DN = 1,  // data number
   int unsigned DW = 8,  // data width
   // coeficients
@@ -14,7 +15,7 @@ interface fir #(
   str_if.drn sti,
   str_if.src sto,
   // weights
-  logic signed [CN-1:0] [CW-1:0] wgh
+  input logic signed [CN-1:0] [CW-1:0] wgh
 );
 
 logic signed [DN-1:0] [CN-1:0] [DW   -1:0] dat;
@@ -23,7 +24,7 @@ logic signed [DN-1:0] [CN-1:0] [DW+CW-1:0] mul;
 function [DW+CW+$clog2(CN)-1:0] add (
   input  logic signed [CN-1:0] [DW+CW-1:0] mul       , // per tap multiplied values
   input  int unsigned                      tpb =    0, // tap begin
-  input  int unsigned                      tpe = CN-1, // tap end
+  input  int unsigned                      tpe = CN-1  // tap end
 );
   add = '0;
   for (int unsigned i=tpb; i<=tpe; i++) begin
