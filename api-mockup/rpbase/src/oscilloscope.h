@@ -64,4 +64,5 @@ const volatile uint32_t* osc_GetDataBufferChB();
 
 const volatile uint32_t* osc_GetDeepAvgDataBufferChA();
 const volatile uint32_t* osc_GetDeepAvgDataBufferChB();
+
 #endif /* SRC_OSCILLOSCOPE_H_ */

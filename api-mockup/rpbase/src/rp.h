@@ -737,7 +737,6 @@ int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
  */
 int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
-
 int rp_AcqGetBufSize(uint32_t* size);
 
 /* Deep averagning functions */
@@ -751,7 +750,6 @@ int rp_GetDeepAvgCount(uint32_t *count);
 int rp_GetDeepAvgShift(uint32_t *shift);
 int rp_GetDeepDataSeqLen(uint32_t *len);
 int rp_GetDeepAvgDebTim(uint32_t *deb_t);
-
 
 int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int16_t *buffer);
 
