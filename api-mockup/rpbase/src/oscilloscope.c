@@ -616,6 +616,6 @@ const volatile uint32_t* osc_GetDeepAvgDataBufferChA(){
     return osc_dp_avg_cha;
 }
 
-const volatile uint32_t* osc_GetDeepAvgDataBufferChb(){
+const volatile uint32_t* osc_GetDeepAvgDataBufferChB(){
     return osc_dp_avg_chb;
 }
