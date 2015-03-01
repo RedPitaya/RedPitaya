@@ -76,15 +76,20 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t * context);
 
 /* Deep averaging */
-scpi_result_t RP_SetDeepAvgCount(scpi_t *context);
-scpi_result_t RP_SetDeepAvgShift(scpi_t *context);
-scpi_result_t RP_SetDeepDataSewLen(scpi_t *context);
-scpi_result_t RP_SetDeepAvgDebTim(scpi_t *context);
-scpi_result_t RP_GetDeepAvgCount(scpi_t *context);
-scpi_result_t RP_GetDeepAvgShift(scpi_t *context);
-scpi_result_t RP_GetDeepDataSeqLen(scpi_t *context);
-scpi_result_t RP_GetDeepAvgDebTim(scpi_t *context);
-scpi_result_t RP_GetDeepAvgRawData(rp_channel_t channel, scpi_t *context);
-scpi_result_t RP_GetDeepAvgTriggerState(scpi_t *context);
+scpi_result_t RP_AcqDPAvgStart(scpi_t *context);
+scpi_result_t RP_AcqDPAvgSetCount(scpi_t *context);
+scpi_result_t RP_AcqDPAvgSetShift(scpi_t *context);
+scpi_result_t RP_AcqDPAvgSetSeqLen(scpi_t *context);
+scpi_result_t RP_AcqDPAvgSetDebTim(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetCount(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetShift(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetSeqLen(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetRawDataCh1(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetRawDataCh2(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetTriggerState(scpi_t *context);
+
+
+scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context);
 
 #endif /* ACQUIRE_H_ */
