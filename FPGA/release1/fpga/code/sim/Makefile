@@ -37,7 +37,16 @@ TBN=$(PATH_TBN)/axi_master_model.v \
     $(PATH_TBN)/red_pitaya_scope_tb.sv \
     $(PATH_TBN)/sys_bus_model.sv
 
+RTL_STR=$(PATH_RTL)/str/str_if.sv
+TBN_STR=$(PATH_TBN)/str/str_mon.sv \
+        $(PATH_TBN)/str/str_pkg.sv
+
 scope:
 	$(MODELSIM_BIN)/vlib work
 	$(MODELSIM_BIN)/vlog $(RTL) $(TBN)
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_scope_tb
+
+fir:
+	$(MODELSIM_BIN)/vlib work
+	$(MODELSIM_BIN)/vlog $(RTL_STR) $(TBN_STR) $(PATH_RTL)/fir/fir.sv $(PATH_TBN)/fir/fir_tb.sv
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' fir_tb
