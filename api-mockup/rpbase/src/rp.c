@@ -420,6 +420,10 @@ int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int16_t *buffer){
     return acq_GetDeepAvgDataRaw(channel, size, buffer);
 }
 
+int rp_GetDeepAvgTriggerState(rp_acq_trig_src_t *source){
+    return acq_GetDeepAvgTriggerState(source);
+}
+
 /**
  * Health methods
  */
