@@ -14,14 +14,14 @@ CROSS_COMPILE = arm-linux-gnueabi-
 RP_PATH_INCLUDE = -I../../api-mockup/rpbase/src/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../api-mockup/rpbase -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L ../../api-mockup/rpbase/src -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
 #Objects
-OBJECTS = blink_diode.o
+OBJECTS = deep_avg_test.o
 #Target file
 TARGET = api_test
 
