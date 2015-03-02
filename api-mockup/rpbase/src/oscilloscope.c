@@ -578,9 +578,10 @@ int osc_GetDeepAvgDebTim(uint32_t *deb_t){
     return cmn_GetValue(&osc_reg->trig_dbc_t, deb_t, DEB_TIM_MASK);
 }
 
-int osc_GetDeepAvgTriggState(uint32_t *state){
-    return cmn_GetValue(&osc_reg->ac_ctrl_stat, state, AC_CTRL_STAT);
+int osc_GetDeepAvgRunState(uint32_t *run){
+    return cmn_GetValue(&osc_reg->ac_ctrl_stat, run, AC_CTRL_STAT);
 }
+
 
 /* osc_WriteDataIntoMemoryDeepAvg
  * First write enable and then write run
@@ -590,10 +591,10 @@ int osc_WriteDataIntoMemoryDeepAvg(bool enable){
 
     if(enable){
         cmn_SetBits(&osc_reg->ac_ctrl_stat, 0x1, AC_CTRL_STAT);
-        cmn_SetBits(&osc_reg->ac_ctrl_stat, 0x3, AC_CTRL_STAT);
+        cmn_SetBits(&osc_reg->ac_ctrl_stat, 0x2, AC_CTRL_STAT);
     }else{
         cmn_UnsetBits(&osc_reg->ac_ctrl_stat, 0x1, AC_CTRL_STAT);
-        cmn_UnsetBits(&osc_reg->ac_ctrl_stat, 0x3, AC_CTRL_STAT);
+        cmn_UnsetBits(&osc_reg->ac_ctrl_stat, 0x2, AC_CTRL_STAT);
     }
     return RP_OK;
 }
