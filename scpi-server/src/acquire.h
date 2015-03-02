@@ -87,7 +87,7 @@ scpi_result_t RP_AcqDPAvgGetSeqLen(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetRawDataCh1(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetRawDataCh2(scpi_t *context);
-scpi_result_t RP_AcqDPAvgGetTriggerState(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetRunState(scpi_t *context);
 
 
 scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context);

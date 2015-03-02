@@ -989,11 +989,11 @@ scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqDPAvgGetTriggerState(scpi_t *context){
+scpi_result_t RP_AcqDPAvgGetRunState(scpi_t *context){
 
     rp_acq_trig_src_t trig_state;
 
-    int result = rp_GetDeepAvgTriggerState(&trig_state);
+    int result = rp_GetDeepAvgRunState(&trig_state);
 
     if(result != RP_OK){
         syslog(LOG_ERR, "ACQ:DP:TRIG Failed to retrieve parameter trigger state.");
@@ -1013,7 +1013,7 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    int16_t buffer[size];
+    int32_t buffer[size];
     int result = rp_GetDeepAvgRawData(channel, &size, buffer);
 
     if(result != RP_OK){
@@ -1021,7 +1021,7 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferInt16(context, buffer, size);
+    SCPI_ResultBufferInt32(context, buffer, size);
 
     syslog(LOG_INFO, "ACQ:DP:SOUR<n>:DATA:N? Successfully returned data.");
 
