@@ -22,7 +22,7 @@ module red_pitaya_acum #(
   // control
   input  logic           ctl_run,  // accumulation running status
   // status
-  input  logic           sts_end,  // end of sequence
+  output logic           sts_end,  // end of sequence
   output logic [ACW-1:0] sts_cnt,  // accumulation count
   // input data stream
 //input  logic           sti_tkeep ,
