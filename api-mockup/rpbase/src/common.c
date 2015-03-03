@@ -150,6 +150,22 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
     return m;
 }
 
+int32_t cmn_DeepAvgCalibCnts(uint32_t field_len, int32_t cnts, int calib_dc_off)
+{
+
+    int64_t m;
+    //int64_t max = (1 << (field_len - 1));
+
+    /* adopt ADC count with calibrated DC offset */
+    m = ((int64_t) cnts) + ((int64_t) calib_dc_off);
+
+    /* check limits */
+    //if      (m > +max)  m = +max;
+    //else if (m < -max)  m = -max;
+
+    return (int32_t)m;
+}
+
 /*----------------------------------------------------------------------------*/
 /**
  * @brief Converts ADC/DAC/Buffer counts to voltage [V]

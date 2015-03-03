@@ -21,7 +21,7 @@
 
 // Base Oscilloscope address
 static const int OSC_BASE_ADDR = 0x40100000;
-static const int OSC_BASE_SIZE = 0x30000;
+static const int OSC_BASE_SIZE = 0x50000;
 
 // Oscilloscope Channel A input signal buffer offset
 #define OSC_CHA_OFFSET 0x10000
@@ -311,14 +311,13 @@ static volatile osc_control_t *osc_reg = NULL;
 // The FPGA input signal buffer pointer for channel A
 static volatile uint32_t *osc_cha = NULL;
 
-// The FPGA input signal buffer pointer for channel B */
+// The FPGA input signal buffer pointer for channel B
 static volatile uint32_t *osc_chb = NULL;
 
 // The FPGA accumulated signal buffer pointer for channel A
 static volatile uint32_t *osc_dp_avg_cha = NULL;
 
 // The FPGA accumulated signal buffer pointer for channel B
-
 static volatile uint32_t *osc_dp_avg_chb = NULL;
 
 
@@ -348,10 +347,13 @@ int osc_Init()
 {
     ECHECK(cmn_Init());
     ECHECK(cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg));
-    osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
-    osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
+    osc_cha        = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
+    osc_chb        = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
     osc_dp_avg_cha = (uint32_t*)((char*)osc_reg + OSC_ACC_CHA_OFFSET);
     osc_dp_avg_chb = (uint32_t*)((char*)osc_reg + OSC_ACC_CHB_OFFSET);
+
+    //Test
+    printf("osc_reg address: %p || dp avg channel a address: %p\n", &osc_reg->conf, osc_dp_avg_cha);
     return RP_OK;
 }
 
@@ -543,7 +545,7 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
  * Deep averaging
  */
 int osc_SetDeepAvgCount(uint32_t count){
-    ECHECK(cmn_SetValue(&osc_reg->ac_count, count, COUNT_MASK));
+    cmn_SetValue(&osc_reg->ac_count, count, COUNT_MASK);
     return RP_OK;
 }
 
@@ -553,6 +555,7 @@ int osc_SetDeepAvgShift(uint32_t shift){
 }
 
 int osc_SetDeepDataSeqLen(uint32_t len){
+    //Writing len-1 because we write one bit less in register.
     ECHECK(cmn_SetValue(&osc_reg->ac_data_seq_len, len, AC_DATA_SEQ_MASK));
     return RP_OK;
 }
