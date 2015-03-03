@@ -872,14 +872,14 @@ scpi_result_t RP_AcqDPAvgSetShift(scpi_t *context){
 
     //Read input parameter
     if(!SCPI_ParamUInt(context, &shift, true)){
-        syslog(LOG_ERR, "ACQ:DP:SHIFT? is missing input parameter.");
+        syslog(LOG_ERR, "*ACQ:DP:SHIFT? is missing input parameter.");
         return SCPI_RES_ERR;
     }
 
     int result = rp_SetDeepAvgShift(shift);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:SHIFT? Failed to set shift: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:DP:SHIFT? Failed to set shift: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     syslog(LOG_INFO, "*ACQ:DP:SHIFT? Successfully set shift to: %d", shift);
@@ -892,18 +892,18 @@ scpi_result_t RP_AcqDPAvgSetSeqLen(scpi_t *context){
 
     //Read input parameter
     if(!SCPI_ParamUInt(context, &seq_len, true)){
-        syslog(LOG_ERR, "ACQ:DP:LEN? is missing input parameter.");
+        syslog(LOG_ERR, "*ACQ:DP:LEN? is missing input parameter.");
         return SCPI_RES_ERR;
     }
 
     int result = rp_SetDeepDataSeqLen(seq_len);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:LEN? Failed to set sequence length.");
+        syslog(LOG_ERR, "*ACQ:DP:LEN? Failed to set sequence length.");
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "ACQ:DP:LEN? Successfully set sequence length to: %d", seq_len);
+    syslog(LOG_INFO, "*ACQ:DP:LEN? Successfully set sequence length to: %d", seq_len);
     return SCPI_RES_OK;
 }
 
@@ -913,18 +913,18 @@ scpi_result_t RP_AcqDPAvgSetDebTim(scpi_t *context){
 
     //Read input parameter
     if(!SCPI_ParamUInt(context, &deb_timer, true)){
-        syslog(LOG_ERR, "ACQ:DP:TIM? is missing input parameter.");
+        syslog(LOG_ERR, "*ACQ:DP:TIM? is missing input parameter.");
         return SCPI_RES_ERR;
     }
 
     int result = rp_SetDeepAvgDebTim(deb_timer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:TIM? Failed to set debunce timer.");
+        syslog(LOG_ERR, "*ACQ:DP:TIM? Failed to set debunce timer.");
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "ACQ:DP:TIM? Successfully set debunce timer to: %d", deb_timer);
+    syslog(LOG_INFO, "*ACQ:DP:TIM? Successfully set debunce timer to: %d", deb_timer);
     return SCPI_RES_OK;
 }
 
@@ -935,11 +935,11 @@ scpi_result_t RP_AcqDPAvgGetCount(scpi_t *context){
     int result = rp_GetDeepAvgCount(&count);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:COUNT Failed to get parameter count.");
+        syslog(LOG_ERR, "*ACQ:DP:COUNT Failed to get parameter count.");
         return SCPI_RES_ERR;
     }
     SCPI_ResultInt(context, count);
-    syslog(LOG_INFO, "ACQ:DP:COUNT Successfully retrieved count parameter: %d", count);
+    syslog(LOG_INFO, "*ACQ:DP:COUNT Successfully retrieved count parameter: %d", count);
     return SCPI_RES_OK;
 }
 
@@ -950,11 +950,11 @@ scpi_result_t RP_AcqDPAvgGetShift(scpi_t *context){
     int result = rp_GetDeepAvgShift(&shift);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:SHIFT Failed to retrieve parameter shift.");
+        syslog(LOG_ERR, "*ACQ:DP:SHIFT Failed to retrieve parameter shift.");
         return SCPI_RES_OK;
     }
     SCPI_ResultInt(context, shift);
-    syslog(LOG_INFO, "ACQ:DP:SHIFT Successfully retrieved shift parameter: %d", shift);
+    syslog(LOG_INFO, "*ACQ:DP:SHIFT Successfully retrieved shift parameter: %d", shift);
     return SCPI_RES_OK;
 }
 
@@ -965,11 +965,11 @@ scpi_result_t RP_AcqDPAvgGetSeqLen(scpi_t *context){
     int result = rp_GetDeepDataSeqLen(&seq_len);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:LEN Failed to retrieve parameter sequence length.");
+        syslog(LOG_ERR, "*ACQ:DP:LEN Failed to retrieve parameter sequence length.");
         return SCPI_RES_OK;
     }
     SCPI_ResultInt(context, seq_len);
-    syslog(LOG_INFO, "ACQ:DP:LEN Successfully retrieved parameter sequence length.");
+    syslog(LOG_INFO, "*ACQ:DP:LEN Successfully retrieved parameter sequence length.");
     return SCPI_RES_OK;
 }
 
@@ -980,12 +980,12 @@ scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context){
     int result = rp_GetDeepAvgDebTim(&deb_timer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:TIM Failed to retrieve parameter debunce timer.");
+        syslog(LOG_ERR, "*ACQ:DP:TIM Failed to retrieve parameter debunce timer.");
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultInt(context, deb_timer);
-    syslog(LOG_INFO, "ACQ:DP:TIM Successfully retrieved parameter debounce timer.");
+    syslog(LOG_INFO, "*ACQ:DP:TIM Successfully retrieved parameter debounce timer.");
     return SCPI_RES_OK;
 }
 
@@ -996,11 +996,11 @@ scpi_result_t RP_AcqDPAvgGetRunState(scpi_t *context){
     int result = rp_GetDeepAvgRunState(&trig_state);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:TRIG Failed to retrieve parameter trigger state.");
+        syslog(LOG_ERR, "*ACQ:DP:TRIG Failed to retrieve parameter trigger state.");
         return SCPI_RES_ERR;
     }
     SCPI_ResultInt(context, trig_state);
-    syslog(LOG_INFO, "ACQ:DP:TRIG Successfully retrieved parameter trigger state.");
+    syslog(LOG_INFO, "*ACQ:DP:TRIG Successfully retrieved parameter trigger state.");
     return SCPI_RES_OK;
 }
 
@@ -1009,7 +1009,7 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
     uint32_t size;
 
     if(!SCPI_ParamUInt(context, &size, true)){
-        syslog(LOG_ERR, "ACQ:DP:SOUR<n>:DATA:N? is missing first parameter");
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA:N? is missing first parameter");
         return SCPI_RES_ERR;
     }
 
@@ -1017,13 +1017,13 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
     int result = rp_GetDeepAvgRawData(channel, &size, buffer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "ACQ:DP:SOUR<n>:DATA:N? Failed to get deep averaging data: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA:N? Failed to get deep averaging data: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultBufferInt32(context, buffer, size);
 
-    syslog(LOG_INFO, "ACQ:DP:SOUR<n>:DATA:N? Successfully returned data.");
+    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:DATA:N? Successfully returned data.");
 
     return SCPI_RES_OK;
 }
