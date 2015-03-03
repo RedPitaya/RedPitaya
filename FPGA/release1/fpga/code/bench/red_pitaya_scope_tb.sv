@@ -106,6 +106,7 @@ logic signed [ 32-1: 0] rdata_blk [];
 bit   signed [ 32-1: 0] rdata_ref [];
 int unsigned            rdata_trg [$];
 int unsigned            blk_size;
+int unsigned            blk_cnt;
 int unsigned            shift;
 
 // system clock & reset
@@ -134,7 +135,9 @@ initial begin
    // external trigger
    trig_ext = 1'b0;
 
-   blk_size = 10;
+   shift = 0;
+   blk_size = 20;
+   blk_cnt = 32;
 
    wait (sys_rstn && adc_rstn)
    repeat(10) @(posedge sys_clk);
@@ -142,7 +145,7 @@ initial begin
    bus.bus_write(32'h08,-32'd0000 );  // A trigger treshold  (trigger at treshold     0 where signal range is -8192:+8191)
    bus.bus_write(32'h0C,-32'd7000 );  // B trigger treshold  (trigger at treshold -7000 where signal range is -8192:+8191)
    bus.bus_write(32'h10, blk_size );  // after trigger delay (the buffer contains 2**14=16384 locations, 16384-10 before and 32 after trigger)
-   bus.bus_write(32'h14, 32'd8    );  // data decimation     (data is decimated by a factor of 8)
+   bus.bus_write(32'h14, 32'd0    );  // data decimation     (data is decimated by a factor of 8)
    bus.bus_write(32'h20, 32'd20   );  // A hysteresis
    bus.bus_write(32'h24, 32'd200  );  // B hysteresis
 
@@ -172,7 +175,7 @@ initial begin
 
    // accumulator
    bus.bus_write(32'h04, 32'h6     );  // configure trigger mode (external rising edge)
-   bus.bus_write(32'h98, 32'd8     );  // accumulate 8 triggers
+   bus.bus_write(32'h98, blk_cnt -1);  // accumulate blk_cnt triggers
    bus.bus_write(32'ha0, blk_size-1);  // block length
    bus.bus_write(32'h9c, shift     );  // shift accumulator output by 3 bit to get the result
    bus.bus_write(32'h94, 32'd1     );  // enable accumulator
@@ -195,8 +198,8 @@ initial begin
        repeat( 2) @(posedge sys_clk);       trig_ext = 1'b1;
        repeat( 2) @(posedge sys_clk);       trig_ext = 1'b0;
        repeat(20) @(posedge sys_clk);
-       // a sequence of 10 short triggers
-       repeat (blk_size) begin
+       // a sequence of short triggers
+       repeat (blk_cnt) begin
          repeat( 1) @(posedge sys_clk);       trig_ext = 1'b1;
          repeat( 1) @(posedge sys_clk);       trig_ext = 1'b0;
          repeat(20) @(posedge sys_clk);
@@ -229,6 +232,8 @@ initial begin
        $display ("trigger positions: %p", rdata_trg);
        $display ("data reference: %p", rdata_ref);
        $display ("data read     : %p", rdata_blk);
+       if (rdata_ref == rdata_blk) $display ("SUCESS");
+       else                        $display ("FAILURE");
      end
    join
 
