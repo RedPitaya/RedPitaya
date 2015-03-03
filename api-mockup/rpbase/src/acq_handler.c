@@ -860,15 +860,15 @@ int acq_GetDeepAvgDebTim(uint32_t *deb_t){
     return osc_GetDeepAvgDebTim(deb_t);
 }
 
-int acq_GetDeepAvgTriggerState(rp_acq_trig_src_t *source){
+int acq_GetDeepAvgRunState(rp_acq_trig_src_t *run){
     
-    uint32_t *state = NULL;
-    ECHECK(osc_GetDeepAvgTriggState(state));
+    uint32_t state;
+    ECHECK(osc_GetDeepAvgRunState(&state));
 
-    if(state == 0){
-        *source = RP_TRIG_STATE_TRIGGERED;
+    if(!(state & 0x2)){
+        *run = RP_TRIG_STATE_TRIGGERED;
     }else{
-        *source = RP_TRIG_STATE_WAITING;
+        *run = RP_TRIG_STATE_WAITING;
     }
 
     return RP_OK;
@@ -889,7 +889,7 @@ static const volatile uint32_t *getDeepAvgRawBuffer(rp_channel_t channel){
 }
 
 /* Acquisition for both channels made in user level */
-int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int16_t *buffer){
+int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer){
 
     /* Same as osc buff */
     *size = MIN(*size, ADC_BUFFER_SIZE);

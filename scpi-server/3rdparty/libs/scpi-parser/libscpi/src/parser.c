@@ -494,6 +494,26 @@ size_t SCPI_ResultBufferInt16(scpi_t * context, const int16_t *data, uint32_t si
     return result;
 }
 
+size_t SCPI_ResultBufferInt32(scpi_t *context, const int32_t *data, uint32_t size){
+    size_t result = 0;
+    result += writeDelimiter(context);
+    result += writeData(context, "{", 1);
+
+    uint32_t i;
+    size_t len;
+    char buffer[26];
+    for(i = 0; i < size-1; i++){
+        len = longToStr(data[i], buffer, sizeof(buffer));
+        result += writeData(context, buffer, len);
+        result += writeData(context, ",", 1);
+    }
+    len = longToStr(data[i], buffer, sizeof(buffer));
+    result += writeData(context, buffer, len);
+    result += writeData(context, "}", 1);
+    context->output_count++;
+    return result;
+}
+
 size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size) {
     size_t result = 0;
     result += writeDelimiter(context);

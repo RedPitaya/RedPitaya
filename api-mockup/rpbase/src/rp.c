@@ -416,8 +416,12 @@ int rp_GetDeepAvgDebTim(uint32_t *deb_t){
 }
 
 
-int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int16_t *buffer){
+int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int32_t *buffer){
     return acq_GetDeepAvgDataRaw(channel, size, buffer);
+}
+
+int rp_GetDeepAvgRunState(rp_acq_trig_src_t *source){
+    return acq_GetDeepAvgRunState(source);
 }
 
 /**

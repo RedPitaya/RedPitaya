@@ -170,6 +170,19 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:BUF:SIZE?", .callback = RP_AcqGetBufferSize,},
 
         /* Deep averagning acquire */
+        {.pattern = "ACQ:DP:START", .callback = RP_AcqDPAvgStart,                   },
+        {.pattern = "ACQ:DP:COUNT?", .callback = RP_AcqDPAvgSetCount,               },
+        {.pattern = "ACQ:DP:SHIFT?", .callback = RP_AcqDPAvgSetShift,               },
+        {.pattern = "ACQ:DP:LEN?", .callback = RP_AcqDPAvgSetSeqLen,                },
+        {.pattern = "ACQ:DP:TIM?", .callback = RP_AcqDPAvgSetDebTim,                },
+        {.pattern = "ACQ:DP:COUNT", .callback = RP_AcqDPAvgGetCount,                },
+        {.pattern = "ACQ:DP:SHIFT", .callback = RP_AcqDPAvgGetShift,                },
+        {.pattern = "ACQ:DP:LEN", .callback = RP_AcqDPAvgGetSeqLen,                 },
+        {.pattern = "ACQ:DP:TIM", .callback = RP_AcqDPAvgGetDebTim,                 },
+        {.pattern = "ACQ:DP:RUN", .callback = RP_AcqDPAvgGetRunState,          },
+        {.pattern = "ACQ:DP:SOUR1:DATA?", .callback = RP_AcqDPAvgGetRawDataCh1,     },
+        {.pattern = "ACQ:DP:SOUR2:DATA?", .callback = RP_AcqDPAvgGetRawDataCh2,     },
+
 
         /* Generate */
         {.pattern = "OUTPUT1:STATE", .callback = RP_GenChannel1SetState,},

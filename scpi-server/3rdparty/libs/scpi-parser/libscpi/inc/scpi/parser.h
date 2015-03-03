@@ -61,6 +61,7 @@ extern "C" {
     size_t SCPI_ResultText(scpi_t * context, const char * data);
     size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val);
     size_t SCPI_ResultBufferInt16(scpi_t * context, const int16_t *data, uint32_t size);
+    size_t SCPI_ResultBufferInt32(scpi_t *context, const int32_t *data, uint32_t size);
     size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size);
 
     scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandatory);

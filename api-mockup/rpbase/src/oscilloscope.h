@@ -56,7 +56,7 @@ int osc_GetDeepAvgCount(uint32_t *count);
 int osc_GetDeepAvgShift(uint32_t *shift);
 int osc_GetDeepDataSeqLen(uint32_t *len);
 int osc_GetDeepAvgDebTim(uint32_t *deb_t);
-int osc_GetDeepAvgTriggState(uint32_t *state);
+int osc_GetDeepAvgRunState(uint32_t *run);
 int osc_WriteDataIntoMemoryDeepAvg(bool eanble);
 
 const volatile uint32_t* osc_GetDataBufferChA();
