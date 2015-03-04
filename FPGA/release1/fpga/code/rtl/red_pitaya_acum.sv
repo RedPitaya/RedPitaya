@@ -216,10 +216,10 @@ mem_rdt <= mem [mem_rad];
 //if (mem_ren)  mem_rdt <= mem [mem_rad];
 
 // read enable mux between stream and read bus
-assign mem_ren = ctl_run ? mem_vld : bus_ren;
+assign mem_ren = sts_run ? mem_vld : bus_ren;
 
 // read address mux between stream and read bus
-assign mem_rad = ctl_run ? mem_adr : bus_adr;
+assign mem_rad = sts_run ? mem_adr : bus_adr;
 
 // read bus data
 assign bus_rdt = mem_rdt;
