@@ -19,14 +19,15 @@ module red_pitaya_acum #(
   input  logic           clr,  // clear (synchronous)
   // configuration
   input  logic [ACW-1:0] cfg_cnt,  // accumulation count
+  input  logic [AAW-1:0] cfg_len,  // accumulation stream length
   // control
-  input  logic           ctl_run,  // accumulation running status
+  input  logic           ctl_run,  // accumulation start pulse
   // status
-  output logic           sts_end,  // end of sequence
+  output logic           sts_run,  // end of sequence
   output logic [ACW-1:0] sts_cnt,  // accumulation count
   // input data stream
 //input  logic           sti_tkeep ,
-  input  logic           sti_tlast ,
+  input  logic           sti_t_trig,
   input  logic [IDW-1:0] sti_tdata ,
   input  logic           sti_tvalid,
   output logic           sti_tready,
@@ -39,7 +40,8 @@ module red_pitaya_acum #(
   // memmory interface (read only)
   input  logic           bus_ren,
   input  logic [AAW-1:0] bus_adr,
-  output logic [ODW-1:0] bus_rdt
+  output logic [ODW-1:0] bus_rdt,
+  output logic           bus_vld
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,8 +49,15 @@ module red_pitaya_acum #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream transfer
+logic           acu_valid;
 logic           sti_trnsfr;
 logic           sto_trnsfr;
+
+// additional input stream signals
+logic           sti_tlast ;
+logic [AAW-1:0] sti_cnt;
+
+logic           sts_end;  // end of sequence
 
 // accumulation counter
 logic [ACW-1:0] acu_cnt;  // accumulation counter
@@ -74,12 +83,28 @@ logic           mem_tsg;                    // addition tmp sign
 logic [ODW-1:IDW] mem_tts;
 
 ////////////////////////////////////////////////////////////////////////////////
-// I/O stream
+// Input stream
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream transfer
-assign sti_trnsfr = sti_tvalid & sti_tready;
+assign acu_tvalid = sti_tvalid & sts_run & (sti_t_trig | (|sti_cnt));
+assign sti_trnsfr = acu_tvalid & sti_tready;
 assign sto_trnsfr = sto_tvalid & sto_tready;
+
+// run status
+always @(posedge clk) //, posedge rst)
+if (rst)             sts_run <= 1'b0;
+else begin
+  if      (ctl_run)  sts_run <= 1'b1;
+  else if (sts_end)  sts_run <= 1'b0;
+end
+
+// buffer length counter
+always @(posedge clk) //, posedge rst)
+if (rst)              sti_cnt <= 0;
+else if (sti_trnsfr)  sti_cnt <= sti_tlast ? 0 : sti_cnt + 1;
+
+assign sti_tlast = sti_cnt == cfg_len;
 
 // accumulation counter
 always_ff @ (posedge clk) //, posedge rst)
@@ -106,8 +131,15 @@ if (sti_trnsfr) begin
   buf_tdata <= sti_tdata;
 end
 
+// end status pulse
+assign sts_end = sti_trnsfr & sti_tlast & acu_end;
+
 // input stream ready
 assign sti_tready = sto_tready;
+
+////////////////////////////////////////////////////////////////////////////////
+// Output stream
+////////////////////////////////////////////////////////////////////////////////
 
 // output stream valid
 always_ff @ (posedge clk) //, posedge rst)
@@ -120,9 +152,6 @@ end
 // output stream data
 always_ff @ (posedge clk)
 if (mem_wen & acu_lst)  sto_tdata <= mem_wdt;
-
-// end status pulse
-assign sts_end = sti_trnsfr & sti_tlast & acu_end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // memory access
@@ -194,5 +223,9 @@ assign mem_rad = ctl_run ? mem_adr : bus_adr;
 
 // read bus data
 assign bus_rdt = mem_rdt;
+
+always_ff @ (posedge clk) //, posedge rst)
+if (rst)  bus_vld <= 1'b0;
+else      bus_vld <= bus_ren;
 
 endmodule: red_pitaya_acum

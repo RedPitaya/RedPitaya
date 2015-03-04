@@ -530,67 +530,75 @@ assign axi1_rstn_o = (adc_rstn_i != 1'b0) && axi1_rstn_i ;
 
 
 
+//---------------------------------------------------------------------------------
+// adding a calibration offset to the input stream
+
+reg                 off_tvalid;
+reg                 off_t_trig;
+reg signed [15-1:0] off_a_tdata , off_b_tdata ;
+
+reg signed [14-1:0] set_off_a, set_off_b;
+
+
+always @(posedge adc_clk_i) // , posedge adc_rstn_i)
+if (~adc_rstn_i) begin
+  off_tvalid <= 1'b0;
+  off_t_trig <= 1'b0;
+end else begin
+  off_tvalid <= adc_dv;
+  off_t_trig <= adc_trig;
+end
+
+always @(posedge adc_clk_i)
+if (adc_dv) begin
+  off_a_tdata <= $signed(adc_a_dat) + set_off_a;
+  off_b_tdata <= $signed(adc_b_dat) + set_off_b;
+end
 
 //---------------------------------------------------------------------------------
 // averaging accumulator module instances
 
-reg            acu_ctl_run;
-wire           acu_sts_end;
+wire           acu_ctl_run;
+wire           acu_sts_run;
 
-reg  [RSZ-1:0] acu_len_cnt;
-wire           acu_len_end;
-wire           acu_valid;
-
-reg            acu_rd   ;
 reg            acu_rd_dv;
 
 wire           acu_a_mem_ren, acu_b_mem_ren;
+wire           acu_a_mem_vld, acu_b_mem_vld;
 wire [RSZ-1:0] acu_a_mem_adr, acu_b_mem_adr;
-wire  [46-1:0] acu_a_mem_tmp, acu_b_mem_tmp; // 14+32 = 46
+wire  [47-1:0] acu_a_mem_tmp, acu_b_mem_tmp; // 1+14+32 = 47
 reg   [32-1:0] acu_a_mem_rdt, acu_b_mem_rdt;
 
-// run control signal is triggered by a write into the arm register
-always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0)  acu_ctl_run <= 1'b0;
-else if (set_acu_ena) begin
-  if (wen & (addr[19:0]==20'h94) & wdata[1])  acu_ctl_run <= 1'b1;
-  else if (acu_sts_end)                       acu_ctl_run <= 1'b0;
-end
-
-assign acu_valid = acu_ctl_run & (adc_trig | (|acu_len_cnt));
-
-always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0)  acu_len_cnt <= 0;
-else if (acu_valid)      acu_len_cnt <= acu_len_end ? 0 : acu_len_cnt + 1;
-
-assign acu_len_end = acu_len_cnt == set_acu_len;
+// generate pulse on write into the run bit of the control/status register
+assign acu_ctl_run = set_acu_ena & wen & (addr[19:0]==20'h94) & wdata[1];
 
 // memory read data valid
 always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0) begin
-  acu_rd    <= 1'b0;
+if (~adc_rstn_i) begin
   acu_rd_dv <= 1'b0;
 end else begin
-  acu_rd    <= acu_a_mem_ren | acu_b_mem_ren;
-  acu_rd_dv <= acu_rd;
+  acu_rd_dv <= acu_a_mem_vld | acu_b_mem_vld;
 end
 
-red_pitaya_acum acum_a (
+red_pitaya_acum #(
+  .IDW (15)
+) acum_a (
   // system signals
   .clk        (adc_clk_i),
   .rst        (~adc_rstn_i),
   .clr        (adc_rst_do),
   // configuration
   .cfg_cnt    (set_acu_cnt),
+  .cfg_len    (set_acu_len),
   // control/status
   .ctl_run    (acu_ctl_run),
-  .sts_end    (acu_sts_end),
+  .sts_run    (acu_sts_run),
   .sts_cnt    (set_sts_cnt),
   // input data stream
-  .sti_tlast  (acu_len_end),
-  .sti_tdata  (adc_a_dat),
-//.sti_tdata  (adc_a_i),  // TODO remove debug code
-  .sti_tvalid (acu_valid),
+//  .sti_tdata  (($signed(adc_a_i) + 15'(set_off_a))),  // TODO remove debug code
+  .sti_tdata  (off_a_tdata),
+  .sti_t_trig (off_t_trig),
+  .sti_tvalid (off_tvalid),
   .sti_tready (),
   // output data stream
   .sto_tlast  (),
@@ -600,30 +608,34 @@ red_pitaya_acum acum_a (
   // memmory interface (read only)
   .bus_ren    (acu_a_mem_ren),
   .bus_adr    (acu_a_mem_adr),
-  .bus_rdt    (acu_a_mem_tmp)
+  .bus_rdt    (acu_a_mem_tmp),
+  .bus_vld    (acu_a_mem_vld)
 );
 
 assign acu_a_mem_ren = ren & (addr[17:16] == 2'h3);
 assign acu_a_mem_adr =        addr[RSZ+1:2];
 
 always @ (posedge adc_clk_i)
-acu_a_mem_rdt <= acu_a_mem_tmp >>> set_acu_shf;
+if (acu_a_mem_vld) acu_a_mem_rdt <= acu_a_mem_tmp >>> set_acu_shf;
 
-red_pitaya_acum acum_b (
+red_pitaya_acum #(
+  .IDW (15)
+) acum_b (
   // system signals
   .clk        (adc_clk_i),
   .rst        (~adc_rstn_i),
   .clr        (adc_rst_do),
   // configuration
   .cfg_cnt    (set_acu_cnt),
+  .cfg_len    (set_acu_len),
   // control/status
   .ctl_run    (acu_ctl_run),
-  .sts_end    (           ),
+  .sts_run    (           ),
   .sts_cnt    (           ),
   // input data stream
-  .sti_tlast  (acu_len_end),
-  .sti_tdata  (adc_b_dat),
-  .sti_tvalid (acu_valid),
+  .sti_tdata  (off_b_tdata),
+  .sti_t_trig (off_t_trig),
+  .sti_tvalid (off_tvalid),
   .sti_tready (),
   // output data stream
   .sto_tlast  (),
@@ -633,14 +645,15 @@ red_pitaya_acum acum_b (
   // memmory interface (read only)
   .bus_ren    (acu_b_mem_ren),
   .bus_adr    (acu_b_mem_adr),
-  .bus_rdt    (acu_b_mem_tmp)
+  .bus_rdt    (acu_b_mem_tmp),
+  .bus_vld    (acu_b_mem_vld)
 );
 
 assign acu_b_mem_ren = ren & (addr[17:16] == 2'h4);
 assign acu_b_mem_adr =        addr[RSZ+1:2];
 
 always @ (posedge adc_clk_i)
-acu_b_mem_rdt <= acu_b_mem_tmp >>> set_acu_shf;
+if (acu_b_mem_vld) acu_b_mem_rdt <= acu_b_mem_tmp >>> set_acu_shf;
 
 //---------------------------------------------------------------------------------
 //  Trigger source selector
@@ -848,6 +861,10 @@ if (adc_rstn_i == 1'b0) begin
    set_acu_ena   <=   1'd0      ;
    set_acu_cnt   <=  32'd0      ;
    set_acu_shf   <=   4'd0      ;
+   set_acu_len   <=  14'd0      ;
+
+   set_off_a     <=  14'd0      ;
+   set_off_b     <=  14'd0      ;
 
    set_a_axi_en  <=   1'b0      ;
    set_b_axi_en  <=   1'b0      ;
@@ -870,12 +887,6 @@ end else begin
       if (addr[19:0]==20'h48)   set_b_filt_kk <= wdata[25-1:0] ;
       if (addr[19:0]==20'h4C)   set_b_filt_pp <= wdata[25-1:0] ;
 
-      if (addr[19:0]==20'h90)   set_deb_len <= wdata[20-1:0] ;
-      if (addr[19:0]==20'h94)   set_acu_ena <= wdata[     0] ;
-      if (addr[19:0]==20'h98)   set_acu_cnt <= wdata[32-1:0] ;
-      if (addr[19:0]==20'h9c)   set_acu_shf <= wdata[ 4-1:0] ;
-      if (addr[19:0]==20'ha0)   set_acu_len <= wdata[14-1:0] ;
-
       if (addr[19:0]==20'h50)   set_a_axi_start <= wdata[32-1:0] ;
       if (addr[19:0]==20'h54)   set_a_axi_stop  <= wdata[32-1:0] ;
       if (addr[19:0]==20'h58)   set_a_axi_dly   <= wdata[32-1:0] ;
@@ -885,6 +896,14 @@ end else begin
       if (addr[19:0]==20'h74)   set_b_axi_stop  <= wdata[32-1:0] ;
       if (addr[19:0]==20'h78)   set_b_axi_dly   <= wdata[32-1:0] ;
       if (addr[19:0]==20'h7C)   set_b_axi_en    <= wdata[     0] ;
+
+      if (addr[19:0]==20'h90)   set_deb_len <= wdata[20-1:0] ;
+      if (addr[19:0]==20'h94)   set_acu_ena <= wdata[     0] ;
+      if (addr[19:0]==20'h98)   set_acu_cnt <= wdata[32-1:0] ;
+      if (addr[19:0]==20'h9c)   set_acu_shf <= wdata[ 4-1:0] ;
+      if (addr[19:0]==20'ha0)   set_acu_len <= wdata[14-1:0] ;
+      if (addr[19:0]==20'ha4)   set_off_a   <= wdata[14-1:0] ;
+      if (addr[19:0]==20'ha8)   set_off_b   <= wdata[14-1:0] ;
    end
 end
 
@@ -916,13 +935,6 @@ always @(*) begin
      20'h00048 : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_kk}      ; end
      20'h0004C : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_pp}      ; end
 
-     20'h00090 : begin ack <= 1'b1;          rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
-     20'h00094 : begin ack <= 1'b1;          rdata <= {{32- 2{1'b0}}, acu_ctl_run,
-                                                                      set_acu_ena}        ; end
-     20'h00098 : begin ack <= 1'b1;          rdata <= {               set_sts_cnt}        ; end
-     20'h0009c : begin ack <= 1'b1;          rdata <= {{32- 4{1'b0}}, set_acu_shf}        ; end
-     20'h000a0 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_acu_len}        ; end
-
      20'h00050 : begin ack <= 1'b1;          rdata <=                 set_a_axi_start     ; end
      20'h00054 : begin ack <= 1'b1;          rdata <=                 set_a_axi_stop      ; end
      20'h00058 : begin ack <= 1'b1;          rdata <=                 set_a_axi_dly       ; end
@@ -936,6 +948,15 @@ always @(*) begin
      20'h0007C : begin ack <= 1'b1;          rdata <= {{32- 1{1'b0}}, set_b_axi_en}       ; end
      20'h00080 : begin ack <= 1'b1;          rdata <=                 set_b_axi_trig      ; end
      20'h00084 : begin ack <= 1'b1;          rdata <=                 set_b_axi_cur       ; end
+
+     20'h00090 : begin ack <= 1'b1;          rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
+     20'h00094 : begin ack <= 1'b1;          rdata <= {{32- 2{1'b0}}, acu_sts_run,
+                                                                      set_acu_ena}        ; end
+     20'h00098 : begin ack <= 1'b1;          rdata <= {               set_sts_cnt}        ; end
+     20'h0009c : begin ack <= 1'b1;          rdata <= {{32- 4{1'b0}}, set_acu_shf}        ; end
+     20'h000a0 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_acu_len}        ; end
+     20'h000a4 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_off_a  }        ; end
+     20'h000a8 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_off_b  }        ; end
 
      20'h1???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
      20'h2???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
