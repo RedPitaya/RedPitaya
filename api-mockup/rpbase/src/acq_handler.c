@@ -897,11 +897,11 @@ int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer)
     const volatile uint32_t *raw_buffer = getDeepAvgRawBuffer(channel);
 
     rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = (channel = RP_DEC_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    int32_t dc_offs = (channel = RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
 
     for(uint32_t i = 0; i < (*size); i++){
-        cnts = (raw_buffer[i % ADC_BUFFER_SIZE] & ADC_BITS);
-        buffer[i] = cmn_CalibCnts(ADC_BITS, cnts, dc_offs);
+        cnts = (raw_buffer[i]);
+        buffer[i] = cmn_DeepAvgCalibCnts(32, cnts, dc_offs);
     }
 
     return RP_OK;
