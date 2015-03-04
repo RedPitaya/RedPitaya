@@ -137,7 +137,7 @@ initial begin
 
    shift = 0;
    blk_size = 20;
-   blk_cnt = 1;
+   blk_cnt = 4;
 
    wait (sys_rstn && adc_rstn)
    repeat(10) @(posedge sys_clk);
