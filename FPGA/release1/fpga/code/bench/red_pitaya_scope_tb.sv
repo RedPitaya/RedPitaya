@@ -137,7 +137,7 @@ initial begin
 
    shift = 0;
    blk_size = 20;
-   blk_cnt = 32;
+   blk_cnt = 1;
 
    wait (sys_rstn && adc_rstn)
    repeat(10) @(posedge sys_clk);
@@ -255,7 +255,7 @@ end
 
 // trigger log
 always_ff @ (posedge adc_clk)
-if (scope.acu_ctl_run & scope.adc_trig & ~(|scope.acu_len_cnt)) begin
+if (scope.acu_sts_run & scope.off_t_trig & ~(|scope.acum_a.sti_cnt)) begin
   rdata_trg.push_back(adc_cyc);
 end
 

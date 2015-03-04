@@ -281,8 +281,8 @@ typedef struct osc_control_s {
     uint32_t ac_count;
 
     /**@brief Accumulator output shift:
-    * bits [31:5] reserved 
-    * bits [4:0] specifies how many LSBbits from the
+    * bits [31:4] reserved 
+    * bits [3:0] specifies how many LSBbits from the
     * accumulated storaged (up to 48bits) are removed
     * before reaching software, which is limited to 32 bits
     */
@@ -296,6 +296,18 @@ typedef struct osc_control_s {
     * of 16384 samples)
     */
     uint32_t ac_data_seq_len;
+
+    /**@brief Accumulator data offset corection ChA
+    * bits [31:14] reserved
+    * bits [13:0] signed offset value
+    */
+    uint32_t ac_off_cha;
+
+    /**@brief Accumulator data offset corection ChB
+    * bits [31:14] reserved
+    * bits [13:0] signed offset value
+    */
+    uint32_t ac_off_chb;
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
