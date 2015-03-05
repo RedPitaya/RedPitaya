@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "../../api-mockup/rpbase/src/rp.h"
+#include "rp.h"
 
 int main(int argc, char **argv){
 
