@@ -980,12 +980,12 @@ scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context){
     int result = rp_GetDeepAvgDebTim(&deb_timer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*ACQ:DP:TIM Failed to retrieve parameter debunce timer.");
+        syslog(LOG_ERR, "*ACQ:DP:DEBTIM Failed to retrieve parameter debunce timer.");
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultInt(context, deb_timer);
-    syslog(LOG_INFO, "*ACQ:DP:TIM Successfully retrieved parameter debounce timer.");
+    syslog(LOG_INFO, "*ACQ:DP:DEBTIM Successfully retrieved parameter debounce timer.");
     return SCPI_RES_OK;
 }
 
