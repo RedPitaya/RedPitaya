@@ -454,6 +454,13 @@ reg signed [15-1:0] off_a_tdata , off_b_tdata ;
 
 reg signed [14-1:0] set_off_a, set_off_b;
 
+// saturation
+function signed [14-1:0] sat (input signed [15-1:0] dat);
+begin
+  if ((&dat[14:13]) || (~|dat[14:13])) sat = dat[13:0];
+  else                                 sat = {14{dat[13]}};
+end
+endfunction
 
 always @(posedge adc_clk_i) // , posedge adc_rstn_i)
 if (~adc_rstn_i) begin
@@ -466,8 +473,8 @@ end
 
 always @(posedge adc_clk_i)
 if (adc_dv) begin
-  off_a_tdata <= $signed(adc_a_dat) + set_off_a;
-  off_b_tdata <= $signed(adc_b_dat) + set_off_b;
+  off_a_tdata <= sat($signed(adc_a_dat) + set_off_a);
+  off_b_tdata <= sat($signed(adc_b_dat) + set_off_b);
 end
 
 //---------------------------------------------------------------------------------
@@ -481,7 +488,7 @@ reg            acu_rd_dv;
 wire           acu_a_mem_ren, acu_b_mem_ren;
 wire           acu_a_mem_vld, acu_b_mem_vld;
 wire [RSZ-1:0] acu_a_mem_adr, acu_b_mem_adr;
-wire  [47-1:0] acu_a_mem_tmp, acu_b_mem_tmp; // 1+14+32 = 47
+wire  [46-1:0] acu_a_mem_tmp, acu_b_mem_tmp; // 14+32 = 46
 reg   [32-1:0] acu_a_mem_rdt, acu_b_mem_rdt;
 
 // generate pulse on write into the run bit of the control/status register
@@ -496,7 +503,7 @@ end else begin
 end
 
 red_pitaya_acum #(
-  .IDW (15)
+  .IDW (14)
 ) acum_a (
   // system signals
   .clk        (adc_clk_i),
@@ -510,7 +517,7 @@ red_pitaya_acum #(
   .sts_run    (acu_sts_run),
   .sts_cnt    (set_sts_cnt),
   // input data stream
-//  .sti_tdata  (($signed(adc_a_i) + 15'(set_off_a))),  // TODO remove debug code
+//  .sti_tdata  (($signed(adc_a_i) + 14'(set_off_a))),  // TODO remove debug code
   .sti_tdata  (off_a_tdata),
   .sti_t_trig (off_t_trig),
   .sti_tvalid (off_tvalid),
@@ -534,7 +541,7 @@ always @ (posedge adc_clk_i)
 if (acu_a_mem_vld) acu_a_mem_rdt <= acu_a_mem_tmp >>> set_acu_shf;
 
 red_pitaya_acum #(
-  .IDW (15)
+  .IDW (14)
 ) acum_b (
   // system signals
   .clk        (adc_clk_i),
