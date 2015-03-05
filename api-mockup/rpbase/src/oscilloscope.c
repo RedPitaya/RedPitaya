@@ -364,8 +364,6 @@ int osc_Init()
     osc_dp_avg_cha = (uint32_t*)((char*)osc_reg + OSC_ACC_CHA_OFFSET);
     osc_dp_avg_chb = (uint32_t*)((char*)osc_reg + OSC_ACC_CHB_OFFSET);
 
-    //Test
-    printf("osc_reg address: %p || dp avg channel a address: %p\n", &osc_reg->conf, osc_dp_avg_cha);
     return RP_OK;
 }
 
