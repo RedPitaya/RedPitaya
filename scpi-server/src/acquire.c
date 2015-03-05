@@ -848,20 +848,22 @@ scpi_result_t RP_AcqDPAvgStart(scpi_t *context){
 scpi_result_t RP_AcqDPAvgSetCount(scpi_t *context){
 
     uint32_t count;
-
+    printf("Setting count.\n");
     //Read input parameter
     if(!SCPI_ParamUInt(context, &count, true)){
         syslog(LOG_ERR, "*ACQ:DP:COUNT is missing input parameter.");
         return SCPI_RES_ERR;
     }
-
+    printf("Set count.\n");
     //Set deep averaging count
+    printf("Setting RP count\n");
     int result = rp_SetDeepAvgCount(count);
-
+    printf("Set count RP\n");
     if(result != RP_OK){
         syslog(LOG_ERR, "*ACQ:DP:COUNT? Failed to set count: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
+    printf("Successful.\n");
     syslog(LOG_INFO, "*ACQ:DP:COUNT? Successfully set count to: %d", count);
     return SCPI_RES_OK;
 }
