@@ -199,24 +199,8 @@ end
 //---------------------------------------------------------------------------------
 //  ADC buffer RAM
 
-//reg   [  14-1: 0] adc_a_buf [0:2**RSZ-1] ;
-//reg   [  14-1: 0] adc_b_buf [0:2**RSZ-1] ;
-reg   [  14-1: 0] adc_a_rd      ;
-reg   [  14-1: 0] adc_b_rd      ;
-reg   [ RSZ-1: 0] adc_wp        ;
-reg   [ RSZ-1: 0] adc_raddr     ;
-reg   [ RSZ-1: 0] adc_a_raddr   ;
-reg   [ RSZ-1: 0] adc_b_raddr   ;
-reg   [   4-1: 0] adc_rval      ;
-wire              adc_rd_dv     ;
-reg               adc_we        ;
-reg               adc_trig      ;
-
-reg   [ RSZ-1: 0] adc_wp_trig   ;
-reg   [ RSZ-1: 0] adc_wp_cur    ;
-reg   [  32-1: 0] set_dly       ;
-reg   [  32-1: 0] adc_dly_cnt   ;
-reg               adc_dly_do    ;
+reg    [  4-1: 0] set_trig_src;
+reg               adc_trig    ;
 
 reg    [ 20-1: 0] set_deb_len; // debouncing length (glitch free time after a posedge)
 reg               set_acu_ena; // accumulation enable
@@ -224,75 +208,6 @@ reg    [ 32-1: 0] set_acu_cnt; // accumulation counter length
 wire   [ 32-1: 0] set_sts_cnt; // accumulation counter current status
 reg    [  4-1: 0] set_acu_shf; // accumulation output shift
 reg    [ 14-1: 0] set_acu_len; // accumulation sequence length
-
-// Write
-always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0) begin
-   adc_wp      <= {RSZ{1'b0}};
-   adc_we      <=  1'b0      ;
-   adc_wp_trig <= {RSZ{1'b0}};
-   adc_wp_cur  <= {RSZ{1'b0}};
-   adc_dly_cnt <= 32'h0      ;
-   adc_dly_do  <=  1'b0      ;
-end
-else if (~set_acu_ena) begin
-   if (adc_arm_do)
-      adc_we <= 1'b1 ;
-   else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
-      adc_we <= 1'b0 ;
-
-   if (adc_rst_do)
-      adc_wp <= {RSZ{1'b0}};
-   else if (adc_we && adc_dv)
-      adc_wp <= adc_wp + 1'b1 ;
-
-   if (adc_rst_do)
-      adc_wp_trig <= {RSZ{1'b0}};
-   else if (adc_trig && !adc_dly_do)
-      adc_wp_trig <= adc_wp_cur ; // save write pointer at trigger arrival
-
-   if (adc_rst_do)
-      adc_wp_cur <= {RSZ{1'b0}};
-   else if (adc_we && adc_dv)
-      adc_wp_cur <= adc_wp ; // save current write pointer
-
-   if (adc_trig)
-      adc_dly_do  <= 1'b1 ;
-   else if ((adc_dly_do && (adc_dly_cnt == 32'b0)) || adc_rst_do || adc_arm_do) //delayed reached or reset
-      adc_dly_do  <= 1'b0 ;
-
-   if (adc_dly_do && adc_we && adc_dv)
-      adc_dly_cnt <= adc_dly_cnt + {32{1'b1}} ; // -1
-   else if (!adc_dly_do)
-      adc_dly_cnt <= set_dly ;
-end
-
-//always @(posedge adc_clk_i)
-//if (adc_we && adc_dv) begin
-//   adc_a_buf[adc_wp] <= adc_a_dat ;
-//   adc_b_buf[adc_wp] <= adc_b_dat ;
-//end
-
-// Read
-always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0)
-   adc_rval <= 4'h0 ;
-else
-   adc_rval <= {adc_rval[2:0], (ren || wen)};
-
-assign adc_rd_dv = adc_rval[3];
-
-always @(posedge adc_clk_i)
-begin
-   adc_raddr   <= addr[RSZ+1:2] ; // address synchronous to clock
-   adc_a_raddr <= adc_raddr     ; // double register 
-   adc_b_raddr <= adc_raddr     ; // otherwise memory corruption at reading
-   adc_a_rd    <= 0; // adc_a_buf[adc_a_raddr] ;
-   adc_b_rd    <= 0; // adc_b_buf[adc_b_raddr] ;
-end
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -334,7 +249,7 @@ always @(posedge axi0_clk_o) begin
       else if ((axi_a_dly_do && (axi_a_dly_cnt == 32'b0)) || axi_a_clr || adc_arm_do) //delayed reached or reset
          axi_a_dly_do  <= 1'b0 ;
 
-      if (adc_dly_do && axi_a_we && adc_dv)
+      if (axi_a_dly_do && axi_a_we && adc_dv)
          axi_a_dly_cnt <= axi_a_dly_cnt + {32{1'b1}} ; // -1
       else if (!axi_a_dly_do)
          axi_a_dly_cnt <= set_a_axi_dly ;
@@ -450,7 +365,7 @@ always @(posedge axi1_clk_o) begin
       else if ((axi_b_dly_do && (axi_b_dly_cnt == 32'b0)) || axi_b_clr || adc_arm_do) //delayed reached or reset
          axi_b_dly_do  <= 1'b0 ;
 
-      if (adc_dly_do && axi_b_we && adc_dv)
+      if (axi_b_dly_do && axi_b_we && adc_dv)
          axi_b_dly_cnt <= axi_b_dly_cnt + {32{1'b1}} ; // -1
       else if (!axi_b_dly_do)
          axi_b_dly_cnt <= set_b_axi_dly ;
@@ -663,7 +578,6 @@ reg               adc_trig_an      ;
 reg               adc_trig_bp      ;
 reg               adc_trig_bn      ;
 reg               adc_trig_sw      ;
-reg   [   4-1: 0] set_trig_src     ;
 wire              ext_trig_p       ;
 wire              ext_trig_n       ;
 wire              asg_trig_p       ;
@@ -674,17 +588,11 @@ if (adc_rstn_i == 1'b0) begin
    adc_arm_do    <= 1'b0 ;
    adc_rst_do    <= 1'b0 ;
    adc_trig_sw   <= 1'b0 ;
-   set_trig_src  <= 4'h0 ;
    adc_trig      <= 1'b0 ;
 end else begin
    adc_arm_do  <= wen && (addr[19:0]==20'h0) && wdata[0] ; // SW ARM
    adc_rst_do  <= wen && (addr[19:0]==20'h0) && wdata[1] ;
-   adc_trig_sw <= wen && (addr[19:0]==20'h4) ; // SW trigger
-
-   if (wen && (addr[19:0]==20'h4))
-      set_trig_src <= wdata[3:0] ;
-   else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
-      set_trig_src <= 4'h0 ;
+   adc_trig_sw <= wen && (addr[19:0]==20'h4) && (wdata[3:0]==4'h1); // SW trigger
 
    case (set_trig_src)
        4'd1 : adc_trig <= adc_trig_sw   ; // manual
@@ -841,9 +749,9 @@ assign asg_trig_n = (asg_trig_dn == 2'b10) ;
 
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
+   set_trig_src  <=   4'h0      ;
    set_a_tresh   <=  14'd5000   ;
    set_b_tresh   <= -14'd5000   ;
-   set_dly       <=  32'd0      ;
    set_dec       <=  17'd1      ;
    set_a_hyst    <=  14'd20     ;
    set_b_hyst    <=  14'd20     ;
@@ -870,13 +778,14 @@ if (adc_rstn_i == 1'b0) begin
    set_b_axi_en  <=   1'b0      ;
 end else begin
    if (wen) begin
-      if (addr[19:0]==20'h8)    set_a_tresh <= wdata[14-1:0] ;
-      if (addr[19:0]==20'hC)    set_b_tresh <= wdata[14-1:0] ;
-      if (addr[19:0]==20'h10)   set_dly     <= wdata[32-1:0] ;
-      if (addr[19:0]==20'h14)   set_dec     <= wdata[17-1:0] ;
-      if (addr[19:0]==20'h20)   set_a_hyst  <= wdata[14-1:0] ;
-      if (addr[19:0]==20'h24)   set_b_hyst  <= wdata[14-1:0] ;
-      if (addr[19:0]==20'h28)   set_avg_en  <= wdata[     0] ;
+      if (addr[19:0]==20'h04)   set_trig_src  <= wdata[ 4-1:0] ;
+      if (addr[19:0]==20'h08)   set_a_tresh   <= wdata[14-1:0] ;
+      if (addr[19:0]==20'h0C)   set_b_tresh   <= wdata[14-1:0] ;
+//    if (addr[19:0]==20'h10)   set_dly       <= wdata[32-1:0] ;
+      if (addr[19:0]==20'h14)   set_dec       <= wdata[17-1:0] ;
+      if (addr[19:0]==20'h20)   set_a_hyst    <= wdata[14-1:0] ;
+      if (addr[19:0]==20'h24)   set_b_hyst    <= wdata[14-1:0] ;
+      if (addr[19:0]==20'h28)   set_avg_en    <= wdata[     0] ;
 
       if (addr[19:0]==20'h30)   set_a_filt_aa <= wdata[18-1:0] ;
       if (addr[19:0]==20'h34)   set_a_filt_bb <= wdata[25-1:0] ;
@@ -915,11 +824,11 @@ always @(*) begin
 
      20'h00008 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_a_tresh}        ; end
      20'h0000C : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_b_tresh}        ; end
-     20'h00010 : begin ack <= 1'b1;          rdata <= {               set_dly}            ; end
+//   20'h00010 : begin ack <= 1'b1;          rdata <= {               set_dly}            ; end
      20'h00014 : begin ack <= 1'b1;          rdata <= {{32-17{1'b0}}, set_dec}            ; end
 
-     20'h00018 : begin ack <= 1'b1;          rdata <= {{32-RSZ{1'b0}}, adc_wp_cur}        ; end
-     20'h0001C : begin ack <= 1'b1;          rdata <= {{32-RSZ{1'b0}}, adc_wp_trig}       ; end
+     20'h00018 : begin ack <= 1'b1;          rdata <= 32'h0                               ; end  // NOTE: removed functionality
+     20'h0001C : begin ack <= 1'b1;          rdata <= 32'h0                               ; end  // NOTE: removed functionality
 
      20'h00020 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_a_hyst}         ; end
      20'h00024 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_b_hyst}         ; end
@@ -958,8 +867,8 @@ always @(*) begin
      20'h000a4 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_off_a  }        ; end
      20'h000a8 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_off_b  }        ; end
 
-     20'h1???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
-     20'h2???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
+     20'h1???? : begin ack <= 1'b0;          rdata <= 32'h0                               ; end  // NOTE: removed functionality
+     20'h2???? : begin ack <= 1'b0;          rdata <= 32'h0                               ; end  // NOTE: removed functionality
 
      20'h3???? : begin ack <= acu_rd_dv;     rdata <= acu_a_mem_rdt                       ; end
      20'h4???? : begin ack <= acu_rd_dv;     rdata <= acu_b_mem_rdt                       ; end
