@@ -1010,8 +1010,10 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
 
     uint32_t size;
 
-    if(!SCPI_ParamUInt(context, &size, true)){
-        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA:N? is missing first parameter");
+    rp_GetDeepDataSeqLen(&size);
+
+    if(size == 0){
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA? Failed to get sequence length.");
         return SCPI_RES_ERR;
     }
 
@@ -1019,14 +1021,12 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
     int result = rp_GetDeepAvgRawData(channel, &size, buffer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA:N? Failed to get deep averaging data: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA? Failed to get deep averaging data: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultBufferInt32(context, buffer, size);
-
-    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:DATA:N? Successfully returned data.");
-
+    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:DATA? Successfully returned data.");
     return SCPI_RES_OK;
 }
 
