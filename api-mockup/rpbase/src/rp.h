@@ -639,6 +639,13 @@ int rp_AcqGetWritePointerAtTrig(uint32_t* pos);
 int rp_AcqStart();
 
 /**
+* Stops the acquire.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqStop();
+
+/**
  * Resets the acquire writing state machine.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
