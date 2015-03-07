@@ -334,6 +334,10 @@ int rp_AcqStart()
     return acq_Start();
 }
 
+int rp_AcqStop()
+{
+    return acq_Stop();
+}
 int rp_AcqReset()
 {
     return acq_Reset();

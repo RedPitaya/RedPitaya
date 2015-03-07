@@ -657,6 +657,11 @@ int acq_Start()
     return osc_WriteDataIntoMemory(true);
 }
 
+int acq_Stop()
+{
+    return osc_WriteDataIntoMemory(false);
+}
+
 int acq_Reset()
 {
     ECHECK(acq_SetDefault());
