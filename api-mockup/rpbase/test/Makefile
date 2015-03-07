@@ -20,8 +20,11 @@ REVISION ?= devbuild
 # List of compiled object files (not yet linked to executable)
 OBJS = test.o
 
+CALIB_C = calibrateApp.c
+
 # Executable name
 TARGET=../testApp
+CALIBRATE=../calibrateApp
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror
@@ -54,7 +57,7 @@ INSTALL_DIR ?= .
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
-all: $(TARGET)
+all: $(TARGET) $(CALIBRATE)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
@@ -67,6 +70,9 @@ all: $(TARGET)
 # list.
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBPATH) $(LIBS)
+
+$(CALIBRATE):
+	$(CC) -o $@ $(CALIB_C) $(CFLAGS) $(LIBPATH) $(LIBS)
 
 # Version header for traceability
 version.h:

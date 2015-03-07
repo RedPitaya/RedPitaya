@@ -83,11 +83,6 @@ const char* rp_GetVersion()
     return version;
 }
 
-rp_calib_params_t rp_GetCalibrationSettings()
-{
-    return calib_GetParams();
-}
-
 const char* rp_GetError(int errorCode) {
     switch (errorCode) {
         case RP_OK:
@@ -141,6 +136,35 @@ const char* rp_GetError(int errorCode) {
     }
 }
 
+/**
+ * Calibrate methods
+ */
+
+rp_calib_params_t rp_GetCalibrationSettings()
+{
+    return calib_GetParams();
+}
+
+
+int rp_CalibrateFrontEndOffset(rp_channel_t channel) {
+    return calib_SetFrontEndOffset(channel);
+}
+
+int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
+    return calib_SetFrontEndScaleLV(channel, referentialVoltage);
+}
+
+int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
+    return calib_SetFrontEndScaleHV(channel, referentialVoltage);
+}
+
+int rp_CalibrateBackEndOffset(rp_channel_t channel) {
+    return calib_SetBackEndOffset(channel);
+}
+
+int rp_CalibrateBackEndScale(rp_channel_t channel) {
+    return calib_SetBackEndScale(channel);
+}
 
 
 /**
