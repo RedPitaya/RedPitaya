@@ -285,21 +285,17 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, uint3
     voltage -= user_dc_off;
 
     /* map voltage units into FPGA adc counts */
-    adc_cnts = (int)round(voltage * (float)((int)(1 << field_len)) / (2 * adc_max_v));
+    adc_cnts = (int)round(voltage * (float) (1 << field_len) / (2 * adc_max_v));
 
     /* adopt calculated ADC counts with calibration DC offset */
     adc_cnts += calib_dc_off;
 
-    /* clip to the highest value (we are dealing with 14 bits only) */
-    if((voltage > 0) && (adc_cnts & (1 << (field_len - 1))))
+    /* check and limit the specified cnt towards */
+    /* maximal cnt which can be applied on ADC inputs */
+    if(adc_cnts > (1 << (field_len - 1)) - 1)
         adc_cnts = (1 << (field_len - 1)) - 1;
-    else
-        adc_cnts = adc_cnts & ((1 << (field_len)) - 1);
-
-
-    // If offset is negative and turns adc_cnts from negative to positive, we just need to
-    // keep field_len bits
-    adc_cnts = adc_cnts & ((1 << (field_len)) - 1);
+    else if(adc_cnts < -(1 << (field_len - 1)))
+        adc_cnts = -1 << (field_len - 1);
 
     return (uint32_t)adc_cnts;
 }
