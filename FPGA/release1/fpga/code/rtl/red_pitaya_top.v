@@ -75,30 +75,6 @@
 module red_pitaya_top
 (
    // PS connections
- `ifdef TOOL_AHEAD
-   inout  [54-1: 0] processing_system7_0_MIO,
-   input            processing_system7_0_PS_SRSTB_pin,
-   input            processing_system7_0_PS_CLK_pin,
-   input            processing_system7_0_PS_PORB_pin,
-   inout            processing_system7_0_DDR_Clk,
-   inout            processing_system7_0_DDR_Clk_n,
-   inout            processing_system7_0_DDR_CKE,
-   inout            processing_system7_0_DDR_CS_n,
-   inout            processing_system7_0_DDR_RAS_n,
-   inout            processing_system7_0_DDR_CAS_n,
-   output           processing_system7_0_DDR_WEB_pin,
-   inout  [ 3-1: 0] processing_system7_0_DDR_BankAddr,
-   inout  [15-1: 0] processing_system7_0_DDR_Addr,
-   inout            processing_system7_0_DDR_ODT,
-   inout            processing_system7_0_DDR_DRSTB,
-   inout  [32-1: 0] processing_system7_0_DDR_DQ,
-   inout  [ 4-1: 0] processing_system7_0_DDR_DM,
-   inout  [ 4-1: 0] processing_system7_0_DDR_DQS,
-   inout  [ 4-1: 0] processing_system7_0_DDR_DQS_n,
-   inout            processing_system7_0_DDR_VRN,
-   inout            processing_system7_0_DDR_VRP,
- `endif
- `ifdef TOOL_VIVADO
    inout  [54-1: 0] FIXED_IO_mio       ,
    inout            FIXED_IO_ps_clk    ,
    inout            FIXED_IO_ps_porb   ,
@@ -120,7 +96,6 @@ module red_pitaya_top
    inout            DDR_ras_n          ,
    inout            DDR_reset_n        ,
    inout            DDR_we_n           ,
- `endif
 
    // Red Pitaya periphery
   
@@ -214,30 +189,6 @@ wire             axi1_rstn_ps       ;
   
 red_pitaya_ps i_ps
 (
- `ifdef TOOL_AHEAD
-  .processing_system7_0_MIO          (  processing_system7_0_MIO            ),
-  .processing_system7_0_PS_SRSTB_pin (  processing_system7_0_PS_SRSTB_pin   ),
-  .processing_system7_0_PS_CLK_pin   (  processing_system7_0_PS_CLK_pin     ),
-  .processing_system7_0_PS_PORB_pin  (  processing_system7_0_PS_PORB_pin    ),
-  .processing_system7_0_DDR_Clk      (  processing_system7_0_DDR_Clk        ),
-  .processing_system7_0_DDR_Clk_n    (  processing_system7_0_DDR_Clk_n      ),
-  .processing_system7_0_DDR_CKE      (  processing_system7_0_DDR_CKE        ),
-  .processing_system7_0_DDR_CS_n     (  processing_system7_0_DDR_CS_n       ),
-  .processing_system7_0_DDR_RAS_n    (  processing_system7_0_DDR_RAS_n      ),
-  .processing_system7_0_DDR_CAS_n    (  processing_system7_0_DDR_CAS_n      ),
-  .processing_system7_0_DDR_WEB_pin  (  processing_system7_0_DDR_WEB_pin    ),
-  .processing_system7_0_DDR_BankAddr (  processing_system7_0_DDR_BankAddr   ),
-  .processing_system7_0_DDR_Addr     (  processing_system7_0_DDR_Addr       ),
-  .processing_system7_0_DDR_ODT      (  processing_system7_0_DDR_ODT        ),
-  .processing_system7_0_DDR_DRSTB    (  processing_system7_0_DDR_DRSTB      ),
-  .processing_system7_0_DDR_DQ       (  processing_system7_0_DDR_DQ         ),
-  .processing_system7_0_DDR_DM       (  processing_system7_0_DDR_DM         ),
-  .processing_system7_0_DDR_DQS      (  processing_system7_0_DDR_DQS        ),
-  .processing_system7_0_DDR_DQS_n    (  processing_system7_0_DDR_DQS_n      ),
-  .processing_system7_0_DDR_VRN      (  processing_system7_0_DDR_VRN        ),
-  .processing_system7_0_DDR_VRP      (  processing_system7_0_DDR_VRP        ),
- `endif
- `ifdef TOOL_VIVADO
   .FIXED_IO_mio       (  FIXED_IO_mio                ),
   .FIXED_IO_ps_clk    (  FIXED_IO_ps_clk             ),
   .FIXED_IO_ps_porb   (  FIXED_IO_ps_porb            ),
@@ -259,7 +210,6 @@ red_pitaya_ps i_ps
   .DDR_ras_n          (  DDR_ras_n                   ),
   .DDR_reset_n        (  DDR_reset_n                 ),
   .DDR_we_n           (  DDR_we_n                    ),
- `endif
 
   .fclk_clk_o      (  fclk               ),
   .fclk_rstn_o     (  frstn              ),
