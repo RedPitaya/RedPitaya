@@ -46,30 +46,6 @@
 module red_pitaya_ps
 (
    // PS peripherals
- `ifdef TOOL_AHEAD
-   inout   [ 54-1: 0] processing_system7_0_MIO,
-   input              processing_system7_0_PS_SRSTB_pin,
-   input              processing_system7_0_PS_CLK_pin,
-   input              processing_system7_0_PS_PORB_pin,
-   inout              processing_system7_0_DDR_Clk,
-   inout              processing_system7_0_DDR_Clk_n,
-   inout              processing_system7_0_DDR_CKE,
-   inout              processing_system7_0_DDR_CS_n,
-   inout              processing_system7_0_DDR_RAS_n,
-   inout              processing_system7_0_DDR_CAS_n,
-   output             processing_system7_0_DDR_WEB_pin,
-   inout   [  3-1: 0] processing_system7_0_DDR_BankAddr,
-   inout   [ 15-1: 0] processing_system7_0_DDR_Addr,
-   inout              processing_system7_0_DDR_ODT,
-   inout              processing_system7_0_DDR_DRSTB,
-   inout   [ 32-1: 0] processing_system7_0_DDR_DQ,
-   inout   [  4-1: 0] processing_system7_0_DDR_DM,
-   inout   [  4-1: 0] processing_system7_0_DDR_DQS,
-   inout   [  4-1: 0] processing_system7_0_DDR_DQS_n,
-   inout              processing_system7_0_DDR_VRN,
-   inout              processing_system7_0_DDR_VRP,
- `endif
- `ifdef TOOL_VIVADO
    inout   [ 54-1: 0] FIXED_IO_mio       ,
    inout              FIXED_IO_ps_clk    ,
    inout              FIXED_IO_ps_porb   ,
@@ -91,8 +67,6 @@ module red_pitaya_ps
    inout              DDR_ras_n          ,
    inout              DDR_reset_n        ,
    inout              DDR_we_n           ,
- `endif
-
 
    output  [  4-1: 0] fclk_clk_o         ,
    output  [  4-1: 0] fclk_rstn_o        ,
@@ -584,198 +558,6 @@ BUFG i_fclk1_buf  (.O(fclk_clk_o[1]), .I(fclk_clk[1]));
 BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
 BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
 
-//---------------------------------------------------------------------------------
-//
-//  USING PLANAHEAD
-
-`ifdef TOOL_AHEAD
- system_stub system_i
- (
- // MIO
-  .processing_system7_0_MIO           (  processing_system7_0_MIO             ),
-  .processing_system7_0_PS_SRSTB_pin  (  processing_system7_0_PS_SRSTB_pin    ),
-  .processing_system7_0_PS_CLK_pin    (  processing_system7_0_PS_CLK_pin      ),
-  .processing_system7_0_PS_PORB_pin   (  processing_system7_0_PS_PORB_pin     ),
-  .processing_system7_0_DDR_Clk       (  processing_system7_0_DDR_Clk         ),
-  .processing_system7_0_DDR_Clk_n     (  processing_system7_0_DDR_Clk_n       ),
-  .processing_system7_0_DDR_CKE       (  processing_system7_0_DDR_CKE         ),
-  .processing_system7_0_DDR_CS_n      (  processing_system7_0_DDR_CS_n        ),
-  .processing_system7_0_DDR_RAS_n     (  processing_system7_0_DDR_RAS_n       ),
-  .processing_system7_0_DDR_CAS_n     (  processing_system7_0_DDR_CAS_n       ),
-  .processing_system7_0_DDR_WEB_pin   (  processing_system7_0_DDR_WEB_pin     ),
-  .processing_system7_0_DDR_BankAddr  (  processing_system7_0_DDR_BankAddr    ),
-  .processing_system7_0_DDR_Addr      (  processing_system7_0_DDR_Addr        ),
-  .processing_system7_0_DDR_ODT       (  processing_system7_0_DDR_ODT         ),
-  .processing_system7_0_DDR_DRSTB     (  processing_system7_0_DDR_DRSTB       ),
-  .processing_system7_0_DDR_DQ        (  processing_system7_0_DDR_DQ          ),
-  .processing_system7_0_DDR_DM        (  processing_system7_0_DDR_DM          ),
-  .processing_system7_0_DDR_DQS       (  processing_system7_0_DDR_DQS         ),
-  .processing_system7_0_DDR_DQS_n     (  processing_system7_0_DDR_DQS_n       ),
-  .processing_system7_0_DDR_VRN       (  processing_system7_0_DDR_VRN         ),
-  .processing_system7_0_DDR_VRP       (  processing_system7_0_DDR_VRP         ),
-
- // FCLKs
-  .processing_system7_0_FCLK_CLK0_pin          (  fclk_clk[0]                 ),  // out
-  .processing_system7_0_FCLK_CLK1_pin          (  fclk_clk[1]                 ),  // out
-  .processing_system7_0_FCLK_CLK2_pin          (  fclk_clk[2]                 ),  // out
-  .processing_system7_0_FCLK_CLK3_pin          (  fclk_clk[3]                 ),  // out
-  .processing_system7_0_FCLK_RESET0_N_pin      (  fclk_rstn[0]                ),  // out
-  .processing_system7_0_FCLK_RESET1_N_pin      (  fclk_rstn[1]                ),  // out
-  .processing_system7_0_FCLK_RESET2_N_pin      (  fclk_rstn[2]                ),  // out
-  .processing_system7_0_FCLK_RESET3_N_pin      (  fclk_rstn[3]                ),  // out
-
- // GP0
-  .processing_system7_0_M_AXI_GP0_ARVALID_pin  (  gp0_maxi_arvalid            ),  // out
-  .processing_system7_0_M_AXI_GP0_AWVALID_pin  (  gp0_maxi_awvalid            ),  // out
-  .processing_system7_0_M_AXI_GP0_BREADY_pin   (  gp0_maxi_bready             ),  // out
-  .processing_system7_0_M_AXI_GP0_RREADY_pin   (  gp0_maxi_rready             ),  // out
-  .processing_system7_0_M_AXI_GP0_WLAST_pin    (  gp0_maxi_wlast              ),  // out
-  .processing_system7_0_M_AXI_GP0_WVALID_pin   (  gp0_maxi_wvalid             ),  // out
-  .processing_system7_0_M_AXI_GP0_ARID_pin     (  gp0_maxi_arid               ),  // out 12
-  .processing_system7_0_M_AXI_GP0_AWID_pin     (  gp0_maxi_awid               ),  // out 12
-  .processing_system7_0_M_AXI_GP0_WID_pin      (  gp0_maxi_wid                ),  // out 12
-  .processing_system7_0_M_AXI_GP0_ARBURST_pin  (  gp0_maxi_arburst            ),  // out 2
-  .processing_system7_0_M_AXI_GP0_ARLOCK_pin   (  gp0_maxi_arlock             ),  // out 2
-  .processing_system7_0_M_AXI_GP0_ARSIZE_pin   (  gp0_maxi_arsize             ),  // out 3
-  .processing_system7_0_M_AXI_GP0_AWBURST_pin  (  gp0_maxi_awburst            ),  // out 2
-  .processing_system7_0_M_AXI_GP0_AWLOCK_pin   (  gp0_maxi_awlock             ),  // out 2
-  .processing_system7_0_M_AXI_GP0_AWSIZE_pin   (  gp0_maxi_awsize             ),  // out 3
-  .processing_system7_0_M_AXI_GP0_ARPROT_pin   (  gp0_maxi_arprot             ),  // out 3
-  .processing_system7_0_M_AXI_GP0_AWPROT_pin   (  gp0_maxi_awprot             ),  // out 3
-  .processing_system7_0_M_AXI_GP0_ARADDR_pin   (  gp0_maxi_araddr             ),  // out 32
-  .processing_system7_0_M_AXI_GP0_AWADDR_pin   (  gp0_maxi_awaddr             ),  // out 32
-  .processing_system7_0_M_AXI_GP0_WDATA_pin    (  gp0_maxi_wdata              ),  // out 32
-  .processing_system7_0_M_AXI_GP0_ARCACHE_pin  (  gp0_maxi_arcache            ),  // out 4
-  .processing_system7_0_M_AXI_GP0_ARLEN_pin    (  gp0_maxi_arlen              ),  // out 4
-  .processing_system7_0_M_AXI_GP0_ARQOS_pin    (  gp0_maxi_arqos              ),  // out 4
-  .processing_system7_0_M_AXI_GP0_AWCACHE_pin  (  gp0_maxi_awcache            ),  // out 4
-  .processing_system7_0_M_AXI_GP0_AWLEN_pin    (  gp0_maxi_awlen              ),  // out 4
-  .processing_system7_0_M_AXI_GP0_AWQOS_pin    (  gp0_maxi_awqos              ),  // out 4
-  .processing_system7_0_M_AXI_GP0_WSTRB_pin    (  gp0_maxi_wstrb              ),  // out 4
-  .processing_system7_0_M_AXI_GP0_ACLK_pin     (  gp0_maxi_aclk               ),  // in
-  .processing_system7_0_M_AXI_GP0_ARREADY_pin  (  gp0_maxi_arready            ),  // in
-  .processing_system7_0_M_AXI_GP0_AWREADY_pin  (  gp0_maxi_awready            ),  // in
-  .processing_system7_0_M_AXI_GP0_BVALID_pin   (  gp0_maxi_bvalid             ),  // in
-  .processing_system7_0_M_AXI_GP0_RLAST_pin    (  gp0_maxi_rlast              ),  // in
-  .processing_system7_0_M_AXI_GP0_RVALID_pin   (  gp0_maxi_rvalid             ),  // in
-  .processing_system7_0_M_AXI_GP0_WREADY_pin   (  gp0_maxi_wready             ),  // in
-  .processing_system7_0_M_AXI_GP0_BID_pin      (  gp0_maxi_bid                ),  // in 12
-  .processing_system7_0_M_AXI_GP0_RID_pin      (  gp0_maxi_rid                ),  // in 12
-  .processing_system7_0_M_AXI_GP0_BRESP_pin    (  gp0_maxi_bresp              ),  // in 2
-  .processing_system7_0_M_AXI_GP0_RRESP_pin    (  gp0_maxi_rresp              ),  // in 2
-  .processing_system7_0_M_AXI_GP0_RDATA_pin    (  gp0_maxi_rdata              ),  // in 32
-  .processing_system7_0_M_AXI_GP0_ARESETN_pin  (  gp0_maxi_arstn              ),  // out
-
- // HP0
-  .processing_system7_0_S_AXI_HP0_ARREADY_pin  (  hp0_saxi_arready            ), // out
-  .processing_system7_0_S_AXI_HP0_AWREADY_pin  (  hp0_saxi_awready            ), // out
-  .processing_system7_0_S_AXI_HP0_BVALID_pin   (  hp0_saxi_bvalid             ), // out
-  .processing_system7_0_S_AXI_HP0_RLAST_pin    (  hp0_saxi_rlast              ), // out
-  .processing_system7_0_S_AXI_HP0_RVALID_pin   (  hp0_saxi_rvalid             ), // out
-  .processing_system7_0_S_AXI_HP0_WREADY_pin   (  hp0_saxi_wready             ), // out
-  .processing_system7_0_S_AXI_HP0_BRESP_pin    (  hp0_saxi_bresp              ), // out 2
-  .processing_system7_0_S_AXI_HP0_RRESP_pin    (  hp0_saxi_rresp              ), // out 2
-  .processing_system7_0_S_AXI_HP0_BID_pin      (  hp0_saxi_bid                ), // out 6
-  .processing_system7_0_S_AXI_HP0_RID_pin      (  hp0_saxi_rid                ), // out 6
-  .processing_system7_0_S_AXI_HP0_RDATA_pin    (  hp0_saxi_rdata              ), // out 64
-  .processing_system7_0_S_AXI_HP0_ACLK_pin     (  hp0_saxi_aclk               ), // in
-  .processing_system7_0_S_AXI_HP0_ARVALID_pin  (  hp0_saxi_arvalid            ), // in
-  .processing_system7_0_S_AXI_HP0_AWVALID_pin  (  hp0_saxi_awvalid            ), // in
-  .processing_system7_0_S_AXI_HP0_BREADY_pin   (  hp0_saxi_bready             ), // in
-  .processing_system7_0_S_AXI_HP0_RREADY_pin   (  hp0_saxi_rready             ), // in
-  .processing_system7_0_S_AXI_HP0_WLAST_pin    (  hp0_saxi_wlast              ), // in
-  .processing_system7_0_S_AXI_HP0_WVALID_pin   (  hp0_saxi_wvalid             ), // in
-  .processing_system7_0_S_AXI_HP0_ARBURST_pin  (  hp0_saxi_arburst            ), // in 2
-  .processing_system7_0_S_AXI_HP0_ARLOCK_pin   (  hp0_saxi_arlock             ), // in 2
-  .processing_system7_0_S_AXI_HP0_ARSIZE_pin   (  hp0_saxi_arsize             ), // in 3
-  .processing_system7_0_S_AXI_HP0_AWBURST_pin  (  hp0_saxi_awburst            ), // in 2
-  .processing_system7_0_S_AXI_HP0_AWLOCK_pin   (  hp0_saxi_awlock             ), // in 2
-  .processing_system7_0_S_AXI_HP0_AWSIZE_pin   (  hp0_saxi_awsize             ), // in 3
-  .processing_system7_0_S_AXI_HP0_ARPROT_pin   (  hp0_saxi_arprot             ), // in 3
-  .processing_system7_0_S_AXI_HP0_AWPROT_pin   (  hp0_saxi_awprot             ), // in 3
-  .processing_system7_0_S_AXI_HP0_ARADDR_pin   (  hp0_saxi_araddr             ), // in 32
-  .processing_system7_0_S_AXI_HP0_AWADDR_pin   (  hp0_saxi_awaddr             ), // in 32
-  .processing_system7_0_S_AXI_HP0_ARCACHE_pin  (  hp0_saxi_arcache            ), // in 4
-  .processing_system7_0_S_AXI_HP0_ARLEN_pin    (  hp0_saxi_arlen              ), // in 4
-  .processing_system7_0_S_AXI_HP0_ARQOS_pin    (  hp0_saxi_arqos              ), // in 4
-  .processing_system7_0_S_AXI_HP0_AWCACHE_pin  (  hp0_saxi_awcache            ), // in 4
-  .processing_system7_0_S_AXI_HP0_AWLEN_pin    (  hp0_saxi_awlen              ), // in 4
-  .processing_system7_0_S_AXI_HP0_AWQOS_pin    (  hp0_saxi_awqos              ), // in 4
-  .processing_system7_0_S_AXI_HP0_ARID_pin     (  hp0_saxi_arid               ), // in 6
-  .processing_system7_0_S_AXI_HP0_AWID_pin     (  hp0_saxi_awid               ), // in 6
-  .processing_system7_0_S_AXI_HP0_WID_pin      (  hp0_saxi_wid                ), // in 6
-  .processing_system7_0_S_AXI_HP0_WDATA_pin    (  hp0_saxi_wdata              ), // in 64
-  .processing_system7_0_S_AXI_HP0_WSTRB_pin    (  hp0_saxi_wstrb              ), // in 8
-  .processing_system7_0_S_AXI_HP0_ARESETN_pin  (  hp0_saxi_arstn              ), // out
-
- // HP1
-  .processing_system7_0_S_AXI_HP1_ARREADY_pin  (  hp1_saxi_arready            ), // out
-  .processing_system7_0_S_AXI_HP1_AWREADY_pin  (  hp1_saxi_awready            ), // out
-  .processing_system7_0_S_AXI_HP1_BVALID_pin   (  hp1_saxi_bvalid             ), // out
-  .processing_system7_0_S_AXI_HP1_RLAST_pin    (  hp1_saxi_rlast              ), // out
-  .processing_system7_0_S_AXI_HP1_RVALID_pin   (  hp1_saxi_rvalid             ), // out
-  .processing_system7_0_S_AXI_HP1_WREADY_pin   (  hp1_saxi_wready             ), // out
-  .processing_system7_0_S_AXI_HP1_BRESP_pin    (  hp1_saxi_bresp              ), // out 2
-  .processing_system7_0_S_AXI_HP1_RRESP_pin    (  hp1_saxi_rresp              ), // out 2
-  .processing_system7_0_S_AXI_HP1_BID_pin      (  hp1_saxi_bid                ), // out 6
-  .processing_system7_0_S_AXI_HP1_RID_pin      (  hp1_saxi_rid                ), // out 6
-  .processing_system7_0_S_AXI_HP1_RDATA_pin    (  hp1_saxi_rdata              ), // out 64
-  .processing_system7_0_S_AXI_HP1_ACLK_pin     (  hp1_saxi_aclk               ), // in
-  .processing_system7_0_S_AXI_HP1_ARVALID_pin  (  hp1_saxi_arvalid            ), // in
-  .processing_system7_0_S_AXI_HP1_AWVALID_pin  (  hp1_saxi_awvalid            ), // in
-  .processing_system7_0_S_AXI_HP1_BREADY_pin   (  hp1_saxi_bready             ), // in
-  .processing_system7_0_S_AXI_HP1_RREADY_pin   (  hp1_saxi_rready             ), // in
-  .processing_system7_0_S_AXI_HP1_WLAST_pin    (  hp1_saxi_wlast              ), // in
-  .processing_system7_0_S_AXI_HP1_WVALID_pin   (  hp1_saxi_wvalid             ), // in
-  .processing_system7_0_S_AXI_HP1_ARBURST_pin  (  hp1_saxi_arburst            ), // in 2
-  .processing_system7_0_S_AXI_HP1_ARLOCK_pin   (  hp1_saxi_arlock             ), // in 2
-  .processing_system7_0_S_AXI_HP1_ARSIZE_pin   (  hp1_saxi_arsize             ), // in 3
-  .processing_system7_0_S_AXI_HP1_AWBURST_pin  (  hp1_saxi_awburst            ), // in 2
-  .processing_system7_0_S_AXI_HP1_AWLOCK_pin   (  hp1_saxi_awlock             ), // in 2
-  .processing_system7_0_S_AXI_HP1_AWSIZE_pin   (  hp1_saxi_awsize             ), // in 3
-  .processing_system7_0_S_AXI_HP1_ARPROT_pin   (  hp1_saxi_arprot             ), // in 3
-  .processing_system7_0_S_AXI_HP1_AWPROT_pin   (  hp1_saxi_awprot             ), // in 3
-  .processing_system7_0_S_AXI_HP1_ARADDR_pin   (  hp1_saxi_araddr             ), // in 32
-  .processing_system7_0_S_AXI_HP1_AWADDR_pin   (  hp1_saxi_awaddr             ), // in 32
-  .processing_system7_0_S_AXI_HP1_ARCACHE_pin  (  hp1_saxi_arcache            ), // in 4
-  .processing_system7_0_S_AXI_HP1_ARLEN_pin    (  hp1_saxi_arlen              ), // in 4
-  .processing_system7_0_S_AXI_HP1_ARQOS_pin    (  hp1_saxi_arqos              ), // in 4
-  .processing_system7_0_S_AXI_HP1_AWCACHE_pin  (  hp1_saxi_awcache            ), // in 4
-  .processing_system7_0_S_AXI_HP1_AWLEN_pin    (  hp1_saxi_awlen              ), // in 4
-  .processing_system7_0_S_AXI_HP1_AWQOS_pin    (  hp1_saxi_awqos              ), // in 4
-  .processing_system7_0_S_AXI_HP1_ARID_pin     (  hp1_saxi_arid               ), // in 6
-  .processing_system7_0_S_AXI_HP1_AWID_pin     (  hp1_saxi_awid               ), // in 6
-  .processing_system7_0_S_AXI_HP1_WID_pin      (  hp1_saxi_wid                ), // in 6
-  .processing_system7_0_S_AXI_HP1_WDATA_pin    (  hp1_saxi_wdata              ), // in 64
-  .processing_system7_0_S_AXI_HP1_WSTRB_pin    (  hp1_saxi_wstrb              ), // in 8
-  .processing_system7_0_S_AXI_HP1_ARESETN_pin  (  hp1_saxi_arstn              ), // out
-
- // SPI0
-  .processing_system7_0_SPI0_SS_O_pin     (  spi_ss_o        ),  // out
-  .processing_system7_0_SPI0_SS_I_pin     (  spi_ss_i        ),  // in
-  .processing_system7_0_SPI0_SS1_O_pin    (  spi_ss1_o       ),  // out
-  .processing_system7_0_SPI0_SS2_O_pin    (  spi_ss2_o       ),  // out
-  .processing_system7_0_SPI0_SCLK_I_pin   (  spi_sclk_i      ),  // in
-  .processing_system7_0_SPI0_SCLK_O_pin   (  spi_sclk_o      ),  // out
-  .processing_system7_0_SPI0_MOSI_I_pin   (  spi_mosi_i      ),  // in
-  .processing_system7_0_SPI0_MOSI_O_pin   (  spi_mosi_o      ),  // out
-  .processing_system7_0_SPI0_MISO_I_pin   (  spi_miso_i      ),  // in
-  .processing_system7_0_SPI0_MISO_O_pin   (  spi_miso_o      ),  // out
-  .processing_system7_0_SPI0_SS_T_pin     (                  ),  // out
-  .processing_system7_0_SPI0_MOSI_T_pin   (                  ),  // out
-  .processing_system7_0_SPI0_SCLK_T_pin   (                  ),  // out
-  .processing_system7_0_SPI0_MISO_T_pin   (                  )   // out
-
- );
-`endif
-
-
-
-//---------------------------------------------------------------------------------
-//
-//  USING VIVADO
-
-`ifdef TOOL_VIVADO
  system_wrapper system_i
  (
  // MIO
@@ -956,14 +738,5 @@ BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
 
  assign hp0_saxi_arstn = 1'b1 ;
  assign hp1_saxi_arstn = 1'b1 ;
-`endif
-
-
-
-
-
-
-
-
 
 endmodule
