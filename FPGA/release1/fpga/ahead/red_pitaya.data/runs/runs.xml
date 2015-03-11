@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<Runs Version="1" Minor="8">
-	<Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="PlanAhead Defaults (XST defaults with hierarchy)" State="current"/>
-	<Run Id="impl_1" Type="Ft2:EntireDesign" SynthRun="synth_1" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="ISE Defaults, including packing registers in IOs off" State="current"/>
-</Runs>
-
