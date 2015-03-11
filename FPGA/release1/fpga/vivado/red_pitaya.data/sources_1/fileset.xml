@@ -331,7 +331,6 @@
       <Option Name="DesignMode" Val="RTL"/>
       <Option Name="TopModule" Val="red_pitaya_top"/>
       <Option Name="TopAutoSet" Val="TRUE"/>
-      <Define Name="TOOL_VIVADO"/>
     </Config>
   </FileSet>
 </DARoots>
