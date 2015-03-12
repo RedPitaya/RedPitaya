@@ -78,16 +78,6 @@ module red_pitaya_ps (
   input   [ 32-1: 0] sys_rdata_i        ,  // system read data
   input              sys_err_i          ,  // system error indicator
   input              sys_ack_i          ,  // system acknowledge signal
-  // SPI master
-  output  [  3-1: 0] spi_ss_o           ,  // select slave
-  output             spi_sclk_o         ,  // serial clock
-  output             spi_mosi_o         ,  // master out slave in
-  input              spi_miso_i         ,  // master in slave out
-  // SPI slave
-  input              spi_ss_i           ,  // slave selected
-  input              spi_sclk_i         ,  // serial clock
-  input              spi_mosi_i         ,  // master out slave in
-  output             spi_miso_o         ,  // master in slave out
   // AXI masters
   input              axi1_clk_i   , axi0_clk_i   ,  // global clock
   input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
@@ -440,6 +430,7 @@ system_wrapper system_i (
   .S_AXI_HP0_rid     (hp0_saxi_rid    ),  .S_AXI_HP1_rid     (hp1_saxi_rid    ), // out 6
   .S_AXI_HP0_rdata   (hp0_saxi_rdata  ),  .S_AXI_HP1_rdata   (hp1_saxi_rdata  ), // out 64
   .S_AXI_HP0_aclk    (hp0_saxi_aclk   ),  .S_AXI_HP1_aclk    (hp1_saxi_aclk   ), // in
+//.S_AXI_HP0_arstn   (hp0_saxi_arstn  ),//.S_AXI_HP1_arstn   (hp1_saxi_arstn  ), // out
   .S_AXI_HP0_arvalid (hp0_saxi_arvalid),  .S_AXI_HP1_arvalid (hp1_saxi_arvalid), // in
   .S_AXI_HP0_awvalid (hp0_saxi_awvalid),  .S_AXI_HP1_awvalid (hp1_saxi_awvalid), // in
   .S_AXI_HP0_bready  (hp0_saxi_bready ),  .S_AXI_HP1_bready  (hp1_saxi_bready ), // in
@@ -466,23 +457,7 @@ system_wrapper system_i (
   .S_AXI_HP0_awid    (hp0_saxi_awid   ),  .S_AXI_HP1_awid    (hp1_saxi_awid   ), // in 6
   .S_AXI_HP0_wid     (hp0_saxi_wid    ),  .S_AXI_HP1_wid     (hp1_saxi_wid    ), // in 6
   .S_AXI_HP0_wdata   (hp0_saxi_wdata  ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata  ), // in 64
-  .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  ), // in 8
-//.S_AXI_HP0_arstn   (hp0_saxi_arstn  ),//.S_AXI_HP1_arstn   (hp1_saxi_arstn  ), // out
-  // SPI0
-  .SPI0_SS_I         (spi_ss_i  ),  // in
-  .SPI0_SS_O         (spi_ss_o[0]),  // out
-  .SPI0_SS1_O        (spi_ss_o[1]),  // out
-  .SPI0_SS2_O        (spi_ss_o[2]),  // out
-  .SPI0_SCLK_I       (spi_sclk_i),  // in
-  .SPI0_SCLK_O       (spi_sclk_o),  // out
-  .SPI0_MOSI_I       (spi_mosi_i),  // in
-  .SPI0_MOSI_O       (spi_mosi_o),  // out
-  .SPI0_MISO_I       (spi_miso_i),  // in
-  .SPI0_MISO_O       (spi_miso_o),  // out
-  .SPI0_SS_T         (          ),  // out
-  .SPI0_SCLK_T       (          ),  // out
-  .SPI0_MOSI_T       (          ),  // out
-  .SPI0_MISO_T       (          )   // out
+  .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  )  // in 8
 );
 
 assign hp0_saxi_arstn = 1'b1 ;
