@@ -90,34 +90,22 @@ module red_pitaya_ps (
    input              spi_sclk_i         ,  // serial clock
    input              spi_mosi_i         ,  // master out slave in
    output             spi_miso_o         ,  // master in slave out
-   // AXI0 master
-   input              axi0_clk_i         ,  // global clock
-   input              axi0_rstn_i        ,  // global reset
-   input   [ 32-1: 0] axi0_waddr_i       ,  // system write address
-   input   [ 64-1: 0] axi0_wdata_i       ,  // system write data
-   input   [  8-1: 0] axi0_wsel_i        ,  // system write byte select
-   input              axi0_wvalid_i      ,  // system write data valid
-   input   [  4-1: 0] axi0_wlen_i        ,  // system write burst length
-   input              axi0_wfixed_i      ,  // system write burst type (fixed / incremental)
-   output             axi0_werr_o        ,  // system write error
-   output             axi0_wrdy_o        ,  // system write ready
-   output             axi0_rstn_o        ,  // reset from PS
-   // AXI1 master
-   input              axi1_clk_i         ,  // global clock
-   input              axi1_rstn_i        ,  // global reset
-   input   [ 32-1: 0] axi1_waddr_i       ,  // system write address
-   input   [ 64-1: 0] axi1_wdata_i       ,  // system write data
-   input   [  8-1: 0] axi1_wsel_i        ,  // system write byte select
-   input              axi1_wvalid_i      ,  // system write data valid
-   input   [  4-1: 0] axi1_wlen_i        ,  // system write burst length
-   input              axi1_wfixed_i      ,  // system write burst type (fixed / incremental)
-   output             axi1_werr_o        ,  // system write error
-   output             axi1_wrdy_o        ,  // system write ready
-   output             axi1_rstn_o           // reset from PS
+   // AXI masters
+   input              axi1_clk_i   , axi0_clk_i   ,  // global clock
+   input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
+   input   [ 32-1: 0] axi1_waddr_i , axi0_waddr_i ,  // system write address
+   input   [ 64-1: 0] axi1_wdata_i , axi0_wdata_i ,  // system write data
+   input   [  8-1: 0] axi1_wsel_i  , axi0_wsel_i  ,  // system write byte select
+   input              axi1_wvalid_i, axi0_wvalid_i,  // system write data valid
+   input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
+   input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
+   output             axi1_werr_o  , axi0_werr_o  ,  // system write error
+   output             axi1_wrdy_o  , axi0_wrdy_o  ,  // system write ready
+   output             axi1_rstn_o  , axi0_rstn_o     // reset from PS
 );
 
 //------------------------------------------------------------------------------
-// AXI MASTERs
+// AXI masters
 
 wire            hp1_saxi_arready, hp0_saxi_arready;
 wire            hp1_saxi_awready, hp0_saxi_awready;
