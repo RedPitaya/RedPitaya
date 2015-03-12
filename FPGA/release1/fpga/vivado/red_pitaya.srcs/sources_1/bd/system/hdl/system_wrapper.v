@@ -30,6 +30,7 @@ module system_wrapper
     FIXED_IO_ps_clk,
     FIXED_IO_ps_porb,
     FIXED_IO_ps_srstb,
+    M_AXI_GP0_ACLK,
     M_AXI_GP0_araddr,
     M_AXI_GP0_arburst,
     M_AXI_GP0_arcache,
@@ -189,6 +190,7 @@ module system_wrapper
   inout FIXED_IO_ps_clk;
   inout FIXED_IO_ps_porb;
   inout FIXED_IO_ps_srstb;
+  input M_AXI_GP0_ACLK;
   output [31:0]M_AXI_GP0_araddr;
   output [1:0]M_AXI_GP0_arburst;
   output [3:0]M_AXI_GP0_arcache;
@@ -349,6 +351,7 @@ module system_wrapper
   wire FIXED_IO_ps_clk;
   wire FIXED_IO_ps_porb;
   wire FIXED_IO_ps_srstb;
+  wire M_AXI_GP0_ACLK;
   wire [31:0]M_AXI_GP0_araddr;
   wire [1:0]M_AXI_GP0_arburst;
   wire [3:0]M_AXI_GP0_arcache;
@@ -510,6 +513,7 @@ system system_i
         .FIXED_IO_ps_clk(FIXED_IO_ps_clk),
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
+        .M_AXI_GP0_ACLK(M_AXI_GP0_ACLK),
         .M_AXI_GP0_araddr(M_AXI_GP0_araddr),
         .M_AXI_GP0_arburst(M_AXI_GP0_arburst),
         .M_AXI_GP0_arcache(M_AXI_GP0_arcache),
