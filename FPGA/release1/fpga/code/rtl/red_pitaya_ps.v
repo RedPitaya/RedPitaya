@@ -212,9 +212,9 @@ axi_master #(
   .sys_rsel_i     ({ 8'h0           ,  8'h0           }), // system read byte select
   .sys_rlen_i     ({ 4'h0           ,  4'h0           }), // system read burst length
   .sys_rfixed_i   ({ 1'b0           ,  1'b0           }), // system read burst type (fixed / incremental)
-  .sys_rdata_o    ({                ,                 }), // system read data
-  .sys_rrdy_o     ({                ,                 }), // system read data is ready
-  .sys_rerr_o     ({                ,                 })  // system read error
+  .sys_rdata_o    (                                    ), // system read data
+  .sys_rrdy_o     (                                    ), // system read data is ready
+  .sys_rerr_o     (                                    )  // system read error
 );
 
 assign hp0_saxi_arqos  = 4'h0 ;
@@ -341,11 +341,8 @@ axi_slave #(
 assign sys_clk_o  = gp0_maxi_aclk   ;
 assign sys_rstn_o = gp0_maxi_arstn  ;
 
-assign gp0_maxi_aclk  = fclk_clk_o[0];
-assign gp0_maxi_arstn = fclk_rstn[0] ;
-
-//assign gp0_maxi_aclk  =  axi0_clk_i ;
-//assign gp0_maxi_arstn =  axi0_rstn_i;
+assign gp0_maxi_aclk  =  axi0_clk_i ;
+assign gp0_maxi_arstn =  axi0_rstn_i;
 
 //------------------------------------------------------------------------------
 // PS STUB
@@ -391,7 +388,7 @@ system_wrapper system_i (
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
   // GP0
-//.M_AXI_GP0_aclk    (axi0_clk_i),
+  .M_AXI_GP0_ACLK    (axi0_clk_i),
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
   .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
   .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
