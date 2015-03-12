@@ -10,6 +10,7 @@
 ################################################################################
 create_clock -name S_AXI_HP0_aclk -period 8 [get_ports S_AXI_HP0_aclk]
 create_clock -name S_AXI_HP1_aclk -period 8 [get_ports S_AXI_HP1_aclk]
+create_clock -name M_AXI_GP0_ACLK -period 8 [get_ports M_AXI_GP0_ACLK]
 create_clock -name FCLK_CLK0 -period 8 [get_ports FCLK_CLK0]
 create_clock -name FCLK_CLK1 -period 4 [get_ports FCLK_CLK1]
 create_clock -name FCLK_CLK2 -period 20 [get_ports FCLK_CLK2]

@@ -40,6 +40,10 @@
             <spirit:value>AXI3</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
+            <spirit:name>FREQ_HZ</spirit:name>
+            <spirit:value>125000000</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
             <spirit:name>ADDR_WIDTH</spirit:name>
             <spirit:value>32</spirit:value>
           </spirit:parameter>
