@@ -79,9 +79,7 @@ module red_pitaya_ps (
   input              sys_err_i          ,  // system error indicator
   input              sys_ack_i          ,  // system acknowledge signal
   // SPI master
-  output             spi_ss_o           ,  // select slave 0
-  output             spi_ss1_o          ,  // select slave 1
-  output             spi_ss2_o          ,  // select slave 2
+  output  [  3-1: 0] spi_ss_o           ,  // select slave
   output             spi_sclk_o         ,  // serial clock
   output             spi_mosi_o         ,  // master out slave in
   input              spi_miso_i         ,  // master in slave out
@@ -343,8 +341,11 @@ axi_slave #(
 assign sys_clk_o  = gp0_maxi_aclk   ;
 assign sys_rstn_o = gp0_maxi_arstn  ;
 
-assign gp0_maxi_aclk  = fclk_clk_o[0]  ;
+assign gp0_maxi_aclk  = fclk_clk_o[0];
 assign gp0_maxi_arstn = fclk_rstn[0] ;
+
+//assign gp0_maxi_aclk  =  axi0_clk_i ;
+//assign gp0_maxi_arstn =  axi0_rstn_i;
 
 //------------------------------------------------------------------------------
 // PS STUB
@@ -472,9 +473,9 @@ system_wrapper system_i (
 //.S_AXI_HP0_arstn   (hp0_saxi_arstn  ),//.S_AXI_HP1_arstn   (hp1_saxi_arstn  ), // out
   // SPI0
   .SPI0_SS_I         (spi_ss_i  ),  // in
-  .SPI0_SS_O         (spi_ss_o  ),  // out
-  .SPI0_SS1_O        (spi_ss1_o ),  // out
-  .SPI0_SS2_O        (spi_ss2_o ),  // out
+  .SPI0_SS_O         (spi_ss_o[0]),  // out
+  .SPI0_SS1_O        (spi_ss_o[1]),  // out
+  .SPI0_SS2_O        (spi_ss_o[2]),  // out
   .SPI0_SCLK_I       (spi_sclk_i),  // in
   .SPI0_SCLK_O       (spi_sclk_o),  // out
   .SPI0_MOSI_I       (spi_mosi_i),  // in
