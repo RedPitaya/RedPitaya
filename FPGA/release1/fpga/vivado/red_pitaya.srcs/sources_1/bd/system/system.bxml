@@ -2,12 +2,12 @@
 <Root MajorVersion="0" MinorVersion="27">
   <CompositeFile CompositeFileTopName="system" CanBeSetAsTop="true" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="STALE"/>
-    <Generation Name="IMPLEMENTATION" State="STALE"/>
+    <Generation Name="SYNTHESIS" State="GENERATED"/>
+    <Generation Name="IMPLEMENTATION" State="GENERATED"/>
     <Generation Name="SIMULATION" State="STALE"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
       <File Name="ip/system_processing_system7_0_0/system_processing_system7_0_0.xci" Type="IP">
-        <Properties IsEditable="false" IsVisible="true" Timestamp="1426113747" IsTrackable="true"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="1426192316" IsTrackable="true"/>
         <Library Name="work"/>
         <UsedIn Val="SYNTHESIS"/>
         <UsedIn Val="IMPLEMENTATION"/>
