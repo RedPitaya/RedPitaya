@@ -41,67 +41,67 @@
  */
 
 module red_pitaya_ps (
-   // PS peripherals
-   inout   [ 54-1: 0] FIXED_IO_mio       ,
-   inout              FIXED_IO_ps_clk    ,
-   inout              FIXED_IO_ps_porb   ,
-   inout              FIXED_IO_ps_srstb  ,
-   inout              FIXED_IO_ddr_vrn   ,
-   inout              FIXED_IO_ddr_vrp   ,
-   // DDR
-   inout   [ 15-1: 0] DDR_addr           ,
-   inout   [  3-1: 0] DDR_ba             ,
-   inout              DDR_cas_n          ,
-   inout              DDR_ck_n           ,
-   inout              DDR_ck_p           ,
-   inout              DDR_cke            ,
-   inout              DDR_cs_n           ,
-   inout   [  4-1: 0] DDR_dm             ,
-   inout   [ 32-1: 0] DDR_dq             ,
-   inout   [  4-1: 0] DDR_dqs_n          ,
-   inout   [  4-1: 0] DDR_dqs_p          ,
-   inout              DDR_odt            ,
-   inout              DDR_ras_n          ,
-   inout              DDR_reset_n        ,
-   inout              DDR_we_n           ,
+  // PS peripherals
+  inout   [ 54-1: 0] FIXED_IO_mio       ,
+  inout              FIXED_IO_ps_clk    ,
+  inout              FIXED_IO_ps_porb   ,
+  inout              FIXED_IO_ps_srstb  ,
+  inout              FIXED_IO_ddr_vrn   ,
+  inout              FIXED_IO_ddr_vrp   ,
+  // DDR
+  inout   [ 15-1: 0] DDR_addr           ,
+  inout   [  3-1: 0] DDR_ba             ,
+  inout              DDR_cas_n          ,
+  inout              DDR_ck_n           ,
+  inout              DDR_ck_p           ,
+  inout              DDR_cke            ,
+  inout              DDR_cs_n           ,
+  inout   [  4-1: 0] DDR_dm             ,
+  inout   [ 32-1: 0] DDR_dq             ,
+  inout   [  4-1: 0] DDR_dqs_n          ,
+  inout   [  4-1: 0] DDR_dqs_p          ,
+  inout              DDR_odt            ,
+  inout              DDR_ras_n          ,
+  inout              DDR_reset_n        ,
+  inout              DDR_we_n           ,
 
-   output  [  4-1: 0] fclk_clk_o         ,
-   output  [  4-1: 0] fclk_rstn_o        ,
-   // system read/write channel
-   output             sys_clk_o          ,  // system clock
-   output             sys_rstn_o         ,  // system reset - active low
-   output  [ 32-1: 0] sys_addr_o         ,  // system read/write address
-   output  [ 32-1: 0] sys_wdata_o        ,  // system write data
-   output  [  4-1: 0] sys_sel_o          ,  // system write byte select
-   output             sys_wen_o          ,  // system write enable
-   output             sys_ren_o          ,  // system read enable
-   input   [ 32-1: 0] sys_rdata_i        ,  // system read data
-   input              sys_err_i          ,  // system error indicator
-   input              sys_ack_i          ,  // system acknowledge signal
-   // SPI master
-   output             spi_ss_o           ,  // select slave 0
-   output             spi_ss1_o          ,  // select slave 1
-   output             spi_ss2_o          ,  // select slave 2
-   output             spi_sclk_o         ,  // serial clock
-   output             spi_mosi_o         ,  // master out slave in
-   input              spi_miso_i         ,  // master in slave out
-   // SPI slave
-   input              spi_ss_i           ,  // slave selected
-   input              spi_sclk_i         ,  // serial clock
-   input              spi_mosi_i         ,  // master out slave in
-   output             spi_miso_o         ,  // master in slave out
-   // AXI masters
-   input              axi1_clk_i   , axi0_clk_i   ,  // global clock
-   input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
-   input   [ 32-1: 0] axi1_waddr_i , axi0_waddr_i ,  // system write address
-   input   [ 64-1: 0] axi1_wdata_i , axi0_wdata_i ,  // system write data
-   input   [  8-1: 0] axi1_wsel_i  , axi0_wsel_i  ,  // system write byte select
-   input              axi1_wvalid_i, axi0_wvalid_i,  // system write data valid
-   input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
-   input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
-   output             axi1_werr_o  , axi0_werr_o  ,  // system write error
-   output             axi1_wrdy_o  , axi0_wrdy_o  ,  // system write ready
-   output             axi1_rstn_o  , axi0_rstn_o     // reset from PS
+  output  [  4-1: 0] fclk_clk_o         ,
+  output  [  4-1: 0] fclk_rstn_o        ,
+  // system read/write channel
+  output             sys_clk_o          ,  // system clock
+  output             sys_rstn_o         ,  // system reset - active low
+  output  [ 32-1: 0] sys_addr_o         ,  // system read/write address
+  output  [ 32-1: 0] sys_wdata_o        ,  // system write data
+  output  [  4-1: 0] sys_sel_o          ,  // system write byte select
+  output             sys_wen_o          ,  // system write enable
+  output             sys_ren_o          ,  // system read enable
+  input   [ 32-1: 0] sys_rdata_i        ,  // system read data
+  input              sys_err_i          ,  // system error indicator
+  input              sys_ack_i          ,  // system acknowledge signal
+  // SPI master
+  output             spi_ss_o           ,  // select slave 0
+  output             spi_ss1_o          ,  // select slave 1
+  output             spi_ss2_o          ,  // select slave 2
+  output             spi_sclk_o         ,  // serial clock
+  output             spi_mosi_o         ,  // master out slave in
+  input              spi_miso_i         ,  // master in slave out
+  // SPI slave
+  input              spi_ss_i           ,  // slave selected
+  input              spi_sclk_i         ,  // serial clock
+  input              spi_mosi_i         ,  // master out slave in
+  output             spi_miso_o         ,  // master in slave out
+  // AXI masters
+  input              axi1_clk_i   , axi0_clk_i   ,  // global clock
+  input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
+  input   [ 32-1: 0] axi1_waddr_i , axi0_waddr_i ,  // system write address
+  input   [ 64-1: 0] axi1_wdata_i , axi0_wdata_i ,  // system write data
+  input   [  8-1: 0] axi1_wsel_i  , axi0_wsel_i  ,  // system write byte select
+  input              axi1_wvalid_i, axi0_wvalid_i,  // system write data valid
+  input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
+  input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
+  output             axi1_werr_o  , axi0_werr_o  ,  // system write error
+  output             axi1_wrdy_o  , axi0_wrdy_o  ,  // system write ready
+  output             axi1_rstn_o  , axi0_rstn_o     // reset from PS
 );
 
 //------------------------------------------------------------------------------
@@ -343,11 +343,13 @@ axi_slave #(
 assign sys_clk_o  = gp0_maxi_aclk   ;
 assign sys_rstn_o = gp0_maxi_arstn  ;
 
+assign gp0_maxi_aclk  = fclk_clk_o[0]  ;
+assign gp0_maxi_arstn = fclk_rstn[0] ;
+
 //------------------------------------------------------------------------------
 // PS STUB
 
-assign fclk_rstn_o    = fclk_rstn      ;
-assign gp0_maxi_aclk  = fclk_clk_o[0]  ;
+assign fclk_rstn_o = fclk_rstn;
 
 BUFG i_fclk0_buf  (.O(fclk_clk_o[0]), .I(fclk_clk[0]));
 BUFG i_fclk1_buf  (.O(fclk_clk_o[1]), .I(fclk_clk[1]));
@@ -388,7 +390,7 @@ system_wrapper system_i (
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
   // GP0
-//  .M_AXI_GP0_aclk    (),
+//.M_AXI_GP0_aclk    (axi0_clk_i),
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
   .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
   .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
@@ -484,8 +486,6 @@ system_wrapper system_i (
   .SPI0_MOSI_T       (          ),  // out
   .SPI0_MISO_T       (          )   // out
 );
-
-assign gp0_maxi_arstn = fclk_rstn[0] ;
 
 assign hp0_saxi_arstn = 1'b1 ;
 assign hp1_saxi_arstn = 1'b1 ;
