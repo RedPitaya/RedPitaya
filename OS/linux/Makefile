@@ -4,7 +4,7 @@
 # Linux kernel Makefile
 #
 
-LINUX_GIT_ARCHIVE := https://github.com/Xilinx/linux-xlnx/archive/xilinx-v14.6.02.tar.gz
+LINUX_GIT_ARCHIVE := https://github.com/Xilinx/linux-xlnx/archive/xilinx-v14.7.tar.gz
 XLINUX_DIR := linux-xlnx
 PATCH := patches
 NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
