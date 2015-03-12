@@ -196,16 +196,6 @@ red_pitaya_ps i_ps (
   .sys_rdata_i   (ps_sys_rdata),  // system read data
   .sys_err_i     (ps_sys_err  ),  // system error indicator
   .sys_ack_i     (ps_sys_ack  ),  // system acknowledge signal
-   // SPI master
-  .spi_ss_o      (            ),  // select slave
-  .spi_sclk_o    (            ),  // serial clock
-  .spi_mosi_o    (            ),  // master out slave in
-  .spi_miso_i    (1'b0        ),  // master in slave out
-   // SPI slave
-  .spi_ss_i      (1'b1        ),  // slave selected
-  .spi_sclk_i    (1'b0        ),  // serial clock
-  .spi_mosi_i    (1'b0        ),  // master out slave in
-  .spi_miso_o    (            ),  // master in slave out
   // AXI masters
   .axi1_clk_i    (axi1_clk    ),  .axi0_clk_i    (axi0_clk    ),  // global clock
   .axi1_rstn_i   (axi1_rstn   ),  .axi0_rstn_i   (axi0_rstn   ),  // global reset
@@ -363,8 +353,8 @@ red_pitaya_hk i_hk (
   .sys_ack_o       (  sys_ack[0]                 )   // acknowledge signal
 );
 
-IOBUF i_iobufp [GV-1:0] (.O(exp_p_in[GV]), .IO(exp_p_io[GV]), .I(exp_p_out[GV]), .T(!exp_p_dir[GV]) );
-IOBUF i_iobufn [GV-1:0] (.O(exp_n_in[GV]), .IO(exp_n_io[GV]), .I(exp_n_out[GV]), .T(!exp_n_dir[GV]) );
+IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(!exp_p_dir) );
+IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(!exp_n_dir) );
 
 //---------------------------------------------------------------------------------
 //
