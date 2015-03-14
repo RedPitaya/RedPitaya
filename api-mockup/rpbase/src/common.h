@@ -63,6 +63,6 @@ float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int cali
 uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int calib_dc_off, float user_dc_off);
 
 /* Deep averagning extension functions */
-int32_t cmn_DeepAvgCalibCnts(uint32_t field_len, int32_t cnts, int calib_dc_off);
+int32_t cmn_DeepAvgCalibCnts(uint32_t field_len, int32_t cnts);
 
 #endif /* COMMON_H_ */

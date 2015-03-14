@@ -52,11 +52,13 @@ int osc_SetDeepAvgCount(uint32_t count);
 int osc_SetDeepAvgShift(uint32_t shift);
 int osc_SetDeepDataSeqLen(uint32_t len);
 int osc_SetDeepAvgDebTim(uint32_t deb_t);
+int osc_SetDeepAvgOffSet(int channel, uint32_t dc_offset);
 int osc_GetDeepAvgCount(uint32_t *count);
 int osc_GetDeepAvgShift(uint32_t *shift);
 int osc_GetDeepDataSeqLen(uint32_t *len);
 int osc_GetDeepAvgDebTim(uint32_t *deb_t);
 int osc_GetDeepAvgRunState(uint32_t *run);
+int osc_GetDeepAvgOffSet(int channel, uint32_t *dc_offset);
 int osc_WriteDataIntoMemoryDeepAvg(bool eanble);
 
 const volatile uint32_t* osc_GetDataBufferChA();
