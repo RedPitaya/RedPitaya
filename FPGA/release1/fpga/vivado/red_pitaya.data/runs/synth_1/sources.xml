@@ -233,11 +233,7 @@
       </FileInfo>
     </File>
     <File Path="$PDATADIR/sources_1/ports.xml">
-      <FileInfo SFType="PortsDb">
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
+      <FileInfo SFType="PortsDb"/>
     </File>
     <File Path="$PPRDIR/../code/bench/red_pitaya_hk_tb.v">
       <FileInfo>
