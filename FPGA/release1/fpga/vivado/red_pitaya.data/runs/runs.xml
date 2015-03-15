@@ -1,56 +1,6 @@
 <?xml version="1.0"?>
 <Runs Version="1" Minor="9">
-	<Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7z010clg400-1" LaunchPart="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" State="current" Dir="$PRUNDIR/synth_1" LaunchTime="1426376523">
-		<File Type="RDS-UTIL" Name="red_pitaya_top_utilization_synth.rpt"/>
-		<File Type="RUN-STRAT" Name="$PDATADIR/runs/synth_1/synth_1.psg"/>
-		<File Type="RDS-UTIL-PB" Name="red_pitaya_top_utilization_synth.pb"/>
-		<File Type="RDS-DCP" Name="red_pitaya_top.dcp"/>
-		<File Type="VDS-TIMINGSUMMARY" Name="red_pitaya_top_timing_summary_synth.rpt"/>
-		<File Type="VDS-TIMING-PB" Name="red_pitaya_top_timing_summary_synth.pb"/>
-		<File Type="PA-TCL" Name="red_pitaya_top.tcl"/>
-		<File Type="RUN-SRCS" Name="$PDATADIR/runs/synth_1/sources.xml"/>
-		<File Type="RUN-CONSTRS" Name="$PDATADIR/runs/synth_1/constrs_in.xml"/>
-		<File Type="RDS-RDS" Name="red_pitaya_top.rds"/>
-	</Run>
-	<Run Id="impl_1" Type="Ft2:EntireDesign" SynthRun="synth_1" Part="xc7z010clg400-1" LaunchPart="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Spread logic throughout the device to avoid creating congested regions. (high setting: highest degree of spreading)" State="current" Dir="$PRUNDIR/impl_1" LaunchTime="1426376523">
-		<File Type="RUN-STRAT" Name="$PDATADIR/runs/impl_1/impl_1.psg"/>
-		<File Type="OPT-DRC" Name="red_pitaya_top_drc_opted.rpt"/>
-		<File Type="PLACE-IO" Name="red_pitaya_top_io_placed.rpt"/>
-		<File Type="PLACE-CLK" Name="red_pitaya_top_clock_utilization_placed.rpt"/>
-		<File Type="PLACE-UTIL" Name="red_pitaya_top_utilization_placed.rpt"/>
-		<File Type="PLACE-UTIL-PB" Name="red_pitaya_top_utilization_placed.pb"/>
-		<File Type="PLACE-CTRL" Name="red_pitaya_top_control_sets_placed.rpt"/>
-		<File Type="PLACE-SIMILARITY" Name="red_pitaya_top_incremental_reuse_placed.rpt"/>
-		<File Type="PLACE-PRE-SIMILARITY" Name="red_pitaya_top_incremental_reuse_pre_placed.rpt"/>
-		<File Type="PA-TCL" Name="red_pitaya_top.tcl"/>
-		<File Type="ROUTE-DRC" Name="red_pitaya_top_drc_routed.rpt"/>
-		<File Type="ROUTE-DRC-PB" Name="red_pitaya_top_drc_routed.pb"/>
-		<File Type="ROUTE-PWR" Name="red_pitaya_top_power_routed.rpt"/>
-		<File Type="ROUTE-PWR-SUM" Name="red_pitaya_top_power_summary_routed.pb"/>
-		<File Type="ROUTE-STATUS" Name="red_pitaya_top_route_status.rpt"/>
-		<File Type="ROUTE-STATUS-PB" Name="red_pitaya_top_route_status.pb"/>
-		<File Type="ROUTE-DCP" Name="red_pitaya_top_routed.dcp"/>
-		<File Type="ROUTE-TIMINGSUMMARY" Name="red_pitaya_top_timing_summary_routed.rpt"/>
-		<File Type="ROUTE-TIMING-PB" Name="red_pitaya_top_timing_summary_routed.pb"/>
-		<File Type="ROUTE-SIMILARITY" Name="red_pitaya_top_incremental_reuse_routed.rpt"/>
-		<File Type="OPT-DCP" Name="red_pitaya_top_opt.dcp"/>
-		<File Type="RDI-RDI" Name="red_pitaya_top.rdi"/>
-		<File Type="PLACE-DCP" Name="red_pitaya_top_placed.dcp"/>
-		<File Type="PWROPT-DCP" Name="red_pitaya_top_pwropt.dcp"/>
-		<File Type="POSTPLACE-PWROPT-DCP" Name="red_pitaya_top_postplace_pwropt.dcp"/>
-		<File Type="PWROPT-DRC" Name="red_pitaya_top_drc_pwropted.rpt"/>
-		<File Type="PHYSOPT-DCP" Name="red_pitaya_top_physopt.dcp"/>
-		<File Type="PHYSOPT-DRC" Name="red_pitaya_top_drc_physopted.rpt"/>
-		<File Type="BG-BIT" Name="red_pitaya_top.bit"/>
-		<File Type="BG-DRC" Name="red_pitaya_top.drc"/>
-		<File Type="BG-BGN" Name="red_pitaya_top.bgn"/>
-		<File Type="BG-BIN" Name="red_pitaya_top.bin"/>
-		<File Type="BITSTR-MSK" Name="red_pitaya_top.msk"/>
-		<File Type="BITSTR-RBT" Name="red_pitaya_top.rbt"/>
-		<File Type="BITSTR-NKY" Name="red_pitaya_top.nky"/>
-		<File Type="BITSTR-BMM" Name="red_pitaya_top_bd.bmm"/>
-		<File Type="WBT-USG" Name="usage_statistics_webtalk.html"/>
-		<File Type="RUN-CONSTRS" Name="$PDATADIR/runs/impl_1/constrs_in.xml"/>
-	</Run>
+	<Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" State="current"/>
+	<Run Id="impl_1" Type="Ft2:EntireDesign" SynthRun="synth_1" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Spread logic throughout the device to avoid creating congested regions. (high setting: highest degree of spreading)" State="current"/>
 </Runs>
 
