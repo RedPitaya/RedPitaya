@@ -349,6 +349,7 @@ static const uint32_t SHIFT_MASK            = 0xF;          // (4 bits)
 static const uint32_t COUNT_MASK            = 0xFFFFFFFF;   // (32 bits)
 static const uint32_t DEB_TIM_MASK          = 0xFFFFF;      // (20 bits)
 static const uint32_t AC_CTRL_STAT          = 0x3;          // (2 bits)
+static const uint32_t DC_OFFS_MASK          = 0x3FFF;       // (14 bits)
 
 
 /**
@@ -575,6 +576,15 @@ int osc_SetDeepAvgDebTim(uint32_t deb_t){
     return RP_OK;
 }
 
+int osc_SetDeepAvgOffSet(int channel, uint32_t dc_offset){
+    if(channel == 1){
+        ECHECK(cmn_SetValue(&osc_reg->ac_off_cha, dc_offset, DC_OFFS_MASK));
+        return RP_OK;
+    }
+    ECHECK(cmn_SetValue(&osc_reg->ac_off_chb, dc_offset, DC_OFFS_MASK));
+    return RP_OK;
+}
+
 int osc_GetDeepAvgCount(uint32_t *count){
     return cmn_GetValue(&osc_reg->ac_count, count, COUNT_MASK);
 }
@@ -594,6 +604,13 @@ int osc_GetDeepAvgDebTim(uint32_t *deb_t){
 int osc_GetDeepAvgRunState(uint32_t *run){
     return cmn_GetValue(&osc_reg->ac_ctrl_stat, run, AC_CTRL_STAT);
 }
+
+int osc_GetDeepAvgOffSet(int channel, uint32_t *dc_offset){
+    if(channel == 1){
+        return cmn_GetValue(&osc_reg->ac_off_cha, dc_offset, DC_OFFS_MASK);
+    }
+    return cmn_GetValue(&osc_reg->ac_off_chb, dc_offset, DC_OFFS_MASK);
+}   
 
 
 /* osc_WriteDataIntoMemoryDeepAvg

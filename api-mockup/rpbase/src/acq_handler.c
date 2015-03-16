@@ -16,6 +16,9 @@
 #include <stdint.h>
 #include <math.h>
 
+#include <string.h>
+#include <stdlib.h>
+
 #include "version.h"
 #include "common.h"
 #include "calib.h"
@@ -843,6 +846,11 @@ int acq_SetDeepDataSeqLen(uint32_t len){
 int acq_SetDeepAvgDebTim(uint32_t deb_t){
     return osc_SetDeepAvgDebTim(deb_t);
 }
+
+int acq_SetDeepAvgOffSet(rp_channel_t channel, uint32_t dc_offs){
+    return osc_SetDeepAvgOffSet(channel, dc_offs);
+}
+
 /* Deep averaging getters */
 int acq_GetDeepAvgCount(uint32_t *count){
     return osc_GetDeepAvgCount(count);
@@ -860,6 +868,7 @@ int acq_GetDeepAvgDebTim(uint32_t *deb_t){
     return osc_GetDeepAvgDebTim(deb_t);
 }
 
+
 int acq_GetDeepAvgRunState(rp_acq_trig_src_t *run){
     
     uint32_t state;
@@ -872,6 +881,10 @@ int acq_GetDeepAvgRunState(rp_acq_trig_src_t *run){
     }
 
     return RP_OK;
+}
+
+int acq_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offs){
+    return osc_GetDeepAvgOffSet(channel, dc_offs);
 }
 
 int acq_DeepAvgStart(){   
@@ -888,6 +901,7 @@ static const volatile uint32_t *getDeepAvgRawBuffer(rp_channel_t channel){
     }
 }
 
+
 /* Acquisition for both channels made in user level */
 int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer){
 
@@ -895,15 +909,11 @@ int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer)
     *size = MIN(*size, ADC_BUFFER_SIZE);
     uint32_t cnts;
     const volatile uint32_t *raw_buffer = getDeepAvgRawBuffer(channel);
-
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = (channel = RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-
+    
     for(uint32_t i = 0; i < (*size); i++){
         cnts = (raw_buffer[i]);
-        buffer[i] = cmn_DeepAvgCalibCnts(32, cnts, dc_offs);
+        buffer[i] = cmn_DeepAvgCalibCnts(32, cnts);
     }
-
     return RP_OK;
 }
 
