@@ -188,8 +188,8 @@ end else begin
    axi_rlast_o   <= rd_do && ack  ;
    axi_rvalid_o  <= rd_do && ack  ;
    axi_rresp_o   <= {(rd_error || ack_cnt[5]),1'b0} ;  // 2'b10 SLVERR    2'b00 OK
-//   axi_rdata_o   <= 32'habcd0000; // TODO: removes this debug code, it breaks functionality
-   axi_rdata_o   <= sys_rdata_i   ;
+   axi_rdata_o   <= 32'habcd0000; // TODO: removes this debug code, it breaks functionality
+//   axi_rdata_o   <= sys_rdata_i   ;
 end
 
 // acknowledge protection
