@@ -848,20 +848,22 @@ scpi_result_t RP_AcqDPAvgStart(scpi_t *context){
 scpi_result_t RP_AcqDPAvgSetCount(scpi_t *context){
 
     uint32_t count;
-
+    printf("Setting count.\n");
     //Read input parameter
     if(!SCPI_ParamUInt(context, &count, true)){
         syslog(LOG_ERR, "*ACQ:DP:COUNT is missing input parameter.");
         return SCPI_RES_ERR;
     }
-
+    printf("Set count.\n");
     //Set deep averaging count
+    printf("Setting RP count\n");
     int result = rp_SetDeepAvgCount(count);
-
+    printf("Set count RP\n");
     if(result != RP_OK){
         syslog(LOG_ERR, "*ACQ:DP:COUNT? Failed to set count: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
+    printf("Successful.\n");
     syslog(LOG_INFO, "*ACQ:DP:COUNT? Successfully set count to: %d", count);
     return SCPI_RES_OK;
 }
@@ -980,12 +982,12 @@ scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context){
     int result = rp_GetDeepAvgDebTim(&deb_timer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*ACQ:DP:TIM Failed to retrieve parameter debunce timer.");
+        syslog(LOG_ERR, "*ACQ:DP:DEBTIM Failed to retrieve parameter debunce timer.");
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultInt(context, deb_timer);
-    syslog(LOG_INFO, "*ACQ:DP:TIM Successfully retrieved parameter debounce timer.");
+    syslog(LOG_INFO, "*ACQ:DP:DEBTIM Successfully retrieved parameter debounce timer.");
     return SCPI_RES_OK;
 }
 
@@ -1008,8 +1010,10 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
 
     uint32_t size;
 
-    if(!SCPI_ParamUInt(context, &size, true)){
-        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA:N? is missing first parameter");
+    rp_GetDeepDataSeqLen(&size);
+
+    if(size == 0){
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA? Failed to get sequence length.");
         return SCPI_RES_ERR;
     }
 
@@ -1017,14 +1021,12 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
     int result = rp_GetDeepAvgRawData(channel, &size, buffer);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA:N? Failed to get deep averaging data: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:DATA? Failed to get deep averaging data: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultBufferInt32(context, buffer, size);
-
-    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:DATA:N? Successfully returned data.");
-
+    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:DATA? Successfully returned data.");
     return SCPI_RES_OK;
 }
 
