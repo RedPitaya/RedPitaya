@@ -332,7 +332,11 @@ assign sys_clk_o  = gp0_maxi_aclk   ;
 assign sys_rstn_o = gp0_maxi_arstn  ;
 
 assign gp0_maxi_aclk  =  axi0_clk_i ;
-assign gp0_maxi_arstn =  axi0_rstn_i;
+
+always @(posedge axi0_clk_i)
+gp0_maxi_arstn <= fclk_rstn[0];
+
+
 
 //------------------------------------------------------------------------------
 // PS STUB
