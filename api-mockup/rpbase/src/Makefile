@@ -34,6 +34,7 @@ TARGET=librp.so
 # List of compiled object files
 OBJECTS =	common.o \
 			housekeeping.o \
+			id_handler.o \
 			dpin_handler.o \
 			oscilloscope.o \
 			acq_handler.o \
