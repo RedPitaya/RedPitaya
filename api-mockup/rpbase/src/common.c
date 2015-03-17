@@ -220,7 +220,7 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
     ret_val += user_dc_off;
 
     /* adopt the calculation with calibration scaling */
-    ret_val *= calibScale;
+    ret_val *= calibScale / (FULL_SCALE_NORM/adc_max_v);
 
     return ret_val;
 }
