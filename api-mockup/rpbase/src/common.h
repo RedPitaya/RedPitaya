@@ -29,6 +29,18 @@
         } \
 }
 
+#define CHECK_OUTPUT(X, Y) { \
+if (channel == RP_CH_1) { \
+	X; \
+} \
+else if (channel == RP_CH_2) { \
+	Y; \
+} \
+else { \
+	return RP_EPN; \
+} \
+}
+
 #define SET_BITS(x,b) ((x) |= (b))
 #define UNSET_BITS(x,b) ((x) &= ~(b))
 #define SET_VALUE(x,b) ((x) = (b))
