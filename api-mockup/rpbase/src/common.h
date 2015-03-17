@@ -43,6 +43,8 @@
 
 #define FLOAT_EPS 0.00001f
 
+#define FULL_SCALE_NORM     20.0    // V
+
 int cmn_Init();
 int cmn_Release();
 
