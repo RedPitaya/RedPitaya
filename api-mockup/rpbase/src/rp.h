@@ -294,6 +294,24 @@ const char* rp_GetError(int errorCode);
 
 ///@}
 
+
+/** @name Identification
+ */
+///@{
+
+/**
+* Gets FPGA Synthesized ID
+*/
+int rp_IdGetID(uint32_t *id);
+
+/**
+* Gets FPGA Unique DNA
+*/
+int rp_IdGetDNA(uint64_t *dna);
+
+///@}
+
+
 /** @name Digital Input/Output
  */
 ///@{
