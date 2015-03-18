@@ -85,7 +85,7 @@ int main(int argc, char *argv[]){
 		int msg_len = strlen((char *)argv[1]);
 
 		int count = 0;
-		char tx_buffer[msg_len + 3];
+		char tx_buffer[msg_len+1];
 
 		strncpy(tx_buffer, argv[1], msg_len);
 
