@@ -25,6 +25,7 @@
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/units.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 /**
  * Interface general commands
@@ -88,6 +89,18 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
 	return SCPI_RES_ERR;
 }
 
+scpi_result_t SCPI_Echo(scpi_t * context) {
+    syslog(LOG_ERR, "*ECHO");
+    SCPI_ResultText(context, "ECHO?");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t SCPI_EchoVersion(scpi_t * context) {
+    syslog(LOG_ERR, "*ECO:VERSION?");
+    SCPI_ResultText(context, rp_GetVersion());
+    return SCPI_RES_OK;
+}
+
 
 
 
@@ -96,38 +109,41 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
  */
 
 static const scpi_command_t scpi_commands[] = {
-    /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
-    { .pattern = "*CLS", .callback = SCPI_CoreCls,},
-    { .pattern = "*ESE", .callback = SCPI_CoreEse,},
-    { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
-    { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
-    { .pattern = "*IDN?", .callback = SCPI_CoreIdnQ,},
-    { .pattern = "*OPC", .callback = SCPI_CoreOpc,},
-    { .pattern = "*OPC?", .callback = SCPI_CoreOpcQ,},
-    { .pattern = "*RST", .callback = SCPI_CoreRst,},
-    { .pattern = "*SRE", .callback = SCPI_CoreSre,},
-    { .pattern = "*SRE?", .callback = SCPI_CoreSreQ,},
-    { .pattern = "*STB?", .callback = SCPI_CoreStbQ,},
-    { .pattern = "*TST?", .callback = SCPI_CoreTstQ,},
-    { .pattern = "*WAI", .callback = SCPI_CoreWai,},
+        /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
+        { .pattern = "*CLS", .callback = SCPI_CoreCls,},
+        { .pattern = "*ESE", .callback = SCPI_CoreEse,},
+        { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
+        { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
+        { .pattern = "*IDN?", .callback = SCPI_CoreIdnQ,},
+        { .pattern = "*OPC", .callback = SCPI_CoreOpc,},
+        { .pattern = "*OPC?", .callback = SCPI_CoreOpcQ,},
+        { .pattern = "*RST", .callback = SCPI_CoreRst,},
+        { .pattern = "*SRE", .callback = SCPI_CoreSre,},
+        { .pattern = "*SRE?", .callback = SCPI_CoreSreQ,},
+        { .pattern = "*STB?", .callback = SCPI_CoreStbQ,},
+        { .pattern = "*TST?", .callback = SCPI_CoreTstQ,},
+        { .pattern = "*WAI", .callback = SCPI_CoreWai,},
 
-    /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
-    {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
-    {.pattern = "SYSTem:ERRor:COUNt?", .callback = SCPI_SystemErrorCountQ,},
-    {.pattern = "SYSTem:VERSion?", .callback = SCPI_SystemVersionQ,},
+        /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
+        {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
+        {.pattern = "SYSTem:ERRor:COUNt?", .callback = SCPI_SystemErrorCountQ,},
+        {.pattern = "SYSTem:VERSion?", .callback = SCPI_SystemVersionQ,},
 
-    {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
-    {.pattern = "STATus:QUEStionable:ENABle", .callback = SCPI_StatusQuestionableEnable,},
-    {.pattern = "STATus:QUEStionable:ENABle?", .callback = SCPI_StatusQuestionableEnableQ,},
+        {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
+        {.pattern = "STATus:QUEStionable:ENABle", .callback = SCPI_StatusQuestionableEnable,},
+        {.pattern = "STATus:QUEStionable:ENABle?", .callback = SCPI_StatusQuestionableEnableQ,},
 
-    {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
+        {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
 
-    {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
+        {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
-    /* RedPitaya */
-    {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
-	{.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
-	{.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
+        {.pattern = "ECHO?", .callback = SCPI_Echo,},
+        {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
+
+        /* RedPitaya */
+        {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
+        {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
+        {.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
         {.pattern = "DIG:PIN:DIR", .callback = RP_DigitalPinSetDirection,},
 
         {.pattern = "ANALOG:RST", .callback = RP_AnalogPinReset,},
@@ -145,7 +161,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:AVG", .callback = RP_AcqSetAveraging,},
         {.pattern = "ACQ:AVG?", .callback = RP_AcqGetAveraging,},
         {.pattern = "ACQ:TRIG", .callback = RP_AcqSetTriggerSrc,},
-        {.pattern = "ACQ:TRIG:STAT?", .callback = RP_AcqGetTriggerSrc,},
+        {.pattern = "ACQ:TRIG:STAT?", .callback = RP_AcqGetTrigger,},
         {.pattern = "ACQ:TRIG:DLY", .callback = RP_AcqSetTriggerDelay,},
         {.pattern = "ACQ:TRIG:DLY?", .callback = RP_AcqGetTriggerDelay,},
         {.pattern = "ACQ:TRIG:DLY:NS", .callback = RP_AcqSetTriggerDelayNs,},
@@ -226,9 +242,9 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "SOUR2:TRIG:SOUR", .callback = RP_GenChannel2SetTriggerSource,},
         {.pattern = "SOUR1:TRIG:SOUR?", .callback = RP_GenChannel1GetTriggerSource,},
         {.pattern = "SOUR2:TRIG:SOUR?", .callback = RP_GenChannel2GetTriggerSource,},
-        {.pattern = "SOUR1:TRIG:IMM", .callback = RP_GenChannel1SetTrigger,},
-        {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2SetTrigger,},
-        {.pattern = "TRIG:IMM", .callback = RP_GenChannel3SetTrigger,},
+        {.pattern = "SOUR1:TRIG:IMM", .callback = RP_GenChannel1Trigger,},
+        {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2Trigger,},
+        {.pattern = "TRIG:IMM", .callback = RP_GenChannelAllTrigger,},
 
     //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
 
