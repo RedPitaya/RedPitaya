@@ -28,6 +28,7 @@ all: $(RPLIB) $(SCPIPARSER) $(SCPISRV)
 
 $(RPLIB):
 	$(MAKE) -C ../api-mockup/rpbase/src
+	$(MAKE) -C ../api-mockup/rpApplications/src
 
 $(SCPISRV):
 	$(MAKE) -C src
@@ -49,4 +50,5 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C 3rdparty/libs/scpi-parser clean
 	$(MAKE) -C ../api-mockup/rpbase/src clean
+	$(MAKE) -C ../api-mockup/rpApplications/src clean
 
