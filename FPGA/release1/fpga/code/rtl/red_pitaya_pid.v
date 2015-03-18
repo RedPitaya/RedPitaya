@@ -49,8 +49,7 @@
 
 
 
-module red_pitaya_pid
-(
+module red_pitaya_pid (
    // signals
    input                 clk_i           ,  //!< processing clock
    input                 rstn_i          ,  //!< processing reset - active low
@@ -60,34 +59,19 @@ module red_pitaya_pid
    output     [ 14-1: 0] dat_b_o         ,  //!< output data CHB
   
    // system bus
-   input                 sys_clk_i       ,  //!< bus clock
-   input                 sys_rstn_i      ,  //!< bus reset - active low
-   input      [ 32-1: 0] sys_addr_i      ,  //!< bus address
-   input      [ 32-1: 0] sys_wdata_i     ,  //!< bus write data
-   input      [  4-1: 0] sys_sel_i       ,  //!< bus write byte select
-   input                 sys_wen_i       ,  //!< bus write enable
-   input                 sys_ren_i       ,  //!< bus read enable
-   output     [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
-   output                sys_err_o       ,  //!< bus error indicator
-   output                sys_ack_o          //!< bus acknowledge signal
+   input      [ 32-1: 0] sys_addr        ,  //!< bus address
+   input      [ 32-1: 0] sys_wdata       ,  //!< bus write data
+   input      [  4-1: 0] sys_sel         ,  //!< bus write byte select
+   input                 sys_wen         ,  //!< bus write enable
+   input                 sys_ren         ,  //!< bus read enable
+   output reg [ 32-1: 0] sys_rdata       ,  //!< bus read data
+   output reg            sys_err         ,  //!< bus error indicator
+   output reg            sys_ack            //!< bus acknowledge signal
 );
-
-
-
-
-wire [ 32-1: 0] addr         ;
-wire [ 32-1: 0] wdata        ;
-wire            wen          ;
-wire            ren          ;
-reg  [ 32-1: 0] rdata        ;
-reg             err          ;
-reg             ack          ;
-
 
 localparam  PSR = 12         ;
 localparam  ISR = 18         ;
 localparam  DSR = 10         ;
-
 
 //---------------------------------------------------------------------------------
 //  PID 11
@@ -103,9 +87,7 @@ red_pitaya_pid_block #(
   .PSR (  PSR   ),
   .ISR (  ISR   ),
   .DSR (  DSR   )      
-)
-i_pid11
-(
+) i_pid11 (
    // data
   .clk_i        (  clk_i          ),  // clock
   .rstn_i       (  rstn_i         ),  // reset - active low
@@ -119,9 +101,6 @@ i_pid11
   .set_kd_i     (  set_11_kd      ),  // Kd
   .int_rst_i    (  set_11_irst    )   // integrator reset
 );
-
-
-
 
 //---------------------------------------------------------------------------------
 //  PID 21
@@ -137,9 +116,7 @@ red_pitaya_pid_block #(
   .PSR (  PSR   ),
   .ISR (  ISR   ),
   .DSR (  DSR   )      
-)
-i_pid21
-(
+) i_pid21 (
    // data
   .clk_i        (  clk_i          ),  // clock
   .rstn_i       (  rstn_i         ),  // reset - active low
@@ -153,9 +130,6 @@ i_pid21
   .set_kd_i     (  set_21_kd      ),  // Kd
   .int_rst_i    (  set_21_irst    )   // integrator reset
 );
-
-
-
 
 //---------------------------------------------------------------------------------
 //  PID 12
@@ -171,9 +145,7 @@ red_pitaya_pid_block #(
   .PSR (  PSR   ),
   .ISR (  ISR   ),
   .DSR (  DSR   )      
-)
-i_pid12
-(
+) i_pid12 (
    // data
   .clk_i        (  clk_i          ),  // clock
   .rstn_i       (  rstn_i         ),  // reset - active low
@@ -187,9 +159,6 @@ i_pid12
   .set_kd_i     (  set_12_kd      ),  // Kd
   .int_rst_i    (  set_12_irst    )   // integrator reset
 );
-
-
-
 
 //---------------------------------------------------------------------------------
 //  PID 22
@@ -205,9 +174,7 @@ red_pitaya_pid_block #(
   .PSR (  PSR   ),
   .ISR (  ISR   ),
   .DSR (  DSR   )      
-)
-i_pid22
-(
+) i_pid22 (
    // data
   .clk_i        (  clk_i          ),  // clock
   .rstn_i       (  rstn_i         ),  // reset - active low
@@ -221,10 +188,6 @@ i_pid22
   .set_kd_i     (  set_22_kd      ),  // Kd
   .int_rst_i    (  set_22_irst    )   // integrator reset
 );
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //  Sum and saturation
@@ -259,27 +222,12 @@ always @(posedge clk_i) begin
    end
 end
 
-
 assign dat_a_o = out_1_sat ;
 assign dat_b_o = out_2_sat ;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //
 //  System bus connection
-
 
 always @(posedge clk_i) begin
    if (rstn_i == 1'b0) begin
@@ -306,97 +254,57 @@ always @(posedge clk_i) begin
 
    end
    else begin
-      if (wen) begin
-         if (addr[19:0]==16'h0)    {set_22_irst,set_21_irst,set_12_irst,set_11_irst} <= wdata[ 4-1:0] ;
+      if (sys_wen) begin
+         if (sys_addr[19:0]==16'h0)    {set_22_irst,set_21_irst,set_12_irst,set_11_irst} <= sys_wdata[ 4-1:0] ;
 
-         if (addr[19:0]==16'h10)    set_11_sp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h14)    set_11_kp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h18)    set_11_ki  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h1C)    set_11_kd  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h20)    set_12_sp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h24)    set_12_kp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h28)    set_12_ki  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h2C)    set_12_kd  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h30)    set_21_sp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h34)    set_21_kp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h38)    set_21_ki  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h3C)    set_21_kd  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h40)    set_22_sp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h44)    set_22_kp  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h48)    set_22_ki  <= wdata[14-1:0] ;
-         if (addr[19:0]==16'h4C)    set_22_kd  <= wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h10)    set_11_sp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h14)    set_11_kp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h18)    set_11_ki  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h1C)    set_11_kd  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h20)    set_12_sp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h24)    set_12_kp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h28)    set_12_ki  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h2C)    set_12_kd  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h30)    set_21_sp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h34)    set_21_kp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h38)    set_21_ki  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h3C)    set_21_kd  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h40)    set_22_sp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h44)    set_22_kp  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h48)    set_22_ki  <= sys_wdata[14-1:0] ;
+         if (sys_addr[19:0]==16'h4C)    set_22_kd  <= sys_wdata[14-1:0] ;
       end
    end
 end
 
-
-
-
-
 always @(*) begin
-   err <= 1'b0 ;
+   sys_err = 1'b0 ;
 
-   casez (addr[19:0])
-      20'h00 : begin ack <= 1'b1;          rdata <= {{32- 4{1'b0}}, set_22_irst,set_21_irst,set_12_irst,set_11_irst}       ; end 
+   casez (sys_addr[19:0])
+      20'h00 : begin sys_ack = 1'b1;          sys_rdata = {{32- 4{1'b0}}, set_22_irst,set_21_irst,set_12_irst,set_11_irst}       ; end 
 
-      20'h10 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_11_sp}          ; end 
-      20'h14 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_11_kp}          ; end 
-      20'h18 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_11_ki}          ; end 
-      20'h1C : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_11_kd}          ; end 
+      20'h10 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_11_sp}          ; end 
+      20'h14 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_11_kp}          ; end 
+      20'h18 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_11_ki}          ; end 
+      20'h1C : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_11_kd}          ; end 
 
-      20'h20 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_12_sp}          ; end 
-      20'h24 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_12_kp}          ; end 
-      20'h28 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_12_ki}          ; end 
-      20'h2C : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_12_kd}          ; end 
+      20'h20 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_12_sp}          ; end 
+      20'h24 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_12_kp}          ; end 
+      20'h28 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_12_ki}          ; end 
+      20'h2C : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_12_kd}          ; end 
 
-      20'h30 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_21_sp}          ; end 
-      20'h34 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_21_kp}          ; end 
-      20'h38 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_21_ki}          ; end 
-      20'h3C : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_21_kd}          ; end 
+      20'h30 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_21_sp}          ; end 
+      20'h34 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_21_kp}          ; end 
+      20'h38 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_21_ki}          ; end 
+      20'h3C : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_21_kd}          ; end 
 
-      20'h40 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_22_sp}          ; end 
-      20'h44 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_22_kp}          ; end 
-      20'h48 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_22_ki}          ; end 
-      20'h4C : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_22_kd}          ; end 
+      20'h40 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_22_sp}          ; end 
+      20'h44 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_22_kp}          ; end 
+      20'h48 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_22_ki}          ; end 
+      20'h4C : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_22_kd}          ; end 
 
-     default : begin ack <= 1'b1;          rdata <=  32'h0                              ; end
+     default : begin sys_ack = 1'b1;          sys_rdata =  32'h0                              ; end
    endcase
 end
 
-
-
-
-
-
-// bridge between processing and sys clock
-bus_clk_bridge i_bridge
-(
-   .sys_clk_i     (  sys_clk_i      ),
-   .sys_rstn_i    (  sys_rstn_i     ),
-   .sys_addr_i    (  sys_addr_i     ),
-   .sys_wdata_i   (  sys_wdata_i    ),
-   .sys_sel_i     (  sys_sel_i      ),
-   .sys_wen_i     (  sys_wen_i      ),
-   .sys_ren_i     (  sys_ren_i      ),
-   .sys_rdata_o   (  sys_rdata_o    ),
-   .sys_err_o     (  sys_err_o      ),
-   .sys_ack_o     (  sys_ack_o      ),
-
-   .clk_i         (  clk_i          ),
-   .rstn_i        (  rstn_i         ),
-   .addr_o        (  addr           ),
-   .wdata_o       (  wdata          ),
-   .wen_o         (  wen            ),
-   .ren_o         (  ren            ),
-   .rdata_i       (  rdata          ),
-   .err_i         (  err            ),
-   .ack_i         (  ack            )
-);
-
-
-
-
-
-
 endmodule
-
