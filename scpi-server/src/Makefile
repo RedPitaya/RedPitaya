@@ -38,6 +38,7 @@ OBJECTS =	scpi-commands.o \
 			apin.o \
 			acquire.o \
 			generate.o \
+			oscilloscopeApp.o \
 			utils.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
@@ -52,8 +53,8 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api-mockup/rpbase/src
-LIBS= -lm -lpthread -lrp -lscpi
+LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api-mockup/rpbase/src -L ../../api-mockup/rpApplications/src
+LIBS= -lm -lpthread -lrp -lrpapp -lscpi
 
 INC= -I../3rdparty/libs/scpi-parser/libscpi/inc -I ../../api-mockup/rpbase/src
 

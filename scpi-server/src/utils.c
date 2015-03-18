@@ -308,12 +308,11 @@ int getRpTriggerSource(const char *sourceStr, rp_acq_trig_src_t *source) {
 }
 
 int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString) {
-	switch (source) {
-		case RP_TRIG_SRC_DISABLED:
-			strcpy(triggSourceString, "TD");
-			break;
-		default:
-			strcpy(triggSourceString, "WAIT");
+	if (source == RP_TRIG_SRC_DISABLED) {
+		strcpy(triggSourceString, "TD");
+	}
+	else {
+		strcpy(triggSourceString, "WAIT");
 	}
 	return  RP_OK;
 }
@@ -440,6 +439,126 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
     }
     return RP_OK;
 }
+
+	int getRpAppInputGain(const char *string, rpApp_osc_in_gain_t *gain) {
+		if (strcmp(string, "HV") == 0) {
+			*gain = RPAPP_OSC_IN_GAIN_HV;
+		}
+		else if (strcmp(string, "LV") == 0) {
+			*gain = RPAPP_OSC_IN_GAIN_LV;
+		}
+		else {
+			return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppInputGainString(rpApp_osc_in_gain_t gain, char *string) {
+		switch (gain) {
+			case RPAPP_OSC_IN_GAIN_HV:
+				strcpy(string, "HV");
+				break;
+			case RPAPP_OSC_IN_GAIN_LV:
+				strcpy(string, "LV");
+				break;
+			default:
+				return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppTrigSource(const char *string, rpApp_osc_trig_source_t *source) {
+		if (strcmp(string, "CH1") == 0) {
+			*source = RPAPP_OSC_TRIG_SRC_CH1;
+		}
+		else if (strcmp(string, "CH2") == 0) {
+			*source = RPAPP_OSC_TRIG_SRC_CH2;
+		}
+		else if (strcmp(string, "EXT") == 0) {
+			*source = RPAPP_OSC_TRIG_SRC_EXTERNAL;
+		}
+		else {
+			return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppTrigSourceString(rpApp_osc_trig_source_t source, char *string) {
+		switch (source) {
+			case RPAPP_OSC_TRIG_SRC_CH1:
+				strcpy(string, "CH1");
+				break;
+			case RPAPP_OSC_TRIG_SRC_CH2:
+				strcpy(string, "CH2");
+				break;
+			case RPAPP_OSC_TRIG_SRC_EXTERNAL:
+				strcpy(string, "EXT");
+				break;
+			default:
+				return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppTrigSlope(const char *string, rpApp_osc_trig_slope_t *slope) {
+		if (strcmp(string, "POS") == 0) {
+			*slope= RPAPP_OSC_TRIG_SLOPE_PE;
+		}
+		else if (strcmp(string, "NEG") == 0) {
+			*slope= RPAPP_OSC_TRIG_SLOPE_NE;
+		}
+		else {
+			return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppTrigSlopeString(rpApp_osc_trig_slope_t slope, char *string) {
+		switch (slope) {
+			case RPAPP_OSC_TRIG_SLOPE_NE:
+				strcpy(string, "POS");
+				break;
+			case RPAPP_OSC_TRIG_SLOPE_PE:
+				strcpy(string, "NEG");
+				break;
+			default:
+				return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppTrigSweep(const char *string, rpApp_osc_trig_sweep_t *sweep) {
+		if (strcmp(string, "AUTO") == 0) {
+			*sweep = RPAPP_OSC_TRIG_AUTO;
+		}
+		else if (strcmp(string, "NORMAL") == 0) {
+			*sweep = RPAPP_OSC_TRIG_NORMAL;
+		}
+		else if (strcmp(string, "SINGLE") == 0) {
+			*sweep = RPAPP_OSC_TRIG_SINGLE;
+		}
+		else {
+			return RP_EOOR;
+		}
+		return RP_OK;
+	}
+
+	int getRpAppTrigSweepString(rpApp_osc_trig_sweep_t sweep, char *string) {
+		switch (sweep) {
+			case RPAPP_OSC_TRIG_AUTO:
+				strcpy(string, "AUTO");
+				break;
+			case RPAPP_OSC_TRIG_NORMAL:
+				strcpy(string, "NORMAL");
+				break;
+			case RPAPP_OSC_TRIG_SINGLE:
+				strcpy(string, "SINGLE");
+				break;
+			default:
+				return RP_EOOR;
+		}
+		return RP_OK;
+	}
 
 int getRpInfinityInteger(const char *string, int32_t *value) {
     if (strcmp(string, "INF") == 0) {
