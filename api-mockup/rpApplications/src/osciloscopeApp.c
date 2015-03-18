@@ -82,6 +82,14 @@ int osc_stop() {
     return RP_OK;
 }
 
+int osc_reset() {
+    STOP_THREAD(mainThread);
+    ECHECK_APP(threadSafe_acqStop());
+
+    ECHECK_APP(osc_SetDefaultValues());
+    return RP_OK;
+}
+
 int osc_single() {
     if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
         ECHECK_APP(osc_setTriggerSweep(RPAPP_OSC_TRIG_SINGLE));
