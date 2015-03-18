@@ -155,13 +155,15 @@ int calib_SetFrontEndOffset(rp_channel_t channel) {
     ECHECK(calib_ReadParams(&params));
 
     /* Reset current calibration parameters*/
-    CHECK_OUTPUT(params.fe_ch1_dc_offs = 0,
-                 params.fe_ch2_dc_offs = 0)
+    CHANNEL_ACTION(channel,
+            params.fe_ch1_dc_offs = 0,
+            params.fe_ch2_dc_offs = 0)
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
-    CHECK_OUTPUT(params.fe_ch1_dc_offs = -calib_GetDataMedian(channel),
-                 params.fe_ch2_dc_offs = -calib_GetDataMedian(channel))
+    CHANNEL_ACTION(channel,
+            params.fe_ch1_dc_offs = -calib_GetDataMedian(channel),
+            params.fe_ch2_dc_offs = -calib_GetDataMedian(channel))
 
     /* Set new local parameter */
     ECHECK(calib_WriteParams(params));
@@ -173,7 +175,8 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
     ECHECK(calib_ReadParams(&params));
 
     /* Reset current calibration parameters*/
-    CHECK_OUTPUT(params.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(1),
+    CHANNEL_ACTION(channel,
+            params.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(1),
             params.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(1))
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
@@ -182,8 +185,9 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
     float value = calib_GetDataMedianFloat(channel, RP_LOW);
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage(referentialVoltage / value);
 
-    CHECK_OUTPUT(params.fe_ch1_fs_g_lo = calibValue,
-                 params.fe_ch2_fs_g_lo = calibValue )
+    CHANNEL_ACTION(channel,
+            params.fe_ch1_fs_g_lo = calibValue,
+            params.fe_ch2_fs_g_lo = calibValue )
 
     /* Set new local parameter */
     ECHECK(calib_WriteParams(params));
@@ -194,8 +198,9 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
     /* Reset current calibration parameters*/
-    CHECK_OUTPUT(params.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1),
-                 params.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1))
+    CHANNEL_ACTION(channel,
+            params.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1),
+            params.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1))
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
@@ -203,8 +208,9 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
     float value = calib_GetDataMedianFloat(channel, RP_HIGH);
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage(referentialVoltage / value);
 
-    CHECK_OUTPUT(params.fe_ch1_fs_g_hi = calibValue,
-                 params.fe_ch2_fs_g_hi = calibValue )
+    CHANNEL_ACTION(channel,
+            params.fe_ch1_fs_g_hi = calibValue,
+            params.fe_ch2_fs_g_hi = calibValue )
 
     /* Set new local parameter */
     ECHECK(calib_WriteParams(params));
@@ -216,8 +222,9 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     ECHECK(calib_ReadParams(&params));
 
     /* Reset current calibration parameters*/
-    CHECK_OUTPUT(params.be_ch1_dc_offs = 0,
-                 params.be_ch2_dc_offs = 0)
+    CHANNEL_ACTION(channel,
+            params.be_ch1_dc_offs = 0,
+            params.be_ch2_dc_offs = 0)
     /* Generate uses this calibration parameters - reset them */
     calib = params;
 
@@ -227,8 +234,9 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     ECHECK(rp_GenAmp(channel, 0));
     ECHECK(rp_GenOutEnable(channel));
 
-    CHECK_OUTPUT(params.be_ch1_dc_offs = -calib_GetDataMedian(channel),
-                 params.be_ch2_dc_offs = -calib_GetDataMedian(channel))
+    CHANNEL_ACTION(channel,
+            params.be_ch1_dc_offs = -calib_GetDataMedian(channel),
+            params.be_ch2_dc_offs = -calib_GetDataMedian(channel))
 
     /* Set new local parameter */
     ECHECK(calib_WriteParams(params));
@@ -240,8 +248,9 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     ECHECK(calib_ReadParams(&params));
 
     /* Reset current calibration parameters*/
-    CHECK_OUTPUT(params.be_ch1_fs = 0,
-                 params.be_ch2_fs = 0)
+    CHANNEL_ACTION(channel,
+            params.be_ch1_fs = 0,
+            params.be_ch2_fs = 0)
     /* Generate uses this calibration parameters - reset them */
     calib = params;
 
@@ -256,8 +265,9 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     float value = calib_GetDataMedianFloat(channel, RP_LOW);
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage((float) (CONSTANT_SIGNAL_AMPLITUDE / value));
 
-    CHECK_OUTPUT(params.be_ch1_fs = calibValue,
-                 params.be_ch2_fs = calibValue)
+    CHANNEL_ACTION(channel,
+            params.be_ch1_fs = calibValue,
+            params.be_ch2_fs = calibValue)
 
     /* Set new local parameter */
     ECHECK(calib_WriteParams(params));

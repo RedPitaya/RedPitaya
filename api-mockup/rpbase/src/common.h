@@ -29,16 +29,15 @@
         } \
 }
 
-#define CHECK_OUTPUT(X, Y) { \
-if (channel == RP_CH_1) { \
-	X; \
+#define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
+if ((CHANNEL) == RP_CH_1) { \
+	CHANNEL_1_ACTION; \
 } \
-else if (channel == RP_CH_2) { \
-	Y; \
+else if ((CHANNEL) == RP_CH_2) { \
+	CHANNEL_2_ACTION; \
 } \
 else { \
 	return RP_EPN; \
-} \
 }
 
 #define SET_BITS(x,b) ((x) |= (b))
