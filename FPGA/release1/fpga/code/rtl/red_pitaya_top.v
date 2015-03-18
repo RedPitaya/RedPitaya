@@ -341,16 +341,14 @@ red_pitaya_hk i_hk (
   .exp_n_dat_o     (  exp_n_out                  ),
   .exp_n_dir_o     (  exp_n_dir                  ),
    // System bus
-  .sys_clk_i       (  sys_clk                    ),  // clock
-  .sys_rstn_i      (  sys_rstn                   ),  // reset - active low
-  .sys_addr_i      (  sys_addr                   ),  // address
-  .sys_wdata_i     (  sys_wdata                  ),  // write data
-  .sys_sel_i       (  sys_sel                    ),  // write byte select
-  .sys_wen_i       (  sys_wen[0]                 ),  // write enable
-  .sys_ren_i       (  sys_ren[0]                 ),  // read enable
-  .sys_rdata_o     (  sys_rdata[ 0*32+31: 0*32]  ),  // read data
-  .sys_err_o       (  sys_err[0]                 ),  // error indicator
-  .sys_ack_o       (  sys_ack[0]                 )   // acknowledge signal
+  .sys_addr        (  sys_addr                   ),  // address
+  .sys_wdata       (  sys_wdata                  ),  // write data
+  .sys_sel         (  sys_sel                    ),  // write byte select
+  .sys_wen         (  sys_wen[0]                 ),  // write enable
+  .sys_ren         (  sys_ren[0]                 ),  // read enable
+  .sys_rdata       (  sys_rdata[ 0*32+31: 0*32]  ),  // read data
+  .sys_err         (  sys_err[0]                 ),  // error indicator
+  .sys_ack         (  sys_ack[0]                 )   // acknowledge signal
 );
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(!exp_p_dir) );
