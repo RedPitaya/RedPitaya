@@ -184,7 +184,7 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
     }
 
     /* adopt ADC count with calibrated DC offset */
-    m += calib_dc_off;
+    m -= calib_dc_off;
 
     /* check limits */
     if(m < (-1 * (1 << (field_len - 1))))
@@ -271,7 +271,7 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, uint3
 
     /* adopt the calculation with calibration scaling. If 0 ->  no calibration */
     if (calib_scale != 0) {
-        voltage *= cmn_CalibFullScaleToVoltage(calib_scale);
+        voltage /= cmn_CalibFullScaleToVoltage(calib_scale) / (FULL_SCALE_NORM/adc_max_v);
     }
 
     /* check and limit the specified voltage arguments towards */
