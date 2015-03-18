@@ -81,6 +81,10 @@ int rpApp_OscStop() {
     return osc_stop();
 }
 
+int rpApp_OscReset() {
+    return osc_reset();
+}
+
 int rpApp_OscSingle() {
     return osc_single();
 }
