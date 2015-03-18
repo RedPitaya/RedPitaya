@@ -84,8 +84,9 @@ int generate_Release() {
 }
 
 int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {
-	CHECK_OUTPUT(*ch_properties = &generate->properties_chA,
-			     *ch_properties = &generate->properties_chB)
+	CHANNEL_ACTION(channel,
+			*ch_properties = &generate->properties_chA,
+			*ch_properties = &generate->properties_chB)
 	return RP_OK;
 }
 
@@ -106,8 +107,9 @@ int generate_setOutputDisable(rp_channel_t channel, bool disable) {
 
 int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
     uint32_t value;
-    CHECK_OUTPUT(value = generate->AsetOutputTo0,
-                 value = generate->BsetOutputTo0)
+    CHANNEL_ACTION(channel,
+			value = generate->AsetOutputTo0,
+			value = generate->BsetOutputTo0)
     *enabled = value == 1 ? false : true;
     return RP_OK;
 }
@@ -155,32 +157,37 @@ int generate_getFrequency(rp_channel_t channel, float *frequency) {
 }
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
-	CHECK_OUTPUT(generate->properties_chA.counterWrap = 65536 * (size-1),
-			     generate->properties_chB.counterWrap = 65536 * (size-1))
+	CHANNEL_ACTION(channel,
+			generate->properties_chA.counterWrap = 65536 * (size-1),
+			generate->properties_chB.counterWrap = 65536 * (size-1))
 	return RP_OK;
 }
 
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
-	CHECK_OUTPUT(generate->AtriggerSelector = value,
-			     generate->BtriggerSelector = value)
+	CHANNEL_ACTION(channel,
+			generate->AtriggerSelector = value,
+			generate->BtriggerSelector = value)
 	return RP_OK;
 }
 
 int generate_getTriggerSource(rp_channel_t channel, uint32_t *value) {
-    CHECK_OUTPUT(*value = generate->AtriggerSelector,
-                 *value = generate->BtriggerSelector)
+    CHANNEL_ACTION(channel,
+			*value = generate->AtriggerSelector,
+			*value = generate->BtriggerSelector)
     return RP_OK;
 }
 
 int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
-    CHECK_OUTPUT(generate->AgatedBursts = value,
-                 generate->BgatedBursts = value)
+    CHANNEL_ACTION(channel,
+			generate->AgatedBursts = value,
+			generate->BgatedBursts = value)
     return RP_OK;
 }
 
 int generate_getGatedBurst(rp_channel_t channel, uint32_t *value) {
-    CHECK_OUTPUT(*value = generate->AgatedBursts,
-                 *value = generate->BgatedBursts)
+    CHANNEL_ACTION(channel,
+			*value = generate->AgatedBursts,
+			*value = generate->BgatedBursts)
     return RP_OK;
 }
 
@@ -240,8 +247,9 @@ int generate_Synchronise() {
 
 int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length) {
 	volatile int32_t *dataOut;
-	CHECK_OUTPUT(dataOut = data_chA,
-			     dataOut = data_chB)
+	CHANNEL_ACTION(channel,
+			dataOut = data_chA,
+			dataOut = data_chB)
 
 	volatile ch_properties_t *properties;
 	ECHECK(getChannelPropertiesAddress(&properties, channel));

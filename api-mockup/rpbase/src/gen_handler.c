@@ -83,12 +83,14 @@ int gen_checkAmplitudeAndOffset(float amplitude, float offset) {
 
 int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     float offset;
-    CHECK_OUTPUT(offset = chA_offset,
-                 offset = chB_offset)
+    CHANNEL_ACTION(channel,
+            offset = chA_offset,
+            offset = chB_offset)
     ECHECK(gen_checkAmplitudeAndOffset(amplitude, offset));
 
-    CHECK_OUTPUT(chA_amplitude = amplitude,
-                 chB_amplitude = amplitude)
+    CHANNEL_ACTION(channel,
+            chA_amplitude = amplitude,
+            chB_amplitude = amplitude)
     return generate_setAmplitude(channel, amplitude);
 }
 
@@ -98,12 +100,14 @@ int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
 
 int gen_setOffset(rp_channel_t channel, float offset) {
     float amplitude;
-    CHECK_OUTPUT(amplitude = chA_amplitude,
-                 amplitude = chB_amplitude)
+    CHANNEL_ACTION(channel,
+            amplitude = chA_amplitude,
+            amplitude = chB_amplitude)
     ECHECK(gen_checkAmplitudeAndOffset(amplitude, offset));
 
-    CHECK_OUTPUT(chA_offset = offset,
-                 chB_offset = offset)
+    CHANNEL_ACTION(channel,
+            chA_offset = offset,
+            chB_offset = offset)
     return generate_setDCOffset(channel, offset);
 }
 
@@ -144,36 +148,42 @@ int gen_setPhase(rp_channel_t channel, float phase) {
     if (phase < 0) {
         phase += 360;
     }
-    CHECK_OUTPUT(chA_phase = phase,
-                 chB_phase = phase)
+    CHANNEL_ACTION(channel,
+            chA_phase = phase,
+            chB_phase = phase)
 
     ECHECK(synthesize_signal(channel));
     return gen_Synchronise();
 }
 
 int gen_getPhase(rp_channel_t channel, float *phase) {
-    CHECK_OUTPUT(*phase = chA_phase,
-                 *phase = chB_phase)
+    CHANNEL_ACTION(channel,
+            *phase = chA_phase,
+            *phase = chB_phase)
     return RP_OK;
 }
 
 int gen_setWaveform(rp_channel_t channel, rp_waveform_t type) {
-    CHECK_OUTPUT(chA_waveform = type,
-                 chB_waveform = type)
+    CHANNEL_ACTION(channel,
+            chA_waveform = type,
+            chB_waveform = type)
     if (type == RP_WAVEFORM_ARBITRARY) {
-        CHECK_OUTPUT(chA_size = chA_arb_size,
-                     chB_size = chB_arb_size)
+        CHANNEL_ACTION(channel,
+                chA_size = chA_arb_size,
+                chB_size = chB_arb_size)
     }
     else{
-        CHECK_OUTPUT(chA_size = BUFFER_LENGTH,
-                     chB_size = BUFFER_LENGTH)
+        CHANNEL_ACTION(channel,
+                chA_size = BUFFER_LENGTH,
+                chB_size = BUFFER_LENGTH)
     }
     return synthesize_signal(channel);
 }
 
 int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {
-    CHECK_OUTPUT(*type = chA_waveform,
-                 *type = chB_waveform)
+    CHANNEL_ACTION(channel,
+            *type = chA_waveform,
+            *type = chB_waveform)
     return RP_OK;
 }
 
@@ -193,8 +203,9 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
 
     // Save data
     float *pointer;
-    CHECK_OUTPUT(pointer = chA_arbitraryData,
-                 pointer = chB_arbitraryData)
+    CHANNEL_ACTION(channel,
+            pointer = chA_arbitraryData,
+            pointer = chB_arbitraryData)
     for(i = 0; i < length; i++) {
         pointer[i] = data[i];
     }
@@ -245,14 +256,16 @@ int gen_setDutyCycle(rp_channel_t channel, float ratio) {
     if (ratio < DUTY_CYCLE_MIN || ratio > DUTY_CYCLE_MAX) {
         return RP_EOOR;
     }
-    CHECK_OUTPUT(chA_dutyCycle = ratio,
-                 chB_dutyCycle = ratio)
+    CHANNEL_ACTION(channel,
+            chA_dutyCycle = ratio,
+            chB_dutyCycle = ratio)
     return synthesize_signal(channel);
 }
 
 int gen_getDutyCycle(rp_channel_t channel, float *ratio) {
-    CHECK_OUTPUT(*ratio = chA_dutyCycle,
-                 *ratio = chB_dutyCycle)
+    CHANNEL_ACTION(channel,
+            *ratio = chA_dutyCycle,
+            *ratio = chB_dutyCycle)
     return RP_OK;
 }
 
@@ -293,7 +306,8 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
     if ((num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) && num == 0) {
         return RP_EOOR;
     }
-    CHECK_OUTPUT(chA_burstCount = num,
+    CHANNEL_ACTION(channel,
+            chA_burstCount = num,
             chB_burstCount = num)
     if (num == -1) {    // -1 represents infinity. In FPGA value 0 represents infinity
         num = 0;
@@ -317,7 +331,8 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
     if ((repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) && repetitions != -1) {
         return RP_EOOR;
     }
-    CHECK_OUTPUT(chA_burstRepetition = repetitions,
+    CHANNEL_ACTION(channel,
+            chA_burstRepetition = repetitions,
             chB_burstRepetition = repetitions)
     if (repetitions == -1) {
         repetitions = 0;
@@ -337,16 +352,18 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
         return RP_EOOR;
     }
     int burstCount;
-    CHECK_OUTPUT(burstCount = chA_burstCount,
-                 burstCount = chB_burstCount)
+    CHANNEL_ACTION(channel,
+            burstCount = chA_burstCount,
+            burstCount = chB_burstCount)
     // period = signal_time * burst_count + delay_time
     int delay = (int) (period - (1 / (channel == RP_CH_1 ? chA_frequency : chB_frequency) * MICRO) * burstCount);
     if (delay <= 0) {
         // if delay is 0, then FPGA generates continuous signal
         delay = 1;
     }
-    CHECK_OUTPUT(chA_burstPeriod = period,
-                 chB_burstPeriod = period)
+    CHANNEL_ACTION(channel,
+            chA_burstPeriod = period,
+            chB_burstPeriod = period)
     return generate_setBurstDelay(channel, (uint32_t) delay);
 }
 
@@ -540,13 +557,15 @@ int synthesis_PWM(float ratio, float *data_out) {
 
 int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) {
     float *pointer;
-    CHECK_OUTPUT(pointer = chA_arbitraryData,
-                 pointer = chB_arbitraryData)
+    CHANNEL_ACTION(channel,
+            pointer = chA_arbitraryData,
+            pointer = chB_arbitraryData)
     for (int i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = pointer[i];
     }
-    CHECK_OUTPUT(*size = chA_arb_size,
-                 *size = chB_arb_size)
+    CHANNEL_ACTION(channel,
+            *size = chA_arb_size,
+            *size = chB_arb_size)
     return RP_OK;
 }
 
