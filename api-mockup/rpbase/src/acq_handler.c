@@ -554,17 +554,21 @@ int acq_GetTriggerLevel(float *voltage)
 
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 {
-    float gain;
+    float gainV;
+    rp_pinState_t gain;
 
-    ECHECK(acq_GetGainV(channel, &gain));
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));;
 
-    if (fabs(voltage) - fabs(gain) > FLOAT_EPS) {
+    if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, 0, dc_offs, 0.0);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
+
+    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, calibScale, dc_offs, 0.0);
     if (channel == RP_CH_1) {
         return osc_SetThresholdChA(cnt);
     }
@@ -590,7 +594,6 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGain(channel, &gain));
 
     rp_calib_params_t calib = calib_GetParams();
-
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
 
@@ -621,17 +624,21 @@ int acq_GetTriggerHyst(float *voltage)
 
 int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
 {
-    float gain;
+    float gainV;
+    rp_pinState_t gain;
 
-    ECHECK(acq_GetGainV(channel, &gain));
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));;
 
-    if (fabs(voltage) - fabs(gain) > FLOAT_EPS) {
+    if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, 0, dc_offs, 0.0);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
+
+    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, calibScale, dc_offs, 0.0);
     if (channel == RP_CH_1) {
         return osc_SetHysteresisChA(cnt);
     }
@@ -655,8 +662,8 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 
     ECHECK(acq_GetGainV(channel, &gainV));
     ECHECK(acq_GetGain(channel, &gain));
-    rp_calib_params_t calib = calib_GetParams();
 
+    rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
     uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
 
