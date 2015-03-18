@@ -6,8 +6,6 @@
 #include <inttypes.h>
 
 #include "rp.h"
-#include "common.h"
-#include "housekeeping.h"
 
 int main(int argc, char **argv){
 
@@ -17,6 +15,6 @@ int main(int argc, char **argv){
     	fprintf(stderr, "Rp api init failed!\n");
     }
 
-    hk_GetDNA (&dna);
-    printf("DNA: 0x016x\n", dna);
+    rp_IdGetDNA (&dna);
+    printf("DNA: 0x%016llx\n", dna);
 }

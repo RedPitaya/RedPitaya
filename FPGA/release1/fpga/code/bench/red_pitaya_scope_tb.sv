@@ -232,7 +232,7 @@ initial begin
        $display ("trigger positions: %p", rdata_trg);
        $display ("data reference: %p", rdata_ref);
        $display ("data read     : %p", rdata_blk);
-       if (rdata_ref == rdata_blk) $display ("SUCESS");
+       if (rdata_ref == rdata_blk) $display ("SUCCESS");
        else                        $display ("FAILURE");
      end
    join
