@@ -426,16 +426,14 @@ red_pitaya_asg i_asg (
   .trig_out_o      (  trig_asg_out               ),
 
   // System bus
-  .sys_clk_i       (  sys_clk                    ),  // clock
-  .sys_rstn_i      (  sys_rstn                   ),  // reset - active low
-  .sys_addr_i      (  sys_addr                   ),  // address
-  .sys_wdata_i     (  sys_wdata                  ),  // write data
-  .sys_sel_i       (  sys_sel                    ),  // write byte select
-  .sys_wen_i       (  sys_wen[2]                 ),  // write enable
-  .sys_ren_i       (  sys_ren[2]                 ),  // read enable
-  .sys_rdata_o     (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
-  .sys_err_o       (  sys_err[2]                 ),  // error indicator
-  .sys_ack_o       (  sys_ack[2]                 )   // acknowledge signal
+  .sys_addr        (  sys_addr                   ),  // address
+  .sys_wdata       (  sys_wdata                  ),  // write data
+  .sys_sel         (  sys_sel                    ),  // write byte select
+  .sys_wen         (  sys_wen[2]                 ),  // write enable
+  .sys_ren         (  sys_ren[2]                 ),  // read enable
+  .sys_rdata       (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
+  .sys_err         (  sys_err[2]                 ),  // error indicator
+  .sys_ack         (  sys_ack[2]                 )   // acknowledge signal
 );
 
 //---------------------------------------------------------------------------------
