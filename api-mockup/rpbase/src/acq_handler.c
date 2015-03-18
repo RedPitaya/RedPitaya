@@ -907,12 +907,10 @@ int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer)
 
     /* Same as osc buff */
     *size = MIN(*size, ADC_BUFFER_SIZE);
-    uint32_t cnts;
     const volatile uint32_t *raw_buffer = getDeepAvgRawBuffer(channel);
     
     for(uint32_t i = 0; i < (*size); i++){
-        cnts = (raw_buffer[i]);
-        buffer[i] = cmn_DeepAvgCalibCnts(32, cnts);
+        buffer[i] = raw_buffer[i];
     }
     return RP_OK;
 }
