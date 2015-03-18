@@ -64,28 +64,15 @@ module red_pitaya_asg
    output                trig_out_o      ,  //!< notification trigger
 
    // System bus
-   input                 sys_clk_i       ,  //!< bus clock
-   input                 sys_rstn_i      ,  //!< bus reset - active low
-   input      [ 32-1: 0] sys_addr_i      ,  //!< bus address
-   input      [ 32-1: 0] sys_wdata_i     ,  //!< bus write data
-   input      [  4-1: 0] sys_sel_i       ,  //!< bus write byte select
-   input                 sys_wen_i       ,  //!< bus write enable
-   input                 sys_ren_i       ,  //!< bus read enable
-   output     [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
-   output                sys_err_o       ,  //!< bus error indicator
-   output                sys_ack_o          //!< bus acknowledge signal
+   input      [ 32-1: 0] sys_addr      ,  //!< bus address
+   input      [ 32-1: 0] sys_wdata     ,  //!< bus write data
+   input      [  4-1: 0] sys_sel       ,  //!< bus write byte select
+   input                 sys_wen       ,  //!< bus write enable
+   input                 sys_ren       ,  //!< bus read enable
+   output reg [ 32-1: 0] sys_rdata     ,  //!< bus read data
+   output reg            sys_err       ,  //!< bus error indicator
+   output reg            sys_ack          //!< bus acknowledge signal
 );
-
-
-
-wire [ 32-1: 0] addr         ;
-wire [ 32-1: 0] wdata        ;
-wire            wen          ;
-wire            ren          ;
-reg  [ 32-1: 0] rdata        ;
-reg             err          ;
-reg             ack          ;
-
 
 //---------------------------------------------------------------------------------
 //
@@ -156,7 +143,7 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_cha
    // buffer ctrl
   .buf_we_i        (  buf_a_we         ),  // buffer buffer write
   .buf_addr_i      (  buf_a_addr       ),  // buffer address
-  .buf_wdata_i     (  wdata[14-1:0]    ),  // buffer write data
+  .buf_wdata_i     (  sys_wdata[14-1:0]    ),  // buffer write data
   .buf_rdata_o     (  buf_a_rdata      ),  // buffer read data
   .buf_rpnt_o      (  buf_a_rpnt       ),  // buffer current read pointer
 
@@ -193,7 +180,7 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_chb
    // buffer ctrl
   .buf_we_i        (  buf_b_we         ),  // buffer buffer write
   .buf_addr_i      (  buf_b_addr       ),  // buffer address
-  .buf_wdata_i     (  wdata[14-1:0]    ),  // buffer write data
+  .buf_wdata_i     (  sys_wdata[14-1:0]    ),  // buffer write data
   .buf_rdata_o     (  buf_b_rdata      ),  // buffer read data
   .buf_rpnt_o      (  buf_b_rpnt       ),  // buffer current read pointer
 
@@ -214,10 +201,10 @@ red_pitaya_asg_ch  #(.RSZ ( RSZ ))  i_chb
 );
 
 always @(posedge dac_clk_i) begin
-   buf_a_we   <= wen && (addr[19:RSZ+2] == 'h1);
-   buf_b_we   <= wen && (addr[19:RSZ+2] == 'h2);
-   buf_a_addr <= addr[RSZ+1:2] ;  // address timing violation
-   buf_b_addr <= addr[RSZ+1:2] ;  // can change only synchronous to write clock
+   buf_a_we   <= sys_wen && (sys_addr[19:RSZ+2] == 'h1);
+   buf_b_we   <= sys_wen && (sys_addr[19:RSZ+2] == 'h2);
+   buf_a_addr <= sys_addr[RSZ+1:2] ;  // address timing violation
+   buf_b_addr <= sys_addr[RSZ+1:2] ;  // can change only synchronous to write clock
 end
 
 assign trig_out_o = trig_a_done ;
@@ -266,46 +253,46 @@ always @(posedge dac_clk_i) begin
    end
    else begin
 
-      trig_a_sw  <= wen && (addr[19:0]==20'h0) && wdata[0]  ;
-      if (wen && (addr[19:0]==20'h0))
-         trig_a_src <= wdata[2:0] ;
+      trig_a_sw  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[0]  ;
+      if (sys_wen && (sys_addr[19:0]==20'h0))
+         trig_a_src <= sys_wdata[2:0] ;
 
-      trig_b_sw  <= wen && (addr[19:0]==20'h0) && wdata[16]  ;
-      if (wen && (addr[19:0]==20'h0))
-         trig_b_src <= wdata[19:16] ;
+      trig_b_sw  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[16]  ;
+      if (sys_wen && (sys_addr[19:0]==20'h0))
+         trig_b_src <= sys_wdata[19:16] ;
 
 
 
-      if (wen) begin
-         if (addr[19:0]==20'h0)   {set_a_rgate, set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= wdata[ 8: 4] ;
-         if (addr[19:0]==20'h0)   {set_b_rgate, set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= wdata[24:20] ;
+      if (sys_wen) begin
+         if (sys_addr[19:0]==20'h0)   {set_a_rgate, set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= sys_wdata[ 8: 4] ;
+         if (sys_addr[19:0]==20'h0)   {set_b_rgate, set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= sys_wdata[24:20] ;
 
-         if (addr[19:0]==20'h4)   set_a_amp  <= wdata[  0+13: 0] ;
-         if (addr[19:0]==20'h4)   set_a_dc   <= wdata[ 16+13:16] ;
-         if (addr[19:0]==20'h8)   set_a_size <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'hC)   set_a_ofs  <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h10)  set_a_step <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h18)  set_a_ncyc <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h1C)  set_a_rnum <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h20)  set_a_rdly <= wdata[  32-1: 0] ;
+         if (sys_addr[19:0]==20'h4)   set_a_amp  <= sys_wdata[  0+13: 0] ;
+         if (sys_addr[19:0]==20'h4)   set_a_dc   <= sys_wdata[ 16+13:16] ;
+         if (sys_addr[19:0]==20'h8)   set_a_size <= sys_wdata[RSZ+15: 0] ;
+         if (sys_addr[19:0]==20'hC)   set_a_ofs  <= sys_wdata[RSZ+15: 0] ;
+         if (sys_addr[19:0]==20'h10)  set_a_step <= sys_wdata[RSZ+15: 0] ;
+         if (sys_addr[19:0]==20'h18)  set_a_ncyc <= sys_wdata[  16-1: 0] ;
+         if (sys_addr[19:0]==20'h1C)  set_a_rnum <= sys_wdata[  16-1: 0] ;
+         if (sys_addr[19:0]==20'h20)  set_a_rdly <= sys_wdata[  32-1: 0] ;
 
-         if (addr[19:0]==20'h24)  set_b_amp  <= wdata[  0+13: 0] ;
-         if (addr[19:0]==20'h24)  set_b_dc   <= wdata[ 16+13:16] ;
-         if (addr[19:0]==20'h28)  set_b_size <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h2C)  set_b_ofs  <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h30)  set_b_step <= wdata[RSZ+15: 0] ;
-         if (addr[19:0]==20'h38)  set_b_ncyc <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h3C)  set_b_rnum <= wdata[  16-1: 0] ;
-         if (addr[19:0]==20'h40)  set_b_rdly <= wdata[  32-1: 0] ;
+         if (sys_addr[19:0]==20'h24)  set_b_amp  <= sys_wdata[  0+13: 0] ;
+         if (sys_addr[19:0]==20'h24)  set_b_dc   <= sys_wdata[ 16+13:16] ;
+         if (sys_addr[19:0]==20'h28)  set_b_size <= sys_wdata[RSZ+15: 0] ;
+         if (sys_addr[19:0]==20'h2C)  set_b_ofs  <= sys_wdata[RSZ+15: 0] ;
+         if (sys_addr[19:0]==20'h30)  set_b_step <= sys_wdata[RSZ+15: 0] ;
+         if (sys_addr[19:0]==20'h38)  set_b_ncyc <= sys_wdata[  16-1: 0] ;
+         if (sys_addr[19:0]==20'h3C)  set_b_rnum <= sys_wdata[  16-1: 0] ;
+         if (sys_addr[19:0]==20'h40)  set_b_rdly <= sys_wdata[  32-1: 0] ;
       end
 
-      if (ren) begin
+      if (sys_ren) begin
          buf_a_rpnt_rd <= {{32-RSZ-2{1'b0}},buf_a_rpnt,2'h0};
          buf_b_rpnt_rd <= {{32-RSZ-2{1'b0}},buf_b_rpnt,2'h0};
       end
 
-      ren_dly <= {ren_dly[3-2:0], ren};
-      ack_dly <=  ren_dly[3-1] || wen ;
+      ren_dly <= {ren_dly[3-2:0], sys_ren};
+      ack_dly <=  ren_dly[3-1] || sys_wen ;
    end
 end
 
@@ -314,69 +301,34 @@ wire [32-1: 0] r0_rd = {7'h0,set_b_rgate, set_b_zero,set_b_rst,set_b_once,set_b_
 
 
 always @(*) begin
-   err <= 1'b0 ;
+   sys_err = 1'b0 ;
 
-   casez (addr[19:0])
-     20'h00000 : begin ack <= 1'b1;          rdata <= r0_rd                              ; end
+   casez (sys_addr[19:0])
+     20'h00000 : begin sys_ack = 1'b1;          sys_rdata = r0_rd                              ; end
 
-     20'h00004 : begin ack <= 1'b1;          rdata <= {2'h0, set_a_dc, 2'h0, set_a_amp}  ; end
-     20'h00008 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_size}     ; end
-     20'h0000C : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
-     20'h00010 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_a_step}     ; end
-     20'h00014 : begin ack <= 1'b1;          rdata <= buf_a_rpnt_rd                      ; end
-     20'h00018 : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_a_ncyc}         ; end
-     20'h0001C : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_a_rnum}         ; end
-     20'h00020 : begin ack <= 1'b1;          rdata <= set_a_rdly                         ; end
+     20'h00004 : begin sys_ack = 1'b1;          sys_rdata = {2'h0, set_a_dc, 2'h0, set_a_amp}  ; end
+     20'h00008 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_a_size}     ; end
+     20'h0000C : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
+     20'h00010 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_a_step}     ; end
+     20'h00014 : begin sys_ack = 1'b1;          sys_rdata = buf_a_rpnt_rd                      ; end
+     20'h00018 : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_a_ncyc}         ; end
+     20'h0001C : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_a_rnum}         ; end
+     20'h00020 : begin sys_ack = 1'b1;          sys_rdata = set_a_rdly                         ; end
 
-     20'h00024 : begin ack <= 1'b1;          rdata <= {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
-     20'h00028 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_size}     ; end
-     20'h0002C : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
-     20'h00030 : begin ack <= 1'b1;          rdata <= {{32-RSZ-16{1'b0}},set_b_step}     ; end
-     20'h00034 : begin ack <= 1'b1;          rdata <= buf_b_rpnt_rd                      ; end
-     20'h00038 : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
-     20'h0003C : begin ack <= 1'b1;          rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
-     20'h00040 : begin ack <= 1'b1;          rdata <= set_b_rdly                         ; end
+     20'h00024 : begin sys_ack = 1'b1;          sys_rdata = {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
+     20'h00028 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_b_size}     ; end
+     20'h0002C : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
+     20'h00030 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_b_step}     ; end
+     20'h00034 : begin sys_ack = 1'b1;          sys_rdata = buf_b_rpnt_rd                      ; end
+     20'h00038 : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_b_ncyc}         ; end
+     20'h0003C : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_b_rnum}         ; end
+     20'h00040 : begin sys_ack = 1'b1;          sys_rdata = set_b_rdly                         ; end
 
-     20'h1zzzz : begin ack <= ack_dly;       rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
-     20'h2zzzz : begin ack <= ack_dly;       rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end
+     20'h1zzzz : begin sys_ack = ack_dly;       sys_rdata = {{32-14{1'b0}},buf_a_rdata}        ; end
+     20'h2zzzz : begin sys_ack = ack_dly;       sys_rdata = {{32-14{1'b0}},buf_b_rdata}        ; end
 
-       default : begin ack <= 1'b1;          rdata <=  32'h0                             ; end
+       default : begin sys_ack = 1'b1;          sys_rdata =  32'h0                             ; end
    endcase
 end
 
-
-
-
-// bridge between DAC and sys clock
-bus_clk_bridge i_bridge
-(
-   .sys_clk_i     (  sys_clk_i      ),
-   .sys_rstn_i    (  sys_rstn_i     ),
-   .sys_addr_i    (  sys_addr_i     ),
-   .sys_wdata_i   (  sys_wdata_i    ),
-   .sys_sel_i     (  sys_sel_i      ),
-   .sys_wen_i     (  sys_wen_i      ),
-   .sys_ren_i     (  sys_ren_i      ),
-   .sys_rdata_o   (  sys_rdata_o    ),
-   .sys_err_o     (  sys_err_o      ),
-   .sys_ack_o     (  sys_ack_o      ),
-
-   .clk_i         (  dac_clk_i      ),
-   .rstn_i        (  dac_rstn_i     ),
-   .addr_o        (  addr           ),
-   .wdata_o       (  wdata          ),
-   .wen_o         (  wen            ),
-   .ren_o         (  ren            ),
-   .rdata_i       (  rdata          ),
-   .err_i         (  err            ),
-   .ack_i         (  ack            )
-);
-
-
-
-
-
-
-
 endmodule
-
