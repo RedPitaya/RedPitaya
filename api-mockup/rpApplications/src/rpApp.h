@@ -131,6 +131,13 @@ int rpApp_OscRun();
 int rpApp_OscStop();
 
 /**
+* Resets oscilloscope.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscReset();
+
+/**
 * Runs oscilloscope once. Fills the buffer and then stops.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.

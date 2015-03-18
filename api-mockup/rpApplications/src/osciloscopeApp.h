@@ -45,6 +45,7 @@ int osc_SetDefaultValues();
 
 int osc_run();
 int osc_stop();
+int osc_reset();
 int osc_single();
 int osc_autoScale();
 int osc_setTimeScale(float scale);
