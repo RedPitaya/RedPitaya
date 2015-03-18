@@ -11,7 +11,7 @@ int main(int argc, char **argv){
 
     uint32_t buff_size = 16 * 1024;
     uint32_t i;
-    uint32_t seq_len = 250;
+    uint32_t seq_len = 100;
     uint32_t count;
     rp_acq_trig_src_t run;
     int32_t *buffer = (int32_t *)malloc(buff_size * sizeof(int32_t));
@@ -56,7 +56,8 @@ int main(int argc, char **argv){
     do{
         rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
         rp_GetDeepAvgRunState(&run);
-        printf("Count: %d  || RunState: %d\n",rp_GetDeepAvgCount(&count), run);
+        rp_GetDeepAvgCount(&count);
+        printf("Count: %d  || RunState: %d\n", count, run);
     }while(run);
 	
     printf("Did while.\n");
@@ -69,7 +70,7 @@ int main(int argc, char **argv){
     printf("Successfuly set data.\n");
 
     for(i = 0; i< seq_len; i++){
-    	printf("Data %d: %d", i,buffer[i]);
+    	printf("Data %d: %d\n", i,buffer[i]);
     }
     printf("Done.\n");
 
