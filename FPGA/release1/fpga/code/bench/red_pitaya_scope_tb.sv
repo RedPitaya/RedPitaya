@@ -59,8 +59,8 @@ function [ADC_DW-1:0] saw_b (input int unsigned cyc);
   saw_b = -2**(ADC_DW-1) + ADC_DW'(cyc*5);
 endfunction: saw_b
 
-logic              adc_clk ;
-logic              adc_rstn;
+logic              clk ;
+logic              rstn;
 
 logic [ADC_DW-1:0] adc_a;
 logic [ADC_DW-1:0] adc_b;
@@ -69,19 +69,19 @@ assign adc_a = saw_a(adc_cyc);
 assign adc_b = saw_b(adc_cyc);
 
 // ADC clock
-initial            adc_clk = 1'b0;
-always #(TP_ADC/2) adc_clk = ~adc_clk;
+initial            clk = 1'b0;
+always #(TP_ADC/2) clk = ~clk;
 
 // ADC reset
 initial begin
-  adc_rstn = 1'b0;
-  repeat(4) @(posedge adc_clk);
-  adc_rstn = 1'b1;
+  rstn = 1'b0;
+  repeat(4) @(posedge clk);
+  rstn = 1'b1;
 end
 
 // ADC cycle counter
 int unsigned adc_cyc=0;
-always_ff @ (posedge adc_clk)
+always_ff @ (posedge clk)
 adc_cyc <= adc_cyc+1;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +90,6 @@ adc_cyc <= adc_cyc+1;
 
 logic            trig_ext ;
 
-logic            sys_clk  ;
-logic            sys_rstn ;
 logic [ 32-1: 0] sys_addr ;
 logic [ 32-1: 0] sys_wdata;
 logic [  4-1: 0] sys_sel  ;
@@ -108,16 +106,6 @@ int unsigned            rdata_trg [$];
 int unsigned            blk_size;
 int unsigned            blk_cnt;
 int unsigned            shift;
-
-// system clock & reset
-initial begin
-  sys_rstn = 1'b0;
-  repeat(4) @(posedge sys_clk);
-  sys_rstn = 1'b1;
-end
-
-initial          sys_clk = 1'b0;
-always #(TP_SYS) sys_clk = ~sys_clk;
 
 task bus_read_blk (
   input int          adr,
@@ -139,8 +127,8 @@ initial begin
    blk_size = 20;
    blk_cnt = 4;
 
-   wait (sys_rstn && adc_rstn)
-   repeat(10) @(posedge sys_clk);
+   wait (rstn && rstn)
+   repeat(10) @(posedge clk);
 
    bus.bus_write(32'h08,-32'd0000 );  // A trigger treshold  (trigger at treshold     0 where signal range is -8192:+8191)
    bus.bus_write(32'h0C,-32'd7000 );  // B trigger treshold  (trigger at treshold -7000 where signal range is -8192:+8191)
@@ -151,26 +139,26 @@ initial begin
 
    // software trigger
    bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
    bus.bus_write(32'h04, 32'h1    );  // do SW trigger
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
    bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
 
    // A ch rising edge trigger
    bus.bus_write(32'h04, 32'h2    );  // configure trigger mode
    bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
    bus.bus_write(32'h00, 32'h2    );  // reset before aquisition ends
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
 
    // external rising edge trigger
    bus.bus_write(32'h90, 32'h0    );  // set debouncer length to zero
    bus.bus_write(32'h04, 32'h6    );  // configure trigger mode
    bus.bus_write(32'h00, 32'h1    );  // start aquisition (ARM, start writing data into memory
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
    trig_ext = 1'b1;
-   repeat(200) @(posedge sys_clk);
+   repeat(200) @(posedge clk);
    trig_ext = 1'b0;
 
    // accumulator
@@ -185,24 +173,24 @@ initial begin
      // provide external trigger
      begin: acu_trg
        // short trigger pulse
-       repeat(20) @(posedge sys_clk);       trig_ext = 1'b1;
-       repeat( 1) @(posedge sys_clk);       trig_ext = 1'b0;
-       repeat(20) @(posedge sys_clk);
+       repeat(20) @(posedge clk);       trig_ext = 1'b1;
+       repeat( 1) @(posedge clk);       trig_ext = 1'b0;
+       repeat(20) @(posedge clk);
        // long trigger pulse
-       repeat(20) @(posedge sys_clk);       trig_ext = 1'b1;
-       repeat(20) @(posedge sys_clk);       trig_ext = 1'b0;
-       repeat(20) @(posedge sys_clk);
+       repeat(20) @(posedge clk);       trig_ext = 1'b1;
+       repeat(20) @(posedge clk);       trig_ext = 1'b0;
+       repeat(20) @(posedge clk);
        // ignored trigger pulse 
-       repeat(20) @(posedge sys_clk);       trig_ext = 1'b1;
-       repeat( 2) @(posedge sys_clk);       trig_ext = 1'b0;
-       repeat( 2) @(posedge sys_clk);       trig_ext = 1'b1;
-       repeat( 2) @(posedge sys_clk);       trig_ext = 1'b0;
-       repeat(20) @(posedge sys_clk);
+       repeat(20) @(posedge clk);       trig_ext = 1'b1;
+       repeat( 2) @(posedge clk);       trig_ext = 1'b0;
+       repeat( 2) @(posedge clk);       trig_ext = 1'b1;
+       repeat( 2) @(posedge clk);       trig_ext = 1'b0;
+       repeat(20) @(posedge clk);
        // a sequence of short triggers
        repeat (blk_cnt) begin
-         repeat( 1) @(posedge sys_clk);       trig_ext = 1'b1;
-         repeat( 1) @(posedge sys_clk);       trig_ext = 1'b0;
-         repeat(20) @(posedge sys_clk);
+         repeat( 1) @(posedge clk);       trig_ext = 1'b1;
+         repeat( 1) @(posedge clk);       trig_ext = 1'b0;
+         repeat(20) @(posedge clk);
        end
      end
      // pool accumulation run status
@@ -210,9 +198,9 @@ initial begin
        // pooling loop
        do begin
          bus.bus_read(32'h94, rdata);  // read value from memory
-         repeat(20) @(posedge sys_clk);
+         repeat(20) @(posedge clk);
        end while (rdata & 2);
-       repeat(20) @(posedge sys_clk);
+       repeat(20) @(posedge clk);
        // readout
        bus_read_blk (32'h30000, blk_size);
        // build reference:
@@ -237,24 +225,24 @@ initial begin
      end
    join
 
-//   repeat(800) @(posedge sys_clk);
+//   repeat(800) @(posedge clk);
 //   bus.bus_write(32'h00,32'h1     );  // start aquisition
-//   repeat(100000) @(posedge sys_clk);
+//   repeat(100000) @(posedge clk);
 //   bus.bus_write(32'h04,32'h5     );  // do trigger
 //
-//   repeat(20000) @(posedge adc_clk);
-//   repeat(1) @(posedge sys_clk);
+//   repeat(20000) @(posedge clk);
+//   repeat(1) @(posedge clk);
 //   bus.bus_read(32'h10000, rdata);  // read value from memory
 //   bus.bus_read(32'h10004, rdata);  // read value from memory
 //   bus.bus_read(32'h20000, rdata);  // read value from memory
 //   bus.bus_read(32'h20004, rdata);  // read value from memory
 
-   repeat(100) @(posedge sys_clk);
+   repeat(100) @(posedge clk);
    $finish ();
 end
 
 // trigger log
-always_ff @ (posedge adc_clk)
+always_ff @ (posedge clk)
 if (scope.acu_sts_run & scope.off_t_trig & ~(|scope.acum_a.sti_cnt)) begin
   rdata_trg.push_back(adc_cyc);
 end
@@ -265,8 +253,8 @@ end
 
 sys_bus_model bus (
   // system signals
-  .sys_clk_i      (sys_clk  ),
-  .sys_rstn_i     (sys_rstn ),
+  .sys_clk_i      (clk      ),
+  .sys_rstn_i     (rstn     ),
   // bus protocol signals
   .sys_addr_o     (sys_addr ),
   .sys_wdata_o    (sys_wdata),
@@ -282,24 +270,22 @@ red_pitaya_scope #(
   .RSZ (RSZ)
 ) scope (
   // ADC
-  .adc_clk_i      (adc_clk  ),  // clock
-  .adc_rstn_i     (adc_rstn ),  // reset - active low
+  .adc_clk_i      (clk      ),  // clock
+  .adc_rstn_i     (rstn     ),  // reset - active low
   .adc_a_i        (adc_a    ),  // CH 1
   .adc_b_i        (adc_b    ),  // CH 2
   // trigger sources
   .trig_ext_i     (trig_ext ),  // external trigger
   .trig_asg_i     (trig_ext ),  // ASG trigger
    // System bus
-  .sys_clk_i      (sys_clk  ),  // clock
-  .sys_rstn_i     (sys_rstn ),  // reset - active low
-  .sys_addr_i     (sys_addr ),  // address
-  .sys_wdata_i    (sys_wdata),  // write data
-  .sys_sel_i      (sys_sel  ),  // write byte select
-  .sys_wen_i      (sys_wen  ),  // write enable
-  .sys_ren_i      (sys_ren  ),  // read enable
-  .sys_rdata_o    (sys_rdata),  // read data
-  .sys_err_o      (sys_err  ),  // error indicator
-  .sys_ack_o      (sys_ack  )   // acknowledge signal
+  .sys_addr       (sys_addr ),  // address
+  .sys_wdata      (sys_wdata),  // write data
+  .sys_sel        (sys_sel  ),  // write byte select
+  .sys_wen        (sys_wen  ),  // write enable
+  .sys_ren        (sys_ren  ),  // read enable
+  .sys_rdata      (sys_rdata),  // read data
+  .sys_err        (sys_err  ),  // error indicator
+  .sys_ack        (sys_ack  )   // acknowledge signal
 );
 
 ////////////////////////////////////////////////////////////////////////////////
