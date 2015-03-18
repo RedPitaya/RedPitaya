@@ -21,6 +21,7 @@
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"
+#include "oscilloscopeApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
@@ -152,6 +153,7 @@ static const scpi_command_t scpi_commands[] = {
 
         /* Acquire */
         {.pattern = "ACQ:START", .callback = RP_AcqStart,},
+        {.pattern = "ACQ:STOP", .callback = RP_AcqStop,},
         {.pattern = "ACQ:RST", .callback = RP_AcqReset,},
         {.pattern = "ACQ:DEC", .callback = RP_AcqSetDecimation,},
         {.pattern = "ACQ:DEC?", .callback = RP_AcqGetDecimation,},
@@ -246,7 +248,64 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2Trigger,},
         {.pattern = "TRIG:IMM", .callback = RP_GenChannelAllTrigger,},
 
-    //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
+        /* Oscilloscope */
+        {.pattern = "OSC:RUN", .callback = RP_APP_OscRun,},
+        {.pattern = "OSC:STOP", .callback = RP_APP_OscStop,},
+        {.pattern = "OSC:RST", .callback = RP_APP_OscReset,},
+        {.pattern = "OSC:AUTOSCALE", .callback = RP_APP_OscAutoscale,},
+        {.pattern = "OSC:SINGLE", .callback = RP_APP_OscSingle,},
+        {.pattern = "OSC:CH1:OFFSET", .callback = RP_APP_OscChannel1SetAmplitudeOffset,},
+        {.pattern = "OSC:CH2:OFFSET", .callback = RP_APP_OscChannel2SetAmplitudeOffset,},
+        {.pattern = "OSC:CH1:OFFSET?", .callback = RP_APP_OscChannel1GetAmplitudeOffset,},
+        {.pattern = "OSC:CH2:OFFSET?", .callback = RP_APP_OscChannel2GetAmplitudeOffset,},
+        {.pattern = "OSC:CH1:SCALE", .callback = RP_APP_OscChannel1SetAmplitudeScale,},
+        {.pattern = "OSC:CH2:SCALE", .callback = RP_APP_OscChannel2SetAmplitudeScale,},
+        {.pattern = "OSC:CH1:SCALE?", .callback = RP_APP_OscChannel1GetAmplitudeScale,},
+        {.pattern = "OSC:CH1:SCALE?", .callback = RP_APP_OscChannel2GetAmplitudeScale,},
+        {.pattern = "OSC:CH1:PROBE", .callback = RP_APP_OscChannel1SetProbeAtt,},
+        {.pattern = "OSC:CH2:PROBE", .callback = RP_APP_OscChannel2SetProbeAtt,},
+        {.pattern = "OSC:CH1:PROBE?", .callback = RP_APP_OscChannel1GetProbeAtt,},
+        {.pattern = "OSC:CH2:PROBE?", .callback = RP_APP_OscChannel2GetProbeAtt,},
+        {.pattern = "OSC:CH1:IN:GAIN", .callback = RP_APP_OscChannel1SetInputGain,},
+        {.pattern = "OSC:CH2:IN:GAIN", .callback = RP_APP_OscChannel2SetInputGain,},
+        {.pattern = "OSC:CH1:IN:GAIN?", .callback = RP_APP_OscChannel1GetInputGain,},
+        {.pattern = "OSC:CH2:IN:GAIN?", .callback = RP_APP_OscChannel2GetInputGain,},
+        {.pattern = "OSC:TIME:OFFSET", .callback = RP_APP_OscSetTimeOffset,},
+        {.pattern = "OSC:TIME:OFFSET?", .callback = RP_APP_OscGetTimeOffset,},
+        {.pattern = "OSC:TIME:SCALE", .callback = RP_APP_OscSetTimeScale,},
+        {.pattern = "OSC:TIME:SCALE?", .callback = RP_APP_OscGetTimeScale,},
+        {.pattern = "OSC:TRIG:SWEEP", .callback = RP_APP_OscSetTriggerSweep,},
+        {.pattern = "OSC:TRIG:SWEEP?", .callback = RP_APP_OscGetTriggerSweep,},
+        {.pattern = "OSC:TRIG:SOURCE", .callback = RP_APP_OscSetTriggerSource,},
+        {.pattern = "OSC:TRIG:SOURCE?", .callback = RP_APP_OscGetTriggerSource,},
+        {.pattern = "OSC:TRIG:SLOPE", .callback = RP_APP_OscSetTriggerSlope,},
+        {.pattern = "OSC:TRIG:SLOPE?", .callback = RP_APP_OscGetTriggerSlope,},
+        {.pattern = "OSC:TRIG:LEVEL", .callback = RP_APP_OscSetTriggerLevel,},
+        {.pattern = "OSC:TRIG:LEVEL?", .callback = RP_APP_OscGetTriggerLevel,},
+        {.pattern = "OSC:CH1:DATA?", .callback = RP_APP_OscChannel1GetViewData,},
+        {.pattern = "OSC:CH2:DATA?", .callback = RP_APP_OscChannel2GetViewData,},
+        {.pattern = "OSC:DATA:SIZE?", .callback = RP_APP_OscGetViewSize,},
+        {.pattern = "OSC:MEAS:CH1:VPP?", .callback = RP_APP_OscChannel1MeasureAmplitude,},
+        {.pattern = "OSC:MEAS:CH2:VPP?", .callback = RP_APP_OscChannel2MeasureAmplitude,},
+        {.pattern = "OSC:MEAS:CH1:VMEAN?", .callback = RP_APP_OscChannel1MeasureMeanVoltage,},
+        {.pattern = "OSC:MEAS:CH2:VMEAN?", .callback = RP_APP_OscChannel2MeasureMeanVoltage,},
+        {.pattern = "OSC:MEAS:CH1:VMAX?", .callback = RP_APP_OscChannel1MeasureAmplitudeMax,},
+        {.pattern = "OSC:MEAS:CH2:VMAX?", .callback = RP_APP_OscChannel2MeasureAmplitudeMax,},
+        {.pattern = "OSC:MEAS:CH1:VMIN?", .callback = RP_APP_OscChannel1MeasureAmplitudeMin,},
+        {.pattern = "OSC:MEAS:CH2:VMIN?", .callback = RP_APP_OscChannel2MeasureAmplitudeMin,},
+        {.pattern = "OSC:MEAS:CH1:FREQ?", .callback = RP_APP_OscChannel1MeasureFrequency,},
+        {.pattern = "OSC:MEAS:CH2:FREQ?", .callback = RP_APP_OscChannel2MeasureFrequency,},
+        {.pattern = "OSC:MEAS:CH1:T0?", .callback = RP_APP_OscChannel1MeasurePeriod,},
+        {.pattern = "OSC:MEAS:CH2:T0?", .callback = RP_APP_OscChannel2MeasurePeriod,},
+        {.pattern = "OSC:MEAS:CH1:DCYC?", .callback = RP_APP_OscChannel1MeasureDutyCycle,},
+        {.pattern = "OSC:MEAS:CH2:DCYC?", .callback = RP_APP_OscChannel2MeasureDutyCycle,},
+        {.pattern = "OSC:CUR:CH1:V? <cursor>", .callback = RP_APP_OscChannel1GetCursorVoltage,},
+        {.pattern = "OSC:CUR:CH2:V? <cursor>", .callback = RP_APP_OscChannel2GetCursorVoltage,},
+        {.pattern = "OSC:CUR:T? <cursor>", .callback = RP_APP_OscGetCursorTime,},
+        {.pattern = "OSC:CUR:DT?  <cursor1> <cursor2>", .callback = RP_APP_OscGetCursorDeltaTime,},
+        {.pattern = "OSC:CUR:CH1:DV? <cursor1> <cursor2>", .callback = RP_APP_OscChannel1GetCursorDeltaAmplitude,},
+        {.pattern = "OSC:CUR:CH2:DV? <cursor1> <cursor2>", .callback = RP_APP_OscChannel2GetCursorDeltaAmplitude,},
+        {.pattern = "OSC:CUR:DF? <cursor1> <cursor2>", .callback = RP_APP_OscGetCursorDeltaFrequency,},
 
     SCPI_CMD_LIST_END
 };

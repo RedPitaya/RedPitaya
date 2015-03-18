@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include "../../api-mockup/rpbase/src/rp.h"
 #include "acquire.h"
+#include "../../api-mockup/rpApplications/src/rpApp.h"
 
 #define SET_OK(cont) \
     	SCPI_ResultString(cont, "OK"); \
@@ -40,6 +41,15 @@ int getRpWaveform(const char *waveformString, rp_waveform_t *waveform);
 int getRpWaveformString(rp_waveform_t waveform, char *waveformString);
 int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource);
 int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string);
+
+int getRpAppInputGain(const char *string, rpApp_osc_in_gain_t *gain);
+int getRpAppInputGainString(rpApp_osc_in_gain_t gain, char *string);
+int getRpAppTrigSource(const char *string, rpApp_osc_trig_source_t *source);
+int getRpAppTrigSourceString(rpApp_osc_trig_source_t source, char *string);
+int getRpAppTrigSlope(const char *string, rpApp_osc_trig_slope_t *slope);
+int getRpAppTrigSlopeString(rpApp_osc_trig_slope_t slope, char *string);
+int getRpAppTrigSweep(const char *string, rpApp_osc_trig_sweep_t *sweep);
+int getRpAppTrigSweepString(rpApp_osc_trig_sweep_t sweep, char *string);
 
 int getRpInfinityInteger(const char *string, int32_t *value);
 int getRpInfinityIntegerString(int32_t value, char *string);
