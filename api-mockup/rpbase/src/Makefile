@@ -3,7 +3,7 @@
 #
 # (c) Red Pitaya  http://www.redpitaya.com
 #
-# Library rplib project file. To build the library run:
+# Library librp project file. To build the library run:
 # 'make all'
 #
 # This project file is written for GNU/Make software. For more details please 

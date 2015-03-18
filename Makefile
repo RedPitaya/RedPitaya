@@ -36,7 +36,7 @@ CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
 SCPI_SERVER_DIR=scpi-server/
-RPLIB_DIR=api-mockup/rpbase/src
+LIBRP_DIR=api-mockup/rpbase/src
 SDK_DIR=SDK/
 
 LINUX=$(BUILD)/uImage
@@ -56,7 +56,7 @@ CALIB=$(BUILD)/bin/calib
 DISCOVERY=$(BUILD)/sbin/discovery
 ECOSYSTEM=$(BUILD)/www/apps/info/info.json
 SCPI_SERVER = $(BUILD)/bin/scpi-server
-RPLIB = $(BUILD)/lib/librp.so
+LIBRP = $(BUILD)/lib/librp.so
 GDBSERVER  = $(BUILD)/bin/gdbserver
 
 # Versioning system
@@ -70,7 +70,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(GDBSERVER) sdk
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(GDBSERVER) sdk
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -146,9 +146,9 @@ $(SCPI_SERVER):
 	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-$(RPLIB):
-	$(MAKE) -C $(RPLIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(RPLIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
+$(LIBRP):
+	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
 
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
@@ -174,7 +174,7 @@ clean:
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(RPLIB_DIR) clean
+	make -C $(LIBRP_DIR) clean
 	make -C $(SDK_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
