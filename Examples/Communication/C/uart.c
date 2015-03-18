@@ -15,6 +15,16 @@
 #include <unistd.h>			//Used for UART
 #include <fcntl.h>			//Used for UART
 #include <termios.h>		//Used for UART
+#include <errno.h>
+
+
+void usage(void){
+
+	char *usage = "Usage:\n\t-First parameter: Input message to be sent.\n";
+
+    fprintf(stderr, "%s", usage);
+}
+
 
 int main(int argc, char *argv[]){
 
@@ -51,14 +61,7 @@ int main(int argc, char *argv[]){
 	 * cfsetispeed - Set input speed
 	 * cfsetspeed  - Set both output and input speed */
 
-	if(argv[1]){
-		baud_rate = (unsigned)(speed_t)(*argv[1]);
-	}
-
-	if(cfsetospeed(&settings, baud_rate) == -1){
-		fprintf(stderr, "Invalid baud. Check termios.h documentation for a valid baud rate.\n");
-		return -1;
-	}
+	cfsetspeed(&settings, baud_rate);
 
 	settings.c_cflag &= ~PARENB; /* no parity */
 	settings.c_cflag &= ~CSTOPB; /* 1 stop bit */
@@ -66,36 +69,43 @@ int main(int argc, char *argv[]){
 	settings.c_cflag |= CS8 | CLOCAL; /* 8 bits */
 	settings.c_lflag = ICANON; /* canonical mode */
 	settings.c_oflag &= ~OPOST; /* raw output */
+	settings.c_cc[VMIN] = 1;
+	settings.c_cc[VTIME] = 0;
 	
 	//Setting attributes
 	tcflush(uart_filestream, TCIFLUSH);
 	tcsetattr(uart_filestream, TCSANOW, &settings);
 
+
+
 	/* Write some sample data into UART */
-
 	//----- TX BYTES -----
-	if(argv[2] == NULL){
-		fprintf(stderr, "Argument 2 not found. Please input the second argument!\n");
-	}
-	int msg_len = strlen((char *)argv[2]);
-	int count = 0;
-	unsigned char tx_buffer[msg_len];
-	unsigned char *p_tx_buffer;
+	if(argv[1]){
 
-	p_tx_buffer = &tx_buffer[0];
-	
-	int i;
-	for(i = 0; i < msg_len; i++){
-		*p_tx_buffer++ = argv[2][i];
+		int msg_len = strlen((char *)argv[1]);
+
+		int count = 0;
+		char tx_buffer[msg_len + 3];
+
+		strncpy(tx_buffer, argv[1], msg_len);
+
+		//New line numerical value
+		tx_buffer[msg_len++] = 0x0a;
+
+		if(uart_filestream != -1){
+			count = write(uart_filestream, &tx_buffer, (msg_len)); //Filestream, bytes to write, number of bytes to write
+		}
+		if(count < 0){
+			fprintf(stderr, "UART TX error.\n");
+		}
+	}else{
+		fprintf(stderr, "Missing first parameter.\n\n");
+		usage();
 	}
 
-	if(uart_filestream != -1){
-		count = write(uart_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0])); //Filestream, bytes to write, number of bytes to write
-	}
-
-	if(count < 0){
-		fprintf(stderr, "UART TX error.\n");
-	}
+	/* CLOSING UART */
+	tcflush(uart_filestream, TCIFLUSH);
+	close(uart_filestream);
 
 	return 0;
 }
