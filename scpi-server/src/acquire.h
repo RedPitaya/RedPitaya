@@ -77,6 +77,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t * context);
 
 /* Deep averaging */
 scpi_result_t RP_AcqDPAvgStart(scpi_t *context);
+scpi_result_t RP_AcqDPAvgRst(scpi_t *context);
 scpi_result_t RP_AcqDPAvgSetCount(scpi_t *context);
 scpi_result_t RP_AcqDPAvgSetShift(scpi_t *context);
 scpi_result_t RP_AcqDPAvgSetSeqLen(scpi_t *context);

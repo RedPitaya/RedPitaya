@@ -171,6 +171,7 @@ static const scpi_command_t scpi_commands[] = {
 
         /* Deep averagning acquire */
         {.pattern = "ACQ:DP:START", .callback = RP_AcqDPAvgStart,                       },
+        {.pattern = "ACQ:DP:RST", .callback = RP_AcqDPAvgRst,                           },
         {.pattern = "ACQ:DP:COUNT", .callback = RP_AcqDPAvgSetCount,                    },
         {.pattern = "ACQ:DP:SHIFT", .callback = RP_AcqDPAvgSetShift,                    },
         {.pattern = "ACQ:DP:LEN", .callback = RP_AcqDPAvgSetSeqLen,                     },
