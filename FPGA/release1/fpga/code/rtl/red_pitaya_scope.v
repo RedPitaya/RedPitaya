@@ -526,7 +526,7 @@ red_pitaya_acum #(
 );
 
 assign acu_a_mem_ren = sys_ren & (sys_addr[17:16] == 2'h3);
-assign acu_a_mem_adr =        sys_addr[RSZ+1:2];
+assign acu_a_mem_adr =            sys_addr[RSZ+1:2];
 
 always @ (posedge adc_clk_i)
 if (acu_a_mem_vld) acu_a_mem_rdt <= acu_a_mem_tmp >>> set_acu_shf;
@@ -563,7 +563,7 @@ red_pitaya_acum #(
 );
 
 assign acu_b_mem_ren = sys_ren & (sys_addr[17:16] == 2'h4);
-assign acu_b_mem_adr =        sys_addr[RSZ+1:2];
+assign acu_b_mem_adr =            sys_addr[RSZ+1:2];
 
 always @ (posedge adc_clk_i)
 if (acu_b_mem_vld) acu_b_mem_rdt <= acu_b_mem_tmp >>> set_acu_shf;
@@ -814,64 +814,68 @@ end else begin
    end
 end
 
-always @(*) begin
-   sys_err = 1'b0 ;
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   sys_err <= 1'b0 ;
+   sys_ack <= 1'b0 ;
+end else begin
+   sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
-     20'h00004 : begin sys_ack = 1'b1;          sys_rdata = {{32- 4{1'b0}}, set_trig_src}       ; end 
+     20'h00004 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 4{1'b0}}, set_trig_src}       ; end 
 
-     20'h00008 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_a_tresh}        ; end
-     20'h0000C : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_b_tresh}        ; end
-//   20'h00010 : begin sys_ack = 1'b1;          sys_rdata = {               set_dly}            ; end
-     20'h00014 : begin sys_ack = 1'b1;          sys_rdata = {{32-17{1'b0}}, set_dec}            ; end
+     20'h00008 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_a_tresh}        ; end
+     20'h0000C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_b_tresh}        ; end
+//   20'h00010 : begin sys_ack <= 1'b1;          sys_rdata <= {               set_dly}            ; end
+     20'h00014 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-17{1'b0}}, set_dec}            ; end
 
-     20'h00018 : begin sys_ack = 1'b1;          sys_rdata = 32'h0                               ; end  // NOTE: removed functionality
-     20'h0001C : begin sys_ack = 1'b1;          sys_rdata = 32'h0                               ; end  // NOTE: removed functionality
+     20'h00018 : begin sys_ack <= 1'b1;          sys_rdata <= 32'h0                               ; end  // NOTE: removed functionality
+     20'h0001C : begin sys_ack <= 1'b1;          sys_rdata <= 32'h0                               ; end  // NOTE: removed functionality
 
-     20'h00020 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_a_hyst}         ; end
-     20'h00024 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_b_hyst}         ; end
+     20'h00020 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_a_hyst}         ; end
+     20'h00024 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_b_hyst}         ; end
 
-     20'h00028 : begin sys_ack = 1'b1;          sys_rdata = {{32- 1{1'b0}}, set_avg_en}         ; end
+     20'h00028 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 1{1'b0}}, set_avg_en}         ; end
 
-     20'h00030 : begin sys_ack = 1'b1;          sys_rdata = {{32-18{1'b0}}, set_a_filt_aa}      ; end
-     20'h00034 : begin sys_ack = 1'b1;          sys_rdata = {{32-25{1'b0}}, set_a_filt_bb}      ; end
-     20'h00038 : begin sys_ack = 1'b1;          sys_rdata = {{32-25{1'b0}}, set_a_filt_kk}      ; end
-     20'h0003C : begin sys_ack = 1'b1;          sys_rdata = {{32-25{1'b0}}, set_a_filt_pp}      ; end
-     20'h00040 : begin sys_ack = 1'b1;          sys_rdata = {{32-18{1'b0}}, set_b_filt_aa}      ; end
-     20'h00044 : begin sys_ack = 1'b1;          sys_rdata = {{32-25{1'b0}}, set_b_filt_bb}      ; end
-     20'h00048 : begin sys_ack = 1'b1;          sys_rdata = {{32-25{1'b0}}, set_b_filt_kk}      ; end
-     20'h0004C : begin sys_ack = 1'b1;          sys_rdata = {{32-25{1'b0}}, set_b_filt_pp}      ; end
+     20'h00030 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-18{1'b0}}, set_a_filt_aa}      ; end
+     20'h00034 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_bb}      ; end
+     20'h00038 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_kk}      ; end
+     20'h0003C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_pp}      ; end
+     20'h00040 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-18{1'b0}}, set_b_filt_aa}      ; end
+     20'h00044 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, set_b_filt_bb}      ; end
+     20'h00048 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, set_b_filt_kk}      ; end
+     20'h0004C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, set_b_filt_pp}      ; end
 
-     20'h00050 : begin sys_ack = 1'b1;          sys_rdata =                 set_a_axi_start     ; end
-     20'h00054 : begin sys_ack = 1'b1;          sys_rdata =                 set_a_axi_stop      ; end
-     20'h00058 : begin sys_ack = 1'b1;          sys_rdata =                 set_a_axi_dly       ; end
-     20'h0005C : begin sys_ack = 1'b1;          sys_rdata = {{32- 1{1'b0}}, set_a_axi_en}       ; end
-     20'h00060 : begin sys_ack = 1'b1;          sys_rdata =                 set_a_axi_trig      ; end
-     20'h00064 : begin sys_ack = 1'b1;          sys_rdata =                 set_a_axi_cur       ; end
+     20'h00050 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_a_axi_start     ; end
+     20'h00054 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_a_axi_stop      ; end
+     20'h00058 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_a_axi_dly       ; end
+     20'h0005C : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 1{1'b0}}, set_a_axi_en}       ; end
+     20'h00060 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_a_axi_trig      ; end
+     20'h00064 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_a_axi_cur       ; end
 
-     20'h00070 : begin sys_ack = 1'b1;          sys_rdata =                 set_b_axi_start     ; end
-     20'h00074 : begin sys_ack = 1'b1;          sys_rdata =                 set_b_axi_stop      ; end
-     20'h00078 : begin sys_ack = 1'b1;          sys_rdata =                 set_b_axi_dly       ; end
-     20'h0007C : begin sys_ack = 1'b1;          sys_rdata = {{32- 1{1'b0}}, set_b_axi_en}       ; end
-     20'h00080 : begin sys_ack = 1'b1;          sys_rdata =                 set_b_axi_trig      ; end
-     20'h00084 : begin sys_ack = 1'b1;          sys_rdata =                 set_b_axi_cur       ; end
+     20'h00070 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_b_axi_start     ; end
+     20'h00074 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_b_axi_stop      ; end
+     20'h00078 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_b_axi_dly       ; end
+     20'h0007C : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 1{1'b0}}, set_b_axi_en}       ; end
+     20'h00080 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_b_axi_trig      ; end
+     20'h00084 : begin sys_ack <= 1'b1;          sys_rdata <=                 set_b_axi_cur       ; end
 
-     20'h00090 : begin sys_ack = 1'b1;          sys_rdata = {{32-20{1'b0}}, set_deb_len}        ; end
-     20'h00094 : begin sys_ack = 1'b1;          sys_rdata = {{32- 2{1'b0}}, acu_sts_run,
-                                                                    set_acu_ena}        ; end
-     20'h00098 : begin sys_ack = 1'b1;          sys_rdata = {               set_sts_cnt}        ; end
-     20'h0009c : begin sys_ack = 1'b1;          sys_rdata = {{32- 4{1'b0}}, set_acu_shf}        ; end
-     20'h000a0 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_acu_len}        ; end
-     20'h000a4 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_off_a  }        ; end
-     20'h000a8 : begin sys_ack = 1'b1;          sys_rdata = {{32-14{1'b0}}, set_off_b  }        ; end
+     20'h00090 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
+     20'h00094 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 2{1'b0}}, acu_sts_run,
+                                                                              set_acu_ena}        ; end
+     20'h00098 : begin sys_ack <= 1'b1;          sys_rdata <= {               set_sts_cnt}        ; end
+     20'h0009c : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 4{1'b0}}, set_acu_shf}        ; end
+     20'h000a0 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_acu_len}        ; end
+     20'h000a4 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_off_a  }        ; end
+     20'h000a8 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_off_b  }        ; end
 
-     20'h1???? : begin sys_ack = 1'b0;          sys_rdata = 32'h0                               ; end  // NOTE: removed functionality
-     20'h2???? : begin sys_ack = 1'b0;          sys_rdata = 32'h0                               ; end  // NOTE: removed functionality
+     20'h1???? : begin sys_ack <= 1'b0;          sys_rdata <= 32'h0                               ; end  // NOTE: removed functionality
+     20'h2???? : begin sys_ack <= 1'b0;          sys_rdata <= 32'h0                               ; end  // NOTE: removed functionality
 
-     20'h3???? : begin sys_ack = acu_rd_dv;     sys_rdata = acu_a_mem_rdt                       ; end
-     20'h4???? : begin sys_ack = acu_rd_dv;     sys_rdata = acu_b_mem_rdt                       ; end
+     20'h3???? : begin sys_ack <= acu_rd_dv;     sys_rdata <= acu_a_mem_rdt                       ; end
+     20'h4???? : begin sys_ack <= acu_rd_dv;     sys_rdata <= acu_b_mem_rdt                       ; end
 
-       default : begin sys_ack = 1'b1;          sys_rdata =  32'h0                              ; end
+       default : begin sys_ack <= 1'b1;          sys_rdata <=  32'h0                              ; end
    endcase
 end
 
