@@ -669,8 +669,8 @@ int acq_Start()
 {
     ECHECK(osc_WriteDataIntoMemory(true));
 
-    // Sleep for 50 ms. This solver previous write pinter step.
-    usleep(50000);
+    // Sleep for 200 ms. This solver previous write pinter step.
+    usleep(200000);
     return RP_OK;
 }
 
