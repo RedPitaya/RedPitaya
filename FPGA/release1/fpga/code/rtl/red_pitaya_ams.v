@@ -72,14 +72,6 @@ module red_pitaya_ams (
 //
 //  System bus connection
 
-wire  [ 32-1: 0] sys_addr         ;
-wire  [ 32-1: 0] sys_wdata        ;
-wire             sys_wen          ;
-wire             sys_ren          ;
-reg   [ 32-1: 0] sys_rdata        ;
-reg              sys_err          ;
-reg              sys_ack          ;
-
 reg   [ 12-1: 0] adc_a_r      ;
 reg   [ 12-1: 0] adc_b_r      ;
 reg   [ 12-1: 0] adc_c_r      ;
