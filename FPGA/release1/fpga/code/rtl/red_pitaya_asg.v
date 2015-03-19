@@ -52,8 +52,7 @@
 
 
 
-module red_pitaya_asg
-(
+module red_pitaya_asg (
    // DAC
    output     [ 14-1: 0] dac_a_o         ,  //!< DAC data CHA
    output     [ 14-1: 0] dac_b_o         ,  //!< DAC data CHB
@@ -300,34 +299,38 @@ wire [32-1: 0] r0_rd = {7'h0,set_b_rgate, set_b_zero,set_b_rst,set_b_once,set_b_
                         7'h0,set_a_rgate, set_a_zero,set_a_rst,set_a_once,set_a_wrap, 1'b0,trig_a_src };
 
 
-always @(*) begin
-   sys_err = 1'b0 ;
+always @(posedge dac_clk_i)
+if (dac_rstn_i == 1'b0) begin
+   sys_err <= 1'b0 ;
+   sys_ack <= 1'b0 ;
+end else begin
+   sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
-     20'h00000 : begin sys_ack = 1'b1;          sys_rdata = r0_rd                              ; end
+     20'h00000 : begin sys_ack <= 1'b1;          sys_rdata <= r0_rd                              ; end
 
-     20'h00004 : begin sys_ack = 1'b1;          sys_rdata = {2'h0, set_a_dc, 2'h0, set_a_amp}  ; end
-     20'h00008 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_a_size}     ; end
-     20'h0000C : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
-     20'h00010 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_a_step}     ; end
-     20'h00014 : begin sys_ack = 1'b1;          sys_rdata = buf_a_rpnt_rd                      ; end
-     20'h00018 : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_a_ncyc}         ; end
-     20'h0001C : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_a_rnum}         ; end
-     20'h00020 : begin sys_ack = 1'b1;          sys_rdata = set_a_rdly                         ; end
+     20'h00004 : begin sys_ack <= 1'b1;          sys_rdata <= {2'h0, set_a_dc, 2'h0, set_a_amp}  ; end
+     20'h00008 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_size}     ; end
+     20'h0000C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
+     20'h00010 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_step}     ; end
+     20'h00014 : begin sys_ack <= 1'b1;          sys_rdata <= buf_a_rpnt_rd                      ; end
+     20'h00018 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-16{1'b0}},set_a_ncyc}         ; end
+     20'h0001C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-16{1'b0}},set_a_rnum}         ; end
+     20'h00020 : begin sys_ack <= 1'b1;          sys_rdata <= set_a_rdly                         ; end
 
-     20'h00024 : begin sys_ack = 1'b1;          sys_rdata = {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
-     20'h00028 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_b_size}     ; end
-     20'h0002C : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
-     20'h00030 : begin sys_ack = 1'b1;          sys_rdata = {{32-RSZ-16{1'b0}},set_b_step}     ; end
-     20'h00034 : begin sys_ack = 1'b1;          sys_rdata = buf_b_rpnt_rd                      ; end
-     20'h00038 : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_b_ncyc}         ; end
-     20'h0003C : begin sys_ack = 1'b1;          sys_rdata = {{32-16{1'b0}},set_b_rnum}         ; end
-     20'h00040 : begin sys_ack = 1'b1;          sys_rdata = set_b_rdly                         ; end
+     20'h00024 : begin sys_ack <= 1'b1;          sys_rdata <= {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
+     20'h00028 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_size}     ; end
+     20'h0002C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
+     20'h00030 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_step}     ; end
+     20'h00034 : begin sys_ack <= 1'b1;          sys_rdata <= buf_b_rpnt_rd                      ; end
+     20'h00038 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
+     20'h0003C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
+     20'h00040 : begin sys_ack <= 1'b1;          sys_rdata <= set_b_rdly                         ; end
 
-     20'h1zzzz : begin sys_ack = ack_dly;       sys_rdata = {{32-14{1'b0}},buf_a_rdata}        ; end
-     20'h2zzzz : begin sys_ack = ack_dly;       sys_rdata = {{32-14{1'b0}},buf_b_rdata}        ; end
+     20'h1zzzz : begin sys_ack <= ack_dly;       sys_rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
+     20'h2zzzz : begin sys_ack <= ack_dly;       sys_rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end
 
-       default : begin sys_ack = 1'b1;          sys_rdata =  32'h0                             ; end
+       default : begin sys_ack <= 1'b1;          sys_rdata <=  32'h0                             ; end
    endcase
 end
 
