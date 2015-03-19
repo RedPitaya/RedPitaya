@@ -105,3 +105,6 @@ plt.plot(buff)
 plt.ylabel('Deep acq test')
 plt.show()
 
+
+rp_s.rp_write('ACQ:DP:RST' + rp_s.delimiter)
+
