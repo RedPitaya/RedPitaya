@@ -180,6 +180,9 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:DP:LEN?", .callback = RP_AcqDPAvgGetSeqLen,                    },
         {.pattern = "ACQ:DP:DEBTIM?", .callback = RP_AcqDPAvgGetDebTim,                 },
         {.pattern = "ACQ:DP:RUN?", .callback = RP_AcqDPAvgGetRunState,                  },
+        {.pattern = "ACQ:DP:OFFSET", .callback = RP_AcqDPAvgSetOffSet,                  },
+        {.pattern = "ACQ:DP:SOUR1:OFFSET?", .callback = RP_AcqDPAvgGetOffSetCh1         },
+        {.pattern = "ACQ:DP:SOUR2:OFFSET?", .callback = RP_AcqDPAvgGetOffSetCh2         },
         {.pattern = "ACQ:DP:SOUR1:DATA?", .callback = RP_AcqDPAvgGetRawDataCh1,         },
         {.pattern = "ACQ:DP:SOUR2:DATA?", .callback = RP_AcqDPAvgGetRawDataCh2,         },
 
