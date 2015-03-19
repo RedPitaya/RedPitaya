@@ -35,7 +35,6 @@ file mkdir $path_sdk
 read_verilog $path_rtl/axi_master.v
 read_verilog $path_rtl/axi_slave.v
 read_verilog $path_rtl/axi_wr_fifo.v
-read_verilog $path_rtl/bus_clk_bridge.v
 
 read_verilog $path_rtl/red_pitaya_acum.sv
 read_verilog $path_rtl/red_pitaya_ams.v

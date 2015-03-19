@@ -6,7 +6,6 @@ PATH_TBN=../bench
 RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/axi_slave.v \
     $(PATH_RTL)/axi_wr_fifo.v \
-    $(PATH_RTL)/bus_clk_bridge.v \
     $(PATH_RTL)/red_pitaya_ams.v \
     $(PATH_RTL)/red_pitaya_analog.v \
     $(PATH_RTL)/red_pitaya_asg_ch.v \
