@@ -449,7 +449,7 @@ reg signed [14-1:0] set_off_a, set_off_b;
 function signed [14-1:0] sat (input signed [15-1:0] dat);
 begin
   if ((&dat[14:13]) || (~|dat[14:13])) sat = dat[13:0];
-  else                                 sat = {14{dat[13]}};
+  else                                 sat = {dat[14], {13{~dat[14]}}};
 end
 endfunction
 
