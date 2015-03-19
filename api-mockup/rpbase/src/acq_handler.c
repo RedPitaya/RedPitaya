@@ -847,8 +847,17 @@ int acq_SetDeepAvgDebTim(uint32_t deb_t){
     return osc_SetDeepAvgDebTim(deb_t);
 }
 
-int acq_SetDeepAvgOffSet(rp_channel_t channel, uint32_t dc_offs){
-    return osc_SetDeepAvgOffSet(channel, dc_offs);
+int acq_SetDeepAvgOffSet(){
+
+    rp_calib_params_t calib = calib_GetParams();
+
+    int32_t dc_offs_ch1 = calib.fe_ch1_dc_offs;
+    int32_t dc_offs_ch2 = calib.fe_ch2_dc_offs;
+
+    osc_SetDeepAvgOffSet(RP_CH_1, dc_offs_ch1);
+    osc_SetDeepAvgOffSet(RP_CH_2, dc_offs_ch2);
+
+    return RP_OK;
 }
 
 /* Deep averaging getters */

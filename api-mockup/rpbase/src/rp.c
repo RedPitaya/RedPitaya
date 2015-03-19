@@ -412,8 +412,8 @@ int rp_SetDeepAvgDebTim(uint32_t deb_t){
     return acq_SetDeepAvgDebTim(deb_t);
 }
 
-int rp_SetDeepAvgOffSet(rp_channel_t channel, uint32_t dc_offs){
-    return acq_SetDeepAvgOffSet(channel, dc_offs);
+int rp_SetDeepAvgOffSet(){
+    return acq_SetDeepAvgOffSet();
 }
 
 int rp_GetDeepAvgCount(uint32_t *count){
@@ -440,8 +440,8 @@ int rp_GetDeepAvgRunState(rp_acq_trig_src_t *source){
     return acq_GetDeepAvgRunState(source);
 }
 
-int rp_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offs){
-    return acq_GetDeepAvgOffSet(channel, dc_offs);
+int rp_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offset){
+    return acq_GetDeepAvgOffSet(channel, dc_offset);
 }
 
 /**

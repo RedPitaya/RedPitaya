@@ -1030,6 +1030,37 @@ scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context){
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqDPAvgGetOffSet(rp_channel_t channel, scpi_t *context){
+
+    uint32_t dc_offs;
+
+    int result = rp_GetDeepAvgOffSet(channel, &dc_offs);
+
+    if(result != RP_OK){
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:OFFSET? Failed to get dc offset for deep averaging: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultDouble(context, (double)dc_offs);
+    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:OFFSET? Successfully retrieved dc offset for deep averaging.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqDPAvgSetOffSet(scpi_t *context){
+
+    int result = rp_SetDeepAvgOffSet();
+
+    if(result != RP_OK){
+        syslog(LOG_ERR, "*ACQ:DP:SOUR<n>:OFFSET failed to set deep averaging dc offset.");
+        return SCPI_RES_OK;
+    }
+
+    syslog(LOG_INFO, "*ACQ:DP:SOUR<n>:OFFSET Successfully set deep averaging dc offset.");
+    return SCPI_RES_OK;
+
+}
+
+/* Raw data getters and setters for SCPI server */
 scpi_result_t RP_AcqDPAvgGetRawDataCh1(scpi_t *context){
     return RP_AcqDPAvgGetRawData(RP_CH_1, context);
 }
@@ -1037,3 +1068,13 @@ scpi_result_t RP_AcqDPAvgGetRawDataCh1(scpi_t *context){
 scpi_result_t RP_AcqDPAvgGetRawDataCh2(scpi_t *context){
     return RP_AcqDPAvgGetRawData(RP_CH_2, context);
 }
+
+/* Offset getters and setters for SCPI server */
+scpi_result_t RP_AcqDPAvgGetOffSetCh1(scpi_t *context){
+    return RP_AcqDPAvgGetOffSet(RP_CH_1, context);
+}
+
+scpi_result_t RP_AcqDPAvgGetOffSetCh2(scpi_t *context){
+    return RP_AcqDPAvgGetOffSet(RP_CH_2, context);
+}
+

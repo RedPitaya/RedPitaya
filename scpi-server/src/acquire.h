@@ -85,11 +85,16 @@ scpi_result_t RP_AcqDPAvgGetCount(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetShift(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetSeqLen(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetDebTim(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetOffSetCh1(scpi_t *context);
+scpi_result_t RP_AcqDPAvgGetOffSetCh2(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetRawDataCh1(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetRawDataCh2(scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetRunState(scpi_t *context);
 
+/* Set deep averaging offset for both channels */
+scpi_result_t RP_AcqDPAvgSetOffSet(scpi_t *context);
 
+scpi_result_t RP_AcqDPAvgGetOffSet(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_AcqDPAvgGetRawData(rp_channel_t channel, scpi_t *context);
 
 #endif /* ACQUIRE_H_ */

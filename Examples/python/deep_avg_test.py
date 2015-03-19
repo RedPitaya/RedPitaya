@@ -1,6 +1,8 @@
 import socket
 import matplotlib.pyplot as plt
 
+import math
+
 class SCPI(object):
 
     #Socket info
@@ -52,12 +54,15 @@ class SCPI(object):
         self._socket = None
 
 #Input your Pitaya's IP address and set a timeout. Example: rp_s = SCPI('192.168.1.100', 1)
-rp_s = SCPI('192.168.178.67', 1)
+rp_s = SCPI('192.168.178.56', 1)
 time_out = 1
 
 wave_form = 'sine'
-freq = 10000
+freq = 100000
 ampl = 1
+
+shift = 2
+count = 10000
 
 #Generate signal
 rp_s.rp_write('SOUR1:FUNC ' + str(wave_form).upper() + rp_s.delimiter)
@@ -67,12 +72,16 @@ rp_s.rp_write('OUTPUT1:STATE ON' + rp_s.delimiter)
 
 #Deep averaging
 rp_s.rp_write('ACQ:DP:LEN 16383' + rp_s.delimiter)
-rp_s.rp_write('ACQ:DP:COUNT 10000' + rp_s.delimiter)
-rp_s.rp_write('ACQ:DP:SHIFT 2' + rp_s.delimiter)
+rp_s.rp_write('ACQ:DP:COUNT ' + str(count) + rp_s.delimiter)
+rp_s.rp_write('ACQ:DP:SHIFT ' + str(shift) + rp_s.delimiter)
 rp_s.rp_write('ACQ:DP:DEBTIM 0' + rp_s.delimiter)
 rp_s.rp_write('ACQ:TRIG CH1_NE' + rp_s.delimiter)
 rp_s.rp_write('ACQ:TRIG:LEV 0' + rp_s.delimiter)
+
 #Hysteresis rp_s.rp_write('')
+
+#Applying software based offset. Not user defined.
+rp_s.rp_write('ACQ:DP:OFFSET' + rp_s.delimiter)
 rp_s.rp_write('ACQ:DP:START' + rp_s.delimiter)
 
 
@@ -88,8 +97,9 @@ buff_string = rp_s.rp_rcv()
 buff_string = buff_string.strip('{\n\r}').split(',')
 buff = map(float, buff_string)
 
+#Applying scaling to accumulated data.
 for i in range(0, len(buff)):
-    print buff[i]
+    buff[i] = (buff[i] * (math.pow(2, shift) / count)) / 0x1fff
 
 plt.plot(buff)
 plt.ylabel('Deep acq test')
