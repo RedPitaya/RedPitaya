@@ -190,6 +190,9 @@ always @(posedge clk_i) begin
    end
 end
 
+wire sys_en;
+assign sys_en = sys_wen | sys_ren;
+
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
    sys_err <= 1'b0 ;
@@ -198,20 +201,20 @@ end else begin
    sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
-     20'h00000 : begin sys_ack <= 1'b1;          sys_rdata <= {               id_value  }                          ; end
-     20'h00004 : begin sys_ack <= 1'b1;          sys_rdata <= {               dna_value[31: 0] }                   ; end
-     20'h00008 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-25{1'b0}}, dna_value[56:32] }                   ; end
+     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {               id_value  }                          ; end
+     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {               dna_value[31: 0] }                   ; end
+     20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, dna_value[56:32] }                   ; end
 
-     20'h00010 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dir_o }                        ; end
-     20'h00014 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dir_o }                        ; end
-     20'h00018 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_o }                        ; end
-     20'h0001C : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_o }                        ; end
-     20'h00020 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_i }                        ; end
-     20'h00024 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_i }                        ; end
+     20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dir_o }                        ; end
+     20'h00014 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dir_o }                        ; end
+     20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_o }                        ; end
+     20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_o }                        ; end
+     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_i }                        ; end
+     20'h00024 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_i }                        ; end
 
-     20'h00030 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 8{1'b0}}, led_reg[7:1], 1'b0 }                 ; end
+     20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, led_reg[7:1], 1'b0 }                 ; end
 
-       default : begin sys_ack <= 1'b1;          sys_rdata <=  32'h0                                               ; end
+       default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                                               ; end
    endcase
 end
 
