@@ -577,11 +577,13 @@ int osc_SetDeepAvgDebTim(uint32_t deb_t){
 }
 
 int osc_SetDeepAvgOffSet(int channel, uint32_t dc_offset){
+
     if(channel == 1){
         ECHECK(cmn_SetValue(&osc_reg->ac_off_cha, dc_offset, DC_OFFS_MASK));
         return RP_OK;
     }
     ECHECK(cmn_SetValue(&osc_reg->ac_off_chb, dc_offset, DC_OFFS_MASK));
+    
     return RP_OK;
 }
 

@@ -763,13 +763,13 @@ int rp_SetDeepAvgCount(uint32_t count);
 int rp_SetDeepAvgShift(uint32_t shift);
 int rp_SetDeepDataSeqLen(uint32_t len);
 int rp_SetDeepAvgDebTim(uint32_t deb_t);
-int rp_SetDeepAvgOffSet(rp_channel_t channel, uint32_t dc_offs);
+int rp_SetDeepAvgOffSet();
 
 int rp_GetDeepAvgCount(uint32_t *count);
 int rp_GetDeepAvgShift(uint32_t *shift);
 int rp_GetDeepDataSeqLen(uint32_t *len);
 int rp_GetDeepAvgDebTim(uint32_t *deb_t);
-int rp_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offs);
+int rp_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offset);
 
 int rp_GetDeepAvgRawData(rp_channel_t channel, uint32_t *size, int32_t *buffer);
 
