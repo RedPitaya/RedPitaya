@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "version.h"
 #include "common.h"
@@ -666,7 +667,11 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 
 int acq_Start()
 {
-    return osc_WriteDataIntoMemory(true);
+    ECHECK(osc_WriteDataIntoMemory(true));
+
+    // Sleep for 50 ms. This solver previous write pinter step.
+    usleep(50000);
+    return RP_OK;
 }
 
 int acq_Stop()
