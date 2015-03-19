@@ -510,16 +510,14 @@ red_pitaya_ams i_ams (
   .dac_d_o         (  dac_pwm_d                  ),
 
    // System bus
-  .sys_clk_i       (  sys_clk                    ),  // clock
-  .sys_rstn_i      (  sys_rstn                   ),  // reset - active low
-  .sys_addr_i      (  sys_addr                   ),  // address
-  .sys_wdata_i     (  sys_wdata                  ),  // write data
-  .sys_sel_i       (  sys_sel                    ),  // write byte select
-  .sys_wen_i       (  sys_wen[4]                 ),  // write enable
-  .sys_ren_i       (  sys_ren[4]                 ),  // read enable
-  .sys_rdata_o     (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
-  .sys_err_o       (  sys_err[4]                 ),  // error indicator
-  .sys_ack_o       (  sys_ack[4]                 )   // acknowledge signal
+  .sys_addr        (  sys_addr                   ),  // address
+  .sys_wdata       (  sys_wdata                  ),  // write data
+  .sys_sel         (  sys_sel                    ),  // write byte select
+  .sys_wen         (  sys_wen[4]                 ),  // write enable
+  .sys_ren         (  sys_ren[4]                 ),  // read enable
+  .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
+  .sys_err         (  sys_err[4]                 ),  // error indicator
+  .sys_ack         (  sys_ack[4]                 )   // acknowledge signal
 );
 
 //---------------------------------------------------------------------------------
@@ -568,33 +566,14 @@ red_pitaya_daisy i_daisy
   .sys_ack_o       (  sys_ack[5]                 )   // acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
-//
-//  Power consumtion test
+// unused system bus slave ports
 
-red_pitaya_test i_test
-(
-   // power test
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
+assign sys_rdata[ 6*32+31: 6*32] = 32'h0 ; 
+assign sys_err[6] = 1'b0 ;
+assign sys_ack[6] = 1'b1 ;
 
-  .rand_o          (                             ),
-
-   // System bus
-  .sys_clk_i       (  sys_clk                    ),  // clock
-  .sys_rstn_i      (  sys_rstn                   ),  // reset - active low
-  .sys_addr_i      (  sys_addr                   ),  // address
-  .sys_wdata_i     (  sys_wdata                  ),  // write data
-  .sys_sel_i       (  sys_sel                    ),  // write byte select
-  .sys_wen_i       (  sys_wen[7]                 ),  // write enable
-  .sys_ren_i       (  sys_ren[7]                 ),  // read enable
-  .sys_rdata_o     (  sys_rdata[ 7*32+31: 7*32]  ),  // read data
-  .sys_err_o       (  sys_err[7]                 ),  // error indicator
-  .sys_ack_o       (  sys_ack[7]                 )   // acknowledge signal
-);
-
-//assign sys_rdata[ 7*32+31: 7*32] = 32'h0 ; 
-//assign sys_err[7] = 1'b0 ;
-//assign sys_ack[7] = 1'b1 ;
+assign sys_rdata[ 7*32+31: 7*32] = 32'h0 ; 
+assign sys_err[7] = 1'b0 ;
+assign sys_ack[7] = 1'b1 ;
 
 endmodule
