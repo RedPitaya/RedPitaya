@@ -839,8 +839,8 @@ int acq_SetDeepAvgShift(uint32_t shift){
     return osc_SetDeepAvgShift(shift);
 }
 
-int acq_SetDeepDataSeqLen(uint32_t len){
-    return osc_SetDeepDataSeqLen(len);
+int acq_SetDeepAvgSeqLen(uint32_t len){
+    return osc_SetDeepAvgSeqLen(len);
 }
 
 int acq_SetDeepAvgDebTim(uint32_t deb_t){
@@ -869,8 +869,8 @@ int acq_GetDeepAvgShift(uint32_t *shift){
     return osc_GetDeepAvgShift(shift);
 }
 
-int acq_GetDeepDataSeqLen(uint32_t *len){
-    return osc_GetDeepDataSeqLen(len);
+int acq_GetDeepAvgSeqLen(uint32_t *len){
+    return osc_GetDeepAvgSeqLen(len);
 }
 
 int acq_GetDeepAvgDebTim(uint32_t *deb_t){
@@ -898,6 +898,10 @@ int acq_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offs){
 
 int acq_DeepAvgStart(){   
     return osc_WriteDataIntoMemoryDeepAvg(true);
+}
+
+int acq_DeepAvgRst(){
+    return osc_DeepAvgRst();
 }
 
 /* Data acq for deep avg buff */

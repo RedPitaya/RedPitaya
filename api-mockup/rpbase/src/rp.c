@@ -396,6 +396,10 @@ int rp_DeepAvgStart(){
     return acq_DeepAvgStart();
 }
 
+int rp_DeepAvgRst(){
+    return acq_DeepAvgRst();
+}
+
 int rp_SetDeepAvgCount(uint32_t count){
     return acq_SetDeepAvgCount(count);
 }
@@ -404,8 +408,8 @@ int rp_SetDeepAvgShift(uint32_t shift){
     return acq_SetDeepAvgShift(shift);
 }
 
-int rp_SetDeepDataSeqLen(uint32_t len){
-    return acq_SetDeepDataSeqLen(len);
+int rp_SetDeepAvgSeqLen(uint32_t len){
+    return acq_SetDeepAvgSeqLen(len);
 }
 
 int rp_SetDeepAvgDebTim(uint32_t deb_t){
@@ -424,8 +428,8 @@ int rp_GetDeepAvgShift(uint32_t *shift){
     return acq_GetDeepAvgShift(shift);
 }
 
-int rp_GetDeepDataSeqLen(uint32_t *len){
-    return acq_GetDeepDataSeqLen(len);
+int rp_GetDeepAvgSeqLen(uint32_t *len){
+    return acq_GetDeepAvgSeqLen(len);
 }
 
 int rp_GetDeepAvgDebTim(uint32_t *deb_t){

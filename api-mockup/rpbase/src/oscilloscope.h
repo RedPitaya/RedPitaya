@@ -48,14 +48,15 @@ int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 /* Deep Avgeraging */
+int osc_DeepAvgRst();
 int osc_SetDeepAvgCount(uint32_t count);
 int osc_SetDeepAvgShift(uint32_t shift);
-int osc_SetDeepDataSeqLen(uint32_t len);
+int osc_SetDeepAvgSeqLen(uint32_t len);
 int osc_SetDeepAvgDebTim(uint32_t deb_t);
 int osc_SetDeepAvgOffSet(int channel, uint32_t dc_offset);
 int osc_GetDeepAvgCount(uint32_t *count);
 int osc_GetDeepAvgShift(uint32_t *shift);
-int osc_GetDeepDataSeqLen(uint32_t *len);
+int osc_GetDeepAvgSeqLen(uint32_t *len);
 int osc_GetDeepAvgDebTim(uint32_t *deb_t);
 int osc_GetDeepAvgRunState(uint32_t *run);
 int osc_GetDeepAvgOffSet(int channel, uint32_t *dc_offset);

@@ -555,6 +555,21 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
 /**
  * Deep averaging
  */
+
+int osc_DeepAvgRst(){
+    ECHECK(cmn_SetValue(&osc_reg->ac_count, 0, COUNT_MASK));
+    ECHECK(cmn_SetValue(&osc_reg->ac_out_sft, 0, SHIFT_MASK));
+    ECHECK(cmn_SetValue(&osc_reg->ac_data_seq_len, 0, AC_DATA_SEQ_MASK));
+
+    ECHECK(cmn_SetValue(&osc_reg->ac_off_cha, 0, DC_OFFS_MASK));
+    ECHECK(cmn_SetValue(&osc_reg->ac_off_chb, 0, DC_OFFS_MASK));
+
+    osc_WriteDataIntoMemoryDeepAvg(false);
+
+    return RP_OK;
+}
+
+
 int osc_SetDeepAvgCount(uint32_t count){
     cmn_SetValue(&osc_reg->ac_count, count, COUNT_MASK);
     return RP_OK;
@@ -565,7 +580,7 @@ int osc_SetDeepAvgShift(uint32_t shift){
     return RP_OK;
 }
 
-int osc_SetDeepDataSeqLen(uint32_t len){
+int osc_SetDeepAvgSeqLen(uint32_t len){
     //Writing len-1 because we write one bit less in register.
     ECHECK(cmn_SetValue(&osc_reg->ac_data_seq_len, len, AC_DATA_SEQ_MASK));
     return RP_OK;
@@ -595,7 +610,7 @@ int osc_GetDeepAvgShift(uint32_t *shift){
     return cmn_GetValue(&osc_reg->ac_out_sft, shift, SHIFT_MASK);
 }
 
-int osc_GetDeepDataSeqLen(uint32_t *len){
+int osc_GetDeepAvgSeqLen(uint32_t *len){
     return cmn_GetValue(&osc_reg->ac_data_seq_len, len, AC_DATA_SEQ_MASK);
 }
 

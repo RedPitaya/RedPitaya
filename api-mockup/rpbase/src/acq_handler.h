@@ -63,21 +63,19 @@ int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 /* Deep averaging functions */
 int acq_SetDeepAvgCount(uint32_t count);
 int acq_SetDeepAvgShift(uint32_t shift);
-int acq_SetDeepDataSeqLen(uint32_t len);
+int acq_SetDeepAvgSeqLen(uint32_t len);
 int acq_SetDeepAvgDebTim(uint32_t deb_t);
 int acq_SetDeepAvgOffSet();
 
 int acq_GetDeepAvgCount(uint32_t *count);
 int acq_GetDeepAvgShift(uint32_t *shift);
-int acq_GetDeepDataSeqLen(uint32_t *len);
+int acq_GetDeepAvgSeqLen(uint32_t *len);
 int acq_GetDeepAvgDebTim(uint32_t *deb_t);
 int acq_GetDeepAvgOffSet(rp_channel_t channel, uint32_t *dc_offs);
-
-int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer);
-
-
 int acq_GetDeepAvgRunState(rp_acq_trig_src_t *run);
 int acq_DeepAvgStart();
+int acq_DeepAvgRst();
+int acq_GetDeepAvgDataRaw(rp_channel_t channel, uint32_t *size, int32_t *buffer);
 
 int acq_GetBufferSize(uint32_t *size);
 
