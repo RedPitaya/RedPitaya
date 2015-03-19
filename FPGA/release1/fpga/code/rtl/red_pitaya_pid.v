@@ -277,6 +277,9 @@ always @(posedge clk_i) begin
    end
 end
 
+wire sys_en;
+assign sys_en = sys_wen | sys_ren;
+
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
    sys_err <= 1'b0 ;
@@ -285,29 +288,29 @@ end else begin
    sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
-      20'h00 : begin sys_ack <= 1'b1;          sys_rdata <= {{32- 4{1'b0}}, set_22_irst,set_21_irst,set_12_irst,set_11_irst}       ; end 
+      20'h00 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, set_22_irst,set_21_irst,set_12_irst,set_11_irst}       ; end 
 
-      20'h10 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_11_sp}          ; end 
-      20'h14 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_11_kp}          ; end 
-      20'h18 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_11_ki}          ; end 
-      20'h1C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_11_kd}          ; end 
+      20'h10 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_11_sp}          ; end 
+      20'h14 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_11_kp}          ; end 
+      20'h18 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_11_ki}          ; end 
+      20'h1C : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_11_kd}          ; end 
 
-      20'h20 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_12_sp}          ; end 
-      20'h24 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_12_kp}          ; end 
-      20'h28 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_12_ki}          ; end 
-      20'h2C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_12_kd}          ; end 
+      20'h20 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_12_sp}          ; end 
+      20'h24 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_12_kp}          ; end 
+      20'h28 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_12_ki}          ; end 
+      20'h2C : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_12_kd}          ; end 
 
-      20'h30 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_21_sp}          ; end 
-      20'h34 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_21_kp}          ; end 
-      20'h38 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_21_ki}          ; end 
-      20'h3C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_21_kd}          ; end 
+      20'h30 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_21_sp}          ; end 
+      20'h34 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_21_kp}          ; end 
+      20'h38 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_21_ki}          ; end 
+      20'h3C : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_21_kd}          ; end 
 
-      20'h40 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_22_sp}          ; end 
-      20'h44 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_22_kp}          ; end 
-      20'h48 : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_22_ki}          ; end 
-      20'h4C : begin sys_ack <= 1'b1;          sys_rdata <= {{32-14{1'b0}}, set_22_kd}          ; end 
+      20'h40 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_22_sp}          ; end 
+      20'h44 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_22_kp}          ; end 
+      20'h48 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_22_ki}          ; end 
+      20'h4C : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_22_kd}          ; end 
 
-     default : begin sys_ack <= 1'b1;          sys_rdata <=  32'h0                              ; end
+     default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                              ; end
    endcase
 end
 
