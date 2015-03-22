@@ -32,7 +32,7 @@ int rpApp_Init() {
     ECHECK_APP(osc_Init());
     // TODO: Place other module releasing here (in reverse order)
 
-    ECHECK_APP(rp_Reset());
+    ECHECK_APP(rpApp_Reset());
 
     return RP_OK;
 }
