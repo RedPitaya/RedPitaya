@@ -1,0 +1,261 @@
+#include <stdio.h>
+#include <cstring>
+#include "DataManager.h"
+#include "misc.h"
+
+int dbg_printf(const char * format, ...)
+{
+	static FILE* log = fopen("rp_sdk.log", "wt");
+	if(log)
+	{
+		va_list va;
+		va_start(va, format);
+		vfprintf(log, format, va);
+		va_end(va);
+		fflush(log);
+	}
+}
+
+CDataManager* CDataManager::GetInstance()
+{
+	static CDataManager instance;
+	return &instance;
+}
+
+void CDataManager::RegisterParam(CBaseParameter * _param)
+{	
+	dbg_printf("RegisterParam: %s\n", _param->GetName());
+	m_params.push_back(_param);
+	dbg_printf("Registered params: %d\n", m_params.size());
+}
+
+void CDataManager::RegisterSignal(CBaseParameter * _signal)
+{
+	dbg_printf("RegisterSignal: %s\n", _signal->GetName());	
+	m_signals.push_back(_signal);
+	dbg_printf("Registered signals: %d\n", m_signals.size());
+}
+
+void CDataManager::UnRegisterParam(const char * _name)
+{
+	for (std::vector<CBaseParameter *>::iterator it =  m_params.begin() ; it !=  m_params.end(); ++it)
+	{	
+		if(strcmp((*it)->GetName(),_name)==0)
+		{
+			m_params.erase(it);			
+			dbg_printf("UnRegisterParam: %s\n", _name);
+			return;
+		}
+	}	
+}
+
+void CDataManager::UnRegisterSignal(const char * _name)
+{
+	for (std::vector<CBaseParameter *>::iterator it =  m_signals.begin() ; it !=  m_params.end(); ++it)
+	{
+		if(strcmp((*it)->GetName(),_name)==0)
+		{
+			m_signals.erase(it);
+			dbg_printf("UnRegisterSignal: %s\n", _name);			
+			return;
+		}
+	}
+}
+
+void CDataManager::UpdateAllParams()
+{
+	for(size_t i=0; i < m_params.size(); i++) {
+		m_params[i]->Update();		
+        }
+}
+
+void CDataManager::UpdateAllSignals()
+{
+	for(size_t i=0; i < m_signals.size(); i++) {
+		m_signals[i]->Update();		
+        }
+}
+
+std::string CDataManager::GetParamsJson()
+{
+	UpdateParams();
+	JSONNode params(JSON_NODE);
+	params.set_name("parameters");
+	for(size_t i=0; i < m_params.size(); i++) {
+		JSONNode n(JSON_NODE);
+		n = m_params[i]->GetJSONObject();		
+		params.push_back(n);
+
+        }
+//	return params.write_formatted();
+	return params.write();
+}
+
+std::string CDataManager::GetSignalsJson()
+{
+	UpdateSignals();
+	JSONNode signals(JSON_NODE);
+	signals.set_name("signals");
+	for(size_t i=0; i < m_signals.size(); i++) {
+		JSONNode n(JSON_NODE);
+		n = m_signals[i]->GetJSONObject();		
+		signals.push_back(n);
+
+        }
+//	return signals.write_formatted();
+	return signals.write();
+}
+
+JSONNode CDataManager::ParseJSON(const JSONNode & _n, const char * _node_name)
+{ 
+	JSONNode node(JSON_NODE);	
+	node = _n.at(_node_name);
+	return node;
+}
+
+void CDataManager::OnNewParams(std::string _params)
+{	
+	JSONNode n(JSON_NODE);
+	n = libjson::parse(_params);		
+	JSONNode m(JSON_NODE);
+	for(size_t i=0; i < m_params.size(); i++) {
+
+		const char* name = m_params[i]->GetName();
+		m = ParseJSON(n, name);		
+		m_params[i]->SetValueFromJSON(m);
+        }
+	::OnNewParams();
+}
+
+void CDataManager::OnNewSignals(std::string _signals)
+{
+		
+	JSONNode n(JSON_NODE);
+	n = libjson::parse(_signals);	
+	JSONNode m(JSON_NODE);
+
+	for(size_t i=0; i < m_signals.size(); i++) {
+
+		const char* name = m_signals[i]->GetName();
+		m = ParseJSON(n, name);		
+		m_signals[i]->SetValueFromJSON(m);
+        }
+}
+
+int CDataManager::GetParamInterval()
+{
+	return m_param_interval;
+}
+
+int CDataManager::GetSignalInterval()
+{
+	return m_signal_interval;
+}
+
+void CDataManager::SetParamInterval(int _interval)
+{
+	m_param_interval = _interval;
+}
+
+void CDataManager::SetSignalInterval(int _interval)
+{
+	m_signal_interval = _interval;
+}
+
+extern "C" int ws_set_params(const char * _json_params)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	if(man)
+	{
+		man->OnNewParams(_json_params);
+		dbg_printf("Set params in test scope\n");
+		return 1;
+	}	
+	dbg_printf("Params were not set in test scope\n");
+	return 0;
+}
+
+extern "C" const char * ws_get_params(void)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	static std::string res = "";	
+	if(man)
+	{
+		res = man->GetParamsJson();
+//		dbg_printf("Get params in test scope\n");
+		return res.c_str();
+	}	
+//	dbg_printf("Params were not got in test scope\n");
+	return res.c_str();
+}
+
+extern "C" int ws_set_signals(const char * _json_signals)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	if(man)
+	{
+		man->OnNewSignals(_json_signals);
+		dbg_printf("Set signals in test scope\n");
+		return 1;
+	}	
+	
+	dbg_printf("Signals were not set in test scope\n");	
+	return 0;
+}
+
+extern "C" const char * ws_get_signals(void)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	static std::string res = "";	
+	if(man)
+	{
+		res = man->GetSignalsJson();
+//		dbg_printf("Get signals in test scope\n");
+		return res.c_str();
+	}	
+//	dbg_printf("Signals were not got in test scope\n");
+	return res.c_str();	
+}
+
+extern "C" void ws_set_params_interval(int _interval)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	if(man)
+	{
+		man->SetParamInterval(_interval);
+		dbg_printf("Set params send interval in test scope\n");
+	}
+}
+
+extern "C" int ws_get_params_interval(void)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	if(man)
+	{
+		int res = man->GetParamInterval();
+		return res;
+	}
+	return 0;
+}
+
+extern "C" void ws_set_signals_interval(int _interval)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	if(man)
+	{
+		man->SetSignalInterval(_interval);
+		dbg_printf("Set signals send interval in test scope\n");
+	}
+}
+
+extern "C" int ws_get_signals_interval(void)
+{
+	CDataManager * man = CDataManager::GetInstance();
+	if(man)
+	{
+		int res = man->GetSignalInterval();
+		return res;
+	}
+	return 0;
+}
+
