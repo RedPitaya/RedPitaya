@@ -23,6 +23,8 @@
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"
 #include "cJSON.h"
+#include <ws_server.h>
+
 
 #include <stdlib.h>
 
@@ -66,7 +68,6 @@ bazaar_acts_t bazaar_acts[] = {
 /** Bazaar token string */
 #define c_token_len    256
 char g_token[c_token_len];
-
 
 /*----------------------------------------------------------------------------*/
 /* request private context, used to share data between different callback functions
@@ -374,7 +375,7 @@ int rp_bazaar_help(ngx_http_request_t *r, cJSON **json_root,
                                                       3, r->pool),
                               r->pool);
     }
-
+	
     return rp_module_cmd_ok(json_root, r->pool);
 }
 
@@ -503,6 +504,23 @@ int rp_bazaar_start(ngx_http_request_t *r,
         free(fpga_name);
     if(app_name)
         free(app_name);
+//start web socket server
+    if(rp_module_ctx.app.ws_api_supported)
+    {
+        struct server_parameters params;
+        ngx_memset(&params, 0, sizeof(struct server_parameters));
+
+        params.set_params_interval_func = rp_module_ctx.app.ws_set_params_interval_func;
+        params.set_signals_interval_func = rp_module_ctx.app.ws_set_signals_interval_func;
+        params.get_params_interval_func = rp_module_ctx.app.ws_get_params_interval_func;
+        params.get_signals_interval_func = rp_module_ctx.app.ws_get_signals_interval_func;
+        params.get_params_func = rp_module_ctx.app.ws_get_params_func;
+        params.set_params_func = rp_module_ctx.app.ws_set_params_func;
+        params.get_signals_func = rp_module_ctx.app.ws_get_signals_func;
+        params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
+        fprintf(stderr, "Starting WS-server\n");
+        start_ws_server(&params);
+    }
 
     return rp_module_cmd_ok(json_root, r->pool);
 }
@@ -511,7 +529,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
 int rp_bazaar_stop(ngx_http_request_t *r, 
                    cJSON **json_root, int argc, char **argv)
 {
-    if(argc != 0) {
+	if(rp_module_ctx.app.ws_api_supported)
+		stop_ws_server();
+	
+	if(argc != 0) {
         return rp_module_cmd_error(json_root, 
                                 "Incorrect number of arguments (should be 0)",
                                    NULL, r->pool);

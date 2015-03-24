@@ -35,6 +35,17 @@ const char *c_rp_get_params_str   = "rp_get_params";
 const char *c_rp_set_signals_str  = "rp_set_signals";
 const char *c_rp_get_signals_str  = "rp_get_signals";
 
+//start web socket function str
+
+const char *c_ws_set_params_interval_str  = "ws_set_params_interval";
+const char *c_ws_set_signals_interval_str = "ws_set_signals_interval";
+const char *c_ws_get_params_interval_str  = "ws_get_params_interval";
+const char *c_ws_get_signals_interval_str = "ws_get_signals_interval";
+const char *c_ws_set_params_str   = "ws_set_params";
+const char *c_ws_get_params_str   = "ws_get_params";
+const char *c_ws_set_signals_str  = "ws_set_signals";
+const char *c_ws_get_signals_str  = "ws_get_signals";
+// end web socket function str
 
 /** Get MAC address of a specific NIC via sysfs */
 int rp_bazaar_get_mac(const char* nic, char *mac)
@@ -371,6 +382,64 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     app->get_signals_func = dlsym(app->handle, c_rp_get_signals_str);
     if(!app->get_signals_func)
         return -1;
+//start web socket functionality
+    app->ws_api_supported = 1;
+    app->ws_set_params_interval_func = dlsym(app->handle, c_ws_set_params_interval_str);
+    if(!app->ws_set_params_interval_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_params_interval_str);
+    }
+
+    app->ws_set_signals_interval_func = dlsym(app->handle, c_ws_set_signals_interval_str);
+    if(!app->ws_set_signals_interval_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_signals_interval_str);
+    }
+
+    app->ws_get_params_interval_func = dlsym(app->handle, c_ws_get_params_interval_str);
+    if(!app->ws_get_params_interval_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_params_interval_str);
+    }
+
+    app->ws_get_signals_interval_func = dlsym(app->handle, c_ws_get_signals_interval_str);
+    if(!app->ws_get_signals_interval_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_signals_interval_str);
+    }
+
+    app->ws_set_params_func = dlsym(app->handle, c_ws_set_params_str);
+    if(!app->ws_set_params_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_params_str);
+    }
+
+    app->ws_get_params_func = dlsym(app->handle, c_ws_get_params_str);
+    if(!app->ws_get_params_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_params_str);
+    }
+
+    app->ws_set_signals_func = dlsym(app->handle, c_ws_set_signals_str);
+    if(!app->ws_set_signals_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_signals_str);
+    }
+
+    app->ws_get_signals_func = dlsym(app->handle, c_ws_get_signals_str);
+    if(!app->ws_get_signals_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_signals_str);
+    }
+//end web socket functionality
 
     app->file_name = (char *)malloc(strlen(app_file)+1);
     if(app->file_name == NULL)
