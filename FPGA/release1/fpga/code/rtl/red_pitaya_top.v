@@ -321,12 +321,9 @@ assign sys_ack[6] = {1{1'b1}} ;
 //
 //  House Keeping
 
-wire  [  8-1: 0] exp_p_in     ;
-wire  [  8-1: 0] exp_p_out    ;
-wire  [  8-1: 0] exp_p_dir    ;
-wire  [  8-1: 0] exp_n_in     ;
-wire  [  8-1: 0] exp_n_out    ;
-wire  [  8-1: 0] exp_n_dir    ;
+wire  [  8-1: 0] exp_p_in , exp_n_in ;
+wire  [  8-1: 0] exp_p_out, exp_n_out;
+wire  [  8-1: 0] exp_p_dir, exp_n_dir;
 
 red_pitaya_hk i_hk (
   .clk_i           (  adc_clk                    ),  // clock
@@ -351,8 +348,8 @@ red_pitaya_hk i_hk (
   .sys_ack         (  sys_ack[0]                 )   // acknowledge signal
 );
 
-IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(!exp_p_dir) );
-IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(!exp_n_dir) );
+IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
+IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
 
 //---------------------------------------------------------------------------------
 //
