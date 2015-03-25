@@ -20,7 +20,7 @@ rp_websocket_server::rp_websocket_server()
 {
 }
 
-rp_websocket_server::rp_websocket_server(const struct server_parameters* params)
+rp_websocket_server::rp_websocket_server(struct server_parameters* params)
     : m_params(params) 
 {
     // set up access channels to only log interesting things
@@ -233,7 +233,7 @@ void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg
 
 }
 
-rp_websocket_server* rp_websocket_server::create(const struct server_parameters* params) {
+rp_websocket_server* rp_websocket_server::create(struct server_parameters* params) {
   return new rp_websocket_server(params);
 }
 

@@ -16,17 +16,17 @@ public:
     typedef websocketpp::server<websocketpp::config::asio> server;
     typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
 	
-	rp_websocket_server();
-	rp_websocket_server(const struct server_parameters* params);
-	~rp_websocket_server();
+    rp_websocket_server();
+    rp_websocket_server(struct server_parameters* params);
+    ~rp_websocket_server();
 
-	static rp_websocket_server* create(const struct server_parameters* params);
+    static rp_websocket_server* create(struct server_parameters* params);
 
     void run(std::string docroot, uint16_t port);
 	
-	void start(std::string docroot, uint16_t port);
-	void join();    
-	void stop();   
+    void start(std::string docroot, uint16_t port);
+    void join();    
+    void stop();   
 	
     void set_signal_timer();
     void set_param_timer();
@@ -36,12 +36,12 @@ public:
     void on_http(connection_hdl hdl);
     void on_open(connection_hdl hdl);
     void on_close(connection_hdl hdl);
-	void on_message(connection_hdl hdl, server::message_ptr msg);
+    void on_message(connection_hdl hdl, server::message_ptr msg);
 
 private:
     typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
 	
-	const struct server_parameters* m_params;
+    struct server_parameters* m_params;
     server m_endpoint;
     con_list m_connections;
     server::timer_ptr m_signal_timer;
