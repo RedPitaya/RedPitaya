@@ -16,7 +16,8 @@ public:
 	const char* GetName() const;
 	virtual void Set(const ValueT& _value) = 0; //set the m_Value.value
 
-	const ValueT& Value(); // access the value
+	ValueT& Value(); // access the value
+	const ValueT& Value() const; // access the value
 	const ValueT& NewValue();  //access the value is stored in temp storage
 
 	void Update(); //apply change of value
@@ -64,7 +65,13 @@ inline CParameter<T, ValueT>::CParameter(std::string _name, int _size, const Val
 }
 
 template <typename T, typename ValueT>
-inline const ValueT& CParameter<T, ValueT>::Value() 
+inline ValueT& CParameter<T, ValueT>::Value() 
+{
+	return m_Value.value;
+}
+
+template <typename T, typename ValueT>
+inline const ValueT& CParameter<T, ValueT>::Value() const
 {
 	return m_Value.value;
 }
