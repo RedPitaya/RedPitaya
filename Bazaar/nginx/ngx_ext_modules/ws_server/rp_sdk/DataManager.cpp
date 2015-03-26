@@ -66,7 +66,7 @@ void CDataManager::UpdateAllParams()
 {
 	for(size_t i=0; i < m_params.size(); i++) {
 		m_params[i]->Update();		
-        }
+       }
 }
 
 void CDataManager::UpdateAllSignals()
@@ -85,10 +85,12 @@ std::string CDataManager::GetParamsJson()
 		JSONNode n(JSON_NODE);
 		n = m_params[i]->GetJSONObject();		
 		params.push_back(n);
-
-        }
-//	return params.write_formatted();
-	return params.write();
+	}
+		
+	JSONNode data_node(JSON_NODE);
+	data_node.set_name("data");
+	data_node.push_back(params);
+	return data_node.write();
 }
 
 std::string CDataManager::GetSignalsJson()
@@ -100,10 +102,12 @@ std::string CDataManager::GetSignalsJson()
 		JSONNode n(JSON_NODE);
 		n = m_signals[i]->GetJSONObject();		
 		signals.push_back(n);
-
-        }
-//	return signals.write_formatted();
-	return signals.write();
+	}
+	
+	JSONNode data_node(JSON_NODE);
+	data_node.set_name("data");
+	data_node.push_back(signals);
+	return data_node.write();
 }
 
 JSONNode CDataManager::ParseJSON(const JSONNode & _n, const char * _node_name)
