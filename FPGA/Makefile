@@ -49,4 +49,4 @@ memtest:
 install: memtest
 	cp $(FPGA_BIT) $(INSTALL_DIR)/fpga.bit
 	cp $(DEV_TREE) $(INSTALL_DIR)/devicetree.dts
-	patch $(INSTALL_DIR)/devicetree.dts $(FPGA_DIR)/image/src/device_tree_$(FPGA_TOOL).patch
+	patch $(INSTALL_DIR)/devicetree.dts $(FPGA_DIR)/image/src/device_tree.patch
