@@ -1,5 +1,5 @@
 CXX=arm-xilinx-linux-gnueabi-g++
-CXXFLAGS=-c -Wall -static -std=c++11 -fPIC -I../libjson
+CXXFLAGS=-c -Wall -O3 -static -std=c++11 -fPIC -I../libjson
 SOURCES= DataManager.cpp \
 	../libjson/_internal/Source/internalJSONNode.cpp \
 	../libjson/_internal/Source/JSONChildren.cpp \
