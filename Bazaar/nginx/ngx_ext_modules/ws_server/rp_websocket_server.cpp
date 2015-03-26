@@ -41,6 +41,10 @@ rp_websocket_server::rp_websocket_server(struct server_parameters* params)
     m_out.open("ws_server.log");
     m_endpoint.get_alog().set_ostream(&m_out);
     m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws_server constructor");
+
+    std::stringstream ss;
+    ss << "default params: signal_interval = "<< params->signal_interval <<", param_interval =" << params->param_interval;
+    m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
 }
 
 rp_websocket_server::~rp_websocket_server()
@@ -76,7 +80,7 @@ void rp_websocket_server::run(std::string docroot, uint16_t port) {
 
 void rp_websocket_server::set_signal_timer() {
 	
-	int interval = m_params->get_signals_interval_func != 0 ?  m_params->get_signals_interval_func() : m_params->signal_interval;
+	int interval = m_params->get_signals_interval_func != 0 ? m_params->get_signals_interval_func() : m_params->signal_interval;
 	m_signal_timer = m_endpoint.set_timer(
 		interval,
 		websocketpp::lib::bind(
@@ -110,11 +114,11 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 	con_list::iterator it;
 	const char* signals = m_params->get_signals_func();
 
+//	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "on_signal_timer");
 	static int once = 1;
 	if(once)
 	{
 		once = 0;
-		m_endpoint.get_alog().write(websocketpp::log::alevel::app, "on_signal_timer");
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app, signals);
 	}
 
@@ -137,11 +141,11 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 	con_list::iterator it;
 	const char* params = m_params->get_params_func();
 
+//	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "on_param_timer");
 	static int once = 1;
 	if(once)
 	{
 		once = 0;
-		m_endpoint.get_alog().write(websocketpp::log::alevel::app, "on_param_timer");
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app, params);
 	}
 
@@ -208,6 +212,7 @@ void rp_websocket_server::on_open(connection_hdl hdl)
 }
 
 void rp_websocket_server::on_close(connection_hdl hdl) {
+	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server connection closed");
 	m_connections.erase(hdl);
 }
 
