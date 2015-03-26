@@ -3,29 +3,7 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
 
-/*std::string GenerateFloatArrays()
-{
-	JSONNode n(JSON_NODE);
-	
-	JSONNode c1(JSON_ARRAY);
-	JSONNode c2(JSON_ARRAY);
-	c1.set_name("ArrayOfFloats1");
-	c2.set_name("ArrayOfFloats2");
-	float start_agl = (-1)*M_PI/2;	
-	int array_size = 2048;	
-	for(int i=0; i < array_size; i++)
-	{	
-		float agl = start_agl + M_PI * (float)i / (float)array_size;		
-		float res = sin(agl);
-		c1.push_back(JSONNode("", res));
-		c2.push_back(JSONNode("", res));
-	}
-	n.push_back(c1);
-	n.push_back(c2);	
-	std::string jc = n.write_formatted();
-
- 	return jc;
-}*/
+#include <math.h>
 
 CFloatSignal Signal1("signal1", 2048, 0.f);
 CFloatSignal Signal2("signal2", 2048, 0.f);
@@ -143,7 +121,17 @@ void UpdateParams(void)
 
 void UpdateSignals(void)
 {
-	// do something
+	CDataManager::GetInstance()->SetParamInterval(5000);
+	CDataManager::GetInstance()->SetSignalInterval(1000);
+
+	MyParameter00.Value()++;
+	float start_agl = (-MyParameter00.Value()/1000.f)*M_PI/2.f;
+	int array_size = 2048;
+	for(int i=0; i < array_size; i++)
+	{	
+		float agl = start_agl + M_PI * (float)i / (float)array_size;		
+		Signal1[i] = sin(agl);
+	}
 }
 
 void OnNewParams(void)
