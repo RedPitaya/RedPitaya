@@ -34,3 +34,6 @@ $(LIB): $(OBJECTS)
 $(RP_MANAGER_LIB): 
 	cd $(RP_MANAGER_DIR); ./build.sh
 
+clean: 
+	rm -rf $(LIB) $(OBJECTS)
+	$(MAKE) -C $(RP_MANAGER_DIR) clean

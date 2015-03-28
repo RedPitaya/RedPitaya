@@ -16,8 +16,9 @@ SOURCES= DataManager.cpp \
 	../libjson/_internal/Source/JSONAllocator.cpp \
 	../libjson/_internal/Source/JSONPreparse.cpp \
 	
-OBJDIR=./objs/rp_sdk
-OBJECTS=$(patsubst %.cpp,$(OBJDIR)/%.o, $(SOURCES))
+OBJDIR=./objs
+SDKOBJDIR=$(OBJDIR)/rp_sdk
+OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
 
@@ -30,7 +31,9 @@ $(LIB): $(OBJECTS)
 	rm ../../../../../Applications/rp_sdk/include/*.h
 	cp *.h ../../../../../Applications/rp_sdk/include
 
-$(OBJDIR)/%.o: %.cpp
+$(SDKOBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
+clean:
+	rm -rf $(LIB) $(OBJDIR)

@@ -57,3 +57,4 @@ install:
 clean:
 	-$(MAKE) -C $(NGINX_DIR) clean
 	rm -rf $(DEPLIBS_DIR)
+	-$(MAKE) -C $(WS_SERVER_DIR) clean
