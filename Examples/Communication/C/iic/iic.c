@@ -40,8 +40,8 @@
  
 
 /* Inline functions definition */ 
-static int IicRead(char *readBuffer, int offset, int size);
-static int IicWrite(char *input_array, int offset, int size);
+static int iicRead(char *readBuffer, int offset, int size);
+static int iicWrite(char *input_array, int offset, int size);
  
 /*
  * File descriptors
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     }
 
     /* Write to redpitaya eeprom */
-    Status = IicWrite((char *)msg, offset, size);
+    Status = iicWrite((char *)msg, offset, size);
     if(Status){
         fprintf(stderr, "Cannot Write to EEPROM\n");
         close(fd);
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     }
     
     /* Read from redpitaya eeprom */
-    Status = IicRead(readBuffer, EEPROM_ADDR, EEPROMSIZE);
+    Status = iicRead(readBuffer, EEPROM_ADDR, EEPROMSIZE);
     if (Status)
     {
         printf("Cannot Read from EEPROM \n");
@@ -190,9 +190,9 @@ static int iicWrite(char *input_array, int offset, int size){
             writeBuffer[index + 2] = input_array[index + (PAGESIZE * loop)];
         }
 
-        // Write the bytes onto the bus.
+        /* Write the bytes onto the bus */
         bytesWritten = write(fd, writeBuffer, writeBytes + 2);
-        // Wait till the EEPROM internally completes the write cycle.
+        /* Wait till the EEPROM internally completes the write cycle */
         sleep(2);
 
         if(bytesWritten != writeBytes+2){
@@ -200,12 +200,12 @@ static int iicWrite(char *input_array, int offset, int size){
             return -1;
         }
 
-        //size = written bytes minus the offset addres of two.
+        /* written bytes minus the offset addres of two */
         size -= bytesWritten - 2;
-        //Increment offset
+        /* Increment offset */
         offset += PAGESIZE;
 
-        //Check for limits for the new message
+        /* Check for limits for the new message */
         if(size > PAGESIZE){
             writeBytes = PAGESIZE;
         }else{
