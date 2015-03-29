@@ -82,9 +82,13 @@ std::string CDataManager::GetParamsJson()
 	JSONNode params(JSON_NODE);
 	params.set_name("parameters");
 	for(size_t i=0; i < m_params.size(); i++) {
-		JSONNode n(JSON_NODE);
-		n = m_params[i]->GetJSONObject();		
-		params.push_back(n);
+		if(m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO)
+		{		
+			dbg_printf("AccessMode not WO\n");			
+			JSONNode n(JSON_NODE);
+			n = m_params[i]->GetJSONObject();		
+			params.push_back(n);
+		}
 	}
 		
 	JSONNode data_node(JSON_NODE);
@@ -123,10 +127,12 @@ void CDataManager::OnNewParams(std::string _params)
 	n = libjson::parse(_params);		
 	JSONNode m(JSON_NODE);
 	for(size_t i=0; i < m_params.size(); i++) {
-
-		const char* name = m_params[i]->GetName();
-		m = ParseJSON(n, name);		
-		m_params[i]->SetValueFromJSON(m);
+		if(m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::RO)
+		{					
+			const char* name = m_params[i]->GetName();
+			m = ParseJSON(n, name);		
+			m_params[i]->SetValueFromJSON(m);
+		}
         }
 	::OnNewParams();
 }
