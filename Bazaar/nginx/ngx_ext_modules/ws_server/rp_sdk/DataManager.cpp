@@ -83,8 +83,7 @@ std::string CDataManager::GetParamsJson()
 	params.set_name("parameters");
 	for(size_t i=0; i < m_params.size(); i++) {
 		if(m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO)
-		{		
-			dbg_printf("AccessMode not WO\n");			
+		{					
 			JSONNode n(JSON_NODE);
 			n = m_params[i]->GetJSONObject();		
 			params.push_back(n);
