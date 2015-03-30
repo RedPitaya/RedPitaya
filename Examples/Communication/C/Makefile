@@ -9,7 +9,6 @@
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
-CROSS_COMPILE = arm-linux-gnueabi-
 TARGET = ./executables
 
 #variable definition

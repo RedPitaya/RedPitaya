@@ -148,7 +148,7 @@ $(SDK):
 	$(MAKE) -C $(SDK_DIR) zip
 
 rp_communication:
-	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-linux-gnueabi-
+	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
