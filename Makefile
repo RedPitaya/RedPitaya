@@ -37,6 +37,7 @@ DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
 SDK=sdk
 SDK_DIR=SDK/
+EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -68,7 +69,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(SCPI_SERVER) $(CALIB) $(DISCOVERY) $(ECOSYSTEM)
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(GDBSERVER) sdk rp_communication
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -130,7 +131,7 @@ $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(SCPI_SERVER):
-    $(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
@@ -146,6 +147,9 @@ $(ECOSYSTEM):
 $(SDK):
 	$(MAKE) -C $(SDK_DIR) zip
 
+rp_communication:
+	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-linux-gnueabi-
+
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
@@ -160,6 +164,7 @@ clean:
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
 	make -C $(SDK_DIR) clean
+	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
