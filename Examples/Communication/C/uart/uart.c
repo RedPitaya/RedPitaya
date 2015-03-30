@@ -21,11 +21,11 @@
 /* Inline function definition */
 static int uart_init();
 static int release();
-static int uart_read();
+static int uart_read(int size);
 static int uart_write();
 
 /* File descriptor definition */
-int uart_filestream = -1;
+int uart_fd = -1;
 
 void usage(void){
 
@@ -36,15 +36,15 @@ void usage(void){
 
 static int uart_init(){
 
-	uart_filestream = open("/dev/ttyPS1", O_RDWR | O_NOCTTY | O_NDELAY);
+	uart_fd = open("/dev/ttyPS1", O_RDWR | O_NOCTTY | O_NDELAY);
 
-	if(uart_filestream == -1){
+	if(uart_fd == -1){
 		fprintf(stderr, "Failed to open uart.\n");
 		return -1;
 	}
 
 	struct termios settings;
-	tcgetattr(uart_filestream, &settings);
+	tcgetattr(uart_fd, &settings);
 
 	/*  CONFIGURE THE UART
 	 *  The flags (defined in /usr/include/termios.h - see http://pubs.opengroup.org/onlinepubs/007908799/xsh/termios.h.html):
@@ -58,7 +58,7 @@ static int uart_init(){
 	 *	PARODD - Odd parity (else even) */
 
 	/* Set baud rate - default set to 9600Hz */
-	speed_t baud_rate = B9600;
+	speed_t baud_rate = B1152000;
 
 	/* Baud rate fuctions
 	 * cfsetospeed - Set output speed
@@ -73,38 +73,38 @@ static int uart_init(){
 	settings.c_cflag |= CS8 | CLOCAL; /* 8 bits */
 	settings.c_lflag = ICANON; /* canonical mode */
 	settings.c_oflag &= ~OPOST; /* raw output */
-	settings.c_cc[VMIN] = 1;
-	settings.c_cc[VTIME] = 0;
 	
 	/* Setting attributes */
-	tcflush(uart_filestream, TCIFLUSH);
-	tcsetattr(uart_filestream, TCSANOW, &settings);
+	tcflush(uart_fd, TCIFLUSH);
+	tcsetattr(uart_fd, TCSANOW, &settings);
 
 	return 0;
 }
 
-static int uart_read(){
+static int uart_read(int size){
 
 	/* Read some sample data from RX UART */
 	
 	/* Don't block serial read */
-	fcntl(uart_filestream, F_SETFL, FNDELAY); 
+	fcntl(uart_fd, F_SETFL, FNDELAY); 
 
 	while(1){
-		if(uart_filestream == -1){
+		if(uart_fd == -1){
 			fprintf(stderr, "Failed to read from UART.\n");
 			return -1;
 		}
 
-		unsigned char rx_buffer[256];
+		unsigned char rx_buffer[size];
 
-		int rx_length = read(uart_filestream, (void*)rx_buffer, 255);
+		int rx_length = read(uart_fd, (void*)rx_buffer, size);
 
 		if (rx_length < 0){
 
-			if(EAGAIN == errno){
+			/* No data yet avaliable, check again */
+			if(errno == EAGAIN){
 				fprintf(stderr, "AGAIN!\n");
-				break;
+				continue;
+			/* Error differs */
 			}else{
 				fprintf(stderr, "Error!\n");
 				return -1;
@@ -112,10 +112,11 @@ static int uart_read(){
 
 		}else if (rx_length == 0){
 			fprintf(stderr, "No data waiting\n");
-
+		/* Print data and exit while loop */
 		}else{
 			rx_buffer[rx_length] = '\0';
 			printf("%i bytes read : %s\n", rx_length, rx_buffer);
+			break;
 
 		}
 	}
@@ -123,20 +124,20 @@ static int uart_read(){
 	return 0;
 }
 
-static int uart_write(char *message){
+static int uart_write(char *data){
 
 	/* Write some sample data into UART */
 	/* ----- TX BYTES ----- */
-	int msg_len = strlen(message);
+	int msg_len = strlen(data);
 
 	int count = 0;
 	char tx_buffer[msg_len+1];
 
-	strncpy(tx_buffer, message, msg_len);
+	strncpy(tx_buffer, data, msg_len);
 	tx_buffer[msg_len++] = 0x0a; //New line numerical value
 
-	if(uart_filestream != -1){
-		count = write(uart_filestream, &tx_buffer, (msg_len));
+	if(uart_fd != -1){
+		count = write(uart_fd, &tx_buffer, (msg_len));
 	}
 	if(count < 0){
 		fprintf(stderr, "UART TX error.\n");
@@ -148,15 +149,15 @@ static int uart_write(char *message){
 
 static int release(){
 
-	tcflush(uart_filestream, TCIFLUSH);
-	close(uart_filestream);
+	tcflush(uart_fd, TCIFLUSH);
+	close(uart_fd);
 
 	return 0;
 }
 
 int main(int argc, char *argv[]){
 
-	char *message = "Redpitaya uart test message.";
+	char *data = "HELLO WOLRD!";
 
 	/* uart init */
 	if(uart_init() < 0){
@@ -165,11 +166,13 @@ int main(int argc, char *argv[]){
 	}
 
 	/* Sample write */
-	if(uart_write(message) < 0){
+	if(uart_write(data) < 0){
 		printf("Uart write error\n");
 		return -1;
 	}
-	if(uart_read() < 0){
+
+	/* Sample read */
+	if(uart_read(strlen(data)) < 0){
 		printf("Uart read error\n");
 		return -1;
 	}
