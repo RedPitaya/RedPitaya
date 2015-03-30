@@ -1,44 +1,52 @@
+
 #
+#  Red Pitaya GPIO communication example
+#  Author: Luka Golinar <luka.golinar@gmail.com>
 #
-#  Red Pitaya Api example Makefile
-#
-#
+
+
 # Versioning system
 VERSION ?= 0.00-0000
-
 REVISION ?= devbuild
 
 CROSS_COMPILE = arm-linux-gnueabi-
+TARGET = ./executables
 
-#Define header includes
-RP_PATH_INCLUDE = -I../../api-mockup/rpbase/src/
+#variable definition
+UART_DIR = ./uart
+SPI_DIR = ./spi
+IIC_DIR = ./iic
 
-#Define library includes
-RP_LIB_INCLUDE = -L ../../api-mockup/rpbase/src -lm -lpthread -lrp
+UART = uart/uart_test
+SPI = spi/spi_test
+IIC = iic/iic_test
 
-#Cross compiler definition
-CC = $(CROSS_COMPILE)gcc
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
-#Objects
-OBJECTS = uart.o
-#Target file
-TARGET = api_test
-
-$(TARGET): $(OBJECTS)
-	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE)
-
-%.o: %.c
-	$(CC) -c $(CFLAGS) $(RP_PATH_INCLUDE) $< -o $@
 
 #Build the executable
 all: $(TARGET)
 
+$(TARGET): $(UART) $(IIC) copy
+
+$(UART):
+	make -C $(UART_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+
+#$(SPI):
+#	make -C $(SPI_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+
+$(IIC):
+	make -C $(IIC_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+
+copy:
+	mkdir $(TARGET)
+	cp $(UART_DIR)/uart_test $(TARGET)
+	#cp $(SPI_DIR/spi_test) $(TARGET)
+	cp $(IIC_DIR)/iic_test $(TARGET)
+	@echo SUCCESS!
+
 clean:
-	$(RM) $(TARGET) *.o ~*
-
-
-#  -----Error----- I have no idea what was wrong. 
-#  ../../api-mockup/rpbase/librp.so: file not recognized: File format not recognized
-#
-# 
+	make -C $(UART_DIR) clean
+	#make -C $(SPI_DIR) clean
+	make -C $(IIC_DIR) clean
+	rm -rf $(TARGET)
