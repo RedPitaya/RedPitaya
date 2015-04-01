@@ -13,8 +13,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -49,17 +47,17 @@
  * 
  */
 
-
-
-module red_pitaya_scope
-(
+module red_pitaya_scope #(
+  parameter RSZ = 14  // RAM size 2^RSZ
+)(
    // ADC
-   input      [ 14-1: 0] adc_a_i         ,  //!< ADC data CHA
-   input      [ 14-1: 0] adc_b_i         ,  //!< ADC data CHB
-   input                 adc_clk_i       ,  //!< ADC clock
-   input                 adc_rstn_i      ,  //!< ADC reset - active low
-   input                 trig_ext_i      ,  //!< external trigger
-   input                 trig_asg_i      ,  //!< ASG trigger
+   input                 adc_clk_i       ,  // ADC clock
+   input                 adc_rstn_i      ,  // ADC reset - active low
+   input      [ 14-1: 0] adc_a_i         ,  // ADC data CHA
+   input      [ 14-1: 0] adc_b_i         ,  // ADC data CHB
+   // trigger sources
+   input                 trig_ext_i      ,  // external trigger
+   input                 trig_asg_i      ,  // ASG trigger
 
    // AXI0 master
    output                axi0_clk_o      ,  // global clock
@@ -88,30 +86,18 @@ module red_pitaya_scope
    input                 axi1_rstn_i     ,  // reset from PS
   
    // System bus
-   input                 sys_clk_i       ,  //!< bus clock
-   input                 sys_rstn_i      ,  //!< bus reset - active low
-   input      [ 32-1: 0] sys_addr_i      ,  //!< bus saddress
-   input      [ 32-1: 0] sys_wdata_i     ,  //!< bus write data
-   input      [  4-1: 0] sys_sel_i       ,  //!< bus write byte select
-   input                 sys_wen_i       ,  //!< bus write enable
-   input                 sys_ren_i       ,  //!< bus read enable
-   output     [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
-   output                sys_err_o       ,  //!< bus error indicator
-   output                sys_ack_o          //!< bus acknowledge signal
+   input      [ 32-1: 0] sys_addr      ,  // bus saddress
+   input      [ 32-1: 0] sys_wdata     ,  // bus write data
+   input      [  4-1: 0] sys_sel       ,  // bus write byte select
+   input                 sys_wen       ,  // bus write enable
+   input                 sys_ren       ,  // bus read enable
+   output reg [ 32-1: 0] sys_rdata     ,  // bus read data
+   output reg            sys_err       ,  // bus error indicator
+   output reg            sys_ack          // bus acknowledge signal
 );
 
-
-wire [ 32-1: 0] addr         ;
-wire [ 32-1: 0] wdata        ;
-wire            wen          ;
-wire            ren          ;
-reg  [ 32-1: 0] rdata        ;
-reg             err          ;
-reg             ack          ;
 reg             adc_arm_do   ;
 reg             adc_rst_do   ;
-
-
 
 //---------------------------------------------------------------------------------
 //  Input filtering
@@ -129,18 +115,15 @@ reg  [ 25-1: 0] set_b_filt_bb  ;
 reg  [ 25-1: 0] set_b_filt_kk  ;
 reg  [ 25-1: 0] set_b_filt_pp  ;
 
-
 assign adc_a_filt_in = adc_a_i ;
 assign adc_b_filt_in = adc_b_i ;
 
-red_pitaya_dfilt1 i_dfilt1_cha
-(
+red_pitaya_dfilt1 i_dfilt1_cha (
    // ADC
   .adc_clk_i   ( adc_clk_i       ),  // ADC clock
   .adc_rstn_i  ( adc_rstn_i      ),  // ADC reset - active low
   .adc_dat_i   ( adc_a_filt_in   ),  // ADC data
   .adc_dat_o   ( adc_a_filt_out  ),  // ADC data
-
    // configuration
   .cfg_aa_i    ( set_a_filt_aa   ),  // config AA coefficient
   .cfg_bb_i    ( set_a_filt_bb   ),  // config BB coefficient
@@ -148,24 +131,18 @@ red_pitaya_dfilt1 i_dfilt1_cha
   .cfg_pp_i    ( set_a_filt_pp   )   // config PP coefficient
 );
 
-red_pitaya_dfilt1 i_dfilt1_chb
-(
+red_pitaya_dfilt1 i_dfilt1_chb (
    // ADC
   .adc_clk_i   ( adc_clk_i       ),  // ADC clock
   .adc_rstn_i  ( adc_rstn_i      ),  // ADC reset - active low
   .adc_dat_i   ( adc_b_filt_in   ),  // ADC data
   .adc_dat_o   ( adc_b_filt_out  ),  // ADC data
-
    // configuration
   .cfg_aa_i    ( set_b_filt_aa   ),  // config AA coefficient
   .cfg_bb_i    ( set_b_filt_bb   ),  // config BB coefficient
   .cfg_kk_i    ( set_b_filt_kk   ),  // config KK coefficient
   .cfg_pp_i    ( set_b_filt_pp   )   // config PP coefficient
 );
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //  Decimate input data
@@ -179,53 +156,39 @@ reg  [ 17-1: 0] adc_dec_cnt   ;
 reg             set_avg_en    ;
 reg             adc_dv        ;
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      adc_a_sum   <= 32'h0 ;
-      adc_b_sum   <= 32'h0 ;
-      adc_dec_cnt <= 17'h0 ;
-      adc_dv      <=  1'b0 ;
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   adc_a_sum   <= 32'h0 ;
+   adc_b_sum   <= 32'h0 ;
+   adc_dec_cnt <= 17'h0 ;
+   adc_dv      <=  1'b0 ;
+end else begin
+   if ((adc_dec_cnt >= set_dec) || adc_arm_do) begin // start again or arm
+      adc_dec_cnt <= 17'h1                   ;
+      adc_a_sum   <= $signed(adc_a_filt_out) ;
+      adc_b_sum   <= $signed(adc_b_filt_out) ;
+   end else begin
+      adc_dec_cnt <= adc_dec_cnt + 17'h1 ;
+      adc_a_sum   <= $signed(adc_a_sum) + $signed(adc_a_filt_out) ;
+      adc_b_sum   <= $signed(adc_b_sum) + $signed(adc_b_filt_out) ;
    end
-   else begin
-      if ((adc_dec_cnt >= set_dec) || adc_arm_do) begin // start again or arm
-         adc_dec_cnt <= 17'h1                   ;
-         adc_a_sum   <= $signed(adc_a_filt_out) ;
-         adc_b_sum   <= $signed(adc_b_filt_out) ;
-      end
-      else begin
-         adc_dec_cnt <= adc_dec_cnt + 17'h1 ;
-         adc_a_sum   <= $signed(adc_a_sum) + $signed(adc_a_filt_out) ;
-         adc_b_sum   <= $signed(adc_b_sum) + $signed(adc_b_filt_out) ;
-      end
 
-      adc_dv <= (adc_dec_cnt >= set_dec) ;
+   adc_dv <= (adc_dec_cnt >= set_dec) ;
 
-      case (set_dec & {17{set_avg_en}})
-         17'h0     : begin adc_a_dat <= adc_a_filt_out;            adc_b_dat <= adc_b_filt_out;        end
-         17'h1     : begin adc_a_dat <= adc_a_sum[15+0 :  0];      adc_b_dat <= adc_b_sum[15+0 :  0];  end
-         17'h8     : begin adc_a_dat <= adc_a_sum[15+3 :  3];      adc_b_dat <= adc_b_sum[15+3 :  3];  end
-         17'h40    : begin adc_a_dat <= adc_a_sum[15+6 :  6];      adc_b_dat <= adc_b_sum[15+6 :  6];  end
-         17'h400   : begin adc_a_dat <= adc_a_sum[15+10: 10];      adc_b_dat <= adc_b_sum[15+10: 10];  end
-         17'h2000  : begin adc_a_dat <= adc_a_sum[15+13: 13];      adc_b_dat <= adc_b_sum[15+13: 13];  end
-         17'h10000 : begin adc_a_dat <= adc_a_sum[15+16: 16];      adc_b_dat <= adc_b_sum[15+16: 16];  end
-         default   : begin adc_a_dat <= adc_a_sum[15+0 :  0];      adc_b_dat <= adc_b_sum[15+0 :  0];  end
-      endcase
-
-   end
+   case (set_dec & {17{set_avg_en}})
+      17'h0     : begin adc_a_dat <= adc_a_filt_out;            adc_b_dat <= adc_b_filt_out;        end
+      17'h1     : begin adc_a_dat <= adc_a_sum[15+0 :  0];      adc_b_dat <= adc_b_sum[15+0 :  0];  end
+      17'h8     : begin adc_a_dat <= adc_a_sum[15+3 :  3];      adc_b_dat <= adc_b_sum[15+3 :  3];  end
+      17'h40    : begin adc_a_dat <= adc_a_sum[15+6 :  6];      adc_b_dat <= adc_b_sum[15+6 :  6];  end
+      17'h400   : begin adc_a_dat <= adc_a_sum[15+10: 10];      adc_b_dat <= adc_b_sum[15+10: 10];  end
+      17'h2000  : begin adc_a_dat <= adc_a_sum[15+13: 13];      adc_b_dat <= adc_b_sum[15+13: 13];  end
+      17'h10000 : begin adc_a_dat <= adc_a_sum[15+16: 16];      adc_b_dat <= adc_b_sum[15+16: 16];  end
+      default   : begin adc_a_dat <= adc_a_sum[15+0 :  0];      adc_b_dat <= adc_b_sum[15+0 :  0];  end
+   endcase
 end
-
-
-
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //  ADC buffer RAM
-
-localparam RSZ = 14 ;  // RAM size 2^RSZ
-
 
 reg   [  14-1: 0] adc_a_buf [0:(1<<RSZ)-1] ;
 reg   [  14-1: 0] adc_b_buf [0:(1<<RSZ)-1] ;
@@ -245,7 +208,7 @@ reg   [ RSZ-1: 0] adc_wp_cur    ;
 reg   [  32-1: 0] set_dly       ;
 reg   [  32-1: 0] adc_dly_cnt   ;
 reg               adc_dly_do    ;
-
+reg    [ 20-1: 0] set_deb_len   ; // debouncing length (glitch free time after a posedge)
 
 // Write
 always @(posedge adc_clk_i) begin
@@ -360,7 +323,7 @@ always @(posedge axi0_clk_o) begin
       else if ((axi_a_dly_do && (axi_a_dly_cnt == 32'b0)) || axi_a_clr || adc_arm_do) //delayed reached or reset
          axi_a_dly_do  <= 1'b0 ;
 
-      if (adc_dly_do && axi_a_we && adc_dv)
+      if (axi_a_dly_do && axi_a_we && adc_dv)
          axi_a_dly_cnt <= axi_a_dly_cnt + {32{1'b1}} ; // -1
       else if (!axi_a_dly_do)
          axi_a_dly_cnt <= set_a_axi_dly ;
@@ -476,7 +439,7 @@ always @(posedge axi1_clk_o) begin
       else if ((axi_b_dly_do && (axi_b_dly_cnt == 32'b0)) || axi_b_clr || adc_arm_do) //delayed reached or reset
          axi_b_dly_do  <= 1'b0 ;
 
-      if (adc_dly_do && axi_b_we && adc_dv)
+      if (axi_b_dly_do && axi_b_we && adc_dv)
          axi_b_dly_cnt <= axi_b_dly_cnt + {32{1'b1}} ; // -1
       else if (!axi_b_dly_do)
          axi_b_dly_cnt <= set_b_axi_dly ;
@@ -558,7 +521,6 @@ assign axi1_rstn_o = (adc_rstn_i != 1'b0) && axi1_rstn_i ;
 
 
 //---------------------------------------------------------------------------------
-//
 //  Trigger source selector
 
 reg               adc_trig_ap      ;
@@ -572,45 +534,38 @@ wire              ext_trig_n       ;
 wire              asg_trig_p       ;
 wire              asg_trig_n       ;
 
-
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      adc_arm_do    <= 1'b0 ;
-      adc_rst_do    <= 1'b0 ;
-      adc_trig_sw   <= 1'b0 ;
-      set_trig_src  <= 4'h0 ;
-      adc_trig      <= 1'b0 ;
-   end
-   else begin
-      adc_arm_do  <= wen && (addr[19:0]==20'h0) && wdata[0] ; // SW ARM
-      adc_rst_do  <= wen && (addr[19:0]==20'h0) && wdata[1] ;
-      adc_trig_sw <= wen && (addr[19:0]==20'h4) ; // SW trigger
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   adc_arm_do    <= 1'b0 ;
+   adc_rst_do    <= 1'b0 ;
+   adc_trig_sw   <= 1'b0 ;
+   set_trig_src  <= 4'h0 ;
+   adc_trig      <= 1'b0 ;
+end else begin
+   adc_arm_do  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[0] ; // SW ARM
+   adc_rst_do  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[1] ;
+   adc_trig_sw <= sys_wen && (sys_addr[19:0]==20'h4) && (sys_wdata[3:0]==4'h1); // SW trigger
 
       if (wen && (addr[19:0]==20'h4))
          set_trig_src <= wdata[3:0] ;
       else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
          set_trig_src <= 4'h0 ;
 
-      case (set_trig_src)
-          4'd1 : adc_trig <= adc_trig_sw   ; // manual
-          4'd2 : adc_trig <= adc_trig_ap   ; // A ch rising edge
-          4'd3 : adc_trig <= adc_trig_an   ; // A ch falling edge
-          4'd4 : adc_trig <= adc_trig_bp   ; // B ch rising edge
-          4'd5 : adc_trig <= adc_trig_bn   ; // B ch falling edge
-          4'd6 : adc_trig <= ext_trig_p    ; // external - rising edge
-          4'd7 : adc_trig <= ext_trig_n    ; // external - falling edge
-          4'd8 : adc_trig <= asg_trig_p    ; // ASG - rising edge
-          4'd9 : adc_trig <= asg_trig_n    ; // ASG - falling edge
-       default : adc_trig <= 1'b0          ;
-      endcase
-   end
+   case (set_trig_src)
+       4'd1 : adc_trig <= adc_trig_sw   ; // manual
+       4'd2 : adc_trig <= adc_trig_ap   ; // A ch rising edge
+       4'd3 : adc_trig <= adc_trig_an   ; // A ch falling edge
+       4'd4 : adc_trig <= adc_trig_bp   ; // B ch rising edge
+       4'd5 : adc_trig <= adc_trig_bn   ; // B ch falling edge
+       4'd6 : adc_trig <= ext_trig_p    ; // external - rising edge
+       4'd7 : adc_trig <= ext_trig_n    ; // external - falling edge
+       4'd8 : adc_trig <= asg_trig_p    ; // ASG - rising edge
+       4'd9 : adc_trig <= asg_trig_n    ; // ASG - falling edge
+    default : adc_trig <= 1'b0          ;
+   endcase
 end
 
-
-
-
 //---------------------------------------------------------------------------------
-//
 //  Trigger created from input signal
 
 reg  [  2-1: 0] adc_scht_ap  ;
@@ -626,55 +581,46 @@ reg  [ 14-1: 0] set_b_treshm ;
 reg  [ 14-1: 0] set_a_hyst   ;
 reg  [ 14-1: 0] set_b_hyst   ;
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      adc_scht_ap  <=  2'h0 ;
-      adc_scht_an  <=  2'h0 ;
-      adc_scht_bp  <=  2'h0 ;
-      adc_scht_bn  <=  2'h0 ;
-      adc_trig_ap  <=  1'b0 ;
-      adc_trig_an  <=  1'b0 ;
-      adc_trig_bp  <=  1'b0 ;
-      adc_trig_bn  <=  1'b0 ;
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   adc_scht_ap  <=  2'h0 ;
+   adc_scht_an  <=  2'h0 ;
+   adc_scht_bp  <=  2'h0 ;
+   adc_scht_bn  <=  2'h0 ;
+   adc_trig_ap  <=  1'b0 ;
+   adc_trig_an  <=  1'b0 ;
+   adc_trig_bp  <=  1'b0 ;
+   adc_trig_bn  <=  1'b0 ;
+end else begin
+   set_a_treshp <= set_a_tresh + set_a_hyst ; // calculate positive
+   set_a_treshm <= set_a_tresh - set_a_hyst ; // and negative treshold
+   set_b_treshp <= set_b_tresh + set_b_hyst ;
+   set_b_treshm <= set_b_tresh - set_b_hyst ;
+
+   if (adc_dv) begin
+           if ($signed(adc_a_dat) >= $signed(set_a_tresh ))      adc_scht_ap[0] <= 1'b1 ;  // treshold reached
+      else if ($signed(adc_a_dat) <  $signed(set_a_treshm))      adc_scht_ap[0] <= 1'b0 ;  // wait until it goes under hysteresis
+           if ($signed(adc_a_dat) <= $signed(set_a_tresh ))      adc_scht_an[0] <= 1'b1 ;  // treshold reached
+      else if ($signed(adc_a_dat) >  $signed(set_a_treshp))      adc_scht_an[0] <= 1'b0 ;  // wait until it goes over hysteresis
+
+           if ($signed(adc_b_dat) >= $signed(set_b_tresh ))      adc_scht_bp[0] <= 1'b1 ;
+      else if ($signed(adc_b_dat) <  $signed(set_b_treshm))      adc_scht_bp[0] <= 1'b0 ;
+           if ($signed(adc_b_dat) <= $signed(set_b_tresh ))      adc_scht_bn[0] <= 1'b1 ;
+      else if ($signed(adc_b_dat) >  $signed(set_b_treshp))      adc_scht_bn[0] <= 1'b0 ;
    end
-   else begin
-      set_a_treshp <= set_a_tresh + set_a_hyst ; // calculate positive
-      set_a_treshm <= set_a_tresh - set_a_hyst ; // and negative treshold
-      set_b_treshp <= set_b_tresh + set_b_hyst ;
-      set_b_treshm <= set_b_tresh - set_b_hyst ;
 
-      if (adc_dv) begin
-              if ($signed(adc_a_dat) >= $signed(set_a_tresh ))      adc_scht_ap[0] <= 1'b1 ;  // treshold reached
-         else if ($signed(adc_a_dat) <  $signed(set_a_treshm))      adc_scht_ap[0] <= 1'b0 ;  // wait until it goes under hysteresis
-              if ($signed(adc_a_dat) <= $signed(set_a_tresh ))      adc_scht_an[0] <= 1'b1 ;  // treshold reached
-         else if ($signed(adc_a_dat) >  $signed(set_a_treshp))      adc_scht_an[0] <= 1'b0 ;  // wait until it goes over hysteresis
+   adc_scht_ap[1] <= adc_scht_ap[0] ;
+   adc_scht_an[1] <= adc_scht_an[0] ;
+   adc_scht_bp[1] <= adc_scht_bp[0] ;
+   adc_scht_bn[1] <= adc_scht_bn[0] ;
 
-              if ($signed(adc_b_dat) >= $signed(set_b_tresh ))      adc_scht_bp[0] <= 1'b1 ;
-         else if ($signed(adc_b_dat) <  $signed(set_b_treshm))      adc_scht_bp[0] <= 1'b0 ;
-              if ($signed(adc_b_dat) <= $signed(set_b_tresh ))      adc_scht_bn[0] <= 1'b1 ;
-         else if ($signed(adc_b_dat) >  $signed(set_b_treshp))      adc_scht_bn[0] <= 1'b0 ;
-      end
-
-      adc_scht_ap[1] <= adc_scht_ap[0] ;
-      adc_scht_an[1] <= adc_scht_an[0] ;
-      adc_scht_bp[1] <= adc_scht_bp[0] ;
-      adc_scht_bn[1] <= adc_scht_bn[0] ;
-
-      adc_trig_ap <= adc_scht_ap[0] && !adc_scht_ap[1] ; // make 1 cyc pulse 
-      adc_trig_an <= adc_scht_an[0] && !adc_scht_an[1] ;
-      adc_trig_bp <= adc_scht_bp[0] && !adc_scht_bp[1] ;
-      adc_trig_bn <= adc_scht_bn[0] && !adc_scht_bn[1] ;
-   end
+   adc_trig_ap <= adc_scht_ap[0] && !adc_scht_ap[1] ; // make 1 cyc pulse 
+   adc_trig_an <= adc_scht_an[0] && !adc_scht_an[1] ;
+   adc_trig_bp <= adc_scht_bp[0] && !adc_scht_bp[1] ;
+   adc_trig_bn <= adc_scht_bn[0] && !adc_scht_bn[1] ;
 end
 
-
-
-
-
-
-
 //---------------------------------------------------------------------------------
-//
 //  External trigger
 
 reg  [  3-1: 0] ext_trig_in    ;
@@ -688,234 +634,185 @@ reg  [  2-1: 0] asg_trig_dn    ;
 reg  [ 20-1: 0] asg_trig_debp  ;
 reg  [ 20-1: 0] asg_trig_debn  ;
 
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   ext_trig_in   <=  3'h0 ;
+   ext_trig_dp   <=  2'h0 ;
+   ext_trig_dn   <=  2'h0 ;
+   ext_trig_debp <= 20'h0 ;
+   ext_trig_debn <= 20'h0 ;
+   asg_trig_in   <=  3'h0 ;
+   asg_trig_dp   <=  2'h0 ;
+   asg_trig_dn   <=  2'h0 ;
+   asg_trig_debp <= 20'h0 ;
+   asg_trig_debn <= 20'h0 ;
+end else begin
+   //----------- External trigger
+   // synchronize FFs
+   ext_trig_in <= {ext_trig_in[1:0],trig_ext_i} ;
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      ext_trig_in   <=  3'h0 ;
-      ext_trig_dp   <=  2'h0 ;
-      ext_trig_dn   <=  2'h0 ;
-      ext_trig_debp <= 20'h0 ;
-      ext_trig_debn <= 20'h0 ;
-      asg_trig_in   <=  3'h0 ;
-      asg_trig_dp   <=  2'h0 ;
-      asg_trig_dn   <=  2'h0 ;
-      asg_trig_debp <= 20'h0 ;
-      asg_trig_debn <= 20'h0 ;
-   end
-   else begin
-      //----------- External trigger
-      // synchronize FFs
-      ext_trig_in <= {ext_trig_in[1:0],trig_ext_i} ;
+   // look for input changes
+   if ((ext_trig_debp == 20'h0) && (ext_trig_in[1] && !ext_trig_in[2]))
+      ext_trig_debp <= set_deb_len ; // ~0.5ms
+   else if (ext_trig_debp != 20'h0)
+      ext_trig_debp <= ext_trig_debp - 20'd1 ;
 
-      // look for input changes
-      if ((ext_trig_debp == 20'h0) && (ext_trig_in[1] && !ext_trig_in[2]))
-         ext_trig_debp <= 20'd62500 ; // ~0.5ms
-      else if (ext_trig_debp != 20'h0)
-         ext_trig_debp <= ext_trig_debp - 20'd1 ;
+   if ((ext_trig_debn == 20'h0) && (!ext_trig_in[1] && ext_trig_in[2]))
+      ext_trig_debn <= set_deb_len ; // ~0.5ms
+   else if (ext_trig_debn != 20'h0)
+      ext_trig_debn <= ext_trig_debn - 20'd1 ;
 
-      if ((ext_trig_debn == 20'h0) && (!ext_trig_in[1] && ext_trig_in[2]))
-         ext_trig_debn <= 20'd62500 ; // ~0.5ms
-      else if (ext_trig_debn != 20'h0)
-         ext_trig_debn <= ext_trig_debn - 20'd1 ;
+   // update output values
+   ext_trig_dp[1] <= ext_trig_dp[0] ;
+   if (ext_trig_debp == 20'h0)
+      ext_trig_dp[0] <= ext_trig_in[1] ;
 
-      // update output values
-      ext_trig_dp[1] <= ext_trig_dp[0] ;
-      if (ext_trig_debp == 20'h0)
-         ext_trig_dp[0] <= ext_trig_in[1] ;
+   ext_trig_dn[1] <= ext_trig_dn[0] ;
+   if (ext_trig_debn == 20'h0)
+      ext_trig_dn[0] <= ext_trig_in[1] ;
 
-      ext_trig_dn[1] <= ext_trig_dn[0] ;
-      if (ext_trig_debn == 20'h0)
-         ext_trig_dn[0] <= ext_trig_in[1] ;
+   //----------- ASG trigger
+   // synchronize FFs
+   asg_trig_in <= {asg_trig_in[1:0],trig_asg_i} ;
 
+   // look for input changes
+   if ((asg_trig_debp == 20'h0) && (asg_trig_in[1] && !asg_trig_in[2]))
+      asg_trig_debp <= set_deb_len ; // ~0.5ms
+   else if (asg_trig_debp != 20'h0)
+      asg_trig_debp <= asg_trig_debp - 20'd1 ;
 
+   if ((asg_trig_debn == 20'h0) && (!asg_trig_in[1] && asg_trig_in[2]))
+      asg_trig_debn <= set_deb_len ; // ~0.5ms
+   else if (asg_trig_debn != 20'h0)
+      asg_trig_debn <= asg_trig_debn - 20'd1 ;
 
+   // update output values
+   asg_trig_dp[1] <= asg_trig_dp[0] ;
+   if (asg_trig_debp == 20'h0)
+      asg_trig_dp[0] <= asg_trig_in[1] ;
 
-      //----------- ASG trigger
-      // synchronize FFs
-      asg_trig_in <= {asg_trig_in[1:0],trig_asg_i} ;
-
-      // look for input changes
-      if ((asg_trig_debp == 20'h0) && (asg_trig_in[1] && !asg_trig_in[2]))
-         asg_trig_debp <= 20'd62500 ; // ~0.5ms
-      else if (asg_trig_debp != 20'h0)
-         asg_trig_debp <= asg_trig_debp - 20'd1 ;
-
-      if ((asg_trig_debn == 20'h0) && (!asg_trig_in[1] && asg_trig_in[2]))
-         asg_trig_debn <= 20'd62500 ; // ~0.5ms
-      else if (asg_trig_debn != 20'h0)
-         asg_trig_debn <= asg_trig_debn - 20'd1 ;
-
-      // update output values
-      asg_trig_dp[1] <= asg_trig_dp[0] ;
-      if (asg_trig_debp == 20'h0)
-         asg_trig_dp[0] <= asg_trig_in[1] ;
-
-      asg_trig_dn[1] <= asg_trig_dn[0] ;
-      if (asg_trig_debn == 20'h0)
-         asg_trig_dn[0] <= asg_trig_in[1] ;
-   end
+   asg_trig_dn[1] <= asg_trig_dn[0] ;
+   if (asg_trig_debn == 20'h0)
+      asg_trig_dn[0] <= asg_trig_in[1] ;
 end
-
 
 assign ext_trig_p = (ext_trig_dp == 2'b01) ;
 assign ext_trig_n = (ext_trig_dn == 2'b10) ;
 assign asg_trig_p = (asg_trig_dp == 2'b01) ;
 assign asg_trig_n = (asg_trig_dn == 2'b10) ;
 
-
-
-
-
-
-
-
-
-
 //---------------------------------------------------------------------------------
-//
 //  System bus connection
 
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   set_a_tresh   <=  14'd5000   ;
+   set_b_tresh   <= -14'd5000   ;
+   set_dly       <=  32'd0      ;
+   set_dec       <=  17'd1      ;
+   set_a_hyst    <=  14'd20     ;
+   set_b_hyst    <=  14'd20     ;
+   set_avg_en    <=   1'b1      ;
+   set_a_filt_aa <=  18'h0      ;
+   set_a_filt_bb <=  25'h0      ;
+   set_a_filt_kk <=  25'hFFFFFF ;
+   set_a_filt_pp <=  25'h0      ;
+   set_b_filt_aa <=  18'h0      ;
+   set_b_filt_bb <=  25'h0      ;
+   set_b_filt_kk <=  25'hFFFFFF ;
+   set_b_filt_pp <=  25'h0      ;
+   set_deb_len   <=  20'd62500  ;
+   set_a_axi_en  <=   1'b0      ;
+   set_b_axi_en  <=   1'b0      ;
+end else begin
+   if (sys_wen) begin
+      if (sys_addr[19:0]==20'h08)   set_a_tresh   <= sys_wdata[14-1:0] ;
+      if (sys_addr[19:0]==20'h0C)   set_b_tresh   <= sys_wdata[14-1:0] ;
+      if (sys_addr[19:0]==20'h10)   set_dly       <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h14)   set_dec       <= sys_wdata[17-1:0] ;
+      if (sys_addr[19:0]==20'h20)   set_a_hyst    <= sys_wdata[14-1:0] ;
+      if (sys_addr[19:0]==20'h24)   set_b_hyst    <= sys_wdata[14-1:0] ;
+      if (sys_addr[19:0]==20'h28)   set_avg_en    <= sys_wdata[     0] ;
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      set_a_tresh   <=  14'd5000   ;
-      set_b_tresh   <= -14'd5000   ;
-      set_dly       <=  32'd0      ;
-      set_dec       <=  17'd1      ;
-      set_a_hyst    <=  14'd20     ;
-      set_b_hyst    <=  14'd20     ;
-      set_avg_en    <=   1'b1      ;
-      set_a_filt_aa <=  18'h0      ;
-      set_a_filt_bb <=  25'h0      ;
-      set_a_filt_kk <=  25'hFFFFFF ;
-      set_a_filt_pp <=  25'h0      ;
-      set_b_filt_aa <=  18'h0      ;
-      set_b_filt_bb <=  25'h0      ;
-      set_b_filt_kk <=  25'hFFFFFF ;
-      set_b_filt_pp <=  25'h0      ;
-      set_a_axi_en  <=   1'b0      ;
-      set_b_axi_en  <=   1'b0      ;
-   end
-   else begin
-      if (wen) begin
-         if (addr[19:0]==20'h8)    set_a_tresh <= wdata[14-1:0] ;
-         if (addr[19:0]==20'hC)    set_b_tresh <= wdata[14-1:0] ;
-         if (addr[19:0]==20'h10)   set_dly     <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h14)   set_dec     <= wdata[17-1:0] ;
-         if (addr[19:0]==20'h20)   set_a_hyst  <= wdata[14-1:0] ;
-         if (addr[19:0]==20'h24)   set_b_hyst  <= wdata[14-1:0] ;
-         if (addr[19:0]==20'h28)   set_avg_en  <= wdata[     0] ;
+      if (sys_addr[19:0]==20'h30)   set_a_filt_aa <= sys_wdata[18-1:0] ;
+      if (sys_addr[19:0]==20'h34)   set_a_filt_bb <= sys_wdata[25-1:0] ;
+      if (sys_addr[19:0]==20'h38)   set_a_filt_kk <= sys_wdata[25-1:0] ;
+      if (sys_addr[19:0]==20'h3C)   set_a_filt_pp <= sys_wdata[25-1:0] ;
+      if (sys_addr[19:0]==20'h40)   set_b_filt_aa <= sys_wdata[18-1:0] ;
+      if (sys_addr[19:0]==20'h44)   set_b_filt_bb <= sys_wdata[25-1:0] ;
+      if (sys_addr[19:0]==20'h48)   set_b_filt_kk <= sys_wdata[25-1:0] ;
+      if (sys_addr[19:0]==20'h4C)   set_b_filt_pp <= sys_wdata[25-1:0] ;
 
-         if (addr[19:0]==20'h30)   set_a_filt_aa <= wdata[18-1:0] ;
-         if (addr[19:0]==20'h34)   set_a_filt_bb <= wdata[25-1:0] ;
-         if (addr[19:0]==20'h38)   set_a_filt_kk <= wdata[25-1:0] ;
-         if (addr[19:0]==20'h3C)   set_a_filt_pp <= wdata[25-1:0] ;
-         if (addr[19:0]==20'h40)   set_b_filt_aa <= wdata[18-1:0] ;
-         if (addr[19:0]==20'h44)   set_b_filt_bb <= wdata[25-1:0] ;
-         if (addr[19:0]==20'h48)   set_b_filt_kk <= wdata[25-1:0] ;
-         if (addr[19:0]==20'h4C)   set_b_filt_pp <= wdata[25-1:0] ;
+      if (sys_addr[19:0]==20'h50)   set_a_axi_start <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h54)   set_a_axi_stop  <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h58)   set_a_axi_dly   <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h5C)   set_a_axi_en    <= sys_wdata[     0] ;
 
-         if (addr[19:0]==20'h50)   set_a_axi_start <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h54)   set_a_axi_stop  <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h58)   set_a_axi_dly   <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h5C)   set_a_axi_en    <= wdata[     0] ;
+      if (sys_addr[19:0]==20'h70)   set_b_axi_start <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h74)   set_b_axi_stop  <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h78)   set_b_axi_dly   <= sys_wdata[32-1:0] ;
+      if (sys_addr[19:0]==20'h7C)   set_b_axi_en    <= sys_wdata[     0] ;
 
-         if (addr[19:0]==20'h70)   set_b_axi_start <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h74)   set_b_axi_stop  <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h78)   set_b_axi_dly   <= wdata[32-1:0] ;
-         if (addr[19:0]==20'h7C)   set_b_axi_en    <= wdata[     0] ;
-
-      end
+      if (sys_addr[19:0]==20'h90)   set_deb_len <= sys_wdata[20-1:0] ;
    end
 end
 
+wire sys_en;
+assign sys_en = sys_wen | sys_ren;
 
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   sys_err <= 1'b0 ;
+   sys_ack <= 1'b0 ;
+end else begin
+   sys_err <= 1'b0 ;
 
+   casez (sys_addr[19:0])
+     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, set_trig_src}       ; end 
 
+     20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_a_tresh}        ; end
+     20'h0000C : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_b_tresh}        ; end
+     20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {               set_dly}            ; end
+     20'h00014 : begin sys_ack <= sys_en;          sys_rdata <= {{32-17{1'b0}}, set_dec}            ; end
 
-always @(*) begin
-   err <= 1'b0 ;
+     20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ{1'b0}}, adc_wp_cur}        ; end
+     20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ{1'b0}}, adc_wp_trig}       ; end
 
-   casez (addr[19:0])
-     20'h00004 : begin ack <= 1'b1;          rdata <= {{32- 4{1'b0}}, set_trig_src}       ; end 
+     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_a_hyst}         ; end
+     20'h00024 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_b_hyst}         ; end
 
-     20'h00008 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_a_tresh}        ; end
-     20'h0000C : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_b_tresh}        ; end
-     20'h00010 : begin ack <= 1'b1;          rdata <= {               set_dly}            ; end
-     20'h00014 : begin ack <= 1'b1;          rdata <= {{32-17{1'b0}}, set_dec}            ; end
+     20'h00028 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 1{1'b0}}, set_avg_en}         ; end
 
-     20'h00018 : begin ack <= 1'b1;          rdata <= {{32-RSZ{1'b0}}, adc_wp_cur}        ; end
-     20'h0001C : begin ack <= 1'b1;          rdata <= {{32-RSZ{1'b0}}, adc_wp_trig}       ; end
+     20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32-18{1'b0}}, set_a_filt_aa}      ; end
+     20'h00034 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_bb}      ; end
+     20'h00038 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_kk}      ; end
+     20'h0003C : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_pp}      ; end
+     20'h00040 : begin sys_ack <= sys_en;          sys_rdata <= {{32-18{1'b0}}, set_b_filt_aa}      ; end
+     20'h00044 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_b_filt_bb}      ; end
+     20'h00048 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_b_filt_kk}      ; end
+     20'h0004C : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_b_filt_pp}      ; end
 
-     20'h00020 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_a_hyst}         ; end
-     20'h00024 : begin ack <= 1'b1;          rdata <= {{32-14{1'b0}}, set_b_hyst}         ; end
+     20'h00050 : begin sys_ack <= sys_en;          sys_rdata <=                 set_a_axi_start     ; end
+     20'h00054 : begin sys_ack <= sys_en;          sys_rdata <=                 set_a_axi_stop      ; end
+     20'h00058 : begin sys_ack <= sys_en;          sys_rdata <=                 set_a_axi_dly       ; end
+     20'h0005C : begin sys_ack <= sys_en;          sys_rdata <= {{32- 1{1'b0}}, set_a_axi_en}       ; end
+     20'h00060 : begin sys_ack <= sys_en;          sys_rdata <=                 set_a_axi_trig      ; end
+     20'h00064 : begin sys_ack <= sys_en;          sys_rdata <=                 set_a_axi_cur       ; end
 
-     20'h00028 : begin ack <= 1'b1;          rdata <= {{32- 1{1'b0}}, set_avg_en}         ; end
+     20'h00070 : begin sys_ack <= sys_en;          sys_rdata <=                 set_b_axi_start     ; end
+     20'h00074 : begin sys_ack <= sys_en;          sys_rdata <=                 set_b_axi_stop      ; end
+     20'h00078 : begin sys_ack <= sys_en;          sys_rdata <=                 set_b_axi_dly       ; end
+     20'h0007C : begin sys_ack <= sys_en;          sys_rdata <= {{32- 1{1'b0}}, set_b_axi_en}       ; end
+     20'h00080 : begin sys_ack <= sys_en;          sys_rdata <=                 set_b_axi_trig      ; end
+     20'h00084 : begin sys_ack <= sys_en;          sys_rdata <=                 set_b_axi_cur       ; end
 
-     20'h00030 : begin ack <= 1'b1;          rdata <= {{32-18{1'b0}}, set_a_filt_aa}      ; end
-     20'h00034 : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_a_filt_bb}      ; end
-     20'h00038 : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_a_filt_kk}      ; end
-     20'h0003C : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_a_filt_pp}      ; end
-     20'h00040 : begin ack <= 1'b1;          rdata <= {{32-18{1'b0}}, set_b_filt_aa}      ; end
-     20'h00044 : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_bb}      ; end
-     20'h00048 : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_kk}      ; end
-     20'h0004C : begin ack <= 1'b1;          rdata <= {{32-25{1'b0}}, set_b_filt_pp}      ; end
+     20'h00090 : begin sys_ack <= sys_en;          sys_rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
 
-     20'h00050 : begin ack <= 1'b1;          rdata <=                 set_a_axi_start     ; end
-     20'h00054 : begin ack <= 1'b1;          rdata <=                 set_a_axi_stop      ; end
-     20'h00058 : begin ack <= 1'b1;          rdata <=                 set_a_axi_dly       ; end
-     20'h0005C : begin ack <= 1'b1;          rdata <= {{32- 1{1'b0}}, set_a_axi_en}       ; end
-     20'h00060 : begin ack <= 1'b1;          rdata <=                 set_a_axi_trig      ; end
-     20'h00064 : begin ack <= 1'b1;          rdata <=                 set_a_axi_cur       ; end
+     20'h1???? : begin sys_ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
+     20'h2???? : begin sys_ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
 
-     20'h00070 : begin ack <= 1'b1;          rdata <=                 set_b_axi_start     ; end
-     20'h00074 : begin ack <= 1'b1;          rdata <=                 set_b_axi_stop      ; end
-     20'h00078 : begin ack <= 1'b1;          rdata <=                 set_b_axi_dly       ; end
-     20'h0007C : begin ack <= 1'b1;          rdata <= {{32- 1{1'b0}}, set_b_axi_en}       ; end
-     20'h00080 : begin ack <= 1'b1;          rdata <=                 set_b_axi_trig      ; end
-     20'h00084 : begin ack <= 1'b1;          rdata <=                 set_b_axi_cur       ; end
-
-     20'h1???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
-     20'h2???? : begin ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
-
-       default : begin ack <= 1'b1;          rdata <=  32'h0                              ; end
+       default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                              ; end
    endcase
 end
 
-
-
-
-
-
-// bridge between ADC and sys clock
-bus_clk_bridge i_bridge
-(
-   .sys_clk_i     (  sys_clk_i      ),
-   .sys_rstn_i    (  sys_rstn_i     ),
-   .sys_addr_i    (  sys_addr_i     ),
-   .sys_wdata_i   (  sys_wdata_i    ),
-   .sys_sel_i     (  sys_sel_i      ),
-   .sys_wen_i     (  sys_wen_i      ),
-   .sys_ren_i     (  sys_ren_i      ),
-   .sys_rdata_o   (  sys_rdata_o    ),
-   .sys_err_o     (  sys_err_o      ),
-   .sys_ack_o     (  sys_ack_o      ),
-
-   .clk_i         (  adc_clk_i      ),
-   .rstn_i        (  adc_rstn_i     ),
-   .addr_o        (  addr           ),
-   .wdata_o       (  wdata          ),
-   .wen_o         (  wen            ),
-   .ren_o         (  ren            ),
-   .rdata_i       (  rdata          ),
-   .err_i         (  err            ),
-   .ack_i         (  ack            )
-);
-
-
-
-
-
-
 endmodule
-
