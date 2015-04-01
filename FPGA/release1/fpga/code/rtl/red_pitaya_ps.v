@@ -266,7 +266,7 @@ wire [ 12-1: 0] gp0_maxi_rid         ;
 wire [  2-1: 0] gp0_maxi_bresp       ;
 wire [  2-1: 0] gp0_maxi_rresp       ;
 wire [ 32-1: 0] gp0_maxi_rdata       ;
-wire            gp0_maxi_arstn       ;
+reg             gp0_maxi_arstn       ;
 
 axi_slave #(
   .AXI_DW     (  32     ), // data width (8,16,...,1024)
