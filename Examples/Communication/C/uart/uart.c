@@ -9,6 +9,7 @@
  * for more details on the language used herein.
  */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,13 +27,6 @@ static int uart_write();
 
 /* File descriptor definition */
 int uart_fd = -1;
-
-void usage(void){
-
-	char *usage = "Usage:\n\t-First parameter: Input message to be sent.\n";
-
-    fprintf(stderr, "%s", usage);
-}
 
 static int uart_init(){
 
@@ -58,7 +52,7 @@ static int uart_init(){
 	 *	PARODD - Odd parity (else even) */
 
 	/* Set baud rate - default set to 9600Hz */
-	speed_t baud_rate = B1152000;
+	speed_t baud_rate = B9600;
 
 	/* Baud rate fuctions
 	 * cfsetospeed - Set output speed
