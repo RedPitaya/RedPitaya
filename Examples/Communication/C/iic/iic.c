@@ -1,13 +1,14 @@
-/*****************************************************************************/
-/**
-* @file i2c_test.c
-* This is a sample iic read and write application
-* @author: Luka Golinar <luka.golinar@redpitaya.com>
-*
-*
-******************************************************************************/
- 
-/***************************** Include Files *********************************/
+
+/* @brief This is a simple application for testing IIC communication on a RedPitaya
+ * @Author Luka Golinar <luka.golinar@redpitaya.com>
+ * 
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in C programming language.
+ * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
+ * for more details on the language used herein.
+ */
+
  
 #include <fcntl.h>
 #include <stdio.h>
@@ -20,7 +21,6 @@
 #include <errno.h>
 #include <stdint.h>
  
-/************************** Constant Definitions *****************************/
  
 #define I2C_SLAVE_FORCE 		   0x0706
 #define I2C_SLAVE    			   0x0703    /* Change slave address            */
@@ -40,8 +40,8 @@
  
 
 /* Inline functions definition */ 
-static int iicRead(char *readBuffer, int offset, int size);
-static int iicWrite(char *input_array, int offset, int size);
+static int iic_read(char *buffer, int offset, int size);
+static int iic_write(char *data, int offset, int size);
  
 /*
  * File descriptors
@@ -50,11 +50,13 @@ int fd;
  
 int main(int argc, char *argv[])
 {
-    int Status;
-	char *readBuffer = (char *)malloc(EEPROMSIZE * sizeof(char));    /* Buffer to hold data read.*/
+    int status;
+    
+    /* Read buffer to hold the data */
+	char *buffer = (char *)malloc(EEPROMSIZE * sizeof(char));
 
-    char msg[] = "THIS IS A TEST MESSAGE FOR THE I2C PROTOCOL COMMUNICATION WITH A EEPROM. IT WAS WRITTEN FOR A REDPITAYA MEASURMENT TOOL.";
-    size_t size = strlen(msg);
+    char data[] = "THIS IS A TEST MESSAGE FOR THE I2C PROTOCOL COMMUNICATION WITH A EEPROM. IT WAS WRITTEN FOR A REDPITAYA MEASURMENT TOOL.";
+    size_t size = strlen(data);
 
     /* Sample offset inside an eeprom */
     int offset = 0x100;
@@ -70,24 +72,24 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    Status = ioctl(fd, I2C_SLAVE_FORCE, EEPROM_ADDR);
-    if(Status < 0)
+    status = ioctl(fd, I2C_SLAVE_FORCE, EEPROM_ADDR);
+    if(status < 0)
     {
         printf("Unable to set the EEPROM address\n");
         return -1;
     }
 
     /* Write to redpitaya eeprom */
-    Status = iicWrite((char *)msg, offset, size);
-    if(Status){
+    status = iic_write((char *)data, offset, size);
+    if(status){
         fprintf(stderr, "Cannot Write to EEPROM\n");
         close(fd);
         return -1;
     }
     
     /* Read from redpitaya eeprom */
-    Status = iicRead(readBuffer, EEPROM_ADDR, EEPROMSIZE);
-    if (Status)
+    status = iic_read(buffer, EEPROM_ADDR, EEPROMSIZE);
+    if (status)
     {
         printf("Cannot Read from EEPROM \n");
         close(fd);
@@ -98,42 +100,36 @@ int main(int argc, char *argv[])
     
     /* Release allocations */
     close(fd);
-    free(readBuffer);
+    free(buffer);
 
     return 0;
 }
  
- 
- 
-/*****************************************************************************/
-/**
+/* Read the data from the EEPROM.
 *
-* Read the data from the EEPROM.
+*  @param    read buffer -- input buffer for data storage
+*  @param    off set     -- eeprom memory space offset
+*  @param    size        -- size of read data
+*  @return   iicRead status
 *
-* @param    read buffer -- input buffer for data storage
-* @param    off set     -- eeprom memory space offset
-* @param    size        -- size of read data
-* @return   iicRead status
-*
-* @note     None.
-*
-******************************************************************************/
-static int iicRead(char *readBuffer, int offset, int size)
+*  @note     None. */
+
+static int iic_read(char *buffer, int offset, int size)
 {   
-    ssize_t bytesWritten;
-    ssize_t bytesRead;
-    uint8_t writeBuffer[2];
+    ssize_t bytes_written;
+    ssize_t bytes_read;
+    uint8_t write_buffer[2];
 
     /*
      * Load the offset address inside EEPROM where data need to be written. 
      * Supported for BigEndian and LittleEndian CPU's
      */
-    writeBuffer[0] = (uint8_t)(offset >> 8);
-    writeBuffer[1] = (uint8_t)(offset);
+    write_buffer[0] = (uint8_t)(offset >> 8);
+    write_buffer[1] = (uint8_t)(offset);
 
     /* Write the bytes onto the bus */
-    bytesWritten = write(fd, writeBuffer, 2);
-    if(bytesWritten < 0){
+    bytes_written = write(fd, write_buffer, 2);
+    if(bytes_written < 0){
         fprintf(stderr, "EEPROM write address error.\n");
         return -1;
     }
@@ -144,8 +140,8 @@ static int iicRead(char *readBuffer, int offset, int size)
     printf ("Performing Read operation.\n");
 
     /* Read bytes from the bus */
-    bytesRead = read(fd, readBuffer, size);
-    if(bytesRead < 0){
+    bytes_read = read(fd, buffer, size);
+    if(bytes_read < 0){
         fprintf(stderr, "EEPROM read error.\n");
         return -1;
     }
@@ -156,18 +152,18 @@ static int iicRead(char *readBuffer, int offset, int size)
 }
 
 
-static int iicWrite(char *input_array, int offset, int size){
+static int iic_write(char *data, int offset, int size){
 
     /* variable declaration */
-    int bytesWritten;
-    int writeBytes;
+    int bytes_written;
+    int write_bytes;
     int index;
     
     /* Check for limits */
     if(size > PAGESIZE){
-        writeBytes = PAGESIZE;
+        write_bytes = PAGESIZE;
     }else{
-        writeBytes = size;
+        write_bytes = size;
     }
 
     /* Number of needed loops to send all the data.
@@ -177,39 +173,39 @@ static int iicWrite(char *input_array, int offset, int size){
     while(size > 0){
 
         /* buffer size is PAGESIZE per transmission */
-        uint8_t writeBuffer[32 + 2];
+        uint8_t write_buffer[32 + 2];
 
         /*
          * Load the offset address inside EEPROM where data need to be written. 
          * Supported for BigEndian and LittleEndian CPU's
          */
-        writeBuffer[0] = (uint8_t)(offset >> 8);
-        writeBuffer[1] = (uint8_t)(offset);
+        write_buffer[0] = (uint8_t)(offset >> 8);
+        write_buffer[1] = (uint8_t)(offset);
 
         for(index = 0; index < PAGESIZE; index++){
-            writeBuffer[index + 2] = input_array[index + (PAGESIZE * loop)];
+            write_buffer[index + 2] = data[index + (PAGESIZE * loop)];
         }
 
         /* Write the bytes onto the bus */
-        bytesWritten = write(fd, writeBuffer, writeBytes + 2);
+        bytes_written = write(fd, write_buffer, write_bytes + 2);
         /* Wait till the EEPROM internally completes the write cycle */
         sleep(2);
 
-        if(bytesWritten != writeBytes+2){
+        if(bytes_written != write_bytes+2){
             fprintf(stderr, "Failed to write to EEPROM\n");
             return -1;
         }
 
         /* written bytes minus the offset addres of two */
-        size -= bytesWritten - 2;
+        size -= bytes_written - 2;
         /* Increment offset */
         offset += PAGESIZE;
 
         /* Check for limits for the new message */
         if(size > PAGESIZE){
-            writeBytes = PAGESIZE;
+            write_bytes = PAGESIZE;
         }else{
-            writeBytes = size;
+            write_bytes = size;
         }
 
         loop++;
