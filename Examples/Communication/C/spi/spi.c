@@ -23,7 +23,6 @@
 /* Inline functions definition */
 static int init_spi();
 static int release_spi();
-static int read_spi();
 static int read_flash_id(int fd);
 static int write_spi(char *write_data, int size);
 
@@ -41,22 +40,19 @@ int main(void){
 		return -1;
 	}
 
+	/* Write some sample data */
 	if(write_spi(data, strlen(data)) < 0){
 		printf("Write to SPI failed. Error: %s\n", strerror(errno));
 		return -1;
 	}
 
+	/* Read flash ID and some sample loopback data */
 	if(read_flash_id(spi_fd) < 0){
 		printf("Error reading from SPI bus : %s\n", strerror(errno));
 		return -1;
 	}
 
-	printf("Hello read_spi\n");
-	if(read_spi() < 0){
-		printf("Error reading from SPI bus : %s\n", strerror(errno));
-		return -1;
-	}
-
+	/* Release resources */
 	if(release_spi() < 0){
 		printf("Relase of SPI resources failed, Error: %s\n", strerror(errno));
 		return -1;
@@ -77,7 +73,6 @@ static int init_spi(){
 	 *        mode |= SPI_READY;
 	 *
 	 * multiple possibilities possible using | */
-
 	int mode = 0;
 
 	/* Opening file stream */
@@ -88,11 +83,13 @@ static int init_spi(){
 		return -1;
 	}
 
+	/* Setting mode (CPHA, CPOL) */
 	if(ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0){
 		printf("Error setting SPI_IOC_RD_MODE. Error: %s\n", strerror(errno));
 		return -1;
 	}
 
+	/* Setting SPI bus speed */
 	int spi_speed = 1000000;
 
 	if(ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed) < 0){
@@ -105,37 +102,9 @@ static int init_spi(){
 
 static int release_spi(){
 
-	/* Release resources */
+	/* Release the spi resources */
 	close(spi_fd);
 
-	return 0;
-}
-
-/* Read data from the SPI bus */
-static int read_spi(int fd, int size){
-
-	char		 	buff[32];
-	int 	      	status, i;
-
-	if(size > 32){
-		size = 32;
-	}
-
-	status = read(fd, &buff, size);
-	if(status < size){
-		printf("Error reading SPI. Error: %s\n", strerror(errno));
-		return -1;
-	}
-
-	if(status != size){
-		printf("Short read: %s\n", strerror(errno));
-		return -1;
-	}
-
-	for(i = 0; i < size; i++){
-		printf("Buffer %d = %s\n", i, &buff[i]);
-	}
-	
 	return 0;
 }
 
@@ -170,12 +139,14 @@ static int read_flash_id(int fd){
   	
  	memset(xfer, 0, sizeof xfer);
  	
-	buf0[0] = 0x9f; //RDID command
+ 	/* RDID command */
+	buf0[0] = 0x9f;
+	/* Some sample data */
 	buf1[0] = 0x01;
 	buf1[1] = 0x23;
 	buf1[2] = 0x45;
 
-	/* RDID buffer*/
+	/* RDID buffer */
 	xfer[0].tx_buf = (__u64)((__u32)buf0);
 	xfer[0].rx_buf = (__u64)((__u32)buf0);
 	xfer[0].len = 1;
@@ -212,11 +183,6 @@ static int write_spi(char *write_buffer, int size){
 	if(write_spi < 0){
 		printf("Failed to write to SPI. Error: %s\n", strerror(errno));
 		return -1;
-	}
-
-	int i;
-	for(i = 0; i < size; i++){
-		printf("i: %d | Element at i: %d\n", i, write_buffer[i]);
 	}
 
 	return 0;
