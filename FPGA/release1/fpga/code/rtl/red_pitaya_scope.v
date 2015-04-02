@@ -546,7 +546,7 @@ end else begin
    adc_rst_do  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[1] ;
    adc_trig_sw <= sys_wen && (sys_addr[19:0]==20'h4) && (sys_wdata[3:0]==4'h1); // SW trigger
 
-      if (sys, wen && (sys_addr[19:0]==20'h4))
+      if (sys_wen && (sys_addr[19:0]==20'h4))
          set_trig_src <= sys_wdata[3:0] ;
       else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
          set_trig_src <= 4'h0 ;
