@@ -120,8 +120,8 @@ set_property PACKAGE_PIN P15 [get_ports {dac_pwm_o[2]}]
 set_property PACKAGE_PIN U13 [get_ports {dac_pwm_o[3]}]
 
 ### XADC
-set_property IOSTANDARD LVCMOS33 [get_ports {vinp_i[*]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {vinn_i[*]}]
+set_property IOSTANDARD TMDS_33 [get_ports {vinp_i[*]}]
+set_property IOSTANDARD TMDS_33 [get_ports {vinn_i[*]}]
 set_property LOC XADC_X0Y0 [get_cells i_ams/XADC_inst]
 #AD0
 set_property PACKAGE_PIN C20 [get_ports {vinp_i[0]}]
