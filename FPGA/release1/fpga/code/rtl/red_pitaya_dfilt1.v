@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -21,10 +19,7 @@
  *
  */
 
-
-
-module red_pitaya_dfilt1
-(
+module red_pitaya_dfilt1 (
    // ADC
    input                 adc_clk_i       ,  //!< ADC clock
    input                 adc_rstn_i      ,  //!< ADC reset - active low
@@ -37,8 +32,6 @@ module red_pitaya_dfilt1
    input      [ 25-1: 0] cfg_kk_i        ,  //!< config KK coefficient
    input      [ 25-1: 0] cfg_pp_i           //!< config PP coefficient
 );
-
-
 
 //---------------------------------------------------------------------------------
 //  register configuration - timing improvements
@@ -54,10 +47,6 @@ always @(posedge adc_clk_i) begin
    cfg_kk_r <= cfg_kk_i ;
    cfg_pp_r <= cfg_pp_i ;
 end
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //  FIR
@@ -88,8 +77,6 @@ always @(posedge adc_clk_i) begin
    end
 end
 
-
-
 //---------------------------------------------------------------------------------
 //  IIR 1
 
@@ -110,8 +97,6 @@ always @(posedge adc_clk_i) begin
    end
 end
 
-
-
 //---------------------------------------------------------------------------------
 //  IIR 2
 
@@ -119,7 +104,6 @@ wire [ 40-1: 0] pp_mult   ;
 wire [ 16-1: 0] r4_sum    ;
 reg  [ 15-1: 0] r4_reg    ;
 reg  [ 15-1: 0] r3_shr    ;
-
 
 assign pp_mult = $signed(r4_reg) * $signed(cfg_pp_r);
 assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
@@ -135,9 +119,6 @@ always @(posedge adc_clk_i) begin
    end
 end
 
-
-
-
 //---------------------------------------------------------------------------------
 //  Scaling
 
@@ -145,7 +126,6 @@ wire [ 40-1: 0] kk_mult   ;
 reg  [ 15-1: 0] r4_reg_r  ;
 reg  [ 15-1: 0] r4_reg_rr ;
 reg  [ 14-1: 0] r5_reg    ;
-
 
 assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk_r);
 
@@ -170,9 +150,4 @@ end
 
 assign adc_dat_o = r5_reg ;
 
-
-
-
-
 endmodule
-
