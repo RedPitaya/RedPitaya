@@ -268,12 +268,12 @@ always @(posedge adc_clk_i) begin
    if (adc_rstn_i == 1'b0)
       adc_rval <= 4'h0 ;
    else
-      adc_rval <= {adc_rval[2:0], (ren || wen)};
+      adc_rval <= {adc_rval[2:0], (sys_ren || sys_wen)};
 end
 assign adc_rd_dv = adc_rval[3];
 
 always @(posedge adc_clk_i) begin
-   adc_raddr   <= addr[RSZ+1:2] ; // address synchronous to clock
+   adc_raddr   <= sys_addr[RSZ+1:2] ; // address synchronous to clock
    adc_a_raddr <= adc_raddr     ; // double register 
    adc_b_raddr <= adc_raddr     ; // otherwise memory corruption at reading
    adc_a_rd    <= adc_a_buf[adc_a_raddr] ;
@@ -546,8 +546,8 @@ end else begin
    adc_rst_do  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[1] ;
    adc_trig_sw <= sys_wen && (sys_addr[19:0]==20'h4) && (sys_wdata[3:0]==4'h1); // SW trigger
 
-      if (wen && (addr[19:0]==20'h4))
-         set_trig_src <= wdata[3:0] ;
+      if (sys_wen && (sys_addr[19:0]==20'h4))
+         set_trig_src <= sys_wdata[3:0] ;
       else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
          set_trig_src <= 4'h0 ;
 
@@ -808,8 +808,8 @@ end else begin
 
      20'h00090 : begin sys_ack <= sys_en;          sys_rdata <= {{32-20{1'b0}}, set_deb_len}        ; end
 
-     20'h1???? : begin sys_ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
-     20'h2???? : begin sys_ack <= adc_rd_dv;     rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
+     20'h1???? : begin sys_ack <= adc_rd_dv;       sys_rdata <= {16'h0, 2'h0,adc_a_rd}              ; end
+     20'h2???? : begin sys_ack <= adc_rd_dv;       sys_rdata <= {16'h0, 2'h0,adc_b_rd}              ; end
 
        default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                              ; end
    endcase
