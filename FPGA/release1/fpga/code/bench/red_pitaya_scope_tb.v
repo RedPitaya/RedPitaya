@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -25,14 +23,9 @@
  * 
  */
 
-
-
 `timescale 1ns / 1ps
 
-module red_pitaya_scope_tb(
-);
-
-
+module red_pitaya_scope_tb();
 
 reg   [ 14-1: 0] adc_a           ;
 reg   [ 14-1: 0] adc_b           ;
@@ -52,7 +45,6 @@ wire  [ 32-1: 0] sys_rdata       ;
 wire             sys_err         ;
 wire             sys_ack         ;
 
-
 sys_bus_model i_bus
 (
   .sys_clk_i      (  sys_clk      ),
@@ -66,8 +58,6 @@ sys_bus_model i_bus
   .sys_err_i      (  sys_err      ),
   .sys_ack_i      (  sys_ack      ) 
 );
-
-
 
 red_pitaya_scope i_scope
 (
@@ -118,10 +108,6 @@ red_pitaya_scope i_scope
   .sys_ack_o       (  sys_ack       )   // acknowledge signal
 );
 
-
-
-
-
 //---------------------------------------------------------------------------------
 //
 // signal generation
@@ -138,7 +124,6 @@ always begin
    #4.9  sys_clk <= !sys_clk ;
 end
 
-
 // ADC clock & reset
 initial begin
    adc_clk  <= 1'b0  ;
@@ -150,9 +135,6 @@ end
 always begin
    #4  adc_clk <= !adc_clk ;
 end
-
-
-
 
 // ADC simple signal generation
 initial begin
@@ -169,9 +151,6 @@ always @(posedge adc_clk) begin
 
    if (adc_b_dir) adc_b <= adc_b + 14'h5 ; else adc_b <= adc_b - 14'h5 ;
 end
-
-
-
 
 // External trigger
 initial begin
@@ -194,7 +173,6 @@ initial begin
    repeat(10000) @(posedge sys_clk);
    trig_ext <= !trig_ext ;
 
-
    repeat(100000) @(posedge sys_clk);
    trig_ext <= !trig_ext ;
    repeat(10000) @(posedge sys_clk);
@@ -203,7 +181,6 @@ initial begin
    trig_ext <= !trig_ext ;
    repeat(10000) @(posedge sys_clk);
    trig_ext <= !trig_ext ;
-
 
    repeat(100000) @(posedge sys_clk);
    trig_ext <= !trig_ext ;
@@ -214,13 +191,6 @@ initial begin
    repeat(100000) @(posedge sys_clk);
    trig_ext <= !trig_ext ;
 end
-
-
-
-
-
-
-
 
 // State machine programming
 initial begin
@@ -243,8 +213,6 @@ initial begin
    i_bus.bus_write(32'h78,32'd900);    // a_axi_dly
    i_bus.bus_write(32'h7C,32'd1);     // a_axi_en
 
-
-
    i_bus.bus_write(32'h0,32'h1);  // start aquisition
    repeat(800) @(posedge sys_clk);
    i_bus.bus_write(32'h4,32'h1);  // do trigger
@@ -258,8 +226,6 @@ initial begin
    repeat(100000) @(posedge sys_clk);
    i_bus.bus_write(32'h4,32'h5);  // do trigger
 
-
-
    repeat(20000) @(posedge adc_clk);
    repeat(1) @(posedge sys_clk);
    i_bus.bus_read(32'h10000);  // read value from memory
@@ -268,8 +234,4 @@ initial begin
    i_bus.bus_read(32'h20004);  // read value from memory
 end
 
-
-
-
 endmodule
-
