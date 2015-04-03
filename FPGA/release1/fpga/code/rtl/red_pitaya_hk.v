@@ -28,12 +28,7 @@
  * 
  */
 
-
-
-
-
-module red_pitaya_hk
-(
+module red_pitaya_hk (
    input                 clk_i           ,  //!< clock
    input                 rstn_i          ,  //!< reset - active low
 
@@ -48,22 +43,15 @@ module red_pitaya_hk
    output reg [  8-1: 0] exp_n_dir_o     ,  //!<
 
    // System bus
-   input                 sys_clk_i       ,  //!< bus clock
-   input                 sys_rstn_i      ,  //!< bus reset - active low
-   input      [ 32-1: 0] sys_addr_i      ,  //!< bus address
-   input      [ 32-1: 0] sys_wdata_i     ,  //!< bus write data
-   input      [  4-1: 0] sys_sel_i       ,  //!< bus write byte select
-   input                 sys_wen_i       ,  //!< bus write enable
-   input                 sys_ren_i       ,  //!< bus read enable
-   output reg [ 32-1: 0] sys_rdata_o     ,  //!< bus read data
-   output reg            sys_err_o       ,  //!< bus error indicator
-   output reg            sys_ack_o          //!< bus acknowledge signal
-
+   input      [ 32-1: 0] sys_addr      ,  //!< bus address
+   input      [ 32-1: 0] sys_wdata     ,  //!< bus write data
+   input      [  4-1: 0] sys_sel       ,  //!< bus write byte select
+   input                 sys_wen       ,  //!< bus write enable
+   input                 sys_ren       ,  //!< bus read enable
+   output reg [ 32-1: 0] sys_rdata     ,  //!< bus read data
+   output reg            sys_err       ,  //!< bus error indicator
+   output reg            sys_ack          //!< bus acknowledge signal
 );
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -100,13 +88,6 @@ always @(posedge clk_i) begin
    end
 end
     
-
-
-
-
-
-
-
 //---------------------------------------------------------------------------------
 //
 //  Testing logic
@@ -126,14 +107,7 @@ always @(posedge clk_i) begin
    end
 end
 
-
 assign led_o = led_reg ; //shift_led_reg;
-
-
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -147,8 +121,8 @@ reg  [ 9-1: 0] dna_cnt   ;
 reg  [57-1: 0] dna_value ;
 reg            dna_done  ;
 
-always @(posedge sys_clk_i) begin
-   if (sys_rstn_i == 1'b0) begin
+always @(posedge clk_i) begin
+   if (rstn_i == 1'b0) begin
       dna_clk   <=  1'b0 ;
       dna_read  <=  1'b0 ;
       dna_shift <=  1'b0 ;
@@ -173,22 +147,14 @@ always @(posedge sys_clk_i) begin
    end
 end
 
-
-
-
 DNA_PORT #( .SIM_DNA_VALUE(57'h0823456789ABCDE) ) // Specifies a sample 57-bit DNA value for simulation
-i_DNA 
-(
+i_DNA (
   .DOUT  ( dna_dout   ), // 1-bit output: DNA output data.
   .CLK   ( dna_clk    ), // 1-bit input: Clock input.
   .DIN   ( 1'b0       ), // 1-bit input: User data input pin.
   .READ  ( dna_read   ), // 1-bit input: Active high load DNA, active low read input.
   .SHIFT ( dna_shift  )  // 1-bit input: Active high shift enable input.
 );
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -199,15 +165,13 @@ wire [32-1: 0] id_value ;
 assign id_value[31: 4] = 28'h0 ; // reserved
 assign id_value[ 3: 0] =  4'h1 ; // board type   1-release1
 
-
-
 //---------------------------------------------------------------------------------
 //
 //  System bus connection
 
 
-always @(posedge sys_clk_i) begin
-   if (sys_rstn_i == 1'b0) begin
+always @(posedge clk_i) begin
+   if (rstn_i == 1'b0) begin
       led_reg[7:1] <= 7'h0 ;
       exp_p_dat_o  <= 8'h0 ;
       exp_p_dir_o  <= 8'h0 ;
@@ -215,55 +179,43 @@ always @(posedge sys_clk_i) begin
       exp_n_dir_o  <= 8'h0 ;
    end
    else begin
-      if (sys_wen_i) begin
-         if (sys_addr_i[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata_i[8-1:0] ;
-         if (sys_addr_i[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata_i[8-1:0] ;
-         if (sys_addr_i[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata_i[8-1:0] ;
-         if (sys_addr_i[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata_i[8-1:0] ;
+      if (sys_wen) begin
+         if (sys_addr[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata[8-1:0] ;
+         if (sys_addr[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata[8-1:0] ;
+         if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[8-1:0] ;
+         if (sys_addr[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata[8-1:0] ;
 
-         if (sys_addr_i[19:0]==20'h30)   led_reg[7:1] <= sys_wdata_i[8-1:1] ;
+         if (sys_addr[19:0]==20'h30)   led_reg[7:1] <= sys_wdata[8-1:1] ;
       end
    end
 end
 
+wire sys_en;
+assign sys_en = sys_wen | sys_ren;
 
+always @(posedge clk_i)
+if (rstn_i == 1'b0) begin
+   sys_err <= 1'b0 ;
+   sys_ack <= 1'b0 ;
+end else begin
+   sys_err <= 1'b0 ;
 
+   casez (sys_addr[19:0])
+     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {               id_value  }                          ; end
+     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {               dna_value[31: 0] }                   ; end
+     20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, dna_value[56:32] }                   ; end
 
+     20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dir_o }                        ; end
+     20'h00014 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dir_o }                        ; end
+     20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_o }                        ; end
+     20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_o }                        ; end
+     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_i }                        ; end
+     20'h00024 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_i }                        ; end
 
-always @(*) begin
-   sys_err_o <= 1'b0 ;
+     20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, led_reg[7:1], 1'b0 }                 ; end
 
-   casez (sys_addr_i[19:0])
-     20'h00000 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {               id_value  }                          ; end
-     20'h00004 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {               dna_value[31: 0] }                   ; end
-     20'h00008 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32-25{1'b0}}, dna_value[56:32] }                   ; end
-
-     20'h00010 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, exp_p_dir_o }                        ; end
-     20'h00014 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, exp_n_dir_o }                        ; end
-     20'h00018 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, exp_p_dat_o }                        ; end
-     20'h0001C : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, exp_n_dat_o }                        ; end
-     20'h00020 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, exp_p_dat_i }                        ; end
-     20'h00024 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, exp_n_dat_i }                        ; end
-
-     20'h00030 : begin sys_ack_o <= 1'b1;          sys_rdata_o <= {{32- 8{1'b0}}, led_reg[7:1], 1'b0 }                 ; end
-
-       default : begin sys_ack_o <= 1'b1;          sys_rdata_o <=  32'h0                                               ; end
+       default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                                               ; end
    endcase
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 endmodule
-
