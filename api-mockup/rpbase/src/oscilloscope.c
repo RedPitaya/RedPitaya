@@ -173,6 +173,86 @@ typedef struct osc_control_s {
      */
     uint32_t chb_filt_pp;
 
+    /** @brief ChA AXI lower address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t cha_axi_low;
+
+    /** @brief ChA AXI High address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t cha_axi_high;
+
+    /** @brief ChA AXI delay after trigger
+    * bits [31:0] - Number of decimated data 
+    * after trig written into memory
+    */
+    uint32_t cha_trig_delay;
+
+    /**@brief ChB AXI enable master
+    * bits [0] Enable AXI master
+    * bits [31:0] reserved
+    */
+    uint32_t cha_enable_axi_m;
+
+    /**@brief ChA AXI write pointer trigger
+    * Write pointer at time the trigger arrived
+    */
+    uint32_t cha_w_ptr_trig;
+
+    /**@brief ChA AXI write pointer current
+    * Current write pointer
+    */
+    uint32_t cha_w_ptr_curr;
+
+    /* Reserved 0x68 & 0x6C */
+    uint32_t reserved_2;
+    uint32_t reserved_3;
+
+    /** @brief ChB AXI lower address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t chb_axi_low;
+
+    /** @brief ChB AXI High address
+    * bits [31:0] - starting writing address
+    */
+    uint32_t chb_axi_high;
+
+    /** @brief ChB AXI delay after trigger
+    * bits [31:0] - Number of decimated data 
+    * after trig written into memory
+    */
+    uint32_t chb_trig_delay;
+
+    /**@brief ChB AXI enable master
+    * bits [0] Enable AXI master
+    * bits [31:0] reserved
+    */
+    uint32_t chb_enable_axi_m;
+
+    /**@brief ChB AXI write pointer trigger
+    * Write pointer at time the trigger arrived
+    */
+    uint32_t chb_w_ptr_trig;
+
+    /**@brief ChB AXI write pointer current
+    * Current write pointer
+    */
+    uint32_t chb_w_ptr_curr;
+
+    /* Reserved 0x88 & 0x8C */
+    uint32_t reserved_4;
+    uint32_t reserved_5;
+
+    /**@brief Trigger debuncer time
+    * bits [19:0] Number of ADC clock periods 
+    * trigger is disabled after activation
+    * reset value is decimal 62500 
+    * or equivalent to 0.5ms
+    */
+    uint32_t trig_dbc_t;
+
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
 } osc_control_t;
@@ -184,21 +264,21 @@ static volatile osc_control_t *osc_reg = NULL;
 // The FPGA input signal buffer pointer for channel A
 static volatile uint32_t *osc_cha = NULL;
 
-// The FPGA input signal buffer pointer for channel B */
+// The FPGA input signal buffer pointer for channel B
 static volatile uint32_t *osc_chb = NULL;
 
 
-static const uint32_t DATA_DEC_MASK = 0x1FFFF;      // (17 bits)
-static const uint32_t DATA_AVG_MASK = 0x1;          // (1 bit)
-static const uint32_t TRIG_SRC_MASK = 0xF;          // (4 bits)
-static const uint32_t START_DATA_WRITE_MASK = 0x1;  // (1 bit)
-static const uint32_t THRESHOLD_MASK = 0x3FFF;      // (14 bits)
-static const uint32_t HYSTERESIS_MASK = 0x3FFF;     // (14 bits)
-static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF; // (32 bits)
-static const uint32_t WRITE_POINTER_MASK = 0x3FFF;  // (14 bits)
-static const uint32_t EQ_FILTER_AA = 0x3FFFF;       // (18 bits)
-static const uint32_t EQ_FILTER   = 0x1FFFFFF;      // (25 bits)
-static const uint32_t RST_WR_ST_MCH_MASK = 0x2;     // (1st bit)
+static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
+static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
+static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
+static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
+static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
+static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
+static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
+static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
+static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
+static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
+static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
 
 
 /**
