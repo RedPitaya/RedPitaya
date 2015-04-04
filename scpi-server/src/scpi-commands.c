@@ -135,6 +135,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ANALOG:PIN?", .callback = RP_AnalogPinGetValue,},
 
         /* Acquire */
+        {.pattern = "ACQ:DATA:FORMAT", .callback = RP_AcqSetDataFormat,},
         {.pattern = "ACQ:START", .callback = RP_AcqStart,},
         {.pattern = "ACQ:RST", .callback = RP_AcqReset,},
         {.pattern = "ACQ:DEC", .callback = RP_AcqSetDecimation,},

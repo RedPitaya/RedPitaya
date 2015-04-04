@@ -209,6 +209,7 @@ extern "C" {
         scpi_param_list_t paramlist;
         scpi_interface_t * interface;
         int_fast16_t output_count;
+        int_fast16_t output_binary_count;
         int_fast16_t input_count;
         scpi_bool_t cmd_error;
         scpi_error_queue_t error_queue;
@@ -217,6 +218,7 @@ extern "C" {
         const scpi_special_number_def_t * special_numbers;
         void * user_context;
         const char * idn[4];
+        bool binary_output;
     };
 
 #ifdef  __cplusplus

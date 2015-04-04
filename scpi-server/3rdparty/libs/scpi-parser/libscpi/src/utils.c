@@ -48,6 +48,20 @@ static size_t patternSeparatorPos(const char * pattern, size_t len);
 static size_t cmdSeparatorPos(const char * cmd, size_t len);
 
 /**
+ * Converts the float from host byte order to network byte order.
+ * @param value
+ * @return
+ */
+float hton_f(float value) {
+    union {float f; unsigned int  i;}val;
+
+    val.f = value;
+
+    val.i = htonl(val.i);
+    return val.f;
+};
+
+/**
  * Find the first occurrence in str of a character in set.
  * @param str
  * @param size
@@ -123,6 +137,18 @@ size_t doubleToStr(double val, char * str, size_t len) {
 size_t strToLong(const char * str, int32_t * val) {
     char * endptr;
     *val = strtol(str, &endptr, 0);
+    return endptr - str;
+}
+
+/**
+ * Converts string to signed 32bit integer representation
+ * @param str   string value
+ * @param val   32bit integer result
+ * @return      number of bytes used in string
+ */
+size_t strToLongLong(const char * str, int64_t * val) {
+    char * endptr;
+    *val = strtoll(str, &endptr, 0);
     return endptr - str;
 }
 
