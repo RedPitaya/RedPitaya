@@ -26,6 +26,33 @@ rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 rp_scpi_acq_format_t format = RP_SCPI_FLAOT;        // default value
 
 
+scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
+    const char * param;
+    size_t param_len;
+
+    // read first parameter Format type (BIN, ASCII)
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+        syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    if (strcasecmp(param, "BIN") == 0) {
+        context->binary_output = true;
+        syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to BIN");
+    }
+    else if (strcasecmp(param, "ASCII") == 0) {
+        context->binary_output = false;
+        syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to ASCII");
+    }
+    else {
+        syslog(LOG_ERR, "*ACQ:DATA:FORMAT wrong argument value");
+        return SCPI_RES_ERR;
+    }
+
+    return SCPI_RES_OK;
+}
+
+
 scpi_result_t RP_AcqStart(scpi_t *context) {
     int result = rp_AcqStart();
 

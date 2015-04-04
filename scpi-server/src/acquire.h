@@ -30,6 +30,7 @@ typedef enum {
 
 int RP_AcqSetDefaultValues();
 
+scpi_result_t RP_AcqSetDataFormat(scpi_t *context);
 scpi_result_t RP_AcqStart(scpi_t * context);
 scpi_result_t RP_AcqReset(scpi_t * context);
 scpi_result_t RP_AcqSetDecimation(scpi_t * context);
