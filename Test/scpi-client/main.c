@@ -30,9 +30,11 @@ int main(int argc, char *argv[])
     char recvBuff[1024];
     struct sockaddr_in serv_addr; 
 
-    if(argc != 3)
+    if(argc != 3 && argc != 4)
     {
-        printf("\n Usage: %s <ip of server> <SCPI command> \n",argv[0]);
+        printf("\n Usage: %s <ip of server> <SCPI command> <argument>\n",argv[0]);
+        printf("\t Arguments:\n");
+        printf("\t\t -b Binary mode\n");
         return 1;
     } 
 
@@ -60,6 +62,16 @@ int main(int argc, char *argv[])
        return 1;
     } 
 
+    if (argc == 4 && strcmp(argv[3], "-b") == 0)
+    {
+        // Switch to bin mode
+        strcpy(recvBuff, "ACQ:DATA:FORMAT BIN\r\n");
+
+        if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
+            perror("send");
+        }
+    }
+
     strcpy(recvBuff, argv[2]);
     strcat(recvBuff, "\r\n");
     if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
@@ -68,7 +80,7 @@ int main(int argc, char *argv[])
 
 
    printf("Sent message %s\n", recvBuff	);	
- fputs("Received: ", stdout);
+   fputs("Received: ", stdout);
    fflush(stdout);
 
 
