@@ -23,11 +23,6 @@ typedef enum {
     RP_SCPI_RAW,
 } rp_scpi_acq_unit_t;
 
-typedef enum {
-    RP_SCPI_FLAOT,
-    RP_SCPI_ADCII,
-} rp_scpi_acq_format_t;
-
 int RP_AcqSetDefaultValues();
 
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context);
