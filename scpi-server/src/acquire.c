@@ -23,8 +23,6 @@
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
-rp_scpi_acq_format_t format = RP_SCPI_FLAOT;        // default value
-
 
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     const char * param;
@@ -74,7 +72,7 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     }
 
     unit = RP_SCPI_VOLTS;
-    format = RP_SCPI_FLAOT;
+    context->binary_output = false;
 
     syslog(LOG_INFO, "*ACQ:RST Successful.");
     return SCPI_RES_OK;
@@ -502,33 +500,6 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*ACQ:DATA:UNITS Successfully set unit to %s.", unitString);
-
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_AcqScpiDataFormat(scpi_t *context) {
-    const char * param;
-    size_t param_len;
-
-    char formatString[10];
-
-    // read first parameter UNITS (ASCII, FLOAT)
-    if (!SCPI_ParamString(context,  &param, &param_len, false)) {
-        syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-    else {
-        strncpy(formatString, param, param_len);
-        formatString[param_len] = '\0';
-    }
-
-    int result = getRpFormat(formatString, &format);
-    if (result != RP_OK) {
-        syslog(LOG_ERR, "*ACQ:DATA:FORMAT Failed to convert format from string: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*ACQ:DATA:FORMAT Successfully set format to %s.", formatString);
 
     return SCPI_RES_OK;
 }
