@@ -36,11 +36,11 @@ scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    if (strcasecmp(param, "BIN") == 0) {
+    if (strncasecmp(param, "BIN", param_len) == 0) {
         context->binary_output = true;
         syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to BIN");
     }
-    else if (strcasecmp(param, "ASCII") == 0) {
+    else if (strncasecmp(param, "ASCII", param_len) == 0) {
         context->binary_output = false;
         syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to ASCII");
     }
