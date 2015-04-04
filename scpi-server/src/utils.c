@@ -331,19 +331,6 @@ int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit) {
 	return RP_OK;
 }
 
-int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format) {
-	if (strcmp(formatString, "FLOAT") == 0) {
-		*format = RP_SCPI_FLAOT;
-	}
-	else if (strcmp(formatString, "ASCII") == 0) {
-		*format = RP_SCPI_ADCII;
-	}
-	else {
-		return RP_EOOR;
-	}
-	return RP_OK;
-}
-
 int getRpWaveform(const char *waveformString, rp_waveform_t *waveform) {
 	if (strcmp(waveformString, "SINE") == 0) {
 		*waveform = RP_WAVEFORM_SINE;
