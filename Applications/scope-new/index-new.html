@@ -25,21 +25,22 @@ function connect() {
 		
 		document.getElementById("server_url").disabled = true;
 		document.getElementById("toggle_connect").innerHTML = "Disconnect";
+		document.getElementById("toggle_connect").disabled = false;
 		document.getElementById("send_data").disabled = false;
 	};
 	
 	ws.onerror = function(e) {
 		document.getElementById("messages").innerHTML += "Client: An error occured, see console log for more details.<br />";
 		console.log(e);
+		cleanup_disconnect();
 	};
 	
 	ws.onclose = function(e) {
 		document.getElementById("messages").innerHTML += "Client: The connection to "+url+" was closed. ["+e.code+(e.reason != "" ? ","+e.reason : "")+"]<br />";
-	    cleanup_disconnect();
+		cleanup_disconnect();
 	};
 	
 	ws.onmessage = function(e) {
-		
 		var receive = JSON.parse(e.data);
 
 		if(receive.signals) {
@@ -59,16 +60,17 @@ function connect() {
 
 function disconnect() {
 	ws.close();
-	cleanup_disconnect();
 }
 
 function cleanup_disconnect() {
 	document.getElementById("send_data").disabled = true;    
-	document.getElementById("server_url").disabled = false;
+	document.getElementById("server_url").disabled = false;	
 	document.getElementById("toggle_connect").innerHTML = "Connect";
+	document.getElementById("toggle_connect").disabled = false;
 }
 
 function toggle_connect() {
+	document.getElementById("toggle_connect").disabled = true;	
 	if (document.getElementById("server_url").disabled === false) {
 		connect();
 	} else {
