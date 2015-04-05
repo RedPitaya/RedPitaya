@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <arpa/inet.h> 
 
 int main(int argc, char *argv[])
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
     int sockfd = 0, n = 0;
     char recvBuff[1024];
     struct sockaddr_in serv_addr; 
+    bool binary_mode = false;
 
     if(argc != 3 && argc != 4)
     {
@@ -70,6 +72,8 @@ int main(int argc, char *argv[])
         if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
             perror("send");
         }
+
+        binary_mode = true;
     }
 
     strcpy(recvBuff, argv[2]);
@@ -88,10 +92,19 @@ int main(int argc, char *argv[])
     {
         recvBuff[n] = 0;
 	   
-        if(fputs(recvBuff, stdout) == EOF)
-        {
-            printf("\n Error : Fputs error\n");
+        if (binary_mode) {
+            for (int i = 0; i < n; ++i)
+            {
+                printf("%X ", (unsigned char)recvBuff[i]);
+            }
         }
+        else {
+            if(fputs(recvBuff, stdout) == EOF)
+            {
+                printf("\n Error : Fputs error\n");
+            }
+        }
+
 	    fflush(stdout);
 
     } 
