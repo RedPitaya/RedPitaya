@@ -16,7 +16,7 @@ REVISION ?= devbuild
 
 CC = CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 NAME = SDK
-#Here I use the same var for rplib and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
+#Here I use the same var for librp and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
 #We could make another var just for rp.h
 RP_LIBRARY_INCLUDE = ../api-mockup/rpbase/src
 
