@@ -8,8 +8,8 @@ typedef int		(*ws_get_params_interval_func)(void);
 typedef int		(*ws_get_signals_interval_func)(void);
 typedef const char     *(*ws_get_params_func)(void);
 typedef const char     *(*ws_get_signals_func)(void);
-typedef int	 	(*ws_set_params_func)(const char * _json_str);
-typedef int		(*ws_set_signals_func)(const char * _json_str);
+typedef int		(*ws_set_params_func)(const char *_params);
+typedef int		(*ws_set_signals_func)(const char *_signals);
 
 // The following struct can be used to define specific parameters
 struct server_parameters {
@@ -18,8 +18,8 @@ struct server_parameters {
 	ws_get_params_interval_func get_params_interval_func;
 	ws_get_signals_interval_func get_signals_interval_func;
 	ws_get_params_func get_params_func;
-	ws_set_params_func set_params_func;
 	ws_get_signals_func get_signals_func;
+	ws_set_params_func set_params_func;
 	ws_set_signals_func set_signals_func;
 	int signal_interval; // in ms
 	int param_interval; // in ms

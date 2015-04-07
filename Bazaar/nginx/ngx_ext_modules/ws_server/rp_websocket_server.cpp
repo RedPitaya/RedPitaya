@@ -140,7 +140,6 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 	
 	con_list::iterator it;
 	const char* params = m_params->get_params_func();
-
 //	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "on_param_timer");
 	static int once = 1;
 	if(once)
@@ -220,20 +219,23 @@ void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg
 	std::stringstream ss;	
 	ss << "Detected " << msg->get_payload() << " test cases.";
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
-	
+	//get child, it is always only one: "parameters" or "signals"
 	JSONNode n = libjson::parse(msg->get_payload());
 	
-	std::string name = n.name();
+	JSONNode child = n.at(0);
+	std::string name = child.name();
+
+	std::string data = child.write();
+	const char * data_str = data.c_str();
 	if(name == "parameters")
-	{
-		set_param_timer();
-		m_params->set_params_func((msg->get_payload()).c_str());
+	{		
+		set_param_timer();		
+		m_params->set_params_func(data_str);
 	}
-	
-	if(name == "signals")
+	else if(name == "signals")
 	{
 		set_signal_timer();
-		m_params->set_signals_func((msg->get_payload()).c_str());
+		m_params->set_signals_func(data_str);
 	}
 
 }
