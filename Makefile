@@ -38,6 +38,7 @@ ECOSYSTEM_DIR=Applications/ecosystem
 SCPI_SERVER_DIR=scpi-server/
 LIBRP_DIR=api-mockup/rpbase/src
 SDK_DIR=SDK/
+EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -70,7 +71,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(GDBSERVER) sdk
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(GDBSERVER) sdk rp_communication
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -160,7 +161,10 @@ sdk:
 sdkPub:
 	$(MAKE) -C $(SDK_DIR) zip
 
-zip: $(TARGET)
+rp_communication:
+	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
@@ -176,6 +180,7 @@ clean:
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR) clean
 	make -C $(SDK_DIR) clean
+	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
