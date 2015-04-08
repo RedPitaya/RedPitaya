@@ -31,14 +31,6 @@ static const uint32_t DEC_1024  = 1024;
 static const uint32_t DEC_8192  = 8192;
 static const uint32_t DEC_65536 = 65536;
 
-// Sampling rate constants
-static const uint32_t SR_125MHZ = 125.0 * 1024 * 1024;
-static const uint32_t SR_15_625MHZ = 15.625 * 1024 * 1024;
-static const uint32_t SR_1_953MHZ = 1.953 * 1024 * 1024;
-static const uint32_t SR_122_070KHZ = 122.070 * 1024;
-static const uint32_t SR_15_258KHZ = 15.258 * 1024;
-static const uint32_t SR_1_907KHZ = 1.907 * 1024;
-
 /* @brief ADC buffer size is 16 k samples. */
 static const uint32_t ADC_BUFFER_SIZE = 16 * 1024;
 
@@ -406,31 +398,33 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 
 int acq_GetSamplingRateHz(float* sampling_rate)
 {
-    rp_acq_sampling_rate_t rate;
-    ECHECK(acq_GetSamplingRate(&rate));
+    float max_rate = 125000000.0;
 
-    switch (rate) {
-    case RP_SMP_125M:
-        *sampling_rate = SR_125MHZ;
-        return RP_OK;
-    case RP_SMP_15_625M:
-        *sampling_rate =  SR_15_625MHZ;
-        return RP_OK;
-    case RP_SMP_1_953M:
-        *sampling_rate =  SR_1_953MHZ;
-        return RP_OK;
-    case RP_SMP_122_070K:
-        *sampling_rate =  SR_122_070KHZ;
-        return RP_OK;
-    case RP_SMP_15_258K:
-        *sampling_rate =  SR_15_258KHZ;
-        return RP_OK;
-    case RP_SMP_1_907K:
-        *sampling_rate =  SR_1_907KHZ;
-        return RP_OK;
-    default:
-        return RP_EOOR;
+    rp_acq_decimation_t decimation;
+    ECHECK(acq_GetDecimation(&decimation));
+
+    switch(decimation){
+        case RP_DEC_1:
+            *sampling_rate = max_rate / 1;
+            break;
+        case RP_DEC_8:
+            *sampling_rate = max_rate / 8;
+            break;
+        case RP_DEC_64:
+            *sampling_rate = max_rate / 64;
+            break;
+        case RP_DEC_1024:
+            *sampling_rate = max_rate / 1024;
+            break;
+        case RP_DEC_8192:
+            *sampling_rate = max_rate / 8192;
+            break;
+        case RP_DEC_65536:
+            *sampling_rate = max_rate / 65536;
+            break;
     }
+    
+    return RP_OK;
 }
 
 int acq_SetAveraging(bool enable)
