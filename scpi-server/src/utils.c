@@ -231,6 +231,7 @@ int getRpSamplingRateString(rp_acq_sampling_rate_t decimation, char *decimationS
 	}
 }
 
+
 int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *decimation) {
 	if (strcmp(decimationString, "125MHz") == 0) {
 		*decimation = RP_SMP_125M;

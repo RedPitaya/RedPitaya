@@ -199,8 +199,12 @@ scpi_result_t RP_AcqGetSamplingRateHz(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    // Return back result
-    SCPI_ResultDouble(context, samplingRate);
+    // Return back string result
+    char samplingRateString;
+    sprintf(&samplingRateString, "%.0f Hz", samplingRate);
+
+    //Return string in form "<Value> Hz"
+    SCPI_ResultString(context, &samplingRateString);
 
     syslog(LOG_INFO, "*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.");
 
