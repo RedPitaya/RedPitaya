@@ -7,9 +7,9 @@ import time
 class scpi(object):
 
     # Socket info
-    BUFF_SIZE = 16384 * 32
     # SCPI delimiter
     delimiter = '\r\n'
+    chunksize = 4096
 
     def __init__(self, host, timeout=None, port=5000):
         self.host    = host
@@ -28,21 +28,26 @@ class scpi(object):
             print 'SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e)
 
     # Receive function
-    def recv(self, buff_size):
-        chunks = []
+    def recv(self, chunksize = self.chunksize):
+        msg = ''
         bytes_read = 0
         while 1:
-            chunk = (self._socket.recv(buff_size)) # Receive chunk size of 2^n preferably
-            chunks.append(chunk)
+            chunk = (self._socket.recv(chunksize)) # Receive chunk size of 2^n preferably
+            msg.append(chunk)
             bytes_read += len(chunk)
             if(len(chunk) and chunk[-1] == '\n'):
                 break
-        return b''.join(chunks)
+
+        return msg
 
     def send(self, message):
         return self._socket.send(message)
 
-    # RP help functions
 
-    def choose_state(self, led, state):
-        return 'DIG:PIN LED' + str(led) + ', ' + str(state) + self.delimiter
+    def close(self):
+        self.__del__()
+
+    def __del__(self):
+        if self._socket is not None:
+            self._socket.close()
+        self._socket = None
