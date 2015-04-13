@@ -53,7 +53,7 @@ class scpi (object):
 
     def send_txt(self, msg):
         """Send text string ending and append delimiter."""
-        return self._socket.send(msg + "; " + self.delimiter)
+        return self._socket.send(msg + self.delimiter)
 
     def send_raw(self, msg):
         """Send RAW binary data."""
@@ -67,3 +67,12 @@ class scpi (object):
         if self._socket is not None:
             self._socket.close()
         self._socket = None
+
+
+
+    def gen(self, src, waveform, freq, ampl):
+        """Generate signal."""
+        self.send_txt('SOUR'+str(src)+':FUNC '      + str(waveform).upper())
+        self.send_txt('SOUR'+str(src)+':FREQ:FIX '  + str(freq)            )
+        self.send_txt('SOUR'+str(src)+':VOLT '      + str(ampl)            )
+        self.send_txt('OUTPUT'+str(src)+':STATE ON'                        )
