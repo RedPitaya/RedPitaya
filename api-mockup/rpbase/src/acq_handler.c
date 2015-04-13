@@ -140,7 +140,7 @@ static int setEqFilters(rp_channel_t channel)
     {
         if (gain == RP_HIGH)
         {
-            return osc_SetEqFiltersChA(
+            return osc_SetEqFiltersChB(
                     GAIN_HI_CHB_FILT_AA,
                     GAIN_HI_CHB_FILT_BB,
                     GAIN_HI_CHB_FILT_KK,
@@ -148,7 +148,7 @@ static int setEqFilters(rp_channel_t channel)
         }
         else
         {
-            return osc_SetEqFiltersChA(
+            return osc_SetEqFiltersChB(
                     GAIN_LO_CHB_FILT_AA,
                     GAIN_LO_CHB_FILT_BB,
                     GAIN_LO_CHB_FILT_KK,
