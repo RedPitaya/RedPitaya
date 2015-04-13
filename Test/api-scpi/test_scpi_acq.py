@@ -1,10 +1,12 @@
+#!/usr/bin/env python
 
 __author__ = 'infused'
 
+import sys
 from time import sleep
 from redpitaya_scpi import scpi
 
-rp_s = scpi ('192.168.178.73')
+rp_s = scpi (sys.argv[1])
 
 #Generate signal
 rp_s.gen (src=1, waveform='sine', freq=50000, ampl=1)
