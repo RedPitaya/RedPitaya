@@ -31,57 +31,61 @@ module sys_bus_model #(
   int unsigned AXI_SW = AXI_DW/8  // strobe width - 1 bit for every data byte
 )(
   // system signals
-  input  logic              sys_clk_i  ,  // system clock
-  input  logic              sys_rstn_i ,  // system reset - active low
+  input  logic              clk  ,  // system clock
+  input  logic              rstn ,  // system reset - active low
   // bus protocol signals
-  output logic [AXI_AW-1:0] sys_addr_o ,  // system read/write address.
-  output logic [AXI_DW-1:0] sys_wdata_o,  // system write data.
-  output logic [AXI_SW-1:0] sys_sel_o  ,  // system write byte select.
-  output logic              sys_wen_o  ,  // system write enable.
-  output logic              sys_ren_o  ,  // system read enable.
-  input  logic [AXI_DW-1:0] sys_rdata_i,  // system read data.
-  input  logic              sys_err_i  ,  // system error indicator.
-  input  logic              sys_ack_i     // system acknowledge signal.
+  output logic [AXI_AW-1:0] sys_addr ,  // system read/write address.
+  output logic [AXI_DW-1:0] sys_wdata,  // system write data.
+  output logic [AXI_SW-1:0] sys_sel  ,  // system write byte select.
+  output logic              sys_wen  ,  // system write enable.
+  output logic              sys_ren  ,  // system read enable.
+  input  logic [AXI_DW-1:0] sys_rdata,  // system read data.
+  input  logic              sys_err  ,  // system error indicator.
+  input  logic              sys_ack     // system acknowledge signal.
 );
 
 initial begin
-   sys_wen_o <= 1'b0 ;
-   sys_ren_o <= 1'b0 ;
+   sys_wen <= 1'b0 ;
+   sys_ren <= 1'b0 ;
 end
 
-//---------------------------------------------------------------------------------
+// bus write transfer
+task transaction (
+  input  logic          we,
+  input  logic [32-1:0] addr,
+  input  logic [32-1:0] wdata,
+  output logic [32-1:0] rdata
+);
+  @(posedge clk)
+  sys_sel    <= '1;
+  sys_wen    <=  we   ;
+  sys_ren    <= ~we   ;
+  sys_addr   <= addr  ;
+  sys_wdata  <= wdata ;
+  @(posedge clk);
+  sys_wen    <= 1'b0  ;
+  sys_ren    <= 1'b0  ;
+  while (~sys_ack & ~sys_err)
+    @(posedge clk);
+  rdata <= sys_rdata ;
+  @(posedge clk);
+endtask: transaction
 
-task bus_write (
+// bus write transfer
+task write (
   input  logic [32-1:0] addr,
   input  logic [32-1:0] wdata
 );
-  @(posedge sys_clk_i)
-  sys_sel_o    <= '1;
-  sys_wen_o    <= 1'b1  ;
-  sys_addr_o   <= addr  ;
-  sys_wdata_o  <= wdata ;
-  @(posedge sys_clk_i);
-  sys_wen_o    <= 1'b0  ;
-  while (~sys_ack_i)
-    @(posedge sys_clk_i);
-endtask: bus_write
+  logic [32-1:0] rdata;
+  transaction (.we (1'b1), .addr (addr), .wdata (wdata), .rdata (rdata));
+endtask: write
 
-//---------------------------------------------------------------------------------
-
-task bus_read (
+// bus read transfer
+task read (
   input  logic [32-1:0] addr,
   output logic [32-1:0] rdata
 );
-  @(posedge sys_clk_i)
-  sys_ren_o    <= 1'b1  ;
-  sys_addr_o   <= addr  ;
-  @(posedge sys_clk_i);
-  sys_ren_o    <= 1'b0  ;
-  while (~sys_ack_i)
-    @(posedge sys_clk_i);
-  rdata <= sys_rdata_i ;
-  @(posedge sys_clk_i);
-  $display ("@%g Readed value at %h is %h", $time, addr[19:0], rdata);
-endtask: bus_read
+  transaction (.we (1'b0), .addr (addr), .wdata (32'hx), .rdata (rdata));
+endtask: read
 
 endmodule: sys_bus_model
