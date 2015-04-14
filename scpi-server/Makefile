@@ -1,7 +1,7 @@
 #
 # $Id: $
 #
-# Red Pitaya library rplib and test app Makefile.
+# Red Pitaya library librp and test app Makefile.
 #
 
 APP=$(notdir $(CURDIR:%/=%))
@@ -18,15 +18,15 @@ INSTALL_DIR ?= .
 
 SCPIPARSER=3rdparty/libs/scpi-parser/libscpi/dist/libscpi.so
 SCPISRV=scpi-server
-RPLIB=../api-mockup/rpbase/src/librp.so
-ARTIFACTS= $(RPLIB) $(SCPIPARSER) $(SCPISRV)
+LIBRP=../api-mockup/rpbase/src/librp.so
+ARTIFACTS= $(LIBRP) $(SCPIPARSER) $(SCPISRV)
 
 #CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 #export CFLAGS
 
-all: $(RPLIB) $(SCPIPARSER) $(SCPISRV)
+all: $(LIBRP) $(SCPIPARSER) $(SCPISRV)
 
-$(RPLIB):
+$(LIBRP):
 	$(MAKE) -C ../api-mockup/rpbase/src
 	$(MAKE) -C ../api-mockup/rpApplications/src
 

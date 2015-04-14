@@ -231,6 +231,7 @@ int getRpSamplingRateString(rp_acq_sampling_rate_t decimation, char *decimationS
 	}
 }
 
+
 int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *decimation) {
 	if (strcmp(decimationString, "125MHz") == 0) {
 		*decimation = RP_SMP_125M;
@@ -257,7 +258,7 @@ int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *deci
 }
 
 
-	int getRpGain(const char *gainStr, rp_pinState_t *state) {
+int getRpGain(const char *gainStr, rp_pinState_t *state) {
 	if (strcmp(gainStr, "LV") == 0) {
 		*state = RP_LOW;
 	}
@@ -323,19 +324,6 @@ int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit) {
 	}
 	else if (strcmp(unitString, "RAW") == 0) {
 		*unit = RP_SCPI_RAW;
-	}
-	else {
-		return RP_EOOR;
-	}
-	return RP_OK;
-}
-
-int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format) {
-	if (strcmp(formatString, "FLOAT") == 0) {
-		*format = RP_SCPI_FLAOT;
-	}
-	else if (strcmp(formatString, "ASCII") == 0) {
-		*format = RP_SCPI_ADCII;
 	}
 	else {
 		return RP_EOOR;

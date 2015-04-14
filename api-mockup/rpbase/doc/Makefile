@@ -1,7 +1,7 @@
 #
 # $Id: $
 #
-# Red Pitaya documentation for rplib Makefile.
+# Red Pitaya documentation for librp Makefile.
 #
 
 

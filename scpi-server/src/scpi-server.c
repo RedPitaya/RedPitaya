@@ -236,6 +236,7 @@ int main(int argc, char *argv[])
 
     // user_context will be pointer to socket
     scpi_context.user_context = NULL;
+    scpi_context.binary_output = false;
     SCPI_Init(&scpi_context);
 
     // Create a socket

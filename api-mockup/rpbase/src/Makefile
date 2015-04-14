@@ -3,7 +3,7 @@
 #
 # (c) Red Pitaya  http://www.redpitaya.com
 #
-# Library rplib project file. To build the library run:
+# Library librp project file. To build the library run:
 # 'make all'
 #
 # This project file is written for GNU/Make software. For more details please 
@@ -34,6 +34,7 @@ TARGET=librp.so
 # List of compiled object files
 OBJECTS =	common.o \
 			housekeeping.o \
+			id_handler.o \
 			dpin_handler.o \
 			oscilloscope.o \
 			acq_handler.o \
