@@ -28,8 +28,8 @@ static const int HOUSEKEEPING_BASE_SIZE = 0x30;
 // Housekeeping structure declaration
 typedef struct housekeeping_control_s {
     uint32_t id;
-    uint32_t dna_part1;
-    uint32_t dna_part2;
+    uint32_t dna_lo;
+    uint32_t dna_hi;
     uint32_t reserved_1;
     uint32_t ex_cd_p;
     uint32_t ex_cd_n;
@@ -72,6 +72,28 @@ int hk_Release()
     ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
     ECHECK(cmn_Release());
     return RP_OK;
+}
+
+
+/**
+ * ID and DNA
+ */
+
+int hk_GetID(uint32_t *id)
+{
+    return cmn_GetValue(&hk->id, id, 0xffffffff);
+}
+
+int hk_GetDNA(uint64_t *dna)
+{
+    int msg;
+    uint32_t dna_lo;
+    uint32_t dna_hi;
+    msg  = cmn_GetValue(&hk->dna_lo, &dna_lo, 0xffffffff);
+    msg |= cmn_GetValue(&hk->dna_hi, &dna_hi, 0xffffffff);
+    *dna = ((uint64_t) dna_hi << 32) | ((uint64_t) dna_lo);
+    // TODO check if return message is constructed correctly
+    return msg;
 }
 
 

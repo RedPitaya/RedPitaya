@@ -82,16 +82,6 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PPRDIR/../code/rtl/bus_clk_bridge.v">
-      <FileInfo>
-        <Attr Name="UsedInSynthesis" Val="1"/>
-        <Attr Name="UsedInImplementation" Val="1"/>
-        <Attr Name="UsedInSimulation" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <File Path="$PPRDIR/../code/rtl/axi_wr_fifo.v">
       <FileInfo>
         <Attr Name="UsedInSynthesis" Val="1"/>

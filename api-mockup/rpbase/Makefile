@@ -1,7 +1,7 @@
 #
 # $Id: $
 #
-# Red Pitaya library rplib and test app Makefile.
+# Red Pitaya library librp and test app Makefile.
 #
 
 APP=$(notdir $(CURDIR:%/=%))
@@ -12,16 +12,16 @@ FPGA=fpga.bit
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-RPLIB=rplib.so
+LIBRP=librp.so
 TEST=testApp
-ARTIFACTS=$(RPLIB) $(TEST)
+ARTIFACTS=$(LIBRP) $(TEST)
 
 #CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 #export CFLAGS
 
-all: $(RPLIB) $(TEST)
+all: $(LIBRP) $(TEST)
 
-$(RPLIB):
+$(LIBRP):
 	$(MAKE) -C src
 
 $(TEST):
