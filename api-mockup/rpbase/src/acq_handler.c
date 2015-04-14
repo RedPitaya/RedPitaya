@@ -167,13 +167,9 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     if (channel == RP_CH_1) {
         gain = &gain_ch_a;
     }
+    
     else {
         gain = &gain_ch_b;
-    }
-
-    // Gain is already at the same state. Nothing to do...
-    if (*gain == state) {
-        return RP_OK;
     }
 
     // Read old values which are dependent on the gain...
