@@ -318,7 +318,7 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
     uint32_t value;
     ECHECK(generate_getTriggerSource(channel, &value));
     if (value == RP_GEN_TRIG_SRC_INTERNAL) {
-        generate_setTriggerSource(channel, 1);
+        ECHECK(generate_setTriggerSource(channel, 1));
     }
     return RP_OK;
 }
@@ -337,7 +337,15 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
     if (repetitions == -1) {
         repetitions = 0;
     }
-    return generate_setBurstRepetitions(channel, (uint32_t) (repetitions-1));
+    ECHECK(generate_setBurstRepetitions(channel, (uint32_t) (repetitions-1)));
+
+    // trigger channel if internal trigger source
+    uint32_t value;
+    ECHECK(generate_getTriggerSource(channel, &value));
+    if (value == RP_GEN_TRIG_SRC_INTERNAL) {
+        ECHECK(generate_setTriggerSource(channel, 1))
+    }
+    return RP_OK;
 }
 
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions) {
@@ -361,10 +369,17 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
         // if delay is 0, then FPGA generates continuous signal
         delay = 1;
     }
-    CHANNEL_ACTION(channel,
-            chA_burstPeriod = period,
-            chB_burstPeriod = period)
-    return generate_setBurstDelay(channel, (uint32_t) delay);
+    CHECK_OUTPUT(chA_burstPeriod = period,
+                 chB_burstPeriod = period)
+    ECHECK(generate_setBurstDelay(channel, (uint32_t) delay));
+
+    // trigger channel if internal trigger source
+    uint32_t value;
+    ECHECK(generate_getTriggerSource(channel, &value));
+    if (value == RP_GEN_TRIG_SRC_INTERNAL) {
+        ECHECK(generate_setTriggerSource(channel, 1))
+    }
+    return RP_OK;
 }
 
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
