@@ -308,7 +308,7 @@ int rp_AcqGetGainV(rp_channel_t channel, float* voltage)
 }
 
 int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
-{
+{   
     return acq_SetGain(channel, state);
 }
 
