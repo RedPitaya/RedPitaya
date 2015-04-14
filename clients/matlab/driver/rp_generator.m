@@ -22,7 +22,7 @@ function varargout = rp_generator(varargin)
 
 % Edit the above text to modify the response to help rp_generator
 
-% Last Modified by GUIDE v2.5 18-Feb-2015 05:48:03
+% Last Modified by GUIDE v2.5 02-Mar-2015 14:21:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,10 +58,10 @@ function rp_generator_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for rp_generator
 
-interfaceObj = tcpip('192.168.178.66', 5000);
-deviceObj = icdevice('red_pitaya.mdd', interfaceObj);
-handles.device = deviceObj;
-delete(deviceObj)
+%interfaceObj = tcpip('192.168.178.66', 5000);
+%deviceObj = icdevice('red_pitaya.mdd', interfaceObj);
+handles.device = 0;
+%delete(deviceObj);
 
 
 
@@ -120,10 +120,10 @@ handles.asgdata.typech1 = 'SINE';
 handles.asgdata.amplitudech1 = 1;
 handles.asgdata.phasech1 = 0;
 handles.asgdata.offsetch1 = 0;
+ndles.asgdata.burst_signal_periodesch1= 1;
 handles.asgdata.dutycyclech1 = 50;
-handles.asgdata.burst_signal_cyclesch1 = 1;
 handles.asgdata.num_burstsch1 = 1;
-handles.asgdata.burst_periodch1 = 10000;
+handles.asgdata.burst_periodch1 = 1000000;
 handles.asgdata.EnableBurstch1 = 0;
 handles.asgdata.triggersourcech1 = 'INT';
 handle.asgdata.arbitrarydatach1 = zeros(1,16000);
@@ -138,9 +138,9 @@ handles.asgdata.amplitudech2 = 1;
 handles.asgdata.phasech2 = 0;
 handles.asgdata.offsetch2 = 0;
 handles.asgdata.dutycyclech2 = 50;
-handles.asgdata.burst_signal_periodesch2= 1;
+handles.asgdata.burst_signal_cyclesch2 = 1;
 handles.asgdata.num_burstsch2 = 1;
-handles.asgdata.burst_periodch2 = 0;
+handles.asgdata.burst_periodch2 = 1000000;
 handles.asgdata.EnableBurstch2 = 0;
 handles.asgdata.triggersourcech2 = 'INT';
 handle.asgdata.arbitrarydatach2 = zeros(1,16000);
@@ -150,7 +150,7 @@ parents=[];
 parents(1) = get(hObject,'parent');
 interfaceelements = get(parents(1),'Children');
 children = get(parents(1),'Children');
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 
 
 %find all panels
@@ -182,13 +182,13 @@ for id = 1 : length(parents)
         
         if strcmp(get(children(childid), 'Tag'),'enable_ch1')
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             set(children(childid),'BackgroundColor', [0.9412    0.9412    0.9412]);
             invoke(groupObj, 'enable', 'OFF');
             
         elseif strcmp(get(children(childid), 'Tag'),'frequency_input_ch1')
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'frequency', '1000');
             set(children(childid),'String', 1000);
             
@@ -197,14 +197,14 @@ for id = 1 : length(parents)
             
         elseif strcmp(get(children(childid), 'Tag'),'amplitude_input_ch1')
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Amplitude', '1');
             set(children(childid),'String', '1');
             
         elseif strcmp(get(children(childid), 'Tag'),'phase_input_ch1')
             
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Phase', '0');
             set(children(childid),'String', '0');
             
@@ -212,21 +212,21 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'duty_cycle_input_ch1')
             
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'DutyCycle', '50');
             set(children(childid),'String', '50');
             
         elseif strcmp(get(children(childid), 'Tag'),'offset_input_ch1')
             
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Offset', '0');
             set(children(childid),'String', '0');
             
             
         elseif strcmp(get(children(childid), 'Tag'),'SINE_togg_ch1')
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Waveform', 'SINE');
             set(children(childid),'BackgroundColor', [0.68  0.92 1]);
         elseif strcmp(get(children(childid), 'Tag'),'ARB_togg_ch1')
@@ -246,7 +246,7 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'enable_burst_togg_ch1')
             
             groupObj = get(deviceObj, 'Burstmodch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Enabled', 'OFF');
             set(children(childid),'BackgroundColor',[0.9412    0.9412    0.9412]);
             
@@ -261,7 +261,9 @@ for id = 1 : length(parents)
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigg_source_ch1')
                     set(children(childidrst),'Enable','off');
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch1')
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch1')
+                    set(children(childidrst),'Enable','off');
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch1')
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch1')
                     set(children(childidrst),'Enable','off');
@@ -275,13 +277,15 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
             
             groupObj = get(deviceObj, 'Triggerch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Source', 'INT');
             
             for childidrst = 1 :  length(children)
                 if strcmp(get(children(childidrst), 'Tag'),'trigger_gated_radio_ch1')
                     set(children(childidrst),'Value',0);
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch1')
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch1')
+                    set(children(childidrst),'Value',0);
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch1')
                     set(children(childidrst),'Value',0);
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch1')
                     set(children(childidrst),'Value',1);
@@ -292,18 +296,18 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'number_ofcycles_ch1')
             set(children(childid),'String', '1');
             groupObj = get(deviceObj, 'Burstmodch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Cycles', '1');
         elseif strcmp(get(children(childid), 'Tag'),'num_bursts_ch1')
             set(children(childid),'String', '1');
             groupObj = get(deviceObj, 'Burstmodch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'BurstCount', '1');
             
         elseif strcmp(get(children(childid), 'Tag'),'burst_period_ch1')
             set(children(childid),'String', '1000000');
             groupObj = get(deviceObj, 'Burstmodch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'InternalPeriod', '1000000');
             
         end
@@ -312,13 +316,13 @@ for id = 1 : length(parents)
         
         if strcmp(get(children(childid), 'Tag'),'enable_ch2')
             groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-            groupObj = groupObj(1);
+            
             set(children(childid),'BackgroundColor', [0.9412    0.9412    0.9412]);
             invoke(groupObj, 'enable', 'OFF');
             
         elseif strcmp(get(children(childid), 'Tag'),'frequency_input_ch2')
             groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'frequency', '1000');
             set(children(childid),'String', 1000);
             
@@ -327,14 +331,14 @@ for id = 1 : length(parents)
             
         elseif strcmp(get(children(childid), 'Tag'),'amplitude_input_ch2')
             groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Amplitude', '1');
             set(children(childid),'String', '1');
             
         elseif strcmp(get(children(childid), 'Tag'),'phase_input_ch2')
             
             groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Phase', '0');
             set(children(childid),'String', '0');
             
@@ -342,20 +346,20 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'duty_cycle_input_ch2')
             
             groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'DutyCycle', '50');
             set(children(childid),'String', '50');
             
         elseif strcmp(get(children(childid), 'Tag'),'offset_input_ch2')
             groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Offset', '0');
             set(children(childid),'String', '0');
             
             
         elseif strcmp(get(children(childid), 'Tag'),'SINE_togg_ch2')
             groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Waveform', 'SINE');
             set(children(childid),'BackgroundColor', [0.68  0.92 1]);
         elseif strcmp(get(children(childid), 'Tag'),'ARB_togg_ch2')
@@ -374,7 +378,7 @@ for id = 1 : length(parents)
             
         elseif strcmp(get(children(childid), 'Tag'),'enable_burst_togg_ch2')
             groupObj = get(deviceObj, 'Burstmodch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Enabled', 'OFF');
             set(children(childid),'BackgroundColor',[0.9412    0.9412    0.9412]);
             
@@ -389,9 +393,11 @@ for id = 1 : length(parents)
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigg_source_ch2')
                     set(children(childidrst),'Enable','off');
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch2')
-                    set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch2')
+                    set(children(childidrst),'Enable','off');
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch2')
+                    set(children(childidrst),'Enable','off');
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch2')
                     set(children(childidrst),'Enable','off');
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_gated_radio_ch2')
                     set(children(childidrst),'Enable','off');
@@ -403,13 +409,15 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
             
             groupObj = get(deviceObj, 'Triggerch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Source', 'INT');
             
             for childidrst = 1 :  length(children)
                 if strcmp(get(children(childidrst), 'Tag'),'trigger_gated_radio_ch2')
                     set(children(childidrst),'Value',0);
-                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_radio_ch2')
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_N_radio_ch2')
+                    set(children(childidrst),'Value',0);
+                elseif strcmp(get(children(childidrst), 'Tag'),'trigger_external_P_radio_ch2')
                     set(children(childidrst),'Value',0);
                 elseif strcmp(get(children(childidrst), 'Tag'),'trigger_internal_radio_ch2')
                     set(children(childidrst),'Value',1);
@@ -420,18 +428,18 @@ for id = 1 : length(parents)
         elseif strcmp(get(children(childid), 'Tag'),'number_ofcycles_ch2')
             set(children(childid),'String', '1');
             groupObj = get(deviceObj, 'Burstmodch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'Cycles', '1');
         elseif strcmp(get(children(childid), 'Tag'),'num_bursts_ch2')
             set(children(childid),'String', '1');
             groupObj = get(deviceObj, 'Burstmodch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'BurstCount', '1');
             
         elseif strcmp(get(children(childid), 'Tag'),'burst_period_ch2')
             set(children(childid),'String', '1000000');
             groupObj = get(deviceObj, 'Burstmodch2');
-            groupObj = groupObj(1);
+            
             invoke(groupObj, 'InternalPeriod', '1000000');
             
         end
@@ -469,12 +477,13 @@ end
 
 %Red Pitaya
 
-handles.asgdata.frequencyMAX = 62e7;
+handles.asgdata.frequencyMAX = 62.5e6;
 handles.asgdata.frequencyMIN = 0;
 handles.IP = '192.168.178.66';
 handles.port = 5000;
 handles.asgdata.connectionstate = 'offline';
-handles.asgdata.connectmessage = 'Please to the instrument first. Instructions for instaling and runing SCPI server on Red Pitaya can be found on www.redpitaya.com';
+handles.asgdata.connectmessage = 'Please connect to the instrument first. If you are experiencing difficulties search for instructions or support at www.redpitaya.com';
+handles.asgdata.num_bursts_MAX = 50000;
 
 %ch1
 handles.asgdata.enablech1 = 'OFF';
@@ -485,7 +494,7 @@ handles.asgdata.amplitudech1 = 1;
 handles.asgdata.phasech1 = 0;
 handles.asgdata.offsetch1 = 0;
 handles.asgdata.dutycyclech1 = 50;
-handles.asgdata.burst_signal_cyclesch1 = 1;
+handles.asgdata.burst_signal_periodesch1= 1;
 handles.asgdata.num_burstsch1 = 1;
 handles.asgdata.burst_periodch1 = 10000;
 handles.asgdata.EnableBurstch1 = 0;
@@ -504,7 +513,7 @@ handles.asgdata.offsetch2 = 0;
 handles.asgdata.dutycyclech2 = 50;
 handles.asgdata.burst_signal_periodesch2= 1;
 handles.asgdata.num_burstsch2 = 1;
-handles.asgdata.burst_periodch2 = 0;
+handles.asgdata.burst_periodch2 = 1000000;
 handles.asgdata.EnableBurstch2 = 0;
 handles.asgdata.triggersourcech2 = 'INT';
 handle.asgdata.arbitrarydatach2 = zeros(1,16000);
@@ -543,14 +552,23 @@ end
 
 
 frequency = handles.asgdata.frequencych1 * handles.asgdata.fr_prefixch1;
-frequencystr = num2str(frequency);
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
-invoke(groupObj, 'frequency', frequencystr);
 
+if (frequency > handles.asgdata.frequencyMAX)
+    errordlg('Frequnecy excedes maximum value!');
+    
+elseif(frequency < handles.asgdata.frequencyMIN)
+    errordlg('Frequnecy excedes minimum value!');
+end
+    
+    frequencystr = num2str(frequency);
+    deviceObj = handles.device;
+    groupObj = get(deviceObj, 'Arbitrarywaveformch1');
+    
+    invoke(groupObj, 'frequency', frequencystr);
+    
+    
+    guidata(hObject,handles);
 
-guidata(hObject,handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -575,18 +593,20 @@ function frequency_input_ch1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of frequency_input_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of frequency_input_ch1 as a double
 
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
     
-frequency = (str2double(get(hObject, 'String')));
+frequencyinput = (str2double(get(hObject, 'String')));
 
-if isnan(frequency)
+if isnan(frequencyinput)
     set(hObject, 'String', 1000);
     errordlg('Input must be a number','Error');
 end
-frequency = frequency * handles.asgdata.fr_prefixch1;
+frequency = frequencyinput * handles.asgdata.fr_prefixch1;
 if (frequency > handles.asgdata.frequencyMAX)
     errordlg('Frequnecy excedes maximum value!');
     
@@ -596,13 +616,13 @@ end
 
 frequencystr = num2str(frequency);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'frequency', frequencystr);
 
-handles.asgdata.frequencych1 = frequency;
+handles.asgdata.frequencych1 = frequencyinput;
 guidata(hObject,handles);
 end
 
@@ -627,6 +647,9 @@ function offset_input_ch1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of offset_input_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of offset_input_ch1 as a double
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
@@ -657,9 +680,9 @@ end
 
 offsetstr = num2str(offset);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Offset', offsetstr);
 
 handles.asgdata.offsetch1 = offset;
@@ -711,9 +734,9 @@ end
 
 amplitudestr = num2str(amplitude);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Amplitude', amplitudestr);
 
 handles.asgdata.amplitude1 = amplitude;
@@ -741,7 +764,9 @@ function duty_cycle_input_ch1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of duty_cycle_input_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of duty_cycle_input_ch1 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -762,9 +787,9 @@ end
 
 dutycyclestr = num2str(dutycycle);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'DutyCycle', dutycyclestr);
 
 handles.asgdata.dutycyclech1 = dutycycle;
@@ -794,6 +819,9 @@ function phase_input_ch1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of phase_input_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of phase_input_ch1 as a double
 
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -814,9 +842,9 @@ end
 
 phasestr = num2str(phase);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Phase', phasestr);
 
 handles.asgdata.phasech1 = phase;
@@ -847,10 +875,10 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'waveform', 'SINE');
 
 parent = get(hObject,'parent');
@@ -918,9 +946,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'waveform', 'TRIANGLE');
 
 parent = get(hObject,'parent');
@@ -960,9 +988,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'waveform', 'SQUARE');
 
 
@@ -1002,9 +1030,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'waveform', 'SAWU');
 
 parent = get(hObject,'parent');
@@ -1041,9 +1069,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'waveform', 'SAWD');
 
 parent = get(hObject,'parent');
@@ -1079,9 +1107,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+ 
 invoke(groupObj, 'waveform', 'PWM');
 
 
@@ -1120,9 +1148,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+ 
 invoke(groupObj, 'waveform', 'ARBITRARY');
 
 
@@ -1157,7 +1185,9 @@ function arbitrary_file_insert_ch1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of arbitrary_file_insert_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of arbitrary_file_insert_ch1 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 end
@@ -1188,17 +1218,24 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Burstmodch1');
-groupObj = groupObj(1);
+deviceObj = handles.device;
+
+groupObj = get(deviceObj, 'Triggerch1');
+burstObj = get(deviceObj, 'Burstmodch1');
 
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 %get(children(1))
 
+
+groupObj = get(deviceObj, 'Triggerch1');
+
+handles.asgdata.triggersourcech1 = 'INT';
+
 if((get(hObject,'BackgroundColor') == [0.68  0.92 1]))
     set(hObject,'BackgroundColor',[0.9412    0.9412    0.9412]);
-    invoke(groupObj, 'Enabled', 'OFF');
+    invoke(burstObj, 'Enabled', 'OFF');
+    invoke(groupObj, 'Source', 'INT');
     handles.asgdata.EnableBurstch1 = 0;
     for childid = 1 :  length(children)
         if strcmp(get(children(childid), 'Tag'),'trigg_imm_ch1')
@@ -1211,18 +1248,31 @@ if((get(hObject,'BackgroundColor') == [0.68  0.92 1]))
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch1')
             set(children(childid),'Enable','off');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+            set(children(childid),'Value',0);
+            set(children(childid),'Enable','off');
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+            set(children(childid),'Value',0);
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+            set(children(childid),'Value',1);
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
             set(children(childid),'Enable','off');
         end
-        
+   
     end
+    
+    %set fr again
+    frequency = handles.asgdata.frequencych1 * handles.asgdata.fr_prefixch1;
+    frequencystr = num2str(frequency);
+    groupObj = get(deviceObj, 'Arbitrarywaveformch1');
+    invoke(groupObj, 'frequency', frequencystr);
+    
 else
     set(hObject,'BackgroundColor',[0.68  0.92 1]);
-    invoke(groupObj, 'Enabled', 'ON');
+    invoke(burstObj, 'Enabled', 'ON');
+    invoke(groupObj, 'Source', 'INT');
     handles.asgdata.EnableBurstch1 = 1;
     for childid = 1 :  length(children)
         if strcmp(get(children(childid), 'Tag'),'trigg_imm_ch1')
@@ -1235,15 +1285,37 @@ else
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch1')
             set(children(childid),'Enable','on');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+            set(children(childid),'Value',0);
+            set(children(childid),'Enable','on');
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+            set(children(childid),'Value',0);
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+            set(children(childid),'Value',1);
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
+            set(children(childid),'Value',0);
             set(children(childid),'Enable','on');
         end
         
     end
+    
+    %send default values
+    groupObj = get(deviceObj, 'Burstmodch1');
+    invoke(groupObj, 'BurstCount', num2str(handles.asgdata.num_burstsch1));
+    invoke(groupObj, 'Cycles', num2str(handles.asgdata.burst_signal_periodesch1));
+    invoke(groupObj, 'InternalPeriod', num2str(handles.asgdata.burst_periodch1));
+
+    parent = get(hObject,'parent');
+    child = findobj(parent,'Tag','number_ofcycles_ch1');%find object
+    set(child,'String',num2str(handles.asgdata.burst_signal_periodesch1)); %Set string to graphical element
+    
+    child = findobj(parent,'Tag','num_bursts_ch1');%find object
+    set(child,'String',num2str(handles.asgdata.num_burstsch1)); %Set string to graphical element
+    
+    child = findobj(parent,'Tag','burst_period_ch1');%find object
+    set(child,'String',num2str(handles.asgdata.burst_periodch1)); %Set string to graphical element
 end
 
 guidata(hObject,handles);
@@ -1256,17 +1328,20 @@ function number_ofcycles_ch1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of number_ofcycles_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of number_ofcycles_ch1 as a double
 N_of_cycles = get(hObject,'String');
-
+if(length(N_of_cycles) < 1)
+    errordlg('Missing parameter!');
+end
 if (N_of_cycles < 1)
     error('Error value must be greater than 0!');
 end
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Burstmodch1');
-groupObj = groupObj(1);
-invoke(groupObj, 'Cycles', N_of_cycles);
+ 
+invoke(groupObj, 'Cycles', num2str(N_of_cycles));
+invoke(groupObj, 'Enabled', 'ON');
 
-handles.asgdata.burst_signal_periodesch2= N_of_cycles;
+handles.asgdata.burst_signal_periodesch1 = N_of_cycles;
 guidata(hObject,handles);
 
 
@@ -1296,9 +1371,9 @@ N_of_bursts = get(hObject,'String');
 if (N_of_bursts < 1)
     error('Error value must be greater than 0!');
 end
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Burstmodch2');
-groupObj = groupObj(1);
+ 
 N_of_bursts_str = num2str(N_of_bursts);
 invoke(groupObj, 'BurstCount', N_of_bursts_str);
 handles.asgdata.num_burstsch2 = N_of_bursts_str;
@@ -1330,18 +1405,20 @@ function burst_period_ch1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of burst_period_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of burst_period_ch1 as a double
 period = get(hObject,'String');
+if(length(period) < 1)
+    errordlg('Missing parameter!');
+end
 if (period < 1)
     error('Error value must be greater than 0!');
 end
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Burstmodch1');
-groupObj = groupObj(1);
-invoke(groupObj, 'InternalPeriod', period);
 
+invoke(groupObj, 'InternalPeriod', period);
+invoke(groupObj, 'Enabled', 'ON');
 
 handles.asgdata.burst_periodch1 = period;
 guidata(hObject,handles);
-
 
 % --- Executes during object creation, after setting all properties.
 function burst_period_ch1_CreateFcn(hObject, eventdata, handles)
@@ -1363,9 +1440,9 @@ function reset_g1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'System');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'ResetGenerator');
 
 parent = get(hObject,'parent');
@@ -1411,10 +1488,10 @@ function enable_ch1_Callback(hObject, eventdata, handles)
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 % Execute device object function(s).
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 
 if((get(hObject,'BackgroundColor') == [0,1,0]))
     set(hObject,'BackgroundColor',[0.9412    0.9412    0.9412]);
@@ -1447,17 +1524,23 @@ for childtag = 1:length(children)
     end
 end
 data=[];
-data= dlmread(file);
-%data = csvread(file);
-datastr = sprintf('%0.6f,',data);
 
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Arbitrarywaveformch1'); %144000 characters
-groupObj = groupObj(1);
-invoke(groupObj, 'customForm', '0.000063,0.000125,0.000188,0.000063,0.000125,0.000188');
+if (exist(file)==2)
+    data= dlmread(file);
+    %data = csvread(file);
+    datastr = sprintf('%0.6f,',data);
+    
+    deviceObj = handles.device;
+    groupObj = get(deviceObj, 'Arbitrarywaveformch1'); %144000 characters
+    
+    invoke(groupObj, 'customForm', '0.000063,0.000125,0.000188,0.000063,0.000125,0.000188');
+    
+    handle.asgdata.arbitrarydatach1 = data;
+    guidata(hObject,handles);
+else
+    errordlg('Please provide existing file!');
+end
 
-handle.asgdata.arbitrarydatach1 = data;
-guidata(hObject,handles);
 
 end
 % --- Executes on button press in Send.
@@ -1473,11 +1556,26 @@ function trigg_imm_ch1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 
 groupObj = get(deviceObj, 'Triggerch1');
-groupObj = groupObj(1);
 invoke(groupObj, 'ImmediateTgigger');
+
+parent = get(hObject,'parent');
+children = get(parent,'Children');
+for childid = 1:length(children)
+    if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
+        set(children(childid),'Value',0);
+    end
+end
 
 handle.asgdata.ImmediateTgiggerch1 = 1;
 guidata(hObject,handles);
@@ -1503,6 +1601,9 @@ function IP_addr_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of IP_addr as text
 %        str2double(get(hObject,'String')) returns contents of IP_addr as a double
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 handles.IP = get(hObject,'String');
 
 guidata(hObject,handles);
@@ -1528,6 +1629,9 @@ function connection_port_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of connection_port as text
 %        str2double(get(hObject,'String')) returns contents of connection_port as a double
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 handles.port = str2num(get(hObject,'String'));
 
 % --- Executes during object creation, after setting all properties.
@@ -1548,58 +1652,81 @@ function connect_button_Callback(hObject, eventdata, handles)
 % hObject    handle to connect_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+%ping test
 IP = handles.IP;
 port = handles.port;
-%Connect to Red Pitaya
 
-color = get(hObject,'BackgroundColor');
-interfaceObj = instrfind('Type', 'tcpip', 'RemoteHost',IP, 'RemotePort', port, 'Tag', '');
-if(color ~= [0,1,0]) % connect 
+
+command=['ping -t 1 -c 1 ',IP];
+
+[ping_status, ping_message] = system(command);
+if (ping_status ~= 0)
+    errordlg('Hardware not found (PING)');
+    disp('Hardware not found (PING)');
+    ping_message
+else
+    %Connect to Red Pitaya
     
-    %check for existing connections with the name 'fcngen' and remove them
-    deviceObj = instrfind('Type', 'fcngen');
-    if (size(deviceObj,2)> 0)
-        %delete existing objects and reconnect
+    color = get(hObject,'BackgroundColor');
+    interfaceObj = instrfind('Type', 'tcpip', 'RemoteHost',IP, 'RemotePort', port, 'Tag', '');
+    
+    
+    parent = get(hObject,'parent'); %get parent object
+    connection_status_tag = findobj(parent,'Tag','connection_status_tag');
+    connectionstatus = get(connection_status_tag,'String');
+    
+    
+    if(~strcmp(connectionstatus ,'Connected')) % connect
+        
+        %check for existing connections with the name 'fcngen' and remove them
+        deviceObj = handles.device;
+        if (size(deviceObj,2) > 1)
+            %delete existing objects and reconnect
+            disconnect(deviceObj);
+            delete(interfaceObj);
+            %set(hObject,'BackgroundColor',[0.9412 0.9412 0.9412]);
+            handles.asgdata.connectionstate = 'offline';
+            interfaceObj = instrfind('Type', 'tcpip', 'RemoteHost',IP, 'RemotePort', port, 'Tag', '');
+        end
+        
+        % Create the TCPIP object if it does not exist
+        % otherwise use the object that was found.
+        if isempty(interfaceObj)
+            interfaceObj = tcpip(IP, port);
+        else
+            fclose(interfaceObj);
+            interfaceObj = interfaceObj(1);
+        end
+        %interfaceObj.Terminator ='CR/LF';
+        deviceObj = icdevice('red_pitaya.mdd', interfaceObj);
+        % Connect device object to hardware.
+        interfaceObj.Terminator = 'CR/LF';
+        
+        interfaceObj.OutputBufferSize = 16384*64;
+        interfaceObj.InputBufferSize = 16384*64;
+        connect(deviceObj);
+        %set(hObject,'BackgroundColor',[0 1 0]);
+        
+        handles.device = deviceObj;
+        handles.asgdata.connectionstate = 'active';
+        set(connection_status_tag,'String','Connected');
+        set(hObject,'String','Disconnect');
+    else % disconnect
+        
+        %deviceObj = get(handles.device)
+        deviceObj = handles.device;
         disconnect(deviceObj);
         delete(interfaceObj);
-        set(hObject,'BackgroundColor',[0.9412 0.9412 0.9412]);
+        %set(hObject,'BackgroundColor',[0.9412 0.9412 0.9412]);
         handles.asgdata.connectionstate = 'offline';
-        interfaceObj = instrfind('Type', 'tcpip', 'RemoteHost',IP, 'RemotePort', port, 'Tag', '');
+        set(connection_status_tag,'String','Disconnected');
+        set(hObject,'String','Connect');
     end
     
-    % Create the TCPIP object if it does not exist
-    % otherwise use the object that was found.
-    if isempty(interfaceObj)
-        interfaceObj = tcpip(IP, port);
-    else
-        fclose(interfaceObj);
-        interfaceObj = interfaceObj(1);
-    end
-    %interfaceObj.Terminator ='CR/LF';
-    deviceObj = icdevice('red_pitaya.mdd', interfaceObj);
-    % Connect device object to hardware.
-    interfaceObj.Terminator = 'CR/LF';
-    
-    interfaceObj.OutputBufferSize = 16384*64;
-    interfaceObj.InputBufferSize = 16384*64;
-    connect(deviceObj);
-    set(hObject,'BackgroundColor',[0 1 0]);
-    handles.asgdata.connectionstate = 'active';
-    
-    
-else % disconnect
-    
-    %deviceObj = get(handles.device)
-    deviceObj = instrfind('Type', 'fcngen');
-    disconnect(deviceObj);
-    delete(interfaceObj);
-    set(hObject,'BackgroundColor',[0.9412 0.9412 0.9412]);
-    handles.asgdata.connectionstate = 'offline';
+    handles.device = deviceObj;
+    guidata(hObject,handles);
 end
-
-handles.device = deviceObj;
-guidata(hObject,handles);
-
 
 
 
@@ -1652,10 +1779,10 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 % Execute device object function(s).
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 
 if((get(hObject,'BackgroundColor') == [0,1,0]))
     set(hObject,'BackgroundColor',[0.9412    0.9412    0.9412]);
@@ -1678,18 +1805,20 @@ function frequency_input_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of frequency_input_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of frequency_input_ch2 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-frequency = (str2double(get(hObject, 'String')));
+frequencyinput = (str2double(get(hObject, 'String')));
 
-if isnan(frequency)
+if isnan(frequencyinput)
     set(hObject, 'String', 1000);
     errordlg('Input must be a number','Error');
 end
-frequency = frequency * handles.asgdata.fr_prefixch2;
+frequency = frequencyinput * handles.asgdata.fr_prefixch2;
 if (frequency > handles.asgdata.frequencyMAX)
     errordlg('Value must be lower than 0!');
     
@@ -1698,12 +1827,12 @@ elseif(frequency < 0)
 end
 
 frequencystr = num2str(frequency);
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'frequency', frequencystr);
 
-handles.asgdata.frequencych2 = frequency;
+handles.asgdata.frequencych2 = frequencyinput;
 guidata(hObject,handles);
 
 end
@@ -1745,10 +1874,16 @@ end
 
 
 frequency = handles.asgdata.frequencych2 * handles.asgdata.fr_prefixch2;
+if (frequency > handles.asgdata.frequencyMAX)
+    errordlg('Frequnecy excedes maximum value!');
+    
+elseif(frequency < handles.asgdata.frequencyMIN)
+    errordlg('Frequnecy excedes minimum value!');
+end
 frequencystr = num2str(frequency);
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'frequency', frequencystr);
 
 guidata(hObject,handles);
@@ -1776,7 +1911,9 @@ function offset_input_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of offset_input_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of offset_input_ch2 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -1801,9 +1938,9 @@ end
 
 offsetstr = num2str(offset);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Offset', offsetstr);
 
 handles.asgdata.offsetch2 = offset;
@@ -1832,7 +1969,9 @@ function duty_cycle_input_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of duty_cycle_input_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of duty_cycle_input_ch2 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -1853,9 +1992,9 @@ end
 
 dutycyclestr = num2str(dutycycle);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'DutyCycle', dutycyclestr);
 
 handles.asgdata.dutycyclech2 = dutycycle;
@@ -1882,6 +2021,9 @@ function amplitude_input_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of amplitude_input_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of amplitude_input_ch2 as a double
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -1906,9 +2048,9 @@ end
 
 amplitudestr = num2str(amplitude);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Amplitude', amplitudestr);
 
 handles.asgdata.amplitudech2 = amplitude;
@@ -1936,7 +2078,9 @@ function phase_input_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of phase_input_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of phase_input_ch2 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -1957,9 +2101,9 @@ end
 
 phasestr = num2str(phase);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Phase', phasestr);
 
 handles.asgdata.phasech2 = phase;
@@ -1996,15 +2140,19 @@ for childtag = 1:length(children)
     end
 end
 data=[];
-data= dlmread(file);
-datastr = sprintf('%0.5f,',data);
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Arbitrarywaveformch2'); %144000 characters
-groupObj = groupObj(1);
-invoke(groupObj, 'CustomForm', datastr);
-
-handle.asgdata.arbitrarydatach2 = data;
-guidata(hObject,handles);
+if (exist(file)==2)
+    data= dlmread(file);
+    datastr = sprintf('%0.5f,',data);
+    deviceObj = handles.device;
+    groupObj = get(deviceObj, 'Arbitrarywaveformch2'); %144000 characters
+    
+    invoke(groupObj, 'CustomForm', datastr);
+    
+    handle.asgdata.arbitrarydatach2 = data;
+    guidata(hObject,handles);
+else
+    errordlg('Please provide existing file!');
+end
 end
 % --- Executes on button press in SINE_togg_ch2.
 function SINE_togg_ch2_Callback(hObject, eventdata, handles)
@@ -2016,10 +2164,10 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'SINE');
 
 parent = get(hObject,'parent');
@@ -2059,9 +2207,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'TRIANGLE');
 
 parent = get(hObject,'parent');
@@ -2098,9 +2246,9 @@ function SQR_togg_ch2_Callback(hObject, eventdata, handles)
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'SQUARE');
 
 
@@ -2138,9 +2286,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'SAWU');
 
 parent = get(hObject,'parent');
@@ -2177,9 +2325,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'SAWD');
 
 parent = get(hObject,'parent');
@@ -2215,17 +2363,17 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'PWM');
 
 
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 for childid = 1 :  length(children)
-    if strcmp(get(children(childid), 'Tag'),'PWM_togg_ch1')
-        set(children(childid),'BackgroundColor',[0.68  0.92 1]);
+    if strcmp(get(children(childid), 'Tag'),'PWM_togg_ch2')
+        set(children(childid),'BackgroundColor',[ 0.68  0.92  1 ]);
     elseif strcmp(get(children(childid), 'Tag'),'ARB_togg_ch2')
         set(children(childid),'BackgroundColor',[0.9412    0.9412    0.9412]);
     elseif strcmp(get(children(childid), 'Tag'),'SAWD_togg_ch2')
@@ -2278,9 +2426,9 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch2');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Waveform', 'ARBITRARY');
 
 
@@ -2316,7 +2464,9 @@ function arbitrary_file_insert_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of arbitrary_file_insert_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of arbitrary_file_insert_ch2 as a double
-
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 end
@@ -2466,10 +2616,25 @@ function trigg_imm_ch2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch2');
-groupObj = groupObj(1);
 invoke(groupObj, 'ImmediateTrigger');
+parent = get(hObject,'parent');
+children = get(parent,'Children');
+for childid = 1:length(children)
+    if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
+        set(children(childid),'Value',0);
+    end
+end
+
 
 handle.asgdata.ImmediateTgiggerch2 = 1;
 guidata(hObject,handles);
@@ -2506,14 +2671,18 @@ function burst_period_ch2_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of burst_period_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of burst_period_ch2 as a double
 period = get(hObject,'String');
+if(length(period) < 1)
+    errordlg('Missing parameter!');
+end
 if (period < 1)
     error('Error value must be greater than 0!');
 end
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Burstmodch2');
-groupObj = groupObj(1);
 invoke(groupObj, 'InternalPeriod', period);
-handles.asgdata.burst_periodch1 = period;
+invoke(groupObj, 'Enabled', 'ON');
+handles.asgdata.burst_periodch2 = period;
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function burst_period_ch2_CreateFcn(hObject, eventdata, handles)
@@ -2537,16 +2706,19 @@ function num_bursts_ch2_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of num_bursts_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of num_bursts_ch2 as a double
 burstsnum= get(hObject,'String');
-
+if(length(burstsnum) < 1)
+    errordlg('Missing parameter!');
+end
 if (burstsnum < 1)
     error('Error value must be greater than 0!');
 end
 
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Burstmodch1');
-groupObj = groupObj(1);
+deviceObj = handles.device;
+groupObj = get(deviceObj, 'Burstmodch2');
+
 burstsnumstr = num2str(burstsnum);
 invoke(groupObj, 'BurstCount', burstsnumstr);
+invoke(groupObj, 'Enabled', 'ON');
 
 handles.asgdata.num_burstsch2 = burstsnum;
 guidata(hObject,handles);
@@ -2572,14 +2744,20 @@ function number_ofcycles_ch2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of number_ofcycles_ch2 as text
 %        str2double(get(hObject,'String')) returns contents of number_ofcycles_ch2 as a double
-cycles = str2double(get(hObject,'String'));
-cycles = get(hObject,'String');
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Burstmodch1');
-groupObj = groupObj(1);
-invoke(groupObj, 'Cycles', cycles);
 
-handles.asgdata.burst_signal_periodesch2= 2;
+cycles = get(hObject,'String');
+if(length(cycles) < 1)
+    errordlg('Missing parameter!');
+end
+cycles = str2double(get(hObject,'String'));
+
+deviceObj = handles.device;
+groupObj = get(deviceObj, 'Burstmodch2');
+
+invoke(groupObj, 'Cycles', num2str(cycles));
+invoke(groupObj, 'Enabled', 'ON');
+
+handles.asgdata.burst_signal_periodesch2 = cycles;
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -2607,9 +2785,12 @@ if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
 
-deviceObj = instrfind('Type', 'fcngen');
-groupObj = get(deviceObj, 'Burstmodch2');
-groupObj = groupObj(1);
+deviceObj = handles.device;
+groupObj = get(deviceObj, 'Triggerch2');
+burstObj = get(deviceObj, 'Burstmodch2');
+
+
+handles.asgdata.triggersourcech1 = 'INT';
 
 parent = get(hObject,'parent');
 children = get(parent,'Children');
@@ -2617,8 +2798,8 @@ children = get(parent,'Children');
 
 if((get(hObject,'BackgroundColor') == [0.68  0.92 1]))
     set(hObject,'BackgroundColor',[0.9412    0.9412    0.9412]);
-    invoke(groupObj, 'Enabled', 'OFF');
-    
+    invoke(burstObj, 'Enabled', 'OFF');
+    invoke(groupObj, 'Source', 'INT');
     for childid = 1 :  length(children)
         if strcmp(get(children(childid), 'Tag'),'trigg_imm_ch2')
             set(children(childid),'Enable','off');
@@ -2630,18 +2811,32 @@ if((get(hObject,'BackgroundColor') == [0.68  0.92 1]))
             set(children(childid),'Enable','off');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch2')
             set(children(childid),'Enable','off');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
             set(children(childid),'Enable','off');
+            set(children(childid),'Value',0);
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
+            set(children(childid),'Enable','off');
+            set(children(childid),'Value',0);
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
             set(children(childid),'Enable','off');
+            set(children(childid),'Value',1);
         elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
             set(children(childid),'Enable','off');
+            set(children(childid),'Value',0);
         end
         
     end
+    
+    %set fr again
+    frequency = handles.asgdata.frequencych2 * handles.asgdata.fr_prefixch2;
+    frequencystr = num2str(frequency);
+    groupObj = get(deviceObj, 'Arbitrarywaveformch2');
+    invoke(groupObj, 'frequency', frequencystr);
+    
 else
     set(hObject,'BackgroundColor',[0.68  0.92 1]);
-    invoke(groupObj, 'Enabled', 'ON');
+    invoke(burstObj, 'Enabled', 'ON');
+    invoke(groupObj, 'Source', 'INT');
     for childid = 1 :  length(children)
         if strcmp(get(children(childid), 'Tag'),'trigg_imm_ch2')
             set(children(childid),'Enable','on');
@@ -2653,15 +2848,37 @@ else
             set(children(childid),'Enable','on');
         elseif strcmp(get(children(childid), 'Tag'),'trigg_source_ch2')
             set(children(childid),'Enable','on');
-        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
             set(children(childid),'Enable','on');
+            set(children(childid),'Value',0);
+        elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
+            set(children(childid),'Enable','on');    
+            set(children(childid),'Value',0);
         elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
             set(children(childid),'Enable','on');
+            set(children(childid),'Value',1);
         elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
             set(children(childid),'Enable','on');
+            set(children(childid),'Value',0);
         end
         
     end
+    %send default values
+    groupObj = get(deviceObj, 'Burstmodch2');    
+    invoke(groupObj, 'BurstCount', num2str(handles.asgdata.num_burstsch2));
+    invoke(groupObj, 'Cycles', num2str(handles.asgdata.burst_signal_periodesch2));
+    invoke(groupObj, 'InternalPeriod', num2str(handles.asgdata.burst_periodch2));
+    
+    parent = get(hObject,'parent');
+    child = findobj(parent,'Tag','number_ofcycles_ch2');%find object
+    set(child,'String',num2str(handles.asgdata.burst_signal_periodesch2)); %Set string to graphical element
+    
+    child = findobj(parent,'Tag','num_bursts_ch2');%find object
+    set(child,'String',num2str(handles.asgdata.num_burstsch2)); %Set string to graphical element
+    
+    child = findobj(parent,'Tag','burst_period_ch2');%find object
+    set(child,'String',num2str(handles.asgdata.burst_periodch2)); %Set string to graphical element
+    
 end
 
 handles.asgdata.EnableBurstch2 = 1;
@@ -2685,16 +2902,19 @@ function trigger_gated_radio_ch1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of trigger_gated_radio_ch1
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch1');
-groupObj = groupObj(1);
+burstObj = get(deviceObj, 'Burstmodch1');
 invoke(groupObj, 'Source', 'GATED');
+invoke(burstObj, 'Enabled', 'ON');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 for childid = 1:length(children)
     if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',1);
@@ -2712,16 +2932,19 @@ function trigger_internal_radio_ch1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of trigger_internal_radio_ch1
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch1');
-groupObj = groupObj(1);
+burstObj = get(deviceObj, 'Burstmodch1');
 invoke(groupObj, 'Source', 'INT');
+invoke(burstObj, 'Enabled', 'ON');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 for childid = 1:length(children)
     if strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',1);
@@ -2733,17 +2956,18 @@ handles.asgdata.triggersourcech1 = 'INT';
 guidata(hObject,handles);
 
 
-% --- Executes on button press in trigger_external_radio_ch2.
-function trigger_external_radio_ch2_Callback(hObject, eventdata, handles)
-% hObject    handle to trigger_external_radio_ch2 (see GCBO)
+% --- Executes on button press in trigger_external_N_radio_ch2.
+function trigger_external_N_radio_ch2_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_N_radio_ch2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of trigger_external_radio_ch2
-deviceObj = instrfind('Type', 'fcngen');
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch2
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch2');
-groupObj = groupObj(1);
-invoke(groupObj, 'Source', 'EXT');
+burstObj = get(deviceObj, 'Burstmodch2');
+invoke(groupObj, 'Source', 'EXT_NE');
+invoke(burstObj, 'Enabled', 'ON');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 
@@ -2752,14 +2976,16 @@ for childid = 1:length(children)
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
         set(children(childid),'Value',1);
     end
 end
 
 
 
-handles.asgdata.triggersourcech2 = 'EXT';
+handles.asgdata.triggersourcech2 = 'EXT_NE';
 guidata(hObject,handles);
 
 % --- Executes on button press in trigger_gated_radio_ch2.
@@ -2769,16 +2995,19 @@ function trigger_gated_radio_ch2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of trigger_gated_radio_ch2
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch2');
-groupObj = groupObj(1);
+burstObj = get(deviceObj, 'Burstmodch2');
 invoke(groupObj, 'Source', 'GATED');
+invoke(burstObj, 'Enabled', 'ON');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 for childid = 1:length(children)
     if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
         set(children(childid),'Value',1);
@@ -2795,16 +3024,19 @@ function trigger_internal_radio_ch2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of trigger_internal_radio_ch2
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch2');
-groupObj = groupObj(1);
+burstObj = get(deviceObj, 'Burstmodch2');
 invoke(groupObj, 'Source', 'INT');
+invoke(burstObj, 'Enabled', 'ON');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 for childid = 1:length(children)
-    if strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch2')
+    if strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
         set(children(childid),'Value',1);
@@ -2815,42 +3047,44 @@ handles.asgdata.triggersourcech2 = 'INT';
 guidata(hObject,handles);
 
 
-% --- Executes on button press in trigger_external_radio_ch2.
+% --- Executes on button press in trigger_external_N_radio_ch2.
 function radiobutton26_Callback(hObject, eventdata, handles)
-% hObject    handle to trigger_external_radio_ch2 (see GCBO)
+% hObject    handle to trigger_external_N_radio_ch2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of trigger_external_radio_ch2
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch2
 %
 
-% --- Executes on button press in trigger_external_radio_ch1.
-function trigger_external_radio_ch1_Callback(hObject, eventdata, handles)
-% hObject    handle to trigger_external_radio_ch1 (see GCBO)
+% --- Executes on button press in trigger_external_N_radio_ch1.
+function trigger_external_N_radio_ch1_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_N_radio_ch1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of trigger_external_radio_ch1
-deviceObj = instrfind('Type', 'fcngen');
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch1
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Triggerch1');
-groupObj = groupObj(1);
-invoke(groupObj, 'Source', 'EXT');
-
+burstObj = get(deviceObj, 'Burstmodch1');
+invoke(groupObj, 'Source', 'EXT_NE');
+invoke(burstObj, 'Enabled', 'ON');
 parent = get(hObject,'parent');
 children = get(parent,'Children');
 %get(children(1))
 
 for childid = 1:length(children)
-    if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+    if strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+        set(children(childid),'Value',1);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
         set(children(childid),'Value',0);
     elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
         set(children(childid),'Value',0);
-    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_radio_ch1')
-        set(children(childid),'Value',1);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',0);
     end
 end
 
-handles.asgdata.triggersourcech2 = 'EXT';
+handles.asgdata.triggersourcech2 = 'EXT_NE';
 guidata(hObject,handles);
 
 
@@ -2906,17 +3140,23 @@ function num_bursts_ch1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of num_bursts_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of num_bursts_ch1 as a double
-deviceObj = instrfind('Type', 'fcngen');
-
+deviceObj = handles.device;
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 number_of_bursts = str2double(get(hObject,'String'));
+if (number_of_bursts > handles.asgdata.num_bursts_MAX)
+    errordlg('Maximum number of bursts is 50000');
+end
+
 number_of_burstsstr = get(hObject,'String');
 groupObj = get(deviceObj, 'Burstmodch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'BurstCount', number_of_burstsstr);
+invoke(groupObj, 'Enabled', 'ON');
 
 handles.asgdata.num_burstsch1 = number_of_bursts;
 guidata(hObject,handles);
-
 
 
 function amplitude_input_ch11_Callback(hObject, eventdata, handles)
@@ -2955,9 +3195,9 @@ end
 
 amplitudestr = num2str(amplitude);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Amplitude', amplitudestr);
 
 handles.asgdata.amplitudech1 = amplitude;
@@ -2985,6 +3225,10 @@ function amplitude_input_ch1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of amplitude_input_ch1 as text
 %        str2double(get(hObject,'String')) returns contents of amplitude_input_ch1 as a double
+
+if(length(get(hObject,'String')) < 1)
+    errordlg('Missing parameter!');
+end
 if (~strcmp(handles.asgdata.connectionstate,'active'))
     errordlg(handles.asgdata.connectmessage);
 else
@@ -3014,9 +3258,9 @@ end
 
 amplitudestr = num2str(amplitude);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Amplitude', amplitudestr);
 
 handles.asgdata.amplitudech1 = amplitude;
@@ -3073,9 +3317,9 @@ end
 
 amplitudestr = num2str(amplitude);
 
-deviceObj = instrfind('Type', 'fcngen');
+deviceObj = handles.device;
 groupObj = get(deviceObj, 'Arbitrarywaveformch1');
-groupObj = groupObj(1);
+
 invoke(groupObj, 'Amplitude', amplitudestr);
 
 handles.asgdata.amplitudech1 = amplitude;
@@ -3093,3 +3337,86 @@ function edit55_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in trigger_external_P_radio_ch2.
+function trigger_external_P_radio_ch2_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_P_radio_ch2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_P_radio_ch2
+deviceObj = handles.device;
+groupObj = get(deviceObj, 'Triggerch2');
+burstObj = get(deviceObj, 'Burstmodch2');
+invoke(groupObj, 'Source', 'EXT_PE');
+invoke(burstObj, 'Enabled', 'ON');
+parent = get(hObject,'parent');
+children = get(parent,'Children');
+%get(children(1))
+
+for childid = 1:length(children)
+    if strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch2')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch2')
+        set(children(childid),'Value',1);
+    end
+end
+
+handles.asgdata.triggersourcech2 = 'EXT_PE';
+guidata(hObject,handles);
+
+% --- Executes on button press in trigger_external_P_radio_ch1.
+function trigger_external_P_radio_ch1_Callback(hObject, eventdata, handles)
+% hObject    handle to trigger_external_P_radio_ch1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_P_radio_ch1
+% hObject    handle to trigger_external_N_radio_ch1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of trigger_external_N_radio_ch1
+deviceObj = handles.device;
+groupObj = get(deviceObj, 'Triggerch1');
+burstObj = get(deviceObj, 'Burstmodch1');
+invoke(groupObj, 'Source', 'EXT_PE');
+
+invoke(burstObj, 'Enabled', 'ON');
+parent = get(hObject,'parent');
+children = get(parent,'Children');
+%get(children(1))
+
+for childid = 1:length(children)
+    if strcmp(get(children(childid), 'Tag'),'trigger_external_P_radio_ch1')
+        set(children(childid),'Value',1);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_internal_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_gated_radio_ch1')
+        set(children(childid),'Value',0);
+    elseif strcmp(get(children(childid), 'Tag'),'trigger_external_N_radio_ch1')
+        set(children(childid),'Value',0);
+    end
+end
+
+handles.asgdata.triggersourcech2 = 'EXT_PE';
+guidata(hObject,handles);
+
+
+% --- Executes when figure1 is resized.
+function figure1_ResizeFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function enable_burst_togg_ch2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to enable_burst_togg_ch2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
