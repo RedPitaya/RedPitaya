@@ -258,7 +258,7 @@ int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *deci
 }
 
 
-	int getRpGain(const char *gainStr, rp_pinState_t *state) {
+int getRpGain(const char *gainStr, rp_pinState_t *state) {
 	if (strcmp(gainStr, "LV") == 0) {
 		*state = RP_LOW;
 	}

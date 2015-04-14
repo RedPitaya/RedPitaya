@@ -582,6 +582,7 @@ scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
 
     // Convert gain to rp_pinState_t
     rp_pinState_t state;
+
     if (getRpGain(gainString, &state)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN parameter gain is invalid.");
         return SCPI_RES_ERR;
@@ -651,7 +652,7 @@ scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferInt16(context, buffer, size);
     }
 
-    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned  latest data.");
+    syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:LAT:N? Successfully returned latest data.");
 
     return SCPI_RES_OK;
 }
