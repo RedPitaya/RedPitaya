@@ -23,6 +23,9 @@
 int hk_Init();
 int hk_Release();
 
+int hk_GetID(uint32_t *id);
+int hk_GetDNA(uint64_t *dna);
+
 int hk_SetLedBits(uint32_t bits);
 int hk_UnsetLedBits(uint32_t bits);
 int hk_AreLedBitsSet(uint32_t bits, bool* result);

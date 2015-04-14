@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <arpa/inet.h> 
 
 int main(int argc, char *argv[])
@@ -29,10 +30,13 @@ int main(int argc, char *argv[])
     int sockfd = 0, n = 0;
     char recvBuff[1024];
     struct sockaddr_in serv_addr; 
+    bool binary_mode = false;
 
-    if(argc != 3)
+    if(argc != 3 && argc != 4)
     {
-        printf("\n Usage: %s <ip of server> <SCPI command> \n",argv[0]);
+        printf("\n Usage: %s <ip of server> <SCPI command> <argument>\n",argv[0]);
+        printf("\t Arguments:\n");
+        printf("\t\t -b Binary mode\n");
         return 1;
     } 
 
@@ -60,6 +64,18 @@ int main(int argc, char *argv[])
        return 1;
     } 
 
+    if (argc == 4 && strcmp(argv[3], "-b") == 0)
+    {
+        // Switch to bin mode
+        strcpy(recvBuff, "ACQ:DATA:FORMAT BIN\r\n");
+
+        if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
+            perror("send");
+        }
+
+        binary_mode = true;
+    }
+
     strcpy(recvBuff, argv[2]);
     strcat(recvBuff, "\r\n");
     if (send(sockfd, recvBuff, strlen(recvBuff), 0) == -1) {
@@ -68,7 +84,7 @@ int main(int argc, char *argv[])
 
 
    printf("Sent message %s\n", recvBuff	);	
- fputs("Received: ", stdout);
+   fputs("Received: ", stdout);
    fflush(stdout);
 
 
@@ -76,10 +92,19 @@ int main(int argc, char *argv[])
     {
         recvBuff[n] = 0;
 	   
-        if(fputs(recvBuff, stdout) == EOF)
-        {
-            printf("\n Error : Fputs error\n");
+        if (binary_mode) {
+            for (int i = 0; i < n; ++i)
+            {
+                printf("%X ", (unsigned char)recvBuff[i]);
+            }
         }
+        else {
+            if(fputs(recvBuff, stdout) == EOF)
+            {
+                printf("\n Error : Fputs error\n");
+            }
+        }
+
 	    fflush(stdout);
 
     } 

@@ -18,6 +18,7 @@
 #include "version.h"
 #include "common.h"
 #include "housekeeping.h"
+#include "id_handler.h"
 #include "dpin_handler.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
@@ -166,6 +167,19 @@ int rp_CalibrateBackEndScale(rp_channel_t channel) {
     return calib_SetBackEndScale(channel);
 }
 
+/**
+ * Identification
+ */
+
+int rp_IdGetID(uint32_t *id)
+{
+    return id_GetID(id);
+}
+
+int rp_IdGetDNA(uint64_t *dna)
+{
+    return id_GetDNA(dna);
+}
 
 /**
  * Digital Pin Input Output methods
