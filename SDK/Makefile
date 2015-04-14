@@ -16,7 +16,7 @@ REVISION ?= devbuild
 
 CC = CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 NAME = SDK
-#Here I use the same var for rplib and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
+#Here I use the same var for librp and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
 #We could make another var just for rp.h
 RP_LIBRARY_INCLUDE = ../api-mockup/rpbase/src
 RP_APP_LIBRARY_INCLUDE = ../api-mockup/rpApplications/src
@@ -30,7 +30,7 @@ include:
 	@echo $(GREET_MSG)
 	mkdir -p include
 	cp $(RP_LIBRARY_INCLUDE)/rp.h ./include
-	#Make rplib, if we are making SDK without the main makefile
+	#Make librp, if we are making SDK without the main makefile
 	$(MAKE) -C $(RP_LIBRARY_INCLUDE)
 	cp $(RP_LIBRARY_INCLUDE)/librp.so ./include
 	cp $(RP_APP_LIBRARY_INCLUDE)/rpApp.h ./include
@@ -53,7 +53,3 @@ zip: include
 clean:
 	rm -rf include
 	rm -rf ../SDK*.zip
-	
-	
-
-

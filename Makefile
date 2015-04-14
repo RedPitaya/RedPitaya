@@ -36,9 +36,10 @@ CALIB_DIR=Test/calib
 DISCOVERY_DIR=OS/discovery
 ECOSYSTEM_DIR=Applications/ecosystem
 SCPI_SERVER_DIR=scpi-server/
-RPLIB_DIR=api-mockup/rpbase/src
+LIBRP_DIR=api-mockup/rpbase/src
 RPAPPLIB_DIR=api-mockup/rpApplications/src
 SDK_DIR=SDK/
+EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
@@ -57,7 +58,7 @@ CALIB=$(BUILD)/bin/calib
 DISCOVERY=$(BUILD)/sbin/discovery
 ECOSYSTEM=$(BUILD)/www/apps/info/info.json
 SCPI_SERVER = $(BUILD)/bin/scpi-server
-RPLIB = $(BUILD)/lib/librp.so
+LIBRP = $(BUILD)/lib/librp.so
 RPAPPLIB = $(BUILD)/lib/librpapp.so
 GDBSERVER  = $(BUILD)/bin/gdbserver
 
@@ -72,7 +73,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(RPLIB) $(RPAPPLIB) $(GDBSERVER) sdk
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(RPAPPLIB) $(GDBSERVER) sdk rp_communication
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -148,9 +149,9 @@ $(SCPI_SERVER):
 	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-$(RPLIB):
-	$(MAKE) -C $(RPLIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(RPLIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+$(LIBRP):
+	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
 
 $(RPAPPLIB):
 	$(MAKE) -C $(RPAPPLIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
@@ -166,7 +167,10 @@ sdk:
 sdkPub:
 	$(MAKE) -C $(SDK_DIR) zip
 
-zip: $(TARGET)
+rp_communication:
+	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
@@ -180,9 +184,10 @@ clean:
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(RPLIB_DIR) clean
+	make -C $(LIBRP_DIR) clean
 	make -C $(RPAPPLIB_DIR) clean
 	make -C $(SDK_DIR) clean
+	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip

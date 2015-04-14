@@ -54,7 +54,5 @@ int getRpAppTrigSweepString(rpApp_osc_trig_sweep_t sweep, char *string);
 int getRpInfinityInteger(const char *string, int32_t *value);
 int getRpInfinityIntegerString(int32_t value, char *string);
 int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit);
-int getRpFormat(const char *formatString, rp_scpi_acq_format_t *format);
-
 
 #endif /* UTILS_H_ */

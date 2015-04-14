@@ -30,6 +30,7 @@ module system_wrapper
     FIXED_IO_ps_clk,
     FIXED_IO_ps_porb,
     FIXED_IO_ps_srstb,
+    M_AXI_GP0_ACLK,
     M_AXI_GP0_araddr,
     M_AXI_GP0_arburst,
     M_AXI_GP0_arcache,
@@ -68,20 +69,6 @@ module system_wrapper
     M_AXI_GP0_wready,
     M_AXI_GP0_wstrb,
     M_AXI_GP0_wvalid,
-    SPI0_MISO_I,
-    SPI0_MISO_O,
-    SPI0_MISO_T,
-    SPI0_MOSI_I,
-    SPI0_MOSI_O,
-    SPI0_MOSI_T,
-    SPI0_SCLK_I,
-    SPI0_SCLK_O,
-    SPI0_SCLK_T,
-    SPI0_SS1_O,
-    SPI0_SS2_O,
-    SPI0_SS_I,
-    SPI0_SS_O,
-    SPI0_SS_T,
     S_AXI_HP0_aclk,
     S_AXI_HP0_araddr,
     S_AXI_HP0_arburst,
@@ -189,6 +176,7 @@ module system_wrapper
   inout FIXED_IO_ps_clk;
   inout FIXED_IO_ps_porb;
   inout FIXED_IO_ps_srstb;
+  input M_AXI_GP0_ACLK;
   output [31:0]M_AXI_GP0_araddr;
   output [1:0]M_AXI_GP0_arburst;
   output [3:0]M_AXI_GP0_arcache;
@@ -227,20 +215,6 @@ module system_wrapper
   input M_AXI_GP0_wready;
   output [3:0]M_AXI_GP0_wstrb;
   output M_AXI_GP0_wvalid;
-  input SPI0_MISO_I;
-  output SPI0_MISO_O;
-  output SPI0_MISO_T;
-  input SPI0_MOSI_I;
-  output SPI0_MOSI_O;
-  output SPI0_MOSI_T;
-  input SPI0_SCLK_I;
-  output SPI0_SCLK_O;
-  output SPI0_SCLK_T;
-  output SPI0_SS1_O;
-  output SPI0_SS2_O;
-  input SPI0_SS_I;
-  output SPI0_SS_O;
-  output SPI0_SS_T;
   input S_AXI_HP0_aclk;
   input [31:0]S_AXI_HP0_araddr;
   input [1:0]S_AXI_HP0_arburst;
@@ -349,6 +323,7 @@ module system_wrapper
   wire FIXED_IO_ps_clk;
   wire FIXED_IO_ps_porb;
   wire FIXED_IO_ps_srstb;
+  wire M_AXI_GP0_ACLK;
   wire [31:0]M_AXI_GP0_araddr;
   wire [1:0]M_AXI_GP0_arburst;
   wire [3:0]M_AXI_GP0_arcache;
@@ -387,20 +362,6 @@ module system_wrapper
   wire M_AXI_GP0_wready;
   wire [3:0]M_AXI_GP0_wstrb;
   wire M_AXI_GP0_wvalid;
-  wire SPI0_MISO_I;
-  wire SPI0_MISO_O;
-  wire SPI0_MISO_T;
-  wire SPI0_MOSI_I;
-  wire SPI0_MOSI_O;
-  wire SPI0_MOSI_T;
-  wire SPI0_SCLK_I;
-  wire SPI0_SCLK_O;
-  wire SPI0_SCLK_T;
-  wire SPI0_SS1_O;
-  wire SPI0_SS2_O;
-  wire SPI0_SS_I;
-  wire SPI0_SS_O;
-  wire SPI0_SS_T;
   wire S_AXI_HP0_aclk;
   wire [31:0]S_AXI_HP0_araddr;
   wire [1:0]S_AXI_HP0_arburst;
@@ -510,6 +471,7 @@ system system_i
         .FIXED_IO_ps_clk(FIXED_IO_ps_clk),
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
+        .M_AXI_GP0_ACLK(M_AXI_GP0_ACLK),
         .M_AXI_GP0_araddr(M_AXI_GP0_araddr),
         .M_AXI_GP0_arburst(M_AXI_GP0_arburst),
         .M_AXI_GP0_arcache(M_AXI_GP0_arcache),
@@ -548,20 +510,6 @@ system system_i
         .M_AXI_GP0_wready(M_AXI_GP0_wready),
         .M_AXI_GP0_wstrb(M_AXI_GP0_wstrb),
         .M_AXI_GP0_wvalid(M_AXI_GP0_wvalid),
-        .SPI0_MISO_I(SPI0_MISO_I),
-        .SPI0_MISO_O(SPI0_MISO_O),
-        .SPI0_MISO_T(SPI0_MISO_T),
-        .SPI0_MOSI_I(SPI0_MOSI_I),
-        .SPI0_MOSI_O(SPI0_MOSI_O),
-        .SPI0_MOSI_T(SPI0_MOSI_T),
-        .SPI0_SCLK_I(SPI0_SCLK_I),
-        .SPI0_SCLK_O(SPI0_SCLK_O),
-        .SPI0_SCLK_T(SPI0_SCLK_T),
-        .SPI0_SS1_O(SPI0_SS1_O),
-        .SPI0_SS2_O(SPI0_SS2_O),
-        .SPI0_SS_I(SPI0_SS_I),
-        .SPI0_SS_O(SPI0_SS_O),
-        .SPI0_SS_T(SPI0_SS_T),
         .S_AXI_HP0_aclk(S_AXI_HP0_aclk),
         .S_AXI_HP0_araddr(S_AXI_HP0_araddr),
         .S_AXI_HP0_arburst(S_AXI_HP0_arburst),

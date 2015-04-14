@@ -21,7 +21,32 @@
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
-rp_scpi_acq_format_t format = RP_SCPI_FLAOT;        // default value
+
+scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
+    const char * param;
+    size_t param_len;
+
+    // read first parameter Format type (BIN, ASCII)
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+        syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    if (strncasecmp(param, "BIN", param_len) == 0) {
+        context->binary_output = true;
+        syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to BIN");
+    }
+    else if (strncasecmp(param, "ASCII", param_len) == 0) {
+        context->binary_output = false;
+        syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to ASCII");
+    }
+    else {
+        syslog(LOG_ERR, "*ACQ:DATA:FORMAT wrong argument value");
+        return SCPI_RES_ERR;
+    }
+
+    return SCPI_RES_OK;
+}
 
 
 scpi_result_t RP_AcqStart(scpi_t *context) {
@@ -57,7 +82,7 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     }
 
     unit = RP_SCPI_VOLTS;
-    format = RP_SCPI_FLAOT;
+    context->binary_output = false;
 
     syslog(LOG_INFO, "*ACQ:RST Successful.");
     return SCPI_RES_OK;
@@ -184,8 +209,12 @@ scpi_result_t RP_AcqGetSamplingRateHz(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    // Return back result
-    SCPI_ResultDouble(context, samplingRate);
+    // Return back string result
+    char samplingRateString;
+    sprintf(&samplingRateString, "%.0f Hz", samplingRate);
+
+    //Return string in form "<Value> Hz"
+    SCPI_ResultString(context, &samplingRateString);
 
     syslog(LOG_INFO, "*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.");
 
@@ -488,33 +517,6 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqScpiDataFormat(scpi_t *context) {
-    const char * param;
-    size_t param_len;
-
-    char formatString[10];
-
-    // read first parameter UNITS (ASCII, FLOAT)
-    if (!SCPI_ParamString(context,  &param, &param_len, false)) {
-        syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-    else {
-        strncpy(formatString, param, param_len);
-        formatString[param_len] = '\0';
-    }
-
-    int result = getRpFormat(formatString, &format);
-    if (result != RP_OK) {
-        syslog(LOG_ERR, "*ACQ:DATA:FORMAT Failed to convert format from string: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*ACQ:DATA:FORMAT Successfully set format to %s.", formatString);
-
-    return SCPI_RES_OK;
-}
-
 scpi_result_t RP_AcqGetChanel1DataPos(scpi_t *context) {
     return RP_AcqGetDataPos(RP_CH_1, context);
 }
@@ -589,6 +591,7 @@ scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
 
     // Convert gain to rp_pinState_t
     rp_pinState_t state;
+
     if (getRpGain(gainString, &state)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN parameter gain is invalid.");
         return SCPI_RES_ERR;
@@ -658,7 +661,7 @@ scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
         SCPI_ResultBufferInt16(context, buffer, size);
     }
 
-    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned  latest data.");
+    syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:LAT:N? Successfully returned latest data.");
 
     return SCPI_RES_OK;
 }
