@@ -1,7 +1,11 @@
 MODELSIM_BIN=$(HOME)/altera/14.1/modelsim_ase/bin
 
+PATH_LIB=/opt/Xilinx/Vivado/2014.4/data/verilog/src
 PATH_RTL=../rtl
 PATH_TBN=../bench
+
+LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
+    $(PATH_LIB)/glbl.v
 
 RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/axi_slave.v \
@@ -34,14 +38,20 @@ TBN=$(PATH_TBN)/axi_master_model.sv \
     $(PATH_TBN)/red_pitaya_scope_tb.sv \
     $(PATH_TBN)/sys_bus_model.sv
 
-all: scope
+all: scope asg hk
 
-scope:
+compile: $(LIB) $(RTL) $(TBN)
 	$(MODELSIM_BIN)/vlib work
-	$(MODELSIM_BIN)/vlog $(RTL) $(TBN)
+	$(MODELSIM_BIN)/vlog $(LIB) $(RTL) $(TBN)
+
+scope: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_scope_tb
 
-asg:
-	$(MODELSIM_BIN)/vlib work
-	$(MODELSIM_BIN)/vlog $(RTL) $(TBN)
+asg: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_asg_tb
+
+hk: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_hk_tb
+
+clean:
+	rm -rf work
