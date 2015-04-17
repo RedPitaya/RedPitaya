@@ -20,7 +20,6 @@ RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/red_pitaya_pid.v \
     $(PATH_RTL)/red_pitaya_ps.v \
     $(PATH_RTL)/red_pitaya_scope.v \
-    $(PATH_RTL)/red_pitaya_test.v \
     $(PATH_RTL)/red_pitaya_top.v
 
 TBN=$(PATH_TBN)/axi_master_model.v \
