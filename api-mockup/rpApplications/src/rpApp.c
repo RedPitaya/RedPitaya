@@ -215,6 +215,10 @@ int rpApp_OscMeasureDutyCycle(rp_channel_t channel, float *dutyCycle) {
     return osc_measureDutyCycle(channel, dutyCycle);
 }
 
+int rpApp_OscMeasureRootMeanSquare(rp_channel_t channel, float *rms) {
+    return osc_measureRootMeanSquare(channel, rms);
+}
+
 int rpApp_OscGetCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value) {
     return osc_getCursorVoltage(channel, cursor, value);
 }

@@ -75,6 +75,7 @@ int osc_measureMinVoltage(rp_channel_t channel, float *Vmin);
 int osc_measureFrequency(rp_channel_t channel, float *frequency);
 int osc_measurePeriod(rp_channel_t channel, float *period);
 int osc_measureDutyCycle(rp_channel_t channel, float *dutyCycle);
+int osc_measureRootMeanSquare(rp_channel_t channel, float *rms);
 int osc_getCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value);
 int osc_getCursorTime(uint32_t cursor, float *value);
 int osc_getCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value);
