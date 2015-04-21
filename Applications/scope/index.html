@@ -1,0 +1,363 @@
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oscilloscope</title>
+  <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+  <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+  <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+  <script src="../assets/flot/jquery.flot.min.js"></script>
+  <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+  <script src="../assets/flot/jquery.flot.navigate.js"></script>
+  <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+  <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+  <script type="text/javascript">
+
+    // Settings which can be modified
+
+    var app_id = 'scope-new';
+    var root_url = '';
+    var start_app_url = root_url + '/bazaar?start=' + app_id;
+    var stop_app_url = root_url + '/bazaar?stop=';
+    var get_url = root_url + '/data';
+    var post_url = root_url + '/data';
+
+    var update_interval = 50;              // Update interval for PC, milliseconds
+    var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds
+    var request_timeout = 3000;            // Milliseconds
+    var long_timeout = 20000;              // Milliseconds
+    var meas_panel_dec = 5;                // Decimation for numerical measure panel to make it human readable
+    var meas_panel_dec_mobdev = 1;         // Decimation for numerical measure panel for mobile devices
+    var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
+    var xdecimal_places = 2;               // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
+    var trigger_level_xdecimal_places = 4; // Number of decimal places for trigger level tooltip
+    var range_offset = 1;                  // Percentages
+
+    var xmin = -1000000;
+    var xmax = 1000000;
+
+    var time_range_max = [130, 1000, 8, 130, 1, 8];
+    var range_steps = [0.5, 1, 2, 5, 10, 20, 50, 100];
+
+    // Settings which should not be modified
+
+    var update_timer = null;
+    var zoompan_timer = null;
+    var downloading = false;
+    var sending = false;
+    var send_que = false;
+    var use_long_timeout = false;
+    var trig_dragging = false;
+    var touch_last_y = 0;
+    var user_editing = false;
+    var app_started = false;
+    var last_get_failed = false;
+    var refresh_counter = 0;
+    var autorun = 1;
+    var datasets = [];
+    var plot = null;
+    var params = {
+      original: null,
+      local: null
+    };
+
+    // On page loaded
+
+    $(function() {
+
+      // Show different buttons on touch screens
+        update_interval = update_interval_mobdev;
+        $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
+        $('#btn_zoompan').show();
+
+      // Add application ID in the message from modal popup
+      $('.app-id').text(app_id);
+
+      // Modals
+      $('#modal_err, #modal_app').modal({ show: false, backdrop: 'static', keyboard: false });
+
+      // Other event bindings
+      $('#trigger_tooltip').tooltip({
+        title: '',
+        trigger: 'manual',
+        placement: 'auto left',
+        animation: false
+      });
+
+      // Load first data
+      updateGraphData();
+
+      // Stop the application when page is unloaded
+      window.onbeforeunload = function() {
+        $.ajax({
+          url: stop_app_url,
+          async: false
+        });
+      };
+
+    });
+
+    function startApp() {
+      $.get(
+        start_app_url
+      )
+      .done(function(dresult) {
+        if(dresult.status == 'ERROR') {
+          showModalError((dresult.reason ? dresult.reason : 'Could not start the application.'), true);
+        }
+      })
+      .fail(function() {
+        showModalError('Could not start the application.', true);
+      });
+    }
+
+    function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+      var err_modal = $('#modal_err');
+
+      err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+      err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+      err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+      err_modal.find('.modal-body').html(err_msg);
+      err_modal.modal('show');
+    }
+
+    function updateGraphData() {
+      if(downloading) {
+        return;
+      }
+      if(update_timer) {
+        clearTimeout(update_timer);
+        update_timer = null;
+      }
+      downloading = true;
+
+      // Send params if there are any unsent changes
+      sendParams();
+
+      var arun_before_ajax = autorun;
+      var long_timeout_used = use_long_timeout;
+
+      $.ajax({
+        url: get_url,
+        timeout: (use_long_timeout ? long_timeout : request_timeout),
+        cache: false
+      })
+              .done(function(dresult) {
+                last_get_failed = false;
+
+                if(dresult.status === 'ERROR') {
+                  if(! app_started) {
+                    startApp();
+                  }
+                  else {
+                    showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
+                  }
+                }
+                else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+                  // Check if the application started on the server is the same as on client
+                  if(app_id !== dresult.app.id) {
+                    if(! app_started) {
+                      startApp();
+                    }
+                    else {
+                      $('#new_app_id').text(dresult.app.id);
+                      $('#modal_app').modal('show');
+                    }
+                    return;
+                  }
+
+                  app_started = true;
+
+                  // Check if trigger mode (which may switch autorun) was changed during ajax request
+                  var arun_after_ajax = autorun;
+
+                  datasets = [];
+                  for(var i=0; i<dresult.datasets.g1.length; i++) {
+                    dresult.datasets.g1[i].color = i;
+                    dresult.datasets.g1[i].label = 'Channel ' + (i+1);
+                    datasets.push(dresult.datasets.g1[i]);
+                  }
+
+                  if(autorun || dresult.status === 'AGAIN') {
+                    if(autorun) {
+                      $('#btn_single').prop('disabled', true);
+                    }
+                    update_timer = setTimeout(function() {
+                      updateGraphData();
+                    }, update_interval);
+                  }
+                  else {
+                    $('#btn_single').prop('disabled', false);
+                  }
+                }
+                else {
+                  showModalError('Wrong application data received.', true, true);
+                }
+              })
+              .fail(function(jqXHR, textStatus, errorThrown) {
+                if(last_get_failed) {
+                  showModalError('Data receiving failed.<br>Error status: ' + textStatus, true, true);
+                  last_get_failed = false;
+                }
+                else {
+                  last_get_failed = true;
+                  downloading = false;
+                  updateGraphData();  // One more try
+                }
+              })
+              .always(function() {
+                if(! last_get_failed) {
+                  downloading = false;
+
+                  if(params.local) {
+                    // Disable trigger level input if trigger source is External or mode is not Normal
+                    if(params.original.trig_mode != 1 || params.original.trig_source == 2) {
+                      $('#trig_level').prop('disabled', true);
+                      if($('#trig_level').is(':focus')) {
+                        $('#trig_level').blur();
+                      }
+                      $('#apply_trig_level').hide().parent().removeClass('input-group');
+                    }
+                    else {
+                      $('#trig_level').prop('disabled', false);
+                    }
+                  }
+                }
+
+                if(long_timeout_used) {
+                  use_long_timeout = false;
+                }
+              });
+    }
+
+    function loadParams(orig_params) {
+      if(! $.isPlainObject(orig_params)) {
+        return;
+      }
+
+      // Same data in local and original params
+      params.original = $.extend({}, orig_params);
+      params.local = $.extend({}, params.original);
+
+      // Autorun if trigger mode is Auto(0) or Normal(1), inStop if it is Single(2)
+      autorun = (params.original.trig_mode == 2 ? 0 : 1);
+
+      updateTimeUnits(orig_params);
+    }
+
+    function updateTimeUnits(new_params) {
+      if(! $.isPlainObject(new_params)) {
+        return;
+      }
+
+      params.original.time_units = params.local.time_units = new_params.time_units;
+
+      var timeu_lbl = (params.original.time_units == 0 ? 'μs' : (params.original.time_units == 1 ? 'ms' : 's'));
+      $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
+    }
+
+    function isParamChanged() {
+      return false;
+    }
+
+    function sendParams(refresh_data, force_send, single_btn) {
+      if(sending || (force_send !== true && !isParamChanged())) {
+        send_que = sending;
+        return;
+      }
+
+      var auto_flag = params.local.auto_flag;  // Keep the value of auto_flag, because in POST response it is always 0
+      sending = true;
+      params.local.single_btn = (single_btn === true ? 1 : 0);
+      use_long_timeout = !!auto_flag;
+
+      $.ajax({
+        type: 'POST',
+        url: post_url,
+        data: JSON.stringify({ datasets: { params: params.local } }),
+        timeout: (use_long_timeout ? long_timeout : request_timeout),
+        cache: false
+      })
+              .done(function(dresult) {
+                // OK: Load the params received as POST result
+                if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+
+                  loadParams(dresult.datasets.params);
+
+                  if(refresh_data && !downloading) {
+                    updateGraphData();
+                  }
+                }
+                else if(dresult.status == 'ERROR') {
+                  showModalError((dresult.reason ? dresult.reason : 'Error while sending data (E1).'), false, true, true);
+                  send_que = false;
+                }
+                else {
+                  showModalError('Error while sending data (E2).', false, true, true);
+                }
+              })
+              .fail(function() {
+                showModalError('Error while sending data (E3).', false, true, true);
+              })
+              .always(function() {
+                sending = false;
+                user_editing = false;
+
+                if(send_que) {
+                  send_que = false;
+                  setTimeout(function(refresh_data) {
+                    sendParams(refresh_data);
+                  }, 100);
+                }
+              });
+    }
+
+  </script>
+  <script src="../assets/redpitaya.custom.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="container">
+    <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
+    <img class="logo pull-left" src="../assets/images/logo_white.png">
+    <h2 class="page-title">Oscilloscope</h2>
+  </div>
+</div>
+<div class="container">
+</div>
+<div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="modal_err_label">Application error</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default btn-close-modal btn-sm" id="btn_ignore">Ignore</button>
+        <button type="button" class="btn btn-default btn-sm" id="btn_retry_get">Retry</button>
+        <button type="button" class="btn btn-primary btn-app-restart btn-sm">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+      </div>
+      <div class="modal-body">
+        The <strong><span class="app-id">scope-new</span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br>
+        Do you want to switch to newly started application or to restart <strong><span class="app-id">scope-new</span></strong>?
+      </div>
+      <div class="modal-footer">
+        <a href="/index.html" class="btn btn-danger pull-left btn-sm">Exit app</a>
+        <button type="button" class="btn btn-default btn-sm" id="btn_switch_app">Switch</button>
+        <button type="button" class="btn btn-primary btn-app-restart btn-sm">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<iframe id="rdbIndicator" width="100%" height="270" border="0" src="chrome-extension://oknpjjbmpnndlpmnhmekjpocelpnlfdi/indicator.html" style="display: none; border: 0; position: fixed; left: 0; top: 0; z-index: 2147483647"></iframe><iframe id="rdbIndicator" width="100%" height="270" border="0" src="chrome-extension://oknpjjbmpnndlpmnhmekjpocelpnlfdi/indicator.html" style="display: none; border: 0; position: fixed; left: 0; top: 0; z-index: 2147483647"></iframe></body></html>
