@@ -487,6 +487,15 @@ int osc_measureDutyCycle(rp_channel_t channel, float *dutyCycle) {
     return RP_OK;
 }
 
+int osc_measureRootMeanSquare(rp_channel_t channel, float *rms) {
+    float rmsValue = 0;
+    for (int i = 0; i < VIEW_SIZE; ++i) {
+        rmsValue += view[channel][i] * view[channel][i];
+    }
+    *rms = (float) sqrt(rmsValue / VIEW_SIZE);
+    return RP_OK;
+}
+
 int osc_getCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value) {
     *value = unscaleAmplitudeChannel(channel, view[channel][cursor]);
     return RP_OK;

@@ -216,21 +216,15 @@ int main(int argc, char *argv[])
     handleCloseChildEvents();
 
 
-    int result = rp_Init();
+    int result = rpApp_Init();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to initialize RP library: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-
-    result = rp_Reset();
-    if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to reset RP: %s", rp_GetError(result));
+        syslog(LOG_ERR, "Failed to initialize RP APP library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
     result = rpApp_Reset();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to reset RP: %s", rp_GetError(result));
+        syslog(LOG_ERR, "Failed to reset RP APP: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
