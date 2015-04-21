@@ -299,6 +299,8 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:MEAS:CH2:T0?", .callback = RP_APP_OscChannel2MeasurePeriod,},
         {.pattern = "OSC:MEAS:CH1:DCYC?", .callback = RP_APP_OscChannel1MeasureDutyCycle,},
         {.pattern = "OSC:MEAS:CH2:DCYC?", .callback = RP_APP_OscChannel2MeasureDutyCycle,},
+        {.pattern = "OSC:MEAS:CH1:RMS?", .callback = RP_APP_OscChannel1RMS,},
+        {.pattern = "OSC:MEAS:CH2:RMS?", .callback = RP_APP_OscChannel2RMS,},
         {.pattern = "OSC:CUR:CH1:V? <cursor>", .callback = RP_APP_OscChannel1GetCursorVoltage,},
         {.pattern = "OSC:CUR:CH2:V? <cursor>", .callback = RP_APP_OscChannel2GetCursorVoltage,},
         {.pattern = "OSC:CUR:T? <cursor>", .callback = RP_APP_OscGetCursorTime,},

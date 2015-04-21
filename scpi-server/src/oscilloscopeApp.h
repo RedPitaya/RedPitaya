@@ -69,6 +69,8 @@ scpi_result_t RP_APP_OscChannel1MeasurePeriod(scpi_t *context);
 scpi_result_t RP_APP_OscChannel2MeasurePeriod(scpi_t *context);
 scpi_result_t RP_APP_OscChannel1MeasureDutyCycle(scpi_t *context);
 scpi_result_t RP_APP_OscChannel2MeasureDutyCycle(scpi_t *context);
+scpi_result_t RP_APP_OscChannel1RMS(scpi_t *context);
+scpi_result_t RP_APP_OscChannel2RMS(scpi_t *context);
 scpi_result_t RP_APP_OscChannel1GetCursorVoltage(scpi_t *context);
 scpi_result_t RP_APP_OscChannel2GetCursorVoltage(scpi_t *context);
 scpi_result_t RP_APP_OscChannel1GetCursorDeltaAmplitude(scpi_t *context);
@@ -93,6 +95,7 @@ scpi_result_t RP_APP_OscMeasureAmplitudeMin(rp_channel_t channel, scpi_t *contex
 scpi_result_t RP_APP_OscMeasureFrequency(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_APP_OscMeasurePeriod(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_APP_OscMeasureDutyCycle(rp_channel_t channel, scpi_t *context);
+scpi_result_t RP_APP_OscMeasureRMS(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_APP_OscGetCursorVoltage(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_APP_OscGetCursorDeltaAmplitude(rp_channel_t channel, scpi_t *context);
 

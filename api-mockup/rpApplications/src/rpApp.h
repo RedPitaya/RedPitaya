@@ -383,6 +383,15 @@ int rpApp_OscMeasurePeriod(rp_channel_t channel, float *period);
 int rpApp_OscMeasureDutyCycle(rp_channel_t channel, float *dutyCycle);
 
 /**
+* Gets signal root mean square of the signal.
+* @param channel Channel 1 or 2 on which we want to measure duty cycle.
+* @param dutyCycle Duty cycle pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureRootMeanSquare(rp_channel_t channel, float *rms);
+
+/**
 * Gets voltage at cursor position.
 * @param channel Channel 1 or 2 on which we want to get voltage.
 * @param cursor Cursor position at witch we get voltage.

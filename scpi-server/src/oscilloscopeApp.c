@@ -198,6 +198,14 @@ scpi_result_t RP_APP_OscChannel2MeasureDutyCycle(scpi_t *context) {
     return RP_APP_OscMeasureDutyCycle(RP_CH_2, context);
 }
 
+scpi_result_t RP_APP_OscChannel1RMS(scpi_t *context) {
+    return RP_APP_OscMeasureRMS(RP_CH_1, context);
+}
+
+scpi_result_t RP_APP_OscChannel2RMS(scpi_t *context) {
+    return RP_APP_OscMeasureRMS(RP_CH_2, context);
+}
+
 scpi_result_t RP_APP_OscChannel1GetCursorVoltage(scpi_t *context) {
     return RP_APP_OscGetCursorVoltage(RP_CH_1, context);
 }
@@ -741,6 +749,18 @@ scpi_result_t RP_APP_OscMeasureDutyCycle(rp_channel_t channel, scpi_t *context) 
     }
     SCPI_ResultDouble(context, value);
     syslog(LOG_INFO, "*OSC:MEAS:CH<n>:DCYC? get successfully.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_APP_OscMeasureRMS(rp_channel_t channel, scpi_t *context) {
+    float value;
+    int result = rpApp_OscMeasureRootMeanSquare(channel, &value);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:MEAS:CH<n>:RMS? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultDouble(context, value);
+    syslog(LOG_INFO, "*OSC:MEAS:CH<n>:RMS? get successfully.");
     return SCPI_RES_OK;
 }
 
