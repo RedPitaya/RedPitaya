@@ -337,10 +337,10 @@ always @(posedge axi0_clk_o) begin
    end
 
    if (axi_a_we && adc_dv) begin
-      if (axi_a_dat_sel == 2'b00) axi_a_dat[ 16-1:  0] <= {2'h0,adc_a_dat};
-      if (axi_a_dat_sel == 2'b01) axi_a_dat[ 32-1: 16] <= {2'h0,adc_a_dat};
-      if (axi_a_dat_sel == 2'b10) axi_a_dat[ 48-1: 32] <= {2'h0,adc_a_dat};
-      if (axi_a_dat_sel == 2'b11) axi_a_dat[ 64-1: 48] <= {2'h0,adc_a_dat};
+      if (axi_a_dat_sel == 2'b00) axi_a_dat[ 16-1:  0] <= $signed(adc_a_dat);
+      if (axi_a_dat_sel == 2'b01) axi_a_dat[ 32-1: 16] <= $signed(adc_a_dat);
+      if (axi_a_dat_sel == 2'b10) axi_a_dat[ 48-1: 32] <= $signed(adc_a_dat);
+      if (axi_a_dat_sel == 2'b11) axi_a_dat[ 64-1: 48] <= $signed(adc_a_dat);
    end
 
    if (axi_a_clr)
@@ -453,10 +453,10 @@ always @(posedge axi1_clk_o) begin
    end
 
    if (axi_b_we && adc_dv) begin
-      if (axi_b_dat_sel == 2'b00) axi_b_dat[ 16-1:  0] <= {2'h0,adc_b_dat};
-      if (axi_b_dat_sel == 2'b01) axi_b_dat[ 32-1: 16] <= {2'h0,adc_b_dat};
-      if (axi_b_dat_sel == 2'b10) axi_b_dat[ 48-1: 32] <= {2'h0,adc_b_dat};
-      if (axi_b_dat_sel == 2'b11) axi_b_dat[ 64-1: 48] <= {2'h0,adc_b_dat};
+      if (axi_b_dat_sel == 2'b00) axi_b_dat[ 16-1:  0] <= $signed(adc_b_dat);
+      if (axi_b_dat_sel == 2'b01) axi_b_dat[ 32-1: 16] <= $signed(adc_b_dat);
+      if (axi_b_dat_sel == 2'b10) axi_b_dat[ 48-1: 32] <= $signed(adc_b_dat);
+      if (axi_b_dat_sel == 2'b11) axi_b_dat[ 64-1: 48] <= $signed(adc_b_dat);
    end
 
    if (axi_b_clr)
