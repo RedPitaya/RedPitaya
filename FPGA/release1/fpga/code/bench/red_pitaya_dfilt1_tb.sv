@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -24,67 +22,45 @@
  * 
  */
 
-
-
 `timescale 1ns / 1ps
 
-module red_pitaya_dfilt1_tb(
+module red_pitaya_dfilt1_tb #(
+  // time periods
+  realtime  TP = 8.0ns  // 125MHz
 );
 
-
-
-reg  [ 14-1: 0] adc_read    ;
-reg  [ 14-1: 0] adc_in      ;
-wire [ 14-1: 0] adc_out     ;
-reg             adc_clk     ;
-reg             adc_rstn    ;
-
-reg  [ 18-1: 0] cfg_aa      ;
-reg  [ 25-1: 0] cfg_bb      ;
-reg  [ 25-1: 0] cfg_kk      ;
-reg  [ 25-1: 0] cfg_pp      ;
-
-
-red_pitaya_dfilt1 i_filt1
-(
-   // ADC
-  .adc_clk_i   ( adc_clk    ),
-  .adc_rstn_i  ( adc_rstn   ),
-  .adc_dat_i   ( adc_in     ),
-  .adc_dat_o   ( adc_out    ),
-
-   // configuration
-  .cfg_aa_i    ( cfg_aa     ),
-  .cfg_bb_i    ( cfg_bb     ),
-  .cfg_kk_i    ( cfg_kk     ),
-  .cfg_pp_i    ( cfg_pp     ) 
-);
-
-
-
-
-
-
-
-//---------------------------------------------------------------------------------
-//
+////////////////////////////////////////////////////////////////////////////////
 // signal generation
+////////////////////////////////////////////////////////////////////////////////
 
+logic              clk ;
+logic              rstn;
 
-// ADC clock & reset
+// ADC clock
+initial        clk = 1'b0;
+always #(TP/2) clk = ~clk;
+
+// ADC reset
 initial begin
-   adc_clk  <= 1'b0  ;
-   adc_rstn <= 1'b0  ;
-   repeat(10) @(posedge adc_clk);
-      adc_rstn <= 1'b1  ;
+  rstn = 1'b0;
+  repeat(4) @(posedge clk);
+  rstn = 1'b1;
 end
 
-always begin
-   #4  adc_clk <= !adc_clk ;
-end
+logic [ 14-1: 0] adc_read    ;
+logic [ 14-1: 0] adc_in      ;
+logic [ 14-1: 0] adc_out     ;
+logic            adc_clk     ;
+logic            adc_rstn    ;
 
+logic [ 18-1: 0] cfg_aa      ;
+logic [ 25-1: 0] cfg_bb      ;
+logic [ 25-1: 0] cfg_kk      ;
+logic [ 25-1: 0] cfg_pp      ;
 
-
+////////////////////////////////////////////////////////////////////////////////
+// signal generation
+////////////////////////////////////////////////////////////////////////////////
 
 // ADC signal generation from file
 integer fp1,fp2;
@@ -115,9 +91,6 @@ initial begin
    $fclose(fp1);
 end
 
-
-
-
 // Save register values into file
 always @(posedge adc_clk) begin
    adc_in <= adc_read ; //additional register, some problems with Vivado simulator
@@ -129,12 +102,30 @@ always @(posedge adc_clk) begin
    end
 end
 
+////////////////////////////////////////////////////////////////////////////////
+// module instances
+////////////////////////////////////////////////////////////////////////////////
 
+red_pitaya_dfilt1 i_filt1 (
+   // ADC
+  .adc_clk_i   ( adc_clk    ),
+  .adc_rstn_i  ( adc_rstn   ),
+  .adc_dat_i   ( adc_in     ),
+  .adc_dat_o   ( adc_out    ),
+   // configuration
+  .cfg_aa_i    ( cfg_aa     ),
+  .cfg_bb_i    ( cfg_bb     ),
+  .cfg_kk_i    ( cfg_kk     ),
+  .cfg_pp_i    ( cfg_pp     ) 
+);
 
+////////////////////////////////////////////////////////////////////////////////
+// waveforms
+////////////////////////////////////////////////////////////////////////////////
 
+initial begin
+  $dumpfile("red_pitaya_dfilt1_tb.vcd");
+  $dumpvars(0, red_pitaya_dfilt1_tb);
+end
 
-
-
-
-endmodule
-
+endmodule: red_pitaya_dfilt1_tb

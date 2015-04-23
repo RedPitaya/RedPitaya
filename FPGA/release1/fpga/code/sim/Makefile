@@ -1,11 +1,27 @@
 MODELSIM_BIN=$(HOME)/altera/14.1/modelsim_ase/bin
 
 PATH_LIB=/opt/Xilinx/Vivado/2014.4/data/verilog/src
+PATH_SIP=/opt/Xilinx/Vivado/2014.4/data/secureip
 PATH_RTL=../rtl
 PATH_TBN=../bench
 
+# secure IP
 LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
+    $(PATH_LIB)/unisims/XADC.v \
+    $(PATH_LIB)/unisims/IBUFDS.v \
+    $(PATH_LIB)/unisims/BUFG.v \
+    $(PATH_LIB)/unisims/PLLE2_ADV.v \
+    $(PATH_LIB)/unisims/ODDR.v \
+    $(PATH_LIB)/unisims/OBUFDS.v \
+    $(PATH_LIB)/unisims/OSERDESE2.v \
+    $(PATH_LIB)/retarget/IBUFGDS.v \
+    $(PATH_LIB)/unisims/BUFIO.v \
+    $(PATH_LIB)/unisims/BUFR.v \
+    $(PATH_LIB)/unisims/ISERDESE2.v \
     $(PATH_LIB)/glbl.v
+
+SIP=$(PATH_SIP)/oserdese2/oserdese2_002.vp \
+    $(PATH_SIP)/iserdese2/iserdese2_002.vp
 
 RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/axi_slave.v \
@@ -40,9 +56,9 @@ TBN=$(PATH_TBN)/axi_master_model.sv \
 
 all: scope asg hk
 
-compile: $(LIB) $(RTL) $(TBN)
+compile: $(LIB) $(SIP) $(RTL) $(TBN)
 	$(MODELSIM_BIN)/vlib work
-	$(MODELSIM_BIN)/vlog $(LIB) $(RTL) $(TBN)
+	$(MODELSIM_BIN)/vlog $(LIB) $(SIP) $(RTL) $(TBN)
 
 scope: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_scope_tb
@@ -52,6 +68,21 @@ asg: compile
 
 hk: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_hk_tb
+
+ams: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_ams_tb
+
+analog: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_analog_tb
+
+daisy: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_daisy_tb
+
+dfilt1: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_dfilt1_tb
+
+pid: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pid_tb
 
 clean:
 	rm -rf work
