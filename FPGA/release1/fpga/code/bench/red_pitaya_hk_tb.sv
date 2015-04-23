@@ -26,7 +26,11 @@
 
 module red_pitaya_hk_tb #(
   // time periods
-  realtime  TP = 8.0ns  // 125MHz
+  realtime  TP = 8.0ns,  // 125MHz
+  // RTL config
+  parameter DWL = 8, // data width for LED
+  parameter DWE = 8, // data width for extension
+  parameter [57-1:0] DNA = 57'h0823456789ABCDE
 );
 
 glbl glbl ();
@@ -73,18 +77,35 @@ logic [ 32-1: 0] sys_rdata;
 logic            sys_err  ;
 logic            sys_ack  ;
 
-logic [ 32-1: 0] rdata;
+int unsigned error = 0;
+
+logic [32-1:0] wdata;
+logic [32-1:0] rdata;
+logic [57-1:0] dna;
 
 initial begin
   wait (rstn)
   repeat(600) @(posedge clk);
-    // LED & Expansion
-    bus.write(32'h30, 32'h00000003); // LED
-    bus.write(32'h10, 32'h00000033); // direction
-    bus.write(32'h18, 32'h000000FF); // value
+    // LED
+    wdata = 32'h000000_03;
+    bus.write(32'h30, wdata);
+    if (led != (wdata[DWL-1:0] & 8'h01))  error++;
 
-    bus.read(32'h4 , rdata);
-    bus.read(32'h8 , rdata);
+    // EXPANSION P
+    bus.write(32'h10, 32'h000000_33); // direction
+    bus.write(32'h18, 32'h000000_0F); // value
+
+    // read ID value
+    bus.read(32'h00, rdata);
+    $display ("ID = 0x%08x", rdata);
+
+    // read DNA [57-1:0] value
+    bus.read(32'h04, rdata); // lower part
+    dna [32-1:00] = rdata [   32-1:0];
+    bus.read(32'h08, rdata); // higher part
+    dna [57-1:32] = rdata [57-32-1:0];
+    $display ("DNA = 0x%016x", dna);
+
     bus.read(32'h24, rdata);
     bus.read(32'h30, rdata);
   repeat(20000) @(posedge clk);
