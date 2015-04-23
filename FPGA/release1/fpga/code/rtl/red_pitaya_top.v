@@ -157,7 +157,6 @@ wire  [  4-1: 0] axi1_wlen   , axi0_wlen   ;
 wire             axi1_wfixed , axi0_wfixed ;
 wire             axi1_werr   , axi0_werr   ;
 wire             axi1_wrdy   , axi0_wrdy   ;
-wire             axi1_rstn_ps, axi0_rstn_ps;
 
 red_pitaya_ps i_ps (
   .FIXED_IO_mio       (  FIXED_IO_mio                ),
@@ -206,8 +205,7 @@ red_pitaya_ps i_ps (
   .axi1_wlen_i   (axi1_wlen   ),  .axi0_wlen_i   (axi0_wlen   ),  // system write burst length
   .axi1_wfixed_i (axi1_wfixed ),  .axi0_wfixed_i (axi0_wfixed ),  // system write burst type (fixed / incremental)
   .axi1_werr_o   (axi1_werr   ),  .axi0_werr_o   (axi0_werr   ),  // system write error
-  .axi1_wrdy_o   (axi1_wrdy   ),  .axi0_wrdy_o   (axi0_wrdy   ),  // system write ready
-  .axi1_rstn_o   (axi1_rstn_ps),  .axi0_rstn_o   (axi0_rstn_ps)   // reset from PS
+  .axi1_wrdy_o   (axi1_wrdy   ),  .axi0_wrdy_o   (axi0_wrdy   )   // system write ready
 );
 
 //---------------------------------------------------------------------------------
@@ -377,7 +375,6 @@ red_pitaya_scope i_scope (
   .axi0_wfixed_o   (  axi0_wfixed                ),  // system write burst type (fixed / incremental)
   .axi0_werr_i     (  axi0_werr                  ),  // system write error
   .axi0_wrdy_i     (  axi0_wrdy                  ),  // system write ready
-  .axi0_rstn_i     (  axi0_rstn_ps               ),  // reset from PS
 
   // AXI1 master
   .axi1_clk_o      (  axi1_clk                   ),  // global clock
@@ -390,7 +387,6 @@ red_pitaya_scope i_scope (
   .axi1_wfixed_o   (  axi1_wfixed                ),  // system write burst type (fixed / incremental)
   .axi1_werr_i     (  axi1_werr                  ),  // system write error
   .axi1_wrdy_i     (  axi1_wrdy                  ),  // system write ready
-  .axi1_rstn_i     (  axi1_rstn_ps               ),  // reset from PS
 
    // System bus
   .sys_addr        (  sys_addr                   ),  // address

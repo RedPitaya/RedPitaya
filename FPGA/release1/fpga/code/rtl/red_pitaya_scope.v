@@ -70,7 +70,6 @@ module red_pitaya_scope #(
    output                axi0_wfixed_o   ,  // system write burst type (fixed / incremental)
    input                 axi0_werr_i     ,  // system write error
    input                 axi0_wrdy_i     ,  // system write ready
-   input                 axi0_rstn_i     ,  // reset from PS
 
    // AXI1 master
    output                axi1_clk_o      ,  // global clock
@@ -83,7 +82,6 @@ module red_pitaya_scope #(
    output                axi1_wfixed_o   ,  // system write burst type (fixed / incremental)
    input                 axi1_werr_i     ,  // system write error
    input                 axi1_wrdy_i     ,  // system write ready
-   input                 axi1_rstn_i     ,  // reset from PS
   
    // System bus
    input      [ 32-1: 0] sys_addr      ,  // bus saddress
@@ -389,15 +387,7 @@ i_wr0
 );
 
 assign axi0_clk_o  = adc_clk_i ;
-assign axi0_rstn_o = (adc_rstn_i != 1'b0) && axi0_rstn_i ;
-
-
-
-
-
-
-
-
+assign axi0_rstn_o = adc_rstn_i;
 
 //---------------------------------------------------------------------------------
 //
@@ -505,20 +495,7 @@ i_wr1
 );
 
 assign axi1_clk_o  = adc_clk_i ;
-assign axi1_rstn_o = (adc_rstn_i != 1'b0) && axi1_rstn_i ;
-
-
-
-
-
-
-
-
-
-
-
-
-
+assign axi1_rstn_o = adc_rstn_i;
 
 //---------------------------------------------------------------------------------
 //  Trigger source selector
