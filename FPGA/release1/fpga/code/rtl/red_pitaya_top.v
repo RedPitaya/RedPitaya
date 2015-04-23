@@ -226,8 +226,8 @@ wire             adc_clk     ;
 reg              adc_rstn    ;
 wire  [ 14-1: 0] adc_a       ;
 wire  [ 14-1: 0] adc_b       ;
-reg   [ 14-1: 0] dac_a       ;
-reg   [ 14-1: 0] dac_b       ;
+wire  [ 14-1: 0] dac_a       ;
+wire  [ 14-1: 0] dac_b       ;
 wire  [ 24-1: 0] dac_pwm_a   ;
 wire  [ 24-1: 0] dac_pwm_b   ;
 wire  [ 24-1: 0] dac_pwm_c   ;
@@ -285,26 +285,9 @@ wire  [ (8*1)-1: 0] sys_err    ;
 wire  [ (8*1)-1: 0] sys_ack    ;
 reg   [     8-1: 0] sys_cs     ;
 
-always @(sys_addr) begin
-   sys_cs = 8'h0 ;
-   case (sys_addr[22:20])
-      3'h0, 3'h1, 3'h2, 3'h3, 3'h4, 3'h5, 3'h6, 3'h7 : 
-         sys_cs[sys_addr[22:20]] = 1'b1 ; 
-   endcase
-end
+assign sys_cs  = 8'h01 << sys_addr[22:20];
 
-assign sys_wen = sys_cs & {8{ps_sys_wen}}  ;
-assign sys_ren = sys_cs & {8{ps_sys_ren}}  ;
-
-
-assign ps_sys_rdata = {32{sys_cs[ 0]}} & sys_rdata[ 0*32+31: 0*32] |
-                      {32{sys_cs[ 1]}} & sys_rdata[ 1*32+31: 1*32] |
-                      {32{sys_cs[ 2]}} & sys_rdata[ 2*32+31: 2*32] |
-                      {32{sys_cs[ 3]}} & sys_rdata[ 3*32+31: 3*32] |
-                      {32{sys_cs[ 4]}} & sys_rdata[ 4*32+31: 4*32] | 
-                      {32{sys_cs[ 5]}} & sys_rdata[ 5*32+31: 5*32] |
-                      {32{sys_cs[ 6]}} & sys_rdata[ 6*32+31: 6*32] |
-                      {32{sys_cs[ 7]}} & sys_rdata[ 7*32+31: 7*32] ; 
+assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
 
 assign ps_sys_err   = |(sys_cs & sys_err);
 
@@ -314,6 +297,16 @@ assign sys_rdata[ 6*32+31: 6*32] = 32'h0;
 
 assign sys_err[6] = {1{1'b0}} ;
 assign sys_ack[6] = {1{1'b1}} ;
+
+// unused system bus slave ports
+
+assign sys_rdata[ 6*32+31: 6*32] = 32'h0 ; 
+assign sys_err[6] = 1'b0 ;
+assign sys_ack[6] = 1'b1 ;
+
+assign sys_rdata[ 7*32+31: 7*32] = 32'h0 ; 
+assign sys_err[7] = 1'b0 ;
+assign sys_ack[7] = 1'b1 ;
 
 //---------------------------------------------------------------------------------
 //
@@ -465,22 +458,9 @@ wire  [ 15-1: 0] dac_b_sum       ;
 assign dac_a_sum = $signed(asg_a) + $signed(pid_a);
 assign dac_b_sum = $signed(asg_b) + $signed(pid_b);
 
-always @(*) begin
-   if (dac_a_sum[15-1:15-2] == 2'b01) // pos. overflow
-      dac_a <= 14'h1FFF ;
-   else if (dac_a_sum[15-1:15-2] == 2'b10) // neg. overflow
-      dac_a <= 14'h2000 ;
-   else
-      dac_a <= dac_a_sum[14-1:0] ;
-
-
-   if (dac_b_sum[15-1:15-2] == 2'b01) // pos. overflow
-      dac_b <= 14'h1FFF ;
-   else if (dac_b_sum[15-1:15-2] == 2'b10) // neg. overflow
-      dac_b <= 14'h2000 ;
-   else
-      dac_b <= dac_b_sum[14-1:0] ;
-end
+// saturation
+assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
+assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
 
 //---------------------------------------------------------------------------------
 //
@@ -556,15 +536,5 @@ red_pitaya_daisy i_daisy
   .sys_err_o       (  sys_err[5]                 ),  // error indicator
   .sys_ack_o       (  sys_ack[5]                 )   // acknowledge signal
 );
-
-// unused system bus slave ports
-
-assign sys_rdata[ 6*32+31: 6*32] = 32'h0 ; 
-assign sys_err[6] = 1'b0 ;
-assign sys_ack[6] = 1'b1 ;
-
-assign sys_rdata[ 7*32+31: 7*32] = 32'h0 ; 
-assign sys_err[7] = 1'b0 ;
-assign sys_ack[7] = 1'b1 ;
 
 endmodule
