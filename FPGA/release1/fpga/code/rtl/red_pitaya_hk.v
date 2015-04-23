@@ -58,41 +58,6 @@ module red_pitaya_hk #(
 
 //---------------------------------------------------------------------------------
 //
-//  Simple LED logic
-
-reg [32-1: 0] shift_led_cnt ;
-reg [ 8-1: 0] shift_led_reg ;
-reg           shift_led_dir ;
-
-always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      shift_led_cnt <= 32'h0 ;
-      shift_led_reg <=  8'h1 ;
-      shift_led_dir <=  1'b1 ; // 1-left, 0-right
-   end
-   else begin
-      if (shift_led_cnt == 32'd40000000)
-         shift_led_cnt <= 32'h1;
-      else
-         shift_led_cnt <= shift_led_cnt + 32'h1;
-
-      if (shift_led_cnt == 32'h1) begin
-         if (shift_led_dir)
-            shift_led_reg <= {shift_led_reg[6:0], 1'b0} ; //shift left
-         else
-            shift_led_reg <= {1'b0, shift_led_reg[7:1]} ; //shift right
-
-          // change direction
-         if (shift_led_dir && (shift_led_reg==8'h40))
-            shift_led_dir <= !shift_led_dir ;
-         else if (!shift_led_dir && (shift_led_reg==8'h2))
-            shift_led_dir <= !shift_led_dir ;
-      end
-   end
-end
-    
-//---------------------------------------------------------------------------------
-//
 //  Testing logic
 
 // LED blinking
