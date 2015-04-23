@@ -30,7 +30,8 @@
 
 module red_pitaya_hk #(
   parameter DWL = 8, // data width for LED
-  parameter DWE = 8  // data width for extension
+  parameter DWE = 8, // data width for extension
+  parameter [57-1:0] DNA = 57'h0823456789ABCDE
 )(
   // system signals
   input                clk_i      ,  // clock
@@ -144,8 +145,8 @@ end else begin
     dna_done <= 1'b1;
 end
 
-DNA_PORT #( .SIM_DNA_VALUE(57'h0823456789ABCDE) ) // Specifies a sample 57-bit DNA value for simulation
-i_DNA (
+// parameter specifies a sample 57-bit DNA value for simulation
+DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
   .DOUT  ( dna_dout   ), // 1-bit output: DNA output data.
   .CLK   ( dna_clk    ), // 1-bit input: Clock input.
   .DIN   ( 1'b0       ), // 1-bit input: User data input pin.
@@ -168,18 +169,18 @@ assign id_value[ 3: 0] =  4'h1; // board type   1-release1
 
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
-  led_reg[7:1] <= 7'h0;
-  exp_p_dat_o  <= 8'h0;
-  exp_p_dir_o  <= 8'h0;
-  exp_n_dat_o  <= 8'h0;
-  exp_n_dir_o  <= 8'h0;
+  led_reg[DWL-1:1] <= {DWL-1{1'b0}};
+  exp_p_dat_o  <= {DWE{1'b0}};
+  exp_p_dir_o  <= {DWE{1'b0}};
+  exp_n_dat_o  <= {DWE{1'b0}};
+  exp_n_dir_o  <= {DWE{1'b0}};
 end else if (sys_wen) begin
-  if (sys_addr[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata[8-1:0];
-  if (sys_addr[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata[8-1:0];
-  if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[8-1:0];
-  if (sys_addr[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata[8-1:0];
+  if (sys_addr[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata[DWE-1:0];
+  if (sys_addr[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata[DWE-1:0];
+  if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[DWE-1:0];
+  if (sys_addr[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata[DWE-1:0];
 
-  if (sys_addr[19:0]==20'h30)   led_reg[7:1] <= sys_wdata[8-1:1];
+  if (sys_addr[19:0]==20'h30)   led_reg[DWL-1:1] <= sys_wdata[DWL-1:1];
 end
 
 wire sys_en;
@@ -193,18 +194,18 @@ end else begin
   sys_err <= 1'b0;
 
   casez (sys_addr[19:0])
-    20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {               id_value  }         ; end
-    20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {               dna_value[31: 0] }  ; end
-    20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{32-25{1'b0}}, dna_value[56:32] }  ; end
+    20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {                id_value          }; end
+    20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {                dna_value[32-1: 0]}; end
+    20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]}; end
 
-    20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, exp_p_dir_o }       ; end
-    20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, exp_n_dir_o }       ; end
-    20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_o }       ; end
-    20'h0001C: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_o }       ; end
-    20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_i }       ; end
-    20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_i }       ; end
+    20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dir_o}       ; end
+    20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dir_o}       ; end
+    20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dat_o}       ; end
+    20'h0001C: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dat_o}       ; end
+    20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dat_i}       ; end
+    20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dat_i}       ; end
 
-    20'h00030: begin sys_ack <= sys_en;  sys_rdata <= {{32- 8{1'b0}}, led_reg[7:1], 1'b0 }; end
+    20'h00030: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWL{1'b0}}, led_reg[DWL-1:1], 1'b0}; end
 
       default: begin sys_ack <= sys_en;  sys_rdata <=  32'h0                              ; end
   endcase
