@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -24,14 +22,14 @@
  * 
  */
 
-
-
 `timescale 1ns / 1ps
 
-module red_pitaya_analog_tb(
+module red_pitaya_analog_tb #(
+  // time periods
+  realtime  TP = 8.0ns  // 125MHz
 );
 
-
+glbl glbl();
 
 // DAC
 wire  [ 14-1: 0] dac_dat_o       ;
@@ -40,7 +38,6 @@ wire             dac_sel_o       ;
 wire             dac_clk_o       ;
 wire             dac_rst_o       ;
 wire  [  4-1: 0] dac_pwm_o       ;
-
 
 reg   [  4-1: 0] fclk            ;
 reg   [  4-1: 0] frstn           ;
@@ -56,26 +53,20 @@ reg   [ 24-1: 0] dac_pwm_b       ;
 reg   [ 24-1: 0] dac_pwm_c       ;
 reg   [ 24-1: 0] dac_pwm_d       ;
 
-
-red_pitaya_analog i_analog
-(
+red_pitaya_analog i_analog (
   // ADC
   .adc_dat_a_i        (  adc_a            ),  // CH 1
   .adc_dat_b_i        (  adc_b            ),  // CH 2
   .adc_clk_p_i        (  fclk[0]          ),  // data clock
   .adc_clk_n_i        ( !fclk[0]          ),  // data clock
-  
   // DAC
   .dac_dat_o          (  dac_dat_o        ),  // combined data
   .dac_wrt_o          (  dac_wrt_o        ),  // write enable
   .dac_sel_o          (  dac_sel_o        ),  // channel select
   .dac_clk_o          (  dac_clk_o        ),  // clock
   .dac_rst_o          (  dac_rst_o        ),  // reset
-  
   // PWM DAC
   .dac_pwm_o          (  dac_pwm_o        ),  // serial PWM DAC
-  
-  
   // user interface
   .adc_dat_a_o        (             ),  // ADC CH1
   .adc_dat_b_o        (             ),  // ADC CH2
@@ -93,114 +84,73 @@ red_pitaya_analog i_analog
   .dac_pwm_sync_o     (  dac_pwm_sync     )
 );
 
-  
-
-
-
-
-
-
-
-
 //---------------------------------------------------------------------------------
 //
 // signal generation
-
 
 always @(posedge adc_clk) begin
    adc_rst <= frstn[0] ;
 end
 
+initial begin
+  fclk  = 4'h2;
+  frstn = 4'h0;
+  fork
+    begin  repeat(10) @(posedge fclk[0]); frstn[0] = 1'b1;  end
+    begin  repeat(21) @(posedge fclk[1]); frstn[1] = 1'b1;  end
+    begin  repeat(10) @(posedge fclk[2]); frstn[2] = 1'b1;  end
+    begin  repeat(10) @(posedge fclk[3]); frstn[3] = 1'b1;  end
+  join
+end
+
+always #4  fclk[0] <= !fclk[0] ;
+always #2  fclk[1] <= !fclk[1] ;
+always #10 fclk[2] <= !fclk[2] ;
+always #10 fclk[3] <= !fclk[3] ;
 
 initial begin
-   fclk  = 4'h2  ;
-   frstn = 4'h0  ;
-   fork
-   begin
-      repeat(10) @(posedge fclk[0]);
-      frstn[0] = 1'b1  ;
-   end
-   begin
-      repeat(21) @(posedge fclk[1]);
-      frstn[1] = 1'b1  ;
-   end
-   begin
-      repeat(10) @(posedge fclk[2]);
-      frstn[2] = 1'b1  ;
-   end
-   begin
-      repeat(10) @(posedge fclk[3]);
-      frstn[3] = 1'b1  ;
-   end
-   join
-end
-
-
-always begin
-   #4 fclk[0] <= !fclk[0] ;
-end
-always begin
-   #2 fclk[1] <= !fclk[1] ;
-end
-always begin
-   #10 fclk[2] <= !fclk[2] ;
-end
-always begin
-   #10 fclk[3] <= !fclk[3] ;
-end
-
-
-
-
-initial begin
-   adc_a <= 14'h3FFF  ;
-   adc_b <= 14'h0000  ;
+   adc_a <= 14'h3FFF;
+   adc_b <= 14'h0000;
    #500;
-   adc_a <= 14'h2000  ;
-   adc_b <= 14'h1FFF  ;
+   adc_a <= 14'h2000;
+   adc_b <= 14'h1FFF;
    #500;
-   adc_a <= 14'h1000  ;
-   adc_b <= 14'h2000  ;
+   adc_a <= 14'h1000;
+   adc_b <= 14'h2000;
 end
-
 
 initial begin
    #500;
-   dac_a <=  14'd500   ;
-   dac_b <= -14'd500   ;
+   dac_a <=  14'd0500;
+   dac_b <= -14'd0500;
    #500;
-   dac_a <=  14'd5000  ;
-   dac_b <= -14'd5000  ;
+   dac_a <=  14'd5000;
+   dac_b <= -14'd5000;
    #500;
-   dac_a <= -14'd7000  ;
-   dac_b <=  14'd7000  ;
+   dac_a <= -14'd7000;
+   dac_b <=  14'd7000;
 end
-
-
 
 initial begin
    wait (adc_rst)
    repeat(10) @(posedge adc_clk);
 
    #10;
-   wait (dac_pwm_sync)
-      @(posedge adc_clk);
+   wait (dac_pwm_sync) @(posedge adc_clk);
    dac_pwm_a <= {8'd0, 16'h0001};
    dac_pwm_b <= {8'd0, 16'h8000};
    dac_pwm_c <= {8'd0, 16'h0000};
    dac_pwm_d <= {8'd0, 16'h0000};
 
    #150000;
-   wait (dac_pwm_sync)
-      @(posedge adc_clk);
+   wait (dac_pwm_sync) @(posedge adc_clk);
    dac_pwm_a <= {8'd0, 16'h8001};
    dac_pwm_b <= {8'd1, 16'h8001};
    dac_pwm_c <= {8'd0, 16'hFFFF};
    dac_pwm_d <= {8'd1, 16'h0000};
 
    #150000;
-   wait (dac_pwm_sync)
-      @(posedge adc_clk);
+   wait (dac_pwm_sync) @(posedge adc_clk);
    dac_pwm_a <= {8'd0,   16'h8001};
    dac_pwm_b <= {8'd0,   16'h8181};
    dac_pwm_c <= {8'd155, 16'hFFFF};
@@ -208,8 +158,13 @@ initial begin
 
 end
 
+////////////////////////////////////////////////////////////////////////////////
+// waveforms
+////////////////////////////////////////////////////////////////////////////////
 
+initial begin
+  $dumpfile("red_pitaya_analog_tb.vcd");
+  $dumpvars(0, red_pitaya_analog_tb);
+end
 
-
-
-endmodule
+endmodule: red_pitaya_analog_tb
