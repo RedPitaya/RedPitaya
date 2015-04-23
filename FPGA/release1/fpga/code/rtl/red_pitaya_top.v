@@ -283,7 +283,7 @@ wire  [     8-1: 0] sys_ren    ;
 wire  [(8*32)-1: 0] sys_rdata  ;
 wire  [ (8*1)-1: 0] sys_err    ;
 wire  [ (8*1)-1: 0] sys_ack    ;
-reg   [     8-1: 0] sys_cs     ;
+wire  [     8-1: 0] sys_cs     ;
 
 assign sys_cs  = 8'h01 << sys_addr[22:20];
 
