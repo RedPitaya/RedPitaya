@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -24,81 +22,50 @@
  * 
  */
 
-
-
-
-
-
 `timescale 1ns / 1ps
 
-module red_pitaya_pid_tb(
+module red_pitaya_pid_tb #(
+  // time periods
+  realtime  TP = 8.0ns  // 125MHz
 );
 
+////////////////////////////////////////////////////////////////////////////////
+// signal generation
+////////////////////////////////////////////////////////////////////////////////
 
+logic              clk ;
+logic              rstn;
 
-reg              clk             ;
-reg              rstn            ;
-reg   [ 14-1: 0] dat_a_in        ;
-reg   [ 14-1: 0] dat_b_in        ;
-wire  [ 14-1: 0] dat_a_out       ;
-wire  [ 14-1: 0] dat_b_out       ;
+// ADC clock
+initial        clk = 1'b0;
+always #(TP/2) clk = ~clk;
 
-reg              sys_clk         ;
-reg              sys_rstn        ;
-wire  [ 32-1: 0] sys_addr        ;
-wire  [ 32-1: 0] sys_wdata       ;
-wire  [  4-1: 0] sys_sel         ;
-wire             sys_wen         ;
-wire             sys_ren         ;
-wire  [ 32-1: 0] sys_rdata       ;
-wire             sys_err         ;
-wire             sys_ack         ;
+// ADC reset
+initial begin
+  rstn = 1'b0;
+  repeat(4) @(posedge clk);
+  rstn = 1'b1;
+end
 
-
-
-sys_bus_model i_bus
-(
-  .sys_clk_i      (  sys_clk      ),
-  .sys_rstn_i     (  sys_rstn     ),
-  .sys_addr_o     (  sys_addr     ),
-  .sys_wdata_o    (  sys_wdata    ),
-  .sys_sel_o      (  sys_sel      ),
-  .sys_wen_o      (  sys_wen      ),
-  .sys_ren_o      (  sys_ren      ),
-  .sys_rdata_i    (  sys_rdata    ),
-  .sys_err_i      (  sys_err      ),
-  .sys_ack_i      (  sys_ack      ) 
-);
-
-
-
-red_pitaya_pid i_pid
-(
-   // signals
-  .clk_i           (  clk           ),  // clock
-  .rstn_i          (  rstn          ),  // reset - active low
-  .dat_a_i         (  dat_a_in      ),  // in 1
-  .dat_b_i         (  dat_b_in      ),  // in 2
-  .dat_a_o         (  dat_a_out     ),  // out 1
-  .dat_b_o         (  dat_b_out     ),  // out 2
-  
-   // System bus
-  .sys_clk_i       (  sys_clk       ),  // clock
-  .sys_rstn_i      (  sys_rstn      ),  // reset - active low
-  .sys_addr_i      (  sys_addr      ),  // address
-  .sys_wdata_i     (  sys_wdata     ),  // write data
-  .sys_sel_i       (  sys_sel       ),  // write byte select
-  .sys_wen_i       (  sys_wen       ),  // write enable
-  .sys_ren_i       (  sys_ren       ),  // read enable
-  .sys_rdata_o     (  sys_rdata     ),  // read data
-  .sys_err_o       (  sys_err       ),  // error indicator
-  .sys_ack_o       (  sys_ack       )   // acknowledge signal
-);
-
-
-
-//---------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// test sequence
 // Simple module - first order system
+////////////////////////////////////////////////////////////////////////////////
+
+logic [ 14-1: 0] dat_a_in        ;
+logic [ 14-1: 0] dat_b_in        ;
+logic [ 14-1: 0] dat_a_out       ;
+logic [ 14-1: 0] dat_b_out       ;
+
+logic [ 32-1: 0] sys_addr        ;
+logic [ 32-1: 0] sys_wdata       ;
+logic [  4-1: 0] sys_sel         ;
+logic            sys_wen         ;
+logic            sys_ren         ;
+logic [ 32-1: 0] sys_rdata       ;
+logic            sys_err         ;
+logic            sys_ack         ;
+
 genvar k;
 reg  [14-1: 0] uut_reg [0:21];
 reg  [20-1: 0] uut_sum ;
@@ -130,39 +97,6 @@ always @(posedge clk) begin
    dat_a_in <= uut_en ? uut_out : 14'h0 ;
 end
 
-
-
-//---------------------------------------------------------------------------------
-//
-// signal generation
-
-initial begin
-   sys_clk  <= 1'b0 ;
-   sys_rstn <= 1'b0 ;
-   repeat(10) @(posedge sys_clk);
-      sys_rstn <= 1'b1  ;
-end
-
-always begin
-   #5  sys_clk <= !sys_clk ;
-end
-
-
-
-initial begin
-   clk  <= 1'b0  ;
-   rstn <= 1'b0  ;
-   repeat(10) @(posedge clk);
-      rstn <= 1'b1  ;
-end
-
-always begin
-   #4  clk <= !clk ;
-end
-
-
-
-
 reg [8-1: 0] ch0_set;
 reg [8-1: 0] ch1_set;
 
@@ -170,29 +104,70 @@ initial begin
    dat_b_in <= 14'h0 ;
    uut_en   <=  1'b0 ;
 
-   wait (sys_rstn && rstn)
-   repeat(10) @(posedge sys_clk);
+   wait (rstn)
+   repeat(10) @(posedge clk);
    //PID settings
-      i_bus.bus_write(32'h10, 32'd7000  );  // set point
-      i_bus.bus_write(32'h14,-32'd3000  );  // Kp
-      i_bus.bus_write(32'h18, 32'd1000  );  // Ki
-      i_bus.bus_write(32'h1C, 32'd1000  );  // Kd
-
+   bus.write(32'h10, 32'd7000  );  // set point
+   bus.write(32'h14,-32'd3000  );  // Kp
+   bus.write(32'h18, 32'd1000  );  // Ki
+   bus.write(32'h1C, 32'd1000  );  // Kd
 
    repeat(100) @(posedge clk);
-      uut_en <= 1'b1 ;
+   uut_en <= 1'b1 ;
 
    //Int reset
    repeat(20) @(posedge clk);
-      i_bus.bus_write(32'h00, 32'b1110  );  // int reset
-
+   bus.write(32'h00, 32'b1110  );  // int reset
 
    repeat(2000000) @(posedge clk);
-
 end
 
+////////////////////////////////////////////////////////////////////////////////
+// module instances
+////////////////////////////////////////////////////////////////////////////////
 
+sys_bus_model bus (
+  // system signals
+  .clk          (clk      ),
+  .rstn         (rstn     ),
+  // bus protocol signals
+  .sys_addr     (sys_addr ),
+  .sys_wdata    (sys_wdata),
+  .sys_sel      (sys_sel  ),
+  .sys_wen      (sys_wen  ),
+  .sys_ren      (sys_ren  ),
+  .sys_rdata    (sys_rdata),
+  .sys_err      (sys_err  ),
+  .sys_ack      (sys_ack  ) 
+);
 
+red_pitaya_pid pid (
+   // signals
+  .clk_i        (clk      ),  // clock
+  .rstn_i       (rstn     ),  // reset - active low
+  .dat_a_i      (dat_a_in ),  // in 1
+  .dat_b_i      (dat_b_in ),  // in 2
+  .dat_a_o      (dat_a_out),  // out 1
+  .dat_b_o      (dat_b_out),  // out 2
+   // System bus
+  .sys_addr     (sys_addr ),
+  .sys_wdata    (sys_wdata),
+  .sys_sel      (sys_sel  ),
+  .sys_wen      (sys_wen  ),
+  .sys_ren      (sys_ren  ),
+  .sys_rdata    (sys_rdata),
+  .sys_err      (sys_err  ),
+  .sys_ack      (sys_ack  )
+);
 
-endmodule
+////////////////////////////////////////////////////////////////////////////////
+// waveforms
+////////////////////////////////////////////////////////////////////////////////
+
+initial begin
+  $dumpfile("red_pitaya_pid_tb.vcd");
+  $dumpvars(0, red_pitaya_pid_tb);
+end
+
+endmodule: red_pitaya_pid_tb
 
