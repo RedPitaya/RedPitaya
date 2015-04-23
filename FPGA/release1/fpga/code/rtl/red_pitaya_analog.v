@@ -61,25 +61,20 @@
 
 
 
-module red_pitaya_analog
-(
+module red_pitaya_analog (
   // ADC IC
   input    [ 16-1: 2] adc_dat_a_i        ,  //!< ADC IC CHA data connection
   input    [ 16-1: 2] adc_dat_b_i        ,  //!< ADC IC CHB data connection
   input               adc_clk_p_i        ,  //!< ADC IC clock P connection
   input               adc_clk_n_i        ,  //!< ADC IC clock N connection
-  
   // DAC IC
   output   [ 14-1: 0] dac_dat_o          ,  //!< DAC IC combined data
   output              dac_wrt_o          ,  //!< DAC IC write enable
   output              dac_sel_o          ,  //!< DAC IC channel select
   output              dac_clk_o          ,  //!< DAC IC clock
   output              dac_rst_o          ,  //!< DAC IC reset
-  
   // PWM DAC
   output   [  4-1: 0] dac_pwm_o          ,  //!< DAC PWM - driving RC
-  
-  
   // user interface
   output   [ 14-1: 0] adc_dat_a_o        ,  //!< ADC CHA data
   output   [ 14-1: 0] adc_dat_b_o        ,  //!< ADC CHB data
@@ -96,7 +91,6 @@ module red_pitaya_analog
   input    [ 24-1: 0] dac_pwm_d_i        ,  //!< DAC PWM CHD
   output              dac_pwm_sync_o        //!< DAC PWM sync
 );
-
 
 //---------------------------------------------------------------------------------
 //
@@ -119,10 +113,6 @@ assign adc_dat_a_o = {adc_dat_a[14-1], ~adc_dat_a[14-2:0]}; // transform into 2'
 assign adc_dat_b_o = {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
 assign adc_clk_o   =  adc_clk ;
 
-
-
-
-
 //---------------------------------------------------------------------------------
 //
 //  Fast DAC - DDR interface
@@ -139,8 +129,7 @@ wire  ser_clk_out     ;
 wire  dac_2ph_out     ;
 wire  dac_2ph         ;
 
-PLLE2_ADV
-#(
+PLLE2_ADV #(
    .BANDWIDTH            ( "OPTIMIZED"   ),
    .COMPENSATION         ( "ZHOLD"       ),
    .DIVCLK_DIVIDE        (  1            ),
@@ -160,9 +149,7 @@ PLLE2_ADV
    .CLKOUT3_DUTY_CYCLE   (  0.5          ),
    .CLKIN1_PERIOD        (  8.000        ),
    .REF_JITTER1          (  0.010        )
-)
-i_dac_plle2
-(
+) i_dac_plle2 (
    // Output clocks
    .CLKFBOUT     (  dac_clk_fb     ),
    .CLKOUT0      (  dac_clk_out    ),
@@ -197,9 +184,6 @@ BUFG i_dac2_buf    (.O(dac_2clk),       .I(dac_2clk_out));
 BUFG i_dac2ph_buf  (.O(dac_2ph),        .I(dac_2ph_out));
 BUFG i_ser_buf     (.O(ser_clk_o),      .I(ser_clk_out));
 
-
-
-
 reg  [14-1: 0] dac_dat_a  ;
 reg  [14-1: 0] dac_dat_b  ;
 
@@ -230,15 +214,6 @@ ODDR i_dac_10 ( .Q(dac_dat_o[10]), .D1(dac_dat_b[10]), .D2(dac_dat_a[10]), .C(da
 ODDR i_dac_11 ( .Q(dac_dat_o[11]), .D1(dac_dat_b[11]), .D2(dac_dat_a[11]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_12 ( .Q(dac_dat_o[12]), .D1(dac_dat_b[12]), .D2(dac_dat_a[12]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_13 ( .Q(dac_dat_o[13]), .D1(dac_dat_b[13]), .D2(dac_dat_a[13]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-
-
-
-
-
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -308,17 +283,4 @@ end
 assign dac_pwm_o      = dac_pwm ;
 assign dac_pwm_sync_o = (dac_pwm_bcnt == 4'hF) && (dac_pwm_vcnt == (PWM_FULL-1)) ; // latch one before
 
-
-
-
-
-
-
-
-
-
-
-
-
 endmodule
-
