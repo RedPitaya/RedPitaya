@@ -251,7 +251,7 @@ red_pitaya_analog i_analog (
   .adc_dat_a_o        (  adc_a            ),  // ADC CH1
   .adc_dat_b_o        (  adc_b            ),  // ADC CH2
   .adc_clk_o          (  adc_clk          ),  // ADC received clock
-  .adc_rst_i          (  adc_rstn         ),  // reset - active low
+  .adc_rstn_i         (  adc_rstn         ),  // reset - active low
   .ser_clk_o          (  ser_clk          ),  // fast serial clock
 
   .dac_dat_a_i        (  dac_a            ),  // DAC CH1
