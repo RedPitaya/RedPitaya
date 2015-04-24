@@ -27,6 +27,7 @@ RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/axi_slave.v \
     $(PATH_RTL)/axi_wr_fifo.v \
     $(PATH_RTL)/red_pitaya_ams.v \
+    $(PATH_RTL)/red_pitaya_pwm.sv \
     $(PATH_RTL)/red_pitaya_analog.v \
     $(PATH_RTL)/red_pitaya_asg_ch.v \
     $(PATH_RTL)/red_pitaya_asg.v \
@@ -45,6 +46,7 @@ RTL=$(PATH_RTL)/axi_master.v \
 TBN=$(PATH_TBN)/axi_master_model.sv \
     $(PATH_TBN)/axi_slave_tb.sv \
     $(PATH_TBN)/red_pitaya_ams_tb.sv \
+    $(PATH_TBN)/red_pitaya_pwm_tb.sv \
     $(PATH_TBN)/red_pitaya_analog_tb.sv \
     $(PATH_TBN)/red_pitaya_asg_tb.sv \
     $(PATH_TBN)/red_pitaya_daisy_tb.sv \
@@ -84,5 +86,8 @@ dfilt1: compile
 pid: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pid_tb
 
+pwm: compile
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pwm_tb
+
 clean:
-	rm -rf work
+	rm -rf work *.vcd
