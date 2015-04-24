@@ -58,38 +58,35 @@
  * 
  */
 
-
-
-
 module red_pitaya_analog (
   // ADC IC
-  input    [ 16-1: 2] adc_dat_a_i        ,  //!< ADC IC CHA data connection
-  input    [ 16-1: 2] adc_dat_b_i        ,  //!< ADC IC CHB data connection
-  input               adc_clk_p_i        ,  //!< ADC IC clock P connection
-  input               adc_clk_n_i        ,  //!< ADC IC clock N connection
+  input    [ 16-1: 2] adc_dat_a_i        ,  // ADC IC CHA data connection
+  input    [ 16-1: 2] adc_dat_b_i        ,  // ADC IC CHB data connection
+  input               adc_clk_p_i        ,  // ADC IC clock P connection
+  input               adc_clk_n_i        ,  // ADC IC clock N connection
   // DAC IC
-  output   [ 14-1: 0] dac_dat_o          ,  //!< DAC IC combined data
-  output              dac_wrt_o          ,  //!< DAC IC write enable
-  output              dac_sel_o          ,  //!< DAC IC channel select
-  output              dac_clk_o          ,  //!< DAC IC clock
-  output              dac_rst_o          ,  //!< DAC IC reset
+  output   [ 14-1: 0] dac_dat_o          ,  // DAC IC combined data
+  output              dac_wrt_o          ,  // DAC IC write enable
+  output              dac_sel_o          ,  // DAC IC channel select
+  output              dac_clk_o          ,  // DAC IC clock
+  output              dac_rst_o          ,  // DAC IC reset
   // PWM DAC
-  output   [  4-1: 0] dac_pwm_o          ,  //!< DAC PWM - driving RC
+  output reg [4-1: 0] dac_pwm_o          ,  // DAC PWM - driving RC
   // user interface
-  output   [ 14-1: 0] adc_dat_a_o        ,  //!< ADC CHA data
-  output   [ 14-1: 0] adc_dat_b_o        ,  //!< ADC CHB data
-  output              adc_clk_o          ,  //!< ADC clock
-  input               adc_rst_i          ,  //!< ADC reset - active low
-  output              ser_clk_o          ,  //!< fast serial clock
+  output   [ 14-1: 0] adc_dat_a_o        ,  // ADC CHA data
+  output   [ 14-1: 0] adc_dat_b_o        ,  // ADC CHB data
+  output              adc_clk_o          ,  // ADC clock
+  input               adc_rstn_i         ,  // ADC reset - active low
+  output              ser_clk_o          ,  // fast serial clock
 
-  input    [ 14-1: 0] dac_dat_a_i        ,  //!< DAC CHA data
-  input    [ 14-1: 0] dac_dat_b_i        ,  //!< DAC CHB data
+  input    [ 14-1: 0] dac_dat_a_i        ,  // DAC CHA data
+  input    [ 14-1: 0] dac_dat_b_i        ,  // DAC CHB data
 
-  input    [ 24-1: 0] dac_pwm_a_i        ,  //!< DAC PWM CHA
-  input    [ 24-1: 0] dac_pwm_b_i        ,  //!< DAC PWM CHB
-  input    [ 24-1: 0] dac_pwm_c_i        ,  //!< DAC PWM CHC
-  input    [ 24-1: 0] dac_pwm_d_i        ,  //!< DAC PWM CHD
-  output              dac_pwm_sync_o        //!< DAC PWM sync
+  input    [ 24-1: 0] dac_pwm_a_i        ,  // DAC PWM CHA
+  input    [ 24-1: 0] dac_pwm_b_i        ,  // DAC PWM CHB
+  input    [ 24-1: 0] dac_pwm_c_i        ,  // DAC PWM CHC
+  input    [ 24-1: 0] dac_pwm_d_i        ,  // DAC PWM CHD
+  output              dac_pwm_sync_o        // DAC PWM sync
 );
 
 //---------------------------------------------------------------------------------
@@ -175,7 +172,7 @@ PLLE2_ADV #(
    // Other control and status signals
    .LOCKED       (  dac_locked     ),
    .PWRDWN       (  1'b0           ),
-   .RST          ( !adc_rst_i      )
+   .RST          ( !adc_rstn_i     )
 );
 
 BUFG i_dacfb_buf   (.O(dac_clk_fb_buf), .I(dac_clk_fb));
@@ -194,26 +191,11 @@ always @(posedge dac_clk) begin
    dac_rst   <= !dac_locked;
 end
 
-
 ODDR i_dac_clk ( .Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_2ph),  .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_wrt ( .Q(dac_wrt_o), .D1(1'b0), .D2(1'b1), .C(dac_2clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_sel ( .Q(dac_sel_o), .D1(1'b1), .D2(1'b0), .C(dac_clk ), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 ODDR i_dac_rst ( .Q(dac_rst_o), .D1(dac_rst), .D2(dac_rst), .C(dac_clk ), .CE(1'b1), .R(1'b0), .S(1'b0) );
-
-ODDR i_dac_0  ( .Q(dac_dat_o[ 0]), .D1(dac_dat_b[ 0]), .D2(dac_dat_a[ 0]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_1  ( .Q(dac_dat_o[ 1]), .D1(dac_dat_b[ 1]), .D2(dac_dat_a[ 1]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_2  ( .Q(dac_dat_o[ 2]), .D1(dac_dat_b[ 2]), .D2(dac_dat_a[ 2]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_3  ( .Q(dac_dat_o[ 3]), .D1(dac_dat_b[ 3]), .D2(dac_dat_a[ 3]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_4  ( .Q(dac_dat_o[ 4]), .D1(dac_dat_b[ 4]), .D2(dac_dat_a[ 4]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_5  ( .Q(dac_dat_o[ 5]), .D1(dac_dat_b[ 5]), .D2(dac_dat_a[ 5]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_6  ( .Q(dac_dat_o[ 6]), .D1(dac_dat_b[ 6]), .D2(dac_dat_a[ 6]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_7  ( .Q(dac_dat_o[ 7]), .D1(dac_dat_b[ 7]), .D2(dac_dat_a[ 7]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_8  ( .Q(dac_dat_o[ 8]), .D1(dac_dat_b[ 8]), .D2(dac_dat_a[ 8]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_9  ( .Q(dac_dat_o[ 9]), .D1(dac_dat_b[ 9]), .D2(dac_dat_a[ 9]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_10 ( .Q(dac_dat_o[10]), .D1(dac_dat_b[10]), .D2(dac_dat_a[10]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_11 ( .Q(dac_dat_o[11]), .D1(dac_dat_b[11]), .D2(dac_dat_a[11]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_12 ( .Q(dac_dat_o[12]), .D1(dac_dat_b[12]), .D2(dac_dat_a[12]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_13 ( .Q(dac_dat_o[13]), .D1(dac_dat_b[13]), .D2(dac_dat_a[13]), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
+ODDR i_dac_dat [14-1:0] ( .Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 
 //---------------------------------------------------------------------------------
 //
@@ -236,7 +218,6 @@ reg  [ 8-1: 0] dac_pwm_va_r   ;
 reg  [ 8-1: 0] dac_pwm_vb_r   ;
 reg  [ 8-1: 0] dac_pwm_vc_r   ;
 reg  [ 8-1: 0] dac_pwm_vd_r   ;
-reg  [ 4-1: 0] dac_pwm        ;
 reg  [ 4-1: 0] dac_pwm_r      ;
 
 always @(posedge dac_2clk) begin
@@ -261,7 +242,6 @@ always @(posedge dac_2clk) begin
       dac_pwm_r[2] <= (dac_pwm_vcnt_r <= dac_pwm_vc_r) ;
       dac_pwm_r[3] <= (dac_pwm_vcnt_r <= dac_pwm_vd_r) ;
 
-
       if (dac_pwm_vcnt == PWM_FULL) begin
          dac_pwm_bcnt <= dac_pwm_bcnt + 4'h1 ;
 
@@ -276,11 +256,10 @@ always @(posedge dac_2clk) begin
          dac_pwm_bd <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_d_i[16-1:0] : {1'b0,dac_pwm_bd[15:1]} ;
       end
 
-      dac_pwm <= dac_pwm_r ; // improve timing
+      dac_pwm_o <= dac_pwm_r; // improve timing
    end
 end
 
-assign dac_pwm_o      = dac_pwm ;
 assign dac_pwm_sync_o = (dac_pwm_bcnt == 4'hF) && (dac_pwm_vcnt == (PWM_FULL-1)) ; // latch one before
 
 endmodule
