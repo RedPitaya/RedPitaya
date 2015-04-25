@@ -204,6 +204,7 @@ reg               adc_trig      ;
 reg   [ RSZ-1: 0] adc_wp_trig   ;
 reg   [ RSZ-1: 0] adc_wp_cur    ;
 reg   [  32-1: 0] set_dly       ;
+reg   [  32-1: 0] adc_we_cnt    ;
 reg   [  32-1: 0] adc_dly_cnt   ;
 reg               adc_dly_do    ;
 reg    [ 20-1: 0] set_deb_len   ; // debouncing length (glitch free time after a posedge)
@@ -215,6 +216,7 @@ always @(posedge adc_clk_i) begin
       adc_we      <=  1'b0      ;
       adc_wp_trig <= {RSZ{1'b0}};
       adc_wp_cur  <= {RSZ{1'b0}};
+      adc_we_cnt  <= 32'h0      ;
       adc_dly_cnt <= 32'h0      ;
       adc_dly_do  <=  1'b0      ;
    end
@@ -224,11 +226,16 @@ always @(posedge adc_clk_i) begin
       else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
          adc_we <= 1'b0 ;
 
+      // count how much data was written into the buffer before trigger
+      if (adc_rst_do | adc_arm_do)
+         adc_we_cnt <= 32'h0;
+      if (adc_we & ~adc_dly_do & adc_dv & ~&adc_we_cnt)
+         adc_we_cnt <= adc_we_cnt + 1;
 
       if (adc_rst_do)
          adc_wp <= {RSZ{1'b0}};
       else if (adc_we && adc_dv)
-         adc_wp <= adc_wp + 1'b1 ;
+         adc_wp <= adc_wp + 1;
 
       if (adc_rst_do)
          adc_wp_trig <= {RSZ{1'b0}};
@@ -247,7 +254,7 @@ always @(posedge adc_clk_i) begin
          adc_dly_do  <= 1'b0 ;
 
       if (adc_dly_do && adc_we && adc_dv)
-         adc_dly_cnt <= adc_dly_cnt + {32{1'b1}} ; // -1
+         adc_dly_cnt <= adc_dly_cnt - 1;
       else if (!adc_dly_do)
          adc_dly_cnt <= set_dly ;
 
@@ -322,7 +329,7 @@ always @(posedge axi0_clk_o) begin
          axi_a_dly_do  <= 1'b0 ;
 
       if (axi_a_dly_do && axi_a_we && adc_dv)
-         axi_a_dly_cnt <= axi_a_dly_cnt + {32{1'b1}} ; // -1
+         axi_a_dly_cnt <= axi_a_dly_cnt - 1;
       else if (!axi_a_dly_do)
          axi_a_dly_cnt <= set_a_axi_dly ;
 
@@ -356,9 +363,7 @@ axi_wr_fifo #(
   .DW  (  64    ), // data width (8,16,...,1024)
   .AW  (  32    ), // address width
   .FW  (   8    )  // address width of FIFO pointers
-)
-i_wr0
-(
+) i_wr0 (
    // global signals
   .axi_clk_i          (  axi0_clk_o        ), // global clock
   .axi_rstn_i         (  axi0_rstn_o       ), // global reset
@@ -430,7 +435,7 @@ always @(posedge axi1_clk_o) begin
          axi_b_dly_do  <= 1'b0 ;
 
       if (axi_b_dly_do && axi_b_we && adc_dv)
-         axi_b_dly_cnt <= axi_b_dly_cnt + {32{1'b1}} ; // -1
+         axi_b_dly_cnt <= axi_b_dly_cnt - 1;
       else if (!axi_b_dly_do)
          axi_b_dly_cnt <= set_b_axi_dly ;
 
@@ -464,9 +469,7 @@ axi_wr_fifo #(
   .DW  (  64    ), // data width (8,16,...,1024)
   .AW  (  32    ), // address width
   .FW  (   8    )  // address width of FIFO pointers
-)
-i_wr1
-(
+) i_wr1 (
    // global signals
   .axi_clk_i          (  axi1_clk_o        ), // global clock
   .axi_rstn_i         (  axi1_rstn_o       ), // global reset
@@ -745,6 +748,10 @@ end else begin
    sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
+     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, adc_dly_do                // trigger status
+                                                                              , 1'b0                      // reset
+                                                                              , adc_we}             ; end // arm
+
      20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, set_trig_src}       ; end 
 
      20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_a_tresh}        ; end
@@ -759,6 +766,8 @@ end else begin
      20'h00024 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}}, set_b_hyst}         ; end
 
      20'h00028 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 1{1'b0}}, set_avg_en}         ; end
+
+     20'h0002C : begin sys_ack <= sys_en;          sys_rdata <=                 adc_we_cnt          ; end
 
      20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32-18{1'b0}}, set_a_filt_aa}      ; end
      20'h00034 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, set_a_filt_bb}      ; end
