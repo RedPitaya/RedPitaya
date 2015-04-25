@@ -220,7 +220,6 @@ assign adc_clk_o = 2'b10;
 //ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
 //ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
 
-
 wire             ser_clk     ;
 wire             adc_clk     ;
 reg              adc_rstn    ;
@@ -228,10 +227,9 @@ wire  [ 14-1: 0] adc_a       ;
 wire  [ 14-1: 0] adc_b       ;
 wire  [ 14-1: 0] dac_a       ;
 wire  [ 14-1: 0] dac_b       ;
-wire  [ 24-1: 0] dac_pwm_a   ;
-wire  [ 24-1: 0] dac_pwm_b   ;
-wire  [ 24-1: 0] dac_pwm_c   ;
-wire  [ 24-1: 0] dac_pwm_d   ;
+
+wire             pwm_clk ;
+wire             pwm_rstn;
 
 red_pitaya_analog i_analog (
   // ADC IC
@@ -245,8 +243,6 @@ red_pitaya_analog i_analog (
   .dac_sel_o          (  dac_sel_o        ),  // channel select
   .dac_clk_o          (  dac_clk_o        ),  // clock
   .dac_rst_o          (  dac_rst_o        ),  // reset
-  // PWM DAC
-  .dac_pwm_o          (  dac_pwm_o        ),  // serial PWM DAC
   // user interface
   .adc_dat_a_o        (  adc_a            ),  // ADC CH1
   .adc_dat_b_o        (  adc_b            ),  // ADC CH2
@@ -256,12 +252,9 @@ red_pitaya_analog i_analog (
 
   .dac_dat_a_i        (  dac_a            ),  // DAC CH1
   .dac_dat_b_i        (  dac_b            ),  // DAC CH2
-
-  .dac_pwm_a_i        (  dac_pwm_a        ),  // slow DAC CH1
-  .dac_pwm_b_i        (  dac_pwm_b        ),  // slow DAC CH2
-  .dac_pwm_c_i        (  dac_pwm_c        ),  // slow DAC CH3
-  .dac_pwm_d_i        (  dac_pwm_d        ),  // slow DAC CH4
-  .dac_pwm_sync_o     (                   )   // slow DAC sync
+  // PWM
+  .pwm_clk            (pwm_clk ),
+  .pwm_rstn           (pwm_rstn)
 );
 
 always @(posedge adc_clk) begin
@@ -365,7 +358,7 @@ red_pitaya_scope i_scope (
   .axi0_wfixed_o (axi0_wfixed),  .axi1_wfixed_o (axi1_wfixed),
   .axi0_werr_i   (axi0_werr  ),  .axi1_werr_i   (axi1_werr  ),
   .axi0_wrdy_i   (axi0_wrdy  ),  .axi1_wrdy_i   (axi1_wrdy  ),
-   // System bus
+  // System bus
   .sys_addr        (  sys_addr                   ),  // address
   .sys_wdata       (  sys_wdata                  ),  // write data
   .sys_sel         (  sys_sel                    ),  // write byte select
@@ -449,19 +442,23 @@ assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}
 //  Analog mixed signals
 //  XADC and slow PWM DAC control
 
+wire  [ 24-1: 0] pwm_cfg_a;
+wire  [ 24-1: 0] pwm_cfg_b;
+wire  [ 24-1: 0] pwm_cfg_c;
+wire  [ 24-1: 0] pwm_cfg_d;
+
 red_pitaya_ams i_ams (
    // power test
   .clk_i           (  adc_clk                    ),  // clock
   .rstn_i          (  adc_rstn                   ),  // reset - active low
-
+  // ADC analog inputs
   .vinp_i          (  vinp_i                     ),  // voltages p
   .vinn_i          (  vinn_i                     ),  // voltages n
-
-  .dac_a_o         (  dac_pwm_a                  ),  // values used for
-  .dac_b_o         (  dac_pwm_b                  ),  // conversion into PWM signal
-  .dac_c_o         (  dac_pwm_c                  ),
-  .dac_d_o         (  dac_pwm_d                  ),
-
+  // PWM configuration
+  .dac_a_o         (  pwm_cfg_a                  ),
+  .dac_b_o         (  pwm_cfg_b                  ),
+  .dac_c_o         (  pwm_cfg_c                  ),
+  .dac_d_o         (  pwm_cfg_d                  ),
    // System bus
   .sys_addr        (  sys_addr                   ),  // address
   .sys_wdata       (  sys_wdata                  ),  // write data
@@ -473,6 +470,17 @@ red_pitaya_ams i_ams (
   .sys_ack         (  sys_ack[4]                 )   // acknowledge signal
 );
 
+red_pitaya_pwm pwm [4-1:0] (
+  // system signals
+  .clk   (pwm_clk ),
+  .rstn  (pwm_rstn),
+  // configuration
+  .cfg   ({dac_pwm_d, dac_pwm_c, dac_pwm_b, dac_pwm_a}),
+  // PWM outputs
+  .pwm_o (dac_pwm_o),
+  .pwm_s ()
+);
+
 //---------------------------------------------------------------------------------
 //
 //  Daisy chain
@@ -481,14 +489,12 @@ red_pitaya_ams i_ams (
 wire daisy_rx_rdy ;
 wire dly_clk = fclk[3]; // 200MHz clock from PS - used for IDELAY (optionaly)
 
-red_pitaya_daisy i_daisy
-(
+red_pitaya_daisy i_daisy (
    // SATA connector
   .daisy_p_o       (  daisy_p_o                  ),  // line 1 is clock capable
   .daisy_n_o       (  daisy_n_o                  ),
   .daisy_p_i       (  daisy_p_i                  ),  // line 1 is clock capable
   .daisy_n_i       (  daisy_n_i                  ),
-
    // Data
   .ser_clk_i       (  ser_clk                    ),  // high speed serial
   .dly_clk_i       (  dly_clk                    ),  // delay clock

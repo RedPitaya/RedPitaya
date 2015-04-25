@@ -38,9 +38,6 @@ logic            io_dac_sel      ;
 logic            io_dac_clk      ;
 logic            io_dac_rst      ;
 
-// signals to PWM IO
-logic [  4-1: 0] io_dac_pwm      ;
-
 // signals from ADC IO
 logic            io_adc_clk      ;
 logic            io_adc_rstn     ;
@@ -54,14 +51,8 @@ logic            ser_clk         ;
 logic [ 14-1: 0] dac_a           ;
 logic [ 14-1: 0] dac_b           ;
 
-logic [ 24-1: 0] dac_pwm_a       ;
-logic [ 24-1: 0] dac_pwm_b       ;
-logic [ 24-1: 0] dac_pwm_c       ;
-logic [ 24-1: 0] dac_pwm_d       ;
-logic            dac_pwm_sync    ;
-
 ////////////////////////////////////////////////////////////////////////////////
-// ADC IO signal source
+// test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
 assign adc_rstn = io_adc_rstn;
@@ -75,57 +66,32 @@ initial        io_adc_clk = 1'h0;
 always #(TP/2) io_adc_clk = ~io_adc_clk;
 
 initial begin
-   io_adc_a <= 14'h3FFF;
-   io_adc_b <= 14'h0000;
-   #500;
-   io_adc_a <= 14'h2000;
-   io_adc_b <= 14'h1FFF;
-   #500;
-   io_adc_a <= 14'h1000;
-   io_adc_b <= 14'h2000;
-end
-
-////////////////////////////////////////////////////////////////////////////////
-// DAC internal signal source
-////////////////////////////////////////////////////////////////////////////////
-
-initial begin
-   #500;
-   dac_a <=  14'd0500;
-   dac_b <= -14'd0500;
-   #500;
-   dac_a <=  14'd5000;
-   dac_b <= -14'd5000;
-   #500;
-   dac_a <= -14'd7000;
-   dac_b <=  14'd7000;
-end
-
-initial begin
-   wait (io_adc_rstn)
-   repeat(10) @(posedge adc_clk);
-
-   #10;
-   wait (dac_pwm_sync) @(posedge adc_clk);
-   dac_pwm_a <= {8'd0, 16'h0001};
-   dac_pwm_b <= {8'd0, 16'h8000};
-   dac_pwm_c <= {8'd0, 16'h0000};
-   dac_pwm_d <= {8'd0, 16'h0000};
-
-   #150000;
-   wait (dac_pwm_sync) @(posedge adc_clk);
-   dac_pwm_a <= {8'd0, 16'h8001};
-   dac_pwm_b <= {8'd1, 16'h8001};
-   dac_pwm_c <= {8'd0, 16'hFFFF};
-   dac_pwm_d <= {8'd1, 16'h0000};
-
-   #150000;
-   wait (dac_pwm_sync) @(posedge adc_clk);
-   dac_pwm_a <= {8'd0,   16'h8001};
-   dac_pwm_b <= {8'd0,   16'h8181};
-   dac_pwm_c <= {8'd155, 16'hFFFF};
-   dac_pwm_d <= {8'd156, 16'h0000};
-
+  fork
+    // ADC IO signal source
+    begin
+      io_adc_a <= 14'h3FFF;
+      io_adc_b <= 14'h0000;
+      #500;
+      io_adc_a <= 14'h2000;
+      io_adc_b <= 14'h1FFF;
+      #500;
+      io_adc_a <= 14'h1000;
+      io_adc_b <= 14'h2000;
+    end
+    // DAC internal signal source
+    begin
+      #500;
+      dac_a <=  14'd0500;
+      dac_b <= -14'd0500;
+      #500;
+      dac_a <=  14'd5000;
+      dac_b <= -14'd5000;
+      #500;
+      dac_a <= -14'd7000;
+      dac_b <=  14'd7000;
+    end
+  join
+  $finish();
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,8 +110,6 @@ red_pitaya_analog analog (
   .dac_sel_o          ( io_dac_sel  ),  // channel select
   .dac_clk_o          ( io_dac_clk  ),  // clock
   .dac_rst_o          ( io_dac_rst  ),  // reset
-  // PWM DAC
-  .dac_pwm_o          ( io_dac_pwm  ),  // serial PWM DAC
   // user interface
   .adc_dat_a_o        (             ),  // ADC CH1
   .adc_dat_b_o        (             ),  // ADC CH2
@@ -156,11 +120,8 @@ red_pitaya_analog analog (
   .dac_dat_a_i        ( dac_a       ),  // DAC CH1
   .dac_dat_b_i        ( dac_b       ),  // DAC CH2
 
-  .dac_pwm_a_i        ( dac_pwm_a   ),  // slow DAC CH1
-  .dac_pwm_b_i        ( dac_pwm_b   ),  // slow DAC CH2
-  .dac_pwm_c_i        ( dac_pwm_c   ),  // slow DAC CH3
-  .dac_pwm_d_i        ( dac_pwm_d   ),  // slow DAC CH4
-  .dac_pwm_sync_o     ( dac_pwm_sync)
+  .pwm_clk            (),
+  .pwm_rstn           ()
 );
 
 ////////////////////////////////////////////////////////////////////////////////
