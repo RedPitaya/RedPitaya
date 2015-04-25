@@ -70,8 +70,6 @@ module red_pitaya_analog (
   output              dac_sel_o          ,  // DAC IC channel select
   output              dac_clk_o          ,  // DAC IC clock
   output              dac_rst_o          ,  // DAC IC reset
-  // PWM DAC
-  output reg [4-1: 0] dac_pwm_o          ,  // DAC PWM - driving RC
   // user interface
   output   [ 14-1: 0] adc_dat_a_o        ,  // ADC CHA data
   output   [ 14-1: 0] adc_dat_b_o        ,  // ADC CHB data
@@ -81,12 +79,9 @@ module red_pitaya_analog (
 
   input    [ 14-1: 0] dac_dat_a_i        ,  // DAC CHA data
   input    [ 14-1: 0] dac_dat_b_i        ,  // DAC CHB data
-
-  input    [ 24-1: 0] dac_pwm_a_i        ,  // DAC PWM CHA
-  input    [ 24-1: 0] dac_pwm_b_i        ,  // DAC PWM CHB
-  input    [ 24-1: 0] dac_pwm_c_i        ,  // DAC PWM CHC
-  input    [ 24-1: 0] dac_pwm_d_i        ,  // DAC PWM CHD
-  output              dac_pwm_sync_o        // DAC PWM sync
+  // PWM
+  output              pwm_clk            ,  // PWM clock
+  output              pwm_rstn              // PWM reset - active low
 );
 
 //---------------------------------------------------------------------------------
@@ -197,69 +192,9 @@ ODDR i_dac_sel ( .Q(dac_sel_o), .D1(1'b1), .D2(1'b0), .C(dac_clk ), .CE(1'b1), .
 ODDR i_dac_rst ( .Q(dac_rst_o), .D1(dac_rst), .D2(dac_rst), .C(dac_clk ), .CE(1'b1), .R(1'b0), .S(1'b0) );
 ODDR i_dac_dat [14-1:0] ( .Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
 
-//---------------------------------------------------------------------------------
-//
-//  Slow DAC - PWM
 
-localparam PWM_FULL = 8'd156 ; // 100% value
-
-reg  [ 4-1: 0] dac_pwm_bcnt   ;
-reg  [16-1: 0] dac_pwm_ba     ;
-reg  [16-1: 0] dac_pwm_bb     ;
-reg  [16-1: 0] dac_pwm_bc     ;
-reg  [16-1: 0] dac_pwm_bd     ;
-reg  [ 8-1: 0] dac_pwm_vcnt   ;
-reg  [ 8-1: 0] dac_pwm_vcnt_r ;
-reg  [ 8-1: 0] dac_pwm_va     ;
-reg  [ 8-1: 0] dac_pwm_vb     ;
-reg  [ 8-1: 0] dac_pwm_vc     ;
-reg  [ 8-1: 0] dac_pwm_vd     ;
-reg  [ 8-1: 0] dac_pwm_va_r   ;
-reg  [ 8-1: 0] dac_pwm_vb_r   ;
-reg  [ 8-1: 0] dac_pwm_vc_r   ;
-reg  [ 8-1: 0] dac_pwm_vd_r   ;
-reg  [ 4-1: 0] dac_pwm_r      ;
-
-always @(posedge dac_2clk) begin
-   if (dac_rst == 1'b1) begin
-      dac_pwm_vcnt <=  8'h0 ;
-      dac_pwm_bcnt <=  4'h0 ;
-      dac_pwm_r    <=  4'h0 ;
-   end
-   else begin
-      dac_pwm_vcnt <= (dac_pwm_vcnt == PWM_FULL) ? 8'h1 : (dac_pwm_vcnt + 8'd1) ;
-
-      // additional register to improve timing
-      dac_pwm_vcnt_r <= dac_pwm_vcnt;
-      dac_pwm_va_r   <= (dac_pwm_va + dac_pwm_ba[0]) ; // add decimal bit to current value
-      dac_pwm_vb_r   <= (dac_pwm_vb + dac_pwm_bb[0]) ;
-      dac_pwm_vc_r   <= (dac_pwm_vc + dac_pwm_bc[0]) ;
-      dac_pwm_vd_r   <= (dac_pwm_vd + dac_pwm_bd[0]) ;
-
-      // make PWM duty cycle
-      dac_pwm_r[0] <= (dac_pwm_vcnt_r <= dac_pwm_va_r) ;
-      dac_pwm_r[1] <= (dac_pwm_vcnt_r <= dac_pwm_vb_r) ;
-      dac_pwm_r[2] <= (dac_pwm_vcnt_r <= dac_pwm_vc_r) ;
-      dac_pwm_r[3] <= (dac_pwm_vcnt_r <= dac_pwm_vd_r) ;
-
-      if (dac_pwm_vcnt == PWM_FULL) begin
-         dac_pwm_bcnt <= dac_pwm_bcnt + 4'h1 ;
-
-         dac_pwm_va <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_a_i[24-1:16] : dac_pwm_va ; // new value on 16*PWM_FULL
-         dac_pwm_vb <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_b_i[24-1:16] : dac_pwm_vb ;
-         dac_pwm_vc <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_c_i[24-1:16] : dac_pwm_vc ;
-         dac_pwm_vd <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_d_i[24-1:16] : dac_pwm_vd ;
-
-         dac_pwm_ba <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_a_i[16-1:0] : {1'b0,dac_pwm_ba[15:1]} ; // shift right
-         dac_pwm_bb <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_b_i[16-1:0] : {1'b0,dac_pwm_bb[15:1]} ; // new value on 16*PWM_FULL
-         dac_pwm_bc <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_c_i[16-1:0] : {1'b0,dac_pwm_bc[15:1]} ;
-         dac_pwm_bd <= (dac_pwm_bcnt == 4'hF) ? dac_pwm_d_i[16-1:0] : {1'b0,dac_pwm_bd[15:1]} ;
-      end
-
-      dac_pwm_o <= dac_pwm_r; // improve timing
-   end
-end
-
-assign dac_pwm_sync_o = (dac_pwm_bcnt == 4'hF) && (dac_pwm_vcnt == (PWM_FULL-1)) ; // latch one before
+// PWM
+assign pwm_clk  =  dac_2clk;
+assign pwm_rstn = ~dac_rst;
 
 endmodule
