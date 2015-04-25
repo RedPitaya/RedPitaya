@@ -475,7 +475,7 @@ red_pitaya_pwm pwm [4-1:0] (
   .clk   (pwm_clk ),
   .rstn  (pwm_rstn),
   // configuration
-  .cfg   ({dac_pwm_d, dac_pwm_c, dac_pwm_b, dac_pwm_a}),
+  .cfg   ({pwm_cfg_d, pwm_cfg_c, pwm_cfg_b, pwm_cfg_a}),
   // PWM outputs
   .pwm_o (dac_pwm_o),
   .pwm_s ()
