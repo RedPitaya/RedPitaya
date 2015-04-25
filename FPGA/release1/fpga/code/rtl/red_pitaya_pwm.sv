@@ -1,7 +1,5 @@
 /**
- * $Id: red_pitaya_analog.v 964 2014-01-24 12:58:17Z matej.oblak $
- *
- * @brief Red Pitaya analog module. Connects to ADC & DAC pins.
+ * @brief Red Pitaya PWM module
  *
  * @Author Matej Oblak
  *
