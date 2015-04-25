@@ -287,16 +287,14 @@ wire  [     8-1: 0] sys_cs     ;
 
 assign sys_cs  = 8'h01 << sys_addr[22:20];
 
+assign sys_wen = sys_cs & {8{ps_sys_wen}}  ;
+assign sys_ren = sys_cs & {8{ps_sys_ren}}  ;
+
 assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
 
 assign ps_sys_err   = |(sys_cs & sys_err);
 
 assign ps_sys_ack   = |(sys_cs & sys_ack);
-
-assign sys_rdata[ 6*32+31: 6*32] = 32'h0;
-
-assign sys_err[6] = {1{1'b0}} ;
-assign sys_ack[6] = {1{1'b1}} ;
 
 // unused system bus slave ports
 
