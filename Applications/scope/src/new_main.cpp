@@ -7,12 +7,12 @@
 
 
 /* --------------------------------  OUT SIGNALS  ------------------------------ *//**/
-CFloatSignal ch1("ch1", 1024, 0.0f);
-CFloatSignal ch2("ch2", 1024, 0.0f);
+CFloatSignal ch1("ch1", CH_SIGNAL_SIZE, 0.0f);
+CFloatSignal ch2("ch2", CH_SIGNAL_SIZE, 0.0f);
 
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
-CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, true, 0);
-CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, true, 0);
+CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, false, 0);
+CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
 
 CBooleanParameter inReset("OSC_RST", CBaseParameter::RW, false, 0);
 CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
@@ -47,6 +47,25 @@ CFloatParameter measureValue2("OSC_MEAS_VAL2", CBaseParameter::RW, 0, 0, -100000
 CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RW, 0, 0, -1000000, 1000000);
 CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RW, 0, 0, -1000000, 1000000);
 
+/* --------------------------------  CURSORS  ------------------------------ */
+CIntParameter cursor1("OSC_CURSOR1", CBaseParameter::RW, -1, 0, 0, 1024);
+CIntParameter cursor2("OSC_CURSOR2", CBaseParameter::RW, -1, 0, 0, 1024);
+CCustomParameter<rp_channel_t> cursor1CH("OSC_CURSOR1_CH", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
+CCustomParameter<rp_channel_t> cursor2CH("OSC_CURSOR2_CH", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
+
+CFloatParameter cursor1V("OSC_CUR1_V", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursor2V("OSC_CUR2_V", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursor1T("OSC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursor2T("OSC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursorDT("OSC_CUR_DT", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursorDV("OSC_CUR_DV", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursorDF("OSC_CUR_DF", CBaseParameter::RW, -1, 0, -1000, 1000);
+
+
+/* --------------------------------  OUTOUT PARAMETERS  ------------------------------ */
+CBooleanParameter out1Show("OUTPUT1_SHOW", CBaseParameter::RW, true, 0);
+CBooleanParameter out2Show("OUTPUT2_SHOW", CBaseParameter::RW, true, 0);
+
 CBooleanParameter out1State("OUTPUT1_STATE", CBaseParameter::RW, false, 0);
 CBooleanParameter out2State("OUTPUT2_STATE", CBaseParameter::RW, false, 0);
 CFloatParameter out1Amplitude("SOUR1_VOLT", CBaseParameter::RW, 1, 0, -1, 1);
@@ -80,6 +99,20 @@ void UpdateParams(void) {
 		measureValue3.Value() = getMeasureValue(measureSelect3.Value());
 	if (measureSelect4.Value() != -1)
 		measureValue4.Value() = getMeasureValue(measureSelect4.Value());
+
+	if (cursor1.Value() != -1) {
+		rpApp_OscGetCursorVoltage(cursor1CH.Value(), (uint32_t) cursor1.Value(), &cursor1V.Value());
+		rpApp_OscGetCursorTime((uint32_t) cursor1.Value(), &cursor1T.Value());
+	}
+	if (cursor2.Value() != -1) {
+		rpApp_OscGetCursorVoltage(cursor2CH.Value(), (uint32_t) cursor2.Value(), &cursor2V.Value());
+		rpApp_OscGetCursorTime((uint32_t) cursor2.Value(), &cursor2T.Value());
+	}
+	if (cursor1.Value() != -1 && cursor1.Value() != -1) {
+		rpApp_OscGetCursorDeltaAmplitude(cursor1CH.Value(), (uint32_t) cursor1.Value(), (uint32_t) cursor2.Value(), &cursorDV.Value());
+		rpApp_OscGetCursorDeltaTime((uint32_t) cursor1.Value(), (uint32_t) cursor2.Value(), &cursorDT.Value());
+		rpApp_OscGetCursorDeltaFrequency((uint32_t) cursor1.Value(), (uint32_t) cursor2.Value(), &cursorDF.Value());
+	}
 }
 
 float getMeasureValue(int measure) {
@@ -127,19 +160,31 @@ void UpdateSignals(void) {
 	float data[1024];
 	if (in1Show.Value()) {
 		rpApp_OscGetViewData(RP_CH_1, data, 1024);
+
+		if (ch1.GetSize() != CH_SIGNAL_SIZE)
+			ch1.Resize(CH_SIGNAL_SIZE);
 		for (int i = 0; i < 1024; i++)
 			ch1[i] = data[i];
+	} else {
+		ch1.Resize(0);
 	}
 
 	if (in2Show.Value()) {
 		rpApp_OscGetViewData(RP_CH_2, data, 1024);
+
+		if (ch2.GetSize() != CH_SIGNAL_SIZE)
+			ch2.Resize(CH_SIGNAL_SIZE);
 		for (int i = 0; i < 1024; i++)
 			ch2[i] = data[i];
+	} else {
+		ch2.Resize(0);
 	}
 }
 
 void OnNewParams(void) {
 /* ------------------------------ IN PARAMETERS ---------------------------------------- */
+	in1Show.Update();
+	in2Show.Update();
 	if (inReset.NewValue()) {
 		rpApp_OscReset();
 	}
@@ -173,102 +218,105 @@ void OnNewParams(void) {
 	if (rpApp_OscSetAmplitudeOffset(RP_CH_1, in1Offset.NewValue())) {
 		in1Offset.Update();
 	}
-	if (rpApp_OscSetAmplitudeOffset(RP_CH_2, in2Offset.Value())) {
+	if (rpApp_OscSetAmplitudeOffset(RP_CH_2, in2Offset.NewValue())) {
 		in2Offset.Update();
 	}
-	if (rpApp_OscSetAmplitudeOffset(RP_CH_1, in1Scale.Value())) {
+	if (rpApp_OscSetAmplitudeOffset(RP_CH_1, in1Scale.NewValue())) {
 		in1Scale.Update();
 	}
-	if (rpApp_OscSetAmplitudeOffset(RP_CH_2, in2Scale.Value())) {
+	if (rpApp_OscSetAmplitudeOffset(RP_CH_2, in2Scale.NewValue())) {
 		in2Scale.Update();
 	}
-	if (rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.Value())) {
+	if (rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.NewValue())) {
 		in1Probe.Update();
 	}
-	if (rpApp_OscSetProbeAtt(RP_CH_2, in2Probe.Value())) {
+	if (rpApp_OscSetProbeAtt(RP_CH_2, in2Probe.NewValue())) {
 		in2Probe.Update();
 	}
-	if (rpApp_OscSetInputGain(RP_CH_1, in1Gain.Value())) {
+	if (rpApp_OscSetInputGain(RP_CH_1, in1Gain.NewValue())) {
 		in1Gain.Update();
 	}
-	if (rpApp_OscSetInputGain(RP_CH_2, in2Gain.Value())) {
+	if (rpApp_OscSetInputGain(RP_CH_2, in2Gain.NewValue())) {
 		in2Gain.Update();
 	}
-	if (rpApp_OscSetTimeOffset(inTimeOffset.Value())) {
+	if (rpApp_OscSetTimeOffset(inTimeOffset.NewValue())) {
 		inTimeOffset.Update();
 	}
-	if (rpApp_OscSetTimeScale(inTimeScale.Value())) {
+	if (rpApp_OscSetTimeScale(inTimeScale.NewValue())) {
 		inTimeScale.Update();
 	}
-	if (rpApp_OscSetTriggerSweep(inTrigSweep.Value())) {
+	if (rpApp_OscSetTriggerSweep(inTrigSweep.NewValue())) {
 		inTrigSweep.Update();
 	}
-	if (rpApp_OscSetTriggerSource(inTrigSource.Value())) {
+	if (rpApp_OscSetTriggerSource(inTrigSource.NewValue())) {
 		inTrigSource.Update();
 	}
-	if (rpApp_OscSetTriggerSlope(inTrigSlope.Value())) {
+	if (rpApp_OscSetTriggerSlope(inTrigSlope.NewValue())) {
 		inTrigSlope.Update();
 	}
-	if (rpApp_OscSetTriggerLevel(inTriggLevel.Value())) {
+	if (rpApp_OscSetTriggerLevel(inTriggLevel.NewValue())) {
 		inTriggLevel.Update();
 	}
+	cursor1.Update();
+	cursor2.Update();
+	cursor1CH.Update();
+	cursor2CH.Update();
 
 /* ------------------------------ OUT PARAMETERS ---------------------------------------- */
-	if (rp_GenAmp(RP_CH_1, out1State.Value())) {
+	out1Show.Update();
+	out2Show.Update();
+	if (rp_GenAmp(RP_CH_1, out1State.NewValue())) {
 		out1State.Update();
 	}
-	if (rp_GenAmp(RP_CH_2, out2State.Value())) {
+	if (rp_GenAmp(RP_CH_2, out2State.NewValue())) {
 		out2State.Update();
 	}
-	if (rp_GenOffset(RP_CH_1, out1Offset.Value())) {
+	if (rp_GenOffset(RP_CH_1, out1Offset.NewValue())) {
 		out1Offset.Update();
 	}
-	if (rp_GenOffset(RP_CH_2, out2Offset.Value())) {
+	if (rp_GenOffset(RP_CH_2, out2Offset.NewValue())) {
 		out2Offset.Update();
 	}
-	if (rp_GenAmp(RP_CH_1, out1Amplitude.Value())) {
+	if (rp_GenAmp(RP_CH_1, out1Amplitude.NewValue())) {
 		out1Amplitude.Update();
 	}
-	if (rp_GenAmp(RP_CH_2, out2Amplitude.Value())) {
+	if (rp_GenAmp(RP_CH_2, out2Amplitude.NewValue())) {
 		out2Amplitude.Update();
 	}
-	if (rp_GenFreq(RP_CH_1, out1Frequancy.Value())) {
+	if (rp_GenFreq(RP_CH_1, out1Frequancy.NewValue())) {
 		out1Frequancy.Update();
 	}
-	if (rp_GenFreq(RP_CH_2, out2Frequancy.Value())) {
+	if (rp_GenFreq(RP_CH_2, out2Frequancy.NewValue())) {
 		out2Frequancy.Update();
 	}
-	if (rp_GenPhase(RP_CH_1, out1Phase.Value())) {
+	if (rp_GenPhase(RP_CH_1, out1Phase.NewValue())) {
 		out1Phase.Update();
 	}
-	if (rp_GenPhase(RP_CH_2, out2Phase.Value())) {
+	if (rp_GenPhase(RP_CH_2, out2Phase.NewValue())) {
 		out2Phase.Update();
 	}
-	if (rp_GenDutyCycle(RP_CH_1, out1DCYC.Value())) {
+	if (rp_GenDutyCycle(RP_CH_1, out1DCYC.NewValue())) {
 		out1DCYC.Update();
 	}
-	if (rp_GenDutyCycle(RP_CH_2, out2DCYC.Value())) {
+	if (rp_GenDutyCycle(RP_CH_2, out2DCYC.NewValue())) {
 		out2DCYC.Update();
 	}
-	if (rp_GenWaveform(RP_CH_1, out1WAveform.Value())) {
+	if (rp_GenWaveform(RP_CH_1, out1WAveform.NewValue())) {
 		out1WAveform.Update();
 	}
-	if (rp_GenWaveform(RP_CH_2, out2WAveform.Value())) {
+	if (rp_GenWaveform(RP_CH_2, out2WAveform.NewValue())) {
 		out2WAveform.Update();
 	}
-	if (rp_GenMode(RP_CH_1, out1Burst.Value() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS)) {
+	if (rp_GenMode(RP_CH_1, out1Burst.NewValue() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS)) {
 		out1Burst.Update();
 	}
-	if (rp_GenMode(RP_CH_2, out2Burst.Value() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS)) {
+	if (rp_GenMode(RP_CH_2, out2Burst.NewValue() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS)) {
 		out2Burst.Update();
 	}
-	if (rp_GenTriggerSource(RP_CH_1, out1TriggerSource.Value())) {
+	if (rp_GenTriggerSource(RP_CH_1, out1TriggerSource.NewValue())) {
 		out1TriggerSource.Update();
 	}
-	if (rp_GenTriggerSource(RP_CH_2, out2TriggerSource.Value())) {
+	if (rp_GenTriggerSource(RP_CH_2, out2TriggerSource.NewValue())) {
 		out2TriggerSource.Update();
 	}
-
-	in1Scale.Update();
-	in2Scale.Update();
 }
