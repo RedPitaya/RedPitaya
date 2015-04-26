@@ -229,7 +229,7 @@
 /*
  *  JSON_WRITE_BASH_COMMENTS will cause libjson to write all comments in bash (#) style
  *  if this option is not turned on, then it will use C-style comments.  Bash comments are
- *  all inSingle line
+ *  all single line
  */
 //#define JSON_WRITE_BASH_COMMENTS
 
@@ -237,7 +237,7 @@
 /*
  *  JSON_WRITE_SINGLE_LINE_COMMENTS will cause libjson to write all comments in using //
  *  notation, or (#) if that option is on.  Some parsers do not support multiline C comments
- *  although, this option is not needed for bash comments, as they are all inSingle line anyway
+ *  although, this option is not needed for bash comments, as they are all single line anyway
  */
 //#define JSON_WRITE_SINGLE_LINE_COMMENTS
 
