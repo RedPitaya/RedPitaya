@@ -1,0 +1,16 @@
+{
+	"mac_address":"00:0a:95:9d:68:16",
+	"zynq_id":"D234048A",
+	"apps":[
+		{
+			"app_id":"2351251",
+			"app_name":"scope",
+			"app_checksum":"595f44fec1e92a71d3e9e77456ba80d1"
+		},
+		{
+			"app_id":"1235845",
+			"app_name":"spectrum",
+			"app_checksum":"125f04fef1e92a31d2e7e77456ba80b3"
+		}
+	],	
+}
