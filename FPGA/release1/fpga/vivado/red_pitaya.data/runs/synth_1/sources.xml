@@ -182,7 +182,7 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PPRDIR/../code/rtl/red_pitaya_analog.v">
+    <File Path="$PPRDIR/../code/rtl/red_pitaya_pll.sv">
       <FileInfo>
         <Attr Name="UsedInSynthesis" Val="1"/>
         <Attr Name="UsedInImplementation" Val="1"/>
