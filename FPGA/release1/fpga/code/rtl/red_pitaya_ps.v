@@ -94,6 +94,9 @@ module red_pitaya_ps (
 //------------------------------------------------------------------------------
 // AXI masters
 
+wire            hp1_saxi_clk_i  , hp0_saxi_clk_i  ;
+wire            hp1_saxi_rstn_i , hp0_saxi_rstn_i ;
+
 wire            hp1_saxi_arready, hp0_saxi_arready;
 wire            hp1_saxi_awready, hp0_saxi_awready;
 wire            hp1_saxi_bvalid , hp0_saxi_bvalid ;
