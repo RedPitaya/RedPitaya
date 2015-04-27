@@ -222,7 +222,18 @@ red_pitaya_scope #(
   // trigger sources
   .trig_ext_i     (trig_ext ),  // external trigger
   .trig_asg_i     (trig_ext ),  // ASG trigger
-   // System bus
+  // AXI0 master           // AXI1 master
+  .axi0_clk_o     (    ),  .axi1_clk_o     (    ),
+  .axi0_rstn_o    (    ),  .axi1_rstn_o    (    ),
+  .axi0_waddr_o   (    ),  .axi1_waddr_o   (    ),
+  .axi0_wdata_o   (    ),  .axi1_wdata_o   (    ),
+  .axi0_wsel_o    (    ),  .axi1_wsel_o    (    ),
+  .axi0_wvalid_o  (    ),  .axi1_wvalid_o  (    ),
+  .axi0_wlen_o    (    ),  .axi1_wlen_o    (    ),
+  .axi0_wfixed_o  (    ),  .axi1_wfixed_o  (    ),
+  .axi0_werr_i    (1'b0),  .axi1_werr_i    (1'b0),
+  .axi0_wrdy_i    (1'b1),  .axi1_wrdy_i    (1'b1),
+  // System bus
   .sys_addr       (sys_addr ),
   .sys_wdata      (sys_wdata),
   .sys_sel        (sys_sel  ),
