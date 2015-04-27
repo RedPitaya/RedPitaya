@@ -217,7 +217,7 @@ always @(posedge sys_clk)
       if (sys_wen && (sys_addr[9:0]==10'h8))    reg_c <= sys_wdata ;
    end
 
-always @(*)
+always_comb
 begin
    sys_err = 1'b0 ;
    casez (sys_addr[9:0])
@@ -268,4 +268,4 @@ begin
    repeat(20000) @(posedge axi_aclk);
 end
 
-endmodule
+endmodule: axi_slave_tb
