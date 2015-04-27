@@ -14,12 +14,10 @@
  */
 
 
-
 /**
  * GENERAL DESCRIPTION:
  *
  * Top module connects PS part with rest of Red Pitaya applications.  
- *
  *
  *
  *                   /-------\      
@@ -28,12 +26,9 @@
  *   PS CLK -------> |  ARM  |              |
  *                   \-------/              |
  *                                          |
- *                                          |
- *                                          |
  *                            /-------\     |
  *                         -> | SCOPE | <---+
  *                         |  \-------/     |
- *                         |                |
  *                         |                |
  *            /--------\   |   /-----\      |
  *   ADC ---> |        | --+-> |     |      |
@@ -41,12 +36,9 @@
  *   DAC <--- |        | <---- |     |      |
  *            \--------/   ^   \-----/      |
  *                         |                |
- *                         |                |
  *                         |  /-------\     |
  *                         -- |  ASG  | <---+ 
  *                            \-------/     |
- *                                          |
- *                                          |
  *                                          |
  *             /--------\                   |
  *    RX ----> |        |                   |
@@ -56,8 +48,6 @@
  *               |    |
  *               |    |
  *               (FREE)
- *
- *
  *
  *
  * Inside analog module, ADC data is translated from unsigned neg-slope into
@@ -245,31 +235,50 @@ assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
-// PLL (clock and reaset)
+// local signals
 ////////////////////////////////////////////////////////////////////////////////
 
 // PLL signals
-wire             adc_clk_in;
-wire             pll_adc_clk;
-wire             pll_dac_clk_1x;
-wire             pll_dac_clk_2x;
-wire             pll_dac_clk_2p;
-wire             pll_ser_clk;
-wire             pll_pwm_clk;
-wire             pll_locked;
-// ADC signals
-wire             adc_clk;
-reg              adc_rstn;
-// DAC signals
-wire             dac_clk_1x;
-wire             dac_clk_2x;
-wire             dac_clk_2p;
-reg              dac_rst;
+wire                  adc_clk_in;
+wire                  pll_adc_clk;
+wire                  pll_dac_clk_1x;
+wire                  pll_dac_clk_2x;
+wire                  pll_dac_clk_2p;
+wire                  pll_ser_clk;
+wire                  pll_pwm_clk;
+wire                  pll_locked;
+
 // fast serial signals
-wire             ser_clk ;
+wire                  ser_clk ;
+
 // PWM clock and reset
-wire             pwm_clk ;
-reg              pwm_rstn;
+wire                  pwm_clk ;
+reg                   pwm_rstn;
+
+// ADC signals
+wire                  adc_clk;
+reg                   adc_rstn;
+reg          [14-1:0] adc_dat_a, adc_dat_b;
+wire  signed [14-1:0] adc_a    , adc_b    ;
+
+// DAC signals
+wire                  dac_clk_1x;
+wire                  dac_clk_2x;
+wire                  dac_clk_2p;
+reg                   dac_rst;
+reg          [14-1:0] dac_dat_a, dac_dat_b;
+wire         [14-1:0] dac_a    , dac_b    ;
+wire  signed [15-1:0] dac_a_sum, dac_b_sum;
+
+// ASG
+wire  signed [14-1:0] asg_a    , asg_b    ;
+
+// PID
+wire  signed [14-1:0] pid_a    , pid_b    ;
+
+////////////////////////////////////////////////////////////////////////////////
+// PLL (clock and reaset)
+////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
 IBUFDS i_clk (.I (adc_clk_p_i), .IB (adc_clk_n_i), .O (adc_clk_in));  // differential clock input
@@ -312,9 +321,6 @@ pwm_rstn <=  frstn[0] &  pll_locked;
 // ADC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-wire  [ 14-1: 0] adc_a     ;
-wire  [ 14-1: 0] adc_b     ;
-
 // generating ADC clock is disabled
 assign adc_clk_o = 2'b10;
 //ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
@@ -323,53 +329,43 @@ assign adc_clk_o = 2'b10;
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
-reg  [14-1: 0] adc_dat_a  ;
-reg  [14-1: 0] adc_dat_b  ;
-
 // IO block registers should be used here
+// lowest 2 bits reserved for 16bit ADC
 always @(posedge adc_clk)
 begin
-   adc_dat_a <= adc_dat_a_i[16-1:2]; // lowest 2 bits reserved for 16bit ADC
-   adc_dat_b <= adc_dat_b_i[16-1:2];
+  adc_dat_a <= adc_dat_a_i[16-1:2];
+  adc_dat_b <= adc_dat_b_i[16-1:2];
 end
     
-assign adc_a = {adc_dat_a[14-1], ~adc_dat_a[14-2:0]}; // transform into 2's complement (negative slope)
+// transform into 2's complement (negative slope)
+assign adc_a = {adc_dat_a[14-1], ~adc_dat_a[14-2:0]};
 assign adc_b = {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-reg signed [14-1: 0] dac_dat_a;
-reg signed [14-1: 0] dac_dat_b;
+// Sumation of ASG and PID signal perform saturation before sending to DAC 
+assign dac_a_sum = asg_a + pid_a;
+assign dac_b_sum = asg_b + pid_b;
 
-wire       [14-1: 0] dac_a;
-wire       [14-1: 0] dac_b;
+// saturation
+assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
+assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
 
 // output registers + signed to unsigned (also to negative slope)
 always @(posedge dac_clk_1x)
 begin
-   dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
-   dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
+  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
 end
 
+// DDR outputs
 ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2p), .CE(1'b1), .R(dac_rst), .S(1'b0));
 ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
-
-// Sumation of ASG and PID signal perform saturation before sending to DAC 
-
-wire signed [15-1:0] dac_a_sum;
-wire signed [15-1:0] dac_b_sum;
-
-assign dac_a_sum = $signed(asg_a) + $signed(pid_a);
-assign dac_b_sum = $signed(asg_b) + $signed(pid_b);
-
-// saturation
-assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
-assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
 
 //---------------------------------------------------------------------------------
 //  House Keeping
@@ -442,9 +438,6 @@ red_pitaya_scope i_scope (
 //---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator
 
-wire  [ 14-1: 0] asg_a       ;
-wire  [ 14-1: 0] asg_b       ;
-
 red_pitaya_asg i_asg (
    // DAC
   .dac_a_o         (  asg_a                      ),  // CH 1
@@ -467,9 +460,6 @@ red_pitaya_asg i_asg (
 
 //---------------------------------------------------------------------------------
 //  MIMO PID controller
-
-wire  [ 14-1: 0] pid_a       ;
-wire  [ 14-1: 0] pid_b       ;
 
 red_pitaya_pid i_pid (
    // signals
