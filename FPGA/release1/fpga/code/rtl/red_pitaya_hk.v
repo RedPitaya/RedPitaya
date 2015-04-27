@@ -36,6 +36,8 @@ module red_pitaya_hk #(
   input                rstn_i     ,  // reset - active low
   // LED
   output     [DWL-1:0] led_o      ,  // LED output
+  // global configuration
+  output reg           digital_loop,
   // Expansion connector
   input      [DWE-1:0] exp_p_dat_i,  // exp. con. input data
   output reg [DWE-1:0] exp_p_dat_o,  // exp. con. output data
@@ -138,6 +140,8 @@ if (rstn_i == 1'b0) begin
   exp_n_dat_o  <= {DWE{1'b0}};
   exp_n_dir_o  <= {DWE{1'b0}};
 end else if (sys_wen) begin
+  if (sys_addr[19:0]==20'h0c)   digital_loop <= sys_wdata[0];
+
   if (sys_addr[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata[DWE-1:0];
   if (sys_addr[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata[DWE-1:0];
   if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[DWE-1:0];
@@ -160,6 +164,7 @@ end else begin
     20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {                id_value          }; end
     20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {                dna_value[32-1: 0]}; end
     20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]}; end
+    20'h0000c: begin sys_ack <= sys_en;  sys_rdata <= {{32-  1{1'b0}}, digital_loop      }; end
 
     20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dir_o}       ; end
     20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dir_o}       ; end

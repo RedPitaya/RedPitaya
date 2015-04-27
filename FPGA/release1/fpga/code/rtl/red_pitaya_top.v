@@ -276,6 +276,9 @@ wire  signed [14-1:0] asg_a    , asg_b    ;
 // PID
 wire  signed [14-1:0] pid_a    , pid_b    ;
 
+// configuration
+wire                  digital_loop;
+
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,8 +341,8 @@ begin
 end
     
 // transform into 2's complement (negative slope)
-assign adc_a = {adc_dat_a[14-1], ~adc_dat_a[14-2:0]};
-assign adc_b = {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
+assign adc_a = digital_loop ? dac_a : {adc_dat_a[14-1], ~adc_dat_a[14-2:0]};
+assign adc_b = digital_loop ? dac_b : {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
@@ -375,11 +378,14 @@ wire  [  8-1: 0] exp_p_out, exp_n_out;
 wire  [  8-1: 0] exp_p_dir, exp_n_dir;
 
 red_pitaya_hk i_hk (
+  // system signals
   .clk_i           (  adc_clk                    ),  // clock
   .rstn_i          (  adc_rstn                   ),  // reset - active low
   // LED
   .led_o           (  led_o                      ),  // LED output
-   // Expansion connector
+  // global configuration
+  .digital_loop    (  digital_loop               ),
+  // Expansion connector
   .exp_p_dat_i     (  exp_p_in                   ),  // input data
   .exp_p_dat_o     (  exp_p_out                  ),  // output data
   .exp_p_dir_o     (  exp_p_dir                  ),  // 1-output enable
