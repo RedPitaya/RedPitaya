@@ -208,61 +208,118 @@ red_pitaya_ps i_ps (
   .axi1_wrdy_o   (axi1_wrdy   ),  .axi0_wrdy_o   (axi0_wrdy   )   // system write ready
 );
 
-//---------------------------------------------------------------------------------
-//
-//  Analog peripherials 
+////////////////////////////////////////////////////////////////////////////////
+// PLL (clock and reaset)
+////////////////////////////////////////////////////////////////////////////////
 
-// ADC clock duty cycle stabilizer is enabled
-assign adc_cdcs_o = 1'b1 ;
+wire             adc_clk_in;
+wire             adc_clk;
+reg              adc_rstn;
+
+wire             dac_clk_1x;
+wire             dac_clk_2x;
+wire             dac_clk_2p;
+reg              dac_rst;
+
+wire             ser_clk ;
+// PWM clock and reset
+wire             pwm_clk ;
+reg              pwm_rstn;
+
+// diferential clock input
+IBUFDS i_clk (.I (adc_clk_p_i), .IB (adc_clk_n_i), .O (adc_clk_in));  // differential clock input
+
+red_pitaya_pll pll (
+  // inputs
+  .clk         (adc_clk_in),  // clock
+  .rstn        (frstn[0]  ),  // reset - active low
+  // output clocks
+  .clk_adc     (adc_clk   ),  // ADC clock
+  .clk_dac_1x  (dac_clk_1x),  // DAC clock 125MHz
+  .clk_dac_2x  (dac_clk_2x),  // DAC clock 250MHz
+  .clk_dac_2p  (dac_clk_2p),  // DAC clock 250MHz -45DGR
+  .clk_ser     (ser_clk   ),  // fast serial clock
+  .clk_pwm     (pwm_clk   ),  // PWM clock
+  // status outputs
+  .pll_locked  (pll_locked)
+);
+
+// ADC reset (active low) 
+always @(posedge adc_clk)
+adc_rstn <=  frstn[0] &  pll_locked;
+
+// DAC reset (active high)
+always @(posedge dac_clk_1x)
+dac_rst  <= ~frstn[0] | ~pll_locked;
+
+// PWM reset (active low)
+always @(posedge pwm_clk)
+pwm_rstn <=  frstn[0] &  pll_locked;
+
+////////////////////////////////////////////////////////////////////////////////
+// ADC IO
+////////////////////////////////////////////////////////////////////////////////
+
+wire  [ 14-1: 0] adc_a     ;
+wire  [ 14-1: 0] adc_b     ;
 
 // generating ADC clock is disabled
 assign adc_clk_o = 2'b10;
 //ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
 //ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
 
-wire             ser_clk     ;
-wire             adc_clk     ;
-reg              adc_rstn    ;
-wire  [ 14-1: 0] adc_a       ;
-wire  [ 14-1: 0] adc_b       ;
-wire  [ 14-1: 0] dac_a       ;
-wire  [ 14-1: 0] dac_b       ;
+// ADC clock duty cycle stabilizer is enabled
+assign adc_cdcs_o = 1'b1 ;
 
-wire             pwm_clk ;
-wire             pwm_rstn;
+reg  [14-1: 0] adc_dat_a  ;
+reg  [14-1: 0] adc_dat_b  ;
 
-red_pitaya_analog i_analog (
-  // ADC IC
-  .adc_dat_a_i        (  adc_dat_a_i      ),  // CH 1
-  .adc_dat_b_i        (  adc_dat_b_i      ),  // CH 2
-  .adc_clk_p_i        (  adc_clk_p_i      ),  // data clock
-  .adc_clk_n_i        (  adc_clk_n_i      ),  // data clock
-  // DAC IC
-  .dac_dat_o          (  dac_dat_o        ),  // combined data
-  .dac_wrt_o          (  dac_wrt_o        ),  // write enable
-  .dac_sel_o          (  dac_sel_o        ),  // channel select
-  .dac_clk_o          (  dac_clk_o        ),  // clock
-  .dac_rst_o          (  dac_rst_o        ),  // reset
-  // user interface
-  .adc_dat_a_o        (  adc_a            ),  // ADC CH1
-  .adc_dat_b_o        (  adc_b            ),  // ADC CH2
-  .adc_clk_o          (  adc_clk          ),  // ADC received clock
-  .adc_rstn_i         (  adc_rstn         ),  // reset - active low
-  .ser_clk_o          (  ser_clk          ),  // fast serial clock
+// IO block registers should be used here
+always @(posedge adc_clk)
+begin
+   adc_dat_a <= adc_dat_a_i[16-1:2]; // lowest 2 bits reserved for 16bit ADC
+   adc_dat_b <= adc_dat_b_i[16-1:2];
+end
+    
+assign adc_a = {adc_dat_a[14-1], ~adc_dat_a[14-2:0]}; // transform into 2's complement (negative slope)
+assign adc_b = {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
 
-  .dac_dat_a_i        (  dac_a            ),  // DAC CH1
-  .dac_dat_b_i        (  dac_b            ),  // DAC CH2
-  // PWM
-  .pwm_clk            (pwm_clk ),
-  .pwm_rstn           (pwm_rstn)
-);
+////////////////////////////////////////////////////////////////////////////////
+// DAC IO
+////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge adc_clk) begin
-   adc_rstn <= frstn[0] ;
+reg signed [14-1: 0] dac_dat_a;
+reg signed [14-1: 0] dac_dat_b;
+
+wire       [14-1: 0] dac_a;
+wire       [14-1: 0] dac_b;
+
+// output registers + signed to unsigned (also to negative slope)
+always @(posedge dac_clk_1x)
+begin
+   dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
+   dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
 end
 
+ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2p), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+
+// Sumation of ASG and PID signal perform saturation before sending to DAC 
+
+wire signed [15-1:0] dac_a_sum;
+wire signed [15-1:0] dac_b_sum;
+
+assign dac_a_sum = $signed(asg_a) + $signed(pid_a);
+assign dac_b_sum = $signed(asg_b) + $signed(pid_b);
+
+// saturation
+assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
+assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
+
 //---------------------------------------------------------------------------------
-//
 //  system bus decoder & multiplexer
 //  it breaks memory addresses into 8 regions
 
@@ -300,7 +357,6 @@ assign sys_err[7] = 1'b0 ;
 assign sys_ack[7] = 1'b1 ;
 
 //---------------------------------------------------------------------------------
-//
 //  House Keeping
 
 wire  [  8-1: 0] exp_p_in , exp_n_in ;
@@ -334,7 +390,6 @@ IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_di
 IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
 
 //---------------------------------------------------------------------------------
-//
 //  Oscilloscope application
 
 wire trig_asg_out ;
@@ -370,7 +425,6 @@ red_pitaya_scope i_scope (
 );
 
 //---------------------------------------------------------------------------------
-//
 //  DAC arbitrary signal generator
 
 wire  [ 14-1: 0] asg_a       ;
@@ -397,7 +451,6 @@ red_pitaya_asg i_asg (
 );
 
 //---------------------------------------------------------------------------------
-//
 //  MIMO PID controller
 
 wire  [ 14-1: 0] pid_a       ;
@@ -423,22 +476,6 @@ red_pitaya_pid i_pid (
 );
 
 //---------------------------------------------------------------------------------
-//
-//  Sumation of ASG and PID signal
-//  perform saturation before sending to DAC 
-
-wire signed [15-1:0] dac_a_sum;
-wire signed [15-1:0] dac_b_sum;
-
-assign dac_a_sum = $signed(asg_a) + $signed(pid_a);
-assign dac_b_sum = $signed(asg_b) + $signed(pid_b);
-
-// saturation
-assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
-assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
-
-//---------------------------------------------------------------------------------
-//
 //  Analog mixed signals
 //  XADC and slow PWM DAC control
 
@@ -482,7 +519,6 @@ red_pitaya_pwm pwm [4-1:0] (
 );
 
 //---------------------------------------------------------------------------------
-//
 //  Daisy chain
 //  simple communication module
 
@@ -511,7 +547,6 @@ red_pitaya_daisy i_daisy (
   .par_dat_o       (                             ),
 
   .debug_o         (/*led_o*/                    ),
-
    // System bus
   .sys_clk_i       (  sys_clk                    ),  // clock
   .sys_rstn_i      (  sys_rstn                   ),  // reset - active low
