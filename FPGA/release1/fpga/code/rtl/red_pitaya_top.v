@@ -220,6 +220,7 @@ wire             pll_dac_clk_2x;
 wire             pll_dac_clk_2p;
 wire             pll_ser_clk;
 wire             pll_pwm_clk;
+wire             pll_locked;
 // ADC signals
 wire             adc_clk;
 reg              adc_rstn;
