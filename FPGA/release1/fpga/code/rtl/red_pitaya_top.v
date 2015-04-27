@@ -209,6 +209,42 @@ red_pitaya_ps i_ps (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
+////////////////////////////////////////////////////////////////////////////////
+
+wire              sys_clk   = ps_sys_clk  ;
+wire              sys_rstn  = ps_sys_rstn ;
+wire  [  32-1: 0] sys_addr  = ps_sys_addr ;
+wire  [  32-1: 0] sys_wdata = ps_sys_wdata;
+wire  [   4-1: 0] sys_sel   = ps_sys_sel  ;
+wire  [8   -1: 0] sys_wen   ;
+wire  [8   -1: 0] sys_ren   ;
+wire  [8*32-1: 0] sys_rdata ;
+wire  [8* 1-1: 0] sys_err   ;
+wire  [8* 1-1: 0] sys_ack   ;
+wire  [8   -1: 0] sys_cs    ;
+
+assign sys_cs = 8'h01 << sys_addr[22:20];
+
+assign sys_wen = sys_cs & {8{ps_sys_wen}};
+assign sys_ren = sys_cs & {8{ps_sys_ren}};
+
+assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
+
+assign ps_sys_err   = |(sys_cs & sys_err);
+assign ps_sys_ack   = |(sys_cs & sys_ack);
+
+// unused system bus slave ports
+
+assign sys_rdata[6*32+:32] = 32'h0; 
+assign sys_err  [6       ] =  1'b0;
+assign sys_ack  [6       ] =  1'b1;
+
+assign sys_rdata[7*32+:32] = 32'h0; 
+assign sys_err  [7       ] =  1'b0;
+assign sys_ack  [7       ] =  1'b1;
+
+////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -334,43 +370,6 @@ assign dac_b_sum = $signed(asg_b) + $signed(pid_b);
 // saturation
 assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
 assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
-
-//---------------------------------------------------------------------------------
-//  system bus decoder & multiplexer
-//  it breaks memory addresses into 8 regions
-
-wire                sys_clk    = ps_sys_clk      ;
-wire                sys_rstn   = ps_sys_rstn     ;
-wire  [    32-1: 0] sys_addr   = ps_sys_addr     ;
-wire  [    32-1: 0] sys_wdata  = ps_sys_wdata    ;
-wire  [     4-1: 0] sys_sel    = ps_sys_sel      ;
-wire  [     8-1: 0] sys_wen    ;
-wire  [     8-1: 0] sys_ren    ;
-wire  [(8*32)-1: 0] sys_rdata  ;
-wire  [ (8*1)-1: 0] sys_err    ;
-wire  [ (8*1)-1: 0] sys_ack    ;
-wire  [     8-1: 0] sys_cs     ;
-
-assign sys_cs  = 8'h01 << sys_addr[22:20];
-
-assign sys_wen = sys_cs & {8{ps_sys_wen}}  ;
-assign sys_ren = sys_cs & {8{ps_sys_ren}}  ;
-
-assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
-
-assign ps_sys_err   = |(sys_cs & sys_err);
-
-assign ps_sys_ack   = |(sys_cs & sys_ack);
-
-// unused system bus slave ports
-
-assign sys_rdata[ 6*32+31: 6*32] = 32'h0 ; 
-assign sys_err[6] = 1'b0 ;
-assign sys_ack[6] = 1'b1 ;
-
-assign sys_rdata[ 7*32+31: 7*32] = 32'h0 ; 
-assign sys_err[7] = 1'b0 ;
-assign sys_ack[7] = 1'b1 ;
 
 //---------------------------------------------------------------------------------
 //  House Keeping
