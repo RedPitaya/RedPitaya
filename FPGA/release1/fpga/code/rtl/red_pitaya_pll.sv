@@ -12,15 +12,15 @@
 
 module red_pitaya_pll (
   // inputs
-  input  logic clk        ,  // clock
-  input  logic rstn       ,  // reset - active low
+  input  logic clk       ,  // clock
+  input  logic rstn      ,  // reset - active low
   // output clocks
-  output logic clk_adc    ,  // ADC clock
-  output logic clk_dac_1x ,  // DAC clock
-  output logic clk_dac_2x ,  // DAC clock
-  output logic clk_dac_2ph,  // DAC clock
-  output logic clk_ser    ,  // fast serial clock
-  output logic clk_pwm    ,  // PWM clock
+  output logic clk_adc   ,  // ADC clock
+  output logic clk_dac_1x,  // DAC clock
+  output logic clk_dac_2x,  // DAC clock
+  output logic clk_dac_2p,  // DAC clock
+  output logic clk_ser   ,  // fast serial clock
+  output logic clk_pwm   ,  // PWM clock
   // status outputs
   output logic pll_locked
 );
@@ -55,17 +55,17 @@ PLLE2_ADV #(
    .REF_JITTER1          ( 0.010     )
 ) pll (
    // Output clocks
-   .CLKFBOUT     (clk_fb     ),
-   .CLKOUT0      (clk_adc    ),
-   .CLKOUT1      (clk_dac_1x ),
-   .CLKOUT2      (clk_dac_2x ),
-   .CLKOUT3      (clk_dac_2ph),
-   .CLKOUT4      (clk_ser    ),
-   .CLKOUT5      (clk_pwm    ),
+   .CLKFBOUT     (clk_fb    ),
+   .CLKOUT0      (clk_adc   ),
+   .CLKOUT1      (clk_dac_1x),
+   .CLKOUT2      (clk_dac_2x),
+   .CLKOUT3      (clk_dac_2p),
+   .CLKOUT4      (clk_ser   ),
+   .CLKOUT5      (clk_pwm   ),
    // Input clock control
-   .CLKFBIN      (clk_fb     ),
-   .CLKIN1       (clk        ),
-   .CLKIN2       (1'b0       ),
+   .CLKFBIN      (clk_fb    ),
+   .CLKIN1       (clk       ),
+   .CLKIN2       (1'b0      ),
    // Tied to always select the primary input clock
    .CLKINSEL     (1'b1 ),
    // Ports for dynamic reconfiguration
