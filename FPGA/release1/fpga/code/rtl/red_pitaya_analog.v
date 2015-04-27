@@ -33,11 +33,6 @@
  *                 /------------\
  *   DAC DAT <---- | RAW <- 2's | <---- DAC DATA FROM USER
  *                 \------------/
- *                       |
- *                       ˇ
- *                   /-------\
- *   DAC PWM <------ |  PWM  | <------- SLOW DAC DATA FROM USER
- *                   \-------/
  *
  *
  * ADC clock is used for main clock domain, from this double clock is made which
@@ -88,21 +83,13 @@ module red_pitaya_analog (
 //
 //  ADC input registers
 
-reg  [14-1: 0] adc_dat_a  ;
-reg  [14-1: 0] adc_dat_b  ;
 wire           adc_clk_in ;
 wire           adc_clk    ;
 
 IBUFDS i_clk ( .I(adc_clk_p_i), .IB(adc_clk_n_i), .O(adc_clk_in));  // differential clock input
 BUFG i_adc_buf  (.O(adc_clk), .I(adc_clk_in)); // use global clock buffer
 
-always @(posedge adc_clk) begin
-   adc_dat_a <= adc_dat_a_i[16-1:2]; // lowest 2 bits reserved for 16bit ADC
-   adc_dat_b <= adc_dat_b_i[16-1:2];
-end
-    
-assign adc_dat_a_o = {adc_dat_a[14-1], ~adc_dat_a[14-2:0]}; // transform into 2's complement (negative slope)
-assign adc_dat_b_o = {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
+
 assign adc_clk_o   =  adc_clk ;
 
 //---------------------------------------------------------------------------------
@@ -175,26 +162,5 @@ BUFG i_dac1_buf    (.O(dac_clk),        .I(dac_clk_out));
 BUFG i_dac2_buf    (.O(dac_2clk),       .I(dac_2clk_out));
 BUFG i_dac2ph_buf  (.O(dac_2ph),        .I(dac_2ph_out));
 BUFG i_ser_buf     (.O(ser_clk_o),      .I(ser_clk_out));
-
-reg  [14-1: 0] dac_dat_a  ;
-reg  [14-1: 0] dac_dat_b  ;
-
-// output registers + signed to unsigned (also to negative slope)
-always @(posedge dac_clk) begin
-   dac_dat_a <= {dac_dat_a_i[14-1], ~dac_dat_a_i[14-2:0]};
-   dac_dat_b <= {dac_dat_b_i[14-1], ~dac_dat_b_i[14-2:0]};
-   dac_rst   <= !dac_locked;
-end
-
-ODDR i_dac_clk ( .Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_2ph),  .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_wrt ( .Q(dac_wrt_o), .D1(1'b0), .D2(1'b1), .C(dac_2clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_sel ( .Q(dac_sel_o), .D1(1'b1), .D2(1'b0), .C(dac_clk ), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-ODDR i_dac_rst ( .Q(dac_rst_o), .D1(dac_rst), .D2(dac_rst), .C(dac_clk ), .CE(1'b1), .R(1'b0), .S(1'b0) );
-ODDR i_dac_dat [14-1:0] ( .Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk), .CE(1'b1), .R(dac_rst), .S(1'b0) );
-
-
-// PWM
-assign pwm_clk  =  dac_2clk;
-assign pwm_rstn = ~dac_rst;
 
 endmodule
