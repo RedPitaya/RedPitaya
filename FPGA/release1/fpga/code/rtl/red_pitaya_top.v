@@ -212,15 +212,23 @@ red_pitaya_ps i_ps (
 // PLL (clock and reaset)
 ////////////////////////////////////////////////////////////////////////////////
 
+// PLL signals
 wire             adc_clk_in;
+wire             pll_adc_clk;
+wire             pll_dac_clk_1x;
+wire             pll_dac_clk_2x;
+wire             pll_dac_clk_2p;
+wire             pll_ser_clk;
+wire             pll_pwm_clk;
+// ADC signals
 wire             adc_clk;
 reg              adc_rstn;
-
+// DAC signals
 wire             dac_clk_1x;
 wire             dac_clk_2x;
 wire             dac_clk_2p;
 reg              dac_rst;
-
+// fast serial signals
 wire             ser_clk ;
 // PWM clock and reset
 wire             pwm_clk ;
@@ -243,6 +251,13 @@ red_pitaya_pll pll (
   // status outputs
   .pll_locked  (pll_locked)
 );
+
+BUFG bufg_adc_clk    (.O (adc_clk   ), .I (pll_adc_clk   ));
+BUFG bufg_dac_clk_1x (.O (dac_clk_1x), .I (pll_dac_clk_1x));
+BUFG bufg_dac_clk_2x (.O (dac_clk_2x), .I (pll_dac_clk_2x));
+BUFG bufg_dac_clk_2p (.O (dac_clk_2p), .I (pll_dac_clk_2p));
+BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
+BUFG bufg_pwm_clk    (.O (pwm_clk   ), .I (pll_pwm_clk   ));
 
 // ADC reset (active low) 
 always @(posedge adc_clk)
