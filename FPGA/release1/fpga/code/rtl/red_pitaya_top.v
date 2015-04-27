@@ -242,12 +242,12 @@ red_pitaya_pll pll (
   .clk         (adc_clk_in),  // clock
   .rstn        (frstn[0]  ),  // reset - active low
   // output clocks
-  .clk_adc     (adc_clk   ),  // ADC clock
-  .clk_dac_1x  (dac_clk_1x),  // DAC clock 125MHz
-  .clk_dac_2x  (dac_clk_2x),  // DAC clock 250MHz
-  .clk_dac_2p  (dac_clk_2p),  // DAC clock 250MHz -45DGR
-  .clk_ser     (ser_clk   ),  // fast serial clock
-  .clk_pwm     (pwm_clk   ),  // PWM clock
+  .clk_adc     (pll_adc_clk   ),  // ADC clock
+  .clk_dac_1x  (pll_dac_clk_1x),  // DAC clock 125MHz
+  .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
+  .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
+  .clk_ser     (pll_ser_clk   ),  // fast serial clock
+  .clk_pwm     (pll_pwm_clk   ),  // PWM clock
   // status outputs
   .pll_locked  (pll_locked)
 );
