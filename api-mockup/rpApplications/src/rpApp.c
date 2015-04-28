@@ -173,7 +173,7 @@ int rpApp_OscGetTriggerSweep(rpApp_osc_trig_sweep_t *mode) {
     return osc_getTriggerSweep(mode);
 }
 
-int rpApp_OscGetViewData(rp_channel_t channel, float *data, uint32_t size) {
+int rpApp_getInvViewData(rp_channel_t channel, float *data, uint32_t size) {
     return osc_getViewData(channel, data, size);
 }
 

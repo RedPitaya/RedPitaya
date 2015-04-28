@@ -550,6 +550,13 @@ int osc_getViewSize(uint32_t *size) {
     return 0;
 }
 
+int osc_getInvViewData(rp_channel_t channel, float *data, uint32_t size){
+    for(int i = 0; i < size; i++){
+        data[i] = -1 * (view[channel][i]);
+    }
+    return RP_OK;
+}
+
 /*
 * Utils
 */
