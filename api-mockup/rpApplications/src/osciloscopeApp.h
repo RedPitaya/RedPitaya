@@ -82,6 +82,7 @@ int osc_getCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value);
 int oscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getViewData(rp_channel_t channel_t, float *data, uint32_t size);
+int osc_getInvViewData(rp_channel_t channel, float *data, uint32_t size);
 int osc_getViewSize(uint32_t *size);
 
 int threadSafe_acqStart();
