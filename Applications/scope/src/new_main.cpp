@@ -13,6 +13,8 @@ CFloatSignal ch2("ch2", CH_SIGNAL_SIZE, 0.0f);
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
 CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, false, 0);
 CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
+CBooleanParameter in1InvShow("CH1_SHOW_INVERTED", CBaseParameter::RW, true, 0);
+CBooleanParameter in2InvShow("CH2_SHOW_INVERTED", CBaseParameter::RW, true, 0);
 
 CBooleanParameter inReset("OSC_RST", CBaseParameter::RW, false, 0);
 CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
@@ -62,7 +64,7 @@ CFloatParameter cursorDV("OSC_CUR_DV", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursorDF("OSC_CUR_DF", CBaseParameter::RW, -1, 0, -1000, 1000);
 
 
-/* --------------------------------  OUTOUT PARAMETERS  ------------------------------ */
+/* --------------------------------  OUTPUT PARAMETERS  ------------------------------ */
 CBooleanParameter out1Show("OUTPUT1_SHOW", CBaseParameter::RW, true, 0);
 CBooleanParameter out2Show("OUTPUT2_SHOW", CBaseParameter::RW, true, 0);
 
@@ -158,8 +160,13 @@ float getMeasureValue(int measure) {
 
 void UpdateSignals(void) {
 	float data[1024];
+
 	if (in1Show.Value()) {
-		rpApp_OscGetViewData(RP_CH_1, data, 1024);
+		if(in1InvShow.Value()){
+			rpApp_OscGetInvViewData(RP_CH_1, data, 1024);
+		}else{
+			rpApp_OscGetViewData(RP_CH_1, data, 1024);
+		}
 
 		if (ch1.GetSize() != CH_SIGNAL_SIZE)
 			ch1.Resize(CH_SIGNAL_SIZE);
@@ -170,8 +177,13 @@ void UpdateSignals(void) {
 	}
 
 	if (in2Show.Value()) {
-		rpApp_OscGetViewData(RP_CH_2, data, 1024);
-
+		
+		if(in2InvShow.Value()){
+			rpApp_OscGetInvViewData(RP_CH_2, data, 1024);
+		}else{
+			rpApp_OscGetViewData(RP_CH_2, data, 1024);
+		}
+		
 		if (ch2.GetSize() != CH_SIGNAL_SIZE)
 			ch2.Resize(CH_SIGNAL_SIZE);
 		for (int i = 0; i < 1024; i++)
