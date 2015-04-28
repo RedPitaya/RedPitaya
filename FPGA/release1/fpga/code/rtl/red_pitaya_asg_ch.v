@@ -107,7 +107,7 @@ begin
 
    // saturation
    if (set_zero_i)  dac_o <= 14'h0;
-   else             dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}} : dac_sum[13:0];
+   else             dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}}} : dac_sum[13:0];
 end
 
 //---------------------------------------------------------------------------------
