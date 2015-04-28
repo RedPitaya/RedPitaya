@@ -40,7 +40,8 @@ typedef struct osc_control_s {
      * Configuration register (offset 0x00):
      * bit [0] - arm_trigger
      * bit [1] - rst_wr_state_machine
-     * bits [31:2] - reserved
+     * bit [2] - trigger_status
+     * bits [31:3] - reserved
      */
     uint32_t conf;
 
@@ -123,7 +124,14 @@ typedef struct osc_control_s {
      */
     uint32_t other;
 
-    uint32_t reseved; // Empty space...
+    /** @brief - Pre Trigger counter
+     *
+     * Pre Trigger counter (offset 0x2C)
+     * bits [31: 0] - Pre Trigger counter
+     * 32 bit number - how many decimated samples have been stored into a buffer
+     * before trigger arrived.
+     */
+    uint32_t pre_trigger_counter;
 
     /** @brief ChA Equalization filter
      * bits [17:0] - AA coefficient (pole)
