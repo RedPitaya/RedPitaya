@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <cstring>
 #include "DataManager.h"
@@ -137,8 +138,7 @@ void CDataManager::OnNewParams(std::string _params)
 }
 
 void CDataManager::OnNewSignals(std::string _signals)
-{
-	dbg_printf("OnNewSignals\n");	
+{	
 	JSONNode n(JSON_NODE);
 	n = libjson::parse(_signals);	
 	JSONNode m(JSON_NODE);

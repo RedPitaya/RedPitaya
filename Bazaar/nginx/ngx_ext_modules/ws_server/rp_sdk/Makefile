@@ -1,5 +1,5 @@
 CXX=arm-xilinx-linux-gnueabi-g++
-CXXFLAGS=-c -Wall -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -Lbuild/lib -lcryptopp
+CXXFLAGS=-c -Wall -O3 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -Lbuild/lib -lcryptopp
 SOURCES= DataManager.cpp \
 	licverify/LicenseVerificator.cpp \
 	licverify/encoder/encoder.cpp \
