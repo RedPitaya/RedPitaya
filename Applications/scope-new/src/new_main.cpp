@@ -5,15 +5,15 @@
 
 #include <math.h>
 
-#include <licverify/LicenseVerificator.h>
-
 CFloatSignal Signal1("signal1", 2048, 0.f);
+/*
 CFloatSignal Signal2("signal2", 2048, 0.f);
 CFloatSignal Signal3("signal3", 2048, 0.f);
 CFloatSignal Signal4("signal4", 2048, 0.f);
 CFloatSignal Signal5("signal5", 2048, 0.f);
-
+*/
 CIntParameter MyParameter00("param00", CBaseParameter::RW, 22, 1, 20, 50);
+/*
 CIntParameter MyParameter01("param01", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter02("param02", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter03("param03", CBaseParameter::RW, 22, 1, 20, 50);
@@ -53,7 +53,6 @@ CIntParameter MyParameter36("param36", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter37("param37", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter38("param38", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter39("param39", CBaseParameter::RW, 22, 1, 20, 50);
-CIntParameter MyParameter100("OSC_CH1_SCALE", CBaseParameter::RW, 0, 1, -1500, 1500);
 
 CFloatParameter MyParameter40("param40", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter41("param41", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
@@ -95,8 +94,9 @@ CFloatParameter MyParameter76("param76", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter77("param77", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter78("param78", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter79("param79", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
-
-CBooleanParameter MyParameter80("param80", CBaseParameter::RW, false, 1);
+*/
+//CBooleanParameter MyParameter80("param80", CBaseParameter::RW, false, 1);
+/*
 CBooleanParameter MyParameter81("param81", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter82("param82", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter83("param83", CBaseParameter::RW, false, 1);
@@ -116,12 +116,10 @@ CBooleanParameter MyParameter96("param96", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter97("param97", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter98("param98", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter99("param99", CBaseParameter::RW, false, 1);
-
-
+*/
 void UpdateParams(void)
 {
 	// do something
-
 }
 
 void UpdateSignals(void)
@@ -131,36 +129,17 @@ void UpdateSignals(void)
 
 	MyParameter00.Value()++;
 	float start_agl = (-MyParameter00.Value()/1000.f)*M_PI/2.f;
-	int array_size = Signal1.GetSize();
+	int array_size = 2048;
 	for(int i=0; i < array_size; i++)
 	{	
 		float agl = start_agl + M_PI * (float)i / (float)array_size;		
 		Signal1[i] = sin(agl);
 	}
-	if(array_size != 1024)	
-	{
-		Signal1.Resize(1024);
-
-		//try to verify license
-		bool failed = verify_app_license("scope");
-		if(!failed)
-		{
-			fprintf(stderr, "License was verified successfully!\n");				
-			// verification is successful
-			//do something
-		}
-		else
-		{
-			fprintf(stderr, "License verication failed!\n");
-		}
-	}
-
-	
 }
 
 void OnNewParams(void)
 {
 	// do something
-	//CDataManager::GetInstance()->UpdateAllParams();	
+	//CDataManager::GetInstance()->UpdateAllParams();
 }
 
