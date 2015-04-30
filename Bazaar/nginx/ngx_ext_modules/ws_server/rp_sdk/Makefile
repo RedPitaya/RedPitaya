@@ -1,5 +1,5 @@
 CXX=arm-xilinx-linux-gnueabi-g++
-CXXFLAGS=-c -Wall -O3 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -Lbuild/lib -lcryptopp
+CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -Lbuild/lib  -Wl,--whole-archive -lcryptopp -Wl,--no-whole-archive 
 SOURCES= DataManager.cpp \
 	licverify/LicenseVerificator.cpp \
 	licverify/encoder/encoder.cpp \
@@ -41,14 +41,13 @@ $(LIB): $(OBJECTS)
 	rm ../../../../../Applications/rp_sdk/lib/*.a
 	cp librp_sdk.a ../../../../../Applications/rp_sdk/lib
 	cp build/lib/libcryptopp.a ../../../../../Applications/rp_sdk/lib
-	rm ../../../../../Applications/rp_sdk/include/*.h
-	cp *.h ../../../../../Applications/rp_sdk/include
-	rm ../../../../../Applications/rp_sdk/include/licverify/*.h
-	cp licverify/*.h ../../../../../Applications/rp_sdk/include/licverify
-	rm ../../../../../Applications/rp_sdk/include/licverify/encoder/*.h
-	cp licverify/encoder/*.h ../../../../../Applications/rp_sdk/include/licverify/encoder
-	rm ../../../../../Applications/rp_sdk/include/cryptopp/*.h
-	cp build/include/cryptopp/*.h ../../../../../Applications/rp_sdk/include/cryptopp
+	#rm ../../../../../Applications/rp_sdk/include/*.h
+	#cp *.h ../../../../../Applications/rp_sdk/include
+	#rm ../../../../../Applications/rp_sdk/include/licverify/*.h
+	#cp licverify/*.h ../../../../../Applications/rp_sdk/include/licverify
+	#rm ../../../../../Applications/rp_sdk/include/licverify/encoder/*.h
+	#cp licverify/encoder/*.h ../../../../../Applications/rp_sdk/include/licverify/encoder
+	#cp build/include/cryptopp/*.h ../../../../../Applications/rp_sdk/include/cryptopp
 
 
 $(SDKOBJDIR)/%.o: %.cpp

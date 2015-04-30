@@ -1,8 +1,10 @@
-#include <stdlib.h>
 #include <stdio.h>
 #include <cstring>
 #include "DataManager.h"
+#include "CustomParameters.h"
 #include "misc.h"
+
+CBooleanParameter MyParameter80("param80", CBaseParameter::RO, false, 1);
 
 int dbg_printf(const char * format, ...)
 {
@@ -15,6 +17,8 @@ int dbg_printf(const char * format, ...)
 		va_end(va);
 		fflush(log);
 	}
+
+	return 0;
 }
 
 CDataManager* CDataManager::GetInstance()
@@ -138,7 +142,8 @@ void CDataManager::OnNewParams(std::string _params)
 }
 
 void CDataManager::OnNewSignals(std::string _signals)
-{	
+{
+	dbg_printf("OnNewSignals\n");	
 	JSONNode n(JSON_NODE);
 	n = libjson::parse(_signals);	
 	JSONNode m(JSON_NODE);
@@ -276,3 +281,12 @@ extern "C" int ws_get_signals_interval(void)
 	return 0;
 }
 
+extern "C" int ws_set_demo_mode(int a)
+{
+	FILE* file = fopen("log.txt", "a+");
+	fputs("ws_set_demo_mode()\n", file);
+	fclose(file);
+
+	MyParameter80.Set(true);
+	return 0;
+}

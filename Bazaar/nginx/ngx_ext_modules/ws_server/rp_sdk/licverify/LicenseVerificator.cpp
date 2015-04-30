@@ -3,7 +3,7 @@
 
 #include <libjson.h>
 #include <encoder.h>
-
+#include <cstdio>
 
 std::string GetLicensePath()
 {
@@ -17,8 +17,12 @@ std::string GetIDFilePath()
 	return path;
 }
 
-bool verify_app_license(const char* app_id)
+int verify_app_license(const char* app_id)
 {
+	FILE* file = fopen("log.txt", "a+");
+	fputs("verify_app_license()\n", file);
+	fclose(file);
+
 	//getting app_key from license file
 	std::cout<<"Liscense verifying... "<<std::endl;
 	std::string lic_file = GetLicensePath();
