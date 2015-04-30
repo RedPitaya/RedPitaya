@@ -171,7 +171,7 @@ int osc_getTimeScale(float *division) {
 
 int osc_setTimeOffset(float offset) {
     float deltaSample = timeToIndex(timeScale) / samplesPerDivision;
-    if (timeToIndex(offset) < (VIEW_SIZE/2 * deltaSample) - ADC_BUFFER_SIZE/2 || offset > indexToTime((int64_t) MAX_UINT)) {
+    if (offset < (VIEW_SIZE/2-ADC_BUFFER_SIZE/2) * deltaSample || offset > indexToTime((int64_t) MAX_UINT)) {
         return RP_EOOR;
     }
 
