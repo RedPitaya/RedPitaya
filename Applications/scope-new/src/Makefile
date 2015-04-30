@@ -17,13 +17,13 @@ CXXSOURCES= \
 
 RP_SDK=../../rp_sdk
 
-INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson -I$(RP_SDK)/include/cryptopp
+INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
-COMMON_FLAGS+=-Wall -g -fPIC -O2
-CFLAGS+=$(COMMON_FLAGS) -Werror $(INCLUDE)
+COMMON_FLAGS+=-Wall -g -fPIC -O0
+CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib  -Wl,--whole-archive -lcryptopp -lrp_sdk  -Wl,--no-whole-archive
+LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib -Wl,--whole-archive -lrp_sdk -lcryptopp -Wl,--no-whole-archive
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
