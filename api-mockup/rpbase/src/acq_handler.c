@@ -17,7 +17,6 @@
 #include <math.h>
 #include <unistd.h>
 
-#include "version.h"
 #include "common.h"
 #include "calib.h"
 #include "oscilloscope.h"
@@ -187,8 +186,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     *gain = state;
 
     // And recalculate new values...
-    int status = RP_OK;
-    status = acq_SetChannelThreshold(channel, ch_thr);
+    int status = acq_SetChannelThreshold(channel, ch_thr);
     if (status == RP_OK) {
         status = acq_SetChannelThresholdHyst(channel, ch_hyst);
     }
@@ -559,6 +557,10 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
 
     uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, calibScale, dc_offs, 0.0);
+
+    // We cut high bits of negative numbers
+    cnt = cnt & ((1 << ADC_BITS) - 1);
+
     if (channel == RP_CH_1) {
         return osc_SetThresholdChA(cnt);
     }
