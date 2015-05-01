@@ -45,6 +45,8 @@ const char *c_ws_set_params_str   = "ws_set_params";
 const char *c_ws_get_params_str   = "ws_get_params";
 const char *c_ws_set_signals_str  = "ws_set_signals";
 const char *c_ws_get_signals_str  = "ws_get_signals";
+const char *c_ws_set_demo_mode_str  = "ws_set_demo_mode";
+const char *c_verify_app_license_str  = "verify_app_license";
 // end web socket function str
 
 /** Get MAC address of a specific NIC via sysfs */
@@ -277,13 +279,66 @@ inline int is_controller_ok(const char *dir,
         return 0;
     }
 
+    int is_reg = !app.verify_app_license_func("scope"); // 1 - is registered
+
     rp_bazaar_app_unload_module(&app);
 
     free(file);
     
-    return 1;
+    return is_reg;
 }
 
+inline int is_registered(const char *dir,
+                            const char *app_id,
+                            const char *fname)
+{
+    char *file = NULL;
+    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
+    struct stat stat_buf;
+    const mode_t perms = S_IRUSR | S_IXUSR;
+
+    file = (char *)malloc(file_len);
+    if(file == NULL) {
+        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
+        return 0;
+    }
+
+    sprintf(file, "%s/%s/%s", dir, app_id, fname);
+
+    if(stat((const char *)file, &stat_buf) < 0) {
+        /* File does not exist */
+        free(file);
+        return 0;
+    }
+    if((stat_buf.st_mode & perms) != perms) {
+        /* Permissions wrong */
+        fprintf(stderr, "%s exists but has wrong permissions.\n", file);
+        free(file);
+        return 0;
+    }
+
+    rp_bazaar_app_t app;
+    ngx_memset(&app, 0, sizeof(rp_bazaar_app_t));
+
+    /* Open and check init, exit and desc symbols - if they exist,
+     * controller is OK.
+     */
+
+    if(rp_bazaar_app_load_module(file, &app) < 0) {
+        fprintf(stderr, "Problem loading app: %s\n", dlerror());
+        rp_bazaar_app_unload_module(&app);
+        free(file);
+        return 0;
+    }
+
+
+
+    rp_bazaar_app_unload_module(&app);
+
+    free(file);
+
+    return 1;
+}
 
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
@@ -327,15 +382,30 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         } else {
             /* Include version only */
             cJSON *j_ver = cJSON_GetObjectItem(info, "version");
+
             if(j_ver == NULL) {
                 fprintf(stderr, "Cannot get version from info JSON.\n");
                 cJSON_Delete(info, pool);
                 continue;
             }
             
-            cJSON_AddItemToObject(*json_root, app_id,
-                                  cJSON_CreateString(j_ver->valuestring, pool),
-                                  pool);
+            /*
+			FILE* file = fopen("log.txt", "a+");
+			fputs("start reg check\n", file);
+			fclose(file);
+
+			// FIXME
+            char ver[256];
+            strcpy(ver, j_ver->valuestring);
+            if (!is_registered(dir, app_id, "controller.so"))
+            	strcat(ver, "_demo");
+
+			file = fopen("log.txt", "a+");
+			fputs(ver, file);
+			fclose(file);
+*/
+
+            cJSON_AddItemToObject(*json_root, app_id,cJSON_CreateString(ver, pool), pool);
             cJSON_Delete(j_ver, pool);
             cJSON_Delete(info, pool);
         }
@@ -439,6 +509,41 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_signals_str);
     }
+
+    app->ws_set_params_demo_func = dlsym(app->handle, c_ws_set_demo_mode_str);
+    if(!app->ws_set_params_demo_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_demo_mode_str);
+    	FILE* file = fopen("log.txt", "a+");
+    	fputs("Cannot resolve function\n", file);
+    	fclose(file);
+    }
+    else
+    {
+    	FILE* file = fopen("log.txt", "a+");
+    	fputs("Resolve function\n", file);
+    	fclose(file);
+    }
+
+
+
+    app->verify_app_license_func = dlsym(app->handle, c_verify_app_license_str);
+    if(!app->verify_app_license_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
+    	FILE* file = fopen("log.txt", "a+");
+    	fputs("Cannot resolve function c_verify_app_license_str\n", file);
+    	fclose(file);
+    }
+    else
+    {
+    	FILE* file = fopen("log.txt", "a+");
+    	fputs("Resolve function c_verify_app_license_str\n", file);
+    	fclose(file);
+    }
+
 //end web socket functionality
 
     app->file_name = (char *)malloc(strlen(app_file)+1);
