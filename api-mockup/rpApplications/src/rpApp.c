@@ -68,6 +68,8 @@ const char* rpApp_GetError(int errorCode) {
             return "Failed to Start a Thread.";
         case RP_APP_ENS:
             return "No signal found.";
+        case RP_EAA:
+            return "Failed to allocate array.";
         default:
             return "Unknown error";
     }
@@ -179,6 +181,10 @@ int rpApp_OscGetViewData(rp_channel_t channel, float *data, uint32_t size) {
 
 int rpApp_OscGetInvViewData(rp_channel_t channel, float *data, uint32_t size){
     return osc_getInvViewData(channel, data, size);
+}
+
+int rpApp_OscSetViewSize(uint32_t size) {
+    return osc_setViewSize(size);
 }
 
 int rpApp_OscGetViewSize(uint32_t *size) {

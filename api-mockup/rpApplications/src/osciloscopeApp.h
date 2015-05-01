@@ -18,7 +18,7 @@
 #include "../../rpbase/src/rp.h"
 #include "rpApp.h"
 
-#define VIEW_SIZE                   1024
+#define VIEW_SIZE_DEFAULT           1024
 #define DIVISIONS_COUNT_X           10
 #define DIVISIONS_COUNT_Y           8
 
@@ -83,6 +83,7 @@ int oscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t 
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getViewData(rp_channel_t channel_t, float *data, uint32_t size);
 int osc_getInvViewData(rp_channel_t channel, float *data, uint32_t size);
+int osc_setViewSize(uint32_t size);
 int osc_getViewSize(uint32_t *size);
 
 int threadSafe_acqStart();
