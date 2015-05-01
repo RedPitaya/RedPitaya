@@ -284,6 +284,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:TRIG:LEVEL?", .callback = RP_APP_OscGetTriggerLevel,},
         {.pattern = "OSC:CH1:DATA?", .callback = RP_APP_OscChannel1GetViewData,},
         {.pattern = "OSC:CH2:DATA?", .callback = RP_APP_OscChannel2GetViewData,},
+        {.pattern = "OSC:DATA:SIZE", .callback = RP_APP_OscSetViewSize,},
         {.pattern = "OSC:DATA:SIZE?", .callback = RP_APP_OscGetViewSize,},
         {.pattern = "OSC:MEAS:CH1:VPP?", .callback = RP_APP_OscChannel1MeasureAmplitude,},
         {.pattern = "OSC:MEAS:CH2:VPP?", .callback = RP_APP_OscChannel2MeasureAmplitude,},
