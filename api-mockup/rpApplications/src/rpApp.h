@@ -32,6 +32,9 @@ extern "C" {
 #define RP_APP_EST  100
 /** No signal found */
 #define RP_APP_ENS  101
+/** Failed to allocate array */
+#define RP_EAA      102
+
 ///@}
 
 /**
@@ -450,6 +453,24 @@ int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscGetViewData(rp_channel_t channel, float *data, uint32_t size);
+
+/**
+* Gets inverted view data. View is buffer of the oscilloscope data.
+* @param channel Channel 1 or 2 for which we want to get view data.
+* @param data View buffer.
+* @param size Number of values to be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetInvViewData(rp_channel_t channel, float *data, uint32_t size);
+
+/**
+* Sets view buffer size.
+* @param size Buffer size.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetViewSize(uint32_t size);
 
 /**
 * Gets view buffer size.
