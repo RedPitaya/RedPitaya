@@ -25,15 +25,16 @@
 #include "../../rpbase/src/common.h"
 
 bool auto_freRun_mode = 0;
-float view[2][VIEW_SIZE];
+uint32_t viewSize = VIEW_SIZE_DEFAULT;
+float *view;
 float ch1_ampOffset, ch2_ampOffset;
 float ch1_ampScale, ch2_ampScale;
 float ch1_probeAtt, ch2_probeAtt;
-float timeScale, timeOffset;
+float timeScale=1, timeOffset=0;
 rpApp_osc_trig_sweep_t trigSweep;
 rpApp_osc_trig_source_t trigSource = RPAPP_OSC_TRIG_SRC_CH1;
 rpApp_osc_trig_slope_t trigSlope = RPAPP_OSC_TRIG_SLOPE_PE;
-const float samplesPerDivision = (float) VIEW_SIZE / (float) DIVISIONS_COUNT_X;
+float samplesPerDivision = (float) VIEW_SIZE_DEFAULT / (float) DIVISIONS_COUNT_X;
 
 pthread_t mainThread = (pthread_t) -1;
 pthread_mutex_t mutex;
@@ -41,12 +42,22 @@ pthread_mutex_t mutex;
 
 int osc_Init() {
     pthread_mutex_init(&mutex, NULL);
+    view = malloc(2 * viewSize * sizeof(float));
+    if (view == NULL) {
+        free(view);
+        view = NULL;
+        return RP_EAA;
+    }
     return RP_OK;
 }
 
 int osc_Release() {
     STOP_THREAD(mainThread);
     pthread_mutex_destroy(&mutex);
+    if (view != NULL) {
+        free(view);
+        view = NULL;
+    }
     return RP_OK;
 }
 
@@ -136,7 +147,7 @@ int osc_autoScale() {
 
 int osc_setTimeScale(float scale) {
     rp_acq_decimation_t decimation;
-    float oscilloscopeConstant = VIEW_SIZE / DIVISIONS_COUNT_X;
+    float oscilloscopeConstant = viewSize / DIVISIONS_COUNT_X;
 
     if (scale < TIME_SCALE_FOR_DIV_1 * oscilloscopeConstant) {
         decimation = RP_DEC_1;
@@ -171,7 +182,7 @@ int osc_getTimeScale(float *division) {
 
 int osc_setTimeOffset(float offset) {
     float deltaSample = timeToIndex(timeScale) / samplesPerDivision;
-    if (offset < (VIEW_SIZE/2-ADC_BUFFER_SIZE/2) * deltaSample || offset > indexToTime((int64_t) MAX_UINT)) {
+    if (offset < ((int)viewSize/2-ADC_BUFFER_SIZE/2) * deltaSample || offset > indexToTime((int64_t) MAX_UINT)) {
         return RP_EOOR;
     }
 
@@ -189,15 +200,15 @@ int osc_getTimeOffset(float *offset) {
 
 int osc_setProbeAtt(rp_channel_t channel, float att) {
     CHANNEL_ACTION(channel,
-            ch1_probeAtt = att,
-            ch2_probeAtt = att)
+                   ch1_probeAtt = att,
+                   ch2_probeAtt = att)
     return RP_OK;
 }
 
 int osc_getProbeAtt(rp_channel_t channel, float *att) {
     CHANNEL_ACTION(channel,
-            *att = ch1_probeAtt,
-            *att = ch2_probeAtt)
+                   *att = ch1_probeAtt,
+                   *att = ch2_probeAtt)
     return 0;
 }
 
@@ -235,29 +246,29 @@ int osc_getInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain) {
 
 int osc_setAmplitudeScale(rp_channel_t channel, float scale) {
     CHANNEL_ACTION(channel,
-            ch1_ampScale = scale,
-            ch2_ampScale = scale)
+                   ch1_ampScale = scale,
+                   ch2_ampScale = scale)
     return RP_OK;
 }
 
 int osc_getAmplitudeScale(rp_channel_t channel, float *scale) {
     CHANNEL_ACTION(channel,
-            *scale = ch1_ampScale,
-            *scale = ch2_ampScale)
+                   *scale = ch1_ampScale,
+                   *scale = ch2_ampScale)
     return RP_OK;
 }
 
 int osc_setAmplitudeOffset(rp_channel_t channel, float offset) {
     CHANNEL_ACTION(channel,
-            ch1_ampOffset = offset,
-            ch2_ampOffset = offset)
+                   ch1_ampOffset = offset,
+                   ch2_ampOffset = offset)
     return RP_OK;
 }
 
 int osc_getAmplitudeOffset(rp_channel_t channel, float *offset) {
     CHANNEL_ACTION(channel,
-            *offset = ch1_ampOffset,
-                 *offset = ch2_ampOffset)
+                   *offset = ch1_ampOffset,
+                   *offset = ch2_ampOffset)
     return RP_OK;}
 
 int osc_setTriggerSource(rpApp_osc_trig_source_t triggerSource) {
@@ -386,12 +397,12 @@ int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *sweep) {
 
 int osc_measureVpp(rp_channel_t channel, float *Vpp) {
     float resMax, resMin, max = FLT_MIN, min = FLT_MAX;
-        for (int i = 0; i < VIEW_SIZE; ++i) {
-        if (view[channel][i] > max) {
-            max = view[channel][i];
+    for (int i = 0; i < viewSize; ++i) {
+        if (view[channel*viewSize + i] > max) {
+            max = view[channel*viewSize + i];
         }
-        if (view[channel][i] < min) {
-            min = view[channel][i];
+        if (view[channel*viewSize + i] < min) {
+            min = view[channel*viewSize + i];
         }
     }
     resMax = unscaleAmplitudeChannel(channel, max);
@@ -402,18 +413,18 @@ int osc_measureVpp(rp_channel_t channel, float *Vpp) {
 
 int osc_measureMeanVoltage(rp_channel_t channel, float *meanVoltage) {
     float sum = 0;
-    for (int i = 0; i < VIEW_SIZE; ++i) {
-        sum += view[channel][i];
+    for (int i = 0; i < viewSize; ++i) {
+        sum += view[channel*viewSize + i];
     }
-    *meanVoltage = unscaleAmplitudeChannel(channel, sum / VIEW_SIZE);
+    *meanVoltage = unscaleAmplitudeChannel(channel, sum / viewSize);
     return RP_OK;
 }
 
 int osc_measureMaxVoltage(rp_channel_t channel, float *Vmax) {
     float max = FLT_MIN;
-    for (int i = 0; i < VIEW_SIZE; ++i) {
-        if (view[channel][i] > max) {
-            max = view[channel][i];
+    for (int i = 0; i < viewSize; ++i) {
+        if (view[channel*viewSize + i] > max) {
+            max = view[channel*viewSize + i];
         }
     }
     *Vmax = unscaleAmplitudeChannel(channel, max);
@@ -422,9 +433,9 @@ int osc_measureMaxVoltage(rp_channel_t channel, float *Vmax) {
 
 int osc_measureMinVoltage(rp_channel_t channel, float *Vmin) {
     float min = FLT_MAX;
-    for (int i = 0; i < VIEW_SIZE; ++i) {
-        if (view[channel][i] < min) {
-            min = view[channel][i];
+    for (int i = 0; i < viewSize; ++i) {
+        if (view[channel*viewSize + i] < min) {
+            min = view[channel*viewSize + i];
         }
     }
     *Vmin = unscaleAmplitudeChannel(channel, min);
@@ -478,31 +489,31 @@ int osc_measureDutyCycle(rp_channel_t channel, float *dutyCycle) {
     int highTime = 0;
     float meanValue;
     ECHECK_APP(osc_measureMeanVoltage(channel, &meanValue));
-    for (int i = 0; i < VIEW_SIZE; ++i) {
-        if (view[channel][i] > meanValue) {
+    for (int i = 0; i < viewSize; ++i) {
+        if (view[channel*viewSize + i] > meanValue) {
             ++highTime;
         }
     }
-    *dutyCycle = highTime / VIEW_SIZE;
+    *dutyCycle = (float)highTime / (float)viewSize;
     return RP_OK;
 }
 
 int osc_measureRootMeanSquare(rp_channel_t channel, float *rms) {
     float rmsValue = 0;
-    for (int i = 0; i < VIEW_SIZE; ++i) {
-        rmsValue += view[channel][i] * view[channel][i];
+    for (int i = 0; i < viewSize; ++i) {
+        rmsValue += view[channel*viewSize + i] * view[channel*viewSize + i];
     }
-    *rms = (float) sqrt(rmsValue / VIEW_SIZE);
+    *rms = (float) sqrt(rmsValue / viewSize);
     return RP_OK;
 }
 
 int osc_getCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value) {
-    *value = unscaleAmplitudeChannel(channel, view[channel][cursor]);
+    *value = unscaleAmplitudeChannel(channel, view[channel*viewSize + cursor]);
     return RP_OK;
 }
 
 int osc_getCursorTime(uint32_t cursor, float *value) {
-    if (cursor < 0 || cursor >= VIEW_SIZE) {
+    if (cursor < 0 || cursor >= viewSize) {
         return RP_EOOR;
     }
     *value = viewIndexToTime(cursor);
@@ -510,7 +521,7 @@ int osc_getCursorTime(uint32_t cursor, float *value) {
 }
 
 int osc_getCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value) {
-    if (cursor1 < 0 || cursor1 >= VIEW_SIZE || cursor2 < 0 || cursor2 >= VIEW_SIZE) {
+    if (cursor1 < 0 || cursor1 >= viewSize || cursor2 < 0 || cursor2 >= viewSize) {
         return RP_EOOR;
     }
     *value = indexToTime(abs(cursor1 - cursor2));
@@ -518,7 +529,7 @@ int osc_getCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value) {
 }
 
 int oscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t cursor2, float *value) {
-    if (cursor1 < 0 || cursor1 >= VIEW_SIZE || cursor2 < 0 || cursor2 >= VIEW_SIZE) {
+    if (cursor1 < 0 || cursor1 >= viewSize || cursor2 < 0 || cursor2 >= viewSize) {
         return RP_EOOR;
     }
     float cursor1Amplitude, cursor2Amplitude;
@@ -529,7 +540,7 @@ int oscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t 
 }
 
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value) {
-    if (cursor1 < 0 || cursor1 >= VIEW_SIZE || cursor2 < 0 || cursor2 >= VIEW_SIZE) {
+    if (cursor1 < 0 || cursor1 >= viewSize || cursor2 < 0 || cursor2 >= viewSize) {
         return RP_EOOR;
     }
     float deltaTime;
@@ -540,19 +551,31 @@ int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value
 
 int osc_getViewData(rp_channel_t channel, float *data, uint32_t size) {
     for (int i = 0; i < size; ++i) {
-        data[i] = view[channel][i];
+        data[i] = view[channel*viewSize + i];
+    }
+    return RP_OK;
+}
+
+int osc_setViewSize(uint32_t size) {
+    viewSize = size;
+    samplesPerDivision = (float) viewSize / (float) DIVISIONS_COUNT_X;
+    view = realloc(view, 2 * viewSize * sizeof(float));
+    if (view == NULL) {
+        free(view);
+        view = NULL;
+        return RP_EAA;
     }
     return RP_OK;
 }
 
 int osc_getViewSize(uint32_t *size) {
-    *size = VIEW_SIZE;
+    *size = viewSize;
     return 0;
 }
 
 int osc_getInvViewData(rp_channel_t channel, float *data, uint32_t size){
     for(int i = 0; i < size; i++){
-        data[i] = -1 * (view[channel][i]);
+        data[i] = -1 * (view[channel*viewSize + i]);
     }
     return RP_OK;
 }
@@ -600,7 +623,7 @@ float unscaleAmplitudeChannel(rp_channel_t channel, float value) {
 }
 
 float viewIndexToTime(int index) {
-    return indexToTime(index - VIEW_SIZE / 2) + timeOffset;
+    return indexToTime(index - viewSize / 2) + timeOffset;
 }
 
 
@@ -637,8 +660,8 @@ void *mainThreadFun(void *arg) {
             // Calculate transformation (form data to view) parameters
             deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
             _triggerDelay = _triggerDelay % ADC_BUFFER_SIZE;
-            startIndex = (_triggerPosition + _triggerDelay - (int) (VIEW_SIZE / 2 * deltaSample)) % ADC_BUFFER_SIZE;
-            getBufSize = (uint32_t) ((VIEW_SIZE * deltaSample) + 1);
+            startIndex = (_triggerPosition + _triggerDelay - (int) (viewSize / 2 * deltaSample)) % ADC_BUFFER_SIZE;
+            getBufSize = (uint32_t) ((viewSize * deltaSample) + 1);
 
             // Get data
             rp_AcqGetDataV(RP_CH_1, startIndex, &getBufSize, data[0]);
@@ -666,12 +689,12 @@ void *mainThreadFun(void *arg) {
                 }
 
                 // Write data to view buffer
-                for (int i = 0; i < VIEW_SIZE && i*deltaSample < buffSize; i++) {
+                for (int i = 0; i < viewSize && i*deltaSample < buffSize; i++) {
                     if (preTrigProblem && (_preWritePointer - startIndex) % ADC_BUFFER_SIZE > i * deltaSample) {
-                        view[channel][i] = scaleAmplitudeChannel(channel, 0);
+                        view[channel*viewSize + i] = scaleAmplitudeChannel(channel, 0);
                     }
                     else {
-                        view[channel][i] = scaleAmplitudeChannel(channel, data[channel][(int) (i * deltaSample)]);
+                        view[channel*viewSize + i] = scaleAmplitudeChannel(channel, data[channel][(int) (i * deltaSample)]);
                     }
                 }
             }

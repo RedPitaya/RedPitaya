@@ -850,6 +850,7 @@ int acq_GetBufferSize(uint32_t *size) {
  * @return
  */
 int acq_SetDefault() {
+    ECHECK(acq_SetTriggerLevel(0));
     ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
     ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, 0.0));
@@ -860,7 +861,6 @@ int acq_SetDefault() {
     ECHECK(acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED));
     ECHECK(acq_SetTriggerDelay(0, false));
     ECHECK(acq_SetTriggerDelayNs(0, false));
-    ECHECK(acq_SetTriggerLevel(0));
 
     return RP_OK;
 }

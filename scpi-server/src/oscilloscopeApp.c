@@ -507,16 +507,32 @@ scpi_result_t RP_APP_OscGetTriggerLevel(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_APP_OscSetViewSize(scpi_t *context) {
+    uint32_t value;
+    if (!SCPI_ParamUInt(context, &value, true)) {
+        syslog(LOG_ERR, "*OSC:DATA:SIZE is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rpApp_OscSetViewSize(value);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:DATA:SIZE Failed to set: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    syslog(LOG_INFO, "*OSC:DATA:SIZE set successfully.");
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_APP_OscGetViewSize(scpi_t *context) {
     uint32_t viewSize;
     int result = rpApp_OscGetViewSize(&viewSize);
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*OSC:TIME:OFFSET? Failed to get: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*OSC:DATA:SIZE? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultUInt(context, viewSize);
-    syslog(LOG_INFO, "*OSC:TIME:OFFSET? get successfully.");
+    syslog(LOG_INFO, "*OSC:DATA:SIZE? get successfully.");
     return SCPI_RES_OK;
 }
 
