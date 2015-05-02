@@ -71,7 +71,28 @@ typedef enum {
     RPAPP_OSC_TRIG_SINGLE       //!< Trigger sweep single
 } rpApp_osc_trig_sweep_t;
 
+/**
+* Type representing oscilloscope math and measure source
+*/
+typedef enum {
+    RPAPP_OSC_SOUR_CH1,         //!< Trigger source ch1
+    RPAPP_OSC_SOUR_CH2,         //!< Trigger source ch2
+    RPAPP_OSC_SOUR_MATH         //!< Trigger source math
+} rpApp_osc_source;
 
+/**
+* Type representing math operations.
+*/
+typedef enum {
+    RPAPP_OSC_MATH_NONE,        //!< Math operation add
+    RPAPP_OSC_MATH_ADD,         //!< Math operation add
+    RPAPP_OSC_MATH_SUB,         //!< Math operation subtract
+    RPAPP_OSC_MATH_MUL,         //!< Math operation mltiply
+    RPAPP_OSC_MATH_DIV,         //!< Math operation divide
+    RPAPP_OSC_MATH_ABS,         //!< Math operation absolute
+    RPAPP_OSC_MATH_DER,         //!< Math operation derivative
+    RPAPP_OSC_MATH_INT,         //!< Math operation integrate
+} rpApp_osc_math_oper_t;
 
 /** @name General
 */
@@ -161,7 +182,7 @@ int rpApp_OscAutoScale();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscSetAmplitudeOffset(rp_channel_t channel, float offset);
+int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, float offset);
 
 /**
 * Gets amplitude offset in volts.
@@ -170,7 +191,7 @@ int rpApp_OscSetAmplitudeOffset(rp_channel_t channel, float offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAmplitudeOffset(rp_channel_t channel, float *offset);
+int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, float *offset);
 
 /**
 * Sets amplitude scale in volts per division.
@@ -179,7 +200,7 @@ int rpApp_OscGetAmplitudeOffset(rp_channel_t channel, float *offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscSetAmplitudeScale(rp_channel_t channel, float scale);
+int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, float scale);
 
 /**
 * Gets amplitude scale in volts per division.
@@ -188,7 +209,7 @@ int rpApp_OscSetAmplitudeScale(rp_channel_t channel, float scale);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAmplitudeScale(rp_channel_t channel, float *scale);
+int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, float *scale);
 
 /**
 * Sets probe attenuation ratio.
@@ -323,86 +344,86 @@ int rpApp_OscSetTriggerLevel(float level);
 int rpApp_OscGetTriggerLevel(float *level);
 
 /**
-* Gets signal peak-to-peak voltage.
-* @param channel Channel 1 or 2 on which we want to measure amplitude.
+* Gets source peak-to-peak voltage.
+* @param source Source ch1, ch2 or math on which we want to measure amplitude.
 * @param Vpp Peak-to-peak voltage pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureVpp(rp_channel_t channel, float *Vpp);
+int rpApp_OscMeasureVpp(rpApp_osc_source source, float *Vpp);
 
 /**
-* Gets signal mean voltage.
-* @param channel Channel 1 or 2 on which we want to measure mean amplitude.
+* Gets source mean voltage.
+* @param source Source ch1, ch2 or math on which we want to measure mean amplitude.
 * @param meanVoltage Mean voltage pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureMeanVoltage(rp_channel_t channel, float *meanVoltage);
+int rpApp_OscMeasureMeanVoltage(rpApp_osc_source source, float *meanVoltage);
 
 /**
-* Gets signal max voltage.
-* @param channel Channel 1 or 2 on which we want to measure max amplitude.
+* Gets source max voltage.
+* @param source Source ch1, ch2 or math on which we want to measure max amplitude.
 * @param Vmax Max voltage pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureAmplitudeMax(rp_channel_t channel, float *Vmax);
+int rpApp_OscMeasureAmplitudeMax(rpApp_osc_source source, float *Vmax);
 
 /**
-* Gets signal min voltage.
-* @param channel Channel 1 or 2 on which we want to measure min amplitude.
+* Gets source min voltage.
+* @param source Source ch1, ch2 or math on which we want to measure min amplitude.
 * @param Vmin Min voltage pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureAmplitudeMin(rp_channel_t channel, float *Vmin);
+int rpApp_OscMeasureAmplitudeMin(rpApp_osc_source source, float *Vmin);
 
 /**
-* Gets signal frequency.
-* @param channel Channel 1 or 2 on which we want to measure frequency.
+* Gets source frequency.
+* @param source Source ch1, ch2 or math on which we want to measure frequency.
 * @param frequency Frequency of the signal.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureFrequency(rp_channel_t channel, float *frequency);
+int rpApp_OscMeasureFrequency(rpApp_osc_source source, float *frequency);
 
 /**
-* Gets signal period.
-* @param channel Channel 1 or 2 on which we want to measure period.
+* Gets source period.
+* @param source Source ch1, ch2 or math on which we want to measure period.
 * @param period Period of the signal.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasurePeriod(rp_channel_t channel, float *period);
+int rpApp_OscMeasurePeriod(rpApp_osc_source source, float *period);
 
 /**
-* Gets signal duty cycle. The returned value represents ratio between high time and all time.
-* @param channel Channel 1 or 2 on which we want to measure duty cycle.
+* Gets source duty cycle. The returned value represents ratio between high time and all time.
+* @param source Source ch1, ch2 or math on which we want to measure duty cycle.
 * @param dutyCycle Duty cycle pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureDutyCycle(rp_channel_t channel, float *dutyCycle);
+int rpApp_OscMeasureDutyCycle(rpApp_osc_source source, float *dutyCycle);
 
 /**
-* Gets signal root mean square of the signal.
-* @param channel Channel 1 or 2 on which we want to measure duty cycle.
+* Gets source root mean square of the signal.
+* @param source Source ch1, ch2 or math on which we want to measure duty cycle.
 * @param dutyCycle Duty cycle pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureRootMeanSquare(rp_channel_t channel, float *rms);
+int rpApp_OscMeasureRootMeanSquare(rpApp_osc_source source, float *rms);
 
 /**
 * Gets voltage at cursor position.
-* @param channel Channel 1 or 2 on which we want to get voltage.
+* @param source Source ch1, ch2 or math on which we want to get voltage.
 * @param cursor Cursor position at witch we get voltage.
 * @param value Amplitude pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value);
+int rpApp_OscGetCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *value);
 
 /**
 * Gets voltage time in milliseconds at cursor position.
@@ -425,14 +446,14 @@ int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value
 
 /**
 * Gets amplitude difference between cursors.
-* @param channel Channel 1 or 2 on which we want to get delta voltage.
+* @param source Source ch1, ch2 or math on which we want to get delta voltage.
 * @param cursor1 Cursor 1 position.
 * @param cursor2 Cursor 2 position.
 * @param value Delta amplitude pointer.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t cursor2, float *value);
+int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value);
 
 /**
 * Gets frequency between cursors. This is equal to 1/(time difference).
@@ -445,24 +466,58 @@ int rpApp_OscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uin
 int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
 
 /**
-* Gets view data. View is buffer of the oscilloscope data.
-* @param channel Channel 1 or 2 for which we want to get view data.
-* @param data View buffer.
-* @param size Number of values to be returned.
+* Sets math operation.
+* @param operation Operation of math calculation.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rpApp_OscGetViewData(rp_channel_t channel, float *data, uint32_t size);
+ */
+int rpApp_OscSetMathOperation(rpApp_osc_math_oper_t operation);
 
 /**
-* Gets inverted view data. View is buffer of the oscilloscope data.
-* @param channel Channel 1 or 2 for which we want to get view data.
+* GGets math operation.
+* @param operation Pointer of operation.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rpApp_OscGetMathOperation(rpApp_osc_math_oper_t *operation);
+
+/**
+* Sets math sources.
+* @param source1 Source 1 of math operation (CH1 or CH2).
+* @param source2 Source 2 of math operation (CH1 or CH2).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rpApp_OscSetMathSources(rp_channel_t source1, rp_channel_t source2);
+
+/**
+* Gets math sources.
+* @param source1 Pointer of source 1.
+* @param source2 Pointer of source 2.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
+
+/**
+* Gets source data.
+* @param source Source ch1, ch2 or math inticates with data we want toi get.
 * @param data View buffer.
 * @param size Number of values to be returned.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetInvViewData(rp_channel_t channel, float *data, uint32_t size);
+int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
+
+/**
+* Gets inverted data.
+* @param source Source ch1, ch2 or math for which we want to get view data.
+* @param data View buffer.
+* @param size Number of values to be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetInvViewData(rpApp_osc_source source, float *data, uint32_t size);
 
 /**
 * Sets view buffer size.
