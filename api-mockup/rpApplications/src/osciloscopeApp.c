@@ -155,21 +155,23 @@ int osc_autoScale() {
 
 int osc_setTimeScale(float scale) {
     rp_acq_decimation_t decimation;
-    float oscilloscopeConstant = viewSize / DIVISIONS_COUNT_X;
+    float constant = (float)viewSize * 125000000.0f * timeScale / 1000.0f / samplesPerDivision / (float)ADC_BUFFER_SIZE;
+    // contition:
+    // sampleRate / samplesPerDivision * viewSize < TIME_SCALE_RATIO_THRESHOLD
 
-    if (scale < TIME_SCALE_FOR_DIV_1 * oscilloscopeConstant) {
+    if (constant / 1.0f < TIME_SCALE_RATIO_THRESHOLD) {
         decimation = RP_DEC_1;
     }
-    else if (scale < TIME_SCALE_FOR_DIV_8 * oscilloscopeConstant) {
+    else if (constant / 8.0f < TIME_SCALE_RATIO_THRESHOLD) {
         decimation = RP_DEC_8;
     }
-    else if (scale < TIME_SCALE_FOR_DIV_64 * oscilloscopeConstant) {
+    else if (constant / 64.0f < TIME_SCALE_RATIO_THRESHOLD) {
         decimation = RP_DEC_64;
     }
-    else if (scale < TIME_SCALE_FOR_DIV_1024 * oscilloscopeConstant) {
+    else if (constant / 1024.0f < TIME_SCALE_RATIO_THRESHOLD) {
         decimation = RP_DEC_1024;
     }
-    else if (scale < TIME_SCALE_FOR_DIV_8192 * oscilloscopeConstant) {
+    else if (constant / 8192.0f < TIME_SCALE_RATIO_THRESHOLD) {
         decimation = RP_DEC_8192;
     }
     else {
@@ -405,6 +407,21 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
 
 int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *sweep) {
     *sweep = trigSweep;
+    return RP_OK;
+}
+
+int osc_getViewPos(float *positionRatio) {
+    int32_t tmp;
+    ECHECK_APP(rp_AcqGetTriggerDelay(&tmp));
+    *positionRatio = 0.5f + (float)(tmp % ADC_BUFFER_SIZE) / ADC_BUFFER_SIZE;
+    return RP_OK;
+}
+
+int osc_getViewPart(float *ratio) {
+    printf("%f\t\t%f\t\t%f\t\t%f\n\n", (float)viewSize, (float)timeToIndex(timeScale) / samplesPerDivision,
+           ((float)viewSize * (float)timeToIndex(timeScale) / samplesPerDivision),
+           ((float)viewSize * (float)timeToIndex(timeScale) / samplesPerDivision) / (float)ADC_BUFFER_SIZE);
+    *ratio = ((float)viewSize * (float)timeToIndex(timeScale) / samplesPerDivision) / (float)ADC_BUFFER_SIZE;
     return RP_OK;
 }
 

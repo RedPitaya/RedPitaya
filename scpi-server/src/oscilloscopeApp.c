@@ -698,6 +698,31 @@ scpi_result_t RP_APP_OscGetViewSize(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_APP_OscGetViewPos(scpi_t *context) {
+    float pos;
+    int result = rpApp_OscGetViewPos(&pos);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:VIEW:POS? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultDouble(context, pos);
+    syslog(LOG_INFO, "*OSC:VIEW:POS? get successfully.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_APP_OscGetViewPart(scpi_t *context) {
+    float pos;
+    int result = rpApp_OscGetViewPart(&pos);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:VIEW:PART? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultDouble(context, pos);
+    syslog(LOG_INFO, "*OSC:VIEW:PART? get successfully.");
+    return SCPI_RES_OK;
+}
 
 scpi_result_t RP_APP_OscGetAmplitudeOffset(rpApp_osc_source source, scpi_t *context) {
     float value;
