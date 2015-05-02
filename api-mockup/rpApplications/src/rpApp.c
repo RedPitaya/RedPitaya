@@ -127,20 +127,20 @@ int rpApp_OscGetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain) {
     return osc_getInputGain(channel, gain);
 }
 
-int rpApp_OscSetAmplitudeScale(rp_channel_t channel, float scale) {
-    return osc_setAmplitudeScale(channel, scale);
+int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, float scale) {
+    return osc_setAmplitudeScale(source, scale);
 }
 
-int rpApp_OscGetAmplitudeScale(rp_channel_t channel, float *scale) {
-    return osc_getAmplitudeScale(channel, scale);
+int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, float *scale) {
+    return osc_getAmplitudeScale(source, scale);
 }
 
-int rpApp_OscSetAmplitudeOffset(rp_channel_t channel, float offset) {
-    return osc_setAmplitudeOffset(channel, offset);
+int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, float offset) {
+    return osc_setAmplitudeOffset(source, offset);
 }
 
-int rpApp_OscGetAmplitudeOffset(rp_channel_t channel, float *offset) {
-    return osc_getAmplitudeOffset(channel, offset);
+int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, float *offset) {
+    return osc_getAmplitudeOffset(source, offset);
 }
 
 int rpApp_OscSetTriggerSource(rpApp_osc_trig_source_t triggerSource) {
@@ -175,12 +175,12 @@ int rpApp_OscGetTriggerSweep(rpApp_osc_trig_sweep_t *mode) {
     return osc_getTriggerSweep(mode);
 }
 
-int rpApp_OscGetViewData(rp_channel_t channel, float *data, uint32_t size) {
-    return osc_getViewData(channel, data, size);
+int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size) {
+    return osc_getData(source, data, size);
 }
 
-int rpApp_OscGetInvViewData(rp_channel_t channel, float *data, uint32_t size){
-    return osc_getInvViewData(channel, data, size);
+int rpApp_OscGetInvViewData(rpApp_osc_source source, float *data, uint32_t size){
+    return osc_getInvData(source, data, size);
 }
 
 int rpApp_OscSetViewSize(uint32_t size) {
@@ -197,40 +197,40 @@ int rpApp_OscGetViewSize(uint32_t *size) {
 
 
 
-int rpApp_OscMeasureVpp(rp_channel_t channel, float *Vpp) {
-    return osc_measureVpp(channel, Vpp);
+int rpApp_OscMeasureVpp(rpApp_osc_source source, float *Vpp) {
+    return osc_measureVpp(source, Vpp);
 }
 
-int rpApp_OscMeasureMeanVoltage(rp_channel_t channel, float *meanVoltage) {
-    return osc_measureMeanVoltage(channel, meanVoltage);
+int rpApp_OscMeasureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
+    return osc_measureMeanVoltage(source, meanVoltage);
 }
 
-int rpApp_OscMeasureAmplitudeMax(rp_channel_t channel, float *Vmax) {
-    return osc_measureMaxVoltage(channel, Vmax);
+int rpApp_OscMeasureAmplitudeMax(rpApp_osc_source source, float *Vmax) {
+    return osc_measureMaxVoltage(source, Vmax);
 }
 
-int rpApp_OscMeasureAmplitudeMin(rp_channel_t channel, float *Vmin) {
-    return osc_measureMinVoltage(channel, Vmin);
+int rpApp_OscMeasureAmplitudeMin(rpApp_osc_source source, float *Vmin) {
+    return osc_measureMinVoltage(source, Vmin);
 }
 
-int rpApp_OscMeasureFrequency(rp_channel_t channel, float *frequency) {
-    return osc_measureFrequency(channel, frequency);
+int rpApp_OscMeasureFrequency(rpApp_osc_source source, float *frequency) {
+    return osc_measureFrequency(source, frequency);
 }
 
-int rpApp_OscMeasurePeriod(rp_channel_t channel, float *period) {
-    return osc_measurePeriod(channel, period);
+int rpApp_OscMeasurePeriod(rpApp_osc_source source, float *period) {
+    return osc_measurePeriod(source, period);
 }
 
-int rpApp_OscMeasureDutyCycle(rp_channel_t channel, float *dutyCycle) {
-    return osc_measureDutyCycle(channel, dutyCycle);
+int rpApp_OscMeasureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
+    return osc_measureDutyCycle(source, dutyCycle);
 }
 
-int rpApp_OscMeasureRootMeanSquare(rp_channel_t channel, float *rms) {
-    return osc_measureRootMeanSquare(channel, rms);
+int rpApp_OscMeasureRootMeanSquare(rpApp_osc_source source, float *rms) {
+    return osc_measureRootMeanSquare(source, rms);
 }
 
-int rpApp_OscGetCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value) {
-    return osc_getCursorVoltage(channel, cursor, value);
+int rpApp_OscGetCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *value) {
+    return osc_getCursorVoltage(source, cursor, value);
 }
 
 int rpApp_OscGetCursorTime(uint32_t cursor, float *value) {
@@ -241,10 +241,26 @@ int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value
     return osc_getCursorDeltaTime(cursor1, cursor2, value);
 }
 
-int rpApp_OscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t cursor2, float *value) {
-    return oscGetCursorDeltaAmplitude(channel, cursor1, cursor2, value);
+int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value) {
+    return oscGetCursorDeltaAmplitude(source, cursor1, cursor2, value);
 }
 
 int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value) {
     return osc_getCursorDeltaFrequency(cursor1, cursor2, value);
+}
+
+int rpApp_OscSetMathOperation(rpApp_osc_math_oper_t operation) {
+    return osc_setMathOperation(operation);
+}
+
+int rpApp_OscGetMathOperation(rpApp_osc_math_oper_t *operation) {
+    return osc_getMathOperation(operation);
+}
+
+int rpApp_OscSetMathSources(rp_channel_t source1, rp_channel_t source2) {
+    return osc_setMathSources(source1, source2);
+}
+
+int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2) {
+    return osc_getMathSources(source1, source2);
 }
