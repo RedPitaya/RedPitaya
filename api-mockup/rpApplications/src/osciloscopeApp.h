@@ -32,11 +32,7 @@
 #define MAIN_THREAT_SLEEP           500     // us
 #define MAX_UINT                    4294967296
 
-#define TIME_SCALE_FOR_DIV_1        1e-5
-#define TIME_SCALE_FOR_DIV_8        1e-4
-#define TIME_SCALE_FOR_DIV_64       6e-3
-#define TIME_SCALE_FOR_DIV_1024     5e-2
-#define TIME_SCALE_FOR_DIV_8192     0.5
+#define TIME_SCALE_RATIO_THRESHOLD  0.9
 
 
 int osc_Init();
@@ -68,6 +64,8 @@ int osc_setTriggerLevel(float level);
 int osc_getTriggerLevel(float *level);
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t mode);
 int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *mode);
+int osc_getViewPos(float *positionRatio);
+int osc_getViewPart(float *ratio);
 int osc_measureVpp(rpApp_osc_source source, float *Vpp);
 int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage);
 int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax);

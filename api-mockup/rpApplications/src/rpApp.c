@@ -167,6 +167,14 @@ int rpApp_OscGetTriggerLevel(float *level) {
     return osc_getTriggerLevel(level);
 }
 
+int rpApp_OscGetViewPos(float *positionRatio) {
+    return osc_getViewPos(positionRatio);
+}
+
+int rpApp_OscGetViewPart(float *ratio) {
+    return osc_getViewPart(ratio);
+}
+
 int rpApp_OscSetTriggerSweep(rpApp_osc_trig_sweep_t mode) {
     return osc_setTriggerSweep(mode);
 }
