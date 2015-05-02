@@ -344,6 +344,22 @@ int rpApp_OscSetTriggerLevel(float level);
 int rpApp_OscGetTriggerLevel(float *level);
 
 /**
+* Gets view position proportional to ADC buffer.
+* @param position Pointer to position. Returned value is between 0 and 1
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetViewPos(float *position);
+
+/**
+* Gets view size ratio position proportional to ADC buffer size.
+* @param ratio Pointer to ratio. Returned value is between 0 and 1
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetViewPart(float *ratio);
+
+/**
 * Gets source peak-to-peak voltage.
 * @param source Source ch1, ch2 or math on which we want to measure amplitude.
 * @param Vpp Peak-to-peak voltage pointer.

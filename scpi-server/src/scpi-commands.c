@@ -291,6 +291,8 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:MATH:DATA?", .callback = RP_APP_OscChannel3GetViewData,},
         {.pattern = "OSC:DATA:SIZE", .callback = RP_APP_OscSetViewSize,},
         {.pattern = "OSC:DATA:SIZE?", .callback = RP_APP_OscGetViewSize,},
+        {.pattern = "OSC:VIEW:POS?", .callback = RP_APP_OscGetViewPos,},
+        {.pattern = "OSC:VIEW:PART?", .callback = RP_APP_OscGetViewPart,},
         {.pattern = "OSC:MEAS:CH1:VPP?", .callback = RP_APP_OscChannel1MeasureAmplitude,},
         {.pattern = "OSC:MEAS:CH2:VPP?", .callback = RP_APP_OscChannel2MeasureAmplitude,},
         {.pattern = "OSC:MEAS:MATH:VPP?", .callback = RP_APP_OscChannel3MeasureAmplitude,},
