@@ -32,6 +32,22 @@
         } \
 }
 
+#define SOURCE_ACTION(SOURCE, SOURCE_1_ACTION, SOURCE_2_ACTION, SOURCE_3_ACTION) \
+switch ((SOURCE)) { \
+    case RPAPP_OSC_SOUR_CH1: \
+        (SOURCE_1_ACTION); \
+        break; \
+    case RPAPP_OSC_SOUR_CH2: \
+        (SOURCE_2_ACTION); \
+        break; \
+    case RPAPP_OSC_SOUR_MATH: \
+        (SOURCE_3_ACTION); \
+        break; \
+    default: \
+        return RP_EPN; \
+        break; \
+}
+
 #define STOP_THREAD(THREAD_X) \
 if ((THREAD_X) != -1) { \
 	pthread_cancel(THREAD_X); \

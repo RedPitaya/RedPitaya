@@ -71,35 +71,51 @@ scpi_result_t RP_APP_OscSingle(scpi_t *context) {
 }
 
 scpi_result_t RP_APP_OscChannel1SetAmplitudeOffset(scpi_t *context) {
-    return RP_APP_OscSetAmplitudeOffset(RP_CH_1, context);
+    return RP_APP_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2SetAmplitudeOffset(scpi_t *context) {
-    return RP_APP_OscSetAmplitudeOffset(RP_CH_2, context);
+    return RP_APP_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3SetAmplitudeOffset(scpi_t *context) {
+    return RP_APP_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1GetAmplitudeOffset(scpi_t *context) {
-    return RP_APP_OscGetAmplitudeOffset(RP_CH_1, context);
+    return RP_APP_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2GetAmplitudeOffset(scpi_t *context) {
-    return RP_APP_OscGetAmplitudeOffset(RP_CH_2, context);
+    return RP_APP_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3GetAmplitudeOffset(scpi_t *context) {
+    return RP_APP_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1SetAmplitudeScale(scpi_t *context) {
-    return RP_APP_OscSetAmplitudeScale(RP_CH_1, context);
+    return RP_APP_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2SetAmplitudeScale(scpi_t *context) {
-    return RP_APP_OscSetAmplitudeScale(RP_CH_2, context);
+    return RP_APP_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3SetAmplitudeScale(scpi_t *context) {
+    return RP_APP_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1GetAmplitudeScale(scpi_t *context) {
-    return RP_APP_OscGetAmplitudeScale(RP_CH_1, context);
+    return RP_APP_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2GetAmplitudeScale(scpi_t *context) {
-    return RP_APP_OscGetAmplitudeScale(RP_CH_2, context);
+    return RP_APP_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3GetAmplitudeScale(scpi_t *context) {
+    return RP_APP_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1SetProbeAtt(scpi_t *context) {
@@ -135,83 +151,123 @@ scpi_result_t RP_APP_OscChannel2GetInputGain(scpi_t *context) {
 }
 
 scpi_result_t RP_APP_OscChannel1GetViewData(scpi_t *context) {
-    return RP_APP_OscGetViewData(RP_CH_1, context);
+    return RP_APP_OscGetViewData(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2GetViewData(scpi_t *context) {
-    return RP_APP_OscGetViewData(RP_CH_2, context);
+    return RP_APP_OscGetViewData(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3GetViewData(scpi_t *context) {
+    return RP_APP_OscGetViewData(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasureAmplitude(scpi_t *context) {
-    return RP_APP_OscMeasureAmplitude(RP_CH_1, context);
+    return RP_APP_OscMeasureAmplitude(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasureAmplitude(scpi_t *context) {
-    return RP_APP_OscMeasureAmplitude(RP_CH_2, context);
+    return RP_APP_OscMeasureAmplitude(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasureAmplitude(scpi_t *context) {
+    return RP_APP_OscMeasureAmplitude(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasureMeanVoltage(scpi_t *context) {
-    return RP_APP_OscMeasureMeanVoltage(RP_CH_1, context);
+    return RP_APP_OscMeasureMeanVoltage(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasureMeanVoltage(scpi_t *context) {
-    return RP_APP_OscMeasureMeanVoltage(RP_CH_2, context);
+    return RP_APP_OscMeasureMeanVoltage(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasureMeanVoltage(scpi_t *context) {
+    return RP_APP_OscMeasureMeanVoltage(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasureAmplitudeMax(scpi_t *context) {
-    return RP_APP_OscMeasureAmplitudeMax(RP_CH_1, context);
+    return RP_APP_OscMeasureAmplitudeMax(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasureAmplitudeMax(scpi_t *context) {
-    return RP_APP_OscMeasureAmplitudeMax(RP_CH_2, context);
+    return RP_APP_OscMeasureAmplitudeMax(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasureAmplitudeMax(scpi_t *context) {
+    return RP_APP_OscMeasureAmplitudeMax(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasureAmplitudeMin(scpi_t *context) {
-    return RP_APP_OscMeasureAmplitudeMin(RP_CH_1, context);
+    return RP_APP_OscMeasureAmplitudeMin(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasureAmplitudeMin(scpi_t *context) {
-    return RP_APP_OscMeasureAmplitudeMin(RP_CH_2, context);
+    return RP_APP_OscMeasureAmplitudeMin(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasureAmplitudeMin(scpi_t *context) {
+    return RP_APP_OscMeasureAmplitudeMin(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasureFrequency(scpi_t *context) {
-    return RP_APP_OscMeasureFrequency(RP_CH_1, context);
+    return RP_APP_OscMeasureFrequency(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasureFrequency(scpi_t *context) {
-    return RP_APP_OscMeasureFrequency(RP_CH_2, context);
+    return RP_APP_OscMeasureFrequency(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasureFrequency(scpi_t *context) {
+    return RP_APP_OscMeasureFrequency(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasurePeriod(scpi_t *context) {
-    return RP_APP_OscMeasurePeriod(RP_CH_1, context);
+    return RP_APP_OscMeasurePeriod(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasurePeriod(scpi_t *context) {
-    return RP_APP_OscMeasurePeriod(RP_CH_2, context);
+    return RP_APP_OscMeasurePeriod(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasurePeriod(scpi_t *context) {
+    return RP_APP_OscMeasurePeriod(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1MeasureDutyCycle(scpi_t *context) {
-    return RP_APP_OscMeasureDutyCycle(RP_CH_1, context);
+    return RP_APP_OscMeasureDutyCycle(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2MeasureDutyCycle(scpi_t *context) {
-    return RP_APP_OscMeasureDutyCycle(RP_CH_2, context);
+    return RP_APP_OscMeasureDutyCycle(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3MeasureDutyCycle(scpi_t *context) {
+    return RP_APP_OscMeasureDutyCycle(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1RMS(scpi_t *context) {
-    return RP_APP_OscMeasureRMS(RP_CH_1, context);
+    return RP_APP_OscMeasureRMS(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2RMS(scpi_t *context) {
-    return RP_APP_OscMeasureRMS(RP_CH_2, context);
+    return RP_APP_OscMeasureRMS(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3RMS(scpi_t *context) {
+    return RP_APP_OscMeasureRMS(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscChannel1GetCursorVoltage(scpi_t *context) {
-    return RP_APP_OscGetCursorVoltage(RP_CH_1, context);
+    return RP_APP_OscGetCursorVoltage(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2GetCursorVoltage(scpi_t *context) {
-    return RP_APP_OscGetCursorVoltage(RP_CH_2, context);
+    return RP_APP_OscGetCursorVoltage(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3GetCursorVoltage(scpi_t *context) {
+    return RP_APP_OscGetCursorVoltage(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscGetCursorTime(scpi_t *context) {
@@ -256,11 +312,15 @@ scpi_result_t RP_APP_OscGetCursorDeltaTime(scpi_t *context) {
 }
 
 scpi_result_t RP_APP_OscChannel1GetCursorDeltaAmplitude(scpi_t *context) {
-    return RP_APP_OscGetCursorDeltaAmplitude(RP_CH_1, context);
+    return RP_APP_OscGetCursorDeltaAmplitude(RPAPP_OSC_SOUR_CH1, context);
 }
 
 scpi_result_t RP_APP_OscChannel2GetCursorDeltaAmplitude(scpi_t *context) {
-    return RP_APP_OscGetCursorDeltaAmplitude(RP_CH_2, context);
+    return RP_APP_OscGetCursorDeltaAmplitude(RPAPP_OSC_SOUR_CH2, context);
+}
+
+scpi_result_t RP_APP_OscChannel3GetCursorDeltaAmplitude(scpi_t *context) {
+    return RP_APP_OscGetCursorDeltaAmplitude(RPAPP_OSC_SOUR_MATH, context);
 }
 
 scpi_result_t RP_APP_OscGetCursorDeltaFrequency(scpi_t *context) {
@@ -286,6 +346,108 @@ scpi_result_t RP_APP_OscGetCursorDeltaFrequency(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_APP_OscSetMathOperation(scpi_t *context) {
+    const char * param;
+    size_t param_len;
+    char string[25];
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+        syslog(LOG_ERR, "*OSC:MATH:OP is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    strncpy(string, param, param_len);
+    string[param_len] = '\0';
+    rpApp_osc_math_oper_t op;
+    if (getRpAppMathOperation(string, &op)) {
+        syslog(LOG_ERR, "*OSC:MATH:OP parameter invalid.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rpApp_OscSetMathOperation(op);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:MATH:OP Failed to set: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    syslog(LOG_INFO, "*OSC:MATH:OP set successfully.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_APP_OscGetMathOperation(scpi_t *context) {
+    rpApp_osc_math_oper_t op;
+    int result = rpApp_OscGetMathOperation(&op);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:MATH:OP? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    char string[50];
+    if (getRpAppMathOperationString(op, string)) {
+        syslog(LOG_ERR, "*OSC:MATH:OP? failed to convert to string.");
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultString(context, string);
+    syslog(LOG_INFO, "*OSC:MATH:OP? get successfully.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_APP_OscSetMathSources(scpi_t *context) {
+    const char * param;
+    size_t param_len;
+    char string[25];
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    strncpy(string, param, param_len);
+    string[param_len] = '\0';
+    rp_channel_t s1;
+    if (getRpChannel(string, &s1)) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR parameter invalid.");
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    strncpy(string, param, param_len);
+    string[param_len] = '\0';
+    rp_channel_t s2;
+    if (getRpChannel(string, &s2)) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR parameter invalid.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rpApp_OscSetMathSources(s1, s2);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR Failed to set: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    syslog(LOG_INFO, "*OSC:MATH:SOUR set successfully.");
+    return SCPI_RES_OK;
+}
+scpi_result_t RP_APP_OscGetMathSources(scpi_t *context) {
+    rp_channel_t s1, s2;
+    int result = rpApp_OscGetMathSources(&s1, &s2);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    char string1[20], string2[20];
+    if (getRpChannelString(s1, string1)) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR? failed to convert to string.");
+        return SCPI_RES_ERR;
+    }
+    if (getRpChannelString(s2, string2)) {
+        syslog(LOG_ERR, "*OSC:MATH:SOUR? failed to convert to string.");
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultString(context, strcat(string1, strcat(", ", string2)));
+    syslog(LOG_INFO, "*OSC:MATH:SOUR? get successfully.");
+    return SCPI_RES_OK;
+}
 
 
 scpi_result_t RP_APP_OscSetTimeOffset(scpi_t *context) {
@@ -537,9 +699,9 @@ scpi_result_t RP_APP_OscGetViewSize(scpi_t *context) {
 }
 
 
-scpi_result_t RP_APP_OscGetAmplitudeOffset(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscGetAmplitudeOffset(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscGetAmplitudeOffset(channel, &value);
+    int result = rpApp_OscGetAmplitudeOffset(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:OFFSET? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -550,14 +712,14 @@ scpi_result_t RP_APP_OscGetAmplitudeOffset(rp_channel_t channel, scpi_t *context
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscSetAmplitudeOffset(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscSetAmplitudeOffset(rpApp_osc_source source, scpi_t *context) {
     double value;
     if (!SCPI_ParamDouble(context, &value, true)) {
         syslog(LOG_ERR, "*OSC:CH<n>:OFFSET is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    int result = rpApp_OscSetAmplitudeOffset(channel, (float) value);
+    int result = rpApp_OscSetAmplitudeOffset(source, (float) value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:OFFSET Failed to set amplitude offset: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -566,14 +728,14 @@ scpi_result_t RP_APP_OscSetAmplitudeOffset(rp_channel_t channel, scpi_t *context
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscSetAmplitudeScale(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscSetAmplitudeScale(rpApp_osc_source source, scpi_t *context) {
     double value;
     if (!SCPI_ParamDouble(context, &value, true)) {
         syslog(LOG_ERR, "*OSC:CH<n>:SCALE is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    int result = rpApp_OscSetAmplitudeScale(channel, (float) value);
+    int result = rpApp_OscSetAmplitudeScale(source, (float) value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:SCALE Failed to set amplitude scale: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -582,9 +744,9 @@ scpi_result_t RP_APP_OscSetAmplitudeScale(rp_channel_t channel, scpi_t *context)
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscGetAmplitudeScale(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscGetAmplitudeScale(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscGetAmplitudeScale(channel, &value);
+    int result = rpApp_OscGetAmplitudeScale(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:SCALE? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -667,12 +829,12 @@ scpi_result_t RP_APP_OscGetInputGain(rp_channel_t channel, scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscGetViewData(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscGetViewData(rpApp_osc_source source, scpi_t *context) {
     uint32_t viewSize;
     rpApp_OscGetViewSize(&viewSize);
     float data[viewSize];
 
-    int result = rpApp_OscGetViewData(channel, data, viewSize);
+    int result = rpApp_OscGetViewData(source, data, viewSize);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:DATA? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -683,9 +845,9 @@ scpi_result_t RP_APP_OscGetViewData(rp_channel_t channel, scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureAmplitudeMin(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureAmplitudeMin(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureAmplitudeMin(channel, &value);
+    int result = rpApp_OscMeasureAmplitudeMin(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:VMIN? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -696,9 +858,9 @@ scpi_result_t RP_APP_OscMeasureAmplitudeMin(rp_channel_t channel, scpi_t *contex
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureAmplitude(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureAmplitude(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureVpp(channel, &value);
+    int result = rpApp_OscMeasureVpp(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:VPP? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -708,9 +870,9 @@ scpi_result_t RP_APP_OscMeasureAmplitude(rp_channel_t channel, scpi_t *context) 
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureMeanVoltage(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureMeanVoltage(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureMeanVoltage(channel, &value);
+    int result = rpApp_OscMeasureMeanVoltage(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:VMEAN? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -720,9 +882,9 @@ scpi_result_t RP_APP_OscMeasureMeanVoltage(rp_channel_t channel, scpi_t *context
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureAmplitudeMax(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureAmplitudeMax(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureAmplitudeMax(channel, &value);
+    int result = rpApp_OscMeasureAmplitudeMax(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:VMAX? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -732,9 +894,9 @@ scpi_result_t RP_APP_OscMeasureAmplitudeMax(rp_channel_t channel, scpi_t *contex
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureFrequency(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureFrequency(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureFrequency(channel, &value);
+    int result = rpApp_OscMeasureFrequency(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:FREQ? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -744,9 +906,9 @@ scpi_result_t RP_APP_OscMeasureFrequency(rp_channel_t channel, scpi_t *context) 
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasurePeriod(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasurePeriod(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasurePeriod(channel, &value);
+    int result = rpApp_OscMeasurePeriod(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:T0? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -756,9 +918,9 @@ scpi_result_t RP_APP_OscMeasurePeriod(rp_channel_t channel, scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureDutyCycle(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureDutyCycle(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureDutyCycle(channel, &value);
+    int result = rpApp_OscMeasureDutyCycle(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:DCYC? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -768,9 +930,9 @@ scpi_result_t RP_APP_OscMeasureDutyCycle(rp_channel_t channel, scpi_t *context) 
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscMeasureRMS(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscMeasureRMS(rpApp_osc_source source, scpi_t *context) {
     float value;
-    int result = rpApp_OscMeasureRootMeanSquare(channel, &value);
+    int result = rpApp_OscMeasureRootMeanSquare(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:MEAS:CH<n>:RMS? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -780,7 +942,7 @@ scpi_result_t RP_APP_OscMeasureRMS(rp_channel_t channel, scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscGetCursorVoltage(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscGetCursorVoltage(rpApp_osc_source source, scpi_t *context) {
     uint32_t value;
     if (!SCPI_ParamUInt(context, &value, true)) {
         syslog(LOG_ERR, "*OSC:CUR:CH<n>:V? is missing first parameter.");
@@ -788,7 +950,7 @@ scpi_result_t RP_APP_OscGetCursorVoltage(rp_channel_t channel, scpi_t *context) 
     }
 
     float resultValue;
-    int result = rpApp_OscGetCursorVoltage(channel, value, &resultValue);
+    int result = rpApp_OscGetCursorVoltage(source, value, &resultValue);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CUR:CH<n>:V? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -798,7 +960,7 @@ scpi_result_t RP_APP_OscGetCursorVoltage(rp_channel_t channel, scpi_t *context) 
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_OscGetCursorDeltaAmplitude(rp_channel_t channel, scpi_t *context) {
+scpi_result_t RP_APP_OscGetCursorDeltaAmplitude(rpApp_osc_source source, scpi_t *context) {
     uint32_t cursor1;
     if (!SCPI_ParamUInt(context, &cursor1, true)) {
         syslog(LOG_ERR, "*OSC:CUR:CH<n>:DV? is missing first parameter.");
@@ -811,7 +973,7 @@ scpi_result_t RP_APP_OscGetCursorDeltaAmplitude(rp_channel_t channel, scpi_t *co
     }
 
     float resultValue;
-    int result = rpApp_OscGetCursorDeltaAmplitude(channel, cursor1, cursor2, &resultValue);
+    int result = rpApp_OscGetCursorDeltaAmplitude(source, cursor1, cursor2, &resultValue);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CUR:CH<n>:DV? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;

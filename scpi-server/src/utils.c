@@ -428,6 +428,33 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
     return RP_OK;
 }
 
+int getRpChannel(const char *string, rp_channel_t *channel) {
+	if (strcmp(string, "CH1") == 0) {
+		*channel = RP_CH_1;
+	}
+	else if (strcmp(string, "CH2") == 0) {
+		*channel = RP_CH_2;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+int getRpChannelString(rp_channel_t channel, char *string) {
+	switch (channel) {
+		case RP_CH_1:
+			strcpy(string, "CH1");
+			break;
+		case RP_CH_2:
+			strcpy(string, "CH2");
+			break;
+		default:
+			return RP_EOOR;
+	}
+	return RP_OK;
+}
+
 	int getRpAppInputGain(const char *string, rpApp_osc_in_gain_t *gain) {
 		if (strcmp(string, "HV") == 0) {
 			*gain = RPAPP_OSC_IN_GAIN_HV;
@@ -547,6 +574,69 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
 		}
 		return RP_OK;
 	}
+
+int getRpAppMathOperation(const char *string, rpApp_osc_math_oper_t *op) {
+	if (strcmp(string, "NONE") == 0) {
+		*op = RPAPP_OSC_MATH_NONE;
+	}
+	else if (strcmp(string, "ADD") == 0) {
+		*op = RPAPP_OSC_MATH_ADD;
+	}
+	else if (strcmp(string, "SUB") == 0) {
+		*op = RPAPP_OSC_MATH_SUB;
+	}
+	else if (strcmp(string, "MUL") == 0) {
+		*op = RPAPP_OSC_MATH_MUL;
+	}
+	else if (strcmp(string, "DIV") == 0) {
+		*op = RPAPP_OSC_MATH_DIV;
+	}
+	else if (strcmp(string, "ABS") == 0) {
+		*op = RPAPP_OSC_MATH_ABS;
+	}
+	else if (strcmp(string, "DER") == 0) {
+		*op = RPAPP_OSC_MATH_DER;
+	}
+	else if (strcmp(string, "INT") == 0) {
+		*op = RPAPP_OSC_MATH_INT;
+	}
+	else {
+		return RP_EOOR;
+	}
+	return RP_OK;
+}
+
+int getRpAppMathOperationString(rpApp_osc_math_oper_t op, char *string) {
+	switch (op) {
+		case RPAPP_OSC_MATH_NONE:
+			strcpy(string, "NONE");
+			break;
+		case RPAPP_OSC_MATH_ADD:
+			strcpy(string, "ADD");
+			break;
+		case RPAPP_OSC_MATH_SUB:
+			strcpy(string, "SUB");
+			break;
+		case RPAPP_OSC_MATH_MUL:
+			strcpy(string, "MUL");
+			break;
+		case RPAPP_OSC_MATH_DIV:
+			strcpy(string, "DIV");
+			break;
+		case RPAPP_OSC_MATH_ABS:
+			strcpy(string, "ABS");
+			break;
+		case RPAPP_OSC_MATH_DER:
+			strcpy(string, "DER");
+			break;
+		case RPAPP_OSC_MATH_INT:
+			strcpy(string, "INT");
+			break;
+		default:
+			return RP_EOOR;
+	}
+	return RP_OK;
+}
 
 int getRpInfinityInteger(const char *string, int32_t *value) {
     if (strcmp(string, "INF") == 0) {
