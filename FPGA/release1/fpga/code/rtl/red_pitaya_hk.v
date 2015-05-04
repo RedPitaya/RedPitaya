@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -28,127 +26,92 @@
  * 
  */
 
-module red_pitaya_hk (
-   input                 clk_i           ,  //!< clock
-   input                 rstn_i          ,  //!< reset - active low
-
-   // LED
-   output     [  8-1: 0] led_o           ,  //!< LED output
-   // Expansion connector
-   input      [  8-1: 0] exp_p_dat_i     ,  //!< exp. con. input data
-   output reg [  8-1: 0] exp_p_dat_o     ,  //!< exp. con. output data
-   output reg [  8-1: 0] exp_p_dir_o     ,  //!< exp. con. 1-output enable
-   input      [  8-1: 0] exp_n_dat_i     ,  //!<
-   output reg [  8-1: 0] exp_n_dat_o     ,  //!<
-   output reg [  8-1: 0] exp_n_dir_o     ,  //!<
-
-   // System bus
-   input      [ 32-1: 0] sys_addr      ,  //!< bus address
-   input      [ 32-1: 0] sys_wdata     ,  //!< bus write data
-   input      [  4-1: 0] sys_sel       ,  //!< bus write byte select
-   input                 sys_wen       ,  //!< bus write enable
-   input                 sys_ren       ,  //!< bus read enable
-   output reg [ 32-1: 0] sys_rdata     ,  //!< bus read data
-   output reg            sys_err       ,  //!< bus error indicator
-   output reg            sys_ack          //!< bus acknowledge signal
+module red_pitaya_hk #(
+  parameter DWL = 8, // data width for LED
+  parameter DWE = 8, // data width for extension
+  parameter [57-1:0] DNA = 57'h0823456789ABCDE
+)(
+  // system signals
+  input                clk_i      ,  // clock
+  input                rstn_i     ,  // reset - active low
+  // LED
+  output     [DWL-1:0] led_o      ,  // LED output
+  // global configuration
+  output reg           digital_loop,
+  // Expansion connector
+  input      [DWE-1:0] exp_p_dat_i,  // exp. con. input data
+  output reg [DWE-1:0] exp_p_dat_o,  // exp. con. output data
+  output reg [DWE-1:0] exp_p_dir_o,  // exp. con. 1-output enable
+  input      [DWE-1:0] exp_n_dat_i,  //
+  output reg [DWE-1:0] exp_n_dat_o,  //
+  output reg [DWE-1:0] exp_n_dir_o,  //
+  // System bus
+  input      [ 32-1:0] sys_addr   ,  // bus address
+  input      [ 32-1:0] sys_wdata  ,  // bus write data
+  input      [  4-1:0] sys_sel    ,  // bus write byte select
+  input                sys_wen    ,  // bus write enable
+  input                sys_ren    ,  // bus read enable
+  output reg [ 32-1:0] sys_rdata  ,  // bus read data
+  output reg           sys_err    ,  // bus error indicator
+  output reg           sys_ack       // bus acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
-//
-//  Simple LED logic
-
-reg [32-1: 0] shift_led_cnt ;
-reg [ 8-1: 0] shift_led_reg ;
-reg           shift_led_dir ;
-
-always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      shift_led_cnt <= 32'h0 ;
-      shift_led_reg <=  8'h1 ;
-      shift_led_dir <=  1'b1 ; // 1-left, 0-right
-   end
-   else begin
-      if (shift_led_cnt == 32'd40000000)
-         shift_led_cnt <= 32'h1;
-      else
-         shift_led_cnt <= shift_led_cnt + 32'h1;
-
-      if (shift_led_cnt == 32'h1) begin
-         if (shift_led_dir)
-            shift_led_reg <= {shift_led_reg[6:0], 1'b0} ; //shift left
-         else
-            shift_led_reg <= {1'b0, shift_led_reg[7:1]} ; //shift right
-
-          // change direction
-         if (shift_led_dir && (shift_led_reg==8'h40))
-            shift_led_dir <= !shift_led_dir ;
-         else if (!shift_led_dir && (shift_led_reg==8'h2))
-            shift_led_dir <= !shift_led_dir ;
-      end
-   end
-end
-    
 //---------------------------------------------------------------------------------
 //
 //  Testing logic
 
 // LED blinking
-reg  [  8-1: 0] led_reg ;      
-reg  [ 32-1: 0] led_cnt ;      
+reg  [DWL-1:0] led_reg;
+reg  [ 32-1:0] led_cnt;
 
-always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      led_reg[0] <=  1'b0 ;
-      led_cnt    <= 32'h0 ;
-   end
-   else begin
-      led_reg[0] <= led_cnt[26] ;
-      led_cnt    <= led_cnt + 32'h1 ;
-   end
+always @(posedge clk_i)
+if (rstn_i == 1'b0) begin
+   led_reg[0] <=  1'b0;
+   led_cnt    <= 32'h0;
+end else begin
+   led_reg[0] <= led_cnt[26];
+   led_cnt    <= led_cnt + 32'h1;
 end
 
-assign led_o = led_reg ; //shift_led_reg;
+assign led_o = led_reg;
 
 //---------------------------------------------------------------------------------
 //
 //  Read device DNA
 
-wire           dna_dout  ;
-reg            dna_clk   ;
-reg            dna_read  ;
-reg            dna_shift ;
-reg  [ 9-1: 0] dna_cnt   ;
-reg  [57-1: 0] dna_value ;
-reg            dna_done  ;
+wire           dna_dout ;
+reg            dna_clk  ;
+reg            dna_read ;
+reg            dna_shift;
+reg  [ 9-1: 0] dna_cnt  ;
+reg  [57-1: 0] dna_value;
+reg            dna_done ;
 
-always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      dna_clk   <=  1'b0 ;
-      dna_read  <=  1'b0 ;
-      dna_shift <=  1'b0 ;
-      dna_cnt   <=  9'd0 ;
-      dna_value <= 57'd0 ;
-      dna_done  <=  1'b0 ;
-   end
-   else begin
-      if (!dna_done)
-         dna_cnt <= dna_cnt + 1'd1 ;
+always @(posedge clk_i)
+if (rstn_i == 1'b0) begin
+  dna_clk   <=  1'b0;
+  dna_read  <=  1'b0;
+  dna_shift <=  1'b0;
+  dna_cnt   <=  9'd0;
+  dna_value <= 57'd0;
+  dna_done  <=  1'b0;
+end else begin
+  if (!dna_done)
+    dna_cnt <= dna_cnt + 1'd1;
 
-      dna_clk <= dna_cnt[2] ;
-      dna_read  <= (dna_cnt < 9'd10);
-      dna_shift <= (dna_cnt > 9'd18);
+  dna_clk <= dna_cnt[2] ;
+  dna_read  <= (dna_cnt < 9'd10);
+  dna_shift <= (dna_cnt > 9'd18);
 
-      if ((dna_cnt[2:0]==3'h0) && !dna_done)
-         dna_value <= {dna_value[57-2:0], dna_dout};
+  if ((dna_cnt[2:0]==3'h0) && !dna_done)
+    dna_value <= {dna_value[57-2:0], dna_dout};
 
-      if (dna_cnt > 9'd465)
-         dna_done <= 1'b1;
-
-   end
+  if (dna_cnt > 9'd465)
+    dna_done <= 1'b1;
 end
 
-DNA_PORT #( .SIM_DNA_VALUE(57'h0823456789ABCDE) ) // Specifies a sample 57-bit DNA value for simulation
-i_DNA (
+// parameter specifies a sample 57-bit DNA value for simulation
+DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
   .DOUT  ( dna_dout   ), // 1-bit output: DNA output data.
   .CLK   ( dna_clk    ), // 1-bit input: Clock input.
   .DIN   ( 1'b0       ), // 1-bit input: User data input pin.
@@ -160,34 +123,31 @@ i_DNA (
 //
 //  Desing identification
 
-wire [32-1: 0] id_value ;
+wire [32-1: 0] id_value;
 
-assign id_value[31: 4] = 28'h0 ; // reserved
-assign id_value[ 3: 0] =  4'h1 ; // board type   1-release1
+assign id_value[31: 4] = 28'h0; // reserved
+assign id_value[ 3: 0] =  4'h1; // board type   1-release1
 
 //---------------------------------------------------------------------------------
 //
 //  System bus connection
 
+always @(posedge clk_i)
+if (rstn_i == 1'b0) begin
+  led_reg[DWL-1:1] <= {DWL-1{1'b0}};
+  exp_p_dat_o  <= {DWE{1'b0}};
+  exp_p_dir_o  <= {DWE{1'b0}};
+  exp_n_dat_o  <= {DWE{1'b0}};
+  exp_n_dir_o  <= {DWE{1'b0}};
+end else if (sys_wen) begin
+  if (sys_addr[19:0]==20'h0c)   digital_loop <= sys_wdata[0];
 
-always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      led_reg[7:1] <= 7'h0 ;
-      exp_p_dat_o  <= 8'h0 ;
-      exp_p_dir_o  <= 8'h0 ;
-      exp_n_dat_o  <= 8'h0 ;
-      exp_n_dir_o  <= 8'h0 ;
-   end
-   else begin
-      if (sys_wen) begin
-         if (sys_addr[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata[8-1:0] ;
-         if (sys_addr[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata[8-1:0] ;
-         if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[8-1:0] ;
-         if (sys_addr[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata[8-1:0] ;
+  if (sys_addr[19:0]==20'h10)   exp_p_dir_o  <= sys_wdata[DWE-1:0];
+  if (sys_addr[19:0]==20'h14)   exp_n_dir_o  <= sys_wdata[DWE-1:0];
+  if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[DWE-1:0];
+  if (sys_addr[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata[DWE-1:0];
 
-         if (sys_addr[19:0]==20'h30)   led_reg[7:1] <= sys_wdata[8-1:1] ;
-      end
-   end
+  if (sys_addr[19:0]==20'h30)   led_reg[DWL-1:1] <= sys_wdata[DWL-1:1];
 end
 
 wire sys_en;
@@ -195,27 +155,28 @@ assign sys_en = sys_wen | sys_ren;
 
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
-   sys_err <= 1'b0 ;
-   sys_ack <= 1'b0 ;
+  sys_err <= 1'b0;
+  sys_ack <= 1'b0;
 end else begin
-   sys_err <= 1'b0 ;
+  sys_err <= 1'b0;
 
-   casez (sys_addr[19:0])
-     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {               id_value  }                          ; end
-     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {               dna_value[31: 0] }                   ; end
-     20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-25{1'b0}}, dna_value[56:32] }                   ; end
+  casez (sys_addr[19:0])
+    20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {                id_value          }; end
+    20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {                dna_value[32-1: 0]}; end
+    20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]}; end
+    20'h0000c: begin sys_ack <= sys_en;  sys_rdata <= {{32-  1{1'b0}}, digital_loop      }; end
 
-     20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dir_o }                        ; end
-     20'h00014 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dir_o }                        ; end
-     20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_o }                        ; end
-     20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_o }                        ; end
-     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_p_dat_i }                        ; end
-     20'h00024 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, exp_n_dat_i }                        ; end
+    20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dir_o}       ; end
+    20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dir_o}       ; end
+    20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dat_o}       ; end
+    20'h0001C: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dat_o}       ; end
+    20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dat_i}       ; end
+    20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dat_i}       ; end
 
-     20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 8{1'b0}}, led_reg[7:1], 1'b0 }                 ; end
+    20'h00030: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWL{1'b0}}, led_reg[DWL-1:1], 1'b0}; end
 
-       default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                                               ; end
-   endcase
+      default: begin sys_ack <= sys_en;  sys_rdata <=  32'h0                              ; end
+  endcase
 end
 
 endmodule

@@ -88,12 +88,14 @@ module red_pitaya_ps (
   input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
   input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
   output             axi1_werr_o  , axi0_werr_o  ,  // system write error
-  output             axi1_wrdy_o  , axi0_wrdy_o  ,  // system write ready
-  output             axi1_rstn_o  , axi0_rstn_o     // reset from PS
+  output             axi1_wrdy_o  , axi0_wrdy_o     // system write ready
 );
 
 //------------------------------------------------------------------------------
 // AXI masters
+
+wire            hp1_saxi_clk_i  , hp0_saxi_clk_i  ;
+wire            hp1_saxi_rstn_i , hp0_saxi_rstn_i ;
 
 wire            hp1_saxi_arready, hp0_saxi_arready;
 wire            hp1_saxi_awready, hp0_saxi_awready;
@@ -134,7 +136,6 @@ wire [  6-1: 0] hp1_saxi_awid   , hp0_saxi_awid   ;
 wire [  6-1: 0] hp1_saxi_wid    , hp0_saxi_wid    ;
 wire [ 64-1: 0] hp1_saxi_wdata  , hp0_saxi_wdata  ;
 wire [  8-1: 0] hp1_saxi_wstrb  , hp0_saxi_wstrb  ;
-wire            hp1_saxi_arstn  , hp0_saxi_arstn  ;
 
 axi_master #(
   .DW   (  64    ), // data width (8,16,...,1024)
@@ -212,14 +213,12 @@ assign hp0_saxi_awqos  = 4'h0 ;
 assign hp0_saxi_clk_i  = axi0_clk_i     ;
 assign hp0_saxi_rstn_i = axi0_rstn_i    ;
 assign hp0_saxi_aclk   = hp0_saxi_clk_i ;
-assign axi0_rstn_o     = hp0_saxi_arstn ;
 
 assign hp1_saxi_arqos  = 4'h0 ;
 assign hp1_saxi_awqos  = 4'h0 ;
 assign hp1_saxi_clk_i  = axi1_clk_i     ;
 assign hp1_saxi_rstn_i = axi1_rstn_i    ;
 assign hp1_saxi_aclk   = hp1_saxi_clk_i ;
-assign axi1_rstn_o     = hp1_saxi_arstn ;
 
 //------------------------------------------------------------------------------
 // AXI SLAVE
@@ -434,7 +433,6 @@ system_wrapper system_i (
   .S_AXI_HP0_rid     (hp0_saxi_rid    ),  .S_AXI_HP1_rid     (hp1_saxi_rid    ), // out 6
   .S_AXI_HP0_rdata   (hp0_saxi_rdata  ),  .S_AXI_HP1_rdata   (hp1_saxi_rdata  ), // out 64
   .S_AXI_HP0_aclk    (hp0_saxi_aclk   ),  .S_AXI_HP1_aclk    (hp1_saxi_aclk   ), // in
-//.S_AXI_HP0_arstn   (hp0_saxi_arstn  ),//.S_AXI_HP1_arstn   (hp1_saxi_arstn  ), // out
   .S_AXI_HP0_arvalid (hp0_saxi_arvalid),  .S_AXI_HP1_arvalid (hp1_saxi_arvalid), // in
   .S_AXI_HP0_awvalid (hp0_saxi_awvalid),  .S_AXI_HP1_awvalid (hp1_saxi_awvalid), // in
   .S_AXI_HP0_bready  (hp0_saxi_bready ),  .S_AXI_HP1_bready  (hp1_saxi_bready ), // in
@@ -463,8 +461,5 @@ system_wrapper system_i (
   .S_AXI_HP0_wdata   (hp0_saxi_wdata  ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata  ), // in 64
   .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  )  // in 8
 );
-
-assign hp0_saxi_arstn = 1'b1 ;
-assign hp1_saxi_arstn = 1'b1 ;
 
 endmodule
