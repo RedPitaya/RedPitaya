@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -36,31 +34,24 @@
  * 
  */
 
-
-
-module red_pitaya_asg_ch
-#(
+module red_pitaya_asg_ch #(
    parameter RSZ = 14
-)
-(
+)(
    // DAC
    output reg [ 14-1: 0] dac_o           ,  //!< dac data output
    input                 dac_clk_i       ,  //!< dac clock
    input                 dac_rstn_i      ,  //!< dac reset - active low
-
    // trigger
    input                 trig_sw_i       ,  //!< software trigger
    input                 trig_ext_i      ,  //!< external trigger
    input      [  3-1: 0] trig_src_i      ,  //!< trigger source selector
    output                trig_done_o     ,  //!< trigger event
-
    // buffer ctrl
    input                 buf_we_i        ,  //!< buffer write enable
    input      [ 14-1: 0] buf_addr_i      ,  //!< buffer address
    input      [ 14-1: 0] buf_wdata_i     ,  //!< buffer write data
    output reg [ 14-1: 0] buf_rdata_o     ,  //!< buffer read data
    output reg [RSZ-1: 0] buf_rpnt_o      ,  //!< buffer current read pointer
-
    // configuration
    input     [RSZ+15: 0] set_size_i      ,  //!< set table data size
    input     [RSZ+15: 0] set_step_i      ,  //!< set pointer step
@@ -77,8 +68,6 @@ module red_pitaya_asg_ch
    input                 set_rgate_i        //!< set external gated repetition
 );
 
-
-
 //---------------------------------------------------------------------------------
 //
 //  DAC buffer RAM
@@ -94,7 +83,8 @@ reg   [  28-1: 0] dac_mult  ;
 reg   [  15-1: 0] dac_sum   ;
 
 // read
-always @(posedge dac_clk_i) begin
+always @(posedge dac_clk_i)
+begin
    buf_rpnt_o <= dac_pnt[RSZ+15:16];
    dac_rp     <= dac_pnt[RSZ+15:16];
    dac_rd     <= dac_buf[dac_rp] ;
@@ -102,34 +92,23 @@ always @(posedge dac_clk_i) begin
 end
 
 // write
-always @(posedge dac_clk_i) begin
-   if (buf_we_i)
-      dac_buf[buf_addr_i] <= buf_wdata_i[14-1:0] ;
-end
+always @(posedge dac_clk_i)
+if (buf_we_i)  dac_buf[buf_addr_i] <= buf_wdata_i[14-1:0] ;
 
 // read-back
-always @(posedge dac_clk_i) begin
-   buf_rdata_o <= dac_buf[buf_addr_i] ;
-end
-
+always @(posedge dac_clk_i)
+buf_rdata_o <= dac_buf[buf_addr_i] ;
 
 // scale and offset
-always @(posedge dac_clk_i) begin
+always @(posedge dac_clk_i)
+begin
    dac_mult <= $signed(dac_rdat) * $signed({1'b0,set_amp_i}) ;
    dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
 
-   if (set_zero_i)
-      dac_o <= 14'h0 ;
-   else if ($signed(dac_sum[15-1:0]) > $signed(14'h1FFF)) // positive saturation
-      dac_o <= 14'h1FFF ;
-   else if ($signed(dac_sum[15-1:0]) < $signed(14'h2000)) // negative saturation
-      dac_o <= 14'h2000 ;
-   else
-      dac_o <= dac_sum[13:0] ;
+   // saturation
+   if (set_zero_i)  dac_o <= 14'h0;
+   else             dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}}} : dac_sum[13:0];
 end
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -164,7 +143,6 @@ always @(posedge dac_clk_i) begin
       dac_trigr <=  1'b0 ;
    end
    else begin
-
       // make 1us tick
       if (dac_do || (dly_tick == 8'd124))
          dly_tick <= 8'h0 ;
@@ -176,7 +154,6 @@ always @(posedge dac_clk_i) begin
          dly_cnt <= set_rdly_i ;
       else if (|dly_cnt && (dly_tick == 8'd124))
          dly_cnt <= dly_cnt - 32'h1 ;
-
 
       // repetitions counter
       if (trig_in && !dac_do)
@@ -194,7 +171,6 @@ always @(posedge dac_clk_i) begin
       else if (!dac_trigr && |cyc_cnt && ({1'b0,dac_pntp} > {1'b0,dac_pnt}))
          cyc_cnt <= cyc_cnt - 16'h1 ;
 
-
       // trigger arrived
       case (trig_src_i)
           3'd1 : trig_in <= trig_sw_i   ; // sw
@@ -202,7 +178,6 @@ always @(posedge dac_clk_i) begin
           3'd3 : trig_in <= ext_trig_n  ; // external negative edge
        default : trig_in <= 1'b0        ;
       endcase
-
 
       // in cycle mode
       if (dac_trig && !set_rst_i)
@@ -215,17 +190,10 @@ always @(posedge dac_clk_i) begin
          dac_rep <= 1'b1 ;
       else if (set_rst_i || (rep_cnt==16'h0))
          dac_rep <= 1'b0 ;
-
    end
 end
 
 assign dac_trig = (!dac_rep && trig_in) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
-
-
-
-
-
-
 
 // read pointer logic
 always @(posedge dac_clk_i) begin
@@ -246,10 +214,6 @@ end
 
 assign dac_npnt = dac_pnt + set_step_i;
 assign trig_done_o = !dac_rep && trig_in;
-
-
-
-
 
 //---------------------------------------------------------------------------------
 //
@@ -293,15 +257,10 @@ always @(posedge dac_clk_i) begin
       ext_trig_dn[1] <= ext_trig_dn[0] ;
       if (ext_trig_debn == 20'h0)
          ext_trig_dn[0] <= ext_trig_in[1] ;
-
    end
 end
 
 assign ext_trig_p = (ext_trig_dp == 2'b01) ;
 assign ext_trig_n = (ext_trig_dn == 2'b10) ;
 
-
-
-
 endmodule
-

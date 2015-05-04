@@ -55,22 +55,22 @@ static bool triggerDelayInNs = false;
 
 
 /* @brief Default filter equalization coefficients */
-static const uint32_t GAIN_HI_CHA_FILT_AA = 0x7D93;
-static const uint32_t GAIN_HI_CHA_FILT_BB = 0x437C7;
-static const uint32_t GAIN_HI_CHA_FILT_PP = 0x2666;
-static const uint32_t GAIN_HI_CHA_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_HI_CHB_FILT_AA = 0x7D93;
-static const uint32_t GAIN_HI_CHB_FILT_BB = 0x437C7;
-static const uint32_t GAIN_HI_CHB_FILT_PP = 0x2666;
-static const uint32_t GAIN_HI_CHB_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_LO_CHA_FILT_AA = 0x4C5F;
-static const uint32_t GAIN_LO_CHA_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_LO_CHA_FILT_AA = 0x7D93;
+static const uint32_t GAIN_LO_CHA_FILT_BB = 0x437C7;
 static const uint32_t GAIN_LO_CHA_FILT_PP = 0x2666;
 static const uint32_t GAIN_LO_CHA_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_LO_CHB_FILT_AA = 0x4C5F;
-static const uint32_t GAIN_LO_CHB_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_LO_CHB_FILT_AA = 0x7D93;
+static const uint32_t GAIN_LO_CHB_FILT_BB = 0x437C7;
 static const uint32_t GAIN_LO_CHB_FILT_PP = 0x2666;
 static const uint32_t GAIN_LO_CHB_FILT_KK = 0xd9999a;
+static const uint32_t GAIN_HI_CHA_FILT_AA = 0x4C5F;
+static const uint32_t GAIN_HI_CHA_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_HI_CHA_FILT_PP = 0x2666;
+static const uint32_t GAIN_HI_CHA_FILT_KK = 0xd9999a;
+static const uint32_t GAIN_HI_CHB_FILT_AA = 0x4C5F;
+static const uint32_t GAIN_HI_CHB_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_HI_CHB_FILT_PP = 0x2666;
+static const uint32_t GAIN_HI_CHB_FILT_KK = 0xd9999a;
 
 /*----------------------------------------------------------------------------*/
 /**
