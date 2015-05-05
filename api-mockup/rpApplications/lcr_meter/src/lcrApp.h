@@ -18,14 +18,13 @@
 #include <complex.h>
 #include "../../../rpbase/src/rp.h"
 
-#define VIEW_SIZE 			1024
-#define VIEW_SIZE_MAX		16834
-#define AMPLITUDE_MAX		1.0
-#define M_PI				3.14159265358979323846
+#define AMPLITUDE_MAX			1.0
+#define M_PI					3.14159265358979323846
+#define TRANS_EFFECT_STEPS		10
 
 typedef enum{
 	LCR_SCALE_LINEAR,
-	LCR_SCLAE_LOGARITHMIC,
+	LCR_SCALE_LOGARITHMIC,
 } lcr_scale_e;
 
 typedef enum{
@@ -65,7 +64,9 @@ int lcr_SetDefaultValues();
 
 /* Main lcr function */
 int lcr_Run();
-void *lcr_MainThread();
+int lcr_MainThread();
+void *lcr_FreqSweep();
+void *lcr_MeasSweep();
 
 /* Measurment functions */
 int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float start_freq, 
