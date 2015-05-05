@@ -18,12 +18,18 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <complex.h>
+#include <math.h>
 
 #include "lcrApp.h"
 #include "common.h"
 
 /* User view buffer */
-float *ch1_data[VIEW_SIZE], *ch2_data[VIEW_SIZE];
+float *ch1_data, *ch2_data;
+
+/* Global variables definition */
+int min_periodes = 10;
+const int view_size = 0;
 
 pthread_mutex_t mutex;
 pthread_t 		*lcr_thread_handler = NULL;
@@ -111,26 +117,132 @@ int SafeThreadGen(rp_channel_t channel, float ampl, float start_freq, float end_
 /* Acquire functions. Callback to the API structure */
 int lcr_SafeThreadAcqData(rp_channel_t channel, float *data){
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_AcqGetOldestDataV(channel, (uint32_t*)VIEW_SIZE, data));
+	ECHECK_APP(rp_AcqGetOldestDataV(channel, (uint32_t*)view_size, data));
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
-/* Main LCR thread */
-void *lcr_MainThread(){
+void *lcr_FreqSweep(){
 
+	/* Forward variable declaration */
+	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
+	float log_freq, a, b, c, w_out;
+	float start_freq = main_params->start_freq, end_freq = main_params->end_freq,
+					   		ampl = main_params->amplitude, averaging = main_params->avg;
+
+	lcr_scale_e scale_type = main_params->scale;
+	int steps = main_params->steps;
+	int stepsTe, freq_step;
+
+	rp_acq_decimation_t decimation;
+
+	if(start_freq < end_freq){
+		printf("End frequency must be greater than the starting frequency.\n");
+	}
+
+	if(steps < 10){
+		stepsTe = steps;
+	}
+	int trans_eff_c = stepsTe;
+
+	/* Check for logarithmic scale */
+	if(scale_type == LCR_SCALE_LOGARITHMIC){
+		a = log10(start_freq);
+		b = log10(end_freq);
+		(steps == 1) ? (c = (b - a)) : (c = (b - a) / (steps - 1));
+	}
+
+	/* Frequency iteration step */
+	(steps == 1) ? (freq_step = (int)(end_freq - start_freq)) : 
+		(freq_step = (int)(end_freq - start_freq) / (steps - 1));
+
+
+	/* Forward memory allocation */
+	float *frequency = (float *)malloc(steps * sizeof(float));
+
+
+	/* Main frequency sweep loop */
+	for(int i = 0; i < steps; i++){
+		if(scale_type == LCR_SCALE_LOGARITHMIC){
+			log_freq = powf(10, (c * i + a));
+			frequency[i] = log_freq;
+		}else{
+			frequency[i] = start_freq + (freq_step * i);
+		}
+
+		if(trans_eff_c > 0){
+			frequency[i] = start_freq - (start_freq / 2) + 
+				((start_freq / 2) * trans_eff_c / stepsTe);
+			trans_eff_c--;
+		}else if(!trans_eff_c){
+			frequency[i] = start_freq;
+		}
+
+		/* Angular velocity calculation */
+		w_out = frequency[i] * 2 * M_PI;
+
+		pthread_mutex_lock(&mutex);
+		/* Generating a sinusoidal form with the given frequency */
+		rp_GenFreq(RP_CH_1, 10000.0);
+		rp_GenAmp(RP_CH_1, ampl);
+		rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
+		rp_GenOutEnable(RP_CH_1);
+
+		rp_GenFreq(RP_CH_2, 10000.0);
+		rp_GenAmp(RP_CH_2, ampl);
+		rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
+		rp_GenOutEnable(RP_CH_2);
+		pthread_mutex_unlock(&mutex);
+
+		for(int j = 0; j < averaging; j++){
+			char freq_c = (char)frequency[j];
+			switch(freq_c){
+				case (freq_c >= 160000):
+					decimation = RP_DEC_1;
+					break;
+			}
+		}
+
+	}
+	
+	printf("%d%d%f%d\n", stepsTe, freq_step, w_out, decimation);
+
+	return RP_OK;
+}
+
+void *lcr_MeasSweep(){
+
+	return RP_OK;
+}
+
+/* Main LCR thread */
+int lcr_MainThread(){
+
+	int err;
+
+	lcr_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
+	if(main_params->sweep == LCR_MEASURMENT_SWEEP){
+		err = pthread_create(lcr_thread_handler, NULL, &lcr_MeasSweep, NULL);
+		if(err != RP_OK){
+			printf("Main thread creation failed.\n");
+			return RP_EOOR;
+		}
+	}else{
+		err = pthread_create(lcr_thread_handler, NULL, &lcr_FreqSweep, NULL);
+		if(err != RP_OK){
+			printf("Main thread creation failed.\n");
+			return RP_EOOR;
+		}
+	}
 
 	return RP_OK;
 }
 
 /* Main call function */
 int lcr_Run(){
-	int ret_val;
-	lcr_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
-	ret_val = pthread_create(lcr_thread_handler, NULL, &lcr_MainThread, NULL);
 
-	if(ret_val != RP_OK){
-		printf("Failed to create thread.\n");
+	if(lcr_MainThread() != RP_OK){
+		printf("Error.\n");
 		return RP_EOOR;
 	}
 
