@@ -22,6 +22,7 @@
 #define ADC_BUFF_SIZE			16 * 1024
 #define M_PI					3.14159265358979323846
 #define TRANS_EFFECT_STEPS		10
+#define SAMPLE_RATE				125e6
 
 /* Decimation */
 #define LCR_DEC_1 				1

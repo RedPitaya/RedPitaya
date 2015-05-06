@@ -26,6 +26,7 @@
 
 /* User view buffer */
 int16_t 				*ch1_data, *ch2_data;
+int16_t					**analysis_data;
 
 /* Global variables definition */
 int 					min_periodes = 10;
@@ -35,7 +36,7 @@ pthread_mutex_t 		mutex;
 pthread_t 				*lcr_thread_handler = NULL;
 
 /* Init lcr params struct */
-lcr_params_e 	*main_params;
+lcr_params_e 			*main_params;
 
 /* Init the main API structure */
 int lcr_Init(){
@@ -69,6 +70,10 @@ int lcr_Release(){
 
 	/* Set all bits in the main_params structure to -1 */
 	memset(main_params, -1, sizeof(*main_params));
+
+	free(ch1_data);
+	free(ch2_data);
+	free(analysis_data);
 
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_destroy(&mutex);
@@ -124,15 +129,64 @@ int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data){
 	return RP_OK;
 }
 
-int lcr_data_analysis(int16_t *data, uint32_t size, float dc_bias, 
+int lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias, 
 		float r_shunt, float complex *Z, float w_out, int decimation){
 
-	int16_t *u_acq = malloc(size * sizeof(int16_t));
-	
+
+	/* Forward vector and variable declarations */
+	float ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
+		phase_z_rad, z_ampl;
+
+	int COORDINATES = 2;
+	float T = (decimation / SAMPLE_RATE);
+
+	int16_t *u_dut = malloc(size * sizeof(int16_t));
+	int16_t *i_dut = malloc(size * sizeof(int16_t));
+
+	int16_t **u_dut_s = multiDimensionVector(COORDINATES, size);
+	int16_t **i_dut_s = multiDimensionVector(COORDINATES, size);
+	int16_t **component_lock = multiDimensionVector(COORDINATES, size);
+
 	for(int i = 0; i < size; i++){
-		u_acq[i] = data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
+		u_dut[i] = data[0][i] - data[1][i];
+		i_dut[i] = data[1][i] / r_shunt; 
 	}
 
+	for(int i = 0; i < size; i++){
+		ang = (T * w_out * i);
+		//X		
+		u_dut_s[0][i] = u_dut[i] * sin(ang);
+		i_dut_s[0][i] = i_dut[i] * sin(ang);
+		//Y
+		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2)); 
+		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
+	}
+
+	/* Trapezoidal approximation */
+	component_lock[0][0] = trapezoidalApprox(u_dut_s[0], T, size);
+	component_lock[0][1] = trapezoidalApprox(u_dut_s[1], T, size);
+	component_lock[1][0] = trapezoidalApprox(i_dut_s[0], T, size);
+	component_lock[1][0] = trapezoidalApprox(i_dut_s[1], T, size);
+
+	/* Calculating volatage and phase */
+	u_dut_ampl = 2 * (sqrt(pow(component_lock[0][0], 2)) + pow(component_lock[0][1], 2));
+	u_dut_phase_ampl = atan2(component_lock[0][0], component_lock[0][1]);
+
+	i_dut_ampl = 2 * (sqrt(pow(component_lock[1][0], 2)) + pow(component_lock[1][1], 2));
+	i_dut_phase_ampl = atan2(component_lock[1][0], component_lock[1][1]);
+
+	/* Assigning impedance values */
+	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
+	z_ampl = u_dut_ampl + i_dut_ampl;
+
+	/* Applying phase limitation (-180 deg, 180 deg) */
+	if(phase_z_rad <= -M_PI){
+		phase_z_rad = phase_z_rad + (2 * M_PI);
+	}else if(phase_z_rad >= M_PI){
+		phase_z_rad = phase_z_rad - (2 * M_PI);
+	}
+
+	*Z = (z_ampl * cos(phase_z_rad)) + (z_ampl * sin(phase_z_rad) * I);
 
 	return RP_OK;
 }
@@ -143,13 +197,17 @@ void *lcr_FreqSweep(){
 	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
 	float log_freq, a, b, c, w_out;
 	float start_freq = main_params->start_freq, end_freq = main_params->end_freq,
-		ampl = main_params->amplitude, averaging = main_params->avg;
+		ampl = main_params->amplitude, averaging = main_params->avg,
+		dc_bias = main_params->dc_bias, r_shunt = main_params->r_shunt;
 
 	lcr_scale_e scale_type = main_params->scale;
 	int steps = main_params->steps;
 	int stepsTe, freq_step;
-
 	int decimation;
+
+	/* Forward memory allocation */
+	float *frequency = (float *)malloc(steps * sizeof(float));
+	float complex *Z = (float complex *)malloc((averaging + 1) * sizeof(float complex));
 
 	if(start_freq < end_freq){
 		printf("End frequency must be greater than the starting frequency.\n");
@@ -172,10 +230,6 @@ void *lcr_FreqSweep(){
 	(steps == 1) ? (freq_step = (int)(end_freq - start_freq)) : 
 		(freq_step = (int)(end_freq - start_freq) / (steps - 1));
 
-
-	/* Forward memory allocation */
-	float *frequency = (float *)malloc(steps * sizeof(float));
-	//float complex *Z = (float complex *)malloc((averaging + 1) * sizeof(float complex));
 
 	/* Main frequency sweep loop */
 	for(int i = 0; i < steps; i++){
@@ -224,20 +278,37 @@ void *lcr_FreqSweep(){
 			if(new_size != view_size){
 				ch1_data = realloc(ch1_data, new_size);
 				ch2_data = realloc(ch2_data, new_size);
+				view_size = new_size;
 			}
 
 			/* Signal acquisition for both channels */
-			int ret_acq = lcr_SafeThreadAcqData(RP_CH_1, ch1_data);
-			if(ret_acq != RP_OK){
+			int ret_val = lcr_SafeThreadAcqData(RP_CH_1, ch1_data);
+			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
 				return (void *)RP_EOOR;
 			}
 
-			ret_acq = lcr_SafeThreadAcqData(RP_CH_2, ch2_data);
-			if(ret_acq != RP_OK){
+			ret_val = lcr_SafeThreadAcqData(RP_CH_2, ch2_data);
+			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
 				return (void *)RP_EOOR;
 			}
+			
+			/* Two dimension vector creation -- u_acq*/
+			for(int i = 0; i < view_size; i++){
+				analysis_data[0][i] = ch1_data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
+				analysis_data[1][i] = ch2_data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
+			}
+
+			/* Calculate output data */
+			ret_val = lcr_data_analysis(analysis_data, view_size, dc_bias, 
+						r_shunt, Z, w_out, decimation);
+
+			if(ret_val != RP_OK){
+				printf("Lcr data analysis failed to properly execute.\n");
+				return (void *)RP_EOOR;
+			}
+
 
 
 		}
