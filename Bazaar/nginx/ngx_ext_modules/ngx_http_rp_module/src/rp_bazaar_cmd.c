@@ -23,6 +23,7 @@
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"
 #include "cJSON.h"
+#include <ws_server.h>
 
 #include <stdlib.h>
 
@@ -66,7 +67,6 @@ bazaar_acts_t bazaar_acts[] = {
 /** Bazaar token string */
 #define c_token_len    256
 char g_token[c_token_len];
-
 
 /*----------------------------------------------------------------------------*/
 /* request private context, used to share data between different callback functions
@@ -122,6 +122,11 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
 
     /* Bazaar commands */
     for(i = 0; bazaar_cmds[i].name != NULL; i++) {
+		//FILE* f = fopen("log.txt", "a+");
+		//fputs((char*)r->uri.data, f);
+		//fputs("\n", f);
+		//fclose(f);
+
         ngx_str_t arg_name = { strlen(bazaar_cmds[i].name), 
                                (u_char *)bazaar_cmds[i].name };
         ngx_uint_t arg_key = ngx_hash_key(arg_name.data, arg_name.len);
@@ -374,7 +379,7 @@ int rp_bazaar_help(ngx_http_request_t *r, cJSON **json_root,
                                                       3, r->pool),
                               r->pool);
     }
-
+	
     return rp_module_cmd_ok(json_root, r->pool);
 }
 
@@ -394,6 +399,30 @@ int rp_bazaar_apps(ngx_http_request_t *r,
 int rp_bazaar_start(ngx_http_request_t *r, 
                     cJSON **json_root, int argc, char **argv)
 {
+	FILE* file = fopen("log.txt", "a+");
+	fputs("rp_bazaar_start\n", file);
+	fclose(file);
+
+	int demo = 0;
+	char* url = strstr(argv[0], "?type=demo");
+	if (url)
+	{
+		*url = '\0';
+		demo = 1;
+
+		FILE* file = fopen("log.txt", "a+");
+		fputs("demo\n", file);
+		fclose(file);
+	}
+	else
+	{
+
+	}
+
+	file = fopen("log.txt", "a+");
+	fputs(argv[0], file);
+	fclose(file);
+
     char *app_name  = NULL;
     char *fpga_name = NULL;
     int   app_id_len, app_name_len, fpga_name_len;
@@ -447,10 +476,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
                                    strerror(errno), r->pool);
     }
     strcpy(rp_module_ctx.app.id, argv[0]);
-
     sprintf(app_name, "%s/%s/controller.so", 
             lc->bazaar_dir.data, argv[0]);
     app_name[app_name_len-1]='\0';
+
     sprintf(fpga_name, "%s/%s/fpga.bit", lc->bazaar_dir.data, argv[0]);
     fpga_name[fpga_name_len-1]='\0';
     
@@ -503,6 +532,54 @@ int rp_bazaar_start(ngx_http_request_t *r,
         free(fpga_name);
     if(app_name)
         free(app_name);
+//start web socket server
+    if(rp_module_ctx.app.ws_api_supported)
+    {
+        struct server_parameters params;
+        ngx_memset(&params, 0, sizeof(struct server_parameters));
+
+        params.set_params_interval_func = rp_module_ctx.app.ws_set_params_interval_func;
+        params.set_signals_interval_func = rp_module_ctx.app.ws_set_signals_interval_func;
+        params.get_params_interval_func = rp_module_ctx.app.ws_get_params_interval_func;
+        params.get_signals_interval_func = rp_module_ctx.app.ws_get_signals_interval_func;
+        params.get_params_func = rp_module_ctx.app.ws_get_params_func;
+        params.set_params_func = rp_module_ctx.app.ws_set_params_func;
+        params.get_signals_func = rp_module_ctx.app.ws_get_signals_func;
+        params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
+        fprintf(stderr, "Starting WS-server\n");
+
+    	FILE* file = fopen("log.txt", "a+");
+    	fputs("start_ws_server\n", file);
+    	fclose(file);
+
+    	if (access("id.json", F_OK) != 0)
+    		system("/root/idgen -o idfile.id");
+
+		file = fopen("log.txt", "a+");
+		fputs("need call\n", file);
+		fclose(file);
+		if (rp_module_ctx.app.verify_app_license_func)
+		{
+			FILE* file = fopen("log.txt", "a+");
+			fputs("verify_app_license_func is def\n", file);
+			fclose(file);
+		}
+		if (rp_module_ctx.app.verify_app_license_func("scope"))
+			demo = 1;
+
+        // set Demo version
+        if (demo)
+        {
+        	FILE* file = fopen("log.txt", "a+");
+        	fputs("start_ws_server demo\n", file);
+        	fclose(file);
+
+        	rp_module_ctx.app.ws_set_params_demo_func(1);
+        }
+
+
+        start_ws_server(&params);
+    }
 
     return rp_module_cmd_ok(json_root, r->pool);
 }
@@ -511,7 +588,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
 int rp_bazaar_stop(ngx_http_request_t *r, 
                    cJSON **json_root, int argc, char **argv)
 {
-    if(argc != 0) {
+	if(rp_module_ctx.app.ws_api_supported)
+		stop_ws_server();
+	
+	if(argc != 0) {
         return rp_module_cmd_error(json_root, 
                                 "Incorrect number of arguments (should be 0)",
                                    NULL, r->pool);
