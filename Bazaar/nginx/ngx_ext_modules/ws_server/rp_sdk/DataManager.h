@@ -38,6 +38,8 @@ public:
 	void SetSignalInterval(int _interval);
 };
 
+int dbg_printf(const char * format, ...);
+
 // user callbacks
 void UpdateParams(void);
 void UpdateSignals(void);
