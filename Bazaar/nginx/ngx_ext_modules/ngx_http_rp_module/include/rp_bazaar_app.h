@@ -54,6 +54,15 @@ typedef int          (*rp_set_params_func)(rp_app_params_t *p, int len);
 typedef int          (*rp_get_params_func)(rp_app_params_t **p);
 typedef int          (*rp_get_signals_func)(float ***s, int *sig_num, 
                                             int *sig_len);
+/*WebSocket Server part*/
+typedef void		(*rp_ws_set_params_interval_func)(int);
+typedef void		(*rp_ws_set_signals_interval_func)(int);
+typedef int		(*rp_ws_get_params_interval_func)(void);
+typedef int		(*rp_ws_get_signals_interval_func)(void);
+typedef const char     *(*rp_ws_get_params_func)(void);
+typedef const char     *(*rp_ws_get_signals_func)(void);
+typedef int		(*rp_ws_set_params_func)(const char *_params);
+typedef int		(*rp_ws_set_signals_func)(const char *_signals);
 
 typedef struct rp_bazaar_app_s {
     /* Initialization function - called when app. is loaded */
@@ -73,6 +82,19 @@ typedef struct rp_bazaar_app_s {
     rp_get_params_func       get_params_func;
     /* Retrieves last good signals from the application */
     rp_get_signals_func      get_signals_func;
+	
+	/*WebSocket Server part*/
+
+	uint8_t ws_api_supported;
+	rp_ws_set_params_interval_func ws_set_params_interval_func;
+	rp_ws_set_signals_interval_func ws_set_signals_interval_func;
+	rp_ws_get_params_interval_func ws_get_params_interval_func;
+	rp_ws_get_signals_interval_func ws_get_signals_interval_func;
+	rp_ws_get_params_func ws_get_params_func;
+	rp_ws_get_signals_func ws_get_signals_func;
+	rp_ws_set_params_func ws_set_params_func;
+	rp_ws_set_signals_func ws_set_signals_func;
+
 
     /* Dynamic library handle */
     void            *handle;

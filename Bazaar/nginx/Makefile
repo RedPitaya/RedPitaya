@@ -22,11 +22,17 @@ SHARED=../../shared/
 DEPLIBS_DIR=build/
 DEPLIBS=$(DEPLIBS_DIR)/lib/libredpitaya.a
 
+WS_SERVER_DIR=ngx_ext_modules/ws_server
+WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
+
 all: $(NGINX)
 
-$(NGINX): $(DEPLIBS)
+$(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB) $(DEPLIBS)
 	cd $(NGINX_DIR); ./rp_configure.sh $(VER)-$(BUILD_NUMBER) $(REVISION);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
+
+$(WS_SERVER_LIB): 
+	cd $(WS_SERVER_DIR); ./build.sh
 
 $(DEPLIBS):
 	mkdir -p $(DEPLIBS_DIR)
@@ -51,3 +57,4 @@ install:
 clean:
 	-$(MAKE) -C $(NGINX_DIR) clean
 	rm -rf $(DEPLIBS_DIR)
+	-$(MAKE) -C $(WS_SERVER_DIR) clean
