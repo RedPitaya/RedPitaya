@@ -26,7 +26,7 @@ float vectorMax(float *data, int view_size){
 	return max;
 }
 
-float trapezoidalApprox(float *data, float t, int view_size){
+float trapezoidalApprox(int16_t *data, float t, int view_size){
 	float result = 0;
 	int i;
 	for(i = 0; i < view_size - 1; i++){
@@ -43,3 +43,19 @@ float vectorMean(float *data, int view_size){
 	}
 	return (result / i);
 }
+
+/* TODO: SWD, function placement open discussion. Directly in 
+   FS/MS or in common as a helper tool */
+int16_t **multiDimensionVector(int first_dimension, int second_dimenson){
+
+	/* Allocate the first dimension */
+	int16_t **data_out = malloc(first_dimension * sizeof(int16_t));
+
+	/* For each element in the first dimension, 
+	 * allocate a size equal to the second dimension*/
+	for(int i = 0; i < first_dimension; i++){
+		data_out[i] = malloc(second_dimenson * sizeof(int16_t));
+	}
+	
+	return data_out;
+}  

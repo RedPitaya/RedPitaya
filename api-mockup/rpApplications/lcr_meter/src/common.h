@@ -26,7 +26,8 @@
 }
 
 float vectorMax(float *data, int view_size);
-float trapezoidalApprox(float *data, float t, int view_size);
+float trapezoidalApprox(int16_t *data, float t, int view_size);
 float meanVector(float *data, int view_size);
+int16_t **multiDimensionVector(int first_dimension, int second_dimenson);
 
 #endif /* COMMON_LCR_H_ */
