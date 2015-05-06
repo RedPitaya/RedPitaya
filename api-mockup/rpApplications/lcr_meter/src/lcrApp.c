@@ -25,17 +25,17 @@
 #include "common.h"
 
 /* User view buffer */
-float *ch1_data, *ch2_data;
+int16_t 				*ch1_data, *ch2_data;
 
 /* Global variables definition */
-int min_periodes = 10;
-const int view_size = 0;
+int 					min_periodes = 10;
+uint32_t 				view_size = 1024;
 
-pthread_mutex_t mutex;
-pthread_t 		*lcr_thread_handler = NULL;
+pthread_mutex_t 		mutex;
+pthread_t 				*lcr_thread_handler = NULL;
 
 /* Init lcr params struct */
-lcr_params_e *main_params;
+lcr_params_e 	*main_params;
 
 /* Init the main API structure */
 int lcr_Init(){
@@ -103,22 +103,37 @@ int lcr_SetDefaultValues(){
 }
 
 /* Generate functions  */
-int SafeThreadGen(rp_channel_t channel, float ampl, float start_freq, float end_freq, float *data){
-	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_GenAmp(channel, ampl));
-	ECHECK_APP(rp_GenFreq(channel, start_freq));
-	//ECHECK_APP(rp_GenEndFreq(channel, end_freq));
-	/* TODO: Need to add synthesis for LCR waveform in API */
+int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 
+	pthread_mutex_lock(&mutex);
+	ECHECK_APP(rp_GenFreq(channel, freq));
+	ECHECK_APP(rp_GenAmp(channel, ampl));
+	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+	ECHECK_APP(rp_GenOutEnable(channel));
 	pthread_mutex_unlock(&mutex);
+
 	return RP_OK;
 }
 
 /* Acquire functions. Callback to the API structure */
-int lcr_SafeThreadAcqData(rp_channel_t channel, float *data){
+int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data){
+
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_AcqGetOldestDataV(channel, (uint32_t*)view_size, data));
+	ECHECK_APP(rp_AcqGetOldestDataRaw(channel, &view_size, data));
 	pthread_mutex_unlock(&mutex);
+	return RP_OK;
+}
+
+int lcr_data_analysis(int16_t *data, uint32_t size, float dc_bias, 
+		float r_shunt, float complex *Z, float w_out, int decimation){
+
+	int16_t *u_acq = malloc(size * sizeof(int16_t));
+	
+	for(int i = 0; i < size; i++){
+		u_acq[i] = data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
+	}
+
+
 	return RP_OK;
 }
 
@@ -128,16 +143,17 @@ void *lcr_FreqSweep(){
 	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
 	float log_freq, a, b, c, w_out;
 	float start_freq = main_params->start_freq, end_freq = main_params->end_freq,
-					   		ampl = main_params->amplitude, averaging = main_params->avg;
+		ampl = main_params->amplitude, averaging = main_params->avg;
 
 	lcr_scale_e scale_type = main_params->scale;
 	int steps = main_params->steps;
 	int stepsTe, freq_step;
 
-	rp_acq_decimation_t decimation;
+	int decimation;
 
 	if(start_freq < end_freq){
 		printf("End frequency must be greater than the starting frequency.\n");
+		return (void *)RP_EOOR;
 	}
 
 	if(steps < 10){
@@ -159,7 +175,7 @@ void *lcr_FreqSweep(){
 
 	/* Forward memory allocation */
 	float *frequency = (float *)malloc(steps * sizeof(float));
-
+	//float complex *Z = (float complex *)malloc((averaging + 1) * sizeof(float complex));
 
 	/* Main frequency sweep loop */
 	for(int i = 0; i < steps; i++){
@@ -181,27 +197,51 @@ void *lcr_FreqSweep(){
 		/* Angular velocity calculation */
 		w_out = frequency[i] * 2 * M_PI;
 
-		pthread_mutex_lock(&mutex);
 		/* Generating a sinusoidal form with the given frequency */
-		rp_GenFreq(RP_CH_1, 10000.0);
-		rp_GenAmp(RP_CH_1, ampl);
-		rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
-		rp_GenOutEnable(RP_CH_1);
+		int ret_gen = lcr_SafeThreadGen(RP_CH_1, ampl, frequency[i]);
 
-		rp_GenFreq(RP_CH_2, 10000.0);
-		rp_GenAmp(RP_CH_2, ampl);
-		rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
-		rp_GenOutEnable(RP_CH_2);
-		pthread_mutex_unlock(&mutex);
+		if(ret_gen != RP_OK){
+			printf("Error generating signal.\n");
+			return (void *)RP_EOOR;
+		}
 
 		for(int j = 0; j < averaging; j++){
-			char freq_c = (char)frequency[j];
-			switch(freq_c){
-				case (freq_c >= 160000):
-					decimation = RP_DEC_1;
-					break;
+			if(frequency[i] >= 160000){
+				decimation = LCR_DEC_1;
+			}else if(frequency[i] >= 20000){
+				decimation = LCR_DEC_8;
+			}else if(frequency[i] >= 2500){
+				decimation = LCR_DEC_64;
+			}else if(frequency[i] >= 1024){
+				decimation = LCR_DEC_8192;
+			}else if(frequency[i]){
+				decimation = LCR_DEC_65536;
 			}
+
+			float new_size = round((min_periodes * 125e6) / frequency[i] * decimation);
+
+			/* Realloc buffer, if view size has changed */
+			if(new_size != view_size){
+				ch1_data = realloc(ch1_data, new_size);
+				ch2_data = realloc(ch2_data, new_size);
+			}
+
+			/* Signal acquisition for both channels */
+			int ret_acq = lcr_SafeThreadAcqData(RP_CH_1, ch1_data);
+			if(ret_acq != RP_OK){
+				printf("Error acquiring data.\n");
+				return (void *)RP_EOOR;
+			}
+
+			ret_acq = lcr_SafeThreadAcqData(RP_CH_2, ch2_data);
+			if(ret_acq != RP_OK){
+				printf("Error acquiring data.\n");
+				return (void *)RP_EOOR;
+			}
+
+
 		}
+
 
 	}
 	
@@ -240,6 +280,10 @@ int lcr_MainThread(){
 
 /* Main call function */
 int lcr_Run(){
+
+	/* Channel memory allocation */
+	ch1_data = malloc((view_size) * sizeof(int16_t));
+	ch2_data = malloc((view_size) * sizeof(int16_t));
 
 	if(lcr_MainThread() != RP_OK){
 		printf("Error.\n");
@@ -401,6 +445,20 @@ int lcr_SetUserWait(bool user_wait){
 
 int lcr_GetUserWait(bool *user_wait){
 	user_wait = &main_params->user_wait;
+	return RP_OK;
+}
+
+int lcr_SetUserView(uint32_t view){
+	if(view < 10){
+		printf("Invalid view size. Must be greater than 10.\n");
+		return RP_EOOR;
+	}
+	view_size = view;
+	return RP_OK;
+}
+
+int lcr_GetUserView(uint32_t *view){
+	view = &view_size;
 	return RP_OK;
 }
 

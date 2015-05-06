@@ -19,8 +19,17 @@
 #include "../../../rpbase/src/rp.h"
 
 #define AMPLITUDE_MAX			1.0
+#define ADC_BUFF_SIZE			16 * 1024
 #define M_PI					3.14159265358979323846
 #define TRANS_EFFECT_STEPS		10
+
+/* Decimation */
+#define LCR_DEC_1 				1
+#define LCR_DEC_8				8
+#define LCR_DEC_64				64
+#define LCR_DEC_1024			1024
+#define LCR_DEC_8192			8192
+#define LCR_DEC_65536			65536
 
 typedef enum{
 	LCR_SCALE_LINEAR,
@@ -56,23 +65,21 @@ typedef struct lcr_params_t{
 	bool user_wait;
 } lcr_params_e;
 
-/* Functions definitions */
+/* Resourse managment functions */
 int lcr_Init();
 int lcr_Release();
 int lcr_Reset();
 int lcr_SetDefaultValues();
 
-/* Main lcr function */
+/* Main lcr functions */
 int lcr_Run();
 int lcr_MainThread();
-void *lcr_FreqSweep();
-void *lcr_MeasSweep();
 
 /* Measurment functions */
-int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float start_freq, 
-					  float end_freq, float *data);
-
-int lcr_SafeThreadAcqData(rp_channel_t channel, float *data);
+int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq);
+int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data);
+void *lcr_FreqSweep();
+void *lcr_MeasSweep();
 
 
 /* Getters and Setters */
@@ -104,6 +111,9 @@ int lcr_SetSweepMode(lcr_sweep_e sweep);
 int lcr_GetSweepMode(lcr_sweep_e *sweep);
 int lcr_SetUserWait(bool wait);
 int lcr_GetUserWait(bool *wait);
+
+int lcr_SetUserView(uint32_t view);
+int lcr_GetUserView(uint32_t *view);
 
 #endif //__LCRMETER_H
 
