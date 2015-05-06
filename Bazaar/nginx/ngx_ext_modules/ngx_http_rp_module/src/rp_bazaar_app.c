@@ -236,58 +236,6 @@ int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool
  * application directory is OK.
  * Returns 0 otherwise.
  */
-inline int is_controller_ok(const char *dir,
-                            const char *app_id,
-                            const char *fname)
-{
-    char *file = NULL;
-    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
-    struct stat stat_buf;
-    const mode_t perms = S_IRUSR | S_IXUSR;
-    
-    file = (char *)malloc(file_len);
-    if(file == NULL) {
-        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
-        return 0;
-    }
-
-    sprintf(file, "%s/%s/%s", dir, app_id, fname);
-
-    if(stat((const char *)file, &stat_buf) < 0) {
-        /* File does not exist */
-        free(file);
-        return 0;
-    }
-    if((stat_buf.st_mode & perms) != perms) {
-        /* Permissions wrong */
-        fprintf(stderr, "%s exists but has wrong permissions.\n", file);
-        free(file);
-        return 0;
-    }
-    
-    rp_bazaar_app_t app;
-    ngx_memset(&app, 0, sizeof(rp_bazaar_app_t));
-
-    /* Open and check init, exit and desc symbols - if they exist,
-     * controller is OK.
-     */
-
-    if(rp_bazaar_app_load_module(file, &app) < 0) {
-        fprintf(stderr, "Problem loading app: %s\n", dlerror());
-        rp_bazaar_app_unload_module(&app);
-        free(file);
-        return 0;
-    }
-
-    int is_reg = !app.verify_app_license_func("scope"); // 1 - is registered
-
-    rp_bazaar_app_unload_module(&app);
-
-    free(file);
-    
-    return is_reg;
-}
-
 inline int is_registered(const char *dir,
                             const char *app_id,
                             const char *fname)
@@ -296,6 +244,58 @@ inline int is_registered(const char *dir,
     int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
+    
+    file = (char *)malloc(file_len);
+    if(file == NULL) {
+        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
+        return 0;
+    }
+
+    sprintf(file, "%s/%s/%s", dir, app_id, fname);
+
+    if(stat((const char *)file, &stat_buf) < 0) {
+        /* File does not exist */
+        free(file);
+        return 0;
+    }
+    if((stat_buf.st_mode & perms) != perms) {
+        /* Permissions wrong */
+        fprintf(stderr, "%s exists but has wrong permissions.\n", file);
+        free(file);
+        return 0;
+    }
+    
+    rp_bazaar_app_t app;
+    ngx_memset(&app, 0, sizeof(rp_bazaar_app_t));
+
+    /* Open and check init, exit and desc symbols - if they exist,
+     * controller is OK.
+     */
+
+    if(rp_bazaar_app_load_module(file, &app) < 0) {
+        fprintf(stderr, "Problem loading app: %s\n", dlerror());
+        rp_bazaar_app_unload_module(&app);
+        free(file);
+        return 0;
+    }
+
+    int is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
+
+    rp_bazaar_app_unload_module(&app);
+
+    free(file);
+    
+    return is_reg;
+}
+
+inline int is_controller_ok(const char *dir,
+                            const char *app_id,
+                            const char *fname)
+{
+    char *file = NULL;
+    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
+    struct stat stat_buf;
+    const mode_t perms = S_IRUSR | S_IXUSR;
 
     file = (char *)malloc(file_len);
     if(file == NULL) {
@@ -330,10 +330,6 @@ inline int is_registered(const char *dir,
         free(file);
         return 0;
     }
-
-
-
-    rp_bazaar_app_unload_module(&app);
 
     free(file);
 
@@ -389,13 +385,13 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                 continue;
             }
             
-            /*
+            
 			FILE* file = fopen("log.txt", "a+");
 			fputs("start reg check\n", file);
 			fclose(file);
 
 			// FIXME
-            char ver[256];
+            char ver[256] = {0};
             strcpy(ver, j_ver->valuestring);
             if (!is_registered(dir, app_id, "controller.so"))
             	strcat(ver, "_demo");
@@ -403,7 +399,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
 			file = fopen("log.txt", "a+");
 			fputs(ver, file);
 			fclose(file);
-*/
+
 
             cJSON_AddItemToObject(*json_root, app_id,cJSON_CreateString(ver, pool), pool);
             cJSON_Delete(j_ver, pool);
