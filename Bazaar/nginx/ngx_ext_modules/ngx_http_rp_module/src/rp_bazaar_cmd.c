@@ -24,9 +24,7 @@
 #include "rp_bazaar_app.h"
 #include "cJSON.h"
 #include <ws_server.h>
-
 #include <stdlib.h>
-
 
 /** The list of available Bazaar commands */
 rp_module_cmd_t bazaar_cmds[] = {
@@ -414,10 +412,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
 		fputs("demo\n", file);
 		fclose(file);
 	}
-	else
-	{
-
-	}
 
 	file = fopen("log.txt", "a+");
 	fputs(argv[0], file);
@@ -555,16 +549,14 @@ int rp_bazaar_start(ngx_http_request_t *r,
     	if (access("id.json", F_OK) != 0)
     		system("/root/idgen -o idfile.id");
 
-		file = fopen("log.txt", "a+");
-		fputs("need call\n", file);
-		fclose(file);
+    	//dbg_printf("need call\n");
 		if (rp_module_ctx.app.verify_app_license_func)
 		{
-			FILE* file = fopen("log.txt", "a+");
-			fputs("verify_app_license_func is def\n", file);
-			fclose(file);
+        	FILE* file = fopen("log.txt", "a+");
+        	fputs("verify_app_license_func is def\n", file);
+        	fclose(file);
 		}
-		if (rp_module_ctx.app.verify_app_license_func("scope"))
+		if (rp_module_ctx.app.verify_app_license_func(argv[0]))
 			demo = 1;
 
         // set Demo version
@@ -575,8 +567,9 @@ int rp_bazaar_start(ngx_http_request_t *r,
         	fclose(file);
 
         	rp_module_ctx.app.ws_set_params_demo_func(1);
-        }
 
+        }
+        rp_module_ctx.app.ws_set_signals_interval_func(12345);
 
         start_ws_server(&params);
     }

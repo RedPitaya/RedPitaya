@@ -252,6 +252,7 @@ extern "C" void ws_set_params_interval(int _interval)
 extern "C" int ws_get_params_interval(void)
 {
 	CDataManager * man = CDataManager::GetInstance();
+
 	if(man)
 	{
 		int res = man->GetParamInterval();
@@ -275,6 +276,7 @@ extern "C" int ws_get_signals_interval(void)
 	CDataManager * man = CDataManager::GetInstance();
 	if(man)
 	{
+		//dbg_printf("ws_get_signals_interval(void)\n");
 		int res = man->GetSignalInterval();
 		return res;
 	}

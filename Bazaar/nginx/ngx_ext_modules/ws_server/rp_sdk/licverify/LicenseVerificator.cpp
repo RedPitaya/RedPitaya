@@ -4,6 +4,7 @@
 #include <libjson.h>
 #include <encoder.h>
 #include <cstdio>
+#include "../DataManager.h"
 
 std::string GetLicensePath()
 {
@@ -19,9 +20,7 @@ std::string GetIDFilePath()
 
 int verify_app_license(const char* app_id)
 {
-	FILE* file = fopen("log.txt", "a+");
-	fputs("verify_app_license()\n", file);
-	fclose(file);
+	dbg_printf("verify_app_license()\n");
 
 	//getting app_key from license file
 	std::cout<<"Liscense verifying... "<<std::endl;
@@ -32,7 +31,7 @@ int verify_app_license(const char* app_id)
 	bool failed = GetJSONObject(lic_file, n);
 	if(!failed)
 	{
-		
+		dbg_printf("1\n");
 		JSONNode apps(JSON_ARRAY);
 		apps = n.at("registered_apps").as_array();
 		
@@ -48,7 +47,7 @@ int verify_app_license(const char* app_id)
 			std::string id = app.at("app_id").as_string();
 			if(id == app_id)
 			{
-
+				dbg_printf("2\n");
 				app_key = app.at("app_key").as_string();
 				break;
 			}	
@@ -57,6 +56,7 @@ int verify_app_license(const char* app_id)
 		//decoding app_key
 		if(app_key.empty())
 		{
+			dbg_printf("3\n");
 			std::cout<<"Application is not registered!"<<std::endl;
 			return 1;
 		}
@@ -81,12 +81,14 @@ int verify_app_license(const char* app_id)
 
 		if(orig_dev_id.empty())
 		{
+			dbg_printf("4\n");
 			std::cout<<"License verification is failed. The id file is required!"<<std::endl;
 			return 1;
 		}
 
 		if(orig_dev_id != dev_id)
 		{
+			dbg_printf("5\n");
 			std::cout<<"Invalid license!"<<std::endl;
 			return 1;
 		}
@@ -95,12 +97,14 @@ int verify_app_license(const char* app_id)
 
 		if(orig_checksum_id.empty())
 		{
+			dbg_printf("6\n");
 			std::cout<<"License verification is failed. No such application in id file!"<<std::endl;
 			return 1;
 		}
 		
 		if(orig_checksum_id != app_checksum)
 		{
+			dbg_printf("6\n");
 			std::cout<<"Invalid license!"<<std::endl;
 			return 1;
 		}
@@ -112,21 +116,25 @@ int verify_app_license(const char* app_id)
 		
 		if(orig_checksum_id.empty())
 		{
+			dbg_printf("7\n");
 			std::cout<<"License verification is failed. The application file was not found!"<<std::endl;
 			return 1;
 		}
 		
 		if(orig_checksum_id != app_checksum)
 		{
+			dbg_printf("%s %s\n", orig_checksum_id.c_str(), app_checksum.c_str());
 			std::cout<<"License verification is failed. The application file was corrupt!"<<std::endl;
 			return 1;
 		}
 	}
 	else
 	{	
+		dbg_printf("9\n");
 		std::cout<<"License verification is failed. Could not open license file!"<<std::endl;
 		return 1;
 	}
+	dbg_printf("10\n");
 	std::cout<<"License verification is successful!"<<std::endl;
 	return 0;
 }
