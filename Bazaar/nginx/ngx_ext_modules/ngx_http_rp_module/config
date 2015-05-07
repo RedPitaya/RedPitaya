@@ -19,7 +19,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS                               \
                 $rp_src_dir/rp_data_cmd.c                    \
                 $rp_src_dir/cJSON.c"
 
-CORE_LIBS="$CORE_LIBS -L../build/lib/ -L$ngx_addon_dir/../ws_server/ -L$ngx_addon_dir/../ws_server/boost/lib/ -L/usr/local/xilinx/SDK/2013.3/gnu/arm/lin/arm-xilinx-linux-gnueabi/libc/usr/lib/ -lstdc++ -lm -ldl -lcurl -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread"
+CORE_LIBS="$CORE_LIBS -L../build/lib/ -L$ngx_addon_dir/../ws_server/ -L$ngx_addon_dir/../ws_server/boost/lib/ -L/opt/Xilinx/SDK/2013.3/gnu/arm/lin/arm-xilinx-linux-gnueabi/libc/usr/lib/ -lstdc++ -lm -ldl -lcurl -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread"
 CFLAGS="$CFLAGS -I $rp_include_dir -I../../../shared/include/ -I$ngx_addon_dir/../ws_server/ -I$ngx_addon_dir/../ws_server/boost/include/"
 CFLAGS="$CFLAGS -DVERSION=$VERSION -DREVISION=$REVISION"
 
