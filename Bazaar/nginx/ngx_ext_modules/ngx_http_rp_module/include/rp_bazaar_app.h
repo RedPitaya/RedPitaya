@@ -52,8 +52,8 @@ typedef int          (*rp_app_exit_func)(void);
 typedef const char  *(*rp_app_desc_func)(void);
 typedef int          (*rp_set_params_func)(rp_app_params_t *p, int len);
 typedef int          (*rp_get_params_func)(rp_app_params_t **p);
-typedef int          (*rp_get_signals_func)(float ***s, int *sig_num, 
-                                            int *sig_len);
+typedef int          (*rp_get_signals_func)(float ***s, int *sig_num, int *sig_len);
+
 /*WebSocket Server part*/
 typedef void		(*rp_ws_set_params_interval_func)(int);
 typedef void		(*rp_ws_set_signals_interval_func)(int);
@@ -66,8 +66,8 @@ typedef int		(*rp_ws_set_signals_func)(const char *_signals);
 
 typedef struct rp_bazaar_app_s {
     /* Initialization function - called when app. is loaded */
-    rp_app_init_func init_func;
     /* Exit/cleanup function - called when app. is unloaded */
+    rp_app_init_func init_func;
     rp_app_exit_func exit_func;
     /* Description function - provides short description of the application
      */
@@ -92,9 +92,10 @@ typedef struct rp_bazaar_app_s {
 	rp_ws_get_signals_interval_func ws_get_signals_interval_func;
 	rp_ws_get_params_func ws_get_params_func;
 	rp_ws_get_signals_func ws_get_signals_func;
-	rp_ws_set_params_func ws_set_params_func;
 	rp_ws_set_signals_func ws_set_signals_func;
-
+	rp_ws_set_params_func ws_set_params_func;
+	rp_ws_set_params_interval_func ws_set_params_demo_func;
+	rp_ws_set_params_func verify_app_license_func;
 
     /* Dynamic library handle */
     void            *handle;
