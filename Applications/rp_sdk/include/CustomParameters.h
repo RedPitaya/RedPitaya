@@ -102,9 +102,19 @@ public:
 	{
 		this->m_Value.value = _value;
 	}
+
+	void Resize(int _new_size)
+	{
+		this->m_Value.size = _new_size;
+	}
+
+	int GetSize()
+	{
+		return this->m_Value.size;
+	}
 };
 
-//custom CIntParameter
+//custom CIntParameter 
 class CIntParameter : public CCustomParameter<int>
 {
 public:

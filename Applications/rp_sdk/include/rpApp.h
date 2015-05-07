@@ -1,0 +1,468 @@
+/**
+* $Id: $
+*
+* @file rpApp.h
+* @brief Red Pitaya application library API interface
+*
+* @Author Red Pitaya
+*
+* (c) Red Pitaya  http://www.redpitaya.com
+*
+* This part of code is written in C programming language.
+* Please visit http://en.wikipedia.org/wiki/C_(programming_language)
+* for more details on the language used herein.
+*/
+
+#ifndef __RP_APP_H
+#define __RP_APP_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "rp.h"
+
+
+/** @name Error codes
+*  Various error codes returned by the API.
+*/
+///@{
+
+/** Failed to Start a Thread */
+#define RP_APP_EST  100
+/** No signal found */
+#define RP_APP_ENS  101
+///@}
+
+/**
+* Type representing input gain.
+*/
+typedef enum {
+    RPAPP_OSC_IN_GAIN_LV,       //!< Input gain LV
+    RPAPP_OSC_IN_GAIN_HV,       //!< Input gain HV
+} rpApp_osc_in_gain_t;
+
+/**
+* Type representing trigger source.
+*/
+typedef enum {
+    RPAPP_OSC_TRIG_SRC_CH1,     //!< Trigger source channel 1
+    RPAPP_OSC_TRIG_SRC_CH2,     //!< Trigger source channel 2
+    RPAPP_OSC_TRIG_SRC_EXTERNAL //!< Trigger source external
+} rpApp_osc_trig_source_t;
+
+/**
+* Type representing trigger slope.
+*/
+typedef enum {
+    RPAPP_OSC_TRIG_SLOPE_NE,    //!< Trigger source slope negative
+    RPAPP_OSC_TRIG_SLOPE_PE     //!< Trigger source slope positive
+} rpApp_osc_trig_slope_t;
+
+/**
+* Type representing trigger mode.
+*/
+typedef enum {
+    RPAPP_OSC_TRIG_AUTO,        //!< Trigger sweep auto
+    RPAPP_OSC_TRIG_NORMAL,      //!< Trigger sweep normal
+    RPAPP_OSC_TRIG_SINGLE       //!< Trigger sweep single
+} rpApp_osc_trig_sweep_t;
+
+
+
+/** @name General
+*/
+///@{
+
+/**
+* Initializes the library. It must be called first, before any other library method.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_Init();
+
+/**
+* Releases the library resources. It must be called last, after library is not used anymore. Typically before
+* application exits.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_Release();
+
+/**
+* Resets all modules. Typically called after rpApp_Init()
+* application exits.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_Reset();
+
+/**
+* Retrieves the library version number
+* @return Library version
+*/
+const char* rpApp_GetVersion();
+
+/**
+* Returns textual representation of error code.
+* @param errorCode Error code returned from API.
+* @return Textual representation of error given error code.
+*/
+const char* rpApp_GetError(int errorCode);
+
+///@}
+
+/** @name Oscilloscope
+*/
+///@{
+
+/**
+* Starts oscilloscope.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscRun();
+
+/**
+* Stops oscilloscope.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscStop();
+
+/**
+* Resets oscilloscope.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscReset();
+
+/**
+* Runs oscilloscope once. Fills the buffer and then stops.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSingle();
+
+/**
+* Automatically sets "best" parameters for viewing the signal
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscAutoScale();
+
+/**
+* Sets amplitude offset in volts.
+* @param channel Channel 1 or 2 for which we want to set amplitude offset.
+* @param offset Amplitude offset in volts.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetAmplitudeOffset(rp_channel_t channel, float offset);
+
+/**
+* Gets amplitude offset in volts.
+* @param channel Channel 1 or 2 for which we want to get amplitude offset.
+* @param offset Amplitude offset pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetAmplitudeOffset(rp_channel_t channel, float *offset);
+
+/**
+* Sets amplitude scale in volts per division.
+* @param channel Channel 1 or 2 for which we want to set amplitude scale.
+* @param scale Amplitude scale in volts per division.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetAmplitudeScale(rp_channel_t channel, float scale);
+
+/**
+* Gets amplitude scale in volts per division.
+* @param channel Channel 1 or 2 for which we want to get amplitude scale.
+* @param scale Amplitude scale pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetAmplitudeScale(rp_channel_t channel, float *scale);
+
+/**
+* Sets probe attenuation ratio.
+* @param channel Channel 1 or 2 for which we want to set probe attenuation.
+* @param att Probe attenuation.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetProbeAtt(rp_channel_t channel, float att);
+
+/**
+* Gets probe attenuation ratio.
+* @param channel Channel 1 or 2 for which we want to get probe attenuation.
+* @param att Probe attenuation pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetProbeAtt(rp_channel_t channel, float *att);
+
+/**
+* Sets input gain. This must be set the same as the jumpers on Red Pitaya board.
+* @param channel Channel 1 or 2 for which we want to set input gain.
+* @param gain Input gain.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t gain);
+
+/**
+* Gets input gain.
+* @param channel Channel 1 or 2 for which we want to get input gain.
+* @param gain Input gain pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain);
+
+/**
+* Sets time delay in milliseconds.
+* @param delay Time delay in milliseconds.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetTimeOffset(float offset);
+
+/**
+* Gets time delay in milliseconds.
+* @param delay Time delay pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetTimeOffset(float *offset);
+
+/**
+* Sets time scale.
+* @param scale Scale factor.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetTimeScale(float scale);
+
+/**
+* Gets time scale.
+* @param scale Scale factor pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetTimeScale(float *scale);
+
+/**
+* Sets trigger Mode.
+* @param mode Mode determines how the system is triggered
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetTriggerSweep(rpApp_osc_trig_sweep_t mode);
+
+/**
+* Gets trigger Mode.
+* @param mode Mode pointer
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetTriggerSweep(rpApp_osc_trig_sweep_t *mode);
+
+/**
+* Sets trigger source.
+* @param triggerSource Determines when the system starts acquiring data.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetTriggerSource(rpApp_osc_trig_source_t triggerSource);
+
+/**
+* Gets trigger source.
+* @param triggerSource Trigger source pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetTriggerSource(rpApp_osc_trig_source_t *triggerSource);
+
+/**
+* Sets trigger slope.
+* @param slope Determines positive or negative slope.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetTriggerSlope(rpApp_osc_trig_slope_t slope);
+
+/**
+* Gets trigger slope.
+* @param slope Slope pointer
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetTriggerSlope(rpApp_osc_trig_slope_t *slope);
+
+/**
+* Sets trigger level.
+* @param level Level determines value at witch is triggered.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetTriggerLevel(float level);
+
+/**
+* Gets trigger level.
+* @param level Level pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetTriggerLevel(float *level);
+
+/**
+* Gets signal peak-to-peak voltage.
+* @param channel Channel 1 or 2 on which we want to measure amplitude.
+* @param Vpp Peak-to-peak voltage pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureVpp(rp_channel_t channel, float *Vpp);
+
+/**
+* Gets signal mean voltage.
+* @param channel Channel 1 or 2 on which we want to measure mean amplitude.
+* @param meanVoltage Mean voltage pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureMeanVoltage(rp_channel_t channel, float *meanVoltage);
+
+/**
+* Gets signal max voltage.
+* @param channel Channel 1 or 2 on which we want to measure max amplitude.
+* @param Vmax Max voltage pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureAmplitudeMax(rp_channel_t channel, float *Vmax);
+
+/**
+* Gets signal min voltage.
+* @param channel Channel 1 or 2 on which we want to measure min amplitude.
+* @param Vmin Min voltage pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureAmplitudeMin(rp_channel_t channel, float *Vmin);
+
+/**
+* Gets signal frequency.
+* @param channel Channel 1 or 2 on which we want to measure frequency.
+* @param frequency Frequency of the signal.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureFrequency(rp_channel_t channel, float *frequency);
+
+/**
+* Gets signal period.
+* @param channel Channel 1 or 2 on which we want to measure period.
+* @param period Period of the signal.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasurePeriod(rp_channel_t channel, float *period);
+
+/**
+* Gets signal duty cycle. The returned value represents ratio between high time and all time.
+* @param channel Channel 1 or 2 on which we want to measure duty cycle.
+* @param dutyCycle Duty cycle pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureDutyCycle(rp_channel_t channel, float *dutyCycle);
+
+/**
+* Gets signal root mean square of the signal.
+* @param channel Channel 1 or 2 on which we want to measure duty cycle.
+* @param dutyCycle Duty cycle pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscMeasureRootMeanSquare(rp_channel_t channel, float *rms);
+
+/**
+* Gets voltage at cursor position.
+* @param channel Channel 1 or 2 on which we want to get voltage.
+* @param cursor Cursor position at witch we get voltage.
+* @param value Amplitude pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetCursorVoltage(rp_channel_t channel, uint32_t cursor, float *value);
+
+/**
+* Gets voltage time in milliseconds at cursor position.
+* @param cursor Cursor position at  we get time.
+* @param value Time pointer
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetCursorTime(uint32_t cursor, float *value);
+
+/**
+* Gets time in milliseconds between cursors.
+* @param cursor1 Cursor 1 position.
+* @param cursor2 Cursor 2 position.
+* @param value Delta time pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value);
+
+/**
+* Gets amplitude difference between cursors.
+* @param channel Channel 1 or 2 on which we want to get delta voltage.
+* @param cursor1 Cursor 1 position.
+* @param cursor2 Cursor 2 position.
+* @param value Delta amplitude pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetCursorDeltaAmplitude(rp_channel_t channel, uint32_t cursor1, uint32_t cursor2, float *value);
+
+/**
+* Gets frequency between cursors. This is equal to 1/(time difference).
+* @param cursor1 Cursor 1 position.
+* @param cursor2 Cursor 2 position.
+* @param value Delta frequency pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
+
+/**
+* Gets view data. View is buffer of the oscilloscope data.
+* @param channel Channel 1 or 2 for which we want to get view data.
+* @param data View buffer.
+* @param size Number of values to be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetViewData(rp_channel_t channel, float *data, uint32_t size);
+
+/**
+* Gets view buffer size.
+* @param size Buffer size pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetViewSize(uint32_t *size);
+
+///@}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif //__RP_H

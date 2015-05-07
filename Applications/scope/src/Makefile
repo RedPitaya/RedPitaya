@@ -1,23 +1,44 @@
 CC=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o fpga_pid.o pid.o
+CSOURCES= \
+	main.c
 
-INCLUDE=
+CXXSOURCES= \
+	new_main.cpp \
+
+RP_SDK=../../rp_sdk
+
+INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
-CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
-LDFLAGS=-shared
+COMMON_FLAGS+=-Wall -g -fPIC -O2
+CFLAGS+=$(COMMON_FLAGS) -Werror $(INCLUDE)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
+LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib -Wl,--whole-archive -lrp_sdk -lrpapp -lrp -Wl,--no-whole-archive
 
+COBJECTS=$(CSOURCES:.c=.o)
+CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
+
+OBJECTS=$(COBJECTS) $(CXXOBJECTS)
 
 OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controller.so
 
-all: make_c_app
+all: $(SOURCES) make_c_app
+
 clean: clean_c_app
 
+.cpp.o:
+	$(CXX) -c $(CXXFLAGS) $< -o $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
 make_c_app: $(OBJECTS)
-	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
+	$(CC) $(OBJECTS) -o $(C_OUT_NAME) $(LDFLAGS)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
+
