@@ -1,0 +1,419 @@
+body {
+  color: #cdcccc;
+  overflow: hidden; 
+  padding-right: 0 !important;
+}
+
+button:focus, button:active, select:focus, input:focus, option:focus {
+  outline: 0 !important;
+  -webkit-appearance: none !important;
+}
+
+area:hover {
+  cursor: pointer;
+}
+
+.full-content {
+  min-width: 1024px; 
+  margin: 0 auto;
+  position: relative;
+}
+
+.container-fluid {
+  margin-top: 20px;
+}
+
+.container {
+  width: 100%;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.row {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+.navbar-collapse {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.navbar-collapse {
+  float: right;
+}
+
+.navbar-nav li {
+  width: 131px;
+  text-align: center;
+}
+
+.nav > li > a {
+  position: relative;
+  display: block;
+  padding: 10px 30px;
+  border-left: 1px solid #999;
+ 
+}
+
+.navbar-inverse .navbar-nav > li > a  {
+ color: #cdcccc;
+ outline: none;
+}
+
+.nav > li > a:hover { 
+  background-color: #444 !important; 
+  color: #E5D5D5;
+}
+
+#OSC_RUN, #OSC_RUN:hover
+{
+  color: #31b44b;
+}
+
+#OSC_STOP, #OSC_STOP:hover
+{
+  display: none;
+  color: #ee3739;
+}
+
+.navbar {
+  border-radius: 0px;
+  background-color: #343433;
+  background-image: linear-gradient(to bottom, #343433 0, #343433 100%);
+  border: 1px solid #999;  
+  min-height: 42px;
+  border-left: 1px solid #999;
+}
+
+.back-btn {
+  height: 22px;
+  float: left;
+  margin: -6px 0px 0px 11px;
+}
+
+.logo {
+  margin: 5px 0px 0px 15px;
+  float: left;
+}
+
+.navbar-collapse collapse in {
+  width: 100%;
+  overflow: hidden;
+}
+
+.navbar-brand {
+  height: 40px;
+}
+
+.close {
+  color: #CAB7B7;
+  opacity: 1;
+  text-shadow: 0 0 0 !important;
+}
+
+.modal-content {
+  background-color: #343433;
+  border: 1px solid #999;
+  border-radius: 0px;
+  outline: 0;
+}
+
+#main {
+  margin-right: 188px;
+}
+
+#buffer {
+  border: 1px solid #999;
+}
+
+.horizontline {
+  margin: 5px 1px 5px 1px;
+  background-color: #cdcccc;
+  height: 2px;
+}
+
+.red-horizont-line {
+  height: 12px;
+  border-left: 1px solid #999;
+  border-right: 1px solid #999;
+  margin-left: 30%;
+  position: absolute;
+  width: 100px;
+}
+
+.red-line {
+  width: 100px;
+  height: 2px;
+  background-color: #ce3234;
+  margin-top: 5px;
+}
+
+.fixator {
+  margin-left: 20%;
+  height: 12px;
+  width: 3px;
+  position: absolute;
+  background-color: #cdcccc;
+}
+
+.right-menu-cont {
+  margin-right: 0px;
+  border-left: 1px solid #999;
+  border-top: 1px solid #999;
+}
+
+.col-xs-6.option-content {
+  border-bottom: 1px solid #999;
+  border-right: 1px solid #999;
+  text-align: center;
+  line-height: 31px;
+  float: left;
+  font-size: 14px;
+  padding: 0px;
+}
+
+.col-xs-12.option-content {
+  border-bottom: 1px solid #999;
+  border-right: 1px solid #999;
+  text-align: center;
+  line-height: 31px;
+  float: left;
+  font-size: 14px;
+  padding: 0px;
+}
+
+.col-xs-2 {
+  padding-right: 15px;
+}
+
+.menu-content {
+  width: 170px;
+  float: right;
+}
+
+.right-menu-option {
+  margin: 1px 1px 2px 1px;
+  height: 31px;
+}
+
+.right-menu-option:hover  {
+  background-color: #444;
+  cursor: pointer;
+  margin: 1px 1px 1px 1px;
+  height: 32px;
+}
+
+.btn:active, .btn.active {
+  background-image: none;
+  background-color: #999;
+  color: #111 !important;
+}
+
+.dialog {
+  margin-right: 0px;
+  display: none;
+}
+
+.info {
+  margin-top: 10px;
+}
+
+.div-out-math {
+  width: 160px;
+  float: left;
+}
+
+.div-title {
+  float: left; 
+  width: 46px;
+}
+
+.div-value {
+  float: left; 
+  width: 90px;
+}
+
+.vpp-min {
+  width: 195px;
+  float: left;
+  max-height: 82px;
+  overflow: hidden;
+}
+
+.ch1, .btn.ch1, .ch1.focus {
+  color: #f3ec1a !important;
+}
+
+.ch2, .btn.ch2, .ch2.focus {
+  color: #31b44b !important;
+}
+
+.out1, .btn.out1, .out1.focus {
+  color: #9595ca !important;
+}
+
+.out2, .btn.out2, .out2.focus {
+  color: #ee3739 !important;
+}
+
+.math1, .btn.math1, .math1.focus {
+  color: #ab4d9d !important;
+}
+
+.trig, .btn.trig, .trig.focus {
+  color: #75cede !important;
+}
+
+.ch1.active, .ch2.active, .out1.active, .out2.active, .math1.active, .trig.active {
+  color: #111 !important;
+} 
+
+#edge1 img, #edge2 img {
+  height: 18px;
+}
+
+.form-control {
+  color: #fff;
+  background-color: #343433;
+  background-image: none;
+  border: 0px none; 
+  box-shadow: none;
+  border-radius: 0px;
+  height: 33px;
+  cursor: pointer;
+}
+.form-control:hover {
+  color: #fff;
+  background-color: #444;
+}
+
+.close:hover, .close:focus {
+  color: #fff !important;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.col-info {
+  font-size: 10px;
+  margin: -11px 0px -25px 0px;
+  padding: 0px;
+  float: left;
+  color: #cdcccc;
+  height: 10px;
+}
+
+.col-info-activ {
+  font-size: 10px;
+  margin: -8px 0px -2px -11px;
+  padding: 0px;
+  float: left;
+  color: #cdcccc;
+  height: 10px;
+  text-shadow: 0px 1px 1px #111;
+}
+
+.btn {
+  background-image: none;
+  border: 0 solid transparent;
+  white-space: nowrap;
+  padding: 6px 12px;
+  line-height: 1.42857143;
+  border-radius: 0;
+  width: 100%;
+  background-color: transparent;
+  text-shadow: 0px 0px;
+ /*  box-shadow: 0 0 0 1px #777; */
+  color:#cdcccc !important;
+}
+
+.btn:hover, btn:active {
+  color: #fff !important;
+  background-image: none;
+}
+
+#clear_means_content {
+  margin-top: 10px;
+  /* margin-bottom: 2px; */
+  min-height: 30px;
+  max-height: 128px;
+  overflow: hidden;
+}
+
+.clear-means {
+  margin: 0px 1px 1px 1px;
+  height: 31px;
+  border: 1px solid #999;
+  cursor: pointer;
+}
+
+.clear-means:hover {
+  background-color:#444;
+  color: #fff;
+}
+
+.setfiled {
+  color: #999;
+  background-color: transparent;
+  border: 0px;
+  width: 100%;
+  text-align: center;
+  height: 31px;
+}
+
+.close-dialog {
+  cursor: pointer;
+}
+
+.close-dialog img {
+  height: 19px;
+  float: left;
+  margin: 7px -19px 0px 7px;
+  cursor: pointer;
+}
+
+#meas:hover, #cursor:hover {
+  color:#fff;
+}
+
+.btn.focus {
+  color: #777;
+  border: 0px solid transparent;
+}
+
+#joystick {
+  position: absolute; 
+  right: 26px; 
+  bottom: 10px; 
+  width: 150px; 
+  height: auto;
+}
+
+#jtk_btns {
+  height: auto; 
+  border: 0 none;
+  width: 150px; 
+}
+
+#jtk_fine {
+  height: 64px;
+  position: absolute;
+  margin: 44px 0px 0px 42px;
+  cursor: pointer;
+}
+
+#graph_holder {
+  margin-top: 20px;
+  position: relative;
+}
+
+#graph_grid {
+  border: 1px solid #5d5d5c;
+}
+
+#plot {
+  position: absolute; 
+  top: 0px; 
+  left: 0px;
+}

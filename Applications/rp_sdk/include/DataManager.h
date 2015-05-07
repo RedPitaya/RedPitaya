@@ -30,8 +30,6 @@ public:
 	
 	void OnNewParams(std::string _params); //is involved when new data received from server, data is JSON-formatted string
 	void OnNewSignals(std::string _signals); //is involved when new data received from server, data is JSON-formatted string
-	
-	JSONNode ParseJSON(const JSONNode & _n, const char * _node_name); //internal function gets data for particular parameter or signal named "_node_name"
 
 	int GetParamInterval();
 	int GetSignalInterval();
@@ -52,6 +50,6 @@ extern "C" int ws_get_params_interval(void);
 extern "C" int ws_get_signals_interval(void);
 extern "C" const char * ws_get_params(void);
 extern "C" const char * ws_get_signals(void);
-extern "C" int ws_set_params(const char * _json_params);
-extern "C" int ws_set_signals(const char * _json_signals);
+extern "C" int ws_set_params(const char *_params);
+extern "C" int ws_set_signals(const char *_signals);
 
