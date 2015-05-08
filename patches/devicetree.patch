@@ -1,0 +1,53 @@
+--- system.dts.old	2015-05-05 02:15:44.613245972 +0200
++++ system.dts	2015-05-05 02:14:53.928994642 +0200
+@@ -23,7 +23,7 @@
+ 	};
+ 	memory {
+ 		device_type = "memory";
+-		reg = <0x0 0x20000000>;
++		reg = <0x0 0x1E000000>;
+ 	};
+ };
+ &gem0 {
+@@ -36,6 +36,16 @@
+ 		#size-cells = <0>;
+ 	};
+ };
++&gem0 {
++	phy-handle = <&phy0>;
++	ps7_ethernet_0_mdio: mdio {
++		phy0: phy@1 {
++			compatible = "lantiq,phy11g";
++			device_type = "ethernet-phy";
++			reg = <1>;
++		};
++	};
++};
+ &gpio0 {
+ 	emio-gpio-width = <64>;
+ 	gpio-mask-high = <0x0>;
+@@ -45,6 +55,16 @@
+ 	clock-frequency = <400000>;
+ 	status = "okay";
+ };
++&i2c0 {
++	eep@50 {
++		compatible = "24c64";
++		reg = <0x50>;
++	};
++	eep@51 {
++		compatible = "24c64";
++		reg = <0x51>;
++	};
++};
+ &intc {
+ 	num_cpus = <2>;
+ 	num_interrupts = <96>;
+@@ -87,6 +107,6 @@
+ 	usb-reset = <&gpio0 48 0>;
+ };
+ &clkc {
+-	fclk-enable = <0x0>;
++	fclk-enable = <0xf>;
+ 	ps-clk-frequency = <33333333>;
+ };
