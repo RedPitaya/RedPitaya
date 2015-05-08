@@ -35,10 +35,6 @@
 +		compatible = "24c64";
 +		reg = <0x50>;
 +	};
-+	eep@51 {
-+		compatible = "24c64";
-+		reg = <0x51>;
-+	};
 +};
  &intc {
  	num_cpus = <2>;
