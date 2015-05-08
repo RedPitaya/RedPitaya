@@ -98,6 +98,10 @@ $(LINUX): $(BUILD)
 $(FPGA):
 	make -C $(SOC_DIR)
 
+$(FSBL): $(FPGA)
+
+$(MEMTEST): $(FPGA)
+
 # U-Boot build provides: u-boot.elf
 $(UBOOT): $(BUILD)
 	make -C $(UBOOT_DIR) RP_VERSION=$(VERSION) RP_REVISION=$(REVISION)
