@@ -1,0 +1,23 @@
+/*
+ * Red Pitaya board DTS
+ *
+ * Copyright (C) 2013 Xilinx, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+/dts-v1/;
+#include "zynq-7000.dtsi"
+
+/ {
+	model = "Red Pitaya Board";
+	compatible = "xlnx,zynq-red-pitaya", "xlnx,zynq-7000";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0 0x1E000000>;
+	};
+};
