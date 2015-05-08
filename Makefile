@@ -26,7 +26,18 @@ NAME=ecosystem
 LINUX_DIR=OS/linux
 LINUX_SOURCE_DIR=$(LINUX_DIR)/linux-xlnx
 UBOOT_DIR=OS/u-boot
+
 SOC_DIR=FPGA
+FPGA=$(SOC_DIR)/out/red_pitaya.bit
+FSBL=$(SOC_DIR)/sdk/fsbl/executable.elf
+MEMTEST=$(SOC_DIR)/sdk/memtest/executable.elf
+DTS=$(SOC_DIR)/sdk/dts/system.dts
+DEVICETREE=$(BUILD)/devicetree.dtb
+UBOOT=$(BUILD)/u-boot.elf
+BOOT=$(BUILD)/boot.bin
+TESTBOOT=$(BUILD)/testboot.bin
+LINUX=$(BUILD)/uImage
+
 URAMDISK_DIR=OS/buildroot
 NGINX_DIR=Bazaar/nginx
 MONITOR_DIR=Test/monitor
@@ -40,14 +51,6 @@ LIBRP_DIR=api-mockup/rpbase/src
 SDK_DIR=SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
-LINUX=$(BUILD)/uImage
-DEVICETREE=$(BUILD)/devicetree.dtb
-UBOOT=$(BUILD)/u-boot.elf
-BOOT=$(BUILD)/boot.bin
-FPGA=$(BUILD)/fpga.bit
-FSBL=$(BUILD)/fsbl.elf
-TESTBOOT=testboot.bin
-MEMTEST=$(BUILD)/memtest.elf
 URAMDISK=$(BUILD)/uramdisk.image.gz
 NGINX=$(BUILD)/sbin/nginx
 MONITOR=$(BUILD)/bin/monitor
@@ -91,25 +94,26 @@ $(LINUX): $(BUILD)
 	make -C $(LINUX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	make -C $(LINUX_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-# FPGA build provides: fsbl.elf, fpga.bit, devicetree.dts.
-$(FPGA): $(BUILD)
+# FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
+$(FPGA):
 	make -C $(SOC_DIR)
-	make -C $(SOC_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 # U-Boot build provides: u-boot.elf
 $(UBOOT): $(BUILD)
 	make -C $(UBOOT_DIR) RP_VERSION=$(VERSION) RP_REVISION=$(REVISION)
 	make -C $(UBOOT_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-$(BOOT): $(BUILD) $(UBOOT) $(FPGA)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > b.bif
-	bootgen -image b.bif -w -o i $@
+$(BOOT): $(FSBL) $(FPGA) $(UBOOT)
+	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot.bif
+	bootgen -image boot.bif -w -o i $@
 
-$(TESTBOOT): $(BOOT)
-	@echo img:{[bootloader] $(MEMTEST) $(FPGA) $(UBOOT) } > b.bif
-	bootgen -image b.bif -w -o i $@
+$(TESTBOOT): $(MEMTEST) $(FPGA) $(UBOOT)
+	@echo img:{[bootloader] $(MEMTEST) $(FPGA) $(UBOOT) } > testboot.bif
+	bootgen -image testboot.bif -w -o i $@
 
-$(DEVICETREE): $(BUILD) $(LINUX) $(FPGA)
+$(DEVICETREE): $(LINUX) $(FPGA) $(DTS)
+	cp $(DTS) $(BUILD)/devicetree.dts
+	patch $(BUILD)/devicetree.dts patches/devicetree.patch
 	$(LINUX_SOURCE_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) $(BUILD)/devicetree.dts
 
 $(URAMDISK): $(BUILD)
