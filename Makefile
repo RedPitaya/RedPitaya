@@ -47,32 +47,30 @@ BUILD=build
 TARGET=target
 NAME=ecosystem
 
-LINUX_SOURCE_DIR=$(LINUX_DIR)/linux-xlnx
-
 SOC_DIR=FPGA
 
 # targets
-FPGA=$(SOC_DIR)/out/red_pitaya.bit
-FSBL=$(SOC_DIR)/sdk/fsbl/executable.elf
-MEMTEST=$(SOC_DIR)/sdk/memtest/executable.elf
-DTS=$(SOC_DIR)/sdk/dts/system.dts
-DEVICETREE=$(TMP)/devicetree.dtb
-UBOOT=$(TMP)/u-boot.elf
-BOOT=$(TMP)/boot.bin
-TESTBOOT=$(TMP)/testboot.bin
-LINUX=$(TMP)/uImage
+FPGA       = $(SOC_DIR)/out/red_pitaya.bit
+FSBL       = $(SOC_DIR)/sdk/fsbl/executable.elf
+MEMTEST    = $(SOC_DIR)/sdk/memtest/executable.elf
+DTS        = $(SOC_DIR)/sdk/dts/system.dts
+DEVICETREE = $(TMP)/devicetree.dtb
+UBOOT      = $(TMP)/u-boot.elf
+BOOT       = $(TMP)/boot.bin
+TESTBOOT   = $(TMP)/testboot.bin
+LINUX      = $(TMP)/uImage
 
-URAMDISK_DIR=OS/buildroot
-NGINX_DIR=Bazaar/nginx
-MONITOR_DIR=Test/monitor
-GENERATE_DIR=Test/generate
-ACQUIRE_DIR=Test/acquire
-CALIB_DIR=Test/calib
-DISCOVERY_DIR=OS/discovery
-ECOSYSTEM_DIR=Applications/ecosystem
-SCPI_SERVER_DIR=scpi-server/
-LIBRP_DIR=api-mockup/rpbase/src
-SDK_DIR=SDK/
+URAMDISK_DIR    = OS/buildroot
+NGINX_DIR       = Bazaar/nginx
+MONITOR_DIR     = Test/monitor
+GENERATE_DIR    = Test/generate
+ACQUIRE_DIR     = Test/acquire
+CALIB_DIR       = Test/calib
+DISCOVERY_DIR   = OS/discovery
+ECOSYSTEM_DIR   = Applications/ecosystem
+SCPI_SERVER_DIR = scpi-server/
+LIBRP_DIR       = api-mockup/rpbase/src
+SDK_DIR         = SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
 URAMDISK=$(BUILD)/uramdisk.image.gz
@@ -130,7 +128,7 @@ $(FSBL): $(FPGA)
 $(MEMTEST): $(FPGA)
 
 ################################################################################
-# U-Boot build provides: u-boot.elf
+# U-Boot build provides: $(UBOOT)
 ################################################################################
 
 $(UBOOT_TAR):
@@ -157,6 +155,7 @@ fw_printenv: $(UBOOT_DIR) $(UBOOT)
 	cp $</tools/env/fw_printenv $@
 
 ################################################################################
+# Linux build provides: $(LINUX)
 ################################################################################
 
 $(LINUX_TAR):
