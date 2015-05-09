@@ -113,9 +113,7 @@ int get_ip(const char *nic, struct in_addr *ip)
 
     close(fd);
 
-    memcpy(ip,
-           &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr,
-           sizeof(ip));
+    memcpy(ip, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, sizeof(*ip));
 
     return ret;
 }
