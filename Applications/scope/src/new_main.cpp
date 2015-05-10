@@ -26,6 +26,7 @@ CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
 
 CBooleanParameter in1InvShow("CH1_SHOW_INVERTED", CBaseParameter::RW, true, 0);
 CBooleanParameter in2InvShow("CH2_SHOW_INVERTED", CBaseParameter::RW, true, 0);
+CBooleanParameter mathInvShow("CH2_SHOW_INVERTED", CBaseParameter::RW, true, 0);
 
 CBooleanParameter inReset("OSC_RST", CBaseParameter::RW, false, 0);
 CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
@@ -205,7 +206,11 @@ float getMeasureValue(int measure) {
 void UpdateSignals(void) {
 	float data[dataSize.Value()];
 	if (in1Show.Value()) {
-		rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
+		if(in1InvShow.Value()){
+			rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
+		}else{
+			rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
+		}
 
 		if (ch1.GetSize() != dataSize.Value())
 			ch1.Resize(dataSize.Value());
@@ -216,7 +221,11 @@ void UpdateSignals(void) {
 	}
 
 	if (in2Show.Value()) {
-		rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH2, data, (uint32_t) dataSize.Value());
+		if(in2InvShow.Value()){
+			rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_CH2, data, (uint32_t) dataSize.Value());
+		}else{
+			rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH2, data, (uint32_t) dataSize.Value());
+		}
 
 		if (ch2.GetSize() != dataSize.Value())
 			ch2.Resize(dataSize.Value());
@@ -227,7 +236,11 @@ void UpdateSignals(void) {
 	}
 
 	if (mathOperation.Value() == RPAPP_OSC_MATH_NONE) {
-		rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
+		if(mathInvShow.Value()){
+			rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
+		}else{
+			rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
+		}
 
 		if (math.GetSize() != dataSize.Value())
 			math.Resize(dataSize.Value());
@@ -242,6 +255,9 @@ void OnNewParams(void) {
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
 	in1Show.Update();
 	in2Show.Update();
+	in1InvShow.Update();
+	in2InvShow.Update();
+	mathInvShow.Update();
 	dataSize.Update();
 	measureSelect1.Update();
 	measureSelect2.Update();
@@ -316,6 +332,8 @@ void OnNewParams(void) {
 /* ------ SEND GENERATE PARAMETERS RO API ------*/
 	IF_VALUE_CHANGED(out1State, rp_GenAmp(RP_CH_1, out1State.NewValue()))
 	IF_VALUE_CHANGED(out2State, rp_GenAmp(RP_CH_2, out2State.NewValue()))
+	IF_VALUE_CHANGED(out1Amplitude, rp_GenAmp(RP_CH_1, out1Amplitude.NewValue()))
+	IF_VALUE_CHANGED(out2Amplitude, rp_GenAmp(RP_CH_2, out2Amplitude.NewValue()))
 	IF_VALUE_CHANGED(out1Offset, rp_GenOffset(RP_CH_1, out1Offset.NewValue()))
 	IF_VALUE_CHANGED(out2Offset, rp_GenOffset(RP_CH_2, out2Offset.NewValue()))
 	IF_VALUE_CHANGED(out1Frequancy, rp_GenFreq(RP_CH_1, out1Frequancy.NewValue()))
