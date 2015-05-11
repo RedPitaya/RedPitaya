@@ -19,7 +19,7 @@ NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
 JOBS=$$(($(NUM_CPU)+1))
 
 SHARED=../../shared/
-DEPLIBS_DIR=build/
+DEPLIBS_DIR=$(DESTDIR)
 DEPLIBS=$(DEPLIBS_DIR)/lib/libredpitaya.a
 
 WS_SERVER_DIR=ngx_ext_modules/ws_server
@@ -52,6 +52,7 @@ install:
 	cp $(NGINX) '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
+	cp ngx_ext_modules/ws_server/boost/lib/*.so* $(DESTDIR)/lib
 
 
 clean:
