@@ -39,7 +39,7 @@ LIBPATH= -L ../../lib
 LIBS= -lm -lpthread -lrp
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE=arm-linux-gnueabi-
+CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .

@@ -8,7 +8,7 @@ VERSION ?= 0.00-0000
 
 REVISION ?= devbuild
 
-CROSS_COMPILE = arm-linux-gnueabi-
+CROSS_COMPILE ?= arm-linux-gnueabi-
 
 #Define header includes
 RP_PATH_INCLUDE = -I../../api-mockup/rpbase/src/
