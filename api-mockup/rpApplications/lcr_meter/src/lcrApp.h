@@ -24,13 +24,7 @@
 #define TRANS_EFFECT_STEPS		10
 #define SAMPLE_RATE				125e6
 
-/* Decimation */
-#define LCR_DEC_1 				1
-#define LCR_DEC_8				8
-#define LCR_DEC_64				64
-#define LCR_DEC_1024			1024
-#define LCR_DEC_8192			8192
-#define LCR_DEC_65536			65536
+
 
 typedef enum{
 	LCR_SCALE_LINEAR,
@@ -64,7 +58,7 @@ typedef enum{
 } lcr_r_shunt_e;
 
 /* Main lcr params structure */
-typedef struct lcr_params_t{
+typedef struct lcr_params_e{
 	float amplitude;
 	float dc_bias;
 	float avg;
@@ -78,7 +72,7 @@ typedef struct lcr_params_t{
 	lcr_scale_e scale;
 	lcr_sweep_e sweep; //lcr_sweep_e
 	bool user_wait;
-} lcr_params_e;
+} lcr_params_t;
 
 /* Resource managment functions */
 int lcr_Init();
@@ -92,7 +86,8 @@ void *lcr_MainThread();
 
 /* Measurment functions */
 int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq);
-int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data);
+int lcr_SafeThreadAcqData(rp_channel_t channel, float *data);
+
 int lcr_FreqSweep(int16_t **calib_data);
 int lcr_FreqSweep(int16_t **calib_data);
 
@@ -100,34 +95,34 @@ int lcr_FreqSweep(int16_t **calib_data);
 int lcr_GetRshuntFactor(float *r_shunt_factor);
 
 /* Getters and Setters */
-int lcr_SetAmplitude(float ampl);
-int lcr_GetAmplitude(float *ampl);
-int lcr_SetDcBias(float dc_bias);
-int lcr_GetDcBias(float *dc_bias);
-int lcr_SetAveraging(float averaging);
-int lcr_GetAveraging(float *averaging);
-int lcr_SetRshunt(lcr_r_shunt_e r_shunt);
-int lcr_GetRShunt(lcr_r_shunt_e *r_shunt);
-int lcr_SetCalibMode(lcr_calib_e mode);
-int lcr_GetCalibMode(lcr_calib_e *mode);
+int lcr_SetAmplitude(lcr_params_t *params, float ampl);
+int lcr_GetAmplitude(lcr_params_t *params, float *ampl);
+int lcr_SetDcBias(lcr_params_t *params, float dc_bias);
+int lcr_GetDcBias(lcr_params_t *params, float *dc_bias);
+int lcr_SetAveraging(lcr_params_t *params, float averaging);
+int lcr_GetAveraging(lcr_params_t *params, float *averaging);
+int lcr_SetRshunt(lcr_params_t *params, lcr_r_shunt_e r_shunt);
+int lcr_GetRShunt(lcr_params_t *params, lcr_r_shunt_e *r_shunt);
+int lcr_SetCalibMode(lcr_params_t *params, lcr_calib_e mode);
+int lcr_GetCalibMode(lcr_params_t *params, lcr_calib_e *mode);
 
-int lcr_SetRefReal(float ref_real);
-int lcr_GetRefReal(float *ref_real);
-int lcr_SetRefImg(float ref_img);
-int lcr_GetRefImg(float *ref_img);
+int lcr_SetRefReal(lcr_params_t *params, float ref_real);
+int lcr_GetRefReal(lcr_params_t *params, float *ref_real);
+int lcr_SetRefImg(lcr_params_t *params, float ref_img);
+int lcr_GetRefImg(lcr_params_t *params, float *ref_img);
 
-int lcr_SetSteps(uint32_t steps);
-int lcr_GetSteps(uint32_t *steps);
-int lcr_SetStartFreq(float start_freq);
-int lcr_GetStartFreq(float *start_freq);
-int lcr_SetEndFreq(float end_freq);
-int lcr_GetEndFreq(float *end_freq);
-int lcr_SetScaleType(lcr_scale_e scale);
-int lcr_GetScaleType(lcr_scale_e *scale);
-int lcr_SetSweepMode(lcr_sweep_e sweep);
-int lcr_GetSweepMode(lcr_sweep_e *sweep);
-int lcr_SetUserWait(bool wait);
-int lcr_GetUserWait(bool *wait);
+int lcr_SetSteps(lcr_params_t *params, uint32_t steps);
+int lcr_GetSteps(lcr_params_t *params, uint32_t *steps);
+int lcr_SetStartFreq(lcr_params_t *params, float start_freq);
+int lcr_GetStartFreq(lcr_params_t *params, float *start_freq);
+int lcr_SetEndFreq(lcr_params_t *params, float end_freq);
+int lcr_GetEndFreq(lcr_params_t *params, float *end_freq);
+int lcr_SetScaleType(lcr_params_t *params, lcr_scale_e scale);
+int lcr_GetScaleType(lcr_params_t *params, lcr_scale_e *scale);
+int lcr_SetSweepMode(lcr_params_t *params, lcr_sweep_e sweep);
+int lcr_GetSweepMode(lcr_params_t *params, lcr_sweep_e *sweep);
+int lcr_SetUserWait(lcr_params_t *params, bool wait);
+int lcr_GetUserWait(lcr_params_t *params, bool *wait);
 
 int lcr_SetUserView(uint32_t view);
 int lcr_GetUserView(uint32_t *view);
