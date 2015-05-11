@@ -19,8 +19,7 @@ NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
 JOBS=$$(($(NUM_CPU)+1))
 
 SHARED=../../shared/
-DEPLIBS_DIR=$(DESTDIR)
-DEPLIBS=$(DEPLIBS_DIR)/lib/libredpitaya.a
+DEPLIBS=$(SHARED)/libredpitaya/libredpitaya.a
 
 WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
@@ -32,23 +31,21 @@ $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB) $(DEPLIBS)
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
 
 $(WS_SERVER_LIB): 
-	cd $(WS_SERVER_DIR); ./build.sh
+	make -C $(WS_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 $(DEPLIBS):
-	mkdir -p $(DEPLIBS_DIR)
 	$(MAKE) -C $(SHARED)
-	$(MAKE) -C $(SHARED) install INSTALL_DIR=$(abspath $(DEPLIBS_DIR))
 
 # Override default nginx install, since Red Pitaya uses only a subset
 # of its default install.
 # TODO: Configure nginx to exclude client_body_temp.
 install:
 	$(STRIP) $(NGINX)
-	test -d '$(DESTDIR)/sbin'     || mkdir -p '$(DESTDIR)/sbin'
-	test -d '$(DESTDIR)/www/conf' || mkdir -p '$(DESTDIR)/www/conf'
-	test -d '$(DESTDIR)/www/logs' || mkdir -p '$(DESTDIR)/www/logs'
-	test -d '$(DESTDIR)/www/apps' || mkdir -p '$(DESTDIR)/www/apps'
-	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
+	mkdir -p $(DESTDIR)/sbin
+	mkdir -p $(DESTDIR)/www/conf
+	mkdir -p $(DESTDIR)/www/logs
+	mkdir -p $(DESTDIR)/www/apps
+	mkdir -p $(DESTDIR)/www/client_body_temp
 	cp $(NGINX) '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
@@ -57,5 +54,4 @@ install:
 
 clean:
 	-$(MAKE) -C $(NGINX_DIR) clean
-	rm -rf $(DEPLIBS_DIR)
 	-$(MAKE) -C $(WS_SERVER_DIR) clean
