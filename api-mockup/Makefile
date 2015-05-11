@@ -37,3 +37,7 @@ clean:
 	$(MAKE) -C $(RPLIB_DIR) clean
 	$(MAKE) -C $(RPAPPLIB_DIR) clean
 
+install:
+	$(MAKE) -C $(RPLIB_DIR) install
+	$(MAKE) -C $(RPAPPLIB_DIR) install
+
