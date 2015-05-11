@@ -22,11 +22,11 @@ CPPEXT   = .c
 CXXEXT   = .cpp
 OBJEXT   = .o
 
-# Input/Output directories
-
+# Directories paths
 OBJECTS_DIR = ../obj
 OUTPUT_DIR  = ../
 SOURCE_DIR  = .
+INSTALL_DIR ?= .
 
 # Library name
 TARGET=$(OUTPUT_DIR)/scpi-server
@@ -46,34 +46,21 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-LDFLAGS= 
+LDFLAGS=
 
 # Red Pitaya common SW directory
 SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api-mockup/rpbase/src -L ../../api-mockup/rpApplications/src
+LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api-mockup/lib
 LIBS= -lm -lpthread -lrp -lrpapp -lscpi
 
 INC= -I../3rdparty/libs/scpi-parser/libscpi/inc -I ../../api-mockup/rpbase/src
 
 # Main GCC executable (used for compiling and linking)
+CROSS_COMPILE=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
-# Installation directory
-INSTALL_DIR ?= .
-
-# Makefile is composed of so called 'targets'. They give basic structure what 
-# needs to be execued during various stages of the building/removing/installing
-# of software package.
-# Simple Makefile targets have the following structure:
-# <name>: <dependencies>
-#	<command1>
-#       <command2>
-#       ...
-# The target <name> is completed in the following order:
-#   - list od <dependencies> finished
-#   - all <commands> in the body of targets are executed succsesfully
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.

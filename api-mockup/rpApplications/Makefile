@@ -30,3 +30,5 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C doc clean
 
+install:
+	$(MAKE) -C src install
