@@ -18,19 +18,6 @@ diff -rupN old/u-boot-xlnx-xilinx-v2015.1/arch/arm/cpu/armv7/zynq/Kconfig u-boot
 +	default "zynq_red_pitaya" if TARGET_ZYNQ_RED_PITAYA
  
  endif
-diff -rupN old/u-boot-xlnx-xilinx-v2015.1/common/main.c u-boot-xlnx-xilinx-v2015.1/common/main.c
---- old/u-boot-xlnx-xilinx-v2015.1/common/main.c	2015-03-03 09:54:28.000000000 +0100
-+++ u-boot-xlnx-xilinx-v2015.1/common/main.c	2015-05-05 09:37:57.072813334 +0200
-@@ -76,6 +76,9 @@ void main_loop(void)
- 	if (cli_process_fdt(&s))
- 		cli_secure_boot_cmd(s);
- 
-+	setenv("fdt_high", "0x1E000000");
-+	setenv("sdboot", "echo Copying Linux from SD to RAM... && mmcinfo && fatload mmc 0 0x2080000 ${kernel_image} && fatload mmc 0 0x2000000 ${devicetree_image} && bootm 0x2080000 - 0x2000000");
-+
- 	autoboot_command(s);
- 
- 	cli_loop();
 diff -rupN old/u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile
 --- old/u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile	2015-03-03 09:54:28.000000000 +0100
 +++ u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile	2015-05-05 09:37:37.828717907 +0200
