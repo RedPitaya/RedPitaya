@@ -16,6 +16,7 @@
 
 #include <configs/zynq-common.h>
 
+
 #undef CONFIG_PHY_MARVELL
 
 #undef CONFIG_SYS_I2C_EEPROM_ADDR_LEN
@@ -26,6 +27,9 @@
 #undef CONFIG_ENV_SIZE
 #undef CONFIG_ENV_IS_IN_SPI_FLASH
 #undef CONFIG_ENV_OFFSET
+
+#undef CONFIG_EXTRA_ENV_SETTINGS
+
 
 #define CONFIG_PHY_LANTIQ
 
@@ -51,7 +55,7 @@
 	"kernel_size=0x500000\0"        \
 	"devicetree_size=0x20000\0"     \
 	"ramdisk_size=0x5E0000\0"       \
-	"fdt_high=0x20000000\0" \
+	"fdt_high=0x1e000000\0" \
 	"initrd_high=0x20000000\0"      \
 	"sdboot=echo Copying Linux from SD to RAM... && " \
 		"mmcinfo && " \
