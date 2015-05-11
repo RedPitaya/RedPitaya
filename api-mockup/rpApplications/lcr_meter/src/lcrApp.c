@@ -30,7 +30,7 @@ int16_t					**analysis_data;
 
 /* Global variables definition */
 int 					min_periodes = 10;
-uint32_t 				view_size = 1024;
+uint32_t 				acq_size = 1024;
 
 pthread_mutex_t 		mutex;
 pthread_t 				*lcr_thread_handler = NULL;
@@ -93,7 +93,6 @@ int lcr_Reset(){
 int lcr_SetDefaultValues(){
 	ECHECK_APP(lcr_SetAmplitude(1.0));
 	ECHECK_APP(lcr_SetDcBias(0.0));
-	ECHECK_APP(lcr_SetRshunt(0.0));
 	ECHECK_APP(lcr_SetAveraging(10));
 	ECHECK_APP(lcr_SetCalibMode(1));
 	ECHECK_APP(lcr_SetRefReal(0.0));
@@ -124,7 +123,7 @@ int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data){
 
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_AcqGetOldestDataRaw(channel, &view_size, data));
+	ECHECK_APP(rp_AcqGetOldestDataV(channel, &acq_size, (float *)data));
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
@@ -145,7 +144,7 @@ int lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias,
 
 	int16_t **u_dut_s = multiDimensionVector(COORDINATES, size);
 	int16_t **i_dut_s = multiDimensionVector(COORDINATES, size);
-	int16_t **component_lock = multiDimensionVector(COORDINATES, size);
+	int16_t **component_lock_in = multiDimensionVector(COORDINATES, size);
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
@@ -163,17 +162,17 @@ int lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias,
 	}
 
 	/* Trapezoidal approximation */
-	component_lock[0][0] = trapezoidalApprox(u_dut_s[0], T, size);
-	component_lock[0][1] = trapezoidalApprox(u_dut_s[1], T, size);
-	component_lock[1][0] = trapezoidalApprox(i_dut_s[0], T, size);
-	component_lock[1][0] = trapezoidalApprox(i_dut_s[1], T, size);
+	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size);
+	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size);
+	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size);
+	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[1], T, size);
 
 	/* Calculating volatage and phase */
-	u_dut_ampl = 2 * (sqrt(pow(component_lock[0][0], 2)) + pow(component_lock[0][1], 2));
-	u_dut_phase_ampl = atan2(component_lock[0][0], component_lock[0][1]);
+	u_dut_ampl = 2 * (sqrt(pow(component_lock_in[0][0], 2)) + pow(component_lock_in[0][1], 2));
+	u_dut_phase_ampl = atan2(component_lock_in[0][0], component_lock_in[0][1]);
 
-	i_dut_ampl = 2 * (sqrt(pow(component_lock[1][0], 2)) + pow(component_lock[1][1], 2));
-	i_dut_phase_ampl = atan2(component_lock[1][0], component_lock[1][1]);
+	i_dut_ampl = 2 * (sqrt(pow(component_lock_in[1][0], 2)) + pow(component_lock_in[1][1], 2));
+	i_dut_phase_ampl = atan2(component_lock_in[1][0], component_lock_in[1][1]);
 
 	/* Assigning impedance values */
 	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
@@ -198,11 +197,12 @@ int lcr_FreqSweep(int16_t **calib_data){
 	float log_freq, a, b, c, w_out;
 	float start_freq = main_params->start_freq, end_freq = main_params->end_freq,
 		ampl = main_params->amplitude, averaging = main_params->avg,
-		dc_bias = main_params->dc_bias, r_shunt = main_params->r_shunt;
+		dc_bias = main_params->dc_bias;
 
+	lcr_r_shunt_e r_shunt;
 	lcr_scale_e scale_type = main_params->scale;
 	int steps = main_params->steps;
-	int stepsTe, freq_step;
+	int freq_step;
 	int decimation;
 
 	/* Forward memory allocation */
@@ -213,11 +213,6 @@ int lcr_FreqSweep(int16_t **calib_data){
 		printf("End frequency must be greater than the starting frequency.\n");
 		return RP_EOOR;
 	}
-
-	if(steps < 10){
-		stepsTe = steps;
-	}
-	int trans_eff_c = stepsTe;
 
 	/* Check for logarithmic scale */
 	if(scale_type == LCR_SCALE_LOGARITHMIC){
@@ -238,14 +233,6 @@ int lcr_FreqSweep(int16_t **calib_data){
 			frequency[i] = log_freq;
 		}else{
 			frequency[i] = start_freq + (freq_step * i);
-		}
-
-		if(trans_eff_c > 0){
-			frequency[i] = start_freq - (start_freq / 2) + 
-				((start_freq / 2) * trans_eff_c / stepsTe);
-			trans_eff_c--;
-		}else if(!trans_eff_c){
-			frequency[i] = start_freq;
 		}
 
 		/* Angular velocity calculation */
@@ -275,10 +262,10 @@ int lcr_FreqSweep(int16_t **calib_data){
 			float new_size = round((min_periodes * 125e6) / frequency[i] * decimation);
 
 			/* Realloc buffer, if view size has changed */
-			if(new_size != view_size){
+			if(new_size != acq_size){
 				ch1_data = realloc(ch1_data, new_size);
 				ch2_data = realloc(ch2_data, new_size);
-				view_size = new_size;
+				acq_size = new_size;
 			}
 
 			/* Signal acquisition for both channels */
@@ -295,15 +282,19 @@ int lcr_FreqSweep(int16_t **calib_data){
 				printf("Error acquiring data.\n");
 				return RP_EOOR;
 			}
-			
+
 			/* Two dimension vector creation -- u_acq */
-			for(int i = 0; i < view_size; i++){
-				analysis_data[0][i] = ch1_data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
-				analysis_data[1][i] = ch2_data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
+			for(int i = 0; i < acq_size; i++){
+				analysis_data[0][i] = ch1_data[i];
+				analysis_data[1][i] = ch2_data[i];
 			}
 
+			/* TODO: Function for settting R_SHUNT */
+
+			lcr_GetRShunt(&r_shunt);
+
 			/* Calculate output data */
-			ret_val = lcr_data_analysis(analysis_data, view_size, dc_bias, 
+			ret_val = lcr_data_analysis(analysis_data, acq_size, dc_bias, 
 						r_shunt, Z, w_out, decimation);
 
 			if(ret_val != RP_OK){
@@ -317,7 +308,7 @@ int lcr_FreqSweep(int16_t **calib_data){
 		}
 	}
 	
-	printf("%d%d%f%d\n", stepsTe, freq_step, w_out, decimation);
+	printf("%d%f%d\n", freq_step, w_out, decimation);
 
 	return RP_OK;
 }
@@ -331,8 +322,8 @@ int lcr_MeasSweep(int16_t **calib_data){
 void *lcr_MainThread(){
 
 	/* Channel memory allocation */
-	ch1_data = malloc((view_size) * sizeof(int16_t));
-	ch2_data = malloc((view_size) * sizeof(int16_t));
+	ch1_data = malloc((acq_size) * sizeof(int16_t));
+	ch2_data = malloc((acq_size) * sizeof(int16_t));
 
 	for(int i = LCR_CALIB_NONE; i < (main_params->mode); i++){
 
@@ -365,7 +356,47 @@ int lcr_Run(){
 	return RP_OK;
 }
 
+/* lcr helper functions */
+int lcr_GetRshuntFactor(float *r_shunt_factor){
+	
+	lcr_r_shunt_e r_shunt;
+	ECHECK_APP(lcr_GetRShunt(&r_shunt));
 
+	switch(r_shunt){
+		case LCR_R_SHUNT_30:
+			*r_shunt_factor = 30;
+			return RP_OK;
+		case LCR_R_SHUNT_75:
+			*r_shunt_factor = 75;
+			return RP_OK;
+		case LCR_R_SHUNT_300:
+			*r_shunt_factor = 300;
+			return RP_OK;
+		case LCR_R_SHUNT_750:
+			*r_shunt_factor = 750;
+			return RP_OK;
+		case LCR_R_SHUNT_3K:
+			*r_shunt_factor = 3000;
+			return RP_OK;
+		case LCR_R_SHUNT_7_5K:
+			*r_shunt_factor = 7500;
+			return RP_OK;
+		case LCR_R_SHUNT_30K:
+			*r_shunt_factor = 30000;
+			return RP_OK;
+		case LCR_R_SHUNT_80K:
+			*r_shunt_factor = 80000;
+			return RP_OK;
+		case LCR_R_SHUNT_430K:
+			*r_shunt_factor = 430000;
+			return RP_OK;
+		case LCR_R_SHUNT_3M:
+			*r_shunt_factor = 30000000;
+			return RP_OK;
+		default:
+			return RP_EOOR;
+	}
+}
 
 /* Getters and setters */
 int lcr_SetAmplitude(float ampl){
@@ -378,8 +409,9 @@ int lcr_SetAmplitude(float ampl){
 
 		return RP_EOOR;
 	}
-	main_params->amplitude = ampl;
 
+	main_params->amplitude = ampl;
+	
 	return RP_OK;
 }
 
@@ -408,17 +440,6 @@ int lcr_GetDcBias(float *dc_bias){
 	return RP_OK;
 }
 
-int lcr_SetRshunt(float r_shunt){
-
-	main_params->r_shunt = r_shunt;
-	return RP_OK;
-}
-
-int lcr_GetRshunt(float *r_shunt){
-	r_shunt = &main_params->r_shunt;
-	return RP_OK;
-}
-
 int lcr_SetAveraging(float avg){
 
 	main_params->avg = avg;
@@ -427,6 +448,16 @@ int lcr_SetAveraging(float avg){
 
 int lcr_GetAveraging(float *avg){
 	avg = &main_params->avg;
+	return RP_OK;
+}
+
+int lcr_SetRshunt(lcr_r_shunt_e r_shunt){
+	main_params->r_shunt = r_shunt;
+	return RP_OK;
+}
+
+int lcr_GetRShunt(lcr_r_shunt_e *r_shunt){
+	r_shunt = &main_params->r_shunt;
 	return RP_OK;
 }
 
@@ -525,12 +556,12 @@ int lcr_SetUserView(uint32_t view){
 		printf("Invalid view size. Must be greater than 10.\n");
 		return RP_EOOR;
 	}
-	view_size = view;
+	acq_size = view;
 	return RP_OK;
 }
 
 int lcr_GetUserView(uint32_t *view){
-	view = &view_size;
+	view = &acq_size;
 	return RP_OK;
 }
 

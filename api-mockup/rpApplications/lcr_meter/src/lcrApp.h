@@ -50,12 +50,25 @@ typedef enum{
 	LCR_FREQUENCY_SWEEP,
 } lcr_sweep_e;
 
+typedef enum{
+	LCR_R_SHUNT_30,
+	LCR_R_SHUNT_75,
+	LCR_R_SHUNT_300,
+	LCR_R_SHUNT_750,
+	LCR_R_SHUNT_3K,
+	LCR_R_SHUNT_7_5K,
+	LCR_R_SHUNT_30K,
+	LCR_R_SHUNT_80K,
+	LCR_R_SHUNT_430K,
+	LCR_R_SHUNT_3M,
+} lcr_r_shunt_e;
+
 /* Main lcr params structure */
 typedef struct lcr_params_t{
 	float amplitude;
 	float dc_bias;
-	float r_shunt;
 	float avg;
+	lcr_r_shunt_e r_shunt;
 	lcr_calib_e mode; //lcr_calib_e
 	float ref_real;
 	float ref_img;
@@ -67,7 +80,7 @@ typedef struct lcr_params_t{
 	bool user_wait;
 } lcr_params_e;
 
-/* Resourse managment functions */
+/* Resource managment functions */
 int lcr_Init();
 int lcr_Release();
 int lcr_Reset();
@@ -83,16 +96,18 @@ int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data);
 int lcr_FreqSweep(int16_t **calib_data);
 int lcr_FreqSweep(int16_t **calib_data);
 
+/* Helper functions */
+int lcr_GetRshuntFactor(float *r_shunt_factor);
 
 /* Getters and Setters */
 int lcr_SetAmplitude(float ampl);
 int lcr_GetAmplitude(float *ampl);
 int lcr_SetDcBias(float dc_bias);
 int lcr_GetDcBias(float *dc_bias);
-int lcr_SetRshunt(float r_shunt);
-int lcr_GetRshunt(float *r_shunt);
 int lcr_SetAveraging(float averaging);
 int lcr_GetAveraging(float *averaging);
+int lcr_SetRshunt(lcr_r_shunt_e r_shunt);
+int lcr_GetRShunt(lcr_r_shunt_e *r_shunt);
 int lcr_SetCalibMode(lcr_calib_e mode);
 int lcr_GetCalibMode(lcr_calib_e *mode);
 
