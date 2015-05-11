@@ -18,23 +18,17 @@ STRIP=$(CROSS_COMPILE)strip
 NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
 JOBS=$$(($(NUM_CPU)+1))
 
-SHARED=../../shared/
-DEPLIBS=$(SHARED)/libredpitaya/libredpitaya.a
-
 WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
 
 all: $(NGINX)
 
-$(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB) $(DEPLIBS)
+$(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 	cd $(NGINX_DIR); ./rp_configure.sh $(VER)-$(BUILD_NUMBER) $(REVISION);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
 
 $(WS_SERVER_LIB): 
 	make -C $(WS_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-
-$(DEPLIBS):
-	$(MAKE) -C $(SHARED)
 
 # Override default nginx install, since Red Pitaya uses only a subset
 # of its default install.
