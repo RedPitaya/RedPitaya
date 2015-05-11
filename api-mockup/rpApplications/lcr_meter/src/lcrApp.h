@@ -41,6 +41,7 @@ typedef enum{
 	LCR_CALIB_NONE,
 	LCR_CALIB_OPEN,
 	LCR_CALIB_SHORT,
+	LCR_CALIB_LOAD,
 	LCR_CALIB_Z_REF,
 } lcr_calib_e;
 
@@ -74,13 +75,13 @@ int lcr_SetDefaultValues();
 
 /* Main lcr functions */
 int lcr_Run();
-int lcr_MainThread();
+void *lcr_MainThread();
 
 /* Measurment functions */
 int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq);
 int lcr_SafeThreadAcqData(rp_channel_t channel, int16_t *data);
-void *lcr_FreqSweep();
-void *lcr_MeasSweep();
+int lcr_FreqSweep(int16_t **calib_data);
+int lcr_FreqSweep(int16_t **calib_data);
 
 
 /* Getters and Setters */

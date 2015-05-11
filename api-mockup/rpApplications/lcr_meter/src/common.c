@@ -48,7 +48,7 @@ float vectorMean(float *data, int view_size){
    FS/MS or in common as a helper tool */
 int16_t **multiDimensionVector(int first_dimension, int second_dimenson){
 
-	/* Allocate the first dimension */
+	/* Allocate first dimension */
 	int16_t **data_out = malloc(first_dimension * sizeof(int16_t));
 
 	/* For each element in the first dimension, 

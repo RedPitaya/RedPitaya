@@ -191,7 +191,7 @@ int lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias,
 	return RP_OK;
 }
 
-void *lcr_FreqSweep(){
+int lcr_FreqSweep(int16_t **calib_data){
 
 	/* Forward variable declaration */
 	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
@@ -206,12 +206,12 @@ void *lcr_FreqSweep(){
 	int decimation;
 
 	/* Forward memory allocation */
-	float *frequency = (float *)malloc(steps * sizeof(float));
-	float complex *Z = (float complex *)malloc((averaging + 1) * sizeof(float complex));
+	float *frequency 	= (float *)malloc(steps * sizeof(float));
+	float complex *Z 	= (float complex *)malloc((averaging + 1) * sizeof(float complex));
 
 	if(start_freq < end_freq){
 		printf("End frequency must be greater than the starting frequency.\n");
-		return (void *)RP_EOOR;
+		return RP_EOOR;
 	}
 
 	if(steps < 10){
@@ -256,7 +256,7 @@ void *lcr_FreqSweep(){
 
 		if(ret_gen != RP_OK){
 			printf("Error generating signal.\n");
-			return (void *)RP_EOOR;
+			return RP_EOOR;
 		}
 
 		for(int j = 0; j < averaging; j++){
@@ -282,19 +282,21 @@ void *lcr_FreqSweep(){
 			}
 
 			/* Signal acquisition for both channels */
-			int ret_val = lcr_SafeThreadAcqData(RP_CH_1, ch1_data);
+			int ret_val;
+
+			ret_val = lcr_SafeThreadAcqData(RP_CH_1, ch1_data);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
-				return (void *)RP_EOOR;
+				return RP_EOOR;
 			}
 
 			ret_val = lcr_SafeThreadAcqData(RP_CH_2, ch2_data);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
-				return (void *)RP_EOOR;
+				return RP_EOOR;
 			}
 			
-			/* Two dimension vector creation -- u_acq*/
+			/* Two dimension vector creation -- u_acq */
 			for(int i = 0; i < view_size; i++){
 				analysis_data[0][i] = ch1_data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
 				analysis_data[1][i] = ch2_data[i] * (2 - dc_bias) / ADC_BUFF_SIZE;
@@ -306,14 +308,13 @@ void *lcr_FreqSweep(){
 
 			if(ret_val != RP_OK){
 				printf("Lcr data analysis failed to properly execute.\n");
-				return (void *)RP_EOOR;
+				return RP_EOOR;
 			}
 
-
-
+			/* Saving calibration data */
+			calib_data[0][j] = creal(*Z);
+			calib_data[1][j] = cimag(*Z);
 		}
-
-
 	}
 	
 	printf("%d%d%f%d\n", stepsTe, freq_step, w_out, decimation);
@@ -321,30 +322,30 @@ void *lcr_FreqSweep(){
 	return RP_OK;
 }
 
-void *lcr_MeasSweep(){
+int lcr_MeasSweep(int16_t **calib_data){
 
 	return RP_OK;
 }
 
 /* Main LCR thread */
-int lcr_MainThread(){
+void *lcr_MainThread(){
 
-	int err;
+	/* Channel memory allocation */
+	ch1_data = malloc((view_size) * sizeof(int16_t));
+	ch2_data = malloc((view_size) * sizeof(int16_t));
 
-	lcr_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
-	if(main_params->sweep == LCR_MEASURMENT_SWEEP){
-		err = pthread_create(lcr_thread_handler, NULL, &lcr_MeasSweep, NULL);
-		if(err != RP_OK){
-			printf("Main thread creation failed.\n");
-			return RP_EOOR;
+	for(int i = LCR_CALIB_NONE; i < (main_params->mode); i++){
+
+		
+		if(main_params->sweep == LCR_MEASURMENT_SWEEP){
+			
+		}else{
+			
 		}
-	}else{
-		err = pthread_create(lcr_thread_handler, NULL, &lcr_FreqSweep, NULL);
-		if(err != RP_OK){
-			printf("Main thread creation failed.\n");
-			return RP_EOOR;
-		}
+
+
 	}
+	
 
 	return RP_OK;
 }
@@ -352,12 +353,12 @@ int lcr_MainThread(){
 /* Main call function */
 int lcr_Run(){
 
-	/* Channel memory allocation */
-	ch1_data = malloc((view_size) * sizeof(int16_t));
-	ch2_data = malloc((view_size) * sizeof(int16_t));
+	int err;
+	lcr_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
 
-	if(lcr_MainThread() != RP_OK){
-		printf("Error.\n");
+	err = pthread_create(lcr_thread_handler, NULL, &lcr_MainThread, NULL);
+	if(err != RP_OK){
+		printf("Main thread creation failed.\n");
 		return RP_EOOR;
 	}
 
