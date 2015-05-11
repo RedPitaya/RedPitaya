@@ -40,9 +40,9 @@ $(SCPIPARSER):
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	mkdir -p $(INSTALL_DIR)/lib
-	cp $(SCPISRV) $(INSTALL_DIR)/bin
+	cp $(SCPISRV)    $(INSTALL_DIR)/bin
 	cp $(SCPIPARSER) $(INSTALL_DIR)/lib
-	make -C $(API_DIR)/rpbase INSTALL_DIR=$(INSTALL_DIR)/lib install
+	make -C $(API_DIR)/rpbase         INSTALL_DIR=$(INSTALL_DIR)/lib install
 	make -C $(API_DIR)/rpApplications INSTALL_DIR=$(INSTALL_DIR)/lib install
 
 clean:

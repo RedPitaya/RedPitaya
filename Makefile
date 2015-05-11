@@ -20,6 +20,7 @@
 
 
 BUILD=build
+INSTALLPATH=$(BUILD)/opt/redpitaya
 TARGET=target
 NAME=ecosystem
 
@@ -49,16 +50,17 @@ FSBL=$(BUILD)/fsbl.elf
 TESTBOOT=testboot.bin
 MEMTEST=$(BUILD)/memtest.elf
 URAMDISK=$(BUILD)/uramdisk.image.gz
-NGINX=$(BUILD)/sbin/nginx
-MONITOR=$(BUILD)/bin/monitor
-GENERATE=$(BUILD)/bin/generate
-ACQUIRE=$(BUILD)/bin/acquire
-CALIB=$(BUILD)/bin/calib
-DISCOVERY=$(BUILD)/sbin/discovery
-ECOSYSTEM=$(BUILD)/www/apps/info/info.json
-SCPI_SERVER = $(BUILD)/bin/scpi-server
-LIBRP = $(BUILD)/lib/librp.so
-GDBSERVER  = $(BUILD)/bin/gdbserver
+
+NGINX=$(INSTALLPATH)/sbin/nginx
+MONITOR=$(INSTALLPATH)/bin/monitor
+GENERATE=$(INSTALLPATH)/bin/generate
+ACQUIRE=$(INSTALLPATH)/bin/acquire
+CALIB=$(INSTALLPATH)/bin/calib
+DISCOVERY=$(INSTALLPATH)/sbin/discovery
+ECOSYSTEM=$(INSTALLPATH)/www/apps/info/info.json
+SCPI_SERVER = $(INSTALLPATH)/bin/scpi-server
+LIBRP = $(INSTALLPATH)/lib/librp.so
+GDBSERVER  = $(INSTALLPATH)/bin/gdbserver
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -84,6 +86,9 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MON
 
 $(BUILD):
 	mkdir $(BUILD)
+
+$(INSTALLPATH):
+	mkdir $(INSTALLPATH)
 
 
 # Linux build provides: uImage kernel, dtc compiler.
@@ -118,42 +123,42 @@ $(URAMDISK): $(BUILD)
 
 $(NGINX): $(URAMDISK)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(BUILD))
+	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALLPATH))
 
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(GENERATE):
 	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(DISCOVERY):
 	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(ECOSYSTEM):
-	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(SCPI_SERVER):
 	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 $(LIBRP):
 	$(MAKE) -C $(LIBRP_DIR)
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
-	cp Test/gdb-server/gdbserver $(abspath $(BUILD))/bin
+	cp Test/gdb-server/gdbserver $(abspath $(INSTALLPATH))/bin
 
 sdk:
 	$(MAKE) -C $(SDK_DIR) clean include
