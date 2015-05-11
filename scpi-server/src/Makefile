@@ -59,7 +59,7 @@ LIBS= -lm -lpthread -lrp -lrpapp -lscpi
 INC= -I../3rdparty/libs/scpi-parser/libscpi/inc -I ../../api-mockup/rpbase/src
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE=arm-linux-gnueabi-
+CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)

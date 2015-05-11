@@ -15,7 +15,7 @@ APP=$(notdir $(CURDIR:%/=%))
 INSTALL_DIR ?= .
 API_DIR=../api-mockup/
 
-CROSS_COMPILE=arm-linux-gnueabi-
+CROSS_COMPILE?=arm-linux-gnueabi-
 
 SCPIPARSER=3rdparty/libs/scpi-parser/libscpi/dist/libscpi.so
 SCPISRV=scpi-server
