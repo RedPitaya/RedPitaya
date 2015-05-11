@@ -3,7 +3,7 @@
 #
 # (c) Red Pitaya  http://www.redpitaya.com
 #
-# Library rplib project file. To build the library run:
+# Library librpapp project file. To build the library run:
 # 'make all'
 #
 # This project file is written for GNU/Make software. For more details please 
@@ -27,9 +27,10 @@ OBJEXT   = .o
 OBJECTS_DIR = ../obj
 INSTALL_DIR  ?= .
 SOURCE_DIR  = .
+OUTPUT_DIR  = ../../lib
 
 # Library name
-TARGET=librpapp.so
+TARGET=$(OUTPUT_DIR)/librpapp.so
 
 # List of compiled object files
 OBJECTS =	common.o \
@@ -51,22 +52,8 @@ SHARED=../../shared/
 LIBS=-lm -lpthread
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE?=arm-linux-gnueabi-
+CROSS_COMPILE=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
-# Installation directory
-INSTALL_DIR ?= .
-
-# Makefile is composed of so called 'targets'. They give basic structure what 
-# needs to be execued during various stages of the building/removing/installing
-# of software package.
-# Simple Makefile targets have the following structure:
-# <name>: <dependencies>
-#	<command1>
-#       <command2>
-#       ...
-# The target <name> is completed in the following order:
-#   - list od <dependencies> finished
-#   - all <commands> in the body of targets are executed succsesfully
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
@@ -83,6 +70,7 @@ $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
+	mkdir -p $(OUTPUT_DIR)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LDFLAGS)
 
 # Version header for traceability
@@ -93,6 +81,7 @@ version.h:
 clean:
 	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
 	rm -rf $(INSTALL_DIR)/lib
+	rm -rf $(OUTPUT_DIR)
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
