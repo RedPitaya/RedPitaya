@@ -5,7 +5,6 @@
 #
 
 APP=$(notdir $(CURDIR:%/=%))
-FPGA=fpga.bit
 
 # Versioning system
 # BUILD_NUMBER ?= 0
@@ -16,10 +15,7 @@ LIBRP=librp.so
 TEST=testApp
 ARTIFACTS=$(LIBRP) $(TEST)
 
-#CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-#export CFLAGS
-
-all: $(LIBRP) $(TEST)
+all: $(LIBRP)
 
 $(LIBRP):
 	$(MAKE) -C src
@@ -35,3 +31,5 @@ clean:
 	$(MAKE) -C test clean
 	$(MAKE) -C doc clean
 
+install:
+	$(MAKE) -C src install
