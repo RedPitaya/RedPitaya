@@ -20,7 +20,9 @@
 
 
 BUILD=build
-INSTALLPATH=$(BUILD)/opt/redpitaya
+# TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
+#INSTALLPATH=$(BUILD)/opt/redpitaya
+INSTALLPATH=$(BUILD)/redpitaya
 TARGET=target
 NAME=ecosystem
 
@@ -44,9 +46,9 @@ EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 LINUX=$(BUILD)/uImage
 DEVICETREE=$(BUILD)/devicetree.dtb
 UBOOT=$(BUILD)/u-boot.elf
-BOOT=$(BUILD)/boot.bin
 FPGA=$(BUILD)/fpga.bit
 FSBL=$(BUILD)/fsbl.elf
+BOOT=$(BUILD)/boot.bin
 TESTBOOT=testboot.bin
 MEMTEST=$(BUILD)/memtest.elf
 URAMDISK=$(BUILD)/uramdisk.image.gz
