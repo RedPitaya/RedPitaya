@@ -3,12 +3,12 @@
 case "$1" in
         start)
                 echo -n "Starting nginx ... "
-                LD_LIBRARY_PATH=/opt/redpitaya/lib /opt/redpitaya/sbin/nginx -p /opt/redpitaya/www
+                LD_LIBRARY_PATH=/opt/redpitaya/lib /opt/redpitaya/sbin/scpi-server
                 echo "done."
                 ;;
         stop)
                 echo -n "Stopping nginx ..."
-                killall nginx
+                killall scpi-server
                 echo "done."
                 ;;
         restart)
