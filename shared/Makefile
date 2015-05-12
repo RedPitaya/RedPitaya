@@ -13,10 +13,6 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-
-CURL_DIR=curl
-CURL_INSTALL_DIR=$(CURL_DIR)/target
-LIBCURL=$(CURL_INSTALL_DIR)/lib/libcurl.a
 LIBREDPITAYA=libredpitaya/libredpitaya.a
 
 # Main GCC executable (used for compiling and linking)
@@ -41,7 +37,7 @@ INSTALL_DIR ?= .
 all: $(LIBREDPITAYA)
 
 $(LIBREDPITAYA):
-	$(MAKE) -C libredpitaya
+	$(MAKE) -C libredpitaya CROSS_COMPILE=$(CROSS_COMPILE)
 
 # Clean target - when called it cleans all object files and executables.
 clean:
