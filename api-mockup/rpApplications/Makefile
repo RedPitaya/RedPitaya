@@ -23,12 +23,13 @@ all: $(RPLIB)
 $(RPLIB):
 	$(MAKE) -C src
 
-docapi:
-	$(MAKE) -C doc
+# TODO, there is no documentation directory here
+#docapi:
+#	$(MAKE) -C doc
 
 clean:
 	$(MAKE) -C src clean
-	$(MAKE) -C doc clean
+#	$(MAKE) -C doc clean
 
 install:
 	$(MAKE) -C src install
