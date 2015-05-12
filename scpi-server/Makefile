@@ -48,5 +48,5 @@ install:
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C 3rdparty/libs/scpi-parser clean
-	$(MAKE) -C $(API_DIR)/rpbase
-	$(MAKE) -C $(API_DIR)/rpApplications
+	$(MAKE) -C $(API_DIR)/rpbase         clean
+	$(MAKE) -C $(API_DIR)/rpApplications clean
