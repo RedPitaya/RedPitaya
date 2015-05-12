@@ -51,6 +51,8 @@ TESTBOOT=testboot.bin
 MEMTEST=$(BUILD)/memtest.elf
 URAMDISK=$(BUILD)/uramdisk.image.gz
 
+LIBREDPITAYA=shared/libredpitaya/libredpitaya.a
+
 NGINX=$(INSTALLPATH)/sbin/nginx
 MONITOR=$(INSTALLPATH)/bin/monitor
 GENERATE=$(INSTALLPATH)/bin/generate
@@ -121,6 +123,9 @@ $(URAMDISK): $(BUILD)
 	$(MAKE) -C $(URAMDISK_DIR)
 	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
+$(LIBREDPITAYA):
+	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
 $(NGINX): $(URAMDISK)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALLPATH))
@@ -176,6 +181,7 @@ clean:
 	make -C $(LINUX_DIR) clean
 	make -C $(SOC_DIR) clean
 	make -C $(UBOOT_DIR) clean
+	make -C shared clean
 	make -C $(NGINX_DIR) clean	
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
