@@ -126,7 +126,7 @@ $(URAMDISK): $(BUILD)
 $(LIBREDPITAYA):
 	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
-$(NGINX): $(URAMDISK)
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALLPATH))
 
