@@ -146,7 +146,7 @@ $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
-$(DISCOVERY):
+$(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
 
