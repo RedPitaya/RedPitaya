@@ -35,6 +35,7 @@ $(WS_SERVER_LIB):
 # TODO: Configure nginx to exclude client_body_temp.
 install:
 	$(STRIP) $(NGINX)
+	mkdir -p $(DESTDIR)/lib
 	mkdir -p $(DESTDIR)/sbin
 	mkdir -p $(DESTDIR)/www/conf
 	mkdir -p $(DESTDIR)/www/logs
