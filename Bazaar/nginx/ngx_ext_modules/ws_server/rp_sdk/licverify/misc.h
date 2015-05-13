@@ -89,8 +89,8 @@ inline std::string GetAppChecksum(const std::string _file_name, const std::strin
 
 inline std::string GetAppsFolder()
 {
-	std::string apps_folder = "/opt/www/apps";
-	//std::string apps_folder = "opt/www/apps"; //for testing
+	std::string apps_folder = "/opt/redpiataya/www/apps";
+	//std::string apps_folder = "opt/redpitaya/www/apps"; //for testing
 	return 	apps_folder;
 }
 

@@ -26,7 +26,7 @@ VER=
 OS=ecosystem
 
 # Default target directory for applications
-TARGET=/opt/www/apps/
+TARGET=/opt/redpitaya/www/apps/
 
 # Get parameters or print usage if they are wrong
 [ $# -lt 2 ] && {
@@ -131,8 +131,8 @@ MD5=$4
     fi
 
     # Applications
-    [ -d /opt/www/apps/${APP} ] || {
-        echo "Trying to remove non-existent /opt/www/apps/${APP}." 1>&2
+    [ -d /opt/redpitaya/www/apps/${APP} ] || {
+        echo "Trying to remove non-existent /opt/redpitaya/www/apps/${APP}." 1>&2
         exit 0;
     }
 
@@ -143,10 +143,10 @@ MD5=$4
         exit 4;
     }
 
-    rm -rf /opt/www/apps/${APP}
+    rm -rf /opt/redpitaya/www/apps/${APP}
     status=$?
     [ $status -ne 0 ] && {
-        echo "Error rmoving /opt/www/apps/${APP}" 1>&2
+        echo "Error rmoving /opt/redpitaya/www/apps/${APP}" 1>&2
         exit 4;
     }
 
