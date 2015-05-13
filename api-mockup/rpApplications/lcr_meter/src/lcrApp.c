@@ -24,9 +24,6 @@
 #include "lcrApp.h"
 #include "common.h"
 
-/* User view buffer */
-float 				    *ch1_data, *ch2_data;
-int16_t					**analysis_data = NULL;
 
 /* Global variables definition */
 int 					min_periodes = 10;
@@ -145,7 +142,7 @@ int lcr_SafeThreadAcqData(rp_channel_t channel, float *data){
 	return RP_OK;
 }
 
-int lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias, 
+float lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias, 
 		float r_shunt, float complex *Z, float w_out, int decimation){
 
 
@@ -204,7 +201,7 @@ int lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias,
 
 	*Z = (z_ampl * cos(phase_z_rad)) + (z_ampl * sin(phase_z_rad) * I);
 
-	return RP_OK;
+	return z_ampl;
 }
 
 int lcr_FreqSweep(int16_t **calib_data){
@@ -214,9 +211,9 @@ int lcr_FreqSweep(int16_t **calib_data){
 	float log_freq, a, b, c, w_out;
 	float start_freq = main_params->start_freq, end_freq = main_params->end_freq,
 		ampl = main_params->amplitude, averaging = main_params->avg,
-		dc_bias = main_params->dc_bias;
+		dc_bias = main_params->dc_bias, z_ampl;
 
-	lcr_r_shunt_e r_shunt;
+	float r_shunt;
 	lcr_scale_e scale_type = main_params->scale;
 	int steps = main_params->steps;
 	int freq_step;
@@ -225,7 +222,11 @@ int lcr_FreqSweep(int16_t **calib_data){
 	/* Forward memory allocation */
 	float *frequency 		= (float *)malloc(steps * sizeof(float));
 	float complex *Z 		= (float complex *)malloc((averaging + 1) * sizeof(float complex));
-	analysis_data = multiDimensionVector(2, acq_size);
+	int16_t **analysis_data 	= multiDimensionVector(2, acq_size);
+
+	/* Channel memory allocation */
+	float *ch1_data = malloc((acq_size) * sizeof(float));
+	float *ch2_data = malloc((acq_size) * sizeof(float));
 
 	if(start_freq > end_freq){
 		printf("End frequency must be greater than the starting frequency.\n");
@@ -246,6 +247,11 @@ int lcr_FreqSweep(int16_t **calib_data){
 
 	/* Main frequency sweep loop */
 	for(int i = 0; i < steps; i++){
+		
+		/* R shunt algorithm calculation */
+		(i != 0) ? (lcr_SetRshunt(main_params, calculateShunt(z_ampl))) : (lcr_SetRshunt(main_params, 0));
+		lcr_GetRshuntFactor(&r_shunt);
+
 		if(scale_type == LCR_SCALE_LOGARITHMIC){
 			log_freq = powf(10, (c * i + a));
 			frequency[i] = log_freq;
@@ -265,6 +271,7 @@ int lcr_FreqSweep(int16_t **calib_data){
 		}
 
 		for(int j = 0; j < averaging; j++){
+
 			if(frequency[i] >= 160000){
 				decimation = LCR_DEC_1;
 			}else if(frequency[i] >= 20000){
@@ -309,11 +316,8 @@ int lcr_FreqSweep(int16_t **calib_data){
 				analysis_data[1][i] = ch2_data[i];
 			}
 
-			/* TODO: Function for settting R_SHUNT */
-			lcr_GetRShunt(main_params, &r_shunt);
-
 			/* Calculate output data */
-			ret_val = lcr_data_analysis(analysis_data, acq_size, dc_bias, 
+			z_ampl = lcr_data_analysis(analysis_data, acq_size, dc_bias, 
 						r_shunt, Z, w_out, decimation);
 
 			if(ret_val != RP_OK){
@@ -336,13 +340,9 @@ int lcr_MeasSweep(int16_t **calib_data){
 
 /* Main LCR thread */
 void *lcr_MainThread(){
-
-	/* Channel memory allocation */
-	ch1_data = malloc((acq_size) * sizeof(float));
-	ch2_data = malloc((acq_size) * sizeof(float));
 	
-
 	int16_t **data = multiDimensionVector(2, acq_size);
+
 	lcr_FreqSweep(data);
 	
 
@@ -366,7 +366,7 @@ int lcr_Run(){
 	return RP_OK;
 }
 
-/* lcr helper functions */
+/* Lcr helper functions */
 int lcr_GetRshuntFactor(float *r_shunt_factor){
 	
 	lcr_r_shunt_e r_shunt;
@@ -406,6 +406,22 @@ int lcr_GetRshuntFactor(float *r_shunt_factor){
 		default:
 			return RP_EOOR;
 	}
+}
+
+int calculateShunt(float z_ampl){
+
+	if(z_ampl <= 50) 							return 0;
+	else if(z_ampl <= 100 && z_ampl > 50) 		return 1;
+	else if(z_ampl <= 500 && z_ampl > 100) 		return 2;
+	else if(z_ampl <= 1000 && z_ampl > 500) 	return 3;
+	else if(z_ampl <= 5000 && z_ampl > 1000) 	return 4;
+	else if(z_ampl <= 10000 && z_ampl > 5000) 	return 5;
+	else if(z_ampl <= 50e3 && z_ampl > 10000) 	return 6;
+	else if(z_ampl < 100e3 && z_ampl > 50e3) 	return 7;
+	else if(z_ampl <= 500e3 && z_ampl > 100e3) 	return 8;
+	else if(z_ampl > 500e3) 					return 9;
+
+	return RP_EOOR;
 }
 
 /* Getters and setters */
