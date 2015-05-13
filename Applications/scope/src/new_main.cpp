@@ -84,8 +84,6 @@ CCustomParameter<rp_channel_t> mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, 
 
 
 
-
-
 /***************************************************************************************
 *                                      GENERATE                                        *
 ****************************************************************************************/
@@ -121,6 +119,21 @@ CBooleanParameter out2Burst("SOUR2_BURS_STAT", CBaseParameter::RW, false, 0);
 
 CCustomParameter<rp_trig_src_t> out1TriggerSource("SOUR1_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_GATED_BURST);
 CCustomParameter<rp_trig_src_t> out2TriggerSource("SOUR2_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_GATED_BURST);
+
+
+/***************************************************************************************
+*                                      CALIBATE                                        *
+****************************************************************************************/
+
+// 0-nothing		1-commant from web		-1-response OK
+// 1V - TP16
+CIntParameter calibrateFrontEndOffset("CLAIB_FE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndScaleLV("CLAIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndScaleHV("CLAIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateBackEndOffset("CLAIB_BE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateBackEndScale("CLAIB_BE_SCALE", CBaseParameter::RW, 0, 0, -1, 1);
+
+
 
 
 void UpdateParams(void) {
@@ -351,4 +364,31 @@ void OnNewParams(void) {
 	IF_VALUE_CHANGED(out2Burst, rp_GenMode(RP_CH_2, out2Burst.NewValue() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS))
 	IF_VALUE_CHANGED(out1TriggerSource, rp_GenTriggerSource(RP_CH_1, out1TriggerSource.NewValue()))
 	IF_VALUE_CHANGED(out2TriggerSource, rp_GenTriggerSource(RP_CH_2, out2TriggerSource.NewValue()))
+
+/* ------ HANDLE CALIBRATE ------*/
+	if (calibrateBackEndOffset.NewValue() == 1) {
+		if (rp_CalibrateBackEndOffset(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
+			calibrateBackEndOffset.Value() = -1;
+		}
+	}
+	if (calibrateBackEndScale.NewValue() == 1) {
+		if (rp_CalibrateBackEndScale(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
+			calibrateBackEndOffset.Value() = -1;
+		}
+	}
+	if (calibrateFrontEndOffset.NewValue() == 1) {
+		if (rp_CalibrateFrontEndOffset(RP_CH_1) && rp_CalibrateFrontEndOffset(RP_CH_2)) {
+			calibrateBackEndOffset.Value() = -1;
+		}
+	}
+	if (calibrateFrontEndScaleHV.NewValue() == 1) {
+		if (rp_CalibrateFrontEndScaleHV(RP_CH_1, CALIB_FE_HV_REF_V) && rp_CalibrateFrontEndScaleHV(RP_CH_2, CALIB_FE_HV_REF_V)) {
+			calibrateBackEndOffset.Value() = -1;
+		}
+	}
+	if (calibrateFrontEndScaleLV.NewValue() == 1) {
+		if (rp_CalibrateFrontEndScaleLV(RP_CH_1, CALIB_FE_LV_REF_V) && rp_CalibrateFrontEndScaleLV(RP_CH_2, CALIB_FE_LV_REF_V)) {
+			calibrateBackEndOffset.Value() = -1;
+		}
+	}
 }
