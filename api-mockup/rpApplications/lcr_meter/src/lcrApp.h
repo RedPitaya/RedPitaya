@@ -93,6 +93,7 @@ int lcr_FreqSweep(int16_t **calib_data);
 
 /* Helper functions */
 int lcr_GetRshuntFactor(float *r_shunt_factor);
+int calculateShunt(float z_ampl);
 
 /* Getters and Setters */
 int lcr_SetAmplitude(lcr_params_t *params, float ampl);
