@@ -61,7 +61,6 @@ read_verilog                      $path_rtl/axi_master.v
 read_verilog                      $path_rtl/axi_slave.v
 read_verilog                      $path_rtl/axi_wr_fifo.v
 
-read_verilog                      $path_rtl/red_pitaya_acum.sv
 read_verilog                      $path_rtl/red_pitaya_ams.v
 read_verilog                      $path_rtl/red_pitaya_analog.v
 read_verilog                      $path_rtl/red_pitaya_asg_ch.v
@@ -74,9 +73,10 @@ read_verilog                      $path_rtl/red_pitaya_dfilt1.v
 read_verilog                      $path_rtl/red_pitaya_hk.v
 read_verilog                      $path_rtl/red_pitaya_pid_block.v
 read_verilog                      $path_rtl/red_pitaya_pid.v
+read_verilog                      $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.v
+read_verilog                      $path_rtl/red_pitaya_pwm.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
-read_verilog                      $path_rtl/red_pitaya_test.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 
 read_xdc                          $path_sdc/red_pitaya.xdc
