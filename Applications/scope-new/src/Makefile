@@ -15,9 +15,9 @@ CSOURCES= \
 CXXSOURCES= \
 	new_main.cpp \
 
-RP_SDK=../../rp_sdk
+RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
+INCLUDE= -I$(RP_SDK) -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/libjson
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
 COMMON_FLAGS+=-Wall -g -fPIC -O0

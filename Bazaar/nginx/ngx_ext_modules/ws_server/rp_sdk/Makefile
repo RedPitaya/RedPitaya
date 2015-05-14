@@ -38,17 +38,6 @@ $(CRYPTO_LIB):
     
 $(LIB): $(OBJECTS) 
 	ar rc $(LIB) $(OBJECTS)
-	rm                            ../../../../../Applications/rp_sdk/lib/*.a
-	cp $(LIB)                     ../../../../../Applications/rp_sdk/lib
-	cp build/lib/libcryptopp.a    ../../../../../Applications/rp_sdk/lib
-	#rm                            ../../../../../Applications/rp_sdk/include/*.h
-	#cp *.h                        ../../../../../Applications/rp_sdk/include
-	#rm                            ../../../../../Applications/rp_sdk/include/licverify/*.h
-	#cp licverify/*.h              ../../../../../Applications/rp_sdk/include/licverify
-	#rm                            ../../../../../Applications/rp_sdk/include/licverify/encoder/*.h
-	#cp licverify/encoder/*.h      ../../../../../Applications/rp_sdk/include/licverify/encoder
-	#cp build/include/cryptopp/*.h ../../../../../Applications/rp_sdk/include/cryptopp
-
 
 $(SDKOBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
