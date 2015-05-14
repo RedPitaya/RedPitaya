@@ -24,4 +24,4 @@ clean:
 	$(MAKE) -C doc clean
 
 install:
-	$(MAKE) -C src install
+	$(MAKE) -C src install INSTALL_DIR=$(abspath $(INSTALL_DIR))

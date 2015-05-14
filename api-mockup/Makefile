@@ -14,8 +14,8 @@ FPGA=fpga.bit
 
 RPLIB_DIR=rpbase
 RPAPPLIB_DIR=rpApplications
-RPLIB=$(RPLIB_DIR)/src/librpapp.so
-RPAPPLIB=$(RPAPPLIB_DIR)/src/librp.so
+RPLIB=$(RPLIB_DIR)/src/librp.so
+RPAPPLIB=$(RPAPPLIB_DIR)/src/librpapp.so
 ARTIFACTS=$(RPLIB) $(RPAPPLIB)
 
 #CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
