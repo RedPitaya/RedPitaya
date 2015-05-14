@@ -47,7 +47,7 @@ BUILD=build
 TARGET=target
 NAME=ecosystem
 
-SOC_DIR=FPGA
+SOC_DIR=fpga
 
 # targets
 FPGA       = $(SOC_DIR)/out/red_pitaya.bit
