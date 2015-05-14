@@ -4,31 +4,23 @@
 # Red Pitaya library librp and test app Makefile.
 #
 
-APP=$(notdir $(CURDIR:%/=%))
-
 # Versioning system
 # BUILD_NUMBER ?= 0
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-LIBRP=librp.so
-TEST=testApp
-ARTIFACTS=$(LIBRP) $(TEST)
+LIBRP=../lib/librp.so
 
 all: $(LIBRP)
 
 $(LIBRP):
 	$(MAKE) -C src
 
-$(TEST):
-	$(MAKE) -C test
-
 docapi:
 	$(MAKE) -C doc
 
 clean:
 	$(MAKE) -C src clean
-	$(MAKE) -C test clean
 	$(MAKE) -C doc clean
 
 install:

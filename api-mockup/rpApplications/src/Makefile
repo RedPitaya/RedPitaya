@@ -25,7 +25,7 @@ OBJEXT   = .o
 # Input/Output directories
 
 OBJECTS_DIR = ../obj
-INSTALL_DIR  ?= .
+INSTALL_DIR ?= .
 SOURCE_DIR  = .
 OUTPUT_DIR  = ../../lib
 
