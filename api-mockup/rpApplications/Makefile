@@ -4,23 +4,16 @@
 # Red Pitaya library rpApplib and test app Makefile.
 #
 
-APP=$(notdir $(CURDIR:%/=%))
-FPGA=fpga.bit
-
 # Versioning system
 # BUILD_NUMBER ?= 0
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-RPLIB=rpApplib.so
-ARTIFACTS=$(RPLIB) $(TEST)
+LIRPAPP=../lib/librpapp.so
 
-#CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-#export CFLAGS
+all: $(LIRPAPP)
 
-all: $(RPLIB)
-
-$(RPLIB):
+$(LIRPAPP):
 	$(MAKE) -C src
 
 # TODO, there is no documentation directory here

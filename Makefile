@@ -26,21 +26,22 @@ INSTALL_DIR=$(BUILD)/redpitaya
 TARGET=target
 NAME=ecosystem
 
-LINUX_DIR=OS/linux
-LINUX_SOURCE_DIR=$(LINUX_DIR)/linux-xlnx
-UBOOT_DIR=OS/u-boot
-SOC_DIR=FPGA
-URAMDISK_DIR=OS/buildroot
-NGINX_DIR=Bazaar/nginx
-MONITOR_DIR=Test/monitor
-GENERATE_DIR=Test/generate
-ACQUIRE_DIR=Test/acquire
-CALIB_DIR=Test/calib
-DISCOVERY_DIR=OS/discovery
-ECOSYSTEM_DIR=Applications/ecosystem
-SCPI_SERVER_DIR=scpi-server/
-LIBRP_DIR=api-mockup/rpbase
-SDK_DIR=SDK/
+LINUX_DIR       = OS/linux
+LINUX_SOURCE_DIR= $(LINUX_DIR)/linux-xlnx
+UBOOT_DIR       = OS/u-boot
+SOC_DIR         = FPGA
+URAMDISK_DIR    = OS/buildroot
+NGINX_DIR       = Bazaar/nginx
+MONITOR_DIR     = Test/monitor
+GENERATE_DIR    = Test/generate
+ACQUIRE_DIR     = Test/acquire
+CALIB_DIR       = Test/calib
+DISCOVERY_DIR   = OS/discovery
+ECOSYSTEM_DIR   = Applications/ecosystem
+SCPI_SERVER_DIR = scpi-server/
+LIBRP_DIR       = api-mockup/rpbase
+LIBRPAPP_DIR    = api-mockup/rpApplications
+SDK_DIR         = SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
 LINUX=$(BUILD)/uImage
@@ -55,16 +56,17 @@ URAMDISK=$(BUILD)/uramdisk.image.gz
 
 LIBREDPITAYA=shared/libredpitaya/libredpitaya.a
 
-NGINX=$(INSTALL_DIR)/sbin/nginx
-MONITOR=$(INSTALL_DIR)/bin/monitor
-GENERATE=$(INSTALL_DIR)/bin/generate
-ACQUIRE=$(INSTALL_DIR)/bin/acquire
-CALIB=$(INSTALL_DIR)/bin/calib
-DISCOVERY=$(INSTALL_DIR)/sbin/discovery
-ECOSYSTEM=$(INSTALL_DIR)/www/apps/info/info.json
+NGINX       = $(INSTALL_DIR)/sbin/nginx
+MONITOR     = $(INSTALL_DIR)/bin/monitor
+GENERATE    = $(INSTALL_DIR)/bin/generate
+ACQUIRE     = $(INSTALL_DIR)/bin/acquire
+CALIB       = $(INSTALL_DIR)/bin/calib
+DISCOVERY   = $(INSTALL_DIR)/sbin/discovery
+ECOSYSTEM   = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER = $(INSTALL_DIR)/bin/scpi-server
-LIBRP = $(INSTALL_DIR)/lib/librp.so
-GDBSERVER  = $(INSTALL_DIR)/bin/gdbserver
+LIBRP       = $(INSTALL_DIR)/lib/librp.so
+LIBRPAPP    = $(INSTALL_DIR)/lib/librpapp.so
+GDBSERVER   = $(INSTALL_DIR)/bin/gdbserver
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -163,6 +165,10 @@ $(LIBRP):
 	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+$(LIBRPAPP):
+	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
 	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
@@ -191,7 +197,8 @@ clean:
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP_DIR) clean
+	make -C $(LIBRP_DIR)    clean
+	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	rm $(BUILD) -rf
