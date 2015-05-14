@@ -34,8 +34,8 @@ TARGET=$(OUTPUT_DIR)/librpapp.so
 
 # List of compiled object files
 OBJECTS =	common.o \
-			osciloscopeApp.o \
-			rpApp.o
+		osciloscopeApp.o \
+		rpApp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
