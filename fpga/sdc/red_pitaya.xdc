@@ -120,8 +120,8 @@ set_property PACKAGE_PIN P15 [get_ports {dac_pwm_o[2]}]
 set_property PACKAGE_PIN U13 [get_ports {dac_pwm_o[3]}]
 
 ### XADC
-set_property IOSTANDARD TMDS_33 [get_ports {vinp_i[*]}]
-set_property IOSTANDARD TMDS_33 [get_ports {vinn_i[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {vinp_i[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {vinn_i[*]}]
 set_property LOC XADC_X0Y0 [get_cells i_ams/XADC_inst]
 #AD0
 set_property PACKAGE_PIN C20 [get_ports {vinp_i[0]}]
@@ -200,14 +200,18 @@ set_property PACKAGE_PIN J14     [get_ports {led_o[7]}]
 #NET "adc_clk" TNM_NET = "adc_clk";
 #TIMESPEC TS_adc_clk = PERIOD "adc_clk" 125 MHz;
 
-create_clock -period 8.000 -name adc_clk_in [get_ports adc_clk_p_i]
+create_clock -period 8.000 -name adc_clk [get_ports adc_clk_p_i]
 
 set_input_delay -clock adc_clk 3.400 [get_ports adc_dat_a_i[*]]
 set_input_delay -clock adc_clk 3.400 [get_ports adc_dat_b_i[*]]
 
 create_clock -period 4.000 -name rx_clk  [get_ports daisy_p_i[1]]
 
-set_false_path -from [get_clocks adc_clk_in] -to [get_clocks dac_clk_1x]
-set_false_path -from [get_clocks dac_clk_1x] -to [get_clocks pll_dac_clk_2x]
-set_false_path -from [get_clocks dac_clk_1x] -to [get_clocks pll_dac_clk_2p]
+set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_out]
+set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks ser_clk_out]
+set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_2clk_out]
+set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks adc_clk]
+set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks par_clk]
+set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2clk_out]
+set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2ph_out]
 
