@@ -32,7 +32,7 @@ $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB) $(DEPLIBS)
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
 
 $(WS_SERVER_LIB): 
-	cd $(WS_SERVER_DIR); ./build.sh
+	cd $(WS_SERVER_DIR); $(MAKE)
 
 $(DEPLIBS):
 	mkdir -p $(DEPLIBS_DIR)
