@@ -17,13 +17,17 @@ CXXSOURCES= \
 
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE= -I$(RP_SDK) -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/libjson
+INCLUDE  = -I$(RP_SDK)
+INCLUDE += -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/libjson
+INCLUDE += -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/cryptopp
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
 COMMON_FLAGS+=-Wall -g -fPIC -O0
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib -Wl,--whole-archive -lrp_sdk -lcryptopp -Wl,--no-whole-archive
+LDFLAGS  = -shared $(COMMON_FLAGS) -Wl,--whole-archive -Wl,--no-whole-archive
+LDFLAGS += -L$(RP_SDK) -lrp_sdk
+LDFLAGS += -L../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/build/lib -lcryptopp
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
