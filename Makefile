@@ -21,8 +21,8 @@
 
 BUILD=build
 # TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
-#INSTALLPATH=$(BUILD)/opt/redpitaya
-INSTALLPATH=$(BUILD)/redpitaya
+#INSTALL_DIR=$(BUILD)/opt/redpitaya
+INSTALL_DIR=$(BUILD)/redpitaya
 TARGET=target
 NAME=ecosystem
 
@@ -55,16 +55,16 @@ URAMDISK=$(BUILD)/uramdisk.image.gz
 
 LIBREDPITAYA=shared/libredpitaya/libredpitaya.a
 
-NGINX=$(INSTALLPATH)/sbin/nginx
-MONITOR=$(INSTALLPATH)/bin/monitor
-GENERATE=$(INSTALLPATH)/bin/generate
-ACQUIRE=$(INSTALLPATH)/bin/acquire
-CALIB=$(INSTALLPATH)/bin/calib
-DISCOVERY=$(INSTALLPATH)/sbin/discovery
-ECOSYSTEM=$(INSTALLPATH)/www/apps/info/info.json
-SCPI_SERVER = $(INSTALLPATH)/bin/scpi-server
-LIBRP = $(INSTALLPATH)/lib/librp.so
-GDBSERVER  = $(INSTALLPATH)/bin/gdbserver
+NGINX=$(INSTALL_DIR)/sbin/nginx
+MONITOR=$(INSTALL_DIR)/bin/monitor
+GENERATE=$(INSTALL_DIR)/bin/generate
+ACQUIRE=$(INSTALL_DIR)/bin/acquire
+CALIB=$(INSTALL_DIR)/bin/calib
+DISCOVERY=$(INSTALL_DIR)/sbin/discovery
+ECOSYSTEM=$(INSTALL_DIR)/www/apps/info/info.json
+SCPI_SERVER = $(INSTALL_DIR)/bin/scpi-server
+LIBRP = $(INSTALL_DIR)/lib/librp.so
+GDBSERVER  = $(INSTALL_DIR)/bin/gdbserver
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -91,8 +91,8 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MON
 $(BUILD):
 	mkdir $(BUILD)
 
-$(INSTALLPATH):
-	mkdir $(INSTALLPATH)
+$(INSTALL_DIR):
+	mkdir $(INSTALL_DIR)
 
 
 # Linux build provides: uImage kernel, dtc compiler.
@@ -130,42 +130,42 @@ $(LIBREDPITAYA):
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(GENERATE):
 	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ECOSYSTEM):
-	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(SCPI_SERVER):
 	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(LIBRP):
 	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALLPATH))
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
-	cp Test/gdb-server/gdbserver $(abspath $(INSTALLPATH))/bin
+	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
 
 sdk:
 	$(MAKE) -C $(SDK_DIR) clean include
