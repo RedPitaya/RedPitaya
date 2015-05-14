@@ -33,20 +33,20 @@ TARGET=$(OUTPUT_DIR)/librp.so
 
 # List of compiled object files
 OBJECTS =	common.o \
-			housekeeping.o \
-			id_handler.o \
-			dpin_handler.o \
-			oscilloscope.o \
-			acq_handler.o \
-			analog_mixed_signals.o \
-			apin_handler.o \
-			health.o \
-			health_handler.o \
-			generate.o \
-			gen_handler.o \
-			calib.o \
-			i2c.o \
-			rp.o
+		housekeeping.o \
+		id_handler.o \
+		dpin_handler.o \
+		oscilloscope.o \
+		acq_handler.o \
+		analog_mixed_signals.o \
+		apin_handler.o \
+		health.o \
+		health_handler.o \
+		generate.o \
+		gen_handler.o \
+		calib.o \
+		i2c.o \
+		rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
