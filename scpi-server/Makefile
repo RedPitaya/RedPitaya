@@ -13,23 +13,14 @@ APP=$(notdir $(CURDIR:%/=%))
 
 # Installation directory. It is changed when using the main Makefile++++++
 INSTALL_DIR ?= .
-API_DIR=../api-mockup/
 
 CROSS_COMPILE?=arm-linux-gnueabi-
 
 SCPIPARSER=3rdparty/libs/scpi-parser/libscpi/dist/libscpi.so
 SCPISRV=scpi-server
-LIBRP=../api-mockup/lib/librp.so
-LIBRPAPP=../api-mockup/lib/librpapp.so
-ARTIFACTS= $(LIBRP) $(LIBRPAPP) $(SCPIPARSER) $(SCPISRV)
+ARTIFACTS= $(SCPIPARSER) $(SCPISRV)
 
-all: $(LIBRP) $(LIBRPAPP) $(SCPIPARSER) $(SCPISRV)
-
-$(LIBRP):
-	$(MAKE) -C $(API_DIR)/rpbase
-
-$(LIBRPAPP):
-	$(MAKE) -C $(API_DIR)/rpApplications
+all: $(SCPIPARSER) $(SCPISRV)
 
 $(SCPISRV):
 	$(MAKE) -C src
@@ -42,11 +33,7 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	cp $(SCPISRV)    $(INSTALL_DIR)/bin
 	cp $(SCPIPARSER) $(INSTALL_DIR)/lib
-	make -C $(API_DIR)/rpbase         INSTALL_DIR=$(INSTALL_DIR)/lib install
-	make -C $(API_DIR)/rpApplications INSTALL_DIR=$(INSTALL_DIR)/lib install
 
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C 3rdparty/libs/scpi-parser clean
-	$(MAKE) -C $(API_DIR)/rpbase         clean
-	$(MAKE) -C $(API_DIR)/rpApplications clean
