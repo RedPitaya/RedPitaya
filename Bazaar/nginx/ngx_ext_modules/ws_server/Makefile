@@ -32,7 +32,7 @@ $(LIB): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 $(RP_MANAGER_LIB): 
-	cd $(RP_MANAGER_DIR); ./build.sh
+	cd $(RP_MANAGER_DIR); $(MAKE)
 
 clean: 
 	rm -rf $(LIB) $(OBJECTS)
