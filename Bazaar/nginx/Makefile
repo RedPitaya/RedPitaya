@@ -28,7 +28,12 @@ $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
 
 $(WS_SERVER_LIB): 
-	make -C $(WS_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+$(DEPLIBS):
+	mkdir -p $(DEPLIBS_DIR)
+	$(MAKE) -C $(SHARED)
+	$(MAKE) -C $(SHARED) install INSTALL_DIR=$(abspath $(DEPLIBS_DIR))
 
 # Override default nginx install, since Red Pitaya uses only a subset
 # of its default install.
