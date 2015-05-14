@@ -1,73 +1,143 @@
-
-
-#*******************************************************************************
-# Simple script to control vivado project via command line
+################################################################################
+# Vivado tcl script for building RedPitaya FPGA in non project mode
 #
-# It takes two argument
-#   clean   cleans project files
-#   build   build all output files
+# Usage:
+# vivado -mode tcl -source red_pitaya_vivado.tcl
+################################################################################
 
+################################################################################
+# define paths
+################################################################################
 
+set path_rtl rtl
+set path_ip  ip
+set path_sdc sdc
 
-#*******************************************************************************
-# Open project
-open_project ./vivado/red_pitaya.xpr
+set path_out out
+set path_sdk sdk
 
+file mkdir $path_out
+file mkdir $path_sdk
 
-#*******************************************************************************
-# Update sources
-update_compile_order -fileset sources_1
+################################################################################
+# setup an in memory project
+################################################################################
 
+set part xc7z010clg400-1
 
-##*******************************************************************************
-## Clean project
+create_project -in_memory -part $part
 
-if {[lindex $argv 0] == "clean"} {
-   ## clean implementation
-   reset_run impl_1
+# experimental attempts to avoid a warning
+#get_projects
+#get_designs
+#list_property  [current_project]
+#set_property FAMILY 7SERIES [current_project]
+#set_property SIM_DEVICE 7SERIES [current_project]
 
-   ## clean synthesis
-   reset_run synth_1
+################################################################################
+# create PS BD (processing system block design)
+################################################################################
 
-   ## clean PS project configuration
-   reset_target all [get_files  ./vivado/red_pitaya.srcs/sources_1/bd/system/system.bd]
-}
+# create PS BD
+source                            $path_ip/system_bd.tcl
 
+# generate SDK files
+generate_target all [get_files    system.bd]
+write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 
+################################################################################
+# read files:
+# 1. RTL design sources
+# 2. IP database files
+# 3. constraints
+################################################################################
 
+# template
+#read_verilog                      $path_rtl/...
 
-##*******************************************************************************
-## Make output files
+read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
-if {[lindex $argv 0] == "build"} {
+read_verilog                      $path_rtl/axi_master.v
+read_verilog                      $path_rtl/axi_slave.v
+read_verilog                      $path_rtl/axi_wr_fifo.v
 
-   ## export PS configuration
-   generate_target all [get_files  ./vivado/red_pitaya.srcs/sources_1/bd/system/system.bd]
-   open_bd_design ./vivado/red_pitaya.srcs/sources_1/bd/system/system.bd
-   export_hardware [get_files ./vivado/red_pitaya.srcs/sources_1/bd/system/system.bd]
-   close_bd_design system
+read_verilog                      $path_rtl/red_pitaya_acum.sv
+read_verilog                      $path_rtl/red_pitaya_ams.v
+read_verilog                      $path_rtl/red_pitaya_analog.v
+read_verilog                      $path_rtl/red_pitaya_asg_ch.v
+read_verilog                      $path_rtl/red_pitaya_asg.v
+read_verilog                      $path_rtl/red_pitaya_daisy_rx.v
+read_verilog                      $path_rtl/red_pitaya_daisy_test.v
+read_verilog                      $path_rtl/red_pitaya_daisy_tx.v
+read_verilog                      $path_rtl/red_pitaya_daisy.v
+read_verilog                      $path_rtl/red_pitaya_dfilt1.v
+read_verilog                      $path_rtl/red_pitaya_hk.v
+read_verilog                      $path_rtl/red_pitaya_pid_block.v
+read_verilog                      $path_rtl/red_pitaya_pid.v
+read_verilog                      $path_rtl/red_pitaya_ps.v
+read_verilog                      $path_rtl/red_pitaya_scope.v
+read_verilog                      $path_rtl/red_pitaya_test.v
+read_verilog                      $path_rtl/red_pitaya_top.v
 
-   ## do synthesis
-   launch_runs synth_1
-   wait_on_run synth_1
+read_xdc                          $path_sdc/red_pitaya.xdc
 
-   ## do implementation
-   launch_runs impl_1
-   wait_on_run impl_1
+################################################################################
+# run synthesis
+# report utilization and timing estimates
+# write checkpoint design
+################################################################################
 
-   ## make bit file
-   launch_runs impl_1 -to_step write_bitstream
-   wait_on_run impl_1
-}
+#synth_design -top red_pitaya_top
+synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
 
+write_checkpoint         -force   $path_out/post_synth
+report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt
+report_power             -file    $path_out/post_synth_power.rpt
 
+################################################################################
+# run placement and logic optimization
+# report utilization and timing estimates
+# write checkpoint design
+################################################################################
 
+opt_design
+power_opt_design
+place_design
+phys_opt_design
+write_checkpoint         -force   $path_out/post_place
+report_timing_summary    -file    $path_out/post_place_timing_summary.rpt
+#write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 
-#*******************************************************************************
-# Close opened project
-close_project
+################################################################################
+# run router
+# report actual utilization and timing,
+# write checkpoint design
+# run drc, write verilog and xdc out
+################################################################################
 
+route_design
+write_checkpoint         -force   $path_out/post_route
+report_timing_summary    -file    $path_out/post_route_timing_summary.rpt
+report_timing            -file    $path_out/post_route_timing.rpt -sort_by group -max_paths 100 -path_type summary
+report_clock_utilization -file    $path_out/clock_util.rpt
+report_utilization       -file    $path_out/post_route_util.rpt
+report_power             -file    $path_out/post_route_power.rpt
+report_drc               -file    $path_out/post_imp_drc.rpt
+#write_verilog            -force   $path_out/bft_impl_netlist.v
+#write_xdc -no_fixed_only -force   $path_out/bft_impl.xdc
 
+################################################################################
+# generate a bitstream
+################################################################################
+
+write_bitstream -force $path_out/red_pitaya.bit
+
+################################################################################
+# generate system definition
+################################################################################
+
+write_sysdef             -hwdef   $path_sdk/red_pitaya.hwdef \
+                         -bitfile $path_out/red_pitaya.bit \
+                         -file    $path_sdk/red_pitaya.sysdef
 
 exit
-

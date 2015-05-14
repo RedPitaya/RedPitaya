@@ -11,42 +11,39 @@
 #
 
 INSTAL_DIR ?= .
-THIS_DIR := $(shell pwd)
-
-# settings for x86_64 build machine
-VM=$(XILINX)/java6/lin64/jre/bin
-ECLIPSE=$(XILINX_EDK)/eclipse/lin64/eclipse/eclipse
-FPGA_DIR=release1/fpga
-FPGA_TOOL=vivado
-SDK_EXPORT=$(FPGA_DIR)/$(FPGA_TOOL)/red_pitaya.sdk/SDK/SDK_Export
 
 # build artefacts
-FPGA_BIT=$(FPGA_DIR)/$(FPGA_TOOL)/red_pitaya.runs/impl_1/red_pitaya_top.bit
-FSBL_ELF=$(SDK_EXPORT)/fsbl/Debug/fsbl.elf
-DEV_TREE=$(SDK_EXPORT)/device-tree_bsp_0/ps7_cortexa9_0/libsrc/device-tree_v0_00_x/xilinx.dts
+FPGA_BIT=out/red_pitaya.bit
+FSBL_ELF=sdk/fsbl/executable.elf
+MEMTEST_ELF=sdk/memtest/executable.elf
+DEVICE_TREE=sdk/dts/system.dts
+DEVICE_TREE_SRC=xilinx-v2015.1.tar.gz
 
-.PHONY: all clean install memtest
+# Vivado from Xilinx provides IP handling, FPGA compilation
+# hsi (hardware software interface) provides software integration
+# both tools are run in batch mode with an option to avoid log/journal files
+VIVADO = vivado -nolog -nojournal -mode batch
+HSI    = hsi    -nolog -nojournal -mode batch
 
-all: $(FPGA_BIT) $(FSBL_ELF) $(DEV_TREE)
+.PHONY: all clean
 
-$(FPGA_BIT):
-	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) fpga
-
-$(FSBL_ELF):
-	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) sw_package
+all: $(FPGA_BIT) $(FSBL_ELF) $(MEMTEST_ELF) $(DEVICE_TREE)
 
 clean:
-	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) clean
+	rm -rf out .Xil .srcs sdk device-tree-xlnx-xilinx-v2015.1
 
-memtest:
-	cp $(FSBL_ELF) $(INSTALL_DIR)
-	cd $(FPGA_DIR); cat $(THIS_DIR)/patches/*.patch | patch -p2
-	rm $(FSBL_ELF)
-	rm -f `find $(SDK_EXPORT)/fsbl/ -name \*.o`
-	make -C $(FPGA_DIR) FPGA_TOOL=$(FPGA_TOOL) fsbl
-	cp $(FSBL_ELF) $(INSTALL_DIR)/memtest.elf
+$(FPGA_BIT):
+	$(VIVADO) -source red_pitaya_vivado.tcl
 
-install: memtest
-	cp $(FPGA_BIT) $(INSTALL_DIR)/fpga.bit
-	cp $(DEV_TREE) $(INSTALL_DIR)/devicetree.dts
-	patch $(INSTALL_DIR)/devicetree.dts $(FPGA_DIR)/image/src/device_tree.patch
+$(FSBL_ELF): $(FPGA_BIT)
+	$(HSI) -source red_pitaya_hsi_fsbl.tcl
+
+$(MEMTEST_ELF): $(FPGA_BIT)
+	$(HSI) -source red_pitaya_hsi_memtest.tcl
+
+$(DEVICE_TREE_SRC):
+	wget https://github.com/Xilinx/device-tree-xlnx/archive/$(DEVICE_TREE_SRC)
+
+$(DEVICE_TREE): $(FPGA_BIT) $(DEVICE_TREE_SRC)
+	tar -xzf $(DEVICE_TREE_SRC)
+	$(HSI) -source red_pitaya_hsi_dts.tcl
