@@ -68,6 +68,9 @@ LIBRP       = $(INSTALL_DIR)/lib/librp.so
 LIBRPAPP    = $(INSTALL_DIR)/lib/librpapp.so
 GDBSERVER   = $(INSTALL_DIR)/bin/gdbserver
 
+APP_SCOPE_DIR = Applications/scope
+APP_SCOPE     = $(INSTALL_DIR)/www/apps/scope
+
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
@@ -168,6 +171,10 @@ $(LIBRP):
 $(LIBRPAPP):
 	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(APP_SCOPE):
+	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
