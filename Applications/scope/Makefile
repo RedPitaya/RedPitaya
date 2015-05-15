@@ -36,7 +36,7 @@ $(ZIP): $(CONTROLLER)
 	$(RM) target -rf
 
 install: $(ZIP)
-	cd $(INSTALL_DIR)/www/apps; unzip $(ZIP)
+	unzip $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
 	$(MAKE) -C src clean
