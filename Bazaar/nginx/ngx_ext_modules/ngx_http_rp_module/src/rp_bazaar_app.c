@@ -255,6 +255,7 @@ inline int is_registered(const char *dir,
 
     if(stat((const char *)file, &stat_buf) < 0) {
         /* File does not exist */
+        fprintf(stderr, "%s does not exist.\n", file);
         free(file);
         return 0;
     }
@@ -307,6 +308,7 @@ inline int is_controller_ok(const char *dir,
 
     if(stat((const char *)file, &stat_buf) < 0) {
         /* File does not exist */
+        fprintf(stderr, "%s does not exist.\n", file);
         free(file);
         return 0;
     }
