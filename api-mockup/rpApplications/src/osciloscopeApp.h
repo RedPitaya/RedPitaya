@@ -44,6 +44,7 @@ int osc_stop();
 int osc_reset();
 int osc_single();
 int osc_autoScale();
+int osc_isRunning(bool *running);
 int osc_setTimeScale(float scale);
 int osc_getTimeScale(float *division);
 int osc_setTimeOffset(float offset);
@@ -97,6 +98,6 @@ float unscaleAmplitudeChannel(rpApp_osc_source source, float value);
 float viewIndexToTime(int index);
 float roundUpTo125(float data);
 
-void *mainThreadFun(void *arg);
+void *mainThreadFun();
 
 #endif //__OSCILOSCOPE_H
