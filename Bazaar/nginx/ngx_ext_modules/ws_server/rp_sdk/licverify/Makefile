@@ -26,7 +26,7 @@ all: $(CRYPTO_LIB) $(SOURCES) $(EXECUTABLE)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	cd $(CRYPTO_DIR); $(MAKE)
+	cd $(CRYPTO_DIR); chmod +x build.sh; ./build.sh
 
 $(EXECUTABLE):	$(OBJECTS)
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
