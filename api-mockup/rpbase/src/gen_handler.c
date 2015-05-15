@@ -57,6 +57,8 @@ int gen_SetDefaultValues() {
     ECHECK(gen_setGenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS));
     ECHECK(gen_setBurstCount(RP_CH_1, 1));
     ECHECK(gen_setBurstCount(RP_CH_2, 1));
+    ECHECK(gen_setBurstPeriod(RP_CH_1, BURST_PERIOD_MIN));
+    ECHECK(gen_setBurstPeriod(RP_CH_2, BURST_PERIOD_MIN));
     ECHECK(gen_setTriggerSource(RP_CH_1, RP_GEN_TRIG_SRC_INTERNAL));
     ECHECK(gen_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL));
     ECHECK(gen_setPhase(RP_CH_1, 0.0));
