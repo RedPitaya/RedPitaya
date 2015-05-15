@@ -95,6 +95,10 @@ int rpApp_OscAutoScale() {
     return osc_autoScale();
 }
 
+int rpApp_OscIsRunning(bool *running) {
+    return osc_isRunning(running);
+}
+
 int rpApp_OscSetTimeScale(float scale) {
     return osc_setTimeScale(scale);
 }
