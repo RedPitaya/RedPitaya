@@ -25,6 +25,7 @@ scpi_result_t RP_APP_OscStop(scpi_t *context);
 scpi_result_t RP_APP_OscReset(scpi_t *context);
 scpi_result_t RP_APP_OscAutoscale(scpi_t *context);
 scpi_result_t RP_APP_OscSingle(scpi_t *context);
+scpi_result_t RP_APP_OscRunning(scpi_t *context);
 scpi_result_t RP_APP_OscChannel1SetAmplitudeOffset(scpi_t *context);
 scpi_result_t RP_APP_OscChannel2SetAmplitudeOffset(scpi_t *context);
 scpi_result_t RP_APP_OscChannel3SetAmplitudeOffset(scpi_t *context);
