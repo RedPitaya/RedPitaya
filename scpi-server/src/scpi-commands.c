@@ -254,6 +254,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:RST", .callback = RP_APP_OscReset,},
         {.pattern = "OSC:AUTOSCALE", .callback = RP_APP_OscAutoscale,},
         {.pattern = "OSC:SINGLE", .callback = RP_APP_OscSingle,},
+        {.pattern = "OSC:RUNNING", .callback = RP_APP_OscRunning,},
         {.pattern = "OSC:CH1:OFFSET", .callback = RP_APP_OscChannel1SetAmplitudeOffset,},
         {.pattern = "OSC:CH2:OFFSET", .callback = RP_APP_OscChannel2SetAmplitudeOffset,},
         {.pattern = "OSC:MATH:OFFSET", .callback = RP_APP_OscChannel3SetAmplitudeOffset,},
