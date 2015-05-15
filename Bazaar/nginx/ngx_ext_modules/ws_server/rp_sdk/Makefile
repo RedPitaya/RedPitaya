@@ -34,21 +34,15 @@ all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	cd $(CRYPTO_DIR); ./build.sh
+	cd $(CRYPTO_DIR); chmod +x build.sh; ./build.sh
     
 $(LIB): $(OBJECTS) 
 	ar rc $(LIB) $(OBJECTS)
 	rm ../../../../../Applications/rp_sdk/lib/*.a
 	cp librp_sdk.a ../../../../../Applications/rp_sdk/lib
 	cp build/lib/libcryptopp.a ../../../../../Applications/rp_sdk/lib
-	#rm ../../../../../Applications/rp_sdk/include/*.h
-	#cp *.h ../../../../../Applications/rp_sdk/include
-	#rm ../../../../../Applications/rp_sdk/include/licverify/*.h
-	#cp licverify/*.h ../../../../../Applications/rp_sdk/include/licverify
-	#rm ../../../../../Applications/rp_sdk/include/licverify/encoder/*.h
-	#cp licverify/encoder/*.h ../../../../../Applications/rp_sdk/include/licverify/encoder
-	#cp build/include/cryptopp/*.h ../../../../../Applications/rp_sdk/include/cryptopp
-
+	rm ../../../../../Applications/rp_sdk/include/*.h
+	cp *.h ../../../../../Applications/rp_sdk/include
 
 $(SDKOBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
@@ -56,4 +50,4 @@ $(SDKOBJDIR)/%.o: %.cpp
 
 clean:
 	rm -rf $(LIB) $(OBJDIR)
-	cd $(CRYPTO_DIR); ./clean.sh
+	cd $(CRYPTO_DIR); chmod +x clean.sh; ./clean.sh
