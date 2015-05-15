@@ -8,7 +8,8 @@ CSOURCES= \
 CXXSOURCES= \
 	new_main.cpp \
 
-RP_SDK=../../rp_sdk
+RP_API=../../../api-mockup/lib
+RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
 INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
 
@@ -16,7 +17,11 @@ INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
 COMMON_FLAGS+=-Wall -g -fPIC -O2
 CFLAGS+=$(COMMON_FLAGS) -Werror $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib -Wl,--whole-archive -lrp_sdk -lrpapp -lrp -Wl,--no-whole-archive
+LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
+LDFLAGS+= -Wl,--whole-archive
+LDFLAGS+=-L$(RP_SDK) -lrp_sdk
+LDFLAGS+=-L$(RP_API) -lrpapp -lrp
+LDFLAGS+= -Wl,--no-whole-archive
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
