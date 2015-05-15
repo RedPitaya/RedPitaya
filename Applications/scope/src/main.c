@@ -16,7 +16,7 @@
 
 #include "version.h"
 
-#include "../../rp_sdk/include/rpApp.h"
+#include "rpApp.h"
 
 
 /* Parameters description structure - must be the same for all RP controllers */
