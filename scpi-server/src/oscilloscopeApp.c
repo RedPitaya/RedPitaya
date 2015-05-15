@@ -70,6 +70,18 @@ scpi_result_t RP_APP_OscSingle(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_APP_OscRunning(scpi_t *context) {
+    bool running;
+    int result = rpApp_OscIsRunning(&running);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*OSC:RUNNING Failed: %s.", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, running);
+    syslog(LOG_INFO, "*OSC:RUNNING Successfully.");
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_APP_OscChannel1SetAmplitudeOffset(scpi_t *context) {
     return RP_APP_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, context);
 }
