@@ -260,18 +260,19 @@ float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t
  * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
  * @param[in] voltage Voltage, specified in [V]
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+ * @param[in] calibFS_LO True if calibrating for front size (out) low voltage
  * @param[in] calibScale Calibration scale factor. If zero -> no scaling, specified in [full scale] - EPROM calibration parameter storage format
  * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
  * @param[in] user_dc_off User specified DC offset, , specified in [V]
  * @retval int ADC/DAC counts
  */
-uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, uint32_t calib_scale, int calib_dc_off, float user_dc_off)
+uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off)
 {
     int adc_cnts = 0;
 
     /* adopt the calculation with calibration scaling. If 0 ->  no calibration */
     if (calib_scale != 0) {
-        voltage /= cmn_CalibFullScaleToVoltage(calib_scale) / (FULL_SCALE_NORM/adc_max_v);
+        voltage /= cmn_CalibFullScaleToVoltage(calib_scale) / calibFS_LO ? 1 : (FULL_SCALE_NORM/adc_max_v);
     }
 
     /* check and limit the specified voltage arguments towards */
