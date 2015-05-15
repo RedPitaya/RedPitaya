@@ -48,11 +48,27 @@ h3 {
   width: 100%;
 }
 
+.step {
+	width: 150px;
+}
+
+.big_margin_padding {
+	margin: 20px;
+	padding: 20px;
+	border: dotted 2px #668014;
+}
+
 .pagewrapper{
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0px auto;
   margin-top: 20px;
   padding: 10px;
+}
+
+.list-group-item {
+	background-color: #323232;
+	font-family: sans-serif;
+	color: red;
 }
 
 .headerwrapper{

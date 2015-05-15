@@ -1,30 +1,47 @@
- <html>
+ <html style="background-color: #1D1D1D">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="stylesheet" href="./style.css" type="text/css" />
+		
 		<!--[if IE]>
 			<link rel="stylesheet" href="./ie9.css" type="text/css" />
     <![endif]-->
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
 		<script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+	    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+	    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+	    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="./style.css" type="text/css" />
 		<script type="text/javascript">
+			var current_app = "";
 		    var url = '/';
 			$(function() {
 				$.ajax({
 					url: url + 'bazaar?apps=',
 					cache: false
 				}).done(function( result ) {
-					container = $( '.appdescredpitaya' );
+					buttons = $('.buttons');
+					desc = $('.description');
+
 					$.each( result, function( key, value ) {
-						el = container.clone();
-						$(el).children('.appicon').attr('src', url + key + '/info/icon.png');
-						$(el).children('.appdesc').children('h3').html(value.name + ' ' + value.version);
-						$(el).children('.appdesc').children('p').html(value.description);
-						$(el).children('.run-button').children('a').attr('href', url + key);
-						$(el).show();
-						$(el).appendTo( '.pagewrapper' );
+						buttons = buttons.clone();
+						$(buttons).children('a').html(value.name);
+						$(buttons).children('a').attr('href', '#' + key);
+						$(buttons).appendTo('.list-group');
+						$(buttons).show();
+						current_app = key;
 					});
+
+					$('.buttons').click(function() {						
+						key = $(this).children('a').attr('href').substr(1);
+						$('.description').children('.name').html(result[key].name);
+						$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
+						$('.description').children('.desc').html(result[key].description);
+						$("#run").attr('href', url + key);
+						$("#demo").attr('href', url + key + '?type=demo');
+						$(desc).show();
+					});
+
 				}).fail(function( msg ) {
 					alert("Something has gone wrong. Is there a problem with the server?");
 			  }	)
@@ -37,26 +54,43 @@
 		<title>My Red Pitaya</title>
 	</head>
 
-	<body>
-		<div class="headerwrapper">
-			<a href="http://www.redpitaya.com">
-				<img src="assets/images/logo_white.png" class="logo"/>
-			</a>
-		</div>
-		<div class="bazaar-link">
-    	<a href="bazaar" class="red inline button">Get more applications</a>
- 	 	</div>
-		<div class="pagewrapper">
-			<div class="appdescredpitaya" style="display: none">
-				<img src="" class="appicon"/>
-				<div class="appdesc">
-					<h3>Name version-revision</h3>
-					<p>Lorem ipsum some description.</p>
+<body style="background-color: #1D1D1D;">
+<div class="pagewrapper">
+	<div class="panel panel-default" style="background-color: #1D1D1D; margin: 50px auto;">
+		<div class="panel-body">
+			<div class="row" style="padding: 20px;">
+				<div class="col-sm-6 col-md-2" style="min-width: 270px; height: 500; overflow-y: scroll;">
+					<img class="appicon" style="width: 150px;" src="../assets/images/logo_white.png">	
+					<h4 style="color: silver;">Select the Instrument:</h4>
+					<div class="list-group pull-left">
+						<div class="buttons" style="display: none; margin: 20px auto;">													
+							<a href="#" id="buttons" class="list-group-item">1</a>
+						</div>
+					</div>
 				</div>
-				<div class="run-button">
-					<a href="scope" class="red button">Run</a>
+
+				<div class="col-sm-6 col-md-6" id="right-col" style="min-width: 600px; height: 500; overflow-y: scroll; color: silver; margin: auto 25px">
+					<div class="description" style="display: none;">
+						<h2 class="name"></h2>
+						<img class="icon" src="">
+						<p class="desc"></p>
+					</div>
+				</div>
+			</div>
+			<div class="container">
+				<div class="bazaar-link" style="float:left;">
+					<a href="bazaar" class="list-group-item">Get more applications</a>
+				</div>
+				<div class="bazaar-link" style="float:right;">
+					<a href="#run" id="run" class="list-group-item">Run</a>
+				</div>
+				<div class="bazaar-link" style="float:right;">
+					<a href="#demo" id="demo" class="list-group-item">Demo</a>
 				</div>
 			</div>
 		</div>
-	</body>
+	</div>
+</div>
+
+</body>
 </html>
