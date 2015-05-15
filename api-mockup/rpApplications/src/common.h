@@ -54,9 +54,9 @@ if ((THREAD_X) != -1) { \
     (THREAD_X) = (pthread_t) -1; \
 }
 
-#define START_THREAD(THREAD_X, THREAD_FUN, ATTRIBUTE) \
+#define START_THREAD(THREAD_X, THREAD_FUN) \
 if ((THREAD_X) == -1) { \
-    if (pthread_create(&(THREAD_X), NULL, &(THREAD_FUN), (ATTRIBUTE))) { \
+    if (pthread_create(&(THREAD_X), NULL, &(THREAD_FUN), NULL)) { \
         return RP_APP_EST; \
     } \
 }
