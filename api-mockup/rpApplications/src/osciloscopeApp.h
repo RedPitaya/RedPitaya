@@ -95,6 +95,7 @@ float scaleAmplitudeChannel(rp_channel_t channel, float volts);
 float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset);
 float unscaleAmplitudeChannel(rpApp_osc_source source, float value);
 float viewIndexToTime(int index);
+float roundUpTo125(float data);
 
 void *mainThreadFun(void *arg);
 
