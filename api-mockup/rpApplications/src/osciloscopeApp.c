@@ -25,6 +25,7 @@
 #include "../../rpbase/src/common.h"
 
 bool auto_freRun_mode = 0;
+bool acqRunning = false;
 uint32_t viewSize = VIEW_SIZE_DEFAULT;
 float *view;
 float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
@@ -90,9 +91,7 @@ int osc_SetDefaultValues() {
 int osc_run() {
     ECHECK_APP(threadSafe_acqStart());
     ECHECK_APP(osc_setTriggerSource(trigSource));
-
-    bool single = false;
-    START_THREAD(mainThread, mainThreadFun, &single);
+    START_THREAD(mainThread, mainThreadFun);
     return RP_OK;
 }
 
@@ -150,6 +149,11 @@ int osc_autoScale() {
     else {
         return RP_APP_ENS;
     }
+}
+
+int osc_isRunning(bool *running) {
+    *running = acqRunning;
+    return RP_OK;
 }
 
 int osc_setTimeScale(float scale) {
@@ -384,18 +388,13 @@ int osc_getTriggerLevel(float *level) {
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
     switch (sweep) {
+        case RPAPP_OSC_TRIG_NORMAL:
         case RPAPP_OSC_TRIG_SINGLE:
             break;
         case RPAPP_OSC_TRIG_AUTO:
             pthread_mutex_lock(&mutex);
             auto_freRun_mode = false;
             pthread_mutex_unlock(&mutex);
-        case RPAPP_OSC_TRIG_NORMAL:
-            // If previous sweep was SINLEGLE
-            if (trigSweep == RPAPP_OSC_TRIG_SINGLE) {
-                ECHECK_APP(threadSafe_acqStart());
-                ECHECK_APP(osc_setTriggerSource(trigSource))
-            }
             break;
         default:
             return RP_EOOR;
@@ -644,6 +643,7 @@ int osc_getInvData(rpApp_osc_source source, float *data, uint32_t size){
 int threadSafe_acqStart() {
     pthread_mutex_lock(&mutex);
     ECHECK_APP(rp_AcqStart())
+    acqRunning = true;
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
@@ -651,6 +651,7 @@ int threadSafe_acqStart() {
 int threadSafe_acqStop() {
     pthread_mutex_lock(&mutex);
     ECHECK_APP(rp_AcqStop())
+    acqRunning = false;
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
@@ -735,7 +736,7 @@ float roundUpTo125(float data) {
 /*
 * Thread function
 */
-void *mainThreadFun(void *arg) {
+void *mainThreadFun() {
     rp_acq_trig_state_t state, preState = RP_TRIG_STATE_TRIGGERED;
     double timer = clock();
     uint32_t buffSize = ADC_BUFFER_SIZE, _triggerPosition, getBufSize, startIndex, _writePointer = 0, _preWritePointer = 0;
@@ -743,7 +744,7 @@ void *mainThreadFun(void *arg) {
     float deltaSample, _timeOffset, _timeScale;
     float data[2][buffSize];
 
-    do {
+    while (true) {
         rp_AcqGetTriggerState(&state);
 
         // If in auto mode end trigger timed out
@@ -774,7 +775,12 @@ void *mainThreadFun(void *arg) {
 
             // Re-set trigger
             if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
-                threadSafe_acqStart();
+                if (acqRunning == 1)
+                    threadSafe_acqStart();
+            } else {
+                pthread_mutex_lock(&mutex);
+                acqRunning = false;
+                pthread_mutex_unlock(&mutex);
             }
 
             // Reset autoSweep timer
@@ -825,6 +831,6 @@ void *mainThreadFun(void *arg) {
         }
         preState = state;
         _preWritePointer = _writePointer;
-    } while (!*(bool *) arg);
+    }
     return RP_OK;
 }
