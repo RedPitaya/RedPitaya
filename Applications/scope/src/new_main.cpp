@@ -2,8 +2,7 @@
 
 #include <DataManager.h>
 #include <CustomParameters.h>
-#include "../../rp_sdk/include/rpApp.h"
-#include "../../rp_sdk/include/CustomParameters.h"
+#include "rpApp.h"
 
 
 /***************************************************************************************
