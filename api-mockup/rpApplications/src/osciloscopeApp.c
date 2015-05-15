@@ -121,20 +121,19 @@ int osc_single() {
 }
 
 int osc_autoScale() {
-    float period, vMax, vMin, vMean;
+    float period, vpp, vMean;
     bool isAutoScaled = false;
 
     for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
-        ECHECK_APP(osc_measureMinVoltage(source, &vMin));
-        ECHECK_APP(osc_measureMaxVoltage(source, &vMax));
+        ECHECK_APP(osc_measureVpp(source, &vpp));
         ECHECK_APP(osc_measureMeanVoltage(source, &vMean));
 
         // If there is signal on input
-        if (fabs(vMin) > SIGNAL_EXISTENCE || fabs(vMax) > SIGNAL_EXISTENCE) {
+        if (fabs(vpp) > SIGNAL_EXISTENCE) {
             ECHECK_APP(osc_setAmplitudeOffset(source, vMean));
             // Calculate scale
-            float scale = (float) (1/((vMax - source) * AUTO_SCALE_AMP_SCA_FACTOR * DIVISIONS_COUNT_Y / 2) * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-            ECHECK_APP(osc_setAmplitudeScale(source, scale));
+            float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+            ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
 
             if (!isAutoScaled) {
                 // set time scale only based on one channel
@@ -721,6 +720,17 @@ float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op, float scale, f
     }
 }
 
+float roundUpTo125(float data) {
+    double power = ceil(log(data) / log(10)) - 1;       // calculate normalization factor
+    double dataNorm = data / pow(10, power);            // normalize data, so that 1 < data < 10
+    if (dataNorm < 2)                                   // round normalized data
+        dataNorm = 2;
+    else if (dataNorm < 5)
+        dataNorm = 5;
+    else
+        dataNorm = 10;
+    return (float) (dataNorm * pow(10, power));         // unnormalize data
+}
 
 /*
 * Thread function
