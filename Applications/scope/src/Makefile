@@ -11,7 +11,8 @@ CXXSOURCES= \
 RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
+INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../libjson
+INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
 COMMON_FLAGS+=-Wall -g -fPIC -O2
