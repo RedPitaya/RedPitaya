@@ -33,7 +33,6 @@ zip: include
 	zip -r ../$(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile" 
 
 clean:
-	rm -rf include
 	rm -rf ../SDK*.zip
 	
 	
