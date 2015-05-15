@@ -4,6 +4,8 @@ case "$1" in
         start)
                 echo -n "Starting nginx ... "
                 /bin/cp -f /opt/sbin/nginx /sbin
+		/bin/cp -f /opt/lib/* /lib
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib
                 /sbin/nginx -p /opt/www
                 echo "done."
                 ;;
