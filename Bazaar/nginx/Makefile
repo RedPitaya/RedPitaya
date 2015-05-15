@@ -20,6 +20,7 @@ JOBS=$$(($(NUM_CPU)+1))
 
 WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
+BOOST_LIBS_DIR=$(WS_SERVER_DIR)/boost/lib
 
 all: $(NGINX)
 
@@ -40,16 +41,18 @@ $(DEPLIBS):
 # TODO: Configure nginx to exclude client_body_temp.
 install:
 	$(STRIP) $(NGINX)
-	mkdir -p $(DESTDIR)/lib
-	mkdir -p $(DESTDIR)/sbin
-	mkdir -p $(DESTDIR)/www/conf
-	mkdir -p $(DESTDIR)/www/logs
-	mkdir -p $(DESTDIR)/www/apps
-	mkdir -p $(DESTDIR)/www/client_body_temp
+	test -d '$(DESTDIR)/sbin'     || mkdir -p '$(DESTDIR)/sbin'
+	test -d '$(DESTDIR)/lib'      || mkdir -p '$(DESTDIR)/lib'
+	test -d '$(DESTDIR)/www/conf' || mkdir -p '$(DESTDIR)/www/conf'
+	test -d '$(DESTDIR)/www/logs' || mkdir -p '$(DESTDIR)/www/logs'
+	test -d '$(DESTDIR)/www/apps' || mkdir -p '$(DESTDIR)/www/apps'
+	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	cp $(NGINX) '$(DESTDIR)/sbin/'
+	cp $(BOOST_LIBS_DIR)/libboost_regex.so.1.57.0 '$(DESTDIR)/lib/'
+	cp $(BOOST_LIBS_DIR)/libboost_system.so.1.57.0 '$(DESTDIR)/lib/'
+	cp $(BOOST_LIBS_DIR)/libboost_thread.so.1.57.0 '$(DESTDIR)/lib/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
-	cp ngx_ext_modules/ws_server/boost/lib/*.so* $(DESTDIR)/lib
 
 
 clean:
