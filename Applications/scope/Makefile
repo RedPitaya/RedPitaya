@@ -32,7 +32,7 @@ $(ZIP): $(CONTROLLER)
 	cp -r $(CONTROLLER) $(FPGA) canvasjs.min.js css fonts img *.html info js target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
-	cd target; zip -r $(ZIP) *
+	cd target; zip -r ../$(ZIP) *
 	$(RM) target -rf
 
 install: $(ZIP)
