@@ -50,6 +50,8 @@ int hk_AreExCiPBitsSet(uint32_t bits, bool* result);
 
 int hk_AreExCiNBitsSet(uint32_t bits, bool* result);
 
+int hk_EnableDigitalLoop(bool enable);
+
 
 
 #endif //__HOUSEKEEPING_H

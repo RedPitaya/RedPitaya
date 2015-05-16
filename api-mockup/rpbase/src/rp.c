@@ -138,6 +138,14 @@ const char* rp_GetError(int errorCode) {
 }
 
 /**
+ * Digital loop
+ */
+int rp_EnableDigitalLoop(bool enable) {
+    return hk_EnableDigitalLoop(enable);
+}
+
+
+/**
  * Calibrate methods
  */
 
@@ -145,7 +153,6 @@ rp_calib_params_t rp_GetCalibrationSettings()
 {
     return calib_GetParams();
 }
-
 
 int rp_CalibrateFrontEndOffset(rp_channel_t channel) {
     return calib_SetFrontEndOffset(channel);
