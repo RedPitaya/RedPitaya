@@ -12,14 +12,11 @@
 * for more details on the language used herein.
 */
 
-#include <sys/socket.h>
 #include <float.h>
 #include "math.h"
 #include "common.h"
 #include "generate.h"
 #include "gen_handler.h"
-
-#include <stdio.h>
 
 float chA_amplitude = 1, chB_amplitude = 1;
 float chA_offset = 0, chB_offset = 0;
@@ -381,6 +378,9 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
     if (value == RP_GEN_TRIG_SRC_INTERNAL) {
         ECHECK(generate_setTriggerSource(channel, 1))
     }
+    CHANNEL_ACTION(channel,
+                   chA_burstPeriod = period,
+                   chB_burstPeriod = period)
     return RP_OK;
 }
 
@@ -604,13 +604,13 @@ int synthesis_square(float frequency, float *data_out) {
         if((0 <= i) && (i <  BUFFER_LENGTH/2 - trans)){
             data_out[i] = 1.0;
         }else if ((i >= BUFFER_LENGTH/2 - trans) && (i <  BUFFER_LENGTH/2)){
-            data_out[i] = 1.0 - (2.0 / trans) * (i - (BUFFER_LENGTH/2 - trans));
+            data_out[i] = (1.0f - (2.0f / trans) * (i - (BUFFER_LENGTH/2 - trans)));
         }
         else if ((0 <= BUFFER_LENGTH/2) && (i <  BUFFER_LENGTH   - trans)){
-            data_out[i] = -1.0;
+            data_out[i] = -1.0f;
         }
         else if ((i >= BUFFER_LENGTH   - trans) && (i <  BUFFER_LENGTH)){
-            data_out[i] = -1.0 + (2.0 / trans) * (i - (BUFFER_LENGTH - trans));
+            data_out[i] = -1.0f + (2.0f / trans) * (i - (BUFFER_LENGTH - trans));
         }
     }
 
