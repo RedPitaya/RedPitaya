@@ -176,6 +176,14 @@ int rpApp_OscSingle();
 int rpApp_OscAutoScale();
 
 /**
+ * Gets oscilloscope state. If running is true then oscilloscope is acquiring new data else data is not refreshed.
+ * @param running Pointer where oscilloscope state is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rpApp_OscIsRunning(bool *running);
+
+/**
 * Sets amplitude offset in volts.
 * @param channel Channel 1 or 2 for which we want to set amplitude offset.
 * @param offset Amplitude offset in volts.
