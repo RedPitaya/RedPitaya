@@ -86,10 +86,15 @@ void *lcr_MainThread();
 
 /* Measurment functions */
 int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq);
-int lcr_SafeThreadAcqData(rp_channel_t channel, float *data);
 
-int lcr_FreqSweep(int16_t **calib_data);
-int lcr_FreqSweep(int16_t **calib_data);
+int lcr_SafeThreadAcqData(rp_channel_t channel, 
+	float *data, rp_acq_decimation_t decimation);
+
+int lcr_FreqSweep(float **calib_data);
+int lcr_MeasSweep(float **calib_data);
+
+float lcr_data_analysis(float **data, uint32_t size, float dc_bias, 
+		float r_shunt, float complex *Z, float w_out, int decimation);
 
 /* Helper functions */
 int lcr_GetRshuntFactor(float *r_shunt_factor);
