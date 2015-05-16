@@ -13,7 +13,6 @@
  */
 
 #include <stdio.h>
-
 #include "version.h"
 
 #include "rpApp.h"
@@ -49,7 +48,6 @@ const char *rp_app_desc(void) {
 int rp_app_init(void) {
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
     rpApp_Init();
-    rpApp_OscRun();
     return 0;
 }
 
@@ -69,32 +67,5 @@ int rp_get_params(rp_app_params_t **p) {
 }
 
 int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
-    return 0;
-}
-
-int rp_create_signals(float ***a_signals) {
-    return 0;
-}
-
-void rp_cleanup_signals(float ***a_signals) { }
-
-int rp_copy_params(rp_app_params_t *src, rp_app_params_t **dst) {
-    return 0;
-}
-
-int rp_clean_params(rp_app_params_t *params) {
-    return 0;
-}
-
-int rp_update_main_params(rp_app_params_t *params) {
-    return 0;
-}
-
-int rp_update_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas) {
-    return 0;
-}
-
-
-int rp_osc_get_signals(float ***signals, int *sig_idx) {
     return 0;
 }
