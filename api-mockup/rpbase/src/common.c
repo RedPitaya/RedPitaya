@@ -298,5 +298,9 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
     else if(adc_cnts < -(1 << (field_len - 1)))
         adc_cnts = -1 << (field_len - 1);
 
+    /* if negative remove higher bits that represent negative number */
+    if (adc_cnts < 0)
+        adc_cnts = adc_cnts & ((1<<field_len)-1);
+
     return (uint32_t)adc_cnts;
 }
