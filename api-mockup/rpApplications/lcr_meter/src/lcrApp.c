@@ -32,6 +32,8 @@ uint32_t 				acq_size = 1024;
 pthread_mutex_t 		mutex;
 pthread_t 				*lcr_thread_handler = NULL;
 
+bool print_data = false;
+
 /* Init lcr params struct */
 lcr_params_t p_params = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false};
 lcr_params_t *main_params = &p_params; 
@@ -105,9 +107,9 @@ int lcr_Reset(){
 }
 
 int lcr_SetDefaultValues(lcr_params_t *params){
-	ECHECK_APP(lcr_SetAmplitude(params, 0.5));
-	ECHECK_APP(lcr_SetDcBias(params, 0.5));
-	ECHECK_APP(lcr_SetAveraging(params, 5));
+	ECHECK_APP(lcr_SetAmplitude(params, 1));
+	ECHECK_APP(lcr_SetDcBias(params, 0));
+	ECHECK_APP(lcr_SetAveraging(params, 1));
 	ECHECK_APP(lcr_SetCalibMode(params, 0));
 	ECHECK_APP(lcr_SetRefReal(params, 0.0));
 	ECHECK_APP(lcr_SetRefImg(params, 0.0));
@@ -123,26 +125,38 @@ int lcr_SetDefaultValues(lcr_params_t *params){
 /* Generate functions  */
 int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 
-	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_GenFreq(channel, freq));
-	ECHECK_APP(rp_GenAmp(channel, ampl));
-	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
-	ECHECK_APP(rp_GenOutEnable(channel));
-	pthread_mutex_unlock(&mutex);
+	//pthread_mutex_lock(&mutex);
+	(rp_GenFreq(channel, freq));
+	(rp_GenAmp(channel, ampl));
+	(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+	(rp_GenOutEnable(channel));
+	//pthread_mutex_unlock(&mutex);
 
 	return RP_OK;
 }
 
 /* Acquire functions. Callback to the API structure */
-int lcr_SafeThreadAcqData(rp_channel_t channel, float *data){
+int lcr_SafeThreadAcqData(rp_channel_t channel, 
+	float *data, rp_acq_decimation_t decimation){
 
+	uint32_t pos, curr_pos;
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_AcqGetOldestDataV(channel, &acq_size, (float *)data));
+	
+	ECHECK_APP(rp_AcqSetDecimation(decimation));
+	ECHECK_APP(rp_AcqStart());
+	ECHECK_APP(rp_AcqGetWritePointer(&pos));
+	
+	do {
+		ECHECK_APP(rp_AcqGetWritePointer(&curr_pos));
+	}while(curr_pos > (pos + ADC_BUFF_SIZE));
+
+	
+	(rp_AcqGetLatestDataV(channel, &acq_size, (float *)data));
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
-float lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias, 
+float lcr_data_analysis(float **data, uint32_t size, float dc_bias, 
 		float r_shunt, float complex *Z, float w_out, int decimation){
 
 
@@ -153,17 +167,18 @@ float lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias,
 	int COORDINATES = 2;
 	float T = (decimation / SAMPLE_RATE);
 
-	int16_t *u_dut = malloc(size * sizeof(int16_t));
-	int16_t *i_dut = malloc(size * sizeof(int16_t));
+	float *u_dut = malloc(size * sizeof(float));
+	float *i_dut = malloc(size * sizeof(float));
 
-	int16_t **u_dut_s = multiDimensionVector(COORDINATES, size);
-	int16_t **i_dut_s = multiDimensionVector(COORDINATES, size);
-	int16_t **component_lock_in = multiDimensionVector(COORDINATES, size);
+	float **u_dut_s = multiDimensionVector(COORDINATES, size);
+	float **i_dut_s = multiDimensionVector(COORDINATES, size);
+	float **component_lock_in = multiDimensionVector(COORDINATES, size);
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
 		i_dut[i] = data[1][i] / r_shunt; 
 	}
+
 
 	for(int i = 0; i < size; i++){
 		ang = (T * w_out * i);
@@ -204,25 +219,32 @@ float lcr_data_analysis(int16_t **data, uint32_t size, float dc_bias,
 	return z_ampl;
 }
 
-int lcr_FreqSweep(int16_t **calib_data){
+int lcr_FreqSweep(float **calib_data){
 
 	/* Forward variable declaration */
 	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
 	float log_freq, a, b, c, w_out;
 	float start_freq = main_params->start_freq, end_freq = main_params->end_freq,
 		ampl = main_params->amplitude, averaging = main_params->avg,
-		dc_bias = main_params->dc_bias, z_ampl;
+		dc_bias = main_params->dc_bias;//, z_ampl;
 
-	float r_shunt;
+	float r_shunt = R_SHUNT_430K;
 	lcr_scale_e scale_type = main_params->scale;
 	int steps = main_params->steps;
 	int freq_step;
 	int decimation;
+	rp_acq_decimation_t api_decimation;
+
+	/* Testing purposes */
+	scale_type = 0;
+	start_freq = 1000;
+	end_freq = 10000;
+	steps = 10;
 
 	/* Forward memory allocation */
 	float *frequency 		= (float *)malloc(steps * sizeof(float));
 	float complex *Z 		= (float complex *)malloc((averaging + 1) * sizeof(float complex));
-	int16_t **analysis_data 	= multiDimensionVector(2, acq_size);
+	float **analysis_data 	= (float **)multiDimensionVector(2, acq_size);
 
 	/* Channel memory allocation */
 	float *ch1_data = malloc((acq_size) * sizeof(float));
@@ -232,7 +254,6 @@ int lcr_FreqSweep(int16_t **calib_data){
 		printf("End frequency must be greater than the starting frequency.\n");
 		return RP_EOOR;
 	}
-
 	/* Check for logarithmic scale */
 	if(scale_type == LCR_SCALE_LOGARITHMIC){
 		a = log10(start_freq);
@@ -244,13 +265,12 @@ int lcr_FreqSweep(int16_t **calib_data){
 	(steps == 1) ? (freq_step = (int)(end_freq - start_freq)) : 
 		(freq_step = (int)(end_freq - start_freq) / (steps - 1));
 
-
 	/* Main frequency sweep loop */
 	for(int i = 0; i < steps; i++){
-		
 		/* R shunt algorithm calculation */
-		(i != 0) ? (lcr_SetRshunt(main_params, calculateShunt(z_ampl))) : (lcr_SetRshunt(main_params, 0));
-		lcr_GetRshuntFactor(&r_shunt);
+		//(i != 0) ? (lcr_SetRshunt(main_params, calculateShunt(z_ampl)))
+			//: (lcr_SetRshunt(main_params, 0));
+		//lcr_GetRshuntFactor(&r_shunt);
 
 		if(scale_type == LCR_SCALE_LOGARITHMIC){
 			log_freq = powf(10, (c * i + a));
@@ -273,16 +293,37 @@ int lcr_FreqSweep(int16_t **calib_data){
 		for(int j = 0; j < averaging; j++){
 
 			if(frequency[i] >= 160000){
+
 				decimation = LCR_DEC_1;
+				api_decimation = RP_DEC_1;
+
 			}else if(frequency[i] >= 20000){
+
 				decimation = LCR_DEC_8;
+				api_decimation = RP_DEC_8;
+
 			}else if(frequency[i] >= 2500){
+
 				decimation = LCR_DEC_64;
-			}else if(frequency[i] >= 1024){
+				api_decimation = RP_DEC_64;
+
+			}else if(frequency[i] >= 160){
+
+				decimation = LCR_DEC_1024;
+				api_decimation = RP_DEC_1024;
+
+			}else if(frequency[i] >= 20){
+
 				decimation = LCR_DEC_8192;
-			}else if(frequency[i]){
+				api_decimation = RP_DEC_8192;
+
+			}else if(frequency[i] >= 2.5){
+
 				decimation = LCR_DEC_65536;
+				api_decimation = RP_DEC_65536;
 			}
+
+
 
 			uint32_t new_size = round((min_periodes * SAMPLE_RATE) / 
 				(frequency[i] * decimation));
@@ -295,31 +336,33 @@ int lcr_FreqSweep(int16_t **calib_data){
 				acq_size = new_size;
 			}
 			/* TODO Make dynamic memory allocation */
-
 			/* Signal acquisition for both channels */
 			int ret_val;
-			ret_val = lcr_SafeThreadAcqData(RP_CH_1, ch1_data);
+			ret_val = lcr_SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
 				return RP_EOOR;
 			}
 
-			ret_val = lcr_SafeThreadAcqData(RP_CH_2, ch2_data);
+			ret_val = lcr_SafeThreadAcqData(RP_CH_2, ch2_data, api_decimation);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
 				return RP_EOOR;
 			}
-
+			if(i == steps - 1){
+				print_data = true;
+			}
 			/* Two dimension vector creation -- u_acq */
-			for(int i = 0; i < new_size; i++){
-				analysis_data[0][i] = ch1_data[i];
-				analysis_data[1][i] = ch2_data[i];
+			for(int k = 0; k < new_size; k++){
+				analysis_data[0][k] = ch1_data[k];
+				
+				//if(i == 99) printf("%f,\n", ch2_data[k]);
+				analysis_data[1][k] = ch2_data[k];
 			}
-
 			/* Calculate output data */
-			z_ampl = lcr_data_analysis(analysis_data, acq_size, dc_bias, 
+			lcr_data_analysis(analysis_data, acq_size, dc_bias, 
 						r_shunt, Z, w_out, decimation);
-
+			
 			if(ret_val != RP_OK){
 				printf("Lcr data analysis failed to properly execute.\n");
 				return RP_EOOR;
@@ -330,10 +373,11 @@ int lcr_FreqSweep(int16_t **calib_data){
 			
 		}
 	}
+	print_data = false;
 	return RP_OK;
 }
 
-int lcr_MeasSweep(int16_t **calib_data){
+int lcr_MeasSweep(float **calib_data){
 
 	return RP_OK;
 }
@@ -341,7 +385,7 @@ int lcr_MeasSweep(int16_t **calib_data){
 /* Main LCR thread */
 void *lcr_MainThread(){
 	
-	int16_t **data = multiDimensionVector(2, acq_size);
+	float **data = multiDimensionVector(2, acq_size);
 
 	lcr_FreqSweep(data);
 	
