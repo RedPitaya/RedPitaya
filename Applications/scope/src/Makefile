@@ -15,8 +15,8 @@ INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../libjson
 INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
-COMMON_FLAGS+=-Wall -g -fPIC -O2
-CFLAGS+=$(COMMON_FLAGS) -Werror $(INCLUDE)
+COMMON_FLAGS+=-Wall -g -fPIC -O0
+CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
@@ -48,4 +48,3 @@ make_c_app: $(OBJECTS)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
-
