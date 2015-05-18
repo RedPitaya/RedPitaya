@@ -3,6 +3,7 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
 #include "rpApp.h"
+#include "version.h"
 
 
 /* -------------------------  debug parameter  --------------------------------- */
@@ -22,20 +23,20 @@ CFloatSignal ch2("ch2", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 CFloatSignal math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 /* ------------------------------- DATA PARAMETERS ------------------------------ */
-CIntParameter dataSize("OSC_DATA_SIZE", CBaseParameter::RW, 1024, 0, 1, 16*1024);
+CIntParameter dataSize("OSC_DATA_SIZE", CBaseParameter::RW, CH_SIGNAL_SIZE_DEFAULT, 0, 1, 16*1024);
 CFloatParameter viewPosition("OSC_VIEW_POS", CBaseParameter::RO, 0.5, 0, 0, 1);
 CFloatParameter viewPortion("OSC_VIEV_PART", CBaseParameter::RO, 0.1, 0, 0, 1);
 
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
-CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, false, 0);
-CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
+CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, true, 0);
+CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, true, 0);
 
 CBooleanParameter in1InvShow("CH1_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 CBooleanParameter in2InvShow("CH2_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 CBooleanParameter mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 
 CBooleanParameter inReset("OSC_RST", CBaseParameter::RW, false, 0);
-CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
+CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, true, 0);
 CBooleanParameter inAutoscale("OSC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 
@@ -140,6 +141,39 @@ CIntParameter calibrateBackEndOffset("CLAIB_BE_OFF", CBaseParameter::RW, 0, 0, -
 CIntParameter calibrateBackEndScale("CLAIB_BE_SCALE", CBaseParameter::RW, 0, 0, -1, 1);
 
 
+
+
+const char *rp_app_desc(void) {
+    return (const char *)"Red Pitaya osciloscope application.\n";
+}
+
+int rp_app_init(void) {
+    fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
+    CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
+    CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
+
+    rpApp_Init();
+    rpApp_OscRun();
+    return 0;
+}
+
+int rp_app_exit(void) {
+    fprintf(stderr, "Unloading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
+    rpApp_Release();
+    return 0;
+}
+
+int rp_set_params(rp_app_params_t *p, int len) {
+    return 0;
+}
+
+int rp_get_params(rp_app_params_t **p) {
+    return 0;
+}
+
+int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
+    return 0;
+}
 
 
 void UpdateParams(void) {
