@@ -4,11 +4,11 @@
 #include "CustomParameters.h"
 #include "misc.h"
 
-CBooleanParameter MyParameter80("param80", CBaseParameter::RO, false, 1);
+CBooleanParameter IsDemoParam("is_demo", CBaseParameter::RO, false, 1);
 
 int dbg_printf(const char * format, ...)
 {
-	static FILE* log = fopen("rp_sdk.log", "wt");
+	static FILE* log = fopen("/var/log/nginx/rp_sdk.log", "wt");
 	if(log)
 	{
 		va_list va;
@@ -289,6 +289,6 @@ extern "C" int ws_set_demo_mode(int a)
 	fputs("ws_set_demo_mode()\n", file);
 	fclose(file);
 
-	MyParameter80.Set(true);
+	IsDemoParam.Set(true);
 	return 0;
 }
