@@ -279,7 +279,9 @@ inline int is_registered(const char *dir,
         return 0;
     }
 
-    int is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
+	int is_reg = 1;
+	if(app.verify_app_license_func)
+		is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
 
     rp_bazaar_app_unload_module(&app);
 
@@ -331,6 +333,8 @@ inline int is_controller_ok(const char *dir,
         return 0;
     }
 
+	rp_bazaar_app_unload_module(&app);
+	
     free(file);
 
     return 1;
@@ -386,20 +390,10 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             }
             
             
-			FILE* file = fopen("log.txt", "a+");
-			fputs("start reg check\n", file);
-			fclose(file);
-
-			// FIXME
             char ver[256] = {0};
             strcpy(ver, j_ver->valuestring);
             if (!is_registered(dir, app_id, "controller.so"))
             	strcat(ver, "_demo");
-
-			file = fopen("log.txt", "a+");
-			fputs(ver, file);
-			fclose(file);
-
 
             cJSON_AddItemToObject(*json_root, app_id,cJSON_CreateString(ver, pool), pool);
             cJSON_Delete(j_ver, pool);
