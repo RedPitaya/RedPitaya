@@ -6,8 +6,11 @@
 
 #define IF_VALUE_CHANGED(X, ACTION) \
 if (X.Value() != X.NewValue()) { \
-    if (ACTION) { \
-        X.Update(); } }
+    int res = ACTION;\
+    if (res == RP_OK) { \
+        X.Update(); \
+    } \
+}
 
 #define IF_VALUE_CHANGED_BOOL(X, ACTION1, ACTION2) \
 if (X.Value() != X.NewValue()) { \
