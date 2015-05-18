@@ -130,6 +130,14 @@ public:
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
 };
 
+//custom CDoubleParameter
+class CDoubleParameter : public CCustomParameter<double>
+{
+public:
+	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+};
+
 //custom CBooleanParameter
 class CBooleanParameter : public CCustomParameter<bool>
 {
@@ -151,6 +159,14 @@ class CFloatSignal : public CCustomSignal<float>
 {
 public:
 	CFloatSignal(std::string _name, int _size, float _def_value)
+		:CCustomSignal(_name, _size, _def_value){};
+};
+
+//custom CDoubleSignal
+class CDoubleSignal : public CCustomSignal<double>
+{
+public:
+	CDoubleSignal(std::string _name, int _size, double _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
 };
 
