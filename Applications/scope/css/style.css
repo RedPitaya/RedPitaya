@@ -4,6 +4,33 @@ body {
   padding-right: 0 !important;
 }
 
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.clear:before, .clear:after {
+  content: "";
+  display: table;
+}
+
+.clear:after  {
+  clear: both;
+}
+
+input, #info div, #info span, .selectable {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 button:focus, button:active, select:focus, input:focus, option:focus {
   outline: 0 !important;
   -webkit-appearance: none !important;
@@ -215,26 +242,31 @@ area:hover {
   display: none;
 }
 
-.info {
+#info {
   margin-top: 10px;
+  min-height: 100px;
 }
 
-.div-out-math {
+.left-info {
   width: 160px;
   float: left;
 }
 
-.div-title {
+.info-title {
   float: left; 
   width: 46px;
 }
 
-.div-value {
+.info-value {
   float: left; 
   width: 90px;
 }
 
-.vpp-min {
+.info-title > div, .info-value > div {
+  display: none;
+}
+
+#info-meas {
   width: 195px;
   float: left;
   max-height: 82px;
@@ -257,7 +289,7 @@ area:hover {
   color: #ee3739 !important;
 }
 
-.math1, .btn.math1, .math1.focus {
+.math, .btn.math, .math.focus {
   color: #ab4d9d !important;
 }
 
@@ -265,9 +297,13 @@ area:hover {
   color: #75cede !important;
 }
 
-.ch1.active, .ch2.active, .out1.active, .out2.active, .math1.active, .trig.active {
+.ch1.active, .ch2.active, .out1.active, .out2.active, .math.active, .trig.active {
   color: #111 !important;
-} 
+}
+
+.menu-btn:disabled {
+  opacity: 0.3;
+}
 
 #edge1 img, #edge2 img {
   height: 18px;
@@ -333,7 +369,7 @@ area:hover {
   background-image: none;
 }
 
-#clear_means_content {
+#meas_list {
   margin-top: 10px;
   /* margin-bottom: 2px; */
   min-height: 30px;
@@ -341,14 +377,14 @@ area:hover {
   overflow: hidden;
 }
 
-.clear-means {
+.meas-item {
   margin: 0px 1px 1px 1px;
   height: 31px;
   border: 1px solid #999;
   cursor: pointer;
 }
 
-.clear-means:hover {
+.meas-item:hover {
   background-color:#444;
   color: #fff;
 }
@@ -403,17 +439,39 @@ area:hover {
   cursor: pointer;
 }
 
-#graph_holder {
+#graphs {
   margin-top: 20px;
   position: relative;
 }
 
 #graph_grid {
   border: 1px solid #5d5d5c;
+  margin-bottom: 2px;
 }
 
-#plot {
+.plot {
   position: absolute; 
   top: 0px; 
   left: 0px;
+}
+
+.y-offset-arrow, #time_offset_arrow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  margin-top: -8px;
+  display: none;
+}
+
+#time_offset_arrow {
+  margin-top: 0;
+  display: inline;
+}
+
+#new_scale {
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  z-index: 12;
 }
