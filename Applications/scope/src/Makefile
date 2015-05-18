@@ -13,10 +13,12 @@ RP_SDK=../../rp_sdk
 INCLUDE= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
-COMMON_FLAGS+=-Wall -g -fPIC -O2
-CFLAGS+=$(COMMON_FLAGS) -Werror $(INCLUDE)
+COMMON_FLAGS+=-Wall -g -fPIC -O0
+CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib -Wl,--whole-archive -lrp_sdk -lrpapp -lrp -Wl,--no-whole-archive
+LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib -Wl,--whole-archive -lrp_sdk -lcryptopp -lrpapp -lrp -Wl,--no-whole-archive
+COBJECTS=$(CSOURCES:.c=.o)
+CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
@@ -41,4 +43,3 @@ make_c_app: $(OBJECTS)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
-

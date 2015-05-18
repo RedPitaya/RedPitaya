@@ -296,6 +296,20 @@ const char* rp_GetError(int errorCode);
 
 
 ///@}
+/** @name Digital loop
+*/
+///@{
+
+/**
+* Enable or disables digital loop. This internally connect output to input
+* @param enable True if you want to enable this feature or false if you want to disable it
+* Each rp_GetCalibrationSettings call returns the same cached setting values.
+* @return Calibration settings
+*/
+int rp_EnableDigitalLoop(bool enable);
+
+
+///@}
 /** @name Calibrate
 */
 ///@{
