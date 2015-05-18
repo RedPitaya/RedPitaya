@@ -1,7 +1,7 @@
 /**
 * $Id: $
 *
-* @brief Red Pitaya application library lcr meter module interface
+* @brief Red Pitaya application lcr module application
 *
 * @Author Luka Golinar
 *
@@ -12,127 +12,58 @@
 * for more details on the language used herein.
 */
 
-#ifndef __LCRMETER_H
-#define __LCRMETER_H
+#ifndef __LCR_APP_H
+#define __LCR_APP_H
 
-#include <complex.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../../rpbase/src/rp.h"
+#include "lcr_meter.h"
 
-#define AMPLITUDE_MAX			1.0
-#define ADC_BUFF_SIZE			16 * 1024
-#define M_PI					3.14159265358979323846
-#define TRANS_EFFECT_STEPS		10
-#define SAMPLE_RATE				125e6
+/** @name General
+*/
+///@{
 
+/** TODO: Function desciption is still to be added. */
 
+/* lcr meter measurment specific functions */
+int lcrApp_LcrInit();
+int lcrApp_LcrRun(int measurment);
+int lcrApp_LcrStop();
+int lcrApp_LcrRelease();
+int lcrApp_LcrReset();
 
-typedef enum{
-	LCR_SCALE_LINEAR,
-	LCR_SCALE_LOGARITHMIC,
-} lcr_scale_e;
+/* Getters and setters */
+int lcrApp_LcrSetAmpl(float amplitude);
+int lcrApp_LcrSetAvg(int averaging);
+int lcrApp_LcrSetDcBias(float dc_bias);
+int lcrApp_LcrSetSteps(int steps);
+int lcrApp_LcrSetStartFreq(float s_freq);
+int lcrApp_LcrSetEndFreq(float e_freq);
+int lcrApp_LcrSetYplot(int y_plot);
+int lcrApp_LcrSetScale(int scale);
+int lcrApp_LcrSetLoadRe(float load_re);
+int lcrApp_LcrSetLoadImg(float load_img);
+int lcrApp_LcrSetCalib(int calib);
 
-typedef enum{
-	LCR_CALIB_NONE,
-	LCR_CALIB_OPEN,
-	LCR_CALIB_SHORT,
-	LCR_CALIB_LOAD,
-	LCR_CALIB_Z_REF,
-} lcr_calib_e;
+int lcrApp_LcrGetAmpl(float *amplitude);
+int lcrApp_LcrGetAvg(int *averaging);
+int lcrApp_LcrGetDcBias(float *dc_bias);
+int lcrApp_LcrGetSteps(int *steps);
+int lcrApp_LcrGetStartFreq(float *s_freq);
+int lcrApp_LcrGetEndFreq(float *e_freq);
+int lcrApp_LcrGetYplot(int *y_plot);
+int lcrApp_LcrGetScale(int *scale);
+int lcrApp_LcrGetLoadRe(float *load_re);
+int lcrApp_LcrGetLoadImg(float *load_img);
+int lcrApp_LcrGetCalib(int *calib);
 
-typedef enum{
-	LCR_MEASURMENT_SWEEP,
-	LCR_FREQUENCY_SWEEP,
-} lcr_sweep_e;
+int lcrApp_LcrSaveData(bool save);
 
-typedef enum{
-	LCR_R_SHUNT_30,
-	LCR_R_SHUNT_75,
-	LCR_R_SHUNT_300,
-	LCR_R_SHUNT_750,
-	LCR_R_SHUNT_3K,
-	LCR_R_SHUNT_7_5K,
-	LCR_R_SHUNT_30K,
-	LCR_R_SHUNT_80K,
-	LCR_R_SHUNT_430K,
-	LCR_R_SHUNT_3M,
-} lcr_r_shunt_e;
+#ifdef __cplusplus
+}
+#endif
 
-/* Main lcr params structure */
-typedef struct lcr_params_e{
-	float amplitude;
-	float dc_bias;
-	float avg;
-	lcr_r_shunt_e r_shunt;
-	lcr_calib_e mode; //lcr_calib_e
-	float ref_real;
-	float ref_img;
-	uint32_t steps;
-	float start_freq;
-	float end_freq;
-	lcr_scale_e scale;
-	lcr_sweep_e sweep; //lcr_sweep_e
-	bool user_wait;
-} lcr_params_t;
-
-/* Resource managment functions */
-int lcr_Init();
-int lcr_Release();
-int lcr_Reset();
-int lcr_SetDefaultValues();
-
-/* Main lcr functions */
-int lcr_Run();
-void *lcr_MainThread();
-
-/* Measurment functions */
-int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq);
-
-int lcr_SafeThreadAcqData(rp_channel_t channel, 
-	float *data, rp_acq_decimation_t decimation);
-
-int lcr_FreqSweep(float **calib_data);
-int lcr_MeasSweep(float **calib_data);
-
-float lcr_data_analysis(float **data, uint32_t size, float dc_bias, 
-		float r_shunt, float complex *Z, float w_out, int decimation);
-
-/* Helper functions */
-int lcr_GetRshuntFactor(float *r_shunt_factor);
-int calculateShunt(float z_ampl);
-
-/* Getters and Setters */
-int lcr_SetAmplitude(lcr_params_t *params, float ampl);
-int lcr_GetAmplitude(lcr_params_t *params, float *ampl);
-int lcr_SetDcBias(lcr_params_t *params, float dc_bias);
-int lcr_GetDcBias(lcr_params_t *params, float *dc_bias);
-int lcr_SetAveraging(lcr_params_t *params, float averaging);
-int lcr_GetAveraging(lcr_params_t *params, float *averaging);
-int lcr_SetRshunt(lcr_params_t *params, lcr_r_shunt_e r_shunt);
-int lcr_GetRShunt(lcr_params_t *params, lcr_r_shunt_e *r_shunt);
-int lcr_SetCalibMode(lcr_params_t *params, lcr_calib_e mode);
-int lcr_GetCalibMode(lcr_params_t *params, lcr_calib_e *mode);
-
-int lcr_SetRefReal(lcr_params_t *params, float ref_real);
-int lcr_GetRefReal(lcr_params_t *params, float *ref_real);
-int lcr_SetRefImg(lcr_params_t *params, float ref_img);
-int lcr_GetRefImg(lcr_params_t *params, float *ref_img);
-
-int lcr_SetSteps(lcr_params_t *params, uint32_t steps);
-int lcr_GetSteps(lcr_params_t *params, uint32_t *steps);
-int lcr_SetStartFreq(lcr_params_t *params, float start_freq);
-int lcr_GetStartFreq(lcr_params_t *params, float *start_freq);
-int lcr_SetEndFreq(lcr_params_t *params, float end_freq);
-int lcr_GetEndFreq(lcr_params_t *params, float *end_freq);
-int lcr_SetScaleType(lcr_params_t *params, lcr_scale_e scale);
-int lcr_GetScaleType(lcr_params_t *params, lcr_scale_e *scale);
-int lcr_SetSweepMode(lcr_params_t *params, lcr_sweep_e sweep);
-int lcr_GetSweepMode(lcr_params_t *params, lcr_sweep_e *sweep);
-int lcr_SetUserWait(lcr_params_t *params, bool wait);
-int lcr_GetUserWait(lcr_params_t *params, bool *wait);
-
-int lcr_SetUserView(uint32_t view);
-int lcr_GetUserView(uint32_t *view);
-
-#endif //__LCRMETER_H
-
-
+#endif //__LCR_APP_H
