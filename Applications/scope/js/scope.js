@@ -494,7 +494,7 @@
 
   // Changes Y zoom/scale for the selected signal
   OSC.changeYZoom = function(direction, curr_scale, send_changes) {
-    if(OSC.state.sel_sig_name != 'ch1' && OSC.state.sel_sig_name != 'ch2') {
+    if($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2', 'math']) < 0) {
       return;
     }
     
@@ -740,7 +740,7 @@ $(function() {
     OSC.changeXZoom(ev.target.id == 'jtk_left' ? '-' : '+');
   });
   
-  // Voltage offset arrows dragging
+  // Voltage offset arrow dragging
   $('.y-offset-arrow').draggable({
     axis: 'y',
     containment: 'parent',
@@ -772,7 +772,7 @@ $(function() {
     }
   });
   
-  // Voltage offset arrows dragging
+  // Voltage offset arrow dragging
   $('#time_offset_arrow').draggable({
     axis: 'x',
     containment: 'parent',

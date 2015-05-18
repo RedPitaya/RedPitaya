@@ -217,10 +217,10 @@
               </select>
             </div>
           </div>
-          <div class="col-xs-12 option-content out2">
+          <!-- div class="col-xs-12 option-content out2">
             <span class="col-info">Measurement range</span>
             <div class="right-menu-option" id="ch2_meas_range">- V</div>
-          </div>
+          </div -->
           <div class="col-xs-12 option-content">
             <span class="col-info">Vertical offset</span>
             <div class="right-menu-option">
@@ -315,7 +315,13 @@
               <input class="setfiled" name="SOUR1_VOLT_OFFS" id="SOUR1_VOLT_OFFS" type="text" value="0">
             </div>
           </div>
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
+            <div class="right-menu-option">
+              <span class="col-info">Phase</span>
+              <input class="setfiled" name="SOUR1_PHAS" id="SOUR1_PHAS" type="text" value="0">
+            </div>
+          </div>
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle</span>
               <input class="setfiled" name="SOUR1_DCYC" id="SOUR1_DCYC" type="text" value="0">
@@ -417,7 +423,12 @@
               <img src="img/arrow_nav_left.png">
               MATH
             </div>
-          </div> 
+          </div>
+          <div class="col-xs-12 option-content">
+            <div class="right-menu-option">
+              <button id="MATH_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
+            </div>
+          </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <div class="btn-group btn-group-justified" data-toggle="buttons">
@@ -668,7 +679,7 @@
           <div class="pull-right">
             Time <span id="OSC_TIME_SCALE">- </span> ms/div <br />
             Trig <img style="margin: -2px 0px 0px 0px;" src="img/toparrow.png"> IN1 <span id="trig_mv">- mV</span><br />
-            <img src="img/tarrow.png"> <span id="OSC_TIME_OFFSET">- </span><span id="osc_time_scale_units">ms</span><br />
+            <img src="img/tarrow.png"> <span id="OSC_TIME_OFFSET">- </span><span id="osc_time_offset_units">ms</span><br />
             <span id="mss">- MS/s</span>
           </div>
         </div>
