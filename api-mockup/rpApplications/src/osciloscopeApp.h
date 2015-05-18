@@ -20,13 +20,13 @@
 
 #define VIEW_SIZE_DEFAULT           1024
 #define DIVISIONS_COUNT_X           10
-#define DIVISIONS_COUNT_Y           8
+#define DIVISIONS_COUNT_Y           10
 
 #define AUTO_TRIG_TIMEOUT           1       // s
-#define SIGNAL_EXISTENCE            0.01    // V
+#define SIGNAL_EXISTENCE            0.03    // V
 #define PERIOD_STORAGE_PERIOD_COUNT 15
 #define AUTO_SCALE_PERIOD_COUNT     2
-#define AUTO_SCALE_AMP_SCA_FACTOR   1.5
+#define AUTO_SCALE_AMP_SCA_FACTOR   1.05
 #define AUTO_SCALE_TIME_OFFSET      0
 #define PRE_WPOINTER_EPSILON        0.001
 #define MAIN_THREAT_SLEEP           500     // us
