@@ -2,9 +2,6 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CSOURCES= \
-	main.c
-
 CXXSOURCES= \
 	new_main.cpp \
 
@@ -25,10 +22,9 @@ LDFLAGS+=-L$(RP_SDK)/cryptopp -lcryptopp
 LDFLAGS+=-L$(RP_API) -lrpapp -lrp
 LDFLAGS+= -Wl,--no-whole-archive
 
-COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 
-OBJECTS=$(COBJECTS) $(CXXOBJECTS)
+OBJECTS=$(CXXOBJECTS)
 
 OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controller.so
