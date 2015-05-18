@@ -43,9 +43,9 @@ CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 CFloatParameter in1Offset("OSC_CH1_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
-CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 0.1, 0, 0, 1000);
-CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 0.1, 0, 0, 1000);
-CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 0.1, 0, 0, 1000);
+CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
+CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
+CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 10, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 10, 0, 0, 1000);
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000);
@@ -326,6 +326,7 @@ void OnNewParams(void) {
     measureSelect2.Update();
     measureSelect3.Update();
     measureSelect4.Update();
+    mathOperation.Update();
 
     cursor1.Update();
     cursor2.Update();
