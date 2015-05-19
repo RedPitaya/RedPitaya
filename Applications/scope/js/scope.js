@@ -51,6 +51,7 @@
     socket_opened: false,
     processing: false,
     editing: false,
+    trig_dragging: false,
     resized: false,
     sel_sig_name: null,
     fine: false
@@ -151,11 +152,12 @@
     
     for(var param_name in new_params) {
       
-      // Do nothing if new parameter value is the same as the old one, and it is not related to measurement info or offset
+      // Do nothing if new parameter value is the same as the old one and it is related to measurement info, signal offset or trigger
       if(OSC.params.orig[param_name] !== undefined 
           && OSC.params.orig[param_name].value === new_params[param_name].value
           && param_name.indexOf('OSC_MEAS_VAL') == -1
-          && param_name.indexOf('_OFFSET') == -1) {
+          && param_name.indexOf('_OFFSET') == -1
+          && (param_name.indexOf('OSC_TRIG_') == -1 || OSC.state.trig_dragging)) {
         continue;
       }
       
@@ -175,53 +177,79 @@
       }
       // All other parameters
       else {
-        var field = $('#' + param_name);
+        var field = $('#' + param_name);  // TODO: Use classes instead of ids, to be able to use a param name in multiple fields
         
-          // Show/hide Y offset arrows
-          if(param_name == 'OSC_CH1_OFFSET') {
-            var zero_pos = ($('#graph_grid').outerHeight() + 7) / 2;
-            
-            if(new_params['CH1_SHOW'].value) {
-              
-              // Change arrow position only if arrow is hidden or old/new values are not the same
-              if(!$('#ch1_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
-                var volt_per_px = (new_params['OSC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-                var px_offset = -(new_params['OSC_CH1_OFFSET'].value / volt_per_px - parseInt($('#ch1_offset_arrow').css('margin-top')) / 2);
-
-                $('#ch1_offset_arrow').css('top', zero_pos + px_offset).show();
-              }
-            }
-            else {
-              $('#ch1_offset_arrow').hide();
-            }
-          }
-          else if(param_name == 'OSC_CH2_OFFSET') {
-            if(new_params['CH2_SHOW'].value) {
-              
-              // Change arrow position only if arrow is hidden or old/new values are not the same
-              if(!$('#ch2_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
-                var volt_per_px = (new_params['OSC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-                var px_offset = -(new_params['OSC_CH2_OFFSET'].value / volt_per_px - parseInt($('#ch2_offset_arrow').css('margin-top')) / 2);
-
-                $('#ch2_offset_arrow').css('top', zero_pos + px_offset).show();
-              }
-            }
-            else {
-              $('#ch2_offset_arrow').hide();
-            }
-          }
-          // Time offset arrow
-          else if(param_name == 'OSC_TIME_OFFSET') {
+        // Show/hide Y offset arrows
+        if(param_name == 'OSC_CH1_OFFSET') {
+          if(new_params['CH1_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#time_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
-              var zero_pos = ($('#graph_grid').outerWidth() + 2) / 2;
-              var ms_per_px = (new_params['OSC_TIME_SCALE'].value * 10) / $('#graph_grid').outerWidth();
-              var px_offset = -(new_params['OSC_TIME_OFFSET'].value / ms_per_px + $('#time_offset_arrow').width()/2 + 1);
+            if(!$('#ch1_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
+              var volt_per_px = (new_params['OSC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
+              var px_offset = -(new_params['OSC_CH1_OFFSET'].value / volt_per_px - parseInt($('#ch1_offset_arrow').css('margin-top')) / 2);
 
-              $('#time_offset_arrow').css('left', zero_pos + px_offset).show();
+              $('#ch1_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset).show();
             }
           }
+          else {
+            $('#ch1_offset_arrow').hide();
+          }
+        }
+        else if(param_name == 'OSC_CH2_OFFSET') {
+          if(new_params['CH2_SHOW'].value) {
+            
+            // Change arrow position only if arrow is hidden or old/new values are not the same
+            if(!$('#ch2_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
+              var volt_per_px = (new_params['OSC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
+              var px_offset = -(new_params['OSC_CH2_OFFSET'].value / volt_per_px - parseInt($('#ch2_offset_arrow').css('margin-top')) / 2);
+
+              $('#ch2_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset).show();
+            }
+          }
+          else {
+            $('#ch2_offset_arrow').hide();
+          }
+        }
+        // Time offset arrow
+        else if(param_name == 'OSC_TIME_OFFSET') {
+          
+          // Change arrow position only if arrow is hidden or old/new values are not the same
+          if(!$('#time_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
+            var ms_per_px = (new_params['OSC_TIME_SCALE'].value * 10) / $('#graph_grid').outerWidth();
+            var px_offset = -(new_params['OSC_TIME_OFFSET'].value / ms_per_px + $('#time_offset_arrow').width()/2 + 1);
+
+            $('#time_offset_arrow').css('left', ($('#graph_grid').outerWidth() + 2) / 2 + px_offset).show();
+          }
+        }
+        // Trigger level
+        else if(param_name == 'OSC_TRIG_LEVEL') {
+          
+          // Trigger button is blured out and trigger level is hidden for source 'EXT', which is not yet supported
+          if(new_params['OSC_TRIG_SOURCE'].value > 1) {
+            $('#trigger_level, #trig_level_arrow').hide();
+            $('#right_menu .menu-btn.trig').prop('disabled', true);
+            $('#osc_trig_level_info').html('- ');
+          }
+          else {
+            var ref_scale = (new_params['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
+            var graph_height = $('#graph_grid').height();
+            var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
+            var px_offset = -(new_params[param_name].value / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+            
+            $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
+            $('#trigger_level, #trig_level_arrow').show();
+            $('#right_menu .menu-btn.trig').prop('disabled', false);
+            $('#osc_trig_level_info').html(new_params[param_name].value);
+          }
+        }
+        // Trigger source
+        else if(param_name == 'OSC_TRIG_SOURCE') {
+          $('#osc_trig_source_ch').html(new_params[param_name].value == 0 ? 'IN1' : (new_params[param_name].value == 1 ? 'IN2' : 'EXT'));
+        }
+        // Trigger edge/slope
+        else if(param_name == 'OSC_TRIG_SLOPE') {
+          $('#osc_trig_edge_img').attr('src', (new_params[param_name].value == 1 ? 'img/trig-edge-up.png' : 'img/trig-edge-down.png'));
+        }
         
         // Do not change fields from dialogs when user is editing something        
         if(!OSC.state.editing || field.closest('.menu-content').length == 0) {
@@ -267,7 +295,7 @@
     var visible_btns = [];
     var visible_plots = [];
     var visible_info = '';
-    var start = +new Date();
+    //var start = +new Date();
     
     // Do nothing if no parameters received yet
     if($.isEmptyObject(OSC.params.orig)) {
@@ -333,7 +361,7 @@
     $('#graphs .plot').not(visible_plots).hide();
     
     // Disable buttons related to inactive signals
-    $('#right_menu .menu-btn').not(visible_btns).prop('disabled', true);
+    $('#right_menu .menu-btn').not(visible_btns).not('.not-signal').prop('disabled', true);
     
     // Show only information about active signals
     $('#info .info-title > span, #info .info-value > span').not(visible_info).hide();
@@ -733,7 +761,7 @@ $(function() {
   });
   
   $('#jtk_up, #jtk_down').click(function(ev) {
-    OSC.changeYZoom(ev.target.id == 'jtk_down' ? '-' : '+');
+    OSC.changeYZoom(ev.target.id == 'jtk_down' ? '+' : '-');
   });
   
   $('#jtk_left, #jtk_right').click(function(ev) {
@@ -761,18 +789,18 @@ $(function() {
       
       if(ui.helper[0].id == 'ch1_offset_arrow') {
         var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-        OSC.params.local['OSC_CH1_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt($('#ch1_offset_arrow').css('margin-top')) / 2) * volt_per_px };
+        OSC.params.local['OSC_CH1_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px };
       }
       else {
         var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-        OSC.params.local['OSC_CH2_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt($('#ch1_offset_arrow').css('margin-top')) / 2) * volt_per_px };
+        OSC.params.local['OSC_CH2_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px };
       }
       
       OSC.sendParams();
     }
   });
   
-  // Voltage offset arrow dragging
+  // Time offset arrow dragging
   $('#time_offset_arrow').draggable({
     axis: 'x',
     containment: 'parent',
@@ -782,6 +810,41 @@ $(function() {
       
       OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width()/2 - 1) * ms_per_px };
       OSC.sendParams();
+    }
+  });
+  
+  // Trigger level arrow dragging
+  $('#trig_level_arrow').draggable({
+    axis: 'y',
+    containment: 'parent',
+    start: function(ev, ui) {
+      OSC.state.trig_dragging = true;
+    },
+    drag: function(ev, ui) {
+      $('#trigger_level').css('top', ui.position.top);
+    },
+    stop: function(ev, ui) {
+      $('#trigger_level').css('top', ui.position.top);
+      
+      if(OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
+        
+        if(OSC.params.orig['OSC_TRIG_SOURCE'].value < 2) {
+          var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
+          
+          if(OSC.params.orig[ref_scale] !== undefined) {
+            var graph_height = $('#graph_grid').height();
+            var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
+            
+            OSC.params.local['OSC_TRIG_LEVEL'] = { value: (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px };
+            OSC.sendParams();
+          }
+        }
+        else {
+          console.log('Trigger level for source ' + OSC.params.orig['OSC_TRIG_SOURCE'].value + ' not yet supported');
+        }
+      }
+      
+      OSC.state.trig_dragging = false;
     }
   });
   
@@ -890,7 +953,17 @@ $(function() {
       $('<img />').attr('src', 'img/' + arguments[i]);
     }
   }
-  $.preloadImages('edge1_active.png','edge2_active.png','node_up.png','node_left.png','node_right.png','node_down.png','fine_active.png');
+  $.preloadImages(
+    'edge1_active.png',
+    'edge2_active.png',
+    'node_up.png',
+    'node_left.png',
+    'node_right.png',
+    'node_down.png',
+    'fine_active.png',
+    'trig-edge-up.png',
+    'trig-edge-down.png'
+  );
   
   // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
   $(window).resize(function() {
@@ -904,8 +977,11 @@ $(function() {
     // Hide all graphs, they will be shown next time signal data is received
     $('#graphs .plot').hide();
     
-    // Hide all offset arrows
-    $('.y-offset-arrow, #time_offset_arrow').hide();
+    // Hide offset arrows, trigger level line and arrow
+    $('.y-offset-arrow, #time_offset_arrow, #trig_level_arrow, #trigger_level').hide();
+    
+    // Reset left position for trigger level arrow, it is added by jQ UI draggable
+    $('#trig_level_arrow').css('left', '');
     
     // Set the resized flag
     OSC.state.resized = true;
