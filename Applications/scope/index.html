@@ -555,13 +555,13 @@
               <span class="col-info">Operator</span>
               <select id="meas_operator" class="form-control styled-select">
                 <option value="0">VPP</option>
-                <option value="2">VMEAN</option>
-                <option value="4">VMAX</option>
-                <option value="6">VMIN</option>
-                <option value="8">DUTY CYCLE</option>
-                <option value="10">PERIOD</option>
-                <option value="12">FREQ</option>
-                <option value="14">RMS</option>
+                <option value="3">VMEAN</option>
+                <option value="6">VMAX</option>
+                <option value="9">VMIN</option>
+                <option value="12">DUTY CYCLE</option>
+                <option value="15">PERIOD</option>
+                <option value="18">FREQ</option>
+                <option value="21">RMS</option>
               </select>
             </div>
           </div>
@@ -637,10 +637,13 @@
             <div class="right-menu-option">
               <div class="btn-group btn-group-justified" data-toggle="buttons">
                 <label class="btn">
-                  <input type="checkbox" name="in1_2" id="in1_2" autocomplete="off"><span class="in1">IN1</span>
+                  <input type="radio" name="OSC_CURSOR_SRC" id="OSC_CURSOR_SRC" value="0" autocomplete="off">IN1
                 </label>
                 <label class="btn">
-                  <input type="checkbox" name="in2_2" id="in2_2" autocomplete="off"> <span class="in2">IN2</span>
+                  <input type="radio" name="OSC_CURSOR_SRC" id="OSC_CURSOR_SRC1" value="1" autocomplete="off">IN2
+                </label>
+                <label class="btn">
+                  <input type="radio" name="OSC_CURSOR_SRC" id="OSC_CURSOR_SRC2" value="2" autocomplete="off">MATH
                 </label>
               </div>
             </div>
