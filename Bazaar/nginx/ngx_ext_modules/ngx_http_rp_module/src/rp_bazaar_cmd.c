@@ -569,7 +569,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
         	rp_module_ctx.app.ws_set_params_demo_func(1);
 
         }
-        rp_module_ctx.app.ws_set_signals_interval_func(12345);
 
         start_ws_server(&params);
     }
