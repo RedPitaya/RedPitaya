@@ -715,7 +715,7 @@ $(function() {
       
       // Add new item
       $('<div id="' + item_id + '" class="meas-item">' + operator_name + ' (' + signal_name + ')</div>').data({ 
-        value: (signal_name == 'CH1' ? operator_val : (signal_name == 'CH2' ? operator_val + 1 : null)),  // Temporarily set null for MATH signal, because no param yet defined fot that signal
+        value: (signal_name == 'CH1' ? operator_val : (signal_name == 'CH2' ? operator_val + 1 : operator_val + 2)),
         operator: operator_name,
         signal: signal_name
       }).prependTo('#meas_list');
