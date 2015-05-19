@@ -170,3 +170,4 @@ public:
 		:CCustomSignal(_name, _size, _def_value){};
 };
 
+extern CBooleanParameter IsDemoParam;	// special default parameter to check mode (demo or not)

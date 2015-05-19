@@ -38,7 +38,7 @@ rp_websocket_server::rp_websocket_server(struct server_parameters* params)
     m_endpoint.set_close_handler(bind(&rp_websocket_server::on_close,this,::_1));
     m_endpoint.set_http_handler(bind(&rp_websocket_server::on_http,this,::_1));
     m_endpoint.set_message_handler(bind(&rp_websocket_server::on_message,this,::_1,::_2));
-    m_out.open("ws_server.log");
+    m_out.open("/var/log/nginx/ws_server.log");
     m_endpoint.get_alog().set_ostream(&m_out);
     m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws_server constructor");
 
