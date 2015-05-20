@@ -447,10 +447,10 @@ int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
 
 int acq_GetTriggerState(rp_acq_trig_state_t* state)
 {
-    rp_acq_trig_src_t source;
-    ECHECK(osc_GetTriggerSource(&source));
+    bool stateB;
+    ECHECK(osc_GetTriggerState(&stateB));
 
-    if (source == RP_TRIG_SRC_DISABLED) {
+    if (stateB) {
         *state=RP_TRIG_STATE_TRIGGERED;
     }
     else{
@@ -470,16 +470,6 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 		trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
 	}
 
-	/*
-    if (trig_dly > ADC_BUFFER_SIZE) {
-        if (updateMaxValue) {
-        	trig_dly = ADC_BUFFER_SIZE;
-        }
-        else {
-            return RP_EOOR;
-        }
-    }
-    */
     ECHECK(osc_SetTriggerDelay(trig_dly));
     triggerDelayInNs = false;
     return RP_OK;
@@ -507,6 +497,10 @@ int acq_GetTriggerDelayNs(int64_t* time_ns)
     ECHECK(acq_GetTriggerDelay(&samples));
     *time_ns=cnvSmplsToTime(samples);
     return RP_OK;
+}
+
+int acq_GetPreTriggerCounter(uint32_t* value) {
+    return osc_GetPreTriggerCounter(value);
 }
 
 int acq_GetWritePointer(uint32_t* pos)
@@ -667,9 +661,6 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 int acq_Start()
 {
     ECHECK(osc_WriteDataIntoMemory(true));
-
-    // Sleep for 200 ms. This solver previous write pinter step.
-    usleep(200000);
     return RP_OK;
 }
 
