@@ -28,7 +28,6 @@
         int retval = (x); \
         if (retval != RP_OK) { \
             fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
-            return retval; \
         } \
 }
 
@@ -60,6 +59,12 @@ if ((THREAD_X) == -1) { \
         return RP_APP_EST; \
     } \
 }
+
+#define EXECUTE_ATOMICALLY(MUTEX, ACTION) \
+pthread_mutex_lock(&(MUTEX));\
+(ACTION); \
+pthread_mutex_unlock(&(MUTEX));
+
 
 int cmn_Init();
 int cmn_Release();

@@ -287,6 +287,8 @@ static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
 static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
 static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
 static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
+static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2st bit)
+static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
 
 
 /**
@@ -368,6 +370,14 @@ int osc_WriteDataIntoMemory(bool enable)
 int osc_ResetWriteStateMachine()
 {
     return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
+}
+
+int osc_GetTriggerState(bool *received) {
+    return cmn_AreBitsSet(osc_reg->conf, (0x1 << 2), TRIG_ST_MCH_MASK, received);
+}
+
+int osc_GetPreTriggerCounter(uint32_t *value) {
+    return cmn_GetValue(&osc_reg->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
 }
 
 /**
