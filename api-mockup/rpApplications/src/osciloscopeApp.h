@@ -31,8 +31,9 @@
 #define PRE_WPOINTER_EPSILON        0.001
 #define MAIN_THREAT_SLEEP           500     // us
 #define MAX_UINT                    4294967296
+#define MIN_TIME_TO_DRAW_BEFORE_TIG 100
 
-#define TIME_SCALE_RATIO_THRESHOLD  0.9
+#define TIME_SCALE_RATIO_THRESHOLD  0.5
 
 
 int osc_Init();
@@ -97,6 +98,8 @@ float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOff
 float unscaleAmplitudeChannel(rpApp_osc_source source, float value);
 float viewIndexToTime(int index);
 float roundUpTo125(float data);
+void clearView();
+void clearMath();
 
 void *mainThreadFun();
 
