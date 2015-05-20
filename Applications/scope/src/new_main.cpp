@@ -7,8 +7,8 @@
 
 
 /* -------------------------  debug parameter  --------------------------------- */
-CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 80, 0, 0, 10000);
-CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 80, 0, 0, 10000);
+CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 0, 10000);
+CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 20, 0, 0, 10000);
 CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, true, 0);
 
 
@@ -72,17 +72,17 @@ CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RW, 0, 0, -100000
 CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RW, 0, 0, -1000000, 1000000);
 
 /* --------------------------------  CURSORS  ------------------------------ */
-CIntParameter cursor1("OSC_CURSOR1", CBaseParameter::RW, -1, 0, 0, 16*1024);
-CIntParameter cursor2("OSC_CURSOR2", CBaseParameter::RW, -1, 0, 0, 16*1024);
+//TODO update and not touch
+CBooleanParameter cursorx1("OSC_CURSOR_X1", CBaseParameter::RW, false, 0);
+CBooleanParameter cursorx2("OSC_CURSOR_X2", CBaseParameter::RW, false, 0);
+CBooleanParameter cursory1("OSC_CURSOR_Y1", CBaseParameter::RW, false, 0);
+CBooleanParameter cursory2("OSC_CURSOR_Y2", CBaseParameter::RW, false, 0);
 CIntParameter cursorSrc("OSC_CURSOR_SRC", CBaseParameter::RW, RPAPP_OSC_SOUR_CH1, 0, RPAPP_OSC_SOUR_CH1, RPAPP_OSC_SOUR_MATH);
 
 CFloatParameter cursor1V("OSC_CUR1_V", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2V("OSC_CUR2_V", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor1T("OSC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2T("OSC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
-CFloatParameter cursorDT("OSC_CUR_DT", CBaseParameter::RW, -1, 0, -1000, 1000);
-CFloatParameter cursorDV("OSC_CUR_DV", CBaseParameter::RW, -1, 0, -1000, 1000);
-CFloatParameter cursorDF("OSC_CUR_DF", CBaseParameter::RW, -1, 0, -1000, 1000);
 
 /* ----------------------------------  MATH  -------------------------------- */
 CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_NONE, 0, RPAPP_OSC_MATH_NONE, RPAPP_OSC_MATH_INT);
@@ -188,20 +188,6 @@ void UpdateParams(void) {
     if (measureSelect4.Value() != -1)
         measureValue4.Value() = getMeasureValue(measureSelect4.Value());
 
-    if (cursor1.Value() != -1) {
-        rpApp_OscGetCursorVoltage((rpApp_osc_source)cursorSrc.Value(), (uint32_t) cursor1.Value(), &cursor1V.Value());
-        rpApp_OscGetCursorTime((uint32_t) cursor1.Value(), &cursor1T.Value());
-    }
-    if (cursor2.Value() != -1) {
-        rpApp_OscGetCursorVoltage((rpApp_osc_source)cursorSrc.Value(), (uint32_t) cursor2.Value(), &cursor2V.Value());
-        rpApp_OscGetCursorTime((uint32_t) cursor2.Value(), &cursor2T.Value());
-    }
-    if (cursor1.Value() != -1 && cursor1.Value() != -1) {
-        rpApp_OscGetCursorDeltaAmplitude((rpApp_osc_source)cursorSrc.Value(), (uint32_t) cursor1.Value(), (uint32_t) cursor2.Value(), &cursorDV.Value());
-        rpApp_OscGetCursorDeltaTime((uint32_t) cursor1.Value(), (uint32_t) cursor2.Value(), &cursorDT.Value());
-        rpApp_OscGetCursorDeltaFrequency((uint32_t) cursor1.Value(), (uint32_t) cursor2.Value(), &cursorDF.Value());
-    }
-
     float pos, portion;
     rpApp_OscGetViewPos(&pos);
     rpApp_OscGetViewPart(&portion);
@@ -277,7 +263,7 @@ void UpdateSignals(void) {
 
         if (ch1.GetSize() != dataSize.Value())
             ch1.Resize(dataSize.Value());
-        for (int i = 0; i < 1024; i++)
+        for (int i = 0; i < dataSize.Value(); i++)
             ch1[i] = data[i];
     } else {
         ch1.Resize(0);
@@ -292,7 +278,7 @@ void UpdateSignals(void) {
 
         if (ch2.GetSize() != dataSize.Value())
             ch2.Resize(dataSize.Value());
-        for (int i = 0; i < 1024; i++)
+        for (int i = 0; i < dataSize.Value(); i++)
             ch2[i] = data[i];
     } else {
         ch2.Resize(0);
@@ -307,7 +293,7 @@ void UpdateSignals(void) {
 
         if (math.GetSize() != dataSize.Value())
             math.Resize(dataSize.Value());
-        for (int i = 0; i < 1024; i++)
+        for (int i = 0; i < dataSize.Value(); i++)
             math[i] = data[i];
     } else {
         math.Resize(0);
@@ -328,16 +314,25 @@ void OnNewParams(void) {
     measureSelect4.Update();
     mathOperation.Update();
 
-    cursor1.Update();
-    cursor2.Update();
+    cursorx1.Update();
+    cursorx2.Update();
+    cursory1.Update();
+    cursory2.Update();
     cursorSrc.Update();
 
 /* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
+    IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
+
     if (inReset.NewValue()) {
         rpApp_OscReset();
+        inReset.Update();
+        inReset.Value() = false;
     }
-
-    IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
+    if (inSingle.NewValue()) {
+        rpApp_OscSingle();
+        inSingle.Update();
+        inSingle.Value() = false;
+    }
 
     if (inAutoscale.NewValue()) {
         rpApp_OscAutoScale();
@@ -354,11 +349,8 @@ void OnNewParams(void) {
         inTimeOffset.Value() = value;
         rpApp_OscGetTimeScale(&value);
         inTimeScale.Value() = value;
-    }
-    if (inSingle.NewValue()) {
-        if (rpApp_OscSingle() == RP_OK) {
-            inTrigSweep.Value() = RPAPP_OSC_TRIG_SINGLE;
-        }
+        inAutoscale.Update();
+        inAutoscale.Value() = false;
     }
 
     IF_VALUE_CHANGED(in1Offset,    rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1,  in1Offset.NewValue()))
