@@ -46,8 +46,8 @@ CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 4
 CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
-CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 10, 0, 0, 1000);
-CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 10, 0, 0, 1000);
+CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
+CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000);
 CFloatParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 50000);
 

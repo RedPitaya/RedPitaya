@@ -72,8 +72,8 @@ int osc_SetDefaultValues() {
     ECHECK_APP(osc_setAmplitudeScale(RPAPP_OSC_SOUR_CH1, 1));
     ECHECK_APP(osc_setAmplitudeScale(RPAPP_OSC_SOUR_CH2, 1));
     ECHECK_APP(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, 1));
-    ECHECK_APP(osc_setProbeAtt(RP_CH_1, 10));
-    ECHECK_APP(osc_setProbeAtt(RP_CH_2, 10));
+    ECHECK_APP(osc_setProbeAtt(RP_CH_1, 1));
+    ECHECK_APP(osc_setProbeAtt(RP_CH_2, 1));
     ECHECK_APP(osc_setInputGain(RP_CH_1, RPAPP_OSC_IN_GAIN_LV))
     ECHECK_APP(osc_setInputGain(RP_CH_2, RPAPP_OSC_IN_GAIN_LV))
     ECHECK_APP(osc_setTimeOffset(0));
