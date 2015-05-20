@@ -46,7 +46,7 @@ pthread_mutex_t mutex;
 
 int osc_Init() {
     pthread_mutex_init(&mutex, NULL);
-    view = malloc(3 * viewSize * sizeof(float));
+    view = calloc(3 * viewSize, sizeof(float));
     if (view == NULL) {
         free(view);
         view = NULL;
@@ -613,14 +613,19 @@ int osc_getData(rpApp_osc_source source, float *data, uint32_t size) {
 }
 
 int osc_setViewSize(uint32_t size) {
-    viewSize = size;
-    samplesPerDivision = (float) viewSize / (float) DIVISIONS_COUNT_X;
-    view = realloc(view, 3 * viewSize * sizeof(float));
+    samplesPerDivision = (float) size / (float) DIVISIONS_COUNT_X;
+    view = realloc(view, 3 * size * sizeof(float));
     if (view == NULL) {
         free(view);
         view = NULL;
         return RP_EAA;
     }
+    for (rpApp_osc_source src = RPAPP_OSC_SOUR_CH1; src <= RPAPP_OSC_SOUR_MATH; ++src) {
+        for (int i = viewSize; i < size; ++i) {
+            view[src*size + i] = 0;
+        }
+    }
+    viewSize = size;
     return RP_OK;
 }
 
