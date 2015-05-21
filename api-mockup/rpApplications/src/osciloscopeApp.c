@@ -848,9 +848,13 @@ void *mainThreadFun() {
             ECHECK_APP(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
             ECHECK_APP(rp_AcqGetDataV(RP_CH_2, _startIndex, &_getBufSize, data[1]));
 
-            if (trigSweep != RPAPP_OSC_TRIG_SINGLE && _triggerSource == RP_TRIG_SRC_DISABLED) {
-                threadSafe_acqStart();
-                thisLoopAcqStart = true;
+            if (_triggerSource == RP_TRIG_SRC_DISABLED) {
+                if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
+                    threadSafe_acqStart();
+                    thisLoopAcqStart = true;
+                } else {
+                    acqRunning = false;
+                }
             }
 
             // Reset autoSweep timer
