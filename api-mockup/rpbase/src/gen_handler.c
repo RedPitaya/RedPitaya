@@ -275,7 +275,8 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         ECHECK(generate_setGatedBurst(channel, 0));
         ECHECK(generate_setBurstDelay(channel, 0));
         ECHECK(generate_setBurstRepetitions(channel, 0));
-        return generate_setBurstCount(channel, 0);
+        ECHECK(generate_setBurstCount(channel, 0));
+        return triggerIfInternal(channel);
     }
     else if (mode == RP_GEN_MODE_BURST) {
         ECHECK(gen_setBurstCount(channel, channel == RP_CH_1 ? chA_burstCount : chB_burstCount));
@@ -316,12 +317,7 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
     ECHECK(generate_setBurstCount(channel, (uint32_t) num));
 
     // trigger channel if internal trigger source
-    uint32_t value;
-    ECHECK(generate_getTriggerSource(channel, &value));
-    if (value == RP_GEN_TRIG_SRC_INTERNAL) {
-        ECHECK(generate_setTriggerSource(channel, 1));
-    }
-    return RP_OK;
+    return triggerIfInternal(channel);
 }
 
 int gen_getBurstCount(rp_channel_t channel, int *num) {
@@ -341,12 +337,7 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
     ECHECK(generate_setBurstRepetitions(channel, (uint32_t) (repetitions-1)));
 
     // trigger channel if internal trigger source
-    uint32_t value;
-    ECHECK(generate_getTriggerSource(channel, &value));
-    if (value == RP_GEN_TRIG_SRC_INTERNAL) {
-        ECHECK(generate_setTriggerSource(channel, 1))
-    }
-    return RP_OK;
+    return triggerIfInternal(channel);
 }
 
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions) {
@@ -372,16 +363,12 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
     }
     ECHECK(generate_setBurstDelay(channel, (uint32_t) delay));
 
-    // trigger channel if internal trigger source
-    uint32_t value;
-    ECHECK(generate_getTriggerSource(channel, &value));
-    if (value == RP_GEN_TRIG_SRC_INTERNAL) {
-        ECHECK(generate_setTriggerSource(channel, 1))
-    }
     CHANNEL_ACTION(channel,
                    chA_burstPeriod = period,
                    chB_burstPeriod = period)
-    return RP_OK;
+
+    // trigger channel if internal trigger source
+    return triggerIfInternal(channel);
 }
 
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
@@ -614,5 +601,14 @@ int synthesis_square(float frequency, float *data_out) {
         }
     }
 
+    return RP_OK;
+}
+
+int triggerIfInternal(rp_channel_t channel) {
+    uint32_t value;
+    ECHECK(generate_getTriggerSource(channel, &value));
+    if (value == RP_GEN_TRIG_SRC_INTERNAL) {
+        ECHECK(generate_setTriggerSource(channel, 1))
+    }
     return RP_OK;
 }
