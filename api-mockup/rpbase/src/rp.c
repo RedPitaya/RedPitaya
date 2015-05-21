@@ -329,6 +329,10 @@ int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
     return acq_GetTriggerDelayNs(time_ns);
 }
 
+int rp_AcqGetPreTriggerCounter(uint32_t* value) {
+    return acq_GetPreTriggerCounter(value);
+}
+
 int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state)
 {
     return acq_GetGain(channel, state);
