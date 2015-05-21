@@ -769,7 +769,7 @@ void waitToFillPreTriggerBuffer() {
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
         ECHECK_APP(osc_getTimeScale(&timeScale));
         deltaSample = timeToIndex(timeScale) / samplesPerDivision;
-    } while (preTriggerCount/deltaSample < viewSize/2 && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
+    } while (preTriggerCount < viewSize/2*deltaSample - triggerDelay && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
 }
 
 /*
