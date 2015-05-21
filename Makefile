@@ -139,10 +139,6 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -d tmp -p 0 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
-	cp patches/zynq_red_pitaya_defconfig $@/configs
-	cp patches/zynq-red-pitaya.dts $@/arch/arm/dts
-	cp patches/zynq_red_pitaya.h $@/include/configs
-	cp patches/u-boot-lantiq.c $@/drivers/net/phy/lantiq.c
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)

@@ -1,62 +1,233 @@
-diff -rupN old/u-boot-xlnx-xilinx-v2015.1/arch/arm/cpu/armv7/zynq/Kconfig u-boot-xlnx-xilinx-v2015.1/arch/arm/cpu/armv7/zynq/Kconfig
---- old/u-boot-xlnx-xilinx-v2015.1/arch/arm/cpu/armv7/zynq/Kconfig	2015-03-03 09:54:28.000000000 +0100
-+++ u-boot-xlnx-xilinx-v2015.1/arch/arm/cpu/armv7/zynq/Kconfig	2015-05-05 09:37:37.828717907 +0200
-@@ -24,6 +24,9 @@ config TARGET_ZYNQ_AFX
- config TARGET_ZYNQ_CSE
- 	bool "Zynq CSE Board"
- 
-+config TARGET_ZYNQ_RED_PITAYA
-+	bool "Red Pitaya Board"
+diff --git a/arch/arm/dts/zynq-red-pitaya.dts b/arch/arm/dts/zynq-red-pitaya.dts
+new file mode 100644
+index 0000000..ac14cd0
+--- /dev/null
++++ b/arch/arm/dts/zynq-red-pitaya.dts
+@@ -0,0 +1,23 @@
++/*
++ * Red Pitaya board DTS
++ *
++ * Copyright (C) 2013 Xilinx, Inc.
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++/dts-v1/;
++#include "zynq-7000.dtsi"
 +
- endchoice
- 
- config SYS_BOARD
-@@ -43,5 +46,6 @@ config SYS_CONFIG_NAME
- 	default "zynq_zybo" if TARGET_ZYNQ_ZYBO
- 	default "zynq_cse" if TARGET_ZYNQ_CSE
- 	default "zynq_afx" if TARGET_ZYNQ_AFX
-+	default "zynq_red_pitaya" if TARGET_ZYNQ_RED_PITAYA
- 
- endif
-diff -rupN old/u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile
---- old/u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile	2015-03-03 09:54:28.000000000 +0100
-+++ u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/Makefile	2015-05-05 09:37:37.828717907 +0200
-@@ -15,6 +15,7 @@ obj-$(CONFIG_PHY_ATHEROS) += atheros.o
- obj-$(CONFIG_PHY_BROADCOM) += broadcom.o
- obj-$(CONFIG_PHY_CORTINA) += cortina.o
- obj-$(CONFIG_PHY_DAVICOM) += davicom.o
-+obj-$(CONFIG_PHY_LANTIQ) += lantiq.o
- obj-$(CONFIG_PHY_ET1011C) += et1011c.o
- obj-$(CONFIG_PHY_LXT) += lxt.o
- obj-$(CONFIG_PHY_MARVELL) += marvell.o
-diff -rupN old/u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/phy.c u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/phy.c
---- old/u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/phy.c	2015-03-03 09:54:28.000000000 +0100
-+++ u-boot-xlnx-xilinx-v2015.1/drivers/net/phy/phy.c	2015-05-05 09:37:37.828717907 +0200
-@@ -457,6 +457,9 @@ int phy_init(void)
- #ifdef CONFIG_PHY_ET1011C
- 	phy_et1011c_init();
++/ {
++	model = "Red Pitaya Board";
++	compatible = "xlnx,zynq-red-pitaya", "xlnx,zynq-7000";
++
++	aliases {
++		serial0 = &uart0;
++	};
++
++	memory {
++		device_type = "memory";
++		reg = <0 0x1E000000>;
++	};
++};
+diff --git a/configs/zynq_red_pitaya_defconfig b/configs/zynq_red_pitaya_defconfig
+new file mode 100644
+index 0000000..8644ae4
+--- /dev/null
++++ b/configs/zynq_red_pitaya_defconfig
+@@ -0,0 +1,6 @@
++CONFIG_SPL=y
+++S:CONFIG_ARM=y
+++S:CONFIG_ZYNQ=y
+++S:CONFIG_TARGET_ZYNQ_RED_PITAYA=y
++CONFIG_OF_CONTROL=n
++CONFIG_DEFAULT_DEVICE_TREE="zynq-red-pitaya"
+diff --git a/drivers/net/phy/lantiq.c b/drivers/net/phy/lantiq.c
+new file mode 100644
+index 0000000..4e9afc5
+--- /dev/null
++++ b/drivers/net/phy/lantiq.c
+@@ -0,0 +1,79 @@
++/*
++ * Lantiq PHY drivers
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2 of
++ * the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
++ * MA 02111-1307 USA
++ *
++ * Copyright 2013 Instrumentation Technologies d.d.
++ * author Tomaž Beltram
++ *
++ */
++
++#include <phy.h>
++
++/* internal address space */
++#define MMD_DEVAD_INT 0x1f
++#define MMD_ACTYPE_DATA 0x4000
++
++/* LED configuration registers */
++#define INT_LED1H 0x1e4
++#define INT_LED1L 0x1e5
++#define INT_LED2H 0x1e6
++#define INT_LED2L 0x1e7
++
++/* LED function bits */
++#define INT_LED_TX 0x01
++#define INT_LED_RX 0x02
++#define INT_LED_LINK10 0x1
++#define INT_LED_LINK100 0x2
++#define INT_LED_LINK1000 0x4
++
++void phy_mmd_write(struct phy_device *phydev, int devad, int addr, int val)
++{
++	phy_write(phydev, MDIO_DEVAD_NONE, MII_MMD_CTRL, devad);
++	phy_write(phydev, MDIO_DEVAD_NONE, MII_MMD_DATA, addr);
++	phy_write(phydev, MDIO_DEVAD_NONE, MII_MMD_CTRL, devad | MMD_ACTYPE_DATA);
++	phy_write(phydev, MDIO_DEVAD_NONE, MII_MMD_DATA, val);
++}
++
++static int phy11g_config(struct phy_device *phydev)
++{
++	phy_mmd_write(phydev, MMD_DEVAD_INT, INT_LED1H, 0);
++	phy_mmd_write(phydev, MMD_DEVAD_INT, INT_LED1L,
++		INT_LED_RX | INT_LED_TX);
++	phy_mmd_write(phydev, MMD_DEVAD_INT, INT_LED2H,
++		INT_LED_LINK1000 << 4 | INT_LED_LINK100);
++	phy_mmd_write(phydev, MMD_DEVAD_INT, INT_LED2L,
++		INT_LED_LINK10 << 4);
++
++	return 0;
++}
++
++static struct phy_driver PHY11G_driver =  {
++	.name = "PHY11G",
++	.uid = 0xd565a401,
++	.mask = 0xffffffff,
++	.features = PHY_GBIT_FEATURES,
++	.config = phy11g_config,
++	.startup = genphy_startup,
++	.shutdown = genphy_shutdown,
++};
++
++int phy_lantiq_init(void)
++{
++	phy_register(&PHY11G_driver);
++
++	return 0;
++}
+diff --git a/drivers/net/phy/phy.c b/drivers/net/phy/phy.c
+index 5b04c85..9f0b00a 100644
+--- a/drivers/net/phy/phy.c
++++ b/drivers/net/phy/phy.c
+@@ -454,6 +454,9 @@ int phy_init(void)
+ #ifdef CONFIG_PHY_DAVICOM
+ 	phy_davicom_init();
  #endif
 +#ifdef CONFIG_PHY_LANTIQ
 +	phy_lantiq_init();
 +#endif
- #ifdef CONFIG_PHY_LXT
- 	phy_lxt_init();
+ #ifdef CONFIG_PHY_ET1011C
+ 	phy_et1011c_init();
  #endif
-diff -rupN old/u-boot-xlnx-xilinx-v2015.1/include/linux/mii.h u-boot-xlnx-xilinx-v2015.1/include/linux/mii.h
---- old/u-boot-xlnx-xilinx-v2015.1/include/linux/mii.h	2015-03-03 09:54:28.000000000 +0100
-+++ u-boot-xlnx-xilinx-v2015.1/include/linux/mii.h	2015-05-05 09:37:37.828717907 +0200
+diff --git a/include/configs/zynq_red_pitaya.h b/include/configs/zynq_red_pitaya.h
+new file mode 100644
+index 0000000..da082ef
+--- /dev/null
++++ b/include/configs/zynq_red_pitaya.h
+@@ -0,0 +1,67 @@
++#ifndef __CONFIG_ZYNQ_RED_PITAYA_H
++#define __CONFIG_ZYNQ_RED_PITAYA_H
++
++#define CONFIG_SYS_SDRAM_SIZE		(480 * 1024 * 1024)
++
++#define CONFIG_ZYNQ_SERIAL_UART0
++#define CONFIG_ZYNQ_GEM0
++#define CONFIG_ZYNQ_GEM_PHY_ADDR0	1
++
++#define CONFIG_SYS_NO_FLASH
++
++#define CONFIG_ZYNQ_SDHCI0
++#define CONFIG_ZYNQ_QSPI
++#define CONFIG_ZYNQ_EEPROM
++#define CONFIG_ZYNQ_BOOT_FREEBSD
++
++#define CONFIG_CPU_FREQ_HZ 666666687
++
++#define CONFIG_CMD_DHCP
++
++#include <configs/zynq-common.h>
++
++#undef CONFIG_PHY_MARVELL
++
++#undef CONFIG_SYS_I2C_EEPROM_ADDR_LEN
++#undef CONFIG_SYS_I2C_EEPROM_ADDR
++#undef CONFIG_SYS_EEPROM_PAGE_WRITE_BITS
++#undef CONFIG_SYS_EEPROM_SIZE
++
++#undef CONFIG_ENV_SIZE
++#undef CONFIG_ENV_IS_IN_SPI_FLASH
++#undef CONFIG_ENV_OFFSET
++
++#undef CONFIG_EXTRA_ENV_SETTINGS
++
++
++#define CONFIG_PHY_LANTIQ
++
++#define CONFIG_SYS_I2C_EEPROM_ADDR_LEN		2
++#define CONFIG_SYS_I2C_EEPROM_ADDR		0x50
++#define CONFIG_SYS_EEPROM_PAGE_WRITE_BITS	5
++#define CONFIG_SYS_EEPROM_SIZE			8192 /* Bytes */
++
++#define CONFIG_ENV_IS_IN_EEPROM
++#define CONFIG_ENV_SIZE		1024 /* Total Size of Environment Sector */
++#define CONFIG_ENV_OFFSET	(2048*3) /* WP area starts at last 1/4 of 8k eeprom */
++
++#define CONFIG_EXTRA_ENV_SETTINGS      \
++	"test_env_merge=SUCESS\0"    \
++	"kernel_image=uImage\0"    \
++	"ramdisk_image=uramdisk.image.gz\0"     \
++	"devicetree_image=devicetree.dtb\0"     \
++	"bitstream_image=system.bit.bin\0"      \
++	"loadbit_addr=0x100000\0"       \
++	"kernel_size=0x500000\0"        \
++	"devicetree_size=0x20000\0"     \
++	"ramdisk_size=0x5E0000\0"       \
++	"fdt_high=0x1e000000\0" \
++	"initrd_high=0x20000000\0"      \
++	"sdboot=echo Copying Linux from SD to RAM... && " \
++		"mmcinfo && " \
++		"fatload mmc 0 0x3000000 ${kernel_image} && " \
++		"fatload mmc 0 0x2A00000 ${devicetree_image} && " \
++		"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
++		"bootm 0x3000000 0x2000000 0x2A00000\0"
++
++#endif /* __CONFIG_ZYNQ_RED_PITAYA_H */
+diff --git a/include/linux/mii.h b/include/linux/mii.h
+index 66b83d8..f23c303 100644
+--- a/include/linux/mii.h
++++ b/include/linux/mii.h
 @@ -19,6 +19,8 @@
  #define MII_EXPANSION	    0x06	/* Expansion register	       */
  #define MII_CTRL1000	    0x09	/* 1000BASE-T control	       */
  #define MII_STAT1000	    0x0a	/* 1000BASE-T status	       */
 +#define MII_MMD_CTRL	    0x0d	/* MMD Access Control Register */
-+#define MII_MMD_DATA	    0x0e	/* MMD Access Data Register */
++#define MII_MMD_DATA	    0x0e	/* MMD Access Data Register    */
  #define MII_ESTATUS	    0x0f	/* Extended Status */
  #define MII_DCOUNTER	    0x12	/* Disconnect counter	       */
  #define MII_FCSCOUNTER	    0x13	/* False carrier counter       */
-diff -rupN old/u-boot-xlnx-xilinx-v2015.1/include/phy.h u-boot-xlnx-xilinx-v2015.1/include/phy.h
---- old/u-boot-xlnx-xilinx-v2015.1/include/phy.h	2015-03-03 09:54:28.000000000 +0100
-+++ u-boot-xlnx-xilinx-v2015.1/include/phy.h	2015-05-05 09:37:37.828717907 +0200
+diff --git a/include/phy.h b/include/phy.h
+index 1e282e2..c51cf4d 100644
+--- a/include/phy.h
++++ b/include/phy.h
 @@ -33,7 +33,7 @@
  				SUPPORTED_10000baseT_Full)
  
