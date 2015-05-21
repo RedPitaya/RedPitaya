@@ -138,7 +138,7 @@ $(UBOOT_TAR):
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d tmp -p 0 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
+	patch -d $@ -p 1 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
@@ -177,15 +177,15 @@ $(LINUX): $(LINUX_DIR)
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
-$(DEVICETREE_TAR):
+$(DTREE_TAR):
 	mkdir -p $(@D)
-	curl -L $(DEVICETREE_URL) -o $@
+	curl -L $(DTREE_URL) -o $@
 
-$(DEVICETREE_DIR): $(DEVICETREE_TAR)
+$(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DEVICETREE_DIR) $(LINUX_DIR) $(FPGA) $(DTS)
+$(DEVICETREE): $(DTREE_DIR) $(LINUX_DIR) $(FPGA) $(DTS)
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(SOC_DIR)/sdk/dts/ $(TMP)/devicetree.dts
