@@ -47,13 +47,13 @@ BUILD=build
 TARGET=target
 NAME=ecosystem
 
-SOC_DIR=fpga
+FPGA_DIR=fpga
 
 # targets
-FPGA       = $(SOC_DIR)/out/red_pitaya.bit
-FSBL       = $(SOC_DIR)/sdk/fsbl/executable.elf
-MEMTEST    = $(SOC_DIR)/sdk/memtest/executable.elf
-DTS        = $(SOC_DIR)/sdk/dts/system.dts
+FPGA       = $(FPGA_DIR)/out/red_pitaya.bit
+FSBL       = $(FPGA_DIR)/sdk/fsbl/executable.elf
+MEMTEST    = $(FPGA_DIR)/sdk/memtest/executable.elf
+DTS        = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE = $(TMP)/devicetree.dtb
 UBOOT      = $(TMP)/u-boot.elf
 BOOT       = $(TMP)/boot.bin
@@ -120,8 +120,8 @@ $(BUILD):
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-$(FPGA):
-	make -C $(SOC_DIR)
+$(FPGA): $(DTREE_DIR)
+	make -C $(FPGA_DIR)
 
 $(FSBL): $(FPGA)
 
@@ -188,7 +188,7 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) $(LINUX_DIR) $(FPGA) $(DTS)
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(SOC_DIR)/sdk/dts/ $(TMP)/devicetree.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA_DIR)/sdk/dts/ $(TMP)/devicetree.dts
 
 ################################################################################
 # boot file generator
@@ -262,7 +262,7 @@ zip: $(TARGET) $(SDK)
 
 clean:
 	make -C $(LINUX_DIR) clean
-	make -C $(SOC_DIR) clean
+	make -C $(FPGA_DIR) clean
 	make -C $(UBOOT_DIR) clean
 	make -C $(NGINX_DIR) clean	
 	make -C $(MONITOR_DIR) clean
