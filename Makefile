@@ -177,7 +177,15 @@ $(LINUX): $(LINUX_DIR)
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
-$(DEVICETREE): $(LINUX_DIR) $(FPGA) $(DTS)
+$(DEVICETREE_TAR):
+	mkdir -p $(@D)
+	curl -L $(DEVICETREE_URL) -o $@
+
+$(DEVICETREE_DIR): $(DEVICETREE_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+
+$(DEVICETREE): $(DEVICETREE_DIR) $(LINUX_DIR) $(FPGA) $(DTS)
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(SOC_DIR)/sdk/dts/ $(TMP)/devicetree.dts
