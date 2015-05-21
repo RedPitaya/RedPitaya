@@ -28,10 +28,9 @@
 #define AUTO_SCALE_PERIOD_COUNT     2
 #define AUTO_SCALE_AMP_SCA_FACTOR   1.05
 #define AUTO_SCALE_TIME_OFFSET      0
-#define PRE_WPOINTER_EPSILON        0.001
-#define MAIN_THREAT_SLEEP           500     // us
 #define MAX_UINT                    4294967296
 #define MIN_TIME_TO_DRAW_BEFORE_TIG 100
+#define WAIT_TO_FILL_BUF_TIMEOUT    (2*CLOCKS_PER_SEC)
 
 #define TIME_SCALE_RATIO_THRESHOLD  0.5
 
@@ -100,6 +99,7 @@ float viewIndexToTime(int index);
 float roundUpTo125(float data);
 void clearView();
 void clearMath();
+void waitToFillPreTriggerBuffer();
 
 void *mainThreadFun();
 
