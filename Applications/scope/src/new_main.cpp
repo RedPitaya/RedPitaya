@@ -72,7 +72,6 @@ CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RW, 0, 0, -100000
 CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RW, 0, 0, -1000000, 1000000);
 
 /* --------------------------------  CURSORS  ------------------------------ */
-//TODO update and not touch
 CBooleanParameter cursorx1("OSC_CURSOR_X1", CBaseParameter::RW, false, 0);
 CBooleanParameter cursorx2("OSC_CURSOR_X2", CBaseParameter::RW, false, 0);
 CBooleanParameter cursory1("OSC_CURSOR_Y1", CBaseParameter::RW, false, 0);
@@ -332,6 +331,9 @@ void OnNewParams(void) {
         rpApp_OscSingle();
         inSingle.Update();
         inSingle.Value() = false;
+        rpApp_osc_trig_sweep_t sweep;
+        rpApp_OscGetTriggerSweep(&sweep);
+        inTrigSweep.Value() = sweep;
     }
 
     if (inAutoscale.NewValue()) {
