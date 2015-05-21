@@ -642,6 +642,14 @@ int rp_AcqSetTriggerDelayNs(int64_t time_ns);
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns);
 
 /**
+ * Returns the number of valid data ponts before trigger.
+ * @param time_ns number of data points.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetPreTriggerCounter(uint32_t* value);
+
+/**
  * Sets the trigger threshold value in volts. Makes the trigger when ADC value crosses this value.
  * @param voltage Threshold value for the channel
  * @return If the function is successful, the return value is RP_OK.
