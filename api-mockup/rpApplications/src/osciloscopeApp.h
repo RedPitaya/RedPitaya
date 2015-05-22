@@ -18,21 +18,20 @@
 #include "../../rpbase/src/rp.h"
 #include "rpApp.h"
 
-#define VIEW_SIZE_DEFAULT           1024
-#define DIVISIONS_COUNT_X           10
-#define DIVISIONS_COUNT_Y           10
+#define VIEW_SIZE_DEFAULT             1024
+#define DIVISIONS_COUNT_X             10
+#define DIVISIONS_COUNT_Y             10
 
-#define AUTO_TRIG_TIMEOUT           1       // s
-#define SIGNAL_EXISTENCE            0.03    // V
-#define PERIOD_STORAGE_PERIOD_COUNT 15
-#define AUTO_SCALE_PERIOD_COUNT     2
-#define AUTO_SCALE_AMP_SCA_FACTOR   1.05
-#define AUTO_SCALE_TIME_OFFSET      0
-#define MAX_UINT                    4294967296
-#define MIN_TIME_TO_DRAW_BEFORE_TIG 100
-#define WAIT_TO_FILL_BUF_TIMEOUT    (2*CLOCKS_PER_SEC)
-
-#define TIME_SCALE_RATIO_THRESHOLD  0.5
+#define AUTO_TRIG_TIMEOUT             1       // s
+#define SIGNAL_EXISTENCE              0.03    // V
+#define PERIOD_STORAGE_PERIOD_COUNT   15
+#define AUTO_SCALE_PERIOD_COUNT       2
+#define AUTO_SCALE_AMP_SCA_FACTOR     1.05
+#define AUTO_SCALE_TIME_OFFSET        0
+#define MAX_UINT                      4294967296
+#define MIN_TIME_TO_DRAW_BEFORE_TIG   100
+#define WAIT_TO_FILL_BUF_TIMEOUT      (2*CLOCKS_PER_SEC)
+#define CONTIOUS_MODE_SCALE_THRESHOLD 0.2   //ms
 
 
 int osc_Init();
