@@ -41,7 +41,8 @@ typedef struct osc_control_s {
      * bit [0] - arm_trigger
      * bit [1] - rst_wr_state_machine
      * bit [2] - trigger_status
-     * bits [31:3] - reserved
+     * bit [3] - arm_keep
+     * bits [31:4] - reserved
      */
     uint32_t conf;
 
