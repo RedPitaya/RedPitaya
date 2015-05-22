@@ -58,7 +58,7 @@ URAMDISK=$(BUILD)/uramdisk.image.gz
 LIBREDPITAYA=shared/libredpitaya/libredpitaya.a
 
 NGINX       = $(INSTALL_DIR)/sbin/nginx
-IDGEN       = $(INSTALL_DIR)/www/apps
+IDGEN       = $(INSTALL_DIR)/sbin/idgen
 MONITOR     = $(INSTALL_DIR)/bin/monitor
 GENERATE    = $(INSTALL_DIR)/bin/generate
 ACQUIRE     = $(INSTALL_DIR)/bin/acquire
