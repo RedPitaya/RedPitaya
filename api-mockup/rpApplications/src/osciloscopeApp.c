@@ -27,6 +27,7 @@
 bool auto_freRun_mode = 0;
 bool acqRunning = false;
 bool clear = false;
+bool continuousMode = true;
 uint32_t viewSize = VIEW_SIZE_DEFAULT;
 float *view;
 float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
@@ -158,7 +159,7 @@ int osc_isRunning(bool *running) {
 }
 
 int osc_setTimeScale(float scale) {
-    float maxDeltaSample = 125000000.0f * scale / 1000.0 / samplesPerDivision;
+    float maxDeltaSample = 125000000.0f * scale / 1000.0f / samplesPerDivision;
     float ratio = (float) ADC_BUFFER_SIZE / (float) viewSize;
 
     if (maxDeltaSample / 65536.0f > ratio) {
@@ -188,6 +189,13 @@ int osc_setTimeScale(float scale) {
     }
 
     pthread_mutex_lock(&mutex);
+    if (scale < CONTIOUS_MODE_SCALE_THRESHOLD) {
+        ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(false))
+        continuousMode = false;
+    } else {
+        ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(true))
+        continuousMode = true;
+    }
     clearView();
     timeScale = scale;
     ECHECK_APP_MUTEX(mutex, rp_AcqSetDecimation(decimation))
@@ -768,6 +776,8 @@ void clearMath() {
 }
 
 int waitToFillPreTriggerBuffer() {
+    if (continuousMode)
+        return RP_OK;
     float deltaSample, timeScale;
     uint32_t preTriggerCount;
     int triggerDelay;
@@ -804,12 +814,12 @@ void mathThreadFunction() {
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
-    double _timer = clock();
+    clock_t _timer = clock();
     uint32_t _triggerPosition, _getBufSize, _startIndex, _writePointer = 0, _preTriggerCount = 0;
     int _triggerDelay, _preZero, _postZero;
     float _deltaSample, _timeScale;
     float data[2][ADC_BUFFER_SIZE];
-    bool thisLoopAcqStart = false;
+    bool thisLoopAcqStart;
 
     while (true) {
         thisLoopAcqStart = false;
@@ -824,16 +834,14 @@ void *mainThreadFun() {
             EXECUTE_ATOMICALLY(mutex, clear = false)
         }
 
-
-        ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
-        ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
-
         // If in auto mode end trigger timed out
         if (trigSweep == RPAPP_OSC_TRIG_AUTO && !auto_freRun_mode && (clock() - _timer) / CLOCKS_PER_SEC > AUTO_TRIG_TIMEOUT) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = true)
         }
 
+        ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
+        ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
         ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
 
         if ((_state == RP_TRIG_STATE_TRIGGERED && _timeScale >= MIN_TIME_TO_DRAW_BEFORE_TIG ) || _triggerSource == RP_TRIG_SRC_DISABLED) {
@@ -847,10 +855,10 @@ void *mainThreadFun() {
             _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
             _triggerDelay = _triggerDelay % ADC_BUFFER_SIZE;
 
-            _preZero = (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
+            _preZero = continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
             _postZero = (int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
-            _getBufSize = (viewSize-(_preZero + _postZero))*_deltaSample;
+            _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample);
 
             // Get data
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
@@ -858,7 +866,9 @@ void *mainThreadFun() {
 
             if (_triggerSource == RP_TRIG_SRC_DISABLED) {
                 if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
-                    threadSafe_acqStart();
+                    if (!continuousMode) {
+                        threadSafe_acqStart();
+                    }
                     thisLoopAcqStart = true;
                 } else {
                     acqRunning = false;
