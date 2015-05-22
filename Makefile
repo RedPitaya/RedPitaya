@@ -47,6 +47,7 @@ ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 BUILD=build
 TARGET=target
 NAME=ecosystem
+INSTALL_DIR=$(BUILD)
 
 FPGA_DIR=fpga
 
@@ -85,7 +86,9 @@ ECOSYSTEM       = $(BUILD)/www/apps/info/info.json
 SCPI_SERVER     = $(BUILD)/bin/scpi-server
 LIBRP           = $(BUILD)/lib/librp.so
 GDBSERVER       = $(BUILD)/bin/gdbserver
-PRINTENV        = $(BUILD)/bin/fw_printenv
+ENVTOOLS_ELF    = $(INSTALL_DIR)/bin/fw_printenv
+ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
+ENVTOOLS        = $(ENVTOOLS_ELF) $(ENVTOOLS_CFG)
 
 ################################################################################
 # Versioning system
@@ -151,9 +154,15 @@ $(UBOOT): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=arm-xilinx-linux-gnueabi- all
 	cp $</u-boot $@
 
-$(PRINTENV): $(UBOOT_DIR)
+$(ENVTOOLS_ELF): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(ARMHF_CFLAGS) CROSS_COMPILE=arm-linux-gnueabihf- env
+	mkdir -p $(INSTALL_DIR)/bin/
 	cp $</tools/env/fw_printenv $@
+	cp $</tools/env/fw_printenv $(INSTALL_DIR)/bin/fw_setenv
+
+$(ENVTOOLS_CFG): $(UBOOT_DIR)
+	mkdir -p $(INSTALL_DIR)/etc/
+	cp $</tools/env/fw_env.config $(INSTALL_DIR)/etc
 
 ################################################################################
 # Linux build provides: $(LINUX)
