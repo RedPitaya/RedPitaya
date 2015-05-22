@@ -9,7 +9,7 @@
 /* -------------------------  debug parameter  --------------------------------- */
 CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 100, 0, 0, 10000);
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 10000);
-CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, true, 0);
+CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, false, 0);
 
 
 
@@ -197,7 +197,7 @@ void UpdateParams(void) {
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
 
-    rp_EnableDigitalLoop(digitalLoop.Value());
+    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
 }
 
 float getMeasureValue(int measure) {
