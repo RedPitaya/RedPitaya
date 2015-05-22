@@ -158,24 +158,29 @@ int osc_isRunning(bool *running) {
 }
 
 int osc_setTimeScale(float scale) {
-    rp_acq_decimation_t decimation;
-    float constant = (float)viewSize * 125000000.0f * timeScale / 1000.0f / samplesPerDivision / (float)ADC_BUFFER_SIZE;
-    // contition:
-    // sampleRate / samplesPerDivision * viewSize < TIME_SCALE_RATIO_THRESHOLD
+    float maxDeltaSample = 125000000.0f * scale / 1000.0 / samplesPerDivision;
+    float ratio = (float) ADC_BUFFER_SIZE / (float) viewSize;
 
-    if (constant / 1.0f < TIME_SCALE_RATIO_THRESHOLD) {
+    if (maxDeltaSample / 65536.0f > ratio) {
+        return RP_EOOR;
+    }
+
+    rp_acq_decimation_t decimation;
+
+    // contition: viewBuffer cannot be larger than adcBuffer
+    if (maxDeltaSample <= ratio) {
         decimation = RP_DEC_1;
     }
-    else if (constant / 8.0f < TIME_SCALE_RATIO_THRESHOLD) {
+    else if (maxDeltaSample / 8.0f <= ratio) {
         decimation = RP_DEC_8;
     }
-    else if (constant / 64.0f < TIME_SCALE_RATIO_THRESHOLD) {
+    else if (maxDeltaSample / 64.0f <= ratio) {
         decimation = RP_DEC_64;
     }
-    else if (constant / 1024.0f < TIME_SCALE_RATIO_THRESHOLD) {
+    else if (maxDeltaSample / 1024.0f <= ratio) {
         decimation = RP_DEC_1024;
     }
-    else if (constant / 8192.0f < TIME_SCALE_RATIO_THRESHOLD) {
+    else if (maxDeltaSample / 8192.0f <= ratio) {
         decimation = RP_DEC_8192;
     }
     else {
