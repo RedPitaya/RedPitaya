@@ -1,5 +1,5 @@
 CC=$(CROSS_COMPILE)g++
-CFLAGS=-c -Wall -static -std=c++11 -DIS_DEV_BRANCH -I../build/include/cryptopp -I../libjson -I../encoder
+CFLAGS=-c -Wall -static -std=c++11 -I../build/include/cryptopp -I../libjson -I../encoder
 LDFLAGS= -L../build/lib -lcryptopp
 SOURCES= main.cpp \
 	../encoder/encoder.cpp \
@@ -32,6 +32,10 @@ $(EXECUTABLE):	$(OBJECTS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
+
+install:
+	test -d '$(DESTDIR)/www/apps' || mkdir -p '$(DESTDIR)/www/apps'
+	cp $(EXECUTABLE) '$(DESTDIR)/www/apps/'
 
 clean: 
 	rm -rf $(EXECUTABLE) $(OBJECTS) $(CRYPTO_LIB) 
