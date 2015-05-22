@@ -1,8 +1,7 @@
 #include "new_main.h"
 
-#include <DataManager.h>
-#include <CustomParameters.h>
-#include "rpApp.h"
+#include <math.h>
+#include <stdio.h>
 #include "version.h"
 
 
@@ -99,7 +98,11 @@ CIntParameter mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, RP_CH_2, 0, RP_CH
 //CIntParameter arbitraryChannel("SOUR_TRAC_CH", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
 
 /* --------------------------------  OUTOUT PARAMETERS  ------------------------------ */
-// TODO out1Show and out2Show unused
+CFloatSignal out1Signal("out1", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatSignal out2Signal("out2", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+bool updateOutCh1 = true;
+bool updateOutCh2 = true;
+
 CBooleanParameter out1Show("OUTPUT1_SHOW", CBaseParameter::RW, true, 0);
 CBooleanParameter out2Show("OUTPUT2_SHOW", CBaseParameter::RW, true, 0);
 
@@ -297,9 +300,48 @@ void UpdateSignals(void) {
     } else {
         math.Resize(0);
     }
+
+
+/* ------ UPDATE OUT SIGNALS ------*/
+    if (out1Show.Value() && out1State.Value() && out1Burst.Value() == 0) {
+        if (out1Signal.GetSize() != dataSize.Value()) {
+            out1Signal.Resize(dataSize.Value());
+            generate(RP_CH_1);
+        }
+        if (updateOutCh1) {
+            generate(RP_CH_1);
+            updateOutCh1 = false;
+        }
+    } else {
+        out1Signal.Resize(0);
+    }
+
+    if (out2Show.Value() && out2State.Value() && out2Burst.Value() == 0) {
+        if (out2Signal.GetSize() != dataSize.Value()) {
+            out2Signal.Resize(dataSize.Value());
+            generate(RP_CH_2);
+        }
+        if (updateOutCh2) {
+            generate(RP_CH_2);
+            updateOutCh2 = false;
+        }
+    } else {
+        out2Signal.Resize(0);
+    }
 }
 
 void OnNewParams(void) {
+
+    if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
+        || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(inTimeScale)) {
+        updateOutCh1 = true;
+    }
+    if (IS_NEW(out2State) || IS_NEW(out2Amplitude) || IS_NEW(out2Offset) || IS_NEW(out2Frequancy) || IS_NEW(out2Phase)
+        || IS_NEW(out2WAveform) || IS_NEW(out2Burst) || IS_NEW(inTimeScale)) {
+        updateOutCh2 = true;
+    }
+
+
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
     in1Show.Update();
     in2Show.Update();
@@ -387,7 +429,7 @@ void OnNewParams(void) {
     out1Show.Update();
     out2Show.Update();
 
-/* ------ SEND GENERATE PARAMETERS RO API ------*/
+/* ------ SEND GENERATE PARAMETERS TO API ------*/
     IF_VALUE_CHANGED_BOOL(out1State, rp_GenOutEnable(RP_CH_1), rp_GenOutDisable(RP_CH_1))
     IF_VALUE_CHANGED_BOOL(out2State, rp_GenOutEnable(RP_CH_2), rp_GenOutDisable(RP_CH_2))
     IF_VALUE_CHANGED(out1Amplitude, rp_GenAmp(RP_CH_1, out1Amplitude.NewValue()))
@@ -439,4 +481,68 @@ void OnNewParams(void) {
     signalPeriiod.Update();
     parameterPeriiod.Update();
     digitalLoop.Update();
+}
+
+
+
+
+
+/***************************************************************************************
+*                            SIGNAL GENERATING TEMPORARY                                *
+****************************************************************************************/
+
+void generate(rp_channel_t channel) {
+    CFloatSignal *signal;
+    rp_waveform_t waveform;
+    float frequency, phase, amplitude, offset;
+
+    if (channel == RP_CH_1) {
+        signal = &out1Signal;
+        waveform = (rp_waveform_t) out1WAveform.Value();
+        frequency = out1Frequancy.Value();
+        phase = (float) (out1Phase.Value() / 180.0f * M_PI);
+        amplitude = out1Amplitude.Value();
+        offset = out1Offset.Value();
+    }
+    else {
+        signal = &out2Signal;
+        waveform = (rp_waveform_t) out2WAveform.Value();
+        frequency = out2Frequancy.Value();
+        phase = (float) (out2Phase.Value() / 180.0f * M_PI);
+        amplitude = out2Amplitude.Value();
+        offset = out2Offset.Value();
+    }
+
+    switch (waveform) {
+        case RP_WAVEFORM_SINE:
+            synthesis_sin(signal, frequency, phase, amplitude, offset);
+            break;
+        case RP_WAVEFORM_TRIANGLE:
+            synthesis_triangle(signal, frequency, phase, amplitude, offset);
+            break;
+        case RP_WAVEFORM_SQUARE:
+            synthesis_square(signal, frequency, phase, amplitude, offset);
+            break;
+        default:
+            break;
+    }
+}
+
+
+void synthesis_sin(CFloatSignal *signal, float freq, float phase, float amp, float off) {
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        (*signal)[i] = (float) (sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase) * amp + off);
+    }
+}
+
+void synthesis_triangle(CFloatSignal *signal, float freq, float phase, float amp, float off) {
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        (*signal)[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase))) / M_PI * 2  * amp + off);
+    }
+}
+
+void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, float off) {
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        (*signal)[i] = sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase) > 0 ? amp+off : -amp+off;
+    }
 }
