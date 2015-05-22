@@ -226,7 +226,10 @@ int hk_AreExCiNBitsSet(uint32_t bits, bool* result)
  * Digital loop
  */
 
-int hk_EnableDigitalLoop(bool enable)
-{
-    return cmn_SetBits(&hk->digital_loop, enable ? 1 : 0, DIGITAL_LOOP_MASK);
+int hk_EnableDigitalLoop(bool enable) {
+    if (enable) {
+        return cmn_SetBits(&hk->digital_loop, 1, DIGITAL_LOOP_MASK);
+    } else {
+        return cmn_UnsetBits(&hk->digital_loop, 1, DIGITAL_LOOP_MASK);
+    }
 }
