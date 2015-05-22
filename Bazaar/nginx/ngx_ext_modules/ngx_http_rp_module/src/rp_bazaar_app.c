@@ -507,33 +507,13 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     {
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_demo_mode_str);
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Cannot resolve function\n", file);
-    	fclose(file);
     }
-    else
-    {
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Resolve function\n", file);
-    	fclose(file);
-    }
-
-
 
     app->verify_app_license_func = dlsym(app->handle, c_verify_app_license_str);
     if(!app->verify_app_license_func)
     {
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Cannot resolve function c_verify_app_license_str\n", file);
-    	fclose(file);
-    }
-    else
-    {
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Resolve function c_verify_app_license_str\n", file);
-    	fclose(file);
     }
 
 //end web socket functionality
