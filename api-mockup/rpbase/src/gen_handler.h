@@ -48,6 +48,7 @@ int gen_setTriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_getTriggerSource(rp_channel_t chanel, rp_trig_src_t *src);
 int gen_Trigger(int mask);
 int gen_Synchronise();
+int triggerIfInternal(rp_channel_t channel);
 
 int synthesize_signal(rp_channel_t channel);
 int synthesis_sin(float *data_out);

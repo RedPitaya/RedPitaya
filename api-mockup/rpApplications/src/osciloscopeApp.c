@@ -116,8 +116,7 @@ int osc_single() {
         ECHECK_APP(osc_setTriggerSweep(RPAPP_OSC_TRIG_SINGLE));
     }
     ECHECK_APP(threadSafe_acqStart());
-    // Sleep thet FGPA acquires some data
-    usleep(1000);
+    waitToFillPreTriggerBuffer();
     ECHECK_APP(osc_setTriggerSource(trigSource));
     return RP_OK;
 }
@@ -407,9 +406,7 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
         case RPAPP_OSC_TRIG_SINGLE:
             break;
         case RPAPP_OSC_TRIG_AUTO:
-            pthread_mutex_lock(&mutex);
-            auto_freRun_mode = false;
-            pthread_mutex_unlock(&mutex);
+            EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
             break;
         default:
             return RP_EOOR;
@@ -762,6 +759,19 @@ void clearMath() {
     }
 }
 
+void waitToFillPreTriggerBuffer() {
+    float deltaSample, timeScale;
+    uint32_t preTriggerCount;
+    int triggerDelay;
+    clock_t timer = clock();
+    do {
+        ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
+        ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
+        ECHECK_APP(osc_getTimeScale(&timeScale));
+        deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+    } while (preTriggerCount < viewSize/2*deltaSample - triggerDelay && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
+}
+
 /*
 * Thread functions
 */
@@ -794,27 +804,20 @@ void *mainThreadFun() {
 
     while (true) {
         thisLoopAcqStart = false;
-        ECHECK_APP(rp_AcqGetTriggerState(&_state));
-        ECHECK_APP(rp_AcqGetTriggerSrc(&_triggerSource));
 
         if (clear) {
-            ECHECK_APP(osc_setTriggerSource(RP_TRIG_SRC_DISABLED));
+            ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             threadSafe_acqStart();
-            uint32_t preTrig = -1;
-            do {
-                rp_AcqGetTriggerDelay(&_triggerDelay);
-                rp_AcqGetPreTriggerCounter(&_preTriggerCount);
-                ECHECK_APP(osc_getTimeScale(&_timeScale));
-                _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
-                if (preTrig == _preTriggerCount)
-                    break;
-                preTrig = _preTriggerCount;
-            } while (_preTriggerCount/_deltaSample < viewSize/2);
+            waitToFillPreTriggerBuffer();
             thisLoopAcqStart = false;
             ECHECK_APP(osc_setTriggerSource(trigSource));
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
             EXECUTE_ATOMICALLY(mutex, clear = false)
         }
+
+
+        ECHECK_APP(rp_AcqGetTriggerState(&_state));
+        ECHECK_APP(rp_AcqGetTriggerSrc(&_triggerSource));
 
         // If in auto mode end trigger timed out
         if (trigSweep == RPAPP_OSC_TRIG_AUTO && !auto_freRun_mode && (clock() - _timer) / CLOCKS_PER_SEC > AUTO_TRIG_TIMEOUT) {
@@ -845,9 +848,13 @@ void *mainThreadFun() {
             ECHECK_APP(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
             ECHECK_APP(rp_AcqGetDataV(RP_CH_2, _startIndex, &_getBufSize, data[1]));
 
-            if (trigSweep != RPAPP_OSC_TRIG_SINGLE && _triggerSource == RP_TRIG_SRC_DISABLED) {
-                threadSafe_acqStart();
-                thisLoopAcqStart = true;
+            if (_triggerSource == RP_TRIG_SRC_DISABLED) {
+                if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
+                    threadSafe_acqStart();
+                    thisLoopAcqStart = true;
+                } else {
+                    acqRunning = false;
+                }
             }
 
             // Reset autoSweep timer
@@ -872,13 +879,7 @@ void *mainThreadFun() {
 
 
         if (thisLoopAcqStart) {
-            do {
-                rp_AcqGetTriggerDelay(&_triggerDelay);
-                rp_AcqGetPreTriggerCounter(&_preTriggerCount);
-                ECHECK_APP(osc_getTimeScale(&_timeScale));
-                _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
-            } while (_preTriggerCount/_deltaSample < viewSize/2);
-
+            waitToFillPreTriggerBuffer();
             ECHECK_APP(osc_setTriggerSource(trigSource));
         }
     }
