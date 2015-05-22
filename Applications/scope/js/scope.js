@@ -12,7 +12,7 @@
   // App configuration
   OSC.config = {};
   OSC.config.app_id = 'scope';
-  OSC.config.server_ip = '';  // Leave empty on production, it is used for testing only
+  OSC.config.server_ip = '192.168.0.103';  // Leave empty on production, it is used for testing only
   OSC.config.start_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?start=' + OSC.config.app_id;
   OSC.config.stop_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?stop=' + OSC.config.app_id;
   OSC.config.socket_url = 'ws://' + (OSC.config.server_ip.length ? OSC.config.server_ip : window.location.hostname) + ':9002';  // WebSocket server URI
@@ -20,8 +20,8 @@
   OSC.config.graph_colors = {
     'ch1' : '#f3ec1a',
     'ch2' : '#31b44b',
-    'out1': '#9595ca',
-    'out2': '#ee3739',
+    'output1': '#9595ca',
+    'output2': '#ee3739',
     'math': '#ab4d9d',
     'trig': '#75cede'
   };
@@ -52,6 +52,7 @@
     processing: false,
     editing: false,
     trig_dragging: false,
+    cursor_dragging: false,
     resized: false,
     sel_sig_name: null,
     fine: false
@@ -149,19 +150,11 @@
 
   // Processes newly received values for parameters
   OSC.processParameters = function(new_params) {
+    var old_params = $.extend(true, {}, OSC.params.orig);
     
     for(var param_name in new_params) {
       
-      // Do nothing if new parameter value is the same as the old one and it is related to measurement info, signal offset or trigger
-      if(OSC.params.orig[param_name] !== undefined 
-          && OSC.params.orig[param_name].value === new_params[param_name].value
-          && param_name.indexOf('OSC_MEAS_VAL') == -1
-          && param_name.indexOf('_OFFSET') == -1
-          && (param_name.indexOf('OSC_TRIG_') == -1 || OSC.state.trig_dragging)) {
-        continue;
-      }
-      
-      // Save data for new parameter
+      // Save new parameter value
       OSC.params.orig[param_name] = new_params[param_name];
       
       // Run/Stop button
@@ -177,14 +170,15 @@
       }
       // All other parameters
       else {
-        var field = $('#' + param_name);  // TODO: Use classes instead of ids, to be able to use a param name in multiple fields
         
         // Show/hide Y offset arrows
         if(param_name == 'OSC_CH1_OFFSET') {
           if(new_params['CH1_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#ch1_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
+            if(!$('#ch1_offset_arrow').is(':visible') 
+                || old_params[param_name].value != new_params[param_name].value 
+                || old_params['OSC_CH1_SCALE'].value != new_params['OSC_CH1_SCALE'].value) {
               var volt_per_px = (new_params['OSC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
               var px_offset = -(new_params['OSC_CH1_OFFSET'].value / volt_per_px - parseInt($('#ch1_offset_arrow').css('margin-top')) / 2);
 
@@ -199,7 +193,7 @@
           if(new_params['CH2_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#ch2_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
+            if(!$('#ch2_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
               var volt_per_px = (new_params['OSC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
               var px_offset = -(new_params['OSC_CH2_OFFSET'].value / volt_per_px - parseInt($('#ch2_offset_arrow').css('margin-top')) / 2);
 
@@ -214,7 +208,7 @@
         else if(param_name == 'OSC_TIME_OFFSET') {
           
           // Change arrow position only if arrow is hidden or old/new values are not the same
-          if(!$('#time_offset_arrow').is(':visible') || OSC.params.orig[param_name].value != new_params[param_name].value) {
+          if(!$('#time_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
             var ms_per_px = (new_params['OSC_TIME_SCALE'].value * 10) / $('#graph_grid').outerWidth();
             var px_offset = -(new_params['OSC_TIME_OFFSET'].value / ms_per_px + $('#time_offset_arrow').width()/2 + 1);
 
@@ -223,23 +217,24 @@
         }
         // Trigger level
         else if(param_name == 'OSC_TRIG_LEVEL') {
-          
-          // Trigger button is blured out and trigger level is hidden for source 'EXT', which is not yet supported
-          if(new_params['OSC_TRIG_SOURCE'].value > 1) {
-            $('#trigger_level, #trig_level_arrow').hide();
-            $('#right_menu .menu-btn.trig').prop('disabled', true);
-            $('#osc_trig_level_info').html('- ');
-          }
-          else {
-            var ref_scale = (new_params['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
-            var graph_height = $('#graph_grid').height();
-            var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
-            var px_offset = -(new_params[param_name].value / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+          if(! OSC.state.trig_dragging) {
             
-            $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
-            $('#trigger_level, #trig_level_arrow').show();
-            $('#right_menu .menu-btn.trig').prop('disabled', false);
-            $('#osc_trig_level_info').html(new_params[param_name].value);
+            // Trigger button is blured out and trigger level is hidden for source 'EXT'
+            if(new_params['OSC_TRIG_SOURCE'].value > 1) {
+              $('#trigger_level, #trig_level_arrow').hide();
+              $('#right_menu .menu-btn.trig').prop('disabled', true);
+              $('#osc_trig_level_info').html('- ');
+            }
+            else {
+              var ref_scale = (new_params['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
+              var graph_height = $('#graph_grid').outerHeight();
+              var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
+              var px_offset = -(new_params[param_name].value / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+              
+              $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
+              $('#right_menu .menu-btn.trig').prop('disabled', false);
+              $('#osc_trig_level_info').html(new_params[param_name].value);
+            }
           }
         }
         // Trigger source
@@ -250,9 +245,63 @@
         else if(param_name == 'OSC_TRIG_SLOPE') {
           $('#osc_trig_edge_img').attr('src', (new_params[param_name].value == 1 ? 'img/trig-edge-up.png' : 'img/trig-edge-down.png'));
         }
+        // Y cursors
+        else if(param_name == 'OSC_CURSOR_Y1' || param_name == 'OSC_CURSOR_Y2') {
+          if(! OSC.state.cursor_dragging) {
+            var y = (param_name == 'OSC_CURSOR_Y1' ? 'y1' : 'y2');
+            
+            if(new_params[param_name].value) {
+              var new_value = new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value;
+              var ref_scale = (new_params['OSC_CURSOR_SRC'].value == 0 ? 'OSC_CH1_SCALE' : (new_params['OSC_CURSOR_SRC'].value == 1 ? 'OSC_CH2_SCALE' : 'OSC_MATH_SCALE'));
+              var graph_height = $('#graph_grid').height();
+              var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
+              var px_offset = -(new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value / volt_per_px - parseInt($('#cur_' + y + '_arrow').css('margin-top')) / 2);
+              var top = (graph_height + 7) / 2 + px_offset;
+              
+              $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
+              $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (top < 16 ? 3 : ''));
+            }
+            else {
+              $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
+            }
+          }
+        }
+        // X cursors
+        else if(param_name == 'OSC_CURSOR_X1' || param_name == 'OSC_CURSOR_X2') {
+          if(! OSC.state.cursor_dragging) {
+            var x = (param_name == 'OSC_CURSOR_X1' ? 'x1' : 'x2');
+            
+            if(new_params[param_name].value) {
+              var new_value = new_params[x == 'x1' ? 'OSC_CUR1_T' : 'OSC_CUR2_T'].value;
+              var graph_width = $('#graph_grid').width();
+              var ms_per_px = (new_params['OSC_TIME_SCALE'].value * 10) / graph_width;
+              var px_offset = -(new_value / ms_per_px - parseInt($('#cur_' + x + '_arrow').css('margin-left')) / 2 - 2.5);
+              var msg_width = $('#cur_' + x + '_info').outerWidth();
+              var left = (graph_width + 2) / 2 + px_offset;
+              
+              $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
+              $('#cur_' + x + '_info')
+                .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + 'ms')
+                .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+            }
+            else {
+              $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
+            }
+          }
+        }
+        // Math scale
+        else if(param_name == 'OSC_MATH_SCALE') {
+          $('#OSC_MATH_SCALE_info').html(new_params[param_name].value);
+        }
         
-        // Do not change fields from dialogs when user is editing something        
-        if(!OSC.state.editing || field.closest('.menu-content').length == 0) {
+        // Find the field having ID equal to current parameter name
+        // TODO: Use classes instead of ids, to be able to use a param name in multiple fields and to loop through all fields to set new values
+        var field = $('#' + param_name);
+        
+        // Do not change fields from dialogs when user is editing something or new parameter value is the same as the old one
+        if((!OSC.state.editing || field.closest('.menu-content').length == 0) 
+            && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
+          
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
           }
@@ -288,6 +337,10 @@
         }
       }
     }
+    
+    // Resize double-headed arrows showing the difference between cursors
+    OSC.updateYCursorDiff();
+    OSC.updateXCursorDiff();
   };
 
   // Processes newly received data for signals
@@ -305,8 +358,18 @@
     // (Re)Draw every signal
     for(sig_name in new_signals) {
       
+      // Ignore empty signals
+      if(new_signals[sig_name].size == 0) {
+        continue;
+      }
+      
       // Ignore disabled signals
       if(OSC.params.orig[sig_name.toUpperCase() + '_SHOW'] && OSC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
+        continue;
+      }
+      
+      // Ignore math signal if no operator defined
+      if(sig_name == 'math' && (!OSC.params.orig['OSC_MATH_OP'] || OSC.params.orig['OSC_MATH_OP'].value == 0)) {
         continue;
       }
       
@@ -338,7 +401,6 @@
             color: color
           },
           yaxis: {
-            autoscaleMargin: 1,
             min: -5, // (sig_name == 'ch1' || sig_name == 'ch2' ? OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SCALE'].value * -5 : null),
             max: 5   // (sig_name == 'ch1' || sig_name == 'ch2' ? OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SCALE'].value * 5 : null)
           },
@@ -438,12 +500,17 @@
       return false;
     }
     
-    // TEMP TEST
-    //OSC.params.local['DEBUG_PARAM_PERIOD'] = { value: 5000 };
-    //OSC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 1000 };
+    OSC.setDefCursorVals();
     
+    // TEMP TEST
+    // TODO: Set the update period depending on device type
+    //OSC.params.local['DEBUG_PARAM_PERIOD'] = { value: 200 };
+    //OSC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 100 };
+    
+    // Send new values and reset the local params object
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
+    
     return true;
   };
 
@@ -531,20 +598,17 @@
     
     for(var i=0; i < OSC.voltage_steps.length - 1; i++) {
       
-      if(OSC.state.fine && (curr_scale == OSC.voltage_steps[i] || (curr_scale > OSC.voltage_steps[i] && curr_scale < OSC.voltage_steps[i + 1]))) {
-          
+      if(OSC.state.fine && (curr_scale == OSC.voltage_steps[i] 
+          || (curr_scale > OSC.voltage_steps[i] && curr_scale < OSC.voltage_steps[i + 1])
+          || (curr_scale == OSC.voltage_steps[i + 1] && direction == '-'))) {
+        
+        new_scale = curr_scale + (OSC.voltage_steps[i + 1] / 100) * (direction == '-' ? -1 : 1);
+        
         // Do not allow values smaller than the lowest possible one
-        if(i != 0 || direction != '-') {
-          
-          // For millivolts, add one millivolt
-          if(curr_scale < 1) {
-            new_scale = curr_scale + 1/1000 * (direction == '-' ? -1 : 1);
-          }
-          // For volts, add one volt
-          else {
-            new_scale = curr_scale + (direction == '-' ? -1 : 1);
-          }
+        if(new_scale < OSC.voltage_steps[0]) {
+          new_scale = OSC.voltage_steps[0];
         }
+        
         break;
       }
       
@@ -553,7 +617,7 @@
         break;
       }
       else if(!OSC.state.fine && ((curr_scale > OSC.voltage_steps[i] && curr_scale < OSC.voltage_steps[i + 1]) || (curr_scale == OSC.voltage_steps[i + 1] && i == OSC.voltage_steps.length - 2))) {
-        new_scale = OSC.voltage_steps[direction == '-' ? i : i + 1]
+        new_scale = OSC.voltage_steps[direction == '-' ? i : i + 1];
         break;
       }
     }
@@ -561,7 +625,7 @@
     if(new_scale !== undefined && new_scale > 0 && new_scale != curr_scale) {
       
       // Fix float length
-      new_scale = parseFloat(new_scale.toFixed(3));
+      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
       
       if(send_changes !== false) {
         OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
@@ -580,28 +644,17 @@
     
     for(var i=0; i < OSC.time_steps.length - 1; i++) {
       
-      if(OSC.state.fine && (curr_scale == OSC.time_steps[i] || (curr_scale > OSC.time_steps[i] && curr_scale < OSC.time_steps[i + 1]))) {
-          
+      if(OSC.state.fine && (curr_scale == OSC.time_steps[i] 
+          || (curr_scale > OSC.time_steps[i] && curr_scale < OSC.time_steps[i + 1])
+          || (curr_scale == OSC.time_steps[i + 1] && direction == '-'))) {
+        
+        new_scale = curr_scale + (OSC.time_steps[i + 1] / 100) * (direction == '-' ? -1 : 1);
+        
         // Do not allow values smaller than the lowest possible one
-        if(i != 0 || direction != '-') {
-          
-          // For nanosecods, add one nanosecond
-          if(curr_scale < 1/1000) {
-            new_scale = curr_scale + 1/1000000 * (direction == '-' ? -1 : 1);
-          }
-          // For microseconds, add one microsecond
-          else if(curr_scale < 1) {
-            new_scale = curr_scale + 1/1000 * (direction == '-' ? -1 : 1);
-          }
-          // For milliseconds, add one millisecod
-          else if(curr_scale < 1000) {
-            new_scale = curr_scale + (direction == '-' ? -1 : 1);
-          }
-          // For seconds, add one second
-          else if(curr_scale >= 1000) {
-            new_scale = curr_scale + 1000 * (direction == '-' ? -1 : 1);
-          }
+        if(new_scale < OSC.time_steps[0]) {
+          new_scale = OSC.time_steps[0];
         }
+        
         break;
       }
       
@@ -618,7 +671,7 @@
     if(new_scale !== undefined && new_scale > 0 && new_scale != curr_scale) {
       
       // Fix float length
-      new_scale = parseFloat(new_scale.toFixed(6));
+      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 8 : 6));
       
       if(send_changes !== false) {
         OSC.params.local['OSC_TIME_SCALE'] = { value: new_scale };
@@ -630,6 +683,233 @@
     return null;
   };
 
+  // Sets default values for cursors, if values not yet defined
+  OSC.setDefCursorVals = function() {
+    var graph_height = $('#graph_grid').height();
+    var graph_width = $('#graph_grid').width();
+    
+    var source = (OSC.params.local['OSC_CURSOR_SRC'] ? OSC.params.local['OSC_CURSOR_SRC'].value : OSC.params.orig['OSC_CURSOR_SRC']);
+    var ref_scale = (source == 0 ? 'OSC_CH1_SCALE' : (source == 1 ? 'OSC_CH2_SCALE' : 'OSC_MATH_SCALE'));
+    var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
+    
+    // Default value for Y1 cursor is 1/4 from graph height
+    if(OSC.params.local['OSC_CURSOR_Y1'] && OSC.params.local['OSC_CURSOR_Y1'].value && OSC.params.local['OSC_CUR1_V'] === undefined && $('#cur_y1').data('init') === undefined) {
+      var cur_arrow = $('#cur_y1_arrow');
+      var top = (graph_height + 7) * 0.25;
+      
+      OSC.params.local['OSC_CUR1_V'] = { value: (graph_height / 2 - top - (cur_arrow.height() - 2) / 2 - parseInt(cur_arrow.css('margin-top'))) * volt_per_px };
+      
+      $('#cur_y1_arrow, #cur_y1').css('top', top).show();
+      $('#cur_y1').data('init', true);
+    }
+    
+    // Default value for Y2 cursor is 1/3 from graph height
+    if(OSC.params.local['OSC_CURSOR_Y2'] && OSC.params.local['OSC_CURSOR_Y2'].value && OSC.params.local['OSC_CUR2_V'] === undefined && $('#cur_y2').data('init') === undefined) {
+      var cur_arrow = $('#cur_y2_arrow');
+      var top = (graph_height + 7) * 0.33;
+      
+      OSC.params.local['OSC_CUR2_V'] = { value: (graph_height / 2 - top - (cur_arrow.height() - 2) / 2 - parseInt(cur_arrow.css('margin-top'))) * volt_per_px };
+      
+      $('#cur_y2_arrow, #cur_y2').css('top', top).show();
+      $('#cur_y2').data('init', true);
+    }
+    
+    // Default value for X1 cursor is 1/4 from graph width
+    if(OSC.params.local['OSC_CURSOR_X1'] && OSC.params.local['OSC_CURSOR_X1'].value && OSC.params.local['OSC_CUR1_T'] === undefined && $('#cur_x1').data('init') === undefined) {
+      var cur_arrow = $('#cur_x1_arrow');
+      var left = graph_width * 0.25;
+      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+      
+      OSC.params.local['OSC_CUR1_T'] = { value: (graph_width / 2 - left - (cur_arrow.width() - 2) / 2 - parseInt(cur_arrow.css('margin-left'))) * ms_per_px };
+      
+      $('#cur_x1_arrow, #cur_x1').css('left', left).show();
+      $('#cur_x1').data('init', true);
+    }
+    
+    // Default value for X2 cursor is 1/3 from graph width
+    if(OSC.params.local['OSC_CURSOR_X2'] && OSC.params.local['OSC_CURSOR_X2'].value && OSC.params.local['OSC_CUR2_T'] === undefined && $('#cur_x2').data('init') === undefined) {
+      var cur_arrow = $('#cur_x2_arrow');
+      var left = graph_width * 0.33;
+      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+      
+      OSC.params.local['OSC_CUR2_T'] = { value: (graph_width / 2 - left - (cur_arrow.width() - 2) / 2 - parseInt(cur_arrow.css('margin-left'))) * ms_per_px };
+      
+      $('#cur_x2_arrow, #cur_x2').css('left', left).show();
+      $('#cur_x2').data('init', true);
+    }
+  };
+  
+  // Updates all elements related to a Y cursor
+  OSC.updateYCursorElems = function(ui, save) {
+    var y = (ui.helper[0].id == 'cur_y1_arrow' ? 'y1' : 'y2');
+    var ref_scale = (OSC.params.orig['OSC_CURSOR_SRC'].value == 0 ? 'OSC_CH1_SCALE' : (OSC.params.orig['OSC_CURSOR_SRC'].value == 1 ? 'OSC_CH2_SCALE' : 'OSC_MATH_SCALE'));
+    var graph_height = $('#graph_grid').height();
+    var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
+    var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px;
+    
+    $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
+    $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (ui.position.top < 16 ? 3 : ''));
+    
+    OSC.updateYCursorDiff();
+    
+    if(save) {
+      OSC.params.local[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'] = { value: new_value };
+      OSC.sendParams();
+    }
+  };
+  
+  // Updates all elements related to a X cursor
+  OSC.updateXCursorElems = function(ui, save) {
+    var x = (ui.helper[0].id == 'cur_x1_arrow' ? 'x1' : 'x2');
+    var graph_width = $('#graph_grid').width();
+    var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+    var msg_width = $('#cur_' + x + '_info').outerWidth();
+    var new_value = (graph_width / 2 - ui.position.left - (ui.helper.width() - 2) / 2 - parseInt(ui.helper.css('margin-left'))) * ms_per_px;
+    
+    $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
+    $('#cur_' + x + '_info')
+      .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + 'ms')
+      .css('margin-left', (ui.position.left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+    
+    OSC.updateXCursorDiff();
+    
+    if(save) {
+      OSC.params.local[x == 'x1' ? 'OSC_CUR1_T' : 'OSC_CUR2_T'] = { value: new_value };
+      OSC.sendParams();
+    }
+  };
+  
+  // Resizes double-headed arrow showing the difference between Y cursors
+  OSC.updateYCursorDiff = function() {
+    var y1 = $('#cur_y1');
+    var y2 = $('#cur_y2');
+    var y1_top = parseInt(y1.css('top'));
+    var y2_top = parseInt(y2.css('top'));
+    var diff_px = Math.abs(y1_top - y2_top) - 6;
+    
+    if(y1.is(':visible') && y2.is(':visible') && diff_px > 12) {
+      var top = Math.min(y1_top, y2_top);
+      var value = parseFloat($('#cur_y1_info').html()) - parseFloat($('#cur_y2_info').html());
+      
+      $('#cur_y_diff')
+        .css('top', top + 5)
+        .height(diff_px)
+        .show();
+      $('#cur_y_diff_info')
+        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : 3))) + 'V')
+        .css('top', top + diff_px/2 - 2)
+        .show();
+    }
+    else {
+      $('#cur_y_diff, #cur_y_diff_info').hide();
+    }
+  };
+  
+  // Resizes double-headed arrow showing the difference between X cursors
+  OSC.updateXCursorDiff = function() {
+    var x1 = $('#cur_x1');
+    var x2 = $('#cur_x2');
+    var x1_left = parseInt(x1.css('left'));
+    var x2_left = parseInt(x2.css('left'));
+    var diff_px = Math.abs(x1_left - x2_left) - 9;
+    
+    if(x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
+      var left = Math.min(x1_left, x2_left);
+      var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
+      
+      $('#cur_x_diff')
+        .css('left', left + 1)
+        .width(diff_px)
+        .show();
+      $('#cur_x_diff_info')
+        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : Math.abs(value) >= 0.001 ? 4 : 6))) + 'ms')
+        .show()
+        .css('left', left + diff_px/2 - $('#cur_x_diff_info').width()/2 + 3);
+    }
+    else {
+      $('#cur_x_diff, #cur_x_diff_info').hide();
+    }
+  };
+  
+  // Updates Y offset in the signal config dialog, if opened, or saves new value
+  OSC.updateYOffset = function(ui, save) {
+    var in1_dialog_visible = $('#in1_dialog').is(':visible');
+    var in2_dialog_visible = $('#in2_dialog').is(':visible');
+    
+    // Return if none of the dialogs is visible and it is not required to save value
+    if(!save && !in1_dialog_visible && !in2_dialog_visible) {
+      return;
+    }
+    
+    var graph_height = $('#graph_grid').outerHeight();
+    var zero_pos = (graph_height + 7) / 2;
+    var new_value;
+    
+    if(ui.helper[0].id == 'ch1_offset_arrow') {
+      var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / graph_height;
+      
+      new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
+      
+      if(in1_dialog_visible) {
+        $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
+      }
+      else if(save) {
+        OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
+      }
+    }
+    else {
+      var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
+      
+      new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
+      
+      if(in2_dialog_visible) {
+        $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
+      }
+      else if(save) {
+        OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
+      }
+    }
+    
+    if(new_value !== undefined && save) {
+      OSC.sendParams();
+    }
+  };
+  
+  // Updates trigger level in the trigger config dialog, if opened, or saves new value
+  OSC.updateTrigLevel = function(ui, save) {
+    var dialog_visible = $('#trig_dialog').is(':visible');
+    
+    $('#trigger_level').css('top', ui.position.top);
+    
+    if(!dialog_visible && !save) {
+      return;
+    }
+    
+    if(OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
+      
+      if(OSC.params.orig['OSC_TRIG_SOURCE'].value < 2) {
+        var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
+        
+        if(OSC.params.orig[ref_scale] !== undefined) {
+          var graph_height = $('#graph_grid').height();
+          var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
+          var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px;
+          
+          if(dialog_visible) {
+            $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
+          }
+          else if(save) {
+            OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
+            OSC.sendParams();
+          }
+        }
+      }
+      else {
+        console.log('Trigger level for source ' + OSC.params.orig['OSC_TRIG_SOURCE'].value + ' not yet supported');
+      }
+    }
+  };
+  
 }(window.OSC = window.OSC || {}, jQuery));
 
 // Page onload event handler
@@ -765,7 +1045,7 @@ $(function() {
   });
   
   $('#jtk_left, #jtk_right').click(function(ev) {
-    OSC.changeXZoom(ev.target.id == 'jtk_left' ? '-' : '+');
+    OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
   });
   
   // Voltage offset arrow dragging
@@ -774,7 +1054,7 @@ $(function() {
     containment: 'parent',
     drag: function(ev, ui) {
       var margin_top = parseInt(ui.helper.css('marginTop'));
-      var min_top = ((ui.helper.height()/2) + margin_top) * -1;
+      var min_top = ((ui.helper.height() / 2) + margin_top) * -1;
       var max_top = $('#graphs').height() - margin_top;
       
       if(ui.position.top < min_top) {
@@ -783,20 +1063,11 @@ $(function() {
       else if(ui.position.top > max_top) {
         ui.position.top = max_top;
       }
+      
+      OSC.updateYOffset(ui, false);
     },
     stop: function(ev, ui) {
-      var zero_pos = ($('#graph_grid').outerHeight() + 7) / 2;
-      
-      if(ui.helper[0].id == 'ch1_offset_arrow') {
-        var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-        OSC.params.local['OSC_CH1_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px };
-      }
-      else {
-        var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-        OSC.params.local['OSC_CH2_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px };
-      }
-      
-      OSC.sendParams();
+      OSC.updateYOffset(ui, true);
     }
   });
   
@@ -805,8 +1076,9 @@ $(function() {
     axis: 'x',
     containment: 'parent',
     stop: function(ev, ui) {
-      var zero_pos = ($('#graph_grid').outerWidth() + 2) / 2;
-      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / $('#graph_grid').outerWidth();
+      var graph_width = $('#graph_grid').outerWidth();
+      var zero_pos = (graph_width + 2) / 2;
+      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
       
       OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width()/2 - 1) * ms_per_px };
       OSC.sendParams();
@@ -821,30 +1093,43 @@ $(function() {
       OSC.state.trig_dragging = true;
     },
     drag: function(ev, ui) {
-      $('#trigger_level').css('top', ui.position.top);
+      OSC.updateTrigLevel(ui, false);
     },
     stop: function(ev, ui) {
-      $('#trigger_level').css('top', ui.position.top);
-      
-      if(OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
-        
-        if(OSC.params.orig['OSC_TRIG_SOURCE'].value < 2) {
-          var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
-          
-          if(OSC.params.orig[ref_scale] !== undefined) {
-            var graph_height = $('#graph_grid').height();
-            var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
-            
-            OSC.params.local['OSC_TRIG_LEVEL'] = { value: (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px };
-            OSC.sendParams();
-          }
-        }
-        else {
-          console.log('Trigger level for source ' + OSC.params.orig['OSC_TRIG_SOURCE'].value + ' not yet supported');
-        }
-      }
-      
+      OSC.updateTrigLevel(ui, true);
       OSC.state.trig_dragging = false;
+    }
+  });
+  
+  // Y cursor arrows dragging
+  $('#cur_y1_arrow, #cur_y2_arrow').draggable({
+    axis: 'y',
+    containment: 'parent',
+    start: function(ev, ui) {
+      OSC.state.cursor_dragging = true;
+    },
+    drag: function(ev, ui) {
+      OSC.updateYCursorElems(ui, false);
+    },
+    stop: function(ev, ui) {
+      OSC.updateYCursorElems(ui, true);
+      OSC.state.cursor_dragging = false;
+    }
+  });
+  
+  // X cursor arrows dragging
+  $('#cur_x1_arrow, #cur_x2_arrow').draggable({
+    axis: 'x',
+    containment: 'parent',
+    start: function(ev, ui) {
+      OSC.state.cursor_dragging = true;
+    },
+    drag: function(ev, ui) {
+      OSC.updateXCursorElems(ui, false);
+    },
+    stop: function(ev, ui) {
+      OSC.updateXCursorElems(ui, true);
+      OSC.state.cursor_dragging = false;
     }
   });
   
@@ -908,7 +1193,7 @@ $(function() {
         }
       }
       // Voltage zoom
-      else if(OSC.touch.zoom_axis == 'y') {
+      else if(OSC.touch.zoom_axis == 'y' && OSC.state.sel_sig_name) {
         var prev_delta_y = Math.abs(OSC.touch.prev[0].clientY - OSC.touch.prev[1].clientY);
         var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
         
@@ -947,6 +1232,11 @@ $(function() {
     $('#new_scale').empty();
   });
 
+  // Prevent native touch activity like scrolling
+  $('html, body').on('touchstart touchmove', function(ev) {
+    ev.preventDefault();
+  });
+  
   // Preload images which are not visible at the beginning
   $.preloadImages = function() {
     for(var i = 0; i < arguments.length; i++) {
