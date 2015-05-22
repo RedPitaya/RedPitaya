@@ -25,10 +25,27 @@
 #define MILLI_TO_NANO               1000000.0
 
 #define ECHECK_APP(x) { \
-        int retval = (x); \
-        if (retval != RP_OK) { \
-            fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
-        } \
+    int retval = (x); \
+    if (retval != RP_OK) { \
+        fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
+        return retval; \
+    } \
+}
+
+#define ECHECK_APP_MUTEX(MUTEX, x) { \
+    int retval = (x); \
+    if (retval != RP_OK) { \
+        fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
+        pthread_mutex_unlock(&MUTEX); \
+        return retval; \
+    } \
+}
+
+#define ECHECK_APP_THREAD(x) { \
+    int retval = (x); \
+    if (retval != RP_OK) { \
+        fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
+    } \
 }
 
 #define SOURCE_ACTION(SOURCE, SOURCE_1_ACTION, SOURCE_2_ACTION, SOURCE_3_ACTION) \
