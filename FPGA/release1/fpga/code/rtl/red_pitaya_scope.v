@@ -199,6 +199,7 @@ reg   [ RSZ-1: 0] adc_b_raddr   ;
 reg   [   4-1: 0] adc_rval      ;
 wire              adc_rd_dv     ;
 reg               adc_we        ;
+reg               adc_we_keep   ;
 reg               adc_trig      ;
 
 reg   [ RSZ-1: 0] adc_wp_trig   ;
@@ -223,7 +224,7 @@ always @(posedge adc_clk_i) begin
    else begin
       if (adc_arm_do)
          adc_we <= 1'b1 ;
-      else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
+      else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0) && ~adc_we_keep) || adc_rst_do) //delayed reached or reset
          adc_we <= 1'b0 ;
 
       // count how much data was written into the buffer before trigger
@@ -706,6 +707,8 @@ if (adc_rstn_i == 1'b0) begin
    set_b_axi_en  <=   1'b0      ;
 end else begin
    if (sys_wen) begin
+      if (sys_addr[19:0]==20'h00)   adc_we_keep   <= sys_wdata[     3] ;
+
       if (sys_addr[19:0]==20'h08)   set_a_tresh   <= sys_wdata[14-1:0] ;
       if (sys_addr[19:0]==20'h0C)   set_b_tresh   <= sys_wdata[14-1:0] ;
       if (sys_addr[19:0]==20'h10)   set_dly       <= sys_wdata[32-1:0] ;
@@ -748,7 +751,8 @@ end else begin
    sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
-     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, adc_dly_do                // trigger status
+     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, adc_we_keep               // do not disarm on 
+                                                                              , adc_dly_do                // trigger status
                                                                               , 1'b0                      // reset
                                                                               , adc_we}             ; end // arm
 
