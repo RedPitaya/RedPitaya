@@ -98,8 +98,8 @@ CIntParameter mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, RP_CH_2, 0, RP_CH
 //CIntParameter arbitraryChannel("SOUR_TRAC_CH", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
 
 /* --------------------------------  OUTOUT PARAMETERS  ------------------------------ */
-CFloatSignal out1Signal("out1", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
-CFloatSignal out2Signal("out2", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatSignal out1Signal("output1", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatSignal out2Signal("output2", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 bool updateOutCh1 = true;
 bool updateOutCh2 = true;
 
