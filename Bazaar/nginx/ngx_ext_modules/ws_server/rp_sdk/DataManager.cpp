@@ -190,10 +190,10 @@ extern "C" int ws_set_params(const char *_params)
 	if(man)
 	{
 		man->OnNewParams(_params);
-		dbg_printf("Set params in test scope\n");
+		dbg_printf("Set params\n");
 		return 1;
 	}	
-	dbg_printf("Params were not set in test scope\n");
+	dbg_printf("Params were not set\n");
 	return 0;
 }
 
@@ -204,10 +204,8 @@ extern "C" const char * ws_get_params(void)
 	if(man)
 	{
 		res = man->GetParamsJson();
-//		dbg_printf("Get params in test scope\n");
 		return res.c_str();
 	}	
-//	dbg_printf("Params were not got in test scope\n");
 	return res.c_str();
 }
 
@@ -217,11 +215,11 @@ extern "C" int ws_set_signals(const char *_signals)
 	if(man)
 	{
 		man->OnNewSignals(_signals);
-		dbg_printf("Set signals in test scope\n");
+		dbg_printf("Set signals\n");
 		return 1;
 	}	
 	
-	dbg_printf("Signals were not set in test scope\n");	
+	dbg_printf("Signals were not set\n");	
 	return 0;
 }
 
@@ -232,10 +230,8 @@ extern "C" const char * ws_get_signals(void)
 	if(man)
 	{
 		res = man->GetSignalsJson();
-//		dbg_printf("Get signals in test scope\n");
 		return res.c_str();
 	}	
-//	dbg_printf("Signals were not got in test scope\n");
 	return res.c_str();	
 }
 
@@ -245,7 +241,7 @@ extern "C" void ws_set_params_interval(int _interval)
 	if(man)
 	{
 		man->SetParamInterval(_interval);
-		dbg_printf("Set params send interval in test scope\n");
+		dbg_printf("Set params send interval\n");
 	}
 }
 
@@ -267,7 +263,7 @@ extern "C" void ws_set_signals_interval(int _interval)
 	if(man)
 	{
 		man->SetSignalInterval(_interval);
-		dbg_printf("Set signals send interval in test scope\n");
+		dbg_printf("Set signals send interval\n");
 	}
 }
 
@@ -276,7 +272,6 @@ extern "C" int ws_get_signals_interval(void)
 	CDataManager * man = CDataManager::GetInstance();
 	if(man)
 	{
-		//dbg_printf("ws_get_signals_interval(void)\n");
 		int res = man->GetSignalInterval();
 		return res;
 	}
@@ -285,10 +280,7 @@ extern "C" int ws_get_signals_interval(void)
 
 extern "C" int ws_set_demo_mode(int a)
 {
-	FILE* file = fopen("log.txt", "a+");
-	fputs("ws_set_demo_mode()\n", file);
-	fclose(file);
-
+	dbg_printf("Set demo mode\n");
 	IsDemoParam.Set(true);
 	return 0;
 }
