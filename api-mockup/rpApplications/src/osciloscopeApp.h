@@ -92,14 +92,14 @@ int osc_getViewSize(uint32_t *size);
 int threadSafe_acqStart();
 int threadSafe_acqStop() ;
 float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset);
-float scaleAmplitudeChannel(rp_channel_t channel, float volts);
+int scaleAmplitudeChannel(rp_channel_t channel, float volts, float *res);
 float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset);
-float unscaleAmplitudeChannel(rpApp_osc_source source, float value);
+int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 float viewIndexToTime(int index);
 float roundUpTo125(float data);
 void clearView();
 void clearMath();
-void waitToFillPreTriggerBuffer();
+int waitToFillPreTriggerBuffer();
 
 void *mainThreadFun();
 
