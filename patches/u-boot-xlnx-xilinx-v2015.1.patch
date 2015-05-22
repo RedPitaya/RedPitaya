@@ -1,3 +1,24 @@
+diff --git a/arch/arm/cpu/armv7/zynq/Kconfig b/arch/arm/cpu/armv7/zynq/Kconfig
+index 2482bbb..d314f05 100644
+--- a/arch/arm/cpu/armv7/zynq/Kconfig
++++ b/arch/arm/cpu/armv7/zynq/Kconfig
+@@ -24,6 +24,9 @@ config TARGET_ZYNQ_AFX
+ config TARGET_ZYNQ_CSE
+ 	bool "Zynq CSE Board"
+ 
++config TARGET_ZYNQ_RED_PITAYA
++	bool "Red Pitaya Board"
++
+ endchoice
+ 
+ config SYS_BOARD
+@@ -43,5 +46,6 @@ config SYS_CONFIG_NAME
+ 	default "zynq_zybo" if TARGET_ZYNQ_ZYBO
+ 	default "zynq_cse" if TARGET_ZYNQ_CSE
+ 	default "zynq_afx" if TARGET_ZYNQ_AFX
++	default "zynq_red_pitaya" if TARGET_ZYNQ_RED_PITAYA
+ 
+ endif
 diff --git a/arch/arm/dts/zynq-red-pitaya.dts b/arch/arm/dts/zynq-red-pitaya.dts
 new file mode 100644
 index 0000000..ac14cd0
@@ -39,6 +60,18 @@ index 0000000..8644ae4
 ++S:CONFIG_TARGET_ZYNQ_RED_PITAYA=y
 +CONFIG_OF_CONTROL=n
 +CONFIG_DEFAULT_DEVICE_TREE="zynq-red-pitaya"
+diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
+index f46bf00..4a6f043 100644
+--- a/drivers/net/phy/Makefile
++++ b/drivers/net/phy/Makefile
+@@ -15,6 +15,7 @@ obj-$(CONFIG_PHY_ATHEROS) += atheros.o
+ obj-$(CONFIG_PHY_BROADCOM) += broadcom.o
+ obj-$(CONFIG_PHY_CORTINA) += cortina.o
+ obj-$(CONFIG_PHY_DAVICOM) += davicom.o
++obj-$(CONFIG_PHY_LANTIQ) += lantiq.o
+ obj-$(CONFIG_PHY_ET1011C) += et1011c.o
+ obj-$(CONFIG_PHY_LXT) += lxt.o
+ obj-$(CONFIG_PHY_MARVELL) += marvell.o
 diff --git a/drivers/net/phy/lantiq.c b/drivers/net/phy/lantiq.c
 new file mode 100644
 index 0000000..4e9afc5
@@ -125,18 +158,18 @@ index 0000000..4e9afc5
 +	return 0;
 +}
 diff --git a/drivers/net/phy/phy.c b/drivers/net/phy/phy.c
-index 5b04c85..9f0b00a 100644
+index 5b04c85..d0312df 100644
 --- a/drivers/net/phy/phy.c
 +++ b/drivers/net/phy/phy.c
-@@ -454,6 +454,9 @@ int phy_init(void)
- #ifdef CONFIG_PHY_DAVICOM
- 	phy_davicom_init();
+@@ -457,6 +457,9 @@ int phy_init(void)
+ #ifdef CONFIG_PHY_ET1011C
+ 	phy_et1011c_init();
  #endif
 +#ifdef CONFIG_PHY_LANTIQ
 +	phy_lantiq_init();
 +#endif
- #ifdef CONFIG_PHY_ET1011C
- 	phy_et1011c_init();
+ #ifdef CONFIG_PHY_LXT
+ 	phy_lxt_init();
  #endif
 diff --git a/include/configs/zynq_red_pitaya.h b/include/configs/zynq_red_pitaya.h
 new file mode 100644
