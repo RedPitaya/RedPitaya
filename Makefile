@@ -41,6 +41,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
 ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
 ################################################################################
+#
 ################################################################################
 
 BUILD=build
@@ -73,23 +74,27 @@ LIBRP_DIR       = api-mockup/rpbase/src
 SDK_DIR         = SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 
-URAMDISK=$(BUILD)/uramdisk.image.gz
-NGINX=$(BUILD)/sbin/nginx
-MONITOR=$(BUILD)/bin/monitor
-GENERATE=$(BUILD)/bin/generate
-ACQUIRE=$(BUILD)/bin/acquire
-CALIB=$(BUILD)/bin/calib
-DISCOVERY=$(BUILD)/sbin/discovery
-ECOSYSTEM=$(BUILD)/www/apps/info/info.json
-SCPI_SERVER = $(BUILD)/bin/scpi-server
-LIBRP = $(BUILD)/lib/librp.so
-GDBSERVER  = $(BUILD)/bin/gdbserver
+URAMDISK        = $(BUILD)/uramdisk.image.gz
+NGINX           = $(BUILD)/sbin/nginx
+MONITOR         = $(BUILD)/bin/monitor
+GENERATE        = $(BUILD)/bin/generate
+ACQUIRE         = $(BUILD)/bin/acquire
+CALIB           = $(BUILD)/bin/calib
+DISCOVERY       = $(BUILD)/sbin/discovery
+ECOSYSTEM       = $(BUILD)/www/apps/info/info.json
+SCPI_SERVER     = $(BUILD)/bin/scpi-server
+LIBRP           = $(BUILD)/lib/librp.so
+GDBSERVER       = $(BUILD)/bin/gdbserver
+PRINTENV        = $(BUILD)/bin/fw_printenv
 
+################################################################################
 # Versioning system
+################################################################################
+
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-VERSION=$(VER)-$(BUILD_NUMBER)
+VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -146,7 +151,7 @@ $(UBOOT): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=arm-xilinx-linux-gnueabi- all
 	cp $</u-boot $@
 
-fw_printenv: $(UBOOT_DIR) $(UBOOT)
+$(PRINTENV): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(ARMHF_CFLAGS) CROSS_COMPILE=arm-linux-gnueabihf- env
 	cp $</tools/env/fw_printenv $@
 
