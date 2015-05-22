@@ -120,10 +120,6 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
 
     /* Bazaar commands */
     for(i = 0; bazaar_cmds[i].name != NULL; i++) {
-		//FILE* f = fopen("log.txt", "a+");
-		//fputs((char*)r->uri.data, f);
-		//fputs("\n", f);
-		//fclose(f);
 
         ngx_str_t arg_name = { strlen(bazaar_cmds[i].name), 
                                (u_char *)bazaar_cmds[i].name };
@@ -397,25 +393,13 @@ int rp_bazaar_apps(ngx_http_request_t *r,
 int rp_bazaar_start(ngx_http_request_t *r, 
                     cJSON **json_root, int argc, char **argv)
 {
-	FILE* file = fopen("log.txt", "a+");
-	fputs("rp_bazaar_start\n", file);
-	fclose(file);
-
 	int demo = 0;
 	char* url = strstr(argv[0], "?type=demo");
 	if (url)
 	{
 		*url = '\0';
 		demo = 1;
-
-		FILE* file = fopen("log.txt", "a+");
-		fputs("demo\n", file);
-		fclose(file);
 	}
-
-	file = fopen("log.txt", "a+");
-	fputs(argv[0], file);
-	fclose(file);
 
     char *app_name  = NULL;
     char *fpga_name = NULL;
@@ -542,34 +526,21 @@ int rp_bazaar_start(ngx_http_request_t *r,
         params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
         fprintf(stderr, "Starting WS-server\n");
 
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("start_ws_server\n", file);
-    	fclose(file);
-
     	if (access("id.json", F_OK) != 0)
-    		system("/root/idgen -o idfile.id");
+    		system("/opt/redpitaya/sbin/idgen -o /opt/redpitaya/www/apps/idfile.id");
 
     	//dbg_printf("need call\n");
 		if (rp_module_ctx.app.verify_app_license_func)
-		{
-        	FILE* file = fopen("log.txt", "a+");
-        	fputs("verify_app_license_func is def\n", file);
-        	fclose(file);
-		}
-		if (rp_module_ctx.app.verify_app_license_func(argv[0]))
-			demo = 1;
+			if (rp_module_ctx.app.verify_app_license_func(argv[0]))
+				demo = 1;
 
         // set Demo version
         if (demo)
-        {
-        	FILE* file = fopen("log.txt", "a+");
-        	fputs("start_ws_server demo\n", file);
-        	fclose(file);
-
+		{
+			fprintf(stderr, "Run in demo mode\n");
         	rp_module_ctx.app.ws_set_params_demo_func(1);
-
-        }
-
+		}
+		
         start_ws_server(&params);
     }
 

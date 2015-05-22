@@ -34,8 +34,8 @@ $(EXECUTABLE):	$(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 install:
-	test -d '$(DESTDIR)/www/apps' || mkdir -p '$(DESTDIR)/www/apps'
-	cp $(EXECUTABLE) '$(DESTDIR)/www/apps/'
+	test -d '$(DESTDIR)/sbin' || mkdir -p '$(DESTDIR)/sbin'
+	cp $(EXECUTABLE) '$(DESTDIR)/sbin'
 
 clean: 
 	rm -rf $(EXECUTABLE) $(OBJECTS) $(CRYPTO_LIB) 
