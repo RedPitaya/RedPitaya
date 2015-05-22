@@ -12,9 +12,9 @@ using CryptoPP::FileSource;
 using CryptoPP::StringSink;
 
 #ifdef IS_DEV_BRANCH
-const char* apps_path="/opt/www/apps"
+const char* apps_path="/opt/www/apps";
 #else
-const char* apps_path="/opt/redpitaya/www/apps"
+const char* apps_path="/opt/redpitaya/www/apps";
 #endif
 
 //Function gets json object from file
