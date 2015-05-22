@@ -8,13 +8,13 @@
 
 std::string GetLicensePath()
 {
-	std::string path = "/opt/redpitaya/www/apps/lic.lic";
+	std::string path = "/var/redpitaya/lic.lic";
 	return path;
 }
 
 std::string GetIDFilePath()
 {
-	std::string path = "/opt/redpitaya/www/apps/idfile.id";
+	std::string path = "/var/redpitaya/idfile.id";
 	return path;
 }
 

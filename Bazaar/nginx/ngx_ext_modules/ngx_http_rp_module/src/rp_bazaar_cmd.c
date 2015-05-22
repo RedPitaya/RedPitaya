@@ -526,9 +526,12 @@ int rp_bazaar_start(ngx_http_request_t *r,
         params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
         fprintf(stderr, "Starting WS-server\n");
 
-    	if (access("id.json", F_OK) != 0)
-    		system("/opt/redpitaya/sbin/idgen -o /opt/redpitaya/www/apps/idfile.id");
-
+    	if (access("/var/redpitaya/idfile.id", F_OK) != 0)
+		{
+			system("mkdir /var/redpitaya");
+    		system("/opt/redpitaya/sbin/idgen -o /var/redpitaya/idfile.id");
+		}
+		
     	//dbg_printf("need call\n");
 		if (rp_module_ctx.app.verify_app_license_func)
 			if (rp_module_ctx.app.verify_app_license_func(argv[0]))
