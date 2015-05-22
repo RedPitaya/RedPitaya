@@ -1,5 +1,10 @@
 #pragma once
 
+
+#include <DataManager.h>
+#include <CustomParameters.h>
+#include "rpApp.h"
+
 #define CH_SIGNAL_SIZE_DEFAULT		1024
 #define CALIB_FE_LV_REF_V           1.0f
 #define CALIB_FE_HV_REF_V           5.0f
@@ -19,8 +24,15 @@ if (X.Value() != X.NewValue()) { \
     } else { \
         ACTION2;    X.Update(); }}
 
-float getMeasureValue(int measure);
+#define IS_NEW(X) X.Value() != X.NewValue()
 
+
+
+float getMeasureValue(int measure);
+void synthesis_sin(CFloatSignal *signal, float freq, float phase, float amp, float off);
+void synthesis_triangle(CFloatSignal *signal, float freq, float phase, float amp, float off);
+void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, float off);
+void generate(rp_channel_t channel);
 
 
 #ifdef __cplusplus
