@@ -7,8 +7,8 @@
 
 
 /* -------------------------  debug parameter  --------------------------------- */
-CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 0, 10000);
-CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 20, 0, 0, 10000);
+CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 100, 0, 0, 10000);
+CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 10000);
 CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, true, 0);
 
 
@@ -311,13 +311,16 @@ void OnNewParams(void) {
     measureSelect2.Update();
     measureSelect3.Update();
     measureSelect4.Update();
-    mathOperation.Update();
 
     cursorx1.Update();
     cursorx2.Update();
     cursory1.Update();
     cursory2.Update();
     cursorSrc.Update();
+    cursor1V.Update();
+    cursor2V.Update();
+    cursor1T.Update();
+    cursor2T.Update();
 
 /* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
     IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
@@ -372,9 +375,12 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(inTrigSlope, rpApp_OscSetTriggerSlope((rpApp_osc_trig_slope_t) inTrigSlope.NewValue()))
     IF_VALUE_CHANGED(inTriggLevel, rpApp_OscSetTriggerLevel(inTriggLevel.NewValue()))
 
-    if (rpApp_OscSetMathSources((rp_channel_t) mathSource1.NewValue(), (rp_channel_t) mathSource2.NewValue())) {
-        mathSource1.Update();
-        mathSource2.Update();
+    IF_VALUE_CHANGED(mathOperation, rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue()))
+    if (mathSource1.Value() != mathSource1.NewValue() || mathSource2.Value() != mathSource2.NewValue()) {
+        if (rpApp_OscSetMathSources((rp_channel_t) mathSource1.NewValue(), (rp_channel_t) mathSource2.NewValue())) {
+            mathSource1.Update();
+            mathSource2.Update();
+        }
     }
 
 /* ------ UPDATE GENERATE LOCAL PARAMETERS ------*/
