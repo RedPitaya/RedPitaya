@@ -707,7 +707,7 @@ void calculateIntegral(rp_channel_t channel, float scale, float offset) {
 }
 
 void calculateDevivative(rp_channel_t channel, float scale, float offset) {
-    double dt2 = 2*timeScale / samplesPerDivision;
+    double dt2 = 2*timeScale / 1000 / samplesPerDivision;
     view[RPAPP_OSC_SOUR_MATH*viewSize] =
             (float) ((view[channel*viewSize+1] - view[channel*viewSize]) / dt2 / 2 * scale + offset);
     for (int i = 1; i < viewSize - 1; ++i) {
@@ -725,7 +725,10 @@ float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op, float scale, f
         case RPAPP_OSC_MATH_MUL:
             return (v1 * v2) * scale + offset;
         case RPAPP_OSC_MATH_DIV:
-            return (v1 / v2) * scale + offset;
+            if (v2 != 0)
+                return (v1 / v2) * scale + offset;
+            else
+                return v1 > 0 ? FLT_MAX : FLT_MIN;
         case RPAPP_OSC_MATH_ABS:
             return (float) (fabs(v1) * scale + offset);
         default:
