@@ -280,14 +280,19 @@ inline int is_registered(const char *dir,
         return 0;
     }
 
-	int is_reg = 1;
-	if(app.verify_app_license_func)
-		is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
+    int is_reg = 1;
+    if(app.verify_app_license_func)
+        is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
 
     rp_bazaar_app_unload_module(&app);
 
     free(file);
-    
+
+    if(is_reg)    
+        fprintf(stderr, "App '%s' is registered\n", app_id);
+    else
+        fprintf(stderr, "App '%s' is not registered\n", app_id);
+
     return is_reg;
 }
 
@@ -335,7 +340,7 @@ inline int is_controller_ok(const char *dir,
         return 0;
     }
 
-	rp_bazaar_app_unload_module(&app);
+    rp_bazaar_app_unload_module(&app);
 	
     free(file);
 
@@ -378,8 +383,11 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
 
         /* We have an application */
 
+	int demo = !is_registered(dir, app_id, "controller.so");
+		
         if (verbose) {
             /* Attach whole info JSON */
+            cJSON_AddItemToObject(info, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
             cJSON_AddItemToObject(*json_root, app_id, info, pool);
         } else {
             /* Include version only */
@@ -391,13 +399,8 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                 continue;
             }
             
-            
-            char ver[256] = {0};
-            strcpy(ver, j_ver->valuestring);
-            if (!is_registered(dir, app_id, "controller.so"))
-            	strcat(ver, "_demo");
-
-            cJSON_AddItemToObject(*json_root, app_id,cJSON_CreateString(ver, pool), pool);
+            cJSON_AddItemToObject(*json_root, app_id, cJSON_CreateString(j_ver->valuestring, pool), pool);
+            cJSON_AddItemToObject(*json_root, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
             cJSON_Delete(j_ver, pool);
             cJSON_Delete(info, pool);
         }

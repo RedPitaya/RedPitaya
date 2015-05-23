@@ -393,13 +393,19 @@ int rp_bazaar_apps(ngx_http_request_t *r,
 int rp_bazaar_start(ngx_http_request_t *r, 
                     cJSON **json_root, int argc, char **argv)
 {
-	int demo = 0;
-	char* url = strstr(argv[0], "?type=demo");
-	if (url)
-	{
-		*url = '\0';
-		demo = 1;
-	}
+    int demo = 0;
+    char* url = strstr(argv[0], "?type=demo");
+    if (url)
+    {
+        *url = '\0';
+        demo = 1;
+    }
+    else
+    {
+	url = strstr(argv[0], "?type=run");
+	if(url)
+            *url = '\0';
+    }
 
     char *app_name  = NULL;
     char *fpga_name = NULL;
@@ -527,22 +533,20 @@ int rp_bazaar_start(ngx_http_request_t *r,
         fprintf(stderr, "Starting WS-server\n");
 
     	if (access("/var/redpitaya/idfile.id", F_OK) != 0)
-		{
-			system("mkdir /var/redpitaya");
-    		system("/opt/redpitaya/sbin/idgen -o /var/redpitaya/idfile.id");
-		}
+        {
+            system("mkdir /var/redpitaya");
+            system("/opt/redpitaya/sbin/idgen -o /var/redpitaya/idfile.id");
+        }
 		
-    	//dbg_printf("need call\n");
-		if (rp_module_ctx.app.verify_app_license_func)
-			if (rp_module_ctx.app.verify_app_license_func(argv[0]))
-				demo = 1;
+        if (rp_module_ctx.app.verify_app_license_func)
+            if (rp_module_ctx.app.verify_app_license_func(argv[0]))
+                demo = 1;
 
-        // set Demo version
         if (demo)
-		{
-			fprintf(stderr, "Run in demo mode\n");
-        	rp_module_ctx.app.ws_set_params_demo_func(1);
-		}
+        {
+            fprintf(stderr, "Run in demo mode\n");
+            rp_module_ctx.app.ws_set_params_demo_func(1);
+        }
 		
         start_ws_server(&params);
     }
@@ -554,14 +558,14 @@ int rp_bazaar_start(ngx_http_request_t *r,
 int rp_bazaar_stop(ngx_http_request_t *r, 
                    cJSON **json_root, int argc, char **argv)
 {
-	if(rp_module_ctx.app.ws_api_supported)
-		stop_ws_server();
+    if(rp_module_ctx.app.ws_api_supported)
+        stop_ws_server();
 	
-	if(argc != 0) {
+/*    if(argc != 0) {
         return rp_module_cmd_error(json_root, 
                                 "Incorrect number of arguments (should be 0)",
                                    NULL, r->pool);
-    }
+    }*/
 
     if(rp_module_ctx.app.handle == NULL) {
         /* Ignore requests to unload the application controller, if none is loaded. */
