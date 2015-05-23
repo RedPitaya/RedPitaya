@@ -40,15 +40,15 @@
 						$('.description').children('.name').html(result[key].name);
 						$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
 						$('.description').children('.desc').html(result[key].description);
-						if (result[key].version.indexOf("demo") > -1)
-						{
-							$("#run").attr('href', url + key);
-							$('#run').html('Run');
-						}
-						else
+						if (result[key].type == "demo")
 						{
 							$("#run").attr('href', url + 'instruct.html');
 							$('#run').html('Buy');
+						}
+						else
+						{
+							$("#run").attr('href', url + key + '?type=run');
+							$('#run').html('Run');
 						}
 						$("#demo").attr('href', url + key + '?type=demo');
 						$("#run").show();
