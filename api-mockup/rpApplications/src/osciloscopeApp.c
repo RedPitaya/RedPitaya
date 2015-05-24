@@ -666,6 +666,7 @@ int osc_getInvData(rpApp_osc_source source, float *data, uint32_t size){
 int threadSafe_acqStart() {
     pthread_mutex_lock(&mutex);
     ECHECK_APP_MUTEX(mutex, rp_AcqStart())
+    ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(continuousMode))
     acqRunning = true;
     pthread_mutex_unlock(&mutex);
     return RP_OK;
@@ -674,6 +675,7 @@ int threadSafe_acqStart() {
 int threadSafe_acqStop() {
     pthread_mutex_lock(&mutex);
     ECHECK_APP_MUTEX(mutex, rp_AcqStop())
+    ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(false))
     acqRunning = false;
     pthread_mutex_unlock(&mutex);
     return RP_OK;
