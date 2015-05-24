@@ -131,11 +131,6 @@ int osc_autoScale() {
 
         // If there is signal on input
         if (fabs(vpp) > SIGNAL_EXISTENCE) {
-            ECHECK_APP(osc_setAmplitudeOffset(source, vMean));
-            // Calculate scale
-            float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-            ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
-
             if (!isAutoScaled) {
                 // set time scale only based on one channel
                 ECHECK_APP(osc_measurePeriod(source, &period));
@@ -143,6 +138,10 @@ int osc_autoScale() {
                 ECHECK_APP(osc_setTimeScale(period * AUTO_SCALE_PERIOD_COUNT / DIVISIONS_COUNT_X));
                 isAutoScaled = true;
             }
+            ECHECK_APP(osc_setAmplitudeOffset(source, -vMean));
+            // Calculate scale
+            float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+            ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
         }
     }
     if (isAutoScaled) {
@@ -512,32 +511,29 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     pthread_mutex_unlock(&mutex);
 
     float mean = 0;
-    for (int i = 0; i < dataSize; ++i) {
+    for (int i = 0; i < viewSize; ++i) {
         mean += data[i];
     }
-    mean = mean / dataSize;
+    mean = mean / viewSize;
 
-    int preTrig_P = -1, preTrig_N = -1;
-    int periods[PERIOD_STORAGE_PERIOD_COUNT];
-    int nextPeriod = 0;
-
-    for (int i = 1; i < dataSize; ++i) {
-        if (data[i - 1] < mean && data[i] >= mean) {
-            if (preTrig_P != -1 && nextPeriod < PERIOD_STORAGE_PERIOD_COUNT) {
-                periods[nextPeriod++] = i - preTrig_P;
-            }
-            preTrig_P = i;
+    // calculate signal correlation
+    float xcorr[viewSize];
+    for (int i = 0; i < viewSize; ++i) {
+        xcorr[i] = 0;
+        for (int j = 0; j < viewSize-i; ++j) {
+            xcorr[i] += (data[j]-mean) * (data[j+i]-mean);
         }
-        if (data[i - 1] > mean && data[i] <= mean) {
-            if (preTrig_N != -1 && nextPeriod < PERIOD_STORAGE_PERIOD_COUNT) {
-                periods[nextPeriod++] = i - preTrig_N;
-            }
-            preTrig_N = i;
+        xcorr[i] /= viewSize-i-1;
+    }
+
+    // find first local maximum, that is high enough
+    for (int i = 1; i < viewSize-1; ++i) {
+        if (xcorr[i] > xcorr[i-1] && xcorr[i] > xcorr[i+1] && xcorr[i] / xcorr[0] > PERIOD_EXISTS_THRESHOLD) {
+            *period = indexToTime(i);
+            return RP_OK;
         }
     }
-    qsort(periods, (size_t) nextPeriod, sizeof(int), intCmp);
-    *period = indexToTime(periods[nextPeriod/2]);
-    return RP_OK;
+    return RP_APP_ECP;
 }
 
 int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
