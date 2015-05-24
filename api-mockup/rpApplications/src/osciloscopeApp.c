@@ -27,7 +27,7 @@
 bool auto_freRun_mode = 0;
 bool acqRunning = false;
 bool clear = false;
-bool continuousMode = true;
+bool continuousMode = false;
 uint32_t viewSize = VIEW_SIZE_DEFAULT;
 float *view;
 float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
@@ -666,7 +666,7 @@ int osc_getInvData(rpApp_osc_source source, float *data, uint32_t size){
 int threadSafe_acqStart() {
     pthread_mutex_lock(&mutex);
     ECHECK_APP_MUTEX(mutex, rp_AcqStart())
-    ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(continuousMode))
+    ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(trigSweep != RPAPP_OSC_TRIG_SINGLE && continuousMode));
     acqRunning = true;
     pthread_mutex_unlock(&mutex);
     return RP_OK;
@@ -778,8 +778,9 @@ void clearMath() {
 }
 
 int waitToFillPreTriggerBuffer() {
-    if (continuousMode)
+    if (continuousMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
         return RP_OK;
+    }
     float deltaSample, timeScale;
     uint32_t preTriggerCount;
     int triggerDelay;
@@ -828,7 +829,7 @@ void *mainThreadFun() {
 
         if (clear) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-            threadSafe_acqStart();
+            ECHECK_APP_THREAD(threadSafe_acqStart());
             waitToFillPreTriggerBuffer();
             thisLoopAcqStart = false;
             ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
@@ -868,12 +869,12 @@ void *mainThreadFun() {
 
             if (_triggerSource == RP_TRIG_SRC_DISABLED) {
                 if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
-                    if (!continuousMode) {
-                        threadSafe_acqStart();
+                    if (!continuousMode && acqRunning) {
+                        ECHECK_APP_THREAD(threadSafe_acqStart());
                     }
                     thisLoopAcqStart = true;
                 } else {
-                    acqRunning = false;
+                    ECHECK_APP_THREAD(threadSafe_acqStop());
                 }
             }
 
