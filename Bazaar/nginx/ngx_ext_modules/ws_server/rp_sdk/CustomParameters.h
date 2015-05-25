@@ -9,7 +9,9 @@ template <typename Type> class CCustomParameter : public CParameter<Type, Type>
 {
 public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
-		:CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max){}	
+		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
+		, m_SentValue(_value)
+	{}	
 	
 	~CCustomParameter()
 	{
@@ -35,14 +37,16 @@ public:
 		Type value = _value;
 		if(this->m_Value.min > value) 
 		{
-			dbg_printf("Incorrect parameters value: %f (min:%f), "
-			"correcting it\n", (float)value, float(this->m_Value.min));				
+			dbg_printf("Incorrect parameters value (min value)\n");
+//			dbg_printf("Incorrect parameters value: %f (min:%f), "
+//			"correcting it\n", (float)value, float(this->m_Value.min));				
 		 	value = this->m_Value.min;
 
 		} else if(this->m_Value.max < value) 
 		{
-			dbg_printf("Incorrect parameters value: %f (max:%f), "
-                    	" correcting it\n", (float)value, float(this->m_Value.max));
+			dbg_printf("Incorrect parameters value (max value)\n");
+//			dbg_printf("Incorrect parameters value: %f (max:%f), "
+//                    	" correcting it\n", (float)value, float(this->m_Value.max));
 			value = this->m_Value.max;
 		}
 
@@ -53,6 +57,16 @@ public:
 	{
 		this->m_Value.value = CheckMinMax(_value);
 	}
+
+	bool IsValueChanged() const
+	{
+		bool tmp = (m_SentValue != this->m_Value.value);
+		m_SentValue = this->m_Value.value;
+		return tmp;
+	}
+
+protected:
+	mutable Type m_SentValue;
 
 };
 
@@ -146,6 +160,19 @@ public:
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, false, true){};
 };
 
+//custom CStringParameter
+class CStringParameter : public CCustomParameter<std::string>
+{
+public:
+	CStringParameter(std::string _name, CBaseParameter::AccessMode _access_mode, std::string _value, int _fpga_update)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, "", ""){};
+
+	void Set(const std::string& _value)
+	{
+		this->m_Value.value = _value;
+	}
+};
+
 //custom CIntSignal
 class CIntSignal : public CCustomSignal<int>
 {
@@ -170,4 +197,6 @@ public:
 		:CCustomSignal(_name, _size, _def_value){};
 };
 
-extern CBooleanParameter IsDemoParam;	// special default parameter to check mode (demo or not)
+extern CBooleanParameter IsDemoParam;		// special default parameter to check mode (demo or not)
+extern CStringParameter InCommandParam;		// special default parameter to receive a string command from WEB UI
+extern CStringParameter OutCommandParam;	// special default parameter to send a string command to WEB UI
