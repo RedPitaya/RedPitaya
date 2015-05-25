@@ -23,17 +23,17 @@
     'ch2' : '#31b44b'
   };
   
-  // Time scale steps in millisecods
+
   //TODO frequency steps in Hz, KHz, MHz
+  SPEC.freq_range_max = [62.5, 7.8, 976, 61, 7.6, 953];
+
   SPEC.time_steps = [
-    // Nanoseconds
-    5/1000000, 10/1000000, 20/1000000, 50/1000000, 100/1000000, 200/1000000, 500/1000000,
-    // Microseconds
-    1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
-    // Millisecods
+    // Hz
     1, 2, 5, 10, 20, 50, 100, 200, 500,
-    // Seconds
-    1*1000, 2*1000, 5*1000, 10*1000, 20*1000, 50*1000
+    // KHz
+    1*1000, 2*1000, 5*1000, 10*1000, 20*1000, 50*1000, 100*1000, 200*1000, 500*1000,
+    // MHz
+    1*1000000, 2*1000000, 5*1000000, 10*1000000, 20*1000000, 50*1000000, 100*1000000, 200*1000000, 500*1000000,
   ];
   
   // Voltage scale steps in volts
@@ -44,7 +44,8 @@
     // Volts
     1, 2, 5
   ];
-  
+  SPEC.points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).  
+
   // App state
   SPEC.state = {
     socket_opened: false,
@@ -65,6 +66,8 @@
   SPEC.ws = null;
   SPEC.graphs = {};
   SPEC.touch = {};
+	
+  SPEC.datasets = [];
   
   // Starts the spectrum application on server
   SPEC.startApp = function() {
@@ -253,6 +256,12 @@
         if(!SPEC.state.editing || field.closest('.menu-content').length == 0) {
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
+
+			if(param_name == 'freq_range' || param_name == 'xmin' || param_name == 'xmax')	
+			{	
+				SPEC.updateZoom();
+				$('.freeze.active').removeClass('active');	
+			}
           }
           else if(field.is('button')) {
             field[new_params[param_name].value === true ? 'addClass' : 'removeClass' ]('active');
@@ -273,11 +282,17 @@
               }
             }
             else { */
-              radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
+            radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
             //}
           }
           else if(field.is('span')) {
             field.html(new_params[param_name].value);
+
+			if(param_name == 'freq_unit') {
+				// 0 - Hz, 1 - kHz, 2 - MHz
+				var freq_unit = (new_params['freq_unit'].value == 1 ? 'K' : (new_params['freq_unit'].value == 2 ? 'M' : '')) + 'Hz';
+				$('#freq_unit').html(freq_unit);	
+		    }	
           }
         }
         
@@ -300,9 +315,17 @@
       return;
     }
     
+	// Keep the datasets for frozen channels
+	var frozen_dsets = [
+	  ($('#CH1_FREEZE').hasClass('active') && SPEC.datasets[0] !== undefined ? SPEC.datasets[0] : null),
+	  ($('#CH2_FREEZE').hasClass('active') && SPEC.datasets[1] !== undefined ? SPEC.datasets[1] : null)
+	];
+
+	SPEC.datasets = [];
+	var sig_count = 0;
     // (Re)Draw every signal
     for(sig_name in new_signals) {
-      
+      sig_count++;
       // Ignore disabled signals
       if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
         continue;
@@ -311,11 +334,16 @@
       var points = [];
       var sig_btn = $('#right_menu .menu-btn.' + sig_name);
       var color = SPEC.config.graph_colors[sig_name];
-      
-      for(var i=0; i<new_signals[sig_name].size; i++) {
-        points.push([i, new_signals[sig_name].value[i]]);
-      }
-      
+
+	  if(frozen_dsets[sig_count-1]){
+		points = frozen_dsets[sig_count-1];
+	  }
+	  else {
+		for(var i = 0; i < new_signals[sig_name].size; i++) {
+       	 	points.push([i, new_signals[sig_name].value[i]]);
+      	}
+	  }
+	  SPEC.datasets.push(points);      
       if(SPEC.graphs[sig_name]) {
         SPEC.graphs[sig_name].elem.show();
         
@@ -323,15 +351,18 @@
           SPEC.graphs[sig_name].plot.resize();
           SPEC.graphs[sig_name].plot.setupGrid();
         }
-        
-        SPEC.graphs[sig_name].plot.setData([points]);
+        var filtered_data = SPEC.filterData(points, SPEC.graphs[sig_name].plot.width());   
+        SPEC.graphs[sig_name].plot.setData([filtered_data]);
         SPEC.graphs[sig_name].plot.draw();
       }
       else {
         SPEC.graphs[sig_name] = {};
         SPEC.graphs[sig_name].elem = $('<div class="plot" />').css($('#graph_grid').css(['height','width'])).appendTo('#graphs');
-        SPEC.graphs[sig_name].plot = $.plot(SPEC.graphs[sig_name].elem, [points], {
-          series: {
+	// Local optimization    
+    	var filtered_data = SPEC.filterData(points, SPEC.graphs[sig_name].elem.width());       
+
+	    SPEC.graphs[sig_name].plot = $.plot(SPEC.graphs[sig_name].elem, [filtered_data], {
+            series: {
             shadowSize: 0,  // Drawing is faster without shadows
             color: color
           },
@@ -400,6 +431,7 @@
       if(value !== undefined && value != SPEC.params.orig[key].value) {
         console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
         SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
+	    //console.log(SPEC.params.local[key].value);
       }
     }
     
@@ -441,6 +473,7 @@
     //SPEC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 1000 };
     
     SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
+	//console.log(SPEC.params.local);
     SPEC.params.local = {};
     return true;
   };
@@ -583,21 +616,17 @@
         // Do not allow values smaller than the lowest possible one
         if(i != 0 || direction != '-') {
           
-          // For nanosecods, add one nanosecond
-          if(curr_scale < 1/1000) {
-            new_scale = curr_scale + 1/1000000 * (direction == '-' ? -1 : 1);
+          // For Hz, add one Hz
+          if(curr_scale < 1000) {
+            new_scale = curr_scale + 1* (direction == '-' ? -1 : 1);
           }
-          // For microseconds, add one microsecond
-          else if(curr_scale < 1) {
-            new_scale = curr_scale + 1/1000 * (direction == '-' ? -1 : 1);
+          // For KHz, add one KHz
+          else if(curr_scale < 1000000) {
+            new_scale = curr_scale + 1*1000 * (direction == '-' ? -1 : 1);
           }
-          // For milliseconds, add one millisecod
-          else if(curr_scale < 1000) {
-            new_scale = curr_scale + (direction == '-' ? -1 : 1);
-          }
-          // For seconds, add one second
-          else if(curr_scale >= 1000) {
-            new_scale = curr_scale + 1000 * (direction == '-' ? -1 : 1);
+          // For MHz, add one MHz
+          else if(curr_scale >= 1000000) {
+            new_scale = curr_scale + 1*1000000 * (direction == '-' ? -1 : 1);
           }
         }
         break;
@@ -626,6 +655,60 @@
     }
     
     return null;
+  };
+
+  SPEC.updateZoom = function() {
+		
+	for(var i = 1; i < 3; i++)
+	{
+		var sig_name = "ch"+i.toLocaleString();
+		if(SPEC.graphs[sig_name])
+		{
+			var plot_elem = SPEC.graphs[sig_name].elem;
+			if(plot_elem.is(':visible') )   {
+
+				var plot = SPEC.graphs[sig_name].plot;
+				SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
+				SPEC.params.local['xmax'] = { value: SPEC.freq_range_max[SPEC.params.orig['freq_range'].value]};
+			  
+				var axes = plot.getAxes();
+				var options = plot.getOptions();
+				
+				options.xaxes[0].min = SPEC.params.local['xmin'].value;
+				options.xaxes[0].max = SPEC.params.local['xmax'].value;
+				options.yaxes[0].min = axes.yaxis.min;
+				options.yaxes[0].max = axes.yaxis.max;
+				
+			  plot.setupGrid();
+				plot.draw();
+
+			}
+		}
+	}
+
+	SPEC.sendParams();
+  };
+
+// Use only data for selected channels and do downsamling (data decimation), which is required for 
+  // better performance. On the canvas cannot be shown too much graph points. 
+  SPEC.filterData = function(dsets, w_points) {
+    var filtered = [];
+      
+    if(SPEC.points_per_px === null || dsets.length > w_points * SPEC.points_per_px) {
+		var step = Math.ceil(dsets.length / (w_points * SPEC.points_per_px));
+		var k = 0;
+		for(var j=0; j<dsets.length; j++) {
+		  if(k > 0 && ++k < step) {
+			continue;
+		  }
+		  filtered.push(dsets[j]);
+		  k = 1;
+		}
+	}
+	else {
+		filtered = dsets.slice(0);
+	}
+	return filtered;
   };
 
   SPEC.getLocalDecimalSeparator = function(){
