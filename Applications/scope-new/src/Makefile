@@ -25,9 +25,8 @@ INCLUDE += -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/cryptopp
 COMMON_FLAGS+=-Wall -g -fPIC -O0
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS  = -shared $(COMMON_FLAGS) -Wl,--whole-archive -Wl,--no-whole-archive
-LDFLAGS += -L$(RP_SDK) -lrp_sdk
-LDFLAGS += -L../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/build/lib -lcryptopp
+LDFLAGS  = -shared $(COMMON_FLAGS)  
+LDFLAGS += -L$(RP_SDK) -Wl,--whole-archive -lrp_sdk -Wl,--no-whole-archive
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
