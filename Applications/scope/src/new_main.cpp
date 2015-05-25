@@ -203,6 +203,8 @@ void UpdateParams(void) {
     inRun.Value() = running;
 
     rp_EnableDigitalLoop(digitalLoop.Value());
+
+    rpApp_OscGetTriggerLevel(&inTriggLevel.Value());
 }
 
 float getMeasureValue(int measure) {
