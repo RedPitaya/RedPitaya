@@ -678,11 +678,11 @@ int threadSafe_acqStop() {
 }
 
 float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset) {
-    return (volts + ampOffset) * probeAtt / ampScale;
+    return volts * probeAtt / ampScale + ampOffset;
 }
 
 float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset) {
-    return (value * ampScale / probeAtt) - ampOffset;
+    return (value - ampOffset) * ampScale / probeAtt;
 }
 
 int scaleAmplitudeChannel(rp_channel_t channel, float volts, float *res) {
