@@ -227,9 +227,10 @@
             }
             else {
               var ref_scale = (new_params['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
+              var source_offset = (new_params['OSC_TRIG_SOURCE'].value == 0 ? new_params['OSC_CH1_OFFSET'].value : new_params['OSC_CH2_OFFSET'].value);
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
-              var px_offset = -(new_params[param_name].value / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+              var px_offset = -((new_params[param_name].value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
               
               $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
               $('#right_menu .menu-btn.trig').prop('disabled', false);
@@ -253,9 +254,10 @@
             if(new_params[param_name].value) {
               var new_value = new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value;
               var ref_scale = (new_params['OSC_CURSOR_SRC'].value == 0 ? 'OSC_CH1_SCALE' : (new_params['OSC_CURSOR_SRC'].value == 1 ? 'OSC_CH2_SCALE' : 'OSC_MATH_SCALE'));
+              var source_offset = new_params[new_params['OSC_CURSOR_SRC'].value == 0 ? 'OSC_CH1_OFFSET' : (new_params['OSC_CURSOR_SRC'].value == 1 ? 'OSC_CH2_OFFSET' : 'OSC_MATH_OFFSET')].value;
               var graph_height = $('#graph_grid').height();
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
-              var px_offset = -(new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value / volt_per_px - parseInt($('#cur_' + y + '_arrow').css('margin-top')) / 2);
+              var px_offset = -((new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value + source_offset) / volt_per_px - parseInt($('#cur_' + y + '_arrow').css('margin-top')) / 2);
               var top = (graph_height + 7) / 2 + px_offset;
               
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
@@ -275,7 +277,7 @@
               var new_value = new_params[x == 'x1' ? 'OSC_CUR1_T' : 'OSC_CUR2_T'].value;
               var graph_width = $('#graph_grid').width();
               var ms_per_px = (new_params['OSC_TIME_SCALE'].value * 10) / graph_width;
-              var px_offset = -(new_value / ms_per_px - parseInt($('#cur_' + x + '_arrow').css('margin-left')) / 2 - 2.5);
+              var px_offset = -((new_value + new_params['OSC_TIME_OFFSET'].value) / ms_per_px - parseInt($('#cur_' + x + '_arrow').css('margin-left')) / 2 - 2.5);
               var msg_width = $('#cur_' + x + '_info').outerWidth();
               var left = (graph_width + 2) / 2 + px_offset;
               
@@ -288,10 +290,6 @@
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
             }
           }
-        }
-        // Math scale
-        else if(param_name == 'OSC_MATH_SCALE') {
-          $('#OSC_MATH_SCALE_info').html(new_params[param_name].value);
         }
         
         // Find the field having ID equal to current parameter name
@@ -589,6 +587,9 @@
 
   // Changes Y zoom/scale for the selected signal
   OSC.changeYZoom = function(direction, curr_scale, send_changes) {
+    
+    // Output 1/2 signals do not have offset
+    // TODO: New parameters added OUTPUT1_SHOW_OFF and OUTPUT2_SHOW_OFF
     if($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2', 'math']) < 0) {
       return;
     }
@@ -743,9 +744,10 @@
   OSC.updateYCursorElems = function(ui, save) {
     var y = (ui.helper[0].id == 'cur_y1_arrow' ? 'y1' : 'y2');
     var ref_scale = (OSC.params.orig['OSC_CURSOR_SRC'].value == 0 ? 'OSC_CH1_SCALE' : (OSC.params.orig['OSC_CURSOR_SRC'].value == 1 ? 'OSC_CH2_SCALE' : 'OSC_MATH_SCALE'));
+    var source_offset = OSC.params.orig[OSC.params.orig['OSC_CURSOR_SRC'].value == 0 ? 'OSC_CH1_OFFSET' : (OSC.params.orig['OSC_CURSOR_SRC'].value == 1 ? 'OSC_CH2_OFFSET' : 'OSC_MATH_OFFSET')].value;
     var graph_height = $('#graph_grid').height();
     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
-    var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px;
+    var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
     
     $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
     $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (ui.position.top < 16 ? 3 : ''));
@@ -764,7 +766,7 @@
     var graph_width = $('#graph_grid').width();
     var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
     var msg_width = $('#cur_' + x + '_info').outerWidth();
-    var new_value = (graph_width / 2 - ui.position.left - (ui.helper.width() - 2) / 2 - parseInt(ui.helper.css('margin-left'))) * ms_per_px;
+    var new_value = (graph_width / 2 - ui.position.left - (ui.helper.width() - 2) / 2 - parseInt(ui.helper.css('margin-left'))) * ms_per_px - OSC.params.orig['OSC_TIME_OFFSET'].value;
     
     $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
     $('#cur_' + x + '_info')
@@ -889,11 +891,12 @@
       
       if(OSC.params.orig['OSC_TRIG_SOURCE'].value < 2) {
         var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
+        var source_offset = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? OSC.params.orig['OSC_CH1_OFFSET'].value : OSC.params.orig['OSC_CH2_OFFSET'].value);
         
         if(OSC.params.orig[ref_scale] !== undefined) {
           var graph_height = $('#graph_grid').height();
           var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
-          var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px;
+          var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
           
           if(dialog_visible) {
             $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
@@ -915,8 +918,11 @@
 // Page onload event handler
 $(function() {
   
+  // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
+  new FastClick(document.body);
+  
   // Process clicks on top menu buttons
-  $('#OSC_RUN').click(function(ev) {
+  $('#OSC_RUN').on('click touchstart', function(ev) {
     ev.preventDefault();
     $('#OSC_RUN').hide();
     $('#OSC_STOP').css('display','block');
@@ -924,7 +930,7 @@ $(function() {
     OSC.sendParams();
   }); 
   
-  $('#OSC_STOP').click(function(ev) {
+  $('#OSC_STOP').on('click touchstart', function(ev) {
     ev.preventDefault();
     $('#OSC_STOP').hide();
     $('#OSC_RUN').show(); 
@@ -932,20 +938,20 @@ $(function() {
     OSC.sendParams();
   });
   
-  $('#OSC_SINGLE').click(function(ev) {
+  $('#OSC_SINGLE').on('click touchstart', function(ev) {
     ev.preventDefault();
     OSC.params.local['OSC_SINGLE'] = { value: true };
     OSC.sendParams();
   });
   
-  $('#OSC_AUTOSCALE').click(function(ev) {
+  $('#OSC_AUTOSCALE').on('click touchstart', function(ev) {
     ev.preventDefault();
     OSC.params.local['OSC_AUTOSCALE'] = { value: true };
     OSC.sendParams();
   });
   
   // Selecting active signal
-  $('.menu-btn').click(function() {
+  $('.menu-btn').on('click touchstart', function() {
     $('#right_menu .menu-btn').not(this).removeClass('active');
     OSC.state.sel_sig_name = $(this).data('signal');
     
@@ -960,7 +966,7 @@ $(function() {
   });
 
   // Opening a dialog for changing parameters
-  $('.edit-mode').click(function() {
+  $('.edit-mode').on('click touchstart', function() {
     OSC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();  
@@ -974,12 +980,12 @@ $(function() {
   });
   
   // Close parameters dialog on close button click
-  $('.close-dialog').click(function() {
+  $('.close-dialog').on('click touchstart', function() {
     OSC.exitEditing();
   });
   
   // Measurement dialog
-  $('#meas_done').click(function() {              
+  $('#meas_done').on('click touchstart', function() {              
     var meas_signal = $('#meas_dialog input[name="meas_signal"]:checked');
     
     if(meas_signal.length) {
@@ -1007,12 +1013,12 @@ $(function() {
   });
   
   // Process events from other controls in parameters dialogs
-  $('#edge1').click(function() {
+  $('#edge1').on('click touchstart', function() {
     $('#edge1').find('img').attr('src','img/edge1_active.png');
     $('#edge2').find('img').attr('src','img/edge2.png');
   });
   
-  $('#edge2').click(function() {
+  $('#edge2').on('click touchstart', function() {
     $('#edge2').find('img').attr('src','img/edge2_active.png');
     $('#edge1').find('img').attr('src','img/edge1.png');
   });
@@ -1023,7 +1029,7 @@ $(function() {
   $('#jtk_right').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_right.png'); });
   $('#jtk_down').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_down.png'); });
   
-  $('#jtk_fine').click(function(){
+  $('#jtk_fine').on('click touchstart', function(){
     var img = $('#jtk_fine');
     
     if(img.attr('src') == 'img/fine.png') {
@@ -1040,11 +1046,16 @@ $(function() {
     $('#jtk_btns').attr('src','img/node_fine.png'); 
   });
   
-  $('#jtk_up, #jtk_down').click(function(ev) {
-    OSC.changeYZoom(ev.target.id == 'jtk_down' ? '+' : '-');
+  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
+    if(OSC.state.sel_sig_name == 'math') {
+      OSC.changeYZoom(ev.target.id == 'jtk_down' ? '-' : '+');
+    }
+    else {
+      OSC.changeYZoom(ev.target.id == 'jtk_down' ? '+' : '-');
+    }
   });
   
-  $('#jtk_left, #jtk_right').click(function(ev) {
+  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
     OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
   });
   

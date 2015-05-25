@@ -281,11 +281,11 @@ area:hover {
   color: #31b44b !important;
 }
 
-.out1, .btn.out1, .out1.focus {
+.output1, .btn.output1, .output1.focus {
   color: #9595ca !important;
 }
 
-.out2, .btn.out2, .out2.focus {
+.output2, .btn.output2, .output2.focus {
   color: #ee3739 !important;
 }
 
@@ -297,7 +297,7 @@ area:hover {
   color: #75cede !important;
 }
 
-.ch1.active, .ch2.active, .out1.active, .out2.active, .math.active, .trig.active {
+.ch1.active, .ch2.active, .output1.active, .output2.active, .math.active, .trig.active {
   color: #111 !important;
 }
 
