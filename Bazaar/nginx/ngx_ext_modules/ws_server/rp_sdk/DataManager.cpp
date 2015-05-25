@@ -5,6 +5,8 @@
 #include "misc.h"
 
 CBooleanParameter IsDemoParam("is_demo", CBaseParameter::RO, false, 1);
+CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
+CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
 
 int dbg_printf(const char * format, ...)
 {
@@ -19,6 +21,15 @@ int dbg_printf(const char * format, ...)
 	}
 
 	return 0;
+}
+
+CDataManager::CDataManager() 
+	: m_params()
+	, m_signals()
+	, m_param_interval(5000)
+	, m_signal_interval(20)
+	, m_send_all_params(true)
+{
 }
 
 CDataManager* CDataManager::GetInstance()
@@ -87,7 +98,7 @@ std::string CDataManager::GetParamsJson()
 	JSONNode params(JSON_NODE);
 	params.set_name("parameters");
 	for(size_t i=0; i < m_params.size(); i++) {
-		if(m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO)
+		if((m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO) && (m_params[i]->IsValueChanged() || m_send_all_params))
 		{					
 			JSONNode n(JSON_NODE);
 			n = m_params[i]->GetJSONObject();		
@@ -98,6 +109,7 @@ std::string CDataManager::GetParamsJson()
 	JSONNode data_node(JSON_NODE);
 	data_node.set_name("data");
 	data_node.push_back(params);
+	m_send_all_params = false;
 	return data_node.write();
 }
 
@@ -123,6 +135,9 @@ void CDataManager::OnNewParams(std::string _params)
 	JSONNode n(JSON_NODE);
 	n = libjson::parse(_params);		
 	JSONNode m(JSON_NODE);
+	
+	for(size_t i=0; i < m_params.size(); i++)
+		m_params[i]->ClearNewValue();
 
 	for(size_t i=0; i < n.size(); i++) {
 		m = n.at(i);
@@ -136,7 +151,10 @@ void CDataManager::OnNewParams(std::string _params)
 					m_params[j]->SetValueFromJSON(m);
 			}
 		}
-        }
+	}
+
+	if(InCommandParam.IsNewValue())
+		m_send_all_params |= InCommandParam.NewValue() == "send_all_params";
 
 	::OnNewParams();
 }

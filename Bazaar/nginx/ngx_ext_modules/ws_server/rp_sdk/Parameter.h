@@ -27,10 +27,14 @@ public:
 	
 	AccessMode GetAccessMode() const;
 
+	bool IsValueChanged() const;
+	bool IsNewValue() const;
+	void ClearNewValue();
+
 protected:
 	TParam<T, ValueT> m_Value; //parameter or signal struct data
-	std::shared_ptr<TParam<T, ValueT> > m_TmpValue; //temp storage of parameter or signal data received from server
-	
+	std::shared_ptr<TParam<T, ValueT>> m_TmpValue; //temp storage of parameter or signal data received from server
+
 };
 
 template <typename T, typename ValueT>
@@ -79,20 +83,20 @@ inline const ValueT& CParameter<T, ValueT>::Value() const
 template <typename T, typename ValueT>
 inline const ValueT& CParameter<T, ValueT>::NewValue() 
 {
-	if(m_TmpValue.get()!= nullptr)
+	if(m_TmpValue.get() != nullptr)
 	{	
 		return m_TmpValue.get()->value;
 	}
 	else
 	{
-		return 	Value();
+		return Value();
 	}
 }
 
 template <typename T, typename ValueT>
 inline void CParameter<T, ValueT>::Update() 
 {
-	if(m_TmpValue.get()!= nullptr)	
+	if(m_TmpValue.get() != nullptr)	
 	{			
 		Set(m_TmpValue.get()->value);	
 		m_TmpValue.reset();
@@ -111,4 +115,22 @@ template <typename T, typename ValueT>
 inline CBaseParameter::AccessMode CParameter<T, ValueT>::GetAccessMode() const
 {
 	return (CBaseParameter::AccessMode)m_Value.access_mode;
+}
+
+template <typename T, typename ValueT>
+inline bool CParameter<T, ValueT>::IsValueChanged() const
+{
+	return true;
+}
+
+template <typename T, typename ValueT>
+inline bool CParameter<T, ValueT>::IsNewValue() const
+{
+	return (m_TmpValue.get() != nullptr);
+}
+
+template <typename T, typename ValueT>
+inline void CParameter<T, ValueT>::ClearNewValue()
+{
+	m_TmpValue.reset();
 }
