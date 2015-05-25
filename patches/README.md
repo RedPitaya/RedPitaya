@@ -61,9 +61,46 @@ This is for an issue reporting memory size if 16bit memory chip is used insted o
 
 ### Configuration
 
-## Device tree specifics
+#### Board header file
+
+`modeboot` is internaly set to `sdboot`, this makes `sdboot` the default boot sequence.
+
+#### Environment
+
+Currently the environment is stored inside the EEPROM:
+
+```
+bootcmd=run $modeboot
+bootdelay=3
+baudrate=115200
+ipaddr=10.10.70.102
+serverip=10.10.70.101
+prod_date=12/22/13
+kernel_image=uImage
+ramdisk_image=uramdisk.image.gz
+devicetree_image=devicetree.dtb
+bitstream_image=system.bit.bin
+loadbit_addr=0x100000
+kernel_size=0x500000
+devicetree_size=0x20000
+ramdisk_size=0x5E0000
+fdt_high=0x20000000
+initrd_high=0x20000000
+sdboot=echo Copying Linux from SD to RAM... && mmcinfo && fatload mmc 0 0x3000000 ${kernel_image} && fatload mmc 0 0x2A00000 ${devicetree_image} && fatload mmc 0 0x2000000 ${ramdisk_image} && bootm 0x3000000 0x2000000 0x2A00000
+ethaddr=00:26:32:F0:03:21
+nav_code=4651
+hw_rev=1.0
+serial=140900801
+```
+
+The Linux `boot` parameters are not appropriate for running Ubuntu images, since a different filesystem configuration is more appropriate. Pavel Demin solved this issue by patching a U-Boot source file, where some variables from the environment contained in the EEPROM are overwritten.
+
 
 ## Linux kernel specifics
+
+
+## Device tree specifics
+
 
 ## Init process specifics
 
