@@ -166,6 +166,9 @@ void CDataManager::OnNewSignals(std::string _signals)
 	n = libjson::parse(_signals);	
 	JSONNode m(JSON_NODE);
 
+	for(size_t i=0; i < m_signals.size(); i++)
+		m_signals[i]->ClearNewValue();
+
 	for(size_t i=0; i < n.size(); i++) {
 		m = n.at(i);
 		const char* name = m.name().c_str();
@@ -178,8 +181,9 @@ void CDataManager::OnNewSignals(std::string _signals)
 					m_signals[j]->SetValueFromJSON(m);
 			}
 		}
-        }
-
+	}
+	
+	::OnNewSignals();
 }
 
 int CDataManager::GetParamInterval()
