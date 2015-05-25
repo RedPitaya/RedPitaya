@@ -14,7 +14,6 @@ struct TParam
 	BaseT max;
 	int access_mode;
 	int fpga_update;
-	int size;
 };
 
 //To get value from JSON object

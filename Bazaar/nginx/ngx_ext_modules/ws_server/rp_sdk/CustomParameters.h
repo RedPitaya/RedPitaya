@@ -75,7 +75,10 @@ template <typename Type> class CCustomSignal : public CParameter<Type, std::vect
 {
 public:
 	CCustomSignal(std::string _name, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, _size, std::vector<Type>(_size, _def_value)){}	
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}	
+
+	CCustomSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}	
 		
 	~CCustomSignal()
 	{
@@ -88,15 +91,14 @@ public:
 	{
 		JSONNode n(JSON_NODE);
 		n.set_name(this->m_Value.name);
-		n.push_back(JSONNode("size", this->m_Value.size));
+		n.push_back(JSONNode("size", this->m_Value.value.size()));
 
 		JSONNode child(JSON_ARRAY);	
 		child.set_name("value");	
-		for(int i=0; i < this->m_Value.size; i++)
+		for(unsigned int i=0; i < this->m_Value.value.size(); i++)
 		{	
 			Type res = this->m_Value.value.at(i);			
 			child.push_back(JSONNode("", res));
-			
 		}		
 		n.push_back(child);
 		return n;
@@ -119,12 +121,12 @@ public:
 
 	void Resize(int _new_size)
 	{
-		this->m_Value.size = _new_size;
+		this->m_Value.value.resize(_new_size);
 	}
 
 	int GetSize()
 	{
-		return this->m_Value.size;
+		return this->m_Value.value.size();
 	}
 };
 
@@ -179,6 +181,9 @@ class CIntSignal : public CCustomSignal<int>
 public:
 	CIntSignal(std::string _name, int _size, int _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
+
+	CIntSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, int _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
 //custom CFloatSignal
@@ -187,6 +192,9 @@ class CFloatSignal : public CCustomSignal<float>
 public:
 	CFloatSignal(std::string _name, int _size, float _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
+
+	CFloatSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
 //custom CDoubleSignal
@@ -195,6 +203,9 @@ class CDoubleSignal : public CCustomSignal<double>
 public:
 	CDoubleSignal(std::string _name, int _size, double _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
+
+	CDoubleSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, double _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
 extern CBooleanParameter IsDemoParam;		// special default parameter to check mode (demo or not)
