@@ -107,7 +107,7 @@
           </div>
           
           <div class="col-xs-6 option-content">
-            <div id="meas" class="right-menu-option edit-mode">CTRL</div>
+            <div id="ctrl" class="right-menu-option edit-mode">CTRL</div>
           </div>
         </div>
 
@@ -125,7 +125,7 @@
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <button id="CH1_FREEZE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
+              <button id="CH1_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
             </div>
           </div>
 		</div>
@@ -144,7 +144,7 @@
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <button id="CH2_FREEZE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
+              <button id="CH2_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
             </div>
           </div>
            
@@ -174,13 +174,13 @@
 		  <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Start freq.</span>
-              <input class="setfiled" name="SOUR2_PHAS" id="SOUR2_PHAS" type="text" value="0">
+              <input class="setfiled" name="xmin" id="xmin" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">End freq.</span>
-              <input class="setfiled" name="SOUR2_DCYC" id="SOUR2_DCYC" type="text" value="0">
+              <input class="setfiled" name="xmax" id="xmax" type="text" value="0">
             </div>
           </div>
 		  <div class="col-xs-12 option-content">
@@ -284,9 +284,9 @@
           </div>
           <div id="info-meas"></div>
           <div class="pull-right">
-            Frequency <span id="SPEC_TIME_SCALE">- </span> Hz/div <br />
-            Trig <img style="margin: -2px 0px 0px 0px;" src="img/toparrow.png"> IN1 <span id="trig_mv">- dBm</span><br />
-            <img src="img/tarrow.png"> <span id="SPEC_TIME_OFFSET">- </span><span id="SPEC_time_scale_units">Hz</span><br />
+            Frequency <span id="SPEC_TIME_SCALE">- </span><span id="freq_unit">Hz</span>/div <br />
+         <!--   Trig <img style="margin: -2px 0px 0px 0px;" src="img/toparrow.png"> IN1 <span id="trig_mv">- dBm</span><br />
+            <img src="img/tarrow.png"> <span id="SPEC_TIME_OFFSET">- </span><span id="SPEC_time_scale_units">Hz</span><br />-->
           </div>
         </div>
 		<div class="waterfall-holder clearfix">
