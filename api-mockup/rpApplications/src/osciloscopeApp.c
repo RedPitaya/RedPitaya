@@ -34,6 +34,7 @@ float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
 float ch1_ampScale,  ch2_ampScale,  math_ampScale;
 float ch1_probeAtt, ch2_probeAtt;
 float timeScale=1, timeOffset=0;
+float trigLevel = 0;
 rpApp_osc_trig_sweep_t trigSweep;
 rpApp_osc_trig_source_t trigSource = RPAPP_OSC_TRIG_SRC_CH1;
 rpApp_osc_trig_slope_t trigSlope = RPAPP_OSC_TRIG_SLOPE_PE;
@@ -292,11 +293,15 @@ int osc_getAmplitudeScale(rpApp_osc_source source, float *scale) {
 }
 
 int osc_setAmplitudeOffset(rpApp_osc_source source, float offset) {
+    pthread_mutex_lock(&mutex);
+    float  level = calcTrigLevel();
     SOURCE_ACTION(source,
                   ch1_ampOffset = offset,
                   ch2_ampOffset = offset,
                   math_ampOffset = offset)
-    EXECUTE_ATOMICALLY(mutex, clearView());
+    clearView();
+    pthread_mutex_unlock(&mutex);
+    ECHECK_APP(osc_setTriggerLevel(level + offset));
     return RP_OK;
 }
 
@@ -346,6 +351,11 @@ int osc_setTriggerSource(rpApp_osc_trig_source_t triggerSource) {
     trigSource = triggerSource;
     ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerSrc(src));
     pthread_mutex_unlock(&mutex);
+
+    if (trigSource != triggerSource) {
+        ECHECK_APP(osc_setTriggerLevel(trigLevel))
+    }
+
     return RP_OK;
 }
 
@@ -401,13 +411,22 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 int osc_setTriggerLevel(float level) {
     pthread_mutex_lock(&mutex);
     clearView();
+
+    trigLevel = level;
+    if (trigSource == RPAPP_OSC_TRIG_SRC_CH1) {
+        level -= ch1_ampOffset * ch1_ampScale;
+    } else if (trigSource == RPAPP_OSC_TRIG_SRC_CH2) {
+        level -= ch2_ampOffset * ch2_ampScale;
+    }
+
     ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerLevel(level));
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
 
 int osc_getTriggerLevel(float *level) {
-    return rp_AcqGetTriggerLevel(level);
+    *level = trigLevel;
+    return RP_OK;
 }
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
@@ -675,6 +694,15 @@ int threadSafe_acqStop() {
     acqRunning = false;
     pthread_mutex_unlock(&mutex);
     return RP_OK;
+}
+
+float calcTrigLevel() {
+    if (trigSource == RPAPP_OSC_TRIG_SRC_CH1)
+        return trigLevel - ch1_ampOffset / ch1_ampScale;
+    else if (trigSource == RPAPP_OSC_TRIG_SRC_CH2)
+        return trigLevel - ch2_ampOffset / ch2_ampScale;
+    else
+        return trigLevel;
 }
 
 float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset) {
