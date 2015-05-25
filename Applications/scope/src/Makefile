@@ -3,7 +3,7 @@ CXX=$(CROSS_COMPILE)g++
 RM=rm
 
 CXXSOURCES= \
-	new_main.cpp \
+	main.cpp \
 
 RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
