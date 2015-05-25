@@ -1,0 +1,2 @@
+{"parameters":{"in_command":{"value":"send_all_params"}}}
+{"signals":{"signal6":{"size":4,"value":[0,0,0,0]}}}
