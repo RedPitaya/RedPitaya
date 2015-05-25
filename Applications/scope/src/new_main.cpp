@@ -440,3 +440,9 @@ void OnNewParams(void) {
     parameterPeriiod.Update();
     digitalLoop.Update();
 }
+
+void OnNewSignals(void)
+{
+	// do something
+	//CDataManager::GetInstance()->UpdateAllSignals();
+}
