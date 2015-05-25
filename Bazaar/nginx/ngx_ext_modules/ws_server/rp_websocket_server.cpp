@@ -221,9 +221,9 @@ void rp_websocket_server::on_close(connection_hdl hdl) {
 }
 
 void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg) {
-	std::stringstream ss;	
-	ss << "Detected " << msg->get_payload() << " test cases.";
-	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
+//	std::stringstream ss;	
+//	ss << "Detected " << msg->get_payload() << " test cases.";
+//	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
 	//get child, it is always only one: "parameters" or "signals"
 	JSONNode n = libjson::parse(msg->get_payload());
 	
