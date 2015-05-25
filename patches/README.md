@@ -61,6 +61,8 @@ This is for an issue reporting memory size if 16bit memory chip is used insted o
 
 ### Configuration
 
+There are three possible sources for the U-Boot environment: configuration header file, persistent storage (EEPROM) and scripts. If the environment is taken from persistent storage (`CONFIG_ENV_IS_IN_EEPROM` macro is defined), then the contents of the `CONFIG_EXTRA_ENV_SETTINGS` macro are ignored. So EEPROM becomes the only source for the environment. Scripts can only be called from the previously described environment sources, so currently they are not used.
+
 #### Board header file
 
 `modeboot` is internaly set to `sdboot`, this makes `sdboot` the default boot sequence.
