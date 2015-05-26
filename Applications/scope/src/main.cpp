@@ -1,8 +1,7 @@
-#include "new_main.h"
+#include "main.h"
 
-#include <DataManager.h>
-#include <CustomParameters.h>
-#include "rpApp.h"
+#include <math.h>
+#include <stdio.h>
 #include "version.h"
 
 
@@ -43,13 +42,13 @@ CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 CFloatParameter in1Offset("OSC_CH1_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
-CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
-CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
-CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0, 1000);
+CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
+CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
+CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000);
-CFloatParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 50000);
+CFloatParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 50000);
 
 CIntParameter in1Gain("OSC_CH1_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter in2Gain("OSC_CH2_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
@@ -99,7 +98,11 @@ CIntParameter mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, RP_CH_2, 0, RP_CH
 //CIntParameter arbitraryChannel("SOUR_TRAC_CH", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
 
 /* --------------------------------  OUTOUT PARAMETERS  ------------------------------ */
-// TODO out1Show and out2Show unused
+CFloatSignal out1Signal("output1", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatSignal out2Signal("output2", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+bool updateOutCh1 = true;
+bool updateOutCh2 = true;
+
 CBooleanParameter out1Show("OUTPUT1_SHOW", CBaseParameter::RW, true, 0);
 CBooleanParameter out2Show("OUTPUT2_SHOW", CBaseParameter::RW, true, 0);
 
@@ -109,8 +112,8 @@ CFloatParameter out1Amplitude("SOUR1_VOLT", CBaseParameter::RW, 1, 0, -1, 1);
 CFloatParameter out2Amplitude("SOUR2_VOLT", CBaseParameter::RW, 1, 0, -1, 1);
 CFloatParameter out1Offset("SOUR1_VOLT_OFFS", CBaseParameter::RW, 0, 0, -1, 1);
 CFloatParameter out2Offset("SOUR2_VOLT_OFFS", CBaseParameter::RW, 0, 0, -1, 1);
-CFloatParameter out1Frequancy("SOUR1_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0, 62.5e6);
-CFloatParameter out2Frequancy("SOUR2_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0, 62.5e6);
+CFloatParameter out1Frequancy("SOUR1_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0.00005, 62.5e6);
+CFloatParameter out2Frequancy("SOUR2_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0.00005, 62.5e6);
 
 CFloatParameter out1Phase("SOUR1_PHAS", CBaseParameter::RW, 0, 0, -360, 360);
 CFloatParameter out2Phase("SOUR2_PHAS", CBaseParameter::RW, 0, 0, -360, 360);
@@ -126,6 +129,8 @@ CIntParameter out2Burst("SOUR2_BURS_STAT", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter out1TriggerSource("SOUR1_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_GATED_BURST);
 CIntParameter out2TriggerSource("SOUR2_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_GATED_BURST);
 
+CFloatParameter out1ShowOffset("OUTPUT1_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
+CFloatParameter out2ShowOffset("OUTPUT1_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
 
 /***************************************************************************************
 *                                      CALIBATE                                        *
@@ -198,6 +203,8 @@ void UpdateParams(void) {
     inRun.Value() = running;
 
     rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+
+    rpApp_OscGetTriggerLevel(&inTriggLevel.Value());
 }
 
 float getMeasureValue(int measure) {
@@ -297,9 +304,49 @@ void UpdateSignals(void) {
     } else {
         math.Resize(0);
     }
+
+
+/* ------ UPDATE OUT SIGNALS ------*/
+    if (out1Show.Value() && out1State.Value() && out1Burst.Value() == 0) {
+        if (out1Signal.GetSize() != dataSize.Value()) {
+            out1Signal.Resize(dataSize.Value());
+            generate(RP_CH_1);
+        }
+        if (updateOutCh1) {
+            generate(RP_CH_1);
+            updateOutCh1 = false;
+        }
+    } else {
+        out1Signal.Resize(0);
+    }
+
+    if (out2Show.Value() && out2State.Value() && out2Burst.Value() == 0) {
+        if (out2Signal.GetSize() != dataSize.Value()) {
+            out2Signal.Resize(dataSize.Value());
+            generate(RP_CH_2);
+        }
+        if (updateOutCh2) {
+            generate(RP_CH_2);
+            updateOutCh2 = false;
+        }
+    } else {
+        out2Signal.Resize(0);
+    }
 }
 
 void OnNewParams(void) {
+
+/* ---- UPDATE INTERLAN SIGNAL GENERATION ----- */
+    if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
+        || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(inTimeScale) ||IS_NEW(out1ShowOffset)) {
+        updateOutCh1 = true;
+    }
+    if (IS_NEW(out2State) || IS_NEW(out2Amplitude) || IS_NEW(out2Offset) || IS_NEW(out2Frequancy) || IS_NEW(out2Phase)
+        || IS_NEW(out2WAveform) || IS_NEW(out2Burst) || IS_NEW(inTimeScale) || IS_NEW(out2ShowOffset)) {
+        updateOutCh2 = true;
+    }
+
+
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
     in1Show.Update();
     in2Show.Update();
@@ -386,8 +433,10 @@ void OnNewParams(void) {
 /* ------ UPDATE GENERATE LOCAL PARAMETERS ------*/
     out1Show.Update();
     out2Show.Update();
+    out1ShowOffset.Update();
+    out2ShowOffset.Update();
 
-/* ------ SEND GENERATE PARAMETERS RO API ------*/
+/* ------ SEND GENERATE PARAMETERS TO API ------*/
     IF_VALUE_CHANGED_BOOL(out1State, rp_GenOutEnable(RP_CH_1), rp_GenOutDisable(RP_CH_1))
     IF_VALUE_CHANGED_BOOL(out2State, rp_GenOutEnable(RP_CH_2), rp_GenOutDisable(RP_CH_2))
     IF_VALUE_CHANGED(out1Amplitude, rp_GenAmp(RP_CH_1, out1Amplitude.NewValue()))
@@ -441,6 +490,71 @@ void OnNewParams(void) {
     digitalLoop.Update();
 }
 
+
+
+
+
+/***************************************************************************************
+*                            SIGNAL GENERATING TEMPORARY                                *
+****************************************************************************************/
+
+void generate(rp_channel_t channel) {
+    CFloatSignal *signal;
+    rp_waveform_t waveform;
+    float frequency, phase, amplitude, offset, showOff;
+
+    if (channel == RP_CH_1) {
+        signal = &out1Signal;
+        waveform = (rp_waveform_t) out1WAveform.Value();
+        frequency = out1Frequancy.Value();
+        phase = (float) (out1Phase.Value() / 180.0f * M_PI);
+        amplitude = out1Amplitude.Value();
+        offset = out1Offset.Value();
+        showOff = out1ShowOffset.Value();
+    }
+    else {
+        signal = &out2Signal;
+        waveform = (rp_waveform_t) out2WAveform.Value();
+        frequency = out2Frequancy.Value();
+        phase = (float) (out2Phase.Value() / 180.0f * M_PI);
+        amplitude = out2Amplitude.Value();
+        offset = out2Offset.Value();
+        showOff = out2ShowOffset.Value();
+    }
+
+    switch (waveform) {
+        case RP_WAVEFORM_SINE:
+            synthesis_sin(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+        case RP_WAVEFORM_TRIANGLE:
+            synthesis_triangle(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+        case RP_WAVEFORM_SQUARE:
+            synthesis_square(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+        default:
+            break;
+    }
+}
+
+
+void synthesis_sin(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        (*signal)[i] = (float) (sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase) * amp + off + showOff);
+    }
+}
+
+void synthesis_triangle(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        (*signal)[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase))) / M_PI * 2  * amp + off + showOff);
+    }
+}
+
+void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        (*signal)[i] = sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase) > 0 ? amp+off + showOff : -amp+off + showOff;
+    }
+}
 void OnNewSignals(void)
 {
 	// do something

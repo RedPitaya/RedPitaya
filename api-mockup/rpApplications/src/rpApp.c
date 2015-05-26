@@ -70,6 +70,8 @@ const char* rpApp_GetError(int errorCode) {
             return "No signal found.";
         case RP_EAA:
             return "Failed to allocate array.";
+        case RP_APP_ECP:
+            return "Failed to calculate period.";
         default:
             return "Unknown error";
     }

@@ -14,13 +14,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Red Pitaya</title>
   <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?1">
   <script src="js/jquery-2.1.3.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
   <script src="js/jquery-ui.min.js"></script>
   <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
   <script src="js/jquery.flot.js"></script>
-  <script src="js/scope.js"></script>
+  <script src="js/fastclick.min.js"></script>
+  <script src="js/scope.js?1"></script>
 </head>
 <body>
   <div class="full-content">
@@ -104,14 +105,14 @@
           
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <button type="button" class="btn menu-btn out1" data-signal="out1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>OUT1</button>
+              <button type="button" class="btn menu-btn output1" data-signal="output1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>OUT1</button>
             </div>
           </div>              
           <div class="col-xs-6 option-content"><div id="out1" class="right-menu-option edit-mode"><img src="img/gear.png"></div></div>
           
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <button type="button" class="btn menu-btn out2" data-signal="out2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>OUT2</button>
+              <button type="button" class="btn menu-btn output2" data-signal="output2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>OUT2</button>
             </div>
           </div>              
           <div class="col-xs-6 option-content"><div id="out2" class="right-menu-option edit-mode"><img src="img/gear.png"></div></div>
@@ -166,14 +167,14 @@
               </select>
             </div>
           </div>
-          <!-- div class="col-xs-12 option-content out2">
+          <!-- div class="col-xs-12 option-content output2">
             <span class="col-info">Measurement range</span>
             <div class="right-menu-option" id="ch1_meas_range">- V</div>
           </div -->
           <div class="col-xs-12 option-content">
             <span class="col-info">Vertical offset</span>
             <div class="right-menu-option">
-              <input id="OSC_CH1_OFFSET" class="setfiled" name="OSC_CH1_OFFSET" type="text" value="0">
+              <input id="OSC_CH1_OFFSET" class="setfield" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
@@ -217,14 +218,14 @@
               </select>
             </div>
           </div>
-          <!-- div class="col-xs-12 option-content out2">
+          <!-- div class="col-xs-12 option-content output2">
             <span class="col-info">Measurement range</span>
             <div class="right-menu-option" id="ch2_meas_range">- V</div>
           </div -->
           <div class="col-xs-12 option-content">
             <span class="col-info">Vertical offset</span>
             <div class="right-menu-option">
-              <input id="OSC_CH2_OFFSET" class="setfiled" name="OSC_CH2_OFFSET" type="text" value="0">
+              <input id="OSC_CH2_OFFSET" class="setfield" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
@@ -243,7 +244,7 @@
         
         <div id="out1_dialog" class="dialog row right-menu-cont">
           <div class="col-xs-6 option-content">
-            <div class="right-menu-option out1 close-dialog">
+            <div class="right-menu-option output1 close-dialog">
               <img src="img/arrow_nav_left.png">
               Output1
             </div>
@@ -264,8 +265,8 @@
               <span class="col-info">Type</span>
               <select id="SOUR1_FUNC" class="form-control styled-select">
                 <option value="0">SINE</option>
-                <option value="1">TRIANGLE</option>
-                <option value="2">SQUARE</option>
+                <option value="1">SQUARE</option>
+                <option value="2">TRIANGLE</option>
                 <option value="3">FROM FILE*</option>
               </select>
             </div>
@@ -300,38 +301,38 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Frequency</span>
-              <input class="setfiled" name="SOUR1_FREQ_FIX" id="SOUR1_FREQ_FIX" type="text" value="0">
+              <input class="setfield" id="SOUR1_FREQ_FIX" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Aplitude</span>
-              <input class="setfiled" name="SOUR1_VOLT" id="SOUR1_VOLT" type="text" value="0">
+              <input class="setfield" id="SOUR1_VOLT" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Offset</span>
-              <input class="setfiled" name="SOUR1_VOLT_OFFS" id="SOUR1_VOLT_OFFS" type="text" value="0">
+              <input class="setfield" id="SOUR1_VOLT_OFFS" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Phase</span>
-              <input class="setfiled" name="SOUR1_PHAS" id="SOUR1_PHAS" type="text" value="0">
+              <input class="setfield" id="SOUR1_PHAS" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle</span>
-              <input class="setfiled" name="SOUR1_DCYC" id="SOUR1_DCYC" type="text" value="0">
+              <input class="setfield" id="SOUR1_DCYC" type="text" value="0">
             </div>
           </div>
         </div>
         
         <div id="out2_dialog" class="dialog row right-menu-cont">
           <div class="col-xs-6 option-content">
-            <div class="right-menu-option out2 close-dialog">
+            <div class="right-menu-option output2 close-dialog">
               <img src="img/arrow_nav_left.png">
               Output2
             </div>
@@ -352,8 +353,8 @@
               <span class="col-info">Type</span>
               <select id="SOUR2_FUNC" class="form-control styled-select">
                 <option value="0">SINE</option>
-                <option value="1">TRIANGLE</option>
-                <option value="2">SQUARE</option>
+                <option value="1">SQUARE</option>
+                <option value="2">TRIANGLE</option>
                 <option value="3">FROM FILE*</option>
               </select>
             </div>
@@ -388,31 +389,31 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Frequency</span>
-              <input class="setfiled" name="SOUR2_FREQ_FIX" id="SOUR2_FREQ_FIX" type="text" value="0">
+              <input class="setfield" id="SOUR2_FREQ_FIX" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Aplitude</span>
-              <input class="setfiled" name="SOUR2_VOLT" id="SOUR2_VOLT" type="text" value="0">
+              <input class="setfield" id="SOUR2_VOLT" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Offset</span>
-              <input class="setfiled" name="SOUR2_VOLT_OFFS" type="text" value="0">
+              <input class="setfield" id="SOUR2_VOLT_OFFS" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Phase</span>
-              <input class="setfiled" name="SOUR2_PHAS" id="SOUR2_PHAS" type="text" value="0">
+              <input class="setfield" id="SOUR2_PHAS" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle</span>
-              <input class="setfiled" name="SOUR2_DCYC" id="SOUR2_DCYC" type="text" value="0">
+              <input class="setfield" id="SOUR2_DCYC" type="text" value="0">
             </div>
           </div>
         </div>
@@ -445,13 +446,15 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Operator</span>
-              <select class="form-control styled-select" name="OSC_MATH_OP" id="OSC_MATH_OP">
-                <option value="0"></option>
+              <select class="form-control styled-select" id="OSC_MATH_OP">
+                <option value="0">none</option>
                 <option value="1">+</option>
                 <option value="2">-</option>
                 <option value="3">*</option>
-                <option value="4">dy/dt</option>
-                <option value="5">xdy</option>
+                <option value="4">/</option>
+                <option value="5">abs</option>
+                <option value="6">dy/dt</option>
+                <option value="7">xdy</option>
               </select>
             </div>
           </div>
@@ -471,13 +474,7 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Vertical offset</span>
-              <input class="setfiled" name="OSC_MATH_OFFSET" id="OSC_MATH_OFFSET" type="text" value="0">
-            </div>
-          </div>
-          <div class="col-xs-12 option-content">
-            <div class="right-menu-option">
-              <span class="col-info">Vertical scale</span>
-              <input class="setfiled" name="OSC_MATH_SCALE" id="OSC_MATH_SCALE" type="text" value="0">
+              <input class="setfield" id="OSC_MATH_OFFSET" type="text" value="0">
             </div>
           </div>
         </div>
@@ -523,7 +520,7 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Level</span>
-              <input id="OSC_TRIG_LEVEL" class="setfiled" name="OSC_TRIG_LEVEL" type="text" value="0">
+              <input id="OSC_TRIG_LEVEL" class="setfield" type="text" value="0">
             </div>
           </div>
           
@@ -591,41 +588,31 @@
         </div>
         
         <div id="cursor_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-6 option-content close-dialog">
+          <div class="col-xs-12 option-content close-dialog">
             <div class="right-menu-option">
               <img src="img/arrow_nav_left.png">
               Cursor
             </div>
           </div>
-
+          
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <button type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">ON</button>
+              <button id="OSC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
             </div>
           </div>
-           
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <div class="btn-group btn-group-justified" data-toggle="buttons">
-                <label class="btn">
-                  <input type="checkbox" name="OSC_CURSOR1_X" id="OSC_CURSOR1_X" autocomplete="off">X1
-                </label>
-                <label class="btn">
-                  <input type="checkbox" name="OSC_CURSOR2_X" id="OSC_CURSOR2_X" autocomplete="off">X2
-                </label>
-              </div>
+              <button id="OSC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
             </div>
           </div>
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <div class="btn-group btn-group-justified" data-toggle="buttons">
-                <label class="btn">
-                  <input type="checkbox" name="OSC_CURSOR1_Y" id="OSC_CURSOR1_Y" autocomplete="off">Y1
-                </label>
-                <label class="btn">
-                  <input type="checkbox" name="OSC_CURSOR1_Y" id="OSC_CURSOR1_Y" autocomplete="off">Y2
-                </label>
-              </div>
+              <button id="OSC_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
+            </div>
+          </div>
+          <div class="col-xs-6 option-content">
+            <div class="right-menu-option">
+              <button id="OSC_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
             </div>
           </div>
           <div class="col-xs-12 option-content">
@@ -648,42 +635,62 @@
               </div>
             </div>
           </div>
-          <div class="col-xs-12 option-content" style="height:100px;"></div>
         </div>
       </div>
   
       <div id="main">
         <div id="buffer">
-          <div class="red-horizont-line">
-            <div class="red-line"></div>
+          <div class="buf-red-line-holder">
+            <div class="buf-red-line"></div>
           </div>
-          <div class="fixator"></div>
-          <div class="horizontline"></div>
+          <div class="buf-fixator"></div>
+          <div class="buf-main-line"></div>
         </div>
         <div id="graphs">
           <canvas id="graph_grid"></canvas>
+          <div id="new_scale"></div>
+          
+          <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+          <div id="cur_x1" class="vline"></div>
+          <div id="cur_x1_info" class="cur_info"></div>
+          <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+          <div id="cur_x2" class="vline"></div>
+          <div id="cur_x2_info" class="cur_info"></div>
+          
+          <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+          <div id="cur_y1" class="hline"></div>
+          <div id="cur_y1_info" class="cur_info"></div>
+          <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+          <div id="cur_y2" class="hline"></div>
+          <div id="cur_y2_info" class="cur_info"></div>
+          
+          <div id="cur_y_diff"></div>
+          <div id="cur_y_diff_info" class="cur_info"></div>
+          <div id="cur_x_diff"></div>
+          <div id="cur_x_diff_info" class="cur_info"></div>
+          
           <img id="time_offset_arrow" src="img/time-offset-arrow.png">
           <img id="ch2_offset_arrow" class="y-offset-arrow" src="img/ch2-offset-arrow.png">
           <img id="ch1_offset_arrow" class="y-offset-arrow" src="img/ch1-offset-arrow.png">
-          <div id="new_scale"></div>
-          <img id="trig_level_arrow" src="img/trigger-arrow.png">
-          <div id="trigger_level"></div>
+          
+          <img id="trig_level_arrow" class="harrow" src="img/trigger-arrow.png">
+          <div id="trigger_level" class="hline"></div>
         </div>
         <div id="info" class="clear">
           <div class="left-info">
             <div class="info-title">
               <div class="ch1">IN1</div>
               <div class="ch2">IN2</div> 
-              <div class="out1">OUT1</div>
-              <div class="out2">OUT2</div>
+              <div class="output1">OUT1</div>
+              <div class="output2">OUT2</div>
               <div class="math">MATH</div>
             </div>
             <div class="info-value">
               <div class="ch1"><span id="OSC_CH1_SCALE">- </span>V/div</div>
               <div class="ch2"><span id="OSC_CH2_SCALE">- </span>V/div</div>
-              <div class="out1"><span id="SOUR1_VOLT_info">- </span>V/div</div>
-              <div class="out2"><span id="SOUR2_VOLT_info">- </span>V/div</div>
-              <div class="math"><span id="SMATH_VOLT">- </span>V^2/div</div>
+              <div class="output1"><span id="SOUR1_VOLT_info">- </span>V/div</div>
+              <div class="output2"><span id="SOUR2_VOLT_info">- </span>V/div</div>
+              <div class="math"><span id="OSC_MATH_SCALE">- </span>V/div</div>
             </div>
           </div>
           <div id="info-meas"></div>
