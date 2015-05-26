@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
-#include <unistd.h>
 
 #include "common.h"
 #include "calib.h"
@@ -161,6 +160,10 @@ static int setEqFilters(rp_channel_t channel)
 }
 
 /*----------------------------------------------------------------------------*/
+
+int acq_SetArmKeep(bool enable) {
+    return osc_SetArmKeep(enable);
+}
 
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 {
@@ -396,7 +399,7 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 
 int acq_GetSamplingRateHz(float* sampling_rate)
 {
-    float max_rate = 125000000.0;
+    float max_rate = 125000000.0f;
 
     rp_acq_decimation_t decimation;
     ECHECK(acq_GetDecimation(&decimation));
