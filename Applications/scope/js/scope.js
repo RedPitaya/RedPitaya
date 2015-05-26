@@ -16,7 +16,6 @@
   OSC.config.start_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?start=' + OSC.config.app_id;
   OSC.config.stop_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?stop=' + OSC.config.app_id;
   OSC.config.socket_url = 'ws://' + (OSC.config.server_ip.length ? OSC.config.server_ip : window.location.hostname) + ':9002';  // WebSocket server URI
-  OSC.config.socket_reconnect_timeout = 1000; // Milliseconds
   OSC.config.graph_colors = {
     'ch1' : '#f3ec1a',
     'ch2' : '#31b44b',
@@ -114,13 +113,7 @@
       OSC.ws.onclose = function() {
         OSC.state.socket_opened = false;
         $('#graphs .plot').hide();  // Hide all graphs
-        
-        console.log('Socket closed. Trying to reopen in ' + OSC.config.socket_reconnect_timeout/1000 + ' sec...');
-        
-        // Try to reconnect after a defined timeout
-        setTimeout(function() {
-          OSC.ws = new WebSocket(OSC.config.socket_url);
-        }, OSC.config.socket_reconnect_timeout);
+        console.log('Socket closed');
       };
       
       OSC.ws.onerror = function(ev) {
@@ -835,14 +828,6 @@
   
   // Updates Y offset in the signal config dialog, if opened, or saves new value
   OSC.updateYOffset = function(ui, save) {
-    var in1_dialog_visible = $('#in1_dialog').is(':visible');
-    var in2_dialog_visible = $('#in2_dialog').is(':visible');
-    
-    // Return if none of the dialogs is visible and it is not required to save value
-    if(!save && !in1_dialog_visible && !in2_dialog_visible) {
-      return;
-    }
-    
     var graph_height = $('#graph_grid').outerHeight();
     var zero_pos = (graph_height + 7) / 2;
     var new_value;
@@ -851,8 +836,9 @@
       var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
+      $('#info_box').html('New IN1 scale: ' + (+(new_value.toFixed(2))));
       
-      if(in1_dialog_visible) {
+      if($('#in1_dialog').is(':visible')) {
         $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
       }
       else if(save) {
@@ -863,8 +849,9 @@
       var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
+      $('#info_box').html('New IN2 scale: ' + (+(new_value.toFixed(2))));
       
-      if(in2_dialog_visible) {
+      if($('#in2_dialog').is(':visible')) {
         $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
       }
       else if(save) {
@@ -878,14 +865,9 @@
   };
   
   // Updates trigger level in the trigger config dialog, if opened, or saves new value
-  OSC.updateTrigLevel = function(ui, save) {
-    var dialog_visible = $('#trig_dialog').is(':visible');
-    
+  OSC.updateTrigLevel = function(ui, save) {    
+  
     $('#trigger_level').css('top', ui.position.top);
-    
-    if(!dialog_visible && !save) {
-      return;
-    }
     
     if(OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
       
@@ -898,7 +880,9 @@
           var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
           var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
           
-          if(dialog_visible) {
+          $('#info_box').html('New trigger level: ' + (+(new_value.toFixed(2))));
+          
+          if($('#trig_dialog').is(':visible')) {
             $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
           }
           else if(save) {
@@ -1079,6 +1063,7 @@ $(function() {
     },
     stop: function(ev, ui) {
       OSC.updateYOffset(ui, true);
+      $('#info_box').empty();
     }
   });
   
@@ -1086,6 +1071,14 @@ $(function() {
   $('#time_offset_arrow').draggable({
     axis: 'x',
     containment: 'parent',
+    drag: function(ev, ui) {
+      var graph_width = $('#graph_grid').outerWidth();
+      var zero_pos = (graph_width + 2) / 2;
+      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+      var new_value = (zero_pos - ui.position.left - ui.helper.width()/2 - 1) * ms_per_px;
+      
+      $('#info_box').html('New time offset: ' + (+(new_value.toFixed(2))));
+    },
     stop: function(ev, ui) {
       var graph_width = $('#graph_grid').outerWidth();
       var zero_pos = (graph_width + 2) / 2;
@@ -1093,6 +1086,7 @@ $(function() {
       
       OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width()/2 - 1) * ms_per_px };
       OSC.sendParams();
+      $('#info_box').empty();
     }
   });
   
@@ -1109,6 +1103,7 @@ $(function() {
     stop: function(ev, ui) {
       OSC.updateTrigLevel(ui, true);
       OSC.state.trig_dragging = false;
+      $('#info_box').empty();
     }
   });
   
@@ -1197,7 +1192,7 @@ $(function() {
           
           if(new_scale !== null) {
             OSC.touch.new_scale_x = new_scale;
-            $('#new_scale').html('X scale: ' + new_scale);
+            $('#info_box').html('X scale: ' + new_scale);
           }
           
           OSC.touch.prev = OSC.touch.curr;
@@ -1209,11 +1204,11 @@ $(function() {
         var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
         
         if(OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
-          var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '-' : '+'), OSC.touch.new_scale_y, false);
+          var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, false);
           
           if(new_scale !== null) {
             OSC.touch.new_scale_y = new_scale;
-            $('#new_scale').html('Y scale: ' + new_scale);
+            $('#info_box').html('Y scale: ' + new_scale);
           }
           
           OSC.touch.prev = OSC.touch.curr;
@@ -1240,7 +1235,7 @@ $(function() {
     
     // Reset touch information
     OSC.touch = {};
-    $('#new_scale').empty();
+    $('#info_box').empty();
   });
 
   // Prevent native touch activity like scrolling
