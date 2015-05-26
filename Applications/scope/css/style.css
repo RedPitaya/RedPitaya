@@ -152,6 +152,9 @@ area:hover {
 
 #buffer {
   border: 1px solid #999;
+  position: relative;
+  height: 14px;
+  overflow: hidden;
 }
 
 .buf-main-line {
@@ -164,9 +167,9 @@ area:hover {
   height: 12px;
   border-left: 1px solid #999;
   border-right: 1px solid #999;
-  margin-left: 30%;
   position: absolute;
-  width: 100px;
+  top: 0;
+  left: 100px;
 }
 
 .buf-red-line {
@@ -174,14 +177,17 @@ area:hover {
   height: 2px;
   background-color: #ce3234;
   margin-top: 5px;
+  display: none;
 }
 
 .buf-fixator {
-  margin-left: 20%;
   height: 12px;
   width: 3px;
   position: absolute;
+  top: 0;
+  left: 0;
   background-color: #cdcccc;
+  display: none;
 }
 
 .right-menu-cont {
