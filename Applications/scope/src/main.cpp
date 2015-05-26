@@ -204,7 +204,8 @@ void UpdateParams(void) {
 
     rp_EnableDigitalLoop(digitalLoop.Value());
 
-    rpApp_OscGetTriggerLevel(&inTriggLevel.Value());
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &in1Offset.Value());
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &in2Offset.Value());
 }
 
 float getMeasureValue(int measure) {
