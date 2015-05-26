@@ -161,6 +161,18 @@
           $('#OSC_RUN').show();
         }
       }
+      // Buffer position
+      else if(param_name == 'OSC_VIEW_POS') {
+        var full_width = $('#buffer').width() - 4;
+        var visible_width = full_width * new_params['OSC_VIEV_PART'].value;
+        
+        $('#buffer .buf-red-line').width(visible_width).show();
+        $('#buffer .buf-red-line-holder').css('left', full_width * new_params['OSC_VIEW_POS'].value - visible_width / 2);
+      }
+      // Buffer size parameter is processed upper
+      else if(param_name == 'OSC_VIEV_PART') {
+        continue;
+      }
       // All other parameters
       else {
         
@@ -872,7 +884,7 @@
     if(OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
       
       if(OSC.params.orig['OSC_TRIG_SOURCE'].value < 2) {
-        var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH2_SCALE' : 'OSC_CH2_SCALE');
+        var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
         var source_offset = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? OSC.params.orig['OSC_CH1_OFFSET'].value : OSC.params.orig['OSC_CH2_OFFSET'].value);
         
         if(OSC.params.orig[ref_scale] !== undefined) {
