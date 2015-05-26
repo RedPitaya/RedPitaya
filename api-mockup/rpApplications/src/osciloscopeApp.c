@@ -836,7 +836,7 @@ void *mainThreadFun() {
     while (true) {
         thisLoopAcqStart = false;
 
-        if (clear) {
+        if (clear && acqRunning) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_THREAD(threadSafe_acqStart());
             waitToFillPreTriggerBuffer();
@@ -847,7 +847,7 @@ void *mainThreadFun() {
         }
 
         // If in auto mode end trigger timed out
-        if (trigSweep == RPAPP_OSC_TRIG_AUTO && !auto_freRun_mode && (clock() - _timer) / CLOCKS_PER_SEC > AUTO_TRIG_TIMEOUT) {
+        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && !auto_freRun_mode && (clock() - _timer) / CLOCKS_PER_SEC > AUTO_TRIG_TIMEOUT) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = true)
         }
@@ -876,9 +876,9 @@ void *mainThreadFun() {
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_2, _startIndex, &_getBufSize, data[1]));
 
-            if (_triggerSource == RP_TRIG_SRC_DISABLED) {
+            if (_triggerSource == RP_TRIG_SRC_DISABLED && acqRunning) {
                 if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
-                    if (!continuousMode && acqRunning) {
+                    if (!continuousMode) {
                         ECHECK_APP_THREAD(threadSafe_acqStart());
                     }
                     thisLoopAcqStart = true;
@@ -895,7 +895,7 @@ void *mainThreadFun() {
 
             // Write data to view buffer
             for (rp_channel_t channel = RP_CH_1; channel <= RP_CH_2; ++channel) {
-                // first preZero data are wrong - from previout trigger. Last preZero data hasent been overwritten
+                // first preZero data are wrong - from previout trigger. Last preZero data hasn't been overwritten
                 for (int i = 0; i < _preZero; ++i) {
                     view[channel * viewSize + i] = 0;
                 }
