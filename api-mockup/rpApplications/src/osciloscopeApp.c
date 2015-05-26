@@ -426,11 +426,14 @@ int osc_getTriggerLevel(float *level) {
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
     EXECUTE_ATOMICALLY(mutex, clearView());
     switch (sweep) {
-        case RPAPP_OSC_TRIG_NORMAL:
         case RPAPP_OSC_TRIG_SINGLE:
             break;
         case RPAPP_OSC_TRIG_AUTO:
-            EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
+        EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
+        case RPAPP_OSC_TRIG_NORMAL:
+            if (!acqRunning) {
+                ECHECK_APP(threadSafe_acqStart());
+            }
             break;
         default:
             return RP_EOOR;
@@ -691,11 +694,11 @@ int threadSafe_acqStop() {
 }
 
 float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset) {
-    return (volts + ampOffset) * probeAtt / ampScale;
+    return (volts * probeAtt + ampOffset) / ampScale;
 }
 
 float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset) {
-    return value * ampScale / probeAtt  - ampOffset;
+    return (value * ampScale - ampOffset) / probeAtt;
 }
 
 int scaleAmplitudeChannel(rp_channel_t channel, float volts, float *res) {
@@ -723,38 +726,39 @@ float viewIndexToTime(int index) {
 
 void calculateIntegral(rp_channel_t channel, float scale, float offset) {
     float dt = timeScale / samplesPerDivision;
-    view[RPAPP_OSC_SOUR_MATH*viewSize] = view[channel*viewSize]* dt * scale + offset;
+    view[RPAPP_OSC_SOUR_MATH*viewSize] = view[channel*viewSize]* dt;
     for (int i = 1; i < viewSize; ++i) {
-        view[RPAPP_OSC_SOUR_MATH*viewSize + i] =
-                (view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (view[channel*viewSize + i]* (dt))) * scale + offset;
+        view[RPAPP_OSC_SOUR_MATH*viewSize + i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (view[channel*viewSize + i]* (dt));
+        view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] = (view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + offset) * scale;
     }
+    view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize-1] = (view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize-1] + offset) * scale;
 }
 
 void calculateDevivative(rp_channel_t channel, float scale, float offset) {
     double dt2 = 2*timeScale / 1000 / samplesPerDivision;
     view[RPAPP_OSC_SOUR_MATH*viewSize] =
-            (float) ((view[channel*viewSize+1] - view[channel*viewSize]) / dt2 / 2 * scale + offset);
+            (float) ((view[channel*viewSize+1] - view[channel*viewSize]) / dt2 / 2 + offset) * scale;
     for (int i = 1; i < viewSize - 1; ++i) {
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] =
-                (float) ((view[channel*viewSize + i+1] - view[channel*viewSize + i-1]) / dt2 * scale + offset);
+                (float) ((view[channel*viewSize + i+1] - view[channel*viewSize + i-1]) / dt2  + offset) * scale;
     }
 }
 
 float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op, float scale, float offset) {
     switch (op) {
         case RPAPP_OSC_MATH_ADD:
-            return (v1 + v2) * scale + offset;
+            return (v1 + v2 + offset) * scale;
         case RPAPP_OSC_MATH_SUB:
-            return (v1 - v2) * scale + offset;
+            return (v1 - v2 + offset) * scale;
         case RPAPP_OSC_MATH_MUL:
-            return (v1 * v2) * scale + offset;
+            return (v1 * v2 + offset) * scale;
         case RPAPP_OSC_MATH_DIV:
             if (v2 != 0)
-                return (v1 / v2) * scale + offset;
+                return (v1 / v2 + offset) * scale;
             else
                 return v1 > 0 ? FLT_MAX : FLT_MIN;
         case RPAPP_OSC_MATH_ABS:
-            return (float) (fabs(v1) * scale + offset);
+            return (float) (fabs(v1) + offset) * scale;
         default:
             return 0;
     }
