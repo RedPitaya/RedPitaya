@@ -90,7 +90,6 @@ int osc_setViewSize(uint32_t size);
 int osc_getViewSize(uint32_t *size);
 int threadSafe_acqStart();
 int threadSafe_acqStop();
-float calcTrigLevel();
 float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset);
 int scaleAmplitudeChannel(rp_channel_t channel, float volts, float *res);
 float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset);
