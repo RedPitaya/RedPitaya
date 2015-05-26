@@ -130,7 +130,7 @@ CIntParameter out1TriggerSource("SOUR1_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TR
 CIntParameter out2TriggerSource("SOUR2_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_GATED_BURST);
 
 CFloatParameter out1ShowOffset("OUTPUT1_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
-CFloatParameter out2ShowOffset("OUTPUT1_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
+CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
 
 /***************************************************************************************
 *                                      CALIBATE                                        *
@@ -206,6 +206,7 @@ void UpdateParams(void) {
 
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &in1Offset.Value());
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &in2Offset.Value());
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &inMathOffset.Value());
 }
 
 float getMeasureValue(int measure) {
@@ -262,11 +263,11 @@ void UpdateSignals(void) {
 
     float data[dataSize.Value()];
     if (in1Show.Value()) {
-         if(in1InvShow.Value()){
-             rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
-         }else {
-             rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
-         }
+        if(in1InvShow.Value()){
+            rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
+        }else {
+            rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
+        }
 
         if (ch1.GetSize() != dataSize.Value())
             ch1.Resize(dataSize.Value());
