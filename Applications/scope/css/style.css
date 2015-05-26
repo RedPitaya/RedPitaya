@@ -439,8 +439,13 @@ area:hover {
   cursor: pointer;
 }
 
+#graphs_holder {
+  margin-top: 12px;
+  padding-top: 8px;
+  overflow: hidden;
+}
+
 #graphs {
-  margin-top: 20px;
   position: relative;
 }
 
@@ -606,7 +611,7 @@ area:hover {
   top: 30px;
 }
 
-#new_scale {
+#info_box {
   position: absolute;
   left: 15px;
   top: 8px;
