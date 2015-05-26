@@ -26,6 +26,30 @@ if (X.Value() != X.NewValue()) { \
 
 #define IS_NEW(X) X.Value() != X.NewValue()
 
+#define IF_VALUE_CHANGED_DEBUG(X, ACTION) \
+if (X.Value() != X.NewValue()) { \
+    float val = (float)X.NewValue(); \
+    fprintf(stderr, "------------  Got new value for %s:\t\t%f  at %s:%d\n", #X, val, __FILE__, __LINE__);\
+    int res = ACTION;\
+    if (res == RP_OK) { \
+        fprintf(stderr, "------------  Action %s\t\tSUCCES  at %s:%d\n", #ACTION, __FILE__, __LINE__); \
+        X.Update(); \
+        fprintf(stderr, "------------  Value updated to: %f   at %s:%d\n", (float)X.Value(), __FILE__, __LINE__); \
+    } else { \
+        fprintf(stderr, "------------  Action %s\t\treturnes %d - %s\t\t   at %s:%d\n", #ACTION, res, rpApp_GetError(res), __FILE__, __LINE__); \
+    }\
+}
+
+#define IF_VALUE_CHANGED_BOOL_DEBUG(X, ACTION1, ACTION2) \
+if (X.Value() != X.NewValue()) { \
+    fprintf(stderr, "------------  Got new value for %s:\t\t%s  at %s:%d\n", #X, X.NewValue() ? "ON" : "OFF", __FILE__, __LINE__);\
+    if (X.NewValue()) { \
+        int res = ACTION1;    X.Update();fprintf(stderr, "------------  Action %s returned %d   at %s:%d\n", #ACTION1, res, __FILE__, __LINE__); \
+    } else { \
+        int res = ACTION2;    X.Update();fprintf(stderr, "------------  Action %s returned %d   at %s:%d\n", #ACTION2, res, __FILE__, __LINE__);  }}
+
+#define IF_VALUE_CHANGED(X, A) IF_VALUE_CHANGED_DEBUG(X, A)
+#define IF_VALUE_CHANGED_BOOL(X, A1, A2)  IF_VALUE_CHANGED_BOOL_DEBUG(X, A1, A2)
 
 
 float getMeasureValue(int measure);
