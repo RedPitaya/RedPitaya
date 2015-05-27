@@ -32,6 +32,7 @@ UBOOT_DIR       = OS/u-boot
 SOC_DIR         = FPGA
 URAMDISK_DIR    = OS/buildroot
 NGINX_DIR       = Bazaar/nginx
+IDGEN_DIR       = Bazaar/tools/idgen
 MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
@@ -57,6 +58,7 @@ URAMDISK=$(BUILD)/uramdisk.image.gz
 LIBREDPITAYA=shared/libredpitaya/libredpitaya.a
 
 NGINX       = $(INSTALL_DIR)/sbin/nginx
+IDGEN       = $(INSTALL_DIR)/sbin/idgen
 MONITOR     = $(INSTALL_DIR)/bin/monitor
 GENERATE    = $(INSTALL_DIR)/bin/generate
 ACQUIRE     = $(INSTALL_DIR)/bin/acquire
@@ -82,7 +84,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) sdk rp_communication
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) sdk rp_communication
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -137,6 +139,10 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
+$(IDGEN):
+	$(MAKE) -C $(IDGEN_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
+	
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

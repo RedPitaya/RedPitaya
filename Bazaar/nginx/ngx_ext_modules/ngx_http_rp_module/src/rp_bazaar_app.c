@@ -280,14 +280,19 @@ inline int is_registered(const char *dir,
         return 0;
     }
 
-	int is_reg = 1;
-	if(app.verify_app_license_func)
-		is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
+    int is_reg = 1;
+    if(app.verify_app_license_func)
+        is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
 
     rp_bazaar_app_unload_module(&app);
 
     free(file);
-    
+
+    if(is_reg)    
+        fprintf(stderr, "App '%s' is registered\n", app_id);
+    else
+        fprintf(stderr, "App '%s' is not registered\n", app_id);
+
     return is_reg;
 }
 
@@ -335,7 +340,7 @@ inline int is_controller_ok(const char *dir,
         return 0;
     }
 
-	rp_bazaar_app_unload_module(&app);
+    rp_bazaar_app_unload_module(&app);
 	
     free(file);
 
@@ -378,8 +383,11 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
 
         /* We have an application */
 
+	int demo = !is_registered(dir, app_id, "controller.so");
+		
         if (verbose) {
             /* Attach whole info JSON */
+            cJSON_AddItemToObject(info, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
             cJSON_AddItemToObject(*json_root, app_id, info, pool);
         } else {
             /* Include version only */
@@ -391,13 +399,8 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                 continue;
             }
             
-            
-            char ver[256] = {0};
-            strcpy(ver, j_ver->valuestring);
-            if (!is_registered(dir, app_id, "controller.so"))
-            	strcat(ver, "_demo");
-
-            cJSON_AddItemToObject(*json_root, app_id,cJSON_CreateString(ver, pool), pool);
+            cJSON_AddItemToObject(*json_root, app_id, cJSON_CreateString(j_ver->valuestring, pool), pool);
+            cJSON_AddItemToObject(*json_root, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
             cJSON_Delete(j_ver, pool);
             cJSON_Delete(info, pool);
         }
@@ -507,33 +510,13 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     {
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_set_demo_mode_str);
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Cannot resolve function\n", file);
-    	fclose(file);
     }
-    else
-    {
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Resolve function\n", file);
-    	fclose(file);
-    }
-
-
 
     app->verify_app_license_func = dlsym(app->handle, c_verify_app_license_str);
     if(!app->verify_app_license_func)
     {
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Cannot resolve function c_verify_app_license_str\n", file);
-    	fclose(file);
-    }
-    else
-    {
-    	FILE* file = fopen("log.txt", "a+");
-    	fputs("Resolve function c_verify_app_license_str\n", file);
-    	fclose(file);
     }
 
 //end web socket functionality

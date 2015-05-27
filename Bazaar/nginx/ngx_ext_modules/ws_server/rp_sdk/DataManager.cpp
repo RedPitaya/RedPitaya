@@ -5,6 +5,8 @@
 #include "misc.h"
 
 CBooleanParameter IsDemoParam("is_demo", CBaseParameter::RO, false, 1);
+CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
+CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
 
 int dbg_printf(const char * format, ...)
 {
@@ -19,6 +21,15 @@ int dbg_printf(const char * format, ...)
 	}
 
 	return 0;
+}
+
+CDataManager::CDataManager() 
+	: m_params()
+	, m_signals()
+	, m_param_interval(5000)
+	, m_signal_interval(20)
+	, m_send_all_params(true)
+{
 }
 
 CDataManager* CDataManager::GetInstance()
@@ -87,7 +98,7 @@ std::string CDataManager::GetParamsJson()
 	JSONNode params(JSON_NODE);
 	params.set_name("parameters");
 	for(size_t i=0; i < m_params.size(); i++) {
-		if(m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO)
+		if((m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO) && (m_params[i]->IsValueChanged() || m_send_all_params))
 		{					
 			JSONNode n(JSON_NODE);
 			n = m_params[i]->GetJSONObject();		
@@ -98,6 +109,7 @@ std::string CDataManager::GetParamsJson()
 	JSONNode data_node(JSON_NODE);
 	data_node.set_name("data");
 	data_node.push_back(params);
+	m_send_all_params = false;
 	return data_node.write();
 }
 
@@ -123,6 +135,9 @@ void CDataManager::OnNewParams(std::string _params)
 	JSONNode n(JSON_NODE);
 	n = libjson::parse(_params);		
 	JSONNode m(JSON_NODE);
+	
+	for(size_t i=0; i < m_params.size(); i++)
+		m_params[i]->ClearNewValue();
 
 	for(size_t i=0; i < n.size(); i++) {
 		m = n.at(i);
@@ -136,7 +151,10 @@ void CDataManager::OnNewParams(std::string _params)
 					m_params[j]->SetValueFromJSON(m);
 			}
 		}
-        }
+	}
+
+	if(InCommandParam.IsNewValue())
+		m_send_all_params |= InCommandParam.NewValue() == "send_all_params";
 
 	::OnNewParams();
 }
@@ -147,6 +165,9 @@ void CDataManager::OnNewSignals(std::string _signals)
 	JSONNode n(JSON_NODE);
 	n = libjson::parse(_signals);	
 	JSONNode m(JSON_NODE);
+
+	for(size_t i=0; i < m_signals.size(); i++)
+		m_signals[i]->ClearNewValue();
 
 	for(size_t i=0; i < n.size(); i++) {
 		m = n.at(i);
@@ -160,8 +181,9 @@ void CDataManager::OnNewSignals(std::string _signals)
 					m_signals[j]->SetValueFromJSON(m);
 			}
 		}
-        }
-
+	}
+	
+	::OnNewSignals();
 }
 
 int CDataManager::GetParamInterval()
@@ -190,10 +212,10 @@ extern "C" int ws_set_params(const char *_params)
 	if(man)
 	{
 		man->OnNewParams(_params);
-		dbg_printf("Set params in test scope\n");
+		dbg_printf("Set params\n");
 		return 1;
 	}	
-	dbg_printf("Params were not set in test scope\n");
+	dbg_printf("Params were not set\n");
 	return 0;
 }
 
@@ -204,10 +226,8 @@ extern "C" const char * ws_get_params(void)
 	if(man)
 	{
 		res = man->GetParamsJson();
-//		dbg_printf("Get params in test scope\n");
 		return res.c_str();
 	}	
-//	dbg_printf("Params were not got in test scope\n");
 	return res.c_str();
 }
 
@@ -217,11 +237,11 @@ extern "C" int ws_set_signals(const char *_signals)
 	if(man)
 	{
 		man->OnNewSignals(_signals);
-		dbg_printf("Set signals in test scope\n");
+		dbg_printf("Set signals\n");
 		return 1;
 	}	
 	
-	dbg_printf("Signals were not set in test scope\n");	
+	dbg_printf("Signals were not set\n");	
 	return 0;
 }
 
@@ -232,10 +252,8 @@ extern "C" const char * ws_get_signals(void)
 	if(man)
 	{
 		res = man->GetSignalsJson();
-//		dbg_printf("Get signals in test scope\n");
 		return res.c_str();
 	}	
-//	dbg_printf("Signals were not got in test scope\n");
 	return res.c_str();	
 }
 
@@ -245,7 +263,7 @@ extern "C" void ws_set_params_interval(int _interval)
 	if(man)
 	{
 		man->SetParamInterval(_interval);
-		dbg_printf("Set params send interval in test scope\n");
+		dbg_printf("Set params send interval\n");
 	}
 }
 
@@ -267,7 +285,7 @@ extern "C" void ws_set_signals_interval(int _interval)
 	if(man)
 	{
 		man->SetSignalInterval(_interval);
-		dbg_printf("Set signals send interval in test scope\n");
+		dbg_printf("Set signals send interval\n");
 	}
 }
 
@@ -276,7 +294,6 @@ extern "C" int ws_get_signals_interval(void)
 	CDataManager * man = CDataManager::GetInstance();
 	if(man)
 	{
-		//dbg_printf("ws_get_signals_interval(void)\n");
 		int res = man->GetSignalInterval();
 		return res;
 	}
@@ -285,10 +302,7 @@ extern "C" int ws_get_signals_interval(void)
 
 extern "C" int ws_set_demo_mode(int a)
 {
-	FILE* file = fopen("log.txt", "a+");
-	fputs("ws_set_demo_mode()\n", file);
-	fclose(file);
-
+	dbg_printf("Set demo mode\n");
 	IsDemoParam.Set(true);
 	return 0;
 }
