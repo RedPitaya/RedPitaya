@@ -112,7 +112,52 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
     return RP_OK;
 }
 
+/* 32 bit integer comparator */
+int intcmp(const void *v1, const void *v2)
+{
+    return (*(int *)v1 - *(int *)v2);
+}
+
+/* 16 bit integer comparator */
+int int16cmp(const void *aa, const void *bb)
+{
+    const int16_t *a = aa, *b = bb;
+    return (*a < *b) ? -1 : (*a > *b);
+}
+
+/* Float comparator */
+int floatCmp(const void *a, const void *b) {
+    float fa = *(const float*) a, fb = *(const float*) b;
+    return (fa > fb) - (fa < fb);
+}
+
 /*----------------------------------------------------------------------------*/
+
+/**
+* @brief Converts calibration Full scale to volts. Scale is usually read from EPROM calibration parameters.
+* If parameter is 0, a factor 1 is returned -> no scaling.
+*
+* @param[in] fullScaleGain value of full voltage scale
+* @retval Scale in volts
+*/
+float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
+    /* no scale */
+    if (fullScaleGain == 0) {
+        return 1;
+    }
+    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
+}
+
+/**
+* @brief Converts scale voltage to calibration Full scale. Result is usually written to EPROM calibration parameters.
+*
+* @param[in] voltageScale Scale value in voltage
+* @retval Scale in volts
+*/
+uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale) {
+    return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
+}
+
 /**
  * @brief Calibrates ADC/DAC/Buffer counts and checks for limits
  *
@@ -139,7 +184,7 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
     }
 
     /* adopt ADC count with calibrated DC offset */
-    m += calib_dc_off;
+    m -= calib_dc_off;
 
     /* check limits */
     if(m < (-1 * (1 << (field_len - 1))))
@@ -161,17 +206,21 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
  * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
  * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+ * @param[in] calibScale Calibration scale factor, specified in [V]
  * @param[in] user_dc_off User specified DC offset, specified in [V]
  * @retval float Signal Value, expressed in user units [V]
  */
 
-float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float user_dc_off)
+float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off)
 {
     /* map ADC counts into user units */
     float ret_val = (calib_cnts * adc_max_v / (float)(1 << (field_len - 1)));
 
     /* and adopt the calculation with user specified DC offset */
     ret_val += user_dc_off;
+
+    /* adopt the calculation with calibration scaling */
+    ret_val *= calibScale / (FULL_SCALE_NORM/adc_max_v);
 
     return ret_val;
 }
@@ -187,15 +236,16 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
  * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
  * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+ * @param[in] calibScale Calibration scale factor, specified in [full scale] - EPROM calibration parameter storage format
  * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
  * @param[in] user_dc_off User specified DC offset, specified in [V]
  * @retval float Signal Value, expressed in user units [V]
  */
 
-float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int calib_dc_off, float user_dc_off)
+float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
 {
     int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, calib_dc_off);
-    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, user_dc_off);
+    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off);
 }
 
 /**
@@ -210,13 +260,20 @@ float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int cali
  * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
  * @param[in] voltage Voltage, specified in [V]
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
+ * @param[in] calibFS_LO True if calibrating for front size (out) low voltage
+ * @param[in] calibScale Calibration scale factor. If zero -> no scaling, specified in [full scale] - EPROM calibration parameter storage format
  * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
  * @param[in] user_dc_off User specified DC offset, , specified in [V]
  * @retval int ADC/DAC counts
  */
-uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int calib_dc_off, float user_dc_off)
+uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off)
 {
     int adc_cnts = 0;
+
+    /* adopt the calculation with calibration scaling. If 0 ->  no calibration */
+    if (calib_scale != 0) {
+        voltage /= cmn_CalibFullScaleToVoltage(calib_scale) / calibFS_LO ? 1 : (FULL_SCALE_NORM/adc_max_v);
+    }
 
     /* check and limit the specified voltage arguments towards */
     /* maximal voltages which can be applied on ADC inputs */
@@ -229,20 +286,21 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int c
     voltage -= user_dc_off;
 
     /* map voltage units into FPGA adc counts */
-    adc_cnts = (int)round(voltage * (float)((int)(1 << field_len)) / (2 * adc_max_v));
-
-    /* clip to the highest value (we are dealing with 14 bits only) */
-    if((voltage > 0) && (adc_cnts & (1 << (field_len - 1))))
-        adc_cnts = (1 << (field_len - 1)) - 1;
-    else
-        adc_cnts = adc_cnts & ((1 << (field_len)) - 1);
+    adc_cnts = (int)round(voltage * (float) (1 << field_len) / (2 * adc_max_v));
 
     /* adopt calculated ADC counts with calibration DC offset */
-    adc_cnts -= calib_dc_off;
+    adc_cnts += calib_dc_off;
 
-    // If offset is negative and turns adc_cnts from negative to positive, we just need to
-    // keep field_len bits
-    adc_cnts = adc_cnts & ((1 << (field_len)) - 1);
+    /* check and limit the specified cnt towards */
+    /* maximal cnt which can be applied on ADC inputs */
+    if(adc_cnts > (1 << (field_len - 1)) - 1)
+        adc_cnts = (1 << (field_len - 1)) - 1;
+    else if(adc_cnts < -(1 << (field_len - 1)))
+        adc_cnts = -1 << (field_len - 1);
+
+    /* if negative remove higher bits that represent negative number */
+    if (adc_cnts < 0)
+        adc_cnts = adc_cnts & ((1<<field_len)-1);
 
     return (uint32_t)adc_cnts;
 }

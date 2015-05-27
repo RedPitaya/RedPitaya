@@ -3,7 +3,7 @@
 #
 # (c) Red Pitaya  http://www.redpitaya.com
 #
-# Test app for library project file. To build executable for acquire utility run:
+# Library librpapp project file. To build the library run:
 # 'make all'
 #
 # This project file is written for GNU/Make software. For more details please 
@@ -17,51 +17,61 @@
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
-# List of compiled object files (not yet linked to executable)
-OBJS = test.o
+# Extensions
+CPPEXT   = .c
+CXXEXT   = .cpp
+OBJEXT   = .o
 
-CALIB_C = calibrateApp.c
+# Input/Output directories
 
-# Executable name
-TARGET=../testApp
-CALIBRATE=../calibrateApp
+OBJECTS_DIR = ../obj
+INSTALL_DIR ?= .
+SOURCE_DIR  = .
+OUTPUT_DIR  = ../../lib
+
+# Library name
+TARGET=$(OUTPUT_DIR)/librpapp.so
+
+# List of compiled object files
+OBJECTS =	common.o \
+		osciloscopeApp.o \
+		rpApp.o
+
+OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror
+CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
 SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../../lib
-LIBS= -lm -lpthread -lrp
+LIBS=-lm -lpthread
 
 # Main GCC executable (used for compiling and linking)
 CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
-# Installation directory
-INSTALL_DIR ?= .
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
-all: $(TARGET) $(CALIBRATE)
+all: $(TARGET)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
-%.o: %.c version.h
+$(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
+	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBPATH) $(LIBS)
-
-$(CALIBRATE):
-	$(CC) -o $@ $(CALIB_C) $(CFLAGS) $(LIBPATH) $(LIBS)
+	mkdir -p $(OUTPUT_DIR)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LDFLAGS)
 
 # Version header for traceability
 version.h:
@@ -69,10 +79,12 @@ version.h:
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
+	rm -rf $(INSTALL_DIR)/lib
+	rm -rf $(OUTPUT_DIR)
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
-	mkdir -p $(INSTALL_DIR)/bin
-	cp $(TARGET) $(INSTALL_DIR)/bin
+	mkdir -p $(INSTALL_DIR)/lib
+	cp  $(TARGET) $(INSTALL_DIR)/lib

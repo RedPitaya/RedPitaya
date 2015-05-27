@@ -29,6 +29,17 @@
         } \
 }
 
+#define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
+if ((CHANNEL) == RP_CH_1) { \
+	CHANNEL_1_ACTION; \
+} \
+else if ((CHANNEL) == RP_CH_2) { \
+	CHANNEL_2_ACTION; \
+} \
+else { \
+	return RP_EPN; \
+}
+
 #define SET_BITS(x,b) ((x) |= (b))
 #define UNSET_BITS(x,b) ((x) &= ~(b))
 #define SET_VALUE(x,b) ((x) = (b))
@@ -42,6 +53,8 @@
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 #define FLOAT_EPS 0.00001f
+
+#define FULL_SCALE_NORM     20.0    // V
 
 int cmn_Init();
 int cmn_Release();
@@ -57,9 +70,16 @@ int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
 int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* result);
 
+int intcmp(const void *a, const void *b);
+int int16cmp(const void *aa, const void *bb);
+int floatCmp(const void *a, const void *b);
+
+float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
+uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale);
+
 int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off);
-float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float user_dc_off);
-float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, int calib_dc_off, float user_dc_off);
-uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, int calib_dc_off, float user_dc_off);
+float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off);
+float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
+uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
 
 #endif /* COMMON_H_ */
