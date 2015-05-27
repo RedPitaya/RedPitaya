@@ -14,9 +14,7 @@
 
 
 #include <stdio.h>
-#include <sys/types.h>
 
-#include "version.h"
 #include "common.h"
 #include "housekeeping.h"
 
@@ -222,4 +220,16 @@ int hk_AreExCiPBitsSet(uint32_t bits, bool* result)
 int hk_AreExCiNBitsSet(uint32_t bits, bool* result)
 {
     return cmn_AreBitsSet(hk->ex_ci_n, bits, EX_CI_N_MASK, result);
+}
+
+/**
+ * Digital loop
+ */
+
+int hk_EnableDigitalLoop(bool enable) {
+    if (enable) {
+        return cmn_SetBits(&hk->digital_loop, 1, DIGITAL_LOOP_MASK);
+    } else {
+        return cmn_UnsetBits(&hk->digital_loop, 1, DIGITAL_LOOP_MASK);
+    }
 }

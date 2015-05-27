@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+<title>WebSocket++ Telemetry Client</title>
+</head>
+<body>
+
+<script type="text/javascript">
+var ws;
+var url;
+
+function connect() {
+	url = document.getElementById("server_url").value;
+	
+	if ("WebSocket" in window) {
+		ws = new WebSocket(url);
+	} else if ("MozWebSocket" in window) {
+		ws = new MozWebSocket(url);
+	} else {
+		document.getElementById("messages").innerHTML += "This Browser does not support WebSockets<br />";
+		return;
+	}
+	ws.onopen = function(e) {
+		document.getElementById("messages").innerHTML += "Client: A connection to "+ws.url+" has been opened.<br />";
+		
+		document.getElementById("server_url").disabled = true;
+		document.getElementById("toggle_connect").innerHTML = "Disconnect";
+		document.getElementById("toggle_connect").disabled = false;
+		document.getElementById("send_data").disabled = false;
+	};
+	
+	ws.onerror = function(e) {
+		document.getElementById("messages").innerHTML += "Client: An error occured, see console log for more details.<br />";
+		console.log(e);
+		cleanup_disconnect();
+	};
+	
+	ws.onclose = function(e) {
+		document.getElementById("messages").innerHTML += "Client: The connection to "+url+" was closed. ["+e.code+(e.reason != "" ? ","+e.reason : "")+"]<br />";
+		cleanup_disconnect();
+	};
+	
+	ws.onmessage = function(e) {
+		var receive = JSON.parse(e.data);
+
+		if(receive.signals) {
+			var signal1 = receive.signals.signal1;
+			var last_pos = signal1.value.length - 1;
+			document.getElementById("messages").innerHTML += "Server: signal 1 first element "+signal1.value[0]+"<br />";	
+			document.getElementById("messages").innerHTML += "Server: signal 1 last element "+signal1.value[last_pos]+"<br />";
+		}
+
+		if(receive.parameters) {
+			var param00 = receive.parameters.param00;
+			document.getElementById("messages").innerHTML += "Server: param00 "+param00.value+"<br />";
+
+			if(receive.parameters.param01) {
+				var param01 = receive.parameters.param01;
+				document.getElementById("messages").innerHTML += "Server: param01 "+param01.value+"<br />";	
+			}
+		}
+		
+	};
+}
+
+function disconnect() {
+	ws.close();
+}
+
+function cleanup_disconnect() {
+	document.getElementById("send_data").disabled = true;    
+	document.getElementById("server_url").disabled = false;	
+	document.getElementById("toggle_connect").innerHTML = "Connect";
+	document.getElementById("toggle_connect").disabled = false;
+}
+
+function toggle_connect() {
+	document.getElementById("toggle_connect").disabled = true;	
+	if (document.getElementById("server_url").disabled === false) {
+		connect();
+	} else {
+		disconnect();
+	}
+}
+
+function get_form_data() {
+	var url = document.getElementById("server_url").value;
+	var name = document.getElementById("user_name").value;
+	var json_data = {
+    		"url": url,
+    		"name": name 
+	}
+	return json_data;
+}
+
+function send_data() {
+	var msg = document.getElementById("user_name").value;
+  	ws.send(msg);
+}
+
+function generate_array() {
+	var array_size = 100;
+	var gen_array = [];
+	var pi = 3.14159;
+	var start_elem = (-1)*pi/2;
+	
+	for (i=0; i < array_size; i++) {
+		var res = start_elem + i*pi/array_size;
+		gen_array.push(res);
+	}
+
+	var json_data = {
+    		array: gen_array 
+	};
+
+	return JSON.stringify(json_data);
+}
+
+</script>
+
+<style>
+body,html {
+	margin: 0px;
+	padding: 0px;
+}
+#controls {
+	float:right;
+	background-color: #999;
+}
+
+</style>
+
+<div id="controls">
+	<div id="server">
+	<input type="text" name="server_url" id="server_url" value="ws://localhost:9002" /><br />
+	<button id="toggle_connect" onclick="toggle_connect();">Connect</button><br />
+	<input type="text" name="user_name" id="user_name" value="user" /><br />
+	<button id="send_data" disabled onclick="send_data();">Send</button>
+	</div>
+</div>
+<div id="messages"></div>
+
+</body>
+</html>

@@ -4,6 +4,8 @@ HTTP_MODULES="$HTTP_MODULES ngx_http_rp_module"
 rp_src_dir=$ngx_addon_dir/src
 rp_include_dir=$ngx_addon_dir/include
 
+buildroot_path=../../../OS/buildroot/buildroot-2014.02/output/build
+shared_path=../../../shared
 
 NGX_ADDON_DEPS="$NGX_ADDON_DEPS                               \
                $rp_include_dir/ngx_http_rp_module.h           \
@@ -19,7 +21,9 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS                               \
                 $rp_src_dir/rp_data_cmd.c                    \
                 $rp_src_dir/cJSON.c"
 
-CORE_LIBS="$CORE_LIBS -lm -ldl -lcurl -lredpitaya -L../build/lib/"
-CFLAGS="$CFLAGS -I $rp_include_dir -I../../../shared/include/"
+XILINX_PATH="/opt/Xilinx/SDK/2013.3"
+
+CORE_LIBS="$CORE_LIBS -L$shared_path/libredpitaya -L$buildroot_path/libcurl-7.35.0/lib/.libs -L$buildroot_path/openssl-1.0.1f/ -L$ngx_addon_dir/../ws_server/ -L$ngx_addon_dir/../ws_server/boost/lib/ -lstdc++ -lm -ldl -lcurl -lssl -lcrypto -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread"
+CFLAGS="$CFLAGS -I $rp_include_dir -I../../../shared/include/ -I$ngx_addon_dir/../ws_server/ -I$ngx_addon_dir/../ws_server/boost/include/"
 CFLAGS="$CFLAGS -DVERSION=$VERSION -DREVISION=$REVISION"
 
