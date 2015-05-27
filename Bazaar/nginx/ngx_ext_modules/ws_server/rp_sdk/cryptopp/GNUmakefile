@@ -1,4 +1,4 @@
-CXXFLAGS = -DNDEBUG -g -O0
+CXXFLAGS = -DNDEBUG -g -Os
 # -O3 fails to link on Cygwin GCC version 4.5.3
 # -fPIC is supported. Please report any breakage of -fPIC as a bug.
 CXXFLAGS += -fPIC

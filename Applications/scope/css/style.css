@@ -154,13 +154,13 @@ area:hover {
   border: 1px solid #999;
 }
 
-.horizontline {
+.buf-main-line {
   margin: 5px 1px 5px 1px;
   background-color: #cdcccc;
   height: 2px;
 }
 
-.red-horizont-line {
+.buf-red-line-holder {
   height: 12px;
   border-left: 1px solid #999;
   border-right: 1px solid #999;
@@ -169,14 +169,14 @@ area:hover {
   width: 100px;
 }
 
-.red-line {
+.buf-red-line {
   width: 100px;
   height: 2px;
   background-color: #ce3234;
   margin-top: 5px;
 }
 
-.fixator {
+.buf-fixator {
   margin-left: 20%;
   height: 12px;
   width: 3px;
@@ -281,11 +281,11 @@ area:hover {
   color: #31b44b !important;
 }
 
-.out1, .btn.out1, .out1.focus {
+.output1, .btn.output1, .output1.focus {
   color: #9595ca !important;
 }
 
-.out2, .btn.out2, .out2.focus {
+.output2, .btn.output2, .output2.focus {
   color: #ee3739 !important;
 }
 
@@ -297,7 +297,7 @@ area:hover {
   color: #75cede !important;
 }
 
-.ch1.active, .ch2.active, .out1.active, .out2.active, .math.active, .trig.active {
+.ch1.active, .ch2.active, .output1.active, .output2.active, .math.active, .trig.active {
   color: #111 !important;
 }
 
@@ -389,7 +389,7 @@ area:hover {
   color: #fff;
 }
 
-.setfiled {
+.setfield {
   color: #999;
   background-color: transparent;
   border: 0px;
@@ -459,9 +459,9 @@ area:hover {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: 10;
   margin-top: -8px;
   display: none;
+  z-index: 10;
 }
 
 #time_offset_arrow {
@@ -473,11 +473,9 @@ area:hover {
   margin: -2px 0 0;
 }
 
-#trigger_level {
+.hline {
   height: 2px;
-  line-height: 2px;
-  overflow: hidden;
-  background-color: #ccc;
+  border-top: 2px dashed #ccc;
   position: absolute;
   left: 1px;
   right: 1px;
@@ -487,7 +485,23 @@ area:hover {
   z-index: 9;
 }
 
-#trig_level_arrow {
+.vline {
+  width: 2px;
+  border-right: 2px dashed #ccc;
+  position: absolute;
+  top: 1px;
+  bottom: 9px;
+  left: 0;
+  opacity: 0.8;
+  display: none;
+  z-index: 9;
+}
+
+#trigger_level.hline {
+  border-top-style: solid;
+}
+
+.harrow {
   position: absolute;
   right: 0;
   top: 0;
@@ -496,9 +510,105 @@ area:hover {
   z-index: 12;
 }
 
+.varrow {
+  position: absolute;
+  left: 0;
+  bottom: 8px;
+  margin-left: -7px;
+  display: none;
+  z-index: 12;
+}
+
+.cur_info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 10px;
+  color: #fff;
+  background-color: #000;
+  line-height: 12px;
+  padding: 1px 3px;
+  white-space: nowrap;
+  display: none;
+  z-index: 14;
+}
+
+#cur_x1_info.cur_info, #cur_x2_info.cur_info {
+  top: 2px;
+  margin-left: 3px;
+}
+
+#cur_y1_info.cur_info, #cur_y2_info.cur_info {
+  left: 2px;
+  margin-top: -15px;
+}
+
+#cur_x_diff {
+  font-family: "Glyphicons Halflings"; 
+  font-size: 11px;
+  line-height: 1; 
+  border-bottom: 2px solid #ccc; 
+  margin: 0 5px;
+  width: 100px;
+  height: 7px; 
+  position: absolute;
+  left: 0;
+  top: 40px;
+  display: none;
+  z-index: 13;
+}
+
+#cur_x_diff:before {
+  content: "\e079";
+  margin-left: -5px;
+}
+
+#cur_x_diff:after {
+  content: "\e080";
+  margin-right: -5px;
+  float: right;
+}
+
+#cur_y_diff {
+  font-family: "Glyphicons Halflings";
+  font-size: 11px;
+  border-right: 2px solid #ccc;
+  height: 100px;
+  width: 7px;
+  position: absolute;
+  left: 50px;
+  top: 0;
+  display: none;
+  z-index: 13;
+}
+
+#cur_y_diff:before {
+  content: "\e113";
+  position: absolute;
+  top: -5px;
+  left: 1px;
+  line-height: 1;
+}
+
+#cur_y_diff:after {
+  content: "\e114";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  line-height: 1;
+}
+
+#cur_y_diff_info.cur_info {
+  left: 59px;
+}
+
+#cur_x_diff_info.cur_info {
+  top: 30px;
+}
+
 #new_scale {
   position: absolute;
   left: 15px;
   top: 8px;
-  z-index: 12;
+  z-index: 15;
 }

@@ -6,7 +6,7 @@
 class CDataManager
 {
 private: 
-	CDataManager() { }
+	CDataManager();
 	CDataManager( const CDataManager&);  
 	CDataManager& operator=( CDataManager& );
 	
@@ -14,6 +14,7 @@ private:
 	std::vector<CBaseParameter*> m_signals;
 	int m_param_interval; //parameters send time interval in milliseconds 
 	int m_signal_interval; //signals send time interval in milliseconds
+	bool m_send_all_params;
 	
 public:
 	static CDataManager* GetInstance();
@@ -44,6 +45,7 @@ int dbg_printf(const char * format, ...);
 void UpdateParams(void);
 void UpdateSignals(void);
 void OnNewParams(void);
+void OnNewSignals(void);
 
 // external interface for websockets server
 extern "C" void ws_set_params_interval(int _interval);

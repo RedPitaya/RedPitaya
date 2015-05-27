@@ -14,7 +14,6 @@ struct TParam
 	BaseT max;
 	int access_mode;
 	int fpga_update;
-	int size;
 };
 
 //To get value from JSON object
@@ -47,6 +46,14 @@ inline bool GetValueFromJSON<bool>(JSONNode _node, const char* _at)
 	return res;
 }
 
+//bool specialization of function
+template <>
+inline std::string GetValueFromJSON<std::string>(JSONNode _node, const char* _at)
+{	
+	std::string res = _node.at(_at).as_string();
+	return res;
+}
+
 //std::vector<int> specialization of function
 template <>
 inline std::vector<int> GetValueFromJSON<std::vector<int> >(JSONNode _node, const char* _at)
@@ -68,6 +75,21 @@ inline std::vector<float> GetValueFromJSON<std::vector<float> >(JSONNode _node, 
 {	
 	JSONNode n = _node.at(_at);
 	std::vector<float> res;
+	JSONNode::const_iterator i = n.begin();
+    	while (i != n.end()){
+        	res.push_back(i->as_float());
+        	++i;
+    	}
+
+	return res;
+}
+
+//std::vector<float> specialization of function
+template <>
+inline std::vector<double> GetValueFromJSON<std::vector<double> >(JSONNode _node, const char* _at)
+{	
+	JSONNode n = _node.at(_at);
+	std::vector<double> res;
 	JSONNode::const_iterator i = n.begin();
     	while (i != n.end()){
         	res.push_back(i->as_float());
