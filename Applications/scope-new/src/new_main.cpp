@@ -6,14 +6,13 @@
 #include <math.h>
 
 CFloatSignal Signal1("signal1", 2048, 0.f);
-/*
 CFloatSignal Signal2("signal2", 2048, 0.f);
 CFloatSignal Signal3("signal3", 2048, 0.f);
 CFloatSignal Signal4("signal4", 2048, 0.f);
 CFloatSignal Signal5("signal5", 2048, 0.f);
-*/
+CFloatSignal Signal6("signal6", CBaseParameter::WO, 4, 0.f);
+
 CIntParameter MyParameter00("param00", CBaseParameter::RW, 22, 1, 20, 50);
-/*
 CIntParameter MyParameter01("param01", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter02("param02", CBaseParameter::RW, 22, 1, 20, 50);
 CIntParameter MyParameter03("param03", CBaseParameter::RW, 22, 1, 20, 50);
@@ -94,9 +93,8 @@ CFloatParameter MyParameter76("param76", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter77("param77", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter78("param78", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
 CFloatParameter MyParameter79("param79", CBaseParameter::RW, 2.3, 1, 2.0, 5.0);
-*/
-//CBooleanParameter MyParameter80("param80", CBaseParameter::RW, false, 1);
-/*
+
+CBooleanParameter MyParameter80("param80", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter81("param81", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter82("param82", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter83("param83", CBaseParameter::RW, false, 1);
@@ -116,7 +114,7 @@ CBooleanParameter MyParameter96("param96", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter97("param97", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter98("param98", CBaseParameter::RW, false, 1);
 CBooleanParameter MyParameter99("param99", CBaseParameter::RW, false, 1);
-*/
+
 void UpdateParams(void)
 {
 	// do something
@@ -141,5 +139,14 @@ void OnNewParams(void)
 {
 	// do something
 	//CDataManager::GetInstance()->UpdateAllParams();
+}
+
+void OnNewSignals(void)
+{
+	if(Signal6.IsNewValue())
+		dbg_printf("\tSignal6.IsNewValue()\n");
+
+	// do something
+	//CDataManager::GetInstance()->UpdateAllSignals();
 }
 
