@@ -1,6 +1,6 @@
 body {
   color: #cdcccc;
-  overflow: hidden; 
+  overflow: auto; 
   padding-right: 0 !important;
 }
 
@@ -244,7 +244,7 @@ area:hover {
 
 #info {
   margin-top: 10px;
-  min-height: 100px;
+  min-height: 50px;
 }
 
 .left-info {
@@ -445,7 +445,7 @@ area:hover {
 }
 
 #graph_grid {
-  border: 1px solid #5d5d5c;
+  border: 1px solid #343433;
   margin-bottom: 2px;
 }
 
@@ -477,7 +477,7 @@ area:hover {
 }
 
 .waterfall-holder {
-  margin: 0px 0px 10px 0px;
+  margin: 0px 11px 10px 29px;
   position: relative;
 }
 
@@ -486,4 +486,24 @@ area:hover {
   width: 100%;
   height: auto;
   max-height: 100px;
+}
+
+.waterfall_title {
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -webkit-transform:  rotate(-90deg);
+  transform-origin: 0 30px 0;
+  -o-transform-origin: 0 30px 0;
+  -ms-transform-origin: 0 30px 0;
+  -moz-transform-origin: 0 30px 0;
+  -webkit-transform-origin: 0 30px 0;
+}
+
+.pull-right {
+  display: none;
 }
