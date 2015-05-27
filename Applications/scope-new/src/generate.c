@@ -526,7 +526,7 @@ int generate_update(rp_app_params_t *params)
     float ch1_arb[AWG_SIG_LEN];
     float ch2_arb[AWG_SIG_LEN];
     
-    int wrap;
+    int wrap = 0;
     
     //int invalid_file=0;
     

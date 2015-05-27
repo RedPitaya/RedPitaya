@@ -16,7 +16,6 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "version.h"
 #include "common.h"
 #include "calib.h"
 #include "oscilloscope.h"
@@ -42,6 +41,9 @@ static const uint64_t ADC_SAMPLE_PERIOD = 8;
 
 /* @brief Number of ADC acquisition bits. */
 static const int ADC_BITS = 14;
+
+/* @brief ADC acquisition bits mask. */
+static const int ADC_BITS_MAK = 0x3FFF;
 
 /* @brief Currently set Gain state */
 static rp_pinState_t gain_ch_a = RP_LOW;
@@ -159,6 +161,10 @@ static int setEqFilters(rp_channel_t channel)
 
 /*----------------------------------------------------------------------------*/
 
+int acq_SetArmKeep(bool enable) {
+    return osc_SetArmKeep(enable);
+}
+
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 {
 
@@ -183,8 +189,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     *gain = state;
 
     // And recalculate new values...
-    int status = RP_OK;
-    status = acq_SetChannelThreshold(channel, ch_thr);
+    int status = acq_SetChannelThreshold(channel, ch_thr);
     if (status == RP_OK) {
         status = acq_SetChannelThresholdHyst(channel, ch_hyst);
     }
@@ -394,7 +399,7 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 
 int acq_GetSamplingRateHz(float* sampling_rate)
 {
-    float max_rate = 125000000.0;
+    float max_rate = 125000000.0f;
 
     rp_acq_decimation_t decimation;
     ECHECK(acq_GetDecimation(&decimation));
@@ -445,10 +450,10 @@ int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
 
 int acq_GetTriggerState(rp_acq_trig_state_t* state)
 {
-    rp_acq_trig_src_t source;
-    ECHECK(osc_GetTriggerSource(&source));
+    bool stateB;
+    ECHECK(osc_GetTriggerState(&stateB));
 
-    if (source == RP_TRIG_SRC_DISABLED) {
+    if (stateB) {
         *state=RP_TRIG_STATE_TRIGGERED;
     }
     else{
@@ -468,16 +473,6 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 		trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
 	}
 
-	/*
-    if (trig_dly > ADC_BUFFER_SIZE) {
-        if (updateMaxValue) {
-        	trig_dly = ADC_BUFFER_SIZE;
-        }
-        else {
-            return RP_EOOR;
-        }
-    }
-    */
     ECHECK(osc_SetTriggerDelay(trig_dly));
     triggerDelayInNs = false;
     return RP_OK;
@@ -505,6 +500,10 @@ int acq_GetTriggerDelayNs(int64_t* time_ns)
     ECHECK(acq_GetTriggerDelay(&samples));
     *time_ns=cnvSmplsToTime(samples);
     return RP_OK;
+}
+
+int acq_GetPreTriggerCounter(uint32_t* value) {
+    return osc_GetPreTriggerCounter(value);
 }
 
 int acq_GetWritePointer(uint32_t* pos)
@@ -540,17 +539,25 @@ int acq_GetTriggerLevel(float *voltage)
 
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 {
-    float gain;
+    float gainV;
+    rp_pinState_t gain;
 
-    ECHECK(acq_GetGainV(channel, &gain));
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));;
 
-    if (fabs(voltage) - fabs(gain) > FLOAT_EPS) {
+    if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
+
+    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, gain == RP_HIGH ? false : true, calibScale, dc_offs, 0.0);
+
+    // We cut high bits of negative numbers
+    cnt = cnt & ((1 << ADC_BITS) - 1);
+
     if (channel == RP_CH_1) {
         return osc_SetThresholdChA(cnt);
     }
@@ -561,7 +568,8 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 {
-    float gain;
+    float gainV;
+    rp_pinState_t gain;
     uint32_t cnts;
 
     if (channel == RP_CH_1) {
@@ -571,11 +579,14 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
         ECHECK(osc_GetThresholdChB(&cnts));
     }
 
-    ECHECK(acq_GetGainV(channel, &gain));
-    rp_calib_params_t calib = calib_GetParams();
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));
 
+    rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
+
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
 
     return RP_OK;
 }
@@ -602,17 +613,21 @@ int acq_GetTriggerHyst(float *voltage)
 
 int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
 {
-    float gain;
+    float gainV;
+    rp_pinState_t gain;
 
-    ECHECK(acq_GetGainV(channel, &gain));
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));;
 
-    if (fabs(voltage) - fabs(gain) > FLOAT_EPS) {
+    if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gain, dc_offs, 0.0);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
+
+    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, gain == RP_HIGH ? false : true, calibScale, dc_offs, 0.0);
     if (channel == RP_CH_1) {
         return osc_SetHysteresisChA(cnt);
     }
@@ -623,7 +638,8 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
 
 int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 {
-    float gain;
+    float gainV;
+    rp_pinState_t gain;
     uint32_t cnts;
 
     if (channel == RP_CH_1) {
@@ -633,18 +649,27 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
         ECHECK(osc_GetHysteresisChB(&cnts));
     }
 
-    ECHECK(acq_GetGainV(channel, &gain));
-    rp_calib_params_t calib = calib_GetParams();
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));
 
+    rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
+
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
 
     return RP_OK;
 }
 
 int acq_Start()
 {
-    return osc_WriteDataIntoMemory(true);
+    ECHECK(osc_WriteDataIntoMemory(true));
+    return RP_OK;
+}
+
+int acq_Stop()
+{
+    return osc_WriteDataIntoMemory(false);
 }
 
 int acq_Reset()
@@ -694,7 +719,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS;
+        cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
 
         buffer[i] = cmn_CalibCnts(ADC_BITS, cnts, dc_offs);
     }
@@ -748,18 +773,21 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
 {
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
-    float gain;
-    ECHECK(acq_GetGainV(channel, &gain));
+    float gainV;
+    rp_pinState_t gain;
+    ECHECK(acq_GetGainV(channel, &gainV));
+    ECHECK(acq_GetGain(channel, &gain));
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = (channel == RP_CH_1 ? calib.fe_ch1_dc_offs : calib.fe_ch2_dc_offs);
+    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
-        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gain, dc_offs, 0.0);
+        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
     }
 
     return RP_OK;
@@ -816,6 +844,7 @@ int acq_GetBufferSize(uint32_t *size) {
  * @return
  */
 int acq_SetDefault() {
+    ECHECK(acq_SetTriggerLevel(0));
     ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
     ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, 0.0));
@@ -826,7 +855,6 @@ int acq_SetDefault() {
     ECHECK(acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED));
     ECHECK(acq_SetTriggerDelay(0, false));
     ECHECK(acq_SetTriggerDelayNs(0, false));
-    ECHECK(acq_SetTriggerLevel(0));
 
     return RP_OK;
 }
