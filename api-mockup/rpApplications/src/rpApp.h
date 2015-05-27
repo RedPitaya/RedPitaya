@@ -34,6 +34,8 @@ extern "C" {
 #define RP_APP_ENS  101
 /** Failed to allocate array */
 #define RP_EAA      102
+/** Failed to calculate period */
+#define RP_APP_ECP   103
 
 ///@}
 

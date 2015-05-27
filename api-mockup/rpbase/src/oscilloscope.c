@@ -12,10 +12,6 @@
  * for more details on the language used herein.
  */
 
-#include <stdio.h>
-#include <sys/types.h>
-
-#include "version.h"
 #include "common.h"
 #include "oscilloscope.h"
 
@@ -28,9 +24,6 @@ static const int OSC_BASE_SIZE = 0x30000;
 
 // Oscilloscope Channel B input signal buffer offset
 #define OSC_CHB_OFFSET 0x20000
-
-// Oscilloscope signal A and B length
-#define OSC_SIG_LEN (16*1024)
 
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
@@ -290,6 +283,7 @@ static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
 static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
 static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2st bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
+static const uint32_t ARM_KEEP_MASK         = 0xF;          // (4 bit)
 
 
 /**
@@ -373,11 +367,21 @@ int osc_ResetWriteStateMachine()
     return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
 }
 
-int osc_GetTriggerState(bool *received) {
+int osc_SetArmKeep(bool enable)
+{
+    if (enable)
+        return cmn_SetBits(&osc_reg->conf, 0x8, ARM_KEEP_MASK);
+    else
+        return cmn_UnsetBits(&osc_reg->conf, 0x8, ARM_KEEP_MASK);
+}
+
+int osc_GetTriggerState(bool *received)
+{
     return cmn_AreBitsSet(osc_reg->conf, (0x1 << 2), TRIG_ST_MCH_MASK, received);
 }
 
-int osc_GetPreTriggerCounter(uint32_t *value) {
+int osc_GetPreTriggerCounter(uint32_t *value)
+{
     return cmn_GetValue(&osc_reg->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
 }
 
