@@ -22,10 +22,6 @@ OBJS = discovery.o cJSON.o
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 
-SHARED=../../shared/
-DEPLIBS_DIR=build/
-DEPLIBS=$(DEPLIBS_DIR)/lib/libcurl.so
-
 # Executable name
 TARGET=discovery
 
@@ -34,7 +30,13 @@ CFLAGS=-g -std=gnu99 -Wall -Werror -I../../shared/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lcurl -lredpitaya -L$(DEPLIBS_DIR)/lib/
+BUILDROOT_PATH=../../OS/buildroot/buildroot-2014.02/output/build
+SHARED_PATH=../../shared
+LIBS=-lm
+LIBS+= -lredpitaya -L$(SHARED_PATH)/libredpitaya
+LIBS+= -lcurl -L$(BUILDROOT_PATH)/libcurl-7.35.0/lib/.libs
+LIBS+= -lssl -lcrypto -L$(BUILDROOT_PATH)/openssl-1.0.1f
+LIBS+= -lz -lcrypto -L$(BUILDROOT_PATH)/zlib-1.2.8
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
@@ -66,18 +68,12 @@ all: $(TARGET)
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
-$(TARGET): $(OBJS) $(DEPLIBS)
+$(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-
-$(DEPLIBS):
-	mkdir -p $(DEPLIBS_DIR)
-	$(MAKE) -C $(SHARED)
-	$(MAKE) -C $(SHARED) install INSTALL_DIR=$(abspath $(DEPLIBS_DIR))
 
 # Clean target - when called it cleans all object files and executables.
 clean:
 	rm -f $(TARGET) *.o *~
-	rm -rf $(DEPLIBS_DIR)
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.

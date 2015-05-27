@@ -84,11 +84,6 @@ const char* rp_GetVersion()
     return version;
 }
 
-rp_calib_params_t rp_GetCalibrationSettings()
-{
-    return calib_GetParams();
-}
-
 const char* rp_GetError(int errorCode) {
     switch (errorCode) {
         case RP_OK:
@@ -140,6 +135,43 @@ const char* rp_GetError(int errorCode) {
         default:
             return "Unknown error";
     }
+}
+
+/**
+ * Digital loop
+ */
+int rp_EnableDigitalLoop(bool enable) {
+    return hk_EnableDigitalLoop(enable);
+}
+
+
+/**
+ * Calibrate methods
+ */
+
+rp_calib_params_t rp_GetCalibrationSettings()
+{
+    return calib_GetParams();
+}
+
+int rp_CalibrateFrontEndOffset(rp_channel_t channel) {
+    return calib_SetFrontEndOffset(channel);
+}
+
+int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
+    return calib_SetFrontEndScaleLV(channel, referentialVoltage);
+}
+
+int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
+    return calib_SetFrontEndScaleHV(channel, referentialVoltage);
+}
+
+int rp_CalibrateBackEndOffset(rp_channel_t channel) {
+    return calib_SetBackEndOffset(channel);
+}
+
+int rp_CalibrateBackEndScale(rp_channel_t channel) {
+    return calib_SetBackEndScale(channel);
 }
 
 /**
@@ -222,6 +254,11 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
  * Acquire methods
  */
 
+int rp_AcqSetArmKeep(bool enable)
+{
+    return acq_SetArmKeep(enable);
+}
+
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
     return acq_SetDecimation(decimation);
@@ -297,6 +334,10 @@ int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
     return acq_GetTriggerDelayNs(time_ns);
 }
 
+int rp_AcqGetPreTriggerCounter(uint32_t* value) {
+    return acq_GetPreTriggerCounter(value);
+}
+
 int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state)
 {
     return acq_GetGain(channel, state);
@@ -308,7 +349,7 @@ int rp_AcqGetGainV(rp_channel_t channel, float* voltage)
 }
 
 int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
-{   
+{
     return acq_SetGain(channel, state);
 }
 
@@ -347,6 +388,10 @@ int rp_AcqStart()
     return acq_Start();
 }
 
+int rp_AcqStop()
+{
+    return acq_Stop();
+}
 int rp_AcqReset()
 {
     return acq_Reset();
