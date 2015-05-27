@@ -20,4 +20,7 @@ public:
 	virtual JSONNode GetJSONObject() = 0;	//get JSON-formatted string with parameters or signals
 	virtual void SetValueFromJSON(JSONNode _node) = 0;	// set the m_TmpValue->value from JSON object
 	virtual AccessMode GetAccessMode() const = 0;
+	virtual bool IsValueChanged() const = 0;
+	virtual bool IsNewValue() const = 0;
+	virtual void ClearNewValue() = 0;
 };
