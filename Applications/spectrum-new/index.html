@@ -42,9 +42,6 @@
 
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-              <!-- li><a href="#" data-toggle="modal" data-target="#settings">SETTINGS</a></li -->
-              <!-- li><a href="#" data-toggle="modal" data-target="#export">EXPORT</a></li -->
-              <li><a id="SPEC_SINGLE" href="#">SINGLE</a></li>
               <li><a id="SPEC_AUTOSCALE" href="#">AUTO</a></li>
               <li>
                 <a id="SPEC_RUN" href="#">RUN</a>
@@ -151,22 +148,19 @@
         </div>
         
         <div id="ctrl_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-12 option-content close-dialog">
+          <div class="col-xs-6 option-content close-dialog">
             <div class="right-menu-option">
               <img src="img/arrow_nav_left.png">
-              Controls
+               Controls
             </div>
           </div> 
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Freq. range:</span>
-              <select id="freq_range" class="form-control styled-select">
-                <option value="0">62.5 MHz</option>
-                <option value="1">7.8 MHz</option>
-				<option value="2">976 KHz</option>
-				<option value="3">61 KHz</option>
-				<option value="4">7.6 KHz</option>
-				<option value="5">953 Hz</option>
+              <span class="col-info">Freq. unit:</span>
+              <select id="freq_unit" class="form-control styled-select">
+                <option value="0">Hz</option>
+                <option value="1">kHz</option>
+		<option value="2">MHz</option>
               </select>
             </div>
           </div>
@@ -266,10 +260,6 @@
         </div>
         <div id="graphs">
           <canvas id="graph_grid"></canvas>
-          <img id="ch1_offset_arrow" class="y-offset-arrow" src="img/ch1-offset-arrow.png">
-          <img id="ch2_offset_arrow" class="y-offset-arrow" src="img/ch2-offset-arrow.png">
-          <img id="time_offset_arrow" src="img/time-offset-arrow.png">
-          <div id="new_scale"></div>
         </div>
         <div id="info" class="clear">
           <div class="left-info">
@@ -284,17 +274,15 @@
           </div>
           <div id="info-meas"></div>
           <div class="pull-right">
-            Frequency <span id="SPEC_TIME_SCALE">- </span><span id="freq_unit">Hz</span>/div <br />
-         <!--   Trig <img style="margin: -2px 0px 0px 0px;" src="img/toparrow.png"> IN1 <span id="trig_mv">- dBm</span><br />
-            <img src="img/tarrow.png"> <span id="SPEC_TIME_OFFSET">- </span><span id="SPEC_time_scale_units">Hz</span><br />-->
+            Frequency <span id="SPEC_TIME_SCALE">- </span><span id="freq_scale_unit">Hz</span>/div <br />
           </div>
         </div>
 		<div class="waterfall-holder clearfix">
-			<div class="ch1">Channel 1</div>
+			<div class="waterfall_title ch1">Channel 1</div>
 			<img id="waterfall_ch1" src="img/wat_nodata.jpg">
 		</div>
         <div class="waterfall-holder clearfix">
-            <div class="ch2">Channel 2</div>
+            <div class="waterfall_title ch2">Channel 2</div>
             <img id="waterfall_ch2" src="img/wat_nodata.jpg">
         </div>
       </div>
