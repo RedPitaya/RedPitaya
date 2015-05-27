@@ -22,11 +22,8 @@
     'ch1' : '#f3ec1a',
     'ch2' : '#31b44b'
   };
-  
-
-  //TODO frequency steps in Hz, KHz, MHz
-  SPEC.freq_range_max = [62.5, 7.8, 976, 61, 7.6, 953];
-
+  SPEC.freq_unit = ['Hz', 'kHz', 'MHz'];
+	
   SPEC.time_steps = [
     // Hz
     1, 2, 5, 10, 20, 50, 100, 200, 500,
@@ -39,13 +36,11 @@
   // Voltage scale steps in volts
   //TODO power steps in dBm
   SPEC.voltage_steps = [
-    // Millivolts
-    1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
-    // Volts
-    1, 2, 5
+    // dBm
+    1, 2, 5, 10, 20, 50, 100
   ];
   SPEC.points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).  
-
+  SPEC.scale_points_size = 10; 
   // App state
   SPEC.state = {
     socket_opened: false,
@@ -205,62 +200,18 @@
 		   // $('#waterfall_ch1').attr('src', config.waterf_img_path + 'wat1_' + img_num + '.jpg');
 		   // $('#waterfall_ch2').attr('src', config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
-			/*
-          // Show/hide Y offset arrows
-          if(param_name == 'SPEC_CH1_OFFSET') {
-            var zero_pos = ($('#graph_grid').outerHeight() + 7) / 2;
-            
-            if(new_params['CH1_SHOW'].value) {
-              
-              // Change arrow position only if arrow is hidden or old/new values are not the same
-              if(!$('#ch1_offset_arrow').is(':visible') || SPEC.params.orig[param_name].value != new_params[param_name].value) {
-                var volt_per_px = (new_params['SPEC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-                var px_offset = -(new_params['SPEC_CH1_OFFSET'].value / volt_per_px - parseInt($('#ch1_offset_arrow').css('margin-top')) / 2);
-
-                $('#ch1_offset_arrow').css('top', zero_pos + px_offset).show();
-              }
-            }
-            else {
-              $('#ch1_offset_arrow').hide();
-            }
-          }
-          else if(param_name == 'SPEC_CH2_OFFSET') {
-            if(new_params['CH2_SHOW'].value) {
-              
-              // Change arrow position only if arrow is hidden or old/new values are not the same
-              if(!$('#ch2_offset_arrow').is(':visible') || SPEC.params.orig[param_name].value != new_params[param_name].value) {
-                var volt_per_px = (new_params['SPEC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-                var px_offset = -(new_params['SPEC_CH2_OFFSET'].value / volt_per_px - parseInt($('#ch2_offset_arrow').css('margin-top')) / 2);
-
-                $('#ch2_offset_arrow').css('top', zero_pos + px_offset).show();
-              }
-            }
-            else {
-              $('#ch2_offset_arrow').hide();
-            }
-          }
-          // Time offset arrow
-          else if(param_name == 'SPEC_TIME_OFFSET') {
-            
-            // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#time_offset_arrow').is(':visible') || SPEC.params.orig[param_name].value != new_params[param_name].value) {
-              var zero_pos = ($('#graph_grid').outerWidth() + 2) / 2;
-              var ms_per_px = (new_params['SPEC_TIME_SCALE'].value * 10) / $('#graph_grid').outerWidth();
-              var px_offset = -(new_params['SPEC_TIME_OFFSET'].value / ms_per_px + $('#time_offset_arrow').width()/2 + 1);
-
-              $('#time_offset_arrow').css('left', zero_pos + px_offset).show();
-            }
-          }
-        */
+		
         // Do not change fields from dialogs when user is editing something        
         if(!SPEC.state.editing || field.closest('.menu-content').length == 0) {
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
 
-			if(param_name == 'freq_range' || param_name == 'xmin' || param_name == 'xmax')	
+			if(param_name == 'xmin' || param_name == 'xmax' || param_name == 'freq_unit')	
 			{	
 				SPEC.updateZoom();
-				$('.freeze.active').removeClass('active');	
+
+				$('#freq_scale_unit').html(SPEC.freq_unit[new_params['freq_unit'].value]);
+				$('.freeze.active').removeClass('active');
 			}
           }
           else if(field.is('button')) {
@@ -270,35 +221,19 @@
             var radios = $('input[name="' + param_name + '"]');
             
             radios.closest('.btn-group').children('.btn.active').removeClass('active');
-            
-            /* if(param_name == 'SPEC_TRIG_SLOPE') {
-              if(new_params[param_name].value == 0) {
-                $('#edge1').find('img').attr('src','img/edge1.png');
-                $('#edge2').addClass('active').find('img').attr('src','img/edge2_active.png').end().find('#SPEC_TRIG_SLOPE1').prop('checked', true);
-              }
-              else {
-                $('#edge1').addClass('active').find('img').attr('src','img/edge1_active.png').end().find('#SPEC_TRIG_SLOPE').prop('checked', true);
-                $('#edge2').find('img').attr('src','img/edge2.png');
-              }
-            }
-            else { */
             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
-            //}
           }
           else if(field.is('span')) {
-            field.html(new_params[param_name].value);
 
-			if(param_name == 'freq_unit') {
-				// 0 - Hz, 1 - kHz, 2 - MHz
-				var freq_unit = (new_params['freq_unit'].value == 1 ? 'K' : (new_params['freq_unit'].value == 2 ? 'M' : '')) + 'Hz';
-				$('#freq_unit').html(freq_unit);	
-		    }	
+            field.html(new_params[param_name].value);	
+			if(param_name == 'SPEC_TIME_SCALE')
+			{
+				var unit = SPEC.freq_unit[new_params["freq_unit"].value];
+				$('#freq_scale_unit').html(unit);		
+				$('#SPEC_TIME_SCALE').html(new_params[param_name].value.toFixed(6));
+			}
           }
         }
-        
-        /* if(param_name == 'SOUR1_VOLT' || param_name == 'SOUR2_VOLT') {
-          $('#' + param_name + '_info').html(new_params[param_name].value);
-        } */
       }
     }
   };
@@ -334,37 +269,44 @@
       var points = [];
       var sig_btn = $('#right_menu .menu-btn.' + sig_name);
       var color = SPEC.config.graph_colors[sig_name];
+	  sig_btn.prop('disabled', false);
+      visible_btns.push(sig_btn[0]);
+      visible_info += (visible_info.length ? ',' : '') + '.' + sig_name;
 
 	  if(frozen_dsets[sig_count-1]){
-		points = frozen_dsets[sig_count-1];
+		points = frozen_dsets[sig_count-1].data;
 	  }
 	  else {
 		for(var i = 0; i < new_signals[sig_name].size; i++) {
        	 	points.push([i, new_signals[sig_name].value[i]]);
       	}
 	  }
-	  SPEC.datasets.push(points);      
-      if(SPEC.graphs[sig_name]) {
-        SPEC.graphs[sig_name].elem.show();
+	  SPEC.datasets.push({ color: color, data: points}); 
+	}     
+
+	if(SPEC.isVisibleChannels()){
+
+      if(SPEC.graphs && SPEC.graphs.elem) {
+       
+		SPEC.graphs.elem.show();
         
         if(SPEC.state.resized) {
-          SPEC.graphs[sig_name].plot.resize();
-          SPEC.graphs[sig_name].plot.setupGrid();
+          SPEC.graphs.plot.resize();
+          SPEC.graphs.plot.setupGrid();
         }
-        var filtered_data = SPEC.filterData(points, SPEC.graphs[sig_name].plot.width());   
-        SPEC.graphs[sig_name].plot.setData([filtered_data]);
-        SPEC.graphs[sig_name].plot.draw();
+        var filtered_data = SPEC.filterData(SPEC.datasets, SPEC.graphs.plot.width());   
+        SPEC.graphs.plot.setData(filtered_data);
+        SPEC.graphs.plot.draw();
       }
       else {
-        SPEC.graphs[sig_name] = {};
-        SPEC.graphs[sig_name].elem = $('<div class="plot" />').css($('#graph_grid').css(['height','width'])).appendTo('#graphs');
+        SPEC.graphs.elem = $('<div class="plot" />').css($('#graph_grid').css(['height','width'])).appendTo('#graphs');
 	// Local optimization    
-    	var filtered_data = SPEC.filterData(points, SPEC.graphs[sig_name].elem.width());       
+    	var filtered_data = SPEC.filterData(SPEC.datasets, SPEC.graphs.elem.width());       
 
-	    SPEC.graphs[sig_name].plot = $.plot(SPEC.graphs[sig_name].elem, [filtered_data], {
-            series: {
-            shadowSize: 0,  // Drawing is faster without shadows
-            color: color
+	    SPEC.graphs.plot = $.plot(SPEC.graphs.elem, filtered_data, {
+		colors: [SPEC.config.graph_colors['ch1'], SPEC.config.graph_colors['ch2']],    // channel1, channel2            
+		series: {
+        shadowSize: 0  // Drawing is faster without shadows
           },
           yaxis: {
             autoscaleMargin: 1,
@@ -375,37 +317,37 @@
             min: 0
           },
           grid: {
-            show: false
+            show: true
           }
         });
+		SPEC.updateZoom();
+		//update power div
+		var scale = SPEC.graphs.plot.getAxes().yaxis.tickSize;//SPEC.graphs.plot.getAxes().yaxis.delta.toFixed(1);
+		$('#SPEC_CH1_SCALE').html(scale);
+		$('#SPEC_CH2_SCALE').html(scale);
+		SPEC.params.local['SPEC_CH1_SCALE'] = { value: scale };
+		SPEC.params.local['SPEC_CH2_SCALE'] = { value: scale };
+		SPEC.sendParams();
+
       }
-      
-      sig_btn.prop('disabled', false);
-      visible_btns.push(sig_btn[0]);
-      visible_plots.push(SPEC.graphs[sig_name].elem[0]);
-      visible_info += (visible_info.length ? ',' : '') + '.' + sig_name;
-    }
+
+      visible_plots.push(SPEC.graphs.elem[0]);
     
-    // Hide plots without signal
-    $('#graphs .plot').not(visible_plots).hide();
-    
-    // Disable buttons related to inactive signals
-    $('#right_menu .menu-btn').not(visible_btns).prop('disabled', true);
-    
-    // Show only information about active signals
-    $('#info .info-title > span, #info .info-value > span').not(visible_info).hide();
-    $('#info').find(visible_info).show();
-    
-    // Reset resize flag
-    SPEC.state.resized = false;
-    
-    // Check if selected signal is still visible 
-    if(SPEC.state.sel_sig_name && SPEC.graphs[SPEC.state.sel_sig_name] && !SPEC.graphs[SPEC.state.sel_sig_name].elem.is(':visible')) {
-      $('#right_menu .menu-btn.active.' + SPEC.state.sel_sig_name).removeClass('active');
-      SPEC.state.sel_sig_name = null;
-    }
-    
-    //console.log('Duration: ' + (+new Date() - start));
+	  // Disable buttons related to inactive signals
+	  $('#right_menu .menu-btn').not(visible_btns).prop('disabled', true);
+		
+		// Show only information about active signals
+	  $('#info .info-title > span, #info .info-value > span').not(visible_info).hide();
+      $('#info').find(visible_info).show();
+	  $('.pull-right').show();
+		// Reset resize flag
+	  SPEC.state.resized = false;
+		
+	  //console.log('Duration: ' + (+new Date() - start));
+	}
+	else{
+		$('.pull-right').hide();
+	}
   };
 
   // Exits from editing mode
@@ -431,7 +373,6 @@
       if(value !== undefined && value != SPEC.params.orig[key].value) {
         console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
         SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
-	    //console.log(SPEC.params.local[key].value);
       }
     }
     
@@ -473,7 +414,6 @@
     //SPEC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 1000 };
     
     SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-	//console.log(SPEC.params.local);
     SPEC.params.local = {};
     return true;
   };
@@ -498,7 +438,7 @@
     // Set draw options
     ctx.beginPath();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#5d5d5c';
+    ctx.strokeStyle = '#343433';
 
     // Draw ticks
     for(var i = 1; i < 50; i++) {
@@ -540,7 +480,7 @@
     // Draw central cross
     ctx.beginPath();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#999';
+    ctx.strokeStyle = '#343433';
     
     ctx.moveTo(center_x, 0);
     ctx.lineTo(center_x, canvas_height);
@@ -656,59 +596,80 @@
     
     return null;
   };
+	
+  SPEC.isVisibleChannels = function(){
+	
+	var is_visible = false;
+
+	if((SPEC.params.orig['CH1_SHOW'] && SPEC.params.orig['CH1_SHOW'].value == true)  || 
+		(SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value == true))
+		is_visible = true;
+	return is_visible;
+  };
 
   SPEC.updateZoom = function() {
-		
-	for(var i = 1; i < 3; i++)
+
+	if(SPEC.graphs && SPEC.graphs.elem)
 	{
-		var sig_name = "ch"+i.toLocaleString();
-		if(SPEC.graphs[sig_name])
-		{
-			var plot_elem = SPEC.graphs[sig_name].elem;
-			if(plot_elem.is(':visible') )   {
+		var plot_elem = SPEC.graphs.elem;
+		if(SPEC.isVisibleChannels())   {
 
-				var plot = SPEC.graphs[sig_name].plot;
-				SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
-				SPEC.params.local['xmax'] = { value: SPEC.freq_range_max[SPEC.params.orig['freq_range'].value]};
-			  
-				var axes = plot.getAxes();
-				var options = plot.getOptions();
-				
-				options.xaxes[0].min = SPEC.params.local['xmin'].value;
-				options.xaxes[0].max = SPEC.params.local['xmax'].value;
-				options.yaxes[0].min = axes.yaxis.min;
-				options.yaxes[0].max = axes.yaxis.max;
-				
-			  plot.setupGrid();
-				plot.draw();
+			var plot = SPEC.graphs.plot;
+			SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
+			SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value};
+		  
+			var axes = plot.getAxes();
+			var options = plot.getOptions();
 
-			}
+			options.xaxes[0].min = SPEC.params.local['xmin'].value;
+			options.xaxes[0].max = SPEC.params.local['xmax'].value;
+			options.yaxes[0].min = axes.yaxis.min;
+			options.yaxes[0].max = axes.yaxis.max;
+
+			plot.setupGrid();
+			plot.draw();
+			axes = plot.getAxes();
+
+			$('#SPEC_TIME_SCALE').html(axes.xaxis.tickSize.toFixed(3));
 		}
 	}
-
-	SPEC.sendParams();
   };
 
 // Use only data for selected channels and do downsamling (data decimation), which is required for 
   // better performance. On the canvas cannot be shown too much graph points. 
-  SPEC.filterData = function(dsets, w_points) {
-    var filtered = [];
+  SPEC.filterData = function(dsets, points) {
+
+ 	var filtered = [];
+    var num_of_channels = 2;
+
+    for(var l=0; l<num_of_channels; l++) {
+      var sig_name = "ch" + (l+1).toLocaleString();
+
+	  if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {       
+		continue;
+      }
+
+      i = Math.min(l, dsets.length - 1);
+
+      filtered.push({ color: dsets[i].color, data: [] });
       
-    if(SPEC.points_per_px === null || dsets.length > w_points * SPEC.points_per_px) {
-		var step = Math.ceil(dsets.length / (w_points * SPEC.points_per_px));
-		var k = 0;
-		for(var j=0; j<dsets.length; j++) {
-		  if(k > 0 && ++k < step) {
-			continue;
-		  }
-		  filtered.push(dsets[j]);
-		  k = 1;
-		}
-	}
-	else {
-		filtered = dsets.slice(0);
-	}
-	return filtered;
+      if(SPEC.points_per_px === null || dsets[i].data.length > points * SPEC.points_per_px) {
+        var step = Math.ceil(dsets[i].data.length / (points * SPEC.points_per_px));
+        var k = 0;
+        for(var j=0; j<dsets[i].data.length; j++) {
+          if(k > 0 && ++k < step) {
+            continue;
+          }
+          filtered[filtered.length - 1].data.push(dsets[i].data[j]);
+          k = 1;
+        }
+      }
+      else {
+        filtered[filtered.length - 1].data = dsets[i].data.slice(0);
+      }
+    }
+   
+    return filtered;
   };
 
   SPEC.getLocalDecimalSeparator = function(){
@@ -1011,7 +972,7 @@ $(function() {
     }
   }
   $.preloadImages('edge1_active.png','edge2_active.png','node_up.png','node_left.png','node_right.png','node_down.png','fine_active.png');
-  
+  SPEC.drawGraphGrid();
   // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
   $(window).resize(function() {
     
