@@ -3,7 +3,7 @@ CXX=$(CROSS_COMPILE)g++
 RM=rm
 
 CXXSOURCES= \
-	new_main.cpp \
+	main.cpp \
 
 RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
@@ -18,7 +18,6 @@ CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
 LDFLAGS+=-L$(RP_SDK) -lrp_sdk
-LDFLAGS+=-L$(RP_SDK)/cryptopp -lcryptopp
 LDFLAGS+=-L$(RP_API) -lrpapp -lrp
 LDFLAGS+= -Wl,--no-whole-archive
 

@@ -506,6 +506,14 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 ///@{
 
 /**
+ * Enables continous acquirement even after trigger has happened.
+ * @param enable True for enabling and false disabling
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetArmKeep(bool enable);
+
+/**
  * Sets the decimation used at acquiring signal. There is only a set of pre-defined decimation
  * values which can be specified. See the #rp_acq_decimation_t enum values.
  * @param decimation Specify one of pre-defined decimation values

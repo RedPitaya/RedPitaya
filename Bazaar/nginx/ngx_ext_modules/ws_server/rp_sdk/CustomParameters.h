@@ -9,7 +9,9 @@ template <typename Type> class CCustomParameter : public CParameter<Type, Type>
 {
 public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
-		:CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max){}	
+		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
+		, m_SentValue(_value)
+	{}	
 	
 	~CCustomParameter()
 	{
@@ -35,14 +37,16 @@ public:
 		Type value = _value;
 		if(this->m_Value.min > value) 
 		{
-			dbg_printf("Incorrect parameters value: %f (min:%f), "
-			"correcting it\n", (float)value, float(this->m_Value.min));				
+			dbg_printf("Incorrect parameters value (min value)\n");
+//			dbg_printf("Incorrect parameters value: %f (min:%f), "
+//			"correcting it\n", (float)value, float(this->m_Value.min));				
 		 	value = this->m_Value.min;
 
 		} else if(this->m_Value.max < value) 
 		{
-			dbg_printf("Incorrect parameters value: %f (max:%f), "
-                    	" correcting it\n", (float)value, float(this->m_Value.max));
+			dbg_printf("Incorrect parameters value (max value)\n");
+//			dbg_printf("Incorrect parameters value: %f (max:%f), "
+//                    	" correcting it\n", (float)value, float(this->m_Value.max));
 			value = this->m_Value.max;
 		}
 
@@ -54,6 +58,16 @@ public:
 		this->m_Value.value = CheckMinMax(_value);
 	}
 
+	bool IsValueChanged() const
+	{
+		bool tmp = (m_SentValue != this->m_Value.value);
+		m_SentValue = this->m_Value.value;
+		return tmp;
+	}
+
+protected:
+	mutable Type m_SentValue;
+
 };
 
 //template for signals
@@ -61,7 +75,10 @@ template <typename Type> class CCustomSignal : public CParameter<Type, std::vect
 {
 public:
 	CCustomSignal(std::string _name, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, _size, std::vector<Type>(_size, _def_value)){}	
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}	
+
+	CCustomSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}	
 		
 	~CCustomSignal()
 	{
@@ -74,15 +91,14 @@ public:
 	{
 		JSONNode n(JSON_NODE);
 		n.set_name(this->m_Value.name);
-		n.push_back(JSONNode("size", this->m_Value.size));
+		n.push_back(JSONNode("size", this->m_Value.value.size()));
 
 		JSONNode child(JSON_ARRAY);	
 		child.set_name("value");	
-		for(int i=0; i < this->m_Value.size; i++)
+		for(unsigned int i=0; i < this->m_Value.value.size(); i++)
 		{	
 			Type res = this->m_Value.value.at(i);			
 			child.push_back(JSONNode("", res));
-			
 		}		
 		n.push_back(child);
 		return n;
@@ -105,12 +121,12 @@ public:
 
 	void Resize(int _new_size)
 	{
-		this->m_Value.size = _new_size;
+		this->m_Value.value.resize(_new_size);
 	}
 
 	int GetSize()
 	{
-		return this->m_Value.size;
+		return this->m_Value.value.size();
 	}
 };
 
@@ -146,12 +162,28 @@ public:
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, false, true){};
 };
 
+//custom CStringParameter
+class CStringParameter : public CCustomParameter<std::string>
+{
+public:
+	CStringParameter(std::string _name, CBaseParameter::AccessMode _access_mode, std::string _value, int _fpga_update)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, "", ""){};
+
+	void Set(const std::string& _value)
+	{
+		this->m_Value.value = _value;
+	}
+};
+
 //custom CIntSignal
 class CIntSignal : public CCustomSignal<int>
 {
 public:
 	CIntSignal(std::string _name, int _size, int _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
+
+	CIntSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, int _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
 //custom CFloatSignal
@@ -160,6 +192,9 @@ class CFloatSignal : public CCustomSignal<float>
 public:
 	CFloatSignal(std::string _name, int _size, float _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
+
+	CFloatSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
 //custom CDoubleSignal
@@ -168,6 +203,11 @@ class CDoubleSignal : public CCustomSignal<double>
 public:
 	CDoubleSignal(std::string _name, int _size, double _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
+
+	CDoubleSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, double _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
-extern CBooleanParameter IsDemoParam;	// special default parameter to check mode (demo or not)
+extern CBooleanParameter IsDemoParam;		// special default parameter to check mode (demo or not)
+extern CStringParameter InCommandParam;		// special default parameter to receive a string command from WEB UI
+extern CStringParameter OutCommandParam;	// special default parameter to send a string command to WEB UI
