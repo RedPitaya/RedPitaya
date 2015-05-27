@@ -52,7 +52,12 @@ function connect() {
 
 		if(receive.parameters) {
 			var param00 = receive.parameters.param00;
-			document.getElementById("messages").innerHTML += "Server: param00 "+param00.value+"<br />";	
+			document.getElementById("messages").innerHTML += "Server: param00 "+param00.value+"<br />";
+
+			if(receive.parameters.param01) {
+				var param01 = receive.parameters.param01;
+				document.getElementById("messages").innerHTML += "Server: param01 "+param01.value+"<br />";	
+			}
 		}
 		
 	};
@@ -89,8 +94,8 @@ function get_form_data() {
 }
 
 function send_data() {
-//	var msg = generate_array();
-//  	ws.send(msg);
+	var msg = document.getElementById("user_name").value;
+  	ws.send(msg);
 }
 
 function generate_array() {
