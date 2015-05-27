@@ -8,7 +8,7 @@
 /* -------------------------  debug parameter  --------------------------------- */
 CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 100, 0, 0, 10000);
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 10000);
-CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, true, 0);
+CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, false, 0);
 
 
 
@@ -202,7 +202,7 @@ void UpdateParams(void) {
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
 
-    rp_EnableDigitalLoop(digitalLoop.Value());
+    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
 
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &in1Offset.Value());
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &in2Offset.Value());
@@ -556,4 +556,9 @@ void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, 
     for(int i = 0; i < (*signal).GetSize(); i++) {
         (*signal)[i] = sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase) > 0 ? amp+off + showOff : -amp+off + showOff;
     }
+}
+void OnNewSignals(void)
+{
+	// do something
+	//CDataManager::GetInstance()->UpdateAllSignals();
 }

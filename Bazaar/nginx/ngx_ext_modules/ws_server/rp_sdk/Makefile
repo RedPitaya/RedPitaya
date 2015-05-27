@@ -1,5 +1,5 @@
 CXX=arm-xilinx-linux-gnueabi-g++
-CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -Lbuild/lib  -Wl,--whole-archive -lcryptopp -Wl,--no-whole-archive 
+CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -DNDEBUG
 SOURCES= DataManager.cpp \
 	licverify/LicenseVerificator.cpp \
 	licverify/encoder/encoder.cpp \
@@ -30,14 +30,18 @@ CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
 
 LIB=librp_sdk.a
 
+CURRENT_DIR := $(shell pwd)
+
 all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
 	cd $(CRYPTO_DIR); ./build.sh
     
-$(LIB): $(OBJECTS) 
-	ar rc $(LIB) $(OBJECTS)
+$(LIB): $(OBJECTS)
+	mkdir -p $(OBJDIR)/cryptopp
+	cd $(OBJDIR)/cryptopp; ar -x $(CURRENT_DIR)/$(CRYPTO_LIB)
+	ar rc $(LIB) objs/cryptopp/*.o $(OBJECTS)
 
 $(SDKOBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
