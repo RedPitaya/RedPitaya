@@ -17,8 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "scpi/scpi.h"
-
 #include "utils.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
@@ -60,6 +58,18 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*ACQ:START Successful.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqStop(scpi_t *context) {
+    int result = rp_AcqStop();
+
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*ACQ:STOP Failed: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    syslog(LOG_INFO, "*ACQ:STOP Successful.");
     return SCPI_RES_OK;
 }
 
@@ -259,7 +269,7 @@ scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
 
     // read first parameter TRIGGER SOURCE (DISABLED,NOW,CH1_PE,CH1_NE,CH2_PE,CH2_NE,EXT_PE,EXT_NE,AWG_PE)
     if (!SCPI_ParamString(context, &param, &param_len, false)) {
-        syslog(LOG_ERR, "*ACQ:TRIG:SRC is missing first parameter.");
+        syslog(LOG_ERR, "*ACQ:TRIG is missing first parameter.");
         return SCPI_RES_ERR;
     }
     else {
@@ -267,10 +277,9 @@ scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
         triggerSource[param_len] = '\0';
     }
 
-    // Convert samplingRate to rp_acq_sampling_rate_t
     rp_acq_trig_src_t source;
     if (getRpTriggerSource(triggerSource, &source)) {
-        syslog(LOG_ERR, "*ACQ:TRIG:SRC parameter trigger source is invalid.");
+        syslog(LOG_ERR, "*ACQ:TRIG parameter trigger source is invalid.");
         return SCPI_RES_ERR;
     }
 
@@ -278,35 +287,35 @@ scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
     int result = rp_AcqSetTriggerSrc(source);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:SRC Failed to set trigger source: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TRIG Failed to set trigger source: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:SRC Successfully set trigger source to %s.", triggerSource);
+    syslog(LOG_INFO, "*ACQ:TRIG Successfully set trigger source to %s.", triggerSource);
 
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetTriggerSrc(scpi_t *context) {
+scpi_result_t RP_AcqGetTrigger(scpi_t *context) {
     // get trigger source
     rp_acq_trig_src_t source;
     int result = rp_AcqGetTriggerSrc(&source);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:SRC? Failed to get trigger source: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TRIG:STAT? Failed to get trigger: %s", rp_GetError(result));
         source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
     char sourceString[15];
     if (getRpTriggerSourceString(source, sourceString)) {
-        syslog(LOG_ERR, "*ACQ:TRIG:SRC? Failed to convert result to string: %s", rp_GetError(result));
+        syslog(LOG_ERR, "*ACQ:TRIG:STAT? Failed to convert result to string: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultString(context, sourceString);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:SRC? Successfully returned trigger source.");
+    syslog(LOG_INFO, "*ACQ:TRIG:STAT? Successfully returned trigger.");
 
     return SCPI_RES_OK;
 }
@@ -786,9 +795,6 @@ scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.");
-
-    printf("*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.\n");
-
     return SCPI_RES_OK;
 }
 

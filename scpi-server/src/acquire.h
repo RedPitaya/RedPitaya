@@ -27,6 +27,7 @@ int RP_AcqSetDefaultValues();
 
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context);
 scpi_result_t RP_AcqStart(scpi_t * context);
+scpi_result_t RP_AcqStop(scpi_t *context);
 scpi_result_t RP_AcqReset(scpi_t * context);
 scpi_result_t RP_AcqSetDecimation(scpi_t * context);
 scpi_result_t RP_AcqGetDecimation(scpi_t * context);
@@ -36,7 +37,7 @@ scpi_result_t RP_AcqGetSamplingRateHz(scpi_t * context);
 scpi_result_t RP_AcqSetAveraging(scpi_t * context);
 scpi_result_t RP_AcqGetAveraging(scpi_t * context);
 scpi_result_t RP_AcqSetTriggerSrc(scpi_t * context);
-scpi_result_t RP_AcqGetTriggerSrc(scpi_t * context);
+scpi_result_t RP_AcqGetTrigger(scpi_t *context);
 scpi_result_t RP_AcqSetTriggerDelay(scpi_t * context);
 scpi_result_t RP_AcqGetTriggerDelay(scpi_t * context);
 scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t * context);
