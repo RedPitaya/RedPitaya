@@ -26,7 +26,7 @@ CBooleanParameter inReset("SPEC_RST", CBaseParameter::RW, false, 0);
 CBooleanParameter inRun("SPEC_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter inAutoscale("SPEC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter inSingle("SPEC_SINGLE", CBaseParameter::RW, false, 0);
-CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, false, 0);
+CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, true, 0);
 CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
 
 void UpdateParams(void)
