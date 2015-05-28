@@ -21,8 +21,7 @@ SRCS = $(subst .o,.c, $(OBJS)))
 # Executable name
 TARGET=libredpitaya.a
 
-CURL=../curl-7.35.0
-#CURL=../curl
+CURL=../../OS/buildroot/buildroot-2014.02/output/build/libcurl-7.35.0
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror -I$(CURL)/include -I../include

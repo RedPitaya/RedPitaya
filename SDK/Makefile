@@ -14,11 +14,10 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 #VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-CC = CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 NAME = SDK
 #Here I use the same var for librp and rp.h. It makes Makefile cleaner, but it gives less modulation when changing either of the two file location.
 #We could make another var just for rp.h
-RP_LIBRARY_INCLUDE = ../api-mockup/rpbase/src
+RP_LIBRARY_DIR = ../api-mockup/
 
 RP_SCPI_LIB_INCLUDE = ../scpi-server/3rdparty/libs/scpi-parser/libscpi/dist/
 GREET_MSG = "\nINSTALLING REDPITAYA SDK ZIP...\n"
@@ -28,13 +27,13 @@ all: zip
 include:
 	@echo $(GREET_MSG)
 	mkdir -p include
-	cp $(RP_LIBRARY_INCLUDE)/rp.h ./include
+	cp $(RP_LIBRARY_DIR)/rpbase/src/rp.h ./include
+	cp $(RP_LIBRARY_DIR)/rpApplications/src/rpApp.h ./include
 	#Make librp, if we are making SDK without the main makefile
-	$(MAKE) -C $(RP_LIBRARY_INCLUDE) $(CC)
-	cp $(RP_LIBRARY_INCLUDE)/librp.so ./include
+	$(MAKE) -C $(RP_LIBRARY_DIR)
+	cp $(RP_LIBRARY_DIR)/lib/* ./include
 	#Make scpi server, if we are making SDK without the main makefile
-	$(MAKE) -C ../scpi-server clean
-	$(MAKE) -C ../scpi-server/ $(CC)
+	$(MAKE) -C ../scpi-server clean all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
 	
@@ -46,9 +45,4 @@ zip: include
 	zip -r ../$(NAME)-$(VERSION)-$(BUILD_NUMBER)-$(REVISION).zip * -x "./Makefile" 
 
 clean:
-	rm -rf include
 	rm -rf ../SDK*.zip
-	
-	
-
-

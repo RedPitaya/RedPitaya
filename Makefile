@@ -45,25 +45,17 @@ ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ################################################################################
 
 BUILD=build
+# TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
+#INSTALL_DIR=$(BUILD)/opt/redpitaya
+INSTALL_DIR=$(BUILD)/redpitaya
 TARGET=target
 NAME=ecosystem
-INSTALL_DIR=$(BUILD)
 
-FPGA_DIR=fpga
+# directories
+FPGA_DIR        = fpga
 
-# targets
-FPGA       = $(FPGA_DIR)/out/red_pitaya.bit
-FSBL       = $(FPGA_DIR)/sdk/fsbl/executable.elf
-MEMTEST    = $(FPGA_DIR)/sdk/memtest/executable.elf
-DTS        = $(FPGA_DIR)/sdk/dts/system.dts
-DEVICETREE = $(TMP)/devicetree.dtb
-UBOOT      = $(TMP)/u-boot.elf
-BOOT       = $(TMP)/boot.bin
-TESTBOOT   = $(TMP)/testboot.bin
-LINUX      = $(TMP)/uImage
-
-URAMDISK_DIR    = OS/buildroot
 NGINX_DIR       = Bazaar/nginx
+IDGEN_DIR       = Bazaar/tools/idgen
 MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
@@ -71,24 +63,46 @@ CALIB_DIR       = Test/calib
 DISCOVERY_DIR   = OS/discovery
 ECOSYSTEM_DIR   = Applications/ecosystem
 SCPI_SERVER_DIR = scpi-server/
-LIBRP_DIR       = api-mockup/rpbase/src
+LIBRP_DIR       = api-mockup/rpbase
+LIBRPAPP_DIR    = api-mockup/rpApplications
 SDK_DIR         = SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
+URAMDISK_DIR    = OS/buildroot
 
-URAMDISK        = $(BUILD)/uramdisk.image.gz
-NGINX           = $(BUILD)/sbin/nginx
-MONITOR         = $(BUILD)/bin/monitor
-GENERATE        = $(BUILD)/bin/generate
-ACQUIRE         = $(BUILD)/bin/acquire
-CALIB           = $(BUILD)/bin/calib
-DISCOVERY       = $(BUILD)/sbin/discovery
-ECOSYSTEM       = $(BUILD)/www/apps/info/info.json
-SCPI_SERVER     = $(BUILD)/bin/scpi-server
-LIBRP           = $(BUILD)/lib/librp.so
-GDBSERVER       = $(BUILD)/bin/gdbserver
+# targets
+FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
+FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
+MEMTEST         = $(FPGA_DIR)/sdk/memtest/executable.elf
+DTS             = $(FPGA_DIR)/sdk/dts/system.dts
+DEVICETREE      = $(TMP)/devicetree.dtb
+UBOOT           = $(TMP)/u-boot.elf
+LINUX           = $(TMP)/uImage
+BOOT            = $(TMP)/boot.bin
+TESTBOOT        = $(TMP)/testboot.bin
+
+NGINX           = $(INSTALL_DIR)/sbin/nginx
+IDGEN           = $(INSTALL_DIR)/sbin/idgen
+MONITOR         = $(INSTALL_DIR)/bin/monitor
+GENERATE        = $(INSTALL_DIR)/bin/generate
+ACQUIRE         = $(INSTALL_DIR)/bin/acquire
+CALIB           = $(INSTALL_DIR)/bin/calib
+DISCOVERY       = $(INSTALL_DIR)/sbin/discovery
+ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
+SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
+LIBRP           = $(INSTALL_DIR)/lib/librp.so
+LIBRPAPP        = $(INSTALL_DIR)/lib/librpapp.so
+GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
+LIBREDPITAYA    = shared/libredpitaya/libredpitaya.a
+
 ENVTOOLS_ELF    = $(INSTALL_DIR)/bin/fw_printenv
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
 ENVTOOLS        = $(ENVTOOLS_ELF) $(ENVTOOLS_CFG)
+
+URAMDISK=$(BUILD)/uramdisk.image.gz
+
+
+APP_SCOPE_DIR = Applications/scope
+APP_SCOPE     = $(INSTALL_DIR)/www/apps/scope
 
 ################################################################################
 # Versioning system
@@ -108,7 +122,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(GDBSERVER) sdk rp_communication
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) sdk rp_communication
 	mkdir $(TARGET)
 	cp $(BOOT) $(TARGET)
 	cp $(TESTBOOT) $(TARGET)
@@ -217,50 +231,70 @@ $(TESTBOOT): $(MEMTEST) $(FPGA) $(UBOOT)
 	bootgen -image testboot.bif -w -o i $@
 
 ################################################################################
+# root file system
 ################################################################################
 
 $(URAMDISK): $(BUILD)
 	$(MAKE) -C $(URAMDISK_DIR)
 	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
-$(NGINX): $(URAMDISK)
-	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(BUILD))
+################################################################################
+# Red Pitaya ecosystem
+################################################################################
 
+$(LIBREDPITAYA):
+	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA)
+	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
+
+$(IDGEN):
+	$(MAKE) -C $(IDGEN_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
+	
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(GENERATE):
 	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(DISCOVERY):
+$(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ECOSYSTEM):
-	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(SCPI_SERVER):
+$(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(LIBRP):
 	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(BUILD))	
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(LIBRPAPP):
+	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
+	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
-	cp Test/gdb-server/gdbserver $(abspath $(BUILD))/bin
+	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
 
 sdk:
 	$(MAKE) -C $(SDK_DIR) clean include
@@ -278,6 +312,7 @@ clean:
 	make -C $(LINUX_DIR) clean
 	make -C $(FPGA_DIR) clean
 	make -C $(UBOOT_DIR) clean
+	make -C shared clean
 	make -C $(NGINX_DIR) clean	
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
@@ -285,7 +320,8 @@ clean:
 	make -C $(CALIB_DIR) clean
 	make -C $(DISCOVERY_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP_DIR) clean
+	make -C $(LIBRP_DIR)    clean
+	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	rm $(BUILD) -rf

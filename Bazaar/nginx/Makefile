@@ -18,15 +18,18 @@ STRIP=$(CROSS_COMPILE)strip
 NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
 JOBS=$$(($(NUM_CPU)+1))
 
-SHARED=../../shared/
-DEPLIBS_DIR=build/
-DEPLIBS=$(DEPLIBS_DIR)/lib/libredpitaya.a
+WS_SERVER_DIR=ngx_ext_modules/ws_server
+WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
+BOOST_LIBS_DIR=$(WS_SERVER_DIR)/boost/lib
 
 all: $(NGINX)
 
-$(NGINX): $(DEPLIBS)
+$(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 	cd $(NGINX_DIR); ./rp_configure.sh $(VER)-$(BUILD_NUMBER) $(REVISION);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
+
+$(WS_SERVER_LIB): 
+	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 $(DEPLIBS):
 	mkdir -p $(DEPLIBS_DIR)
@@ -39,15 +42,19 @@ $(DEPLIBS):
 install:
 	$(STRIP) $(NGINX)
 	test -d '$(DESTDIR)/sbin'     || mkdir -p '$(DESTDIR)/sbin'
+	test -d '$(DESTDIR)/lib'      || mkdir -p '$(DESTDIR)/lib'
 	test -d '$(DESTDIR)/www/conf' || mkdir -p '$(DESTDIR)/www/conf'
 	test -d '$(DESTDIR)/www/logs' || mkdir -p '$(DESTDIR)/www/logs'
 	test -d '$(DESTDIR)/www/apps' || mkdir -p '$(DESTDIR)/www/apps'
 	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	cp $(NGINX) '$(DESTDIR)/sbin/'
+	cp $(BOOST_LIBS_DIR)/libboost_regex.so.1.57.0 '$(DESTDIR)/lib/'
+	cp $(BOOST_LIBS_DIR)/libboost_system.so.1.57.0 '$(DESTDIR)/lib/'
+	cp $(BOOST_LIBS_DIR)/libboost_thread.so.1.57.0 '$(DESTDIR)/lib/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
 
 
 clean:
 	-$(MAKE) -C $(NGINX_DIR) clean
-	rm -rf $(DEPLIBS_DIR)
+	-$(MAKE) -C $(WS_SERVER_DIR) clean

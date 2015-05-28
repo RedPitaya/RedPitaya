@@ -26,15 +26,16 @@ VER=
 OS=ecosystem
 
 # Default target directory for applications
-TARGET=/opt/www/apps/
+BASEDIR=/opt/redpitaya
+TARGET=${BASEDIR}/www/apps/
 
 # Get parameters or print usage if they are wrong
 [ $# -lt 2 ] && {
     echo  "`basename $0` version ${VER}"
     echo ""
     echo "Usage: `basename $0`  action app [url] [md5sum]" 1>&2
-    echo "       action:     Action to perform [install, remove]." 1>&2
-    echo "       app:        Application ID." 1>&2
+    echo "       action:     Action to perform [install, remove, idgen, lic]." 1>&2
+    echo "       app:        Application ID, pass '0' for idgen and lic ." 1>&2
     echo "       url:        Application archive URL (for install only)." 1>&2
     echo "       md5sum:     The MD5 sum of the archive (for install only)." 1>&2
     exit 1;
@@ -131,8 +132,8 @@ MD5=$4
     fi
 
     # Applications
-    [ -d /opt/www/apps/${APP} ] || {
-        echo "Trying to remove non-existent /opt/www/apps/${APP}." 1>&2
+    [ -d /opt/redpitaya/www/apps/${APP} ] || {
+        echo "Trying to remove non-existent /opt/redpitaya/www/apps/${APP}." 1>&2
         exit 0;
     }
 
@@ -143,10 +144,52 @@ MD5=$4
         exit 4;
     }
 
-    rm -rf /opt/www/apps/${APP}
+    rm -rf /opt/redpitaya/www/apps/${APP}
     status=$?
     [ $status -ne 0 ] && {
-        echo "Error rmoving /opt/www/apps/${APP}" 1>&2
+        echo "Error rmoving /opt/redpitaya/www/apps/${APP}" 1>&2
+        exit 4;
+    }
+
+    mount -o ro,remount /opt
+
+    exit 0;
+}
+
+[ "x${ACTION}" == "xidgen" ] && {
+
+    mount -o rw,remount /opt
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error mounting SD card RW." 1>&2
+        exit 4;
+    }
+
+	${BASEDIR}/sbin/idgen -o ${TARGET}/idfile.id
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error creating ID-file" 1>&2
+        exit 4;
+    }
+
+    mount -o ro,remount /opt
+
+    exit 0;
+}
+
+[ "x${ACTION}" == "xlic" ] && {
+
+    mount -o rw,remount /opt
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error mounting SD card RW." 1>&2
+        exit 4;
+    }
+
+	mv -f /tmp/lic.lic ${TARGET}/lic.lic
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error installing License-file" 1>&2
         exit 4;
     }
 
