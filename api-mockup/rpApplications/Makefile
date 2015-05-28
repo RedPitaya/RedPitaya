@@ -1,7 +1,7 @@
 #
 # $Id: $
 #
-# Red Pitaya library librp and test app Makefile.
+# Red Pitaya library rpApplib and test app Makefile.
 #
 
 # Versioning system
@@ -9,19 +9,20 @@
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-LIBRP=../lib/librp.so
+LIRPAPP=../lib/librpapp.so
 
-all: $(LIBRP)
+all: $(LIRPAPP)
 
-$(LIBRP):
+$(LIRPAPP):
 	$(MAKE) -C src
 
-docapi:
-	$(MAKE) -C doc
+# TODO, there is no documentation directory here
+#docapi:
+#	$(MAKE) -C doc
 
 clean:
 	$(MAKE) -C src clean
-	$(MAKE) -C doc clean
+#	$(MAKE) -C doc clean
 
 install:
 	$(MAKE) -C src install INSTALL_DIR=$(abspath $(INSTALL_DIR))
