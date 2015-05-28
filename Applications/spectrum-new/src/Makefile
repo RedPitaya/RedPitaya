@@ -30,7 +30,7 @@ INCLUDE+=$(FFT_INC) $(JPEG_INC)
 
 CFLAGS+= -Wall -fPIC $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -fPIC
-LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_API) -L$(RP_SDK)/cryptopp -L$(RP_SDK) -Wl,--whole-archive -lrp_sdk -lrpapp -lcryptopp -lrp -Wl,--no-whole-archive
+LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_API) -L$(RP_SDK) -Wl,--whole-archive -lrp_sdk -lrpapp -lrp -Wl,--no-whole-archive
 
 
 OUT_DIR=../
