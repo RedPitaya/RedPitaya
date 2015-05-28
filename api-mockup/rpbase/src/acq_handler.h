@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include "rp.h"
 
+int acq_SetArmKeep(bool enable);
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state);
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state);
 int acq_GetGainV(rp_channel_t channel, float* voltage);
@@ -39,6 +40,7 @@ int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue);
 int acq_GetTriggerDelayNs(int64_t* time_ns);
 int acq_SetTriggerLevel(float voltage);
 int acq_GetTriggerLevel(float *voltage);
+int acq_GetPreTriggerCounter(uint32_t* value);
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage);
 int acq_SetTriggerHyst(float voltage);
@@ -48,6 +50,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage);
 int acq_GetWritePointer(uint32_t* pos);
 int acq_GetWritePointerAtTrig(uint32_t* pos);
 int acq_Start();
+int acq_Stop();
 int acq_Reset();
 
 uint32_t acq_GetNormalizedDataPos(uint32_t pos);
