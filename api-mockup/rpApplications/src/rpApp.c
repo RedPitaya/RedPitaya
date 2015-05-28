@@ -173,6 +173,13 @@ int rpApp_OscGetTriggerLevel(float *level) {
     return osc_getTriggerLevel(level);
 }
 
+int rpApp_OscSetInverted(rpApp_osc_source source, bool inverted) {
+    return osc_setInverted(source, inverted);
+}
+int rpApp_OscIsInverted(rpApp_osc_source source, bool *inverted) {
+    return osc_isInverted(source, inverted);
+}
+
 int rpApp_OscGetViewPos(float *positionRatio) {
     return osc_getViewPos(positionRatio);
 }
@@ -191,10 +198,6 @@ int rpApp_OscGetTriggerSweep(rpApp_osc_trig_sweep_t *mode) {
 
 int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size) {
     return osc_getData(source, data, size);
-}
-
-int rpApp_OscGetInvViewData(rpApp_osc_source source, float *data, uint32_t size){
-    return osc_getInvData(source, data, size);
 }
 
 int rpApp_OscSetViewSize(uint32_t size) {
