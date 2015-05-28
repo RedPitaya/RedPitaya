@@ -354,6 +354,22 @@ int rpApp_OscSetTriggerLevel(float level);
 int rpApp_OscGetTriggerLevel(float *level);
 
 /**
+* Sets source signal inverted.
+* @param inverted Determines if the signal is to be inverted or not.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetInverted(rpApp_osc_source source, bool inverted);
+
+/**
+* Checks if signal is inverted or not.
+* @param inverted Returned value.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscIsInverted(rpApp_osc_source source, bool *inverted);
+
+/**
 * Gets view position proportional to ADC buffer.
 * @param position Pointer to position. Returned value is between 0 and 1
 * @return If the function is successful, the return value is RP_OK.
@@ -534,16 +550,6 @@ int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
-
-/**
-* Gets inverted data.
-* @param source Source ch1, ch2 or math for which we want to get view data.
-* @param data View buffer.
-* @param size Number of values to be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rpApp_OscGetInvViewData(rpApp_osc_source source, float *data, uint32_t size);
 
 /**
 * Sets view buffer size.
