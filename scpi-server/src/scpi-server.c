@@ -27,11 +27,9 @@
 
 #include "scpi-commands.h"
 
-#include "dpin.h"
-#include "apin.h"
 #include "generate.h"
-#include "acquire.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "../../api-mockup/rpApplications/src/rpApp.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -218,15 +216,15 @@ int main(int argc, char *argv[])
     handleCloseChildEvents();
 
 
-    int result = rp_Init();
+    int result = rpApp_Init();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to initialize RP library: %s", rp_GetError(result));
+        syslog(LOG_ERR, "Failed to initialize RP APP library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
-    result = rp_Reset();
+    result = rpApp_Reset();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to reset RP: %s", rp_GetError(result));
+        syslog(LOG_ERR, "Failed to reset RP APP: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
@@ -314,10 +312,9 @@ int main(int argc, char *argv[])
 
     close(listenfd);
 
-    result = rp_Release();
-
+    result = rpApp_Release();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to initialize RP library: %s", rp_GetError(result));
+        syslog(LOG_ERR, "Failed to release RP App library: %s", rp_GetError(result));
     }
 
 

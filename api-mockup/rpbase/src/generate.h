@@ -39,18 +39,6 @@
 #define DATA_BIT_LENGTH         14
 #define MICRO                   1e6
 
-#define CHECK_OUTPUT(X, Y) { \
-if (channel == RP_CH_1) { \
-	X; \
-} \
-else if (channel == RP_CH_2) { \
-	Y; \
-} \
-else { \
-	return RP_EPN; \
-} \
-}
-
 int generate_Init();
 int generate_Release();
 

@@ -17,14 +17,14 @@ all: zip
 
 install:
 	mkdir -p $(INSTALL_DIR)/www/apps/
-	cp -r ../assets images info *.html style.css $(INSTALL_DIR)/www/apps/
+	cp -r ../assets images info ui *.html style.css $(INSTALL_DIR)/www/apps/
 	rm `find $(INSTALL_DIR)/www/apps/ -iname .svn` -rf
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 
 zip:
 	mkdir -p target/www/apps/
-	cp -r ../assets images info *.html style.css target/www/apps/
+	cp -r ../assets images info ui *.html style.css target/www/apps/
 	rm `find target/ -iname .svn` -rf
 	sed -i target/www/apps/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/www/apps/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'

@@ -288,19 +288,90 @@ int rp_Reset();
 const char* rp_GetVersion();
 
 /**
- * Returns calibration settings.
- * These calibration settings are populated only once from EEPROM at rp_Init().
- * Each rp_GetCalibrationSettings call returns the same cached setting values.
- * @return Calibration settings
- */
-rp_calib_params_t rp_GetCalibrationSettings();
-
-/**
  * Returns textual representation of error code.
  * @param errorCode Error code returned from API.
  * @return Textual representation of error given error code.
  */
 const char* rp_GetError(int errorCode);
+
+
+///@}
+/** @name Digital loop
+*/
+///@{
+
+/**
+* Enable or disables digital loop. This internally connect output to input
+* @param enable True if you want to enable this feature or false if you want to disable it
+* Each rp_GetCalibrationSettings call returns the same cached setting values.
+* @return Calibration settings
+*/
+int rp_EnableDigitalLoop(bool enable);
+
+
+///@}
+/** @name Calibrate
+*/
+///@{
+
+/**
+* Returns calibration settings.
+* These calibration settings are populated only once from EEPROM at rp_Init().
+* Each rp_GetCalibrationSettings call returns the same cached setting values.
+* @return Calibration settings
+*/
+rp_calib_params_t rp_GetCalibrationSettings();
+
+/**
+* Calibrates input channel offset. This input channel must be grounded to calibrate properly.
+* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @param channel Channel witch is going to be calibrated
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrateFrontEndOffset(rp_channel_t channel) ;
+
+/**
+* Calibrates input channel low voltage scale. Jumpers must be set to LV.
+* This input channel must be connected to stable positive source.
+* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @param channel Channel witch is going to be calibrated
+* @param referentialVoltage Voltage of the source.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage);
+
+/**
+* Calibrates input channel high voltage scale. Jumpers must be set to HV.
+* This input channel must be connected to stable positive source.
+* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @param channel Channel witch is going to be calibrated
+* @param referentialVoltage Voltage of the source.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage);
+
+/**
+* Calibrates output channel offset.
+* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
+* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @param channel Channel witch is going to be calibrated
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrateBackEndOffset(rp_channel_t channel);
+
+/**
+* Calibrates output channel voltage scale.
+* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
+* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @param channel Channel witch is going to be calibrated
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrateBackEndScale(rp_channel_t channel);
 
 ///@}
 
@@ -433,6 +504,14 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 /** @name Acquire
  */
 ///@{
+
+/**
+ * Enables continous acquirement even after trigger has happened.
+ * @param enable True for enabling and false disabling
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetArmKeep(bool enable);
 
 /**
  * Sets the decimation used at acquiring signal. There is only a set of pre-defined decimation
@@ -571,6 +650,14 @@ int rp_AcqSetTriggerDelayNs(int64_t time_ns);
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns);
 
 /**
+ * Returns the number of valid data ponts before trigger.
+ * @param time_ns number of data points.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetPreTriggerCounter(uint32_t* value);
+
+/**
  * Sets the trigger threshold value in volts. Makes the trigger when ADC value crosses this value.
  * @param voltage Threshold value for the channel
  * @return If the function is successful, the return value is RP_OK.
@@ -655,6 +742,13 @@ int rp_AcqGetWritePointerAtTrig(uint32_t* pos);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqStart();
+
+/**
+* Stops the acquire.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqStop();
 
 /**
  * Resets the acquire writing state machine.
