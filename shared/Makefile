@@ -13,10 +13,6 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-
-CURL_DIR=curl
-CURL_INSTALL_DIR=$(CURL_DIR)/target
-LIBCURL=$(CURL_INSTALL_DIR)/lib/libcurl.a
 LIBREDPITAYA=libredpitaya/libredpitaya.a
 
 # Main GCC executable (used for compiling and linking)
@@ -38,28 +34,18 @@ INSTALL_DIR ?= .
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
-all: $(LIBREDPITAYA) $(LIBCURL)
-
-$(LIBCURL):
-	[ -f $(CURL_DIR)/config.status ] || { cd $(CURL_DIR); ./configure --host=arm-xilinx-linux-gnueabi --build=i686-linux --enable-smtp --prefix=$(abspath $(CURL_INSTALL_DIR)); }
-	$(MAKE) -C $(CURL_DIR)
-	$(MAKE) -C $(CURL_DIR) install
+all: $(LIBREDPITAYA)
 
 $(LIBREDPITAYA):
-	$(MAKE) -C libredpitaya
+	$(MAKE) -C libredpitaya CROSS_COMPILE=$(CROSS_COMPILE)
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -rf $(CURL_INSTALL_DIR)
 	$(MAKE) -C libredpitaya clean
 	rm -f *~
-
-distclean: clean
-	$(MAKE) -C $(CURL_DIR) clean
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/lib
 	cp $(LIBREDPITAYA) $(INSTALL_DIR)/lib
-	cp -r $(CURL_INSTALL_DIR)/lib/ $(INSTALL_DIR)

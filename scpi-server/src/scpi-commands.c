@@ -21,10 +21,12 @@
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"
+#include "oscilloscopeApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/units.h"
+#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 /**
  * Interface general commands
@@ -88,6 +90,18 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
 	return SCPI_RES_ERR;
 }
 
+scpi_result_t SCPI_Echo(scpi_t * context) {
+    syslog(LOG_ERR, "*ECHO");
+    SCPI_ResultText(context, "ECHO?");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t SCPI_EchoVersion(scpi_t * context) {
+    syslog(LOG_ERR, "*ECO:VERSION?");
+    SCPI_ResultText(context, rp_GetVersion());
+    return SCPI_RES_OK;
+}
+
 
 
 
@@ -96,38 +110,41 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
  */
 
 static const scpi_command_t scpi_commands[] = {
-    /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
-    { .pattern = "*CLS", .callback = SCPI_CoreCls,},
-    { .pattern = "*ESE", .callback = SCPI_CoreEse,},
-    { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
-    { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
-    { .pattern = "*IDN?", .callback = SCPI_CoreIdnQ,},
-    { .pattern = "*OPC", .callback = SCPI_CoreOpc,},
-    { .pattern = "*OPC?", .callback = SCPI_CoreOpcQ,},
-    { .pattern = "*RST", .callback = SCPI_CoreRst,},
-    { .pattern = "*SRE", .callback = SCPI_CoreSre,},
-    { .pattern = "*SRE?", .callback = SCPI_CoreSreQ,},
-    { .pattern = "*STB?", .callback = SCPI_CoreStbQ,},
-    { .pattern = "*TST?", .callback = SCPI_CoreTstQ,},
-    { .pattern = "*WAI", .callback = SCPI_CoreWai,},
+        /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
+        { .pattern = "*CLS", .callback = SCPI_CoreCls,},
+        { .pattern = "*ESE", .callback = SCPI_CoreEse,},
+        { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
+        { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
+        { .pattern = "*IDN?", .callback = SCPI_CoreIdnQ,},
+        { .pattern = "*OPC", .callback = SCPI_CoreOpc,},
+        { .pattern = "*OPC?", .callback = SCPI_CoreOpcQ,},
+        { .pattern = "*RST", .callback = SCPI_CoreRst,},
+        { .pattern = "*SRE", .callback = SCPI_CoreSre,},
+        { .pattern = "*SRE?", .callback = SCPI_CoreSreQ,},
+        { .pattern = "*STB?", .callback = SCPI_CoreStbQ,},
+        { .pattern = "*TST?", .callback = SCPI_CoreTstQ,},
+        { .pattern = "*WAI", .callback = SCPI_CoreWai,},
 
-    /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
-    {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
-    {.pattern = "SYSTem:ERRor:COUNt?", .callback = SCPI_SystemErrorCountQ,},
-    {.pattern = "SYSTem:VERSion?", .callback = SCPI_SystemVersionQ,},
+        /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
+        {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
+        {.pattern = "SYSTem:ERRor:COUNt?", .callback = SCPI_SystemErrorCountQ,},
+        {.pattern = "SYSTem:VERSion?", .callback = SCPI_SystemVersionQ,},
 
-    {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
-    {.pattern = "STATus:QUEStionable:ENABle", .callback = SCPI_StatusQuestionableEnable,},
-    {.pattern = "STATus:QUEStionable:ENABle?", .callback = SCPI_StatusQuestionableEnableQ,},
+        {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
+        {.pattern = "STATus:QUEStionable:ENABle", .callback = SCPI_StatusQuestionableEnable,},
+        {.pattern = "STATus:QUEStionable:ENABle?", .callback = SCPI_StatusQuestionableEnableQ,},
 
-    {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
+        {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
 
-    {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
+        {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
-    /* RedPitaya */
-    {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
-	{.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
-	{.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
+        {.pattern = "ECHO?", .callback = SCPI_Echo,},
+        {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
+
+        /* RedPitaya */
+        {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
+        {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
+        {.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
         {.pattern = "DIG:PIN:DIR", .callback = RP_DigitalPinSetDirection,},
 
         {.pattern = "ANALOG:RST", .callback = RP_AnalogPinReset,},
@@ -136,6 +153,7 @@ static const scpi_command_t scpi_commands[] = {
 
         /* Acquire */
         {.pattern = "ACQ:START", .callback = RP_AcqStart,},
+        {.pattern = "ACQ:STOP", .callback = RP_AcqStop,},
         {.pattern = "ACQ:RST", .callback = RP_AcqReset,},
         {.pattern = "ACQ:DEC", .callback = RP_AcqSetDecimation,},
         {.pattern = "ACQ:DEC?", .callback = RP_AcqGetDecimation,},
@@ -145,7 +163,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:AVG", .callback = RP_AcqSetAveraging,},
         {.pattern = "ACQ:AVG?", .callback = RP_AcqGetAveraging,},
         {.pattern = "ACQ:TRIG", .callback = RP_AcqSetTriggerSrc,},
-        {.pattern = "ACQ:TRIG:STAT?", .callback = RP_AcqGetTriggerSrc,},
+        {.pattern = "ACQ:TRIG:STAT?", .callback = RP_AcqGetTrigger,},
         {.pattern = "ACQ:TRIG:DLY", .callback = RP_AcqSetTriggerDelay,},
         {.pattern = "ACQ:TRIG:DLY?", .callback = RP_AcqGetTriggerDelay,},
         {.pattern = "ACQ:TRIG:DLY:NS", .callback = RP_AcqSetTriggerDelayNs,},
@@ -226,11 +244,94 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "SOUR2:TRIG:SOUR", .callback = RP_GenChannel2SetTriggerSource,},
         {.pattern = "SOUR1:TRIG:SOUR?", .callback = RP_GenChannel1GetTriggerSource,},
         {.pattern = "SOUR2:TRIG:SOUR?", .callback = RP_GenChannel2GetTriggerSource,},
-        {.pattern = "SOUR1:TRIG:IMM", .callback = RP_GenChannel1SetTrigger,},
-        {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2SetTrigger,},
-        {.pattern = "TRIG:IMM", .callback = RP_GenChannel3SetTrigger,},
+        {.pattern = "SOUR1:TRIG:IMM", .callback = RP_GenChannel1Trigger,},
+        {.pattern = "SOUR2:TRIG:IMM", .callback = RP_GenChannel2Trigger,},
+        {.pattern = "TRIG:IMM", .callback = RP_GenChannelAllTrigger,},
 
-    //{.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
+        /* Oscilloscope */
+        {.pattern = "OSC:RUN", .callback = RP_APP_OscRun,},
+        {.pattern = "OSC:STOP", .callback = RP_APP_OscStop,},
+        {.pattern = "OSC:RST", .callback = RP_APP_OscReset,},
+        {.pattern = "OSC:AUTOSCALE", .callback = RP_APP_OscAutoscale,},
+        {.pattern = "OSC:SINGLE", .callback = RP_APP_OscSingle,},
+        {.pattern = "OSC:RUNNING", .callback = RP_APP_OscRunning,},
+        {.pattern = "OSC:CH1:OFFSET", .callback = RP_APP_OscChannel1SetAmplitudeOffset,},
+        {.pattern = "OSC:CH2:OFFSET", .callback = RP_APP_OscChannel2SetAmplitudeOffset,},
+        {.pattern = "OSC:MATH:OFFSET", .callback = RP_APP_OscChannel3SetAmplitudeOffset,},
+        {.pattern = "OSC:CH1:OFFSET?", .callback = RP_APP_OscChannel1GetAmplitudeOffset,},
+        {.pattern = "OSC:CH2:OFFSET?", .callback = RP_APP_OscChannel2GetAmplitudeOffset,},
+        {.pattern = "OSC:MATH:OFFSET?", .callback = RP_APP_OscChannel3GetAmplitudeOffset,},
+        {.pattern = "OSC:CH1:SCALE", .callback = RP_APP_OscChannel1SetAmplitudeScale,},
+        {.pattern = "OSC:CH2:SCALE", .callback = RP_APP_OscChannel2SetAmplitudeScale,},
+        {.pattern = "OSC:MATH:SCALE", .callback = RP_APP_OscChannel3SetAmplitudeScale,},
+        {.pattern = "OSC:CH1:SCALE?", .callback = RP_APP_OscChannel1GetAmplitudeScale,},
+        {.pattern = "OSC:CH2:SCALE?", .callback = RP_APP_OscChannel2GetAmplitudeScale,},
+        {.pattern = "OSC:MATH:SCALE?", .callback = RP_APP_OscChannel3GetAmplitudeScale,},
+        {.pattern = "OSC:CH1:PROBE", .callback = RP_APP_OscChannel1SetProbeAtt,},
+        {.pattern = "OSC:CH2:PROBE", .callback = RP_APP_OscChannel2SetProbeAtt,},
+        {.pattern = "OSC:CH1:PROBE?", .callback = RP_APP_OscChannel1GetProbeAtt,},
+        {.pattern = "OSC:CH2:PROBE?", .callback = RP_APP_OscChannel2GetProbeAtt,},
+        {.pattern = "OSC:CH1:IN:GAIN", .callback = RP_APP_OscChannel1SetInputGain,},
+        {.pattern = "OSC:CH2:IN:GAIN", .callback = RP_APP_OscChannel2SetInputGain,},
+        {.pattern = "OSC:CH1:IN:GAIN?", .callback = RP_APP_OscChannel1GetInputGain,},
+        {.pattern = "OSC:CH2:IN:GAIN?", .callback = RP_APP_OscChannel2GetInputGain,},
+        {.pattern = "OSC:TIME:OFFSET", .callback = RP_APP_OscSetTimeOffset,},
+        {.pattern = "OSC:TIME:OFFSET?", .callback = RP_APP_OscGetTimeOffset,},
+        {.pattern = "OSC:TIME:SCALE", .callback = RP_APP_OscSetTimeScale,},
+        {.pattern = "OSC:TIME:SCALE?", .callback = RP_APP_OscGetTimeScale,},
+        {.pattern = "OSC:TRIG:SWEEP", .callback = RP_APP_OscSetTriggerSweep,},
+        {.pattern = "OSC:TRIG:SWEEP?", .callback = RP_APP_OscGetTriggerSweep,},
+        {.pattern = "OSC:TRIG:SOURCE", .callback = RP_APP_OscSetTriggerSource,},
+        {.pattern = "OSC:TRIG:SOURCE?", .callback = RP_APP_OscGetTriggerSource,},
+        {.pattern = "OSC:TRIG:SLOPE", .callback = RP_APP_OscSetTriggerSlope,},
+        {.pattern = "OSC:TRIG:SLOPE?", .callback = RP_APP_OscGetTriggerSlope,},
+        {.pattern = "OSC:TRIG:LEVEL", .callback = RP_APP_OscSetTriggerLevel,},
+        {.pattern = "OSC:TRIG:LEVEL?", .callback = RP_APP_OscGetTriggerLevel,},
+        {.pattern = "OSC:CH1:DATA?", .callback = RP_APP_OscChannel1GetViewData,},
+        {.pattern = "OSC:CH2:DATA?", .callback = RP_APP_OscChannel2GetViewData,},
+        {.pattern = "OSC:MATH:DATA?", .callback = RP_APP_OscChannel3GetViewData,},
+        {.pattern = "OSC:DATA:SIZE", .callback = RP_APP_OscSetViewSize,},
+        {.pattern = "OSC:DATA:SIZE?", .callback = RP_APP_OscGetViewSize,},
+        {.pattern = "OSC:VIEW:POS?", .callback = RP_APP_OscGetViewPos,},
+        {.pattern = "OSC:VIEW:PART?", .callback = RP_APP_OscGetViewPart,},
+        {.pattern = "OSC:MEAS:CH1:VPP?", .callback = RP_APP_OscChannel1MeasureAmplitude,},
+        {.pattern = "OSC:MEAS:CH2:VPP?", .callback = RP_APP_OscChannel2MeasureAmplitude,},
+        {.pattern = "OSC:MEAS:MATH:VPP?", .callback = RP_APP_OscChannel3MeasureAmplitude,},
+        {.pattern = "OSC:MEAS:CH1:VMEAN?", .callback = RP_APP_OscChannel1MeasureMeanVoltage,},
+        {.pattern = "OSC:MEAS:CH2:VMEAN?", .callback = RP_APP_OscChannel2MeasureMeanVoltage,},
+        {.pattern = "OSC:MEAS:MATH:VMEAN?", .callback = RP_APP_OscChannel3MeasureMeanVoltage,},
+        {.pattern = "OSC:MEAS:CH1:VMAX?", .callback = RP_APP_OscChannel1MeasureAmplitudeMax,},
+        {.pattern = "OSC:MEAS:CH2:VMAX?", .callback = RP_APP_OscChannel2MeasureAmplitudeMax,},
+        {.pattern = "OSC:MEAS:MATH:VMAX?", .callback = RP_APP_OscChannel3MeasureAmplitudeMax,},
+        {.pattern = "OSC:MEAS:CH1:VMIN?", .callback = RP_APP_OscChannel1MeasureAmplitudeMin,},
+        {.pattern = "OSC:MEAS:CH2:VMIN?", .callback = RP_APP_OscChannel2MeasureAmplitudeMin,},
+        {.pattern = "OSC:MEAS:MATH:VMIN?", .callback = RP_APP_OscChannel3MeasureAmplitudeMin,},
+        {.pattern = "OSC:MEAS:CH1:FREQ?", .callback = RP_APP_OscChannel1MeasureFrequency,},
+        {.pattern = "OSC:MEAS:CH2:FREQ?", .callback = RP_APP_OscChannel2MeasureFrequency,},
+        {.pattern = "OSC:MEAS:MATH:FREQ?", .callback = RP_APP_OscChannel3MeasureFrequency,},
+        {.pattern = "OSC:MEAS:CH1:T0?", .callback = RP_APP_OscChannel1MeasurePeriod,},
+        {.pattern = "OSC:MEAS:CH2:T0?", .callback = RP_APP_OscChannel2MeasurePeriod,},
+        {.pattern = "OSC:MEAS:MATH:T0?", .callback = RP_APP_OscChannel3MeasurePeriod,},
+        {.pattern = "OSC:MEAS:CH1:DCYC?", .callback = RP_APP_OscChannel1MeasureDutyCycle,},
+        {.pattern = "OSC:MEAS:CH2:DCYC?", .callback = RP_APP_OscChannel2MeasureDutyCycle,},
+        {.pattern = "OSC:MEAS:MATH:DCYC?", .callback = RP_APP_OscChannel3MeasureDutyCycle,},
+        {.pattern = "OSC:MEAS:CH1:RMS?", .callback = RP_APP_OscChannel1RMS,},
+        {.pattern = "OSC:MEAS:CH2:RMS?", .callback = RP_APP_OscChannel2RMS,},
+        {.pattern = "OSC:MEAS:MATH:RMS?", .callback = RP_APP_OscChannel3RMS,},
+        {.pattern = "OSC:CUR:CH1:V?", .callback = RP_APP_OscChannel1GetCursorVoltage,},
+        {.pattern = "OSC:CUR:CH2:V?", .callback = RP_APP_OscChannel2GetCursorVoltage,},
+        {.pattern = "OSC:CUR:MATH:V?", .callback = RP_APP_OscChannel3GetCursorVoltage,},
+        {.pattern = "OSC:CUR:T?", .callback = RP_APP_OscGetCursorTime,},
+        {.pattern = "OSC:CUR:DT?", .callback = RP_APP_OscGetCursorDeltaTime,},
+        {.pattern = "OSC:CUR:CH1:DV?", .callback = RP_APP_OscChannel1GetCursorDeltaAmplitude,},
+        {.pattern = "OSC:CUR:CH2:DV?", .callback = RP_APP_OscChannel2GetCursorDeltaAmplitude,},
+        {.pattern = "OSC:CUR:MATH:DV?", .callback = RP_APP_OscChannel3GetCursorDeltaAmplitude,},
+        {.pattern = "OSC:CUR:DF?", .callback = RP_APP_OscGetCursorDeltaFrequency,},
+        {.pattern = "OSC:MATH:OP", .callback = RP_APP_OscSetMathOperation,},
+        {.pattern = "OSC:MATH:OP?", .callback = RP_APP_OscGetMathOperation,},
+        {.pattern = "OSC:MATH:SOUR", .callback = RP_APP_OscSetMathSources,},
+        {.pattern = "OSC:MATH:SOUR?", .callback = RP_APP_OscGetMathSources,},
+
 
     SCPI_CMD_LIST_END
 };

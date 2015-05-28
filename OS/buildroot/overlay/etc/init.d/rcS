@@ -60,17 +60,7 @@ done
 /etc/init.d/connman-config
 
 # Run IP discovery service
-/opt/sbin/discovery
-
-# Start user rcS script from SD card
-OPT_RCS=/opt/etc/init.d/rcS
-echo "Running user script from SD card ..."
-if [ -f $OPT_RCS ]
-then
-    source $OPT_RCS
-else
-    echo "$OPT_RCS not found."
-fi
+/opt/redpitaya/sbin/discovery
 
 # Print OS version info
 cat /etc/motd
