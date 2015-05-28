@@ -40,15 +40,16 @@ static volatile health_control_t *health = NULL;
 
 int health_Init()
 {
-    ECHECK(cmn_Init());
+//    ECHECK(cmn_Init());
     ECHECK(cmn_Map(HEALTH_BASE_SIZE, HEALTH_BASE_ADDR, (void**)&health));
+
     return RP_OK;
 }
 
 int health_Release()
 {
     ECHECK(cmn_Unmap(HEALTH_BASE_SIZE, (void**)&health));
-    ECHECK(cmn_Release());
+//    ECHECK(cmn_Release());
     return RP_OK;
 }
 

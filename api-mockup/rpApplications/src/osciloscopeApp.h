@@ -99,7 +99,7 @@ float viewIndexToTime(int index);
 float roundUpTo125(float data);
 void clearView();
 void clearMath();
-int waitToFillPreTriggerBuffer();
+int waitToFillPreTriggerBuffer(int testcancel);
 
 void *mainThreadFun();
 

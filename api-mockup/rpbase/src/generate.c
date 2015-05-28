@@ -68,7 +68,7 @@ static volatile int32_t *data_chB = NULL;
 
 
 int generate_Init() {
-	ECHECK(cmn_Init());
+//	ECHECK(cmn_Init());
 	ECHECK(cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate));
 	data_chA = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
 	data_chB = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
@@ -77,7 +77,7 @@ int generate_Init() {
 
 int generate_Release() {
 	ECHECK(cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate));
-	ECHECK(cmn_Release());
+//	ECHECK(cmn_Release());
 	data_chA = NULL;
 	data_chB = NULL;
 	return RP_OK;
