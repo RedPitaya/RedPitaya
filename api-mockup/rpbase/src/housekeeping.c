@@ -17,6 +17,7 @@
 
 #include "common.h"
 #include "housekeeping.h"
+#include "calib.h"
 
 
 // Base Housekeeping address
@@ -228,8 +229,10 @@ int hk_AreExCiNBitsSet(uint32_t bits, bool* result)
 
 int hk_EnableDigitalLoop(bool enable) {
     if (enable) {
+        calib_SetToZero();
         return cmn_SetBits(&hk->digital_loop, 1, DIGITAL_LOOP_MASK);
     } else {
+        ECHECK(calib_Init());
         return cmn_UnsetBits(&hk->digital_loop, 1, DIGITAL_LOOP_MASK);
     }
 }
