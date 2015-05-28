@@ -25,6 +25,7 @@ CFloatSignal math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 CIntParameter dataSize("OSC_DATA_SIZE", CBaseParameter::RW, CH_SIGNAL_SIZE_DEFAULT, 0, 1, 16*1024);
 CFloatParameter viewPosition("OSC_VIEW_POS", CBaseParameter::RO, 0.5, 0, 0, 1);
 CFloatParameter viewPortion("OSC_VIEV_PART", CBaseParameter::RO, 0.1, 0, 0, 1);
+CIntParameter samplingRate("OSC_SAMPL_RATE", CBaseParameter::RW, RP_SMP_125M, 0, RP_SMP_125M, RP_SMP_1_907K);
 
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
 CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, true, 0);
@@ -198,6 +199,10 @@ void UpdateParams(void) {
     viewPosition.Value() = pos;
     viewPortion.Value() = portion;
 
+    rp_acq_sampling_rate_t sampling_rate;
+    rp_AcqGetSamplingRate(&sampling_rate);
+    samplingRate.Value() = sampling_rate;
+
     bool running;
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
@@ -263,11 +268,7 @@ void UpdateSignals(void) {
 
     float data[dataSize.Value()];
     if (in1Show.Value()) {
-        if(in1InvShow.Value()){
-            rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
-        }else {
-            rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
-        }
+        rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH1, data, (uint32_t) dataSize.Value());
 
         if (ch1.GetSize() != dataSize.Value())
             ch1.Resize(dataSize.Value());
@@ -278,11 +279,7 @@ void UpdateSignals(void) {
     }
 
     if (in2Show.Value()) {
-        if(in2InvShow.Value()){
-            rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_CH2, data, (uint32_t) dataSize.Value());
-        }else {
-            rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH2, data, (uint32_t) dataSize.Value());
-        }
+        rpApp_OscGetViewData(RPAPP_OSC_SOUR_CH2, data, (uint32_t) dataSize.Value());
 
         if (ch2.GetSize() != dataSize.Value())
             ch2.Resize(dataSize.Value());
@@ -293,11 +290,7 @@ void UpdateSignals(void) {
     }
 
     if (mathOperation.Value() != RPAPP_OSC_MATH_NONE) {
-        if (mathInvShow.Value()) {
-            rpApp_OscGetInvViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
-        }else {
-            rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
-        }
+        rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
 
         if (math.GetSize() != dataSize.Value())
             math.Resize(dataSize.Value());
@@ -340,11 +333,11 @@ void OnNewParams(void) {
 
 /* ---- UPDATE INTERLAN SIGNAL GENERATION ----- */
     if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
-        || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(inTimeScale) ||IS_NEW(out1ShowOffset)) {
+        || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(inTimeScale) ||IS_NEW(out1ShowOffset) || IS_NEW(inAutoscale)) {
         updateOutCh1 = true;
     }
     if (IS_NEW(out2State) || IS_NEW(out2Amplitude) || IS_NEW(out2Offset) || IS_NEW(out2Frequancy) || IS_NEW(out2Phase)
-        || IS_NEW(out2WAveform) || IS_NEW(out2Burst) || IS_NEW(inTimeScale) || IS_NEW(out2ShowOffset)) {
+        || IS_NEW(out2WAveform) || IS_NEW(out2Burst) || IS_NEW(inTimeScale) || IS_NEW(out2ShowOffset) || IS_NEW(inAutoscale)) {
         updateOutCh2 = true;
     }
 
@@ -352,9 +345,6 @@ void OnNewParams(void) {
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
     in1Show.Update();
     in2Show.Update();
-    in1InvShow.Update();
-    in2InvShow.Update();
-    mathInvShow.Update();
     dataSize.Update();
     measureSelect1.Update();
     measureSelect2.Update();
@@ -423,6 +413,9 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(inTrigSource, rpApp_OscSetTriggerSource((rpApp_osc_trig_source_t)inTrigSource.NewValue()))
     IF_VALUE_CHANGED(inTrigSlope, rpApp_OscSetTriggerSlope((rpApp_osc_trig_slope_t) inTrigSlope.NewValue()))
     IF_VALUE_CHANGED(inTriggLevel, rpApp_OscSetTriggerLevel(inTriggLevel.NewValue()))
+    IF_VALUE_CHANGED(in1InvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_CH1, in1InvShow.NewValue()))
+    IF_VALUE_CHANGED(in2InvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_CH2, in2InvShow.NewValue()))
+    IF_VALUE_CHANGED(mathInvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_MATH, mathInvShow.NewValue()))
 
     IF_VALUE_CHANGED(mathOperation, rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue()))
     if (mathSource1.Value() != mathSource1.NewValue() || mathSource2.Value() != mathSource2.NewValue()) {
