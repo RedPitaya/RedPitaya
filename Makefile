@@ -189,7 +189,7 @@ $(LINUX_TAR):
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d tmp -p 1 < patches/linux-xlnx-$(LINUX_TAG).patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG).patch
 	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
 
 $(LINUX): $(LINUX_DIR)
