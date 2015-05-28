@@ -72,9 +72,9 @@ scpi_result_t RP_GenChannel1SetTriggerSource(scpi_t * context);
 scpi_result_t RP_GenChannel2SetTriggerSource(scpi_t * context);
 scpi_result_t RP_GenChannel1GetTriggerSource(scpi_t * context);
 scpi_result_t RP_GenChannel2GetTriggerSource(scpi_t * context);
-scpi_result_t RP_GenChannel1SetTrigger(scpi_t * context);
-scpi_result_t RP_GenChannel2SetTrigger(scpi_t * context);
-scpi_result_t RP_GenChannel3SetTrigger(scpi_t * context);
+scpi_result_t RP_GenChannel1Trigger(scpi_t *context);
+scpi_result_t RP_GenChannel2Trigger(scpi_t *context);
+scpi_result_t RP_GenChannelAllTrigger(scpi_t *context);
 
 scpi_result_t RP_GenSetState(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenGetState(rp_channel_t channel, scpi_t * context);

@@ -243,15 +243,15 @@ enum _scpi_result_t RP_GenChannel2GetTriggerSource(scpi_t *context) {
     return RP_GenGetTriggerSource(RP_CH_2, context);
 }
 
-enum _scpi_result_t RP_GenChannel1SetTrigger(scpi_t *context) {
+enum _scpi_result_t RP_GenChannel1Trigger(scpi_t *context) {
     return RP_GenSetTrigger(1, context);
 }
 
-enum _scpi_result_t RP_GenChannel2SetTrigger(scpi_t *context) {
+enum _scpi_result_t RP_GenChannel2Trigger(scpi_t *context) {
     return RP_GenSetTrigger(2, context);
 }
 
-enum _scpi_result_t RP_GenChannel3SetTrigger(scpi_t *context) {
+enum _scpi_result_t RP_GenChannelAllTrigger(scpi_t *context) {
     return RP_GenSetTrigger(3, context);
 }
 
@@ -772,7 +772,7 @@ enum _scpi_result_t RP_GenSetTriggerSource(rp_channel_t channel, scpi_t *context
     size_t param_len;
     char triggerSourceString[15];
 
-    // read first parameter TRIGGER SOURCE (EXT, INT)
+    // read first parameter TRIGGER SOURCE (EXT_PE, EXT_NE, INT, GATED)
     if (!SCPI_ParamString(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:TRIG:SOUR is missing first parameter.");
         return SCPI_RES_ERR;
