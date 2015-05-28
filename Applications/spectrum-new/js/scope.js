@@ -26,19 +26,23 @@
 	
   SPEC.time_steps = [
     // Hz
-    1, 2, 5, 10, 20, 50, 100, 200, 500,
+    1/10, 2/10, 5/10, 1, 2, 5, 10, 20, 50, 100, 200, 500
     // KHz
-    1*1000, 2*1000, 5*1000, 10*1000, 20*1000, 50*1000, 100*1000, 200*1000, 500*1000,
+    //1*1000, 2*1000, 5*1000, 10*1000, 20*1000, 50*1000, 100*1000, 200*1000, 500*1000,
     // MHz
-    1*1000000, 2*1000000, 5*1000000, 10*1000000, 20*1000000, 50*1000000, 100*1000000, 200*1000000, 500*1000000,
+    //1*1000000, 2*1000000, 5*1000000, 10*1000000, 20*1000000, 50*1000000, 100*1000000, 200*1000000, 500*1000000,
   ];
   
   // Voltage scale steps in volts
   //TODO power steps in dBm
   SPEC.voltage_steps = [
     // dBm
-    1, 2, 5, 10, 20, 50, 100
+    1/10, 2/10, 5/10, 1, 2, 5, 10, 20, 50, 100
   ];
+ 
+  SPEC.ymax = 20.0;
+  SPEC.ymin = -120.0;
+
   SPEC.points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).  
   SPEC.scale_points_size = 10; 
   // App state
@@ -196,9 +200,9 @@
 			if(img_num <= 999) { 
 			  img_num = ('00' + img_num).slice(-3); 
 			}
-		/////////////////////////TODO uncomment this to change spectrum img
-		   // $('#waterfall_ch1').attr('src', config.waterf_img_path + 'wat1_' + img_num + '.jpg');
-		   // $('#waterfall_ch2').attr('src', config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
+			
+		    $('#waterfall_ch1').attr('src', config.waterf_img_path + 'wat1_' + img_num + '.jpg');
+		    $('#waterfall_ch2').attr('src', config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
 		
         // Do not change fields from dialogs when user is editing something        
@@ -784,22 +788,16 @@ $(function() {
   $('#jtk_left').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_left.png'); });
   $('#jtk_right').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_right.png'); });
   $('#jtk_down').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_down.png'); });
+  $('#jtk_fine').on('mousedown touchstart', function() { $('#jtk_fine').attr('src','img/reset_active.png'); });
   
-  $('#jtk_fine').click(function(){
-    var img = $('#jtk_fine');
-    
-    if(img.attr('src') == 'img/fine.png') {
-      img.attr('src', 'img/fine_active.png');
-      SPEC.state.fine = true;
-    }
-    else {
-      img.attr('src', 'img/fine.png');
-      SPEC.state.fine = false;
-    }
-  });
 
   $(document).on('mouseup touchend', function(){ 
     $('#jtk_btns').attr('src','img/node_fine.png'); 
+	$('#jtk_fine').attr('src','img/reset.png');
+  });
+  
+  $('#jtk_fine').click(function(){
+	SPEC.resetZoom();
   });
   
   $('#jtk_up, #jtk_down').click(function(ev) {
