@@ -60,7 +60,9 @@ area:hover {
   margin-left: 0px;
   margin-right: 0px;
 }
-
+.between{
+	min-height: 10px;
+}
 .navbar-collapse {
   padding-left: 0px;
   padding-right: 0px;
