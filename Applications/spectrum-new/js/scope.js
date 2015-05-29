@@ -150,7 +150,7 @@
 
   // Processes newly received values for parameters
   SPEC.processParameters = function(new_params) {
-    //console.log("PEAK FREQ = " + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)));
+	//if (new_params['peak1_unit']) console.log("PEAK UNIT = " + SPEC.floatToLocalString(new_params['peak1_unit'].value.toFixed(2)));
     for(var param_name in new_params) {
       
       // Do nothing if new parameter value is the same as the old one, and it is not related to measurement info or offset
@@ -181,20 +181,25 @@
       else {
         var field = $('#' + param_name);
 
-		if(param_name == 'peak1_unit')	
+		//if(param_name == 'peak1_unit')	
 		{
 			// 0 - Hz, 1 - kHz, 2 - MHz
-			var freq_unit1 = (new_params['peak1_unit'].value == 1 ? 'k' : (new_params['peak1_unit'].value == 2 ? 'M' : '')) + 'Hz';
-			
-			$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);		
+
+			var freq_unit1 = 'Hz';
+			if (new_params['peak1_unit'])
+				freq_unit1 = (new_params['peak1_unit'].value == 1 ? 'k' : (new_params['peak1_unit'].value == 2 ? 'M' : '')) + 'Hz';
+			if (new_params['peak1_power'] && new_params['peak1_freq'])
+				$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);		
 		}
-		else if (param_name == 'peak2_unit')
+		/*else*/ if (param_name == 'peak2_unit')
 		{
 			// 0 - Hz, 1 - kHz, 2 - MHz
-			var freq_unit2 = (new_params['peak2_unit'].value == 1 ? 'k' : (new_params['peak2_unit'].value == 2 ? 'M' : '')) + 'Hz';
+			var freq_unit2 = 'Hz';
+			if (new_params['peak2_unit'])
+				freq_unit2 = (new_params['peak2_unit'].value == 1 ? 'k' : (new_params['peak2_unit'].value == 2 ? 'M' : '')) + 'Hz';
 			$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
 		}
-		else if(param_name == 'w_idx')
+		/*else*/ if(param_name == 'w_idx')
 		{
 			// Update waterfall images
 			var img_num = new_params['w_idx'].value;
@@ -215,7 +220,8 @@
 			{	
 				SPEC.updateZoom();
 
-				$('#freq_scale_unit').html(SPEC.freq_unit[new_params['freq_unit'].value]);
+				if (new_params['freq_unit'])
+					$('#freq_scale_unit').html(SPEC.freq_unit[new_params['freq_unit'].value]);
 				$('.freeze.active').removeClass('active');
 			}
           }
