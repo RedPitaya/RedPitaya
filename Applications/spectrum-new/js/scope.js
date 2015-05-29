@@ -26,19 +26,23 @@
 	
   SPEC.time_steps = [
     // Hz
-    1, 2, 5, 10, 20, 50, 100, 200, 500,
+    1/10, 2/10, 5/10, 1, 2, 5, 10, 20, 50, 100, 200, 500
     // KHz
-    1*1000, 2*1000, 5*1000, 10*1000, 20*1000, 50*1000, 100*1000, 200*1000, 500*1000,
+    //1*1000, 2*1000, 5*1000, 10*1000, 20*1000, 50*1000, 100*1000, 200*1000, 500*1000,
     // MHz
-    1*1000000, 2*1000000, 5*1000000, 10*1000000, 20*1000000, 50*1000000, 100*1000000, 200*1000000, 500*1000000,
+    //1*1000000, 2*1000000, 5*1000000, 10*1000000, 20*1000000, 50*1000000, 100*1000000, 200*1000000, 500*1000000,
   ];
   
   // Voltage scale steps in volts
   //TODO power steps in dBm
   SPEC.voltage_steps = [
     // dBm
-    1, 2, 5, 10, 20, 50, 100
+    1/10, 2/10, 5/10, 1, 2, 5, 10, 20, 50, 100
   ];
+ 
+  SPEC.ymax = 20.0;
+  SPEC.ymin = -120.0;
+
   SPEC.points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).  
   SPEC.scale_points_size = 10; 
   // App state
@@ -196,9 +200,9 @@
 			if(img_num <= 999) { 
 			  img_num = ('00' + img_num).slice(-3); 
 			}
-		/////////////////////////TODO uncomment this to change spectrum img
-		   // $('#waterfall_ch1').attr('src', config.waterf_img_path + 'wat1_' + img_num + '.jpg');
-		   // $('#waterfall_ch2').attr('src', config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
+			
+		    $('#waterfall_ch1').attr('src', config.waterf_img_path + 'wat1_' + img_num + '.jpg');
+		    $('#waterfall_ch2').attr('src', config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
 		
         // Do not change fields from dialogs when user is editing something        
@@ -491,110 +495,99 @@
     ctx.stroke();
   };
 
-  // Changes Y zoom/scale for the selected signal
+   // Changes Y zoom/scale for the selected signal
   SPEC.changeYZoom = function(direction, curr_scale, send_changes) {
-    if(SPEC.state.sel_sig_name != 'ch1' && SPEC.state.sel_sig_name != 'ch2') {
-      return;
-    }
+	if(!(SPEC.graphs && SPEC.graphs.elem))
+		return null;
+	
+	var plot_elem = SPEC.graphs.elem;
+	
+	if(!SPEC.isVisibleChannels())
+		return null;    
+	
+	var options = SPEC.graphs.plot.getOptions();
+    var axes = SPEC.graphs.plot.getAxes();
+    var curr_scale = axes.yaxis.tickSize;
+
+	if((curr_scale >= SPEC.voltage_steps[ SPEC.voltage_steps.length - 1] && direction == '-') ||
+		(curr_scale <= SPEC.voltage_steps[0] && direction == '+' )) 
+		return null;
+
+
+	var range = axes.yaxis.max - axes.yaxis.min;
+	var delta = direction == '+' ? 1 : -1
+	options.yaxes[0].min = axes.yaxis.min + delta*range*0.1;
+	options.yaxes[0].max = axes.yaxis.max - delta*range*0.1;
+
+	SPEC.graphs.plot.setupGrid();
+	SPEC.graphs.plot.draw();
+	axes = SPEC.graphs.plot.getAxes();
+	var new_scale = axes.yaxis.tickSize;
     
-    var curr_scale = (curr_scale === undefined ? SPEC.params.orig['SPEC_' + SPEC.state.sel_sig_name.toUpperCase() + '_SCALE'].value : curr_scale);
-    var new_scale;
-    
-    for(var i=0; i < SPEC.voltage_steps.length - 1; i++) {
-      
-      if(SPEC.state.fine && (curr_scale == SPEC.voltage_steps[i] || (curr_scale > SPEC.voltage_steps[i] && curr_scale < SPEC.voltage_steps[i + 1]))) {
-          
-        // Do not allow values smaller than the lowest possible one
-        if(i != 0 || direction != '-') {
-          
-          // For millivolts, add one millivolt
-          if(curr_scale < 1) {
-            new_scale = curr_scale + 1/1000 * (direction == '-' ? -1 : 1);
-          }
-          // For volts, add one volt
-          else {
-            new_scale = curr_scale + (direction == '-' ? -1 : 1);
-          }
-        }
-        break;
-      }
-      
-      if(!SPEC.state.fine && curr_scale == SPEC.voltage_steps[i]) {
-        new_scale = SPEC.voltage_steps[direction == '-' ? (i > 0 ? i - 1 : 0) : i + 1];
-        break;
-      }
-      else if(!SPEC.state.fine && ((curr_scale > SPEC.voltage_steps[i] && curr_scale < SPEC.voltage_steps[i + 1]) || (curr_scale == SPEC.voltage_steps[i + 1] && i == SPEC.voltage_steps.length - 2))) {
-        new_scale = SPEC.voltage_steps[direction == '-' ? i : i + 1]
-        break;
-      }
-    }
-    
-    if(new_scale !== undefined && new_scale > 0 && new_scale != curr_scale) {
-      
-      // Fix float length
-      new_scale = parseFloat(new_scale.toFixed(3));
-      
-      if(send_changes !== false) {
-        SPEC.params.local['SPEC_' + SPEC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
+	if(send_changes !== false) {
+        SPEC.params.local['SPEC_CH1_SCALE'] = { value: new_scale };
+		SPEC.params.local['SPEC_CH2_SCALE'] = { value: new_scale };
         SPEC.sendParams();
-      }
-      return new_scale;
     }
-    
-    return null;
+
+    return new_scale;
+	
   };
 
   // Changes X zoom/scale for all signals
   SPEC.changeXZoom = function(direction, curr_scale, send_changes) {
-    var curr_scale = (curr_scale === undefined ? SPEC.params.orig['SPEC_TIME_SCALE'].value : curr_scale);
-    var new_scale;
+    if(!(SPEC.graphs && SPEC.graphs.elem))
+		return null;
+	if(!SPEC.isVisibleChannels())
+		return null;
+	var options = SPEC.graphs.plot.getOptions();
+    var axes = SPEC.graphs.plot.getAxes();
+    var curr_scale = axes.xaxis.tickSize;
+
+	if((curr_scale >= SPEC.time_steps[ SPEC.time_steps.length - 1] && direction == '-') ||
+	(curr_scale <= SPEC.time_steps[0] && direction == '+' ))
+		return null;
+
+	var range = axes.xaxis.max - axes.xaxis.min;
+	var delta = direction == '+' ? 1 : -1
+	options.xaxes[0].min = axes.xaxis.min + delta*range*0.1; 
+	options.xaxes[0].max = axes.xaxis.max - delta*range*0.1;
+
+	SPEC.graphs.plot.setupGrid();
+	SPEC.graphs.plot.draw();
+	axes = SPEC.graphs.plot.getAxes();
+	var new_scale = axes.xaxis.tickSize;
+
+	if(send_changes !== false) {
+		SPEC.params.local['SPEC_TIME_SCALE'] = { value: new_scale };
+		SPEC.sendParams();
+	}
+
+    return new_scale;
+  };
+	
+  SPEC.resetZoom = function() {
+    if(!(SPEC.graphs && SPEC.graphs.elem))
+		return;
+	if(!SPEC.isVisibleChannels())
+		return;
+
+	var plot = SPEC.graphs.plot; 
+    var curr_options = plot.getOptions();
+    curr_options.xaxes[0].min = SPEC.params.orig['xmin'].value;
+    curr_options.xaxes[0].max = SPEC.params.orig['xmax'].value;
+    curr_options.yaxes[0].min = SPEC.ymin;
+    curr_options.yaxes[0].max = SPEC.ymax;
     
-    for(var i=0; i < SPEC.time_steps.length - 1; i++) {
-      
-      if(SPEC.state.fine && (curr_scale == SPEC.time_steps[i] || (curr_scale > SPEC.time_steps[i] && curr_scale < SPEC.time_steps[i + 1]))) {
-          
-        // Do not allow values smaller than the lowest possible one
-        if(i != 0 || direction != '-') {
-          
-          // For Hz, add one Hz
-          if(curr_scale < 1000) {
-            new_scale = curr_scale + 1* (direction == '-' ? -1 : 1);
-          }
-          // For KHz, add one KHz
-          else if(curr_scale < 1000000) {
-            new_scale = curr_scale + 1*1000 * (direction == '-' ? -1 : 1);
-          }
-          // For MHz, add one MHz
-          else if(curr_scale >= 1000000) {
-            new_scale = curr_scale + 1*1000000 * (direction == '-' ? -1 : 1);
-          }
-        }
-        break;
-      }
-      
-      if(!SPEC.state.fine && curr_scale == SPEC.time_steps[i]) {
-        new_scale = SPEC.time_steps[direction == '-' ? (i > 0 ? i - 1 : 0) : i + 1];
-        break;
-      }
-      else if(!SPEC.state.fine && ((curr_scale > SPEC.time_steps[i] && curr_scale < SPEC.time_steps[i + 1]) || (curr_scale == SPEC.time_steps[i + 1] && i == SPEC.time_steps.length - 2))) {
-        new_scale = SPEC.time_steps[direction == '-' ? i : i + 1]
-        break;
-      }
-    }
+    plot.setupGrid();
+    plot.draw();
+    var axes = plot.getAxes();
+	var cur_x_scale = axes.xaxis.tickSize;
+	var cur_y_scale = axes.yaxis.tickSize;
+    SPEC.params.local['SPEC_TIME_SCALE'] = {value : cur_x_scale};
+    SPEC.params.local['SPEC_CH1_SCALE'] = {value : cur_y_scale};
     
-    if(new_scale !== undefined && new_scale > 0 && new_scale != curr_scale) {
-      
-      // Fix float length
-      new_scale = parseFloat(new_scale.toFixed(6));
-      
-      if(send_changes !== false) {
-        SPEC.params.local['SPEC_TIME_SCALE'] = { value: new_scale };
-        SPEC.sendParams();
-      }
-      return new_scale;
-    }
-    
-    return null;
+    SPEC.sendParams();
   };
 	
   SPEC.isVisibleChannels = function(){
@@ -795,22 +788,16 @@ $(function() {
   $('#jtk_left').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_left.png'); });
   $('#jtk_right').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_right.png'); });
   $('#jtk_down').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_down.png'); });
+  $('#jtk_fine').on('mousedown touchstart', function() { $('#jtk_fine').attr('src','img/reset_active.png'); });
   
-  $('#jtk_fine').click(function(){
-    var img = $('#jtk_fine');
-    
-    if(img.attr('src') == 'img/fine.png') {
-      img.attr('src', 'img/fine_active.png');
-      SPEC.state.fine = true;
-    }
-    else {
-      img.attr('src', 'img/fine.png');
-      SPEC.state.fine = false;
-    }
-  });
 
   $(document).on('mouseup touchend', function(){ 
     $('#jtk_btns').attr('src','img/node_fine.png'); 
+	$('#jtk_fine').attr('src','img/reset.png');
+  });
+  
+  $('#jtk_fine').click(function(){
+	SPEC.resetZoom();
   });
   
   $('#jtk_up, #jtk_down').click(function(ev) {
