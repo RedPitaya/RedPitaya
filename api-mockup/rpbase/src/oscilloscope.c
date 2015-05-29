@@ -292,7 +292,7 @@ static const uint32_t ARM_KEEP_MASK         = 0xF;          // (4 bit)
 
 int osc_Init()
 {
-    ECHECK(cmn_Init());
+//    ECHECK(cmn_Init());
     ECHECK(cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg));
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
@@ -304,7 +304,7 @@ int osc_Release()
     ECHECK(cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg));
     osc_cha = NULL;
     osc_chb = NULL;
-    ECHECK(cmn_Release());
+//    ECHECK(cmn_Release());
     return RP_OK;
 }
 
