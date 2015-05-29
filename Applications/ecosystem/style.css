@@ -12,6 +12,13 @@ body {
   margin: 0;
 }
 
+.pagewrapper .container {
+max-width: none;
+}
+.pagewrapper .container {
+max-width: none !important;
+}
+
 h3 {
   color: #d5273a;
   margin-top: 0;
@@ -59,7 +66,7 @@ h3 {
 }
 
 .pagewrapper{
-  max-width: 1000px;
+  width: 1000px;
   margin: 0px auto;
   margin-top: 20px;
   padding: 10px;
@@ -68,7 +75,25 @@ h3 {
 .list-group-item {
 	background-color: #323232;
 	font-family: sans-serif;
-	color: red;
+	color: blue;
+}
+
+a.list-group-item {                                                                          
+  color: silver;#555555;                                                                     
+}
+
+a.list-group-item:hover:visited {
+  color: black;  
+}
+
+.list-group-item.more {
+	font-size: 18px;
+}
+
+
+
+.list-group-item.btn {
+	font-weight: bold;
 }
 
 .headerwrapper{
