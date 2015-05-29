@@ -3,8 +3,7 @@
 case "$1" in
         start)
                 echo -n "Starting SPCI server ... "
-                #demonize -p /var/run/scpi.pid -l /var/run/scpi.pid LD_LIBRARY_PATH=/opt/redpitaya/lib /opt/redpitaya/bin/scpi-server
-                /var/run/scpi.pid LD_LIBRARY_PATH=/opt/redpitaya/lib /opt/redpitaya/bin/scpi-server &
+                LD_LIBRARY_PATH=/opt/redpitaya/lib /opt/redpitaya/bin/scpi-server &
                 echo "done."
                 ;;
         stop)
