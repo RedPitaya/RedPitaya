@@ -67,6 +67,8 @@ switch ((SOURCE)) { \
 #define STOP_THREAD(THREAD_X) \
 if ((THREAD_X) != -1) { \
 	pthread_cancel(THREAD_X); \
+	int ret = pthread_join(THREAD_X, NULL); \
+	if(ret != 0){ fprintf(stderr, "pthread_join() failed: thread id: %d", (unsigned int)THREAD_X); fflush(stderr);} \
     (THREAD_X) = (pthread_t) -1; \
 }
 
