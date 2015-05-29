@@ -19,6 +19,8 @@
 #include "worker.h"
 #include "spectrometerApp.h"
 
+void SpecIntervalInit();
+
 extern rp_app_params_t rp_main_params[PARAMS_NUM+1];
 
 // SPECTRUM
@@ -36,7 +38,7 @@ int rpApp_SpecRun(void)
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
 
-//	rpApp_SpecSetUnit(5);
+	SpecIntervalInit();
 
     return 0;
 }
@@ -50,16 +52,19 @@ int rpApp_SpecStop(void)
     return 0;
 }
 
-int rpApp_SpecGetViewData(int source, float *data, uint32_t size)
+int rpApp_SpecGetViewData(int source, float *data, size_t size)
 {
     return rp_spectr_get_signals_channel(source, data, size);
 }
 
-int rpApp_SpecGetJpgIdx(float* jpg)
+int rpApp_SpecGetJpgIdx(int* jpg)
 {
 	rp_spectr_worker_res_t res;
 	int ret = rp_spectr_get_params(&res);
-	*jpg = res.jpg_idx;
+	if (!ret)
+	{
+		*jpg = res.jpg_idx;
+	}
 
 	return ret;
 }
@@ -68,7 +73,10 @@ int rpApp_SpecGetPeakPower(int channel, float* power)
 {
 	rp_spectr_worker_res_t res;
 	int ret = rp_spectr_get_params(&res);
-	*power = channel == 0 ? res.peak_pw_cha : res.peak_pw_chb;
+	if (!ret)
+	{
+		*power = channel == 0 ? res.peak_pw_cha : res.peak_pw_chb;
+	}
 
 	return ret;
 }
@@ -77,13 +85,21 @@ int rpApp_SpecGetPeakFreq(int channel, float* freq)
 {
 	rp_spectr_worker_res_t res;
 	int ret = rp_spectr_get_params(&res);
-	*freq = channel == 0 ? res.peak_pw_freq_cha : res.peak_pw_freq_chb;
+	if (!ret)
+	{
+		*freq = channel == 0 ? res.peak_pw_freq_cha : res.peak_pw_freq_chb;
+	}
 
 	return ret;
 }
 
-int rpApp_SpecSetUnit(float freq)
+int rpApp_SpecSetUnit(int freq)
 {
-	float unit = spectr_fpga_cnv_freq_range_to_unit(freq);
-	return rp_spectr_worker_update_params_by_idx(unit, FREQ_UNIT_PARAM, 1);
+	int unit = spectr_fpga_cnv_freq_range_to_unit(freq);
+
+	rp_spectr_worker_update_params_by_idx(unit, FREQ_UNIT_PARAM, 1);
+	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHA_PARAM, 1);
+	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHB_PARAM, 1);
+
+	return unit;
 }

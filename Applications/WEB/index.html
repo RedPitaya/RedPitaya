@@ -1,0 +1,140 @@
+ <html style="background-color: #1D1D1D">
+	<head>
+		<meta charset="utf-8" />
+		
+		<!--[if IE]>
+			<link rel="stylesheet" href="./ie9.css" type="text/css" />
+    <![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" /> 
+
+		<script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+	    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+	    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+	    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="./style.css" type="text/css" />
+		<link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
+		<script src="assets/jquery.mCustomScrollbar.concat.min.js"></script>
+
+		<script type="text/javascript">
+			$(window).load(function() {
+				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
+		
+				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
+			});
+
+			var current_app = "";
+		    var url = '/';
+			$(function() {
+				$.ajax({
+					url: url + 'bazaar?apps=',
+					cache: false
+				}).done(function( result ) {
+					buttons = $('.buttons');
+					desc = $('.description');
+					
+					var first_button = null;
+					$.each( result, function( key, value ) {
+						buttons = buttons.clone();
+						if (first_button == null)
+							first_button = buttons;
+						$(buttons).children('a').html(value.name);
+						$(buttons).children('a').attr('href', '#' + key);
+						$(buttons).appendTo('.list-group');
+						$(buttons).show();
+						current_app = key;
+					});
+
+					$('.buttons').click(function() {						
+						key = $(this).children('a').attr('href').substr(1);
+						$('.description').children('.name').html(result[key].name);
+						$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
+						$('.description').children('.desc').html(result[key].description);
+                        if (result[key].type == "demo")
+                        {
+                                $("#run").attr('href', url + 'instruct.html');
+                                $('#run').html('Buy');
+								$("#run").css('visibility', 'visible');
+								$("#demo").css('visibility', 'visible');
+                        }				
+                        else if (result[key].type == "run")
+                        {
+                            $("#run").attr('href', url + key + '?type=run');
+                            $('#run').html('Run');
+							$("#run").css('visibility', 'visible');
+							$("#demo").css('visibility', 'visible');
+                        }
+						else if (result[key].type == "old_app")
+						{
+							$('#run').html('Run');
+							$("#run").attr('href', url + key);
+							$("#run").css('visibility', 'visible');
+							$("#demo").css('visibility', 'hidden');
+						}
+
+                        $("#demo").attr('href', url + key + '?type=demo');
+
+						$(desc).show();
+					});
+
+					first_button.click();
+
+					//$(selector).mCustomScrollbar({ option: value });
+
+				}).fail(function( msg ) {
+					alert("Something has gone wrong. Is there a problem with the server?");
+			  }	)
+			});
+
+			$(function() {
+				document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya ("+window.location.hostname+")");
+			});
+
+		</script>
+		<title>My Red Pitaya</title>
+	</head>
+
+<body style="background-color: #1D1D1D;">
+<div class="pagewrapper">
+	<div class="panel panel-default" style="background-color: #1D1D1D; margin: 50px auto;">
+		<div class="panel-body">
+			<div class="row" style="padding: 20px;">
+
+				<div class="col-sm-6 col-md-2" style="min-width: 270px; height: 500;">
+					<div id="mcs_container">
+							<img class="appicon" style="width: 150px;" src="../assets/images/logo_white.png">	
+							<h4 style="color: silver;">Select the Instrument:</h4>
+							<div class="list-group pull-left">
+								<div class="buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">													
+									<a href="#" id="buttons" style="border-radius: 0;" class="list-group-item">1</a>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				<div class="col-sm-6 col-md-6" id="right-col" style="min-width: 600px; height: 500;color: silver; margin: auto 25px;">
+					<div id="mcs_container2">
+					<div class="description" style="display: none;">
+						<h2 class="name"></h2>
+						<img class="icon" src="">
+						<p class="desc"></p>
+					</div>
+				</div>
+				</div>
+			</div>
+			<div class="container" style="margin: -37;">
+				<div class="bazaar-link" style="float:left;">
+					<a href="bazaar" class="list-group-item more">Get more applications</a>
+				</div>
+				<div class="bazaar-link" style="float:right; visibility: hidden;">
+					<a href="#run" id="run" class="list-group-item btn" style="margin: 0 60 0 0;">Run</a>
+				</div>
+				<div class="bazaar-link" style="float:right; visibility: hidden;" >
+					<a href="#demo" id="demo" class="list-group-item btn">Demo</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+</body>
+</html>
