@@ -234,7 +234,6 @@ int rp_spectr_worker_update_params_by_idx(float value, size_t idx, int fpga_upda
 {
     pthread_mutex_lock(&rp_spectr_ctrl_mutex);
 
-	//dbg_printf("value %f idx %u\n");
     rp_spectr_params[idx].value = value;
     rp_spectr_params_dirty       = 1;
     rp_spectr_params_fpga_update = fpga_update;
@@ -337,9 +336,9 @@ int rp_spectr_get_params(rp_spectr_worker_res_t *result)
 int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result)
 {
     pthread_mutex_lock(&rp_spectr_sig_mutex);
-    memcpy(&rp_spectr_signals[0][0], &source[0][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
-    memcpy(&rp_spectr_signals[1][0], &source[1][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
-    memcpy(&rp_spectr_signals[2][0], &source[2][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
+    memcpy(rp_spectr_signals[0], source[0], sizeof(float)*SPECTR_OUT_SIG_LEN);
+    memcpy(rp_spectr_signals[1], source[1], sizeof(float)*SPECTR_OUT_SIG_LEN);
+    memcpy(rp_spectr_signals[2], source[2], sizeof(float)*SPECTR_OUT_SIG_LEN);
 
     rp_spectr_signals_dirty = 1;
 
