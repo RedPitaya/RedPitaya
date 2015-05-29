@@ -19,6 +19,8 @@
 #include "worker.h"
 #include "spectrometerApp.h"
 
+void SpecIntervalInit();
+
 extern rp_app_params_t rp_main_params[PARAMS_NUM+1];
 
 // SPECTRUM
@@ -36,6 +38,8 @@ int rpApp_SpecRun(void)
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
 
+	SpecIntervalInit();
+
     return 0;
 }
 
@@ -48,7 +52,7 @@ int rpApp_SpecStop(void)
     return 0;
 }
 
-int rpApp_SpecGetViewData(int source, float *data, uint32_t size)
+int rpApp_SpecGetViewData(int source, float *data, size_t size)
 {
     return rp_spectr_get_signals_channel(source, data, size);
 }
@@ -89,8 +93,13 @@ int rpApp_SpecGetPeakFreq(int channel, float* freq)
 	return ret;
 }
 
-int rpApp_SpecSetUnit(float freq)
+int rpApp_SpecSetUnit(int freq)
 {
-	float unit = spectr_fpga_cnv_freq_range_to_unit(freq);
-	return rp_spectr_worker_update_params_by_idx(unit, FREQ_UNIT_PARAM, 1);
+	int unit = spectr_fpga_cnv_freq_range_to_unit(freq);
+
+	rp_spectr_worker_update_params_by_idx(unit, FREQ_UNIT_PARAM, 1);
+	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHA_PARAM, 1);
+	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHB_PARAM, 1);
+
+	return unit;
 }
