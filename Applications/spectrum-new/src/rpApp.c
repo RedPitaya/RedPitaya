@@ -36,8 +36,6 @@ int rpApp_SpecRun(void)
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
 
-//	rpApp_SpecSetUnit(5);
-
     return 0;
 }
 
@@ -55,11 +53,14 @@ int rpApp_SpecGetViewData(int source, float *data, uint32_t size)
     return rp_spectr_get_signals_channel(source, data, size);
 }
 
-int rpApp_SpecGetJpgIdx(float* jpg)
+int rpApp_SpecGetJpgIdx(int* jpg)
 {
 	rp_spectr_worker_res_t res;
 	int ret = rp_spectr_get_params(&res);
-	*jpg = res.jpg_idx;
+	if (!ret)
+	{
+		*jpg = res.jpg_idx;
+	}
 
 	return ret;
 }
@@ -68,7 +69,10 @@ int rpApp_SpecGetPeakPower(int channel, float* power)
 {
 	rp_spectr_worker_res_t res;
 	int ret = rp_spectr_get_params(&res);
-	*power = channel == 0 ? res.peak_pw_cha : res.peak_pw_chb;
+	if (!ret)
+	{
+		*power = channel == 0 ? res.peak_pw_cha : res.peak_pw_chb;
+	}
 
 	return ret;
 }
@@ -77,7 +81,10 @@ int rpApp_SpecGetPeakFreq(int channel, float* freq)
 {
 	rp_spectr_worker_res_t res;
 	int ret = rp_spectr_get_params(&res);
-	*freq = channel == 0 ? res.peak_pw_freq_cha : res.peak_pw_freq_chb;
+	if (!ret)
+	{
+		*freq = channel == 0 ? res.peak_pw_freq_cha : res.peak_pw_freq_chb;
+	}
 
 	return ret;
 }
