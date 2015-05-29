@@ -53,7 +53,7 @@ static volatile analog_mixed_signals_control_t *ams = NULL;
 
 int ams_Init()
 {
-    ECHECK(cmn_Init());
+//    ECHECK(cmn_Init());
     ECHECK(cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams));
     return RP_OK;
 }
@@ -61,7 +61,7 @@ int ams_Init()
 int ams_Release()
 {
     ECHECK(cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams));
-    ECHECK(cmn_Release());
+//    ECHECK(cmn_Release());
     return RP_OK;
 }
 

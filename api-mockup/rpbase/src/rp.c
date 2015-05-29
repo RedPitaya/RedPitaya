@@ -39,6 +39,8 @@ static char version[50];
 
 int rp_Init()
 {
+	ECHECK(cmn_Init());
+	
     ECHECK(calib_Init());
     ECHECK(hk_Init());
     ECHECK(ams_Init());
@@ -57,13 +59,13 @@ int rp_Init()
 int rp_Release()
 {
     ECHECK(osc_Release())
-    ECHECK(generate_Release());;
+    ECHECK(generate_Release());
     ECHECK(health_Release());
     ECHECK(ams_Release());
     ECHECK(hk_Release());
     ECHECK(calib_Release());
     ECHECK(i2c_Release());
-
+	ECHECK(cmn_Release());
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }
