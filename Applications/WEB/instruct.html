@@ -1,0 +1,99 @@
+ <html style="background-color: #1D1D1D">
+	<head>
+		<meta charset="utf-8" />
+		
+		<!--[if IE]>
+			<link rel="stylesheet" href="./ie9.css" type="text/css" />
+    <![endif]-->
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+		<script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+	    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+	    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+	    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="./style.css" type="text/css" />
+		<script src="../assets/dropzone.js"></script>
+		<title>My Red Pitaya</title>
+	</head>
+
+<body style="background-color: #1D1D1D;">
+	<div class="panel panel-default" style="background-color: #1D1D1D; width:1200px; margin: 50px auto;">
+		<div class="panel-body" >
+			<img class="appicon" style="float:left; width: 150px;" src="../assets/images/logo_white.png">
+			<h1 style="float:left; color:silver; margin: 20px;">Instructions for licensing the applications</h1>
+
+			<div class="row">
+				<div class="col-sm-6 col-md-6">
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 50px;" src="ui/UX-UI-menu-rp-2.0-images_and_specs_9.gif">
+					</div>
+					<div class="container" style="margin: 5px 0; float:left;">
+						<h3 style="color: silver;">Download the IDFILE</h3>
+					</div>
+					<div class="container">
+					<img class="step" style="width: 200px;" src="ui/5.png">
+					</div>
+					<div class="container" style="float:left; padding: 10 150px;">
+						<a href="idfile.id" class="list-group-item"">Download</a>
+					</div>
+				</div>
+
+				<div class="col-sm-6 col-md-6" id="right-col" style="">
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 50px;" src="ui/UX-UI-menu-rp-2.0-images_and_specs_10.gif">
+					</div>
+					<div class="container" style="margin: 5px 0; float:left;">
+						<h4 style="color: silver; margin: 5px 0; float:left;">Navigate to the</h4>
+						<a href="/bazaar" style="color: #E71D25; margin: 2px 0; float:left; font-weight: bold; font-size: 18px;">&nbsp;store&nbsp;</a>
+						<h4 style="color: silver; margin: 5px 0; float:left;">and upload the IDFILE</h4>
+					</div>
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 400px;" src="ui/6.png">
+					</div>	
+				</div>
+			</div>
+
+			<div class="row" style="padding: 40 0">			
+				<div class="col-sm-4 col-md-6" style="">
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 50px;" src="ui/UX-UI-menu-rp-2.0-images_and_specs_11.gif">
+					</div>
+					<div class="container" style="margin: 5px 0; float:left;">
+						<h4 style="color: silver;font-size:130%;">Get the license file by purchasing applications</h4>
+					</div>
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 400px;" src="ui/7.png">
+					</div>	
+				</div>
+
+				<div class="col-sm-2 col-md-6" id="right-col" style="">
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 50px;" src="ui/UX-UI-menu-rp-2.0-images_and_specs_12.gif">
+					</div>
+					<div class="container" style="margin: 5px 0; float:left;">
+						<h4 style="color: silver;">Drag and drop license file to this browser window</h4>
+					</div>
+					<div class="container" style="float:left;">
+						<img class="step" style="width: 400px;" src="ui/8.png">
+					</div>
+					<div class="container" style="margin: 0 0 0 125; float:left;">
+						<h4 style="color: silver; margin: 5px 0; float:left;">... or use</h4><a href="upload.html" style="color: #E71D25; margin: 2px 0; float:left; font-weight: bold; font-size: 18px;">&nbsp;standart uplodaer</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+	<script type="text/javascript">
+	var myDropzone = new Dropzone(document.body, {
+		url: "/lic_upload",
+		thumbnailWidth: 80,
+		thumbnailHeight: 80,
+		parallelUploads: 20,
+		autoProessQueue: true,
+		addRemoveLinks: false,
+		previewTemplate: '<div id="dummy"></div>'
+	});
+	</script>
+</html>
