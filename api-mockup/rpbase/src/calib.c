@@ -141,6 +141,20 @@ int calib_WriteParams(rp_calib_params_t calib_params) {
     return RP_OK;
 }
 
+void calib_SetToZero() {
+    calib.be_ch1_dc_offs = 0;
+    calib.be_ch2_dc_offs = 0;
+    calib.fe_ch1_dc_offs = 0;
+    calib.fe_ch2_dc_offs = 0;
+
+    calib.be_ch1_fs      = cmn_CalibFullScaleFromVoltage(1);
+    calib.be_ch2_fs      = cmn_CalibFullScaleFromVoltage(1);
+    calib.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20);
+    calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1);
+    calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20);
+    calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1);
+}
+
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
     if (gain == RP_HIGH) {
         return (channel == RP_CH_1 ? calib.fe_ch1_fs_g_hi : calib.fe_ch2_fs_g_hi);
@@ -176,8 +190,8 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(1),
-            params.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(1))
+            params.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20),
+            params.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20))
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
