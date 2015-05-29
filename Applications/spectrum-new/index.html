@@ -34,7 +34,7 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button> 
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="/">
               <img class="back-btn" src="img/arrow_nav_left.png">
             </a>
             <img class="logo" src="img/logo_nav_white.png">
@@ -177,18 +177,7 @@
               <input class="setfiled" name="xmax" id="xmax" type="text" value="0">
             </div>
           </div>
-		  <div class="col-xs-12 option-content">
-            <div class="right-menu-option">
-              <span class="col-info">Peak Ch1:</span>
-              <input class="setfiled" name="peak_ch1" id="peak_ch1" type="text" value="0" readonly>
-            </div>
-          </div>
-		  <div class="col-xs-12 option-content">
-            <div class="right-menu-option">
-              <span class="col-info">Peak Ch2:</span>
-              <input class="setfiled" name="peak_ch2" id="peak_ch2" type="text" value="0" readonly>
-            </div>
-          </div>
+		  
         </div>
         
         <div id="cursor_dialog" class="dialog row right-menu-cont">
@@ -248,8 +237,27 @@
           </div>
           <div class="col-xs-12 option-content" style="height:100px;"></div>
         </div>
-      </div>
-  
+
+		<div class="between"></div>
+		<div class="row right-menu-cont">
+	  
+			<div class="col-xs-12 option-content">
+				<div class="right-menu-option">
+				  <span class="col-info">Peak Ch1:</span>
+				  <input class="setfiled" name="peak_ch1" id="peak_ch1" type="text" value="0" readonly>
+				</div>
+			</div>
+			<div class="col-xs-12 option-content">
+				<div class="right-menu-option">
+				  <span class="col-info">Peak Ch2:</span>
+				  <input class="setfiled" name="peak_ch2" id="peak_ch2" type="text" value="0" readonly>
+				</div>
+			</div>
+		</div>
+	  
+	  </div>
+	  
+	  
       <div id="main">
         <div id="buffer">
           <div class="red-horizont-line">
@@ -279,16 +287,16 @@
         </div>
 		<div class="waterfall-holder clearfix">
 			<div class="waterfall_title ch1">Channel 1</div>
-			<img id="waterfall_ch1" src="img/wat_nodata.jpg">
+			<img id="waterfall_ch1" src="img/wat_nodata.jpg" onerror = "this.src = 'img/wat_nodata.jpg'">
 		</div>
         <div class="waterfall-holder clearfix">
             <div class="waterfall_title ch2">Channel 2</div>
-            <img id="waterfall_ch2" src="img/wat_nodata.jpg">
+            <img id="waterfall_ch2" src="img/wat_nodata.jpg" onerror = "this.src = 'img/wat_nodata.jpg'">
         </div>
       </div>
       
       <div id="joystick">
-        <img id="jtk_fine" src="img/fine.png" />
+        <img id="jtk_fine" src="img/reset.png" />
         <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
         <map name="jtk_btns_map">
           <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
