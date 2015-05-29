@@ -160,7 +160,7 @@ int rpApp_SpecGetViewData(int source, float *data, uint32_t size);
 
 int rpApp_SpecGetParams();
 
-int rpApp_SpecGetJpgIdx(float* jpg);
+int rpApp_SpecGetJpgIdx(int* jpg);
 
 int rpApp_SpecGetPeakPower(int channel, float* power);
 
