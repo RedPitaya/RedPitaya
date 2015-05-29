@@ -28,7 +28,7 @@ static char version[50];
 
 int rpApp_Init() {
     ECHECK_APP(rp_Init());
-    ECHECK_APP(cmn_Init());
+//    ECHECK_APP(cmn_Init());
     ECHECK_APP(osc_Init());
     // TODO: Place other module releasing here (in reverse order)
 
@@ -38,7 +38,6 @@ int rpApp_Init() {
 }
 
 int rpApp_Release() {
-    ECHECK_APP(osc_Release());
     ECHECK_APP(osc_Release());
     ECHECK_APP(rp_Release());
     // TODO: Place other module releasing here (in reverse order)
