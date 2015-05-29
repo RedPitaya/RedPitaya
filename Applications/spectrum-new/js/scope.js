@@ -22,6 +22,7 @@
     'ch1' : '#f3ec1a',
     'ch2' : '#31b44b'
   };
+  SPEC.config.waterf_img_path = "/tmp/"
   SPEC.freq_unit = ['Hz', 'kHz', 'MHz'];
 	
   SPEC.time_steps = [
@@ -149,7 +150,7 @@
 
   // Processes newly received values for parameters
   SPEC.processParameters = function(new_params) {
-    
+    //console.log("PEAK FREQ = " + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)));
     for(var param_name in new_params) {
       
       // Do nothing if new parameter value is the same as the old one, and it is not related to measurement info or offset
@@ -201,8 +202,8 @@
 			  img_num = ('00' + img_num).slice(-3); 
 			}
 			
-		    $('#waterfall_ch1').attr('src', config.waterf_img_path + 'wat1_' + img_num + '.jpg');
-		    $('#waterfall_ch2').attr('src', config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
+		    $('#waterfall_ch1').attr('src', SPEC.config.waterf_img_path + 'wat1_' + img_num + '.jpg');
+		    $('#waterfall_ch2').attr('src', SPEC.config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
 		
         // Do not change fields from dialogs when user is editing something        
