@@ -116,7 +116,7 @@ int osc_single() {
         ECHECK_APP(osc_setTriggerSweep(RPAPP_OSC_TRIG_SINGLE));
     }
     ECHECK_APP(threadSafe_acqStart());
-    ECHECK_APP(waitToFillPreTriggerBuffer());
+    ECHECK_APP(waitToFillPreTriggerBuffer(0));
     ECHECK_APP(osc_setTriggerSource(trigSource));
     return RP_OK;
 }
@@ -790,7 +790,7 @@ void clearMath() {
     }
 }
 
-int waitToFillPreTriggerBuffer() {
+int waitToFillPreTriggerBuffer(int testcancel) {
     if (continuousMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
         return RP_OK;
     }
@@ -803,6 +803,8 @@ int waitToFillPreTriggerBuffer() {
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
         ECHECK_APP(osc_getTimeScale(&timeScale));
         deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+        if(testcancel)
+            pthread_testcancel();
     } while (preTriggerCount < viewSize/2*deltaSample - triggerDelay && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
     return RP_OK;
 }
@@ -838,12 +840,13 @@ void *mainThreadFun() {
     bool thisLoopAcqStart;
 
     while (true) {
+	pthread_testcancel();
         thisLoopAcqStart = false;
 
         if (clear && acqRunning) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_THREAD(threadSafe_acqStart());
-            waitToFillPreTriggerBuffer();
+            waitToFillPreTriggerBuffer(1);
             thisLoopAcqStart = false;
             ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
@@ -912,7 +915,7 @@ void *mainThreadFun() {
         }
 
         if (thisLoopAcqStart) {
-            waitToFillPreTriggerBuffer();
+            waitToFillPreTriggerBuffer(1);
             ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
         }
     }
