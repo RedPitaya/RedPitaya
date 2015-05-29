@@ -78,6 +78,7 @@ const char *rp_app_desc(void)
 int rp_app_init(void)
 {
     fprintf(stderr, "Loading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
+	return 0;
 
     if(rp_spectr_worker_init() < 0) {
         return -1;

@@ -60,6 +60,7 @@ void UpdateSignals(void)
 {
 	static float data[CH_SIGNAL_SIZE];
 
+
 	int ret = -1;
 	if (in1Show.Value())
 	{
@@ -70,7 +71,7 @@ void UpdateSignals(void)
 				ch1[i] = data[i];
 		}
 	}
-
+/*
 	if (in2Show.Value())
 	{
 		ret = rpApp_SpecGetViewData(RP_CH_2, data, CH_SIGNAL_SIZE);
@@ -80,6 +81,7 @@ void UpdateSignals(void)
 				ch2[i] = data[i];
 		}
 	}
+*/
 }
 
 void OnNewParams(void)
