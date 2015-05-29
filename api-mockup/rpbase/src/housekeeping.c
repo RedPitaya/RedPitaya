@@ -61,7 +61,7 @@ static volatile housekeeping_control_t *hk = NULL;
 
 int hk_Init()
 {
-    ECHECK(cmn_Init());
+//    ECHECK(cmn_Init());
     ECHECK(cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk));
     return RP_OK;
 }
@@ -69,7 +69,7 @@ int hk_Init()
 int hk_Release()
 {
     ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
-    ECHECK(cmn_Release());
+//    ECHECK(cmn_Release());
     return RP_OK;
 }
 
