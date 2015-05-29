@@ -166,7 +166,7 @@ int rpApp_SpecGetPeakPower(int channel, float* power);
 
 int rpApp_SpecGetPeakFreq(int channel, float* freq);
 
-int rpApp_SpecSetUnit(float freq);
+int rpApp_SpecSetUnit(int freq);
 
 
 #ifdef __cplusplus
