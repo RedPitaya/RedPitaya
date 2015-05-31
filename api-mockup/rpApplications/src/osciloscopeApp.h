@@ -66,7 +66,6 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t mode);
 int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *mode);
 int osc_setInverted(rpApp_osc_source source, bool inverted);
 int osc_isInverted(rpApp_osc_source source, bool *inverted);
-int osc_getViewPos(float *positionRatio);
 int osc_getViewPart(float *ratio);
 int osc_measureVpp(rpApp_osc_source source, float *Vpp);
 int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage);
