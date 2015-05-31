@@ -23,7 +23,6 @@ CFloatSignal math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 /* ------------------------------- DATA PARAMETERS ------------------------------ */
 CIntParameter dataSize("OSC_DATA_SIZE", CBaseParameter::RW, CH_SIGNAL_SIZE_DEFAULT, 0, 1, 16*1024);
-CFloatParameter viewPosition("OSC_VIEW_POS", CBaseParameter::RO, 0.5, 0, 0, 1);
 CFloatParameter viewPortion("OSC_VIEV_PART", CBaseParameter::RO, 0.1, 0, 0, 1);
 CIntParameter samplingRate("OSC_SAMPL_RATE", CBaseParameter::RW, RP_SMP_125M, 0, RP_SMP_125M, RP_SMP_1_907K);
 
@@ -193,10 +192,8 @@ void UpdateParams(void) {
     if (measureSelect4.Value() != -1)
         measureValue4.Value() = getMeasureValue(measureSelect4.Value());
 
-    float pos, portion;
-    rpApp_OscGetViewPos(&pos);
+    float portion;
     rpApp_OscGetViewPart(&portion);
-    viewPosition.Value() = pos;
     viewPortion.Value() = portion;
 
     rp_acq_sampling_rate_t sampling_rate;
