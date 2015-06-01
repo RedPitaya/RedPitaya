@@ -33,8 +33,8 @@ float *view;
 float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
 float ch1_ampScale,  ch2_ampScale,  math_ampScale;
 float ch1_probeAtt, ch2_probeAtt;
+bool ch1_inverted = false; bool ch2_inverted = false, math_inverted = false;
 float timeScale=1, timeOffset=0;
-float trigLevel = 0;
 rpApp_osc_trig_sweep_t trigSweep;
 rpApp_osc_trig_source_t trigSource = RPAPP_OSC_TRIG_SRC_CH1;
 rpApp_osc_trig_slope_t trigSlope = RPAPP_OSC_TRIG_SLOPE_PE;
@@ -276,11 +276,21 @@ int osc_getInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain) {
 }
 
 int osc_setAmplitudeScale(rpApp_osc_source source, float scale) {
+    float offset, currScale;
+    pthread_mutex_lock(&mutex);
+    ECHECK_APP_MUTEX(mutex, osc_getAmplitudeOffset(source, &offset));
+    ECHECK_APP_MUTEX(mutex, osc_getAmplitudeScale(source, &currScale));
+    offset = offset / currScale;
     SOURCE_ACTION(source,
                   ch1_ampScale = scale,
                   ch2_ampScale = scale,
                   math_ampScale = scale)
-    EXECUTE_ATOMICALLY(mutex, clearView());
+    clearView();
+    offset *= scale;
+    pthread_mutex_unlock(&mutex);
+    if (!isnan(offset)) {
+        ECHECK_APP(osc_setAmplitudeOffset(source, offset));
+    }
     return RP_OK;
 }
 
@@ -294,14 +304,12 @@ int osc_getAmplitudeScale(rpApp_osc_source source, float *scale) {
 
 int osc_setAmplitudeOffset(rpApp_osc_source source, float offset) {
     pthread_mutex_lock(&mutex);
-    float  level = calcTrigLevel();
     SOURCE_ACTION(source,
                   ch1_ampOffset = offset,
                   ch2_ampOffset = offset,
                   math_ampOffset = offset)
     clearView();
     pthread_mutex_unlock(&mutex);
-    ECHECK_APP(osc_setTriggerLevel(level + offset));
     return RP_OK;
 }
 
@@ -351,10 +359,6 @@ int osc_setTriggerSource(rpApp_osc_trig_source_t triggerSource) {
     trigSource = triggerSource;
     ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerSrc(src));
     pthread_mutex_unlock(&mutex);
-
-    if (trigSource != triggerSource) {
-        ECHECK_APP(osc_setTriggerLevel(trigLevel))
-    }
 
     return RP_OK;
 }
@@ -411,32 +415,26 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 int osc_setTriggerLevel(float level) {
     pthread_mutex_lock(&mutex);
     clearView();
-
-    trigLevel = level;
-    if (trigSource == RPAPP_OSC_TRIG_SRC_CH1) {
-        level -= ch1_ampOffset * ch1_ampScale;
-    } else if (trigSource == RPAPP_OSC_TRIG_SRC_CH2) {
-        level -= ch2_ampOffset * ch2_ampScale;
-    }
-
     ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerLevel(level));
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
 
 int osc_getTriggerLevel(float *level) {
-    *level = trigLevel;
-    return RP_OK;
+    return rp_AcqGetTriggerLevel(level);
 }
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
     EXECUTE_ATOMICALLY(mutex, clearView());
     switch (sweep) {
-        case RPAPP_OSC_TRIG_NORMAL:
         case RPAPP_OSC_TRIG_SINGLE:
             break;
         case RPAPP_OSC_TRIG_AUTO:
-            EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
+        EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
+        case RPAPP_OSC_TRIG_NORMAL:
+            if (!acqRunning) {
+                ECHECK_APP(threadSafe_acqStart());
+            }
             break;
         default:
             return RP_EOOR;
@@ -450,10 +448,21 @@ int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *sweep) {
     return RP_OK;
 }
 
-int osc_getViewPos(float *positionRatio) {
-    int32_t tmp;
-    ECHECK_APP(rp_AcqGetTriggerDelay(&tmp));
-    *positionRatio = 0.5f + (float)(tmp % ADC_BUFFER_SIZE) / ADC_BUFFER_SIZE;
+int osc_setInverted(rpApp_osc_source source, bool inverted) {
+    pthread_mutex_lock(&mutex);
+    SOURCE_ACTION(source,
+                  ch1_inverted = inverted,
+                  ch2_inverted = inverted,
+                  math_inverted = inverted)
+    pthread_mutex_unlock(&mutex);
+    return RP_OK;
+}
+
+int osc_isInverted(rpApp_osc_source source, bool *inverted) {
+    SOURCE_ACTION(source,
+                  *inverted = ch1_inverted,
+                  *inverted = ch2_inverted,
+                  *inverted = math_inverted)
     return RP_OK;
 }
 
@@ -463,7 +472,7 @@ int osc_getViewPart(float *ratio) {
 }
 
 int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
-    float resMax, resMin, max = FLT_MIN, min = FLT_MAX;
+    float resMax, resMin, max = -FLT_MAX, min = FLT_MAX;
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
@@ -488,7 +497,7 @@ int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
 }
 
 int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
-    float max = FLT_MIN;
+    float max = -FLT_MAX;
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
@@ -559,6 +568,7 @@ int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
     int highTime = 0;
     float meanValue;
     ECHECK_APP(osc_measureMeanVoltage(source, &meanValue));
+    ECHECK_APP(scaleAmplitudeChannel(source, meanValue, &meanValue))
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] > meanValue) {
             ++highTime;
@@ -667,13 +677,6 @@ int osc_getViewSize(uint32_t *size) {
     return 0;
 }
 
-int osc_getInvData(rpApp_osc_source source, float *data, uint32_t size){
-    for(int i = 0; i < size; i++){
-        data[i] = -1 * (view[source*viewSize + i]);
-    }
-    return RP_OK;
-}
-
 /*
 * Utils
 */
@@ -696,39 +699,47 @@ int threadSafe_acqStop() {
     return RP_OK;
 }
 
-float calcTrigLevel() {
-    if (trigSource == RPAPP_OSC_TRIG_SRC_CH1)
-        return trigLevel - ch1_ampOffset / ch1_ampScale;
-    else if (trigSource == RPAPP_OSC_TRIG_SRC_CH2)
-        return trigLevel - ch2_ampOffset / ch2_ampScale;
-    else
-        return trigLevel;
+float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset, float invertFactor) {
+    return (volts * invertFactor * probeAtt + ampOffset) / ampScale;
 }
 
-float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset) {
-    return volts * probeAtt / ampScale + ampOffset;
+float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset, float invertFactor) {
+    return ((value * ampScale) - ampOffset) / probeAtt / invertFactor;
 }
 
-float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset) {
-    return (value - ampOffset) * ampScale / probeAtt;
+float unOffsetAmplitude(float value, float ampScale, float ampOffset) {
+    return value - (ampOffset / ampScale);
 }
 
-int scaleAmplitudeChannel(rp_channel_t channel, float volts, float *res) {
-    float ampOffset, ampScale, probeAtt;
-    ECHECK_APP(osc_getAmplitudeOffset((rpApp_osc_source) channel, &ampOffset));
-    ECHECK_APP(osc_getAmplitudeScale((rpApp_osc_source) channel, &ampScale));
-    ECHECK_APP(osc_getProbeAtt(channel, &probeAtt));
-    *res = scaleAmplitude(volts, ampScale, probeAtt, ampOffset);
+int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res) {
+    float ampOffset, ampScale, probeAtt = 1;
+    bool inverted;
+    ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
+    ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
+    if (source != RPAPP_OSC_SOUR_MATH)
+        ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
+    ECHECK_APP(osc_isInverted(source, &inverted));
+    *res = scaleAmplitude(volts, ampScale, probeAtt, ampOffset, inverted ? -1 : 1);
     return RP_OK;
 }
 
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
     float ampOffset, ampScale, probeAtt=1;
+    bool inverted;
     ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
     ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
+    ECHECK_APP(osc_isInverted(source, &inverted));
     if (source != RPAPP_OSC_SOUR_MATH)
         ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
-    *res = unscaleAmplitude(value, ampScale, probeAtt, ampOffset);
+    *res = unscaleAmplitude(value, ampScale, probeAtt, ampOffset, inverted ? -1 : 1);
+    return RP_OK;
+}
+
+int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
+    float ampOffset, ampScale;
+    ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
+    ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
+    *res = unOffsetAmplitude(value, ampScale, ampOffset);
     return RP_OK;
 }
 
@@ -736,40 +747,47 @@ float viewIndexToTime(int index) {
     return indexToTime(index - viewSize / 2) + timeOffset;
 }
 
-void calculateIntegral(rp_channel_t channel, float scale, float offset) {
+void calculateIntegral(rp_channel_t channel, float scale, float offset, float invertFactor) {
     float dt = timeScale / samplesPerDivision;
-    view[RPAPP_OSC_SOUR_MATH*viewSize] = view[channel*viewSize]* dt * scale + offset;
+    float v;
+    ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v));
+    view[RPAPP_OSC_SOUR_MATH*viewSize] = v * dt;
     for (int i = 1; i < viewSize; ++i) {
-        view[RPAPP_OSC_SOUR_MATH*viewSize + i] =
-                (view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (view[channel*viewSize + i]* (dt))) * scale + offset;
+        ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i], &v));
+        view[RPAPP_OSC_SOUR_MATH*viewSize + i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (v * dt);
+        view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + i-1], scale, 1, offset, invertFactor);
     }
+    view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize-1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize-1], scale, 1, offset, invertFactor);
 }
 
-void calculateDevivative(rp_channel_t channel, float scale, float offset) {
-    double dt2 = 2*timeScale / 1000 / samplesPerDivision;
-    view[RPAPP_OSC_SOUR_MATH*viewSize] =
-            (float) ((view[channel*viewSize+1] - view[channel*viewSize]) / dt2 / 2 * scale + offset);
+void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor) {
+    float dt2 = 2*timeScale / 1000 / samplesPerDivision;
+    float v1, v2;
+    ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize+1], &v1));
+    ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v2));
+    view[RPAPP_OSC_SOUR_MATH*viewSize] = scaleAmplitude(((v1 - v2) / dt2 / 2), scale, 1, offset, invertFactor);
     for (int i = 1; i < viewSize - 1; ++i) {
-        view[RPAPP_OSC_SOUR_MATH*viewSize + i] =
-                (float) ((view[channel*viewSize + i+1] - view[channel*viewSize + i-1]) / dt2 * scale + offset);
+        v1 = v2;
+        ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i+1], &v2));
+        view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude((v2 - v1) / dt2, scale, 1, offset, invertFactor);
     }
 }
 
-float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op, float scale, float offset) {
+float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op) {
     switch (op) {
         case RPAPP_OSC_MATH_ADD:
-            return (v1 + v2) * scale + offset;
+            return v1 + v2;
         case RPAPP_OSC_MATH_SUB:
-            return (v1 - v2) * scale + offset;
+            return v1 - v2;
         case RPAPP_OSC_MATH_MUL:
-            return (v1 * v2) * scale + offset;
+            return v1 * v2;
         case RPAPP_OSC_MATH_DIV:
             if (v2 != 0)
-                return (v1 / v2) * scale + offset;
+                return v1 / v2;
             else
-                return v1 > 0 ? FLT_MAX : FLT_MIN;
+                return v1 > 0 ? FLT_MAX * 0.9f : -FLT_MAX * 0.9f;
         case RPAPP_OSC_MATH_ABS:
-            return (float) (fabs(v1) * scale + offset);
+            return (float) fabs(v1);
         default:
             return 0;
     }
@@ -826,15 +844,19 @@ int waitToFillPreTriggerBuffer(int testcancel) {
 
 void mathThreadFunction() {
     if (operation != RPAPP_OSC_MATH_NONE) {
+        bool invert;
+        ECHECK_APP_THREAD(osc_isInverted(RPAPP_OSC_SOUR_MATH, &invert))
+        float invertFactor = invert ? -1 : 1;
         if (operation == RPAPP_OSC_MATH_DER) {
-            calculateDevivative(mathSource1, math_ampScale, math_ampOffset);
+            calculateDevivative(mathSource1, math_ampScale, math_ampOffset, invertFactor);
         } else if (operation == RPAPP_OSC_MATH_INT) {
-            calculateIntegral(mathSource1, math_ampScale, math_ampOffset);
+            calculateIntegral(mathSource1, math_ampScale, math_ampOffset, invertFactor);
         } else {
+            float v1, v2;
             for (int i = 0; i < viewSize; ++i) {
-                view[RPAPP_OSC_SOUR_MATH*viewSize + i] =
-                        calculateMath(view[mathSource1*viewSize + i], view[mathSource2*viewSize + i],
-                                      operation, math_ampScale, math_ampOffset);
+                ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
+                ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
+                view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(v1, v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
         }
     }
@@ -854,7 +876,7 @@ void *mainThreadFun() {
 	pthread_testcancel();
         thisLoopAcqStart = false;
 
-        if (clear) {
+        if (clear && acqRunning) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_THREAD(threadSafe_acqStart());
             waitToFillPreTriggerBuffer(1);
@@ -865,7 +887,7 @@ void *mainThreadFun() {
         }
 
         // If in auto mode end trigger timed out
-        if (trigSweep == RPAPP_OSC_TRIG_AUTO && !auto_freRun_mode && (clock() - _timer) / CLOCKS_PER_SEC > AUTO_TRIG_TIMEOUT) {
+        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && !auto_freRun_mode && (clock() - _timer) / CLOCKS_PER_SEC > AUTO_TRIG_TIMEOUT) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = true)
         }
@@ -894,9 +916,9 @@ void *mainThreadFun() {
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_2, _startIndex, &_getBufSize, data[1]));
 
-            if (_triggerSource == RP_TRIG_SRC_DISABLED) {
+            if (_triggerSource == RP_TRIG_SRC_DISABLED && acqRunning) {
                 if (trigSweep != RPAPP_OSC_TRIG_SINGLE) {
-                    if (!continuousMode && acqRunning) {
+                    if (!continuousMode) {
                         ECHECK_APP_THREAD(threadSafe_acqStart());
                     }
                     thisLoopAcqStart = true;
@@ -913,12 +935,12 @@ void *mainThreadFun() {
 
             // Write data to view buffer
             for (rp_channel_t channel = RP_CH_1; channel <= RP_CH_2; ++channel) {
-                // first preZero data are wrong - from previout trigger. Last preZero data hasent been overwritten
+                // first preZero data are wrong - from previout trigger. Last preZero data hasn't been overwritten
                 for (int i = 0; i < _preZero; ++i) {
                     view[channel * viewSize + i] = 0;
                 }
                 for (int i = 0; i < viewSize-_postZero && (int) (i * _deltaSample) < _getBufSize; ++i) {
-                    ECHECK_APP_THREAD(scaleAmplitudeChannel(channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
+                    ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
                 }
             }
 

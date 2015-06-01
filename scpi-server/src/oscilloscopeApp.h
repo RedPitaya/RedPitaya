@@ -64,7 +64,6 @@ scpi_result_t RP_APP_OscSetTriggerLevel(scpi_t *context);
 scpi_result_t RP_APP_OscGetTriggerLevel(scpi_t *context);
 scpi_result_t RP_APP_OscSetViewSize(scpi_t *context);
 scpi_result_t RP_APP_OscGetViewSize(scpi_t *context);
-scpi_result_t RP_APP_OscGetViewPos(scpi_t *context);
 scpi_result_t RP_APP_OscGetViewPart(scpi_t *context);
 scpi_result_t RP_APP_OscChannel1GetViewData(scpi_t *context);
 scpi_result_t RP_APP_OscChannel2GetViewData(scpi_t *context);
