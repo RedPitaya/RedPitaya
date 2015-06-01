@@ -3,7 +3,7 @@
 case "$1" in
         start)
 #                echo -n "Starting SPCI server ... "
-#                LD_LIBRARY_PATH=/opt/redpitaya/lib /opt/redpitaya/bin/scpi-server &
+#                LD_LIBRARY_PATH=$PATH_REDPITAYA/lib $PATH_REDPITAYA/bin/scpi-server &
                 echo -n "TODO, NOT Starting SPCI server ... "
                 echo "done."
                 ;;

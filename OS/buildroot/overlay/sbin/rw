@@ -2,7 +2,7 @@
 #
 # $Id: rw 751 2013-11-29 11:23:09Z ales.bardorfer $
 #
-# Mount SD card (/opt) read-write.
+# Mount SD card read-write.
 #
 
-mount -o rw,remount /opt
+mount -o rw,remount $PATH_REDPITAYA

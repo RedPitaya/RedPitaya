@@ -1,7 +1,6 @@
 #!/bin/sh
 
-source /opt/etc/network/config
-PATH=$PATH:/opt/sbin
+source $PATH_REDPITAYA/etc/network/config
 
 case "$1" in
   start)
@@ -24,7 +23,7 @@ case "$1" in
 	    echo "   WiFi: Access Point (AP) mode"
 
 	    # Set-up links to proper files
-	    ln -sf ../../opt/etc/network/interfaces.ap /etc/network/interfaces
+	    ln -sf $PATH_REDPITAYA/etc/network/interfaces.ap /etc/network/interfaces
 
 	    # Bring-up wlan0 with static (AP) config
 	    ifup wlan0
@@ -35,18 +34,18 @@ case "$1" in
 
 	    # Start the AP & DHCP daemons
 	    echo "   WiFi: Starting AP daemon"
-	    hostapd -B -P /var/run/hostapd.pid /opt/etc/network/hostapd.conf > /dev/null
+	    hostapd -B -P /var/run/hostapd.pid $PATH_REDPITAYA/etc/network/hostapd.conf > /dev/null
 	    echo "   WiFi: Starting DHCP & DNS server"
-	    dnsmasq --conf-file=/opt/etc/network/dnsmasq.conf
+	    dnsmasq --conf-file=$PATH_REDPITAYA/etc/network/dnsmasq.conf
 
 	} || {
 
 	    echo "   WiFi: Client mode"
 
 	    # Set-up links to proper files
-	    ln -sf ../../opt/etc/network/interfaces /etc/network/interfaces
+	    ln -sf $PATH_REDPITAYA/etc/network/interfaces /etc/network/interfaces
 
-	    if [ -e /opt/etc/network/wpa_supplicant.conf ]
+	    if [ -e $PATH_REDPITAYA/etc/network/wpa_supplicant.conf ]
 	    then
 		ifup wlan0
 	    fi
