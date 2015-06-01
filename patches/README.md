@@ -21,7 +21,9 @@ There are several patches for U-Boot:
 
 1.  Increased PHY autonegotiation timeout from 4 to 10s.
 
-    `include/phy.h`
+    ```
+    include/phy.h
+    ```
 
 2.  Added support for Lantiq PHY11G.
 
