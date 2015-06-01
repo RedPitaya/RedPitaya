@@ -61,7 +61,7 @@ done
 /etc/init.d/connman-config
 
 # Run IP discovery service
-$PATH_REDPITAYA/redpitaya/sbin/discovery
+$PATH_REDPITAYA/sbin/discovery
 
 # Print OS version info
-cat $PATH_REDPITAYA/etc/motd
+cat $PATH_REDPITAYA/motd
