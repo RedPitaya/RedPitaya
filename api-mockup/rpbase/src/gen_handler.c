@@ -190,7 +190,7 @@ int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {
 
 int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
     // Check if data is normalized
-    float min = FLT_MAX, max = FLT_MIN; // initial values
+    float min = FLT_MAX, max = -FLT_MAX; // initial values
     int i;
     for(i = 0; i < length; i++) {
         if (data[i] < min)
