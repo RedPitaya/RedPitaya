@@ -487,7 +487,54 @@ area:hover {
   display: block;
   width: 100%;
   height: auto;
+  min-height: 100px;
   max-height: 100px;
+}
+
+.waterfall-holder span {
+  display:inline-block;
+  position:absolute;
+  top:30px;   
+  left:0px;
+     
+    /* Оформление текста */
+  color:#FFF;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:20px; 
+     
+    /* Фон */
+  padding:10px 30px;
+  width: 100%;
+  text-align: center;
+}
+
+.wait{
+  position:relative;
+  margin-top: -100px;
+}
+
+.wait img{
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100px;
+}
+
+.wait span {
+  display:inline-block;
+  position:absolute;
+  top:30px;   
+  left:0px;
+     
+    /* Оформление текста */
+  color:#FFF;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:20px; 
+     
+    /* Фон */
+  padding:10px 30px;
+  width: 100%;
+  text-align: center;
 }
 
 .waterfall_title {
@@ -508,4 +555,133 @@ area:hover {
 
 .pull-right {
   display: none;
+}
+
+.hline {
+  height: 2px;
+  border-top: 2px dashed #ccc;
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 0;
+  opacity: 0.8;
+  display: none;
+  z-index: 9;
+}
+
+.vline {
+  width: 2px;
+  border-right: 2px dashed #ccc;
+  position: absolute;
+  top: 1px;
+  bottom: 9px;
+  left: 0;
+  opacity: 0.8;
+  display: none;
+  z-index: 9;
+}
+
+.harrow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  margin-top: -7px;
+  display: none;
+  z-index: 12;
+}
+
+.varrow {
+  position: absolute;
+  left: 0;
+  bottom: 8px;
+  margin-left: -7px;
+  display: none;
+  z-index: 12;
+}
+
+.cur_info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 10px;
+  color: #fff;
+  background-color: #000;
+  line-height: 12px;
+  padding: 1px 3px;
+  white-space: nowrap;
+  display: none;
+  z-index: 14;
+}
+
+#cur_x1_info.cur_info, #cur_x2_info.cur_info {
+  top: 2px;
+  margin-left: 3px;
+}
+
+#cur_y1_info.cur_info, #cur_y2_info.cur_info {
+  left: 2px;
+  margin-top: -15px;
+}
+
+#cur_x_diff {
+  font-family: "Glyphicons Halflings"; 
+  font-size: 11px;
+  line-height: 1; 
+  border-bottom: 2px solid #ccc; 
+  margin: 0 5px;
+  width: 100px;
+  height: 7px; 
+  position: absolute;
+  left: 0;
+  top: 40px;
+  display: none;
+  z-index: 13;
+}
+
+#cur_x_diff:before {
+  content: "\e079";
+  margin-left: -5px;
+}
+
+#cur_x_diff:after {
+  content: "\e080";
+  margin-right: -5px;
+  float: right;
+}
+
+#cur_y_diff {
+  font-family: "Glyphicons Halflings";
+  font-size: 11px;
+  border-right: 2px solid #ccc;
+  height: 100px;
+  width: 7px;
+  position: absolute;
+  left: 50px;
+  top: 0;
+  display: none;
+  z-index: 13;
+}
+
+#cur_y_diff:before {
+  content: "\e113";
+  position: absolute;
+  top: -5px;
+  left: 1px;
+  line-height: 1;
+}
+
+#cur_y_diff:after {
+  content: "\e114";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  line-height: 1;
+}
+
+#cur_y_diff_info.cur_info {
+  left: 59px;
+}
+
+#cur_x_diff_info.cur_info {
+  top: 30px;
 }
