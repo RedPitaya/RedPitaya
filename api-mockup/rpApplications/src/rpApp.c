@@ -179,10 +179,6 @@ int rpApp_OscIsInverted(rpApp_osc_source source, bool *inverted) {
     return osc_isInverted(source, inverted);
 }
 
-int rpApp_OscGetViewPos(float *positionRatio) {
-    return osc_getViewPos(positionRatio);
-}
-
 int rpApp_OscGetViewPart(float *ratio) {
     return osc_getViewPart(ratio);
 }

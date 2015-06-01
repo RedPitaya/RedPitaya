@@ -466,13 +466,6 @@ int osc_isInverted(rpApp_osc_source source, bool *inverted) {
     return RP_OK;
 }
 
-int osc_getViewPos(float *positionRatio) {
-    int32_t tmp;
-    ECHECK_APP(rp_AcqGetTriggerDelay(&tmp));
-    *positionRatio = 0.5f + (float)(tmp % ADC_BUFFER_SIZE) / ADC_BUFFER_SIZE;
-    return RP_OK;
-}
-
 int osc_getViewPart(float *ratio) {
     *ratio = ((float)viewSize * (float)timeToIndex(timeScale) / samplesPerDivision) / (float)ADC_BUFFER_SIZE;
     return RP_OK;
@@ -775,8 +768,8 @@ void calculateDevivative(rp_channel_t channel, float scale, float offset, float 
     view[RPAPP_OSC_SOUR_MATH*viewSize] = scaleAmplitude(((v1 - v2) / dt2 / 2), scale, 1, offset, invertFactor);
     for (int i = 1; i < viewSize - 1; ++i) {
         v1 = v2;
-        ECHECK_APP_THREAD(unOffsetAmplitudeChannel(channel, view[channel*viewSize + i+1], &v2));
-        view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude((float) ((v2 - v1) / dt2), scale, 1, offset, invertFactor);
+        ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i+1], &v2));
+        view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude((v2 - v1) / dt2, scale, 1, offset, invertFactor);
     }
 }
 
@@ -947,7 +940,7 @@ void *mainThreadFun() {
                     view[channel * viewSize + i] = 0;
                 }
                 for (int i = 0; i < viewSize-_postZero && (int) (i * _deltaSample) < _getBufSize; ++i) {
-                    ECHECK_APP_THREAD(scaleAmplitudeChannel(channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
+                    ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
                 }
             }
 
