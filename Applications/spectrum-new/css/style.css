@@ -421,8 +421,10 @@ area:hover {
 }
 
 #joystick {
-  position: absolute; 
-  right: 26px; 
+  position: absolute;
+  margin-left: 8px;
+  margin-bottom: 250px;
+  right: 26px;
   bottom: 10px; 
   width: 150px; 
   height: auto;
