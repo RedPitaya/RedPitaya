@@ -78,6 +78,10 @@ reg   [  14-1: 0] dac_rdat  ;
 reg   [ RSZ-1: 0] dac_rp    ;
 reg   [RSZ+15: 0] dac_pnt   ; // read pointer
 reg   [RSZ+15: 0] dac_pntp  ; // previour read pointer
+wire  [RSZ+16: 0] dac_npnt  ; // next read pointer
+wire  [RSZ+16: 0] dac_npnt_sub ;
+wire              dac_npnt_sub_pos;
+wire              dac_npnt_sub_zro;
 
 reg   [  28-1: 0] dac_mult  ;
 reg   [  15-1: 0] dac_sum   ;
@@ -127,7 +131,6 @@ reg              dac_do       ;
 reg              dac_rep      ;
 wire             dac_trig     ;
 reg              dac_trigr    ;
-wire [RSZ+16: 0] dac_npnt     ; // next read pointer
 
 // state machine
 always @(posedge dac_clk_i) begin
@@ -182,7 +185,7 @@ always @(posedge dac_clk_i) begin
       // in cycle mode
       if (dac_trig && !set_rst_i)
          dac_do <= 1'b1 ;
-      else if (set_rst_i || ((cyc_cnt==16'h1) && (dac_npnt >= {1'b0,set_size_i})) )
+      else if (set_rst_i || ((cyc_cnt==16'h1) && (dac_npnt_sub_pos || dac_npnt_sub_zro)) )
          dac_do <= 1'b0 ;
 
       // in repetition mode
@@ -195,18 +198,21 @@ end
 
 assign dac_trig = (!dac_rep && trig_in) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
 
+assign dac_npnt_sub = dac_npnt - {1'b0,set_size_i};
+assign dac_npnt_sub_neg =  ~dac_npnt_sub[RSZ+16];
+assign dac_npnt_sub_zro = ~|dac_npnt_sub;
+
 // read pointer logic
 always @(posedge dac_clk_i) begin
    if (dac_rstn_i == 1'b0) begin
       dac_pnt  <= {RSZ+16{1'b0}} ;
-   end
-   else begin
+   end else begin
       if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
          dac_pnt <= set_ofs_i ;
-      else if (dac_do && !set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //go to start
+      else if (dac_do && !set_wrap_i && dac_npnt_sub_pos) //go to start
          dac_pnt <= set_ofs_i ;
-      else if (dac_do &&  set_wrap_i && (dac_npnt > {1'b0,set_size_i}) ) //wrap
-         dac_pnt <= dac_npnt - {1'b0,set_size_i} - 'h10000 ; //transfer difference into next cycle
+      else if (dac_do &&  set_wrap_i && dac_npnt_sub_pos) //wrap
+         dac_pnt <= dac_npnt_sub - 'h10000 ; //transfer difference into next cycle
       else if (dac_do) //normal increase
          dac_pnt <= dac_npnt[RSZ+15:0] ;
    end
