@@ -73,6 +73,9 @@ GDBSERVER   = $(INSTALL_DIR)/bin/gdbserver
 APP_SCOPE_DIR = Applications/scope
 APP_SCOPE     = $(INSTALL_DIR)/www/apps/scope
 
+APP_SPECTRUM_DIR = Applications/spectrum-new
+APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
+
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
@@ -84,7 +87,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) sdk rp_communication
+$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication
 	mkdir $(TARGET)
 	cp -r $(BUILD)/* $(TARGET)
 	rm -f $(TARGET)/fsbl.elf $(TARGET)/fpga.bit $(TARGET)/u-boot.elf $(TARGET)/devicetree.dts $(TARGET)/memtest.elf
@@ -181,6 +184,10 @@ $(LIBRPAPP):
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
+	$(MAKE) -C $(APP_SPECTRUM_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 #Gdb server for remote debugging
 $(GDBSERVER): #TODO: This is a temporary solution
