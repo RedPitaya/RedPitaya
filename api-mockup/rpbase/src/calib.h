@@ -26,6 +26,7 @@ int calib_Release();
 
 rp_calib_params_t calib_GetParams();
 int calib_WriteParams(rp_calib_params_t calib_params);
+void calib_SetToZero();
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
 int calib_SetFrontEndOffset(rp_channel_t channel);
