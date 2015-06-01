@@ -9,7 +9,7 @@ from redpitaya_scpi import scpi
 rp_s = scpi (sys.argv[1])
 
 #Generate signal
-rp_s.gen (src=1, waveform='square', freq=10000, ampl=0.9)
+rp_s.gen (src=1, waveform='sine', freq=10000, ampl=0.9)
 
 rp_s.send_txt('ACQ:RST')
 
