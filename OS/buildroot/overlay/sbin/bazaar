@@ -19,8 +19,6 @@
 # 3  Data integrity error
 # 4  System error
 
-# Automatic version - do not edit.
-VER=
 
 # Ecosystem special application ID.
 OS=ecosystem
@@ -30,7 +28,7 @@ TARGET=${PATH_REDPITAYA}/www/apps/
 
 # Get parameters or print usage if they are wrong
 [ $# -lt 2 ] && {
-    echo  "`basename $0` version ${VER}"
+    echo  "`basename $0`"
     echo ""
     echo "Usage: `basename $0`  action app [url] [md5sum]" 1>&2
     echo "       action:     Action to perform [install, remove, idgen, lic]." 1>&2
