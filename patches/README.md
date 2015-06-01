@@ -21,13 +21,13 @@ There are several patches for U-Boot:
 
 1.  Increased PHY autonegotiation timeout from 4 to 10s.
 
-    ```
+    ```lang-none
     include/phy.h
     ```
 
 2.  Added support for Lantiq PHY11G.
 
-    ```
+    ```lang-none
     include/phy.h
     drivers/net/phy/phy.c
     drivers/net/phy/lantiq.c
@@ -37,7 +37,7 @@ There are several patches for U-Boot:
 
 3.  Red Pitaya board added to U-Boot configuration.
 
-    ```
+    ```lang-none
     arch/arm/cpu/armv7/zynq/Kconfig
     arch/arm/dts/zynq-red-pitaya.dts
     configs/zynq_red_pitaya_defconfig
@@ -46,7 +46,7 @@ There are several patches for U-Boot:
 
 4.  Boot options for Ubuntu/Debian SD card images.
 
-    ```
+    ```lang-none
     TODO
     ```
 
@@ -58,7 +58,7 @@ There are three possible sources for the U-Boot environment: configuration heade
 
 #### Environment
 Currently the environment is stored inside the EEPROM:
-```
+```lang-none
 bootcmd=run $modeboot
 bootdelay=3
 baudrate=115200
@@ -89,21 +89,21 @@ The Linux `boot` parameters are not appropriate for running Ubuntu images, since
 A new version of the Linux kernel is provided with each Vivado version, the current version is **v2015.1**.
 
 ### Patches
-```
+```lang-none
 arch/arm/configs/xilinx_zynq_defconfig
 ```
 Kernel configuration update based on a generic configuration for Xilinx Zynq devices.
-```
+```lang-none
 drivers/misc/eeprom/at24.c
 ```
 Modifies the EEPROM driver to use a 32 Byte page size for `24c64` instead of the default 8 Bytes. This patch might improve speed and reduce EEPROM wear. There are no related changes upstream. TODO, check if the same can be achieved using runtime configuration options.
-```
+```lang-none
 drivers/net/phy/Kconfig
 drivers/net/phy/Makefile
 drivers/net/phy/lantiq.c
 ```
 A driver for Lantiq PHY11G is provided here. I checked the manfacturers website for an official driver, but could not find one.
-```
+```lang-none
 drivers/net/wireless/Kconfig
 drivers/net/wireless/Makefile
 drivers/net/wireless/rtl8192cu/*
@@ -119,7 +119,7 @@ Linux kernel configuration is based on `arch/arm/configs/xilinx_zynq_defconfig`,
 ## Init process
 Init configuration is slit between generic components (file system mounting, wireless access point) and Red Pitaya specific components (starting Nginx and SCPI servers).
 
-```
+```lang-none
 OS/filesystem/
 OS/filesystem/sbin
 OS/filesystem/sbin/os-postinstall
@@ -133,16 +133,12 @@ OS/filesystem/etc/network/config
 OS/filesystem/etc/network/wpa_supplicant.conf
 ```
 
-```
-OS/buildroot/overlay/
-OS/buildroot/overlay/sbin
+```lang-none
 OS/buildroot/overlay/sbin/ro
 OS/buildroot/overlay/sbin/lantiq_mdio
 OS/buildroot/overlay/sbin/rw
 OS/buildroot/overlay/sbin/bazaar
-OS/buildroot/overlay/var
-OS/buildroot/overlay/var/log
-OS/buildroot/overlay/etc
+OS/buildroot/overlay/var/log -> ../tmp/log
 OS/buildroot/overlay/etc/fw_env.config
 OS/buildroot/overlay/etc/ssh_host_key
 OS/buildroot/overlay/etc/init.d
@@ -160,12 +156,6 @@ OS/buildroot/overlay/etc/profile
 OS/buildroot/overlay/etc/motd
 OS/buildroot/overlay/etc/ssh_host_ed25519_key
 OS/buildroot/overlay/etc/ssh_host_ecdsa_key
-OS/buildroot/overlay/etc/network
 OS/buildroot/overlay/etc/network/interfaces
-OS/buildroot/overlay/usr
-OS/buildroot/overlay/usr/share
-OS/buildroot/overlay/usr/share/udhcpc
 OS/buildroot/overlay/usr/share/udhcpc/default.script
-OS/buildroot/overlay/usr/lib
-OS/buildroot/overlay/usr/lib/libluajit-5.1.so.2
 ```
