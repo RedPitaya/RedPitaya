@@ -25,7 +25,6 @@ $(UIMAGE): $(B_DIR) overlay config
 $(B_DIR):
 	wget $(B_DOWNLOAD)
 	tar xfz $(B_ARCHIVE)
-	patch buildroot-2014.02/package/avahi/avahi.mk patches/0000-avahi-tarball-url.patch
 
 install: $(UIMAGE)
 	mkdir -p $(INSTALL_DIR)
