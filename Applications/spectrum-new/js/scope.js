@@ -13,7 +13,7 @@
   SPEC.config = {};
   SPEC.config.app_id = 'spectrum';
   SPEC.config.server_ip = '';  // Leave empty on production, it is used for testing only
-  SPEC.config.start_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?start=' + SPEC.config.app_id;
+  SPEC.config.start_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?start=' + SPEC.config.app_id + '?' + location.search.substr(1);
   SPEC.config.stop_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?stop=' + SPEC.config.app_id;
 //  SPEC.config.socket_url = 'ws://localhost:9002';
   SPEC.config.socket_url = 'ws://' + (SPEC.config.server_ip.length ? SPEC.config.server_ip : window.location.hostname) + ':9002';  // WebSocket server URI
@@ -40,7 +40,9 @@
     // dBm
     1/10, 2/10, 5/10, 1, 2, 5, 10, 20, 50, 100
   ];
- 
+
+  SPEC.xmin = -1000000;
+  SPEC.xmax = 1000000;  
   SPEC.ymax = 20.0;
   SPEC.ymin = -120.0;
 
@@ -52,6 +54,7 @@
     processing: false,
     editing: false,
     resized: false,
+	cursor_dragging: false,
     sel_sig_name: null,
     fine: false
   };
@@ -114,7 +117,7 @@
       SPEC.ws.onclose = function() {
         SPEC.state.socket_opened = false;
         $('#graphs .plot').hide();  // Hide all graphs
-        
+        SPEC.hideCursors();
         console.log('Socket closed. Trying to reopen in ' + SPEC.config.socket_reconnect_timeout/1000 + ' sec...');
         
         // Try to reconnect after a defined timeout
@@ -150,20 +153,10 @@
 
   // Processes newly received values for parameters
   SPEC.processParameters = function(new_params) {
-	//if (new_params['peak1_unit']) console.log("PEAK UNIT = " + SPEC.floatToLocalString(new_params['peak1_unit'].value.toFixed(2)));
+	var old_params = $.extend(true, {}, SPEC.params.orig);
+    
     for(var param_name in new_params) {
-      
-      // Do nothing if new parameter value is the same as the old one, and it is not related to measurement info or offset
-      if(SPEC.params.orig[param_name] !== undefined 
-          && SPEC.params.orig[param_name].value === new_params[param_name].value
-        //  && param_name.indexOf('SPEC_MEAS_VAL') == -1
-        //  && param_name.indexOf('_OFFSET') == -1
-		  )
-	  {
-        continue;
-      }
-      
-      // Save data for new parameter
+        // Save new parameter value
       SPEC.params.orig[param_name] = new_params[param_name];
 
       // Run/Stop button
@@ -179,7 +172,6 @@
       }
       // All other parameters
       else {
-        var field = $('#' + param_name);
 
 		//if(param_name == 'peak1_unit')	
 		{
@@ -210,9 +202,75 @@
 		    $('#waterfall_ch1').attr('src', SPEC.config.waterf_img_path + 'wat1_' + img_num + '.jpg');
 		    $('#waterfall_ch2').attr('src', SPEC.config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
+		// Y cursors
+        else if(param_name == 'SPEC_CURSOR_Y1' || param_name == 'SPEC_CURSOR_Y2') {
+          if(! SPEC.state.cursor_dragging) {
+            var y = (param_name == 'SPEC_CURSOR_Y1' ? 'y1' : 'y2');
+            
+            if(new_params[param_name].value) {
+
+				var plot = SPEC.getPlot();
+				if(SPEC.isVisibleChannels() && plot){
+
+					var axes = plot.getAxes();   
+					var min_y =axes.yaxis.min;  
+					var max_y = axes.yaxis.max;
+
+					var new_value = new_params[y == 'y1' ? 'SPEC_CUR1_V' : 'SPEC_CUR2_V'].value;
+					var correct_val = Math.max(min_y, new_value);
+					new_value = Math.min(correct_val, max_y);
+
+					var volt_per_px = 1/axes.yaxis.scale;
+					var top =  (axes.yaxis.max - new_value)/volt_per_px;
+				  
+					$('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
+					$('#cur_' + y + '_info').html((new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'dBm').css('margin-top', (top < 16 ? 3 : ''));
+				}
+            }
+            else {
+              $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
+            }
+          }
+        }
+        // X cursors
+        else if(param_name == 'SPEC_CURSOR_X1' || param_name == 'SPEC_CURSOR_X2') {
+          if(! SPEC.state.cursor_dragging) {
+            var x = (param_name == 'SPEC_CURSOR_X1' ? 'x1' : 'x2');
+            
+            if(new_params[param_name].value) {
+
+				var plot = SPEC.getPlot();
+				if(SPEC.isVisibleChannels() && plot){
+
+					var axes = plot.getAxes();   
+					var min_x =Math.max(0, axes.xaxis.min);  
+					var max_x = axes.xaxis.max;
+					var new_value = -1*new_params[x == 'x1' ? 'SPEC_CUR1_T' : 'SPEC_CUR2_T'].value;
+					var correct_val = Math.max(min_x, new_value);
+					new_value = -1* Math.min(correct_val, max_x);
+					var graph_width = $('#graph_grid').width();
+					var ms_per_px = 1/axes.xaxis.scale;
+					var msg_width = $('#cur_' + x + '_info').outerWidth();
+					var left = (-axes.xaxis.min -  new_value)/ms_per_px;
+					var unit = SPEC.freq_unit[new_params['freq_unit'].value];
+					$('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
+					$('#cur_' + x + '_info')
+					.html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + unit)
+					.css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+				}
+            }
+            else {
+              $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
+            }
+          }
+        }
+		
+		var field = $('#' + param_name);
 		
         // Do not change fields from dialogs when user is editing something        
-        if(!SPEC.state.editing || field.closest('.menu-content').length == 0) {
+        if((!SPEC.state.editing || field.closest('.menu-content').length == 0) 
+	&& (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
+          
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
 
@@ -247,6 +305,10 @@
         }
       }
     }
+	    
+    // Resize double-headed arrows showing the difference between cursors
+    SPEC.updateYCursorDiff();
+    SPEC.updateXCursorDiff();
   };
 
   // Processes newly received data for signals
@@ -271,6 +333,10 @@
 	var sig_count = 0;
     // (Re)Draw every signal
     for(sig_name in new_signals) {
+	// Ignore empty signals
+      if(new_signals[sig_name].size == 0) {
+        continue;
+      }
       sig_count++;
       // Ignore disabled signals
       if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
@@ -308,6 +374,10 @@
         var filtered_data = SPEC.filterData(SPEC.datasets, SPEC.graphs.plot.width());   
         SPEC.graphs.plot.setData(filtered_data);
         SPEC.graphs.plot.draw();
+		SPEC.updateCursors();
+		//to change position while resizing automatically
+		$('.harrow').css('left', 'inherit');
+		$('.varrow').css('top', 'inherit');
       }
       else {
         SPEC.graphs.elem = $('<div class="plot" />').css($('#graph_grid').css(['height','width'])).appendTo('#graphs');
@@ -333,13 +403,18 @@
         });
 		SPEC.updateZoom();
 		//update power div
-		var scale = SPEC.graphs.plot.getAxes().yaxis.tickSize;//SPEC.graphs.plot.getAxes().yaxis.delta.toFixed(1);
+		var scale = SPEC.graphs.plot.getAxes().yaxis.tickSize;
 		$('#SPEC_CH1_SCALE').html(scale);
 		$('#SPEC_CH2_SCALE').html(scale);
 		SPEC.params.local['SPEC_CH1_SCALE'] = { value: scale };
 		SPEC.params.local['SPEC_CH2_SCALE'] = { value: scale };
 		SPEC.sendParams();
 
+		var offset = SPEC.graphs.plot.getPlotOffset();
+		var margins =  {};
+		margins.marginLeft = offset.left + 'px';
+		margins.marginRight = offset.right + 'px';
+		$('.waterfall-holder').css(margins);
       }
 
       visible_plots.push(SPEC.graphs.elem[0]);
@@ -358,11 +433,27 @@
 	}
 	else{
 		$('.pull-right').hide();
+		// Disable buttons related to inactive signals
+		$('#right_menu .menu-btn').not(visible_btns).prop('disabled', true);
+			
+			// Show only information about active signals
+		$('#info .info-title > span, #info .info-value > span').not(visible_info).hide();
+		$('#info').find(visible_info).show();
+		if(SPEC.graphs && SPEC.graphs.elem) 
+		   SPEC.graphs.elem.hide();
+		SPEC.hideCursors();
 	}
   };
 
   // Exits from editing mode
   SPEC.exitEditing = function() {
+	
+	if(!($('#CH1_SHOW').hasClass('active') || $('#CH2_SHOW').hasClass('active'))){
+		if(SPEC.params.orig['CH1_SHOW'].value == true)
+			$('#CH2_SHOW').addClass('active');
+		else if(SPEC.params.orig['CH2_SHOW'].value == true)
+			$('#CH1_SHOW').addClass('active');
+	}
 
     for(var key in SPEC.params.orig) {
       var field = $('#' + key);
@@ -423,7 +514,9 @@
     // TEMP TEST
     //SPEC.params.local['DEBUG_PARAM_PERIOD'] = { value: 5000 };
     //SPEC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 1000 };
-    
+	
+    SPEC.setDefCursorVals();
+	
     SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
     SPEC.params.local = {};
     return true;
@@ -536,6 +629,8 @@
 		SPEC.params.local['SPEC_CH2_SCALE'] = { value: new_scale };
         SPEC.sendParams();
     }
+	SPEC.updateWaterfallWidth();
+	SPEC.updateCursors();
 
     return new_scale;
 	
@@ -569,6 +664,8 @@
 		SPEC.params.local['SPEC_TIME_SCALE'] = { value: new_scale };
 		SPEC.sendParams();
 	}
+	SPEC.updateWaterfallWidth();
+	SPEC.updateCursors();
 
     return new_scale;
   };
@@ -595,6 +692,9 @@
     SPEC.params.local['SPEC_CH1_SCALE'] = {value : cur_y_scale};
     
     SPEC.sendParams();
+	SPEC.updateWaterfallWidth();
+	SPEC.updateCursors();
+
   };
 	
   SPEC.isVisibleChannels = function(){
@@ -605,6 +705,76 @@
 		(SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value == true))
 		is_visible = true;
 	return is_visible;
+  };
+
+  SPEC.getPlot = function(){
+	
+	if(SPEC.graphs && SPEC.graphs.elem){
+		var plot = SPEC.graphs.plot;
+ 		return plot;
+	}
+	return null;
+  };
+
+  SPEC.updateWaterfallWidth = function(){
+	var plot = SPEC.getPlot();
+	if(!(SPEC.isVisibleChannels() && plot)){
+		return;
+	} 
+	var offset = plot.getPlotOffset();
+	var margins =  {};
+	margins.marginLeft = offset.left + 'px';
+	margins.marginRight = offset.right + 'px';
+
+	$('.waterfall-holder').css(margins);
+
+  };
+
+  SPEC.updateCursors = function(){
+	var plot = SPEC.getPlot();
+	if(!(SPEC.isVisibleChannels() && plot)){
+		return;
+	} 
+	var offset = plot.getPlotOffset();
+	var left = offset.left+1 + 'px';
+	var right = offset.right+1 + 'px';
+	var top = offset.top+1 + 'px';
+	var bottom = offset.bottom+9 + 'px';
+	
+	//update lines length
+	$('.hline').css('left', left);
+	$('.hline').css('right', right);
+	$('.vline').css('top', top);
+	$('.vline').css('bottom', bottom);
+
+	//update arrows positions
+	var diff_left =  offset.left +2+ 'px';
+	var diff_top = offset.top -2+ 'px';
+	var margin_left =  offset.left -7 -2 + 'px';
+	var margin_top =  -7 + offset.top -2+ 'px';
+	var margin_bottom =  -2 + offset.bottom + 'px';
+	var line_margin_left =  offset.left  - 2+ 'px';
+	var line_margin_top =  offset.top  - 2+ 'px';
+	var line_margin_bottom =  offset.bottom  - 2+ 'px';
+
+	$('.varrow').css('margin-left', margin_left);
+	$('.harrow').css('margin-top', margin_top);
+	$('.harrow').css('margin-bottom', margin_bottom);
+	$('.vline').css('margin-left',line_margin_left);
+	$('.hline').css('margin-top', line_margin_top);
+	$('.hline').css('margin-bottom', line_margin_bottom);
+	
+	$('#cur_x_diff').css('margin-left', diff_left);
+	$('#cur_y_diff').css('margin-top', diff_top);
+	$('#cur_x_diff_info').css('margin-left', diff_left);
+	$('#cur_y_diff_info').css('margin-top', diff_top);
+	
+  };
+  
+  SPEC.hideCursors = function(){
+	$('.hline, .vline, .harrow, .varrow, .cur_info').hide();
+	$('#cur_y_diff').hide();
+	$('#cur_x_diff').hide();
   };
 
   SPEC.updateZoom = function() {
@@ -682,14 +852,194 @@
     //return num.toString().replace('.', SPEC.getLocalDecimalSeparator());
     return (num + '').replace('.', SPEC.getLocalDecimalSeparator());
   };
+  
+  // Sets default values for cursors, if values not yet defined
+  SPEC.setDefCursorVals = function() {
 
+	var plot = SPEC.getPlot();
+	if(!(SPEC.isVisibleChannels() && plot)){
+		return;
+	} 
+	var offset = plot.getPlotOffset();
+    var graph_height = $('#graph_grid').height() - offset.top - offset.bottom;
+    var graph_width = $('#graph_grid').width() - offset.left - offset.right;
+    
+    var axes = plot.getAxes();
+
+    var volt_per_px = 1/axes.yaxis.scale;
+	
+	SPEC.updateCursors();
+
+    // Default value for Y1 cursor is 1/4 from graph height
+    if(SPEC.params.local['SPEC_CURSOR_Y1'] && SPEC.params.local['SPEC_CURSOR_Y1'].value && SPEC.params.local['SPEC_CUR1_V'] === undefined && $('#cur_y1').data('init') === undefined) {
+      var cur_arrow = $('#cur_y1_arrow');
+      var top = (graph_height + 7) * 0.25;
+    
+      SPEC.params.local['SPEC_CUR1_V'] = { value: axes.yaxis.max - top*volt_per_px };
+      $('#cur_y1_arrow, #cur_y1').css('top', top).show();
+      $('#cur_y1').data('init', true);
+    }
+    
+    // Default value for Y2 cursor is 1/3 from graph height
+    if(SPEC.params.local['SPEC_CURSOR_Y2'] && SPEC.params.local['SPEC_CURSOR_Y2'].value && SPEC.params.local['SPEC_CUR2_V'] === undefined && $('#cur_y2').data('init') === undefined) {
+      var cur_arrow = $('#cur_y2_arrow');
+      var top = (graph_height + 7) * 0.33;
+      
+      SPEC.params.local['SPEC_CUR2_V'] = { value: axes.yaxis.max - top*volt_per_px}; 
+      
+      $('#cur_y2_arrow, #cur_y2').css('top', top).show();
+      $('#cur_y2').data('init', true);
+    }
+    
+	var ms_per_px = 1/axes.xaxis.scale;
+    // Default value for X1 cursor is 1/4 from graph width
+    if(SPEC.params.local['SPEC_CURSOR_X1'] && SPEC.params.local['SPEC_CURSOR_X1'].value && SPEC.params.local['SPEC_CUR1_T'] === undefined && $('#cur_x1').data('init') === undefined) {
+      var cur_arrow = $('#cur_x1_arrow');
+      var left = graph_width * 0.25;
+
+      SPEC.params.local['SPEC_CUR1_T'] = { value: -axes.xaxis.min - left * ms_per_px };
+      $('#cur_x1_arrow, #cur_x1').css('left', left).show();
+      $('#cur_x1').data('init', true);
+    }
+    
+    // Default value for X2 cursor is 1/3 from graph width
+    if(SPEC.params.local['SPEC_CURSOR_X2'] && SPEC.params.local['SPEC_CURSOR_X2'].value && SPEC.params.local['SPEC_CUR2_T'] === undefined && $('#cur_x2').data('init') === undefined) {
+      var cur_arrow = $('#cur_x2_arrow');
+      var left = graph_width * 0.33;
+   
+      SPEC.params.local['SPEC_CUR2_T'] = { value: -axes.xaxis.min - left * ms_per_px };
+
+      $('#cur_x2_arrow, #cur_x2').css('left', left).show();
+      $('#cur_x2').data('init', true);
+    }
+  };
+  
+  // Updates all elements related to a Y cursor
+  SPEC.updateYCursorElems = function(ui, save) {
+    var y = (ui.helper[0].id == 'cur_y1_arrow' ? 'y1' : 'y2');
+
+	var plot = SPEC.getPlot();
+	if(!(SPEC.isVisibleChannels() && plot)){
+		return;
+	} 
+	var axes = plot.getAxes();
+
+    var volt_per_px = 1/axes.yaxis.scale;
+    var new_value = axes.yaxis.max - ui.position.top*volt_per_px;
+    $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
+    $('#cur_' + y + '_info').html((new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'dBm').css('margin-top', (ui.position.top < 16 ? 3 : ''));
+    
+    SPEC.updateYCursorDiff();
+    
+    if(save) {
+      SPEC.params.local[y == 'y1' ? 'SPEC_CUR1_V' : 'SPEC_CUR2_V'] = { value: new_value };
+      SPEC.sendParams();
+    }
+  };
+  
+  // Updates all elements related to a X cursor
+  SPEC.updateXCursorElems = function(ui, save) {
+    var x = (ui.helper[0].id == 'cur_x1_arrow' ? 'x1' : 'x2');
+    var plot = SPEC.getPlot();
+	if(!(SPEC.isVisibleChannels() && plot)){
+		return;
+	} 
+	var axes = plot.getAxes();
+	var offset = plot.getPlotOffset();
+    
+    var graph_width = $('#graph_grid').width() - offset.left - offset.right;
+    var ms_per_px = 1/axes.xaxis.scale;
+    var msg_width = $('#cur_' + x + '_info').outerWidth();
+    var new_value = -axes.xaxis.min - ui.position.left * ms_per_px;
+
+    $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
+	
+	var unit = SPEC.freq_unit[SPEC.params.orig['freq_unit'].value];
+    $('#cur_' + x + '_info')
+      .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + unit)
+      .css('margin-left', (ui.position.left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+    
+    SPEC.updateXCursorDiff();
+    
+    if(save) {
+      SPEC.params.local[x == 'x1' ? 'SPEC_CUR1_T' : 'SPEC_CUR2_T'] = { value: new_value };
+      SPEC.sendParams();
+    }
+  };
+  
+  // Resizes double-headed arrow showing the difference between Y cursors
+  SPEC.updateYCursorDiff = function() {
+    var y1 = $('#cur_y1');
+    var y2 = $('#cur_y2');
+    var y1_top = parseInt(y1.css('top'));
+    var y2_top = parseInt(y2.css('top'));
+    var diff_px = Math.abs(y1_top - y2_top) - 6;
+    
+    if(y1.is(':visible') && y2.is(':visible') && diff_px > 12) {
+      var top = Math.min(y1_top, y2_top);
+      var value = parseFloat($('#cur_y1_info').html()) - parseFloat($('#cur_y2_info').html());
+      
+      $('#cur_y_diff')
+        .css('top', top + 5)
+        .height(diff_px)
+        .show();
+      $('#cur_y_diff_info')
+        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : 3))) + 'dBm')
+        .css('top', top + diff_px/2 - 2)
+        .show();
+    }
+    else {
+      $('#cur_y_diff, #cur_y_diff_info').hide();
+    }
+  };
+  
+  // Resizes double-headed arrow showing the difference between X cursors
+  SPEC.updateXCursorDiff = function() {
+    var x1 = $('#cur_x1');
+    var x2 = $('#cur_x2');
+    var x1_left = parseInt(x1.css('left'));
+    var x2_left = parseInt(x2.css('left'));
+    var diff_px = Math.abs(x1_left - x2_left) - 9;
+    
+    if(x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
+      var left = Math.min(x1_left, x2_left);
+      var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
+      var unit = SPEC.freq_unit[SPEC.params.orig['freq_unit'].value];
+      $('#cur_x_diff')
+        .css('left', left + 1)
+        .width(diff_px)
+        .show();
+      $('#cur_x_diff_info')
+        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : Math.abs(value) >= 0.001 ? 4 : 6))) + unit)
+        .show()
+        .css('left', left + diff_px/2 - $('#cur_x_diff_info').width()/2 + 3);
+    }
+    else {
+      $('#cur_x_diff, #cur_x_diff_info').hide();
+    }
+  };
+
+  SPEC.updateImg = function(img, hide){
+	  if(hide && $('#wait_' + $(img).attr('id')).is(':visible')){
+		$('#wait_' + $(img).attr('id')).hide();
+		return;
+	  }
+	  if(!hide && $('#wait_' + $(img).attr('id')).is(':hidden')){
+		$('#wait_' + $(img).attr('id')).is(':hidden').show();
+	  }
+	  
+  };
+  
 }(window.SPEC = window.SPEC || {}, jQuery));
 
 // Page onload event handler
 $(function() {
   
+// Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
+  new FastClick(document.body);
+  
   // Process clicks on top menu buttons
-  $('#SPEC_RUN').click(function(ev) {
+  $('#SPEC_RUN').on('click touchstart', function() {
     ev.preventDefault();
     $('#SPEC_RUN').hide();
     $('#SPEC_STOP').css('display','block');
@@ -697,7 +1047,7 @@ $(function() {
     SPEC.sendParams();
   }); 
   
-  $('#SPEC_STOP').click(function(ev) {
+  $('#SPEC_STOP').on('click touchstart', function() {
     ev.preventDefault();
     $('#SPEC_STOP').hide();
     $('#SPEC_RUN').show(); 
@@ -705,35 +1055,20 @@ $(function() {
     SPEC.sendParams();
   });
   
-  $('#SPEC_SINGLE').click(function(ev) {
+  $('#SPEC_SINGLE').on('click touchstart', function() {
     ev.preventDefault();
     SPEC.params.local['SPEC_SINGLE'] = { value: true };
     SPEC.sendParams();
   });
   
-  $('#SPEC_AUTOSCALE').click(function(ev) {
+  $('#SPEC_AUTOSCALE').on('click touchstart', function() {
     ev.preventDefault();
     SPEC.params.local['SPEC_AUTOSCALE'] = { value: true };
     SPEC.sendParams();
   });
-  
-  // Selecting active signal
-  $('.menu-btn').click(function() {
-    $('#right_menu .menu-btn').not(this).removeClass('active');
-    SPEC.state.sel_sig_name = $(this).data('signal');
-    
-    if(SPEC.state.sel_sig_name == 'ch1') {
-      $('#ch1_offset_arrow').css('z-index', 11);
-      $('#ch2_offset_arrow').css('z-index', 10);
-    }
-    else if(SPEC.state.sel_sig_name == 'ch2') {
-      $('#ch2_offset_arrow').css('z-index', 11);
-      $('#ch1_offset_arrow').css('z-index', 10);
-    }
-  });
 
   // Opening a dialog for changing parameters
-  $('.edit-mode').click(function() {
+  $('.edit-mode').on('click touchstart', function() {
     SPEC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();  
@@ -747,12 +1082,12 @@ $(function() {
   });
   
   // Close parameters dialog on close button click
-  $('.close-dialog').click(function() {
+  $('.close-dialog').on('click touchstart', function() {
     SPEC.exitEditing();
   });
   
   // Measurement dialog
-  $('#meas_done').click(function() {              
+  $('#meas_done').on('click touchstart', function() {             
     var meas_signal = $('#meas_dialog input[name="meas_signal"]:checked');
     
     if(meas_signal.length) {
@@ -780,12 +1115,12 @@ $(function() {
   });
   
   // Process events from other controls in parameters dialogs
-  $('#edge1').click(function() {
+  $('#edge1').on('click touchstart', function() {
     $('#edge1').find('img').attr('src','img/edge1_active.png');
     $('#edge2').find('img').attr('src','img/edge2.png');
   });
   
-  $('#edge2').click(function() {
+  $('#edge2').on('click touchstart', function() {
     $('#edge2').find('img').attr('src','img/edge2_active.png');
     $('#edge1').find('img').attr('src','img/edge1.png');
   });
@@ -803,60 +1138,47 @@ $(function() {
 	$('#jtk_fine').attr('src','img/reset.png');
   });
   
-  $('#jtk_fine').click(function(){
+  $('#jtk_fine').on('click touchstart', function(ev) {
 	SPEC.resetZoom();
   });
   
-  $('#jtk_up, #jtk_down').click(function(ev) {
+  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
     SPEC.changeYZoom(ev.target.id == 'jtk_down' ? '-' : '+');
   });
   
-  $('#jtk_left, #jtk_right').click(function(ev) {
+  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
     SPEC.changeXZoom(ev.target.id == 'jtk_left' ? '-' : '+');
   });
   
-  // Voltage offset arrows dragging
-  $('.y-offset-arrow').draggable({
+  // Y cursor arrows dragging
+  $('#cur_y1_arrow, #cur_y2_arrow').draggable({
     axis: 'y',
     containment: 'parent',
+    start: function(ev, ui) {
+      SPEC.state.cursor_dragging = true;
+    },
     drag: function(ev, ui) {
-      var margin_top = parseInt(ui.helper.css('marginTop'));
-      var min_top = ((ui.helper.height()/2) + margin_top) * -1;
-      var max_top = $('#graphs').height() - margin_top;
-      
-      if(ui.position.top < min_top) {
-        ui.position.top = min_top;
-      }
-      else if(ui.position.top > max_top) {
-        ui.position.top = max_top;
-      }
+      SPEC.updateYCursorElems(ui, false);
     },
     stop: function(ev, ui) {
-      var zero_pos = ($('#graph_grid').outerHeight() + 7) / 2;
-      
-      if(ui.helper[0].id == 'ch1_offset_arrow') {
-        var volt_per_px = (SPEC.params.orig['SPEC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-        SPEC.params.local['SPEC_CH1_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt($('#ch1_offset_arrow').css('margin-top')) / 2) * volt_per_px };
-      }
-      else {
-        var volt_per_px = (SPEC.params.orig['SPEC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
-        SPEC.params.local['SPEC_CH2_OFFSET'] = { value: (zero_pos - ui.position.top + parseInt($('#ch1_offset_arrow').css('margin-top')) / 2) * volt_per_px };
-      }
-      
-      SPEC.sendParams();
+      SPEC.updateYCursorElems(ui, true);
+      SPEC.state.cursor_dragging = false;
     }
   });
   
-  // Voltage offset arrows dragging
-  $('#time_offset_arrow').draggable({
+  // X cursor arrows dragging
+  $('#cur_x1_arrow, #cur_x2_arrow').draggable({
     axis: 'x',
     containment: 'parent',
+    start: function(ev, ui) {
+      SPEC.state.cursor_dragging = true;
+    },
+    drag: function(ev, ui) {
+      SPEC.updateXCursorElems(ui, false);
+    },
     stop: function(ev, ui) {
-      var zero_pos = ($('#graph_grid').outerWidth() + 2) / 2;
-      var ms_per_px = (SPEC.params.orig['SPEC_TIME_SCALE'].value * 10) / $('#graph_grid').outerWidth();
-      
-      SPEC.params.local['SPEC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width()/2 - 1) * ms_per_px };
-      SPEC.sendParams();
+      SPEC.updateXCursorElems(ui, true);
+      SPEC.state.cursor_dragging = false;
     }
   });
   
@@ -959,6 +1281,11 @@ $(function() {
     $('#new_scale').empty();
   });
 
+  // Prevent native touch activity like scrolling
+  $('html, body').on('touchstart touchmove', function(ev) {
+    ev.preventDefault();
+  });
+  
   // Preload images which are not visible at the beginning
   $.preloadImages = function() {
     for(var i = 0; i < arguments.length; i++) {
@@ -982,6 +1309,8 @@ $(function() {
     // Hide all offset arrows
     $('.y-offset-arrow, #time_offset_arrow').hide();
     
+	SPEC.updateCursors();
+
     // Set the resized flag
     SPEC.state.resized = true;
     
