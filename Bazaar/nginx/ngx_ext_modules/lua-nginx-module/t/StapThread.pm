@@ -144,7 +144,7 @@ F(ngx_http_lua_run_thread) {
     #}
 }
 
-probe process("/usr/local/openresty-debug/luajit/lib/libluajit-5.1.so.2").function("lua_resume") {
+probe process("/usr/local/openresty-debug/luajit/lib/libluajit-5.1.so.2.0.2").function("lua_resume") {
     id = gen_id($L)
     printf("lua resume %d\n", id)
 }
