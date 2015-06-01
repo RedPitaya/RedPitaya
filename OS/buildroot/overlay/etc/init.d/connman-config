@@ -1,13 +1,13 @@
 #!/bin/sh
 
-source /opt/etc/network/config
+source $PATH_REDPITAYA/etc/network/config
 
 echo -n "Network: "
 
 # Configure static network configuraton if selected
 [ "x$NETWORK" != "xstatic" ] && {
     echo "DHCP"
-    echo "To change your network configuration, edit /opt/etc/network/config."
+    echo "To change your network configuration, edit $PATH_REDPITAYA/etc/network/config."
 } || {
     echo ""
 
@@ -23,7 +23,7 @@ echo -n "Network: "
 
     [ "x$IP" == "x" ] && {
         echo "ERROR: Static network selected, but IP not defined."
-        echo "Please edit /opt/etc/network/config to fix."
+        echo "Please edit $PATH_REDPITAYA/etc/network/config to fix."
 	exit 255;
     }
     [ "x$NETMASK" == "x" ] && {

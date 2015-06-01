@@ -2,6 +2,6 @@
 #
 # $Id: ro 751 2013-11-29 11:23:09Z ales.bardorfer $
 #
-# Mount SD card (/opt) read-only.
+# Mount SD card read-only.
 #
-mount -o ro,remount /opt
+mount -o ro,remount $PATH_REDPITAYA

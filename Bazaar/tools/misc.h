@@ -11,11 +11,7 @@ using CryptoPP::FileSource;
 #include "filters.h"
 using CryptoPP::StringSink;
 
-#ifdef IS_DEV_BRANCH
-const char* apps_path="/opt/www/apps";
-#else
 const char* apps_path="/opt/redpitaya/www/apps";
-#endif
 
 //Function gets json object from file
 inline int GetJSONObject(const std::string _file_name, JSONNode & _json_node)
@@ -93,7 +89,6 @@ inline std::string GetAppChecksum(const std::string _file_name, const std::strin
 inline std::string GetAppsFolder()
 {
 	std::string apps_folder = apps_path;
-	//std::string apps_folder = "opt/www/apps"; //for testing
 	return 	apps_folder;
 }
 
