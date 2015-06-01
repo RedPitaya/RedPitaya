@@ -3,13 +3,10 @@
 # Lantiq PHY MDIO register swiss army knife utility.
 #
 
-# Automatic version - do not edit.
-VER=
-
 LANTIQ=/sys/devices/amba.0/e000b000.ps7-ethernet/net/eth0/e000b000:01
 
 [ $# -lt 1 ] && {
-    echo "`basename $0` version ${VER}"
+    echo "`basename $0`"
     echo ""
     echo "Usage: `basename $0` addr <val>"
     echo "       addr: MDIO register address"
