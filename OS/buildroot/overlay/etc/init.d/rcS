@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 echo "Starting rcS..."
 
 echo "++ Mounting filesystems"
@@ -9,7 +8,7 @@ mkdir -p /dev/i2c
 mount -a
 
 # Check if SD card mounted, if not wait and try again
-if ! grep -qs '/opt' /proc/mounts; then
+if ! grep -qs $PATH_REDPITAYA /proc/mounts; then
 	sleep 1
 	mount -a
 fi
@@ -60,7 +59,7 @@ done
 /etc/init.d/connman-config
 
 # Run IP discovery service
-/opt/redpitaya/sbin/discovery
+$PATH_REDPITAYA/redpitaya/sbin/discovery
 
 # Print OS version info
-cat /etc/motd
+cat $PATH_REDPITAYA/etc/motd

@@ -1,4 +1,4 @@
- #
+#
 # $Id: Makefile 1253 2014-02-23 21:09:06Z ales.bardorfer $
 #
 # Red Pitaya OS/Ecosystem main Makefile
@@ -46,8 +46,7 @@ ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
 BUILD=build
 # TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
-#INSTALL_DIR=$(BUILD)/opt/redpitaya
-INSTALL_DIR=$(BUILD)/redpitaya
+INSTALL_DIR=$(BUILD)
 TARGET=target
 NAME=ecosystem
 
