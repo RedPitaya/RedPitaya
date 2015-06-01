@@ -108,7 +108,7 @@ drivers/net/wireless/Kconfig
 drivers/net/wireless/Makefile
 drivers/net/wireless/rtl8192cu/*
 ```
-This patch adds the out of tree driver for Broadcom rtl8192cu chip, since there are many issues with the in kernel version (even latest kernels). The provided code was copied from the **Rasberry PI** kernel repository `https://github.com/raspberrypi/linux/tree/rpi-3.18.y/drivers/net/wireless/rtl8192cu`.
+This patch adds the out of tree driver for Broadcom rtl8192cu chip, since there are many issues with the in kernel version (even latest kernels). The provided code was copied from the **Raspberry PI** kernel repository `https://github.com/raspberrypi/linux/tree/rpi-3.18.y/drivers/net/wireless/rtl8192cu`.
 
 ### Configuration
 Linux kernel configuration is based on `arch/arm/configs/xilinx_zynq_defconfig`, which is patched to add support for `RT2X00` and `RTL8192CU` wireless drivers. Aditional networking features are also enabled so Red Pitaya can behave like an access point routing travic from the wireless adapter to the wired port connected to the internet.
@@ -116,15 +116,34 @@ Linux kernel configuration is based on `arch/arm/configs/xilinx_zynq_defconfig`,
 ## Device tree
 
 
-## Init process
-Init configuration is slit between generic components (file system mounting, wireless access point) and Red Pitaya specific components (starting Nginx and SCPI servers).
+## OS costumizations
+OS costumization can be split between generic components (file system mounting, network configuration, wireless access point) and Red Pitaya specific components (starting Nginx and SCPI servers).
+
+### U-Boot tools
+Executables `fw_printenv` and `fw_setenv` (a symbolic link to `fw_printenv`) and configuration file `OS/buildroot/overlay/etc/fw_env.config` should be copied to the OS image:
+```
+/usr/sbin/fw_printenv
+/usr/sbin/fw_setenv
+/etc/fw_env.config
+```
+
+### Red Pitaya tools
+The next scripts are installed inside `/opt/redpitaya/sbin`. `lantiq_mdio` provides access low level access to the MDIO interface, but it is not used. `bazaar` is a script used in application instalation, scripts `ro` (read only) and `rw` (read write) are used by `bazaar` or can be run by the user.
+```
+OS/filesystem/sbin/lantiq_mdio
+OS/filesystem/sbin/bazaar
+OS/filesystem/sbin/ro
+OS/filesystem/sbin/rw
+```
+
+### Init sequence
+
+
+### Networking
+
+
 
 ```lang-none
-OS/filesystem/
-OS/filesystem/sbin
-OS/filesystem/sbin/os-postinstall
-OS/filesystem/etc
-OS/filesystem/etc/network
 OS/filesystem/etc/network/interfaces
 OS/filesystem/etc/network/interfaces.ap
 OS/filesystem/etc/network/hostapd.conf
@@ -134,28 +153,26 @@ OS/filesystem/etc/network/wpa_supplicant.conf
 ```
 
 ```lang-none
-OS/buildroot/overlay/sbin/ro
-OS/buildroot/overlay/sbin/lantiq_mdio
-OS/buildroot/overlay/sbin/rw
-OS/buildroot/overlay/sbin/bazaar
 OS/buildroot/overlay/var/log -> ../tmp/log
-OS/buildroot/overlay/etc/fw_env.config
+
 OS/buildroot/overlay/etc/ssh_host_key
-OS/buildroot/overlay/etc/init.d
+OS/buildroot/overlay/etc/ssh_host_dsa_key
+OS/buildroot/overlay/etc/ssh_host_rsa_key
+OS/buildroot/overlay/etc/ssh_host_ed25519_key
+OS/buildroot/overlay/etc/ssh_host_ecdsa_key
+
 OS/buildroot/overlay/etc/init.d/S40network
 OS/buildroot/overlay/etc/init.d/connman-config
 OS/buildroot/overlay/etc/init.d/S90scpi
 OS/buildroot/overlay/etc/init.d/rcK
 OS/buildroot/overlay/etc/init.d/S80nginx
 OS/buildroot/overlay/etc/init.d/rcS
-OS/buildroot/overlay/etc/ssh_host_dsa_key
-OS/buildroot/overlay/etc/fstab
-OS/buildroot/overlay/etc/ssh_host_rsa_key
+
 OS/buildroot/overlay/etc/inittab
+OS/buildroot/overlay/etc/fstab
 OS/buildroot/overlay/etc/profile
-OS/buildroot/overlay/etc/motd
-OS/buildroot/overlay/etc/ssh_host_ed25519_key
-OS/buildroot/overlay/etc/ssh_host_ecdsa_key
-OS/buildroot/overlay/etc/network/interfaces
+OS/buildroot/overlay/etc/motd -> /opt/redpitaya/version.txt
+OS/buildroot/overlay/etc/network/interfaces -> ../../opt/etc/network/interfaces
+
 OS/buildroot/overlay/usr/share/udhcpc/default.script
 ```
