@@ -108,13 +108,13 @@ F(ngx_http_handler) {
 }
 
 /*
-probe process("/usr/local/openresty-debug/luajit/lib/libluajit-5.1.so.2.0.2").function("lua_yield") {
+probe process("/usr/local/openresty-debug/luajit/lib/libluajit-5.1.so.2").function("lua_yield") {
     id = gen_id($L)
     printf("raw lua yield %d\n", id)
     #print_ubacktrace()
 }
 
-probe process("/usr/local/openresty-debug/luajit/lib/libluajit-5.1.so.2.0.2").function("lua_resume") {
+probe process("/usr/local/openresty-debug/luajit/lib/libluajit-5.1.so.2").function("lua_resume") {
     id = gen_id($L)
     printf("raw lua resume %d\n", id)
 }
