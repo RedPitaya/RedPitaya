@@ -72,7 +72,7 @@ int rp_app_exit(void);
 int rp_set_params(rp_app_params_t *p, int len);
 int rp_get_params(rp_app_params_t **p);
 int rp_get_signals(float ***s, int *sig_num, int *sig_len);
-int rp_spectr_get_signals_channel(int channel, float *signals, size_t size);
+int rp_spectr_get_signals_channel(float **signals, size_t size);
 int rp_spectr_get_params(rp_spectr_worker_res_t *result);
 
 /* Internal helper functions */
