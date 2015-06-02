@@ -23,6 +23,8 @@
 # Ecosystem special application ID.
 OS=ecosystem
 
+PATH_REDPITAYA=/opt/redpitaya
+
 # Default target directory for applications
 TARGET=${PATH_REDPITAYA}/www/apps/
 
