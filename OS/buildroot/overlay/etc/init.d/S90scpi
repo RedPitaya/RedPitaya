@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PATH_REDPITAYA=/opt/redpitaya
+source /etc/profile
 
 case "$1" in
         start)
