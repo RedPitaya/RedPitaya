@@ -10,7 +10,10 @@ public:
 		RW = 0,
 		RO,
 		WO,
-		
+
+		RWSA,	// send value always
+		ROSA,	// send value always
+
 		AccessModes
 	};
 
