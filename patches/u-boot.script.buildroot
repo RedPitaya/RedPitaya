@@ -1,7 +1,7 @@
 echo Set devicetree and ramdisk high loading address to 512MB-64MB
-high=0x1c000000
-fdt_high=${high}
-initrd_high=${high}
+setenv high        0x1c000000
+setenv fdt_high    ${high}
+setenv initrd_high ${high}
 
 echo Loading from SD card (FAT file system) to memory
 mmcinfo
@@ -10,5 +10,5 @@ fatload mmc 0 0x3000000 uramdisk.image.gz
 fatload mmc 0 0x4000000 devicetree.dtb
 
 echo Booting Linux kernel with ramdisk and devicetree
-sdboot=bootm 0x2001000 0x3000000 0x4000000
+setenv sdboot   bootm 0x2001000 0x3000000 0x4000000
 bootd
