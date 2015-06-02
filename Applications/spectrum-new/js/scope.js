@@ -11,7 +11,7 @@
 
   // App configuration
   SPEC.config = {};
-  SPEC.config.app_id = 'spectrum';
+  SPEC.config.app_id = 'spectrum-new';
   SPEC.config.server_ip = '';  // Leave empty on production, it is used for testing only
   SPEC.config.start_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?start=' + SPEC.config.app_id + '?' + location.search.substr(1);
   SPEC.config.stop_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?stop=' + SPEC.config.app_id;

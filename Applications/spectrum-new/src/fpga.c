@@ -181,11 +181,12 @@ int spectr_fpga_exit(void)
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
                            float trig_delay, float trig_level, int freq_range,
                            int enable_avg_at_dec)
-{
+{	
     /* TODO: Locking of memory map */
     int fpga_trig_source = spectr_fpga_cnv_trig_source(trig_imm, trig_source, 
                                                     trig_edge);
     int fpga_dec_factor = spectr_fpga_cnv_freq_range_to_dec(freq_range);
+	fprintf(stderr, "freq_range = %d fpga_dec_factor = %d\n", freq_range, fpga_dec_factor);
     int fpga_delay;
     int fpga_trig_thr = spectr_fpga_cnv_v_to_cnt(trig_level);
 
