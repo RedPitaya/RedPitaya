@@ -20,6 +20,7 @@ mkdir -p /tmp/log/nginx
 
 # the device driver is not creating this node, so for now
 # create the devcfg device node manually
+# TODO, check if this was fixed with the newer kernel
 
 if [ ! -e /dev/xdevcfg ]
 then

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+PATH_REDPITAYA=/opt/redpitaya
+
 source $PATH_REDPITAYA/etc/network/config
 
 case "$1" in
