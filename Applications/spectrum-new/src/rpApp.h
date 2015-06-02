@@ -156,7 +156,7 @@ int rpApp_SpecRun();
 int rpApp_SpecStop();
 
 
-int rpApp_SpecGetViewData(int source, float *data, uint32_t size);
+int rpApp_SpecGetViewData(float **signals, size_t size);
 
 int rpApp_SpecGetParams();
 
@@ -166,7 +166,9 @@ int rpApp_SpecGetPeakPower(int channel, float* power);
 
 int rpApp_SpecGetPeakFreq(int channel, float* freq);
 
-int rpApp_SpecSetUnit(int freq);
+int rpApp_SpecSetFreqRange(float freq);
+
+int rpApp_SpecSetUnit(int unit);
 
 
 #ifdef __cplusplus
