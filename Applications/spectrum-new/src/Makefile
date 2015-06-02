@@ -3,7 +3,7 @@ CXX=$(CROSS_COMPILE)g++
 RM=rm
 
 CXXSOURCES= \
-        new_main.cpp \
+        new_main.cpp
 
 COBJECTS=$(CSOURCES:.c=.o) main.o dsp.o fpga.o spectrometerApp.o rpApp.o waterfall.o
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
