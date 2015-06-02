@@ -9,7 +9,7 @@ then
     DAEMON_SBIN=/usr/sbin/hostapd
   else
     sed -i '/^driver/s/=.*/=rtl871xdrv/' /etc/hostapd/hostapd.conf
-    DAEMON_SBIN=/opt/sbin/hostapd
+    DAEMON_SBIN=/opt/redpitaya/sbin/hostapd
   fi
   echo $DAEMON_SBIN > /run/hostapd.which
 elif [ "$1" = "stop" ]
