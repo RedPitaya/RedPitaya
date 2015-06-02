@@ -52,9 +52,9 @@ int rpApp_SpecStop(void)
     return 0;
 }
 
-int rpApp_SpecGetViewData(int source, float *data, size_t size)
+int rpApp_SpecGetViewData(float** signals, size_t size)
 {
-    return rp_spectr_get_signals_channel(source, data, size);
+    return rp_spectr_get_signals_channel(signals, size);
 }
 
 int rpApp_SpecGetJpgIdx(int* jpg)
@@ -93,13 +93,26 @@ int rpApp_SpecGetPeakFreq(int channel, float* freq)
 	return ret;
 }
 
-int rpApp_SpecSetUnit(int freq)
+int rpApp_SpecSetFreqRange(float freq)
 {
-	int unit = spectr_fpga_cnv_freq_range_to_unit(freq);
+	const float ranges[] = { 62500000, 7800000, 976000, 61000, 7600, 953 };
+	int range = 0;
+	for (; range < 5; ++range)
+		if (freq > ranges[range])
+			break;
 
+	rp_spectr_worker_update_params_by_idx(range, FREQ_RANGE_PARAM, 1);
+
+	fprintf(stderr, "max freq = %.2f range = %d\n", freq, range);
+
+	return 0;
+}
+
+int rpApp_SpecSetUnit(int unit)
+{
 	rp_spectr_worker_update_params_by_idx(unit, FREQ_UNIT_PARAM, 1);
 	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHA_PARAM, 1);
 	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHB_PARAM, 1);
 
-	return unit;
+	return 0;
 }

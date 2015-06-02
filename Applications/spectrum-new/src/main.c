@@ -31,7 +31,7 @@ rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* xmin - currently ignored */ 
         "xmin", -1000000, 0, 1, -10000000, +10000000 },
     { /* xmax - currently ignored   */ 
-        "xmax", +1000000, 0, 1, -10000000, +10000000 },
+        "xmax", +63, 0, 1, -10000000, +10000000 },
     { /* freq_range::
        *    0 - 62.5 [MHz]
        *    1 - 7.8 [MHz]
@@ -44,7 +44,7 @@ rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    0 - [Hz]
        *    1 - [kHz]
        *    2 - [MHz]   */
-        "freq_unit",  0, 0, 1,         0,         2 },
+        "freq_unit",  2, 0, 1,         0,         2 },
     { /* peak1_freq */
         "peak1_freq", 0, 0, 1,         0,         +1e6 },
     { /* peak1_power    */
