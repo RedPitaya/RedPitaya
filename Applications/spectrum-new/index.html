@@ -14,13 +14,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Red Pitaya</title>
   <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?1">
   <script src="js/jquery-2.1.3.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
   <script src="js/jquery-ui.min.js"></script>
   <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
   <script src="js/jquery.flot.js"></script>
-  <script src="js/scope.js"></script>
+  <script src="js/fastclick.min.js"></script>
+  <script src="js/scope.js?1"></script>
 </head>
 <body>
   <div class="full-content">
@@ -181,61 +182,33 @@
         </div>
         
         <div id="cursor_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-6 option-content close-dialog">
+          <div class="col-xs-12 option-content close-dialog">
             <div class="right-menu-option">
               <img src="img/arrow_nav_left.png">
               Cursor
             </div>
           </div>
-
+          
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <button type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">ON</button>
+              <button id="SPEC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
             </div>
           </div>
-           
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <div class="btn-group btn-group-justified" data-toggle="buttons">
-                <label class="btn">
-                  <input type="checkbox" name="SPEC_CURSOR1_X" id="SPEC_CURSOR1_X" autocomplete="off">X1
-                </label>
-                <label class="btn">
-                  <input type="checkbox" name="SPEC_CURSOR2_X" id="SPEC_CURSOR2_X" autocomplete="off">X2
-                </label>
-              </div>
+              <button id="SPEC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
             </div>
           </div>
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <div class="btn-group btn-group-justified" data-toggle="buttons">
-                <label class="btn">
-                  <input type="checkbox" name="SPEC_CURSOR1_Y" id="SPEC_CURSOR1_Y" autocomplete="off">Y1
-                </label>
-                <label class="btn">
-                  <input type="checkbox" name="SPEC_CURSOR1_Y" id="SPEC_CURSOR1_Y" autocomplete="off">Y2
-                </label>
-              </div>
+              <button id="SPEC_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
             </div>
           </div>
-          <div class="col-xs-12 option-content">
-            <div style="margin: 3px; height: 20px; line-height: 20px;">
-              Source
-            </div>
-          </div>
-          <div class="col-xs-12 option-content">
+          <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <div class="btn-group btn-group-justified" data-toggle="buttons">
-                <label class="btn">
-                  <input type="checkbox" name="in1_2" id="in1_2" autocomplete="off"><span class="in1">IN1</span>
-                </label>
-                <label class="btn">
-                  <input type="checkbox" name="in2_2" id="in2_2" autocomplete="off"> <span class="in2">IN2</span>
-                </label>
-              </div>
+              <button id="SPEC_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
             </div>
           </div>
-          <div class="col-xs-12 option-content" style="height:100px;"></div>
         </div>
 
 		<div class="between"></div>
@@ -259,15 +232,26 @@
 	  
 	  
       <div id="main">
-        <div id="buffer">
-          <div class="red-horizont-line">
-            <div class="red-line"></div>
-          </div>
-          <div class="fixator"></div>
-          <div class="horizontline"></div>
-        </div>
         <div id="graphs">
           <canvas id="graph_grid"></canvas>
+		  <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+          <div id="cur_x1" class="vline"></div>
+          <div id="cur_x1_info" class="cur_info"></div>
+          <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+          <div id="cur_x2" class="vline"></div>
+          <div id="cur_x2_info" class="cur_info"></div>
+          
+          <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+          <div id="cur_y1" class="hline"></div>
+          <div id="cur_y1_info" class="cur_info"></div>
+          <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+          <div id="cur_y2" class="hline"></div>
+          <div id="cur_y2_info" class="cur_info"></div>
+          
+          <div id="cur_y_diff"></div>
+          <div id="cur_y_diff_info" class="cur_info"></div>
+          <div id="cur_x_diff"></div>
+          <div id="cur_x_diff_info" class="cur_info"></div>
         </div>
         <div id="info" class="clear">
           <div class="left-info">
@@ -287,11 +271,19 @@
         </div>
 		<div class="waterfall-holder clearfix">
 			<div class="waterfall_title ch1">Channel 1</div>
-			<img id="waterfall_ch1" src="img/wat_nodata.jpg" onerror = "this.src = 'img/wat_nodata.jpg'">
+			<img id="waterfall_ch1" src=" " onload="SPEC.updateImg(this, true);" onerror = "SPEC.updateImg(this, false);">
+			<div id="wait_waterfall_ch1" class="wait">
+				<img id="waitdata_ch1" src="img/wat_nodata.jpg" onerror = "">
+				<span id="wait_text_ch1">Waiting for data...</span>
+			</div>
 		</div>
         <div class="waterfall-holder clearfix">
             <div class="waterfall_title ch2">Channel 2</div>
-            <img id="waterfall_ch2" src="img/wat_nodata.jpg" onerror = "this.src = 'img/wat_nodata.jpg'">
+            <img id="waterfall_ch2" src="" onload="SPEC.updateImg(this, true);" onerror = "SPEC.updateImg(this, false);">
+			<div id="wait_waterfall_ch2" class="wait">
+				<img id="waitdata_ch2" src="img/wat_nodata.jpg" onerror = "">
+				<span id="wait_text_ch2">Waiting for data...</span>
+			</div>
         </div>
       </div>
       
