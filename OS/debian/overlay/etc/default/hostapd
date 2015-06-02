@@ -1,0 +1,18 @@
+DAEMON_CONF=/etc/hostapd/hostapd.conf
+
+if [ "$1" = "start" ]
+then
+  iw wlan0 info > /dev/null 2>&1
+  if [ $? -eq 0 ]
+  then
+    sed -i '/^driver/s/=.*/=nl80211/' /etc/hostapd/hostapd.conf
+    DAEMON_SBIN=/usr/sbin/hostapd
+  else
+    sed -i '/^driver/s/=.*/=rtl871xdrv/' /etc/hostapd/hostapd.conf
+    DAEMON_SBIN=/opt/sbin/hostapd
+  fi
+  echo $DAEMON_SBIN > /run/hostapd.which
+elif [ "$1" = "stop" ]
+then
+  DAEMON_SBIN=$(cat /run/hostapd.which)
+fi

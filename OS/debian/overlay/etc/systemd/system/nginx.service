@@ -1,0 +1,13 @@
+[Unit]
+Description=A high performance web server and a reverse proxy server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStart =/opt/sbin/nginx -p /opt/www
+ExecReload=/opt/sbin/nginx -p /opt/www -s reload
+ExecStop  =/opt/sbin/nginx -p /opt/www -s quit
+
+[Install]
+WantedBy=multi-user.target
