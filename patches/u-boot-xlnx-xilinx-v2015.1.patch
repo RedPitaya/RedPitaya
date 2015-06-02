@@ -48,6 +48,19 @@ index 0000000..ac14cd0
 +		reg = <0 0x1E000000>;
 +	};
 +};
+diff --git a/common/main.c b/common/main.c
+index 9a83bf9..2952327 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -76,6 +76,8 @@ void main_loop(void)
+ 	if (cli_process_fdt(&s))
+ 		cli_secure_boot_cmd(s);
+ 
++	setenv("sdboot", "echo Running script from SD... && mmcinfo && fatload mmc 0 0x2000000 u-boot.scr && source 0x2000000");
++
+ 	autoboot_command(s);
+ 
+ 	cli_loop();
 diff --git a/configs/zynq_red_pitaya_defconfig b/configs/zynq_red_pitaya_defconfig
 new file mode 100644
 index 0000000..8644ae4
