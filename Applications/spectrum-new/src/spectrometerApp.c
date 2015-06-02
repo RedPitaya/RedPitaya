@@ -230,10 +230,12 @@ int rp_spectr_worker_update_params(rp_app_params_t *params, int fpga_update)
     return 0;
 }
 
-int rp_spectr_worker_update_params_by_idx(float value, size_t idx, int fpga_update)
+int rp_spectr_worker_update_params_by_idx(int value, size_t idx, int fpga_update)
 {
     pthread_mutex_lock(&rp_spectr_ctrl_mutex);
 
+
+	fprintf(stderr, "rp_spectr_worker_update_params_by_idx = %d %d\n", idx, value);
     rp_spectr_params[idx].value = value;
     rp_spectr_params_dirty       = 1;
     rp_spectr_params_fpga_update = fpga_update;
@@ -299,15 +301,17 @@ int rp_spectr_clean_tmpdir(const char *dir)
     return ret;
 }
 
-int rp_spectr_get_signals_channel(int channel, float *signals, size_t size)
+int rp_spectr_get_signals_channel(float** signals, size_t size)
 {
     pthread_mutex_lock(&rp_spectr_sig_mutex);
-    if(rp_spectr_signals_dirty == 0 || channel > 2) {
+    if(rp_spectr_signals_dirty == 0) {
         pthread_mutex_unlock(&rp_spectr_sig_mutex);
         return -1;
     }
 
-    memcpy(signals, rp_spectr_signals[channel + 1], sizeof(float)*size); // (channel + 1) = ch1
+	size_t i;
+	for (i = 0; i < 3; ++i)
+		memcpy(signals[i], rp_spectr_signals[i], sizeof(float)*size);
 
     rp_spectr_signals_dirty = 0;
 
@@ -376,9 +380,9 @@ void *rp_spectr_worker_thread(void *args)
         old_state = state;
         pthread_mutex_lock(&rp_spectr_ctrl_mutex);
         state = rp_spectr_ctrl;
-        if(rp_spectr_params_dirty) {
-            memcpy(&curr_params, &rp_spectr_params, 
-                   sizeof(rp_app_params_t)*PARAMS_NUM);
+        if(rp_spectr_params_dirty) {			
+            memcpy(&curr_params, &rp_spectr_params, sizeof(rp_app_params_t)*PARAMS_NUM);
+			fprintf(stderr, "dirty curr_params = %f rp_spectr_params = %f\n", curr_params[FREQ_RANGE_PARAM].value, rp_spectr_params[FREQ_RANGE_PARAM].value);
             fpga_update = rp_spectr_params_fpga_update;
             rp_spectr_params_dirty = 0;
         }
@@ -390,11 +394,11 @@ void *rp_spectr_worker_thread(void *args)
         }
 
         if(fpga_update) {
+			fprintf(stderr, "update\n");
             spectr_fpga_reset();
-            if(spectr_fpga_update_params(0, 0, 0, 0, 0, 
-                               (int)curr_params[FREQ_RANGE_PARAM].value,
-                               curr_params[EN_AVG_AT_DEC].value) < 0) {
-                rp_spectr_worker_change_state(rp_spectr_auto_state);
+            if(spectr_fpga_update_params(0, 0, 0, 0, 0, (int)curr_params[FREQ_RANGE_PARAM].value, curr_params[EN_AVG_AT_DEC].value) < 0) {
+				rp_spectr_worker_change_state(rp_spectr_auto_state);
+				fprintf(stderr, "updated\n");
             }
 
             fpga_update = 0;
