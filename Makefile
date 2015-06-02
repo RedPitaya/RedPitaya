@@ -23,18 +23,28 @@ TMP = tmp
 UBOOT_TAG = xilinx-v2015.1
 LINUX_TAG = xilinx-v2015.1
 DTREE_TAG = xilinx-v2015.1
+BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR = $(TMP)/linux-xlnx-$(LINUX_TAG)
 DTREE_DIR = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
+BUILDROOT_DIR = $(TMP)/buildroot-$(BUILDROOT_TAG)
 
 UBOOT_TAR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
 LINUX_TAR = $(TMP)/linux-xlnx-$(LINUX_TAG).tar.gz
 DTREE_TAR = $(TMP)/device-tree-xlnx-$(DTREE_TAG).tar.gz
+BUILDROOT_TAR = $(TMP)/buildroot-$(BUILDROOT_TAG).tar.gz
 
-UBOOT_URL = https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
-LINUX_URL = https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
-DTREE_URL = https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
+# it is possible to use an alternative download location (local) by setting environment variables
+UBOOT_URL ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+LINUX_URL ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+DTREE_URL ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
+BUILDROOT_URL ?= http://buildroot.uclibc.org/downloads/buildroot-$(BUILDROOT_TAG).tar.gz
+
+UBOOT_GIT ?= https://github.com/Xilinx/u-boot-xlnx.git
+LINUX_GIT ?= https://github.com/Xilinx/linux-xlnx.git
+DTREE_GIT ?= https://github.com/Xilinx/device-tree-xlnx.git
+BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
@@ -44,9 +54,8 @@ ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 #
 ################################################################################
 
-BUILD=build
 # TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
-INSTALL_DIR=$(BUILD)
+INSTALL_DIR=build
 TARGET=target
 NAME=ecosystem
 
@@ -97,11 +106,11 @@ ENVTOOLS_ELF    = $(INSTALL_DIR)/bin/fw_printenv
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
 ENVTOOLS        = $(ENVTOOLS_ELF) $(ENVTOOLS_CFG)
 
-URAMDISK=$(BUILD)/uramdisk.image.gz
+URAMDISK        = $(INSTALL_DIR)/uramdisk.image.gz
 
 
-APP_SCOPE_DIR = Applications/scope
-APP_SCOPE     = $(INSTALL_DIR)/www/apps/scope
+APP_SCOPE_DIR   = Applications/scope
+APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope
 
 ################################################################################
 # Versioning system
@@ -109,6 +118,7 @@ APP_SCOPE     = $(INSTALL_DIR)/www/apps/scope
 
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
+ ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
@@ -121,21 +131,15 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) sdk rp_communication
+$(TARGET): $(BOOT) $(TESTBOOT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) sdk rp_communication
 	mkdir $(TARGET)
-	cp $(BOOT) $(TARGET)
-	cp $(TESTBOOT) $(TARGET)
-	cp $(DEVICETREE) $(TARGET)
-	cp $(LINUX) $(TARGET)
-	cp -r $(BUILD)/* $(TARGET)
-	cp -r OS/filesystem/* $(TARGET)
-	rm `find $(TARGET) -iname .svn` -rf
-	echo "" > $(TARGET)/version.txt
-	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" >> $(TARGET)/version.txt
-	echo "" >> $(TARGET)/version.txt
-
-$(BUILD):
-	mkdir $(BUILD)
+	cp $(BOOT)             $(TARGET)
+	cp $(TESTBOOT)         $(TARGET)
+	cp $(DEVICETREE)       $(TARGET)
+	cp $(LINUX)            $(TARGET)
+	cp -r $(INSTALL_DIR)/* $(TARGET)
+	cp -r OS/filesystem/*  $(TARGET)
+	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
@@ -233,9 +237,16 @@ $(TESTBOOT): $(MEMTEST) $(FPGA) $(UBOOT)
 # root file system
 ################################################################################
 
-$(URAMDISK): $(BUILD)
+$(INSTALL_DIR):
+	mkdir $(INSTALL_DIR)
+
+$(URAMDISK): $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
-	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+################################################################################
+# debian image
+################################################################################
 
 ################################################################################
 # Red Pitaya ecosystem
