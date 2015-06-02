@@ -23,6 +23,14 @@ int dbg_printf(const char * format, ...)
 	return 0;
 }
 
+inline bool CDataManager::NeedSend(const CBaseParameter& param) const
+{
+	CBaseParameter::AccessMode mode = param.GetAccessMode();
+	return ((mode != CBaseParameter::AccessMode::WO) && (param.IsValueChanged() || m_send_all_params))
+			|| (mode == CBaseParameter::AccessMode::ROSA)
+			|| (mode == CBaseParameter::AccessMode::RWSA);
+}
+
 CDataManager::CDataManager() 
 	: m_params()
 	, m_signals()
@@ -98,8 +106,7 @@ std::string CDataManager::GetParamsJson()
 	JSONNode params(JSON_NODE);
 	params.set_name("parameters");
 	for(size_t i=0; i < m_params.size(); i++) {
-		if((m_params[i]->GetAccessMode() != CBaseParameter::AccessMode::WO) && (m_params[i]->IsValueChanged() || m_send_all_params))
-		{					
+		if(NeedSend(*m_params[i])) {					
 			JSONNode n(JSON_NODE);
 			n = m_params[i]->GetJSONObject();		
 			params.push_back(n);
@@ -119,9 +126,11 @@ std::string CDataManager::GetSignalsJson()
 	JSONNode signals(JSON_NODE);
 	signals.set_name("signals");
 	for(size_t i=0; i < m_signals.size(); i++) {
-		JSONNode n(JSON_NODE);
-		n = m_signals[i]->GetJSONObject();		
-		signals.push_back(n);
+		if(NeedSend(*m_signals[i])) {					
+			JSONNode n(JSON_NODE);
+			n = m_signals[i]->GetJSONObject();		
+			signals.push_back(n);
+		}
 	}
 	
 	JSONNode data_node(JSON_NODE);

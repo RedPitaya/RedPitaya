@@ -337,6 +337,9 @@
       if(new_signals[sig_name].size == 0) {
         continue;
       }
+	  if(sig_name == "freq_ch"){
+		continue;
+	  }
       sig_count++;
       // Ignore disabled signals
       if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
@@ -355,7 +358,7 @@
 	  }
 	  else {
 		for(var i = 0; i < new_signals[sig_name].size; i++) {
-       	 	points.push([i, new_signals[sig_name].value[i]]);
+       	 	points.push([new_signals["freq_ch"].value[i], new_signals[sig_name].value[i]]);
       	}
 	  }
 	  SPEC.datasets.push({ color: color, data: points}); 
