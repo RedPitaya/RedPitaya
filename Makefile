@@ -120,7 +120,6 @@ APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
- ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
