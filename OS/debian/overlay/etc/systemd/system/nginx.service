@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=forking
 PIDFile=/run/nginx.pid
-ExecStart =/opt/sbin/nginx -p /opt/www
-ExecReload=/opt/sbin/nginx -p /opt/www -s reload
-ExecStop  =/opt/sbin/nginx -p /opt/www -s quit
+ExecStart =/opt/redpitaya/sbin/nginx -p /opt/redpitaya/www
+ExecReload=/opt/redpitaya/sbin/nginx -p /opt/redpitaya/www -s reload
+ExecStop  =/opt/redpitaya/sbin/nginx -p /opt/redpitaya/www -s quit
 
 [Install]
 WantedBy=multi-user.target
