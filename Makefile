@@ -172,6 +172,13 @@ $(UBOOT): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=arm-xilinx-linux-gnueabi- all
 	cp $</u-boot $@
 
+UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
+UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
+UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
+$(UBOOT_SCRIPT): $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
+	$(UBOOT_DIR)/tools/mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "boot Buildroot" -d $@ $(UBOOT_SCRIPT_BUILDROOT)
+#	$(UBOOT_DIR)/tools/mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $@ $(UBOOT_SCRIPT_DEBIAN)
+
 $(ENVTOOLS_ELF): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(ARMHF_CFLAGS) CROSS_COMPILE=arm-linux-gnueabihf- env
 	mkdir -p $(INSTALL_DIR)/bin/
