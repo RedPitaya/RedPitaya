@@ -64,4 +64,4 @@ done
 $PATH_REDPITAYA/sbin/discovery
 
 # Print OS version info
-cat $PATH_REDPITAYA/motd
+cat $PATH_REDPITAYA/version.txt
