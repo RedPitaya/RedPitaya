@@ -1,14 +1,17 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
 #include "rpApp.h"
+#include "main.h"
 
-enum { CH_SIGNAL_SIZE = 1024, INTERVAL = 200 };
+enum { CH_SIGNAL_SIZE = 1024*2, INTERVAL = 500 };
+enum { FREQ_CHANNEL = -1 };
 
 CFloatSignal ch1("ch1", CH_SIGNAL_SIZE, 0.0f);
 CFloatSignal ch2("ch2", CH_SIGNAL_SIZE, 0.0f);
+CFloatSignal freq_ch("freq_ch", CH_SIGNAL_SIZE, 0.0f);
 
-CIntParameter freq_range("freq_range", CBaseParameter::RW, 0, 1, 0, 5); // IN
-CIntParameter freq_unit("freq_unit", CBaseParameter::RWSA, 0, 0, 0, 2);
+CIntParameter freq_range("freq_range", CBaseParameter::RW, 0, 1, 0, 5);
+CIntParameter freq_unit("freq_unit", CBaseParameter::RWSA, 2, 0, 0, 2);
 
 //power 
 CFloatParameter in1Scale("SPEC_CH1_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
@@ -16,7 +19,7 @@ CFloatParameter in2Scale("SPEC_CH2_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 
 CFloatParameter inFreqScale("SPEC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 50000);
 CFloatParameter xmin("xmin", CBaseParameter::RW, 0, 0, -1e6, +1e6);
-CFloatParameter xmax("xmax", CBaseParameter::RW, 1000, 0, -1e6, +1e6);
+CFloatParameter xmax("xmax", CBaseParameter::RW, 63, 0, -1e6, +1e6);
 
 
 CFloatParameter peak1_freq("peak1_freq", CBaseParameter::ROSA, 0, 0, 0, +1e6);
@@ -38,18 +41,18 @@ CBooleanParameter inSingle("SPEC_SINGLE", CBaseParameter::RW, false, 0);
 CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, true, 0);
 CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
 
+CBooleanParameter cursorx1("SPEC_CURSOR_X1", CBaseParameter::RW, false, 0);
+CBooleanParameter cursorx2("SPEC_CURSOR_X2", CBaseParameter::RW, false, 0);
+CBooleanParameter cursory1("SPEC_CURSOR_Y1", CBaseParameter::RW, false, 0);
+CBooleanParameter cursory2("SPEC_CURSOR_Y2", CBaseParameter::RW, false, 0);
+
+CFloatParameter cursor1V("SPEC_CUR1_V", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursor2V("SPEC_CUR2_V", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursor1T("SPEC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
+CFloatParameter cursor2T("SPEC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
+
 void UpdateParams(void)
 {
-/*
-	static bool set_period = false;
-	if (!set_period)
-	{
-		CDataManager::GetInstance()->SetParamInterval(INTERVAL);
-		CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
-		set_period = true;
-	}
-*/
-
 	int ret = rpApp_SpecGetJpgIdx(&w_idx.Value());
 	ret = rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
 	ret = rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());
@@ -60,29 +63,30 @@ void UpdateParams(void)
 
 void UpdateSignals(void)
 {
-	static float data[CH_SIGNAL_SIZE];
-
-
-	int ret = -1;
-	if (in1Show.Value())
+	static float* data[3] = {0};
+	if (data[0] == 0) // TODO
 	{
-		ret = rpApp_SpecGetViewData(RP_CH_1, data, CH_SIGNAL_SIZE);
-		if (!ret)
-		{
-			for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-				ch1[i] = data[i];
-		}
+		for (size_t i = 0; i < 3; ++i)
+			data[i] = new float[CH_SIGNAL_SIZE];
 	}
+
+	if (in1Show.Value() || in2Show.Value())
+	{
+		int ret = rpApp_SpecGetViewData(data, CH_SIGNAL_SIZE);
+		if (ret != 0)
+			return;
+
+		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
+			freq_ch[i] = data[0][i];
+	}
+
+	if (in1Show.Value())
+		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
+			ch1[i] = data[1][i];
 
 	if (in2Show.Value())
-	{
-		ret = rpApp_SpecGetViewData(RP_CH_2, data, CH_SIGNAL_SIZE);
-		if (!ret)
-		{
-			for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-				ch2[i] = data[i];
-		}
-	}
+		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
+			ch2[i] = data[2][i];
 }
 
 void OnNewParams(void)
@@ -94,10 +98,20 @@ void OnNewParams(void)
 		run = true;
 	}
 
-	if (xmax.IsNewValue())
+	in1Show.Update();
+	in2Show.Update();
+
+	if (xmax.IsNewValue() || freq_unit.IsNewValue())
 	{
+		freq_unit.Update();
 		xmax.Update();
-		//fprintf(stderr, "xmax = %f\n", xmax.Value());
+
+		float max_freq = xmax.Value();
+		for (int i = 0; i < freq_unit.Value(); ++i)
+			max_freq *= 1000; // set x max freq (Hz, kHz or MHz) by unit
+
+		rpApp_SpecSetUnit(freq_unit.Value());
+		rpApp_SpecSetFreqRange(max_freq);
 	}
 }
 
