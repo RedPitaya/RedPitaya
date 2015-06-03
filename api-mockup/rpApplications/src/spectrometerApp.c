@@ -23,10 +23,13 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
-#include "worker.h"
-#include "fpga.h"
-#include "dsp.h"
-#include "waterfall.h"
+#include "spectrometerApp.h"
+#include "common.h"
+#include "../../rpbase/src/common.h"
+#include "../../rpbase/src/spec_fpga.h"
+#include "../../rpbase/src/spec_dsp.h"
+
+const wf_func_table_t* wf_func_table;
 
 /* JPG outputs: c_jpg_file_path+[1|2]+_+jpg_cnt(3 digits)+c_jpg_file_suf */
 const char c_jpg_dir_path[]="/tmp";
@@ -69,8 +72,10 @@ float                **rp_spectr_signals = NULL;
 rp_spectr_worker_res_t rp_spectr_result;
 int                    rp_spectr_signals_dirty = 0;
 
-int rp_spectr_worker_init(void)
+int rp_spectr_worker_init(const wf_func_table_t* wf_f)
 {
+	wf_func_table = wf_f;
+
     int ret_val;
 
     rp_spectr_ctrl               = rp_spectr_idle_state;
@@ -123,7 +128,7 @@ int rp_spectr_worker_init(void)
         return -1;
     }
 
-    if(rp_spectr_wf_init() < 0) {
+    if(wf_func_table->rp_spectr_wf_init() < 0) {
         rp_spectr_worker_clean();
         return -1;
     }
@@ -160,7 +165,7 @@ int rp_spectr_worker_clean(void)
     rp_cleanup_signals(&rp_tmp_signals);
     rp_spectr_hann_clean();
     rp_spectr_fft_clean();
-    rp_spectr_wf_clean();
+    wf_func_table->rp_spectr_wf_clean();
 
     if(jpg_fname_cha) {
         free(jpg_fname_cha);
@@ -229,6 +234,20 @@ int rp_spectr_worker_update_params(rp_app_params_t *params, int fpga_update)
     return 0;
 }
 
+int rp_spectr_worker_update_params_by_idx(int value, size_t idx, int fpga_update)
+{
+    pthread_mutex_lock(&rp_spectr_ctrl_mutex);
+
+
+	fprintf(stderr, "rp_spectr_worker_update_params_by_idx = %d %d\n", idx, value);
+    rp_spectr_params[idx].value = value;
+    rp_spectr_params_dirty       = 1;
+    rp_spectr_params_fpga_update = fpga_update;
+
+    pthread_mutex_unlock(&rp_spectr_ctrl_mutex);
+    return 0;
+}
+
 int rp_spectr_clean_signals(void)
 {
     pthread_mutex_lock(&rp_spectr_sig_mutex);
@@ -286,20 +305,31 @@ int rp_spectr_clean_tmpdir(const char *dir)
     return ret;
 }
 
-int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result)
+int rp_spectr_get_signals_channel(float** signals, size_t size)
 {
-    float **s = *signals;
     pthread_mutex_lock(&rp_spectr_sig_mutex);
     if(rp_spectr_signals_dirty == 0) {
         pthread_mutex_unlock(&rp_spectr_sig_mutex);
         return -1;
     }
 
-    memcpy(&s[0][0], &rp_spectr_signals[0][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
-    memcpy(&s[1][0], &rp_spectr_signals[1][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
-    memcpy(&s[2][0], &rp_spectr_signals[2][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
+	size_t i;
+	for (i = 0; i < 3; ++i)
+		memcpy(signals[i], rp_spectr_signals[i], sizeof(float)*size);
 
     rp_spectr_signals_dirty = 0;
+
+    pthread_mutex_unlock(&rp_spectr_sig_mutex);
+    return 0;
+}
+
+int rp_spectr_get_params(rp_spectr_worker_res_t *result)
+{
+    pthread_mutex_lock(&rp_spectr_sig_mutex);
+    if(rp_spectr_signals_dirty == 0) {
+        pthread_mutex_unlock(&rp_spectr_sig_mutex);
+        return -1;
+    }
 
     result->jpg_idx          = rp_spectr_result.jpg_idx;
     result->peak_pw_cha      = rp_spectr_result.peak_pw_cha;
@@ -314,9 +344,9 @@ int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result)
 int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result)
 {
     pthread_mutex_lock(&rp_spectr_sig_mutex);
-    memcpy(&rp_spectr_signals[0][0], &source[0][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
-    memcpy(&rp_spectr_signals[1][0], &source[1][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
-    memcpy(&rp_spectr_signals[2][0], &source[2][0], sizeof(float)*SPECTR_OUT_SIG_LEN);
+    memcpy(rp_spectr_signals[0], source[0], sizeof(float)*SPECTR_OUT_SIG_LEN);
+    memcpy(rp_spectr_signals[1], source[1], sizeof(float)*SPECTR_OUT_SIG_LEN);
+    memcpy(rp_spectr_signals[2], source[2], sizeof(float)*SPECTR_OUT_SIG_LEN);
 
     rp_spectr_signals_dirty = 1;
 
@@ -354,9 +384,9 @@ void *rp_spectr_worker_thread(void *args)
         old_state = state;
         pthread_mutex_lock(&rp_spectr_ctrl_mutex);
         state = rp_spectr_ctrl;
-        if(rp_spectr_params_dirty) {
-            memcpy(&curr_params, &rp_spectr_params, 
-                   sizeof(rp_app_params_t)*PARAMS_NUM);
+        if(rp_spectr_params_dirty) {			
+            memcpy(&curr_params, &rp_spectr_params, sizeof(rp_app_params_t)*PARAMS_NUM);
+			fprintf(stderr, "dirty curr_params = %f rp_spectr_params = %f\n", curr_params[FREQ_RANGE_PARAM].value, rp_spectr_params[FREQ_RANGE_PARAM].value);
             fpga_update = rp_spectr_params_fpga_update;
             rp_spectr_params_dirty = 0;
         }
@@ -368,15 +398,15 @@ void *rp_spectr_worker_thread(void *args)
         }
 
         if(fpga_update) {
+			fprintf(stderr, "update\n");
             spectr_fpga_reset();
-            if(spectr_fpga_update_params(0, 0, 0, 0, 0, 
-                               (int)curr_params[FREQ_RANGE_PARAM].value,
-                               curr_params[EN_AVG_AT_DEC].value) < 0) {
-                rp_spectr_worker_change_state(rp_spectr_auto_state);
+            if(spectr_fpga_update_params(0, 0, 0, 0, 0, (int)curr_params[FREQ_RANGE_PARAM].value, curr_params[EN_AVG_AT_DEC].value) < 0) {
+				rp_spectr_worker_change_state(rp_spectr_auto_state);
+				fprintf(stderr, "updated\n");
             }
 
             fpga_update = 0;
-            rp_spectr_wf_clean_map();
+            wf_func_table->rp_spectr_wf_clean_map();
             switch((int)curr_params[FREQ_RANGE_PARAM].value) {
             case 0:
             case 1:
@@ -440,7 +470,7 @@ void *rp_spectr_worker_thread(void *args)
         spectr_fpga_get_signal(&rp_cha_in, &rp_chb_in);
 
         rp_spectr_prepare_freq_vector(&rp_tmp_signals[0], 
-                                      c_spectr_fpga_smpl_freq,
+                                      get_spectr_fpga_smpl_freq(),
                                       curr_params[FREQ_RANGE_PARAM].value);
 
         rp_spectr_hann_filter(&rp_cha_in[0], &rp_chb_in[0],
@@ -464,7 +494,7 @@ void *rp_spectr_worker_thread(void *args)
                              curr_params[FREQ_RANGE_PARAM].value);
 
         /* Calculate the map used for Waterfall diagram  */
-        rp_spectr_wf_calc(&rp_cha_fft[0], &rp_chb_fft[0]);
+        wf_func_table->rp_spectr_wf_calc(&rp_cha_fft[0], &rp_chb_fft[0]);
 
         if((jpg_write_div == 0) || (loop_cnt++%jpg_write_div == 0)) {
             jpg_fn_cnt++;
@@ -475,7 +505,7 @@ void *rp_spectr_worker_thread(void *args)
                     1, jpg_fn_cnt, c_jpg_file_suf);
             sprintf(jpg_fname_chb, "%s%01d_%03d%s", c_jpg_file_path, 
                     2, jpg_fn_cnt, c_jpg_file_suf);
-            rp_spectr_wf_save_jpeg(jpg_fname_cha, jpg_fname_chb);
+            wf_func_table->rp_spectr_wf_save_jpeg(jpg_fname_cha, jpg_fname_chb);
 
             /* Report index back to the user */
         } else if(loop_cnt > 1e6) {
@@ -492,5 +522,144 @@ void *rp_spectr_worker_thread(void *args)
     }
 
     return 0;
+}
+
+// API
+
+
+/* Describe app. parameters with some info/limitations */
+rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
+    { /* xmin - currently ignored */
+        "xmin", -1000000, 0, 1, -10000000, +10000000 },
+    { /* xmax - currently ignored   */
+        "xmax", +63, 0, 1, -10000000, +10000000 },
+    { /* freq_range::
+       *    0 - 62.5 [MHz]
+       *    1 - 7.8 [MHz]
+       *    2 - 976 [kHz]
+       *    3 - 61 [kHz]
+       *    4 - 7.6 [kHz]
+       *    5 - 953 [Hz] */
+        "freq_range", 0, 1, 0,         0,         5 },
+    { /* freq_unit:
+       *    0 - [Hz]
+       *    1 - [kHz]
+       *    2 - [MHz]   */
+        "freq_unit",  2, 0, 1,         0,         2 },
+    { /* peak1_freq */
+        "peak1_freq", 0, 0, 1,         0,         +1e6 },
+    { /* peak1_power    */
+        "peak1_power", 0, 0, 1, -10000000, +10000000 },
+    { /* peak1_unit - same enumeration as freq_unit */
+        "peak1_unit", 0, 0, 1,       0,       2 },
+    { /* peak2_freq */
+        "peak2_freq", 0, 0, 1,         0,         1e6 },
+    { /* time_range */
+        "peak2_power", 0, 0, 1,         -1e7, 1e7 },
+    { /* peak2_unit - same enumeration as freq_unit */
+        "peak2_unit", 0, 0, 1,         0,         2 },
+    { /* JPG Waterfall files index */
+        "w_idx", 0, 0, 1, 0, 1000 },
+    { /* en_avg_at_dec:
+           *    0 - disable
+           *    1 - enable */
+        "en_avg_at_dec", 1, 0, 1,      0,         1 },
+    { /* Must be last! */
+        NULL, 0.0, -1, -1, 0.0, 0.0 }
+};
+
+
+void SpecIntervalInit();
+
+int spec_run(const wf_func_table_t* wf_f)
+{
+    fprintf(stderr, "SPEC RUN Loading spectrum version %s-%s.\n", "1" ,"1");
+
+    if(rp_spectr_worker_init(wf_f) < 0) {
+	    fprintf(stderr, "rp_spectr_worker_init failed\n");
+        return -1;
+    }
+
+    rp_set_params(rp_main_params, PARAMS_NUM);
+
+    rp_spectr_worker_change_state(rp_spectr_auto_state);
+
+	SpecIntervalInit();
+
+    return 0;
+}
+
+int spec_stop()
+{
+    fprintf(stderr, "Unloading spectrum version %s-%s.\n", "1", "1");
+
+    rp_spectr_worker_exit();
+
+    return 0;
+}
+
+int spec_getViewData(float **signals, size_t size)
+{
+    return rp_spectr_get_signals_channel(signals, size);
+}
+
+int spec_getJpgIdx(int* jpg)
+{
+	rp_spectr_worker_res_t res;
+	int ret = rp_spectr_get_params(&res);
+	if (!ret)
+	{
+		*jpg = res.jpg_idx;
+	}
+
+	return ret;
+}
+
+int spec_getPeakPower(int channel, float* power)
+{
+	rp_spectr_worker_res_t res;
+	int ret = rp_spectr_get_params(&res);
+	if (!ret)
+	{
+		*power = channel == 0 ? res.peak_pw_cha : res.peak_pw_chb;
+	}
+
+	return ret;
+}
+
+int spec_getPeakFreq(int channel, float* freq)
+{
+	rp_spectr_worker_res_t res;
+	int ret = rp_spectr_get_params(&res);
+	if (!ret)
+	{
+		*freq = channel == 0 ? res.peak_pw_freq_cha : res.peak_pw_freq_chb;
+	}
+
+	return ret;
+}
+
+int spec_setFreqRange(float freq)
+{
+	const float ranges[] = { 62500000, 7800000, 976000, 61000, 7600, 953 };
+	int range = 0;
+	for (; range < 5; ++range)
+		if (freq > ranges[range])
+			break;
+
+	rp_spectr_worker_update_params_by_idx(range, FREQ_RANGE_PARAM, 1);
+
+	fprintf(stderr, "max freq = %.2f range = %d\n", freq, range);
+
+	return 0;
+}
+
+int spec_setUnit(int unit)
+{
+	rp_spectr_worker_update_params_by_idx(unit, FREQ_UNIT_PARAM, 1);
+	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHA_PARAM, 1);
+	rp_spectr_worker_update_params_by_idx(unit, PEAK_UNIT_CHB_PARAM, 1);
+
+	return 0;
 }
 

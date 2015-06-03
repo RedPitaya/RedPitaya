@@ -33,6 +33,8 @@ TARGET=$(OUTPUT_DIR)/librp.so
 
 # List of compiled object files
 OBJECTS =	common.o \
+		kiss_fft/kiss_fft.c \
+		kiss_fft/kiss_fftr.c \
 		housekeeping.o \
 		id_handler.o \
 		dpin_handler.o \
@@ -46,14 +48,16 @@ OBJECTS =	common.o \
 		gen_handler.o \
 		calib.o \
 		i2c.o \
+		spec_dsp.o \
+		spec_fpga.o \
 		rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
+CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-LDFLAGS=-shared -Wl,--version-script=exportmap
+LDFLAGS=-shared -Wl,--version-script=exportmap -rdynamic
 
 # Red Pitaya common SW directory
 SHARED=../../shared/
