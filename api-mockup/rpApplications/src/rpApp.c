@@ -17,6 +17,7 @@
 
 #include "rpApp.h"
 #include "osciloscopeApp.h"
+#include "spectrometerApp.h"
 #include "version.h"
 #include "common.h"
 
@@ -275,4 +276,40 @@ int rpApp_OscSetMathSources(rp_channel_t source1, rp_channel_t source2) {
 
 int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2) {
     return osc_getMathSources(source1, source2);
+}
+
+
+// SPECTRUM
+
+
+int rpApp_SpecRun(const wf_func_table_t* wf_f) { // waterfall function pointers
+	return spec_run(wf_f);
+}
+
+int rpApp_SpecStop(void) {
+	return spec_stop();
+}
+
+int rpApp_SpecGetViewData(float** signals, size_t size) {
+	return spec_getViewData(signals, size);
+}
+
+int rpApp_SpecGetJpgIdx(int* jpg) {
+	return spec_getJpgIdx(jpg);
+}
+
+int rpApp_SpecGetPeakPower(int channel, float* power) {
+	return spec_getPeakPower(channel, power);
+}
+
+int rpApp_SpecGetPeakFreq(int channel, float* freq) {
+	return spec_getPeakFreq(channel, freq);
+}
+
+int rpApp_SpecSetFreqRange(float freq) {
+	return spec_setFreqRange(freq);
+}
+
+int rpApp_SpecSetUnit(int unit) {
+	return spec_setUnit(unit);
 }
