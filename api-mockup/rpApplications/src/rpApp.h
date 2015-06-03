@@ -561,6 +561,26 @@ int rpApp_OscGetViewSize(uint32_t *size);
 
 ///@}
 
+// SPECTRUM
+
+int rpApp_SpecRun(const wf_func_table_t* wf_f); // waterfall function pointers
+
+int rpApp_SpecStop();
+
+int rpApp_SpecGetViewData(float **signals, size_t size);
+
+//int rpApp_SpecGetParams();
+
+int rpApp_SpecGetJpgIdx(int* jpg);
+
+int rpApp_SpecGetPeakPower(int channel, float* power);
+
+int rpApp_SpecGetPeakFreq(int channel, float* freq);
+
+int rpApp_SpecSetFreqRange(float freq);
+
+int rpApp_SpecSetUnit(int unit);
+
 #ifdef __cplusplus
 }
 #endif
