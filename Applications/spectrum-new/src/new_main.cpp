@@ -1,7 +1,11 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
-#include "rpApp.h"
-#include "main.h"
+
+extern "C" {
+    #include "rpApp.h"
+    #include "spectrometerApp.h"
+    #include "version.h"
+}
 
 enum { CH_SIGNAL_SIZE = 1024*2, INTERVAL = 500 };
 enum { FREQ_CHANNEL = -1 };
@@ -59,6 +63,7 @@ void UpdateParams(void)
 
 	ret = rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
 	ret = rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
+	rp_EnableDigitalLoop(false); // IsDemoParam.Value()); // FIXME
 }
 
 void UpdateSignals(void)
@@ -122,3 +127,29 @@ extern "C" void SpecIntervalInit()
 
 	fprintf(stderr, "Interval Init\n");
 }
+
+extern "C" int rp_app_init(void)
+{
+    fprintf(stderr, "Loading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
+    rpApp_Init();
+/*
+    if(rp_spectr_worker_init() < 0) {
+        return -1;
+    }
+
+    rp_set_params(&rp_main_params[0], PARAMS_NUM);
+
+    rp_spectr_worker_change_state(rp_spectr_auto_state);
+*/
+    return 0;
+}
+
+extern "C" int rp_app_exit(void)
+{
+    fprintf(stderr, "Unloading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
+
+    rp_spectr_worker_exit();
+    rpApp_Release();
+    return 0;
+}
+
