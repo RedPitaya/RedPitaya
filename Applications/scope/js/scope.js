@@ -164,17 +164,13 @@
           $('#OSC_RUN').show();
         }
       }
-      // Buffer position
-      else if(param_name == 'OSC_VIEW_POS') {
+      // Buffer size parameter
+      else if(param_name == 'OSC_VIEV_PART') {
         var full_width = $('#buffer').width() - 4;
         var visible_width = full_width * new_params['OSC_VIEV_PART'].value;
         
         $('#buffer .buf-red-line').width(visible_width).show();
-        $('#buffer .buf-red-line-holder').css('left', full_width * new_params['OSC_VIEW_POS'].value - visible_width / 2);
-      }
-      // Buffer size parameter is processed upper
-      else if(param_name == 'OSC_VIEV_PART') {
-        continue;
+        $('#buffer .buf-red-line-holder').css('left', full_width / 2 - visible_width / 2);
       }
       // Sampling rate
       else if(param_name == 'OSC_SAMPL_RATE') {
@@ -278,7 +274,7 @@
             var ratio = buf_width / (buf_width * new_params['OSC_VIEV_PART'].value);
             
             $('#time_offset_arrow').css('left', arrow_left).show();
-            $('#buf_time_offset').css('left', buf_width * new_params['OSC_VIEW_POS'].value - buf_width * new_params['OSC_VIEV_PART'].value / 2 + arrow_left / ratio - 4).show();
+            $('#buf_time_offset').css('left', buf_width / 2 - buf_width * new_params['OSC_VIEV_PART'].value / 2 + arrow_left / ratio - 4).show();
           }
         }
         // Trigger level
@@ -1122,7 +1118,7 @@ $(function() {
   $('#jtk_right').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_right.png'); });
   $('#jtk_down').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_down.png'); });
   
-  $('#jtk_fine').on('click touchstart', function(){
+  $('#jtk_fine').on('click touchstart', function(ev){
     var img = $('#jtk_fine');
     
     if(img.attr('src') == 'img/fine.png') {
@@ -1133,6 +1129,9 @@ $(function() {
       img.attr('src', 'img/fine.png');
       OSC.state.fine = false;
     }
+    
+    ev.preventDefault();
+    ev.stopPropagation();
   });
 
   $(document).on('mouseup touchend', function(){ 
@@ -1140,10 +1139,14 @@ $(function() {
   });
   
   $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
     OSC.changeYZoom(ev.target.id == 'jtk_down' ? '+' : '-');
   });
   
   $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
     OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
   });
   
@@ -1184,7 +1187,7 @@ $(function() {
       var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
       
       $('#info_box').html('Time offset ' + new_value + 'ms');
-      $('#buf_time_offset').css('left', buf_width * OSC.params.orig['OSC_VIEW_POS'].value - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + ui.position.left / ratio - 4).show();
+      $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + ui.position.left / ratio - 4).show();
     },
     stop: function(ev, ui) {
       var graph_width = $('#graph_grid').outerWidth();
@@ -1203,7 +1206,7 @@ $(function() {
     containment: 'parent',
     drag: function(ev, ui) {
       var buf_width = $('#buffer').width();
-      var zero_pos = (buf_width + 2) * OSC.params.orig['OSC_VIEW_POS'].value;
+      var zero_pos = (buf_width + 2) / 2;
       var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
       var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
       var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio).toFixed(2));
@@ -1214,7 +1217,7 @@ $(function() {
     },
     stop: function(ev, ui) {
       var buf_width = $('#buffer').width();
-      var zero_pos = (buf_width + 2) * OSC.params.orig['OSC_VIEW_POS'].value;
+      var zero_pos = (buf_width + 2) / 2;
       var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
       var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
       
