@@ -1,9 +1,11 @@
 
+# TODO: copyright notice and authors shold be listed here
 
 device=$1
 
 boot_dir=BOOT
 root_dir=ROOT
+OVERLAY=OS/debian/overlay
 
 ecosystem_tar=red-pitaya-ecosystem-0.92-20150527.tgz
 
@@ -42,19 +44,23 @@ export LANG=C
 /debootstrap/debootstrap --second-stage
 EOF_CHROOT
 
-# copy overlay
-mkdir -p                    $root_dir/var/log/nginx
-cp patches/fw_env.config    $root_dir/etc/
-cp -r OS/debian/overlay/*   $root_dir/
+# copy U-Boot environment tools
+install -m 664 -o root -D patches/fw_env.config                      $root_dir/etc/fw_env.config
+# TODO missing executables
 
+install -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $root_dir/etc/apt/apt.conf.d/99norecommends
+install -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $root_dir/etc/apt/sources.list
+install -m 664 -o root -D $OVERLAY/etc/fstab                         $root_dir/etc/fstab
+install -m 664 -o root -D $OVERLAY/etc/hostname                      $root_dir/etc/hostname
+install -m 664 -o root -D $OVERLAY/etc/timezone                      $root_dir/etc/timezone
+install -m 664 -o root -D $OVERLAY/etc/securetty                     $root_dir/etc/securetty
+
+# setup locale and timezune, install packages
 chroot $root_dir <<- EOF_CHROOT
 # TODO sees sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
 #localectl set-locale LANG="en_US.UTF-8"
-
-echo redpitaya > /etc/hostname
-echo Europe/Ljubljana > /etc/timezone
 
 apt-get update
 apt-get -y upgrade
@@ -71,23 +77,43 @@ apt-get -y install openssh-server ca-certificates ntp ntpdate fake-hwclock \
   iw firmware-realtek firmware-ralink build-essential libluajit-5.1 lua-cjson \
   unzip ifplugd
 
-# TODO: /etc/default/hostapd should be copied only here
-# TODO: /etc/dhcp/dhcpd.conf should be copied only here
-
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+EOF_CHROOT
 
+# Nginx service
+install -m 664 -o root -d                                           $root_dir/var/log/nginx
+install -m 664 -o root -D $OVERLAY/etc/systemd/system/nginx.service $root_dir/etc/systemd/system/nginx.service
+install -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya          $root_dir/etc/sysconfig/redpitaya
+
+chroot $root_dir <<- EOF_CHROOT
 systemctl enable nginx
+EOF_CHROOT
 
+# network configuration
+install -m 664 -o root -D $OVERLAY/etc/udev/rules.d/75-persistent-net-generator.rules $root_dir/etc/udev/rules.d/75-persistent-net-generator.rules
+install -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $root_dir/etc/network/interfaces.d/eth0
+install -m 664 -o root -D $OVERLAY/etc/default/ifplugd                                $root_dir/etc/default/ifplugd
+install -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0                     $root_dir/etc/network/interfaces.d/wlan0
+install -m 664 -o root -D $OVERLAY/etc/hostapd/hostapd.conf                           $root_dir/etc/hostapd/hostapd.conf
+install -m 664 -o root -D $OVERLAY/etc/default/hostapd                                $root_dir/etc/default/hostapd
+install -m 664 -o root -D $OVERLAY/etc/dhcp/dhcpd.conf                                $root_dir/etc/dhcp/dhcpd.conf
+install -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nat                              $root_dir/etc/iptables.ipv4.nat
+install -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nonat                            $root_dir/etc/iptables.ipv4.nonat
+
+chroot $root_dir <<- EOF_CHROOT
 sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
+EOF_CHROOT
 
-apt-get clean
+# final operations and cleanup
+install -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $root_dir/etc/profile.d/redpitaya.sh
 
+chroot $root_dir <<- EOF_CHROOT
 echo root:root | chpasswd
-
+apt-get clean
 service ntp stop
-
 history -c
 EOF_CHROOT
+
 
 rm $root_dir/etc/resolv.conf
 rm $root_dir/usr/bin/qemu-arm-static
