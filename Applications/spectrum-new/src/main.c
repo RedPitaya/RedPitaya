@@ -75,31 +75,6 @@ const char *rp_app_desc(void)
     return (const char *)"Red Pitaya spectrum analyser application.\n";
 }
 
-int rp_app_init(void)
-{
-    fprintf(stderr, "Loading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
-	return 0;
-
-    if(rp_spectr_worker_init() < 0) {
-        return -1;
-    }
-
-    rp_set_params(&rp_main_params[0], PARAMS_NUM);
-
-    rp_spectr_worker_change_state(rp_spectr_auto_state);
-
-    return 0;
-}
-
-int rp_app_exit(void)
-{
-    fprintf(stderr, "Unloading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
-
-    rp_spectr_worker_exit();
-
-    return 0;
-}
-
 int rp_set_params(rp_app_params_t *p, int len)
 {
     int i;
