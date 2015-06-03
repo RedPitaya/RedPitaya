@@ -1,9 +1,8 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
-
 extern "C" {
     #include "rpApp.h"
-    #include "spectrometerApp.h"
+    #include "waterfall.h"
     #include "version.h"
 }
 
@@ -96,10 +95,27 @@ void UpdateSignals(void)
 
 void OnNewParams(void)
 {
+/*
+	typedef struct wf_func_table_t {
+    int (*rp_spectr_wf_init)();
+    int (*rp_spectr_wf_clean)();
+    int (*rp_spectr_wf_clean_map)();
+    int (*rp_spectr_wf_calc)();
+    int (*rp_spectr_wf_save_jpeg)();
+} wf_func_table_t;
+*/
 	static bool run = false;
 	if (!run)
 	{
-		rpApp_SpecRun();
+		static wf_func_table_t wf_f = {
+			rp_spectr_wf_init,
+    		rp_spectr_wf_clean,
+    		rp_spectr_wf_clean_map,
+    		rp_spectr_wf_calc,
+	    	rp_spectr_wf_save_jpeg
+		};
+
+		rpApp_SpecRun(&wf_f);
 		run = true;
 	}
 
