@@ -15,7 +15,9 @@
 #ifndef __DSP_H
 #define __DSP_H
 
-extern const int c_dsp_sig_len;
+#include "rp.h"
+
+#define c_dsp_sig_len (SPECTR_FPGA_SIG_LEN>>1)
 
 extern const double c_c2v;
 

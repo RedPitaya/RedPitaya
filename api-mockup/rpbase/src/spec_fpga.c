@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "fpga.h"
+#include "spec_fpga.h"
 
 /* internals */
 /* The FPGA register structure */
@@ -42,7 +42,7 @@ float g_spectr_fpga_adc_max_v;
 const float c_spectr_fpga_adc_max_v_revC= +1.079;
 const float c_spectr_fpga_adc_max_v_revD= +1.027;
 /* Sampling frequency = 125Mspmpls (non-decimated) */
-const float c_spectr_fpga_smpl_freq = 125e6;
+float get_spectr_fpga_smpl_freq() { return 125e6; }
 /* Sampling period (non-decimated) - 8 [ns] */
 const float c_spectr_fpga_smpl_period = (1. / 125e6);
 
