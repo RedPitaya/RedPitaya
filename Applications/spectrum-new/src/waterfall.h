@@ -27,6 +27,8 @@
 
 #include "jpeglib.h"
 
+extern const int c_dsp_sig_len;
+
 /*** Main Warerfall module calls ****/
 int rp_spectr_wf_init(void);
 int rp_spectr_wf_clean(void);
