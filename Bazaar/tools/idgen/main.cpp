@@ -300,7 +300,7 @@ bool verify_app_license(const char* app_id, const char* lic_file, const char* id
 		try {
 		 	decoded_key = Decode(app_key);
 		} catch (std::exception const & e) {
-			std::cout<<"License verification is failed. Invalid license!<<std::endl;
+			std::cout<<"License verification is failed. Invalid license!"<<std::endl;
 			return 1;
 		}
 		//getting app_id, devid, checksum
