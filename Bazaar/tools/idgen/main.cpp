@@ -286,7 +286,7 @@ bool verify_app_license(const char* app_id, const char* lic_file, const char* id
 				}	
 			}
 		} catch (std::exception const & e) {
-			std::cout<<"License verification is failed. License file is broken!<<std::endl;
+			std::cout<<"License verification is failed. License file is broken!"<<std::endl;
 			return 1;
 		}	
 		//decoding app_key
