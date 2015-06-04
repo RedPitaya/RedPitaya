@@ -313,3 +313,9 @@ int rpApp_SpecSetFreqRange(float freq) {
 int rpApp_SpecSetUnit(int unit) {
 	return spec_setUnit(unit);
 }
+
+int rpApp_SpecGetViewSize(size_t* size)
+{
+	*size = 1024*2;
+	return 0;
+}
