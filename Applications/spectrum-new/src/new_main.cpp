@@ -119,6 +119,11 @@ void OnNewParams(void)
 
 		rpApp_SpecRun(&wf_f);
 		run = true;
+
+		CDataManager::GetInstance()->SetParamInterval(INTERVAL);
+		CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
+
+		fprintf(stderr, "Interval Init\n");
 	}
 
 	in1Show.Update();
