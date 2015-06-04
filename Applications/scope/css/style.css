@@ -180,13 +180,13 @@ area:hover {
   display: none;
 }
 
-.buf-fixator {
+#buf_time_offset {
   height: 12px;
-  width: 3px;
+  width: 8px;
   position: absolute;
   top: 0;
   left: 0;
-  background-color: #cdcccc;
+  background-color: #75cede;
   display: none;
 }
 
