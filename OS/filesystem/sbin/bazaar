@@ -44,20 +44,20 @@ URL=$3
 MD5=$4
 
 # Install action
-[ "x${ACTION}" == "xinstall" ] && {
+[ "x${ACTION}" = "xinstall" ] && {
 
-    if [ "x${MD5}" == "x" ]; then
+    if [ "x${MD5}" = "x" ]; then
         echo "Required md5sum parameter missing." 1>&2
         exit 1;
     fi
 
-    if [ "x${URL}" == "x" ]; then
+    if [ "x${URL}" = "x" ]; then
         echo "Required url parameter missing." 1>&2
         exit 1;
     fi
 
     # Ecosystem special case
-    if [ "x${APP}" == "x${OS}" ]; then
+    if [ "x${APP}" = "x${OS}" ]; then
         TARGET=${PATH_REDPITAYA}
     fi
 
@@ -105,7 +105,7 @@ MD5=$4
     mount -o ro,remount ${PATH_REDPITAYA}
 
     # Ecosystem special case - schedule a reboot
-    if [ "x${APP}" == "x${OS}" ]; then
+    if [ "x${APP}" = "x${OS}" ]; then
         /bin/sh -c "sleep 5; reboot" &
     fi
 
@@ -113,10 +113,10 @@ MD5=$4
 }
 
 # Remove (uninstall) action
-[ "x${ACTION}" == "xremove" ] && {
+[ "x${ACTION}" = "xremove" ] && {
 
     # Ecosystem special case
-    if [ "x${APP}" == "x${OS}" ]; then
+    if [ "x${APP}" = "x${OS}" ]; then
         echo "Cowardly refusing to remove the (eco)system." 1>&2
         exit 1;
     fi
@@ -146,7 +146,7 @@ MD5=$4
     exit 0;
 }
 
-[ "x${ACTION}" == "xidgen" ] && {
+[ "x${ACTION}" = "xidgen" ] && {
 
     mount -o rw,remount ${PATH_REDPITAYA}
     status=$?
@@ -167,7 +167,7 @@ MD5=$4
     exit 0;
 }
 
-[ "x${ACTION}" == "xlic" ] && {
+[ "x${ACTION}" = "xlic" ] && {
 
     mount -o rw,remount ${PATH_REDPITAYA}
     status=$?
