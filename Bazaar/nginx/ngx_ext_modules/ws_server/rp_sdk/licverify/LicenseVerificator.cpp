@@ -20,6 +20,10 @@ std::string GetIDFilePath()
 
 int verify_app_license(const char* app_id)
 {
+#ifdef ALWAYS_PURCHASED
+	return 0;
+#endif
+
 	//getting app_key from license file
 	dbg_printf("Liscense verifying... \n");
 	std::string lic_file = GetLicensePath();
