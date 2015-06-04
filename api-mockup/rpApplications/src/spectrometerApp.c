@@ -571,8 +571,6 @@ rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
 /* params initialized */
 static int params_init = 0;
 
-void SpecIntervalInit();
-
 int rp_create_signals(float ***a_signals)
 {
     int i;
@@ -702,8 +700,6 @@ int spec_run(const wf_func_table_t* wf_f)
     rp_set_params(rp_main_params, PARAMS_NUM);
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
-
-	SpecIntervalInit();
 
     return 0;
 }
