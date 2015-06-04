@@ -22,12 +22,17 @@ inline int GetJSONObject(const std::string _file_name, JSONNode & _json_node)
 		std::ostringstream tmp;
 		tmp<<file.rdbuf();
 		std::string s = tmp.str();
-		_json_node = libjson::parse(s);
 		file.close();
+		try {
+			_json_node = libjson::parse(s);
+		} catch (std::exception const & e) {
+			printf("Parsing of file %s is failed!\n", _file_name.c_str());
+			return -1;
+		}
+
 		return 0;
 	}
 	printf("No such file: %s\n", _file_name.c_str());
-	file.close();
 	return -1;
 		
 }
@@ -37,10 +42,17 @@ inline std::string GetDataFromFile(const std::string _file_name, const std::stri
 {
 	JSONNode n(JSON_NODE);
 	bool failed = GetJSONObject(_file_name, n);
-	
+	std::string data;
 	if(!failed)
-		return n.at(_data_id.c_str()).as_string();
-	
+	{
+		try {
+			data = n.at(_data_id.c_str()).as_string();
+			return data;
+		} catch (std::exception const & e) {
+			printf("Parsing of file %s is failed!\n", _file_name.c_str());
+			return "";
+		}
+	}
 	return "";
 }
 
@@ -69,19 +81,24 @@ inline std::string GetAppChecksum(const std::string _file_name, const std::strin
 	if(!failed)
 	{
 		JSONNode apps(JSON_ARRAY);
-		apps = n.at("apps").as_array();
-		int size = apps.size();
-		for(int i=0; i<size; i++)
-		{
-			JSONNode app(JSON_NODE);
-			app = apps.at(i);
-			std::string app_id = app.at("app_id").as_string();
-			if(app_id == _app_id)
+		try {
+			apps = n.at("apps").as_array();
+			int size = apps.size();
+			for(int i=0; i<size; i++)
 			{
-				std::string app_checksum = app.at("app_checksum").as_string();
-				std::string res = app_checksum;
-				return res;
-			}	
+				JSONNode app(JSON_NODE);
+				app = apps.at(i);
+				std::string app_id = app.at("app_id").as_string();
+				if(app_id == _app_id)
+				{
+					std::string app_checksum = app.at("app_checksum").as_string();
+					std::string res = app_checksum;
+					return res;
+				}	
+			}
+		} catch (std::exception const & e) {
+			printf("Parsing of file %s is failed!\n", _file_name.c_str());
+			return "";
 		}
 	}
 	return "";
