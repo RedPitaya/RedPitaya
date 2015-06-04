@@ -470,7 +470,7 @@ void *rp_spectr_worker_thread(void *args)
         spectr_fpga_get_signal(&rp_cha_in, &rp_chb_in);
 
         rp_spectr_prepare_freq_vector(&rp_tmp_signals[0], 
-                                      get_spectr_fpga_smpl_freq(),
+                                      spectr_get_fpga_smpl_freq(),
                                       curr_params[FREQ_RANGE_PARAM].value);
 
         rp_spectr_hann_filter(&rp_cha_in[0], &rp_chb_in[0],
@@ -568,8 +568,127 @@ rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         NULL, 0.0, -1, -1, 0.0, 0.0 }
 };
 
+/* params initialized */
+static int params_init = 0;
 
 void SpecIntervalInit();
+
+int rp_create_signals(float ***a_signals)
+{
+    int i;
+    float **s;
+
+    s = (float **)malloc(SPECTR_OUT_SIG_NUM * sizeof(float *));
+    if(s == NULL) {
+        return -1;
+    }
+    for(i = 0; i < SPECTR_OUT_SIG_NUM; i++)
+        s[i] = NULL;
+
+    for(i = 0; i < SPECTR_OUT_SIG_NUM; i++) {
+        s[i] = (float *)malloc(SPECTR_OUT_SIG_LEN * sizeof(float));
+        if(s[i] == NULL) {
+            rp_cleanup_signals(a_signals);
+            return -1;
+        }
+        memset(&s[i][0], 0, SPECTR_OUT_SIG_LEN * sizeof(float));
+    }
+    *a_signals = s;
+
+    return 0;
+}
+
+void rp_cleanup_signals(float ***a_signals)
+{
+    int i;
+    float **s = *a_signals;
+
+    if(s) {
+        for(i = 0; i < SPECTR_OUT_SIG_NUM; i++) {
+            if(s[i]) {
+                free(s[i]);
+                s[i] = NULL;
+            }
+        }
+        free(s);
+        *a_signals = NULL;
+    }
+}
+
+int rp_set_params(rp_app_params_t *p, int len)
+{
+    int i;
+    int fpga_update = 1;
+    int params_change = 0;
+
+    if(len > PARAMS_NUM) {
+        fprintf(stderr, "Too much parameters, max=%d\n", PARAMS_NUM);
+        return -1;
+    }
+
+    for(i = 0; i < len; i++) {
+        int p_idx = -1;
+        int j = 0;
+
+        /* Search for correct parameter name in defined parameters */
+        while(rp_main_params[j].name != NULL) {
+            int p_strlen = strlen(p[i].name);
+
+            if(p_strlen != strlen(rp_main_params[j].name)) {
+                j++;
+                continue;
+            }
+            if(!strncmp(p[i].name, rp_main_params[j].name, p_strlen)) {
+                p_idx = j;
+                break;
+            }
+            j++;
+        }
+
+        if(p_idx == -1) {
+            fprintf(stderr, "Parameter %s not found, ignoring it\n", p[i].name);
+            continue;
+        }
+
+        if(rp_main_params[p_idx].read_only) {
+            continue;
+        }
+
+        if(rp_main_params[p_idx].value != p[i].value) {
+            params_change = 1;
+            if(rp_main_params[p_idx].fpga_update)
+                fpga_update = 1;
+        }
+        if(rp_main_params[p_idx].min_val > p[i].value) {
+            fprintf(stderr, "Incorrect parameters value: %f (min:%f), "
+                    " correcting it\n", p[i].value, 
+                    rp_main_params[p_idx].min_val);
+            p[i].value = rp_main_params[p_idx].min_val;
+        } else if(rp_main_params[p_idx].max_val < p[i].value) {
+            fprintf(stderr, "Incorrect parameters value: %f (max:%f), "
+                    " correcting it\n", p[i].value, 
+                    rp_main_params[p_idx].max_val);
+            p[i].value = rp_main_params[p_idx].max_val;
+        }
+
+        rp_main_params[p_idx].value = p[i].value;
+    }
+
+    if(params_change || (params_init == 0)) {
+        params_init = 1;
+
+        rp_main_params[FREQ_UNIT_PARAM].value = 
+            rp_main_params[PEAK_UNIT_CHA_PARAM].value =
+            rp_main_params[PEAK_UNIT_CHB_PARAM].value =
+            spectr_fpga_cnv_freq_range_to_unit(
+                                         rp_main_params[FREQ_RANGE_PARAM].value);
+
+        rp_spectr_worker_update_params((rp_app_params_t *)&rp_main_params[0],
+                                       fpga_update);
+    }
+
+    return 0;
+}
 
 int spec_run(const wf_func_table_t* wf_f)
 {
@@ -591,8 +710,6 @@ int spec_run(const wf_func_table_t* wf_f)
 
 int spec_stop()
 {
-    fprintf(stderr, "Unloading spectrum version %s-%s.\n", "1", "1");
-
     rp_spectr_worker_exit();
 
     return 0;

@@ -569,7 +569,7 @@ int rpApp_SpecStop();
 
 int rpApp_SpecGetViewData(float **signals, size_t size);
 
-//int rpApp_SpecGetParams();
+int rpApp_SpecGetViewSize(size_t* size);
 
 int rpApp_SpecGetJpgIdx(int* jpg);
 
