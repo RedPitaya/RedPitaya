@@ -43,7 +43,7 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -L$(OUTPUT_DIR)
-LDFLAGS=-shared -Wl,--version-script=exportmap -rdynamic
+LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
 SHARED=../../shared/
