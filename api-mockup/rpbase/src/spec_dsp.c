@@ -249,7 +249,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
     double max_pw_chb = -1e5;
     int max_pw_idx_cha = 0;
     int max_pw_idx_chb = 0;
-    float freq_smpl = get_spectr_fpga_smpl_freq() / 
+    float freq_smpl = spectr_get_fpga_smpl_freq() / 
         (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
 
     /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
