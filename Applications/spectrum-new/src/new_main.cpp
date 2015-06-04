@@ -6,6 +6,17 @@ extern "C" {
     #include "version.h"
 }
 
+/* Parameters description structure - must be the same for all RP controllers */
+typedef struct rp_app_params_s {
+    char  *name;
+    float  value;
+    int    fpga_update;
+    int    read_only;
+    float  min_val;
+    float  max_val;
+} rp_app_params_t;
+
+
 enum { CH_SIGNAL_SIZE = 1024*2, INTERVAL = 500 };
 enum { FREQ_CHANNEL = -1 };
 
@@ -95,15 +106,6 @@ void UpdateSignals(void)
 
 void OnNewParams(void)
 {
-/*
-	typedef struct wf_func_table_t {
-    int (*rp_spectr_wf_init)();
-    int (*rp_spectr_wf_clean)();
-    int (*rp_spectr_wf_clean_map)();
-    int (*rp_spectr_wf_calc)();
-    int (*rp_spectr_wf_save_jpeg)();
-} wf_func_table_t;
-*/
 	static bool run = false;
 	if (!run)
 	{
@@ -164,8 +166,26 @@ extern "C" int rp_app_exit(void)
 {
     fprintf(stderr, "Unloading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
 
-    rp_spectr_worker_exit();
+	rpApp_SpecStop();
     rpApp_Release();
+
+    return 0;
+}
+
+extern "C" const char *rp_app_desc(void) {
+    fprintf(stderr, "spec desc\n");
+    return (const char*)"Red Pitaya spectrometer application.\n";
+}
+
+extern "C" int rp_set_params(rp_app_params_t *p, int len) {
+    return 0;
+}
+
+extern "C" int rp_get_params(rp_app_params_t **p) {
+    return 0;
+}
+
+extern "C" int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
     return 0;
 }
 
