@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=forking
-PIDFile=/run/nginx.pid
+PIDFile=/run/redpitaya_nginx.pid
 EnvironmentFile=/etc/sysconfig/redpitaya
 ExecStart =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www
 ExecReload=/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s reload
@@ -12,4 +12,3 @@ ExecStop  =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s quit
 
 [Install]
 WantedBy=multi-user.target
-
