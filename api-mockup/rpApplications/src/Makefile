@@ -35,13 +35,14 @@ TARGET=$(OUTPUT_DIR)/librpapp.so
 # List of compiled object files
 OBJECTS =	common.o \
 		osciloscopeApp.o \
+		spectrometerApp.o \
 		rpApp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
-CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -L$(OUTPUT_DIR)
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
@@ -49,7 +50,7 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lpthread
+LIBS=-lm -lpthread -lrp
 
 # Main GCC executable (used for compiling and linking)
 CROSS_COMPILE?=arm-linux-gnueabi-

@@ -20,17 +20,15 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "dsp.h"
-#include "main.h"
-#include "fpga.h"
-#include "dsp.h"
+#include "spec_dsp.h"
+//#include "spectrometerApp.h"
+#include "spec_fpga.h"
 #include "kiss_fftr.h"
 
 extern float g_spectr_fpga_adc_max_v;
 extern const int c_spectr_fpga_adc_bits;
 
 /* length of output signals: floor(SPECTR_FPGA_SIG_LEN/2) */
-const int c_dsp_sig_len = SPECTR_FPGA_SIG_LEN>>1;
 
 /* Internal structures used in DSP  */
 double                *rp_hann_window   = NULL;
@@ -251,7 +249,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
     double max_pw_chb = -1e5;
     int max_pw_idx_cha = 0;
     int max_pw_idx_chb = 0;
-    float freq_smpl = c_spectr_fpga_smpl_freq / 
+    float freq_smpl = spectr_get_fpga_smpl_freq() / 
         (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
 
     /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
