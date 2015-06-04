@@ -5,7 +5,11 @@ After=network.target
 [Service]
 Type=forking
 PIDFile=/run/redpitaya_nginx.pid
-EnvironmentFile=/etc/sysconfig/redpitaya
+# TODO: it should be possible to use EnvironmentFile, but it is not working properly
+# complains about failing library path, or something else
+#EnvironmentFile=/etc/sysconfig/redpitaya
+Environment=PATH_REDPITAYA=/opt/redpitaya
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
 ExecStart =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www
 ExecReload=/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s reload
 ExecStop  =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s quit
