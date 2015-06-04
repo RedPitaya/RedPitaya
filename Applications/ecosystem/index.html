@@ -20,6 +20,11 @@
 				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
 		
 				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
+
+				$("#mcs_container .buttons a").on('click', function(){
+					$("#mcs_container .buttons a").removeClass('item-active');
+					$(this).addClass('item-active');
+				});
 			});
 
 			var current_app = "";
@@ -99,9 +104,9 @@
 		<div class="panel-body">
 			<div class="row" style="padding: 20px;">
 
-				<div class="col-sm-6 col-md-2" style="min-width: 270px; height: 500;">
+				<div class="col-xs-2" style="min-width: 270px; height: 500;">
 					<div id="mcs_container">
-							<img class="appicon" style="width: 150px;" src="../assets/images/logo_white.png">	
+							<img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">	
 							<h4 style="color: silver;">Select the Instrument:</h4>
 							<div class="list-group pull-left">
 								<div class="buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">													
@@ -111,7 +116,7 @@
 						</div>
 					</div>
 
-				<div class="col-sm-6 col-md-6" id="right-col" style="min-width: 600px; height: 500;color: silver; margin: auto 25px;">
+				<div class="col-xs-6" id="right-col" style="min-width: 600px; height: 500;color: silver; margin: auto 25px;">
 					<div id="mcs_container2">
 					<div class="description" style="display: none;">
 						<h2 class="name"></h2>
