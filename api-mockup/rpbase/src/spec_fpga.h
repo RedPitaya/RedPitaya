@@ -211,7 +211,7 @@ int spectr_fpga_get_wr_ptr(int *wr_ptr_curr, int *wr_ptr_trig);
 
 /* Returnes signal content */
 /* various constants */
-extern const float c_spectr_fpga_smpl_freq;
+float spectr_get_fpga_smpl_freq();
 extern const float c_spectr_fpga_smpl_period;
 
 /* helper conversion functions */
