@@ -264,28 +264,31 @@ bool verify_app_license(const char* app_id, const char* lic_file, const char* id
 	bool failed = GetJSONObject(lic_file, n);
 	if(!failed)
 	{
-		
-		JSONNode apps(JSON_ARRAY);
-		apps = n.at("registered_apps").as_array();
-		
-		int size = apps.size();
-		
-		std::string app_key;
-		
-		for(int i=0; i<size; i++)
-		{
-			JSONNode app(JSON_NODE);
-			app = apps.at(i);
-			
-			std::string id = app.at("app_id").as_string();
-			if(id == app_id)
-			{
 
-				app_key = app.at("app_key").as_string();
-				break;
-			}	
-		}
-		
+		std::string app_key;		
+		try {
+			JSONNode apps(JSON_ARRAY);
+			apps = n.at("registered_apps").as_array();
+			
+			int size = apps.size();
+			
+			for(int i=0; i<size; i++)
+			{
+				JSONNode app(JSON_NODE);
+				app = apps.at(i);
+				
+				std::string id = app.at("app_id").as_string();
+				if(id == app_id)
+				{
+
+					app_key = app.at("app_key").as_string();
+					break;
+				}	
+			}
+		} catch (std::exception const & e) {
+			std::cout<<"License verification is failed. License file is broken!"<<std::endl;
+			return 1;
+		}	
 		//decoding app_key
 		if(app_key.empty())
 		{
@@ -293,8 +296,13 @@ bool verify_app_license(const char* app_id, const char* lic_file, const char* id
 			return 1;
 		}
 		//std::cout<<"app_key "<<app_key<<std::endl;
-		std::string decoded_key = Decode(app_key);
-		
+		std::string decoded_key;
+		try {
+		 	decoded_key = Decode(app_key);
+		} catch (std::exception const & e) {
+			std::cout<<"License verification is failed. Invalid license!"<<std::endl;
+			return 1;
+		}
 		//getting app_id, devid, checksum
 		int term_pos = decoded_key.find(";");
 		std::string dev_id = decoded_key.substr(0, term_pos);
