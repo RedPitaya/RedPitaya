@@ -22,6 +22,7 @@
 #include "apin.h"
 #include "generate.h"
 #include "oscilloscopeApp.h"
+#include "spectrometerApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
@@ -292,6 +293,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:MATH:DATA?", .callback = RP_APP_OscChannel3GetViewData,},
         {.pattern = "OSC:DATA:SIZE", .callback = RP_APP_OscSetViewSize,},
         {.pattern = "OSC:DATA:SIZE?", .callback = RP_APP_OscGetViewSize,},
+        {.pattern = "OSC:VIEW:POS?", .callback = RP_APP_OscGetViewPos,},
         {.pattern = "OSC:VIEW:PART?", .callback = RP_APP_OscGetViewPart,},
         {.pattern = "OSC:MEAS:CH1:VPP?", .callback = RP_APP_OscChannel1MeasureAmplitude,},
         {.pattern = "OSC:MEAS:CH2:VPP?", .callback = RP_APP_OscChannel2MeasureAmplitude,},
@@ -331,6 +333,55 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:MATH:SOUR", .callback = RP_APP_OscSetMathSources,},
         {.pattern = "OSC:MATH:SOUR?", .callback = RP_APP_OscGetMathSources,},
 
+/*
+scpi_result_t RP_APP_SpecRun(scpi_t *context); // :RUN
+scpi_result_t RP_APP_SpecStop(scpi_t *context); // :STOP
+scpi_result_t RP_APP_SpecReset(scpi_t *context); // :RST
+scpi_result_t RP_APP_SpecAutoscale(scpi_t *context); // :AUTOSCALE
+scpi_result_t RP_APP_SpecRunning(scpi_t *context); // :RUNNING
+
+scpi_result_t RP_APP_SpecChannel1GetViewData(scpi_t *context); // :CH1:DATA?
+scpi_result_t RP_APP_SpecChannel2GetViewData(scpi_t *context); // :CH2:DATA?
+scpi_result_t RP_APP_SpecGetViewSize(scpi_t *context); // :DATA:SIZE?
+scpi_result_t RP_APP_SpecSetViewSize(scpi_t *context); // :DATA:SIZE
+
+scpi_result_t RP_APP_SpecChannel1GetPeak(scpi_t *context); // :CH1:PEAK
+scpi_result_t RP_APP_SpecChannel2GetPeak(scpi_t *context); // :CH2:PEAK
+scpi_result_t RP_APP_SpecChannel1Freeze(scpi_t *context); // :CH1:FREEZE
+scpi_result_t RP_APP_SpecChannel2Freeze(scpi_t *context); // :CH2:FREEZE
+
+scpi_result_t RP_APP_SpecGetFreqMin(scpi_t *context); // :FREQ:MIN
+scpi_result_t RP_APP_SpecGetFreqMax(scpi_t *context); // :FREQ:MAX
+*/
+
+        /* Spectrum */
+        {.pattern = "SPEC:RUN", .callback = RP_APP_SpecRun,},
+        {.pattern = "SPEC:STOP", .callback = RP_APP_SpecStop,},
+        {.pattern = "SPEC:RST", .callback = RP_APP_OscReset,},
+		{.pattern = "SPEC:RUNNING", .callback = RP_APP_SpecRunning,},
+
+        {.pattern = "SPEC:CH1:DATA?", .callback = RP_APP_SpecChannel1GetViewData,},
+        {.pattern = "SPEC:CH2:DATA?", .callback = RP_APP_SpecChannel2GetViewData,},
+
+        {.pattern = "SPEC:DATA:SIZE?", .callback = RP_APP_SpecGetViewSize,},
+        //{.pattern = "SPEC:DATA:SIZE", .callback = RP_APP_SpecSetViewSize,},
+
+        {.pattern = "SPEC:CH1:PEAK?", .callback = RP_APP_SpecChannel1GetPeak,},
+        {.pattern = "SPEC:CH2:PEAK?", .callback = RP_APP_SpecChannel2GetPeak,},
+        {.pattern = "SPEC:CH1:PEAK:FREQ?", .callback = RP_APP_SpecChannel1GetPeakFreq,},
+        {.pattern = "SPEC:CH2:PEAK:FREQ?", .callback = RP_APP_SpecChannel2GetPeakFreq,},
+
+//TODO
+/*
+        {.pattern = "SPEC:CH1:FREEZE?", .callback = RP_APP_SpecChannel1Freeze,},
+        {.pattern = "SPEC:CH2:FREEZE?", .callback = RP_APP_SpecChannel2Freeze,},
+
+        {.pattern = "SPEC:CUR:CH1:DB?", .callback = RP_APP_OscChannel1SetProbeAtt,},
+        {.pattern = "SPEC:CUR:CH2:DB?", .callback = RP_APP_OscChannel2SetProbeAtt,},
+
+        {.pattern = "SPEC:CUR:CH1:FREQ", .callback = RP_APP_OscChannel1SetProbeAtt,},
+        {.pattern = "SPEC:CUR:CH2:FREQ", .callback = RP_APP_OscChannel2SetProbeAtt,},
+*/
 
     SCPI_CMD_LIST_END
 };

@@ -290,6 +290,10 @@ int rpApp_SpecStop(void) {
 	return spec_stop();
 }
 
+int rpApp_SpecRunning(void) {
+	return spec_running();
+}
+
 int rpApp_SpecGetViewData(float** signals, size_t size) {
 	return spec_getViewData(signals, size);
 }
