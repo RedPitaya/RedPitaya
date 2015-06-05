@@ -79,7 +79,7 @@ sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 EOF_CHROOT
 
 # Nginx service
-install -v -m 664 -o root -d                                                     $root_dir/var/log/nginx
+install -v -m 664 -o root -d                                                     $root_dir/var/log/redpitaya_nginx
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service $root_dir/etc/systemd/system/redpitaya_nginx.service
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                    $root_dir/etc/sysconfig/redpitaya
 
