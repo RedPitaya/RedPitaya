@@ -128,10 +128,12 @@ int rp_spectr_worker_init(const wf_func_table_t* wf_f)
         return -1;
     }
 
-    if(wf_func_table->rp_spectr_wf_init() < 0) {
-        rp_spectr_worker_clean();
-        return -1;
-    }
+	if (wf_func_table) {
+	    if(wf_func_table->rp_spectr_wf_init() < 0) {
+    	    rp_spectr_worker_clean();
+        	return -1;
+	    }
+	}
 
     spectr_fpga_get_sig_ptr(&rp_fpga_cha_signal, &rp_fpga_chb_signal);
 
@@ -150,7 +152,7 @@ int rp_spectr_worker_init(const wf_func_table_t* wf_f)
 
         rp_cleanup_signals(&rp_spectr_signals);
         rp_cleanup_signals(&rp_tmp_signals);
-        fprintf(stderr, "pthread_create() failed: %s\n", 
+        fprintf(stderr, "pthread_create() failed: %s\n", 	
                 strerror(errno));
         return -1;
     }
@@ -165,7 +167,8 @@ int rp_spectr_worker_clean(void)
     rp_cleanup_signals(&rp_tmp_signals);
     rp_spectr_hann_clean();
     rp_spectr_fft_clean();
-    wf_func_table->rp_spectr_wf_clean();
+	if (wf_func_table)
+    	wf_func_table->rp_spectr_wf_clean();
 
     if(jpg_fname_cha) {
         free(jpg_fname_cha);
@@ -398,15 +401,13 @@ void *rp_spectr_worker_thread(void *args)
         }
 
         if(fpga_update) {
-			fprintf(stderr, "update\n");
             spectr_fpga_reset();
             if(spectr_fpga_update_params(0, 0, 0, 0, 0, (int)curr_params[FREQ_RANGE_PARAM].value, curr_params[EN_AVG_AT_DEC].value) < 0) {
 				rp_spectr_worker_change_state(rp_spectr_auto_state);
-				fprintf(stderr, "updated\n");
             }
-
             fpga_update = 0;
-            wf_func_table->rp_spectr_wf_clean_map();
+			if (wf_func_table)
+            	wf_func_table->rp_spectr_wf_clean_map();
             switch((int)curr_params[FREQ_RANGE_PARAM].value) {
             case 0:
             case 1:
@@ -494,7 +495,8 @@ void *rp_spectr_worker_thread(void *args)
                              curr_params[FREQ_RANGE_PARAM].value);
 
         /* Calculate the map used for Waterfall diagram  */
-        wf_func_table->rp_spectr_wf_calc(&rp_cha_fft[0], &rp_chb_fft[0]);
+		if (wf_func_table)
+	        wf_func_table->rp_spectr_wf_calc(&rp_cha_fft[0], &rp_chb_fft[0]);
 
         if((jpg_write_div == 0) || (loop_cnt++%jpg_write_div == 0)) {
             jpg_fn_cnt++;
@@ -505,8 +507,8 @@ void *rp_spectr_worker_thread(void *args)
                     1, jpg_fn_cnt, c_jpg_file_suf);
             sprintf(jpg_fname_chb, "%s%01d_%03d%s", c_jpg_file_path, 
                     2, jpg_fn_cnt, c_jpg_file_suf);
-            wf_func_table->rp_spectr_wf_save_jpeg(jpg_fname_cha, jpg_fname_chb);
-
+			if (wf_func_table)
+	            wf_func_table->rp_spectr_wf_save_jpeg(jpg_fname_cha, jpg_fname_chb);
             /* Report index back to the user */
         } else if(loop_cnt > 1e6) {
             loop_cnt = 0;
@@ -691,6 +693,7 @@ int rp_set_params(rp_app_params_t *p, int len)
 int spec_run(const wf_func_table_t* wf_f)
 {
     fprintf(stderr, "SPEC RUN Loading spectrum version %s-%s.\n", "1" ,"1");
+	rpApp_Init();
 
     if(rp_spectr_worker_init(wf_f) < 0) {
 	    fprintf(stderr, "rp_spectr_worker_init failed\n");
@@ -704,9 +707,17 @@ int spec_run(const wf_func_table_t* wf_f)
     return 0;
 }
 
+int spec_running() // true/false
+{
+	return rp_spectr_ctrl == rp_spectr_auto_state;
+}
+
 int spec_stop()
 {
     rp_spectr_worker_exit();
+
+	rpApp_SpecStop();
+    rpApp_Release();
 
     return 0;
 }

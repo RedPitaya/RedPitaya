@@ -567,6 +567,8 @@ int rpApp_SpecRun(const wf_func_table_t* wf_f); // waterfall function pointers
 
 int rpApp_SpecStop();
 
+int rpApp_SpecRunning();
+
 int rpApp_SpecGetViewData(float **signals, size_t size);
 
 int rpApp_SpecGetViewSize(size_t* size);
