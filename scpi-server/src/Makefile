@@ -39,6 +39,7 @@ OBJECTS =	scpi-commands.o \
 			acquire.o \
 			generate.o \
 			oscilloscopeApp.o \
+			spectrometerApp.o \
 			utils.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
