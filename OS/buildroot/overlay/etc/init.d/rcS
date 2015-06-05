@@ -16,7 +16,7 @@ if ! grep -qs $PATH_REDPITAYA /proc/mounts; then
 fi
 
 # Create /tmp structure every time, since it resides in RAM
-mkdir -p /tmp/log/nginx
+mkdir -p /tmp/log/redpitaya_nginx
 
 # the device driver is not creating this node, so for now
 # create the devcfg device node manually
