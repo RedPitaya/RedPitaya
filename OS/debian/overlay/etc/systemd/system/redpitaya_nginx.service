@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=forking
-PIDFile=/run/redpitaya_nginx.pid
+PIDFile=/var/run/redpitaya_nginx.pid
 # TODO: it should be possible to use EnvironmentFile, but it is not working properly
 # complains about failing library path, or something else
 #EnvironmentFile=/etc/sysconfig/redpitaya
