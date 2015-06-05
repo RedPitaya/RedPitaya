@@ -110,6 +110,8 @@ int spec_run(const wf_func_table_t* wf_f);
 
 int spec_stop();
 
+int spec_running(); // true/false
+
 int spec_getViewData(float **signals, size_t size);
 
 //int spec_getParams();
