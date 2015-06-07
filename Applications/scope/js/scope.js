@@ -285,7 +285,7 @@
             if(new_params['OSC_TRIG_SOURCE'].value > 1) {
               $('#trigger_level, #trig_level_arrow').hide();
               $('#right_menu .menu-btn.trig').prop('disabled', true);
-              $('#osc_trig_level_info').html('- ');
+              $('#osc_trig_level_info').html('-');
             }
             else {
               var ref_scale = (new_params['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
@@ -296,7 +296,7 @@
               
               $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
               $('#right_menu .menu-btn.trig').prop('disabled', false);
-              $('#osc_trig_level_info').html(new_params[param_name].value);
+              $('#osc_trig_level_info').html(OSC.convertVoltage(new_params[param_name].value));
             }
           }
         }
@@ -323,7 +323,10 @@
               var top = (graph_height + 7) / 2 + px_offset;
               
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
-              $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (top < 16 ? 3 : ''));
+              $('#cur_' + y + '_info')
+                .html(OSC.convertVoltage(+new_value))
+                .data('cleanval', +new_value)
+                .css('margin-top', (top < 16 ? 3 : ''));
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -345,7 +348,8 @@
               
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
               $('#cur_' + x + '_info')
-                .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + 'ms')
+                .html(OSC.convertTime(-new_value))
+                .data('cleanval', -new_value)
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
             }
             else {
@@ -354,7 +358,7 @@
           }
         }
         else if(param_name == 'SOUR1_VOLT' || param_name == 'SOUR2_VOLT') {
-          $('#' + param_name + '_info').html(new_params[param_name].value);
+          $('#' + param_name + '_info').html(OSC.convertVoltage(new_params[param_name].value));
         }
         
         // Find the field having ID equal to current parameter name
@@ -391,7 +395,15 @@
             }
           }
           else if(field.is('span')) {
-            field.html(new_params[param_name].value);
+            if($.inArray(param_name, ['OSC_TIME_OFFSET', 'OSC_TIME_SCALE']) > -1) {
+              field.html(OSC.convertTime(new_params[param_name].value));
+            }
+            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE']) > -1) {
+              field.html(OSC.convertVoltage(new_params[param_name].value));
+            }
+            else {
+              field.html(new_params[param_name].value);
+            }
           }
         }
       }
@@ -816,7 +828,10 @@
     var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
     
     $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
-    $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (ui.position.top < 16 ? 3 : ''));
+    $('#cur_' + y + '_info')
+      .html(OSC.convertVoltage(+new_value))
+      .data('cleanval', +new_value)
+      .css('margin-top', (ui.position.top < 16 ? 3 : ''));
     
     OSC.updateYCursorDiff();
     
@@ -836,7 +851,8 @@
     
     $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
     $('#cur_' + x + '_info')
-      .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + 'ms')
+      .html(OSC.convertTime(-new_value))
+      .data('cleanval', -new_value)
       .css('margin-left', (ui.position.left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
     
     OSC.updateXCursorDiff();
@@ -857,14 +873,14 @@
     
     if(y1.is(':visible') && y2.is(':visible') && diff_px > 12) {
       var top = Math.min(y1_top, y2_top);
-      var value = parseFloat($('#cur_y1_info').html()) - parseFloat($('#cur_y2_info').html());
+      var value = $('#cur_y1_info').data('cleanval') - $('#cur_y2_info').data('cleanval');
       
       $('#cur_y_diff')
         .css('top', top + 5)
         .height(diff_px)
         .show();
       $('#cur_y_diff_info')
-        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : 3))) + 'V')
+        .html(OSC.convertVoltage(Math.abs(value)))
         .css('top', top + diff_px/2 - 2)
         .show();
     }
@@ -883,14 +899,14 @@
     
     if(x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
       var left = Math.min(x1_left, x2_left);
-      var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
+      var value = $('#cur_x1_info').data('cleanval') - $('#cur_x2_info').data('cleanval');
       
       $('#cur_x_diff')
         .css('left', left + 1)
         .width(diff_px)
         .show();
       $('#cur_x_diff_info')
-        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : Math.abs(value) >= 0.001 ? 4 : 6))) + 'ms')
+        .html(OSC.convertTime(Math.abs(value)))
         .show()
         .css('left', left + diff_px/2 - $('#cur_x_diff_info').width()/2 + 3);
     }
@@ -909,7 +925,7 @@
       var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('IN1 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('IN1 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#in1_dialog').is(':visible')) {
         $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
@@ -922,7 +938,7 @@
       var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('IN2 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('IN2 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#in2_dialog').is(':visible')) {
         $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
@@ -935,7 +951,7 @@
       var volt_per_px =  10 / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('OUT1 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('OUT1 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#out1_dialog').is(':visible')) {
         $('#SOUR1_VOLT_OFFS').val(+(new_value.toFixed(2)));
@@ -948,7 +964,7 @@
       var volt_per_px =  10 / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('OUT2 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('OUT2 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#out2_dialog').is(':visible')) {
         $('#SOUR2_VOLT_OFFS').val(+(new_value.toFixed(2)));
@@ -961,7 +977,7 @@
       var volt_per_px = (OSC.params.orig['OSC_MATH_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('MATH zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('MATH zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#math_dialog').is(':visible')) {
         $('#OSC_MATH_OFFSET').val(+(new_value.toFixed(2)));
@@ -992,7 +1008,7 @@
           var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
           var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
           
-          $('#info_box').html('New trigger level: ' + (+(new_value.toFixed(2))));
+          $('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
           
           if($('#trig_dialog').is(':visible')) {
             $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
@@ -1007,6 +1023,48 @@
         console.log('Trigger level for source ' + OSC.params.orig['OSC_TRIG_SOURCE'].value + ' not yet supported');
       }
     }
+  };
+  
+  // Converts time from milliseconds to a more 'user friendly' time unit; returned value includes units
+  OSC.convertTime = function(t) {
+    var abs_t = Math.abs(t);
+    var unit = 'ms';
+    
+    if(abs_t >= 1000) {
+      t = t / 1000;
+      unit = 's';
+    } 
+    else if(abs_t >= 1) {
+      t = t * 1;
+      unit = 'ms';
+    }
+    else if(abs_t >= 0.001) {
+      t = t * 1000;
+      unit = 'μs';
+    }
+    else if(abs_t >= 0.000001) {
+      t = t * 1000000;
+      unit = ' ns';
+    }
+    
+    return +(t.toFixed(2)) + ' ' + unit;
+  };
+  
+  // Converts voltage from volts to a more 'user friendly' unit; returned value includes units
+  OSC.convertVoltage = function(v) {
+    var abs_v = Math.abs(v);
+    var unit = 'V';
+    
+    if(abs_v >= 1) {
+      v = v * 1;
+      unit = 'V';
+    }
+    else if(abs_v >= 0.001) {
+      v = v * 1000;
+      unit = 'mV';
+    }
+    
+    return +(v.toFixed(2)) + ' ' + unit;
   };
   
 }(window.OSC = window.OSC || {}, jQuery));
@@ -1186,7 +1244,7 @@ $(function() {
       var buf_width = graph_width - 2;
       var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
       
-      $('#info_box').html('Time offset ' + new_value + 'ms');
+      $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
       $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + ui.position.left / ratio - 4).show();
     },
     stop: function(ev, ui) {
@@ -1212,7 +1270,7 @@ $(function() {
       var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio).toFixed(2));
       var px_offset = -(new_value / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
       
-      $('#info_box').html('Time offset ' + new_value + 'ms');
+      $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
       $('#time_offset_arrow').css('left', (buf_width + 2) / 2 + px_offset);
     },
     stop: function(ev, ui) {
@@ -1329,7 +1387,7 @@ $(function() {
           
           if(new_scale !== null) {
             OSC.touch.new_scale_x = new_scale;
-            $('#info_box').html('Time scale ' + new_scale + ' ms/div');
+            $('#info_box').html('Time scale ' + OSC.convertTime(new_scale) + '/div');
           }
           
           OSC.touch.prev = OSC.touch.curr;
@@ -1345,7 +1403,7 @@ $(function() {
           
           if(new_scale !== null) {
             OSC.touch.new_scale_y = new_scale;
-            $('#info_box').html('Vertical scale ' + (new_scale * 1000) + ' mV/div');
+            $('#info_box').html('Vertical scale ' + OSC.convertVoltage(new_scale) + '/div');
           }
           
           OSC.touch.prev = OSC.touch.curr;
