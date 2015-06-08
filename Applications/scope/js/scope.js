@@ -572,6 +572,7 @@
     //OSC.params.local['DEBUG_PARAM_PERIOD'] = { value: 200 };
     //OSC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 100 };
     
+	OSC.params.local['in_command'] = { value: 'send_all_params' };
     // Send new values and reset the local params object
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
