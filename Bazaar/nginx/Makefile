@@ -29,8 +29,7 @@ $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
 
 $(WS_SERVER_LIB): 
-	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-
+	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=$(CROSS_COMPILE)
 $(DEPLIBS):
 	mkdir -p $(DEPLIBS_DIR)
 	$(MAKE) -C $(SHARED)

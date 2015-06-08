@@ -1,4 +1,4 @@
-CXX=arm-xilinx-linux-gnueabi-g++
+CXX=$(CROSS_COMPILE)g++
 CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -DNDEBUG
 SOURCES= DataManager.cpp \
 	licverify/LicenseVerificator.cpp \
