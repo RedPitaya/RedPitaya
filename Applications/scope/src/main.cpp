@@ -392,6 +392,10 @@ void OnNewParams(void) {
         inTimeScale.Value() = value;
         inAutoscale.Update();
         inAutoscale.Value() = false;
+
+        rpApp_osc_trig_sweep_t sweep;
+        rpApp_OscGetTriggerSweep(&sweep);
+        inTrigSweep.Value() = sweep;
     }
 
     IF_VALUE_CHANGED(in1Offset,    rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1,  in1Offset.NewValue()))
