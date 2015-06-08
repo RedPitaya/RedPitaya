@@ -18,6 +18,8 @@
 #
 # TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
 
+CROSS_COMPILE?=arm-xilinx-linux-gnueabi-
+
 TMP = tmp
 
 UBOOT_TAG = xilinx-v2015.1
@@ -173,7 +175,7 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=arm-xilinx-linux-gnueabi- all
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=$(CROSS_COMPILE) all
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
@@ -182,7 +184,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_S
 	cp $@.buildroot $@
 
 $(ENVTOOLS_ELF): $(UBOOT_DIR)
-	make -C $< arch=ARM CFLAGS=$(ARMHF_CFLAGS) CROSS_COMPILE=arm-linux-gnueabihf- env
+	make -C $< arch=ARM CFLAGS=$(ARMHF_CFLAGS) CROSS_COMPILE=$(CROSS_COMPILE) env
 	mkdir -p $(INSTALL_DIR)/bin/
 	cp $</tools/env/fw_printenv $@
 	cp $</tools/env/fw_printenv $(INSTALL_DIR)/bin/fw_setenv
@@ -210,7 +212,7 @@ $(LINUX): $(LINUX_DIR)
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
 	  -j $(shell grep -c ^processor /proc/cpuinfo) \
-	  CROSS_COMPILE=arm-xilinx-linux-gnueabi- UIMAGE_LOADADDR=0x8000 uImage
+	  CROSS_COMPILE=$(CROSS_COMPILE) UIMAGE_LOADADDR=0x8000 uImage
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################
@@ -263,57 +265,57 @@ $(URAMDISK): $(INSTALL_DIR)
 ################################################################################
 
 $(LIBREDPITAYA):
-	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C shared CROSS_COMPILE=$(CROSS_COMPILE)
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA)
-	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(IDGEN):
-	$(MAKE) -C $(IDGEN_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(IDGEN_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	
 $(MONITOR):
-	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(GENERATE):
-	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ACQUIRE):
-	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
-	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
-	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
-	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(LIBRP):
-	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(LIBRPAPP):
-	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUM_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SPECTRUM_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 # Gdb server for remote debugging
@@ -328,7 +330,7 @@ sdkPub:
 	$(MAKE) -C $(SDK_DIR) zip
 
 rp_communication:
-	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
