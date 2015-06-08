@@ -23,7 +23,7 @@ echo ${without} | xargs ./configure ${add_conf_params} ${add_modules}
 
 # Make it cross-compilable
 cat objs/Makefile | tail -n +3 > objs/Makefile.tmp
-echo "CROSS_COMPILE=arm-xilinx-linux-gnueabi-" > objs/Makefile
+echo "CROSS_COMPILE=$(CROSS_COMPILE)" > objs/Makefile
 echo "CC =	\$(CROSS_COMPILE)gcc" >> objs/Makefile
 cat objs/Makefile.tmp >> objs/Makefile
 rm objs/Makefile.tmp
