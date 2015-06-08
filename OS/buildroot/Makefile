@@ -29,7 +29,7 @@ $(B_DIR):
 install: $(UIMAGE)
 	mkdir -p $(INSTALL_DIR)
 	cp $(UIMAGE) $(INSTALL_DIR)/uramdisk.image.gz
-	$(MAKE) -C hostapd install INSTALL_DIR=$(INSTALL_DIR)/sbin CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C hostapd install INSTALL_DIR=$(INSTALL_DIR)/sbin CROSS_COMPILE=$(CROSS_COMPILE)
 
 clean:
 	-$(MAKE) -C $(B_DIR) clean

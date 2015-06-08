@@ -1,4 +1,3 @@
-#export CROSS_COMPILE=arm-xilinx-eabi-
 #export PATH=$PATH:home/user/websocketpp/config/
 #export PATH=$PATH:/home/user/work/RedPitaya-master/OS/u-boot/u-boot-xlnx/tools
 #make > my.log 2>&1
