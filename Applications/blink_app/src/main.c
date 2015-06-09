@@ -140,7 +140,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     /* ------------------------------------ END OF APP PARAMS ------------------------------------------------*/
     
     { /* Start blink*/
-      "rp_start_blink", 0, 1, 0, 0, 1},
+      "rp_start_blink", 0, 1, 0, 0, 3},
 
     { /* Blink diode parameter  */
       "rp_led", 1, 1, 0, 0, 7 },
@@ -686,12 +686,19 @@ int rp_copy_params(rp_app_params_t *src, rp_app_params_t **dst)
         }
         
     }
-
-    fprintf(stderr, "%f\n", rp_main_params[RP_LED].value);
+    
     if(rp_main_params[RP_START_BLINK].value == 1){
-      set_led(rp_main_params[RP_LED].value);
+
+      set_led((rp_main_params[RP_LED].value));
+      rp_main_params[RP_START_BLINK].value = 0; 
+    
+    }else if(rp_main_params[RP_START_BLINK].value == 2){
+      
+      unset_led(rp_main_params[RP_LED].value);
       rp_main_params[RP_START_BLINK].value = 0;
+    
     }
+    
 
     *dst = p_new;
     return 0;
@@ -708,6 +715,7 @@ int rp_copy_params(rp_app_params_t *src, rp_app_params_t **dst)
  * @param[in]   params  Application parameters to be deallocated
  * @retval      0       Success, never fails
  */
+
 int rp_clean_params(rp_app_params_t *params)
 {
     int i = 0;
