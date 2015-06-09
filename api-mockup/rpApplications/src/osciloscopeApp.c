@@ -549,26 +549,132 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     for (int i = 0; i < viewSize; ++i) {
         mean += data[i];
     }
+
     mean = mean / viewSize;
+    for (int i = 0; i < viewSize; ++i){
+        data[i] -= mean;
+    }
 
     // calculate signal correlation
     float xcorr[viewSize];
     for (int i = 0; i < viewSize; ++i) {
         xcorr[i] = 0;
         for (int j = 0; j < viewSize-i; ++j) {
-            xcorr[i] += (data[j]-mean) * (data[j+i]-mean);
+            xcorr[i] += data[j] * data[j+i];
         }
-        xcorr[i] /= viewSize-i-1;
+        xcorr[i] /= viewSize-i;
     }
 
-    // find first local maximum, that is high enough
+    // The main problem is the presence lot of noise in the signal
+    // We can filter correlation function and differentiate it to find local maximum, but it could fail on high frequencies I suppose
+    // So lets try to find local maximum logically, idea is:
+    // signal: ZxxbbbbbaaAaaBbbbbxxYxbbbbBaaAaaa
+    // 'a' - values below acceptable threshold
+    // 'b', 'x', 'y' - values above acceptable threshold
+    // 'Y' - local maximum value
+    // 'Z' - reference value
+    // 'x' - almost y
+    // need find left 'A', then we can find left 'B'
+    // then can need find right 'A', then can find right 'B'
+    // then we can find 'Y' between left and right 'B'
+    // then we can find left and right 'x'
+    // guess extreme point locates in the middle of left and right 'x'
+    // we can not use 'Y' only because it could be (x + noise)
+
+    int left_idx = 0;
+    int right_idx = 0;
+    int left_edge_idx = 0;
+    int right_edge_idx = viewSize-2;
+
+    // search for left point where correlation function is less than it's expected
     for (int i = 1; i < viewSize-1; ++i) {
-        if (xcorr[i] > xcorr[i-1] && xcorr[i] > xcorr[i+1] && xcorr[i] / xcorr[0] > PERIOD_EXISTS_THRESHOLD) {
-            *period = indexToTime(i);
-            return RP_OK;
+        if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
+            left_edge_idx = i;
+            break;
         }
     }
-    return RP_APP_ECP;
+
+    if(left_edge_idx == 0)
+        return RP_APP_ECP;
+    
+    // search for left point where correlation function is greater than it's expected
+    for (int i = left_edge_idx; i < viewSize-1; ++i) {
+        if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
+            left_idx = i;
+            break;
+        }
+    }
+
+    if(left_idx == 0)
+        return RP_APP_ECP;
+
+    // search for right point where correlation function is less than it's expected
+    for (int i = left_idx; i < viewSize-1; ++i) {
+        if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
+            right_edge_idx = i;
+            break;
+        }
+    }
+    
+    // search for right point where correlation function is greater than it's expected
+    for (int i = right_edge_idx; i >= left_idx; --i) {
+        if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
+            right_idx = i;
+            break;
+        }
+    }
+
+    // search for local maximum
+    float loc_max = xcorr[left_idx];
+    int max_idx = left_idx;
+    for (int i = left_idx; i <= right_idx; ++i) {
+        if(loc_max < xcorr[i]) {
+            loc_max = xcorr[i];
+            max_idx = i;
+        }
+    }
+
+    // search for left point which is almost equal to maximum
+    int left_amax_idx = max_idx;
+    int right_amax_idx = max_idx;
+    for (int i = left_idx; i <= right_idx; ++i) {
+        if(xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
+            left_amax_idx = i;
+            break;
+        }
+    }
+
+    // search for right point which is almost equal to maximum
+    for (int i = right_edge_idx; i >= left_idx; --i) {
+        if(xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
+            right_amax_idx = i;
+            break;
+        }
+    }
+
+    // guess extreme point locates between 'left_amax_idx' and 'right_amax_idx'
+    *period = indexToTime((left_amax_idx + right_amax_idx) / 2);
+
+#if 0
+    static int counter = 0;
+    if((*period >= 1.1f) || ((counter % 20) == 0)) {
+        fprintf(stderr, "source = %d\n", source);
+        fprintf(stderr, "viewSize = %d\n", viewSize);
+
+        fprintf(stderr, "left_edge_idx = %d\n", left_edge_idx);
+        fprintf(stderr, "left_idx = %d\n", left_idx);
+
+        fprintf(stderr, "right_edge_idx = %d\n", right_edge_idx);
+        fprintf(stderr, "right_idx = %d\n", right_idx);
+
+        fprintf(stderr, "max_idx = %d\n", max_idx);
+        fprintf(stderr, "left_amax_idx = %d\n", left_amax_idx);
+        fprintf(stderr, "right_amax_idx = %d\n", right_amax_idx);
+        fprintf(stderr, "*period = %f\n", *period);
+    }
+    ++counter;
+#endif
+    return RP_OK;
 }
 
 int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
