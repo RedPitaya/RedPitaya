@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Buildroot 2014.02 Configuration
+# Buildroot 2014.02-00414-gac78fb4 Configuration
 #
 BR2_HAVE_DOT_CONFIG=y
 
@@ -65,7 +65,6 @@ BR2_cortex_a9=y
 # BR2_ARM_EABI is not set
 BR2_ARM_EABIHF=y
 BR2_ARM_ENABLE_NEON=y
-# BR2_ARM_SOFT_FLOAT is not set
 # BR2_ARM_FPU_VFPV2 is not set
 # BR2_ARM_FPU_VFPV3 is not set
 # BR2_ARM_FPU_VFPV3D16 is not set
@@ -132,6 +131,13 @@ BR2_GLOBAL_PATCH_DIR="../patches"
 BR2_TOOLCHAIN_USES_GLIBC=y
 # BR2_TOOLCHAIN_BUILDROOT is not set
 BR2_TOOLCHAIN_EXTERNAL=y
+# BR2_TOOLCHAIN_EXTERNAL_LINARO_2013_11 is not set
+# BR2_TOOLCHAIN_EXTERNAL_LINARO_2013_10 is not set
+# BR2_TOOLCHAIN_EXTERNAL_LINARO_2013_09 is not set
+
+#
+# Sourcery CodeBench toolchains available for the EABI ABI
+#
 BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
 # BR2_TOOLCHAIN_EXTERNAL_DOWNLOAD is not set
 BR2_TOOLCHAIN_EXTERNAL_PREINSTALLED=y
@@ -268,6 +274,7 @@ BR2_PACKAGE_BUSYBOX_CONFIG="../busybox.config"
 # BR2_PACKAGE_LATENCYTOP is not set
 # BR2_PACKAGE_LMBENCH is not set
 # BR2_PACKAGE_LTP_TESTSUITE is not set
+# BR2_PACKAGE_LTRACE is not set
 
 #
 # lttng-modules needs a Linux kernel to be built
@@ -328,6 +335,7 @@ BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT=y
 # BR2_PACKAGE_FLASHBENCH is not set
 # BR2_PACKAGE_GENEXT2FS is not set
 # BR2_PACKAGE_GENROMFS is not set
+# BR2_PACKAGE_KOBS_NG is not set
 # BR2_PACKAGE_MAKEDEVS is not set
 # BR2_PACKAGE_MMC_UTILS is not set
 # BR2_PACKAGE_MTD is not set
@@ -335,6 +343,7 @@ BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT=y
 # BR2_PACKAGE_NTFS_3G is not set
 # BR2_PACKAGE_SQUASHFS is not set
 # BR2_PACKAGE_SSHFS is not set
+# BR2_PACKAGE_SUNXI_TOOLS is not set
 # BR2_PACKAGE_UNIONFS is not set
 # BR2_PACKAGE_XFSPROGS is not set
 
@@ -382,6 +391,7 @@ BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT=y
 #
 # BR2_PACKAGE_EFL is not set
 # BR2_PACKAGE_QT is not set
+# BR2_PACKAGE_QT5_JSCORE_AVAILABLE is not set
 # BR2_PACKAGE_QT5 is not set
 
 #
@@ -414,10 +424,17 @@ BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT=y
 #
 # Firmware
 #
+# BR2_PACKAGE_AM33X_CM3 is not set
 # BR2_PACKAGE_B43_FIRMWARE is not set
 # BR2_PACKAGE_LINUX_FIRMWARE is not set
+# BR2_PACKAGE_RPI_FIRMWARE is not set
+# BR2_PACKAGE_SUNXI_BOARDS is not set
 # BR2_PACKAGE_UX500_FIRMWARE is not set
 # BR2_PACKAGE_ZD1211_FIRMWARE is not set
+
+#
+# a10disp needs a Linux kernel to be built
+#
 # BR2_PACKAGE_AVRDUDE is not set
 # BR2_PACKAGE_CDRKIT is not set
 # BR2_PACKAGE_CRYPTSETUP is not set
@@ -437,6 +454,16 @@ BR2_DBUS_EXPAT=y
 # BR2_PACKAGE_FCONFIG is not set
 # BR2_PACKAGE_FIS is not set
 # BR2_PACKAGE_FMTOOLS is not set
+
+#
+# Freescale i.MX libraries
+#
+
+#
+# imx-lib needs an imx-specific Linux kernel to be built
+#
+# BR2_PACKAGE_FIRMWARE_IMX is not set
+# BR2_PACKAGE_GPU_VIV_BIN_MX6Q is not set
 # BR2_PACKAGE_FXLOAD is not set
 # BR2_PACKAGE_GADGETFS_TEST is not set
 # BR2_PACKAGE_GPM is not set
@@ -477,6 +504,7 @@ BR2_DBUS_EXPAT=y
 # BR2_PACKAGE_PCIUTILS is not set
 # BR2_PACKAGE_PICOCOM is not set
 # BR2_PACKAGE_RNG_TOOLS is not set
+# BR2_PACKAGE_RPI_USERLAND is not set
 # BR2_PACKAGE_SANE_BACKENDS is not set
 # BR2_PACKAGE_SDPARM is not set
 # BR2_PACKAGE_SETSERIAL is not set
@@ -486,7 +514,13 @@ BR2_DBUS_EXPAT=y
 # BR2_PACKAGE_SNOWBALL_HDMISERVICE is not set
 # BR2_PACKAGE_SREDIRD is not set
 # BR2_PACKAGE_STATSERIAL is not set
+# BR2_PACKAGE_SUNXI_CEDARX is not set
+# BR2_PACKAGE_SUNXI_MALI is not set
 # BR2_PACKAGE_SYSSTAT is not set
+
+#
+# ti-gfx needs an (e)glibc toolchain and a Linux kernel to be built
+#
 # BR2_PACKAGE_TI_UIM is not set
 # BR2_PACKAGE_TI_UTILS is not set
 # BR2_PACKAGE_UBOOT_TOOLS is not set
@@ -546,6 +580,7 @@ BR2_PACKAGE_LUA_CJSON=y
 # BR2_PACKAGE_RINGS is not set
 # BR2_PACKAGE_WSAPI is not set
 # BR2_PACKAGE_XAVANTE is not set
+# BR2_PACKAGE_NODEJS is not set
 # BR2_PACKAGE_PERL is not set
 # BR2_PACKAGE_PHP is not set
 # BR2_PACKAGE_PYTHON is not set
@@ -583,6 +618,7 @@ BR2_PACKAGE_LUA_CJSON=y
 # BR2_PACKAGE_SPEEX is not set
 # BR2_PACKAGE_TAGLIB is not set
 # BR2_PACKAGE_TREMOR is not set
+# BR2_PACKAGE_WEBRTC_AUDIO_PROCESSING is not set
 
 #
 # Compression and decompression
@@ -711,6 +747,7 @@ BR2_PACKAGE_WEBKIT_ARCH_SUPPORTS=y
 # BR2_PACKAGE_LIBV4L is not set
 # BR2_PACKAGE_LIBXKBCOMMON is not set
 # BR2_PACKAGE_MTDEV is not set
+# BR2_PACKAGE_NE10 is not set
 # BR2_PACKAGE_NEARDAL is not set
 # BR2_PACKAGE_PCSC_LITE is not set
 # BR2_PACKAGE_TSLIB is not set
@@ -759,6 +796,12 @@ BR2_PACKAGE_EXPAT=y
 # BR2_PACKAGE_LIBDVDNAV is not set
 # BR2_PACKAGE_LIBDVDREAD is not set
 # BR2_PACKAGE_LIBEBML is not set
+# BR2_PACKAGE_LIBFSLCODEC is not set
+# BR2_PACKAGE_LIBFSLPARSER is not set
+
+#
+# libfslvpuwrap needs an imx-specific Linux kernel to be built
+#
 # BR2_PACKAGE_LIBMATROSKA is not set
 # BR2_PACKAGE_LIBMMS is not set
 # BR2_PACKAGE_LIBMPEG2 is not set
@@ -869,6 +912,7 @@ BR2_PACKAGE_GMP=y
 # BR2_PACKAGE_LIBCAP is not set
 # BR2_PACKAGE_LIBCAP_NG is not set
 # BR2_PACKAGE_LIBCGROUP is not set
+# BR2_PACKAGE_LIBCOFI is not set
 BR2_PACKAGE_LIBDAEMON=y
 # BR2_PACKAGE_LIBELF is not set
 # BR2_PACKAGE_LIBEV is not set
@@ -1121,6 +1165,7 @@ BR2_PACKAGE_WPA_SUPPLICANT_WPS=y
 #
 # Real-Time
 #
+# BR2_PACKAGE_XENOMAI is not set
 
 #
 # Shell and utilities
@@ -1209,6 +1254,7 @@ BR2_TARGET_ROOTFS_CPIO_UIMAGE=y
 # Bootloaders
 #
 # BR2_TARGET_BAREBOX is not set
+# BR2_TARGET_MXS_BOOTLETS is not set
 # BR2_TARGET_UBOOT is not set
 # BR2_TARGET_XLOADER is not set
 
@@ -1229,6 +1275,7 @@ BR2_TARGET_ROOTFS_CPIO_UIMAGE=y
 # BR2_PACKAGE_HOST_PARTED is not set
 # BR2_PACKAGE_HOST_SAM_BA is not set
 # BR2_PACKAGE_HOST_SQUASHFS is not set
+# BR2_PACKAGE_HOST_SUNXI_TOOLS is not set
 BR2_PACKAGE_HOST_UBOOT_TOOLS=y
 # BR2_PACKAGE_HOST_UTIL_LINUX is not set
 
