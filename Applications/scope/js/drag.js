@@ -51,7 +51,7 @@ function getOffsets(obj_event) {
     var offsetY = deltaY + y;
 
     /* Обработчик события перетаскивания */
-    dragHandler(offsetX, offsetY);
+    dragHandler(offsetX-16, offsetY-96);
 }
 
 function dragHandler(offsetX, offsetY){
@@ -68,7 +68,7 @@ $(function(){
             if (browser.indexOf("Firefox") != -1) ff = 1;
         }
     }
-    goal = document.getElementById("graph_grid");
+    goal = document.getElementById("graphs");
     deltaX = 0;
     deltaY = 0;
     /* Ставим обработчики событий на нажатие и отпускание клавиши мыши */
