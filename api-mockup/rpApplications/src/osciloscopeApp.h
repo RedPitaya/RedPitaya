@@ -30,7 +30,9 @@
 #define MIN_TIME_TO_DRAW_BEFORE_TIG   100
 #define WAIT_TO_FILL_BUF_TIMEOUT      (2*CLOCKS_PER_SEC)
 #define CONTIOUS_MODE_SCALE_THRESHOLD 1     // ms
-#define PERIOD_EXISTS_THRESHOLD       0.92  // ratio
+#define PERIOD_EXISTS_MIN_THRESHOLD       0.65  // ratio
+#define PERIOD_EXISTS_MAX_THRESHOLD       0.85  // ratio
+#define PERIOD_EXISTS_PEAK_THRESHOLD      0.99  // ratio
 
 
 int osc_Init();
