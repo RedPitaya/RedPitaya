@@ -109,5 +109,8 @@ int rp_clean_params(rp_app_params_t *params);
  */
 int rp_update_main_params(rp_app_params_t *params);
 
+/* Blink led function */
+int blink_led(float led);
+
 
 #endif /*  __MAIN_H */

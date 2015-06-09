@@ -40,6 +40,7 @@ int house_init(void);
 int house_release(void);
 
 int set_led(int led);
+int unset_led(int led);
 
 #endif // __HOUSE_K
 
