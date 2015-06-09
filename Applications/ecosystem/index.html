@@ -20,12 +20,7 @@
 				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
 		
 				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
-
-				$("#mcs_container .buttons a").on('click', function(){
-					$("#mcs_container .buttons a").removeClass('item-active');
-					$(this).addClass('item-active');
-				});
-			});
+			});
 
 			var current_app = "";
 		    var url = '/';
@@ -84,6 +79,11 @@
 					first_button.click();
 
 					//$(selector).mCustomScrollbar({ option: value });
+					$("#mcs_container .buttons a").on('click', function(){
+						$("#mcs_container .buttons a").removeClass('item-active');
+						$(this).addClass('item-active');
+					});
+
 
 				}).fail(function( msg ) {
 					alert("Something has gone wrong. Is there a problem with the server?");
@@ -102,8 +102,8 @@
 <div class="pagewrapper">
 	<div class="panel panel-default" style="background-color: #1D1D1D; margin: 50px auto;">
 		<div class="panel-body">
+			<div class="divider"></div>
 			<div class="row" style="padding: 20px;">
-
 				<div class="col-xs-2" style="min-width: 270px; height: 500;">
 					<div id="mcs_container">
 							<img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">	
