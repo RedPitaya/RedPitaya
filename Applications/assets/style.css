@@ -292,3 +292,15 @@ fieldset[disabled] .btn-primary.active {
   background: #fff;
   color: #000;
 }
+.divider {
+  width: 1px;
+  top: 35px;
+  bottom: 35px;
+  left: 285px;
+  background: #fff;
+  content: '';
+  position: absolute;
+}
+.panel-body{
+  position: relative;
+}
