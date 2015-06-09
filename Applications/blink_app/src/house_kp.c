@@ -80,34 +80,13 @@
 
 int set_led(int led){
 
-	house_reg->led_control = 0;
+	house_reg->led_control |= 1 << led;
+	return 0;
+}
 
-	uint32_t reg_val = 0;
-	switch(led){
-		case 1:
-			reg_val = 2;
-			break;
-		case 2:
-			reg_val = 4;
-			break;
-		case 3:
-			reg_val = 8;
-			break;
-		case 4:
-			reg_val = 16;
-			break;
-		case 5:
-			reg_val = 32;
-			break;
-		case 6:
-			reg_val = 64;
-			break;
-		case 7:
-			reg_val = 128;
-			break;
-	}
-
-	house_reg->led_control = reg_val;
+int unset_led(int led){
+	
+	house_reg->led_control &= ~(1 << led);
 	return 0;
 }
 
