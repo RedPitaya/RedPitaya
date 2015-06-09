@@ -533,7 +533,7 @@ int osc_measureFrequency(rpApp_osc_source source, float *frequency) {
 }
 
 int osc_measurePeriod(rpApp_osc_source source, float *period) {
-    uint32_t dataSize = source == RPAPP_OSC_SOUR_MATH ? viewSize : ADC_BUFFER_SIZE;
+    uint32_t dataSize = source == RPAPP_OSC_SOUR_MATH ? viewSize : VIEW_SIZE_DEFAULT;
     float data[dataSize];
     pthread_mutex_lock(&mutex);
     if (source == RPAPP_OSC_SOUR_MATH) {
@@ -546,23 +546,23 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     pthread_mutex_unlock(&mutex);
 
     float mean = 0;
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = 0; i < dataSize; ++i) {
         mean += data[i];
     }
 
-    mean = mean / viewSize;
-    for (int i = 0; i < viewSize; ++i){
+    mean = mean / dataSize;
+    for (int i = 0; i < dataSize; ++i){
         data[i] -= mean;
     }
 
     // calculate signal correlation
-    float xcorr[viewSize];
-    for (int i = 0; i < viewSize; ++i) {
+    float xcorr[dataSize];
+    for (int i = 0; i < dataSize; ++i) {
         xcorr[i] = 0;
-        for (int j = 0; j < viewSize-i; ++j) {
+        for (int j = 0; j < dataSize-i; ++j) {
             xcorr[i] += data[j] * data[j+i];
         }
-        xcorr[i] /= viewSize-i;
+        xcorr[i] /= dataSize-i;
     }
 
     // The main problem is the presence lot of noise in the signal
@@ -584,32 +584,44 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     int left_idx = 0;
     int right_idx = 0;
     int left_edge_idx = 0;
-    int right_edge_idx = viewSize-2;
+    int right_edge_idx = dataSize-2;
 
     // search for left point where correlation function is less than it's expected
-    for (int i = 1; i < viewSize-1; ++i) {
+    for (int i = 1; i < dataSize-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             left_edge_idx = i;
             break;
         }
     }
 
-    if(left_edge_idx == 0)
+    if(left_edge_idx == 0) {
+#if 0
+        fprintf(stderr, "left_edge_idx == 0\n");
+        fprintf(stderr, "source = %d\n", source);
+        fprintf(stderr, "dataSize = %d\n", dataSize);
+#endif
         return RP_APP_ECP;
-    
+    }
+
     // search for left point where correlation function is greater than it's expected
-    for (int i = left_edge_idx; i < viewSize-1; ++i) {
+    for (int i = left_edge_idx; i < dataSize-1; ++i) {
         if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             left_idx = i;
             break;
         }
     }
 
-    if(left_idx == 0)
+    if(left_idx == 0) {
+#if 0		
+        fprintf(stderr, "left_idx == 0\n");
+        fprintf(stderr, "source = %d\n", source);
+        fprintf(stderr, "dataSize = %d\n", dataSize);
+#endif
         return RP_APP_ECP;
+    }
 
     // search for right point where correlation function is less than it's expected
-    for (int i = left_idx; i < viewSize-1; ++i) {
+    for (int i = left_idx; i < dataSize-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             right_edge_idx = i;
             break;
@@ -659,7 +671,7 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     static int counter = 0;
     if((*period >= 1.1f) || ((counter % 20) == 0)) {
         fprintf(stderr, "source = %d\n", source);
-        fprintf(stderr, "viewSize = %d\n", viewSize);
+        fprintf(stderr, "dataSize = %d\n", dataSize);
 
         fprintf(stderr, "left_edge_idx = %d\n", left_edge_idx);
         fprintf(stderr, "left_idx = %d\n", left_idx);
