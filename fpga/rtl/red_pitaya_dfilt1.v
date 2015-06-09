@@ -82,7 +82,7 @@ end
 
 wire [ 41-1: 0] aa_mult   ;
 wire [ 49-1: 0] r3_sum    ; //24 + 25
-reg  [ 23-1: 0] r3_reg    ;
+(* use_dsp48="yes" *) reg  [ 23-1: 0] r3_reg    ;
 
 
 assign aa_mult = $signed(r3_reg) * $signed(cfg_aa_r);
