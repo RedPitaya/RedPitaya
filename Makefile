@@ -104,9 +104,7 @@ LIBRPAPP        = $(INSTALL_DIR)/lib/librpapp.so
 GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
 LIBREDPITAYA    = shared/libredpitaya/libredpitaya.a
 
-ENVTOOLS_ELF    = $(INSTALL_DIR)/bin/fw_printenv
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
-ENVTOOLS        = $(ENVTOOLS_ELF) $(ENVTOOLS_CFG)
 
 UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
 UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
@@ -182,12 +180,6 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_S
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Buildroot" -d $(UBOOT_SCRIPT_BUILDROOT) $@.buildroot
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
 	cp $@.buildroot $@
-
-$(ENVTOOLS_ELF): $(UBOOT_DIR)
-	make -C $< arch=ARM CFLAGS=$(ARMHF_CFLAGS) CROSS_COMPILE=$(CROSS_COMPILE) env
-	mkdir -p $(INSTALL_DIR)/bin/
-	cp $</tools/env/fw_printenv $@
-	cp $</tools/env/fw_printenv $(INSTALL_DIR)/bin/fw_setenv
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
 	mkdir -p $(INSTALL_DIR)/etc/

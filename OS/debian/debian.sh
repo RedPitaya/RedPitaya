@@ -19,7 +19,6 @@ EOF_CHROOT
 
 # copy U-Boot environment tools
 install -v -m 664 -o root -D patches/fw_env.config                      $root_dir/etc/fw_env.config
-# TODO missing executables
 
 install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $root_dir/etc/apt/apt.conf.d/99norecommends
 install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $root_dir/etc/apt/sources.list
@@ -47,7 +46,7 @@ dpkg-reconfigure --frontend=noninteractive tzdata
 
 apt-get -y install openssh-server ca-certificates ntp ntpdate fake-hwclock \
   usbutils psmisc lsof parted curl vim wpasupplicant hostapd isc-dhcp-server \
-  iw firmware-realtek firmware-ralink build-essential ifplugd sudo
+  iw firmware-realtek firmware-ralink build-essential ifplugd sudo u-boot-tools
 
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 EOF_CHROOT
