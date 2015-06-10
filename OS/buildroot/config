@@ -490,7 +490,10 @@ BR2_DBUS_EXPAT=y
 # BR2_PACKAGE_SYSSTAT is not set
 # BR2_PACKAGE_TI_UIM is not set
 # BR2_PACKAGE_TI_UTILS is not set
-# BR2_PACKAGE_UBOOT_TOOLS is not set
+BR2_PACKAGE_UBOOT_TOOLS=y
+BR2_PACKAGE_UBOOT_TOOLS_MKIMAGE=y
+BR2_PACKAGE_UBOOT_TOOLS_MKENVIMAGE=y
+BR2_PACKAGE_UBOOT_TOOLS_FWPRINTENV=y
 
 #
 # udev needs udev /dev management and a toolchain w/ largefile, wchar, dynamic library
