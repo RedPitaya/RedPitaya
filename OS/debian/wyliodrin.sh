@@ -1,9 +1,12 @@
-# delete second partition
-echo -e "d\n2\nw" | fdisk /dev/mmcblk0
-# recreate partition
-parted -s /dev/mmcblk0 mkpart primary ext4 16MB 100%
-# resize partition
-resize2fs /dev/mmcblk0p2
+################################################################################
+# TODO: copyright notice and authors should be listed here
+################################################################################
+
+# enable chroot access with native execution
+cp /etc/resolv.conf         $root_dir/etc/
+cp /usr/bin/qemu-arm-static $root_dir/usr/bin/
+
+chroot $root_dir <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
 
@@ -67,3 +70,8 @@ script
        sudo -E -u $USER /usr/local/bin/npm start
 end script
 respawn
+EOF_CHROOT
+
+# disable chroot access with native execution
+rm $root_dir/etc/resolv.conf
+rm $root_dir/usr/bin/qemu-arm-static
