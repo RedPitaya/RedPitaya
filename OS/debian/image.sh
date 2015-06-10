@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ################################################################################
 #
 ################################################################################
@@ -8,7 +8,7 @@
 ################################################################################
 
 #image=$1
-image=debian_9_jun_2015.img
+image=debian_armel.img
 
 #size=$2
 size=1024
@@ -17,7 +17,7 @@ dd if=/dev/zero of=$image bs=1M count=$size
 
 device=`losetup -f`
 
-losetup                $device $image
+losetup $device $image
 
 boot_dir=BOOT
 root_dir=ROOT
@@ -45,7 +45,6 @@ mount $root_dev $root_dir
 
 OVERLAY=OS/debian/overlay
 
-pwd
 source OS/debian/debian.sh
 source OS/debian/redpitaya.sh
 #source OS/debian/wyliodrin.sh
