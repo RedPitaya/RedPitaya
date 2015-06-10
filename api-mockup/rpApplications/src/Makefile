@@ -87,4 +87,6 @@ clean:
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/lib
+	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
+	cp  rpapp.h   $(INSTALL_DIR)/include
