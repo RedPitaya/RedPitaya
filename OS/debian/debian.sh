@@ -1,31 +1,6 @@
-
-# TODO: copyright notice and authors shold be listed here
-
-device=$1
-
-boot_dir=BOOT
-root_dir=ROOT
-OVERLAY=OS/debian/overlay
-
-# Create partitions
-parted -s $device mklabel msdos
-parted -s $device mkpart primary fat16   4MB 128MB
-parted -s $device mkpart primary ext4  128MB 100%
-
-boot_dev=/dev/`lsblk -lno NAME $device | sed '2!d'`
-root_dev=/dev/`lsblk -lno NAME $device | sed '3!d'`
-
-# Create file systems
-mkfs.vfat -v    $boot_dev
-mkfs.ext4 -F -j $root_dev
-
-# Mount file systems
-mkdir -p $boot_dir $root_dir
-mount $boot_dev $boot_dir
-mount $root_dev $root_dir
-
-# Copy files to the boot file system
-unzip ecosystem*.zip -d $boot_dir
+################################################################################
+# TODO: copyright notice and authors should be listed here
+################################################################################
 
 # Install Debian base system to the root file system
 mirror=http://ftp.heanet.ie/pub/debian
@@ -33,7 +8,7 @@ distro=jessie
 arch=armel
 debootstrap --foreign --arch $arch $distro $root_dir $mirror
 
-# Add missing configuration files and packages
+# enable chroot access with native execution
 cp /etc/resolv.conf         $root_dir/etc/
 cp /usr/bin/qemu-arm-static $root_dir/usr/bin/
 
@@ -72,19 +47,9 @@ dpkg-reconfigure --frontend=noninteractive tzdata
 
 apt-get -y install openssh-server ca-certificates ntp ntpdate fake-hwclock \
   usbutils psmisc lsof parted curl vim wpasupplicant hostapd isc-dhcp-server \
-  iw firmware-realtek firmware-ralink build-essential libluajit-5.1 lua-cjson \
-  unzip ifplugd sudo
+  iw firmware-realtek firmware-ralink build-essential ifplugd sudo
 
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-EOF_CHROOT
-
-# Nginx service
-install -v -m 664 -o root -d                                                     $root_dir/var/log/redpitaya_nginx
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service $root_dir/etc/systemd/system/redpitaya_nginx.service
-install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                    $root_dir/etc/sysconfig/redpitaya
-
-chroot $root_dir <<- EOF_CHROOT
-systemctl enable redpitaya_nginx
 EOF_CHROOT
 
 # network configuration
@@ -102,9 +67,6 @@ chroot $root_dir <<- EOF_CHROOT
 sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
 EOF_CHROOT
 
-# final operations and cleanup
-install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $root_dir/etc/profile.d/redpitaya.sh
-
 chroot $root_dir <<- EOF_CHROOT
 echo root:root | chpasswd
 apt-get clean
@@ -112,10 +74,6 @@ service ntp stop
 history -c
 EOF_CHROOT
 
-
+# disable chroot access with native execution
 rm $root_dir/etc/resolv.conf
 rm $root_dir/usr/bin/qemu-arm-static
-
-# Unmount file systems
-umount $boot_dir $root_dir
-rmdir $boot_dir $root_dir
