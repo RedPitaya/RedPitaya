@@ -8,6 +8,7 @@ cp /usr/bin/qemu-arm-static $root_dir/usr/bin/
 
 # Copy files to the boot file system
 unzip ecosystem*.zip -d $boot_dir
+cp -f $boot_dir/u-boot.scr.debian $boot_dir/u-boot.scr
 
 # Nginx service
 install -v -m 664 -o root -d                                                     $root_dir/var/log/redpitaya_nginx
