@@ -107,7 +107,8 @@ int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 
 void clearView();
 void clearMath();
-int waitToFillPreTriggerBuffer(int testcancel);
+int waitToFillPreTriggerBuffer(bool testcancel);
+int waitToFillAfterTriggerBuffer(bool testcancel);
 
 void *mainThreadFun();
 
