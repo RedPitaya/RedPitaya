@@ -122,7 +122,7 @@ int osc_single() {
         ECHECK_APP(osc_setTriggerSweep(RPAPP_OSC_TRIG_SINGLE));
     }
     ECHECK_APP(threadSafe_acqStart());
-    ECHECK_APP(waitToFillPreTriggerBuffer(0));
+    ECHECK_APP(waitToFillPreTriggerBuffer(false));
     ECHECK_APP(osc_setTriggerSource(trigSource));
     return RP_OK;
 }
@@ -957,7 +957,7 @@ void clearMath() {
     }
 }
 
-int waitToFillPreTriggerBuffer(int testcancel) {
+int waitToFillPreTriggerBuffer(bool testcancel) {
     if (continuousMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
         return RP_OK;
     }
@@ -973,6 +973,27 @@ int waitToFillPreTriggerBuffer(int testcancel) {
         if(testcancel)
             pthread_testcancel();
     } while (preTriggerCount < viewSize/2*deltaSample - triggerDelay && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
+    return RP_OK;
+}
+
+int waitToFillAfterTriggerBuffer(bool testcancel) {
+    if (continuousMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
+        return RP_OK;
+    }
+
+    float deltaSample, timeScale;
+    uint32_t _writePointer, _triggerPosition;
+    int triggerDelay;
+    clock_t timer = clock();
+    do {
+        ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
+        ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
+        ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
+        ECHECK_APP(osc_getTimeScale(&timeScale));
+        deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+        if(testcancel)
+            pthread_testcancel();
+    } while (((_writePointer - (_triggerPosition + triggerDelay)) % ADC_BUFFER_SIZE) <= (viewSize/2)*deltaSample && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
     return RP_OK;
 }
 
@@ -1003,7 +1024,7 @@ void mathThreadFunction() {
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
-    //clock_t _timer = clock();
+    clock_t _timer = clock();
     uint32_t _triggerPosition, _getBufSize, _startIndex, _writePointer = 0, _preTriggerCount = 0;
     int _triggerDelay, _preZero, _postZero;
     float _deltaSample, _timeScale;
@@ -1020,7 +1041,7 @@ void *mainThreadFun() {
         if (clear && acqRunning) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_THREAD(threadSafe_acqStart());
-            waitToFillPreTriggerBuffer(1);
+            waitToFillPreTriggerBuffer(true);
             thisLoopAcqStart = false;
             ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
@@ -1030,7 +1051,7 @@ void *mainThreadFun() {
         ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
 
         // If in auto mode end trigger timed out
-        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO /*&& (clock() - _timer) / CLOCKS_PER_SEC * 1000.0 > _timeScale * DIVISIONS_COUNT_X*/) {
+        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && (((clock() - _timer) / CLOCKS_PER_SEC * 1000.0) > (_timeScale * DIVISIONS_COUNT_X))) {
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = true)
         }
 
@@ -1038,13 +1059,15 @@ void *mainThreadFun() {
         ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
 
         manuallyTriggered = false;
-        if (trigSweep == RPAPP_OSC_TRIG_AUTO && auto_freRun_mode /*&& _state != RP_TRIG_STATE_TRIGGERED*/) {
+        if (trigSweep == RPAPP_OSC_TRIG_AUTO && auto_freRun_mode && _state != RP_TRIG_STATE_TRIGGERED) {
             threadSafe_acqStop();
             manuallyTriggered = true;
         }
 
         if ((_state == RP_TRIG_STATE_TRIGGERED && _timeScale >= MIN_TIME_TO_DRAW_BEFORE_TIG )
             || _triggerSource == RP_TRIG_SRC_DISABLED || manuallyTriggered) {
+
+            waitToFillAfterTriggerBuffer(true);
             // Read parameters
             ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
             ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
@@ -1058,8 +1081,9 @@ void *mainThreadFun() {
             _preZero = continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
             _postZero = (int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
-            if (manuallyTriggered) {
-                _preZero = 0;                _postZero = 0;
+            if (!manuallyTriggered) {
+                _preZero = 0;
+                _postZero = 0;
                 _startIndex = (_writePointer - (uint32_t) ((viewSize - _preZero) * _deltaSample)) % ADC_BUFFER_SIZE;
             }
             _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample);
@@ -1081,9 +1105,9 @@ void *mainThreadFun() {
 
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {
-                //_timer = clock();
+                _timer = clock();
                 if (!manuallyTriggered) {
-                    //EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
+                    EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
                 } else {
                     threadSafe_acqStart();
                     thisLoopAcqStart = true;
@@ -1105,7 +1129,7 @@ void *mainThreadFun() {
         }
 
         if (thisLoopAcqStart) {
-            waitToFillPreTriggerBuffer(1);
+            waitToFillPreTriggerBuffer(true);
             ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
         }
     }
