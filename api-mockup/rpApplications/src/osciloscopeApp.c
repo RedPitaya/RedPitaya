@@ -24,24 +24,25 @@
 #include "common.h"
 #include "../../rpbase/src/common.h"
 
-bool auto_freRun_mode = false;
-bool acqRunning = false;
-bool clear = false;
-bool continuousMode = false;
-uint32_t viewSize = VIEW_SIZE_DEFAULT;
+volatile bool auto_freRun_mode = false;
+volatile bool acqRunning = false;
+volatile bool oscRunning = false;
+volatile bool clear = false;
+volatile bool continuousMode = false;
+volatile uint32_t viewSize = VIEW_SIZE_DEFAULT;
 float *view;
-float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
-float ch1_ampScale,  ch2_ampScale,  math_ampScale;
-float ch1_probeAtt, ch2_probeAtt;
-bool ch1_inverted = false; bool ch2_inverted = false, math_inverted = false;
-float timeScale=1, timeOffset=0;
-rpApp_osc_trig_sweep_t trigSweep;
-rpApp_osc_trig_source_t trigSource = RPAPP_OSC_TRIG_SRC_CH1;
-rpApp_osc_trig_slope_t trigSlope = RPAPP_OSC_TRIG_SLOPE_PE;
-rpApp_osc_math_oper_t operation;
-rp_channel_t mathSource1, mathSource2;
+volatile float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
+volatile float ch1_ampScale,  ch2_ampScale,  math_ampScale;
+volatile float ch1_probeAtt, ch2_probeAtt;
+volatile bool ch1_inverted = false; bool ch2_inverted = false, math_inverted = false;
+volatile float timeScale=1, timeOffset=0;
+volatile rpApp_osc_trig_sweep_t trigSweep;
+volatile rpApp_osc_trig_source_t trigSource = RPAPP_OSC_TRIG_SRC_CH1;
+volatile rpApp_osc_trig_slope_t trigSlope = RPAPP_OSC_TRIG_SLOPE_PE;
+volatile rpApp_osc_math_oper_t operation;
+volatile rp_channel_t mathSource1, mathSource2;
 
-float samplesPerDivision = (float) VIEW_SIZE_DEFAULT / (float) DIVISIONS_COUNT_X;
+volatile float samplesPerDivision = (float) VIEW_SIZE_DEFAULT / (float) DIVISIONS_COUNT_X;
 
 pthread_t mainThread = (pthread_t) -1;
 pthread_mutex_t mutex;
@@ -94,6 +95,7 @@ int osc_SetDefaultValues() {
 
 int osc_run() {
     clearView();
+    EXECUTE_ATOMICALLY(mutex, oscRunning = true);
     ECHECK_APP(threadSafe_acqStart());
     ECHECK_APP(osc_setTriggerSource(trigSource));
     START_THREAD(mainThread, mainThreadFun);
@@ -101,6 +103,7 @@ int osc_run() {
 }
 
 int osc_stop() {
+    EXECUTE_ATOMICALLY(mutex, oscRunning = false);
     ECHECK_APP(threadSafe_acqStop());
     return RP_OK;
 }
@@ -108,6 +111,7 @@ int osc_stop() {
 int osc_reset() {
     clearView();
     STOP_THREAD(mainThread);
+    EXECUTE_ATOMICALLY(mutex, oscRunning = false);
     ECHECK_APP(threadSafe_acqStop());
     ECHECK_APP(osc_SetDefaultValues());
     return RP_OK;
@@ -161,7 +165,12 @@ int osc_autoScale() {
 }
 
 int osc_isRunning(bool *running) {
-    *running = acqRunning;
+    *running = oscRunning;
+
+    if (oscRunning && (trigSweep == RPAPP_OSC_TRIG_SINGLE)) {
+        *running = acqRunning;
+    }
+
     return RP_OK;
 }
 
@@ -807,6 +816,9 @@ int osc_getViewSize(uint32_t *size) {
 */
 
 int threadSafe_acqStart() {
+    if(!oscRunning)
+        return RP_OK;
+
     pthread_mutex_lock(&mutex);
     ECHECK_APP_MUTEX(mutex, rp_AcqStart())
     ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(trigSweep != RPAPP_OSC_TRIG_SINGLE && continuousMode));
@@ -999,7 +1011,10 @@ void *mainThreadFun() {
     bool thisLoopAcqStart, manuallyTriggered;
 
     while (true) {
-	pthread_testcancel();
+        do{
+            pthread_testcancel();
+        }while(!oscRunning);
+
         thisLoopAcqStart = false;
 
         if (clear && acqRunning) {
