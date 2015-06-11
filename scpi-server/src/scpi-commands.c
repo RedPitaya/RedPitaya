@@ -22,6 +22,7 @@
 #include "apin.h"
 #include "generate.h"
 #include "oscilloscopeApp.h"
+#include "spectrometerApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
@@ -331,6 +332,27 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "OSC:MATH:SOUR", .callback = RP_APP_OscSetMathSources,},
         {.pattern = "OSC:MATH:SOUR?", .callback = RP_APP_OscGetMathSources,},
 
+        /* Spectrum */
+        {.pattern = "SPEC:RUN", .callback = RP_APP_SpecRun,},
+        {.pattern = "SPEC:STOP", .callback = RP_APP_SpecStop,},
+        {.pattern = "SPEC:RESET", .callback = RP_APP_SpecReset,},
+		{.pattern = "SPEC:RUNNING", .callback = RP_APP_SpecRunning,},
+
+        {.pattern = "SPEC:CH1:DATA?", .callback = RP_APP_SpecChannel1GetViewData,},
+        {.pattern = "SPEC:CH2:DATA?", .callback = RP_APP_SpecChannel2GetViewData,},
+        {.pattern = "SPEC:DATA:SIZE?", .callback = RP_APP_SpecGetViewSize,},
+        {.pattern = "SPEC:DATA:SIZE", .callback = RP_APP_SpecSetViewSize,}, // TODO ??
+
+        {.pattern = "SPEC:CH1:PEAK?", .callback = RP_APP_SpecChannel1GetPeak,},
+        {.pattern = "SPEC:CH2:PEAK?", .callback = RP_APP_SpecChannel2GetPeak,},
+        {.pattern = "SPEC:CH1:PEAK:FREQ?", .callback = RP_APP_SpecChannel1GetPeakFreq,},
+        {.pattern = "SPEC:CH2:PEAK:FREQ?", .callback = RP_APP_SpecChannel2GetPeakFreq,},
+
+        {.pattern = "SPEC:FREQ:MIN?", .callback = RP_APP_SpecGetFreqMin,},
+        {.pattern = "SPEC:FREQ:MAX?", .callback = RP_APP_SpecGetFreqMax,},
+        {.pattern = "SPEC:FREQ:MIN", .callback = RP_APP_SpecSetFreqMin,},
+        {.pattern = "SPEC:FREQ:MAX", .callback = RP_APP_SpecSetFreqMax,},
+        {.pattern = "SPEC:FPGA:FREQ?", .callback = RP_APP_SpecGetFpgaFreq,},
 
     SCPI_CMD_LIST_END
 };
