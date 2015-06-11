@@ -569,6 +569,8 @@ int rpApp_SpecStop();
 
 int rpApp_SpecRunning();
 
+int rpApp_SpecReset();
+
 int rpApp_SpecGetViewData(float **signals, size_t size);
 
 int rpApp_SpecGetViewSize(size_t* size);
@@ -582,6 +584,16 @@ int rpApp_SpecGetPeakFreq(int channel, float* freq);
 int rpApp_SpecSetFreqRange(float freq);
 
 int rpApp_SpecSetUnit(int unit);
+
+int rpApp_SpecGetFreqMin(float* freq);
+
+int rpApp_SpecGetFreqMax(float* freq);
+
+int rpApp_SpecSetFreqMin(float freq);
+
+int rpApp_SpecSetFreqMax(float freq);
+
+int rpApp_SpecGetFpgaFreq(float* freq);
 
 #ifdef __cplusplus
 }

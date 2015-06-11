@@ -72,6 +72,8 @@ float                **rp_spectr_signals = NULL;
 rp_spectr_worker_res_t rp_spectr_result;
 int                    rp_spectr_signals_dirty = 0;
 
+static float freq_min, freq_max, current_freq_range;
+
 int rp_spectr_worker_init(const wf_func_table_t* wf_f)
 {
 	wf_func_table = wf_f;
@@ -570,6 +572,8 @@ rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         NULL, 0.0, -1, -1, 0.0, 0.0 }
 };
 
+rp_app_params_t rp_default_params[PARAMS_NUM+1];
+
 /* params initialized */
 static int params_init = 0;
 
@@ -680,11 +684,8 @@ int rp_set_params(rp_app_params_t *p, int len)
         rp_main_params[FREQ_UNIT_PARAM].value = 
             rp_main_params[PEAK_UNIT_CHA_PARAM].value =
             rp_main_params[PEAK_UNIT_CHB_PARAM].value =
-            spectr_fpga_cnv_freq_range_to_unit(
-                                         rp_main_params[FREQ_RANGE_PARAM].value);
-
-        rp_spectr_worker_update_params((rp_app_params_t *)&rp_main_params[0],
-                                       fpga_update);
+            spectr_fpga_cnv_freq_range_to_unit(rp_main_params[FREQ_RANGE_PARAM].value);
+        rp_spectr_worker_update_params((rp_app_params_t *)&rp_main_params[0], fpga_update);
     }
 
     return 0;
@@ -700,6 +701,7 @@ int spec_run(const wf_func_table_t* wf_f)
         return -1;
     }
 
+	memcpy(rp_default_params, rp_main_params, PARAMS_NUM + 1);
     rp_set_params(rp_main_params, PARAMS_NUM);
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
@@ -716,10 +718,15 @@ int spec_stop()
 {
     rp_spectr_worker_exit();
 
-	rpApp_SpecStop();
-    rpApp_Release();
-
     return 0;
+}
+
+int spec_reset()
+{
+	rp_set_params(rp_default_params, PARAMS_NUM);
+	rp_spectr_worker_change_state(rp_spectr_auto_state); // FIXME pause
+
+	return 0;
 }
 
 int spec_getViewData(float **signals, size_t size)
@@ -771,6 +778,9 @@ int spec_setFreqRange(float freq)
 		if (freq > ranges[range])
 			break;
 
+	current_freq_range = ranges[range];
+	freq_max = freq;
+
 	rp_spectr_worker_update_params_by_idx(range, FREQ_RANGE_PARAM, 1);
 
 	fprintf(stderr, "max freq = %.2f range = %d\n", freq, range);
@@ -787,3 +797,23 @@ int spec_setUnit(int unit)
 	return 0;
 }
 
+int spec_getFpgaFreq(float* freq)
+{
+	*freq = current_freq_range;
+
+	return 0;
+}
+
+int spec_getFreqMax(float* freq)
+{
+	*freq = freq_max;
+
+	return 0;
+}
+
+int spec_getFreqMin(float* freq)
+{
+	*freq = freq_min;
+
+	return 0;
+}
