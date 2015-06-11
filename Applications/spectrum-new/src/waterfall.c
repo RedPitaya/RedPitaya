@@ -22,7 +22,6 @@
 #include "jpeglib.h"
 
 #include "waterfall.h"
-#include "dsp.h"
 #include "wf_colmap.h"
 
 /* TODO: More appripriate names */
