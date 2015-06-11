@@ -12,10 +12,11 @@
  * for more details on the language used herein.
  */
 
-#ifndef __WORKER_H
-#define __WORKER_H
+#ifndef __SPECTROMETERAPP_H
+#define __SPECTROMETERAPP_H
 
-#include "fpga.h"
+#include "../../rpbase/src/rp.h"
+#include "rpApp.h"
 
 /* Parameters description structure - must be the same for all RP controllers */
 typedef struct rp_app_params_s {
@@ -72,7 +73,7 @@ int rp_app_exit(void);
 int rp_set_params(rp_app_params_t *p, int len);
 int rp_get_params(rp_app_params_t **p);
 int rp_get_signals(float ***s, int *sig_num, int *sig_len);
-int rp_spectr_get_signals_channel(int channel, float *signals, size_t size);
+int rp_spectr_get_signals_channel(float **signals, size_t size);
 int rp_spectr_get_params(rp_spectr_worker_res_t *result);
 
 /* Internal helper functions */
@@ -80,12 +81,12 @@ int  rp_create_signals(float ***a_signals);
 void rp_cleanup_signals(float ***a_signals);
 
 
-int rp_spectr_worker_init(void);
+int rp_spectr_worker_init(const wf_func_table_t* wf_f);
 int rp_spectr_worker_clean(void);
 int rp_spectr_worker_exit(void);
 int rp_spectr_worker_change_state(rp_spectr_worker_state_t new_state);
 int rp_spectr_worker_update_params(rp_app_params_t *params, int fpga_update);
-int rp_spectr_worker_update_params_by_idx(float value, size_t idx, int fpga_update);
+int rp_spectr_worker_update_params_by_idx(int value, size_t idx, int fpga_update);
 
 /* removes 'dirty' flags */
 int rp_spectr_clean_signals(void);
@@ -101,6 +102,35 @@ int rp_spectr_get_signals(float ***signals, rp_spectr_worker_res_t *result);
 /* Fills the output signal structure from temp one after calculation is done 
  * and marks it dirty 
  */
+
 int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result);
 
-#endif /* __WORKER_H*/
+
+int spec_run(const wf_func_table_t* wf_f);
+
+int spec_stop();
+
+int spec_running(); // true/false
+
+int spec_reset();
+
+int spec_getViewData(float **signals, size_t size);
+
+int spec_getJpgIdx(int* jpg);
+
+int spec_getPeakPower(int channel, float* power);
+
+int spec_getPeakFreq(int channel, float* freq);
+
+int spec_setFreqRange(float freq);
+
+int spec_setUnit(int unit);
+
+int spec_getFpgaFreq(float* freq);
+
+int spec_getFreqMax(float* freq);
+
+int spec_getFreqMin(float* freq);
+
+
+#endif /* __SPECTROMETERAPP_H*/
