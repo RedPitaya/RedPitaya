@@ -36,7 +36,8 @@ all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	cd $(CRYPTO_DIR); ./build.sh
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
     
 $(LIB): $(OBJECTS)
 	mkdir -p $(OBJDIR)/cryptopp
@@ -49,4 +50,5 @@ $(SDKOBJDIR)/%.o: %.cpp
 
 clean:
 	rm -rf $(LIB) $(OBJDIR)
-	cd $(CRYPTO_DIR); ./clean.sh
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build remove
