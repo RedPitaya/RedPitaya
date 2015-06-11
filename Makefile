@@ -268,12 +268,10 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	wget http://www.cryptopp.com/cryptopp562.zip
 	mkdir -p Bazaar/tools/cryptopp
 	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
-	# GNUmakefile, line "CXXFLAGS += -march=native" should be commented out
-	sed -e '/march/s/^/#/g' -i Bazaar/tools/cryptopp/GNUmakefile
-	# enable PIC support (position-independent code)
-	sed -i '/^#.* 2001 /s/^#//' -i Bazaar/tools/cryptopp/GNUmakefile
-	# another crypto++ library
-	ln -s ../../../../tools/cryptopp Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/cryptopp
+	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
+	# JSON library
+	#wget http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+	#unzip libjson_7.6.1.zip -d Bazaar/tools/
 	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
