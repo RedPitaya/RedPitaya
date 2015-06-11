@@ -20,7 +20,6 @@ JOBS=$$(($(NUM_CPU)+1))
 
 WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
-BOOST_LIBS_DIR=$(WS_SERVER_DIR)/boost/lib
 BOOST_LIBS_DIR=../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0/lib
 
 all: $(NGINX)

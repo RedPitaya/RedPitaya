@@ -1,5 +1,6 @@
+BOOST_DIR=../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0
 CXX=arm-xilinx-linux-gnueabi-g++
-CXXFLAGS=-c -Wall -O3 -static -std=c++11 -Iwebsocketpp -Iboost/include -Lboost/lib/ -L. -lboost_system
+CXXFLAGS=-c -Wall -O3 -static -std=c++11 -Iwebsocketpp -I$(BOOST_DIR)/include -L$(BOOST_DIR)/lib/ -L. -lboost_system
 SOURCES= rp_websocket_server.cpp \
 	ws_server.cpp \
 	libjson/_internal/Source/internalJSONNode.cpp \
