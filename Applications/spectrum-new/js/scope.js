@@ -11,7 +11,7 @@
 
   // App configuration
   SPEC.config = {};
-  SPEC.config.app_id = 'spectrum';
+  SPEC.config.app_id = 'spectrum-new';
   SPEC.config.server_ip = '';  // Leave empty on production, it is used for testing only
   SPEC.config.start_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?start=' + SPEC.config.app_id + '?' + location.search.substr(1);
   SPEC.config.stop_app_url = (SPEC.config.server_ip.length ? 'http://' + SPEC.config.server_ip : '') + '/bazaar?stop=' + SPEC.config.app_id;
@@ -118,6 +118,7 @@
         SPEC.state.socket_opened = false;
         $('#graphs .plot').hide();  // Hide all graphs
         SPEC.hideCursors();
+		SPEC.hideInfo();
         console.log('Socket closed. Trying to reopen in ' + SPEC.config.socket_reconnect_timeout/1000 + ' sec...');
         
         // Try to reconnect after a defined timeout
@@ -299,7 +300,7 @@
 			{
 				var unit = SPEC.freq_unit[new_params["freq_unit"].value];
 				$('#freq_scale_unit').html(unit);		
-				$('#SPEC_TIME_SCALE').html(new_params[param_name].value.toFixed(6));
+				$('#SPEC_TIME_SCALE').html(new_params[param_name].value.toFixed(3));
 			}
           }
         }
@@ -343,25 +344,31 @@
       sig_count++;
       // Ignore disabled signals
       if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
-        continue;
+		$('#info .left-info .info-title .' + sig_name + ', #info .left-info .info-value .'+ sig_name).hide();     
+		$('#waterfall-holder_' + sig_name).hide();    
+		continue;
       }
       
       var points = [];
-      var sig_btn = $('#right_menu .menu-btn.' + sig_name);
       var color = SPEC.config.graph_colors[sig_name];
-	  sig_btn.prop('disabled', false);
-      visible_btns.push(sig_btn[0]);
-      visible_info += (visible_info.length ? ',' : '') + '.' + sig_name;
 
 	  if(frozen_dsets[sig_count-1]){
 		points = frozen_dsets[sig_count-1].data;
 	  }
 	  else {
 		for(var i = 0; i < new_signals[sig_name].size; i++) {
-       	 	points.push([new_signals["freq_ch"].value[i], new_signals[sig_name].value[i]]);
+			var d = (SPEC.params.orig['xmax'].value - SPEC.params.orig['xmin'].value)/(new_signals[sig_name].size - 1);
+			var p = d*i;
+       	 	points.push([p, new_signals[sig_name].value[i]]);
       	}
 	  }
 	  SPEC.datasets.push({ color: color, data: points}); 
+	  var sig_btn = $('#right_menu .menu-btn.' + sig_name);
+	  sig_btn.prop('disabled', false);
+      visible_btns.push(sig_btn[0]);
+      visible_info += (visible_info.length ? ',' : '') + '.' + sig_name;
+	  $('#info .left-info .info-title .' + sig_name + ', #info .left-info .info-value .'+ sig_name).show();
+	  $('#waterfall-holder_' + sig_name).show();
 	}     
 
 	if(SPEC.isVisibleChannels()){
@@ -424,27 +431,12 @@
     
 	  // Disable buttons related to inactive signals
 	  $('#right_menu .menu-btn').not(visible_btns).prop('disabled', true);
-		
-		// Show only information about active signals
-	  $('#info .info-title > span, #info .info-value > span').not(visible_info).hide();
-      $('#info').find(visible_info).show();
+
 	  $('.pull-right').show();
 		// Reset resize flag
 	  SPEC.state.resized = false;
 		
 	  //console.log('Duration: ' + (+new Date() - start));
-	}
-	else{
-		$('.pull-right').hide();
-		// Disable buttons related to inactive signals
-		$('#right_menu .menu-btn').not(visible_btns).prop('disabled', true);
-			
-			// Show only information about active signals
-		$('#info .info-title > span, #info .info-value > span').not(visible_info).hide();
-		$('#info').find(visible_info).show();
-		if(SPEC.graphs && SPEC.graphs.elem) 
-		   SPEC.graphs.elem.hide();
-		SPEC.hideCursors();
 	}
   };
 
@@ -655,8 +647,8 @@
 
 	var range = axes.xaxis.max - axes.xaxis.min;
 	var delta = direction == '+' ? 1 : -1
-	options.xaxes[0].min = axes.xaxis.min + delta*range*0.1; 
-	options.xaxes[0].max = axes.xaxis.max - delta*range*0.1;
+	options.xaxes[0].min = Math.max(0, axes.xaxis.min + delta*range*0.1); 
+	options.xaxes[0].max = Math.min(SPEC.params.orig['xmax'].value, axes.xaxis.max - delta*range*0.1);
 
 	SPEC.graphs.plot.setupGrid();
 	SPEC.graphs.plot.draw();
@@ -779,6 +771,14 @@
 	$('#cur_y_diff').hide();
 	$('#cur_x_diff').hide();
   };
+
+	SPEC.hideInfo = function(){
+		$('.pull-right').hide();
+		// Disable buttons related to inactive signals
+		$('#right_menu .menu-btn').prop('disabled', true);
+		$('#info').hide();
+		$('.waterfall-holder').hide();
+};
 
   SPEC.updateZoom = function() {
 
@@ -1028,7 +1028,7 @@
 		return;
 	  }
 	  if(!hide && $('#wait_' + $(img).attr('id')).is(':hidden')){
-		$('#wait_' + $(img).attr('id')).is(':hidden').show();
+		$('#wait_' + $(img).attr('id')).show();
 	  }
 	  
   };

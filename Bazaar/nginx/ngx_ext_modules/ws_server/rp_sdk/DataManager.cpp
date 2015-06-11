@@ -34,7 +34,7 @@ inline bool CDataManager::NeedSend(const CBaseParameter& param) const
 CDataManager::CDataManager() 
 	: m_params()
 	, m_signals()
-	, m_param_interval(5000)
+	, m_param_interval(20)
 	, m_signal_interval(20)
 	, m_send_all_params(true)
 {
