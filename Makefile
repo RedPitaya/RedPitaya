@@ -259,18 +259,18 @@ $(LIBREDPITAYA):
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	# boost library
-	ln -s ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
+	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
 	# websocket++ library
-	wget https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
+	wget -nc https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
 	tar -xzf 0.5.0.tar.gz -C Bazaar/nginx/ngx_ext_modules/ws_server
-	ln -s websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+	ln -sf websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 	# crypto++ library
-	wget http://www.cryptopp.com/cryptopp562.zip
+	wget -nc http://www.cryptopp.com/cryptopp562.zip
 	mkdir -p Bazaar/tools/cryptopp
 	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
 	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
 	# JSON library
-	#wget http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+	#wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 	#unzip libjson_7.6.1.zip -d Bazaar/tools/
 	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
