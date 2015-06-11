@@ -258,11 +258,19 @@ $(LIBREDPITAYA):
 	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
+	# boost library
 	ln -s ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
+	# websocket++ library
 	wget https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
-	mkdir -p Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 	tar -xzf 0.5.0.tar.gz -C Bazaar/nginx/ngx_ext_modules/ws_server
 	ln -s websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+	# crypto++ library
+	wget http://www.cryptopp.com/cryptopp562.zip
+	mkdir -p Bazaar/tools/cryptopp
+	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
+	# GNUmakefile, line "CXXFLAGS += -march=native" should be commented out
+	sed -e '/march/s/^/#/g' -i Bazaar/tools/cryptopp/GNUmakefile
+	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -335,7 +343,9 @@ clean:
 	make -C $(FPGA_DIR) clean
 	make -C $(UBOOT_DIR) clean
 	make -C shared clean
-	make -C $(NGINX_DIR) clean	
+	# todo, remove downloaded libraries and symlinks
+	rm -rf Bazaar/tools/cryptopp
+	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
