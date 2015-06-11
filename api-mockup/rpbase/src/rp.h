@@ -77,6 +77,8 @@ extern "C" {
 /** Failed to write to the bus */
 #define RP_EFWB   22
 
+#define SPECTR_OUT_SIG_LEN (2*1024)
+
 ///@}
 
 /**
@@ -252,6 +254,15 @@ typedef struct {
     int32_t  be_ch1_dc_offs; //!< Back end DC offset, channel A
     int32_t  be_ch2_dc_offs; //!< Back end DC offset, on channel B
 } rp_calib_params_t;
+
+typedef struct wf_func_table_t {
+    int (*rp_spectr_wf_init)();
+    int (*rp_spectr_wf_clean)();
+    int (*rp_spectr_wf_clean_map)();
+    int (*rp_spectr_wf_calc)(double *cha_in, double *chb_in);
+    int (*rp_spectr_wf_save_jpeg)(const char *wf_file1, const char *wf_file2);
+} wf_func_table_t;
+
 
 /** @name General
  */

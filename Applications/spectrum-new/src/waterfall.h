@@ -27,6 +27,9 @@
 
 #include "jpeglib.h"
 
+#define SPECTR_FPGA_SIG_LEN   (16*1024)
+#define c_dsp_sig_len (SPECTR_FPGA_SIG_LEN>>1)
+
 /*** Main Warerfall module calls ****/
 int rp_spectr_wf_init(void);
 int rp_spectr_wf_clean(void);

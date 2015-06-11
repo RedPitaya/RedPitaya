@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "fpga.h"
+#include "spec_fpga.h"
 
 /* internals */
 /* The FPGA register structure */
@@ -42,7 +42,7 @@ float g_spectr_fpga_adc_max_v;
 const float c_spectr_fpga_adc_max_v_revC= +1.079;
 const float c_spectr_fpga_adc_max_v_revD= +1.027;
 /* Sampling frequency = 125Mspmpls (non-decimated) */
-const float c_spectr_fpga_smpl_freq = 125e6;
+float spectr_get_fpga_smpl_freq() { return 125e6; }
 /* Sampling period (non-decimated) - 8 [ns] */
 const float c_spectr_fpga_smpl_period = (1. / 125e6);
 
@@ -181,11 +181,12 @@ int spectr_fpga_exit(void)
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
                            float trig_delay, float trig_level, int freq_range,
                            int enable_avg_at_dec)
-{
+{	
     /* TODO: Locking of memory map */
     int fpga_trig_source = spectr_fpga_cnv_trig_source(trig_imm, trig_source, 
                                                     trig_edge);
     int fpga_dec_factor = spectr_fpga_cnv_freq_range_to_dec(freq_range);
+	fprintf(stderr, "freq_range = %d fpga_dec_factor = %d\n", freq_range, fpga_dec_factor);
     int fpga_delay;
     int fpga_trig_thr = spectr_fpga_cnv_v_to_cnt(trig_level);
 
