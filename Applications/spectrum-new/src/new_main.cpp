@@ -17,12 +17,12 @@ typedef struct rp_app_params_s {
 } rp_app_params_t;
 
 
-enum { CH_SIGNAL_SIZE = 1024*2, INTERVAL = 500 };
+enum { CH_SIGNAL_SIZE = 1024, INTERVAL = 100 };
 enum { FREQ_CHANNEL = -1 };
 
 CFloatSignal ch1("ch1", CH_SIGNAL_SIZE, 0.0f);
 CFloatSignal ch2("ch2", CH_SIGNAL_SIZE, 0.0f);
-CFloatSignal freq_ch("freq_ch", CH_SIGNAL_SIZE, 0.0f);
+//CFloatSignal freq_ch("freq_ch", CH_SIGNAL_SIZE, 0.0f);
 
 CIntParameter freq_range("freq_range", CBaseParameter::RW, 0, 1, 0, 5);
 CIntParameter freq_unit("freq_unit", CBaseParameter::RWSA, 2, 0, 0, 2);
@@ -82,28 +82,35 @@ void UpdateSignals(void)
 	if (data[0] == 0) // TODO
 	{
 		for (size_t i = 0; i < 3; ++i)
-			data[i] = new float[CH_SIGNAL_SIZE];
+			data[i] = new float[2048];
 	}
 
 	if (in1Show.Value() || in2Show.Value())
 	{
-		int ret = rpApp_SpecGetViewData(data, CH_SIGNAL_SIZE);
+		int ret = rpApp_SpecGetViewData(data, 2048);
 		if (ret != 0)
 			return;
-
-		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			freq_ch[i] = data[0][i];
 	}
 
-	if (in1Show.Value())
+	if (in1Show.Value()) {
+		if (ch1.GetSize() != CH_SIGNAL_SIZE)
+			ch1.Resize(CH_SIGNAL_SIZE);
 		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			ch1[i] = data[1][i];
+			ch1[i] = data[1][i*2];
+	}
+	else if (ch1.GetSize() == CH_SIGNAL_SIZE)
+		ch1.Resize(0);
 
-	if (in2Show.Value())
+	if (in2Show.Value()) {
+		if (ch2.GetSize() != CH_SIGNAL_SIZE)
+			ch2.Resize(CH_SIGNAL_SIZE);
 		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			ch2[i] = data[2][i];
+			ch2[i] = data[2][i*2];
+	}
+	else if (ch2.GetSize() == CH_SIGNAL_SIZE)
+		ch2.Resize(0);
 }
-
+extern "C" int rp_app_exit(void);
 void OnNewParams(void)
 {
 	static bool run = false;
@@ -116,13 +123,10 @@ void OnNewParams(void)
     		rp_spectr_wf_calc,
 	    	rp_spectr_wf_save_jpeg
 		};
-
 		rpApp_SpecRun(&wf_f);
 		run = true;
-
 		CDataManager::GetInstance()->SetParamInterval(INTERVAL);
 		CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
-
 		fprintf(stderr, "Interval Init\n");
 	}
 
@@ -147,8 +151,6 @@ extern "C" void SpecIntervalInit()
 {
 	CDataManager::GetInstance()->SetParamInterval(INTERVAL);
 	CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
-
-	fprintf(stderr, "Interval Init\n");
 }
 
 extern "C" int rp_app_init(void)
@@ -170,9 +172,7 @@ extern "C" int rp_app_init(void)
 extern "C" int rp_app_exit(void)
 {
     fprintf(stderr, "Unloading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
-
 	rpApp_SpecStop();
-    rpApp_Release();
 
     return 0;
 }
