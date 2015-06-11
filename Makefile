@@ -257,7 +257,8 @@ $(URAMDISK): $(INSTALL_DIR)
 $(LIBREDPITAYA):
 	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA)
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
+	ln -s OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
