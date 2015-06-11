@@ -40,5 +40,8 @@ scpi_result_t RP_APP_SpecChannel2Freeze(scpi_t *context); // :CH2:FREEZE
 
 scpi_result_t RP_APP_SpecGetFreqMin(scpi_t *context); // :FREQ:MIN
 scpi_result_t RP_APP_SpecGetFreqMax(scpi_t *context); // :FREQ:MAX
+scpi_result_t RP_APP_SpecSetFreqMin(scpi_t *context); // :FREQ:MIN
+scpi_result_t RP_APP_SpecSetFreqMax(scpi_t *context); // :FREQ:MAX
+scpi_result_t RP_APP_SpecGetFpgaFreq(scpi_t *context); // :FPGA:FREQ
 
 #endif /* OSCILLOSCOPE_APP_H_ */
