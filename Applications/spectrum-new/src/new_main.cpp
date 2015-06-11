@@ -133,6 +133,15 @@ void OnNewParams(void)
 	in1Show.Update();
 	in2Show.Update();
 
+    cursorx1.Update();
+    cursorx2.Update();
+    cursory1.Update();
+    cursory2.Update();
+    cursor1V.Update();
+    cursor2V.Update();
+    cursor1T.Update();
+    cursor2T.Update();
+
 	if (xmax.IsNewValue() || freq_unit.IsNewValue())
 	{
 		freq_unit.Update();
