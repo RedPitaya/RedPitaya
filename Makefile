@@ -258,7 +258,11 @@ $(LIBREDPITAYA):
 	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
-	ln -s OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
+	ln -s ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
+	wget https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
+	mkdir -p Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+	tar -xzf 0.5.0.tar.gz -C Bazaar/nginx/ngx_ext_modules/ws_server
+	ln -s websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
