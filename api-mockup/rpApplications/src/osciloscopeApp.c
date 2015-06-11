@@ -1050,8 +1050,10 @@ void *mainThreadFun() {
 
         ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
 
+        float dt = ((float)(clock() - _timer) / (float)CLOCKS_PER_SEC) * 1000.f;
+        float dtmax = 10.f * _timeScale * (float)DIVISIONS_COUNT_X;
         // If in auto mode end trigger timed out
-        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && (((clock() - _timer) / CLOCKS_PER_SEC * 1000.0) > (_timeScale * DIVISIONS_COUNT_X))) {
+        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && (dt > dtmax)) {
             EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = true)
         }
 
@@ -1067,7 +1069,10 @@ void *mainThreadFun() {
         if ((_state == RP_TRIG_STATE_TRIGGERED && _timeScale >= MIN_TIME_TO_DRAW_BEFORE_TIG )
             || _triggerSource == RP_TRIG_SRC_DISABLED || manuallyTriggered) {
 
-            waitToFillAfterTriggerBuffer(true);
+            if(!manuallyTriggered) {
+                waitToFillAfterTriggerBuffer(true);
+            }
+
             // Read parameters
             ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
             ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
@@ -1081,7 +1086,7 @@ void *mainThreadFun() {
             _preZero = continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
             _postZero = (int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
-            if (!manuallyTriggered) {
+            if (manuallyTriggered) {
                 _preZero = 0;
                 _postZero = 0;
                 _startIndex = (_writePointer - (uint32_t) ((viewSize - _preZero) * _deltaSample)) % ADC_BUFFER_SIZE;
@@ -1106,9 +1111,8 @@ void *mainThreadFun() {
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {
                 _timer = clock();
-                if (!manuallyTriggered) {
-                    EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
-                } else {
+                EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false);
+                if (manuallyTriggered) {
                     threadSafe_acqStart();
                     thisLoopAcqStart = true;
                 }
