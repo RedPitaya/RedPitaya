@@ -130,6 +130,7 @@ int osc_single() {
 int osc_autoScale() {
     float period, vpp, vMean;
     bool isAutoScaled = false;
+    int ret;
 
     for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
         ECHECK_APP(osc_measureVpp(source, &vpp));
@@ -139,17 +140,21 @@ int osc_autoScale() {
         if (fabs(vpp) > SIGNAL_EXISTENCE) {
             if (!isAutoScaled) {
                 // set time scale only based on one channel
-                ECHECK_APP(osc_measurePeriod(source, &period));
-                ECHECK_APP(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
-                ECHECK_APP(osc_setTimeScale(period * AUTO_SCALE_PERIOD_COUNT / DIVISIONS_COUNT_X));
-                isAutoScaled = true;
+                ret = osc_measurePeriod(source, &period);
+                if (ret == RP_OK) {
+                    ECHECK_APP(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
+                    ECHECK_APP(osc_setTimeScale(period * AUTO_SCALE_PERIOD_COUNT / DIVISIONS_COUNT_X));
+                    isAutoScaled = true;
+            
+                    ECHECK_APP(osc_setAmplitudeOffset(source, -vMean));
+                    // Calculate scale
+                    float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+                    ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
+                }
             }
-            ECHECK_APP(osc_setAmplitudeOffset(source, -vMean));
-            // Calculate scale
-            float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-            ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
         }
     }
+
     if (isAutoScaled) {
         if (trigSweep != RPAPP_OSC_TRIG_AUTO) {
             osc_setTriggerSweep(RPAPP_OSC_TRIG_AUTO);
@@ -157,9 +162,12 @@ int osc_autoScale() {
         return RP_OK;
     }
     else {
-        if (trigSweep != RPAPP_OSC_TRIG_NORMAL) {
-            osc_setTriggerSweep(RPAPP_OSC_TRIG_NORMAL);
-        }
+        float sampRate;
+        ECHECK_APP(rp_AcqGetSamplingRateHz(&sampRate));
+        float maxDt = (samplesPerDivision * 1000.0f / sampRate) * ((float) ADC_BUFFER_SIZE / (float) viewSize);
+        ECHECK_APP(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
+        ECHECK_APP(osc_setTimeScale(maxDt));
+        fprintf(stderr, "maxDt: %f\n", maxDt);
         return RP_APP_ENS;
     }
 }
@@ -542,36 +550,25 @@ int osc_measureFrequency(rpApp_osc_source source, float *frequency) {
 }
 
 int osc_measurePeriod(rpApp_osc_source source, float *period) {
-    uint32_t dataSize = source == RPAPP_OSC_SOUR_MATH ? viewSize : VIEW_SIZE_DEFAULT;
-    float data[dataSize];
-    pthread_mutex_lock(&mutex);
-    if (source == RPAPP_OSC_SOUR_MATH) {
-        for (int i = 0; i < dataSize; ++i) {
-            data[i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i];
-        }
-    } else {
-        ECHECK_APP_MUTEX(mutex, rp_AcqGetLatestDataV((rp_channel_t)source, &dataSize, data));
-    }
-    pthread_mutex_unlock(&mutex);
-
+    float* data = view + source*viewSize;
     float mean = 0;
-    for (int i = 0; i < dataSize; ++i) {
+    for (int i = 0; i < viewSize; ++i) {
         mean += data[i];
     }
 
-    mean = mean / dataSize;
-    for (int i = 0; i < dataSize; ++i){
+    mean = mean / viewSize;
+    for (int i = 0; i < viewSize; ++i){
         data[i] -= mean;
     }
 
     // calculate signal correlation
-    float xcorr[dataSize];
-    for (int i = 0; i < dataSize; ++i) {
+    float xcorr[viewSize];
+    for (int i = 0; i < viewSize; ++i) {
         xcorr[i] = 0;
-        for (int j = 0; j < dataSize-i; ++j) {
+        for (int j = 0; j < viewSize-i; ++j) {
             xcorr[i] += data[j] * data[j+i];
         }
-        xcorr[i] /= dataSize-i;
+        xcorr[i] /= viewSize-i;
     }
 
     // The main problem is the presence lot of noise in the signal
@@ -593,10 +590,10 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     int left_idx = 0;
     int right_idx = 0;
     int left_edge_idx = 0;
-    int right_edge_idx = dataSize-2;
+    int right_edge_idx = viewSize-2;
 
     // search for left point where correlation function is less than it's expected
-    for (int i = 1; i < dataSize-1; ++i) {
+    for (int i = 1; i < viewSize-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             left_edge_idx = i;
             break;
@@ -613,7 +610,7 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     // search for left point where correlation function is greater than it's expected
-    for (int i = left_edge_idx; i < dataSize-1; ++i) {
+    for (int i = left_edge_idx; i < viewSize-1; ++i) {
         if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             left_idx = i;
             break;
@@ -630,7 +627,7 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     // search for right point where correlation function is less than it's expected
-    for (int i = left_idx; i < dataSize-1; ++i) {
+    for (int i = left_idx; i < viewSize-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             right_edge_idx = i;
             break;
@@ -674,7 +671,12 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     // guess extreme point locates between 'left_amax_idx' and 'right_amax_idx'
-    *period = indexToTime((left_amax_idx + right_amax_idx) / 2);
+    float timeScale, viewScale;
+    ECHECK_APP(osc_getTimeScale(&timeScale));
+    viewScale = timeToIndex(timeScale) / samplesPerDivision;
+
+    float idx = ((left_amax_idx + right_amax_idx) / 2.f) * viewScale;
+    *period = indexToTime(idx);
 
 #if 0
     static int counter = 0;
