@@ -285,7 +285,7 @@
             if(new_params['OSC_TRIG_SOURCE'].value > 1) {
               $('#trigger_level, #trig_level_arrow').hide();
               $('#right_menu .menu-btn.trig').prop('disabled', true);
-              $('#osc_trig_level_info').html('- ');
+              $('#osc_trig_level_info').html('-');
             }
             else {
               var ref_scale = (new_params['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
@@ -296,7 +296,7 @@
               
               $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
               $('#right_menu .menu-btn.trig').prop('disabled', false);
-              $('#osc_trig_level_info').html(new_params[param_name].value);
+              $('#osc_trig_level_info').html(OSC.convertVoltage(new_params[param_name].value));
             }
           }
         }
@@ -323,7 +323,10 @@
               var top = (graph_height + 7) / 2 + px_offset;
               
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
-              $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (top < 16 ? 3 : ''));
+              $('#cur_' + y + '_info')
+                .html(OSC.convertVoltage(+new_value))
+                .data('cleanval', +new_value)
+                .css('margin-top', (top < 16 ? 3 : ''));
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -345,7 +348,8 @@
               
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
               $('#cur_' + x + '_info')
-                .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + 'ms')
+                .html(OSC.convertTime(-new_value))
+                .data('cleanval', -new_value)
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
             }
             else {
@@ -354,7 +358,7 @@
           }
         }
         else if(param_name == 'SOUR1_VOLT' || param_name == 'SOUR2_VOLT') {
-          $('#' + param_name + '_info').html(new_params[param_name].value);
+          $('#' + param_name + '_info').html(OSC.convertVoltage(new_params[param_name].value));
         }
         
         // Find the field having ID equal to current parameter name
@@ -391,7 +395,15 @@
             }
           }
           else if(field.is('span')) {
-            field.html(new_params[param_name].value);
+            if($.inArray(param_name, ['OSC_TIME_OFFSET', 'OSC_TIME_SCALE']) > -1) {
+              field.html(OSC.convertTime(new_params[param_name].value));
+            }
+            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE']) > -1) {
+              field.html(OSC.convertVoltage(new_params[param_name].value));
+            }
+            else {
+              field.html(new_params[param_name].value);
+            }
           }
         }
       }
@@ -572,6 +584,7 @@
     //OSC.params.local['DEBUG_PARAM_PERIOD'] = { value: 200 };
     //OSC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 100 };
     
+	OSC.params.local['in_command'] = { value: 'send_all_params' };
     // Send new values and reset the local params object
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
@@ -816,7 +829,10 @@
     var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
     
     $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
-    $('#cur_' + y + '_info').html(+(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : 3)) + 'V').css('margin-top', (ui.position.top < 16 ? 3 : ''));
+    $('#cur_' + y + '_info')
+      .html(OSC.convertVoltage(+new_value))
+      .data('cleanval', +new_value)
+      .css('margin-top', (ui.position.top < 16 ? 3 : ''));
     
     OSC.updateYCursorDiff();
     
@@ -836,7 +852,8 @@
     
     $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
     $('#cur_' + x + '_info')
-      .html(-(new_value.toFixed(Math.abs(new_value) >= 0.1 ? 2 : Math.abs(new_value) >= 0.001 ? 4 : 6)) + 'ms')
+      .html(OSC.convertTime(-new_value))
+      .data('cleanval', -new_value)
       .css('margin-left', (ui.position.left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
     
     OSC.updateXCursorDiff();
@@ -857,14 +874,14 @@
     
     if(y1.is(':visible') && y2.is(':visible') && diff_px > 12) {
       var top = Math.min(y1_top, y2_top);
-      var value = parseFloat($('#cur_y1_info').html()) - parseFloat($('#cur_y2_info').html());
+      var value = $('#cur_y1_info').data('cleanval') - $('#cur_y2_info').data('cleanval');
       
       $('#cur_y_diff')
         .css('top', top + 5)
         .height(diff_px)
         .show();
       $('#cur_y_diff_info')
-        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : 3))) + 'V')
+        .html(OSC.convertVoltage(Math.abs(value)))
         .css('top', top + diff_px/2 - 2)
         .show();
     }
@@ -883,14 +900,14 @@
     
     if(x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
       var left = Math.min(x1_left, x2_left);
-      var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
+      var value = $('#cur_x1_info').data('cleanval') - $('#cur_x2_info').data('cleanval');
       
       $('#cur_x_diff')
         .css('left', left + 1)
         .width(diff_px)
         .show();
       $('#cur_x_diff_info')
-        .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : Math.abs(value) >= 0.001 ? 4 : 6))) + 'ms')
+        .html(OSC.convertTime(Math.abs(value)))
         .show()
         .css('left', left + diff_px/2 - $('#cur_x_diff_info').width()/2 + 3);
     }
@@ -909,7 +926,7 @@
       var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('IN1 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('IN1 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#in1_dialog').is(':visible')) {
         $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
@@ -922,7 +939,7 @@
       var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('IN2 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('IN2 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#in2_dialog').is(':visible')) {
         $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
@@ -935,7 +952,7 @@
       var volt_per_px =  10 / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('OUT1 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('OUT1 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#out1_dialog').is(':visible')) {
         $('#SOUR1_VOLT_OFFS').val(+(new_value.toFixed(2)));
@@ -948,7 +965,7 @@
       var volt_per_px =  10 / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('OUT2 zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('OUT2 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#out2_dialog').is(':visible')) {
         $('#SOUR2_VOLT_OFFS').val(+(new_value.toFixed(2)));
@@ -961,7 +978,7 @@
       var volt_per_px = (OSC.params.orig['OSC_MATH_SCALE'].value * 10) / graph_height;
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-      $('#info_box').html('MATH zero offset ' + (+((new_value * 1000).toFixed(2))) + 'mV');
+      $('#info_box').html('MATH zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#math_dialog').is(':visible')) {
         $('#OSC_MATH_OFFSET').val(+(new_value.toFixed(2)));
@@ -992,7 +1009,7 @@
           var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
           var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
           
-          $('#info_box').html('New trigger level: ' + (+(new_value.toFixed(2))));
+          $('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
           
           if($('#trig_dialog').is(':visible')) {
             $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
@@ -1007,6 +1024,48 @@
         console.log('Trigger level for source ' + OSC.params.orig['OSC_TRIG_SOURCE'].value + ' not yet supported');
       }
     }
+  };
+  
+  // Converts time from milliseconds to a more 'user friendly' time unit; returned value includes units
+  OSC.convertTime = function(t) {
+    var abs_t = Math.abs(t);
+    var unit = 'ms';
+    
+    if(abs_t >= 1000) {
+      t = t / 1000;
+      unit = 's';
+    } 
+    else if(abs_t >= 1) {
+      t = t * 1;
+      unit = 'ms';
+    }
+    else if(abs_t >= 0.001) {
+      t = t * 1000;
+      unit = 'μs';
+    }
+    else if(abs_t >= 0.000001) {
+      t = t * 1000000;
+      unit = ' ns';
+    }
+    
+    return +(t.toFixed(2)) + ' ' + unit;
+  };
+  
+  // Converts voltage from volts to a more 'user friendly' unit; returned value includes units
+  OSC.convertVoltage = function(v) {
+    var abs_v = Math.abs(v);
+    var unit = 'V';
+    
+    if(abs_v >= 1) {
+      v = v * 1;
+      unit = 'V';
+    }
+    else if(abs_v >= 0.001) {
+      v = v * 1000;
+      unit = 'mV';
+    }
+    
+    return +(v.toFixed(2)) + ' ' + unit;
   };
   
 }(window.OSC = window.OSC || {}, jQuery));
@@ -1169,8 +1228,10 @@ $(function() {
       OSC.updateYOffset(ui, false);
     },
     stop: function(ev, ui) {
-      OSC.updateYOffset(ui, true);
-      $('#info_box').empty();
+      if(! OSC.state.simulated_drag) {
+        OSC.updateYOffset(ui, true);
+        $('#info_box').empty();
+      }
     }
   });
   
@@ -1186,17 +1247,19 @@ $(function() {
       var buf_width = graph_width - 2;
       var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
       
-      $('#info_box').html('Time offset ' + new_value + 'ms');
+      $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
       $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + ui.position.left / ratio - 4).show();
     },
     stop: function(ev, ui) {
-      var graph_width = $('#graph_grid').outerWidth();
-      var zero_pos = (graph_width + 2) / 2;
-      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
-      
-      OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px };
-      OSC.sendParams();
-      $('#info_box').empty();
+      if(! OSC.state.simulated_drag) {
+        var graph_width = $('#graph_grid').outerWidth();
+        var zero_pos = (graph_width + 2) / 2;
+        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+        
+        OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px };
+        OSC.sendParams();
+        $('#info_box').empty();
+      }
     }
   });
   
@@ -1212,18 +1275,20 @@ $(function() {
       var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio).toFixed(2));
       var px_offset = -(new_value / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
       
-      $('#info_box').html('Time offset ' + new_value + 'ms');
+      $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
       $('#time_offset_arrow').css('left', (buf_width + 2) / 2 + px_offset);
     },
     stop: function(ev, ui) {
-      var buf_width = $('#buffer').width();
-      var zero_pos = (buf_width + 2) / 2;
-      var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
-      var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
-      
-      OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
-      OSC.sendParams();
-      $('#info_box').empty();
+      if(! OSC.state.simulated_drag) {
+        var buf_width = $('#buffer').width();
+        var zero_pos = (buf_width + 2) / 2;
+        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
+        var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
+        
+        OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+        OSC.sendParams();
+        $('#info_box').empty();
+      }
     }
   });
   
@@ -1280,6 +1345,7 @@ $(function() {
   $(document).on('touchstart', '.plot', function(ev) {
     ev.preventDefault();
     
+    // Multi-touch is used for zooming
     if(!OSC.touch.start && ev.originalEvent.touches.length > 1) {
       OSC.touch.zoom_axis = null;
       OSC.touch.start = [
@@ -1287,87 +1353,155 @@ $(function() {
         { clientX: ev.originalEvent.touches[1].clientX, clientY: ev.originalEvent.touches[1].clientY }
       ];
     }
+    // Single touch is used for changing offset
+    else if(! OSC.state.simulated_drag) {
+      OSC.state.simulated_drag = true;
+      OSC.touch.offset_axis = null;
+      OSC.touch.start = [
+        { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY }
+      ];
+    }
   });
   
   $(document).on('touchmove', '.plot', function(ev) {
     ev.preventDefault();
     
-    if(ev.originalEvent.touches.length < 2) {
-      return;
-    }
-    
-    OSC.touch.curr = [
-      { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY }, 
-      { clientX: ev.originalEvent.touches[1].clientX, clientY: ev.originalEvent.touches[1].clientY }
-    ];
-    
-    // Find zoom axis
-    if(! OSC.touch.zoom_axis) {
-      var delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
-      var delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
+    // Multi-touch is used for zooming
+    if(ev.originalEvent.touches.length > 1) {
+
+      OSC.touch.curr = [
+        { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY }, 
+        { clientX: ev.originalEvent.touches[1].clientX, clientY: ev.originalEvent.touches[1].clientY }
+      ];
       
-      if(Math.abs(delta_x - delta_y) > 10) {
-        if(delta_x > delta_y) {
-          OSC.touch.zoom_axis = 'x';
-        }
-        else if(delta_y > delta_x) {
-          OSC.touch.zoom_axis = 'y';
+      // Find zoom axis
+      if(! OSC.touch.zoom_axis) {
+        var delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
+        var delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
+        
+        if(Math.abs(delta_x - delta_y) > 10) {
+          if(delta_x > delta_y) {
+            OSC.touch.zoom_axis = 'x';
+          }
+          else if(delta_y > delta_x) {
+            OSC.touch.zoom_axis = 'y';
+          }
         }
       }
-    }
-    
-    // Skip first touch event
-    if(OSC.touch.prev) {
       
-      // Time zoom
-      if(OSC.touch.zoom_axis == 'x') {
-        var prev_delta_x = Math.abs(OSC.touch.prev[0].clientX - OSC.touch.prev[1].clientX);
-        var curr_delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
+      // Skip first touch event
+      if(OSC.touch.prev) {
         
-        if(OSC.state.fine || Math.abs(curr_delta_x - prev_delta_x) > $(this).width() * 0.9 / OSC.time_steps.length) {
-          var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, false);
+        // Time zoom
+        if(OSC.touch.zoom_axis == 'x') {
+          var prev_delta_x = Math.abs(OSC.touch.prev[0].clientX - OSC.touch.prev[1].clientX);
+          var curr_delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
           
-          if(new_scale !== null) {
-            OSC.touch.new_scale_x = new_scale;
-            $('#info_box').html('Time scale ' + new_scale + ' ms/div');
+          if(OSC.state.fine || Math.abs(curr_delta_x - prev_delta_x) > $(this).width() * 0.9 / OSC.time_steps.length) {
+            var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, false);
+            
+            if(new_scale !== null) {
+              OSC.touch.new_scale_x = new_scale;
+              $('#info_box').html('Time scale ' + OSC.convertTime(new_scale) + '/div');
+            }
+            
+            OSC.touch.prev = OSC.touch.curr;
           }
+        }
+        // Voltage zoom
+        else if(OSC.touch.zoom_axis == 'y' && OSC.state.sel_sig_name) {
+          var prev_delta_y = Math.abs(OSC.touch.prev[0].clientY - OSC.touch.prev[1].clientY);
+          var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
           
-          OSC.touch.prev = OSC.touch.curr;
+          if(OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
+            var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, false);
+            
+            if(new_scale !== null) {
+              OSC.touch.new_scale_y = new_scale;
+              $('#info_box').html('Vertical scale ' + OSC.convertVoltage(new_scale) + '/div');
+            }
+            
+            OSC.touch.prev = OSC.touch.curr;
+          }
         }
       }
-      // Voltage zoom
-      else if(OSC.touch.zoom_axis == 'y' && OSC.state.sel_sig_name) {
-        var prev_delta_y = Math.abs(OSC.touch.prev[0].clientY - OSC.touch.prev[1].clientY);
-        var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
-        
-        if(OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
-          var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, false);
-          
-          if(new_scale !== null) {
-            OSC.touch.new_scale_y = new_scale;
-            $('#info_box').html('Vertical scale ' + (new_scale * 1000) + ' mV/div');
-          }
-          
-          OSC.touch.prev = OSC.touch.curr;
-        }
+      else if(OSC.touch.prev === undefined) {
+        OSC.touch.prev = OSC.touch.curr;
       }
     }
-    else if(OSC.touch.prev === undefined) {
-      OSC.touch.prev = OSC.touch.curr;
+    // Single touch is used for changing offset
+    else if(OSC.state.simulated_drag) {
+      
+      // Find offset axis
+      if(! OSC.touch.offset_axis) {
+        var delta_x = Math.abs(OSC.touch.start[0].clientX - ev.originalEvent.touches[0].clientX);
+        var delta_y = Math.abs(OSC.touch.start[0].clientY - ev.originalEvent.touches[0].clientY);
+        
+        if(delta_x > 5 || delta_y > 5) {
+          if(delta_x > delta_y) {
+            OSC.touch.offset_axis = 'x';
+          }
+          else if(delta_y > delta_x) {
+            OSC.touch.offset_axis = 'y';
+          }
+        }
+      }
+      
+      if(OSC.touch.prev) {
+        
+        // Time offset
+        if(OSC.touch.offset_axis == 'x') {
+          var delta_x = ev.originalEvent.touches[0].clientX - OSC.touch.prev[0].clientX;
+          
+          if(delta_x != 0) {
+            //$('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
+            $('#buf_time_offset').simulate('drag', { dx: delta_x, dy: 0 });
+          }
+        }
+        // Voltage offset
+        else if(OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
+          var delta_y = ev.originalEvent.touches[0].clientY - OSC.touch.prev[0].clientY;
+          
+          if(delta_y != 0) {
+            $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', { dx: 0, dy: delta_y });
+          }
+        }
+        
+      }
+      
+      OSC.touch.prev = [
+        { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY }
+      ];
     }
   });
   
   $(document).on('touchend', '.plot', function(ev) {
     ev.preventDefault();
     
-    // Send new scale
-    if(OSC.touch.new_scale_y !== undefined) {
-      OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: OSC.touch.new_scale_y };
-      OSC.sendParams();
+    if(OSC.state.simulated_drag) {
+      OSC.state.simulated_drag = false;
+      
+      if(OSC.touch.offset_axis == 'x') {
+        //$('#time_offset_arrow').simulate('drag', { dx: 0, dy: 0 });
+        $('#buf_time_offset').simulate('drag', { dx: 0, dy: 0 });
+      }
+      else if(OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
+        $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', { dx: 0, dy: 0 });
+      }
+      
+      delete OSC.touch.start;
+      delete OSC.touch.prev;
     }
-    else if(OSC.touch.new_scale_x !== undefined) {
-      OSC.params.local['OSC_TIME_SCALE'] = { value: OSC.touch.new_scale_x };
-      OSC.sendParams();
+    else {
+      // Send new scale
+      if(OSC.touch.new_scale_y !== undefined) {
+        OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: OSC.touch.new_scale_y };
+        OSC.sendParams();
+      }
+      else if(OSC.touch.new_scale_x !== undefined) {
+        OSC.params.local['OSC_TIME_SCALE'] = { value: OSC.touch.new_scale_x };
+        OSC.sendParams();
+      }
     }
     
     // Reset touch information
