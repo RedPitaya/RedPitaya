@@ -145,27 +145,27 @@ int osc_autoScale() {
 
         // If there is signal on input
         if (fabs(vpp) > SIGNAL_EXISTENCE) {
-            if (!isAutoScaled) {
-                // set time scale only based on one channel
-                ret = osc_measurePeriod(source, &period);
-                if (ret == RP_OK) {
+            ret = osc_measurePeriod(source, &period);
+            if (ret == RP_OK) {
+                if (!isAutoScaled) {
+                    // set time scale only based on one channel
                     ECHECK_APP(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
                     ECHECK_APP(osc_setTimeScale(period * AUTO_SCALE_PERIOD_COUNT / DIVISIONS_COUNT_X));
                     isAutoScaled = true;
-            
-                    ECHECK_APP(osc_setAmplitudeOffset(source, -vMean));
-                    // Calculate scale
-                    float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-                    ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
-                }
+                }            
+                ECHECK_APP(osc_setAmplitudeOffset(source, -vMean));
+                // Calculate scale
+                float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+                ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
             }
         }
     }
 
+    if (trigSweep != RPAPP_OSC_TRIG_AUTO) {
+        osc_setTriggerSweep(RPAPP_OSC_TRIG_AUTO);
+    }
+
     if (isAutoScaled) {
-        if (trigSweep != RPAPP_OSC_TRIG_AUTO) {
-            osc_setTriggerSweep(RPAPP_OSC_TRIG_AUTO);
-        }
         return RP_OK;
     }
     else {
@@ -595,7 +595,7 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     // we can not use 'Y' only because it could be (x + noise)
 
     int left_idx = 0;
-    int right_idx = 0;
+    int right_idx = viewSize-2;
     int left_edge_idx = 0;
     int right_edge_idx = viewSize-2;
 
