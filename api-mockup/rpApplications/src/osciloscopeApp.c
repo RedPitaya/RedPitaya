@@ -44,9 +44,16 @@ volatile rp_channel_t mathSource1, mathSource2;
 
 volatile float samplesPerDivision = (float) VIEW_SIZE_DEFAULT / (float) DIVISIONS_COUNT_X;
 
+volatile double threadTimer;
+
 pthread_t mainThread = (pthread_t) -1;
 pthread_mutex_t mutex;
 
+static double _clock() {
+    struct timespec tp;
+    clock_gettime(CLOCK_REALTIME, &tp);
+    return ((double)tp.tv_sec * 1000.f) + ((double)tp.tv_nsec / 1000000.f);
+}
 
 int osc_Init() {
     pthread_mutex_init(&mutex, NULL);
@@ -963,18 +970,21 @@ int waitToFillPreTriggerBuffer(bool testcancel) {
     if (continuousMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
         return RP_OK;
     }
+
+    double localTimer = testcancel ? threadTimer : _clock() + WAIT_TO_FILL_BUF_TIMEOUT;
     float deltaSample, timeScale;
     uint32_t preTriggerCount;
     int triggerDelay;
-    clock_t timer = clock();
+
     do {
         ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
         ECHECK_APP(osc_getTimeScale(&timeScale));
         deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+
         if(testcancel)
             pthread_testcancel();
-    } while (preTriggerCount < viewSize/2*deltaSample - triggerDelay && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
+    } while (preTriggerCount < viewSize/2*deltaSample - triggerDelay && localTimer > _clock());
     return RP_OK;
 }
 
@@ -983,19 +993,22 @@ int waitToFillAfterTriggerBuffer(bool testcancel) {
         return RP_OK;
     }
 
+    double localTimer = testcancel ? threadTimer : _clock() + WAIT_TO_FILL_BUF_TIMEOUT;
     float deltaSample, timeScale;
     uint32_t _writePointer, _triggerPosition;
     int triggerDelay;
-    clock_t timer = clock();
+
     do {
         ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
         ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
         ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
         ECHECK_APP(osc_getTimeScale(&timeScale));
         deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+
         if(testcancel)
             pthread_testcancel();
-    } while (((_writePointer - (_triggerPosition + triggerDelay)) % ADC_BUFFER_SIZE) <= (viewSize/2)*deltaSample && clock() - timer < WAIT_TO_FILL_BUF_TIMEOUT);
+
+    } while (((_writePointer - (_triggerPosition + triggerDelay)) % ADC_BUFFER_SIZE) <= (viewSize/2)*deltaSample && localTimer > _clock());
     return RP_OK;
 }
 
@@ -1026,12 +1039,14 @@ void mathThreadFunction() {
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
-    clock_t _timer = clock();
     uint32_t _triggerPosition, _getBufSize, _startIndex, _writePointer = 0, _preTriggerCount = 0;
     int _triggerDelay, _preZero, _postZero;
     float _deltaSample, _timeScale;
     float data[2][ADC_BUFFER_SIZE];
     bool thisLoopAcqStart, manuallyTriggered;
+
+    ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
+    threadTimer = _clock() + MAX(0.05f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X));
 
     while (true) {
         do{
@@ -1051,26 +1066,18 @@ void *mainThreadFun() {
         }
 
         ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
-
-        float dt = ((float)(clock() - _timer) / (float)CLOCKS_PER_SEC) * 1000.f;
-        float dtmax = 10.f * _timeScale * (float)DIVISIONS_COUNT_X;
-        // If in auto mode end trigger timed out
-        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && (dt > dtmax)) {
-            EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = true)
-        }
-
-        ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
         ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
 
+        // If in auto mode end trigger timed out
         manuallyTriggered = false;
-        if (trigSweep == RPAPP_OSC_TRIG_AUTO && auto_freRun_mode && _state != RP_TRIG_STATE_TRIGGERED) {
-            threadSafe_acqStop();
+        if (acqRunning && trigSweep == RPAPP_OSC_TRIG_AUTO && (threadTimer < _clock())) {
+            ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             manuallyTriggered = true;
         }
 
-        if ((_state == RP_TRIG_STATE_TRIGGERED && _timeScale >= MIN_TIME_TO_DRAW_BEFORE_TIG )
-            || _triggerSource == RP_TRIG_SRC_DISABLED || manuallyTriggered) {
+        ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
 
+        if ((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED) || manuallyTriggered) {
             if(!manuallyTriggered) {
                 waitToFillAfterTriggerBuffer(true);
             }
@@ -1088,10 +1095,11 @@ void *mainThreadFun() {
             _preZero = continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
             _postZero = (int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
+
             if (manuallyTriggered) {
                 _preZero = 0;
                 _postZero = 0;
-                _startIndex = (_writePointer - (uint32_t) ((viewSize - _preZero) * _deltaSample)) % ADC_BUFFER_SIZE;
+                _startIndex = (_writePointer - (uint32_t) (viewSize * _deltaSample)) % ADC_BUFFER_SIZE;
             }
             _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample);
 
@@ -1112,12 +1120,15 @@ void *mainThreadFun() {
 
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {
-                _timer = clock();
-                EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false);
+                threadTimer = _clock() + MAX(0.05f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X));
+
                 if (manuallyTriggered) {
-                    threadSafe_acqStart();
+                    ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(_triggerSource));
+                    ECHECK_APP_THREAD(threadSafe_acqStart());
                     thisLoopAcqStart = true;
                 }
+            } else {
+                threadTimer = _clock() + WAIT_TO_FILL_BUF_TIMEOUT;
             }
 
             // Write data to view buffer
