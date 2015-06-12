@@ -423,9 +423,8 @@ area:hover {
 #joystick {
   position: absolute;
   margin-left: 8px;
-  margin-bottom: 250px;
   right: 26px;
-  bottom: 10px; 
+  top: 300px; 
   width: 150px; 
   height: auto;
 }
@@ -481,6 +480,7 @@ area:hover {
 }
 
 .waterfall-holder {
+  display: none;
   margin: 0px 11px 10px 29px;
   position: relative;
 }
