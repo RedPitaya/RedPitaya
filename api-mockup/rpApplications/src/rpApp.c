@@ -29,7 +29,7 @@ static char version[50];
 
 int rpApp_Init() {
     ECHECK_APP(rp_Init());
-//    ECHECK_APP(cmn_Init());
+    ECHECK_APP(cmn_Init());
     ECHECK_APP(osc_Init());
     // TODO: Place other module releasing here (in reverse order)
 
@@ -40,6 +40,7 @@ int rpApp_Init() {
 
 int rpApp_Release() {
     ECHECK_APP(osc_Release());
+//    ECHECK_APP(osc_Release());
     ECHECK_APP(rp_Release());
     // TODO: Place other module releasing here (in reverse order)
 
@@ -290,6 +291,14 @@ int rpApp_SpecStop(void) {
 	return spec_stop();
 }
 
+int rpApp_SpecRunning(void) {
+	return spec_running();
+}
+
+int rpApp_SpecReset() {
+	return spec_reset();
+}
+
 int rpApp_SpecGetViewData(float** signals, size_t size) {
 	return spec_getViewData(signals, size);
 }
@@ -316,6 +325,31 @@ int rpApp_SpecSetUnit(int unit) {
 
 int rpApp_SpecGetViewSize(size_t* size)
 {
-	*size = 1024*2;
+	*size = SPECTR_OUT_SIG_LEN;
 	return 0;
+}
+
+int rpApp_SpecGetFreqMin(float* freq)
+{
+	return spec_getFreqMin(freq);
+}
+
+int rpApp_SpecGetFreqMax(float* freq)
+{
+	return spec_getFreqMax(freq);
+}
+
+int rpApp_SpecSetFreqMin(float freq) // TODO??
+{
+	return 0;
+}
+
+int rpApp_SpecSetFreqMax(float freq)
+{
+	return spec_setFreqRange(freq);
+}
+
+int rpApp_SpecGetFpgaFreq(float* freq)
+{
+	return spec_getFpgaFreq(freq);
 }
