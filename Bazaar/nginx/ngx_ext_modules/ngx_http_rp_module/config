@@ -21,7 +21,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS                               \
                 $rp_src_dir/rp_data_cmd.c                    \
                 $rp_src_dir/cJSON.c"
 
-CORE_LIBS="$CORE_LIBS -L$shared_path/libredpitaya -L$ngx_addon_dir/../ws_server -L$SYSROOT/usr/lib -lstdc++ -lm -ldl -lcurl -lssl -lcrypto -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread"
-CFLAGS="$CFLAGS -I $rp_include_dir -I../../../shared/include -I$ngx_addon_dir/../ws_server -I$SYSROOT/usr/include --sysroot=$SYSROOT"
+CORE_LIBS="$CORE_LIBS -L$shared_path/libredpitaya -L$ngx_addon_dir/../ws_server -L$SYSROOT/usr/lib -lstdc++ -lm -ldl -lcurl -lssl -lcrypto -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread --sysroot=$SYSROOT"
+CFLAGS="$CFLAGS -I $rp_include_dir -I../../../shared/include -I$ngx_addon_dir/../ws_server -I$SYSROOT/usr/include"
 CFLAGS="$CFLAGS -DVERSION=$VERSION -DREVISION=$REVISION"
 
