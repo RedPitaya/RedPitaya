@@ -6,6 +6,9 @@ ngx_feature_incs="#include <lauxlib.h>"
 ngx_feature_path=
 ngx_feature_test="(void) luaL_newstate();"
 
+# SYSROOT=../../../../OS/buildroot/buildroot-2014.02/output/host/usr/armeb-buildroot-linux-gnueabi/sysroot
+# LUAJIT_INC="-I ${SYSROOT}/usr/include";
+# LUAJIT_LIB="-L ${SYSROOT}/usr/lib -lluajit";
 
 # ngx_custom_path should be available from wherever the ./configure for Nginx is called
 ngx_custom_path="../../../OS/buildroot/buildroot-2014.02/output/build/luajit-2.0.2/src/"
