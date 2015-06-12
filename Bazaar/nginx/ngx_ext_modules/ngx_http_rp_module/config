@@ -4,7 +4,7 @@ HTTP_MODULES="$HTTP_MODULES ngx_http_rp_module"
 rp_src_dir=$ngx_addon_dir/src
 rp_include_dir=$ngx_addon_dir/include
 
-SYSROOT=../../../OS/buildroot/buildroot-2014.02/output/host/usr/armeb-buildroot-linux-gnueabi/sysroot
+SYSROOT=../../../OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabihf/sysroot
 shared_path=../../../shared
 
 NGX_ADDON_DEPS="$NGX_ADDON_DEPS                               \
