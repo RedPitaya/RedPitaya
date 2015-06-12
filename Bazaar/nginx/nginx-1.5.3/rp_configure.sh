@@ -14,6 +14,9 @@
 # We will add things one-by-one accoording to our needs in add_modules.
 without=$(cat configure_withouts.txt)
 
+#SYSROOT=../../../OS/buildroot/buildroot-2014.02/output/host/usr/armeb-buildroot-linux-gnueabi/sysroot
+#add_conf_params="--with-zlib=${SYSROOT}/usr/lib/ --with-pcre=${SYSROOT}/usr/lib/"
+
 add_modules="--add-module=../ngx_ext_modules/lua-nginx-module --add-module=../ngx_ext_modules/ngx_http_rp_module"
 add_conf_params="--with-zlib=../../../OS/buildroot/buildroot-2014.02/output/build/zlib-1.2.8/ --with-pcre=../../../OS/buildroot/buildroot-2014.02/output/build/pcre-8.34/"
 export VERSION=$1
