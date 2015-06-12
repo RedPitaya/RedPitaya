@@ -270,8 +270,11 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
 	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
 	# JSON library
-	#wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
-	#unzip libjson_7.6.1.zip -d Bazaar/tools/
+	wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+	unzip libjson_7.6.1.zip -d Bazaar/tools/
+	patch -d Bazaar/tools/libjson -p1 < patches/libjson.patch
+	unzip libjson_7.6.1.zip -d Bazaar/nginx/ngx_ext_modules/ws_server/
+	patch -d Bazaar/nginx/ngx_ext_modules/ws_server/libjson -p1 < patches/libjson.patch
 	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
