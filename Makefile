@@ -259,7 +259,22 @@ $(URAMDISK): $(INSTALL_DIR)
 $(LIBREDPITAYA):
 	$(MAKE) -C shared CROSS_COMPILE=$(CROSS_COMPILE)
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA)
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
+	# boost library
+	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
+	# websocket++ library
+	wget -nc https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
+	tar -xzf 0.5.0.tar.gz -C Bazaar/nginx/ngx_ext_modules/ws_server
+	ln -sf websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+	# crypto++ library
+	wget -nc http://www.cryptopp.com/cryptopp562.zip
+	mkdir -p Bazaar/tools/cryptopp
+	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
+	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
+	# JSON library
+	#wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+	#unzip libjson_7.6.1.zip -d Bazaar/tools/
+	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -332,7 +347,9 @@ clean:
 	make -C $(FPGA_DIR) clean
 	make -C $(UBOOT_DIR) clean
 	make -C shared clean
-	make -C $(NGINX_DIR) clean	
+	# todo, remove downloaded libraries and symlinks
+	rm -rf Bazaar/tools/cryptopp
+	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
