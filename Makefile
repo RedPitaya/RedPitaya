@@ -272,8 +272,16 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
 	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
 	# JSON library
-	#wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
-	#unzip libjson_7.6.1.zip -d Bazaar/tools/
+	wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+	unzip libjson_7.6.1.zip -d Bazaar/tools/
+	patch -d Bazaar/tools/libjson -p1 < patches/libjson.patch
+	unzip libjson_7.6.1.zip -d Bazaar/nginx/ngx_ext_modules/ws_server/
+	patch -d Bazaar/nginx/ngx_ext_modules/ws_server/libjson -p1 < patches/libjson.patch
+	# Nginx LUA module
+	wget -nc https://codeload.github.com/openresty/lua-nginx-module/tar.gz/v0.8.7
+	tar -xzf v0.8.7 -C Bazaar/nginx/ngx_ext_modules
+	ln -sf lua-nginx-module-0.8.7 Bazaar/nginx/ngx_ext_modules/lua-nginx-module
+	patch -d Bazaar/nginx/ngx_ext_modules/lua-nginx-module -p1 < patches/lua-nginx-module.patch
 	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
