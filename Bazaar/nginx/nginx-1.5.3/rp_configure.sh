@@ -26,6 +26,6 @@ echo ${without} | xargs ./configure ${add_conf_params} ${add_modules}
 
 # Make it cross-compilable
 cat objs/Makefile | tail -n +3 > objs/Makefile.tmp
-echo "CC = \$(CROSS_COMPILE)gcc" >> objs/Makefile
+echo "CC = \$(CROSS_COMPILE)gcc" > objs/Makefile
 cat objs/Makefile.tmp >> objs/Makefile
 rm objs/Makefile.tmp
