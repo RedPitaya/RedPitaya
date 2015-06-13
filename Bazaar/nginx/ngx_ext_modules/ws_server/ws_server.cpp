@@ -52,7 +52,7 @@ struct server_parameters * load_params()
 	{
         	/* Config does not exist */
 		params->signal_interval = 20;
-		params->param_interval = 5000;
+		params->param_interval = 20;
 		params->port = 9002;
         	return params;
 	}
