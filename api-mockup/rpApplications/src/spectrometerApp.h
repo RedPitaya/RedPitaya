@@ -112,9 +112,9 @@ int spec_stop();
 
 int spec_running(); // true/false
 
-int spec_getViewData(float **signals, size_t size);
+int spec_reset();
 
-//int spec_getParams();
+int spec_getViewData(float **signals, size_t size);
 
 int spec_getJpgIdx(int* jpg);
 
@@ -125,6 +125,12 @@ int spec_getPeakFreq(int channel, float* freq);
 int spec_setFreqRange(float freq);
 
 int spec_setUnit(int unit);
+
+int spec_getFpgaFreq(float* freq);
+
+int spec_getFreqMax(float* freq);
+
+int spec_getFreqMin(float* freq);
 
 
 #endif /* __SPECTROMETERAPP_H*/
