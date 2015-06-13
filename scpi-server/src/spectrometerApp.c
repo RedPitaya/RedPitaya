@@ -67,35 +67,21 @@ scpi_result_t RP_APP_SpecStop(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_SpecReset(scpi_t *context) { // TODO
-    int result = rpApp_OscReset();
+scpi_result_t RP_APP_SpecReset(scpi_t *context) {
+    int result = rpApp_SpecReset();
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*OSC:RST Failed: %s.", rp_GetError(result));
+        syslog(LOG_ERR, "*SPEC:RESET Failed: %s.", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    syslog(LOG_INFO, "*OSC:RST Successfully.");
+    syslog(LOG_INFO, "*SPEC:RESET Successfully.");
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_APP_SpecAutoscale(scpi_t *context) { // TODO
-    int result = rpApp_OscAutoScale();
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*OSC:AUTOSCALE Failed: %s.", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-    syslog(LOG_INFO, "*OSC:AUTOSCALE Successfully.");
-    return SCPI_RES_OK;
-}
+scpi_result_t RP_APP_SpecRunning(scpi_t *context) {
+    int running = rpApp_SpecRunning();
 
-scpi_result_t RP_APP_SpecRunning(scpi_t *context) { // TODO
-    bool running;
-    int result = rpApp_OscIsRunning(&running);
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*OSC:RUNNING Failed: %s.", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-    SCPI_ResultBool(context, running);
-    syslog(LOG_INFO, "*OSC:RUNNING Successfully.");
+    SCPI_ResultInt(context, running);
+    syslog(LOG_INFO, "*SPEC:RUNNING Successfully.");
     return SCPI_RES_OK;
 }
 
@@ -109,14 +95,27 @@ scpi_result_t RP_APP_SpecChannel2GetViewData(scpi_t *context) {
 
 scpi_result_t RP_APP_SpecGetViewSize(scpi_t *context) {
     uint32_t viewSize = 2048;
-//    int result = rpApp_OscGetViewSize(&viewSize); // TOOD
-    /*if (RP_OK != result) {
+    int result = rpApp_SpecGetViewSize(&viewSize);
+    if (RP_OK != result) {
         syslog(LOG_ERR, "*SPEC:DATA:SIZE? Failed to get: %s", rp_GetError(result));
         return SCPI_RES_ERR;
-    }*/
+    }
 
     SCPI_ResultUInt(context, viewSize);
     syslog(LOG_INFO, "*SPEC:DATA:SIZE? get successfully.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_APP_SpecSetViewSize(scpi_t *context) {
+    uint32_t viewSize = 2048;
+    int result = rpApp_SpecGetViewSize(&viewSize);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SPEC:DATA:SIZE Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultUInt(context, viewSize);
+    syslog(LOG_INFO, "*SPEC:DATA:SIZE get successfully.");
     return SCPI_RES_OK;
 }
 
@@ -172,12 +171,76 @@ scpi_result_t RP_APP_SpecChannel2GetPeakFreq(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_APP_SpecGetFreqMin(scpi_t *context) {
+	float freq;
+    int result = rpApp_SpecGetFreqMin(&freq);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SPEC:FREQ:MIN? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
+    SCPI_ResultDouble(context, freq);
+    syslog(LOG_INFO, "*SPEC:FREQ:MIN? get successfully.");
+    return SCPI_RES_OK;
+}
 
+scpi_result_t RP_APP_SpecGetFreqMax(scpi_t *context) { 
+	float freq;
+    int result = rpApp_SpecGetFreqMax(&freq);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SPEC:FREQ:MAX? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
+    SCPI_ResultDouble(context, freq);
+    syslog(LOG_INFO, "*SPEC:FREQ:MAX? get successfully.");
+    return SCPI_RES_OK;
+}
 
+scpi_result_t RP_APP_SpecSetFreqMin(scpi_t *context) {
+	/*
+	float freq;
+    int result = rpApp_SpecGetPeakFreq(1, &freq); // TODO
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SPEC:FREQ:MIN Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
+    SCPI_ResultDouble(context, freq);
+    syslog(LOG_INFO, "*SPEC:FREQ:MIN get successfully.");
+	*/
+    return SCPI_RES_OK;
+}
 
+scpi_result_t RP_APP_SpecSetFreqMax(scpi_t *context) {
+    double freq;
+    if (!SCPI_ParamDouble(context, &freq, true)) {
+        syslog(LOG_ERR, "*SPEC:FREQ:MAX is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
 
+	int result = rpApp_SpecSetFreqMax(freq);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SPEC:FREQ:MAX Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultDouble(context, freq);
+    syslog(LOG_INFO, "*SPEC:FREQ:MAX get successfully.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_APP_SpecGetFpgaFreq(scpi_t *context) {
+	float freq;
+    int result = rpApp_SpecGetFpgaFreq(&freq);
+    if (RP_OK != result) {
+        syslog(LOG_ERR, "*SPEC:FPGA:FREQ? Failed to get: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultDouble(context, freq);
+    syslog(LOG_INFO, "*SPEC:FREQ:FREQ? get successfully.");
+    return SCPI_RES_OK;
+}
 
 
