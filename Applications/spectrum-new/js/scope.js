@@ -140,7 +140,15 @@
         var receive = JSON.parse(ev.data);
 
         if(receive.parameters) {
-          SPEC.processParameters(receive.parameters);
+			SPEC.processParameters(receive.parameters);
+			console.log([Object.keys(SPEC.params.orig).length, Object.keys(receive.parameters).length, Object.keys(SPEC.params.orig).length == 0 && Object.keys(receive.parameters).length < 30]);
+			if(Object.keys(SPEC.params.orig).length < 30 && Object.keys(receive.parameters).length < 30) {
+				SPEC.params.local['in_command'] = { value: 'send_all_params' };
+				SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
+				SPEC.params.local = {};
+			} else {
+				SPEC.processParameters(receive.parameters);
+			}
         }
         
         if(receive.signals) {
@@ -356,9 +364,13 @@
 		points = frozen_dsets[sig_count-1].data;
 	  }
 	  else {
-		for(var i = 0; i < new_signals[sig_name].size; i++) {
-       	 	points.push([new_signals["freq_ch"].value[i], new_signals[sig_name].value[i]]);
-      	}
+		if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin'])
+			for(var i = 0; i < new_signals[sig_name].size; i++) {
+
+				var d = (SPEC.params.orig['xmax'].value - SPEC.params.orig['xmin'].value)/(new_signals[sig_name].size - 1);
+				var p = d*i;
+    	   	 	points.push([p, new_signals[sig_name].value[i]]);
+    	  	}
 	  }
 	  SPEC.datasets.push({ color: color, data: points}); 
 	  var sig_btn = $('#right_menu .menu-btn.' + sig_name);
@@ -509,7 +521,7 @@
     //SPEC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 1000 };
 	
     SPEC.setDefCursorVals();
-	
+	SPEC.params.local['in_command'] = { value: 'send_all_params' };
     SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
     SPEC.params.local = {};
     return true;
@@ -1041,7 +1053,7 @@ $(function() {
   
   // Process clicks on top menu buttons
   $('#SPEC_RUN').on('click touchstart', function() {
-    ev.preventDefault();
+    //ev.preventDefault();
     $('#SPEC_RUN').hide();
     $('#SPEC_STOP').css('display','block');
     SPEC.params.local['SPEC_RUN'] = { value: true };
@@ -1049,7 +1061,7 @@ $(function() {
   }); 
   
   $('#SPEC_STOP').on('click touchstart', function() {
-    ev.preventDefault();
+    //ev.preventDefault();
     $('#SPEC_STOP').hide();
     $('#SPEC_RUN').show(); 
     SPEC.params.local['SPEC_RUN'] = { value: false };
