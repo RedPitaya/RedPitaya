@@ -95,6 +95,7 @@ module red_pitaya_scope #(
 );
 
 reg             adc_arm_do   ;
+reg             adc_arm_undo ;
 reg             adc_rst_do   ;
 
 //---------------------------------------------------------------------------------
@@ -224,7 +225,7 @@ always @(posedge adc_clk_i) begin
    else begin
       if (adc_arm_do)
          adc_we <= 1'b1 ;
-      else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0) && ~adc_we_keep) || adc_rst_do) //delayed reached or reset
+      else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0) && ~adc_we_keep) || adc_rst_do || adc_arm_undo) //delayed reached or reset
          adc_we <= 1'b0 ;
 
       // count how much data was written into the buffer before trigger
@@ -321,7 +322,7 @@ always @(posedge axi0_clk_o) begin
    else begin
       if (adc_arm_do && set_a_axi_en)
          axi_a_we <= 1'b1 ;
-      else if (((axi_a_dly_do || adc_trig) && (axi_a_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
+      else if (((axi_a_dly_do || adc_trig) && (axi_a_dly_cnt == 32'h0)) || adc_rst_do || adc_arm_undo) //delayed reached or reset
          axi_a_we <= 1'b0 ;
 
       if (adc_trig && axi_a_we)
@@ -427,7 +428,7 @@ always @(posedge axi1_clk_o) begin
    else begin
       if (adc_arm_do && set_b_axi_en)
          axi_b_we <= 1'b1 ;
-      else if (((axi_b_dly_do || adc_trig) && (axi_b_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
+      else if (((axi_b_dly_do || adc_trig) && (axi_b_dly_cnt == 32'h0)) || adc_rst_do || adc_arm_undo) //delayed reached or reset
          axi_b_we <= 1'b0 ;
 
       if (adc_trig && axi_b_we)
@@ -518,13 +519,15 @@ wire              asg_trig_n       ;
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
    adc_arm_do    <= 1'b0 ;
+   adc_arm_undo  <= 1'b0 ;
    adc_rst_do    <= 1'b0 ;
    adc_trig_sw   <= 1'b0 ;
    set_trig_src  <= 4'h0 ;
    adc_trig      <= 1'b0 ;
 end else begin
-   adc_arm_do  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[0] ; // SW ARM
-   adc_rst_do  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[1] ;
+   adc_arm_do  <= sys_wen && (sys_addr[19:0]==20'h0) &&  sys_wdata[0] ; // SW ARM write 1
+   adc_arm_undo<= sys_wen && (sys_addr[19:0]==20'h0) && ~sys_wdata[0] ; // SW ARM wtite 0
+   adc_rst_do  <= sys_wen && (sys_addr[19:0]==20'h0) &&  sys_wdata[1] ;
    adc_trig_sw <= sys_wen && (sys_addr[19:0]==20'h4) && (sys_wdata[3:0]==4'h1); // SW trigger
 
       if (sys_wen && (sys_addr[19:0]==20'h4))
