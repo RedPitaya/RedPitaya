@@ -32,13 +32,7 @@ all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_conf_params) $(add_modules);
-	# Make it cross-compilable
-	cat $(NGINX_DIR)/objs/Makefile | tail -n +3 > $(NGINX_DIR)/objs/Makefile.tmp
-	echo "CC = $(CROSS_COMPILE)gcc" > $(NGINX_DIR)/objs/Makefile
-	cat $(NGINX_DIR)/objs/Makefile.tmp >> $(NGINX_DIR)/objs/Makefile
-	rm $(NGINX_DIR)/objs/Makefile.tmp
-	# run modified Makefile
-	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
+	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB): 
 	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
