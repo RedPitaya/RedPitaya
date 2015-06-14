@@ -20,13 +20,19 @@ JOBS=$$(($(NUM_CPU)+1))
 
 WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
-BOOST_LIBS_DIR=../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0/lib
+
+# Remove everything we can.
+# We will add things one-by-one accoording to our needs in add_modules.
+without:=`cat configure_withouts.txt`
+add_modules=--add-module=../ngx_ext_modules/lua-nginx-module --add-module=../ngx_ext_modules/ngx_http_rp_module
+add_conf_params=--with-zlib=../../../OS/buildroot/buildroot-2014.02/output/build/zlib-1.2.8 --with-pcre=../../../OS/buildroot/buildroot-2014.02/output/build/pcre-8.34
+VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./rp_configure.sh $(VER)-$(BUILD_NUMBER) $(REVISION);
-	$(MAKE) -j $(JOBS) -C $(NGINX_DIR)
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_conf_params) $(add_modules);
+	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB): 
 	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=$(CROSS_COMPILE)
