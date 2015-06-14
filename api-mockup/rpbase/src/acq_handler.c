@@ -823,13 +823,8 @@ int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
     uint32_t pos;
     ECHECK(acq_GetWritePointer(&pos));
 
-    pos++;
+    pos = (pos - (*size)) % ADC_BUFFER_SIZE;
 
-    if ((*size) > pos) {
-        pos += ADC_BUFFER_SIZE;
-    }
-
-    pos -= (*size);
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
