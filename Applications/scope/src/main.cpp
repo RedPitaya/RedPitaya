@@ -108,8 +108,8 @@ CBooleanParameter out2Show("OUTPUT2_SHOW", CBaseParameter::RW, true, 0);
 
 CBooleanParameter out1State("OUTPUT1_STATE", CBaseParameter::RW, false, 0);
 CBooleanParameter out2State("OUTPUT2_STATE", CBaseParameter::RW, false, 0);
-CFloatParameter out1Amplitude("SOUR1_VOLT", CBaseParameter::RW, 1, 0, -1, 1);
-CFloatParameter out2Amplitude("SOUR2_VOLT", CBaseParameter::RW, 1, 0, -1, 1);
+CFloatParameter out1Amplitude("SOUR1_VOLT", CBaseParameter::RW, 0.9, 0, -1, 1);
+CFloatParameter out2Amplitude("SOUR2_VOLT", CBaseParameter::RW, 0.9, 0, -1, 1);
 CFloatParameter out1Offset("SOUR1_VOLT_OFFS", CBaseParameter::RW, 0, 0, -1, 1);
 CFloatParameter out2Offset("SOUR2_VOLT_OFFS", CBaseParameter::RW, 0, 0, -1, 1);
 CFloatParameter out1Frequancy("SOUR1_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0.00005, 62.5e6);
@@ -327,16 +327,72 @@ void UpdateSignals(void) {
 }
 
 void OnNewParams(void) {
-
 /* ---- UPDATE INTERLAN SIGNAL GENERATION ----- */
+/* ------ SEND GENERATE PARAMETERS TO API ------*/
     if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
-        || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(inTimeScale) ||IS_NEW(out1ShowOffset) || IS_NEW(inAutoscale)) {
+        || IS_NEW(out1DCYC) || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(out1TriggerSource)) {
+    
         updateOutCh1 = true;
+        IF_VALUE_CHANGED_BOOL(out1State, rp_GenOutEnable(RP_CH_1), rp_GenOutDisable(RP_CH_1));
+
+        rp_GenAmp(RP_CH_1, out1Amplitude.NewValue());
+        out1Amplitude.Update();
+
+        rp_GenOffset(RP_CH_1, out1Offset.NewValue());
+        out1Offset.Update();
+
+        rp_GenFreq(RP_CH_1, out1Frequancy.NewValue());
+        out1Frequancy.Update();
+
+        rp_GenPhase(RP_CH_1, out1Phase.NewValue());
+        out1Phase.Update();
+
+        rp_GenDutyCycle(RP_CH_1, out1DCYC.NewValue());
+        out1DCYC.Update();
+
+        rp_GenWaveform(RP_CH_1, (rp_waveform_t) out1WAveform.NewValue());
+        out1WAveform.Update();
+
+        rp_GenMode(RP_CH_1, out1Burst.NewValue() == 0 ? RP_GEN_MODE_CONTINUOUS : RP_GEN_MODE_BURST);
+        out1Burst.Update();
+
+        rp_GenTriggerSource(RP_CH_1, (rp_trig_src_t) out1TriggerSource.NewValue());
+        out1TriggerSource.Update();
     }
+
     if (IS_NEW(out2State) || IS_NEW(out2Amplitude) || IS_NEW(out2Offset) || IS_NEW(out2Frequancy) || IS_NEW(out2Phase)
-        || IS_NEW(out2WAveform) || IS_NEW(out2Burst) || IS_NEW(inTimeScale) || IS_NEW(out2ShowOffset) || IS_NEW(inAutoscale)) {
+        || IS_NEW(out2DCYC) || IS_NEW(out2WAveform) || IS_NEW(out2Burst) || IS_NEW(out2TriggerSource)) {
+
         updateOutCh2 = true;
+        IF_VALUE_CHANGED_BOOL(out2State, rp_GenOutEnable(RP_CH_2), rp_GenOutDisable(RP_CH_2));
+
+        rp_GenAmp(RP_CH_2, out2Amplitude.NewValue());
+        out2Amplitude.Update();
+
+        rp_GenOffset(RP_CH_2, out2Offset.NewValue());
+        out2Offset.Update();
+
+        rp_GenFreq(RP_CH_2, out2Frequancy.NewValue());
+        out2Frequancy.Update();
+
+        rp_GenPhase(RP_CH_2, out2Phase.NewValue());
+        out2Phase.Update();
+
+        rp_GenDutyCycle(RP_CH_2, out2DCYC.NewValue());
+        out2DCYC.Update();
+
+        rp_GenWaveform(RP_CH_2, (rp_waveform_t) out2WAveform.NewValue());
+        out2WAveform.Update();
+
+        rp_GenMode(RP_CH_2, out2Burst.NewValue() == 0 ? RP_GEN_MODE_CONTINUOUS : RP_GEN_MODE_BURST);
+        out2Burst.Update();
+
+        rp_GenTriggerSource(RP_CH_2, (rp_trig_src_t) out2TriggerSource.NewValue());
+        out2TriggerSource.Update();
     }
+
+    updateOutCh1 = updateOutCh1 || IS_NEW(inTimeScale) || IS_NEW(inAutoscale) || IS_NEW(out1ShowOffset);
+    updateOutCh2 = updateOutCh2 || IS_NEW(inTimeScale) || IS_NEW(inAutoscale) || IS_NEW(out2ShowOffset);
 
 
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
@@ -431,27 +487,6 @@ void OnNewParams(void) {
     out2Show.Update();
     out1ShowOffset.Update();
     out2ShowOffset.Update();
-
-/* ------ SEND GENERATE PARAMETERS TO API ------*/
-    IF_VALUE_CHANGED_BOOL(out1State, rp_GenOutEnable(RP_CH_1), rp_GenOutDisable(RP_CH_1))
-    IF_VALUE_CHANGED_BOOL(out2State, rp_GenOutEnable(RP_CH_2), rp_GenOutDisable(RP_CH_2))
-    IF_VALUE_CHANGED(out1Amplitude, rp_GenAmp(RP_CH_1, out1Amplitude.NewValue()))
-    IF_VALUE_CHANGED(out2Amplitude, rp_GenAmp(RP_CH_2, out2Amplitude.NewValue()))
-    IF_VALUE_CHANGED(out1Offset, rp_GenOffset(RP_CH_1, out1Offset.NewValue()))
-    IF_VALUE_CHANGED(out2Offset, rp_GenOffset(RP_CH_2, out2Offset.NewValue()))
-    IF_VALUE_CHANGED(out1Frequancy, rp_GenFreq(RP_CH_1, out1Frequancy.NewValue()))
-    IF_VALUE_CHANGED(out2Frequancy, rp_GenFreq(RP_CH_2, out2Frequancy.NewValue()))
-    IF_VALUE_CHANGED(out1Phase, rp_GenPhase(RP_CH_1, out1Phase.NewValue()))
-    IF_VALUE_CHANGED(out2Phase, rp_GenPhase(RP_CH_2, out2Phase.NewValue()))
-    IF_VALUE_CHANGED(out1DCYC, rp_GenDutyCycle(RP_CH_1, out1DCYC.NewValue()))
-    IF_VALUE_CHANGED(out2DCYC, rp_GenDutyCycle(RP_CH_2, out2DCYC.NewValue()))
-    IF_VALUE_CHANGED(out1WAveform, rp_GenWaveform(RP_CH_1, (rp_waveform_t) out1WAveform.NewValue()))
-    IF_VALUE_CHANGED(out2WAveform, rp_GenWaveform(RP_CH_2, (rp_waveform_t) out2WAveform.NewValue()))
-    IF_VALUE_CHANGED(out1Burst, rp_GenMode(RP_CH_1, out1Burst.NewValue() == 0 ? RP_GEN_MODE_CONTINUOUS : RP_GEN_MODE_BURST))
-    IF_VALUE_CHANGED(out2Burst, rp_GenMode(RP_CH_2, out2Burst.NewValue() == 0 ? RP_GEN_MODE_CONTINUOUS : RP_GEN_MODE_BURST))
-    IF_VALUE_CHANGED(out1TriggerSource, rp_GenTriggerSource(RP_CH_1, (rp_trig_src_t) out1TriggerSource.NewValue()))
-    IF_VALUE_CHANGED(out2TriggerSource, rp_GenTriggerSource(RP_CH_2, (rp_trig_src_t) out2TriggerSource.NewValue()))
-
 
 /* ------ HANDLE CALIBRATE ------*/
     if (calibrateBackEndOffset.NewValue() == 1) {
