@@ -98,7 +98,7 @@ void rp_websocket_server::set_param_timer() {
 	
 	if(m_param_timer!=NULL)	
 		m_param_timer->cancel();
-	int interval = 20;//m_params->get_params_interval_func != 0 ?  m_params->get_params_interval_func() : m_params->param_interval;
+	int interval = m_params->get_params_interval_func != 0 ?  m_params->get_params_interval_func() : m_params->param_interval;
 	m_param_timer = m_endpoint.set_timer(
 		interval,
 		websocketpp::lib::bind(
