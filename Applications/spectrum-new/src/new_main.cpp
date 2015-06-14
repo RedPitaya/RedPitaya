@@ -6,6 +6,7 @@ extern "C" {
     #include "version.h"
 }
 
+
 /* Parameters description structure - must be the same for all RP controllers */
 typedef struct rp_app_params_s {
     char  *name;
@@ -55,10 +56,12 @@ CBooleanParameter inSingle("SPEC_SINGLE", CBaseParameter::RW, false, 0);
 CBooleanParameter in1Show("CH1_SHOW", CBaseParameter::RW, true, 0);
 CBooleanParameter in2Show("CH2_SHOW", CBaseParameter::RW, false, 0);
 
+/* --------------------------------  CURSORS  ------------------------------ */
 CBooleanParameter cursorx1("SPEC_CURSOR_X1", CBaseParameter::RW, false, 0);
 CBooleanParameter cursorx2("SPEC_CURSOR_X2", CBaseParameter::RW, false, 0);
 CBooleanParameter cursory1("SPEC_CURSOR_Y1", CBaseParameter::RW, false, 0);
 CBooleanParameter cursory2("SPEC_CURSOR_Y2", CBaseParameter::RW, false, 0);
+CIntParameter cursorSrc("SPEC_CURSOR_SRC", CBaseParameter::RW, RPAPP_OSC_SOUR_CH1, 0, RPAPP_OSC_SOUR_CH1, RPAPP_OSC_SOUR_MATH);
 
 CFloatParameter cursor1V("SPEC_CUR1_V", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2V("SPEC_CUR2_V", CBaseParameter::RW, -1, 0, -1000, 1000);
@@ -67,6 +70,10 @@ CFloatParameter cursor2T("SPEC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 
 void UpdateParams(void)
 {
+	inRun.Update();
+	if (inRun.Value() == false)
+		return;
+
 	int ret = rpApp_SpecGetJpgIdx(&w_idx.Value());
 	ret = rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
 	ret = rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());
@@ -84,6 +91,10 @@ void UpdateSignals(void)
 		for (size_t i = 0; i < 3; ++i)
 			data[i] = new float[2048];
 	}
+
+	inRun.Update();
+	if (inRun.Value() == false)
+		return;
 
 	if (in1Show.Value() || in2Show.Value())
 	{
@@ -132,6 +143,16 @@ void OnNewParams(void)
 
 	in1Show.Update();
 	in2Show.Update();
+
+    cursorx1.Update();
+    cursorx2.Update();
+    cursory1.Update();
+    cursory2.Update();
+    cursorSrc.Update();
+    cursor1V.Update();
+    cursor2V.Update();
+    cursor1T.Update();
+    cursor2T.Update();
 
 	if (xmax.IsNewValue() || freq_unit.IsNewValue())
 	{
