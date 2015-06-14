@@ -132,7 +132,13 @@
         var receive = JSON.parse(ev.data);
 
         if(receive.parameters) {
-          OSC.processParameters(receive.parameters);
+          if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
+            OSC.params.local['in_command'] = { value: 'send_all_params' };
+            OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+            OSC.params.local = {};
+          } else {
+            OSC.processParameters(receive.parameters);
+          }
         }
         
         if(receive.signals) {
@@ -212,14 +218,14 @@
             $('#ch2_offset_arrow').hide();
           }
         }
-        else if(param_name == 'SOUR1_VOLT_OFFS') {
+        else if(param_name == 'OUTPUT1_SHOW_OFF') {
           if(new_params['OUTPUT1_SHOW'].value && new_params['OUTPUT1_STATE'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#output1_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = 10 / graph_height;
-              var px_offset = -(new_params['SOUR1_VOLT_OFFS'].value / volt_per_px - parseInt($('#output1_offset_arrow').css('margin-top')) / 2);
+              var px_offset = -(new_params['OUTPUT1_SHOW_OFF'].value / volt_per_px - parseInt($('#output1_offset_arrow').css('margin-top')) / 2);
 
               $('#output1_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset).show();
             }
@@ -228,14 +234,14 @@
             $('#output1_offset_arrow').hide();
           }
         }
-        else if(param_name == 'SOUR2_VOLT_OFFS') {
+        else if(param_name == 'OUTPUT2_SHOW_OFF') {
           if(new_params['OUTPUT2_SHOW'].value && new_params['OUTPUT2_STATE'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#output2_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = 10 / graph_height;
-              var px_offset = -(new_params['SOUR2_VOLT_OFFS'].value / volt_per_px - parseInt($('#output2_offset_arrow').css('margin-top')) / 2);
+              var px_offset = -(new_params['OUTPUT2_SHOW_OFF'].value / volt_per_px - parseInt($('#output2_offset_arrow').css('margin-top')) / 2);
 
               $('#output2_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset).show();
             }
@@ -490,7 +496,7 @@
       visible_info += (visible_info.length ? ',' : '') + '.' + sig_name;
       
       // By default first signal is selected
-      if(! OSC.state.sel_sig_name) {
+      if(! OSC.state.sel_sig_name && !$('#right_menu .not-signal').hasClass('active')) {
         OSC.state.sel_sig_name = sig_name;
         $('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
       }
@@ -584,7 +590,7 @@
     //OSC.params.local['DEBUG_PARAM_PERIOD'] = { value: 200 };
     //OSC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 100 };
     
-	OSC.params.local['in_command'] = { value: 'send_all_params' };
+    OSC.params.local['in_command'] = { value: 'send_all_params' };
     // Send new values and reset the local params object
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
@@ -953,12 +959,8 @@
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
       $('#info_box').html('OUT1 zero offset ' + OSC.convertVoltage(new_value));
-      
-      if($('#out1_dialog').is(':visible')) {
-        $('#SOUR1_VOLT_OFFS').val(+(new_value.toFixed(2)));
-      }
-      else if(save) {
-        OSC.params.local['SOUR1_VOLT_OFFS'] = { value: new_value };
+      if(save) {
+        OSC.params.local['OUTPUT1_SHOW_OFF'] = { value: new_value };
       }
     }
     else if(ui.helper[0].id == 'output2_offset_arrow') {
@@ -966,12 +968,8 @@
       
       new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
       $('#info_box').html('OUT2 zero offset ' + OSC.convertVoltage(new_value));
-      
-      if($('#out2_dialog').is(':visible')) {
-        $('#SOUR2_VOLT_OFFS').val(+(new_value.toFixed(2)));
-      }
-      else if(save) {
-        OSC.params.local['SOUR2_VOLT_OFFS'] = { value: new_value };
+      if(save) {
+        OSC.params.local['OUTPUT2_SHOW_OFF'] = { value: new_value };
       }
     }
     else if(ui.helper[0].id == 'math_offset_arrow') {
