@@ -25,7 +25,7 @@ OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 CRYPTO_DIR=../../../../tools/cryptopp
 CRYPTO_INSTALL_DIR=../../../../tools/build
 
-CXX=arm-xilinx-linux-gnueabi-g++
+CXX=$(CROSS_COMPILE)g++
 CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -Ilicverify/encoder -DNDEBUG
 
 LIB=librp_sdk.a
