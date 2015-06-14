@@ -282,6 +282,10 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	tar -xzf v0.8.7 -C Bazaar/nginx/ngx_ext_modules
 	ln -sf lua-nginx-module-0.8.7 Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 	patch -d Bazaar/nginx/ngx_ext_modules/lua-nginx-module -p1 < patches/lua-nginx-module.patch
+	# Nginx sources
+	wget -nc http://nginx.org/download/nginx-1.5.3.tar.gz
+	tar -xzf nginx-1.5.3.tar.gz -C Bazaar/nginx/
+	patch -d Bazaar/nginx/nginx-1.5.3 -p1 < patches/nginx.patch
 	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
