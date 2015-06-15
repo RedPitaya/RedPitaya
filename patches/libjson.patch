@@ -1,0 +1,24 @@
+diff -rupN libjson.old/JSONOptions.h libjson.new/JSONOptions.h
+--- libjson.old/JSONOptions.h	2012-03-10 04:41:30.000000000 +0100
++++ libjson.new/JSONOptions.h	2015-06-09 16:02:00.952983000 +0200
+@@ -11,7 +11,7 @@
+  *  JSON_LIBRARY must be declared if libjson is compiled as a static or dynamic 
+  *  library.  This exposes a C-style interface, but none of the inner workings of libjson
+  */
+-#define JSON_LIBRARY
++//#define JSON_LIBRARY
+ 
+ 
+ /*
+diff -rupN libjson.old/makefile libjson.new/makefile
+--- libjson.old/makefile	2012-05-30 05:15:42.000000000 +0200
++++ libjson.new/makefile	2015-06-09 16:02:00.976982000 +0200
+@@ -266,7 +266,7 @@ install_headers: banner
+ 	cp -r ./$(srcdir)/JSONDefs $(include_path)/$(libname_hdr)/$(srcdir)
+ 	chmod -R a+r $(include_path)/$(libname_hdr)
+ 	find  $(include_path)/$(libname_hdr) -type d -exec chmod a+x {} \;
+-	cp -rv $(srcdir)/Dependencies/ $(include_path)/$(libname_hdr)/$(srcdir)
++	cp -rv $(srcdir)/../Dependencies/ $(include_path)/$(libname_hdr)/$(srcdir)/../
+ 	@echo "Install header files: Done."
+ 
+ clean: banner

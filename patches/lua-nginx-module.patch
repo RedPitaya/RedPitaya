@@ -1,0 +1,235 @@
+diff -rupN lua-nginx-module.old/config lua-nginx-module.new/config
+--- lua-nginx-module.old/config	2013-09-02 21:58:33.000000000 +0200
++++ lua-nginx-module.new/config	2015-06-12 14:39:57.279348839 +0200
+@@ -6,6 +6,21 @@ ngx_feature_incs="#include <lauxlib.h>"
+ ngx_feature_path=
+ ngx_feature_test="(void) luaL_newstate();"
+ 
++# SYSROOT=../../../../OS/buildroot/buildroot-2014.02/output/host/usr/armeb-buildroot-linux-gnueabi/sysroot
++# LUAJIT_INC="-I ${SYSROOT}/usr/include";
++# LUAJIT_LIB="-L ${SYSROOT}/usr/lib -lluajit";
++
++# ngx_custom_path should be available from wherever the ./configure for Nginx is called
++ngx_custom_path="../../../OS/buildroot/buildroot-2014.02/output/build/luajit-2.0.2/src/"
++LUAJIT_INC="-I ${ngx_custom_path}";
++LUAJIT_LIB="-L ${ngx_custom_path} -lluajit";
++ngx_force_module=yes;
++
++if test -n "$ngx_force_module"; then
++   ngx_found=yes;
++   ngx_feature_path=$LUAJIT_INC;
++   ngx_feature_libs=$LUAJIT_LIB;
++else
+ if [ -n "$LUAJIT_INC" -o -n "$LUAJIT_LIB" ]; then
+     # explicitly set Lua lib path
+     ngx_feature="LuaJIT library in $LUAJIT_LIB and $LUAJIT_INC (specified by the LUAJIT_LIB and LUAJIT_INC env)"
+@@ -163,6 +178,7 @@ END
+         fi
+     fi
+ fi
++fi # ngx_force_module
+ 
+ if [ $ngx_found = yes ]; then
+     CORE_INCS="$CORE_INCS $ngx_feature_path"
+@@ -295,8 +311,8 @@ fi
+ NGX_DTRACE_PROVIDERS="$NGX_DTRACE_PROVIDERS $ngx_addon_dir/dtrace/ngx_lua_provider.d"
+ NGX_TAPSET_SRCS="$NGX_TAPSET_SRCS $ngx_addon_dir/tapset/ngx_lua.stp"
+ 
+-USE_MD5=YES
+-USE_SHA1=YES
++USE_MD5=NO
++USE_SHA1=NO
+ 
+ CORE_INCS="$CORE_INCS $ngx_addon_dir/src/api"
+ 
+diff -rupN lua-nginx-module.old/.gitignore lua-nginx-module.new/.gitignore
+--- lua-nginx-module.old/.gitignore	2013-09-02 21:58:33.000000000 +0200
++++ lua-nginx-module.new/.gitignore	1970-01-01 01:00:00.000000000 +0100
+@@ -1,161 +0,0 @@
+-build/
+-work/
+-tags
+-cscope.*
+-*.mobi
+-genmobi.sh
+-.libs
+-*.swp
+-*.slo
+-*.la
+-*.swo
+-*.lo
+-*~
+-*.o
+-print.txt
+-.rsync
+-*.tar.gz
+-dist
+-build[789]
+-build
+-tags
+-update-readme
+-*.tmp
+-test/Makefile
+-test/blib
+-test.sh
+-t.sh
+-t/t.sh
+-test/t/servroot/
+-releng
+-reset
+-*.t_
+-src/handler.h
+-src/util.c
+-src/module.h
+-src/module.c
+-src/drizzle.c
+-src/processor.h
+-src/handler.c
+-src/util.h
+-src/drizzle.h
+-src/processor.c
+-src/output.c
+-src/output.h
+-libdrizzle
+-ctags
+-src/stream.h
+-nginx
+-keepalive
+-reindex
+-src/keepalive.c
+-src/keepalive.h
+-src/checker.h
+-src/checker.c
+-src/quoting.h
+-src/quoting.c
+-src/module.h
+-src/module.c
+-src/util.h
+-src/util.c
+-src/processor.h
+-src/processor.c
+-src/rds.h
+-src/utils.h
+-src/handler.c
+-src/handler.h
+-util/bench
+-*.html
+-trace.out*
+-try.sh
+-src/cache.c
+-src/cache.h
+-src/common.h
+-src/directive.c
+-src/directive.h
+-src/consts.[ch]
+-src/contentby.[ch]
+-src/pcrefix.[ch]
+-src/util.c
+-src/clfactory.c
+-src/directive.c
+-src/conf.h
+-src/setby.h
+-src/cache.h
+-src/hook.c
+-src/util.h
+-src/hook.h
+-src/common.h
+-src/directive.h
+-src/conf.c
+-src/setby.c
+-src/cache.c
+-src/module.c
+-src/clfactory.h
+-src/capturefilter.[ch]
+-src/contentby.c
+-pack
+-b.sh
+-src/in.[ch]
+-src/out.[ch]
+-go
+-all.sh
+-src/accessby.[ch]
+-src/rewriteby.[ch]
+-src/patch.[ch]
+-src/ndk.[ch]
+-src/control.[ch]
+-src/output.[ch]
+-src/variable.[ch]
+-src/string.[ch]
+-src/misc.[ch]
+-src/log.[ch]
+-src/exception.[ch]
+-src/subrequest.[ch]
+-src/time.[ch]
+-src/regex.[ch]
+-src/ctx.[ch]
+-src/args.[ch]
+-src/headers.[ch]
+-src/script.[ch]
+-src/filter.[ch]
+-src/shdict.[ch]
+-src/body.[ch]
+-src/uri.[ch]
+-src/api.[ch]
+-src/coroutine.[ch]
+-src/logby.[ch]
+-src/sleep.[ch]
+-a.patch
+-all
+-build1[0-9]
+-g
+-buildroot/
+-src/headerfilterby.[ch]
+-*.patch
+-analyze
+-tsock
+-a.c
+-test.lua
+-build12
+-ERRORS
+-src/bodyfilterby.[ch]
+-src/tcp.[ch]
+-src/initby.[ch]
+-src/socket.[ch]
+-src/udp.[ch]
+-src/method.[ch]
+-tre
+-src/phase.[ch]
+-src/probe.h
+-src/uthread.[ch]
+-src/timer.[ch]
+-*.plist
+-lua
+-ttimer
+-Makefile
+-tsubreq
+-tthread
+-addr2line
+-hup
+-theaders
+diff -rupN lua-nginx-module.old/.gitmodules lua-nginx-module.new/.gitmodules
+--- lua-nginx-module.old/.gitmodules	2013-09-02 21:58:33.000000000 +0200
++++ lua-nginx-module.new/.gitmodules	1970-01-01 01:00:00.000000000 +0100
+@@ -1,3 +0,0 @@
+-[submodule "deps/ngx_devel_kit"]
+-	path = deps/ngx_devel_kit
+-	url = git://github.com/simpl/ngx_devel_kit.git
+diff -rupN lua-nginx-module.old/src/ngx_http_lua_socket_tcp.c lua-nginx-module.new/src/ngx_http_lua_socket_tcp.c
+--- lua-nginx-module.old/src/ngx_http_lua_socket_tcp.c	2013-09-02 21:58:33.000000000 +0200
++++ lua-nginx-module.new/src/ngx_http_lua_socket_tcp.c	2015-06-12 14:39:57.283348675 +0200
+@@ -3146,8 +3146,7 @@ ngx_http_lua_req_socket(lua_State *L)
+     }
+ 
+     lua_settop(L, 1);
+-    lua_pushnil(L);
+-    return 2;
++    return 1;
+ }
+ 
+ 
+diff -rupN lua-nginx-module.old/t/.gitignore lua-nginx-module.new/t/.gitignore
+--- lua-nginx-module.old/t/.gitignore	2013-09-02 21:58:33.000000000 +0200
++++ lua-nginx-module.new/t/.gitignore	1970-01-01 01:00:00.000000000 +0100
+@@ -1,2 +0,0 @@
+-servroot
+-

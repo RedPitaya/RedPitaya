@@ -257,7 +257,34 @@ $(URAMDISK): $(INSTALL_DIR)
 $(LIBREDPITAYA):
 	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA)
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
+	# boost library
+	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
+	# websocket++ library
+	wget -nc https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
+	tar -xzf 0.5.0.tar.gz -C Bazaar/nginx/ngx_ext_modules/ws_server
+	ln -sf websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+	# crypto++ library
+	wget -nc http://www.cryptopp.com/cryptopp562.zip
+	mkdir -p Bazaar/tools/cryptopp
+	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
+	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
+	# JSON library
+	wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+	unzip libjson_7.6.1.zip -d Bazaar/tools/
+	patch -d Bazaar/tools/libjson -p1 < patches/libjson.patch
+	unzip libjson_7.6.1.zip -d Bazaar/nginx/ngx_ext_modules/ws_server/
+	patch -d Bazaar/nginx/ngx_ext_modules/ws_server/libjson -p1 < patches/libjson.patch
+	# Nginx LUA module
+	wget -nc https://codeload.github.com/openresty/lua-nginx-module/tar.gz/v0.8.7
+	tar -xzf v0.8.7 -C Bazaar/nginx/ngx_ext_modules
+	ln -sf lua-nginx-module-0.8.7 Bazaar/nginx/ngx_ext_modules/lua-nginx-module
+	patch -d Bazaar/nginx/ngx_ext_modules/lua-nginx-module -p1 < patches/lua-nginx-module.patch
+	# Nginx sources
+	wget -nc http://nginx.org/download/nginx-1.5.3.tar.gz
+	tar -xzf nginx-1.5.3.tar.gz -C Bazaar/nginx/
+	patch -d Bazaar/nginx/nginx-1.5.3 -p1 < patches/nginx.patch
+	# do something
 	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -330,7 +357,9 @@ clean:
 	make -C $(FPGA_DIR) clean
 	make -C $(UBOOT_DIR) clean
 	make -C shared clean
-	make -C $(NGINX_DIR) clean	
+	# todo, remove downloaded libraries and symlinks
+	rm -rf Bazaar/tools/cryptopp
+	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
