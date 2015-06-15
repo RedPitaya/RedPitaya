@@ -35,7 +35,7 @@ $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB): 
-	cd $(WS_SERVER_DIR); $(MAKE) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	make -C $(WS_SERVER_DIR)
 
 $(DEPLIBS):
 	mkdir -p $(DEPLIBS_DIR)
@@ -47,13 +47,13 @@ $(DEPLIBS):
 # TODO: Configure nginx to exclude client_body_temp.
 install:
 	$(STRIP) $(NGINX)
-	test -d '$(DESTDIR)/sbin'     || mkdir -p '$(DESTDIR)/sbin'
-	test -d '$(DESTDIR)/lib'      || mkdir -p '$(DESTDIR)/lib'
-	test -d '$(DESTDIR)/www/conf' || mkdir -p '$(DESTDIR)/www/conf'
-	test -d '$(DESTDIR)/www/logs' || mkdir -p '$(DESTDIR)/www/logs'
-	test -d '$(DESTDIR)/www/apps' || mkdir -p '$(DESTDIR)/www/apps'
+	test -d '$(DESTDIR)/sbin'                 || mkdir -p '$(DESTDIR)/sbin'
+	test -d '$(DESTDIR)/lib'                  || mkdir -p '$(DESTDIR)/lib'
+	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
+	test -d '$(DESTDIR)/www/logs'             || mkdir -p '$(DESTDIR)/www/logs'
+	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
 	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
-	cp $(NGINX) '$(DESTDIR)/sbin/'
+	cp $(NGINX)                     '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
 
