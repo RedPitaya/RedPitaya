@@ -5,7 +5,6 @@
 # Install Debian base system to the root file system
 MIRROR=http://ftp.heanet.ie/pub/debian
 DISTRO=jessie
-ARCH=armel
 debootstrap --foreign --arch $ARCH $DISTRO $ROOT_DIR $MIRROR
 
 # enable chroot access with native execution
