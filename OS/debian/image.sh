@@ -52,6 +52,11 @@ mount $ROOT_DEV $ROOT_DIR
 OVERLAY=OS/debian/overlay
 
 source OS/debian/debian.sh 
+
+# enable chroot access with native execution
+cp /etc/resolv.conf         $ROOT_DIR/etc/
+cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
+
 source OS/debian/redpitaya.sh
 #source OS/debian/wyliodrin.sh
 
@@ -67,4 +72,4 @@ rm $ROOT_DIR/usr/bin/qemu-arm-static
 umount $BOOT_DIR $ROOT_DIR
 rmdir $BOOT_DIR $ROOT_DIR
 
-losetup -d             $DEVICE
+losetup -d $DEVICE
