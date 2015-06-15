@@ -3,32 +3,28 @@
 ################################################################################
 
 # Install Debian base system to the root file system
-mirror=http://ftp.heanet.ie/pub/debian
-distro=jessie
-arch=armel
-debootstrap --foreign --arch $arch $distro $root_dir $mirror
+MIRROR=http://ftp.heanet.ie/pub/debian
+DISTRO=jessie
+ARCH=armel
+debootstrap --foreign --arch $ARCH $DISTRO $ROOT_DIR $MIRROR
 
-# enable chroot access with native execution
-cp /etc/resolv.conf         $root_dir/etc/
-cp /usr/bin/qemu-arm-static $root_dir/usr/bin/
-
-chroot $root_dir <<- EOF_CHROOT
+chroot $ROOT_DIR <<- EOF_CHROOT
 export LANG=C
 /debootstrap/debootstrap --second-stage
 EOF_CHROOT
 
 # copy U-Boot environment tools
-install -v -m 664 -o root -D patches/fw_env.config                      $root_dir/etc/fw_env.config
+install -v -m 664 -o root -D patches/fw_env.config                      $ROOT_DIR/etc/fw_env.config
 
-install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $root_dir/etc/apt/apt.conf.d/99norecommends
-install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $root_dir/etc/apt/sources.list
-install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $root_dir/etc/fstab
-install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $root_dir/etc/hostname
-install -v -m 664 -o root -D $OVERLAY/etc/timezone                      $root_dir/etc/timezone
-install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $root_dir/etc/securetty
+install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $ROOT_DIR/etc/apt/apt.conf.d/99norecommends
+install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DIR/etc/apt/sources.list
+install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DIR/etc/fstab
+install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
+install -v -m 664 -o root -D $OVERLAY/etc/timezone                      $ROOT_DIR/etc/timezone
+install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $ROOT_DIR/etc/securetty
 
 # setup locale and timezune, install packages
-chroot $root_dir <<- EOF_CHROOT
+chroot $ROOT_DIR <<- EOF_CHROOT
 # TODO sees sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
@@ -52,27 +48,23 @@ sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 EOF_CHROOT
 
 # network configuration
-install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/75-persistent-net-generator.rules $root_dir/etc/udev/rules.d/75-persistent-net-generator.rules
-install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $root_dir/etc/network/interfaces.d/eth0
-install -v -m 664 -o root -D $OVERLAY/etc/default/ifplugd                                $root_dir/etc/default/ifplugd
-install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0                     $root_dir/etc/network/interfaces.d/wlan0
-install -v -m 664 -o root -D $OVERLAY/etc/hostapd/hostapd.conf                           $root_dir/etc/hostapd/hostapd.conf
-install -v -m 664 -o root -D $OVERLAY/etc/default/hostapd                                $root_dir/etc/default/hostapd
-install -v -m 664 -o root -D $OVERLAY/etc/dhcp/dhcpd.conf                                $root_dir/etc/dhcp/dhcpd.conf
-install -v -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nat                              $root_dir/etc/iptables.ipv4.nat
-install -v -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nonat                            $root_dir/etc/iptables.ipv4.nonat
+install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/75-persistent-net-generator.rules $ROOT_DIR/etc/udev/rules.d/75-persistent-net-generator.rules
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $ROOT_DIR/etc/network/interfaces.d/eth0
+install -v -m 664 -o root -D $OVERLAY/etc/default/ifplugd                                $ROOT_DIR/etc/default/ifplugd
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0                     $ROOT_DIR/etc/network/interfaces.d/wlan0
+install -v -m 664 -o root -D $OVERLAY/etc/hostapd/hostapd.conf                           $ROOT_DIR/etc/hostapd/hostapd.conf
+install -v -m 664 -o root -D $OVERLAY/etc/default/hostapd                                $ROOT_DIR/etc/default/hostapd
+install -v -m 664 -o root -D $OVERLAY/etc/dhcp/dhcpd.conf                                $ROOT_DIR/etc/dhcp/dhcpd.conf
+install -v -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nat                              $ROOT_DIR/etc/iptables.ipv4.nat
+install -v -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nonat                            $ROOT_DIR/etc/iptables.ipv4.nonat
 
-chroot $root_dir <<- EOF_CHROOT
+chroot $ROOT_DIR <<- EOF_CHROOT
 sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
 EOF_CHROOT
 
-chroot $root_dir <<- EOF_CHROOT
+chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
 apt-get clean
 service ntp stop
 history -c
 EOF_CHROOT
-
-# disable chroot access with native execution
-rm $root_dir/etc/resolv.conf
-rm $root_dir/usr/bin/qemu-arm-static

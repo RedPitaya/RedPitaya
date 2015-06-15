@@ -3,10 +3,10 @@
 ################################################################################
 
 # enable chroot access with native execution
-cp /etc/resolv.conf         $root_dir/etc/
-cp /usr/bin/qemu-arm-static $root_dir/usr/bin/
+cp /etc/resolv.conf         $ROOT_DIR/etc/
+cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 
-chroot $root_dir <<- EOF_CHROOT
+chroot $ROOT_DIR <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
 
@@ -89,5 +89,5 @@ EOF_CAT
 EOF_CHROOT
 
 # disable chroot access with native execution
-rm $root_dir/etc/resolv.conf
-rm $root_dir/usr/bin/qemu-arm-static
+rm $ROOT_DIR/etc/resolv.conf
+rm $ROOT_DIR/usr/bin/qemu-arm-static
