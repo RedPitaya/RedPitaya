@@ -1047,7 +1047,7 @@ void mathThreadFunction() {
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
-    uint32_t _triggerPosition, _getBufSize, _startIndex, _preTriggerCount = 0;
+    uint32_t _triggerPosition, _getBufSize, _startIndex, _preTriggerCount, _writePointer;
     int _triggerDelay, _preZero, _postZero;
     float _deltaSample, _timeScale;
     float data[2][ADC_BUFFER_SIZE];
@@ -1106,6 +1106,11 @@ void *mainThreadFun() {
             _postZero = 0; //(int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
             _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample);
+
+            if(manuallyTriggered && continuousMode) {
+                ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
+                _startIndex = (_writePointer - _getBufSize) % ADC_BUFFER_SIZE;
+            }
 
             // Get data
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
