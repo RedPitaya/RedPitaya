@@ -10,11 +10,18 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
 
-sudo apt-get install -y nodejs npm
 sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config libhiredis0.10 libhiredis-dev
+#sudo apt-get install -y nodejs npm
 
 # apt-get install python-pip
 # pip install redis
+
+# node.js install process, 
+wget https://gist.github.com/raw/3245130/v0.10.24/node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz 
+tar xvzf node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
+cd node-v0.10.24-linux-arm-armv6j-vfp-hard
+cp -R * /usr/local
+cd ..
 
 #==============Am ramas aici============
 #git clone https://gitlab.redpitaya.com/red-pitaya-webtool/red-pitaya-ecosystem.git
@@ -72,9 +79,9 @@ ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
 #end script
 #respawn
 
-cat <<- EOF_CAT > /lib/systemd/system/foo.service
+cat <<- EOF_CAT > /lib/systemd/system/redpitaya_wyliodrin.service
 [Unit]
-Description=Wyliodrin server
+Description=Wyliodrin server for Red Pitaya
 
 [Service]
 Type=forking
@@ -84,6 +91,7 @@ ExecStart=npm start
 WantedBy=multi-user.target
 EOF_CAT
 
+systemctl enable redpitaya_wyliodrin
 EOF_CHROOT
 
 # disable chroot access with native execution
