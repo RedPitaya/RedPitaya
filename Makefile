@@ -173,7 +173,7 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=$(CROSS_COMPILE) all
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
@@ -202,9 +202,7 @@ $(LINUX_DIR): $(LINUX_TAR)
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
-	  -j $(shell grep -c ^processor /proc/cpuinfo) \
-	  CROSS_COMPILE=$(CROSS_COMPILE) UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################
@@ -257,7 +255,7 @@ $(URAMDISK): $(INSTALL_DIR)
 ################################################################################
 
 $(LIBREDPITAYA):
-	$(MAKE) -C shared CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C shared
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	# boost library
@@ -287,54 +285,54 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
 	tar -xzf nginx-1.5.3.tar.gz -C Bazaar/nginx/
 	patch -d Bazaar/nginx/nginx-1.5.3 -p1 < patches/nginx.patch
 	# do something
-	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(IDGEN):
-	$(MAKE) -C $(IDGEN_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	
 $(MONITOR):
-	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(GENERATE):
-	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(GENERATE_DIR)
 	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ACQUIRE):
-	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
-	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
-	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
-	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(LIBRP):
-	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(LIBRPAPP):
-	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(APP_SCOPE_DIR)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUM_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 # Gdb server for remote debugging
@@ -349,7 +347,7 @@ sdkPub:
 	$(MAKE) -C $(SDK_DIR) zip
 
 rp_communication:
-	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
+	make -C $(EXAMPLES_COMMUNICATION_DIR)
 
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
