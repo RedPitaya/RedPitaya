@@ -14,7 +14,7 @@ DATE=`date +"%H_%M_%S__%d_%b_%Y"`
 ARCH=armel
 
 # default image size if 3GB, which is appropriate for all 4BG SD cards
-SIZE=3*1024
+SIZE=3500
 
 #IMAGE=$1
 IMAGE=debian_${ARCH}__${DATE}.img
