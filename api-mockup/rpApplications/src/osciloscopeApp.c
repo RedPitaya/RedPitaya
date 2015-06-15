@@ -103,7 +103,14 @@ int osc_run() {
     clearView();
     EXECUTE_ATOMICALLY(mutex, oscRunning = true);
     ECHECK_APP(threadSafe_acqStart());
-    ECHECK_APP(osc_setTriggerSource(trigSource));
+
+    if (trigSweep == RPAPP_OSC_TRIG_SINGLE) {
+        ECHECK_APP(waitToFillPreTriggerBuffer(false));
+        ECHECK_APP(osc_setTriggerSource(trigSource));
+    } else {
+        ECHECK_APP(osc_setTriggerSource(trigSource));
+    }
+
     START_THREAD(mainThread, mainThreadFun);
     return RP_OK;
 }
