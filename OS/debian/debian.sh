@@ -8,6 +8,10 @@ DISTRO=jessie
 ARCH=armel
 debootstrap --foreign --arch $ARCH $DISTRO $ROOT_DIR $MIRROR
 
+# enable chroot access with native execution
+cp /etc/resolv.conf         $ROOT_DIR/etc/
+cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 export LANG=C
 /debootstrap/debootstrap --second-stage
@@ -68,3 +72,7 @@ apt-get clean
 service ntp stop
 history -c
 EOF_CHROOT
+
+# disable chroot access with native execution
+rm $ROOT_DIR/etc/resolv.conf
+rm $ROOT_DIR/usr/bin/qemu-arm-static
