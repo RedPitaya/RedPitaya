@@ -8,7 +8,7 @@
 ################################################################################
 
 # current time and date are used to create the image name
-DATE=`date +"%H_%M_%S__%d_%b_%Y"`
+DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 
 # the ABI (armel/armhf) provided by the compiler is used to create the image name
 ARCH=armel
@@ -17,7 +17,7 @@ ARCH=armel
 SIZE=3500
 
 #IMAGE=$1
-IMAGE=debian_${ARCH}__${DATE}.img
+IMAGE=debian_${ARCH}_${DATE}.img
 
 dd if=/dev/zero of=$IMAGE bs=1M count=$SIZE
 
