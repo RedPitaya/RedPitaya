@@ -992,6 +992,27 @@ int waitToFillPreTriggerBuffer(bool testcancel) {
     return RP_OK;
 }
 
+int waitToFillAfterTriggerBuffer(bool testcancel) {
+    double localTimer = testcancel ? threadTimer : _clock() + WAIT_TO_FILL_BUF_TIMEOUT;
+    float deltaSample, timeScale;
+    uint32_t _writePointer, _triggerPosition;
+    int triggerDelay;
+
+    ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
+    ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
+    ECHECK_APP(osc_getTimeScale(&timeScale));
+    deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+
+    do {
+        ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
+
+        if(testcancel)
+            pthread_testcancel();
+
+    } while (((_writePointer - (_triggerPosition + triggerDelay)) % ADC_BUFFER_SIZE) <= (viewSize/2)*deltaSample && localTimer > _clock());
+    return RP_OK;
+}
+
 /*
 * Thread functions
 */
@@ -1066,6 +1087,10 @@ void *mainThreadFun() {
             ECHECK_APP_THREAD(rp_AcqGetTriggerDelay(&_triggerDelay));
             ECHECK_APP_THREAD(rp_AcqGetPreTriggerCounter(&_preTriggerCount));
 
+            if((_state == RP_TRIG_STATE_TRIGGERED) && (_triggerSource != RP_TRIG_SRC_DISABLED)) {
+                waitToFillAfterTriggerBuffer(true);
+            }
+
             // Calculate transformation (form data to view) parameters
             _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
             _triggerDelay = _triggerDelay % ADC_BUFFER_SIZE;
@@ -1106,9 +1131,9 @@ void *mainThreadFun() {
             // Write data to view buffer
             for (rp_channel_t channel = RP_CH_1; channel <= RP_CH_2; ++channel) {
                 // first preZero data are wrong - from previout trigger. Last preZero data hasn't been overwritten
-                for (int i = 0; i < _preZero; ++i) {
-                    view[channel * viewSize + i] = 0;
-                }
+//                for (int i = 0; i < _preZero; ++i) {
+//                    view[channel * viewSize + i] = 0;
+//                }
                 for (int i = 0; i < viewSize-_postZero && (int) (i * _deltaSample) < _getBufSize; ++i) {
                     ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
                 }
