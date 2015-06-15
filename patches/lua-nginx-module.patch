@@ -5,7 +5,7 @@ diff -rupN lua-nginx-module.old/config lua-nginx-module.new/config
  ngx_feature_path=
  ngx_feature_test="(void) luaL_newstate();"
  
-+# SYSROOT=../../../../OS/buildroot/buildroot-2014.02/output/host/usr/armeb-buildroot-linux-gnueabi/sysroot
++# SYSROOT=../../../../OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabi/sysroot
 +# LUAJIT_INC="-I ${SYSROOT}/usr/include";
 +# LUAJIT_LIB="-L ${SYSROOT}/usr/lib -lluajit";
 +
