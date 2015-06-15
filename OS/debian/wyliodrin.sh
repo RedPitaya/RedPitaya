@@ -11,9 +11,7 @@ echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
 
 sudo apt-get install -y nodejs npm
-sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools
-sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
-sudo apt-get install -y libhiredis0.10 libhiredis-dev
+sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config libhiredis0.10 libhiredis-dev
 
 # apt-get install python-pip
 # pip install redis
@@ -80,7 +78,7 @@ Description=Wyliodrin server
 
 [Service]
 Type=forking
-ExecStart=chdir ~/ wyliodrin server
+ExecStart=npm start
 
 [Install]
 WantedBy=multi-user.target
