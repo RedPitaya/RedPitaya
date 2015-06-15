@@ -26,7 +26,8 @@ all: $(CRYPTO_LIB) $(SOURCES) $(EXECUTABLE)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	cd $(CRYPTO_DIR); chmod +x build.sh; ./build.sh
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
 
 $(EXECUTABLE):	$(OBJECTS)
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
@@ -36,4 +37,4 @@ $(EXECUTABLE):	$(OBJECTS)
 
 clean: 
 	rm -rf $(EXECUTABLE) $(OBJECTS)
-	$(MAKE) -C $(CRYPTO_DIR) clean
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
