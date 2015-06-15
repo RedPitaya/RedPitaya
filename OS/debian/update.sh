@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ################################################################################
 #
 ################################################################################
@@ -37,7 +37,7 @@ cp /etc/resolv.conf         $ROOT_DIR/etc/
 cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 
 #source OS/debian/redpitaya.sh
-source OS/debian/wyliodrin.sh
+. OS/debian/wyliodrin.sh
 
 # disable chroot access with native execution
 rm $ROOT_DIR/etc/resolv.conf
