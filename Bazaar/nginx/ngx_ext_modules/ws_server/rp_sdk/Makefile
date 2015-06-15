@@ -1,5 +1,3 @@
-CXX=arm-xilinx-linux-gnueabi-g++
-CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -DNDEBUG -DALWAYS_PURCHASED
 SOURCES= DataManager.cpp \
 	licverify/LicenseVerificator.cpp \
 	licverify/encoder/encoder.cpp \
@@ -24,11 +22,14 @@ OBJDIR=./objs
 SDKOBJDIR=$(OBJDIR)/rp_sdk
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
-CRYPTO_DIR=cryptopp/
-CRYPTO_INSTALL_DIR=build/
-CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
+CRYPTO_DIR=../../../../tools/cryptopp
+CRYPTO_INSTALL_DIR=../../../../tools/build
+
+CXX=$(CROSS_COMPILE)g++
+CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -Ilicverify/encoder -DNDEBUG
 
 LIB=librp_sdk.a
+CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
 
 CURRENT_DIR := $(shell pwd)
 
@@ -36,7 +37,8 @@ all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	cd $(CRYPTO_DIR); ./build.sh
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
     
 $(LIB): $(OBJECTS)
 	mkdir -p $(OBJDIR)/cryptopp
@@ -49,4 +51,5 @@ $(SDKOBJDIR)/%.o: %.cpp
 
 clean:
 	rm -rf $(LIB) $(OBJDIR)
-	cd $(CRYPTO_DIR); ./clean.sh
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build remove
