@@ -701,7 +701,7 @@ int spec_run(const wf_func_table_t* wf_f)
         return -1;
     }
 
-	memcpy(rp_default_params, rp_main_params, PARAMS_NUM + 1);
+	memcpy(rp_default_params, rp_main_params, sizeof(rp_default_params));
     rp_set_params(rp_main_params, PARAMS_NUM);
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
