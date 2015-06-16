@@ -26,7 +26,7 @@ CRYPTO_DIR=../../../../tools/cryptopp
 CRYPTO_INSTALL_DIR=../../../../tools/build
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -Ilicverify/encoder -DNDEBUG
+CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -Ilicverify/encoder -DNDEBUG -DALWAYS_PURCHASED
 
 LIB=librp_sdk.a
 CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
