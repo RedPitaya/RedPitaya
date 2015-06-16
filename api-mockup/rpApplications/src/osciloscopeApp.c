@@ -24,7 +24,6 @@
 #include "common.h"
 #include "../../rpbase/src/common.h"
 
-volatile bool auto_freRun_mode = false;
 volatile bool acqRunning = false;
 volatile bool oscRunning = false;
 volatile bool clear = false;
@@ -104,7 +103,14 @@ int osc_run() {
     clearView();
     EXECUTE_ATOMICALLY(mutex, oscRunning = true);
     ECHECK_APP(threadSafe_acqStart());
-    ECHECK_APP(osc_setTriggerSource(trigSource));
+
+    if (trigSweep == RPAPP_OSC_TRIG_SINGLE) {
+        ECHECK_APP(waitToFillPreTriggerBuffer(false));
+        ECHECK_APP(osc_setTriggerSource(trigSource));
+    } else {
+        ECHECK_APP(osc_setTriggerSource(trigSource));
+    }
+
     START_THREAD(mainThread, mainThreadFun);
     return RP_OK;
 }
@@ -463,7 +469,6 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
         case RPAPP_OSC_TRIG_SINGLE:
             break;
         case RPAPP_OSC_TRIG_AUTO:
-        EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
         case RPAPP_OSC_TRIG_NORMAL:
             if (!acqRunning) {
                 ECHECK_APP(threadSafe_acqStart());
@@ -506,6 +511,8 @@ int osc_getViewPart(float *ratio) {
 
 int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     float resMax, resMin, max = -FLT_MAX, min = FLT_MAX;
+
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
@@ -514,6 +521,8 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
             min = view[source*viewSize + i];
         }
     }
+    pthread_mutex_unlock(&mutex);
+
     ECHECK_APP(unscaleAmplitudeChannel(source, max, &resMax));
     ECHECK_APP(unscaleAmplitudeChannel(source, min, &resMin));
     *Vpp = resMax - resMin;
@@ -522,31 +531,43 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
 
 int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
     float sum = 0;
+    
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
         sum += view[source*viewSize + i];
     }
+    pthread_mutex_unlock(&mutex);
+
     ECHECK_APP(unscaleAmplitudeChannel(source, sum / viewSize, meanVoltage));
     return RP_OK;
 }
 
 int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
     float max = -FLT_MAX;
+    
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
         }
     }
+    pthread_mutex_unlock(&mutex);
+
     ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
     return RP_OK;
 }
 
 int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
     float min = FLT_MAX;
+    
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] < min) {
             min = view[source*viewSize + i];
         }
     }
+    pthread_mutex_unlock(&mutex);
+
     ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
     return RP_OK;
 }
@@ -559,11 +580,16 @@ int osc_measureFrequency(rpApp_osc_source source, float *frequency) {
 }
 
 int osc_measurePeriod(rpApp_osc_source source, float *period) {
-    float* data = view + source*viewSize;
+    float data[viewSize];
+    float* ch_view = view + source*viewSize;
+
+    pthread_mutex_lock(&mutex);
     float mean = 0;
     for (int i = 0; i < viewSize; ++i) {
+        data[i] = ch_view[i];
         mean += data[i];
     }
+    pthread_mutex_unlock(&mutex);
 
     mean = mean / viewSize;
     for (int i = 0; i < viewSize; ++i){
@@ -610,11 +636,6 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     if(left_edge_idx == 0) {
-#if 0
-        fprintf(stderr, "left_edge_idx == 0\n");
-        fprintf(stderr, "source = %d\n", source);
-        fprintf(stderr, "dataSize = %d\n", dataSize);
-#endif
         return RP_APP_ECP;
     }
 
@@ -627,11 +648,6 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     if(left_idx == 0) {
-#if 0		
-        fprintf(stderr, "left_idx == 0\n");
-        fprintf(stderr, "source = %d\n", source);
-        fprintf(stderr, "dataSize = %d\n", dataSize);
-#endif
         return RP_APP_ECP;
     }
 
@@ -687,25 +703,6 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     float idx = ((left_amax_idx + right_amax_idx) / 2.f) * viewScale;
     *period = indexToTime(idx);
 
-#if 0
-    static int counter = 0;
-    if((*period >= 1.1f) || ((counter % 20) == 0)) {
-        fprintf(stderr, "source = %d\n", source);
-        fprintf(stderr, "dataSize = %d\n", dataSize);
-
-        fprintf(stderr, "left_edge_idx = %d\n", left_edge_idx);
-        fprintf(stderr, "left_idx = %d\n", left_idx);
-
-        fprintf(stderr, "right_edge_idx = %d\n", right_edge_idx);
-        fprintf(stderr, "right_idx = %d\n", right_idx);
-
-        fprintf(stderr, "max_idx = %d\n", max_idx);
-        fprintf(stderr, "left_amax_idx = %d\n", left_amax_idx);
-        fprintf(stderr, "right_amax_idx = %d\n", right_amax_idx);
-        fprintf(stderr, "*period = %f\n", *period);
-    }
-    ++counter;
-#endif
     return RP_OK;
 }
 
@@ -714,20 +711,28 @@ int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
     float meanValue;
     ECHECK_APP(osc_measureMeanVoltage(source, &meanValue));
     ECHECK_APP(scaleAmplitudeChannel(source, meanValue, &meanValue))
+
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
         if (view[source*viewSize + i] > meanValue) {
             ++highTime;
         }
     }
+    pthread_mutex_unlock(&mutex);
+
     *dutyCycle = (float)highTime / (float)viewSize;
     return RP_OK;
 }
 
 int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms) {
     float rmsValue = 0;
+
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
         rmsValue += view[source*viewSize + i] * view[source*viewSize + i];
     }
+    pthread_mutex_unlock(&mutex);
+
     *rms = (float) sqrt(rmsValue / viewSize);
     return RP_OK;
 }
@@ -798,21 +803,26 @@ int osc_getMathSources(rp_channel_t *source1, rp_channel_t *source2) {
 }
 
 int osc_getData(rpApp_osc_source source, float *data, uint32_t size) {
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < size; ++i) {
         data[i] = view[source*viewSize + i];
     }
+    pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
 
 int osc_setViewSize(uint32_t size) {
     viewSize = size;
     samplesPerDivision = (float) viewSize / (float) DIVISIONS_COUNT_X;
+    
+    pthread_mutex_lock(&mutex);
     view = realloc(view, 3 * viewSize * sizeof(float));
     if (view == NULL) {
-        free(view);
-        view = NULL;
+        pthread_mutex_unlock(&mutex);
         return RP_EAA;
     }
+    pthread_mutex_unlock(&mutex);
+
     EXECUTE_ATOMICALLY(mutex, clearView());
     return RP_OK;
 }
@@ -959,7 +969,6 @@ void clearView() {
         view[i] = 0;
     }
     clear = true;
-    auto_freRun_mode = false;
 }
 
 void clearMath() {
@@ -991,21 +1000,18 @@ int waitToFillPreTriggerBuffer(bool testcancel) {
 }
 
 int waitToFillAfterTriggerBuffer(bool testcancel) {
-    if (continuousMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
-        return RP_OK;
-    }
-
     double localTimer = testcancel ? threadTimer : _clock() + WAIT_TO_FILL_BUF_TIMEOUT;
     float deltaSample, timeScale;
     uint32_t _writePointer, _triggerPosition;
     int triggerDelay;
 
+    ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
+    ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
+    ECHECK_APP(osc_getTimeScale(&timeScale));
+    deltaSample = timeToIndex(timeScale) / samplesPerDivision;
+
     do {
-        ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
         ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
-        ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
-        ECHECK_APP(osc_getTimeScale(&timeScale));
-        deltaSample = timeToIndex(timeScale) / samplesPerDivision;
 
         if(testcancel)
             pthread_testcancel();
@@ -1039,9 +1045,9 @@ void mathThreadFunction() {
 }
 
 void *mainThreadFun() {
-    rp_acq_trig_src_t _triggerSource, _triggerSourceSaved;
+    rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
-    uint32_t _triggerPosition, _getBufSize, _startIndex, _writePointer = 0, _preTriggerCount = 0;
+    uint32_t _triggerPosition, _getBufSize, _startIndex, _preTriggerCount, _writePointer;
     int _triggerDelay, _preZero, _postZero;
     float _deltaSample, _timeScale;
     float data[2][ADC_BUFFER_SIZE];
@@ -1057,62 +1063,54 @@ void *mainThreadFun() {
 
         thisLoopAcqStart = false;
 
+        ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
+
         if (clear && acqRunning) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_THREAD(threadSafe_acqStart());
+
+            threadTimer = (trigSweep == RPAPP_OSC_TRIG_AUTO) ? MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X)) : WAIT_TO_FILL_BUF_TIMEOUT;
+            threadTimer += _clock();
+            manuallyTriggered = false;
+
             waitToFillPreTriggerBuffer(true);
-            thisLoopAcqStart = false;
+
             ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
-            EXECUTE_ATOMICALLY(mutex, auto_freRun_mode = false)
             EXECUTE_ATOMICALLY(mutex, clear = false)
         }
 
-        ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
-        ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
-
         // If in auto mode end trigger timed out
         if (acqRunning && !manuallyTriggered && trigSweep == RPAPP_OSC_TRIG_AUTO && (threadTimer < _clock())) {
-            _triggerSourceSaved = _triggerSource;
-            ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-            ECHECK_APP_THREAD(threadSafe_acqStart());
+            ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             manuallyTriggered = true;
-            uint32_t start_point;
-            ECHECK_APP_THREAD(rp_AcqGetWritePointer(&start_point));
-            _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
-            do {
-                ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
-                pthread_testcancel();
-            } while ((_writePointer - start_point) % ADC_BUFFER_SIZE < (viewSize * _deltaSample));
-            ECHECK_APP_THREAD(threadSafe_acqStop());
         }
 
+        ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
         ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
 
-        if ((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED) || manuallyTriggered) {
-            if(!manuallyTriggered) {
-                waitToFillAfterTriggerBuffer(true);
-            }
-
+        if ((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED)) {
             // Read parameters
-            ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
             ECHECK_APP_THREAD(rp_AcqGetWritePointerAtTrig(&_triggerPosition));
             ECHECK_APP_THREAD(rp_AcqGetTriggerDelay(&_triggerDelay));
             ECHECK_APP_THREAD(rp_AcqGetPreTriggerCounter(&_preTriggerCount));
+
+            if((_state == RP_TRIG_STATE_TRIGGERED) && (_triggerSource != RP_TRIG_SRC_DISABLED)) {
+                waitToFillAfterTriggerBuffer(true);
+            }
 
             // Calculate transformation (form data to view) parameters
             _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
             _triggerDelay = _triggerDelay % ADC_BUFFER_SIZE;
 
-            _preZero = continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
-            _postZero = (int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
+            _preZero = 0; //continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
+            _postZero = 0; //(int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
-
-            if (manuallyTriggered) {
-                _preZero = 0;
-                _postZero = 0;
-                _startIndex = (_writePointer - (uint32_t) ((viewSize - _preZero) * _deltaSample)) % ADC_BUFFER_SIZE;
-            }
             _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample);
+
+            if(manuallyTriggered && continuousMode) {
+                ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
+                _startIndex = (_writePointer - _getBufSize) % ADC_BUFFER_SIZE;
+            }
 
             // Get data
             ECHECK_APP_THREAD(rp_AcqGetDataV(RP_CH_1, _startIndex, &_getBufSize, data[0]));
@@ -1131,10 +1129,9 @@ void *mainThreadFun() {
 
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {
-                threadTimer = _clock() + MAX(0.05f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X));
+                threadTimer = _clock() + MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X));
 
-                if (manuallyTriggered) {
-                    ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(_triggerSourceSaved));
+                if (manuallyTriggered && !thisLoopAcqStart) {
                     ECHECK_APP_THREAD(threadSafe_acqStart());
                     thisLoopAcqStart = true;
                 }
@@ -1142,18 +1139,21 @@ void *mainThreadFun() {
                 threadTimer = _clock() + WAIT_TO_FILL_BUF_TIMEOUT;
             }
 
+            pthread_mutex_lock(&mutex);
             // Write data to view buffer
             for (rp_channel_t channel = RP_CH_1; channel <= RP_CH_2; ++channel) {
                 // first preZero data are wrong - from previout trigger. Last preZero data hasn't been overwritten
-                for (int i = 0; i < _preZero; ++i) {
-                    view[channel * viewSize + i] = 0;
-                }
+//                for (int i = 0; i < _preZero; ++i) {
+//                    view[channel * viewSize + i] = 0;
+//                }
                 for (int i = 0; i < viewSize-_postZero && (int) (i * _deltaSample) < _getBufSize; ++i) {
                     ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
                 }
             }
 
             mathThreadFunction();
+            pthread_mutex_unlock(&mutex);
+
             manuallyTriggered = false;
         }
 
