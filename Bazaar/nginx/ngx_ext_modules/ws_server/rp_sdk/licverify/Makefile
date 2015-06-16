@@ -1,5 +1,5 @@
 CC=$(CROSS_COMPILE)g++
-CFLAGS=-c -Wall -static -std=c++11 -Ibuild/include/cryptopp -I../../libjson -Iencoder -DALWAYS_PURCHASED
+CFLAGS=-c -Wall -static -std=c++11 -Ibuild/include/cryptopp -I../../libjson -Iencoder
 LDFLAGS= -Lbuild/lib -lcryptopp
 SOURCES= main.cpp \
 	LicenseVerificator.cpp \
