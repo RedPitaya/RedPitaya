@@ -291,7 +291,7 @@ WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 CRYPTOPP_DIR    = Bazaar/tools/cryptopp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
-NGINX_DIR       = Bazaar/nginx/nginx-1.5.3
+NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
 $(WEBSOCKETPP_TAR):
@@ -300,7 +300,7 @@ $(WEBSOCKETPP_TAR):
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
-	tar -zxf $< --strip-components=1 --directory=$@
+	tar -xzf $< --strip-components=1 --directory=$@
 
 $(CRYPTOPP_TAR):
 	mkdir -p $(@D)
@@ -326,22 +326,22 @@ $(LUANGINX_TAR):
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
-	tar -zxf $< --strip-components=1 --directory=$@
+	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
 $(NGINX_TAR):
 	mkdir -p $(@D)
 	curl -L $(NGINX_URL) -o $@
 
-$(NGINX_DIR): $(NGINX_TAR)
+$(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
-	tar -zxf $< --strip-components=1 --directory=$@
+	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/nginx.patch
 
 $(BOOST_DIR): $(URAMDISK)
-	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $<
+	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_DIR) $(BOOST_DIR)
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
