@@ -141,7 +141,6 @@
 
         if(receive.parameters) {
 			SPEC.processParameters(receive.parameters);
-			console.log([Object.keys(SPEC.params.orig).length, Object.keys(receive.parameters).length, Object.keys(SPEC.params.orig).length == 0 && Object.keys(receive.parameters).length < 30]);
 			if(Object.keys(SPEC.params.orig).length < 30 && Object.keys(receive.parameters).length < 30) {
 				SPEC.params.local['in_command'] = { value: 'send_all_params' };
 				SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
@@ -189,7 +188,7 @@
 			var freq_unit1 = 'Hz';
 			if (new_params['peak1_unit'])
 				freq_unit1 = (new_params['peak1_unit'].value == 1 ? 'k' : (new_params['peak1_unit'].value == 2 ? 'M' : '')) + 'Hz';
-			if (new_params['peak1_power'] && new_params['peak1_freq'])
+			if (new_params['peak1_power'] && new_params['peak1_freq'] && !$('#CH1_FREEZE').hasClass('active'))
 				$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);		
 		}
 		/*else*/ if (param_name == 'peak2_unit')
@@ -198,7 +197,8 @@
 			var freq_unit2 = 'Hz';
 			if (new_params['peak2_unit'])
 				freq_unit2 = (new_params['peak2_unit'].value == 1 ? 'k' : (new_params['peak2_unit'].value == 2 ? 'M' : '')) + 'Hz';
-			$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
+			if (new_params['peak2_power'] && new_params['peak2_freq'] && !$('#CH2_FREEZE').hasClass('active'))
+				$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
 		}
 		/*else*/ if(param_name == 'w_idx')
 		{
@@ -334,43 +334,42 @@
     
 	// Keep the datasets for frozen channels
 	var frozen_dsets = [
-	  ($('#CH1_FREEZE').hasClass('active') && SPEC.datasets[0] !== undefined ? SPEC.datasets[0] : null),
-	  ($('#CH2_FREEZE').hasClass('active') && SPEC.datasets[1] !== undefined ? SPEC.datasets[1] : null)
+	  (($('#CH1_FREEZE').hasClass('active') && SPEC.datasets[0] !== undefined) ? SPEC.datasets[0] : null),
+	  (($('#CH2_FREEZE').hasClass('active')) ? (SPEC.datasets[1] ? SPEC.datasets[1] : SPEC.datasets[0]) : null)
 	];
-
 	SPEC.datasets = [];
 	var sig_count = 0;
     // (Re)Draw every signal
+$('#waterfall-holder_ch1').hide();
+$('#waterfall-holder_ch2').hide();
     for(sig_name in new_signals) {
 	// Ignore empty signals
       if(new_signals[sig_name].size == 0) {
         continue;
       }
-	  if(sig_name == "freq_ch"){
-		continue;
-	  }
+
       sig_count++;
       // Ignore disabled signals
       if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
-		$('#info .left-info .info-title .' + sig_name + ', #info .left-info .info-value .'+ sig_name).hide();     
-		$('#waterfall-holder_' + sig_name).hide();    
+		
+		$('#info .left-info .info-title .' + sig_name + ', #info .left-info .info-value .'+ sig_name).hide();
+		$('#waterfall-holder_' + sig_name).hide();  
 		continue;
       }
       
       var points = [];
       var color = SPEC.config.graph_colors[sig_name];
 
-	  if(frozen_dsets[sig_count-1]){
-		points = frozen_dsets[sig_count-1].data;
+	  var idx = sig_name[sig_name.length-1] - '0' - 1;
+	  if(frozen_dsets[idx]){
+		points = frozen_dsets[idx].data;
 	  }
-	  else {
-		if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin'])
-			for(var i = 0; i < new_signals[sig_name].size; i++) {
-
-				var d = (SPEC.params.orig['xmax'].value - SPEC.params.orig['xmin'].value)/(new_signals[sig_name].size - 1);
-				var p = d*i;
-    	   	 	points.push([p, new_signals[sig_name].value[i]]);
-    	  	}
+	  else if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin']) {
+		for(var i = 0; i < new_signals[sig_name].size; i++) {
+			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size - 1);
+			var p = d*i;
+	   	 	points.push([p, new_signals[sig_name].value[i]]);
+	  	}
 	  }
 	  SPEC.datasets.push({ color: color, data: points}); 
 	  var sig_btn = $('#right_menu .menu-btn.' + sig_name);
@@ -476,7 +475,12 @@
       else if(field.is('input:radio')) {
         value = $('input[name="' + key + '"]:checked').val();
       }
-      
+
+	if (SPEC.params.orig['CH1_SHOW'].value)
+		$('#waterfall-holder_ch1').show();
+	else
+        $('#waterfall-holder_ch1').hide();
+
       if(value !== undefined && value != SPEC.params.orig[key].value) {
         console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
         SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
@@ -703,13 +707,8 @@
   };
 	
   SPEC.isVisibleChannels = function(){
-	
-	var is_visible = false;
-
-	if((SPEC.params.orig['CH1_SHOW'] && SPEC.params.orig['CH1_SHOW'].value == true)  || 
-		(SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value == true))
-		is_visible = true;
-	return is_visible;
+	return ((SPEC.params.orig.CH1_SHOW && SPEC.params.orig.CH1_SHOW.value == true)  
+		|| (SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value == true));
   };
 
   SPEC.getPlot = function(){
@@ -833,7 +832,8 @@
       }
 
       i = Math.min(l, dsets.length - 1);
-
+	  if (i < 0)
+		return [];
       filtered.push({ color: dsets[i].color, data: [] });
       
       if(SPEC.points_per_px === null || dsets[i].data.length > points * SPEC.points_per_px) {
@@ -1035,10 +1035,12 @@
   SPEC.updateImg = function(img, hide){
 	  if(hide && $('#wait_' + $(img).attr('id')).is(':visible')){
 		$('#wait_' + $(img).attr('id')).hide();
+		SPEC.config.graph_colors['ch1'] = '#f3ec1a'; // hide ch1
 		return;
 	  }
 	  if(!hide && $('#wait_' + $(img).attr('id')).is(':hidden')){
 		$('#wait_' + $(img).attr('id')).show();
+	    SPEC.config.graph_colors['ch1'] = '#343433';
 	  }
 	  
   };
