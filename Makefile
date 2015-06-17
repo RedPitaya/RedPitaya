@@ -133,14 +133,14 @@ export VERSION
 # directories
 ################################################################################
 
-$(TMP):
-	mkdir -p $@
-
 ################################################################################
 # external sources
 ################################################################################
 
 all: zip
+
+$(TMP):
+	mkdir -p $@
 
 $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication
 	mkdir $(TARGET)
