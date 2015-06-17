@@ -75,11 +75,15 @@ void UpdateParams(void)
 		return;
 
 	int ret = rpApp_SpecGetJpgIdx(&w_idx.Value());
-	ret = rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
-	ret = rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());
+	if (in1Show.Value()) {
+		ret = rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
+		ret = rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
+	}
 
-	ret = rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
-	ret = rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
+	if (in2Show.Value()) {
+		ret = rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
+		ret = rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
+	}
 	rp_EnableDigitalLoop(false); // IsDemoParam.Value()); // FIXME
 }
 
@@ -153,6 +157,10 @@ void OnNewParams(void)
     cursor2V.Update();
     cursor1T.Update();
     cursor2T.Update();
+
+	xmin.Update();
+	if (xmin.Value() < 0)
+		xmin.Value() = 0;
 
 	if (xmax.IsNewValue() || freq_unit.IsNewValue())
 	{
