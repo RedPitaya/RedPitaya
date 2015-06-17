@@ -1,22 +1,23 @@
+LIBJSON_DIR=../../../tools/libjson
 SYSROOT=../../../../OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabi/sysroot/
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O3 -static -std=c++11 -Iwebsocketpp -I$(SYSROOT)/usr/include -L$(SYSROOT)/usr/lib/ -L. -lboost_system
+CXXFLAGS=-c -Wall -O3 -static -std=c++11 -Iwebsocketpp -I$(SYSROOT)/usr/include -I$(LIBJSON_DIR) -I$(LIBJSON_DIR)/.. -L$(SYSROOT)/usr/lib/ -L. -lboost_system
 SOURCES= rp_websocket_server.cpp \
 	ws_server.cpp \
-	libjson/_internal/Source/internalJSONNode.cpp \
-	libjson/_internal/Source/JSONChildren.cpp \
-	libjson/_internal/Source/JSONDebug.cpp \
-	libjson/_internal/Source/JSONIterators.cpp \
-	libjson/_internal/Source/JSONMemory.cpp \
-	libjson/_internal/Source/JSONNode_Mutex.cpp \
-	libjson/_internal/Source/JSONNode.cpp \
-	libjson/_internal/Source/JSONWorker.cpp \
-	libjson/_internal/Source/JSONWriter.cpp \
-	libjson/_internal/Source/libjson.cpp \
-	libjson/_internal/Source/JSONValidator.cpp \
-	libjson/_internal/Source/JSONStream.cpp \
-	libjson/_internal/Source/JSONAllocator.cpp \
-    	libjson/_internal/Source/JSONPreparse.cpp \
+	$(LIBJSON_DIR)/_internal/Source/internalJSONNode.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONChildren.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONDebug.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONIterators.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONMemory.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONNode_Mutex.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONNode.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONWorker.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONWriter.cpp \
+	$(LIBJSON_DIR)/_internal/Source/libjson.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONValidator.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONStream.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONAllocator.cpp \
+    	$(LIBJSON_DIR)/_internal/Source/JSONPreparse.cpp \
 	
 OBJECTS=$(SOURCES:.cpp=.o)
 LIB=libws_server.a
