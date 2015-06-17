@@ -117,6 +117,7 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope
 APP_SPECTRUM_DIR = Applications/spectrum-new
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
+################################################################################
 # Versioning system
 ################################################################################
 
@@ -127,6 +128,13 @@ VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
+
+################################################################################
+# directories
+################################################################################
+
+$(TMP):
+	mkdir -p $@
 
 ################################################################################
 # external sources
@@ -245,44 +253,95 @@ $(URAMDISK): $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
-# debian image
-################################################################################
-
-################################################################################
-# Red Pitaya ecosystem
+# API libraries
 ################################################################################
 
 $(LIBREDPITAYA):
 	$(MAKE) -C shared
 
+$(LIBRP):
+	$(MAKE) -C $(LIBRP_DIR)
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(LIBRPAPP):
+	$(MAKE) -C $(LIBRPAPP_DIR)
+	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+################################################################################
+# Red Pitaya ecosystem
+################################################################################
+
+WEBSOCKETPP_TAG = 0.5.0
+LUANGINX_TAG    = v0.8.7
+NGINX_TAG       = 1.5.3
+
+WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
+CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp562.zip
+LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
+NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
+
+WEBSOCKETPP_TAR = $(TMP)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
+CRYPTOPP_TAR    = $(TMP)/cryptopp562.zip
+LIBJSON_TAR     = $(TMP)/libjson_7.6.1.zip
+LUANGINX_TAR    = $(TMP)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
+NGINX_TAR       = $(TMP)/nginx-$(NGINX_TAG).tar.gz
+
+WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+CRYPTOPP_DIR    = Bazaar/tools/cryptopp
+LIBJSON_DIR     = Bazaar/tools/libjson
+LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
+NGINX_DIR       = Bazaar/nginx/nginx-1.5.3
+BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
+
+$(WEBSOCKETPP_TAR):
+	mkdir -p $(@D)
+	curl -L $(WEBSOCKETPP_URL) -o $@
+
+$(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+
+$(CRYPTOPP_TAR):
+	mkdir -p $(@D)
+	curl -L $(CRYPTOPP_URL) -o $@
+
+$(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
+	mkdir -p $@
+	unzip $< -d $@
+	patch -d $@ -p1 < patches/cryptopp.patch
+
+$(LIBJSON_TAR):
+	mkdir -p $(@D)
+	curl -L $(LIBJSON_URL) -o $@
+
+$(LIBJSON_DIR): $(LIBJSON_TAR)
+	mkdir -p $@
+	unzip $< -d $(@D)
+	patch -d $@ -p1 < patches/libjson.patch
+
+$(LUANGINX_TAR):
+	mkdir -p $(@D)
+	curl -L $(LUANGINX_URL) -o $@
+
+$(LUANGINX_DIR): $(LUANGINX_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+	patch -d $@ -p1 < patches/lua-nginx-module.patch
+
+$(NGINX_TAR):
+	mkdir -p $(@D)
+	curl -L $(NGINX_URL) -o $@
+
+$(NGINX_DIR): $(NGINX_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+	patch -d $@ -p1 < patches/nginx.patch
+
+$(BOOST_DIR): $(URAMDISK)
+	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $<
+
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
-	# boost library
-	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 Bazaar/nginx/ngx_ext_modules/ws_server/boost
-	# websocket++ library
-	wget -nc https://github.com/zaphoyd/websocketpp/archive/0.5.0.tar.gz
-	tar -xzf 0.5.0.tar.gz -C Bazaar/nginx/ngx_ext_modules/ws_server
-	ln -sf websocketpp-0.5.0 Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
-	# crypto++ library
-	wget -nc http://www.cryptopp.com/cryptopp562.zip
-	mkdir -p Bazaar/tools/cryptopp
-	unzip cryptopp562.zip -d Bazaar/tools/cryptopp
-	patch -d Bazaar/tools/cryptopp -p1 < patches/cryptopp.patch
-	# JSON library
-	wget -nc http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
-	unzip libjson_7.6.1.zip -d Bazaar/tools/
-	patch -d Bazaar/tools/libjson -p1 < patches/libjson.patch
-	unzip libjson_7.6.1.zip -d Bazaar/nginx/ngx_ext_modules/ws_server/
-	patch -d Bazaar/nginx/ngx_ext_modules/ws_server/libjson -p1 < patches/libjson.patch
-	# Nginx LUA module
-	wget -nc https://codeload.github.com/openresty/lua-nginx-module/tar.gz/v0.8.7
-	tar -xzf v0.8.7 -C Bazaar/nginx/ngx_ext_modules
-	ln -sf lua-nginx-module-0.8.7 Bazaar/nginx/ngx_ext_modules/lua-nginx-module
-	patch -d Bazaar/nginx/ngx_ext_modules/lua-nginx-module -p1 < patches/lua-nginx-module.patch
-	# Nginx sources
-	wget -nc http://nginx.org/download/nginx-1.5.3.tar.gz
-	tar -xzf nginx-1.5.3.tar.gz -C Bazaar/nginx/
-	patch -d Bazaar/nginx/nginx-1.5.3 -p1 < patches/nginx.patch
-	# do something
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -290,6 +349,10 @@ $(IDGEN):
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	
+################################################################################
+# Red Pitaya tools
+################################################################################
+
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -317,13 +380,9 @@ $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(LIBRP):
-	$(MAKE) -C $(LIBRP_DIR)
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-$(LIBRPAPP):
-	$(MAKE) -C $(LIBRPAPP_DIR)
-	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+################################################################################
+# Red Pitaya applications
+################################################################################
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)

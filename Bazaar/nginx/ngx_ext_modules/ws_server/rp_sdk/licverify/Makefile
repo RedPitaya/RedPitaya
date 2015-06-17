@@ -1,19 +1,20 @@
+LIBJSON_DIR=../../../../../tools/libjson
 CC=$(CROSS_COMPILE)g++
-CFLAGS=-c -Wall -static -std=c++11 -Ibuild/include/cryptopp -I../../libjson -Iencoder
+CFLAGS=-c -Wall -static -std=c++11 -Ibuild/include/cryptopp -I$(LIBJSON_DIR) -Iencoder
 LDFLAGS= -Lbuild/lib -lcryptopp
 SOURCES= main.cpp \
 	LicenseVerificator.cpp \
 	encoder/encoder.cpp \
 	encoder/pubkey.cpp \
 	encoder/privkey.cpp \
-	../../libjson/_internal/Source/internalJSONNode.cpp \
-	../../libjson/_internal/Source/JSONChildren.cpp ../../libjson/_internal/Source/JSONDebug.cpp \
-	../../libjson/_internal/Source/JSONIterators.cpp ../../libjson/_internal/Source/JSONMemory.cpp \
-	../../libjson/_internal/Source/JSONNode_Mutex.cpp ../../libjson/_internal/Source/JSONNode.cpp \
-	../../libjson/_internal/Source/JSONWorker.cpp ../../libjson/_internal/Source/JSONWriter.cpp \
-	../../libjson/_internal/Source/libjson.cpp ../../libjson/_internal/Source/JSONValidator.cpp \
-	../../libjson/_internal/Source/JSONStream.cpp ../../libjson/_internal/Source/JSONAllocator.cpp \
-    	../../libjson/_internal/Source/JSONPreparse.cpp \
+	$(LIBJSON_DIR)/_internal/Source/internalJSONNode.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONChildren.cpp $(LIBJSON_DIR)/_internal/Source/JSONDebug.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONIterators.cpp $(LIBJSON_DIR)/_internal/Source/JSONMemory.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONNode_Mutex.cpp $(LIBJSON_DIR)/_internal/Source/JSONNode.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONWorker.cpp $(LIBJSON_DIR)/_internal/Source/JSONWriter.cpp \
+	$(LIBJSON_DIR)/_internal/Source/libjson.cpp $(LIBJSON_DIR)/_internal/Source/JSONValidator.cpp \
+	$(LIBJSON_DIR)/_internal/Source/JSONStream.cpp $(LIBJSON_DIR)/_internal/Source/JSONAllocator.cpp \
+    	$(LIBJSON_DIR)/_internal/Source/JSONPreparse.cpp \
 	
 OBJECTS=$(SOURCES:.cpp=.o)
 CRYPTO_DIR=cryptopp/
