@@ -3,20 +3,28 @@
 ################################################################################
 
 # enable chroot access with native execution
-cp /etc/resolv.conf         $root_dir/etc/
-cp /usr/bin/qemu-arm-static $root_dir/usr/bin/
+cp /etc/resolv.conf         $ROOT_DIR/etc/
+cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 
-chroot $root_dir <<- EOF_CHROOT
+chroot $ROOT_DIR <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
 
-sudo apt-get install -y nodejs npm
 sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools
 sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
-sudo apt-get install -y libhiredis0.10 libhiredis-dev
+sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server
 
 # apt-get install python-pip
 # pip install redis
+
+#==============install node.js=============
+#sudo apt-get install -y nodejs npm
+apt-get install wget
+wget https://gist.github.com/raw/3245130/v0.10.24/node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz 
+tar xvzf node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
+cd node-v0.10.24-linux-arm-armv6j-vfp-hard
+cp -R * /usr/local
+cd ..
 
 #==============Am ramas aici============
 #git clone https://gitlab.redpitaya.com/red-pitaya-webtool/red-pitaya-ecosystem.git
@@ -24,7 +32,6 @@ sudo apt-get install -y libhiredis0.10 libhiredis-dev
 #cp librp.so /usr/local/lib
 #cp rp.h /usr/local/include
 #cd ~
-
 
 #==============Fuse setup=============
 mkdir /wyliodrin
@@ -52,10 +59,6 @@ mkdir build
 cd build
 # header file and dynamic library are not yet in the path
 cmake -DREDPITAYA=ON -DSWIG_EXECUTABLE=/usr/bin/swig3.0 -DREDPITAYA_LIBRARIES=/opt/redpitaya/lib/librp.so -DREDPITAYA_INCLUDE_DIR=/opt/redpitaya/include ..
-ln -s /usr/include/nodejs/src/node.h                 /usr/include/node.h
-ln -s /usr/include/nodejs/deps/uv/include/uv.h       /usr/include/uv.h
-ln -s /usr/include/nodejs/deps/uv/include/uv-private /usr/include/uv-private
-ln -s /usr/include/nodejs/src/node_object_wrap.h     /usr/include/node_object_wrap.h
 make
 sudo make install
 ln -s /usr/local/lib/node_modules/ /usr/lib/node
@@ -89,5 +92,5 @@ EOF_CAT
 EOF_CHROOT
 
 # disable chroot access with native execution
-rm $root_dir/etc/resolv.conf
-rm $root_dir/usr/bin/qemu-arm-static
+rm $ROOT_DIR/etc/resolv.conf
+rm $ROOT_DIR/usr/bin/qemu-arm-static
