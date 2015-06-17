@@ -341,7 +341,7 @@ $(NGINX_DIR): $(NGINX_TAR)
 $(BOOST_DIR): $(URAMDISK)
 	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $<
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(URAMDISK)
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_DIR) $(BOOST_DIR)
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
