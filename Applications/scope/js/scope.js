@@ -218,7 +218,23 @@
             $('#ch2_offset_arrow').hide();
           }
         }
-        else if(param_name == 'OUTPUT1_SHOW_OFF') {
+		else if(param_name == 'SOUR1_VOLT_OFFS') {
+			if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
+				var value = $('#SOUR1_VOLT_OFFS').val();
+				if(value !== new_params[param_name].value){
+					$('#SOUR1_VOLT_OFFS').val(new_params[param_name].value);
+				}
+			}
+		}
+		else if(param_name == 'SOUR2_VOLT_OFFS') {
+			if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
+				var value = $('#SOUR2_VOLT_OFFS').val();
+				if(value !== new_params[param_name].value){
+					$('#SOUR2_VOLT_OFFS').val(new_params[param_name].value);
+				}
+			}
+		}
+	    else if(param_name == 'OUTPUT1_SHOW_OFF') {
           if(new_params['OUTPUT1_SHOW'].value && new_params['OUTPUT1_STATE'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
@@ -284,7 +300,7 @@
           }
         }
         // Trigger level
-        else if(param_name == 'OSC_TRIG_LEVEL') {
+        else if(param_name == 'OSC_TRIG_LEVEL' || param_name == 'OSC_TRIG_SOURCE') {
           if(! OSC.state.trig_dragging) {
             
             // Trigger button is blured out and trigger level is hidden for source 'EXT'
@@ -298,17 +314,26 @@
               var source_offset = (new_params['OSC_TRIG_SOURCE'].value == 0 ? new_params['OSC_CH1_OFFSET'].value : new_params['OSC_CH2_OFFSET'].value);
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
-              var px_offset = -((new_params[param_name].value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+              var px_offset = -((new_params['OSC_TRIG_LEVEL'].value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
               
               $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
-              $('#right_menu .menu-btn.trig').prop('disabled', false);
-              $('#osc_trig_level_info').html(OSC.convertVoltage(new_params[param_name].value));
+              if(param_name == 'OSC_TRIG_LEVEL') {
+				$('#right_menu .menu-btn.trig').prop('disabled', false);
+				$('#osc_trig_level_info').html(OSC.convertVoltage(new_params['OSC_TRIG_LEVEL'].value));
+				
+				if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
+					var value = $('#OSC_TRIG_LEVEL').val();
+					if(value !== new_params[param_name].value){
+						$('#OSC_TRIG_LEVEL').val(new_params[param_name].value);
+					}
+				}
+			  }
             }
           }
-        }
-        // Trigger source
-        else if(param_name == 'OSC_TRIG_SOURCE') {
-          $('#osc_trig_source_ch').html(new_params[param_name].value == 0 ? 'IN1' : (new_params[param_name].value == 1 ? 'IN2' : 'EXT'));
+		   // Trigger source
+		  if(param_name == 'OSC_TRIG_SOURCE') {
+			$('#osc_trig_source_ch').html(new_params['OSC_TRIG_SOURCE'].value == 0 ? 'IN1' : (new_params['OSC_TRIG_SOURCE'].value == 1 ? 'IN2' : 'EXT'));
+		  }
         }
         // Trigger edge/slope
         else if(param_name == 'OSC_TRIG_SLOPE') {
