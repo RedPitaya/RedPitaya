@@ -13,10 +13,9 @@ OBJECTS=$(COBJECTS) $(CXXOBJECTS)
 RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../libjson
+INCLUDE = -I$(RP_SDK)
 INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
-
-INCLUDE+= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
+INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 JPEG_DIR=./external/jpeg-6b
 JPEG_LIB=$(JPEG_DIR)/libjpeg.a
