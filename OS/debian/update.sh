@@ -1,6 +1,10 @@
 #!/bin/sh
 ################################################################################
-#
+# Authors:
+# - Pavel Demin <pavel.demin@uclouvain.be>
+# - Iztok Jeras <iztok.jeras@redpitaya.com>
+# License:
+# https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
 ################################################################################
