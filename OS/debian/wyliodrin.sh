@@ -1,5 +1,9 @@
 ################################################################################
-# TODO: copyright notice and authors should be listed here
+# Authors:
+# - Ioana Culic <ioana.culic@wyliodrin.com>
+# - Iztok Jeras <iztok.jeras@redpitaya.com>
+# License:
+# https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
 # enable chroot access with native execution
