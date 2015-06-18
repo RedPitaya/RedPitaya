@@ -198,7 +198,7 @@ void UpdateParams(void) {
     viewPortion.Value() = portion;
 	
 	float trigg_limit;
-	rp_channel_t channel = inTrigSource.Value();
+	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
 	inTriggLimit.Value() = trigg_limit;
 	
