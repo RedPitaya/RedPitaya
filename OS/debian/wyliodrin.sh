@@ -1,5 +1,9 @@
 ################################################################################
-# TODO: copyright notice and authors should be listed here
+# Authors:
+# - Ioana Culic <ioana.culic@wyliodrin.com>
+# - Iztok Jeras <iztok.jeras@redpitaya.com>
+# License:
+# https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
 # enable chroot access with native execution
@@ -77,18 +81,20 @@ ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
 #end script
 #respawn
 
-cat <<- EOF_CAT > /lib/systemd/system/foo.service
+cat <<- EOF_CAT > /lib/systemd/system/redpitaya_wyliodrin.service
 [Unit]
-Description=Wyliodrin server
+Description=Wyliodrin server for Red Pitaya
 
 [Service]
 Type=forking
-ExecStart=chdir ~/ wyliodrin server
+# TODO, set work  directory to /root/wyliodrin-server-nodejs
+ExecStart=npm start
 
 [Install]
 WantedBy=multi-user.target
 EOF_CAT
 
+systemctl enable redpitaya_wyliodrin
 EOF_CHROOT
 
 # disable chroot access with native execution
