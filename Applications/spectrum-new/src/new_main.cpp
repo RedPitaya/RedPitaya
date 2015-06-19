@@ -33,8 +33,8 @@ CFloatParameter in1Scale("SPEC_CH1_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 CFloatParameter in2Scale("SPEC_CH2_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 
 CFloatParameter inFreqScale("SPEC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 50000);
-CFloatParameter xmin("xmin", CBaseParameter::RW, 0, 0, -1e6, +1e6);
-CFloatParameter xmax("xmax", CBaseParameter::RW, 63, 0, -1e6, +1e6);
+CFloatParameter xmin("xmin", CBaseParameter::RW, 0, 0, -1000, 1000);
+CFloatParameter xmax("xmax", CBaseParameter::RW, 63, 0, -1000, 1000);
 
 
 CFloatParameter peak1_freq("peak1_freq", CBaseParameter::ROSA, 0, 0, 0, +1e6);
@@ -42,7 +42,7 @@ CFloatParameter peak1_power("peak1_power", CBaseParameter::ROSA, 0, 0, -10000000
 CFloatParameter peak1_unit("peak1_unit", CBaseParameter::ROSA, 0, 1, 0, 2);
 
 CFloatParameter peak2_freq("peak2_freq", CBaseParameter::ROSA, 0, 0, 0, 1e6);
-CFloatParameter peak2_power("peak2_power", CBaseParameter::ROSA, 0, 0, -1e7, 1e7);
+CFloatParameter peak2_power("peak2_power", CBaseParameter::ROSA, 0, 0, -10000000, +10000000);
 CFloatParameter peak2_unit("peak2_unit", CBaseParameter::ROSA, 0, 0, 0, 2);
 
 CIntParameter w_idx("w_idx", CBaseParameter::RO, 0, 0, 0, 1000);
@@ -74,15 +74,17 @@ void UpdateParams(void)
 	if (inRun.Value() == false)
 		return;
 
-	int ret = rpApp_SpecGetJpgIdx(&w_idx.Value());
+	if (in1Show.Value() || in2Show.Value())
+		rpApp_SpecGetJpgIdx(&w_idx.Value());
+
 	if (in1Show.Value()) {
-		ret = rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
-		ret = rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
+		rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
+		rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
 	}
 
 	if (in2Show.Value()) {
-		ret = rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
-		ret = rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
+		rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
+		rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
 	}
 	rp_EnableDigitalLoop(false); // IsDemoParam.Value()); // FIXME
 }
@@ -110,8 +112,8 @@ void UpdateSignals(void)
 	if (in1Show.Value()) {
 		if (ch1.GetSize() != CH_SIGNAL_SIZE)
 			ch1.Resize(CH_SIGNAL_SIZE);
-		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			ch1[i] = data[1][i*2];
+		for (size_t i = 1; i < CH_SIGNAL_SIZE*2; i += 2)
+			ch1[(i-1)/2] = data[1][i];
 	}
 	else if (ch1.GetSize() == CH_SIGNAL_SIZE)
 		ch1.Resize(0);
@@ -119,8 +121,8 @@ void UpdateSignals(void)
 	if (in2Show.Value()) {
 		if (ch2.GetSize() != CH_SIGNAL_SIZE)
 			ch2.Resize(CH_SIGNAL_SIZE);
-		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			ch2[i] = data[2][i*2];
+		for (size_t i = 1; i < CH_SIGNAL_SIZE*2; i += 2)
+			ch2[(i-1)/2] = data[2][i];
 	}
 	else if (ch2.GetSize() == CH_SIGNAL_SIZE)
 		ch2.Resize(0);
@@ -166,6 +168,9 @@ void OnNewParams(void)
 	{
 		freq_unit.Update();
 		xmax.Update();
+
+		if (freq_unit.Value() == 2 && xmax.Value() > 63)
+			xmax.Value() = 63;
 
 		float max_freq = xmax.Value();
 		for (int i = 0; i < freq_unit.Value(); ++i)
