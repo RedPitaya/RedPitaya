@@ -1,11 +1,14 @@
 ################################################################################
-# TODO: copyright notice and authors should be listed here
+# Authors:
+# - Pavel Demin <pavel.demin@uclouvain.be>
+# - Iztok Jeras <iztok.jeras@redpitaya.com>
+# License:
+# https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
 # Install Debian base system to the root file system
 MIRROR=http://ftp.heanet.ie/pub/debian
 DISTRO=jessie
-ARCH=armel
 debootstrap --foreign --arch $ARCH $DISTRO $ROOT_DIR $MIRROR
 
 # enable chroot access with native execution

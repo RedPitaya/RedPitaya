@@ -706,6 +706,8 @@ int spec_run(const wf_func_table_t* wf_f)
 
     rp_spectr_worker_change_state(rp_spectr_auto_state);
 
+	spec_setFreqRange(63000000);
+
     return 0;
 }
 
@@ -724,7 +726,7 @@ int spec_stop()
 int spec_reset()
 {
 	rp_set_params(rp_default_params, PARAMS_NUM);
-	rp_spectr_worker_change_state(rp_spectr_auto_state); // FIXME pause
+	rp_spectr_worker_change_state(rp_spectr_auto_state);
 
 	return 0;
 }
