@@ -1031,8 +1031,13 @@
           var graph_height = $('#graph_grid').height();
           var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
           var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
-          
-          $('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
+
+		  if(OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
+			$('#info_box').html('Trigger at its limit');
+		  }
+		  else{
+			$('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
+		  }
           
           if($('#trig_dialog').is(':visible')) {
             $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
