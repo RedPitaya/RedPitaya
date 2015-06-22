@@ -130,11 +130,7 @@ export REVISION
 export VERSION
 
 ################################################################################
-# directories
-################################################################################
-
-################################################################################
-# external sources
+# tarball
 ################################################################################
 
 all: zip
@@ -151,6 +147,9 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
+
+zip: $(TARGET) $(SDK)
+	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(GIT_BRANCH)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
@@ -405,9 +404,6 @@ sdkPub:
 
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR)
-
-zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
 	make -C $(LINUX_DIR) clean
