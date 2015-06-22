@@ -149,7 +149,7 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
 
 zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(GIT_BRANCH)-$(BUILD_NUMBER)-$(REVISION).zip *
+	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_TAG)-$(GIT_COMMIT).zip *
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
