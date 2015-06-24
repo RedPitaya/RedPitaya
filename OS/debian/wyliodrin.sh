@@ -81,14 +81,15 @@ ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
 #end script
 #respawn
 
-cat <<- EOF_CAT > /lib/systemd/system/redpitaya_wyliodrin.service
+cat <<- EOF_CAT > /etc/systemd/system/redpitaya_wyliodrin.service
 [Unit]
 Description=Wyliodrin server for Red Pitaya
 
 [Service]
 Type=forking
-# TODO, set work  directory to /root/wyliodrin-server-nodejs
-ExecStart=npm start
+WorkingDirectory=/root/wyliodrin-server-nodejs
+ExecStart =/usr/local/bin/npm start
+ExecStop  =/usr/local/bin/npm stop
 
 [Install]
 WantedBy=multi-user.target
