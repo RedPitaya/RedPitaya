@@ -18,20 +18,22 @@
 #include "generate.h"
 #include "gen_handler.h"
 
-float chA_amplitude = 1, chB_amplitude = 1;
-float chA_offset = 0, chB_offset = 0;
-float chA_dutyCycle = 0, chB_dutyCycle = 0;
-float chA_frequency, chB_frequency;
-float chA_phase = 0, chB_phase = 0;
-int chA_burstCount = 1, chB_burstCount = 1;
-int chA_burstRepetition = 1, chB_burstRepetition = 1;
-uint32_t chA_burstPeriod = 0, chB_burstPeriod = 0;
-rp_waveform_t chA_waveform, chB_waveform;
-uint32_t chA_size = BUFFER_LENGTH, chB_size = BUFFER_LENGTH;
+// global variables
+// TODO: should be organized into a system status structure
+float         chA_amplitude            = 1, chB_amplitude            = 1;
+float         chA_offset               = 0, chB_offset               = 0;
+float         chA_dutyCycle            = 0, chB_dutyCycle            = 0;
+float         chA_frequency               , chB_frequency               ;
+float         chA_phase                = 0, chB_phase                = 0;
+int           chA_burstCount           = 1, chB_burstCount           = 1;
+int           chA_burstRepetition      = 1, chB_burstRepetition      = 1;
+uint32_t      chA_burstPeriod          = 0, chB_burstPeriod          = 0;
+rp_waveform_t chA_waveform                , chB_waveform                ;
+uint32_t      chA_size     = BUFFER_LENGTH, chB_size     = BUFFER_LENGTH;
+uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 
 float chA_arbitraryData[BUFFER_LENGTH];
 float chB_arbitraryData[BUFFER_LENGTH];
-uint32_t chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 
 int gen_SetDefaultValues() {
     ECHECK(gen_Disable(RP_CH_1));
@@ -469,86 +471,61 @@ int synthesize_signal(rp_channel_t channel) {
         return RP_EPN;
     }
 
-
     switch (waveform) {
-        case RP_WAVEFORM_SINE:
-            synthesis_sin(data);
-            break;
-        case RP_WAVEFORM_TRIANGLE:
-            synthesis_triangle(data);
-            break;
-        case RP_WAVEFORM_SQUARE:
-            synthesis_square(frequency, data);
-            break;
-        case RP_WAVEFORM_RAMP_UP:
-            synthesis_rampUp(data);
-            break;
-        case RP_WAVEFORM_RAMP_DOWN:
-            synthesis_rampDown(data);
-            break;
-        case RP_WAVEFORM_DC:
-            synthesis_DC(data);
-            break;
-        case RP_WAVEFORM_PWM:
-            synthesis_PWM(dutyCycle, data);
-            break;
-        case RP_WAVEFORM_ARBITRARY:
-            synthesis_arbitrary(channel, data, &size);
-            break;
-        default:
-            return RP_EIPV;
+        case RP_WAVEFORM_SINE     : synthesis_sin      (data);                 break;
+        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data);                 break;
+        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data);      break;
+        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data);                 break;
+        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data);                 break;
+        case RP_WAVEFORM_DC       : synthesis_DC       (data);                 break;
+        case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data);      break;
+        case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
+        default:                    return RP_EIPV;
     }
     return generate_writeData(channel, data, phase, size);
 }
 
 int synthesis_sin(float *data_out) {
-    int i;
-    for(i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) BUFFER_LENGTH));
     }
     return RP_OK;
 }
 
 int synthesis_triangle(float *data_out) {
-    int i;
-    for(i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI * 2));
     }
     return RP_OK;
 }
 
 int synthesis_rampUp(float *data_out) {
-    int i;
     data_out[BUFFER_LENGTH -1] = 0;
-    for(i = 0; i < BUFFER_LENGTH-1; i++) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH-1; i++) {
         data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI - 1));
     }
     return RP_OK;
 }
 
 int synthesis_rampDown(float *data_out) {
-    int i;
-    for(i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI - 1));
     }
     return RP_OK;
 }
 
 int synthesis_DC(float *data_out) {
-    int i;
-    for(i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = 1.0;
     }
     return RP_OK;
 }
 
 int synthesis_PWM(float ratio, float *data_out) {
-    int i;
-
     // calculate number of samples that need to be high
     int h = (int) (BUFFER_LENGTH/2 * ratio);
 
-    for(i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         if (i < h || i >= BUFFER_LENGTH - h) {
             data_out[i] = 1.0;
         }
@@ -564,7 +541,7 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
     CHANNEL_ACTION(channel,
             pointer = chA_arbitraryData,
             pointer = chB_arbitraryData)
-    for (int i = 0; i < BUFFER_LENGTH; i++) {
+    for (int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = pointer[i];
     }
     CHANNEL_ACTION(channel,
@@ -574,31 +551,19 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
 }
 
 int synthesis_square(float frequency, float *data_out) {
-    
-    uint32_t i;
-
     // Various locally used constants - HW specific parameters
     const int trans0 = 30;
     const int trans1 = 300;
 
     int trans = (int) (frequency / 1e6 * trans1); // 300 samples at 1 MHz
 
-    if (trans <= 10) {
-        trans = trans0;
-    }
+    if (trans <= 10)  trans = trans0;
 
-    for(i = 0; i < BUFFER_LENGTH; i++) {
-        if((0 <= i) && (i <  BUFFER_LENGTH/2 - trans)){
-            data_out[i] = 1.0;
-        }else if ((i >= BUFFER_LENGTH/2 - trans) && (i <  BUFFER_LENGTH/2)){
-            data_out[i] = (1.0f - (2.0f / trans) * (i - (BUFFER_LENGTH/2 - trans)));
-        }
-        else if ((0 <= BUFFER_LENGTH/2) && (i <  BUFFER_LENGTH   - trans)){
-            data_out[i] = -1.0f;
-        }
-        else if ((i >= BUFFER_LENGTH   - trans) && (i <  BUFFER_LENGTH)){
-            data_out[i] = -1.0f + (2.0f / trans) * (i - (BUFFER_LENGTH - trans));
-        }
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+        if      ((0 <= i                      ) && (i <  BUFFER_LENGTH/2 - trans))  data_out[i] =  1.0f;
+        else if ((i >= BUFFER_LENGTH/2 - trans) && (i <  BUFFER_LENGTH/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (i - (BUFFER_LENGTH/2 - trans));
+        else if ((0 <= BUFFER_LENGTH/2        ) && (i <  BUFFER_LENGTH   - trans))  data_out[i] = -1.0f;
+        else if ((i >= BUFFER_LENGTH   - trans) && (i <  BUFFER_LENGTH          ))  data_out[i] = -1.0f + (2.0f / trans) * (i - (BUFFER_LENGTH   - trans));
     }
 
     return RP_OK;
