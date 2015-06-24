@@ -10,6 +10,9 @@
 cp /etc/resolv.conf         $ROOT_DIR/etc/
 cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 
+# Wyliodrin service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
@@ -69,32 +72,7 @@ ln -s /usr/local/lib/node_modules/ /usr/lib/node
 ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
 
 
-#===============/etc/init/wyliodrin.conf==============
-#description "wyliodrin server"
-#author "Ioana Culic"
-#start on runlevel [2345]
-#stop on runlevel [016]
-#chdir ~/ wyliodrin server
-#script
-#       export NODE_PATH=\"/usr/local/lib/node_modules\"
-#       sudo -E -u $USER /usr/local/bin/npm start
-#end script
-#respawn
-
-cat <<- EOF_CAT > /etc/systemd/system/redpitaya_wyliodrin.service
-[Unit]
-Description=Wyliodrin server for Red Pitaya
-
-[Service]
-Type=forking
-WorkingDirectory=/root/wyliodrin-server-nodejs
-ExecStart =/usr/local/bin/npm start
-ExecStop  =/usr/local/bin/npm stop
-
-[Install]
-WantedBy=multi-user.target
-EOF_CAT
-
+#===============systemd==============
 systemctl enable redpitaya_wyliodrin
 EOF_CHROOT
 
