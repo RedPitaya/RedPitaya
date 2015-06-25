@@ -24,6 +24,10 @@
   };
   SPEC.config.waterf_img_path = "/tmp/"
   SPEC.freq_unit = ['Hz', 'kHz', 'MHz'];
+
+  SPEC.config.xmin = 0;
+  SPEC.config.xmax = 63;
+  SPEC.config.unit = 2;
 	
   SPEC.time_steps = [
     // Hz
@@ -279,7 +283,6 @@
         // Do not change fields from dialogs when user is editing something        
         if((!SPEC.state.editing || field.closest('.menu-content').length == 0) 
 	&& (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
-          
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
 
@@ -288,7 +291,7 @@
 				SPEC.updateZoom();
 
 				if (new_params['freq_unit'])
-					$('#freq_scale_unit').html(SPEC.freq_unit[new_params['freq_unit'].value]);
+					$('#freq').html(SPEC.freq_unit[new_params['freq_unit'].value]);
 				$('.freeze.active').removeClass('active');
 			}
           }
@@ -485,6 +488,14 @@ $('#waterfall-holder_ch2').hide();
         console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
         SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
       }
+	if (key == 'xmin')
+		SPEC.config.xmin = value;
+	if (key == 'xmax')
+		SPEC.config.xmax = value;
+	if (key == 'freq_unit')
+		SPEC.config.unit = value;
+
+	console.log(SPEC.config.xmin, SPEC.config.xmax, SPEC.config.unit);
     }
     
     // Check changes in measurement list
@@ -655,14 +666,21 @@ $('#waterfall-holder_ch2').hide();
     var axes = SPEC.graphs.plot.getAxes();
     var curr_scale = axes.xaxis.tickSize;
 
-	if((curr_scale >= SPEC.time_steps[ SPEC.time_steps.length - 1] && direction == '-') ||
-	(curr_scale <= SPEC.time_steps[0] && direction == '+' ))
+	if((curr_scale >= SPEC.time_steps[ SPEC.time_steps.length - 1] && direction == '-') || (curr_scale <= SPEC.time_steps[0] && direction == '+' ))
+	{
 		return null;
+	}
 
 	var range = axes.xaxis.max - axes.xaxis.min;
 	var delta = direction == '+' ? 1 : -1
-	options.xaxes[0].min = Math.max(0, axes.xaxis.min + delta*range*0.1); 
-	options.xaxes[0].max = Math.min(SPEC.params.orig['xmax'].value, axes.xaxis.max - delta*range*0.1);
+
+	options.xaxes[0].min = Math.max(SPEC.config.xmin, axes.xaxis.min + delta*range*0.1); 
+	options.xaxes[0].max = Math.min(SPEC.config.xmax, axes.xaxis.max - delta*range*0.1);
+
+	SPEC.params.local['xmin'] = { value: options.xaxes[0].min };
+	SPEC.params.local['xmax'] = { value: options.xaxes[0].max };
+	console.log(axes.xaxis.min, axes.xaxis.max, delta, curr_scale);
+	SPEC.sendParams();
 
 	SPEC.graphs.plot.setupGrid();
 	SPEC.graphs.plot.draw();
@@ -691,7 +709,11 @@ $('#waterfall-holder_ch2').hide();
     curr_options.xaxes[0].max = SPEC.params.orig['xmax'].value;
     curr_options.yaxes[0].min = SPEC.ymin;
     curr_options.yaxes[0].max = SPEC.ymax;
-    
+
+	SPEC.params.local['xmin'] = { value: SPEC.config.xmin };
+	SPEC.params.local['xmax'] = { value: SPEC.config.xmax };
+	SPEC.sendParams();
+
     plot.setupGrid();
     plot.draw();
     var axes = plot.getAxes();
@@ -798,7 +820,7 @@ $('#waterfall-holder_ch2').hide();
 
 			var plot = SPEC.graphs.plot;
 			SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
-			SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value};
+			SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value };
 		  
 			var axes = plot.getAxes();
 			var options = plot.getOptions();
