@@ -908,10 +908,10 @@ float viewIndexToTime(int index) {
 void calculateIntegral(rp_channel_t channel, float scale, float offset, float invertFactor) {
     float dt = timeScale / samplesPerDivision;
     float v;
-    ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v));
+    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v));
     view[RPAPP_OSC_SOUR_MATH*viewSize] = v * dt;
     for (int i = 1; i < viewSize; ++i) {
-        ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i], &v));
+        ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i], &v));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (v * dt);
         view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + i-1], scale, 1, offset, invertFactor);
     }
@@ -921,12 +921,12 @@ void calculateIntegral(rp_channel_t channel, float scale, float offset, float in
 void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor) {
     float dt2 = 2*timeScale / 1000 / samplesPerDivision;
     float v1, v2;
-    ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize+1], &v1));
-    ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v2));
+    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize+1], &v1));
+    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v2));
     view[RPAPP_OSC_SOUR_MATH*viewSize] = scaleAmplitude(((v1 - v2) / dt2 / 2), scale, 1, offset, invertFactor);
     for (int i = 1; i < viewSize - 1; ++i) {
         v1 = v2;
-        ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i+1], &v2));
+        ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i+1], &v2));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude((v2 - v1) / dt2, scale, 1, offset, invertFactor);
     }
 }
@@ -1036,8 +1036,8 @@ void mathThreadFunction() {
         } else {
             float v1, v2;
             for (int i = 0; i < viewSize; ++i) {
-                ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
-                ECHECK_APP_THREAD(unOffsetAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
+                ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
+                ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
                 view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(v1, v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
         }
