@@ -158,8 +158,8 @@ int generate_getFrequency(rp_channel_t channel, float *frequency) {
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
 	CHANNEL_ACTION(channel,
-			generate->properties_chA.counterWrap = 65536 * (size-1),
-			generate->properties_chB.counterWrap = 65536 * (size-1))
+			generate->properties_chA.counterWrap = 65536 * size - 1,
+			generate->properties_chB.counterWrap = 65536 * size - 1)
 	return RP_OK;
 }
 
