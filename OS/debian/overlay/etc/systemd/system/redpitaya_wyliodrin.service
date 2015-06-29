@@ -1,0 +1,15 @@
+[Unit]
+Description=Wyliodrin server for Red Pitaya
+
+[Service]
+Type=forking
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=redpitaya_wyliodrin
+WorkingDirectory=/root/wyliodrin-server-nodejs
+ExecStart =/usr/local/bin/npm start &
+#ExecStop  =/usr/local/bin/npm stop  &
+
+[Install]
+WantedBy=multi-user.target

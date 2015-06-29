@@ -68,6 +68,8 @@ CFloatParameter cursor2V("SPEC_CUR2_V", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor1T("SPEC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2T("SPEC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 
+static float g_max_freq = 63000000;
+
 void UpdateParams(void)
 {
 	inRun.Update();
@@ -109,19 +111,23 @@ void UpdateSignals(void)
 			return;
 	}
 
+	float fpga_freq, k1 = 1, k2 = 1;
+	rpApp_SpecGetFpgaFreq(&fpga_freq);
+	
+	if (g_max_freq < fpga_freq)
+		k2 = fpga_freq/g_max_freq; // send xmax limit koeff
+
 	if (in1Show.Value()) {
-		if (ch1.GetSize() != CH_SIGNAL_SIZE)
-			ch1.Resize(CH_SIGNAL_SIZE);
-		for (size_t i = 1; i < CH_SIGNAL_SIZE*2; i += 2)
+		ch1.Resize(CH_SIGNAL_SIZE/k2);
+		for (size_t i = 1; i < ch1.GetSize()*2; i += 2)
 			ch1[(i-1)/2] = data[1][i];
 	}
 	else if (ch1.GetSize() == CH_SIGNAL_SIZE)
 		ch1.Resize(0);
 
 	if (in2Show.Value()) {
-		if (ch2.GetSize() != CH_SIGNAL_SIZE)
-			ch2.Resize(CH_SIGNAL_SIZE);
-		for (size_t i = 1; i < CH_SIGNAL_SIZE*2; i += 2)
+			ch2.Resize(CH_SIGNAL_SIZE/k2);
+		for (size_t i = 1; i < ch2.GetSize()*2; i += 2)
 			ch2[(i-1)/2] = data[2][i];
 	}
 	else if (ch2.GetSize() == CH_SIGNAL_SIZE)
@@ -172,12 +178,17 @@ void OnNewParams(void)
 		if (freq_unit.Value() == 2 && xmax.Value() > 63)
 			xmax.Value() = 63;
 
-		float max_freq = xmax.Value();
+		float min = xmin.Value();
+		g_max_freq = xmax.Value();
 		for (int i = 0; i < freq_unit.Value(); ++i)
-			max_freq *= 1000; // set x max freq (Hz, kHz or MHz) by unit
+		{
+			g_max_freq *= 1000; // set x max freq (Hz, kHz or MHz) by unit
+			min *= 1000;
+		}
 
 		rpApp_SpecSetUnit(freq_unit.Value());
-		rpApp_SpecSetFreqRange(max_freq);
+		rpApp_SpecSetFreqRange(min, g_max_freq);
+		peak1_unit.Value() = peak2_unit.Value() = rpApp_SpecGetUnit();
 	}
 }
 
