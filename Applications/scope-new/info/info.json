@@ -1,6 +1,6 @@
 {
     "name": "Oscilloscope",
-    "version": "0.92-BUILD_NUMBER",
-    "revision": "REVISION",
+    "version": "0.92-233",
+    "revision": "d3751f9",
     "description": "A two channel time domain signal visualization system."
 }
