@@ -77,7 +77,6 @@ SDK_DIR         = SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 URAMDISK_DIR    = OS/buildroot
 
-<<<<<<< HEAD
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
