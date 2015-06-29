@@ -80,6 +80,7 @@ reg   [RSZ+15: 0] dac_pnt   ; // read pointer
 reg   [RSZ+15: 0] dac_pntp  ; // previour read pointer
 wire  [RSZ+16: 0] dac_npnt  ; // next read pointer
 wire  [RSZ+16: 0] dac_npnt_sub ;
+wire              dac_npnt_sub_neg;
 wire              dac_npnt_sub_pos;
 wire              dac_npnt_sub_zro;
 
@@ -199,8 +200,9 @@ end
 assign dac_trig = (!dac_rep && trig_in) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
 
 assign dac_npnt_sub = dac_npnt - {1'b0,set_size_i};
-assign dac_npnt_sub_neg =  ~dac_npnt_sub[RSZ+16];
+assign dac_npnt_sub_neg =   dac_npnt_sub[RSZ+16];
 assign dac_npnt_sub_zro = ~|dac_npnt_sub;
+assign dac_npnt_sub_pos = ~dac_npnt_sub_neg & ~dac_npnt_sub_zro;
 
 // read pointer logic
 always @(posedge dac_clk_i) begin
