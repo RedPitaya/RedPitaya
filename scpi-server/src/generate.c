@@ -342,7 +342,7 @@ enum _scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t *context) {
     size_t param_len;
     char waveformString[15];
 
-    // read first parameter SAMPLING_RATE (125MHz,15_6MHz, 1_9MHz,103_8kHz, 15_2kHz, 1_9kHz)
+    // read first parameter waveform shape
     if (!SCPI_ParamString(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:FUNC is missing first parameter.");
         return SCPI_RES_ERR;

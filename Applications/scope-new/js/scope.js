@@ -11,7 +11,7 @@
 
   // App configuration
   OSC.config = {};
-  OSC.config.app_id = 'scope';
+  OSC.config.app_id = 'scope-new';
   OSC.config.server_ip = '';  // Leave empty on production, it is used for testing only
   OSC.config.start_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?start=' + OSC.config.app_id + '?' + location.search.substr(1);
   OSC.config.stop_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?stop=' + OSC.config.app_id;
@@ -1145,7 +1145,18 @@ $(function() {
   $('.edit-mode').on('click touchstart', function() {
     OSC.state.editing = true;
     $('#right_menu').hide();
-    $('#' + $(this).attr('id') + '_dialog').show();  
+    $('#' + $(this).attr('id') + '_dialog').show();
+	//selecting active signal
+	if(OSC.state.sel_sig_name){
+		var sig_name = $(this).data('signal');
+		if(sig_name){
+			$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+			$('#right_menu .menu-btn.' + sig_name).addClass('active');
+			OSC.state.sel_sig_name = sig_name;
+			$('.y-offset-arrow').css('z-index', 10);
+			$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+		}
+	}
   });
   
   // Close parameters dialog after Enter key is pressed
