@@ -288,8 +288,8 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
 
     /* adopt the calculation with calibration scaling. If 0 ->  no calibration */
     if (calib_scale != 0) {
-//        voltage /= (float) cmn_CalibFullScaleToVoltage(calib_scale) / (float)(calibFS_LO ? 1 : (FULL_SCALE_NORM/adc_max_v));
-        voltage /= (float) cmn_CalibFullScaleToVoltage(calib_scale) / (float)(FULL_SCALE_NORM/adc_max_v);
+        voltage /= (float) cmn_CalibFullScaleToVoltage(calib_scale) / (float)((!calibFS_LO) ? 1.f : (FULL_SCALE_NORM/adc_max_v));
+//        voltage /= (float) cmn_CalibFullScaleToVoltage(calib_scale) / (float)(FULL_SCALE_NORM/adc_max_v);
     }
 
     /* check and limit the specified voltage arguments towards */
