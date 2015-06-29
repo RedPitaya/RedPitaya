@@ -581,9 +581,11 @@ int rpApp_SpecGetPeakPower(int channel, float* power);
 
 int rpApp_SpecGetPeakFreq(int channel, float* freq);
 
-int rpApp_SpecSetFreqRange(float freq);
+int rpApp_SpecSetFreqRange(float _freq_min, float freq);
 
 int rpApp_SpecSetUnit(int unit);
+
+int rpApp_SpecGetUnit();
 
 int rpApp_SpecGetFreqMin(float* freq);
 
