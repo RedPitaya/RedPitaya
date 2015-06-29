@@ -12,10 +12,9 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-INSTALL_DIR ?= .
+INSTALL_DIR ?= ../
 
 CONTROLLER=controller.so
-ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 ARTIFACTS=$(CONTROLLER)
 
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
@@ -26,19 +25,19 @@ all: $(CONTROLLER)
 $(CONTROLLER):
 	$(MAKE) -C src
 
-$(ZIP): $(CONTROLLER)
+zip: $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) $(FPGA) css fonts img *.html info js target/$(APP)
+	cp -r $(CONTROLLER) $(FPGA) info index.html Makefile target/$(APP)
+	$(MAKE) -C src clean
+	cp -r src target/$(APP)
+	rm `find target/ -iname .svn` -rf
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
-	cd target; zip -r ../$(ZIP) *
+	cd target; zip -r $(INSTALL_DIR)/$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 	$(RM) target -rf
-
-install: $(ZIP)
-	unzip $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
 	$(MAKE) -C src clean
 	-$(RM) target -rf
-	-$(RM) $(ZIP)
+	-$(RM) *.zip

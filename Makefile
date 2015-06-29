@@ -77,6 +77,7 @@ SDK_DIR         = SDK/
 EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
 URAMDISK_DIR    = OS/buildroot
 
+<<<<<<< HEAD
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
@@ -111,8 +112,8 @@ UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
 URAMDISK        = $(INSTALL_DIR)/uramdisk.image.gz
 
 
-APP_SCOPE_DIR   = Applications/scope
-APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope
+APP_SCOPE_DIR   = Applications/scope-new
+APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope-new
 
 APP_SPECTRUM_DIR = Applications/spectrum-new
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
