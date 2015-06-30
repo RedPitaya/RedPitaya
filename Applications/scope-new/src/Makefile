@@ -2,36 +2,28 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CSOURCES= \
-	main.c \
-	fpga.c \
-	worker.c \
-	calib.c \
-	fpga_awg.c \
-	generate.c \
-	fpga_pid.c \
-	pid.c \
-
 CXXSOURCES= \
-	new_main.cpp \
+	main.cpp \
 
+RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE  = -I$(RP_SDK)
-INCLUDE += -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/libjson
-INCLUDE += -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/cryptopp
+INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../libjson
+INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
 COMMON_FLAGS+=-Wall -g -fPIC -O0
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS  = -shared $(COMMON_FLAGS)  
-LDFLAGS += -L$(RP_SDK) -Wl,--whole-archive -lrp_sdk -Wl,--no-whole-archive
+LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
+LDFLAGS+= -Wl,--whole-archive
+LDFLAGS+=-L$(RP_SDK) -lrp_sdk
+LDFLAGS+=-L$(RP_API) -lrpapp -lrp
+LDFLAGS+= -Wl,--no-whole-archive
 
-COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 
-OBJECTS=$(COBJECTS) $(CXXOBJECTS)
+OBJECTS=$(CXXOBJECTS)
 
 OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controller.so
@@ -51,4 +43,3 @@ make_c_app: $(OBJECTS)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
-
