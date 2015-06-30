@@ -190,8 +190,9 @@
 			// 0 - Hz, 1 - kHz, 2 - MHz
 
 			var freq_unit1 = 'Hz';
-			if (new_params['peak1_unit'])
-				freq_unit1 = (new_params['peak1_unit'].value == 1 ? 'k' : (new_params['peak1_unit'].value == 2 ? 'M' : '')) + 'Hz';
+			var unit = new_params['peak1_unit'];
+			if (unit)
+				freq_unit1 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
 			if (new_params['peak1_power'] && new_params['peak1_freq'] && !$('#CH1_FREEZE').hasClass('active'))
 				$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);		
 		}
@@ -199,8 +200,9 @@
 		{
 			// 0 - Hz, 1 - kHz, 2 - MHz
 			var freq_unit2 = 'Hz';
-			if (new_params['peak2_unit'])
-				freq_unit2 = (new_params['peak2_unit'].value == 1 ? 'k' : (new_params['peak2_unit'].value == 2 ? 'M' : '')) + 'Hz';
+			var unit = new_params['peak2_unit'];
+			if (unit)
+				freq_unit2 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
 			if (new_params['peak2_power'] && new_params['peak2_freq'] && !$('#CH2_FREEZE').hasClass('active'))
 				$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
 		}
@@ -461,7 +463,8 @@ $('#waterfall-holder_ch2').hide();
 		else if(SPEC.params.orig['CH2_SHOW'].value == true)
 			$('#CH1_SHOW').addClass('active');
 	}
-
+	var t_min = SPEC.config.xmin;
+	var t_max = SPEC.config.xmax;
     for(var key in SPEC.params.orig) {
       var field = $('#' + key);
       var value = undefined;
@@ -497,7 +500,16 @@ $('#waterfall-holder_ch2').hide();
 
 	console.log(SPEC.config.xmin, SPEC.config.xmax, SPEC.config.unit);
     }
-    
+
+	if (SPEC.config.xmin >= SPEC.config.xmax) {
+		SPEC.params.local['xmin'].value = t_min;
+		SPEC.params.local['xmax'].value = t_max;
+		SPEC.params.orig['xmin'].value = t_min;
+		SPEC.config.xmin = t_min;
+		SPEC.params.orig['xmax'].value = t_max;
+		SPEC.config.xmax = t_max;
+	}
+
     // Check changes in measurement list
     var mi_count = 0;
     $('#info-meas').empty();
