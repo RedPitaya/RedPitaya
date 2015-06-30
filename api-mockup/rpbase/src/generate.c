@@ -92,11 +92,9 @@ int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_cha
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
 	if (channel == RP_CH_1) {
-		generate->ASM_WrapPointer = 0;
 		generate->AsetOutputTo0 = disable ? 1 : 0;
 	}
 	else if (channel == RP_CH_2) {
-		generate->BSM_WrapPointer = 0;
 		generate->BsetOutputTo0 = disable ? 1 : 0;
 	}
 	else {
@@ -146,6 +144,8 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
 	volatile ch_properties_t *ch_properties;
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
 	ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
+	channel == RP_CH_1 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
+	 
 	return RP_OK;
 }
 
