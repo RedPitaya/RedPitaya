@@ -117,6 +117,11 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope-new
 APP_SPECTRUM_DIR = Applications/spectrum-new
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
+OLD_APPS = praeteritum-apps
+OLD_APPS_DIR = Applications/old-apps
+O_INSTALL_DIR = $PWD
+export O_INSTALL_DIR
+
 # Versioning system
 ################################################################################
 
@@ -134,7 +139,7 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication
+$(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(OLD_APPS) $(APP_SPECTRUM) sdk rp_communication old_apps
 	mkdir $(TARGET)
 	cp $(BOOT)             $(TARGET)
 	cp $(TESTBOOT)         $(TARGET)
@@ -321,6 +326,11 @@ sdkPub:
 
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+old_apps:
+	$(MAKE) -C $(OLD_APPS_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(OLD_APPS_DIR) install
+	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
