@@ -122,9 +122,11 @@ int spec_getPeakPower(int channel, float* power);
 
 int spec_getPeakFreq(int channel, float* freq);
 
-int spec_setFreqRange(float freq);
+int spec_setFreqRange(float _freq_min, float freq);
 
 int spec_setUnit(int unit);
+
+int spec_getUnit();
 
 int spec_getFpgaFreq(float* freq);
 

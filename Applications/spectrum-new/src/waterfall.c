@@ -32,7 +32,7 @@ float g_qq = 0.0;
 const int c_skip_after_conv = 10;
 
 /* Decimation step - without skipped firsy c_skip_after_conf samples */
-int   g_dec_wat_step = 0;
+float   g_dec_wat_step = 0;
 
 float *rp_wf_avg_filter = NULL;
 
@@ -61,6 +61,9 @@ int  rp_wf_cont_map_idx = -1;
  */
 JSAMPLE *rp_wf_cha_wat = NULL;
 JSAMPLE *rp_wf_chb_wat = NULL;
+
+static float g_coeff = 1;
+float g_minI = 1;
 
 int rp_spectr_wf_init(void)
 {
@@ -96,9 +99,9 @@ int rp_spectr_wf_init(void)
     }
 
     g_dec_wat_step = 
-        ceil((g_conv_len-c_skip_after_conv) / (double)RP_SPECTR_WF_COL);
+        (int)ceil((g_conv_len-c_skip_after_conv) / (double)RP_SPECTR_WF_COL);
 
-    g_spectr_wf_col = round((g_conv_len-c_skip_after_conv) / g_dec_wat_step);
+    g_spectr_wf_col = round((g_conv_len-c_skip_after_conv) / (int)g_dec_wat_step);
 
     rp_wf_cha_dec_map = (int *)malloc(g_spectr_wf_col * sizeof(int));
     rp_wf_chb_dec_map = (int *)malloc(g_spectr_wf_col * sizeof(int));
@@ -191,8 +194,9 @@ int rp_spectr_wf_clean_map(void)
     return 0;
 }
 
-int rp_spectr_wf_calc(double *cha_in, double *chb_in)
+int rp_spectr_wf_calc(double *cha_in, double *chb_in, float koeff, float koeff2)
 {
+	g_coeff = koeff;
     if(!cha_in || !chb_in) {
         fprintf(stderr, "rp_spectr_wf_calc(): input signals not initialized\n");
         return -1;
@@ -202,7 +206,14 @@ int rp_spectr_wf_calc(double *cha_in, double *chb_in)
         return -1;
     }
 
-    if(rp_spectr_wf_conv(cha_in, chb_in, &rp_wf_cha_cnv, &rp_wf_chb_cnv) < 0) {
+	g_minI = g_conv_len*koeff2 + c_skip_after_conv;
+	float maxI = g_conv_len*koeff + c_skip_after_conv;
+	maxI = maxI > (g_conv_len-c_skip_after_conv) ? (g_conv_len-c_skip_after_conv) : maxI;
+	g_dec_wat_step = (maxI - g_minI)/(float)g_spectr_wf_col;
+
+	fprintf(stderr, "g_dec_wat_step = %f\n", g_dec_wat_step);
+
+    if(rp_spectr_wf_conv(cha_in, chb_in, &rp_wf_cha_cnv, &rp_wf_chb_cnv, koeff) < 0) {
         fprintf(stderr, "rp_spectr_wf_calc(): rp_spectr_wf_conv() failed\n");
         return -1;
     }
@@ -263,7 +274,7 @@ int rp_spectr_wf_save_jpeg(const char *wf_cha_file, const char *wf_chb_file)
  *  - output: c_dsp_sig_len + RP_SPECTR_WF_AVG_FILT - 1 
  */
 int rp_spectr_wf_conv(double *cha_in, double *chb_in,
-                      double **cha_out, double **chb_out)
+                      double **cha_out, double **chb_out, float koeff)
 {
     double *cha_o = *cha_out;
     double *chb_o = *chb_out;
@@ -274,7 +285,7 @@ int rp_spectr_wf_conv(double *cha_in, double *chb_in,
         return -1;
     }
 
-    for(n = 0; n < g_conv_len; n++) {
+    for(n = 0; n < g_conv_len/*/koeff*/; n++) {
         int kmin, kmax, k;
 
         cha_o[n] = chb_o[n] = 0;
@@ -306,22 +317,23 @@ int rp_spectr_wf_dec_map(double *cha_in, double *chb_in,
 {
     int *cha_o = *cha_out;
     int *chb_o = *chb_out;
-    int i, o;
+    int o;
     if(!cha_in || !chb_in || !cha_o || !chb_o) {
         fprintf(stderr, "rp_spectr_wf_dec() not initialized\n");
         return -1;
     }
 
     /* decimate */
-    for(i = c_skip_after_conv, o = 0; o < g_spectr_wf_col; 
+	float i;
+    for(i = g_minI, o = 0; o < g_spectr_wf_col; 
         o++, i+=g_dec_wat_step) {
         double cha_s, chb_s;
         if(i >= c_dsp_sig_len) {
             continue;
         }
         /* put to linear scale */
-        cha_s = 20*log10(cha_in[i]);
-        chb_s = 20*log10(chb_in[i]);
+        cha_s = 20*log10(cha_in[(int)i]);
+        chb_s = 20*log10(chb_in[(int)i]);
 
         /* prepare map */
         cha_o[o] = __rp_spectr_wf_limit(round(cha_s * g_mm + g_qq));
