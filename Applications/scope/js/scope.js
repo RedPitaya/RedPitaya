@@ -57,7 +57,9 @@
     cursor_dragging: false,
     resized: false,
     sel_sig_name: null,
-    fine: false
+    fine: false,
+	graph_grid_height: null,
+	graph_grid_width: null
   };
   
   // Params cache
@@ -192,10 +194,11 @@
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#ch1_offset_arrow').is(':visible') 
                 || old_params[param_name].value != new_params[param_name].value 
-                || old_params['OSC_CH1_SCALE'].value != new_params['OSC_CH1_SCALE'].value) {
+                || old_params['OSC_CH1_SCALE'].value != new_params['OSC_CH1_SCALE'].value
+				|| (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
               var volt_per_px = (new_params['OSC_CH1_SCALE'].value * 10) / $('#graph_grid').outerHeight();
               var px_offset = -(new_params['OSC_CH1_OFFSET'].value / volt_per_px - parseInt($('#ch1_offset_arrow').css('margin-top')) / 2);
-
+			  OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
               $('#ch1_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset).show();
             }
           }
@@ -207,10 +210,12 @@
           if(new_params['CH2_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#ch2_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
+            if(!$('#ch2_offset_arrow').is(':visible') 
+				|| old_params[param_name].value != new_params[param_name].value
+				|| (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
               var volt_per_px = (new_params['OSC_CH2_SCALE'].value * 10) / $('#graph_grid').outerHeight();
               var px_offset = -(new_params['OSC_CH2_OFFSET'].value / volt_per_px - parseInt($('#ch2_offset_arrow').css('margin-top')) / 2);
-
+			  OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
               $('#ch2_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset).show();
             }
           }
@@ -238,11 +243,13 @@
           if(new_params['OUTPUT1_SHOW'].value && new_params['OUTPUT1_STATE'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#output1_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
+            if(!$('#output1_offset_arrow').is(':visible') 
+				|| old_params[param_name].value != new_params[param_name].value
+				|| (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = 10 / graph_height;
               var px_offset = -(new_params['OUTPUT1_SHOW_OFF'].value / volt_per_px - parseInt($('#output1_offset_arrow').css('margin-top')) / 2);
-
+			  OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
               $('#output1_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset).show();
             }
           }
@@ -254,11 +261,13 @@
           if(new_params['OUTPUT2_SHOW'].value && new_params['OUTPUT2_STATE'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
-            if(!$('#output2_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
+            if(!$('#output2_offset_arrow').is(':visible') 
+				|| old_params[param_name].value != new_params[param_name].value
+				|| (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = 10 / graph_height;
               var px_offset = -(new_params['OUTPUT2_SHOW_OFF'].value / volt_per_px - parseInt($('#output2_offset_arrow').css('margin-top')) / 2);
-
+			  OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
               $('#output2_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset).show();
             }
           }
@@ -272,10 +281,11 @@
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#math_offset_arrow').is(':visible') 
                 || old_params[param_name].value != new_params[param_name].value 
-                || old_params['OSC_MATH_SCALE'].value != new_params['OSC_MATH_SCALE'].value) {
+                || old_params['OSC_MATH_SCALE'].value != new_params['OSC_MATH_SCALE'].value
+				|| (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
               var volt_per_px = (new_params['OSC_MATH_SCALE'].value * 10) / $('#graph_grid').outerHeight();
               var px_offset = -(new_params['OSC_MATH_OFFSET'].value / volt_per_px - parseInt($('#math_offset_arrow').css('margin-top')) / 2);
-
+			  OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
               $('#math_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset).show();
             }
           }
@@ -287,14 +297,16 @@
         else if(param_name == 'OSC_TIME_OFFSET') {
           
           // Change arrow position only if arrow is hidden or old/new values are not the same
-          if(!$('#time_offset_arrow').is(':visible') || old_params[param_name].value != new_params[param_name].value) {
+          if(!$('#time_offset_arrow').is(':visible') 
+			  || old_params[param_name].value != new_params[param_name].value
+			  || (OSC.state.graph_grid_width && OSC.state.graph_grid_width !== $('#graph_grid').outerWidth())) {
             var graph_width = $('#graph_grid').outerWidth();
             var ms_per_px = (new_params['OSC_TIME_SCALE'].value * 10) / graph_width;
             var px_offset = -(new_params['OSC_TIME_OFFSET'].value / ms_per_px + $('#time_offset_arrow').width()/2 + 1);
             var arrow_left = (graph_width + 2) / 2 + px_offset;
             var buf_width = graph_width - 2;
             var ratio = buf_width / (buf_width * new_params['OSC_VIEV_PART'].value);
-            
+            OSC.state.graph_grid_width = graph_width;
             $('#time_offset_arrow').css('left', arrow_left).show();
             $('#buf_time_offset').css('left', buf_width / 2 - buf_width * new_params['OSC_VIEV_PART'].value / 2 + arrow_left / ratio - 4).show();
           }
@@ -537,6 +549,9 @@
     $('#info .info-title > div, #info .info-value > div').not(visible_info).hide();
     $('#info').find(visible_info).show();
     
+	if(OSC.state.resized)
+	
+	
     // Reset resize flag
     OSC.state.resized = false;
     
@@ -1570,7 +1585,7 @@ $(function() {
     'trig-edge-up.png',
     'trig-edge-down.png'
   );
-  
+  OSC.drawGraphGrid();
   // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
   $(window).resize(function() {
     
