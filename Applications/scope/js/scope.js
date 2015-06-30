@@ -549,9 +549,6 @@
     $('#info .info-title > div, #info .info-value > div').not(visible_info).hide();
     $('#info').find(visible_info).show();
     
-	if(OSC.state.resized)
-	
-	
     // Reset resize flag
     OSC.state.resized = false;
     
