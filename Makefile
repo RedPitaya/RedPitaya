@@ -119,7 +119,7 @@ APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
 OLD_APPS = praeteritum-apps
 OLD_APPS_DIR = Applications/old-apps
-O_INSTALL_DIR = $PWD
+O_INSTALL_DIR = $(shell pwd)
 export O_INSTALL_DIR
 
 # Versioning system
