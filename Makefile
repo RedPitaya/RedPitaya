@@ -328,7 +328,7 @@ rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 old_apps:
-	$(MAKE) -C $(OLD_APPS_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(OLD_APPS_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(OLD_APPS_DIR) install
 	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
