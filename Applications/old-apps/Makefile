@@ -3,8 +3,9 @@
 #
 
 #List of applications to build
-APPS = spectrum scope scope+gen freqanalyzer scope+pid
+APPS = scope scope+gen scope+pid spectrum freqanalyzer
 NAME = praeteritum-apps
+O_INSTALL_DIR ?= .
 
 all: zips
 
@@ -20,7 +21,7 @@ install:
 	done
 
 	cd target; zip $(NAME).zip *.zip; cd -
-	cp ./target/$(NAME).zip $(INSTALL_DIR)
+	cp ./target/$(NAME).zip $(O_INSTALL_DIR)
 	rm -rf *.zip
 
 clean:
