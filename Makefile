@@ -329,7 +329,7 @@ rp_communication:
 
 old_apps:
 	$(MAKE) -C $(OLD_APPS_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(OLD_APPS_DIR) install
+	$(MAKE) -C $(OLD_APPS_DIR) install 
 	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
 zip: $(TARGET) $(SDK)
@@ -351,6 +351,7 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
+	make -C $(OLD_APPS_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
