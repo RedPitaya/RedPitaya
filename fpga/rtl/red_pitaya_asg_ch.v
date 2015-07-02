@@ -81,8 +81,6 @@ reg   [RSZ+15: 0] dac_pntp  ; // previour read pointer
 wire  [RSZ+16: 0] dac_npnt  ; // next read pointer
 wire  [RSZ+16: 0] dac_npnt_sub ;
 wire              dac_npnt_sub_neg;
-wire              dac_npnt_sub_pos;
-wire              dac_npnt_sub_zro;
 
 reg   [  28-1: 0] dac_mult  ;
 reg   [  15-1: 0] dac_sum   ;
@@ -186,7 +184,7 @@ always @(posedge dac_clk_i) begin
       // in cycle mode
       if (dac_trig && !set_rst_i)
          dac_do <= 1'b1 ;
-      else if (set_rst_i || ((cyc_cnt==16'h1) && dac_npnt_sub_pos) )
+      else if (set_rst_i || ((cyc_cnt==16'h1) && ~dac_npnt_sub_neg) )
          dac_do <= 1'b0 ;
 
       // in repetition mode
@@ -200,9 +198,7 @@ end
 assign dac_trig = (!dac_rep && trig_in) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
 
 assign dac_npnt_sub = dac_npnt - {1'b0,set_size_i} - 1;
-assign dac_npnt_sub_neg =   dac_npnt_sub[RSZ+16];
-assign dac_npnt_sub_zro = ~|dac_npnt_sub;
-assign dac_npnt_sub_pos = ~dac_npnt_sub_neg & ~dac_npnt_sub_zro;
+assign dac_npnt_sub_neg = dac_npnt_sub[RSZ+16];
 
 // read pointer logic
 always @(posedge dac_clk_i)
@@ -212,8 +208,8 @@ end else begin
    if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
       dac_pnt <= set_ofs_i;
    else if (dac_do) begin
-      if (dac_npnt_sub_pos)  dac_pnt <= set_wrap_i ? dac_npnt_sub : set_ofs_i; // wrap or go to start
-      else                   dac_pnt <= dac_npnt[RSZ+15:0]; // normal increase
+      if (~dac_npnt_sub_neg)  dac_pnt <= set_wrap_i ? dac_npnt_sub : set_ofs_i; // wrap or go to start
+      else                    dac_pnt <= dac_npnt[RSZ+15:0]; // normal increase
    end
 end
 

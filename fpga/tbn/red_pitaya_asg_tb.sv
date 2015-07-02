@@ -24,7 +24,7 @@
 `timescale 1ns / 1ps
 
 module red_pitaya_asg_tb #(
-  // time periods
+  // time period
   realtime  TP = 8.0ns,  // 125MHz
   // DUT configuration
   int unsigned DAC_DW = 14, // ADC data width
@@ -32,7 +32,7 @@ module red_pitaya_asg_tb #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// ADC signal generation
+// DAC signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -68,9 +68,6 @@ always begin
   trig <= 1'b0 ;
 end
 
-reg [9-1: 0] ch0_set;
-reg [9-1: 0] ch1_set;
-
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,11 +84,17 @@ logic            sys_ack  ;
 logic        [ 32-1: 0] rdata;
 logic signed [ 32-1: 0] rdata_blk [];
 
-initial begin
-  wait (rstn)
-  repeat(4) @(posedge clk);
+//---------------------------------------------------------------------------------
+//
+// signal generation
 
-  //CH0 DAC data
+reg [9-1: 0] ch0_set;
+reg [9-1: 0] ch1_set;
+
+initial begin
+  repeat(10) @(posedge clk);
+
+  // CH0 DAC data
   bus.write(32'h10000, 32'd3     );  // write table
   bus.write(32'h10004, 32'd30    );  // write table
   bus.write(32'h10008, 32'd8000  );  // write table
@@ -101,9 +104,9 @@ initial begin
   bus.write(32'h10018,-32'd2000  );  // write table
   bus.write(32'h1001c, 32'd250   );  // write table
 
-  //CH0 DAC settings
+  // CH0 DAC settings
   bus.write(32'h00004,{2'h0,-14'd500, 2'h0, 14'h2F00}  );  // DC offset, amplitude
-  bus.write(32'h00008,{2'h0, 14'd7, 16'd0}             );  // table size
+  bus.write(32'h00008,{2'h0, 14'd7, 16'hffff}          );  // table size
   bus.write(32'h0000C,{2'h0, 14'h1, 16'h0}             );  // reset offset
   bus.write(32'h00010,{2'h0, 14'h2, 16'h0}             );  // table step
   bus.write(32'h00018,{16'h0, 16'd0}                   );  // number of cycles
@@ -112,14 +115,14 @@ initial begin
 
   ch0_set = {1'b0 ,1'b0, 1'b0, 1'b0, 1'b1,    1'b0, 3'h2} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
-  //CH1 DAC data
+  // CH1 DAC data
   for (int k=0; k<8000; k++) begin
-    bus.write(32'h20000 + (k*4), k   );  // write table
+    bus.write(32'h20000 + (k*4), k);  // write table
   end
 
-  //CH1 DAC settings
+  // CH1 DAC settings
   bus.write(32'h00024,{2'h0, 14'd0, 2'h0, 14'h2000}    );  // DC offset, amplitude
-  bus.write(32'h00028,{2'h0, 14'd7999, 16'd0}          );  // table size
+  bus.write(32'h00028,{2'h0, 14'd7999, 16'hffff}       );  // table size
   bus.write(32'h0002C,{2'h0, 14'h5, 16'h0}             );  // reset offset
   bus.write(32'h00030,{2'h0, 14'h9, 16'h0}             );  // table step
   bus.write(32'h00038,{16'h0, 16'd0}                   );  // number of cycles
@@ -139,8 +142,9 @@ initial begin
   repeat(200) @(posedge clk);
 
   // CH1 table data readback
+  rdata_blk = new [80];
   for (int k=0; k<80; k++) begin
-    bus.read(32'h20000 + (k*4), rdata);  // read table
+    bus.read(32'h20000 + (k*4), rdata_blk [k]);  // read table
   end
 
   // CH1 table data readback
@@ -151,6 +155,8 @@ initial begin
   end
 
   repeat(20000) @(posedge clk);
+
+  $finish();
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +188,7 @@ red_pitaya_asg asg (
   .trig_a_i       (trig     ),
   .trig_b_i       (trig     ),
   .trig_out_o     (         ),
-   // System bus
+  // System bus
   .sys_addr       (sys_addr ),
   .sys_wdata      (sys_wdata),
   .sys_sel        (sys_sel  ),
