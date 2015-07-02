@@ -44,6 +44,8 @@ CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
+CFloatParameter out1Scale("OSC_OUTPUT1_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
+CFloatParameter out2Scale("OSC_OUTPUT2_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
 CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
@@ -420,6 +422,17 @@ void OnNewParams(void) {
     cursor1T.Update();
     cursor2T.Update();
 
+	if (out1Scale.IsNewValue())
+	{
+		out1Scale.Update();
+		generate(RP_CH_1);
+	}
+	if (out2Scale.IsNewValue())
+	{
+		out2Scale.Update();
+		generate(RP_CH_2);
+	}
+
 /* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
     IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
 
@@ -545,7 +558,7 @@ void generate(rp_channel_t channel) {
         waveform = (rp_waveform_t) out1WAveform.Value();
         frequency = out1Frequancy.Value();
         phase = (float) (out1Phase.Value() / 180.0f * M_PI);
-        amplitude = out1Amplitude.Value();
+        amplitude = out1Amplitude.Value()/out1Scale.Value();
         offset = out1Offset.Value();
         showOff = out1ShowOffset.Value();
     }
@@ -554,7 +567,7 @@ void generate(rp_channel_t channel) {
         waveform = (rp_waveform_t) out2WAveform.Value();
         frequency = out2Frequancy.Value();
         phase = (float) (out2Phase.Value() / 180.0f * M_PI);
-        amplitude = out2Amplitude.Value();
+        amplitude = out2Amplitude.Value()/out2Scale.Value();
         offset = out2Offset.Value();
         showOff = out2ShowOffset.Value();
     }
