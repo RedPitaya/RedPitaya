@@ -434,6 +434,11 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
+int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
+{
+    return acq_GetDataV2(pos, size, buffer1, buffer2);
+}
+
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetOldestDataV(channel, size, buffer);
