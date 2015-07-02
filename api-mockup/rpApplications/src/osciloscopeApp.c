@@ -1044,6 +1044,12 @@ void mathThreadFunction() {
     }
 }
 
+static inline float linear(float x0, float y0, float x1, float y1, float x) {
+    float k = (y1 - y0) / (x1 - x0);
+    float b = y0 - (k * x0);
+    return (k * x) + b;
+}
+
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
@@ -1099,7 +1105,7 @@ void *mainThreadFun() {
             }
 
             // Calculate transformation (form data to view) parameters
-            _deltaSample = timeToIndex(_timeScale) / samplesPerDivision;
+            _deltaSample = (float)timeToIndex(_timeScale) / (float)samplesPerDivision;
             _triggerDelay = _triggerDelay % ADC_BUFFER_SIZE;
 
             _preZero = 0; //continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
@@ -1146,8 +1152,17 @@ void *mainThreadFun() {
 //                for (int i = 0; i < _preZero; ++i) {
 //                    view[channel * viewSize + i] = 0;
 //                }
-                for (int i = 0; i < viewSize-_postZero && (int) (i * _deltaSample) < _getBufSize; ++i) {
-                    ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) (i * _deltaSample)], view + channel*viewSize + i+_preZero));
+                if(_deltaSample < 1.0f) {
+                    for (int i = 0; i < viewSize-_postZero && (int) ((float)i * _deltaSample) < _getBufSize; ++i) {
+                        int x0 = (int)((float)i * _deltaSample);
+                        int x1 = ((x0 + 1) < (_getBufSize - 1)) ? (x0 + 1) : (_getBufSize - 1);
+                        float y = linear(x0, data[channel][x0], x0 + 1, data[channel][x1], ((float)i * _deltaSample));
+                        ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, y, view + ((channel * viewSize) + i + _preZero)));
+                    }
+                } else {
+                    for (int i = 0; i < viewSize-_postZero && (int) ((float)i * _deltaSample) < _getBufSize; ++i) {
+                        ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) ((float)i * _deltaSample)], view + ((channel * viewSize) + i + _preZero)));
+                    }
                 }
             }
 
