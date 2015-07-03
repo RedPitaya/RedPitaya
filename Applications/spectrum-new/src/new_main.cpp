@@ -80,12 +80,12 @@ void UpdateParams(void)
 		rpApp_SpecGetJpgIdx(&w_idx.Value());
 
 	if (in1Show.Value()) {
-		rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
+		//rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
 		rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
 	}
 
 	if (in2Show.Value()) {
-		rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
+		//rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
 		rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
 	}
 	rp_EnableDigitalLoop(false); // IsDemoParam.Value()); // FIXME
@@ -117,21 +117,37 @@ void UpdateSignals(void)
 	if (g_max_freq < fpga_freq)
 		k2 = fpga_freq/g_max_freq; // send xmax limit koeff
 
+    double max_pw_cha = -1e5;
+    double max_pw_chb = -1e5;
+
 	if (in1Show.Value()) {
 		ch1.Resize(CH_SIGNAL_SIZE/k2);
-		for (size_t i = 1; i < ch1.GetSize()*2; i += 2)
+		for (size_t i = 1; i < ch1.GetSize()*2; i += 2) {
 			ch1[(i-1)/2] = data[1][i];
+		    /* Find peaks */
+		    if(data[1][i] > max_pw_cha) {
+		        max_pw_cha     = data[1][i];
+		    }
+		}
 	}
 	else if (ch1.GetSize() == CH_SIGNAL_SIZE)
 		ch1.Resize(0);
 
 	if (in2Show.Value()) {
 			ch2.Resize(CH_SIGNAL_SIZE/k2);
-		for (size_t i = 1; i < ch2.GetSize()*2; i += 2)
+		for (size_t i = 1; i < ch2.GetSize()*2; i += 2) {
 			ch2[(i-1)/2] = data[2][i];
+		    /* Find peaks */
+		    if(data[1][i] > max_pw_chb) {
+		        max_pw_chb     = data[1][i];
+		    }
+		}
 	}
 	else if (ch2.GetSize() == CH_SIGNAL_SIZE)
 		ch2.Resize(0);
+
+	peak1_power.Value() = max_pw_cha;
+	peak2_power.Value() = max_pw_chb;
 }
 extern "C" int rp_app_exit(void);
 void OnNewParams(void)
