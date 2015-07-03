@@ -1116,7 +1116,8 @@ $(function() {
   new FastClick(document.body);
   
   // Process clicks on top menu buttons
-  $('#OSC_RUN').on('click touchstart', function(ev) {
+//  $('#OSC_RUN').on('click touchstart', function(ev) {
+  $('#OSC_RUN').on('click', function(ev) {
     ev.preventDefault();
     $('#OSC_RUN').hide();
     $('#OSC_STOP').css('display','block');
@@ -1124,7 +1125,8 @@ $(function() {
     OSC.sendParams();
   }); 
   
-  $('#OSC_STOP').on('click touchstart', function(ev) {
+//  $('#OSC_STOP').on('click touchstart', function(ev) {
+  $('#OSC_STOP').on('click', function(ev) {
     ev.preventDefault();
     $('#OSC_STOP').hide();
     $('#OSC_RUN').show(); 
@@ -1132,20 +1134,23 @@ $(function() {
     OSC.sendParams();
   });
   
-  $('#OSC_SINGLE').on('click touchstart', function(ev) {
+//  $('#OSC_SINGLE').on('click touchstart', function(ev) {
+  $('#OSC_SINGLE').on('click', function(ev) {
     ev.preventDefault();
     OSC.params.local['OSC_SINGLE'] = { value: true };
     OSC.sendParams();
   });
   
-  $('#OSC_AUTOSCALE').on('click touchstart', function(ev) {
+//  $('#OSC_AUTOSCALE').on('click touchstart', function(ev) {
+  $('#OSC_AUTOSCALE').on('click', function(ev) {
     ev.preventDefault();
     OSC.params.local['OSC_AUTOSCALE'] = { value: true };
     OSC.sendParams();
   });
   
   // Selecting active signal
-  $('.menu-btn').on('click touchstart', function() {
+//  $('.menu-btn').on('click touchstart', function() {
+  $('.menu-btn').on('click', function() {
     $('#right_menu .menu-btn').not(this).removeClass('active');
     OSC.state.sel_sig_name = $(this).data('signal');
     $('.y-offset-arrow').css('z-index', 10);
@@ -1153,7 +1158,8 @@ $(function() {
   });
 
   // Opening a dialog for changing parameters
-  $('.edit-mode').on('click touchstart', function() {
+//  $('.edit-mode').on('click touchstart', function() {
+  $('.edit-mode').on('click', function() {
     OSC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();
@@ -1178,12 +1184,14 @@ $(function() {
   });
   
   // Close parameters dialog on close button click
-  $('.close-dialog').on('click touchstart', function() {
+//  $('.close-dialog').on('click touchstart', function() {
+  $('.close-dialog').on('click', function() {
     OSC.exitEditing();
   });
   
   // Measurement dialog
-  $('#meas_done').on('click touchstart', function() {              
+//  $('#meas_done').on('click touchstart', function() {              
+  $('#meas_done').on('click', function() {              
     var meas_signal = $('#meas_dialog input[name="meas_signal"]:checked');
     
     if(meas_signal.length) {
@@ -1211,12 +1219,14 @@ $(function() {
   });
   
   // Process events from other controls in parameters dialogs
-  $('#edge1').on('click touchstart', function() {
+//  $('#edge1').on('click touchstart', function() {
+  $('#edge1').on('click', function() {
     $('#edge1').find('img').attr('src','img/edge1_active.png');
     $('#edge2').find('img').attr('src','img/edge2.png');
   });
   
-  $('#edge2').on('click touchstart', function() {
+//  $('#edge2').on('click touchstart', function() {
+  $('#edge2').on('click', function() {
     $('#edge2').find('img').attr('src','img/edge2_active.png');
     $('#edge1').find('img').attr('src','img/edge1.png');
   });
@@ -1227,7 +1237,8 @@ $(function() {
   $('#jtk_right').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_right.png'); });
   $('#jtk_down').on('mousedown touchstart', function() { $('#jtk_btns').attr('src','img/node_down.png'); });
   
-  $('#jtk_fine').on('click touchstart', function(ev){
+//  $('#jtk_fine').on('click touchstart', function(ev){
+  $('#jtk_fine').on('click', function(ev){
     var img = $('#jtk_fine');
     
     if(img.attr('src') == 'img/fine.png') {
@@ -1247,13 +1258,15 @@ $(function() {
     $('#jtk_btns').attr('src','img/node_fine.png'); 
   });
   
-  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
+//  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
+  $('#jtk_up, #jtk_down').on('click', function(ev) {
     ev.preventDefault();
     ev.stopPropagation();
     OSC.changeYZoom(ev.target.id == 'jtk_down' ? '+' : '-');
   });
   
-  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
+//  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
+  $('#jtk_left, #jtk_right').on('click', function(ev) {
     ev.preventDefault();
     ev.stopPropagation();
     OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
