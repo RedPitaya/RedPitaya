@@ -399,7 +399,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
     {
         *url = '\0';
         demo = 1;
-    }
+    } 
     else
     {
 	url = strstr(argv[0], "?type=run");
@@ -409,6 +409,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     char *app_name  = NULL;
     char *fpga_name = NULL;
+
     int   app_id_len, app_name_len, fpga_name_len;
     ngx_http_rp_loc_conf_t *lc = 
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
@@ -429,13 +430,17 @@ int rp_bazaar_start(ngx_http_request_t *r,
     }
 
     /* Assemble the application and FPGA filename:
-     *   <app_dir>/<app_id>/fpga.bit
      *   <app_dir>/<app_id>/controller.so 
      */
     app_id_len = strlen(argv[0]) + 1;
     app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
         strlen("/controller.so") + 2;
-    fpga_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
+
+    /* Get FPGA file name 
+     *    <fpga_dir>/<fpga_app_dir>/fpga.bit
+     */
+
+    fpga_name_len = strlen(c_fpga_dir) + strlen(argv[0]) +
         strlen("/fpga.bit") + 2;
 
     app_name = (char *)malloc(app_name_len);
@@ -464,18 +469,21 @@ int rp_bazaar_start(ngx_http_request_t *r,
             lc->bazaar_dir.data, argv[0]);
     app_name[app_name_len-1]='\0';
 
-    sprintf(fpga_name, "%s/%s/fpga.bit", lc->bazaar_dir.data, argv[0]);
+    sprintf(fpga_name, "%s/%s/fpga.bit", c_fpga_dir, argv[0]);
     fpga_name[fpga_name_len-1]='\0';
-    
 
-    /* Load FPGA */
-    // FPGA loading disabled.
-    // Nginx seems to have the /dev/xdevcfg device file already opened
-    // and rp_bazaar_app_load_fpga() always fails.
-    // The correct FPGA is already loaded at boot time for T&M apps.
-#if 0
+    /* Unload existing application before, new fpga load */
+    if(rp_module_ctx.app.handle != NULL){
+        if(rp_bazaar_app_unload_module(&rp_module_ctx.app)){
+            return rp_module_cmd_error(json_root,
+                                       "Cannot unload existing application.",
+                                       NULL, r->pool);
+        }
+    }
+
     /* Here we do not have application running anymore - load new FPGA */
-    rp_debug(r->connection->log, "Loading FPGA from file: '%s'\n", fpga_name);
+    rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
+    
     if(rp_bazaar_app_load_fpga(fpga_name) < 0) {
         if(app_name)
             free(app_name);
@@ -484,7 +492,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
         return rp_module_cmd_error(json_root, "Can not load FPGA.", 
                                    NULL, r->pool);
     }
-#endif
+
 
     /* Load new application. */
     rp_debug(r->connection->log, "Loading application: '%s'\n", app_name);
