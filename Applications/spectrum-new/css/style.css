@@ -485,6 +485,8 @@ area:hover {
   display: none;
   margin: 0px 11px 10px 29px;
   position: relative;
+  left: 7px;
+  width: 97%;
 }
 
 .waterfall-holder img {

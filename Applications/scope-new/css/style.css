@@ -428,7 +428,7 @@ area:hover {
   position: absolute; 
   margin-left: 8px;
   right: 26px; 
-  top: 400px;  
+  bottom: 10px;
   width: 150px; 
   height: auto;
 }
