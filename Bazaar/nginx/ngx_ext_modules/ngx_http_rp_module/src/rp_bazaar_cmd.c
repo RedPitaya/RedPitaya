@@ -26,6 +26,9 @@
 #include <ws_server.h>
 #include <stdlib.h>
 
+/* TODO: This should not be here. Also, check if fpga is OK must be done! */
+const char *c_fpga_dir       = "/opt/redpitaya/fpga/";
+
 /** The list of available Bazaar commands */
 rp_module_cmd_t bazaar_cmds[] = {
     { "arg_help", "", 
