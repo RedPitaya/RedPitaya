@@ -186,14 +186,18 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
 void UpdateParams(void) {
     CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 
-    if (measureSelect1.Value() != -1)
-        measureValue1.Value() = getMeasureValue(measureSelect1.Value());
-    if (measureSelect2.Value() != -1)
-        measureValue2.Value() = getMeasureValue(measureSelect2.Value());
-    if (measureSelect3.Value() != -1)
-        measureValue3.Value() = getMeasureValue(measureSelect3.Value());
-    if (measureSelect4.Value() != -1)
-        measureValue4.Value() = getMeasureValue(measureSelect4.Value());
+    if (measureSelect1.Value() != -1) {
+        measureValue1.Value() = measureSelect1.Value() == 0 ? fabs(getMeasureValue(measureSelect1.Value())) : getMeasureValue(measureSelect1.Value());
+	}
+    if (measureSelect2.Value() != -1) {
+        measureValue1.Value() = measureSelect2.Value() == 0 ? fabs(getMeasureValue(measureSelect2.Value())) : getMeasureValue(measureSelect2.Value());
+	}
+    if (measureSelect3.Value() != -1) {
+        measureValue1.Value() = measureSelect3.Value() == 0 ? fabs(getMeasureValue(measureSelect3.Value())) : getMeasureValue(measureSelect3.Value());
+	}
+    if (measureSelect4.Value() != -1) {
+        measureValue1.Value() = measureSelect4.Value() == 0 ? fabs(getMeasureValue(measureSelect4.Value())) : getMeasureValue(measureSelect4.Value());
+	}
 
     float portion;
     rpApp_OscGetViewPart(&portion);
