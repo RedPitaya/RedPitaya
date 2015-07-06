@@ -400,8 +400,11 @@
             }
           }
         }
-        else if(param_name == 'SOUR1_VOLT' || param_name == 'SOUR2_VOLT') {
-          $('#' + param_name + '_info').html(OSC.convertVoltage(new_params[param_name].value));
+        else if(param_name == 'SOUR1_VOLT') {
+          $('#' + param_name + '_info').html(OSC.convertVoltage(new_params['OSC_OUTPUT1_SCALE'].value));
+        }
+        else if(param_name == 'SOUR2_VOLT') {
+          $('#' + param_name + '_info').html(OSC.convertVoltage(new_params['OSC_OUTPUT2_SCALE'].value));
         }
         
         // Find the field having ID equal to current parameter name
@@ -590,12 +593,15 @@
     // Check changes in measurement list
     var mi_count = 0;
     $('#info-meas').empty();
+//    $($('#meas_list .meas-item').get().reverse()).each(function(index, elem) {
     $('#meas_list .meas-item').each(function(index, elem) {
       var $elem = $(elem);
       var item_val = $elem.data('value');
       
       if(item_val !== null) {
-        OSC.params.local['OSC_MEAS_SEL' + (++mi_count)] = { value: item_val };
+		++mi_count;
+        OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
+		console.log(elem);
         $('#info-meas').append(
           '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + $elem.data('signal') + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span></div>'
         );
@@ -1210,7 +1216,7 @@ $(function() {
         value: (signal_name == 'CH1' ? operator_val : (signal_name == 'CH2' ? operator_val + 1 : operator_val + 2)),
         operator: operator_name,
         signal: signal_name
-      }).prependTo('#meas_list');
+      }).appendTo('#meas_list');
     }
   });
 
