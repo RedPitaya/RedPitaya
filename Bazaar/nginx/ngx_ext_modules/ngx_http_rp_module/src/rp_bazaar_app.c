@@ -382,8 +382,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
 
         /* We have an application */
-
-	int demo = !is_registered(dir, app_id, "controller.so");
+        int demo = !is_registered(dir, app_id, "controller.so");
 		
         if (verbose) {
             /* Attach whole info JSON */
@@ -548,6 +547,46 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 
         ngx_memset(app, 0, sizeof(rp_bazaar_app_t));
     }
+    return 0;
+}
+
+/* Inline becouse of frequent call */
+inline int get_fpga_dir(const char *app_id,
+                 const char *dir,
+                 char *fpga_file){
+
+    /* Forward declarations */
+    FILE *f_stream = NULL;
+    char *fpga_conf = NULL;
+    char *fpga_name = NULL;
+
+    int fpga_conf_len, fpga_size;
+
+    fpga_conf_len = strlen(dir) + strlen(app_id) +
+        strlen("/fpga.conf");
+
+    fpga_conf = (char *)malloc(fpga_conf_len * sizeof(char *));
+    sprintf(fpga_conf, "%s/%s/fpga.conf", dir, app_id);
+
+    f_stream = fopen(fpga_conf, "r");
+    if(f_stream == NULL){
+        fprintf(stderr, "Error opening fpga.conf file: %s\n", 
+            strerror(errno));
+
+        return -1;
+    }
+
+    fseek(f_stream, 0, SEEK_END);
+    fpga_size = ftell(f_stream);
+    fseek(f_stream, 0, SEEK_SET);
+
+    fpga_name = (char *)malloc(fpga_size * sizeof(char *) + 2);
+    fgets(fpga_name, fpga_size, f_stream);
+    fpga_name[fpga_size - 1] = '\0';
+
+    strcpy(fpga_file, fpga_name, fpga_size + 2);
+    fclose(f_stream);
+
     return 0;
 }
 
