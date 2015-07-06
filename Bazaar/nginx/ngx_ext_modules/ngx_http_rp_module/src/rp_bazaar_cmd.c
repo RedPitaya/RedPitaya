@@ -413,7 +413,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
     char *app_name  = NULL;
     char *fpga_name = NULL;
 
-    int   app_id_len, app_name_len, fpga_conf_len, fpga_len;
+    int   app_id_len, app_name_len;
     ngx_http_rp_loc_conf_t *lc = 
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
 
@@ -439,9 +439,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
     app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
         strlen("/controller.so") + 2;
 
-    /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf 
-     */
-
     app_name = (char *)malloc(app_name_len);
     if(app_name == NULL) {
         return rp_module_cmd_error(json_root, "Can not allocate memory",
@@ -451,7 +448,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
     /* Application id string */
     rp_module_ctx.app.id = (char *)malloc(app_id_len);
     if(rp_module_ctx.app.id == NULL) {
-        free(fpga_name);
         free(app_name);
         return rp_module_cmd_error(json_root, "Can not allocate memory",
                                    strerror(errno), r->pool);
@@ -461,9 +457,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
     sprintf(app_name, "%s/%s/controller.so", 
             lc->bazaar_dir.data, argv[0]);
     app_name[app_name_len-1]='\0';
-
-    
-    
 
     /* Unload existing application before, new fpga load */
     if(rp_module_ctx.app.handle != NULL){
@@ -476,29 +469,55 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf 
      */
-    if(get_fpga_dir(argv[0], lc->bazaar_dir.data, 
+    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, 
         fpga_name) < 0){
-
-        fprintf(stderr, "Unable to get fpga directory: 
-            %s\n", strerror(errno));
-
         return rp_module_cmd_error(json_root,
-                                    "Cannot unload existing application.",
+                                    "Unable to get fpga directory.",
                                     NULL, r->pool);
     }
 
     /* Here we do not have application running anymore - load new FPGA */
     rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
-
-    if(rp_bazaar_app_load_fpga(fpga_name) < 0) {
-        if(app_name)
-            free(app_name);
-        if(fpga_name)
-            free(fpga_name);
-            fclose(f_stream);
-        return rp_module_cmd_error(json_root, "Can not load FPGA.", 
-                                   NULL, r->pool);
+    /* Try loading FPGA code 
+     *    - Test if fpga loaded correctly 
+     *    - Read/write permissions 
+     *    - File exists/not exists */
+    switch(rp_bazaar_app_load_fpga(fpga_name)){
+        case -1:
+            if(app_name) free(app_name);
+            if(fpga_name){
+                free(fpga_name);
+                fclose(f_stream);
+            }
+            return rp_module_cmd_error(json_root, "Cannot find fpga file.",
+                                        NULL, r->pool);
+        case -2:
+            if(app_name) free(app_name);
+            if(fpga_name){
+                free(fpga_name);
+                fclose(f_stream);
+            }
+            return rp_module_cmd_error(json_root, "Fpga file found, but has wrong"
+                                        "permissions",
+                                        NULL, r->pool);
+        case 0:
+            rp_bazaar_app_load_fpga(fpga_name);
+            if(app_name) free(app_name);
+            if(fpga_name){
+                free(fpga_name);
+                fclose(f_stream);
+            }
+            break;
+        default:
+            if(app_name) free(app_name);
+            if(fpga_name){
+                free(fpga_name);
+                fclose(f_stream);
+            }
+            return rp_module_cmd_error(json_root, "Unknown error.",
+                                        NULL, r->pool); 
     }
+    
 
     /* Load new application. */
     rp_debug(r->connection->log, "Loading application: '%s'\n", app_name);

@@ -347,6 +347,65 @@ inline int is_controller_ok(const char *dir,
     return 1;
 }
 
+/* Inline becouse of frequent call */
+int get_fpga_path(const char *app_id,
+                  const char *dir,
+                  char *fpga_file){
+
+    /* Forward declarations */
+    FILE *f_stream = NULL;
+
+    struct stat st;
+    const mode_t perms = S_IRUSR | S_IXUSR;
+
+    int fpga_conf_len, fpga_size;
+
+    fpga_conf_len = strlen(dir) + strlen(app_id) +
+        strlen("/fpga.conf") + 2;
+
+    char fpga_conf[fpga_conf_len * sizeof(char *)];
+    sprintf(fpga_conf, "%s/%s/fpga.conf", dir, app_id);
+    fpga_conf[fpga_conf_len - 1] = '\0';
+
+    f_stream = fopen(fpga_conf, "r");
+    if(f_stream == NULL){
+        fprintf(stderr, "Error opening fpga.conf file: %s\n", 
+            strerror(errno));
+
+        return -1;
+    }
+
+    fseek(f_stream, 0, SEEK_END);
+    fpga_size = ftell(f_stream) + 2;
+    fseek(f_stream, 0, SEEK_SET);
+
+    char fpga_name[fpga_size * sizeof(char *)];
+
+    fgets(fpga_name, fpga_size, f_stream);
+    fpga_name[fpga_size - 1] = '\0';
+
+    /* Copy fpga string into fpga_file */
+    strcpy(fpga_file, fpga_name);
+
+    /* If file doesn't exist */
+    if(stat((const char *)fpga_file, &st) < 0){
+        fprintf(stderr, "Error opening fpga file:"
+            "%s\n", fpga_file);
+
+        fclose(f_stream);
+        return -1;
+    }
+
+    if((st.st_mode & perms) != perms) {
+        /* Permissions wrong */
+        fprintf(stderr, "%s exists but has wrong permissions.\n", fpga_name);
+        return -1;
+    }
+
+    fclose(f_stream);
+    return 0;
+}
+
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
 {
@@ -547,46 +606,6 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 
         ngx_memset(app, 0, sizeof(rp_bazaar_app_t));
     }
-    return 0;
-}
-
-/* Inline becouse of frequent call */
-inline int get_fpga_dir(const char *app_id,
-                 const char *dir,
-                 char *fpga_file){
-
-    /* Forward declarations */
-    FILE *f_stream = NULL;
-    char *fpga_conf = NULL;
-    char *fpga_name = NULL;
-
-    int fpga_conf_len, fpga_size;
-
-    fpga_conf_len = strlen(dir) + strlen(app_id) +
-        strlen("/fpga.conf");
-
-    fpga_conf = (char *)malloc(fpga_conf_len * sizeof(char *));
-    sprintf(fpga_conf, "%s/%s/fpga.conf", dir, app_id);
-
-    f_stream = fopen(fpga_conf, "r");
-    if(f_stream == NULL){
-        fprintf(stderr, "Error opening fpga.conf file: %s\n", 
-            strerror(errno));
-
-        return -1;
-    }
-
-    fseek(f_stream, 0, SEEK_END);
-    fpga_size = ftell(f_stream);
-    fseek(f_stream, 0, SEEK_SET);
-
-    fpga_name = (char *)malloc(fpga_size * sizeof(char *) + 2);
-    fgets(fpga_name, fpga_size, f_stream);
-    fpga_name[fpga_size - 1] = '\0';
-
-    strcpy(fpga_file, fpga_name, fpga_size + 2);
-    fclose(f_stream);
-
     return 0;
 }
 
