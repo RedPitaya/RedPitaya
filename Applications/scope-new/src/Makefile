@@ -2,17 +2,17 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES= \
-	main.cpp \
+CXXSOURCES=main.cpp
 
 RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../libjson
+INCLUDE = -I$(RP_SDK)
 INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
+INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 #CFLAGS=$(CFLAGS) -Wall -Werror -g
-COMMON_FLAGS+=-Wall -g -fPIC -O0
+COMMON_FLAGS+=-Wall -g -fPIC
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
