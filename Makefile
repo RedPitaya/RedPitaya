@@ -145,6 +145,7 @@ $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $
 	cp $(TESTBOOT)         $(TARGET)
 	cp $(DEVICETREE)       $(TARGET)
 	cp $(LINUX)            $(TARGET)
+	cp -r Applications/fpga $(TARGET)
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
