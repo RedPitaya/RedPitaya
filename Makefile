@@ -144,6 +144,9 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK
 	cp -r OS/filesystem/*  $(TARGET)
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
 
+zip: $(TARGET) $(SDK)
+	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_TAG)-$(GIT_COMMIT).zip *
+
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
@@ -321,9 +324,6 @@ sdkPub:
 
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-
-zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
 	make -C $(LINUX_DIR) clean
