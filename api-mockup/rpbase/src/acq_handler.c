@@ -793,6 +793,39 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
     return RP_OK;
 }
 
+int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
+{
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    float gainV1, gainV2;
+    rp_pinState_t gain1, gain2;
+    ECHECK(acq_GetGainV(RP_CH_1, &gainV1));
+    ECHECK(acq_GetGain(RP_CH_1, &gain1));
+    ECHECK(acq_GetGainV(RP_CH_2, &gainV2));
+    ECHECK(acq_GetGain(RP_CH_2, &gain2));
+
+    rp_calib_params_t calib = calib_GetParams();
+    int32_t dc_offs1 = calib.fe_ch1_dc_offs;
+    uint32_t calibScale1 = calib_GetFrontEndScale(RP_CH_1, gain1);
+
+    int32_t dc_offs2 = calib.fe_ch2_dc_offs;
+    uint32_t calibScale2 = calib_GetFrontEndScale(RP_CH_2, gain2);
+
+    const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
+    const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
+    
+    uint32_t cnts;
+    for (uint32_t i = 0; i < (*size); ++i) {
+        cnts = raw_buffer1[(pos + i) % ADC_BUFFER_SIZE];
+        buffer1[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV1, calibScale1, dc_offs1, 0.0);
+
+        cnts = raw_buffer2[(pos + i) % ADC_BUFFER_SIZE];
+        buffer2[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV2, calibScale2, dc_offs2, 0.0);
+    }
+
+    return RP_OK;
+}
+
 int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
 {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
