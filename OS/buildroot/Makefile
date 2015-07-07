@@ -18,12 +18,15 @@ REVISION ?= devbuild
 
 all: $(UIMAGE)
 
-$(UIMAGE): $(B_DIR) overlay config
-	ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
-		cp config.armel $(B_DIR)/.config
-	else
-		cp config.armhf $(B_DIR)/.config
-	endif
+ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
+$(B_DIR)/.config: config.armel
+	cp $< $@
+else
+$(B_DIR)/.config: config.armhf
+	cp $< $@
+endif
+
+$(UIMAGE): $(B_DIR) overlay $(B_DIR)/.config
 	$(MAKE) -C $(B_DIR) USER_HOOKS_EXTRA_ENV='VERSION=$(VERSION) REVISION=$(REVISION)'
 
 $(B_DIR):
