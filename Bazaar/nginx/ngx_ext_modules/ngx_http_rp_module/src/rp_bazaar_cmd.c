@@ -520,6 +520,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
     
 
     /* Load new application. */
+    stop_ws_server();
     rp_debug(r->connection->log, "Loading application: '%s'\n", app_name);
     if(rp_bazaar_app_load_module(app_name, &rp_module_ctx.app) < 0) {
         rp_bazaar_app_unload_module(&rp_module_ctx.app);

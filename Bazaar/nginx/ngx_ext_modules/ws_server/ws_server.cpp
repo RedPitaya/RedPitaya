@@ -8,10 +8,14 @@
 #include <sstream>
 #include <iostream>
 
-rp_websocket_server * s;
+rp_websocket_server * s = NULL;
 
 void start_ws_server(const struct server_parameters * _params)
-{ 		
+{
+    stop_ws_server();
+
+	fprintf(stderr, "start_ws_server()\n");
+	
 	struct server_parameters* loaded_params = load_params();
 	if(_params != 0)
 	{
@@ -39,7 +43,12 @@ void start_ws_server(const struct server_parameters * _params)
 
 void stop_ws_server()
 {
-	s->stop();
+	fprintf(stderr, "stop_ws_server()\n");
+	if(s) {
+	    s->stop();
+	    delete s;
+	    s = NULL;
+	}
 }
 
 struct server_parameters * load_params()

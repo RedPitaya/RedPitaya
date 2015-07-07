@@ -150,6 +150,9 @@ $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $
 	cp -r OS/filesystem/*  $(TARGET)
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
 
+zip: $(TARGET) $(SDK)
+	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_TAG)-$(GIT_COMMIT).zip *
+
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
@@ -332,9 +335,6 @@ old_apps:
 	$(MAKE) -C $(OLD_APPS_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(OLD_APPS_DIR) install 
 	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
-
-zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 
 clean:
 	make -C $(LINUX_DIR) clean
