@@ -470,7 +470,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf 
      */
     if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, 
-        fpga_name) < 0){
+        &fpga_name) < 0){
         return rp_module_cmd_error(json_root,
                                     "Unable to get fpga directory.",
                                     NULL, r->pool);
@@ -478,6 +478,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     /* Here we do not have application running anymore - load new FPGA */
     rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
+    printf("IMAGE: %s\n", &fpga_name[0]);
     /* Try loading FPGA code 
      *    - Test if fpga loaded correctly 
      *    - Read/write permissions 
