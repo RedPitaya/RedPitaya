@@ -68,10 +68,10 @@ CIntParameter measureSelect2("OSC_MEAS_SEL2", CBaseParameter::RW, -1, 0, -1, 23)
 CIntParameter measureSelect3("OSC_MEAS_SEL3", CBaseParameter::RW, -1, 0, -1, 23);
 CIntParameter measureSelect4("OSC_MEAS_SEL4", CBaseParameter::RW, -1, 0, -1, 23);
 
-CFloatParameter measureValue1("OSC_MEAS_VAL1", CBaseParameter::RW, 0, 0, -1000000, 1000000);
-CFloatParameter measureValue2("OSC_MEAS_VAL2", CBaseParameter::RW, 0, 0, -1000000, 1000000);
-CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RW, 0, 0, -1000000, 1000000);
-CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RW, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue1("OSC_MEAS_VAL1", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue2("OSC_MEAS_VAL2", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
 
 /* --------------------------------  CURSORS  ------------------------------ */
 CBooleanParameter cursorx1("OSC_CURSOR_X1", CBaseParameter::RW, false, 0);
@@ -190,13 +190,13 @@ void UpdateParams(void) {
         measureValue1.Value() = measureSelect1.Value() == 0 ? fabs(getMeasureValue(measureSelect1.Value())) : getMeasureValue(measureSelect1.Value());
 	}
     if (measureSelect2.Value() != -1) {
-        measureValue1.Value() = measureSelect2.Value() == 0 ? fabs(getMeasureValue(measureSelect2.Value())) : getMeasureValue(measureSelect2.Value());
+        measureValue2.Value() = measureSelect2.Value() == 0 ? fabs(getMeasureValue(measureSelect2.Value())) : getMeasureValue(measureSelect2.Value());
 	}
     if (measureSelect3.Value() != -1) {
-        measureValue1.Value() = measureSelect3.Value() == 0 ? fabs(getMeasureValue(measureSelect3.Value())) : getMeasureValue(measureSelect3.Value());
+        measureValue3.Value() = measureSelect3.Value() == 0 ? fabs(getMeasureValue(measureSelect3.Value())) : getMeasureValue(measureSelect3.Value());
 	}
     if (measureSelect4.Value() != -1) {
-        measureValue1.Value() = measureSelect4.Value() == 0 ? fabs(getMeasureValue(measureSelect4.Value())) : getMeasureValue(measureSelect4.Value());
+        measureValue4.Value() = measureSelect4.Value() == 0 ? fabs(getMeasureValue(measureSelect4.Value())) : getMeasureValue(measureSelect4.Value());
 	}
 
     float portion;
