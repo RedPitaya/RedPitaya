@@ -22,6 +22,7 @@ ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
 $(B_DIR)/.config: config.armel
 	cp $< $@
 else
+TOOLCHAIN_PATH=/opt/linaro/gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf
 $(B_DIR)/.config: config.armhf
 	cp $< $@
 endif
