@@ -1,4 +1,4 @@
-MODELSIM_BIN=$(HOME)/altera/15/modelsim_ase/bin
+MODELSIM_BIN=$(HOME)/altera/15.0/modelsim_ase/bin
 
 PATH_LIB=/opt/Xilinx/Vivado/2015.1/data/verilog/src
 PATH_SIP=/opt/Xilinx/Vivado/2015.1/data/secureip
