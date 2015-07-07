@@ -368,23 +368,17 @@ int get_fpga_path(const char *app_id,
 
     f_stream = fopen(fpga_conf, "r");
     if(f_stream == NULL){
-        fprintf(stderr, "Error opening fpga.conf file:%s\n", 
-            strerror(errno));
-
+        fprintf(stderr, "Error opening fpga.conf file:%s\n", strerror(errno));
         return -1;
     }
 
     /* Get file size */
-    fseek(f_stream, 0, SEEK_END);
-    fpga_size = ftell(f_stream);
-    fseek(f_stream, 0, SEEK_SET);
+    stat(fpga_conf, &st);
+    fpga_size = st.st_size;
 
     *fpga_file = malloc(fpga_size * sizeof(char));
 
-    while((c = fgetc(f_stream)) != EOF){
-        /* End of line, do not copy \n char */
-        (*fpga_file)[chr++] = (char)c;
-    }
+    fread(*fpga_file, 1, fpga_size, f_stream);
 
     /* Terminate with null char */
     (*fpga_file)[fpga_size-1] = '\0';
@@ -403,7 +397,6 @@ int get_fpga_path(const char *app_id,
         fprintf(stderr, "%s exists but has wrong permissions.\n", *fpga_file);
         return -1;
     }
-
 
     fclose(f_stream);
     return 0;
