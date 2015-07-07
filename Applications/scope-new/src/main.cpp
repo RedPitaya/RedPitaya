@@ -44,6 +44,8 @@ CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
+CFloatParameter out1Scale("OSC_OUTPUT1_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
+CFloatParameter out2Scale("OSC_OUTPUT2_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
 CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
@@ -55,6 +57,7 @@ CIntParameter in2Gain("OSC_CH2_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
 
 /* --------------------------------  TRIGGER PARAMETERS --------------------------- */
 CFloatParameter inTriggLevel("OSC_TRIG_LEVEL", CBaseParameter::RW, 0, 0, -20, 20);
+CFloatParameter inTriggLimit("OSC_TRIG_LIMIT", CBaseParameter::RO, 0, 0, -20, 20);
 CIntParameter inTrigSweep("OSC_TRIG_SWEEP", CBaseParameter::RW, RPAPP_OSC_TRIG_AUTO, 0, RPAPP_OSC_TRIG_AUTO, RPAPP_OSC_TRIG_SINGLE);
 CIntParameter inTrigSource("OSC_TRIG_SOURCE", CBaseParameter::RW, RPAPP_OSC_TRIG_SRC_CH1, 0, RPAPP_OSC_TRIG_SRC_CH1, RPAPP_OSC_TRIG_SRC_EXTERNAL);
 CIntParameter inTrigSlope("OSC_TRIG_SLOPE", CBaseParameter::RW, RPAPP_OSC_TRIG_SLOPE_PE, 0, RPAPP_OSC_TRIG_SLOPE_NE, RPAPP_OSC_TRIG_SLOPE_PE);
@@ -65,10 +68,10 @@ CIntParameter measureSelect2("OSC_MEAS_SEL2", CBaseParameter::RW, -1, 0, -1, 23)
 CIntParameter measureSelect3("OSC_MEAS_SEL3", CBaseParameter::RW, -1, 0, -1, 23);
 CIntParameter measureSelect4("OSC_MEAS_SEL4", CBaseParameter::RW, -1, 0, -1, 23);
 
-CFloatParameter measureValue1("OSC_MEAS_VAL1", CBaseParameter::RW, 0, 0, -1000000, 1000000);
-CFloatParameter measureValue2("OSC_MEAS_VAL2", CBaseParameter::RW, 0, 0, -1000000, 1000000);
-CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RW, 0, 0, -1000000, 1000000);
-CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RW, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue1("OSC_MEAS_VAL1", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue2("OSC_MEAS_VAL2", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue3("OSC_MEAS_VAL3", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
+CFloatParameter measureValue4("OSC_MEAS_VAL4", CBaseParameter::RWSA, 0, 0, -1000000, 1000000);
 
 /* --------------------------------  CURSORS  ------------------------------ */
 CBooleanParameter cursorx1("OSC_CURSOR_X1", CBaseParameter::RW, false, 0);
@@ -183,19 +186,28 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
 void UpdateParams(void) {
     CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 
-    if (measureSelect1.Value() != -1)
-        measureValue1.Value() = getMeasureValue(measureSelect1.Value());
-    if (measureSelect2.Value() != -1)
-        measureValue2.Value() = getMeasureValue(measureSelect2.Value());
-    if (measureSelect3.Value() != -1)
-        measureValue3.Value() = getMeasureValue(measureSelect3.Value());
-    if (measureSelect4.Value() != -1)
-        measureValue4.Value() = getMeasureValue(measureSelect4.Value());
+    if (measureSelect1.Value() != -1) {
+        measureValue1.Value() = measureSelect1.Value() == 0 ? fabs(getMeasureValue(measureSelect1.Value())) : getMeasureValue(measureSelect1.Value());
+	}
+    if (measureSelect2.Value() != -1) {
+        measureValue2.Value() = measureSelect2.Value() == 0 ? fabs(getMeasureValue(measureSelect2.Value())) : getMeasureValue(measureSelect2.Value());
+	}
+    if (measureSelect3.Value() != -1) {
+        measureValue3.Value() = measureSelect3.Value() == 0 ? fabs(getMeasureValue(measureSelect3.Value())) : getMeasureValue(measureSelect3.Value());
+	}
+    if (measureSelect4.Value() != -1) {
+        measureValue4.Value() = measureSelect4.Value() == 0 ? fabs(getMeasureValue(measureSelect4.Value())) : getMeasureValue(measureSelect4.Value());
+	}
 
     float portion;
     rpApp_OscGetViewPart(&portion);
     viewPortion.Value() = portion;
-
+	
+	float trigg_limit;
+	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
+	rp_AcqGetGainV(channel, &trigg_limit);
+	inTriggLimit.Value() = trigg_limit;
+	
     rp_acq_sampling_rate_t sampling_rate;
     rp_AcqGetSamplingRate(&sampling_rate);
     samplingRate.Value() = sampling_rate;
@@ -414,6 +426,17 @@ void OnNewParams(void) {
     cursor1T.Update();
     cursor2T.Update();
 
+	if (out1Scale.IsNewValue())
+	{
+		out1Scale.Update();
+		generate(RP_CH_1);
+	}
+	if (out2Scale.IsNewValue())
+	{
+		out2Scale.Update();
+		generate(RP_CH_2);
+	}
+
 /* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
     IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
 
@@ -539,7 +562,7 @@ void generate(rp_channel_t channel) {
         waveform = (rp_waveform_t) out1WAveform.Value();
         frequency = out1Frequancy.Value();
         phase = (float) (out1Phase.Value() / 180.0f * M_PI);
-        amplitude = out1Amplitude.Value();
+        amplitude = out1Amplitude.Value()/out1Scale.Value();
         offset = out1Offset.Value();
         showOff = out1ShowOffset.Value();
     }
@@ -548,7 +571,7 @@ void generate(rp_channel_t channel) {
         waveform = (rp_waveform_t) out2WAveform.Value();
         frequency = out2Frequancy.Value();
         phase = (float) (out2Phase.Value() / 180.0f * M_PI);
-        amplitude = out2Amplitude.Value();
+        amplitude = out2Amplitude.Value()/out2Scale.Value();
         offset = out2Offset.Value();
         showOff = out2ShowOffset.Value();
     }
