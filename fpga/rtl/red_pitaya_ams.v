@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 /**
  * GENERAL DESCRIPTION:
  *
@@ -40,32 +38,26 @@
  * 
  */
 
-
-
-
-
 module red_pitaya_ams (
    // ADC
-   input                 clk_i           ,  //!< clock
-   input                 rstn_i          ,  //!< reset - active low
-   input      [  5-1: 0] vinp_i          ,  //!< voltages p
-   input      [  5-1: 0] vinn_i          ,  //!< voltages n
-
+   input                 clk_i           ,  // clock
+   input                 rstn_i          ,  // reset - active low
+   input      [  5-1: 0] vinp_i          ,  // voltages p
+   input      [  5-1: 0] vinn_i          ,  // voltages n
    // PWM DAC
-   output     [ 24-1: 0] dac_a_o         ,  //!< values used for
-   output     [ 24-1: 0] dac_b_o         ,  //!< conversion into PWM signal
-   output     [ 24-1: 0] dac_c_o         ,  //!< 
-   output     [ 24-1: 0] dac_d_o         ,  //!< 
-
+   output     [ 24-1: 0] dac_a_o         ,  // values used for
+   output     [ 24-1: 0] dac_b_o         ,  // conversion into PWM signal
+   output     [ 24-1: 0] dac_c_o         ,  // 
+   output     [ 24-1: 0] dac_d_o         ,  // 
    // system bus
-   input      [ 32-1: 0] sys_addr        ,  //!< bus address
-   input      [ 32-1: 0] sys_wdata       ,  //!< bus write data
-   input      [  4-1: 0] sys_sel         ,  //!< bus write byte select
-   input                 sys_wen         ,  //!< bus write enable
-   input                 sys_ren         ,  //!< bus read enable
-   output reg [ 32-1: 0] sys_rdata       ,  //!< bus read data
-   output reg            sys_err         ,  //!< bus error indicator
-   output reg            sys_ack            //!< bus acknowledge signal
+   input      [ 32-1: 0] sys_addr        ,  // bus address
+   input      [ 32-1: 0] sys_wdata       ,  // bus write data
+   input      [  4-1: 0] sys_sel         ,  // bus write byte select
+   input                 sys_wen         ,  // bus write enable
+   input                 sys_ren         ,  // bus read enable
+   output reg [ 32-1: 0] sys_rdata       ,  // bus read data
+   output reg            sys_err         ,  // bus error indicator
+   output reg            sys_ack            // bus acknowledge signal
 );
 
 //---------------------------------------------------------------------------------
@@ -91,20 +83,18 @@ reg   [ 24-1: 0] dac_b_r      ;
 reg   [ 24-1: 0] dac_c_r      ;
 reg   [ 24-1: 0] dac_d_r      ;
 
-always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      dac_a_r     <= 24'h0F_0000 ;
-      dac_b_r     <= 24'h4E_0000 ;
-      dac_c_r     <= 24'h75_0000 ;
-      dac_d_r     <= 24'h9C_0000 ;
-   end
-   else begin
-      if (sys_wen) begin
-         if (sys_addr[19:0]==16'h20)   dac_a_r <= sys_wdata[24-1: 0] ;
-         if (sys_addr[19:0]==16'h24)   dac_b_r <= sys_wdata[24-1: 0] ;
-         if (sys_addr[19:0]==16'h28)   dac_c_r <= sys_wdata[24-1: 0] ;
-         if (sys_addr[19:0]==16'h2C)   dac_d_r <= sys_wdata[24-1: 0] ;
-      end
+always @(posedge clk_i)
+if (rstn_i == 1'b0) begin
+   dac_a_r     <= 24'h0F_0000 ;
+   dac_b_r     <= 24'h4E_0000 ;
+   dac_c_r     <= 24'h75_0000 ;
+   dac_d_r     <= 24'h9C_0000 ;
+end else begin
+   if (sys_wen) begin
+      if (sys_addr[19:0]==16'h20)   dac_a_r <= sys_wdata[24-1: 0] ;
+      if (sys_addr[19:0]==16'h24)   dac_b_r <= sys_wdata[24-1: 0] ;
+      if (sys_addr[19:0]==16'h28)   dac_c_r <= sys_wdata[24-1: 0] ;
+      if (sys_addr[19:0]==16'h2C)   dac_d_r <= sys_wdata[24-1: 0] ;
    end
 end
 
@@ -206,9 +196,7 @@ XADC #(
   // Simulation attributes: Set for proper simulation behavior
   .SIM_DEVICE("7SERIES"),            // Select target device (values)
   .SIM_MONITOR_FILE("../../../../code/bench/xadc_sim_values.txt")  // Analog simulation data file name
-)
-XADC_inst
-(
+) XADC_inst (
   // ALARMS: 8-bit (each) output: ALM, OT
   .ALM        (  xadc_alarm           ),  // 8-bit output: Output alarm for temp, Vccint, Vccaux and Vccbram
   .OT         (                       ),  // 1-bit output: Over-Temperature alarm
@@ -241,23 +229,21 @@ XADC_inst
   .MUXADDR      (   )  // 5-bit output: External MUX channel decode
 );
 
+always @(posedge clk_i)
+if (xadc_drp_drdy) begin
+   if (xadc_drp_addr == 7'd0 )   adc_temp_r <= xadc_drp_dato[15:4]; // temperature
+   if (xadc_drp_addr == 7'd13)   adc_pint_r <= xadc_drp_dato[15:4]; // vccpint
+   if (xadc_drp_addr == 7'd14)   adc_paux_r <= xadc_drp_dato[15:4]; // vccpaux
+   if (xadc_drp_addr == 7'd6 )   adc_bram_r <= xadc_drp_dato[15:4]; // vccbram
+   if (xadc_drp_addr == 7'd1 )   adc_int_r  <= xadc_drp_dato[15:4]; // vccint
+   if (xadc_drp_addr == 7'd2 )   adc_aux_r  <= xadc_drp_dato[15:4]; // vccaux
+   if (xadc_drp_addr == 7'd15)   adc_ddr_r  <= xadc_drp_dato[15:4]; // vccddr
 
-always @(posedge clk_i) begin
-   if (xadc_drp_drdy) begin
-      if (xadc_drp_addr == 7'd0 )   adc_temp_r <= xadc_drp_dato[15:4]; // temperature
-      if (xadc_drp_addr == 7'd13)   adc_pint_r <= xadc_drp_dato[15:4]; // vccpint
-      if (xadc_drp_addr == 7'd14)   adc_paux_r <= xadc_drp_dato[15:4]; // vccpaux
-      if (xadc_drp_addr == 7'd6 )   adc_bram_r <= xadc_drp_dato[15:4]; // vccbram
-      if (xadc_drp_addr == 7'd1 )   adc_int_r  <= xadc_drp_dato[15:4]; // vccint
-      if (xadc_drp_addr == 7'd2 )   adc_aux_r  <= xadc_drp_dato[15:4]; // vccaux
-      if (xadc_drp_addr == 7'd15)   adc_ddr_r  <= xadc_drp_dato[15:4]; // vccddr
-
-      if (xadc_drp_addr == 7'h03)   adc_v_r <= xadc_drp_dato[15:4]; // vin
-      if (xadc_drp_addr == 7'd16)   adc_b_r <= xadc_drp_dato[15:4]; // ch0 - aif1
-      if (xadc_drp_addr == 7'd17)   adc_c_r <= xadc_drp_dato[15:4]; // ch1 - aif2
-      if (xadc_drp_addr == 7'd24)   adc_a_r <= xadc_drp_dato[15:4]; // ch8 - aif0
-      if (xadc_drp_addr == 7'd25)   adc_d_r <= xadc_drp_dato[15:4]; // ch9 - aif3
-   end
+   if (xadc_drp_addr == 7'h03)   adc_v_r <= xadc_drp_dato[15:4]; // vin
+   if (xadc_drp_addr == 7'd16)   adc_b_r <= xadc_drp_dato[15:4]; // ch0 - aif1
+   if (xadc_drp_addr == 7'd17)   adc_c_r <= xadc_drp_dato[15:4]; // ch1 - aif2
+   if (xadc_drp_addr == 7'd24)   adc_a_r <= xadc_drp_dato[15:4]; // ch8 - aif0
+   if (xadc_drp_addr == 7'd25)   adc_d_r <= xadc_drp_dato[15:4]; // ch9 - aif3
 end
 
 endmodule

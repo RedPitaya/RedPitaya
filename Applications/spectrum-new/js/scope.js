@@ -371,7 +371,7 @@ $('#waterfall-holder_ch2').hide();
 	  }
 	  else if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin']) {
 		for(var i = 0; i < new_signals[sig_name].size; i++) {
-			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size - 1);
+			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size + 0.5);
 			var p = d*i;
 	   	 	points.push([p, new_signals[sig_name].value[i]]);
 	  	}
@@ -1088,7 +1088,7 @@ $(function() {
   new FastClick(document.body);
   
   // Process clicks on top menu buttons
-  $('#SPEC_RUN').on('click touchstart', function() {
+  $('#SPEC_RUN').on('click', function() {
     //ev.preventDefault();
     $('#SPEC_RUN').hide();
     $('#SPEC_STOP').css('display','block');
@@ -1096,7 +1096,7 @@ $(function() {
     SPEC.sendParams();
   }); 
   
-  $('#SPEC_STOP').on('click touchstart', function() {
+  $('#SPEC_STOP').on('click', function() {
     //ev.preventDefault();
     $('#SPEC_STOP').hide();
     $('#SPEC_RUN').show(); 
@@ -1104,20 +1104,20 @@ $(function() {
     SPEC.sendParams();
   });
   
-  $('#SPEC_SINGLE').on('click touchstart', function() {
+  $('#SPEC_SINGLE').on('click', function() {
     ev.preventDefault();
     SPEC.params.local['SPEC_SINGLE'] = { value: true };
     SPEC.sendParams();
   });
   
-  $('#SPEC_AUTOSCALE').on('click touchstart', function() {
+  $('#SPEC_AUTOSCALE').on('click', function() {
     ev.preventDefault();
     SPEC.params.local['SPEC_AUTOSCALE'] = { value: true };
     SPEC.sendParams();
   });
 
   // Opening a dialog for changing parameters
-  $('.edit-mode').on('click touchstart', function() {
+  $('.edit-mode').on('click', function() {
     SPEC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();  
@@ -1131,12 +1131,12 @@ $(function() {
   });
   
   // Close parameters dialog on close button click
-  $('.close-dialog').on('click touchstart', function() {
+  $('.close-dialog').on('click', function() {
     SPEC.exitEditing();
   });
   
   // Measurement dialog
-  $('#meas_done').on('click touchstart', function() {             
+  $('#meas_done').on('click', function() {             
     var meas_signal = $('#meas_dialog input[name="meas_signal"]:checked');
     
     if(meas_signal.length) {
@@ -1164,12 +1164,12 @@ $(function() {
   });
   
   // Process events from other controls in parameters dialogs
-  $('#edge1').on('click touchstart', function() {
+  $('#edge1').on('click', function() {
     $('#edge1').find('img').attr('src','img/edge1_active.png');
     $('#edge2').find('img').attr('src','img/edge2.png');
   });
   
-  $('#edge2').on('click touchstart', function() {
+  $('#edge2').on('click', function() {
     $('#edge2').find('img').attr('src','img/edge2_active.png');
     $('#edge1').find('img').attr('src','img/edge1.png');
   });
@@ -1187,15 +1187,15 @@ $(function() {
 	$('#jtk_fine').attr('src','img/reset.png');
   });
   
-  $('#jtk_fine').on('click touchstart', function(ev) {
+  $('#jtk_fine').on('click', function(ev) {
 	SPEC.resetZoom();
   });
   
-  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
+  $('#jtk_up, #jtk_down').on('click', function(ev) {
     SPEC.changeYZoom(ev.target.id == 'jtk_down' ? '-' : '+');
   });
   
-  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
+  $('#jtk_left, #jtk_right').on('click', function(ev) {
     SPEC.changeXZoom(ev.target.id == 'jtk_left' ? '-' : '+');
   });
   
