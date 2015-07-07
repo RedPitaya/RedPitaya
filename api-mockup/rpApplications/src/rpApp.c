@@ -315,12 +315,16 @@ int rpApp_SpecGetPeakFreq(int channel, float* freq) {
 	return spec_getPeakFreq(channel, freq);
 }
 
-int rpApp_SpecSetFreqRange(float freq) {
-	return spec_setFreqRange(freq);
+int rpApp_SpecSetFreqRange(float _freq_min, float freq) {
+	return spec_setFreqRange(_freq_min, freq);
 }
 
 int rpApp_SpecSetUnit(int unit) {
 	return spec_setUnit(unit);
+}
+
+int rpApp_SpecGetUnit() {
+	return spec_getUnit();
 }
 
 int rpApp_SpecGetViewSize(size_t* size)
@@ -346,7 +350,7 @@ int rpApp_SpecSetFreqMin(float freq) // TODO??
 
 int rpApp_SpecSetFreqMax(float freq)
 {
-	return spec_setFreqRange(freq);
+	return spec_setFreqRange(0, freq);
 }
 
 int rpApp_SpecGetFpgaFreq(float* freq)
