@@ -474,6 +474,14 @@ area:hover {
   display: inline;
 }
 
+#power {
+    position: absolute;
+    top: 45%;
+    left: 7px;
+    transform: rotate(-90deg);
+    transform-origin: 0px 0px 0px;
+}
+
 #new_scale {
   position: absolute;
   left: 15px;
