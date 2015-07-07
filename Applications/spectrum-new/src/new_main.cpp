@@ -33,8 +33,8 @@ CFloatParameter in1Scale("SPEC_CH1_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 CFloatParameter in2Scale("SPEC_CH2_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 
 CFloatParameter inFreqScale("SPEC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 50000);
-CFloatParameter xmin("xmin", CBaseParameter::RW, 0, 0, -1e6, +1e6);
-CFloatParameter xmax("xmax", CBaseParameter::RW, 63, 0, -1e6, +1e6);
+CFloatParameter xmin("xmin", CBaseParameter::RW, 0, 0, -1000, 1000);
+CFloatParameter xmax("xmax", CBaseParameter::RW, 63, 0, -1000, 1000);
 
 
 CFloatParameter peak1_freq("peak1_freq", CBaseParameter::ROSA, 0, 0, 0, +1e6);
@@ -42,7 +42,7 @@ CFloatParameter peak1_power("peak1_power", CBaseParameter::ROSA, 0, 0, -10000000
 CFloatParameter peak1_unit("peak1_unit", CBaseParameter::ROSA, 0, 1, 0, 2);
 
 CFloatParameter peak2_freq("peak2_freq", CBaseParameter::ROSA, 0, 0, 0, 1e6);
-CFloatParameter peak2_power("peak2_power", CBaseParameter::ROSA, 0, 0, -1e7, 1e7);
+CFloatParameter peak2_power("peak2_power", CBaseParameter::ROSA, 0, 0, -10000000, +10000000);
 CFloatParameter peak2_unit("peak2_unit", CBaseParameter::ROSA, 0, 0, 0, 2);
 
 CIntParameter w_idx("w_idx", CBaseParameter::RO, 0, 0, 0, 1000);
@@ -68,18 +68,26 @@ CFloatParameter cursor2V("SPEC_CUR2_V", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor1T("SPEC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2T("SPEC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 
+static float g_max_freq = 63000000;
+
 void UpdateParams(void)
 {
 	inRun.Update();
 	if (inRun.Value() == false)
 		return;
 
-	int ret = rpApp_SpecGetJpgIdx(&w_idx.Value());
-	ret = rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
-	ret = rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());
+	if (in1Show.Value() || in2Show.Value())
+		rpApp_SpecGetJpgIdx(&w_idx.Value());
 
-	ret = rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
-	ret = rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
+	if (in1Show.Value()) {
+		//rpApp_SpecGetPeakPower(RP_CH_1, &peak1_power.Value());
+		rpApp_SpecGetPeakFreq(RP_CH_1, &peak1_freq.Value());
+	}
+
+	if (in2Show.Value()) {
+		//rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
+		rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
+	}
 	rp_EnableDigitalLoop(false); // IsDemoParam.Value()); // FIXME
 }
 
@@ -103,23 +111,43 @@ void UpdateSignals(void)
 			return;
 	}
 
+	float fpga_freq, k1 = 1, k2 = 1;
+	rpApp_SpecGetFpgaFreq(&fpga_freq);
+	
+	if (g_max_freq < fpga_freq)
+		k2 = fpga_freq/g_max_freq; // send xmax limit koeff
+
+    double max_pw_cha = -1e5;
+    double max_pw_chb = -1e5;
+
 	if (in1Show.Value()) {
-		if (ch1.GetSize() != CH_SIGNAL_SIZE)
-			ch1.Resize(CH_SIGNAL_SIZE);
-		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			ch1[i] = data[1][i*2];
+		ch1.Resize(CH_SIGNAL_SIZE/k2);
+		for (size_t i = 1; i < ch1.GetSize()*2; i += 2) {
+			ch1[(i-1)/2] = data[1][i];
+		    /* Find peaks */
+		    if(data[1][i] > max_pw_cha) {
+		        max_pw_cha     = data[1][i];
+		    }
+		}
 	}
 	else if (ch1.GetSize() == CH_SIGNAL_SIZE)
 		ch1.Resize(0);
 
 	if (in2Show.Value()) {
-		if (ch2.GetSize() != CH_SIGNAL_SIZE)
-			ch2.Resize(CH_SIGNAL_SIZE);
-		for (size_t i = 0; i < CH_SIGNAL_SIZE; i++)
-			ch2[i] = data[2][i*2];
+			ch2.Resize(CH_SIGNAL_SIZE/k2);
+		for (size_t i = 1; i < ch2.GetSize()*2; i += 2) {
+			ch2[(i-1)/2] = data[2][i];
+		    /* Find peaks */
+		    if(data[1][i] > max_pw_chb) {
+		        max_pw_chb     = data[1][i];
+		    }
+		}
 	}
 	else if (ch2.GetSize() == CH_SIGNAL_SIZE)
 		ch2.Resize(0);
+
+	peak1_power.Value() = max_pw_cha;
+	peak2_power.Value() = max_pw_chb;
 }
 extern "C" int rp_app_exit(void);
 void OnNewParams(void)
@@ -154,17 +182,29 @@ void OnNewParams(void)
     cursor1T.Update();
     cursor2T.Update();
 
+	xmin.Update();
+	if (xmin.Value() < 0)
+		xmin.Value() = 0;
+
 	if (xmax.IsNewValue() || freq_unit.IsNewValue())
 	{
 		freq_unit.Update();
 		xmax.Update();
 
-		float max_freq = xmax.Value();
+		if (freq_unit.Value() == 2 && xmax.Value() > 63)
+			xmax.Value() = 63;
+
+		float min = xmin.Value();
+		g_max_freq = xmax.Value();
 		for (int i = 0; i < freq_unit.Value(); ++i)
-			max_freq *= 1000; // set x max freq (Hz, kHz or MHz) by unit
+		{
+			g_max_freq *= 1000; // set x max freq (Hz, kHz or MHz) by unit
+			min *= 1000;
+		}
 
 		rpApp_SpecSetUnit(freq_unit.Value());
-		rpApp_SpecSetFreqRange(max_freq);
+		rpApp_SpecSetFreqRange(min, g_max_freq);
+		peak1_unit.Value() = peak2_unit.Value() = rpApp_SpecGetUnit();
 	}
 }
 

@@ -1,6 +1,6 @@
 body {
   color: #cdcccc;
-  overflow: auto; 
+  overflow-y: auto; 
   padding-right: 0 !important;
 }
 
@@ -217,7 +217,7 @@ area:hover {
 }
 
 .menu-content {
-  width: 170px;
+  width: 160px;
   float: right;
 }
 
@@ -398,6 +398,7 @@ area:hover {
   width: 100%;
   text-align: center;
   height: 31px;
+  font-size: 85%;
 }
 
 .close-dialog {
@@ -456,6 +457,7 @@ area:hover {
   position: absolute; 
   top: 0px; 
   left: 0px;
+  margin-left: 8px;
 }
 
 .y-offset-arrow, #time_offset_arrow {
@@ -472,6 +474,14 @@ area:hover {
   display: inline;
 }
 
+#power {
+    position: absolute;
+    top: 45%;
+    left: 7px;
+    transform: rotate(-90deg);
+    transform-origin: 0px 0px 0px;
+}
+
 #new_scale {
   position: absolute;
   left: 15px;
@@ -483,11 +493,13 @@ area:hover {
   display: none;
   margin: 0px 11px 10px 29px;
   position: relative;
+  left: 7px;
+  width: 97%;
 }
 
 .waterfall-holder img {
   display: block;
-  width: 100%;
+  width: 101%;
   height: auto;
   min-height: 100px;
   max-height: 100px;
@@ -517,7 +529,7 @@ area:hover {
 
 .wait img{
   display: block;
-  width: 100%;
+  width: 101%;
   height: auto;
   max-height: 100px;
 }
@@ -595,7 +607,7 @@ area:hover {
 .varrow {
   position: absolute;
   left: 0;
-  bottom: 8px;
+  bottom: 29px;
   margin-left: -7px;
   display: none;
   z-index: 12;
