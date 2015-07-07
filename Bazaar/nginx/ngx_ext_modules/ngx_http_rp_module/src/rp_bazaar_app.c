@@ -354,10 +354,9 @@ int get_fpga_path(const char *app_id,
     /* Forward declarations */
     FILE *f_stream = NULL;
     struct stat st;
-    size_t chr = 0;
     const mode_t perms = S_IRUSR | S_IXUSR;
 
-    int fpga_conf_len, fpga_size, c = 0;
+    int fpga_conf_len, fpga_size;
 
     fpga_conf_len = strlen(dir) + strlen(app_id) +
         strlen("/fpga.conf") + 3;
