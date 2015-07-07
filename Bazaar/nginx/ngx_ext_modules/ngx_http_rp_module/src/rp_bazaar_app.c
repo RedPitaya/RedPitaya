@@ -505,7 +505,7 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     app->get_signals_func = dlsym(app->handle, c_rp_get_signals_str);
     if(!app->get_signals_func)
         return -1;
-//start web socket functionality
+    //start web socket functionality
     app->ws_api_supported = 1;
     app->ws_set_params_interval_func = dlsym(app->handle, c_ws_set_params_interval_str);
     if(!app->ws_set_params_interval_func)
@@ -577,7 +577,7 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
     }
 
-//end web socket functionality
+    //end web socket functionality
 
     app->file_name = (char *)malloc(strlen(app_file)+1);
     if(app->file_name == NULL)

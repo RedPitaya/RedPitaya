@@ -246,7 +246,7 @@ BR2_PACKAGE_BUSYBOX_CONFIG="../busybox.config"
 # BR2_PACKAGE_BZIP2 is not set
 # BR2_PACKAGE_INFOZIP is not set
 # BR2_PACKAGE_LZOP is not set
-# BR2_PACKAGE_XZ is not set
+BR2_PACKAGE_XZ=y
 
 #
 # Debugging, profiling and benchmark
