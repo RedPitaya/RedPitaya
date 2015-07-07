@@ -347,21 +347,20 @@ inline int is_controller_ok(const char *dir,
     return 1;
 }
 
-/* Inline becouse of frequent call */
 int get_fpga_path(const char *app_id,
                   const char *dir,
-                  char *fpga_file){
+                  char **fpga_file){
 
     /* Forward declarations */
     FILE *f_stream = NULL;
-
     struct stat st;
+    size_t chr = 0;
     const mode_t perms = S_IRUSR | S_IXUSR;
 
-    int fpga_conf_len, fpga_size;
+    int fpga_conf_len, fpga_size, c = 0;
 
     fpga_conf_len = strlen(dir) + strlen(app_id) +
-        strlen("/fpga.conf") + 2;
+        strlen("/fpga.conf") + 3;
 
     char fpga_conf[fpga_conf_len * sizeof(char *)];
     sprintf(fpga_conf, "%s/%s/fpga.conf", dir, app_id);
@@ -369,38 +368,42 @@ int get_fpga_path(const char *app_id,
 
     f_stream = fopen(fpga_conf, "r");
     if(f_stream == NULL){
-        fprintf(stderr, "Error opening fpga.conf file: %s\n", 
+        fprintf(stderr, "Error opening fpga.conf file:%s\n", 
             strerror(errno));
 
         return -1;
     }
 
+    /* Get file size */
     fseek(f_stream, 0, SEEK_END);
-    fpga_size = ftell(f_stream) + 2;
+    fpga_size = ftell(f_stream);
     fseek(f_stream, 0, SEEK_SET);
 
-    char fpga_name[fpga_size * sizeof(char *)];
+    *fpga_file = malloc(fpga_size * sizeof(char));
 
-    fgets(fpga_name, fpga_size, f_stream);
-    fpga_name[fpga_size - 1] = '\0';
+    while((c = fgetc(f_stream)) != EOF){
+        /* End of line, do not copy \n char */
+        (*fpga_file)[chr++] = (char)c;
+    }
 
-    /* Copy fpga string into fpga_file */
-    strcpy(fpga_file, fpga_name);
+    /* Terminate with null char */
+    (*fpga_file)[fpga_size-1] = '\0';
 
     /* If file doesn't exist */
     if(stat((const char *)fpga_file, &st) < 0){
         fprintf(stderr, "Error opening fpga file:"
-            "%s\n", fpga_file);
+            "%s\n", strerror(errno));
 
         fclose(f_stream);
         return -1;
-    }
+    } 
 
     if((st.st_mode & perms) != perms) {
         /* Permissions wrong */
-        fprintf(stderr, "%s exists but has wrong permissions.\n", fpga_name);
+        fprintf(stderr, "%s exists but has wrong permissions.\n", *fpga_file);
         return -1;
     }
+
 
     fclose(f_stream);
     return 0;
