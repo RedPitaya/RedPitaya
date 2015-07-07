@@ -24,6 +24,10 @@
   };
   SPEC.config.waterf_img_path = "/tmp/"
   SPEC.freq_unit = ['Hz', 'kHz', 'MHz'];
+
+  SPEC.config.xmin = 0;
+  SPEC.config.xmax = 63;
+  SPEC.config.unit = 2;
 	
   SPEC.time_steps = [
     // Hz
@@ -141,7 +145,6 @@
 
         if(receive.parameters) {
 			SPEC.processParameters(receive.parameters);
-			console.log([Object.keys(SPEC.params.orig).length, Object.keys(receive.parameters).length, Object.keys(SPEC.params.orig).length == 0 && Object.keys(receive.parameters).length < 30]);
 			if(Object.keys(SPEC.params.orig).length < 30 && Object.keys(receive.parameters).length < 30) {
 				SPEC.params.local['in_command'] = { value: 'send_all_params' };
 				SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
@@ -187,18 +190,21 @@
 			// 0 - Hz, 1 - kHz, 2 - MHz
 
 			var freq_unit1 = 'Hz';
-			if (new_params['peak1_unit'])
-				freq_unit1 = (new_params['peak1_unit'].value == 1 ? 'k' : (new_params['peak1_unit'].value == 2 ? 'M' : '')) + 'Hz';
-			if (new_params['peak1_power'] && new_params['peak1_freq'])
+			var unit = new_params['peak1_unit'];
+			if (unit)
+				freq_unit1 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
+			if (new_params['peak1_power'] && new_params['peak1_freq'] && !$('#CH1_FREEZE').hasClass('active'))
 				$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);		
 		}
 		/*else*/ if (param_name == 'peak2_unit')
 		{
 			// 0 - Hz, 1 - kHz, 2 - MHz
 			var freq_unit2 = 'Hz';
-			if (new_params['peak2_unit'])
-				freq_unit2 = (new_params['peak2_unit'].value == 1 ? 'k' : (new_params['peak2_unit'].value == 2 ? 'M' : '')) + 'Hz';
-			$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
+			var unit = new_params['peak2_unit'];
+			if (unit)
+				freq_unit2 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
+			if (new_params['peak2_power'] && new_params['peak2_freq'] && !$('#CH2_FREEZE').hasClass('active'))
+				$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
 		}
 		/*else*/ if(param_name == 'w_idx')
 		{
@@ -279,7 +285,6 @@
         // Do not change fields from dialogs when user is editing something        
         if((!SPEC.state.editing || field.closest('.menu-content').length == 0) 
 	&& (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
-          
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
 
@@ -288,7 +293,7 @@
 				SPEC.updateZoom();
 
 				if (new_params['freq_unit'])
-					$('#freq_scale_unit').html(SPEC.freq_unit[new_params['freq_unit'].value]);
+					$('#freq').html(SPEC.freq_unit[new_params['freq_unit'].value]);
 				$('.freeze.active').removeClass('active');
 			}
           }
@@ -334,43 +339,42 @@
     
 	// Keep the datasets for frozen channels
 	var frozen_dsets = [
-	  ($('#CH1_FREEZE').hasClass('active') && SPEC.datasets[0] !== undefined ? SPEC.datasets[0] : null),
-	  ($('#CH2_FREEZE').hasClass('active') && SPEC.datasets[1] !== undefined ? SPEC.datasets[1] : null)
+	  (($('#CH1_FREEZE').hasClass('active') && SPEC.datasets[0] !== undefined) ? SPEC.datasets[0] : null),
+	  (($('#CH2_FREEZE').hasClass('active')) ? (SPEC.datasets[1] ? SPEC.datasets[1] : SPEC.datasets[0]) : null)
 	];
-
 	SPEC.datasets = [];
 	var sig_count = 0;
     // (Re)Draw every signal
+$('#waterfall-holder_ch1').hide();
+$('#waterfall-holder_ch2').hide();
     for(sig_name in new_signals) {
 	// Ignore empty signals
       if(new_signals[sig_name].size == 0) {
         continue;
       }
-	  if(sig_name == "freq_ch"){
-		continue;
-	  }
+
       sig_count++;
       // Ignore disabled signals
       if(SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'] && SPEC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
-		$('#info .left-info .info-title .' + sig_name + ', #info .left-info .info-value .'+ sig_name).hide();     
-		$('#waterfall-holder_' + sig_name).hide();    
+		
+		$('#info .left-info .info-title .' + sig_name + ', #info .left-info .info-value .'+ sig_name).hide();
+		$('#waterfall-holder_' + sig_name).hide();  
 		continue;
       }
       
       var points = [];
       var color = SPEC.config.graph_colors[sig_name];
 
-	  if(frozen_dsets[sig_count-1]){
-		points = frozen_dsets[sig_count-1].data;
+	  var idx = sig_name[sig_name.length-1] - '0' - 1;
+	  if(frozen_dsets[idx]){
+		points = frozen_dsets[idx].data;
 	  }
-	  else {
-		if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin'])
-			for(var i = 0; i < new_signals[sig_name].size; i++) {
-
-				var d = (SPEC.params.orig['xmax'].value - SPEC.params.orig['xmin'].value)/(new_signals[sig_name].size - 1);
-				var p = d*i;
-    	   	 	points.push([p, new_signals[sig_name].value[i]]);
-    	  	}
+	  else if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin']) {
+		for(var i = 0; i < new_signals[sig_name].size; i++) {
+			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size + 0.5);
+			var p = d*i;
+	   	 	points.push([p, new_signals[sig_name].value[i]]);
+	  	}
 	  }
 	  SPEC.datasets.push({ color: color, data: points}); 
 	  var sig_btn = $('#right_menu .menu-btn.' + sig_name);
@@ -459,7 +463,8 @@
 		else if(SPEC.params.orig['CH2_SHOW'].value == true)
 			$('#CH1_SHOW').addClass('active');
 	}
-
+	var t_min = SPEC.config.xmin;
+	var t_max = SPEC.config.xmax;
     for(var key in SPEC.params.orig) {
       var field = $('#' + key);
       var value = undefined;
@@ -476,13 +481,35 @@
       else if(field.is('input:radio')) {
         value = $('input[name="' + key + '"]:checked').val();
       }
-      
+
+	if (SPEC.params.orig['CH1_SHOW'].value)
+		$('#waterfall-holder_ch1').show();
+	else
+        $('#waterfall-holder_ch1').hide();
+
       if(value !== undefined && value != SPEC.params.orig[key].value) {
         console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
         SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
       }
+	if (key == 'xmin')
+		SPEC.config.xmin = value;
+	if (key == 'xmax')
+		SPEC.config.xmax = value;
+	if (key == 'freq_unit')
+		SPEC.config.unit = value;
+
+	console.log(SPEC.config.xmin, SPEC.config.xmax, SPEC.config.unit);
     }
-    
+
+	if (SPEC.config.xmin >= SPEC.config.xmax) {
+		SPEC.params.local['xmin'].value = t_min;
+		SPEC.params.local['xmax'].value = t_max;
+		SPEC.params.orig['xmin'].value = t_min;
+		SPEC.config.xmin = t_min;
+		SPEC.params.orig['xmax'].value = t_max;
+		SPEC.config.xmax = t_max;
+	}
+
     // Check changes in measurement list
     var mi_count = 0;
     $('#info-meas').empty();
@@ -651,14 +678,21 @@
     var axes = SPEC.graphs.plot.getAxes();
     var curr_scale = axes.xaxis.tickSize;
 
-	if((curr_scale >= SPEC.time_steps[ SPEC.time_steps.length - 1] && direction == '-') ||
-	(curr_scale <= SPEC.time_steps[0] && direction == '+' ))
+	if((curr_scale >= SPEC.time_steps[ SPEC.time_steps.length - 1] && direction == '-') || (curr_scale <= SPEC.time_steps[0] && direction == '+' ))
+	{
 		return null;
+	}
 
 	var range = axes.xaxis.max - axes.xaxis.min;
 	var delta = direction == '+' ? 1 : -1
-	options.xaxes[0].min = Math.max(0, axes.xaxis.min + delta*range*0.1); 
-	options.xaxes[0].max = Math.min(SPEC.params.orig['xmax'].value, axes.xaxis.max - delta*range*0.1);
+
+	options.xaxes[0].min = Math.max(SPEC.config.xmin, axes.xaxis.min + delta*range*0.1); 
+	options.xaxes[0].max = Math.min(SPEC.config.xmax, axes.xaxis.max - delta*range*0.1);
+
+	SPEC.params.local['xmin'] = { value: options.xaxes[0].min };
+	SPEC.params.local['xmax'] = { value: options.xaxes[0].max };
+	console.log(axes.xaxis.min, axes.xaxis.max, delta, curr_scale);
+	SPEC.sendParams();
 
 	SPEC.graphs.plot.setupGrid();
 	SPEC.graphs.plot.draw();
@@ -687,7 +721,11 @@
     curr_options.xaxes[0].max = SPEC.params.orig['xmax'].value;
     curr_options.yaxes[0].min = SPEC.ymin;
     curr_options.yaxes[0].max = SPEC.ymax;
-    
+
+	SPEC.params.local['xmin'] = { value: SPEC.config.xmin };
+	SPEC.params.local['xmax'] = { value: SPEC.config.xmax };
+	SPEC.sendParams();
+
     plot.setupGrid();
     plot.draw();
     var axes = plot.getAxes();
@@ -703,13 +741,8 @@
   };
 	
   SPEC.isVisibleChannels = function(){
-	
-	var is_visible = false;
-
-	if((SPEC.params.orig['CH1_SHOW'] && SPEC.params.orig['CH1_SHOW'].value == true)  || 
-		(SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value == true))
-		is_visible = true;
-	return is_visible;
+	return ((SPEC.params.orig.CH1_SHOW && SPEC.params.orig.CH1_SHOW.value == true)  
+		|| (SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value == true));
   };
 
   SPEC.getPlot = function(){
@@ -799,7 +832,7 @@
 
 			var plot = SPEC.graphs.plot;
 			SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
-			SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value};
+			SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value };
 		  
 			var axes = plot.getAxes();
 			var options = plot.getOptions();
@@ -833,7 +866,8 @@
       }
 
       i = Math.min(l, dsets.length - 1);
-
+	  if (i < 0)
+		return [];
       filtered.push({ color: dsets[i].color, data: [] });
       
       if(SPEC.points_per_px === null || dsets[i].data.length > points * SPEC.points_per_px) {
@@ -1035,10 +1069,12 @@
   SPEC.updateImg = function(img, hide){
 	  if(hide && $('#wait_' + $(img).attr('id')).is(':visible')){
 		$('#wait_' + $(img).attr('id')).hide();
+		SPEC.config.graph_colors['ch1'] = '#f3ec1a'; // hide ch1
 		return;
 	  }
 	  if(!hide && $('#wait_' + $(img).attr('id')).is(':hidden')){
 		$('#wait_' + $(img).attr('id')).show();
+	    SPEC.config.graph_colors['ch1'] = '#343433';
 	  }
 	  
   };
@@ -1052,7 +1088,7 @@ $(function() {
   new FastClick(document.body);
   
   // Process clicks on top menu buttons
-  $('#SPEC_RUN').on('click touchstart', function() {
+  $('#SPEC_RUN').on('click', function() {
     //ev.preventDefault();
     $('#SPEC_RUN').hide();
     $('#SPEC_STOP').css('display','block');
@@ -1060,7 +1096,7 @@ $(function() {
     SPEC.sendParams();
   }); 
   
-  $('#SPEC_STOP').on('click touchstart', function() {
+  $('#SPEC_STOP').on('click', function() {
     //ev.preventDefault();
     $('#SPEC_STOP').hide();
     $('#SPEC_RUN').show(); 
@@ -1068,20 +1104,20 @@ $(function() {
     SPEC.sendParams();
   });
   
-  $('#SPEC_SINGLE').on('click touchstart', function() {
+  $('#SPEC_SINGLE').on('click', function() {
     ev.preventDefault();
     SPEC.params.local['SPEC_SINGLE'] = { value: true };
     SPEC.sendParams();
   });
   
-  $('#SPEC_AUTOSCALE').on('click touchstart', function() {
+  $('#SPEC_AUTOSCALE').on('click', function() {
     ev.preventDefault();
     SPEC.params.local['SPEC_AUTOSCALE'] = { value: true };
     SPEC.sendParams();
   });
 
   // Opening a dialog for changing parameters
-  $('.edit-mode').on('click touchstart', function() {
+  $('.edit-mode').on('click', function() {
     SPEC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();  
@@ -1095,12 +1131,12 @@ $(function() {
   });
   
   // Close parameters dialog on close button click
-  $('.close-dialog').on('click touchstart', function() {
+  $('.close-dialog').on('click', function() {
     SPEC.exitEditing();
   });
   
   // Measurement dialog
-  $('#meas_done').on('click touchstart', function() {             
+  $('#meas_done').on('click', function() {             
     var meas_signal = $('#meas_dialog input[name="meas_signal"]:checked');
     
     if(meas_signal.length) {
@@ -1128,12 +1164,12 @@ $(function() {
   });
   
   // Process events from other controls in parameters dialogs
-  $('#edge1').on('click touchstart', function() {
+  $('#edge1').on('click', function() {
     $('#edge1').find('img').attr('src','img/edge1_active.png');
     $('#edge2').find('img').attr('src','img/edge2.png');
   });
   
-  $('#edge2').on('click touchstart', function() {
+  $('#edge2').on('click', function() {
     $('#edge2').find('img').attr('src','img/edge2_active.png');
     $('#edge1').find('img').attr('src','img/edge1.png');
   });
@@ -1151,15 +1187,15 @@ $(function() {
 	$('#jtk_fine').attr('src','img/reset.png');
   });
   
-  $('#jtk_fine').on('click touchstart', function(ev) {
+  $('#jtk_fine').on('click', function(ev) {
 	SPEC.resetZoom();
   });
   
-  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
+  $('#jtk_up, #jtk_down').on('click', function(ev) {
     SPEC.changeYZoom(ev.target.id == 'jtk_down' ? '-' : '+');
   });
   
-  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
+  $('#jtk_left, #jtk_right').on('click', function(ev) {
     SPEC.changeXZoom(ev.target.id == 'jtk_left' ? '-' : '+');
   });
   

@@ -1,43 +1,53 @@
-#!/bin/bash
+#!/bin/sh
 ################################################################################
-#
+# Authors:
+# - Pavel Demin <pavel.demin@uclouvain.be>
+# - Iztok Jeras <iztok.jeras@redpitaya.com>
+# License:
+# https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
 ################################################################################
 # prepating and mounting image
 ################################################################################
 
-#image=$1
-image=debian_armel.img
+# current time and date are used to create the image name
+DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 
-#size=$2
-size=1024
+# the ABI (armel/armhf) provided by the compiler is used to create the image name
+ARCH=armel
 
-dd if=/dev/zero of=$image bs=1M count=$size
+# default image size if 3GB, which is appropriate for all 4BG SD cards
+SIZE=3500
 
-device=`losetup -f`
+#IMAGE=$1
+IMAGE=debian_${ARCH}_${DATE}.img
 
-losetup $device $image
+dd if=/dev/zero of=$IMAGE bs=1M count=$SIZE
 
-boot_dir=BOOT
-root_dir=ROOT
+DEVICE=`losetup -f`
+
+losetup $DEVICE $IMAGE
+
+BOOT_DIR=boot
+ROOT_DIR=root
 
 # Create partitions
-parted -s $device mklabel msdos
-parted -s $device mkpart primary fat16   4MB 128MB
-parted -s $device mkpart primary ext4  128MB 100%
+parted -s $DEVICE mklabel msdos
+parted -s $DEVICE mkpart primary fat16   4MB 128MB
+parted -s $DEVICE mkpart primary ext4  128MB 100%
 
-boot_dev=/dev/`lsblk -lno NAME $device | sed '2!d'`
-root_dev=/dev/`lsblk -lno NAME $device | sed '3!d'`
+BOOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '2!d'`
+ROOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '3!d'`
 
 # Create file systems
-mkfs.vfat -v    $boot_dev
-mkfs.ext4 -F -j $root_dev
+mkfs.vfat -v    $BOOT_DEV
+mkfs.ext4 -F -j $ROOT_DEV
 
 # Mount file systems
-mkdir -p $boot_dir $root_dir
-mount $boot_dev $boot_dir
-mount $root_dev $root_dir
+mkdir -p $BOOT_DIR $ROOT_DIR
+mount $BOOT_DEV $BOOT_DIR
+mount $ROOT_DEV $ROOT_DIR
 
 ################################################################################
 # install OS
@@ -45,16 +55,25 @@ mount $root_dev $root_dir
 
 OVERLAY=OS/debian/overlay
 
-source OS/debian/debian.sh
-source OS/debian/redpitaya.sh
-#source OS/debian/wyliodrin.sh
+. OS/debian/debian.sh 
+
+# enable chroot access with native execution
+cp /etc/resolv.conf         $ROOT_DIR/etc/
+cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
+
+. OS/debian/redpitaya.sh
+#. OS/debian/wyliodrin.sh
+
+# disable chroot access with native execution
+rm $ROOT_DIR/etc/resolv.conf
+rm $ROOT_DIR/usr/bin/qemu-arm-static
 
 ################################################################################
 # umount image
 ################################################################################
 
 # Unmount file systems
-umount $boot_dir $root_dir
-rmdir $boot_dir $root_dir
+umount $BOOT_DIR $ROOT_DIR
+rmdir $BOOT_DIR $ROOT_DIR
 
-losetup -d             $device
+losetup -d $DEVICE
