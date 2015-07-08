@@ -409,8 +409,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
             *url = '\0';
     }
 
-    FILE *f_stream = NULL;
-    char *app_name  = NULL;
     char *fpga_name = NULL;
 
     int   app_id_len, app_name_len;
@@ -431,7 +429,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
                                        NULL, r->pool);
         }
     }
-
     /* Assemble the application and FPGA filename:
      *   <app_dir>/<app_id>/controller.so 
      */
@@ -439,7 +436,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
     app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
         strlen("/controller.so") + 2;
 
-    app_name = (char *)malloc(app_name_len);
+    char app_name[app_name_len];
     if(app_name == NULL) {
         return rp_module_cmd_error(json_root, "Can not allocate memory",
                                    strerror(errno), r->pool);
@@ -448,7 +445,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
     /* Application id string */
     rp_module_ctx.app.id = (char *)malloc(app_id_len);
     if(rp_module_ctx.app.id == NULL) {
-        free(app_name);
         return rp_module_cmd_error(json_root, "Can not allocate memory",
                                    strerror(errno), r->pool);
     }
@@ -466,7 +462,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
                                        NULL, r->pool);
         }
     }
-
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf 
      */
     if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, 
@@ -475,60 +470,49 @@ int rp_bazaar_start(ngx_http_request_t *r,
                                     "Unable to get fpga directory.",
                                     NULL, r->pool);
     }
-
     /* Here we do not have application running anymore - load new FPGA */
     rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
-    printf("IMAGE: %s\n", &fpga_name[0]);
     /* Try loading FPGA code 
      *    - Test if fpga loaded correctly 
      *    - Read/write permissions 
      *    - File exists/not exists */
     switch(rp_bazaar_app_load_fpga(fpga_name)){
         case -1:
-            if(app_name) free(app_name);
             if(fpga_name){
                 free(fpga_name);
-                fclose(f_stream);
             }
             return rp_module_cmd_error(json_root, "Cannot find fpga file.",
                                         NULL, r->pool);
         case -2:
-            if(app_name) free(app_name);
             if(fpga_name){
                 free(fpga_name);
-                fclose(f_stream);
             }
-            return rp_module_cmd_error(json_root, "Fpga file found, but has wrong"
-                                        "permissions",
+            return rp_module_cmd_error(json_root, "Unable to read FPGA file.",
                                         NULL, r->pool);
-        case 0:
-            rp_bazaar_app_load_fpga(fpga_name);
-            if(app_name) free(app_name);
+        case -3:
             if(fpga_name){
                 free(fpga_name);
-                fclose(f_stream);
             }
+            return rp_module_cmd_error(json_root, "Unable to write FPGA "
+                "file into memory.", NULL, r->pool);
+        case 0:
             break;
         default:
-            if(app_name) free(app_name);
             if(fpga_name){
                 free(fpga_name);
-                fclose(f_stream);
             }
             return rp_module_cmd_error(json_root, "Unknown error.",
                                         NULL, r->pool); 
     }
+    /* Free fpga_name memory */
+    if(fpga_name)
+        free(fpga_name);
     
-
     /* Load new application. */
     stop_ws_server();
     rp_debug(r->connection->log, "Loading application: '%s'\n", app_name);
-    if(rp_bazaar_app_load_module(app_name, &rp_module_ctx.app) < 0) {
+    if(rp_bazaar_app_load_module(&app_name[0], &rp_module_ctx.app) < 0) {
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
-        if(app_name)
-            free(app_name);
-        if(fpga_name)
-            free(fpga_name);
         return rp_module_cmd_error(json_root, "Can not load application.", 
                                    NULL, r->pool);
     }
@@ -538,20 +522,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
                             "Application init failed, aborting", 
                             NULL, r->pool);
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
-        if(app_name)
-            free(app_name);
-        if(fpga_name)
-            free(fpga_name);
         return -1;
     }
     rp_module_ctx.app.initialized=1;
     rp_debug(r->connection->log, "Application %s loaded succesfully!");
-
-    if(fpga_name)
-        free(fpga_name);
-        fclose(f_stream);
-    if(app_name)
-        free(app_name);
 
     //start web socket server
     if(rp_module_ctx.app.ws_api_supported)
