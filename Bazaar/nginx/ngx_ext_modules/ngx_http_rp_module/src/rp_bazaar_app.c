@@ -354,9 +354,9 @@ int get_fpga_path(const char *app_id,
     /* Forward declarations */
     FILE *f_stream = NULL;
     struct stat st;
-    const mode_t perms = S_IRUSR | S_IXUSR;
+    const mode_t perms = S_IRUSR;
 
-    int fpga_conf_len, fpga_size;
+    int unsigned fpga_conf_len, fpga_size;
 
     fpga_conf_len = strlen(dir) + strlen(app_id) +
         strlen("/fpga.conf") + 3;
@@ -373,7 +373,8 @@ int get_fpga_path(const char *app_id,
 
     /* Get file size */
     stat(fpga_conf, &st);
-    fpga_size = st.st_size;
+    fpga_size = st.st_size + 1;
+    fprintf(stdout, "DEBUG: ", fpga_size);
 
     *fpga_file = malloc(fpga_size * sizeof(char));
 
@@ -383,7 +384,7 @@ int get_fpga_path(const char *app_id,
     (*fpga_file)[fpga_size-1] = '\0';
 
     /* If file doesn't exist */
-    if(stat((const char *)fpga_file, &st) < 0){
+    if(stat((*fpga_file, &st) < 0){
         fprintf(stderr, "Error opening fpga file:"
             "%s\n", strerror(errno));
 
