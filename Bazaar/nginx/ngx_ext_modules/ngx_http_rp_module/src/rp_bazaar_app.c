@@ -347,6 +347,44 @@ inline int is_controller_ok(const char *dir,
     return 1;
 }
 
+int get_fpga_path(const char *app_id,
+                  const char *dir,
+                  char **fpga_file){
+
+    /* Forward declarations */
+    FILE *f_stream = NULL;
+    struct stat st;
+
+    int unsigned fpga_conf_len, fpga_size;
+
+    fpga_conf_len = strlen(dir) + strlen(app_id) +
+        strlen("/fpga.conf") + 3;
+
+    char fpga_conf[fpga_conf_len * sizeof(char *)];
+    sprintf(fpga_conf, "%s/%s/fpga.conf", dir, app_id);
+    fpga_conf[fpga_conf_len - 1] = '\0';
+
+    f_stream = fopen(fpga_conf, "r");
+    if(f_stream == NULL){
+        fprintf(stderr, "Error opening fpga.conf file:%s\n", strerror(errno));
+        return -1;
+    }
+
+    /* Get file size */
+    stat(fpga_conf, &st);
+    fpga_size = st.st_size;
+
+    *fpga_file = malloc(fpga_size * sizeof(char));
+
+    fread(*fpga_file, 1, fpga_size, f_stream);
+
+    /* Terminate with null char */
+    (*fpga_file)[fpga_size-1] = '\0';
+
+    fclose(f_stream);
+    return 0;
+}
+
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
 {
@@ -382,8 +420,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
 
         /* We have an application */
-
-	int demo = !is_registered(dir, app_id, "controller.so");
+        int demo = !is_registered(dir, app_id, "controller.so");
 		
         if (verbose) {
             /* Attach whole info JSON */
@@ -447,7 +484,7 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     app->get_signals_func = dlsym(app->handle, c_rp_get_signals_str);
     if(!app->get_signals_func)
         return -1;
-//start web socket functionality
+    //start web socket functionality
     app->ws_api_supported = 1;
     app->ws_set_params_interval_func = dlsym(app->handle, c_ws_set_params_interval_str);
     if(!app->ws_set_params_interval_func)
@@ -519,7 +556,7 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
     }
 
-//end web socket functionality
+    //end web socket functionality
 
     app->file_name = (char *)malloc(strlen(app_file)+1);
     if(app->file_name == NULL)
@@ -552,20 +589,24 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
-#define RP_FPGA_CONF_BUF_LEN (32*1024)
 int rp_bazaar_app_load_fpga(const char *fpga_file)
 {
-    unsigned char buff[RP_FPGA_CONF_BUF_LEN];
     int fo, fi;
-    int ret_val = 0;
+    int ret_val = 0, fpga_size;
+    struct stat st;
 
     fo = open("/dev/xdevcfg", O_WRONLY);
     if(fo < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open xdevcfg: %s\n",
                 strerror(errno));
         return -1;
-    }
+    }    
 
+    /* Get FPGA size */
+    stat(fpga_file, &st);
+    fpga_size = st.st_size;
+    char fi_buff[fpga_size];
+    
     fi = open(fpga_file, O_RDONLY);
     if(fi < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open FPGA file: %s\n",
@@ -573,27 +614,18 @@ int rp_bazaar_app_load_fpga(const char *fpga_file)
         return -1;
     }
 
-    while(1) {
-        int ret_w;
-        int ret_r = read(fi, &buff[0], RP_FPGA_CONF_BUF_LEN);
-        if(ret_r < 0) {
-            fprintf(stderr, "rp_bazaar_app_load_fpga() read failed: %s\n", 
-                    strerror(errno));
-            ret_val = -1;
-            break;
-        }
-        if(ret_r == 0) {
-            /* finished loading */
-            break;
-        }
-        
-        ret_w = write(fo, &buff[0], ret_r);
-        if(ret_w < 0) {
-            fprintf(stderr, "rp_bazaar_app_load_fpga() write failed: %s\n",
-                    strerror(errno));
-            ret_val = -1;
-            break;
-        }
+    /* Read FPGA file into fi_buff */
+    if(read(fi, &fi_buff, fpga_size) < 0){
+        fprintf(stderr, "Unable to read FPGA file: %s\n",
+            strerror(errno));
+        return -2;
+    }
+
+    /* Write fi_buff into fo */
+    if(write(fo, &fi_buff, fpga_size) < 0){
+        fprintf(stderr, "Unable to write to /dev/xdevcfg: %s\n", 
+            strerror(errno));
+        return -3;
     }
 
     close(fo);

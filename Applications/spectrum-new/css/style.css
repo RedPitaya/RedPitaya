@@ -457,7 +457,6 @@ area:hover {
   position: absolute; 
   top: 0px; 
   left: 0px;
-  margin-left: 8px;
 }
 
 .y-offset-arrow, #time_offset_arrow {
@@ -474,6 +473,14 @@ area:hover {
   display: inline;
 }
 
+#power {
+    position: absolute;
+    top: 45%;
+    left: 7px;
+    transform: rotate(-90deg);
+    transform-origin: 0px 0px 0px;
+}
+
 #new_scale {
   position: absolute;
   left: 15px;
@@ -485,7 +492,7 @@ area:hover {
   display: none;
   margin: 0px 11px 10px 29px;
   position: relative;
-  left: 7px;
+  left: 0px;
   width: 97%;
 }
 
@@ -592,6 +599,7 @@ area:hover {
   right: 0;
   top: 0;
   margin-top: -7px;
+  margin-right: 8px;
   display: none;
   z-index: 12;
 }
