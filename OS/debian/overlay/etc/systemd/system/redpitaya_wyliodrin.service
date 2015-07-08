@@ -1,15 +1,18 @@
 [Unit]
 Description=Wyliodrin server for Red Pitaya
+After=redis.service
+ConditionFileNotEmpty=/boot/wyliodrin.json
 
 [Service]
-Type=forking
+Type=simple
 Restart=always
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=redpitaya_wyliodrin
 WorkingDirectory=/root/wyliodrin-server-nodejs
-ExecStart =/usr/local/bin/npm start &
-#ExecStop  =/usr/local/bin/npm stop  &
+ExecStart=/usr/local/bin/node /root/wyliodrin-server-nodejs/start_script.js
+ExecStop=/bin/kill -15 $MAINPID
+PIDFile=/var/run/wyliodrin-server.pid
 
 [Install]
 WantedBy=multi-user.target
