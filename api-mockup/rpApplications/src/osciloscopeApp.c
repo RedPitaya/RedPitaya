@@ -565,9 +565,9 @@ int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
             max = view[source*viewSize + i];
         }
     }
+	*Vmax = max;
     pthread_mutex_unlock(&mutex);
 
-    ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
     return RP_OK;
 }
 
@@ -580,9 +580,9 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
             min = view[source*viewSize + i];
         }
     }
+	*Vmin = min;
     pthread_mutex_unlock(&mutex);
 
-    ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
     return RP_OK;
 }
 

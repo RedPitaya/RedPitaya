@@ -119,6 +119,11 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope-new
 APP_SPECTRUM_DIR = Applications/spectrum-new
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
+OLD_APPS = praeteritum-apps
+OLD_APPS_DIR = Applications/old-apps
+O_INSTALL_DIR = $(shell pwd)
+export O_INSTALL_DIR
+
 ################################################################################
 # Versioning system
 ################################################################################
@@ -140,12 +145,13 @@ all: zip
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(NGINX) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication
+$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication old_apps
 	mkdir $(TARGET)
 	cp $(BOOT)             $(TARGET)
 	cp $(TESTBOOT)         $(TARGET)
 	cp $(DEVICETREE)       $(TARGET)
 	cp $(LINUX)            $(TARGET)
+	cp -r Applications/fpga $(TARGET)
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
@@ -407,6 +413,11 @@ sdkPub:
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR)
 
+old_apps:
+	$(MAKE) -C $(OLD_APPS_DIR) all
+	$(MAKE) -C $(OLD_APPS_DIR) install 
+	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
+
 clean:
 	make -C $(LINUX_DIR) clean
 	make -C $(FPGA_DIR) clean
@@ -425,6 +436,7 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
+	make -C $(OLD_APPS_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
