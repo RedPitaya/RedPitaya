@@ -374,7 +374,7 @@ int get_fpga_path(const char *app_id,
     /* Get file size */
     stat(fpga_conf, &st);
     fpga_size = st.st_size + 1;
-    fprintf(stdout, "DEBUG: ", fpga_size);
+    fprintf(stdout, "DEBUG: %d", fpga_size);
 
     *fpga_file = malloc(fpga_size * sizeof(char));
 
@@ -382,15 +382,6 @@ int get_fpga_path(const char *app_id,
 
     /* Terminate with null char */
     (*fpga_file)[fpga_size-1] = '\0';
-
-    /* If file doesn't exist */
-    if(stat(*fpga_file, &st) < 0){
-        fprintf(stderr, "Error opening fpga file:"
-            "%s\n", strerror(errno));
-
-        fclose(f_stream);
-        return -1;
-    } 
 
     if((st.st_mode & perms) != perms) {
         /* Permissions wrong */
