@@ -12,7 +12,7 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-INSTALL_DIR = ../../target
+INSTALL_DIR ?= ../../build
 
 CONTROLLER=controller.so
 ARTIFACTS=$(CONTROLLER)
