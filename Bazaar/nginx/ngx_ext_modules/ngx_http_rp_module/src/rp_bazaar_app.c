@@ -589,10 +589,8 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
-//#define RP_FPGA_CONF_BUF_LEN (32*1024)
 int rp_bazaar_app_load_fpga(const char *fpga_file)
 {
-    //unsigned char buff[RP_FPGA_CONF_BUF_LEN];
     int fo, fi;
     int ret_val = 0, fpga_size;
     struct stat st;
@@ -609,7 +607,7 @@ int rp_bazaar_app_load_fpga(const char *fpga_file)
     fpga_size = st.st_size;
     char fi_buff[fpga_size];
     
-    fi = open(fpga_file, O_RDONLY, S_IREAD);
+    fi = open(fpga_file, O_RDONLY);
     if(fi < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open FPGA file: %s\n",
                 strerror(errno));
@@ -625,7 +623,7 @@ int rp_bazaar_app_load_fpga(const char *fpga_file)
 
     /* Write fi_buff into fo */
     if(write(fo, &fi_buff, fpga_size) < 0){
-        fprintf(stderr, "Unable to write FPGA file: %s\n", 
+        fprintf(stderr, "Unable to write to /dev/xdevcfg: %s\n", 
             strerror(errno));
         return -3;
     }
