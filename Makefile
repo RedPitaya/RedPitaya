@@ -108,7 +108,7 @@ UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
 UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
 UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
 
-URAMDISK        = $(INSTALL_DIR)/uramdisk.image.gz
+URAMDISK               = $(INSTALL_DIR)/uramdisk.image.gz
 
 
 APP_SCOPE_DIR   = Applications/scope-new
@@ -117,10 +117,8 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope-new
 APP_SPECTRUM_DIR = Applications/spectrum-new
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
-OLD_APPS = praeteritum-apps
-OLD_APPS_DIR = Applications/old-apps
-O_INSTALL_DIR = $(shell pwd)
-export O_INSTALL_DIR
+APPS_FREE 	 = apps-free
+APPS_FREE_DIR    = apps-free/
 
 # Versioning system
 ################################################################################
@@ -139,7 +137,10 @@ export VERSION
 
 all: zip
 
-$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SPECTRUM) sdk rp_communication old_apps
+$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
+	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SPECTRUM) sdk rp_communication apps_free
+
 	mkdir $(TARGET)
 	cp $(BOOT)             $(TARGET)
 	cp $(TESTBOOT)         $(TARGET)
@@ -331,10 +332,10 @@ sdkPub:
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
-old_apps:
-	$(MAKE) -C $(OLD_APPS_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(OLD_APPS_DIR) install 
-	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
+apps_free:
+	$(MAKE) -C $(APPS_FREE_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APPS_FREE_DIR) install 
+	mv $(APP_FREE).zip $(APPS_FREE)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
 clean:
 	make -C $(LINUX_DIR) clean
