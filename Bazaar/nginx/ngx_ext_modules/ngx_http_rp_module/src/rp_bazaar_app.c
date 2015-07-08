@@ -384,7 +384,7 @@ int get_fpga_path(const char *app_id,
     (*fpga_file)[fpga_size-1] = '\0';
 
     /* If file doesn't exist */
-    if(stat(((const char *)fpga_file, &st) < 0){
+    if(stat(*fpga_file, &st) < 0){
         fprintf(stderr, "Error opening fpga file:"
             "%s\n", strerror(errno));
 
