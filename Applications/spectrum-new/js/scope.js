@@ -371,7 +371,7 @@ $('#waterfall-holder_ch2').hide();
 	  }
 	  else if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin']) {
 		for(var i = 0; i < new_signals[sig_name].size; i++) {
-			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size + 0.5);
+			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size - 1);
 			var p = d*i;
 	   	 	points.push([p, new_signals[sig_name].value[i]]);
 	  	}
