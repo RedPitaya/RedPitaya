@@ -419,7 +419,7 @@
         if(field.closest('.menu-content').length == 0 
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
-          if(field.is('select') || (field.is('input') && !field.is('input:text'))) {
+          if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
             field.val(new_params[param_name].value);
           }
           else if(field.is('button')) {
@@ -578,7 +578,7 @@
       if(key == 'OSC_RUN'){
         value = (field.is(':visible') ? 0 : 1);
       }
-      else if(field.is('select') || (field.is('input') && !field.is('input:text'))) {
+      else if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
         value = field.val();
       }
       else if(field.is('button')) {
@@ -604,7 +604,7 @@
       
       if(item_val !== null) {
 		++mi_count;
-		var units = {'VPP': 'Vpp', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ns', 'FREQ': 'Hz', 'RMS': 'V'};
+		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ns', 'FREQ': 'Hz', 'RMS': 'V'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
         $('#info-meas').append(
           '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + $elem.data('signal') + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
