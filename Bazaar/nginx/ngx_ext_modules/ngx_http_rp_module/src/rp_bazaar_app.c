@@ -354,7 +354,6 @@ int get_fpga_path(const char *app_id,
     /* Forward declarations */
     FILE *f_stream = NULL;
     struct stat st;
-    const mode_t perms = S_IRUSR;
 
     int unsigned fpga_conf_len, fpga_size;
 
@@ -373,8 +372,7 @@ int get_fpga_path(const char *app_id,
 
     /* Get file size */
     stat(fpga_conf, &st);
-    fpga_size = st.st_size + 1;
-    fprintf(stdout, "DEBUG: %d", fpga_size);
+    fpga_size = st.st_size;
 
     *fpga_file = malloc(fpga_size * sizeof(char));
 
@@ -382,12 +380,6 @@ int get_fpga_path(const char *app_id,
 
     /* Terminate with null char */
     (*fpga_file)[fpga_size-1] = '\0';
-
-    if((st.st_mode & perms) != perms) {
-        /* Permissions wrong */
-        fprintf(stderr, "%s exists but has wrong permissions.\n", *fpga_file);
-        return -1;
-    }
 
     fclose(f_stream);
     return 0;
@@ -597,48 +589,45 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
-#define RP_FPGA_CONF_BUF_LEN (32*1024)
+//#define RP_FPGA_CONF_BUF_LEN (32*1024)
 int rp_bazaar_app_load_fpga(const char *fpga_file)
 {
-    unsigned char buff[RP_FPGA_CONF_BUF_LEN];
+    //unsigned char buff[RP_FPGA_CONF_BUF_LEN];
     int fo, fi;
-    int ret_val = 0;
+    int ret_val = 0, fpga_size;
+    struct stat st;
 
     fo = open("/dev/xdevcfg", O_WRONLY);
     if(fo < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open xdevcfg: %s\n",
                 strerror(errno));
         return -1;
-    }
+    }    
 
-    fi = open(fpga_file, O_RDONLY);
+    /* Get FPGA size */
+    stat(fpga_file, &st);
+    fpga_size = st.st_size;
+    char fi_buff[fpga_size];
+    
+    fi = open(fpga_file, O_RDONLY, S_IREAD);
     if(fi < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open FPGA file: %s\n",
                 strerror(errno));
         return -1;
     }
 
-    while(1) {
-        int ret_w;
-        int ret_r = read(fi, &buff[0], RP_FPGA_CONF_BUF_LEN);
-        if(ret_r < 0) {
-            fprintf(stderr, "rp_bazaar_app_load_fpga() read failed: %s\n", 
-                    strerror(errno));
-            ret_val = -1;
-            break;
-        }
-        if(ret_r == 0) {
-            /* finished loading */
-            break;
-        }
-        
-        ret_w = write(fo, &buff[0], ret_r);
-        if(ret_w < 0) {
-            fprintf(stderr, "rp_bazaar_app_load_fpga() write failed: %s\n",
-                    strerror(errno));
-            ret_val = -1;
-            break;
-        }
+    /* Read FPGA file into fi_buff */
+    if(read(fi, &fi_buff, fpga_size) < 0){
+        fprintf(stderr, "Unable to read FPGA file: %s\n",
+            strerror(errno));
+        return -2;
+    }
+
+    /* Write fi_buff into fo */
+    if(write(fo, &fi_buff, fpga_size) < 0){
+        fprintf(stderr, "Unable to write FPGA file: %s\n", 
+            strerror(errno));
+        return -3;
     }
 
     close(fo);
