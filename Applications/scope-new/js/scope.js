@@ -7,6 +7,21 @@
  *
 */
 
+(function(){
+    var originalAddClassMethod = jQuery.fn.addClass;
+    var originalRemoveClassMethod = jQuery.fn.removeClass;
+    $.fn.addClass = function(clss){
+        var result = originalAddClassMethod.apply(this, arguments);
+        $(this).trigger('activeChanged', 'add');
+        return result;
+    };
+    $.fn.removeClass = function(clss){
+        var result = originalRemoveClassMethod.apply(this, arguments);
+        $(this).trigger('activeChanged', 'remove');
+        return result;
+    }
+})();
+
 (function(OSC, $, undefined) {
 
   // App configuration
@@ -161,6 +176,10 @@
       // Save new parameter value
       OSC.params.orig[param_name] = new_params[param_name];
       
+	  if (param_name.indexOf('OSC_MEAS_VAL') == 0) {
+			new_params[param_name].value = new_params[param_name].value.toFixed(4);
+	  }
+
       // Run/Stop button
       if(param_name == 'OSC_RUN') {
         if(new_params[param_name].value === true) {
@@ -415,7 +434,7 @@
         if(field.closest('.menu-content').length == 0 
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
-          if(field.is('select') || field.is('input:text')) {
+          if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
             field.val(new_params[param_name].value);
           }
           else if(field.is('button')) {
@@ -565,7 +584,7 @@
   };
 
   // Exits from editing mode
-  OSC.exitEditing = function() {
+  OSC.exitEditing = function(noclose) {
 
     for(var key in OSC.params.orig) {
       var field = $('#' + key);
@@ -574,7 +593,7 @@
       if(key == 'OSC_RUN'){
         value = (field.is(':visible') ? 0 : 1);
       }
-      else if(field.is('select') || field.is('input:text')) {
+      else if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
         value = field.val();
       }
       else if(field.is('button')) {
@@ -600,10 +619,10 @@
       
       if(item_val !== null) {
 		++mi_count;
+		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ns', 'FREQ': 'Hz', 'RMS': 'V'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
-		console.log(elem);
         $('#info-meas').append(
-          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + $elem.data('signal') + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span></div>'
+          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + $elem.data('signal') + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
         );
       }
     });
@@ -611,6 +630,7 @@
     // Send params then reset editing state and hide dialog
     OSC.sendParams();
     OSC.state.editing = false;
+    if (noclose) return;
     $('.dialog:visible').hide();
     $('#right_menu').show(); 
   };
@@ -1117,9 +1137,13 @@
 
 // Page onload event handler
 $(function() {
+    $('button').bind('activeChanged', function(){
+        OSC.exitEditing(true);
+    });
+    $('select, input').on('change', function(){OSC.exitEditing(true);});
   
   // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
-  new FastClick(document.body);
+  //new FastClick(document.body);
   
   // Process clicks on top menu buttons
 //  $('#OSC_RUN').on('click touchstart', function(ev) {
@@ -1185,7 +1209,7 @@ $(function() {
   // Close parameters dialog after Enter key is pressed
   $('input').keyup(function(event){
     if(event.keyCode == 13){
-      OSC.exitEditing();
+      OSC.exitEditing(true);
     }
   });
   
@@ -1467,7 +1491,7 @@ $(function() {
           var curr_delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
           
           if(OSC.state.fine || Math.abs(curr_delta_x - prev_delta_x) > $(this).width() * 0.9 / OSC.time_steps.length) {
-            var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, false);
+            var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, true);
             
             if(new_scale !== null) {
               OSC.touch.new_scale_x = new_scale;
@@ -1483,7 +1507,7 @@ $(function() {
           var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
           
           if(OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
-            var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, false);
+            var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, true);
             
             if(new_scale !== null) {
               OSC.touch.new_scale_y = new_scale;
@@ -1524,7 +1548,7 @@ $(function() {
           
           if(delta_x != 0) {
             //$('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
-            $('#buf_time_offset').simulate('drag', { dx: delta_x, dy: 0 });
+  			$('#time_offset_arrow').simulate('drag',{ dx: delta_x, dy: 0 });
           }
         }
         // Voltage offset
@@ -1579,10 +1603,12 @@ $(function() {
   });
 
   // Prevent native touch activity like scrolling
+/*
   $('html, body').on('touchstart touchmove', function(ev) {
     ev.preventDefault();
   });
-  
+  */
+
   // Preload images which are not visible at the beginning
   $.preloadImages = function() {
     for(var i = 0; i < arguments.length; i++) {
