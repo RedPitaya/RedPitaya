@@ -120,6 +120,7 @@ APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 APPS_FREE 	 = apps-free
 APPS_FREE_DIR    = apps-free/
 
+################################################################################
 # Versioning system
 ################################################################################
 
@@ -132,10 +133,13 @@ export REVISION
 export VERSION
 
 ################################################################################
-# external sources
+# tarball
 ################################################################################
 
 all: zip
+
+$(TMP):
+	mkdir -p $@
 
 $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
@@ -180,7 +184,7 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) CROSS_COMPILE=arm-xilinx-linux-gnueabi- all
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
@@ -209,9 +213,7 @@ $(LINUX_DIR): $(LINUX_TAR)
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
-	  -j $(shell grep -c ^processor /proc/cpuinfo) \
-	  CROSS_COMPILE=arm-xilinx-linux-gnueabi- UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################
@@ -256,65 +258,143 @@ $(URAMDISK): $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
-# debian image
+# API libraries
 ################################################################################
+
+$(LIBREDPITAYA):
+	$(MAKE) -C shared
+
+$(LIBRP):
+	$(MAKE) -C $(LIBRP_DIR)
+	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(LIBRPAPP):
+	$(MAKE) -C $(LIBRPAPP_DIR)
+	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya ecosystem
 ################################################################################
 
-$(LIBREDPITAYA):
-	$(MAKE) -C shared CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+WEBSOCKETPP_TAG = 0.5.0
+LUANGINX_TAG    = v0.8.7
+NGINX_TAG       = 1.5.3
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA)
-	$(MAKE) -C $(NGINX_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
+CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp562.zip
+LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
+NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
+
+WEBSOCKETPP_TAR = $(TMP)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
+CRYPTOPP_TAR    = $(TMP)/cryptopp562.zip
+LIBJSON_TAR     = $(TMP)/libjson_7.6.1.zip
+LUANGINX_TAR    = $(TMP)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
+NGINX_TAR       = $(TMP)/nginx-$(NGINX_TAG).tar.gz
+
+WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+CRYPTOPP_DIR    = Bazaar/tools/cryptopp
+LIBJSON_DIR     = Bazaar/tools/libjson
+LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
+NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
+BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
+
+$(WEBSOCKETPP_TAR):
+	mkdir -p $(@D)
+	curl -L $(WEBSOCKETPP_URL) -o $@
+
+$(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+
+$(CRYPTOPP_TAR):
+	mkdir -p $(@D)
+	curl -L $(CRYPTOPP_URL) -o $@
+
+$(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
+	mkdir -p $@
+	unzip $< -d $@
+	patch -d $@ -p1 < patches/cryptopp.patch
+
+$(LIBJSON_TAR):
+	mkdir -p $(@D)
+	curl -L $(LIBJSON_URL) -o $@
+
+$(LIBJSON_DIR): $(LIBJSON_TAR)
+	mkdir -p $@
+	unzip $< -d $(@D)
+	patch -d $@ -p1 < patches/libjson.patch
+
+$(LUANGINX_TAR):
+	mkdir -p $(@D)
+	curl -L $(LUANGINX_URL) -o $@
+
+$(LUANGINX_DIR): $(LUANGINX_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	patch -d $@ -p1 < patches/lua-nginx-module.patch
+
+$(NGINX_TAR):
+	mkdir -p $(@D)
+	curl -L $(NGINX_URL) -o $@
+
+$(NGINX_SRC_DIR): $(NGINX_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	patch -d $@ -p1 < patches/nginx.patch
+
+$(BOOST_DIR): $(URAMDISK)
+	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
+
+$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
+	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(IDGEN):
-	$(MAKE) -C $(IDGEN_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	
+################################################################################
+# Red Pitaya tools
+################################################################################
+
 $(MONITOR):
-	$(MAKE) -C $(MONITOR_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(GENERATE):
-	$(MAKE) -C $(GENERATE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(GENERATE_DIR)
 	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ACQUIRE):
-	$(MAKE) -C $(ACQUIRE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
-	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
-	$(MAKE) -C $(DISCOVERY_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
-	$(MAKE) -C $(SCPI_SERVER_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(LIBRP):
-	$(MAKE) -C $(LIBRP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-$(LIBRPAPP):
-	$(MAKE) -C $(LIBRPAPP_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
-	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+################################################################################
+# Red Pitaya applications
+################################################################################
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SCOPE_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SCOPE_DIR)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUM_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 # Gdb server for remote debugging
@@ -329,10 +409,10 @@ sdkPub:
 	$(MAKE) -C $(SDK_DIR) zip
 
 rp_communication:
-	make -C $(EXAMPLES_COMMUNICATION_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	make -C $(EXAMPLES_COMMUNICATION_DIR)
 
 apps_free:
-	$(MAKE) -C $(APPS_FREE_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C $(APPS_FREE_DIR) all
 	$(MAKE) -C $(APPS_FREE_DIR) install 
 
 clean:
@@ -340,7 +420,9 @@ clean:
 	make -C $(FPGA_DIR) clean
 	make -C $(UBOOT_DIR) clean
 	make -C shared clean
-	make -C $(NGINX_DIR) clean	
+	# todo, remove downloaded libraries and symlinks
+	rm -rf Bazaar/tools/cryptopp
+	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
