@@ -409,8 +409,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
             *url = '\0';
     }
 
-    char *fpga_name = NULL;
-
     int   app_id_len, app_name_len;
     ngx_http_rp_loc_conf_t *lc = 
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
@@ -462,51 +460,51 @@ int rp_bazaar_start(ngx_http_request_t *r,
                                        NULL, r->pool);
         }
     }
-    /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf 
-     */
-    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, 
-        &fpga_name) < 0){
-        return rp_module_cmd_error(json_root,
-                                    "Unable to get fpga directory.",
-                                    NULL, r->pool);
+
+    /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
+    char *fpga_name = NULL;
+
+    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name)) {
+        /* Here we do not have application running anymore - load new FPGA */
+        rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
+        /* Try loading FPGA code 
+         *    - Test if fpga loaded correctly 
+         *    - Read/write permissions 
+         *    - File exists/not exists */
+        switch(rp_bazaar_app_load_fpga(fpga_name)){
+            case -1:
+                if(fpga_name){
+                    free(fpga_name);
+                }
+                return rp_module_cmd_error(json_root, "Cannot find fpga file.",
+                                            NULL, r->pool);
+            case -2:
+                if(fpga_name){
+                    free(fpga_name);
+                }
+                return rp_module_cmd_error(json_root, "Unable to read FPGA file.",
+                                            NULL, r->pool);
+            case -3:
+                if(fpga_name){
+                    free(fpga_name);
+                }
+                return rp_module_cmd_error(json_root, "Unable to write FPGA "
+                    "file into memory.", NULL, r->pool);
+            case 0:
+                break;
+            default:
+                if(fpga_name){
+                    free(fpga_name);
+                }
+                return rp_module_cmd_error(json_root, "Unknown error.",
+                                            NULL, r->pool); 
+        }
+        /* Free fpga_name memory */
+        if(fpga_name)
+            free(fpga_name);
+    } else {
+        rp_debug(r->connection->log, "Not loading specific FPGA, since no fpga.conf file was found.\n");
     }
-    /* Here we do not have application running anymore - load new FPGA */
-    rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
-    /* Try loading FPGA code 
-     *    - Test if fpga loaded correctly 
-     *    - Read/write permissions 
-     *    - File exists/not exists */
-    switch(rp_bazaar_app_load_fpga(fpga_name)){
-        case -1:
-            if(fpga_name){
-                free(fpga_name);
-            }
-            return rp_module_cmd_error(json_root, "Cannot find fpga file.",
-                                        NULL, r->pool);
-        case -2:
-            if(fpga_name){
-                free(fpga_name);
-            }
-            return rp_module_cmd_error(json_root, "Unable to read FPGA file.",
-                                        NULL, r->pool);
-        case -3:
-            if(fpga_name){
-                free(fpga_name);
-            }
-            return rp_module_cmd_error(json_root, "Unable to write FPGA "
-                "file into memory.", NULL, r->pool);
-        case 0:
-            break;
-        default:
-            if(fpga_name){
-                free(fpga_name);
-            }
-            return rp_module_cmd_error(json_root, "Unknown error.",
-                                        NULL, r->pool); 
-    }
-    /* Free fpga_name memory */
-    if(fpga_name)
-        free(fpga_name);
     
     /* Load new application. */
     stop_ws_server();
