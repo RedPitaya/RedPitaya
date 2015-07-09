@@ -13,7 +13,7 @@
 # build artefacts
 FPGA_BIT=out/red_pitaya.bit
 FSBL_ELF=sdk/fsbl/executable.elf
-MEMTEST_ELF=sdk/memtest/executable.elf
+MEMTEST_ELF=sdk/dram_test/executable.elf
 DEVICE_TREE=sdk/dts/system.dts
 
 # Vivado from Xilinx provides IP handling, FPGA compilation
@@ -36,7 +36,7 @@ $(FSBL_ELF): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_fsbl.tcl
 
 $(MEMTEST_ELF): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_memtest.tcl
+	$(HSI) -source red_pitaya_hsi_dram_test.tcl
 
 $(DEVICE_TREE): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_dts.tcl
