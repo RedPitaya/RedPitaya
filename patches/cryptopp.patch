@@ -1,0 +1,58 @@
+diff -rupN cryptopp.old/adhoc.cpp cryptopp.new/adhoc.cpp
+--- cryptopp.old/adhoc.cpp	1970-01-01 01:00:00.000000000 +0100
++++ cryptopp.new/adhoc.cpp	2015-06-11 16:57:01.761687327 +0200
+@@ -0,0 +1,17 @@
++#include "filters.h"
++#include "files.h"
++#include "base64.h"
++#include "hex.h"
++#include <iostream>
++
++USING_NAMESPACE(CryptoPP)
++USING_NAMESPACE(std)
++
++extern int (*AdhocTest)(int argc, char *argv[]);
++
++int MyAdhocTest(int argc, char *argv[])
++{
++	return 0;
++}
++
++static int s_i = (AdhocTest = &MyAdhocTest, 0);
+diff -rupN cryptopp.old/build.sh cryptopp.new/build.sh
+--- cryptopp.old/build.sh	1970-01-01 01:00:00.000000000 +0100
++++ cryptopp.new/build.sh	2015-06-11 16:57:01.753687653 +0200
+@@ -0,0 +1,4 @@
++export CXX=${CROSS_COMPILE}g++
++export PREFIX=../build
++make static
++make install
+diff -rupN cryptopp.old/clean.sh cryptopp.new/clean.sh
+--- cryptopp.old/clean.sh	1970-01-01 01:00:00.000000000 +0100
++++ cryptopp.new/clean.sh	2015-06-11 16:57:01.765687164 +0200
+@@ -0,0 +1,3 @@
++export PREFIX=../build
++make clean
++make remove
+diff -rupN cryptopp.old/GNUmakefile cryptopp.new/GNUmakefile
+--- cryptopp.old/GNUmakefile	2013-02-20 15:30:52.000000000 +0100
++++ cryptopp.new/GNUmakefile	2015-06-11 16:57:01.753687653 +0200
+@@ -1,7 +1,7 @@
+-CXXFLAGS = -DNDEBUG -g -O2
++CXXFLAGS = -DNDEBUG -g -Os
+ # -O3 fails to link on Cygwin GCC version 4.5.3
+ # -fPIC is supported. Please report any breakage of -fPIC as a bug.
+-# CXXFLAGS += -fPIC
++CXXFLAGS += -fPIC
+ # the following options reduce code size, but breaks link or makes link very slow on some systems
+ # CXXFLAGS += -ffunction-sections -fdata-sections
+ # LDFLAGS += -Wl,--gc-sections
+@@ -39,7 +39,7 @@ ifneq ($(GCC42_OR_LATER),0)
+ ifeq ($(UNAME),Darwin)
+ CXXFLAGS += -arch x86_64 -arch i386
+ else
+-CXXFLAGS += -march=native
++#CXXFLAGS += -march=native
+ endif
+ endif
+ 
