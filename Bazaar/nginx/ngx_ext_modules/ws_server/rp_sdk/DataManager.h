@@ -39,6 +39,8 @@ public:
 
 	void SetParamInterval(int _interval);
 	void SetSignalInterval(int _interval);
+	
+	void SendAllParams();
 };
 
 int dbg_printf(const char * format, ...);
