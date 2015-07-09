@@ -221,6 +221,30 @@ void UpdateParams(void) {
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &in1Offset.Value());
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &in2Offset.Value());
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &inMathOffset.Value());
+
+	
+    float value;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &value);
+    in1Scale.Value() = value;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &value);
+    in2Scale.Value() = value;
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
+    in1Offset.Value() = value;
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
+    in1Offset.Value() = value;
+	
+    rpApp_OscGetTimeOffset(&value);
+    inTimeOffset.Value() = value;
+    rpApp_OscGetTimeScale(&value);
+    inTimeScale.Value() = value;
+
+	if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || in1Offset.IsValueChanged() || in1Offset.IsValueChanged()
+	   || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
+		
+		CDataManager::GetInstance()->SendAllParams();
+		updateOutCh1 = true;
+		updateOutCh1 = true;
+	}
 }
 
 float getMeasureValue(int measure) {
