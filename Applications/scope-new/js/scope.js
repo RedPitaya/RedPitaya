@@ -7,6 +7,21 @@
  *
 */
 
+(function(){
+    var originalAddClassMethod = jQuery.fn.addClass;
+    var originalRemoveClassMethod = jQuery.fn.removeClass;
+    $.fn.addClass = function(clss){
+        var result = originalAddClassMethod.apply(this, arguments);
+        $(this).trigger('activeChanged', 'add');
+        return result;
+    };
+    $.fn.removeClass = function(clss){
+        var result = originalRemoveClassMethod.apply(this, arguments);
+        $(this).trigger('activeChanged', 'remove');
+        return result;
+    }
+})();
+
 (function(OSC, $, undefined) {
 
   // App configuration
@@ -569,7 +584,7 @@
   };
 
   // Exits from editing mode
-  OSC.exitEditing = function() {
+  OSC.exitEditing = function(noclose) {
 
     for(var key in OSC.params.orig) {
       var field = $('#' + key);
@@ -615,6 +630,7 @@
     // Send params then reset editing state and hide dialog
     OSC.sendParams();
     OSC.state.editing = false;
+    if (noclose) return;
     $('.dialog:visible').hide();
     $('#right_menu').show(); 
   };
@@ -1121,6 +1137,10 @@
 
 // Page onload event handler
 $(function() {
+    $('button').bind('activeChanged', function(){
+        OSC.exitEditing(true);
+    });
+    $('select, input').on('change', function(){OSC.exitEditing(true);});
   
   // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
   //new FastClick(document.body);
@@ -1189,7 +1209,7 @@ $(function() {
   // Close parameters dialog after Enter key is pressed
   $('input').keyup(function(event){
     if(event.keyCode == 13){
-      OSC.exitEditing();
+      OSC.exitEditing(true);
     }
   });
   
