@@ -187,16 +187,16 @@ void UpdateParams(void) {
     CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 
     if (measureSelect1.Value() != -1) {
-        measureValue1.Value() = measureSelect1.Value() >= 0 || measureSelect1.Value() <= 2 ? fabs(getMeasureValue(measureSelect1.Value())) : getMeasureValue(measureSelect1.Value());
+        measureValue1.Value() = getMeasureValue(measureSelect1.Value());
 	}
     if (measureSelect2.Value() != -1) {
-        measureValue2.Value() = measureSelect2.Value() >= 0 || measureSelect2.Value() <= 2 ? fabs(getMeasureValue(measureSelect2.Value())) : getMeasureValue(measureSelect2.Value());
+        measureValue2.Value() = getMeasureValue(measureSelect2.Value());
 	}
     if (measureSelect3.Value() != -1) {
-        measureValue3.Value() = measureSelect3.Value() >= 0 || measureSelect3.Value() <= 2 ? fabs(getMeasureValue(measureSelect3.Value())) : getMeasureValue(measureSelect3.Value());
+        measureValue3.Value() = getMeasureValue(measureSelect3.Value());
 	}
     if (measureSelect4.Value() != -1) {
-        measureValue4.Value() = measureSelect4.Value() >= 0 || measureSelect4.Value() <= 2 ? fabs(getMeasureValue(measureSelect4.Value())) : getMeasureValue(measureSelect4.Value());
+        measureValue4.Value() = getMeasureValue(measureSelect4.Value());
 	}
 
     float portion;
@@ -254,6 +254,7 @@ float getMeasureValue(int measure) {
         case 1:
         case 2:
             rpApp_OscMeasureVpp((rpApp_osc_source) (measure % 3), &value);
+			value = fabs(value);
             break;
         case 3:
         case 4:
