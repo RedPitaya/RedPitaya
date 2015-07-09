@@ -80,7 +80,7 @@ URAMDISK_DIR    = OS/buildroot
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
-MEMTEST         = $(FPGA_DIR)/sdk/memtest/executable.elf
+MEMTEST         = $(FPGA_DIR)/sdk/dram_test/executable.elf
 DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
