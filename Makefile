@@ -241,7 +241,7 @@ $(BOOT): $(FSBL) $(FPGA) $(UBOOT)
 	bootgen -image boot.bif -w -o i $@
 
 $(TESTBOOT): $(MEMTEST) $(FPGA) $(UBOOT)
-	@echo img:{[bootloader] $(MEMTEST) $(FPGA) $(UBOOT) } > testboot.bif
+	@echo img:{[bootloader] $(MEMTEST) $(FPGA) } > testboot.bif
 	bootgen -image testboot.bif -w -o i $@
 
 ################################################################################
