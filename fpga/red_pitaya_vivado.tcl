@@ -130,6 +130,8 @@ report_drc               -file    $path_out/post_imp_drc.rpt
 # generate a bitstream
 ################################################################################
 
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+
 write_bitstream -force $path_out/red_pitaya.bit
 
 ################################################################################
