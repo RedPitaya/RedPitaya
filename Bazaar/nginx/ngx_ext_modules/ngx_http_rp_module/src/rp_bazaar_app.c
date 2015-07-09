@@ -354,34 +354,34 @@ int get_fpga_path(const char *app_id,
     /* Forward declarations */
     FILE *f_stream = NULL;
     struct stat st;
-
     int unsigned fpga_conf_len, fpga_size;
 
-    fpga_conf_len = strlen(dir) + strlen(app_id) +
-        strlen("/fpga.conf") + 3;
-
+    /* Construct fpga.conf path */
+    // TODO, check if the string size is correct
+    fpga_conf_len = strlen(dir) + strlen(app_id) + strlen("/fpga.conf") + 3;
     char fpga_conf[fpga_conf_len * sizeof(char *)];
     sprintf(fpga_conf, "%s/%s/fpga.conf", dir, app_id);
-    fpga_conf[fpga_conf_len - 1] = '\0';
+    fpga_conf[fpga_conf_len-1] = '\0';
 
+    /* Open fpga.conf */
     f_stream = fopen(fpga_conf, "r");
     if(f_stream == NULL){
-        fprintf(stderr, "Error opening fpga.conf file:%s\n", strerror(errno));
+        fprintf(stderr, "Error opening file \"%s\":%s\n", fpga_conf , strerror(errno));
         return -1;
     }
 
-    /* Get file size */
+    /* Get fpga.conf file size */
     stat(fpga_conf, &st);
     fpga_size = st.st_size;
-
     *fpga_file = malloc(fpga_size * sizeof(char));
 
+    /* Read fpga.conf file into memory */
     fread(*fpga_file, 1, fpga_size, f_stream);
+    fclose(f_stream);
 
     /* Terminate with null char */
     (*fpga_file)[fpga_size-1] = '\0';
 
-    fclose(f_stream);
     return 0;
 }
 
