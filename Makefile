@@ -334,7 +334,6 @@ rp_communication:
 apps_free:
 	$(MAKE) -C $(APPS_FREE_DIR) all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 	$(MAKE) -C $(APPS_FREE_DIR) install 
-	mv $(APP_FREE).zip $(APPS_FREE)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
 clean:
 	make -C $(LINUX_DIR) clean
