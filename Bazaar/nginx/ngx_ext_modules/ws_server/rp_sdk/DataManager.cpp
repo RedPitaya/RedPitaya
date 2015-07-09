@@ -215,6 +215,11 @@ void CDataManager::SetSignalInterval(int _interval)
 	m_signal_interval = _interval;
 }
 
+void CDataManager::SendAllParams()
+{
+	m_send_all_params = true;
+}
+
 extern "C" int ws_set_params(const char *_params)
 {
 	CDataManager * man = CDataManager::GetInstance();	
