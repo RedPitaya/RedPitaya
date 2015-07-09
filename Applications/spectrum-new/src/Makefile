@@ -2,21 +2,14 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES= \
-        new_main.cpp
-
-COBJECTS=$(CSOURCES:.c=.o) waterfall.o
-CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
-
-OBJECTS=$(COBJECTS) $(CXXOBJECTS)
+CXXSOURCES=new_main.cpp
 
 RP_API=../../../api-mockup/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
-INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../libjson
+INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../../../../tools/libjson
 INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
-
-INCLUDE+= -I$(RP_SDK)/include -I$(RP_SDK)/include/libjson
+INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 JPEG_DIR=./external/jpeg-6b
 JPEG_LIB=$(JPEG_DIR)/libjpeg.a
@@ -24,10 +17,19 @@ JPEG_INC=-I$(JPEG_DIR)
 
 INCLUDE+=$(JPEG_INC)
 
-CFLAGS+= -Wall -fPIC $(INCLUDE)
+#CFLAGS=$(CFLAGS) -Wall -Werror -g
+COMMON_FLAGS+=-Wall -g -fPIC
+CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -fPIC
-LDFLAGS=-shared $(COMMON_FLAGS) -L$(RP_API) -L$(RP_SDK) -Wl,--whole-archive -lrp_sdk -lrpapp -lrp -Wl,--no-whole-archive
+LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
+LDFLAGS+= -Wl,--whole-archive
+LDFLAGS+=-L$(RP_SDK) -lrp_sdk
+LDFLAGS+=-L$(RP_API) -lrpapp -lrp
+LDFLAGS+= -Wl,--no-whole-archive
 
+COBJECTS=$(CSOURCES:.c=.o) waterfall.o
+CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
+OBJECTS=$(COBJECTS) $(CXXOBJECTS)
 
 OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controller.so
