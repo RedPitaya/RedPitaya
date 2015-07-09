@@ -7,6 +7,21 @@
  *
 */
 
+(function(){
+    var originalAddClassMethod = jQuery.fn.addClass;
+    var originalRemoveClassMethod = jQuery.fn.removeClass;
+    $.fn.addClass = function(clss){
+        var result = originalAddClassMethod.apply(this, arguments);
+        $(this).trigger('activeChanged', 'add');
+        return result;
+    };
+    $.fn.removeClass = function(clss){
+        var result = originalRemoveClassMethod.apply(this, arguments);
+        $(this).trigger('activeChanged', 'remove');
+        return result;
+    }
+})();
+
 (function(SPEC, $, undefined) {
 
   // App configuration
@@ -371,7 +386,7 @@ $('#waterfall-holder_ch2').hide();
 	  }
 	  else if (SPEC.params.orig['xmax'] && SPEC.params.orig['xmin']) {
 		for(var i = 0; i < new_signals[sig_name].size; i++) {
-			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size + 0.5);
+			var d = (SPEC.params.orig['xmax'].value)/(new_signals[sig_name].size - 1);
 			var p = d*i;
 	   	 	points.push([p, new_signals[sig_name].value[i]]);
 	  	}
@@ -455,7 +470,7 @@ $('#waterfall-holder_ch2').hide();
   };
 
   // Exits from editing mode
-  SPEC.exitEditing = function() {
+  SPEC.exitEditing = function(noclose) {
 	
 	if(!($('#CH1_SHOW').hasClass('active') || $('#CH2_SHOW').hasClass('active'))){
 		if(SPEC.params.orig['CH1_SHOW'].value == true)
@@ -528,6 +543,7 @@ $('#waterfall-holder_ch2').hide();
     // Send params then reset editing state and hide dialog
     SPEC.sendParams();
     SPEC.state.editing = false;
+    if (noclose) return;
     $('.dialog:visible').hide();
     $('#right_menu').show(); 
   };
@@ -561,6 +577,8 @@ $('#waterfall-holder_ch2').hide();
     
     var center_x = canvas_width / 2;
     var center_y = canvas_height / 2;
+
+	$('.waterfall-holder').css('width', canvas_width - 30);
     
     var ctx = $('#graph_grid')[0].getContext('2d');
     
@@ -662,7 +680,7 @@ $('#waterfall-holder_ch2').hide();
         SPEC.sendParams();
     }
 	SPEC.updateWaterfallWidth();
-	SPEC.updateCursors();
+	//SPEC.updateCursors();
 
     return new_scale;
 	
@@ -691,8 +709,6 @@ $('#waterfall-holder_ch2').hide();
 
 	SPEC.params.local['xmin'] = { value: options.xaxes[0].min };
 	SPEC.params.local['xmax'] = { value: options.xaxes[0].max };
-	console.log(axes.xaxis.min, axes.xaxis.max, delta, curr_scale);
-	SPEC.sendParams();
 
 	SPEC.graphs.plot.setupGrid();
 	SPEC.graphs.plot.draw();
@@ -704,7 +720,6 @@ $('#waterfall-holder_ch2').hide();
 		SPEC.sendParams();
 	}
 	SPEC.updateWaterfallWidth();
-	SPEC.updateCursors();
 
     return new_scale;
   };
@@ -806,7 +821,9 @@ $('#waterfall-holder_ch2').hide();
 	$('#cur_y_diff').css('margin-top', diff_top);
 	$('#cur_x_diff_info').css('margin-left', diff_left);
 	$('#cur_y_diff_info').css('margin-top', diff_top);
-	
+
+	SPEC.params.local['in_command'] = { value: 'send_all_params' };
+    SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
   };
   
   SPEC.hideCursors = function(){
@@ -1083,7 +1100,10 @@ $('#waterfall-holder_ch2').hide();
 
 // Page onload event handler
 $(function() {
-  
+    $('button').bind('activeChanged', function(){
+        SPEC.exitEditing(true);
+    });
+    $('select, input').on('change', function(){SPEC.exitEditing(true);});
 // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
   new FastClick(document.body);
   
@@ -1126,7 +1146,7 @@ $(function() {
   // Close parameters dialog after Enter key is pressed
   $('input').keyup(function(event){
     if(event.keyCode == 13){
-      SPEC.exitEditing();
+      SPEC.exitEditing(true);
     }
   });
   
@@ -1351,6 +1371,8 @@ $(function() {
     
     // Resize the graph holders
     $('.plot').css($('#graph_grid').css(['height','width']));
+
+	$('.waterfall-holder img').css('width', '100%');
     
     // Hide all graphs, they will be shown next time signal data is received
     $('#graphs .plot').hide();
