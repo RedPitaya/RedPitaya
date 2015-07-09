@@ -33,7 +33,7 @@ include:
 	$(MAKE) -C $(RP_LIBRARY_DIR)
 	cp $(RP_LIBRARY_DIR)/lib/* ./include
 	#Make scpi server, if we are making SDK without the main makefile
-	$(MAKE) -C ../scpi-server clean all CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C ../scpi-server clean all
 	cp $(RP_SCPI_LIB_INCLUDE)/* ./include
 	rm ./include/libscpi.a
 	
