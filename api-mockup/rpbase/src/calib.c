@@ -176,8 +176,8 @@ int calib_SetFrontEndOffset(rp_channel_t channel) {
     calib = params;
 
     CHANNEL_ACTION(channel,
-            params.fe_ch1_dc_offs = -calib_GetDataMedian(channel),
-            params.fe_ch2_dc_offs = -calib_GetDataMedian(channel))
+            params.fe_ch1_dc_offs = calib_GetDataMedian(channel),
+            params.fe_ch2_dc_offs = calib_GetDataMedian(channel))
 
     /* Set new local parameter */
     ECHECK(calib_WriteParams(params));
@@ -197,7 +197,7 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
 
     /* Calculate real max adc voltage */
     float value = calib_GetDataMedianFloat(channel, RP_LOW);
-    uint32_t calibValue = cmn_CalibFullScaleFromVoltage(referentialVoltage / value);
+    uint32_t calibValue = cmn_CalibFullScaleFromVoltage(20.f * referentialVoltage / value);
 
     CHANNEL_ACTION(channel,
             params.fe_ch1_fs_g_lo = calibValue,
@@ -246,6 +246,7 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     ECHECK(rp_GenReset());
     ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
     ECHECK(rp_GenAmp(channel, 0));
+    ECHECK(rp_GenOffset(channel, 0));
     ECHECK(rp_GenOutEnable(channel));
 
     CHANNEL_ACTION(channel,
@@ -263,8 +264,8 @@ int calib_SetBackEndScale(rp_channel_t channel) {
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.be_ch1_fs = 0,
-            params.be_ch2_fs = 0)
+            params.be_ch1_fs = cmn_CalibFullScaleFromVoltage(1),
+            params.be_ch2_fs = cmn_CalibFullScaleFromVoltage(1))
     /* Generate uses this calibration parameters - reset them */
     calib = params;
 
@@ -273,11 +274,12 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_PWM));
     ECHECK(rp_GenDutyCycle(channel, 1));
     ECHECK(rp_GenAmp(channel, CONSTANT_SIGNAL_AMPLITUDE));
+    ECHECK(rp_GenOffset(channel, 0));
     ECHECK(rp_GenOutEnable(channel));
 
     /* Calculate real max adc voltage */
     float value = calib_GetDataMedianFloat(channel, RP_LOW);
-    uint32_t calibValue = cmn_CalibFullScaleFromVoltage((float) (CONSTANT_SIGNAL_AMPLITUDE / value));
+    uint32_t calibValue = cmn_CalibFullScaleFromVoltage((float) (value / CONSTANT_SIGNAL_AMPLITUDE));
 
     CHANNEL_ACTION(channel,
             params.be_ch1_fs = calibValue,
@@ -288,36 +290,52 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     return calib_Init();
 }
 
+int calib_Reset() {
+    calib_SetToZero();
+    ECHECK(calib_WriteParams(calib));
+    return calib_Init();
+}
+    
 int32_t calib_GetDataMedian(rp_channel_t channel) {
     /* Acquire data */
     ECHECK(rp_AcqReset());
     ECHECK(rp_AcqStart());
+    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    usleep(1000000);
+    ECHECK(rp_AcqStop());
 
     int16_t data[BUFFER_LENGTH];
     uint32_t bufferSize = (uint32_t) BUFFER_LENGTH;
     ECHECK(rp_AcqGetDataRaw(channel, 0, &bufferSize, data));
 
-    ECHECK(rp_AcqStop());
+    long long avg = 0;
+    for(int i = 0; i < BUFFER_LENGTH; ++i)
+        avg += data[i];
 
-    /* Calculate median value */
-    qsort(data, BUFFER_LENGTH, sizeof(int16_t), int16cmp);
-    return data[BUFFER_LENGTH/2];
+    avg /= BUFFER_LENGTH;
+    fprintf(stderr, "\ncalib_GetDataMedian: avg = %d\n", (int32_t)avg);
+    return avg;
 }
 
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
     ECHECK(rp_AcqReset());
     ECHECK(rp_AcqSetGain(channel, gain));
     ECHECK(rp_AcqStart());
-    usleep(10000);
+    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    usleep(1000000);
     int BUF_SIZE = BUFFER_LENGTH;
+
+    ECHECK(rp_AcqStop());
 
     float data[BUF_SIZE];
     uint32_t bufferSize = (uint32_t) BUF_SIZE;
     ECHECK(rp_AcqGetDataV(channel, 0, &bufferSize, data));
 
-    ECHECK(rp_AcqStop());
+    double avg = 0;
+    for(int i = 0; i < BUFFER_LENGTH; ++i)
+    avg += data[i];
 
-    /* Calculate median value */
-    qsort(data, (size_t) BUF_SIZE, sizeof(float), floatCmp);
-    return data[BUF_SIZE/2];
+    avg /= BUFFER_LENGTH;
+    fprintf(stderr, "\ncalib_GetDataMedianFloat: avg = %f\n", (float)avg);	
+    return avg;
 }
