@@ -82,7 +82,7 @@ URAMDISK_DIR    = OS/buildroot
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
-MEMTEST         = $(FPGA_DIR)/sdk/memtest/executable.elf
+MEMTEST         = $(FPGA_DIR)/sdk/dram_test/executable.elf
 DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
@@ -110,7 +110,7 @@ UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
 UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
 UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
 
-URAMDISK        = $(INSTALL_DIR)/uramdisk.image.gz
+URAMDISK               = $(INSTALL_DIR)/uramdisk.image.gz
 
 
 APP_SCOPE_DIR   = Applications/scope-new
@@ -119,10 +119,8 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scope-new
 APP_SPECTRUM_DIR = Applications/spectrum-new
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
 
-OLD_APPS = praeteritum-apps
-OLD_APPS_DIR = Applications/old-apps
-O_INSTALL_DIR = $(shell pwd)
-export O_INSTALL_DIR
+APPS_FREE 	 = apps-free
+APPS_FREE_DIR    = apps-free/
 
 ################################################################################
 # Versioning system
@@ -145,7 +143,9 @@ all: zip
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication old_apps
+$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
+	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
 	mkdir $(TARGET)
 	cp $(BOOT)             $(TARGET)
 	cp $(TESTBOOT)         $(TARGET)
@@ -245,7 +245,7 @@ $(BOOT): $(FSBL) $(FPGA) $(UBOOT)
 	bootgen -image boot.bif -w -o i $@
 
 $(TESTBOOT): $(MEMTEST) $(FPGA) $(UBOOT)
-	@echo img:{[bootloader] $(MEMTEST) $(FPGA) $(UBOOT) } > testboot.bif
+	@echo img:{[bootloader] $(MEMTEST) $(FPGA) } > testboot.bif
 	bootgen -image testboot.bif -w -o i $@
 
 ################################################################################
@@ -413,10 +413,9 @@ sdkPub:
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR)
 
-old_apps:
-	$(MAKE) -C $(OLD_APPS_DIR) all
-	$(MAKE) -C $(OLD_APPS_DIR) install 
-	mv $(OLD_APPS).zip $(OLD_APPS)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
+apps_free:
+	$(MAKE) -C $(APPS_FREE_DIR) all
+	$(MAKE) -C $(APPS_FREE_DIR) install 
 
 clean:
 	make -C $(LINUX_DIR) clean
