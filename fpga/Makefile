@@ -22,12 +22,15 @@ DEVICE_TREE=sdk/dts/system.dts
 VIVADO = vivado -nolog -nojournal -mode batch
 HSI    = hsi    -nolog -nojournal -mode batch
 
-.PHONY: all clean
+.PHONY: all clean project
 
 all: $(FPGA_BIT) $(FSBL_ELF) $(MEMTEST_ELF) $(DEVICE_TREE)
 
 clean:
 	rm -rf out .Xil .srcs sdk
+
+project:
+	vivado -mode batch -source red_pitaya_vivado_project.tcl
 
 $(FPGA_BIT):
 	$(VIVADO) -source red_pitaya_vivado.tcl
