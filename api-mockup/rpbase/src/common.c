@@ -230,13 +230,13 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
 float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off)
 {
     /* map ADC counts into user units */
-    float ret_val = (calib_cnts * adc_max_v / (float)(1 << (field_len - 1)));
+    double ret_val = ((double)calib_cnts * adc_max_v / (double)(1 << (field_len - 1)));
 
     /* and adopt the calculation with user specified DC offset */
     ret_val += user_dc_off;
 
     /* adopt the calculation with calibration scaling */
-    ret_val *= calibScale / (FULL_SCALE_NORM/adc_max_v);
+    ret_val *= (double)calibScale / ((double)FULL_SCALE_NORM/(double)adc_max_v);
 
     return ret_val;
 }
