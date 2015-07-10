@@ -18,8 +18,6 @@
 #
 # TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
 
-CROSS_COMPILE?=arm-xilinx-linux-gnueabi-
-
 TMP = tmp
 
 UBOOT_TAG = xilinx-v2015.1
