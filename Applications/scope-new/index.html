@@ -173,7 +173,7 @@
             <div class="right-menu-option" id="ch1_meas_range">- V</div>
           </div -->
           <div class="col-xs-12 option-content">
-            <span class="col-info">Vertical offset</span>
+            <span class="col-info">Vertical offset / V</span>
             <div class="right-menu-option">
               <input id="OSC_CH1_OFFSET" class="setfield" type="text" value="0">
             </div>
@@ -224,7 +224,7 @@
             <div class="right-menu-option" id="ch2_meas_range">- V</div>
           </div -->
           <div class="col-xs-12 option-content">
-            <span class="col-info">Vertical offset</span>
+            <span class="col-info">Vertical offset / V</span>
             <div class="right-menu-option">
               <input id="OSC_CH2_OFFSET" class="setfield" type="text" value="0">
             </div>
@@ -291,39 +291,41 @@
             <div class="right-menu-option">
               <span class="col-info">Trigger</span>
               <select id="SOUR1_TRIG_SOUR" class="form-control styled-select">
-                <option value="0">External Positive edge</option>
-                <option value="1">External Negative edge</option>
+                <option value="1">Internal</option>
+                <option value="2">External Positive edge</option>
+                <option value="3">External Negative edge</option>
               </select>
             </div>
           </div>
 
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Frequency</span>
+              <span class="col-info">Frequency / Hz</span>
               <input class="setfield" id="SOUR1_FREQ_FIX" type="text" value="0">
             </div>
           </div>
+
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Amplitude</span>
-              <input class="setfield" id="SOUR1_VOLT" type="number" step="any" value="0" min="0" max="1">
+              <span class="col-info">Amplitude / V</span>
+              <input class="setfield limits" id="SOUR1_VOLT" type="number" step="0.1" value="0" min="0" max="1">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Offset</span>
-              <input class="setfield" id="SOUR1_VOLT_OFFS" type="number" step="any" value="0" min="-1" max="1">
+              <span class="col-info">Offset / V</span>
+              <input class="setfield limits" id="SOUR1_VOLT_OFFS" type="number" step="0.1" value="0" min="-1" max="1">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Phase</span>
+              <span class="col-info">Phase / deg</span>
               <input class="setfield" id="SOUR1_PHAS" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Duty cycle</span>
+              <span class="col-info">Duty cycle / %</span>
               <input class="setfield" id="SOUR1_DCYC" type="text" value="0">
             </div>
           </div>
@@ -377,39 +379,40 @@
             <div class="right-menu-option">
               <span class="col-info">Trigger</span>
               <select id="SOUR2_TRIG_SOUR" class="form-control styled-select">
-                <option value="0">External Positive edge</option>
-                <option value="1">External Negative edge</option>
+                <option value="1">Internal</option>
+                <option value="2">External Positive edge</option>
+                <option value="3">External Negative edge</option>
               </select>
             </div>
           </div>
           
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Frequency</span>
+              <span class="col-info">Frequency / Hz</span>
               <input class="setfield" id="SOUR2_FREQ_FIX" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Amplitude</span>
-              <input class="setfield" id="SOUR2_VOLT" type="number" step="any" value="0" min="0" max="1">
+              <span class="col-info">Amplitude / V</span>
+              <input class="setfield limits" id="SOUR2_VOLT" type="number" step="0.1" value="0" min="0" max="1">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Offset</span>
-              <input class="setfield" id="SOUR2_VOLT_OFFS" type="number" step="any" value="0" min="-1" max="1">
+              <span class="col-info">Offset / V</span>
+              <input class="setfield limits" id="SOUR2_VOLT_OFFS" type="number" step="0.1" value="0" min="-1" max="1">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Phase</span>
+              <span class="col-info">Phase / deg</span>
               <input class="setfield" id="SOUR2_PHAS" type="text" value="0">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Duty cycle</span>
+              <span class="col-info">Duty cycle / %</span>
               <input class="setfield" id="SOUR2_DCYC" type="text" value="0">
             </div>
           </div>
@@ -470,7 +473,7 @@
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Vertical offset</span>
+              <span class="col-info">Vertical offset / V</span>
               <input class="setfield" id="OSC_MATH_OFFSET" type="text" value="0">
             </div>
           </div>
@@ -721,4 +724,13 @@
     </div>
   </div>
 </body>
+
+<script language="javascript" type="text/javascript">
+$(".limits").change(function() {
+	if ($(this).val() < $(this).attr('min'))
+    	$(this).val($(this).attr('min'));
+	else if ($(this).val() > $(this).attr('max'))
+    	$(this).val($(this).attr('max'));
+}).change();
+</script>
 </html>
