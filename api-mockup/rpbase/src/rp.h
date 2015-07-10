@@ -384,6 +384,7 @@ int rp_CalibrateBackEndOffset(rp_channel_t channel);
 */
 int rp_CalibrateBackEndScale(rp_channel_t channel);
 
+int rp_CalibrationReset();
 ///@}
 
 
