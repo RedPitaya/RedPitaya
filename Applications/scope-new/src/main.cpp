@@ -600,7 +600,7 @@ void generate(rp_channel_t channel) {
         amplitude = out2Amplitude.Value()/out2Scale.Value();
         offset = out2Offset.Value();
         showOff = out2ShowOffset.Value();
-		duty_cycle = out1DCYC.Value();
+		duty_cycle = out2DCYC.Value();
     }
 
     switch (waveform) {
