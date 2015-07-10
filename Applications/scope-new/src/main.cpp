@@ -39,8 +39,8 @@ CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, true, 0);
 CBooleanParameter inAutoscale("OSC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 
-CFloatParameter in1Offset("OSC_CH1_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
-CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
+CFloatParameter in1Offset("OSC_CH1_OFFSET", CBaseParameter::RWSA, 0, 0, -40, 40);
+CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RWSA, 0, 0, -40, 40);
 CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
@@ -580,7 +580,7 @@ void OnNewParams(void) {
 void generate(rp_channel_t channel) {
     CFloatSignal *signal;
     rp_waveform_t waveform;
-    float frequency, phase, amplitude, offset, showOff;
+    float frequency, phase, amplitude, offset, showOff, duty_cycle;
 
     if (channel == RP_CH_1) {
         signal = &out1Signal;
@@ -590,6 +590,7 @@ void generate(rp_channel_t channel) {
         amplitude = out1Amplitude.Value()/out1Scale.Value();
         offset = out1Offset.Value();
         showOff = out1ShowOffset.Value();
+		duty_cycle = out1DCYC.Value();
     }
     else {
         signal = &out2Signal;
@@ -599,6 +600,7 @@ void generate(rp_channel_t channel) {
         amplitude = out2Amplitude.Value()/out2Scale.Value();
         offset = out2Offset.Value();
         showOff = out2ShowOffset.Value();
+		duty_cycle = out1DCYC.Value();
     }
 
     switch (waveform) {
@@ -610,6 +612,19 @@ void generate(rp_channel_t channel) {
             break;
         case RP_WAVEFORM_SQUARE:
             synthesis_square(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+
+        case RP_WAVEFORM_RAMP_UP:
+            synthesis_rampUp(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+        case RP_WAVEFORM_RAMP_DOWN:
+            synthesis_rampDown(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+        case RP_WAVEFORM_DC:
+            synthesis_DC(signal, frequency, phase, amplitude, offset, showOff);
+            break;
+        case RP_WAVEFORM_PWM:
+            synthesis_PWM(signal, frequency, phase, amplitude, offset, showOff, duty_cycle);
             break;
         default:
             break;
@@ -634,6 +649,43 @@ void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, 
         (*signal)[i] = sin(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase) > 0 ? amp+off + showOff : -amp+off + showOff;
     }
 }
+
+int synthesis_rampUp(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
+    for(int i = 0; i < signal->GetSize() - 1; i++) {
+        (*signal)[signal->GetSize() - i-2] = (float) (-1.0 * (acos(cos(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase)) / M_PI - 1))*amp + off + showOff;
+    }
+    return RP_OK;
+}
+
+int synthesis_rampDown(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
+    for(int i = 0; i < signal->GetSize(); i++) {
+        (*signal)[i] = (float) (-1.0 * (acos(cos(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase))))*amp + off + showOff;
+    }
+    return RP_OK;
+}
+
+int synthesis_DC(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
+    for(int i = 0; i < signal->GetSize(); i++) {
+        (*signal)[i] = 1.0*amp + off + showOff;
+    }
+    return RP_OK;
+}
+
+int synthesis_PWM(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff, float ratio /*duty cycle*/) {
+    // calculate number of samples that need to be high
+    int h = (int) (signal->GetSize()/2 * ratio);
+
+    for(int i = 0; i < signal->GetSize(); i++) {
+        if (i < h || i >= signal->GetSize() - h) {
+            (*signal)[i] = 1.0*amp + off + showOff;
+        }
+        else {
+            (*signal)[i] = (float)-1.0*amp + off + showOff;
+        }
+    }
+    return RP_OK;
+}
+
 void OnNewSignals(void)
 {
 	// do something
