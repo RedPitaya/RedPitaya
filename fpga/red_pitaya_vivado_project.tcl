@@ -2,7 +2,7 @@
 # Vivado tcl script for building RedPitaya FPGA in non project mode
 #
 # Usage:
-# vivado -mode tcl -source red_pitaya_vivado.tcl
+# vivado -mode batch -source red_pitaya_vivado_project.tcl
 ################################################################################
 
 ################################################################################
@@ -12,12 +12,6 @@
 set path_rtl rtl
 set path_ip  ip
 set path_sdc sdc
-
-set path_out out
-set path_sdk sdk
-
-file mkdir $path_out
-file mkdir $path_sdk
 
 ################################################################################
 # setup an in memory project
@@ -36,7 +30,6 @@ source                            $path_ip/system_bd.tcl
 
 # generate SDK files
 generate_target all [get_files    system.bd]
-#write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 
 ################################################################################
 # read files:
@@ -44,9 +37,6 @@ generate_target all [get_files    system.bd]
 # 2. IP database files
 # 3. constraints
 ################################################################################
-
-# template
-#read_verilog                      $path_rtl/...
 
 read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
@@ -81,4 +71,4 @@ update_compile_order -fileset sources_1
 ################################################################################
 ################################################################################
 
-start_gui
+#start_gui
