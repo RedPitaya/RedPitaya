@@ -21,10 +21,12 @@ REVISION ?= devbuild
 OBJS = test.o
 
 CALIB_C = calibrateApp.c
+CALIB2_C = calibrateApp2.c
 
 # Executable name
 TARGET=../testApp
 CALIBRATE=../calibrateApp
+CALIBRATE2=../calibrateApp2
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror
@@ -46,7 +48,7 @@ INSTALL_DIR ?= .
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
-all: $(TARGET) $(CALIBRATE)
+all: $(TARGET) $(CALIBRATE) $(CALIBRATE2)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
@@ -63,16 +65,21 @@ $(TARGET): $(OBJS)
 $(CALIBRATE):
 	$(CC) -o $@ $(CALIB_C) $(CFLAGS) $(LIBPATH) $(LIBS)
 
+$(CALIBRATE2):
+	$(CC) -o $@ $(CALIB2_C) $(CFLAGS) $(LIBPATH) $(LIBS)
+
 # Version header for traceability
 version.h:
 	cp $(SHARED)/include/redpitaya/version.h . 
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(CALIBRATE) $(CALIBRATE2) $(TARGET) *.o
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(TARGET) $(INSTALL_DIR)/bin
+	cp $(CALIBRATE) $(INSTALL_DIR)/bin
+	cp $(CALIBRATE2) $(INSTALL_DIR)/bin	
