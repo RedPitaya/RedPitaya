@@ -558,31 +558,37 @@ int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
 }
 
 int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
-    float max = -FLT_MAX;
-    
+    float max = view[source*viewSize];
+
     pthread_mutex_lock(&mutex);
+    bool inverted = (source == 0 && ch1_inverted) || (source == 1 && ch2_inverted) || (source == 2 && math_inverted);
     for (int i = 0; i < viewSize; ++i) {
-        if (view[source*viewSize + i] > max) {
+        if (inverted ? view[source*viewSize + i] < max : view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
         }
     }
 	*Vmax = max;
     pthread_mutex_unlock(&mutex);
 
+	ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
+
     return RP_OK;
 }
 
 int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
-    float min = FLT_MAX;
+    float min = view[source*viewSize];
     
     pthread_mutex_lock(&mutex);
+    bool inverted = (source == 0 && ch1_inverted) || (source == 1 && ch2_inverted) || (source == 2 && math_inverted);
     for (int i = 0; i < viewSize; ++i) {
-        if (view[source*viewSize + i] < min) {
+        if (inverted ? view[source*viewSize + i] > min : view[source*viewSize + i] < min) {
             min = view[source*viewSize + i];
         }
     }
 	*Vmin = min;
     pthread_mutex_unlock(&mutex);
+
+	ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
 
     return RP_OK;
 }
