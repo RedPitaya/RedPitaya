@@ -36,6 +36,8 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage);
 int calib_SetBackEndOffset(rp_channel_t channel);
 int calib_SetBackEndScale(rp_channel_t channel);
 
+int calib_Reset();
+
 int32_t calib_GetDataMedian(rp_channel_t channel);
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
 
