@@ -30,7 +30,7 @@ clean:
 	rm -rf out .Xil .srcs sdk
 
 project:
-	vivado -mode batch -source red_pitaya_vivado_project.tcl
+	vivado -source red_pitaya_vivado_project.tcl
 
 $(FPGA_BIT):
 	$(VIVADO) -source red_pitaya_vivado.tcl
