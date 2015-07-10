@@ -372,6 +372,13 @@ int get_fpga_path(const char *app_id,
 
     /* Get fpga.conf file size */
     stat(fpga_conf, &st);
+
+    /* fpga.conf is empty, therefore we are dealing with a new app
+     * that doesn't need a specific fpga.bit file. */
+    if(fpga_conf < 0){
+        return FPGA_NOT_REQ;
+    }
+
     fpga_size = st.st_size;
     *fpga_file = malloc(fpga_size * sizeof(char));
 
@@ -600,12 +607,6 @@ fpga_stat rp_bazaar_app_load_fpga(const char *fpga_file)
     stat(fpga_file, &st);
     fpga_size = st.st_size;
     char fi_buff[fpga_size];
-
-    /* fpga.conf is empty, therefore we are dealing with a new app
-     * that doesn't need a specific fpga.bit file. */
-    if(fpga_size == 0){
-        return FPGA_NOT_REQ;
-    }
 
     fo = open("/dev/xdevcfg", O_WRONLY);
     if(fo < 0) {
