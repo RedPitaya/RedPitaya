@@ -20,9 +20,9 @@
 
 TMP = tmp
 
-UBOOT_TAG = xilinx-v2015.1
-LINUX_TAG = xilinx-v2015.1
-DTREE_TAG = xilinx-v2015.1
+UBOOT_TAG = xilinx-v2015.2
+LINUX_TAG = xilinx-v2015.2.01
+DTREE_TAG = xilinx-v2015.2.01
 BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
