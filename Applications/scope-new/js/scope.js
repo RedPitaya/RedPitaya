@@ -207,7 +207,7 @@
       else {
         
         // Show/hide Y offset arrows
-        if(param_name == 'OSC_CH1_OFFSET') {
+        if(param_name == 'OSC_CH1_OFFSET' && new_params['CH1_SHOW']) {
           if(new_params['CH1_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
@@ -225,7 +225,7 @@
             $('#ch1_offset_arrow').hide();
           }
         }
-        else if(param_name == 'OSC_CH2_OFFSET') {
+        else if(param_name == 'OSC_CH2_OFFSET' && new_params['CH2_SHOW']) {
           if(new_params['CH2_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
@@ -1219,8 +1219,7 @@ $(function() {
     OSC.exitEditing();
   });
   
-  // Measurement dialog
-//  $('#meas_done').on('click touchstart', function() {              
+  // Measurement dialog       
   $('#meas_done').on('click', function() {              
     var meas_signal = $('#meas_dialog input[name="meas_signal"]:checked');
     
@@ -1242,10 +1241,12 @@ $(function() {
         signal: signal_name
       }).appendTo('#meas_list');
     }
+	OSC.exitEditing(true);
   });
 
   $(document).on('click', '.meas-item', function() {
     $(this).remove();
+	OSC.exitEditing(true);
   });
   
   // Process events from other controls in parameters dialogs
