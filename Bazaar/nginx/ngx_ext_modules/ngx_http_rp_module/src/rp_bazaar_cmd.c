@@ -481,6 +481,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
             case -3:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
+            /* App is a new app and doesn't need custom fpga.bit */
+            case -4:
+                if(fpga_name) free(fpga_name);
+                break;
             case 0:
                 if (fpga_name)  free(fpga_name);
                 break;
