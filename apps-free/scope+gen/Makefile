@@ -5,14 +5,13 @@
 #
 
 APP=$(notdir $(CURDIR:%/=%))
-FPGA=fpga.bit
 
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-INSTALL_DIR = ../../target
+INSTALL_DIR ?= ../../build
 
 CONTROLLER=controller.so
 ARTIFACTS=$(CONTROLLER)
@@ -34,9 +33,7 @@ src:
 zip: $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) $(FPGA) info index.html Makefile target/$(APP)
-	$(MAKE) -C src clean
-	cp -r src target/$(APP)
+	cp -r $(CONTROLLER) fpga.conf info index.html Makefile target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r $(INSTALL_DIR)/$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
