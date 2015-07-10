@@ -4,8 +4,6 @@
 
 #List of applications to build
 APPS = scope scope+gen scope+pid spectrum freqanalyzer
-NAME = praeteritum-apps
-O_INSTALL_DIR ?= .
 
 all: zips
 
@@ -15,19 +13,14 @@ zips:
 	done
 
 install:
-	mkdir target
+	mkdir build
 	for APP in $(APPS); do \
-		$(MAKE) -C $$APP zip; \
+		$(MAKE) -C $$APP INSTALL_DIR=../../build zip; \
 	done
-
-	cd target; zip $(NAME).zip *.zip; cd -
-	cp ./target/$(NAME).zip $(O_INSTALL_DIR)
-	rm -rf *.zip
 
 clean:
 	for app in $(APPS); do \
 		$(MAKE) -C $$app clean; \
 	done
 
-	$(RM) -rf $(NAME).zip
-	$(RM) -rf ./target
+	$(RM) -rf ./build/
