@@ -32,6 +32,10 @@ float getMeasureValue(int measure);
 void synthesis_sin(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
 void synthesis_triangle(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
 void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
+int synthesis_rampUp(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
+int synthesis_rampDown(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
+int synthesis_DC(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
+int synthesis_PWM(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff, float ratio);
 void generate(rp_channel_t channel);
 
 
