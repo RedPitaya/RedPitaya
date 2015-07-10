@@ -118,15 +118,23 @@ typedef struct hk_fpga_reg_mem_s {
     uint32_t dna_hi;
 } hk_fpga_reg_mem_t;
 
+typedef enum fpga_stat{
+    FPGA_OK;
+    FPGA_FIND_ERR;
+    FPGA_READ_ERR;
+    FPGA_WRITE_ERR;
+    FPGA_NOT_REQ;
+}fpga_stat_t;
+
 
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root, 
                                  ngx_pool_t *pool, int verbose);
 int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app);
 int rp_bazaar_app_unload_module(rp_bazaar_app_t *app);
-int rp_bazaar_app_load_fpga(const char *fpga_file);
 int rp_bazaar_get_mac(const char* nic, char *mac);
 int rp_bazaar_get_dna(unsigned long long *dna);
 int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool);
 int get_fpga_path(const char *app_id, const char *dir, char **fpga_file);
+fpga_stat rp_bazaar_app_load_fpga(const char *fpga_file);
 
 #endif /*__RP_BAZAAR_APP_H*/
