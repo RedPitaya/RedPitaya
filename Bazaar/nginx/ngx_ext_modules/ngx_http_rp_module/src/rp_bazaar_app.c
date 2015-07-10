@@ -596,7 +596,7 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
-fpga_stat rp_bazaar_app_load_fpga(const char *fpga_file)
+fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file)
 {
     int fo, fi;
     int ret_val = 0, fpga_size;
