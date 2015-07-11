@@ -39,8 +39,8 @@ CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, true, 0);
 CBooleanParameter inAutoscale("OSC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 
-CFloatParameter in1Offset("OSC_CH1_OFFSET", CBaseParameter::RWSA, 0, 0, -40, 40);
-CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RWSA, 0, 0, -40, 40);
+CFloatParameter in1Offset("OSC_CH1_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
+CFloatParameter in2Offset("OSC_CH2_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
@@ -489,11 +489,12 @@ void OnNewParams(void) {
         rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
         in1Offset.Value() = value;
         rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
-        in1Offset.Value() = value;
+        in2Offset.Value() = value;
         rpApp_OscGetTimeOffset(&value);
         inTimeOffset.Value() = value;
         rpApp_OscGetTimeScale(&value);
         inTimeScale.Value() = value;
+		inTimeScale.Value() = inTimeScale.Value() <= 0  ? 0.00005 : inTimeScale.Value();
         inAutoscale.Update();
         inAutoscale.Value() = false;
 
