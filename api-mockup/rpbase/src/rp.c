@@ -176,6 +176,10 @@ int rp_CalibrateBackEndScale(rp_channel_t channel) {
     return calib_SetBackEndScale(channel);
 }
 
+int rp_CalibrateBackEnd(rp_channel_t channel) {
+    return calib_CalibrateBackEnd(channel);
+}
+
 int rp_CalibrationReset() {
     return calib_Reset();
 }
