@@ -621,8 +621,9 @@
 		++mi_count;
 		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ns', 'FREQ': 'Hz', 'RMS': 'V'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
+		var sig_name = $elem.data('signal')[0] == '1' ? 'IN1' : 'IN2';
         $('#info-meas').append(
-          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + $elem.data('signal') + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
+          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
         );
       }
     });
