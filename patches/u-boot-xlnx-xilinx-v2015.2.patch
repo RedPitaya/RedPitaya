@@ -68,9 +68,9 @@ index 0000000..8644ae4
 +++ b/configs/zynq_red_pitaya_defconfig
 @@ -0,0 +1,6 @@
 +CONFIG_SPL=y
-++S:CONFIG_ARM=y
-++S:CONFIG_ZYNQ=y
-++S:CONFIG_TARGET_ZYNQ_RED_PITAYA=y
++CONFIG_ARM=y
++CONFIG_ZYNQ=y
++CONFIG_TARGET_ZYNQ_RED_PITAYA=y
 +CONFIG_OF_CONTROL=n
 +CONFIG_DEFAULT_DEVICE_TREE="zynq-red-pitaya"
 diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
