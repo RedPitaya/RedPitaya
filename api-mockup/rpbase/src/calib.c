@@ -290,6 +290,69 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     return calib_Init();
 }
 
+static int getGenAmp(rp_channel_t channel, float amp, float* min, float* max) {
+    ECHECK(rp_GenReset());
+    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+    ECHECK(rp_GenAmp(channel, amp));
+    ECHECK(rp_GenOffset(channel, 0));
+    ECHECK(rp_GenOutEnable(channel));
+    
+    return calib_GetDataMinMaxFloat(channel, RP_LOW, min, max);
+}
+
+static int getGenDC_int(rp_channel_t channel, float dc) {
+    ECHECK(rp_GenReset());
+    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_DC));
+    ECHECK(rp_GenAmp(channel, 0));
+    ECHECK(rp_GenOffset(channel, dc));
+    ECHECK(rp_GenOutEnable(channel));
+    
+    return calib_GetDataMedian(channel);
+}
+
+int calib_CalibrateBackEnd(rp_channel_t channel) {
+    rp_calib_params_t params;
+    ECHECK(calib_ReadParams(&params));
+
+    /* Reset current calibration parameters*/
+    CHANNEL_ACTION(channel,
+            params.be_ch1_fs = cmn_CalibFullScaleFromVoltage(1),
+            params.be_ch2_fs = cmn_CalibFullScaleFromVoltage(1))
+
+    CHANNEL_ACTION(channel,
+            params.be_ch1_dc_offs = 0,
+            params.be_ch2_dc_offs = 0)
+
+    /* Generate uses this calibration parameters - reset them */
+    calib = params;
+
+    float value1, value2;
+    getGenAmp(channel, CONSTANT_SIGNAL_AMPLITUDE, &value1, &value2);
+    float scale = (value2 - value1) / (2.f * CONSTANT_SIGNAL_AMPLITUDE);
+    fprintf(stderr, "v1: %f, v2: %f, scale: %f\n", value1, value2, scale);
+
+    int off1 = getGenDC_int(channel, -CONSTANT_SIGNAL_AMPLITUDE);
+    int off2 = getGenDC_int(channel, 0);
+    int off3 = getGenDC_int(channel, CONSTANT_SIGNAL_AMPLITUDE);
+    int offset = -(off1 + off2 + off3) / 3;
+    
+    fprintf(stderr, "off1: %d, off2: %d, off3: %d, off: %d\n", off1, off2, off3, offset);
+    /* Generate constant signal signal */
+    uint32_t calibValue = cmn_CalibFullScaleFromVoltage(scale);
+
+    CHANNEL_ACTION(channel,
+            params.be_ch1_fs = calibValue,
+            params.be_ch2_fs = calibValue)
+
+    CHANNEL_ACTION(channel,
+            params.be_ch1_dc_offs = offset,
+            params.be_ch2_dc_offs = offset)
+
+    /* Set new local parameter */
+    ECHECK(calib_WriteParams(params));
+    return calib_Init();
+}
+
 int calib_Reset() {
     calib_SetToZero();
     ECHECK(calib_WriteParams(calib));
@@ -333,9 +396,36 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
 
     double avg = 0;
     for(int i = 0; i < BUFFER_LENGTH; ++i)
-    avg += data[i];
+        avg += data[i];
 
     avg /= BUFFER_LENGTH;
     fprintf(stderr, "\ncalib_GetDataMedianFloat: avg = %f\n", (float)avg);	
     return avg;
+}
+
+int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max) {
+    ECHECK(rp_AcqReset());
+    ECHECK(rp_AcqSetGain(channel, gain));
+    ECHECK(rp_AcqStart());
+    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    usleep(1000000);
+    int BUF_SIZE = BUFFER_LENGTH;
+
+    ECHECK(rp_AcqStop());
+
+    float data[BUF_SIZE];
+    uint32_t bufferSize = (uint32_t) BUF_SIZE;
+    ECHECK(rp_AcqGetDataV(channel, 0, &bufferSize, data));
+
+    float _min = data[0];
+    float _max = data[0];
+    for(int i = 1; i < BUFFER_LENGTH; ++i) {
+        _min = (_min > data[i]) ? data[i] : _min;
+        _max = (_max < data[i]) ? data[i] : _max;
+    }
+
+    fprintf(stderr, "\ncalib_GetDataMinMaxFloat: min = %f, max = %f\n", _min, _max);
+    *min = _min;
+    *max = _max;
+    return RP_OK;
 }
