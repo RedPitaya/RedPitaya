@@ -1055,10 +1055,15 @@ void mathThreadFunction() {
             calculateIntegral(mathSource1, math_ampScale, math_ampOffset, invertFactor);
         } else {
             float v1, v2;
+            bool invert1 = (mathSource1 == RP_CH_1) ? ch1_inverted : ch2_inverted;
+            bool invert2 = (mathSource2 == RP_CH_1) ? ch1_inverted : ch2_inverted;
+            float sign1 = invert1 ? -1.f : 1.f;
+            float sign2 = invert2 ? -1.f : 1.f;
+            
             for (int i = 0; i < viewSize; ++i) {
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
-                view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(v1, v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
+                view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
         }
     }
