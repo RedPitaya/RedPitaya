@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
     puts("Calibration proces started.");
 
-    puts("Connect CH1 to ground. ");
+    puts("Connect CH1 to ground.");
     waitForUser();
     ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1));
 
@@ -62,8 +62,12 @@ int main(int argc, char **argv) {
     } while ((ret != 1) && (value <= 0.f) && (value > 1.f));
     printf("Calibrating to %f V\n", value);
     ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_1, value));
-    
-    puts("Connect CH2 to ground. \n");
+
+    puts("Connect CH1 Outout to CH1 Input. Press any key to continue.");
+    waitForUser();
+    ECHECK(rp_CalibrateBackEnd(RP_CH_1));
+
+    puts("Connect CH2 to ground.");
     waitForUser();
     ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2));
 
@@ -83,18 +87,11 @@ int main(int argc, char **argv) {
     printf("Calibrating to %f V\n", value);
     ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_2, value));
 
-
-
-    puts("Connect CH1 Outout to CH1 Input. Press any key to continue.");
+    puts("Connect CH2 Outout to CH2 Input.");
     waitForUser();
-    ECHECK(rp_CalibrateBackEndOffset(RP_CH_1));
-    ECHECK(rp_CalibrateBackEndScale(RP_CH_1));
+    ECHECK(rp_CalibrateBackEnd(RP_CH_2));
 
-    puts("Connect CH2 Outout to CH2 Input. Press any key to continue.");
-    waitForUser();
-    ECHECK(rp_CalibrateBackEndOffset(RP_CH_2));
-    ECHECK(rp_CalibrateBackEndScale(RP_CH_2));
-
+    
     ECHECK(rp_Release());
     return 0;
 }
