@@ -1055,10 +1055,15 @@ void mathThreadFunction() {
             calculateIntegral(mathSource1, math_ampScale, math_ampOffset, invertFactor);
         } else {
             float v1, v2;
+            bool invert1 = (mathSource1 == RP_CH_1) ? ch1_inverted : ch2_inverted;
+            bool invert2 = (mathSource2 == RP_CH_1) ? ch1_inverted : ch2_inverted;
+            float sign1 = invert1 ? -1.f : 1.f;
+            float sign2 = invert2 ? -1.f : 1.f;
+            
             for (int i = 0; i < viewSize; ++i) {
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
-                view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(v1, v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
+                view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
         }
     }
@@ -1066,15 +1071,15 @@ void mathThreadFunction() {
 
 void checkAutoscale(bool fromThread) {
     if((autoScale == false) && (fromThread == true))
-		return;
-	
+        return;
+
     fprintf(stderr, "checkAutoscale\n");
     static const float scales[AUTO_SCALE_NUM_OF_SCALE] = {0.00005f, 0.0001f, 0.0002f, 0.0005f, 0.001f, 0.002f, 0.005f, 0.01f, 0.02f, 0.05f, 0.1f, 0.2f, 0.5f, 1.f, 2.f, 5.f, 10.f, 20.f, 50.f, 100.f};
-	static int timeScaleIdx = 0;
-	static float periods[2][AUTO_SCALE_NUM_OF_SCALE];
-	static float vpps[2][AUTO_SCALE_NUM_OF_SCALE];
-	static float vMeans[2][AUTO_SCALE_NUM_OF_SCALE];
-	static float savedTimeScale;
+    static int timeScaleIdx = 0;
+    static float periods[2][AUTO_SCALE_NUM_OF_SCALE];
+    static float vpps[2][AUTO_SCALE_NUM_OF_SCALE];
+    static float vMeans[2][AUTO_SCALE_NUM_OF_SCALE];
+    static float savedTimeScale;
     
     float period, vpp, vMean;
     int ret;
@@ -1084,52 +1089,52 @@ void checkAutoscale(bool fromThread) {
     
     float period_to_set = 1.f;
     
-	if(!fromThread) {
+    if(!fromThread) {
         if(autoScale)
             return;
         
-		osc_getTimeScale(&savedTimeScale);
-		timeScaleIdx = 0;
+        osc_getTimeScale(&savedTimeScale);
+        timeScaleIdx = 0;
         period_to_set = scales[timeScaleIdx];
         autoScale = true;
     } else {
         for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
             ECHECK_APP_THREAD(osc_measureVpp(source, &vpp));
             ECHECK_APP_THREAD(osc_measureMeanVoltage(source, &vMean));
-			
+
             if (fabs(vpp) > SIGNAL_EXISTENCE) {
                 ret = osc_measurePeriod(source, &period);
                 periods[source][timeScaleIdx] = (ret == RP_OK) ? period : 0.f;
                 vpps[source][timeScaleIdx] = vpp;
                 vMeans[source][timeScaleIdx] = vMean;
-			} else {
-				periods[source][timeScaleIdx] = 0.f;
-			}
-		}
-		
-		if(++timeScaleIdx >= AUTO_SCALE_NUM_OF_SCALE) {
-			autoScale = false;
+            } else {
+                periods[source][timeScaleIdx] = 0.f;
+            }
+        }
+
+        if(++timeScaleIdx >= AUTO_SCALE_NUM_OF_SCALE) {
+            autoScale = false;
 
             for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
                 repCounts[source] = 0;
                 for(int i = (AUTO_SCALE_NUM_OF_SCALE - 1); i >= 1; --i) {
                     
-					int count = 0;
-					if(fabs(periods[source][i])  < 0.00001)
-						continue;
-						
+                    int count = 0;
+                    if(fabs(periods[source][i])  < 0.00001)
+                        continue;
+
                     for(int j = (i - 1); j >= 0; --j) {
-						if(fabs(periods[source][j])  < 0.00001)
+                        if(fabs(periods[source][j])  < 0.00001)
                             continue;
 
-						if(fabs((periods[source][i] - periods[source][j]) / periods[source][i]) < AUTO_SCALE_PERIOD_ERROR)
-							count++;
+                        if(fabs((periods[source][i] - periods[source][j]) / periods[source][i]) < AUTO_SCALE_PERIOD_ERROR)
+                            count++;
                     }
-					
-					if(count > repCounts[source]) {
-						repCounts[source] = count;
-						periodsIdx[source] = i;
-					}
+
+                    if(count > repCounts[source]) {
+                        repCounts[source] = count;
+                        periodsIdx[source] = i;
+                    }
                 }
             }
             
@@ -1141,7 +1146,7 @@ void checkAutoscale(bool fromThread) {
                 period_to_set = savedTimeScale;
             }
             
-			for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
+            for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
                 if(repCounts[source] > 0) {
                     vpp = vpps[source][periodsIdx[source]];
                     vMean = vMeans[source][periodsIdx[source]];
@@ -1152,14 +1157,14 @@ void checkAutoscale(bool fromThread) {
                         ECHECK_APP_THREAD(osc_setAmplitudeScale(source, roundUpTo125(scale)));
                     }
                  }
-			}
-		} else {
+            }
+        } else {
             savedTimeScale = scales[timeScaleIdx];
-		}
-	}
-	
-	ECHECK_APP_THREAD(osc_setTimeScale(period_to_set));
-	ECHECK_APP_THREAD(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
+        }
+    }
+
+    ECHECK_APP_THREAD(osc_setTimeScale(period_to_set));
+    ECHECK_APP_THREAD(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
 }
 
 void *mainThreadFun() {
@@ -1220,19 +1225,19 @@ void *mainThreadFun() {
                 int bufferEars = ((int)_getBufSize - requiredBuffSize) / 2;
                 int viewEars = -MIN(bufferEars / curDeltaSample, 0);
                 bufferEars = MAX(0, bufferEars);
-				int viewOffset = ((_lastTimeOffset - timeOffset) * (float)samplesPerDivision) / _timeScale ;
-				int buffOffset = viewOffset * curDeltaSample;
+                int viewOffset = ((_lastTimeOffset - timeOffset) * (float)samplesPerDivision) / _timeScale ;
+                int buffOffset = viewOffset * curDeltaSample;
 
-				if(viewEars) {
-					buffOffset = 0;
-				} else {
-					if(bufferEars < abs(buffOffset)) {
-						viewOffset = (abs(buffOffset) - bufferEars) * sign(buffOffset) / curDeltaSample;
-						buffOffset = bufferEars * sign(buffOffset);
-					} else {
-						viewOffset = 0;
-					}
-				}
+                if(viewEars) {
+                    buffOffset = 0;
+                } else {
+                    if(bufferEars < abs(buffOffset)) {
+                        viewOffset = (abs(buffOffset) - bufferEars) * sign(buffOffset) / curDeltaSample;
+                        buffOffset = bufferEars * sign(buffOffset);
+                    } else {
+                        viewOffset = 0;
+                    }
+                }
                 int maxViewIdx = MIN(viewSize, (viewSize - 2*viewEars + viewOffset));
                 int buffFullOffset = bufferEars - buffOffset;
 
@@ -1278,7 +1283,7 @@ void *mainThreadFun() {
             // Calculate transformation (form data to view) parameters
             _deltaSample = (float)timeToIndex(_timeScale) / (float)samplesPerDivision;
             _lastTimeScale = _timeScale;
-			_lastTimeOffset = timeOffset;
+            _lastTimeOffset = timeOffset;
             _triggerDelay = _triggerDelay % ADC_BUFFER_SIZE;
 
             _preZero = 0; //continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
@@ -1342,7 +1347,7 @@ void *mainThreadFun() {
             pthread_mutex_unlock(&mutex);
 
             manuallyTriggered = false;
-			checkAutoscale(true);
+            checkAutoscale(true);
         }
 
         if (thisLoopAcqStart) {
