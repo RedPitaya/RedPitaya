@@ -651,15 +651,27 @@ void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, 
 }
 
 int synthesis_rampUp(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
-    for(int i = 0; i < signal->GetSize() - 1; i++) {
-        (*signal)[signal->GetSize() - i-2] = (float) (-1.0 * (acos(cos(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase)) / M_PI - 1))*amp + off + showOff;
+    float shift = 0;
+    for(int unsigned i = 0; i < signal->GetSize() - 1; i++) {
+        float angle = M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase - shift;
+        if(angle > M_PI) {
+            angle -= M_PI;
+            shift += M_PI;
+        }
+        (*signal)[signal->GetSize() - i-2] = (float) (-1.0 * (acos(cos(angle)) / M_PI - 1));
     }
     return RP_OK;
 }
 
 int synthesis_rampDown(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff) {
-    for(int i = 0; i < signal->GetSize(); i++) {
-        (*signal)[i] = (float) (-1.0 * (acos(cos(2 * M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase))))*amp + off + showOff;
+    float shift = 0;
+    for(int unsigned i = 0; i < signal->GetSize() - 1; i++) {
+        float angle = M_PI * (float) i / (float) (*signal).GetSize() * (freq * inTimeScale.Value()/1000) * 10 + phase - shift;
+        if(angle > M_PI) {
+            angle -= M_PI;
+            shift += M_PI;
+        }
+        (*signal)[i] = (float) (-1.0 * (acos(cos(angle)) / M_PI - 1));
     }
     return RP_OK;
 }
@@ -672,16 +684,18 @@ int synthesis_DC(CFloatSignal *signal, float freq, float phase, float amp, float
 }
 
 int synthesis_PWM(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff, float ratio /*duty cycle*/) {
-    // calculate number of samples that need to be high
-    int h = (int) (signal->GetSize()/2 * ratio);
+    float period = (float) (*signal).GetSize() / (freq * inTimeScale.Value() * 10.f / 1000.f);
+    float duty = period * ratio;
+    float fphase = period * phase / (2.f * M_PI);
 
-    for(int i = 0; i < signal->GetSize(); i++) {
-        if (i < h || i >= signal->GetSize() - h) {
-            (*signal)[i] = 1.0*amp + off + showOff;
+    float shift = 0;
+    for(int i = 0; i < (*signal).GetSize(); i++) {
+        float value = (float)i + fphase - shift;
+        if(value > period) {
+            value -= period;
+            shift += period;
         }
-        else {
-            (*signal)[i] = (float)-1.0*amp + off + showOff;
-        }
+        (*signal)[i] = (value > duty) ? (-amp + off + showOff) : (amp + off + showOff);
     }
     return RP_OK;
 }
