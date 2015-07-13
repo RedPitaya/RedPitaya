@@ -372,7 +372,14 @@ int get_fpga_path(const char *app_id,
 
     /* Get fpga.conf file size */
     stat(fpga_conf, &st);
+
     fpga_size = st.st_size;
+    /* fpga.conf is empty, therefore we are dealing with a new app
+     * that doesn't need a specific fpga.bit file. */
+    if(fpga_size < 0){
+        return FPGA_NOT_REQ;
+    }
+
     *fpga_file = malloc(fpga_size * sizeof(char));
 
     /* Read fpga.conf file into memory */
@@ -589,47 +596,48 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
-int rp_bazaar_app_load_fpga(const char *fpga_file)
+fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file)
 {
     int fo, fi;
-    int ret_val = 0, fpga_size;
+    int fpga_size;
     struct stat st;
 
-    fo = open("/dev/xdevcfg", O_WRONLY);
-    if(fo < 0) {
-        fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open xdevcfg: %s\n",
-                strerror(errno));
-        return -1;
-    }    
 
     /* Get FPGA size */
     stat(fpga_file, &st);
     fpga_size = st.st_size;
     char fi_buff[fpga_size];
+
+    fo = open("/dev/xdevcfg", O_WRONLY);
+    if(fo < 0) {
+        fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open xdevcfg: %s\n",
+                strerror(errno));
+        return FPGA_READ_ERR;
+    }  
     
     fi = open(fpga_file, O_RDONLY);
     if(fi < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open FPGA file: %s\n",
                 strerror(errno));
-        return -1;
+        return FPGA_FIND_ERR;
     }
 
     /* Read FPGA file into fi_buff */
     if(read(fi, &fi_buff, fpga_size) < 0){
         fprintf(stderr, "Unable to read FPGA file: %s\n",
             strerror(errno));
-        return -2;
+        return FPGA_READ_ERR;
     }
 
     /* Write fi_buff into fo */
     if(write(fo, &fi_buff, fpga_size) < 0){
         fprintf(stderr, "Unable to write to /dev/xdevcfg: %s\n", 
             strerror(errno));
-        return -3;
+        return FPGA_WRITE_ERR;
     }
 
     close(fo);
     close(fi);
 
-    return ret_val;
+    return FPGA_OK;
 }
