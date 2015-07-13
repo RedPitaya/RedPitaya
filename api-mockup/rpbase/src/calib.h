@@ -19,7 +19,7 @@
 
 #include "rp.h"
 
-#define CONSTANT_SIGNAL_AMPLITUDE 0.7
+#define CONSTANT_SIGNAL_AMPLITUDE 0.8
 
 int calib_Init();
 int calib_Release();
@@ -35,10 +35,12 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage);
 
 int calib_SetBackEndOffset(rp_channel_t channel);
 int calib_SetBackEndScale(rp_channel_t channel);
+int calib_CalibrateBackEnd(rp_channel_t channel);
 
 int calib_Reset();
 
 int32_t calib_GetDataMedian(rp_channel_t channel);
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
-
+int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
+	
 #endif //__CALIB_H
