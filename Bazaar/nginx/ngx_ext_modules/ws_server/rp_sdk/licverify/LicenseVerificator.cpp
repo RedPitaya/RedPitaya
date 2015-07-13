@@ -114,7 +114,7 @@ int verify_app_license(const char* app_id)
 		
 		//check if application was not change
 		std::string apps_folder = GetAppsFolder();
-		std::string contr_path = apps_folder+"/"+app_id+"/"+"controller.so";
+		std::string contr_path = apps_folder+"/"+app_id+"/"+"controllerhf.so";
 		orig_checksum_id = GetMD5(contr_path.c_str());
 		
 		if(orig_checksum_id.empty())

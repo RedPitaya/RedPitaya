@@ -409,7 +409,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         /* check if structure is correct, we need: 
          *  <app_id>/info/info.json
          *  <app_id>/info/icon.png
-         *  <app_id>/controller.so
+         *  <app_id>/controllerhf.so
          *  <app_id>/fpga.bit
          * And we must be able to load the application and test mandatory
          * functions.
@@ -419,7 +419,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
         if (!is_readable(dir, app_id, "fpga.bit"))
             continue;
-        if (!is_controller_ok(dir, app_id, "controller.so"))
+        if (!is_controller_ok(dir, app_id, "controllerhf.so"))
             continue;
         if (!get_info(&info, dir, app_id, pool))
             continue;
@@ -427,7 +427,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
 
         /* We have an application */
-        int demo = !is_registered(dir, app_id, "controller.so");
+        int demo = !is_registered(dir, app_id, "controller.hfso");
 		
         if (verbose) {
             /* Attach whole info JSON */
