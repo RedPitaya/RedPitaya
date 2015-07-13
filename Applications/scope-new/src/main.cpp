@@ -228,11 +228,16 @@ void UpdateParams(void) {
     in1Scale.Value() = value;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &value);
     in2Scale.Value() = value;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &value);
+    inMathScale.Value() = value;
+
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
     in1Offset.Value() = value;
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
     in1Offset.Value() = value;
-	
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &value);
+    inMathOffset.Value() = value;
+
     rpApp_OscGetTimeOffset(&value);
     inTimeOffset.Value() = value;
     rpApp_OscGetTimeScale(&value);
