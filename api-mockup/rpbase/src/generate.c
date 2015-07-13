@@ -139,9 +139,10 @@ int generate_setDCOffset(rp_channel_t channel, float offset) {
 	
 	rp_calib_params_t calib = calib_GetParams();
 	int dc_offs = channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
+	uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
 	
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-	ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, 0, dc_offs, 0);
+	ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
 	return RP_OK;
 }
 
@@ -150,9 +151,10 @@ int generate_getDCOffset(rp_channel_t channel, float *offset) {
 
 	rp_calib_params_t calib = calib_GetParams();
 	int dc_offs = channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
+	uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
 	
     ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-    *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), 0, dc_offs, 0);
+    *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0);
     return RP_OK;
 }
 
