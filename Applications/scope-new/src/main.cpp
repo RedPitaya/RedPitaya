@@ -494,7 +494,6 @@ void OnNewParams(void) {
         inTimeOffset.Value() = value;
         rpApp_OscGetTimeScale(&value);
         inTimeScale.Value() = value;
-		inTimeScale.Value() = inTimeScale.Value() <= 0  ? 0.00005 : inTimeScale.Value();
         inAutoscale.Update();
         inAutoscale.Value() = false;
 
