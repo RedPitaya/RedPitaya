@@ -16,8 +16,9 @@ INCLUDE=$(FFT_INC) $(JPEG_INC)
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
-OUT_DIR=../
-C_OUT_NAME=$(OUT_DIR)controllerhf.so
+OUT_DIR		=../
+OUT_NAME	=? controllerhf.so 
+C_OUT_NAME	=$(OUT_DIR)/$(OUT_NAME)
 
 all: make_c_app
 clean: clean_c_app clean_ext
@@ -32,7 +33,7 @@ make_c_app: $(FFT_OBJECTS) $(JPEG_LIB) $(OBJECTS)
 	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
 
 clean_c_app:
-	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
+	$(RM) -f $(OBJECTS)
 
 clean_ext:
 	$(MAKE) -C $(FFT_DIR) clean
