@@ -123,7 +123,7 @@ inline int is_readable(const char *dir,
                        const char *app_id,
                        const char *fname)
 {
-    char file = [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
@@ -160,7 +160,7 @@ int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool
     /* Read description JSON file */
     const char *fname = "info/info.json";
 
-    char file = [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
 
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
     
@@ -221,7 +221,7 @@ inline int is_registered(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
-    char file = [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
     
@@ -269,7 +269,7 @@ inline int is_controller_ok(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
-    char file = [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
 
