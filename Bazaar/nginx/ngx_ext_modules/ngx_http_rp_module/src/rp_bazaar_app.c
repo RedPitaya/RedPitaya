@@ -221,6 +221,7 @@ inline int is_registered(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
+    int status;
     char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
@@ -245,8 +246,9 @@ inline int is_registered(const char *dir,
      * controller is OK.
      */
 
-    if(rp_bazaar_app_load_module(file, &app) < 0) {
-        fprintf(stderr, "Problem loading app: %s\n", dlerror());
+    status = rp_bazaar_app_load_module(file, &app);
+    if(status < 0) {
+        fprintf(stderr, "Problem loading app (return %d): %s\n", status, dlerror());
         rp_bazaar_app_unload_module(&app);
         return 0;
     }
@@ -269,6 +271,7 @@ inline int is_controller_ok(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
+    int status;
     char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
@@ -293,8 +296,9 @@ inline int is_controller_ok(const char *dir,
      * controller is OK.
      */
 
-    if(rp_bazaar_app_load_module(file, &app) < 0) {
-        fprintf(stderr, "Problem loading app: %s\n", dlerror());
+    status = rp_bazaar_app_load_module(file, &app);
+    if(status < 0) {
+        fprintf(stderr, "Problem loading app (return %d): %s\n", status, dlerror());
         rp_bazaar_app_unload_module(&app);
         return 0;
     }
