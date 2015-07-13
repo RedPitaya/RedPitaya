@@ -11,7 +11,7 @@ LDFLAGS=-shared
 
 
 OUT_DIR=../
-C_OUT_NAME=$(OUT_DIR)controllerh.so
+C_OUT_NAME=$(OUT_DIR)controllerhf.so
 
 all: make_c_app
 clean: clean_c_app
