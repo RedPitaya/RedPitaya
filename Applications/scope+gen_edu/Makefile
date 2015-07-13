@@ -14,7 +14,7 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= ../
 
-CONTROLLER=controller.so
+CONTROLLER=controllerhf.so
 ARTIFACTS=$(CONTROLLER)
 
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
