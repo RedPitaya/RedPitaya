@@ -472,16 +472,20 @@ int rp_bazaar_start(ngx_http_request_t *r,
          *    - Read/write permissions 
          *    - File exists/not exists */
         switch (rp_bazaar_app_load_fpga(fpga_name)) {
-            case -1:
+            case FPGA_FIND_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
-            case -2:
+            case FPGA_READ_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
-            case -3:
+            case FPGA_WRITE_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
-            case 0:
+            /* App is a new app and doesn't need custom fpga.bit */
+            case FPGA_NOT_REQ:
+                if(fpga_name) free(fpga_name);
+                break;
+            case FPGA_OK:
                 if (fpga_name)  free(fpga_name);
                 break;
             default:
