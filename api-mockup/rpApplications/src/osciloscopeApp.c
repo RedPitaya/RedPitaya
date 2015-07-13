@@ -742,7 +742,9 @@ int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms) {
 
     pthread_mutex_lock(&mutex);
     for (int i = 0; i < viewSize; ++i) {
-        rmsValue += view[source*viewSize + i] * view[source*viewSize + i];
+		float tmp;
+		unscaleAmplitudeChannel(source, view[source*viewSize + i], &tmp);
+        rmsValue += tmp*tmp;
     }
     pthread_mutex_unlock(&mutex);
 
