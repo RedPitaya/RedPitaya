@@ -17,7 +17,7 @@ CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
 OUT_DIR=../
-C_OUT_NAME=$(OUT_DIR)controller.so
+C_OUT_NAME=$(OUT_DIR)controllerhf.so
 
 all: make_c_app
 clean: clean_c_app clean_ext
