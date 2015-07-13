@@ -43,7 +43,7 @@
   // Time scale steps in millisecods
   OSC.time_steps = [
     // Nanoseconds
-    5/1000000, 10/1000000, 20/1000000, 50/1000000, 100/1000000, 200/1000000, 500/1000000,
+    100/1000000, 200/1000000, 500/1000000,
     // Microseconds
     1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
     // Millisecods
@@ -621,7 +621,11 @@
 		++mi_count;
 		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ns', 'FREQ': 'Hz', 'RMS': 'V'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
-		var sig_name = $elem.data('signal')[0] == '1' ? 'IN1' : 'IN2';
+		var sig_name = 'MATH';
+		if ($elem.data('signal')[2] == '1')
+			sig_name = 'IN1';
+		else if ($elem.data('signal')[2] == '2')
+			sig_name = 'IN2';
         $('#info-meas').append(
           '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
         );
