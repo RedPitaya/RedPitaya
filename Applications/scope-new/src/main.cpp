@@ -234,7 +234,7 @@ void UpdateParams(void) {
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
     in1Offset.Value() = value;
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
-    in1Offset.Value() = value;
+    in2Offset.Value() = value;
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &value);
     inMathOffset.Value() = value;
 
