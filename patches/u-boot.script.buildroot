@@ -10,5 +10,6 @@ fatload mmc 0 0x3000000 uramdisk.image.gz
 fatload mmc 0 0x4000000 devicetree.dtb
 
 echo Booting Linux kernel with ramdisk and devicetree
-setenv sdboot   bootm 0x2001000 0x3000000 0x4000000
+setenv sdboot bootm 0x2001000 0x3000000 0x4000000
+setenv bootdelay 0
 bootd
