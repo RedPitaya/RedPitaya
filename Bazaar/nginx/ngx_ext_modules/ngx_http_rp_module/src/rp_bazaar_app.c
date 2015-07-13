@@ -373,13 +373,13 @@ int get_fpga_path(const char *app_id,
     /* Get fpga.conf file size */
     stat(fpga_conf, &st);
 
+    fpga_size = st.st_size;
     /* fpga.conf is empty, therefore we are dealing with a new app
      * that doesn't need a specific fpga.bit file. */
-    if(fpga_conf < 0){
+    if(fpga_size < 0){
         return FPGA_NOT_REQ;
     }
 
-    fpga_size = st.st_size;
     *fpga_file = malloc(fpga_size * sizeof(char));
 
     /* Read fpga.conf file into memory */
@@ -599,7 +599,7 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file)
 {
     int fo, fi;
-    int ret_val = 0, fpga_size;
+    int fpga_size;
     struct stat st;
 
 

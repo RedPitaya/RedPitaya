@@ -475,7 +475,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
             case FPGA_FIND_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
-            case FPGA_READ_ERR
+            case FPGA_READ_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
             case FPGA_WRITE_ERR:
