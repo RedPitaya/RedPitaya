@@ -376,7 +376,7 @@ int get_fpga_path(const char *app_id,
     fpga_size = st.st_size;
     /* fpga.conf is empty, therefore we are dealing with a new app
      * that doesn't need a specific fpga.bit file. */
-    if(fpga_size < 0){
+    if(fpga_size == 0){
         return FPGA_NOT_REQ;
     }
 
