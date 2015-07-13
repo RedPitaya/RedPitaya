@@ -119,11 +119,11 @@ typedef struct hk_fpga_reg_mem_s {
 } hk_fpga_reg_mem_t;
 
 typedef enum fpga_stat{
-    FPGA_OK;
-    FPGA_FIND_ERR;
-    FPGA_READ_ERR;
-    FPGA_WRITE_ERR;
-    FPGA_NOT_REQ;
+    FPGA_OK,
+    FPGA_FIND_ERR,
+    FPGA_READ_ERR,
+    FPGA_WRITE_ERR,
+    FPGA_NOT_REQ,
 }fpga_stat_t;
 
 
