@@ -428,11 +428,11 @@ int rp_bazaar_start(ngx_http_request_t *r,
         }
     }
     /* Assemble the application and FPGA filename:
-     *   <app_dir>/<app_id>/controller.so 
+     *   <app_dir>/<app_id>/controllerhf.so 
      */
     app_id_len = strlen(argv[0]) + 1;
     app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
-        strlen("/controller.so") + 2;
+        strlen("/controllerhf.so") + 2;
 
     char app_name[app_name_len];
     if(app_name == NULL) {
@@ -448,7 +448,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
     }
     strcpy(rp_module_ctx.app.id, argv[0]);
 
-    sprintf(app_name, "%s/%s/controller.so", 
+    sprintf(app_name, "%s/%s/controllerhf.so", 
             lc->bazaar_dir.data, argv[0]);
     app_name[app_name_len-1]='\0';
 
