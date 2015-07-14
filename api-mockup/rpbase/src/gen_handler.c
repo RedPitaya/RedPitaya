@@ -46,10 +46,10 @@ int gen_SetDefaultValues() {
     ECHECK(gen_setBurstPeriod(RP_CH_2, (uint32_t) (1 / 1000.0 * MICRO)));   // period = 1/frequency in us
     ECHECK(gen_setWaveform(RP_CH_1, RP_WAVEFORM_SINE));
     ECHECK(gen_setWaveform(RP_CH_2, RP_WAVEFORM_SINE));
-    ECHECK(gen_setAmplitude(RP_CH_1, 1));
-    ECHECK(gen_setAmplitude(RP_CH_2, 1));
     ECHECK(gen_setOffset(RP_CH_1, 0));
     ECHECK(gen_setOffset(RP_CH_2, 0));
+    ECHECK(gen_setAmplitude(RP_CH_1, 1));
+    ECHECK(gen_setAmplitude(RP_CH_2, 1));
     ECHECK(gen_setDutyCycle(RP_CH_1, 0.5));
     ECHECK(gen_setDutyCycle(RP_CH_2, 0.5));
     ECHECK(gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS));
