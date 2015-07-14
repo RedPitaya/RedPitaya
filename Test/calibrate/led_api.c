@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "../src/rp.h"
+#include "rp.h"
 
 
 
