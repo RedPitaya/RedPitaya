@@ -90,6 +90,7 @@ CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_NO
 CIntParameter mathSource1("OSC_MATH_SRC1", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
 CIntParameter mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, RP_CH_2, 0, RP_CH_1, RP_CH_2);
 
+CIntParameter triggerInfo("OSC_TRIG_INFO", CBaseParameter::RWSA, 0, 0, 0, 3);
 
 
 /***************************************************************************************
@@ -184,6 +185,20 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
 
 
 void UpdateParams(void) {
+	bool is_running;
+	rpApp_osc_trig_sweep_t mode;
+	rpApp_OscGetTriggerSweep(&mode);
+	rpApp_OscIsRunning(&is_running);
+	
+	if (!is_running)
+		triggerInfo.Value() = 0;
+	else if (mode == RPAPP_OSC_TRIG_AUTO)
+		triggerInfo.Value() = 1;
+	else if (rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
+		triggerInfo.Value() = 2;
+	else if (!rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
+		triggerInfo.Value() = 3;	
+	
     CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 
     if (measureSelect1.Value() != -1) {
