@@ -3,8 +3,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "../src/rp.h"
-#include "../src/common.h"
+#include "rp.h"
+#include "common.h"
 
 
 int mygetch ( void )
