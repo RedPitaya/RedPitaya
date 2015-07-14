@@ -463,8 +463,20 @@
             if($.inArray(param_name, ['OSC_TIME_OFFSET', 'OSC_TIME_SCALE']) > -1) {
               field.html(OSC.convertTime(new_params[param_name].value));
             }
-            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE', 'OSC_OUTPUT1_SCALE', 'OSC_OUTPUT2_SCALE']) > -1) {
-              field.html(OSC.convertVoltage(new_params[param_name].value));
+            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE', 'OSC_OUTPUT1_SCALE', 'OSC_OUTPUT2_SCALE']) > -1) {				                
+				if (param_name == 'OSC_MATH_SCALE' && new_params['OSC_MATH_OP'] && $('#OSC_MATH_SCALE')) {			
+					var value = new_params[param_name].value;
+					var unit = 'V';
+					if(Math.abs(value) <= 0.1) {
+						value = value * 1000;
+						unit = 'mV';
+					}
+					field.html(value);
+					var units = ['', unit, unit, unit + '^2', '', '|' + unit +'|', unit + '/s', unit + 's'];
+					$('#munit').html(units[new_params['OSC_MATH_OP'].value] + '/div');
+				}        
+				else
+					field.html(OSC.convertVoltage(new_params[param_name].value));      
             }
             else {
               field.html(new_params[param_name].value);
