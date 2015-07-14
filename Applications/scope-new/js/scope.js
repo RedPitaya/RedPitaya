@@ -55,9 +55,9 @@
   // Voltage scale steps in volts
   OSC.voltage_steps = [
     // Millivolts
-    1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
+    1/10000, 1/5000, 1/2000, 1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
     // Volts
-    1, 2, 5
+    1, 2, 5, 7, 10
   ];
   
   // Sampling rates
@@ -205,7 +205,15 @@
       }
       // All other parameters
       else {
-        
+        if (param_name == 'OSC_TRIG_INFO') {
+			var idx = new_params['OSC_TRIG_INFO'].value;
+			var states = ['STOPPED', 'AUTO', 'TRIG\'D', 'WAITING'];
+			var colors = ['red', 'green', 'green', 'yellow'];
+			
+			$('#triginfo').html(states[idx]);
+			$('#triginfo').css('color', colors[idx]);
+			$('#triginfo').css('display', '');
+		}
         // Show/hide Y offset arrows
         if(param_name == 'OSC_CH1_OFFSET' && new_params['CH1_SHOW']) {
           if(new_params['CH1_SHOW'].value) {
@@ -463,8 +471,26 @@
             if($.inArray(param_name, ['OSC_TIME_OFFSET', 'OSC_TIME_SCALE']) > -1) {
               field.html(OSC.convertTime(new_params[param_name].value));
             }
-            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE', 'OSC_OUTPUT1_SCALE', 'OSC_OUTPUT2_SCALE']) > -1) {
-              field.html(OSC.convertVoltage(new_params[param_name].value));
+            else if($.inArray(param_name, ['OSC_CH1_SCALE', 'OSC_CH2_SCALE', 'OSC_MATH_SCALE', 'OSC_OUTPUT1_SCALE', 'OSC_OUTPUT2_SCALE']) > -1) {				                
+				if (param_name == 'OSC_MATH_SCALE' && new_params['OSC_MATH_OP'] && $('#munit')) {			
+					var value = new_params[param_name].value;
+					var unit = 'V';
+					if(Math.abs(value) <= 0.1) {
+						value *= 1000;
+						unit = 'mV';
+					} else if (Math.abs(value) >= 1000) {
+						value /= 1000;
+						unit = 'kV';						
+					} else if (Math.abs(value) >= 1000000) {
+						value /= 1000000;
+						unit = 'MV';						
+					}
+					field.html(value);
+					var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
+					$('#munit').html(units[new_params['OSC_MATH_OP'].value] + '/div');
+				}        
+				else
+					field.html(OSC.convertVoltage(new_params[param_name].value));      
             }
             else {
               field.html(new_params[param_name].value);
