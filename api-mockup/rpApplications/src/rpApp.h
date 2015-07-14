@@ -185,6 +185,10 @@ int rpApp_OscAutoScale();
  */
 int rpApp_OscIsRunning(bool *running);
 
+
+int rpApp_OscIsTriggered();
+
+
 /**
 * Sets amplitude offset in volts.
 * @param channel Channel 1 or 2 for which we want to set amplitude offset.

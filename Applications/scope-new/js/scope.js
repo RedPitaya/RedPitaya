@@ -205,7 +205,15 @@
       }
       // All other parameters
       else {
-        
+        if (param_name == 'OSC_TRIG_INFO') {
+			var idx = new_params['OSC_TRIG_INFO'].value;
+			var states = ['STOPPED', 'AUTO', 'TRIG\'D', 'WAITING'];
+			var colors = ['red', 'green', 'green', 'yellow'];
+			
+			$('#triginfo').html(states[idx]);
+			$('#triginfo').css('color', colors[idx]);
+			$('#triginfo').css('display', '');
+		}
         // Show/hide Y offset arrows
         if(param_name == 'OSC_CH1_OFFSET' && new_params['CH1_SHOW']) {
           if(new_params['CH1_SHOW'].value) {
