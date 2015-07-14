@@ -128,6 +128,7 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 GIT_BRANCH ?= master
+BRANCH_NAME = $(shell echo origin/single_fpga | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
@@ -153,10 +154,10 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK
 	cp -r Applications/fpga $(TARGET)
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
-	echo "Red Pitaya GNU/Linux/Ecosystem. Branch: $(GIT_BRANCH) | Version: $(VERSION) | Commit: $(GIT_COMMIT)" > $(TARGET)/version.txt
+	echo "Red Pitaya GNU/Linux/Ecosystem. Branch: $(BRANCH_NAME) | Version: $(VERSION) | Commit: $(GIT_COMMIT)" > $(TARGET)/version.txt
 
 zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(GIT_BRANCH).zip *
+	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(BRANCH_NAME).zip *
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
