@@ -46,11 +46,10 @@
             <ul class="nav navbar-nav">
               <!-- li><a href="#" data-toggle="modal" data-target="#settings">SETTINGS</a></li -->
               <!-- li><a href="#" data-toggle="modal" data-target="#export">EXPORT</a></li -->
-              <li><a id="OSC_SINGLE" href="#">SINGLE</a></li>
-              <li><a id="OSC_AUTOSCALE" href="#">AUTO</a></li>
+              <li><a id="OSC_AUTOSCALE" href="#">AUTO SCALE</a></li>
               <li>
-                <a id="OSC_RUN" href="#">RUN</a>
-                <a id="OSC_STOP" href="#" style="display:none">STOP</a>
+                <a id="OSC_RUN" href="#" style="margin-top: 10px;">RUN</a>
+                <a id="OSC_STOP" href="#" style="display:none; margin-top: 10px;">STOP</a>
               </li>
             </ul>
           </div>
@@ -459,7 +458,7 @@
                 <option value="3">* (V^2)</option>
                 <option value="5">abs (|V|)</option>
                 <option value="6">dy/dt (V/s)</option>
-                <option value="7">xdy (V/s)</option>
+                <option value="7">xdy (Vs)</option>
               </select>
             </div>
           </div>
@@ -700,7 +699,10 @@
               <div class="ch2"><span id="OSC_CH2_SCALE">-</span>/div</div>
               <div class="output1"><span id="SOUR1_VOLT_info">-</span>/div</div>
               <div class="output2"><span id="SOUR2_VOLT_info">-</span>/div</div>
-              <div class="math"><span id="OSC_MATH_SCALE">-</span>/div</div>
+              <div class="math">
+				  <span id="OSC_MATH_SCALE">-</span>
+				  <span id="munit">/div</span>
+			  </div>
             </div>
           </div>
           <div id="info-meas"></div>
