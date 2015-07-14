@@ -26,13 +26,11 @@ C_OUT_NAME=$(OUT_DIR)controller.so
 
 all: $(SOURCES) make_c_app
 
-clean:
-
 .cpp.o:
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 make_c_app: $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $(C_OUT_NAME) $(LDFLAGS)
 
-clean_c_app:
+clean:
 	-$(RM) -f $(C_OUT_NAME) $(OBJECTS)
