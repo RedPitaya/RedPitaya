@@ -24,9 +24,7 @@
 *.x86_64
 *.hex
 
-api-mockup/rpbase/testApp
 scpi-server/scpi-server
-
 
 #Eclipse
 .cproject
