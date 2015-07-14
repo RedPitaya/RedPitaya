@@ -128,6 +128,7 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 GIT_BRANCH ?= master
+GIT_COMMIT = $(REVISION)
 BRANCH_NAME = $(shell echo origin/single_fpga | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
