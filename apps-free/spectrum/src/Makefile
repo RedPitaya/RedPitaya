@@ -16,9 +16,9 @@ INCLUDE=$(FFT_INC) $(JPEG_INC)
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
-OUT_DIR		=../
-OUT_NAME	=? controllerhf.so 
-C_OUT_NAME	=$(OUT_DIR)/$(OUT_NAME)
+OUT_DIR     = ../
+OUT_NAME   ?= controllerhf.so
+C_OUT_NAME  = $(OUT_DIR)/$(OUT_NAME)
 
 all: make_c_app
 clean: clean_c_app clean_ext
