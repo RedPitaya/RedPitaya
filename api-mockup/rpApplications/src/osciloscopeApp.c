@@ -48,6 +48,8 @@ volatile float samplesPerDivision = (float) VIEW_SIZE_DEFAULT / (float) DIVISION
 volatile double threadTimer;
 volatile bool mathChanged = false;
 
+volatile double g_triggerTS = 0;
+
 pthread_t mainThread = (pthread_t) -1;
 pthread_mutex_t mutex;
 
@@ -213,6 +215,10 @@ int osc_isRunning(bool *running) {
     }
 
     return RP_OK;
+}
+
+int osc_isTriggered() {
+	return _clock() < g_triggerTS;
 }
 
 int osc_setTimeScale(float scale) {
@@ -1346,7 +1352,9 @@ void *mainThreadFun() {
                     ECHECK_APP_THREAD(threadSafe_acqStop());
                 }
             }
-
+            
+			g_triggerTS = _clock() + 5.f * _timeScale * (float)DIVISIONS_COUNT_X;
+			
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {
                 threadTimer = _clock() + MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X));
