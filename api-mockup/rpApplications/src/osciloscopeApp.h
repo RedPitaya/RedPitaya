@@ -46,6 +46,7 @@ int osc_reset();
 int osc_single();
 int osc_autoScale();
 int osc_isRunning(bool *running);
+int osc_isTriggered();
 int osc_setTimeScale(float scale);
 int osc_getTimeScale(float *division);
 int osc_setTimeOffset(float offset);
