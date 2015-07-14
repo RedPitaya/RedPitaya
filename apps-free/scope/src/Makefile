@@ -3,16 +3,12 @@ RM=rm
 
 OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o fpga_pid.o pid.o
 
-INCLUDE=
-
-#CFLAGS=$(CFLAGS) -Wall -Werror -g
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
-
-OUT_DIR=	../
-OUT_NAME	?= controllerhf.so
-C_OUT_NAME 	?= $(OUT_DIR)/$(OUT_NAME)
+OUT_DIR     = ../
+OUT_NAME   ?= controllerhf.so
+C_OUT_NAME  = $(OUT_DIR)/$(OUT_NAME)
 
 all: make_c_app
 clean: clean_c_app
