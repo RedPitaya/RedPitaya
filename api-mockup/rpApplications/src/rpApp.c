@@ -102,6 +102,10 @@ int rpApp_OscIsRunning(bool *running) {
     return osc_isRunning(running);
 }
 
+int rpApp_OscIsTriggered() {
+    return osc_isTriggered();
+}
+
 int rpApp_OscSetTimeScale(float scale) {
     return osc_setTimeScale(scale);
 }
