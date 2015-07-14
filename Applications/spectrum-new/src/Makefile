@@ -1,4 +1,3 @@
-CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
@@ -17,10 +16,8 @@ JPEG_INC=-I$(JPEG_DIR)
 
 INCLUDE+=$(JPEG_INC)
 
-#CFLAGS=$(CFLAGS) -Wall -Werror -g
 COMMON_FLAGS+=-Wall -g -fPIC
-CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -fPIC
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
 LDFLAGS+=-L$(RP_SDK) -lrp_sdk
@@ -41,7 +38,7 @@ $(JPEG_LIB):
 	$(MAKE) -C $(JPEG_DIR)
 
 make_c_app: $(JPEG_LIB) $(OBJECTS)
-	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
+	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) $(JPEG_LIB)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
