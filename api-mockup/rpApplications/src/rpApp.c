@@ -102,6 +102,10 @@ int rpApp_OscIsRunning(bool *running) {
     return osc_isRunning(running);
 }
 
+int rpApp_OscIsTriggered() {
+    return osc_isTriggered();
+}
+
 int rpApp_OscSetTimeScale(float scale) {
     return osc_setTimeScale(scale);
 }
@@ -205,6 +209,9 @@ int rpApp_OscGetViewSize(uint32_t *size) {
     return osc_getViewSize(size);
 }
 
+int rpApp_OscGetViewLimits(uint32_t* start, uint32_t* end) {
+    return osc_getViewLimits(start, end);
+}
 
 
 
