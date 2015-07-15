@@ -16,7 +16,7 @@
 # responsible to build those in a coordinated way and to package them within
 # the target redpitaya-OS ZIP archive.
 #
-# TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
+# TODO #1: Make up a new name for OS dir, as OS is building one level higher now. 
 
 TMP = tmp
 
@@ -128,12 +128,25 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 GIT_BRANCH ?= master
-GIT_COMMIT = $(REVISION)
 BRANCH_NAME = $(shell echo origin/single_fpga | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
 export VERSION
+
+define GREET_MSG
+##############################################################################
+#                                                                            # 
+#                                                                            #
+                         Red Pitaya GNU/Linux/Ecosystem.                     
+                         Version: $(VER)                                     
+                         Branch: $(BRANCH_NAME)                              
+                         Build: $(BUILD_NUMBER)                              
+                         Commit: $(GIT_COMMIT)                               
+#                                                                            #
+#                                                                            #
+##############################################################################
+endef
 
 ################################################################################
 # tarball
@@ -155,7 +168,7 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK
 	cp -r Applications/fpga $(TARGET)
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
-	echo "Red Pitaya GNU/Linux/Ecosystem. Branch: $(BRANCH_NAME) | Version: $(VERSION) | Commit: $(GIT_COMMIT)" > $(TARGET)/version.txt
+	echo "$(GREET_MSG)" > $(TARGET)/version.txt
 
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(BRANCH_NAME).zip *
