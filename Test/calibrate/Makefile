@@ -24,12 +24,12 @@ CALIB_C = calibrateApp.c
 CALIB2_C = calibrateApp2.c
 
 # Executable name
-TARGET=../testApp
-CALIBRATE=../calibrateApp
-CALIBRATE2=../calibrateApp2
+TARGET=testApp
+CALIBRATE=calibrateApp
+CALIBRATE2=calibrateApp2
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror
+CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api-mockup/rpbase/src
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Red Pitaya common SW directory
@@ -37,11 +37,10 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../../lib
+LIBPATH= -L ../../api-mockup/lib
 LIBS= -lm -lpthread -lrp
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .
@@ -80,6 +79,6 @@ clean:
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/bin
-	cp $(TARGET) $(INSTALL_DIR)/bin
-	cp $(CALIBRATE) $(INSTALL_DIR)/bin
+	cp $(TARGET)     $(INSTALL_DIR)/bin
+	cp $(CALIBRATE)  $(INSTALL_DIR)/bin
 	cp $(CALIBRATE2) $(INSTALL_DIR)/bin	
