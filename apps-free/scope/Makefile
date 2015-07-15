@@ -5,6 +5,7 @@
 #
 
 APP=$(notdir $(CURDIR:%/=%))
+SHARED_OBJS = scope+gen scope+pid
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -19,13 +20,19 @@ CONTROLLER   = controller.so
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
-all: $(CONTROLLERHF) $(CONTROLLER)
+all: $(CONTROLLERHF) $(CONTROLLER) shared_ctrl
 
 $(CONTROLLERHF):
 	$(MAKE) -C src OUT_NAME=$(CONTROLLERHF)
 
 $(CONTROLLER):
 	$(MAKE) -C src OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+shared_ctrl: $(CONTROLLERHF) $(CONTROLLER)
+	for obj in $(SHARED_OBJS); do \
+		cp $(CONTROLLERHF) $(CONTROLLER) ../$$obj; \
+	done
+	
 
 zip: $(CONTROLLERHF) $(CONTROLLER)
 	-$(RM) target -rf
