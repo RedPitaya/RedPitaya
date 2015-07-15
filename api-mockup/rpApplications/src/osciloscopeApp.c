@@ -50,6 +50,9 @@ volatile bool mathChanged = false;
 
 volatile double g_triggerTS = 0;
 
+volatile uint32_t viewStartPos = 0;
+volatile uint32_t viewEndPos = VIEW_SIZE_DEFAULT;
+
 pthread_t mainThread = (pthread_t) -1;
 pthread_mutex_t mutex;
 
@@ -92,6 +95,8 @@ int osc_Init() {
         view = NULL;
         return RP_EAA;
     }
+    viewStartPos = 0;
+    viewEndPos = viewSize;
     return RP_OK;
 }
 
@@ -201,10 +206,10 @@ int osc_autoScale() {
         osc_setTriggerSweep(RPAPP_OSC_TRIG_AUTO);
     }
 
-	if(!isAutoScaled)
-		checkAutoscale(false);
-	
-	return RP_OK;
+    if(!isAutoScaled)
+        checkAutoscale(false);
+
+    return RP_OK;
 }
 
 int osc_isRunning(bool *running) {
@@ -355,7 +360,7 @@ int osc_setAmplitudeScale(rpApp_osc_source source, float scale) {
     if (!isnan(offset)) {
         ECHECK_APP(osc_setAmplitudeOffset(source, offset));
     }
-	EXECUTE_ATOMICALLY(mutex, update_view());
+    EXECUTE_ATOMICALLY(mutex, update_view());
     return RP_OK;
 }
 
@@ -539,7 +544,7 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     float resMax, resMin, max = -FLT_MAX, min = FLT_MAX;
 
     pthread_mutex_lock(&mutex);
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = viewStartPos; i < viewEndPos; ++i) {
         if (view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
         }
@@ -559,12 +564,12 @@ int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
     double sum = 0;
     
     pthread_mutex_lock(&mutex);
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = viewStartPos; i < viewEndPos; ++i) {
         sum += view[source*viewSize + i];
     }
     pthread_mutex_unlock(&mutex);
 
-    ECHECK_APP(unscaleAmplitudeChannel(source, sum / viewSize, meanVoltage));
+    ECHECK_APP(unscaleAmplitudeChannel(source, sum / (viewEndPos - viewStartPos), meanVoltage));
     return RP_OK;
 }
 
@@ -573,15 +578,15 @@ int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
 
     pthread_mutex_lock(&mutex);
     bool inverted = (source == 0 && ch1_inverted) || (source == 1 && ch2_inverted) || (source == 2 && math_inverted);
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = viewStartPos; i < viewEndPos; ++i) {
         if (inverted ? view[source*viewSize + i] < max : view[source*viewSize + i] > max) {
             max = view[source*viewSize + i];
         }
     }
-	*Vmax = max;
+    *Vmax = max;
     pthread_mutex_unlock(&mutex);
 
-	ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
+    ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
 
     return RP_OK;
 }
@@ -591,7 +596,7 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
     
     pthread_mutex_lock(&mutex);
     bool inverted = (source == 0 && ch1_inverted) || (source == 1 && ch2_inverted) || (source == 2 && math_inverted);
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = viewStartPos; i < viewEndPos; ++i) {
         if (inverted ? view[source*viewSize + i] > min : view[source*viewSize + i] < min) {
             min = view[source*viewSize + i];
         }
@@ -612,30 +617,31 @@ int osc_measureFrequency(rpApp_osc_source source, float *frequency) {
 }
 
 int osc_measurePeriod(rpApp_osc_source source, float *period) {
-    float data[viewSize];
-    float* ch_view = view + source*viewSize;
+    int size = viewEndPos - viewStartPos;
+    float data[size];
+    float* ch_view = view + source*viewSize + viewStartPos;
 
     pthread_mutex_lock(&mutex);
     float mean = 0;
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = 0; i < size; ++i) {
         data[i] = ch_view[i];
         mean += data[i];
     }
     pthread_mutex_unlock(&mutex);
 
-    mean = mean / viewSize;
-    for (int i = 0; i < viewSize; ++i){
+    mean = mean / size;
+    for (int i = 0; i < size; ++i){
         data[i] -= mean;
     }
 
     // calculate signal correlation
-    float xcorr[viewSize];
-    for (int i = 0; i < viewSize; ++i) {
+    float xcorr[size];
+    for (int i = 0; i < size; ++i) {
         xcorr[i] = 0;
-        for (int j = 0; j < viewSize-i; ++j) {
+        for (int j = 0; j < size-i; ++j) {
             xcorr[i] += data[j] * data[j+i];
         }
-        xcorr[i] /= viewSize-i;
+        xcorr[i] /= size-i;
     }
 
     // The main problem is the presence lot of noise in the signal
@@ -657,10 +663,10 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     int left_idx = 0;
     int right_idx = 0;
     int left_edge_idx = 0;
-    int right_edge_idx = viewSize-2;
+    int right_edge_idx = size-2;
 
     // search for left point where correlation function is less than it's expected
-    for (int i = 1; i < viewSize-1; ++i) {
+    for (int i = 1; i < size-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             left_edge_idx = i;
             break;
@@ -672,7 +678,7 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     // search for left point where correlation function is greater than it's expected
-    for (int i = left_edge_idx; i < viewSize-1; ++i) {
+    for (int i = left_edge_idx; i < size-1; ++i) {
         if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             left_idx = i;
             break;
@@ -684,7 +690,7 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     }
 
     // search for right point where correlation function is less than it's expected
-    for (int i = left_idx; i < viewSize-1; ++i) {
+    for (int i = left_idx; i < size-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             right_edge_idx = i;
             break;
@@ -745,29 +751,29 @@ int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
     ECHECK_APP(scaleAmplitudeChannel(source, meanValue, &meanValue))
 
     pthread_mutex_lock(&mutex);
-    for (int i = 0; i < viewSize; ++i) {
+    for (int i = viewStartPos; i < viewEndPos; ++i) {
         if (view[source*viewSize + i] > meanValue) {
             ++highTime;
         }
     }
     pthread_mutex_unlock(&mutex);
 
-    *dutyCycle = (float)highTime / (float)viewSize;
+    *dutyCycle = (float)highTime / (float)(viewEndPos - viewStartPos);
     return RP_OK;
 }
 
 int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms) {
-    float rmsValue = 0;
+    double rmsValue = 0;
 
     pthread_mutex_lock(&mutex);
-    for (int i = 0; i < viewSize; ++i) {
-		float tmp;
-		unscaleAmplitudeChannel(source, view[source*viewSize + i], &tmp);
+    for (int i = viewStartPos; i < viewEndPos; ++i) {
+        float tmp;
+        unscaleAmplitudeChannel(source, view[source*viewSize + i], &tmp);
         rmsValue += tmp*tmp;
     }
     pthread_mutex_unlock(&mutex);
 
-    *rms = (float) sqrt(rmsValue / viewSize);
+    *rms = (double) sqrt(rmsValue / (double)(viewEndPos - viewStartPos));
     return RP_OK;
 }
 
@@ -817,6 +823,7 @@ int osc_setMathOperation(rpApp_osc_math_oper_t op) {
     operation = op;
     mathChanged = true;
     clearMath();
+    update_view();
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
@@ -832,6 +839,7 @@ int osc_setMathSources(rp_channel_t source1, rp_channel_t source2) {
     mathSource2 = source2;
     mathChanged = true;
     clearMath();
+    update_view();
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
@@ -868,7 +876,13 @@ int osc_setViewSize(uint32_t size) {
 
 int osc_getViewSize(uint32_t *size) {
     *size = viewSize;
-    return 0;
+    return RP_OK;
+}
+
+int osc_getViewLimits(uint32_t* start, uint32_t* end) {
+    *start = viewStartPos;
+    *end = viewEndPos;
+    return RP_OK;
 }
 
 /*
@@ -951,14 +965,14 @@ void calculateIntegral(rp_channel_t channel, float scale, float offset, float in
     bool invert = (channel == RP_CH_1) ? ch1_inverted : ch2_inverted;
     float ch_sign = invert ? -1.f : 1.f;
 
-    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v));
+    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + viewStartPos], &v));
     view[RPAPP_OSC_SOUR_MATH*viewSize] = ch_sign * v * dt;
-    for (int i = 1; i < viewSize; ++i) {
+    for (int i = viewStartPos + 1; i < viewEndPos; ++i) {
         ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i], &v));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (ch_sign * v * dt);
         view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + i-1], scale, 1, offset, invertFactor);
     }
-    view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize - 1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize-1], scale, 1, offset, invertFactor);
+    view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 1], scale, 1, offset, invertFactor);
 }
 
 void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor) {
@@ -969,14 +983,14 @@ void calculateDevivative(rp_channel_t channel, float scale, float offset, float 
     float ch_sign = invert ? -1.f : 1.f;
     
 //    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize+1], &v1));
-    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize], &v2));
+    ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + viewStartPos], &v2));
 //    view[RPAPP_OSC_SOUR_MATH*viewSize] = scaleAmplitude(((v1 - v2) / dt2 / 2), scale, 1, offset, invertFactor);
-    for (int i = 0; i < viewSize - 1; ++i) {
+    for (int i = viewStartPos; i < viewEndPos - 1; ++i) {
         v1 = v2;
-        ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i+1], &v2));
+        ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i + 1], &v2));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(ch_sign * (v2 - v1) / dt2, scale, 1, offset, invertFactor);
     }
-    view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize - 1] = view[RPAPP_OSC_SOUR_MATH*viewSize + viewSize - 2];
+    view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 1] = view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 2];
 }
 
 float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op) {
@@ -1017,6 +1031,8 @@ void clearView() {
         view[i] = 0;
     }
     clear = true;
+    viewStartPos = 0;
+    viewEndPos = viewSize;
 }
 
 void clearMath() {
@@ -1103,7 +1119,7 @@ void mathThreadFunction() {
             float sign1 = invert1 ? -1.f : 1.f;
             float sign2 = invert2 ? -1.f : 1.f;
             
-            for (int i = 0; i < viewSize; ++i) {
+            for (int i = viewStartPos; i < viewEndPos; ++i) {
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
                 view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
@@ -1281,7 +1297,7 @@ void *mainThreadFun() {
                         viewOffset = 0;
                     }
                 }
-                int maxViewIdx = MIN(viewSize, (viewSize - 2*viewEars + viewOffset));
+                int maxViewIdx = MIN(viewSize, (viewSize - 2*viewEars));
                 int buffFullOffset = bufferEars - buffOffset;
 
                 // Write data to view buffer
@@ -1308,6 +1324,8 @@ void *mainThreadFun() {
                         }
                     }
                 }
+                viewStartPos = viewEars + viewOffset;
+                viewEndPos = viewStartPos + maxViewIdx;
 
                 mathThreadFunction();
             }
@@ -1387,6 +1405,9 @@ void *mainThreadFun() {
                     }
                 }
             }
+
+            viewStartPos = 0;
+            viewEndPos = viewSize;
 
             mathThreadFunction();
             pthread_mutex_unlock(&mutex);
