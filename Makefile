@@ -72,6 +72,7 @@ MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
 CALIB_DIR       = Test/calib
+CALIBRATE_DIR   = Test/calibrate
 DISCOVERY_DIR   = OS/discovery
 ECOSYSTEM_DIR   = Applications/ecosystem
 SCPI_SERVER_DIR = scpi-server/
@@ -98,6 +99,7 @@ MONITOR         = $(INSTALL_DIR)/bin/monitor
 GENERATE        = $(INSTALL_DIR)/bin/generate
 ACQUIRE         = $(INSTALL_DIR)/bin/acquire
 CALIB           = $(INSTALL_DIR)/bin/calib
+CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery
 ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
@@ -131,7 +133,7 @@ APPS_FREE_DIR    = apps-free/
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-VERSION = $(VER)-$(BUILD_NUMBER)
+VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -146,7 +148,7 @@ $(TMP):
 	mkdir -p $@
 
 $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
-	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(CALIBRATE) $(DISCOVERY) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
 	mkdir $(TARGET)
 	cp $(BOOT)             $(TARGET)
@@ -378,12 +380,14 @@ $(CALIB):
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+$(CALIBRATE): $(LIBRP)
+	$(MAKE) -C $(CALIBRATE_DIR)
+	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-$(ECOSYSTEM):
-	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
@@ -392,6 +396,9 @@ $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 ################################################################################
 # Red Pitaya applications
 ################################################################################
+
+$(ECOSYSTEM):
+	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)
