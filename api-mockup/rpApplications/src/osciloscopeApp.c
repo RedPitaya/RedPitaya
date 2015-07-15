@@ -75,7 +75,7 @@ static inline float linear(float x0, float y0, float x1, float y1, float x) {
 }
 
 static inline void update_view() {
-    if(trigSweep == RPAPP_OSC_TRIG_AUTO) {
+    if((trigSweep == RPAPP_OSC_TRIG_AUTO) && oscRunning) {
         clearView();
         updateView = false;
     } else {
@@ -1242,7 +1242,7 @@ static inline void threadUpdateView(thread_data_t data, uint32_t _getBufSize, fl
     int bufferEars = ((int)_getBufSize - requiredBuffSize) / 2;
     int viewEars = -MIN(bufferEars / curDeltaSample, 0);
     bufferEars = MAX(0, bufferEars);
-    int viewOffset = ((_lastTimeOffset - timeOffset) * (float)samplesPerDivision) / _timeScale ;
+    int viewOffset = ((_lastTimeOffset - timeOffset) * (float)samplesPerDivision) / _timeScale;
     int buffOffset = viewOffset * curDeltaSample;
 
     if(viewEars) {
@@ -1270,16 +1270,20 @@ static inline void threadUpdateView(thread_data_t data, uint32_t _getBufSize, fl
         }
                 
         if(curDeltaSample < 1.0f) {
-            for (int i = 0; i < maxViewIdx && (int) ((float)i * curDeltaSample) < _getBufSize; ++i) {
+            int i;
+            for (i = 0; i < maxViewIdx && (int) (((float)i * curDeltaSample) + buffFullOffset) < _getBufSize; ++i) {
                 int x0 = (int)((float)i * curDeltaSample) + buffFullOffset;
                 int x1 = MIN((x0 + 1) , (_getBufSize - 1));
                 float y = linear(x0, data[channel][x0], x0 + 1, data[channel][x1], ((float)i * curDeltaSample) + buffFullOffset);
                 ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, y, view + viewFullOffset + i));
             }
+            maxViewIdx = i;
         } else {
-            for (int i = 0; i < maxViewIdx && (int) ((float)i * curDeltaSample) < _getBufSize; ++i) {
+            int i;
+            for (i = 0; i < maxViewIdx && (int) (((float)i * curDeltaSample) + buffFullOffset) < _getBufSize; ++i) {
                 ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, data[channel][(int) ((float)i * curDeltaSample) + buffFullOffset], view + viewFullOffset + i));
             }
+            maxViewIdx = i;
         }
     }
     viewStartPos = viewEars + viewOffset;
