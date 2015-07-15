@@ -396,17 +396,15 @@ int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
     int demo = 0;
-    char* url = strstr(argv[0], "?type=demo");
-    if (url)
-    {
-        *url = '\0';
+    char* parse_cmd = strstr(argv[0], "?");
+    /* We are dealing with a new app */
+    if (parse_cmd){
+        *parse_cmd = '\0';
+    }
+
+    char *url = strstr(parse_cmd++, "type=demo");
+    if(url){
         demo = 1;
-    } 
-    else
-    {
-	url = strstr(argv[0], "?type=run");
-	if(url)
-            *url = '\0';
     }
 
     int   app_id_len, app_name_len;
@@ -431,6 +429,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
      *   <app_dir>/<app_id>/controllerhf.so 
      */
     app_id_len = strlen(argv[0]) + 1;
+
     app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
         strlen("/controllerhf.so") + 2;
 
@@ -486,10 +485,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
                 if(fpga_name) free(fpga_name);
                 break;
             case FPGA_OK:
-                if (fpga_name)  free(fpga_name);
+                if (fpga_name) free(fpga_name);
                 break;
             default:
-                if (fpga_name)  free(fpga_name);
+                if (fpga_name) free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool); 
         }
     } else {
