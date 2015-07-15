@@ -14,8 +14,6 @@ APP=$(notdir $(CURDIR:%/=%))
 # Installation directory. It is changed when using the main Makefile++++++
 INSTALL_DIR ?= .
 
-CROSS_COMPILE?=arm-linux-gnueabi-
-
 SCPIPARSER=3rdparty/libs/scpi-parser/libscpi/dist/libscpi.so
 SCPISRV=scpi-server
 ARTIFACTS= $(SCPIPARSER) $(SCPISRV)

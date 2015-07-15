@@ -1,11 +1,10 @@
 diff -rupN lua-nginx-module.old/config lua-nginx-module.new/config
 --- lua-nginx-module.old/config	2013-09-02 21:58:33.000000000 +0200
 +++ lua-nginx-module.new/config	2015-06-12 14:39:57.279348839 +0200
-@@ -6,6 +6,21 @@ ngx_feature_incs="#include <lauxlib.h>"
+@@ -6,6 +6,20 @@ ngx_feature_incs="#include <lauxlib.h>"
  ngx_feature_path=
  ngx_feature_test="(void) luaL_newstate();"
  
-+# SYSROOT=../../../../OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabi/sysroot
 +# LUAJIT_INC="-I ${SYSROOT}/usr/include";
 +# LUAJIT_LIB="-L ${SYSROOT}/usr/lib -lluajit";
 +
