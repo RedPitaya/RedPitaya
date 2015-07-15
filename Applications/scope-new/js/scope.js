@@ -540,7 +540,7 @@
       var color = OSC.config.graph_colors[sig_name];
       
 
-      if ((sig_name == 'output1') || (sig_name == 'output2')) {
+      if ((sig_name == 'output1') || (sig_name == 'output2') || !OSC.graphs[sig_name]) {
           for(var i=0; i<new_signals[sig_name].size; i++) {
               points.push([i, new_signals[sig_name].value[i]]);
           }
