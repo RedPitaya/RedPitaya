@@ -410,7 +410,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         
         if (!is_readable(dir, app_id, "info/icon.png"))
             continue;
-        if (!is_readable(dir, app_id, "fpga.bit"))
+        if (!is_readable(dir, app_id, "fpga.conf"))
             continue;
         if (!is_controller_ok(dir, app_id, "controller.so"))
             continue;
