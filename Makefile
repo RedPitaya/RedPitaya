@@ -138,11 +138,11 @@ define GREET_MSG
 ##############################################################################
 #                                                                            # 
 #                                                                            #
-                         Red Pitaya GNU/Linux/Ecosystem.                     
-                         Version: $(VER)                                     
-                         Branch: $(BRANCH_NAME)                              
-                         Build: $(BUILD_NUMBER)                              
-                         Commit: $(GIT_COMMIT)                               
+# Red Pitaya GNU/Linux/Ecosystem.                     
+# Version: $(VER)                                     
+# Branch: $(BRANCH_NAME)                              
+# Build: $(BUILD_NUMBER)                              
+# Commit: $(GIT_COMMIT)                               
 #                                                                            #
 #                                                                            #
 ##############################################################################
