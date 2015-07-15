@@ -55,9 +55,9 @@
   // Voltage scale steps in volts
   OSC.voltage_steps = [
     // Millivolts
-    1/10000, 1/5000, 1/2000, 1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
+    1/1000, 2/1000, 5/1000, 10/1000, 20/1000, 50/1000, 100/1000, 200/1000, 500/1000,
     // Volts
-    1, 2, 5, 7, 10
+    1, 2, 5
   ];
   
   // Sampling rates
@@ -539,8 +539,15 @@
       var sig_btn = $('#right_menu .menu-btn.' + sig_name);
       var color = OSC.config.graph_colors[sig_name];
       
-      for(var i=0; i<new_signals[sig_name].size; i++) {
-        points.push([i, new_signals[sig_name].value[i]]);
+
+      if ((sig_name == 'output1') || (sig_name == 'output2')) {
+          for(var i=0; i<new_signals[sig_name].size; i++) {
+              points.push([i, new_signals[sig_name].value[i]]);
+          }
+      } else {
+          for(var i=OSC.params.orig['OSC_VIEW_START_POS'].value; i<OSC.params.orig['OSC_VIEW_END_POS'].value; i++) {
+            points.push([i, new_signals[sig_name].value[i]]);
+          }
       }
       
       if(OSC.graphs[sig_name]) {
@@ -645,7 +652,7 @@
       
       if(item_val !== null) {
 		++mi_count;
-		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ns', 'FREQ': 'Hz', 'RMS': 'V'};
+		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ms', 'FREQ': 'Hz', 'RMS': 'V'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
 		var sig_name = 'MATH';
 		if ($elem.data('signal')[2] == '1')
