@@ -147,6 +147,7 @@ define GREET_MSG
 #                                                                            #
 ##############################################################################
 endef
+export GREET_MSG
 
 ################################################################################
 # tarball
@@ -168,7 +169,7 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK
 	cp -r Applications/fpga $(TARGET)
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
-	echo "$(GREET_MSG)" > $(TARGET)/version.txt
+	@echo "$$GREET_MSG" > $(TARGET)/version.txt
 
 zip: $(TARGET) $(SDK)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(BRANCH_NAME).zip *
