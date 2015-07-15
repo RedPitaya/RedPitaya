@@ -20,9 +20,9 @@
 
 TMP = tmp
 
-UBOOT_TAG = xilinx-v2015.1
-LINUX_TAG = xilinx-v2015.1
-DTREE_TAG = xilinx-v2015.1
+UBOOT_TAG = xilinx-v2015.2
+LINUX_TAG = xilinx-v2015.2.01
+DTREE_TAG = xilinx-v2015.2.01
 BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -46,9 +46,13 @@ LINUX_GIT ?= https://github.com/Xilinx/linux-xlnx.git
 DTREE_GIT ?= https://github.com/Xilinx/device-tree-xlnx.git
 BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
-LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
-UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
-ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
+LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
+UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
+else
+LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+endif
 
 ################################################################################
 #
@@ -68,6 +72,7 @@ MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
 CALIB_DIR       = Test/calib
+CALIBRATE_DIR   = Test/calibrate
 DISCOVERY_DIR   = OS/discovery
 ECOSYSTEM_DIR   = Applications/ecosystem
 SCPI_SERVER_DIR = scpi-server/
@@ -94,6 +99,7 @@ MONITOR         = $(INSTALL_DIR)/bin/monitor
 GENERATE        = $(INSTALL_DIR)/bin/generate
 ACQUIRE         = $(INSTALL_DIR)/bin/acquire
 CALIB           = $(INSTALL_DIR)/bin/calib
+CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery
 ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
@@ -161,6 +167,7 @@ $(TMP):
 $(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
+
 	mkdir $(TARGET)
 	cp $(BOOT)             $(TARGET)
 	cp $(TESTBOOT)         $(TARGET)
@@ -391,12 +398,14 @@ $(CALIB):
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+$(CALIBRATE): $(LIBRP)
+	$(MAKE) -C $(CALIBRATE_DIR)
+	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
 	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-$(ECOSYSTEM):
-	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
@@ -405,6 +414,9 @@ $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 ################################################################################
 # Red Pitaya applications
 ################################################################################
+
+$(ECOSYSTEM):
+	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)

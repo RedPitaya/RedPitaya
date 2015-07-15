@@ -31,6 +31,12 @@ input, #info div, #info span, .selectable {
   user-select: text;
 }
 
+#triginfo {
+	width: 100%;
+	text-align: center;
+	padding-right: 162px;
+}
+
 button:focus, button:active, select:focus, input:focus, option:focus {
   outline: 0 !important;
   -webkit-appearance: none !important;
