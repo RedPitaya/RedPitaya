@@ -18,10 +18,9 @@ LDFLAGS=-shared
 
 OUT_DIR     = ../
 OUT_NAME   ?= controllerhf.so
-C_OUT_NAME  = $(OUT_DIR)/$(OUT_NAME)
+CONTROLLER  = $(OUT_DIR)/$(OUT_NAME)
 
-all: make_c_app
-clean: clean_c_app clean_ext
+all: $(CONTROLLER)
 
 $(JPEG_LIB):
 	$(MAKE) -C $(JPEG_DIR)
@@ -29,12 +28,10 @@ $(JPEG_LIB):
 $(FFT_OBJECTS):
 	$(MAKE) -C $(FFT_DIR)
 
-make_c_app: $(FFT_OBJECTS) $(JPEG_LIB) $(OBJECTS)
-	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
+$(CONTROLLER): $(FFT_OBJECTS) $(JPEG_LIB) $(OBJECTS)
+	$(CC) -o $(CONTROLLER) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
 
-clean_c_app:
+clean:
 	$(RM) -f $(OBJECTS)
-
-clean_ext:
 	$(MAKE) -C $(FFT_DIR) clean
 	$(MAKE) -C $(JPEG_DIR) clean
