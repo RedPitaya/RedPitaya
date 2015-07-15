@@ -185,6 +185,10 @@ int rpApp_OscAutoScale();
  */
 int rpApp_OscIsRunning(bool *running);
 
+
+int rpApp_OscIsTriggered();
+
+
 /**
 * Sets amplitude offset in volts.
 * @param channel Channel 1 or 2 for which we want to set amplitude offset.
@@ -558,6 +562,15 @@ int rpApp_OscSetViewSize(uint32_t size);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscGetViewSize(uint32_t *size);
+
+/**
+* Gets start end positions of the valid data in the view buffer.
+* @param start Start position pointer.
+* @param end Ent position pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetViewLimits(uint32_t* start, uint32_t* end);
 
 ///@}
 
