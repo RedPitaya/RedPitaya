@@ -1,7 +1,7 @@
 LIBJSON_DIR=../libjson
 CC=$(CROSS_COMPILE)g++
 CFLAGS=-c -Wall -static -std=c++11 -I../build/include/cryptopp -I$(LIBJSON_DIR) -I../encoder
-LDFLAGS= -L../build/lib -lcryptopp -lsupc++
+LDFLAGS= -L../build/lib -lcryptopp
 SOURCES= main.cpp \
 	../encoder/encoder.cpp \
 	../encoder/pubkey.cpp \
