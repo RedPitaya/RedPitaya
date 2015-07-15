@@ -51,6 +51,8 @@ CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000);
 CFloatParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 50000);
+CIntParameter   inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 16384);
+CIntParameter   inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384);
 
 CIntParameter in1Gain("OSC_CH1_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter in2Gain("OSC_CH2_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
@@ -258,13 +260,18 @@ void UpdateParams(void) {
     rpApp_OscGetTimeScale(&value);
     inTimeScale.Value() = value;
 
-	if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || in1Offset.IsValueChanged() || in1Offset.IsValueChanged()
-	   || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
-		
-		CDataManager::GetInstance()->SendAllParams();
-		updateOutCh1 = true;
-		updateOutCh1 = true;
-	}
+    uint32_t start, end;
+    rpApp_OscGetViewLimits(&start, &end);
+    inViewStartPos.Value() = start;
+    inViewEndPos.Value() = end;
+
+    if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || in1Offset.IsValueChanged() || in1Offset.IsValueChanged()
+       || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
+    
+        CDataManager::GetInstance()->SendAllParams();
+        updateOutCh1 = true;
+        updateOutCh1 = true;
+    }
 }
 
 float getMeasureValue(int measure) {
