@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "../src/rp.h"
+#include "rp.h"
 
 
 
