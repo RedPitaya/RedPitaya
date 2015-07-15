@@ -8,13 +8,12 @@ LDFLAGS=-shared
 
 OUT_DIR     = ../
 OUT_NAME   ?= controllerhf.so
-C_OUT_NAME  = $(OUT_DIR)/$(OUT_NAME)
+CONTROLLER  = $(OUT_DIR)/$(OUT_NAME)
 
-all: make_c_app
-clean: clean_c_app
+all: $(CONTROLLER)
 
-make_c_app: $(OBJECTS)
-	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
+$(CONTROLLER): $(OBJECTS)
+	$(CC) -o $(CONTROLLER) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
-clean_c_app:
+clean:
 	$(RM) -f $(OBJECTS)
