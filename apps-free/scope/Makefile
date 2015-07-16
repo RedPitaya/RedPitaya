@@ -23,9 +23,11 @@ export CFLAGS
 all: $(CONTROLLERHF) $(CONTROLLER) shared_ctrl
 
 $(CONTROLLERHF):
+	$(MAKE) -C src clean
 	$(MAKE) -C src OUT_NAME=$(CONTROLLERHF)
 
 $(CONTROLLER):
+	$(MAKE) -C src clean
 	$(MAKE) -C src OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 shared_ctrl: $(CONTROLLERHF) $(CONTROLLER)
@@ -45,4 +47,4 @@ zip: $(CONTROLLERHF) $(CONTROLLER)
 
 clean:
 	$(MAKE) -C src clean
-	-rm *.so
+	-$(RM) *.so
