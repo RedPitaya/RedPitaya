@@ -209,6 +209,9 @@ int rpApp_OscGetViewSize(uint32_t *size) {
     return osc_getViewSize(size);
 }
 
+int rpApp_OscGetViewLimits(uint32_t* start, uint32_t* end) {
+    return osc_getViewLimits(start, end);
+}
 
 
 
