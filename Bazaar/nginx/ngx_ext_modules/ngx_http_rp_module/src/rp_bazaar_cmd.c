@@ -396,17 +396,15 @@ int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
     int demo = 0;
-    char* url = strstr(argv[0], "?type=demo");
-    if (url)
-    {
-        *url = '\0';
+    char* parse_cmd = strstr(argv[0], "?");
+    /* We are dealing with a new app */
+    if (parse_cmd){
+        *parse_cmd = '\0';
+    }
+
+    char *url = strstr(parse_cmd++, "type=demo");
+    if(url){
         demo = 1;
-    } 
-    else
-    {
-	url = strstr(argv[0], "?type=run");
-	if(url)
-            *url = '\0';
     }
 
     int unsigned len;
@@ -437,10 +435,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
     }
     strcpy(rp_module_ctx.app.id, argv[0]);
 
-    /* Assemble the application and FPGA filename: <app_dir>/<app_id>/controller.so */
-    len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/controller.so") + 2;
+    /* Assemble the application and FPGA filename: <app_dir>/<app_id>/controllerhf.so */
+    len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/controllerhf.so") + 2;
     char app_name[len];
-    sprintf(app_name, "%s/%s/controller.so", lc->bazaar_dir.data, argv[0]);
+    sprintf(app_name, "%s/%s/controllerhf.so", lc->bazaar_dir.data, argv[0]);
     app_name[len-1]='\0';
 
     /* Unload existing application before, new fpga load */
@@ -462,20 +460,24 @@ int rp_bazaar_start(ngx_http_request_t *r,
          *    - Read/write permissions 
          *    - File exists/not exists */
         switch (rp_bazaar_app_load_fpga(fpga_name)) {
-            case -1:
+            case FPGA_FIND_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
-            case -2:
+            case FPGA_READ_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
-            case -3:
+            case FPGA_WRITE_ERR:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
-            case 0:
-                if (fpga_name)  free(fpga_name);
+            /* App is a new app and doesn't need custom fpga.bit */
+            case FPGA_NOT_REQ:
+                if(fpga_name) free(fpga_name);
+                break;
+            case FPGA_OK:
+                if (fpga_name) free(fpga_name);
                 break;
             default:
-                if (fpga_name)  free(fpga_name);
+                if (fpga_name) free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool); 
         }
     } else {

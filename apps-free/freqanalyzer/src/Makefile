@@ -12,22 +12,18 @@ INCLUDE=$(FFT_INC)
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
+OUT_DIR     = ../
+OUT_NAME   ?= controllerhf.so
+CONTROLLER  = $(OUT_DIR)/$(OUT_NAME)
 
-OUT_DIR=../
-C_OUT_NAME=$(OUT_DIR)controller.so
-
-all: make_c_app
-clean: clean_c_app clean_ext
+all: $(CONTROLLER)
 
 $(FFT_OBJECTS):
 	$(MAKE) -C $(FFT_DIR)
 
-make_c_app: $(FFT_OBJECTS) $(OBJECTS)
-	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS)
+$(CONTROLLER): $(FFT_OBJECTS) $(OBJECTS)
+	$(CC) -o $(CONTROLLER) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS)
 
-clean_c_app:
-	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
-
-clean_ext:
+clean:
+	$(RM) -f $(OBJECTS)
 	$(MAKE) -C $(FFT_DIR) clean
-

@@ -212,8 +212,8 @@ int GetAppInfo(std::string & _info) {
 			struct dirent* app_entry;
 			while (app_entry = readdir(app_dir))
 			{
-				//serch for controller.so
-				if ( strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..") && (app_entry->d_type == DT_REG) && !(strcmp(app_entry->d_name, "controller.so")))
+				//serch for controllerhf.so
+				if ( strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..") && (app_entry->d_type == DT_REG) && !(strcmp(app_entry->d_name, "controllerhf.so")))
 				{
 					//set application dir name as app_id
 					app.push_back(JSONNode("app_id", entry->d_name));
@@ -226,8 +226,8 @@ int GetAppInfo(std::string & _info) {
 					
 					app.push_back(JSONNode("app_name", name_str));
 					
-					//get md5 checksum of controller.so
-					std::string contr_path = app_path + "/controller.so"; 
+					//get md5 checksum of controllerhf.so
+					std::string contr_path = app_path + "/controllerhf.so"; 
 					
 					std::string md5 = GetMD5(contr_path.c_str());
 					
@@ -347,7 +347,7 @@ bool verify_app_license(const char* app_id, const char* lic_file, const char* id
 		
 		//check if application was not change
 		std::string apps_folder = GetAppsFolder();
-		std::string contr_path = apps_folder+"/"+app_id+"/"+"controller.so";
+		std::string contr_path = apps_folder+"/"+app_id+"/"+"controllerhf.so";
 		orig_checksum_id = GetMD5(contr_path.c_str());
 		
 		if(orig_checksum_id.empty())
