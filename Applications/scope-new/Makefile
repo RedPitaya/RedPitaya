@@ -13,7 +13,7 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= .
 
-CONTROLLER=controller.so
+CONTROLLER=controllerhf.so
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 ARTIFACTS=$(CONTROLLER)
 
