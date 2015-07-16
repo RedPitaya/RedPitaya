@@ -91,6 +91,7 @@ int osc_getMathSources(rp_channel_t *source1, rp_channel_t *source2);
 int osc_getMathOperation(rpApp_osc_math_oper_t *op);
 int osc_setViewSize(uint32_t size);
 int osc_getViewSize(uint32_t *size);
+int osc_getViewLimits(uint32_t* start, uint32_t* end);
 int threadSafe_acqStart();
 int threadSafe_acqStop();
 float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset, float invertFactor);
