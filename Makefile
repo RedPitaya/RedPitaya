@@ -134,8 +134,7 @@ APPS_FREE_DIR    = apps-free/
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-GIT_BRANCH ?= master
-BRANCH_NAME = $(shell echo origin/single_fpga | sed -e 's/.*\///')
+GIT_BRANCH = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
@@ -143,11 +142,11 @@ export VERSION
 
 define GREET_MSG
 ##############################################################################
-# Red Pitaya GNU/Linux/Ecosystem.                     
-# Version: $(VER)                                     
-# Branch: $(BRANCH_NAME)                              
-# Build: $(BUILD_NUMBER)                              
-# Commit: $(GIT_COMMIT)                               
+# Red Pitaya GNU/Linux Ecosystem
+# Version: $(VER)
+# Branch: $(GIT_BRANCH)
+# Build: $(BUILD_NUMBER)
+# Commit: $(GIT_COMMIT)
 ##############################################################################
 endef
 export GREET_MSG
