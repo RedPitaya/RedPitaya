@@ -47,9 +47,11 @@ DTREE_GIT ?= https://github.com/Xilinx/device-tree-xlnx.git
 BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
 ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
+SYSROOT=$(PWD)/OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabi/sysroot
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
 else
+SYSROOT=$(PWD)/OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabihf/sysroot
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 endif
@@ -58,7 +60,6 @@ endif
 #
 ################################################################################
 
-# TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
 INSTALL_DIR=build
 TARGET=target
 NAME=ecosystem
@@ -353,7 +354,7 @@ $(BOOST_DIR): $(URAMDISK)
 	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
-	$(MAKE) -C $(NGINX_DIR)
+	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(IDGEN):
