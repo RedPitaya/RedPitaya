@@ -146,12 +146,16 @@ $(TMP):
 $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(CALIBRATE) $(DISCOVERY) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
-	mkdir $(TARGET)
+	mkdir -p               $(TARGET)
 	cp $(BOOT)             $(TARGET)
 	cp $(TESTBOOT)         $(TARGET)
 	cp $(DEVICETREE)       $(TARGET)
 	cp $(LINUX)            $(TARGET)
-	cp -r Applications/fpga $(TARGET)
+	# copy FPGA bitstream images and decompress them
+	mkdir -p               $(TARGET)/fpga
+	cp fpga/archive/*.xz   $(TARGET)/fpga
+	cd $(TARGET)/fpga; xz -df *.xz
+	#
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
