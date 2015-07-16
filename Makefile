@@ -16,7 +16,7 @@
 # responsible to build those in a coordinated way and to package them within
 # the target redpitaya-OS ZIP archive.
 #
-# TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
+# TODO #1: Make up a new name for OS dir, as OS is building one level higher now. 
 
 TMP = tmp
 
@@ -134,10 +134,23 @@ APPS_FREE_DIR    = apps-free/
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+GIT_BRANCH ?= master
+BRANCH_NAME = $(shell echo origin/single_fpga | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
 export VERSION
+
+define GREET_MSG
+##############################################################################
+# Red Pitaya GNU/Linux/Ecosystem.                     
+# Version: $(VER)                                     
+# Branch: $(BRANCH_NAME)                              
+# Build: $(BUILD_NUMBER)                              
+# Commit: $(GIT_COMMIT)                               
+##############################################################################
+endef
+export GREET_MSG
 
 ################################################################################
 # tarball
@@ -148,8 +161,8 @@ all: zip
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
-	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(CALIBRATE) $(DISCOVERY) $(ECOSYSTEM) \
+$(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
 	mkdir -p               $(TARGET)
 	cp $(BOOT)             $(TARGET)
@@ -163,10 +176,10 @@ $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $
 	#
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
-	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
+	@echo "$$GREET_MSG" > $(TARGET)/version.txt
 
 zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_TAG)-$(GIT_COMMIT).zip *
+	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(BRANCH_NAME).zip *
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
@@ -361,7 +374,7 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJS
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
-$(IDGEN):
+$(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	
