@@ -388,7 +388,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
 
         /* We have an application */
-        int demo = !is_registered(dir, app_id, "controller.hfso");
+        int demo = !is_registered(dir, app_id, "controllerhf.so");
 		
         if (verbose) {
             /* Attach whole info JSON */
