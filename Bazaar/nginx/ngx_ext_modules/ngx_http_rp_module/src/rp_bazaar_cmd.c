@@ -409,7 +409,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
             *url = '\0';
     }
 
-    int   app_id_len, app_name_len;
+    int unsigned len;
     ngx_http_rp_loc_conf_t *lc = 
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
 
@@ -427,30 +427,21 @@ int rp_bazaar_start(ngx_http_request_t *r,
                                        NULL, r->pool);
         }
     }
-    /* Assemble the application and FPGA filename:
-     *   <app_dir>/<app_id>/controller.so 
-     */
-    app_id_len = strlen(argv[0]) + 1;
-    app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
-        strlen("/controller.so") + 2;
-
-    char app_name[app_name_len];
-    if(app_name == NULL) {
-        return rp_module_cmd_error(json_root, "Can not allocate memory",
-                                   strerror(errno), r->pool);
-    }
 
     /* Application id string */
-    rp_module_ctx.app.id = (char *)malloc(app_id_len);
+    len = strlen(argv[0]) + 1;
+    rp_module_ctx.app.id = (char *)malloc(len);
     if(rp_module_ctx.app.id == NULL) {
         return rp_module_cmd_error(json_root, "Can not allocate memory",
                                    strerror(errno), r->pool);
     }
     strcpy(rp_module_ctx.app.id, argv[0]);
 
-    sprintf(app_name, "%s/%s/controller.so", 
-            lc->bazaar_dir.data, argv[0]);
-    app_name[app_name_len-1]='\0';
+    /* Assemble the application and FPGA filename: <app_dir>/<app_id>/controller.so */
+    len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/controller.so") + 2;
+    char app_name[len];
+    sprintf(app_name, "%s/%s/controller.so", lc->bazaar_dir.data, argv[0]);
+    app_name[len-1]='\0';
 
     /* Unload existing application before, new fpga load */
     if(rp_module_ctx.app.handle != NULL){
@@ -463,7 +454,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
     char *fpga_name = NULL;
-
     if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) {
         /* Here we do not have application running anymore - load new FPGA */
         rp_debug(r->connection->log, "Loading specific FPGA from: '%s'\n", fpga_name);
