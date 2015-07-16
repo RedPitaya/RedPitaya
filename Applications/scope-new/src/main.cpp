@@ -123,8 +123,8 @@ CFloatParameter out2Frequancy("SOUR2_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0.0
 
 CFloatParameter out1Phase("SOUR1_PHAS", CBaseParameter::RW, 0, 0, -360, 360);
 CFloatParameter out2Phase("SOUR2_PHAS", CBaseParameter::RW, 0, 0, -360, 360);
-CFloatParameter out1DCYC("SOUR1_DCYC", CBaseParameter::RW, 0.5, 0, 0, 100);
-CFloatParameter out2DCYC("SOUR2_DCYC", CBaseParameter::RW, 0.5, 0, 0, 100);
+CFloatParameter out1DCYC("SOUR1_DCYC", CBaseParameter::RW, 50, 0, 0, 100);
+CFloatParameter out2DCYC("SOUR2_DCYC", CBaseParameter::RW, 50, 0, 0, 100);
 
 CIntParameter out1WAveform("SOUR1_FUNC", CBaseParameter::RW, RP_WAVEFORM_SINE, 0, RP_WAVEFORM_SINE, RP_WAVEFORM_ARBITRARY);
 CIntParameter out2WAveform("SOUR2_FUNC", CBaseParameter::RW, RP_WAVEFORM_SINE, 0, RP_WAVEFORM_SINE, RP_WAVEFORM_ARBITRARY);
@@ -411,7 +411,7 @@ void OnNewParams(void) {
         rp_GenPhase(RP_CH_1, out1Phase.NewValue());
         out1Phase.Update();
 
-        rp_GenDutyCycle(RP_CH_1, out1DCYC.NewValue());
+        rp_GenDutyCycle(RP_CH_1, out1DCYC.NewValue()/100);
         out1DCYC.Update();
 
         rp_GenWaveform(RP_CH_1, (rp_waveform_t) out1WAveform.NewValue());
@@ -442,7 +442,7 @@ void OnNewParams(void) {
         rp_GenPhase(RP_CH_2, out2Phase.NewValue());
         out2Phase.Update();
 
-        rp_GenDutyCycle(RP_CH_2, out2DCYC.NewValue());
+        rp_GenDutyCycle(RP_CH_2, out2DCYC.NewValue()/100);
         out2DCYC.Update();
 
         rp_GenWaveform(RP_CH_2, (rp_waveform_t) out2WAveform.NewValue());
@@ -617,7 +617,7 @@ void generate(rp_channel_t channel) {
         amplitude = out1Amplitude.Value()/out1Scale.Value();
         offset = out1Offset.Value();
         showOff = out1ShowOffset.Value();
-		duty_cycle = out1DCYC.Value();
+		duty_cycle = out1DCYC.Value()/100;
     }
     else {
         signal = &out2Signal;
@@ -627,7 +627,7 @@ void generate(rp_channel_t channel) {
         amplitude = out2Amplitude.Value()/out2Scale.Value();
         offset = out2Offset.Value();
         showOff = out2ShowOffset.Value();
-		duty_cycle = out2DCYC.Value();
+		duty_cycle = out2DCYC.Value()/100;
     }
 
     switch (waveform) {
