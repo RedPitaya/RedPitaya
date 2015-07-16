@@ -16,4 +16,4 @@ $(CONTROLLER): $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	$(RM) -f $(OBJECTS)
+	-$(RM) -f $(OBJECTS)
