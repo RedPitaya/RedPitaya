@@ -1096,7 +1096,7 @@ int waitToFillAfterTriggerBuffer(bool testcancel) {
         if(testcancel)
             pthread_testcancel();
 
-    } while (((_writePointer - (_triggerPosition + triggerDelay)) % ADC_BUFFER_SIZE) <= (viewSize/2)*deltaSample && localTimer > _clock());
+    } while ((((_writePointer - _triggerPosition) % ADC_BUFFER_SIZE) <= ((viewSize/2.f) * deltaSample) + triggerDelay) && localTimer > _clock());
     return RP_OK;
 }
 
