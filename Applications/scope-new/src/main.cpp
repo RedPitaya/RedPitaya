@@ -146,11 +146,12 @@ CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40
 
 // 0-nothing		1-commant from web		-1-response OK
 // 1V - TP16
-CIntParameter calibrateFrontEndOffset("CLAIB_FE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndScaleLV("CLAIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndScaleHV("CLAIB_FE_SCALE_HV", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateBackEndOffset("CLAIB_BE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateBackEndScale("CLAIB_BE_SCALE", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateReset("CALIB_RESET", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndOffset("CALIB_FE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, 0, 0, -1, 1);
+CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.f);
 
 
 
@@ -590,29 +591,41 @@ void OnNewParams(void) {
     out2ShowOffset.Update();
 
 /* ------ HANDLE CALIBRATE ------*/
-    if (calibrateBackEndOffset.NewValue() == 1) {
-        if (rp_CalibrateBackEndOffset(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
-            calibrateBackEndOffset.Value() = -1;
-        }
-    }
-    if (calibrateBackEndScale.NewValue() == 1) {
-        if (rp_CalibrateBackEndScale(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
-            calibrateBackEndOffset.Value() = -1;
-        }
-    }
+	if (calibrateReset.NewValue() == 1) {
+		fprintf(stderr, "calibrateReset 1\n");
+		if (rp_CalibrationReset()) {
+			fprintf(stderr, "calibrateReset 2\n");
+			calibrateReset.Value() = -1;
+		}
+	}
     if (calibrateFrontEndOffset.NewValue() == 1) {
+		fprintf(stderr, "calibrateFrontEndOffset 1\n");
         if (rp_CalibrateFrontEndOffset(RP_CH_1) && rp_CalibrateFrontEndOffset(RP_CH_2)) {
-            calibrateBackEndOffset.Value() = -1;
+			fprintf(stderr, "calibrateFrontEndOffset 2\n");
+            calibrateFrontEndOffset.Value() = -1;
         }
     }
-    if (calibrateFrontEndScaleHV.NewValue() == 1) {
-        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, CALIB_FE_HV_REF_V) && rp_CalibrateFrontEndScaleHV(RP_CH_2, CALIB_FE_HV_REF_V)) {
-            calibrateBackEndOffset.Value() = -1;
+    if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
+		fprintf(stderr, "calibrateFrontEndScaleLV 1 VALUE = %f\n", calibrateValue.NewValue());
+        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue()) && rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue())) {
+			fprintf(stderr, "calibrateFrontEndScaleLV 2\n");
+            calibrateFrontEndScaleLV.Value() = -1;
         }
+        calibrateValue.Update();
+    }    
+    if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
+		fprintf(stderr, "calibrateFrontEndScaleHV 1 VALUE = %f\n", calibrateValue.NewValue());
+        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue()) && rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue())) {
+			fprintf(stderr, "calibrateFrontEndScaleHV 2\n");
+            calibrateFrontEndScaleHV.Value() = -1;
+        }
+        calibrateValue.Update();
     }
-    if (calibrateFrontEndScaleLV.NewValue() == 1) {
-        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, CALIB_FE_LV_REF_V) && rp_CalibrateFrontEndScaleLV(RP_CH_2, CALIB_FE_LV_REF_V)) {
-            calibrateBackEndOffset.Value() = -1;
+    if (calibrateBackEnd.NewValue() == 1) {
+		fprintf(stderr, "calibrateBackEnd 1\n");
+        if (rp_CalibrateBackEndOffset(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2) && rp_CalibrateBackEndScale(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
+			fprintf(stderr, "calibrateBackEnd 2\n");
+            calibrateBackEnd.Value() = -1;
         }
     }
 
