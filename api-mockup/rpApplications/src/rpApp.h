@@ -196,7 +196,7 @@ int rpApp_OscIsTriggered();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, float offset);
+int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, double offset);
 
 /**
 * Gets amplitude offset in volts.
@@ -205,7 +205,7 @@ int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, float offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, float *offset);
+int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, double *offset);
 
 /**
 * Sets amplitude scale in volts per division.
@@ -214,7 +214,7 @@ int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, float *offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, float scale);
+int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, double scale);
 
 /**
 * Gets amplitude scale in volts per division.
@@ -223,7 +223,7 @@ int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, float scale);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, float *scale);
+int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, double *scale);
 
 /**
 * Sets probe attenuation ratio.

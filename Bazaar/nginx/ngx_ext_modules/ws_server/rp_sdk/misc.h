@@ -38,6 +38,15 @@ inline float GetValueFromJSON<float>(JSONNode _node, const char* _at)
 	return res;
 }
 
+//float specialization of function
+template <>
+inline double GetValueFromJSON<double>(JSONNode _node, const char* _at)
+{
+    double tmp = 0.f;
+    sscanf(_node.at(_at).as_string().c_str(), "%lf", &tmp);
+    return tmp;
+}
+
 //bool specialization of function
 template <>
 inline bool GetValueFromJSON<bool>(JSONNode _node, const char* _at)

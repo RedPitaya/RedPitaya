@@ -724,7 +724,7 @@ scpi_result_t RP_APP_OscGetViewPart(scpi_t *context) {
 }
 
 scpi_result_t RP_APP_OscGetAmplitudeOffset(rpApp_osc_source source, scpi_t *context) {
-    float value;
+    double value;
     int result = rpApp_OscGetAmplitudeOffset(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:OFFSET? Failed to get: %s", rp_GetError(result));
@@ -769,7 +769,7 @@ scpi_result_t RP_APP_OscSetAmplitudeScale(rpApp_osc_source source, scpi_t *conte
 }
 
 scpi_result_t RP_APP_OscGetAmplitudeScale(rpApp_osc_source source, scpi_t *context) {
-    float value;
+    double value;
     int result = rpApp_OscGetAmplitudeScale(source, &value);
     if (RP_OK != result) {
         syslog(LOG_ERR, "*OSC:CH<n>:SCALE? Failed to get: %s", rp_GetError(result));
