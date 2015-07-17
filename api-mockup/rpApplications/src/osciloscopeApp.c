@@ -32,8 +32,8 @@ volatile bool clear = false;
 volatile bool continuousMode = false;
 volatile uint32_t viewSize = VIEW_SIZE_DEFAULT;
 float *view;
-volatile float ch1_ampOffset, ch2_ampOffset, math_ampOffset;
-volatile float ch1_ampScale,  ch2_ampScale,  math_ampScale;
+volatile double ch1_ampOffset, ch2_ampOffset, math_ampOffset;
+volatile double ch1_ampScale,  ch2_ampScale,  math_ampScale;
 volatile float ch1_probeAtt, ch2_probeAtt;
 volatile bool ch1_inverted = false; bool ch2_inverted = false, math_inverted = false;
 volatile float timeScale=1, timeOffset=0;
@@ -347,8 +347,8 @@ int osc_getInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain) {
     return RP_OK;
 }
 
-int osc_setAmplitudeScale(rpApp_osc_source source, float scale) {
-    float offset, currScale;
+int osc_setAmplitudeScale(rpApp_osc_source source, double scale) {
+    double offset, currScale;
     pthread_mutex_lock(&mutex);
     ECHECK_APP_MUTEX(mutex, osc_getAmplitudeOffset(source, &offset));
     ECHECK_APP_MUTEX(mutex, osc_getAmplitudeScale(source, &currScale));
@@ -366,7 +366,7 @@ int osc_setAmplitudeScale(rpApp_osc_source source, float scale) {
     return RP_OK;
 }
 
-int osc_getAmplitudeScale(rpApp_osc_source source, float *scale) {
+int osc_getAmplitudeScale(rpApp_osc_source source, double *scale) {
     SOURCE_ACTION(source,
                   *scale = ch1_ampScale,
                   *scale = ch2_ampScale,
@@ -374,7 +374,7 @@ int osc_getAmplitudeScale(rpApp_osc_source source, float *scale) {
     return RP_OK;
 }
 
-int osc_setAmplitudeOffset(rpApp_osc_source source, float offset) {
+int osc_setAmplitudeOffset(rpApp_osc_source source, double offset) {
     pthread_mutex_lock(&mutex);
     SOURCE_ACTION(source,
                   ch1_ampOffset = offset,
@@ -386,7 +386,7 @@ int osc_setAmplitudeOffset(rpApp_osc_source source, float offset) {
     return RP_OK;
 }
 
-int osc_getAmplitudeOffset(rpApp_osc_source source, float *offset) {
+int osc_getAmplitudeOffset(rpApp_osc_source source, double *offset) {
     SOURCE_ACTION(source,
                   *offset = ch1_ampOffset,
                   *offset = ch2_ampOffset,
@@ -603,10 +603,10 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
             min = view[source*viewSize + i];
         }
     }
-	*Vmin = min;
+    *Vmin = min;
     pthread_mutex_unlock(&mutex);
 
-	ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
+    ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
 
     return RP_OK;
 }
@@ -912,20 +912,21 @@ int threadSafe_acqStop() {
     return RP_OK;
 }
 
-float scaleAmplitude(float volts, float ampScale, float probeAtt, float ampOffset, float invertFactor) {
+double scaleAmplitude(double volts, double ampScale, double probeAtt, double ampOffset, double invertFactor) {
     return (volts * invertFactor * probeAtt + ampOffset) / ampScale;
 }
 
-float unscaleAmplitude(float value, float ampScale, float probeAtt, float ampOffset, float invertFactor) {
+double unscaleAmplitude(double value, double ampScale, double probeAtt, double ampOffset, double invertFactor) {
     return ((value * ampScale) - ampOffset) / probeAtt / invertFactor;
 }
 
-float unOffsetAmplitude(float value, float ampScale, float ampOffset) {
+double unOffsetAmplitude(double value, double ampScale, double ampOffset) {
     return value - (ampOffset / ampScale);
 }
 
 int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res) {
-    float ampOffset, ampScale, probeAtt = 1;
+    double ampOffset, ampScale;
+    float probeAtt = 1;
     bool inverted;
     ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
     ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
@@ -937,7 +938,8 @@ int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res) {
 }
 
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
-    float ampOffset, ampScale, probeAtt=1;
+    double ampOffset, ampScale;
+    float probeAtt=1;
     bool inverted;
     ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
     ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
@@ -949,7 +951,7 @@ int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
 }
 
 int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
-    float ampOffset, ampScale;
+    double ampOffset, ampScale;
     ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
     ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
     *res = unOffsetAmplitude(value, ampScale, ampOffset);
@@ -1015,7 +1017,7 @@ float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op) {
     }
 }
 
-float roundUpTo125(float data) {
+double roundUpTo125(double data) {
     double power = ceil(log(data) / log(10)) - 1;       // calculate normalization factor
     double dataNorm = data / pow(10, power);            // normalize data, so that 1 < data < 10
     if (dataNorm < 2)                                   // round normalized data
@@ -1024,7 +1026,19 @@ float roundUpTo125(float data) {
         dataNorm = 5;
     else
         dataNorm = 10;
-    return (float) (dataNorm * pow(10, power));         // unnormalize data
+    return (dataNorm * pow(10, power));         // unnormalize data
+}
+
+double roundUpTo25(double data) {
+    double power = ceil(log(data) / log(10)) - 1;       // calculate normalization factor
+    double dataNorm = data / pow(10, power);            // normalize data, so that 1 < data < 10
+    if (dataNorm < 2)                                   // round normalized data
+        dataNorm = 2;
+    else if (dataNorm < 5)
+        dataNorm = 5;
+    else
+        dataNorm = 20;
+    return (dataNorm * pow(10, power));         // unnormalize data
 }
 
 void clearView() {
@@ -1098,7 +1112,7 @@ static inline void scaleMath() {
         ECHECK_APP_THREAD(osc_measureMeanVoltage(RPAPP_OSC_SOUR_MATH, &vMean));
         // Calculate scale
         float scale = vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y;
-        ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo125(scale)));
+        ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo25(scale)));
         ECHECK_APP_THREAD(osc_setAmplitudeOffset(RPAPP_OSC_SOUR_MATH, -vMean));
     }
 }

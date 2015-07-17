@@ -487,12 +487,13 @@
 					if(Math.abs(value) <= 0.1) {
 						value *= 1000;
 						unit = 'mV';
-					} else if (Math.abs(value) >= 1000) {
-						value /= 1000;
-						unit = 'kV';						
+
 					} else if (Math.abs(value) >= 1000000) {
 						value /= 1000000;
 						unit = 'MV';						
+					} else if (Math.abs(value) >= 1000) {
+						value /= 1000;
+						unit = 'kV';						
 					}
 					field.html(value);
 					var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
@@ -804,7 +805,12 @@
       return;
     }
     
-    var curr_scale = (curr_scale === undefined ? OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'].value : curr_scale);
+    var mult = 1;
+    if(OSC.state.sel_sig_name.toUpperCase() === 'MATH') {
+        mult = OSC.params.orig['OSC_MATH_SCALE_MULT'].value;
+    }
+      
+    var curr_scale = (curr_scale === undefined ? OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'].value : curr_scale) / mult;
     var new_scale;
     
     for(var i=0; i < OSC.voltage_steps.length - 1; i++) {
@@ -834,9 +840,9 @@
     }
     
     if(new_scale !== undefined && new_scale > 0 && new_scale != curr_scale) {
-      
+      new_scale *= mult;
       // Fix float length
-      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
+//      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
       if(send_changes !== false) {
         OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
         OSC.sendParams();
