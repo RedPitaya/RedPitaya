@@ -88,7 +88,8 @@ CFloatParameter cursor1T("OSC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2T("OSC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 
 /* ----------------------------------  MATH  -------------------------------- */
-CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_NONE, 0, RPAPP_OSC_MATH_NONE, RPAPP_OSC_MATH_INT);
+CBooleanParameter mathOperationEnabled("MATH_SHOW_ENABLE", CBaseParameter::RW, false, 0);
+CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, 0, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT);
 CIntParameter mathSource1("OSC_MATH_SRC1", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
 CIntParameter mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, RP_CH_2, 0, RP_CH_1, RP_CH_2);
 
@@ -350,7 +351,7 @@ void UpdateSignals(void) {
         ch2.Resize(0);
     }
 
-    if (mathOperation.Value() != RPAPP_OSC_MATH_NONE) {
+    if (mathOperationEnabled.Value()) {
         rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
 
         if (math.GetSize() != dataSize.Value())
@@ -477,6 +478,8 @@ void OnNewParams(void) {
     cursor2V.Update();
     cursor1T.Update();
     cursor2T.Update();
+	
+	mathOperationEnabled.Update();
 
 	if (out1Scale.IsNewValue())
 	{

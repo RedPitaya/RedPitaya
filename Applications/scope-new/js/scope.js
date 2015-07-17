@@ -303,7 +303,7 @@
           }
         }
         else if(param_name == 'OSC_MATH_OFFSET') {
-          if(new_params['OSC_MATH_OP'].value) {
+          if(new_params['MATH_SHOW_ENABLE'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#math_offset_arrow').is(':visible') 
@@ -447,6 +447,15 @@
           }
           else if(field.is('button')) {
             field[new_params[param_name].value === true ? 'addClass' : 'removeClass' ]('active');
+			//switch green light for output signals
+			if(param_name == "OUTPUT1_STATE" || param_name == "OUTPUT2_STATE")
+			{
+				var value = new_params[param_name].value === true ? 1 : 0;
+				if(value == 1)
+					$('#'+param_name+'_ON').show();
+				else
+					$('#'+param_name+'_ON').hide();
+			}	
           }
           else if(field.is('input:radio')) {
             var radios = $('input[name="' + param_name + '"]');
@@ -531,7 +540,7 @@
       }
       
       // Ignore math signal if no operator defined
-      if(sig_name == 'math' && (!OSC.params.orig['OSC_MATH_OP'] || OSC.params.orig['OSC_MATH_OP'].value == 0)) {
+      if(sig_name == 'math' && (!OSC.params.orig['MATH_SHOW_ENABLE'] || OSC.params.orig['MATH_SHOW_ENABLE'].value == false)) {
         continue;
       }
       
@@ -619,6 +628,21 @@
   // Exits from editing mode
   OSC.exitEditing = function(noclose) {
 
+	if($('#math_dialog').is(':visible')) {
+		//for values == abs, dy/dt, ydt (5, 6, 7) deselect and disable signal2 buttons
+		var radios = $('input[name="OSC_MATH_SRC2"]');
+		var field = $('#OSC_MATH_OP');
+		var value = field.val();
+		if(value >= 5)
+		{
+			radios.closest('.btn-group').children('.btn').addClass('disabled');
+			radios.closest('.btn-group').children('.btn.active').removeClass('active');	
+		}
+		else{
+			radios.closest('.btn-group').children('.btn').removeClass('disabled');		
+		}
+	}
+	
     for(var key in OSC.params.orig) {
       var field = $('#' + key);
       var value = undefined;
