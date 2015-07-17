@@ -22,6 +22,16 @@ body {
   clear: both;
 }
 
+.clb-button {
+  display: inline-block;
+  border: 1px solid gray;
+  margin: 0 29px;
+}
+
+.modal {
+
+}
+
 input, #info div, #info span, .selectable {
   -webkit-touch-callout: text;
   -webkit-user-select: text;
@@ -29,6 +39,10 @@ input, #info div, #info span, .selectable {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+}
+
+#myModal {
+  text-align: center;
 }
 
 #triginfo {
