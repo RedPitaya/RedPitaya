@@ -19,6 +19,7 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 systemctl enable redpitaya_nginx
 
 apt-get -y install libluajit-5.1 lua-cjson unzip
+apt-get -y install libboost-system1.55.0 libboost-regex1.55.0 libboost-thread1.55.0
 EOF_CHROOT
 
 # final operations and cleanup
