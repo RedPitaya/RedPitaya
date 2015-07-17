@@ -890,6 +890,8 @@
       new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 8 : 6));
       
       if(send_changes !== false) {
+        var new_offset = OSC.params.orig['OSC_TIME_OFFSET'].value * new_scale / OSC.params.orig['OSC_TIME_SCALE'].value;
+        OSC.params.local['OSC_TIME_OFFSET'] = { value: new_offset };
         OSC.params.local['OSC_TIME_SCALE'] = { value: new_scale };
         OSC.sendParams();
       }
