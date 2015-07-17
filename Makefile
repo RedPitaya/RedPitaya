@@ -202,8 +202,8 @@ $(MEMTEST): $(FPGA)
 # U-Boot build provides: $(UBOOT)
 ################################################################################
 
-$(UBOOT_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(UBOOT_URL) -o $@  fi
+$(UBOOT_TAR): | $(DL)
+	curl -L $(UBOOT_URL) -o $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
@@ -229,8 +229,8 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 # Linux build provides: $(LINUX)
 ################################################################################
 
-$(LINUX_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(LINUX_URL) -o $@  fi
+$(LINUX_TAR): | $(DL)
+	curl -L $(LINUX_URL) -o $@
 
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
@@ -249,8 +249,8 @@ $(LINUX): $(LINUX_DIR)
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
-$(DTREE_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(DTREE_URL) -o $@  fi
+$(DTREE_TAR): | $(DL)
+	curl -L $(DTREE_URL) -o $@
 
 $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
@@ -326,39 +326,39 @@ LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
-$(WEBSOCKETPP_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(WEBSOCKETPP_URL) -o $@  fi
+$(WEBSOCKETPP_TAR): | $(DL)
+	curl -L $(WEBSOCKETPP_URL) -o $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
-$(CRYPTOPP_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(CRYPTOPP_URL) -o $@  fi
+$(CRYPTOPP_TAR): | $(DL)
+	curl -L $(CRYPTOPP_URL) -o $@
 
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	mkdir -p $@
 	unzip $< -d $@
 	patch -d $@ -p1 < patches/cryptopp.patch
 
-$(LIBJSON_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(LIBJSON_URL) -o $@  fi
+$(LIBJSON_TAR): | $(DL)
+	curl -L $(LIBJSON_URL) -o $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
 	unzip $< -d $(@D)
 	patch -d $@ -p1 < patches/libjson.patch
 
-$(LUANGINX_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(LUANGINX_URL) -o $@  fi
+$(LUANGINX_TAR): | $(DL)
+	curl -L $(LUANGINX_URL) -o $@
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
-$(NGINX_TAR): $(DL)
-	if [[ ! -e $@ ]]; then  curl -L $(NGINX_URL) -o $@  fi
+$(NGINX_TAR): | $(DL)
+	curl -L $(NGINX_URL) -o $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
