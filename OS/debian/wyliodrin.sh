@@ -71,6 +71,7 @@ sudo make install
 ln -s /usr/local/lib/node_modules/ /usr/lib/node
 ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
 
+echo -n redpitaya > wyliodrin-server-nodejs/board.type
 
 #===============systemd==============
 systemctl enable redpitaya_wyliodrin
