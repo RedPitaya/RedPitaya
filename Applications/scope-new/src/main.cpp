@@ -46,7 +46,8 @@ CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 100
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter out1Scale("OSC_OUTPUT1_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
 CFloatParameter out2Scale("OSC_OUTPUT2_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
-CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
+CDoubleParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 1e-12, 1e+12);
+CDoubleParameter inMathScaleMult("OSC_MATH_SCALE_MULT", CBaseParameter::RW, 1, 0, 1e-12, 1e+12);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000);
@@ -88,7 +89,8 @@ CFloatParameter cursor1T("OSC_CUR1_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 CFloatParameter cursor2T("OSC_CUR2_T", CBaseParameter::RW, -1, 0, -1000, 1000);
 
 /* ----------------------------------  MATH  -------------------------------- */
-CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_NONE, 0, RPAPP_OSC_MATH_NONE, RPAPP_OSC_MATH_INT);
+CBooleanParameter mathOperationEnabled("MATH_SHOW_ENABLE", CBaseParameter::RW, false, 0);
+CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, 0, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT);
 CIntParameter mathSource1("OSC_MATH_SRC1", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_2);
 CIntParameter mathSource2("OSC_MATH_SRC2", CBaseParameter::RW, RP_CH_2, 0, RP_CH_1, RP_CH_2);
 
@@ -144,11 +146,12 @@ CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40
 
 // 0-nothing		1-commant from web		-1-response OK
 // 1V - TP16
-CIntParameter calibrateFrontEndOffset("CLAIB_FE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndScaleLV("CLAIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndScaleHV("CLAIB_FE_SCALE_HV", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateBackEndOffset("CLAIB_BE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateBackEndScale("CLAIB_BE_SCALE", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateReset("CALIB_RESET", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndOffset("CALIB_FE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, 0, 0, -1, 1);
+CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.f);
 
 
 
@@ -185,6 +188,12 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
     return 0;
 }
 
+double roundUpTo1(double data) {
+    double power = ceil(log(data) / log(10)) - 1;       // calculate normalization factor
+    double dataNorm = data / pow(10, power);            // normalize data, so that 1 < data < 10
+    dataNorm = 10;
+    return (dataNorm * pow(10, power));         // unnormalize data
+}
 
 void UpdateParams(void) {
 	bool is_running;
@@ -235,26 +244,28 @@ void UpdateParams(void) {
 
     rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
 
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &in1Offset.Value());
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &in2Offset.Value());
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &inMathOffset.Value());
+    double dvalue;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
+    in1Scale.Value() = dvalue;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &dvalue);
+    in2Scale.Value() = dvalue;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &dvalue);
 
+    if(inMathScale.Value() != dvalue) {
+        double mult = roundUpTo1(dvalue);
+        inMathScaleMult.Value() = mult > 1.f ? mult / 10.f : mult * 10.f;
+    }
+
+    inMathScale.Value() = dvalue;
 	
+	rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
+    in1Offset.Value() = dvalue;
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &dvalue);
+    in2Offset.Value() = dvalue;
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &dvalue);
+    inMathOffset.Value() = dvalue;
+
     float value;
-    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &value);
-    in1Scale.Value() = value;
-    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &value);
-    in2Scale.Value() = value;
-    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &value);
-    inMathScale.Value() = value;
-
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
-    in1Offset.Value() = value;
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
-    in2Offset.Value() = value;
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &value);
-    inMathOffset.Value() = value;
-
     rpApp_OscGetTimeOffset(&value);
     inTimeOffset.Value() = value;
     rpApp_OscGetTimeScale(&value);
@@ -265,7 +276,8 @@ void UpdateParams(void) {
     inViewStartPos.Value() = start;
     inViewEndPos.Value() = end;
 
-    if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || in1Offset.IsValueChanged() || in1Offset.IsValueChanged()
+    if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || inMathScale.IsValueChanged()
+       || in1Offset.IsValueChanged() || in1Offset.IsValueChanged() || inMathOffset.IsValueChanged()
        || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
     
         CDataManager::GetInstance()->SendAllParams();
@@ -350,7 +362,7 @@ void UpdateSignals(void) {
         ch2.Resize(0);
     }
 
-    if (mathOperation.Value() != RPAPP_OSC_MATH_NONE) {
+    if (mathOperationEnabled.Value()) {
         rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, data, (uint32_t) dataSize.Value());
 
         if (math.GetSize() != dataSize.Value())
@@ -477,6 +489,8 @@ void OnNewParams(void) {
     cursor2V.Update();
     cursor1T.Update();
     cursor2T.Update();
+	
+	mathOperationEnabled.Update();
 
 	if (out1Scale.IsNewValue())
 	{
@@ -508,15 +522,17 @@ void OnNewParams(void) {
 
     if (inAutoscale.NewValue()) {
         rpApp_OscAutoScale();
+        double dvalue;
+        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
+        in1Scale.Value() = dvalue;
+        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &dvalue);
+        in2Scale.Value() = dvalue;
+        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
+        in1Offset.Value() = dvalue;
+        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &dvalue);
+        in2Offset.Value() = dvalue;
+
         float value;
-        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &value);
-        in1Scale.Value() = value;
-        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &value);
-        in2Scale.Value() = value;
-        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
-        in1Offset.Value() = value;
-        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
-        in2Offset.Value() = value;
         rpApp_OscGetTimeOffset(&value);
         inTimeOffset.Value() = value;
         rpApp_OscGetTimeScale(&value);
@@ -527,6 +543,17 @@ void OnNewParams(void) {
         rpApp_osc_trig_sweep_t sweep;
         rpApp_OscGetTriggerSweep(&sweep);
         inTrigSweep.Value() = sweep;
+    }
+
+    if(mathSource1.IsNewValue() || mathSource2.IsNewValue() || mathOperation.IsNewValue()) {
+        inMathScale.Update();
+        inMathScale.Value() = 1.f;
+        inMathScaleMult.Value() = 1.f;
+        rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.Value());
+        
+        inMathOffset.Update();
+        inMathOffset.Value() = 0.f;
+        rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.Value());
     }
 
     IF_VALUE_CHANGED(in1Offset,    rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1,  in1Offset.NewValue()))
@@ -564,29 +591,41 @@ void OnNewParams(void) {
     out2ShowOffset.Update();
 
 /* ------ HANDLE CALIBRATE ------*/
-    if (calibrateBackEndOffset.NewValue() == 1) {
-        if (rp_CalibrateBackEndOffset(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
-            calibrateBackEndOffset.Value() = -1;
-        }
-    }
-    if (calibrateBackEndScale.NewValue() == 1) {
-        if (rp_CalibrateBackEndScale(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
-            calibrateBackEndOffset.Value() = -1;
-        }
-    }
+	if (calibrateReset.NewValue() == 1) {
+		fprintf(stderr, "calibrateReset 1\n");
+		if (rp_CalibrationReset()) {
+			fprintf(stderr, "calibrateReset 2\n");
+			calibrateReset.Value() = -1;
+		}
+	}
     if (calibrateFrontEndOffset.NewValue() == 1) {
+		fprintf(stderr, "calibrateFrontEndOffset 1\n");
         if (rp_CalibrateFrontEndOffset(RP_CH_1) && rp_CalibrateFrontEndOffset(RP_CH_2)) {
-            calibrateBackEndOffset.Value() = -1;
+			fprintf(stderr, "calibrateFrontEndOffset 2\n");
+            calibrateFrontEndOffset.Value() = -1;
         }
     }
-    if (calibrateFrontEndScaleHV.NewValue() == 1) {
-        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, CALIB_FE_HV_REF_V) && rp_CalibrateFrontEndScaleHV(RP_CH_2, CALIB_FE_HV_REF_V)) {
-            calibrateBackEndOffset.Value() = -1;
+    if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
+		fprintf(stderr, "calibrateFrontEndScaleLV 1 VALUE = %f\n", calibrateValue.NewValue());
+        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue()) && rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue())) {
+			fprintf(stderr, "calibrateFrontEndScaleLV 2\n");
+            calibrateFrontEndScaleLV.Value() = -1;
         }
+        calibrateValue.Update();
+    }    
+    if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
+		fprintf(stderr, "calibrateFrontEndScaleHV 1 VALUE = %f\n", calibrateValue.NewValue());
+        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue()) && rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue())) {
+			fprintf(stderr, "calibrateFrontEndScaleHV 2\n");
+            calibrateFrontEndScaleHV.Value() = -1;
+        }
+        calibrateValue.Update();
     }
-    if (calibrateFrontEndScaleLV.NewValue() == 1) {
-        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, CALIB_FE_LV_REF_V) && rp_CalibrateFrontEndScaleLV(RP_CH_2, CALIB_FE_LV_REF_V)) {
-            calibrateBackEndOffset.Value() = -1;
+    if (calibrateBackEnd.NewValue() == 1) {
+		fprintf(stderr, "calibrateBackEnd 1\n");
+        if (rp_CalibrateBackEndOffset(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2) && rp_CalibrateBackEndScale(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
+			fprintf(stderr, "calibrateBackEnd 2\n");
+            calibrateBackEnd.Value() = -1;
         }
     }
 
