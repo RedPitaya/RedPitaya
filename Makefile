@@ -203,7 +203,7 @@ $(MEMTEST): $(FPGA)
 ################################################################################
 
 $(UBOOT_TAR): $(DL)
-	curl -L $(UBOOT_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(UBOOT_URL) -o $@  fi
 
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
@@ -230,7 +230,7 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 ################################################################################
 
 $(LINUX_TAR): $(DL)
-	curl -L $(LINUX_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(LINUX_URL) -o $@  fi
 
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
@@ -250,7 +250,7 @@ $(LINUX): $(LINUX_DIR)
 ################################################################################
 
 $(DTREE_TAR): $(DL)
-	curl -L $(DTREE_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(DTREE_URL) -o $@  fi
 
 $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
@@ -327,14 +327,14 @@ NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
 $(WEBSOCKETPP_TAR): $(DL)
-	curl -L $(WEBSOCKETPP_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(WEBSOCKETPP_URL) -o $@  fi
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
 $(CRYPTOPP_TAR): $(DL)
-	curl -L $(CRYPTOPP_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(CRYPTOPP_URL) -o $@  fi
 
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	mkdir -p $@
@@ -342,7 +342,7 @@ $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	patch -d $@ -p1 < patches/cryptopp.patch
 
 $(LIBJSON_TAR): $(DL)
-	curl -L $(LIBJSON_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(LIBJSON_URL) -o $@  fi
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
@@ -350,7 +350,7 @@ $(LIBJSON_DIR): $(LIBJSON_TAR)
 	patch -d $@ -p1 < patches/libjson.patch
 
 $(LUANGINX_TAR): $(DL)
-	curl -L $(LUANGINX_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(LUANGINX_URL) -o $@  fi
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
@@ -358,7 +358,7 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
 $(NGINX_TAR): $(DL)
-	curl -L $(NGINX_URL) -o $@
+	if [[ ! -e $@ ]]; then  curl -L $(NGINX_URL) -o $@  fi
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
