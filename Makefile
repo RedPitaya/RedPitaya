@@ -309,11 +309,17 @@ LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zi
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 
-WEBSOCKETPP_TAR = $(TMP)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
-CRYPTOPP_TAR    = $(TMP)/cryptopp562.zip
-LIBJSON_TAR     = $(TMP)/libjson_7.6.1.zip
-LUANGINX_TAR    = $(TMP)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
-NGINX_TAR       = $(TMP)/nginx-$(NGINX_TAG).tar.gz
+ifdef BR2_DL_DIR
+DL=$(BR2_DL_DIR)
+else
+DL=$(TMP)
+endif
+
+WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
+CRYPTOPP_TAR    = $(DL)/cryptopp562.zip
+LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
+LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
+NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 CRYPTOPP_DIR    = Bazaar/tools/cryptopp
@@ -322,16 +328,14 @@ LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
-$(WEBSOCKETPP_TAR):
-	mkdir -p $(@D)
+$(WEBSOCKETPP_TAR): $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
-$(CRYPTOPP_TAR):
-	mkdir -p $(@D)
+$(CRYPTOPP_TAR): $(DL)
 	curl -L $(CRYPTOPP_URL) -o $@
 
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
@@ -339,8 +343,7 @@ $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	unzip $< -d $@
 	patch -d $@ -p1 < patches/cryptopp.patch
 
-$(LIBJSON_TAR):
-	mkdir -p $(@D)
+$(LIBJSON_TAR): $(DL)
 	curl -L $(LIBJSON_URL) -o $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
@@ -348,8 +351,7 @@ $(LIBJSON_DIR): $(LIBJSON_TAR)
 	unzip $< -d $(@D)
 	patch -d $@ -p1 < patches/libjson.patch
 
-$(LUANGINX_TAR):
-	mkdir -p $(@D)
+$(LUANGINX_TAR): $(DL)
 	curl -L $(LUANGINX_URL) -o $@
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
@@ -357,8 +359,7 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
-$(NGINX_TAR):
-	mkdir -p $(@D)
+$(NGINX_TAR): $(DL)
 	curl -L $(NGINX_URL) -o $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
