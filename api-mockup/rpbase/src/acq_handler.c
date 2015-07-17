@@ -814,13 +814,23 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
     
-    uint32_t cnts;
+    uint32_t cnts1[*size];
+    uint32_t cnts2[*size];
+    uint32_t* ptr1 = cnts1;
+    uint32_t* ptr2 = cnts2;
+    
     for (uint32_t i = 0; i < (*size); ++i) {
-        cnts = raw_buffer1[(pos + i) % ADC_BUFFER_SIZE];
-        buffer1[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV1, calibScale1, dc_offs1, 0.0);
-
-        cnts = raw_buffer2[(pos + i) % ADC_BUFFER_SIZE];
-        buffer2[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV2, calibScale2, dc_offs2, 0.0);
+        *ptr1++ = raw_buffer1[pos];
+        *ptr2++ = raw_buffer2[pos];
+        pos = (pos + 1) % ADC_BUFFER_SIZE;
+    }
+    
+    ptr1 = cnts1;
+    ptr2 = cnts2;
+    
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1, calibScale1, dc_offs1, 0.0);
+        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2, calibScale2, dc_offs2, 0.0);
     }
 
     return RP_OK;
