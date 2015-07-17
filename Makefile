@@ -20,30 +20,37 @@
 
 TMP = tmp
 
-UBOOT_TAG = xilinx-v2015.2
-LINUX_TAG = xilinx-v2015.2.01
-DTREE_TAG = xilinx-v2015.2.01
+# check if download cache directory is available
+ifdef BR2_DL_DIR
+DL=$(BR2_DL_DIR)
+else
+DL=$(TMP)
+endif
+
+UBOOT_TAG     = xilinx-v2015.2
+LINUX_TAG     = xilinx-v2015.2.01
+DTREE_TAG     = xilinx-v2015.2.01
 BUILDROOT_TAG = 2015.5
 
-UBOOT_DIR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
-LINUX_DIR = $(TMP)/linux-xlnx-$(LINUX_TAG)
-DTREE_DIR = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
+UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
+LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
+DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
 BUILDROOT_DIR = $(TMP)/buildroot-$(BUILDROOT_TAG)
 
-UBOOT_TAR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
-LINUX_TAR = $(TMP)/linux-xlnx-$(LINUX_TAG).tar.gz
-DTREE_TAR = $(TMP)/device-tree-xlnx-$(DTREE_TAG).tar.gz
-BUILDROOT_TAR = $(TMP)/buildroot-$(BUILDROOT_TAG).tar.gz
+UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
+LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
+DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
+BUILDROOT_TAR = $(DL)/buildroot-$(BUILDROOT_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
-UBOOT_URL ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
-LINUX_URL ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
-DTREE_URL ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
+UBOOT_URL     ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+LINUX_URL     ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
 BUILDROOT_URL ?= http://buildroot.uclibc.org/downloads/buildroot-$(BUILDROOT_TAG).tar.gz
 
-UBOOT_GIT ?= https://github.com/Xilinx/u-boot-xlnx.git
-LINUX_GIT ?= https://github.com/Xilinx/linux-xlnx.git
-DTREE_GIT ?= https://github.com/Xilinx/device-tree-xlnx.git
+UBOOT_GIT     ?= https://github.com/Xilinx/u-boot-xlnx.git
+LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
+DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
 BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
 ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
@@ -195,8 +202,7 @@ $(MEMTEST): $(FPGA)
 # U-Boot build provides: $(UBOOT)
 ################################################################################
 
-$(UBOOT_TAR):
-	mkdir -p $(@D)
+$(UBOOT_TAR): $(DL)
 	curl -L $(UBOOT_URL) -o $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
@@ -223,8 +229,7 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 # Linux build provides: $(LINUX)
 ################################################################################
 
-$(LINUX_TAR):
-	mkdir -p $(@D)
+$(LINUX_TAR): $(DL)
 	curl -L $(LINUX_URL) -o $@
 
 $(LINUX_DIR): $(LINUX_TAR)
@@ -244,8 +249,7 @@ $(LINUX): $(LINUX_DIR)
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
-$(DTREE_TAR):
-	mkdir -p $(@D)
+$(DTREE_TAR): $(DL)
 	curl -L $(DTREE_URL) -o $@
 
 $(DTREE_DIR): $(DTREE_TAR)
@@ -308,12 +312,6 @@ CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp562.zip
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
-
-ifdef BR2_DL_DIR
-DL=$(BR2_DL_DIR)
-else
-DL=$(TMP)
-endif
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 CRYPTOPP_TAR    = $(DL)/cryptopp562.zip
