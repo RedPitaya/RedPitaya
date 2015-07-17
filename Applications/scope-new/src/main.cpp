@@ -46,7 +46,8 @@ CFloatParameter in1Scale("OSC_CH1_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 100
 CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
 CFloatParameter out1Scale("OSC_OUTPUT1_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
 CFloatParameter out2Scale("OSC_OUTPUT2_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
-CFloatParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000);
+CDoubleParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 1e-12, 1e+12);
+CDoubleParameter inMathScaleMult("OSC_MATH_SCALE_MULT", CBaseParameter::RW, 1, 0, 1e-12, 1e+12);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000);
@@ -185,6 +186,12 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
     return 0;
 }
 
+double roundUpTo1(double data) {
+    double power = ceil(log(data) / log(10)) - 1;       // calculate normalization factor
+    double dataNorm = data / pow(10, power);            // normalize data, so that 1 < data < 10
+    dataNorm = 10;
+    return (dataNorm * pow(10, power));         // unnormalize data
+}
 
 void UpdateParams(void) {
 	bool is_running;
@@ -235,26 +242,28 @@ void UpdateParams(void) {
 
     rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
 
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &in1Offset.Value());
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &in2Offset.Value());
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &inMathOffset.Value());
+    double dvalue;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
+    in1Scale.Value() = dvalue;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &dvalue);
+    in2Scale.Value() = dvalue;
+    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &dvalue);
 
+    if(inMathScale.Value() != dvalue) {
+        double mult = roundUpTo1(dvalue);
+        inMathScaleMult.Value() = mult > 1.f ? mult / 10.f : mult * 10.f;
+    }
+
+    inMathScale.Value() = dvalue;
 	
+	rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
+    in1Offset.Value() = dvalue;
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &dvalue);
+    in2Offset.Value() = dvalue;
+    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &dvalue);
+    inMathOffset.Value() = dvalue;
+
     float value;
-    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &value);
-    in1Scale.Value() = value;
-    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &value);
-    in2Scale.Value() = value;
-    rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &value);
-    inMathScale.Value() = value;
-
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
-    in1Offset.Value() = value;
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
-    in2Offset.Value() = value;
-    rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, &value);
-    inMathOffset.Value() = value;
-
     rpApp_OscGetTimeOffset(&value);
     inTimeOffset.Value() = value;
     rpApp_OscGetTimeScale(&value);
@@ -265,7 +274,8 @@ void UpdateParams(void) {
     inViewStartPos.Value() = start;
     inViewEndPos.Value() = end;
 
-    if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || in1Offset.IsValueChanged() || in1Offset.IsValueChanged()
+    if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || inMathScale.IsValueChanged()
+       || in1Offset.IsValueChanged() || in1Offset.IsValueChanged() || inMathOffset.IsValueChanged()
        || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
     
         CDataManager::GetInstance()->SendAllParams();
@@ -508,15 +518,17 @@ void OnNewParams(void) {
 
     if (inAutoscale.NewValue()) {
         rpApp_OscAutoScale();
+        double dvalue;
+        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
+        in1Scale.Value() = dvalue;
+        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &dvalue);
+        in2Scale.Value() = dvalue;
+        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
+        in1Offset.Value() = dvalue;
+        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &dvalue);
+        in2Offset.Value() = dvalue;
+
         float value;
-        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &value);
-        in1Scale.Value() = value;
-        rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH2, &value);
-        in2Scale.Value() = value;
-        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &value);
-        in1Offset.Value() = value;
-        rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &value);
-        in2Offset.Value() = value;
         rpApp_OscGetTimeOffset(&value);
         inTimeOffset.Value() = value;
         rpApp_OscGetTimeScale(&value);
@@ -527,6 +539,17 @@ void OnNewParams(void) {
         rpApp_osc_trig_sweep_t sweep;
         rpApp_OscGetTriggerSweep(&sweep);
         inTrigSweep.Value() = sweep;
+    }
+
+    if(mathSource1.IsNewValue() || mathSource2.IsNewValue() || mathOperation.IsNewValue()) {
+        inMathScale.Update();
+        inMathScale.Value() = 1.f;
+        inMathScaleMult.Value() = 1.f;
+        rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.Value());
+        
+        inMathOffset.Update();
+        inMathOffset.Value() = 0.f;
+        rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.Value());
     }
 
     IF_VALUE_CHANGED(in1Offset,    rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1,  in1Offset.NewValue()))
