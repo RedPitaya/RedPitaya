@@ -138,19 +138,19 @@ int rpApp_OscGetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain) {
     return osc_getInputGain(channel, gain);
 }
 
-int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, float scale) {
+int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, double scale) {
     return osc_setAmplitudeScale(source, scale);
 }
 
-int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, float *scale) {
+int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, double *scale) {
     return osc_getAmplitudeScale(source, scale);
 }
 
-int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, float offset) {
+int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, double offset) {
     return osc_setAmplitudeOffset(source, offset);
 }
 
-int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, float *offset) {
+int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, double *offset) {
     return osc_getAmplitudeOffset(source, offset);
 }
 
