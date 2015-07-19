@@ -41,6 +41,34 @@ input, #info div, #info span, .selectable {
   user-select: text;
 }
 
+.input-number-box{
+  display: inline-block;
+  position: relative;
+}
+
+.input-number{
+  line-height: 25px;
+  height:25px;
+  padding-right: 25px;
+}
+.input-number-more,
+.input-number-less{
+  position: absolute;
+  right: 8px;
+  border-width: 5px;
+  border-style: solid;
+  cursor: pointer;
+}
+.input-number-more{
+  top: 2px;
+  border-color: transparent transparent gray transparent;
+}
+.input-number-less{
+  bottom: 2px;
+  border-color: gray transparent transparent transparent;
+}
+
+
 #myModal {
   text-align: center;
 }
