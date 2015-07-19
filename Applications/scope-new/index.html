@@ -184,7 +184,7 @@
           <div class="col-xs-12 option-content">
             <span class="col-info">Vertical offset / V</span>
             <div class="right-menu-option">
-              <input id="OSC_CH1_OFFSET" class="setfield" type="text" value="0">
+              <input id="OSC_CH1_OFFSET" class="setfield" type="number" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
@@ -235,7 +235,7 @@
           <div class="col-xs-12 option-content">
             <span class="col-info">Vertical offset / V</span>
             <div class="right-menu-option">
-              <input id="OSC_CH2_OFFSET" class="setfield" type="text" value="0">
+              <input id="OSC_CH2_OFFSET" class="setfield" type="number" value="0">
             </div>
           </div>
           <div class="col-xs-12 option-content">
@@ -299,32 +299,32 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Frequency / Hz</span>
-              <input class="setfield" id="SOUR1_FREQ_FIX" type="text" value="0">
+              <input class="setfield" id="SOUR1_FREQ_FIX" type="number" value="0" min="0" max="50000000" step="1">
             </div>
           </div>
 
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Amplitude / V</span>
-              <input class="setfield limits" id="SOUR1_VOLT" type="text" value="0">
+              <input class="setfield limits" id="SOUR1_VOLT" type="number" value="0" min="0.001" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Offset / V</span>
-              <input class="setfield limits" id="SOUR1_VOLT_OFFS" type="text" value="0">
+              <input class="setfield limits" id="SOUR1_VOLT_OFFS" type="number" value="0"  min="-1" max="1" step="0.001">>
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Phase / deg</span>
-              <input class="setfield limits" id="SOUR1_PHAS" type="text" value="0">
+              <input class="setfield limits" id="SOUR1_PHAS" type="number" value="0" min="0" max="180" step="1">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle / %</span>
-              <input class="setfield limits" id="SOUR1_DCYC" type="text" value="0">
+              <input class="setfield limits" id="SOUR1_DCYC" type="number" value="0" min="0.0" max="100.0" step="0.1">
             </div>
           </div>
         </div>
@@ -376,31 +376,31 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Frequency / Hz</span>
-              <input class="setfield" id="SOUR2_FREQ_FIX" type="text" value="0">
+              <input class="setfield" id="SOUR2_FREQ_FIX" type="number" value="0" min="0" max="50000000" step="1">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Amplitude / V</span>
-              <input class="setfield limits" id="SOUR2_VOLT" type="text" value="0">
+              <input class="setfield limits" id="SOUR2_VOLT" type="number" value="0" min="0.001" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Offset / V</span>
-              <input class="setfield limits" id="SOUR2_VOLT_OFFS" type="text" value="0">
+              <input class="setfield limits" id="SOUR2_VOLT_OFFS" type="number" value="0" min="-1" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Phase / deg</span>
-              <input class="setfield limits" id="SOUR2_PHAS" type="text" value="0">
+              <input class="setfield limits" id="SOUR2_PHAS" type="number" value="0" min="0" max="180" step="1">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle / %</span>
-              <input class="setfield limits" id="SOUR2_DCYC" type="text" value="0">
+              <input class="setfield limits" id="SOUR2_DCYC" type="number" value="0" min="0.0" max="100.0" step="0.1">
             </div>
           </div>
         </div>
@@ -439,7 +439,6 @@
             <div class="right-menu-option">
               <span class="col-info">Operator</span>
               <select class="form-control styled-select" id="OSC_MATH_OP">
-                <option value="0">none</option>
                 <option value="1">+</option>
                 <option value="2">-</option>
                 <option value="3">*</option>
@@ -465,7 +464,7 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Vertical offset / V</span>
-              <input class="setfield" id="OSC_MATH_OFFSET" type="text" value="0">
+              <input class="setfield" id="OSC_MATH_OFFSET" type="number" value="0">
             </div>
           </div>
         </div>
@@ -511,7 +510,7 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Level</span>
-              <input id="OSC_TRIG_LEVEL" class="setfield" type="text" value="0">
+              <input id="OSC_TRIG_LEVEL" class="setfield" type="number" value="0">
             </div>
           </div>
           
@@ -763,5 +762,169 @@ $(".limits").change(function() {
 			$(this).val(min == -1 ? 0 : 1);
     }
 }).change();
+</script>
+
+
+<script language="javascript" type="text/javascript">
+;(function ($) {
+
+    $.fn.iLightInputNumber = function (options) {
+
+        var inBox = '.input-number-box',
+            newInput = '.input-number',
+            moreVal = '.input-number-more',
+            lessVal = '.input-number-less';
+
+        this.each(function () {
+
+            var el = $(this);
+            $('<div class="' + inBox.substr(1) + '"></div>').insertAfter(el);
+            var parent = el.find('+ ' + inBox);
+            parent.append(el);
+            var classes = el.attr('class');
+            parent.append('<input class="' + newInput.substr(1) + '" type="text">');
+            el.hide();
+            var newEl = el.next();
+            newEl.addClass(classes);
+            var attrValue;
+
+            function setInputAttr(attrName) {
+                if (el.attr(attrName)) {
+                    attrValue = el.attr(attrName);
+                    newEl.attr(attrName, attrValue);
+                }
+            }
+
+            setInputAttr('value');
+            setInputAttr('min');
+            setInputAttr('max');
+            setInputAttr('step');
+
+            parent.append('<div class=' + moreVal.substr(1) + '></div>');
+            parent.append('<div class=' + lessVal.substr(1) + '></div>');
+
+        }); //end each
+
+        var value,
+            step;
+
+        var interval = null,
+            timeout = null;
+
+            function ToggleValue(input) {
+                input.val(parseInt(input.val(), 10) + d);
+                console.log(input);
+            }
+
+            $('body').on('mousedown', moreVal, function () {
+                var el = $(this);
+                var input = el.siblings(newInput);
+                moreValFn(input);
+                timeout = setTimeout(function(){
+                    interval = setInterval(function(){ moreValFn(input); }, 50);
+                }, 200);
+
+            });
+
+            $('body').on('mousedown', lessVal, function () {
+                var el = $(this);
+                var input = el.siblings(newInput);
+                lessValFn(input);
+                timeout = setTimeout(function(){
+                    interval = setInterval(function(){ lessValFn(input); }, 50);
+                }, 200);
+            });
+
+            $(moreVal +', '+ lessVal).on("mouseup mouseout", function() {
+                clearTimeout(timeout);
+                clearInterval(interval);
+            });
+
+            function moreValFn(input){
+                var max = input.attr('max');
+                checkInputAttr(input);
+                
+				var newValue = value + step;
+				var parts = step.toString().split('.');
+				var signs = parts.length < 2 ? 0 : parts[1].length;
+				newValue = newValue.toFixed(signs);
+				
+                if (newValue > max) {
+                    newValue = max;
+                }
+                changeInputsVal(input, newValue);
+            }
+
+            function lessValFn(input){
+                var min = input.attr('min');
+                checkInputAttr(input);
+				
+                var newValue = value - step;
+				var parts = step.toString().split('.');
+				var signs = parts.length < 2 ? 0 : parts[1].length;
+				newValue = newValue.toFixed(signs);
+                if (newValue < min) {
+                    newValue = min;
+                }
+                changeInputsVal(input, newValue);
+            }
+
+            function changeInputsVal(input, newValue){
+                input.val(newValue);
+                var inputNumber = input.siblings(this);
+                inputNumber.val(newValue);
+            }
+
+            function checkInputAttr(input) {
+               /* if (input.attr('value')) {
+                    value = parseFloat(input.attr('value'));
+                }*/
+
+                value = parseFloat(input.val());
+				
+				
+                if (!( $.isNumeric(value) )) {
+                    value = 0;
+                }
+                if (input.attr('step')) {
+                    step = parseFloat(input.attr('step'));
+                } else {
+                    step = 1;
+                }
+            }
+
+            $(newInput).change(function () {
+				
+                var input = $(this);
+                var value = parseFloat(input.val());
+                var min = input.attr('min');
+                var max = input.attr('max');
+                if (value < min) {
+                    value = min;
+                } else if (value > max) {
+                    value = max;
+                }
+                if (!( $.isNumeric(value) )) {
+                    value = 0;
+                }
+                input.val(value);
+                input.siblings(this).val(value);
+            });
+
+            $(newInput).keydown(function(e){
+                var input = $(this);
+                var k = e.keyCode;
+                if( k == 38 ){
+                    moreValFn(input);
+                }else if( k == 40){
+                    lessValFn(input);
+                }
+            });
+    };
+})(jQuery);
+
+$('input[type=number]').iLightInputNumber({
+    mobile: false
+});
 </script>
 </html>
