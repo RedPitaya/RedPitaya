@@ -650,10 +650,9 @@
 		if(value >= 5)
 		{
 			radios.closest('.btn-group').children('.btn').addClass('disabled');
-			radios.closest('.btn-group').children('.btn.active').removeClass('active');	
 		}
 		else{
-			radios.closest('.btn-group').children('.btn').removeClass('disabled');		
+			radios.closest('.btn-group').children('.btn').removeClass('disabled');	
 		}
 	}
 	
