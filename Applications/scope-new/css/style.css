@@ -331,6 +331,10 @@ area:hover {
   opacity: 0.3;
 }
 
+.menu-btn.state-on {
+  opacity: 1.0;
+}
+
 .menu-btn img{
   height: 20px;
   width: 20px;
