@@ -16,45 +16,57 @@
 # responsible to build those in a coordinated way and to package them within
 # the target redpitaya-OS ZIP archive.
 #
-# TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
+# TODO #1: Make up a new name for OS dir, as OS is building one level higher now. 
 
 TMP = tmp
 
-UBOOT_TAG = xilinx-v2015.1
-LINUX_TAG = xilinx-v2015.1
-DTREE_TAG = xilinx-v2015.1
+# check if download cache directory is available
+ifdef BR2_DL_DIR
+DL=$(BR2_DL_DIR)
+else
+DL=$(TMP)
+endif
+
+UBOOT_TAG     = xilinx-v2015.2
+LINUX_TAG     = xilinx-v2015.2.01
+DTREE_TAG     = xilinx-v2015.2.01
 BUILDROOT_TAG = 2015.5
 
-UBOOT_DIR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
-LINUX_DIR = $(TMP)/linux-xlnx-$(LINUX_TAG)
-DTREE_DIR = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
+UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
+LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
+DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
 BUILDROOT_DIR = $(TMP)/buildroot-$(BUILDROOT_TAG)
 
-UBOOT_TAR = $(TMP)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
-LINUX_TAR = $(TMP)/linux-xlnx-$(LINUX_TAG).tar.gz
-DTREE_TAR = $(TMP)/device-tree-xlnx-$(DTREE_TAG).tar.gz
-BUILDROOT_TAR = $(TMP)/buildroot-$(BUILDROOT_TAG).tar.gz
+UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
+LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
+DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
+BUILDROOT_TAR = $(DL)/buildroot-$(BUILDROOT_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
-UBOOT_URL ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
-LINUX_URL ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
-DTREE_URL ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
+UBOOT_URL     ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+LINUX_URL     ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
 BUILDROOT_URL ?= http://buildroot.uclibc.org/downloads/buildroot-$(BUILDROOT_TAG).tar.gz
 
-UBOOT_GIT ?= https://github.com/Xilinx/u-boot-xlnx.git
-LINUX_GIT ?= https://github.com/Xilinx/linux-xlnx.git
-DTREE_GIT ?= https://github.com/Xilinx/device-tree-xlnx.git
+UBOOT_GIT     ?= https://github.com/Xilinx/u-boot-xlnx.git
+LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
+DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
 BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
-LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
-UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp"
-ARMHF_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
+SYSROOT=$(PWD)/OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabi/sysroot
+LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
+UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
+else
+SYSROOT=$(PWD)/OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabihf/sysroot
+LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+endif
 
 ################################################################################
 #
 ################################################################################
 
-# TODO, using Linux kernel 3.18 (Xilinx version 2015.1), it should be possible to use overlayfs
 INSTALL_DIR=build
 TARGET=target
 NAME=ecosystem
@@ -129,10 +141,22 @@ APPS_FREE_DIR    = apps-free/
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
 export VERSION
+
+define GREET_MSG
+##############################################################################
+# Red Pitaya GNU/Linux Ecosystem
+# Version: $(VER)
+# Branch: $(GIT_BRANCH_LOCAL)
+# Build: $(BUILD_NUMBER)
+# Commit: $(GIT_COMMIT)
+##############################################################################
+endef
+export GREET_MSG
 
 ################################################################################
 # tarball
@@ -143,8 +167,8 @@ all: zip
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) \
-	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(CALIBRATE) $(DISCOVERY) $(ECOSYSTEM) \
+$(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
 	mkdir -p               $(TARGET)
 	cp $(BOOT)             $(TARGET)
@@ -158,10 +182,10 @@ $(TARGET): $(NGINX) $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $
 	#
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
-	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" > $(TARGET)/version.txt
+	@echo "$$GREET_MSG" > $(TARGET)/version.txt
 
 zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VER)-$(BUILD_TAG)-$(GIT_COMMIT).zip *
+	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(BRANCH_NAME).zip *
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
@@ -178,8 +202,7 @@ $(MEMTEST): $(FPGA)
 # U-Boot build provides: $(UBOOT)
 ################################################################################
 
-$(UBOOT_TAR):
-	mkdir -p $(@D)
+$(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
@@ -206,8 +229,7 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 # Linux build provides: $(LINUX)
 ################################################################################
 
-$(LINUX_TAR):
-	mkdir -p $(@D)
+$(LINUX_TAR): | $(DL)
 	curl -L $(LINUX_URL) -o $@
 
 $(LINUX_DIR): $(LINUX_TAR)
@@ -227,8 +249,7 @@ $(LINUX): $(LINUX_DIR)
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
-$(DTREE_TAR):
-	mkdir -p $(@D)
+$(DTREE_TAR): | $(DL)
 	curl -L $(DTREE_URL) -o $@
 
 $(DTREE_DIR): $(DTREE_TAR)
@@ -292,11 +313,11 @@ LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zi
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 
-WEBSOCKETPP_TAR = $(TMP)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
-CRYPTOPP_TAR    = $(TMP)/cryptopp562.zip
-LIBJSON_TAR     = $(TMP)/libjson_7.6.1.zip
-LUANGINX_TAR    = $(TMP)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
-NGINX_TAR       = $(TMP)/nginx-$(NGINX_TAG).tar.gz
+WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
+CRYPTOPP_TAR    = $(DL)/cryptopp562.zip
+LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
+LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
+NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 CRYPTOPP_DIR    = Bazaar/tools/cryptopp
@@ -305,16 +326,14 @@ LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
-$(WEBSOCKETPP_TAR):
-	mkdir -p $(@D)
+$(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
-$(CRYPTOPP_TAR):
-	mkdir -p $(@D)
+$(CRYPTOPP_TAR): | $(DL)
 	curl -L $(CRYPTOPP_URL) -o $@
 
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
@@ -322,8 +341,7 @@ $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	unzip $< -d $@
 	patch -d $@ -p1 < patches/cryptopp.patch
 
-$(LIBJSON_TAR):
-	mkdir -p $(@D)
+$(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
@@ -331,8 +349,7 @@ $(LIBJSON_DIR): $(LIBJSON_TAR)
 	unzip $< -d $(@D)
 	patch -d $@ -p1 < patches/libjson.patch
 
-$(LUANGINX_TAR):
-	mkdir -p $(@D)
+$(LUANGINX_TAR): | $(DL)
 	curl -L $(LUANGINX_URL) -o $@
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
@@ -340,8 +357,7 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
-$(NGINX_TAR):
-	mkdir -p $(@D)
+$(NGINX_TAR): | $(DL)
 	curl -L $(NGINX_URL) -o $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
@@ -353,10 +369,10 @@ $(BOOST_DIR): $(URAMDISK)
 	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
 
 $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
-	$(MAKE) -C $(NGINX_DIR)
+	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
-$(IDGEN):
+$(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	

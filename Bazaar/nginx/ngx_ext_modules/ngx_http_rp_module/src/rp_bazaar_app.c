@@ -123,31 +123,20 @@ inline int is_readable(const char *dir,
                        const char *app_id,
                        const char *fname)
 {
-    char *file = NULL;
-    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     
-    file = (char *)malloc(file_len);
-    if(file == NULL) {
-        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
-        return 0;
-    }
-
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
     if(stat((const char *)file, &stat_buf) < 0) {
         /* File does not exist */
-        free(file);
         return 0;
     }
     if(!(stat_buf.st_mode & S_IRUSR)) {
         /* Permissions wrong */
         fprintf(stderr, "%s exists but is not readable.\n", file);
-        free(file);
         return 0;
     }
-    
-    free(file);
     
     return 1;
 }
@@ -161,23 +150,17 @@ inline int is_readable(const char *dir,
  */
 int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool)
 {
-    char *file = NULL;
     char *data = NULL;
     cJSON *json = NULL;
     FILE *fp = NULL;
     size_t len, read;
     int ret = 1;
+    struct stat st;
 
     /* Read description JSON file */
     const char *fname = "info/info.json";
-    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
 
-    file = (char *)malloc(file_len);
-    if(file == NULL) {
-        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
-        ret = 0;
-        goto out;
-    }
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
 
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
     
@@ -188,9 +171,8 @@ int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool
         goto out;
     }
 
-    fseek(fp, 0, SEEK_END);
-    len = ftell(fp);
-    fseek(fp, 0 ,SEEK_SET);
+    stat(file, &st);
+    len = st.st_size;
 
     data = (char *)malloc(len+1);
     if(data == NULL) {
@@ -225,7 +207,6 @@ int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool
      * If not, the caller is responsible to delete it.
      */
     if (data)  free(data);
-    if (file)  free(file);
     if (fp)    fclose(fp);
     
     return ret;
@@ -240,29 +221,21 @@ inline int is_registered(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
-    char *file = NULL;
-    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
+    int status;
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
     
-    file = (char *)malloc(file_len);
-    if(file == NULL) {
-        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
-        return 0;
-    }
-
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
     if(stat((const char *)file, &stat_buf) < 0) {
         /* File does not exist */
         fprintf(stderr, "%s does not exist.\n", file);
-        free(file);
         return 0;
     }
     if((stat_buf.st_mode & perms) != perms) {
         /* Permissions wrong */
         fprintf(stderr, "%s exists but has wrong permissions.\n", file);
-        free(file);
         return 0;
     }
     
@@ -273,10 +246,10 @@ inline int is_registered(const char *dir,
      * controller is OK.
      */
 
-    if(rp_bazaar_app_load_module(file, &app) < 0) {
-        fprintf(stderr, "Problem loading app: %s\n", dlerror());
+    status = rp_bazaar_app_load_module(file, &app);
+    if(status < 0) {
+        fprintf(stderr, "Problem loading app (return %d): %s\n", status, dlerror());
         rp_bazaar_app_unload_module(&app);
-        free(file);
         return 0;
     }
 
@@ -285,8 +258,6 @@ inline int is_registered(const char *dir,
         is_reg = !app.verify_app_license_func(app_id); // 1 - is registered
 
     rp_bazaar_app_unload_module(&app);
-
-    free(file);
 
     if(is_reg)    
         fprintf(stderr, "App '%s' is registered\n", app_id);
@@ -300,29 +271,21 @@ inline int is_controller_ok(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
-    char *file = NULL;
-    int file_len = strlen(dir) + strlen(app_id) + strlen(fname) + 3;
+    int status;
+    char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
-
-    file = (char *)malloc(file_len);
-    if(file == NULL) {
-        fprintf(stderr, "Can not allocate memory: %s", strerror(errno));
-        return 0;
-    }
 
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
     if(stat((const char *)file, &stat_buf) < 0) {
         /* File does not exist */
         fprintf(stderr, "%s does not exist.\n", file);
-        free(file);
         return 0;
     }
     if((stat_buf.st_mode & perms) != perms) {
         /* Permissions wrong */
         fprintf(stderr, "%s exists but has wrong permissions.\n", file);
-        free(file);
         return 0;
     }
 
@@ -333,17 +296,15 @@ inline int is_controller_ok(const char *dir,
      * controller is OK.
      */
 
-    if(rp_bazaar_app_load_module(file, &app) < 0) {
-        fprintf(stderr, "Problem loading app: %s\n", dlerror());
+    status = rp_bazaar_app_load_module(file, &app);
+    if(status < 0) {
+        fprintf(stderr, "Problem loading app (return %d): %s\n", status, dlerror());
         rp_bazaar_app_unload_module(&app);
-        free(file);
         return 0;
     }
 
     rp_bazaar_app_unload_module(&app);
 	
-    free(file);
-
     return 1;
 }
 
@@ -372,7 +333,14 @@ int get_fpga_path(const char *app_id,
 
     /* Get fpga.conf file size */
     stat(fpga_conf, &st);
+
     fpga_size = st.st_size;
+    /* fpga.conf is empty, therefore we are dealing with a new app
+     * that doesn't need a specific fpga.bit file. */
+    if(fpga_size == 0){
+        return FPGA_NOT_REQ;
+    }
+
     *fpga_file = malloc(fpga_size * sizeof(char));
 
     /* Read fpga.conf file into memory */
@@ -402,7 +370,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         /* check if structure is correct, we need: 
          *  <app_id>/info/info.json
          *  <app_id>/info/icon.png
-         *  <app_id>/controller.so
+         *  <app_id>/controllerhf.so
          *  <app_id>/fpga.bit
          * And we must be able to load the application and test mandatory
          * functions.
@@ -412,7 +380,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
         if (!is_readable(dir, app_id, "fpga.conf"))
             continue;
-        if (!is_controller_ok(dir, app_id, "controller.so"))
+        if (!is_controller_ok(dir, app_id, "controllerhf.so"))
             continue;
         if (!get_info(&info, dir, app_id, pool))
             continue;
@@ -420,7 +388,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             continue;
 
         /* We have an application */
-        int demo = !is_registered(dir, app_id, "controller.so");
+        int demo = !is_registered(dir, app_id, "controllerhf.so");
 		
         if (verbose) {
             /* Attach whole info JSON */
@@ -461,30 +429,31 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     dlerror(); /* clear error */
     app->init_func = dlsym(app->handle, c_rp_app_init_str);
     if(!app->init_func)
-        return -1;
+        return -2;
 
     dlerror(); /* clear error */
     app->exit_func = dlsym(app->handle, c_rp_app_exit_str);
     if(!app->exit_func)
-        return -1;
+        return -3;
 
     dlerror(); /* clear error */
     app->desc_func = dlsym(app->handle, c_rp_app_desc_str);
     if(!app->desc_func)
-        return -1;
+        return -4;
 
     app->set_params_func  = dlsym(app->handle, c_rp_set_params_str);
     if(!app->set_params_func)
-        return -1;
+        return -5;
 
     app->get_params_func = dlsym(app->handle, c_rp_get_params_str);
     if(!app->get_params_func)
-        return -1;
+        return -6;
 
     app->get_signals_func = dlsym(app->handle, c_rp_get_signals_str);
     if(!app->get_signals_func)
-        return -1;
-    //start web socket functionality
+        return -7;
+
+    // start web socket functionality
     app->ws_api_supported = 1;
     app->ws_set_params_interval_func = dlsym(app->handle, c_ws_set_params_interval_str);
     if(!app->ws_set_params_interval_func)
@@ -556,11 +525,11 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
     }
 
-    //end web socket functionality
+    // end web socket functionality
 
     app->file_name = (char *)malloc(strlen(app_file)+1);
     if(app->file_name == NULL)
-        return -1;
+        return -8;
     
     strncpy(app->file_name, app_file, strlen(app_file));
     app->file_name[strlen(app_file)] = '\0';
@@ -589,47 +558,48 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
-int rp_bazaar_app_load_fpga(const char *fpga_file)
+fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file)
 {
     int fo, fi;
-    int ret_val = 0, fpga_size;
+    int fpga_size;
     struct stat st;
 
-    fo = open("/dev/xdevcfg", O_WRONLY);
-    if(fo < 0) {
-        fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open xdevcfg: %s\n",
-                strerror(errno));
-        return -1;
-    }    
 
     /* Get FPGA size */
     stat(fpga_file, &st);
     fpga_size = st.st_size;
     char fi_buff[fpga_size];
+
+    fo = open("/dev/xdevcfg", O_WRONLY);
+    if(fo < 0) {
+        fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open xdevcfg: %s\n",
+                strerror(errno));
+        return FPGA_READ_ERR;
+    }  
     
     fi = open(fpga_file, O_RDONLY);
     if(fi < 0) {
         fprintf(stderr, "rp_bazaar_app_load_fpga() failed to open FPGA file: %s\n",
                 strerror(errno));
-        return -1;
+        return FPGA_FIND_ERR;
     }
 
     /* Read FPGA file into fi_buff */
     if(read(fi, &fi_buff, fpga_size) < 0){
         fprintf(stderr, "Unable to read FPGA file: %s\n",
             strerror(errno));
-        return -2;
+        return FPGA_READ_ERR;
     }
 
     /* Write fi_buff into fo */
     if(write(fo, &fi_buff, fpga_size) < 0){
         fprintf(stderr, "Unable to write to /dev/xdevcfg: %s\n", 
             strerror(errno));
-        return -3;
+        return FPGA_WRITE_ERR;
     }
 
     close(fo);
     close(fi);
 
-    return ret_val;
+    return FPGA_OK;
 }
