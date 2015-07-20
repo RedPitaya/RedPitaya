@@ -41,30 +41,35 @@ input, #info div, #info span, .selectable {
   user-select: text;
 }
 
+input {
+    -webkit-user-modify: read-write-plaintext-only;
+    -webkit-tap-highlight-color: transparent;
+}
+
 .input-number-box{
   display: inline-block;
   position: relative;
 }
 
 .input-number{
-  line-height: 25px;
-  height:25px;
+  line-height: 35px;
+  height:35px;
   padding-right: 25px;
 }
 .input-number-more,
 .input-number-less{
   position: absolute;
   right: 8px;
-  border-width: 5px;
+  border-width: 7px;
   border-style: solid;
   cursor: pointer;
 }
 .input-number-more{
-  top: 2px;
+  top: 0px;
   border-color: transparent transparent gray transparent;
 }
 .input-number-less{
-  bottom: 2px;
+  bottom: 0px;
   border-color: gray transparent transparent transparent;
 }
 
@@ -432,6 +437,13 @@ area:hover {
 .btn:hover, btn:active {
   color: #fff !important;
   background-image: none;
+}
+
+
+.math-radio-btn:disabled, .math-radio-btn.disabled{
+	background-image: none;
+	background-color: transparent;
+	color: #cdcccc !important;
 }
 
 #meas_list {
