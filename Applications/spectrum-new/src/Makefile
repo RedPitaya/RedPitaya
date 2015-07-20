@@ -17,10 +17,9 @@ JPEG_INC=-I$(JPEG_DIR)
 
 INCLUDE+=$(JPEG_INC)
 
-#CFLAGS=$(CFLAGS) -Wall -Werror -g
 COMMON_FLAGS+=-Wall -g -fPIC
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -fPIC
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
 LDFLAGS+=-L$(RP_SDK) -lrp_sdk
@@ -32,7 +31,7 @@ CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 OBJECTS=$(COBJECTS) $(CXXOBJECTS)
 
 OUT_DIR=../
-C_OUT_NAME=$(OUT_DIR)controller.so
+C_OUT_NAME=$(OUT_DIR)controllerhf.so
 
 all: make_c_app
 clean: clean_c_app clean_ext
@@ -41,7 +40,7 @@ $(JPEG_LIB):
 	$(MAKE) -C $(JPEG_DIR)
 
 make_c_app: $(JPEG_LIB) $(OBJECTS)
-	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
+	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
