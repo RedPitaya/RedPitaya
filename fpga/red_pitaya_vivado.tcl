@@ -38,6 +38,7 @@ create_project -in_memory -part $part
 # create PS BD (processing system block design)
 ################################################################################
 
+# file was created from GUI using "write_bd_tcl -force ip/system_bd.tcl"
 # create PS BD
 source                            $path_ip/system_bd.tcl
 
