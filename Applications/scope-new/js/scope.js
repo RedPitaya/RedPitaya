@@ -461,9 +461,14 @@
 			{
 				var value = new_params[param_name].value === true ? 1 : 0;
 				if(value == 1)
+				{
 					$('#'+param_name+'_ON').show();
-				else
+					$('#'+param_name+'_ON').closest('.menu-btn').addClass('state-on');
+				}
+				else{
 					$('#'+param_name+'_ON').hide();
+					$('#'+param_name+'_ON').closest('.menu-btn').removeClass('state-on');
+				}
 			}	
           }
           else if(field.is('input:radio')) {
@@ -646,10 +651,9 @@
 		if(value >= 5)
 		{
 			radios.closest('.btn-group').children('.btn').addClass('disabled');
-			radios.closest('.btn-group').children('.btn.active').removeClass('active');	
 		}
 		else{
-			radios.closest('.btn-group').children('.btn').removeClass('disabled');		
+			radios.closest('.btn-group').children('.btn').removeClass('disabled');	
 		}
 	}
 	
