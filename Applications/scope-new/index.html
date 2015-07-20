@@ -451,11 +451,11 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <div class="btn-group btn-group-justified" data-toggle="buttons">
-                <label class="btn">
+                <label class="btn math-radio-btn">
                   <span class="col-info-activ">Signal2</span>
                   <input type="radio" value="0" name="OSC_MATH_SRC2" id="OSC_MATH_SRC2" autocomplete="off">IN1
                 </label>
-                <label class="btn">
+                <label class="btn math-radio-btn">
                   <input type="radio" value="1" name="OSC_MATH_SRC2" id="OSC_MATH_SRC22" autocomplete="off">IN2
                 </label>
               </div>
@@ -841,13 +841,13 @@ $(".limits").change(function() {
             });
 
             function moreValFn(input){
-                var max = input.attr('max');
+                var max = parseFloat(input.attr('max'));
                 checkInputAttr(input);
                 
 				var newValue = value + step;
 				var parts = step.toString().split('.');
 				var signs = parts.length < 2 ? 0 : parts[1].length;
-				newValue = newValue.toFixed(signs);
+				newValue = parseFloat(newValue.toFixed(signs));
 				
                 if (newValue > max) {
                     newValue = max;
@@ -856,13 +856,14 @@ $(".limits").change(function() {
             }
 
             function lessValFn(input){
-                var min = input.attr('min');
+
+                var min = parseFloat(input.attr('min'));
                 checkInputAttr(input);
 				
                 var newValue = value - step;
 				var parts = step.toString().split('.');
 				var signs = parts.length < 2 ? 0 : parts[1].length;
-				newValue = newValue.toFixed(signs);
+				newValue = parseFloat(newValue.toFixed(signs));
                 if (newValue < min) {
                     newValue = min;
                 }
