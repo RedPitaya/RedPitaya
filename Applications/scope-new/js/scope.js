@@ -206,11 +206,12 @@
       }
       // All other parameters
       else {
-		if (param_name == 'is_demo' && !new_params['is_demo'].value) {
+		if (param_name == 'is_demo' && new_params['is_demo'].value) {
 			OSC.state.calib = 0;
-			OSC.setCalibState(OSC.state.calib);
-			$('#calib-2').removeAttr('disabled');
-			$('#calib-3').removeAttr('disabled');
+			OSC.setCalibState(OSC.state.calib);		
+			$('#calib-2').children().attr('disabled', 'true');
+			$('#calib-3').children().attr('disabled', 'true');
+			$('#calib-text').html('Calibration is not available in demo mode');
 		}
 		  
         if (param_name == 'OSC_TRIG_INFO') {
@@ -1762,8 +1763,8 @@ $(function() {
 						'Calibration of outputs is done. For finishing press DONE',
 						'Something went wrong, try again!'];
 						
-	OSC.calib_buttons = [['CLOSE', 	'DEFAULT',	'CONTINUE'], 
-						 ['CLOSE', 	null, 		'CALIBRARTE'],
+	OSC.calib_buttons = [['CANCEL', 'DEFAULT',	'CONTINUE'], 
+						 ['CANCEL', null, 		'CALIBRARTE'],
 						 [null,		'DONE', 	'CONTINUE'],
 						 ['CANCEL', 'input', 	'CALIBRARTE'],
 						 ['CANCEL', 'DONE', 	'CONTINUE'],
@@ -1781,16 +1782,16 @@ $(function() {
 			if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] != 'input') { // button
 				console.log(1);
 				$(this).children().html(OSC.calib_buttons[state][i]);
-				$(this).css('visibility', 'visible');
+				$(this).show();//css('visibility', 'visible');
 			}
 			else if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] == 'input') { // input
 				console.log(2);
 				$('#calib-input').show();
-				$(this).css('visibility', 'hidden');
+				$(this).hide();//css('visibility', 'hidden');
 				with_input = true;
 			} else if (OSC.calib_buttons[state][i] == null) { // null
 				console.log(3);
-				$(this).css('visibility', 'hidden');
+				$(this).hide();//css('visibility', 'hidden');
 			}
 			++i;
 		});
@@ -1806,11 +1807,21 @@ $(function() {
 	}
 
 	$('#calib-1').click(function() {
+		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
+			return;
+			
 		OSC.state.calib = 0;
 		OSC.setCalibState(OSC.state.calib);
+		
+		var local = {};
+		local['CALIB_CANCEL'] = {value: 1};
+		OSC.ws.send(JSON.stringify({ parameters: local }));
 	});  
 	  
 	$('#calib-2').click(function() {
+		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
+			return;
+			
 		if (OSC.state.calib != 0) {
 			$('#myModal').modal('hide');
 			return;
@@ -1827,6 +1838,9 @@ $(function() {
 	});
 
 	$('#calib-3').click(function() {
+		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
+			return;
+					
 		if (OSC.calib_params[OSC.state.calib]) {
 			var local = {};
 			local[OSC.calib_params[OSC.state.calib]] = {value: 1};

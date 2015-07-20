@@ -183,6 +183,10 @@ int rp_CalibrateBackEnd(rp_channel_t channel) {
 int rp_CalibrationReset() {
     return calib_Reset();
 }
+
+int rp_CalibrationSetCachedParams() {
+	return calib_setCachedParams();
+}
 /**
  * Identification
  */
