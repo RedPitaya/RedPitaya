@@ -18,8 +18,16 @@ REVISION ?= devbuild
 
 all: $(UIMAGE)
 
-$(UIMAGE): $(B_DIR) overlay config
-	cp config $(B_DIR)/.config
+ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
+$(B_DIR)/.config: config.armel
+	cp $< $@
+else
+TOOLCHAIN_PATH=/opt/linaro/gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf
+$(B_DIR)/.config: config.armhf
+	cp $< $@
+endif
+
+$(UIMAGE): $(B_DIR) overlay $(B_DIR)/.config
 	$(MAKE) -C $(B_DIR) USER_HOOKS_EXTRA_ENV='VERSION=$(VERSION) REVISION=$(REVISION)'
 
 $(B_DIR):
