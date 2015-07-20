@@ -25,7 +25,7 @@ static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
 
 // Cached parameter values.
-static rp_calib_params_t calib;
+static rp_calib_params_t calib, failsafa_params;
 
 int calib_Init()
 {
@@ -63,7 +63,7 @@ rp_calib_params_t calib_GetParams()
 int calib_ReadParams(rp_calib_params_t *calib_params)
 {
     FILE   *fp;
-    size_t  size;
+    size_t  size;    
 
     /* sanity check */
     if(calib_params == NULL) {
@@ -167,7 +167,8 @@ uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
 int calib_SetFrontEndOffset(rp_channel_t channel) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
-
+	failsafa_params = params;
+	
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
             params.fe_ch1_dc_offs = 0,
@@ -187,7 +188,8 @@ int calib_SetFrontEndOffset(rp_channel_t channel) {
 int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
-
+	failsafa_params = params;
+	
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
             params.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20),
@@ -211,6 +213,8 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
 int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
+    failsafa_params = params;
+    
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
             params.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1),
@@ -235,6 +239,7 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
 
+	failsafa_params = params;
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
             params.be_ch1_dc_offs = 0,
@@ -261,7 +266,8 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
 int calib_SetBackEndScale(rp_channel_t channel) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
-
+	failsafa_params = params;
+	
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
             params.be_ch1_fs = cmn_CalibFullScaleFromVoltage(1),
@@ -428,4 +434,12 @@ int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* mi
     *min = _min;
     *max = _max;
     return RP_OK;
+}
+
+int calib_setCachedParams() {
+	fprintf(stderr, "write FAILSAFE PARAMS\n");
+    ECHECK(calib_WriteParams(failsafa_params));
+    calib = failsafa_params;
+    
+    return 0;
 }
