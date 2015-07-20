@@ -152,6 +152,7 @@ CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, 
 CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, 0, 0, -1, 1);
 CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, 0, 0, -1, 1);
 CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.f);
+CIntParameter calibrateCancel("CALIB_CANCEL", CBaseParameter::RW, 0, 0, 0, 1);
 
 
 
@@ -591,19 +592,29 @@ void OnNewParams(void) {
     out2ShowOffset.Update();
 
 /* ------ HANDLE CALIBRATE ------*/
+	static bool is_default_calib_params = true;
+	
+	if (calibrateCancel.IsNewValue() && !is_default_calib_params) {
+		calibrateCancel.Update();
+		rp_CalibrationSetCachedParams();
+	}
+	
 	if (calibrateReset.NewValue() == 1) {
 		fprintf(stderr, "calibrateReset 1\n");
 		if (rp_CalibrationReset()) {
 			fprintf(stderr, "calibrateReset 2\n");
 			calibrateReset.Value() = -1;
 		}
+		is_default_calib_params = true;
 	}
+	
     if (calibrateFrontEndOffset.NewValue() == 1) {
 		fprintf(stderr, "calibrateFrontEndOffset 1\n");
         if (rp_CalibrateFrontEndOffset(RP_CH_1) && rp_CalibrateFrontEndOffset(RP_CH_2)) {
 			fprintf(stderr, "calibrateFrontEndOffset 2\n");
             calibrateFrontEndOffset.Value() = -1;
         }
+        is_default_calib_params = false;
     }
     if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
 		fprintf(stderr, "calibrateFrontEndScaleLV 1 VALUE = %f\n", calibrateValue.NewValue());
