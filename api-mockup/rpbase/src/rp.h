@@ -403,6 +403,8 @@ int rp_CalibrateBackEnd(rp_channel_t channel);
 
 int rp_CalibrationReset();
 
+int rp_CalibrationSetCachedParams();
+
 ///@}
 
 
