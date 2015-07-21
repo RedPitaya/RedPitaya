@@ -212,6 +212,8 @@
 			$('#calib-2').children().attr('disabled', 'true');
 			$('#calib-3').children().attr('disabled', 'true');
 			$('#calib-text').html('Calibration is not available in demo mode');
+		} else if (param_name == 'is_demo' && !new_params['is_demo'].value) {
+			$('#calib-text').html('Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.');
 		}
 		  
         if (param_name == 'OSC_TRIG_INFO') {
@@ -312,7 +314,7 @@
           }
         }
         else if(param_name == 'OSC_MATH_OFFSET') {
-          if(new_params['MATH_SHOW_ENABLE'].value) {
+          if(new_params['MATH_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#math_offset_arrow').is(':visible') 
@@ -555,7 +557,7 @@
       }
       
       // Ignore math signal if no operator defined
-      if(sig_name == 'math' && (!OSC.params.orig['MATH_SHOW_ENABLE'] || OSC.params.orig['MATH_SHOW_ENABLE'].value == false)) {
+      if(sig_name == 'math' && (!OSC.params.orig['MATH_SHOW'] || OSC.params.orig['MATH_SHOW'].value == false)) {
         continue;
       }
       
@@ -613,7 +615,7 @@
       
       // By default first signal is selected
       if(! OSC.state.sel_sig_name && !$('#right_menu .not-signal').hasClass('active')) {
-        OSC.state.sel_sig_name = sig_name;
+        //OSC.state.sel_sig_name = sig_name;
         $('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
       }
     }
@@ -634,7 +636,7 @@
     // Check if selected signal is still visible 
     if(OSC.state.sel_sig_name && OSC.graphs[OSC.state.sel_sig_name] && !OSC.graphs[OSC.state.sel_sig_name].elem.is(':visible')) {
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
-      OSC.state.sel_sig_name = null;
+      //OSC.state.sel_sig_name = null;
     }
     
     //console.log('Duration: ' + (+new Date() - start));
@@ -1082,9 +1084,9 @@
       if($('#in1_dialog').is(':visible')) {
         $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
       }
-      else if(save) {
+      //else if(save) {
         OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
-      }
+      //}
     }
     else if(ui.helper[0].id == 'ch2_offset_arrow') {
       var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
@@ -1095,9 +1097,9 @@
       if($('#in2_dialog').is(':visible')) {
         $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
       }
-      else if(save) {
+      //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
-      }
+      //}
     }
     else if(ui.helper[0].id == 'output1_offset_arrow') {
       var volt_per_px =  10 / graph_height;
@@ -1126,9 +1128,9 @@
       if($('#math_dialog').is(':visible')) {
         $('#OSC_MATH_OFFSET').val(+(new_value.toFixed(2)));
       }
-      else if(save) {
+      //else if(save) {
         OSC.params.local['OSC_MATH_OFFSET'] = { value: new_value };
-      }
+      //}
     }
     
     if(new_value !== undefined && save) {
@@ -1780,18 +1782,15 @@ $(function() {
 		var with_input = false;
 		$('.calib-button').each(function() {
 			if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] != 'input') { // button
-				console.log(1);
 				$(this).children().html(OSC.calib_buttons[state][i]);
-				$(this).show();//css('visibility', 'visible');
+				$(this).show();
 			}
 			else if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] == 'input') { // input
-				console.log(2);
 				$('#calib-input').show();
-				$(this).hide();//css('visibility', 'hidden');
+				$(this).hide();
 				with_input = true;
 			} else if (OSC.calib_buttons[state][i] == null) { // null
-				console.log(3);
-				$(this).hide();//css('visibility', 'hidden');
+				$(this).hide();
 			}
 			++i;
 		});
@@ -1804,10 +1803,15 @@ $(function() {
 		// text
 		if (OSC.calib_texts[state])
 			$('#calib-text').html(OSC.calib_texts[state]);
+			
+		if (state > 3)
+			$('#calib-input').attr('max', '20');
+		else 
+			$('#calib-input').attr('max', '1');
 	}
 
 	$('#calib-1').click(function() {
-		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
+		if ((OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value) || OSC.state.calib == 0)
 			return;
 			
 		OSC.state.calib = 0;
@@ -1816,18 +1820,14 @@ $(function() {
 		var local = {};
 		local['CALIB_CANCEL'] = {value: 1};
 		OSC.ws.send(JSON.stringify({ parameters: local }));
+		location.reload();		
 	});  
 	  
 	$('#calib-2').click(function() {
 		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
 			return;
-			
-		if (OSC.state.calib != 0) {
-			$('#myModal').modal('hide');
-			return;
-		}
 		
-		if (OSC.calib_params[OSC.state.calib]) {
+		if (OSC.state.calib == 0 && OSC.calib_params[OSC.state.calib]) {
 			var local = {};
 			local[OSC.calib_params[OSC.state.calib]] = {value: 1};
 			OSC.ws.send(JSON.stringify({ parameters: local }));	
@@ -1835,6 +1835,9 @@ $(function() {
 				
 		OSC.state.calib = 0;
 		OSC.setCalibState(OSC.state.calib);
+		
+		$('#myModal').modal('hide');
+		location.reload();
 	});
 
 	$('#calib-3').click(function() {
