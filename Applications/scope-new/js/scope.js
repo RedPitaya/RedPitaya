@@ -212,6 +212,8 @@
 			$('#calib-2').children().attr('disabled', 'true');
 			$('#calib-3').children().attr('disabled', 'true');
 			$('#calib-text').html('Calibration is not available in demo mode');
+		} else if (param_name == 'is_demo' && !new_params['is_demo'].value) {
+			$('#calib-text').html('Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.');
 		}
 		  
         if (param_name == 'OSC_TRIG_INFO') {
@@ -1780,18 +1782,15 @@ $(function() {
 		var with_input = false;
 		$('.calib-button').each(function() {
 			if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] != 'input') { // button
-				console.log(1);
 				$(this).children().html(OSC.calib_buttons[state][i]);
-				$(this).show();//css('visibility', 'visible');
+				$(this).show();
 			}
 			else if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] == 'input') { // input
-				console.log(2);
 				$('#calib-input').show();
-				$(this).hide();//css('visibility', 'hidden');
+				$(this).hide();
 				with_input = true;
 			} else if (OSC.calib_buttons[state][i] == null) { // null
-				console.log(3);
-				$(this).hide();//css('visibility', 'hidden');
+				$(this).hide();
 			}
 			++i;
 		});
@@ -1804,10 +1803,15 @@ $(function() {
 		// text
 		if (OSC.calib_texts[state])
 			$('#calib-text').html(OSC.calib_texts[state]);
+			
+		if (state > 3)
+			$('#calib-input').attr('max', '20');
+		else 
+			$('#calib-input').attr('max', '1');
 	}
 
 	$('#calib-1').click(function() {
-		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
+		if ((OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value) || OSC.state.calib == 0)
 			return;
 			
 		OSC.state.calib = 0;
@@ -1816,18 +1820,14 @@ $(function() {
 		var local = {};
 		local['CALIB_CANCEL'] = {value: 1};
 		OSC.ws.send(JSON.stringify({ parameters: local }));
+		location.reload();		
 	});  
 	  
 	$('#calib-2').click(function() {
 		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value)
 			return;
-			
-		if (OSC.state.calib != 0) {
-			$('#myModal').modal('hide');
-			return;
-		}
 		
-		if (OSC.calib_params[OSC.state.calib]) {
+		if (OSC.state.calib == 0 && OSC.calib_params[OSC.state.calib]) {
 			var local = {};
 			local[OSC.calib_params[OSC.state.calib]] = {value: 1};
 			OSC.ws.send(JSON.stringify({ parameters: local }));	
@@ -1835,6 +1835,9 @@ $(function() {
 				
 		OSC.state.calib = 0;
 		OSC.setCalibState(OSC.state.calib);
+		
+		$('#myModal').modal('hide');
+		location.reload();
 	});
 
 	$('#calib-3').click(function() {
