@@ -1105,7 +1105,7 @@ int waitToFillAfterTriggerBuffer(bool testcancel) {
 */
 
 static inline void scaleMath() {
-    if (mathChanged) {
+    if (mathChanged && !autoScale) {
         mathChanged = false;
         float vpp, vMean;
         ECHECK_APP_THREAD(osc_measureVpp(RPAPP_OSC_SOUR_MATH, &vpp));
