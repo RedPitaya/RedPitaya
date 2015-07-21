@@ -494,14 +494,18 @@ area:hover {
   position: relative;
   left: 0px;
   width: 97%;
+  
+  min-height: 60px;
+  max-height: 60px;  
 }
 
 .waterfall-holder img {
   display: block;
   width: 101%;
   height: auto;
-  min-height: 100px;
-  max-height: 100px;
+  min-height: 60px;
+  max-height: 60px;
+  margin-top: -40px;
 }
 
 .waterfall-holder span {
@@ -509,7 +513,7 @@ area:hover {
   position:absolute;
   top:30px;   
   left:0px;
-     
+     margin-top: -40px;
     /* Оформление текста */
   color:#FFF;
   font-family:Arial, Helvetica, sans-serif;
@@ -519,18 +523,20 @@ area:hover {
   padding:10px 30px;
   width: 100%;
   text-align: center;
+  max-height: 60px;
 }
 
 .wait{
   position:relative;
-  margin-top: -100px;
+  margin-top: -60px;
+  max-height: 60px;
 }
 
 .wait img{
   display: block;
   width: 101%;
   height: auto;
-  max-height: 100px;
+  max-height: 60px;
 }
 
 .wait span {
@@ -548,10 +554,12 @@ area:hover {
   padding:10px 30px;
   width: 100%;
   text-align: center;
+  max-height: 60px;
 }
 
 .waterfall_title {
   left: 0;
+  margin-top: -40px;
   position: absolute;
   top: 50%;
   transform: rotate(-90deg);
@@ -564,6 +572,7 @@ area:hover {
   -ms-transform-origin: 0 30px 0;
   -moz-transform-origin: 0 30px 0;
   -webkit-transform-origin: 0 30px 0;
+   max-height: 60px;
 }
 
 .pull-right {
