@@ -314,7 +314,7 @@
           }
         }
         else if(param_name == 'OSC_MATH_OFFSET') {
-          if(new_params['MATH_SHOW_ENABLE'].value) {
+          if(new_params['MATH_SHOW'].value) {
             
             // Change arrow position only if arrow is hidden or old/new values are not the same
             if(!$('#math_offset_arrow').is(':visible') 
@@ -557,7 +557,7 @@
       }
       
       // Ignore math signal if no operator defined
-      if(sig_name == 'math' && (!OSC.params.orig['MATH_SHOW_ENABLE'] || OSC.params.orig['MATH_SHOW_ENABLE'].value == false)) {
+      if(sig_name == 'math' && (!OSC.params.orig['MATH_SHOW'] || OSC.params.orig['MATH_SHOW'].value == false)) {
         continue;
       }
       
