@@ -83,6 +83,15 @@ static inline void update_view() {
     }
 }
 
+static inline int scaleChannel(rp_channel_t channel, float vpp, float vMean) {
+    float scale1 = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+    float scale2 = (float) ((fabs(vpp) + fabs(vMean)) * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+    float scale = MAX(MAX(scale1, scale2), 0.002);
+    ECHECK_APP(osc_setAmplitudeScale(channel, roundUpTo125(scale)));
+    ECHECK_APP(osc_setAmplitudeOffset(channel, -vMean));
+    return RP_OK;
+}
+
 void checkAutoscale(bool fromThread);
 
 int osc_Init() {
@@ -195,13 +204,10 @@ int osc_autoScale() {
                     ECHECK_APP(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
                     ECHECK_APP(osc_setTimeScale(period * AUTO_SCALE_PERIOD_COUNT / DIVISIONS_COUNT_X));
                     isAutoScaled = true;
-                }            
-                // Calculate scale
-                float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-                ECHECK_APP(osc_setAmplitudeScale(source, roundUpTo125(scale)));
-                ECHECK_APP(osc_setAmplitudeOffset(source, -vMean));
+                }
             }
         }
+        ECHECK_APP(scaleChannel(source, vpp, vMean));
     }
 
     if (trigSweep != RPAPP_OSC_TRIG_AUTO) {
@@ -1105,7 +1111,7 @@ int waitToFillAfterTriggerBuffer(bool testcancel) {
 */
 
 static inline void scaleMath() {
-    if (mathChanged) {
+    if (mathChanged && !autoScale) {
         mathChanged = false;
         float vpp, vMean;
         ECHECK_APP_THREAD(osc_measureVpp(RPAPP_OSC_SOUR_MATH, &vpp));
@@ -1224,13 +1230,8 @@ void checkAutoscale(bool fromThread) {
                 if(repCounts[source] > 0) {
                     vpp = vpps[source][periodsIdx[source]];
                     vMean = vMeans[source][periodsIdx[source]];
-
-                    if (fabs(vpp) > SIGNAL_EXISTENCE) {
-                        ECHECK_APP_THREAD(osc_setAmplitudeOffset(source, -vMean));
-                        float scale = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (source == RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-                        ECHECK_APP_THREAD(osc_setAmplitudeScale(source, roundUpTo125(scale)));
-                    }
-                 }
+                    ECHECK_APP_THREAD(scaleChannel(source, vpp, vMean));
+                }
             }
         } else {
             savedTimeScale = scales[timeScaleIdx];
