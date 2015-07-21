@@ -603,6 +603,8 @@ int acq_GetTriggerHyst(float *voltage)
     ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, &v1));
     ECHECK(acq_GetChannelThresholdHyst(RP_CH_2, &v2));
 
+    *voltage = v1;
+
     if (fabs(v1 - v2) > FLOAT_EPS) {
         return RP_EOOR;
     }
