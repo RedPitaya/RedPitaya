@@ -443,6 +443,13 @@ area:hover {
   cursor: pointer;
 }
 
+.calib-button {
+  position: absolute;
+  height: auto;
+  margin-top: 40px;
+  border: 2px solid gray;
+}
+
 #graphs {
   margin-top: 20px;
   position: relative;
