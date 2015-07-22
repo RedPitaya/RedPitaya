@@ -699,6 +699,22 @@
 			sig_name = 'IN1';
 		else if ($elem.data('signal')[2] == '2')
 			sig_name = 'IN2';
+			
+		// V/s or Vs unit for dy/dt and ydt
+		if (sig_name == 'MATH') {
+			if ($('#OSC_MATH_OP').find(":selected").text() == 'dy/dt') {
+				units['VPP'] = 'V/s';
+				units['VMAX'] = 'V/s';
+				units['VMIN'] = 'V/s';
+				units['RMS'] = 'V/s';
+			} else if ($('#OSC_MATH_OP').find(":selected").text() == 'ydt') {
+				units['VPP'] = 'Vs';
+				units['VMAX'] = 'Vs';
+				units['VMIN'] = 'Vs';
+				units['RMS'] = 'Vs';
+			}
+		}
+		
         $('#info-meas').append(
           '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
         );
