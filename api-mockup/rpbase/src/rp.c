@@ -185,7 +185,11 @@ int rp_CalibrationReset() {
 }
 
 int rp_CalibrationSetCachedParams() {
-	return calib_setCachedParams();
+    return calib_setCachedParams();
+}
+
+int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
+    return calib_WriteParams(calib_params);
 }
 /**
  * Identification
