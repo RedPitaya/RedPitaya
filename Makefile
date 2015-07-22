@@ -98,8 +98,8 @@ DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
 LINUX           = $(TMP)/uImage
-BOOT            = $(TMP)/boot.bin
-TESTBOOT        = $(TMP)/testboot.bin
+BOOT_UBOOT      = $(TMP)/boot.bin.uboot
+BOOT_MEMTEST    = $(TMP)/boot.bin.memtest
 
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
@@ -167,12 +167,15 @@ all: zip
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT) $(TESTBOOT) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
+$(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
 	mkdir -p               $(TARGET)
-	cp $(BOOT)             $(TARGET)
-	cp $(TESTBOOT)         $(TARGET)
+	# copy boot images and select FSBL as default
+	cp $(BOOT_UBOOT)       $(TARGET)
+	cp $(BOOT_MEMTEST)     $(TARGET)
+	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
+	# copy device tree and Linux kernel
 	cp $(DEVICETREE)       $(TARGET)
 	cp $(LINUX)            $(TARGET)
 	# copy FPGA bitstream images and decompress them
@@ -268,13 +271,13 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) $(FPGA) $(DTS)
 # boot file generator
 ################################################################################
 
-$(BOOT): $(FSBL) $(FPGA) $(UBOOT)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot.bif
-	bootgen -image boot.bif -w -o i $@
+$(BOOT_UBOOT): $(FSBL) $(FPGA) $(UBOOT)
+	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+	bootgen -image boot_uboot.bif -w -o $@
 
-$(TESTBOOT): $(MEMTEST) $(FPGA) $(UBOOT)
-	@echo img:{[bootloader] $(MEMTEST) $(FPGA) } > testboot.bif
-	bootgen -image testboot.bif -w -o i $@
+$(BOOT_MEMTEST): $(MEMTEST) $(FPGA)
+	@echo img:{[bootloader] $(FSBL) $(FPGA) $(MEMTEST) } > boot_memtest.bif
+	bootgen -image boot_memtest.bif -w -o $@
 
 ################################################################################
 # root file system
