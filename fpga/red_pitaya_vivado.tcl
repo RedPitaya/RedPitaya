@@ -63,7 +63,6 @@ read_verilog                      $path_rtl/axi_slave.v
 read_verilog                      $path_rtl/axi_wr_fifo.v
 
 read_verilog                      $path_rtl/red_pitaya_ams.v
-read_verilog                      $path_rtl/red_pitaya_analog.v
 read_verilog                      $path_rtl/red_pitaya_asg_ch.v
 read_verilog                      $path_rtl/red_pitaya_asg.v
 read_verilog                      $path_rtl/red_pitaya_daisy_rx.v
