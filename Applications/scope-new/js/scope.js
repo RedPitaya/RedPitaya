@@ -1223,6 +1223,7 @@
 // Page onload event handler
 $(function() {
 	$('#calib-input').hide();
+	$('#calib-input-text').hide();
 	
     $('button').bind('activeChanged', function(){
         OSC.exitEditing(true);
@@ -1787,6 +1788,7 @@ $(function() {
 			}
 			else if (OSC.calib_buttons[state][i] && OSC.calib_buttons[state][i] == 'input') { // input
 				$('#calib-input').show();
+				$('#calib-input-text').show();
 				$(this).hide();
 				with_input = true;
 			} else if (OSC.calib_buttons[state][i] == null) { // null
@@ -1798,6 +1800,7 @@ $(function() {
 		
 		if (!with_input) {
 			$('#calib-input').hide();
+			$('#calib-input-text').hide();
 		}
 		
 		// text

@@ -607,46 +607,41 @@ void OnNewParams(void) {
 		calibrateCancel.Update();
 		rp_CalibrationSetCachedParams();
 	}
-	
 	if (calibrateReset.NewValue() == 1) {
-		fprintf(stderr, "calibrateReset 1\n");
-		if (rp_CalibrationReset()) {
-			fprintf(stderr, "calibrateReset 2\n");
+		if (rp_CalibrationReset())
 			calibrateReset.Value() = -1;
-		}
 		is_default_calib_params = true;
-	}
-	
-    if (calibrateFrontEndOffset.NewValue() == 1) {
-		fprintf(stderr, "calibrateFrontEndOffset 1\n");
-        if (rp_CalibrateFrontEndOffset(RP_CH_1) && rp_CalibrateFrontEndOffset(RP_CH_2)) {
-			fprintf(stderr, "calibrateFrontEndOffset 2\n");
+	}	
+    if (calibrateFrontEndOffset.NewValue() == 1) {		
+        if (rp_CalibrateFrontEndOffset(RP_CH_1))
+			calibrateFrontEndOffset.Value() = -1;
+        if (rp_CalibrateFrontEndOffset(RP_CH_2))
             calibrateFrontEndOffset.Value() = -1;
-        }
         is_default_calib_params = false;
     }
-    if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
-		fprintf(stderr, "calibrateFrontEndScaleLV 1 VALUE = %f\n", calibrateValue.NewValue());
-        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue()) && rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue())) {
-			fprintf(stderr, "calibrateFrontEndScaleLV 2\n");
-            calibrateFrontEndScaleLV.Value() = -1;
-        }
+    if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {		
+        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue()))
+			calibrateFrontEndScaleLV.Value() = -1;			
+        if (rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue()))
+            calibrateFrontEndScaleLV.Value() = -1;            
         calibrateValue.Update();
     }    
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
-		fprintf(stderr, "calibrateFrontEndScaleHV 1 VALUE = %f\n", calibrateValue.NewValue());
-        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue()) && rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue())) {
-			fprintf(stderr, "calibrateFrontEndScaleHV 2\n");
+        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue()))
+			calibrateFrontEndScaleHV.Value() = -1;
+        if (rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue()))
             calibrateFrontEndScaleHV.Value() = -1;
-        }
         calibrateValue.Update();
     }
     if (calibrateBackEnd.NewValue() == 1) {
-		fprintf(stderr, "calibrateBackEnd 1\n");
-        if (rp_CalibrateBackEndOffset(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2) && rp_CalibrateBackEndScale(RP_CH_1) && rp_CalibrateBackEndOffset(RP_CH_2)) {
-			fprintf(stderr, "calibrateBackEnd 2\n");
-            calibrateBackEnd.Value() = -1;
-        }
+        if (rp_CalibrateBackEndOffset(RP_CH_1))
+			calibrateBackEnd.Value() = -1;
+        if (rp_CalibrateBackEndOffset(RP_CH_2))
+			calibrateBackEnd.Value() = -1;
+        if (rp_CalibrateBackEndScale(RP_CH_1))
+			calibrateBackEnd.Value() = -1;
+        if (rp_CalibrateBackEndOffset(RP_CH_2))			
+            calibrateBackEnd.Value() = -1;        
     }
 
 /* ------ UPDATE DEBUG PARAMETERS ------*/
