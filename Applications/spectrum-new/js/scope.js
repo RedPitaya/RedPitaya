@@ -43,7 +43,7 @@
   SPEC.config.xmin = 0;
   SPEC.config.xmax = 63;
   SPEC.config.unit = 2;
-	
+  SPEC.config.gen_enable = undefined;
   SPEC.time_steps = [
     // Hz
     1/10, 2/10, 5/10, 1, 2, 5, 10, 20, 50, 100, 200, 500
@@ -199,7 +199,26 @@
       }
       // All other parameters
       else {
-
+		if (param_name == 'is_demo') {
+			if (SPEC.config.gen_enable == undefined)
+				SPEC.config.gen_enable = new_params['is_demo'].value;
+				
+			if (new_params['is_demo'].value)
+				$('#demo-info').show();
+			else
+				$('#demo-info').hide();
+		}
+		
+		if (param_name == 'xmax' && new_params['xmax'].value > 5)
+		{			
+			if (SPEC.config.gen_enable === true && SPEC.params.orig['freq_unit'] && SPEC.params.orig['freq_unit'].value == 2) {
+				$('#xmax').val(5);
+				new_params['xmax'].value = 5;
+				SPEC.params.local['xmax'] = { value: 5 };
+				SPEC.sendParams();
+			}			
+		}
+		
 		//if(param_name == 'peak1_unit')	
 		{
 			// 0 - Hz, 1 - kHz, 2 - MHz
@@ -464,8 +483,6 @@ $('#waterfall-holder_ch2').hide();
 	  $('.pull-right').show();
 		// Reset resize flag
 	  SPEC.state.resized = false;
-		
-	  //console.log('Duration: ' + (+new Date() - start));
 	}
   };
 
@@ -502,8 +519,7 @@ $('#waterfall-holder_ch2').hide();
 	else
         $('#waterfall-holder_ch1').hide();
 
-      if(value !== undefined && value != SPEC.params.orig[key].value) {
-        console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
+      if(value !== undefined && value != SPEC.params.orig[key].value) {        
         SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
       }
 	if (key == 'xmin')
@@ -512,8 +528,6 @@ $('#waterfall-holder_ch2').hide();
 		SPEC.config.xmax = value;
 	if (key == 'freq_unit')
 		SPEC.config.unit = value;
-
-	console.log(SPEC.config.xmin, SPEC.config.xmax, SPEC.config.unit);
     }
 
 	if (SPEC.config.xmin >= SPEC.config.xmax) {
@@ -1135,6 +1149,20 @@ $(function() {
     SPEC.params.local['SPEC_AUTOSCALE'] = { value: true };
     SPEC.sendParams();
   });
+  
+  $('#demo_toggle').on('click', function() {
+	SPEC.config.gen_enable = !SPEC.config.gen_enable;
+	if (SPEC.config.gen_enable) {
+		$('#demo_toggle').children().html('Disable Demo signals');
+		$('#demo_img').show();
+	} else {
+		$('#demo_toggle').children().html('Enable Demo signals');
+		$('#demo_img').hide();
+	}
+		
+    SPEC.params.local['SPEC_GEN_ENABLE'] = { value: SPEC.config.gen_enable };
+    SPEC.sendParams();
+  });   
 
   // Opening a dialog for changing parameters
   $('.edit-mode').on('click', function() {
