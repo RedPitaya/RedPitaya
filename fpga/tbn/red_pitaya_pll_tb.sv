@@ -1,6 +1,4 @@
 /**
- * $Id: red_pitaya_analog_tb.v 961 2014-01-21 11:40:39Z matej.oblak $
- *
  * @brief Red Pitaya analog module testbench.
  *
  * @Author Matej Oblak
