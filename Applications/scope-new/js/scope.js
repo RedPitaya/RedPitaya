@@ -615,7 +615,7 @@
       
       // By default first signal is selected
       if(! OSC.state.sel_sig_name && !$('#right_menu .not-signal').hasClass('active')) {
-        OSC.state.sel_sig_name = sig_name;
+        //OSC.state.sel_sig_name = sig_name;
         $('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
       }
     }
@@ -636,7 +636,7 @@
     // Check if selected signal is still visible 
     if(OSC.state.sel_sig_name && OSC.graphs[OSC.state.sel_sig_name] && !OSC.graphs[OSC.state.sel_sig_name].elem.is(':visible')) {
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
-      OSC.state.sel_sig_name = null;
+      //OSC.state.sel_sig_name = null;
     }
     
     //console.log('Duration: ' + (+new Date() - start));
@@ -1084,9 +1084,9 @@
       if($('#in1_dialog').is(':visible')) {
         $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
       }
-      else if(save) {
+      //else if(save) {
         OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
-      }
+      //}
     }
     else if(ui.helper[0].id == 'ch2_offset_arrow') {
       var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
@@ -1097,9 +1097,9 @@
       if($('#in2_dialog').is(':visible')) {
         $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
       }
-      else if(save) {
+      //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
-      }
+      //}
     }
     else if(ui.helper[0].id == 'output1_offset_arrow') {
       var volt_per_px =  10 / graph_height;
@@ -1128,9 +1128,9 @@
       if($('#math_dialog').is(':visible')) {
         $('#OSC_MATH_OFFSET').val(+(new_value.toFixed(2)));
       }
-      else if(save) {
+      //else if(save) {
         OSC.params.local['OSC_MATH_OFFSET'] = { value: new_value };
-      }
+      //}
     }
     
     if(new_value !== undefined && save) {
