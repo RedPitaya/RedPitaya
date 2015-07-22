@@ -22,7 +22,7 @@
 #define DIVISIONS_COUNT_X             10
 #define DIVISIONS_COUNT_Y             10
 
-#define SIGNAL_EXISTENCE              0.03    // V
+#define SIGNAL_EXISTENCE              0.01    // V
 #define AUTO_SCALE_PERIOD_COUNT       2
 #define AUTO_SCALE_AMP_SCA_FACTOR     1.05
 #define AUTO_SCALE_TIME_OFFSET        0
