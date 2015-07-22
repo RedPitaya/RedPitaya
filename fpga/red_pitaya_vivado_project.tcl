@@ -45,7 +45,6 @@ add_files                         $path_rtl/axi_slave.v
 add_files                         $path_rtl/axi_wr_fifo.v
 
 add_files                         $path_rtl/red_pitaya_ams.v
-add_files                         $path_rtl/red_pitaya_analog.v
 add_files                         $path_rtl/red_pitaya_asg_ch.v
 add_files                         $path_rtl/red_pitaya_asg.v
 add_files                         $path_rtl/red_pitaya_daisy_rx.v
