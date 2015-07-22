@@ -155,7 +155,8 @@ CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.
 CIntParameter calibrateCancel("CALIB_CANCEL", CBaseParameter::RW, 0, 0, 0, 1);
 
 
-
+static const float DEF_MIN_SCALE = 1.f/1000.f;
+static const float DEF_MAX_SCALE = 5.f;
 
 const char *rp_app_desc(void) {
     return (const char *)"Red Pitaya osciloscope application.\n";
@@ -194,6 +195,34 @@ double roundUpTo1(double data) {
     double dataNorm = data / pow(10, power);            // normalize data, so that 1 < data < 10
     dataNorm = 10;
     return (dataNorm * pow(10, power));         // unnormalize data
+}
+
+void resetMathParams() {
+    inMathScale.Update();
+    inMathScale.Value() = 1.f;
+    inMathScaleMult.Value() = 1.f;
+    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.Value());
+        
+    inMathOffset.Update();
+    inMathOffset.Value() = 0.f;
+    rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.Value());
+}
+
+void checkMathScale() {
+    if(inMathScale.IsNewValue()) {
+        float min_amp = DEF_MIN_SCALE * 10.f * inMathScaleMult.Value();
+        float max_amp = DEF_MAX_SCALE * 10.f * inMathScaleMult.Value();
+        float vpp;
+        rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
+
+        if((min_amp >= vpp) || (max_amp <= vpp)) {
+            rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.Value());
+            resetMathParams();
+        } else {
+            rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.NewValue());
+            inMathScale.Update();
+        }
+    }
 }
 
 void UpdateParams(void) {
@@ -283,7 +312,7 @@ void UpdateParams(void) {
     
         CDataManager::GetInstance()->SendAllParams();
         updateOutCh1 = true;
-        updateOutCh1 = true;
+        updateOutCh2 = true;
     }
 }
 
@@ -556,14 +585,7 @@ void OnNewParams(void) {
     }
 
     if(mathSource1.IsNewValue() || mathSource2.IsNewValue() || mathOperation.IsNewValue()) {
-        inMathScale.Update();
-        inMathScale.Value() = 1.f;
-        inMathScaleMult.Value() = 1.f;
-        rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.Value());
-        
-        inMathOffset.Update();
-        inMathOffset.Value() = 0.f;
-        rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.Value());
+        resetMathParams();
     }
 
     IF_VALUE_CHANGED(in1Offset,    rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_CH1,  in1Offset.NewValue()))
@@ -571,7 +593,9 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(inMathOffset, rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.NewValue()))
     IF_VALUE_CHANGED(in1Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH1,  in1Scale.NewValue()))
     IF_VALUE_CHANGED(in2Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH2,  in2Scale.NewValue()))
-    IF_VALUE_CHANGED(inMathScale, rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.NewValue()))
+
+    checkMathScale();
+
     IF_VALUE_CHANGED(in1Probe, rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.NewValue()))
     IF_VALUE_CHANGED(in2Probe, rpApp_OscSetProbeAtt(RP_CH_2, in2Probe.NewValue()))
     IF_VALUE_CHANGED(in1Gain, rpApp_OscSetInputGain(RP_CH_1, (rpApp_osc_in_gain_t)in1Gain.NewValue()))
