@@ -566,16 +566,22 @@
       var color = OSC.config.graph_colors[sig_name];
       
 
-      if ((sig_name == 'output1') || (sig_name == 'output2') || !OSC.graphs[sig_name]) {
+      if(OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
+          if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0) || !OSC.graphs[sig_name]) {
+              for(var i=0; i<new_signals[sig_name].size; i++) {
+                  points.push([i, new_signals[sig_name].value[i]]);
+              }
+          } else {
+              for(var i=OSC.params.orig['OSC_VIEW_START_POS'].value; i<OSC.params.orig['OSC_VIEW_END_POS'].value; i++) {
+                points.push([i, new_signals[sig_name].value[i]]);
+              }
+          }
+      } else {
           for(var i=0; i<new_signals[sig_name].size; i++) {
               points.push([i, new_signals[sig_name].value[i]]);
           }
-      } else {
-          for(var i=OSC.params.orig['OSC_VIEW_START_POS'].value; i<OSC.params.orig['OSC_VIEW_END_POS'].value; i++) {
-            points.push([i, new_signals[sig_name].value[i]]);
-          }
       }
-      
+
       if(OSC.graphs[sig_name]) {
         OSC.graphs[sig_name].elem.show();
         
