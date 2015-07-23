@@ -174,6 +174,9 @@ red_pitaya_ps i_ps (
 
   .fclk_clk_o    (fclk        ),
   .fclk_rstn_o   (frstn       ),
+  // ADC analog inputs
+  .vinp_i        (vinp_i      ),  // voltages p
+  .vinn_i        (vinn_i      ),  // voltages n
    // system read/write channel
   .sys_clk_o     (ps_sys_clk  ),  // system clock
   .sys_rstn_o    (ps_sys_rstn ),  // system reset - active low
@@ -499,9 +502,6 @@ red_pitaya_ams i_ams (
    // power test
   .clk_i           (  adc_clk                    ),  // clock
   .rstn_i          (  adc_rstn                   ),  // reset - active low
-  // ADC analog inputs
-  .vinp_i          (  vinp_i                     ),  // voltages p
-  .vinn_i          (  vinn_i                     ),  // voltages n
   // PWM configuration
   .dac_a_o         (  pwm_cfg_a                  ),
   .dac_b_o         (  pwm_cfg_b                  ),
