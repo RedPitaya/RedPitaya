@@ -1782,11 +1782,11 @@ $(function() {
 	OSC.calib_texts =  	['Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.',
 						'To calibrate inputs DC offset, <b>shortcut</b> IN1 and IN2 and press CALIBRATE.',
 						'DC offset calibration is done. For finishing DC offset calibration press DONE. To continue with gains calibration press CONTINUE.',
-						'To calibrate inputs low gains set the jumpers to LV settings and correct IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage on LV ' + 'jumper settings is <b>1 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
+						'To calibrate inputs low gains set the jumpers to LV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage on LV ' + 'jumper settings is <b>1 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
 						'LOW gains calibration is done. To finish press DONE to continue with high gain calibration press CONTINUE.',
-						'To calibrate inputs low gains set the jumpers to HV settings and correct IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage ' +
+						'To calibrate inputs high gains set the jumpers to HV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage ' +
 						'on LV jumper settings is <b>20 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
-						'High gains calibration is done. To finish press DONE, to continue with outputs calibration connect OUT1 to IN1 OUT2 to IN2 and press CONTINUE.',
+						'High gains calibration is done. To finish press DONE, to continue with outputs calibration connect OUT1 to IN1 OUT2 to IN2 and set the jumpers to LV settings and press CONTINUE.',
 						'Calibration of outputs is done. For finishing press DONE',
 						'Something went wrong, try again!'];
 						
