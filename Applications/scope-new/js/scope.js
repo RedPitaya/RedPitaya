@@ -566,16 +566,22 @@
       var color = OSC.config.graph_colors[sig_name];
       
 
-      if ((sig_name == 'output1') || (sig_name == 'output2') || !OSC.graphs[sig_name]) {
+      if(OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
+          if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0) || !OSC.graphs[sig_name]) {
+              for(var i=0; i<new_signals[sig_name].size; i++) {
+                  points.push([i, new_signals[sig_name].value[i]]);
+              }
+          } else {
+              for(var i=OSC.params.orig['OSC_VIEW_START_POS'].value; i<OSC.params.orig['OSC_VIEW_END_POS'].value; i++) {
+                points.push([i, new_signals[sig_name].value[i]]);
+              }
+          }
+      } else {
           for(var i=0; i<new_signals[sig_name].size; i++) {
               points.push([i, new_signals[sig_name].value[i]]);
           }
-      } else {
-          for(var i=OSC.params.orig['OSC_VIEW_START_POS'].value; i<OSC.params.orig['OSC_VIEW_END_POS'].value; i++) {
-            points.push([i, new_signals[sig_name].value[i]]);
-          }
       }
-      
+
       if(OSC.graphs[sig_name]) {
         OSC.graphs[sig_name].elem.show();
         
@@ -704,15 +710,23 @@
 		if (sig_name == 'MATH') {
 			if ($('#OSC_MATH_OP').find(":selected").text() == 'dy/dt') {
 				units['VPP'] = 'V/s';
+				units['VMEAN'] = 'V/s';
 				units['VMAX'] = 'V/s';
 				units['VMIN'] = 'V/s';
 				units['RMS'] = 'V/s';
 			} else if ($('#OSC_MATH_OP').find(":selected").text() == 'ydt') {
 				units['VPP'] = 'Vs';
+				units['VMEAN'] = 'Vs';
 				units['VMAX'] = 'Vs';
 				units['VMIN'] = 'Vs';
 				units['RMS'] = 'Vs';
-			}
+			} else if ($('#OSC_MATH_OP').find(":selected").text() == '*') {
+				units['VPP'] = 'V^2';
+				units['VMEAN'] = 'V^2';
+				units['VMAX'] = 'V^2';
+				units['VMIN'] = 'V^2';
+				units['RMS'] = 'V^2';
+			}			
 		}
 		
         $('#info-meas').append(
@@ -1774,11 +1788,11 @@ $(function() {
 	OSC.calib_texts =  	['Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.',
 						'To calibrate inputs DC offset, <b>shortcut</b> IN1 and IN2 and press CALIBRATE.',
 						'DC offset calibration is done. For finishing DC offset calibration press DONE. To continue with gains calibration press CONTINUE.',
-						'To calibrate inputs low gains set the jumpers to LV settings and correct IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage on LV ' + 'jumper settings is <b>1 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
+						'To calibrate inputs low gains set the jumpers to LV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage on LV ' + 'jumper settings is <b>1 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
 						'LOW gains calibration is done. To finish press DONE to continue with high gain calibration press CONTINUE.',
-						'To calibrate inputs low gains set the jumpers to HV settings and correct IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage ' +
+						'To calibrate inputs high gains set the jumpers to HV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage ' +
 						'on LV jumper settings is <b>20 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
-						'High gains calibration is done. To finish press DONE, to continue with outputs calibration connect OUT1 to IN1 OUT2 to IN2 and press CONTINUE.',
+						'High gains calibration is done. To finish press DONE, to continue with outputs calibration connect OUT1 to IN1 OUT2 to IN2 and set the jumpers to LV settings and press CONTINUE.',
 						'Calibration of outputs is done. For finishing press DONE',
 						'Something went wrong, try again!'];
 						
