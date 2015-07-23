@@ -704,15 +704,23 @@
 		if (sig_name == 'MATH') {
 			if ($('#OSC_MATH_OP').find(":selected").text() == 'dy/dt') {
 				units['VPP'] = 'V/s';
+				units['VMEAN'] = 'V/s';
 				units['VMAX'] = 'V/s';
 				units['VMIN'] = 'V/s';
 				units['RMS'] = 'V/s';
 			} else if ($('#OSC_MATH_OP').find(":selected").text() == 'ydt') {
 				units['VPP'] = 'Vs';
+				units['VMEAN'] = 'Vs';
 				units['VMAX'] = 'Vs';
 				units['VMIN'] = 'Vs';
 				units['RMS'] = 'Vs';
-			}
+			} else if ($('#OSC_MATH_OP').find(":selected").text() == '*') {
+				units['VPP'] = 'V^2';
+				units['VMEAN'] = 'V^2';
+				units['VMAX'] = 'V^2';
+				units['VMIN'] = 'V^2';
+				units['RMS'] = 'V^2';
+			}			
 		}
 		
         $('#info-meas').append(
