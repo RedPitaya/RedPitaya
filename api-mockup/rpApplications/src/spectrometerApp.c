@@ -332,10 +332,6 @@ int rp_spectr_get_signals_channel(float** signals, size_t size)
 int rp_spectr_get_params(rp_spectr_worker_res_t *result)
 {
     pthread_mutex_lock(&rp_spectr_sig_mutex);
-    if(rp_spectr_signals_dirty == 0) {
-        pthread_mutex_unlock(&rp_spectr_sig_mutex);
-        return -1;
-    }
 
     result->jpg_idx          = rp_spectr_result.jpg_idx;
     result->peak_pw_cha      = rp_spectr_result.peak_pw_cha;

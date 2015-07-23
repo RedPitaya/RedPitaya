@@ -20,7 +20,7 @@ typedef struct rp_app_params_s {
 } rp_app_params_t;
 
 
-enum { CH_SIGNAL_SIZE = 1024, INTERVAL = 100 };
+enum { CH_SIGNAL_SIZE = 1024, INTERVAL = 200 };
 enum { FREQ_CHANNEL = -1 };
 
 enum { GEN_BUFFER_LENGTH =  (16 * 1024)};
