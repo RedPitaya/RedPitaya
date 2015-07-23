@@ -219,18 +219,14 @@
 			}			
 		}
 		
-		//if(param_name == 'peak1_unit')	
-		{
-			// 0 - Hz, 1 - kHz, 2 - MHz
-
-			var freq_unit1 = 'Hz';
-			var unit = new_params['peak1_unit'];
-			if (unit)
-				freq_unit1 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
-			if (new_params['peak1_power'] && new_params['peak1_freq'] && !$('#CH1_FREEZE').hasClass('active'))
-				$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);		
-		}
-		/*else*/ if (param_name == 'peak2_unit')
+		var freq_unit1 = 'Hz';
+		var unit = new_params['peak1_unit'];
+		if (unit)
+			freq_unit1 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
+		if (new_params['peak1_power'] && new_params['peak1_freq'] && !$('#CH1_FREEZE').hasClass('active'))
+			$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);
+			
+		if (param_name == 'peak2_unit')
 		{
 			// 0 - Hz, 1 - kHz, 2 - MHz
 			var freq_unit2 = 'Hz';
@@ -240,16 +236,17 @@
 			if (new_params['peak2_power'] && new_params['peak2_freq'] && !$('#CH2_FREEZE').hasClass('active'))
 				$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
 		}
-		/*else*/ if(param_name == 'w_idx')
+		if(param_name == 'w_idx')
 		{
 			// Update waterfall images
 			var img_num = new_params['w_idx'].value;
 			if(img_num <= 999) { 
 			  img_num = ('00' + img_num).slice(-3); 
 			}
-			
-		    $('#waterfall_ch1').attr('src', SPEC.config.waterf_img_path + 'wat1_' + img_num + '.jpg');
-		    $('#waterfall_ch2').attr('src', SPEC.config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
+			if (SPEC.params.orig['CH1_SHOW'] && SPEC.params.orig['CH1_SHOW'].value)
+				$('#waterfall_ch1').attr('src', SPEC.config.waterf_img_path + 'wat1_' + img_num + '.jpg');
+			if (SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value)
+				$('#waterfall_ch2').attr('src', SPEC.config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
 		// Y cursors
         else if(param_name == 'SPEC_CURSOR_Y1' || param_name == 'SPEC_CURSOR_Y2') {
@@ -317,8 +314,7 @@
 		var field = $('#' + param_name);
 		
         // Do not change fields from dialogs when user is editing something        
-        if((!SPEC.state.editing || field.closest('.menu-content').length == 0) 
-	&& (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
+        if( (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
           if(field.is('select') || field.is('input:text')) {
             field.val(new_params[param_name].value);
 
@@ -492,7 +488,7 @@ $('#waterfall-holder_ch2').hide();
 	if(!($('#CH1_SHOW').hasClass('active') || $('#CH2_SHOW').hasClass('active'))){
 		if(SPEC.params.orig['CH1_SHOW'].value == true)
 			$('#CH2_SHOW').addClass('active');
-		else if(SPEC.params.orig['CH2_SHOW'].value == true)
+		if(SPEC.params.orig['CH2_SHOW'].value == true)
 			$('#CH1_SHOW').addClass('active');
 	}
 	var t_min = SPEC.config.xmin;
@@ -1117,7 +1113,10 @@ $(function() {
     $('button').bind('activeChanged', function(){
         SPEC.exitEditing(true);
     });
-    $('select, input').on('change', function(){SPEC.exitEditing(true);});
+    $('select, input').on('change', function(){
+		SPEC.exitEditing(true);
+		setTimeout('SPEC.exitEditing(true)', 1000);
+	});
 // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
   new FastClick(document.body);
   
