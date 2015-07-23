@@ -35,6 +35,7 @@
 #define PERIOD_EXISTS_MIN_THRESHOLD       0.75  // ratio
 #define PERIOD_EXISTS_MAX_THRESHOLD       0.92  // ratio
 #define PERIOD_EXISTS_PEAK_THRESHOLD      0.99  // ratio
+#define PERIOD_REP_COUNT_MIN          3
 
 int osc_Init();
 int osc_Release();
