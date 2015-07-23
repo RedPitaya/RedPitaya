@@ -1,6 +1,6 @@
---- system.dts.old	2015-05-08 16:30:28.596579284 +0200
-+++ system.dts	2015-05-08 16:37:38.800566873 +0200
-@@ -23,7 +23,7 @@
+--- system.dts.old	2015-07-23 23:14:55.434444209 +0200
++++ system.dts	2015-07-23 23:05:18.198460862 +0200
+@@ -24,7 +24,7 @@
  	};
  	memory {
  		device_type = "memory";
@@ -9,10 +9,11 @@
  	};
  };
  &gem0 {
-@@ -36,6 +36,16 @@
- 		#size-cells = <0>;
- 	};
+@@ -86,3 +86,44 @@
+ 	fclk-enable = <0x0>;
+ 	ps-clk-frequency = <33333333>;
  };
++
 +&gem0 {
 +	phy-handle = <&phy0>;
 +	ps7_ethernet_0_mdio: mdio {
@@ -23,25 +24,33 @@
 +		};
 +	};
 +};
- &gpio0 {
- 	emio-gpio-width = <64>;
- 	gpio-mask-high = <0x0>;
-@@ -44,6 +54,10 @@
- &i2c0 {
- 	clock-frequency = <400000>;
- 	status = "okay";
++&i2c0 {
 +	eep@50 {
 +		compatible = "24c64";
 +		reg = <0x50>;
 +	};
- };
- &intc {
- 	num_cpus = <2>;
-@@ -82,6 +96,6 @@
- 	usb-reset = <&gpio0 48 0>;
- };
- &clkc {
--	fclk-enable = <0x0>;
++};
++&clkc {
 +	fclk-enable = <0xf>;
- 	ps-clk-frequency = <33333333>;
- };
++};
++&xadc {
++	xlnx,channels {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		channel@0 {
++			reg = <0>;
++		};
++		channel@1 {
++			reg = <1>;
++		};
++		channel@2 {
++			reg = <2>;
++		};
++		channel@9 {
++			reg = <9>;
++		};
++		channel@10 {
++			reg = <10>;
++		};
++	};
++};
