@@ -67,6 +67,9 @@ module red_pitaya_ps (
 
   output  [  4-1: 0] fclk_clk_o         ,
   output  [  4-1: 0] fclk_rstn_o        ,
+  // XADC
+  input    [ 5-1: 0] vinp_i             ,  // voltages p
+  input    [ 5-1: 0] vinn_i             ,  // voltages n
   // system read/write channel
   output             sys_clk_o          ,  // system clock
   output             sys_rstn_o         ,  // system reset - active low
@@ -380,6 +383,12 @@ system_wrapper system_i (
   .FCLK_RESET1_N     (fclk_rstn[1]     ),
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
+  // XADC
+  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
+  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
+  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
+  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
+  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
   .M_AXI_GP0_ACLK    (axi0_clk_i),
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
