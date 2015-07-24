@@ -457,12 +457,7 @@
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
           if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-			if(param_name == "OSC_MATH_OFFSET"){
-				OSC.setValue(field, OSC.convertValueToMathUnit(new_params[param_name].value));				
-			}else{
-			//field.val(new_params[param_name].value);
-				OSC.setValue(field, new_params[param_name].value);
-			}
+field.val(new_params[param_name].value);
 			
           }
           else if(field.is('button')) {
@@ -682,11 +677,7 @@
         value = (field.is(':visible') ? 0 : 1);
       }
       else if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-        if(key == 'OSC_MATH_OFFSET')
-		{
-			value = OSC.convertMathUnitToValue();
-		}else
-			value = field.val();
+value = field.val();
       }
       else if(field.is('button')) {
         value = (field.hasClass('active') ? 1 : 0);
@@ -1325,7 +1316,7 @@
   
   OSC.setValue = function(input, value) {
     input.val(value);
-	input.change();
+	//input.change();
   };
   
   
