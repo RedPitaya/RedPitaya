@@ -658,13 +658,9 @@ void OnNewParams(void) {
         calibrateValue.Update();
     }
     if (calibrateBackEnd.NewValue() == 1) {
-        if (rp_CalibrateBackEndOffset(RP_CH_1))
+        if (rp_CalibrateBackEnd(RP_CH_1))
 			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEndOffset(RP_CH_2))
-			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEndScale(RP_CH_1))
-			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEndOffset(RP_CH_2))			
+        if (rp_CalibrateBackEnd(RP_CH_2))			
             calibrateBackEnd.Value() = -1;        
     }
 
