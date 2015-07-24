@@ -307,7 +307,7 @@ void UpdateParams(void) {
     inViewEndPos.Value() = end;
 
     if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || inMathScale.IsValueChanged()
-       || in1Offset.IsValueChanged() || in1Offset.IsValueChanged() || inMathOffset.IsValueChanged()
+       || in1Offset.IsValueChanged() || in2Offset.IsValueChanged() || inMathOffset.IsValueChanged()
        || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
     
         CDataManager::GetInstance()->SendAllParams();
