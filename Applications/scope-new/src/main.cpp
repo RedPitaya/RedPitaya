@@ -612,7 +612,7 @@ void OnNewParams(void) {
 
     IF_VALUE_CHANGED(mathOperation, rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue()))
     if (mathSource1.Value() != mathSource1.NewValue() || mathSource2.Value() != mathSource2.NewValue()) {
-        if (rpApp_OscSetMathSources((rp_channel_t) mathSource1.NewValue(), (rp_channel_t) mathSource2.NewValue())) {
+        if (rpApp_OscSetMathSources((rp_channel_t) mathSource1.NewValue(), (rp_channel_t) mathSource2.NewValue()) == RP_OK) {
             mathSource1.Update();
             mathSource2.Update();
         }
@@ -658,13 +658,9 @@ void OnNewParams(void) {
         calibrateValue.Update();
     }
     if (calibrateBackEnd.NewValue() == 1) {
-        if (rp_CalibrateBackEndOffset(RP_CH_1))
+        if (rp_CalibrateBackEnd(RP_CH_1))
 			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEndOffset(RP_CH_2))
-			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEndScale(RP_CH_1))
-			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEndOffset(RP_CH_2))			
+        if (rp_CalibrateBackEnd(RP_CH_2))			
             calibrateBackEnd.Value() = -1;        
     }
 
