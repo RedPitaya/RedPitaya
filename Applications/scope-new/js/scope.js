@@ -265,7 +265,8 @@
 			if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
 				var value = $('#SOUR1_VOLT_OFFS').val();
 				if(value !== new_params[param_name].value){
-					$('#SOUR1_VOLT_OFFS').val(new_params[param_name].value);
+					//$('#SOUR1_VOLT_OFFS').val(new_params[param_name].value);
+					OSC.setValue($('#SOUR1_VOLT_OFFS'), new_params[param_name].value);
 				}
 			}
 		}
@@ -273,7 +274,8 @@
 			if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
 				var value = $('#SOUR2_VOLT_OFFS').val();
 				if(value !== new_params[param_name].value){
-					$('#SOUR2_VOLT_OFFS').val(new_params[param_name].value);
+					//$('#SOUR2_VOLT_OFFS').val(new_params[param_name].value);
+					OSC.setValue($('#SOUR2_VOLT_OFFS'), new_params[param_name].value);
 				}
 			}
 		}
@@ -374,7 +376,8 @@
 				if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
 					var value = $('#OSC_TRIG_LEVEL').val();
 					if(value !== new_params[param_name].value){
-						$('#OSC_TRIG_LEVEL').val(new_params[param_name].value);
+						//$('#OSC_TRIG_LEVEL').val(new_params[param_name].value);
+						OSC.setValue($('#OSC_TRIG_LEVEL'), new_params[param_name].value);
 					}
 				}
 			  }
@@ -454,7 +457,13 @@
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
           if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-            field.val(new_params[param_name].value);
+			if(param_name == "OSC_MATH_OFFSET"){
+				OSC.setValue(field, OSC.convertValueToMathUnit(new_params[param_name].value));				
+			}else{
+			//field.val(new_params[param_name].value);
+				OSC.setValue(field, new_params[param_name].value);
+			}
+			
           }
           else if(field.is('button')) {
             field[new_params[param_name].value === true ? 'addClass' : 'removeClass' ]('active');
@@ -673,7 +682,11 @@
         value = (field.is(':visible') ? 0 : 1);
       }
       else if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-        value = field.val();
+        if(key == 'OSC_MATH_OFFSET')
+		{
+			value = OSC.convertMathUnitToValue();
+		}else
+			value = field.val();
       }
       else if(field.is('button')) {
         value = (field.hasClass('active') ? 1 : 0);
@@ -890,6 +903,10 @@
 //      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
       if(send_changes !== false) {
         OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
+		var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
+		var new_offset = cur_offset / curr_scale * new_scale;
+		OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
+		
         OSC.sendParams();
       }
       return new_scale;
@@ -1112,7 +1129,9 @@
       $('#info_box').html('IN1 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#in1_dialog').is(':visible')) {
-        $('#OSC_CH1_OFFSET').val(+(new_value.toFixed(2)));
+        //$('#OSC_CH1_OFFSET').val(+(new_value));
+		//$('#OSC_CH1_OFFSET').change();
+		OSC.setValue($('#OSC_CH1_OFFSET'), new_value);
       }
       //else if(save) {
         OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
@@ -1125,7 +1144,9 @@
       $('#info_box').html('IN2 zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#in2_dialog').is(':visible')) {
-        $('#OSC_CH2_OFFSET').val(+(new_value.toFixed(2)));
+        //$('#OSC_CH2_OFFSET').val(+(new_value));
+		//$('#OSC_CH2_OFFSET').change();
+		OSC.setValue($('#OSC_CH2_OFFSET'), new_value);
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1156,7 +1177,7 @@
       $('#info_box').html('MATH zero offset ' + OSC.convertVoltage(new_value));
       
       if($('#math_dialog').is(':visible')) {
-        $('#OSC_MATH_OFFSET').val(+(new_value.toFixed(2)));
+        OSC.convertValueToMathUnit(new_value);
       }
       //else if(save) {
         OSC.params.local['OSC_MATH_OFFSET'] = { value: new_value };
@@ -1192,7 +1213,9 @@
 		  }
           
           if($('#trig_dialog').is(':visible')) {
-            $('#OSC_TRIG_LEVEL').val(+(new_value.toFixed(2)));
+            //$('#OSC_TRIG_LEVEL').val(+(new_value));
+			//$('#OSC_TRIG_LEVEL').change();
+			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
           }
           else if(save) {
             OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
@@ -1247,6 +1270,64 @@
     
     return +(v.toFixed(2)) + ' ' + unit;
   };
+  
+  OSC.convertValueToMathUnit = function(v) {
+    var value = v;
+	var unit = 'V';
+	var precision = 3;
+	if(OSC.params.orig['OSC_MATH_OP']){
+		if(Math.abs(value) < 1) {
+			value *= 1000;
+			unit = 'mV';
+			precision = 0;
+
+		} else if (Math.abs(value) >= 1000000) {
+			value /= 1000000;
+			unit = 'MV';	
+			precision = 1;		
+		} else if (Math.abs(value) >= 1000) {
+			value /= 1000;
+			unit = 'kV';
+			precision = 2;
+		}
+						
+		var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
+		var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
+		var cur_unit = unit_holder.html();
+		if(unit == undefined || unit != cur_unit)
+		{
+			unit_holder.html(units[OSC.params.orig['OSC_MATH_OP'].value]);
+		}
+	}
+
+	var value_holder = $('#OSC_MATH_OFFSET');
+	value_holder.val(value.toFixed(precision));
+	value_holder.change();
+  };
+  
+  OSC.convertMathUnitToValue = function() {
+    var value = parseFloat($('#OSC_MATH_OFFSET').val());
+	var unit = $('#OSC_MATH_OFFSET_UNIT').html().charAt(0);
+	var precision = 3;
+	if(unit === 'm') {
+		value /= 1000;
+
+	} else if (unit === 'M') {
+		value *= 1000000;
+							
+	} else if (unit === 'k') {
+		value *= 1000;			
+	}
+	
+	value = value.toFixed(precision);
+	return value;
+  };
+  
+  OSC.setValue = function(input, value) {
+    input.val(value);
+	input.change();
+  };
+  
   
 }(window.OSC = window.OSC || {}, jQuery));
 
