@@ -26,6 +26,7 @@ DL=$(BR2_DL_DIR)
 else
 DL=$(TMP)
 endif
+#TODO: DL = $(BR2_DL_DIR)
 
 UBOOT_TAG     = xilinx-v2015.2
 LINUX_TAG     = xilinx-v2015.2.01
