@@ -79,9 +79,10 @@ input {
 }
 
 #triginfo {
+	position: absolute;
 	width: 100%;
 	text-align: center;
-	padding-right: 162px;
+	padding-right: 222px;
 }
 
 button:focus, button:active, select:focus, input:focus, option:focus {
