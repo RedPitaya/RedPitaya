@@ -1223,6 +1223,9 @@ void checkAutoscale(bool fromThread) {
                 period_to_set = savedTimeScale;
             }
             
+            period_to_set = MAX(0.0001f, period_to_set);
+            period_to_set = MIN(500.f, period_to_set);
+            
             for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
                 vpp = vpps[source][0];
                 vMean = vMeans[source][0];
