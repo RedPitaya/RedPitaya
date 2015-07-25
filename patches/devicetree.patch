@@ -35,7 +35,7 @@
 +};
 +&xadc {
 +	compatible = "xlnx,zynq-xadc-1.00.a";
-+	clocks = <&fclk3";
++	clocks = <&fclk3>;
 +	xlnx,channels {
 +		#address-cells = <1>;
 +		#size-cells = <0>;
