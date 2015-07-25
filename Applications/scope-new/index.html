@@ -306,25 +306,25 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Amplitude / V</span>
-              <input class="setfield limits input-number" id="SOUR1_VOLT" type="text" value="0" min="0.001" max="1" step="0.001">
+              <input class="setfield limits input-number" id="SOUR1_VOLT" type="text" value="0.000" min="0.001" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Offset / V</span>
-              <input class="setfield limits input-number" id="SOUR1_VOLT_OFFS" type="text" value="0"  min="-1" max="1" step="0.001">>
+              <input class="setfield limits input-number" id="SOUR1_VOLT_OFFS" type="text" value="0.000"  min="-1" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Phase / deg</span>
-              <input class="setfield limits input-number" id="SOUR1_PHAS" type="text" value="0" min="0" max="180" step="1">
+              <input class="setfield limits input-number" id="SOUR1_PHAS" type="text" value="0" min="0" max="180" step="1" >
             </div>
           </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle / %</span>
-              <input class="setfield limits input-number" id="SOUR1_DCYC" type="text" value="0" min="0.0" max="100.0" step="0.1">
+              <input class="setfield limits input-number" id="SOUR1_DCYC" type="text" value="0.0" min="0.0" max="100.0" step="0.1">
             </div>
           </div>
         </div>
@@ -382,13 +382,13 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Amplitude / V</span>
-              <input class="setfield limits input-number" id="SOUR2_VOLT" type="text" value="0" min="0.001" max="1" step="0.001">
+              <input class="setfield limits input-number" id="SOUR2_VOLT" type="text" value="0.000" min="0.001" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Offset / V</span>
-              <input class="setfield limits input-number" id="SOUR2_VOLT_OFFS" type="text" value="0" min="-1" max="1" step="0.001">
+              <input class="setfield limits input-number" id="SOUR2_VOLT_OFFS" type="text" value="0.000" min="-1" max="1" step="0.001">
             </div>
           </div>
           <div class="col-xs-6 option-content">
@@ -400,7 +400,7 @@
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Duty cycle / %</span>
-              <input class="setfield limits input-number" id="SOUR2_DCYC" type="text" value="0" min="0.0" max="100.0" step="0.1">
+              <input class="setfield limits input-number" id="SOUR2_DCYC" type="text" value="0.0" min="0.0" max="100.0" step="0.1">
             </div>
           </div>
         </div>
@@ -463,7 +463,7 @@
           </div>
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
-              <span class="col-info">Vertical offset / V</span>
+              <div class="col-info">Vertical offset / <span id="OSC_MATH_OFFSET_UNIT">V</span></div>
               <input class="setfield input-number" id="OSC_MATH_OFFSET" type="text" value="0.000" step="0.001" min="-40.000" max="40.000">
             </div>
           </div>
@@ -510,7 +510,7 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Level</span>
-              <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0" step="0.001" min="-1" max="1">
+              <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000" step="0.001" min="-1" max="1">
             </div>
           </div>
           
@@ -691,7 +691,7 @@
 			  </div>
             </div>
           </div>
-          <div id="info-meas"></div>
+          <div id="info-meas" style="width: 500px;"></div>
           <div class="pull-right">
             Time <span id="OSC_TIME_SCALE">-</span>/div <br />
             Trig 
@@ -801,11 +801,6 @@ $('#calib-input').change(function() {
             parent.append('<div class=' + lessVal.substr(1) + '></div>');
 
         }); //end each
-		
-		$(this).on('input', function(){
-			OSC.exitEditing(true);
-		});
-		
 
         var value,
             step;
@@ -868,10 +863,21 @@ $('#calib-input').change(function() {
 					
 					if(OSC.params.orig[substrid + '_SCALE']){
 						var limit = Math.abs(OSC.params.orig[substrid + '_SCALE'].value)*5;
+						if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
+							var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
+							var unit = unit_holder.html().charAt(0);
+							
+							if(unit === 'k')
+								limit /= 1000;
+							else if(unit === 'M')
+								limit /= 1000000;
+							else if(unit === 'm')
+								limit *= 1000;
+						}
+
 						min = -1 * limit;
 						max = limit;
-					}
-						
+					}	
 				}
 				
 				else if (['OSC_TRIG_LEVEL'].indexOf(input.attr('id')) != -1 && OSC.params.orig['OSC_TRIG_SOURCE']) {
@@ -910,6 +916,7 @@ $('#calib-input').change(function() {
 
             function changeInputsVal(input, newValue){
                 input.val(newValue);
+				OSC.exitEditing(true);
             }
 
             function checkInputAttr(input) {
@@ -934,12 +941,17 @@ $('#calib-input').change(function() {
 					}
 					if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
 					
-						if(value < 1000)
+						var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
+						var unit = unit_holder.html().charAt(0);
+						
+						if(unit === 'V')
 							step = 0.001;
-						else if(value < 100000)
+						else if(unit === 'k')
 							step = 0.01;
-						else 
+						else if(unit === 'M')
 							step = 0.1;
+						else
+							step = 1;
 					}
 					
                 } else {
