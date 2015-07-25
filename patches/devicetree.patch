@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,45 @@
+@@ -86,3 +86,46 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -35,6 +35,7 @@
 +};
 +&xadc {
 +	compatible = "xlnx,zynq-xadc-1.00.a";
++	clocks = <&fclk3";
 +	xlnx,channels {
 +		#address-cells = <1>;
 +		#size-cells = <0>;
