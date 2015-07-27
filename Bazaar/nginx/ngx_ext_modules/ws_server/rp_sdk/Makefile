@@ -3,7 +3,7 @@ CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryp
 
 ifeq ($(ALWAYS_PURCHASED),true)
 	CXXFLAGS+=-DALWAYS_PURCHASED
-	$(info ALWAYS_PURCHASED==true)
+#	$(info ALWAYS_PURCHASED==true)
 endif
 
 SOURCES= DataManager.cpp \
