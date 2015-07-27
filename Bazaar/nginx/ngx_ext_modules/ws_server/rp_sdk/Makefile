@@ -1,5 +1,11 @@
 CXX=arm-xilinx-linux-gnueabi-g++
 CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I../libjson -Ibuild/include/cryptopp -Ilicverify/encoder -DNDEBUG
+
+ifeq ($(ALWAYS_PURCHASED),true)
+	CXXFLAGS+=-DALWAYS_PURCHASED
+	$(info ALWAYS_PURCHASED==true)
+endif
+
 SOURCES= DataManager.cpp \
 	licverify/LicenseVerificator.cpp \
 	licverify/encoder/encoder.cpp \
