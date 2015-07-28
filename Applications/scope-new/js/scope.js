@@ -385,7 +385,15 @@
           }
 		   // Trigger source
 		  if(param_name == 'OSC_TRIG_SOURCE') {
-			$('#osc_trig_source_ch').html(new_params['OSC_TRIG_SOURCE'].value == 0 ? 'IN1' : (new_params['OSC_TRIG_SOURCE'].value == 1 ? 'IN2' : 'EXT'));
+			  var source = new_params['OSC_TRIG_SOURCE'].value == 0 ? 'IN1' : (new_params['OSC_TRIG_SOURCE'].value == 1 ? 'IN2' : 'EXT');
+			$('#osc_trig_source_ch').html(source);
+			if (source == 'EXT') {
+				$('#OSC_TRIG_LEVEL').attr('min', -3.3);
+				$('#OSC_TRIG_LEVEL').attr('max', 3.3);
+			} else {
+				$('#OSC_TRIG_LEVEL').attr('min', -1);
+				$('#OSC_TRIG_LEVEL').attr('max', 1);				
+			}
 		  }
         }
         // Trigger edge/slope
@@ -504,20 +512,26 @@ field.val(new_params[param_name].value);
 				if (param_name == 'OSC_MATH_SCALE' && new_params['OSC_MATH_OP'] && $('#munit')) {			
 					var value = new_params[param_name].value;
 					var unit = 'V';
+					OSC.div = 1;
 					if(Math.abs(value) <= 0.1) {
 						value *= 1000;
+						OSC.div = 0.001;
 						unit = 'mV';
-
 					} else if (Math.abs(value) >= 1000000) {
 						value /= 1000000;
+						OSC.div = 1000000;
 						unit = 'MV';						
 					} else if (Math.abs(value) >= 1000) {
 						value /= 1000;
+						OSC.div = 1000;
 						unit = 'kV';						
 					}
-					field.html(value);
+					field.html(value);					
 					var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
 					$('#munit').html(units[new_params['OSC_MATH_OP'].value] + '/div');
+					
+					$('#OSC_MATH_OFFSET_UNIT').html(units[new_params['OSC_MATH_OP'].value]);
+					$('#OSC_MATH_OFFSET').val((OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div).toFixed(4));
 				}        
 				else
 					field.html(OSC.convertVoltage(new_params[param_name].value));      
@@ -767,6 +781,8 @@ value = field.val();
     
     OSC.params.local['in_command'] = { value: 'send_all_params' };
     // Send new values and reset the local params object
+    if (OSC.params.local['OSC_MATH_OFFSET'])
+		OSC.params.local['OSC_MATH_OFFSET'].value *= OSC.div;
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
     
@@ -1283,14 +1299,8 @@ value = field.val();
 		}
 						
 		var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
-		var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
-		var cur_unit = unit_holder.html();
-		if(unit == undefined || unit != cur_unit)
-		{
-			unit_holder.html(units[OSC.params.orig['OSC_MATH_OP'].value]);
-		}
+		$('#OSC_MATH_OFFSET_UNIT').html(units[OSC.params.orig['OSC_MATH_OP'].value]);		
 	}
-
 	var value_holder = $('#OSC_MATH_OFFSET');
 	value_holder.val(value.toFixed(precision));
 	value_holder.change();
@@ -1334,6 +1344,19 @@ $(function() {
   
   // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
   //new FastClick(document.body);
+  
+	$(".dbl").on('dblclick', function() {
+	  var cls = $(this).attr('class');
+	  if (cls.indexOf('ch1') != -1)
+		$('#OSC_CH1_OFFSET').val(0);
+	  if (cls.indexOf('ch2') != -1)
+		$('#OSC_CH2_OFFSET').val(0);
+	  if (cls.indexOf('math') != -1)
+		$('#OSC_MATH_OFFSET').val(0);
+	  if (cls.indexOf('trig') != -1)
+		$('#OSC_TRIG_LEVEL').val(0);
+	  OSC.exitEditing(true);
+	});  
   
   // Process clicks on top menu buttons
 //  $('#OSC_RUN').on('click touchstart', function(ev) {
