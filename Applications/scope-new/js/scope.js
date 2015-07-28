@@ -959,7 +959,7 @@ value = field.val();
     var graph_height = $('#graph_grid').height();
     var graph_width = $('#graph_grid').width();
     
-    var source = (OSC.params.local['OSC_CURSOR_SRC'] ? OSC.params.local['OSC_CURSOR_SRC'].value : OSC.params.orig['OSC_CURSOR_SRC']);
+    var source = (OSC.params.local['OSC_CURSOR_SRC'] ? OSC.params.local['OSC_CURSOR_SRC'].value : OSC.params.orig['OSC_CURSOR_SRC'].value);
     var ref_scale = (source == 0 ? 'OSC_CH1_SCALE' : (source == 1 ? 'OSC_CH2_SCALE' : 'OSC_MATH_SCALE'));
     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
     
@@ -1897,8 +1897,7 @@ $(function() {
 				$(this).hide();
 			}
 			++i;
-		});
-		console.log('-----------');
+		});		
 		
 		if (!with_input) {
 			$('#calib-input').hide();
