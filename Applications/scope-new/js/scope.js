@@ -202,7 +202,7 @@
       }
       // Sampling rate
       else if(param_name == 'OSC_SAMPL_RATE') {
-        $('#' + param_name).html(OSC.sample_rates[new_params[param_name].value] + '/s');
+        $('#' + param_name).html(OSC.sample_rates[new_params[param_name].value] + 'S/s');
       }
       // All other parameters
       else {
