@@ -759,7 +759,7 @@ int synthesis_rampUp(CFloatSignal *signal, float freq, float phase, float amp, f
             angle -= M_PI;
             shift += M_PI;
         }
-        (*signal)[signal->GetSize() - i-2] = (float) (-1.0 * (acos(cos(angle)) / M_PI - 1));
+        (*signal)[signal->GetSize() - i-2] = (float) (-1.0 * (acos(cos(angle)) / M_PI - 1)) * amp + off + showOff;
     }
     return RP_OK;
 }
@@ -772,7 +772,7 @@ int synthesis_rampDown(CFloatSignal *signal, float freq, float phase, float amp,
             angle -= M_PI;
             shift += M_PI;
         }
-        (*signal)[i] = (float) (-1.0 * (acos(cos(angle)) / M_PI - 1));
+        (*signal)[i] = (float) (-1.0 * (acos(cos(angle)) / M_PI - 1)) * amp + off + showOff;
     }
     return RP_OK;
 }
