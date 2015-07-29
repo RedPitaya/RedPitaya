@@ -61,7 +61,7 @@
   ];
   
   // Sampling rates
-  OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070K', '15.258K', '1.907K'];
+  OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
   
   // App state
   OSC.state = {
