@@ -396,17 +396,21 @@ int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
     int demo = 0;
+	fprintf(stderr, "arg %s\n", argv[0]);
     char* parse_cmd = strstr(argv[0], "?");
     /* We are dealing with a new app */
     if (parse_cmd){
         *parse_cmd = '\0';
     }
-
-    char *url = strstr(parse_cmd++, "type=demo");
+    fprintf(stderr, "parse_cmd %s\n", parse_cmd); 
+    char *url = strstr(++parse_cmd, "type=demo");
     if(url){
         demo = 1;
     }
-
+    fprintf(stderr, "parse_cmd %s\n", parse_cmd); 
+	fprintf(stderr, "url %s\n", url); 
+	fprintf(stderr, "demo %d\n", demo);
+	
     int unsigned len;
     ngx_http_rp_loc_conf_t *lc = 
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
@@ -523,6 +527,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
             if (rp_module_ctx.app.verify_app_license_func(argv[0]))
                 demo = 1;
 
+		fprintf(stderr, "demo %d\n", demo);
         if (demo)
         {
             fprintf(stderr, "Run in demo mode\n");
