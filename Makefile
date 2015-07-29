@@ -70,11 +70,11 @@ LIBRP       = $(INSTALL_DIR)/lib/librp.so
 LIBRPAPP    = $(INSTALL_DIR)/lib/librpapp.so
 GDBSERVER   = $(INSTALL_DIR)/bin/gdbserver
 
-APP_SCOPE_DIR = Applications/scope-new
-APP_SCOPE     = $(INSTALL_DIR)/www/apps/scope-new
+APP_SCOPE_DIR = Applications/scopegenpro
+APP_SCOPE     = $(INSTALL_DIR)/www/apps/scopegenpro
 
-APP_SPECTRUM_DIR = Applications/spectrum-new
-APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrum
+APP_SPECTRUM_DIR = Applications/spectrumpro
+APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrumpro
 
 # Versioning system
 BUILD_NUMBER ?= 0
