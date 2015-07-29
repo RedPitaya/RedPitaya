@@ -5,8 +5,7 @@
 #
 
 # List of applications to build
-APPS=scope-new spectrum-new
-
+APPS=scopegenpro spectrumpro
 
 all: zips
 
