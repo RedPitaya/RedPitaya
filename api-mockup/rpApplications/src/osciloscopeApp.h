@@ -27,6 +27,7 @@
 #define AUTO_SCALE_AMP_SCA_FACTOR     1.05
 #define AUTO_SCALE_TIME_OFFSET        0
 #define AUTO_SCALE_PERIOD_ERROR       0.08
+#define AUTO_SCALE_VMEAN_ERROR        0.08
 #define AUTO_SCALE_NUM_OF_SCALE       20
 #define MAX_UINT                      4294967296
 #define MIN_TIME_TO_DRAW_BEFORE_TIG   100
@@ -36,6 +37,7 @@
 #define PERIOD_EXISTS_MAX_THRESHOLD       0.92  // ratio
 #define PERIOD_EXISTS_PEAK_THRESHOLD      0.99  // ratio
 #define PERIOD_REP_COUNT_MIN          3
+#define VMEAN_REP_COUNT_MIN          3
 
 int osc_Init();
 int osc_Release();
