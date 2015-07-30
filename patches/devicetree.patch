@@ -34,7 +34,7 @@
 +	fclk-enable = <0xf>;
 +};
 +&xadc {
-+	compatible = "xlnx,zynq-xadc-1.00.a";
++	compatible = "xlnx,axi-xadc-1.00.a";
 +	clocks = <&clkc 18>;
 +	xlnx,channels {
 +		#address-cells = <1>;
