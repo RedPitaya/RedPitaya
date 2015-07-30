@@ -5,7 +5,7 @@
 #
 
 # List of applications to build
-APPS=scope-new scope+gen scope+pid spectrum freqanalyzer spectrum-new
+APPS=scopegenpro scope+gen scope+pid spectrum freqanalyzer spectrumpro
 
 
 all: zips
