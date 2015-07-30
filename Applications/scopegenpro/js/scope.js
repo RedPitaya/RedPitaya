@@ -26,7 +26,7 @@
 
   // App configuration
   OSC.config = {};
-  OSC.config.app_id = 'scope-new';
+  OSC.config.app_id = 'scopegenpro';
   OSC.config.server_ip = '';  // Leave empty on production, it is used for testing only
   OSC.config.start_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?start=' + OSC.config.app_id + '?' + location.search.substr(1);
   OSC.config.stop_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?stop=' + OSC.config.app_id;
@@ -61,7 +61,7 @@
   ];
   
   // Sampling rates
-  OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070K', '15.258K', '1.907K'];
+  OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
   
   // App state
   OSC.state = {
@@ -1223,6 +1223,7 @@ value = field.val();
             //$('#OSC_TRIG_LEVEL').val(+(new_value));
 			//$('#OSC_TRIG_LEVEL').change();
 			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
+			$('#OSC_TRIG_LEVEL').change();
           }
           else if(save) {
             OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
