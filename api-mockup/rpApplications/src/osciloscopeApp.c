@@ -541,6 +541,7 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     ECHECK_APP(unscaleAmplitudeChannel(source, max, &resMax));
     ECHECK_APP(unscaleAmplitudeChannel(source, min, &resMin));
     *Vpp = resMax - resMin;
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vpp, Vpp));
     return RP_OK;
 }
 
@@ -554,6 +555,7 @@ int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, sum / (viewEndPos - viewStartPos), meanVoltage));
+    ECHECK_APP(attenuateAmplitudeChannel(source, *meanVoltage, meanVoltage));
     return RP_OK;
 }
 
@@ -571,7 +573,7 @@ int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
-
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vmax, Vmax));
     return RP_OK;
 }
 
@@ -589,7 +591,7 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
-
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vmin, Vmin));
     return RP_OK;
 }
 
@@ -758,6 +760,7 @@ int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms) {
     pthread_mutex_unlock(&mutex);
 
     *rms = (double) sqrt(rmsValue / (double)(viewEndPos - viewStartPos));
+    ECHECK_APP(attenuateAmplitudeChannel(source, *rms, rms));
     return RP_OK;
 }
 
@@ -942,6 +945,15 @@ int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
     ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
     ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
     *res = unOffsetAmplitude(value, ampScale, ampOffset);
+    return RP_OK;
+}
+
+int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
+    float probeAtt = 1.f;
+    if (source != RPAPP_OSC_SOUR_MATH)
+        ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
+    
+    *res = scaleAmplitude(value, 1.f, probeAtt, 0.f, 1.f);
     return RP_OK;
 }
 
