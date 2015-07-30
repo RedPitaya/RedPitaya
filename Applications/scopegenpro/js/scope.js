@@ -1223,6 +1223,7 @@ value = field.val();
             //$('#OSC_TRIG_LEVEL').val(+(new_value));
 			//$('#OSC_TRIG_LEVEL').change();
 			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
+			$('#OSC_TRIG_LEVEL').change();
           }
           else if(save) {
             OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
