@@ -85,7 +85,7 @@ static inline void update_view() {
 
 static inline int scaleChannel(rp_channel_t channel, float vpp, float vMean) {
     float scale1 = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-    float scale2 = (float) ((fabs(vpp) + fabs(vMean)) * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+    float scale2 = (float) ((fabs(vpp) + (fabs(vMean) * 2.f)) * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
     float scale = MAX(MAX(scale1, scale2), 0.002);
     ECHECK_APP(osc_setAmplitudeScale(channel, roundUpTo125(scale)));
     ECHECK_APP(osc_setAmplitudeOffset(channel, -vMean));
@@ -541,6 +541,7 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     ECHECK_APP(unscaleAmplitudeChannel(source, max, &resMax));
     ECHECK_APP(unscaleAmplitudeChannel(source, min, &resMin));
     *Vpp = resMax - resMin;
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vpp, Vpp));
     return RP_OK;
 }
 
@@ -554,6 +555,7 @@ int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, sum / (viewEndPos - viewStartPos), meanVoltage));
+    ECHECK_APP(attenuateAmplitudeChannel(source, *meanVoltage, meanVoltage));
     return RP_OK;
 }
 
@@ -571,7 +573,7 @@ int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
-
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vmax, Vmax));
     return RP_OK;
 }
 
@@ -589,7 +591,7 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
-
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vmin, Vmin));
     return RP_OK;
 }
 
@@ -758,6 +760,7 @@ int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms) {
     pthread_mutex_unlock(&mutex);
 
     *rms = (double) sqrt(rmsValue / (double)(viewEndPos - viewStartPos));
+    ECHECK_APP(attenuateAmplitudeChannel(source, *rms, rms));
     return RP_OK;
 }
 
@@ -942,6 +945,15 @@ int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
     ECHECK_APP(osc_getAmplitudeOffset(source, &ampOffset));
     ECHECK_APP(osc_getAmplitudeScale(source, &ampScale));
     *res = unOffsetAmplitude(value, ampScale, ampOffset);
+    return RP_OK;
+}
+
+int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
+    float probeAtt = 1.f;
+    if (source != RPAPP_OSC_SOUR_MATH)
+        ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
+    
+    *res = scaleAmplitude(value, 1.f, probeAtt, 0.f, 1.f);
     return RP_OK;
 }
 
@@ -1150,6 +1162,9 @@ void checkAutoscale(bool fromThread) {
     
     int periodsIdx[2];
     int repCounts[2];
+
+    int vMeansIdx[2];
+    int vMeansRepCounts[2];
     
     float period_to_set = 1.f;
     
@@ -1192,8 +1207,22 @@ void checkAutoscale(bool fromThread) {
 
             for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
                 repCounts[source] = 0;
+                vMeansRepCounts[source] = 0;
+                
                 for(int i = (AUTO_SCALE_NUM_OF_SCALE - 1); i >= 1; --i) {
                     int count = 0;
+
+                    for(int j = (i - 1); j >= 0; --j) {
+                        if(fabs((vMeans[source][i] - vMeans[source][j]) / vMeans[source][i]) < AUTO_SCALE_VMEAN_ERROR)
+                            count++;
+                    }
+
+                    if(count > vMeansRepCounts[source]) {
+                        vMeansRepCounts[source] = count;
+                        vMeansIdx[source] = i;
+                    }
+                    
+                    count = 0;
                     if(fabs(periods[source][i])  < 0.00001)
                         continue;
 
@@ -1228,14 +1257,22 @@ void checkAutoscale(bool fromThread) {
             
             for (rpApp_osc_source source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_CH2; ++source) {
                 vpp = vpps[source][0];
-                vMean = vMeans[source][0];
-                
                 for(int i = 1; i < AUTO_SCALE_NUM_OF_SCALE; ++i) {
                     vpp = MAX(vpp, vpps[source][i]);
-                    if(fabs(vMean) > fabs(vMeans[source][i])) {
-                        vMean = vMeans[source][i];
+                }
+
+                if(vMeansRepCounts[source] >= VMEAN_REP_COUNT_MIN) {
+                    vMean = vMeans[source][vMeansIdx[source]];
+                } else {
+                    vMean = vMeans[source][0];
+
+                    for(int i = 1; i < AUTO_SCALE_NUM_OF_SCALE; ++i) {
+                        if(fabs(vMean) > fabs(vMeans[source][i])) {
+                            vMean = vMeans[source][i];
+                        }
                     }
                 }
+                
                 ECHECK_APP_THREAD(scaleChannel(source, vpp, vMean));
             }
         } else {

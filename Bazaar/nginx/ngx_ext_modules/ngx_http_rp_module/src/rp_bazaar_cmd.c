@@ -402,7 +402,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
         *parse_cmd = '\0';
     }
 
-    char *url = strstr(parse_cmd++, "type=demo");
+    char *url = strstr(++parse_cmd, "type=demo");
     if(url){
         demo = 1;
     }
