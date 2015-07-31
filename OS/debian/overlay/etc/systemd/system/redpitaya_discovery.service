@@ -1,0 +1,11 @@
+[Unit]
+Description=Registering Red Pitaya board MAC address and IP address to a server
+After=network.target
+
+[Service]
+Environment=PATH_REDPITAYA=/opt/redpitaya
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+ExecStart =/opt/redpitaya/sbin/discovery
+
+[Install]
+WantedBy=multi-user.target
