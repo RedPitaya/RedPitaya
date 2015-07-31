@@ -467,7 +467,7 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 }
 
 int osc_setTriggerLevel(float level) {
-root	    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex);
     
     if((trigSource == RPAPP_OSC_TRIG_SRC_CH1) || (trigSource == RPAPP_OSC_TRIG_SRC_CH2)) {
         rpApp_osc_source source = (trigSource == RPAPP_OSC_TRIG_SRC_CH1) ? RPAPP_OSC_SOUR_CH1 : RPAPP_OSC_SOUR_CH2;
@@ -990,9 +990,11 @@ void calculateIntegral(rp_channel_t channel, float scale, float offset, float in
     float ch_sign = invert ? -1.f : 1.f;
 
     ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + viewStartPos], &v));
+	ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v, &v));
     view[RPAPP_OSC_SOUR_MATH*viewSize] = ch_sign * v * dt;
     for (int i = viewStartPos + 1; i < viewEndPos; ++i) {
         ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i], &v));
+		ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v, &v));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (ch_sign * v * dt);
         view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + i-1], scale, 1, offset, invertFactor);
     }
@@ -1007,9 +1009,11 @@ void calculateDevivative(rp_channel_t channel, float scale, float offset, float 
     float ch_sign = invert ? -1.f : 1.f;
     
     ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + viewStartPos], &v2));
+	ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v2, &v2));
     for (int i = viewStartPos; i < viewEndPos - 1; ++i) {
         v1 = v2;
         ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i + 1], &v2));
+		ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v2, &v2));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(ch_sign * (v2 - v1) / dt2, scale, 1, offset, invertFactor);
     }
     view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 1] = view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 2];
@@ -1156,6 +1160,10 @@ void mathThreadFunction() {
             for (int i = viewStartPos; i < viewEndPos; ++i) {
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
+
+                ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) mathSource1, v1, &v1));
+                ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) mathSource2, v2, &v2));
+
                 view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
         }
