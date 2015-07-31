@@ -80,6 +80,7 @@ IDGEN_DIR       = Bazaar/tools/idgen
 MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
+XADC_DIR        = Test/xadc
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
 DISCOVERY_DIR   = OS/discovery
@@ -107,6 +108,7 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 MONITOR         = $(INSTALL_DIR)/bin/monitor
 GENERATE        = $(INSTALL_DIR)/bin/generate
 ACQUIRE         = $(INSTALL_DIR)/bin/acquire
+XADC            = $(INSTALL_DIR)/bin/xadc
 CALIB           = $(INSTALL_DIR)/bin/calib
 CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery
@@ -398,6 +400,10 @@ $(GENERATE):
 $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+$(XADC): $(LINUX_DIR)
+	$(MAKE) -C $(XADC_DIR)
+#	$(MAKE) -C $(XADC_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR)
