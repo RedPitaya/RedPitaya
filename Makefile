@@ -401,8 +401,8 @@ $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(XADC): $(LINUX_DIR)
-	$(MAKE) -C $(XADC_DIR)
+#$(XADC): $(LINUX_DIR)
+#	$(MAKE) -C $(XADC_DIR)
 #	$(MAKE) -C $(XADC_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIB):
