@@ -117,6 +117,9 @@ int main(int argc, char **argv)
     }
     sprintf(jsp, "payload=%s", js);
 
+    // print payload for debugging purposes
+    printf ("\n%s\n", jsp);
+
     char *url = (char *)c_default_url;
     if (argc > 1) {
         url = argv[1];
