@@ -103,10 +103,9 @@ int ams_SetValueDAC3(uint32_t value)
 
 int ams_GetValueADC0(uint32_t* value)
 {
-    int r=cmn_GetValue(&ams->aif0, value, ANALOG_IN_MASK);
-    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
-    	*value=0;
-    }
+    file fp;
+    fopen (fp, "/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/", 'r');
+    int r=fscanf (fp, "%d", value);
     return r;
 }
 

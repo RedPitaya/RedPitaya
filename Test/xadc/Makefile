@@ -4,11 +4,12 @@ CC=$(CROSS_COMPILE)gcc
 TARGET=xadc
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror
+CFLAGS=-g -std=gnu99 -Wall
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -Ixadc_lib/include
 CFLAGS += -Ixadc_lib/src
 CFLAGS += -Ixadc_lib/linux_include
+#CFLAGS += -I../../tmp/linux-xlnx-xilinx-v2015.2.01/include
 
 LIBS=-lm -lpthread
 
