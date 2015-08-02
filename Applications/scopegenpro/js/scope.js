@@ -206,6 +206,25 @@
       }
       // All other parameters
       else {
+		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1) {
+			console.log(new_params[param_name].value);
+			if (new_params[param_name].value == -1) {
+				++OSC.state.calib;
+				OSC.setCalibState(OSC.state.calib);
+				
+				$('#calib-2').children().removeAttr('disabled');
+				$('#calib-3').children().removeAttr('disabled');
+			} else if (new_params[param_name].value == 0) {				
+				$('#modal-warning').show();
+				$('#calib-4').show();
+				$('#calib-5').show();
+				$('#calib-2').children().removeAttr('disabled');
+				$('#calib-3').children().removeAttr('disabled');
+			}
+			
+			new_params[param_name].value = -2;
+		}
+					  
 		if (param_name == 'is_demo' && new_params['is_demo'].value) {
 			OSC.state.calib = 0;
 			OSC.setCalibState(OSC.state.calib);		
@@ -367,8 +386,8 @@
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
               var px_offset = -((new_params['OSC_TRIG_LEVEL'].value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
-              
-              $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
+				
+              $('#trig_level_arrow, #trigger_level').show();
               if(param_name == 'OSC_TRIG_LEVEL') {
 				$('#right_menu .menu-btn.trig').prop('disabled', false);
 				$('#osc_trig_level_info').html(OSC.convertVoltage(new_params['OSC_TRIG_LEVEL'].value));
@@ -1214,6 +1233,8 @@ value = field.val();
 
 		  if(OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
 			$('#info_box').html('Trigger at its limit');
+			$('#trig_level_arrow').css('top', $('#graph_grid').outerHeight()/2);
+			$('#trigger_level').css('top', $('#graph_grid').outerHeight()/2);
 		  }
 		  else{
 			$('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
@@ -1337,6 +1358,7 @@ value = field.val();
 $(function() {
 	$('#calib-input').hide();
 	$('#calib-input-text').hide();
+	$('#modal-warning').hide();
 	
     $('button').bind('activeChanged', function(){
         OSC.exitEditing(true);
@@ -1864,6 +1886,8 @@ $(function() {
     }
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
+    $('#trig_level_arrow').css('top', $('#graph_grid').outerHeight()/2);    
+    $('#trigger_level').css('top', $('#graph_grid').outerHeight()/2);    
     
     // Set the resized flag
     OSC.state.resized = true;
@@ -1887,7 +1911,7 @@ $(function() {
 						'To calibrate inputs low gains set the jumpers to LV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage on LV ' + 'jumper settings is <b>1 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
 						'LOW gains calibration is done. To finish press DONE to continue with high gain calibration press CONTINUE.',
 						'To calibrate inputs high gains set the jumpers to HV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage ' +
-						'on LV jumper settings is <b>20 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
+						'on HV jumper settings is <b>20 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
 						'High gains calibration is done. To finish press DONE, to continue with outputs calibration connect OUT1 to IN1 OUT2 to IN2 and set the jumpers to LV settings and press CONTINUE.',
 						'Calibration of outputs is done. For finishing press DONE',
 						'Something went wrong, try again!'];
@@ -1939,9 +1963,14 @@ $(function() {
 	}
 
 	$('#calib-1').click(function() {
-		if ((OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value) || OSC.state.calib == 0)
+		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value == false) {
+			$('#calib-2').children().removeAttr('disabled');
+			$('#calib-3').children().removeAttr('disabled');
+		}		
+		if (OSC.state.calib == 0) {
 			return;
-			
+		}
+		
 		OSC.state.calib = 0;
 		OSC.setCalibState(OSC.state.calib);
 		
@@ -1979,7 +2008,24 @@ $(function() {
 				local['CALIB_VALUE'] = {value: $('#calib-input').val()};
 			OSC.ws.send(JSON.stringify({ parameters: local }));	
 		}
-					
+		
+		if ($('#calib-3').children().html() != 'CALIBRARTE') {
+			++OSC.state.calib;
+			OSC.setCalibState(OSC.state.calib);
+		} else {
+			$('#calib-2').children().attr('disabled', 'true');
+			$('#calib-3').children().attr('disabled', 'true');
+		}
+	});
+	
+	$('#calib-4').click(function() {
+		$('#modal-warning').hide();
+	});  
+	$('#calib-5').click(function() {	
+		var local = {};
+		local['CALIB_WRITE'] = {value: true};
+		OSC.ws.send(JSON.stringify({ parameters: local }));
+		$('#modal-warning').hide();
 		++OSC.state.calib;
 		OSC.setCalibState(OSC.state.calib);
 	});

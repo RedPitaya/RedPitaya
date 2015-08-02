@@ -4,6 +4,12 @@
 #include <stdio.h>
 #include "version.h"
 
+enum {
+	STEP_FRONT_END_OFFSET = 1,
+	STEP_FRONT_END_SCALE_LV,
+	STEP_FRONT_END_SCALE_HV,
+	STEP_BACK_END
+};
 
 /* -------------------------  debug parameter  --------------------------------- */
 CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 100, 0, 0, 10000);
@@ -146,13 +152,14 @@ CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40
 
 // 0-nothing		1-commant from web		-1-response OK
 // 1V - TP16
-CIntParameter calibrateReset("CALIB_RESET", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndOffset("CALIB_FE_OFF", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, 0, 0, -1, 1);
-CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter calibrateReset("CALIB_RESET", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndOffset("CALIB_FE_OFF", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, -2, 0, -2, 1);
 CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.f);
 CIntParameter calibrateCancel("CALIB_CANCEL", CBaseParameter::RW, 0, 0, 0, 1);
+CBooleanParameter calibrateWrite("CALIB_WRITE", CBaseParameter::RW, false, 0);
 
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
@@ -262,8 +269,13 @@ void UpdateParams(void) {
 	float trigg_limit;
 	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
-	inTriggLimit.Value() = trigg_limit;
-	
+	if (channel == RPAPP_OSC_TRIG_SRC_CH1)		
+		inTriggLimit.Value() = trigg_limit*in1Probe.Value();
+	else if (channel == RPAPP_OSC_TRIG_SRC_CH2)	
+		inTriggLimit.Value() = trigg_limit*in2Probe.Value();
+	else
+		inTriggLimit.Value() = trigg_limit;
+		
     rp_acq_sampling_rate_t sampling_rate;
     rp_AcqGetSamplingRate(&sampling_rate);
     samplingRate.Value() = sampling_rate;
@@ -430,6 +442,25 @@ void UpdateSignals(void) {
     } else {
         out2Signal.Resize(0);
     }
+}
+
+bool check_params(const rp_calib_params_t& current_params, int step) {
+	if (step == STEP_FRONT_END_OFFSET) {
+		if (abs(current_params.fe_ch1_dc_offs) < 512 && abs(current_params.fe_ch2_dc_offs) < 512)
+			return true;
+	} else if (step == STEP_FRONT_END_SCALE_LV) {
+		if (fabs(current_params.fe_ch1_fs_g_lo/858993459.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_lo/858993459.f - 1.f) < 0.2)
+			return true;
+	} else if (step == STEP_FRONT_END_SCALE_HV) {
+		if (fabs(current_params.fe_ch1_fs_g_hi/42949672.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_hi/42949672.f - 1.f) < 0.2)
+			return true;
+	} else if (step == STEP_BACK_END) {
+		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) && 
+				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2)
+			return true;
+	}
+	
+	return false;
 }
 
 void OnNewParams(void) {
@@ -625,7 +656,17 @@ void OnNewParams(void) {
     out2ShowOffset.Update();
 
 /* ------ HANDLE CALIBRATE ------*/
-	static bool is_default_calib_params = true;
+	static bool is_default_calib_params = true;	
+	static rp_calib_params_t default_params = rp_GetCalibrationSettings();
+	static rp_calib_params_t out_params = default_params;
+	
+	
+	if (calibrateWrite.NewValue()) {
+		calibrateWrite.Update();
+		rp_CalibrationWriteParams(out_params);
+		calibrateWrite.Value() = false;
+		fprintf(stderr, "write\n");
+	}
 	
 	if (calibrateCancel.IsNewValue() && !is_default_calib_params) {
 		calibrateCancel.Update();
@@ -635,33 +676,64 @@ void OnNewParams(void) {
 		if (rp_CalibrationReset())
 			calibrateReset.Value() = -1;
 		is_default_calib_params = true;
-	}	
-    if (calibrateFrontEndOffset.NewValue() == 1) {		
-        if (rp_CalibrateFrontEndOffset(RP_CH_1))
-			calibrateFrontEndOffset.Value() = -1;
-        if (rp_CalibrateFrontEndOffset(RP_CH_2))
-            calibrateFrontEndOffset.Value() = -1;
-        is_default_calib_params = false;
-    }
-    if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {		
-        if (rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue()))
+		default_params = rp_GetCalibrationSettings();
+	}
+
+	if (calibrateFrontEndOffset.NewValue() == 1) {
+		calibrateFrontEndOffset.Update();		
+		rp_CalibrateFrontEndOffset(RP_CH_1, &out_params);
+		rp_CalibrateFrontEndOffset(RP_CH_2, &out_params);
+		calibrateFrontEndOffset.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_OFFSET)) {
+			rp_CalibrationWriteParams(out_params);
+			calibrateFrontEndOffset.Value() = -1; // next calibration step
+			is_default_calib_params = false;
+		}
+		else
+			calibrateFrontEndOffset.Value() = 0; // send user warning		
+	}
+    
+    if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
+		calibrateFrontEndScaleLV.Update();		
+        rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue(), &out_params);
+        rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue(), &out_params);        
+        calibrateFrontEndScaleLV.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_SCALE_LV)) {			
+			rp_CalibrationWriteParams(out_params);
 			calibrateFrontEndScaleLV.Value() = -1;			
-        if (rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue()))
-            calibrateFrontEndScaleLV.Value() = -1;            
-        calibrateValue.Update();
-    }    
-    if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
-        if (rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue()))
-			calibrateFrontEndScaleHV.Value() = -1;
-        if (rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue()))
-            calibrateFrontEndScaleHV.Value() = -1;
+		}
+		else {
+			calibrateFrontEndScaleLV.Value() = 0;			
+		}
         calibrateValue.Update();
     }
+    
+    if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
+		calibrateFrontEndScaleHV.Update();
+		fprintf(stderr, "3\n");
+        rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue(), &out_params);			
+        rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue(), &out_params);
+        calibrateFrontEndScaleHV.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_SCALE_HV)) {
+			rp_CalibrationWriteParams(out_params);
+			calibrateFrontEndScaleHV.Value() = -1;
+		}
+		else
+			calibrateFrontEndScaleHV.Value() = 0;		
+        calibrateValue.Update();
+    }
+    
     if (calibrateBackEnd.NewValue() == 1) {
-        if (rp_CalibrateBackEnd(RP_CH_1))
+		calibrateBackEnd.Update();
+        rp_CalibrateBackEnd(RP_CH_1, &out_params);
+        rp_CalibrateBackEnd(RP_CH_2, &out_params);
+        calibrateBackEnd.IsValueChanged();
+		if (check_params(out_params, STEP_BACK_END)) {
+			rp_CalibrationWriteParams(out_params);
 			calibrateBackEnd.Value() = -1;
-        if (rp_CalibrateBackEnd(RP_CH_2))			
-            calibrateBackEnd.Value() = -1;        
+		}
+		else
+			calibrateBackEnd.Value() = 0;
     }
 
 /* ------ UPDATE DEBUG PARAMETERS ------*/

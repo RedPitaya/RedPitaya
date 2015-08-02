@@ -29,13 +29,13 @@ int calib_WriteParams(rp_calib_params_t calib_params);
 void calib_SetToZero();
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
-int calib_SetFrontEndOffset(rp_channel_t channel);
-int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage);
-int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage);
+int calib_SetFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params);
+int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
+int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
 
 int calib_SetBackEndOffset(rp_channel_t channel);
 int calib_SetBackEndScale(rp_channel_t channel);
-int calib_CalibrateBackEnd(rp_channel_t channel);
+int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
 
 int calib_Reset();
 
