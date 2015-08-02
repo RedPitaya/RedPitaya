@@ -37,7 +37,7 @@
 #define PERIOD_EXISTS_MAX_THRESHOLD       0.92  // ratio
 #define PERIOD_EXISTS_PEAK_THRESHOLD      0.99  // ratio
 #define PERIOD_REP_COUNT_MIN          3
-#define VMEAN_REP_COUNT_MIN          3
+#define VMEAN_REP_COUNT_MIN           3
 
 int osc_Init();
 int osc_Release();
@@ -101,6 +101,8 @@ double scaleAmplitude(double volts, double ampScale, double probeAtt, double amp
 int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res);
 double unscaleAmplitude(double value, double ampScale, double probeAtt, double ampOffset, double invertFactor);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 float viewIndexToTime(int index);
 double roundUpTo125(double data);
 double roundUpTo25(double data);
