@@ -468,6 +468,12 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 
 int osc_setTriggerLevel(float level) {
     pthread_mutex_lock(&mutex);
+    
+    if((trigSource == RPAPP_OSC_TRIG_SRC_CH1) || (trigSource == RPAPP_OSC_TRIG_SRC_CH2)) {
+        rpApp_osc_source source = (trigSource == RPAPP_OSC_TRIG_SRC_CH1) ? RPAPP_OSC_SOUR_CH1 : RPAPP_OSC_SOUR_CH2;
+        ECHECK_APP_MUTEX(mutex, unattenuateAmplitudeChannel(source, level, &level));
+    }
+    
     ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerLevel(level));
     update_view();
     pthread_mutex_unlock(&mutex);
@@ -475,7 +481,13 @@ int osc_setTriggerLevel(float level) {
 }
 
 int osc_getTriggerLevel(float *level) {
-    return rp_AcqGetTriggerLevel(level);
+    ECHECK_APP(rp_AcqGetTriggerLevel(level));
+    
+    if((trigSource == RPAPP_OSC_TRIG_SRC_CH1) || (trigSource == RPAPP_OSC_TRIG_SRC_CH2)) {
+        rpApp_osc_source source = (trigSource == RPAPP_OSC_TRIG_SRC_CH1) ? RPAPP_OSC_SOUR_CH1 : RPAPP_OSC_SOUR_CH2;
+        ECHECK_APP(attenuateAmplitudeChannel(source, *level, level));
+    }
+    return RP_OK;
 }
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
@@ -541,6 +553,7 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     ECHECK_APP(unscaleAmplitudeChannel(source, max, &resMax));
     ECHECK_APP(unscaleAmplitudeChannel(source, min, &resMin));
     *Vpp = resMax - resMin;
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vpp, Vpp));
     return RP_OK;
 }
 
@@ -554,6 +567,7 @@ int osc_measureMeanVoltage(rpApp_osc_source source, float *meanVoltage) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, sum / (viewEndPos - viewStartPos), meanVoltage));
+    ECHECK_APP(attenuateAmplitudeChannel(source, *meanVoltage, meanVoltage));
     return RP_OK;
 }
 
@@ -571,7 +585,7 @@ int osc_measureMaxVoltage(rpApp_osc_source source, float *Vmax) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, max, Vmax));
-
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vmax, Vmax));
     return RP_OK;
 }
 
@@ -589,7 +603,7 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
     pthread_mutex_unlock(&mutex);
 
     ECHECK_APP(unscaleAmplitudeChannel(source, min, Vmin));
-
+    ECHECK_APP(attenuateAmplitudeChannel(source, *Vmin, Vmin));
     return RP_OK;
 }
 
@@ -758,6 +772,7 @@ int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms) {
     pthread_mutex_unlock(&mutex);
 
     *rms = (double) sqrt(rmsValue / (double)(viewEndPos - viewStartPos));
+    ECHECK_APP(attenuateAmplitudeChannel(source, *rms, rms));
     return RP_OK;
 }
 
@@ -945,6 +960,24 @@ int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
     return RP_OK;
 }
 
+int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
+    float probeAtt = 1.f;
+    if (source != RPAPP_OSC_SOUR_MATH)
+        ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
+    
+    *res = scaleAmplitude(value, 1.f, probeAtt, 0.f, 1.f);
+    return RP_OK;
+}
+
+int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
+    float probeAtt = 1.f;
+    if (source != RPAPP_OSC_SOUR_MATH)
+        ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
+    
+    *res = unscaleAmplitude(value, 1.f, probeAtt, 0.f, 1.f);
+    return RP_OK;
+}
+
 float viewIndexToTime(int index) {
     return indexToTime(index - viewSize / 2) + timeOffset;
 }
@@ -957,9 +990,11 @@ void calculateIntegral(rp_channel_t channel, float scale, float offset, float in
     float ch_sign = invert ? -1.f : 1.f;
 
     ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + viewStartPos], &v));
+	ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v, &v));
     view[RPAPP_OSC_SOUR_MATH*viewSize] = ch_sign * v * dt;
     for (int i = viewStartPos + 1; i < viewEndPos; ++i) {
         ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i], &v));
+		ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v, &v));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] + (ch_sign * v * dt);
         view[RPAPP_OSC_SOUR_MATH*viewSize + i-1] = scaleAmplitude(view[RPAPP_OSC_SOUR_MATH*viewSize + i-1], scale, 1, offset, invertFactor);
     }
@@ -974,9 +1009,11 @@ void calculateDevivative(rp_channel_t channel, float scale, float offset, float 
     float ch_sign = invert ? -1.f : 1.f;
     
     ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + viewStartPos], &v2));
+	ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v2, &v2));
     for (int i = viewStartPos; i < viewEndPos - 1; ++i) {
         v1 = v2;
         ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) channel, view[channel*viewSize + i + 1], &v2));
+		ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) channel, v2, &v2));
         view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(ch_sign * (v2 - v1) / dt2, scale, 1, offset, invertFactor);
     }
     view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 1] = view[RPAPP_OSC_SOUR_MATH*viewSize + viewEndPos - 2];
@@ -1123,6 +1160,10 @@ void mathThreadFunction() {
             for (int i = viewStartPos; i < viewEndPos; ++i) {
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, view[mathSource1*viewSize + i], &v1));
                 ECHECK_APP_THREAD(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, view[mathSource2*viewSize + i], &v2));
+
+                ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) mathSource1, v1, &v1));
+                ECHECK_APP_THREAD(attenuateAmplitudeChannel((rpApp_osc_source) mathSource2, v2, &v2));
+
                 view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
         }
