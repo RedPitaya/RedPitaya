@@ -14,6 +14,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "common.h"
 #include "analog_mixed_signals.h"
@@ -103,36 +104,29 @@ int ams_SetValueDAC3(uint32_t value)
 
 int ams_GetValueADC0(uint32_t* value)
 {
-    file fp;
-    fopen (fp, "/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/", 'r');
-    int r=fscanf (fp, "%d", value);
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");
+    int r = !fscanf (fp, "%d", value);
     return r;
 }
 
 int ams_GetValueADC1(uint32_t* value)
 {
-    int r=cmn_GetValue(&ams->aif1, value, ANALOG_IN_MASK);
-    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
-    	*value=0;
-    }
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");
+    int r = !fscanf (fp, "%d", value);
     return r;
 }
 
 int ams_GetValueADC2(uint32_t* value)
 {
-    int r=cmn_GetValue(&ams->aif2, value, ANALOG_IN_MASK);
-    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
-    	*value=0;
-    }
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");
+    int r = !fscanf (fp, "%d", value);
     return r;
 }
 
 int ams_GetValueADC3(uint32_t* value)
 {
-    int r=cmn_GetValue(&ams->aif3, value, ANALOG_IN_MASK);
-    if(*value>ANALOG_IN_MAX_VAL_INTEGER){
-    	*value=0;
-    }
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");
+    int r = !fscanf (fp, "%d", value);
     return r;
 }
 
