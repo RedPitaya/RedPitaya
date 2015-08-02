@@ -111,7 +111,7 @@ ACQUIRE         = $(INSTALL_DIR)/bin/acquire
 XADC            = $(INSTALL_DIR)/bin/xadc
 CALIB           = $(INSTALL_DIR)/bin/calib
 CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
-DISCOVERY       = $(INSTALL_DIR)/sbin/discovery
+DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
 LIBRP           = $(INSTALL_DIR)/lib/librp.so
@@ -415,8 +415,6 @@ $(CALIBRATE): $(LIBRP)
 
 
 $(DISCOVERY): $(URAMDISK) $(LIBREDPITAYA)
-	$(MAKE) -C $(DISCOVERY_DIR)
-	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp $(DISCOVERY_DIR)/discovery.sh $(INSTALL_DIR)
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
@@ -468,7 +466,6 @@ clean:
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
-	make -C $(DISCOVERY_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
