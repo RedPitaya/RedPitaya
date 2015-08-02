@@ -340,7 +340,7 @@ rp_calib_params_t rp_GetCalibrationSettings();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateFrontEndOffset(rp_channel_t channel) ;
+int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params) ;
 
 /**
 * Calibrates input channel low voltage scale. Jumpers must be set to LV.
@@ -351,7 +351,7 @@ int rp_CalibrateFrontEndOffset(rp_channel_t channel) ;
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage);
+int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
 
 /**
 * Calibrates input channel high voltage scale. Jumpers must be set to HV.
@@ -362,7 +362,7 @@ int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage);
+int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
 
 /**
 * Calibrates output channel offset.
@@ -392,7 +392,7 @@ int rp_CalibrateBackEndScale(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateBackEnd(rp_channel_t channel);
+int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
 
 /**
 * Set default calibration values.
