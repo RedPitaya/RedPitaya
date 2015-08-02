@@ -164,7 +164,7 @@ uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
     }
 }
 
-int calib_SetFrontEndOffset(rp_channel_t channel) {
+int calib_SetFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
 	failsafa_params = params;
@@ -181,11 +181,14 @@ int calib_SetFrontEndOffset(rp_channel_t channel) {
             params.fe_ch2_dc_offs = calib_GetDataMedian(channel))
 
     /* Set new local parameter */
-    ECHECK(calib_WriteParams(params));
+    if  (out_params)
+		*out_params = params;
+    else
+		ECHECK(calib_WriteParams(params));    
     return calib_Init();
 }
 
-int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
+int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
 	failsafa_params = params;
@@ -206,11 +209,14 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage) {
             params.fe_ch2_fs_g_lo = calibValue )
 
     /* Set new local parameter */
-    ECHECK(calib_WriteParams(params));
+    if  (out_params)
+		*out_params = params;
+    else
+		ECHECK(calib_WriteParams(params));
     return calib_Init();
 }
 
-int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
+int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
     failsafa_params = params;
@@ -231,7 +237,10 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage) {
             params.fe_ch2_fs_g_hi = calibValue )
 
     /* Set new local parameter */
-    ECHECK(calib_WriteParams(params));
+    if  (out_params)
+		*out_params = params;
+    else
+		ECHECK(calib_WriteParams(params));
     return calib_Init();
 }
 
@@ -259,7 +268,7 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
             params.be_ch2_dc_offs = -calib_GetDataMedian(channel))
 
     /* Set new local parameter */
-    ECHECK(calib_WriteParams(params));
+	ECHECK(calib_WriteParams(params));
     return calib_Init();
 }
 
@@ -292,7 +301,7 @@ int calib_SetBackEndScale(rp_channel_t channel) {
             params.be_ch2_fs = calibValue)
 
     /* Set new local parameter */
-    ECHECK(calib_WriteParams(params));
+	ECHECK(calib_WriteParams(params));
     return calib_Init();
 }
 
@@ -316,7 +325,7 @@ static int getGenDC_int(rp_channel_t channel, float dc) {
     return calib_GetDataMedian(channel);
 }
 
-int calib_CalibrateBackEnd(rp_channel_t channel) {
+int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     ECHECK(calib_ReadParams(&params));
 
@@ -355,7 +364,10 @@ int calib_CalibrateBackEnd(rp_channel_t channel) {
             params.be_ch2_dc_offs = offset)
 
     /* Set new local parameter */
-    ECHECK(calib_WriteParams(params));
+    if  (out_params)
+		*out_params = params;
+    else
+		ECHECK(calib_WriteParams(params));
     return calib_Init();
 }
 
