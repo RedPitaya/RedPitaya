@@ -62,7 +62,7 @@ done
 /etc/init.d/connman-config
 
 # Run IP discovery service
-$PATH_REDPITAYA/sbin/discovery
+$PATH_REDPITAYA/sbin/discovery.sh
 
 # Print OS version info
 cat $PATH_REDPITAYA/version.txt
