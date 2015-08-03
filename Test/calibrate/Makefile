@@ -29,7 +29,7 @@ CALIBRATE=calibrateApp
 CALIBRATE2=calibrateApp2
 
 # GCC compiling & linking flags
-CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api-mockup/rpbase/src
+CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api/rpbase/src
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Red Pitaya common SW directory
@@ -37,7 +37,7 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../../api-mockup/lib
+LIBPATH= -L ../../api/lib
 LIBS= -lm -lpthread -lrp
 
 # Main GCC executable (used for compiling and linking)
