@@ -3,11 +3,11 @@ RM=rm
 
 CXXSOURCES=main.cpp
 
-RP_API=../../../api-mockup/lib
+RP_API=../../../api/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
 INCLUDE = -I$(RP_SDK)
-INCLUDE+= -I../../../api-mockup/rpApplications/src/ -I../../../api-mockup/rpbase/src/
+INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/rpbase/src/
 INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 COMMON_FLAGS+=-Wall -g -fPIC -lstdc++

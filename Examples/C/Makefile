@@ -9,10 +9,10 @@ VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 #Define header includes
-RP_PATH_INCLUDE = -I../../api-mockup/rpbase/src/
+RP_PATH_INCLUDE = -I../../api/rpbase/src/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../api-mockup/rpbase -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L ../../api/rpbase -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
@@ -37,6 +37,6 @@ clean:
 
 
 #  -----Error----- I have no idea what was wrong. 
-#  ../../api-mockup/rpbase/librp.so: file not recognized: File format not recognized
+#  ../../api/rpbase/librp.so: file not recognized: File format not recognized
 #
 # 

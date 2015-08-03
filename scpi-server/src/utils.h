@@ -16,9 +16,9 @@
 #define UTILS_H_
 
 #include <stdbool.h>
-#include "../../api-mockup/rpbase/src/rp.h"
+#include "../../api/rpbase/src/rp.h"
 #include "acquire.h"
-#include "../../api-mockup/rpApplications/src/rpApp.h"
+#include "../../api/rpApplications/src/rpApp.h"
 
 #define SET_OK(cont) \
     	SCPI_ResultString(cont, "OK"); \

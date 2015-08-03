@@ -17,8 +17,8 @@
 #define OSCILLOSCOPE_APP_H_
 
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
-#include "../../api-mockup/rpbase/src/rp.h"
-#include "../../api-mockup/rpApplications/src/rpApp.h"
+#include "../../api/rpbase/src/rp.h"
+#include "../../api/rpApplications/src/rpApp.h"
 
 scpi_result_t RP_APP_OscRun(scpi_t *context);
 scpi_result_t RP_APP_OscStop(scpi_t *context);
