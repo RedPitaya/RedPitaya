@@ -104,21 +104,21 @@ int ams_SetValueDAC3(uint32_t value)
 
 int ams_GetValueADC0(uint32_t* value)
 {
-    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");
     int r = !fscanf (fp, "%d", value);
     return r;
 }
 
 int ams_GetValueADC1(uint32_t* value)
 {
-    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");
     int r = !fscanf (fp, "%d", value);
     return r;
 }
 
 int ams_GetValueADC2(uint32_t* value)
 {
-    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");
+    FILE *fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");
     int r = !fscanf (fp, "%d", value);
     return r;
 }
