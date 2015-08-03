@@ -471,10 +471,10 @@ int osc_setTriggerLevel(float level) {
     
     if((trigSource == RPAPP_OSC_TRIG_SRC_CH1) || (trigSource == RPAPP_OSC_TRIG_SRC_CH2)) {
         rpApp_osc_source source = (trigSource == RPAPP_OSC_TRIG_SRC_CH1) ? RPAPP_OSC_SOUR_CH1 : RPAPP_OSC_SOUR_CH2;
-        ECHECK_APP_MUTEX(mutex, unattenuateAmplitudeChannel(source, level, &level));
+        ECHECK_APP_MUTEX(mutex, unattenuateAmplitudeChannel(source, level, &level));        
     }
     
-    ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerLevel(level));
+    rp_AcqSetTriggerLevel(level);
     update_view();
     pthread_mutex_unlock(&mutex);
     return RP_OK;
