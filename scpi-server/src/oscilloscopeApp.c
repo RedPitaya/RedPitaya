@@ -16,7 +16,7 @@
 #include "oscilloscopeApp.h"
 #include <string.h>
 
-#include "../../api-mockup/rpApplications/src/rpApp.h"
+#include "../../api/rpApplications/src/rpApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 #include "utils.h"
 

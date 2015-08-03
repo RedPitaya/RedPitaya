@@ -19,7 +19,7 @@
 
 #include "utils.h"
 #include "dpin.h"
-#include "../../api-mockup/rpbase/src/common.h"
+#include "../../api/rpbase/src/common.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
 
 
