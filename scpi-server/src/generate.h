@@ -17,7 +17,7 @@
 #define GENERATE_H_
 
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
-#include "../../api-mockup/rpbase/src/rp.h"
+#include "../../api/rpbase/src/rp.h"
 
 scpi_result_t RP_GenChannel1SetState(scpi_t * context);
 scpi_result_t RP_GenChannel2SetState(scpi_t * context);

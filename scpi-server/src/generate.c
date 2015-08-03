@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "generate.h"
-#include "../../api-mockup/rpbase/src/generate.h"
+#include "../../api/rpbase/src/generate.h"
 
 #include "utils.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
