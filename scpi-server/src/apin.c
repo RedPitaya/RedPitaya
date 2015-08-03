@@ -19,7 +19,7 @@
 #include "utils.h"
 #include "apin.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
-#include "../../api-mockup/rpbase/src/common.h"
+#include "../../api/rpbase/src/common.h"
 
 
 scpi_result_t RP_AnalogPinReset(scpi_t *context) {

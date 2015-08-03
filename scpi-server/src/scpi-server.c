@@ -29,7 +29,7 @@
 
 #include "generate.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
-#include "../../api-mockup/rpApplications/src/rpApp.h"
+#include "../../api/rpApplications/src/rpApp.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
