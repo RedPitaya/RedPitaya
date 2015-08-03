@@ -528,11 +528,12 @@ int acq_GetTriggerLevel(float *voltage)
     ECHECK(acq_GetChannelThreshold(RP_CH_1, &v1));
     ECHECK(acq_GetChannelThreshold(RP_CH_2, &v2));
 
-    if (fabs(v1 - v2) > FLOAT_EPS) {
-        return RP_EOOR;
-    }
-
-    *voltage = v1;
+    rp_acq_trig_src_t src;
+    acq_GetTriggerSrc(&src);
+    if (src == 0)
+		*voltage = v1;
+	else if (src == 1)
+		*voltage = v2;
 
     return RP_OK;
 }
