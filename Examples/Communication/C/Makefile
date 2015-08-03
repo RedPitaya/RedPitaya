@@ -38,7 +38,7 @@ $(IIC):
 	make -C $(IIC_DIR) CROSS_COMPILE=$(CROSS_COMPILE)
 
 copy:
-	mkdir $(TARGET)
+	mkdir -p $(TARGET)
 	cp $(UART_DIR)/uart_test $(TARGET)
 	#cp $(SPI_DIR/spi_test) $(TARGET)
 	cp $(IIC_DIR)/iic_test $(TARGET)
