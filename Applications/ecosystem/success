@@ -14,9 +14,26 @@
 		<link rel="stylesheet" href="./style.css" type="text/css" />
 		<script src="../assets/dropzone.js"></script>
 		<title>My Red Pitaya</title>
+		<script>
+			var counter = 5;
+			var interval = setInterval(function() {
+				counter--;
+				$("#succes_text").html("Your license is valid and after " + counter + " seconds you will be redirected to the main page.");
+				// Display 'counter' wherever you want to display it.
+				if (counter == 0) {
+					// Display a login box
+					window.location = "index.html";
+				}
+			}, 1000);
+		</script>
 	</head>
 
 <body style="background-color: #1D1D1D;">
+	<div class="panel panel-default" style="background-color: #1D1D1D; width:1200px; margin: 50px auto;">
+		<div class="success_body" id="succes_text">
+			Your license is valid and after 5 seconds you will be redirected to the main page.
+		</div>
+	</div>
 	<div class="panel panel-default" style="background-color: #1D1D1D; width:1200px; margin: 50px auto;">
 		<div class="panel-body" >
             <a class="navbar-brand" href="/">
@@ -81,40 +98,8 @@
 					</div>
 				</div>		
 			</div>
-			
-<div class="input-w" style="float: right; width:300px">
-	<form enctype="multipart/form-data" action="/lic_upload" method="post">
-		<div class="row">
-			<div class="col-sm-4 btn btn-default btn-file">
-				Choise file<input type="file"  name="file1">
-			</div>
-			<div class="col-sm-6 btn btn-default btn-file">
-				Submit<input type="submit" name="submit" value="Upload">
-			</div>
-			<input type="hidden" name="upload_pass" value="value">
-		</div>
-	</form>
-</div>
-
 		</div>
 	</div>
 
 </body>
-	<script type="text/javascript">
-	var myDropzone = new Dropzone(document.body, {
-		url: "/lic_upload",
-		thumbnailWidth: 80,
-		thumbnailHeight: 80,
-		autoProessQueue: true,
-		addRemoveLinks: false,
-		previewTemplate: '<div id="dummy"></div>',
-		init: function() {
-			this.on("success", function(file, responseText) {
-				document.open();
-				document.write(responseText);
-				document.close();
-			});
-		}
-	});
-	</script>
 </html>
