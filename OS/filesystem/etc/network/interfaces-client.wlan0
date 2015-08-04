@@ -1,0 +1,9 @@
+################################
+# wlan0: Wireless USB adapter  #
+################################
+
+auto wlan0
+iface wlan0 inet dhcp
+    pre-up wpa_supplicant -B -D wext -i wlan0 -c /boot/wpa_supplicant.conf
+    post-down killall -q wpa_supplicant
+    udhcpc_opts -t7 -T3
