@@ -180,7 +180,83 @@
       OSC.params.orig[param_name] = new_params[param_name];
       
 	  if (param_name.indexOf('OSC_MEAS_VAL') == 0) {
-			new_params[param_name].value = new_params[param_name].value.toFixed(4);
+		  var orig_units = $("#"+param_name).parent().children("#OSC_MEAS_ORIG_UNITS").text();
+		  var is_hertz = (orig_units == "Hz");
+		  var is_ms = (orig_units == "ms");
+		  
+		  var y = new_params[param_name].value;
+		  var z = y;
+		  var factor = '';
+		  if(y < 0.00000000000010)
+				new_params[param_name].value = 'ERROR';
+		  else if(y > 0.00000000000010 && y <= 0.000000999990)
+		  {	
+			  z*=1e9;
+			  factor = (is_ms) ? 'p' : 'n';
+			  if(y > 0.00000000000010 && y <= 0.00000000999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
+			  else if(y > 0.00000000999990 && y <= 0.0000000999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
+			  else if(y > 0.0000000999990 && y <= 0.000000999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+		  }
+		  else if(y > 0.000000999990 && y <= 0.000999990)
+		  {	
+			  z*=1e6;
+			  factor = (is_ms) ? 'n' : 'u';
+			  if(y > 0.000000999990 && y <= 0.00000999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
+			  else if(y > 0.00000999990 && y <= 0.0000999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
+			  else if(y > 0.0000999990 && y <= 0.000999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+		  }
+		  else if(y > 0.000999990 && y <= 0.999990)
+		  {	
+			  z*=1e3;
+			  factor = (is_ms) ? 'u' : 'm';
+			  if(y > 0.000999990 && y <= 0.00999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
+			  else if(y > 0.00999990 && y <= 0.0999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
+			  else if(y > 0.0999990 && y <= 0.999990)
+				new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+		  }
+		  else if(y > 0.999990 && y <= 9999.90)
+		  {	
+			  factor = (is_ms) ? 'm' : '';
+			  if(y > 0.999990 && y <= 9.99990)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
+			  else if(y > 9.99990 && y <= 99.9990)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
+			  else if(y > 99.9990 && y <= 999.990)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+			  else if(y > 999.990 && y <= 9999.90)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(0) : z.toFixed(1);
+		  }
+		  else if(y > 9999.90 && y <= 999990.0)
+		  {	
+			  z/=1e3;
+			  factor = 'k';
+			  if(y > 9999.90 && y <= 99999.0)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
+			  else if(y > 99999.0 && y <= 999990.0)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+		  }
+		  else if(y > 999990.0 && y <= 999990000.0)
+		  {	
+			  z/=1e6;
+			  factor = 'M';
+			  if(y > 999990.0 && y <= 9999900.0)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
+			  else if(y > 9999900.0 && y <= 99999000.0)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
+			  else if(y > 99999000.0 && y <= 999990000.0)
+				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+		  }
+		  if (is_ms)
+			orig_units = 's';
+		  $("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(factor + orig_units);
 	  }
 
       // Run/Stop button
@@ -208,8 +284,9 @@
       }
       // All other parameters
       else {
-		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1) {
-			console.log(new_params[param_name].value);
+		  if (param_name == 'OSC_TRIG_LEVEL')
+			console.log('OSC_TRIG_LEVEL = ', new_params['OSC_TRIG_LEVEL'].value);
+		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1) {			
 			if (new_params[param_name].value == -1) {
 				++OSC.state.calib;
 				OSC.setCalibState(OSC.state.calib);
@@ -768,7 +845,7 @@ value = field.val();
 		}
 		
         $('#info-meas').append(
-          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;' + units[$elem.data('operator')] + '</div>'
+          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;<span id="OSC_MEAS_UNITS">' + units[$elem.data('operator')] + '</span><span id="OSC_MEAS_ORIG_UNITS" style="display:none;">' + units[$elem.data('operator')] + '</span></div>'
         );
       }
     });
