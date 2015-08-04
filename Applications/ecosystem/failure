@@ -18,6 +18,11 @@
 
 <body style="background-color: #1D1D1D;">
 	<div class="panel panel-default" style="background-color: #1D1D1D; width:1200px; margin: 50px auto;">
+		<div class="error_body" >
+			Your license file did not unlock any instrument.
+		</div>
+	</div>
+	<div class="panel panel-default" style="background-color: #1D1D1D; width:1200px; margin: 50px auto;">
 		<div class="panel-body" >
             <a class="navbar-brand" href="/">
               <img class="back-btn" src="scopegenpro/img/arrow_nav_left.png">
