@@ -7,4 +7,4 @@ PAYLOAD=payload={\"mac\":\"$MAC\",\"ips\":{\"eth0\":\"$IP\"}}
 
 URL=http://discovery.redpitaya.com/update
 
-curl -X POST -d '$PAYLOAD' $URL
+curl -X POST -d "$PAYLOAD" $URL
