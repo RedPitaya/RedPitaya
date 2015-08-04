@@ -52,6 +52,7 @@ static rp_pinState_t gain_ch_b = RP_LOW;
 /* @brief Determines whether TriggerDelay was set in time or sample units */
 static bool triggerDelayInNs = false;
 
+rp_acq_trig_src_t last_trig_src = RP_TRIG_SRC_DISABLED;
 
 /* @brief Default filter equalization coefficients */
 static const uint32_t GAIN_LO_CHA_FILT_AA = 0x7D93;
@@ -440,6 +441,7 @@ int acq_GetAveraging(bool* enable)
 
 int acq_SetTriggerSrc(rp_acq_trig_src_t source)
 {
+    last_trig_src = source;
     return osc_SetTriggerSource(source);
 }
 
@@ -518,23 +520,21 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
 
 int acq_SetTriggerLevel(float voltage)
 {
-    ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
-    return acq_SetChannelThreshold(RP_CH_2, voltage);
+    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
+        ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
+    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
+        ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
+    }
+    return RP_OK;
 }
 
 int acq_GetTriggerLevel(float *voltage)
 {
-    float v1, v2;
-    ECHECK(acq_GetChannelThreshold(RP_CH_1, &v1));
-    ECHECK(acq_GetChannelThreshold(RP_CH_2, &v2));
-
-    rp_acq_trig_src_t src;
-    acq_GetTriggerSrc(&src);
-    if (src == 0)
-		*voltage = v1;
-	else if (src == 1)
-		*voltage = v2;
-
+    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
+        ECHECK(acq_GetChannelThreshold(RP_CH_1, voltage));
+    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
+        ECHECK(acq_GetChannelThreshold(RP_CH_2, voltage));
+    }
     return RP_OK;
 }
 
@@ -594,22 +594,21 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 
 int acq_SetTriggerHyst(float voltage)
 {
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
-    return acq_SetChannelThresholdHyst(RP_CH_2, voltage);
+    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
+        ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
+    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
+        ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, voltage));
+    }
+    return RP_OK;
 }
 
 int acq_GetTriggerHyst(float *voltage)
 {
-    float v1, v2;
-    ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, &v1));
-    ECHECK(acq_GetChannelThresholdHyst(RP_CH_2, &v2));
-
-    *voltage = v1;
-
-    if (fabs(v1 - v2) > FLOAT_EPS) {
-        return RP_EOOR;
+    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
+        ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, voltage));
+    } else if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
+        ECHECK(acq_GetChannelThresholdHyst(RP_CH_2, voltage));
     }
-
     return RP_OK;
 }
 
@@ -885,11 +884,13 @@ int acq_GetBufferSize(uint32_t *size) {
  * @return
  */
 int acq_SetDefault() {
-    ECHECK(acq_SetTriggerLevel(0));
-    ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
-    ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
+    ECHECK(acq_SetChannelThreshold(RP_CH_1, 0.0));
+    ECHECK(acq_SetChannelThreshold(RP_CH_2, 0.0));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, 0.0));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, 0.0));
+	
+    ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
+    ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
     ECHECK(acq_SetDecimation(RP_DEC_1));
     ECHECK(acq_SetSamplingRate(RP_SMP_125M));
     ECHECK(acq_SetAveraging(true));
