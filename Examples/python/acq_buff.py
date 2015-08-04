@@ -23,3 +23,8 @@ rp_s.tx_txt('ACQ:SOUR1:DATA?')
 buff_string = rp_s.rx_txt()
 buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
 buff = map(float, buff_string)
+
+import matplotlib.pyplot as plt
+plt.plot(buff)
+plt.ylabel('Voltage')
+plt.show()
