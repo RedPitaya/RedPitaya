@@ -194,7 +194,7 @@ $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) 
 	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
 
 zip: $(TARGET) $(SDK)
-	cd $(TARGET); zip -r ../$(NAME)-$(VERSION)-$(BRANCH_NAME).zip *
+	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
