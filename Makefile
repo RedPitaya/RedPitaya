@@ -373,7 +373,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/nginx.patch
-	cp -f patches/nginx.conf $@
+	cp -f patches/nginx.conf $@/conf/
 
 $(BOOST_DIR): $(URAMDISK)
 	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
