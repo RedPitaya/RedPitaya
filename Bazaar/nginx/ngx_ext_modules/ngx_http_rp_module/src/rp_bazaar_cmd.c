@@ -396,15 +396,17 @@ int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
     int demo = 0;
-    char* parse_cmd = strstr(argv[0], "?");
-    /* We are dealing with a new app */
-    if (parse_cmd){
-        *parse_cmd = '\0';
-    }
-
-    char *url = strstr(++parse_cmd, "type=demo");
-    if(url){
+    char* url = strstr(argv[0], "?type=demo");
+    if (url)
+    {
+        *url = '\0';
         demo = 1;
+    } 
+    else
+    {
+       url = strstr(argv[0], "?type=run");
+       if(url)
+            *url = '\0';
     }
 
     int unsigned len;
