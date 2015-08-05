@@ -510,7 +510,7 @@
           <div class="col-xs-12 option-content">
             <div class="right-menu-option">
               <span class="col-info">Level</span>
-              <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000" step="0.001" min="-2000" max="2000">
+              <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000" step="0.001" min="-1" max="1">
             </div>
           </div>
           
@@ -903,14 +903,14 @@ $('#calib-input').change(function() {
 						var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
 						if(OSC.params.orig[ref_scale]){
 							var limit = Math.abs(OSC.params.orig[ref_scale].value)*5;
-							limit = limit > 2000 ? 2000 : limit;
+							limit = limit > 1 ? 1 : limit;
 							min = -1 * limit;
 							max = limit;
 						}
 					}			
 				}
 				
-				return {'min': min.toFixed(3), 'max': max.toFixed(3)};
+				return {'min': min, 'max': max};
 				
             }
 			
