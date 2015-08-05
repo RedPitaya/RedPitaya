@@ -463,8 +463,8 @@
               var graph_height = $('#graph_grid').outerHeight();
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
               var px_offset = -((new_params['OSC_TRIG_LEVEL'].value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
-				
-              $('#trig_level_arrow, #trigger_level').show();
+              
+              $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
               if(param_name == 'OSC_TRIG_LEVEL') {
 				$('#right_menu .menu-btn.trig').prop('disabled', false);
 				$('#osc_trig_level_info').html(OSC.convertVoltage(new_params['OSC_TRIG_LEVEL'].value));
@@ -1310,8 +1310,6 @@ value = field.val();
 
 		  if(OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
 			$('#info_box').html('Trigger at its limit');
-			$('#trig_level_arrow').css('top', $('#graph_grid').outerHeight()/2);
-			$('#trigger_level').css('top', $('#graph_grid').outerHeight()/2);
 		  }
 		  else{
 			$('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
@@ -1963,8 +1961,6 @@ $(function() {
     }
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
-    $('#trig_level_arrow').css('top', $('#graph_grid').outerHeight()/2);    
-    $('#trigger_level').css('top', $('#graph_grid').outerHeight()/2);    
     
     // Set the resized flag
     OSC.state.resized = true;
