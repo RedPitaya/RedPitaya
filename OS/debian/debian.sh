@@ -7,7 +7,8 @@
 ################################################################################
 
 # Install Debian base system to the root file system
-MIRROR=http://ftp.heanet.ie/pub/debian
+#MIRROR=http://ftp.arnes.si/pub/packages/debian
+MIRROR=http://ftp.debian.org/debian
 DISTRO=jessie
 debootstrap --foreign --arch $ARCH $DISTRO $ROOT_DIR $MIRROR
 
