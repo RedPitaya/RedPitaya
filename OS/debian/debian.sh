@@ -59,6 +59,8 @@ install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/75-persistent-net-generat
 install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $ROOT_DIR/etc/network/interfaces.d/eth0
 install -v -m 664 -o root -D $OVERLAY/etc/default/ifplugd                                $ROOT_DIR/etc/default/ifplugd
 install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0                     $ROOT_DIR/etc/network/interfaces.d/wlan0
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces-ap.wlan0                    $ROOT_DIR/etc/network/interfaces-ap.wlan0
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces-client.wlan0                $ROOT_DIR/etc/network/interfaces-client.wlan0
 install -v -m 664 -o root -D $OVERLAY/etc/hostapd/hostapd.conf                           $ROOT_DIR/etc/hostapd/hostapd.conf
 install -v -m 664 -o root -D $OVERLAY/etc/default/hostapd                                $ROOT_DIR/etc/default/hostapd
 install -v -m 664 -o root -D $OVERLAY/etc/dhcp/dhcpd.conf                                $ROOT_DIR/etc/dhcp/dhcpd.conf
