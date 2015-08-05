@@ -468,26 +468,14 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 
 int osc_setTriggerLevel(float level) {
     pthread_mutex_lock(&mutex);
-    
-    if((trigSource == RPAPP_OSC_TRIG_SRC_CH1) || (trigSource == RPAPP_OSC_TRIG_SRC_CH2)) {
-        rpApp_osc_source source = (trigSource == RPAPP_OSC_TRIG_SRC_CH1) ? RPAPP_OSC_SOUR_CH1 : RPAPP_OSC_SOUR_CH2;
-        ECHECK_APP_MUTEX(mutex, unattenuateAmplitudeChannel(source, level, &level));        
-    }
-    
-    rp_AcqSetTriggerLevel(level);
+    ECHECK_APP_MUTEX(mutex, rp_AcqSetTriggerLevel(level));
     update_view();
     pthread_mutex_unlock(&mutex);
     return RP_OK;
 }
 
 int osc_getTriggerLevel(float *level) {
-    ECHECK_APP(rp_AcqGetTriggerLevel(level));
-    
-    if((trigSource == RPAPP_OSC_TRIG_SRC_CH1) || (trigSource == RPAPP_OSC_TRIG_SRC_CH2)) {
-        rpApp_osc_source source = (trigSource == RPAPP_OSC_TRIG_SRC_CH1) ? RPAPP_OSC_SOUR_CH1 : RPAPP_OSC_SOUR_CH2;
-        ECHECK_APP(attenuateAmplitudeChannel(source, *level, level));
-    }
-    return RP_OK;
+    return rp_AcqGetTriggerLevel(level);
 }
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
@@ -966,15 +954,6 @@ int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res) 
         ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
     
     *res = scaleAmplitude(value, 1.f, probeAtt, 0.f, 1.f);
-    return RP_OK;
-}
-
-int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res) {
-    float probeAtt = 1.f;
-    if (source != RPAPP_OSC_SOUR_MATH)
-        ECHECK_APP(osc_getProbeAtt((rp_channel_t)source, &probeAtt));
-    
-    *res = unscaleAmplitude(value, 1.f, probeAtt, 0.f, 1.f);
     return RP_OK;
 }
 
