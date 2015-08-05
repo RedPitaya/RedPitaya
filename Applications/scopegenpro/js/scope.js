@@ -75,9 +75,7 @@
     fine: false,
 	graph_grid_height: null,
 	graph_grid_width: null,
-	calib: 0,
-	trig_limit: false,
-	trig_top: 0
+	calib: 0
   };
   
   // Params cache
@@ -472,8 +470,9 @@
 				$('#osc_trig_level_info').html(OSC.convertVoltage(new_params['OSC_TRIG_LEVEL'].value));
 				
 				if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
-					var value = $('#OSC_TRIG_LEVEL').val();					
+					var value = $('#OSC_TRIG_LEVEL').val();
 					if(value !== new_params[param_name].value){
+						//$('#OSC_TRIG_LEVEL').val(new_params[param_name].value);
 						OSC.setValue($('#OSC_TRIG_LEVEL'), new_params[param_name].value);
 					}
 				}
@@ -488,8 +487,8 @@
 				$('#OSC_TRIG_LEVEL').attr('min', -3.3);
 				$('#OSC_TRIG_LEVEL').attr('max', 3.3);
 			} else {
-				$('#OSC_TRIG_LEVEL').attr('min', -2000);
-				$('#OSC_TRIG_LEVEL').attr('max', 2000);				
+				$('#OSC_TRIG_LEVEL').attr('min', -1);
+				$('#OSC_TRIG_LEVEL').attr('max', 1);				
 			}
 		  }
         }
@@ -1311,22 +1310,20 @@ value = field.val();
 
 		  if(OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
 			$('#info_box').html('Trigger at its limit');
-			OSC.state.trig_limit = true;
+			$('#trig_level_arrow').css('top', $('#graph_grid').outerHeight()/2);
+			$('#trigger_level').css('top', $('#graph_grid').outerHeight()/2);
 		  }
 		  else{
-			OSC.state.trig_limit = false;
-			OSC.state.trig_top = $('#trig_level_arrow').css('top');
-			
 			$('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
 		  }
           
           if($('#trig_dialog').is(':visible')) {
-			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value.toFixed(3));
+            //$('#OSC_TRIG_LEVEL').val(+(new_value));
+			//$('#OSC_TRIG_LEVEL').change();
+			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
 			$('#OSC_TRIG_LEVEL').change();
-            OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
-            OSC.sendParams();			
           }
-          else if(save) {			
+          else if(save) {
             OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
             OSC.sendParams();
           }
@@ -1712,15 +1709,10 @@ $(function() {
     drag: function(ev, ui) {
       OSC.updateTrigLevel(ui, false);
     },
-    stop: function(ev, ui) {	
-      OSC.updateTrigLevel(ui, true);   
+    stop: function(ev, ui) {
+      OSC.updateTrigLevel(ui, true);
       OSC.state.trig_dragging = false;
       $('#info_box').empty();
-      
-	  if (OSC.state.trig_limit) {
-		$('#trig_level_arrow').css('top', OSC.state.trig_top);
-		$('#trigger_level').css('top', OSC.state.trig_top);
-	  }   	      
     }
   });
   
@@ -1732,11 +1724,11 @@ $(function() {
       OSC.state.cursor_dragging = true;
     },
     drag: function(ev, ui) {
-      OSC.updateYCursorElems(ui, false);    
+      OSC.updateYCursorElems(ui, false);
     },
     stop: function(ev, ui) {
       OSC.updateYCursorElems(ui, true);
-      OSC.state.cursor_dragging = false;      
+      OSC.state.cursor_dragging = false;
     }
   });
   
