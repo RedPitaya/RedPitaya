@@ -40,6 +40,9 @@
 							first_button = buttons;
 						$(buttons).children('a').html(value.name);
 						$(buttons).children('a').attr('href', '#' + key);
+						if(value.type=='demo')
+							$(buttons).children('a').addClass('lock');
+							
 						$(buttons).appendTo('.list-group');
 						$(buttons).show();
 						current_app = key;
@@ -82,7 +85,11 @@
 					//$(selector).mCustomScrollbar({ option: value });
 					$("#mcs_container .buttons a").on('click', function(){
 						$("#mcs_container .buttons a").removeClass('item-active');
-						$(this).addClass('item-active');
+						$("#mcs_container .buttons a").removeClass('item-active-lock');
+						if($(this).hasClass('lock'))
+							$(this).addClass('item-active-lock');
+						else
+							$(this).addClass('item-active');
 					});
 
 
