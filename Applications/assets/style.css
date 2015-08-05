@@ -292,6 +292,17 @@ fieldset[disabled] .btn-primary.active {
   background: #fff;
   color: #000;
 }
+
+#mcs_container .buttons a.item-active-lock{
+    background: url(../assets/images/klucavnica.png)
+				calc(100% - 8px) 8px
+				no-repeat
+				#fff;
+			
+	background-size:  25px 25px;
+	color: #000;
+}
+
 .divider {
   width: 1px;
   top: 35px;
@@ -303,4 +314,12 @@ fieldset[disabled] .btn-primary.active {
 }
 .panel-body{
   position: relative;
+}
+
+.lock
+{
+    background: url(../assets/images/klucavnica.png)
+				calc(100% - 8px) 8px
+				no-repeat;
+	background-size:  25px 25px;
 }
