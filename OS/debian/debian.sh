@@ -33,7 +33,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $ROOT_DI
 
 # setup locale and timezune, install packages
 chroot $ROOT_DIR <<- EOF_CHROOT
-# TODO sees sytemd is not running without /proc/cmdline or something
+# TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
 #localectl set-locale LANG="en_US.UTF-8"
