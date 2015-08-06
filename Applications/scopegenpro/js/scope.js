@@ -624,21 +624,37 @@
 						OSC.div = 1000;
 						unit = 'kV';						
 					}
-					field.html(value);					
+					field.html(value);
 					var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
 					$('#munit').html(units[new_params['OSC_MATH_OP'].value] + '/div');
 					
-					$('#OSC_MATH_OFFSET_UNIT').html(units[new_params['OSC_MATH_OP'].value]);
-					$('#OSC_MATH_OFFSET').val((OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div).toFixed(4));
+					$('#OSC_MATH_OFFSET_UNIT').html(units[new_params['OSC_MATH_OP'].value]);	
+					$('#OSC_MATH_OFFSET').val(OSC.formatValue(OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div));
 				}        
 				else
-					field.html(OSC.convertVoltage(new_params[param_name].value));      
+				{
+					var inp_units;
+				    if(Math.abs(new_params[param_name].value) >= 1) {
+						inp_units = 'V';
+					}
+					else if(Math.abs(new_params[param_name].value) >= 0.001) {
+						inp_units = 'mV';
+					}
+					field.html(OSC.convertVoltage(new_params[param_name].value)); 
+					if (param_name == "OSC_CH1_SCALE")
+						$("#OSC_CH1_OFFSET_UNIT").html(inp_units)
+					else if (param_name == "OSC_CH2_SCALE")
+						$("#OSC_CH2_OFFSET_UNIT").html(inp_units);
+				}
             }
             else {
               field.html(new_params[param_name].value);
             }
           }
-        }
+        } else {
+			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET" || param_name == "OSC_MATH_OFFSET")
+				field.val(OSC.formatValue(new_params[param_name].value));
+		}
       }
     }
     
@@ -797,6 +813,25 @@ value = field.val();
       else if(field.is('input:radio')) {
         value = $('input[name="' + key + '"]:checked').val();
       }
+	  
+	  if (key == "OSC_CH1_OFFSET")
+	  {
+		var units = $('#OSC_CH1_OFFSET_UNIT').html();
+		var divider = units == "mV" ? 1000 : 1;
+		value /= divider;
+	  }
+	  
+	  if (key == "OSC_CH2_OFFSET")
+	  {
+		var units = $('#OSC_CH2_OFFSET_UNIT').html();
+		var divider = units == "mV" ? 1000 : 1;
+		value /= divider;
+	  }
+	  
+	  if (key == "OSC_CH1_OFFSET")
+	  {
+		value = OSC.convertMathUnitToValue();
+	  }
       
       if(value !== undefined && value != OSC.params.orig[key].value) {
         console.log(key + ' changed from ' + OSC.params.orig[key].value + ' to ' + ($.type(OSC.params.orig[key].value) == 'boolean' ? !!value : value));
@@ -879,8 +914,8 @@ value = field.val();
     
     OSC.params.local['in_command'] = { value: 'send_all_params' };
     // Send new values and reset the local params object
-    if (OSC.params.local['OSC_MATH_OFFSET'])
-		OSC.params.local['OSC_MATH_OFFSET'].value *= OSC.div;
+//    if (OSC.params.local['OSC_MATH_OFFSET'])
+//		OSC.params.local['OSC_MATH_OFFSET'].value *= OSC.div;
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
     
@@ -1236,8 +1271,11 @@ value = field.val();
       if($('#in1_dialog').is(':visible')) {
         //$('#OSC_CH1_OFFSET').val(+(new_value));
 		//$('#OSC_CH1_OFFSET').change();
-		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value));
+		var units = $('#OSC_CH1_OFFSET_UNIT').html();
+		var multiplier = units == "mV" ? 1000 : 1;
+		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value * multiplier));
       }
+
       //else if(save) {
         OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
       //}
@@ -1251,7 +1289,9 @@ value = field.val();
       if($('#in2_dialog').is(':visible')) {
         //$('#OSC_CH2_OFFSET').val(+(new_value));
 		//$('#OSC_CH2_OFFSET').change();
-		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value));
+		var units = $('#OSC_CH2_OFFSET_UNIT').html();
+		var multiplier = units == "mV" ? 1000 : 1;
+		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value * multiplier));
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1303,7 +1343,11 @@ value = field.val();
 			else if(z < 99.9990)
 				return z.toFixed(3);
 			else if(z < 999.990)
-				return z.toFixed(2);			
+				return z.toFixed(2);		
+			else if(z < 9999.990)
+				return z.toFixed(1);		
+			else 
+				return z.toFixed(0);					
 		} else 
 		{
 			if(z > -9.99990)
@@ -1311,7 +1355,11 @@ value = field.val();
 			else if(z > -99.9990)
 				return z.toFixed(3);
 			else if(z > -999.990)
-				return z.toFixed(2);					
+				return z.toFixed(2);
+			else if(z > -9999.990)
+				return z.toFixed(1);		
+			else 
+				return z.toFixed(0);				
 		}
 		
 		return z;
@@ -1404,17 +1452,18 @@ value = field.val();
     var value = v;
 	var unit = 'V';
 	var precision = 3;
+	var munit = $('munit').html().charAt(0);
 	if(OSC.params.orig['OSC_MATH_OP']){
-		if(Math.abs(value) < 1) {
+		if(munit == 'm') {
 			value *= 1000;
 			unit = 'mV';
 			precision = 0;
 
-		} else if (Math.abs(value) >= 1000000) {
+		} else if (munit == 'M') {
 			value /= 1000000;
 			unit = 'MV';	
 			precision = 1;		
-		} else if (Math.abs(value) >= 1000) {
+		} else if (munit == 'k') {
 			value /= 1000;
 			unit = 'kV';
 			precision = 2;
@@ -1424,7 +1473,7 @@ value = field.val();
 		$('#OSC_MATH_OFFSET_UNIT').html(units[OSC.params.orig['OSC_MATH_OP'].value]);		
 	}
 	var value_holder = $('#OSC_MATH_OFFSET');
-	value_holder.val(value.toFixed(precision));
+	value_holder.val(OSC.formatValue(value));
 	value_holder.change();
   };
   
@@ -1442,7 +1491,7 @@ value = field.val();
 		value *= 1000;			
 	}
 	
-	value = value.toFixed(precision);
+	value = OSC.formatValue(value);
 	return value;
   };
   
