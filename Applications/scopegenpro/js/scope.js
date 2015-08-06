@@ -562,8 +562,10 @@
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
           if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-field.val(new_params[param_name].value);
-			
+				if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET" || param_name == "OSC_MATH_OFFSET")
+					field.val(OSC.formatValue(new_params[param_name].value));
+				else 
+					field.val(new_params[param_name].value);
           }
           else if(field.is('button')) {
             field[new_params[param_name].value === true ? 'addClass' : 'removeClass' ]('active');
@@ -1235,7 +1237,7 @@ value = field.val();
       if($('#in1_dialog').is(':visible')) {
         //$('#OSC_CH1_OFFSET').val(+(new_value));
 		//$('#OSC_CH1_OFFSET').change();
-		OSC.setValue($('#OSC_CH1_OFFSET'), new_value);
+		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value));
       }
       //else if(save) {
         OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
@@ -1250,7 +1252,7 @@ value = field.val();
       if($('#in2_dialog').is(':visible')) {
         //$('#OSC_CH2_OFFSET').val(+(new_value));
 		//$('#OSC_CH2_OFFSET').change();
-		OSC.setValue($('#OSC_CH2_OFFSET'), new_value);
+		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value));
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1292,6 +1294,29 @@ value = field.val();
       OSC.sendParams();
     }
   };
+  
+   OSC.formatValue = function (oldValue){
+		var z = oldValue;
+		if (z > 0)
+		{
+			if(z < 9.99990)
+				return z.toFixed(4);
+			else if(z < 99.9990)
+				return z.toFixed(3);
+			else if(z < 999.990)
+				return z.toFixed(2);			
+		} else 
+		{
+			if(z > -9.99990)
+				return z.toFixed(4);
+			else if(z > -99.9990)
+				return z.toFixed(3);
+			else if(z > -999.990)
+				return z.toFixed(2);					
+		}
+		
+		return z;
+   };
   
   // Updates trigger level in the trigger config dialog, if opened, or saves new value
   OSC.updateTrigLevel = function(ui, save) {
