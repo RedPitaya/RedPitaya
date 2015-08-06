@@ -40,6 +40,7 @@
 							first_button = buttons;
 						$(buttons).children('a').html(value.name);
 						$(buttons).children('a').attr('href', '#' + key);
+						$(buttons).children('a').removeClass('lock');
 						if(value.type=='demo')
 							$(buttons).children('a').addClass('lock');
 							
