@@ -514,12 +514,26 @@
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
               var px_offset = -((new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value + source_offset) / volt_per_px - parseInt($('#cur_' + y + '_arrow').css('margin-top')) / 2);
               var top = (graph_height + 7) / 2 + px_offset;
+              var overflow = false;
+              
+              if (top < 0)
+			  {
+				top = 0;
+				overflow = true;
+			  }
+			  if (top > graph_height)
+			  {
+				top = graph_height;
+				overflow = true;
+			  }
               
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
               $('#cur_' + y + '_info')
                 .html(OSC.convertVoltage(+new_value))
                 .data('cleanval', +new_value)
                 .css('margin-top', (top < 16 ? 3 : ''));
+              if(overflow)
+				$('#cur_' + y + ', #cur_' + y + '_info').hide();
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -539,11 +553,26 @@
               var msg_width = $('#cur_' + x + '_info').outerWidth();
               var left = (graph_width + 2) / 2 + px_offset;
               
+              var overflow = false;
+              if (left < 0)
+			  {
+				left = 0;
+				overflow = true;
+			  }
+			  if (left > graph_width)
+			  {
+				left = graph_width;
+				overflow = true;
+			  }
+              
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
               $('#cur_' + x + '_info')
                 .html(OSC.convertTime(-new_value))
                 .data('cleanval', -new_value)
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+                
+              if (overflow)
+				$('#cur_' + x + ', #cur_' + x + '_info').hide();
             }
             else {
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
@@ -1173,6 +1202,7 @@ value = field.val();
     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
     var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
     
+	$('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').show();    
     $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
     $('#cur_' + y + '_info')
       .html(OSC.convertVoltage(+new_value))
@@ -1195,6 +1225,7 @@ value = field.val();
     var msg_width = $('#cur_' + x + '_info').outerWidth();
     var new_value = (graph_width / 2 - ui.position.left - (ui.helper.width() - 2) / 2 - parseInt(ui.helper.css('margin-left'))) * ms_per_px - OSC.params.orig['OSC_TIME_OFFSET'].value;
     
+	$('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').show(); 
     $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
     $('#cur_' + x + '_info')
       .html(OSC.convertTime(-new_value))
