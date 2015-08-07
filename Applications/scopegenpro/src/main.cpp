@@ -269,8 +269,13 @@ void UpdateParams(void) {
 	float trigg_limit;
 	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
-	inTriggLimit.Value() = trigg_limit;
-	
+	if (channel == RPAPP_OSC_TRIG_SRC_CH1)		
+		inTriggLimit.Value() = trigg_limit*in1Probe.Value();
+	else if (channel == RPAPP_OSC_TRIG_SRC_CH2)	
+		inTriggLimit.Value() = trigg_limit*in2Probe.Value();
+	else
+		inTriggLimit.Value() = trigg_limit;
+		
     rp_acq_sampling_rate_t sampling_rate;
     rp_AcqGetSamplingRate(&sampling_rate);
     samplingRate.Value() = sampling_rate;
