@@ -828,7 +828,7 @@ value = field.val();
 		value /= divider;
 	  }
 	  
-	  if (key == "OSC_CH1_OFFSET")
+	  if (key == "OSC_MATH_OFFSET")
 	  {
 		value = OSC.convertMathUnitToValue();
 	  }
@@ -1452,7 +1452,7 @@ value = field.val();
     var value = v;
 	var unit = 'V';
 	var precision = 3;
-	var munit = $('munit').html().charAt(0);
+	var munit = $('#munit').html().charAt(0);
 	if(OSC.params.orig['OSC_MATH_OP']){
 		if(munit == 'm') {
 			value *= 1000;
