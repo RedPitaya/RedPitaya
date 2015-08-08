@@ -97,6 +97,7 @@ float imp_data_analysis(float **data, uint32_t size, float dc_bias,
 
 /* Helper functions */
 uint32_t imp_shuntAlgorithm(float z_ampl);
+int imp_Interpolate(float *calib_data, FILE *calib_file);
 
 /* Getters and Setters */
 int imp_SetAmplitude(float ampl);

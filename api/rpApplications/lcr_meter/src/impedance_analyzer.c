@@ -322,7 +322,7 @@ int imp_Sweep(float *ampl_z_out){
 
 				r_shunt = imp_shuntAlgorithm(z_ampl);
 				/* Set shunt value before measurment */
-				//ECHECK_APP(set_IIC_Shunt(r_shunt));	
+				ECHECK_APP(set_IIC_Shunt(r_shunt));	
 			}
 
 		/* Save *Z */
@@ -416,24 +416,16 @@ void *imp_MainThread(){
 	float *amplitude_z = malloc(acq_size * sizeof(float));
 	//lcr_sweep_t sweep_mode = main_params.sweep;
 	imp_calib_t calib_mode = main_params.mode;
-	char command[100];
 
+	/* Main sweep function */
 	imp_Sweep(amplitude_z);
 
 	/* Write calibration data into files on the system */
 	if(calib_mode == IMP_CALIB_OPEN){
-		if(fopen("/tmp/imp_data/calibration/calib_open", "r") == NULL){
-			strcpy(command, "touch /tmp/imp_data/calibration/calib_open");
-			system(command);
-		}
-		calib_file = fopen("/tmp/imp_data/calibration/calib_open", "w");
+		calib_file = fopen("/tmp/imp_data/calibration/calib_open", "w+");
 
 	}else if(calib_mode == IMP_CALIB_SHORT){
-		if(fopen("/tmp/lcr_meter/calibration/calib_short", "r") == NULL){
-			strcpy(command, "touch /tmp/imp_data/calibration/calib_short");
-			system(command);
-		}
-		calib_file = fopen("/tmp/imp_data/calibration/calib_short", "w");
+		calib_file = fopen("/tmp/imp_data/calibration/calib_short", "w+");
 	}
 
 	if(calib_mode != IMP_CALIB_NONE){
@@ -455,6 +447,10 @@ void *imp_MainThread(){
 		default:
 			break;
 	}
+
+	//Interpolation
+
+
 	return RP_OK;
 }
 
@@ -470,6 +466,34 @@ int imp_Run(){
 	}
 	pthread_join(imp_thread_handler, 0);
 	
+	return RP_OK;
+}
+
+int imp_Interpolate(float *calib_data, FILE *calib_file){
+
+	uint32_t steps, c;
+	float start_freq, end_freq, start_interval, end_interval;
+	imp_GetSteps(&steps);
+
+	float t_calib[100];
+	
+	/* Read calibration file */
+	while(!feof(calib_file)){
+		fscanf(calib_file, "%f", &t_calib[c]);
+		++c;
+	}
+
+	imp_GetStartFreq(&start_freq);
+	imp_GetEndFreq(&end_freq);
+
+	/* Get start and ending Z calib */
+	start_interval = vectorApprox(calib_data, steps, start_freq);
+	end_interval = vectorApprox(calib_data, steps, end_freq);
+
+	//TODO: interpolacijska funkcija
+
+	printf("%f | %f\n",start_interval, end_interval);
+
 	return RP_OK;
 }
 

@@ -128,6 +128,19 @@ float vectorMax(float *data, int size){
 	return max;
 }
 
+float vectorApprox(float *data, int size, float approx_val){
+
+	/* Get vector max value */
+	float closet_val = vectorMax(data, size);
+
+	for(int i = 0; i < size; ++i){
+		if(abs(data[i] - approx_val) < closet_val){
+			closet_val = data[i];
+		}
+	}
+	return closet_val;
+}
+
 float trapezoidalApprox(float *data, float T, int size){
 	float result = 0;
 
