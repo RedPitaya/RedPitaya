@@ -1,7 +1,7 @@
 /**
 * $Id: $
 *
-* @brief Red Pitaya application lcr module application
+* @brief Red Pitaya application impedance module application
 *
 * @Author Luka Golinar
 *
@@ -39,26 +39,26 @@ int impApp_ImpReset();
 int impApp_ImpSetAmpl(float amplitude);
 int impApp_ImpSetAvg(int averaging);
 int impApp_ImpSetDcBias(float dc_bias);
-int impApp_ImpSetSteps(int steps);
+int impApp_ImpSetSteps(uint32_t steps);
 int impApp_ImpSetStartFreq(float s_freq);
 int impApp_ImpSetEndFreq(float e_freq);
 int impApp_ImpSetYplot(int y_plot);
 int impApp_ImpSetScale(int scale);
 int impApp_ImpSetLoadRe(float load_re);
 int impApp_ImpSetLoadImg(float load_img);
-int impApp_ImpSetCalib(int calib);
+int impApp_ImpSetCalib(imp_calib_t calib);
 
 int impApp_ImpGetAmpl(float *amplitude);
 int impApp_ImpGetAvg(int *averaging);
 int impApp_ImpGetDcBias(float *dc_bias);
-int impApp_ImpGetSteps(int *steps);
+int impApp_ImpGetSteps(uint32_t *steps);
 int impApp_ImpGetStartFreq(float *s_freq);
 int impApp_ImpGetEndFreq(float *e_freq);
 int impApp_ImpGetYplot(int *y_plot);
 int impApp_ImpGetScale(int *scale);
 int impApp_ImpGetLoadRe(float *load_re);
 int impApp_ImpGetLoadImg(float *load_img);
-int impApp_ImpGetCalib(int *calib);
+int impApp_ImpGetCalib(imp_calib_t *calib);
 
 /* Impedance anaylzer save data functionality */
 int lcrApp_ImpSaveData(bool save);
