@@ -1,7 +1,7 @@
 /**
 * $Id: $
 *
-* @brief Red Pitaya application Impedance Analzyer module interface
+* @brief Red Pitaya application Impedance analyzer module interface
 *
 * @Author Luka Golinar
 *
@@ -26,28 +26,15 @@
 
 
 /* Global variables definition */
-int 					min_periodes = 10;
+int 					min_periodes = 20;
 uint32_t 				acq_size = 1024;
 
 pthread_mutex_t 		mutex;
 pthread_t 				*imp_thread_handler = NULL;
 
-bool print_data = false;
-
-/* Init impedance analyzer params struct */
-imp_params_t main_params = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false}; 
-
-/* R_shunt constans */
-static const uint32_t R_SHUNT_30	 = 30;
-static const uint32_t R_SHUNT_75     = 75;
-static const uint32_t R_SHUNT_300    = 300;
-static const uint32_t R_SHUNT_750    = 750;
-static const uint32_t R_SHUNT_3K     = 3000;
-static const uint32_t R_SHUNT_7_5K   = 7500;
-static const uint32_t R_SHUNT_30K    = 30000;
-static const uint32_t R_SHUNT_80K    = 80000;
-static const uint32_t R_SHUNT_430K   = 430000;
-static const uint32_t R_SHUNT_3M     = 3000000;
+/* Init impedance params struct */
+imp_params_t main_params = 
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false};
 
 /* Decimation constants */
 static const uint32_t IMP_DEC_1		= 1;
@@ -69,11 +56,18 @@ int imp_Init(){
 
 	if(rp_Init() != RP_OK){
 		fprintf(stderr, "Unable to inicialize the RPI API structure "
-			"needed by Impedance analyzer application: %s\n", strerror(errno));
+			"needed by impedance analyzer application: %s\n", strerror(errno));
 		return RP_EOOR;
 	}
-	/* Set default values of the lcr_params structure */
+	
+	/* Set default values of the impedance structure */
 	imp_SetDefaultValues();
+
+	/* Set some default values */
+	ECHECK_APP(rp_AcqReset());
+	ECHECK_APP(rp_GenReset());
+	ECHECK_APP(rp_AcqSetTriggerLevel(0.1));
+	ECHECK_APP(rp_AcqSetTriggerDelay(8192));
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
@@ -86,9 +80,6 @@ int imp_Release(){
 			"Impedance analyzer meter API: %s\n", strerror(errno));
 		return RP_EOOR;
 	}
-
-	/* Set all bits in the main_params structure to -1 */
-	memset(&main_params, -1, sizeof(main_params));
 
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_destroy(&mutex);
@@ -109,27 +100,29 @@ int imp_SetDefaultValues(){
 	ECHECK_APP(imp_SetAmplitude(1));
 	ECHECK_APP(imp_SetDcBias(0));
 	ECHECK_APP(imp_SetAveraging(1));
-	ECHECK_APP(imp_SetCalibMode(0));
+	ECHECK_APP(imp_SetRshunt(R_SHUNT_7_5K));
+	ECHECK_APP(imp_SetCalibMode(IMP_CALIB_NONE));
 	ECHECK_APP(imp_SetRefReal(0.0));
 	ECHECK_APP(imp_SetRefImg(0.0));
 	ECHECK_APP(imp_SetSteps(10));
-	ECHECK_APP(imp_SetStartFreq(1000.0));
+	ECHECK_APP(imp_SetStartFreq(500.0));
 	ECHECK_APP(imp_SetEndFreq(10000.0));
-	ECHECK_APP(imp_SetScaleType(0));
-	ECHECK_APP(imp_SetSweepMode(0));
+	ECHECK_APP(imp_SetScaleType(IMP_SCALE_LINEAR));
+	ECHECK_APP(imp_SetSweepMode(IMP_FREQUENCY_SWEEP));
 	ECHECK_APP(imp_SetUserWait(false));
+
 	return RP_OK;
 }
 
 /* Generate functions  */
 int imp_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 
-	//pthread_mutex_lock(&mutex);
-	(rp_GenFreq(channel, freq));
-	(rp_GenAmp(channel, ampl));
-	(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
-	(rp_GenOutEnable(channel));
-	//pthread_mutex_unlock(&mutex);
+	pthread_mutex_lock(&mutex);
+	ECHECK_APP(rp_GenFreq(channel, freq));
+	ECHECK_APP(rp_GenAmp(channel, ampl));
+	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+	ECHECK_APP(rp_GenOutEnable(channel));
+	pthread_mutex_unlock(&mutex);
 
 	return RP_OK;
 }
@@ -138,116 +131,56 @@ int imp_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 int imp_SafeThreadAcqData(rp_channel_t channel, 
 	float *data, rp_acq_decimation_t decimation){
 
-	uint32_t pos, curr_pos;
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex);	
+	
+	rp_acq_trig_state_t state = RP_TRIG_STATE_WAITING;
 	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
+	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
 	ECHECK_APP(rp_AcqStart());
-	ECHECK_APP(rp_AcqGetWritePointer(&pos));
-	
-	do {
-		ECHECK_APP(rp_AcqGetWritePointer(&curr_pos));
-	}while(curr_pos > (pos + ADC_BUFF_SIZE));
 
-	
-	(rp_AcqGetLatestDataV(channel, &acq_size, (float *)data));
+	while(state == RP_TRIG_STATE_WAITING){
+		ECHECK_APP(rp_AcqGetTriggerState(&state));
+	}
+
+	ECHECK_APP(rp_AcqGetOldestDataV(channel, &acq_size, data));
 	pthread_mutex_unlock(&mutex);
+
 	return RP_OK;
 }
 
-float imp_data_analysis(float **data, uint32_t size, float dc_bias, 
-		float r_shunt, float complex *Z, float w_out, int decimation){
-
-
-	/* Forward vector and variable declarations */
-	float ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
-		phase_z_rad, z_ampl;
-
-	int COORDINATES = 2;
-	float T = (decimation / SAMPLE_RATE);
-
-	float *u_dut = malloc(size * sizeof(float));
-	float *i_dut = malloc(size * sizeof(float));
-
-	float **u_dut_s = multiDimensionVector(COORDINATES, size);
-	float **i_dut_s = multiDimensionVector(COORDINATES, size);
-	float **component_lock_in = multiDimensionVector(COORDINATES, size);
-
-	for(int i = 0; i < size; i++){
-		u_dut[i] = data[0][i] - data[1][i];
-		i_dut[i] = data[1][i] / r_shunt; 
-	}
-
-
-	for(int i = 0; i < size; i++){
-		ang = (T * w_out * i);
-		//X		
-		u_dut_s[0][i] = u_dut[i] * sin(ang);
-		i_dut_s[0][i] = i_dut[i] * sin(ang);
-		//Y
-		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2)); 
-		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
-	}
-
-	/* Trapezoidal approximation */
-	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size);
-	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size);
-	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size);
-	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[1], T, size);
-
-	/* Calculating volatage and phase */
-	u_dut_ampl = 2 * (sqrt(pow(component_lock_in[0][0], 2)) + pow(component_lock_in[0][1], 2));
-	u_dut_phase_ampl = atan2(component_lock_in[0][0], component_lock_in[0][1]);
-
-	i_dut_ampl = 2 * (sqrt(pow(component_lock_in[1][0], 2)) + pow(component_lock_in[1][1], 2));
-	i_dut_phase_ampl = atan2(component_lock_in[1][0], component_lock_in[1][1]);
-
-	/* Assigning impedance values */
-	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
-	z_ampl = u_dut_ampl + i_dut_ampl;
-
-	/* Applying phase limitation (-180 deg, 180 deg) */
-	if(phase_z_rad <= -M_PI){
-		phase_z_rad = phase_z_rad + (2 * M_PI);
-	}else if(phase_z_rad >= M_PI){
-		phase_z_rad = phase_z_rad - (2 * M_PI);
-	}
-
-	*Z = (z_ampl * cos(phase_z_rad)) + (z_ampl * sin(phase_z_rad) * I);
-
-	return z_ampl;
-}
-
-int imp_FreqSweep(float **calib_data){
+int imp_Sweep(float *ampl_z_out){
 
 	/* Forward variable declaration */
-	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
-	float log_freq, a, b, c, w_out;
-	float start_freq = main_params.start_freq, end_freq = main_params.end_freq,
-		ampl = main_params.amplitude, averaging = main_params.avg,
-		dc_bias = main_params.dc_bias;//, z_ampl;
+	float log_freq, a, b, c, w_out, start_freq, end_freq;
+	float ampl = main_params.amplitude, averaging = main_params.avg,
+		dc_bias = main_params.dc_bias, z_ampl;
 
-	float r_shunt = R_SHUNT_430K;
-	imp_scale_e scale_type = main_params.scale;
-	int steps = main_params.steps;
-	int freq_step;
-	int decimation;
+	imp_scale_t scale_type = main_params.scale;
+	int freq_step, steps, decimation;
 	rp_acq_decimation_t api_decimation;
-
-	/* Testing purposes */
-	scale_type = 0;
-	start_freq = 1000;
-	end_freq = 10000;
-	steps = 10;
+	imp_calib_t calibration = main_params.mode;
+	bool rep_meas = true;
+	int i = 0;
 
 	/* Forward memory allocation */
-	float *frequency 		= (float *)malloc(steps * sizeof(float));
 	float complex *Z 		= (float complex *)malloc((averaging + 1) * sizeof(float complex));
-	float **analysis_data 	= (float **)multiDimensionVector(2, acq_size);
+	float **analysis_data 	= (float **)multiDimensionVector(acq_size);
+	float **z_avg = (float **)multiDimensionVector(acq_size);
 
 	/* Channel memory allocation */
 	float *ch1_data = malloc((acq_size) * sizeof(float));
 	float *ch2_data = malloc((acq_size) * sizeof(float));
+
+	if(calibration != IMP_CALIB_NONE){
+		start_freq = 100, end_freq = 1000000;
+		steps = 100;
+	}else{
+		start_freq = main_params.start_freq, end_freq = main_params.end_freq;
+		steps = main_params.steps;
+	}
+
+	float *frequency = (float *)malloc(steps * sizeof(float));
 
 	if(start_freq > end_freq){
 		printf("End frequency must be greater than the starting frequency.\n");
@@ -260,17 +193,27 @@ int imp_FreqSweep(float **calib_data){
 		(steps == 1) ? (c = (b - a)) : (c = (b - a) / (steps - 1));
 	}
 
-	/* Frequency iteration step */
-	(steps == 1) ? (freq_step = (int)(end_freq - start_freq)) : 
-		(freq_step = (int)(end_freq - start_freq) / (steps - 1));
+	/* Frequency iteration step ( Preventing division by zero ) */
+	if(main_params.sweep){
+		(steps == 1) ? (freq_step = (int)(end_freq - start_freq)) : 
+			(freq_step = (int)(end_freq - start_freq) / (steps - 1));		
+	}else{
+		freq_step = 0;
+	}
+
+	ECHECK_APP(set_IIC_Shunt(-1));
+
+	uint32_t r_shunt;
+	/* Get R shunt enumerator value */
+	ECHECK_APP(imp_GetRShunt(&r_shunt));
+
+	/* Set shunt value before measurment */
+	ECHECK_APP(set_IIC_Shunt(r_shunt));
 
 	/* Main frequency sweep loop */
-	for(int i = 0; i < steps; i++){
-		/* R shunt algorithm calculation */
-		//(i != 0) ? (lcr_SetRshunt(main_params, calculateShunt(z_ampl)))
-			//: (lcr_SetRshunt(main_params, 0));
-		//lcr_GetRshuntFactor(&r_shunt);
+	while(i < steps){
 
+		/* Repeat step if r_shunt changed */
 		if(scale_type == IMP_SCALE_LOGARITHMIC){
 			log_freq = powf(10, (c * i + a));
 			frequency[i] = log_freq;
@@ -292,37 +235,24 @@ int imp_FreqSweep(float **calib_data){
 		for(int j = 0; j < averaging; j++){
 
 			if(frequency[i] >= 160000){
-
 				decimation = IMP_DEC_1;
 				api_decimation = RP_DEC_1;
-
 			}else if(frequency[i] >= 20000){
-
 				decimation = IMP_DEC_8;
 				api_decimation = RP_DEC_8;
-
 			}else if(frequency[i] >= 2500){
-
 				decimation = IMP_DEC_64;
 				api_decimation = RP_DEC_64;
-
 			}else if(frequency[i] >= 160){
-
 				decimation = IMP_DEC_1024;
 				api_decimation = RP_DEC_1024;
-
 			}else if(frequency[i] >= 20){
-
 				decimation = IMP_DEC_8192;
 				api_decimation = RP_DEC_8192;
-
 			}else if(frequency[i] >= 2.5){
-
 				decimation = IMP_DEC_65536;
 				api_decimation = RP_DEC_65536;
 			}
-
-
 
 			uint32_t new_size = round((min_periodes * SAMPLE_RATE) / 
 				(frequency[i] * decimation));
@@ -331,12 +261,16 @@ int imp_FreqSweep(float **calib_data){
 			if(new_size != acq_size){
 				ch1_data = realloc(ch1_data, new_size * sizeof(float));
 				ch2_data = realloc(ch2_data, new_size * sizeof(float));
-				analysis_data = multiDimensionVector(2, new_size);
+				analysis_data = multiDimensionVector(new_size);
+				z_avg = multiDimensionVector(new_size);
+				ampl_z_out = realloc(ampl_z_out, new_size * sizeof(float));
 				acq_size = new_size;
 			}
-			/* TODO Make dynamic memory allocation */
+
+			/* TODO: dynamic memory allocation */
 			/* Signal acquisition for both channels */
 			int ret_val;
+
 			ret_val = imp_SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
@@ -348,16 +282,13 @@ int imp_FreqSweep(float **calib_data){
 				printf("Error acquiring data.\n");
 				return RP_EOOR;
 			}
-			if(i == steps - 1){
-				print_data = true;
-			}
+
 			/* Two dimension vector creation -- u_acq */
-			for(int k = 0; k < new_size; k++){
+			for(int k = 0; k < acq_size; k++){
 				analysis_data[0][k] = ch1_data[k];
-				
-				//if(i == 99) printf("%f,\n", ch2_data[k]);
 				analysis_data[1][k] = ch2_data[k];
 			}
+
 			/* Calculate output data */
 			imp_data_analysis(analysis_data, acq_size, dc_bias, 
 						r_shunt, Z, w_out, decimation);
@@ -366,106 +297,194 @@ int imp_FreqSweep(float **calib_data){
 				printf("Impedance analyzer data analysis failed to properly execute.\n");
 				return RP_EOOR;
 			}
+
 			/* Saving calibration data */
-			calib_data[0][j] = creal(*Z);
-			calib_data[1][j] = cimag(*Z);
-			
+			z_avg[0][j] = creal(*Z);
+			z_avg[1][j] = cimag(*Z);
+		}
+
+		ECHECK_APP(rp_GenOutDisable(RP_CH_1)); 
+		
+		/* Out data */
+		z_ampl = sqrtf(powf(vectorMean(z_avg[0], averaging), 2) + 
+			powf(vectorMean(z_avg[1], averaging), 2));
+
+		if(((z_ampl >= (r_shunt * 3)) || (z_ampl 
+			<= (r_shunt / 3))) && rep_meas){
+
+			if(((z_ampl > 1e6) && (r_shunt == R_SHUNT_3M)) ||
+				((z_ampl < 30) && (r_shunt == R_SHUNT_30))){
+
+				rep_meas = false;
+				continue;
+
+			}else{
+
+				r_shunt = imp_shuntAlgorithm(z_ampl);
+				/* Set shunt value before measurment */
+				//ECHECK_APP(set_IIC_Shunt(r_shunt));	
+			}
+
+		/* Save *Z */
+		}else{
+			ampl_z_out[i] = z_ampl;
+			rep_meas = true;
+			/* Increment counter */
+			i++;	
 		}
 	}
-	print_data = false;
-	return RP_OK;
-}
 
-int imp_MeasSweep(float **calib_data){
+	/* Set shunt value after measurment */
+	ECHECK_APP(set_IIC_Shunt(R_SHUNT_7_5K));
 
 	return RP_OK;
 }
 
-/* Main Impedance Analzyer thread */
-void *imp_MainThread(int measurment){
-	
-	float **data = multiDimensionVector(2, acq_size);
+float imp_data_analysis(float **data, uint32_t size, float dc_bias, 
+		uint32_t r_shunt, float complex *Z, float w_out, int decimation){
 
-	if(measurment){
-		imp_FreqSweep(data);
-	}else{
-		imp_MeasSweep(data);
+	/* Forward vector and variable declarations */
+	float ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
+		phase_z_rad, z_ampl;
+
+	float T = (decimation / SAMPLE_RATE);
+
+	float *u_dut = (float *)malloc(size * sizeof(float));
+	float *i_dut = (float *)malloc(size * sizeof(float));
+
+	float **u_dut_s = multiDimensionVector(size);
+	float **i_dut_s = multiDimensionVector(size);
+
+	float **component_lock_in = multiDimensionVector(1);
+
+	for(int i = 0; i < size; i++){
+		u_dut[i] = data[0][i] - data[1][i];
+		i_dut[i] = data[1][i] / R_SHUNT_7_5K;//((r_shunt * 1e6 ) / (r_shunt + 1e6));
 	}
 
+	for(int i = 0; i < size; i++){
+		ang = (i * T * w_out);
+		//Real		
+		u_dut_s[0][i] = u_dut[i] * sin(ang);
+		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2));
+		//Imag
+		i_dut_s[0][i] = i_dut[i] * sin(ang);
+		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
+	}
+	
+	/* Trapezoidal approximation */
+	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size);
+	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size);
+	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size);
+	component_lock_in[1][1] = trapezoidalApprox(i_dut_s[1], T, size);
+
+	/* Calculating volatage and phase */
+	u_dut_ampl = 2 * (sqrtf(powf(component_lock_in[0][0], 2.0)) + 
+		powf(component_lock_in[0][1], 2.0));
+
+	u_dut_phase_ampl = atan2f(component_lock_in[0][1], 
+		component_lock_in[0][0]);
+
+	i_dut_ampl = 2 * (sqrtf(powf(component_lock_in[1][0], 2.0)) + 
+		powf(component_lock_in[1][1], 2.0));
+
+	i_dut_phase_ampl = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
+
+	/* Assigning impedance values */
+	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
+	z_ampl = u_dut_ampl / i_dut_ampl;
+
+	/* Applying phase limitation (-180 deg, 180 deg) */
+	if(phase_z_rad <= -M_PI){
+		phase_z_rad = phase_z_rad + (2 * M_PI);
+	}else if(phase_z_rad >= M_PI){
+		phase_z_rad = phase_z_rad - (2 * M_PI);
+	}
+
+	*Z = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
+
+	return z_ampl;
+}
+
+/* Main Impedance Analyzer thread */
+void *imp_MainThread(){
+
+	/* TODO: File managing system here looks a bit clumsy, 
+	 * Make a better implementation. */
+
+	FILE *calib_file;
+	float *amplitude_z = malloc(acq_size * sizeof(float));
+	//lcr_sweep_t sweep_mode = main_params.sweep;
+	imp_calib_t calib_mode = main_params.mode;
+	char command[100];
+
+	imp_Sweep(amplitude_z);
+
+	/* Write calibration data into files on the system */
+	if(calib_mode == IMP_CALIB_OPEN){
+		if(fopen("/tmp/imp_data/calibration/calib_open", "r") == NULL){
+			strcpy(command, "touch /tmp/imp_data/calibration/calib_open");
+			system(command);
+		}
+		calib_file = fopen("/tmp/imp_data/calibration/calib_open", "w");
+
+	}else if(calib_mode == IMP_CALIB_SHORT){
+		if(fopen("/tmp/lcr_meter/calibration/calib_short", "r") == NULL){
+			strcpy(command, "touch /tmp/imp_data/calibration/calib_short");
+			system(command);
+		}
+		calib_file = fopen("/tmp/imp_data/calibration/calib_short", "w");
+	}
+
+	if(calib_mode != IMP_CALIB_NONE){
+		for(int i = 0; i < main_params.steps; i++){
+			fprintf(calib_file, "%.10f,\n", amplitude_z[i]);
+		}	
+	}
+
+	/* Data calculation */
+	switch(calib_mode){
+		case IMP_CALIB_NONE: //No calibrations were made
+			break;
+		case IMP_CALIB_OPEN:
+			calib_file = fopen("/tmp/imp_data/calibration/calib_open", "r");
+			break;
+		case IMP_CALIB_SHORT:
+			calib_file = fopen("/tmp/imp_data/calibration/calib_short", "r");
+			break;
+		default:
+			break;
+	}
 	return RP_OK;
 }
 
 /* Main call function */
-int imp_Run(int measurment){
+int imp_Run(){
 
-	//int err;
-	//lcr_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
-	//err = pthread_create(lcr_thread_handler, NULL, &lcr_MainThread, NULL);
+	int err;
+	pthread_t imp_thread_handler;
+	err = pthread_create(&imp_thread_handler, 0, imp_MainThread, 0);
+	if(err != RP_OK){
+		printf("Main thread creation failed.\n");
+		return RP_EOOR;
+	}
+	pthread_join(imp_thread_handler, 0);
 	
-	imp_MainThread(measurment);
-
-	//if(err != RP_OK){
-		//printf("Main thread creation failed.\n");
-		//return RP_EOOR;
-	//}
-
 	return RP_OK;
 }
 
-/* Impedance analyzer helper functions */
-int imp_GetRshuntFactor(float *r_shunt_factor){
-	
-	imp_r_shunt_e r_shunt;
-	ECHECK_APP(imp_GetRShunt(&r_shunt));
+uint32_t imp_shuntAlgorithm(float z_ampl){
 
-	switch(r_shunt){
-		case IMP_R_SHUNT_30:
-			*r_shunt_factor = R_SHUNT_30;
-			return RP_OK;
-		case IMP_R_SHUNT_75:
-			*r_shunt_factor = R_SHUNT_75;
-			return RP_OK;
-		case IMP_R_SHUNT_300:
-			*r_shunt_factor = R_SHUNT_300;
-			return RP_OK;
-		case IMP_R_SHUNT_750:
-			*r_shunt_factor = R_SHUNT_750;
-			return RP_OK;
-		case IMP_R_SHUNT_3K:
-			*r_shunt_factor = R_SHUNT_3K;
-			return RP_OK;
-		case IMP_R_SHUNT_7_5K:
-			*r_shunt_factor = R_SHUNT_7_5K;
-			return RP_OK;
-		case IMP_R_SHUNT_30K:
-			*r_shunt_factor = R_SHUNT_30K;
-			return RP_OK;
-		case IMP_R_SHUNT_80K:
-			*r_shunt_factor = R_SHUNT_80K;
-			return RP_OK;
-		case IMP_R_SHUNT_430K:
-			*r_shunt_factor = R_SHUNT_430K;
-			return RP_OK;
-		case IMP_R_SHUNT_3M:
-			*r_shunt_factor = R_SHUNT_3M;
-			return RP_OK;
-		default:
-			return RP_SNOMATCH;
-	}
-}
-
-int calculateShunt(float z_ampl){
-
-	if(z_ampl <= 50) 							return 0;
-	else if(z_ampl <= 100 && z_ampl > 50) 		return 1;
-	else if(z_ampl <= 500 && z_ampl > 100) 		return 2;
-	else if(z_ampl <= 1000 && z_ampl > 500) 	return 3;
-	else if(z_ampl <= 5000 && z_ampl > 1000) 	return 4;
-	else if(z_ampl <= 10000 && z_ampl > 5000) 	return 5;
-	else if(z_ampl <= 50e3 && z_ampl > 10000) 	return 6;
-	else if(z_ampl < 100e3 && z_ampl > 50e3) 	return 7;
-	else if(z_ampl <= 500e3 && z_ampl > 100e3) 	return 8;
-	else if(z_ampl > 500e3) 					return 9;
+	if(z_ampl <= 50) 							return R_SHUNT_30;
+	else if(z_ampl <= 100 && z_ampl > 50) 		return R_SHUNT_75;
+	else if(z_ampl <= 500 && z_ampl > 100) 		return R_SHUNT_300;
+	else if(z_ampl <= 1000 && z_ampl > 500) 	return R_SHUNT_750;
+	else if(z_ampl <= 5000 && z_ampl > 1000) 	return R_SHUNT_3K;
+	else if(z_ampl <= 10000 && z_ampl > 5000) 	return R_SHUNT_7_5K;
+	else if(z_ampl <= 50e3 && z_ampl > 10000) 	return R_SHUNT_30K;
+	else if(z_ampl <= 100e3 && z_ampl > 50e3) 	return R_SHUNT_80K;
+	else if(z_ampl <= 500e3 && z_ampl > 100e3) 	return R_SHUNT_430K;
+	else if(z_ampl > 500e3) 					return R_SHUNT_3M;
 
 	return RP_EOOR;
 }
@@ -482,12 +501,11 @@ int imp_SetAmplitude(float ampl){
 		return RP_EOOR;
 	}
 	main_params.amplitude = ampl;
-	
 	return RP_OK;
 }
 
 int imp_GetAmplitude(float *ampl){
-	ampl = &main_params.amplitude;
+	*ampl = main_params.amplitude;
 	return RP_OK;
 }
 
@@ -501,44 +519,43 @@ int imp_SetDcBias(float dc_bias){
 
 		return RP_EOOR;
 	}
+
 	main_params.dc_bias = dc_bias;
-	
 	return RP_OK;
 }
 
 int imp_GetDcBias(float *dc_bias){
-	dc_bias = &main_params.dc_bias;
+	*dc_bias = main_params.dc_bias;
 	return RP_OK;
 }
 
 int imp_SetAveraging(float avg){
-
 	main_params.avg = avg;
 	return RP_OK;
 }
 
 int imp_GetAveraging(float *avg){
-	avg = &main_params.avg;
+	*avg = main_params.avg;
 	return RP_OK;
 }
 
-int imp_SetRshunt(imp_r_shunt_e r_shunt){
+int imp_SetRshunt(uint32_t r_shunt){
 	main_params.r_shunt = r_shunt;
 	return RP_OK;
 }
 
-int imp_GetRShunt(imp_r_shunt_e *r_shunt){
-	r_shunt = &main_params.r_shunt;
+int imp_GetRShunt(uint32_t *r_shunt){
+	*r_shunt = main_params.r_shunt;
 	return RP_OK;
 }
 
-int imp_SetCalibMode(imp_calib_e mode){
+int imp_SetCalibMode(imp_calib_t mode){
 	main_params.mode = mode;
 	return RP_OK;
 }
 
-int imp_GetCalibMode(imp_calib_e *mode){
-	mode = &main_params.mode;
+int imp_GetCalibMode(imp_calib_t *mode){
+	*mode = main_params.mode;
 	return RP_OK;
 }
 
@@ -548,7 +565,7 @@ int imp_SetRefReal(float ref_real){
 }
 
 int imp_GetRefReal(float *ref_real){
-	ref_real = &main_params.ref_real;
+	*ref_real = main_params.ref_real;
 	return RP_OK;
 }
 
@@ -558,7 +575,7 @@ int imp_SetRefImg(float ref_img){
 }
 
 int imp_GetRefImg(float *ref_img){
-	ref_img = &main_params.ref_img;
+	*ref_img = main_params.ref_img;
 	return RP_OK;
 }
 
@@ -568,7 +585,7 @@ int imp_SetSteps(uint32_t steps){
 }
 
 int imp_GetSteps(uint32_t *steps){
-	steps = &main_params.steps;
+	*steps = main_params.steps;
 	return RP_OK;
 }
 
@@ -578,7 +595,7 @@ int imp_SetStartFreq(float start_freq){
 }
 
 int imp_GetStartFreq(float *start_freq){
-	start_freq = &main_params.start_freq;
+	*start_freq = main_params.start_freq;
 	return RP_OK;
 }
 
@@ -588,27 +605,27 @@ int imp_SetEndFreq(float end_freq){
 }
 
 int imp_GetEndFreq(float *end_freq){
-	end_freq = &main_params.end_freq;
+	*end_freq = main_params.end_freq;
 	return RP_OK;
 }
 
-int imp_SetScaleType(imp_scale_e scale){
+int imp_SetScaleType(imp_scale_t scale){
 	main_params.scale = scale;
 	return RP_OK;
 }
 
-int imp_GetScaleType(imp_scale_e *scale){
-	scale = &main_params.scale;
+int imp_GetScaleType(imp_scale_t *scale){
+	*scale = main_params.scale;
 	return RP_OK;
 }
 
-int imp_SetSweepMode(imp_sweep_e sweep){
+int imp_SetSweepMode(imp_sweep_t sweep){
 	main_params.sweep = sweep;
 	return RP_OK;
 }
 
-int imp_GetSweepMode(imp_sweep_e *sweep){
-	sweep = &main_params.sweep;
+int imp_GetSweepMode(imp_sweep_t *sweep){
+	*sweep = main_params.sweep;
 	return RP_OK;
 }
 
@@ -618,31 +635,14 @@ int imp_SetUserWait(bool user_wait){
 }
 
 int imp_GetUserWait(bool *user_wait){
-	user_wait = &main_params.user_wait;
-	return RP_OK;
-}
-
-int imp_SetUserView(uint32_t view){
-	if(view < 10){
-		printf("Invalid view size. Must be greater than 10.\n");
-		return RP_EOOR;
-	}
-	acq_size = view;
-	return RP_OK;
-}
-
-int imp_GetUserView(uint32_t *view){
-	view = &acq_size;
+	*user_wait = main_params.user_wait;
 	return RP_OK;
 }
 
 int main(int argc, char **argv){
 
 	imp_Init();
-	imp_Run(1);
+	imp_Run();
 	imp_Release();
 	return 0;
 }
-
-
-

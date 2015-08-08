@@ -1,7 +1,7 @@
 /**
 * $Id: $
 *
-* @brief Red Pitaya application Impendace Analyzer module interface
+* @brief Red Pitaya application Impedance Analyzer module interface
 *
 * @Author Luka Golinar
 *
@@ -49,3 +49,59 @@ int impApp_ImpSetDcBias(float dc_bias){
 int impApp_ImpGetDcBias(float *dc_bias){
 	return imp_GetDcBias(dc_bias);
 }
+
+int impApp_ImpSetSteps(uint32_t steps){
+	return imp_SetSteps(steps);
+}
+
+int impApp_ImpGetSteps(uint32_t *steps){
+	return imp_GetSteps(steps);
+}
+
+int impApp_ImpSetStartFreq(float s_freq){
+	return imp_SetStartFreq(s_freq);
+}
+
+int impApp_ImpGetStartFreq(float *s_freq){
+	return imp_GetStartFreq(s_freq);
+}
+
+int impApp_ImpSetEndFreq(float e_freq){
+	return imp_SetEndFreq(e_freq);
+}
+
+int impApp_ImpGetEndFreq(float *e_freq){
+	return imp_GetEndFreq(e_freq);
+}
+
+/* TODO: Implement in first layer - lcr_meter */
+int impApp_SetYplot(int y_plot) { return 0; }
+
+int impApp_GetYplot(int y_plot) { return 0; }
+
+int impApp_ImpSetLoadRe(float load_re){
+	return imp_SetRefReal(load_re);
+}
+
+int impApp_ImpGetLoadRe(float *load_re){
+	return imp_GetRefReal(load_re);
+}
+
+int impApp_ImpSetLoadImg(float load_img){
+	return imp_SetRefImg(load_img);
+}
+
+int impApp_ImpGetLoadImg(float *load_img){
+	return imp_GetRefImg(load_img);
+}
+
+int impApp_ImpSetCalib(imp_calib_t calib){
+	return imp_SetCalibMode(calib);
+}
+
+int impApp_ImpGetCalib(imp_calib_t *calib){
+	return imp_GetCalibMode(calib);
+}
+
+
+
