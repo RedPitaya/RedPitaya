@@ -1,7 +1,7 @@
 /**
 * $Id: $
 *
-* @brief Red Pitaya application lcr module interface
+* @brief Red Pitaya application Impedance Analzyer module interface
 *
 * @Author Luka Golinar
 *
@@ -21,7 +21,7 @@
 #include <complex.h>
 #include <math.h>
 
-#include "lcr_meter.h"
+#include "impedance_analyzer.h"
 #include "common.h"
 
 
@@ -30,12 +30,12 @@ int 					min_periodes = 10;
 uint32_t 				acq_size = 1024;
 
 pthread_mutex_t 		mutex;
-pthread_t 				*lcr_thread_handler = NULL;
+pthread_t 				*imp_thread_handler = NULL;
 
 bool print_data = false;
 
-/* Init lcr params struct */
-lcr_params_t main_params = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false}; 
+/* Init impedance analyzer params struct */
+imp_params_t main_params = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false}; 
 
 /* R_shunt constans */
 static const uint32_t R_SHUNT_30	 = 30;
@@ -50,15 +50,15 @@ static const uint32_t R_SHUNT_430K   = 430000;
 static const uint32_t R_SHUNT_3M     = 3000000;
 
 /* Decimation constants */
-static const uint32_t LCR_DEC_1		= 1;
-static const uint32_t LCR_DEC_8		= 8;
-static const uint32_t LCR_DEC_64	= 64;
-static const uint32_t LCR_DEC_1024  = 1024;
-static const uint32_t LCR_DEC_8192	= 8192;
-static const uint32_t LCR_DEC_65536 = 65536;
+static const uint32_t IMP_DEC_1		= 1;
+static const uint32_t IMP_DEC_8		= 8;
+static const uint32_t IMP_DEC_64	= 64;
+static const uint32_t IMP_DEC_1024  = 1024;
+static const uint32_t IMP_DEC_8192	= 8192;
+static const uint32_t IMP_DEC_65536 = 65536;
 
 /* Init the main API structure */
-int lcr_Init(){
+int imp_Init(){
 
 	/* Init mutex thread */
 	if(pthread_mutex_init(&mutex, NULL)){
@@ -69,21 +69,21 @@ int lcr_Init(){
 
 	if(rp_Init() != RP_OK){
 		fprintf(stderr, "Unable to inicialize the RPI API structure "
-			"needed by LCR meter application: %s\n", strerror(errno));
+			"needed by Impedance analyzer application: %s\n", strerror(errno));
 		return RP_EOOR;
 	}
 	/* Set default values of the lcr_params structure */
-	lcr_SetDefaultValues();
+	imp_SetDefaultValues();
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
 /* Release resources used the main API structure */
-int lcr_Release(){
+int imp_Release(){
 	pthread_mutex_lock(&mutex);
 	if(rp_Release() != RP_OK){
 		fprintf(stderr, "Unable to release resources used by " 
-			"LCR meter API: %s\n", strerror(errno));
+			"Impedance analyzer meter API: %s\n", strerror(errno));
 		return RP_EOOR;
 	}
 
@@ -96,33 +96,33 @@ int lcr_Release(){
 }
 
 /* Set default values of all rpi resources */
-int lcr_Reset(){
+int imp_Reset(){
 	pthread_mutex_lock(&mutex);
 	rp_Reset();
 	/* Set default values of the lcr_params structure */
-	lcr_SetDefaultValues(main_params);
+	imp_SetDefaultValues(main_params);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
-int lcr_SetDefaultValues(){
-	ECHECK_APP(lcr_SetAmplitude(1));
-	ECHECK_APP(lcr_SetDcBias(0));
-	ECHECK_APP(lcr_SetAveraging(1));
-	ECHECK_APP(lcr_SetCalibMode(0));
-	ECHECK_APP(lcr_SetRefReal(0.0));
-	ECHECK_APP(lcr_SetRefImg(0.0));
-	ECHECK_APP(lcr_SetSteps(10));
-	ECHECK_APP(lcr_SetStartFreq(1000.0));
-	ECHECK_APP(lcr_SetEndFreq(10000.0));
-	ECHECK_APP(lcr_SetScaleType(0));
-	ECHECK_APP(lcr_SetSweepMode(0));
-	ECHECK_APP(lcr_SetUserWait(false));
+int imp_SetDefaultValues(){
+	ECHECK_APP(imp_SetAmplitude(1));
+	ECHECK_APP(imp_SetDcBias(0));
+	ECHECK_APP(imp_SetAveraging(1));
+	ECHECK_APP(imp_SetCalibMode(0));
+	ECHECK_APP(imp_SetRefReal(0.0));
+	ECHECK_APP(imp_SetRefImg(0.0));
+	ECHECK_APP(imp_SetSteps(10));
+	ECHECK_APP(imp_SetStartFreq(1000.0));
+	ECHECK_APP(imp_SetEndFreq(10000.0));
+	ECHECK_APP(imp_SetScaleType(0));
+	ECHECK_APP(imp_SetSweepMode(0));
+	ECHECK_APP(imp_SetUserWait(false));
 	return RP_OK;
 }
 
 /* Generate functions  */
-int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
+int imp_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 
 	//pthread_mutex_lock(&mutex);
 	(rp_GenFreq(channel, freq));
@@ -135,7 +135,7 @@ int lcr_SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 }
 
 /* Acquire functions. Callback to the API structure */
-int lcr_SafeThreadAcqData(rp_channel_t channel, 
+int imp_SafeThreadAcqData(rp_channel_t channel, 
 	float *data, rp_acq_decimation_t decimation){
 
 	uint32_t pos, curr_pos;
@@ -155,7 +155,7 @@ int lcr_SafeThreadAcqData(rp_channel_t channel,
 	return RP_OK;
 }
 
-float lcr_data_analysis(float **data, uint32_t size, float dc_bias, 
+float imp_data_analysis(float **data, uint32_t size, float dc_bias, 
 		float r_shunt, float complex *Z, float w_out, int decimation){
 
 
@@ -218,7 +218,7 @@ float lcr_data_analysis(float **data, uint32_t size, float dc_bias,
 	return z_ampl;
 }
 
-int lcr_FreqSweep(float **calib_data){
+int imp_FreqSweep(float **calib_data){
 
 	/* Forward variable declaration */
 	//float complex Z_load_ref = main_params->ref_real + main_params->ref_img;
@@ -228,7 +228,7 @@ int lcr_FreqSweep(float **calib_data){
 		dc_bias = main_params.dc_bias;//, z_ampl;
 
 	float r_shunt = R_SHUNT_430K;
-	lcr_scale_e scale_type = main_params.scale;
+	imp_scale_e scale_type = main_params.scale;
 	int steps = main_params.steps;
 	int freq_step;
 	int decimation;
@@ -254,7 +254,7 @@ int lcr_FreqSweep(float **calib_data){
 		return RP_EOOR;
 	}
 	/* Check for logarithmic scale */
-	if(scale_type == LCR_SCALE_LOGARITHMIC){
+	if(scale_type == IMP_SCALE_LOGARITHMIC){
 		a = log10(start_freq);
 		b = log10(end_freq);
 		(steps == 1) ? (c = (b - a)) : (c = (b - a) / (steps - 1));
@@ -271,7 +271,7 @@ int lcr_FreqSweep(float **calib_data){
 			//: (lcr_SetRshunt(main_params, 0));
 		//lcr_GetRshuntFactor(&r_shunt);
 
-		if(scale_type == LCR_SCALE_LOGARITHMIC){
+		if(scale_type == IMP_SCALE_LOGARITHMIC){
 			log_freq = powf(10, (c * i + a));
 			frequency[i] = log_freq;
 		}else{
@@ -282,7 +282,7 @@ int lcr_FreqSweep(float **calib_data){
 		w_out = frequency[i] * 2 * M_PI;
 
 		/* Generating a sinusoidal form with the given frequency */
-		int ret_gen = lcr_SafeThreadGen(RP_CH_1, ampl, frequency[i]);
+		int ret_gen = imp_SafeThreadGen(RP_CH_1, ampl, frequency[i]);
 
 		if(ret_gen != RP_OK){
 			printf("Error generating signal.\n");
@@ -293,32 +293,32 @@ int lcr_FreqSweep(float **calib_data){
 
 			if(frequency[i] >= 160000){
 
-				decimation = LCR_DEC_1;
+				decimation = IMP_DEC_1;
 				api_decimation = RP_DEC_1;
 
 			}else if(frequency[i] >= 20000){
 
-				decimation = LCR_DEC_8;
+				decimation = IMP_DEC_8;
 				api_decimation = RP_DEC_8;
 
 			}else if(frequency[i] >= 2500){
 
-				decimation = LCR_DEC_64;
+				decimation = IMP_DEC_64;
 				api_decimation = RP_DEC_64;
 
 			}else if(frequency[i] >= 160){
 
-				decimation = LCR_DEC_1024;
+				decimation = IMP_DEC_1024;
 				api_decimation = RP_DEC_1024;
 
 			}else if(frequency[i] >= 20){
 
-				decimation = LCR_DEC_8192;
+				decimation = IMP_DEC_8192;
 				api_decimation = RP_DEC_8192;
 
 			}else if(frequency[i] >= 2.5){
 
-				decimation = LCR_DEC_65536;
+				decimation = IMP_DEC_65536;
 				api_decimation = RP_DEC_65536;
 			}
 
@@ -337,13 +337,13 @@ int lcr_FreqSweep(float **calib_data){
 			/* TODO Make dynamic memory allocation */
 			/* Signal acquisition for both channels */
 			int ret_val;
-			ret_val = lcr_SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
+			ret_val = imp_SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
 				return RP_EOOR;
 			}
 
-			ret_val = lcr_SafeThreadAcqData(RP_CH_2, ch2_data, api_decimation);
+			ret_val = imp_SafeThreadAcqData(RP_CH_2, ch2_data, api_decimation);
 			if(ret_val != RP_OK){
 				printf("Error acquiring data.\n");
 				return RP_EOOR;
@@ -359,11 +359,11 @@ int lcr_FreqSweep(float **calib_data){
 				analysis_data[1][k] = ch2_data[k];
 			}
 			/* Calculate output data */
-			lcr_data_analysis(analysis_data, acq_size, dc_bias, 
+			imp_data_analysis(analysis_data, acq_size, dc_bias, 
 						r_shunt, Z, w_out, decimation);
 			
 			if(ret_val != RP_OK){
-				printf("Lcr data analysis failed to properly execute.\n");
+				printf("Impedance analyzer data analysis failed to properly execute.\n");
 				return RP_EOOR;
 			}
 			/* Saving calibration data */
@@ -376,33 +376,33 @@ int lcr_FreqSweep(float **calib_data){
 	return RP_OK;
 }
 
-int lcr_MeasSweep(float **calib_data){
+int imp_MeasSweep(float **calib_data){
 
 	return RP_OK;
 }
 
-/* Main LCR thread */
-void *lcr_MainThread(int measurment){
+/* Main Impedance Analzyer thread */
+void *imp_MainThread(int measurment){
 	
 	float **data = multiDimensionVector(2, acq_size);
 
 	if(measurment){
-		lcr_FreqSweep(data);
+		imp_FreqSweep(data);
 	}else{
-		lcr_MeasSweep(data);
+		imp_MeasSweep(data);
 	}
 
 	return RP_OK;
 }
 
 /* Main call function */
-int lcr_Run(int measurment){
+int imp_Run(int measurment){
 
 	//int err;
 	//lcr_thread_handler = (pthread_t *)malloc(sizeof(pthread_t));
 	//err = pthread_create(lcr_thread_handler, NULL, &lcr_MainThread, NULL);
 	
-	lcr_MainThread(measurment);
+	imp_MainThread(measurment);
 
 	//if(err != RP_OK){
 		//printf("Main thread creation failed.\n");
@@ -412,45 +412,45 @@ int lcr_Run(int measurment){
 	return RP_OK;
 }
 
-/* Lcr helper functions */
-int lcr_GetRshuntFactor(float *r_shunt_factor){
+/* Impedance analyzer helper functions */
+int imp_GetRshuntFactor(float *r_shunt_factor){
 	
-	lcr_r_shunt_e r_shunt;
-	ECHECK_APP(lcr_GetRShunt(&r_shunt));
+	imp_r_shunt_e r_shunt;
+	ECHECK_APP(imp_GetRShunt(&r_shunt));
 
 	switch(r_shunt){
-		case LCR_R_SHUNT_30:
+		case IMP_R_SHUNT_30:
 			*r_shunt_factor = R_SHUNT_30;
 			return RP_OK;
-		case LCR_R_SHUNT_75:
+		case IMP_R_SHUNT_75:
 			*r_shunt_factor = R_SHUNT_75;
 			return RP_OK;
-		case LCR_R_SHUNT_300:
+		case IMP_R_SHUNT_300:
 			*r_shunt_factor = R_SHUNT_300;
 			return RP_OK;
-		case LCR_R_SHUNT_750:
+		case IMP_R_SHUNT_750:
 			*r_shunt_factor = R_SHUNT_750;
 			return RP_OK;
-		case LCR_R_SHUNT_3K:
+		case IMP_R_SHUNT_3K:
 			*r_shunt_factor = R_SHUNT_3K;
 			return RP_OK;
-		case LCR_R_SHUNT_7_5K:
+		case IMP_R_SHUNT_7_5K:
 			*r_shunt_factor = R_SHUNT_7_5K;
 			return RP_OK;
-		case LCR_R_SHUNT_30K:
+		case IMP_R_SHUNT_30K:
 			*r_shunt_factor = R_SHUNT_30K;
 			return RP_OK;
-		case LCR_R_SHUNT_80K:
+		case IMP_R_SHUNT_80K:
 			*r_shunt_factor = R_SHUNT_80K;
 			return RP_OK;
-		case LCR_R_SHUNT_430K:
+		case IMP_R_SHUNT_430K:
 			*r_shunt_factor = R_SHUNT_430K;
 			return RP_OK;
-		case LCR_R_SHUNT_3M:
+		case IMP_R_SHUNT_3M:
 			*r_shunt_factor = R_SHUNT_3M;
 			return RP_OK;
 		default:
-			return RP_EOOR;
+			return RP_SNOMATCH;
 	}
 }
 
@@ -471,7 +471,7 @@ int calculateShunt(float z_ampl){
 }
 
 /* Getters and setters */
-int lcr_SetAmplitude(float ampl){
+int imp_SetAmplitude(float ampl){
 
 	if((main_params.dc_bias != -1) && ((main_params.dc_bias + ampl > 1)
 	  || (main_params.dc_bias + ampl <= 0))){
@@ -486,12 +486,12 @@ int lcr_SetAmplitude(float ampl){
 	return RP_OK;
 }
 
-int lcr_GetAmplitude(float *ampl){
+int imp_GetAmplitude(float *ampl){
 	ampl = &main_params.amplitude;
 	return RP_OK;
 }
 
-int lcr_SetDcBias(float dc_bias){
+int imp_SetDcBias(float dc_bias){
 
 	if((main_params.amplitude != -1) && ((main_params.amplitude + dc_bias > 1)
 	  || (main_params.amplitude + dc_bias <= 0))){
@@ -506,123 +506,123 @@ int lcr_SetDcBias(float dc_bias){
 	return RP_OK;
 }
 
-int lcr_GetDcBias(float *dc_bias){
+int imp_GetDcBias(float *dc_bias){
 	dc_bias = &main_params.dc_bias;
 	return RP_OK;
 }
 
-int lcr_SetAveraging(float avg){
+int imp_SetAveraging(float avg){
 
 	main_params.avg = avg;
 	return RP_OK;
 }
 
-int lcr_GetAveraging(float *avg){
+int imp_GetAveraging(float *avg){
 	avg = &main_params.avg;
 	return RP_OK;
 }
 
-int lcr_SetRshunt(lcr_r_shunt_e r_shunt){
+int imp_SetRshunt(imp_r_shunt_e r_shunt){
 	main_params.r_shunt = r_shunt;
 	return RP_OK;
 }
 
-int lcr_GetRShunt(lcr_r_shunt_e *r_shunt){
+int imp_GetRShunt(imp_r_shunt_e *r_shunt){
 	r_shunt = &main_params.r_shunt;
 	return RP_OK;
 }
 
-int lcr_SetCalibMode(lcr_calib_e mode){
+int imp_SetCalibMode(imp_calib_e mode){
 	main_params.mode = mode;
 	return RP_OK;
 }
 
-int lcr_GetCalibMode(lcr_calib_e *mode){
+int imp_GetCalibMode(imp_calib_e *mode){
 	mode = &main_params.mode;
 	return RP_OK;
 }
 
-int lcr_SetRefReal(float ref_real){
+int imp_SetRefReal(float ref_real){
 	main_params.ref_real = ref_real;
 	return RP_OK;
 }
 
-int lcr_GetRefReal(float *ref_real){
+int imp_GetRefReal(float *ref_real){
 	ref_real = &main_params.ref_real;
 	return RP_OK;
 }
 
-int lcr_SetRefImg(float ref_img){
+int imp_SetRefImg(float ref_img){
 	main_params.ref_img = ref_img;
 	return RP_OK;
 }
 
-int lcr_GetRefImg(float *ref_img){
+int imp_GetRefImg(float *ref_img){
 	ref_img = &main_params.ref_img;
 	return RP_OK;
 }
 
-int lcr_SetSteps(uint32_t steps){
+int imp_SetSteps(uint32_t steps){
 	main_params.steps = steps;
 	return RP_OK;
 }
 
-int lcr_GetSteps(uint32_t *steps){
+int imp_GetSteps(uint32_t *steps){
 	steps = &main_params.steps;
 	return RP_OK;
 }
 
-int lcr_SetStartFreq(float start_freq){
+int imp_SetStartFreq(float start_freq){
 	main_params.start_freq = start_freq;
 	return RP_OK;
 }
 
-int lcr_GetStartFreq(float *start_freq){
+int imp_GetStartFreq(float *start_freq){
 	start_freq = &main_params.start_freq;
 	return RP_OK;
 }
 
-int lcr_SetEndFreq(float end_freq){
+int imp_SetEndFreq(float end_freq){
 	main_params.end_freq = end_freq;
 	return RP_OK;
 }
 
-int lcr_GetEndFreq(float *end_freq){
+int imp_GetEndFreq(float *end_freq){
 	end_freq = &main_params.end_freq;
 	return RP_OK;
 }
 
-int lcr_SetScaleType(lcr_scale_e scale){
+int imp_SetScaleType(imp_scale_e scale){
 	main_params.scale = scale;
 	return RP_OK;
 }
 
-int lcr_GetScaleType(lcr_scale_e *scale){
+int imp_GetScaleType(imp_scale_e *scale){
 	scale = &main_params.scale;
 	return RP_OK;
 }
 
-int lcr_SetSweepMode(lcr_sweep_e sweep){
+int imp_SetSweepMode(imp_sweep_e sweep){
 	main_params.sweep = sweep;
 	return RP_OK;
 }
 
-int lcr_GetSweepMode(lcr_sweep_e *sweep){
+int imp_GetSweepMode(imp_sweep_e *sweep){
 	sweep = &main_params.sweep;
 	return RP_OK;
 }
 
-int lcr_SetUserWait(bool user_wait){
+int imp_SetUserWait(bool user_wait){
 	main_params.user_wait = user_wait;
 	return RP_OK;
 }
 
-int lcr_GetUserWait(bool *user_wait){
+int imp_GetUserWait(bool *user_wait){
 	user_wait = &main_params.user_wait;
 	return RP_OK;
 }
 
-int lcr_SetUserView(uint32_t view){
+int imp_SetUserView(uint32_t view){
 	if(view < 10){
 		printf("Invalid view size. Must be greater than 10.\n");
 		return RP_EOOR;
@@ -631,16 +631,16 @@ int lcr_SetUserView(uint32_t view){
 	return RP_OK;
 }
 
-int lcr_GetUserView(uint32_t *view){
+int imp_GetUserView(uint32_t *view){
 	view = &acq_size;
 	return RP_OK;
 }
 
 int main(int argc, char **argv){
 
-	lcr_Init();
-	lcr_Run(1);
-	lcr_Release();
+	imp_Init();
+	imp_Run(1);
+	imp_Release();
 	return 0;
 }
 
