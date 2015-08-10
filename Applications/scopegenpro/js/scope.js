@@ -595,8 +595,42 @@
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
           if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-				if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET" || param_name == "OSC_MATH_OFFSET")
+				if(param_name == "OSC_CH1_OFFSET") 
+				{
+					var units;
+					if (new_params["OSC_CH1_SCALE"] != undefined)
+					{
+						if(Math.abs(new_params["OSC_CH1_SCALE"].value) >= 1) {
+							units = 'V';
+						}
+						else if(Math.abs(new_params["OSC_CH1_SCALE"].value) >= 0.001) {
+							units = 'mV';
+						}
+					}
+					else 
+						units = $('#OSC_CH1_OFFSET_UNIT').html();
+					var multiplier = units == "mV" ? 1000 : 1;
+					field.val(OSC.formatValue(new_params[param_name].value * multiplier));
+				} else if (param_name == "OSC_CH2_OFFSET")
+				{
+					var units;
+					if (new_params["OSC_CH2_SCALE"] != undefined)
+					{
+						if(Math.abs(new_params["OSC_CH2_SCALE"].value) >= 1) {
+							units = 'V';
+						}
+						else if(Math.abs(new_params["OSC_CH2_SCALE"].value) >= 0.001) {
+							units = 'mV';
+						}
+					}
+					else 
+						units = $('#OSC_CH2_OFFSET_UNIT').html();
+					var multiplier = units == "mV" ? 1000 : 1;
+					field.val(OSC.formatValue(new_params[param_name].value * multiplier));
+				} else if (param_name == "OSC_MATH_OFFSET")
+				{
 					field.val(OSC.formatValue(new_params[param_name].value));
+				}
 				else 
 					field.val(new_params[param_name].value);
           }
@@ -1077,10 +1111,12 @@ value = field.val();
 //      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
       if(send_changes !== false) {
         OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
-		var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-		var new_offset = cur_offset / curr_scale * new_scale;
-		OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
-		
+        if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET']!=undefined)
+        {
+			var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
+			var new_offset = cur_offset / curr_scale * new_scale;
+			OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
+		}
         OSC.sendParams();
       }
       return new_scale;
