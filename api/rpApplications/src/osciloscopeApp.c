@@ -339,7 +339,7 @@ int osc_setAmplitudeScale(rpApp_osc_source source, double scale) {
                   ch1_ampScale = scale,
                   ch2_ampScale = scale,
                   math_ampScale = scale)
-    offset *= scale;
+    offset *= currScale;
     pthread_mutex_unlock(&mutex);
     if (!isnan(offset)) {
         ECHECK_APP(osc_setAmplitudeOffset(source, offset));
