@@ -105,8 +105,8 @@ int imp_SetDefaultValues(){
 	ECHECK_APP(imp_SetRefReal(0.0));
 	ECHECK_APP(imp_SetRefImg(0.0));
 	ECHECK_APP(imp_SetSteps(10));
-	ECHECK_APP(imp_SetStartFreq(500.0));
-	ECHECK_APP(imp_SetEndFreq(10000.0));
+	ECHECK_APP(imp_SetStartFreq(900.0));
+	ECHECK_APP(imp_SetEndFreq(20000.0));
 	ECHECK_APP(imp_SetScaleType(IMP_SCALE_LINEAR));
 	ECHECK_APP(imp_SetSweepMode(IMP_FREQUENCY_SWEEP));
 	ECHECK_APP(imp_SetUserWait(false));
@@ -510,7 +510,7 @@ int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 	findInterpFreq(t_calib, end_freq, &end_interval, false);
 
 	//TODO: Interpolate
-	printf("%f | %f\n",start_interval, end_interval);
+	printf("%f | %f\n", start_interval, end_interval);
 
 	fclose(calib_file);
 
@@ -522,25 +522,31 @@ int findInterpFreq(float *calib_data,
 				   float *out_freq, 
 				   bool start_interval){
 
+	float diff, freq_index;
+
 	/* Max calibration frequency */
-	float closet_freq = END_CALIB_FREQ;
+	float smallest_diff = END_CALIB_FREQ;
 
 	for(int i = 1; i < CALIB_SIZE+1; i++){
-		float freq_index = i * 100;
-		if(start_interval){
-			if(abs((freq_index) -  input_freq) < closet_freq 
-				&& ((freq_index) < input_freq)){
 
-				*out_freq = (freq_index);
+		freq_index = 100 + (i-1) * 10100;
+		diff = abs(freq_index -  input_freq);
+
+		if(start_interval){
+			if((diff < smallest_diff) && (freq_index < input_freq)){
+				*out_freq = freq_index;
+				smallest_diff = diff;
 			}
 		}else{
-			if(abs((freq_index) -  input_freq) < closet_freq 
-				&& ((freq_index) > input_freq)){
-
-				*out_freq = (freq_index);
+			if((diff < smallest_diff) && (freq_index > input_freq)){
+				*out_freq = freq_index;
+				smallest_diff = diff;
+				
 			}
 		}
 	}
+
+	
 
 	return RP_OK;
 }
