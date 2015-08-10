@@ -26,7 +26,7 @@
 }
 
 float vectorMax(float *data, int size);
-float vectorApprox(float *data, int size, float approx_val);
+float vectorApprox(float *data, int size, float approx_val, bool min);
 float trapezoidalApprox(float *data, float t, int size);
 float vectorMean(float *data, int steps);
 float **multiDimensionVector(int second_dimenson);
