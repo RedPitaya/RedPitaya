@@ -12,8 +12,8 @@
  * for more details on the language used herein.
  */
 
- #ifndef COMMON_LCR_H_
- #define COMMON_LCR_H_
+ #ifndef COMMON_IMP_H_
+ #define COMMON_IMP_H_
 
 #include "../../../rpbase/src/rp.h"
 
@@ -25,9 +25,11 @@
  		} \
 }
 
-float vectorMax(float *data, int view_size);
-float trapezoidalApprox(float *data, float t, int view_size);
-float meanVector(float *data, int view_size);
-float **multiDimensionVector(int first_dimension, int second_dimenson);
+float vectorMax(float *data, int size);
+float vectorApprox(float *data, int size, float approx_val);
+float trapezoidalApprox(float *data, float t, int size);
+float vectorMean(float *data, int steps);
+float **multiDimensionVector(int second_dimenson);
+int set_IIC_Shunt(uint32_t shunt);
 
-#endif /* COMMON_LCR_H_ */
+#endif /* COMMON_IMP_H_ */
