@@ -21,12 +21,19 @@
 #define REPEAT do
 #define UNTIL(exp) while(!(exp))
 
+/* Random global defines */
 #define AMPLITUDE_MAX			1.0
 #define ADC_BUFF_SIZE			16384
 #define M_PI					3.14159265358979323846
 #define TRANS_EFFECT_STEPS		10
 #define SAMPLE_RATE				125e6
 #define PARAMS_NUM				13
+
+/* Calibration params */
+#define CALIB_SIZE				100
+#define START_CALIB_FREQ		1000000 //TODO
+#define END_CALIB_FREQ			1e6
+
 
 /* R_shunt constans */
 static const uint32_t R_SHUNT_30	 = 30;
@@ -97,7 +104,12 @@ float imp_data_analysis(float **data, uint32_t size, float dc_bias,
 
 /* Helper functions */
 uint32_t imp_shuntAlgorithm(float z_ampl);
-int imp_Interpolate(float *calib_data, FILE *calib_file);
+int imp_Interpolate(float *calib_data, imp_calib_t calib_mode);
+
+int findInterpFreq(float *calib_data, 
+				   float input_freq, 
+				   float *frequency, 
+				   bool start_interval);
 
 /* Getters and Setters */
 int imp_SetAmplitude(float ampl);

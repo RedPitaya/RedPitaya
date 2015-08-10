@@ -160,7 +160,7 @@ int imp_Sweep(float *ampl_z_out){
 	int freq_step, steps, decimation;
 	rp_acq_decimation_t api_decimation;
 	imp_calib_t calibration = main_params.mode;
-	bool rep_meas = true;
+	//bool rep_meas = true;
 	int i = 0;
 
 	/* Forward memory allocation */
@@ -173,8 +173,8 @@ int imp_Sweep(float *ampl_z_out){
 	float *ch2_data = malloc((acq_size) * sizeof(float));
 
 	if(calibration != IMP_CALIB_NONE){
-		start_freq = 100, end_freq = 1000000;
-		steps = 100;
+		start_freq = START_CALIB_FREQ, end_freq = END_CALIB_FREQ;
+		steps = CALIB_SIZE;
 	}else{
 		start_freq = main_params.start_freq, end_freq = main_params.end_freq;
 		steps = main_params.steps;
@@ -201,16 +201,17 @@ int imp_Sweep(float *ampl_z_out){
 		freq_step = 0;
 	}
 
-	ECHECK_APP(set_IIC_Shunt(-1));
+	//set_IIC_Shunt(-1);
 
 	uint32_t r_shunt;
 	/* Get R shunt enumerator value */
 	ECHECK_APP(imp_GetRShunt(&r_shunt));
 
 	/* Set shunt value before measurment */
-	ECHECK_APP(set_IIC_Shunt(r_shunt));
+	//set_IIC_Shunt(r_shunt);
 
 	/* Main frequency sweep loop */
+	printf("TODO STEPS: %d\n", steps);
 	while(i < steps){
 
 		/* Repeat step if r_shunt changed */
@@ -301,6 +302,7 @@ int imp_Sweep(float *ampl_z_out){
 			/* Saving calibration data */
 			z_avg[0][j] = creal(*Z);
 			z_avg[1][j] = cimag(*Z);
+
 		}
 
 		ECHECK_APP(rp_GenOutDisable(RP_CH_1)); 
@@ -309,6 +311,11 @@ int imp_Sweep(float *ampl_z_out){
 		z_ampl = sqrtf(powf(vectorMean(z_avg[0], averaging), 2) + 
 			powf(vectorMean(z_avg[1], averaging), 2));
 
+		i++;
+		ampl_z_out[i] = z_ampl;
+		}
+
+#if 0
 		if(((z_ampl >= (r_shunt * 3)) || (z_ampl 
 			<= (r_shunt / 3))) && rep_meas){
 
@@ -320,9 +327,9 @@ int imp_Sweep(float *ampl_z_out){
 
 			}else{
 
-				r_shunt = imp_shuntAlgorithm(z_ampl);
+				//r_shunt = imp_shuntAlgorithm(z_ampl);
 				/* Set shunt value before measurment */
-				ECHECK_APP(set_IIC_Shunt(r_shunt));	
+				//set_IIC_Shunt(r_shunt);	
 			}
 
 		/* Save *Z */
@@ -335,7 +342,9 @@ int imp_Sweep(float *ampl_z_out){
 	}
 
 	/* Set shunt value after measurment */
-	ECHECK_APP(set_IIC_Shunt(R_SHUNT_7_5K));
+	//set_IIC_Shunt(R_SHUNT_7_5K);
+#endif
+	//rep_meas = false;
 
 	return RP_OK;
 }
@@ -428,28 +437,26 @@ void *imp_MainThread(){
 		calib_file = fopen("/tmp/imp_data/calibration/calib_short", "w+");
 	}
 
+	/* If we are in calibration mode, write data to a file */
 	if(calib_mode != IMP_CALIB_NONE){
-		for(int i = 0; i < main_params.steps; i++){
-			fprintf(calib_file, "%.10f,\n", amplitude_z[i]);
+		for(int i = 0; i < CALIB_SIZE; i++){
+			fprintf(calib_file, "%.10f\n", amplitude_z[i]);
 		}	
+	}	
+
+	if(calib_mode != IMP_CALIB_NONE) fclose(calib_file);
+
+	float *calib_data_open = malloc(CALIB_SIZE * sizeof(float));
+	float *calib_data_short = malloc(CALIB_SIZE * sizeof(float));
+
+	//Interpolation function
+	if(calib_mode == IMP_CALIB_NONE) {
+		imp_Interpolate(calib_data_open, IMP_CALIB_OPEN);
+		imp_Interpolate(calib_data_short, IMP_CALIB_SHORT);
 	}
-
-	/* Data calculation */
-	switch(calib_mode){
-		case IMP_CALIB_NONE: //No calibrations were made
-			break;
-		case IMP_CALIB_OPEN:
-			calib_file = fopen("/tmp/imp_data/calibration/calib_open", "r");
-			break;
-		case IMP_CALIB_SHORT:
-			calib_file = fopen("/tmp/imp_data/calibration/calib_short", "r");
-			break;
-		default:
-			break;
-	}
-
-	//Interpolation
-
+	
+	/* Calculate some more data from ampz TODO: Function. 
+	 * Return data to client. Return sucessfuly calibration if CALIB mode selected. */
 
 	return RP_OK;
 }
@@ -469,30 +476,71 @@ int imp_Run(){
 	return RP_OK;
 }
 
-int imp_Interpolate(float *calib_data, FILE *calib_file){
+int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 
-	uint32_t steps, c;
 	float start_freq, end_freq, start_interval, end_interval;
+	uint32_t steps;
 	imp_GetSteps(&steps);
+	FILE *calib_file;
+	float t_calib[CALIB_SIZE];
 
-	float t_calib[100];
-	
+	/* Data calculation */
+	switch(calib_mode){
+		case IMP_CALIB_OPEN:
+			calib_file = fopen("/tmp/imp_data/calibration/calib_open", "r");
+			break;
+		case IMP_CALIB_SHORT:
+			calib_file = fopen("/tmp/imp_data/calibration/calib_short", "r");
+			break;
+		default:
+			break;
+	}
+
+	int c = 0;
 	/* Read calibration file */
 	while(!feof(calib_file)){
-		fscanf(calib_file, "%f", &t_calib[c]);
-		++c;
+		fscanf(calib_file, "%f", &t_calib[c++]);
 	}
 
 	imp_GetStartFreq(&start_freq);
 	imp_GetEndFreq(&end_freq);
 
-	/* Get start and ending Z calib */
-	start_interval = vectorApprox(calib_data, steps, start_freq);
-	end_interval = vectorApprox(calib_data, steps, end_freq);
+	/* Get interpolation interval */
+	findInterpFreq(t_calib, start_freq, &start_interval, true);
+	findInterpFreq(t_calib, end_freq, &end_interval, false);
 
-	//TODO: interpolacijska funkcija
-
+	//TODO: Interpolate
 	printf("%f | %f\n",start_interval, end_interval);
+
+	fclose(calib_file);
+
+	return RP_OK;
+}
+
+int findInterpFreq(float *calib_data, 
+				   float input_freq, 
+				   float *out_freq, 
+				   bool start_interval){
+
+	/* Max calibration frequency */
+	float closet_freq = END_CALIB_FREQ;
+
+	for(int i = 1; i < CALIB_SIZE+1; i++){
+		float freq_index = i * 100;
+		if(start_interval){
+			if(abs((freq_index) -  input_freq) < closet_freq 
+				&& ((freq_index) < input_freq)){
+
+				*out_freq = (freq_index);
+			}
+		}else{
+			if(abs((freq_index) -  input_freq) < closet_freq 
+				&& ((freq_index) > input_freq)){
+
+				*out_freq = (freq_index);
+			}
+		}
+	}
 
 	return RP_OK;
 }
