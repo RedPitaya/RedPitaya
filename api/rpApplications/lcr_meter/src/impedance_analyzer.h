@@ -31,7 +31,7 @@
 
 /* Calibration params */
 #define CALIB_SIZE				100
-#define START_CALIB_FREQ		1000000 //TODO
+#define START_CALIB_FREQ		100 //TODO
 #define END_CALIB_FREQ			1e6
 
 
