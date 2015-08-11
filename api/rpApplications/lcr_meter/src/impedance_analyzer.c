@@ -3,7 +3,7 @@
 *
 * @brief Red Pitaya application Impedance analyzer module interface
 *
-* @Author Luka Golinar
+* @Author Luka Golinar <luka.golinar@gmail.com>
 *
 * (c) Red Pitaya  http://www.redpitaya.com
 *
@@ -14,6 +14,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
@@ -34,7 +36,7 @@ pthread_t 				*imp_thread_handler = NULL;
 
 /* Init impedance params struct */
 imp_params_t main_params = 
-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false};
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false};
 
 /* Decimation constants */
 static const uint32_t IMP_DEC_1		= 1;
@@ -101,7 +103,7 @@ int imp_SetDefaultValues(){
 	ECHECK_APP(imp_SetDcBias(0));
 	ECHECK_APP(imp_SetAveraging(1));
 	ECHECK_APP(imp_SetRshunt(R_SHUNT_7_5K));
-	ECHECK_APP(imp_SetCalibMode(IMP_CALIB_NONE));
+	ECHECK_APP(imp_SetCalibMode(IMP_CALIB_OPEN));
 	ECHECK_APP(imp_SetRefReal(0.0));
 	ECHECK_APP(imp_SetRefImg(0.0));
 	ECHECK_APP(imp_SetSteps(10));
@@ -110,6 +112,7 @@ int imp_SetDefaultValues(){
 	ECHECK_APP(imp_SetScaleType(IMP_SCALE_LINEAR));
 	ECHECK_APP(imp_SetSweepMode(IMP_FREQUENCY_SWEEP));
 	ECHECK_APP(imp_SetUserWait(false));
+	ECHECK_APP(imp_SetNoCalibration(true));
 
 	return RP_OK;
 }
@@ -211,7 +214,6 @@ int imp_Sweep(float *ampl_z_out){
 	//set_IIC_Shunt(r_shunt);
 
 	/* Main frequency sweep loop */
-	printf("TODO STEPS: %d\n", steps);
 	while(i < steps){
 
 		/* Repeat step if r_shunt changed */
@@ -295,7 +297,8 @@ int imp_Sweep(float *ampl_z_out){
 						r_shunt, Z, w_out, decimation);
 			
 			if(ret_val != RP_OK){
-				printf("Impedance analyzer data analysis failed to properly execute.\n");
+				printf("Impedance analyzer data analysis failed to properly "
+					"execute.\n");
 				return RP_EOOR;
 			}
 
@@ -313,7 +316,8 @@ int imp_Sweep(float *ampl_z_out){
 
 		i++;
 		ampl_z_out[i] = z_ampl;
-		}
+
+	}
 
 #if 0
 		if(((z_ampl >= (r_shunt * 3)) || (z_ampl 
@@ -428,11 +432,24 @@ void *imp_MainThread(){
 
 	FILE *calib_file;
 	float *amplitude_z = malloc(acq_size * sizeof(float));
-	//lcr_sweep_t sweep_mode = main_params.sweep;
 	imp_calib_t calib_mode = main_params.mode;
+	bool no_calib = main_params.no_calib;
+
+	/* Stat structure */
+	struct stat st = {0};
 
 	/* Main sweep function */
 	imp_Sweep(amplitude_z);
+
+	/* Data directory */
+	char *data_path = "/tmp/imp_data/calibration";
+
+	/* Create calibration data directory if it doesn't exist yet */
+	if(calib_mode){
+		if(stat(data_path, &st) == -1){
+			createDir(data_path);
+		}
+	}
 
 	/* Write calibration data into files on the system */
 	if(calib_mode == IMP_CALIB_OPEN){
@@ -454,14 +471,16 @@ void *imp_MainThread(){
 	float *calib_data_open = malloc(CALIB_SIZE * sizeof(float));
 	float *calib_data_short = malloc(CALIB_SIZE * sizeof(float));
 
-	//Interpolation function
-	if(calib_mode == IMP_CALIB_NONE) {
+	/* Interpolate output data with the calibration data if *
+	 * if user did calibration and has not requested data with no calibration */
+	if(calib_mode == IMP_CALIB_NONE && !no_calib) {
 		imp_Interpolate(calib_data_open, IMP_CALIB_OPEN);
 		imp_Interpolate(calib_data_short, IMP_CALIB_SHORT);
 	}
 	
 	/* Calculate some more data from ampz TODO: Function. 
-	 * Return data to client. Return sucessfuly calibration if CALIB mode selected. */
+	 * Return data to client. Return sucessfuly calibration parameter
+	 * if CALIB mode selected. */
 
 	return RP_OK;
 }
@@ -529,7 +548,7 @@ int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 /* Finds the index of the given interval number 
  * between an array of z amplitudes. Indexes are calibration
  * frequencys. */
-int findInterpFreq(float input_freq, 
+int findInterpFreq(float input_freq,
 				   float *out_index, 
 				   bool start_interval){
 
@@ -555,7 +574,6 @@ int findInterpFreq(float input_freq,
 			}
 		}
 	}
-
 	return RP_OK;
 }
 
@@ -733,6 +751,11 @@ int imp_GetSweepMode(imp_sweep_t *sweep){
 
 int imp_SetUserWait(bool user_wait){
 	main_params.user_wait = user_wait;
+	return RP_OK;
+}
+
+int imp_SetNoCalibration(bool no_calib){
+	main_params.no_calib = no_calib;
 	return RP_OK;
 }
 

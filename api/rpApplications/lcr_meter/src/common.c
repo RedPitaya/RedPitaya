@@ -20,6 +20,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "common.h"
 
@@ -180,4 +182,38 @@ float **multiDimensionVector(int second_dimenson){
 	}
 
 	return data_out;
+}
+
+/* This functions recursivly creates a directory path 
+ * Example: /tmp/imp_data/calibration 
+ * One we come find the second / symbol, we check if the directory
+ * exists. If it does, the function continues. If not, it creates the 
+ * directory and calls itself with the same char *array as param. */
+int createDir(char *path){
+
+	/* Stat structure */
+	struct stat st = {0};
+
+	/* Get array size */
+	int size = sizeof(path) / sizeof(*path);
+	char strip_path[size];
+	printf("Hello\n");
+	for(int i = 0; i < size; ++i){
+		if(strcmp(&path[i], "/") == 0){
+
+			memcpy(&strip_path[0], &path[0], i);
+			strip_path[size++] = '\0';
+
+			if(stat(&strip_path[0], &st) == -1){
+				break;
+			}
+			continue;
+		}
+	}
+
+	/* Create dir from subarray */
+	mkdir(&strip_path[0], 0777);
+	createDir(path);
+
+	return RP_OK;
 }

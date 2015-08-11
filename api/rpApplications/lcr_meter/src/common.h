@@ -31,5 +31,6 @@ float trapezoidalApprox(float *data, float t, int size);
 float vectorMean(float *data, int steps);
 float **multiDimensionVector(int second_dimenson);
 int set_IIC_Shunt(uint32_t shunt);
+int createDir(char *path);
 
 #endif /* COMMON_IMP_H_ */
