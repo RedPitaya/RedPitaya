@@ -106,10 +106,14 @@ float imp_data_analysis(float **data, uint32_t size, float dc_bias,
 uint32_t imp_shuntAlgorithm(float z_ampl);
 int imp_Interpolate(float *calib_data, imp_calib_t calib_mode);
 
-int findInterpFreq(float *calib_data, 
-				   float input_freq, 
-				   float *frequency, 
+int findInterpFreq(float input_freq, 
+				   float *out_index, 
 				   bool start_interval);
+
+int findIntrpInterv(float *in_z_ampl,
+					float *out_sub_arry,
+					int start_interval, 
+					int end_interval);
 
 /* Getters and Setters */
 int imp_SetAmplitude(float ampl);

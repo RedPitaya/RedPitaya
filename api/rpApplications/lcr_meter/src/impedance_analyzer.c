@@ -349,8 +349,13 @@ int imp_Sweep(float *ampl_z_out){
 	return RP_OK;
 }
 
-float imp_data_analysis(float **data, uint32_t size, float dc_bias, 
-		uint32_t r_shunt, float complex *Z, float w_out, int decimation){
+float imp_data_analysis(float **data, 
+						uint32_t size, 
+						float dc_bias, 
+						uint32_t r_shunt, 
+						float complex *Z, 
+						float w_out, 
+						int decimation){
 
 	/* Forward vector and variable declarations */
 	float ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
@@ -478,11 +483,13 @@ int imp_Run(){
 
 int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 
-	float start_freq, end_freq, start_interval, end_interval;
+	float start_freq, end_freq, start_interval, end_interval; 
 	uint32_t steps;
-	imp_GetSteps(&steps);
+
+	ECHECK_APP(imp_GetSteps(&steps));
 	FILE *calib_file;
-	float t_calib[CALIB_SIZE];
+	float *t_calib = malloc(CALIB_SIZE * sizeof(float));
+	float *sub_calib = malloc(steps * sizeof(float));
 
 	/* Data calculation */
 	switch(calib_mode){
@@ -506,47 +513,64 @@ int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 	imp_GetEndFreq(&end_freq);
 
 	/* Get interpolation interval */
-	findInterpFreq(t_calib, start_freq, &start_interval, true);
-	findInterpFreq(t_calib, end_freq, &end_interval, false);
+	findInterpFreq(start_freq, &start_interval, true);
+	findInterpFreq(end_freq, &end_interval, false);	
+
+	/* Interpolate each step inside */
+	findIntrpInterv(&t_calib[0], &sub_calib[0], 
+		start_interval, end_interval);
 
 	//TODO: Interpolate
-	printf("%f | %f\n", start_interval, end_interval);
-
 	fclose(calib_file);
 
 	return RP_OK;
 }
 
-int findInterpFreq(float *calib_data, 
-				   float input_freq, 
-				   float *out_freq, 
+/* Finds the index of the given interval number 
+ * between an array of z amplitudes. Indexes are calibration
+ * frequencys. */
+int findInterpFreq(float input_freq, 
+				   float *out_index, 
 				   bool start_interval){
 
-	float diff, freq_index;
+	float diff, freq_step;
 
 	/* Max calibration frequency */
 	float smallest_diff = END_CALIB_FREQ;
 
 	for(int i = 1; i < CALIB_SIZE+1; i++){
 
-		freq_index = 100 + (i-1) * 10100;
-		diff = abs(freq_index -  input_freq);
+		freq_step = 100 + (i-1) * 10100;
+		diff = abs(freq_step -  input_freq);
 
 		if(start_interval){
-			if((diff < smallest_diff) && (freq_index < input_freq)){
-				*out_freq = freq_index;
+			if((diff < smallest_diff) && (freq_step < input_freq)){
+				*out_index = i;
 				smallest_diff = diff;
 			}
 		}else{
-			if((diff < smallest_diff) && (freq_index > input_freq)){
-				*out_freq = freq_index;
-				smallest_diff = diff;
-				
+			if((diff < smallest_diff) && (freq_step > input_freq)){
+				*out_index = i;
+				smallest_diff = diff;	
 			}
 		}
 	}
 
-	
+	return RP_OK;
+}
+
+/* This functions finds the Z amplitude 
+ * interval on which we are going to interpolate */
+int findIntrpInterv(float *in_z_ampl,
+					float *out_sub_arry,
+					int start_interval, 
+					int end_interval){
+
+	/* Calculate sub array size */
+	uint32_t sub_size = (start_interval - end_interval) * sizeof(float);
+
+	/* Get pointer to sub array*/
+	memcpy(out_sub_arry, &in_z_ampl[start_interval], sub_size);
 
 	return RP_OK;
 }
