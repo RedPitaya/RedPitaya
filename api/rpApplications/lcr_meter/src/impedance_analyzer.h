@@ -3,7 +3,7 @@
 *
 * @brief Red Pitaya application library Impedance Analyzer module interface
 *
-* @Author Luka Golinar
+* @Author Luka Golinar <luka.golinar@gmail.com>
 *
 * (c) Red Pitaya  http://www.redpitaya.com
 *
@@ -28,6 +28,7 @@
 #define TRANS_EFFECT_STEPS		10
 #define SAMPLE_RATE				125e6
 #define PARAMS_NUM				13
+
 
 /* Calibration params */
 #define CALIB_SIZE				100
@@ -79,6 +80,7 @@ typedef struct imp_params_e{
 	imp_scale_t scale;
 	imp_sweep_t sweep; //imp_sweep_e
 	bool user_wait;
+	bool no_calib;
 } imp_params_t;
 
 /* Resource managment functions */
@@ -126,6 +128,7 @@ int imp_SetRshunt(uint32_t r_shunt);
 int imp_GetRShunt(uint32_t *r_shunt);
 int imp_SetCalibMode(imp_calib_t mode);
 int imp_GetCalibMode(imp_calib_t *mode);
+int imp_SetNoCalibration(bool no_calib);
 
 int imp_SetRefReal(float ref_real);
 int imp_GetRefReal(float *ref_real);
