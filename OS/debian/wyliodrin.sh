@@ -68,7 +68,7 @@ cd build
 cmake -DREDPITAYA=ON -DSWIG_EXECUTABLE=/usr/bin/swig3.0 -DREDPITAYA_LIBRARIES=/opt/redpitaya/lib/librp.so -DREDPITAYA_INCLUDE_DIR=/opt/redpitaya/include ..
 make
 sudo make install
-#TODO: check this two lines
+# TODO: check this links, there were errors reported
 ln -s /usr/local/lib/node_modules/ /usr/lib/node
 ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
 
