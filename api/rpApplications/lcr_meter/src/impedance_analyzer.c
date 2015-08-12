@@ -547,6 +547,7 @@ int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 	findIntrpInterv(&t_calib[0], &sub_calib[0], 
 		start_interval, end_interval);
 
+
 	//TODO: Interpolate
 	fclose(calib_file);
 
@@ -597,6 +598,14 @@ int findIntrpInterv(float *in_z_ampl,
 
 	/* Get pointer to sub array*/
 	memcpy(out_sub_arry, &in_z_ampl[start_interval], sub_size);
+
+	return RP_OK;
+}
+
+/* [ f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , ... ]
+ * [ x1 , x2 , x3 , x4 , x5 , x6 , x7 , x8 , ... ]
+ * */
+int interpolationFunc(float *calib_data, float frequency){
 
 	return RP_OK;
 }

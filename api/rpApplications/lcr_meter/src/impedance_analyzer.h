@@ -117,6 +117,8 @@ int findIntrpInterv(float *in_z_ampl,
 					int start_interval, 
 					int end_interval);
 
+int interpolationFunc(float *calib_data, float frequency);
+
 /* Getters and Setters */
 int imp_SetAmplitude(float ampl);
 int imp_GetAmplitude(float *ampl);
