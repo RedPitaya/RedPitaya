@@ -443,11 +443,19 @@ void *imp_MainThread(){
 
 	/* Data directory */
 	char *data_path = "/tmp/imp_data/calibration";
+	char *command = " mkdir -p /tmp/imp_data/calibration";
 
 	/* Create calibration data directory if it doesn't exist yet */
 	if(calib_mode){
 		if(stat(data_path, &st) == -1){
-			createDir(data_path);
+			/* Function call for creating a directory TODO: Use something else 
+			* other than system call */
+			//createPath(&data_path[0]);
+
+			if(system(command) < 0){
+				fprintf(stderr, "Error executing system "
+					"command: %s\n", strerror(errno));
+			}
 		}
 	}
 
