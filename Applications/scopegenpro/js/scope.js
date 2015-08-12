@@ -181,80 +181,85 @@
 		  var orig_units = $("#"+param_name).parent().children("#OSC_MEAS_ORIG_UNITS").text();
 		  var is_hertz = (orig_units == "Hz");
 		  var is_ms = (orig_units == "ms");
-		  
-		  var y = new_params[param_name].value;
-		  var z = y;
-		  var factor = '';
-		  if(y < 0.00000000000010)
-				new_params[param_name].value = 'ERROR';
-		  else if(y > 0.00000000000010 && y <= 0.000000999990)
-		  {	
-			  z*=1e9;
-			  factor = (is_ms) ? 'p' : 'n';
-			  if(y > 0.00000000000010 && y <= 0.00000000999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
-			  else if(y > 0.00000000999990 && y <= 0.0000000999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
-			  else if(y > 0.0000000999990 && y <= 0.000000999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
-		  }
-		  else if(y > 0.000000999990 && y <= 0.000999990)
-		  {	
-			  z*=1e6;
-			  factor = (is_ms) ? 'n' : 'u';
-			  if(y > 0.000000999990 && y <= 0.00000999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
-			  else if(y > 0.00000999990 && y <= 0.0000999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
-			  else if(y > 0.0000999990 && y <= 0.000999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
-		  }
-		  else if(y > 0.000999990 && y <= 0.999990)
-		  {	
-			  z*=1e3;
-			  factor = (is_ms) ? 'u' : 'm';
-			  if(y > 0.000999990 && y <= 0.00999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
-			  else if(y > 0.00999990 && y <= 0.0999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
-			  else if(y > 0.0999990 && y <= 0.999990)
-				new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
-		  }
-		  else if(y > 0.999990 && y <= 9999.90)
-		  {	
-			  factor = (is_ms) ? 'm' : '';
-			  if(y > 0.999990 && y <= 9.99990)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
-			  else if(y > 9.99990 && y <= 99.9990)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
-			  else if(y > 99.9990 && y <= 999.990)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
-			  else if(y > 999.990 && y <= 9999.90)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(0) : z.toFixed(1);
-		  }
-		  else if(y > 9999.90 && y <= 999990.0)
-		  {	
-			  z/=1e3;
-			  factor = 'k';
-			  if(y > 9999.90 && y <= 99999.0)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
-			  else if(y > 99999.0 && y <= 999990.0)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
-		  }
-		  else if(y > 999990.0 && y <= 999990000.0)
-		  {	
-			  z/=1e6;
-			  factor = 'M';
-			  if(y > 999990.0 && y <= 9999900.0)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
-			  else if(y > 9999900.0 && y <= 99999000.0)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
-			  else if(y > 99999000.0 && y <= 999990000.0)
-				new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
-		  }
-		  if (is_ms)
-			orig_units = 's';
-		  $("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(factor + orig_units);
+		  if (orig_units == "%")
+		  {
+			new_params[param_name].value = OSC.formatValue(new_params[param_name].value);
+			$("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(orig_units);
+		  } else  {
+			  var y = new_params[param_name].value;
+			  var z = y;
+			  var factor = '';
+			  if(y < 0.00000000000010)
+					new_params[param_name].value = 'ERROR';
+			  else if(y > 0.00000000000010 && y <= 0.000000999990)
+			  {	
+				  z*=1e9;
+				  factor = (is_ms) ? 'p' : 'n';
+				  if(y > 0.00000000000010 && y <= 0.00000000999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
+				  else if(y > 0.00000000999990 && y <= 0.0000000999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
+				  else if(y > 0.0000000999990 && y <= 0.000000999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+			  }
+			  else if(y > 0.000000999990 && y <= 0.000999990)
+			  {	
+				  z*=1e6;
+				  factor = (is_ms) ? 'n' : 'u';
+				  if(y > 0.000000999990 && y <= 0.00000999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
+				  else if(y > 0.00000999990 && y <= 0.0000999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
+				  else if(y > 0.0000999990 && y <= 0.000999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+			  }
+			  else if(y > 0.000999990 && y <= 0.999990)
+			  {	
+				  z*=1e3;
+				  factor = (is_ms) ? 'u' : 'm';
+				  if(y > 0.000999990 && y <= 0.00999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
+				  else if(y > 0.00999990 && y <= 0.0999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
+				  else if(y > 0.0999990 && y <= 0.999990)
+					new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+			  }
+			  else if(y > 0.999990 && y <= 9999.90)
+			  {	
+				  factor = (is_ms) ? 'm' : '';
+				  if(y > 0.999990 && y <= 9.99990)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
+				  else if(y > 9.99990 && y <= 99.9990)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
+				  else if(y > 99.9990 && y <= 999.990)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+				  else if(y > 999.990 && y <= 9999.90)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(0) : z.toFixed(1);
+			  }
+			  else if(y > 9999.90 && y <= 999990.0)
+			  {	
+				  z/=1e3;
+				  factor = 'k';
+				  if(y > 9999.90 && y <= 99999.0)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
+				  else if(y > 99999.0 && y <= 999990.0)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+			  }
+			  else if(y > 999990.0 && y <= 999990000.0)
+			  {	
+				  z/=1e6;
+				  factor = 'M';
+				  if(y > 999990.0 && y <= 9999900.0)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
+				  else if(y > 9999900.0 && y <= 99999000.0)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
+				  else if(y > 99999000.0 && y <= 999990000.0)
+					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+			  }
+			  if (is_ms)
+				orig_units = 's';
+			  $("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(factor + orig_units);
+		}
 	  }
 
       // Run/Stop button
@@ -509,12 +514,26 @@
               var volt_per_px = (new_params[ref_scale].value * 10) / graph_height;
               var px_offset = -((new_params[y == 'y1' ? 'OSC_CUR1_V' : 'OSC_CUR2_V'].value + source_offset) / volt_per_px - parseInt($('#cur_' + y + '_arrow').css('margin-top')) / 2);
               var top = (graph_height + 7) / 2 + px_offset;
+              var overflow = false;
+              
+              if (top < 0)
+			  {
+				top = 0;
+				overflow = true;
+			  }
+			  if (top > graph_height)
+			  {
+				top = graph_height;
+				overflow = true;
+			  }
               
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
               $('#cur_' + y + '_info')
                 .html(OSC.convertVoltage(+new_value))
                 .data('cleanval', +new_value)
                 .css('margin-top', (top < 16 ? 3 : ''));
+              if(overflow)
+				$('#cur_' + y + ', #cur_' + y + '_info').hide();
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -534,11 +553,26 @@
               var msg_width = $('#cur_' + x + '_info').outerWidth();
               var left = (graph_width + 2) / 2 + px_offset;
               
+              var overflow = false;
+              if (left < 0)
+			  {
+				left = 0;
+				overflow = true;
+			  }
+			  if (left > graph_width)
+			  {
+				left = graph_width;
+				overflow = true;
+			  }
+              
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
               $('#cur_' + x + '_info')
                 .html(OSC.convertTime(-new_value))
                 .data('cleanval', -new_value)
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+                
+              if (overflow)
+				$('#cur_' + x + ', #cur_' + x + '_info').hide();
             }
             else {
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
@@ -561,8 +595,42 @@
             || (!OSC.state.editing && (old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value))) {
           
           if(field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-				if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET" || param_name == "OSC_MATH_OFFSET")
+				if(param_name == "OSC_CH1_OFFSET") 
+				{
+					var units;
+					if (new_params["OSC_CH1_SCALE"] != undefined)
+					{
+						if(Math.abs(new_params["OSC_CH1_SCALE"].value) >= 1) {
+							units = 'V';
+						}
+						else if(Math.abs(new_params["OSC_CH1_SCALE"].value) >= 0.001) {
+							units = 'mV';
+						}
+					}
+					else 
+						units = $('#OSC_CH1_OFFSET_UNIT').html();
+					var multiplier = units == "mV" ? 1000 : 1;
+					field.val(OSC.formatValue(new_params[param_name].value * multiplier));
+				} else if (param_name == "OSC_CH2_OFFSET")
+				{
+					var units;
+					if (new_params["OSC_CH2_SCALE"] != undefined)
+					{
+						if(Math.abs(new_params["OSC_CH2_SCALE"].value) >= 1) {
+							units = 'V';
+						}
+						else if(Math.abs(new_params["OSC_CH2_SCALE"].value) >= 0.001) {
+							units = 'mV';
+						}
+					}
+					else 
+						units = $('#OSC_CH2_OFFSET_UNIT').html();
+					var multiplier = units == "mV" ? 1000 : 1;
+					field.val(OSC.formatValue(new_params[param_name].value * multiplier));
+				} else if (param_name == "OSC_MATH_OFFSET")
+				{
 					field.val(OSC.formatValue(new_params[param_name].value));
+				}
 				else 
 					field.val(new_params[param_name].value);
           }
@@ -624,21 +692,37 @@
 						OSC.div = 1000;
 						unit = 'kV';						
 					}
-					field.html(value);					
+					field.html(value);
 					var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
 					$('#munit').html(units[new_params['OSC_MATH_OP'].value] + '/div');
 					
-					$('#OSC_MATH_OFFSET_UNIT').html(units[new_params['OSC_MATH_OP'].value]);
-					$('#OSC_MATH_OFFSET').val((OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div).toFixed(4));
+					$('#OSC_MATH_OFFSET_UNIT').html(units[new_params['OSC_MATH_OP'].value]);	
+					$('#OSC_MATH_OFFSET').val(OSC.formatValue(OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div));
 				}        
 				else
-					field.html(OSC.convertVoltage(new_params[param_name].value));      
+				{
+					var inp_units;
+				    if(Math.abs(new_params[param_name].value) >= 1) {
+						inp_units = 'V';
+					}
+					else if(Math.abs(new_params[param_name].value) >= 0.001) {
+						inp_units = 'mV';
+					}
+					field.html(OSC.convertVoltage(new_params[param_name].value)); 
+					if (param_name == "OSC_CH1_SCALE")
+						$("#OSC_CH1_OFFSET_UNIT").html(inp_units)
+					else if (param_name == "OSC_CH2_SCALE")
+						$("#OSC_CH2_OFFSET_UNIT").html(inp_units);
+				}
             }
             else {
               field.html(new_params[param_name].value);
             }
           }
-        }
+        } else {
+			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET" || param_name == "OSC_MATH_OFFSET")
+				field.val(OSC.formatValue(new_params[param_name].value));
+		}
       }
     }
     
@@ -797,6 +881,25 @@ value = field.val();
       else if(field.is('input:radio')) {
         value = $('input[name="' + key + '"]:checked').val();
       }
+	  
+	  if (key == "OSC_CH1_OFFSET")
+	  {
+		var units = $('#OSC_CH1_OFFSET_UNIT').html();
+		var divider = units == "mV" ? 1000 : 1;
+		value /= divider;
+	  }
+	  
+	  if (key == "OSC_CH2_OFFSET")
+	  {
+		var units = $('#OSC_CH2_OFFSET_UNIT').html();
+		var divider = units == "mV" ? 1000 : 1;
+		value /= divider;
+	  }
+	  
+	  if (key == "OSC_MATH_OFFSET")
+	  {
+		value = OSC.convertMathUnitToValue();
+	  }
       
       if(value !== undefined && value != OSC.params.orig[key].value) {
         console.log(key + ' changed from ' + OSC.params.orig[key].value + ' to ' + ($.type(OSC.params.orig[key].value) == 'boolean' ? !!value : value));
@@ -879,8 +982,8 @@ value = field.val();
     
     OSC.params.local['in_command'] = { value: 'send_all_params' };
     // Send new values and reset the local params object
-    if (OSC.params.local['OSC_MATH_OFFSET'])
-		OSC.params.local['OSC_MATH_OFFSET'].value *= OSC.div;
+//    if (OSC.params.local['OSC_MATH_OFFSET'])
+//		OSC.params.local['OSC_MATH_OFFSET'].value *= OSC.div;
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
     
@@ -1008,10 +1111,12 @@ value = field.val();
 //      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
       if(send_changes !== false) {
         OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
-		var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-		var new_offset = cur_offset / curr_scale * new_scale;
-		OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
-		
+        if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET']!=undefined)
+        {
+			var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
+			var new_offset = (cur_offset / curr_scale) * (new_scale / mult);
+			OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
+		}
         OSC.sendParams();
       }
       return new_scale;
@@ -1133,6 +1238,7 @@ value = field.val();
     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
     var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
     
+	$('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').show();    
     $('#cur_' + y + ', #cur_' + y + '_info').css('top', ui.position.top);
     $('#cur_' + y + '_info')
       .html(OSC.convertVoltage(+new_value))
@@ -1155,6 +1261,7 @@ value = field.val();
     var msg_width = $('#cur_' + x + '_info').outerWidth();
     var new_value = (graph_width / 2 - ui.position.left - (ui.helper.width() - 2) / 2 - parseInt(ui.helper.css('margin-left'))) * ms_per_px - OSC.params.orig['OSC_TIME_OFFSET'].value;
     
+	$('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').show(); 
     $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
     $('#cur_' + x + '_info')
       .html(OSC.convertTime(-new_value))
@@ -1236,8 +1343,11 @@ value = field.val();
       if($('#in1_dialog').is(':visible')) {
         //$('#OSC_CH1_OFFSET').val(+(new_value));
 		//$('#OSC_CH1_OFFSET').change();
-		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value));
+		var units = $('#OSC_CH1_OFFSET_UNIT').html();
+		var multiplier = units == "mV" ? 1000 : 1;
+		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value * multiplier));
       }
+
       //else if(save) {
         OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
       //}
@@ -1251,7 +1361,9 @@ value = field.val();
       if($('#in2_dialog').is(':visible')) {
         //$('#OSC_CH2_OFFSET').val(+(new_value));
 		//$('#OSC_CH2_OFFSET').change();
-		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value));
+		var units = $('#OSC_CH2_OFFSET_UNIT').html();
+		var multiplier = units == "mV" ? 1000 : 1;
+		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value * multiplier));
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1303,7 +1415,11 @@ value = field.val();
 			else if(z < 99.9990)
 				return z.toFixed(3);
 			else if(z < 999.990)
-				return z.toFixed(2);			
+				return z.toFixed(2);		
+			else if(z < 9999.990)
+				return z.toFixed(1);		
+			else 
+				return z.toFixed(0);					
 		} else 
 		{
 			if(z > -9.99990)
@@ -1311,7 +1427,11 @@ value = field.val();
 			else if(z > -99.9990)
 				return z.toFixed(3);
 			else if(z > -999.990)
-				return z.toFixed(2);					
+				return z.toFixed(2);
+			else if(z > -9999.990)
+				return z.toFixed(1);		
+			else 
+				return z.toFixed(0);				
 		}
 		
 		return z;
@@ -1335,6 +1455,10 @@ value = field.val();
 
 		  if(OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
 			$('#info_box').html('Trigger at its limit');
+			if(new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value)
+				new_value = OSC.params.orig['OSC_TRIG_LIMIT'].value
+			if(new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)
+				new_value = -OSC.params.orig['OSC_TRIG_LIMIT'].value
 		  }
 		  else{
 			$('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
@@ -1346,7 +1470,7 @@ value = field.val();
 			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
 			$('#OSC_TRIG_LEVEL').change();
           }
-          else if(save) {
+          if(save) {
             OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
             OSC.sendParams();
           }
@@ -1404,17 +1528,18 @@ value = field.val();
     var value = v;
 	var unit = 'V';
 	var precision = 3;
+	var munit = $('#munit').html().charAt(0);
 	if(OSC.params.orig['OSC_MATH_OP']){
-		if(Math.abs(value) < 1) {
+		if(munit == 'm') {
 			value *= 1000;
 			unit = 'mV';
 			precision = 0;
 
-		} else if (Math.abs(value) >= 1000000) {
+		} else if (munit == 'M') {
 			value /= 1000000;
 			unit = 'MV';	
 			precision = 1;		
-		} else if (Math.abs(value) >= 1000) {
+		} else if (munit == 'k') {
 			value /= 1000;
 			unit = 'kV';
 			precision = 2;
@@ -1424,7 +1549,7 @@ value = field.val();
 		$('#OSC_MATH_OFFSET_UNIT').html(units[OSC.params.orig['OSC_MATH_OP'].value]);		
 	}
 	var value_holder = $('#OSC_MATH_OFFSET');
-	value_holder.val(value.toFixed(precision));
+	value_holder.val(OSC.formatValue(value));
 	value_holder.change();
   };
   
@@ -1442,7 +1567,7 @@ value = field.val();
 		value *= 1000;			
 	}
 	
-	value = value.toFixed(precision);
+	value = OSC.formatValue(value);
 	return value;
   };
   
