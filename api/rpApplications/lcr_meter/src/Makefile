@@ -1,29 +1,27 @@
 #
-#
 #  Red Pitaya Api example Makefile
 #
-#
-# Versioning system
-VERSION ?= 0.00-0000
-
-REVISION ?= devbuild
 
 CROSS_COMPILE ?= arm-linux-gnueabi-
 
 #Define header includes
-RP_PATH_INCLUDE = -I../../api/rpbase/src/
+RP_PATH_INCLUDE ?= -I../../../rpbase/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../api/rpbase -lm -lpthread -lrp
+RP_LIB_INCLUDE ?= -L ../../../lib -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
+
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
+
 #Objects
-OBJECTS = common.o lcrApp.o
+OBJECTS = common.o impedance_analyzer.o impApp.o
 #Target file
-TARGET = api_test
+TARGET = imp_test
+
+all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE)
@@ -31,14 +29,5 @@ $(TARGET): $(OBJECTS)
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(RP_PATH_INCLUDE) $< -o $@
 
-#Build the executable
-all: $(TARGET)
-
 clean:
-	$(RM) $(TARGET) *.o ~*
-
-
-#  -----Error----- I have no idea what was wrong. 
-#  ../../api/rpbase/librp.so: file not recognized: File format not recognized
-#
-# 
+	-$(RM) $(TARGET) *.o ~* 
