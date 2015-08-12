@@ -267,9 +267,16 @@ void UpdateParams(void) {
     viewPortion.Value() = portion;
 	
 	float trigg_limit;
+	float trigg_level;
+	
+	fprintf(stderr, "[UpdateParams] inTrigSource: %d\n", inTrigSource.Value());
 	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
-	if (channel == RPAPP_OSC_TRIG_SRC_CH1)		
+	
+	//rpApp_OscGetTriggerLevel(&trigg_level);
+	//inTriggLevel.Value() = trigg_level;
+	
+	if (channel == RPAPP_OSC_TRIG_SRC_CH1)
 		inTriggLimit.Value() = trigg_limit*in1Probe.Value();
 	else if (channel == RPAPP_OSC_TRIG_SRC_CH2)	
 		inTriggLimit.Value() = trigg_limit*in2Probe.Value();
@@ -626,6 +633,8 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(in2Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH2,  in2Scale.NewValue()))
 
     checkMathScale();
+    
+    bool update_trig_level = inTrigSource.Value() != inTrigSource.NewValue();
 
     IF_VALUE_CHANGED(in1Probe, rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.NewValue()))
     IF_VALUE_CHANGED(in2Probe, rpApp_OscSetProbeAtt(RP_CH_2, in2Probe.NewValue()))
@@ -634,9 +643,9 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(inTimeOffset, rpApp_OscSetTimeOffset(inTimeOffset.NewValue()))
     IF_VALUE_CHANGED(inTimeScale, rpApp_OscSetTimeScale(inTimeScale.NewValue()))
     IF_VALUE_CHANGED(inTrigSweep, rpApp_OscSetTriggerSweep((rpApp_osc_trig_sweep_t) inTrigSweep.NewValue()))
+    IF_VALUE_CHANGED(inTriggLevel, rpApp_OscSetTriggerLevel(inTriggLevel.NewValue()))
     IF_VALUE_CHANGED(inTrigSource, rpApp_OscSetTriggerSource((rpApp_osc_trig_source_t)inTrigSource.NewValue()))
     IF_VALUE_CHANGED(inTrigSlope, rpApp_OscSetTriggerSlope((rpApp_osc_trig_slope_t) inTrigSlope.NewValue()))
-    IF_VALUE_CHANGED(inTriggLevel, rpApp_OscSetTriggerLevel(inTriggLevel.NewValue()))
     IF_VALUE_CHANGED(in1InvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_CH1, in1InvShow.NewValue()))
     IF_VALUE_CHANGED(in2InvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_CH2, in2InvShow.NewValue()))
     IF_VALUE_CHANGED(mathInvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_MATH, mathInvShow.NewValue()))
@@ -648,6 +657,14 @@ void OnNewParams(void) {
             mathSource2.Update();
         }
     }
+    
+    if (update_trig_level)
+    {
+		float trigg_level;
+		rpApp_OscGetTriggerLevel(&trigg_level);
+		inTriggLevel.Value() = trigg_level;
+		inTriggLevel.Update();
+	}
 
 /* ------ UPDATE GENERATE LOCAL PARAMETERS ------*/
     out1Show.Update();

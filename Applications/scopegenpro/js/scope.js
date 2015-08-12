@@ -1455,6 +1455,10 @@ value = field.val();
 
 		  if(OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
 			$('#info_box').html('Trigger at its limit');
+			if(new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value)
+				new_value = OSC.params.orig['OSC_TRIG_LIMIT'].value
+			if(new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)
+				new_value = -OSC.params.orig['OSC_TRIG_LIMIT'].value
 		  }
 		  else{
 			$('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
@@ -1466,7 +1470,7 @@ value = field.val();
 			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
 			$('#OSC_TRIG_LEVEL').change();
           }
-          else if(save) {
+          if(save) {
             OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
             OSC.sendParams();
           }
