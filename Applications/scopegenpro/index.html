@@ -182,7 +182,7 @@
             <div class="right-menu-option" id="ch1_meas_range">- V</div>
           </div -->
           <div class="col-xs-12 option-content">
-            <span class="col-info">Vertical offset / V</span>
+            <div class="col-info">Vertical offset / <span id="OSC_CH1_OFFSET_UNIT">V</span></div>
             <div class="right-menu-option">
               <input id="OSC_CH1_OFFSET" class="setfield input-number" type="text" value="0.0000" step="0.0010" min="-40.0000" max="40.0000">
             </div>
@@ -233,7 +233,7 @@
             <div class="right-menu-option" id="ch2_meas_range">- V</div>
           </div -->
           <div class="col-xs-12 option-content">
-            <span class="col-info">Vertical offset / V</span>
+            <div class="col-info">Vertical offset / <span id="OSC_CH2_OFFSET_UNIT">V</span></div>
             <div class="right-menu-option">
               <input id="OSC_CH2_OFFSET" class="setfield input-number" type="text" value="0.0000" step="0.0010" min="-40.0000" max="40.0000">
             </div>
@@ -686,7 +686,7 @@
               <div class="output1"><span id="SOUR1_VOLT_info">-</span>/div</div>
               <div class="output2"><span id="SOUR2_VOLT_info">-</span>/div</div>
               <div class="math">
-				  <span id="OSC_MATH_SCALE">-</span>
+				  <span id="OSC_MATH_SCALE">1</span>
 				  <span id="munit">/div</span>
 			  </div>
             </div>
@@ -792,6 +792,61 @@ $('#calib-input').change(function() {
 }).change();
 </script>
 
+<script>
+	function updateLimits(){
+		{ // OSC_CH1_OFFSET limits
+			var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+			var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			var units = $('#OSC_CH1_OFFSET_UNIT').html();
+			var multiplier = units == "mV" ? 1000 : 1;
+			var newMin = -1 * 10 * jumperSettings * probeAttenuation * multiplier;
+			var newMax =  1 * 10 * jumperSettings * probeAttenuation * multiplier;
+			$("#OSC_CH1_OFFSET").attr("min", newMin);
+			$("#OSC_CH1_OFFSET").attr("max", newMax);
+		}
+		
+		{ // OSC_CH2_OFFSET limits
+			var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
+			var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			var units = $('#OSC_CH2_OFFSET_UNIT').html();
+			var multiplier = units == "mV" ? 1000 : 1;
+			var newMin = -1 * 10 * jumperSettings1 * probeAtt1 * multiplier;
+			var newMax =  1 * 10 * jumperSettings1 * probeAtt1 * multiplier;
+			$("#OSC_CH2_OFFSET").attr("min", newMin);
+			$("#OSC_CH2_OFFSET").attr("max", newMax);
+		} 
+		
+		{ // OSC_MATH_OFFSET limits
+			var scale_val = $("#OSC_MATH_SCALE").text();
+			var math_vdiv = parseInt(scale_val);
+			var newMin = -1 * 5 * math_vdiv;
+			var newMax =  1 * 5 * math_vdiv;
+			$("#OSC_MATH_OFFSET").attr("min", newMin);
+			$("#OSC_MATH_OFFSET").attr("max", newMax);
+		}
+	}
+	$('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
+		updateLimits();
+	});
+	$('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
+		updateLimits();
+	});	
+	$("#OSC_MATH_SCALE").bind("DOMSubtreeModified",function(){
+		updateLimits();
+	});
+	
+	$(".btn").mouseup(function() {
+		setTimeout(function() {
+			updateLimits();
+		}, 20);
+	});
+	$("#OSC_CH1_PROBE").change(function() {
+		updateLimits();
+	});
+	$( document ).ready(function() {
+		updateLimits();
+	});
+</script>
 
 <script language="javascript" type="text/javascript">
 ;(function ($) {
@@ -875,7 +930,7 @@ $('#calib-input').change(function() {
 			function getLimits(input){
 				var min = parseFloat(input.attr('min'));
 				var max = parseFloat(input.attr('max'));
-				if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET', 'OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
+				/*if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET', 'OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
 				
 					var substrid = input.attr('id').substr(0, input.attr('id').indexOf('_OFFSET'));
 					
@@ -898,7 +953,7 @@ $('#calib-input').change(function() {
 					}	
 				}
 				
-				else if (['OSC_TRIG_LEVEL'].indexOf(input.attr('id')) != -1 && OSC.params.orig['OSC_TRIG_SOURCE']) {
+				else */if (['OSC_TRIG_LEVEL'].indexOf(input.attr('id')) != -1 && OSC.params.orig['OSC_TRIG_SOURCE']) {
 					if(OSC.params.orig['OSC_TRIG_SOURCE'] .value <= 1) {
 						var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
 						if(OSC.params.orig[ref_scale]){
