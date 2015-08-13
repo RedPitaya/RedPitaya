@@ -102,6 +102,7 @@ int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res);
 double unscaleAmplitude(double value, double ampScale, double probeAtt, double ampOffset, double invertFactor);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 float viewIndexToTime(int index);
 double roundUpTo125(double data);
 double roundUpTo25(double data);
