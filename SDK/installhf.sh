@@ -31,14 +31,11 @@ echo -e "\nCREATING LINARO ROOT DIRECTORIES..."
 cd /opt; sudo mkdir -p linaro; 
 cd -
 echo -e "\nCOPYING DATA..."
-pwd
-echo "Linaro sub tar: " $LINARO_HF_SUB
-echo "Linaro hf: "  $LINARO_HF_TAR
 sudo cp -r $LINARO_HF_SUB/* /opt/linaro
 sudo rm -rf $LINARO_HF_SUB
 sudo rm -rf $LINARO_HF_DL 
 
 #Seting seassion environment
 echo -e "\nSETTING ENVIRONMENTAL VARIABLES..."
-export PATH=$PATH:$EXEC_PATH
-export CROSS_COMPILE=arm-linux-gnueabihf-
+echo export PATH=$PATH:$EXEC_PATH
+echo export CROSS_COMPILE=arm-linux-gnueabihf-
