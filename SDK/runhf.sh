@@ -6,12 +6,12 @@
 
 #Global variables definition
 CROSS_COMPILE='arm-linux-gnueabi-gcc '
-CFLAGS='-g -std=gnu99 -Wall -Werror'
-RP_LIB_INCLUDE='-L /lib/lirp.so -lm -lpthread -lrp'
+CFLAGS='-g -std=gnu99 -Wall -Werror '
+RP_LIB_INCLUDE='-L /lib/lirp.so -lm -lpthread -lrp '
 IP=$1
 REDIRECT=' >> /var/log/sdk_log/debug'
 #Remote execute command
-REMOTE_COMPILE_CMD=$CROSS_COMPILE$CFLAGS$RP_LIB_INCLUDE$REDIRECT
+REMOTE_COMPILE_CMD=$CROSS_COMPILE$CFLAGS$RP_LIB_INCLUDE
 
 
 usage(){
@@ -27,16 +27,17 @@ if [ $# -eq 0 ] || [ $# -gt 2 ]
 fi 
 
 echo -e "\nEXECUTING RED PITAYA RUN SCRIPT..."
-sshpass -p root ssh -o StrictHostKeyChecking=no root@$1
-sshpass -p root ssh -o root scp $PWD/$2 root@$1:/opt/redpitaya
-sshpass -p root ssh -o root@$IP '/opt/redpitaya/'$1
+sshpass -p root ssh root@$IP 'cd /opt/redpitaya; rw'
+sshpass -p root scp $PWD/$2 root@$IP:/opt/redpitaya
+sshpass -p root ssh root@$IP '/opt/redpitaya/'$2
+
 #Installing all needed tools on a remote Red Pitaya 
-sshpass -p root ssh -o root@$IP 'apt-get install gcc-arm-linux-gnueabi'
-sshpass -p root ssh -o root@$IP 'mkdir -p /var/log/sdk_log'
+sshpass -p root ssh root@$IP 'mkdir -p /var/log/sdk_log'
+
 if [ sshpass -p root ssh -o root@$IP '! -f /tmp/log/sdk_log/debug' ]
   then
     sshpass -p root ssh -o root@$IP 'touch /tmp/log/sdk_log/debug'
 fi
 
-sshpass -p root ssh -o root@$IP $REMOTE_EXECUTE_COMMAND
+$REMOTE_EXECUTE_COMMAND
 #Test everything
