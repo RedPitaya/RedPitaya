@@ -27,7 +27,7 @@ if [ $# -eq 0 ] || [ $# -gt 2 ]
 fi
 
 echo -e "\nEXECUTING RED PITAYA RUN SCRIPT..."
-mkdir -p includes
+mkdir -p include
 echo -e "\nCOPYING RED PITAYA INCLUDES..."
 sshpass -p root scp -r root@$IP:/opt/redpitaya/lib/* include
 sshpass -p root scp -r root@$IP:/opt/redpitaya/include/* include
