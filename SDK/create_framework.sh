@@ -28,12 +28,13 @@ fi
 
 #Framework generating system
 { echo -e "#include <stdio.h>";
-  echo -e '#include "lib/rp.h"\n';
-  echo -e "void main(int argc, char **argv){\n";
+  echo -e '#include "include/rp.h"\n';
+  echo -e "int main(int argc, char **argv){\n";
   echo -e "   /* Init the red pitaya resources */";
   echo -e "   if(rp_Init() != RP_OK){";
-  echo -e "      return RP_ERRNO\n   }\n";
-  echo -e "   -- Code goes here --\n";
+  echo -e "      return -1;\n   }\n";
+  echo -e "   /* -- Code goes here -- */\n";
   echo -e "   /* Release the red pitaya module resources */";
-  echo -e "   rp_Release();\n}";
+  echo -e "   rp_Release();\n";
+  echo -e "   return RP_OK;\n}";
 } >> $1
