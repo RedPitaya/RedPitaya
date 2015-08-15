@@ -18,24 +18,25 @@ echo -e "\nINSTALLING NANO..."
 sudo apt-get install nano
 echo -e "\nINSTALLING CURL..."
 sudo apt-get install curl
-echo -e "\nINSTALLING PLINK..."
+echo -e "\nINSTALLING PUTTY-TOOLS..."
 sudo apt-get install putty-tools
 
 #Installing compilement tools
-echo -e "\nINSTALLING COMPILE GCC LINARO HF..."
+echo -e "INSTALLING GCC HF COMPILER..."
 curl -L --remote-name $LINARO_HF_DL #Permission feedback required
 sudo tar xvf $LINARO_HF_TAR
 LINARO_HF_SUB=$(echo $LINARO_HF_TAR | sed -e 's/.tar.xz//')
 
-echo -e "\nCREATING LINARO ROOT DIRECTORIES..."
+echo -e "CREATING LINARO ROOT DIRECTORIES..."
 cd /opt; sudo mkdir -p linaro; 
 cd -
-echo -e "\nCOPYING DATA..."
+echo -e "COPYING DATA..."
 sudo cp -r $LINARO_HF_SUB/* /opt/linaro
 sudo rm -rf $LINARO_HF_SUB
 sudo rm -rf $LINARO_HF_DL 
 
 #Seting seassion environment
 echo -e "\nSETTING ENVIRONMENTAL VARIABLES..."
-echo export PATH=$PATH:$EXEC_PATH
-echo export CROSS_COMPILE=arm-linux-gnueabihf-
+sudo chmod 777 /etc/bash.bashrc
+echo  PATH=$PATH:$EXEC_PATH >> /etc/bash.bashrc
+echo export CROSS_COMPILE=arm-linux-gnueabihf- >> /etc/bash.bashrc
