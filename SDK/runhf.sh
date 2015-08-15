@@ -5,14 +5,9 @@
 # installed with install.sh. 
 
 #Global variables definition
-CROSS_COMPILE='arm-linux-gnueabi-gcc '
-CFLAGS='-g -std=gnu99 -Wall -Werror '
-RP_LIB_INCLUDE='-L /lib/lirp.so -lm -lpthread -lrp '
 IP=$1
-REDIRECT=' >> /var/log/sdk_log/debug'
-#Remote execute command
-REMOTE_COMPILE_CMD=$CROSS_COMPILE$CFLAGS$RP_LIB_INCLUDE
-
+REDIRECT='/var/log/sdk_log/debug'
+EXECUTABLE=$(echo $2 | sed -e 's/.c//')
 
 usage(){
   echo    "Usage: - Input argument 1: Red Pitaya IP address in form 192.168.1.100."
@@ -20,24 +15,45 @@ usage(){
   exit 1 
 }
 
+#TODO: Add timestamp to redirect output
+timeStamp(){
+  exit 1  
+}
+
 if [ $# -eq 0 ] || [ $# -gt 2 ]
   then
      echo -e "\nWrong argument number!"
      usage
-fi 
-
-echo -e "\nEXECUTING RED PITAYA RUN SCRIPT..."
-sshpass -p root ssh root@$IP 'cd /opt/redpitaya; rw'
-sshpass -p root scp $PWD/$2 root@$IP:/opt/redpitaya
-sshpass -p root ssh root@$IP '/opt/redpitaya/'$2
-
-#Installing all needed tools on a remote Red Pitaya 
-sshpass -p root ssh root@$IP 'mkdir -p /var/log/sdk_log'
-
-if [ sshpass -p root ssh -o root@$IP '! -f /tmp/log/sdk_log/debug' ]
-  then
-    sshpass -p root ssh -o root@$IP 'touch /tmp/log/sdk_log/debug'
 fi
 
-$REMOTE_EXECUTE_COMMAND
-#Test everything
+echo -e "\nEXECUTING RED PITAYA RUN SCRIPT..."
+mkdir -p includes
+echo -e "\nCOPYING RED PITAYA INCLUDES..."
+sshpass -p root scp -r root@$IP:/opt/redpitaya/lib/* include
+sshpass -p root scp -r root@$IP:/opt/redpitaya/include/* include
+
+echo -e "\nCOMPILING SOURCE FILE..."
+
+if [ ! -f $2 ]; then
+  echo -e "Invalid second argument. File does not exist!\n"
+  exit 1
+else
+  make clean all OBJECT=$2 TARGET=$EXECUTABLE
+fi
+
+#Remount red pitaya file system
+#sshpass -p root ssh root@$IP 'mount -o rw, remount /opt/redpitaya'
+
+#Creating log directories
+sshpass -p root ssh root@$IP 'mkdir -p /var/log/sdk_log'
+sshpass -p root ssh root@$IP 'touch /var/log/sdk_log/debug'
+
+#Copying executable file to red pitaya
+echo -e "EXECUTING REMOTE FILE..."
+echo -e "OUTPUT: \n----------"
+sshpass -p root scp $PWD/$EXECUTABLE root@$IP:/tmp
+sshpass -p root ssh root@$IP '/tmp/'$EXECUTABLE' | tee '$REDIRECT
+
+#make clean
+echo -e "----------\nREMOVING ARTIFACTS..."
+make clean TARGET=$EXECUTABLE
