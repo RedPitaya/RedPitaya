@@ -11,7 +11,7 @@
 | `fpga/sdc/`     | "Synopsys Design Constraints" contains Xilinx design constraints
 | `fpga/sim/`     | simulation scripts
 | `fpga/tbn/`     | Verilog (SystemVerilog) "test bench"
-|-----------------|----------------------------------------------------------------
+|                 |
 | `fpga/hsi/`     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds
 
 # Build process
@@ -41,13 +41,13 @@ XADC input data can be accessed through the Linux IIO (Industrial IO) driver int
 
 ## GPIO LEDs
 
-| LED     | color  | driver          | dedicated meaning
+| LED     | color  | SW driver       | dedicated meaning
 |---------|--------|-----------------|----------------------------------
 | `[7:0]` | yellow | RP API          | user defined
-| `  [8]` | yellow | kernel          | user defined
-| `  [9]` | reg    | kernel `MIO[0]` | user defined
-| ` [10]` | green  | kernel `MIO[7]` | "Power Good" status
-| ` [11]` | blue   | kernel | FPGA programming "DONE"
+| `  [8]` | yellow | kernel `MIO[0]` | user defined
+| `  [9]` | reg    | kernel `MIO[7]` | user defined
+| ` [10]` | green  | none            | "Power Good" status
+| ` [11]` | blue   | none            | FPGA programming "DONE"
 
 ### Linux access to GPIO
 
