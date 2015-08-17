@@ -65,3 +65,18 @@ echo 906 > /sys/class/gpio/export
 echo 913 > /sys/class/gpio/export
 ```
 
+### Linux access to LED
+
+This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
+
+By providing GPIO/LED details in the device tree, it is possible to access LEDs using a dedicated kernel interface.
+NOTE: only LED 8 and LED 9 support this interface for now.
+
+To show CPU load on LED 9 use:
+```bash
+echo heartbeat > /sys/class/leds/led9/trigger
+```
+To switch LED 8 on use:
+```bash
+echo 1 > /sys/class/leds/led8/brightness
+```
