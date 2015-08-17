@@ -13,7 +13,7 @@ enum {
 
 /* -------------------------  debug parameter  --------------------------------- */
 CIntParameter signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 100, 0, 0, 10000);
-CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 10000);
+CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 25, 0, 0, 10000);
 CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, false, 0);
 
 
