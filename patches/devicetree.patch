@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,46 @@
+@@ -86,3 +86,61 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -54,5 +54,20 @@
 +		channel@10 {
 +			reg = <10>;
 +		};
++	};
++};
++&amba {
++	gpio-leds {
++	    compatible = "gpio-leds";
++	    led8 {
++	        label = "led8";
++	        gpios = <&gpio0 0 0>;
++	        default-state = "off";
++	    };
++	    led9 {
++	        label = "led9";
++	        gpios = <&gpio0 913 0>;
++	        default-state = "off";
++	    };
 +	};
 +};
