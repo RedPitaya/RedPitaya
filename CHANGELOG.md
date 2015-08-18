@@ -69,7 +69,7 @@
 
 
 
-# Release 0.93
+# Release 0.93 (30 April 2015)
 
 ## Changes
 
@@ -96,9 +96,7 @@
 
 
 
-# Release 0.92
-
-29 May 2014
+# Release 0.92 (29 May 2014)
 
 Release 0.92 is a bug-fix release, not introducing any new features. The bug-fixes resolve mainly the following issues:
 
@@ -126,9 +124,6 @@ Release 0.92 is a bug-fix release, not introducing any new features. The bug-fix
 17. Cleanup of obsolete code.
 
 
-# Release 0.90
-
-27 Feb 2014
+# Release 0.90 (27 February 2014)
 
 Initial release.
-
