@@ -40,6 +40,7 @@
 ### Web applications
 * existing free applications were recompiled for ARMHF, and are still also compatible with ARMEL for older ecosystems
 * new Oscilloscope+Generator and Spectrum analyzer were added
+* fixed support for applications loading their own FPGA bitstream images
 
 ### Other applications
 * Wyliodrin was ported to Debian on Red Pitaya
