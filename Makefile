@@ -443,10 +443,7 @@ $(GDBSERVER):
 	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
 
 sdk:
-	$(MAKE) -C $(SDK_DIR) clean include
-
-sdkPub:
-	$(MAKE) -C $(SDK_DIR) zip
+        $(MAKE) -C $(SDK_DIR) install INSTALL_DIR=.
 
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR)
