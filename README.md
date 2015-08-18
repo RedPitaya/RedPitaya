@@ -12,9 +12,10 @@ different places one would expect.
 DIRECTORIES
 
 Applications    Red Pitaya applications (controller modules & GUI clients).
+apps-free       REd Pitaya application for the old environment (also with controler modules & GUI clients).
 Bazaar          Nginx server with dependencies, Red Pitaya Bazaar module &
                 application controller module loader.
-FPGA            FPGA design for the inital set of Red Pitaya applications.
+fpga            FPGA design for the inital set of Red Pitaya applications.
 OS              GNU/Linux operating system components including:
                 - Linux kernel config & patches
                 - U-Boot config & patches
