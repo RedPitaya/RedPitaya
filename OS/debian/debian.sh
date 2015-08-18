@@ -59,6 +59,7 @@ EOF_CHROOT
 install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/75-persistent-net-generator.rules $ROOT_DIR/etc/udev/rules.d/75-persistent-net-generator.rules
 install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $ROOT_DIR/etc/network/interfaces.d/eth0
 install -v -m 664 -o root -D $OVERLAY/etc/default/ifplugd                                $ROOT_DIR/etc/default/ifplugd
+# TODO: the next three files are not handled cleanly, hetwoking should be documented and cleaned 
 install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0                     $ROOT_DIR/etc/network/interfaces.d/wlan0
 install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces-ap.wlan0                    $ROOT_DIR/etc/network/interfaces-ap.wlan0
 install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces-client.wlan0                $ROOT_DIR/etc/network/interfaces-client.wlan0
