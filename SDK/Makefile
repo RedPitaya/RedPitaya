@@ -2,6 +2,9 @@
 # Red Pitaya SDK Makefile
 #
 
+INSTALL_DIR ?= ../
+INSTALL_NAME = sdk.zip
+
 #Includes
 RP_PATH_INCLUDE = -I./include
 
@@ -24,7 +27,16 @@ $(TARGET): $(OBJECT)
 	$(CC) -c $(CFLAGS) $(RP_PATH_INCLUDE) $< -o $@
 
 #Build the executable
+
 all: $(TARGET)
 
+install:
+	mkdir -p target
+	cp -r install.sh run.sh create_framework.sh ./include/* Makefile ./target/
+	zip $(INSTALL_NAME) target/*
+	cp $(INSTALL_NAME) $(INSTALL_DIR)        
+
 clean:
-	$(RM) $(TARGET) *.o ~*
+	-$(RM) $(TARGET) *.o ~*
+	-$(RM) -r target
+	-$(RM) $(INSTALL_NAME)
