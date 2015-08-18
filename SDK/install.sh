@@ -1,4 +1,3 @@
-#!/bin/bash
 
 #Red Pitaya SDK application run script
 #
