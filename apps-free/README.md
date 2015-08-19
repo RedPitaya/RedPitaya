@@ -16,7 +16,7 @@ Application structure
 
 Scope, scope+gen, scope+pid have all similar structure
 
-|  path                  | contents
+|  path | contents
 |------------------------|---------
 | `apps_name/index.html`
 | `apps_name/Makefile`
