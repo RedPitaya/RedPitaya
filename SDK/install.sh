@@ -1,4 +1,3 @@
-#!/bin/bash
 
 #Red Pitaya SDK application run script
 #
@@ -37,6 +36,5 @@ sudo rm -rf $LINARO_HF_DL
 
 #Seting seassion environment
 echo -e "\nSETTING ENVIRONMENTAL VARIABLES..."
-sudo chmod 777 /etc/bash.bashrc
-echo  PATH=$PATH:$EXEC_PATH >> /etc/bash.bashrc
-echo export CROSS_COMPILE=arm-linux-gnueabihf- >> /etc/bash.bashrc
+export PATH=$PATH:$EXEC_PATH
+export CROSS_COMPILE=arm-linux-gnueabihf-

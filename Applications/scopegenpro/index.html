@@ -732,8 +732,8 @@
 				<div class="modal-footer">
 					<ul class="nav navbar-nav">
 						<li id="calib-1" class="calib-button"><button type="button" class="btn" data-dismiss="modal">CANCEL</button></li>
-						<li style="margin: 0 28px 0 28px;"><input class="setfield" id="calib-input" type="dummy" style="width: 140px;  border-style: solid; border-width: 2px;" value="1"
-						max="1"><span id="calib-input-text" class="calib-info">V</span></input></li>
+						<li style="margin: 0 28px 0 28px;"><input class="setfield" id="calib-input" type="dummy" style="width: 140px;  border-style: solid; border-width: 2px;" value="0.9"
+						max="0.9"><span id="calib-input-text" class="calib-info">V</span></input></li>
 						<li id="calib-2" class="calib-button" ><button type="button" class="btn" >DEFAULT</button></li>
 						<li id="calib-3" class="calib-button" ><button type="button" class="btn" >CONTINUE</button></li>
 					</ul>
@@ -746,7 +746,12 @@
 				<div class="modal-body">
 					<br>
 					<h4 id="">
-						 Calibration warning
+						Calibration parameters are out of expected range.
+						 Please check reference voltage level and connections.
+
+						To repeat calibration step press BACK.
+
+						To accept calibration parameters and continue with calibration press CONTINUE.
 					</h4>
 				</div>
 				<br><br>
@@ -784,11 +789,11 @@ $(".limits").change(function() {
 
 $('#calib-input').change(function() {
 	if (isNaN($(this).val()))
-		$(this).val(1);
+		$(this).val($(this).attr('min'));
 	else if ($(this).val() > +$(this).attr('max'))
 		$(this).val($(this).attr('max'));
-	else if ($(this).val() < 0)
-		$(this).val(0);
+	else if ($(this).val() <= 0)
+		$(this).val($(this).attr('min'));
 }).change();
 </script>
 
