@@ -13,14 +13,11 @@ different places one would expect.
 | api          | librp.so API source code
 | Applications | Red Pitaya applications (controller modules & GUI clients).
 | apps-free    | Red Pitaya application for the old environment (also with controler modules & GUI clients).
-| Bazaar       | Nginx server with dependencies, Red Pitaya Bazaar module &
-|              | application controller module loader.
+| Bazaar       | Nginx server with dependencies, Red Pitaya Bazaar module & application controller module loader.
 | fpga         | FPGA design for the inital set of Red Pitaya applications.
-| OS           | GNU/Linux operating system components including:
-|              | - Linux kernel config & patches
-|              | - U-Boot config & patches
-|              | - Staged ramdisk
-|              | - Red pitaya IP discovery client
+| OS/buildroot | GNU/Linux operating system components
+| patches      | Directory containing red pitaya patches
+| scpi-server  | Scpi server directory, containing red pitaya core scpi server
 | Test         | Command line utilities (acquire, generate, ...).
 | shared       | libredpitaya.so API source code
 
@@ -30,6 +27,7 @@ different places one would expect.
 - Fpga + Devicetree
 - api
 - Apps-free
+- scpi-server
 - Linux kernel
 - Debian
 
@@ -67,6 +65,8 @@ The output of this process is the Red Pitaya librp.so library in ./api/lib direc
 
 To build apps free, follow the instructions given at apps-free [README.md](apps-free/README.md) file.
 
+### Scpi-server ###
+Scpi server README can be found [here](scpi-server/README.md)
 
 ### Linux Kernel ###
 [Linux kernel]
