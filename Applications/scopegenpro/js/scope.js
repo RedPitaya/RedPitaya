@@ -1699,7 +1699,7 @@ $(function() {
       $('<div id="' + item_id + '" class="meas-item">' + operator_name + ' (' + signal_name + ')</div>').data({ 
         value: (signal_name == 'CH1' ? operator_val : (signal_name == 'CH2' ? operator_val + 1 : operator_val + 2)),
         operator: operator_name,
-        signal: signal_name
+        signal: signal_name == 'CH1' ? 'IN1' : ( signal_name == 'CH2 ' ? 'IN2' : signal_name)
       }).appendTo('#meas_list');
     }
 	OSC.exitEditing(true);
@@ -2179,10 +2179,14 @@ $(function() {
 		if (OSC.calib_texts[state])
 			$('#calib-text').html(OSC.calib_texts[state]);
 			
-		if (state > 3)
-			$('#calib-input').attr('max', '20');
-		else 
-			$('#calib-input').attr('max', '1');
+		if (state > 3) {
+			$('#calib-input').attr('max', '19');
+			$('#calib-input').attr('min', '9');
+			$('#calib-input').val(9);
+		} else {
+			$('#calib-input').attr('max', '0.9');
+			$('#calib-input').attr('min', '0.1');
+		}
 	}
 
 	$('#calib-1').click(function() {
