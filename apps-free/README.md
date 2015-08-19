@@ -54,7 +54,7 @@ sudo wget https://releases.linaro.org/14.11/components/toolchain/binaries/arm-li
 ```
 Extract the content of this .tar.xz file you just downloaded
 ```bash
-tar xvf https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
+tar xvf gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
 ```
 Now all you need to do, is set the PATH variable to include the linaro directory.
 ```bash
