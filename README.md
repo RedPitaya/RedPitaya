@@ -1,4 +1,4 @@
-# Red Pitaya Ecosystem and Applications 
+# RED PITAYA ECOSYSTEM AND APPLICATIONS 
 
 Here you will find the sources of various software components of the
 Red Pitaya system. The components are mainly contained in dedicated
@@ -11,7 +11,7 @@ different places one would expect.
 | DIRECTORIES  |
 |--------------|----------------------------------------------------------------
 | Applications | Red Pitaya applications (controller modules & GUI clients).
-| apps-free    | REd Pitaya application for the old environment (also with controler modules & GUI clients).
+| apps-free    | Red Pitaya application for the old environment (also with controler modules & GUI clients).
 | Bazaar       | Nginx server with dependencies, Red Pitaya Bazaar module &
 |              | application controller module loader.
 | fpga         | FPGA design for the inital set of Red Pitaya applications.
@@ -23,3 +23,15 @@ different places one would expect.
 | Test         | Command line utilities (acquire, generate, ...).
 | shared       | Common libraries and routines.
 
+BUILD PROCESS
+=============
+- Fpga + Devicetree
+- Api
+- Apps-free
+- Linux kernel
+- Debian
+
+Fpga and Device tree
+--------------------
+- [fpga](fpga/README.md)
+- [devicetree]
