@@ -61,13 +61,13 @@
 +	    compatible = "gpio-leds";
 +	    led-8-yellow {
 +	        label = "led8";
-+	        gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
++	        gpios = <&gpio0 0 0>;
 +	        default-state = "off";
 +		linux,default-trigger = "mmc0";
 +	    };
 +	    led-9-red {
 +	        label = "led9";
-+	        gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
++	        gpios = <&gpio0 7 0>;
 +	        default-state = "off";
 +		linux,default-trigger = "hartbeat";
 +	    };
