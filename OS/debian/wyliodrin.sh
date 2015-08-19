@@ -33,13 +33,6 @@ cd node-v0.10.24-linux-arm-armv6j-vfp-hard
 cp -R * /usr/local
 cd ..
 
-#==============Am ramas aici============
-#git clone https://gitlab.redpitaya.com/red-pitaya-webtool/red-pitaya-ecosystem.git
-#cd red-pitaya-ecosystem/…….
-#cp librp.so /usr/local/lib
-#cp rp.h /usr/local/include
-#cd ~
-
 #==============Fuse setup=============
 mkdir /wyliodrin
 groupadd fuse
