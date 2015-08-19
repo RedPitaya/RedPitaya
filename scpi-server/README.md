@@ -1,9 +1,9 @@
-#SCPI SERVER
+# SCPI SERVER #
 
 ## Contents ##
 
 | paths                         | contents
-|-----------------------------------------
+|-------------------------------|---------
 | `scpi-server/src/`            |
 | `scpi-server/3rdparty`        |
 | `scpi-server/build.sh`        |
