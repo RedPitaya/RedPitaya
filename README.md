@@ -24,19 +24,16 @@ different places one would expect.
 | Test         | Command line utilities (acquire, generate, ...).
 | shared       | libredpitaya.so API source code
 
-BUILD PROCESS
--------------
+## BUILD PROCESS ##
 
-Ecosystem structure
--------------------
+### Ecosystem structure ###
 - Fpga + Devicetree
 - api
 - Apps-free
 - Linux kernel
 - Debian
 
-Installation requirements
--------------------------
+#### Installation requirements ####
 
 You will need the following to build the RedPitaya components:
 
@@ -45,17 +42,28 @@ You will need the following to build the RedPitaya components:
 It can be downloaded [here](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_)
 3. GNU make autoconf, automake, ...
 
-Fpga and Device tree
---------------------
+#### Installing required tools ####
+If you are having trouble installing the required tools, take a look at [Red Pitaya OS](http://wiki.redpitaya.com/index.php?title=Red_Pitaya_OS) wiki page, for more information.
+
+### Fpga and Device tree ###
 - [fpga](fpga/README.md)
 - [devicetree]
 
-api
----
-Source folder: ./api/rpbase
-Navigate to the source folder and run
+### Api ###
+
+Export PATH to include your local linaro bin directory and export CROSS_COMPILE. Lets assume, linaro is installed in /opt directory.
+```bash
+export PATH=$PATH:/opt/linaro/bin
+export CROSS_COMPILE=arm-linux-gnueabihf-
+```
+
+Navigate to the ./api/rpbase folder and run:
 ```bash
 make
 ```
-Give the fact, that you followed the instructions given at Installation requirements, you will be successfully be able to build the Red
-Pitaya library.
+
+The output of this process is the Red Pitaya librp.so library in ./api/lib directory.
+
+### Apps-free ###
+
+To build apps free, follow the instructions given at apps-free [README.md](apps-free/README.md) file.
