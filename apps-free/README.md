@@ -44,20 +44,29 @@ You need to set the CROSS_COMPILE variable. Check to see if is is already set by
 ```bash
 env | grep CROSS_COMPILE
 ```
-The output should be something like: CROSS_COMPILE=arm-xilinx-linux-gnueabi-. 
+The output should be something like: CROSS_COMPILE=arm-linux-gnueabihf-. 
 If this gives you a blank result, you should either set the CROSS_COMPILE variable to be pointing at the gnu cross
 compiler or check our how to build red pitaya OS [wiki-page](http://wiki.redpitaya.com/index.php?title=Red_Pitaya_OS)
 
 If you don't have gcc cross compiler installed, you can install it with the following command:
 ```bash
-sudo apt-get install apt-get install gcc-arm-linux-gnueabi 
+sudo wget https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
 ```
-You can then set the CROSS_COMPILE variable to be pointing at that compiler:
+Extract the content of this .tar.xz file you just downloaded
 ```bash
-export CROSS_COMPILE=arm-linux-gnueabi-
+tar xvf https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
 ```
+Now all you need to do, is set the PATH variable to include the linaro directory.
+```bash
+export PATH=$PATH:./gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf/bin
+```
+NOTE: You can copy the extracted linaro directory where ever you want, but remember to set the PATH variable accordingly.
 
-Once you did all that, you can use the same command as before, to check you completed these steps successfuly:
+Now export the CROSS_COMPILE variable.
+```bash
+export CROSS_COMPILE=arm-linux-gnueabihf-
+```
+Once you did all that, you can use the same command as before, to check you completed these steps successfuly.
 ```bash
 env | grep CROSS_COMPILE
 ```
