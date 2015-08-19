@@ -45,7 +45,7 @@ If there are no changes needed to the Debian system, but a new ecosystem is avai
 
 ## Wyliodrin
 
-Unfortunately there are issues with Wyliodrin install process inside a virtuallized environment, therefore the provided script `wiliodrin.sh` must be run from a shell on a running Red Pitaya board. The script can be copied to the FAT partition and executed from the `/root/` directory, but some coded meant to be executed on the development machine, should be comment out (everything outside the `chroot`, including the `chroot` lines themselves).
+Unfortunately there are issues with Wyliodrin install process inside a virtualized environment, therefore the provided script `wiliodrin.sh` must be run from a shell on a running Red Pitaya board. The script can be copied to the FAT partition and executed from the `/root/` directory, but some coded meant to be executed on the development machine, should be comment out (everything outside the `chroot`, including the `chroot` lines themselves).
 ```bash
 cd /root
 . /opt/redpitaya/wyliodrin.sh
