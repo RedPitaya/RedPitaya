@@ -24,6 +24,7 @@ Xilinx Vivado 2015.2 (including SDK) is required. If installed at the default lo
 The default mode for building the FPGA is to run a TCL script inside Vivado. Non project mode is used, to avoid the generation of project files, which are too many and difficult to handle. This allows us to only place source files and scripts under version control.
 
 The next scripts perform various tasks:
+
 | TCL script                      | action
 |---------------------------------|---------------------------------------------
 | `red_pitaya_hsi_dram_test.tcl`  | should create the `zynq_dram_test` but the produced binary can not be run from a SD card
@@ -47,6 +48,7 @@ make project
 Device tree is used by Linux to describe features and address space of memory mapped hardware attached to the CPU.
 
 Running `make` inside this directory will create a device tree source and some include files:
+
 | device tree file | contents
 |------------------|------------------------------------------------------------
 | `zynq-7000.dtsi` | description of peripherals inside PS (processing system)
