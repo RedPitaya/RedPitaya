@@ -1,7 +1,7 @@
 # Directory structure
 
 |  path           | contents
-|-----------------|----------------------------------------------------------------
+|-----------------|-------------------------------------------------------------
 | `fpga/Makefile` | main Makefile, used to run FPGA related tools
 | `fpga/*.tcl`    | TCL scripts to be run inside FPGA tools
 | `fpga/archive/` | archive of XZ compressed FPGA bit files
@@ -16,15 +16,44 @@
 
 # Build process
 
-Run the following to generate a bit file and reports:
+Xilinx Vivado 2015.2 (including SDK) is required. If installed at the default location, then the next command will properly configure system variables:
+```bash
+. /opt/Xilinx/Vivado/2015.2/settings64.sh
+```
+
+The default mode for building the FPGA is to run a TCL script inside Vivado. Non project mode is used, to avoid the generation of project files, which are too many and difficult to handle. This allows us to only place source files and scripts under version control.
+
+The next scripts perform various tasks:
+| TCL script                      | action
+|---------------------------------|---------------------------------------------
+| `red_pitaya_hsi_dram_test.tcl`  | should create the `zynq_dram_test` but the produced binary can not be run from a SD card
+| `red_pitaya_hsi_dts.tcl`        | creates device tree sources
+| `red_pitaya_hsi_fsbl.tcl`       | creates FSBL executable binary
+| `red_pitaya_vivado_project.tcl` | creates a Vivado project for graphical editing
+| `red_pitaya_vivado.tcl`         | creates the bitstream and reports
+
+To generate a bit file, reports, device tree and FSBL, run:
 ```bash
 make
 ```
 
-Run the following to generate and open a project file using Vivado GUI:
+To generate and open a Vivado project using GUI, run:
 ```bash
 make project
 ```
+
+# Device tree
+
+Device tree is used by Linux to describe features and address space of memory mapped hardware attached to the CPU.
+
+Running `make` inside this directory will create a device tree source and some include files:
+| device tree file | contents
+|------------------|------------------------------------------------------------
+| `zynq-7000.dtsi` | description of peripherals inside PS (processing system)
+| `pl.dtsi`        | description of AXI attached peripherals inside PL (programmable logic)
+| `system.dts`     | description of all peripherals, includes the above `*.dtsi` files
+
+To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED) the device tree source is patched using `../patches/devicetree.patch`.
 
 # Signal mapping
 
