@@ -6,6 +6,5 @@ TODO
 * Bring OS & ecosystem sources together as they compose one package.
 * Comment the code extensively in Doxygen style. Provide Doxygen
   documentation.
-* Move FPGA images to specific applications.
 * Simplify Test/monitor.
 
