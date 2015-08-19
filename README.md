@@ -46,8 +46,7 @@ It can be downloaded [here](https://releases.linaro.org/14.11/components/toolcha
 If you are having trouble installing the required tools, take a look at [Red Pitaya OS](http://wiki.redpitaya.com/index.php?title=Red_Pitaya_OS) wiki page, for more information.
 
 ### Fpga and Device tree ###
-- [fpga](fpga/README.md)
-- [devicetree]
+- Both fpga and devicetree README can be found [here](fpga/README.md)
 
 ### Api ###
 
@@ -67,3 +66,13 @@ The output of this process is the Red Pitaya librp.so library in ./api/lib direc
 ### Apps-free ###
 
 To build apps free, follow the instructions given at apps-free [README.md](apps-free/README.md) file.
+
+
+### Linux Kernel ###
+[Linux kernel]
+
+### U-boot ###
+[U-boot]
+
+### Debian ###
+Debian README can be found [here](OS/debian/README.md)
