@@ -8,8 +8,9 @@ some components might be spread across many directories or found at
 different places one would expect.
 
 
-| DIRECTORIES  |
+| directories  | contents
 |--------------|----------------------------------------------------------------
+| api          | librp.so API source code
 | Applications | Red Pitaya applications (controller modules & GUI clients).
 | apps-free    | REd Pitaya application for the old environment (also with controler modules & GUI clients).
 | Bazaar       | Nginx server with dependencies, Red Pitaya Bazaar module &
@@ -21,5 +22,5 @@ different places one would expect.
 |              | - Staged ramdisk
 |              | - Red pitaya IP discovery client
 | Test         | Command line utilities (acquire, generate, ...).
-| shared       | Common libraries and routines.
+| shared       | libredpitaya.so API source code
 
