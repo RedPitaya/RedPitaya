@@ -181,8 +181,12 @@ int calib_SetFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params)
             params.fe_ch2_dc_offs = calib_GetDataMedian(channel))
 
     /* Set new local parameter */
-    if  (out_params)
-		*out_params = params;
+    if  (out_params) {
+		//	*out_params = params;
+		CHANNEL_ACTION(channel,
+				out_params->fe_ch1_dc_offs = params.fe_ch1_dc_offs,
+				out_params->fe_ch2_dc_offs = params.fe_ch2_dc_offs)
+	}
     else
 		ECHECK(calib_WriteParams(params));    
     return calib_Init();
@@ -209,8 +213,12 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_
             params.fe_ch2_fs_g_lo = calibValue )
 
     /* Set new local parameter */
-    if  (out_params)
-		*out_params = params;
+    if  (out_params) {
+		//	*out_params = params;
+		CHANNEL_ACTION(channel,
+				out_params->fe_ch1_fs_g_lo = params.fe_ch1_fs_g_lo,
+				out_params->fe_ch2_fs_g_lo = params.fe_ch2_fs_g_lo)
+	}
     else
 		ECHECK(calib_WriteParams(params));
     return calib_Init();
@@ -237,8 +245,12 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_
             params.fe_ch2_fs_g_hi = calibValue )
 
     /* Set new local parameter */
-    if  (out_params)
-		*out_params = params;
+    if  (out_params) {
+		//	*out_params = params;
+		CHANNEL_ACTION(channel,
+				out_params->fe_ch1_fs_g_hi = params.fe_ch1_fs_g_hi,
+				out_params->fe_ch2_fs_g_hi = params.fe_ch2_fs_g_hi)
+	}
     else
 		ECHECK(calib_WriteParams(params));
     return calib_Init();
@@ -364,8 +376,15 @@ int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) 
             params.be_ch2_dc_offs = offset)
 
     /* Set new local parameter */
-    if  (out_params)
-		*out_params = params;
+    if  (out_params) {
+		//	*out_params = params;
+		CHANNEL_ACTION(channel,
+				out_params->be_ch1_fs = params.be_ch1_fs,
+				out_params->be_ch2_fs = params.be_ch2_fs)
+		CHANNEL_ACTION(channel,
+				out_params->be_ch1_dc_offs = params.be_ch1_dc_offs,
+				out_params->be_ch2_dc_offs = params.be_ch2_dc_offs)
+	}
     else
 		ECHECK(calib_WriteParams(params));
     return calib_Init();
