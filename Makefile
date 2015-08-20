@@ -83,7 +83,7 @@ ACQUIRE_DIR     = Test/acquire
 XADC_DIR        = Test/xadc
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
-DISCOVERY_DIR   = OS/discovery
+OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
 SCPI_SERVER_DIR = scpi-server/
 LIBRP_DIR       = api/rpbase
@@ -112,6 +112,7 @@ XADC            = $(INSTALL_DIR)/bin/xadc
 CALIB           = $(INSTALL_DIR)/bin/calib
 CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
+HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
 LIBRP           = $(INSTALL_DIR)/lib/librp.so
@@ -171,7 +172,7 @@ $(TMP):
 	mkdir -p $@
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
-	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
@@ -419,7 +420,10 @@ $(CALIBRATE): $(LIBRP)
 
 
 $(DISCOVERY):
-	cp $(DISCOVERY_DIR)/discovery.sh $@
+	cp $(OS_TOOLS_DIR)/discovery.sh $@
+
+$(HEARTBEAT):
+	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
