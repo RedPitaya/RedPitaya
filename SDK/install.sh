@@ -14,25 +14,25 @@ EXEC_PATH="/opt/linaro/bin"
 #Installing dependency tools
 echo -e $GREET_MSG
 echo -e "\nINSTALLING NANO..."
-sudo apt-get install nano
+apt-get install nano
 echo -e "\nINSTALLING CURL..."
-sudo apt-get install curl
+apt-get install curl
 echo -e "\nINSTALLING PUTTY-TOOLS..."
-sudo apt-get install putty-tools
+apt-get install putty-tools
 
 #Installing compilement tools
 echo -e "INSTALLING GCC HF COMPILER..."
 curl -L --remote-name $LINARO_HF_DL #Permission feedback required
-sudo tar xvf $LINARO_HF_TAR
+tar xvf $LINARO_HF_TAR
 LINARO_HF_SUB=$(echo $LINARO_HF_TAR | sed -e 's/.tar.xz//')
 
 echo -e "CREATING LINARO ROOT DIRECTORIES..."
 cd /opt; sudo mkdir -p linaro; 
 cd -
 echo -e "COPYING DATA..."
-sudo cp -r $LINARO_HF_SUB/* /opt/linaro
-sudo rm -rf $LINARO_HF_SUB
-sudo rm -rf $LINARO_HF_DL 
+cp -r $LINARO_HF_SUB/* /opt/linaro
+rm -rf $LINARO_HF_SUB
+rm -rf $LINARO_HF_DL 
 
 #Seting seassion environment
 echo -e "\nSETTING ENVIRONMENTAL VARIABLES..."
