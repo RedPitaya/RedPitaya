@@ -4,7 +4,7 @@ After=redpitaya_nginx.service
 
 [Service]
 Type=oneshot
-ExecStart=/opt/redpitaya/heartbeat.sh > /sys/class/leds/led9/trigger
+ExecStart=/opt/redpitaya/sbin/heartbeat.sh
 
 [Install]
 WantedBy=multi-user.target
