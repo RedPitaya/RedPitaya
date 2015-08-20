@@ -1,0 +1,10 @@
+[Unit]
+Description=Lights up heartbeet LED
+After=redpitaya_nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/redpitaya/heartbeat.sh > /sys/class/leds/led9/trigger
+
+[Install]
+WantedBy=multi-user.target
