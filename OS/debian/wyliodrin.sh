@@ -13,6 +13,10 @@ cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 # Wyliodrin service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
 
+# this file is otherwise available on the mounted FAT partion, should be removed later
+mkdir -p $ROOT_DIR/opt/redpitaya/lib
+cp $BOOT_DIR/opt/redpitaya/lib/librp.so $ROOT_DIR/opt/redpitaya/lib/librp.so
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts
 echo “127.0.0.1 localhost” >> /etc/hosts
@@ -61,15 +65,18 @@ cd build
 cmake -DREDPITAYA=ON -DSWIG_EXECUTABLE=/usr/bin/swig3.0 -DREDPITAYA_LIBRARIES=/opt/redpitaya/lib/librp.so -DREDPITAYA_INCLUDE_DIR=/opt/redpitaya/include ..
 make
 sudo make install
-# TODO: check this links, there were errors reported
-ln -s /usr/local/lib/node_modules/ /usr/lib/node
-ln -s /usr/local/lib/node_modules/ /usr/local/lib/node
+cd ../..
+ln -s /usr/local/lib/node_modules /usr/lib/node
+ln -s /usr/local/lib/node_modules /usr/local/lib/node
 
 echo -n redpitaya > wyliodrin-server-nodejs/board.type
 
 #===============systemd==============
 systemctl enable redpitaya_wyliodrin
 EOF_CHROOT
+
+# removing directory which belongs to a mounted FAT patrition
+rm -rf $ROOT_DIR/opt/redpitaya/lib
 
 # disable chroot access with native execution
 rm $ROOT_DIR/etc/resolv.conf
