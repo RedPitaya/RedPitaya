@@ -74,6 +74,28 @@ zip debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin.img.zip
 
 ## Systemd
 
-### SCPI server
+Systemd is used as the init system and services are used to start/stop Red Pitaya applications/servers. Service files are located in `OS/debian/overlay/etc/systemd/system/*.service`.
 
-### Wyliodrin
+| service               | description
+|-----------------------|-------------------------------------------------------
+| `redpitaya_wyliodrin` | Wyliodrin server, is running by default
+| `redpitaya_scpi`      | SCPI server, is disabled by default, since it conflicts with WEB applications
+| `redpitaya_discovery` | Device discovery, is run once after boot to send Ethernet MAC and IP address to a discovery server
+| `redpitaya_nginx`     | Nginx based server, serving WEB based applications
+
+To start/stop a service, do one of the following:
+```bash
+systemctl start service_name
+systemctl stop service_name
+```
+
+To enable/disable a service, so to determine if it will start at powerup, do one of the following:
+```bash
+systemctl enable service_name
+systemctl disable service_name
+```
+
+To see the status of a specific service run:
+```bash
+systemctl
+```
