@@ -58,10 +58,44 @@ Since Wiliodrin and maybe the ecosystem ZIP are not part of the original SD card
 dd bs=4M if=/dev/sd? of=debian_armhf_*_wyliodrin.img
 ```
 
+Initially the SD card image was designed to be about 3.7GB in size, so it would fit all 4GB SD cards. If the image is created from a larger card, it will contain empty space at the end. To remove the empty space from the SD card image do:
+```bash
+head -c 3670016000 debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin-short.img
+mv debian_armhf_*_wyliodrin-short.img debian_armhf_*_wyliodrin.im
+```
+
+The image size can be further reduced by compressing it. Zip is used, since it is also available by default on MS Windows.
+```bash
+zip debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin.img.zip
+```
+
+
 # Debian Usage
 
 ## Systemd
 
-### SCPI server
+Systemd is used as the init system and services are used to start/stop Red Pitaya applications/servers. Service files are located in `OS/debian/overlay/etc/systemd/system/*.service`.
 
-### Wyliodrin
+| service               | description
+|-----------------------|-------------------------------------------------------
+| `redpitaya_wyliodrin` | Wyliodrin server, is running by default
+| `redpitaya_scpi`      | SCPI server, is disabled by default, since it conflicts with WEB applications
+| `redpitaya_discovery` | Device discovery, is run once after boot to send Ethernet MAC and IP address to a discovery server
+| `redpitaya_nginx`     | Nginx based server, serving WEB based applications
+
+To start/stop a service, do one of the following:
+```bash
+systemctl start service_name
+systemctl stop service_name
+```
+
+To enable/disable a service, so to determine if it will start at powerup, do one of the following:
+```bash
+systemctl enable service_name
+systemctl disable service_name
+```
+
+To see the status of a specific service run:
+```bash
+systemctl
+```
