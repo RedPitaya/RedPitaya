@@ -58,6 +58,18 @@ Since Wiliodrin and maybe the ecosystem ZIP are not part of the original SD card
 dd bs=4M if=/dev/sd? of=debian_armhf_*_wyliodrin.img
 ```
 
+Initially the SD card image was designed to be about 3.7GB in size, so it would fit all 4GB SD cards. If the image is created from a larger card, it will contain empty space at the end. To remove the empty space from the SD card image do:
+```bash
+head -c 3670016000 debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin-short.img
+mv debian_armhf_*_wyliodrin-short.img debian_armhf_*_wyliodrin.im
+```
+
+The image size can be further reduced by compressing it. Zip is used, since it is also available by default on MS Windows.
+```bash
+zip debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin.img.zip
+```
+
+
 # Debian Usage
 
 ## Systemd
