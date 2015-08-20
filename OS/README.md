@@ -1,15 +1,11 @@
 This is the GNU/Linux Operating system for Red Pitaya, an Open-source
 instrument based on Xilinx Zynq.
 
-
-DIRECTORIES
-
-u-boot          U-boot boot loader.
-linux           Linux kernel.
-buildroot       Root filesystem (ramdisk).
-discovery       IP discovery connection agent.
-filesystem      Overlay for SD card filesystem, holding user configurable
-                files.
+| directories | contents
+|-------------|-----------------------------------------------------------------
+| buildroot   | Root filesystem (ramdisk).
+| tools       | IP discovery connection agent, and other scripts.
+| filesystem  | Overlay for SD card filesystem, holding user configurable files.
 
 Upon boot, the ramdisk image and thus the root filesystem resides in RAM.
 Although it is writable, its content is lost at next reboot or power cycle.

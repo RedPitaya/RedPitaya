@@ -75,10 +75,12 @@ XADC input data can be accessed through the Linux IIO (Industrial IO) driver int
 | LED     | color  | SW driver       | dedicated meaning
 |---------|--------|-----------------|----------------------------------
 | `[7:0]` | yellow | RP API          | user defined
-| `  [8]` | yellow | kernel `MIO[0]` | user defined
-| `  [9]` | reg    | kernel `MIO[7]` | user defined
+| `  [8]` | yellow | kernel `MIO[0]` | CPU hearbeat (user defined)
+| `  [9]` | reg    | kernel `MIO[7]` | SD card access (user defined)
 | ` [10]` | green  | none            | "Power Good" status
 | ` [11]` | blue   | none            | FPGA programming "DONE"
+
+For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are not driven by a kernel driver, since the Linux GPIO/LED sublystem does not allow access to multiple pins simultaneously.
 
 ### Linux access to GPIO
 
