@@ -1694,12 +1694,18 @@ $(function() {
       if($('#' + item_id).length > 0) {
         return;
       }
+
+	var sig_text = 'MATH';
+	if (signal_name == 'CH1')
+		sig_text = 'IN1';
+	else if (signal_name == 'CH2')
+		sig_text = 'IN2';
       
       // Add new item
-      $('<div id="' + item_id + '" class="meas-item">' + operator_name + ' (' + signal_name + ')</div>').data({ 
+      $('<div id="' + item_id + '" class="meas-item">' + operator_name + ' (' + sig_text + ')</div>').data({
         value: (signal_name == 'CH1' ? operator_val : (signal_name == 'CH2' ? operator_val + 1 : operator_val + 2)),
         operator: operator_name,
-        signal: signal_name == 'CH1' ? 'IN1' : ( signal_name == 'CH2 ' ? 'IN2' : signal_name)
+        signal: signal_name
       }).appendTo('#meas_list');
     }
 	OSC.exitEditing(true);
