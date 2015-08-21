@@ -129,6 +129,10 @@
       OSC.ws.onopen = function() {
         OSC.state.socket_opened = true;
         console.log('Socket opened');
+        
+		OSC.params.local['in_command'] = { value: 'send_all_params' };
+		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+		OSC.params.local = {};        
       };
       
       OSC.ws.onclose = function() {
@@ -140,7 +144,7 @@
       OSC.ws.onerror = function(ev) {
         console.log('Websocket error: ', ev);
       };
-      
+        
       OSC.ws.onmessage = function(ev) {
         if(OSC.state.processing) {
           return;
@@ -917,7 +921,7 @@ value = field.val();
       
       if(item_val !== null) {
 		++mi_count;
-		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ms', 'FREQ': 'Hz', 'RMS': 'V'};
+		var units = {'P2P': 'V', 'MEAN': 'V', 'MAX': 'V', 'MIN': 'V', 'RMS': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ms', 'FREQ': 'Hz'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
 		var sig_name = 'MATH';
 		if ($elem.data('signal')[2] == '1')
@@ -928,22 +932,22 @@ value = field.val();
 		// V/s or Vs unit for dy/dt and ydt
 		if (sig_name == 'MATH') {
 			if ($('#OSC_MATH_OP').find(":selected").text() == 'dy/dt') {
-				units['VPP'] = 'V/s';
-				units['VMEAN'] = 'V/s';
-				units['VMAX'] = 'V/s';
-				units['VMIN'] = 'V/s';
+				units['P2P'] = 'V/s';
+				units['MEAN'] = 'V/s';
+				units['MAX'] = 'V/s';
+				units['MIN'] = 'V/s';
 				units['RMS'] = 'V/s';
 			} else if ($('#OSC_MATH_OP').find(":selected").text() == 'ydt') {
-				units['VPP'] = 'Vs';
-				units['VMEAN'] = 'Vs';
-				units['VMAX'] = 'Vs';
-				units['VMIN'] = 'Vs';
+				units['P2P'] = 'Vs';
+				units['MEAN'] = 'Vs';
+				units['MAX'] = 'Vs';
+				units['MIN'] = 'Vs';
 				units['RMS'] = 'Vs';
 			} else if ($('#OSC_MATH_OP').find(":selected").text() == '*') {
-				units['VPP'] = 'V^2';
-				units['VMEAN'] = 'V^2';
-				units['VMAX'] = 'V^2';
-				units['VMIN'] = 'V^2';
+				units['P2P'] = 'V^2';
+				units['MEAN'] = 'V^2';
+				units['MAX'] = 'V^2';
+				units['MIN'] = 'V^2';
 				units['RMS'] = 'V^2';
 			}			
 		}
@@ -1114,7 +1118,7 @@ value = field.val();
         if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET']!=undefined)
         {
 			var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-			var new_offset = (cur_offset / curr_scale) * (new_scale / mult);
+			var new_offset = cur_offset; //(cur_offset / curr_scale) * (new_scale / mult);
 			OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
 		}
         OSC.sendParams();
@@ -1345,7 +1349,10 @@ value = field.val();
 		//$('#OSC_CH1_OFFSET').change();
 		var units = $('#OSC_CH1_OFFSET_UNIT').html();
 		var multiplier = units == "mV" ? 1000 : 1;
-		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value * multiplier));
+		
+		var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
       }
 
       //else if(save) {
@@ -1363,7 +1370,11 @@ value = field.val();
 		//$('#OSC_CH2_OFFSET').change();
 		var units = $('#OSC_CH2_OFFSET_UNIT').html();
 		var multiplier = units == "mV" ? 1000 : 1;
-		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value * multiplier));
+		
+		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
+
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1406,34 +1417,68 @@ value = field.val();
     }
   };
   
+  
+  	OSC.formatInputValue = function(oldValue, attenuation, is_milis, is_hv){
+		var z = oldValue;
+		if (is_milis)
+			return z.toFixed(0);
+		if(is_hv) 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(2);
+					break;
+				case 10:
+					return z.toFixed(1);
+					break;
+				case 100:
+					return z.toFixed(0);
+					break;
+			}
+		} else 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(3);
+					break;
+				case 10:
+					return z.toFixed(2);
+					break;
+				case 100:
+					return z.toFixed(1);
+					break;
+			}
+		}
+		return z;
+	}
+  
    OSC.formatValue = function (oldValue){
 		var z = oldValue;
+/*
 		if (z > 0)
 		{
 			if(z < 9.99990)
-				return z.toFixed(4);
-			else if(z < 99.9990)
 				return z.toFixed(3);
+			else if(z < 99.9990)
+				return z.toFixed(2);
 			else if(z < 999.990)
-				return z.toFixed(2);		
-			else if(z < 9999.990)
 				return z.toFixed(1);		
 			else 
 				return z.toFixed(0);					
 		} else 
 		{
 			if(z > -9.99990)
-				return z.toFixed(4);
-			else if(z > -99.9990)
 				return z.toFixed(3);
-			else if(z > -999.990)
+			else if(z > -99.9990)
 				return z.toFixed(2);
-			else if(z > -9999.990)
-				return z.toFixed(1);		
+			else if(z > -999.990)
+				return z.toFixed(1);
 			else 
 				return z.toFixed(0);				
 		}
-		
+*/		
 		return z;
    };
   

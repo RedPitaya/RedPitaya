@@ -541,14 +541,14 @@
             <div class="right-menu-option">
               <span class="col-info">Operator</span>
               <select id="meas_operator" class="form-control styled-select">
-                <option value="0">VPP</option>
-                <option value="3">VMEAN</option>
-                <option value="6">VMAX</option>
-                <option value="9">VMIN</option>
+                <option value="0">P2P</option>
+                <option value="3">MEAN</option>
+                <option value="6">MAX</option>
+                <option value="9">MIN</option>
+                <option value="21">RMS</option>
                 <option value="12">DUTY CYCLE</option>
                 <option value="15">PERIOD</option>
                 <option value="18">FREQ</option>
-                <option value="21">RMS</option>
               </select>
             </div>
           </div>
@@ -830,19 +830,85 @@ $('#calib-input').change(function() {
 			$("#OSC_MATH_OFFSET").attr("max", newMax);
 		}
 	}
+	
+	function formatInputValue(oldValue, attenuation, is_milis, is_hv){
+		var z = oldValue;
+		if (is_milis)
+			return z.toFixed(0);
+		if(is_hv) 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(2);
+					break;
+				case 10:
+					return z.toFixed(1);
+					break;
+				case 100:
+					return z.toFixed(0);
+					break;
+			}
+		} else 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(3);
+					break;
+				case 10:
+					return z.toFixed(2);
+					break;
+				case 100:
+					return z.toFixed(1);
+					break;
+			}
+		}
+		return z;
+	}
+
+	function formatVals(){
+		{ // OSC_CH1_OFFSET limits
+			var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+			var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			var units = $('#OSC_CH1_OFFSET_UNIT').html();
+			var multiplier = units == "mV" ? 1000 : 1;
+			var in1_value = parseFloat($("#OSC_CH1_OFFSET").val());
+			$("#OSC_CH1_OFFSET").val(formatInputValue(in1_value, probeAttenuation, units=="mV", jumperSettings == 20));	
+		}
+		
+		{ // OSC_CH2_OFFSET limits
+			var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
+			var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			var units = $('#OSC_CH2_OFFSET_UNIT').html();
+			var multiplier = units == "mV" ? 1000 : 1;
+			var in2_value = parseFloat($("#OSC_CH2_OFFSET").val());
+			$("#OSC_CH2_OFFSET").val(formatInputValue(in2_value, probeAtt1, units=="mV", jumperSettings1 == 20));	
+		} 
+		
+		/*{ // OSC_MATH_OFFSET limits
+			var scale_val = $("#OSC_MATH_SCALE").text();
+			var math_vdiv = parseInt(scale_val);
+			var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
+		}*/
+	}
 	$('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
 		updateLimits();
+		formatVals();
 	});
 	$('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
 		updateLimits();
+		formatVals();
 	});	
 	$("#OSC_MATH_SCALE").bind("DOMSubtreeModified",function(){
 		updateLimits();
+		formatVals();
 	});
 	
 	$(".btn").mouseup(function() {
 		setTimeout(function() {
 			updateLimits();
+			formatVals();
 		}, 20);
 	});
 	$("#OSC_CH1_PROBE").change(function() {
@@ -850,6 +916,7 @@ $('#calib-input').change(function() {
 	});
 	$( document ).ready(function() {
 		updateLimits();
+		formatVals();
 	});
 </script>
 
@@ -993,7 +1060,7 @@ $('#calib-input').change(function() {
             }
 
             function changeInputsVal(input, newValue){
-                input.val(formatValue(newValue));
+                input.val(newValue);
 				OSC.exitEditing(true);
             }
 
@@ -1009,13 +1076,50 @@ $('#calib-input').change(function() {
                     step = parseFloat(input.attr('step'));
 					if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET'].indexOf(input.attr('id')) != -1) {
 					
-						if(value < 10)
-							step = 0.001;
-						else if(value < 100)
-							step = 0.01;
+						var ch = "";
+						if  (input.attr('id') == "OSC_CH1_OFFSET")
+							ch = "CH1";
 						else 
-							step = 0.1;
-						return;
+							ch = "CH2";
+							
+						var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+						var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+						var units = $('#OSC_'+ch+'_OFFSET_UNIT').html();
+						var multiplier = units == "mV" ? 1000 : 1;
+						
+						if (multiplier == 1000)
+						{
+							step = 1;
+							return;
+						}
+						if(jumperSettings == 20)
+						{
+							switch(probeAttenuation)
+							{
+								case 1: 
+									step = 0.01;
+									return;
+								case 10:
+									step = 0.1;
+									return;
+								case 100:
+									step = 1;
+									return;
+							}
+						} else 
+						{
+							switch(probeAttenuation)
+							{
+								case 1: 
+									step = 0.001;
+									return;
+								case 10:
+									step = 0.01;
+									return;
+								case 100:
+									step = 0.1;
+							}
+						}
 					}
 					if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
 					
@@ -1035,29 +1139,6 @@ $('#calib-input').change(function() {
                 } else {
                     step = 1;
                 }
-            }
-            
-            function formatValue(oldValue){
-				var z = oldValue;
-				if (z > 0)
-				{
-					if(z < 9.99990)
-						return z.toFixed(3);
-					else if(z < 99.9990)
-						return z.toFixed(2);
-					else if(z < 999.990)
-						return z.toFixed(1);			
-				} else 
-				{
-					if(z > -9.99990)
-						return z.toFixed(3);
-					else if(z > -99.9990)
-						return z.toFixed(2);
-					else if(z > -999.990)
-						return z.toFixed(1);					
-				}
-				
-				return z;
             }
 			
             $(newInput).change(function () {
@@ -1081,7 +1162,7 @@ $('#calib-input').change(function() {
                 if (!( $.isNumeric(value) )) {
                     value = 0;
                 }
-                input.val(formatValue(value));
+                input.val(value);
             });
 
             $(newInput).keydown(function(e){
