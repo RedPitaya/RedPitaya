@@ -17,8 +17,8 @@ CC = $(CROSS_COMPILE)gcc
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
 
-OBJECT ?= frame_work.o
-TARGET ?= executable
+OBJECT ?= framework.o
+TARGET ?= framework
 
 $(TARGET): $(OBJECT)
 	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE)
