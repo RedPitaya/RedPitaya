@@ -1114,7 +1114,7 @@ value = field.val();
         if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET']!=undefined)
         {
 			var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-			var new_offset = (cur_offset / curr_scale) * (new_scale / mult);
+			var new_offset = cur_offset; //(cur_offset / curr_scale) * (new_scale / mult);
 			OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
 		}
         OSC.sendParams();
