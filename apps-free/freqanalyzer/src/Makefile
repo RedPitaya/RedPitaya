@@ -25,5 +25,5 @@ $(CONTROLLER): $(FFT_OBJECTS) $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	$(RM) -f $(OBJECTS)
+	$(RM) -f $(OBJECTS) $(CONTROLLER)
 	$(MAKE) -C $(FFT_DIR) clean
