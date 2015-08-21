@@ -194,7 +194,7 @@
 			  var z = y;
 			  var factor = '';
 			  if(y < 0.00000000000010)
-					new_params[param_name].value = 'ERROR';
+					new_params[param_name].value = 'No signal';
 			  else if(y > 0.00000000000010 && y <= 0.000000999990)
 			  {	
 				  z*=1e9;
@@ -481,8 +481,26 @@
 				if((!OSC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))){
 					var value = $('#OSC_TRIG_LEVEL').val();
 					if(value !== new_params[param_name].value){
+						
+						var probeAttenuation = 1;
+						var jumperSettings = 1;
+						var ch="";
+						if($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
+							ch="CH1";
+						else if ($("OSC_TRIG_SOURCE2").parent().hasClass("actie"))
+							ch="CH2";
+						else
+						{
+							probeAttenuation = 1;
+						}
+						
+						if (ch == "CH1" || ch == "CH2")
+						{
+							probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+							jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+						}
 						//$('#OSC_TRIG_LEVEL').val(new_params[param_name].value);
-						OSC.setValue($('#OSC_TRIG_LEVEL'), new_params[param_name].value);
+						OSC.setValue($('#OSC_TRIG_LEVEL'), OSC.formatInputValue(new_params[param_name].value, probeAttenuation, false, jumperSettings == 20));
 					}
 				}
 			  }
@@ -492,13 +510,6 @@
 		  if(param_name == 'OSC_TRIG_SOURCE') {
 			  var source = new_params['OSC_TRIG_SOURCE'].value == 0 ? 'IN1' : (new_params['OSC_TRIG_SOURCE'].value == 1 ? 'IN2' : 'EXT');
 			$('#osc_trig_source_ch').html(source);
-			if (source == 'EXT') {
-				$('#OSC_TRIG_LEVEL').attr('min', -3.3);
-				$('#OSC_TRIG_LEVEL').attr('max', 3.3);
-			} else {
-				$('#OSC_TRIG_LEVEL').attr('min', -1);
-				$('#OSC_TRIG_LEVEL').attr('max', 1);				
-			}
 		  }
         }
         // Trigger edge/slope
@@ -635,7 +646,27 @@
 				{
 					field.val(OSC.formatMathValue(new_params[param_name].value));
 				}
-				else 
+				else if (param_name == "OSC_TRIG_LEVEL")
+				{
+					var probeAttenuation = 1;
+					var jumperSettings = 1;
+					var ch="";
+					if($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
+						ch="CH1";
+					else if ($("OSC_TRIG_SOURCE2").parent().hasClass("actie"))
+						ch="CH2";
+					else
+					{
+						probeAttenuation = 1;
+					}
+					
+					if (ch == "CH1" || ch == "CH2")
+					{
+						probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+						jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+					}
+					field.val(formatInputValue(new_params[param_name].value, probeAttenuation, false, jumperSettings == 20));
+				} else 
 					field.val(new_params[param_name].value);
           }
           else if(field.is('button')) {
@@ -954,8 +985,11 @@ value = field.val();
 			}			
 		}
 		
+		var u = '';
+		if (OSC.params.orig['OSC_MEAS_VAL' + mi_count])
+			u = OSC.params.orig['OSC_MEAS_VAL' + mi_count].value == 'No signal' ? '' : units[$elem.data('operator')];
         $('#info-meas').append(
-          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;<span id="OSC_MEAS_UNITS">' + units[$elem.data('operator')] + '</span><span id="OSC_MEAS_ORIG_UNITS" style="display:none;">' + units[$elem.data('operator')] + '</span></div>'
+          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;<span id="OSC_MEAS_UNITS">' + u + '</span><span id="OSC_MEAS_ORIG_UNITS" style="display:none;">' + u + '</span></div>'
         );
       }
     });
@@ -1514,7 +1548,25 @@ value = field.val();
           if($('#trig_dialog').is(':visible')) {
             //$('#OSC_TRIG_LEVEL').val(+(new_value));
 			//$('#OSC_TRIG_LEVEL').change();
-			OSC.setValue($('#OSC_TRIG_LEVEL'), new_value);
+			var probeAttenuation = 1;
+			var jumperSettings = 1;
+			var ch="";
+			if($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
+				ch="CH1";
+			else if ($("OSC_TRIG_SOURCE2").parent().hasClass("actie"))
+				ch="CH2";
+			else
+			{
+				probeAttenuation = 1;
+			}
+			
+			if (ch == "CH1" || ch == "CH2")
+			{
+				probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+				jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			}
+			
+			OSC.setValue($('#OSC_TRIG_LEVEL'), OSC.formatInputValue(new_value, probeAttenuation, false, jumperSettings == 20));
 			$('#OSC_TRIG_LEVEL').change();
           }
           if(save) {
