@@ -633,7 +633,7 @@
 					field.val(OSC.formatValue(new_params[param_name].value * multiplier));
 				} else if (param_name == "OSC_MATH_OFFSET")
 				{
-					field.val(OSC.formatValue(new_params[param_name].value));
+					field.val(OSC.formatMathValue(new_params[param_name].value));
 				}
 				else 
 					field.val(new_params[param_name].value);
@@ -701,7 +701,7 @@
 					$('#munit').html(units[new_params['OSC_MATH_OP'].value] + '/div');
 					
 					$('#OSC_MATH_OFFSET_UNIT').html(units[new_params['OSC_MATH_OP'].value]);	
-					$('#OSC_MATH_OFFSET').val(OSC.formatValue(OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div));
+					$('#OSC_MATH_OFFSET').val(OSC.formatMathValue(OSC.params.orig['OSC_MATH_OFFSET'].value/OSC.div));
 				}        
 				else
 				{
@@ -724,8 +724,10 @@
             }
           }
         } else {
-			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET" || param_name == "OSC_MATH_OFFSET")
+			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET")
 				field.val(OSC.formatValue(new_params[param_name].value));
+			if (param_name == "OSC_MATH_OFFSET")
+				field.val(OSC.formatMathValue(new_params[param_name].value));
 		}
       }
     }
@@ -1569,32 +1571,48 @@ value = field.val();
     return +(v.toFixed(2)) + ' ' + unit;
   };
   
+   	OSC.formatMathValue = function(oldValue){
+		var z = oldValue;
+		var precision = 2;
+		var munit = $('#munit').html().charAt(0);
+		var scale_val = $("#OSC_MATH_SCALE").text();
+		var math_vdiv = parseFloat(scale_val);
+		if(munit == 'm') 
+			precision = 0;
+		if (math_vdiv < 1)
+			precision = 3;
+		
+		return z.toFixed(precision);
+	}
+  
   OSC.convertValueToMathUnit = function(v) {
     var value = v;
 	var unit = 'V';
-	var precision = 3;
+	var precision = 2;
 	var munit = $('#munit').html().charAt(0);
+	var scale_val = $("#OSC_MATH_SCALE").text();
+	var math_vdiv = parseFloat(scale_val);
+	
 	if(OSC.params.orig['OSC_MATH_OP']){
 		if(munit == 'm') {
 			value *= 1000;
 			unit = 'mV';
 			precision = 0;
-
 		} else if (munit == 'M') {
 			value /= 1000000;
 			unit = 'MV';	
-			precision = 1;		
 		} else if (munit == 'k') {
 			value /= 1000;
 			unit = 'kV';
-			precision = 2;
 		}
+		if (math_vdiv < 1)
+			precision = 3;
 						
 		var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
 		$('#OSC_MATH_OFFSET_UNIT').html(units[OSC.params.orig['OSC_MATH_OP'].value]);		
 	}
 	var value_holder = $('#OSC_MATH_OFFSET');
-	value_holder.val(OSC.formatValue(value));
+	value_holder.val(OSC.formatMathValue(value));
 	value_holder.change();
   };
   
