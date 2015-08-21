@@ -256,16 +256,20 @@ void UpdateParams(void) {
 		triggerInfo.Value() = 3;	    
 
     if (measureSelect1.Value() != -1) {
-        measureValue1.Value() = getMeasureValue(measureSelect1.Value());
+		double val = getMeasureValue(measureSelect1.Value());
+        measureValue1.Value() = measureSelect1.Value() == 12 ? val* 100 : val;        
 	}
     if (measureSelect2.Value() != -1) {
-        measureValue2.Value() = getMeasureValue(measureSelect2.Value());
+		double val = getMeasureValue(measureSelect2.Value());
+        measureValue2.Value() = measureSelect2.Value() == 12 ? val* 100 : val;  
 	}
     if (measureSelect3.Value() != -1) {
-        measureValue3.Value() = getMeasureValue(measureSelect3.Value());
+		double val = getMeasureValue(measureSelect3.Value());
+        measureValue3.Value() = measureSelect3.Value() == 12 ? val* 100 : val;  
 	}
     if (measureSelect4.Value() != -1) {
-        measureValue4.Value() = getMeasureValue(measureSelect4.Value());
+		double val = getMeasureValue(measureSelect4.Value());
+        measureValue4.Value() = measureSelect4.Value() == 12 ? val* 100 : val;  
 	}
 
     float portion;
