@@ -42,7 +42,7 @@ CBooleanParameter in2InvShow("CH2_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 CBooleanParameter mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 
 CBooleanParameter inReset("OSC_RST", CBaseParameter::RW, false, 0);
-CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, true, 0);
+CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter inAutoscale("OSC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 
@@ -233,21 +233,27 @@ void checkMathScale() {
 }
 
 void UpdateParams(void) {
-	bool is_running;
+	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());	
+	
+    bool running;
+    rpApp_OscIsRunning(&running);
+    if (!running)
+		return;
+    inRun.Value() = running;
+
+    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+    
 	rpApp_osc_trig_sweep_t mode;
 	rpApp_OscGetTriggerSweep(&mode);
-	rpApp_OscIsRunning(&is_running);
 	
-	if (!is_running)
+	if (!running)
 		triggerInfo.Value() = 0;
 	else if (mode == RPAPP_OSC_TRIG_AUTO)
 		triggerInfo.Value() = 1;
 	else if (rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
 		triggerInfo.Value() = 2;
 	else if (!rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
-		triggerInfo.Value() = 3;	
-	
-    CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
+		triggerInfo.Value() = 3;	    
 
     if (measureSelect1.Value() != -1) {
         measureValue1.Value() = getMeasureValue(measureSelect1.Value());
@@ -269,12 +275,8 @@ void UpdateParams(void) {
 	float trigg_limit;
 	float trigg_level;
 	
-	fprintf(stderr, "[UpdateParams] inTrigSource: %d\n", inTrigSource.Value());
 	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
-	
-	//rpApp_OscGetTriggerLevel(&trigg_level);
-	//inTriggLevel.Value() = trigg_level;
 	
 	if (channel == RPAPP_OSC_TRIG_SRC_CH1)
 		inTriggLimit.Value() = trigg_limit*in1Probe.Value();
@@ -286,12 +288,7 @@ void UpdateParams(void) {
     rp_acq_sampling_rate_t sampling_rate;
     rp_AcqGetSamplingRate(&sampling_rate);
     samplingRate.Value() = sampling_rate;
-
-    bool running;
-    rpApp_OscIsRunning(&running);
-    inRun.Value() = running;
-
-    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+    
 
     double dvalue;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
