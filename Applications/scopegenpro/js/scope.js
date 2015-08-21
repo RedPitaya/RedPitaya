@@ -921,7 +921,7 @@ value = field.val();
       
       if(item_val !== null) {
 		++mi_count;
-		var units = {'VPP': 'V', 'VMEAN': 'V', 'VMAX': 'V', 'VMIN': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ms', 'FREQ': 'Hz', 'RMS': 'V'};
+		var units = {'P2P': 'V', 'MEAN': 'V', 'MAX': 'V', 'MIN': 'V', 'RMS': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ms', 'FREQ': 'Hz'};
         OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
 		var sig_name = 'MATH';
 		if ($elem.data('signal')[2] == '1')
@@ -932,22 +932,22 @@ value = field.val();
 		// V/s or Vs unit for dy/dt and ydt
 		if (sig_name == 'MATH') {
 			if ($('#OSC_MATH_OP').find(":selected").text() == 'dy/dt') {
-				units['VPP'] = 'V/s';
-				units['VMEAN'] = 'V/s';
-				units['VMAX'] = 'V/s';
-				units['VMIN'] = 'V/s';
+				units['P2P'] = 'V/s';
+				units['MEAN'] = 'V/s';
+				units['MAX'] = 'V/s';
+				units['MIN'] = 'V/s';
 				units['RMS'] = 'V/s';
 			} else if ($('#OSC_MATH_OP').find(":selected").text() == 'ydt') {
-				units['VPP'] = 'Vs';
-				units['VMEAN'] = 'Vs';
-				units['VMAX'] = 'Vs';
-				units['VMIN'] = 'Vs';
+				units['P2P'] = 'Vs';
+				units['MEAN'] = 'Vs';
+				units['MAX'] = 'Vs';
+				units['MIN'] = 'Vs';
 				units['RMS'] = 'Vs';
 			} else if ($('#OSC_MATH_OP').find(":selected").text() == '*') {
-				units['VPP'] = 'V^2';
-				units['VMEAN'] = 'V^2';
-				units['VMAX'] = 'V^2';
-				units['VMIN'] = 'V^2';
+				units['P2P'] = 'V^2';
+				units['MEAN'] = 'V^2';
+				units['MAX'] = 'V^2';
+				units['MIN'] = 'V^2';
 				units['RMS'] = 'V^2';
 			}			
 		}
