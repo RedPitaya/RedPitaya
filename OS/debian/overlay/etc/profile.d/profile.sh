@@ -1,5 +1,4 @@
 export PS1="\e[0;31mred\e[1mpitaya\e[0;31m>\e[m "
-export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 export USER=`id -un`
 export LOGNAME=$USER
