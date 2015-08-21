@@ -117,7 +117,7 @@ ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
 LIBRP           = $(INSTALL_DIR)/lib/librp.so
 LIBRPAPP        = $(INSTALL_DIR)/lib/librpapp.so
-GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
+#GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
 LIBREDPITAYA    = shared/libredpitaya/libredpitaya.a
 
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
@@ -166,14 +166,14 @@ export GREET_MSG
 # tarball
 ################################################################################
 
-all: zip
+all: zip sdk apps_free
 
 $(TMP):
 	mkdir -p $@
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
-	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
+	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(APP_SCOPE) $(APP_SPECTRUM) rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -193,11 +193,8 @@ $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) 
 	# copy Linaro runtime library to fix dependency issues on Debian
 	# TODO: find a better solution
 	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
-	# TODO: the current path for this files is not well thought out
-	cp OS/debian/overlay/etc/network/interfaces-ap.wlan0     $(TARGET)/etc/network/interfaces-ap.wlan0
-	cp OS/debian/overlay/etc/network/interfaces-client.wlan0 $(TARGET)/etc/network/interfaces-client.wlan0
 
-zip: $(TARGET) $(SDK)
+zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
 
 ################################################################################
@@ -446,11 +443,11 @@ $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
 
 # Gdb server for remote debugging
 # TODO: This is a temporary solution
-$(GDBSERVER):
-	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
+#$(GDBSERVER):
+#	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
 
 sdk:
-	$(MAKE) -C $(SDK_DIR) install INSTALL_DIR=.
+	$(MAKE) -C $(SDK_DIR) install INSTALL_DIR=$(abspath .)
 
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR)
