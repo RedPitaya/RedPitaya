@@ -691,7 +691,7 @@
 			  </div>
             </div>
           </div>
-          <div id="info-meas" style="width: 500px;"></div>
+          <div id="info-meas" style="position: absolute; left: 200px;"></div>
           <div class="pull-right">
             Time <span id="OSC_TIME_SCALE">-</span>/div <br />
             Trig 
@@ -829,6 +829,30 @@ $('#calib-input').change(function() {
 			$("#OSC_MATH_OFFSET").attr("min", newMin);
 			$("#OSC_MATH_OFFSET").attr("max", newMax);
 		}
+		
+		{ // OSC_TRIG_LEVEL_OFFSET limits
+			var ch="";
+			if($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
+				ch="CH1";
+			else if ($("OSC_TRIG_SOURCE2").parent().hasClass("actie"))
+				ch="CH2";
+			else
+			{
+				$("#OSC_TRIG_LEVEL").attr("min", -1);
+				$("#OSC_TRIG_LEVEL").attr("max",  1);
+				return;
+			}
+			
+			var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+			var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			
+			var newMin = -1 * jumperSettings * probeAttenuation ;
+			var newMax =  1 * jumperSettings * probeAttenuation ;
+			
+			var trig_lvl = $("#OSC_TRIG_LEVEL");
+			trig_lvl.attr("min", newMin);
+			trig_lvl.attr("max", newMax);
+		}
 	}
 	
 	function formatInputValue(oldValue, attenuation, is_milis, is_hv){
@@ -899,7 +923,42 @@ $('#calib-input').change(function() {
 				precision = 3;
 			var math_value = parseFloat($("#OSC_MATH_OFFSET").val());			
 			$("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
+		}
+		
+		{ // OSC_TRIG_LEVEL_OFFSET
+			var probeAttenuation = 1;
+			var jumperSettings = 1;
+			var ch="";
+			if($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
+				ch="CH1";
+			else if ($("OSC_TRIG_SOURCE2").parent().hasClass("actie"))
+				ch="CH2";
+			else
+			{
+				probeAttenuation = 1;
+			}
 			
+			if (ch == "CH1" || ch == "CH2")
+			{
+				probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+				jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			}
+			
+			var trig_value = parseFloat($("#OSC_TRIG_LEVEL").val());
+			$("#OSC_TRIG_LEVEL").val(formatInputValue(trig_value, probeAttenuation, false, jumperSettings == 20));	
+		}
+		
+				
+		{ // DUTY CYCLE FORMATTING
+			var SOUR1_DCYC = parseFloat($("SOUR1_DCYC").val());
+			$("SOUR1_DCYC").val(SOUR1_DCYC.toFixed(2));
+			var SOUR2_DCYC = parseFloat($("SOUR2_DCYC").val());
+			$("SOUR2_DCYC").val(SOUR2_DCYC.toFixed(2));
+			
+			var SOUR1_PHAS = parseFloat($("SOUR1_PHAS").val());
+			$("SOUR1_PHAS").val(SOUR1_PHAS.toFixed(2));
+			var SOUR2_PHAS = parseFloat($("SOUR2_PHAS").val());
+			$("SOUR2_PHAS").val(SOUR2_PHAS.toFixed(2));
 		}
 	}
 	$('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
@@ -924,7 +983,8 @@ $('#calib-input').change(function() {
 	$("#OSC_CH1_PROBE").change(function() {
 		updateLimits();
 	});
-	$( document ).ready(function() {
+	
+-	$( document ).ready(function() {
 		updateLimits();
 		formatVals();
 	});
@@ -1012,20 +1072,7 @@ $('#calib-input').change(function() {
 			function getLimits(input){
 				var min = parseFloat(input.attr('min'));
 				var max = parseFloat(input.attr('max'));
-				if (['OSC_TRIG_LEVEL'].indexOf(input.attr('id')) != -1 && OSC.params.orig['OSC_TRIG_SOURCE']) {
-					if(OSC.params.orig['OSC_TRIG_SOURCE'] .value <= 1) {
-						var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
-						if(OSC.params.orig[ref_scale]){
-							var limit = Math.abs(OSC.params.orig[ref_scale].value)*5;
-							limit = limit > 1 ? 1 : limit;
-							min = -1 * limit;
-							max = limit;
-						}
-					}			
-				}
-				
 				return {'min': min, 'max': max};
-				
             }
 			
             function lessValFn(input){
