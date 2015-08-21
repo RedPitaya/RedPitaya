@@ -823,7 +823,7 @@ $('#calib-input').change(function() {
 		
 		{ // OSC_MATH_OFFSET limits
 			var scale_val = $("#OSC_MATH_SCALE").text();
-			var math_vdiv = parseInt(scale_val);
+			var math_vdiv = parseFloat(scale_val);
 			var newMin = -1 * 5 * math_vdiv;
 			var newMax =  1 * 5 * math_vdiv;
 			$("#OSC_MATH_OFFSET").attr("min", newMin);
@@ -868,7 +868,7 @@ $('#calib-input').change(function() {
 	}
 
 	function formatVals(){
-		{ // OSC_CH1_OFFSET limits
+		{ // OSC_CH1_OFFSET 
 			var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
 			var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 			var units = $('#OSC_CH1_OFFSET_UNIT').html();
@@ -877,7 +877,7 @@ $('#calib-input').change(function() {
 			$("#OSC_CH1_OFFSET").val(formatInputValue(in1_value, probeAttenuation, units=="mV", jumperSettings == 20));	
 		}
 		
-		{ // OSC_CH2_OFFSET limits
+		{ // OSC_CH2_OFFSET 
 			var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
 			var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 			var units = $('#OSC_CH2_OFFSET_UNIT').html();
@@ -886,11 +886,21 @@ $('#calib-input').change(function() {
 			$("#OSC_CH2_OFFSET").val(formatInputValue(in2_value, probeAtt1, units=="mV", jumperSettings1 == 20));	
 		} 
 		
-		/*{ // OSC_MATH_OFFSET limits
+		{ // OSC_MATH_OFFSET 
 			var scale_val = $("#OSC_MATH_SCALE").text();
-			var math_vdiv = parseInt(scale_val);
-			var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
-		}*/
+			var units = $("#munit").text();
+			var math_vdiv = parseFloat(scale_val);
+			
+			var munit = $('#munit').html().charAt(0);
+			var precision = 2;
+			if(munit == 'm')
+				precision = 0;
+			if(math_vdiv < 1)
+				precision = 3;
+			var math_value = parseFloat($("#OSC_MATH_OFFSET").val());			
+			$("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
+			
+		}
 	}
 	$('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
 		updateLimits();
@@ -1002,30 +1012,7 @@ $('#calib-input').change(function() {
 			function getLimits(input){
 				var min = parseFloat(input.attr('min'));
 				var max = parseFloat(input.attr('max'));
-				/*if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET', 'OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
-				
-					var substrid = input.attr('id').substr(0, input.attr('id').indexOf('_OFFSET'));
-					
-					if(OSC.params.orig[substrid + '_SCALE']){
-						var limit = Math.abs(OSC.params.orig[substrid + '_SCALE'].value)*5;
-						if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
-							var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
-							var unit = unit_holder.html().charAt(0);
-							
-							if(unit === 'k')
-								limit /= 1000;
-							else if(unit === 'M')
-								limit /= 1000000;
-							else if(unit === 'm')
-								limit *= 1000;
-						}
-
-						min = -1 * limit;
-						max = limit;
-					}	
-				}
-				
-				else */if (['OSC_TRIG_LEVEL'].indexOf(input.attr('id')) != -1 && OSC.params.orig['OSC_TRIG_SOURCE']) {
+				if (['OSC_TRIG_LEVEL'].indexOf(input.attr('id')) != -1 && OSC.params.orig['OSC_TRIG_SOURCE']) {
 					if(OSC.params.orig['OSC_TRIG_SOURCE'] .value <= 1) {
 						var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
 						if(OSC.params.orig[ref_scale]){
@@ -1125,15 +1112,9 @@ $('#calib-input').change(function() {
 					
 						var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
 						var unit = unit_holder.html().charAt(0);
-						
-						if(unit === 'V')
-							step = 0.001;
-						else if(unit === 'k')
-							step = 0.01;
-						else if(unit === 'M')
-							step = 0.1;
-						else
-							step = 1;
+						var scale_val = $("#OSC_MATH_SCALE").text();
+						var math_vdiv = parseFloat(scale_val);
+						step = math_vdiv / 100;
 					}
 					
                 } else {
