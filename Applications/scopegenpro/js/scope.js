@@ -129,6 +129,10 @@
       OSC.ws.onopen = function() {
         OSC.state.socket_opened = true;
         console.log('Socket opened');
+        
+		OSC.params.local['in_command'] = { value: 'send_all_params' };
+		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+		OSC.params.local = {};        
       };
       
       OSC.ws.onclose = function() {
@@ -140,7 +144,7 @@
       OSC.ws.onerror = function(ev) {
         console.log('Websocket error: ', ev);
       };
-      
+        
       OSC.ws.onmessage = function(ev) {
         if(OSC.state.processing) {
           return;
@@ -1345,7 +1349,10 @@ value = field.val();
 		//$('#OSC_CH1_OFFSET').change();
 		var units = $('#OSC_CH1_OFFSET_UNIT').html();
 		var multiplier = units == "mV" ? 1000 : 1;
-		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatValue(new_value * multiplier));
+		
+		var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+		OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
       }
 
       //else if(save) {
@@ -1363,7 +1370,11 @@ value = field.val();
 		//$('#OSC_CH2_OFFSET').change();
 		var units = $('#OSC_CH2_OFFSET_UNIT').html();
 		var multiplier = units == "mV" ? 1000 : 1;
-		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatValue(new_value * multiplier));
+		
+		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
+
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1406,34 +1417,68 @@ value = field.val();
     }
   };
   
+  
+  	OSC.formatInputValue = function(oldValue, attenuation, is_milis, is_hv){
+		var z = oldValue;
+		if (is_milis)
+			return z.toFixed(0);
+		if(is_hv) 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(2);
+					break;
+				case 10:
+					return z.toFixed(1);
+					break;
+				case 100:
+					return z.toFixed(0);
+					break;
+			}
+		} else 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(3);
+					break;
+				case 10:
+					return z.toFixed(2);
+					break;
+				case 100:
+					return z.toFixed(1);
+					break;
+			}
+		}
+		return z;
+	}
+  
    OSC.formatValue = function (oldValue){
 		var z = oldValue;
+/*
 		if (z > 0)
 		{
 			if(z < 9.99990)
-				return z.toFixed(4);
-			else if(z < 99.9990)
 				return z.toFixed(3);
+			else if(z < 99.9990)
+				return z.toFixed(2);
 			else if(z < 999.990)
-				return z.toFixed(2);		
-			else if(z < 9999.990)
 				return z.toFixed(1);		
 			else 
 				return z.toFixed(0);					
 		} else 
 		{
 			if(z > -9.99990)
-				return z.toFixed(4);
-			else if(z > -99.9990)
 				return z.toFixed(3);
-			else if(z > -999.990)
+			else if(z > -99.9990)
 				return z.toFixed(2);
-			else if(z > -9999.990)
-				return z.toFixed(1);		
+			else if(z > -999.990)
+				return z.toFixed(1);
 			else 
 				return z.toFixed(0);				
 		}
-		
+*/		
 		return z;
    };
   

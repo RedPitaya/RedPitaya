@@ -830,19 +830,85 @@ $('#calib-input').change(function() {
 			$("#OSC_MATH_OFFSET").attr("max", newMax);
 		}
 	}
+	
+	function formatInputValue(oldValue, attenuation, is_milis, is_hv){
+		var z = oldValue;
+		if (is_milis)
+			return z.toFixed(0);
+		if(is_hv) 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(2);
+					break;
+				case 10:
+					return z.toFixed(1);
+					break;
+				case 100:
+					return z.toFixed(0);
+					break;
+			}
+		} else 
+		{
+			switch(attenuation)
+			{
+				case 1: 
+					return z.toFixed(3);
+					break;
+				case 10:
+					return z.toFixed(2);
+					break;
+				case 100:
+					return z.toFixed(1);
+					break;
+			}
+		}
+		return z;
+	}
+
+	function formatVals(){
+		{ // OSC_CH1_OFFSET limits
+			var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+			var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			var units = $('#OSC_CH1_OFFSET_UNIT').html();
+			var multiplier = units == "mV" ? 1000 : 1;
+			var in1_value = parseFloat($("#OSC_CH1_OFFSET").val());
+			$("#OSC_CH1_OFFSET").val(formatInputValue(in1_value, probeAttenuation, units=="mV", jumperSettings == 20));	
+		}
+		
+		{ // OSC_CH2_OFFSET limits
+			var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
+			var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+			var units = $('#OSC_CH2_OFFSET_UNIT').html();
+			var multiplier = units == "mV" ? 1000 : 1;
+			var in2_value = parseFloat($("#OSC_CH2_OFFSET").val());
+			$("#OSC_CH2_OFFSET").val(formatInputValue(in2_value, probeAtt1, units=="mV", jumperSettings1 == 20));	
+		} 
+		
+		/*{ // OSC_MATH_OFFSET limits
+			var scale_val = $("#OSC_MATH_SCALE").text();
+			var math_vdiv = parseInt(scale_val);
+			var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
+		}*/
+	}
 	$('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
 		updateLimits();
+		formatVals();
 	});
 	$('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
 		updateLimits();
+		formatVals();
 	});	
 	$("#OSC_MATH_SCALE").bind("DOMSubtreeModified",function(){
 		updateLimits();
+		formatVals();
 	});
 	
 	$(".btn").mouseup(function() {
 		setTimeout(function() {
 			updateLimits();
+			formatVals();
 		}, 20);
 	});
 	$("#OSC_CH1_PROBE").change(function() {
@@ -850,6 +916,7 @@ $('#calib-input').change(function() {
 	});
 	$( document ).ready(function() {
 		updateLimits();
+		formatVals();
 	});
 </script>
 
