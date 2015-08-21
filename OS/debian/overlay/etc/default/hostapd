@@ -6,7 +6,7 @@ if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
     echo "Client Wlan"
       if [ "$1" = "start" ] 
         then
-          cp /opt/redpitaya/etc/network/interfaces-client.wlan0 /etc/network/interfaces.d/wlan0
+          ln -s wlan0.client /etc/network/interfaces.d/wlan0
           ifup wlan0
           exit
       elif [ "$1" = "stop" ] 
@@ -15,7 +15,7 @@ if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
         fi
   else
   echo "AP wlan"
-  cp /opt/redpitaya/etc/network/interfaces-ap.wlan0 /etc/network/interfaces.d/wlan0
+  ln -s wlan0.ap /etc/network/interfaces.d/wlan0
   if [ "$1" = "start" ]
   then
     iw wlan0 info > /dev/null 2>&1

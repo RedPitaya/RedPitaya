@@ -193,9 +193,6 @@ $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) 
 	# copy Linaro runtime library to fix dependency issues on Debian
 	# TODO: find a better solution
 	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
-	# TODO: the current path for this files is not well thought out
-	cp OS/debian/overlay/etc/network/interfaces-ap.wlan0     $(TARGET)/etc/network/interfaces-ap.wlan0
-	cp OS/debian/overlay/etc/network/interfaces-client.wlan0 $(TARGET)/etc/network/interfaces-client.wlan0
 
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
