@@ -22,6 +22,7 @@ export CFLAGS
 all: $(CONTROLLERHF) $(CONTROLLER)
 
 $(CONTROLLERHF):
+	$(MAKE) -C src clean
 	$(MAKE) -C src OUT_NAME=$(CONTROLLERHF)
 
 $(CONTROLLER):
