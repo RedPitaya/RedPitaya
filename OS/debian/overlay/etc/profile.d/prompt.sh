@@ -11,3 +11,7 @@ export HISTFILESIZE=1000
 export PAGER='/usr/bin/less '
 export EDITOR='/usr/bin/nano'
 export INPUTRC=/etc/inputrc
+
+export LS_OPTIONS='--color=auto'
+eval "`dircolors`"
+alias ls='ls $LS_OPTIONS'
