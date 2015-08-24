@@ -487,7 +487,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
     }
     
     /* Load new application. */
-    stop_ws_server();
     rp_debug(r->connection->log, "Loading application: '%s'\n", app_name);
     if(rp_bazaar_app_load_module(&app_name[0], &rp_module_ctx.app) < 0) {
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
@@ -541,9 +540,6 @@ int rp_bazaar_start(ngx_http_request_t *r,
 int rp_bazaar_stop(ngx_http_request_t *r, 
                    cJSON **json_root, int argc, char **argv)
 {
-    if(rp_module_ctx.app.ws_api_supported)
-        stop_ws_server();
-	
 /*    if(argc != 0) {
         return rp_module_cmd_error(json_root, 
                                 "Incorrect number of arguments (should be 0)",
