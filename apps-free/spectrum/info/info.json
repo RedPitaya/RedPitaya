@@ -1,0 +1,6 @@
+{
+    "name": "Spectrum Analyzer",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "A two channel frequency domain analysis system."
+}
