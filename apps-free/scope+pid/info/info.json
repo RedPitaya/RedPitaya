@@ -1,0 +1,6 @@
+{
+    "name": "PID Controller & Oscilloscope",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "A 2x2 MIMO PID controller with integrated two channel time domain signal visualization system."
+}
