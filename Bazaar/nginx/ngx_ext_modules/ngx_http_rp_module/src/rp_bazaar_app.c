@@ -25,6 +25,8 @@
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"
 
+#include <ws_server.h>
+
 const char *c_rp_app_init_str     = "rp_app_init";
 const char *c_rp_app_exit_str     = "rp_app_exit";
 const char *c_rp_app_desc_str     = "rp_app_desc";
@@ -542,6 +544,7 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
 
 int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 {
+    stop_ws_server();
     if(app->handle) {
         if(app->initialized && app->exit_func) {
             app->exit_func();
