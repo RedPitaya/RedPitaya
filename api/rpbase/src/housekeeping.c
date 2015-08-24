@@ -103,10 +103,6 @@ int hk_GetDNA(uint64_t *dna)
 
 int hk_SetLedBits(uint32_t bits)
 {
-    // First led is read only
-    if (bits == 0x1) {
-        return RP_EMRO;
-    }
     return cmn_SetBits(&hk->led_control, bits, LED_CONTROL_MASK);
 }
 
