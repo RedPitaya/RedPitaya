@@ -135,8 +135,8 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scopegenpro
 APP_SPECTRUM_DIR = Applications/spectrumpro
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrumpro
 
-APPS_FREE 	 = apps-free
 APPS_FREE_DIR    = apps-free/
+APPS_CONTRIB_DIR = apps-contrib/
 
 ################################################################################
 # Versioning system
@@ -455,6 +455,10 @@ rp_communication:
 apps_free:
 	$(MAKE) -C $(APPS_FREE_DIR) all
 	$(MAKE) -C $(APPS_FREE_DIR) install 
+
+apps_contrib:
+	$(MAKE) -C $(APPS_CONTRIB_DIR) all
+	$(MAKE) -C $(APPS_CONTRIB_DIR) install 
 
 clean:
 	make -C $(LINUX_DIR) clean
