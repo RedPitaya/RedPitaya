@@ -3,7 +3,7 @@
 #
 
 #List of applications to build
-APPS = lti teslameter
+APPS = lti teslameter scope+istsensor
 
 all: zips
 

@@ -20,7 +20,7 @@ CONTROLLER   = controller.so
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
-SHARED_SRC=../apps_free/scope/src
+SHARED_SRC=../../apps-free/scope/src
 
 all: $(CONTROLLERHF) $(CONTROLLER)
 
