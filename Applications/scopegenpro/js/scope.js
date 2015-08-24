@@ -666,6 +666,14 @@
 						jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 					}
 					field.val(formatInputValue(new_params[param_name].value, probeAttenuation, false, jumperSettings == 20));
+				} 
+				else if(['SOUR1_DCYC', 'SOUR2_DCYC'].indexOf(param_name) != -1)
+				{
+					field.val(new_params[param_name].value.toFixed(1));
+				} 
+				else if(['SOUR1_PHAS', 'SOUR2_PHAS'].indexOf(param_name) != -1)
+				{
+					field.val(new_params[param_name].value.toFixed(0));
 				} else 
 					field.val(new_params[param_name].value);
           }
