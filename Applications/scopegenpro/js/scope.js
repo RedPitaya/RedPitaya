@@ -187,7 +187,7 @@
 		  var is_ms = (orig_units == "ms");
 		  if (orig_units == "%")
 		  {
-			new_params[param_name].value = OSC.formatValue(new_params[param_name].value);
+			new_params[param_name].value = new_params[param_name].value.toFixed(1);
 			$("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(orig_units);
 		  } else  {
 			  var y = new_params[param_name].value;
@@ -990,7 +990,7 @@ value = field.val();
 				units['MAX'] = 'V^2';
 				units['MIN'] = 'V^2';
 				units['RMS'] = 'V^2';
-			}			
+			}
 		}
 		
 		var u = '';
