@@ -23,7 +23,10 @@ sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-too
 sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
 sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server
 
-#==============install node.js=============
+################################################################################
+# install node.js
+################################################################################
+
 #sudo apt-get install -y nodejs npm
 apt-get install wget
 wget https://gist.github.com/raw/3245130/v0.10.24/node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz 
@@ -32,13 +35,25 @@ cd node-v0.10.24-linux-arm-armv6j-vfp-hard
 cp -R * /usr/local
 cd ..
 
-#==============Fuse setup=============
+################################################################################
+# install node.js from repository
+################################################################################
+
+# TODO
+
+################################################################################
+# setup Fuse
+################################################################################
+
 mkdir /wyliodrin
 groupadd fuse
 chown -R root:root /wyliodrin
 usermod -a -G fuse root
 
-#===================Install wyliodrin server===============
+################################################################################
+# install wyliodrin server
+################################################################################
+
 git clone https://github.com/Wyliodrin/wyliodrin-server-nodejs.git
 cd wyliodrin-server-nodejs
 git checkout development
@@ -48,7 +63,10 @@ npm install
 ./patch.sh
 cd ..
 
-#==========libwyliodrin installation
+################################################################################
+# install libwyliodrin
+################################################################################
+
 git config --global http.sslVerify false
 
 git clone https://github.com/Wyliodrin/libwyliodrin.git
@@ -66,7 +84,10 @@ ln -s /usr/local/lib/node_modules /usr/local/lib/node
 
 echo -n redpitaya > wyliodrin-server-nodejs/board.type
 
-#===============systemd==============
+################################################################################
+# systemd service
+################################################################################
+
 systemctl enable redpitaya_wyliodrin
 
 # stop the redos-server service, since it is keeping open the mounted fylesystem
