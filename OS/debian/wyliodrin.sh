@@ -71,7 +71,6 @@ git config --global http.sslVerify false
 
 git clone https://github.com/Wyliodrin/libwyliodrin.git
 cd libwyliodrin/
-git checkout red-pitaya
 mkdir build
 cd build
 # header file and dynamic library are not yet in the path
