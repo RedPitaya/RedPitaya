@@ -5,8 +5,7 @@
 #
 
 # List of applications to build
-APPS=scope scope+gen scope+pid spectrum freqanalyzer
-
+APPS=scopegenpro spectrumpro
 
 all: zips
 
@@ -19,4 +18,4 @@ clean:
 	for app in $(APPS); do \
 		$(MAKE) -C $$app clean; \
 	done
-	$(RM) redpitaya-*.zip
+	$(RM) *.zip
