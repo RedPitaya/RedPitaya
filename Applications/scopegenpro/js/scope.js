@@ -1115,6 +1115,20 @@ value = field.val();
     if(OSC.state.sel_sig_name.toUpperCase() === 'MATH') {
         mult = OSC.params.orig['OSC_MATH_SCALE_MULT'].value;
     }
+    if(OSC.state.sel_sig_name.toUpperCase() === 'CH1')
+    {
+		var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 10;
+		mult = probeAttenuation * jumperSettings;
+	}
+	
+    if(OSC.state.sel_sig_name.toUpperCase() === 'CH2')
+    {
+		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 10;
+		mult = probeAttenuation * jumperSettings;
+	}
+
       
     var curr_scale = (curr_scale === undefined ? OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'].value : curr_scale) / mult;
     var new_scale;
@@ -1154,7 +1168,7 @@ value = field.val();
         if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET']!=undefined)
         {
 			var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-			var new_offset = cur_offset; //(cur_offset / curr_scale) * (new_scale / mult);
+			var new_offset = (cur_offset / curr_scale) * (new_scale / mult);
 			OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
 		}
         OSC.sendParams();
