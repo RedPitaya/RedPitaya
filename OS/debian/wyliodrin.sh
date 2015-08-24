@@ -6,10 +6,6 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
-# enable chroot access with native execution
-cp /etc/resolv.conf         $ROOT_DIR/etc/
-cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
-
 # Wyliodrin service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
 
@@ -24,9 +20,6 @@ echo “127.0.0.1 localhost” >> /etc/hosts
 sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools
 sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
 sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server
-
-# apt-get install python-pip
-# pip install redis
 
 #==============install node.js=============
 #sudo apt-get install -y nodejs npm
@@ -73,11 +66,10 @@ echo -n redpitaya > wyliodrin-server-nodejs/board.type
 
 #===============systemd==============
 systemctl enable redpitaya_wyliodrin
+
+# stop the redos-server service, since it is keeping open the mounted fylesystem
+systemctl stop redis-server
 EOF_CHROOT
 
 # removing directory which belongs to a mounted FAT patrition
 rm -rf $ROOT_DIR/opt/redpitaya/lib
-
-# disable chroot access with native execution
-rm $ROOT_DIR/etc/resolv.conf
-rm $ROOT_DIR/usr/bin/qemu-arm-static
