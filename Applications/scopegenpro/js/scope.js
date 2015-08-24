@@ -187,7 +187,7 @@
 		  var is_ms = (orig_units == "ms");
 		  if (orig_units == "%")
 		  {
-			new_params[param_name].value = OSC.formatValue(new_params[param_name].value);
+			new_params[param_name].value = new_params[param_name].value.toFixed(1);
 			$("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(orig_units);
 		  } else  {
 			  var y = new_params[param_name].value;
@@ -666,6 +666,14 @@
 						jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 					}
 					field.val(formatInputValue(new_params[param_name].value, probeAttenuation, false, jumperSettings == 20));
+				} 
+				else if(['SOUR1_DCYC', 'SOUR2_DCYC'].indexOf(param_name) != -1)
+				{
+					field.val(new_params[param_name].value.toFixed(1));
+				} 
+				else if(['SOUR1_PHAS', 'SOUR2_PHAS'].indexOf(param_name) != -1)
+				{
+					field.val(new_params[param_name].value.toFixed(0));
 				} else 
 					field.val(new_params[param_name].value);
           }
@@ -982,7 +990,7 @@ value = field.val();
 				units['MAX'] = 'V^2';
 				units['MIN'] = 'V^2';
 				units['RMS'] = 'V^2';
-			}			
+			}
 		}
 		
 		var u = '';
@@ -1115,6 +1123,20 @@ value = field.val();
     if(OSC.state.sel_sig_name.toUpperCase() === 'MATH') {
         mult = OSC.params.orig['OSC_MATH_SCALE_MULT'].value;
     }
+    if(OSC.state.sel_sig_name.toUpperCase() === 'CH1')
+    {
+		var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 10;
+		mult = probeAttenuation * jumperSettings;
+	}
+	
+    if(OSC.state.sel_sig_name.toUpperCase() === 'CH2')
+    {
+		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
+		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 10;
+		mult = probeAttenuation * jumperSettings;
+	}
+
       
     var curr_scale = (curr_scale === undefined ? OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'].value : curr_scale) / mult;
     var new_scale;
@@ -1154,7 +1176,7 @@ value = field.val();
         if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET']!=undefined)
         {
 			var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-			var new_offset = cur_offset; //(cur_offset / curr_scale) * (new_scale / mult);
+			var new_offset = (cur_offset / curr_scale) * (new_scale / mult);
 			OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = {value: new_offset};
 		}
         OSC.sendParams();

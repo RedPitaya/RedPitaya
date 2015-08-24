@@ -834,12 +834,12 @@ $('#calib-input').change(function() {
 			var ch="";
 			if($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
 				ch="CH1";
-			else if ($("OSC_TRIG_SOURCE2").parent().hasClass("actie"))
+			else if ($("#OSC_TRIG_SOURCE2").parent().hasClass("active"))
 				ch="CH2";
 			else
 			{
-				$("#OSC_TRIG_LEVEL").attr("min", -1);
-				$("#OSC_TRIG_LEVEL").attr("max",  1);
+				$("#OSC_TRIG_LEVEL").attr("min", -3.3);
+				$("#OSC_TRIG_LEVEL").attr("max",  3.3);
 				return;
 			}
 			
@@ -951,14 +951,14 @@ $('#calib-input').change(function() {
 				
 		{ // DUTY CYCLE FORMATTING
 			var SOUR1_DCYC = parseFloat($("SOUR1_DCYC").val());
-			$("SOUR1_DCYC").val(SOUR1_DCYC.toFixed(2));
+			$("SOUR1_DCYC").val(SOUR1_DCYC.toFixed(1));
 			var SOUR2_DCYC = parseFloat($("SOUR2_DCYC").val());
-			$("SOUR2_DCYC").val(SOUR2_DCYC.toFixed(2));
+			$("SOUR2_DCYC").val(SOUR2_DCYC.toFixed(1));
 			
 			var SOUR1_PHAS = parseFloat($("SOUR1_PHAS").val());
-			$("SOUR1_PHAS").val(SOUR1_PHAS.toFixed(2));
+			$("SOUR1_PHAS").val(SOUR1_PHAS.toFixed(1));
 			var SOUR2_PHAS = parseFloat($("SOUR2_PHAS").val());
-			$("SOUR2_PHAS").val(SOUR2_PHAS.toFixed(2));
+			$("SOUR2_PHAS").val(SOUR2_PHAS.toFixed(1));
 		}
 	}
 	$('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function(){
