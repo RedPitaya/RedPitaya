@@ -183,87 +183,163 @@
       
 	  if (param_name.indexOf('OSC_MEAS_VAL') == 0) {
 		  var orig_units = $("#"+param_name).parent().children("#OSC_MEAS_ORIG_UNITS").text();
-		  var is_hertz = (orig_units == "Hz");
-		  var is_ms = (orig_units == "ms");
-		  if (orig_units == "%")
+		  var orig_function = $("#"+param_name).parent().children("#OSC_MEAS_ORIG_FOO").text();
+		  var orig_source = $("#"+param_name).parent().children("#OSC_MEAS_ORIG_SIGNAME").text();
+		  var y = new_params[param_name].value;
+		  var z = y;
+		  var factor = '';
+					  
+		  if (orig_function == "PERIOD")
 		  {
-			new_params[param_name].value = new_params[param_name].value.toFixed(1);
-			$("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(orig_units);
-		  } else  {
-			  var y = new_params[param_name].value;
-			  var z = y;
-			  var factor = '';
-			  if(y < 0.00000000000010)
-					new_params[param_name].value = 'No signal';
-			  else if(y > 0.00000000000010 && y <= 0.000000999990)
-			  {	
-				  z*=1e9;
-				  factor = (is_ms) ? 'p' : 'n';
-				  if(y > 0.00000000000010 && y <= 0.00000000999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
-				  else if(y > 0.00000000999990 && y <= 0.0000000999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
-				  else if(y > 0.0000000999990 && y <= 0.000000999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+			  y /= 1000; // Now in seconds and not ms
+			  z = y;
+			  orig_units = 's';
+			  if (y < 0.000000010)
+				new_params[param_name].value = 'OVER RANGE';
+			  else if (y >= 0.000000010 && y <= 0.00000099990)
+			  {
+				  z*=1e9; factor = 'n';
+				  new_params[param_name].value = z.toFixed(0);
 			  }
-			  else if(y > 0.000000999990 && y <= 0.000999990)
-			  {	
-				  z*=1e6;
-				  factor = (is_ms) ? 'n' : 'u';
-				  if(y > 0.000000999990 && y <= 0.00000999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
-				  else if(y > 0.00000999990 && y <= 0.0000999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
-				  else if(y > 0.0000999990 && y <= 0.000999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+			  else if (y > 0.00000099990 && y <= 0.00099990)
+			  {
+				  z*=1e6; factor = 'µ';
+				  new_params[param_name].value = z.toFixed(1);
 			  }
-			  else if(y > 0.000999990 && y <= 0.999990)
-			  {	
-				  z*=1e3;
-				  factor = (is_ms) ? 'u' : 'm';
-				  if(y > 0.000999990 && y <= 0.00999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(3) : z.toFixed(4);
-				  else if(y > 0.00999990 && y <= 0.0999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(2) : z.toFixed(3);
-				  else if(y > 0.0999990 && y <= 0.999990)
-					new_params[param_name].value = (is_ms) ? z.toFixed(1) : z.toFixed(2);
+			  else if (y > 0.00099990 && y <= 0.99990)
+			  {
+				  z*=1e3; factor = 'm';
+				  new_params[param_name].value = z.toFixed(2);
 			  }
-			  else if(y > 0.999990 && y <= 9999.90)
-			  {	
-				  factor = (is_ms) ? 'm' : '';
-				  if(y > 0.999990 && y <= 9.99990)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
-				  else if(y > 9.99990 && y <= 99.9990)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
-				  else if(y > 99.9990 && y <= 999.990)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
-				  else if(y > 999.990 && y <= 9999.90)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(0) : z.toFixed(1);
+			  else if (y > 0.99990 && y <= 8.5901)
+			  {
+				  new_params[param_name].value = z.toFixed(3);
+			  } else 
+				  new_params[param_name].value = 'NO EDGES';
+				  
+		  } else if (orig_function == "FREQ")
+		  {
+			  if (y < 0.12)
+				new_params[param_name].value = 'NO EDGES';
+			  else if (y >= 0.12 && y <= 0.99990)
+			  {
+				  z*=1e3; factor = 'm';
+				  new_params[param_name].value = z.toFixed(0);
 			  }
-			  else if(y > 9999.90 && y <= 999990.0)
-			  {	
-				  z/=1e3;
-				  factor = 'k';
-				  if(y > 9999.90 && y <= 99999.0)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
-				  else if(y > 99999.0 && y <= 999990.0)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
+			  else if (y > 0.99990 && y <= 999.990)
+			  {
+				  new_params[param_name].value = z.toFixed(2);
+			  } else if (y > 999.990 && y <= 999900.0)
+			  {
+				  z/=1e3; format = 'k';
+				  new_params[param_name].value = z.toFixed(2);
+			  } else if (y > 999900.0 && y <= 9999900.0)
+			  {
+				  z/=1e6; format = 'M';
+				  new_params[param_name].value = z.toFixed(3);
+			  } else if (y > 9999900.0 && y <= 50000000.0)
+			  {
+				  z/=1e6; format = 'M';
+				  new_params[param_name].value = z.toFixed(2);
+			  } else 
+				  new_params[param_name].value = 'OVER RANGE';
+		  } else if (orig_function == "DUTY CYCLE")
+		  {
+			  if (y < 0 || y > 100)
+				new_params[param_name].value = 'ERROR';
+			  else 
+				new_params[param_name].value = z.toFixed(1);
+				
+		  } else // P2P, MEAN, MAX, MIN, RMS
+		  {
+			  y = Math.abs(y);
+			  if(orig_source == "MATH") 
+			  {
+				  if(y < 0.00000000000010)
+						new_params[param_name].value = 'No signal';
+				  else if(y > 0.00000000000010 && y <= 0.000000999990)
+				  {	
+					  z*=1e9; factor = 'n';
+					  if(y > 0.00000000000010 && y <= 0.00000000999990)
+						new_params[param_name].value = z.toFixed(4);
+					  else if(y > 0.00000000999990 && y <= 0.0000000999990)
+						new_params[param_name].value = z.toFixed(3);
+					  else if(y > 0.0000000999990 && y <= 0.000000999990)
+						new_params[param_name].value = z.toFixed(2);
+				  }
+				  else if(y > 0.000000999990 && y <= 0.000999990)
+				  {	
+					  z*=1e6; factor = 'u';
+					  if(y > 0.000000999990 && y <= 0.00000999990)
+						new_params[param_name].value = z.toFixed(4);
+					  else if(y > 0.00000999990 && y <= 0.0000999990)
+						new_params[param_name].value = z.toFixed(3);
+					  else if(y > 0.0000999990 && y <= 0.000999990)
+						new_params[param_name].value = z.toFixed(2);
+				  }
+				  else if(y > 0.000999990 && y <= 0.999990)
+				  {	
+					  z*=1e3; factor = 'm';
+					  if(y > 0.000999990 && y <= 0.00999990)
+						new_params[param_name].value = z.toFixed(4);
+					  else if(y > 0.00999990 && y <= 0.0999990)
+						new_params[param_name].value = z.toFixed(3);
+					  else if(y > 0.0999990 && y <= 0.999990)
+						new_params[param_name].value = z.toFixed(2);
+				  }
+				  else if(y > 0.999990 && y <= 9999.90)
+				  {	
+					  if(y > 0.999990 && y <= 9.99990)
+						new_params[param_name].value = z.toFixed(4);
+					  else if(y > 9.99990 && y <= 99.9990)
+						new_params[param_name].value = z.toFixed(3);
+					  else if(y > 99.9990 && y <= 999.990)
+						new_params[param_name].value = z.toFixed(2);
+					  else if(y > 999.990 && y <= 9999.90)
+						new_params[param_name].value = z.toFixed(1);
+				  }
+				  else if(y > 9999.90 && y <= 999990.0)
+				  {	
+					  z/=1e3;  factor = 'k';
+					  if(y > 9999.90 && y <= 99999.0)
+						new_params[param_name].value = z.toFixed(3);
+					  else if(y > 99999.0 && y <= 999990.0)
+						new_params[param_name].value = z.toFixed(2);
+				  }
+				  else if(y > 999990.0 && y <= 999990000.0)
+				  {	
+					  z/=1e6; factor = 'M';
+					  if(y > 999990.0 && y <= 9999900.0)
+						new_params[param_name].value = z.toFixed(4);
+					  else if(y > 9999900.0 && y <= 99999000.0)
+						new_params[param_name].value = z.toFixed(3);
+					  else if(y > 99999000.0 && y <= 999990000.0)
+						new_params[param_name].value = z.toFixed(2);
+				  }
+			  } else { // CH1 or CH2
+				  if (y < 0.00010)
+					new_params[param_name].value = 'LOW SIGNAL';
+				  else if (y >= 0.00010 && y <= 0.99990)
+				  {
+					  z*=1e3; factor = 'm';
+					  new_params[param_name].value = z.toFixed(1);
+				  } else if (y > 0.99990 && y <= 9.9990)
+				  {
+					  new_params[param_name].value = z.toFixed(3);
+				  } else if (y > 9.9990 && y <= 99.990)
+				  {
+					  new_params[param_name].value = z.toFixed(2);
+				  } else if (y > 99.990 && y <= 999.90)
+				  {
+					  new_params[param_name].value = z.toFixed(1);
+				  } else if (y > 999.90 && y <= 4000.0)
+				  {
+					  z/=1e3; factor = 'k';
+					  new_params[param_name].value = z.toFixed(1);
+				  }				  
 			  }
-			  else if(y > 999990.0 && y <= 999990000.0)
-			  {	
-				  z/=1e6;
-				  factor = 'M';
-				  if(y > 999990.0 && y <= 9999900.0)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(3) : z.toFixed(4);
-				  else if(y > 9999900.0 && y <= 99999000.0)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(2) : z.toFixed(3);
-				  else if(y > 99999000.0 && y <= 999990000.0)
-					new_params[param_name].value = (is_ms || is_hertz) ? z.toFixed(1) : z.toFixed(2);
-			  }
-			  if (is_ms)
-				orig_units = 's';
-			  $("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(factor + orig_units);
-		}
+		  }
+		  $("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(factor + orig_units);
 	  }
 
       // Run/Stop button
@@ -997,7 +1073,7 @@ value = field.val();
 		if (OSC.params.orig['OSC_MEAS_VAL' + mi_count])
 			u = OSC.params.orig['OSC_MEAS_VAL' + mi_count].value == 'No signal' ? '' : units[$elem.data('operator')];
         $('#info-meas').append(
-          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;<span id="OSC_MEAS_UNITS">' + u + '</span><span id="OSC_MEAS_ORIG_UNITS" style="display:none;">' + u + '</span></div>'
+          '<div>' + $elem.data('operator') + '(<span class="' + $elem.data('signal').toLowerCase() + '">' + sig_name + '</span>) <span id="OSC_MEAS_VAL' + mi_count + '">-</span>&nbsp;<span id="OSC_MEAS_UNITS">' + u + '</span><span id="OSC_MEAS_ORIG_UNITS" style="display:none;">' + u + '</span><span id="OSC_MEAS_ORIG_FOO" style="display:none;">' + $elem.data('operator') + '</span><span id="OSC_MEAS_ORIG_SIGNAME" style="display:none;">' + sig_name + '</span></div>'
         );
       }
     });
