@@ -629,7 +629,7 @@
                 .data('cleanval', +new_value)
                 .css('margin-top', (top < 16 ? 3 : ''));
               if(overflow)
-				$('#cur_' + y + ', #cur_' + y + '_info').hide();
+				$('#cur_' + y + '_info').hide();
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -668,7 +668,7 @@
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
                 
               if (overflow)
-				$('#cur_' + x + ', #cur_' + x + '_info').hide();
+				$('#cur_' + x + '_info').hide();
             }
             else {
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
@@ -1453,7 +1453,7 @@ value = field.val();
     var x2_left = parseInt(x2.css('left'));
     var diff_px = Math.abs(x1_left - x2_left) - 9;
     
-    if(x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
+    if(x1.is(':visible') && x2.is(':visible') && diff_px > 12) {
       var left = Math.min(x1_left, x2_left);
       var value = $('#cur_x1_info').data('cleanval') - $('#cur_x2_info').data('cleanval');
       
@@ -2335,7 +2335,7 @@ $(function() {
     }
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
-    
+	//$('#graphs').height($('#graph_grid').height() - 5);
     // Set the resized flag
     OSC.state.resized = true;
     
