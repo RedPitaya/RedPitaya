@@ -1,4 +1,4 @@
-+<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -17,7 +17,7 @@
   
   // Settings which can be modified
    
-  var app_id = 'bode_analyzer';  
+  var app_id = 'bode_plotter';  
   var root_url = '';
   //var root_url = 'http://10.0.1.221';      // Test local
   //var root_url = 'http://192.168.53.133';  // Test remote and local
@@ -50,11 +50,9 @@
     lines: { lineWidth: 1 },
     selection: { mode: null },
     zoom: { interactive: false, trigger: null },
-
-    xaxis: { xmin: 0.001, xmax: 1000},  /*transform: function(v) {return Math.log(v);}, ticks: [[0.001, '10^-3'], [0.01, ''], [0.1, ''], [1,''], [10, ''], [100, ''], [1000, '10^3'], [10000,''], [100000, ''], [1000000, ''], [10000000,''], [100000000, '10^8']], }, */
-
+    xaxis: { min: xmin, max: xmax, ticks: [0.001, 0.01, 0.1, 1, 10, 100], transform: function(v) {return Math.Log(v+0.0001);}, tickDecimals: 3 },
     grid: { borderWidth: 0 },
-    legend: { noColumns: 1, margin: [0, 0], backgroundColor: 'transparent' },
+    legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
     touch: { autoWidth: false, autoHeight: false }
   };
 
@@ -1971,10 +1969,6 @@ function changeData(){
     bode_modal.hidePleaseWait();
   }
 
-  function myTick(value){
-    return {value:value, showLabel:false, showMark:false};
-  }
-
 
   </script>
   <script src="../assets/redpitaya.custom.js"></script>
@@ -1984,7 +1978,7 @@ function changeData(){
     <div class="container">
       <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
       <img class="logo pull-left" src="../assets/images/logo_white.png">
-      <h2 class="page-title">Bode analyzer</h2>
+      <h2 class="page-title">Bode plotter</h2>
     </div>
   </div>
   <div class="container">
