@@ -458,7 +458,7 @@ apps_free:
 
 apps_contrib:
 	$(MAKE) -C $(APPS_CONTRIB_DIR) all
-	$(MAKE) -C $(APPS_CONTRIB_DIR) install 
+	#$(MAKE) -C $(APPS_CONTRIB_DIR) install 
 
 clean:
 	make -C $(LINUX_DIR) clean
