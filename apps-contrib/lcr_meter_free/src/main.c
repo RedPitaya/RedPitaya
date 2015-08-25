@@ -1137,7 +1137,7 @@ float rp_gen_limit_freq(float freq, float gen_type)
 float rp_get_params_lcr(int pos){
   switch (pos){
     case 0:
-      return rp_main_params[FLAG_BUTTON].value;
+      return rp_main_params[START_MEASURE].value;
     case 1:
       return rp_main_params[LCR_STEPS].value;
     case 2:
@@ -1164,8 +1164,6 @@ float rp_get_params_lcr(int pos){
       return rp_main_params[PLOT_Y_SCALE_DATA].value;
     case 16:
       return rp_main_params[LCR_SAVE_DATA].value;
-
-    /* -1 Reserver for START_MEASURE */
     default:
       return -2;
   }
