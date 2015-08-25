@@ -629,7 +629,7 @@
                 .data('cleanval', +new_value)
                 .css('margin-top', (top < 16 ? 3 : ''));
               if(overflow)
-				$('#cur_' + y + ', #cur_' + y + '_info').hide();
+				$('#cur_' + y + '_info').hide();
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -668,7 +668,7 @@
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
                 
               if (overflow)
-				$('#cur_' + x + ', #cur_' + x + '_info').hide();
+				$('#cur_' + x + '_info').hide();
             }
             else {
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
@@ -858,11 +858,12 @@
   };
 
   // Processes newly received data for signals
+  OSC.iterCnt = 0;
   OSC.processSignals = function(new_signals) {
     var visible_btns = [];
     var visible_plots = [];
     var visible_info = '';
-    //var start = +new Date();
+    var start = +new Date();
     
     // Do nothing if no parameters received yet
     if($.isEmptyObject(OSC.params.orig)) {
@@ -970,8 +971,16 @@
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
       //OSC.state.sel_sig_name = null;
     }
-    
-    //console.log('Duration: ' + (+new Date() - start));
+
+    var fps = 1000/(+new Date() - start);
+
+    if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
+		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
+		var period = {};
+		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
+		OSC.ws.send(JSON.stringify({ parameters: period }));
+		OSC.iterCnt = 0;
+    }
   };
 
   // Exits from editing mode
@@ -1453,7 +1462,7 @@ value = field.val();
     var x2_left = parseInt(x2.css('left'));
     var diff_px = Math.abs(x1_left - x2_left) - 9;
     
-    if(x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
+    if(x1.is(':visible') && x2.is(':visible') && diff_px > 12) {
       var left = Math.min(x1_left, x2_left);
       var value = $('#cur_x1_info').data('cleanval') - $('#cur_x2_info').data('cleanval');
       
@@ -2335,7 +2344,7 @@ $(function() {
     }
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
-    
+	//$('#graphs').height($('#graph_grid').height() - 5);
     // Set the resized flag
     OSC.state.resized = true;
     
