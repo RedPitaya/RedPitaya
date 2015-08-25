@@ -49,6 +49,6 @@ private:
     websocketpp::lib::thread m_thread;
     std::string m_docroot;
 	std::ofstream m_out;
-    bool m_stopped;
 };
+
 }
