@@ -84,8 +84,8 @@ static inline void update_view() {
 }
 
 static inline int scaleChannel(rp_channel_t channel, float vpp, float vMean) {
-    float scale1 = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
-    float scale2 = (float) ((fabs(vpp) + (fabs(vMean) * 2.f)) * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y * (channel == (rp_channel_t)RPAPP_OSC_SOUR_CH1 ? ch1_probeAtt : ch2_probeAtt));
+    float scale1 = (float) (vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y);
+    float scale2 = (float) ((fabs(vpp) + (fabs(vMean) * 2.f)) * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y);
     float scale = MAX(MAX(scale1, scale2), 0.002);
     ECHECK_APP(osc_setAmplitudeScale(channel, roundUpTo125(scale)));
     ECHECK_APP(osc_setAmplitudeOffset(channel, -vMean));
