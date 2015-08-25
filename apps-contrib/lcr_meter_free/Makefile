@@ -5,7 +5,6 @@
 #
 
 APP=$(notdir $(CURDIR:%/=%))
-FPGA=fpga.bit
 
 # Versioning system
 BUILD_NUMBER ?= 0
@@ -14,36 +13,30 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= ../
 
-CONTROLLER=controller.so
-ARTIFACTS=$(CONTROLLER)
+CONTROLLER = controller.so
+CONTROLLERHF = controllerhf.so
 
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-export CFLAGS
+all: $(CONTROLLER) $(CONTROLLERHF)
 
-SHARED_SRC=../scope/src
-
-all: $(CONTROLLER)
-
-$(CONTROLLER): src
-	$(MAKE) -C src
-
-src:
-	cp -r $(SHARED_SRC) src
+$(CONTROLLER):
 	$(MAKE) -C src clean
+	$(MAKE) -C src all OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+$(CONTROLLERHF):
+	$(MAKE) -C src clean
+	$(MAKE) -C src all OUT_NAME=$(CONTROLLERHF)
 
 zip: $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) $(FPGA) info index.html Makefile target/$(APP)
-	$(MAKE) -C src clean
+	cp -r $(CONTROLLER) $(CONTROLLERHF) fpga.conf info index.html Makefile target/$(APP)
+	-$(MAKE) -C src clean
 	cp -r src target/$(APP)
 	rm `find target/ -iname .svn` -rf
-	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
-	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
-	cd target; zip -r $(INSTALL_DIR)/redpitaya-$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
-	$(RM) target -rf
+	cd target; zip -r $(INSTALL_DIR)/$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
+	-$(RM) target -rf
 
 clean:
 	-$(MAKE) -C src clean
 	-$(RM) target -rf
-	-$(RM) *.zip
+	-$(RM) *.so
