@@ -17,13 +17,11 @@ using websocketpp::lib::thread;
 
 rp_websocket_server::rp_websocket_server()
     : m_params(NULL)
-    , m_stopped(false)
 {
 }
 
 rp_websocket_server::rp_websocket_server(struct server_parameters* params)
     : m_params(params) 
-    , m_stopped(false)
 {
     // set up access channels to only log interesting things
     m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
@@ -112,8 +110,6 @@ void rp_websocket_server::set_param_timer() {
 }
 
 void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & ec) {
-	if(m_stopped)
-		return;
 
 	if (ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
@@ -142,8 +138,6 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 }
 
 void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec) {
-	if(m_stopped)
-		return;
 
 	if (ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
@@ -171,8 +165,6 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 }
 
 void rp_websocket_server::on_http(connection_hdl hdl) {
-	if(m_stopped)
-		return;
 
 	// Upgrade our connection handle to a full connection_ptr
 	server::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
@@ -227,12 +219,9 @@ void rp_websocket_server::on_open(connection_hdl hdl)
 }
 
 void rp_websocket_server::on_close(connection_hdl hdl) {
-	m_stopped = true;
-	m_param_timer->cancel();
-	m_signal_timer->cancel();
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server connection closed");
 	m_connections.erase(hdl);
-	stop();
+	exit(-1);
 }
 
 void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg) {
