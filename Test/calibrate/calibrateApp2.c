@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
     puts("Connect CH1 to ground.");
     waitForUser();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1));
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1, NULL));
 
     do {
         puts("Connect CH1 to reference voltage source and set jumpers to HV.");
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         ret = scanf("%f", &value);
     } while ((ret != 1) && (value <= 0.f) && (value > 20.f));
     printf("Calibrating to %f V\n", value);
-    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_1, value));
+    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_1, value, NULL));
 
     do {
         puts("Connect CH1 to reference voltage source and set jumpers to LV.");
@@ -114,15 +114,15 @@ int main(int argc, char **argv) {
         ret = scanf("%f", &value);
     } while ((ret != 1) && (value <= 0.f) && (value > 1.f));
     printf("Calibrating to %f V\n", value);
-    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_1, value));
+    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_1, value, NULL));
 
     puts("Connect CH1 Outout to CH1 Input. Press any key to continue.");
     waitForUser();
-    ECHECK(rp_CalibrateBackEnd(RP_CH_1));
+    ECHECK(rp_CalibrateBackEnd(RP_CH_1, NULL));
 
     puts("Connect CH2 to ground.");
     waitForUser();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2));
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2, NULL));
 
     do {
         puts("Connect CH2 to reference voltage source and set jumpers to HV.");
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         ret = scanf("%f", &value);
     } while ((ret != 1) && (value <= 0.f) && (value > 20.f));
     printf("Calibrating to %f V\n", value);
-    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_2, value));
+    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_2, value, NULL));
 
     do {
         puts("Connect CH2 to reference voltage source and set jumpers to LV.");
@@ -138,11 +138,11 @@ int main(int argc, char **argv) {
         ret = scanf("%f", &value);
     } while ((ret != 1) && (value <= 0.f) && (value > 1.f));
     printf("Calibrating to %f V\n", value);
-    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_2, value));
+    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_2, value, NULL));
 
     puts("Connect CH2 Outout to CH2 Input.");
     waitForUser();
-    ECHECK(rp_CalibrateBackEnd(RP_CH_2));
+    ECHECK(rp_CalibrateBackEnd(RP_CH_2, NULL));
 
     printParams(NULL);
     backupParams();
