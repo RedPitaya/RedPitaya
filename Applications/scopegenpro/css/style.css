@@ -537,6 +537,7 @@ area:hover {
 
 #graphs {
   position: relative;
+  overflow:hidden;
 }
 
 #graph_grid {
@@ -610,6 +611,7 @@ area:hover {
   left: 0;
   bottom: 8px;
   margin-left: -7px;
+  margin-right: -7px;
   display: none;
   z-index: 12;
 }
@@ -626,6 +628,15 @@ area:hover {
   white-space: nowrap;
   display: none;
   z-index: 14;
+}
+
+#kostyl_footer {
+	position: absolute;
+	bottom: -4px;
+    width: 100%;
+    background: #343433;
+    height: 10px;
+    z-index: 15;
 }
 
 #cur_x1_info.cur_info, #cur_x2_info.cur_info {
