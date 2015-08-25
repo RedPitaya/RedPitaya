@@ -79,7 +79,7 @@ typedef struct rp_osc_meas_res_s {
 #define PREPARE_WAVE      32
 #define GEN_DC_OFFS_1     33
 #define GEN_DC_OFFS_2     34
-#define START_MEASURE     35
+#define FLAG_BUTTON       35
 #define GEN_AMP           36
 #define GEN_AVG           37
 #define GEN_DC_BIAS       38

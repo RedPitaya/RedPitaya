@@ -728,6 +728,10 @@ void *rp_osc_worker_thread(void *args)
         if((state == rp_osc_single_state) && (!long_acq)) {
             rp_osc_worker_change_state(rp_osc_idle_state);
         }
+
+       
+       
+        
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
             /* Finish the measurement */
