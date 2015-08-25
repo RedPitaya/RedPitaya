@@ -257,12 +257,10 @@ void UpdateParams(void) {
 
     if (measureSelect1.Value() != -1) {
 		double val = getMeasureValue(measureSelect1.Value());
-		fprintf(stderr, "MEAS N = %d\n", measureSelect1.Value());
         measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 15 ? val* 100 : val;        
 	}
     if (measureSelect2.Value() != -1) {
 		double val = getMeasureValue(measureSelect2.Value());
-		fprintf(stderr, "MEAS N = %d\n", measureSelect2.Value());
         measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 15 ? val* 100 : val;  
 	}
     if (measureSelect3.Value() != -1) {
