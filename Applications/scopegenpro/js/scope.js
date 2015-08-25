@@ -89,6 +89,8 @@
   OSC.graphs = {};
   OSC.touch = {};
   
+  OSC.connect_time;
+  
   // Starts the oscilloscope application on server
   OSC.startApp = function() {
     $.get(
@@ -96,7 +98,7 @@
     )
     .done(function(dresult) {
       if(dresult.status == 'OK') {
-        OSC.connectWebSocket();
+		 OSC.connectWebSocket();
       }
       else if(dresult.status == 'ERROR') {
         console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
@@ -231,15 +233,15 @@
 				  new_params[param_name].value = z.toFixed(2);
 			  } else if (y > 999.990 && y <= 999900.0)
 			  {
-				  z/=1e3; format = 'k';
+				  z/=1e3; factor = 'k';
 				  new_params[param_name].value = z.toFixed(2);
 			  } else if (y > 999900.0 && y <= 9999900.0)
 			  {
-				  z/=1e6; format = 'M';
+				  z/=1e6; factor = 'M';
 				  new_params[param_name].value = z.toFixed(3);
 			  } else if (y > 9999900.0 && y <= 50000000.0)
 			  {
-				  z/=1e6; format = 'M';
+				  z/=1e6; factor = 'M';
 				  new_params[param_name].value = z.toFixed(2);
 			  } else 
 				  new_params[param_name].value = 'OVER RANGE';
@@ -336,7 +338,10 @@
 				  {
 					  z/=1e3; factor = 'k';
 					  new_params[param_name].value = z.toFixed(1);
-				  }				  
+				  } else 
+				  {
+					  new_params[param_name].value = "OVER RANGE";
+				  }
 			  }
 		  }
 		  $("#"+param_name).parent().children("#OSC_MEAS_UNITS").text(factor + orig_units);
