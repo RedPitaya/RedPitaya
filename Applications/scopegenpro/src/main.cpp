@@ -464,7 +464,7 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 			return true;
 	} else if (step == STEP_BACK_END) {
 		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) && 
-				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2)
+				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.2)
 			return true;
 	}
 	
@@ -728,7 +728,6 @@ void OnNewParams(void) {
     
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
 		calibrateFrontEndScaleHV.Update();
-		fprintf(stderr, "3\n");
         rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue(), &out_params);			
         rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue(), &out_params);
         calibrateFrontEndScaleHV.IsValueChanged();
