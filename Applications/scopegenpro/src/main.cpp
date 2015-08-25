@@ -233,7 +233,8 @@ void checkMathScale() {
 }
 
 void UpdateParams(void) {
-	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());	
+	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
+	CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
 	
     bool running;
     rpApp_OscIsRunning(&running);

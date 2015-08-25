@@ -858,11 +858,12 @@
   };
 
   // Processes newly received data for signals
+  OSC.iterCnt = 0;
   OSC.processSignals = function(new_signals) {
     var visible_btns = [];
     var visible_plots = [];
     var visible_info = '';
-    //var start = +new Date();
+    var start = +new Date();
     
     // Do nothing if no parameters received yet
     if($.isEmptyObject(OSC.params.orig)) {
@@ -970,8 +971,16 @@
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
       //OSC.state.sel_sig_name = null;
     }
-    
-    //console.log('Duration: ' + (+new Date() - start));
+
+    var fps = 1000/(+new Date() - start);
+
+    if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
+		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
+		var period = {};
+		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
+		OSC.ws.send(JSON.stringify({ parameters: period }));
+		OSC.iterCnt = 0;
+    }
   };
 
   // Exits from editing mode
