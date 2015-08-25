@@ -1,43 +1,39 @@
 #
-# $Id: Makefile 1235 2014-02-21 16:44:10Z ales.bardorfer $
+# $Id: Makefile 1235 2014-02-21 16:44:10Z ales.bardorfer, luka.golinar $
 #
-# Red Pitaya specific application Makefile.
+# Contributed apps application specific apps
 #
 
 APP=$(notdir $(CURDIR:%/=%))
-FPGA=fpga.bit
 
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/\",//')
 
-INSTALL_DIR ?= ../
+CONTROLLER   = controller.so
+CONTROLLERHF = controllerhf.so
 
-CONTROLLER=controller.so
-ARTIFACTS=$(CONTROLLER)
-
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-export CFLAGS
-
-all: $(CONTROLLER)
+all: $(CONTROLLER) $(CONTROLLERHF)
 
 $(CONTROLLER):
-	$(MAKE) -C src
+	$(MAKE) -C src clean
+	$(MAKE) -C src all OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
-zip: $(CONTROLLER)
+$(CONTROLLERHF):
+	$(MAKE) -C src clean
+	$(MAKE) -C src all OUT_NAME=$(CONTROLLERHF)
+
+zip: $(CONTROLLER) $(CONTROLLERHF)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) $(FPGA) info index.html Makefile target/$(APP)
+	cp -r $(CONTROLLER) $(CONTROLLERHF) fpga.conf info index.html Makefile target/$(APP)
 	$(MAKE) -C src clean
 	cp -r src target/$(APP)
-	rm `find target/ -iname .svn` -rf
-	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
-	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r $(INSTALL_DIR)/$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
-	$(RM) target -rf
+	-$(RM) target -rf
 
 clean:
 	$(MAKE) -C src clean
 	-$(RM) target -rf
-	-$(RM) *.zip
+	-$(RM) *.so

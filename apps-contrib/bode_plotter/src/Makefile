@@ -1,3 +1,5 @@
+
+CROSS_COMPILE ?= arm-linux-gnueabihf-
 CC=$(CROSS_COMPILE)gcc
 RM=rm
 
@@ -10,8 +12,9 @@ CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
 
-OUT_DIR=../
-C_OUT_NAME=$(OUT_DIR)controller.so
+OUT_NAME  ?= controllerhf.so
+OUT_DIR   = ..
+C_OUT_NAME= $(OUT_DIR)/$(OUT_NAME)
 
 all: make_c_app
 clean: clean_c_app
@@ -20,4 +23,4 @@ make_c_app: $(OBJECTS)
 	$(CC) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean_c_app:
-	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
+	-$(RM) -f $(OBJECTS)
