@@ -9,7 +9,7 @@ APP=$(notdir $(CURDIR:%/=%))
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/\",//')
+VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
 CONTROLLER   = controller.so
 CONTROLLERHF = controllerhf.so
