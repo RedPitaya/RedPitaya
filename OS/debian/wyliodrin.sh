@@ -35,11 +35,15 @@ cd node-v0.10.24-linux-arm-armv6j-vfp-hard
 cp -R * /usr/local
 cd ..
 
-################################################################################
-# install node.js from repository
-################################################################################
-
-# TODO
+# ################################################################################
+# # install node.js from repository
+# # https://nodesource.com/blog/nodejs-v012-iojs-and-the-nodesource-linux-repositories
+# ################################################################################
+# 
+# # Note the new setup script name for Node.js v0.12
+# curl -sL https://deb.nodesource.com/setup_0.12 | sudo bash -
+# # Then install with:
+# sudo apt-get install -y nodejs
 
 ################################################################################
 # setup Fuse
