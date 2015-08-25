@@ -150,9 +150,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* start_measure - General flag used for sending params from the RedPitaya browser.
        *   -1 - Application not loaded yet
        *    0 - negative
-       *    1 - Frequency Sweep
-       *    2 - Measurment sweep 
-       *    3 - Other ( Change the max value for more states )
+       *    1 - positive 
+       *    2 - Other ( Change the max value for more states )
        *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
        *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
        *    code in index.html as well as from the C controller code. */
@@ -161,14 +160,17 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    Min value - 0
        *    Max value - 2 */
         "gen_amp", 0, 1, 0, 0, 2 },
+
     { /* Averaging parameter.
        *    Min value - 0
        *    Max value - 10 */
         "gen_avg", 0, 1, 0, 0, 10 },
+
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2 */
         "gen_DC_bias", 0, 1, 0, -2, 2 },
+
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2  */
@@ -181,7 +183,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* Start frequency for frequency sweep.
        *    Min value - 200
        *    Max value - 1000000    */
-       "start_freq", 200, 1, 0, 0, 1000000 },
+       "start_freq", 200, 1, 0, 0, 100000 },
+
     { /* End frequency for frequency sweep.
        * Min value - 200
        * Max value - 1000000 */
@@ -1130,12 +1133,11 @@ float rp_gen_limit_freq(float freq, float gen_type)
     return freq;
 }
 
-
 /* General function for returning parameters */
 float rp_get_params_lcr(int pos){
   switch (pos){
     case 0:
-      return rp_main_params[START_MEASURE].value;
+      return rp_main_params[FLAG_BUTTON].value;
     case 1:
       return rp_main_params[LCR_STEPS].value;
     case 2:
