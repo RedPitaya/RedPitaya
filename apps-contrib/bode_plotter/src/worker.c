@@ -322,7 +322,7 @@ void *rp_osc_worker_thread(void *args)
             snprintf(scale, 5, "%f", read_scale);
             snprintf(counts, 5, "%f", read_counts);
 
-            strcpy(command, "/opt/www/apps/bode_analyzer/bode 1 ");
+            strcpy(command, "/opt/www/apps/bode_plotter/bode 1 ");
             
             strcat(command, amp);
             strcat(command, " ");

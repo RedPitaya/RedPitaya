@@ -26,4 +26,4 @@ $(CONTROLLER): $(FFT_OBJECTS) $(OBJECTS)
 
 clean:
 	$(MAKE) -C $(FFT_DIR) clean
-	$(RM) -f $(OBJECTS) $(CONTROLLER)
+	$(RM) -f $(OBJECTS)
