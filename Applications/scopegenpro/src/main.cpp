@@ -257,19 +257,19 @@ void UpdateParams(void) {
 
     if (measureSelect1.Value() != -1) {
 		double val = getMeasureValue(measureSelect1.Value());
-        measureValue1.Value() = measureSelect1.Value() == 12 ? val* 100 : val;        
+        measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 15 ? val* 100 : val;        
 	}
     if (measureSelect2.Value() != -1) {
 		double val = getMeasureValue(measureSelect2.Value());
-        measureValue2.Value() = measureSelect2.Value() == 12 ? val* 100 : val;  
+        measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 15 ? val* 100 : val;  
 	}
     if (measureSelect3.Value() != -1) {
 		double val = getMeasureValue(measureSelect3.Value());
-        measureValue3.Value() = measureSelect3.Value() == 12 ? val* 100 : val;  
+        measureValue3.Value() = measureSelect3.Value() >= 12 && measureSelect3.Value() <= 15 ? val* 100 : val;  
 	}
     if (measureSelect4.Value() != -1) {
 		double val = getMeasureValue(measureSelect4.Value());
-        measureValue4.Value() = measureSelect4.Value() == 12 ? val* 100 : val;  
+        measureValue4.Value() = measureSelect4.Value() >= 12 && measureSelect4.Value() <= 15 ? val* 100 : val;  
 	}
 
     float portion;
