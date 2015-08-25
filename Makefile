@@ -166,7 +166,7 @@ export GREET_MSG
 # tarball
 ################################################################################
 
-all: zip sdk apps_free
+all: zip sdk apps_free apps_contrib
 
 $(TMP):
 	mkdir -p $@
@@ -458,7 +458,7 @@ apps_free:
 
 apps_contrib:
 	$(MAKE) -C $(APPS_CONTRIB_DIR) all
-	#$(MAKE) -C $(APPS_CONTRIB_DIR) install 
+	$(MAKE) -C $(APPS_CONTRIB_DIR) install 
 
 clean:
 	make -C $(LINUX_DIR) clean
@@ -478,6 +478,7 @@ clean:
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	make -C $(OLD_APPS_DIR) clean
+	make -C $(APPS_CONTRIB_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
