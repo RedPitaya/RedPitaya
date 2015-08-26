@@ -29,8 +29,8 @@ endif
 #TODO: DL = $(BR2_DL_DIR)
 
 UBOOT_TAG     = xilinx-v2015.2
-LINUX_TAG     = xilinx-v2015.1
-DTREE_TAG     = xilinx-v2015.1
+LINUX_TAG     = xilinx-v2015.2.02
+DTREE_TAG     = xilinx-v2015.2.02
 #BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
