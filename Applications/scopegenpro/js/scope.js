@@ -1877,7 +1877,10 @@ $(function() {
 //  $('.menu-btn').on('click touchstart', function() {
   $('.menu-btn').on('click', function() {
     $('#right_menu .menu-btn').not(this).removeClass('active');
-    OSC.state.sel_sig_name = $(this).data('signal');
+    if (!$(this).hasClass('active'))
+		OSC.state.sel_sig_name = $(this).data('signal');
+	else 
+		OSC.state.sel_sig_name = null;
     $('.y-offset-arrow').css('z-index', 10);
     $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
   });
