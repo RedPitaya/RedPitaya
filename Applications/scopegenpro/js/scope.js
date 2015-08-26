@@ -75,7 +75,7 @@
     fine: false,
 	graph_grid_height: null,
 	graph_grid_width: null,
-	calib: 0
+	calib: 0	
   };
   
   // Params cache
@@ -174,9 +174,11 @@
     }
   };
 
-  // Processes newly received values for parameters  
+  // Processes newly received values for parameters
   OSC.processParameters = function(new_params) {
     var old_params = $.extend(true, {}, OSC.params.orig);
+    
+    var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
     
     for(var param_name in new_params) {
       
@@ -372,9 +374,7 @@
       }
       // All other parameters
       else {
-		  if (param_name == 'OSC_TRIG_LEVEL')
-			console.log('OSC_TRIG_LEVEL = ', new_params['OSC_TRIG_LEVEL'].value);
-		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1) {			
+		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1 && !send_all_params) {		
 			if (new_params[param_name].value == -1) {
 				++OSC.state.calib;
 				OSC.setCalibState(OSC.state.calib);
@@ -392,13 +392,12 @@
 			new_params[param_name].value = -2;
 		}
 					  
-		if (param_name == 'is_demo' && new_params['is_demo'].value) {
-			OSC.state.calib = 0;
+		if (param_name == 'is_demo' && new_params['is_demo'].value && OSC.state.calib == 0) {			
 			OSC.setCalibState(OSC.state.calib);		
 			$('#calib-2').children().attr('disabled', 'true');
 			$('#calib-3').children().attr('disabled', 'true');
 			$('#calib-text').html('Calibration is not available in demo mode');
-		} else if (param_name == 'is_demo' && !new_params['is_demo'].value) {
+		} else if (param_name == 'is_demo' && !new_params['is_demo'].value && OSC.state.calib == 0) {
 			$('#calib-text').html('Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.');
 		}
 		  
@@ -629,15 +628,7 @@
                 .data('cleanval', +new_value)
                 .css('margin-top', (top < 16 ? 3 : ''));
               if(overflow)
-              {
 				$('#cur_' + y + '_info').hide();
-				$('#cur_y_diff').hide();
-				$('#cur_y_diff_info').hide();
-			  } else if($('#cur_y1_info').is(':visible') && $('#cur_y2_info').is(':visible'))
-			  {
-				$('#cur_y_diff').show();
-				$('#cur_y_diff_info').show();
-			  }
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -676,16 +667,7 @@
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
                 
               if (overflow)
-              {
 				$('#cur_' + x + '_info').hide();
-				$('#cur_x_diff').hide();
-				$('#cur_x_diff_info').hide();
-			  }
-			  else if($('#cur_x1_info').is(':visible') && $('#cur_x2_info').is(':visible'))
-			  {
-				$('#cur_y_diff').show();
-				$('#cur_y_diff_info').show();
-			  }
             }
             else {
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
@@ -862,7 +844,16 @@
           }
         } else {
 			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET")
-				field.val(OSC.formatValue(new_params[param_name].value));
+			{
+				var ch = (param_name == "OSC_CH1_OFFSET") ? "CH1" : "CH2";
+				var units = $('#OSC_'+ch+'_OFFSET_UNIT').html();
+				var multiplier = units == "mV" ? 1000 : 1;
+				
+				var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+				var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+				
+				field.val(OSC.formatInputValue(new_params[param_name].value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
+			}
 			if (param_name == "OSC_MATH_OFFSET")
 				field.val(OSC.formatMathValue(new_params[param_name].value));
 		}
@@ -990,11 +981,12 @@
     }
 
     var fps = 1000/(+new Date() - start);
+
     if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
 		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
 		var period = {};
 		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
-		OSC.ws.send(JSON.stringify({ parameters: period }));		
+		OSC.ws.send(JSON.stringify({ parameters: period }));
 		OSC.iterCnt = 0;
     }
   };
@@ -1446,8 +1438,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between Y cursors
   OSC.updateYCursorDiff = function() {
-    var y1 = $('#cur_y1_info');
-    var y2 = $('#cur_y2_info');
+    var y1 = $('#cur_y1');
+    var y2 = $('#cur_y2');
     var y1_top = parseInt(y1.css('top'));
     var y2_top = parseInt(y2.css('top'));
     var diff_px = Math.abs(y1_top - y2_top) - 6;
@@ -1472,8 +1464,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between X cursors
   OSC.updateXCursorDiff = function() {
-    var x1 = $('#cur_x1_info');
-    var x2 = $('#cur_x2_info');
+    var x1 = $('#cur_x1');
+    var x2 = $('#cur_x2');
     var x1_left = parseInt(x1.css('left'));
     var x2_left = parseInt(x2.css('left'));
     var diff_px = Math.abs(x1_left - x2_left) - 9;
@@ -1538,7 +1530,6 @@ value = field.val();
 		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
 		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
-
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -2352,13 +2343,12 @@ $(function() {
     
     // Hide offset arrows, trigger level line and arrow
     $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-/*
+
 	if (OSC.ws) {
             OSC.params.local['in_command'] = { value: 'send_all_params' };
             OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
             OSC.params.local = {};
     }
-*/
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
 	//$('#graphs').height($('#graph_grid').height() - 5);
