@@ -6,16 +6,17 @@ if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
     echo "Client Wlan"
       if [ "$1" = "start" ] 
         then
-          ln -s wlan0.client /etc/network/interfaces.d/wlan0
-          ifup wlan0
+          ln -s -f /etc/network/interfaces.d/wlan0.client /etc/network/interfaces.d/wlan0
+          sleep 1 
           exit
       elif [ "$1" = "stop" ] 
         then
-          ifdown wlan0
+          #ifdown wlan0
+	  sleep 1
         fi
   else
   echo "AP wlan"
-  ln -s wlan0.ap /etc/network/interfaces.d/wlan0
+  ln -s -f /etc/network/interfaces.d/wlan0.ap /etc/network/interfaces.d/wlan0
   if [ "$1" = "start" ]
   then
     iw wlan0 info > /dev/null 2>&1
