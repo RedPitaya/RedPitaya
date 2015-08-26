@@ -161,6 +161,7 @@ CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.
 CIntParameter calibrateCancel("CALIB_CANCEL", CBaseParameter::RW, 0, 0, 0, 1);
 CBooleanParameter calibrateWrite("CALIB_WRITE", CBaseParameter::RW, false, 0);
 
+CBooleanParameter allParams("send_all_params", CBaseParameter::RW, true, 0);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -464,8 +465,8 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 		if (fabs(current_params.fe_ch1_fs_g_hi/42949672.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_hi/42949672.f - 1.f) < 0.2)
 			return true;
 	} else if (step == STEP_BACK_END) {
-		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) && 
-				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.2)
+		if ((abs(current_params.be_ch1_dc_offs) < 1024 && abs(current_params.be_ch2_dc_offs) < 1024) && 
+				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.3 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.3)
 			return true;
 	}
 	
