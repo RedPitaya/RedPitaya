@@ -988,9 +988,8 @@
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
       //OSC.state.sel_sig_name = null;
     }
-    
+
     var fps = 1000/(+new Date() - start);
-    
     if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
 		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
 		var period = {};
