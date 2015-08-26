@@ -75,7 +75,7 @@
     fine: false,
 	graph_grid_height: null,
 	graph_grid_width: null,
-	calib: 0
+	calib: 0	
   };
   
   // Params cache
@@ -177,6 +177,8 @@
   // Processes newly received values for parameters
   OSC.processParameters = function(new_params) {
     var old_params = $.extend(true, {}, OSC.params.orig);
+    
+    var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
     
     for(var param_name in new_params) {
       
@@ -372,9 +374,7 @@
       }
       // All other parameters
       else {
-		  if (param_name == 'OSC_TRIG_LEVEL')
-			console.log('OSC_TRIG_LEVEL = ', new_params['OSC_TRIG_LEVEL'].value);
-		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1) {			
+		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1 && !send_all_params) {		
 			if (new_params[param_name].value == -1) {
 				++OSC.state.calib;
 				OSC.setCalibState(OSC.state.calib);
@@ -392,13 +392,12 @@
 			new_params[param_name].value = -2;
 		}
 					  
-		if (param_name == 'is_demo' && new_params['is_demo'].value) {
-			OSC.state.calib = 0;
+		if (param_name == 'is_demo' && new_params['is_demo'].value && OSC.state.calib == 0) {			
 			OSC.setCalibState(OSC.state.calib);		
 			$('#calib-2').children().attr('disabled', 'true');
 			$('#calib-3').children().attr('disabled', 'true');
 			$('#calib-text').html('Calibration is not available in demo mode');
-		} else if (param_name == 'is_demo' && !new_params['is_demo'].value) {
+		} else if (param_name == 'is_demo' && !new_params['is_demo'].value && OSC.state.calib == 0) {
 			$('#calib-text').html('Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.');
 		}
 		  
@@ -845,7 +844,16 @@
           }
         } else {
 			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET")
-				field.val(OSC.formatValue(new_params[param_name].value));
+			{
+				var ch = (param_name == "OSC_CH1_OFFSET") ? "CH1" : "CH2";
+				var units = $('#OSC_'+ch+'_OFFSET_UNIT').html();
+				var multiplier = units == "mV" ? 1000 : 1;
+				
+				var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+				var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+				
+				field.val(OSC.formatInputValue(new_params[param_name].value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
+			}
 			if (param_name == "OSC_MATH_OFFSET")
 				field.val(OSC.formatMathValue(new_params[param_name].value));
 		}
@@ -1522,7 +1530,6 @@ value = field.val();
 		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
 		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
-
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1870,7 +1877,10 @@ $(function() {
 //  $('.menu-btn').on('click touchstart', function() {
   $('.menu-btn').on('click', function() {
     $('#right_menu .menu-btn').not(this).removeClass('active');
-    OSC.state.sel_sig_name = $(this).data('signal');
+    if (!$(this).hasClass('active'))
+		OSC.state.sel_sig_name = $(this).data('signal');
+	else 
+		OSC.state.sel_sig_name = null;
     $('.y-offset-arrow').css('z-index', 10);
     $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
   });
