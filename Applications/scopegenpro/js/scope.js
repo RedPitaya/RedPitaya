@@ -174,7 +174,7 @@
     }
   };
 
-  // Processes newly received values for parameters
+  // Processes newly received values for parameters  
   OSC.processParameters = function(new_params) {
     var old_params = $.extend(true, {}, OSC.params.orig);
     
@@ -629,7 +629,15 @@
                 .data('cleanval', +new_value)
                 .css('margin-top', (top < 16 ? 3 : ''));
               if(overflow)
+              {
 				$('#cur_' + y + '_info').hide();
+				$('#cur_y_diff').hide();
+				$('#cur_y_diff_info').hide();
+			  } else if($('#cur_y1_info').is(':visible') && $('#cur_y2_info').is(':visible'))
+			  {
+				$('#cur_y_diff').show();
+				$('#cur_y_diff_info').show();
+			  }
             }
             else {
               $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
@@ -668,7 +676,16 @@
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
                 
               if (overflow)
+              {
 				$('#cur_' + x + '_info').hide();
+				$('#cur_x_diff').hide();
+				$('#cur_x_diff_info').hide();
+			  }
+			  else if($('#cur_x1_info').is(':visible') && $('#cur_x2_info').is(':visible'))
+			  {
+				$('#cur_y_diff').show();
+				$('#cur_y_diff_info').show();
+			  }
             }
             else {
               $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
@@ -858,11 +875,12 @@
   };
 
   // Processes newly received data for signals
+  OSC.iterCnt = 0;
   OSC.processSignals = function(new_signals) {
     var visible_btns = [];
     var visible_plots = [];
     var visible_info = '';
-    //var start = +new Date();
+    var start = +new Date();
     
     // Do nothing if no parameters received yet
     if($.isEmptyObject(OSC.params.orig)) {
@@ -971,7 +989,15 @@
       //OSC.state.sel_sig_name = null;
     }
     
-    //console.log('Duration: ' + (+new Date() - start));
+    var fps = 1000/(+new Date() - start);
+    
+    if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
+		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
+		var period = {};
+		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
+		OSC.ws.send(JSON.stringify({ parameters: period }));		
+		OSC.iterCnt = 0;
+    }
   };
 
   // Exits from editing mode
@@ -1421,8 +1447,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between Y cursors
   OSC.updateYCursorDiff = function() {
-    var y1 = $('#cur_y1');
-    var y2 = $('#cur_y2');
+    var y1 = $('#cur_y1_info');
+    var y2 = $('#cur_y2_info');
     var y1_top = parseInt(y1.css('top'));
     var y2_top = parseInt(y2.css('top'));
     var diff_px = Math.abs(y1_top - y2_top) - 6;
@@ -1447,8 +1473,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between X cursors
   OSC.updateXCursorDiff = function() {
-    var x1 = $('#cur_x1');
-    var x2 = $('#cur_x2');
+    var x1 = $('#cur_x1_info');
+    var x2 = $('#cur_x2_info');
     var x1_left = parseInt(x1.css('left'));
     var x2_left = parseInt(x2.css('left'));
     var diff_px = Math.abs(x1_left - x2_left) - 9;
@@ -2327,12 +2353,13 @@ $(function() {
     
     // Hide offset arrows, trigger level line and arrow
     $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-
+/*
 	if (OSC.ws) {
             OSC.params.local['in_command'] = { value: 'send_all_params' };
             OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
             OSC.params.local = {};
     }
+*/
     // Reset left position for trigger level arrow, it is added by jQ UI draggable
     $('#trig_level_arrow').css('left', '');
 	//$('#graphs').height($('#graph_grid').height() - 5);
