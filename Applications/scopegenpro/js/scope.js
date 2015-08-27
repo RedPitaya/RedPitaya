@@ -75,7 +75,7 @@
     fine: false,
 	graph_grid_height: null,
 	graph_grid_width: null,
-	calib: 0
+	calib: 0	
   };
   
   // Params cache
@@ -179,7 +179,6 @@
     var old_params = $.extend(true, {}, OSC.params.orig);
     
     var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
-
     for(var param_name in new_params) {
       
       // Save new parameter value
@@ -391,7 +390,6 @@
 			
 			new_params[param_name].value = -2;
 		}
-					  
 		if (param_name == 'is_demo' && new_params['is_demo'].value && OSC.state.calib == 0) {
 			OSC.setCalibState(OSC.state.calib);		
 			$('#calib-2').children().attr('disabled', 'true');
@@ -844,7 +842,16 @@
           }
         } else {
 			if(param_name == "OSC_CH1_OFFSET" || param_name == "OSC_CH2_OFFSET")
-				field.val(OSC.formatValue(new_params[param_name].value));
+			{
+				var ch = (param_name == "OSC_CH1_OFFSET") ? "CH1" : "CH2";
+				var units = $('#OSC_'+ch+'_OFFSET_UNIT').html();
+				var multiplier = units == "mV" ? 1000 : 1;
+				
+				var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
+				var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+				
+				field.val(OSC.formatInputValue(new_params[param_name].value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
+			}
 			if (param_name == "OSC_MATH_OFFSET")
 				field.val(OSC.formatMathValue(new_params[param_name].value));
 		}
@@ -1521,7 +1528,6 @@ value = field.val();
 		var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
 		var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 		OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
-
       }
       //else if(save) {
         OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
@@ -1869,7 +1875,10 @@ $(function() {
 //  $('.menu-btn').on('click touchstart', function() {
   $('.menu-btn').on('click', function() {
     $('#right_menu .menu-btn').not(this).removeClass('active');
-    OSC.state.sel_sig_name = $(this).data('signal');
+    if (!$(this).hasClass('active'))
+		OSC.state.sel_sig_name = $(this).data('signal');
+	else 
+		OSC.state.sel_sig_name = null;
     $('.y-offset-arrow').css('z-index', 10);
     $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
   });
