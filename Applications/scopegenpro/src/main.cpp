@@ -465,8 +465,8 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 		if (fabs(current_params.fe_ch1_fs_g_hi/42949672.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_hi/42949672.f - 1.f) < 0.2)
 			return true;
 	} else if (step == STEP_BACK_END) {
-		if ((abs(current_params.be_ch1_dc_offs) < 1024 && abs(current_params.be_ch2_dc_offs) < 1024) && 
-				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.3 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.3)
+		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) && 
+				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.2)
 			return true;
 	}
 	
