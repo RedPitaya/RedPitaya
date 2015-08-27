@@ -1146,10 +1146,8 @@ void mathThreadFunction() {
         float invertFactor = invert ? -1 : 1;
         if (operation == RPAPP_OSC_MATH_DER) {
             calculateDevivative(mathSource1, math_ampScale, math_ampOffset, invertFactor);
-            scaleMath();
         } else if (operation == RPAPP_OSC_MATH_INT) {
             calculateIntegral(mathSource1, math_ampScale, math_ampOffset, invertFactor);
-            scaleMath();
         } else {
             float v1, v2;
             bool invert1 = (mathSource1 == RP_CH_1) ? ch1_inverted : ch2_inverted;
@@ -1166,6 +1164,7 @@ void mathThreadFunction() {
 
                 view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
+            scaleMath();
         }
     }
 }
