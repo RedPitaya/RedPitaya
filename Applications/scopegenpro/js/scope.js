@@ -179,7 +179,6 @@
     var old_params = $.extend(true, {}, OSC.params.orig);
     
     var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
-    
     for(var param_name in new_params) {
       
       // Save new parameter value
@@ -374,7 +373,7 @@
       }
       // All other parameters
       else {
-		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1 && !send_all_params) {		
+		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1 && !send_all_params) {
 			if (new_params[param_name].value == -1) {
 				++OSC.state.calib;
 				OSC.setCalibState(OSC.state.calib);
@@ -391,8 +390,7 @@
 			
 			new_params[param_name].value = -2;
 		}
-					  
-		if (param_name == 'is_demo' && new_params['is_demo'].value && OSC.state.calib == 0) {			
+		if (param_name == 'is_demo' && new_params['is_demo'].value && OSC.state.calib == 0) {
 			OSC.setCalibState(OSC.state.calib);		
 			$('#calib-2').children().attr('disabled', 'true');
 			$('#calib-3').children().attr('disabled', 'true');
