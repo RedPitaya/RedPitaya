@@ -399,6 +399,7 @@ int calib_Reset() {
 int32_t calib_GetDataMedian(rp_channel_t channel) {
     /* Acquire data */
     ECHECK(rp_AcqReset());
+    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
     ECHECK(rp_AcqStart());
     ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
     usleep(1000000);
@@ -420,6 +421,7 @@ int32_t calib_GetDataMedian(rp_channel_t channel) {
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
     ECHECK(rp_AcqReset());
     ECHECK(rp_AcqSetGain(channel, gain));
+    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
     ECHECK(rp_AcqStart());
     ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
     usleep(1000000);
@@ -443,6 +445,7 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
 int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max) {
     ECHECK(rp_AcqReset());
     ECHECK(rp_AcqSetGain(channel, gain));
+    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
     ECHECK(rp_AcqStart());
     ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
     usleep(1000000);
