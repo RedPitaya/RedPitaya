@@ -1,6 +1,7 @@
-DAEMON_CONF=/etc/hostapd/hostapd.conf
+DAEMON_CONF=/opt/redpitaya/hostapd.conf
 
 CHECK_INTEFACE=`grep "wlan0" /proc/net/dev`
+
 if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
   then
     echo "Client Wlan"
@@ -22,10 +23,14 @@ if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
     iw wlan0 info > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-      sed -i '/^driver/s/=.*/=nl80211/' /etc/hostapd/hostapd.conf
+      rw
+      sed -i '/^driver/s/=.*/=nl80211/' $DAEMON_CONF
+      ro
       DAEMON_SBIN=/usr/sbin/hostapd
     else
-      sed -i '/^driver/s/=.*/=rtl871xdrv/' /etc/hostapd/hostapd.conf
+      rw
+      sed -i '/^driver/s/=.*/=rtl871xdrv/' $DAEMON_CONF
+      ro
       DAEMON_SBIN=/opt/redpitaya/sbin/hostapd
     fi
     echo $DAEMON_SBIN > /run/hostapd.which
