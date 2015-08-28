@@ -508,11 +508,21 @@ $('#waterfall-holder_ch2').hide();
   SPEC.exitEditing = function(noclose) {
 	
 	if(!($('#CH1_SHOW').hasClass('active') || $('#CH2_SHOW').hasClass('active'))){
-		if(SPEC.params.orig['CH1_SHOW'].value == true)
+		/*if(SPEC.params.orig['CH1_SHOW'].value == true)
 			$('#CH2_SHOW').addClass('active');
 		if(SPEC.params.orig['CH2_SHOW'].value == true)
-			$('#CH1_SHOW').addClass('active');
+			$('#CH1_SHOW').addClass('active');*/
+		
 	}
+	if(!SPEC.isVisibleChannels())
+	{
+		$('#graphs .plot').hide();
+		var sig_btn = $('#right_menu .menu-btn.ch2');
+		sig_btn.prop('disabled', true);
+		var sig_btn = $('#right_menu .menu-btn.ch1');
+		sig_btn.prop('disabled', true);
+	}
+		
 	var t_min = SPEC.config.xmin;
 	var t_max = SPEC.config.xmax;
     for(var key in SPEC.params.orig) {
