@@ -760,6 +760,25 @@
 			//switch green light for output signals
 			if(param_name == "OUTPUT1_STATE" || param_name == "OUTPUT2_STATE")
 			{
+				var sig_name = param_name == "OUTPUT1_STATE" ? 'output1' : 'output2';
+				if(new_params[param_name].value === true)
+				{
+					if (OSC.state.sel_sig_name)
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+					OSC.state.sel_sig_name = sig_name;
+					
+					$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');		
+					$('.y-offset-arrow').css('z-index', 10);
+					$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+				} else 
+				{
+					if (OSC.state.sel_sig_name == sig_name)
+					{
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+						OSC.state.sel_sig_name = null;
+					}
+				}
+				
 				var value = new_params[param_name].value === true ? 1 : 0;
 				if(value == 1)
 				{
@@ -770,7 +789,27 @@
 					$('#'+param_name+'_ON').hide();
 					$('#'+param_name+'_ON').closest('.menu-btn').removeClass('state-on');
 				}
-			}	
+			} else if (param_name == "MATH_SHOW")
+			{
+				var sig_name = "math";
+				if(new_params[param_name].value === true)
+				{
+					if (OSC.state.sel_sig_name)
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+					OSC.state.sel_sig_name = sig_name;
+					
+					$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');		
+					$('.y-offset-arrow').css('z-index', 10);
+					$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+				} else 
+				{
+					if (OSC.state.sel_sig_name == sig_name)
+					{
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+						OSC.state.sel_sig_name = null;
+					}
+				}
+			}
           }
           else if(field.is('input:radio')) {
             var radios = $('input[name="' + param_name + '"]');
@@ -1005,8 +1044,8 @@
 			radios.closest('.btn-group').children('.btn').removeClass('disabled');	
 		}
 	}
-	
-    for(var key in OSC.params.orig) {
+
+   for(var key in OSC.params.orig) {
       var field = $('#' + key);
       var value = undefined;
 
@@ -1889,17 +1928,31 @@ $(function() {
     OSC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();
-	//selecting active signal
-	if(OSC.state.sel_sig_name){
-		var sig_name = $(this).data('signal');
-		if(sig_name){
+    
+    if($.inArray($(this).data('signal'), ['ch1', 'ch2', 'math', 'output1', 'output2']) >= 0) {
+		if (OSC.state.sel_sig_name)
 			$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
-			$('#right_menu .menu-btn.' + sig_name).addClass('active');
-			OSC.state.sel_sig_name = sig_name;
+		if ($(this).data('signal') == 'output1' || $(this).data('signal') == 'output2' || $(this).data('signal') == 'math')
+		{
+			var out_enabled = $(this).data('signal') == 'output1' ? OSC.params.orig["OUTPUT1_STATE"].value
+							: $(this).data('signal') == 'output2' ? OSC.params.orig["OUTPUT2_STATE"].value : OSC.params.orig["MATH_SHOW"].value;
+			if (out_enabled)
+			{
+				OSC.state.sel_sig_name = $(this).data('signal');
+				$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
+				$('.y-offset-arrow').css('z-index', 10);
+				$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+			} else 
+				OSC.state.sel_sig_name = null;
+		} else 
+		{
+			OSC.state.sel_sig_name = $(this).data('signal');
+			
+			$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
 			$('.y-offset-arrow').css('z-index', 10);
 			$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
 		}
-	}
+    }
   });
   
   // Close parameters dialog after Enter key is pressed
