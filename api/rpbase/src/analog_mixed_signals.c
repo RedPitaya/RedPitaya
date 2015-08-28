@@ -41,9 +41,9 @@ static const uint32_t ANALOG_OUT_MASK            = 0xFF;
 static const uint32_t ANALOG_OUT_BITS            = 16;
 static const uint32_t ANALOG_IN_MASK             = 0xFFF;
 
-static const float ANALOG_IN_MAX_VAL             = 3.5;
+static const float ANALOG_IN_MAX_VAL             = 7.0;
 static const float ANALOG_IN_MIN_VAL             = 0.0;
-static const uint32_t ANALOG_IN_MAX_VAL_INTEGER  = 0x7FF;
+static const uint32_t ANALOG_IN_MAX_VAL_INTEGER  = 0xFFF;
 static const float ANALOG_OUT_MAX_VAL            = 1.8;
 static const float ANALOG_OUT_MIN_VAL            = 0.0;
 static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 156;
