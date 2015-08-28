@@ -63,7 +63,8 @@
 * Linux kernel could not be updated to the latest Xilinx version 2015.2.01, due to changes to the Ethernet and USB subsystems, which caused issues
 
 ### OS
-* Wireless is broken on Buildroot, and will probably only be futher maintained on Debian/Ubuntu
+* wireless is broken on Buildroot, and will probably only be futher maintained on Debian/Ubuntu
+* The scrip for detecting the WiFi driver and reconfiguring the AP config file is not able to write the file, so only one chip is supported without manually modifying `hostapd.conf`
 
 ### Other applications
 * SCPI server is poorly tested and the documentation is old
