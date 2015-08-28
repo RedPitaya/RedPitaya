@@ -760,6 +760,25 @@
 			//switch green light for output signals
 			if(param_name == "OUTPUT1_STATE" || param_name == "OUTPUT2_STATE")
 			{
+				var sig_name = param_name == "OUTPUT1_STATE" ? 'output1' : 'output2';
+				if(new_params[param_name].value === true)
+				{
+					if (OSC.state.sel_sig_name)
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+					OSC.state.sel_sig_name = sig_name;
+					
+					$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');		
+					$('.y-offset-arrow').css('z-index', 10);
+					$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+				} else 
+				{
+					if (OSC.state.sel_sig_name == sig_name)
+					{
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+						OSC.state.sel_sig_name = null;
+					}
+				}
+				
 				var value = new_params[param_name].value === true ? 1 : 0;
 				if(value == 1)
 				{
@@ -770,7 +789,27 @@
 					$('#'+param_name+'_ON').hide();
 					$('#'+param_name+'_ON').closest('.menu-btn').removeClass('state-on');
 				}
-			}	
+			} else if (param_name == "MATH_SHOW")
+			{
+				var sig_name = "math";
+				if(new_params[param_name].value === true)
+				{
+					if (OSC.state.sel_sig_name)
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+					OSC.state.sel_sig_name = sig_name;
+					
+					$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');		
+					$('.y-offset-arrow').css('z-index', 10);
+					$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+				} else 
+				{
+					if (OSC.state.sel_sig_name == sig_name)
+					{
+						$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
+						OSC.state.sel_sig_name = null;
+					}
+				}
+			}
           }
           else if(field.is('input:radio')) {
             var radios = $('input[name="' + param_name + '"]');
@@ -1005,8 +1044,8 @@
 			radios.closest('.btn-group').children('.btn').removeClass('disabled');	
 		}
 	}
-	
-    for(var key in OSC.params.orig) {
+
+   for(var key in OSC.params.orig) {
       var field = $('#' + key);
       var value = undefined;
 
@@ -1436,8 +1475,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between Y cursors
   OSC.updateYCursorDiff = function() {
-    var y1 = $('#cur_y1');
-    var y2 = $('#cur_y2');
+    var y1 = $('#cur_y1_info');
+    var y2 = $('#cur_y2_info');
     var y1_top = parseInt(y1.css('top'));
     var y2_top = parseInt(y2.css('top'));
     var diff_px = Math.abs(y1_top - y2_top) - 6;
@@ -1462,8 +1501,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between X cursors
   OSC.updateXCursorDiff = function() {
-    var x1 = $('#cur_x1');
-    var x2 = $('#cur_x2');
+    var x1 = $('#cur_x1_info');
+    var x2 = $('#cur_x2_info');
     var x1_left = parseInt(x1.css('left'));
     var x2_left = parseInt(x2.css('left'));
     var diff_px = Math.abs(x1_left - x2_left) - 9;
@@ -1889,17 +1928,31 @@ $(function() {
     OSC.state.editing = true;
     $('#right_menu').hide();
     $('#' + $(this).attr('id') + '_dialog').show();
-	//selecting active signal
-	if(OSC.state.sel_sig_name){
-		var sig_name = $(this).data('signal');
-		if(sig_name){
+    
+    if($.inArray($(this).data('signal'), ['ch1', 'ch2', 'math', 'output1', 'output2']) >= 0) {
+		if (OSC.state.sel_sig_name)
 			$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).removeClass('active');
-			$('#right_menu .menu-btn.' + sig_name).addClass('active');
-			OSC.state.sel_sig_name = sig_name;
+		if ($(this).data('signal') == 'output1' || $(this).data('signal') == 'output2' || $(this).data('signal') == 'math')
+		{
+			var out_enabled = $(this).data('signal') == 'output1' ? OSC.params.orig["OUTPUT1_STATE"].value
+							: $(this).data('signal') == 'output2' ? OSC.params.orig["OUTPUT2_STATE"].value : OSC.params.orig["MATH_SHOW"].value;
+			if (out_enabled)
+			{
+				OSC.state.sel_sig_name = $(this).data('signal');
+				$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
+				$('.y-offset-arrow').css('z-index', 10);
+				$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+			} else 
+				OSC.state.sel_sig_name = null;
+		} else 
+		{
+			OSC.state.sel_sig_name = $(this).data('signal');
+			
+			$('#right_menu .menu-btn.' + OSC.state.sel_sig_name).addClass('active');
 			$('.y-offset-arrow').css('z-index', 10);
 			$('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
 		}
-	}
+    }
   });
   
   // Close parameters dialog after Enter key is pressed
