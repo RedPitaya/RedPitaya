@@ -34,6 +34,8 @@ tar xvzf node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
 cd node-v0.10.24-linux-arm-armv6j-vfp-hard
 cp -R * /usr/local
 cd ..
+rm -rf node-v0.10.24-linux-arm-armv6j-vfp-hard
+rm -f  node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
 
 # ################################################################################
 # # install node.js from repository
@@ -66,6 +68,8 @@ ln -s /usr/bin/nodejs /usr/bin/node
 npm install
 ./patch.sh
 cd ..
+# I wish I could remove this directory, but it seems it is used
+#rm -rf wyliodrin-server-nodejs
 
 ################################################################################
 # install libwyliodrin
@@ -84,6 +88,7 @@ sudo make install
 cd ../..
 ln -s /usr/local/lib/node_modules /usr/lib/node
 ln -s /usr/local/lib/node_modules /usr/local/lib/node
+rm -rf libwyliodrin
 
 echo -n redpitaya > wyliodrin-server-nodejs/board.type
 
