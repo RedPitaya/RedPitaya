@@ -1436,8 +1436,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between Y cursors
   OSC.updateYCursorDiff = function() {
-    var y1 = $('#cur_y1');
-    var y2 = $('#cur_y2');
+    var y1 = $('#cur_y1_info');
+    var y2 = $('#cur_y2_info');
     var y1_top = parseInt(y1.css('top'));
     var y2_top = parseInt(y2.css('top'));
     var diff_px = Math.abs(y1_top - y2_top) - 6;
@@ -1462,8 +1462,8 @@ value = field.val();
   
   // Resizes double-headed arrow showing the difference between X cursors
   OSC.updateXCursorDiff = function() {
-    var x1 = $('#cur_x1');
-    var x2 = $('#cur_x2');
+    var x1 = $('#cur_x1_info');
+    var x2 = $('#cur_x2_info');
     var x1_left = parseInt(x1.css('left'));
     var x2_left = parseInt(x2.css('left'));
     var diff_px = Math.abs(x1_left - x2_left) - 9;
