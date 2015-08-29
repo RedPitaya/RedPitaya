@@ -1382,6 +1382,22 @@ static inline void threadUpdateView(thread_data_t data, uint32_t _getBufSize, fl
     pthread_mutex_unlock(&mutex);
 }
 
+int RestartAcq(float _timeScale) {
+	ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
+	ECHECK_APP_THREAD(threadSafe_acqStart());
+
+	threadTimer = (trigSweep == RPAPP_OSC_TRIG_AUTO) ? MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X)) : WAIT_TO_FILL_BUF_TIMEOUT;
+	threadTimer += _clock();
+
+	waitToFillPreTriggerBuffer(true);
+
+	ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
+	EXECUTE_ATOMICALLY(mutex, clear = false)
+	EXECUTE_ATOMICALLY(mutex, updateView = false)
+	
+	return RP_OK;
+}
+
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
@@ -1409,18 +1425,8 @@ void *mainThreadFun() {
         ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
 
         if (clear && acqRunning) {
-            ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-            ECHECK_APP_THREAD(threadSafe_acqStart());
-
-            threadTimer = (trigSweep == RPAPP_OSC_TRIG_AUTO) ? MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X)) : WAIT_TO_FILL_BUF_TIMEOUT;
-            threadTimer += _clock();
-            manuallyTriggered = false;
-
-            waitToFillPreTriggerBuffer(true);
-
-            ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
-            EXECUTE_ATOMICALLY(mutex, clear = false)
-            EXECUTE_ATOMICALLY(mutex, updateView = false)
+			RestartAcq(_timeScale);
+			manuallyTriggered = false;
             _getBufSize = 0;
         }
 
@@ -1429,7 +1435,8 @@ void *mainThreadFun() {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             manuallyTriggered = true;
         } else if (acqRunning && trigSweep != RPAPP_OSC_TRIG_AUTO && (threadTimer < _clock())) {
-			EXECUTE_ATOMICALLY(mutex, clear = true)
+			RestartAcq(_timeScale);
+			manuallyTriggered = false;
 		}
 
         ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
