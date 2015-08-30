@@ -6,10 +6,10 @@ INSTALL_DIR ?= ../
 INSTALL_NAME = sdk.zip
 
 #Includes
-RP_PATH_INCLUDE = -I./include
+RP_PATH_INCLUDE = -I../api/rpbase/src/
 
 #Library
-RP_LIB_INCLUDE = -L ./include -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L../api/lib/ -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
@@ -32,7 +32,7 @@ all: $(TARGET)
 
 install:
 	mkdir -p target
-	cp -r install.sh run.sh create_framework.sh ./include/* Makefile ./target/
+	cp -r install.sh run.sh create_framework.sh ../api/rpbase/src/rp.h ./target/
 	zip $(INSTALL_NAME) target/*
 	cp $(INSTALL_NAME) $(INSTALL_DIR)        
 
