@@ -241,7 +241,9 @@ int osc_setTimeScale(float scale) {
     }
 
     pthread_mutex_lock(&mutex);
-    if (scale < CONTIOUS_MODE_SCALE_THRESHOLD) {
+    rpApp_osc_trig_sweep_t sweep;
+    osc_getTriggerSweep(&sweep);
+    if (scale < CONTIOUS_MODE_SCALE_THRESHOLD || sweep != RPAPP_OSC_TRIG_AUTO){
         ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(false))
         continuousMode = false;
     } else {
@@ -504,6 +506,11 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
         default:
             return RP_EOOR;
     }
+
+    float scale;
+    osc_getTimeScale(&scale);
+    osc_setTimeScale(scale);
+
     trigSweep = sweep;
     return RP_OK;
 }
@@ -1443,7 +1450,6 @@ void *mainThreadFun() {
         ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
 
         if(updateView && !((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED))) {
-            
             threadUpdateView(data, _getBufSize, _deltaSample, _timeScale, _lastTimeScale, _lastTimeOffset);
             
         } else if ((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED)) {
@@ -1472,7 +1478,6 @@ void *mainThreadFun() {
                 ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
                 _startIndex = (_writePointer - _getBufSize) % ADC_BUFFER_SIZE;
             }
-
             // Get data
             ECHECK_APP_THREAD(rp_AcqGetDataV2(_startIndex, &_getBufSize, data[0], data[1]));
 
