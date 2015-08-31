@@ -1,9 +1,6 @@
-Free applications
-=================
+# Free applications
 
-Application list
-----------------
-
+## Application list:
 - Scope
 - Scope+gen
 - Scope+pid
@@ -11,8 +8,7 @@ Application list
 - freqanalyzer
 
 
-Application structure
---------------------
+## Application structure
 
 Scope, scope+gen, scope+pid have all similar structure
 
@@ -36,7 +32,7 @@ These applications have a slightly different structure in the src directory.
 | `apps_name/src/external/kiss_fft` | Fast fourier transform directory; kiss distribution.
 
 
-#Build process
+# Build process
 
 Before building the applications, you need or should set your working environment.
 
