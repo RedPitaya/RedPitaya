@@ -17,6 +17,9 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_heartbeat.service $ROOT_DIR/etc/systemd/system/redpitaya_heartbeat.service
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
+# TODO: this Wyliodrin service is only here since wyliodrin.sh can not be run in a virtualized environment
+# Wyliodrin service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 systemctl enable redpitaya_discovery
