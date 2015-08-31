@@ -77,7 +77,8 @@ cd ..
 
 git config --global http.sslVerify false
 
-git clone https://github.com/Wyliodrin/libwyliodrin.git
+#git clone https://github.com/Wyliodrin/libwyliodrin.git
+git clone https://github.com/RedPitaya/libwyliodrin.git
 cd libwyliodrin/
 mkdir build
 cd build
