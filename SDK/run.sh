@@ -29,8 +29,8 @@ fi
 echo -e "\nEXECUTING RED PITAYA RUN SCRIPT..."
 mkdir -p include
 echo -e "\nCOPYING RED PITAYA INCLUDES..."
-sshpass -p root scp -r root@$IP:/opt/redpitaya/lib/* include
-sshpass -p root scp -r root@$IP:/opt/redpitaya/include/* include
+sshpass -p root scp -r root@$IP:/opt/redpitaya/lib/librp.so include
+sshpass -p root scp -r root@$IP:/opt/redpitaya/include/rp.h include
 
 echo -e "\nCOMPILING SOURCE FILE..."
 
@@ -55,5 +55,5 @@ sshpass -p root scp $PWD/$EXECUTABLE root@$IP:/tmp
 sshpass -p root ssh root@$IP '/tmp/'$EXECUTABLE' | tee '$REDIRECT
 
 #make clean
-echo -e "----------\nREMOVING ARTIFACTS..."
+echo -e "\n----------\nREMOVING ARTIFACTS..."
 make clean TARGET=$EXECUTABLE
