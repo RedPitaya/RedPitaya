@@ -31,7 +31,7 @@
 #define AUTO_SCALE_NUM_OF_SCALE       20
 #define MAX_UINT                      4294967296
 #define MIN_TIME_TO_DRAW_BEFORE_TIG   100
-#define WAIT_TO_FILL_BUF_TIMEOUT      (2*CLOCKS_PER_SEC)
+#define WAIT_TO_FILL_BUF_TIMEOUT      500.f //(2*CLOCKS_PER_SEC)
 #define CONTIOUS_MODE_SCALE_THRESHOLD 1     // ms
 #define PERIOD_EXISTS_MIN_THRESHOLD       0.75  // ratio
 #define PERIOD_EXISTS_MAX_THRESHOLD       0.92  // ratio
