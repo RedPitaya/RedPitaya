@@ -239,8 +239,6 @@ void UpdateParams(void) {
 	
     bool running;
     rpApp_OscIsRunning(&running);
-    if (!running)
-		return;
     inRun.Value() = running;
 
     rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
