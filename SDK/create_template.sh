@@ -28,7 +28,7 @@ fi
 
 #Framework generating system
 { echo -e "#include <stdio.h>";
-  echo -e '#include "include/rp.h"\n';
+  echo -e '#include "rp.h"\n';
   echo -e "int main(int argc, char **argv){\n";
   echo -e "   /* Init the red pitaya resources */";
   echo -e "   if(rp_Init() != RP_OK){";
