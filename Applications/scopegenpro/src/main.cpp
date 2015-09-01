@@ -472,6 +472,7 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 }
 
 void OnNewParams(void) {
+	checkMathScale();
 /* ---- UPDATE INTERLAN SIGNAL GENERATION ----- */
 /* ------ SEND GENERATE PARAMETERS TO API ------*/
     if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
@@ -633,8 +634,6 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(in1Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH1,  in1Scale.NewValue()))
     IF_VALUE_CHANGED(in2Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH2,  in2Scale.NewValue()))
 
-    checkMathScale();
-    
     bool update_trig_level = inTrigSource.Value() != inTrigSource.NewValue();
 
     IF_VALUE_CHANGED(in1Probe, rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.NewValue()))
