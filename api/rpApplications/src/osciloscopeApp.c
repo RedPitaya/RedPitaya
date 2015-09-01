@@ -1141,7 +1141,7 @@ static inline void scaleMath() {
         ECHECK_APP_THREAD(osc_measureMeanVoltage(RPAPP_OSC_SOUR_MATH, &vMean));
         // Calculate scale
         float scale = vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y;
-		if (vMean <= FLOAT_EPS && scale <= FLOAT_EPS) {
+		if (scale <= FLOAT_EPS) {
 			ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo25(1)));
 		} else {
 			ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo25(scale)));
