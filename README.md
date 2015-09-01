@@ -36,6 +36,7 @@ You will need the following to build the Red Pitaya components:
 1. Xilinx Vivado 2015.2 FPGA development tools, the SDK (bare metal toolchain) must also be installed.
 2. Linaro toolchain for cross compiling Linux applications, can be downloaded from [Linaro release servers](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_).
 3. GNU make autoconf, automake, ...
+4. u-boot-tools, curl
 
 [Red Pitaya OS wiki page](http://wiki.redpitaya.com/index.php?title=Red_Pitaya_OS) provides more information about installing the required tools.
 
