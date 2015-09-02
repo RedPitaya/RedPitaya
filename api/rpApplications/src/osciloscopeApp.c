@@ -561,6 +561,7 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     ECHECK_APP(unscaleAmplitudeChannel(source, min, &resMin));
     *Vpp = resMax - resMin;
     ECHECK_APP(attenuateAmplitudeChannel(source, *Vpp, Vpp));
+    *Vpp = fabs(*Vpp);
     return RP_OK;
 }
 
