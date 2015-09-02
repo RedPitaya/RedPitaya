@@ -1,30 +1,38 @@
-DAEMON_CONF=/etc/hostapd/hostapd.conf
+DAEMON_CONF=/opt/redpitaya/hostapd.conf
 
 CHECK_INTEFACE=`grep "wlan0" /proc/net/dev`
+
 if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
   then
     echo "Client Wlan"
       if [ "$1" = "start" ] 
         then
-          cp /opt/redpitaya/etc/network/interfaces-client.wlan0 /etc/network/interfaces.d/wlan0
-          ifup wlan0
+          ln -s -f wlan0.client /etc/network/interfaces.d/wlan0
+          sleep 1 
           exit
       elif [ "$1" = "stop" ] 
         then
-          ifdown wlan0
+          #ifdown wlan0
+	  sleep 1
         fi
   else
   echo "AP wlan"
-  cp /opt/redpitaya/etc/network/interfaces-ap.wlan0 /etc/network/interfaces.d/wlan0
+  ln -s -f wlan0.ap /etc/network/interfaces.d/wlan0
   if [ "$1" = "start" ]
   then
     iw wlan0 info > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-      sed -i '/^driver/s/=.*/=nl80211/' /etc/hostapd/hostapd.conf
+      echo "nl80211"
+      /opt/redpitaya/sbin/rw
+      sed -i '/^driver/s/=.*/=nl80211/' $DAEMON_CONF
+      /opt/redpitaya/sbin/ro
       DAEMON_SBIN=/usr/sbin/hostapd
     else
-      sed -i '/^driver/s/=.*/=rtl871xdrv/' /etc/hostapd/hostapd.conf
+      echo "rtl871xdrv"
+      /opt/redpitaya/sbin/rw
+      sed -i '/^driver/s/=.*/=rtl871xdrv/' $DAEMON_CONF
+      /opt/redpitaya/sbin/ro
       DAEMON_SBIN=/opt/redpitaya/sbin/hostapd
     fi
     echo $DAEMON_SBIN > /run/hostapd.which
