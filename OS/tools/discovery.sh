@@ -1,6 +1,6 @@
 #!/bin/sh
 
-URL_PREFIX="http://account.staging1.redpitaya.com/discovery.php"
+URL="http://account.redpitaya.com/discovery.php"
 LOGFILE="/var/log/discovery.log"
 
 MAC_LAN=$(cat /sys/class/net/eth0/address)
@@ -16,11 +16,21 @@ else
     PAYLOAD="?mac=$MAC_LAN&ip=$IP_WAN"
 fi
 
-curl $URL_PREFIX$PAYLOAD >> $LOGFILE 2>&1
+curl $URL$PAYLOAD >> $LOGFILE 2>&1
 
 if [ $? -ne 0 ]
 then
     echo "Discovery update failed!"
 else
     echo "Discovery update was successful."
+fi
+
+URL_STAGING="http://account.staging1.redpitaya.com/discovery.php"
+curl $URL_STAGING$PAYLOAD >> $LOGFILE 2>&1
+
+if [ $? -ne 0 ]
+then
+    echo "Discovery staging update failed!"
+else
+    echo "Discovery staging update was successful."
 fi
