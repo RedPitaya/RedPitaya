@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,46 @@
+@@ -86,3 +86,63 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -54,5 +54,22 @@
 +		channel@10 {
 +			reg = <10>;
 +		};
++	};
++};
++/ {
++	gpio-leds {
++	    compatible = "gpio-leds";
++	    led-8-yellow {
++	        label = "led8";
++	        gpios = <&gpio0 0 0>;
++	        default-state = "off";
++		linux,default-trigger = "mmc0";
++	    };
++	    led-9-red {
++	        label = "led9";
++	        gpios = <&gpio0 7 0>;
++	        default-state = "off";
++		linux,default-trigger = "hartbeat";
++	    };
 +	};
 +};

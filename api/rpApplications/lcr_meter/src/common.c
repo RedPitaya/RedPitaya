@@ -20,12 +20,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "common.h"
 
 #define I2C_SLAVE_FORCE		0x0706
 #define EXPANDER_ADDR		0x20
-
 
 int set_IIC_Shunt(uint32_t shunt){
 
@@ -128,18 +129,25 @@ float vectorMax(float *data, int size){
 	return max;
 }
 
-float vectorApprox(float *data, int size, float approx_val){
+#if 0
+float vectorApprox(float *data, int size, float approx_val, bool min){
 
 	/* Get vector max value */
 	float closet_val = vectorMax(data, size);
 
 	for(int i = 0; i < size; ++i){
-		if(abs(data[i] - approx_val) < closet_val){
+		if(min){
+			if(abs(data[i] - approx_val < closet_val) && (data[i] < approx_val)){
+				closet_val = data[i];
+			} 
+		}else if(abs(data[i] - approx_val < closet_val) && (data[i] > approx_val)){
 			closet_val = data[i];
-		}
+		}	
 	}
+
 	return closet_val;
 }
+#endif
 
 float trapezoidalApprox(float *data, float T, int size){
 	float result = 0;
@@ -174,3 +182,50 @@ float **multiDimensionVector(int second_dimenson){
 
 	return data_out;
 }
+
+#if 0
+/* This functions recursivly creates a directory path 
+ * Example: /tmp/imp_data/calibration 
+ * One we come find the second / symbol, we check if the directory
+ * exists. If it does, the function continues. If not, it creates the 
+ * directory and calls itself with the same char *array as param. */
+int createPath(char *path){
+
+	/* Get array size */
+	int idx = 0;
+	int size = strlen(&path[0]);
+	char *strip_path;
+	const char seek_char = '/';
+
+	while(idx < size){
+
+		/* Get seek index */
+		idx = strcspn(&path[idx], &seek_char);
+
+		strip_path = malloc(idx++ * sizeof(char));
+		memcpy(strip_path, path, idx++);
+
+		/* Create single directory chunk */
+		createSingle(&strip_path[0]);
+		free(strip_path);
+		
+		idx++;
+	}
+
+	return RP_OK;
+}
+
+int createSingle(char *path){
+
+	/* Stat structure */
+	struct stat st = {0};
+
+	/* Directory doesn't exist yet */
+	if(stat(&path[0], &st) == -1){
+		mkdir(&path[0], S_IWUSR);	
+	}
+	
+	return RP_OK;
+}
+
+#endif

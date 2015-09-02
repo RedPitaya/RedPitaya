@@ -1,1 +1,1 @@
-Matltalb examples here.
+This directory contains Red Pitaya matlab scpi examples.
