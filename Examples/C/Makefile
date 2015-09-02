@@ -33,10 +33,4 @@ $(TARGET): $(OBJECTS)
 all: $(TARGET)
 
 clean:
-	$(RM) $(TARGET) *.o ~*
-
-
-#  -----Error----- I have no idea what was wrong. 
-#  ../../api/rpbase/librp.so: file not recognized: File format not recognized
-#
-# 
+	$(RM) $(TARGET) *.o ~* 

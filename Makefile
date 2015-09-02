@@ -83,7 +83,7 @@ ACQUIRE_DIR     = Test/acquire
 XADC_DIR        = Test/xadc
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
-DISCOVERY_DIR   = OS/discovery
+OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
 SCPI_SERVER_DIR = scpi-server/
 LIBRP_DIR       = api/rpbase
@@ -112,11 +112,12 @@ XADC            = $(INSTALL_DIR)/bin/xadc
 CALIB           = $(INSTALL_DIR)/bin/calib
 CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
+HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
 SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
 LIBRP           = $(INSTALL_DIR)/lib/librp.so
 LIBRPAPP        = $(INSTALL_DIR)/lib/librpapp.so
-GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
+#GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
 LIBREDPITAYA    = shared/libredpitaya/libredpitaya.a
 
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
@@ -134,8 +135,8 @@ APP_SCOPE       = $(INSTALL_DIR)/www/apps/scopegenpro
 APP_SPECTRUM_DIR = Applications/spectrumpro
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrumpro
 
-APPS_FREE 	 = apps-free
 APPS_FREE_DIR    = apps-free/
+APPS_CONTRIB_DIR = apps-contrib/
 
 ################################################################################
 # Versioning system
@@ -165,14 +166,14 @@ export GREET_MSG
 # tarball
 ################################################################################
 
-all: zip
+all: zip sdk apps_free apps_contrib
 
 $(TMP):
 	mkdir -p $@
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
-	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(ECOSYSTEM) \
-	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(GDBSERVER) $(APP_SCOPE) $(APP_SPECTRUM) sdk rp_communication apps_free
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
+	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(APP_SCOPE) $(APP_SPECTRUM) rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -193,7 +194,7 @@ $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) 
 	# TODO: find a better solution
 	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
 
-zip: $(TARGET) $(SDK)
+zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
 
 ################################################################################
@@ -416,7 +417,10 @@ $(CALIBRATE): $(LIBRP)
 
 
 $(DISCOVERY):
-	cp $(DISCOVERY_DIR)/discovery.sh $@
+	cp $(OS_TOOLS_DIR)/discovery.sh $@
+
+$(HEARTBEAT):
+	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
@@ -439,14 +443,11 @@ $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
 
 # Gdb server for remote debugging
 # TODO: This is a temporary solution
-$(GDBSERVER):
-	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
+#$(GDBSERVER):
+#	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
 
 sdk:
-	$(MAKE) -C $(SDK_DIR) clean include
-
-sdkPub:
-	$(MAKE) -C $(SDK_DIR) zip
+	$(MAKE) -C $(SDK_DIR) install INSTALL_DIR=$(abspath .)
 
 rp_communication:
 	make -C $(EXAMPLES_COMMUNICATION_DIR)
@@ -454,6 +455,10 @@ rp_communication:
 apps_free:
 	$(MAKE) -C $(APPS_FREE_DIR) all
 	$(MAKE) -C $(APPS_FREE_DIR) install 
+
+apps_contrib:
+	$(MAKE) -C $(APPS_CONTRIB_DIR) all
+	$(MAKE) -C $(APPS_CONTRIB_DIR) install 
 
 clean:
 	make -C $(LINUX_DIR) clean
@@ -473,6 +478,7 @@ clean:
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	make -C $(OLD_APPS_DIR) clean
+	make -C $(APPS_CONTRIB_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
