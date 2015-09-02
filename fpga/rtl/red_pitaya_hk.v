@@ -35,7 +35,7 @@ module red_pitaya_hk #(
   input                clk_i      ,  // clock
   input                rstn_i     ,  // reset - active low
   // LED
-  output     [DWL-1:0] led_o      ,  // LED output
+  output reg [DWL-1:0] led_o      ,  // LED output
   // global configuration
   output reg           digital_loop,
   // Expansion connector
@@ -55,25 +55,6 @@ module red_pitaya_hk #(
   output reg           sys_err    ,  // bus error indicator
   output reg           sys_ack       // bus acknowledge signal
 );
-
-//---------------------------------------------------------------------------------
-//
-//  Testing logic
-
-// LED blinking
-reg  [DWL-1:0] led_reg;
-reg  [ 32-1:0] led_cnt;
-
-always @(posedge clk_i)
-if (rstn_i == 1'b0) begin
-   led_reg[0] <=  1'b0;
-   led_cnt    <= 32'h0;
-end else begin
-   led_reg[0] <= led_cnt[26];
-   led_cnt    <= led_cnt + 32'h1;
-end
-
-assign led_o = led_reg;
 
 //---------------------------------------------------------------------------------
 //
@@ -134,7 +115,7 @@ assign id_value[ 3: 0] =  4'h1; // board type   1 - release 1
 
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
-  led_reg[DWL-1:1] <= {DWL-1{1'b0}};
+  led_o        <= {DWL{1'b0}};
   exp_p_dat_o  <= {DWE{1'b0}};
   exp_p_dir_o  <= {DWE{1'b0}};
   exp_n_dat_o  <= {DWE{1'b0}};
@@ -147,7 +128,7 @@ end else if (sys_wen) begin
   if (sys_addr[19:0]==20'h18)   exp_p_dat_o  <= sys_wdata[DWE-1:0];
   if (sys_addr[19:0]==20'h1C)   exp_n_dat_o  <= sys_wdata[DWE-1:0];
 
-  if (sys_addr[19:0]==20'h30)   led_reg[DWL-1:1] <= sys_wdata[DWL-1:1];
+  if (sys_addr[19:0]==20'h30)   led_o        <= sys_wdata[DWL-1:0];
 end
 
 wire sys_en;
@@ -173,7 +154,7 @@ end else begin
     20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_dat_i}       ; end
     20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_dat_i}       ; end
 
-    20'h00030: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWL{1'b0}}, led_reg[DWL-1:1], 1'b0}; end
+    20'h00030: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWL{1'b0}}, led_o}             ; end
 
       default: begin sys_ack <= sys_en;  sys_rdata <=  32'h0                              ; end
   endcase
