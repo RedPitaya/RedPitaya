@@ -184,6 +184,7 @@ $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) 
 	cp $(LINUX)            $(TARGET)
 	# copy FPGA bitstream images and decompress them
 	mkdir -p               $(TARGET)/fpga
+	cp $(FPGA)             $(TARGET)/fpga/fpga.bit
 	cp fpga/archive/*.xz   $(TARGET)/fpga
 	cd $(TARGET)/fpga; xz -df *.xz
 	#
