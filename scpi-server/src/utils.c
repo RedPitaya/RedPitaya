@@ -113,7 +113,7 @@ int getRpSamplingRateString(rp_acq_sampling_rate_t decimation, char *decimationS
 		case RP_SMP_125M    :  strcpy(decimationString, "125MHz"  );  return RP_OK;
 		case RP_SMP_15_625M :  strcpy(decimationString, "15_6MHz" );  return RP_OK;
 		case RP_SMP_1_953M  :  strcpy(decimationString, "1_9MHz"  );  return RP_OK;
-		case RP_SMP_122_070K:  strcpy(decimationString, "103_8kHz");  return RP_OK;
+		case RP_SMP_122_070K:  strcpy(decimationString, "122kHz"  );  return RP_OK;
 		case RP_SMP_15_258K :  strcpy(decimationString, "15_2kHz" );  return RP_OK;
 		case RP_SMP_1_907K  :  strcpy(decimationString, "1_9kHz"  );  return RP_OK;
 		default:                                                      return RP_EOOR;
@@ -125,7 +125,7 @@ int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *deci
 	if      (strcmp(decimationString, "125MHz"  ) == 0)  *decimation = RP_SMP_125M    ;
 	else if (strcmp(decimationString, "15_6MHz" ) == 0)  *decimation = RP_SMP_15_625M ;
 	else if (strcmp(decimationString, "1_9MHz"  ) == 0)  *decimation = RP_SMP_1_953M  ;
-	else if (strcmp(decimationString, "103_8kHz") == 0)  *decimation = RP_SMP_122_070K;
+	else if (strcmp(decimationString, "122kHz"  ) == 0)  *decimation = RP_SMP_122_070K;
 	else if (strcmp(decimationString, "15_2kHz" ) == 0)  *decimation = RP_SMP_15_258K ;
 	else if (strcmp(decimationString, "1_9kHz"  ) == 0)  *decimation = RP_SMP_1_907K  ;
 	else                                                 return RP_EOOR;
