@@ -33,10 +33,10 @@
  *
  *
  *
- * Module wrappes PS module (BD design from Vivado or EDK from PlanAhead).
- * There is also included simple AXI slave which serves as master for custom
+ * This module wrappes the PS module (BD design from Vivado or EDK from PlanAhead).
+ * There is also a simple AXI slave included which serves as a master for the custom
  * system bus. With this simpler bus it is more easy for newbies to develop 
- * their own module communication with ARM.
+ * their own module communication with the ARM.
  * 
  */
 
@@ -137,10 +137,14 @@ wire [  6-1: 0] hp1_saxi_wid    , hp0_saxi_wid    ;
 wire [ 64-1: 0] hp1_saxi_wdata  , hp0_saxi_wdata  ;
 wire [  8-1: 0] hp1_saxi_wstrb  , hp0_saxi_wstrb  ;
 
+//genvar   i;
+//generate
+//    for (i=0; i<2; i=i+1) begin : axi_master_gen
 axi_master #(
   .DW   (  64    ), // data width (8,16,...,1024)
   .AW   (  32    ), // address width
-  .ID   (   0    ), // master ID // TODO, it is not OK to have two masters with same ID
+//  .ID   (   i    ), // master ID
+  .ID   (   0    ), // master ID  // TODO: it is not OK to have two masters with same ID
   .IW   (   6    ), // master ID width
   .LW   (   4    )  // length width
 ) axi_master [1:0] (
@@ -207,6 +211,8 @@ axi_master #(
   .sys_rrdy_o     (                                    ), // system read data is ready
   .sys_rerr_o     (                                    )  // system read error
 );
+//    end
+//endgenerate
 
 assign hp0_saxi_arqos  = 4'h0 ;
 assign hp0_saxi_awqos  = 4'h0 ;
