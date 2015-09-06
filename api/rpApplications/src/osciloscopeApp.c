@@ -507,11 +507,11 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
             return RP_EOOR;
     }
 
+    trigSweep = sweep;
+
     float scale;
     osc_getTimeScale(&scale);
     osc_setTimeScale(scale);
-
-    trigSweep = sweep;
     return RP_OK;
 }
 
@@ -1443,9 +1443,9 @@ void *mainThreadFun() {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             manuallyTriggered = true;
         } else if (acqRunning && trigSweep != RPAPP_OSC_TRIG_AUTO && (threadTimer < _clock())) {
-			RestartAcq(_timeScale);
-			manuallyTriggered = false;
-		}
+            RestartAcq(_timeScale);
+            manuallyTriggered = false;
+        }
 
         ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
         ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
