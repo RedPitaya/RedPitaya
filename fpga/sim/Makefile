@@ -3,7 +3,7 @@ MODELSIM_BIN=$(HOME)/altera/15.0/modelsim_ase/bin
 PATH_LIB=/opt/Xilinx/Vivado/2015.2/data/verilog/src
 PATH_SIP=/opt/Xilinx/Vivado/2015.2/data/secureip
 PATH_RTL=../rtl
-PATH_TBN=../bench
+PATH_TBN=../tbn
 
 # secure IP
 LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
@@ -41,7 +41,8 @@ RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/red_pitaya_pid.v \
     $(PATH_RTL)/red_pitaya_ps.v \
     $(PATH_RTL)/red_pitaya_scope.v \
-    $(PATH_RTL)/red_pitaya_top.v
+    $(PATH_RTL)/red_pitaya_top.v \
+    $(PATH_RTL)/pwm.sv
 
 TBN=$(PATH_TBN)/axi_master_model.sv \
     $(PATH_TBN)/axi_slave_tb.sv \
@@ -54,7 +55,8 @@ TBN=$(PATH_TBN)/axi_master_model.sv \
     $(PATH_TBN)/red_pitaya_hk_tb.sv \
     $(PATH_TBN)/red_pitaya_pid_tb.sv \
     $(PATH_TBN)/red_pitaya_scope_tb.sv \
-    $(PATH_TBN)/sys_bus_model.sv
+    $(PATH_TBN)/sys_bus_model.sv \
+    $(PATH_TBN)/pwm_tb.sv
 
 all: scope asg hk
 
@@ -87,7 +89,8 @@ pid: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pid_tb
 
 pwm: compile
-	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pwm_tb
+#	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pwm_tb
+	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' pwm_tb
 
 clean:
 	rm -rf work *.vcd
