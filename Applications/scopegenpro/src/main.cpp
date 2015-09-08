@@ -223,10 +223,10 @@ void checkMathScale() {
         float vpp;
         rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
 
-        /*if((min_amp >= vpp) || (max_amp <= vpp)) {
+        if((min_amp >= vpp) || (max_amp <= vpp)) {
             rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.Value());
             resetMathParams();
-        } else*/ {
+        } else {
             rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.NewValue());
             inMathScale.Update();
         }
@@ -239,8 +239,6 @@ void UpdateParams(void) {
 	
     bool running;
     rpApp_OscIsRunning(&running);
-    if (!running)
-		return;
     inRun.Value() = running;
 
     rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
@@ -259,19 +257,19 @@ void UpdateParams(void) {
 
     if (measureSelect1.Value() != -1) {
 		double val = getMeasureValue(measureSelect1.Value());
-        measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 15 ? val* 100 : val;        
+        measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 14 ? val* 100 : val;        
 	}
     if (measureSelect2.Value() != -1) {
 		double val = getMeasureValue(measureSelect2.Value());
-        measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 15 ? val* 100 : val;  
+        measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 14 ? val* 100 : val;  
 	}
     if (measureSelect3.Value() != -1) {
 		double val = getMeasureValue(measureSelect3.Value());
-        measureValue3.Value() = measureSelect3.Value() >= 12 && measureSelect3.Value() <= 15 ? val* 100 : val;  
+        measureValue3.Value() = measureSelect3.Value() >= 12 && measureSelect3.Value() <= 14 ? val* 100 : val;  
 	}
     if (measureSelect4.Value() != -1) {
 		double val = getMeasureValue(measureSelect4.Value());
-        measureValue4.Value() = measureSelect4.Value() >= 12 && measureSelect4.Value() <= 15 ? val* 100 : val;  
+        measureValue4.Value() = measureSelect4.Value() >= 12 && measureSelect4.Value() <= 14 ? val* 100 : val;  
 	}
 
     float portion;
@@ -474,6 +472,7 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 }
 
 void OnNewParams(void) {
+	checkMathScale();
 /* ---- UPDATE INTERLAN SIGNAL GENERATION ----- */
 /* ------ SEND GENERATE PARAMETERS TO API ------*/
     if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
@@ -635,8 +634,6 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(in1Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH1,  in1Scale.NewValue()))
     IF_VALUE_CHANGED(in2Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH2,  in2Scale.NewValue()))
 
-    checkMathScale();
-    
     bool update_trig_level = inTrigSource.Value() != inTrigSource.NewValue();
 
     IF_VALUE_CHANGED(in1Probe, rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.NewValue()))

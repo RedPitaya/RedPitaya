@@ -241,7 +241,9 @@ int osc_setTimeScale(float scale) {
     }
 
     pthread_mutex_lock(&mutex);
-    if (scale < CONTIOUS_MODE_SCALE_THRESHOLD) {
+    rpApp_osc_trig_sweep_t sweep;
+    osc_getTriggerSweep(&sweep);
+    if (scale < CONTIOUS_MODE_SCALE_THRESHOLD || sweep != RPAPP_OSC_TRIG_AUTO){
         ECHECK_APP_MUTEX(mutex, rp_AcqSetArmKeep(false))
         continuousMode = false;
     } else {
@@ -504,7 +506,12 @@ int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
         default:
             return RP_EOOR;
     }
+
     trigSweep = sweep;
+
+    float scale;
+    osc_getTimeScale(&scale);
+    osc_setTimeScale(scale);
     return RP_OK;
 }
 
@@ -554,6 +561,7 @@ int osc_measureVpp(rpApp_osc_source source, float *Vpp) {
     ECHECK_APP(unscaleAmplitudeChannel(source, min, &resMin));
     *Vpp = resMax - resMin;
     ECHECK_APP(attenuateAmplitudeChannel(source, *Vpp, Vpp));
+    *Vpp = fabs(*Vpp);
     return RP_OK;
 }
 
@@ -1134,9 +1142,13 @@ static inline void scaleMath() {
         ECHECK_APP_THREAD(osc_measureMeanVoltage(RPAPP_OSC_SOUR_MATH, &vMean));
         // Calculate scale
         float scale = vpp * AUTO_SCALE_AMP_SCA_FACTOR / DIVISIONS_COUNT_Y;
-        ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo25(scale)));
-        ECHECK_APP_THREAD(osc_setAmplitudeOffset(RPAPP_OSC_SOUR_MATH, -vMean));
-    }
+		if (scale <= FLOAT_EPS) {
+			ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo25(1)));
+		} else {
+			ECHECK_APP_THREAD(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, roundUpTo25(scale)));
+			ECHECK_APP_THREAD(osc_setAmplitudeOffset(RPAPP_OSC_SOUR_MATH, -vMean));
+		}
+	}
 }
 
 void mathThreadFunction() {
@@ -1164,8 +1176,8 @@ void mathThreadFunction() {
 
                 view[RPAPP_OSC_SOUR_MATH*viewSize + i] = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
             }
-            scaleMath();
         }
+        scaleMath();
     }
 }
 
@@ -1378,6 +1390,22 @@ static inline void threadUpdateView(thread_data_t data, uint32_t _getBufSize, fl
     pthread_mutex_unlock(&mutex);
 }
 
+int RestartAcq(float _timeScale) {
+	ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
+	ECHECK_APP_THREAD(threadSafe_acqStart());
+
+	threadTimer = (trigSweep == RPAPP_OSC_TRIG_AUTO) ? MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X)) : WAIT_TO_FILL_BUF_TIMEOUT;
+	threadTimer += _clock();
+
+	waitToFillPreTriggerBuffer(true);
+
+	ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
+	EXECUTE_ATOMICALLY(mutex, clear = false)
+	EXECUTE_ATOMICALLY(mutex, updateView = false)
+	
+	return RP_OK;
+}
+
 void *mainThreadFun() {
     rp_acq_trig_src_t _triggerSource;
     rp_acq_trig_state_t _state;
@@ -1405,18 +1433,8 @@ void *mainThreadFun() {
         ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
 
         if (clear && acqRunning) {
-            ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-            ECHECK_APP_THREAD(threadSafe_acqStart());
-
-            threadTimer = (trigSweep == RPAPP_OSC_TRIG_AUTO) ? MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X)) : WAIT_TO_FILL_BUF_TIMEOUT;
-            threadTimer += _clock();
-            manuallyTriggered = false;
-
-            waitToFillPreTriggerBuffer(true);
-
-            ECHECK_APP_THREAD(osc_setTriggerSource(trigSource));
-            EXECUTE_ATOMICALLY(mutex, clear = false)
-            EXECUTE_ATOMICALLY(mutex, updateView = false)
+			RestartAcq(_timeScale);
+			manuallyTriggered = false;
             _getBufSize = 0;
         }
 
@@ -1424,13 +1442,15 @@ void *mainThreadFun() {
         if (acqRunning && !manuallyTriggered && trigSweep == RPAPP_OSC_TRIG_AUTO && (threadTimer < _clock())) {
             ECHECK_APP_THREAD(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
             manuallyTriggered = true;
+        } else if (acqRunning && trigSweep != RPAPP_OSC_TRIG_AUTO && (threadTimer < _clock())) {
+            RestartAcq(_timeScale);
+            manuallyTriggered = false;
         }
 
         ECHECK_APP_THREAD(rp_AcqGetTriggerSrc(&_triggerSource));
         ECHECK_APP_THREAD(rp_AcqGetTriggerState(&_state));
 
         if(updateView && !((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED))) {
-            
             threadUpdateView(data, _getBufSize, _deltaSample, _timeScale, _lastTimeScale, _lastTimeOffset);
             
         } else if ((_state == RP_TRIG_STATE_TRIGGERED) || (_triggerSource == RP_TRIG_SRC_DISABLED)) {
@@ -1459,7 +1479,6 @@ void *mainThreadFun() {
                 ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
                 _startIndex = (_writePointer - _getBufSize) % ADC_BUFFER_SIZE;
             }
-
             // Get data
             ECHECK_APP_THREAD(rp_AcqGetDataV2(_startIndex, &_getBufSize, data[0], data[1]));
 
