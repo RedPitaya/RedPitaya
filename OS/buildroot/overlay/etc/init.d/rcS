@@ -6,7 +6,6 @@ export PATH_REDPITAYA=/opt/redpitaya
 
 echo "++ Mounting filesystems"
 mkdir -p /dev/pts
-mkdir -p /dev/i2c
 mount -a
 
 # Check if SD card mounted, if not wait and try again
@@ -17,18 +16,6 @@ fi
 
 # Create /tmp structure every time, since it resides in RAM
 mkdir -p /tmp/log/redpitaya_nginx
-
-# the device driver is not creating this node, so for now
-# create the devcfg device node manually
-# TODO, check if this was fixed with the newer kernel
-
-if [ ! -e /dev/xdevcfg ]
-then
-	mknod /dev/xdevcfg c 259 0
-fi
-
-# Shortcut link to u-boot EEPROM
-ln -s /sys/bus/i2c/devices/0-0050/eeprom /dev/eeprom
 
 # Fix keys for SHH
 chmod 600 `find /etc/ -name ssh_host_\*`
