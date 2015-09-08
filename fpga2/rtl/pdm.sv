@@ -1,10 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Module: PWM (pulse width modulation)
+// Module: PDM (pulse density modulation)
 // Author: Iztok Jeras <iztok.jeras@redpitaya.com>
 // (c) Red Pitaya  (redpitaya.com)
 ////////////////////////////////////////////////////////////////////////////////
 
-module pwm #(
+module pdm #(
   int unsigned  CCW = 8,  // configuration counter width (resolution)
   bit [CCW-1:0] CCE = '1  // 100% value
 )(
@@ -16,13 +16,16 @@ module pwm #(
   input  logic [CCW-1:0] str_dat,  // data
   input  logic           str_vld,  // valid
   output logic           str_rdy,  // ready
-  // PWM output
-  output logic           pwm
+  // PDM output
+  output logic           pdm
 );
 
 // local signals
 logic [CCW-1:0] cnt;  // counter current value
 logic [CCW-1:0] nxt;  // counter next value
+logic [CCW-1:0] acu;  // accumulator
+logic [CCW  :0] sum;  // summation
+logic [CCW  :0] sub;  // subtraction
 
 // counter current value
 always_ff @(posedge clk)
@@ -35,12 +38,18 @@ assign nxt = cnt + 'd1;
 // counter cycle end
 assign str_rdy = nxt == CCE;
 
-// PWM output
+// counter
 always_ff @(posedge clk)
-if (~rstn)  pwm <= 1'b0;
-else begin
-  if      (cnt == 0      )  pwm <= |str_dat;
-  else if (cnt == str_dat)  pwm <= 1'b0;
-end
+if (~rstn)  acu <= '0;
+else        acu <= ~sub[CCW] ? sub[CCW-1:0] : sum[CCW-1:0];
 
-endmodule: pwm
+// summation
+assign sum = acu + str_dat;
+
+// subtraction
+assign sub = sum - CCE;
+
+// PDM output
+assign pdm = ~sub[CCW] | ~|sub[CCW-1:0];
+
+endmodule: pdm

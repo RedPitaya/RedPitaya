@@ -15,15 +15,17 @@ module pwm_tb #(
 );
 
 // system signals
-logic clk ;
-logic rstn;
+logic           clk ;
+logic           rstn;
 
 // input stream
 logic [CCW-1:0] str_dat;
+logic           str_vld;
 logic           str_rdy;
 
-// signals to PWM IO
-logic pwm;
+// signals to PWM/PDM IO
+logic           pwm;
+logic           pdm;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -36,18 +38,20 @@ initial begin
   // initialization
   rstn = 1'b0;
   str_dat = '0;
+  str_vld = 1'b0;
   repeat(4) @(posedge clk);
   // start
   rstn = 1'b1;
+  str_vld = 1'b1;
   // test sequence
   for (int unsigned i=0; i<=CCE; i++) begin
-    while (~str_rdy) @ (posedge clk);
     str_dat <= i[CCW-1:0];
     @ (posedge clk);
+    while (~str_rdy) @ (posedge clk);
   end
-  // show end
-  repeat(2*CCE+4) @(posedge clk);
   // end simulation
+  repeat(2**CCW) @(posedge clk);
+  repeat(4) @(posedge clk);
   $finish();
 end
 
@@ -58,15 +62,31 @@ end
 pwm #(
   .CCW (CCW),
   .CCE (CCE)
-) dut (
+) dut_pwm (
   // system signals
   .clk      (clk ),
   .rstn     (rstn),
   // input stream
   .str_dat  (str_dat), 
+  .str_vld  (str_vld), 
   .str_rdy  (str_rdy), 
   // PWM outputs
   .pwm      (pwm)
+);
+
+pdm #(
+  .CCW (CCW),
+  .CCE (CCE)
+) dut_pdm (
+  // system signals
+  .clk      (clk ),
+  .rstn     (rstn),
+  // input stream
+  .str_dat  (str_dat), 
+  .str_vld  (str_vld), 
+  .str_rdy  (       ), 
+  // PWM outputs
+  .pdm      (pdm)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
