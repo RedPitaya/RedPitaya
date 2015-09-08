@@ -52,10 +52,10 @@ long GetMACAddressLinux(const char* nic, char *mac)
 
 std::string GetMACAddress()
 {
-	unsigned char result[18];
-	sprintf(mac, "00:00:00:00:00:00");
+	char result[18];
+	sprintf(result, "00:00:00:00:00:00");
 	GetMACAddressLinux("/sys/class/net/eth0/address", result);
-	std::string mac_address(buffer);
+	std::string mac_address(result);
 	return mac_address;
 }
 
