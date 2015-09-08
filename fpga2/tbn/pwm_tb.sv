@@ -15,10 +15,14 @@ module pwm_tb #(
 );
 
 // system signals
-logic           clk ;
-logic           rstn;
+logic           clk ;  // clock
+logic           rstn;  // reset
 
-// input stream
+// configuration
+logic           ena;  // enable
+logic [CCW-1:0] rng;  // range
+
+// data stream
 logic [CCW-1:0] str_dat;
 logic           str_vld;
 logic           str_rdy;
@@ -35,6 +39,9 @@ initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
 
 initial begin
+  // TODO, this are now constants, but should be tested
+  ena = 1'b1;
+  rng = CCE;
   // initialization
   rstn = 1'b0;
   str_dat = '0;
@@ -60,12 +67,14 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 pwm #(
-  .CCW (CCW),
-  .CCE (CCE)
+  .CCW (CCW)
 ) dut_pwm (
   // system signals
   .clk      (clk ),
   .rstn     (rstn),
+  // configuration
+  .ena      (ena),
+  .rng      (rng),
   // input stream
   .str_dat  (str_dat), 
   .str_vld  (str_vld), 
@@ -75,12 +84,14 @@ pwm #(
 );
 
 pdm #(
-  .CCW (CCW),
-  .CCE (CCE)
+  .CCW (CCW)
 ) dut_pdm (
   // system signals
   .clk      (clk ),
   .rstn     (rstn),
+  // configuration
+  .ena      (ena),
+  .rng      (rng),
   // input stream
   .str_dat  (str_dat), 
   .str_vld  (str_vld), 
