@@ -73,8 +73,16 @@ int main(int argc, char *argv[])
             perror("send");
         }
 
-        binary_mode = true;
-    }
+      
+   //strcpy(recvBuff, "SOUR:DIG:DATA:BIT LED4,1;\r\nSOUR:DIG:DATA:BIT LED5,1;\r\nSOUR:DIG:DATA:BIT LED6,1;\r\n");
+
+    strcpy(recvBuff,
+            /* LED ON */
+            "DIG:PIN LED4,1;\r\nDIG:PIN LED5,1;\r\nDIG:PIN LED6,1;\r\nDIG:PIN:DIR INP,DIO1_P;\r\n"
+                    /* ANALOG WRITE */
+                    "ANALOG:PIN AOUT0,1;\r\nANALOG:PIN AOUT1,1.5;\r\nANALOG:PIN AOUT2,0.75;\r\nANALOG:PIN AOUT3,0.12345;\r\n"
+                    /* ANALOG READ */
+                    "ANALOG:PIN? AOUT0;\r\nANALOG:PIN? AOUT1;\r\nANALOG:PIN? AOUT2;\r\nANALOG:PIN? AOUT3\r\n");
 
     strcpy(recvBuff, argv[2]);
     strcat(recvBuff, "\r\n");
@@ -87,24 +95,14 @@ int main(int argc, char *argv[])
    fputs("Received: ", stdout);
    fflush(stdout);
 
-
     while ( (n = (int) read(sockfd, recvBuff, sizeof(recvBuff)-1)) > 0)
     {
         recvBuff[n] = 0;
-	   
-        if (binary_mode) {
-            for (int i = 0; i < n; ++i)
-            {
-                printf("%X ", (unsigned char)recvBuff[i]);
-            }
+	    fputs("Received: ", stdout);
+        if(fputs(recvBuff, stdout) == EOF)
+        {
+            printf("\n Error : Fputs error\n");
         }
-        else {
-            if(fputs(recvBuff, stdout) == EOF)
-            {
-                printf("\n Error : Fputs error\n");
-            }
-        }
-
 	    fflush(stdout);
 
     } 

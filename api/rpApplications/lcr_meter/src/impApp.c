@@ -3,7 +3,7 @@
 *
 * @brief Red Pitaya application Impedance Analyzer module interface
 *
-* @Author Luka Golinar
+* @Author Luka Golinar <luka.golinar@redpitaya.com>
 *
 * (c) Red Pitaya  http://www.redpitaya.com
 *
