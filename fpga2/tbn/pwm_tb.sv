@@ -10,26 +10,27 @@ module pwm_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // PWM parameters
-  int unsigned  CCW = 4,        // configuration counter width (resolution)
-  bit [CCW-1:0] CCE = 2**CCW-1  // 100% value
+  int unsigned CW = 4,  // counter width (resolution)
+  int unsigned OW = 4,  // output  width
+  bit [CW-1:0] CCE = 2**CW-1  // 100% value
 );
 
 // system signals
-logic           clk ;  // clock
-logic           rstn;  // reset
+logic                  clk ;  // clock
+logic                  rstn;  // reset
 
 // configuration
-logic           ena;  // enable
-logic [CCW-1:0] rng;  // range
+logic                  ena;  // enable
+logic         [CW-1:0] rng;  // range
 
 // data stream
-logic [CCW-1:0] str_dat;
-logic           str_vld;
-logic           str_rdy;
+logic [OW-1:0][CW-1:0] str_dat;
+logic                  str_vld;
+logic                  str_rdy;
 
 // signals to PWM/PDM IO
-logic           pwm;
-logic           pdm;
+logic [OW-1:0]         pwm;
+logic [OW-1:0]         pdm;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -52,12 +53,12 @@ initial begin
   str_vld = 1'b1;
   // test sequence
   for (int unsigned i=0; i<=CCE; i++) begin
-    str_dat <= i[CCW-1:0];
+    str_dat <= {OW{i[CW-1:0]}};
     @ (posedge clk);
     while (~str_rdy) @ (posedge clk);
   end
   // end simulation
-  repeat(2**CCW) @(posedge clk);
+  repeat(2**CW) @(posedge clk);
   repeat(4) @(posedge clk);
   $finish();
 end
@@ -67,7 +68,8 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 pwm #(
-  .CCW (CCW)
+  .CW (CW),
+  .OW (OW)
 ) dut_pwm (
   // system signals
   .clk      (clk ),
@@ -84,7 +86,8 @@ pwm #(
 );
 
 pdm #(
-  .CCW (CCW)
+  .CW (CW),
+  .OW (OW)
 ) dut_pdm (
   // system signals
   .clk      (clk ),

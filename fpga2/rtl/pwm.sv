@@ -5,25 +5,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module pwm #(
-  int unsigned  CCW = 8  // configuration counter width (resolution)
+  int unsigned CW = 8,  // counter width (resolution)
+  int unsigned OW = 1   // output  width
 )(
   // system signals
-  input  logic           clk ,  // clock
-  input  logic           rstn,  // reset (active low)
+  input  logic                  clk ,  // clock
+  input  logic                  rstn,  // reset (active low)
   // configuration
-  input  logic           ena,   // enable
-  input  logic [CCW-1:0] rng,   // range
+  input  logic                  ena,   // enable
+  input  logic         [CW-1:0] rng,   // range
   // input stream
-  input  logic [CCW-1:0] str_dat,  // data
-  input  logic           str_vld,  // valid
-  output logic           str_rdy,  // ready
+  input  logic [OW-1:0][CW-1:0] str_dat,  // data
+  input  logic                  str_vld,  // valid
+  output logic                  str_rdy,  // ready
   // PWM output
-  output logic           pwm
+  output logic [OW-1:0]         pwm
 );
 
 // local signals
-logic [CCW-1:0] cnt;  // counter current value
-logic [CCW-1:0] nxt;  // counter next value
+logic [CW-1:0] cnt;  // counter current value
+logic [CW-1:0] nxt;  // counter next value
 
 // counter current value
 always_ff @(posedge clk)
@@ -39,16 +40,20 @@ assign nxt = cnt + 'd1;
 // counter cycle end
 assign str_rdy = nxt == rng;
 
+generate
+for (genvar i=0; i<OW; i++) begin: out
+
 // PWM output
 always_ff @(posedge clk)
-if (~rstn)  pwm <= 1'b0;
+if (~rstn)                       pwm[i] <= 1'b0;
 else begin
   if (ena) begin
-    if      (cnt == 0      )  pwm <= |str_dat;
-    else if (cnt == str_dat)  pwm <= 1'b0;
-  end else begin
-    pwm <= 1'b0;
-  end
+    if      (cnt == 0         )  pwm[i] <= |str_dat[i];
+    else if (cnt == str_dat[i])  pwm[i] <= 1'b0;
+  end else                       pwm[i] <= 1'b0;
 end
+
+end: out
+endgenerate
 
 endmodule: pwm

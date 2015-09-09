@@ -5,28 +5,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module pdm #(
-  int unsigned  CCW = 8  // configuration counter width (resolution)
+  int unsigned CW = 8,  // counter width (resolution)
+  int unsigned OW = 1   // output  width
 )(
   // system signals
-  input  logic           clk ,  // clock
-  input  logic           rstn,  // reset (active low)
+  input  logic                  clk ,  // clock
+  input  logic                  rstn,  // reset (active low)
   // configuration
-  input  logic           ena,   // enable
-  input  logic [CCW-1:0] rng,   // range
+  input  logic                  ena,   // enable
+  input  logic         [CW-1:0] rng,   // range
   // input stream
-  input  logic [CCW-1:0] str_dat,  // data
-  input  logic           str_vld,  // valid
-  output logic           str_rdy,  // ready
+  input  logic [OW-1:0][CW-1:0] str_dat,  // data
+  input  logic                  str_vld,  // valid
+  output logic                  str_rdy,  // ready
   // PDM output
-  output logic           pdm
+  output logic [OW-1:0]         pdm
 );
 
 // local signals
-logic [CCW-1:0] cnt;  // counter current value
-logic [CCW-1:0] nxt;  // counter next value
-logic [CCW-1:0] acu;  // accumulator
-logic [CCW  :0] sum;  // summation
-logic [CCW  :0] sub;  // subtraction
+logic         [CW-1:0] cnt;  // counter current value
+logic         [CW-1:0] nxt;  // counter next value
+logic [OW-1:0][CW-1:0] acu;  // accumulator
+logic [OW-1:0][CW  :0] sum;  // summation
+logic [OW-1:0][CW  :0] sub;  // subtraction
 
 // counter current value
 always_ff @(posedge clk)
@@ -42,21 +43,27 @@ assign nxt = cnt + 'd1;
 // counter cycle end
 assign str_rdy = nxt == rng;
 
-// counter
+generate
+for (genvar i=0; i<OW; i++) begin: out
+
+// accumulator
 always_ff @(posedge clk)
-if (~rstn)  acu <= '0;
+if (~rstn)  acu[i] <= '0;
 else begin
-  if (ena)  acu <= ~sub[CCW] ? sub[CCW-1:0] : sum[CCW-1:0];
-  else      acu <= '0;
+  if (ena)  acu[i] <= ~sub[i][CW] ? sub[i][CW-1:0] : sum[i][CW-1:0];
+  else      acu[i] <= '0;
 end
 
 // summation
-assign sum = acu + str_dat;
+assign sum[i] = acu[i] + str_dat[i];
 
 // subtraction
-assign sub = sum - rng;
+assign sub[i] = sum[i] - rng;
 
 // PDM output
-assign pdm = ena & (~sub[CCW] | ~|sub[CCW-1:0]);
+assign pdm[i] = ena & (~sub[i][CW] | ~|sub[i][CW-1:0]);
+
+end: out
+endgenerate
 
 endmodule: pdm
