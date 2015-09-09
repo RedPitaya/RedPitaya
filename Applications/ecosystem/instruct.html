@@ -1,30 +1,91 @@
- <html style="background-color: #444">
+ <html style="background-color: #1D1D1D">
 	<head>
 		<meta charset="utf-8" />
 		
 		<!--[if IE]>
 			<link rel="stylesheet" href="./ie9.css" type="text/css" />
     <![endif]-->
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" /> 
 
 		<script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
 	    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
 	    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
 	    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
 		<link rel="stylesheet" href="./style.css" type="text/css" />
-		<script src="../assets/dropzone.js"></script>
+		<link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
+		<script src="assets/jquery.mCustomScrollbar.concat.min.js"></script>
+
+		<script type="text/javascript">
+			$(window).load(function() {
+				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
+		
+				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
+
+			});
+
+		$(function() {
+				document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya ("+window.location.hostname+")");
+				
+				var xmlHttp = new XMLHttpRequest();
+				xmlHttp.open("GET", 'info/info.json', false);
+				xmlHttp.send(null);
+				var info = JSON.parse(xmlHttp.responseText);
+				$('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+			});
+
+		</script>
 		<title>My Red Pitaya</title>
 	</head>
 
-<body style="background-color: #444;">
-	<div class="panel panel-default" style="background-color: #444; width:1200px; margin: 50px auto; padding: 15px;">
-		<div class="panel-body" >
-			<p class="instruct_text">This application is locked and can run only in demo mode, to unlock it please follow these steps: </p>
-			<p class="instruct_text">1. Share information about it with your friends or purchase it in order to <a href="#" class="mark_selection">get unlock key</a></M>.</p>
-			<p class="instruct_text">2. <a href="http://store.staging1.redpitaya.com/myequipment/list/" class="mark_selection">Open MY EQUIPMENT page</a>, click UNLOCK APPS and enter the unlock key that you received on your e-mail.</p>
-			<p class="instruct_text">3. <a href="#" class="mark_selection">Apply unlock key</a> to your Red Pitaya.</p>
-			<p class="instruct_text">Thank you for your support.<p>
+<body style="background-color: #1D1D1D;">
+<div class="pagewrapper">
+	<div class="panel panel-default" style="background-color: #1D1D1D; margin: 50px auto;">
+		<div class="panel-body">
+			<div class="row" style="padding: 20px;">
+				<div class="col-xs-2" style="min-width: 170px; height: 70px;">
+					<div>
+						<a href="javascript:history.back()"><img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png"></a>
+					</div>
+				</div>
+				<div style="padding-top: 75px;">
+					<p class="instruct_text">This application is locked and can run only in demo mode, to unlock it please follow these steps: </p>
+					<p class="instruct_text">1. Share information about it with your friends or purchase it in order to <a href="#" class="mark_selection">get unlock key</a></M>.</p>
+					<p class="instruct_text">2. <a href="http://store.staging1.redpitaya.com/myequipment/list/" class="mark_selection">Open MY EQUIPMENT page</a>, click UNLOCK APPS and enter the unlock key that you received on your e-mail.</p>
+					<p class="instruct_text">3. <a href="#" id="apply" class="mark_selection">Apply unlock key</a> to your Red Pitaya.</p>
+					<p class="instruct_text">Thank you for your support.</p>
+				</div>
+			</div>
 		</div>
 	</div>
+	<div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
+</div>
+<script>
+
+var id_file = '';
+$('#apply').click(function() {
+	var testmode = false;
+	var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/'; 
+	var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac=00:26:32:f0:03:ba'; 
+	if (testmode) // TODO: REMOVE!!
+	{
+		post_uri = "http://192.168.1.12:82/html/post_rec.php"
+		req_uri = "http://192.168.1.12:82/html/get_lic.php"
+	}
+
+	$.get("idfile.id", function( idf ) {
+		var id_file = idf;
+		$.post( post_uri, { idfile : id_file }, function( d ) {
+			if (d == "OK") // May be some other way to detect that all data were loaded correctly ?
+			{
+				$.get(req_uri, function( da ) {
+					$.post ("/lic_upload", { 'lic.lic' : da }, function (dat)
+					{
+					});
+				});
+			}
+		});
+	});
+});
+</script>
 </body>
 </html>
