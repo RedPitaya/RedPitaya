@@ -23,6 +23,7 @@
 
 			});
 
+
 			var current_app = "";
 		    var url = '/';
 			$(function() {
@@ -30,9 +31,19 @@
 					url: url + 'bazaar?apps=',
 					cache: false
 				}).done(function( result ) {
-					buttons = $('.buttons');
-					desc = $('.description');
+					var buttons = $('#main_buttons');
+					$(buttons).removeAttr('id');
+					buttons = buttons.clone();
+					if (first_button == null)
+						first_button = buttons;
+					$(buttons).children('a').html("Visual programming");
+					$(buttons).children('a').attr('href', '#visualprogramming');
+					$(buttons).children('a').removeClass('lock');
+					$(buttons).appendTo('.list-group');
+					$(buttons).show();
+					current_app = 'visualprogramming';
 					
+					desc = $('.description');				
 					var first_button = null;
 					$.each( result, function( key, value ) {
 						buttons = buttons.clone();
@@ -51,34 +62,56 @@
 
 					$('.buttons').click(function() {						
 						key = $(this).children('a').attr('href').substr(1);
-						$('.description').children('.name').html(result[key].name);
-						$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
-						$('.description').children('.desc').html(result[key].description);
-                        if (result[key].type == "demo")
-                        {
-                                $("#run").attr('href', url + 'instruct.html');
-                                $('#run').html('Run');
-								$("#run").css('visibility', 'visible');
-								$("#demo").css('visibility', 'visible');
-                        }				
-                        else if (result[key].type == "run")
-                        {
-                            $("#run").attr('href', url + key + '?type=run');
-                            $('#run').html('Run');
-							$("#run").css('visibility', 'visible');
-							$("#demo").css('visibility', 'visible');
-                        }
-						else if (result[key].type == "old_app")
+						if (key == 'visualprogramming')
 						{
+							$('.description').children('.name').html("Visual programming");
+							$('.description').children('.icon').attr('src', '/images/img_visualprog.png');
+							$('.description').children('.icon').css('width', '480px');
+							$('.description').children('.desc').html('<p>This is the perfect tool for newcomers to have fun while learning and putting their ideas into practice. It is equally suitable for developers that would like to prototype their ideas faster</p> \
+								<p>Features:</p> \
+								<ul> \
+								<li>Program Red Pitaya via intuitive WEB based service using blocks or other programming languages (python, C/C++, Java Script,..)</li> \
+								<li>Create your own dashboards with real time graphs, dials, meters, sliders and buttons</li> \
+								<li>Connect sensors and measure temperature, moisture, alcohol, water level, vibrations, UV light, sound, pressure, air quality or detect motion and more</li> \
+								<li>Connect actuators and indicators such as LEDs, displays, motors or relays in order to control high load devices</li> \
+								<li>Share measurements or send notifications to email or even social networks like Facebook and Twitter</li> \
+								</ul> \
+							');
 							$('#run').html('Run');
-							$("#run").attr('href', url + key);
+							$("#run").attr('href', 'http://staging1.redpitaya.com/visual-programming-instructions/');
 							$("#run").css('visibility', 'visible');
 							$("#demo").css('visibility', 'hidden');
+						} else {
+							$('.description').children('.name').html(result[key].name);
+							$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
+							$('.description').children('.icon').css('width', '');
+							$('.description').children('.desc').html(result[key].description);
+							if (result[key].type == "demo")
+							{
+									$("#run").attr('href', url + 'instruct.html');
+									$('#run').html('Run');
+									$("#run").css('visibility', 'visible');
+									$("#demo").css('visibility', 'visible');
+							}				
+							else if (result[key].type == "run")
+							{
+								$("#run").attr('href', url + key + '?type=run');
+								$('#run').html('Run');
+								$("#run").css('visibility', 'visible');
+								$("#demo").css('visibility', 'visible');
+							}
+							else if (result[key].type == "old_app")
+							{
+								$('#run').html('Run');
+								$("#run").attr('href', url + key);
+								$("#run").css('visibility', 'visible');
+								$("#demo").css('visibility', 'hidden');
+							}
+
+							$("#demo").attr('href', url + key + '?type=demo');
+
+							$(desc).show();
 						}
-
-                        $("#demo").attr('href', url + key + '?type=demo');
-
-						$(desc).show();
 					});
 
 					first_button.click();
@@ -124,7 +157,7 @@
 							<img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">	
 							<h4 style="color: silver;">Select the Instrument:</h4>
 							<div class="list-group pull-left">
-								<div class="buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">													
+								<div class="buttons" id="main_buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">													
 									<a href="#" id="buttons" style="border-radius: 0;" class="list-group-item">1</a>
 								</div>
 							</div>
