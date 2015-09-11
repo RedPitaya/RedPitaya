@@ -50,14 +50,14 @@
  *               (FREE)
  *
  *
- * Inside analog module, ADC data is translated from unsigned neg-slope into
+ * Inside the analog module, ADC data is translated from unsigned neg-slope into
  * two's complement. Similar is done on DAC data.
  *
  * Scope module stores data from ADC into RAM, arbitrary signal generator (ASG)
  * sends data from RAM to DAC. MIMO PID uses ADC ADC as input and DAC as its output.
  *
  * Daisy chain connects with other boards with fast serial link. Data which is
- * send and received is at the moment undefined. This is left for the user.
+ * sent and received is at the moment undefined. This is left for the user.
  * 
  */
 
@@ -280,10 +280,10 @@ wire  signed [14-1:0] pid_a    , pid_b    ;
 wire                  digital_loop;
 
 ////////////////////////////////////////////////////////////////////////////////
-// PLL (clock and reaset)
+// PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
 
-// diferential clock input
+// differential clock input
 IBUFDS i_clk (.I (adc_clk_p_i), .IB (adc_clk_n_i), .O (adc_clk_in));  // differential clock input
 
 red_pitaya_pll pll (
@@ -295,7 +295,7 @@ red_pitaya_pll pll (
   .clk_dac_1x  (pll_dac_clk_1x),  // DAC clock 125MHz
   .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
   .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
-  .clk_ser     (pll_ser_clk   ),  // fast serial clock
+  .clk_ser     (pll_ser_clk   ),  // fast serial clock 200MHz
   .clk_pwm     (pll_pwm_clk   ),  // PWM clock
   // status outputs
   .pll_locked  (pll_locked)
@@ -348,7 +348,7 @@ assign adc_b = digital_loop ? dac_b : {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-// Sumation of ASG and PID signal perform saturation before sending to DAC 
+// Summation of ASG and PID signal perform saturation before sending to DAC 
 assign dac_a_sum = asg_a + pid_a;
 assign dac_b_sum = asg_b + pid_b;
 
@@ -572,3 +572,4 @@ red_pitaya_daisy i_daisy (
 );
 
 endmodule
+

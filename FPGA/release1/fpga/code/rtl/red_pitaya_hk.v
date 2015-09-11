@@ -121,7 +121,7 @@ DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
 
 //---------------------------------------------------------------------------------
 //
-//  Desing identification
+//  Design identification
 
 wire [32-1: 0] id_value;
 
@@ -180,3 +180,4 @@ end else begin
 end
 
 endmodule
+
