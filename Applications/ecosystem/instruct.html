@@ -20,7 +20,14 @@
 				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
 		
 				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
-
+				var pathname = window.location.href;
+				var hash_index = pathname.indexOf('#');
+				if (hash_index > 0 && ((pathname.length - hash_index) > 1))
+				{
+					var res = pathname.substring(hash_index+1, pathname.length);
+					$('#app_link').attr('href', 'http://store.staging1.redpitaya.com/'+ res +'.html');
+				} else 
+					$('#app_link').attr('href', 'http://store.staging1.redpitaya.com');
 			});
 
 		$(function() {
@@ -63,7 +70,7 @@
 				</div>
 				<div style="padding-top: 75px;">
 					<p class="instruct_text">This application is locked and can run only in demo mode, to unlock it please follow these steps: </p>
-					<p class="instruct_text">1. Share information about it with your friends or purchase it in order to <a href="#" class="mark_selection">get unlock key</a></M>.</p>
+					<p class="instruct_text">1. Share information about it with your friends or purchase it in order to <a href="#" id="app_link" class="mark_selection">get unlock key</a></M>.</p>
 					<p class="instruct_text">2. <a href="http://store.staging1.redpitaya.com/myequipment/list/" class="mark_selection">Open MY EQUIPMENT page</a>, click UNLOCK APPS and enter the unlock key that you received on your e-mail.</p>
 					<p class="instruct_text">3. <a href="#" id="apply" class="mark_selection">Apply unlock key</a> to your Red Pitaya.</p>
 					<p class="instruct_text">Thank you for your support.</p>
@@ -77,7 +84,7 @@
 
 var id_file = '';
 $('#apply').click(function() {
-	var testmode = true;
+	var testmode = false;
 	var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/'; 
 	var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac=00:26:32:f0:03:ba'; 
 	if (testmode) // TODO: REMOVE!!
@@ -94,7 +101,7 @@ $('#apply').click(function() {
 		$.ajax({
 			method: "POST",
 			url: post_uri,
-			data: { idfile : msg }
+			data: 'id_file=' + msg
 		})
 		.done(function( msg ) {
 			if (msg == "OK"){

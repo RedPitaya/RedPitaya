@@ -88,7 +88,7 @@
 							$('.description').children('.desc').html(result[key].description);
 							if (result[key].type == "demo")
 							{
-									$("#run").attr('href', url + 'instruct.html');
+									$("#run").attr('href', url + 'instruct.html#'+key);
 									$('#run').html('Run');
 									$("#run").css('visibility', 'visible');
 									$("#demo").css('visibility', 'visible');
