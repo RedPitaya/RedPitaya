@@ -33,10 +33,10 @@
  *
  *
  *
- * Module wrappes PS module (BD design from Vivado or EDK from PlanAhead).
- * There is also included simple AXI slave which serves as master for custom
+ * This module wrappes the PS module (BD design from Vivado or EDK from PlanAhead).
+ * There is also a simple AXI slave included which serves as a master for the custom
  * system bus. With this simpler bus it is more easy for newbies to develop 
- * their own module communication with ARM.
+ * their own module communication with the ARM.
  * 
  */
 

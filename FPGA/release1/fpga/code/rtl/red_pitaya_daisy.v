@@ -101,7 +101,7 @@ module red_pitaya_daisy
 
 //---------------------------------------------------------------------------------
 //
-//  Transmiter
+//  Transmitter
 
 reg            cfg_tx_en     ;
 reg  [32-1: 0] cfg_tx_sys    ;
@@ -156,7 +156,7 @@ red_pitaya_daisy_tx i_tx
 
 //---------------------------------------------------------------------------------
 //
-//  Reciever
+//  Receiver
 
 reg            cfg_rx_en        ;
 reg            cfg_rx_train     ;
