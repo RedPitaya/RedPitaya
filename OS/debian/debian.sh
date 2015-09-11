@@ -36,7 +36,7 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 # TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
-#localectl set-locale LANG="en_US.UTF-8"
+#localectl   set-locale   LANG="en_US.UTF-8"
 
 apt-get update
 apt-get -y upgrade
