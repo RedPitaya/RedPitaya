@@ -86,18 +86,16 @@ var id_file = '';
 $('#apply').click(function() {
 	var testmode = false;
 	var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/'; 
-	var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac=00:26:32:f0:03:ba'; 
-	if (testmode) // TODO: REMOVE!!
-	{
-		post_uri = "http://192.168.1.12:82/html/post_rec.php"
-		req_uri = "http://192.168.1.12:82/html/get_lic.php"
-	}
+	var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac='; 
 
 	$.ajax({
 		method: "GET",
 		url: "idfile.id"
 	})
 	.done(function( msg ) {
+		var obj = jQuery.parseJSON( msg );
+		if (obj != undefined && obj != null && obj.mac_address != undefined  && obj.mac_address != null)
+			req_uri = req_uri + obj.mac_address;
 		$.ajax({
 			method: "POST",
 			url: post_uri,
@@ -110,10 +108,12 @@ $('#apply').click(function() {
 					url: req_uri
 				})
 				.done(function( msg ) {
+					var res_msg = msg + "\r\n";
+					console.log(res_msg);
 					$.ajax({
 						method: "POST",
 						dataType: 'json',
-						data: { 'lic.lic' : msg },
+						data: { 'lic.lic' : res_msg },
 						contentType: 'application/json; charset=utf-8',
 						url: "/lic_upload",
 					})
