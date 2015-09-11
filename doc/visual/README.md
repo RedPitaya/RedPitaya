@@ -4,7 +4,7 @@
 
 Every developer facing a new toy (development board) starts with simple tasks, like lighting a LED.
 
-![Progam blocks](example_1_blocks.png)
+![Progam blocks for LED blink](example_1_blocks.png)
 
 To light a LED we need the *Red Pitaya* > **Set Led** block. The first entry in the block is used to choose one of the eight yellow LEDs. The second entry specifies if the LED should be turned 'ON' or 'OFF'. In the example the first *Set Led* block turns the led 'ON' while the second turns it 'OFF'.
 
@@ -19,6 +19,18 @@ You can set another LED to blink instead of LED '0', by changing the first entry
 You can change the rhythm of blinking by changing the values in *delay* blocks. Try it and see what happens.
 
 You can also change everything else. In most cases, the program will not work. If this happens, just undo your changes, and try something else.
+
+## Example 2 - Buzzer
+
+This example is similar to the previous, but instead of lighting a LED we will sound a buzzer. This buzzer is a simple device, it can only produce a simple tone, but we can again define the length of the sound and the length of pauses.
+
+![Progam blocks for Buzzer](example_2_blocks.png)
+
+Since the buzzer is very annoying, a different loop was used, to avoid listening to the noise indefinitely. *Program* > *Loops* > **repeat 10 times** will repeat the wrapped blocks only the specified amount of times.
+
+### Experimentation
+
+
 
 # Hardware
 
