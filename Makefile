@@ -1,4 +1,4 @@
- #
+#
 # $Id: Makefile 1253 2014-02-23 21:09:06Z ales.bardorfer $
 #
 # Red Pitaya OS/Ecosystem main Makefile
@@ -78,10 +78,8 @@ $(TARGET): $(BOOT) $(TESTBOOT) $(LINUX) $(DEVICETREE) $(URAMDISK) $(NGINX) $(MON
 	echo "Red Pitaya GNU/Linux/Ecosystem version $(VERSION)" >> $(TARGET)/version.txt
 	echo "" >> $(TARGET)/version.txt
 
-
 $(BUILD):
 	mkdir $(BUILD)
-
 
 # Linux build provides: uImage kernel, dtc compiler.
 $(LINUX): $(BUILD)
@@ -130,7 +128,7 @@ $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(SCPI_SERVER):
-    $(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(BUILD))
 
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
