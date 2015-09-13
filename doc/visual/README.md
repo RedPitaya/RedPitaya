@@ -4,13 +4,17 @@
 
 Every developer facing a new toy (development board) starts with simple tasks, like lighting a LED.
 
-![Progam blocks for LED blink](example_1_blocks.png)
+### Wiring
+
+### Description
+
+![Program blocks for LED blink](example_1_blocks.png)
 
 To light a LED we need the *Red Pitaya* > **Set Led** block. The first entry in the block is used to choose one of the eight yellow LEDs. The second entry specifies if the LED should be turned 'ON' or 'OFF'. In the example the first *Set Led* block turns the led 'ON' while the second turns it 'OFF'.
 
 There are *Program* > *Timing* > **delay** blocks after *Set Led*. The first delay specifies for how long the LED will be shining, while the second delay specifies for how long the LED will be dark.
 
-*Set Led* an *delay* blocks are wrapped into a *Program* > *Loops* > **repeat** *while* block, this will repeat the LED 'ON', delay, LED 'OFF', delay sequence indefinitely, this causing the LED to blink.
+*Set Led* an *delay* blocks are wrapped into a *Program* > *Loops* > **repeat while** block, this will repeat the LED 'ON', delay, LED 'OFF', delay sequence indefinitely, this causing the LED to blink.
 
 ### Experimentation
 
@@ -22,15 +26,63 @@ You can also change everything else. In most cases, the program will not work. I
 
 ## Example 2 - Buzzer
 
-This example is similar to the previous, but instead of lighting a LED we will sound a buzzer. This buzzer is a simple device, it can only produce a simple tone, but we can again define the length of the sound and the length of pauses.
+This example is similar to the previous, but instead of lighting a LED we will sound a buzzer. This buzzer is a simple device, it can only produce a simple tone, but we can try and make it sound like an alarm, by defining the length of the sound and pauses.
 
-![Progam blocks for Buzzer](example_2_blocks.png)
+### Wiring
 
-Since the buzzer is very annoying, a different loop was used, to avoid listening to the noise indefinitely. *Program* > *Loops* > **repeat 10 times** will repeat the wrapped blocks only the specified amount of times.
+### Description
+
+![Program blocks for Buzzer](example_2_blocks.png)
+
+To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer** block. We can set it to 'HIGH' (buzzing) or 'LOW' (silent). We also have to specify to which data signal the buzzer is connected, in out example this is 'D0', the first of 16 digital IO (input/output) signals.
+
+Since the buzzer is very annoying, to avoid listening to the noise indefinitely, a different loop was used. *Program* > *Loops* > **repeat 10 times** will repeat the wrapped blocks only the specified amount of times. 
 
 ### Experimentation
 
+You can change how many times the loop repeats, the buzz length and the pause length. It is also possible to connect the buzzer to a different slot on the shield, this requires changing the 'D0' signal to something else.
 
+## Example 3 - PIR Motion Sensor
+
+The previous examples only used indicators, LED and buzzer. This example is using an infra red sensor to detect motion, so the program knows, if somebody is moving in the sensors vicinity. The program will check for motion every second, and if the motion is detected it will report it by printing a line containing the current time on the screen.
+
+### Wiring
+
+### Description
+
+![Program blocks for PIR Motion Sensor](example_3_blocks.png)
+
+An infinite loop with a 1 second delay at the end is used again. Inside the loop there is a *Program* > *Logic* > **if do** block, which will execute on the condition that the *Sensors* > *Motion sensor* > **get motion from** will return true. This will happen each time somebody is moving in the vicinity of the sensor. The sensor can be attached to various connectors on the shield, here the 'D0' option is used as specified in the sensor block.
+
+If the condition is true the *Program* > *Screen and keyboard* > **Write on screen** block will be executed. A text block must be placed inside, here the *Program* > *Text* > **create text with** is used to concatenate several short text strings into one longer. The first string "Motion detected at: " is never changing so it is placed inside the *Program* > *Text* > **" "** block. We also wish to print the actual time (hour:minute:second), blocks for this strings can be found inside *Program* > *Date and Hour* > **get of day**.
+
+### Experimentation
+
+Similar to indicators, sensors can also be attached to different shield connectors, here the 'D0' connector is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
+
+## Example 4 - Alarm
+
+This example is a combination of previous examples. The PIR motion sensor will detect moving persons, while the LED and buzzer will be used to sound the alarm.
+
+### Wiring
+
+### Description
+
+### Experimentation
+
+Instead of sounding the alarm for 30 seconds, you could change it to sound until a button on screen is pressed, by using TODO.
+
+## Example 5 - Temperature logger
+
+This example shows how analog sensors can be used. The previous digital sensors only supported digital values like 'ON/OFF', 'HIGH/LOW' or '1/0'. Analog sensor can provide a range of numbers like temperature, pressure, humidity, brightness, ... Another new feature described in this example is how to draw a graph of temperature changing over time.
+
+### Wiring
+
+### Description
+
+### Experimentation
+
+ 
 
 # Hardware
 
