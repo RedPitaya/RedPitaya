@@ -61,6 +61,7 @@ int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
 int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
 int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
+int generate_LoopBack();
 
 int generate_simultaneousTrigger();
 int generate_Synchronise();
