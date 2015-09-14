@@ -608,3 +608,9 @@ int rp_I2cRead(int addr, char *data, int length) {
 int rp_I2cWrite(int addr, char *data, int length) {
     return i2c_write(addr, data, length);
 }
+
+
+//Test loopback functions
+int rp_SetLoopBack(){
+    return gen_LoopBack();
+}
