@@ -163,14 +163,13 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
 	ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
 	ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
 	channel == RP_CH_1 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
-	 
 	return RP_OK;
 }
 
 int generate_getFrequency(rp_channel_t channel, float *frequency) {
     volatile ch_properties_t *ch_properties;
     ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
-    *frequency = (float) (ch_properties->counterStep / 65536 * DAC_FREQUENCY / BUFFER_LENGTH);
+    *frequency = (float) round((ch_properties->counterStep * DAC_FREQUENCY) / (65536 * BUFFER_LENGTH));
     return RP_OK;
 }
 
