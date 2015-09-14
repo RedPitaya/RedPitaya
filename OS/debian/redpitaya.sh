@@ -8,7 +8,6 @@
 
 # Copy files to the boot file system
 unzip ecosystem*.zip -d $BOOT_DIR
-cp -f $BOOT_DIR/u-boot.scr.debian $BOOT_DIR/u-boot.scr
 
 # Systemd services
 install -v -m 664 -o root -d                                                         $ROOT_DIR/var/log/redpitaya_nginx
