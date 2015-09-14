@@ -127,7 +127,11 @@ $('#apply').click(function() {
 							var counter = 5;
 							var interval = setInterval(function() {
 								counter--;
-								$("#succes_text").html("Your license is valid and after " + counter + " seconds you will be redirected to the main page.");
+								if (counter <= 0)
+									$("#succes_text").html("Your license is valid and now you will be redirected to the main page.");
+								else 
+									$("#succes_text").html("Your license is valid and after " + counter + " seconds you will be redirected to the main page.");
+									
 								if (counter == 0) {
 									window.location = "index.html";
 								}
