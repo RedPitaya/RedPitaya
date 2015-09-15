@@ -97,7 +97,7 @@ class Base(object):
         rp_scpi.tx_txt('ACQ:TRIG NOW')
         rp_scpi.tx_txt('ACQ:TRIG:STAT?')
         rp_scpi.rx_txt()
-        rp_scpi.tx_txt('ACQ:SOUR1:DATA?')
+        rp_scpi.tx_txt('ACQ:SOUR' str(channel) + ':DATA?')
 
         buff_string = rp_scpi.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
