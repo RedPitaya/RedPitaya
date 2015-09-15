@@ -443,10 +443,6 @@ int gen_Trigger(int mask) {
     }
 }
 
-int gen_LoopBack(){
-    return generate_LoopBack();
-}
-
 int gen_Synchronise() {
     return generate_Synchronise();
 }
