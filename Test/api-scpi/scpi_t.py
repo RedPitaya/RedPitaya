@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.111')
+rp_scpi = scpi.scpi('IP')
 
 #Global variables
 rp_dpin_p  = {1: 'DIO1_P', 2: 'DIO2_P', 3: 'DIO3_P', 4: 'DIO4_P', 5: 'DIO5_P', 6: 'DIO6_P', 7: 'DIO7_P', 8: 'DIO8_P'}
