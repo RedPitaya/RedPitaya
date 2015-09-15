@@ -14,7 +14,7 @@ To light a LED we need the *Red Pitaya* > **Set Led** block. The first entry in 
 
 There are *Program* > *Timing* > **delay** blocks after *Set Led*. The first delay specifies for how long the LED will be shining, while the second delay specifies for how long the LED will be dark.
 
-*Set Led* an *delay* blocks are wrapped into a *Program* > *Loops* > **repeat while** block, this will repeat the LED 'ON', delay, LED 'OFF', delay sequence indefinitely, this causing the LED to blink.
+*Set Led* an *delay* blocks are wrapped into a *Program* > *Loops* > **repeat while []** block, this will repeat the LED 'ON', delay, LED 'OFF', delay sequence indefinitely, this causing the LED to blink.
 
 ### Experimentation
 
@@ -26,7 +26,7 @@ You can also change everything else. In most cases, the program will not work. I
 
 ## Example 2 - Buzzer
 
-This example is similar to the previous, but instead of lighting a LED we will sound a buzzer. This buzzer is a simple device, it can only produce a simple tone, but we can try and make it sound like an alarm, by defining the length of the sound and pauses.
+This example introduces *Dashboard* blocks. An on screen switch is used to turn a buzzer 'ON' and 'OFF'.
 
 ### Wiring
 
@@ -34,13 +34,13 @@ This example is similar to the previous, but instead of lighting a LED we will s
 
 ![Program blocks for Buzzer](example_2_blocks.png)
 
-To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer** block. We can set it to 'HIGH' (buzzing) or 'LOW' (silent). We also have to specify to which data signal the buzzer is connected, in out example this is 'D0', the first of 16 digital IO (input/output) signals.
+To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer [] on pin []** block. We can set it to 'HIGH' (buzzing) or 'LOW' (silent). We also have to specify to which data signal the buzzer is connected, in out example this is 'D0', the first of 16 digital IO (input/output) signals.
 
-Since the buzzer is very annoying, to avoid listening to the noise indefinitely, a different loop was used. *Program* > *Loops* > **repeat 10 times** will repeat the wrapped blocks only the specified amount of times. 
+The **Switch** block from the *Dashboard* generates a named signal each time it is toggled, additionally is sends the 'ON' and 'OFF' status after the change. To receive this signal the *Signal* > **On receive signal [] with signal value [] Do** block is used. The switch and the receiver must use the same signal name. When the switch is toggled the receiver will execute the code inside the block, but first it will set the variable 'buzz_state' to the state of the switch. The *Program* > *Logic* > **if [] do [] else []** block is used to turn 'HIGH' the buzzer only if the switch is set to 'ON', else the buzzer will be turned to 'LOW'. 
 
 ### Experimentation
 
-You can change how many times the loop repeats, the buzz length and the pause length. It is also possible to connect the buzzer to a different slot on the shield, this requires changing the 'D0' signal to something else.
+An important programming concept introduced in this example is a variable. Variables are used by programs to memorize numbers, ON/OFF states, text and many other things. When choosing a name for a variable, find something meaningful, so the name will remind you of the variables purpose. The same program can be used to control a LED, try to add a *Set Led* block, so it will shine while the buzzer is silent.
 
 ## Example 3 - PIR Motion Sensor
 
