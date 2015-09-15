@@ -50,8 +50,6 @@ int gen_Trigger(int mask);
 int gen_Synchronise();
 int triggerIfInternal(rp_channel_t channel);
 
-int gen_LoopBack();
-
 int synthesize_signal(rp_channel_t channel);
 int synthesis_sin(float *data_out);
 int synthesis_triangle(float *data_out);
