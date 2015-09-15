@@ -74,7 +74,7 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':PHAS?')
         return rp_scpi.rx_txt()
 
-    def generate_wform(self, channel):
+    def generate_wform(self, channel, wave_form):
 
         buff = []
         buff_ctrl = []
@@ -82,7 +82,6 @@ class Base(object):
         #Sample data
         freq = 100
         ampl = 1
-        wave_form = rp_wave_forms[0]
 
         #Enable Red Pitaya digital loop
         rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
@@ -97,7 +96,7 @@ class Base(object):
         rp_scpi.tx_txt('ACQ:TRIG NOW')
         rp_scpi.tx_txt('ACQ:TRIG:STAT?')
         rp_scpi.rx_txt()
-        rp_scpi.tx_txt('ACQ:SOUR' str(channel) + ':DATA?')
+        rp_scpi.tx_txt('ACQ:SOUR' + str(channel) + ':DATA?')
 
         buff_string = rp_scpi.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
@@ -177,7 +176,8 @@ class MainTest(unittest.TestCase):
     #Test generate
     def test_generate(self):
         for form in rp_wave_forms:
-            assert Base().generate_wform(form) is True
+            assert Base().generate_wform(1, form) is True
+            assert Base().generate_wform(2, form) is True
 
 
 if __name__ == '__main__':
