@@ -82,7 +82,6 @@ version.h:
 clean:
 	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
 	rm -rf $(INSTALL_DIR)/lib
-	rm -rf $(OUTPUT_DIR)
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
