@@ -1006,3 +1006,14 @@ scpi_result_t RP_APP_OscGetCursorDeltaAmplitude(rpApp_osc_source source, scpi_t 
     syslog(LOG_INFO, "*OSC:CUR:CH<n>:DV? get successfully.");
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_APP_OscRunDigLoop(scpi_t *context){
+
+    int result = rp_EnableDigitalLoop(true);
+    if(result != RP_OK){
+        syslog(LOG_ERR, "*OSC:RUN:DIGLOOP Failed to enable digital loop: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    syslog(LOG_INFO, "*OSC:RUN:DIGLOOP Successfully enabled Red Pitaya digital loop.");
+    return SCPI_RES_OK;
+}
