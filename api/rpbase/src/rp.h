@@ -1226,9 +1226,6 @@ int rp_I2cRead(int addr, char *data, int length);
 */
 int rp_I2cWrite(int addr, char *data, int length);
 
-//Test loopback functions
-int rp_SetLoopBack();
-
 ///@}
 
 #ifdef __cplusplus

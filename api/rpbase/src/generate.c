@@ -255,9 +255,6 @@ int generate_simultaneousTrigger() {
     return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
 }
 
-int generate_LoopBack(){
-	return RP_OK;
-}
 
 int generate_Synchronise() {
     // Both channels must be reset simultaneously
