@@ -5,6 +5,7 @@ __author__ = "Luka Golinar <luka.golinar@gmail.com>"
 import sys
 import redpitaya_scpi as scpi
 import unittest
+import collections
 
 
 #Scpi declaration
@@ -19,10 +20,10 @@ rp_leds    = {1: 'LED1', 2: 'LED2', 3: 'LED3', 4: 'LED4', 5: 'LED5', 6: 'LED6', 
 
 rp_freq_range  = [100, 1000, 10000, 100000, 1e+06, 1e+07, 3e+07]
 rp_volt_range  = [0.25, 0.5, 0.75, 1.0]
-rp_phase_range = [-30, -90, -180,-360, 30, 90, 180 , 360]
+rp_phase_range = [360, -180, -90, -30, 30, 90, 180, 360]
 rp_offs_range  = [-0.75, -0.5, -0.25, 0.25, 0.5 , 0.75]
 
-rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAW_N', 'SAW_P']
+rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
 
 # Base functions
 class Base(object):
@@ -33,7 +34,6 @@ class Base(object):
         return rp_scpi.rx_txt()
 
     #TODO: Direction
-
     def rp_dpin_state(self, pin, state):
         rp_scpi.tx_txt('DIG:PIN ' + pin + ', ' + state)
         rp_scpi.tx_txt('DIG:PIN? ' + pin)
@@ -55,9 +55,16 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT?')
         return rp_scpi.rx_txt()
 
+    def rp_w_form(self, channel, form):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC ' + str(form))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC?')
+        return rp_scpi.rx_txt()
+
+
     def rp_offs(self, channel, offs):
         #AMPL + OFFS <= |1V|
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT 0.01')
+
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT:OFFS ' + str(offs))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT:OFFS?')
         return rp_scpi.rx_txt()
@@ -67,10 +74,43 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':PHAS?')
         return rp_scpi.rx_txt()
 
+    def generate_wform(self, channel):
 
-    def generate_wform(self):
-        lines = [line.rstrip('\n') for line in open('./control_data')]
-        return True
+        buff = []
+        buff_ctrl = []
+
+        #Sample data
+        freq = 100
+        ampl = 1
+        wave_form = rp_wave_forms[0]
+
+        #Enable Red Pitaya digital loop
+        rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
+
+        #Set generator options
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT ' + str(ampl))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC ' + str(wave_form))
+        rp_scpi.tx_txt('OUTPUT' + str(channel) + ':STATE ON')
+
+        #Acquire bufferrp_s.tx_txt('ACQ:START')
+        rp_scpi.tx_txt('ACQ:TRIG NOW')
+        rp_scpi.tx_txt('ACQ:TRIG:STAT?')
+        rp_scpi.rx_txt()
+        rp_scpi.tx_txt('ACQ:SOUR1:DATA?')
+
+        buff_string = rp_scpi.rx_txt()
+        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+        buff = map(float, buff_string)
+        buff_ctrl = open('./ctrl_data/gen_ctrl', 'r').readlines(len(buff))
+
+        for i in range(0, len(buff_ctrl)):
+            buff_ctrl[i] = buff_ctrl[i].strip('\n')
+
+        #Compare the two buffers
+        f = lambda x1, x2: x1[0:] == x2[:-1]
+
+        return f(buff, buff_ctrl)
 
 # Main test class
 class MainTest(unittest.TestCase):
@@ -111,6 +151,12 @@ class MainTest(unittest.TestCase):
             self.assertAlmostEquals(float(Base().rp_ampl(1, volt)), volt)
             self.assertAlmostEquals(float(Base().rp_ampl(2, volt)), volt)
 
+    def test_w_form(self):
+        for i in range(0, len(rp_wave_forms)):
+            w_form = rp_wave_forms[i]
+            self.assertEquals(Base().rp_w_form(1, w_form), w_form)
+            self.assertEquals(Base().rp_w_form(2, w_form), w_form)
+
     def test_offs(self):
         for i in range(0, len(rp_offs_range)):
             offs = rp_offs_range[i]
@@ -128,11 +174,11 @@ class MainTest(unittest.TestCase):
                 self.assertAlmostEquals(float(Base().rp_phase(1, phase)), phase)
                 self.assertAlmostEquals(float(Base().rp_phase(2, phase)), phase)
 
-'''
+    #Test generate
     def test_generate(self):
         for form in rp_wave_forms:
             assert Base().generate_wform(form) is True
-'''
+
 
 if __name__ == '__main__':
     #TODO: Implement specific tests
