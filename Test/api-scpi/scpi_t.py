@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('IP')
+rp_scpi = scpi.scpi('192.168.1.109')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -22,6 +22,11 @@ rp_freq_range  = [100, 1000, 10000, 100000, 1e+06, 1e+07, 3e+07]
 rp_volt_range  = [0.25, 0.5, 0.75, 1.0]
 rp_phase_range = [360, -180, -90, -30, 30, 90, 180, 360]
 rp_offs_range  = [-0.75, -0.5, -0.25, 0.25, 0.5 , 0.75]
+rp_dcyc_range  = [0.5, 1, 10, 50, 75, 100]
+rp_ncyc_range  = [1, 10, 100, 1000, 10000, 50000, 'INF']
+rp_nor_range   = rp_ncyc_range[:]
+rp_inp_range   = [i * 100 for i in range(1, 6)]
+
 
 rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
 
@@ -74,6 +79,38 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':PHAS?')
         return rp_scpi.rx_txt()
 
+    def rp_dcyc(self, channel, dcyc):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':DCYC ' + str(dcyc))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':DCYC?')
+        return rp_scpi.rx_txt()
+
+    #TODO: Scpi server returns 1 for ON and 0 for off here. It should be ON and OFF. Fix that!
+    def rp_burst_state(self, channel):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+        if(rp_scpi.rx_txt().strip('\n') is not '1'):
+            return False
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+        if(rp_scpi.rx_txt().strip('\n') is not '0'):
+            return False
+        return True
+
+    def rp_burst_ncyc(self, channel, ncyc):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC ' + str(ncyc))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC?')
+        return rp_scpi.rx_txt()
+
+    def rp_burst_nor(self, channel, nor):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC ' + str(nor))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC?')
+        return rp_scpi.rx_txt()
+
+    def rp_burst_intp(self, channel, intp):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER ' + str(intp))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER?')
+        return rp_scpi.rx_txt()
+
     def generate_wform(self, channel, wave_form):
 
         buff = []
@@ -93,7 +130,7 @@ class Base(object):
         rp_scpi.tx_txt('OUTPUT' + str(channel) + ':STATE ON')
 
         #Acquire bufferrp_s.tx_txt('ACQ:START')
-        rp_scpi.tx_txt('ACQ:TRIG NOW')
+        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
         rp_scpi.tx_txt('ACQ:TRIG:STAT?')
         rp_scpi.rx_txt()
         rp_scpi.tx_txt('ACQ:SOUR' + str(channel) + ':DATA?')
@@ -107,9 +144,8 @@ class Base(object):
             buff_ctrl[i] = buff_ctrl[i].strip('\n')
 
         #Compare the two buffers
-        f = lambda x1, x2: x1[0:] == x2[:-1]
-
-        return f(buff, buff_ctrl)
+        cmp = lambda x1, x2: x1[0:] == x2[:-1]
+        return cmp(buff, buff_ctrl)
 
 # Main test class
 class MainTest(unittest.TestCase):
@@ -128,7 +164,7 @@ class MainTest(unittest.TestCase):
             self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '0'), '0')
 
         #Test neg state
-        for pin in range(0, 8):
+        for pin in range(len(rp_dpin_p)):
             self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '1'), '1')
             self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
 
@@ -139,31 +175,31 @@ class MainTest(unittest.TestCase):
 
     ############### SIGNAL GENERATOR ###############
     def test_freq(self):
-        for i in range(0, len(rp_freq_range)):
+        for i in range(len(rp_freq_range)):
             freq = rp_freq_range[i]
             self.assertEquals(float(Base().rp_freq(1, freq)), freq)
             self.assertEquals(float(Base().rp_freq(2, freq)), freq)
 
     def test_volt(self):
-        for i in range(0, len(rp_volt_range)):
+        for i in range(len(rp_volt_range)):
             volt = rp_volt_range[i]
             self.assertAlmostEquals(float(Base().rp_ampl(1, volt)), volt)
             self.assertAlmostEquals(float(Base().rp_ampl(2, volt)), volt)
 
     def test_w_form(self):
-        for i in range(0, len(rp_wave_forms)):
+        for i in range(len(rp_wave_forms)):
             w_form = rp_wave_forms[i]
             self.assertEquals(Base().rp_w_form(1, w_form), w_form)
             self.assertEquals(Base().rp_w_form(2, w_form), w_form)
 
     def test_offs(self):
-        for i in range(0, len(rp_offs_range)):
+        for i in range(len(rp_offs_range)):
             offs = rp_offs_range[i]
             self.assertAlmostEquals(float(Base().rp_offs(1, offs)), offs)
             self.assertAlmostEquals(float(Base().rp_offs(2, offs)), offs)
 
     def test_phase(self):
-        for i in range(0, len(rp_phase_range)):
+        for i in range(len(rp_phase_range)):
             phase = rp_phase_range[i]
             if(phase < 0):
                 phase_new = phase + 360
@@ -172,6 +208,40 @@ class MainTest(unittest.TestCase):
             else:
                 self.assertAlmostEquals(float(Base().rp_phase(1, phase)), phase)
                 self.assertAlmostEquals(float(Base().rp_phase(2, phase)), phase)
+
+    def test_dcyc(self):
+        for i in range(len(rp_dcyc_range)):
+            dcyc = rp_dcyc_range[i]
+            self.assertEquals(float(Base().rp_dcyc(1, dcyc)), dcyc)
+            self.assertEquals(float(Base().rp_dcyc(2, dcyc)), dcyc)
+
+    #TODO: Scpi server returns 0 on INF given. This should also be fixed.
+    def test_ncyc(self):
+        for i in range(len(rp_ncyc_range)):
+            ncyc = rp_ncyc_range[i]
+            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), '0')
+            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), '0')
+
+    def test_nor(self):
+        for i in range(len(rp_nor_range)):
+            nor = rp_nor_range[i]
+            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(1, nor), '0')
+            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(2, nor), '0')
+
+    def test_intp(self):
+        for i in range(len(rp_inp_range)):
+            intp = rp_inp_range[i]
+            self.assertEquals(float(Base().rp_burst_intp(1, intp)), intp)
+            self.assertEquals(float(Base().rp_burst_intp(2, intp)), intp)
+
+    def test_burst_state(self):
+        self.assertTrue(Base().rp_burst_state(1))
+        self.assertTrue(Base().rp_burst_state(1))
+
+    #TODO: Arbitrary-waveform. TRAC-DATA
+
+
+    ############### SIGNAL ACQUISITION TOOL ###############
 
     #Test generate
     def test_generate(self):
