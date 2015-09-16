@@ -92,6 +92,12 @@ This example shows how analog sensors can be used. The previous digital sensors 
 
 # Hardware
 
+## Visual programming shield connectors
+
+The black connectors on the sides are compatible with arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs.
+
+In addition to general purpose connectors on the sides of the shield, there are dedicated connectors compatible with [Grove modules](http://www.seeedstudio.com/depot/category_products?themes_id=1417 "seeed Grove modules").
+
 ## Red Pitaya connectors
 
 While it is possible to connect sensors and indicators directly to Red Pitaya *E1* and *E2* connectors, it is recommended to use shields. They enable the user to connect multiple peripherals without improvised wiring. It is also possible for developers to create their own custom shields.
@@ -106,14 +112,14 @@ Connector E1 provides 16 *GPIO* (general purpose input/output) signals. All GPIO
 | NC       | `24` | `23` | NC       |
 | NC       | `22` | `21` | NC       |
 | NC       | `20` | `19` | NC       |
-| DIO_N[7] | `18` | `17` | DIO_P[7] |
-| DIO_N[6] | `16` | `15` | DIO_P[6] |
-| DIO_N[5] | `14` | `13` | DIO_P[5] |
-| DIO_N[4] | `12` | `11` | DIO_P[4] |
-| DIO_N[3] | `10` | ` 9` | DIO_P[3] |
-| DIO_N[2] | ` 8` | ` 7` | DIO_P[2] |
-| DIO_N[1] | ` 6` | ` 5` | DIO_P[1] |
-| DIO_N[0] | ` 4` | ` 3` | DIO_P[0] |
+| D[15]    | `18` | `17` | D[7]     |
+| D[14]    | `16` | `15` | D[6]     |
+| D[13]    | `14` | `13` | D[5]     |
+| D[12]    | `12` | `11` | D[4]     |
+| D[11]    | `10` | ` 9` | D[3]     |
+| D[10]    | ` 8` | ` 7` | D[2]     |
+| D[ 9]    | ` 6` | ` 5` | D[1]     |
+| D[ 8]    | ` 4` | ` 3` | D[0]     |
 | +3.3V    | ` 2` | ` 1` | +3.3V    |
 
 ### E2 connector
