@@ -12,11 +12,11 @@ import collections
 rp_scpi = scpi.scpi('IP')
 
 #Global variables
-rp_dpin_p  = {1: 'DIO1_P', 2: 'DIO2_P', 3: 'DIO3_P', 4: 'DIO4_P', 5: 'DIO5_P', 6: 'DIO6_P', 7: 'DIO7_P', 8: 'DIO8_P'}
-rp_dpin_n  = {0: 'DIO0_N', 1: 'DIO1_N', 2: 'DIO2_N', 3: 'DIO3_N', 4: 'DIO4_N', 5: 'DIO5_N', 6: 'DIO6_N', 7: 'DIO7_N', 8:'DIO8_N'}
-rp_a_pin_o = {0: 'AOUT0', 1: 'AOUT1', 2: 'AOUT2', 3: 'AOUT3'}
-rp_a_pin_i = {0: 'AIN0', 1: 'AIN1', 2: 'AIN2', 3: 'AIN3'}
-rp_leds    = {1: 'LED1', 2: 'LED2', 3: 'LED3', 4: 'LED4', 5: 'LED5', 6: 'LED6', 7: 'LED7', 8: 'LED8'}
+rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
+rp_dpin_n  = {i: 'DIO'+str(i)+'_N' for i in range(8)}
+rp_a_pin_o = {i: 'AOUT'+str(i) for i in range(4)}
+rp_a_pin_i = {i: 'AIN'+str(i) for i in range(4)}
+rp_leds    = {i: 'LED'+str(i) for i in range(8)}
 
 rp_freq_range  = [100, 1000, 10000, 100000, 1e+06, 1e+07, 3e+07]
 rp_volt_range  = [0.25, 0.5, 0.75, 1.0]
