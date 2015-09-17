@@ -74,9 +74,9 @@ This example is a combination of previous examples. The PIR motion sensor will d
 
 ### Description
 
-![Program blocks for PIR Motion Sensor](example_4/block_start.png)
-![Program blocks for PIR Motion Sensor](example_4/block_stop.png)
-![Program blocks for PIR Motion Sensor](example_4/block_timestamp.png)
+![Program blocks for Alarm](example_4/block_start.png)
+![Program blocks for Alarm](example_4/block_stop.png)
+![Program blocks for Alarm](example_4/block_timestamp.png)
 
 ### Experimentation
 
@@ -101,6 +101,22 @@ This example shows how analog sensors can be used. The previous digital sensors 
 The black connectors on the sides are compatible with arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs.
 
 In addition to general purpose connectors on the sides of the shield, there are dedicated connectors compatible with [Grove modules](http://www.seeedstudio.com/depot/category_products?themes_id=1417 "seeed Grove modules").
+
+### Grove module connectors
+
+| pin | CN8  | CN8  | CN18 | CN19 | CN20 | CN12 | CN7  | CN?? | CN22 | CN9  | CN10 | CN11 | CN13 | CN14 |
+|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|
+| `0` | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  |
+| `1` | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  |
+| `2` | TX   | SDA  | SDA  | SDA  | SDA  | AI3  | AI2  | AI1  | AO1  | IO1  | IO3  | IO5  | IO7  | IO9  |
+| `3` | RX   | SCL  | SCL  | SCL  | SCL  | AI2  | AI1  | AI0  | AO0  | IO0  | IO2  | IO4  | IO6  | IO8  |
+|     | UART | I2C  | I2C  | I2C  | I2C  | AI   | AI   | AI   | AO   | DIO  | DIO  | DIO  | DIO  | DIO  |
+
+### Arduino compatible connectors
+
+| function | pin | comment |
+|----------|-----|---------|
+| GND      | `0` |         |
 
 ## Red Pitaya connectors
 
