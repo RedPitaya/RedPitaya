@@ -98,31 +98,73 @@ This example shows how analog sensors can be used. The previous digital sensors 
 
 ## Visual programming shield connectors
 
-The black connectors on the sides are compatible with arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs.
-
-In addition to general purpose connectors on the sides of the shield, there are dedicated connectors compatible with [Grove modules](http://www.seeedstudio.com/depot/category_products?themes_id=1417 "seeed Grove modules").
+The black connectors on the sides are compatible with Arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs. On the bottom there are sonnectors to the Red Pitaya board.
 
 ### Grove module connectors
 
-| pin | CN8  | CN8  | CN18 | CN19 | CN20 | CN12 | CN7  | CN?? | CN22 | CN9  | CN10 | CN11 | CN13 | CN14 |
+This are dedicated connectors compatible with [Grove modules](http://www.seeedstudio.com/depot/category_products?themes_id=1417 "seeed Grove modules").
+
+| pin | CN8  | CN8  | CN18 | CN19 | CN20 | CN2  | CN7  | CN12 | CN22 | CN9  | CN10 | CN11 | CN13 | CN14 |
 |-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|
-| `0` | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  |
-| `1` | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  |
-| `2` | TX   | SDA  | SDA  | SDA  | SDA  | AI3  | AI2  | AI1  | AO1  | IO1  | IO3  | IO5  | IO7  | IO9  |
-| `3` | RX   | SCL  | SCL  | SCL  | SCL  | AI2  | AI1  | AI0  | AO0  | IO0  | IO2  | IO4  | IO6  | IO8  |
+| `1` | RX   | SCL  | SCL  | SCL  | SCL  | AI0  | AI1  | AI2  | AO0  | IO0  | IO2  | IO4  | IO6  | IO8  |
+| `2` | TX   | SDA  | SDA  | SDA  | SDA  | AI1  | AI2  | AI3  | AO1  | IO1  | IO3  | IO5  | IO7  | IO9  |
+| `3` | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  |
+| `4` | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  |
 |     | UART | I2C  | I2C  | I2C  | I2C  | AI   | AI   | AI   | AO   | DIO  | DIO  | DIO  | DIO  | DIO  |
 
-### Arduino compatible connectors
+### Arduino shield compatible connectors
 
-| function | pin | comment |
-|----------|-----|---------|
-| GND      | `0` |         |
+This set of connectors is partially compatible with the Arduino shield connector.
 
-## Red Pitaya connectors
+| function | pin | comment       |
+|----------|-----|---------------|
+| IO0      | `1` | D[0]          |
+| IO1      | `2` | D[1]          |
+| IO2      | `3` | D[2]          |
+| IO3      | `4` | D[3]          |
+| IO4      | `5` | D[4]          |
+| IO5      | `6` | D[5]          |
+| IO6      | `7` | D[6]          |
+| IO7      | `8` | D[7]          |
+
+| function | pin | comment       |
+|----------|-----|---------------|
+| IO8      | `1` | D[8]          |
+| IO9      | `2` | D[9]          |
+| IO10     | `3` | D[10]         |
+| IO11     | `4` | D[11]         |
+| IO12     | `5` | D[12]         |
+| IO13     | `6` | D[13]         |
+| GND      | `7` |               |
+| AREF     | `8` | not connected |
+| SDA      | `9` | I2C_SDA       |
+| SCL      |`10` | I2C_SCL       |
+
+| function | pin | comment       |
+|----------|-----|---------------|
+| A0       | `1` | AI[0]         |
+| A1       | `2` | AI[1]         |
+| A2       | `3` | AI[2]         |
+| A3       | `4` | AI[3]         |
+| A4       | `5` | I2C_SDA       |
+| A5       | `6` | I2C_SCL       |
+
+| function | pin | comment       |
+|----------|-----|---------------|
+| A6       | `1` | not connected |
+| A7       | `1` | not connected |
+| Reset    | `1` | not connected |
+| +3.3V    | `1` |               |
+| +5.0V    | `1` |               |
+| GND      | `1` |               |
+| GND      | `1` |               |
+| +VIN     | `1` | not connected |
+
+### Connectors to Red Pitaya motherboard
 
 While it is possible to connect sensors and indicators directly to Red Pitaya *E1* and *E2* connectors, it is recommended to use shields. They enable the user to connect multiple peripherals without improvised wiring. It is also possible for developers to create their own custom shields.
 
-### E1 connector
+#### Connector E1
 
 Connector E1 provides 16 *GPIO* (general purpose input/output) signals. All GPIO can be used to read sensor data, or drive indicators.
 
@@ -142,7 +184,7 @@ Connector E1 provides 16 *GPIO* (general purpose input/output) signals. All GPIO
 | D[ 8]    | ` 4` | ` 3` | D[0]     |
 | +3.3V    | ` 2` | ` 1` | +3.3V    |
 
-### E2 connector
+#### connector E2
 
 Connector E2 provides 4 *AI* (analog input) signals, 4 *AO* (analog output) signals and signals for serial protocols *UART*, *SPI* and *I2C*. Analog inputs can be used to connect analog sensors. Analog outputs can be used to drive some indicators. Serial protocols can be used to connect more complex sensors, indicators and other peripherals.
 
