@@ -74,6 +74,10 @@ This example is a combination of previous examples. The PIR motion sensor will d
 
 ### Description
 
+![Program blocks for PIR Motion Sensor](example_4/block_start.png)
+![Program blocks for PIR Motion Sensor](example_4/block_stop.png)
+![Program blocks for PIR Motion Sensor](example_4/block_timestamp.png)
+
 ### Experimentation
 
 Instead of sounding the alarm for 30 seconds, you could change it to sound until a button on screen is pressed, by using TODO.
