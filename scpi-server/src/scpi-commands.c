@@ -251,6 +251,7 @@ static const scpi_command_t scpi_commands[] = {
 
         /* Oscilloscope */
         {.pattern = "OSC:RUN", .callback = RP_APP_OscRun,},
+        {.pattern = "OSC:RUN:DIGLOOP", .callback = RP_APP_OscRunDigLoop,},
         {.pattern = "OSC:STOP", .callback = RP_APP_OscStop,},
         {.pattern = "OSC:RST", .callback = RP_APP_OscReset,},
         {.pattern = "OSC:AUTOSCALE", .callback = RP_APP_OscAutoscale,},
