@@ -763,7 +763,7 @@ scpi_result_t RP_GenGetBurstPeriod(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultUInt(context, value);
 
-    syslog(LOG_INFO, "*SOUR<n>:BURS:INT:PER? Successfully returned burst period %s to client.",  value);
+    syslog(LOG_INFO, "*SOUR<n>:BURS:INT:PER? Successfully returned burst period %d to client.",  value);
 
     return SCPI_RES_OK;
 }
