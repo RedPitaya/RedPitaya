@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.1.109')
+rp_scpi = scpi.scpi('192.168.178.107')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -116,8 +116,8 @@ class Base(object):
         buff = []
         buff_ctrl = []
 
-        #Sample data
-        freq = 100
+        #Do not change this values!
+        freq = 7629.39453125
         ampl = 1
 
         #Enable Red Pitaya digital loop
@@ -144,7 +144,7 @@ class Base(object):
             buff_ctrl[i] = buff_ctrl[i].strip('\n')
 
         #Compare the two buffers
-        cmp = lambda x1, x2: x1[0:] == x2[:-1]
+        cmp = lambda x1, x2: x1[:] == x2[:]
         return cmp(buff, buff_ctrl)
 
 # Main test class
@@ -219,14 +219,14 @@ class MainTest(unittest.TestCase):
     def test_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
-            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), '0')
-            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), '0')
+            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
+            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
 
     def test_nor(self):
         for i in range(len(rp_nor_range)):
             nor = rp_nor_range[i]
-            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(1, nor), '0')
-            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(2, nor), '0')
+            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
+            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
 
     def test_intp(self):
         for i in range(len(rp_inp_range)):
