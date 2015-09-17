@@ -152,13 +152,13 @@ This set of connectors is partially compatible with the Arduino shield connector
 | function | pin | comment       |
 |----------|-----|---------------|
 | A6       | `1` | not connected |
-| A7       | `1` | not connected |
-| Reset    | `1` | not connected |
-| +3.3V    | `1` |               |
-| +5.0V    | `1` |               |
-| GND      | `1` |               |
-| GND      | `1` |               |
-| +VIN     | `1` | not connected |
+| A7       | `2` | not connected |
+| Reset    | `3` | not connected |
+| +3.3V    | `4` |               |
+| +5.0V    | `5` |               |
+| GND      | `6` |               |
+| GND      | `7` |               |
+| +VIN     | `8` | not connected |
 
 ### Connectors to Red Pitaya motherboard
 
