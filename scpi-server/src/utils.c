@@ -328,13 +328,13 @@ int getRpAppMathOperationString(rpApp_osc_math_oper_t op, char *string) {
 }
 
 int getRpInfinityInteger(const char *string, int32_t *value) {
-    if (strcmp(string, "INF") == 0)  *value = -1;
+    if (strcmp(string, "INF") == 0)  *value = 0;
     else                             *value = atoi(string);
     return RP_OK;
 }
 
 int getRpInfinityIntegerString(int32_t value, char *string) {
-    if (value == -1)  strcpy(string, "INF");
+    if (value == 0)   strcpy(string, "INF");
     else              sprintf(string, "%d", value);
     return RP_OK;
 }
