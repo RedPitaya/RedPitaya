@@ -1,6 +1,6 @@
 # Examples
 
-TODO: add some generic wiering descriptions of the shield.
+TODO: add some generic wiring descriptions of the shield.
 
 ## Example 1 - LED blink
 
@@ -8,15 +8,17 @@ Every developer facing a new toy (development board) starts with simple tasks, l
 
 ### Wiring
 
+This example does not require a shield yet, there are 8 LEDs on the Red Pitaya board, which can be turnd `ON` or `OFF`.
+
 ### Description
 
 ![Program blocks for LED blink](example_1/blocks.png)
 
-To light an LED we need the *Red Pitaya* > **Set Led** block. The first entry in the block is used to choose one of the eight yellow LEDs. The second entry specifies if the LED should be turned `ON` or `OFF`. In the example the first *Set Led* block turns the led `ON` while the second turns it `OFF`.
+To light an LED we need the *Red Pitaya* > **Set [] Led on pin []** block. The first entry in the block is used to choose one of the eight yellow LEDs. The second entry specifies if the LED should be turned `ON` or `OFF`. In the example the first *Set Led* block turns the led `ON` while the second turns it `OFF`.
 
-There are *Program* > *Timing* > **delay** blocks after *Set Led*. The first delay specifies for how long the LED will be shining, while the second delay specifies for how long the LED will be dark.
+There are *Program* > *Timing* > **delay [] []** blocks after *Set Led*. The *delay* block provides a time delay of the specified amount of seconds/milliseconds. The first delay specifies for how long the LED will be shining, while the second delay specifies for how long the LED will be dark.
 
-*Set Led* an *delay* blocks are wrapped into a *Program* > *Loops* > **repeat while []** block, this will repeat the LED `ON`, delay, LED `OFF`, delay sequence indefinitely, this causing the LED to blink.
+*Set Led* an *delay* blocks are wrapped into a *Program* > *Loops* > **repeat while [] []** block, this will repeat the LED `ON`, delay, LED `OFF`, delay sequence indefinitely, this causing the LED to blink.
 
 ### Experimentation
 
@@ -28,7 +30,7 @@ You can also change everything else. In most cases, the program will not work. I
 
 ## Example 2 - Buzzer
 
-This example introduces *Dashboard* blocks. An on screen switch is used to turn a buzzer `ON` and `OFF`.
+This example introduces the extension shield, the Grove Buzzer, *Dashboard* block *Switch* and variables. We will be able to use an on screen switch is used to turn a buzzer `ON` and `OFF`.
 
 ### Wiring
 
@@ -38,7 +40,7 @@ TODO: describe how the board can be attached to various connectors.
 
 ![Program blocks for Buzzer](example_2/blocks.png)
 
-To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer [] on pin []** block. We can set it to `HIGH` (buzzing) or `LOW` (silent). We also have to specify to which data signal the buzzer is connected, in out example this is `D0`, the first of 16 digital IO (input/output) signals.
+To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer [] on pin []** block. We can set it to `HIGH` (buzzing) or `LOW` (silent). We also have to specify to which data signal the buzzer is connected, in out example this is `D0`, the first of 16 digital IO (input/output) signals available on the *CN9* shield connector.
 
 The **Switch** block from the *Dashboard* generates a named signal each time it is toggled, additionally is sends the `ON` and `OFF` status after the change. To receive this signal the *Signal* > **On receive signal [] with signal value [] Do** block is used. The switch and the receiver must use the same signal name. When the switch is toggled the receiver will execute the code inside the block, but first it will set the variable `buzz_state` to the state of the switch. The *Program* > *Logic* > **if [] do [] else []** block is used to turn `HIGH` the buzzer only if the switch is set to `ON`, else the buzzer will be turned to `LOW`. 
 
@@ -53,17 +55,19 @@ The previous examples only used indicators, LED and buzzer. This example is usin
 
 ### Wiring
 
+TODO: describe how the board can be attached to various connectors.
+
 ### Description
 
 ![Program blocks for PIR Motion Sensor](example_3/blocks.png)
 
-An infinite loop with a 1 second delay at the end is used again. Inside the loop there is a *Program* > *Logic* > **if do** block, which will execute on the condition that the *Sensors* > *Motion sensor* > **get motion from** will return true. This will happen each time somebody is moving in the vicinity of the sensor. The sensor can be attached to various connectors on the shield, here the `D0` option is used as specified in the sensor block.
+An infinite loop with a 1 second delay at the end is used again. Inside the loop there is a *Program* > *Logic* > **if [] do []** block, which will execute its contents on the condition that the *Sensors* > *Motion sensor* > **get motion from []** will return true. This will happen each time somebody is moving in the vicinity of the sensor. The sensor can be attached to various connectors on the shield, here the `D0` option is used as specified in the sensor block.
 
-If the condition is true the *Program* > *Screen and keyboard* > **Write on screen** block will be executed. A text block must be placed inside, here the *Program* > *Text* > **create text with** is used to concatenate several short text strings into one longer. The first string "Motion detected at: " is never changing so it is placed inside the *Program* > *Text* > **" "** block. We also wish to print the actual time (hour:minute:second), blocks for this strings can be found inside *Program* > *Date and Hour* > **get of day**.
+If the condition is true the *Program* > *Screen and keyboard* > **Write on screen []** block will be executed. A text block must be placed inside, here the *Program* > *Text* > **create text with [] [] ...** is used to concatenate several short text strings into one longer. The first string "Motion detected at: " is never changing so it is placed inside the *Program* > *Text* > **" "** block. We also wish to print the actual time (hour:minute:second), blocks for time strings can be found inside *Program* > *Date and Hour* > **get [] of day**.
 
 ### Experimentation
 
-Similar to indicators, sensors can also be attached to different shield connectors, here the `D0` connector is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
+Similar to indicators, sensors can also be attached to different shield connectors, here the `D0` connector (shield connector *CN9*) is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
 
 
 ## Example 4 - Alarm
@@ -71,6 +75,8 @@ Similar to indicators, sensors can also be attached to different shield connecto
 This example is a combination of previous examples. The PIR motion sensor will detect moving persons, while the LED and buzzer will be used to sound the alarm.
 
 ### Wiring
+
+TODO: describe how the board can be attached to various connectors.
 
 ### Description
 
@@ -88,6 +94,8 @@ This example shows how analog sensors can be used. The previous digital sensors 
 
 ### Wiring
 
+TODO: describe how the board can be attached to various connectors.
+
 ### Description
 
 ### Experimentation
@@ -98,7 +106,7 @@ This example shows how analog sensors can be used. The previous digital sensors 
 
 ## Visual programming shield connectors
 
-The black connectors on the sides are compatible with Arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs. On the bottom there are sonnectors to the Red Pitaya board.
+The black connectors on the sides are compatible with Arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs. On the bottom there are connectors to the Red Pitaya board.
 
 ### Grove module connectors
 
