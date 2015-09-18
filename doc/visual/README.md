@@ -72,7 +72,7 @@ Similar to indicators, sensors can also be attached to different shield connecto
 
 ## Example 4 - Alarm
 
-This example is a combination of previous examples. The PIR motion sensor will detect moving persons, while the LED and buzzer will be used to sound the alarm.
+This example is a combination of previous examples and is also introducing functions. The PIR motion sensor will detect moving persons, while the LED and buzzer will be used to sound the alarm. There is also an option to remotely disable the alarm by pressing an on-screen button.
 
 ### Wiring
 
@@ -84,9 +84,19 @@ TODO: describe how the board can be attached to various connectors.
 ![Program blocks for Alarm](example_4/block_stop.png)
 ![Program blocks for Alarm](example_4/block_timestamp.png)
 
+The main block contains a loop repeating 10 times each second. Inside the loop the motion sensor is checked and its status is stored into the variable `status`. If motion is detected the program will start executing another loop, which will sound the buzzer and blink a LED 60 times, unless in the meantime the variable `status` changes to `false`.
+
+The second block is executed each time the *stop* button (*Switch* with the *push* option enabled under settings). The purpose of this block is to stop the alarm, this is achieved by changing the value of the `status` variable to `false`.
+
+The third block is a function from *Program* > *Functions* > **to [] []**. Functions are used to store code which is used in multiple places. In this case the function is named `timestamp`, since when executed, it will return a string containing the current time. If you look at the first two blocks, you will see one prints the alarm start time, the other the alarm stop time, both use the same `timestamp` function to provide the time string.
+
+The first two blocks are running at the same time, the first one is checking for motion, the second is checking for button presses. The variable `status` is used to share/pass information between them.
+
+TODO: there seems to be some issues with concurent execution and signals, therefore do expect problems.
+
 ### Experimentation
 
-Instead of sounding the alarm for 30 seconds, you could change it to sound until a button on screen is pressed, by using TODO.
+By using a different loop type, you could change the alarm to sound until a button on screen is pressed, without the 30 second timeout (60 repetitions each taking o.5 seconds).
 
 ## Example 5 - Temperature logger
 
@@ -97,6 +107,8 @@ This example shows how analog sensors can be used. The previous digital sensors 
 TODO: describe how the board can be attached to various connectors.
 
 ### Description
+
+
 
 ### Experimentation
 
