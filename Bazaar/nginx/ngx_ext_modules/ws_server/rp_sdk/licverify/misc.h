@@ -13,6 +13,9 @@ using CryptoPP::FileSource;
 #include "filters.h"
 using CryptoPP::StringSink;
 
+int get_xilinx_dna(unsigned long long *dna);
+std::string GetZynqId();
+
 //Function gets json object from file
 inline int GetJSONObject(const std::string _file_name, JSONNode & _json_node)
 {
@@ -59,7 +62,7 @@ inline std::string GetDataFromFile(const std::string _file_name, const std::stri
 //Function reads Zynq ID from ID file
 inline std::string GetDevID(const std::string _file_name)
 {
-	std::string devid_str = GetDataFromFile(_file_name, "zynq_id");
+	std::string devid_str = GetZynqId();
 	return devid_str;
 }
 

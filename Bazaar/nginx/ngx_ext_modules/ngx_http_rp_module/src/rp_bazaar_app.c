@@ -358,8 +358,11 @@ int get_fpga_path(const char *app_id,
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
 {
-	if (access("/opt/redpitaya/www/apps/idfile.id", F_OK) != 0)
+	static int once = 1;
+	if (once) {
 		system("bazaar idgen 0");	
+		once = 0;
+	}
 	
     DIR *dp;
     struct dirent *ep;
