@@ -295,7 +295,7 @@ enum _scpi_result_t RP_GenGetState(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultBool(context, state);
 
-    syslog(LOG_INFO, "*OUTPUT<n>:STATE? got successfully.");
+    syslog(LOG_INFO, "*OUTPUT<n>:STATE? Successfully returned generate state to client.");
 
     return SCPI_RES_OK;
 }
@@ -332,7 +332,7 @@ enum _scpi_result_t RP_GenGetFrequency(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*SOUR<n>:FREQ:FIX? Successfully got frequancy to %.2f Hz.", value);
+    syslog(LOG_INFO, "*SOUR<n>:FREQ:FIX? Successfully returned frequency %.2fHz to client.", value);
 
     return SCPI_RES_OK;
 }
@@ -387,7 +387,7 @@ enum _scpi_result_t RP_GenGetWaveForm(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultString(context, string);
 
-    syslog(LOG_INFO, "*SOUR<n>:FUNC? Successfully got waveform to %s.", string);
+    syslog(LOG_INFO, "*SOUR<n>:FUNC? Successfully returned waveform %s to client.", string);
 
     return SCPI_RES_OK;
 }
@@ -424,7 +424,7 @@ enum _scpi_result_t RP_GenGetAmplitude(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*SOUR<n>:VOLT? Successfully got amplitude to %.2f V.", value);
+    syslog(LOG_INFO, "*SOUR<n>:VOLT? Successfully returned amplitudate voltage %.2fV to client.", value);
 
     return SCPI_RES_OK;
 }
@@ -461,7 +461,7 @@ enum _scpi_result_t RP_GenGetOffset(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*SOUR<n>:VOLT:OFFS? Successfully got offset to %.2f V.", value);
+    syslog(LOG_INFO, "*SOUR<n>:VOLT:OFFS? Successfully returned offset %.2fV to client.", value);
 
     return SCPI_RES_OK;
 }
@@ -498,7 +498,7 @@ enum _scpi_result_t RP_GenGetPhase(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*SOUR<n>:PHAS? Successfully got phase to %.2f deg.", value);
+    syslog(LOG_INFO, "*SOUR<n>:PHAS? Successfully returned phase %.2fdeg to client.", value);
 
     return SCPI_RES_OK;
 }
@@ -535,7 +535,7 @@ enum _scpi_result_t RP_GenGetDutyCycle(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultDouble(context, value*100);
 
-    syslog(LOG_INFO, "*SOUR<n>:DCYC? Successfully got duty cycle to %.2f.", value);
+    syslog(LOG_INFO, "*SOUR<n>:DCYC? Successfully returned duty cycle %.2f to client.", value);
 
     return SCPI_RES_OK;
 }
@@ -573,7 +573,7 @@ enum _scpi_result_t RP_GenGetArbitraryWaveForm(rp_channel_t channel, scpi_t *con
 
     // Return back result
     SCPI_ResultBufferFloat(context, data, length);
-    syslog(LOG_INFO, "*SOUR<n>:TRAC:DATA:DATA? Successfully got arbitrary waveform");
+    syslog(LOG_INFO, "*SOUR<n>:TRAC:DATA:DATA? Successfully returned arbitrary wave form to client.");
 
     return SCPI_RES_OK;
 }
@@ -615,7 +615,7 @@ enum _scpi_result_t RP_GenGetGenerateMode(rp_channel_t channel, scpi_t *context)
     // Return back result
     SCPI_ResultBool(context, mode == RP_GEN_MODE_BURST);
 
-    syslog(LOG_INFO, "*SOUR<n>:BURS:STAT? Successfully got generate mode");
+    syslog(LOG_INFO, "*SOUR<n>:BURS:STAT? Successfully returned generate mode status to client.");
 
     return SCPI_RES_OK;
 }
@@ -634,6 +634,7 @@ enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
     string[param_len] = '\0';
 
     // Convert String to int
+
     int32_t value;
     if (getRpInfinityInteger(string, &value)) {
         syslog(LOG_ERR, "*SOUR<n>:BURS:NCYC parameter cycles is invalid.");
@@ -670,7 +671,7 @@ enum _scpi_result_t RP_GenGetBurstCount(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultString(context, string);
 
-    syslog(LOG_INFO, "*SOUR<n>:BURS:NCYC? Successfully got burst count");
+    syslog(LOG_INFO, "*SOUR<n>:BURS:NCYC? Successfully returned burst count %s to client.", &string[0]);
     return SCPI_RES_OK;
 }
 
@@ -725,7 +726,7 @@ scpi_result_t RP_GenGetBurstRepetitions(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultString(context, string);
 
-    syslog(LOG_INFO, "*SOUR<n>:BURS:NOR? Successfully got burst repetitions");
+    syslog(LOG_INFO, "*SOUR<n>:BURS:NOR? Successfully returned burst repetitions %s to client.", &string[0]);
     return SCPI_RES_OK;
 }
 
@@ -762,7 +763,7 @@ scpi_result_t RP_GenGetBurstPeriod(rp_channel_t channel, scpi_t *context) {
     // Return back result
     SCPI_ResultUInt(context, value);
 
-    syslog(LOG_INFO, "*SOUR<n>:BURS:INT:PER? Successfully got burst period");
+    syslog(LOG_INFO, "*SOUR<n>:BURS:INT:PER? Successfully returned burst period %d to client.",  value);
 
     return SCPI_RES_OK;
 }
@@ -817,7 +818,7 @@ enum _scpi_result_t RP_GenGetTriggerSource(rp_channel_t channel, scpi_t *context
     // Return back result
     SCPI_ResultString(context, string);
 
-    syslog(LOG_INFO, "*SOUR<n>:TRIG:SOUR? Successfully got trigger source");
+    syslog(LOG_INFO, "*SOUR<n>:TRIG:SOUR? Successfully returned trigger source to client.");
 
     return SCPI_RES_OK;
 }

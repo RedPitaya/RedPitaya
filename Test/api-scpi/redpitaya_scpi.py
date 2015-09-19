@@ -7,8 +7,6 @@ __copyright__ = "Copyright 2015, Red Pitaya"
 
 class scpi (object):
     """SCPI class used to access Red Pitaya over an IP network."""
-
-    # SCPI delimiter
     delimiter = '\r\n'
 
     def __init__(self, host, timeout=None, port=5000):
@@ -30,7 +28,7 @@ class scpi (object):
         except socket.error as e:
             print 'SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e)
 
-    def recv_txt(self, chunksize = 4096):
+    def rx_txt(self, chunksize = 4096):
         """Receive text string and return it after removing the delimiter."""
         msg = ''
         while 1:
@@ -40,24 +38,13 @@ class scpi (object):
                 break
         return msg[:-2]
 
-    def recv_raw(self):
-        """Receive RAW binary data, parse the header, and return only the payload."""
-        # receive message header
-        msg = self._socket.recv(6)
-        # parse header to get the length of binary data (number of bytes)
-        num = int(msg)
-        # receive binary data
-        msg = self._socket.recv(num)
-        # return binary data
-        return msg
-
-    def send_txt(self, msg):
+    def tx_txt(self, msg):
         """Send text string ending and append delimiter."""
         return self._socket.send(msg + self.delimiter)
 
-    def send_raw(self, msg):
-        """Send RAW binary data."""
-        return self._socket.send(msg)
+    #RP help functions
+    def choose_state(self, led, state):
+        return 'DIG:PIN LED' + str(led) + ', ' + str(state) + self.delimiter
 
     def close(self):
         """Close IP connection."""
@@ -68,11 +55,3 @@ class scpi (object):
             self._socket.close()
         self._socket = None
 
-
-
-    def gen(self, src, waveform, freq, ampl):
-        """Generate signal."""
-        self.send_txt('SOUR'+str(src)+':FUNC '      + str(waveform).upper())
-        self.send_txt('SOUR'+str(src)+':FREQ:FIX '  + str(freq)            )
-        self.send_txt('SOUR'+str(src)+':VOLT '      + str(ampl)            )
-        self.send_txt('OUTPUT'+str(src)+':STATE ON'                        )

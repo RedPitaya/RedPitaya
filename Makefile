@@ -230,7 +230,7 @@ $(UBOOT): $(UBOOT_DIR)
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Buildroot" -d $(UBOOT_SCRIPT_BUILDROOT) $@.buildroot
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
-	cp $@.buildroot $@
+	cp $@.debian $@
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
 	mkdir -p $(INSTALL_DIR)/etc/
