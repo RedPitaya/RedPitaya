@@ -21,6 +21,7 @@
 #include "../../api/rpApplications/src/rpApp.h"
 
 scpi_result_t RP_APP_OscRun(scpi_t *context);
+scpi_result_t RP_APP_OscRunDigLoop(scpi_t *context);
 scpi_result_t RP_APP_OscStop(scpi_t *context);
 scpi_result_t RP_APP_OscReset(scpi_t *context);
 scpi_result_t RP_APP_OscAutoscale(scpi_t *context);
