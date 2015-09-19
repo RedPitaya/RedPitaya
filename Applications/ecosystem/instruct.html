@@ -99,7 +99,7 @@ $('#apply').click(function() {
 		$.ajax({
 			method: "POST",
 			url: post_uri,
-			data: 'id_file=' + msg
+			data: 'id_file=' + encodeURIComponent(msg)
 		})
 		.done(function( msg ) {
 			if (msg == "OK"){
