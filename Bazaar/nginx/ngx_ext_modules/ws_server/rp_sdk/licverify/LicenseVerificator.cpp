@@ -4,7 +4,47 @@
 #include <libjson.h>
 #include <encoder.h>
 #include <cstdio>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include "../misc.h"
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+#include <libjson.h>
+
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/mman.h>
+
 #include "../DataManager.h"
+
+using namespace std;
+
+/* FPGA housekeeping structure - Bazaar relevant part */
+typedef struct hk_fpga_reg_mem_s {
+    /* configuration:
+     * bit   [3:0] - hw revision
+     * bits [31:4] - reserved
+     */
+    uint32_t rev;
+    /* DNA low word */
+    uint32_t dna_lo;
+    /* DNA high word */
+    uint32_t dna_hi;
+} hk_fpga_reg_mem_t;
 
 std::string GetLicensePath()
 {
@@ -16,6 +56,62 @@ std::string GetIDFilePath()
 {
 	std::string path = "/opt/redpitaya/www/apps/idfile.id";
 	return path;
+}
+
+int get_xilinx_dna(unsigned long long *dna)
+{
+ 	void *page_ptr;
+    long page_addr, page_size = sysconf(_SC_PAGESIZE);
+    const long c_dna_fpga_base_addr = 0x40000000;
+    const long c_dna_fpga_base_size = 0x20;
+    int fd = -1;
+
+    fd = open("/dev/mem", O_RDONLY | O_SYNC);
+    if(fd < 0) {
+       // printf("%s: open(/dev/mem) failed: %s\n",
+             //  __FUNCTION__, strerror(errno));
+        return -1;
+    }
+
+    page_addr = c_dna_fpga_base_addr & (~(page_size-1));
+
+    page_ptr = mmap(NULL, c_dna_fpga_base_size, PROT_READ,
+                          MAP_SHARED, fd, page_addr);
+
+    if((void *)page_ptr == MAP_FAILED) {
+        //printf("%s: mmap() failed: %s\n",
+               //__FUNCTION__, strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    hk_fpga_reg_mem_t *hk =(hk_fpga_reg_mem_t *)page_ptr;
+    *dna = hk->dna_hi & 0x00ffffff;
+
+    *dna = *dna << 32 | hk->dna_lo;
+
+    if(munmap(page_ptr, c_dna_fpga_base_size) < 0) {
+        //printf("%s: munmap() failed: %s\n", 
+            //   __FUNCTION__, strerror(errno));
+        close(fd);
+        return -1;
+    }
+	
+    close (fd);
+
+    return 0;
+}
+
+std::string GetZynqId()
+{
+	unsigned long long dna;
+	get_xilinx_dna(&dna);
+
+    ostringstream oss;
+    oss << dna;
+    string res = oss.str();
+
+	return res;
 }
 
 int verify_app_license(const char* app_id)

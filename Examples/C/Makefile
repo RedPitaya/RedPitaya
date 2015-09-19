@@ -12,7 +12,7 @@ REVISION ?= devbuild
 RP_PATH_INCLUDE = -I../../api/rpbase/src/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../api/rpbase -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L ../../api/lib -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
