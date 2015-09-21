@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.107')
+rp_scpi = scpi.scpi('192.168.178.111')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -120,8 +120,12 @@ class Base(object):
         freq = 7629.39453125
         ampl = 1
 
+        rp_scpi.tx_txt('ACQ:RST')
         #Enable Red Pitaya digital loop
         rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
+
+        rp_scpi.tx_txt('ACQ:START')
+        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
 
         #Set generator options
         rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
@@ -129,8 +133,7 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC ' + str(wave_form))
         rp_scpi.tx_txt('OUTPUT' + str(channel) + ':STATE ON')
 
-        #Acquire bufferrp_s.tx_txt('ACQ:START')
-        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
+        #Acquire buffer rp_scpi.tx_txt('ACQ:START')
         rp_scpi.tx_txt('ACQ:TRIG:STAT?')
         rp_scpi.rx_txt()
         rp_scpi.tx_txt('ACQ:SOUR' + str(channel) + ':DATA?')
@@ -138,6 +141,7 @@ class Base(object):
         buff_string = rp_scpi.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = map(float, buff_string)
+
         buff_ctrl = open('./ctrl_data/gen_ctrl', 'r').readlines(len(buff))
 
         for i in range(0, len(buff_ctrl)):
@@ -151,13 +155,13 @@ class Base(object):
 class MainTest(unittest.TestCase):
 
     ############### LEDS and GPIOs ###############
-    def test_led(self):
+    def test020_led(self):
         for led in range(1, 8):
             self.assertEquals(Base().rp_led(rp_leds[led], '1'), '1')
             self.assertEquals(Base().rp_led(rp_leds[led], '0'), '0')
 
 
-    def test_dpin(self):
+    def test030_dpin(self):
         #Test pos state
         for pin in range(1, 8):
             self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '1'), '1')
@@ -168,37 +172,37 @@ class MainTest(unittest.TestCase):
             self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '1'), '1')
             self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
 
-    def test_analog_pin(self):
+    def test040_analog_pin(self):
         for a_pin in range(0, 3):
             self.assertTrue(1.2 <= float(Base().rp_analog_pin(rp_a_pin_o[a_pin], '1.34', True)) <= 1.4)
             self.assertTrue(0 <= float(Base().rp_analog_pin(rp_a_pin_i[a_pin], None, False)) <= 0.1)
 
     ############### SIGNAL GENERATOR ###############
-    def test_freq(self):
+    def test050_freq(self):
         for i in range(len(rp_freq_range)):
             freq = rp_freq_range[i]
             self.assertEquals(float(Base().rp_freq(1, freq)), freq)
             self.assertEquals(float(Base().rp_freq(2, freq)), freq)
 
-    def test_volt(self):
+    def test060_volt(self):
         for i in range(len(rp_volt_range)):
             volt = rp_volt_range[i]
             self.assertAlmostEquals(float(Base().rp_ampl(1, volt)), volt)
             self.assertAlmostEquals(float(Base().rp_ampl(2, volt)), volt)
 
-    def test_w_form(self):
+    def test070_w_form(self):
         for i in range(len(rp_wave_forms)):
             w_form = rp_wave_forms[i]
             self.assertEquals(Base().rp_w_form(1, w_form), w_form)
             self.assertEquals(Base().rp_w_form(2, w_form), w_form)
 
-    def test_offs(self):
+    def tes080_offs(self):
         for i in range(len(rp_offs_range)):
             offs = rp_offs_range[i]
             self.assertAlmostEquals(float(Base().rp_offs(1, offs)), offs)
             self.assertAlmostEquals(float(Base().rp_offs(2, offs)), offs)
 
-    def test_phase(self):
+    def test090_phase(self):
         for i in range(len(rp_phase_range)):
             phase = rp_phase_range[i]
             if(phase < 0):
@@ -209,45 +213,45 @@ class MainTest(unittest.TestCase):
                 self.assertAlmostEquals(float(Base().rp_phase(1, phase)), phase)
                 self.assertAlmostEquals(float(Base().rp_phase(2, phase)), phase)
 
-    def test_dcyc(self):
+    def test100_dcyc(self):
         for i in range(len(rp_dcyc_range)):
             dcyc = rp_dcyc_range[i]
             self.assertEquals(float(Base().rp_dcyc(1, dcyc)), dcyc)
             self.assertEquals(float(Base().rp_dcyc(2, dcyc)), dcyc)
 
     #TODO: Scpi server returns 0 on INF given. This should also be fixed.
-    def test_ncyc(self):
+    def test110_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
             self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
             self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
 
-    def test_nor(self):
+    def test120_nor(self):
         for i in range(len(rp_nor_range)):
             nor = rp_nor_range[i]
             self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
             self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
 
-    def test_intp(self):
+    def test130_intp(self):
         for i in range(len(rp_inp_range)):
             intp = rp_inp_range[i]
             self.assertEquals(float(Base().rp_burst_intp(1, intp)), intp)
             self.assertEquals(float(Base().rp_burst_intp(2, intp)), intp)
 
-    def test_burst_state(self):
+    def test140_burst_state(self):
         self.assertTrue(Base().rp_burst_state(1))
         self.assertTrue(Base().rp_burst_state(1))
 
     #TODO: Arbitrary-waveform. TRAC-DATA
 
-
-    ############### SIGNAL ACQUISITION TOOL ###############
-
+	
     #Test generate
-    def test_generate(self):
+    def test010_generate(self):
         for form in rp_wave_forms:
             assert Base().generate_wform(1, form) is True
             assert Base().generate_wform(2, form) is True
+
+    ############### SIGNAL ACQUISITION TOOL ###############
 
 
 if __name__ == '__main__':
