@@ -39,6 +39,7 @@ TODO: describe how the board can be attached to various connectors.
 ### Description
 
 ![Program blocks for Buzzer](example_2/blocks.png)
+![Dashboard block for Buzzer](example_2/switch.png)
 
 To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer [] on pin []** block. We can set it to `HIGH` (buzzing) or `LOW` (silent). We also have to specify to which data signal the buzzer is connected, in out example this is `D0`, the first of 16 digital IO (input/output) signals available on the *CN9* shield connector.
 
@@ -80,9 +81,10 @@ TODO: describe how the board can be attached to various connectors.
 
 ### Description
 
-![Program blocks for Alarm](example_4/block_start.png)
-![Program blocks for Alarm](example_4/block_stop.png)
-![Program blocks for Alarm](example_4/block_timestamp.png)
+![Program blocks start     for Alarm](example_4/block_start.png)
+![Program blocks stop      for Alarm](example_4/block_stop.png)
+![Program blocks timestamp for Alarm](example_4/block_timestamp.png)
+![Dashboard blocks for Alarm](example_4/pushbutton.png)
 
 The main block contains a loop repeating 10 times each second. Inside the loop the motion sensor is checked and its status is stored into the variable `status`. If motion is detected the program will start executing another loop, which will sound the buzzer and blink a LED 60 times, unless in the meantime the variable `status` changes to `false`.
 
