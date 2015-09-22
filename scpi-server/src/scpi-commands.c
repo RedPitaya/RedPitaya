@@ -17,6 +17,7 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "api_cmd.h"
 #include "utils.h"
 #include "dpin.h"
 #include "apin.h"
@@ -103,9 +104,6 @@ scpi_result_t SCPI_EchoVersion(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
-
-
-
 /**
  * SCPI Configuration
  */
@@ -143,6 +141,10 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
 
         /* RedPitaya */
+        {.pattern = "RP:INIT", .callback = RP_InitAll,},
+        {.pattern = "RP:RST", .callback = RP_ResetAll,},
+        {.pattern = "RP:RELEASE", .callback = RP_RealaseAll,},
+
         {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
         {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
         {.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
@@ -151,6 +153,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ANALOG:RST", .callback = RP_AnalogPinReset,},
         {.pattern = "ANALOG:PIN", .callback = RP_AnalogPinSetValue,},
         {.pattern = "ANALOG:PIN?", .callback = RP_AnalogPinGetValue,},
+
 
         /* Acquire */
         {.pattern = "ACQ:START", .callback = RP_AcqStart,},
