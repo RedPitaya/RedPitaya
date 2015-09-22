@@ -232,13 +232,16 @@ Grove sensors from Seed
 http://www.seeedstudio.com/
 
 PIR Motion sensor
-[[http://www.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor]]
+http://www.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor
 
 Buzzer
-[[http://www.seeedstudio.com/wiki/Grove_-_Buzzer]]
+http://www.seeedstudio.com/wiki/Grove_-_Buzzer
 
 Sound sensor
-[[http://www.seeedstudio.com/wiki/Grove_-_Sound_Sensor]]
+http://www.seeedstudio.com/wiki/Grove_-_Sound_Sensor
+
+Temperature Sensor V1.2
+http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor_V1.2
 
 # Software
 
