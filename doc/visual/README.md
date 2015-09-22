@@ -8,6 +8,11 @@ Every developer facing a new toy (development board) starts with simple tasks, l
 
 ### Wiring
 
+Components:
+1. Red Pitaya
+
+![Wiring for LED blink](example_1/wiring.png)
+
 This example does not require the extension module yet, there are 8 LEDs on the Red Pitaya board, which can be turnd `ON` or `OFF`.
 
 ### Description
@@ -34,7 +39,14 @@ This example introduces the extension module, the Grove Buzzer, *Dashboard* bloc
 
 ### Wiring
 
-TODO: describe how the board can be attached to various connectors.
+Components:
+1. Red Pitaya
+2. extension module
+3. [Grove Buzzer](http://www.seeedstudio.com/wiki/Grove_-_Buzzer)
+
+![Wiring for Buzzer](example_2/wiring.png)
+
+Connect the extension module to Red Pitaya and connect the Buzzer to the *CN?* connector on the extension module.
 
 ### Description
 
