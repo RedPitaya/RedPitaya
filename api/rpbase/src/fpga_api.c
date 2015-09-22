@@ -13,8 +13,11 @@
 */
 
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
 #include <sys/stat.h>
-
+ 
 #include "rp.h"
 #include "fpga_api.h"
 
@@ -42,7 +45,7 @@ int fpga_load(char *fpga_file){
     	return RP_EOOR;
     }
 
-    if(read(fi, &fi_buff, fpga_file) < 0){
+    if(read(fi, &fi_buff, fpga_size) < 0){
     	printf("Unable to read input file.\n");
     	return RP_EOOR;
     }
