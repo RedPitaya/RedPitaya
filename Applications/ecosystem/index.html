@@ -88,7 +88,8 @@
 							$('.description').children('.desc').html(result[key].description);
 							if (result[key].type == "demo")
 							{
-									$("#run").attr('href', url + 'instruct.html#'+key);
+									$("#run").removeAttr('href');
+									$("#run").attr('href2', url + 'instruct.html#'+key);
 									$('#run').html('Run');
 									$("#run").css('visibility', 'visible');
 									$("#demo").css('visibility', 'visible');
@@ -189,5 +190,86 @@
 	</div>
 	<div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
 </div>
+<script>
+	
+$('#run').click(function(){
+	
+	if (typeof String.prototype.startsWith != 'function') {
+		String.prototype.startsWith = function (str){
+			return this.indexOf(str) === 0;
+		};
+	}
+	
+	if ($(this).attr('href') == undefined)
+	{
+		var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/'; 
+		var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac='; 
+		
+		$.ajax({
+			method: "GET",
+			url: "lic.lic"
+		})
+		.done(function( msg ) {
+			window.location = $('#run').attr('href2');
+		})
+		.fail(function( msg ) {			
+			$.ajax({
+				method: "GET",
+				url: "idfile.id"
+			})
+			.done(function( msg ) {
+				var obj = jQuery.parseJSON( msg );
+				if (obj != undefined && obj != null && obj.mac_address != undefined  && obj.mac_address != null)
+					req_uri = req_uri + obj.mac_address;
+				$.ajax({
+					method: "POST",
+					url: post_uri,
+					data: 'id_file=' + encodeURIComponent(msg)
+				})
+				.done(function( msg ) {
+					if (msg == "OK"){
+						$.ajax({
+							method: "GET",
+							url: req_uri
+						})
+						.done(function( msg ) {
+							var res_msg = msg + "\r\n";
+							console.log(res_msg);
+							$.ajax({
+								method: "POST",
+								dataType: 'json',
+								data: { 'lic.lic' : res_msg },
+								contentType: 'application/json; charset=utf-8',
+								url: "/lic_upload",
+							})
+							.done(function( msg ) {
+							})
+							.fail(function( msg ) {
+								if (msg.responseText.startsWith("OK"))
+									window.location = "index.html";
+								else 
+									window.location = $('#run').attr('href2');
+							});
+						})
+						.fail(function( msg ) {
+							window.location = $('#run').attr('href2');
+						});
+					} else 
+					{
+						window.location = $('#run').attr('href2');
+					}
+				})
+				.fail(function( msg ) {
+					window.location = $('#run').attr('href2');
+				});
+			})
+			.fail(function( msg ) {
+				window.location = $('#run').attr('href2');
+			});
+		})
+	}
+});
+
+</script>
 </body>
 </html>
