@@ -46,7 +46,7 @@ Components:
 
 ![Wiring for Buzzer](example_2/wiring.png)
 
-Connect the extension module to Red Pitaya and connect the Buzzer to the *CN?* connector on the extension module.
+Connect the extension module to Red Pitaya. Connect the Buzzer to the *CN?* connector on the extension module which is part of a group of connectors providing digital input/output signals.
 
 ### Description
 
@@ -68,7 +68,14 @@ The previous examples only used indicators, LED and buzzer. This example is usin
 
 ### Wiring
 
-TODO: describe how the board can be attached to various connectors.
+Components:
+1. Red Pitaya
+2. extension module
+3. [Grove PIR Motion Sensor](http://www.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor)
+
+![Wiring for PIR Motion Sensor](example_3/wiring.png)
+
+Connect the PIR Motion Sensor to the *CN?* connector on the extension module.
 
 ### Description
 
@@ -89,7 +96,15 @@ This example is a combination of previous examples and is also introducing funct
 
 ### Wiring
 
-TODO: describe how the board can be attached to various connectors.
+Components:
+1. Red Pitaya
+2. extension module
+3. [Grove PIR Motion Sensor](http://www.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor)
+4. [Grove Buzzer](http://www.seeedstudio.com/wiki/Grove_-_Buzzer)
+
+![Wiring for Alarm](example_4/wiring.png)
+
+Connect the PIR Motion Sensor to the *CN?* connector and the buzzer to the *CN?* connector on the extension module.
 
 ### Description
 
@@ -118,7 +133,14 @@ This example shows how analog sensors can be used. The previous digital sensors 
 
 ### Wiring
 
-TODO: describe how the board can be attached to various connectors.
+Components:
+1. Red Pitaya
+2. extension module
+3. [Grove Temperature Sensor V1.2](http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor_V1.2)
+
+![Wiring for Temperature logger](example_5/wiring.png)
+
+Connect the Buzzer to the *CN?* connector on the extension module which is part of a group of connectors providing analog input signals.
 
 ### Description
 
