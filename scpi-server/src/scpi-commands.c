@@ -17,11 +17,11 @@
 #include <string.h>
 #include <syslog.h>
 
-#include "api_cmd.h"
 #include "utils.h"
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"
+#include "api_cmd.h"
 #include "oscilloscopeApp.h"
 #include "spectrometerApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
@@ -144,6 +144,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "RP:INIT", .callback = RP_InitAll,},
         {.pattern = "RP:RST", .callback = RP_ResetAll,},
         {.pattern = "RP:RELEASE", .callback = RP_RealaseAll,},
+        {.pattern = "RP:FPGA:LOAD", .callback = RP_FpgaLoad,},
 
         {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
         {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
@@ -153,7 +154,6 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ANALOG:RST", .callback = RP_AnalogPinReset,},
         {.pattern = "ANALOG:PIN", .callback = RP_AnalogPinSetValue,},
         {.pattern = "ANALOG:PIN?", .callback = RP_AnalogPinGetValue,},
-
 
         /* Acquire */
         {.pattern = "ACQ:START", .callback = RP_AcqStart,},
