@@ -240,6 +240,9 @@ http://www.seeedstudio.com/wiki/Grove_-_Buzzer
 Sound sensor
 http://www.seeedstudio.com/wiki/Grove_-_Sound_Sensor
 
+Temperature Sensor V1.2
+http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor_V1.2
+
 # Software
 
 ## Red Pitaya blocks
