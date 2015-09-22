@@ -60,3 +60,34 @@ scpi_result_t RP_RealaseAll(scpi_t *context){
     syslog(LOG_INFO, "*RP:RELEASE Successfully released Red Pitaya modules.");
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_FpgaLoad(scpi_t *context){
+
+    const char *param;
+    size_t param_len;
+
+    char fpga_image[100];
+    char *fpga_dir = "/opt/redpitaya/fpga/";
+    
+
+    //Read first parameter(specific fpga image to load)
+    if(!SCPI_ParamString(context, &param, &param_len, true)){
+        syslog(LOG_ERR, "*RP:FPGA:RST Failed to reset load fpga image.\n");
+        return SCPI_RES_ERR;
+    }
+
+    strncpy(fpga_image, &param[0], param_len);
+    fpga_image[param_len] = '\0';
+
+    char fpga_path[strlen(fpga_dir) + strlen(fpga_image) + 2];
+    sprintf(fpga_path, "%s/%s", fpga_path, fpga_image);
+
+    int result = rp_fpga_load(&fpga_path[0]);
+
+    if(result != RP_OK){
+        syslog(LOG_ERR, "*RP:FPGA:RST Failed to reset load fpga image.\n");
+        return SCPI_RES_ERR;
+    }
+
+    return SCPI_RES_OK;
+}
