@@ -1228,6 +1228,9 @@ int rp_I2cWrite(int addr, char *data, int length);
 
 ///@}
 
+//TODO: ADD detailed description
+int rp_fpga_load(char *fpga_file);
+
 #ifdef __cplusplus
 }
 #endif
