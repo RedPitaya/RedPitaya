@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.111')
+rp_scpi = scpi.scpi('192.168.178.112')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -111,44 +111,48 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER?')
         return rp_scpi.rx_txt()
 
-    def generate_wform(self, channel, wave_form):
+    def generate_wform(self, channel):
 
         buff = []
         buff_ctrl = []
 
-        #Do not change this values!
+        #Do not change these values!
         freq = 7629.39453125
-        ampl = 1
+        ampl = 0.8
+        wave_form = 'SINE'
 
-        rp_scpi.tx_txt('ACQ:RST')
-        #Enable Red Pitaya digital loop
-        rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
 
         rp_scpi.tx_txt('ACQ:START')
-        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
+
+
+        #Enable Red Pitaya digital loop
+        rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
 
         #Set generator options
         rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT ' + str(ampl))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC ' + str(wave_form))
+
+        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
         rp_scpi.tx_txt('OUTPUT' + str(channel) + ':STATE ON')
 
-        #Acquire buffer rp_scpi.tx_txt('ACQ:START')
-        rp_scpi.tx_txt('ACQ:TRIG:STAT?')
-        rp_scpi.rx_txt()
+        #rp_scpi.tx_txt('ACQ:TRIG:STAT?')
+        #rp_scpi.rx_txt()
         rp_scpi.tx_txt('ACQ:SOUR' + str(channel) + ':DATA?')
 
         buff_string = rp_scpi.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = map(float, buff_string)
 
-        buff_ctrl = open('./ctrl_data/gen_ctrl', 'r').readlines(len(buff))
+        buff_ctrl = open('./ctrl_data/gen_ctrl', 'r').readlines()
 
-        for i in range(0, len(buff_ctrl)):
-            buff_ctrl[i] = buff_ctrl[i].strip('\n')
+        for i in range(len(buff_ctrl)):
+            buff_ctrl[i] = (float)(buff_ctrl[i].strip('\n'))
+
+        rp_scpi.tx_txt('ACQ:RST')
 
         #Compare the two buffers
-        cmp = lambda x1, x2: x1[:] == x2[:]
+        cmp = lambda x, y: collections.Counter(x) == collections.Counter(y)
         return cmp(buff, buff_ctrl)
 
 # Main test class
@@ -247,9 +251,8 @@ class MainTest(unittest.TestCase):
 	
     #Test generate
     def test010_generate(self):
-        for form in rp_wave_forms:
-            assert Base().generate_wform(1, form) is True
-            assert Base().generate_wform(2, form) is True
+            assert (Base().generate_wform(1)) is True
+            assert (Base().generate_wform(2)) is True
 
     ############### SIGNAL ACQUISITION TOOL ###############
 
