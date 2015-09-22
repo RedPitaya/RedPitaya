@@ -1,6 +1,6 @@
 # Examples
 
-TODO: add some generic wiring descriptions of the shield.
+TODO: add some generic wiring descriptions of the extension module.
 
 ## Example 1 - LED blink
 
@@ -8,7 +8,7 @@ Every developer facing a new toy (development board) starts with simple tasks, l
 
 ### Wiring
 
-This example does not require a shield yet, there are 8 LEDs on the Red Pitaya board, which can be turnd `ON` or `OFF`.
+This example does not require the extension module yet, there are 8 LEDs on the Red Pitaya board, which can be turnd `ON` or `OFF`.
 
 ### Description
 
@@ -30,7 +30,7 @@ You can also change everything else. In most cases, the program will not work. I
 
 ## Example 2 - Buzzer
 
-This example introduces the extension shield, the Grove Buzzer, *Dashboard* block *Switch* and variables. We will be able to use an on screen switch is used to turn a buzzer `ON` and `OFF`.
+This example introduces the extension module, the Grove Buzzer, *Dashboard* block *Switch* and variables. We will be able to use an on screen switch is used to turn a buzzer `ON` and `OFF`.
 
 ### Wiring
 
@@ -41,7 +41,7 @@ TODO: describe how the board can be attached to various connectors.
 ![Program blocks for Buzzer](example_2/blocks.png)
 ![Dashboard block for Buzzer](example_2/switch.png)
 
-To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer [] on pin []** block. We can set it to `HIGH` (buzzing) or `LOW` (silent). We also have to specify to which data signal the buzzer is connected, in out example this is `D0`, the first of 16 digital IO (input/output) signals available on the *CN9* shield connector.
+To sound the buzzer we need *Indicators* > *Buzzer* > **Set buzzer [] on pin []** block. We can set it to `HIGH` (buzzing) or `LOW` (silent). We also have to specify to which data signal the buzzer is connected, in out example this is `D0`, the first of 16 digital IO (input/output) signals available on the *CN9* extension module connector.
 
 The **Switch** block from the *Dashboard* generates a named signal each time it is toggled, additionally is sends the `ON` and `OFF` status after the change. To receive this signal the *Signal* > **On receive signal [] with signal value [] Do** block is used. The switch and the receiver must use the same signal name. When the switch is toggled the receiver will execute the code inside the block, but first it will set the variable `buzz_state` to the state of the switch. The *Program* > *Logic* > **if [] do [] else []** block is used to turn `HIGH` the buzzer only if the switch is set to `ON`, else the buzzer will be turned to `LOW`. 
 
@@ -62,13 +62,13 @@ TODO: describe how the board can be attached to various connectors.
 
 ![Program blocks for PIR Motion Sensor](example_3/blocks.png)
 
-An infinite loop with a 1 second delay at the end is used again. Inside the loop there is a *Program* > *Logic* > **if [] do []** block, which will execute its contents on the condition that the *Sensors* > *Motion sensor* > **get motion from []** will return true. This will happen each time somebody is moving in the vicinity of the sensor. The sensor can be attached to various connectors on the shield, here the `D0` option is used as specified in the sensor block.
+An infinite loop with a 1 second delay at the end is used again. Inside the loop there is a *Program* > *Logic* > **if [] do []** block, which will execute its contents on the condition that the *Sensors* > *Motion sensor* > **get motion from []** will return true. This will happen each time somebody is moving in the vicinity of the sensor. The sensor can be attached to various connectors on the extension module, here the `D0` option is used as specified in the sensor block.
 
 If the condition is true the *Program* > *Screen and keyboard* > **Write on screen []** block will be executed. A text block must be placed inside, here the *Program* > *Text* > **create text with [] [] ...** is used to concatenate several short text strings into one longer. The first string "Motion detected at: " is never changing so it is placed inside the *Program* > *Text* > **" "** block. We also wish to print the actual time (hour:minute:second), blocks for time strings can be found inside *Program* > *Date and Hour* > **get [] of day**.
 
 ### Experimentation
 
-Similar to indicators, sensors can also be attached to different shield connectors, here the `D0` connector (shield connector *CN9*) is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
+Similar to indicators, sensors can also be attached to different extension module connectors, here the `D0` connector (connector *CN9*) is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
 
 
 ## Example 4 - Alarm
@@ -118,7 +118,7 @@ TODO: describe how the board can be attached to various connectors.
 
 # Hardware
 
-## Visual programming shield connectors
+## Visual programming extension module connectors
 
 The black connectors on the sides are compatible with Arduino, white connectors on the front provide analog inputs, and there are two rows of gray connectors at the center which provide digital I/O, UART, I2C or analog outputs. On the bottom there are connectors to the Red Pitaya board.
 
@@ -184,7 +184,7 @@ This set of connectors is partially compatible with the Arduino shield connector
 
 ### Connectors to Red Pitaya motherboard
 
-While it is possible to connect sensors and indicators directly to Red Pitaya *E1* and *E2* connectors, it is recommended to use shields. They enable the user to connect multiple peripherals without improvised wiring. It is also possible for developers to create their own custom shields.
+While it is possible to connect sensors and indicators directly to Red Pitaya *E1* and *E2* connectors, it is recommended to use the extension module. It enables the user to connect multiple peripherals without improvised wiring. It is also possible for developers to create their own custom extensions.
 
 #### Connector E1
 
