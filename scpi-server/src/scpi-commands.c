@@ -17,6 +17,7 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "api_cmd.h"
 #include "utils.h"
 #include "dpin.h"
 #include "apin.h"
@@ -143,6 +144,13 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
 
         /* RedPitaya */
+
+        /* General commands */
+        {.pattern = "RP:INiT", .callback = RP_InitAll,},
+        {.pattern = "RP:REst", .callback = RP_ResetAll,},
+        {.pattern = "RP:RELease", .callback = RP_RealaseAll,},
+        {.pattern = "RP:FPGA:BITSTR", .callback = RP_FpgaBitStream,},
+
         {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
         {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
         {.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
