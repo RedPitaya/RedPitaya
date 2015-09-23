@@ -147,9 +147,9 @@ static const scpi_command_t scpi_commands[] = {
 
         /* General commands */
         {.pattern = "RP:INiT", .callback = RP_InitAll,},
-        {.pattern = "RP:REst", .callback = RP_ResetAll,},
+        {.pattern = "RP:REset", .callback = RP_ResetAll,},
         {.pattern = "RP:RELease", .callback = RP_RealaseAll,},
-        {.pattern = "RP:FPGA:BITSTR", .callback = RP_FpgaBitStream,},
+        {.pattern = "RP:FPGA:BITstr", .callback = RP_FpgaBitStream,},
 
         {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
         {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
