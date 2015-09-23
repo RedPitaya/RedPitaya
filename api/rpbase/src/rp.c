@@ -30,7 +30,6 @@
 #include "generate.h"
 #include "gen_handler.h"
 #include "i2c.h"
-#include "fpga_api.h"
 
 static char version[50];
 
@@ -608,12 +607,4 @@ int rp_I2cRead(int addr, char *data, int length) {
 
 int rp_I2cWrite(int addr, char *data, int length) {
     return i2c_write(addr, data, length);
-}
-
-/**
-* FPGA methods
-*/
-
-int rp_fpga_load(char *fpga_file){
-    return fpga_load(fpga_file);
 }
