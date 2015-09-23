@@ -34,6 +34,7 @@ TARGET=$(OUTPUT_DIR)/scpi-server
 # List of compiled object files
 OBJECTS =	scpi-commands.o \
 			scpi-server.o \
+			api_cmd.o \
 			dpin.o \
 			apin.o \
 			acquire.o \
