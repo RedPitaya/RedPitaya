@@ -21,7 +21,6 @@
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"
-#include "api_cmd.h"
 #include "oscilloscopeApp.h"
 #include "spectrometerApp.h"
 #include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
@@ -104,6 +103,9 @@ scpi_result_t SCPI_EchoVersion(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
+
+
+
 /**
  * SCPI Configuration
  */
@@ -141,11 +143,6 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
 
         /* RedPitaya */
-        {.pattern = "RP:INIT", .callback = RP_InitAll,},
-        {.pattern = "RP:RST", .callback = RP_ResetAll,},
-        {.pattern = "RP:RELEASE", .callback = RP_RealaseAll,},
-        {.pattern = "RP:FPGA:LOAD", .callback = RP_FpgaLoad,},
-
         {.pattern = "DIG:RST", .callback = RP_DigitalPinReset,},
         {.pattern = "DIG:PIN", .callback = RP_DigitalPinSetState,},
         {.pattern = "DIG:PIN?", .callback = RP_DigitalPinGetStateQ,},
