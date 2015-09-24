@@ -600,7 +600,6 @@ enum _scpi_result_t RP_GenSetGenerateMode(rp_channel_t channel, scpi_t *context)
     }
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:STAT Successfully set generate mode");
-
     return SCPI_RES_OK;
 }
 
@@ -619,10 +618,9 @@ enum _scpi_result_t RP_GenGetGenerateMode(rp_channel_t channel, scpi_t *context)
         return SCPI_RES_ERR;
     }
 
-    // Return back result
+    /* Return generate mode status back to the client */
     SCPI_ResultString(context, &value);
-
-    syslog(LOG_INFO, "*SOUR<n>:BURS:STAT? Successfully returned generate mode status to client.");
+    syslog(LOG_INFO, "*SOUR<n>:BURS:STAT? Successfully returned %s status to client.", &value);
 
     return SCPI_RES_OK;
 }
