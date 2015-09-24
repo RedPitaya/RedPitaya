@@ -156,6 +156,7 @@ class Base(object):
         #Compare the two buffers
         cmp = lambda x, y: collections.Counter(x) == collections.Counter(y)
         return cmp(buff, buff_ctrl)
+
         
     def app_run(self, app_name):
 		rp_scpi.tx_txt(app_name + ':RUN')
@@ -195,7 +196,12 @@ class Base(object):
     def osc_time_scale(self, value):
 		rp_scpi.tx_txt('OSC:TIME:SCALE ' + str(value))
 		rp_scpi.tx_txt('OSC:TIME:SCALE?')
-		return rp_scpi.rx_txt()		
+		return rp_scpi.rx_txt()
+
+    def osc_time_offset(self, value):
+        rp_scpi.tx_txt('OSC:TIME:OFFSET ' + str(value))
+        rp_scpi.tx_txt('OSC:TIME:OFFSET?')
+        return rp_scpi.rx_txt()
 
 
 # Main test class
@@ -295,92 +301,55 @@ class MainTest(unittest.TestCase):
     #Test generate
     def test0310_generate(self):
             assert (Base().generate_wform(1)) is True
-            assert (Base().generate_wform(2)) is True   
+            assert (Base().generate_wform(2)) is True
 
-	# OSC
-    def test150_osc_run(self):
+    ############### SIGNAL ACQUISITION TOOL ###############
+    
+
+
+
+
+	############### OSCILLOSCOPE MODULE ###############
+    def test0501_osc_run(self):
 		self.assertEquals(Base().app_run('OSC'), '1')
 		
-    def test160_osc_stop(self):
+    def test0502_osc_stop(self):
 		self.assertEquals(Base().app_stop('OSC'), '0')
 		
-    def test170_spec_run(self):
+    def test0503_spec_run(self):
 		self.assertEquals(Base().app_run('SPEC'), '1')
 		
-    def test180_spec_stop(self):
+    def test0504_spec_stop(self):
 		self.assertEquals(Base().app_stop('SPEC'), '0')		
 		
-    def test190_osc_offset(self):
+    def test0505_osc_offset(self):
 		for channel in rp_channels:
 			for offset in rp_offs_range:
 				self.assertEquals(Base().osc_offset(channel, offset), str(offset))
 				
-    def test200_osc_scale(self):
+    def test0506_osc_scale(self):
 		for channel in rp_channels:
 			for scale in rp_scales:
 				self.assertEquals(Base().osc_scale(channel, scale), str(scale))
 				
-    def test210_osc_probe(self):
+    def test0507_osc_probe(self):
 		for channel in ['CH1', 'CH2']:
 			for probe in rp_scales:
 				self.assertEquals(Base().osc_probe(channel, probe), str(probe))
-				
-    def test220_osc_gain(self):
-		for channel in ['CH1', 'CH2']:
+
+    def test0508_osc_gain(self):
+        for channel in ['CH1', 'CH2']:
 			for gain in [0, 1]:
 				self.assertEquals(Base().osc_gain(channel, gain), str(gain))
 				
-    def test230_osc_time_offset(self):
-		for offset in rp_scales:
+    def test0509_osc_time_offset(self):
+        for offset in rp_scales:
 			self.assertEquals(Base().osc_time_offset(offset), str(offset))
-				
-    def test240_osc_gain(self):
-		for scale in rp_scales:
-			self.assertEquals(Base().osc_time_scale(scale), str(scale))
 
-    #TODO: Arbitrary-waveform. TRAC-DATA
+    def test0510_osc_gain(self):
+        for scale in rp_scales:
+            self.assertEquals(Base().osc_time_scale(scale), str(scale))
 
-
-    ############### SIGNAL ACQUISITION TOOL ###############
-    
-"""
-        {.pattern = "OSC:CH1:OFFSET", .callback = RP_APP_OscChannel1SetAmplitudeOffset,},
-        {.pattern = "OSC:CH2:OFFSET", .callback = RP_APP_OscChannel2SetAmplitudeOffset,},
-        {.pattern = "OSC:MATH:OFFSET", .callback = RP_APP_OscChannel3SetAmplitudeOffset,},
-        {.pattern = "OSC:CH1:OFFSET?", .callback = RP_APP_OscChannel1GetAmplitudeOffset,},
-        {.pattern = "OSC:CH2:OFFSET?", .callback = RP_APP_OscChannel2GetAmplitudeOffset,},
-        {.pattern = "OSC:MATH:OFFSET?", .callback = RP_APP_OscChannel3GetAmplitudeOffset,},
-        
-        {.pattern = "OSC:CH1:SCALE", .callback = RP_APP_OscChannel1SetAmplitudeScale,},
-        {.pattern = "OSC:CH2:SCALE", .callback = RP_APP_OscChannel2SetAmplitudeScale,},
-        {.pattern = "OSC:MATH:SCALE", .callback = RP_APP_OscChannel3SetAmplitudeScale,},
-        {.pattern = "OSC:CH1:SCALE?", .callback = RP_APP_OscChannel1GetAmplitudeScale,},
-        {.pattern = "OSC:CH2:SCALE?", .callback = RP_APP_OscChannel2GetAmplitudeScale,},
-        {.pattern = "OSC:MATH:SCALE?", .callback = RP_APP_OscChannel3GetAmplitudeScale,},
-        
-        {.pattern = "OSC:CH1:PROBE", .callback = RP_APP_OscChannel1SetProbeAtt,},
-        {.pattern = "OSC:CH2:PROBE", .callback = RP_APP_OscChannel2SetProbeAtt,},
-        {.pattern = "OSC:CH1:PROBE?", .callback = RP_APP_OscChannel1GetProbeAtt,},
-        {.pattern = "OSC:CH2:PROBE?", .callback = RP_APP_OscChannel2GetProbeAtt,},
-        {.pattern = "OSC:CH1:IN:GAIN", .callback = RP_APP_OscChannel1SetInputGain,},
-        {.pattern = "OSC:CH2:IN:GAIN", .callback = RP_APP_OscChannel2SetInputGain,},
-        {.pattern = "OSC:CH1:IN:GAIN?", .callback = RP_APP_OscChannel1GetInputGain,},
-        {.pattern = "OSC:CH2:IN:GAIN?", .callback = RP_APP_OscChannel2GetInputGain,},
-        !!
-        
-        {.pattern = "OSC:TIME:OFFSET", .callback = RP_APP_OscSetTimeOffset,},
-        {.pattern = "OSC:TIME:OFFSET?", .callback = RP_APP_OscGetTimeOffset,},
-        {.pattern = "OSC:TIME:SCALE", .callback = RP_APP_OscSetTimeScale,},
-        {.pattern = "OSC:TIME:SCALE?", .callback = RP_APP_OscGetTimeScale,},        
-        {.pattern = "OSC:TRIG:SWEEP", .callback = RP_APP_OscSetTriggerSweep,},
-        {.pattern = "OSC:TRIG:SWEEP?", .callback = RP_APP_OscGetTriggerSweep,},
-        {.pattern = "OSC:TRIG:SOURCE", .callback = RP_APP_OscSetTriggerSource,},
-        {.pattern = "OSC:TRIG:SOURCE?", .callback = RP_APP_OscGetTriggerSource,},
-        {.pattern = "OSC:TRIG:SLOPE", .callback = RP_APP_OscSetTriggerSlope,},
-        {.pattern = "OSC:TRIG:SLOPE?", .callback = RP_APP_OscGetTriggerSlope,},
-        {.pattern = "OSC:TRIG:LEVEL", .callback = RP_APP_OscSetTriggerLevel,},
-        {.pattern = "OSC:TRIG:LEVEL?", .callback = RP_APP_OscGetTriggerLevel,},
- """    
 
 
 if __name__ == '__main__':
