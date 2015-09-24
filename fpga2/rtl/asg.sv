@@ -86,8 +86,6 @@ logic             set_a_rgate  , set_b_rgate  ;
 logic             buf_a_we     , buf_b_we     ;
 logic [ RSZ-1: 0] buf_a_addr   , buf_b_addr   ;
 logic [ DWO-1: 0] buf_a_rdata  , buf_b_rdata  ;
-logic [ RSZ-1: 0] buf_a_rpnt   , buf_b_rpnt   ;
-logic [  32-1: 0] buf_a_rpnt_rd, buf_b_rpnt_rd;
 logic             trig_a_sw    , trig_b_sw    ;
 logic [   3-1: 0] trig_a_src   , trig_b_src   ;
 logic             trig_a_done  , trig_b_done  ;
@@ -108,7 +106,6 @@ red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   .buf_addr_i      ({buf_b_addr       , buf_a_addr       }),  // buffer address
   .buf_wdata_i     ({sys_wdata[14-1:0], sys_wdata[14-1:0]}),  // buffer write data
   .buf_rdata_o     ({buf_b_rdata      , buf_a_rdata      }),  // buffer read data
-  .buf_rpnt_o      ({buf_b_rpnt       , buf_a_rpnt       }),  // buffer current read pointer
   // configuration
   .set_size_i      ({set_b_size       , set_a_size       }),  // set table data size
   .set_step_i      ({set_b_step       , set_a_step       }),  // set pointer step
@@ -208,11 +205,6 @@ end else begin
       if (sys_addr[19:0]==20'h40)  set_b_rdly <= sys_wdata[  32-1: 0] ;
    end
 
-   if (sys_ren) begin
-      buf_a_rpnt_rd <= {{32-RSZ-2{1'b0}},buf_a_rpnt,2'h0};
-      buf_b_rpnt_rd <= {{32-RSZ-2{1'b0}},buf_b_rpnt,2'h0};
-   end
-
    ren_dly <= {ren_dly[3-2:0], sys_ren};
    ack_dly <=  ren_dly[3-1] || sys_wen ;
 end
@@ -237,7 +229,6 @@ end else begin
      20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_size}     ; end
      20'h0000C : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
      20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_step}     ; end
-     20'h00014 : begin sys_ack <= sys_en;          sys_rdata <= buf_a_rpnt_rd                      ; end
      20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_a_ncyc}         ; end
      20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_a_rnum}         ; end
      20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= set_a_rdly                         ; end
@@ -246,7 +237,6 @@ end else begin
      20'h00028 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_size}     ; end
      20'h0002C : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
      20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_step}     ; end
-     20'h00034 : begin sys_ack <= sys_en;          sys_rdata <= buf_b_rpnt_rd                      ; end
      20'h00038 : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
      20'h0003C : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
      20'h00040 : begin sys_ack <= sys_en;          sys_rdata <= set_b_rdly                         ; end
