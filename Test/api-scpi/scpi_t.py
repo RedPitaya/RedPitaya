@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.112')
+rp_scpi = scpi.scpi('IP')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -206,6 +206,26 @@ class Base(object):
 		rp_scpi.tx_txt('OSC:TIME:SCALE?')
 		return rp_scpi.rx_txt()
 
+    def osc_sweep(self, value):
+		rp_scpi.tx_txt('OSC:TRIG:SWEEP ' + str(value))
+		rp_scpi.tx_txt('OSC:TRIG:SWEEP?')
+		return rp_scpi.rx_txt()
+		
+    def osc_source(self, value):
+		rp_scpi.tx_txt('OSC:TRIG:SOURCE ' + str(value))
+		rp_scpi.tx_txt('OSC:TRIG:SOURCE?')
+		return rp_scpi.rx_txt()
+		
+    def osc_slope(self, value):
+		rp_scpi.tx_txt('OSC:TRIG:SLOPE ' + str(value))
+		rp_scpi.tx_txt('OSC:TRIG:SLOPE?')
+		return rp_scpi.rx_txt()
+		
+    def osc_level(self, value):
+		rp_scpi.tx_txt('OSC:TRIG:LEVEL ' + str(value))
+		rp_scpi.tx_txt('OSC:TRIG:LEVEL?')
+		return rp_scpi.rx_txt()
+
 
 # Main test class
 class MainTest(unittest.TestCase):
@@ -232,9 +252,10 @@ class MainTest(unittest.TestCase):
             self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
 
     def test0202_analog_pin(self):
-        for a_pin in range(0, 3):
-            self.assertTrue(1.2 <= float(Base().rp_analog_pin(rp_a_pin_o[a_pin], '1.34', True)) <= 1.4)
-            self.assertTrue(0 <= float(Base().rp_analog_pin(rp_a_pin_i[a_pin], None, False)) <= 0.1)
+		pass
+        #for a_pin in range(0, 3):
+        #    self.assertTrue(1.2 <= float(Base().rp_analog_pin(rp_a_pin_o[a_pin], '1.34', True)) <= 1.4)
+        #    self.assertTrue(0 <= float(Base().rp_analog_pin(rp_a_pin_i[a_pin], None, False)) <= 0.1)
 
     ############### SIGNAL GENERATOR ###############
     def test0300_freq(self):
@@ -308,9 +329,6 @@ class MainTest(unittest.TestCase):
     ############### SIGNAL ACQUISITION TOOL ###############
 
 
-
-
-
 	############### OSCILLOSCOPE MODULE ###############
     def test0501_osc_run(self):
 		self.assertEquals(Base().app_run('OSC'), '1')
@@ -347,11 +365,28 @@ class MainTest(unittest.TestCase):
     def test0509_osc_time_offset(self):
         for offset in rp_scales:
 			self.assertEquals(Base().osc_time_offset(offset), str(offset))
+				
+    def test0510_osc_time_scale(self):
+		for scale in rp_scales:
+			self.assertEquals(Base().osc_time_scale(scale), str(scale))
+			
+    def test0511_osc_sweep(self):
+		for value in ['AUTO', 'NORMAL', 'SINGLE']:
+			self.assertEquals(Base().osc_sweep(value), str(value))
+			
+    def test0512_osc_source(self):
+		for value in ['CH1', 'CH2', 'EXT']:
+			self.assertEquals(Base().osc_source(value), str(value))
+			
+    def test0513_osc_slope(self):
+		for value in ['POS', 'NEG']:
+			self.assertEquals(Base().osc_slope(value), str(value))
+			
+    def test0514_osc_level(self):
+		for i in [1, 3.3]:
+			self.assertEquals(Base().osc_level(i), str(i))
 
-    def test0510_osc_gain(self):
-        for scale in rp_scales:
-            self.assertEquals(Base().osc_time_scale(scale), str(scale))
-
+    #TODO: Arbitrary-waveform. TRAC-DATA
 
 
 if __name__ == '__main__':
