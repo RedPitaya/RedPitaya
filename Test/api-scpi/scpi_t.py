@@ -90,11 +90,11 @@ class Base(object):
     def rp_burst_state(self, channel):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not '1'):
+        if(rp_scpi.rx_txt().strip('\n') is not 'ON'):
             return False
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not '0'):
+        if(rp_scpi.rx_txt().strip('\n') is not 'OFF'):
             return False
         return True
 
@@ -156,6 +156,7 @@ class Base(object):
         #Compare the two buffers
         cmp = lambda x, y: collections.Counter(x) == collections.Counter(y)
         return cmp(buff, buff_ctrl)
+
         
     def app_run(self, app_name):
 		rp_scpi.tx_txt(app_name + ':RUN')
@@ -196,7 +197,7 @@ class Base(object):
 		rp_scpi.tx_txt('OSC:TIME:SCALE ' + str(value))
 		rp_scpi.tx_txt('OSC:TIME:SCALE?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_sweep(self, value):
 		rp_scpi.tx_txt('OSC:TRIG:SWEEP ' + str(value))
 		rp_scpi.tx_txt('OSC:TRIG:SWEEP?')
@@ -215,7 +216,7 @@ class Base(object):
     def osc_level(self, value):
 		rp_scpi.tx_txt('OSC:TRIG:LEVEL ' + str(value))
 		rp_scpi.tx_txt('OSC:TRIG:LEVEL?')
-		return rp_scpi.rx_txt()		
+		return rp_scpi.rx_txt()
 
 
 # Main test class
@@ -290,7 +291,6 @@ class MainTest(unittest.TestCase):
             self.assertEquals(float(Base().rp_dcyc(1, dcyc)), dcyc)
             self.assertEquals(float(Base().rp_dcyc(2, dcyc)), dcyc)
 
-    #TODO: Scpi server returns 0 on INF given. This should also be fixed.
     def test0306_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
@@ -316,69 +316,69 @@ class MainTest(unittest.TestCase):
     #Test generate
     def test0310_generate(self):
             assert (Base().generate_wform(1)) is True
-            assert (Base().generate_wform(2)) is True   
+            assert (Base().generate_wform(2)) is True
 
-	# OSC
-    def test150_osc_run(self):
+    ############### SIGNAL ACQUISITION TOOL ###############
+
+
+	############### OSCILLOSCOPE MODULE ###############
+    def test0501_osc_run(self):
 		self.assertEquals(Base().app_run('OSC'), '1')
 		
-    def test160_osc_stop(self):
+    def test0502_osc_stop(self):
 		self.assertEquals(Base().app_stop('OSC'), '0')
 		
-    def test170_spec_run(self):
+    def test0503_spec_run(self):
 		self.assertEquals(Base().app_run('SPEC'), '1')
 		
-    def test180_spec_stop(self):
+    def test0504_spec_stop(self):
 		self.assertEquals(Base().app_stop('SPEC'), '0')		
 		
-    def test190_osc_offset(self):
+    def test0505_osc_offset(self):
 		for channel in rp_channels:
 			for offset in rp_offs_range:
 				self.assertEquals(Base().osc_offset(channel, offset), str(offset))
 				
-    def test200_osc_scale(self):
+    def test0506_osc_scale(self):
 		for channel in rp_channels:
 			for scale in rp_scales:
 				self.assertEquals(Base().osc_scale(channel, scale), str(scale))
 				
-    def test210_osc_probe(self):
+    def test0507_osc_probe(self):
 		for channel in ['CH1', 'CH2']:
 			for probe in rp_scales:
 				self.assertEquals(Base().osc_probe(channel, probe), str(probe))
-				
-    def test220_osc_gain(self):
-		for channel in ['CH1', 'CH2']:
+
+    def test0508_osc_gain(self):
+        for channel in ['CH1', 'CH2']:
 			for gain in [0, 1]:
 				self.assertEquals(Base().osc_gain(channel, gain), str(gain))
 				
-    def test230_osc_time_offset(self):
-		for offset in rp_scales:
+    def test0509_osc_time_offset(self):
+        for offset in rp_scales:
 			self.assertEquals(Base().osc_time_offset(offset), str(offset))
 				
-    def test240_osc_time_scale(self):
+    def test0510_osc_time_scale(self):
 		for scale in rp_scales:
 			self.assertEquals(Base().osc_time_scale(scale), str(scale))
 			
-    def test250_osc_sweep(self):
+    def test0511_osc_sweep(self):
 		for value in ['AUTO', 'NORMAL', 'SINGLE']:
 			self.assertEquals(Base().osc_sweep(value), str(value))
 			
-    def test260_osc_source(self):
+    def test0512_osc_source(self):
 		for value in ['CH1', 'CH2', 'EXT']:
 			self.assertEquals(Base().osc_source(value), str(value))
 			
-    def test270_osc_slope(self):
+    def test0513_osc_slope(self):
 		for value in ['POS', 'NEG']:
 			self.assertEquals(Base().osc_slope(value), str(value))
 			
-    def test280_osc_level(self):
+    def test0514_osc_level(self):
 		for i in [1, 3.3]:
 			self.assertEquals(Base().osc_level(i), str(i))
 
     #TODO: Arbitrary-waveform. TRAC-DATA
-
-
-    ############### SIGNAL ACQUISITION TOOL ###############
 
 
 if __name__ == '__main__':
