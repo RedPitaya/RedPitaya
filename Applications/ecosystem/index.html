@@ -78,7 +78,7 @@
 								</ul> \
 							');
 							$('#run').html('Run');
-							$("#run").attr('href', 'http://staging1.redpitaya.com/visual-programming-instructions/');
+							$("#run").attr('href', 'http://redpitaya.com/visual-programming-instructions/');
 							$("#run").css('visibility', 'visible');
 							$("#demo").css('visibility', 'hidden');
 						} else {
@@ -202,8 +202,8 @@ $('#run').click(function(){
 
 	if ($(this).attr('href') == undefined)
 	{
-		var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/';
-		var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac=';
+		var post_uri = 'http://store.redpitaya.com/upload_id_file/';
+		var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
 
 		$.ajax({
 			method: "GET",

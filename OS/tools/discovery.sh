@@ -24,13 +24,3 @@ then
 else
     echo "Discovery update was successful."
 fi
-
-URL_STAGING="http://account.staging1.redpitaya.com/discovery.php"
-curl $URL_STAGING$PAYLOAD >> $LOGFILE 2>&1
-
-if [ $? -ne 0 ]
-then
-    echo "Discovery staging update failed!"
-else
-    echo "Discovery staging update was successful."
-fi
