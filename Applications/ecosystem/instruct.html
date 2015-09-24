@@ -1,11 +1,11 @@
  <html style="background-color: #1D1D1D">
 	<head>
 		<meta charset="utf-8" />
-		
+
 		<!--[if IE]>
 			<link rel="stylesheet" href="./ie9.css" type="text/css" />
     <![endif]-->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
 
 		<script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
 	    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
@@ -18,7 +18,7 @@
 		<script type="text/javascript">
 			$(window).load(function() {
 				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
-		
+
 				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
 				var pathname = window.location.href;
 				var hash_index = pathname.indexOf('#');
@@ -26,13 +26,13 @@
 				{
 					var res = pathname.substring(hash_index+1, pathname.length);
 					$('#app_link').attr('href', 'http://store.staging1.redpitaya.com/'+ res +'.html');
-				} else 
+				} else
 					$('#app_link').attr('href', 'http://store.staging1.redpitaya.com');
 			});
 
 		$(function() {
 				document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya ("+window.location.hostname+")");
-				
+
 				var xmlHttp = new XMLHttpRequest();
 				xmlHttp.open("GET", 'info/info.json', false);
 				xmlHttp.send(null);
@@ -85,8 +85,8 @@
 var id_file = '';
 $('#apply').click(function() {
 	var testmode = false;
-	var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/'; 
-	var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac='; 
+	var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/';
+	var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac=';
 
 	$.ajax({
 		method: "GET",
@@ -129,14 +129,14 @@ $('#apply').click(function() {
 								counter--;
 								if (counter <= 0)
 									$("#succes_text").html("Your license is valid and now you will be redirected to the main page.");
-								else 
+								else
 									$("#succes_text").html("Your license is valid and after " + counter + " seconds you will be redirected to the main page.");
-									
+
 								if (counter == 0) {
 									window.location = "index.html";
 								}
 							}, 1000);
-						} else 
+						} else
 						{
 							$(".error_body").show();
 						}
@@ -145,7 +145,7 @@ $('#apply').click(function() {
 				.fail(function( msg ) {
 					$(".error_body").show();
 				});
-			} else 
+			} else
 			{
 				$(".error_body").show();
 			}
