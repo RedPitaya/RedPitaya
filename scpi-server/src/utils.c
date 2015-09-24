@@ -338,3 +338,9 @@ int getRpInfinityIntegerString(int32_t value, char *string) {
     else              sprintf(string, "%d", value);
     return RP_OK;
 }
+
+int getRpStateIntegerString(int32_t value, char *string){
+	if(value == 0) strcpy(string, "OFF");
+	else		   strcpy(string, "ON");
+	return RP_OK;
+}
