@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('IP')
+rp_scpi = scpi.scpi('192.168.178.112')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -23,7 +23,7 @@ rp_volt_range  = [0.25, 0.5, 0.75, 1.0]
 rp_phase_range = [360, -180, -90, -30, 30, 90, 180, 360]
 rp_offs_range  = [-0.75, -0.5, -0.25, 0.25, 0.5 , 0.75]
 rp_dcyc_range  = [0.5, 1, 10, 50, 75, 100]
-rp_ncyc_range  = [1, 10, 100, 1000, 10000, 50000, 'INF']
+rp_ncyc_range  = ['INF', 1, 10, 100, 1000, 10000, 50000]
 rp_nor_range   = rp_ncyc_range[:]
 rp_inp_range   = [i * 100 for i in range(1, 6)]
 rp_channels    = ['CH1', 'CH2', 'MATH']
@@ -86,18 +86,6 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':DCYC?')
         return rp_scpi.rx_txt()
 
-    #TODO: Scpi server returns 1 for ON and 0 for off here. It should be ON and OFF. Fix that!
-    def rp_burst_state(self, channel):
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not 'ON'):
-            return False
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not 'OFF'):
-            return False
-        return True
-
     def rp_burst_ncyc(self, channel, ncyc):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC ' + str(ncyc))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC?')
@@ -109,9 +97,29 @@ class Base(object):
         return rp_scpi.rx_txt()
 
     def rp_burst_intp(self, channel, intp):
+        #Set number of cycles to 0, for period repeatibilty (period = signal_time * burst_count + delay_time)
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC 0')
+
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER ' + str(intp))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER?')
         return rp_scpi.rx_txt()
+
+    #Burst state must also set burst counts to something other than 0.
+    #Api checks, if burst count is not equal to 0 or yes and with the latter being true
+    #returns continious mode, therefore rp_burst_state will always return OFF and fail.
+    #To prevent this, we set Burts count to 1 before starting the burst state test.
+    #TODO: Make a better commentary.
+    def rp_burst_state(self, channel):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC 1')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+        if(rp_scpi.rx_txt().strip('\n') != 'ON'):
+            return False
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+        if(rp_scpi.rx_txt().strip('\n') != 'OFF'):
+            return False
+        return True
 
     def generate_wform(self, channel):
 
@@ -273,14 +281,14 @@ class MainTest(unittest.TestCase):
     def test0306_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
-            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
-            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
+            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != 0 else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
+            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != 0 else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
 
     def test0307_nor(self):
         for i in range(len(rp_nor_range)):
             nor = rp_nor_range[i]
-            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
-            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
+            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != 0 else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
+            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != 0 else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
 
     def test0308_intp(self):
         for i in range(len(rp_inp_range)):
