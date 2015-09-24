@@ -1,11 +1,11 @@
  <html style="background-color: #1D1D1D">
 	<head>
 		<meta charset="utf-8" />
-		
+
 		<!--[if IE]>
 			<link rel="stylesheet" href="./ie9.css" type="text/css" />
     <![endif]-->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
 
 		<script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
 	    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
@@ -18,7 +18,7 @@
 		<script type="text/javascript">
 			$(window).load(function() {
 				$("#mcs_container").mCustomScrollbar({ alwaysShowScrollbar: 2 });
-		
+
 				$("#mcs_container2").mCustomScrollbar({ alwaysShowScrollbar: 2 });
 
 			});
@@ -42,8 +42,8 @@
 					$(buttons).appendTo('.list-group');
 					$(buttons).show();
 					current_app = 'visualprogramming';
-					
-					desc = $('.description');				
+
+					desc = $('.description');
 					var first_button = null;
 					$.each( result, function( key, value ) {
 						buttons = buttons.clone();
@@ -54,13 +54,13 @@
 						$(buttons).children('a').removeClass('lock');
 						if(value.type=='demo')
 							$(buttons).children('a').addClass('lock');
-							
+
 						$(buttons).appendTo('.list-group');
 						$(buttons).show();
 						current_app = key;
 					});
 
-					$('.buttons').click(function() {						
+					$('.buttons').click(function() {
 						key = $(this).children('a').attr('href').substr(1);
 						if (key == 'visualprogramming')
 						{
@@ -93,7 +93,7 @@
 									$('#run').html('Run');
 									$("#run").css('visibility', 'visible');
 									$("#demo").css('visibility', 'visible');
-							}				
+							}
 							else if (result[key].type == "run")
 							{
 								$("#run").attr('href', url + key + '?type=run');
@@ -135,7 +135,7 @@
 
 			$(function() {
 				document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya ("+window.location.hostname+")");
-				
+
 				var xmlHttp = new XMLHttpRequest();
 				xmlHttp.open("GET", 'info/info.json', false);
 				xmlHttp.send(null);
@@ -155,10 +155,10 @@
 			<div class="row" style="padding: 20px;">
 				<div class="col-xs-2" style="min-width: 270px; height: 400;">
 					<div id="mcs_container">
-							<img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">	
+							<img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">
 							<h4 style="color: silver;">Select the Instrument:</h4>
 							<div class="list-group pull-left">
-								<div class="buttons" id="main_buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">													
+								<div class="buttons" id="main_buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">
 									<a href="#" id="buttons" style="border-radius: 0;" class="list-group-item">1</a>
 								</div>
 							</div>
@@ -191,20 +191,20 @@
 	<div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
 </div>
 <script>
-	
+
 $('#run').click(function(){
-	
+
 	if (typeof String.prototype.startsWith != 'function') {
 		String.prototype.startsWith = function (str){
 			return this.indexOf(str) === 0;
 		};
 	}
-	
+
 	if ($(this).attr('href') == undefined)
 	{
-		var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/'; 
-		var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac='; 
-		
+		var post_uri = 'http://store.staging1.redpitaya.com/upload_id_file/';
+		var req_uri = 'http://store.staging1.redpitaya.com/get_lic/?rp_mac=';
+
 		$.ajax({
 			method: "GET",
 			url: "lic.lic"
@@ -212,7 +212,7 @@ $('#run').click(function(){
 		.done(function( msg ) {
 			window.location = $('#run').attr('href2');
 		})
-		.fail(function( msg ) {			
+		.fail(function( msg ) {
 			$.ajax({
 				method: "GET",
 				url: "idfile.id"
@@ -247,14 +247,14 @@ $('#run').click(function(){
 							.fail(function( msg ) {
 								if (msg.responseText.startsWith("OK"))
 									window.location = "index.html";
-								else 
+								else
 									window.location = $('#run').attr('href2');
 							});
 						})
 						.fail(function( msg ) {
 							window.location = $('#run').attr('href2');
 						});
-					} else 
+					} else
 					{
 						window.location = $('#run').attr('href2');
 					}
