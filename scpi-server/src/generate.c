@@ -605,6 +605,8 @@ enum _scpi_result_t RP_GenSetGenerateMode(rp_channel_t channel, scpi_t *context)
 }
 
 enum _scpi_result_t RP_GenGetGenerateMode(rp_channel_t channel, scpi_t *context) {
+    
+    char value;
     rp_gen_mode_t mode;
     int result = rp_GenGetMode(channel, &mode);
     if (RP_OK != result) {
@@ -612,8 +614,13 @@ enum _scpi_result_t RP_GenGetGenerateMode(rp_channel_t channel, scpi_t *context)
         return SCPI_RES_ERR;
     }
 
+    if(getRpStateIntegerString(mode, &value)){
+        syslog(LOG_ERR, "*SOUR<n>:BURS:STAT? Invalid mode.");
+        return SCPI_RES_ERR;
+    }
+
     // Return back result
-    SCPI_ResultBool(context, mode == RP_GEN_MODE_BURST);
+    SCPI_ResultString(context, &value);
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:STAT? Successfully returned generate mode status to client.");
 

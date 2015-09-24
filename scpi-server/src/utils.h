@@ -59,5 +59,6 @@ int getRpAppMathOperationString(rpApp_osc_math_oper_t op, char *string);
 int getRpInfinityInteger(const char *string, int32_t *value);
 int getRpInfinityIntegerString(int32_t value, char *string);
 int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit);
+int getRpStateIntegerString(int32_t value, char *string);
 
 #endif /* UTILS_H_ */
