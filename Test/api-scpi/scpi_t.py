@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.1.3')
+rp_scpi = scpi.scpi('IP')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -90,11 +90,11 @@ class Base(object):
     def rp_burst_state(self, channel):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not '1'):
+        if(rp_scpi.rx_txt().strip('\n') is not 'ON'):
             return False
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not '0'):
+        if(rp_scpi.rx_txt().strip('\n') is not 'OFF'):
             return False
         return True
 
@@ -198,11 +198,6 @@ class Base(object):
 		rp_scpi.tx_txt('OSC:TIME:SCALE?')
 		return rp_scpi.rx_txt()
 
-    def osc_time_offset(self, value):
-        rp_scpi.tx_txt('OSC:TIME:OFFSET ' + str(value))
-        rp_scpi.tx_txt('OSC:TIME:OFFSET?')
-        return rp_scpi.rx_txt()
-
 
 # Main test class
 class MainTest(unittest.TestCase):
@@ -275,7 +270,6 @@ class MainTest(unittest.TestCase):
             self.assertEquals(float(Base().rp_dcyc(1, dcyc)), dcyc)
             self.assertEquals(float(Base().rp_dcyc(2, dcyc)), dcyc)
 
-    #TODO: Scpi server returns 0 on INF given. This should also be fixed.
     def test0306_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
@@ -304,7 +298,7 @@ class MainTest(unittest.TestCase):
             assert (Base().generate_wform(2)) is True
 
     ############### SIGNAL ACQUISITION TOOL ###############
-    
+
 
 
 
