@@ -128,3 +128,19 @@ scpi_result_t RP_FpgaBitStream(scpi_t *context){
 
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_EnableDigLoop(scpi_t *context){
+
+    int result = rp_EnableDigitalLoop(true);
+
+    if(result != RP_OK){
+        syslog(LOG_ERR, "*RP:DIG:LOop Failed to initialize Red Pitaya"
+            " digital loop.\n");
+        return SCPI_RES_ERR;
+    }
+
+    syslog(LOG_INFO, "*RP:DIG:LOop Successfully initialize Red Pitaya"
+        " digital loop.\n");
+
+    return SCPI_RES_OK;
+}
