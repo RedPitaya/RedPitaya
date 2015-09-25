@@ -88,7 +88,7 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetDecimation(scpi_t *context) {
+scpi_result_t RP_AcqDecimation(scpi_t *context) {
     int value;
 
     // read first parameter DECIMATION (1,8,64,1024,8192,65536)
@@ -117,7 +117,7 @@ scpi_result_t RP_AcqSetDecimation(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetDecimation(scpi_t *context) {
+scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     // Get decimation
     rp_acq_decimation_t decimation;
     int result = rp_AcqGetDecimation(&decimation);
@@ -142,7 +142,7 @@ scpi_result_t RP_AcqGetDecimation(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetSamplingRate(scpi_t *context) {
+scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
     const char * param;
     size_t param_len;
     char samplingRateStr[15];
@@ -175,7 +175,7 @@ scpi_result_t RP_AcqSetSamplingRate(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetSamplingRate(scpi_t *context) {
+scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
     rp_acq_sampling_rate_t samplingRate;
     int result = rp_AcqGetSamplingRate(&samplingRate);
 
@@ -199,7 +199,7 @@ scpi_result_t RP_AcqGetSamplingRate(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetSamplingRateHz(scpi_t *context) {
+scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     // get sampling rate
     float samplingRate;
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
@@ -221,7 +221,7 @@ scpi_result_t RP_AcqGetSamplingRateHz(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetAveraging(scpi_t *context) {
+scpi_result_t RP_AcqAveraging(scpi_t *context) {
     scpi_bool_t value;
 
     // read first parameter AVERAGING (OFF,ON)
@@ -243,7 +243,7 @@ scpi_result_t RP_AcqSetAveraging(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetAveraging(scpi_t *context) {
+scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
     // get averaging
     bool value;
     int result = rp_AcqGetAveraging(&value);
@@ -261,7 +261,7 @@ scpi_result_t RP_AcqGetAveraging(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
+scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
     const char * param;
     size_t param_len;
 
@@ -296,7 +296,7 @@ scpi_result_t RP_AcqSetTriggerSrc(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetTrigger(scpi_t *context) {
+scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
     // get trigger source
     rp_acq_trig_src_t source;
     int result = rp_AcqGetTriggerSrc(&source);
@@ -320,7 +320,7 @@ scpi_result_t RP_AcqGetTrigger(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetTriggerDelay(scpi_t *context) {
+scpi_result_t RP_AcqTriggerDelay(scpi_t *context) {
     int32_t triggerDelay;
 
     // read first parameter TRIGGER DELAY (value in samples)
@@ -341,7 +341,7 @@ scpi_result_t RP_AcqSetTriggerDelay(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
+scpi_result_t RP_AcqTriggerDelayQ(scpi_t *context) {
     // get trigger delay
     int32_t value;
     int result = rp_AcqGetTriggerDelay(&value);
@@ -359,7 +359,7 @@ scpi_result_t RP_AcqGetTriggerDelay(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t *context) {
+scpi_result_t RP_AcqTriggerDelayNs(scpi_t *context) {
     int64_t triggerDelay;
 
     // read first parameter TRIGGER DELAY ns (value in ns)
@@ -380,7 +380,7 @@ scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
+scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
     // get trigger delay ns
     int64_t value;
     int result = rp_AcqGetTriggerDelayNs(&value);
@@ -398,23 +398,23 @@ scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSetChannel1Gain(scpi_t *context) {
+scpi_result_t RP_AcqChannel1Gain(scpi_t *context) {
     return RP_AcqSetGain(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqSetChannel2Gain(scpi_t *context) {
+scpi_result_t RP_AcqChannel2Gain(scpi_t *context) {
     return RP_AcqSetGain(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqGetChannel1Gain(scpi_t *context) {
+scpi_result_t RP_AcqChannel1GainQ(scpi_t *context) {
     return RP_AcqGetGain(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqGetChannel2Gain(scpi_t *context) {
+scpi_result_t RP_AcqChannel2GainQ(scpi_t *context) {
     return RP_AcqGetGain(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context) {
+scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     double value;
 
     // read first parameter TRIGGER LEVEL (value in mV)
@@ -437,7 +437,7 @@ scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetTriggerLevel(scpi_t *context) {
+scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
     float value;
     int result = rp_AcqGetTriggerLevel(&value);
 
@@ -454,7 +454,7 @@ scpi_result_t RP_AcqGetTriggerLevel(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetWritePointer(scpi_t *context) {
+scpi_result_t RP_AcqWritePointerQ(scpi_t *context) {
     // get write pointer
     uint32_t value;
     int result = rp_AcqGetWritePointer(&value);
@@ -472,7 +472,7 @@ scpi_result_t RP_AcqGetWritePointer(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetWritePointerAtTrig(scpi_t *context) {
+scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
     // get write pointer at trigger
     uint32_t value;
     int result = rp_AcqGetWritePointerAtTrig(&value);
@@ -517,47 +517,47 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqGetChanel1DataPos(scpi_t *context) {
+scpi_result_t RP_AcqChannel1DataPosQ(scpi_t *context) {
     return RP_AcqGetDataPos(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqGetChanel2DataPos(scpi_t *context) {
+scpi_result_t RP_AcqChannel2DataPosQ(scpi_t *context) {
     return RP_AcqGetDataPos(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqGetChanel1Data(scpi_t *context) {
+scpi_result_t RP_AcqChannel1DataQ(scpi_t *context) {
     return RP_AcqGetData(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqGetChanel2Data(scpi_t *context) {
+scpi_result_t RP_AcqChannel2DataQ(scpi_t *context) {
     return RP_AcqGetData(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqGetChanel1OldestData(scpi_t *context) {
+scpi_result_t RP_AcqChannel1OldestDataQ(scpi_t *context) {
     return RP_AcqGetOldestData(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqGetChanel2OldestData(scpi_t *context) {
+scpi_result_t RP_AcqChannel2OldestDataQ(scpi_t *context) {
     return RP_AcqGetOldestData(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqGetChanel1LatestData(scpi_t *context) {
+scpi_result_t RP_AcqChannel1LatestDataQ(scpi_t *context) {
     return RP_AcqGetLatestData(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqGetChanel2LatestData(scpi_t *context) {
+scpi_result_t RP_AcqChannel2LatestDataQ(scpi_t *context) {
     return RP_AcqGetLatestData(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqGetChanel1OldestDataAll(scpi_t *context) {
+scpi_result_t RP_AcqChannel1OldestDataAllQ(scpi_t *context) {
     return RP_AcqGetOldestDataAll(RP_CH_1, context);
 }
 
-scpi_result_t RP_AcqGetChanel2OldestDataAll(scpi_t *context) {
+scpi_result_t RP_AcqChannel2OldestDataAllQ(scpi_t *context) {
     return RP_AcqGetOldestDataAll(RP_CH_2, context);
 }
 
-scpi_result_t RP_AcqGetBufferSize(scpi_t *context) {
+scpi_result_t RP_AcqBufferSizeQ(scpi_t *context) {
     uint32_t size;
     int result = rp_AcqGetBufSize(&size);
 

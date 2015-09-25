@@ -17,7 +17,7 @@
 #define APIN_H_
 
 scpi_result_t RP_AnalogPinReset(scpi_t * context);
-scpi_result_t RP_AnalogPinGetValue(scpi_t * context);
-scpi_result_t RP_AnalogPinSetValue(scpi_t * context);
+scpi_result_t RP_AnalogPinValueQ(scpi_t * context);
+scpi_result_t RP_AnalogPinValue(scpi_t * context);
 
 #endif /* APIN_H_ */
