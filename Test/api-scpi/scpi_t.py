@@ -157,7 +157,7 @@ class Base(object):
         cmp = lambda x, y: collections.Counter(x) == collections.Counter(y)
         return cmp(buff, buff_ctrl)
 
-        
+
     def app_run(self, app_name):
 		rp_scpi.tx_txt(app_name + ':RUN')
 		rp_scpi.tx_txt(app_name + ':RUNNING')
@@ -167,32 +167,32 @@ class Base(object):
 		rp_scpi.tx_txt(app_name + ':STOP')
 		rp_scpi.tx_txt(app_name + ':RUNNING')
 		return rp_scpi.rx_txt()
-		
+
     def osc_offset(self, channel, value):
 		rp_scpi.tx_txt('OSC:' + channel + ':OFFSET ' + str(value))
 		rp_scpi.tx_txt('OSC:' + channel + ':OFFSET?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_scale(self, channel, value):
 		rp_scpi.tx_txt('OSC:' + channel + ':SCALE ' + str(value))
 		rp_scpi.tx_txt('OSC:' + channel + ':SCALE?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_probe(self, channel, value):
 		rp_scpi.tx_txt('OSC:' + channel + ':PROBE ' + str(value))
 		rp_scpi.tx_txt('OSC:' + channel + ':PROBE?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_gain(self, channel, value):
 		rp_scpi.tx_txt('OSC:' + channel + ':IN:GAIN ' + str(value))
 		rp_scpi.tx_txt('OSC:' + channel + ':IN:GAIN?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_time_offset(self, value):
 		rp_scpi.tx_txt('OSC:TIME:OFFSET ' + str(value))
 		rp_scpi.tx_txt('OSC:TIME:OFFSET?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_time_scale(self, value):
 		rp_scpi.tx_txt('OSC:TIME:SCALE ' + str(value))
 		rp_scpi.tx_txt('OSC:TIME:SCALE?')
@@ -202,20 +202,42 @@ class Base(object):
 		rp_scpi.tx_txt('OSC:TRIG:SWEEP ' + str(value))
 		rp_scpi.tx_txt('OSC:TRIG:SWEEP?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_source(self, value):
 		rp_scpi.tx_txt('OSC:TRIG:SOURCE ' + str(value))
 		rp_scpi.tx_txt('OSC:TRIG:SOURCE?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_slope(self, value):
 		rp_scpi.tx_txt('OSC:TRIG:SLOPE ' + str(value))
 		rp_scpi.tx_txt('OSC:TRIG:SLOPE?')
 		return rp_scpi.rx_txt()
-		
+
     def osc_level(self, value):
 		rp_scpi.tx_txt('OSC:TRIG:LEVEL ' + str(value))
 		rp_scpi.tx_txt('OSC:TRIG:LEVEL?')
+		return rp_scpi.rx_txt()
+
+    def osc_data_size(self, size):
+		rp_scpi.tx_txt('OSC:DATA:SIZE ' + str(size))
+		rp_scpi.tx_txt('OSC:DATA:SIZE?')
+		return rp_scpi.rx_txt()
+
+	# SPEC
+
+    def spec_data_size(self, size):
+		rp_scpi.tx_txt('SPEC:DATA:SIZE ' + str(size))
+		rp_scpi.tx_txt('SPEC:DATA:SIZE?')
+		return rp_scpi.rx_txt()
+
+    def spec_freq_min(self, size):
+		rp_scpi.tx_txt('SPEC:FREQ:MIN ' + str(size))
+		rp_scpi.tx_txt('SPEC:FREQ:MIN?')
+		return rp_scpi.rx_txt()
+
+    def spec_freq_max(self, size):
+		rp_scpi.tx_txt('SPEC:FREQ:MAX ' + str(size))
+		rp_scpi.tx_txt('SPEC:FREQ:MAX?')
 		return rp_scpi.rx_txt()
 
 
@@ -324,26 +346,20 @@ class MainTest(unittest.TestCase):
 	############### OSCILLOSCOPE MODULE ###############
     def test0501_osc_run(self):
 		self.assertEquals(Base().app_run('OSC'), '1')
-		
+
     def test0502_osc_stop(self):
 		self.assertEquals(Base().app_stop('OSC'), '0')
-		
-    def test0503_spec_run(self):
-		self.assertEquals(Base().app_run('SPEC'), '1')
-		
-    def test0504_spec_stop(self):
-		self.assertEquals(Base().app_stop('SPEC'), '0')		
-		
+
     def test0505_osc_offset(self):
 		for channel in rp_channels:
 			for offset in rp_offs_range:
 				self.assertEquals(Base().osc_offset(channel, offset), str(offset))
-				
+
     def test0506_osc_scale(self):
 		for channel in rp_channels:
 			for scale in rp_scales:
 				self.assertEquals(Base().osc_scale(channel, scale), str(scale))
-				
+
     def test0507_osc_probe(self):
 		for channel in ['CH1', 'CH2']:
 			for probe in rp_scales:
@@ -351,32 +367,49 @@ class MainTest(unittest.TestCase):
 
     def test0508_osc_gain(self):
         for channel in ['CH1', 'CH2']:
-			for gain in [0, 1]:
+			for gain in ['LV', 'HV']:
 				self.assertEquals(Base().osc_gain(channel, gain), str(gain))
-				
+
     def test0509_osc_time_offset(self):
         for offset in rp_scales:
 			self.assertEquals(Base().osc_time_offset(offset), str(offset))
-				
+
     def test0510_osc_time_scale(self):
 		for scale in rp_scales:
 			self.assertEquals(Base().osc_time_scale(scale), str(scale))
-			
+
     def test0511_osc_sweep(self):
 		for value in ['AUTO', 'NORMAL', 'SINGLE']:
 			self.assertEquals(Base().osc_sweep(value), str(value))
-			
+
     def test0512_osc_source(self):
 		for value in ['CH1', 'CH2', 'EXT']:
 			self.assertEquals(Base().osc_source(value), str(value))
-			
+
     def test0513_osc_slope(self):
-		for value in ['POS', 'NEG']:
-			self.assertEquals(Base().osc_slope(value), str(value))
-			
+		for k, v in {'POS': '1', 'NEG': '0'}.items():
+			self.assertEquals(Base().osc_slope(k), v)
+
     def test0514_osc_level(self):
-		for i in [1, 3.3]:
+		for i in [0.0, -0.3, 0, 0.5, 0.83]:
 			self.assertEquals(Base().osc_level(i), str(i))
+
+	############### SPECTRUM MODULE ###############
+
+    def test0600_spec_run(self):
+		self.assertEquals(Base().app_run('SPEC'), '1')
+
+    def test0601_spec_stop(self):
+		self.assertEquals(Base().app_stop('SPEC'), '0')
+
+    def test0602_spec_freq_min(self):
+		for size in [1232, 1123, 2131]:
+			self.assertEquals(Base().spec_freq_min(size), str(size))
+
+    def test0603_spec_freq_max(self):
+		for size in [1231, 11233, 21232]:
+			self.assertEquals(Base().spec_freq_max(size), str(size))
+
 
     #TODO: Arbitrary-waveform. TRAC-DATA
 
