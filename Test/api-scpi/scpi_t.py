@@ -160,13 +160,6 @@ class Base(object):
             buff_ctrl[i] = float(buff_ctrl[i].strip('\n'))
 
         rp_scpi.tx_txt('RP:RESET')
-        #print(buff[0] == buff_ctrl[0])
-
-        import matplotlib.pyplot as plt
-        plt.plot(buff)
-        plt.ylabel('Voltage')
-        plt.show()
-
         return (buff[:] == buff_ctrl[:])
 
 # Main test class
@@ -269,7 +262,6 @@ class MainTest(unittest.TestCase):
         assert (Base().generate_wform(2)) is True
 
     ############### SIGNAL ACQUISITION TOOL ###############
-
 
     #TODO: Arbitrary-waveform. TRAC-DATA
 
