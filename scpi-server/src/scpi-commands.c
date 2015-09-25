@@ -102,9 +102,6 @@ scpi_result_t SCPI_EchoVersion(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
-
-
-
 /**
  * SCPI Configuration
  */
@@ -144,9 +141,9 @@ static const scpi_command_t scpi_commands[] = {
         /* RedPitaya */
 
         /* General commands */
-        {.pattern = "RP:INiT", .callback            = RP_InitAll,},
+        {.pattern = "RP:INit", .callback            = RP_InitAll,},
         {.pattern = "RP:REset", .callback           = RP_ResetAll,},
-        {.pattern = "RP:RELease", .callback         = RP_RealaseAll,},
+        {.pattern = "RP:RELease", .callback         = RP_ReleaseAll,},
         {.pattern = "RP:FPGA:BITstr", .callback     = RP_FpgaBitStream,},
         {.pattern = "RP:DIG:LOop", .callback        = RP_EnableDigLoop,},
 
@@ -196,7 +193,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:SOUR2:DATA:OLD:N?", .callback      = RP_AcqChannel2OldestDataQ,},
         {.pattern = "ACQ:SOUR1:DATA:LAT:N?", .callback      = RP_AcqChannel1LatestDataQ,},
         {.pattern = "ACQ:SOUR2:DATA:LAT:N?", .callback      = RP_AcqChannel2LatestDataQ,},
-        {.pattern = "ACQ:BUF:SIZE?", .callback = RP_AcqBufferSizeQ,},
+        {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
         /* Generate */
         {.pattern = "GEN:RST", .callback                = RP_GenReset,},
