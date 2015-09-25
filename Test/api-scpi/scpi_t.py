@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('IP')
+rp_scpi = scpi.scpi('192.168.178.112')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -131,101 +131,43 @@ class Base(object):
         ampl = 0.8
         wave_form = 'SINE'
 
-
-        rp_scpi.tx_txt('ACQ:START')
-
+        #Init Red Pitaya resources
+        rp_scpi.tx_txt('RP:INIT')
 
         #Enable Red Pitaya digital loop
-        rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
+        rp_scpi.tx_txt('RP:DIG:LO')
+        rp_scpi.tx_txt('ACQ:START')
 
         #Set generator options
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT ' + str(ampl))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC ' + str(wave_form))
-
-        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
         rp_scpi.tx_txt('OUTPUT' + str(channel) + ':STATE ON')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
+        rp_scpi.tx_txt('ACQ:TRIG CH' + str(channel) + '_PE')
 
-        #rp_scpi.tx_txt('ACQ:TRIG:STAT?')
-        #rp_scpi.rx_txt()
         rp_scpi.tx_txt('ACQ:SOUR' + str(channel) + ':DATA?')
 
         buff_string = rp_scpi.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = map(float, buff_string)
 
-        buff_ctrl = open('./ctrl_data/gen_ctrl', 'r').readlines()
+        if(channel == 1):
+            buff_ctrl = open('./ctrl_data/gen_ctrl_ch1', 'r').readlines()
+        else:
+           buff_ctrl = open('./ctrl_data/gen_ctrl_ch2', 'r').readlines()
 
         for i in range(len(buff_ctrl)):
-            buff_ctrl[i] = (float)(buff_ctrl[i].strip('\n'))
-            buff[i] = (float)(buff[i])
-        rp_scpi.tx_txt('ACQ:RST')
+            buff_ctrl[i] = float(buff_ctrl[i].strip('\n'))
 
-        #Compare the two buffers
-        cmp = lambda x, y: collections.Counter(x) == collections.Counter(y)
-        return cmp(buff, buff_ctrl)
+        rp_scpi.tx_txt('RP:RESET')
+        #print(buff[0] == buff_ctrl[0])
 
-        
-    def app_run(self, app_name):
-		rp_scpi.tx_txt(app_name + ':RUN')
-		rp_scpi.tx_txt(app_name + ':RUNNING')
-		return rp_scpi.rx_txt()
+        import matplotlib.pyplot as plt
+        plt.plot(buff)
+        plt.ylabel('Voltage')
+        plt.show()
 
-    def app_stop(self, app_name):
-		rp_scpi.tx_txt(app_name + ':STOP')
-		rp_scpi.tx_txt(app_name + ':RUNNING')
-		return rp_scpi.rx_txt()
-		
-    def osc_offset(self, channel, value):
-		rp_scpi.tx_txt('OSC:' + channel + ':OFFSET ' + str(value))
-		rp_scpi.tx_txt('OSC:' + channel + ':OFFSET?')
-		return rp_scpi.rx_txt()
-		
-    def osc_scale(self, channel, value):
-		rp_scpi.tx_txt('OSC:' + channel + ':SCALE ' + str(value))
-		rp_scpi.tx_txt('OSC:' + channel + ':SCALE?')
-		return rp_scpi.rx_txt()
-		
-    def osc_probe(self, channel, value):
-		rp_scpi.tx_txt('OSC:' + channel + ':PROBE ' + str(value))
-		rp_scpi.tx_txt('OSC:' + channel + ':PROBE?')
-		return rp_scpi.rx_txt()
-		
-    def osc_gain(self, channel, value):
-		rp_scpi.tx_txt('OSC:' + channel + ':IN:GAIN ' + str(value))
-		rp_scpi.tx_txt('OSC:' + channel + ':IN:GAIN?')
-		return rp_scpi.rx_txt()
-		
-    def osc_time_offset(self, value):
-		rp_scpi.tx_txt('OSC:TIME:OFFSET ' + str(value))
-		rp_scpi.tx_txt('OSC:TIME:OFFSET?')
-		return rp_scpi.rx_txt()
-		
-    def osc_time_scale(self, value):
-		rp_scpi.tx_txt('OSC:TIME:SCALE ' + str(value))
-		rp_scpi.tx_txt('OSC:TIME:SCALE?')
-		return rp_scpi.rx_txt()
-
-    def osc_sweep(self, value):
-		rp_scpi.tx_txt('OSC:TRIG:SWEEP ' + str(value))
-		rp_scpi.tx_txt('OSC:TRIG:SWEEP?')
-		return rp_scpi.rx_txt()
-		
-    def osc_source(self, value):
-		rp_scpi.tx_txt('OSC:TRIG:SOURCE ' + str(value))
-		rp_scpi.tx_txt('OSC:TRIG:SOURCE?')
-		return rp_scpi.rx_txt()
-		
-    def osc_slope(self, value):
-		rp_scpi.tx_txt('OSC:TRIG:SLOPE ' + str(value))
-		rp_scpi.tx_txt('OSC:TRIG:SLOPE?')
-		return rp_scpi.rx_txt()
-		
-    def osc_level(self, value):
-		rp_scpi.tx_txt('OSC:TRIG:LEVEL ' + str(value))
-		rp_scpi.tx_txt('OSC:TRIG:LEVEL?')
-		return rp_scpi.rx_txt()
-
+        return (buff[:] == buff_ctrl[:])
 
 # Main test class
 class MainTest(unittest.TestCase):
@@ -322,69 +264,12 @@ class MainTest(unittest.TestCase):
         self.assertTrue(Base().rp_burst_state(1))
 
     #Test generate
-    def test0310_generate(self):
-            assert (Base().generate_wform(1)) is True
-            assert (Base().generate_wform(2)) is True
+    def test000_generate(self):
+        assert (Base().generate_wform(1)) is True
+        assert (Base().generate_wform(2)) is True
 
     ############### SIGNAL ACQUISITION TOOL ###############
 
-
-	############### OSCILLOSCOPE MODULE ###############
-    def test0501_osc_run(self):
-		self.assertEquals(Base().app_run('OSC'), '1')
-		
-    def test0502_osc_stop(self):
-		self.assertEquals(Base().app_stop('OSC'), '0')
-		
-    def test0503_spec_run(self):
-		self.assertEquals(Base().app_run('SPEC'), '1')
-		
-    def test0504_spec_stop(self):
-		self.assertEquals(Base().app_stop('SPEC'), '0')		
-		
-    def test0505_osc_offset(self):
-		for channel in rp_channels:
-			for offset in rp_offs_range:
-				self.assertEquals(Base().osc_offset(channel, offset), str(offset))
-				
-    def test0506_osc_scale(self):
-		for channel in rp_channels:
-			for scale in rp_scales:
-				self.assertEquals(Base().osc_scale(channel, scale), str(scale))
-				
-    def test0507_osc_probe(self):
-		for channel in ['CH1', 'CH2']:
-			for probe in rp_scales:
-				self.assertEquals(Base().osc_probe(channel, probe), str(probe))
-
-    def test0508_osc_gain(self):
-        for channel in ['CH1', 'CH2']:
-			for gain in [0, 1]:
-				self.assertEquals(Base().osc_gain(channel, gain), str(gain))
-				
-    def test0509_osc_time_offset(self):
-        for offset in rp_scales:
-			self.assertEquals(Base().osc_time_offset(offset), str(offset))
-				
-    def test0510_osc_time_scale(self):
-		for scale in rp_scales:
-			self.assertEquals(Base().osc_time_scale(scale), str(scale))
-			
-    def test0511_osc_sweep(self):
-		for value in ['AUTO', 'NORMAL', 'SINGLE']:
-			self.assertEquals(Base().osc_sweep(value), str(value))
-			
-    def test0512_osc_source(self):
-		for value in ['CH1', 'CH2', 'EXT']:
-			self.assertEquals(Base().osc_source(value), str(value))
-			
-    def test0513_osc_slope(self):
-		for value in ['POS', 'NEG']:
-			self.assertEquals(Base().osc_slope(value), str(value))
-			
-    def test0514_osc_level(self):
-		for i in [1, 3.3]:
-			self.assertEquals(Base().osc_level(i), str(i))
 
     #TODO: Arbitrary-waveform. TRAC-DATA
 
