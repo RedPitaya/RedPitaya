@@ -224,7 +224,18 @@
 		if (unit)
 			freq_unit1 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
 		if (new_params['peak1_power'] && new_params['peak1_freq'] && !$('#CH1_FREEZE').hasClass('active'))
-			$('#peak_ch1').val(SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1);
+		{
+			var result = '';
+			var multiplier = (freq_unit1.charAt(0) == 'k') ? 1000 
+						   : (freq_unit1.charAt(0) == 'M') ? 1000000 : 1;
+			if (new_params['peak1_power'].value < -120 || new_params['peak1_power'].value > 20)
+				result = 'OVER RANGE';
+			else if (((new_params['peak1_freq'].value*multiplier) < 0) ||  ((new_params['peak1_freq'].value*multiplier) > 50e6))
+				result = 'OVER RANGE';
+			else 
+				result = SPEC.floatToLocalString(new_params['peak1_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak1_freq'].value.toFixed(2)) + ' ' + freq_unit1;
+			$('#peak_ch1').val(result);
+		}		
 			
 		if (param_name == 'peak2_unit')
 		{
@@ -233,8 +244,19 @@
 			var unit = new_params['peak2_unit'];
 			if (unit)
 				freq_unit2 = (unit.value == 1 ? 'k' : (unit.value == 2 ? 'M' : '')) + 'Hz';
+				
 			if (new_params['peak2_power'] && new_params['peak2_freq'] && !$('#CH2_FREEZE').hasClass('active'))
-				$('#peak_ch2').val(SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2);
+			{				
+				var multiplier = (freq_unit2.charAt(0) == 'k') ? 1000 
+							   : (freq_unit2.charAt(0) == 'M') ? 1000000 : 1;
+				if (new_params['peak2_power'].value < -120 || new_params['peak2_power'].value > 20)
+					result = 'OVER RANGE';
+				else if (((new_params['peak2_freq'].value*multiplier) < 0) ||  ((new_params['peak2_freq'].value*multiplier) > 50e6))
+					result = 'OVER RANGE';
+				else 
+					result = SPEC.floatToLocalString(new_params['peak2_power'].value.toFixed(3)) + ' dBm @ ' + SPEC.floatToLocalString(new_params['peak2_freq'].value.toFixed(2)) + ' ' + freq_unit2;
+				$('#peak_ch2').val(result);
+			}
 		}
 		if(param_name == 'w_idx')
 		{
@@ -243,9 +265,9 @@
 			if(img_num <= 999) { 
 			  img_num = ('00' + img_num).slice(-3); 
 			}
-			if (SPEC.params.orig['CH1_SHOW'] && SPEC.params.orig['CH1_SHOW'].value)
+			if (SPEC.params.orig['CH1_SHOW'] && SPEC.params.orig['CH1_SHOW'].value && !$('#CH1_FREEZE').hasClass('active'))
 				$('#waterfall_ch1').attr('src', SPEC.config.waterf_img_path + 'wat1_' + img_num + '.jpg');
-			if (SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value)
+			if (SPEC.params.orig['CH2_SHOW'] && SPEC.params.orig['CH2_SHOW'].value && !$('#CH2_FREEZE').hasClass('active'))
 				$('#waterfall_ch2').attr('src', SPEC.config.waterf_img_path + 'wat2_' + img_num + '.jpg');	
 		}
 		// Y cursors
@@ -486,11 +508,21 @@ $('#waterfall-holder_ch2').hide();
   SPEC.exitEditing = function(noclose) {
 	
 	if(!($('#CH1_SHOW').hasClass('active') || $('#CH2_SHOW').hasClass('active'))){
-		if(SPEC.params.orig['CH1_SHOW'].value == true)
+		/*if(SPEC.params.orig['CH1_SHOW'].value == true)
 			$('#CH2_SHOW').addClass('active');
 		if(SPEC.params.orig['CH2_SHOW'].value == true)
-			$('#CH1_SHOW').addClass('active');
+			$('#CH1_SHOW').addClass('active');*/
+		
 	}
+	if(!SPEC.isVisibleChannels())
+	{
+		$('#graphs .plot').hide();
+		var sig_btn = $('#right_menu .menu-btn.ch2');
+		sig_btn.prop('disabled', true);
+		var sig_btn = $('#right_menu .menu-btn.ch1');
+		sig_btn.prop('disabled', true);
+	}
+		
 	var t_min = SPEC.config.xmin;
 	var t_max = SPEC.config.xmax;
     for(var key in SPEC.params.orig) {

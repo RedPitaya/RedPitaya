@@ -3,7 +3,7 @@
 *
 * @brief Red Pitaya application library Impedance Analyzer module interface
 *
-* @Author Luka Golinar
+* @Author Luka Golinar <luka.golinar@gmail.com>
 *
 * (c) Red Pitaya  http://www.redpitaya.com
 *
@@ -21,12 +21,20 @@
 #define REPEAT do
 #define UNTIL(exp) while(!(exp))
 
+/* Random global defines */
 #define AMPLITUDE_MAX			1.0
 #define ADC_BUFF_SIZE			16384
 #define M_PI					3.14159265358979323846
 #define TRANS_EFFECT_STEPS		10
 #define SAMPLE_RATE				125e6
 #define PARAMS_NUM				13
+
+
+/* Calibration params */
+#define CALIB_SIZE				100
+#define START_CALIB_FREQ		100 //TODO
+#define END_CALIB_FREQ			1e6
+
 
 /* R_shunt constans */
 static const uint32_t R_SHUNT_30	 = 30;
@@ -72,6 +80,7 @@ typedef struct imp_params_e{
 	imp_scale_t scale;
 	imp_sweep_t sweep; //imp_sweep_e
 	bool user_wait;
+	bool no_calib;
 } imp_params_t;
 
 /* Resource managment functions */
@@ -97,7 +106,18 @@ float imp_data_analysis(float **data, uint32_t size, float dc_bias,
 
 /* Helper functions */
 uint32_t imp_shuntAlgorithm(float z_ampl);
-int imp_Interpolate(float *calib_data, FILE *calib_file);
+int imp_Interpolate(float *calib_data, imp_calib_t calib_mode);
+
+int findInterpFreq(float input_freq, 
+				   float *out_index, 
+				   bool start_interval);
+
+int findIntrpInterv(float *in_z_ampl,
+					float *out_sub_arry,
+					int start_interval, 
+					int end_interval);
+
+int interpolationFunc(float *calib_data, float frequency);
 
 /* Getters and Setters */
 int imp_SetAmplitude(float ampl);
@@ -110,6 +130,7 @@ int imp_SetRshunt(uint32_t r_shunt);
 int imp_GetRShunt(uint32_t *r_shunt);
 int imp_SetCalibMode(imp_calib_t mode);
 int imp_GetCalibMode(imp_calib_t *mode);
+int imp_SetNoCalibration(bool no_calib);
 
 int imp_SetRefReal(float ref_real);
 int imp_GetRefReal(float *ref_real);

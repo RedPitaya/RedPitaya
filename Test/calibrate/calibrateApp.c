@@ -35,29 +35,29 @@ int main(int argc, char **argv) {
 
     puts("Connect CH1 to ground. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1));
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1, NULL));
 
     puts("Connect CH1 to 5V and set jumpers to HV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_1, 5.0));
+    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_1, 5.0, NULL));
 
     puts("Connect CH1 to 1V and set jumpers to LV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_1, 1.0));
+    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_1, 1.0, NULL));
 
 
 
     puts("Connect CH2 to ground. Press any key to continue.\n");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2));
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2, NULL));
 
     puts("Connect CH2 to 5V and set jumpers to HV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_2, 5.0));
+    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_2, 5.0, NULL));
 
     puts("Connect CH2 to 1V and set jumpers to LV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_2, 1.0));
+    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_2, 1.0, NULL));
 
 
 

@@ -20,7 +20,7 @@ typedef struct rp_app_params_s {
 } rp_app_params_t;
 
 
-enum { CH_SIGNAL_SIZE = 1024, INTERVAL = 200 };
+enum { CH_SIGNAL_SIZE = 2048, INTERVAL = 300 };
 enum { FREQ_CHANNEL = -1 };
 
 enum { GEN_BUFFER_LENGTH =  (16 * 1024)};
@@ -158,8 +158,8 @@ void UpdateSignals(void)
 
 	if (in1Show.Value()) {
 		ch1.Resize(CH_SIGNAL_SIZE/k2);
-		for (size_t i = 1; i < ch1.GetSize()*2; i += 2) {
-			ch1[(i-1)/2] = data[1][i];
+		for (size_t i = 0; i < ch1.GetSize(); ++i) {
+			ch1[i] = data[1][i];
 		    /* Find peaks */
 		    if(data[1][i] > max_pw_cha) {
 		        max_pw_cha     = data[1][i];
@@ -171,8 +171,8 @@ void UpdateSignals(void)
 
 	if (in2Show.Value()) {
 			ch2.Resize(CH_SIGNAL_SIZE/k2);
-		for (size_t i = 1; i < ch2.GetSize()*2; i += 2) {
-			ch2[(i-1)/2] = data[2][i];
+		for (size_t i = 0; i < ch2.GetSize(); ++i) {
+			ch2[i] = data[2][i];
 		    /* Find peaks */
 		    if(data[1][i] > max_pw_chb) {
 		        max_pw_chb     = data[1][i];

@@ -43,7 +43,7 @@ CBooleanParameter in2InvShow("CH2_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 CBooleanParameter mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0);
 
 CBooleanParameter inReset("OSC_RST", CBaseParameter::RW, false, 0);
-CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, true, 0);
+CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter inAutoscale("OSC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 
@@ -162,6 +162,7 @@ CFloatParameter calibrateValue("CALIB_VALUE", CBaseParameter::RW, 0, 0, 0.f, 20.
 CIntParameter calibrateCancel("CALIB_CANCEL", CBaseParameter::RW, 0, 0, 0, 1);
 CBooleanParameter calibrateWrite("CALIB_WRITE", CBaseParameter::RW, false, 0);
 
+CBooleanParameter allParams("send_all_params", CBaseParameter::RW, true, 0);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -223,10 +224,10 @@ void checkMathScale() {
         float vpp;
         rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
 
-        /*if((min_amp >= vpp) || (max_amp <= vpp)) {
+        if((min_amp >= vpp) || (max_amp <= vpp)) {
             rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.Value());
             resetMathParams();
-        } else*/ {
+        } else {
             rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.NewValue());
             inMathScale.Update();
         }
@@ -234,33 +235,42 @@ void checkMathScale() {
 }
 
 void UpdateParams(void) {
-	bool is_running;
+	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
+	CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
+	
+    bool running;
+    rpApp_OscIsRunning(&running);
+    inRun.Value() = running;
+
+    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+    
 	rpApp_osc_trig_sweep_t mode;
 	rpApp_OscGetTriggerSweep(&mode);
-	rpApp_OscIsRunning(&is_running);
 	
-	if (!is_running)
+	if (!running)
 		triggerInfo.Value() = 0;
 	else if (mode == RPAPP_OSC_TRIG_AUTO)
 		triggerInfo.Value() = 1;
 	else if (rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
 		triggerInfo.Value() = 2;
 	else if (!rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
-		triggerInfo.Value() = 3;	
-	
-    CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
+		triggerInfo.Value() = 3;	    
 
     if (measureSelect1.Value() != -1) {
-        measureValue1.Value() = getMeasureValue(measureSelect1.Value());
+		double val = getMeasureValue(measureSelect1.Value());
+        measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 14 ? val* 100 : val;        
 	}
     if (measureSelect2.Value() != -1) {
-        measureValue2.Value() = getMeasureValue(measureSelect2.Value());
+		double val = getMeasureValue(measureSelect2.Value());
+        measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 14 ? val* 100 : val;  
 	}
     if (measureSelect3.Value() != -1) {
-        measureValue3.Value() = getMeasureValue(measureSelect3.Value());
+		double val = getMeasureValue(measureSelect3.Value());
+        measureValue3.Value() = measureSelect3.Value() >= 12 && measureSelect3.Value() <= 14 ? val* 100 : val;  
 	}
     if (measureSelect4.Value() != -1) {
-        measureValue4.Value() = getMeasureValue(measureSelect4.Value());
+		double val = getMeasureValue(measureSelect4.Value());
+        measureValue4.Value() = measureSelect4.Value() >= 12 && measureSelect4.Value() <= 14 ? val* 100 : val;  
 	}
 
     float portion;
@@ -268,9 +278,12 @@ void UpdateParams(void) {
     viewPortion.Value() = portion;
 	
 	float trigg_limit;
+	float trigg_level;
+	
 	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
-	if (channel == RPAPP_OSC_TRIG_SRC_CH1)		
+	
+	if (channel == RPAPP_OSC_TRIG_SRC_CH1)
 		inTriggLimit.Value() = trigg_limit*in1Probe.Value();
 	else if (channel == RPAPP_OSC_TRIG_SRC_CH2)	
 		inTriggLimit.Value() = trigg_limit*in2Probe.Value();
@@ -280,12 +293,7 @@ void UpdateParams(void) {
     rp_acq_sampling_rate_t sampling_rate;
     rp_AcqGetSamplingRate(&sampling_rate);
     samplingRate.Value() = sampling_rate;
-
-    bool running;
-    rpApp_OscIsRunning(&running);
-    inRun.Value() = running;
-
-    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+    
 
     double dvalue;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
@@ -457,7 +465,7 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 			return true;
 	} else if (step == STEP_BACK_END) {
 		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) && 
-				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2)
+				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.2)
 			return true;
 	}
 	
@@ -465,6 +473,7 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 }
 
 void OnNewParams(void) {
+	checkMathScale();
 /* ---- UPDATE INTERLAN SIGNAL GENERATION ----- */
 /* ------ SEND GENERATE PARAMETERS TO API ------*/
     if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
@@ -626,7 +635,7 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(in1Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH1,  in1Scale.NewValue()))
     IF_VALUE_CHANGED(in2Scale,    rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_CH2,  in2Scale.NewValue()))
 
-    checkMathScale();
+    bool update_trig_level = inTrigSource.Value() != inTrigSource.NewValue();
 
     IF_VALUE_CHANGED(in1Probe, rpApp_OscSetProbeAtt(RP_CH_1, in1Probe.NewValue()))
     IF_VALUE_CHANGED(in2Probe, rpApp_OscSetProbeAtt(RP_CH_2, in2Probe.NewValue()))
@@ -635,9 +644,9 @@ void OnNewParams(void) {
     IF_VALUE_CHANGED(inTimeOffset, rpApp_OscSetTimeOffset(inTimeOffset.NewValue()))
     IF_VALUE_CHANGED(inTimeScale, rpApp_OscSetTimeScale(inTimeScale.NewValue()))
     IF_VALUE_CHANGED(inTrigSweep, rpApp_OscSetTriggerSweep((rpApp_osc_trig_sweep_t) inTrigSweep.NewValue()))
+    IF_VALUE_CHANGED(inTriggLevel, rpApp_OscSetTriggerLevel(inTriggLevel.NewValue()))
     IF_VALUE_CHANGED(inTrigSource, rpApp_OscSetTriggerSource((rpApp_osc_trig_source_t)inTrigSource.NewValue()))
     IF_VALUE_CHANGED(inTrigSlope, rpApp_OscSetTriggerSlope((rpApp_osc_trig_slope_t) inTrigSlope.NewValue()))
-    IF_VALUE_CHANGED(inTriggLevel, rpApp_OscSetTriggerLevel(inTriggLevel.NewValue()))
     IF_VALUE_CHANGED(in1InvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_CH1, in1InvShow.NewValue()))
     IF_VALUE_CHANGED(in2InvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_CH2, in2InvShow.NewValue()))
     IF_VALUE_CHANGED(mathInvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_MATH, mathInvShow.NewValue()))
@@ -649,6 +658,14 @@ void OnNewParams(void) {
             mathSource2.Update();
         }
     }
+    
+    if (update_trig_level)
+    {
+		float trigg_level;
+		rpApp_OscGetTriggerLevel(&trigg_level);
+		inTriggLevel.Value() = trigg_level;
+		inTriggLevel.Update();
+	}
 
 /* ------ UPDATE GENERATE LOCAL PARAMETERS ------*/
     out1Show.Update();
@@ -711,7 +728,6 @@ void OnNewParams(void) {
     
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
 		calibrateFrontEndScaleHV.Update();
-		fprintf(stderr, "3\n");
         rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue(), &out_params);			
         rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue(), &out_params);
         calibrateFrontEndScaleHV.IsValueChanged();
