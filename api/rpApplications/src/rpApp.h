@@ -548,6 +548,16 @@ int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
 int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
 
 /**
+* Gets raw data.
+* @param source Source ch1, ch2.
+* @param data buffer.
+* @param size Number of values to be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetRawData(rp_channel_t source, uint16_t *data, uint32_t size);
+
+/**
 * Sets view buffer size.
 * @param size Buffer size.
 * @return If the function is successful, the return value is RP_OK.
