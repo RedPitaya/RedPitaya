@@ -27,65 +27,35 @@ using namespace std;
 #include <encoder.h>
 
 //Function returns MAC address
-long GetMACAddressLinux(unsigned char * result)
+long GetMACAddressLinux(const char* nic, char *mac)
 {
-	struct ifreq ifr;
-    struct ifreq *IFR;
-    struct ifconf ifc;
-    char buf[1024];
-    int s, i;
-    int ok = 0;
-    s = socket(AF_INET, SOCK_DGRAM, 0);
-    if (s == -1)
-	{
+    FILE *fp;
+    ssize_t read;
+    const size_t len = 17;
+
+    fp = fopen(nic, "r");
+    if(fp == NULL) {
         return -1;
     }
 
-    ifc.ifc_len = sizeof(buf);
-    ifc.ifc_buf = buf;
-    ioctl(s, SIOCGIFCONF, &ifc);
+    read = fread(mac, len, 1, fp);
+    if(read != 1) {
+        fclose(fp);
+        return -2;
+    }
+    mac[len] = '\0';
 
-    IFR = ifc.ifc_req;
-    for (i = ifc.ifc_len / sizeof(struct ifreq); --i >= 0; IFR++)
-	{
-        strcpy(ifr.ifr_name, IFR->ifr_name);
-        if (ioctl(s, SIOCGIFFLAGS, &ifr) == 0)
-		{
-            if (! (ifr.ifr_flags & IFF_LOOPBACK))
-			{
-                if (ioctl(s, SIOCGIFHWADDR, &ifr) == 0)
-				{
-                    ok = 1;
-                    break;
-                }
-            }
-        }
-    }
+    fclose(fp);
 
-    shutdown(s, SHUT_RDWR);
-    if (ok)
-	{
-        bcopy( ifr.ifr_hwaddr.sa_data, result, 6);
-    }
-    else
-	{
-        return -1;
-    }
     return 0;
 }
 
 std::string GetMACAddress()
 {
-	// Fill result with zeroes
-	unsigned char result[6];
-	memset(result, 0, 6);
-
-	GetMACAddressLinux(result);
-	char buffer [50];
- 	sprintf (buffer, "%02X:%02X:%02X:%02X:%02X:%02X",(unsigned int)result[0], (unsigned int)result[1], (unsigned int)result[2],
-				(unsigned int)result[3], (unsigned int)result[4], (unsigned int)result[5]);
-  
-	std::string mac_address(buffer);
+	char result[18];
+	sprintf(result, "00:00:00:00:00:00");
+	GetMACAddressLinux("/sys/class/net/eth0/address", result);
+	std::string mac_address(result);
 	return mac_address;
 }
 

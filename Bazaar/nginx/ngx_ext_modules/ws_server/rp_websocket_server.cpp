@@ -38,7 +38,7 @@ rp_websocket_server::rp_websocket_server(struct server_parameters* params)
     m_endpoint.set_close_handler(bind(&rp_websocket_server::on_close,this,::_1));
     m_endpoint.set_http_handler(bind(&rp_websocket_server::on_http,this,::_1));
     m_endpoint.set_message_handler(bind(&rp_websocket_server::on_message,this,::_1,::_2));
-    m_out.open("/var/log/nginx/ws_server.log");
+    m_out.open("/var/log/nginx/ws_server.log", std::ofstream::out | std::ofstream::app);
     m_endpoint.get_alog().set_ostream(&m_out);
     m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws_server constructor");
 
@@ -110,6 +110,7 @@ void rp_websocket_server::set_param_timer() {
 }
 
 void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & ec) {
+
 	if (ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
 				"Timer Error: "+ec.message());
@@ -137,6 +138,7 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 }
 
 void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec) {
+
 	if (ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
 				"Timer Error: "+ec.message());
@@ -163,6 +165,7 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 }
 
 void rp_websocket_server::on_http(connection_hdl hdl) {
+
 	// Upgrade our connection handle to a full connection_ptr
 	server::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
 
@@ -218,6 +221,7 @@ void rp_websocket_server::on_open(connection_hdl hdl)
 void rp_websocket_server::on_close(connection_hdl hdl) {
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server connection closed");
 	m_connections.erase(hdl);
+	exit(-1);
 }
 
 void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg) {
@@ -283,7 +287,7 @@ void rp_websocket_server::stop()
                 }
 
 	}
-	
+	m_connections.clear();
 	join();
 	m_out.close();
 }

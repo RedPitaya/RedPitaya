@@ -12,7 +12,7 @@ REVISION ?= devbuild
 RP_PATH_INCLUDE = -I../../api/rpbase/src/
 
 #Define library includes
-RP_LIB_INCLUDE = -L ../../api/rpbase -lm -lpthread -lrp
+RP_LIB_INCLUDE = -L ../../api/lib -lm -lpthread -lrp
 
 #Cross compiler definition
 CC = $(CROSS_COMPILE)gcc
@@ -33,10 +33,4 @@ $(TARGET): $(OBJECTS)
 all: $(TARGET)
 
 clean:
-	$(RM) $(TARGET) *.o ~*
-
-
-#  -----Error----- I have no idea what was wrong. 
-#  ../../api/rpbase/librp.so: file not recognized: File format not recognized
-#
-# 
+	$(RM) $(TARGET) *.o ~* 

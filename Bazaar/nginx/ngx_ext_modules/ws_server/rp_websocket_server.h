@@ -50,4 +50,5 @@ private:
     std::string m_docroot;
 	std::ofstream m_out;
 };
+
 }

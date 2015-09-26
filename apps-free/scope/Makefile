@@ -24,13 +24,13 @@ all: $(CONTROLLERHF) $(CONTROLLER) shared_ctrl
 
 $(CONTROLLERHF):
 	$(MAKE) -C src clean
-	$(MAKE) -C src OUT_NAME=$(CONTROLLERHF)
+	$(MAKE) -C src all OUT_NAME=$(CONTROLLERHF)
 
 $(CONTROLLER):
 	$(MAKE) -C src clean
-	$(MAKE) -C src OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+	$(MAKE) -C src all OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
-shared_ctrl: $(CONTROLLERHF) $(CONTROLLER)
+shared_ctrl: $(CONTROLLER) $(CONTROLLERHF)
 	for obj in $(SHARED_OBJS); do \
 		cp $(CONTROLLERHF) $(CONTROLLER) ../$$obj; \
 	done
@@ -48,4 +48,5 @@ zip: $(CONTROLLERHF) $(CONTROLLER)
 
 clean:
 	$(MAKE) -C src clean
+	-$(RM) target -rf
 	-$(RM) *.so

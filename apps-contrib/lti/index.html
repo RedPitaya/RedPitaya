@@ -1,0 +1,1584 @@
+<!-- $Id$
+ *
+ * Red Pitaya LTI DSP workbench client.
+ *
+ * Author: Dakus <info@eskala.eu>
+ *         DashPi<dashpi46@gmail.com> 
+ *         
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in Javascript & HTML.
+ * Please visit http://en.wikipedia.org/wiki/JavaScript
+ *              http://en.wikipedia.org/wiki/HTML
+ * for more details on the languages used herein.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LTI DSP Workbench</title>
+  <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+  <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+  <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+  <script src="../assets/flot/jquery.flot.js"></script>
+  <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+  <script src="../assets/flot/jquery.flot.navigate.js"></script>
+  <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+  <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+  <script type="text/javascript">
+  
+  // Settings which can be modified
+
+  var app_id = 'lti';
+  var root_url = '';
+  //var root_url = 'http://10.0.1.221';      // Test local
+  //var root_url = 'http://192.168.53.133';  // Test remote and local  
+  //var root_url = 'http://192.168.1.100';   // Default RedPitaya IP
+  var start_app_url = root_url + '/bazaar?start=' + app_id;
+  var stop_app_url = root_url + '/bazaar?stop=';
+  var get_url = root_url + '/data';
+  var post_url = root_url + '/data';
+
+  
+  var update_interval = 50;          // Update interval for PC, milliseconds
+  var update_interval_mobdev = 500;  // Update interval for mobile devices, milliseconds 
+  var request_timeout = 2000;        // Milliseconds
+  var points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
+  var xdecimal_places = 2;           // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
+    
+  var xmin = -1000000;
+  var xmax = 1000000;  
+  var ymax = 20.0;
+  var ymin = -120.0;
+
+  var freq_range_max = [62.5, 7.8, 976, 61, 7.6, 953];
+
+  var plot_options = {
+    colors: ['#3276B1', '#D2322D'],    // channel1, channel2
+    lines: { lineWidth: 1 },
+    selection: { mode: 'xy' },
+    zoom: { interactive: true, trigger: null },
+    xaxis: { min: xmin, max: xmax },
+    yaxis: { min: ymin, max: ymax },
+    grid: { borderWidth: 0 },
+    legend: { noColumns: 2, margin: [0, 0], backgroundColor: 'transparent' },
+    touch: { autoWidth: false, autoHeight: false }
+  };
+  
+  // Settings which should not be modified
+  
+  var update_timer = null;
+  var zoompan_timer = null;
+  var downloading = false;
+  var sending = false;
+  var send_que = false;
+  var trig_dragging = false;
+  var touch_last_y = 0;
+  var user_editing = false;
+  var app_started = false;
+  var last_get_failed = false;
+  var autorun = 1;
+  var datasets = [];
+  var plot = null;
+  var params = {
+    original: null,
+    local: null
+  };
+  
+  
+  var lock=0;
+  
+  // Default parameters - posted after server side app is started 
+  var def_params = {
+    en_avg_at_dec: 1
+  };
+  
+  // On page loaded
+    
+  $(function() {
+    
+    // Show different buttons on touch screens
+    if(window.ontouchstart === undefined) {
+      $('.btn-lg').removeClass('btn-lg');
+      $('.modal .btn').addClass('btn-sm');
+      $('#btn_zoompan').remove();
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').show();
+    }
+    else {
+      update_interval = update_interval_mobdev;
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
+      $('#btn_zoompan').show();
+    }
+    
+    // Add application ID in the message from modal popup
+    $('.app-id').text(app_id);
+    
+    // Disable all controls until the params state is loaded for the first time 
+    //$('input, select,  button', '.container').prop('disabled', true);
+    
+    // Events binding
+
+    
+ 
+    
+    
+    $('#lti_b0')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_b0').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_b0').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_b0 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_b0)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });    
+    
+    $('#lti_b1')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_b1').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_b1').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_b1 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_b1)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });      
+    
+    $('#lti_a1')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_a1').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_a1').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_a1 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_a1)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });      
+    
+  
+   $('#lti_b2')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_b2').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_b2').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_b2 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_b2)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });      
+    
+    $('#lti_a2')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_a2').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_a2').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_a2 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_a2)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });    
+    
+    
+
+    
+      $('#lti_b3')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_b3').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_b3').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_b3 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_b3)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });      
+    
+    $('#lti_a3')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_a3').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_a3').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_a3 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_a3)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });    
+    
+
+      $('#lti_b4')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_b4').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_b4').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_b4 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_b4)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });      
+    
+    $('#lti_a4')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_a4').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_a4').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_a4 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_a4)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });        
+    
+
+
+      $('#lti_b5')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_b5').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_b5').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_b5 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_b5)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });      
+    
+    $('#lti_a5')
+      .on('focus paste', function() {   
+        
+        $(this).parent().addClass('input-group');
+        $('#apply_lti_a5').show();
+        lock=1;
+        
+      })
+      .on('blur', function() {
+        $('#apply_lti_a5').hide();
+        $(this).parent().removeClass('input-group');
+        lock=0;
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          params.local.lti_a5 = val;
+          sendParams();
+        }
+        else {
+          $(this).val(params.local.lti_a5)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+        
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });            
+    
+    
+    $('#freq_range').on('focus', function() {
+      user_editing = true;
+    });
+    
+    $('#freq_range').on('change', function() {
+      params.local.freq_range = parseInt($(this).val());
+      //sendParams();
+      updateZoom();
+      $('#btn_freezech1').data('checked', false).removeClass('btn-primary').addClass('btn-default');
+      $('#btn_freezech2').data('checked', false).removeClass('btn-primary').addClass('btn-default');
+      $(this).blur();
+      user_editing = false;
+    });
+    
+    $('.btn').on('click', function() {
+      var btn = $(this);
+      setTimeout(function() { btn.blur(); }, 10);
+    });
+    
+    $('#btn_toolbar .btn').on('blur', function() {
+      $(this).removeClass('active');
+    });
+    
+    // Modal popups
+    
+    $('#modal_err, #modal_app').modal({ show: false, backdrop: 'static', keyboard: false });
+    
+    $('#btn_switch_app').on('click', function() {
+      var newapp_id = $('#new_app_id').text();
+      if(newapp_id.length) {
+        location.href = location.href.replace(app_id, newapp_id);
+      }
+    });
+    
+    $('.btn-app-restart').on('click', function() {
+      location.reload();
+    });
+    
+    $('#btn_retry_get').on('click', function() {
+      $('#modal_err').modal('hide');
+      updateGraphData();
+    });
+    
+    $('.btn-close-modal').on('click', function() {
+      $(this).closest('.modal').modal('hide');
+    });
+    
+    // Load first data
+    updateGraphData();
+    
+    // Stop the application when page is unloaded
+    window.onbeforeunload = function() { 
+      $.ajax({
+        url: stop_app_url,
+        async: false
+      });
+    };
+    
+  });
+  
+  function startApp() {
+    $.get(
+      start_app_url
+    )
+    .done(function(dresult) {
+      if(dresult.status == 'ERROR') {
+        showModalError((dresult.reason ? dresult.reason : 'Could not start the application.'), true);
+      }
+      else {
+        $.post(
+          post_url, 
+          JSON.stringify({ datasets: { params: def_params } })
+        )
+        .done(function(dresult) {
+          app_started = true;
+          updateGraphData();      
+        })
+        .fail(function() {
+          showModalError('Could not initialize the application with default parameters.', false, true);
+        });
+      }
+    })
+    .fail(function() {
+      showModalError('Could not start the application.', true);
+    });
+  }
+  
+  function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+    var err_modal = $('#modal_err');
+    
+    err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+    err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+    err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+    err_modal.find('.modal-body').html(err_msg);
+    err_modal.modal('show');
+  }    
+  
+  function updateGraphData() {
+    if(downloading) {
+      return;
+    }
+    if(update_timer) {
+      clearTimeout(update_timer);
+      update_timer = null;
+    }
+    downloading = true;
+    
+    // Send params if there are any unsent changes
+    sendParams();
+    
+    // Don't update data if both channels are frozen and there are already some sets of data
+    if($('#btn_freezech1').data('checked') && $('#btn_freezech2').data('checked') && datasets.length) {
+      downloading = false;
+      update_timer = setTimeout(function() {
+        updateGraphData();
+      }, update_interval);
+      return;
+    }
+    
+    var arun_before_ajax = autorun;
+    
+    $.ajax({
+      url: get_url,
+      timeout: request_timeout,
+      cache: false
+    })
+    .done(function(dresult) {
+      last_get_failed = false;
+      
+      if(dresult.status === 'ERROR') {
+        if(! app_started) {
+          startApp();
+        }
+        else {
+          showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
+        }
+      }
+      else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+        // Check if the application started on the server is the same as on client
+        if(app_id !== dresult.app.id) {
+          if(! app_started) {
+            startApp();
+          }
+          else {
+            $('#new_app_id').text(dresult.app.id);
+            $('#modal_app').modal('show');
+          }
+          return;
+        }
+        
+        app_started = true;
+        
+        // Keep the datasets for frozen channels
+        var frozen_dsets = [
+          ($('#btn_freezech1').data('checked') && datasets[0] !== undefined ? datasets[0] : null),
+          ($('#btn_freezech2').data('checked') && datasets[1] !== undefined ? datasets[1] : null)
+        ];
+         
+        datasets = [];
+        for(var i=0; i<dresult.datasets.g1.length; i++) {
+          // Don't update data for frozen channels
+          if(frozen_dsets[i]) {
+            datasets.push(frozen_dsets[i]);
+          }
+          else {
+            dresult.datasets.g1[i].color = i;
+            
+            if (i==0)
+            {
+             dresult.datasets.g1[i].label = 'Gain';   
+            } 
+            else
+            {
+             dresult.datasets.g1[i].label = 'Phase';  
+            }
+            
+            datasets.push(dresult.datasets.g1[i]);
+          }
+        }
+
+        if(! plot) {
+          initPlot(dresult.datasets.params);
+        }
+        else {
+          // Apply the params state received from server if not in edit mode
+          if(! user_editing) {
+            loadParams(dresult.datasets.params);
+          }
+          // Frequency units must be always updated
+          else {
+            updateFrequencyUnits(dresult.datasets.params);
+          }
+          
+          // Redraw the plot using new datasets
+          plot.setData(filterData(datasets, plot.width()));
+          plot.setupGrid();
+          plot.draw();
+        }
+                
+        if(autorun || dresult.status === 'AGAIN') {
+          update_timer = setTimeout(function() {
+            updateGraphData();
+          }, update_interval);
+        }
+      }
+      else {
+        showModalError('Wrong application data received.', true, true);
+      }
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      if(last_get_failed) {
+        showModalError('Data receiving failed.<br>Error status: ' + textStatus, true, true);
+        last_get_failed = false;
+      }
+      else {
+        last_get_failed = true;
+        downloading = false;
+        updateGraphData();  // One more try
+      }
+    })
+    .always(function() {
+      if(! last_get_failed) {
+        downloading = false;
+        if(params.local) {
+          $('.btn, #freq_range').prop('disabled', false);
+        }
+      }
+    });
+  }
+  
+  function initPlot(init_params) {
+    var plot_holder = $('#plot_holder');
+    
+    // Load received params
+    loadParams(init_params);
+    
+    $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+    $('#btn_ch2').data('checked', false).removeClass('btn-primary').addClass('btn-default');
+    
+    
+    // When xmin/xmax are null, the min/max values of received data will be used. For ymin/ymax use the predefined values.
+    $.extend(true, plot_options, {
+      xaxis: { min: null, max: null },
+      yaxis: { min: ymin, max: ymax }
+    });
+    
+    // Local optimization    
+    var filtered_data = filterData(datasets, plot_holder.width());
+  
+    // Plot first creation and drawing
+    plot = $.plot(
+      plot_holder, 
+      filtered_data,
+      plot_options
+    );
+    
+    // Selection
+    plot_holder.on('plotselected', function(event, ranges) {
+    
+      // Clamp the zooming to prevent eternal zoom
+      if(ranges.xaxis.to - ranges.xaxis.from < 0.00001) {
+        ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+      }
+      if(ranges.yaxis.to - ranges.yaxis.from < 0.00001) {
+        ranges.yaxis.to = ranges.yaxis.from + 0.00001;
+      }
+  
+      // Do the zooming
+      plot = $.plot(
+        plot_holder, 
+        getData(ranges.xaxis.from, ranges.xaxis.to),
+        $.extend(true, plot_options, {
+          xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+          yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to }
+        })
+      );
+      
+      params.local.xmin = parseFloat(ranges.xaxis.from.toFixed(xdecimal_places));
+      params.local.xmax = parseFloat(ranges.xaxis.to.toFixed(xdecimal_places));
+      
+      sendParams(true);
+    });
+    
+    // Zoom / Pan
+    plot_holder.on('plotzoom plotpan touchmove touchend', function(event) {
+      
+      if(zoompan_timer) {
+        clearTimeout(zoompan_timer);
+        zoompan_timer = null;
+      }
+      
+      zoompan_timer = setTimeout(function() {
+        zoompan_timer = null;
+        
+        var xaxis = plot.getAxes().xaxis;
+        params.local.xmin = parseFloat(xaxis.min.toFixed(xdecimal_places));
+        params.local.xmax = parseFloat(xaxis.max.toFixed(xdecimal_places));
+        
+        sendParams(true);
+      }, 250);
+    });
+  }
+  
+  function loadParams(orig_params) {
+    if(! $.isPlainObject(orig_params)) {
+      return;
+    }
+    params.original = $.extend({}, orig_params);
+    
+    // Same data in local and original params
+    params.local = $.extend({}, params.original);
+
+    // For spectrum analyzer autorun is always on
+    autorun = 1;
+    
+
+
+    $('#freq_range').val(params.original.freq_range);
+    
+    
+    
+    
+    updateFrequencyUnits(orig_params);
+    
+    
+    
+    if (lock==0)
+    {
+     $('#lti_b0').val(floatToLocalString(params.original.lti_b0));
+     $('#lti_b1').val(floatToLocalString(params.original.lti_b1));
+     $('#lti_b2').val(floatToLocalString(params.original.lti_b2));
+     $('#lti_b3').val(floatToLocalString(params.original.lti_b3));
+     $('#lti_b4').val(floatToLocalString(params.original.lti_b4));
+     $('#lti_b5').val(floatToLocalString(params.original.lti_b5));
+     $('#lti_a1').val(floatToLocalString(params.original.lti_a1));
+     $('#lti_a2').val(floatToLocalString(params.original.lti_a2));
+     $('#lti_a3').val(floatToLocalString(params.original.lti_a3));
+     $('#lti_a4').val(floatToLocalString(params.original.lti_a4));
+     $('#lti_a5').val(floatToLocalString(params.original.lti_a5));
+    
+    
+    
+    }
+    
+  
+  }
+  
+  function updateFrequencyUnits(new_params) {
+    if(! $.isPlainObject(new_params)) {
+      return;
+    } 
+    
+    params.original.freq_unit = params.local.freq_unit = (isNaN(new_params.freq_unit) ? 0 : parseInt(new_params.freq_unit)); 
+    
+    // 0 - Hz, 1 - kHz, 2 - MHz
+    var frequ_lbl = (params.original.freq_unit == 1 ? 'k' : (params.original.freq_unit == 2 ? 'M' : '')) + 'Hz';
+    $('#xtitle').text('Frequency [ ' + frequ_lbl + ' ]');     
+    }
+  
+  function isParamChanged() {
+    if(params.original) {
+      for(var key in params.original) {
+        if(params.original[key] != params.local[key]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  
+  
+  
+    function apply_set1() { // Butterworth
+     
+     params.local.lti_b0 =0.2e-3;
+     params.local.lti_b1 =1e-3;
+     params.local.lti_b2 =2e-3;
+     params.local.lti_b3 =2e-3;
+     params.local.lti_b4 =1e-3;
+     params.local.lti_b5 =0.2e-3;
+
+     params.local.lti_a1 =-3.6472224558;
+     params.local.lti_a2 =5.4596234544;
+     params.local.lti_a3 =-4.1683669554;
+     params.local.lti_a4 =1.6176008148;
+     params.local.lti_a5 =-0.2546287580;
+     
+     
+     sendParams(true,true);          // Propagate parameter to RP
+  }
+  
+  
+
+    function apply_set2() { //Chebyshev
+     
+     params.local.lti_b0 =0.2e-4;
+     params.local.lti_b1 =1e-4;
+     params.local.lti_b2 =2e-4;
+     params.local.lti_b3 =2e-4;
+     params.local.lti_b4 =1e-4;
+     params.local.lti_b5 =0.2e-4;
+
+     params.local.lti_a1 =-4.5482914951;
+     params.local.lti_a2 =8.4784075947;
+     params.local.lti_a3 =-8.0859220613;
+     params.local.lti_a4 =3.9427877496;
+     params.local.lti_a5 =-0.7862521738;
+     
+     
+     sendParams(true,true);          // Propagate parameter to RP
+  }  
+  
+
+    function apply_set3() { //Chebyshev BPF
+     
+     params.local.lti_b0 =0.179e-4;
+     params.local.lti_b1 =0;
+     params.local.lti_b2 =-0.357e-4;
+     params.local.lti_b3 =0;
+     params.local.lti_b4 =0.179e-4;
+     params.local.lti_b5 =0;
+
+     params.local.lti_a1 =-3.9866252520;
+     params.local.lti_a2 =5.9665528445;
+     params.local.lti_a3 =-3.9731862345;
+     params.local.lti_a4 =0.9932694228;
+     params.local.lti_a5 =0;
+     
+     
+     sendParams(true,true);          // Propagate parameter to RP
+  }    
+
+    function apply_set4() { //Butterworth BPF
+     
+     params.local.lti_b0 =1e-2;
+     params.local.lti_b1 =0;
+     params.local.lti_b2 =-2e-2;
+     params.local.lti_b3 =0;
+     params.local.lti_b4 =1e-2;
+     params.local.lti_b5 =0;
+
+     params.local.lti_a1 =-3.6800905708;
+     params.local.lti_a2 =5.1075219760;
+     params.local.lti_a3 =-3.1709237517;
+     params.local.lti_a4 =0.743655195;
+     params.local.lti_a5 =0;
+     
+     
+     sendParams(true,true);          // Propagate parameter to RP
+  }    
+    
+  
+    function apply_set5() { //Limited integrator
+     
+     params.local.lti_b0 =0.1;
+     params.local.lti_b1 =0;
+     params.local.lti_b2 =0;
+     params.local.lti_b3 =0;
+     params.local.lti_b4 =0;
+     params.local.lti_b5 =0;
+
+     params.local.lti_a1 =-0.999;
+     params.local.lti_a2 =0;
+     params.local.lti_a3 =0;
+     params.local.lti_a4 =0;
+     params.local.lti_a5 =0;
+     
+     
+     sendParams(true,true);          // Propagate parameter to RP
+  }    
+  
+    function apply_set6() { //Differentiator
+     
+     params.local.lti_b0 =0.5;
+     params.local.lti_b1 =-0.5;
+     params.local.lti_b2 =0;
+     params.local.lti_b3 =0;
+     params.local.lti_b4 =0;
+     params.local.lti_b5 =0;
+
+     params.local.lti_a1 =0;
+     params.local.lti_a2 =0;
+     params.local.lti_a3 =0;
+     params.local.lti_a4 =0;
+     params.local.lti_a5 =0;
+     
+     
+     sendParams(true,true);          // Propagate parameter to RP
+  }      
+  
+  
+  function sendParams(refresh_data, force_send) {
+    if(sending || (force_send !== true && !isParamChanged())) {
+      send_que = sending;
+      return;
+    }
+    sending = true;
+    
+    $.ajax({
+      type: 'POST',
+      url: post_url,
+      data: JSON.stringify({ datasets: { params: params.local } }),
+      timeout: request_timeout,
+      cache: false
+    })
+    .done(function(dresult) {
+      // OK: Load the params received as POST result
+      if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+        loadParams(dresult.datasets.params);
+        
+        if(refresh_data && !downloading) {
+          updateGraphData();
+        } 
+      }
+      else if(dresult.status == 'ERROR') {
+        showModalError((dresult.reason ? dresult.reason : 'Error while sending data (E1).'), false, true, true);
+        send_que = false;
+      }
+      else {
+        showModalError('Error while sending data (E2).', false, true, true);
+      }
+    })
+    .fail(function() {
+      showModalError('Error while sending data (E3).', false, true, true);
+    })
+    .always(function() {
+      sending = false;
+      user_editing = false;
+      
+      if(send_que) {
+        send_que = false;
+        setTimeout(function(refresh_data) {
+          sendParams(refresh_data);
+        }, 100);
+      }
+    });
+  }
+  
+  function getData(from, to) {
+    var rangedata = new Array();
+    for(var i=0; i<datasets.length; i++) {
+      if(! $('#btn_ch' + (i+1)).data('checked')) {
+        continue;
+      }
+      rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
+      for(var j=0; j<datasets[i].data.length; j++) {
+        if(datasets[i].data[j][0] > to) {
+          break;
+        }
+        if(datasets[i].data[j][0] >= from) {
+          rangedata[rangedata.length - 1].data.push(datasets[i].data[j]);
+        }
+      }
+    }
+    rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+    return rangedata;
+  }
+  
+  // Use only data for selected channels and do downsamling (data decimation), which is required for 
+  // better performance. On the canvas cannot be shown too much graph points. 
+  function filterData(dsets, points) {
+    var filtered = [];
+    var num_of_channels = 2;
+
+    for(var l=0; l<num_of_channels; l++) {
+      if(! $('#btn_ch' + (l+1)).data('checked')) {
+        continue;
+      }
+
+      i = Math.min(l, dsets.length - 1);
+
+      filtered.push({ color: dsets[i].color, label: dsets[i].label, data: [] });
+      
+      if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
+        var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
+        var k = 0;
+        for(var j=0; j<dsets[i].data.length; j++) {
+          if(k > 0 && ++k < step) {
+            continue;
+          }
+          filtered[filtered.length - 1].data.push(dsets[i].data[j]);
+          k = 1;
+        }
+      }
+      else {
+        filtered[filtered.length - 1].data = dsets[i].data.slice(0);
+      }
+    }
+    
+    return filtered;
+  }
+  
+  function redrawPlot() {
+    if(! downloading) {
+      if(! plot) {
+        updateGraphData();
+      }
+      else {
+        var options = plot.getOptions();
+        plot = $.plot(
+          plot.getPlaceholder(), 
+          filterData(datasets, plot.width()),
+          $.extend(true, plot_options, {
+            xaxis: { min: options.xaxes[0].min, max: options.xaxes[0].max },
+            yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max }
+          })
+        );      
+      }
+    }
+  }
+  
+  function setVisibleChannels(btn) {
+    var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
+    var btn = $(btn);
+    var checked = !btn.data('checked');
+    
+    btn.data('checked', checked).toggleClass('btn-default btn-primary');
+    
+    // At least one button must be checked, so that at least one graph will be visible.
+    if(! checked) {
+      other_btn.data('checked', true).removeClass('btn-default').addClass('btn-primary');
+    }
+    redrawPlot();
+  }
+  
+  function freezeChannel(btn) {
+    var btn = $(btn);
+    var checked = !btn.data('checked');
+    
+    btn.data('checked', checked).toggleClass('btn-default btn-primary');
+  }
+  
+  function autoscaleY() {
+    if(! plot) {
+      return;
+    }
+    
+    var options = plot.getOptions();
+    var axes = plot.getAxes();
+    
+    // Set Y scale to data min/max + 10%
+    options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - axes.yaxis.datamin * 0.1); 
+    options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + axes.yaxis.datamax * 0.1);
+
+    plot.setupGrid();
+    plot.draw();
+  }
+  
+  function resetZoom() {
+    if(! plot) {
+      return;
+    }
+    $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+    $('#btn_ch2').data('checked', false).removeClass('btn-primary').addClass('btn-default');   
+    $('#btn_freezech1, #btn_freezech2').data('checked', false).removeClass('btn-primary').addClass('btn-default');
+    
+    $.extend(true, plot_options, {
+      xaxis: { min: null, max: null },
+      yaxis: { min: ymin, max: ymax }
+    });
+         
+    var curr_options = plot.getOptions();
+    curr_options.xaxes[0].min = null;
+    curr_options.xaxes[0].max = null;
+    curr_options.yaxes[0].min = ymin;
+    curr_options.yaxes[0].max = ymax;
+    
+    plot.setupGrid();
+    plot.draw();
+    
+    params.local.xmin = xmin;
+    params.local.xmax = xmax;
+    
+    sendParams(true, true);
+  }
+  
+  function updateZoom() {
+    if(! plot) {
+      return;
+    }
+
+    params.local.xmin = 0;
+    params.local.xmax = freq_range_max[params.local.freq_range];
+  
+    var axes = plot.getAxes();
+    var options = plot.getOptions();
+    
+    options.xaxes[0].min = params.local.xmin;
+    options.xaxes[0].max = params.local.xmax;
+    options.yaxes[0].min = axes.yaxis.min;
+    options.yaxes[0].max = axes.yaxis.max;
+    
+    plot.setupGrid();
+    plot.draw();
+
+    sendParams(true, true);
+  }
+  
+  function selectTool(toolname) {
+    $('#selzoompan .btn').removeClass('btn-primary').addClass('btn-default');
+    $(this).toggleClass('btn-default btn-primary');
+  
+    if(toolname == 'zoomin') {
+      enableZoomInSelection();
+    }
+    if(toolname == 'zoomout') {
+      enableZoomOut();
+    }
+    else if(toolname == 'pan') {
+      enablePanning();
+    }
+  }
+
+  function enableZoomInSelection() {
+    if(plot_options.hasOwnProperty('selection')) {
+      return;
+    }
+    
+    var plot_pholder = plot.getPlaceholder();
+
+    // Disable panning and zoom out
+    delete plot_options.pan;
+    plot_pholder.off('click.rp');
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        selection: { mode: 'xy' },
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  }
+  
+  function enableZoomOut() {
+    var plot_pholder = plot.getPlaceholder();
+    
+    plot_pholder.on('click.rp', function(event) {
+      var offset = $(event.target).offset();
+      
+      plot.zoomOut({
+        center: { left: event.pageX - offset.left, top: event.pageY - offset.top },
+        amount: 1.2
+      });
+    });
+    
+    // Disable zoom in selection and panning
+    delete plot_options.selection;
+    delete plot_options.pan;
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  }
+  
+  function enablePanning() {
+    if(plot_options.hasOwnProperty('pan')) {
+      return;
+    }
+    
+    var plot_pholder = plot.getPlaceholder();
+    
+    // Disable selection zooming and zoom out
+    delete plot_options.selection;
+    plot_pholder.off('click.rp');
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        pan: { interactive: true },
+        xaxis: { min: axes.xaxis.min, max: axes.xaxis.max },
+        yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+      })
+    );
+  }
+  
+  function getLocalDecimalSeparator() {
+    var n = 1.1;
+    return n.toLocaleString().substring(1,2);
+  }
+  
+  function parseLocalFloat(num) {
+    return +(num.replace(getLocalDecimalSeparator(), '.'));
+  }
+  
+  function floatToLocalString(num) {
+    // Workaround for a bug in Safari 6 (reference: https://github.com/mleibman/SlickGrid/pull/472)
+    //return num.toString().replace('.', getLocalDecimalSeparator());
+    return (num + '').replace('.', getLocalDecimalSeparator());
+  }
+  </script>
+  <script src="../assets/redpitaya.custom.js"></script>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
+      <img class="logo pull-left" src="../assets/images/logo_white.png">
+      <h2 class="page-title">LTI DSP Workbench</h2>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div id="btn_toolbar" class="col-xs-12">
+        <button id="btn_autoscale_y" class="btn btn-primary btn-lg" data-autozoom="false" onclick="autoscaleY()">
+          <span class="glyphicon glyphicon-resize-vertical"></span> Autoscale
+        </button>
+        <button class="btn btn-primary btn-lg" onclick="resetZoom()">
+          <span class="glyphicon glyphicon-retweet"></span> Reset zoom
+        </button>  
+        <div id="selzoompan" class="btn-group" data-toggle="buttons">
+          <button id="btn_zoomin" class="btn btn-primary" onclick="selectTool.call(this, 'zoomin')" style="display: none">
+            <span class="glyphicon glyphicon-zoom-in"></span>
+          </button>
+          <button id="btn_zoomout" class="btn btn-default" onclick="selectTool.call(this, 'zoomout')" style="display: none">
+            <span class="glyphicon glyphicon-zoom-out"></span>
+          </button>
+          <button id="btn_pan" class="btn btn-default" onclick="selectTool.call(this, 'pan')" style="display: none">
+            <span class="glyphicon glyphicon-move"></span>
+          </button>
+          <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
+            <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
+          </button>
+        </div>      
+        <button id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Gain </button>
+        <button id="btn_ch2" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Phase </button>
+        <button id="btn_freezech1" class="btn btn-default btn-lg" data-checked="false" onclick="freezeChannel(this)">Freeze Gain</button>
+        <button id="btn_freezech2" class="btn btn-default btn-lg" data-checked="false" onclick="freezeChannel(this)">Freeze Phase</button>
+      <div style="float:right">        
+        <a href="https://github.com/dashpi/RedPitaya"> dashpi <img  border="0" src="./src/external/picts/git.jpg"  width="50"> </a>
+      </div>      
+      </div>      
+    </div>  
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-8">
+        <div class="allgraphs-holder well well-small">
+          <div class="graph-holder clearfix">
+            <div id="ytitle">Gain [ dB ] / Phase [ deg ]</div>
+            <div id="plot_holder" class="spectrum"></div>
+            <div id="xtitle"></div>
+          </div>        
+        </div>                        
+        <div style="float:right">        
+         <img  border="0" src="./src/external/picts/rp_conn.png"  width="200">
+        </div>         
+      </div>   
+      <div class="col-xs-12 col-sm-12 col-md-4">
+        <div id="trigger_panel" class="panel panel-default">
+          <div class="panel-heading">
+            <strong>System</strong>
+          </div>
+          <div class="panel-body">
+            <form class="form-horizontal" role="form" onsubmit="return false;">
+              <div class="form-group">
+                <label for="freq_range" class="col-xs-4 control-label" style="white-space: nowrap;">Sampling freq.:</label>
+                <div class="col-xs-8">
+                  <select id="freq_range" class="form-control">
+                    <option value="0">125  MHz (FPGA DSP NA) </option>
+                    <option value="1">15.6 MHz (FPGA DSP NA)</option>
+                    <option value="2">1.9  KHz (FPGA DSP NA)</option>
+                    <option value="3">122  KHz </option>
+                    <option value="4">15.2 KHz </option>
+                    <option value="5">1907 Hz  </option>
+                  </select>
+                </div>                                                      
+              </div>
+            </form>            
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-4">
+        <div id="trigger_panel" class="panel panel-default">
+          <div class="panel-heading">
+            <strong>LTI parameters</strong>
+          </div>
+          <div class="panel-body">          
+            <form class="form-horizontal" role="form" onsubmit="return false;">          
+              <div class="form-group">
+                <label for="lti_b0" class="col-xs-1 control-label">b0:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_b0">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_b0">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div>                
+                <label for="a0" class="col-xs-1 control-label">a0:</label>
+                <div class="col-xs-5 input-group ">
+                  <input type="text" id="a0" value="1" class="form-control" disabled/>
+                </div> 
+              </div>        
+            </form>     
+            <form class="form-horizontal" role="form" onsubmit="return false;">          
+              <div class="form-group">
+                <label for="lti_b1" class="col-xs-1 control-label">b1:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_b1">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_b1">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div> 
+                <label for="lti_a1" class="col-xs-1 control-label">a1:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_a1">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_a1">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div>                       
+              </div>        
+            </form>                    
+            <form class="form-horizontal" role="form" onsubmit="return false;">          
+              <div class="form-group">
+                <label for="lti_b2" class="col-xs-1 control-label">b2:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_b2">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_b2">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div> 
+                <label for="lti_a2" class="col-xs-1 control-label">a2:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_a2">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_a2">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div>                       
+              </div>        
+            </form>              
+            <form class="form-horizontal" role="form" onsubmit="return false;">          
+              <div class="form-group">
+                <label for="lti_b3" class="col-xs-1 control-label">b3:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_b3">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_b3">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div> 
+                <label for="lti_a3" class="col-xs-1 control-label">a3:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_a3">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_a3">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div>                       
+              </div>        
+            </form>                        
+            <form class="form-horizontal" role="form" onsubmit="return false;">          
+              <div class="form-group">
+                <label for="lti_b4" class="col-xs-1 control-label">b4:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_b4">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_b4">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div> 
+                <label for="lti_a4" class="col-xs-1 control-label">a4:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_a4">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_a4">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div>                       
+              </div>        
+            </form>              
+            <form class="form-horizontal" role="form" onsubmit="return false;">          
+              <div class="form-group">
+                <label for="lti_b5" class="col-xs-1 control-label">b5:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_b5">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_b5">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div> 
+                <label for="lti_a5" class="col-xs-1 control-label">a5:</label>
+                <div class="col-xs-5 input-group ">
+                    <input type="text" autocomplete="off" class="form-control" value="0" id="lti_a5">
+                    <span style="display: none;" class="input-group-btn" id="apply_lti_a5">
+                      <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                </div>                       
+              </div>        
+            </form>                 
+            <img border="0" src="./src/external/picts/z_tf.jpg"  width="300">	           
+          </div>
+        </div>
+      </div>                    
+      <div class="col-xs-22 col-sm-22 col-md-4">
+        <div id="trigger_panel" class="panel panel-default">
+          <div class="panel-heading">
+            <strong>Predefined configurations</strong>
+          </div>
+          <div class="panel-body">
+           <div class="col-xs-5 input-group ">
+            <label for="spc2" class="col-xs-1 control-label"></label>                  
+            <form class="form-horizontal" role="form" onsubmit="return false;">         
+              <button class="btn btn-primary btn-lg" onclick="apply_set1()">Butterworth LPF 6th ord 0.13 (8kHz/61kHz) </button>              
+            </form>        
+           </div>            
+           <div class="col-xs-5 input-group ">                                    
+            <label for="spc2" class="col-xs-1 control-label"></label>                   
+            <form class="form-horizontal" role="form" onsubmit="return false;">                
+              <button class="btn btn-primary btn-lg" onclick="apply_set2()">Chebyshev LPF 6th ord 0.13 (8kHz/61kHz) </button>             
+            </form>       
+           </div>            
+           <div class="col-xs-5 input-group ">                                    
+            <label for="spc2" class="col-xs-1 control-label"></label>                   
+            <form class="form-horizontal" role="form" onsubmit="return false;">                
+              <button class="btn btn-primary btn-lg" onclick="apply_set3()">Chebyshev BPF 4th ord (1kHz/61kHz) </button>             
+            </form>       
+           </div>            
+           <div class="col-xs-5 input-group ">                                    
+            <label for="spc2" class="col-xs-1 control-label"></label>                   
+            <form class="form-horizontal" role="form" onsubmit="return false;">                
+              <button class="btn btn-primary btn-lg" onclick="apply_set4()">Buttherwoth BPF 4th ord (1-5kHz) </button>             
+            </form>       
+           </div>            
+           <div class="col-xs-8 input-group ">                                    
+            <label for="spc2" class="col-xs-8 control-label"> </label>                 
+            <form class="form-horizontal" role="form" onsubmit="return false;">                
+              <button class="btn btn-primary btn-lg" onclick="apply_set5()">Limited Integrator </button>             
+            </form>       
+           </div>  
+           <div class="col-xs-8 input-group ">                                    
+            <label for="spc2" class="col-xs-8 control-label"> </label>                   
+            <form class="form-horizontal" role="form" onsubmit="return false;">                
+              <button class="btn btn-primary btn-lg" onclick="apply_set6()">Differentiator </button>             
+            </form>       
+           </div>                       
+          </div>          
+        </div>
+      </div>                  
+    </div>
+    <div class="footer clearfix">
+      <p class="pull-right" style="margin: 4px 0 0">&copy; 2014 - Red Pitaya</p>
+    </div>
+  </div>
+  <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_err_label">Application error</h4>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-close-modal" id="btn_ignore">Ignore</button>
+          <button type="button" class="btn btn-default" id="btn_retry_get">Retry</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+        </div>
+        <div class="modal-body">
+          The <strong><span class="app-id"></span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br />
+          Do you want to switch to newly started application or to restart <strong><span class="app-id"></span></strong>?
+        </div>
+        <div class="modal-footer">
+          <a href="/index.html" class="btn btn-danger pull-left">Exit app</a>
+          <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
