@@ -36,7 +36,7 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 # TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
-#localectl set-locale LANG="en_US.UTF-8"
+#localectl   set-locale   LANG="en_US.UTF-8"
 
 apt-get update
 apt-get -y upgrade
@@ -57,16 +57,19 @@ EOF_CHROOT
 
 # network configuration
 install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/75-persistent-net-generator.rules $ROOT_DIR/etc/udev/rules.d/75-persistent-net-generator.rules
-install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $ROOT_DIR/etc/network/interfaces.d/eth0
 install -v -m 664 -o root -D $OVERLAY/etc/default/ifplugd                                $ROOT_DIR/etc/default/ifplugd
-install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0                     $ROOT_DIR/etc/network/interfaces.d/wlan0
-install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces-ap.wlan0                    $ROOT_DIR/etc/network/interfaces-ap.wlan0
-install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces-client.wlan0                $ROOT_DIR/etc/network/interfaces-client.wlan0
-install -v -m 664 -o root -D $OVERLAY/etc/hostapd/hostapd.conf                           $ROOT_DIR/etc/hostapd/hostapd.conf
+# TODO: the next line is a bit improvized, there are issues with write access to /opt/redpitaya, so switching the wireless driver will not work
+install -v -m 664 -o root -D $OVERLAY/etc/hostapd/hostapd.conf                           $BOOT_DIR/hostapd.conf
 install -v -m 664 -o root -D $OVERLAY/etc/default/hostapd                                $ROOT_DIR/etc/default/hostapd
 install -v -m 664 -o root -D $OVERLAY/etc/dhcp/dhcpd.conf                                $ROOT_DIR/etc/dhcp/dhcpd.conf
 install -v -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nat                              $ROOT_DIR/etc/iptables.ipv4.nat
 install -v -m 664 -o root -D $OVERLAY/etc/iptables.ipv4.nonat                            $ROOT_DIR/etc/iptables.ipv4.nonat
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces                             $ROOT_DIR/etc/network/interfaces
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/eth0                      $ROOT_DIR/etc/network/interfaces.d/eth0
+# TODO: the next three files are not handled cleanly, netwoking should be documented and cleaned 
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0.ap                  $ROOT_DIR/etc/network/interfaces.d/wlan0.ap
+install -v -m 664 -o root -D $OVERLAY/etc/network/interfaces.d/wlan0.client              $ROOT_DIR/etc/network/interfaces.d/wlan0.client
+ln -s                                                          wlan0.ap                  $ROOT_DIR/etc/network/interfaces.d/wlan0
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf

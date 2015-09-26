@@ -41,4 +41,5 @@ zip: $(CONTROLLERHF) $(CONTROLLER)
 
 clean:
 	$(MAKE) -C src clean
+	-$(RM) target -rf
 	-$(RM) *.so

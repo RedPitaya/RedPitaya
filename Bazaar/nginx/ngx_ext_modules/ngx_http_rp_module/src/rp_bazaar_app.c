@@ -25,6 +25,8 @@
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"
 
+#include <ws_server.h>
+
 const char *c_rp_app_init_str     = "rp_app_init";
 const char *c_rp_app_exit_str     = "rp_app_exit";
 const char *c_rp_app_desc_str     = "rp_app_desc";
@@ -356,8 +358,11 @@ int get_fpga_path(const char *app_id,
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
 {
-	if (access("/opt/redpitaya/www/apps/idfile.id", F_OK) != 0)
+	static int once = 1;
+	if (once) {
 		system("bazaar idgen 0");	
+		once = 0;
+	}
 	
     DIR *dp;
     struct dirent *ep;
@@ -542,6 +547,7 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
 
 int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 {
+    stop_ws_server();
     if(app->handle) {
         if(app->initialized && app->exit_func) {
             app->exit_func();
