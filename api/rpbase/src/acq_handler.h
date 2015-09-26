@@ -57,6 +57,7 @@ uint32_t acq_GetNormalizedDataPos(uint32_t pos);
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
 int acq_GetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
 int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
+int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2);
 int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
