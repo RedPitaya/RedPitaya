@@ -434,6 +434,11 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
+int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
+{
+    return acq_GetDataRawV2(pos, size, buffer, buffer2);
+}
+
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     return acq_GetOldestDataRaw(channel, size, buffer);
