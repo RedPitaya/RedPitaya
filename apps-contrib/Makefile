@@ -3,7 +3,6 @@
 #
 
 #List of applications to build
-APPS = lti scope+istsensor
 
 all: zips
 
