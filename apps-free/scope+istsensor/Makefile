@@ -23,8 +23,6 @@ SHARED_SRC=../../apps-free/scope/src
 all: $(CONTROLLERHF)
 
 $(CONTROLLERHF):
-	cp -r $(SHARED_SRC) src
-	$(MAKE) -C src clean
 	$(MAKE) -C src
 
 zip: $(CONTROLLERHF)
