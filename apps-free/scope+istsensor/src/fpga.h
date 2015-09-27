@@ -16,7 +16,6 @@
 #define __FPGA_H
 
 #include <stdint.h>
-#include "ISTctrl.h"
 
 
 /** @defgroup fpga_h Acquisition

@@ -53,7 +53,6 @@ rp_calib_params_t *rp_calib_params = NULL;
 int rp_osc_worker_init(rp_app_params_t *params, int params_len,
                        rp_calib_params_t *calib_params)
 {
-		
     int ret_val;
 
     rp_osc_ctrl               = rp_osc_idle_state;
@@ -99,7 +98,7 @@ int rp_osc_worker_init(rp_app_params_t *params, int params_len,
                 strerror(errno));
         return -1;
     }
-	
+
     return 0;
 }
 
@@ -124,7 +123,8 @@ int rp_osc_worker_exit(void)
     rp_cleanup_signals(&rp_osc_signals);
     rp_cleanup_signals(&rp_tmp_signals);
 
-    rp_clean_params(rp_osc_params);	    
+    rp_clean_params(rp_osc_params);
+
     return 0;
 }
 
@@ -222,8 +222,8 @@ int rp_osc_set_signals(float **source, int index)
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_set_meas_data(rp_osc_meas_res_t ch1_meas, rp_osc_meas_res_t ch2_meas)
-{	
-	pid_constUpdate(rp_osc_params);	//update PID parameters
+{
+    pid_constUpdate(rp_osc_params);	//update PID parameters
     rp_update_meas_data(ch1_meas, ch2_meas);
     return 0;
 }
@@ -256,11 +256,11 @@ void *rp_osc_worker_thread(void *args)
     old_state = state = rp_osc_ctrl;
     pthread_mutex_unlock(&rp_osc_ctrl_mutex);
 
+
     while(1) {
         /* update states - we save also old state to see if we need to reset
          * FPGA 
          */
-                
         old_state = state;
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
@@ -292,7 +292,7 @@ void *rp_osc_worker_thread(void *args)
             rp_clean_params(curr_params);
             return 0;
         }
-		
+
         if(state == rp_osc_auto_set_state) {
             /* Auto-set algorithm was selected - run it */
             rp_osc_auto_set(curr_params, ch1_max_adc_v, ch2_max_adc_v,
@@ -343,7 +343,7 @@ void *rp_osc_worker_thread(void *args)
 
             fpga_update = 0;
         }
-					   
+
         if(state == rp_osc_idle_state) {
             //usleep(10000);
             ISTctrl_time(10000);
@@ -356,8 +356,8 @@ void *rp_osc_worker_thread(void *args)
             float t_acq = (curr_params[MAX_GUI_PARAM].value - 
                            curr_params[MIN_GUI_PARAM].value) / unit_factor;
 
-			TimeWin = t_acq * 1e6;//us
-			
+            TimeWin = t_acq * 1e6;//us
+
             rp_osc_prepare_time_vector((float **)&rp_tmp_signals[0], 
                                        dec_factor,
                                        curr_params[MIN_GUI_PARAM].value,
@@ -770,7 +770,7 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
             (t_start + ((next_out_idx*step_wr_ptr)*smpl_period))*t_unit_factor;
 
         /* A bug in FPGA? - Trig & write pointers not sample-accurate. */
-         if ( (dec_factor > 64) && (next_out_idx == 2) ) {
+        if ( (dec_factor > 64) && (next_out_idx == 2) ) {
              int i;
              for (i=0; i < next_out_idx; i++) {
                  cha_out[i] = cha_out[next_out_idx];

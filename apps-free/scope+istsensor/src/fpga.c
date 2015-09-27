@@ -106,7 +106,6 @@ int osc_fpga_init(void)
         return -1;
 
     g_osc_fpga_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    fd = g_osc_fpga_mem_fd;
     if(g_osc_fpga_mem_fd < 0) {
         fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
         return -1;
@@ -122,7 +121,6 @@ int osc_fpga_init(void)
         __osc_fpga_cleanup_mem();
         return -1;
     }
-    
     g_osc_fpga_reg_mem = page_ptr + page_off;
     g_osc_fpga_cha_mem = (uint32_t *)g_osc_fpga_reg_mem + 
         (OSC_FPGA_CHA_OFFSET / sizeof(uint32_t));
