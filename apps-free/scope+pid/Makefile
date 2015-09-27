@@ -21,8 +21,7 @@ export CFLAGS
 all: $(CONTROLLERHF)
 
 $(CONTROLLERHF):
-	$(MAKE) -C src clean
-	$(MAKE) -C src OUT_NAME=$(CONTROLLERHF)
+	$(MAKE) -C src
 
 zip: $(CONTROLLERHF)
 	-$(RM) target -rf
