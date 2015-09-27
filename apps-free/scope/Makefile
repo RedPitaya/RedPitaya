@@ -22,8 +22,7 @@ export CFLAGS
 all: $(CONTROLLERHF) shared_ctrl
 
 $(CONTROLLERHF):
-	$(MAKE) -C src clean
-	$(MAKE) -C src OUT_NAME=$(CONTROLLERHF)
+	$(MAKE) -C src
 
 shared_ctrl: $(CONTROLLERHF)
 	for obj in $(SHARED_OBJS); do \
