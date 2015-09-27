@@ -1,5 +1,5 @@
 #
-# $Id: Makefile 1235 2014-02-21 16:44:10Z ales.bardorfer $
+# Authors: Aleš Bardorfer, Luka Golinar
 #
 # Red Pitaya specific application Makefile.
 #
