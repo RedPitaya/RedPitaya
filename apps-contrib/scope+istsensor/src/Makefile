@@ -6,9 +6,7 @@ OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o ISTctrl.o pid.o
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
-OUT_DIR     = ../
-OUT_NAME   ?= controllerhf.so
-CONTROLLER  = $(OUT_DIR)/$(OUT_NAME)
+CONTROLLER = ../controllerhf.so
 
 all: $(CONTROLLER)
 
