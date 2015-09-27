@@ -1,5 +1,5 @@
 /**
- * $Id: worker.c 881 2013-12-16 05:37:34Z rp_jmenart $
+ * $Id: worker.h 881 2013-12-16 05:37:34Z rp_jmenart $
  *
  * @brief Red Pitaya Oscilloscope worker.
  *
