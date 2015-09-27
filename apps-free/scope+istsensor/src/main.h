@@ -123,6 +123,7 @@ typedef struct rp_osc_meas_res_s {
 #define SIGNAL_LENGTH (1024) /* Must be 2^n! */
 #define SIGNALS_NUM   3
 
+
 /* module entry points */
 int rp_app_init(void);
 int rp_app_exit(void);

@@ -164,7 +164,9 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* scale_ch2 - Jumper & probe attenuation dependent Y scaling factor for Channel 2 */
         "scale_ch2", 0, 0, 1, -1000, 1000 },
 
+    /********************************************************/
     /* Arbitrary Waveform Generator parameters from here on */
+    /********************************************************/
 
     { /* gen_trig_mod_ch1 - Selects the trigger mode for channel 1:
        *    0 - continuous
@@ -243,8 +245,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
         "pid_IST_kd",  0, 1, 0, -8192, 8191 },
     { /* Must be last! */
         NULL, 0.0, -1, -1, 0.0, 0.0 }     
-};  
-
+};
 /* params initialized */
 static int params_init = 0;
 
@@ -266,8 +267,7 @@ const char *rp_app_desc(void)
 }
 
 int rp_app_init(void)
-{		
-					
+{
     fprintf(stderr, "Loading scope (with gen+pid extensions) version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     rp_default_calib_params(&rp_main_calib_params);
@@ -278,8 +278,7 @@ int rp_app_init(void)
     if(rp_osc_worker_init(&rp_main_params[0], PARAMS_NUM, 
                           &rp_main_calib_params) < 0) {
         return -1;
-    } 
-	
+    }
     if(generate_init(&rp_main_calib_params) < 0) {
         return -1;
     }
@@ -287,9 +286,9 @@ int rp_app_init(void)
     rp_set_params(&rp_main_params[0], PARAMS_NUM);
 
 
-	pid_init();
-	ISTctrl_Init();
-	pid_constUpdate(&rp_main_params[0]);	//update PID parameters
+    pid_init();
+    ISTctrl_Init();
+    pid_constUpdate(&rp_main_params[0]);	//update PID parameters
 
     return 0;
 }
@@ -298,7 +297,7 @@ int rp_app_exit(void)
 {
     fprintf(stderr, "Unloading 1Ch scope + IST sensor Control version %s-%s.\n", VERSION_STR, REVISION_STR);
 
-	Stop_ISTctrl(&rp_main_params[0]);
+    Stop_ISTctrl(&rp_main_params[0]);
     rp_osc_worker_exit();
     generate_exit();
 
