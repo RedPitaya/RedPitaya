@@ -1,5 +1,5 @@
 #
-# $Id: Makefile 1235 2014-02-21 16:44:10Z ales.bardorfer $
+# Authors: Aleš Bardorfer, Luka Golinar
 #
 # Red Pitaya specific application Makefile.
 #
@@ -11,32 +11,28 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-INSTALL_DIR ?= ../
+INSTALL_DIR ?= ../../build
 
-CONTROLLER = controller.so
 CONTROLLERHF = controllerhf.so
 
-all: $(CONTROLLER) $(CONTROLLERHF)
+CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
+export CFLAGS
 
-$(CONTROLLER):
-	$(MAKE) -C src clean
-	$(MAKE) -C src all OUT_NAME=$(CONTROLLER) CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+all: $(CONTROLLERHF)
 
 $(CONTROLLERHF):
-	$(MAKE) -C src clean
-	$(MAKE) -C src all OUT_NAME=$(CONTROLLERHF)
+	$(MAKE) -C src
 
-zip: $(CONTROLLER)
+zip: $(CONTROLLERHF)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) $(CONTROLLERHF) fpga.conf info index.html Makefile target/$(APP)
-	-$(MAKE) -C src clean
-	cp -r src target/$(APP)
-	rm `find target/ -iname .svn` -rf
+	cp -r $(CONTROLLERHF) fpga.conf info index.html target/$(APP)
+	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
+	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r $(INSTALL_DIR)/$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
-	-$(RM) target -rf
+	$(RM) target -rf
 
 clean:
-	-$(MAKE) -C src clean
+	$(MAKE) -C src clean
 	-$(RM) target -rf
 	-$(RM) *.so
