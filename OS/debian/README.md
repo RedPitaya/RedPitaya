@@ -51,6 +51,16 @@ cd /root
 . /opt/redpitaya/wyliodrin.sh
 ```
 
+Then perform a cleanup
+```bash
+apt-get clean
+cat /dev/zero > zero.file
+sync
+rm zero.file
+history -c
+```
+
+
 ## Creating a SD card image
 
 Since Wiliodrin and maybe the ecosystem ZIP are not part of the original SD card image. The updated SD card contents should be copied into an image using `dd` or the `Disks` tool (Create Disk Image).

@@ -13,7 +13,7 @@ Components:
 
 ![Wiring for LED blink](example_1/wiring.png)
 
-This example does not require the extension module yet, there are 8 LEDs on the Red Pitaya board, which can be turnd `ON` or `OFF`.
+This example does not require the extension module yet, there are 8 LEDs on the Red Pitaya board, which can be turn `ON` or `OFF`.
 
 ### Description
 
@@ -46,7 +46,7 @@ Components:
 
 ![Wiring for Buzzer](example_2/wiring.png)
 
-Connect the extension module to Red Pitaya. Connect the Buzzer to the *CN?* connector on the extension module which is part of a group of connectors providing digital input/output signals.
+Connect the extension module to Red Pitaya. Connect the Buzzer to the *CN12* connector on the extension module which is part of a group of connectors providing digital input/output signals.
 
 ### Description
 
@@ -75,7 +75,7 @@ Components:
 
 ![Wiring for PIR Motion Sensor](example_3/wiring.png)
 
-Connect the PIR Motion Sensor to the *CN?* connector on the extension module.
+Connect the PIR Motion Sensor to the *CN12* connector on the extension module.
 
 ### Description
 
@@ -87,7 +87,7 @@ If the condition is true the *Program* > *Screen and keyboard* > **Write on scre
 
 ### Experimentation
 
-Similar to indicators, sensors can also be attached to different extension module connectors, here the `D0` connector (connector *CN9*) is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
+Similar to indicators, sensors can also be attached to different extension module connectors, here the `D0` connector (connector *CN12*) is used, you can try attaching to a different connector and changing the number. This will become handy, when a combination of multiple sensors indicators will be used and it will not be possible to attach them to the same connector. You should also try changing the printed text, for example adding the date.
 
 
 ## Example 4 - Alarm
@@ -104,7 +104,7 @@ Components:
 
 ![Wiring for Alarm](example_4/wiring.png)
 
-Connect the PIR Motion Sensor to the *CN?* connector and the buzzer to the *CN?* connector on the extension module.
+Connect the PIR Motion Sensor to the *CN12* connector and the buzzer to the *CN11* connector on the extension module.
 
 ### Description
 
@@ -121,7 +121,7 @@ The third block is a function from *Program* > *Functions* > **to [] []**. Funct
 
 The first two blocks are running at the same time, the first one is checking for motion, the second is checking for button presses. The variable `status` is used to share/pass information between them.
 
-TODO: there seems to be some issues with concurent execution and signals, therefore do expect problems.
+TODO: there seems to be some issues with concurrent execution and signals, therefore do expect problems.
 
 ### Experimentation
 
@@ -140,7 +140,7 @@ Components:
 
 ![Wiring for Temperature logger](example_5/wiring.png)
 
-Connect the Buzzer to the *CN?* connector on the extension module which is part of a group of connectors providing analog input signals.
+Connect the Temperature Sensor V1.2 to the *CN0* connector on the extension module which is part of a group of connectors providing analog input signals.
 
 ### Description
 
@@ -160,13 +160,13 @@ The black connectors on the sides are compatible with Arduino, white connectors 
 
 This are dedicated connectors compatible with [Grove modules](http://www.seeedstudio.com/depot/category_products?themes_id=1417 "seeed Grove modules").
 
-| pin | CN8  | CN8  | CN18 | CN19 | CN20 | CN2  | CN7  | CN12 | CN22 | CN9  | CN10 | CN11 | CN13 | CN14 |
-|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|
-| `1` | RX   | SCL  | SCL  | SCL  | SCL  | AI0  | AI1  | AI2  | AO0  | IO0  | IO2  | IO4  | IO6  | IO8  |
-| `2` | TX   | SDA  | SDA  | SDA  | SDA  | AI1  | AI2  | AI3  | AO1  | IO1  | IO3  | IO5  | IO7  | IO9  |
-| `3` | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  |
-| `4` | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  |
-|     | UART | I2C  | I2C  | I2C  | I2C  | AI   | AI   | AI   | AO   | DIO  | DIO  | DIO  | DIO  | DIO  |
+| pin | CN0  | CN1  | CN2  | CN3  | CN4  | CN5  | CN6  | CN7  | CN8  | CN9  | CN10 | CN11 | CN12 |
+|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|
+| `1` | AI0  | AI1  | AI2  | AO0  | SCL  | SCL  | SCL  | RX   | IO8  | IO6  | IO4  | IO2  | IO0  |
+| `2` | AI1  | AI2  | AI3  | AO1  | SDA  | SDA  | SDA  | TX   | IO9  | IO7  | IO5  | IO3  | IO1  |
+| `3` | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  | VCC  |
+| `4` | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  | GND  |
+|     | AI   | AI   | AI   | AO   | I2C  | I2C  | I2C  | UART | DIO  | DIO  | DIO  | DIO  | DIO  |
 
 ### Arduino shield compatible connectors
 

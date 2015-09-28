@@ -12,9 +12,7 @@ INCLUDE=$(FFT_INC)
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
 LDFLAGS=-shared
 
-OUT_DIR     = ../
-OUT_NAME   ?= controllerhf.so
-CONTROLLER  = $(OUT_DIR)/$(OUT_NAME)
+CONTROLLER = ../controllerhf.so
 
 all: $(CONTROLLER)
 
