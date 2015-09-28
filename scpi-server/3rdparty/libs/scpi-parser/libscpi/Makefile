@@ -2,7 +2,6 @@
 VERSION = 0.3.0
 LIBNAME = scpi
 
-CC=$(CROSS_COMPILE)gcc
 
 CFLAGS += -Wextra -O1 -g -fPIC -Iinc
 LDFLAGS += -Wl,--as-needed

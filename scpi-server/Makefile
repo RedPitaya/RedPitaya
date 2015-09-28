@@ -24,7 +24,7 @@ $(SCPISRV):
 	$(MAKE) -C src
 
 $(SCPIPARSER):
-	$(MAKE) -C 3rdparty/libs/scpi-parser CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C 3rdparty/libs/scpi-parser CC=$(CROSS_COMPILE)gcc
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
