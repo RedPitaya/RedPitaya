@@ -51,7 +51,7 @@ scpi_result_t RP_ResetAll(scpi_t *context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_RealaseAll(scpi_t *context){
+scpi_result_t RP_ReleaseAll(scpi_t *context){
 
     int result = rp_Release();
 
