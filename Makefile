@@ -136,7 +136,6 @@ APP_SPECTRUM_DIR = Applications/spectrumpro
 APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrumpro
 
 APPS_FREE_DIR    = apps-free/
-APPS_CONTRIB_DIR = apps-contrib/
 
 ################################################################################
 # Versioning system
@@ -166,7 +165,7 @@ export GREET_MSG
 # tarball
 ################################################################################
 
-all: zip sdk apps_free apps_contrib
+all: zip sdk apps_free
 
 $(TMP):
 	mkdir -p $@
@@ -457,10 +456,6 @@ apps_free:
 	$(MAKE) -C $(APPS_FREE_DIR) all
 	$(MAKE) -C $(APPS_FREE_DIR) install 
 
-apps_contrib:
-	$(MAKE) -C $(APPS_CONTRIB_DIR) all
-	$(MAKE) -C $(APPS_CONTRIB_DIR) install 
-
 clean:
 	make -C $(LINUX_DIR) clean
 	make -C $(FPGA_DIR) clean
@@ -478,8 +473,7 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
-	make -C $(OLD_APPS_DIR) clean
-	make -C $(APPS_CONTRIB_DIR) clean
+	make -C $(APPS_FREE_DIR) clean
 	rm $(BUILD) -rf
 	rm $(TARGET) -rf
 	$(RM) $(NAME)*.zip
