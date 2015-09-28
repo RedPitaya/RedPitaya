@@ -1,8 +1,6 @@
 
 PROG = test
 
-CC=$(CROSS_COMPILE)gcc
-
 SRCS = main.c ../common/scpi-def.c
 CFLAGS += -Wextra -I ../../libscpi/inc/
 LDFLAGS += ../../libscpi/dist/libscpi.a
