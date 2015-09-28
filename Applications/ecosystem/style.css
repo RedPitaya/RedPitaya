@@ -78,12 +78,12 @@ h3 {
 	color: blue;
 }
 
-a.list-group-item {                                                                          
-  color: silver;#555555;                                                                     
+a.list-group-item {
+  color: silver;#555555;
 }
 
 a.list-group-item:hover:visited {
-  color: black;  
+  color: black;
 }
 
 .list-group-item.more {
@@ -231,7 +231,7 @@ position: relative;
     display: block;
 }
 
-.col-sm-4 
+.col-sm-4
 {
 	width: 160px;
 }

@@ -21,7 +21,7 @@ echo “127.0.0.1 localhost” >> /etc/hosts
 
 sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools
 sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
-sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server
+sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server libevent-dev
 
 ################################################################################
 # install node.js
