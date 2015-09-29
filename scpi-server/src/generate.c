@@ -343,7 +343,7 @@ enum _scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t *context) {
     char waveformString[15];
 
     // read first parameter waveform shape
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:FUNC is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -385,7 +385,7 @@ enum _scpi_result_t RP_GenGetWaveForm(rp_channel_t channel, scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, string);
+    SCPI_ResultMnemonic(context, string);
 
     syslog(LOG_INFO, "*SOUR<n>:FUNC? Successfully returned waveform %s to client.", string);
 
@@ -619,7 +619,7 @@ enum _scpi_result_t RP_GenGetGenerateMode(rp_channel_t channel, scpi_t *context)
     }
 
     /* Return generate mode status back to the client */
-    SCPI_ResultString(context, &value);
+    SCPI_ResultMnemonic(context, &value);
     syslog(LOG_INFO, "*SOUR<n>:BURS:STAT? Successfully returned %s status to client.", &value);
 
     return SCPI_RES_OK;
@@ -631,7 +631,7 @@ enum _scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t *context) {
     char string[15];
 
     // read first parameter NUMBER OF CYCLES (integer value)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:BURS:NCYC is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -674,7 +674,7 @@ enum _scpi_result_t RP_GenGetBurstCount(rp_channel_t channel, scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, string);
+    SCPI_ResultMnemonic(context, string);
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:NCYC? Successfully returned burst count %s to client.", &string[0]);
     return SCPI_RES_OK;
@@ -687,7 +687,7 @@ scpi_result_t RP_GenSetBurstRepetitions(rp_channel_t channel, scpi_t *context) {
     char string[15];
 
     // read first parameter NUMBER OF REPETITIONS (integer value)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:BURS:NOR is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -729,7 +729,7 @@ scpi_result_t RP_GenGetBurstRepetitions(rp_channel_t channel, scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, string);
+    SCPI_ResultMnemonic(context, string);
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:NOR? Successfully returned burst repetitions %s to client.", &string[0]);
     return SCPI_RES_OK;
@@ -779,7 +779,7 @@ enum _scpi_result_t RP_GenSetTriggerSource(rp_channel_t channel, scpi_t *context
     char triggerSourceString[15];
 
     // read first parameter TRIGGER SOURCE (EXT_PE, EXT_NE, INT, GATED)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*SOUR<n>:TRIG:SOUR is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -821,7 +821,7 @@ enum _scpi_result_t RP_GenGetTriggerSource(rp_channel_t channel, scpi_t *context
     }
 
     // Return back result
-    SCPI_ResultString(context, string);
+    SCPI_ResultMnemonic(context, string);
 
     syslog(LOG_INFO, "*SOUR<n>:TRIG:SOUR? Successfully returned trigger source to client.");
 
