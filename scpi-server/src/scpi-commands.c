@@ -75,11 +75,6 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
     return SCPI_RES_ERR;
 }
 
-scpi_result_t SCPI_Test(scpi_t * context) {
-	syslog(LOG_ERR, "**Test not implemented");
-    return SCPI_RES_ERR;
-}
-
 scpi_result_t SCPI_Reset(scpi_t * context) {
 	syslog(LOG_ERR, "**Reset not implemented");
     return SCPI_RES_ERR;
@@ -262,7 +257,6 @@ static scpi_interface_t scpi_interface = {
     .control = SCPI_Control,
     .flush = SCPI_Flush,
     .reset = SCPI_Reset,
-    .test = SCPI_Test,
 };
 
 #define SCPI_INPUT_BUFFER_LENGTH 262144
@@ -280,6 +274,6 @@ scpi_t scpi_context = {
     .interface = &scpi_interface,
     .registers = scpi_regs,
     .units = scpi_units_def,
-    .special_numbers = scpi_special_numbers_def,
     .idn = {"REDPITAYA", "INSTR2014", NULL, "01-02"},
 };
+

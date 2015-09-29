@@ -27,7 +27,7 @@ scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     size_t param_len;
 
     // read first parameter Format type (BIN, ASCII)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -148,7 +148,7 @@ scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
     char samplingRateStr[15];
 
     // read first parameter SAMPLING_RATE (125MHz,15_6MHz, 1_9MHz,103_8kHz, 15_2kHz, 1_9kHz)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*ACQ:SRAT is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -192,7 +192,7 @@ scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, samplingRateString);
+    SCPI_ResultMnemonic(context, samplingRateString);
 
     syslog(LOG_INFO, "*ACQ:SRAT? Successfully returned sampling rate.");
 
@@ -214,7 +214,7 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     sprintf(&samplingRateString, "%.0f Hz", samplingRate);
 
     //Return string in form "<Value> Hz"
-    SCPI_ResultString(context, &samplingRateString);
+    SCPI_ResultMnemonic(context, &samplingRateString);
 
     syslog(LOG_INFO, "*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.");
 
@@ -254,7 +254,7 @@ scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, value ? "ON" : "OFF");
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
 
     syslog(LOG_INFO, "*ACQ:AVG? Successfully returned averaging.");
 
@@ -268,7 +268,7 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
     char triggerSource[15];
 
     // read first parameter TRIGGER SOURCE (DISABLED,NOW,CH1_PE,CH1_NE,CH2_PE,CH2_NE,EXT_PE,EXT_NE,AWG_PE)
-    if (!SCPI_ParamString(context, &param, &param_len, false)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, false)) {
         syslog(LOG_ERR, "*ACQ:TRIG is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -313,7 +313,7 @@ scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, sourceString);
+    SCPI_ResultMnemonic(context, sourceString);
 
     syslog(LOG_INFO, "*ACQ:TRIG:STAT? Successfully returned trigger.");
 
@@ -497,7 +497,7 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
     char unitString[10];
 
     // read first parameter UNITS (RAW, VOLTS)
-    if (!SCPI_ParamString(context,  &param, &param_len, false)) {
+    if (!SCPI_ParamCharacters(context,  &param, &param_len, false)) {
         syslog(LOG_ERR, "*ACQ:DATA:UNITSis missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -580,7 +580,7 @@ scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
     char gainString[15];
 
     // read first parameter GAIN (LV,HV)
-    if (!SCPI_ParamString(context, &param, &param_len, false)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, false)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -620,7 +620,7 @@ scpi_result_t RP_AcqGetGain(rp_channel_t channel, scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultString(context, state == RP_HIGH ? "HV" : "LV");
+    SCPI_ResultMnemonic(context, state == RP_HIGH ? "HV" : "LV");
 
     syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned  latest data.");
 
