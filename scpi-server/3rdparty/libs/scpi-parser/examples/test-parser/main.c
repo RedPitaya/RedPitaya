@@ -93,9 +93,8 @@ int main(int argc, char** argv) {
 
     TEST_SCPI_INPUT("*CLS\r\n");
     TEST_SCPI_INPUT("*RST\r\n");
-    TEST_SCPI_INPUT("MEAS:volt:DC? 12,50;*RST\r\n");
-/*    
-TEST_SCPI_INPUT("*IDN?\r\n");
+    TEST_SCPI_INPUT("MEAS:volt:DC? 12,50;*OPC\r\n");
+    TEST_SCPI_INPUT("*IDN?\r\n");
     TEST_SCPI_INPUT("SYST:VERS?");
     TEST_SCPI_INPUT("\r\n*ID");
     TEST_SCPI_INPUT("N?");
@@ -127,7 +126,7 @@ TEST_SCPI_INPUT("*IDN?\r\n");
     //     fgets(smbuffer, 10, stdin);
     //     SCPI_Input(&scpi_context, smbuffer, strlen(smbuffer));
     //}
-*/
+
 
     return (EXIT_SUCCESS);
 }
