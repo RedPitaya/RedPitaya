@@ -20,7 +20,7 @@
 #include "../../api/rpbase/src/generate.h"
 
 #include "utils.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "scpi/parser.h"
 
 
 scpi_result_t RP_GenReset(scpi_t *context) {

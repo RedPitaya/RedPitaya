@@ -15,7 +15,7 @@
 #ifndef API_CMD_H_
 #define API_CMD_H_
 
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
+#include "scpi/types.h"
 
 scpi_result_t RP_InitAll(scpi_t *context);
 scpi_result_t RP_ResetAll(scpi_t *context);
