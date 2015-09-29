@@ -48,7 +48,7 @@ scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
 	char port[15];
 
     // read first parameter PORT (LED1, LED2, ...)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
     	syslog(LOG_ERR, "*MEAS:DIG:DATA:BIT? is missing first parameter.");
     	return SCPI_RES_ERR;
     }
@@ -93,7 +93,7 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
 	char port[15];
 
     // read first parameter PORT (LED1, LED2, ...)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
     	syslog(LOG_ERR, "*SOUR:DIG:DATA:BIT is missing first parameter.");
     	return SCPI_RES_ERR;
     }
@@ -146,7 +146,7 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
     char port[15];
 
     // read first parameter DIRECTION (OUTP -> OUTPUT; IN->INPUT)
-    if(!SCPI_ParamString(context, &param, &param_len, true)) {
+    if(!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*DIG:PIN:DIR is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -154,7 +154,7 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
     direction_string[param_len] = '\0';
 
     // read second parameter PORT (RP_DIO0_P, RP_DIO0_N, ...)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         syslog(LOG_ERR, "*DIG:PIN:DIR is missing second parameter.");
         return SCPI_RES_ERR;
     }

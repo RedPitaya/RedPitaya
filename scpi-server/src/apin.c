@@ -47,7 +47,7 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
 	char port[15];
 
     // read first parameter PORT (RP_AOUT0, RP_AIN0, ...)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
     	syslog(LOG_ERR, "*ANALOG:PIN? is missing first parameter.");
     	return SCPI_RES_ERR;
     }
@@ -92,7 +92,7 @@ scpi_result_t RP_AnalogPinValue(scpi_t * context) {
 	char port[15];
 
     // read first parameter PORT (RP_AOUT0, RP_AIN0, ...)
-    if (!SCPI_ParamString(context, &param, &param_len, true)) {
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
     	syslog(LOG_ERR, "*ANALOG:PIN is missing first parameter.");
     	return SCPI_RES_ERR;
     }
