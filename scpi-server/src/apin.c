@@ -18,7 +18,7 @@
 
 #include "utils.h"
 #include "apin.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "scpi/parser.h"
 #include "../../api/rpbase/src/common.h"
 
 

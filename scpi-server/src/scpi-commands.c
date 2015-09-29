@@ -22,11 +22,11 @@
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/error.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/ieee488.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/minimal.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/units.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "scpi/error.h"
+#include "scpi/ieee488.h"
+#include "scpi/minimal.h"
+#include "scpi/units.h"
+#include "scpi/parser.h"
 
 /**
  * Interface general commands
