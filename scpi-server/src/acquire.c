@@ -18,7 +18,7 @@
 #include <string.h>
 
 #include "utils.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "scpi/parser.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 

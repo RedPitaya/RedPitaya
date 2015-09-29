@@ -16,7 +16,7 @@
 #ifndef ACQUIRE_H_
 #define ACQUIRE_H_
 
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
+#include "scpi/types.h"
 
 typedef enum {
     RP_SCPI_VOLTS,

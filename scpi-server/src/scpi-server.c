@@ -27,7 +27,7 @@
 
 #include "scpi-commands.h"
 
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "scpi/parser.h"
 #include "../../api/rpbase/src/rp.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))

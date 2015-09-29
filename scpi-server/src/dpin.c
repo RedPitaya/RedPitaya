@@ -20,7 +20,7 @@
 #include "utils.h"
 #include "dpin.h"
 #include "../../api/rpbase/src/common.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
+#include "scpi/parser.h"
 
 
 scpi_result_t RP_DigitalPinReset(scpi_t *context) {
