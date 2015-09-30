@@ -630,7 +630,7 @@ scpi_result_t RP_AcqGetGain(rp_channel_t channel, scpi_t *context) {
 scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
     uint32_t size;
     // read first parameter SIZE
-    if (!SCPI_ParamUInt(context, &size, true)) {
+    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:LAT:N? is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -670,13 +670,13 @@ scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
 scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
     uint32_t start, size;
     // read first parameter START POSITION
-    if (!SCPI_ParamUInt(context, &start, true)) {
+    if (!SCPI_ParamUnsignedInt(context, &start, true)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:N? is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
     // read second parameter SIZE
-    if (!SCPI_ParamUInt(context, &size, true)) {
+    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:N? is missing second parameter.");
         return SCPI_RES_ERR;
     }
@@ -715,7 +715,7 @@ scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t *context) {
 scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t *context) {
     uint32_t size;
     // read first parameter SIZE
-    if (!SCPI_ParamUInt(context, &size, true)) {
+    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:OLD:N? is missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -754,13 +754,13 @@ scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t *context) {
 scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
     uint32_t start, end;
     // read first parameter START POSITION
-    if (!SCPI_ParamUInt(context, &start, true)) {
+    if (!SCPI_ParamUnsignedInt(context, &start, true)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
     // read second parameter END POSITION
-    if (!SCPI_ParamUInt(context, &end, true)) {
+    if (!SCPI_ParamUnsignedInt(context, &end, true)) {
         syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? is missing second parameter.");
         return SCPI_RES_ERR;
     }

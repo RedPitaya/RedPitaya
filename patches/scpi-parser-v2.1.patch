@@ -56,7 +56,7 @@ index 137ffef..e028443 100644
  $(OBJS): $(HDRS) $(DISTDIR) $(OBJDIR) $(SRCS)
  
 diff --git a/libscpi/inc/scpi/parser.h b/libscpi/inc/scpi/parser.h
-index 2402c85..1be06d3 100644
+index 2402c85..0c818be 100644
 --- a/libscpi/inc/scpi/parser.h
 +++ b/libscpi/inc/scpi/parser.h
 @@ -53,10 +53,15 @@ extern "C" {
@@ -75,18 +75,16 @@ index 2402c85..1be06d3 100644
     
      scpi_bool_t SCPI_Parameter(scpi_t * context, scpi_parameter_t * parameter, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamIsNumber(scpi_parameter_t * parameter, scpi_bool_t suffixAllowed);
-@@ -69,6 +74,10 @@ extern "C" {
+@@ -69,6 +74,8 @@ extern "C" {
  
      scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamUnsignedInt(scpi_t * context, uint32_t * value, scpi_bool_t mandatory);
-+    scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandatory);
-+    scpi_bool_t SCPI_ParamUInt(scpi_t * context, uint32_t * value, scpi_bool_t mandatory);
 +    scpi_bool_t SCPI_ParamLong(scpi_t * context, int64_t * value, scpi_bool_t mandatory);
 +    scpi_bool_t SCPI_ParamULong(scpi_t * context, uint64_t * value, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamDouble(scpi_t * context, double * value, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamCharacters(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamArbitraryBlock(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);
-@@ -76,6 +85,7 @@ extern "C" {
+@@ -76,6 +83,7 @@ extern "C" {
  
      scpi_bool_t SCPI_ParamBool(scpi_t * context, scpi_bool_t * value, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options, int32_t * value, scpi_bool_t mandatory);
@@ -115,7 +113,7 @@ index db52e81..f99af0e 100644
  
  #ifdef  __cplusplus
 diff --git a/libscpi/src/parser.c b/libscpi/src/parser.c
-index 6a7b776..e822e2c 100644
+index 6a7b776..91187c0 100644
 --- a/libscpi/src/parser.c
 +++ b/libscpi/src/parser.c
 @@ -34,8 +34,10 @@
@@ -339,34 +337,10 @@ index 6a7b776..e822e2c 100644
  /**
   * Write arbitrary block program data to the result
   * @param context
-@@ -612,6 +788,77 @@ scpi_bool_t SCPI_ParamToDouble(scpi_t * context, scpi_parameter_t * parameter, d
+@@ -612,6 +788,53 @@ scpi_bool_t SCPI_ParamToDouble(scpi_t * context, scpi_parameter_t * parameter, d
      return result;
  }
  
-+
-+scpi_bool_t SCPI_ParamUInt(scpi_t *context, uint32_t *value, scpi_bool_t mandatory) {
-+    const char * param;
-+    size_t param_len;
-+    size_t num_len;
-+
-+    if (!value) {
-+        return FALSE;
-+    }
-+
-+    if (!SCPI_ParamCharacters(context, &param, &param_len, mandatory)) {
-+        return FALSE;
-+    }
-+
-+    num_len = strToLong(param, value, 10);
-+
-+    if (num_len != param_len) {
-+        SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
-+        return FALSE;
-+    }
-+
-+    return TRUE;
-+}
-+
 +scpi_bool_t SCPI_ParamLong(scpi_t *context, int64_t *value, scpi_bool_t mandatory) {
 +    const char * param;
 +    size_t param_len;
@@ -417,7 +391,7 @@ index 6a7b776..e822e2c 100644
  /**
   * Read floating point parameter
   * @param context
-@@ -906,6 +1153,24 @@ scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options
+@@ -906,6 +1129,24 @@ scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options
  }
  
  /**
@@ -442,7 +416,7 @@ index 6a7b776..e822e2c 100644
   * Parse one parameter and detect type
   * @param state
   * @param token
-@@ -1046,6 +1311,7 @@ int scpiParser_detectProgramMessageUnit(scpi_parser_state_t * state, char * buff
+@@ -1046,6 +1287,7 @@ int scpiParser_detectProgramMessageUnit(scpi_parser_state_t * state, char * buff
      return lex_state.pos - lex_state.buffer;
  }
  
