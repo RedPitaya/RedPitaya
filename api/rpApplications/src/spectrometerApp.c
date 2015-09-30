@@ -33,9 +33,9 @@
 const wf_func_table_t* wf_func_table;
 
 /* JPG outputs: c_jpg_file_path+[1|2]+_+jpg_cnt(3 digits)+c_jpg_file_suf */
-const char c_jpg_dir_path[]="/tmp";
+const char c_jpg_dir_path[]="/tmp/ram";
 const char c_jpg_file_name[]="wat";
-const char c_jpg_file_path[]="/tmp/wat";
+const char c_jpg_file_path[]="/tmp/ram/wat";
 const char c_jpg_file_suf[]=".jpg";
 const int  c_jpg_max_file  = 63;
 const int  c_save_jpg_cnt  = 10; /* Repetition how often the JPG is stored */
