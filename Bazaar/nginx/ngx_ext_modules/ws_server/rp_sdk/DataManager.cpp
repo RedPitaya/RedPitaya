@@ -4,6 +4,10 @@
 #include "CustomParameters.h"
 #include "misc.h"
 
+#ifndef ALWAYS_PURCHASED
+#include "licverify/LicenseVerificator.h"
+#endif
+
 CBooleanParameter IsDemoParam("is_demo", CBaseParameter::RO, false, 1);
 CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
 CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
