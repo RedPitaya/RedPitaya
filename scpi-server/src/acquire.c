@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "utils.h"
+#include "../scpi-parser/libscpi/inc/scpi/error.h"
 #include "scpi/parser.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
@@ -398,20 +399,69 @@ scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqChannel1Gain(scpi_t *context) {
-    return RP_AcqSetGain(RP_CH_1, context);
+//Todo: Custom error handling.
+scpi_result_t RP_AcqGain(scpi_t *context) {
+
+    int32_t ch_usr[1];
+    const char *param;
+    size_t param_len;
+
+    SCPI_CommandNumbers(context, ch_usr, 1);
+
+    if((ch_usr[0] != 0) && (ch_usr[0] != 1)){
+        syslog(LOG_ERR, "ACQ:SOUR#:GAIN Invalid channel number! %d\n", ch_usr[0]);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamCharacters(context, &param, &param_len, false)){
+        syslog(LOG_ERR, "ACQ:SOUR#:GAIN is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    rp_pinState_t state;
+    if(scpi_getRpGain(&param[0], &state, param_len)){
+        syslog(LOG_ERR, "ACQ:SOUR#:GAIN Invalid parameter: %s %d\n", &param[0], param_len);
+        return SCPI_RES_ERR;
+    }
+
+    rp_channel_t channel;
+    scpi_getRpChannel(ch_usr[0], &channel);
+
+    if(rp_AcqSetGain(channel, state)){
+        syslog(LOG_ERR, "ACQ:SOUR#:GAIN Failed to set gain: %s\n", &param[0]);
+        return SCPI_RES_ERR;
+    }
+
+    syslog(LOG_INFO, "ACQ:SOUR#:GAIN Successfully set gain on to: %s", &param[0]);
+
+    return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqChannel2Gain(scpi_t *context) {
-    return RP_AcqSetGain(RP_CH_2, context);
-}
+scpi_result_t RP_AcqGainQ(scpi_t *context){
 
-scpi_result_t RP_AcqChannel1GainQ(scpi_t *context) {
-    return RP_AcqGetGain(RP_CH_1, context);
-}
+    int32_t ch_usr[1];
+    rp_pinState_t state;
 
-scpi_result_t RP_AcqChannel2GainQ(scpi_t *context) {
-    return RP_AcqGetGain(RP_CH_2, context);
+    SCPI_CommandNumbers(context, ch_usr, 1);
+
+    if(ch_usr[0] != 0 && ch_usr[0] != 1){
+        syslog(LOG_ERR, "ACQ:SOUR#:GAIN? Invalid channel number!\n");
+        return SCPI_RES_ERR;
+    }
+
+    rp_channel_t channel;
+    scpi_getRpChannel(ch_usr[0], &channel);
+
+    if(rp_AcqGetGain(channel, &state)){
+        syslog(LOG_ERR, "ACQ:SOUR#:GAIN? Failed to get gain.\n");
+        return SCPI_RES_ERR;
+    }
+
+    /* Return data to client */
+    SCPI_ResultMnemonic(context, state == RP_HIGH ? "HV" : "LV");
+    syslog(LOG_INFO, "ACQ:SOUR#:GAIN? Successfully returned gain data.\n");
+
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
@@ -569,60 +619,6 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t *context) {
     SCPI_ResultUInt(context, size);
 
     syslog(LOG_INFO, "*ACQ:BUF:SIZE?? Successfully returned buffer size.");
-
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t *context) {
-    const char * param;
-    size_t param_len;
-
-    char gainString[15];
-
-    // read first parameter GAIN (LV,HV)
-    if (!SCPI_ParamCharacters(context, &param, &param_len, false)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-    else {
-        strncpy(gainString, param, param_len);
-        gainString[param_len] = '\0';
-    }
-
-    // Convert gain to rp_pinState_t
-    rp_pinState_t state;
-
-    if (getRpGain(gainString, &state)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN parameter gain is invalid.");
-        return SCPI_RES_ERR;
-    }
-
-    // Now set gain
-    int result = rp_AcqSetGain(channel, state);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:GAIN Failed to set gain: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*ACQ:SOUR<n>:GAIN Successfully set gain %s.", gainString);
-
-    return SCPI_RES_OK;
-}
-
-
-scpi_result_t RP_AcqGetGain(rp_channel_t channel, scpi_t *context) {
-    rp_pinState_t state;
-    int result = rp_AcqGetGain(channel, &state);
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:LAT:N? Failed to get latest data: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultMnemonic(context, state == RP_HIGH ? "HV" : "LV");
-
-    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned  latest data.");
 
     return SCPI_RES_OK;
 }
