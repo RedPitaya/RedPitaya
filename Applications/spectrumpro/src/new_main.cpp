@@ -48,7 +48,7 @@ CFloatSignal ch2("ch2", CH_SIGNAL_SIZE, 0.0f);
 CIntParameter freq_range("freq_range", CBaseParameter::RW, 0, 1, 0, 5);
 CIntParameter freq_unit("freq_unit", CBaseParameter::RWSA, 2, 0, 0, 2);
 
-//power 
+//power
 CFloatParameter in1Scale("SPEC_CH1_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 CFloatParameter in2Scale("SPEC_CH2_SCALE", CBaseParameter::RW, 10, 0, 0, 1000);
 
@@ -93,12 +93,12 @@ static float g_max_freq = 63000000;
 
 static float out1_freq = OUT1_FREQ_MIN;
 static float out1_amp = OUT1_AMP_MAX;
-static float out1_freq_change = OUT_FREQ_CHANGE; 
+static float out1_freq_change = OUT_FREQ_CHANGE;
 static float out1_amp_change = OUT_AMP_CHANGE;
 
 static float out2_freq = OUT2_FREQ_MAX;
 static float out2_amp = OUT2_AMP_MIN;
-static float out2_freq_change = OUT_FREQ_CHANGE; 
+static float out2_freq_change = OUT_FREQ_CHANGE;
 static float out2_amp_change = OUT_AMP_CHANGE;
 
 void UpdateGen(void);
@@ -119,10 +119,10 @@ void UpdateParams(void)
 	}
 
 	if (in2Show.Value()) {
-		//rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());	
+		//rpApp_SpecGetPeakPower(RP_CH_2, &peak2_power.Value());
 		rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
 	}
-	
+
 	rp_EnableDigitalLoop(IsDemoParam.Value());
 	UpdateGen();
 }
@@ -149,7 +149,7 @@ void UpdateSignals(void)
 
 	float fpga_freq, k1 = 1, k2 = 1;
 	rpApp_SpecGetFpgaFreq(&fpga_freq);
-	
+
 	if (g_max_freq < fpga_freq)
 		k2 = fpga_freq/g_max_freq; // send xmax limit koeff
 
@@ -203,7 +203,6 @@ void OnNewParams(void)
 		run = true;
 		CDataManager::GetInstance()->SetParamInterval(INTERVAL);
 		CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
-		fprintf(stderr, "Interval Init\n");
 	}
 
 	in1Show.Update();
@@ -249,7 +248,7 @@ void OnNewParams(void)
         if(genEnable.IsNewValue() || once) {
             once = false;
             genEnable.Update();
-            
+
             if(genEnable.Value()) {
                 InitGen();
             } else {
@@ -285,7 +284,6 @@ extern "C" int rp_app_exit(void)
 }
 
 extern "C" const char *rp_app_desc(void) {
-    fprintf(stderr, "spec desc\n");
     return (const char*)"Red Pitaya spectrometer application.\n";
 }
 
@@ -328,15 +326,14 @@ static inline void synthesis_ch2() {
 }
 
 void InitGen(void) {
-    fprintf(stderr, "InitGen()\n");
     out1_freq = OUT1_FREQ_MIN;
     out1_amp = OUT1_AMP_MAX;
-    out1_freq_change = OUT_FREQ_CHANGE; 
+    out1_freq_change = OUT_FREQ_CHANGE;
     out1_amp_change = OUT_AMP_CHANGE;
 
     out2_freq = OUT2_FREQ_MAX;
     out2_amp = OUT2_AMP_MIN;
-    out2_freq_change = OUT_FREQ_CHANGE; 
+    out2_freq_change = OUT_FREQ_CHANGE;
     out2_amp_change = OUT_AMP_CHANGE;
 
     synthesis_ch1();
@@ -359,7 +356,7 @@ void InitGen(void) {
 
 static inline float changeVal(float cur_value, float* change, float min, float max) {
     float value = cur_value + *change;
-    
+
     if(value <= min) {
         value = min;
         *change = -*change;
@@ -371,7 +368,7 @@ static inline float changeVal(float cur_value, float* change, float min, float m
     }
     return value;
 }
-    
+
 static inline double _clock() {
     struct timespec tp;
     clock_gettime(CLOCK_REALTIME, &tp);
@@ -380,10 +377,10 @@ static inline double _clock() {
 
 void UpdateGen(void) {
     static double timer = _clock() + 100.f;
-    
+
     if(genEnable.Value() && timer <= _clock()) {
         timer = _clock() + 100.f;
-        
+
         out1_freq = changeVal(out1_freq, &out1_freq_change, OUT1_FREQ_MIN, OUT1_FREQ_MAX);
         out2_freq = changeVal(out2_freq, &out2_freq_change, OUT2_FREQ_MIN, OUT2_FREQ_MAX);
         rp_GenFreq(RP_CH_1, out1_freq);
