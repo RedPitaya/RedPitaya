@@ -321,7 +321,7 @@ extern "C" int ws_set_demo_mode(int a)
 	return 0;
 }
 
-extern "C" verify_app_license(const char* app_id)
+extern "C" int verify_app_license(const char* app_id)
 {
 #ifdef ALWAYS_PURCHASED
 	return 0;
