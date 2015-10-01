@@ -33,7 +33,7 @@ int getRpDecimation(int decimationInt, rp_acq_decimation_t *decimation);
 int getRpDecimationInt(rp_acq_decimation_t decimation, int *decimationInt);
 int getRpSamplingRateString(rp_acq_sampling_rate_t samplingRate, char *samplingRateString);
 int getRpSamplingRate(const char *samplingRateString, rp_acq_sampling_rate_t *samplingRate);
-int getRpGain(const char *gainStr, rp_pinState_t *state);
+int scpi_getRpGain(const char *gainStr, rp_pinState_t *state, int c_len);
 int getRpTriggerSource(const char *sourceStr, rp_acq_trig_src_t *source);
 int getRpTriggerSourceString(rp_acq_trig_src_t source, char *triggSourceString);
 
@@ -44,6 +44,8 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string);
 
 int getRpChannel(const char *string, rp_channel_t *op);
 int getRpChannelString(rp_channel_t op, char *string);
+
+int scpi_getRpChannel(int32_t channel_num, rp_channel_t *channel);
 
 int getRpAppInputGain(const char *string, rpApp_osc_in_gain_t *gain);
 int getRpAppInputGainString(rpApp_osc_in_gain_t gain, char *string);
