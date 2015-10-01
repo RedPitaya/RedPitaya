@@ -216,9 +216,9 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
 }
 
 //TODO: Redundant function?
-int getRpChannel(const char *string, rp_channel_t *channel, int c_len) {
-	if      (strncmp(string, "CH1") == 0)  *channel = RP_CH_1;
-	else if (strncmp(string, "CH2") == 0)  *channel = RP_CH_2;
+int getRpChannel(const char *string, rp_channel_t *channel) {
+	if      (strcmp(string, "CH1") == 0)  *channel = RP_CH_1;
+	else if (strcmp(string, "CH2") == 0)  *channel = RP_CH_2;
 	else                                  return RP_EOOR;
 	return RP_OK;
 }
