@@ -133,9 +133,9 @@ int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *deci
 }
 
 
-int getRpGain(const char *gainStr, rp_pinState_t *state) {
-	if      (strcmp(gainStr, "LV") == 0)  *state = RP_LOW;
-	else if (strcmp(gainStr, "HV") == 0)  *state = RP_HIGH;
+int scpi_getRpGain(const char *gainStr, rp_pinState_t *state, int c_len) {
+	if      (strncmp(gainStr, "LV", c_len) == 0)  *state = RP_LOW;
+	else if (strncmp(gainStr, "HV", c_len) == 0)  *state = RP_HIGH;
 	else                                  return RP_EOOR;
 	return RP_OK;
 }
@@ -215,10 +215,18 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
     return RP_OK;
 }
 
-int getRpChannel(const char *string, rp_channel_t *channel) {
-	if      (strcmp(string, "CH1") == 0)  *channel = RP_CH_1;
-	else if (strcmp(string, "CH2") == 0)  *channel = RP_CH_2;
+//TODO: Redundant function?
+int getRpChannel(const char *string, rp_channel_t *channel, int c_len) {
+	if      (strncmp(string, "CH1") == 0)  *channel = RP_CH_1;
+	else if (strncmp(string, "CH2") == 0)  *channel = RP_CH_2;
 	else                                  return RP_EOOR;
+	return RP_OK;
+}
+
+int scpi_getRpChannel(int32_t channel_num, rp_channel_t *channel){
+	if     (channel_num == 0) *channel = RP_CH_1;
+	else if(channel_num == 1) *channel = RP_CH_2;
+	else                       return RP_EOOR;
 	return RP_OK;
 }
 
