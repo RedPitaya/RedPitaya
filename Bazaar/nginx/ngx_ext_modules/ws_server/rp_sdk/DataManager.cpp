@@ -31,7 +31,7 @@ inline bool CDataManager::NeedSend(const CBaseParameter& param) const
 			|| (mode == CBaseParameter::AccessMode::RWSA);
 }
 
-CDataManager::CDataManager() 
+CDataManager::CDataManager()
 	: m_params()
 	, m_signals()
 	, m_param_interval(20)
@@ -47,7 +47,7 @@ CDataManager* CDataManager::GetInstance()
 }
 
 void CDataManager::RegisterParam(CBaseParameter * _param)
-{	
+{
 	dbg_printf("RegisterParam: %s\n", _param->GetName());
 	m_params.push_back(_param);
 	dbg_printf("Registered params: %d\n", m_params.size());
@@ -55,7 +55,7 @@ void CDataManager::RegisterParam(CBaseParameter * _param)
 
 void CDataManager::RegisterSignal(CBaseParameter * _signal)
 {
-	dbg_printf("RegisterSignal: %s\n", _signal->GetName());	
+	dbg_printf("RegisterSignal: %s\n", _signal->GetName());
 	m_signals.push_back(_signal);
 	dbg_printf("Registered signals: %d\n", m_signals.size());
 }
@@ -63,14 +63,14 @@ void CDataManager::RegisterSignal(CBaseParameter * _signal)
 void CDataManager::UnRegisterParam(const char * _name)
 {
 	for (std::vector<CBaseParameter *>::iterator it =  m_params.begin() ; it !=  m_params.end(); ++it)
-	{	
+	{
 		if(strcmp((*it)->GetName(),_name)==0)
 		{
-			m_params.erase(it);			
+			m_params.erase(it);
 			dbg_printf("UnRegisterParam: %s\n", _name);
 			return;
 		}
-	}	
+	}
 }
 
 void CDataManager::UnRegisterSignal(const char * _name)
@@ -80,7 +80,7 @@ void CDataManager::UnRegisterSignal(const char * _name)
 		if(strcmp((*it)->GetName(),_name)==0)
 		{
 			m_signals.erase(it);
-			dbg_printf("UnRegisterSignal: %s\n", _name);			
+			dbg_printf("UnRegisterSignal: %s\n", _name);
 			return;
 		}
 	}
@@ -89,14 +89,14 @@ void CDataManager::UnRegisterSignal(const char * _name)
 void CDataManager::UpdateAllParams()
 {
 	for(size_t i=0; i < m_params.size(); i++) {
-		m_params[i]->Update();		
+		m_params[i]->Update();
        }
 }
 
 void CDataManager::UpdateAllSignals()
 {
 	for(size_t i=0; i < m_signals.size(); i++) {
-		m_signals[i]->Update();		
+		m_signals[i]->Update();
         }
 }
 
@@ -106,13 +106,13 @@ std::string CDataManager::GetParamsJson()
 	JSONNode params(JSON_NODE);
 	params.set_name("parameters");
 	for(size_t i=0; i < m_params.size(); i++) {
-		if(NeedSend(*m_params[i])) {					
+		if(NeedSend(*m_params[i])) {
 			JSONNode n(JSON_NODE);
-			n = m_params[i]->GetJSONObject();		
+			n = m_params[i]->GetJSONObject();
 			params.push_back(n);
 		}
 	}
-		
+
 	JSONNode data_node(JSON_NODE);
 	data_node.set_name("data");
 	data_node.push_back(params);
@@ -126,13 +126,13 @@ std::string CDataManager::GetSignalsJson()
 	JSONNode signals(JSON_NODE);
 	signals.set_name("signals");
 	for(size_t i=0; i < m_signals.size(); i++) {
-		if(NeedSend(*m_signals[i])) {					
+		if(NeedSend(*m_signals[i])) {
 			JSONNode n(JSON_NODE);
-			n = m_signals[i]->GetJSONObject();		
+			n = m_signals[i]->GetJSONObject();
 			signals.push_back(n);
 		}
 	}
-	
+
 	JSONNode data_node(JSON_NODE);
 	data_node.set_name("data");
 	data_node.push_back(signals);
@@ -140,23 +140,23 @@ std::string CDataManager::GetSignalsJson()
 }
 
 void CDataManager::OnNewParams(std::string _params)
-{			
+{
 	JSONNode n(JSON_NODE);
-	n = libjson::parse(_params);		
+	n = libjson::parse(_params);
 	JSONNode m(JSON_NODE);
-	
+
 	for(size_t i=0; i < m_params.size(); i++)
 		m_params[i]->ClearNewValue();
 
 	for(size_t i=0; i < n.size(); i++) {
 		m = n.at(i);
 		const char* name = m.name().c_str();
-		
+
 		for(size_t j=0; j < m_params.size(); j++) {
 			if(m_params[j]->GetAccessMode() != CBaseParameter::AccessMode::RO)
-			{					
+			{
 				const char* param_name = m_params[j]->GetName();
-				if(!strcmp(param_name, name))							
+				if(!strcmp(param_name, name))
 					m_params[j]->SetValueFromJSON(m);
 			}
 		}
@@ -170,9 +170,9 @@ void CDataManager::OnNewParams(std::string _params)
 
 void CDataManager::OnNewSignals(std::string _signals)
 {
-	dbg_printf("OnNewSignals\n");	
+	dbg_printf("OnNewSignals\n");
 	JSONNode n(JSON_NODE);
-	n = libjson::parse(_signals);	
+	n = libjson::parse(_signals);
 	JSONNode m(JSON_NODE);
 
 	for(size_t i=0; i < m_signals.size(); i++)
@@ -181,17 +181,17 @@ void CDataManager::OnNewSignals(std::string _signals)
 	for(size_t i=0; i < n.size(); i++) {
 		m = n.at(i);
 		const char* name = m.name().c_str();
-		
+
 		for(size_t j=0; j < m_signals.size(); j++) {
 			if(m_signals[j]->GetAccessMode() != CBaseParameter::AccessMode::RO)
-			{					
+			{
 				const char* param_name = m_signals[j]->GetName();
-				if(!strcmp(param_name, name))							
+				if(!strcmp(param_name, name))
 					m_signals[j]->SetValueFromJSON(m);
 			}
 		}
 	}
-	
+
 	::OnNewSignals();
 }
 
@@ -222,13 +222,13 @@ void CDataManager::SendAllParams()
 
 extern "C" int ws_set_params(const char *_params)
 {
-	CDataManager * man = CDataManager::GetInstance();	
+	CDataManager * man = CDataManager::GetInstance();
 	if(man)
 	{
 		man->OnNewParams(_params);
 		dbg_printf("Set params\n");
 		return 1;
-	}	
+	}
 	dbg_printf("Params were not set\n");
 	return 0;
 }
@@ -236,12 +236,12 @@ extern "C" int ws_set_params(const char *_params)
 extern "C" const char * ws_get_params(void)
 {
 	CDataManager * man = CDataManager::GetInstance();
-	static std::string res = "";	
+	static std::string res = "";
 	if(man)
 	{
 		res = man->GetParamsJson();
 		return res.c_str();
-	}	
+	}
 	return res.c_str();
 }
 
@@ -253,22 +253,22 @@ extern "C" int ws_set_signals(const char *_signals)
 		man->OnNewSignals(_signals);
 		dbg_printf("Set signals\n");
 		return 1;
-	}	
-	
-	dbg_printf("Signals were not set\n");	
+	}
+
+	dbg_printf("Signals were not set\n");
 	return 0;
 }
 
 extern "C" const char * ws_get_signals(void)
 {
 	CDataManager * man = CDataManager::GetInstance();
-	static std::string res = "";	
+	static std::string res = "";
 	if(man)
 	{
 		res = man->GetSignalsJson();
 		return res.c_str();
-	}	
-	return res.c_str();	
+	}
+	return res.c_str();
 }
 
 extern "C" void ws_set_params_interval(int _interval)
@@ -319,4 +319,13 @@ extern "C" int ws_set_demo_mode(int a)
 	dbg_printf("Set demo mode\n");
 	IsDemoParam.Set(true);
 	return 0;
+}
+
+extern "C" verify_app_license(const char* app_id)
+{
+#ifdef ALWAYS_PURCHASED
+	return 0;
+#else
+	return verify_app_license_impl(app_id);
+#endif
 }
