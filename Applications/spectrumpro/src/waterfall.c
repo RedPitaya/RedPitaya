@@ -4,7 +4,7 @@
  * @brief Red Pitaya Waterfall diagram.
  *
  * @Author Jure Menart <juremenart@gmail.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -37,7 +37,7 @@ float   g_dec_wat_step = 0;
 float *rp_wf_avg_filter = NULL;
 
 /* Results of the filtering/convolution, size:
- *   c_dsp_sig_len + RP_SPECTR_AVG_FILT - 1 
+ *   c_dsp_sig_len + RP_SPECTR_AVG_FILT - 1
  */
 int g_conv_len;
 double *rp_wf_cha_cnv = NULL;
@@ -50,14 +50,14 @@ int *rp_wf_cha_dec_map = NULL;
 int *rp_wf_chb_dec_map = NULL;
 
 /* Maps which is builded from multiple acquisitions, size:
- * RP_SPECTR_WF_COL * RP_SPECTR_WF_LIN 
+ * RP_SPECTR_WF_COL * RP_SPECTR_WF_LIN
  */
 int *rp_wf_cha_cont_map = NULL;
 int *rp_wf_chb_cont_map = NULL;
 int  rp_wf_cont_map_idx = -1;
 
-/* The following structures are of R,G,B order data 
- * Size is RP_SPECTR_WF_COL * RP_SPECTR_WF_LIN * 3 (for RGB) 
+/* The following structures are of R,G,B order data
+ * Size is RP_SPECTR_WF_COL * RP_SPECTR_WF_LIN * 3 (for RGB)
  */
 JSAMPLE *rp_wf_cha_wat = NULL;
 JSAMPLE *rp_wf_chb_wat = NULL;
@@ -72,7 +72,7 @@ int rp_spectr_wf_init(void)
     /* Just to be sure... */
     rp_spectr_wf_clean();
 
-    g_mm = 
+    g_mm =
         ((double)RP_SPECTR_WF_MAP_MAX-RP_SPECTR_WF_MAP_NOI)/
         (double)(RP_SPECTR_WF_SPEC_MAX-RP_SPECTR_WF_SPEC_NOI);
 
@@ -98,7 +98,7 @@ int rp_spectr_wf_init(void)
         return -1;
     }
 
-    g_dec_wat_step = 
+    g_dec_wat_step =
         (int)ceil((g_conv_len-c_skip_after_conv) / (double)RP_SPECTR_WF_COL);
 
     g_spectr_wf_col = round((g_conv_len-c_skip_after_conv) / (int)g_dec_wat_step);
@@ -121,7 +121,7 @@ int rp_spectr_wf_init(void)
         return -1;
     }
     rp_spectr_wf_clean_map();
-    
+
     /* Initialize the rp_wf_cha_wat & chb_wat structures which will be used
      * to build a picture - x3 is for R,G,B
      */
@@ -185,9 +185,9 @@ int rp_spectr_wf_clean_map(void)
         return -1;
     }
 
-    memset(rp_wf_cha_cont_map, 0, 
+    memset(rp_wf_cha_cont_map, 0,
            RP_SPECTR_WF_LIN * g_spectr_wf_col * sizeof(int));
-    memset(rp_wf_chb_cont_map, 0, 
+    memset(rp_wf_chb_cont_map, 0,
            RP_SPECTR_WF_LIN * g_spectr_wf_col * sizeof(int));
     rp_wf_cont_map_idx = RP_SPECTR_WF_LIN - 1; /* start with the last line */
 
@@ -211,21 +211,19 @@ int rp_spectr_wf_calc(double *cha_in, double *chb_in, float koeff, float koeff2)
 	maxI = maxI > (g_conv_len-c_skip_after_conv) ? (g_conv_len-c_skip_after_conv) : maxI;
 	g_dec_wat_step = (maxI - g_minI)/(float)g_spectr_wf_col;
 
-	fprintf(stderr, "g_dec_wat_step = %f\n", g_dec_wat_step);
-
     if(rp_spectr_wf_conv(cha_in, chb_in, &rp_wf_cha_cnv, &rp_wf_chb_cnv, koeff) < 0) {
         fprintf(stderr, "rp_spectr_wf_calc(): rp_spectr_wf_conv() failed\n");
         return -1;
     }
 
-    if(rp_spectr_wf_dec_map(rp_wf_cha_cnv, rp_wf_chb_cnv, 
+    if(rp_spectr_wf_dec_map(rp_wf_cha_cnv, rp_wf_chb_cnv,
                             &rp_wf_cha_dec_map, &rp_wf_chb_dec_map) < 0) {
         fprintf(stderr, "rp_spectr_wf_calc(): rp_spectr_wf_dec_map() failed\n");
         return -1;
     }
 
     if(rp_spectr_wf_add_to_map(rp_wf_cha_dec_map, rp_wf_chb_dec_map) < 0) {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "rp_spectr_wf_calc(): rp_spectr_wf_add_to_map() failed\n");
         return -1;
     }
@@ -233,14 +231,14 @@ int rp_spectr_wf_calc(double *cha_in, double *chb_in, float koeff, float koeff2)
     return 0;
 }
 
-int rp_spectr_wf_save_jpeg(const char *wf_cha_file, const char *wf_chb_file) 
+int rp_spectr_wf_save_jpeg(const char *wf_cha_file, const char *wf_chb_file)
 {
-    if(!rp_wf_cha_cont_map || !rp_wf_chb_cont_map || 
+    if(!rp_wf_cha_cont_map || !rp_wf_chb_cont_map ||
        !rp_wf_cha_wat || !rp_wf_chb_wat) {
         fprintf(stderr, "rp_spectr_wf_save_jpeg(): not initialized\n");
         return -1;
     }
-    
+
     if(rp_spectr_wf_create_rgb(rp_wf_cha_cont_map, &rp_wf_cha_wat) < 0) {
         fprintf(stderr, "rp_spectr_wf_save_jpeg(): rp_spectr_wf_create_rgb() "
                 " failed\n");
@@ -271,7 +269,7 @@ int rp_spectr_wf_save_jpeg(const char *wf_cha_file, const char *wf_chb_file)
 /* Signal lengths:
  *  - input: c_dsp_sig_len
  *  - avg. filter: RP_SPECTR_WF_AVG_FILT
- *  - output: c_dsp_sig_len + RP_SPECTR_WF_AVG_FILT - 1 
+ *  - output: c_dsp_sig_len + RP_SPECTR_WF_AVG_FILT - 1
  */
 int rp_spectr_wf_conv(double *cha_in, double *chb_in,
                       double **cha_out, double **chb_out, float koeff)
@@ -290,7 +288,7 @@ int rp_spectr_wf_conv(double *cha_in, double *chb_in,
 
         cha_o[n] = chb_o[n] = 0;
 
-        kmin = (n >= RP_SPECTR_WF_AVG_FILT - 1) ? 
+        kmin = (n >= RP_SPECTR_WF_AVG_FILT - 1) ?
             n - (RP_SPECTR_WF_AVG_FILT - 1) : 0;
         kmax = (n < c_dsp_sig_len - 1) ? n : c_dsp_sig_len - 1;
 
@@ -325,7 +323,7 @@ int rp_spectr_wf_dec_map(double *cha_in, double *chb_in,
 
     /* decimate */
 	float i;
-    for(i = g_minI, o = 0; o < g_spectr_wf_col; 
+    for(i = g_minI, o = 0; o < g_spectr_wf_col;
         o++, i+=g_dec_wat_step) {
         double cha_s, chb_s;
         if(i >= c_dsp_sig_len) {
@@ -354,13 +352,13 @@ int rp_spectr_wf_add_to_map(int *cha_in, int *chb_in)
 
     start_idx = (rp_wf_cont_map_idx * g_spectr_wf_col);
 
-    memcpy(&rp_wf_cha_cont_map[start_idx], &cha_in[0], 
+    memcpy(&rp_wf_cha_cont_map[start_idx], &cha_in[0],
            g_spectr_wf_col * sizeof(int));
-    memcpy(&rp_wf_chb_cont_map[start_idx], &chb_in[0], 
+    memcpy(&rp_wf_chb_cont_map[start_idx], &chb_in[0],
            g_spectr_wf_col * sizeof(int));
-    
-    /* Decrease the rp_wf_cont_map_idx and wraps it if necessary but be sure to 
-     * wrap it if necessary 
+
+    /* Decrease the rp_wf_cont_map_idx and wraps it if necessary but be sure to
+     * wrap it if necessary
      * TODO: Should we clean last map or override it?
      */
     if(--rp_wf_cont_map_idx < 0)
@@ -381,7 +379,7 @@ int rp_spectr_wf_create_rgb(int *data_in, JSAMPLE **data_out)
     }
 
     /* Data out is of format R, G, B, R, G, B ... R, G, B */
-    for(i = (g_spectr_wf_col * RP_SPECTR_WF_LIN * 3 - 1), j = start_map_idx; 
+    for(i = (g_spectr_wf_col * RP_SPECTR_WF_LIN * 3 - 1), j = start_map_idx;
         i >= 2; i-=3, j--) {
         int colmap_idx;
         if(j < 0) {
@@ -414,7 +412,7 @@ int rp_spectr_wf_comp_jpeg(JSAMPLE *data_in, const char *file_str)
     jpeg_create_compress(&cinfo);
 
     if((out_file = fopen(file_str, "wb")) == NULL) {
-        fprintf(stderr, "rp_spectr_wf_comp_jpeg() can not open file (%s): %s\n", 
+        fprintf(stderr, "rp_spectr_wf_comp_jpeg() can not open file (%s): %s\n",
                 file_str, strerror(errno));
         return -1;
     }
