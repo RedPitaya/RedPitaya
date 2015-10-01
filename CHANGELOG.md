@@ -1,4 +1,14 @@
-# Release 0.94
+# Release 0.94 RC13
+
+Changes:
+- spectrum analyzer was very slow on slow SD cards, a tmpfs /tmp/ram was created for waterfall JPEG images
+- removed XADC code from monitor, added Examples/xadc/xadc.sh covering the same functionality (currently missing proper voltge scaling)
+
+**Known issues** (at least major ones) are same as in RC12.
+
+# Release 0.94 RC12
+
+RC12 is the first public release in the series.
 
 ## Changes
 
