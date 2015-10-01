@@ -18,13 +18,14 @@ SCPIPARSER=scpi-parser/libscpi/dist/libscpi.so
 SCPISRV=scpi-server
 ARTIFACTS= $(SCPIPARSER) $(SCPISRV)
 
+
 all: $(SCPIPARSER) $(SCPISRV)
 
 $(SCPISRV):
 	$(MAKE) -C src
 
 $(SCPIPARSER):
-	$(MAKE) -C scpi-parser CC=$(CROSS_COMPILE)gcc
+	$(MAKE) -C scpi-parser CC=$(CROSS_COMPILE)gcc USER_FULL_ERROR_LIST=1
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
