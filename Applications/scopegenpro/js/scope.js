@@ -2434,12 +2434,12 @@ $(function() {
 						'Something went wrong, try again!'];
 						
 	OSC.calib_buttons = [['CANCEL', 'DEFAULT',	'CONTINUE'], 
-						 ['CANCEL', null, 		'CALIBRARTE'],
+						 ['CANCEL', null, 		'CALIBRATE'],
 						 [null,		'DONE', 	'CONTINUE'],
-						 ['CANCEL', 'input', 	'CALIBRARTE'],
+						 ['CANCEL', 'input', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	'CONTINUE'],
-						 ['CANCEL', 'input', 	'CALIBRARTE'],
-						 ['CANCEL', 'DONE', 	'CALIBRARTE'],
+						 ['CANCEL', 'input', 	'CALIBRATE'],
+						 ['CANCEL', 'DONE', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	null],
 						 ['EXIT', 	null, 		null]];
 						 
@@ -2530,7 +2530,7 @@ $(function() {
 			OSC.ws.send(JSON.stringify({ parameters: local }));	
 		}
 		
-		if ($('#calib-3').children().html() != 'CALIBRARTE') {
+		if ($('#calib-3').children().html() != 'CALIBRATE') {
 			++OSC.state.calib;
 			OSC.setCalibState(OSC.state.calib);
 		} else {
