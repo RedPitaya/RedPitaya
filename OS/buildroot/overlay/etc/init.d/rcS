@@ -16,6 +16,7 @@ fi
 
 # Create /tmp structure every time, since it resides in RAM
 mkdir -p /tmp/log/redpitaya_nginx
+mkdir -p /tmp/ram
 
 # Fix keys for SHH
 chmod 600 `find /etc/ -name ssh_host_\*`
