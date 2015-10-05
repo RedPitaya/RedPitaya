@@ -180,8 +180,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:SOUR#:DATA:STA:N?", .callback      = RP_AcqDataQ,},
         {.pattern = "ACQ:SOUR#:DATA:OLD:N?", .callback      = RP_AcqOldestDataQ,},
         {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
-        {.pattern = "ACQ:SOUR1:DATA:LAT:N?", .callback      = RP_AcqChannel1LatestDataQ,},
-        {.pattern = "ACQ:SOUR2:DATA:LAT:N?", .callback      = RP_AcqChannel2LatestDataQ,},
+        {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
         {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
         /* Generate */
