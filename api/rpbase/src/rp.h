@@ -1211,35 +1211,6 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 */
 int rp_GenTrigger(int mask);
 
-
-///@}
-/** @name I2C
-*/
-///@{
-
-/**
-* Read from I2C device
-* @param addr Address of the I2C device
-* @param data Pointer to where data will be read
-* @param length Number of bytes to be read
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_I2cRead(int addr, char *data, int length);
-
-
-/**
-* Write to I2C device
-* @param addr Address of the I2C device
-* @param data Pointer From of data to be written to I2C device
-* @param length Number of bytes to be written
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_I2cWrite(int addr, char *data, int length);
-
-///@}
-
 #ifdef __cplusplus
 }
 #endif
