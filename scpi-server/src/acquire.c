@@ -12,7 +12,6 @@
  * for more details on the language used herein.
  */
 
-#include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -460,8 +459,7 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    rp_channel_t channel;
-    scpi_getRpChannel(ch_usr[0], &channel);
+    rp_channel_t channel = ch_usr[0];
 
     if(rp_AcqGetGain(channel, &state)){
         RP_ERR("ACQ:SOUR#:GAIN? Failed to get gain.", NULL);
@@ -489,12 +487,11 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     int result = rp_AcqSetTriggerLevel((float) value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:LEV Failed to set trigger level: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:LEV Failed to set trigger level", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:LEV Successfully set trigger level %.2f.", value);
-
+    RP_INFO("*ACQ:TRIG:LEV Successfully set trigger level.");
     return SCPI_RES_OK;
 }
 
@@ -503,14 +500,14 @@ scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
     int result = rp_AcqGetTriggerLevel(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:LEV? Failed to get trigger level: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:LEV? Failed to get trigger level", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     value = value * 1000;       // convert to milli volts
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:LEV? Successfully returned trigger level.");
+    RP_INFO("*ACQ:TRIG:LEV? Successfully returned trigger level.");
 
     return SCPI_RES_OK;
 }
@@ -521,14 +518,14 @@ scpi_result_t RP_AcqWritePointerQ(scpi_t *context) {
     int result = rp_AcqGetWritePointer(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:WPOS? Failed to get writer position: %s", rp_GetError(result));
+        RP_ERR("*ACQ:WPOS? Failed to get writer position", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultUInt(context, value);
 
-    syslog(LOG_INFO, "*ACQ:WPOS? Successfully returned writer position.");
+    RP_INFO("*ACQ:WPOS? Successfully returned writer position.");
 
     return SCPI_RES_OK;
 }
@@ -539,14 +536,14 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
     int result = rp_AcqGetWritePointerAtTrig(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TPOS? Failed to get writer position at trigger: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TPOS? Failed to get writer position at trigger", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultUInt(context, value);
 
-    syslog(LOG_INFO, "*ACQ:TPOS? Successfully returned writer position at trigger.");
+    RP_INFO("*ACQ:TPOS? Successfully returned writer position at trigger.");
 
     return SCPI_RES_OK;
 }
@@ -559,7 +556,7 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
 
     // read first parameter UNITS (RAW, VOLTS)
     if (!SCPI_ParamCharacters(context,  &param, &param_len, false)) {
-        syslog(LOG_ERR, "*ACQ:DATA:UNITSis missing first parameter.");
+        RP_ERR("*ACQ:DATA:UNITS is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
     else {
@@ -569,11 +566,11 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
 
     int result = getRpUnit(unitString, &unit);
     if (result != RP_OK) {
-        syslog(LOG_ERR, "*ACQ:DATA:UNITS Failed to convert unit from string: %s", rp_GetError(result));
+        RP_ERR("*ACQ:DATA:UNITS Failed to convert unit from string", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:DATA:UNITS Successfully set unit to %s.", unitString);
+    RP_INFO("*ACQ:DATA:UNITS Successfully set scpi units.");
 
     return SCPI_RES_OK;
 }
