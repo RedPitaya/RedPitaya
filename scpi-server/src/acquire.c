@@ -460,8 +460,7 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    rp_channel_t channel;
-    scpi_getRpChannel(ch_usr[0], &channel);
+    rp_channel_t channel = ch_usr[0];
 
     if(rp_AcqGetGain(channel, &state)){
         RP_ERR("ACQ:SOUR#:GAIN? Failed to get gain.", NULL);
