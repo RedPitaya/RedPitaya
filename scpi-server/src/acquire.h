@@ -17,14 +17,31 @@
 #define ACQUIRE_H_
 
 #include "scpi/types.h"
+#include <syslog.h>
+
+#define RP_PRINT(x) #x
+#define SCPI_DEBUG 1
+
+/* rp scpi log */
+#ifdef SCPI_DEBUG
+#define RP_ERR(msg, param) \
+(param == NULL) ? \
+syslog(LOG_ERR, "%s\n", msg): \
+syslog(LOG_ERR,"%s: %s\n", msg, RP_PRINT(param));
+#define RP_INFO(msg) \
+syslog(LOG_INFO, "%s\n", msg);
+#else
+#define RP_ERR(msg, param)
+#define RP_INFO(msg)
+#endif
 
 typedef enum {
     RP_SCPI_VOLTS,
     RP_SCPI_RAW,
 } rp_scpi_acq_unit_t;
 
-int RP_AcqSetDefaultValues();
 
+int RP_AcqSetDefaultValues();
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context);
 scpi_result_t RP_AcqStart(scpi_t * context);
 scpi_result_t RP_AcqStop(scpi_t *context);
