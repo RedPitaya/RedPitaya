@@ -16,6 +16,7 @@
 #define UTILS_H_
 
 #include <stdbool.h>
+#include <syslog.h>
 #include "../../api/rpbase/src/rp.h"
 #include "acquire.h"
 #include "../../api/rpApplications/src/rpApp.h"
@@ -23,6 +24,22 @@
 #define SET_OK(cont) \
     	SCPI_ResultString(cont, "OK"); \
     	return SCPI_RES_OK;
+
+#define CNV_STR(x) #x
+#define SCPI_DEBUG 1
+
+/* rp scpi log */
+#ifdef SCPI_DEBUG
+#define RP_ERR(msg, param) \
+(CNV_STR(param) == NULL) ? \
+syslog(LOG_ERR, "%s\n", msg): \
+syslog(LOG_ERR,"%s: %s\n", msg, CNV_STR(param));
+#define RP_INFO(msg) \
+syslog(LOG_INFO, "%s\n", msg);
+#else
+#define RP_ERR(msg, param)
+#define RP_INFO(msg)
+#endif
 
 int getRpDpin(const char* pinStr, rp_dpin_t *rpPin);
 int getRpDirection(const char *dirStr, rp_pinDirection_t *direction);
