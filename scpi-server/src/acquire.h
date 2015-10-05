@@ -17,23 +17,6 @@
 #define ACQUIRE_H_
 
 #include "scpi/types.h"
-#include <syslog.h>
-
-#define RP_PRINT(x) #x
-#define SCPI_DEBUG 1
-
-/* rp scpi log */
-#ifdef SCPI_DEBUG
-#define RP_ERR(msg, param) \
-(param == NULL) ? \
-syslog(LOG_ERR, "%s\n", msg): \
-syslog(LOG_ERR,"%s: %s\n", msg, RP_PRINT(param));
-#define RP_INFO(msg) \
-syslog(LOG_INFO, "%s\n", msg);
-#else
-#define RP_ERR(msg, param)
-#define RP_INFO(msg)
-#endif
 
 typedef enum {
     RP_SCPI_VOLTS,
@@ -67,8 +50,7 @@ scpi_result_t RP_AcqWritePointerQ(scpi_t * context);
 scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t * context);
 scpi_result_t RP_AcqScpiDataUnits(scpi_t * context);
 scpi_result_t RP_AcqScpiDataFormat(scpi_t * context);
-scpi_result_t RP_AcqChannel1DataPosQ(scpi_t * context);
-scpi_result_t RP_AcqChannel2DataPosQ(scpi_t * context);
+scpi_result_t RP_AcqDataPosQ(scpi_t * context);
 scpi_result_t RP_AcqChannel1DataQ(scpi_t * context);
 scpi_result_t RP_AcqChannel2DataQ(scpi_t * context);
 scpi_result_t RP_AcqChannel1OldestDataAllQ(scpi_t * context);

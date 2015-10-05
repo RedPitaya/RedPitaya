@@ -440,7 +440,6 @@ scpi_result_t RP_AcqGain(scpi_t *context) {
     }
 
     rp_pinState_t state = param;
-
     rp_channel_t channel = ch_usr[0];
 
     if(rp_AcqSetGain(channel, state)){
@@ -582,12 +581,57 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqChannel1DataPosQ(scpi_t *context) {
-    return RP_AcqGetDataPos(RP_CH_1, context);
-}
+scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
+    
+    uint32_t start, end;
+    int32_t ch_usr[1];
+    int result;
 
-scpi_result_t RP_AcqChannel2DataPosQ(scpi_t *context) {
-    return RP_AcqGetDataPos(RP_CH_2, context);
+    /* Read channel */
+    SCPI_CommandNumbers(context, ch_usr, 1);
+    if((ch_usr[0] != 0) && (ch_usr[0] != 1)){
+        RP_ERR("*ACQ:SOUR#:DATA:STA:END? Invalid channel number", &ch_usr[0]);
+        return SCPI_RES_ERR;
+    }
+
+    rp_channel_t channel = ch_usr[0];
+
+    /* Read START parameter */
+    if(!SCPI_ParamUnsignedInt(context, &start, true)){
+        RP_ERR("*ACQ:SOUR#:DATA:STA:END? Unable to read START parameter.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamUnsignedInt(context, &end, true)){
+        RP_ERR("*ACQ:SOUR#:DATA:STA:END? Unable to read END parameter.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t size = end - start;
+    if(unit == RP_SCPI_VOLTS){
+        float buffer[size];
+        result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
+        
+        if(result != RP_OK){
+            RP_ERR("*ACQ:SOUR#:DATA:STA:END? Failed to get data in volts", result);
+            return SCPI_RES_ERR;
+        }
+        
+        SCPI_ResultBufferFloat(context, buffer, size);
+    }else{
+        int16_t buffer[size];
+        result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
+        
+        if(result != RP_OK){
+            RP_ERR("*ACQ:SOUR#:DATA:STA:END? Failed to get raw data", result);
+            return SCPI_RES_ERR;
+        }
+
+        SCPI_ResultBufferInt16(context, buffer, size);
+    }
+    RP_INFO("*ACQ:SOUR#:DATA:STA:END? Successfully returned data to client.");
+
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqChannel1DataQ(scpi_t *context) {
@@ -759,53 +803,6 @@ scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t *context) {
 
     syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:OLD:N? Successfully returned oldest data.");
 
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t *context) {
-    uint32_t start, end;
-    // read first parameter START POSITION
-    if (!SCPI_ParamUnsignedInt(context, &start, true)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    // read second parameter END POSITION
-    if (!SCPI_ParamUnsignedInt(context, &end, true)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? is missing second parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result;
-    uint32_t size;
-    rp_AcqGetBufSize(&size);
-
-    if (unit == RP_SCPI_VOLTS) {
-        float buffer[size];
-        result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
-
-        if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get data at position: %s", rp_GetError(result));
-            return SCPI_RES_ERR;
-        }
-
-        // Return back result
-        SCPI_ResultBufferFloat(context, buffer, size);
-    }
-    else {
-        int16_t buffer[size];
-        result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
-
-        if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:STA:END? Failed to get data at position: %s", rp_GetError(result));
-            return SCPI_RES_ERR;
-        }
-
-        // Return back result
-        SCPI_ResultBufferInt16(context, buffer, size);
-    }
-
-    syslog(LOG_INFO, "*AACQ:SOUR<n>:DATA:STA:END? Successfully returned data at position.");
     return SCPI_RES_OK;
 }
 
