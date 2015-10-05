@@ -720,17 +720,51 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
         }
         SCPI_ResultBufferInt16(context, buffer, size);
     }
-    
+
     RP_INFO("*ACQ:SOUR#:DATA? Successfully returned data.");
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqChannel1OldestDataQ(scpi_t *context) {
-   return RP_AcqGetOldestData(RP_CH_1, context);
-}
+scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
+    
+    uint32_t size;
+    int32_t ch_usr[1];
+    int result;
 
-scpi_result_t RP_AcqChannel2OldestDataQ(scpi_t *context) {
-    return RP_AcqGetOldestData(RP_CH_1, context);
+    SCPI_CommandNumbers(context, ch_usr, 1);
+    if(ch_usr[0] != 0 && ch_usr[0] != 1){
+        RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Invalid channel number.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    rp_channel_t channel = ch_usr[0];
+
+    if(!SCPI_ParamUnsignedInt(context, &size, true)){
+        RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Missing SIZE parameter.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    if(unit == RP_SCPI_VOLTS){
+        float buffer[size];
+        result = rp_AcqGetOldestDataV(channel, &size, buffer);
+
+        if(result != RP_OK){
+            RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Unable to get data in volt", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
+        SCPI_ResultBufferFloat(context, buffer, size);
+    }else{
+        int16_t buffer[size];
+        result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
+        if(result != RP_OK){
+            RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Unable to get raw data.", NULL);
+            return SCPI_RES_ERR;
+        }
+        SCPI_ResultBufferInt16(context, buffer, size);
+    }
+
+    RP_INFO("*ACQ:SOUR#:DATA:OLD:N? Successfully returned data to client.");
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqChannel1LatestDataQ(scpi_t *context) {
@@ -792,45 +826,6 @@ scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
     }
 
     syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:LAT:N? Successfully returned latest data.");
-
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t *context) {
-    uint32_t size;
-    // read first parameter SIZE
-    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:OLD:N? is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result;
-    if (unit == RP_SCPI_VOLTS) {
-        float buffer[size];
-        result = rp_AcqGetOldestDataV(channel, &size, buffer);
-
-        if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:OLD:N? Failed to get oldest data: %s", rp_GetError(result));
-            return SCPI_RES_ERR;
-        }
-
-        // Return back result
-        SCPI_ResultBufferFloat(context, buffer, size);
-    }
-    else {
-        int16_t buffer[size];
-        result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
-
-        if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:OLD:N? Failed to get oldest data: %s", rp_GetError(result));
-            return SCPI_RES_ERR;
-        }
-
-        // Return back result
-        SCPI_ResultBufferInt16(context, buffer, size);
-    }
-
-    syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:OLD:N? Successfully returned oldest data.");
 
     return SCPI_RES_OK;
 }
