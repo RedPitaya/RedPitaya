@@ -23,6 +23,20 @@
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
+/* These structures are a direct API mirror 
+and should not be altered! */
+const scpi_choice_def_t scpi_RpGain[] = {
+    {"LV", 0},
+    {"HV", 1},
+    SCPI_CHOICE_LIST_END
+};
+
+const scpi_choice_def_t scpi_RpChannel[] = {
+    {"RP_CH_1", 0},
+    {"RP_CH_2", 1},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
@@ -403,37 +417,38 @@ scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
 scpi_result_t RP_AcqGain(scpi_t *context) {
 
     int32_t ch_usr[1];
-    const char *param;
-    size_t param_len;
+    const char *name;
+    int32_t param;
 
     SCPI_CommandNumbers(context, ch_usr, 1);
 
     if((ch_usr[0] != 0) && (ch_usr[0] != 1)){
-        syslog(LOG_ERR, "ACQ:SOUR#:GAIN Invalid channel number! %d\n", ch_usr[0]);
+        RP_ERR("ACQ:SOUR#:GAIN Invalid channel number", &ch_usr[0]);
         return SCPI_RES_ERR;
     }
 
-    if(!SCPI_ParamCharacters(context, &param, &param_len, false)){
-        syslog(LOG_ERR, "ACQ:SOUR#:GAIN is missing first parameter.\n");
+    /* Get param val */
+    if(!SCPI_ParamChoice(context, scpi_RpGain, &param, true)){
+        RP_ERR("ACQ:SOUR#:GAIN is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
-    rp_pinState_t state;
-    if(scpi_getRpGain(&param[0], &state, param_len)){
-        syslog(LOG_ERR, "ACQ:SOUR#:GAIN Invalid parameter: %s %d\n", &param[0], param_len);
+    /* Get param name */
+    if(!SCPI_ChoiceToName(scpi_RpGain, param, &name)){
+        RP_ERR("ACQ:SOUR#:GAIN is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
-    rp_channel_t channel;
-    scpi_getRpChannel(ch_usr[0], &channel);
+    rp_pinState_t state = param;
+
+    rp_channel_t channel = ch_usr[0];
 
     if(rp_AcqSetGain(channel, state)){
-        syslog(LOG_ERR, "ACQ:SOUR#:GAIN Failed to set gain: %s\n", &param[0]);
+        RP_ERR("ACQ:SOUR#:GAIN Failed to set gain", name);
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "ACQ:SOUR#:GAIN Successfully set gain on to: %s", &param[0]);
-
+    RP_INFO("ACQ:SOUR#:GAIN Successfully set gain.");
     return SCPI_RES_OK;
 }
 
@@ -445,7 +460,7 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
     SCPI_CommandNumbers(context, ch_usr, 1);
 
     if(ch_usr[0] != 0 && ch_usr[0] != 1){
-        syslog(LOG_ERR, "ACQ:SOUR#:GAIN? Invalid channel number!\n");
+        RP_ERR("ACQ:SOUR#:GAIN? Invalid channel number!", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -453,13 +468,13 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
     scpi_getRpChannel(ch_usr[0], &channel);
 
     if(rp_AcqGetGain(channel, &state)){
-        syslog(LOG_ERR, "ACQ:SOUR#:GAIN? Failed to get gain.\n");
+        RP_ERR("ACQ:SOUR#:GAIN? Failed to get gain.", NULL);
         return SCPI_RES_ERR;
     }
 
     /* Return data to client */
     SCPI_ResultMnemonic(context, state == RP_HIGH ? "HV" : "LV");
-    syslog(LOG_INFO, "ACQ:SOUR#:GAIN? Successfully returned gain data.\n");
+    RP_INFO("ACQ:SOUR#:GAIN? Successfully returned gain data.");
 
     return SCPI_RES_OK;
 }
