@@ -43,20 +43,20 @@ scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
 
     // read first parameter Format type (BIN, ASCII)
     if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        syslog(LOG_ERR, "*ACQ:DATA:FORMAT is missing first parameter.");
+        RP_ERR("*ACQ:DATA:FORMAT is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
     if (strncasecmp(param, "BIN", param_len) == 0) {
         context->binary_output = true;
-        syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to BIN");
+        RP_INFO("*ACQ:DATA:FORMAT set to BIN");
     }
     else if (strncasecmp(param, "ASCII", param_len) == 0) {
         context->binary_output = false;
-        syslog(LOG_INFO, "*ACQ:DATA:FORMAT set to ASCII");
+        RP_INFO("*ACQ:DATA:FORMAT set to ASCII");
     }
     else {
-        syslog(LOG_ERR, "*ACQ:DATA:FORMAT wrong argument value");
+        RP_ERR("*ACQ:DATA:FORMAT wrong argument value", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -68,11 +68,11 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
     int result = rp_AcqStart();
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:START Failed: %s", rp_GetError(result));
+        RP_ERR("*ACQ:START Failed", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:START Successful.");
+    RP_INFO("*ACQ:START Successful.");
     return SCPI_RES_OK;
 }
 
@@ -80,11 +80,11 @@ scpi_result_t RP_AcqStop(scpi_t *context) {
     int result = rp_AcqStop();
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:STOP Failed: %s", rp_GetError(result));
+        RP_ERR("*ACQ:STOP Failed", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:STOP Successful.");
+    RP_ERR("*ACQ:STOP Successful.", NULL);
     return SCPI_RES_OK;
 }
 
@@ -92,14 +92,14 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     int result = rp_AcqReset();
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:RST Failed: %s", rp_GetError(result));
+        RP_ERR("*ACQ:RST Failed", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     unit = RP_SCPI_VOLTS;
     context->binary_output = false;
 
-    syslog(LOG_INFO, "*ACQ:RST Successful.");
+    RP_INFO("*ACQ:RST Successful.");
     return SCPI_RES_OK;
 }
 
@@ -108,14 +108,14 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
 
     // read first parameter DECIMATION (1,8,64,1024,8192,65536)
     if (!SCPI_ParamInt(context, &value, false)) {
-        syslog(LOG_ERR, "*ACQ:DEC is missing first parameter.");
+        RP_ERR("*ACQ:DEC is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Convert decimation to rp_acq_decimation_t
     rp_acq_decimation_t decimation;
     if (getRpDecimation(value, &decimation)) {
-        syslog(LOG_ERR, "*ACQ:DEC parameter decimation is invalid.");
+        RP_ERR("*ACQ:DEC parameter decimation is invalid.", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -123,12 +123,11 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
     int result = rp_AcqSetDecimation(decimation);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:DEC Failed to set decimation: %s", rp_GetError(result));
+        RP_ERR("*ACQ:DEC Failed to set decimation", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:DEC Successfully set decimation to %d.", value);
-
+    RP_INFO("*ACQ:DEC Successfully set decimation.");
     return SCPI_RES_OK;
 }
 
@@ -138,22 +137,21 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     int result = rp_AcqGetDecimation(&decimation);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:DEC? Failed to get decimation: %s", rp_GetError(result));
+        RP_ERR("*ACQ:DEC? Failed to get decimation", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Convert decimation to int
     int value;
     if (RP_OK != getRpDecimationInt(decimation, &value)) {
-        syslog(LOG_ERR, "*ACQ:DEC? Failed to convert decimation to integer: %s", rp_GetError(result));
+        RP_ERR("*ACQ:DEC? Failed to convert decimation to integer", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultDouble(context, value);
 
-    syslog(LOG_INFO, "*ACQ:DEC? Successfully returned decimation.");
-
+    RP_INFO("*ACQ:DEC? Successfully returned decimation.");
     return SCPI_RES_OK;
 }
 
@@ -164,7 +162,7 @@ scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
 
     // read first parameter SAMPLING_RATE (125MHz,15_6MHz, 1_9MHz,103_8kHz, 15_2kHz, 1_9kHz)
     if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        syslog(LOG_ERR, "*ACQ:SRAT is missing first parameter.");
+        RP_ERR("*ACQ:SRAT is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
     strncpy(samplingRateStr, param, param_len);
@@ -173,7 +171,7 @@ scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
     // Convert samplingRate to rp_acq_sampling_rate_t
     rp_acq_sampling_rate_t samplingRate;
     if (getRpSamplingRate(samplingRateStr, &samplingRate)) {
-        syslog(LOG_ERR, "*ACQ:SRAT parameter sampling rate is invalid.");
+        RP_ERR("*ACQ:SRAT parameter sampling rate is invalid.", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -181,12 +179,11 @@ scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
     int result = rp_AcqSetSamplingRate(samplingRate);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:SRAT Failed to set sampling rate: %s", rp_GetError(result));
+        RP_ERR("*ACQ:SRAT Failed to set sampling rate", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:SRAT Successfully set sampling rate to %s.", samplingRateStr);
-
+    RP_INFO("*ACQ:SRAT Successfully set sampling rate.");
     return SCPI_RES_OK;
 }
 
@@ -195,21 +192,21 @@ scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
     int result = rp_AcqGetSamplingRate(&samplingRate);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:SRAT? Failed to get sampling rate: %s", rp_GetError(result));
+        RP_ERR("*ACQ:SRAT? Failed to get sampling rate", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // convert sampling rate to string
     char samplingRateString[15];
     if (RP_OK != getRpSamplingRateString(samplingRate, samplingRateString)) {
-        syslog(LOG_ERR, "*ACQ:SRAT? Failed to convert sampling rate to string: %s", rp_GetError(result));
+        RP_ERR("*ACQ:SRAT? Failed to convert sampling rate to string", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultMnemonic(context, samplingRateString);
 
-    syslog(LOG_INFO, "*ACQ:SRAT? Successfully returned sampling rate.");
+    RP_INFO("*ACQ:SRAT? Successfully returned sampling rate.");
 
     return SCPI_RES_OK;
 }
@@ -220,7 +217,7 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:SRA:HZ? Failed to get sampling rate in Hz: %s", rp_GetError(result));
+        RP_ERR("*ACQ:SRA:HZ? Failed to get sampling rate in Hz", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
@@ -231,7 +228,7 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     //Return string in form "<Value> Hz"
     SCPI_ResultMnemonic(context, &samplingRateString);
 
-    syslog(LOG_INFO, "*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.");
+    RP_INFO("*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.");
 
     return SCPI_RES_OK;
 }
@@ -241,7 +238,7 @@ scpi_result_t RP_AcqAveraging(scpi_t *context) {
 
     // read first parameter AVERAGING (OFF,ON)
     if (!SCPI_ParamBool(context, &value, false)) {
-        syslog(LOG_ERR, "*ACQ:AVGT is missing first parameter.");
+        RP_ERR("*ACQ:AVGT is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -249,11 +246,11 @@ scpi_result_t RP_AcqAveraging(scpi_t *context) {
     int result = rp_AcqSetAveraging(value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:AVGT Failed to set averaging: %s", rp_GetError(result));
+        RP_ERR("*ACQ:AVGT Failed to set averaging", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:AVG Successfully set averaging to %s.", value ? "ON" : "OFF");
+    RP_INFO("*ACQ:AVG Successfully set averaging.");
 
     return SCPI_RES_OK;
 }
@@ -264,14 +261,14 @@ scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
     int result = rp_AcqGetAveraging(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:AVG? Failed to get averaging: %s", rp_GetError(result));
+        RP_ERR("*ACQ:AVG? Failed to get averaging", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
 
-    syslog(LOG_INFO, "*ACQ:AVG? Successfully returned averaging.");
+    RP_INFO("*ACQ:AVG? Successfully returned averaging.");
 
     return SCPI_RES_OK;
 }
@@ -284,7 +281,7 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
 
     // read first parameter TRIGGER SOURCE (DISABLED,NOW,CH1_PE,CH1_NE,CH2_PE,CH2_NE,EXT_PE,EXT_NE,AWG_PE)
     if (!SCPI_ParamCharacters(context, &param, &param_len, false)) {
-        syslog(LOG_ERR, "*ACQ:TRIG is missing first parameter.");
+        RP_ERR("*ACQ:TRIG is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
     else {
@@ -294,7 +291,7 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
 
     rp_acq_trig_src_t source;
     if (getRpTriggerSource(triggerSource, &source)) {
-        syslog(LOG_ERR, "*ACQ:TRIG parameter trigger source is invalid.");
+        RP_ERR("*ACQ:TRIG parameter trigger source is invalid.", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -302,11 +299,11 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
     int result = rp_AcqSetTriggerSrc(source);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG Failed to set trigger source: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG Failed to set trigger source", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG Successfully set trigger source to %s.", triggerSource);
+    RP_INFO("*ACQ:TRIG Successfully set trigger source.");
 
     return SCPI_RES_OK;
 }
@@ -317,20 +314,20 @@ scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
     int result = rp_AcqGetTriggerSrc(&source);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:STAT? Failed to get trigger: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:STAT? Failed to get trigger", rp_GetError(result));
         source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
     char sourceString[15];
     if (getRpTriggerSourceString(source, sourceString)) {
-        syslog(LOG_ERR, "*ACQ:TRIG:STAT? Failed to convert result to string: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:STAT? Failed to convert result to string", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultMnemonic(context, sourceString);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:STAT? Successfully returned trigger.");
+    RP_INFO("*ACQ:TRIG:STAT? Successfully returned trigger.");
 
     return SCPI_RES_OK;
 }
@@ -347,11 +344,11 @@ scpi_result_t RP_AcqTriggerDelay(scpi_t *context) {
     int result = rp_AcqSetTriggerDelay(triggerDelay);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:DLY Failed to set trigger delay: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:DLY Failed to set trigger delay", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY Successfully set trigger delay to %d.", triggerDelay);
+    RP_INFO("*ACQ:TRIG:DLY Successfully set trigger delay.");
 
     return SCPI_RES_OK;
 }
@@ -362,14 +359,14 @@ scpi_result_t RP_AcqTriggerDelayQ(scpi_t *context) {
     int result = rp_AcqGetTriggerDelay(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:DLY? Failed to get trigger delay: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:DLY? Failed to get trigger delay", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultInt(context, value);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY? Successfully returned trigger delay.");
+    RP_INFO("*ACQ:TRIG:DLY? Successfully returned trigger delay.");
 
     return SCPI_RES_OK;
 }
@@ -386,11 +383,11 @@ scpi_result_t RP_AcqTriggerDelayNs(scpi_t *context) {
     int result = rp_AcqSetTriggerDelayNs(triggerDelay);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:DLY:NS Failed to set trigger delay in ns: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:DLY:NS Failed to set trigger delay in ns", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS Successfully set trigger delay to %ld ns.", (signed long)triggerDelay);
+    RP_INFO("*ACQ:TRIG:DLY:NS Successfully set trigger delay.");
 
     return SCPI_RES_OK;
 }
@@ -401,14 +398,14 @@ scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
     int result = rp_AcqGetTriggerDelayNs(&value);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:TRIG:DLY:NS? Failed to get trigger delay in ns: %s", rp_GetError(result));
+        RP_ERR("*ACQ:TRIG:DLY:NS? Failed to get trigger delay", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultLong(context, value);
 
-    syslog(LOG_INFO, "*ACQ:TRIG:DLY:NS? Successfully returned trigger delay in ns.");
+    RP_INFO("*ACQ:TRIG:DLY:NS? Successfully returned trigger delay in ns.");
 
     return SCPI_RES_OK;
 }
