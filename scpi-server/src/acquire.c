@@ -618,6 +618,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
         }
         
         SCPI_ResultBufferFloat(context, buffer, size);
+
     }else{
         int16_t buffer[size];
         result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
@@ -672,6 +673,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
         }
 
         SCPI_ResultBufferFloat(context, buffer, size);
+
     }else{
         int16_t buffer[size_buff - start];
         result = rp_AcqGetDataRaw(channel, start, &size, buffer);
@@ -680,6 +682,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
             RP_ERR("*ACQ:SOUR<n>:DATA:STA:N? Failed to get raw data", rp_GetError(result));
             return SCPI_RES_ERR;
         }
+
         SCPI_ResultBufferInt16(context, buffer, size);
     }
 
@@ -707,17 +710,20 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
         result = rp_AcqGetOldestDataV(channel, &size, buffer);
 
         if(result != RP_OK){
-            RP_ERR("*ACQ:SOUR#:DATA? Unable to get data in volt.", rp_GetError(result));
+            RP_ERR("*ACQ:SOUR#:DATA? Failed to get data in volt.", rp_GetError(result));
             return SCPI_RES_ERR;
         }
+
         SCPI_ResultBufferFloat(context, buffer, size);
+
     }else{
         int16_t buffer[size];
         result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
         if(result != RP_OK){
-            RP_ERR("*ACQ:SOUR#:DATA? Unable to get raw data.", rp_GetError(result));
+            RP_ERR("*ACQ:SOUR#:DATA? Failed to get raw data.", rp_GetError(result));
             return SCPI_RES_ERR;
         }
+
         SCPI_ResultBufferInt16(context, buffer, size);
     }
 
@@ -749,17 +755,20 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
         result = rp_AcqGetOldestDataV(channel, &size, buffer);
 
         if(result != RP_OK){
-            RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Unable to get data in volt", rp_GetError(result));
+            RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Failed to get data in volt", rp_GetError(result));
             return SCPI_RES_ERR;
         }
+
         SCPI_ResultBufferFloat(context, buffer, size);
+
     }else{
         int16_t buffer[size];
         result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
         if(result != RP_OK){
-            RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Unable to get raw data.", NULL);
+            RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Failed to get raw data.", NULL);
             return SCPI_RES_ERR;
         }
+
         SCPI_ResultBufferInt16(context, buffer, size);
     }
 
@@ -767,12 +776,49 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqChannel1LatestDataQ(scpi_t *context) {
-    return RP_AcqGetLatestData(RP_CH_1, context);
-}
+scpi_result_t RP_AcqLatestDataQ(scpi_t *context) {
+    
+    uint32_t size;
+    int32_t ch_usr[1];
+    int result;
 
-scpi_result_t RP_AcqChannel2LatestDataQ(scpi_t *context) {
-    return RP_AcqGetLatestData(RP_CH_2, context);
+    SCPI_CommandNumbers(context, ch_usr, 1);
+
+    if(ch_usr[0] != 0 && ch_usr[0] != 1){
+        RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Invalid channel number.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    rp_channel_t channel = ch_usr[0];
+
+    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
+        RP_ERR("*ACQ:SOUR<n>:DATA:LAT:N? Missing first parameter", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    if(unit == RP_SCPI_VOLTS){
+        float buffer[size];
+        result = rp_AcqGetLatestDataV(channel, &size, buffer);
+
+        if(result != RP_OK){
+            RP_ERR("*ACQ:SOUR<n>:DATA:LAT:N? Failed to get data in volt", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
+
+        SCPI_ResultBufferFloat(context, buffer, size);
+    }else{
+        int16_t buffer[size];
+        result = rp_AcqGetLatestDataRaw(channel, &size, buffer);
+
+        if(result != RP_OK){
+            RP_ERR("*ACQ:SOUR<n>:DATA:LAT:N? Failed to get raw data.", rp_GetError(result));
+        }
+
+        SCPI_ResultBufferInt16(context, buffer, size);
+    }
+
+    RP_INFO("*ACQ:SOUR<n>:DATA:LAT:N? Successfully returned data to client.");
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqBufferSizeQ(scpi_t *context) {
@@ -780,52 +826,12 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t *context) {
     int result = rp_AcqGetBufSize(&size);
 
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*ACQ:BUF:SIZE? Failed to get buffer size: %s", rp_GetError(result));
+        RP_ERR("*ACQ:BUF:SIZE? Failed to get buffer size", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultUInt(context, size);
-
-    syslog(LOG_INFO, "*ACQ:BUF:SIZE?? Successfully returned buffer size.");
-
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t *context) {
-    uint32_t size;
-    // read first parameter SIZE
-    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
-        syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:LAT:N? is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result;
-    if (unit == RP_SCPI_VOLTS) {
-        float buffer[size];
-        result = rp_AcqGetLatestDataV(channel, &size, buffer);
-
-        if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:LAT:N? Failed to get latest data: %s", rp_GetError(result));
-            return SCPI_RES_ERR;
-        }
-
-        // Return back result
-        SCPI_ResultBufferFloat(context, buffer, size);
-    }
-    else {
-        int16_t buffer[size];
-        result = rp_AcqGetLatestDataRaw(channel, &size, buffer);
-
-        if (RP_OK != result) {
-            syslog(LOG_ERR, "*ACQ:SOUR<n>:DATA:LAT:N? Failed to get latest data: %s", rp_GetError(result));
-            return SCPI_RES_ERR;
-        }
-
-        // Return back result
-        SCPI_ResultBufferInt16(context, buffer, size);
-    }
-
-    syslog(LOG_INFO, "*ACQ:SOUR<n>:DATA:LAT:N? Successfully returned latest data.");
+    RP_INFO("*ACQ:BUF:SIZE?? Successfully returned buffer size.");
 
     return SCPI_RES_OK;
 }
