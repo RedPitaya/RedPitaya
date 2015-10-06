@@ -25,8 +25,8 @@
     	SCPI_ResultString(cont, "OK"); \
     	return SCPI_RES_OK;
 
-#define CNV_STR(x) #x
 #define SCPI_DEBUG 1
+#define CNV_STR(x) #x
 
 /* rp scpi log */
 #ifdef SCPI_DEBUG
@@ -43,8 +43,6 @@ syslog(LOG_INFO, "%s\n", msg);
 
 int getRpDpin(const char* pinStr, rp_dpin_t *rpPin);
 int getRpDirection(const char *dirStr, rp_pinDirection_t *direction);
-int getRpApin(const char *pinStr, rp_apin_t *rpPin);
-
 
 int getRpDecimation(int decimationInt, rp_acq_decimation_t *decimation);
 int getRpDecimationInt(rp_acq_decimation_t decimation, int *decimationInt);
