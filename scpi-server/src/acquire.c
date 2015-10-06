@@ -49,6 +49,20 @@ const scpi_choice_def_t scpi_RpSmpRate[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpTrigSrc[] = {
+    {"DISABLED",    0},
+    {"NOW",         1},
+    {"CH1_PE",      2},
+    {"CH1_NE",      3},
+    {"CH2_PE",      4},
+    {"CH2_NE",      5},
+    {"EXT_PE",      6},
+    {"EXT_NE",      7},
+    {"AWG_PE",      8},
+    {"AWG_NE",      9},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
@@ -210,9 +224,9 @@ scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+//TODO: Redundand function?
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     
-    const char *smp_name;
     // get sampling rate
     float samplingRate;
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
@@ -275,41 +289,31 @@ scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
-    const char * param;
-    size_t param_len;
+    
+    int32_t trig_src;
 
-    char triggerSource[15];
-
-    // read first parameter TRIGGER SOURCE (DISABLED,NOW,CH1_PE,CH1_NE,CH2_PE,CH2_NE,EXT_PE,EXT_NE,AWG_PE)
-    if (!SCPI_ParamCharacters(context, &param, &param_len, false)) {
+    /* Read TRIGGER SOURCE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpTrigSrc, &trig_src, true)) {
         RP_ERR("*ACQ:TRIG is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
-    else {
-        strncpy(triggerSource, param, param_len);
-        triggerSource[param_len] = '\0';
-    }
 
-    rp_acq_trig_src_t source;
-    if (getRpTriggerSource(triggerSource, &source)) {
-        RP_ERR("*ACQ:TRIG parameter trigger source is invalid.", NULL);
-        return SCPI_RES_ERR;
-    }
+    rp_acq_trig_src_t source = trig_src;
 
     // Now set the trigger source
     int result = rp_AcqSetTriggerSrc(source);
-
     if (RP_OK != result) {
         RP_ERR("*ACQ:TRIG Failed to set trigger source", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     RP_INFO("*ACQ:TRIG Successfully set trigger source.");
-
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
+    
+    const char *trig_name;
     // get trigger source
     rp_acq_trig_src_t source;
     int result = rp_AcqGetTriggerSrc(&source);
@@ -319,14 +323,13 @@ scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
         source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
-    char sourceString[15];
-    if (getRpTriggerSourceString(source, sourceString)) {
-        RP_ERR("*ACQ:TRIG:STAT? Failed to convert result to string", rp_GetError(result));
+    if(!SCPI_ChoiceToName(scpi_RpTrigSrc, source, &trig_name)){
+        RP_ERR("*ACQ:TRIG:STAT? Failed to parse trigger source.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultMnemonic(context, sourceString);
+    SCPI_ResultMnemonic(context, trig_name);
 
     RP_INFO("*ACQ:TRIG:STAT? Successfully returned trigger.");
 
