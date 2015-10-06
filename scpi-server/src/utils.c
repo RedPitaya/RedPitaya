@@ -67,22 +67,6 @@ int getRpDirection(const char *dirStr, rp_pinDirection_t *direction) {
 	return 0; // OK
 }
 
-int getRpApin(const char *pinStr, rp_apin_t *rpPin) {
-	if     (strcasecmp(pinStr, "AOUT0") == 0)  *rpPin = RP_AOUT0;
-	else if(strcasecmp(pinStr, "AOUT1") == 0)  *rpPin = RP_AOUT1;
-	else if(strcasecmp(pinStr, "AOUT2") == 0)  *rpPin = RP_AOUT2;
-	else if(strcasecmp(pinStr, "AOUT3") == 0)  *rpPin = RP_AOUT3;
-
-	else if(strcasecmp(pinStr, "AIN0" ) == 0)  *rpPin = RP_AIN0;
-	else if(strcasecmp(pinStr, "AIN1" ) == 0)  *rpPin = RP_AIN1;
-	else if(strcasecmp(pinStr, "AIN2" ) == 0)  *rpPin = RP_AIN2;
-	else if(strcasecmp(pinStr, "AIN3" ) == 0)  *rpPin = RP_AIN3;
-
-	else                                       return 1; // ERROR
-
-	return 0; // OK
-}
-
 int getRpDecimation(int decimationInt, rp_acq_decimation_t *decimation) {
 	switch (decimationInt) {
 		case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
