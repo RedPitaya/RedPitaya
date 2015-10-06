@@ -12,7 +12,6 @@
  * for more details on the language used herein.
  */
 
-#include <syslog.h>
 #include <stdio.h>
 #include <string.h>
 
