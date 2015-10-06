@@ -175,6 +175,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "ACQ:WPOS?", .callback          = RP_AcqWritePointerQ,},
         {.pattern = "ACQ:TPOS?", .callback          = RP_AcqWritePointerAtTrigQ,},
         {.pattern = "ACQ:DATA:UNITS", .callback     = RP_AcqScpiDataUnits,},
+        {.pattern = "ACQ:DATA:UNITS?", .callback     = RP_AcqScpiDataUnitsQ,},
         {.pattern = "ACQ:DATA:FORMAT", .callback    = RP_AcqSetDataFormat,},
         {.pattern = "ACQ:SOUR#:DATA:STA:END?", .callback    = RP_AcqDataPosQ,},
         {.pattern = "ACQ:SOUR#:DATA:STA:N?", .callback      = RP_AcqDataQ,},
