@@ -24,6 +24,12 @@ rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
 /* These structures are a direct API mirror 
 and should not be altered! */
+const scpi_choice_def_t scpi_RpUnits[] = {
+    {"VOLTS", 0},
+    {"RAW", 1},
+    SCPI_CHOICE_LIST_END
+};
+
 const scpi_choice_def_t scpi_RpGain[] = {
     {"LV", 0},
     {"HV", 1},
@@ -554,29 +560,33 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
-    const char * param;
-    size_t param_len;
+    
+    int32_t choice;
 
-    char unitString[10];
-
-    // read first parameter UNITS (RAW, VOLTS)
-    if (!SCPI_ParamCharacters(context,  &param, &param_len, false)) {
-        RP_ERR("*ACQ:DATA:UNITS is missing first parameter.", NULL);
+    /* Read UNITS parameters */
+    if(!SCPI_ParamChoice(context, scpi_RpUnits, &choice, true)){
+        RP_ERR("*ACQ:DATA:UNITS Missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
-    else {
-        strncpy(unitString, param, param_len);
-        unitString[param_len] = '\0';
-    }
 
-    int result = getRpUnit(unitString, &unit);
-    if (result != RP_OK) {
-        RP_ERR("*ACQ:DATA:UNITS Failed to convert unit from string", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
+    /* Set global units for acq scpi */
+    unit = choice;
 
     RP_INFO("*ACQ:DATA:UNITS Successfully set scpi units.");
+    return SCPI_RES_OK;
+}
 
+scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t *context){
+
+    const char *units;
+
+    if(!SCPI_ChoiceToName(scpi_RpUnits, unit, &units)){
+        RP_ERR("*ACQ:DATA:UNITS? Failed to get data units.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, units);
+    RP_INFO("*ACQ:DATA:UNITS? Successfully returned data to client.");
     return SCPI_RES_OK;
 }
 
