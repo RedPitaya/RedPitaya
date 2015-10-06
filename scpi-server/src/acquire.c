@@ -30,6 +30,16 @@ const scpi_choice_def_t scpi_RpGain[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpSmpRate[] = {
+    {"S_125MHz",   0}, //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    {"S_15_6MHz",  1}, //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    {"S_1_9MHz",   2}, //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    {"S_103_8kHz", 3}, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    {"S_15_2kHz",  4}, //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    {"S_1_9kHz",   5},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
@@ -149,26 +159,15 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
-    const char * param;
-    size_t param_len;
-    char samplingRateStr[15];
+    
+    int32_t choice;
 
-    // read first parameter SAMPLING_RATE (125MHz,15_6MHz, 1_9MHz,103_8kHz, 15_2kHz, 1_9kHz)
-    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        RP_ERR("*ACQ:SRAT is missing first parameter.", NULL);
-        return SCPI_RES_ERR;
-    }
-    strncpy(samplingRateStr, param, param_len);
-    samplingRateStr[param_len] = '\0';
-
-    // Convert samplingRate to rp_acq_sampling_rate_t
-    rp_acq_sampling_rate_t samplingRate;
-    if (getRpSamplingRate(samplingRateStr, &samplingRate)) {
-        RP_ERR("*ACQ:SRAT parameter sampling rate is invalid.", NULL);
+    if(!SCPI_ParamChoice(context, scpi_RpSmpRate, &choice, true)){
+        RP_ERR("*ACQ:SRAT Missing SAMPLE RATE parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
-    // Now set the sampling rate
+    rp_acq_sampling_rate_t  samplingRate = choice;
     int result = rp_AcqSetSamplingRate(samplingRate);
 
     if (RP_OK != result) {
