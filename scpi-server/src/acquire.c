@@ -30,6 +30,15 @@ const scpi_choice_def_t scpi_RpGain[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpDec[] = {
+    {"D_1",     1},
+    {"D_8",     2},
+    {"D_64",    3},
+    {"D_1024",  4},
+    {"D_8192",  5},
+    {"D_65536", 6},
+};
+
 const scpi_choice_def_t scpi_RpSmpRate[] = {
     {"S_125MHz",   0}, //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
     {"S_15_6MHz",  1}, //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
@@ -107,24 +116,20 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqDecimation(scpi_t *context) {
-    int value;
+    
+    int32_t choice;
 
-    // read first parameter DECIMATION (1,8,64,1024,8192,65536)
-    if (!SCPI_ParamInt(context, &value, false)) {
+    /* Read DECIMATION parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpDec, &choice, true)) {
         RP_ERR("*ACQ:DEC is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Convert decimation to rp_acq_decimation_t
-    rp_acq_decimation_t decimation;
-    if (getRpDecimation(value, &decimation)) {
-        RP_ERR("*ACQ:DEC parameter decimation is invalid.", NULL);
-        return SCPI_RES_ERR;
-    }
+    rp_acq_decimation_t decimation = choice;
 
     // Now set the decimation
     int result = rp_AcqSetDecimation(decimation);
-
     if (RP_OK != result) {
         RP_ERR("*ACQ:DEC Failed to set decimation", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -135,6 +140,9 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
+    
+    const char *dec_name;
+
     // Get decimation
     rp_acq_decimation_t decimation;
     int result = rp_AcqGetDecimation(&decimation);
@@ -144,15 +152,14 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    // Convert decimation to int
-    int value;
-    if (RP_OK != getRpDecimationInt(decimation, &value)) {
-        RP_ERR("*ACQ:DEC? Failed to convert decimation to integer", rp_GetError(result));
+    /* Parse decimation to choice */
+    if(!SCPI_ChoiceToName(scpi_RpDec, decimation, &dec_name)){
+        RP_ERR("*ACQ:DEC? Failed to get decimation.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultDouble(context, value);
+    SCPI_ResultMnemonic(context, dec_name);
 
     RP_INFO("*ACQ:DEC? Successfully returned decimation.");
     return SCPI_RES_OK;
@@ -180,6 +187,8 @@ scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
+    
+    const char *smp_name;
     rp_acq_sampling_rate_t samplingRate;
     int result = rp_AcqGetSamplingRate(&samplingRate);
 
@@ -188,22 +197,22 @@ scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    // convert sampling rate to string
-    char samplingRateString[15];
-    if (RP_OK != getRpSamplingRateString(samplingRate, samplingRateString)) {
-        RP_ERR("*ACQ:SRAT? Failed to convert sampling rate to string", rp_GetError(result));
+    /* Parse sampling rate to choice */
+    if(!SCPI_ChoiceToName(scpi_RpSmpRate, samplingRate, &smp_name)){
+        RP_ERR("*ACQ:SRAT? Failed to get sampling rate.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultMnemonic(context, samplingRateString);
-
+    SCPI_ResultMnemonic(context, smp_name);
     RP_INFO("*ACQ:SRAT? Successfully returned sampling rate.");
 
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
+    
+    const char *smp_name;
     // get sampling rate
     float samplingRate;
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
