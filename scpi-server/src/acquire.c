@@ -30,12 +30,6 @@ const scpi_choice_def_t scpi_RpGain[] = {
     SCPI_CHOICE_LIST_END
 };
 
-const scpi_choice_def_t scpi_RpChannel[] = {
-    {"RP_CH_1", 0},
-    {"RP_CH_2", 1},
-    SCPI_CHOICE_LIST_END
-};
-
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
@@ -71,7 +65,7 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    RP_INFO("*ACQ:START Successful.");
+    RP_INFO("*ACQ:START Successful started Red Pitaya acquire.");
     return SCPI_RES_OK;
 }
 
@@ -83,7 +77,7 @@ scpi_result_t RP_AcqStop(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    RP_ERR("*ACQ:STOP Successful.", NULL);
+    RP_ERR("*ACQ:STOP Successful stopped Red Pitaya acquire.", NULL);
     return SCPI_RES_OK;
 }
 
@@ -98,7 +92,7 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     unit = RP_SCPI_VOLTS;
     context->binary_output = false;
 
-    RP_INFO("*ACQ:RST Successful.");
+    RP_INFO("*ACQ:RST Successful reset  Red Pitaya acquire.");
     return SCPI_RES_OK;
 }
 
