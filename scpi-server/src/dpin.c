@@ -54,7 +54,13 @@ const scpi_choice_def_t scpi_RpDpin[] = {
 
 const scpi_choice_def_t scpi_RpBit[] = {
     {"OFF", 0},
-    {"ON", 1},
+    {"ON",  1},
+    SCPI_CHOICE_LIST_END
+};
+
+const scpi_choice_def_t scpi_RpDir[] = {
+    {"IN",  0},
+    {"OUT", 1},
     SCPI_CHOICE_LIST_END
 };
 
@@ -151,52 +157,33 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
 * @return success or failure
 */
 scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
-    const char * param;
-    size_t param_len;
+    
+    int32_t dir_choice, pin_choice;
 
-    char direction_string[7];
-    char port[15];
-
-    // read first parameter DIRECTION (OUTP -> OUTPUT; IN->INPUT)
-    if(!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        syslog(LOG_ERR, "*DIG:PIN:DIR is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-    strncpy(direction_string, param, param_len);
-    direction_string[param_len] = '\0';
-
-    // read second parameter PORT (RP_DIO0_P, RP_DIO0_N, ...)
-    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        syslog(LOG_ERR, "*DIG:PIN:DIR is missing second parameter.");
-        return SCPI_RES_ERR;
-    }
-    strncpy(port, param, param_len);
-    port[param_len] = '\0';
-
-    rp_pinDirection_t direction;
-    // Convert port into pin id
-    if (getRpDirection(direction_string, &direction)) {
-        syslog(LOG_ERR, "*DIG:PIN:DIR parameter direction is invalid.");
+    /* Read first, DIRECTION parameter */
+    if(!SCPI_ParamChoice(context, scpi_RpDir, &dir_choice, true)){
+        RP_ERR("*DIG:PIN:DIR is missing first parameter", NULL);
         return SCPI_RES_ERR;
     }
 
-    rp_dpin_t pin;
-    // Convert port into pin id
-    if (getRpDpin(port, &pin)) {
-        syslog(LOG_ERR, "*DIG:PIN:DIR parameter port is invalid.");
+    /* Read second, PIN parameter */
+    if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
+        RP_ERR("*DIG:PIN:DIR is missing second parameter.", NULL);
         return SCPI_RES_ERR;
     }
+
+    /* Set api values */
+    rp_pinDirection_t direction = dir_choice;
+    rp_dpin_t pin               = pin_choice;
 
     // Now set the pin state
     int result = rp_DpinSetDirection(pin, direction);
 
-    if (RP_OK != result)
-    {
-        syslog(LOG_ERR, "*SOUR:DIG:DATA:BIT Failed to set pin direction: %s", rp_GetError(result));
+    if (RP_OK != result){
+        RP_ERR("*DIG:PIN:DIR Failed to set pin direction", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*SOUR:DIG:DATA:BIT Successfully set port %s direction to %s.", port, (direction == RP_OUT ? "OUTPUT" : "INPUT"));
-
+    RP_INFO("*DIG:PIN:DIR Successfully set port direction.");
     return SCPI_RES_OK;
 }
