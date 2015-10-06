@@ -132,14 +132,6 @@ int getRpSamplingRate(const char *decimationString, rp_acq_sampling_rate_t *deci
 	return RP_OK;
 }
 
-
-int getRpGain(const char *gainStr, rp_pinState_t *state) {
-	if      (strcmp(gainStr, "LV") == 0)  *state = RP_LOW;
-	else if (strcmp(gainStr, "HV") == 0)  *state = RP_HIGH;
-	else                                  return RP_EOOR;
-	return RP_OK;
-}
-
 int getRpTriggerSource(const char *sourceStr, rp_acq_trig_src_t *source) {
 	if      (strcmp(sourceStr, "DISABLED") == 0)  *source = RP_TRIG_SRC_DISABLED;
 	else if (strcmp(sourceStr, "NOW"     ) == 0)  *source = RP_TRIG_SRC_NOW;
@@ -215,6 +207,7 @@ int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string) {
     return RP_OK;
 }
 
+//TODO: Redundant function?
 int getRpChannel(const char *string, rp_channel_t *channel) {
 	if      (strcmp(string, "CH1") == 0)  *channel = RP_CH_1;
 	else if (strcmp(string, "CH2") == 0)  *channel = RP_CH_2;
