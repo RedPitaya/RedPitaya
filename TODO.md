@@ -5,22 +5,24 @@ FPGA:
 - rethink generator and osciloscope SW interface sequences
 - sestructure registers into a hierarchy
 - generalize trigger modes
-- use DMA from Xilinx
 - write configurable PLL
 - write streaming benches
-
-Scope:
-- continuous mode
-- trigger mode
+- Scope:
+  - use DMA from Xilinx
+  - continuous mode
+  - trigger mode
+- add configurable PLL
 
 Linux:
 - upgrade to 3.19, there are Ethernet and USB driver issues
 - write IIO drivers
+- rethink user management and security
 
 Bazaar:
 - review the Nginx current patch, try to remove it and instead update the config file
 - update Nginx to newer version
 - update Buildroot to newer version
+- use API to get Zynq DNA (there are 2 instances)
 
 API:
 - move type definitins (structures, constants) to header files
