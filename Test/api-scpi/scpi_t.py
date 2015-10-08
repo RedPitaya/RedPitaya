@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.112')
+rp_scpi = scpi.scpi('192.168.1.241')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -28,7 +28,6 @@ rp_nor_range   = rp_ncyc_range[:]
 rp_inp_range   = [i * 100 for i in range(1, 6)]
 rp_channels    = ['CH1', 'CH2', 'MATH']
 rp_scales      = [0.5, 1, 2, 3, 10]
-
 
 rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
 
@@ -171,26 +170,25 @@ class MainTest(unittest.TestCase):
     ############### LEDS and GPIOs ###############
     def test0200_led(self):
         for led in range(1, 8):
-            self.assertEquals(Base().rp_led(rp_leds[led], '1'), '1')
-            self.assertEquals(Base().rp_led(rp_leds[led], '0'), '0')
+            self.assertEquals(Base().rp_led(rp_leds[led], 'ON'), 'ON')
+            self.assertEquals(Base().rp_led(rp_leds[led], 'OFF'), 'OFF')
 
 
     def test0201_dpin(self):
         #Test pos state
         for pin in range(1, 8):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '1'), '1')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '0'), '0')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], 'ON'), 'ON')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], 'OFF'), 'OFF')
 
         #Test neg state
         for pin in range(len(rp_dpin_p)):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '1'), '1')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], 'ON'), 'ON')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], 'OFF'), 'OFF')
 
     def test0202_analog_pin(self):
-		pass
-        #for a_pin in range(0, 3):
-        #    self.assertTrue(1.2 <= float(Base().rp_analog_pin(rp_a_pin_o[a_pin], '1.34', True)) <= 1.4)
-        #    self.assertTrue(0 <= float(Base().rp_analog_pin(rp_a_pin_i[a_pin], None, False)) <= 0.1)
+        for a_pin in range(0, 3):
+            self.assertTrue(1.2 <= float(Base().rp_analog_pin(rp_a_pin_o[a_pin], '1.34', True)) <= 1.4)
+            self.assertTrue(0 <= float(Base().rp_analog_pin(rp_a_pin_i[a_pin], None, False)) <= 0.1)
 
     ############### SIGNAL GENERATOR ###############
     def test0300_freq(self):
