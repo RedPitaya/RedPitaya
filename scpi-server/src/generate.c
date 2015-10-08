@@ -22,11 +22,10 @@
 #include "utils.h"
 #include "scpi/parser.h"
 
-
 scpi_result_t RP_GenReset(scpi_t *context) {
     int result = rp_GenReset();
     if (RP_OK != result) {
-        syslog(LOG_ERR, "*GEN:RST Failed to: %s", rp_GetError(result));
+        RP_ERR("*GEN:RST Failed to reset Red Pitaya generate", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
@@ -35,20 +34,63 @@ scpi_result_t RP_GenReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1State(scpi_t *context) {
-    return RP_GenSetState(RP_CH_1, context);
+scpi_result_t RP_GenState(scpi_t *context) {
+    
+    int32_t ch_usr[1];
+    bool state_c;
+
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
+
+    /* Setting channel varaible for explicit declaration */
+    int32_t channel = ch_usr[0];
+
+    if(channel < MIN_CH && channel > MAX_CH){
+        RP_ERR("*OUTPUT#:STATE Invalid channel number", channel);
+        return SCPI_RES_ERR;
+    }
+
+    /* Parse first, STATE argument */
+    if(!SCPI_ParamBool(context, &state_c, true)){
+        RP_ERR("*OUTPUT#:STATE Missing first parameter", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_GenOutIsEnabled(channel, &state_c);
+    if(result != RP_OK){
+        RP_ERR("*OUTPUT#:STATE Failed to enable generate", 
+            rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*OUTPUT#:STATE Successfully enabled generate output.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2State(scpi_t *context) {
-    return RP_GenSetState(RP_CH_2, context);
-}
+scpi_result_t RP_GenStateQ(scpi_t *context){
 
-enum _scpi_result_t RP_GenChannel1StateQ(scpi_t *context) {
-    return RP_GenGetState(RP_CH_1, context);
-}
+    int32_t ch_usr[1];
+    bool enabled;
 
-enum _scpi_result_t RP_GenChannel2StateQ(scpi_t *context) {
-    return RP_GenGetState(RP_CH_2, context);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
+
+    if(ch_usr[0] < MIN_CH && ch_usr[0] > MAX_CH){
+        RP_ERR("*OUTPUT#:STATE? Invalid channel number", ch_usr[0]);
+        return SCPI_RES_ERR;
+    }
+
+    rp_channel_t channel = ch_usr[0];
+
+    int result = rp_GenOutIsEnabled(channel, &enabled);
+    if(result != RP_OK){
+        RP_ERR("*OUTPUT#:STATE Failed to get generate state", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultBool(context, enabled);
+
+    RP_INFO("*OUTPUT#:STATE Successfully returned generate state");
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1Frequency(scpi_t *context) {
@@ -255,32 +297,6 @@ enum _scpi_result_t RP_GenChannelAllTrigger(scpi_t *context) {
     return RP_GenSetTrigger(3, context);
 }
 
-enum _scpi_result_t RP_GenSetState(rp_channel_t channel, scpi_t *context) {
-    bool state;
-    // read first parameter STATE (ON, OFF)
-    if (!SCPI_ParamBool(context, &state, true)) {
-        syslog(LOG_ERR, "*OUTPUT<n>:STATE is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result;
-    if (state) {
-        result = rp_GenOutEnable(channel);
-    }
-    else {
-        result = rp_GenOutDisable(channel);
-    }
-    
-    
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*OUTPUT<n>:STATE Failed to %s channel: %s", state ? "enable" : "disable", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*OUTPUT<n>:STATE Successfully %s channel.", state ? "enabled" : "disabled");
-    
-   return SCPI_RES_OK;
-}
 
 enum _scpi_result_t RP_GenGetState(rp_channel_t channel, scpi_t *context) {
     bool state;
@@ -766,7 +782,7 @@ scpi_result_t RP_GenGetBurstPeriod(rp_channel_t channel, scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultUInt(context, value);
+    SCPI_ResultUInt32Base(context, value, 10);
 
     syslog(LOG_INFO, "*SOUR<n>:BURS:INT:PER? Successfully returned burst period %d to client.",  value);
 
