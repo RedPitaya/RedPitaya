@@ -385,7 +385,7 @@ scpi_result_t RP_AcqTriggerDelayNs(scpi_t *context) {
     int64_t triggerDelay;
 
     // read first parameter TRIGGER DELAY ns (value in ns)
-    if (!SCPI_ParamLong(context, &triggerDelay, false)) {
+    if (!SCPI_ParamInt64(context, &triggerDelay, false)) {
         triggerDelay = 0;
     }
 
@@ -413,7 +413,7 @@ scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultLong(context, value);
+    SCPI_ResultInt32(context, value);
 
     RP_INFO("*ACQ:TRIG:DLY:NS? Successfully returned trigger delay in ns.");
 
@@ -427,7 +427,7 @@ scpi_result_t RP_AcqGain(scpi_t *context) {
     const char *name;
     int32_t param;
 
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
 
     if((ch_usr[0] != 0) && (ch_usr[0] != 1)){
         RP_ERR("ACQ:SOUR#:GAIN Invalid channel number", &ch_usr[0]);
@@ -463,7 +463,7 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
     int32_t ch_usr[1];
     rp_pinState_t state;
 
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
 
     if(ch_usr[0] != 0 && ch_usr[0] != 1){
         RP_ERR("ACQ:SOUR#:GAIN? Invalid channel number!", NULL);
@@ -534,7 +534,7 @@ scpi_result_t RP_AcqWritePointerQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultUInt(context, value);
+    SCPI_ResultUInt32Base(context, value, 10);
 
     RP_INFO("*ACQ:WPOS? Successfully returned writer position.");
 
@@ -552,7 +552,7 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultUInt(context, value);
+    SCPI_ResultUInt32Base(context, value, 10);
 
     RP_INFO("*ACQ:TPOS? Successfully returned writer position at trigger.");
 
@@ -597,7 +597,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
     int result;
 
     /* Read channel */
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
     if((ch_usr[0] != 0) && (ch_usr[0] != 1)){
         RP_ERR("*ACQ:SOUR#:DATA:STA:END? Invalid channel number", &ch_usr[0]);
         return SCPI_RES_ERR;
@@ -650,7 +650,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
     int32_t ch_usr[1];
     int result;
 
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
 
     if(ch_usr[0] != 0 && ch_usr[0] != 1){
         RP_ERR("*ACQ:SOUR#:DATA:STA:N? Invalid channel number.", NULL);
@@ -705,7 +705,7 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
     int32_t ch_usr[1];
     int result;
 
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
 
     if(ch_usr[0] != 0 && ch_usr[0] != 1){
         RP_ERR("*ACQ:SOUR#:DATA? Invalid channel number.", NULL);
@@ -746,7 +746,7 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
     int32_t ch_usr[1];
     int result;
 
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
     if(ch_usr[0] != 0 && ch_usr[0] != 1){
         RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Invalid channel number.", NULL);
         return SCPI_RES_ERR;
@@ -791,7 +791,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t *context) {
     int32_t ch_usr[1];
     int result;
 
-    SCPI_CommandNumbers(context, ch_usr, 1);
+    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
 
     if(ch_usr[0] != 0 && ch_usr[0] != 1){
         RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Invalid channel number.", NULL);
@@ -839,7 +839,7 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultUInt(context, size);
+    SCPI_ResultUInt32Base(context, size, 10);
     RP_INFO("*ACQ:BUF:SIZE?? Successfully returned buffer size.");
 
     return SCPI_RES_OK;
