@@ -29,7 +29,6 @@
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
-#include "i2c.h"
 
 static char version[50];
 
@@ -39,7 +38,7 @@ static char version[50];
 
 int rp_Init()
 {
-	ECHECK(cmn_Init());
+    ECHECK(cmn_Init());
 	
     ECHECK(calib_Init());
     ECHECK(hk_Init());
@@ -47,7 +46,6 @@ int rp_Init()
     ECHECK(health_Init());
     ECHECK(generate_Init());
     ECHECK(osc_Init());
-    ECHECK(i2c_Init());
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
@@ -64,8 +62,7 @@ int rp_Release()
     ECHECK(ams_Release());
     ECHECK(hk_Release());
     ECHECK(calib_Release());
-    ECHECK(i2c_Release());
-	ECHECK(cmn_Release());
+    ECHECK(cmn_Release());
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }
@@ -434,6 +431,11 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
+int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
+{
+    return acq_GetDataRawV2(pos, size, buffer, buffer2);
+}
+
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     return acq_GetOldestDataRaw(channel, size, buffer);
@@ -597,14 +599,3 @@ int rp_GenTrigger(int mask) {
     return gen_Trigger(mask);
 }
 
-/**
-* I2C methods
-*/
-
-int rp_I2cRead(int addr, char *data, int length) {
-    return i2c_read(addr, data, length);
-}
-
-int rp_I2cWrite(int addr, char *data, int length) {
-    return i2c_write(addr, data, length);
-}

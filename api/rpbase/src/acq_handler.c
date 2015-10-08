@@ -729,6 +729,22 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     return RP_OK;
 }
 
+
+int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
+{
+
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+    const volatile uint32_t* raw_buffer = getRawBuffer(RP_CH_1);
+    const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        buffer[i] = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
+        buffer2[i] = (raw_buffer2[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
+    }
+
+    return RP_OK;
+}
+
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size)
 {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
