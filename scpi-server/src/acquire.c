@@ -346,7 +346,7 @@ scpi_result_t RP_AcqTriggerDelay(scpi_t *context) {
     int32_t triggerDelay;
 
     // read first parameter TRIGGER DELAY (value in samples)
-    if (!SCPI_ParamInt(context, &triggerDelay, false)) {
+    if (!SCPI_ParamInt32(context, &triggerDelay, false)) {
         triggerDelay = 0;
     }
 
@@ -374,7 +374,7 @@ scpi_result_t RP_AcqTriggerDelayQ(scpi_t *context) {
     }
 
     // Return back result
-    SCPI_ResultInt(context, value);
+    SCPI_ResultInt32(context, value);
 
     RP_INFO("*ACQ:TRIG:DLY? Successfully returned trigger delay.");
 
@@ -606,12 +606,12 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
     rp_channel_t channel = ch_usr[0];
 
     /* Read START parameter */
-    if(!SCPI_ParamUnsignedInt(context, &start, true)){
+    if(!SCPI_ParamUInt32(context, &start, true)){
         RP_ERR("*ACQ:SOUR#:DATA:STA:END? Unable to read START parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
-    if(!SCPI_ParamUnsignedInt(context, &end, true)){
+    if(!SCPI_ParamUInt32(context, &end, true)){
         RP_ERR("*ACQ:SOUR#:DATA:STA:END? Unable to read END parameter.", NULL);
         return SCPI_RES_ERR;
     }
@@ -660,13 +660,13 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
     rp_channel_t channel = ch_usr[0];
 
     /* Parse START parameter */
-    if(!SCPI_ParamUnsignedInt(context, &start, true)){
+    if(!SCPI_ParamUInt32(context, &start, true)){
         RP_ERR("*ACQ:SOUR<n>:DATA:STA:N? is missing START parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
     /* Parse SIZE parameter */
-    if(!SCPI_ParamUnsignedInt(context, &size, true)){
+    if(!SCPI_ParamUInt32(context, &size, true)){
         RP_ERR("*ACQ:SOUR<n>:DATA:STA:N? is missing SIZE parameter.", NULL);
         return SCPI_RES_ERR;
     }
@@ -754,7 +754,7 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
 
     rp_channel_t channel = ch_usr[0];
 
-    if(!SCPI_ParamUnsignedInt(context, &size, true)){
+    if(!SCPI_ParamUInt32(context, &size, true)){
         RP_ERR("*ACQ:SOUR#:DATA:OLD:N? Missing SIZE parameter.", NULL);
         return SCPI_RES_ERR;
     }
@@ -800,7 +800,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t *context) {
 
     rp_channel_t channel = ch_usr[0];
 
-    if (!SCPI_ParamUnsignedInt(context, &size, true)) {
+    if (!SCPI_ParamUInt32(context, &size, true)) {
         RP_ERR("*ACQ:SOUR<n>:DATA:LAT:N? Missing first parameter", NULL);
         return SCPI_RES_ERR;
     }
