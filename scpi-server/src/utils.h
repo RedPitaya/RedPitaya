@@ -25,8 +25,12 @@
     	SCPI_ResultString(cont, "OK"); \
     	return SCPI_RES_OK;
 
-#define SCPI_DEBUG 1
-#define CNV_STR(x) #x
+#define MIN_CH			0
+#define MAX_CH			3
+
+#define SCPI_CMD_NUM 	1
+#define SCPI_DEBUG 		1
+#define CNV_STR(x) 		#x
 
 /* rp scpi log */
 #ifdef SCPI_DEBUG
