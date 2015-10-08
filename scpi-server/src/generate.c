@@ -22,6 +22,19 @@
 #include "utils.h"
 #include "scpi/parser.h"
 
+/* These structures are a direct API mirror 
+and should not be altered! */
+const scpi_choice_def_t scpi_RpWForm[] = {
+    {"SINE",        0},
+    {"SQUARE",      1},
+    {"TRIANGLE",    2},
+    {"SAWU",        3},
+    {"SAWD",        4},
+    {"PWM",         5},
+    {"ARBITRARY",   6},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_GenReset(scpi_t *context) {
     int result = rp_GenReset();
     if (RP_OK != result) {
@@ -145,16 +158,61 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
     return SCPI_RES_OK;
 }    
 
-enum _scpi_result_t RP_GenChannel1WaveForm(scpi_t *context) {
-    return RP_GenSetWaveForm(RP_CH_1, context);
+scpi_result_t RP_GenWaveForm(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int32_t wave_form;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("SOUR#:FUNC Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    /* Read WAVEFORM parameter */
+    if(!SCPI_ParamChoice(context, scpi_RpWForm, &wave_form, true)){
+        RP_ERR("*SOUR#:FUNC Missing first parameter", NULL);
+        return SCPI_RES_ERR;
+    }    
+
+    rp_waveform_t wf = wave_form;
+    result = rp_GenWaveform(channel, wf);
+
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:FUNC Failed to set generate wave form.", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:FUNC Successfully set generate waveform.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2WaveForm(scpi_t *context) {
-    return RP_GenSetWaveForm(RP_CH_2, context);
-}
 
-enum _scpi_result_t RP_GenChannel1WaveFormQ(scpi_t *context) {
-    return RP_GenGetWaveForm(RP_CH_1, context);
+scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
+    
+    const char *wf_name; 
+    rp_channel_t channel;
+    rp_waveform_t wave_form;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:FUNC? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetWaveform(channel, &wave_form);
+    int32_t wf = wave_form;
+
+    if(!SCPI_ChoiceToName(scpi_RpWForm, wf, &wf_name)){
+        RP_ERR("*SOUR#:FUNC? Failed to get wave form", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    /* Return result to client */
+    SCPI_ResultMnemonic(context, wf_name);
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel2WaveFormQ(scpi_t *context) {
