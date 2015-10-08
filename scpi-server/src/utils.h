@@ -45,6 +45,9 @@ syslog(LOG_INFO, "%s\n", msg);
 #define RP_INFO(msg)
 #endif
 
+
+int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
+
 int getRpWaveform(const char *waveformString, rp_waveform_t *waveform);
 int getRpWaveformString(rp_waveform_t waveform, char *waveformString);
 int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource);
