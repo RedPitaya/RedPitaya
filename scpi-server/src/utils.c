@@ -21,11 +21,9 @@
 #include "scpi/parser.h"
 
 /* Parse channel */
-//TODO: RP_ERR message should be in form COMMAND: MESSAGE
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel){
 
 	int32_t ch_usr[1];
-
 	SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
     if(ch_usr[0] < MIN_CH && ch_usr[0] > MAX_CH){
         return RP_EOOR;
