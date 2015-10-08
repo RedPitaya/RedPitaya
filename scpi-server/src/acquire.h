@@ -49,6 +49,7 @@ scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context);
 scpi_result_t RP_AcqWritePointerQ(scpi_t * context);
 scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t * context);
 scpi_result_t RP_AcqScpiDataUnits(scpi_t * context);
+scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t *context);
 scpi_result_t RP_AcqScpiDataFormat(scpi_t * context);
 scpi_result_t RP_AcqDataPosQ(scpi_t * context);
 scpi_result_t RP_AcqDataQ(scpi_t * context);
