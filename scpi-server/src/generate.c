@@ -739,7 +739,7 @@ scpi_result_t RP_GenSetBurstPeriod(rp_channel_t channel, scpi_t *context) {
     uint32_t value;
 
     // read first parameter PERIOD TIME (unsigned integer value)
-    if (!SCPI_ParamUnsignedInt(context, &value, true)) {
+    if (!SCPI_ParamUInt32(context, &value, true)) {
         syslog(LOG_ERR, "*SOUR<n>:BURS:INT:PER is missing first parameter.");
         return SCPI_RES_ERR;
     }
