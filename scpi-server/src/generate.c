@@ -36,16 +36,16 @@ scpi_result_t RP_GenReset(scpi_t *context) {
 
 scpi_result_t RP_GenState(scpi_t *context) {
     
-    int32_t ch_usr[1];
+    int result;
+    rp_channel_t channel;
     bool state_c;
 
-    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
-
-    /* Setting channel varaible for explicit declaration */
-    int32_t channel = ch_usr[0];
-
-    if(channel < MIN_CH && channel > MAX_CH){
-        RP_ERR("*OUTPUT#:STATE Invalid channel number", channel);
+    /* Get channel number */
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*OUTPUT#:STATE Invalid channel number", 
+            rp_GetError(result));
+        
         return SCPI_RES_ERR;
     }
 
@@ -55,7 +55,7 @@ scpi_result_t RP_GenState(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    int result = rp_GenOutIsEnabled(channel, &state_c);
+    result = rp_GenOutIsEnabled(channel, &state_c);
     if(result != RP_OK){
         RP_ERR("*OUTPUT#:STATE Failed to enable generate", 
             rp_GetError(result));
@@ -93,21 +93,38 @@ scpi_result_t RP_GenStateQ(scpi_t *context){
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1Frequency(scpi_t *context) {
-    return RP_GenSetFrequency(RP_CH_1, context);
+scpi_result_t RP_GenFrequency(scpi_t *context){
+
+    double frequency;
+    rp_channel_t channel;
+    int result;
+
+    /* Get channel number */
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*OUR#:FREQ:FIX Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    /* Parse first, FREQUENCY parameter */
+    if(!SCPI_ParamDouble(context, &frequency, true)){
+        RP_ERR("*OUR#:FREQ:FIX Missing first parameter", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenFreq(channel, frequency);
+    if(result != RP_OK){
+        RP_ERR("*OUR#:FREQ:FIX Failed to set frequency", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*OUR#:FREQ:FIX Successfully set frequency");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2Frequency(scpi_t *context) {
-    return RP_GenSetFrequency(RP_CH_2, context);
-}
-
-enum _scpi_result_t RP_GenChannel1FrequencyQ(scpi_t *context) {
-    return RP_GenGetFrequency(RP_CH_1, context);
-}
-
-enum _scpi_result_t RP_GenChannel2FrequencyQ(scpi_t *context) {
-    return RP_GenGetFrequency(RP_CH_2, context);
-}
+scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
+    return SCPI_RES_OK;
+}    
 
 enum _scpi_result_t RP_GenChannel1WaveForm(scpi_t *context) {
     return RP_GenSetWaveForm(RP_CH_1, context);
