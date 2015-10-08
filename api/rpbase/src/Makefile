@@ -47,7 +47,6 @@ OBJECTS =	common.o \
 		generate.o \
 		gen_handler.o \
 		calib.o \
-		i2c.o \
 		spec_dsp.o \
 		spec_fpga.o \
 		rp.o

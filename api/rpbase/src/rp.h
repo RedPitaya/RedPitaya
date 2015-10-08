@@ -847,6 +847,18 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
+ * Returns the ADC buffer in raw units from specified position and desired size.
+ * Output buffer must be at least 'size' long.
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param pos Starting position of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2);
+
+/**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
  * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
@@ -1198,35 +1210,6 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenTrigger(int mask);
-
-
-///@}
-/** @name I2C
-*/
-///@{
-
-/**
-* Read from I2C device
-* @param addr Address of the I2C device
-* @param data Pointer to where data will be read
-* @param length Number of bytes to be read
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_I2cRead(int addr, char *data, int length);
-
-
-/**
-* Write to I2C device
-* @param addr Address of the I2C device
-* @param data Pointer From of data to be written to I2C device
-* @param length Number of bytes to be written
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_I2cWrite(int addr, char *data, int length);
-
-///@}
 
 #ifdef __cplusplus
 }
