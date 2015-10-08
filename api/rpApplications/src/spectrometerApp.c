@@ -4,7 +4,7 @@
  * @brief Red Pitaya Spectrum Analyzer worker.
  *
  * @Author Jure Menart <juremenart@gmail.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -33,9 +33,9 @@
 const wf_func_table_t* wf_func_table;
 
 /* JPG outputs: c_jpg_file_path+[1|2]+_+jpg_cnt(3 digits)+c_jpg_file_suf */
-const char c_jpg_dir_path[]="/tmp";
+const char c_jpg_dir_path[]="/tmp/ram";
 const char c_jpg_file_name[]="wat";
-const char c_jpg_file_path[]="/tmp/wat";
+const char c_jpg_file_path[]="/tmp/ram/wat";
 const char c_jpg_file_suf[]=".jpg";
 const int  c_jpg_max_file  = 63;
 const int  c_save_jpg_cnt  = 10; /* Repetition how often the JPG is stored */
@@ -107,9 +107,9 @@ int rp_spectr_worker_init(const wf_func_table_t* wf_f)
         return -1;
     }
 
-    jpg_fname_cha = 
+    jpg_fname_cha =
         (char *)malloc((strlen(c_jpg_file_path)+strlen(c_jpg_file_suf)+5+1));
-    jpg_fname_chb = 
+    jpg_fname_chb =
         (char *)malloc((strlen(c_jpg_file_path)+strlen(c_jpg_file_suf)+5+1));
     if(!jpg_fname_cha || !jpg_fname_chb) {
         rp_spectr_worker_clean();
@@ -147,15 +147,15 @@ int rp_spectr_worker_init(const wf_func_table_t* wf_f)
         return -1;
     }
 
-    ret_val = 
-        pthread_create(rp_spectr_thread_handler, NULL, 
+    ret_val =
+        pthread_create(rp_spectr_thread_handler, NULL,
                        rp_spectr_worker_thread, NULL);
     if(ret_val != 0) {
         spectr_fpga_exit();
 
         rp_cleanup_signals(&rp_spectr_signals);
         rp_cleanup_signals(&rp_tmp_signals);
-        fprintf(stderr, "pthread_create() failed: %s\n", 	
+        fprintf(stderr, "pthread_create() failed: %s\n",
                 strerror(errno));
         return -1;
     }
@@ -212,7 +212,7 @@ int rp_spectr_worker_exit(void)
         rp_spectr_thread_handler = NULL;
     }
     if(ret_val != 0) {
-        fprintf(stderr, "pthread_join() failed: %s\n", 
+        fprintf(stderr, "pthread_join() failed: %s\n",
                 strerror(errno));
     }
     rp_spectr_worker_clean();
@@ -244,8 +244,6 @@ int rp_spectr_worker_update_params_by_idx(int value, size_t idx, int fpga_update
 {
     pthread_mutex_lock(&rp_spectr_ctrl_mutex);
 
-
-	fprintf(stderr, "rp_spectr_worker_update_params_by_idx = %d %d\n", idx, value);
     rp_spectr_params[idx].value = value;
     rp_spectr_params_dirty       = 1;
     rp_spectr_params_fpga_update = fpga_update;
@@ -381,14 +379,13 @@ void *rp_spectr_worker_thread(void *args)
 
     while(1) {
         /* update states - we save also old state to see if we need to reset
-         * FPGA 
+         * FPGA
          */
         old_state = state;
         pthread_mutex_lock(&rp_spectr_ctrl_mutex);
         state = rp_spectr_ctrl;
-        if(rp_spectr_params_dirty) {			
+        if(rp_spectr_params_dirty) {
             memcpy(&curr_params, &rp_spectr_params, sizeof(rp_app_params_t)*PARAMS_NUM);
-			fprintf(stderr, "dirty curr_params = %f rp_spectr_params = %f\n", curr_params[FREQ_RANGE_PARAM].value, rp_spectr_params[FREQ_RANGE_PARAM].value);
             fpga_update = rp_spectr_params_fpga_update;
             rp_spectr_params_dirty = 0;
         }
@@ -430,7 +427,7 @@ void *rp_spectr_worker_thread(void *args)
 
         /* Start the writting machine */
         spectr_fpga_arm_trigger();
-        
+
         usleep(10);
 
         spectr_fpga_set_trigger(1);
@@ -455,7 +452,7 @@ void *rp_spectr_worker_thread(void *args)
             if((state != old_state) || params_dirty) {
                 break;
             }
-                
+
             if(spectr_fpga_triggered()) {
                 break;
             }
@@ -469,27 +466,27 @@ void *rp_spectr_worker_thread(void *args)
         /* retrieve data and process it*/
         spectr_fpga_get_signal(&rp_cha_in, &rp_chb_in);
 
-        rp_spectr_prepare_freq_vector(&rp_tmp_signals[0], 
+        rp_spectr_prepare_freq_vector(&rp_tmp_signals[0],
                                       spectr_get_fpga_smpl_freq(),
                                       curr_params[FREQ_RANGE_PARAM].value);
 
         rp_spectr_hann_filter(&rp_cha_in[0], &rp_chb_in[0],
                               &rp_cha_in, &rp_chb_in);
-        
-        rp_spectr_fft(&rp_cha_in[0], &rp_chb_in[0], 
+
+        rp_spectr_fft(&rp_cha_in[0], &rp_chb_in[0],
                       (double **)&rp_cha_fft, (double **)&rp_chb_fft);
-        
-        rp_spectr_decimate(&rp_cha_fft[0], &rp_chb_fft[0], 
-                           (float **)&rp_tmp_signals[1], 
+
+        rp_spectr_decimate(&rp_cha_fft[0], &rp_chb_fft[0],
+                           (float **)&rp_tmp_signals[1],
                            (float **)&rp_tmp_signals[2],
                            c_dsp_sig_len, SPECTR_OUT_SIG_LEN);
-        
-        rp_spectr_cnv_to_dBm(&rp_tmp_signals[1][0], &rp_tmp_signals[2][0], 
-                             (float **)&rp_tmp_signals[1], 
-                             (float **)&rp_tmp_signals[2], 
-                             &tmp_result.peak_pw_cha, 
+
+        rp_spectr_cnv_to_dBm(&rp_tmp_signals[1][0], &rp_tmp_signals[2][0],
+                             (float **)&rp_tmp_signals[1],
+                             (float **)&rp_tmp_signals[2],
+                             &tmp_result.peak_pw_cha,
                              &tmp_result.peak_pw_freq_cha,
-                             &tmp_result.peak_pw_chb, 
+                             &tmp_result.peak_pw_chb,
                              &tmp_result.peak_pw_freq_chb,
                              curr_params[FREQ_RANGE_PARAM].value);
         /* Calculate the map used for Waterfall diagram  */
@@ -506,12 +503,12 @@ void *rp_spectr_worker_thread(void *args)
 
         if((jpg_write_div == 0) || (loop_cnt++%jpg_write_div == 0)) {
             jpg_fn_cnt++;
-            if(jpg_fn_cnt > c_jpg_max_file) 
+            if(jpg_fn_cnt > c_jpg_max_file)
                 jpg_fn_cnt = 0;
 
-            sprintf(jpg_fname_cha, "%s%01d_%03d%s", c_jpg_file_path, 
+            sprintf(jpg_fname_cha, "%s%01d_%03d%s", c_jpg_file_path,
                     1, jpg_fn_cnt, c_jpg_file_suf);
-            sprintf(jpg_fname_chb, "%s%01d_%03d%s", c_jpg_file_path, 
+            sprintf(jpg_fname_chb, "%s%01d_%03d%s", c_jpg_file_path,
                     2, jpg_fn_cnt, c_jpg_file_suf);
 			if (wf_func_table)
 	            wf_func_table->rp_spectr_wf_save_jpeg(jpg_fname_cha, jpg_fname_chb);
@@ -669,12 +666,12 @@ int rp_set_params(rp_app_params_t *p, int len)
         }
         if(rp_main_params[p_idx].min_val > p[i].value) {
             fprintf(stderr, "Incorrect parameters value: %f (min:%f), "
-                    " correcting it\n", p[i].value, 
+                    " correcting it\n", p[i].value,
                     rp_main_params[p_idx].min_val);
             p[i].value = rp_main_params[p_idx].min_val;
         } else if(rp_main_params[p_idx].max_val < p[i].value) {
             fprintf(stderr, "Incorrect parameters value: %f (max:%f), "
-                    " correcting it\n", p[i].value, 
+                    " correcting it\n", p[i].value,
                     rp_main_params[p_idx].max_val);
             p[i].value = rp_main_params[p_idx].max_val;
         }
@@ -685,7 +682,7 @@ int rp_set_params(rp_app_params_t *p, int len)
     if(params_change || (params_init == 0)) {
         params_init = 1;
 
-        rp_main_params[FREQ_UNIT_PARAM].value = 
+        rp_main_params[FREQ_UNIT_PARAM].value =
             rp_main_params[PEAK_UNIT_CHA_PARAM].value =
             rp_main_params[PEAK_UNIT_CHB_PARAM].value =
             spectr_fpga_cnv_freq_range_to_unit(rp_main_params[FREQ_RANGE_PARAM].value);
@@ -784,14 +781,14 @@ int spec_setFreqRange(float _freq_min, float freq)
 		if (freq < ranges[range])
 			break;
 
-	
+
 	current_freq_range = ranges[range];
-	
+
 	range = 5 - range;
 	freq_max = freq;
 	freq_min = _freq_min;
 	current_unit = range;
-	
+
 	rp_spectr_worker_update_params_by_idx(range, FREQ_RANGE_PARAM, 1);
 
 	return 0;

@@ -2092,7 +2092,7 @@ $(function() {
       var graph_width = $('#graph_grid').outerWidth();
       var zero_pos = (graph_width + 2) / 2;
       var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
-      var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px).toFixed(2));
+      var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px).toFixed(6));
       var buf_width = graph_width - 2;
       var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
       
@@ -2434,12 +2434,12 @@ $(function() {
 						'Something went wrong, try again!'];
 						
 	OSC.calib_buttons = [['CANCEL', 'DEFAULT',	'CONTINUE'], 
-						 ['CANCEL', null, 		'CALIBRARTE'],
+						 ['CANCEL', null, 		'CALIBRATE'],
 						 [null,		'DONE', 	'CONTINUE'],
-						 ['CANCEL', 'input', 	'CALIBRARTE'],
+						 ['CANCEL', 'input', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	'CONTINUE'],
-						 ['CANCEL', 'input', 	'CALIBRARTE'],
-						 ['CANCEL', 'DONE', 	'CALIBRARTE'],
+						 ['CANCEL', 'input', 	'CALIBRATE'],
+						 ['CANCEL', 'DONE', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	null],
 						 ['EXIT', 	null, 		null]];
 						 
@@ -2530,7 +2530,7 @@ $(function() {
 			OSC.ws.send(JSON.stringify({ parameters: local }));	
 		}
 		
-		if ($('#calib-3').children().html() != 'CALIBRARTE') {
+		if ($('#calib-3').children().html() != 'CALIBRATE') {
 			++OSC.state.calib;
 			OSC.setCalibState(OSC.state.calib);
 		} else {

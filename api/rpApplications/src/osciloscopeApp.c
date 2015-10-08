@@ -25,6 +25,7 @@
 #include "../../rpbase/src/common.h"
 
 typedef float thread_data_t[2][ADC_BUFFER_SIZE];
+typedef uint16_t raw_data_t[2][ADC_BUFFER_SIZE];
 
 volatile bool acqRunning = false;
 volatile bool oscRunning = false;
@@ -44,6 +45,8 @@ volatile rpApp_osc_math_oper_t operation;
 volatile rp_channel_t mathSource1, mathSource2;
 volatile bool updateView = false;
 volatile bool autoScale = false;
+
+raw_data_t raw_data; 
 
 volatile float samplesPerDivision = (float) VIEW_SIZE_DEFAULT / (float) DIVISIONS_COUNT_X;
 
@@ -618,11 +621,13 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin) {
 int osc_measureFrequency(rpApp_osc_source source, float *frequency) {
     float period;
     ECHECK_APP(osc_measurePeriod(source, &period));
+    period = (period == 0.f) ?  0.000001f : period;
     *frequency = (float) (1 / (period / 1000.0));
     return RP_OK;
 }
 
-int osc_measurePeriod(rpApp_osc_source source, float *period) {
+int osc_measurePeriodMath(rpApp_osc_source source, float *period)
+{
     int size = viewEndPos - viewStartPos;
     float data[size];
     float* ch_view = view + source*viewSize + viewStartPos;
@@ -747,7 +752,102 @@ int osc_measurePeriod(rpApp_osc_source source, float *period) {
     float idx = ((left_amax_idx + right_amax_idx) / 2.f) * viewScale;
     *period = indexToTime(idx);
 
+    return RP_OK;	
+}
+
+
+int osc_adc_sign(int in_data)
+{
+	const int c_osc_fpga_adc_bits = 14;
+    int s_data = in_data;
+    if(s_data & (1<<(c_osc_fpga_adc_bits-1)))
+        s_data = -1 * ((s_data ^ ((1<<c_osc_fpga_adc_bits)-1)) + 1);
+    return s_data;
+}
+
+
+int osc_measurePeriodCh(rpApp_osc_source source, float *period) {
+    const float c_osc_fpga_smpl_freq = 125000000;
+    const float c_meas_freq_thr = 100;
+    uint32_t start, end;
+    osc_getViewLimits(&start, &end);
+    
+    int size = ADC_BUFFER_SIZE;
+    const int c_meas_time_thr = ADC_BUFFER_SIZE / 8;
+    const float c_min_period = 19.6e-9; // 51 MHz
+
+    float thr1, thr2, cen;
+    int state = 0;
+    int trig_t[2] = { 0, 0 };
+    int trig_cnt = 0;
+    int ix;
+    
+    uint16_t data[ADC_BUFFER_SIZE];
+    osc_getRawData((source == RPAPP_OSC_SOUR_CH1) ? RP_CH_1 : RP_CH_2, data, ADC_BUFFER_SIZE);
+        
+	float meas_max, meas_min;
+	//if (dataSize.Value() > 0)
+	{
+		meas_max = data[0];
+		meas_min = data[0];
+		int i = 0;
+		for(; i<size; i++)
+		{
+			meas_max = (meas_max > data[i])? meas_max : data[i];
+			meas_min = (meas_min < data[i])? meas_min : data[i];
+		}
+	}
+	
+	uint32_t dec_factor = 1;    
+    ECHECK_APP(rp_AcqGetDecimationFactor(&dec_factor));
+
+    float acq_dur=(float)(size)/((float) c_osc_fpga_smpl_freq) * (float) dec_factor;
+    cen = (meas_max + meas_min) / 2;
+    thr1 = cen + 0.2 * (meas_min - cen);
+    thr2 = cen + 0.2 * (meas_max - cen);
+    float res_period = 0;
+    for(ix = 0; ix < (size); ix++) {
+        uint16_t sa = (uint16_t)osc_adc_sign((int)data[ix]); 
+        
+
+        /* Lower transitions */
+        if((state == 0) && (sa < thr1)) {
+            state = 1;
+        }
+        /* Upper transitions - count them & store edge times. */
+        if((state == 1) && (sa >= thr2) ) {
+            state = 0;
+            if (trig_cnt++ == 0) {
+                trig_t[0] = ix;
+            } else {
+                trig_t[1] = ix;
+            }
+        }
+        if ((trig_t[1] - trig_t[0]) > c_meas_time_thr) {
+            break;
+        }
+    }
+    /* Period calculation - taking into account at least meas_time_thr samples */
+    if(trig_cnt >= 2) {
+       res_period = (float)(trig_t[1] - trig_t[0]) /
+            ((float)c_osc_fpga_smpl_freq * (trig_cnt - 1)) * dec_factor;
+    }
+    
+    if( ((thr2 - thr1) < c_meas_freq_thr) ||
+         (res_period * 3 >= acq_dur)    ||
+         (res_period < c_min_period) )
+    {
+        res_period = 0;
+    } 
+    *period = res_period * 1000.f;
     return RP_OK;
+}
+
+int osc_measurePeriod(rpApp_osc_source source, float *period) {
+	if(source == RPAPP_OSC_SOUR_MATH)
+		return osc_measurePeriodMath(source, period);
+	else 
+		return osc_measurePeriodCh(source, period);
 }
 
 int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle) {
@@ -861,6 +961,15 @@ int osc_getData(rpApp_osc_source source, float *data, uint32_t size) {
     pthread_mutex_lock(&mutex);
     for (int i = 0; i < size; ++i) {
         data[i] = view[source*viewSize + i];
+    }
+    pthread_mutex_unlock(&mutex);
+    return RP_OK;
+}
+
+int osc_getRawData(rp_channel_t source, uint16_t *data, uint32_t size) {
+    pthread_mutex_lock(&mutex);
+    for (int i = 0; i < size; ++i) {
+        data[i] = raw_data[source][i];
     }
     pthread_mutex_unlock(&mutex);
     return RP_OK;
@@ -1480,7 +1589,9 @@ void *mainThreadFun() {
                 _startIndex = (_writePointer - _getBufSize) % ADC_BUFFER_SIZE;
             }
             // Get data
+            uint32_t _size = ADC_BUFFER_SIZE;
             ECHECK_APP_THREAD(rp_AcqGetDataV2(_startIndex, &_getBufSize, data[0], data[1]));
+            ECHECK_APP_THREAD(rp_AcqGetDataRawV2(_startIndex, &_size, raw_data[0], raw_data[1]));
 
             if (trigSweep == RPAPP_OSC_TRIG_SINGLE) {
                 ECHECK_APP_THREAD(threadSafe_acqStop());
