@@ -1,33 +1,17 @@
 diff --git a/libscpi/inc/scpi/parser.h b/libscpi/inc/scpi/parser.h
-index 2402c85..0c818be 100644
+index c3c98ef..91816e2 100644
 --- a/libscpi/inc/scpi/parser.h
 +++ b/libscpi/inc/scpi/parser.h
-@@ -53,10 +53,15 @@ extern "C" {
- #define SCPI_ResultMnemonic(context, data) SCPI_ResultCharacters((context), (data), strlen(data))
-     size_t SCPI_ResultInt(scpi_t * context, int32_t val);
-     size_t SCPI_ResultIntBase(scpi_t * context, int32_t val, int8_t base);
-+    size_t SCPI_ResultUInt(scpi_t * context, uint32_t val);
-+    size_t SCPI_ResultLong(scpi_t * context, int64_t val);
-+    size_t SCPI_ResultULong(scpi_t * context, uint64_t val);
-     size_t SCPI_ResultDouble(scpi_t * context, double val);
+@@ -60,6 +60,8 @@ extern "C" {
      size_t SCPI_ResultText(scpi_t * context, const char * data);
      size_t SCPI_ResultArbitraryBlock(scpi_t * context, const char * data, size_t len);
      size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val);
 +    size_t SCPI_ResultBufferInt16(scpi_t * context, const int16_t *data, uint32_t size);
 +    size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size);
     
-     scpi_bool_t SCPI_Parameter(scpi_t * context, scpi_parameter_t * parameter, scpi_bool_t mandatory);
-     scpi_bool_t SCPI_ParamIsNumber(scpi_parameter_t * parameter, scpi_bool_t suffixAllowed);
-@@ -69,6 +74,8 @@ extern "C" {
  
-     scpi_bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, scpi_bool_t mandatory);
-     scpi_bool_t SCPI_ParamUnsignedInt(scpi_t * context, uint32_t * value, scpi_bool_t mandatory);
-+    scpi_bool_t SCPI_ParamLong(scpi_t * context, int64_t * value, scpi_bool_t mandatory);
-+    scpi_bool_t SCPI_ParamULong(scpi_t * context, uint64_t * value, scpi_bool_t mandatory);
-     scpi_bool_t SCPI_ParamDouble(scpi_t * context, double * value, scpi_bool_t mandatory);
-     scpi_bool_t SCPI_ParamCharacters(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);
-     scpi_bool_t SCPI_ParamArbitraryBlock(scpi_t * context, const char ** value, size_t * len, scpi_bool_t mandatory);
-@@ -76,6 +83,7 @@ extern "C" {
+     scpi_bool_t SCPI_Parameter(scpi_t * context, scpi_parameter_t * parameter, scpi_bool_t mandatory);
+@@ -88,6 +90,7 @@ extern "C" {
  
      scpi_bool_t SCPI_ParamBool(scpi_t * context, scpi_bool_t * value, scpi_bool_t mandatory);
      scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options, int32_t * value, scpi_bool_t mandatory);
@@ -36,10 +20,10 @@ index 2402c85..0c818be 100644
      scpi_bool_t SCPI_IsCmd(scpi_t * context, const char * cmd);
      int32_t SCPI_CmdTag(scpi_t * context);
 diff --git a/libscpi/inc/scpi/types.h b/libscpi/inc/scpi/types.h
-index db52e81..f99af0e 100644
+index 1d7277b..860e03f 100644
 --- a/libscpi/inc/scpi/types.h
 +++ b/libscpi/inc/scpi/types.h
-@@ -290,6 +290,7 @@ extern "C" {
+@@ -292,6 +292,7 @@ extern "C" {
          scpi_param_list_t param_list;
          scpi_interface_t * interface;
          int_fast16_t output_count;
@@ -47,7 +31,7 @@ index db52e81..f99af0e 100644
          int_fast16_t input_count;
          scpi_bool_t cmd_error;
          scpi_error_queue_t error_queue;
-@@ -298,6 +299,7 @@ extern "C" {
+@@ -300,6 +301,7 @@ extern "C" {
          void * user_context;
          scpi_parser_state_t parser_state;
          const char * idn[4];
@@ -56,7 +40,7 @@ index db52e81..f99af0e 100644
  
  #ifdef  __cplusplus
 diff --git a/libscpi/src/parser.c b/libscpi/src/parser.c
-index 6a7b776..91187c0 100644
+index c996764..a271406 100644
 --- a/libscpi/src/parser.c
 +++ b/libscpi/src/parser.c
 @@ -34,8 +34,10 @@
@@ -71,7 +55,7 @@ index 6a7b776..91187c0 100644
  
  #include "scpi/config.h"
  #include "scpi/parser.h"
-@@ -96,11 +98,47 @@ static size_t writeNewLine(scpi_t * context) {
+@@ -96,12 +98,48 @@ static size_t writeNewLine(scpi_t * context) {
          len = writeData(context, SCPI_LINE_ENDING, strlen(SCPI_LINE_ENDING));
          flushData(context);
          return len;
@@ -81,9 +65,9 @@ index 6a7b776..91187c0 100644
 +        flushData(context);
      }
 +    return 0;
-+}
-+
-+/**
+ }
+ 
+ /**
 + * Writes header for binary data
 + * @param context
 + * @param numElems - number of items in the array
@@ -93,7 +77,7 @@ index 6a7b776..91187c0 100644
 +size_t writeBinHeader(scpi_t * context, uint32_t numElems, size_t sizeOfElem) {
 +
 +    size_t result = 0;
-+    char numBytes[10];
++    char numBytes[9+1];
 +    char numOfNumBytes[2];
 +
 +    // Calculate number of bytes needed for all elements
@@ -105,22 +89,23 @@ index 6a7b776..91187c0 100644
 +    }
 +
 +    // Convert to string and calculate string length
-+    size_t len = SCPI_LongToStr(numDataBytes, numBytes, sizeof(numBytes), 10);
++    size_t len = SCPI_UInt32ToStrBase(numDataBytes, numBytes, sizeof(numBytes), 10);
 +
 +    // Convert len to sting
-+    SCPI_LongToStr(len, numOfNumBytes, sizeof(numOfNumBytes), 10);
++    SCPI_UInt32ToStrBase(len, numOfNumBytes, sizeof(numOfNumBytes), 10);
 +
 +    result += writeData(context, "#", 1);
 +    result += writeData(context, numOfNumBytes, 1);
 +    result += writeData(context, numBytes, len);
 +
 +    return result;
- }
- 
++}
 +
- /**
++
++/**
   * Conditionaly write ";"
   * @param context
+  * @return number of characters written
 @@ -127,6 +165,7 @@ static void processCommand(scpi_t * context) {
  
      context->cmd_error = FALSE;
@@ -129,50 +114,7 @@ index 6a7b776..91187c0 100644
      context->input_count = 0;
  
      /* if callback exists - call command callback */
-@@ -326,6 +365,42 @@ size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
-     return SCPI_ResultIntBase(context, val, 10);
- }
- 
-+size_t SCPI_ResultUInt(scpi_t *context, uint32_t val) {
-+    char buffer[15];
-+    size_t result = 0;
-+    size_t len = SCPI_LongToStr(val, buffer, sizeof (buffer), 10);
-+    result += writeDelimiter(context);
-+    result += writeData(context, buffer, len);
-+    context->output_count++;
-+    return result;
-+}
-+
-+/**
-+* Write long value to the result
-+* @param context
-+* @param val
-+* @return
-+*/
-+size_t SCPI_ResultLong(scpi_t * context, int64_t val) {
-+    char buffer[25];
-+    size_t result = 0;
-+    size_t len = SCPI_LongToStr(val, buffer, sizeof (buffer), 10);
-+    result += writeDelimiter(context);
-+    result += writeData(context, buffer, len);
-+    context->output_count++;
-+    return result;
-+}
-+
-+size_t SCPI_ResultULong(scpi_t *context, uint64_t val) {
-+    char buffer[25];
-+    size_t result = 0;
-+    size_t len = SCPI_LongToStr(val, buffer, sizeof (buffer), 10);
-+    result += writeDelimiter(context);
-+    result += writeData(context, buffer, len);
-+    context->output_count++;
-+    return result;
-+}
-+
- /**
-  * Return prefix of nondecimal base
-  * @param base
-@@ -399,6 +474,107 @@ size_t SCPI_ResultText(scpi_t * context, const char * data) {
+@@ -472,6 +511,107 @@ size_t SCPI_ResultText(scpi_t * context, const char * data) {
      return result;
  }
  
@@ -203,11 +145,11 @@ index 6a7b776..91187c0 100644
 +    size_t len;
 +    char buffer[12];
 +    for (i = 0; i < size-1; i++) {
-+        len = SCPI_LongToStr(data[i], buffer, sizeof (buffer), 10);
++        len = SCPI_UInt32ToStrBase(data[i], buffer, sizeof (buffer), 10);
 +        result += writeData(context, buffer, len);
 +        result += writeData(context, ",", 1);
 +    }
-+    len = SCPI_LongToStr(data[i], buffer, sizeof (buffer), 10);
++    len = SCPI_UInt32ToStrBase(data[i], buffer, sizeof (buffer), 10);
 +    result += writeData(context, buffer, len);
 +    result += writeData(context, "}", 1);
 +    context->output_count++;
@@ -280,65 +222,12 @@ index 6a7b776..91187c0 100644
  /**
   * Write arbitrary block program data to the result
   * @param context
-@@ -612,6 +788,53 @@ scpi_bool_t SCPI_ParamToDouble(scpi_t * context, scpi_parameter_t * parameter, d
-     return result;
- }
- 
-+scpi_bool_t SCPI_ParamLong(scpi_t *context, int64_t *value, scpi_bool_t mandatory) {
-+    const char * param;
-+    size_t param_len;
-+    size_t num_len;
-+
-+    if (!value) {
-+        return FALSE;
-+    }
-+
-+    if (!SCPI_ParamCharacters(context, &param, &param_len, mandatory)) {
-+        return FALSE;
-+    }
-+
-+    num_len = strToLongLong(param, value);
-+
-+    if (num_len != param_len) {
-+        SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
-+        return FALSE;
-+    }
-+
-+    return TRUE;
-+}
-+
-+scpi_bool_t SCPI_ParamULong(scpi_t *context, uint64_t *value, scpi_bool_t mandatory) {
-+    const char * param;
-+    size_t param_len;
-+    size_t num_len;
-+
-+    if (!value) {
-+        return FALSE;
-+    }
-+
-+    if (!SCPI_ParamCharacters(context, &param, &param_len, mandatory)) {
-+        return FALSE;
-+    }
-+
-+    num_len = strToLongLong(param, value);
-+
-+    if (num_len != param_len) {
-+        SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
-+        return FALSE;
-+    }
-+
-+    return TRUE;
-+}
-+
-+
- /**
-  * Read floating point parameter
-  * @param context
-@@ -906,6 +1129,24 @@ scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options
+@@ -1179,6 +1319,24 @@ scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options
  }
  
  /**
-+ * TODO
++ * Red Pitaya added function
++ * TODO, replace with upstream equivalent
 + */
 +scpi_bool_t SCPI_ParamBufferFloat(scpi_t * context, float *data, uint32_t *size, scpi_bool_t mandatory) {
 +    *size = 0;
@@ -354,12 +243,11 @@ index 6a7b776..91187c0 100644
 +    return true;
 +}
 +
-+
 +/**
   * Parse one parameter and detect type
   * @param state
   * @param token
-@@ -1046,6 +1287,7 @@ int scpiParser_detectProgramMessageUnit(scpi_parser_state_t * state, char * buff
+@@ -1319,6 +1477,7 @@ int scpiParser_detectProgramMessageUnit(scpi_parser_state_t * state, char * buff
      return lex_state.pos - lex_state.buffer;
  }
  
@@ -368,7 +256,7 @@ index 6a7b776..91187c0 100644
   * Check current command
   *  - suitable for one handle to multiple commands
 diff --git a/libscpi/src/utils.c b/libscpi/src/utils.c
-index 66dbc64..bdab2f5 100644
+index 1d309ec..dae376d 100644
 --- a/libscpi/src/utils.c
 +++ b/libscpi/src/utils.c
 @@ -49,6 +49,20 @@ static size_t patternSeparatorPos(const char * pattern, size_t len);
@@ -392,30 +280,11 @@ index 66dbc64..bdab2f5 100644
   * Find the first occurrence in str of a character in set.
   * @param str
   * @param size
-@@ -169,6 +183,18 @@ size_t strToULong(const char * str, uint32_t * val, int8_t base) {
- 
- 
- /**
-+ * Converts string to signed 64bit integer representation
-+ * @param str   string value
-+ * @param val   64bit integer result
-+ * @return      number of bytes used in string
-+ */
-+size_t strToLongLong(const char * str, int64_t * val) {
-+    char * endptr;
-+    *val = strtoll(str, &endptr, 0);
-+    return endptr - str;
-+}
-+
-+/**
-  * Converts string to double representation
-  * @param str   string value
-  * @param val   double result
 diff --git a/libscpi/src/utils_private.h b/libscpi/src/utils_private.h
-index 473a98f..46fa85e 100644
+index e7909e5..c904f64 100644
 --- a/libscpi/src/utils_private.h
 +++ b/libscpi/src/utils_private.h
-@@ -51,11 +51,15 @@ extern "C" {
+@@ -51,6 +51,7 @@ extern "C" {
      #define LOCAL
  #endif
  
@@ -423,11 +292,3 @@ index 473a98f..46fa85e 100644
      char * strnpbrk(const char *str, size_t size, const char *set) LOCAL;
      scpi_bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2) LOCAL;
      scpi_bool_t compareStrAndNum(const char * str1, size_t len1, const char * str2, size_t len2, int32_t * num) LOCAL;
-+    size_t longToStr(int32_t val, char * str, size_t len) LOCAL;
-+    size_t doubleToStr(double val, char * str, size_t len) LOCAL;
-     size_t strToLong(const char * str, int32_t * val, int8_t base) LOCAL;
-     size_t strToULong(const char * str, uint32_t * val, int8_t base) LOCAL;
-+    size_t strToLongLong(const char * str, int64_t * val) LOCAL;
-     size_t strToDouble(const char * str, double * val) LOCAL;
-     scpi_bool_t locateText(const char * str1, size_t len1, const char ** str2, size_t * len2) LOCAL;
-     scpi_bool_t locateStr(const char * str1, size_t len1, const char ** str2, size_t * len2) LOCAL;
