@@ -4,7 +4,7 @@
  * @brief Red Pitaya Spectrum Analyzer FPGA Interface.
  *
  * @Author Jure Menart <juremenart@gmail.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -163,9 +163,9 @@ int spectr_fpga_init(void)
         return -1;
     }
     g_spectr_fpga_reg_mem = page_ptr + page_off;
-    g_spectr_fpga_cha_mem = (uint32_t *)g_spectr_fpga_reg_mem + 
+    g_spectr_fpga_cha_mem = (uint32_t *)g_spectr_fpga_reg_mem +
         (SPECTR_FPGA_CHA_OFFSET / sizeof(uint32_t));
-    g_spectr_fpga_chb_mem = (uint32_t *)g_spectr_fpga_reg_mem + 
+    g_spectr_fpga_chb_mem = (uint32_t *)g_spectr_fpga_reg_mem +
         (SPECTR_FPGA_CHB_OFFSET / sizeof(uint32_t));
 
     return 0;
@@ -178,15 +178,14 @@ int spectr_fpga_exit(void)
     return 0;
 }
 
-int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
+int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
                            float trig_delay, float trig_level, int freq_range,
                            int enable_avg_at_dec)
-{	
+{
     /* TODO: Locking of memory map */
-    int fpga_trig_source = spectr_fpga_cnv_trig_source(trig_imm, trig_source, 
+    int fpga_trig_source = spectr_fpga_cnv_trig_source(trig_imm, trig_source,
                                                     trig_edge);
     int fpga_dec_factor = spectr_fpga_cnv_freq_range_to_dec(freq_range);
-	fprintf(stderr, "freq_range = %d fpga_dec_factor = %d\n", freq_range, fpga_dec_factor);
     int fpga_delay;
     int fpga_trig_thr = spectr_fpga_cnv_v_to_cnt(trig_level);
 
@@ -195,12 +194,12 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     uint32_t gain_hi_cha_filt_bb = 0x437C7;
     uint32_t gain_hi_cha_filt_pp = 0x0;
     uint32_t gain_hi_cha_filt_kk = 0xffffff;
-    
+
     uint32_t gain_hi_chb_filt_aa = 0x7D93;
     uint32_t gain_hi_chb_filt_bb = 0x437C7;
     uint32_t gain_hi_chb_filt_pp = 0x0;
     uint32_t gain_hi_chb_filt_kk = 0xffffff;
-    
+
     if((fpga_trig_source < 0) || (fpga_dec_factor < 0)) {
         fprintf(stderr, "spectr_fpga_update_params() failed\n");
         return -1;
@@ -210,7 +209,7 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
 
     /* Trig source is written after ARM */
     /*    g_spectr_fpga_reg_mem->trig_source   = fpga_trig_source;*/
-    if(trig_source == 0) 
+    if(trig_source == 0)
         g_spectr_fpga_reg_mem->cha_thr   = fpga_trig_thr;
     else
         g_spectr_fpga_reg_mem->chb_thr   = fpga_trig_thr;
@@ -284,7 +283,7 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
 
     spectr_fpga_get_wr_ptr(NULL, &wr_ptr_trig);
 
-    for(in_idx = wr_ptr_trig + 1, out_idx = 0; 
+    for(in_idx = wr_ptr_trig + 1, out_idx = 0;
         out_idx < SPECTR_FPGA_SIG_LEN; in_idx++, out_idx++) {
         if(in_idx >= SPECTR_FPGA_SIG_LEN)
             in_idx = in_idx % SPECTR_FPGA_SIG_LEN;
@@ -314,7 +313,7 @@ int spectr_fpga_cnv_trig_source(int trig_imm, int trig_source, int trig_edge)
 {
     int fpga_trig_source = 0;
 
-    /* Trigger immediately */    
+    /* Trigger immediately */
     if(trig_imm)
         return 1;
 
@@ -416,12 +415,12 @@ int spectr_fpga_cnv_v_to_cnt(float voltage)
 
     if((voltage > g_spectr_fpga_adc_max_v) || (voltage < -g_spectr_fpga_adc_max_v))
         return -1;
-    
-    adc_cnts = (int)round(voltage * (float)((int)(1<<c_spectr_fpga_adc_bits)) / 
+
+    adc_cnts = (int)round(voltage * (float)((int)(1<<c_spectr_fpga_adc_bits)) /
                           (2*g_spectr_fpga_adc_max_v));
 
     /* Clip highest value (+14 is calculated in int32_t to 0x2000, but we have
-     * only 14 bits 
+     * only 14 bits
      */
     if((voltage > 0) && (adc_cnts & (1<<(c_spectr_fpga_adc_bits-1))))
         adc_cnts = (1<<(c_spectr_fpga_adc_bits-1))-1;

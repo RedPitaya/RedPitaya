@@ -37,7 +37,7 @@
     'ch1' : '#f3ec1a',
     'ch2' : '#31b44b'
   };
-  SPEC.config.waterf_img_path = "/tmp/"
+  SPEC.config.waterf_img_path = "/tmp/ram/"
   SPEC.freq_unit = ['Hz', 'kHz', 'MHz'];
 
   SPEC.config.xmin = 0;

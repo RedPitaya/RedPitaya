@@ -2,7 +2,7 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES=new_main.cpp
+CXXSOURCES=main.cpp
 
 RP_API=../../../api/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
