@@ -19,10 +19,8 @@
 #include "scpi/types.h"
 #include "../../api/rpbase/src/rp.h"
 
-scpi_result_t RP_GenChannel1State(scpi_t * context);
-scpi_result_t RP_GenChannel2State(scpi_t * context);
-scpi_result_t RP_GenChannel1StateQ(scpi_t * context);
-scpi_result_t RP_GenChannel2StateQ(scpi_t * context);
+scpi_result_t RP_GenState(scpi_t * context);
+scpi_result_t RP_GenStateQ(scpi_t * context);
 scpi_result_t RP_GenReset(scpi_t * context);
 scpi_result_t RP_GenChannel1Frequency(scpi_t * context);
 scpi_result_t RP_GenChannel2Frequency(scpi_t * context);
