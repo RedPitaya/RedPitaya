@@ -125,7 +125,7 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
 scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
     
     float frequency;
-    rp_channel_t;
+    rp_channel_t channel;
     int result;
 
     /* Get channel number */
@@ -135,7 +135,7 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenGetFreq(&frequency);
+    result = rp_GenGetFreq(channel, &frequency);
     if(result != RP_OK){
         RP_ERR("*OUTPUT#:STATE Failed to get frequency", rp_GetError(result));
         return SCPI_RES_ERR;
