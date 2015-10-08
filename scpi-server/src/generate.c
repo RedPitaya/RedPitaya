@@ -123,6 +123,25 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
 }
 
 scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
+    
+    float frequency;
+    rp_channel_t;
+    int result;
+
+    /* Get channel number */
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*OUTPUT#:STATE Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetFreq(&frequency);
+    if(result != RP_OK){
+        RP_ERR("*OUTPUT#:STATE Failed to get frequency", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*OUTPUT#:STATE Successfully returned frequency value to client.");
     return SCPI_RES_OK;
 }    
 
