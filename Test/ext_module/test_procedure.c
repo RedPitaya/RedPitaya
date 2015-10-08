@@ -34,6 +34,7 @@ int main(int argc, char *argv[]){
 	}
 	rp_DpinSetDirection(RP_DIO0_P, RP_OUT);
 	rp_DpinSetState(RP_DIO0_P, 1);
+	usleep(1000);
 	rp_DpinSetState(RP_DIO0_P, 0);
 
 	rp_ApinSetValue(RP_AOUT0, 0.5);
@@ -45,7 +46,12 @@ int main(int argc, char *argv[]){
 	while(d_pin < RP_DIO1_N){
 		rp_pinState_t state;
 		rp_DpinGetState(d_pin, &state);
-		sum += state;
+		if((d_pin % 2 == 0) && state == 0){
+			sum += 1;
+		}else if((d_pin % 2 != 0) && state == 1){
+			sum += 1;
+		}
+
 		j++;
 		d_pin++;
 	}
@@ -54,9 +60,15 @@ int main(int argc, char *argv[]){
 	while(a_pin < RP_AIN3){
 		float a_val;
 		rp_ApinGetValue(a_pin, &a_val);
-		if((a_val / 0.7) >= 0.45 && (a_val / 0.7) < 0.55){
-			sum += 1;
-		} 
+		if(a_pin % 2 == 0){
+			if((a_val / 0.7) >= 0.45 && (a_val / 0.7) < 0.55){
+					sum += 1;
+			}
+		}else{
+			if((a_val / 0.7) > 0.95 && (a_val / 0.7) < 1.05){
+					sum += 1;
+			}
+		}
 		j++;
 		a_pin++;
 	}

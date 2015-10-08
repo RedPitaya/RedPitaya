@@ -391,7 +391,7 @@ $(IDGEN): $(NGINX)
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = v2.1
+SCPI_PARSER_TAG = 8746b911b06fe0fc3060c9c12493c13edfcdbd7e
 SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_DIR = scpi-server/scpi-parser
