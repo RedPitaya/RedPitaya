@@ -215,10 +215,6 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2WaveFormQ(scpi_t *context) {
-    return RP_GenGetWaveForm(RP_CH_2, context);
-}
-
 enum _scpi_result_t RP_GenChannel1Amplitude(scpi_t *context) {
     return RP_GenSetAmplitude(RP_CH_1, context);
 }
@@ -443,61 +439,6 @@ enum _scpi_result_t RP_GenGetFrequency(rp_channel_t channel, scpi_t *context) {
     SCPI_ResultDouble(context, value);
 
     syslog(LOG_INFO, "*SOUR<n>:FREQ:FIX? Successfully returned frequency %.2fHz to client.", value);
-
-    return SCPI_RES_OK;
-}
-
-enum _scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t *context) {
-    const char * param;
-    size_t param_len;
-    char waveformString[15];
-
-    // read first parameter waveform shape
-    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        syslog(LOG_ERR, "*SOUR<n>:FUNC is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-    strncpy(waveformString, param, param_len);
-    waveformString[param_len] = '\0';
-
-    // Convert waveform
-    rp_waveform_t waveform;
-    if (getRpWaveform(waveformString, &waveform)) {
-        syslog(LOG_ERR, "*SOUR<n>:FUNC parameter waveform is invalid.");
-        return SCPI_RES_ERR;
-    }
-
-    int result = rp_GenWaveform(channel, waveform);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:FUNC Failed to set waveform: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*SOUR<n>:FUNC Successfully set waveform to %s.", waveformString);
-
-    return SCPI_RES_OK;
-}
-
-enum _scpi_result_t RP_GenGetWaveForm(rp_channel_t channel, scpi_t *context) {
-    rp_waveform_t waveform;
-    int result = rp_GenGetWaveform(channel, &waveform);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:FUNC? Failed to get waveform: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    char string[50];
-    if (getRpWaveformString(waveform, string)) {
-        syslog(LOG_ERR, "*SOUR<n>:FUNC? failed to convert to string.");
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultMnemonic(context, string);
-
-    syslog(LOG_INFO, "*SOUR<n>:FUNC? Successfully returned waveform %s to client.", string);
 
     return SCPI_RES_OK;
 }

@@ -74,8 +74,6 @@ scpi_result_t RP_GenSetState(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenGetState(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenSetFrequency(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenGetFrequency(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetWaveForm(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetWaveForm(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenSetAmplitude(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenGetAmplitude(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t * context);
