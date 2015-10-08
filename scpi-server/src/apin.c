@@ -22,14 +22,14 @@
 
 /* Apin choice def */
 const scpi_choice_def_t scpi_RpApin[] = {
-    {"RP_AOUT0", 0},  //!< Analog output 0
-    {"RP_AOUT1", 1},  //!< Analog output 1
-    {"RP_AOUT2", 2},  //!< Analog output 2
-    {"RP_AOUT3", 3},  //!< Analog output 3
-    {"RP_AIN0",  4},  //!< Analog input 0
-    {"RP_AIN1",  5},  //!< Analog input 1
-    {"RP_AIN2",  6},  //!< Analog input 2
-    {"RP_AIN3",  7},  //!< Analog input 3
+    {"AOUT0", 0},  //!< Analog output 0
+    {"AOUT1", 1},  //!< Analog output 1
+    {"AOUT2", 2},  //!< Analog output 2
+    {"AOUT3", 3},  //!< Analog output 3
+    {"AIN0",  4},  //!< Analog input 0
+    {"AIN1",  5},  //!< Analog input 1
+    {"AIN2",  6},  //!< Analog input 2
+    {"AIN3",  7},  //!< Analog input 3
     SCPI_CHOICE_LIST_END
 };
 
