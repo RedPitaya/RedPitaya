@@ -210,7 +210,7 @@ index 122b557..2a8d849 100644
 +size_t resultBufferInt16Bin(scpi_t * context, const int16_t *data, uint32_t size) {
 +    size_t result = 0;
 +
-+    result += writeBinHeader(context, size, sizeof(float));
++    result += writeBinHeader(context, size, sizeof(int16_t));
 +
 +    if (result == 0) {
 +        return result;
