@@ -24,15 +24,48 @@ rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
 /* These structures are a direct API mirror 
 and should not be altered! */
+const scpi_choice_def_t scpi_RpUnits[] = {
+    {"VOLTS", 0},
+    {"RAW", 1},
+    SCPI_CHOICE_LIST_END
+};
+
 const scpi_choice_def_t scpi_RpGain[] = {
     {"LV", 0},
     {"HV", 1},
     SCPI_CHOICE_LIST_END
 };
 
-const scpi_choice_def_t scpi_RpChannel[] = {
-    {"RP_CH_1", 0},
-    {"RP_CH_2", 1},
+const scpi_choice_def_t scpi_RpDec[] = {
+    {"D_1",     1},
+    {"D_8",     2},
+    {"D_64",    3},
+    {"D_1024",  4},
+    {"D_8192",  5},
+    {"D_65536", 6},
+};
+
+const scpi_choice_def_t scpi_RpSmpRate[] = {
+    {"S_125MHz",   0}, //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    {"S_15_6MHz",  1}, //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    {"S_1_9MHz",   2}, //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    {"S_103_8kHz", 3}, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    {"S_15_2kHz",  4}, //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    {"S_1_9kHz",   5},
+    SCPI_CHOICE_LIST_END
+};
+
+const scpi_choice_def_t scpi_RpTrigSrc[] = {
+    {"DISABLED",    0},
+    {"NOW",         1},
+    {"CH1_PE",      2},
+    {"CH1_NE",      3},
+    {"CH2_PE",      4},
+    {"CH2_NE",      5},
+    {"EXT_PE",      6},
+    {"EXT_NE",      7},
+    {"AWG_PE",      8},
+    {"AWG_NE",      9},
     SCPI_CHOICE_LIST_END
 };
 
@@ -71,7 +104,7 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    RP_INFO("*ACQ:START Successful.");
+    RP_INFO("*ACQ:START Successful started Red Pitaya acquire.");
     return SCPI_RES_OK;
 }
 
@@ -83,7 +116,7 @@ scpi_result_t RP_AcqStop(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    RP_ERR("*ACQ:STOP Successful.", NULL);
+    RP_ERR("*ACQ:STOP Successful stopped Red Pitaya acquire.", NULL);
     return SCPI_RES_OK;
 }
 
@@ -98,29 +131,25 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     unit = RP_SCPI_VOLTS;
     context->binary_output = false;
 
-    RP_INFO("*ACQ:RST Successful.");
+    RP_INFO("*ACQ:RST Successful reset  Red Pitaya acquire.");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqDecimation(scpi_t *context) {
-    int value;
+    
+    int32_t choice;
 
-    // read first parameter DECIMATION (1,8,64,1024,8192,65536)
-    if (!SCPI_ParamInt(context, &value, false)) {
+    /* Read DECIMATION parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpDec, &choice, true)) {
         RP_ERR("*ACQ:DEC is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Convert decimation to rp_acq_decimation_t
-    rp_acq_decimation_t decimation;
-    if (getRpDecimation(value, &decimation)) {
-        RP_ERR("*ACQ:DEC parameter decimation is invalid.", NULL);
-        return SCPI_RES_ERR;
-    }
+    rp_acq_decimation_t decimation = choice;
 
     // Now set the decimation
     int result = rp_AcqSetDecimation(decimation);
-
     if (RP_OK != result) {
         RP_ERR("*ACQ:DEC Failed to set decimation", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -131,6 +160,9 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
+    
+    const char *dec_name;
+
     // Get decimation
     rp_acq_decimation_t decimation;
     int result = rp_AcqGetDecimation(&decimation);
@@ -140,41 +172,29 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    // Convert decimation to int
-    int value;
-    if (RP_OK != getRpDecimationInt(decimation, &value)) {
-        RP_ERR("*ACQ:DEC? Failed to convert decimation to integer", rp_GetError(result));
+    /* Parse decimation to choice */
+    if(!SCPI_ChoiceToName(scpi_RpDec, decimation, &dec_name)){
+        RP_ERR("*ACQ:DEC? Failed to get decimation.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultDouble(context, value);
+    SCPI_ResultMnemonic(context, dec_name);
 
     RP_INFO("*ACQ:DEC? Successfully returned decimation.");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
-    const char * param;
-    size_t param_len;
-    char samplingRateStr[15];
+    
+    int32_t choice;
 
-    // read first parameter SAMPLING_RATE (125MHz,15_6MHz, 1_9MHz,103_8kHz, 15_2kHz, 1_9kHz)
-    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
-        RP_ERR("*ACQ:SRAT is missing first parameter.", NULL);
-        return SCPI_RES_ERR;
-    }
-    strncpy(samplingRateStr, param, param_len);
-    samplingRateStr[param_len] = '\0';
-
-    // Convert samplingRate to rp_acq_sampling_rate_t
-    rp_acq_sampling_rate_t samplingRate;
-    if (getRpSamplingRate(samplingRateStr, &samplingRate)) {
-        RP_ERR("*ACQ:SRAT parameter sampling rate is invalid.", NULL);
+    if(!SCPI_ParamChoice(context, scpi_RpSmpRate, &choice, true)){
+        RP_ERR("*ACQ:SRAT Missing SAMPLE RATE parameter.", NULL);
         return SCPI_RES_ERR;
     }
 
-    // Now set the sampling rate
+    rp_acq_sampling_rate_t  samplingRate = choice;
     int result = rp_AcqSetSamplingRate(samplingRate);
 
     if (RP_OK != result) {
@@ -187,6 +207,8 @@ scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
+    
+    const char *smp_name;
     rp_acq_sampling_rate_t samplingRate;
     int result = rp_AcqGetSamplingRate(&samplingRate);
 
@@ -195,22 +217,22 @@ scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    // convert sampling rate to string
-    char samplingRateString[15];
-    if (RP_OK != getRpSamplingRateString(samplingRate, samplingRateString)) {
-        RP_ERR("*ACQ:SRAT? Failed to convert sampling rate to string", rp_GetError(result));
+    /* Parse sampling rate to choice */
+    if(!SCPI_ChoiceToName(scpi_RpSmpRate, samplingRate, &smp_name)){
+        RP_ERR("*ACQ:SRAT? Failed to get sampling rate.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultMnemonic(context, samplingRateString);
-
+    SCPI_ResultMnemonic(context, smp_name);
     RP_INFO("*ACQ:SRAT? Successfully returned sampling rate.");
 
     return SCPI_RES_OK;
 }
 
+//TODO: Redundand function?
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
+    
     // get sampling rate
     float samplingRate;
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
@@ -273,41 +295,31 @@ scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
-    const char * param;
-    size_t param_len;
+    
+    int32_t trig_src;
 
-    char triggerSource[15];
-
-    // read first parameter TRIGGER SOURCE (DISABLED,NOW,CH1_PE,CH1_NE,CH2_PE,CH2_NE,EXT_PE,EXT_NE,AWG_PE)
-    if (!SCPI_ParamCharacters(context, &param, &param_len, false)) {
+    /* Read TRIGGER SOURCE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpTrigSrc, &trig_src, true)) {
         RP_ERR("*ACQ:TRIG is missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
-    else {
-        strncpy(triggerSource, param, param_len);
-        triggerSource[param_len] = '\0';
-    }
 
-    rp_acq_trig_src_t source;
-    if (getRpTriggerSource(triggerSource, &source)) {
-        RP_ERR("*ACQ:TRIG parameter trigger source is invalid.", NULL);
-        return SCPI_RES_ERR;
-    }
+    rp_acq_trig_src_t source = trig_src;
 
     // Now set the trigger source
     int result = rp_AcqSetTriggerSrc(source);
-
     if (RP_OK != result) {
         RP_ERR("*ACQ:TRIG Failed to set trigger source", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     RP_INFO("*ACQ:TRIG Successfully set trigger source.");
-
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
+    
+    const char *trig_name;
     // get trigger source
     rp_acq_trig_src_t source;
     int result = rp_AcqGetTriggerSrc(&source);
@@ -317,14 +329,13 @@ scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
         source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
-    char sourceString[15];
-    if (getRpTriggerSourceString(source, sourceString)) {
-        RP_ERR("*ACQ:TRIG:STAT? Failed to convert result to string", rp_GetError(result));
+    if(!SCPI_ChoiceToName(scpi_RpTrigSrc, source, &trig_name)){
+        RP_ERR("*ACQ:TRIG:STAT? Failed to parse trigger source.", NULL);
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultMnemonic(context, sourceString);
+    SCPI_ResultMnemonic(context, trig_name);
 
     RP_INFO("*ACQ:TRIG:STAT? Successfully returned trigger.");
 
@@ -549,29 +560,33 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
-    const char * param;
-    size_t param_len;
+    
+    int32_t choice;
 
-    char unitString[10];
-
-    // read first parameter UNITS (RAW, VOLTS)
-    if (!SCPI_ParamCharacters(context,  &param, &param_len, false)) {
-        RP_ERR("*ACQ:DATA:UNITS is missing first parameter.", NULL);
+    /* Read UNITS parameters */
+    if(!SCPI_ParamChoice(context, scpi_RpUnits, &choice, true)){
+        RP_ERR("*ACQ:DATA:UNITS Missing first parameter.", NULL);
         return SCPI_RES_ERR;
     }
-    else {
-        strncpy(unitString, param, param_len);
-        unitString[param_len] = '\0';
-    }
 
-    int result = getRpUnit(unitString, &unit);
-    if (result != RP_OK) {
-        RP_ERR("*ACQ:DATA:UNITS Failed to convert unit from string", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
+    /* Set global units for acq scpi */
+    unit = choice;
 
     RP_INFO("*ACQ:DATA:UNITS Successfully set scpi units.");
+    return SCPI_RES_OK;
+}
 
+scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t *context){
+
+    const char *units;
+
+    if(!SCPI_ChoiceToName(scpi_RpUnits, unit, &units)){
+        RP_ERR("*ACQ:DATA:UNITS? Failed to get data units.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, units);
+    RP_INFO("*ACQ:DATA:UNITS? Successfully returned data to client.");
     return SCPI_RES_OK;
 }
 
