@@ -4,7 +4,7 @@
 #include "CustomParameters.h"
 #include "misc.h"
 
-#ifndef ALWAYS_PURCHASED
+#ifdef ENABLE_LICENSING
 #include "licverify/LicenseVerificator.h"
 #endif
 
@@ -327,9 +327,9 @@ extern "C" int ws_set_demo_mode(int a)
 
 extern "C" int verify_app_license(const char* app_id)
 {
-#ifdef ALWAYS_PURCHASED
-	return 0;
-#else
+#ifdef ENABLE_LICENSING
 	return verify_app_license_impl(app_id);
+#else
+	return 0;
 #endif
 }
