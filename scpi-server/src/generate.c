@@ -35,6 +35,12 @@ const scpi_choice_def_t scpi_RpWForm[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpGenMode[] = {
+    {"OFF",  0},
+    {"ON",   1},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_GenReset(scpi_t *context) {
     int result = rp_GenReset();
     if (RP_OK != result) {
@@ -472,20 +478,64 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1GenerateMode(scpi_t *context) {
-    return RP_GenSetGenerateMode(RP_CH_1, context);
+scpi_result_t RP_GenGenerateMode(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int32_t usr_mode;
+    int result;
+    
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamChoice(context, scpi_RpGenMode, &usr_mode, true)){
+        RP_ERR("*SOUR#:BURS:STAT Failed to parse first parameter", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    rp_gen_mode_t mode = usr_mode;
+    result = rp_GenMode(channel, mode);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT Failed to get generate mode", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:BURS:STAT Successfully set generate mode.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2GenerateMode(scpi_t *context) {
-    return RP_GenSetGenerateMode(RP_CH_2, context);
-}
+scpi_result_t RP_GenGenerateModeQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result;
+    const char *gen_mode;
+    rp_gen_mode_t mode;
 
-enum _scpi_result_t RP_GenChannel1GenerateModeQ(scpi_t *context) {
-    return RP_GenGetGenerateMode(RP_CH_1, context);
-}
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT? Invalid channel name", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel2GenerateModeQ(scpi_t *context) {
-    return RP_GenGetGenerateMode(RP_CH_2, context);
+    result = rp_GenGetMode(channel, &mode);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT? Failed to get generate mode", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    int32_t i_mode = mode;
+
+    if(!SCPI_ChoiceToName(scpi_RpGenMode, i_mode, &gen_mode)){
+        RP_ERR("*SOUR#:BURS:STAT? Invalid genera*SOUR#:BURS:STAT?te mode", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, gen_mode);
+
+    RP_INFO("*SOUR#:BURS:STAT? Successfully returned generate mode status to client.");
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1BurstCount(scpi_t *context) {
