@@ -636,20 +636,38 @@ scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenChannel1BurstPeriod(scpi_t *context) {
-    return RP_GenSetBurstPeriod(RP_CH_1, context);
+scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result;
+    uint32_t period;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:INT:PER Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamUInt32(context, &period, true)){
+        RP_ERR("*SOUR#:BURS:INT:PER Failed to parse first parameter", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenBurstPeriod(channel, period);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:INT:PER Failed to get generate burst period", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultUInt32Base(context, period, 10);
+
+    RP_INFO("*SOUR#:BURS:INT:PER Successfully returned generate burst period value to client");
+    return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenChannel2BurstPeriod(scpi_t *context) {
-    return RP_GenSetBurstPeriod(RP_CH_2, context);
-}
-
-scpi_result_t RP_GenChannel1BurstPeriodQ(scpi_t *context) {
-    return RP_GenGetBurstPeriod(RP_CH_1, context);
-}
-
-scpi_result_t RP_GenChannel2BurstPeriodQ(scpi_t *context) {
-    return RP_GenGetBurstPeriod(RP_CH_2, context);
+scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
+    
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1TriggerSource(scpi_t *context) {
