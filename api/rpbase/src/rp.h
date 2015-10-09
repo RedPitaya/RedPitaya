@@ -1211,6 +1211,8 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 */
 int rp_GenTrigger(int mask);
 
+float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
+
 #ifdef __cplusplus
 }
 #endif
