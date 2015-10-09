@@ -28,7 +28,7 @@ int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel){
     if(ch_usr[0] < MIN_CH && ch_usr[0] > MAX_CH){
         return RP_EOOR;
     }
-    *channel = ch_usr[0];
+    *channel = ch_usr[0] - 1;
     
     return RP_OK;
 }
