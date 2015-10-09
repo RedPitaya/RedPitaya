@@ -66,14 +66,14 @@ int main(int argc, char *argv[]){
 		float a_val;
 		rp_ApinGetValue(a_pin, &a_val);
 		if(a_pin % 2 == 0){
-			if((a_val / 0.7) >= 0.45 && (a_val / 0.7) < 0.55){
+			if(a_val >= 0.45 && a_val < 0.55){
 					check[global_c++] = 1;
 					sum++;
 					continue;
 			}
 			global_c++;
 		}else{
-			if((a_val / 0.7) > 0.95 && (a_val / 0.7) < 1.05){
+			if(a_val / 0.7 > 0.95 && a_val / 0.7 < 1.05){
 					check[global_c++] = 1;
 					sum++;
 					continue;
