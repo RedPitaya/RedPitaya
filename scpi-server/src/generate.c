@@ -418,7 +418,7 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
         RP_ERR("*SOUR#:DCYC? Failed to get generate duty cycle", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    
+
     SCPI_ResultFloat(context, duty_cycle);
 
     RP_INFO("*SOUR#:DCYC Successfully returned generate duty cycle  value to client");
@@ -571,7 +571,7 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
     
     result = RP_ParseChArgv(context, &channel);
     if(result != RP_OK){
-        RP_ERR("*SOUR#:BURS:STAT? Invalid cahnnel number", rp_GetError(result));
+        RP_ERR("*SOUR#:BURS:STAT? Invalid channel number", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
@@ -587,20 +587,53 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenChannel1BurstRepetitions(scpi_t *context) {
-    return RP_GenSetBurstRepetitions(RP_CH_1, context);
+scpi_result_t RP_GenBurstRepetitions(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result, repetitions;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:NOR Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamInt32(context, &repetitions, true)){
+        RP_ERR("*SOUR#:BURS:NOR Failed to parse first parameter", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenBurstRepetitions(channel, repetitions);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:NOR Failed to set generate burst repetitions", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:BURS:NOR Successfully set generate repetitions");
+    return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenChannel2BurstRepetitions(scpi_t *context) {
-    return RP_GenSetBurstRepetitions(RP_CH_2, context);
-}
+scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result, repetitions;
 
-scpi_result_t RP_GenChannel1BurstRepetitionsQ(scpi_t *context) {
-    return RP_GenGetBurstRepetitions(RP_CH_1, context);
-}
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:NOR? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
-scpi_result_t RP_GenChannel2BurstRepetitionsQ(scpi_t *context) {
-    return RP_GenGetBurstRepetitions(RP_CH_2, context);
+    result = rp_GenGetBurstRepetitions(channel, &repetitions);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:NOR Failed to get generate repetitions", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultInt32(context, repetitions);
+
+    RP_INFO("*SOUR#:BURS:NOR Successfully returned generate repetitions value to client");
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_GenChannel1BurstPeriod(scpi_t *context) {
