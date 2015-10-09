@@ -210,13 +210,9 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "SOUR#:BURS:NOR?", .callback        = RP_GenBurstRepetitionsQ,},
         {.pattern = "SOUR#:BURS:INT:PER", .callback     = RP_GenBurstPeriod,},
         {.pattern = "SOUR#:BURS:INT:PER?", .callback    = RP_GenBurstPeriodQ,},
-        {.pattern = "SOUR1:TRIG:SOUR", .callback        = RP_GenChannel1TriggerSource,},
-        {.pattern = "SOUR2:TRIG:SOUR", .callback        = RP_GenChannel2TriggerSource,},
-        {.pattern = "SOUR1:TRIG:SOUR?", .callback       = RP_GenChannel1TriggerSourceQ,},
-        {.pattern = "SOUR2:TRIG:SOUR?", .callback       = RP_GenChannel2TriggerSourceQ,},
-        {.pattern = "SOUR1:TRIG:IMM", .callback         = RP_GenChannel1Trigger,},
-        {.pattern = "SOUR2:TRIG:IMM", .callback         = RP_GenChannel2Trigger,},
-        {.pattern = "TRIG:IMM", .callback               = RP_GenChannelAllTrigger,},
+        {.pattern = "SOUR#:TRIG:SOUR", .callback        = RP_GenTriggerSource,},
+        {.pattern = "SOUR#:TRIG:SOUR?", .callback       = RP_GenTriggerSourceQ,},
+        {.pattern = "SOUR#:TRIG:IMM", .callback         = RP_GenTrigger,},
 
     SCPI_CMD_LIST_END
 };
