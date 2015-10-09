@@ -368,20 +368,55 @@ scpi_result_t RP_GenPhaseQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1DutyCycle(scpi_t *context) {
-    return RP_GenSetDutyCycle(RP_CH_1, context);
+scpi_result_t RP_GenDutyCycle(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float duty_cycle;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:DCYC", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamFloat(context, &duty_cycle, true)){
+        RP_ERR("*SOUR#:DCYC Failed to parse first argument", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenDutyCycle(channel, duty_cycle);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:DCYC Failed to set generate duty cycle", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:DCYC Successfully set generate duty cycle.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2DutyCycle(scpi_t *context) {
-    return RP_GenSetDutyCycle(RP_CH_2, context);
-}
+scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float duty_cycle;
+    int result;
 
-enum _scpi_result_t RP_GenChannel1DutyCycleQ(scpi_t *context) {
-    return RP_GenGetDutyCycle(RP_CH_1, context);
-}
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:DCYC? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel2DutyCycleQ(scpi_t *context) {
-    return RP_GenGetDutyCycle(RP_CH_2, context);
+    result = rp_GenGetDutyCycle(channel, &duty_cycle);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:DCYC? Failed to get generate duty cycle", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, duty_cycle);
+
+    RP_INFO("*SOUR#:DCYC Successfully returned generate duty cycle  value to client");
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1ArbitraryWaveForm(scpi_t *context) {
