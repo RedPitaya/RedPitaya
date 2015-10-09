@@ -40,7 +40,7 @@ static char version[50];
 int rp_Init()
 {
 	ECHECK(cmn_Init());
-	
+
     ECHECK(calib_Init());
     ECHECK(hk_Init());
     ECHECK(ams_Init());
@@ -600,6 +600,11 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
 
 int rp_GenTrigger(int mask) {
     return gen_Trigger(mask);
+}
+
+float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
+{
+	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
 }
 
 /**
