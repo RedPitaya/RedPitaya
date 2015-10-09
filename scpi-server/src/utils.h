@@ -48,21 +48,4 @@ syslog(LOG_INFO, "%s\n", msg);
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
 
-int getRpWaveform(const char *waveformString, rp_waveform_t *waveform);
-int getRpWaveformString(rp_waveform_t waveform, char *waveformString);
-int getRpGenTriggerSource(const char *triggerSourceString, rp_trig_src_t *triggerSource);
-int getRpGenTriggerSourceString(rp_trig_src_t triggerSource, char *string);
-
-int getRpAppTrigSlope(const char *string, rpApp_osc_trig_slope_t *slope);
-int getRpAppTrigSlopeString(rpApp_osc_trig_slope_t slope, char *string);
-int getRpAppTrigSweep(const char *string, rpApp_osc_trig_sweep_t *sweep);
-int getRpAppTrigSweepString(rpApp_osc_trig_sweep_t sweep, char *string);
-int getRpAppMathOperation(const char *string, rpApp_osc_math_oper_t *op);
-int getRpAppMathOperationString(rpApp_osc_math_oper_t op, char *string);
-
-int getRpInfinityInteger(const char *string, int32_t *value);
-int getRpInfinityIntegerString(int32_t value, char *string);
-int getRpUnit(const char *unitString, rp_scpi_acq_unit_t *unit);
-int getRpStateIntegerString(int32_t value, char *string);
-
 #endif /* UTILS_H_ */
