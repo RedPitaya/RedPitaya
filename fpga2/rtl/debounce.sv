@@ -6,8 +6,7 @@
 
 module debounce #(
   int unsigned CW = 8,  // counter width
-  int unsigned DW = 1,  // data width
-  bit [PW-1:0] DI = '0  // data idle state
+  bit          DI = '0  // data idle state
 )(
   // system signals
   input  logic          clk ,  // clock
@@ -16,41 +15,42 @@ module debounce #(
   input  logic          ena,   // enable
   input  logic [CW-1:0] len,   // range
   // input stream
-  input  logic [PW-1:0] d_i,   // data input
-  output logic [PW-1:0] d_o,   // debounced output
-  output logic [PW-1:0] d_p,   // debounced output posedge
-  output logic [PW-1:0] d_n    // debounced output negedge
+  input  logic          d_i,   // data input
+  output logic          d_o,   // debounced output
+  output logic          d_p,   // debounced output posedge
+  output logic          d_n    // debounced output negedge
 );
-
-generate
-for (genvar i=0; i<PW; i++) begin: for_i
 
 logic [CW-1:0] cnt;  // counter
 logic    [1:0] d_s;  // input synchronizer
 
 // prevention of metastability problems
 always_ff @(posedge clk)
-d_s <= {d_s[0], d_i[i]};
+d_s <= {d_s[0], d_i};
 
 // the counter should start running on a change
 always_ff @(posedge clk)
 if (~rstn)              cnt <= 0;
 else if (ena) begin
   if (|cnt)             cnt <= cnt - 1;
-  else if (d_s[1]^d_o)  cnt <= CN;
+  else if (d_s[1]^d_o)  cnt <= len;
 end
 
 // when the counter is zero the output should follow the input
 always_ff @(posedge clk)
 if (~rstn) begin
-  d_o[i] <= DI[i];
-end else if (ena & ~|cnt) begin
-  d_o[i] <=  d_s[1];
-  d_p[i] <=  d_s[1] & ~d_p[i];
-  d_n[i] <= ~d_s[1] &  d_p[i];
+  d_o <= DI;
+  d_p <= 1'b0;
+  d_n <= 1'b0;
+end else if (ena) begin
+  if (~|cnt) begin
+    d_o <=  d_s[1];
+    d_p <=  d_s[1] & ~d_o;
+    d_n <= ~d_s[1] &  d_o;
+  end else begin
+    d_p <= 1'b0;
+    d_n <= 1'b0;
+  end
 end
-
-end: for_i
-endgenerate
 
 endmodule: debounce
