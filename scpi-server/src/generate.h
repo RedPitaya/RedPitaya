@@ -48,24 +48,4 @@ scpi_result_t RP_GenTriggerSource(scpi_t * context);
 scpi_result_t RP_GenTriggerSourceQ(scpi_t * context);
 scpi_result_t RP_GenTrigger(scpi_t *context);
 
-scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetOffset(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetPhase(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetPhase(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetDutyCycle(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetDutyCycle(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetArbitraryWaveForm(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetArbitraryWaveForm(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetGenerateMode(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetGenerateMode(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetBurstCount(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetBurstCount(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetBurstRepetitions(rp_channel_t channel, scpi_t *context);
-scpi_result_t RP_GenGetBurstRepetitions(rp_channel_t channel, scpi_t *context);
-scpi_result_t RP_GenSetBurstPeriod(rp_channel_t channel, scpi_t *context);
-scpi_result_t RP_GenGetBurstPeriod(rp_channel_t channel, scpi_t *context);
-scpi_result_t RP_GenSetTriggerSource(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenGetTriggerSource(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_GenSetTrigger(int channel, scpi_t * context);
-
 #endif /* GENERATE_H_ */
