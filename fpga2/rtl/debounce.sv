@@ -30,10 +30,12 @@ d_s <= {d_s[0], d_i};
 
 // the counter should start running on a change
 always_ff @(posedge clk)
-if (~rstn)              cnt <= 0;
-else if (ena) begin
-  if (|cnt)             cnt <= cnt - 1;
-  else if (d_s[1]^d_o)  cnt <= len;
+if (~rstn)                cnt <= 0;
+else begin
+  if (ena) begin
+    if (|cnt)             cnt <= cnt - 1;
+    else if (d_s[1]^d_o)  cnt <= len;
+  end else                cnt <= 0;
 end
 
 // when the counter is zero the output should follow the input
@@ -42,9 +44,12 @@ if (~rstn) begin
   d_o <= DI;
   d_p <= 1'b0;
   d_n <= 1'b0;
-end else if (ena) begin
+end else begin
+  // output folowing the input
+  if (~|cnt | ~ena)
+    d_o <= d_s[1];
+  // edge pulses  
   if (~|cnt) begin
-    d_o <=  d_s[1];
     d_p <=  d_s[1] & ~d_o;
     d_n <= ~d_s[1] &  d_o;
   end else begin

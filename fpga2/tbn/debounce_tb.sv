@@ -22,7 +22,7 @@ int seed;  // random seed
 
 // request for a dumpfile
 initial begin
-  $dumpfile("debounce.vcd");
+  $dumpfile("debounce_tb.vcd");
   $dumpvars(0, debounce_tb);
 end
 
