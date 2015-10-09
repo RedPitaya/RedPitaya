@@ -388,7 +388,7 @@ $(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	
 ################################################################################
-# Red Pitaya tools
+# Red Pitaya examples
 ################################################################################
 
 $(MONITOR):
@@ -403,10 +403,6 @@ $(ACQUIRE):
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-#$(XADC): $(LINUX_DIR)
-#	$(MAKE) -C $(XADC_DIR)
-#	$(MAKE) -C $(XADC_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
 $(CALIB):
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -415,6 +411,16 @@ $(CALIBRATE): $(LIBRP)
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+rp_communication:
+	make -C $(EXAMPLES_COMMUNICATION_DIR)
+
+#$(XADC): $(LINUX_DIR)
+#	$(MAKE) -C $(XADC_DIR)
+#	$(MAKE) -C $(XADC_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+################################################################################
+# Red Pitaya OS tools
+################################################################################
 
 $(DISCOVERY):
 	cp $(OS_TOOLS_DIR)/discovery.sh $@
@@ -422,16 +428,30 @@ $(DISCOVERY):
 $(HEARTBEAT):
 	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
+################################################################################
+# SCPI server
+################################################################################
+
 $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
-# Red Pitaya applications
+# Red Pitaya ecosystem and free applications
 ################################################################################
 
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+apps_free:
+	$(MAKE) -C $(APPS_FREE_DIR) all
+	$(MAKE) -C $(APPS_FREE_DIR) install 
+
+################################################################################
+# Red Pitaya PRO applications
+################################################################################
+
+ifdef ENABLE_LICENSING
 
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)
@@ -441,20 +461,18 @@ $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-# Gdb server for remote debugging
-# TODO: This is a temporary solution
-#$(GDBSERVER):
-#	cp Test/gdb-server/gdbserver $(abspath $(INSTALL_DIR))/bin
+endif
+
+################################################################################
+# Red Pitaya SDK
+################################################################################
 
 sdk:
 	$(MAKE) -C $(SDK_DIR) install INSTALL_DIR=$(abspath .)
 
-rp_communication:
-	make -C $(EXAMPLES_COMMUNICATION_DIR)
-
-apps_free:
-	$(MAKE) -C $(APPS_FREE_DIR) all
-	$(MAKE) -C $(APPS_FREE_DIR) install 
+################################################################################
+#
+################################################################################
 
 clean:
 	make -C $(LINUX_DIR) clean
