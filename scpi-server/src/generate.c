@@ -152,6 +152,9 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
+    /* Return data to client */
+    SCPI_ResultDouble(context, frequency);
+
     RP_INFO("*OUTPUT#:STATE Successfully returned frequency value to client.");
     return SCPI_RES_OK;
 }    
@@ -210,39 +213,91 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
 
     /* Return result to client */
     SCPI_ResultMnemonic(context, wf_name);
+
+    RP_INFO("*SOUR#:FUNC? Successfully returned generate wave form to client.");
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1Amplitude(scpi_t *context) {
-    return RP_GenSetAmplitude(RP_CH_1, context);
+scpi_result_t RP_GenAmplitude(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float amplitude;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT Invalid channel number", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamFloat(context, &amplitude, true)){
+        RP_ERR("*SOUR#:VOLT Failed to parse first parameter", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenAmp(channel, amplitude);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT Failed to set amplitude", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:VOLT Successfully set amplitude.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2Amplitude(scpi_t *context) {
-    return RP_GenSetAmplitude(RP_CH_2, context);
+scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
+   
+    rp_channel_t channel;
+    float amplitude;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetAmp(channel, &amplitude);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT? Failed to set amplitude", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultDouble(context, amplitude);
+
+    RP_INFO("*SOUR#:VOLT? Successfully returned amplitude value to client.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1AmplitudeQ(scpi_t *context) {
-    return RP_GenGetAmplitude(RP_CH_1, context);
+scpi_result_t RP_GenOffset(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float offset;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT:OFFS Invalid chnnel number", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamFloat(context, &offset, true)){
+        RP_ERR("*SOUR#:VOLT:OFFS Failed to parse parameter.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenOffset(channel, offset);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT:OFFS Failed to set offset.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:VOLT:OFFS Successfully set generate offset value.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2AmplitudeQ(scpi_t *context) {
-    return RP_GenGetAmplitude(RP_CH_2, context);
-}
-
-enum _scpi_result_t RP_GenChannel1Offset(scpi_t *context) {
-    return RP_GenSetOffset(RP_CH_1, context);
-}
-
-enum _scpi_result_t RP_GenChannel2Offset(scpi_t *context) {
-    return RP_GenSetOffset(RP_CH_2, context);
-}
-
-enum _scpi_result_t RP_GenChannel1OffsetQ(scpi_t *context) {
-    return RP_GenGetOffset(RP_CH_1, context);
-}
-
-enum _scpi_result_t RP_GenChannel2OffsetQ(scpi_t *context) {
-    return RP_GenGetOffset(RP_CH_2, context);
+scpi_result_t RP_GenOffsetQ(scpi_t *context) {
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1Phase(scpi_t *context) {
@@ -383,99 +438,6 @@ enum _scpi_result_t RP_GenChannel2Trigger(scpi_t *context) {
 
 enum _scpi_result_t RP_GenChannelAllTrigger(scpi_t *context) {
     return RP_GenSetTrigger(3, context);
-}
-
-
-enum _scpi_result_t RP_GenGetState(rp_channel_t channel, scpi_t *context) {
-    bool state;
-    int result;
-    result = rp_GenOutIsEnabled(channel, &state);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*OUTPUT<n>:STATE? Failed to get state: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultBool(context, state);
-
-    syslog(LOG_INFO, "*OUTPUT<n>:STATE? Successfully returned generate state to client.");
-
-    return SCPI_RES_OK;
-}
-
-enum _scpi_result_t RP_GenSetFrequency(rp_channel_t channel, scpi_t *context) {
-    double value;
-    // read first parameter FREQUENCY (value in Hz)
-    if (!SCPI_ParamDouble(context, &value, true)) {
-        syslog(LOG_ERR, "*SOUR<n>:FREQ:FIX is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result = rp_GenFreq(channel, (float) value);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:FREQ:FIX Failed to set frequancy: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*SOUR<n>:FREQ:FIX Successfully set frequancy to %.2f Hz.", value);
-
-    return SCPI_RES_OK;
-}
-
-enum _scpi_result_t RP_GenGetFrequency(rp_channel_t channel, scpi_t *context) {
-    float value;
-    int result = rp_GenGetFreq(channel, &value);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:FREQ:FIX? Failed to get frequancy: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultDouble(context, value);
-
-    syslog(LOG_INFO, "*SOUR<n>:FREQ:FIX? Successfully returned frequency %.2fHz to client.", value);
-
-    return SCPI_RES_OK;
-}
-
-enum _scpi_result_t RP_GenSetAmplitude(rp_channel_t channel, scpi_t *context) {
-    double value;
-    // read first parameter AMPLITUDE (value in V)
-    if (!SCPI_ParamDouble(context, &value, true)) {
-        syslog(LOG_ERR, "*SOUR<n>:VOLT is missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result = rp_GenAmp(channel, (float) value);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:VOLT Failed to set amplitude: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    syslog(LOG_INFO, "*SOUR<n>:VOLT Successfully set amplitude to %.2f V.", value);
-
-    return SCPI_RES_OK;
-}
-
-enum _scpi_result_t RP_GenGetAmplitude(rp_channel_t channel, scpi_t *context) {
-    float value;
-    int result = rp_GenGetAmp(channel, &value);
-
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:VOLT? Failed to get amplitude: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultDouble(context, value);
-
-    syslog(LOG_INFO, "*SOUR<n>:VOLT? Successfully returned amplitudate voltage %.2fV to client.", value);
-
-    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t *context) {
