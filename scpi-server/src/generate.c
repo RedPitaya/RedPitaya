@@ -419,20 +419,57 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1ArbitraryWaveForm(scpi_t *context) {
-    return RP_GenSetArbitraryWaveForm(RP_CH_1, context);
+scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float buffer[BUFFER_LENGTH];
+    uint32_t size;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRAC:DATA:DATA Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamBufferFloat(context, buffer, &size, true)){
+        RP_ERR("*SOUR#:TRAC:DATA:DATA Failed to arbitrary waveform data parameter.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenArbWaveform(channel, buffer, size);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRAC:DATA:DATA Failed to set arbitrary waveform data.", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:TRAC:DATA:DATA Successfully set arbitrary waveform data.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2ArbitraryWaveForm(scpi_t *context) {
-    return RP_GenSetArbitraryWaveForm(RP_CH_2, context);
-}
+scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float buffer[BUFFER_LENGTH];
+    uint32_t size;
+    int result;
 
-enum _scpi_result_t RP_GenChannel1ArbitraryWaveFormQ(scpi_t *context) {
-    return RP_GenGetArbitraryWaveForm(RP_CH_1, context);
-}
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRAC:DATA:DATA? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel2ArbitraryWaveFormQ(scpi_t *context) {
-    return RP_GenGetArbitraryWaveForm(RP_CH_2, context);
+    result = rp_GenGetArbWaveform(channel, buffer, &size);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRAC:DATA:DATA? Failed to get arbitrary waveform data", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultBufferFloat(context, buffer, size);
+
+    RP_INFO("*SOUR#:TRAC:DATA:DATA? Successfully returned arbitrary waveform data to client.");
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1GenerateMode(scpi_t *context) {
