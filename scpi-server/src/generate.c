@@ -418,7 +418,7 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
         RP_ERR("*SOUR#:DCYC? Failed to get generate duty cycle", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
+    
     SCPI_ResultFloat(context, duty_cycle);
 
     RP_INFO("*SOUR#:DCYC Successfully returned generate duty cycle  value to client");
@@ -538,20 +538,53 @@ scpi_result_t RP_GenGenerateModeQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1BurstCount(scpi_t *context) {
-    return RP_GenSetBurstCount(RP_CH_1, context);
+scpi_result_t RP_GenBurstCount(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result, count;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamInt32(context, &count, true)){
+        RP_ERR("*SOUR#:BURS:STAT Failed to parse first parameter", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenBurstCount(channel, count);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT Failed to set count parameter", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:BURS:STAT Successfully set generate burst count.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2BurstCount(scpi_t *context) {
-    return RP_GenSetBurstCount(RP_CH_2, context);
-}
+scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
 
-enum _scpi_result_t RP_GenChannel1BurstCountQ(scpi_t *context) {
-    return RP_GenGetBurstCount(RP_CH_1, context);
-}
+    rp_channel_t channel;
+    int result, count;
+    
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT? Invalid cahnnel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel2BurstCountQ(scpi_t *context) {
-    return RP_GenGetBurstCount(RP_CH_2, context);
+    result = rp_GenGetBurstCount(channel, &count);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:STAT? Failed to get generate burst count.", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultInt32(context, count);
+
+    RP_INFO("*SOUR#:BURS:STAT? Successfully returned generate burst count value to client.");
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_GenChannel1BurstRepetitions(scpi_t *context) {
