@@ -82,19 +82,17 @@ scpi_result_t RP_GenState(scpi_t *context) {
 
 scpi_result_t RP_GenStateQ(scpi_t *context){
 
-    int32_t ch_usr[1];
     bool enabled;
+    int result;
+    rp_channel_t channel;
 
-    SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
-
-    if(ch_usr[0] < MIN_CH && ch_usr[0] > MAX_CH){
-        RP_ERR("*OUTPUT#:STATE? Invalid channel number", ch_usr[0]);
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*OUTPUT#:STATE Invalid channel number", NULL);
         return SCPI_RES_ERR;
     }
 
-    rp_channel_t channel = ch_usr[0];
-
-    int result = rp_GenOutIsEnabled(channel, &enabled);
+    result = rp_GenOutIsEnabled(channel, &enabled);
     if(result != RP_OK){
         RP_ERR("*OUTPUT#:STATE Failed to get generate state", rp_GetError(result));
         return SCPI_RES_ERR;
