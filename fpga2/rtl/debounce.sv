@@ -42,9 +42,12 @@ end
 
 // when the counter is zero the output should follow the input
 always_ff @(posedge clk)
-if (~rstn)    d_o <= DI[i];
-else if (ena) begin
-  if (~|cnt)  d_o <= d_s[1];
+if (~rstn) begin
+  d_o[i] <= DI[i];
+end else if (ena & ~|cnt) begin
+  d_o[i] <=  d_s[1];
+  d_p[i] <=  d_s[1] & ~d_p[i];
+  d_n[i] <= ~d_s[1] &  d_p[i];
 end
 
 end: for_i
