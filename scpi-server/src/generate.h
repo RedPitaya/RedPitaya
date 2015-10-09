@@ -44,13 +44,9 @@ scpi_result_t RP_GenBurstRepetitions(scpi_t * context);
 scpi_result_t RP_GenBurstRepetitionsQ(scpi_t * context);
 scpi_result_t RP_GenBurstPeriod(scpi_t * context);
 scpi_result_t RP_GenBurstPeriodQ(scpi_t * context);
-scpi_result_t RP_GenChannel1TriggerSource(scpi_t * context);
-scpi_result_t RP_GenChannel2TriggerSource(scpi_t * context);
-scpi_result_t RP_GenChannel1TriggerSourceQ(scpi_t * context);
-scpi_result_t RP_GenChannel2TriggerSourceQ(scpi_t * context);
-scpi_result_t RP_GenChannel1Trigger(scpi_t *context);
-scpi_result_t RP_GenChannel2Trigger(scpi_t *context);
-scpi_result_t RP_GenChannelAllTrigger(scpi_t *context);
+scpi_result_t RP_GenTriggerSource(scpi_t * context);
+scpi_result_t RP_GenTriggerSourceQ(scpi_t * context);
+scpi_result_t RP_GenTrigger(scpi_t *context);
 
 scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t * context);
 scpi_result_t RP_GenGetOffset(rp_channel_t channel, scpi_t * context);

@@ -35,6 +35,14 @@ const scpi_choice_def_t scpi_RpWForm[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpGenTrig[] = {
+    {"INT",     1},
+    {"EXT_PE",  2},
+    {"EXT_NE",  3},
+    {"GATED",   4},
+    SCPI_CHOICE_LIST_END
+};
+
 const scpi_choice_def_t scpi_RpGenMode[] = {
     {"OFF",  0},
     {"ON",   1},
@@ -659,43 +667,112 @@ scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultUInt32Base(context, period, 10);
-
-    RP_INFO("*SOUR#:BURS:INT:PER Successfully returned generate burst period value to client");
+    RP_INFO("*SOUR#:BURS:INT:PER Successfully set generate burst period.");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
     
+    rp_channel_t channel;
+    int result;
+    uint32_t period;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:INT:PER Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetBurstPeriod(channel, &period);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:BURS:INT:PER Failed to get generate burst period", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultUInt32Base(context, period, 10);
+
+    RP_INFO("*SOUR#:BURS:INT:PER Successfully returned generate burst period value to client.");
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1TriggerSource(scpi_t *context) {
-    return RP_GenSetTriggerSource(RP_CH_1, context);
+scpi_result_t RP_GenTriggerSource(scpi_t *context) {
+        
+    rp_channel_t channel;
+    int32_t trig_choice;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRIG:SOUR Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamChoice(context, scpi_RpGenTrig, &trig_choice, true)){
+        RP_ERR("*SOUR#:TRIG:SOUR Failed to parse first parameter", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    rp_trig_src_t trig_src = trig_choice;
+    result = rp_GenTriggerSource(channel, trig_src);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRIG:SOUR Failed to set generate"
+        " trigger source", rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:TRIG:SOUR Successfully set generate trigger source.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2TriggerSource(scpi_t *context) {
-    return RP_GenSetTriggerSource(RP_CH_2, context);
+scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result;
+    const char *trig_name;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRIG:SOUR? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    rp_trig_src_t trig_src;
+    result = rp_GenGetTriggerSource(channel, &trig_src);
+
+    int32_t trig_n = trig_src;
+
+    if(!SCPI_ChoiceToName(scpi_RpGenTrig, trig_n, &trig_name)){
+        RP_ERR("*SOUR#:TRIG:SOUR? Failed to parse trigger name", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, trig_name);
+
+    RP_INFO("*SOUR#:TRIG:SOUR? Successfully returend generate trigger"
+        "status to client.");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1TriggerSourceQ(scpi_t *context) {
-    return RP_GenGetTriggerSource(RP_CH_1, context);
-}
+scpi_result_t RP_GenTrigger(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result;
 
-enum _scpi_result_t RP_GenChannel2TriggerSourceQ(scpi_t *context) {
-    return RP_GenGetTriggerSource(RP_CH_2, context);
-}
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRIG:IMM Invalid channel number", NULL);
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel1Trigger(scpi_t *context) {
-    return RP_GenSetTrigger(1, context);
-}
+    result = rp_GenTrigger(channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:TRIG:IMM Failed to set immediate trigger", NULL);
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel2Trigger(scpi_t *context) {
-    return RP_GenSetTrigger(2, context);
-}
-
-enum _scpi_result_t RP_GenChannelAllTrigger(scpi_t *context) {
-    return RP_GenSetTrigger(3, context);
+    RP_INFO("*SOUR#:TRIG:IMM Successfully set immediate trigger")
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenSetOffset(rp_channel_t channel, scpi_t *context) {
@@ -1074,28 +1151,7 @@ enum _scpi_result_t RP_GenSetTriggerSource(rp_channel_t channel, scpi_t *context
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenGetTriggerSource(rp_channel_t channel, scpi_t *context) {
-    rp_trig_src_t triggerSource;
-    int result = rp_GenGetTriggerSource(channel, &triggerSource);
 
-    if (RP_OK != result) {
-        syslog(LOG_ERR, "*SOUR<n>:TRIG:SOUR? Failed to get trigger source: %s",rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    char string[50];
-    if (getRpGenTriggerSourceString(triggerSource, string)) {
-        syslog(LOG_ERR, "*SOUR<n>:TRIG:SOUR? failed to convert to string.");
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultMnemonic(context, string);
-
-    syslog(LOG_INFO, "*SOUR<n>:TRIG:SOUR? Successfully returned trigger source to client.");
-
-    return SCPI_RES_OK;
-}
 
 enum _scpi_result_t RP_GenSetTrigger(int channel, scpi_t *context) {
     int result = rp_GenTrigger(channel);
