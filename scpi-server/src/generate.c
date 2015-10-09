@@ -318,20 +318,54 @@ scpi_result_t RP_GenOffsetQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel1Phase(scpi_t *context) {
-    return RP_GenSetPhase(RP_CH_1, context);
+scpi_result_t RP_GenPhase(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float phase;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:PHAS Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamFloat(context, &phase, true)){
+        RP_ERR("*SOUR#:PHAS Failed to parse first argument", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenPhase(channel, phase);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:PHAS Failed to set generate phase.", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_INFO("*SOUR#:PHAS Successfully set generate phase");
+    return SCPI_RES_OK;
 }
 
-enum _scpi_result_t RP_GenChannel2Phase(scpi_t *context) {
-    return RP_GenSetPhase(RP_CH_2, context);
-}
+scpi_result_t RP_GenPhaseQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    int result;
+    float phase;
 
-enum _scpi_result_t RP_GenChannel1PhaseQ(scpi_t *context) {
-    return RP_GenGetPhase(RP_CH_1, context);
-}
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:PHAS? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
 
-enum _scpi_result_t RP_GenChannel2PhaseQ(scpi_t *context) {
-    return RP_GenGetPhase(RP_CH_2, context);
+    result = rp_GenGetPhase(channel, &phase);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:PHAS? Failed to get generate phase", rp_GetError(result));
+        return SCPI_RES_ERR;
+    } 
+    SCPI_ResultFloat(context, phase);
+
+    RP_INFO("*SOUR#:PHAS? Successfully returned generate phase value to client.");
+    return SCPI_RES_OK;
 }
 
 enum _scpi_result_t RP_GenChannel1DutyCycle(scpi_t *context) {
