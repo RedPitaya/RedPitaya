@@ -27,13 +27,12 @@
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module asg_ch #(
+module asg #(
   // data parameters
   int unsigned DWO = 14,  // data width for output
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
-
 )(
   // system signals
   input  logic                  clk      ,  // clock
@@ -153,4 +152,4 @@ end
 assign dac_npnt = dac_pnt + cfg_step;
 assign trig_o = !dac_rep && trig_i;
 
-endmodule: asg_ch
+endmodule: asg

@@ -1,25 +1,8 @@
-/**
- * $Id: red_pitaya_asg_tb.v 1271 2014-02-25 12:32:34Z matej.oblak $
- *
- * @brief Red Pitaya arbitrary signal generator testbench.
- *
- * @Author Matej Oblak
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in Verilog hardware description language (HDL).
- * Please visit http://en.wikipedia.org/wiki/Verilog
- * for more details on the language used herein.
- */
-
-/**
- * GENERAL DESCRIPTION:
- *
- * Testbench for arbitrary signal generator module.
- *
- * This testbench writes values into RAM table and sets desired configuration.
- * 
- */
+////////////////////////////////////////////////////////////////////////////////
+// Arbitrary signal generator. Holds table and FSM for one channel.
+// Authoris: Matej Oblak, Iztok Jeras
+// (c) Red Pitaya  (redpitaya.com)
+////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1ns / 1ps
 
@@ -199,13 +182,50 @@ red_pitaya_asg asg (
   .sys_ack        (sys_ack  )
 );
 
+module asg #(
+  // data parameters
+  int unsigned DWO = 14,  // data width for output
+  // buffer parameters
+  int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
+  int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
+)(
+  // system signals
+  clk      ,
+  rstn     ,
+  // DAC
+  .sto_dat   (),
+  .sto_vld   (),
+  .sto_rdy   (),
+  // trigger
+  .trig_i    (),
+  .trig_o    (),
+  // CPU buffer access
+  .bus_ena   (),
+  .bus_wen   (),
+  .bus_addr  (),
+  .bus_wdata (),
+  .bus_rdata (),
+  // configuration
+  .cfg_size  (),
+  .cfg_step  (),
+  .cfg_offs  (),
+  .cfg_ncyc  (),
+  .cfg_rnum  (),
+  .cfg_rdly  (),
+  // control
+  .ctl_rst   (),
+  .ctl_wrap  (),
+  .ctl_zero  (),
+  .ctl_rgate () 
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  $dumpfile("red_pitaya_asg_tb.vcd");
-  $dumpvars(0, red_pitaya_asg_tb);
+  $dumpfile("asg_tb.vcd");
+  $dumpvars(0, asg_tb);
 end
 
-endmodule: red_pitaya_asg_tb
+endmodule: asg_tb

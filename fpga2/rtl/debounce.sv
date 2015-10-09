@@ -18,6 +18,8 @@ module debounce #(
   // input stream
   input  logic [PW-1:0] d_i,   // data input
   output logic [PW-1:0] d_o,   // debounced output
+  output logic [PW-1:0] d_p,   // debounced output posedge
+  output logic [PW-1:0] d_n    // debounced output negedge
 );
 
 generate

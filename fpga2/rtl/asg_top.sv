@@ -40,7 +40,7 @@
  * 
  */
 
-module asg #(
+module asg_top #(
   int unsigned DWO = 14,  // data width for output
   int unsigned RSZ = 14   // RAM size 2^RSZ
 )(
@@ -248,4 +248,4 @@ end else begin
    endcase
 end
 
-endmodule: asg
+endmodule: asg_top
