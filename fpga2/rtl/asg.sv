@@ -1,251 +1,156 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya arbitrary signal generator (ASG).
-// Authors: Matej Oblak
+// Arbitrary signal generator. Holds table and FSM for one channel.
+// Author: Matej Oblak, Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * GENERAL DESCRIPTION:
- *
- * Arbitrary signal generator takes data stored in buffer and sends them to DAC.
- *
- *
- *                /-----\         /--------\
- *   SW --------> | BUF | ------> | kx + o | ---> DAC CHA
- *                \-----/         \--------/
- *                   ^
- *                   |
- *                /-----\
- *   SW --------> |     |
- *                | FSM | ------> trigger notification
- *   trigger ---> |     |
- *                \-----/
- *                   |
- *                   ˇ
- *                /-----\         /--------\
- *   SW --------> | BUF | ------> | kx + o | ---> DAC CHB
- *                \-----/         \--------/ 
- *
- *
- * Buffers are filed with SW. It also sets finite state machine which take control
- * over read pointer. All registers regarding reading from buffer has additional 
- * 16 bits used as decimal points. In this way we can make better ratio betwen 
- * clock cycle and frequency of output signal. 
- *
- * Finite state machine can be set for one time sequence or continously wrapping.
- * Starting trigger can come from outside, notification trigger used to synchronize
- * with other applications (scope) is also available. Both channels are independant.
- *
- * Output data is scaled with linear transmormation.
- * 
- */
+////////////////////////////////////////////////////////////////////////////////
+//
+// GENERAL DESCRIPTION:
+//
+// Arbitrary signal generator takes data stored in buffer and sends them to DAC.
+//
+//
+//                /-----\
+//   SW --------> | BUF | ---> output
+//          |     \-----/
+//          |        ^
+//          |        |
+//          |     /-----\
+//          ----> |     |
+//                | FSM | ---> trigger notification
+//   trigger ---> |     |
+//                \-----/
+//
+//
+// Submodule for ASG which hold buffer data and control registers for one channel.
+// 
+////////////////////////////////////////////////////////////////////////////////
 
-module asg #(
+module asg_ch #(
+  // data parameters
   int unsigned DWO = 14,  // data width for output
-  int unsigned RSZ = 14   // RAM size 2^RSZ
+  // buffer parameters
+  int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
+  int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
+
 )(
   // system signals
-  input  logic           clk ,  // clock
-  input  logic           rstn,  // reset - active low
+  input  logic                  clk      ,  // clock
+  input  logic                  rstn     ,  // reset - active low
   // DAC
-  output logic [DWO-1:0] dac_a_o   ,  // DAC data CHA
-  output logic [DWO-1:0] dac_b_o   ,  // DAC data CHB
-
-  input  logic           trig_a_i  ,  // starting trigger CHA
-  input  logic           trig_b_i  ,  // starting trigger CHB
-  output logic           trig_out_o,  // notification trigger
-  // System bus
-  input  logic [ 32-1: 0] sys_addr  ,  // bus address
-  input  logic [ 32-1: 0] sys_wdata ,  // bus write data
-  input  logic [  4-1: 0] sys_sel   ,  // bus write byte select
-  input  logic            sys_wen   ,  // bus write enable
-  input  logic            sys_ren   ,  // bus read enable
-  output logic [ 32-1: 0] sys_rdata ,  // bus read data
-  output logic            sys_err   ,  // bus error indicator
-  output logic            sys_ack      // bus acknowledge signal
-);
-
-//---------------------------------------------------------------------------------
-//
-// generating signal from DAC table 
-
-
-logic [RSZ+15: 0] set_a_size   , set_b_size   ;
-logic [RSZ+15: 0] set_a_step   , set_b_step   ;
-logic [RSZ+15: 0] set_a_ofs    , set_b_ofs    ;
-logic             set_a_rst    , set_b_rst    ;
-logic             set_a_once   , set_b_once   ;
-logic             set_a_wrap   , set_b_wrap   ;
-logic [ DWO-1: 0] set_a_amp    , set_b_amp    ;
-logic [ DWO-1: 0] set_a_dc     , set_b_dc     ;
-logic             set_a_zero   , set_b_zero   ;
-logic [  16-1: 0] set_a_ncyc   , set_b_ncyc   ;
-logic [  16-1: 0] set_a_rnum   , set_b_rnum   ;
-logic [  32-1: 0] set_a_rdly   , set_b_rdly   ;
-logic             set_a_rgate  , set_b_rgate  ;
-logic             buf_a_we     , buf_b_we     ;
-logic [ RSZ-1: 0] buf_a_addr   , buf_b_addr   ;
-logic [ DWO-1: 0] buf_a_rdata  , buf_b_rdata  ;
-logic             trig_a_sw    , trig_b_sw    ;
-logic [   3-1: 0] trig_a_src   , trig_b_src   ;
-logic             trig_a_done  , trig_b_done  ;
-
-red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
-  // system signals
-  .clk             ({clk              , clk              }),  // clock
-  .rstn            ({rstn             , rstn             }),  // reset - active low
-  // DAC
-  .dac_o           ({dac_b_o          , dac_a_o          }),  // dac data output
+  output logic signed [DWO-1:0] sto_dat  ,  // data
+  output logic                  sto_vld  ,  // valid
+  input  logic                  sto_rdy  ,  // ready
   // trigger
-  .trig_sw_i       ({trig_b_sw        , trig_a_sw        }),  // software trigger
-  .trig_ext_i      ({trig_b_i         , trig_a_i         }),  // external trigger
-  .trig_src_i      ({trig_b_src       , trig_a_src       }),  // trigger source selector
-  .trig_done_o     ({trig_b_done      , trig_a_done      }),  // trigger event
-  // buffer ctrl
-  .buf_we_i        ({buf_b_we         , buf_a_we         }),  // buffer buffer write
-  .buf_addr_i      ({buf_b_addr       , buf_a_addr       }),  // buffer address
-  .buf_wdata_i     ({sys_wdata[14-1:0], sys_wdata[14-1:0]}),  // buffer write data
-  .buf_rdata_o     ({buf_b_rdata      , buf_a_rdata      }),  // buffer read data
+  input  logic                  trig_i   ,  // input
+  output logic                  trig_o   ,  // output event
+  // CPU buffer access
+  input  logic                  bus_ena  ,  // enable
+  input  logic                  bus_wen  ,  // write enable
+  input  logic        [CWM-1:0] bus_addr ,  // address
+  input  logic signed [DWO-1:0] bus_wdata,  // write data
+  output logic signed [DWO-1:0] bus_rdata,  // read  data
   // configuration
-  .set_size_i      ({set_b_size       , set_a_size       }),  // set table data size
-  .set_step_i      ({set_b_step       , set_a_step       }),  // set pointer step
-  .set_ofs_i       ({set_b_ofs        , set_a_ofs        }),  // set reset offset
-  .set_rst_i       ({set_b_rst        , set_a_rst        }),  // set FMS to reset
-  .set_once_i      ({set_b_once       , set_a_once       }),  // set only once
-  .set_wrap_i      ({set_b_wrap       , set_a_wrap       }),  // set wrap pointer
-  .set_amp_i       ({set_b_amp        , set_a_amp        }),  // set amplitude scale
-  .set_dc_i        ({set_b_dc         , set_a_dc         }),  // set output offset
-  .set_zero_i      ({set_b_zero       , set_a_zero       }),  // set output to zero
-  .set_ncyc_i      ({set_b_ncyc       , set_a_ncyc       }),  // set number of cycle
-  .set_rnum_i      ({set_b_rnum       , set_a_rnum       }),  // set number of repetitions
-  .set_rdly_i      ({set_b_rdly       , set_a_rdly       }),  // set delay between repetitions
-  .set_rgate_i     ({set_b_rgate      , set_a_rgate      })   // set external gated repetition
+  input  logic    [CWM+CWF-1:0] cfg_size ,  // data tablesize
+  input  logic    [CWM+CWF-1:0] cfg_step ,  // pointer step    size
+  input  logic    [CWM+CWF-1:0] cfg_offs ,  // pointer initial offset (used to define phase)
+  input  logic       [  16-1:0] cfg_ncyc ,  // set number of cycle
+  input  logic       [  16-1:0] cfg_rnum ,  // set number of repetitions
+  input  logic       [  32-1:0] cfg_rdly ,  // set delay between repetitions
+  // control
+  input  logic                  ctl_rst  ,  // set FSM to reset
+  input  logic                  ctl_wrap ,  // set wrap enable
+  input  logic                  ctl_zero ,  // set output to zero
+  input  logic                  ctl_rgate   // set external gated repetition
 );
 
+////////////////////////////////////////////////////////////////////////////////
+//  DAC buffer RAM
+////////////////////////////////////////////////////////////////////////////////
+
+logic signed [    DWO-1:0] buf_mem [0:2**CWM-1];
+logic signed [    DWO-1:0] buf_rdata;  // read data
+logic        [CWM    -1:0] buf_raddr;  // read address
+logic        [CWM+CWF-1:0] dac_pnt   ; // read pointer
+logic        [CWM+CWF-1:0] dac_pntp  ; // previour read pointer
+logic        [CWM+CWF-0:0] dac_npnt  ; // next read pointer
+logic        [CWM+CWF-0:0] dac_npnt_sub ;
+logic                      dac_npnt_sub_neg;
+
+// stream read
 always @(posedge clk)
 begin
-   buf_a_we   <= sys_wen && (sys_addr[19:RSZ+2] == 'h1);
-   buf_b_we   <= sys_wen && (sys_addr[19:RSZ+2] == 'h2);
-   buf_a_addr <= sys_addr[RSZ+1:2] ;  // address timing violation
-   buf_b_addr <= sys_addr[RSZ+1:2] ;  // can change only synchronous to write clock
+  buf_raddr <= dac_pnt[CWF+:CWM];
+  buf_rdata <= buf_mem[buf_raddr];
 end
 
-assign trig_out_o = trig_a_done ;
-
-//---------------------------------------------------------------------------------
-//
-//  System bus connection
-
-reg  [3-1: 0] ren_dly ;
-reg           ack_dly ;
-
+// CPU write access
 always @(posedge clk)
-if (rstn == 1'b0) begin
-   trig_a_sw   <=  1'b0    ;
-   trig_a_src  <=  3'h0    ;
-   set_a_amp   <= 14'h2000 ;
-   set_a_dc    <= 14'h0    ;
-   set_a_zero  <=  1'b0    ;
-   set_a_rst   <=  1'b0    ;
-   set_a_once  <=  1'b0    ;
-   set_a_wrap  <=  1'b0    ;
-   set_a_size  <= {RSZ+16{1'b1}} ;
-   set_a_ofs   <= {RSZ+16{1'b0}} ;
-   set_a_step  <={{RSZ+15{1'b0}},1'b0} ;
-   set_a_ncyc  <= 16'h0    ;
-   set_a_rnum  <= 16'h0    ;
-   set_a_rdly  <= 32'h0    ;
-   set_a_rgate <=  1'b0    ;
-   trig_b_sw   <=  1'b0    ;
-   trig_b_src  <=  3'h0    ;
-   set_b_amp   <= 14'h2000 ;
-   set_b_dc    <= 14'h0    ;
-   set_b_zero  <=  1'b0    ;
-   set_b_rst   <=  1'b0    ;
-   set_b_once  <=  1'b0    ;
-   set_b_wrap  <=  1'b0    ;
-   set_b_size  <= {RSZ+16{1'b1}} ;
-   set_b_ofs   <= {RSZ+16{1'b0}} ;
-   set_b_step  <={{RSZ+15{1'b0}},1'b0} ;
-   set_b_ncyc  <= 16'h0    ;
-   set_b_rnum  <= 16'h0    ;
-   set_b_rdly  <= 32'h0    ;
-   set_b_rgate <=  1'b0    ;
-   ren_dly     <=  3'h0    ;
-   ack_dly     <=  1'b0    ;
-end else begin
-   trig_a_sw  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[0]  ;
-   if (sys_wen && (sys_addr[19:0]==20'h0))
-      trig_a_src <= sys_wdata[2:0] ;
+if (bus_ena &  bus_wen)  buf_mem[bus_addr] <= bus_wdata;
 
-   trig_b_sw  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[16]  ;
-   if (sys_wen && (sys_addr[19:0]==20'h0))
-      trig_b_src <= sys_wdata[19:16] ;
-
-   if (sys_wen) begin
-      if (sys_addr[19:0]==20'h0)   {set_a_rgate, set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= sys_wdata[ 8: 4] ;
-      if (sys_addr[19:0]==20'h0)   {set_b_rgate, set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= sys_wdata[24:20] ;
-
-      if (sys_addr[19:0]==20'h4)   set_a_amp  <= sys_wdata[  0+13: 0] ;
-      if (sys_addr[19:0]==20'h4)   set_a_dc   <= sys_wdata[ 16+13:16] ;
-      if (sys_addr[19:0]==20'h8)   set_a_size <= sys_wdata[RSZ+15: 0] ;
-      if (sys_addr[19:0]==20'hC)   set_a_ofs  <= sys_wdata[RSZ+15: 0] ;
-      if (sys_addr[19:0]==20'h10)  set_a_step <= sys_wdata[RSZ+15: 0] ;
-      if (sys_addr[19:0]==20'h18)  set_a_ncyc <= sys_wdata[  16-1: 0] ;
-      if (sys_addr[19:0]==20'h1C)  set_a_rnum <= sys_wdata[  16-1: 0] ;
-      if (sys_addr[19:0]==20'h20)  set_a_rdly <= sys_wdata[  32-1: 0] ;
-
-      if (sys_addr[19:0]==20'h24)  set_b_amp  <= sys_wdata[  0+13: 0] ;
-      if (sys_addr[19:0]==20'h24)  set_b_dc   <= sys_wdata[ 16+13:16] ;
-      if (sys_addr[19:0]==20'h28)  set_b_size <= sys_wdata[RSZ+15: 0] ;
-      if (sys_addr[19:0]==20'h2C)  set_b_ofs  <= sys_wdata[RSZ+15: 0] ;
-      if (sys_addr[19:0]==20'h30)  set_b_step <= sys_wdata[RSZ+15: 0] ;
-      if (sys_addr[19:0]==20'h38)  set_b_ncyc <= sys_wdata[  16-1: 0] ;
-      if (sys_addr[19:0]==20'h3C)  set_b_rnum <= sys_wdata[  16-1: 0] ;
-      if (sys_addr[19:0]==20'h40)  set_b_rdly <= sys_wdata[  32-1: 0] ;
-   end
-
-   ren_dly <= {ren_dly[3-2:0], sys_ren};
-   ack_dly <=  ren_dly[3-1] || sys_wen ;
-end
-
-wire [32-1: 0] r0_rd = {7'h0,set_b_rgate, set_b_zero,set_b_rst,set_b_once,set_b_wrap, 1'b0,trig_b_src,
-                        7'h0,set_a_rgate, set_a_zero,set_a_rst,set_a_once,set_a_wrap, 1'b0,trig_a_src };
-
-wire sys_en;
-assign sys_en = sys_wen | sys_ren;
-
+// CPU read-back access
 always @(posedge clk)
-if (rstn == 1'b0) begin
-   sys_err <= 1'b0 ;
-   sys_ack <= 1'b0 ;
+if (bus_ena & ~bus_wen)  bus_rdata <= buf_mem[bus_addr];
+
+////////////////////////////////////////////////////////////////////////////////
+//  read pointer & state machine
+////////////////////////////////////////////////////////////////////////////////
+
+logic [  16-1: 0] cyc_cnt;
+logic [  16-1: 0] rep_cnt;
+
+logic             dac_do  ;
+logic             dac_rep ;
+logic             dac_trig;
+
+// state machine
+always @(posedge clk)
+if (~rstn) begin
+  cyc_cnt   <= '0;
+  rep_cnt   <= '0;
+  dly_cnt   <= '0;
+  dac_do    <= '0;
+  dac_rep   <= '0;
+  dac_pntp  <= '0;
 end else begin
-   sys_err <= 1'b0 ;
+  // delay between repetitions 
+  if (ctl_rst || dac_do)   dly_cnt <= cfg_rdly;
+  else if (|dly_cnt)       dly_cnt <= dly_cnt - 32'h1;
+  // repetitions counter
+  if (trig_i && !dac_do)                                                    rep_cnt <= cfg_rnum ;
+  else if (!ctl_rgate && (|rep_cnt && dac_rep && (dac_trig && !dac_do)))    rep_cnt <= rep_cnt - 16'h1 ;
+  else if (ctl_rgate)                                                       rep_cnt <= 16'h0 ;
+  // count number of table read cycles
+  dac_pntp  <= dac_pnt;
 
-   casez (sys_addr[19:0])
-     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= r0_rd                              ; end
-
-     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {2'h0, set_a_dc, 2'h0, set_a_amp}  ; end
-     20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_size}     ; end
-     20'h0000C : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_ofs}      ; end
-     20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_a_step}     ; end
-     20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_a_ncyc}         ; end
-     20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_a_rnum}         ; end
-     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= set_a_rdly                         ; end
-
-     20'h00024 : begin sys_ack <= sys_en;          sys_rdata <= {2'h0, set_b_dc, 2'h0, set_b_amp}  ; end
-     20'h00028 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_size}     ; end
-     20'h0002C : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_ofs}      ; end
-     20'h00030 : begin sys_ack <= sys_en;          sys_rdata <= {{32-RSZ-16{1'b0}},set_b_step}     ; end
-     20'h00038 : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
-     20'h0003C : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
-     20'h00040 : begin sys_ack <= sys_en;          sys_rdata <= set_b_rdly                         ; end
-
-     20'h1zzzz : begin sys_ack <= ack_dly;         sys_rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
-     20'h2zzzz : begin sys_ack <= ack_dly;         sys_rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end
-
-       default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                             ; end
-   endcase
+  else if (!dac_trig && |cyc_cnt && ({1'b0,dac_pntp} > {1'b0,dac_pnt}))    cyc_cnt <= cyc_cnt - 16'h1 ;
+  // in cycle mode
+  if (dac_trig && !ctl_rst)                                           dac_do <= 1'b1 ;
+  else if (ctl_rst || ((cyc_cnt==16'h1) && ~dac_npnt_sub_neg) )       dac_do <= 1'b0 ;
+  // in repetition mode
+  if (dac_trig && !ctl_rst)                  dac_rep <= 1'b1 ;
+  else if (ctl_rst || (rep_cnt==16'h0))      dac_rep <= 1'b0 ;
 end
 
-endmodule: asg
+assign dac_trig = (!dac_rep && trig_i) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
+
+assign dac_npnt_sub = dac_npnt - {1'b0,cfg_size} - 1;
+assign dac_npnt_sub_neg = dac_npnt_sub[CWM+16];
+
+// read pointer logic
+always @(posedge clk)
+if (~rstn) begin                    dac_pnt <= '0;
+end else begin
+  // manual reset or start
+  if (ctl_rst || (dac_trig && !dac_do))  dac_pnt <= cfg_offs;
+  else if (dac_do) begin
+    if (~dac_npnt_sub_neg)               dac_pnt <= ctl_wrap ? dac_npnt_sub : cfg_offs; // wrap or go to start
+    else                                 dac_pnt <= dac_npnt; // normal increase
+  end
+end
+
+assign dac_npnt = dac_pnt + cfg_step;
+assign trig_o = !dac_rep && trig_i;
+
+endmodule: asg_ch
