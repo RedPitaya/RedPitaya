@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "utils.h"
+#include "common.h"
 #include "api_cmd.h"
 #include "scpi/parser.h"
 #include "../../api/rpbase/src/common.h"

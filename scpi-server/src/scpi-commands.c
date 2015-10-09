@@ -18,7 +18,7 @@
 #include <syslog.h>
 
 #include "api_cmd.h"
-#include "utils.h"
+#include "common.h"
 #include "dpin.h"
 #include "apin.h"
 #include "generate.h"

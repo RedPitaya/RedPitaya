@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "utils.h"
+#include "common.h"
 #include "scpi/parser.h"
 
 /* Parse channel */

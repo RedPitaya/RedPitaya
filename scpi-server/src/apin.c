@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "utils.h"
+#include "common.h"
 #include "apin.h"
 #include "scpi/parser.h"
 #include "../../api/rpbase/src/common.h"

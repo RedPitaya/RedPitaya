@@ -12,8 +12,8 @@
  * for more details on the language used herein.
  */
 
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef COMMON_H_
+#define COMMON_H_
 
 #include <stdbool.h>
 #include <syslog.h>
@@ -48,4 +48,4 @@ syslog(LOG_INFO, "%s\n", msg);
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
 
-#endif /* UTILS_H_ */
+#endif /* COMMON_H_ */

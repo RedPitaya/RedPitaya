@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils.h"
+#include "common.h"
 #include "../scpi-parser/libscpi/inc/scpi/error.h"
 #include "scpi/parser.h"
 
