@@ -12,14 +12,13 @@
  * for more details on the language used herein.
  */
 
-#include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "generate.h"
 #include "../../api/rpbase/src/generate.h"
 
-#include "utils.h"
+#include "common.h"
 #include "scpi/parser.h"
 
 /* These structures are a direct API mirror 

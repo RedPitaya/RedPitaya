@@ -12,12 +12,11 @@
  * for more details on the language used herein.
  */
 
-#include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils.h"
+#include "common.h"
 #include "dpin.h"
 #include "../../api/rpbase/src/common.h"
 #include "scpi/parser.h"
@@ -52,12 +51,6 @@ const scpi_choice_def_t scpi_RpDpin[] = {
     SCPI_CHOICE_LIST_END
 };
 
-const scpi_choice_def_t scpi_RpBit[] = {
-    {"OFF", 0},
-    {"ON",  1},
-    SCPI_CHOICE_LIST_END
-};
-
 const scpi_choice_def_t scpi_RpDir[] = {
     {"IN",  0},
     {"OUT", 1},
@@ -78,52 +71,14 @@ scpi_result_t RP_DigitalPinReset(scpi_t *context) {
 }
 
 /**
- * Returns Digital Pin state to SCPI context
- * @param context SCPI context
- * @return success or failure
- */
-scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
-    
-    const char *status;
-    int32_t pin_choice;
-
-    /* Read PIN parameter */
-    if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
-        RP_ERR("*DIG:PIN? is missing first parameter.", NULL);
-        return SCPI_RES_ERR;
-    }
-
-    rp_dpin_t pin = pin_choice;
-
-    /* Get pin state */
-    rp_pinState_t state;
-    int result = rp_DpinGetState(pin, &state);
-
-    if (RP_OK != result){
-    	RP_ERR("*DIG:PIN? Failed to get pin state", rp_GetError(result));
-    	return SCPI_RES_ERR;
-    }
-
-    if(!SCPI_ChoiceToName(scpi_RpBit, state, &status)){
-        RP_ERR("*DIG:PIN? invalid pin state.", NULL);
-        return SCPI_RES_ERR;
-    }
-
-    /* Return PIN state to the client */
-    SCPI_ResultMnemonic(context, status);
-
-	RP_INFO("*DIG:PIN? Successfully returned port value");
-    return SCPI_RES_OK;
-}
-
-/**
  *  Sets Digital Pin to state High/Low
  * @param context SCPI context
  * @return success or failure
  */
 scpi_result_t RP_DigitalPinState(scpi_t * context) {
     
-    int32_t pin_choice, bit;
+    int32_t pin_choice;
+    uint32_t bit;
 
     /* Parse first, PIN parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
@@ -132,7 +87,7 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
     }
 
     /* Parse second, BIT parameter */
-    if(!SCPI_ParamChoice(context, scpi_RpBit, &bit, true)){
+    if(!SCPI_ParamUInt32(context, &bit, true)){
         RP_ERR("*DIG:PIN invalid second parameter", NULL);
         return SCPI_RES_ERR;
     }
@@ -152,6 +107,39 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
 }
 
 /**
+ * Returns Digital Pin state to SCPI context
+ * @param context SCPI context
+ * @return success or failure
+ */
+scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
+    
+    int32_t pin_choice;
+
+    /* Read PIN parameter */
+    if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
+        RP_ERR("*DIG:PIN? is missing first parameter.", NULL);
+        return SCPI_RES_ERR;
+    }
+
+    rp_dpin_t pin = pin_choice;
+
+    /* Get pin state */
+    rp_pinState_t state;
+    int result = rp_DpinGetState(pin, &state);
+
+    if (RP_OK != result){
+        RP_ERR("*DIG:PIN? Failed to get pin state", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    /* Return PIN state to the client */
+    SCPI_ResultInt32(context, state);
+
+    RP_INFO("*DIG:PIN? Successfully returned port value");
+    return SCPI_RES_OK;
+}
+
+/**
 * Sets Digital Pin direction to state Output/Input
 * @param context SCPI context
 * @return success or failure
@@ -160,6 +148,7 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
     
     int32_t dir_choice, pin_choice;
 
+    RP_INFO("*DIG:PIN:DIR Successfully set port direction.");
     /* Read first, DIRECTION parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDir, &dir_choice, true)){
         RP_ERR("*DIG:PIN:DIR is missing first parameter", NULL);
