@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
 
 	rp_DpinSetDirection(RP_DIO0_P, RP_OUT);
 	rp_DpinSetState(RP_DIO0_P, 1);
-	usleep(1000);
+	usleep(1000000);
 	rp_DpinSetState(RP_DIO0_P, 0);
 
 	rp_ApinSetValue(RP_AOUT0, 0.5);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
 
 	if(sum != 12.0){
 		printf("Error on zero state pins...\n\n");
-		printf("D2P\tD3P\tD4P\tD5P\tD6P\tD7P\tD0N\tD1N\tA0\tA1\tA2\tA3\n");
+		printf("D2\tD3\tD4\tD5\tD6\tD7\tD8\tD9\tA0\tA1\tA2\tA3\n");
 		printf("%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\n", 
 			check[0], check[1], check[2], check[3], check[4], check[5], check[6], 
 			check[7], check[8], check[9], check[10], check[11]);
