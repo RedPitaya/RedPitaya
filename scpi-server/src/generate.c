@@ -277,7 +277,7 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
 
     result = RP_ParseChArgv(context, &channel);
     if(result != RP_OK){
-        RP_ERR("*SOUR#:VOLT:OFFS Invalid chnnel number", NULL);
+        RP_ERR("*SOUR#:VOLT:OFFS Invalid channel number", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
@@ -288,7 +288,7 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
 
     result = rp_GenOffset(channel, offset);
     if(result != RP_OK){
-        RP_ERR("*SOUR#:VOLT:OFFS Failed to set offset.", NULL);
+        RP_ERR("*SOUR#:VOLT:OFFS Failed to set offset.", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
@@ -297,6 +297,24 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
 }
 
 scpi_result_t RP_GenOffsetQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float offset;
+    int result;
+
+    result = RP_ParseChArgv(context, &channel);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT:OFFS? Invalid channel number", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetOffset(channel, &offset);
+    if(result != RP_OK){
+        RP_ERR("*SOUR#:VOLT:OFFS? Failed to get generate offset", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, offset);
     return SCPI_RES_OK;
 }
 
