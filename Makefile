@@ -172,7 +172,7 @@ $(TMP):
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
-	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(APP_SCOPE) $(APP_SPECTRUM) rp_communication
+	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -453,6 +453,8 @@ apps_free:
 
 ifdef ENABLE_LICENSING
 
+apps_pro: $(APP_SCOPE) $(APP_SPECTRUM)
+
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -460,6 +462,10 @@ $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+else
+
+apps_pro:
 
 endif
 
