@@ -141,19 +141,6 @@ typedef enum {
     RP_AIN3        //!< Analog input 3
 } rp_apin_t;
 
-/**
- * Type representing system health information.
- */
-typedef enum {
-    RP_TEMP_FPGA,  //!< FPGA temperature
-    RP_VCC_PINT,   //!< VCC PINT
-    RP_VCC_PAUX,   //!< VCC PAUX
-    RP_VCC_BRAM,   //!< VCC BRAM
-    RP_VCC_INT,    //!< VCC INT
-    RP_VCC_AUX,    //!< VCC AUX
-    RP_VCC_DDR     //!< VCC DDR
-} rp_health_t;
-
 typedef enum {
     RP_WAVEFORM_SINE,       //!< Wave form sine
     RP_WAVEFORM_SQUARE,     //!< Wave form square
@@ -930,22 +917,6 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 
 int rp_AcqGetBufSize(uint32_t* size);
-
-
-///@}
-/** @name Health
- */
-///@{
-
-
-/**
- * Gets data about system health like temperature
- * @param sensor   From witch sensor the data is read
- * @param value    The returned value
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_HealthGetValue(rp_health_t sensor, float* value);
 
 
 ///@}

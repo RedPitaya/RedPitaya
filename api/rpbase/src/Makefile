@@ -42,8 +42,6 @@ OBJECTS =	common.o \
 		acq_handler.o \
 		analog_mixed_signals.o \
 		apin_handler.o \
-		health.o \
-		health_handler.o \
 		generate.o \
 		gen_handler.o \
 		calib.o \

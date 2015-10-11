@@ -6,23 +6,6 @@
 
 #include "rp.h"
 
-
-
-const char HEALTH_OIN_NAME[11][20]={
-        "Tempereature",
-        "VCCPINT(1V0)",
-        "VCCPAUX(1V8)",
-        "VCCBRAM(1V0)",
-        "VCCINT(1V0)",
-        "VCCAUX(1V8)",
-        "VCCDDR(1V5)",
-        "AO0(0-1.8V)",
-        "AO1(0-1.8V)",
-        "AO2(0-1.8V)",
-        "AO3(0-1.8V)",
-};
-
-
 int main(int argc, char **argv) {
 
 	int result;
@@ -33,21 +16,6 @@ int main(int argc, char **argv) {
 
 	result = rp_Init();
 	printf("Initializing library: %s\n", rp_GetError(result));
-
-    printf("\n---------Testing HEALTH---------\n");
-    printf("%s\t%s\t\t%s\n", "#ID", "Desc", "Val");
-    float valFloat;
-    int i;
-    for (i = RP_TEMP_FPGA; i <= RP_VCC_DDR; i++)
-    {
-        result = rp_HealthGetValue((rp_health_t) i, &valFloat);
-        if (result == RP_OK) {
-            printf("%d\t%s\t%.3f\n",i, &HEALTH_OIN_NAME[i][0], valFloat);
-        } else {
-            printf("%d\t%s\tError:%s\n",i, &HEALTH_OIN_NAME[i][0], rp_GetError(result));
-        }
-    }
-
 
 
     printf("\n---------Testing AMS---------\n");
