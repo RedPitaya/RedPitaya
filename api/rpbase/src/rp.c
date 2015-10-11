@@ -24,8 +24,6 @@
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
 #include "apin_handler.h"
-#include "health.h"
-#include "health_handler.h"
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
@@ -43,7 +41,6 @@ int rp_Init()
     ECHECK(calib_Init());
     ECHECK(hk_Init());
     ECHECK(ams_Init());
-    ECHECK(health_Init());
     ECHECK(generate_Init());
     ECHECK(osc_Init());
     // TODO: Place other module initializations here
@@ -58,7 +55,6 @@ int rp_Release()
 {
     ECHECK(osc_Release())
     ECHECK(generate_Release());
-    ECHECK(health_Release());
     ECHECK(ams_Release());
     ECHECK(hk_Release());
     ECHECK(calib_Release());
@@ -468,15 +464,6 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 
 int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
-}
-
-/**
- * Health methods
- */
-
-int rp_HealthGetValue(rp_health_t sensor, float* value)
-{
-    return health_GetValue(sensor, value);
 }
 
 /**
