@@ -42,8 +42,8 @@ module asg #(
   output logic                  sto_vld  ,  // valid
   input  logic                  sto_rdy  ,  // ready
   // trigger
-  input  logic                  trig_i   ,  // input
-  output logic                  trig_o   ,  // output event
+  input  logic                  trg_i   ,  // input
+  output logic                  trg_o   ,  // output event
   // CPU buffer access
   input  logic                  bus_ena  ,  // enable
   input  logic                  bus_wen  ,  // write enable
@@ -57,11 +57,9 @@ module asg #(
   input  logic       [  16-1:0] cfg_ncyc ,  // set number of cycle
   input  logic       [  16-1:0] cfg_rnum ,  // set number of repetitions
   input  logic       [  32-1:0] cfg_rdly ,  // set delay between repetitions
+  input  logic                  cfg_wrap ,  // set wrap enable
   // control
   input  logic                  ctl_rst  ,  // set FSM to reset
-  input  logic                  ctl_wrap ,  // set wrap enable
-  input  logic                  ctl_zero ,  // set output to zero
-  input  logic                  ctl_rgate   // set external gated repetition
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,10 +99,10 @@ logic [  16-1: 0] rep_cnt;
 
 logic             dac_do  ;
 logic             dac_rep ;
-logic             dac_trig;
+logic             dac_trg;
 
 // state machine
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn) begin
   cyc_cnt   <= '0;
   rep_cnt   <= '0;
@@ -117,39 +115,38 @@ end else begin
   if (ctl_rst || dac_do)   dly_cnt <= cfg_rdly;
   else if (|dly_cnt)       dly_cnt <= dly_cnt - 32'h1;
   // repetitions counter
-  if (trig_i && !dac_do)                                                    rep_cnt <= cfg_rnum ;
-  else if (!ctl_rgate && (|rep_cnt && dac_rep && (dac_trig && !dac_do)))    rep_cnt <= rep_cnt - 16'h1 ;
-  else if (ctl_rgate)                                                       rep_cnt <= 16'h0 ;
+  if (trg_i && !dac_do)                                    rep_cnt <= cfg_rnum;
+  else if (|rep_cnt && dac_rep && (dac_trg && !dac_do))    rep_cnt <= rep_cnt - 16'h1;
   // count number of table read cycles
   dac_pntp  <= dac_pnt;
 
-  else if (!dac_trig && |cyc_cnt && ({1'b0,dac_pntp} > {1'b0,dac_pnt}))    cyc_cnt <= cyc_cnt - 16'h1 ;
+  else if (!dac_trg && |cyc_cnt && ({1'b0,dac_pntp} > {1'b0,dac_pnt}))    cyc_cnt <= cyc_cnt - 16'h1 ;
   // in cycle mode
-  if (dac_trig && !ctl_rst)                                           dac_do <= 1'b1 ;
+  if (dac_trg && !ctl_rst)                                           dac_do <= 1'b1 ;
   else if (ctl_rst || ((cyc_cnt==16'h1) && ~dac_npnt_sub_neg) )       dac_do <= 1'b0 ;
   // in repetition mode
-  if (dac_trig && !ctl_rst)                  dac_rep <= 1'b1 ;
+  if (dac_trg && !ctl_rst)                  dac_rep <= 1'b1 ;
   else if (ctl_rst || (rep_cnt==16'h0))      dac_rep <= 1'b0 ;
 end
 
-assign dac_trig = (!dac_rep && trig_i) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
+assign dac_trg = (!dac_rep && trg_i) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
 
 assign dac_npnt_sub = dac_npnt - {1'b0,cfg_size} - 1;
 assign dac_npnt_sub_neg = dac_npnt_sub[CWM+16];
 
 // read pointer logic
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn) begin                    dac_pnt <= '0;
 end else begin
   // manual reset or start
-  if (ctl_rst || (dac_trig && !dac_do))  dac_pnt <= cfg_offs;
+  if (ctl_rst || (dac_trg && !dac_do))  dac_pnt <= cfg_offs;
   else if (dac_do) begin
-    if (~dac_npnt_sub_neg)               dac_pnt <= ctl_wrap ? dac_npnt_sub : cfg_offs; // wrap or go to start
+    if (~dac_npnt_sub_neg)               dac_pnt <= cfg_wrap ? dac_npnt_sub : cfg_offs; // wrap or go to start
     else                                 dac_pnt <= dac_npnt; // normal increase
   end
 end
 
 assign dac_npnt = dac_pnt + cfg_step;
-assign trig_o = !dac_rep && trig_i;
+assign trg_o = !dac_rep && trg_i;
 
 endmodule: asg

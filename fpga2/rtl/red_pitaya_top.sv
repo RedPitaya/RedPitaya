@@ -1,18 +1,9 @@
-/**
- * $Id: red_pitaya_top.v 1271 2014-02-25 12:32:34Z matej.oblak $
- *
- * @brief Red Pitaya TOP module. It connects external pins and PS part with 
- *        other application modules. 
- *
- * @Author Matej Oblak
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in Verilog hardware description language (HDL).
- * Please visit http://en.wikipedia.org/wiki/Verilog
- * for more details on the language used herein.
- */
-
+////////////////////////////////////////////////////////////////////////////////
+// Red Pitaya TOP module. It connects external pins and PS part with 
+// other application modules. 
+// Authors: Matej Oblak, Iztok Jeras
+// (c) Red Pitaya  http://www.redpitaya.com
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * GENERAL DESCRIPTION:
@@ -38,17 +29,7 @@
  *                         |                |
  *                         |  /-------\     |
  *                         -- |  ASG  | <---+ 
- *                            \-------/     |
- *                                          |
- *             /--------\                   |
- *    RX ----> |        |                   |
- *   SATA      | DAISY  | <-----------------+
- *    TX <---- |        | 
- *             \--------/ 
- *               |    |
- *               |    |
- *               (FREE)
- *
+ *                            \-------/     
  *
  * Inside analog module, ADC data is translated from unsigned neg-slope into
  * two's complement. Similar is done on DAC data.
@@ -448,27 +429,29 @@ red_pitaya_scope i_scope (
   .sys_ack         (  sys_ack[1]                 )   // acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
-//  DAC arbitrary signal generator
+////////////////////////////////////////////////////////////////////////////////
+// ASG (arbitrary signal generators)
+////////////////////////////////////////////////////////////////////////////////
 
-red_pitaya_asg i_asg (
+asg_top asg_top (
+  // system signals
+  .clk             (adc_clk     ),
+  .rstn            (adc_rstn    ),
    // DAC
-  .dac_a_o         (  asg_a                      ),  // CH 1
-  .dac_b_o         (  asg_b                      ),  // CH 2
-  .dac_clk_i       (  adc_clk                    ),  // clock
-  .dac_rstn_i      (  adc_rstn                   ),  // reset - active low
-  .trig_a_i        (  exp_p_in[0]                ),
-  .trig_b_i        (  exp_p_in[0]                ),
-  .trig_out_o      (  trig_asg_out               ),
+  .dac_a_o         (asg_a       ),
+  .dac_b_o         (asg_b       ),
+  .trig_ext_p      (exp_p_in[0] ),
+  .trig_ext_n      (exp_p_in[0] ),
+  .trig_asg_o      (trig_asg_out),
   // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[2]                 ),  // write enable
-  .sys_ren         (  sys_ren[2]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
-  .sys_err         (  sys_err[2]                 ),  // error indicator
-  .sys_ack         (  sys_ack[2]                 )   // acknowledge signal
+  .sys_addr        (sys_addr                 ),
+  .sys_wdata       (sys_wdata                ),
+  .sys_sel         (sys_sel                  ),
+  .sys_wen         (sys_wen[2]               ),
+  .sys_ren         (sys_ren[2]               ),
+  .sys_rdata       (sys_rdata[ 2*32+31: 2*32]),
+  .sys_err         (sys_err[2]               ),
+  .sys_ack         (sys_ack[2]               )
 );
 
 //---------------------------------------------------------------------------------
