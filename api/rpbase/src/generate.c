@@ -21,7 +21,7 @@
 #include "generate.h"
 #include "calib.h"
 
-// Base Health address
+// Base Generate address
 static size_t GENERATE_BASE_ADDR = 0x40200000;
 static size_t GENERATE_BASE_SIZE = 0x30000;
 
