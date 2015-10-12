@@ -21,6 +21,7 @@
 #include "common.h"
 #include "dpin.h"
 #include "apin.h"
+#include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
