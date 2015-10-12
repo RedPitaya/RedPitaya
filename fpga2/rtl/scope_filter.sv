@@ -31,7 +31,7 @@ module scope_filter #(
   input  logic                   sti_vld,  // valid
   output logic                   sti_rdy,  // ready
   // output stream
-  output logic signed [DWO-1: 0] sto_vld,  // ADC data
+  output logic signed [DWO-1: 0] sto_dat,  // ADC data
   output logic                   sto_vld,  // valid
   input  logic                   sto_rdy,  // ready
   // configuration
@@ -58,12 +58,12 @@ module scope_filter #(
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [ 39-1: 0] bb_mult   ;
-logic signed [ 33-1: 0] r2_sum    ;
-logic signed [ 33-1: 0] r1_reg    ;
-logic signed [ 23-1: 0] r2_reg    ;
-logic signed [ 32-1: 0] r01_reg   ;
-logic signed [ 28-1: 0] r02_reg   ;
+logic signed [ 39-1: 0] bb_mult;
+logic signed [ 33-1: 0] r2_sum ;
+logic signed [ 33-1: 0] r1_reg ;
+logic signed [ 23-1: 0] r2_reg ;
+logic signed [ 32-1: 0] r01_reg;
+logic signed [ 28-1: 0] r02_reg;
 
 assign bb_mult = sti_vld * cfg_bb;
 assign r2_sum  = r01_reg + r1_reg;
@@ -85,18 +85,18 @@ end
 // IIR 1
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [ 41-1: 0] aa_mult   ;
-logic [ 49-1: 0] r3_sum    ; //24 + 25
-(* use_dsp48="yes" *) logic [ 23-1: 0] r3_reg    ;
+logic [ 41-1: 0] aa_mult;
+logic [ 49-1: 0] r3_sum ; //24 + 25
+(* use_dsp48="yes" *) logic [ 23-1: 0] r3_reg;
 
 assign aa_mult = $signed(r3_reg) * $signed(cfg_aa);
 assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
 
 always @(posedge clk)
 if (~rstn) begin
-  r3_reg  <= 23'h0 ;
+  r3_reg  <= 23'h0;
 end else begin
-  r3_reg  <= r3_sum[49-2:25] ;
+  r3_reg  <= r3_sum[49-2:25];
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,41 +113,41 @@ assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
 
 always @(posedge clk)
 if (~rstn) begin
-  r3_shr <= 15'h0 ;
-  r4_reg <= 15'h0 ;
+  r3_shr <= 15'h0;
+  r4_reg <= 15'h0;
 end else begin
-  r3_shr <= r3_reg[23-1:8] ;
-  r4_reg <= r4_sum[16-2:0] ;
+  r3_shr <= r3_reg[23-1:8];
+  r4_reg <= r4_sum[16-2:0];
 end
 
 ////////////////////////////////////////////////////////////////////////////////
-// Scaling
+// Scaling and saturation
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [ 40-1: 0] kk_mult   ;
-logic [ 15-1: 0] r4_reg_r  ;
-logic [ 15-1: 0] r4_reg_rr ;
-logic [ 14-1: 0] r5_reg    ;
+logic [ 40-1: 0] kk_mult  ;
+logic [ 15-1: 0] r4_reg_r ;
+logic [ 15-1: 0] r4_reg_rr;
+logic [ 14-1: 0] r5_reg   ;
 
 assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk);
 
 always @(posedge clk)
 if (~rstn) begin
-  r4_reg_r  <= 15'h0 ;
-  r4_reg_rr <= 15'h0 ;
-  r5_reg    <= 14'h0 ;
+  r4_reg_r  <= 15'h0;
+  r4_reg_rr <= 15'h0;
+  r5_reg    <= 14'h0;
 end else begin
-  r4_reg_r  <= r4_reg   ;
-  r4_reg_rr <= r4_reg_r ;
+  r4_reg_r  <= r4_reg  ;
+  r4_reg_rr <= r4_reg_r;
   // saturation
   if ($signed(kk_mult[40-2:24]) > $signed(14'h1FFF))
-     r5_reg <= 14'h1FFF ;
+     r5_reg <= 14'h1FFF;
   else if ($signed(kk_mult[40-2:24]) < $signed(14'h2000))
-     r5_reg <= 14'h2000 ;
+     r5_reg <= 14'h2000;
   else
      r5_reg <= kk_mult[24+14-1:24];
 end
 
-assign sto_vld = r5_reg ;
+assign sto_vld = r5_reg;
 
 endmodule: scope_filter

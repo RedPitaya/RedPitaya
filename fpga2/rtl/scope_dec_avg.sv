@@ -10,7 +10,7 @@ module scope_dec_avg #(
   int unsigned DWO = 14,  // data width for output
   // decimation parameters
   int unsigned DWC = 17,  // data width for counter
-  int unsigned DWS =  4,  // data width for shifter
+  int unsigned DWS =  4   // data width for shifter
 )(
   // system signals
   input  logic                  clk ,  // clock
@@ -20,7 +20,7 @@ module scope_dec_avg #(
   // configuration
   input  logic                  cfg_avg,  // averaging enable
   input  logic        [DWC-1:0] cfg_dec,  // decimation factor
-  input  logic        [DWS-1:0] cfg_shf,  // shift right
+  input  logic        [DWS-1:0] cfg_shr,  // shift right
   // stream input
   input  logic signed [DWI-1:0] sti_dat,  // data
   input  logic                  sti_vld,  // valid
@@ -31,7 +31,7 @@ module scope_dec_avg #(
   input  logic                  sto_rdy,  // ready
   // triggers
   input  logic                  trg_ext,  // external input
-  output logic                  trg_out,  // output
+  output logic                  trg_out   // output
 );
 
 logic signed [DWC+DWI-1:0] sum;
@@ -48,7 +48,7 @@ always_ff @(posedge clk)
 if (~rstn) begin
   sum     <= '0;
   cnt     <= '0;
-  sto_vld <= 
+  sto_vld <= 1'b0;
 end else begin
   if (ctl_clr) begin
     sum <= '0;
