@@ -172,7 +172,7 @@ $(TMP):
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
-	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) apps_pro rp_communication
+	   $(SCPI_SERVER) librp apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -305,9 +305,19 @@ $(LIBRP):
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+ifdef ENABLE_LICENSING
+
+librp: $(LIBRP) $(LIBRPAPP)
+
 $(LIBRPAPP):
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+else
+
+librp: $(LIBRP)
+
+endif
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -432,7 +442,7 @@ $(HEARTBEAT):
 # SCPI server
 ################################################################################
 
-$(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
+$(SCPI_SERVER): $(LIBRP)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -455,11 +465,11 @@ ifdef ENABLE_LICENSING
 
 apps_pro: $(APP_SCOPE) $(APP_SPECTRUM)
 
-$(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
+$(APP_SCOPE): librp $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
+$(APP_SPECTRUM): librp $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
