@@ -16,7 +16,7 @@
 # responsible to build those in a coordinated way and to package them within
 # the target redpitaya-OS ZIP archive.
 #
-# TODO #1: Make up a new name for OS dir, as OS is building one level higher now. 
+# TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
 
 TMP = tmp
 
@@ -170,9 +170,17 @@ all: zip sdk apps_free
 $(TMP):
 	mkdir -p $@
 
+ifeq ($(ENABLE_LICENSING),true)
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
 	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) $(APP_SCOPE) $(APP_SPECTRUM) rp_communication
+else
+$(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
+	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
+	   $(SCPI_SERVER) $(LIBRP) $(LIBRPAPP) rp_communication
+endif
+
+
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -386,7 +394,7 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJS
 $(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
-	
+
 ################################################################################
 # Red Pitaya tools
 ################################################################################
@@ -433,6 +441,7 @@ $(SCPI_SERVER): $(LIBRP) $(LIBRPAPP)
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+ifeq ($(ENABLE_LICENSING),true)
 $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -440,6 +449,7 @@ $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+endif
 
 # Gdb server for remote debugging
 # TODO: This is a temporary solution
@@ -454,7 +464,7 @@ rp_communication:
 
 apps_free:
 	$(MAKE) -C $(APPS_FREE_DIR) all
-	$(MAKE) -C $(APPS_FREE_DIR) install 
+	$(MAKE) -C $(APPS_FREE_DIR) install
 
 clean:
 	make -C $(LINUX_DIR) clean
