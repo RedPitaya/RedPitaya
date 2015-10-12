@@ -16,7 +16,7 @@
 # responsible to build those in a coordinated way and to package them within
 # the target redpitaya-OS ZIP archive.
 #
-# TODO #1: Make up a new name for OS dir, as OS is building one level higher now. 
+# TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
 
 TMP = tmp
 
@@ -386,7 +386,7 @@ $(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJS
 $(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
-	
+
 ################################################################################
 # Red Pitaya examples
 ################################################################################
