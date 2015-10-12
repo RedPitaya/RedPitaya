@@ -17,6 +17,7 @@
 #define ACQUIRE_H_
 
 #include "scpi/types.h"
+#include "../../api/rpbase/src/rp.h"
 
 typedef enum {
     RP_SCPI_VOLTS,

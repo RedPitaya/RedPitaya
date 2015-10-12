@@ -12,13 +12,9 @@
  * for more details on the language used herein.
  */
 
-#include <strings.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "common.h"
-#include "scpi/parser.h"
 
 /* Parse channel */
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel){
