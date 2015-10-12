@@ -12,7 +12,6 @@
  * for more details on the language used herein.
  */
 
-#include <syslog.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -30,11 +29,11 @@ scpi_result_t RP_InitAll(scpi_t *context){
     int result = rp_Init();
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*RP:INIT Failed to initialize Red Pitaya modules: %s", rp_GetError(result));
+        RP_ERR("*RP:INIT Failed to initialize Red Pitaya modules", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*RP:INIT Successfully inizitalized Red Pitaya modules.");
+    RP_INFO("*RP:INIT Successfully inizitalized Red Pitaya modules.");
     return SCPI_RES_OK;
 }
 
@@ -43,11 +42,11 @@ scpi_result_t RP_ResetAll(scpi_t *context){
     int result = rp_Reset();
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*RP:RST Failed to reset Red Pitaya modules: %s", rp_GetError(result));
+        RP_ERR("*RP:RST Failed to reset Red Pitaya modules", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*RP:RST Successfully reset Red Pitaya modules.");
+    RP_INFO("*RP:RST Successfully reset Red Pitaya modules.");
     return SCPI_RES_OK;
 }
 
@@ -56,11 +55,11 @@ scpi_result_t RP_ReleaseAll(scpi_t *context){
     int result = rp_Release();
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*RP:RELEASE Failed to release Red Pitaya modules: %s", rp_GetError(result));
+        RP_ERR("*RP:RELEASE Failed to release Red Pitaya modules", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*RP:RELEASE Successfully released Red Pitaya modules.");
+    RP_INFO("*RP:RELEASE Successfully released Red Pitaya modules.");
     return SCPI_RES_OK;
 }
 
@@ -75,7 +74,7 @@ scpi_result_t RP_FpgaBitStream(scpi_t *context){
 
     /* Read first param(fpga bit file typ (0.93, 0.94)) fom context */
     if(!SCPI_ParamCharacters(context, &param, &param_len, true)){
-        syslog(LOG_ERR, "*RP:FPGA:BITSTR Failed to parse first parameter.\n");
+        RP_ERR("*RP:FPGA:BITSTR Failed to parse first parameter", NULL);
         return SCPI_RES_ERR;
     }
 
@@ -94,13 +93,13 @@ scpi_result_t RP_FpgaBitStream(scpi_t *context){
     /* Load new fpga image into /dev/xdevcfg */
     fo = open("/dev/xdevcfg", O_WRONLY);
     if(fo < 0){
-        syslog(LOG_ERR, "*RP:FPGA:BITstr Failed to open output file.\n");
+        RP_ERR("*RP:FPGA:BITstr Failed to open output file", NULL);
         return SCPI_RES_ERR;
     }
 
     fi = open(fpga_file, O_RDONLY);
     if(fi < 0){
-        syslog(LOG_ERR, "*RP:FPGA:BITstr Failed to open input file.\n");
+        RP_ERR("*RP:FPGA:BITstr Failed to open input file", fi);
         return SCPI_RES_ERR;
     }
 
@@ -111,16 +110,16 @@ scpi_result_t RP_FpgaBitStream(scpi_t *context){
 
     /* Read FPGA file into fi_buff */
     if(read(fi, &fi_buff, fpga_s) < 0){
-        syslog(LOG_ERR, "*RP:FPGA:BITstr Unable to read fpga bit stream into buffer.\n");
+        RP_ERR("*RP:FPGA:BITstr Unable to read fpga bit stream into buffer", fo);
         return SCPI_RES_ERR;
     }
 
     if(write(fo, &fi_buff, fpga_s) < 0){
-        syslog(LOG_ERR, "*RP:FPGA:BITstr Unable to write fpga bit stream into /dev/xdevcfg.\n");
+        RP_ERR("*RP:FPGA:BITstr Unable to write fpga bit stream into /dev/xdevcfg", NULL);
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*RP:FPGA:BITstr Successfully loaded FPGA bit stream.\n");
+    RP_INFO("*RP:FPGA:BITstr Successfully loaded FPGA bit stream.");
 
     /* Close resources */
     close(fi);
@@ -134,12 +133,12 @@ scpi_result_t RP_EnableDigLoop(scpi_t *context){
     int result = rp_EnableDigitalLoop(true);
 
     if(result != RP_OK){
-        syslog(LOG_ERR, "*RP:DIG:LOop Failed to initialize Red Pitaya"
-            " digital loop.\n");
+        RP_ERR("*RP:DIG:LOop Failed to initialize Red Pitaya"
+            " digital loop", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    syslog(LOG_INFO, "*RP:DIG:LOop Successfully initialize Red Pitaya"
+    RP_INFO("*RP:DIG:LOop Successfully initialize Red Pitaya"
         " digital loop.\n");
 
     return SCPI_RES_OK;

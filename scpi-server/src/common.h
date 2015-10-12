@@ -15,11 +15,10 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#include <stdbool.h>
 #include <syslog.h>
+
+#include "scpi/parser.h"
 #include "../../api/rpbase/src/rp.h"
-#include "acquire.h"
-#include "../../api/rpApplications/src/rpApp.h"
 
 #define SET_OK(cont) \
     	SCPI_ResultString(cont, "OK"); \
