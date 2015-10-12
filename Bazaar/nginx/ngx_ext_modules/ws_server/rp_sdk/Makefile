@@ -26,9 +26,7 @@ CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTA
 
 ifeq ($(ENABLE_LICENSING),true)
 SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
-CXXFLAGS+=-Ilicverify/encoder
-else
-CXXFLAGS+=-DALWAYS_PURCHASED
+CXXFLAGS+=-Ilicverify/encoder -DENABLE_LICENSING
 endif
 
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
