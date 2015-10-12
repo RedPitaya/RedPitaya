@@ -61,12 +61,11 @@ scpi_result_t RP_DigitalPinReset(scpi_t *context) {
     int result = rp_DpinReset();
 
     if (RP_OK != result) {
-        RP_ERR("DIG:RST Failed to", rp_GetError(result));
+        RP_ERR("DIG:RST Failed to reset Red Pitaya digital pins", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_INFO("*DIG:RST Successfully");
-
+    RP_INFO("*DIG:RST Successfully reset Red Pitaya digital pins.");
     return SCPI_RES_OK;
 }
 
@@ -102,7 +101,7 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
 		return SCPI_RES_ERR;
 	}
 
-	RP_INFO("*SOUR:DIG:DATA:BIT Successfully set port value");
+	RP_INFO("*DIG:PIN Successfully set port value");
 	return SCPI_RES_OK;
 }
 
@@ -148,7 +147,6 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
     
     int32_t dir_choice, pin_choice;
 
-    RP_INFO("*DIG:PIN:DIR Successfully set port direction.");
     /* Read first, DIRECTION parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDir, &dir_choice, true)){
         RP_ERR("*DIG:PIN:DIR is missing first parameter", NULL);
