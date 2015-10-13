@@ -21,6 +21,9 @@
 
 #define CONSTANT_SIGNAL_AMPLITUDE 0.8
 
+static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
+static const int  eeprom_calib_off=0x0008;
+
 int calib_Init();
 int calib_Release();
 
@@ -44,4 +47,5 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
 int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
 
 int calib_setCachedParams();
+
 #endif //__CALIB_H

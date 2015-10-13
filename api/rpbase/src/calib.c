@@ -19,10 +19,7 @@
 #include "generate.h"
 #include "calib.h"
 
-int calib_ReadParams(rp_calib_params_t *calib_params);
-
-static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
-static const int  eeprom_calib_off=0x0008;
+static int calib_ReadParams(rp_calib_params_t *calib_params);
 
 // Cached parameter values.
 static rp_calib_params_t calib, failsafa_params;
@@ -60,7 +57,7 @@ rp_calib_params_t calib_GetParams()
  * @retval       >0 Failure
  *
  */
-int calib_ReadParams(rp_calib_params_t *calib_params)
+static int calib_ReadParams(rp_calib_params_t *calib_params)
 {
     FILE   *fp;
     size_t  size;
