@@ -80,6 +80,8 @@ IDGEN_DIR       = Bazaar/tools/idgen
 MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
+LCR_DIR         = Test/acquire
+BODE_DIR        = Test/acquire
 XADC_DIR        = Test/xadc
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
@@ -108,6 +110,8 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 MONITOR         = $(INSTALL_DIR)/bin/monitor
 GENERATE        = $(INSTALL_DIR)/bin/generate
 ACQUIRE         = $(INSTALL_DIR)/bin/acquire
+LCR             = $(INSTALL_DIR)/bin/lcr
+BODE            = $(INSTALL_DIR)/bin/bode
 XADC            = $(INSTALL_DIR)/bin/xadc
 CALIB           = $(INSTALL_DIR)/bin/calib
 CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
@@ -165,14 +169,14 @@ export GREET_MSG
 # tarball
 ################################################################################
 
-all: zip sdk apps_free
+all: zip sdk apps-free
 
 $(TMP):
 	mkdir -p $@
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
-	   $(SCPI_SERVER) librp apps_pro rp_communication
+	   $(SCPI_SERVER) api apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -200,6 +204,10 @@ zip: $(TARGET)
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
+
+.PHONY: fpga
+
+fpga: $(FPGA)
 
 $(FPGA): $(DTREE_DIR)
 	make -C $(FPGA_DIR)
@@ -298,6 +306,8 @@ $(URAMDISK): $(INSTALL_DIR)
 # API libraries
 ################################################################################
 
+.PHONY: api
+
 $(LIBREDPITAYA):
 	$(MAKE) -C shared
 
@@ -307,7 +317,7 @@ $(LIBRP):
 
 ifdef ENABLE_LICENSING
 
-librp: $(LIBRP) $(LIBRPAPP)
+api: $(LIBRP) $(LIBRPAPP)
 
 $(LIBRPAPP):
 	$(MAKE) -C $(LIBRPAPP_DIR)
@@ -315,7 +325,7 @@ $(LIBRPAPP):
 
 else
 
-librp: $(LIBRP)
+api: $(LIBRP)
 
 endif
 
@@ -414,13 +424,27 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/scpi-parser-$(SCPI_PARSER_TAG).patch
 
-$(SCPI_SERVER): $(LIBRP) $(INSTALL_DIR) $(SCPI_PARSER_DIR)
+$(SCPI_SERVER): api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya tools
 ################################################################################
+
+.PHONY: lcr bode
+
+lcr: $(LCR)
+
+$(LCR):
+	$(MAKE) -C $(LCR_DIR)
+	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+lcr: $(BODE)
+
+$(BODE):
+	$(MAKE) -C $(BODE_DIR)
+	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(MONITOR):
 	$(MAKE) -C $(MONITOR_DIR)
@@ -438,7 +462,7 @@ $(CALIB):
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(CALIBRATE): $(LIBRP)
+$(CALIBRATE): api
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -466,7 +490,9 @@ $(HEARTBEAT):
 $(ECOSYSTEM):
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-apps_free:
+.PHONY: apps-free
+
+apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) all
 	$(MAKE) -C $(APPS_FREE_DIR) install 
 
@@ -478,11 +504,11 @@ ifdef ENABLE_LICENSING
 
 apps_pro: $(APP_SCOPE) $(APP_SPECTRUM)
 
-$(APP_SCOPE): librp $(NGINX)
+$(APP_SCOPE): api $(NGINX)
 	$(MAKE) -C $(APP_SCOPE_DIR)
 	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(APP_SPECTRUM): librp $(NGINX)
+$(APP_SPECTRUM): api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -504,9 +530,9 @@ sdk:
 ################################################################################
 
 clean:
-	make -C $(LINUX_DIR) clean
+	-make -C $(LINUX_DIR) clean
 	make -C $(FPGA_DIR) clean
-	make -C $(UBOOT_DIR) clean
+	-make -C $(UBOOT_DIR) clean
 	make -C shared clean
 	# todo, remove downloaded libraries and symlinks
 	rm -rf Bazaar/tools/cryptopp
@@ -515,12 +541,12 @@ clean:
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
-	make -C $(SCPI_SERVER_DIR) clean
+	-make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
-	rm $(BUILD) -rf
-	rm $(TARGET) -rf
+	$(RM) $(INSTALL_DIR) -rf
+	$(RM) $(TARGET) -rf
 	$(RM) $(NAME)*.zip
