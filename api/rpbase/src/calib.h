@@ -43,5 +43,5 @@ int32_t calib_GetDataMedian(rp_channel_t channel);
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
 int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
 
-int calib_setCachedParams();	
+int calib_setCachedParams();
 #endif //__CALIB_H
