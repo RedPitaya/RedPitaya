@@ -147,6 +147,7 @@ static const scpi_command_t scpi_commands[] = {
         {.pattern = "DIG:PIN", .callback            = RP_DigitalPinState,},
         {.pattern = "DIG:PIN?", .callback           = RP_DigitalPinStateQ,},
         {.pattern = "DIG:PIN:DIR", .callback        = RP_DigitalPinDirection,},
+        {.pattern = "DIG:PIN:DIR?", .callback       = RP_DigitalPinDirectionQ,},
 
         {.pattern = "ANALOG:RST", .callback         = RP_AnalogPinReset,},
         {.pattern = "ANALOG:PIN", .callback         = RP_AnalogPinValue,},
