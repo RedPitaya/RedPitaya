@@ -398,7 +398,28 @@ $(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
-# Red Pitaya examples
+# SCPI server
+################################################################################
+
+SCPI_PARSER_TAG = 8746b911b06fe0fc3060c9c12493c13edfcdbd7e
+SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
+SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
+SCPI_PARSER_DIR = scpi-server/scpi-parser
+
+$(SCPI_PARSER_TAR): | $(DL)
+	curl -L $(SCPI_PARSER_URL) -o $@
+
+$(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	patch -d $@ -p1 < patches/scpi-parser-$(SCPI_PARSER_TAG).patch
+
+$(SCPI_SERVER): $(LIBRP) $(LIBRPAPP) $(INSTALL_DIR) $(SCPI_PARSER_DIR)
+	$(MAKE) -C $(SCPI_SERVER_DIR)
+	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+################################################################################
+# Red Pitaya tools
 ################################################################################
 
 $(MONITOR):
@@ -437,14 +458,6 @@ $(DISCOVERY):
 
 $(HEARTBEAT):
 	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
-
-################################################################################
-# SCPI server
-################################################################################
-
-$(SCPI_SERVER): $(LIBRP)
-	$(MAKE) -C $(SCPI_SERVER_DIR)
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya ecosystem and free applications

@@ -5,9 +5,7 @@
 | paths                         | contents
 |-------------------------------|---------
 | `scpi-server/src/`            |
-| `scpi-server/3rdparty`        |
-| `scpi-server/build.sh`        |
-| `scpi-server/build-upload.sh` |
+| `scpi-server/scpi-parser`     |
 | `scpi-server/Makefile`        |
 
 
