@@ -80,8 +80,8 @@ IDGEN_DIR       = Bazaar/tools/idgen
 MONITOR_DIR     = Test/monitor
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
-LCR_DIR         = Test/acquire
-BODE_DIR        = Test/acquire
+LCR_DIR         = Test/lcr
+BODE_DIR        = Test/bode
 XADC_DIR        = Test/xadc
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
@@ -440,7 +440,7 @@ $(LCR):
 	$(MAKE) -C $(LCR_DIR)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-lcr: $(BODE)
+bode: $(BODE)
 
 $(BODE):
 	$(MAKE) -C $(BODE_DIR)
