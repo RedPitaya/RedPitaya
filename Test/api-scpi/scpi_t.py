@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.115')
+rp_scpi = scpi.scpi('192.168.1.241')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -23,10 +23,11 @@ rp_volt_range  = [0.25, 0.5, 0.75, 1.0]
 rp_phase_range = [360, -180, -90, -30, 30, 90, 180, 360]
 rp_offs_range  = [-0.75, -0.5, -0.25, 0.25, 0.5 , 0.75]
 rp_dcyc_range  = [0.5, 1, 10, 50, 75, 100]
-rp_ncyc_range  = [1, 10, 100, 1000, 10000, 50000, 'INF']
+rp_ncyc_range  = ['INF', 1, 10, 100, 1000, 10000, 50000]
 rp_nor_range   = rp_ncyc_range[:]
 rp_inp_range   = [i * 100 for i in range(1, 6)]
-
+rp_channels    = ['CH1', 'CH2', 'MATH']
+rp_scales      = [0.5, 1, 2, 3, 10]
 
 rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
 
@@ -84,18 +85,6 @@ class Base(object):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':DCYC?')
         return rp_scpi.rx_txt()
 
-    #TODO: Scpi server returns 1 for ON and 0 for off here. It should be ON and OFF. Fix that!
-    def rp_burst_state(self, channel):
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not '1'):
-            return False
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') is not '0'):
-            return False
-        return True
-
     def rp_burst_ncyc(self, channel, ncyc):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC ' + str(ncyc))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC?')
@@ -107,9 +96,29 @@ class Base(object):
         return rp_scpi.rx_txt()
 
     def rp_burst_intp(self, channel, intp):
+        #Set number of cycles to 0, for period repeatibilty (period = signal_time * burst_count + delay_time)
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC 0')
+
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER ' + str(intp))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER?')
         return rp_scpi.rx_txt()
+
+    #Burst state must also set burst counts to something other than 0.
+    #Api checks, if burst count is not equal to 0 or yes and with the latter being true
+    #returns continious mode, therefore rp_burst_state will always return OFF and fail.
+    #To prevent this, we set Burts count to 1 before starting the burst state test.
+    #TODO: Make a better commentary.
+    def rp_burst_state(self, channel):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC 1')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+        if(rp_scpi.rx_txt().strip('\n') != 'ON'):
+            return False
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+        if(rp_scpi.rx_txt().strip('\n') != 'OFF'):
+            return False
+        return True
 
     def generate_wform(self, channel):
 
@@ -121,39 +130,36 @@ class Base(object):
         ampl = 0.8
         wave_form = 'SINE'
 
-
-        rp_scpi.tx_txt('ACQ:START')
-
+        #Init Red Pitaya resources
+        rp_scpi.tx_txt('RP:INIT')
 
         #Enable Red Pitaya digital loop
-        rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
+        rp_scpi.tx_txt('RP:DIG:LO')
+        rp_scpi.tx_txt('ACQ:START')
 
         #Set generator options
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':VOLT ' + str(ampl))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':FUNC ' + str(wave_form))
-
-        rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
         rp_scpi.tx_txt('OUTPUT' + str(channel) + ':STATE ON')
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':FREQ:FIX ' + str(freq))
+        rp_scpi.tx_txt('ACQ:TRIG CH' + str(channel) + '_PE')
 
-        #rp_scpi.tx_txt('ACQ:TRIG:STAT?')
-        #rp_scpi.rx_txt()
         rp_scpi.tx_txt('ACQ:SOUR' + str(channel) + ':DATA?')
 
         buff_string = rp_scpi.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = map(float, buff_string)
 
-        buff_ctrl = open('./ctrl_data/gen_ctrl', 'r').readlines()
+        if(channel == 1):
+            buff_ctrl = open('./ctrl_data/gen_ctrl_ch1', 'r').readlines()
+        else:
+           buff_ctrl = open('./ctrl_data/gen_ctrl_ch2', 'r').readlines()
 
         for i in range(len(buff_ctrl)):
-            buff_ctrl[i] = (float)(buff_ctrl[i].strip('\n'))
-            buff[i] = (float)(buff[i])
-        rp_scpi.tx_txt('ACQ:RST')
+            buff_ctrl[i] = float(buff_ctrl[i].strip('\n'))
 
-        #Compare the two buffers
-        cmp = lambda x, y: collections.Counter(x) == collections.Counter(y)
-        return cmp(buff, buff_ctrl)
+        rp_scpi.tx_txt('RP:RESET')
+        return (buff[:] == buff_ctrl[:])
 
 # Main test class
 class MainTest(unittest.TestCase):
@@ -164,20 +170,20 @@ class MainTest(unittest.TestCase):
     ############### LEDS and GPIOs ###############
     def test0200_led(self):
         for led in range(1, 8):
-            self.assertEquals(Base().rp_led(rp_leds[led], '1'), '1')
-            self.assertEquals(Base().rp_led(rp_leds[led], '0'), '0')
+            self.assertEquals(Base().rp_led(rp_leds[led], 'ON'), 'ON')
+            self.assertEquals(Base().rp_led(rp_leds[led], 'OFF'), 'OFF')
 
 
     def test0201_dpin(self):
         #Test pos state
         for pin in range(1, 8):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '1'), '1')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '0'), '0')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], 'ON'), 'ON')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], 'OFF'), 'OFF')
 
         #Test neg state
         for pin in range(len(rp_dpin_p)):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '1'), '1')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], 'ON'), 'ON')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], 'OFF'), 'OFF')
 
     def test0202_analog_pin(self):
         for a_pin in range(0, 3):
@@ -226,18 +232,17 @@ class MainTest(unittest.TestCase):
             self.assertEquals(float(Base().rp_dcyc(1, dcyc)), dcyc)
             self.assertEquals(float(Base().rp_dcyc(2, dcyc)), dcyc)
 
-    #TODO: Scpi server returns 0 on INF given. This should also be fixed.
     def test0306_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
-            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
-            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != (len(rp_ncyc_range) - 1) else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
+            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != 0 else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
+            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != 0 else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
 
     def test0307_nor(self):
         for i in range(len(rp_nor_range)):
             nor = rp_nor_range[i]
-            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
-            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != (len(rp_nor_range) - 1) else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
+            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != 0 else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
+            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != 0 else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
 
     def test0308_intp(self):
         for i in range(len(rp_inp_range)):
@@ -249,15 +254,14 @@ class MainTest(unittest.TestCase):
         self.assertTrue(Base().rp_burst_state(1))
         self.assertTrue(Base().rp_burst_state(1))
 
-    #TODO: Arbitrary-waveform. TRAC-DATA
-
-
     #Test generate
-    def test0310_generate(self):
-            assert (Base().generate_wform(1)) is True
-            assert (Base().generate_wform(2)) is True
+    def test000_generate(self):
+        assert (Base().generate_wform(1)) is True
+        assert (Base().generate_wform(2)) is True
 
     ############### SIGNAL ACQUISITION TOOL ###############
+
+    #TODO: Arbitrary-waveform. TRAC-DATA
 
 
 if __name__ == '__main__':
