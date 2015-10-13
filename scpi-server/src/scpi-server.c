@@ -26,6 +26,7 @@
 #include <syslog.h>
 
 #include "scpi-commands.h"
+#include "common.h"
 
 #include "scpi/parser.h"
 #include "../../api/rpbase/src/rp.h"
@@ -109,7 +110,7 @@ void LogMessage(char *m, size_t len) {
     strncpy(buff, m, len);
     buff[len - 1] = '\0';
 
-    syslog(LOG_INFO, "Processing command: %s", buff);
+    RP_LOG(LOG_INFO, "Processing command: %s\n", buff);
 }
 
 /**
@@ -167,7 +168,7 @@ static int handleConnection(int connfd) {
             memmove(message_buff, m, msg_end);
         }
 
-        syslog(LOG_INFO, "Waiting for next client request.");
+        RP_LOG(LOG_INFO, "Waiting for next client request.\n");
     }
 
     free(message_buff);
