@@ -16,60 +16,49 @@
 #ifndef ACQUIRE_H_
 #define ACQUIRE_H_
 
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/types.h"
+#include "scpi/types.h"
+#include "../../api/rpbase/src/rp.h"
 
 typedef enum {
     RP_SCPI_VOLTS,
     RP_SCPI_RAW,
 } rp_scpi_acq_unit_t;
 
-int RP_AcqSetDefaultValues();
 
+int RP_AcqSetDefaultValues();
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context);
 scpi_result_t RP_AcqStart(scpi_t * context);
 scpi_result_t RP_AcqStop(scpi_t *context);
 scpi_result_t RP_AcqReset(scpi_t * context);
-scpi_result_t RP_AcqSetDecimation(scpi_t * context);
-scpi_result_t RP_AcqGetDecimation(scpi_t * context);
-scpi_result_t RP_AcqSetSamplingRate(scpi_t * context);
-scpi_result_t RP_AcqGetSamplingRate(scpi_t * context);
-scpi_result_t RP_AcqGetSamplingRateHz(scpi_t * context);
-scpi_result_t RP_AcqSetAveraging(scpi_t * context);
-scpi_result_t RP_AcqGetAveraging(scpi_t * context);
-scpi_result_t RP_AcqSetTriggerSrc(scpi_t * context);
-scpi_result_t RP_AcqGetTrigger(scpi_t *context);
-scpi_result_t RP_AcqSetTriggerDelay(scpi_t * context);
-scpi_result_t RP_AcqGetTriggerDelay(scpi_t * context);
-scpi_result_t RP_AcqSetTriggerDelayNs(scpi_t * context);
-scpi_result_t RP_AcqGetTriggerDelayNs(scpi_t * context);
-scpi_result_t RP_AcqSetChannel1Gain(scpi_t * context);
-scpi_result_t RP_AcqSetChannel2Gain(scpi_t * context);
-scpi_result_t RP_AcqGetChannel1Gain(scpi_t * context);
-scpi_result_t RP_AcqGetChannel2Gain(scpi_t * context);
-scpi_result_t RP_AcqSetTriggerLevel(scpi_t *context);
-scpi_result_t RP_AcqGetTriggerLevel(scpi_t *context);
-scpi_result_t RP_AcqGetWritePointer(scpi_t * context);
-scpi_result_t RP_AcqGetWritePointerAtTrig(scpi_t * context);
+scpi_result_t RP_AcqDecimation(scpi_t * context);
+scpi_result_t RP_AcqDecimationQ(scpi_t * context);
+scpi_result_t RP_AcqSamplingRate(scpi_t * context);
+scpi_result_t RP_AcqSamplingRateQ(scpi_t * context);
+scpi_result_t RP_AcqSamplingRateHzQ(scpi_t * context);
+scpi_result_t RP_AcqAveraging(scpi_t * context);
+scpi_result_t RP_AcqAveragingQ(scpi_t * context);
+scpi_result_t RP_AcqTriggerSrc(scpi_t * context);
+scpi_result_t RP_AcqTriggerQ(scpi_t *context);
+scpi_result_t RP_AcqTriggerDelay(scpi_t * context);
+scpi_result_t RP_AcqTriggerDelayQ(scpi_t * context);
+scpi_result_t RP_AcqTriggerDelayNs(scpi_t * context);
+scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t * context);
+scpi_result_t RP_AcqGain(scpi_t * context);
+scpi_result_t RP_AcqGainQ(scpi_t * context);
+scpi_result_t RP_AcqTriggerLevel(scpi_t *context);
+scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context);
+scpi_result_t RP_AcqWritePointerQ(scpi_t * context);
+scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t * context);
 scpi_result_t RP_AcqScpiDataUnits(scpi_t * context);
+scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t *context);
 scpi_result_t RP_AcqScpiDataFormat(scpi_t * context);
-scpi_result_t RP_AcqGetChanel1DataPos(scpi_t * context);
-scpi_result_t RP_AcqGetChanel2DataPos(scpi_t * context);
-scpi_result_t RP_AcqGetChanel1Data(scpi_t * context);
-scpi_result_t RP_AcqGetChanel2Data(scpi_t * context);
-scpi_result_t RP_AcqGetChanel1OldestDataAll(scpi_t * context);
-scpi_result_t RP_AcqGetChanel2OldestDataAll(scpi_t * context);
-scpi_result_t RP_AcqGetChanel1OldestData(scpi_t * context);
-scpi_result_t RP_AcqGetChanel2OldestData(scpi_t * context);
-scpi_result_t RP_AcqGetChanel1LatestData(scpi_t * context);
-scpi_result_t RP_AcqGetChanel2LatestData(scpi_t * context);
-scpi_result_t RP_AcqGetBufferSize(scpi_t * context);
+scpi_result_t RP_AcqDataPosQ(scpi_t * context);
+scpi_result_t RP_AcqDataQ(scpi_t * context);
+scpi_result_t RP_AcqDataOldestAllQ(scpi_t * context);
+scpi_result_t RP_AcqOldestDataQ(scpi_t *context);
+scpi_result_t RP_AcqLatestDataQ(scpi_t *context);
+scpi_result_t RP_AcqBufferSizeQ(scpi_t * context);
 
-scpi_result_t RP_AcqSetGain(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_AcqGetGain(rp_channel_t channel, scpi_t *context);
 scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_AcqGetOldestDataAll(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_AcqGetOldestData(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_AcqGetDataPos(rp_channel_t channel, scpi_t * context);
-scpi_result_t RP_AcqGetData(rp_channel_t channel, scpi_t * context);
 
 #endif /* ACQUIRE_H_ */

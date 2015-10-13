@@ -12,12 +12,15 @@
  * for more details on the language used herein.
  */
 
+#ifndef API_CMD_H_
+#define API_CMD_H_
 
-#ifndef APIN_H_
-#define APIN_H_
+#include "scpi/types.h"
 
-scpi_result_t RP_AnalogPinReset(scpi_t * context);
-scpi_result_t RP_AnalogPinValueQ(scpi_t * context);
-scpi_result_t RP_AnalogPinValue(scpi_t * context);
+scpi_result_t RP_InitAll(scpi_t *context);
+scpi_result_t RP_ResetAll(scpi_t *context);
+scpi_result_t RP_ReleaseAll(scpi_t *context);
+scpi_result_t RP_FpgaBitStream(scpi_t *context);
+scpi_result_t RP_EnableDigLoop(scpi_t *context);
 
-#endif /* APIN_H_ */
+#endif /* API_CMD_H_ */

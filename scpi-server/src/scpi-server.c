@@ -27,9 +27,8 @@
 
 #include "scpi-commands.h"
 
-#include "generate.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
-#include "../../api/rpApplications/src/rpApp.h"
+#include "scpi/parser.h"
+#include "../../api/rpbase/src/rp.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -216,13 +215,13 @@ int main(int argc, char *argv[])
     handleCloseChildEvents();
 
 
-    int result = rpApp_Init();
+    int result = rp_Init();
     if (result != RP_OK) {
         syslog(LOG_ERR, "Failed to initialize RP APP library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
-    result = rpApp_Reset();
+    result = rp_Reset();
     if (result != RP_OK) {
         syslog(LOG_ERR, "Failed to reset RP APP: %s", rp_GetError(result));
         return (EXIT_FAILURE);
@@ -312,7 +311,7 @@ int main(int argc, char *argv[])
 
     close(listenfd);
 
-    result = rpApp_Release();
+    result = rp_Release();
     if (result != RP_OK) {
         syslog(LOG_ERR, "Failed to release RP App library: %s", rp_GetError(result));
     }
