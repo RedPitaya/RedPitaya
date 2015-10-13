@@ -28,29 +28,12 @@
 #define MAX_CH			3
 
 #define SCPI_CMD_NUM 	1
-#define SCPI_DEBUG 		1
-
-
-#define CNV_STR(x) #x
-    	
-/* rp scpi log */
-#ifdef SCPI_DEBUG
-#define RP_ERR(msg, param) \
-(CNV_STR(param) == NULL) ? \
-syslog(LOG_INFO, "%s\n", msg): \
-syslog(LOG_INFO,"%s: %s\n", msg, CNV_STR(param));
-#define RP_INFO(msg) \
-syslog(LOG_INFO, "%s\n", msg);
-#else
-#define RP_ERR(msg, param)
-#define RP_INFO(msg)
-#endif
 
 #ifdef SCPI_DEBUG
 #define RP_LOG(...) \
 syslog(__VA_ARGS__);
 #else
-#define RP_LOG(...) pass;
+#define RP_LOG(...)
 #endif
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
