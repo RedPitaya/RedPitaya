@@ -14,15 +14,15 @@
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-#define LEVEL_MAX	            1.0	        // V
+#define LEVEL_MAX               1.0         // V
 #define AMPLITUDE_MAX           1.0         // V
-#define ARBITRARY_MIN          -1.0	        // V
+#define ARBITRARY_MIN          -1.0         // V
 #define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V
-#define FREQUENCY_MIN           0	        // Hz
+#define FREQUENCY_MIN           0           // Hz
 #define FREQUENCY_MAX           62.5e6      // Hz
-#define PHASE_MIN	           -360         // deg
-#define PHASE_MAX	            360         // deg
+#define PHASE_MIN              -360         // deg
+#define PHASE_MAX               360         // deg
 #define DUTY_CYCLE_MIN          0           // %
 #define DUTY_CYCLE_MAX          100         // %
 #define BURST_COUNT_MIN        -1

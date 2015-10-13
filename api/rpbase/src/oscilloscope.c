@@ -186,7 +186,7 @@ typedef struct osc_control_s {
     uint32_t cha_axi_high;
 
     /** @brief ChA AXI delay after trigger
-    * bits [31:0] - Number of decimated data 
+    * bits [31:0] - Number of decimated data
     * after trig written into memory
     */
     uint32_t cha_trig_delay;
@@ -222,7 +222,7 @@ typedef struct osc_control_s {
     uint32_t chb_axi_high;
 
     /** @brief ChB AXI delay after trigger
-    * bits [31:0] - Number of decimated data 
+    * bits [31:0] - Number of decimated data
     * after trig written into memory
     */
     uint32_t chb_trig_delay;
@@ -248,9 +248,9 @@ typedef struct osc_control_s {
     uint32_t reserved_5;
 
     /**@brief Trigger debuncer time
-    * bits [19:0] Number of ADC clock periods 
+    * bits [19:0] Number of ADC clock periods
     * trigger is disabled after activation
-    * reset value is decimal 62500 
+    * reset value is decimal 62500
     * or equivalent to 0.5ms
     */
     uint32_t trig_dbc_t;
