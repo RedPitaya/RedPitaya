@@ -43,8 +43,9 @@ const scpi_choice_def_t scpi_RpGenTrig[] = {
 };
 
 const scpi_choice_def_t scpi_RpGenMode[] = {
-    {"OFF",  0},
-    {"ON",   1},
+    {"CONTINUOUS",  0},
+    {"BURST",       1},
+    {"STREAM",      2},
     SCPI_CHOICE_LIST_END
 };
 
@@ -80,7 +81,9 @@ scpi_result_t RP_GenState(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenOutIsEnabled(channel, &state_c);
+    state_c ? (result = rp_GenOutEnable(channel)) :
+        (result = rp_GenOutDisable(channel));
+
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
             rp_GetError(result));
