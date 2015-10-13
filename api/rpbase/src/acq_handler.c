@@ -174,7 +174,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     if (channel == RP_CH_1) {
         gain = &gain_ch_a;
     }
-    
+
     else {
         gain = &gain_ch_b;
     }
@@ -425,7 +425,7 @@ int acq_GetSamplingRateHz(float* sampling_rate)
             *sampling_rate = max_rate / 65536;
             break;
     }
-    
+
     return RP_OK;
 }
 
@@ -459,7 +459,7 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
         *state=RP_TRIG_STATE_TRIGGERED;
     }
     else{
-    	*state=RP_TRIG_STATE_WAITING;
+        *state=RP_TRIG_STATE_WAITING;
     }
 
     return RP_OK;
@@ -467,13 +467,13 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
 
 int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 {
-	int32_t trig_dly;
-	if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
-    		trig_dly=0;
-	}
-	else{
-		trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
-	}
+    int32_t trig_dly;
+    if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
+            trig_dly=0;
+    }
+    else{
+        trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
+    }
 
     ECHECK(osc_SetTriggerDelay(trig_dly));
     triggerDelayInNs = false;
@@ -490,9 +490,9 @@ int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue)
 
 int acq_GetTriggerDelay(int32_t* decimated_data_num)
 {
-	uint32_t trig_dly;
-	int r=osc_GetTriggerDelay(&trig_dly);
-	*decimated_data_num=(int32_t)trig_dly-TRIG_DELAY_ZERO_OFFSET;
+    uint32_t trig_dly;
+    int r=osc_GetTriggerDelay(&trig_dly);
+    *decimated_data_num=(int32_t)trig_dly-TRIG_DELAY_ZERO_OFFSET;
     return r;
 }
 
@@ -831,21 +831,21 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
 
     const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
-    
+
     uint32_t cnts1[*size];
     uint32_t cnts2[*size];
     uint32_t* ptr1 = cnts1;
     uint32_t* ptr2 = cnts2;
-    
+
     for (uint32_t i = 0; i < (*size); ++i) {
         *ptr1++ = raw_buffer1[pos];
         *ptr2++ = raw_buffer2[pos];
         pos = (pos + 1) % ADC_BUFFER_SIZE;
     }
-    
+
     ptr1 = cnts1;
     ptr2 = cnts2;
-    
+
     for (uint32_t i = 0; i < (*size); ++i) {
         *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1, calibScale1, dc_offs1, 0.0);
         *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2, calibScale2, dc_offs2, 0.0);
@@ -904,7 +904,7 @@ int acq_SetDefault() {
     ECHECK(acq_SetChannelThreshold(RP_CH_2, 0.0));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, 0.0));
     ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, 0.0));
-	
+
     ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
     ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
     ECHECK(acq_SetDecimation(RP_DEC_1));
