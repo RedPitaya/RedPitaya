@@ -20,11 +20,11 @@
 
 #include "common.h"
 
-static int fd = -1;
+static int fd = NULL;
 
 int cmn_Init()
 {
-    if (fd == -1) {
+    if (!fd) {
         if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
             return RP_EOMD;
         }
@@ -34,11 +34,10 @@ int cmn_Init()
 
 int cmn_Release()
 {
-    if (fd != -1) {
+    if (fd) {
         if(close(fd) < 0) {
             return RP_ECMD;
         }
-        fd = -1;
     }
 
     return RP_OK;
@@ -46,7 +45,7 @@ int cmn_Release()
 
 int cmn_Map(size_t size, size_t offset, void** mapped)
 {
-    if(fd == -1) {
+    if(!fd) {
         return RP_EMMD;
     }
 
@@ -61,7 +60,7 @@ int cmn_Map(size_t size, size_t offset, void** mapped)
 
 int cmn_Unmap(size_t size, void** mapped)
 {
-    if(fd == -1) {
+    if(!fd) {
         return RP_EUMD;
     }
 

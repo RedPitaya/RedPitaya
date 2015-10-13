@@ -21,47 +21,6 @@
 #include "generate.h"
 #include "calib.h"
 
-// Base Generate address
-static size_t GENERATE_BASE_ADDR = 0x40200000;
-static size_t GENERATE_BASE_SIZE = 0x30000;
-
-typedef struct ch_properties {
-    unsigned int amplitudeScale     :14;
-    unsigned int                    :2;
-    unsigned int amplitudeOffset    :14;
-    unsigned int                    :2;
-    uint32_t counterWrap;
-    uint32_t startOffset;
-    uint32_t counterStep;
-    unsigned int                    :2;
-    uint32_t buffReadPointer        :14;
-    unsigned int                    :16;
-    uint32_t cyclesInOneBurst;
-    uint32_t burstRepetitions;
-    uint32_t delayBetweenBurstRepetitions;
-} ch_properties_t;
-
-typedef struct generate_control_s {
-    unsigned int AtriggerSelector   :4;
-    unsigned int ASM_WrapPointer    :1;
-    unsigned int                    :1;
-    unsigned int ASM_reset          :1;
-    unsigned int AsetOutputTo0      :1;
-    unsigned int AgatedBursts       :1;
-    unsigned int                    :7;
-
-    unsigned int BtriggerSelector   :4;
-    unsigned int BSM_WrapPointer    :1;
-    unsigned int                    :1;
-    unsigned int BSM_reset          :1;
-    unsigned int BsetOutputTo0      :1;
-    unsigned int BgatedBursts       :1;
-    unsigned int                    :7;
-
-    ch_properties_t properties_chA;
-    ch_properties_t properties_chB;
-} generate_control_t;
-
 static volatile generate_control_t *generate = NULL;
 static volatile int32_t *data_chA = NULL;
 static volatile int32_t *data_chB = NULL;
