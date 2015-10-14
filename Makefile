@@ -87,7 +87,6 @@ CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
 OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
-SCPI_SERVER_DIR = scpi-server/
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
 SDK_DIR         = SDK/
@@ -118,7 +117,6 @@ CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
-SCPI_SERVER     = $(INSTALL_DIR)/bin/scpi-server
 LIBRP           = $(INSTALL_DIR)/lib/librp.so
 LIBRPAPP        = $(INSTALL_DIR)/lib/librpapp.so
 #GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
@@ -176,7 +174,7 @@ $(TMP):
 
 $(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
 	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
-	   $(SCPI_SERVER) api apps_pro rp_communication
+	   scpi api apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)
@@ -411,10 +409,13 @@ $(IDGEN): $(NGINX)
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = 8746b911b06fe0fc3060c9c12493c13edfcdbd7e
+SCPI_PARSER_TAG = b7e9d6858699f5ea9a23ecf6587e98e7b0e1bc28
 SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
-SCPI_PARSER_DIR = scpi-server/scpi-parser
+SCPI_SERVER_DIR = scpi-server
+SCPI_PARSER_DIR = $(SCPI_SERVER_DIR)/scpi-parser
+
+.PHONY: scpi
 
 $(SCPI_PARSER_TAR): | $(DL)
 	curl -L $(SCPI_PARSER_URL) -o $@
@@ -424,7 +425,7 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/scpi-parser-$(SCPI_PARSER_TAG).patch
 
-$(SCPI_SERVER): api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
+scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
