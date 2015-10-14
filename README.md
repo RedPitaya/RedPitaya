@@ -18,32 +18,61 @@ different places one would expect.
 | patches      | Directory containing red pitaya patches
 | scpi-server  | Scpi server directory, containing red pitaya core scpi server
 | Test         | Command line utilities (acquire, generate, ...).
-| shared       | `libredpitaya.so` API source code
+| shared       | `libredpitaya.so` API source code (to be deprecated soon hopefully!)
+
+## Requirements
+
+Redpitaya is developed on Linux, so Linux (preferably Ubuntu) is also the only platform we support.
+
+You will need the following to build the Red Pitaya components:
+1. Various development packages:
+```bash
+sudo apt-get install make u-boot-tools curl xz-utils nano
+```
+2. Xilinx [Vivado 2015.2](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2015-2.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be carefull during the install process to select it. Preferably use the default install location.
+3. Linaro [ARM toolchain](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/) for cross compiling Linux applications. We recommend to install it to `/opt/linaro/` since build process instructions relly on it.
+```bash
+TOOLCHAIN="http://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz"
+#TOOLCHAIN="http://releases.linaro.org/15.02/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf.tar.xz"
+curl -O $TOOLCHAIN
+sudo mkdir -p /opt/linaro
+sudo chown $USER:$USER /opt/linaro
+tar -xpf *linaro*.tar.xz -C /opt/linaro
+```
 
 # Build process
 
-Currently the published code does not allow for building the whole system, th next components can be built separately"
+Go to your prefered development directory and clone the Red Pitaya repository from GitHub.
+```bash
+git clone https://github.com/RedPitaya/RedPitaya.git
+cd RedPitaya
+```
+
+An example script `settings.sh` is provided for setting all necessary environment variables. The script assumes some default tool install paths, so it might need editing if install paths other than the ones described above were used.
+```bash
+. settings.sh
+```
+
+Prepare a download cache for various source tarballs. This is an optional step which will speadup the build process by avoiding downloads for all but the first build. There is a default cache path defined in the `settings.sh` script, you can edit it and avoid a rebuild the next time.
+```bash
+mkdir -p dl
+export BR2_DL_DIR=$PWD/dl
+```
+
+To build everything just run `make`.
+```bash
+make
+```
+
+# Partial reguild process
+
+The next components can be built separately.
 - FPGA + device tree
 - API
 - free applications
 - SCPI server
 - Linux kernel
 - Debian OS
-
-## Requirements
-
-You will need the following to build the Red Pitaya components:
-1. Xilinx Vivado 2015.2 FPGA development tools, the SDK (bare metal toolchain) must also be installed.
-2. Linaro toolchain for cross compiling Linux applications, can be downloaded from [Linaro release servers](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_).
-3. GNU make autoconf, automake, ...
-4. u-boot-tools, curl
-
-[Red Pitaya OS wiki page](http://wiki.redpitaya.com/index.php?title=Red_Pitaya_OS) provides more information about installing the required tools.
-
-An example script `settings.sh` is provided for setting all necessary environment variables. The script assumes some default tool install paths, so it might need editing.
-```bash
-. settings.sh
-```
 
 ## Base system
 
