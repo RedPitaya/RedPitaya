@@ -453,14 +453,6 @@ $(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
 $(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUM_DIR)
 	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-else ($(ALWAYS_PURCHASE),true)
-$(APP_SCOPE): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SCOPE_DIR)
-	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-$(APP_SPECTRUM): $(LIBRP) $(LIBRPAPP) $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUM_DIR)
-	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 endif
 
 # Gdb server for remote debugging
