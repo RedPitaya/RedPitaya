@@ -24,7 +24,7 @@ void printParams() {
 }
 
 void printHelp() {
-	puts("usage:  in|out channel lv|hv|off|fs value\n\tinfo - print current calibration params");
+	puts("usage:  in|out(channel) lv|hv|off|fs value\n\tinfo - print current calibration params");
 }
 
 int main(int argc, char **argv) {
