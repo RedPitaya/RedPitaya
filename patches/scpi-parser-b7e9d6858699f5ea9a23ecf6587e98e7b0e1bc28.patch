@@ -41,7 +41,7 @@ index fab9b37..6afb9b6 100644
  
  #ifdef  __cplusplus
 diff --git a/libscpi/src/parser.c b/libscpi/src/parser.c
-index acb53a8..f9a2eba 100644
+index acb53a8..71f7c1a 100644
 --- a/libscpi/src/parser.c
 +++ b/libscpi/src/parser.c
 @@ -34,8 +34,10 @@
@@ -75,7 +75,7 @@ index acb53a8..f9a2eba 100644
 + * @param sizeOfElem - size of each item [sizeof(float), sizeof(int), ...]
 + * @return number of characters written
 + */
-+size_t writeBinHeader(scpi_t * context, uint32_t numElems, size_t sizeOfElem) {
++static size_t writeBinHeader(scpi_t * context, uint32_t numElems, size_t sizeOfElem) {
 +
 +    size_t result = 0;
 +    char numBytes[9+1];
@@ -119,7 +119,7 @@ index acb53a8..f9a2eba 100644
      return result;
  }
  
-+size_t resultBufferInt16Bin(scpi_t * context, const int16_t *data, uint32_t size) {
++static size_t resultBufferInt16Bin(scpi_t * context, const int16_t *data, uint32_t size) {
 +    size_t result = 0;
 +
 +    result += writeBinHeader(context, size, sizeof(int16_t));
@@ -137,7 +137,7 @@ index acb53a8..f9a2eba 100644
 +    return result;
 +}
 +
-+size_t resultBufferInt16Ascii(scpi_t * context, const int16_t *data, uint32_t size) {
++static size_t resultBufferInt16Ascii(scpi_t * context, const int16_t *data, uint32_t size) {
 +    size_t result = 0;
 +    result += writeDelimiter(context);
 +    result += writeData(context, "{", 1);
@@ -168,7 +168,7 @@ index acb53a8..f9a2eba 100644
 +    }
 +}
 +
-+size_t resultBufferFloatBin(scpi_t * context, const float *data, uint32_t size) {
++static size_t resultBufferFloatBin(scpi_t * context, const float *data, uint32_t size) {
 +    size_t result = 0;
 +
 +    result += writeBinHeader(context, size, sizeof(float));
@@ -187,7 +187,7 @@ index acb53a8..f9a2eba 100644
 +}
 +
 +
-+size_t resultBufferFloatAscii(scpi_t * context, const float *data, uint32_t size) {
++static size_t resultBufferFloatAscii(scpi_t * context, const float *data, uint32_t size) {
 +    size_t result = 0;
 +    result += writeDelimiter(context);
 +    result += writeData(context, "{", 1);
