@@ -98,8 +98,6 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 
-APPS_FREE_DIR    = apps-free/
-
 ################################################################################
 # Versioning system
 ################################################################################
@@ -462,7 +460,9 @@ $(HEARTBEAT):
 # Red Pitaya ecosystem and free applications
 ################################################################################
 
-$(ECOSYSTEM):
+APPS_FREE_DIR    = apps-free/
+
+ecosystem:
 	$(MAKE) -C $(ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 .PHONY: apps-free
