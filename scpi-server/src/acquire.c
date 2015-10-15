@@ -69,6 +69,20 @@ const scpi_choice_def_t scpi_RpTrigSrc[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpTrigStat[] = {
+    {"TD",   0},
+    {"WAIT", 1},
+    {"WAIT", 2},
+    {"WAIT", 3},
+    {"WAIT", 4},
+    {"WAIT", 5},
+    {"WAIT", 6},
+    {"WAIT", 7},
+    {"WAIT", 8},
+    {"WAIT", 9},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
@@ -328,7 +342,7 @@ scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
         source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
-    if(!SCPI_ChoiceToName(scpi_RpTrigSrc, source, &trig_name)){
+    if(!SCPI_ChoiceToName(scpi_RpTrigStat, source, &trig_name)){
         RP_LOG(LOG_ERR, "*ACQ:TRIG:STAT? Failed to parse trigger source.\n");
         return SCPI_RES_ERR;
     }

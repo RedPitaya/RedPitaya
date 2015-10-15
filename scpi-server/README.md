@@ -18,9 +18,10 @@ make clean all
 
 ## Starting Red Pitaya SCPI server
 
-Before starting SCPI service, make sure Nginx service is not running. Running both at the same time will cause conflicts, since they access the same hardware.
+Before starting SCPI service, make sure Nginx and Wyliodrin services is not running. Running them at the same time will cause conflicts, since they access the same hardware.
 ```bash
-systemctl stop nginx
+systemctl stop redpitaya_nginx
+systemctl stop redpitaya_wyliodrin
 ```
 Now we can try and start Red Pitaya SCPI server.
 ```bash
@@ -31,7 +32,7 @@ systemctl start redpitaya_scpi
 
 The next commands will enable running SCPI service at boot time and disable Nginx and Wyliodrin services.
 ```bash
-systemctl enable redpitaya_scpi
 systemctl disable redpitaya_nginx
 systemctl disable redpitaya_wyliodrin
+systemctl enable  redpitaya_scpi
 ```
