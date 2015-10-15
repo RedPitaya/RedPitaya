@@ -239,14 +239,18 @@ void UpdateParams(void) {
 	CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
 
     bool running;
-    static bool inited_loop = false;
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
 
+#ifdef DIGITAL_LOOP
+	rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+#else
+	static bool inited_loop = false;
 	if (!inited_loop) {
 		rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
 		inited_loop = true;
 	}
+#endif
 
 	rpApp_osc_trig_sweep_t mode;
 	rpApp_OscGetTriggerSweep(&mode);

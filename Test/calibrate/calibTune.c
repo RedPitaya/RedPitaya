@@ -24,11 +24,11 @@ void printParams() {
 }
 
 void printHelp() {
-	puts("usage:  in|out channel lv|hv|off|fs\n\tinfo - print current calibration params");
+	puts("usage:  in|out channel lv|hv|off|fs value\n\tinfo - print current calibration params");
 }
 
 int main(int argc, char **argv) {
-	ECHECK(rp_Init());
+	ECHECK(rp_CalibInit());
 	rp_calib_params_t calib = rp_GetCalibrationSettings();
 
 	char cmd[32] = {0};
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 	}
 
 	ECHECK(rp_CalibrationWriteParams(calib));
-	ECHECK(rp_Release());
+	//ECHECK(rp_Release());
 
 	return 0;
 }
