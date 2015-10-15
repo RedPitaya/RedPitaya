@@ -19,7 +19,7 @@ ampl = 1
 wave_form = 'SINE'
 
 #Enable Red Pitaya digital loop
-rp_scpi.tx_txt('OSC:RUN:DIGLOOP')
+rp_scpi.tx_txt('OSC:DIGLOOP')
 
 rp_scpi.tx_txt('ACQ:START')
 rp_scpi.tx_txt('ACQ:TRIG CH1_PE')
