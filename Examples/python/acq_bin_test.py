@@ -32,7 +32,6 @@ while 1:
     if tmp == 'TD':
         break
 
-
 ################################################################################
 # float ascii
 
@@ -79,6 +78,7 @@ rp_s.tx_txt('ACQ:SOUR1:DATA?')
 str = rp_s.rx_arb()
 print [hex(ord(str[i])) for i in range(10)]
 buff = array.array('f', str)
+buff.byteswap()
 
 print "FLOAT BIN"
 print(len(str))
@@ -97,6 +97,7 @@ rp_s.tx_txt('ACQ:SOUR1:DATA?')
 str = rp_s.rx_arb()
 print [hex(ord(str[i])) for i in range(10)]
 buff = array.array('h', str)
+buff.byteswap()
 
 print "INT16 BIN"
 print(len(str))
