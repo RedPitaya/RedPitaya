@@ -31,7 +31,7 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	cp $(SCPISRV) $(INSTALL_DIR)/bin
 	$(MAKE) -C scpi-parser install PREFIX=$(INSTALL_DIR)
-	ln -s libscpi.so.2.1.0 $(INSTALL_DIR)/lib/libscpi.so
+	ln -sf libscpi.so.2.1.0 $(INSTALL_DIR)/lib/libscpi.so
 
 clean:
 	$(MAKE) -C src clean
