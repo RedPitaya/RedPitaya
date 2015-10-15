@@ -56,6 +56,13 @@ int rp_Init()
     return RP_OK;
 }
 
+int rp_CalibInit()
+{
+    ECHECK(calib_Init());
+
+    return RP_OK;
+}
+
 int rp_Release()
 {
     ECHECK(osc_Release())

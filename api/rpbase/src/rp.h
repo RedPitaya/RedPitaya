@@ -276,6 +276,8 @@ typedef struct wf_func_table_t {
  */
 int rp_Init();
 
+int rp_CalibInit();
+
 /**
  * Releases the library resources. It must be called last, after library is not used anymore. Typically before
  * application exits.
