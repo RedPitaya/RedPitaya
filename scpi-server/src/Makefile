@@ -33,18 +33,18 @@ TARGET=$(OUTPUT_DIR)/scpi-server
 
 # List of compiled object files
 OBJECTS =	scpi-commands.o \
-			scpi-server.o \
-			api_cmd.o \
-			dpin.o \
-			apin.o \
-			acquire.o \
-			generate.o \
-			common.o
+		scpi-server.o \
+		api_cmd.o \
+		dpin.o \
+		apin.o \
+		acquire.o \
+		generate.o \
+		common.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
+CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
 
