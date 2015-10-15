@@ -77,21 +77,11 @@ FPGA_DIR        = fpga
 
 NGINX_DIR       = Bazaar/nginx
 IDGEN_DIR       = Bazaar/tools/idgen
-MONITOR_DIR     = Test/monitor
-GENERATE_DIR    = Test/generate
-ACQUIRE_DIR     = Test/acquire
-LCR_DIR         = Test/lcr
-BODE_DIR        = Test/bode
-XADC_DIR        = Test/xadc
-CALIB_DIR       = Test/calib
-CALIBRATE_DIR   = Test/calibrate
 OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
 SDK_DIR         = SDK/
-EXAMPLES_COMMUNICATION_DIR=Examples/Communication/C
-URAMDISK_DIR    = OS/buildroot
 
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
@@ -101,41 +91,12 @@ DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
 LINUX           = $(TMP)/uImage
-BOOT_UBOOT      = $(TMP)/boot.bin.uboot
-BOOT_MEMTEST    = $(TMP)/boot.bin.memtest
+BOOT_UBOOT      = $(TMP)/boot.bin
 
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
-MONITOR         = $(INSTALL_DIR)/bin/monitor
-GENERATE        = $(INSTALL_DIR)/bin/generate
-ACQUIRE         = $(INSTALL_DIR)/bin/acquire
-LCR             = $(INSTALL_DIR)/bin/lcr
-BODE            = $(INSTALL_DIR)/bin/bode
-XADC            = $(INSTALL_DIR)/bin/xadc
-CALIB           = $(INSTALL_DIR)/bin/calib
-CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
-ECOSYSTEM       = $(INSTALL_DIR)/www/apps/info/info.json
-LIBRP           = $(INSTALL_DIR)/lib/librp.so
-LIBRPAPP        = $(INSTALL_DIR)/lib/librpapp.so
-#GDBSERVER       = $(INSTALL_DIR)/bin/gdbserver
-LIBREDPITAYA    = shared/libredpitaya/libredpitaya.a
-
-ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
-
-UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
-UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
-UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
-
-URAMDISK               = $(INSTALL_DIR)/uramdisk.image.gz
-
-
-APP_SCOPE_DIR   = Applications/scopegenpro
-APP_SCOPE       = $(INSTALL_DIR)/www/apps/scopegenpro
-
-APP_SPECTRUM_DIR = Applications/spectrumpro
-APP_SPECTRUM     = $(INSTALL_DIR)/www/apps/spectrumpro
 
 APPS_FREE_DIR    = apps-free/
 
@@ -172,13 +133,11 @@ all: zip sdk apps-free
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT_UBOOT) $(BOOT_MEMTEST) $(UBOOT_SCRIPT) $(DEVICETREE) $(LINUX) $(URAMDISK) $(IDGEN) $(NGINX) \
-	   $(MONITOR) $(GENERATE) $(ACQUIRE) $(CALIB) $(DISCOVERY) $(HEARTBEAT) $(ECOSYSTEM) \
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 	   scpi api apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
-	cp $(BOOT_UBOOT)       $(TARGET)
-	cp $(BOOT_MEMTEST)     $(TARGET)
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
 	# copy device tree and Linux kernel
 	cp $(DEVICETREE)       $(TARGET)
@@ -205,18 +164,22 @@ zip: $(TARGET)
 
 .PHONY: fpga
 
-fpga: $(FPGA)
-
-$(FPGA): $(DTREE_DIR)
+fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR)
-
-$(FSBL): $(FPGA)
-
-$(MEMTEST): $(FPGA)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
 ################################################################################
+
+ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
+
+UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
+UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
+UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
+
+.PHONY: u-boot
+
+u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(ENVTOOLS_CFG)
 
 $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
@@ -272,7 +235,7 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) $(LINUX) $(FPGA) $(DTS)
+$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA_DIR)/sdk/dts/ $(TMP)/devicetree.dts
@@ -281,22 +244,22 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) $(FPGA) $(DTS)
 # boot file generator
 ################################################################################
 
-$(BOOT_UBOOT): $(FSBL) $(FPGA) $(UBOOT)
+$(BOOT_UBOOT): fpga $(UBOOT)
 	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
-
-$(BOOT_MEMTEST): $(MEMTEST) $(FPGA)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(MEMTEST) } > boot_memtest.bif
-	bootgen -image boot_memtest.bif -w -o $@
 
 ################################################################################
 # root file system
 ################################################################################
 
+URAMDISK_DIR    = OS/buildroot
+
+.PHONY: buildroot
+
 $(INSTALL_DIR):
 	mkdir $(INSTALL_DIR)
 
-$(URAMDISK): $(INSTALL_DIR)
+buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
 	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -304,26 +267,26 @@ $(URAMDISK): $(INSTALL_DIR)
 # API libraries
 ################################################################################
 
-.PHONY: api
+.PHONY: api librp librpapp libredpitaya
 
-$(LIBREDPITAYA):
+libredpitaya:
 	$(MAKE) -C shared
 
-$(LIBRP):
+librp:
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ifdef ENABLE_LICENSING
 
-api: $(LIBRP) $(LIBRPAPP)
+api: librp librpapp
 
-$(LIBRPAPP):
+librpapp:
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 
-api: $(LIBRP)
+api: librp
 
 endif
 
@@ -353,6 +316,8 @@ LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
+
+.PHONY: ecosystem nginx 
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
@@ -394,10 +359,10 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	patch -d $@ -p1 < patches/nginx.patch
 	cp -f patches/nginx.conf $@/conf/
 
-$(BOOST_DIR): $(URAMDISK)
+$(BOOST_DIR): buildroot
 	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
 
-$(NGINX): $(URAMDISK) $(LIBREDPITAYA) $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
+$(NGINX): buildroot libredpitaya $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -433,44 +398,53 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 # Red Pitaya tools
 ################################################################################
 
-.PHONY: lcr bode
+LCR_DIR         = Test/lcr
+BODE_DIR        = Test/bode
+MONITOR_DIR     = Test/monitor
+GENERATE_DIR    = Test/generate
+ACQUIRE_DIR     = Test/acquire
+CALIB_DIR       = Test/calib
+CALIBRATE_DIR   = Test/calibrate
+COMM_DIR        = Examples/Communication/C
+XADC_DIR        = Test/xadc
 
-lcr: $(LCR)
+.PHONY: examples rp_communication
+.PHONY: lcr bode monitor generate acquire calib calibrate
 
-$(LCR):
+examples: lcr bode monitor generate acquire calib calibrate
+
+lcr:
 	$(MAKE) -C $(LCR_DIR)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-bode: $(BODE)
-
-$(BODE):
+bode:
 	$(MAKE) -C $(BODE_DIR)
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(MONITOR):
+monitor:
 	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(GENERATE):
+generate:
 	$(MAKE) -C $(GENERATE_DIR)
 	$(MAKE) -C $(GENERATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(ACQUIRE):
+acquire:
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(CALIB):
+calib:
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-$(CALIBRATE): api
+calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 rp_communication:
-	make -C $(EXAMPLES_COMMUNICATION_DIR)
+	make -C $(COMM_DIR)
 
-#$(XADC): $(LINUX_DIR)
+#xadc: $(LINUX_DIR)
 #	$(MAKE) -C $(XADC_DIR)
 #	$(MAKE) -C $(XADC_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -503,15 +477,20 @@ apps-free: lcr bode
 
 ifdef ENABLE_LICENSING
 
-apps_pro: $(APP_SCOPE) $(APP_SPECTRUM)
+APP_SCOPEGENPRO_DIR = Applications/scopegenpro
+APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 
-$(APP_SCOPE): api $(NGINX)
-	$(MAKE) -C $(APP_SCOPE_DIR)
-	$(MAKE) -C $(APP_SCOPE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+.PHONY: apps_pro scopegenpro spectrumpro
 
-$(APP_SPECTRUM): api $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUM_DIR)
-	$(MAKE) -C $(APP_SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+apps_pro: scopegenpro spectrumpro
+
+scopegenpro: api $(NGINX)
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+spectrumpro: api $(NGINX)
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR)
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 
@@ -546,7 +525,7 @@ clean:
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
-	make -C $(EXAMPLES_COMMUNICATION_DIR) clean
+	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
 	$(RM) $(INSTALL_DIR) -rf
 	$(RM) $(TARGET) -rf
