@@ -19,6 +19,7 @@
 #include "acquire.h"
 #include "common.h"
 #include "scpi/parser.h"
+#include "scpi/units.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
@@ -34,15 +35,6 @@ const scpi_choice_def_t scpi_RpGain[] = {
     {"LV", 0},
     {"HV", 1},
     SCPI_CHOICE_LIST_END
-};
-
-const scpi_choice_def_t scpi_RpDec[] = {
-    {"D_1",     1},
-    {"D_8",     2},
-    {"D_64",    3},
-    {"D_1024",  4},
-    {"D_8192",  5},
-    {"D_65536", 6},
 };
 
 const scpi_choice_def_t scpi_RpSmpRate[] = {
@@ -149,18 +141,49 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+// TODO: remove this limited decimation options
+#include "rp.h"
+
+static int getRpDecimation(uint32_t decimationInt, rp_acq_decimation_t *decimation) {
+	switch (decimationInt) {
+		case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
+		case     8:  *decimation = RP_DEC_8    ;  return RP_OK;
+		case    64:  *decimation = RP_DEC_64   ;  return RP_OK;
+		case  1024:  *decimation = RP_DEC_1024 ;  return RP_OK;
+		case  8192:  *decimation = RP_DEC_8192 ;  return RP_OK;
+		case 65536:  *decimation = RP_DEC_65536;  return RP_OK;
+		default   :                               return RP_EOOR;
+	}
+}
+
+static int getRpDecimationInt(rp_acq_decimation_t decimation, uint32_t *decimationInt) {
+	switch (decimation) {
+		case RP_DEC_1    :  *decimationInt =     1;  return RP_OK;
+		case RP_DEC_8    :  *decimationInt =     8;  return RP_OK;
+		case RP_DEC_64   :  *decimationInt =    64;  return RP_OK;
+		case RP_DEC_1024 :  *decimationInt =  1024;  return RP_OK;
+		case RP_DEC_8192 :  *decimationInt =  8192;  return RP_OK;
+		case RP_DEC_65536:  *decimationInt = 65536;  return RP_OK;
+		default          :                           return RP_EOOR;
+	}
+}
+
 scpi_result_t RP_AcqDecimation(scpi_t *context) {
     
-    int32_t choice;
+    uint32_t value;
 
     /* Read DECIMATION parameter */
-    if (!SCPI_ParamChoice(context, scpi_RpDec, &choice, true)) {
+    if (!SCPI_ParamUInt32(context, &value, true)) {
         RP_LOG(LOG_ERR, "*ACQ:DEC is missing first parameter.\n");
         return SCPI_RES_ERR;
     }
 
     // Convert decimation to rp_acq_decimation_t
-    rp_acq_decimation_t decimation = choice;
+    rp_acq_decimation_t decimation;
+    if (getRpDecimation(value, &decimation)) {
+        syslog(LOG_ERR, "*ACQ:DEC parameter decimation is invalid.");
+        return SCPI_RES_ERR;
+    }
 
     // Now set the decimation
     int result = rp_AcqSetDecimation(decimation);
@@ -174,9 +197,6 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
-    
-    const char *dec_name;
-
     // Get decimation
     rp_acq_decimation_t decimation;
     int result = rp_AcqGetDecimation(&decimation);
@@ -186,14 +206,15 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    /* Parse decimation to choice */
-    if(!SCPI_ChoiceToName(scpi_RpDec, decimation, &dec_name)){
-        RP_LOG(LOG_ERR, "*ACQ:DEC? Failed to get decimation.\n");
+    // Convert decimation to int
+    uint32_t value;
+    if (RP_OK != getRpDecimationInt(decimation, &value)) {
+        syslog(LOG_ERR, "*ACQ:DEC? Failed to convert decimation to integer: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
-    SCPI_ResultMnemonic(context, dec_name);
+    SCPI_ResultUInt32Base(context, value, 10);
 
     RP_LOG(LOG_INFO, "*ACQ:DEC? Successfully returned decimation.\n");
     return SCPI_RES_OK;
@@ -491,17 +512,16 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
 }
 
 scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
-    double value;
+    scpi_number_t value;
 
     // read first parameter TRIGGER LEVEL (value in mV)
-    if (!SCPI_ParamDouble(context, &value, true)) {
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV is missing first parameter.\n");
         return SCPI_RES_ERR;
     }
-    value = value / 1000.0;     // convert to to volts
 
     // Now set threshold
-    int result = rp_AcqSetTriggerLevel((float) value);
+    int result = rp_AcqSetTriggerLevel((float) value.value);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV Failed to set trigger level: %s\n", rp_GetError(result));
