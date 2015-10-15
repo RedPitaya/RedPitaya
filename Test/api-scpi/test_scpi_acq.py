@@ -3,21 +3,22 @@
 __author__ = 'infused'
 
 import sys
-from time import sleep
-from redpitaya_scpi import scpi
+import redpitaya_scpi as scpi
+import matplotlib.pyplot as plt
 
-rp_s = scpi (sys.argv[1])
+rp_s = scpi.scpi(sys.argv[1])
 
 wave_form = 'sine'
 freq = 10000
 ampl = 0.9
 
-#rp_s.tx_txt('OSC:RUN:DIGLOOP')
+rp_s.tx_txt('RP:DIGLOOP')
 
 rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
 rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
 rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
 
+#Enable output
 rp_s.tx_txt('OUTPUT1:STATE ON')
 
 rp_s.tx_txt('ACQ:RST')
@@ -33,6 +34,7 @@ while 1:
     print tmp
     if tmp == 'TD':
         break
+
 rp_s.tx_txt('ACQ:SOUR1:DATA?')
 buff_string = rp_s.rx_txt()
 buff_string = buff_string.strip('{} ').split(',')
@@ -45,7 +47,6 @@ print('ACQ:TRIG:DLY? = ' + rp_s.rx_txt())
 rp_s.tx_txt('ACQ:SOUR1:GAIN?')
 print('ACQ:SOUR1:GAIN = ' + rp_s.rx_txt())
 
-import matplotlib.pyplot as plt
 plt.plot(buff)
 plt.ylabel('Voltage')
 plt.show()
