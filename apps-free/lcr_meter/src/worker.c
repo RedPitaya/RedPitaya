@@ -323,7 +323,7 @@ void *rp_osc_worker_thread(void *args)
             snprintf(im, 10, "%f", lcr_load_im);
             snprintf(calib, 1, "%f", lcr_calibration);
             
-            strcpy(command, "/opt/www/apps/lcr_meter/lcr 1 ");
+            strcpy(command, "/opt/redpitaya/www/apps/lcr_meter/lcr 1 ");
             strcat(command, amp);
             strcat(command, " ");
 
@@ -399,7 +399,7 @@ void *rp_osc_worker_thread(void *args)
 
             char command[100];
             
-            strcpy(command, "/opt/www/apps/lcr_meter/lcr 1 "); 
+            strcpy(command, "/opt/redpitaya/www/apps/lcr_meter/lcr 1 "); 
             
             strcat(command, amp);
             strcat(command, " ");
