@@ -1,14 +1,17 @@
+#!/usr/bin/env python
 
-import redpitaya_scpi as scpi
+__author__ = 'infused'
+
 import sys
+import redpitaya_scpi as scpi
 import array
 import matplotlib.pyplot as plt
 
-rp_s = scpi.scpi('192.168.178.108')
+rp_s = scpi.scpi(sys.argv[1])
 
 wave_form = 'sine'
-freq = 100000
-ampl = 1
+freq = 10000
+ampl = 0.9
 
 rp_s.tx_txt('*RST')
 
@@ -22,7 +25,13 @@ rp_s.tx_txt('OUTPUT1:STATE ON')
 rp_s.tx_txt('ACQ:START')
 rp_s.tx_txt('ACQ:TRIG NOW')
 rp_s.tx_txt('ACQ:TRIG:STAT?')
-rp_s.rx_txt()
+while 1:
+    rp_s.tx_txt('ACQ:TRIG:STAT?')
+    tmp = rp_s.rx_txt()
+    print tmp
+    if tmp == 'TD':
+        break
+
 
 ################################################################################
 # float ascii
