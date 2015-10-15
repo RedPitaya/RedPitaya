@@ -150,8 +150,9 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* start_measure - General flag used for sending params from the RedPitaya browser.
        *   -1 - Application not loaded yet
        *    0 - negative
-       *    1 - positive 
-       *    2 - Other ( Change the max value for more states )
+       *    1 - Frequency Sweep
+       *    2 - Measurment sweep 
+       *    3 - Other ( Change the max value for more states )
        *  - Setting max value to 2 for general purposes. Can be changed accordingly. 
        *  - Read only value set to 0, as the flag_button value can be changed from Javascript 
        *    code in index.html as well as from the C controller code. */
@@ -160,17 +161,14 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        *    Min value - 0
        *    Max value - 2 */
         "gen_amp", 0, 1, 0, 0, 2 },
-
     { /* Averaging parameter.
        *    Min value - 0
        *    Max value - 10 */
         "gen_avg", 0, 1, 0, 0, 10 },
-
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2 */
         "gen_DC_bias", 0, 1, 0, -2, 2 },
-
     { /* DC bias parameter.
        *    Min value - (-2)
        *    Max value -   2  */
@@ -183,8 +181,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* Start frequency for frequency sweep.
        *    Min value - 200
        *    Max value - 1000000    */
-       "start_freq", 200, 1, 0, 0, 100000 },
-
+       "start_freq", 200, 1, 0, 0, 1000000 },
     { /* End frequency for frequency sweep.
        * Min value - 200
        * Max value - 1000000 */
@@ -211,14 +208,40 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
        * 2 - Load calibration
        * 3 - None */
        "lcr_calibration", 0, 1, 0, 0, 3 },
-    { /* Lcr progress status. Used for progress bar while measuring.
-       * 0 -   default/min val
-       * 100 - max val */
-       "lcr_progress", 0, 1, 0, 0, 100 },
-    {/* Lcr save/load data parameter 
-      * -1 - Do not save any parameter data
-      *  1 - Save parameter data */ 
-       "lcr_save_data", -1, 1, 0, -1, 3 },
+
+    /* LCR measurment parameters from here on: TODO - Write detailed description
+     * Frequency - 
+     * AmplitudeZ - 
+     * PhaseZ - 
+     * Y_abs - 
+     * PhaseY -
+     * R_s - 
+     * X_s - 
+     * G_p -
+     * B_p -
+     * C_s - 
+     * C_p -
+     * L_s -
+     * L_p -
+     * R_p
+     * Q 
+     * D                                                                      */
+     {  "frequency_meas", 0, 0, 1, 0, +2500000 },
+     {  "phaseZ", 0, 0, 1, -1000, +1000 },
+     {  "amplitude_meas", 0, 0, 1, -1000, +1000 },
+     {  "y_abs", 0, 0, 1, -1000, +1000 },
+     {  "phaseY", 0, 0, 1, -1000, +1000 },
+     {  "R_s", 0, 0, 1, -1000, +1000 },
+     {  "X_s", 0, 0, 1, -1000, +1000 },
+     {  "G_p", 0, 0, 1, -1000, +1000 },
+     {  "B_p", 0, 0, 1, -1000, +1000 },
+     {  "C_s", 0, 0, 1, -1000, +1000 },
+     {  "C_p", 0, 0, 1, -1000, +1000 },
+     {  "L_s", 0, 0, 1, -1000, +1000 },
+     {  "L_p", 0, 0, 1, -1000, +1000 },
+     {  "R_p", 0, 0, 1, -1000, +1000 },
+     {  "Q", 0, 0, 1, -1000, +1000 },
+     {  "D", 0, 0, 1, -1000, +1000 },
 
     /* Arbitrary Waveform Generator parameters from here on */
 
@@ -1104,6 +1127,31 @@ int rp_update_main_params(rp_app_params_t *params)
     return 0;
 }
 
+int lcr_update_meas_data(lcr_meas_data_t lcr_meas){
+
+  pthread_mutex_lock(&rp_main_params_mutex);
+  rp_main_params[MEAS_FREQ_LCR].value = lcr_meas.frequency;
+  rp_main_params[MEAS_PHASEZ_LCR].value = lcr_meas.phaseZ;
+  rp_main_params[MEAS_AMPZ_LCR].value = lcr_meas.amplitudeZ;
+  rp_main_params[MEAS_Y_ABS].value = lcr_meas.y_abs;
+  rp_main_params[MEAS_PHASEY_LCR].value = lcr_meas.phaseY;
+  
+  rp_main_params[MEAS_R_S_LCR].value = lcr_meas.R_s;
+  rp_main_params[MEAS_X_S_LCR].value = lcr_meas.X_s;
+  rp_main_params[MEAS_G_P_LCR].value = lcr_meas.G_p;
+  rp_main_params[MEAS_B_P_LCR].value = lcr_meas.B_p;
+  rp_main_params[MEAS_C_S_LCR].value = lcr_meas.C_s;
+  rp_main_params[MEAS_C_P_LCR].value = lcr_meas.C_p;
+  rp_main_params[MEAS_L_S_LCR].value = lcr_meas.L_s;
+  rp_main_params[MEAS_L_P_LCR].value = lcr_meas.L_p;
+  rp_main_params[MEAS_R_P_LCR].value = lcr_meas.R_p;
+  rp_main_params[MEAS_Q_LCR].value = lcr_meas.Q;
+  rp_main_params[MEAS_D_LCR].value = lcr_meas.D;
+  
+  pthread_mutex_unlock(&rp_main_params_mutex);
+  return 0;
+}
+
 float rp_gen_limit_freq(float freq, float gen_type)
 {
     int type = (int)gen_type;
@@ -1132,6 +1180,7 @@ float rp_gen_limit_freq(float freq, float gen_type)
 
     return freq;
 }
+
 
 /* General function for returning parameters */
 float rp_get_params_lcr(int pos){
@@ -1162,8 +1211,8 @@ float rp_get_params_lcr(int pos){
       return rp_main_params[LCR_CALIBRATION].value;
     case 15:
       return rp_main_params[PLOT_Y_SCALE_DATA].value;
-    case 16:
-      return rp_main_params[LCR_SAVE_DATA].value;
+
+    /* -1 Reserver for START_MEASURE */
     default:
       return -2;
   }
@@ -1174,49 +1223,6 @@ void rp_set_params_lcr(int pos, float val){
   switch(pos){
     case 0:
       rp_main_params[START_MEASURE].value = val;
-      break;
-    case 1:
-      rp_main_params[LCR_PROGRESS].value = val;
-      break;
-    case 2:
-      rp_main_params[LCR_SAVE_DATA].value = val;
-      break;
-    case 3:
-      rp_main_params[LCR_STEPS].value = val;
-      break;
-    case 4:
-      rp_main_params[GEN_AMP].value = val;
-      break;
-    case 5:
-      rp_main_params[GEN_AVG].value = val;
-      break;
-    case 6:
-      rp_main_params[GEN_DC_BIAS].value = val;
-      break;
-    case 7:
-      rp_main_params[GEN_R_SHUNT].value = val;
-      break;
-    case 8:
-      rp_main_params[START_FREQ].value = val;
-      break;
-    case 9:
-      rp_main_params[END_FREQ].value = val;
-      break;
-    case 10:
-      rp_main_params[LCR_SCALE_TYPE].value = val;
-      break;
-    case 11:
-      rp_main_params[GEN_FS_LOADRE].value = val;
-      break;
-    case 12:
-      rp_main_params[GEN_FS_LOADIM].value = val;
-      break;
-    case 13:
-      rp_main_params[LCR_CALIBRATION].value = val;
-      break;
-    case 14:
-      rp_main_params[PLOT_Y_SCALE_DATA].value = val;
-      break;
   }
 }
 
