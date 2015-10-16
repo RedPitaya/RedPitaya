@@ -15,11 +15,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
 #include "generate.h"
 #include "../../api/rpbase/src/generate.h"
 
 #include "common.h"
 #include "scpi/parser.h"
+#include "scpi/units.h"
 
 /* These structures are a direct API mirror 
 and should not be altered! */
@@ -122,7 +125,7 @@ scpi_result_t RP_GenStateQ(scpi_t *context){
 
 scpi_result_t RP_GenFrequency(scpi_t *context){
 
-    double frequency;
+    scpi_number_t frequency;
     rp_channel_t channel;
     int result;
 
@@ -134,12 +137,12 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
     }
 
     /* Parse first, FREQUENCY parameter */
-    if(!SCPI_ParamDouble(context, &frequency, true)){
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &frequency, true)) {
         RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenFreq(channel, frequency);
+    result = rp_GenFreq(channel, frequency.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Failed to set frequency: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -237,7 +240,7 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
 scpi_result_t RP_GenAmplitude(scpi_t *context) {
     
     rp_channel_t channel;
-    float amplitude;
+    scpi_number_t amplitude;
     int result;
 
     result = RP_ParseChArgv(context, &channel);
@@ -246,12 +249,12 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    if(!SCPI_ParamFloat(context, &amplitude, true)){
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &amplitude, true)) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to parse first parameter.\n");
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenAmp(channel, amplitude);
+    result = rp_GenAmp(channel, amplitude.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -288,7 +291,7 @@ scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
 scpi_result_t RP_GenOffset(scpi_t *context) {
     
     rp_channel_t channel;
-    float offset;
+    scpi_number_t offset;
     int result;
 
     result = RP_ParseChArgv(context, &channel);
@@ -297,12 +300,12 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    if(!SCPI_ParamFloat(context, &offset, true)){
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &offset, true)) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to parse parameter.\n");
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenOffset(channel, offset);
+    result = rp_GenOffset(channel, offset.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -340,7 +343,7 @@ scpi_result_t RP_GenOffsetQ(scpi_t *context) {
 scpi_result_t RP_GenPhase(scpi_t *context) {
     
     rp_channel_t channel;
-    float phase;
+    scpi_number_t phase;
     int result;
 
     result = RP_ParseChArgv(context, &channel);
@@ -349,12 +352,12 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    if(!SCPI_ParamFloat(context, &phase, true)){
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &phase, true)) {
         RP_LOG(LOG_ERR, "*SOUR#:PHAS Failed to parse first argument.\n");
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenPhase(channel, phase);
+    result = rp_GenPhase(channel, phase.value/(2*M_PI)*360);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:PHAS Failed to set generate "
             "phase: %s\n", rp_GetError(result));

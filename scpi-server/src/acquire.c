@@ -220,52 +220,6 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqSamplingRate(scpi_t *context) {
-    
-    int32_t choice;
-
-    if(!SCPI_ParamChoice(context, scpi_RpSmpRate, &choice, true)){
-        RP_LOG(LOG_ERR, "*ACQ:SRAT Missing SAMPLE RATE parameter.\n");
-        return SCPI_RES_ERR;
-    }
-
-    rp_acq_sampling_rate_t  samplingRate = choice;
-    int result = rp_AcqSetSamplingRate(samplingRate);
-
-    if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*ACQ:SRAT Failed to set sampling rate: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    RP_LOG(LOG_INFO, "*ACQ:SRAT Successfully set sampling rate.");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_AcqSamplingRateQ(scpi_t *context) {
-    
-    const char *smp_name;
-    rp_acq_sampling_rate_t samplingRate;
-    int result = rp_AcqGetSamplingRate(&samplingRate);
-
-    if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*ACQ:SRAT? Failed to get sampling rate: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    /* Parse sampling rate to choice */
-    if(!SCPI_ChoiceToName(scpi_RpSmpRate, samplingRate, &smp_name)){
-        RP_LOG(LOG_ERR, "*ACQ:SRAT? Failed to get sampling rate.\n");
-        return SCPI_RES_ERR;
-    }
-
-    // Return back result
-    SCPI_ResultMnemonic(context, smp_name);
-    RP_LOG(LOG_INFO, "*ACQ:SRAT? Successfully returned sampling rate.\n");
-
-    return SCPI_RES_OK;
-}
-
-//TODO: Redundand function?
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     
     // get sampling rate
