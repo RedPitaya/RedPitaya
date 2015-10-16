@@ -35,18 +35,18 @@
 
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
 
-	size_t total = 0;
+    size_t total = 0;
 
-	if (context->user_context != NULL) {
+    if (context->user_context != NULL) {
         int fd = *(int *)(context->user_context);
         while (len > 0) {
-        	size_t written =  write(fd, data, len);
-        	if (written < 0) {
-				syslog(LOG_ERR,
-						"Failed to write into the socket. Should send %zu bytes. Could send only %zu bytes",
-						len, written);
-				return total;
-        	}
+            size_t written =  write(fd, data, len);
+            if (written < 0) {
+                syslog(LOG_ERR,
+                    "Failed to write into the socket. Should send %zu bytes. Could send only %zu bytes",
+                    len, written);
+                return total;
+            }
             len -= written;
             data += written;
             total += written;
@@ -60,7 +60,7 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
 }
 
 int SCPI_Error(scpi_t * context, int_fast16_t err) {
-	const char error[] = "ERR!";
+    const char error[] = "ERR!";
     syslog(LOG_ERR, "**ERROR: %d, \"%s\"", (int32_t) err, SCPI_ErrorTranslate(err));
     SCPI_Write(context, error, strlen(error));
     return 0;
@@ -70,20 +70,20 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
     if (SCPI_CTRL_SRQ == ctrl) {
         syslog(LOG_ERR, "**SRQ not implemented");
     } else {
-    	 syslog(LOG_ERR, "**CTRL not implemented");
+         syslog(LOG_ERR, "**CTRL not implemented");
     }
 
     return SCPI_RES_ERR;
 }
 
 scpi_result_t SCPI_Reset(scpi_t * context) {
-	syslog(LOG_ERR, "**Reset not implemented");
+    syslog(LOG_ERR, "**Reset not implemented");
     return SCPI_RES_ERR;
 }
 
 scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
-	syslog(LOG_ERR, "**SCPI_SystemCommTcpipControlQ not implemented");
-	return SCPI_RES_ERR;
+    syslog(LOG_ERR, "**SCPI_SystemCommTcpipControlQ not implemented");
+    return SCPI_RES_ERR;
 }
 
 scpi_result_t SCPI_Echo(scpi_t * context) {
@@ -103,118 +103,118 @@ scpi_result_t SCPI_EchoVersion(scpi_t * context) {
  */
 
 static const scpi_command_t scpi_commands[] = {
-        /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
-        { .pattern = "*CLS", .callback = SCPI_CoreCls,},
-        { .pattern = "*ESE", .callback = SCPI_CoreEse,},
-        { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
-        { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
-        { .pattern = "*IDN?", .callback = SCPI_CoreIdnQ,},
-        { .pattern = "*OPC", .callback = SCPI_CoreOpc,},
-        { .pattern = "*OPC?", .callback = SCPI_CoreOpcQ,},
-        { .pattern = "*RST", .callback = SCPI_CoreRst,},
-        { .pattern = "*SRE", .callback = SCPI_CoreSre,},
-        { .pattern = "*SRE?", .callback = SCPI_CoreSreQ,},
-        { .pattern = "*STB?", .callback = SCPI_CoreStbQ,},
-        { .pattern = "*TST?", .callback = SCPI_CoreTstQ,},
-        { .pattern = "*WAI", .callback = SCPI_CoreWai,},
+    /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
+    { .pattern = "*CLS", .callback = SCPI_CoreCls,},
+    { .pattern = "*ESE", .callback = SCPI_CoreEse,},
+    { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
+    { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
+    { .pattern = "*IDN?", .callback = SCPI_CoreIdnQ,},
+    { .pattern = "*OPC", .callback = SCPI_CoreOpc,},
+    { .pattern = "*OPC?", .callback = SCPI_CoreOpcQ,},
+    { .pattern = "*RST", .callback = SCPI_CoreRst,},
+    { .pattern = "*SRE", .callback = SCPI_CoreSre,},
+    { .pattern = "*SRE?", .callback = SCPI_CoreSreQ,},
+    { .pattern = "*STB?", .callback = SCPI_CoreStbQ,},
+    { .pattern = "*TST?", .callback = SCPI_CoreTstQ,},
+    { .pattern = "*WAI", .callback = SCPI_CoreWai,},
 
-        /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
-        {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
-        {.pattern = "SYSTem:ERRor:COUNt?", .callback = SCPI_SystemErrorCountQ,},
-        {.pattern = "SYSTem:VERSion?", .callback = SCPI_SystemVersionQ,},
+    /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
+    {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
+    {.pattern = "SYSTem:ERRor:COUNt?", .callback = SCPI_SystemErrorCountQ,},
+    {.pattern = "SYSTem:VERSion?", .callback = SCPI_SystemVersionQ,},
 
-        {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
-        {.pattern = "STATus:QUEStionable:ENABle", .callback = SCPI_StatusQuestionableEnable,},
-        {.pattern = "STATus:QUEStionable:ENABle?", .callback = SCPI_StatusQuestionableEnableQ,},
+    {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
+    {.pattern = "STATus:QUEStionable:ENABle", .callback = SCPI_StatusQuestionableEnable,},
+    {.pattern = "STATus:QUEStionable:ENABle?", .callback = SCPI_StatusQuestionableEnableQ,},
 
-        {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
+    {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
 
-        {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
+    {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
-        {.pattern = "ECHO?", .callback = SCPI_Echo,},
-        {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
+    {.pattern = "ECHO?", .callback = SCPI_Echo,},
+    {.pattern = "ECO:VERSION?", .callback = SCPI_EchoVersion,},
 
-        /* RedPitaya */
+    /* RedPitaya */
 
-        /* General commands */
-        {.pattern = "RP:INit", .callback            = RP_InitAll,},
-        {.pattern = "RP:REset", .callback           = RP_ResetAll,},
-        {.pattern = "RP:RELease", .callback         = RP_ReleaseAll,},
-        {.pattern = "RP:FPGABITREAM", .callback     = RP_FpgaBitStream,},
-        {.pattern = "RP:DIGLOOP", .callback         = RP_EnableDigLoop,},
+    /* General commands */
+    {.pattern = "RP:INit", .callback            = RP_InitAll,},
+    {.pattern = "RP:REset", .callback           = RP_ResetAll,},
+    {.pattern = "RP:RELease", .callback         = RP_ReleaseAll,},
+    {.pattern = "RP:FPGABITREAM", .callback     = RP_FpgaBitStream,},
+    {.pattern = "RP:DIGLOOP", .callback         = RP_EnableDigLoop,},
 
-        {.pattern = "DIG:RST", .callback            = RP_DigitalPinReset,},
-        {.pattern = "DIG:PIN", .callback            = RP_DigitalPinState,},
-        {.pattern = "DIG:PIN?", .callback           = RP_DigitalPinStateQ,},
-        {.pattern = "DIG:PIN:DIR", .callback        = RP_DigitalPinDirection,},
-        {.pattern = "DIG:PIN:DIR?", .callback       = RP_DigitalPinDirectionQ,},
+    {.pattern = "DIG:RST", .callback            = RP_DigitalPinReset,},
+    {.pattern = "DIG:PIN", .callback            = RP_DigitalPinState,},
+    {.pattern = "DIG:PIN?", .callback           = RP_DigitalPinStateQ,},
+    {.pattern = "DIG:PIN:DIR", .callback        = RP_DigitalPinDirection,},
+    {.pattern = "DIG:PIN:DIR?", .callback       = RP_DigitalPinDirectionQ,},
 
-        {.pattern = "ANALOG:RST", .callback         = RP_AnalogPinReset,},
-        {.pattern = "ANALOG:PIN", .callback         = RP_AnalogPinValue,},
-        {.pattern = "ANALOG:PIN?", .callback        = RP_AnalogPinValueQ,},
+    {.pattern = "ANALOG:RST", .callback         = RP_AnalogPinReset,},
+    {.pattern = "ANALOG:PIN", .callback         = RP_AnalogPinValue,},
+    {.pattern = "ANALOG:PIN?", .callback        = RP_AnalogPinValueQ,},
 
-        /* Acquire */
-        {.pattern = "ACQ:START", .callback          = RP_AcqStart,},
-        {.pattern = "ACQ:STOP", .callback           = RP_AcqStop,},
-        {.pattern = "ACQ:RST", .callback            = RP_AcqReset,},
-        {.pattern = "ACQ:DEC", .callback            = RP_AcqDecimation,},
-        {.pattern = "ACQ:DEC?", .callback           = RP_AcqDecimationQ,},
-        {.pattern = "ACQ:SRAT", .callback           = RP_AcqSamplingRate,},
-        {.pattern = "ACQ:SRAT?", .callback          = RP_AcqSamplingRateQ,},
-        {.pattern = "ACQ:SRA:HZ?", .callback        = RP_AcqSamplingRateHzQ,},
-        {.pattern = "ACQ:AVG", .callback            = RP_AcqAveraging,},
-        {.pattern = "ACQ:AVG?", .callback           = RP_AcqAveragingQ,},
-        {.pattern = "ACQ:TRIG", .callback           = RP_AcqTriggerSrc,},
-        {.pattern = "ACQ:TRIG:STAT?", .callback     = RP_AcqTriggerQ,},
-        {.pattern = "ACQ:TRIG:DLY", .callback       = RP_AcqTriggerDelay,},
-        {.pattern = "ACQ:TRIG:DLY?", .callback      = RP_AcqTriggerDelayQ,},
-        {.pattern = "ACQ:TRIG:DLY:NS", .callback    = RP_AcqTriggerDelayNs,},
-        {.pattern = "ACQ:TRIG:DLY:NS?", .callback   = RP_AcqTriggerDelayNsQ,},
-        {.pattern = "ACQ:SOUR#:GAIN", .callback     = RP_AcqGain,},
-        {.pattern = "ACQ:SOUR#:GAIN?", .callback    = RP_AcqGainQ,},
-        {.pattern = "ACQ:TRIG:LEV", .callback       = RP_AcqTriggerLevel,},
-        {.pattern = "ACQ:TRIG:LEV?", .callback      = RP_AcqTriggerLevel,},
-        {.pattern = "ACQ:WPOS?", .callback          = RP_AcqWritePointerQ,},
-        {.pattern = "ACQ:TPOS?", .callback          = RP_AcqWritePointerAtTrigQ,},
-        {.pattern = "ACQ:DATA:UNITS", .callback     = RP_AcqScpiDataUnits,},
-        {.pattern = "ACQ:DATA:UNITS?", .callback     = RP_AcqScpiDataUnitsQ,},
-        {.pattern = "ACQ:DATA:FORMAT", .callback    = RP_AcqSetDataFormat,},
-        {.pattern = "ACQ:SOUR#:DATA:STA:END?", .callback    = RP_AcqDataPosQ,},
-        {.pattern = "ACQ:SOUR#:DATA:STA:N?", .callback      = RP_AcqDataQ,},
-        {.pattern = "ACQ:SOUR#:DATA:OLD:N?", .callback      = RP_AcqOldestDataQ,},
-        {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
-        {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
-        {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
+    /* Acquire */
+    {.pattern = "ACQ:START", .callback          = RP_AcqStart,},
+    {.pattern = "ACQ:STOP", .callback           = RP_AcqStop,},
+    {.pattern = "ACQ:RST", .callback            = RP_AcqReset,},
+    {.pattern = "ACQ:DEC", .callback            = RP_AcqDecimation,},
+    {.pattern = "ACQ:DEC?", .callback           = RP_AcqDecimationQ,},
+    {.pattern = "ACQ:SRAT", .callback           = RP_AcqSamplingRate,},
+    {.pattern = "ACQ:SRAT?", .callback          = RP_AcqSamplingRateQ,},
+    {.pattern = "ACQ:SRA:HZ?", .callback        = RP_AcqSamplingRateHzQ,},
+    {.pattern = "ACQ:AVG", .callback            = RP_AcqAveraging,},
+    {.pattern = "ACQ:AVG?", .callback           = RP_AcqAveragingQ,},
+    {.pattern = "ACQ:TRIG", .callback           = RP_AcqTriggerSrc,},
+    {.pattern = "ACQ:TRIG:STAT?", .callback     = RP_AcqTriggerQ,},
+    {.pattern = "ACQ:TRIG:DLY", .callback       = RP_AcqTriggerDelay,},
+    {.pattern = "ACQ:TRIG:DLY?", .callback      = RP_AcqTriggerDelayQ,},
+    {.pattern = "ACQ:TRIG:DLY:NS", .callback    = RP_AcqTriggerDelayNs,},
+    {.pattern = "ACQ:TRIG:DLY:NS?", .callback   = RP_AcqTriggerDelayNsQ,},
+    {.pattern = "ACQ:SOUR#:GAIN", .callback     = RP_AcqGain,},
+    {.pattern = "ACQ:SOUR#:GAIN?", .callback    = RP_AcqGainQ,},
+    {.pattern = "ACQ:TRIG:LEV", .callback       = RP_AcqTriggerLevel,},
+    {.pattern = "ACQ:TRIG:LEV?", .callback      = RP_AcqTriggerLevel,},
+    {.pattern = "ACQ:WPOS?", .callback          = RP_AcqWritePointerQ,},
+    {.pattern = "ACQ:TPOS?", .callback          = RP_AcqWritePointerAtTrigQ,},
+    {.pattern = "ACQ:DATA:UNITS", .callback     = RP_AcqScpiDataUnits,},
+    {.pattern = "ACQ:DATA:UNITS?", .callback     = RP_AcqScpiDataUnitsQ,},
+    {.pattern = "ACQ:DATA:FORMAT", .callback    = RP_AcqSetDataFormat,},
+    {.pattern = "ACQ:SOUR#:DATA:STA:END?", .callback    = RP_AcqDataPosQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STA:N?", .callback      = RP_AcqDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:OLD:N?", .callback      = RP_AcqOldestDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
+    {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
+    {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
-        /* Generate */
-        {.pattern = "GEN:RST", .callback                = RP_GenReset,},
-        {.pattern = "OUTPUT#:STATE", .callback          = RP_GenState,},
-        {.pattern = "OUTPUT#:STATE?", .callback         = RP_GenStateQ,},
-        {.pattern = "SOUR#:FREQ:FIX", .callback         = RP_GenFrequency,},
-        {.pattern = "SOUR#:FREQ:FIX?", .callback        = RP_GenFrequencyQ,},
-        {.pattern = "SOUR#:FUNC", .callback             = RP_GenWaveForm,},
-        {.pattern = "SOUR#:FUNC?", .callback            = RP_GenWaveFormQ,},
-        {.pattern = "SOUR#:VOLT", .callback             = RP_GenAmplitude,},
-        {.pattern = "SOUR#:VOLT?", .callback            = RP_GenAmplitudeQ,},
-        {.pattern = "SOUR#:VOLT:OFFS", .callback        = RP_GenOffset,},
-        {.pattern = "SOUR#:VOLT:OFFS?", .callback       = RP_GenOffsetQ,},
-        {.pattern = "SOUR#:PHAS", .callback             = RP_GenPhase,},
-        {.pattern = "SOUR#:PHAS?", .callback            = RP_GenPhaseQ,},
-        {.pattern = "SOUR#:DCYC", .callback             = RP_GenDutyCycle,},
-        {.pattern = "SOUR#:DCYC?", .callback            = RP_GenDutyCycleQ,},
-        {.pattern = "SOUR#:TRAC:DATA:DATA", .callback   = RP_GenArbitraryWaveForm,},
-        {.pattern = "SOUR#:TRAC:DATA:DATA?", .callback  = RP_GenArbitraryWaveFormQ,},
-        {.pattern = "SOUR#:BURS:STAT", .callback        = RP_GenGenerateMode,},
-        {.pattern = "SOUR#:BURS:STAT?", .callback       = RP_GenGenerateModeQ,},
-        {.pattern = "SOUR#:BURS:NCYC", .callback        = RP_GenBurstCount,},
-        {.pattern = "SOUR#:BURS:NCYC?", .callback       = RP_GenBurstCountQ,},
-        {.pattern = "SOUR#:BURS:NOR", .callback         = RP_GenBurstRepetitions,},
-        {.pattern = "SOUR#:BURS:NOR?", .callback        = RP_GenBurstRepetitionsQ,},
-        {.pattern = "SOUR#:BURS:INT:PER", .callback     = RP_GenBurstPeriod,},
-        {.pattern = "SOUR#:BURS:INT:PER?", .callback    = RP_GenBurstPeriodQ,},
-        {.pattern = "SOUR#:TRIG:SOUR", .callback        = RP_GenTriggerSource,},
-        {.pattern = "SOUR#:TRIG:SOUR?", .callback       = RP_GenTriggerSourceQ,},
-        {.pattern = "SOUR#:TRIG:IMM", .callback         = RP_GenTrigger,},
+    /* Generate */
+    {.pattern = "GEN:RST", .callback                = RP_GenReset,},
+    {.pattern = "OUTPUT#:STATE", .callback          = RP_GenState,},
+    {.pattern = "OUTPUT#:STATE?", .callback         = RP_GenStateQ,},
+    {.pattern = "SOUR#:FREQ:FIX", .callback         = RP_GenFrequency,},
+    {.pattern = "SOUR#:FREQ:FIX?", .callback        = RP_GenFrequencyQ,},
+    {.pattern = "SOUR#:FUNC", .callback             = RP_GenWaveForm,},
+    {.pattern = "SOUR#:FUNC?", .callback            = RP_GenWaveFormQ,},
+    {.pattern = "SOUR#:VOLT", .callback             = RP_GenAmplitude,},
+    {.pattern = "SOUR#:VOLT?", .callback            = RP_GenAmplitudeQ,},
+    {.pattern = "SOUR#:VOLT:OFFS", .callback        = RP_GenOffset,},
+    {.pattern = "SOUR#:VOLT:OFFS?", .callback       = RP_GenOffsetQ,},
+    {.pattern = "SOUR#:PHAS", .callback             = RP_GenPhase,},
+    {.pattern = "SOUR#:PHAS?", .callback            = RP_GenPhaseQ,},
+    {.pattern = "SOUR#:DCYC", .callback             = RP_GenDutyCycle,},
+    {.pattern = "SOUR#:DCYC?", .callback            = RP_GenDutyCycleQ,},
+    {.pattern = "SOUR#:TRAC:DATA:DATA", .callback   = RP_GenArbitraryWaveForm,},
+    {.pattern = "SOUR#:TRAC:DATA:DATA?", .callback  = RP_GenArbitraryWaveFormQ,},
+    {.pattern = "SOUR#:BURS:STAT", .callback        = RP_GenGenerateMode,},
+    {.pattern = "SOUR#:BURS:STAT?", .callback       = RP_GenGenerateModeQ,},
+    {.pattern = "SOUR#:BURS:NCYC", .callback        = RP_GenBurstCount,},
+    {.pattern = "SOUR#:BURS:NCYC?", .callback       = RP_GenBurstCountQ,},
+    {.pattern = "SOUR#:BURS:NOR", .callback         = RP_GenBurstRepetitions,},
+    {.pattern = "SOUR#:BURS:NOR?", .callback        = RP_GenBurstRepetitionsQ,},
+    {.pattern = "SOUR#:BURS:INT:PER", .callback     = RP_GenBurstPeriod,},
+    {.pattern = "SOUR#:BURS:INT:PER?", .callback    = RP_GenBurstPeriodQ,},
+    {.pattern = "SOUR#:TRIG:SOUR", .callback        = RP_GenTriggerSource,},
+    {.pattern = "SOUR#:TRIG:SOUR?", .callback       = RP_GenTriggerSourceQ,},
+    {.pattern = "SOUR#:TRIG:IMM", .callback         = RP_GenTrigger,},
 
     SCPI_CMD_LIST_END
 };
