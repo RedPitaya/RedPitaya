@@ -110,7 +110,6 @@ GENERATE        = $(INSTALL_DIR)/bin/generate
 ACQUIRE         = $(INSTALL_DIR)/bin/acquire
 XADC            = $(INSTALL_DIR)/bin/xadc
 CALIB           = $(INSTALL_DIR)/bin/calib
-CALIBTUNE       = $(INSTALL_DIR)/bin/calibTune
 CALIBRATE       = $(INSTALL_DIR)/bin/calibrateApp2
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
@@ -421,10 +420,6 @@ $(CALIB):
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 $(CALIBRATE): $(LIBRP)
-	$(MAKE) -C $(CALIBRATE_DIR)
-	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-$(CALIBTUNE): $(LIBRP)
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
