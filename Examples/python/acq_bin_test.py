@@ -13,7 +13,10 @@ wave_form = 'sine'
 freq = 10000
 ampl = 0.9
 
-rp_s.tx_txt('*RST')
+# TODO: for some reason '*RST' is returning an error
+#rp_s.tx_txt('*RST')
+
+rp_s.tx_txt('RP:DIGLOOP')
 
 rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
 rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
@@ -24,7 +27,6 @@ rp_s.tx_txt('OUTPUT1:STATE ON')
 
 rp_s.tx_txt('ACQ:START')
 rp_s.tx_txt('ACQ:TRIG NOW')
-rp_s.tx_txt('ACQ:TRIG:STAT?')
 while 1:
     rp_s.tx_txt('ACQ:TRIG:STAT?')
     tmp = rp_s.rx_txt()
@@ -44,7 +46,7 @@ buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
 buff = map(float, buff_string)
 
 print "FLOAT ASCII"
-print buff_string
+print buff_string[:100]
 print(buff[:10])
 plt.plot(buff)
 plt.ylabel('Voltage')
@@ -62,7 +64,7 @@ buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
 buff = map(int, buff_string)
 
 print "INT16 ASCII"
-print buff_string
+print buff_string[:100]
 print(buff[:10])
 plt.plot(buff)
 plt.ylabel('Voltage')
