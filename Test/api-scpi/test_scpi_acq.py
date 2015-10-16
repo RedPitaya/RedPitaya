@@ -14,9 +14,9 @@ ampl = 0.9
 
 rp_s.tx_txt('RP:DIGLOOP')
 
-rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
-rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
-rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
+rp_s.tx_txt('SOUR1:FUNC '+ str(wave_form).upper())
+rp_s.tx_txt('SOUR1:FREQ:FIX '+ str(freq) +' Hz')
+rp_s.tx_txt('SOUR1:VOLT '+ str(ampl))
 
 #Enable output
 rp_s.tx_txt('OUTPUT1:STATE ON')

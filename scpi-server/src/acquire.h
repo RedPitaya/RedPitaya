@@ -32,8 +32,6 @@ scpi_result_t RP_AcqStop(scpi_t *context);
 scpi_result_t RP_AcqReset(scpi_t * context);
 scpi_result_t RP_AcqDecimation(scpi_t * context);
 scpi_result_t RP_AcqDecimationQ(scpi_t * context);
-scpi_result_t RP_AcqSamplingRate(scpi_t * context);
-scpi_result_t RP_AcqSamplingRateQ(scpi_t * context);
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t * context);
 scpi_result_t RP_AcqAveraging(scpi_t * context);
 scpi_result_t RP_AcqAveragingQ(scpi_t * context);
