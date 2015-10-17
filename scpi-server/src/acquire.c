@@ -411,12 +411,9 @@ scpi_result_t RP_AcqGain(scpi_t *context) {
 
     rp_channel_t channel;
 
-    int result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-
 
     /* Get param val */
     if(!SCPI_ParamChoice(context, scpi_RpGain, &param, true)){
@@ -446,13 +443,11 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
     rp_pinState_t state;
     rp_channel_t channel;
 
-    int result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
     
-    result = rp_AcqGetGain(channel, &state);
+    int result = rp_AcqGetGain(channel, &state);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "ACQ:SOUR#:GAIN? Failed to get gain: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -577,9 +572,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
 
     rp_channel_t channel;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -629,9 +622,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
 
     rp_channel_t channel;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -683,9 +674,7 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
 
     rp_channel_t channel;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
     
@@ -723,9 +712,7 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
 
     rp_channel_t channel;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -769,9 +756,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t *context) {
 
     rp_channel_t channel;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*ACQ:SOUR#:GAIN? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
