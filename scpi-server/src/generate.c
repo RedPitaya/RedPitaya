@@ -71,10 +71,7 @@ scpi_result_t RP_GenState(scpi_t *context) {
     rp_channel_t channel;
     bool state_c;
 
-    /* Get channel number */
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUTPUT#:STATE Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -104,9 +101,7 @@ scpi_result_t RP_GenStateQ(scpi_t *context){
     int result;
     rp_channel_t channel;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUTPUT#:STATE Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -129,10 +124,7 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
     rp_channel_t channel;
     int result;
 
-    /* Get channel number */
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -158,10 +150,7 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
     rp_channel_t channel;
     int result;
 
-    /* Get channel number */
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUTPUT#:STATE Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -184,9 +173,7 @@ scpi_result_t RP_GenWaveForm(scpi_t *context) {
     int32_t wave_form;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "SOUR#:FUNC Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -214,15 +201,14 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
     const char *wf_name; 
     rp_channel_t channel;
     rp_waveform_t wave_form;
-    int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:FUNC? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenGetWaveform(channel, &wave_form);
+    if (rp_GenGetWaveform(channel, &wave_form) != RP_OK){
+        return SCPI_RES_ERR;
+    }
     int32_t wf = wave_form;
 
     if(!SCPI_ChoiceToName(scpi_RpWForm, wf, &wf_name)){
@@ -243,9 +229,7 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
     scpi_number_t amplitude;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -270,9 +254,7 @@ scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
     float amplitude;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -294,9 +276,7 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
     scpi_number_t offset;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -321,9 +301,7 @@ scpi_result_t RP_GenOffsetQ(scpi_t *context) {
     float offset;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -346,9 +324,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
     scpi_number_t phase;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:PHAS Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -374,9 +350,7 @@ scpi_result_t RP_GenPhaseQ(scpi_t *context) {
     int result;
     float phase;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:PHAS? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -397,23 +371,18 @@ scpi_result_t RP_GenDutyCycle(scpi_t *context) {
     
     rp_channel_t channel;
     float duty_cycle;
-    int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:DCYC Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ParamFloat(context, &duty_cycle, true)){
-        RP_LOG(LOG_ERR, "*SOUR#:DCYC Failed to parse first argument: %s\n", rp_GetError(result));
+        RP_LOG(LOG_ERR, "*SOUR#:DCYC Failed to parse first argument\n");
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenDutyCycle(channel, duty_cycle);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:DCYC Failed to set generate"
-        " duty cycle: %s\n", rp_GetError(result));
+    if (rp_GenDutyCycle(channel, duty_cycle) != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:DCYC Failed to set generate duty cycle\n");
         return SCPI_RES_ERR;
     }
 
@@ -427,9 +396,7 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
     float duty_cycle;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:DCYC? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -455,9 +422,7 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
     uint32_t size;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_INFO, "*SOUR#:TRAC:DATA:DATA Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -485,9 +450,7 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
     uint32_t size;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:TRAC:DATA:DATA? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -511,9 +474,7 @@ scpi_result_t RP_GenGenerateMode(scpi_t *context) {
     int32_t usr_mode;
     int result;
     
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -541,9 +502,7 @@ scpi_result_t RP_GenGenerateModeQ(scpi_t *context) {
     const char *gen_mode;
     rp_gen_mode_t mode;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT? Invalid channel name.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -573,9 +532,7 @@ scpi_result_t RP_GenBurstCount(scpi_t *context) {
     rp_channel_t channel;
     int result, count;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -601,9 +558,7 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
     rp_channel_t channel;
     int result, count;
     
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -626,9 +581,7 @@ scpi_result_t RP_GenBurstRepetitions(scpi_t *context) {
     rp_channel_t channel;
     int result, repetitions;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:NOR Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -654,9 +607,7 @@ scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
     rp_channel_t channel;
     int result, repetitions;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:NOR? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -681,9 +632,7 @@ scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
     int result;
     uint32_t period;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:INT:PER Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -710,9 +659,7 @@ scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
     int result;
     uint32_t period;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:INT:PER Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -736,9 +683,7 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
     int32_t trig_choice;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:TRIG:SOUR Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -763,17 +708,16 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
 scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
     
     rp_channel_t channel;
-    int result;
     const char *trig_name;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:TRIG:SOUR? Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
     rp_trig_src_t trig_src;
-    result = rp_GenGetTriggerSource(channel, &trig_src);
+    if (rp_GenGetTriggerSource(channel, &trig_src) != RP_OK){
+        return SCPI_RES_ERR;
+    }
 
     int32_t trig_n = trig_src;
 
@@ -795,9 +739,7 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     rp_channel_t channel;
     int result;
 
-    result = RP_ParseChArgv(context, &channel);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:TRIG:IMM Invalid channel number.\n");
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
