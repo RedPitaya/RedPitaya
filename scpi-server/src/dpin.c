@@ -185,14 +185,6 @@ scpi_result_t RP_DigitalPinDirectionQ(scpi_t *context){
     int result;
     const char *dir_n;
 
-    rp_channel_t channel;
-    result = RP_ParseChArgv(context, &channel);
-
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*DIG:PIN:DIR? Invalid channel number: %d", channel);
-        return SCPI_RES_ERR;
-    }
-
     if(!SCPI_ParamChoice(context, scpi_RpDpin, &usr_pin, true)){
         RP_LOG(LOG_ERR, "*DIG:PIN:DIR? Failed to parse first parameter.");
         return SCPI_RES_ERR;
