@@ -10,26 +10,26 @@ different places one would expect.
 | directories  | contents
 |--------------|----------------------------------------------------------------
 | api          | `librp.so` API source code
-| Applications | Red Pitaya applications (controller modules & GUI clients).
-| apps-free    | Red Pitaya application for the old environment (also with controler modules & GUI clients).
-| Bazaar       | Nginx server with dependencies, Red Pitaya Bazaar module & application controller module loader.
-| fpga         | FPGA design for the inital set of Red Pitaya applications.
+| Applications | WEB applications (controller modules & GUI clients).
+| apps-free    | WEB application for the old environment (also with controller modules & GUI clients).
+| Bazaar       | Nginx server with dependencies, Bazaar module & application controller module loader.
+| fpga         | FPGA design (RTL, bench, simulation and synthesis scripts)
 | OS/buildroot | GNU/Linux operating system components
-| patches      | Directory containing red pitaya patches
-| scpi-server  | Scpi server directory, containing red pitaya core scpi server
-| Test         | Command line utilities (acquire, generate, ...).
+| patches      | Directory containing patches
+| scpi-server  | SCPI server
+| Test         | Command line utilities (acquire, generate, ...), tests
 | shared       | `libredpitaya.so` API source code (to be deprecated soon hopefully!)
 
 ## Requirements
 
-Redpitaya is developed on Linux, so Linux (preferably Ubuntu) is also the only platform we support.
+Red Pitaya is developed on Linux, so Linux (preferably Ubuntu) is also the only platform we support.
 
 You will need the following to build the Red Pitaya components:
 1. Various development packages:
 ```bash
 sudo apt-get install make u-boot-tools curl xz-utils nano
 ```
-2. Xilinx [Vivado 2015.2](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2015-2.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be carefull during the install process to select it. Preferably use the default install location.
+2. Xilinx [Vivado 2015.2](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2015-2.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
 3. Linaro [ARM toolchain](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/) for cross compiling Linux applications. We recommend to install it to `/opt/linaro/` since build process instructions relly on it.
 ```bash
 TOOLCHAIN="http://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz"
@@ -42,7 +42,7 @@ tar -xpf *linaro*.tar.xz -C /opt/linaro
 
 # Build process
 
-Go to your prefered development directory and clone the Red Pitaya repository from GitHub.
+Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
 ```bash
 git clone https://github.com/RedPitaya/RedPitaya.git
 cd RedPitaya
@@ -53,7 +53,7 @@ An example script `settings.sh` is provided for setting all necessary environmen
 . settings.sh
 ```
 
-Prepare a download cache for various source tarballs. This is an optional step which will speadup the build process by avoiding downloads for all but the first build. There is a default cache path defined in the `settings.sh` script, you can edit it and avoid a rebuild the next time.
+Prepare a download cache for various source tarballs. This is an optional step which will speedup the build process by avoiding downloads for all but the first build. There is a default cache path defined in the `settings.sh` script, you can edit it and avoid a rebuild the next time.
 ```bash
 mkdir -p dl
 export BR2_DL_DIR=$PWD/dl
@@ -64,7 +64,7 @@ To build everything just run `make`.
 make
 ```
 
-# Partial reguild process
+# Partial rebuild process
 
 The next components can be built separately.
 - FPGA + device tree
