@@ -1,20 +1,18 @@
 #!/usr/bin/python
 
-import redpitaya_scpi as scpi
-import time
 import sys
+import redpitaya_scpi as scpi
 
-__author__ = "Luka Golinar, Iztok Jeras"
-__copyright__ = "Copyright 2015, Red Pitaya"
+rp_s = scpi.scpi(sys.argv[1])
 
-rp_s = SCPI('192.168.178.36', 0.5)
+# set all DIO*_N pins to inputs
+for i in range(8):
+    rp_s.tx_txt('DIG:PIN:DIR IN,DIO'+str(i)+'_N')
 
-rp_s.tx_txt('DIG:PIN:DIR OUT,DIO5_N')
-
-
+# copy DIOi_N pin state to LEDi state fir each i [0:7]
 while 1:
-    rp_s.tx_txt('DIG:PIN? DIO5_N')
-    if rp_s.rx_txt()[0] == '1':
-        rp_s.tx_txt('DIG:PIN LED5,0')
-    else:
-        rp_s.tx_txt('DIG:PIN LED5,1')
+    for i in range(8):
+        rp_s.tx_txt('DIG:PIN? DIO'+str(i)+'_N')
+        state = rp_s.rx_txt()
+        print state
+        rp_s.tx_txt('DIG:PIN LED'+str(i)+','+str(state))
