@@ -46,8 +46,8 @@ const scpi_choice_def_t scpi_RpDpin[] = {
     {"DIO3_N",  19},
     {"DIO4_N",  20},
     {"DIO5_N",  21},
-    {"DIO6_N",  21},
-    {"DIO7_N",  22},
+    {"DIO6_N",  22},
+    {"DIO7_N",  23},
     SCPI_CHOICE_LIST_END
 };
 
