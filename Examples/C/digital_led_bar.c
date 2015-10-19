@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <rp.h>
+#include "rp.h"
 
 int main(int arc, char **argv){
     // Print error, if rp_Init() function failed
