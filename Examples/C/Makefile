@@ -19,7 +19,7 @@ CC = $(CROSS_COMPILE)gcc
 #Flags
 CFLAGS = -g -std=gnu99 -Wall -Werror
 #Objects
-OBJECTS = blink_diode.o
+OBJECTS = digital_led_blink.o
 #Target file
 TARGET = api_test
 
