@@ -403,6 +403,49 @@ scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTriggerHyst(scpi_t *context){
+
+    int result;
+    float voltage;
+
+    if(!SCPI_ParamFloat(context, &voltage, true)){
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:HYST Missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_AcqSetTriggerHyst(voltage);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:HYST Failed to set trigger "
+            "hysteresis: %s", rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*ACQ:TRIG:HYST Successfully set trigger hysteresis.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerHystQ(scpi_t *context){
+
+    int result;
+    float voltage;
+
+    result = rp_AcqGetTriggerHyst(&voltage);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:HYST Failed to get trigger "
+            "hysteresis: %s\n", rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, voltage);
+
+    RP_LOG(LOG_INFO, "*ACQ:TRIG:HYST Successfully returned "
+        "hysteresis value to client.\n");
+
+    return SCPI_RES_OK;
+}
+
 //Todo: Custom error handling.
 scpi_result_t RP_AcqGain(scpi_t *context) {
 
