@@ -1,6 +1,6 @@
 # Compiling and running on host
 
-When compiling on a PC host, a cross compiler must be used. Please read the instructions.
+When compiling on a PC host, a cross compiler must be used. Please read [the instructions](../../README.md) for installing the required tools and setting up the environment variables.
 
 To compile the code just use the source file name without the `.c` extension.
 ```bash
@@ -24,6 +24,8 @@ LD_LIBRARY_PATH=/opt/redpitaya/lib ./digital_led_blink
 ```
 
 # Compiling and running on target
+
+When compiling on the target no special preparations are needed. A native toolchain is available directly on the Debian system.
 
 First connect to your board over SSH (replace the IP).
 ```bash
