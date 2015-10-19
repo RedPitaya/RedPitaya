@@ -61,15 +61,9 @@ class scpi (object):
             str += (self._socket.recv(1))
         return str
 
-
-
     def tx_txt(self, msg):
         """Send text string ending and append delimiter."""
         return self._socket.send(msg + self.delimiter)
-
-    #RP help functions
-    def choose_state(self, led, state):
-        return 'DIG:PIN LED' + str(led) + ', ' + str(state) + self.delimiter
 
     def close(self):
         """Close IP connection."""
