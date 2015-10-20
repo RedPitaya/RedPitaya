@@ -9,6 +9,7 @@ int main (int argc, char **argv) {
     // Initialization of API
     if (rp_Init() != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
     }
 
     // configure DIO[0:7]_N to inputs
@@ -27,5 +28,5 @@ int main (int argc, char **argv) {
     // Releasing resources
     rp_Release();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

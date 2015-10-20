@@ -15,12 +15,13 @@ int main (int argc, char **argv) {
     } else {
         led = 0;
     }
-    printf("Blinking LED[%u]", led);
+    printf("Blinking LED[%u]\n", led);
     led += RP_LED0;
 
     // Initialization of API
     if (rp_Init() != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
     }
 
     int unsigned retries = 1000;
@@ -34,5 +35,5 @@ int main (int argc, char **argv) {
     // Releasing resources
     rp_Release();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
