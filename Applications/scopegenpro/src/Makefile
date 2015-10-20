@@ -10,7 +10,7 @@ INCLUDE = -I$(RP_SDK)
 INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/rpbase/src/
 INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
-COMMON_FLAGS+=-Wall -g -fPIC -lstdc++
+COMMON_FLAGS+=-Wall -fPIC -lstdc++ -Os -s
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
