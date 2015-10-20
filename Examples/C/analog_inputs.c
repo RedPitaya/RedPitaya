@@ -5,32 +5,23 @@
 
 #include "rp.h"
 
-int main(int argc, char **argv){
+int main (int argc, char **argv) {
+    float value;
 
-	/* Print error, if rp_Init() function failed */
-	if(rp_Init() != RP_OK){
-		fprintf(stderr, "Rp api init failed!\n");
-	}
+    // Initialization of API
+    if (rp_Init() != RP_OK) {
+        fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
+    }
 
-	float volts;
-	rp_ApinGetValue(RP_AIN3, &volts);
-	printf("Volts: %f\n", volts);
+    // Measure each XADC input voltage
+    for (int i=0; i<4; i++) {
+        rp_ApinGetValue(i+RP_AIN0, &value);
+        printf("Measured voltage on AI[%i] = %1.2fV\n", i, value);
+    }
 
-	rp_dpin_t led_pin = 0;
-
-	float p = volts*(100/3.3);
-
-	int i;
-	for(i = 1; i < 7; i++){
-		if(p >= (100/7) * i){
-			rp_DpinSetState(led_pin + i, RP_HIGH);
-		}else{
-			rp_DpinSetState(led_pin + i, RP_LOW);
-		}
-	}
-
-	rp_Release();
-	
-	return 0;
-	
+    // Releasing resources
+    rp_Release();
+    
+    return EXIT_SUCCESS;
 }
