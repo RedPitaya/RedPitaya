@@ -45,7 +45,7 @@ int cmn_Release()
 
 int cmn_Map(size_t size, size_t offset, void** mapped)
 {
-    if(!fd) {
+    if(fd == -1) {
         return RP_EMMD;
     }
 
@@ -60,7 +60,7 @@ int cmn_Map(size_t size, size_t offset, void** mapped)
 
 int cmn_Unmap(size_t size, void** mapped)
 {
-    if(!fd) {
+    if(fd == -1) {
         return RP_EUMD;
     }
 
@@ -163,6 +163,10 @@ float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
 }
 
+float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
+	return cmn_CalibFullScaleToVoltage(fullScaleGain);
+}
+
 /**
 * @brief Converts scale voltage to calibration Full scale. Result is usually written to EPROM calibration parameters.
 *
@@ -171,6 +175,10 @@ float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
 */
 uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale) {
     return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
+}
+
+uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale) {
+    return cmn_CalibFullScaleFromVoltage(voltageScale);
 }
 
 /**
@@ -263,6 +271,9 @@ float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t
     return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off);
 }
 
+float rp_cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off) {
+	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
+}
 /**
  * @brief Converts voltage in [V] to ADC/DAC/Buffer counts
  *
@@ -319,4 +330,8 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
         adc_cnts = adc_cnts & ((1<<field_len)-1);
 
     return (uint32_t)adc_cnts;
+}
+
+uint32_t rp_cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off) {
+	return cmn_CnvVToCnt(field_len, voltage, adc_max_v, calibFS_LO, calib_scale, calib_dc_off, user_dc_off);
 }
