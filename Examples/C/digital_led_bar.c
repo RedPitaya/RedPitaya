@@ -13,11 +13,12 @@ int main (int argc, char **argv) {
     } else {
         percent = 50.0;
     }
-    printf("Bar showing %.1f%%", percent);
+    printf("Bar showing %.1f%%\n", percent);
 
     // Initialization of API
     if (rp_Init() != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
     }
 
     // Turning on leds based on parameter percent
@@ -32,5 +33,5 @@ int main (int argc, char **argv) {
     // Releasing resources
     rp_Release();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
