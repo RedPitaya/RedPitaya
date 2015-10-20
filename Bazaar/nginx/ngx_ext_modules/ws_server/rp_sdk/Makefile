@@ -29,6 +29,10 @@ SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licveri
 CXXFLAGS+=-Ilicverify/encoder -DENABLE_LICENSING
 endif
 
+ifeq ($(DIGITAL_LOOP),true)
+CXXFLAGS+=-DIGITAL_LOOP
+endif
+
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
