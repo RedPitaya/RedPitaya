@@ -5,19 +5,35 @@
 
 #include "rp.h"
 
-int main(int argv, char **argc){
+int main (int argc, char **argv) {
+    float value [4];
 
-	/* Print error, if rp_Init() function failed */
-	if(rp_Init() != RP_OK){
-		fprintf(stderr, "Rp api init failed!\n");
-	}
-	float value = 1.34;
+    // Voltages can be provided as an argument (default is 1V)
+    for (int i=0; i<4; i++) {
+        if (argc > (1+i)) {
+            value [i] = atof(argv[1+i]);
+        } else {
+            value [i] = 1.0;
+        }
+        printf("Voltage setting for AO[%i] = %1.1fV\n", i, value [i]);
+    }
 
-	int status = rp_ApinSetValue(RP_AOUT2, value);
+    // Initialization of API
+    if (rp_Init() != RP_OK) {
+        fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
+    }
 
-	if(status != RP_OK){
-		printf("Could not set pin voltage.\n");
-	}
+    // Setting a voltage for each ananlog output
+    for (int i=0; i<4; i++) {
+        int status = rp_ApinSetValue(RP_AOUT0+i, value[i]);
+        if (status != RP_OK) {
+            printf("Could not set AO[%i] voltage.\n", i);
+        }
+    }
 
-	rp_Release();
+    // Releasing resources
+    rp_Release();
+
+    return EXIT_SUCCESS;
 }
