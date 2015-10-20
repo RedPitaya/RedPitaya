@@ -24,11 +24,11 @@ void printParams() {
 }
 
 void printHelp() {
-	puts("usage:  in|out channel lv|hv|off|fs\n\tinfo - print current calibration params");
+	puts("usage:  in|out(channel) lv|hv|off|fs value\n\tinfo - print current calibration params");
 }
 
 int main(int argc, char **argv) {
-	ECHECK(rp_Init());
+	ECHECK(rp_CalibInit());
 	rp_calib_params_t calib = rp_GetCalibrationSettings();
 
 	char cmd[32] = {0};
@@ -44,13 +44,13 @@ int main(int argc, char **argv) {
 	}
 
 	if (!strcmp(cmd, "in1lv")) {
-		calib.fe_ch1_fs_g_lo += value*1E6;
+		calib.fe_ch1_fs_g_lo += value;//*1E6;
 	} else if (!strcmp(cmd, "in1hv")) {
-		calib.fe_ch1_fs_g_hi += value*1E4;
+		calib.fe_ch1_fs_g_hi += value;//*1E4;
 	} else if (!strcmp(cmd, "in2lv")) {
-		calib.fe_ch2_fs_g_lo += value*1E6;
+		calib.fe_ch2_fs_g_lo += value;//*1E6;
 	} else if (!strcmp(cmd, "in2hv")) {
-		calib.fe_ch2_fs_g_hi += value*1E4;
+		calib.fe_ch2_fs_g_hi += value;//*1E4;
 	} else if (!strcmp(cmd, "in1off")) {
 		calib.fe_ch1_dc_offs += value;
 	} else if (!strcmp(cmd, "in2off")) {
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 	}
 
 	ECHECK(rp_CalibrationWriteParams(calib));
-	ECHECK(rp_Release());
+	//ECHECK(rp_Release());
 
 	return 0;
 }

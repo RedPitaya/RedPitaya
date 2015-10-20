@@ -1543,12 +1543,14 @@ void *mainThreadFun() {
     rp_acq_trig_state_t _state;
     uint32_t _triggerPosition, _getBufSize = 0, _startIndex, _preTriggerCount, _writePointer;
     int _triggerDelay, _preZero, _postZero;
-    float _deltaSample, _timeScale, _lastTimeScale, _lastTimeOffset;
+    float _deltaSample, _timeScale, _lastTimeScale, _lastTimeOffset = 0;
     thread_data_t data;
     bool thisLoopAcqStart, manuallyTriggered = false;
 
     ECHECK_APP_THREAD(osc_getTimeScale(&_timeScale));
     threadTimer = _clock() + MAX(0.1f, (2.f * _timeScale * (float)DIVISIONS_COUNT_X));
+	_lastTimeScale = _timeScale;
+	_deltaSample = (float)timeToIndex(_timeScale) / (float)samplesPerDivision;
 
     while (true) {
         do{
