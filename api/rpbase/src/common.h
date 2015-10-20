@@ -82,4 +82,7 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
 
+float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
+uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale);
+
 #endif /* COMMON_H_ */
