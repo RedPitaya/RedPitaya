@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 int acq_SetArmKeep(bool enable);
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state);

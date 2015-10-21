@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 #include "common.h"
 
 void printParams() {

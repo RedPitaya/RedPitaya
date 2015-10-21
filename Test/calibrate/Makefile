@@ -31,7 +31,7 @@ CALIBRATE2=calibrateApp2
 CALIBTUNE=calibTune
 
 # GCC compiling & linking flags
-CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api/rpbase/src
+CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Red Pitaya common SW directory
