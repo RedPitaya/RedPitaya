@@ -1,6 +1,6 @@
 body {
   color: #cdcccc;
-  overflow: auto; 
+  overflow: auto;
   padding-right: 0 !important;
 }
 
@@ -95,7 +95,7 @@ area:hover {
 }
 
 .full-content {
-  min-width: 1024px; 
+  /*min-width: 1024px;*/
   margin: 0 auto;
   position: relative;
 }
@@ -134,7 +134,7 @@ area:hover {
   display: block;
   padding: 10px 30px;
   border-left: 1px solid #999;
- 
+
 }
 
 .navbar-inverse .navbar-nav > li > a  {
@@ -142,8 +142,8 @@ area:hover {
  outline: none;
 }
 
-.nav > li > a:hover { 
-  background-color: #444 !important; 
+.nav > li > a:hover {
+  background-color: #444 !important;
   color: #E5D5D5;
 }
 
@@ -162,7 +162,7 @@ area:hover {
   border-radius: 0px;
   background-color: #343433;
   background-image: linear-gradient(to bottom, #343433 0, #343433 100%);
-  border: 1px solid #999;  
+  border: 1px solid #999;
   min-height: 42px;
   border-left: 1px solid #999;
 }
@@ -313,12 +313,12 @@ area:hover {
 }
 
 .info-title {
-  float: left; 
+  float: left;
   width: 46px;
 }
 
 .info-value {
-  float: left; 
+  float: left;
   width: 90px;
 }
 
@@ -384,7 +384,7 @@ area:hover {
   color: #fff;
   background-color: #343433;
   background-image: none;
-  border: 0px none; 
+  border: 0px none;
   box-shadow: none;
   border-radius: 0px;
   height: 33px;
@@ -508,18 +508,18 @@ area:hover {
 }
 
 #joystick {
-  position: absolute; 
+  position: absolute;
   margin-left: 8px;
-  right: 26px; 
+  right: 10px;
   bottom: 10px;
-  width: 150px; 
+  width: 150px;
   height: auto;
 }
 
 #jtk_btns {
-  height: auto; 
+  height: auto;
   border: 0 none;
-  width: 150px; 
+  width: 150px;
 }
 
 #jtk_fine {
@@ -546,8 +546,8 @@ area:hover {
 }
 
 .plot {
-  position: absolute; 
-  top: 0px; 
+  position: absolute;
+  top: 0px;
   left: 0px;
 }
 
@@ -650,13 +650,13 @@ area:hover {
 }
 
 #cur_x_diff {
-  font-family: "Glyphicons Halflings"; 
+  font-family: "Glyphicons Halflings";
   font-size: 11px;
-  line-height: 1; 
-  border-bottom: 2px solid #ccc; 
+  line-height: 1;
+  border-bottom: 2px solid #ccc;
   margin: 0 5px;
   width: 100px;
-  height: 7px; 
+  height: 7px;
   position: absolute;
   left: 0;
   top: 40px;
