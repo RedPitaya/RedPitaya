@@ -56,7 +56,7 @@ SHARED=../../shared/
 LIBPATH= -L ../scpi-parser/libscpi/dist -L ../../api/lib
 LIBS= -lm -lpthread -lrp -lscpi
 
-INC= -I../scpi-parser/libscpi/inc -I../../api/rpbase/src
+INC= -I../scpi-parser/libscpi/inc -I../../api/include
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
