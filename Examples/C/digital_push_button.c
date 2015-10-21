@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 int main (int argc, char **argv) {
     rp_pinState_t state;

@@ -15,8 +15,7 @@
 #ifndef APIN_HANDLER_H_
 #define APIN_HANDLER_H_
 
-
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 int apin_SetDefaultValues();
 int apin_SetValue(rp_apin_t pin, float value);

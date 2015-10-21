@@ -18,7 +18,7 @@
 #include <syslog.h>
 
 #include "scpi/parser.h"
-#include "../../api/rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 
 #define SET_OK(cont) \
     	SCPI_ResultString(cont, "OK"); \
