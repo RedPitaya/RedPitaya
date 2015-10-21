@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 
 

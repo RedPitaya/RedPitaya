@@ -18,8 +18,11 @@
 
 #include "acquire.h"
 #include "common.h"
+
 #include "scpi/parser.h"
 #include "scpi/units.h"
+
+#include "redpitaya/rp.h"
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
@@ -142,7 +145,6 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
 }
 
 // TODO: remove this limited decimation options
-#include "rp.h"
 
 static int getRpDecimation(uint32_t decimationInt, rp_acq_decimation_t *decimation) {
 	switch (decimationInt) {

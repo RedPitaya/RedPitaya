@@ -17,7 +17,6 @@
 #define GENERATE_H_
 
 #include "scpi/types.h"
-#include "../../api/rpbase/src/rp.h"
 
 scpi_result_t RP_GenState(scpi_t * context);
 scpi_result_t RP_GenStateQ(scpi_t * context);
