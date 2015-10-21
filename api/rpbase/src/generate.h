@@ -14,7 +14,7 @@
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 #define LEVEL_MAX               1.0         // V
 #define AMPLITUDE_MAX           1.0         // V

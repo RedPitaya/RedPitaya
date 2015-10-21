@@ -101,4 +101,4 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp -r ../include/redpitaya $(INSTALL_DIR)/include
+	cp -r ../../include/redpitaya $(INSTALL_DIR)/include

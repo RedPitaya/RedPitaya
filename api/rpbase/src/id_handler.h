@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 int id_GetID(uint32_t *id);
 int id_GetDNA(uint64_t *dna);

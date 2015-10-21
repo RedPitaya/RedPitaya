@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 #define ECHECK(x) { \
         int retval = (x); \
@@ -84,5 +84,7 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
 
 float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
 uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale);
+float rp_cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
+uint32_t rp_cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
 
 #endif /* COMMON_H_ */
