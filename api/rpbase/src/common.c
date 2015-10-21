@@ -242,7 +242,6 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
 
     /* and adopt the calculation with user specified DC offset */
     ret_val += user_dc_off;
-
     /* adopt the calculation with calibration scaling */
     ret_val *= (double)calibScale / ((double)FULL_SCALE_NORM/(double)adc_max_v);
 

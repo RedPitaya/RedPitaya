@@ -39,7 +39,7 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../../api/lib
+LIBPATH= -L../../api/lib
 LIBS= -lm -lpthread -lrp
 
 # Main GCC executable (used for compiling and linking)
@@ -70,7 +70,7 @@ $(CALIBRATE2):
 	$(CC) -o $@ $(CALIB2_C) $(CFLAGS) $(LIBPATH) $(LIBS)
 
 $(CALIBTUNE):
-	$(CC) -o $@ $(CALIBTUNE_C) $(CFLAGS) $(LIBPATH) $(LIBS)
+	$(CC) $(CFLAGS) $(LIBPATH) $(LIBS) -o $@ $(CALIBTUNE_C)
 
 # Version header for traceability
 version.h:
