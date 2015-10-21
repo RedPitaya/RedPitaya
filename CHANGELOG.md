@@ -1,3 +1,10 @@
+# Release 0.94 RC15
+
+Changes:
+- on extension board analog input divider was removed, so in libwyliodrin ananlog input range was changed from 10V to 7V
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
+
 # Release 0.94 RC14
 
 Changes:
