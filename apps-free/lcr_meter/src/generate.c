@@ -215,93 +215,47 @@ int read_in_file(int chann,  float *ch_data)
 {
     FILE *fi = NULL;
     int i, read_size, samples_read=0;
-
-
-    
-    
-  
-    
     
     /* open file */
-    if (chann==1)
-    {
-      
-  
-      
+    if (chann==1){
       fi = fopen(gen_waveform_file1, "r+");
-      
-      
-      
-      
-  
-      
-      
       //fi = fopen(gen_waveform_file1, "r+");      
-      
       if(fi == NULL) {
-	
-	fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n", 
-		gen_waveform_file1, strerror(errno));
+	       fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n", gen_waveform_file1, strerror(errno));
 	return -1;
       }
     }
-    
-    else
-    {
-      
-       
+    else{
       fi = fopen(gen_waveform_file2, "r+");
       
-      if(fi == NULL) {
-	fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n", 
-		gen_waveform_file2, strerror(errno));
-	
-	
+      if(fi == NULL) { 
+        fprintf(stderr, "read_in_file(): Can not open input file (%s): %s\n", gen_waveform_file2, strerror(errno));
 	
 	return -1;
 	
       } 
     }
     
-    
-   
-
     /* parse at most AWG_SIG_LEN lines and save data to the specified buffers */
     for(i = 0; i < AWG_SIG_LEN; i++) {
-      
-        read_size = fscanf(fi, "%f \n", 
-                            &ch_data[i]);
+      read_size = fscanf(fi, "%f \n", &ch_data[i]);
 	    
-	  if((read_size == EOF) || (read_size != 1)) {
-        
-            i -= 1;
-	     
-            break;
+	    if((read_size == EOF) || (read_size != 1)) {
+           i -= 1;
+	       break;
         }
-        
-        
     }
     samples_read = i + 1;
-
 
     if (samples_read>=AWG_SIG_LEN)
       samples_read=AWG_SIG_LEN-1;
      
-    
     /* check for errors */
     if(i == 0) {
         fprintf(stderr, "read_in_file() cannot read in signal, wrong format?\n");
-	
-	
-	
-    
-        fclose(fi);
+	    fclose(fi);
         return -1;
-	
-    }
-
-
-    
+	}
     /* close a file */
     fclose(fi);
 
@@ -359,13 +313,6 @@ int  calculate_data(float *in_data, int in_data_len,
     awg->step = round(65536 * freq/c_awg_smpl_freq * in_data_len); 
     awg->wrap = round(65536 * (in_data_len-1));
 
-    
-   
-    
-    
-
-    
-    
     /* retrieve max amplitude of the specified Signal Definition, it is used for the normalization */
     max_amp = -1e30;
     min_amp = +1e30;
@@ -378,13 +325,7 @@ int  calculate_data(float *in_data, int in_data_len,
             min_amp = in_data[i];
 	
     }
-
-     
-    
     /* calculate normalization factor */
-    
-    
-   
     
     if (max_amp-min_amp==0)      
     {
@@ -399,12 +340,6 @@ int  calculate_data(float *in_data, int in_data_len,
     else
       
       k_norm = (float)((1<<(c_awg_fpga_dac_bits-1))-1) * amp /(max_amp-min_amp) /fpga_awg_calc_dac_max_v(calib_fs);
-    
-    
-    
-    
-    
-    
     
     /* normalize Signal values */
     for(i = 0; i < in_data_len; i++) {
@@ -424,10 +359,6 @@ int  calculate_data(float *in_data, int in_data_len,
     for(i = i+1; i < AWG_SIG_LEN; i++) {
         out_data[i] = 0;
     }
-    
-    
-   
-    
     
     return 0;
 }
@@ -630,10 +561,6 @@ int generate_update(rp_app_params_t *params)
            // invalid_file=1;	
 	}
 	 
-   
-
-	
-	
     /* Waveform from signal gets treated differently then others */
     if(ch1_enable > 0) {
         if(ch1_type < eSignalFile) {
