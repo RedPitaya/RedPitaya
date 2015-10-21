@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 int dpin_SetDefaultValues();
 int dpin_SetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
