@@ -30,11 +30,8 @@ static const uint32_t DEC_1024  = 1024;
 static const uint32_t DEC_8192  = 8192;
 static const uint32_t DEC_65536 = 65536;
 
-/* @brief ADC buffer size is 16 k samples. */
-static const uint32_t ADC_BUFFER_SIZE = 16 * 1024;
-
 /* @brief Trig. reg. value offset when set to 0 */
-static const int32_t TRIG_DELAY_ZERO_OFFSET = 8192;
+static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
 
 /* @brief Sampling period (non-decimated) - 8 [ns]. */
 static const uint64_t ADC_SAMPLE_PERIOD = 8;
