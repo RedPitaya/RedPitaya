@@ -43,7 +43,7 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 # GCC compiling & linking flags
 CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -L$(OUTPUT_DIR)
-CFLAGS += -I../../include
+CFLAGS += -I../../include -I../../rpbase/src
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
