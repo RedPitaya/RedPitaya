@@ -2345,75 +2345,75 @@ function changeData(){
               <input type="text" autocomplete="off" class="" value="25" id="gen_counts">
             </div>
             <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">Amplitude [Vpp]</p>
-              <input type="number" autocomplete="off" class="" value="1" id="gen_amp">
-            </div>
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">Averaging</p>
-              <input type="number" autocomplete="off" class="" value="1" id="gen_avg">
-            </div>
-            <div class="panel_input_field"; id="full_button">
-                <p id = "field_descr_text">DC-bias</p> 
-                <input type="number" autocomplete="off" class="" value="0" id="gen_dc_bias">
-            </div>
-          </div>
+      <p id = "field_descr_text">Amplitude [Vpp]</p>
+      <input type="number" autocomplete="off" class="" value="1" id="gen_amp">
+    </div>
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">Averaging</p>
+      <input type="number" autocomplete="off" class="" value="1" id="gen_avg">
+    </div>
+    <div class="panel_input_field"; id="full_button">
+	<p id = "field_descr_text">DC-bias</p> 
+	<input type="number" autocomplete="off" class="" value="0" id="gen_dc_bias">
+    </div>
+  </div>
 
 
-          <div class="freq_sweep_setings_panel" >
-            <a href="#" id="Freq_sweep_back">
-              <div class="title_section"; id="">
-                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
-                Frequency sweep
-              </div>
-            </a>
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">Start Frequency [Hz]</p>
-              <input type="text" autocomplete="off" class="" value="1000" id="gen_freq">
-            </div>
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">End Frequency [Hz]</p>
-              <input type="number" autocomplete="off" class="" value="10000" id="gen_end_freq">
-            </div>
-          </div>
+  <div class="freq_sweep_setings_panel" >
+    <a href="#" id="Freq_sweep_back">
+      <div class="title_section"; id="">
+	<img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+	Frequency sweep
+      </div>
+    </a>
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">Start Frequency [Hz]</p>
+      <input type="text" autocomplete="off" class="" value="1000" id="gen_freq">
+    </div>
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">End Frequency [Hz]</p>
+      <input type="number" autocomplete="off" class="" value="10000" id="gen_end_freq">
+    </div>
+  </div>
 
 
-          <div class="plot_setings" >
-            <a href="#" id="Plot_setings_back">
-              <div class="title_section"; id="">
-                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
-                Plot settings
-              </div>
-            </a>
+  <div class="plot_setings" >
+    <a href="#" id="Plot_setings_back">
+      <div class="title_section"; id="">
+	<img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+	Plot settings
+      </div>
+    </a>
 
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">Scale</p>
-              <!-- in the redrawPlot() there is a reader that creads the values from selection. It replaces the scale lin/log -->
-              <select class="" id="gen_scale" onchange="redrawPlot()">
-                <option value="0">Lin</option>
-                <option value="1" selected>Log</option>
-              </select>
-              
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">Scale</p>
+      <!-- in the redrawPlot() there is a reader that creads the values from selection. It replaces the scale lin/log -->
+      <select class="" id="gen_scale" onchange="redrawPlot()">
+	<option value="0">Lin</option>
+	<option value="1" selected>Log</option>
+      </select>
+      
 
-              <!--<input type="text" autocomplete="off" class="" value="Log" id="">-->
-            </div>
-            <!--
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">Dual graph</p>
-              OFF
-            </div>
-            -->
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">X-axis</p>
-              <select style="margin-left: 30%;" class="" id="apply_Xaxis">
-                  <option value="0">Frequency</option>
-              </select>
-              <!--<input type="text" autocomplete="off" class="" value="Frequency" id="">-->
-            </div>
-            <div class="panel_input_field"; id="full_button">
-              <p id = "field_descr_text">Y-axis</p>
-              <!--<input type="text" autocomplete="off" class="" value="|Z|" id="">-->
-              <select style="margin-left: 25%;" class="" id="apply_Yaxis">
-                <option value="0">Amplitude</option>
+      <!--<input type="text" autocomplete="off" class="" value="Log" id="">-->
+    </div>
+    <!--
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">Dual graph</p>
+      OFF
+    </div>
+    -->
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">X-axis</p>
+      <select style="margin-left: 30%;" class="" id="apply_Xaxis">
+	  <option value="0">Frequency [Hz]</option>
+      </select>
+      <!--<input type="text" autocomplete="off" class="" value="Frequency" id="">-->
+    </div>
+    <div class="panel_input_field"; id="full_button">
+      <p id = "field_descr_text">Y-axis</p>
+      <!--<input type="text" autocomplete="off" class="" value="|Z|" id="">-->
+      <select style="margin-left: 25%;" class="" id="apply_Yaxis">
+	<option value="0">Amplitude [dB]</option>
                 <option value="1">Phase</option>
               </select>
             </div>
