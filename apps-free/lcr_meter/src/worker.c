@@ -37,7 +37,6 @@ float               **rp_tmp_signals; /* used for calculation, only from worker 
 
 /* Signals directly pointing at the FPGA mem space */
 int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
-lcr_meas_data_t lcr_mes;
 
 /* Calibration parameters read from EEPROM */
 rp_calib_params_t *rp_calib_params = NULL;
@@ -231,9 +230,8 @@ void *rp_osc_worker_thread(void *args)
     int long_acq_last_wr_ptr = 0;
     int long_acq_step = 0;
     int long_acq_init_trig_ptr;
-
-    rp_osc_meas_res_t ch1_meas, ch2_meas;
     float ch1_max_adc_v = 1, ch2_max_adc_v = 1;
+    rp_osc_meas_res_t ch1_meas, ch2_meas;
 
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
     old_state = state = rp_osc_ctrl;
@@ -278,7 +276,49 @@ void *rp_osc_worker_thread(void *args)
 
         }
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
-        
+
+
+        float save_data = rp_get_params_lcr(16);
+
+        /* Check if we want to save param data to a file */
+        if(save_data == 1){
+
+            char f_command[100];
+
+            /* If the file doesn't exists yet */
+            if(fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "w") == NULL){
+                /* Create a normal file, as txt is a just an interpreter */
+                strcpy(f_command, "touch /opt/redpitaya/www/apps/lcr_meter/lcr_param_data");
+                system(f_command);
+            }
+
+            /* Open file for writing */
+            FILE *data = fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "w");
+
+            /* Write parameter data */
+            fprintf(data, "%.1f\n", rp_get_params_lcr(2));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(3));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(4));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(5));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(6));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(7));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(8));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(9));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(10));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(11));
+            fprintf(data, "%.1f\n", rp_get_params_lcr(15));
+
+            /* Set lcr_save_data to 0, so we don't access this IF everytime */
+            rp_set_params_lcr(2,0);
+            fclose(data);
+
+        }
+
+        /* Load parameters if user input is true */
+        if(rp_load_data(save_data) == -1){
+            printf("Loading parameters failed!\n");
+        }
+
         /* Start lcr measurment */
         float measure_option = rp_get_params_lcr(0);
         /* Set max command lenght */
@@ -312,6 +352,7 @@ void *rp_osc_worker_thread(void *args)
             char calib[1];
 
             snprintf(steps, 10, "%f", lcr_steps);
+            printf("STEPS: %s\n", steps);
             snprintf(sF, 20, "%f", start_freq);
             snprintf(eF, 20, "%f", end_freq);
             snprintf(amp, 20, "%f", lcr_amp);
@@ -518,8 +559,6 @@ void *rp_osc_worker_thread(void *args)
                  * when it changes we will act like official 'trigger' 
                  * came
                  */
-                rp_osc_meas_clear(&ch1_meas);
-                rp_osc_meas_clear(&ch2_meas);
                 osc_fpga_get_wr_ptr(NULL, &long_acq_init_trig_ptr);
             } else {
                 long_acq_first_wr_ptr  = 0;
@@ -629,8 +668,6 @@ void *rp_osc_worker_thread(void *args)
                         round((t_acq / (c_osc_fpga_smpl_period * dec_factor)) / 
                               (((int)rp_get_params_lcr(1))-1));
 
-                rp_osc_meas_clear(&ch1_meas);
-                rp_osc_meas_clear(&ch2_meas);
             }
              
             /* we are after trigger - so let's wait a while to collect some 
@@ -648,8 +685,6 @@ void *rp_osc_worker_thread(void *args)
 
         if(!long_acq) {
             /* Triggered, decimate & convert the values */
-            rp_osc_meas_clear(&ch1_meas);
-            rp_osc_meas_clear(&ch2_meas);
 
             lcr_start_Measure((float **)&rp_tmp_signals[1], &rp_fpga_cha_signal[0],
                             (float **)&rp_tmp_signals[2], &rp_fpga_chb_signal[0],
@@ -693,18 +728,13 @@ void *rp_osc_worker_thread(void *args)
         if((state == rp_osc_single_state) && (!long_acq)) {
             rp_osc_worker_change_state(rp_osc_idle_state);
         }
+
+       
+       
+        
         /* copy the results to the user buffer - if we are finished or not */
         if(!long_acq || long_acq_idx == 0) {
             /* Finish the measurement */
-            rp_osc_meas_avg_amp(&ch1_meas, OSC_FPGA_SIG_LEN);
-            rp_osc_meas_avg_amp(&ch2_meas, OSC_FPGA_SIG_LEN);
-            
-            rp_osc_meas_period(&ch1_meas, &ch2_meas, &rp_fpga_cha_signal[0], 
-                               &rp_fpga_chb_signal[0], 
-                               0, OSC_FPGA_SIG_LEN, dec_factor);
-            rp_osc_meas_convert(&ch1_meas, ch1_max_adc_v, rp_calib_params->fe_ch1_dc_offs);
-            rp_osc_meas_convert(&ch2_meas, ch2_max_adc_v, rp_calib_params->fe_ch2_dc_offs);
-            
             
             rp_osc_set_signals(rp_tmp_signals, ((int)rp_get_params_lcr(1))-1);
         } else {
@@ -776,6 +806,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
 
     if(rp_get_params_lcr(0) == -1){
 
+
         for(out_idx=0; out_idx < counter; out_idx++) {
             cha_s[out_idx] = 0;
             chb_s[out_idx] = 0;
@@ -785,22 +816,22 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
 
 
         /* Opening files */
-        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency.txt", "r");
-        FILE *file_phase = fopen("/tmp/lcr_data/data_phase.txt", "r");
-        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude.txt", "r");
-        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs.txt", "r");
-        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY.txt", "r");
-        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s.txt", "r");
-        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s.txt", "r");
-        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p.txt", "r");
-        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p.txt", "r");
-        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s.txt", "r");
-        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p.txt", "r");
-        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s.txt", "r");
-        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p.txt", "r");
-        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p.txt", "r");
-        FILE *file_Q = fopen("/tmp/lcr_data/data_Q.txt", "r");
-        FILE *file_D = fopen("/tmp/lcr_data/data_D.txt", "r");
+        FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency", "r");
+        FILE *file_phase = fopen("/tmp/lcr_data/data_phase", "r");
+        FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude", "r");
+        FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs", "r");
+        FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY", "r");
+        FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s", "r");
+        FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s", "r");
+        FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p", "r");
+        FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p", "r");
+        FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s", "r");
+        FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p", "r");
+        FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s", "r");
+        FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p", "r");
+        FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p", "r");
+        FILE *file_Q = fopen("/tmp/lcr_data/data_Q", "r");
+        FILE *file_D = fopen("/tmp/lcr_data/data_D", "r");
         
 
         while(!feof(file_frequency)){
@@ -984,31 +1015,7 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             }else if(measure_method == 2){
                 t[out_idx] = frequency[out_idx];
             }
-        }
-        
-        if(measure_counter < 99){
-
-            lcr_mes.frequency = frequency[measure_counter];
-                
-            lcr_mes.phaseZ = phase[measure_counter];
-            lcr_mes.amplitudeZ = amplitude[measure_counter];
-            lcr_mes.y_abs = Y_abs[measure_counter];
-            lcr_mes.phaseY = phaseY[measure_counter];
-            
-            lcr_mes.R_s = R_s[measure_counter];
-            lcr_mes.X_s = X_s[measure_counter];
-            lcr_mes.G_p = G_p[measure_counter];
-            lcr_mes.B_p = B_p[measure_counter];
-            lcr_mes.C_s = C_s[measure_counter];
-            lcr_mes.C_p = C_p[measure_counter];
-            lcr_mes.L_s = L_s[measure_counter];
-            lcr_mes.L_p = L_p[measure_counter]; 
-            lcr_mes.R_p = R_p[measure_counter];
-            lcr_mes.Q = Q[measure_counter];
-            lcr_mes.D = D[measure_counter];
-
-            measure_counter++;
-        }       
+        }     
         
     }
     
@@ -1045,8 +1052,6 @@ int rp_osc_decimate_partial(float **cha_out_signal, int *cha_in_signal,
     for(; in_idx < curr_ptr; in_idx++) {
         if(in_idx >= OSC_FPGA_SIG_LEN)
             in_idx = in_idx % OSC_FPGA_SIG_LEN;
-        rp_osc_meas_min_max(ch1_meas, cha_in_signal[in_idx]);
-        rp_osc_meas_min_max(ch2_meas, chb_in_signal[in_idx]);
     }
 
     in_idx = *next_wr_ptr;
@@ -1436,19 +1441,6 @@ int rp_osc_auto_set(rp_app_params_t *orig_params,
 }
 
 
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_clear(rp_osc_meas_res_t *ch_meas)
-{
-    ch_meas->min = 1e9;
-    ch_meas->max = -1e9;
-    ch_meas->amp = 0;
-    ch_meas->avg = 0;
-    ch_meas->freq = 0;
-    ch_meas->period = 0;
-
-    return 0;
-}
-
 
 /*----------------------------------------------------------------------------------*/
 int rp_osc_adc_sign(int in_data)
@@ -1459,145 +1451,32 @@ int rp_osc_adc_sign(int in_data)
     return s_data;
 }
 
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_min_max(rp_osc_meas_res_t *ch_meas, int sig_data)
-{
-    int s_data = rp_osc_adc_sign(sig_data);
-
-    if(ch_meas->min > s_data)
-        ch_meas->min = s_data;
-    if(ch_meas->max < s_data)
-        ch_meas->max = s_data;
-
-    ch_meas->avg += s_data;
-
-    return 0;
-}
-
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_avg_amp(rp_osc_meas_res_t *ch_meas, int avg_len)
-{
-    ch_meas->avg /= avg_len;
-    ch_meas->amp = ch_meas->max - ch_meas->min;
-    return 0;
-}
-
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_period(rp_osc_meas_res_t *ch1_meas, rp_osc_meas_res_t *ch2_meas, 
-                       int *in_cha_signal, int *in_chb_signal, 
-                       int start_idx, int stop_idx, int dec_factor)
-{
-    const float meas_freq_thr = 100;
-
-    float ch1_thr1, ch1_thr2, ch2_thr1, ch2_thr2, ch1_cen, ch2_cen;
-    int ch1_state = 0, ch2_state = 0;
-    int ch1_trig_t[3] = { -1, -1, -1 };
-    int ch2_trig_t[3] = { -1, -1, -1 };
-    int ch1_trig_cnt = 0;
-    int ch2_trig_cnt = 0;
-    int in_idx;
-
-    int ix_corr, wr_ptr_curr, wr_ptr_trig;
-
-    float acq_dur=(float)(OSC_FPGA_SIG_LEN)/((float) c_osc_fpga_smpl_freq) * (float) dec_factor;
-
-    ch1_cen = (ch1_meas->max + ch1_meas->min) / 2;
-    ch2_cen = (ch2_meas->max + ch2_meas->min) / 2;
-
-    ch1_thr1 = (ch1_meas->min + ch1_cen) / 2;
-    ch1_thr2 = (ch1_meas->max + ch1_cen) / 2;
-    ch2_thr1 = (ch2_meas->min + ch2_cen) / 2;
-    ch2_thr2 = (ch2_meas->max + ch2_cen) / 2;
-
-    // Checking where acquisition starts
-    osc_fpga_get_wr_ptr(&wr_ptr_curr, &wr_ptr_trig); 
-
-    ch1_meas->period =0;
-    ch2_meas->period =0;
-
-    /* Frequency check - it was proposed to be done in the decimation but 
-     * calculation can be inaccurate (depends on the SW decimation used) */
-    for(in_idx = 0; in_idx < (OSC_FPGA_SIG_LEN); in_idx++) {
-        ix_corr=in_idx+wr_ptr_trig;
-
-        if (ix_corr>=(OSC_FPGA_SIG_LEN)) 
-            ix_corr=ix_corr-OSC_FPGA_SIG_LEN;
-
-        float s_a_0 = rp_osc_adc_sign(in_cha_signal[ix_corr-1]);
-        float s_a_1 = rp_osc_adc_sign(in_cha_signal[ix_corr]);
-        float s_b_0 = rp_osc_adc_sign(in_chb_signal[ix_corr-1]);
-        float s_b_1 = rp_osc_adc_sign(in_chb_signal[ix_corr]);
-        /* Period/frequency measurement */
-        if((ch1_state == 0) && (ix_corr > 0) 
-            && (s_a_0<ch1_thr1)) {
-            ch1_state = 1;
-        }
-        if((ch2_state == 0) && (ix_corr > 0) &&
-            (s_b_0<ch2_thr1)) {
-            ch2_state = 1;
-        }
-        if((ch1_state == 1) && (ch1_trig_cnt < 3) && 
-           (s_a_1>=ch1_thr2) ) {
-            ch1_state = 0;
-            ch1_trig_t[ch1_trig_cnt] = in_idx;
-            ch1_trig_cnt++;
-            if(ch1_trig_cnt >= 2) {
-                ch1_meas->period = (ch1_trig_t[1]-ch1_trig_t[0]) /
-                    (float)c_osc_fpga_smpl_freq * dec_factor;
-            }
+int rp_load_data(float save_data){
+    /* If the user wants to load all the data */
+    if(save_data == 2){
+        float val = 0;
+        
+        if(fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "r") == NULL){
+            printf("Parameter data failure!\n");
+            return -1;
         }
 
-        if((ch2_state == 1) && (ch2_trig_cnt < 3) && 
-           (s_b_1>=ch2_thr2) ) {
-            ch2_state = 0;
-            ch2_trig_t[ch2_trig_cnt] = in_idx;
-            ch2_trig_cnt++;
-            if(ch2_trig_cnt >= 2) {
-                ch2_meas->period = (ch2_trig_t[1]-ch2_trig_t[0]) /
-                    (float)c_osc_fpga_smpl_freq * dec_factor;
-            }
-           
-        }
+        /* Read data */
+        FILE *data = fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "r");
 
-        if((ch1_trig_cnt > 1) && (ch2_trig_cnt > 1))
-            break;
+        int counter = 4;
+        while(!feof(data)){
+            val = 0;
+            /* Read data into val */
+            fscanf(data, "%f", &val);
+            /* Set according parameters with value val */
+            rp_set_params_lcr(counter, val);
+            counter++;
+        }
+        rp_set_params_lcr(2, 3);
+        fclose(data);
+
     }
-
-    if(((ch1_thr2-ch1_thr1) < meas_freq_thr) || (ch1_meas->period * 3 >=acq_dur) || (ch1_meas->period<=(2/(float)c_osc_fpga_smpl_freq))) {  //16 ns is the minimum period (62.5 MHz)
-        ch1_meas->period = 0;
-        ch1_meas->freq = 0;
-    } else {
-        ch1_meas->freq = 1 / ch1_meas->period;
-    }
-
-    if(((ch2_thr2-ch2_thr1) < meas_freq_thr) || (ch2_meas->period *3 >= acq_dur) || (ch2_meas->period<=(2/(float)c_osc_fpga_smpl_freq))) {
-        ch2_meas->period = 0;
-        ch2_meas->freq = 0;
-    } else {
-        ch2_meas->freq = 1 / ch2_meas->period;
-    }
-
     return 0;
 }
 
-
-/*----------------------------------------------------------------------------------*/
-float rp_osc_meas_cnv_cnt(float data, float adc_max_v)
-{
-    return (data * adc_max_v / (float)(1<<(c_osc_fpga_adc_bits-1)));
-}
-
-
-/*----------------------------------------------------------------------------------*/
-int rp_osc_meas_convert(rp_osc_meas_res_t *ch_meas, float adc_max_v, int32_t cal_dc_offs)
-{
-    ch_meas->min = rp_osc_meas_cnv_cnt(ch_meas->min+cal_dc_offs, adc_max_v);
-    ch_meas->max = rp_osc_meas_cnv_cnt(ch_meas->max+cal_dc_offs, adc_max_v);
-    ch_meas->amp = rp_osc_meas_cnv_cnt(ch_meas->amp, adc_max_v);
-    ch_meas->avg = rp_osc_meas_cnv_cnt(ch_meas->avg+cal_dc_offs, adc_max_v);
-
-    return 0;
-}
