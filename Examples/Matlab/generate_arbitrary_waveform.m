@@ -3,8 +3,8 @@ clc
 clear all
 close all
 IP= '192.168.178.56';           % Input IP of your Red Pitaya...
-port = 5000;                    % If you are using WiFi then IP is:                 
-tcpipObj=tcpip(IP, port);       % 192.168.128.1
+port = 5000;
+tcpipObj=tcpip(IP, port);
 
 tcpipObj.InputBufferSize = 16384*64;
 tcpipObj.OutputBufferSize = 16384*64;
@@ -30,7 +30,7 @@ grid on
 waveform_ch_1_0 =num2str(x,'%1.5f,');
 waveform_ch_2_0 =num2str(y,'%1.5f,');
 
-% latest are empty spaces  “,”.  
+% latest are empty spaces  “,”.
 waveform_ch_1 =waveform_ch_1_0(1,1:length(waveform_ch_1_0)-3);
 waveform_ch_2 =waveform_ch_2_0(1,1:length(waveform_ch_2_0)-3);
 
@@ -38,7 +38,7 @@ waveform_ch_2 =waveform_ch_2_0(1,1:length(waveform_ch_2_0)-3);
 
 fprintf(tcpipObj,'GEN:RST')                     % Reset to default settings
 
-fprintf(tcpipObj,'SOUR1:FUNC ARBITRARY');       % Set function of output signal     
+fprintf(tcpipObj,'SOUR1:FUNC ARBITRARY');       % Set function of output signal
 fprintf(tcpipObj,'SOUR2:FUNC ARBITRARY');       % {sine, square, triangle, sawu, sawd}
 
 fprintf(tcpipObj,['SOUR1:TRAC:DATA:DATA ' waveform_ch_1])  % Send waveforms to Red Pitya
@@ -49,9 +49,9 @@ fprintf(tcpipObj,'SOUR2:VOLT 1');
 
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 4000');        % Set frequency of output signal
 fprintf(tcpipObj,'SOUR2:FREQ:FIX 4000');
-            
 
-fprintf(tcpipObj,'OUTPUT1:STATE ON'); 
+
+fprintf(tcpipObj,'OUTPUT1:STATE ON');
 fprintf(tcpipObj,'OUTPUT2:STATE ON');
 
 fclose(tcpipObj);

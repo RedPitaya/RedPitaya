@@ -4,8 +4,8 @@ clear all
 close all
 
 IP= '192.168.178.56';           % Input IP of your Red Pitaya...
-port = 5000;                    % If you are using WiFi then IP is:                  
-tcpipObj=tcpip(IP, port);       % 192.168.128.1
+port = 5000;
+tcpipObj=tcpip(IP, port);
 tcpipObj.InputBufferSize = 16384*32;
 tcpipObj.OutputBufferSize = 16384*32;
 
@@ -18,12 +18,12 @@ flushoutput(tcpipObj)
 %% Generate
 
 fprintf(tcpipObj,'SOUR1:FUNC SINE');          % Set function of output signal {sine, square, triangle,sawu,sawd, pwm}
-fprintf(tcpipObj,'SOUR1:FREQ:FIX 50000');     % Set frequency of output signal                
+fprintf(tcpipObj,'SOUR1:FREQ:FIX 50000');     % Set frequency of output signal
 fprintf(tcpipObj,'SOUR1:VOLT 1');             % Set amplitude of output signal
-fprintf(tcpipObj,'SOUR1:BURS:NCYC 1');        % Set 1 pulses of sine wave 
-fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON 
+fprintf(tcpipObj,'SOUR1:BURS:NCYC 1');        % Set 1 pulses of sine wave
+fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON
 fprintf(tcpipObj,'SOUR1:BURS:STAT ON');       % Set burst mode to ON
- 
+
 %% Set Acquire
 
 fprintf(tcpipObj,'ACQ:DEC 1');
@@ -35,8 +35,8 @@ pause(0.01)
 %% Start gen % acq
 
 fprintf(tcpipObj,'ACQ:START');
-fprintf(tcpipObj,'ACQ:TRIG AWG_PE'); 
-fprintf(tcpipObj,'SOUR1:TRIG:IMM');           % Set generator trigger to immediately 
+fprintf(tcpipObj,'ACQ:TRIG AWG_PE');
+fprintf(tcpipObj,'SOUR1:TRIG:IMM');           % Set generator trigger to immediately
 
 %% Wait for trigger
  while 1
@@ -45,7 +45,7 @@ fprintf(tcpipObj,'SOUR1:TRIG:IMM');           % Set generator trigger to immedia
     break
     end
  end
-  
+
 %% Read & plot
 
 signal_str=query(tcpipObj,'ACQ:SOUR1:DATA?');
@@ -56,4 +56,3 @@ grid on
 
 %% Close connection with Red Pitaya
 fprintf(tcpipObj,'ACQ:RST');
-fclose(tcpipObj);

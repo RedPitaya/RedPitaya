@@ -3,8 +3,8 @@ clear all
 close all
 clc
 IP= '192.168.178.56';                 % Input IP of your Red Pitaya...
-port = 5000;                          % If you are using WiFi then IP is:                  
-tcpipObj = tcpip(IP, port);           % 192.168.128.1
+port = 5000;
+tcpipObj = tcpip(IP, port);
 tcpipObj.InputBufferSize = 16384*32;
 
 %% Open connection with your Red Pitaya
@@ -40,8 +40,8 @@ pause(0.1) % Wait for data writing
 
 
 fprintf(tcpipObj,'ACQ:START');
-fprintf(tcpipObj,'ACQ:TRIG EXT_PE');  
- 
+fprintf(tcpipObj,'ACQ:TRIG EXT_PE');
+
 % Wait for trigger
 % Until trigger is true wait with acquiring
 % Be aware of while loop if trigger is not achieved
@@ -60,11 +60,11 @@ while 1
  end
  
  
-% Read data from buffer 
+% Read data from buffer
 
 signal_str=query(tcpipObj,'ACQ:SOUR1:DATA?');
 
-% Convert values to numbers.% First character in string is “{“   
+% Convert values to numbers.% First character in string is “{“
 % and 2 latest are empty spaces and last is “}”.  
 
 signal_num=str2num(signal_str(1,2:length(signal_str)-3));
@@ -77,9 +77,9 @@ grid on
 Fs=str2num(query(tcpipObj,'ACQ:SRA:HZ?'));
 dec=str2num(query(tcpipObj,'ACQ:DEC?'));
 buffer_ln=16384;
-%Create time vector in respect to                
+%Create time vector in respect to
 %decimation value
-t=0:1/(Fs/dec):1/(Fs/dec)*(buffer_ln-1); 
+t=0:1/(Fs/dec):1/(Fs/dec)*(buffer_ln-1);
 %plot(t,signal_num);
 %grid on
 
