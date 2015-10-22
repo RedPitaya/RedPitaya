@@ -6,7 +6,7 @@
 #include "rp.h"
 
 int main (int argc, char **argv) {
-    float value;
+    float value [4];
 
     // Initialization of API
     if (rp_Init() != RP_OK) {
@@ -16,8 +16,8 @@ int main (int argc, char **argv) {
 
     // Measure each XADC input voltage
     for (int i=0; i<4; i++) {
-        rp_ApinGetValue(i+RP_AIN0, &value);
-        printf("Measured voltage on AI[%i] = %1.2fV\n", i, value);
+        rp_ApinGetValue(i+RP_AIN0, &value[i]);
+        printf("Measured voltage on AI[%i] = %1.2fV\n", i, value[i]);
     }
 
     // Releasing resources

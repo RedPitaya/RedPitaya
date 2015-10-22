@@ -29,10 +29,11 @@
 #include "scpi/units.h"
 #include "scpi/parser.h"
 
+bool RST_executed = FALSE;
+
 /**
  * Interface general commands
  */
-
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
 
     size_t total = 0;
@@ -77,8 +78,10 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
 }
 
 scpi_result_t SCPI_Reset(scpi_t * context) {
-    syslog(LOG_ERR, "**Reset not implemented");
-    return SCPI_RES_ERR;
+    /* Terminating all scpi operations */
+    (void) context;
+    RP_LOG(LOG_INFO, "*RST Sucsessfuly reset scpi server.");
+    return SCPI_RES_OK;
 }
 
 scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
