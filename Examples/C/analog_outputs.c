@@ -26,7 +26,7 @@ int main (int argc, char **argv) {
 
     // Setting a voltage for each ananlog output
     for (int i=0; i<4; i++) {
-        int status = rp_ApinSetValue((rp_apin_t) RP_AOUT0+i, value[i]);
+        int status = rp_AOpinSetValue(i, value[i]);
         if (status != RP_OK) {
             printf("Could not set AO[%i] voltage.\n", i);
         }

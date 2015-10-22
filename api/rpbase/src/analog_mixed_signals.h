@@ -20,17 +20,10 @@ static const int ANALOG_MIXED_SIGNALS_BASE_ADDR = 0x40400000;
 static const int ANALOG_MIXED_SIGNALS_BASE_SIZE = 0x30;
 
 typedef struct analog_mixed_signals_control_s {
-    uint32_t aif0;
-    uint32_t aif1;
-    uint32_t aif2;
-    uint32_t aif3;
+    uint32_t aif [4];
     uint32_t reserved[4];
-    uint32_t dac0;
-    uint32_t dac1;
-    uint32_t dac2;
-    uint32_t dac3;
+    uint32_t dac [4];
 } analog_mixed_signals_control_t;
-
 
 static const uint32_t ANALOG_OUT_MASK            = 0xFF;
 static const uint32_t ANALOG_OUT_BITS            = 16;
@@ -43,25 +36,16 @@ static const float    ANALOG_OUT_MAX_VAL         = 1.8;
 static const float    ANALOG_OUT_MIN_VAL         = 0.0;
 static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 156;
 
+static volatile analog_mixed_signals_control_t *ams = NULL;
 
-int ams_Init();
-int ams_Release();
+static int ams_Init() {
+    ECHECK(cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams));
+    return RP_OK;
+}
 
-int ams_SetValueDAC0(uint32_t value);
-int ams_SetValueDAC1(uint32_t value);
-int ams_SetValueDAC2(uint32_t value);
-int ams_SetValueDAC3(uint32_t value);
-
-int ams_GetValueADC0(uint32_t* value);
-int ams_GetValueADC1(uint32_t* value);
-int ams_GetValueADC2(uint32_t* value);
-int ams_GetValueADC3(uint32_t* value);
-int ams_GetValueDAC0(uint32_t* value);
-int ams_GetValueDAC1(uint32_t* value);
-int ams_GetValueDAC2(uint32_t* value);
-int ams_GetValueDAC3(uint32_t* value);
-
-int ams_GetRangeInput(float *min_val, float *max_val, uint32_t *int_max_val);
-int ams_GetRangeOutput(float *min_val, float *max_val, uint32_t *int_max_val);
+static int ams_Release() {
+    ECHECK(cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams));
+    return RP_OK;
+}
 
 #endif //__ANALOG_MIXED_SIGNALS_H
