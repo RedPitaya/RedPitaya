@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <rp.h>
+#include "rp.h"
 
 int main(int argc, char **argv){
 

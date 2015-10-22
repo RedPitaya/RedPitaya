@@ -1,1 +1,0 @@
-fprintf(tcpipObj,'SOUR1:TRIG:IMM')                       % Reset to default settings

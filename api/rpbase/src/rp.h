@@ -263,6 +263,8 @@ typedef struct wf_func_table_t {
  */
 int rp_Init();
 
+int rp_CalibInit();
+
 /**
  * Releases the library resources. It must be called last, after library is not used anymore. Typically before
  * application exits.
@@ -473,16 +475,45 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 
 ///@}
 
-/** @name Analog Input/Output
+
+/** @name Analog Inputs
  */
 ///@{
 
+/**
+ * Gets value from analog pin in volts.
+ * @param pin    pin index
+ * @param value  voltage
+ * @return       RP_OK - successful, RP_E* - failure
+ */
+int rp_ApinGetValue(int unsigned pin, float* value);
 
 /**
-* Sets analog pins to default values. Output pins are set to 0 V.
+ * Gets raw value from analog pin.
+ * @param pin    pin index
+ * @param value  raw 12 bit XADC value
+ * @return       RP_OK - successful, RP_E* - failure
+ */
+int rp_ApinGetValueRaw(int unsigned pin, uint32_t* value);
+
+/**
+ * Gets range in volts on specific pin.
+ * @param pin      pin index
+ * @param min_val  minimum range voltage on given pin
+ * @param max_val  maximum range voltage on given pin
+ * @return         RP_OK - successful, RP_E* - failure
+ */
+int rp_ApinGetRange(int unsigned pin, float* min_val,  float* max_val);
+
+
+/** @name Analog Outputs
+ */
+///@{
+
+/**
+* Sets analog outputs to default values (0V).
 */
 int rp_ApinReset();
-
 
 /**
  * Gets value from analog pin in volts.

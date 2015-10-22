@@ -145,27 +145,27 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
 #include "rp.h"
 
 static int getRpDecimation(uint32_t decimationInt, rp_acq_decimation_t *decimation) {
-	switch (decimationInt) {
-		case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
-		case     8:  *decimation = RP_DEC_8    ;  return RP_OK;
-		case    64:  *decimation = RP_DEC_64   ;  return RP_OK;
-		case  1024:  *decimation = RP_DEC_1024 ;  return RP_OK;
-		case  8192:  *decimation = RP_DEC_8192 ;  return RP_OK;
-		case 65536:  *decimation = RP_DEC_65536;  return RP_OK;
-		default   :                               return RP_EOOR;
-	}
+    switch (decimationInt) {
+        case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
+        case     8:  *decimation = RP_DEC_8    ;  return RP_OK;
+        case    64:  *decimation = RP_DEC_64   ;  return RP_OK;
+        case  1024:  *decimation = RP_DEC_1024 ;  return RP_OK;
+        case  8192:  *decimation = RP_DEC_8192 ;  return RP_OK;
+        case 65536:  *decimation = RP_DEC_65536;  return RP_OK;
+        default   :                               return RP_EOOR;
+    }
 }
 
 static int getRpDecimationInt(rp_acq_decimation_t decimation, uint32_t *decimationInt) {
-	switch (decimation) {
-		case RP_DEC_1    :  *decimationInt =     1;  return RP_OK;
-		case RP_DEC_8    :  *decimationInt =     8;  return RP_OK;
-		case RP_DEC_64   :  *decimationInt =    64;  return RP_OK;
-		case RP_DEC_1024 :  *decimationInt =  1024;  return RP_OK;
-		case RP_DEC_8192 :  *decimationInt =  8192;  return RP_OK;
-		case RP_DEC_65536:  *decimationInt = 65536;  return RP_OK;
-		default          :                           return RP_EOOR;
-	}
+    switch (decimation) {
+        case RP_DEC_1    :  *decimationInt =     1;  return RP_OK;
+        case RP_DEC_8    :  *decimationInt =     8;  return RP_OK;
+        case RP_DEC_64   :  *decimationInt =    64;  return RP_OK;
+        case RP_DEC_1024 :  *decimationInt =  1024;  return RP_OK;
+        case RP_DEC_8192 :  *decimationInt =  8192;  return RP_OK;
+        case RP_DEC_65536:  *decimationInt = 65536;  return RP_OK;
+        default          :                           return RP_EOOR;
+    }
 }
 
 scpi_result_t RP_AcqDecimation(scpi_t *context) {

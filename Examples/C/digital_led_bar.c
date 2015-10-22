@@ -2,28 +2,36 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <rp.h>
+#include "rp.h"
 
-int main(int arc, char **argv){
-    // Print error, if rp_Init() function failed
-    if(rp_Init() != RP_OK){
-        fprintf(stderr, "Rp api init failed!\n");
+int main (int argc, char **argv) {
+    float percent;
+
+    // percentage can be provided as an argument
+    if (argc > 1) {
+        percent = atof(argv[1]);
+    } else {
+        percent = 50.0;
     }
-    rp_dpin_t pin;
+    printf("Bar showing %.1f%%\n", percent);
 
-    float p = 67;
+    // Initialization of API
+    if (rp_Init() != RP_OK) {
+        fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
+    }
 
-    // Turning on leds based on parameter p
-    for(i = RP_LED0; i <= RP_LED7; i++){
-        if(p > (i*(100/8)){
-            rp_DpinSetState(pin, RP_HIGH);
-        }else{
-            rp_DpinSetState(pin, RP_LOW);
+    // Turning on leds based on parameter percent
+    for (int i=0; i<8; i++) {
+        if (percent > (i*(100.0/8))) {
+            rp_DpinSetState(i+RP_LED0, RP_HIGH);
+        } else {
+            rp_DpinSetState(i+RP_LED0, RP_LOW);
         }
     }
 
     // Releasing resources
     rp_Release();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

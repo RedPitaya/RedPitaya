@@ -1,22 +1,13 @@
 #!/usr/bin/python
 
-import redpitaya_scpi as scpi
-import time
 import sys
-
-__author__ = "Luka Golinar, Iztok Jeras"
-__copyright__ = "Copyright 2015, Red Pitaya"
+import redpitaya_scpi as scpi
+import matplotlib.pyplot as plot
 
 rp_s = scpi.scpi(sys.argv[1])
 
-wave_form = 'sine'
-freq = 1000
-ampl = 1
-
-buff = []
-buff_string = ''
 rp_s.tx_txt('ACQ:DEC 8')
-rp_s.tx_txt('ACQ:TRIG:LEV 100')
+rp_s.tx_txt('ACQ:TRIG:LEVEL 100')
 rp_s.tx_txt('ACQ:START')
 rp_s.tx_txt('ACQ:TRIG CH1_PE')
 
@@ -30,7 +21,6 @@ buff_string = rp_s.rx_txt()
 buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
 buff = map(float, buff_string)
 
-import matplotlib.pyplot as plt
-plt.plot(buff)
-plt.ylabel('Voltage')
-plt.show()
+plot.plot(buff)
+plot.ylabel('Voltage')
+plot.show()
