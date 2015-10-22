@@ -411,7 +411,7 @@ XADC_DIR        = Test/xadc
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor generate acquire calib calibrate
 
-examples: lcr bode monitor generate acquire calib calbrate
+examples: lcr bode monitor generate acquire calib calibrate
 
 lcr:
 	$(MAKE) -C $(LCR_DIR)
