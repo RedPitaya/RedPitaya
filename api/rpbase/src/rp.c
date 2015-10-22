@@ -23,7 +23,6 @@
 #include "oscilloscope.h"
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
-#include "apin_handler.h"
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
@@ -73,7 +72,7 @@ int rp_Release()
 int rp_Reset()
 {
     ECHECK(rp_DpinReset());
-    ECHECK(rp_ApinReset());
+    ECHECK(rp_AOpinReset());
     ECHECK(rp_GenReset());
     ECHECK(rp_AcqReset());
     // TODO: Place other module resetting here (in reverse order)
@@ -233,37 +232,78 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state)
     return dpin_GetState(pin, state);
 }
 
+
 /**
- * Analog In Output methods
+ * Analog Inputs
  */
 
-int rp_ApinReset() {
-    return apin_SetDefaultValues();
+int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
+    FILE *fp;
+    switch (pin) {
+        case 0:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");  break;
+        case 1:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");   break;
+        case 2:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");  break;
+        case 3:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");  break;
+        default:
+            return RP_EPN;
+    }
+    int r = !fscanf (fp, "%d", value);
+    fclose(fp);
+    return r;
 }
 
-int rp_ApinSetValue(rp_apin_t pin, float value)
-{
-    return apin_SetValue(pin, value);
+int rp_AIpinGetValue(int unsigned pin, float* value) {
+    uint32_t value_raw;
+    int result = rp_AIpinGetValueRaw(pin, &value_raw);
+    *value = (((float)value_raw / ANALOG_IN_MAX_VAL_INTEGER) * (ANALOG_IN_MAX_VAL - ANALOG_IN_MIN_VAL)) + ANALOG_IN_MIN_VAL;
+    return result;
 }
 
-int rp_ApinGetValue(rp_apin_t pin, float* value)
-{
-    return apin_GetValue(pin, value);
+
+/**
+ * Analog Outputs
+ */
+
+int rp_AOpinReset() {
+    for (int unsigned pin=0; pin<4; pin++) {
+        rp_AOpinSetValueRaw(pin, 0);
+    }
+    return RP_OK;
 }
 
-int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value)
-{
-    return apin_SetValueRaw(pin, value);
+int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
+    if (pin >= 4) {
+        return RP_EPN;
+    }
+    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+        return RP_EOOR;
+    }
+    return cmn_SetShiftedValue(&ams->dac[pin], value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
 }
 
-int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value)
-{
-    return apin_GetValueRaw(pin, value);
+int rp_AOpinSetValue(int unsigned pin, float value) {
+    uint32_t value_raw = (uint32_t) (((value - ANALOG_OUT_MIN_VAL) / (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) * ANALOG_OUT_MAX_VAL_INTEGER);
+    return rp_AOpinSetValueRaw(pin, value_raw);
 }
 
-int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
-{
-    return apin_GetRange(pin, min_val, max_val);
+int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
+    if (pin >= 4) {
+        return RP_EPN;
+    }
+    return cmn_GetShiftedValue(&ams->dac[pin], value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+}
+
+int rp_AOpinGetValue(int unsigned pin, float* value) {
+    uint32_t value_raw;
+    int result = rp_AOpinGetValueRaw(pin, &value_raw);
+    *value = (((float)value_raw / ANALOG_OUT_MAX_VAL_INTEGER) * (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) + ANALOG_OUT_MIN_VAL;
+    return result;
+}
+
+int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
+    *min_val = ANALOG_OUT_MIN_VAL;
+    *max_val = ANALOG_OUT_MAX_VAL;
+    return RP_OK;
 }
 
 
