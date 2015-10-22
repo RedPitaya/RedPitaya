@@ -25,7 +25,6 @@ int apin_SetDefaultValues() {
     for (pin = RP_AOUT0; pin <= RP_AOUT3; pin++) {
         ECHECK(apin_SetValue(pin, 0));
     }
-
     return RP_OK;
 }
 
