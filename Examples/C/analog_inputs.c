@@ -16,7 +16,7 @@ int main (int argc, char **argv) {
 
     // Measure each XADC input voltage
     for (int i=0; i<4; i++) {
-        rp_ApinGetValue(i+RP_AIN0, &value[i]);
+        rp_AIpinGetValue(i, &value[i]);
         printf("Measured voltage on AI[%i] = %1.2fV\n", i, value[i]);
     }
 
