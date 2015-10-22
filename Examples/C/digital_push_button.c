@@ -1,40 +1,32 @@
-/* Red Pitaya C API example one --TODO-- add exact example name */
-
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <rp.h>
+#include "rp.h"
 
-int main(int argc, char **argv){
+int main (int argc, char **argv) {
+    rp_pinState_t state;
 
-	/* Print error, if rp_Init() function failed */
-	if(rp_Init() != RP_OK){
-		fprintf(stderr, "Rp api init failed!\n");
-	}
+    // Initialization of API
+    if (rp_Init() != RP_OK) {
+        fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
+    }
 
-	rp_dpin_t pin = RP_DIO5_N;
-	rp_pinDirection_t direction = RP_IN;
-	rp_pinState_t stat = RP_LOW;
+    // configure DIO[0:7]_N to inputs
+    for (int i=0; i<8; i++) {
+        rp_DpinSetDirection (i+RP_DIO0_N, RP_IN);
+    }
 
-	rp_DpinSetDirection(pin, direction);
+    // transfer each input state to the corresponding LED state
+    while (1) {
+        for (int i=0; i<8; i++) {
+            rp_DpinGetState (i+RP_DIO0_N, &state);
+            rp_DpinSetState (i+RP_LED0, state);
+        }
+    }
 
-	/* You can set a timeout */
-	//int i = 0;
-	while(1){
-		printf("Getting pin state.\n");
-		rp_DpinGetState(pin, &stat);
-		printf("Setting pin state.\n");
-		if(stat == RP_LOW){
-			rp_DpinSetState(RP_LED5, RP_HIGH);
-			printf("Setting pin state: HIGH\n");
-		}else{
-			rp_DpinSetState(RP_LED5, RP_LOW);
-			printf("Setting pin state: LOW\n");
-		}
-		//i++;
-	}
+    // Releasing resources
+    rp_Release();
 
-	rp_Release();
-
-	return 0;
+    return EXIT_SUCCESS;
 }

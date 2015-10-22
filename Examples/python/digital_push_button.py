@@ -14,5 +14,4 @@ while 1:
     for i in range(8):
         rp_s.tx_txt('DIG:PIN? DIO'+str(i)+'_N')
         state = rp_s.rx_txt()
-        print state
         rp_s.tx_txt('DIG:PIN LED'+str(i)+','+str(state))

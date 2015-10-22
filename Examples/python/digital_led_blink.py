@@ -6,8 +6,14 @@ import redpitaya_scpi as scpi
 
 rp_s = scpi.scpi(sys.argv[1])
 
+if (len(sys.argv) > 2):
+  led = int(sys.argv[2])
+else:
+  led = 0
+
+print ("Blinking LED["+str(led)+"]")
+
 period = 1 # seconds
-led = 5
 
 while 1:
     time.sleep(period/2.0)
