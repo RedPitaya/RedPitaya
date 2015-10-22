@@ -364,7 +364,7 @@ int rp_spectr_set_signals(float **source, rp_spectr_worker_res_t result)
 void *rp_spectr_worker_thread(void *args)
 {
     rp_spectr_worker_state_t old_state, state;
-    rp_app_params_t          curr_params[PARAMS_NUM];
+    rp_app_params_t          curr_params[PARAMS_NUM] = {};
     int                      fpga_update = 1;
     int                      params_dirty = 1;
     int                      loop_cnt = 0; /* each N save jpeg */

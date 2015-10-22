@@ -1,3 +1,23 @@
+# Release 0.94 RC16
+
+Changes:
+- move to a newer version of SCPI parser (between v2.1 and Git master) some patches were ported some removed
+- fixed a SCPI acquisition issue, where buffer was overwritten by incoming data (involuntary continuous acquisition mode)
+- removed continuous calibration related I2C EEPROM reads while running scopegenpro, this improved stability
+- removed rebug option from application builds, thus improving performance
+- updated build process (Makefile) mostly for the public release
+- some cleanup of Examples
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ SPI interface is not working (seems to be a kernel configuration issue)
+
+# Release 0.94 RC15
+
+Changes:
+- on extension board analog input divider was removed, so in libwyliodrin analog input range was changed from 10V to 7V
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
+
 # Release 0.94 RC14
 
 Changes:
@@ -10,7 +30,7 @@ Changes:
 
 Changes:
 - spectrum analyzer was very slow on slow SD cards, a tmpfs /tmp/ram was created for waterfall JPEG images
-- removed XADC code from monitor, added Examples/xadc/xadc.sh covering the same functionality (currently missing proper voltge scaling)
+- removed XADC code from monitor, added Examples/xadc/xadc.sh covering the same functionality (currently missing proper voltage scaling)
 
 **Known issues** (at least major ones) are same as in 0.94 RC12.
 

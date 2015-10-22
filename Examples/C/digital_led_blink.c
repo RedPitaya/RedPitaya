@@ -4,28 +4,36 @@
 
 #include "rp.h"
 
-int main(int argc, char **argv){
+int main (int argc, char **argv) {
     int unsigned period = 1000000; // uS
+    int unsigned led;
 
-    // Print error, if rp_Init() function failed
-    if(rp_Init() != RP_OK){
-        fprintf(stderr, "Rp api init failed!\n");
+    // index of blinking LED can be provided as an argument
+    if (argc > 1) {
+        led = atoi(argv[1]);
+    // otherwise LED 0 will blink
+    } else {
+        led = 0;
+    }
+    printf("Blinking LED[%u]\n", led);
+    led += RP_LED0;
+
+    // Initialization of API
+    if (rp_Init() != RP_OK) {
+        fprintf(stderr, "Red Pitaya API init failed!\n");
+        return EXIT_FAILURE;
     }
 
-    // Set rp_dpin_t to led 1
-    rp_dpin_t pin = RP_LED1;
-
-    int retries = 1000; //ms
-    while(retries--){
-        // Setting pin to 1
-        rp_DpinSetState(pin, RP_HIGH);
+    int unsigned retries = 1000;
+    while (retries--){
+        rp_DpinSetState(led, RP_HIGH);
         usleep(period/2);
-        rp_DpinSetState(pin, RP_LOW);
+        rp_DpinSetState(led, RP_LOW);
         usleep(period/2);
     }
 
     // Releasing resources
     rp_Release();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
