@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-#include "rp.h"
+#include "redpitaya/rp.h"
 #include "common.h"
 #include "generate.h"
 #include "calib.h"

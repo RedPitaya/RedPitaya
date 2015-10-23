@@ -35,9 +35,6 @@ TARGET=$(OUTPUT_DIR)/librp.so
 OBJECTS =	common.o \
 		kiss_fft/kiss_fft.c \
 		kiss_fft/kiss_fftr.c \
-		housekeeping.o \
-		id_handler.o \
-		dpin_handler.o \
 		oscilloscope.o \
 		acq_handler.o \
 		generate.o \
@@ -50,8 +47,9 @@ OBJECTS =	common.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS=-std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+CFLAGS += -I../../include
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
@@ -62,7 +60,6 @@ SHARED=../../shared/
 LIBS=-lm -lpthread
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
@@ -98,4 +95,4 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp  rp.h      $(INSTALL_DIR)/include
+	cp -r ../../include/redpitaya $(INSTALL_DIR)/include
