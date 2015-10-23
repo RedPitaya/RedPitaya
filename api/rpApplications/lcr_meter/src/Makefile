@@ -2,8 +2,6 @@
 #  Red Pitaya Api example Makefile
 #
 
-CROSS_COMPILE ?= arm-linux-gnueabi-
-
 #Define header includes
 RP_PATH_INCLUDE ?= -I../../../rpbase/ -I../../../include
 
