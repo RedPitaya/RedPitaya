@@ -24,7 +24,7 @@ int mygetch ( void )
 
 
 int main(int argc, char **argv) {
-	printf("Library version: %s\n", rp_GetVersion());
+    printf("Library version: %s\n", rp_GetVersion());
 
     ECHECK(rp_Init());
 
