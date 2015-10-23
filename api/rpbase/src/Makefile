@@ -35,9 +35,6 @@ TARGET=$(OUTPUT_DIR)/librp.so
 OBJECTS =	common.o \
 		kiss_fft/kiss_fft.c \
 		kiss_fft/kiss_fftr.c \
-		housekeeping.o \
-		id_handler.o \
-		dpin_handler.o \
 		oscilloscope.o \
 		acq_handler.o \
 		analog_mixed_signals.o \
