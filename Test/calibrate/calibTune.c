@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rp.h>
-#include <common.h>
+#include "redpitaya/rp.h"
 
 uint32_t calculateScale(uint32_t calibValue, float value) {
 	return rp_cmn_CalibFullScaleFromVoltage(rp_cmn_CalibFullScaleToVoltage(calibValue) + value);
@@ -40,7 +39,7 @@ void printHelp() {
 }
 
 int main(int argc, char **argv) {
-	ECHECK(rp_CalibInit());
+	rp_CalibInit();
 	rp_calib_params_t calib = rp_GetCalibrationSettings();
 
 	char cmd[32] = {0};
@@ -85,7 +84,7 @@ int main(int argc, char **argv) {
 		printHelp();
 	}
 
-	ECHECK(rp_CalibrationWriteParams(calib));
+	rp_CalibrationWriteParams(calib);
 
 	return 0;
 }

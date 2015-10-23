@@ -7,7 +7,7 @@ RP_API=../../../api/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
 INCLUDE = -I$(RP_SDK)
-INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/rpbase/src/
+INCLUDE+= -I../../../api/rpApplications/src -I../../../api/include
 INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 COMMON_FLAGS+=-Wall -fPIC -lstdc++ -Os -s
