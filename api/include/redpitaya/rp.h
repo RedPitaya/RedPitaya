@@ -128,6 +128,19 @@ typedef enum {
     RP_OUT //!< Output direction
 } rp_pinDirection_t;
 
+/**
+ * Type representing analog input output pins.
+ */
+typedef enum {
+    RP_AOUT0,      //!< Analog output 0
+    RP_AOUT1,      //!< Analog output 1
+    RP_AOUT2,      //!< Analog output 2
+    RP_AOUT3,      //!< Analog output 3
+    RP_AIN0,       //!< Analog input 0
+    RP_AIN1,       //!< Analog input 1
+    RP_AIN2,       //!< Analog input 2
+    RP_AIN3        //!< Analog input 3
+} rp_apin_t;
 
 typedef enum {
     RP_WAVEFORM_SINE,       //!< Wave form sine
@@ -483,6 +496,62 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 
 ///@}
+
+
+/** @name Analog Inputs/Outputs
+ */
+///@{
+
+/**
+* Sets analog outputs to default values (0V).
+*/
+int rp_ApinReset();
+
+/**
+ * Gets value from analog pin in volts.
+ * @param pin    Analog pin.
+ * @param value  Value on analog pin in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_ApinGetValue(rp_apin_t pin, float* value);
+
+/**
+ * Gets raw value from analog pin.
+ * @param pin    Analog pin.
+ * @param value  Raw value on analog pin
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value);
+
+/**
+ * Sets value in volts on analog output pin.
+ * @param pin    Analog output pin.
+ * @param value  Value in volts to be set on given output pin.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_ApinSetValue(rp_apin_t pin, float value);
+
+/**
+ * Sets raw value on analog output pin.
+ * @param pin    Analog output pin.
+ * @param value  Raw value to be set on given output pin.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value);
+
+/**
+ * Gets range in volts on specific pin.
+ * @param pin      Analog input output pin.
+ * @param min_val  Minimum value in volts on given pin.
+ * @param max_val  Maximum value in volts on given pin.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
 
 
 /** @name Analog Inputs
