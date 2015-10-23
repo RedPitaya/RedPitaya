@@ -40,6 +40,10 @@ else { \
     return RP_EPN; \
 }
 
+// unmasked IO read/write (p - pointer, v - value)
+#define ioread32(p) (*(volatile uint32_t *)(p))
+#define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
+
 #define SET_BITS(x,b) ((x) |= (b))
 #define UNSET_BITS(x,b) ((x) &= ~(b))
 #define SET_VALUE(x,b) ((x) = (b))
