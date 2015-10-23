@@ -11,9 +11,9 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.ser
 
 # this file is otherwise available on the mounted FAT partion, should be removed later
 mkdir -p $ROOT_DIR/opt/redpitaya/lib
-cp $BOOT_DIR/opt/redpitaya/lib/librp.so $ROOT_DIR/opt/redpitaya/lib/librp.so
-mkdir -p $ROOT_DIR/opt/redpitaya/include
-cp $BOOT_DIR/opt/redpitaya/include/rp.h $ROOT_DIR/opt/redpitaya/include/rp.h
+mkdir -p $ROOT_DIR/opt/redpitaya/include/redpitaya
+cp -r $BOOT_DIR/opt/redpitaya/lib     $ROOT_DIR/opt/redpitaya/
+cp -r $BOOT_DIR/opt/redpitaya/include $ROOT_DIR/opt/redpitaya/
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo “127.0.1.1 red-pitaya” >> /etc/hosts

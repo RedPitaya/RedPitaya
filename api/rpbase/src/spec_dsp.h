@@ -15,7 +15,7 @@
 #ifndef __DSP_H
 #define __DSP_H
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 #define c_dsp_sig_len (SPECTR_FPGA_SIG_LEN>>1)
 

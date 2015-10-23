@@ -18,7 +18,6 @@
 
 #include "common.h"
 #include "dpin.h"
-#include "../../api/rpbase/src/common.h"
 #include "scpi/parser.h"
 
 

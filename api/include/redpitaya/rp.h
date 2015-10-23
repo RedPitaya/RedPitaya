@@ -24,6 +24,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#define ADC_BUFFER_SIZE             (16*1024)
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -497,37 +498,7 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 ///@}
 
 
-/** @name Analog Inputs
- */
-///@{
-
-/**
- * Gets value from analog pin in volts.
- * @param pin    pin index
- * @param value  voltage
- * @return       RP_OK - successful, RP_E* - failure
- */
-int rp_ApinGetValue(int unsigned pin, float* value);
-
-/**
- * Gets raw value from analog pin.
- * @param pin    pin index
- * @param value  raw 12 bit XADC value
- * @return       RP_OK - successful, RP_E* - failure
- */
-int rp_ApinGetValueRaw(int unsigned pin, uint32_t* value);
-
-/**
- * Gets range in volts on specific pin.
- * @param pin      pin index
- * @param min_val  minimum range voltage on given pin
- * @param max_val  maximum range voltage on given pin
- * @return         RP_OK - successful, RP_E* - failure
- */
-int rp_ApinGetRange(int unsigned pin, float* min_val,  float* max_val);
-
-
-/** @name Analog Outputs
+/** @name Analog Inputs/Outputs
  */
 ///@{
 
