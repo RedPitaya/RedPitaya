@@ -355,6 +355,72 @@ int rp_EnableDigitalLoop(bool enable) {
 }
 
 
+/** @name Analog Inputs/Outputs
+ */
+///@{
+
+int rp_ApinReset() {
+    return rp_AOpinReset();
+}
+
+int rp_ApinGetValue(rp_apin_t pin, float* value) {
+    if (pin <= RP_AIN3) {
+        rp_AIpinGetValue(pin-RP_AIN0, value);
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinGetValue(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
+    if (pin <= RP_AIN3) {
+        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int rp_ApinSetValue(rp_apin_t pin, float value) {
+    if (pin <= RP_AIN3) {
+        return RP_EPN;
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinSetValue(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
+    if (pin <= RP_AIN3) {
+        return RP_EPN;
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
+    if (pin <= RP_AIN3) {
+        *min_val = ANALOG_IN_MIN_VAL;
+        *max_val = ANALOG_IN_MAX_VAL;
+    } else if (pin <= RP_AOUT3) {
+        *min_val = ANALOG_OUT_MIN_VAL;
+        *max_val = ANALOG_OUT_MAX_VAL;
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+
 /**
  * Analog Inputs
  */
