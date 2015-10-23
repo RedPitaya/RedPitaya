@@ -21,7 +21,6 @@
 #include "common.h"
 #include "api_cmd.h"
 #include "scpi/parser.h"
-#include "../../api/rpbase/src/common.h"
 
 
 scpi_result_t RP_InitAll(scpi_t *context){
