@@ -1,6 +1,6 @@
 body {
   color: #cdcccc;
-  overflow-y: auto; 
+  overflow-y: auto;
   padding-right: 0 !important;
 }
 
@@ -41,7 +41,9 @@ area:hover {
 }
 
 .full-content {
-  min-width: 1024px; 
+/*
+  min-width: 1024px;
+*/
   margin: 0 auto;
   position: relative;
 }
@@ -82,7 +84,7 @@ area:hover {
   display: block;
   padding: 10px 30px;
   border-left: 1px solid #999;
- 
+
 }
 
 .navbar-inverse .navbar-nav > li > a  {
@@ -90,8 +92,8 @@ area:hover {
  outline: none;
 }
 
-.nav > li > a:hover { 
-  background-color: #444 !important; 
+.nav > li > a:hover {
+  background-color: #444 !important;
   color: #E5D5D5;
 }
 
@@ -110,7 +112,7 @@ area:hover {
   border-radius: 0px;
   background-color: #343433;
   background-image: linear-gradient(to bottom, #343433 0, #343433 100%);
-  border: 1px solid #999;  
+  border: 1px solid #999;
   min-height: 42px;
   border-left: 1px solid #999;
 }
@@ -255,12 +257,12 @@ area:hover {
 }
 
 .info-title {
-  float: left; 
+  float: left;
   width: 46px;
 }
 
 .info-value {
-  float: left; 
+  float: left;
   width: 90px;
 }
 
@@ -315,7 +317,7 @@ area:hover {
   color: #fff;
   background-color: #343433;
   background-image: none;
-  border: 0px none; 
+  border: 0px none;
   box-shadow: none;
   border-radius: 0px;
   height: 33px;
@@ -424,16 +426,16 @@ area:hover {
 #joystick {
   position: absolute;
   margin-left: 8px;
-  right: 26px;
-  top: 300px; 
-  width: 150px; 
+  right: 10px;
+  top: 210px;
+  width: 150px;
   height: auto;
 }
 
 #jtk_btns {
-  height: auto; 
+  height: auto;
   border: 0 none;
-  width: 150px; 
+  width: 150px;
 }
 
 #jtk_fine {
@@ -461,8 +463,8 @@ area:hover {
 }
 
 .plot {
-  position: absolute; 
-  top: 0px; 
+  position: absolute;
+  top: 0px;
   left: 0px;
 }
 
@@ -501,9 +503,9 @@ area:hover {
   position: relative;
   left: 0px;
   width: 97%;
-  
+
   min-height: 60px;
-  max-height: 60px;  
+  max-height: 60px;
 }
 
 .waterfall-holder img {
@@ -518,14 +520,14 @@ area:hover {
 .waterfall-holder span {
   display:inline-block;
   position:absolute;
-  top:30px;   
+  top:30px;
   left:0px;
      margin-top: -40px;
     /* Оформление текста */
   color:#FFF;
   font-family:Arial, Helvetica, sans-serif;
-  font-size:20px; 
-     
+  font-size:20px;
+
     /* Фон */
   padding:10px 30px;
   width: 100%;
@@ -549,14 +551,14 @@ area:hover {
 .wait span {
   display:inline-block;
   position:absolute;
-  top:30px;   
+  top:30px;
   left:0px;
-     
+
     /* Оформление текста */
   color:#FFF;
   font-family:Arial, Helvetica, sans-serif;
-  font-size:20px; 
-     
+  font-size:20px;
+
     /* Фон */
   padding:10px 30px;
   width: 100%;
@@ -654,13 +656,13 @@ area:hover {
 }
 
 #cur_x_diff {
-  font-family: "Glyphicons Halflings"; 
+  font-family: "Glyphicons Halflings";
   font-size: 11px;
-  line-height: 1; 
-  border-bottom: 2px solid #ccc; 
+  line-height: 1;
+  border-bottom: 2px solid #ccc;
   margin: 0 5px;
   width: 100px;
-  height: 7px; 
+  height: 7px;
   position: absolute;
   left: 0;
   top: 40px;
