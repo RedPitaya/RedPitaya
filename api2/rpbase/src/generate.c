@@ -43,31 +43,7 @@ int generate_Release() {
 }
 
 int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {
-    CHANNEL_ACTION(channel,
-            *ch_properties = &generate->properties_chA,
-            *ch_properties = &generate->properties_chB)
-    return RP_OK;
-}
-
-int generate_setOutputDisable(rp_channel_t channel, bool disable) {
-    if (channel == RP_CH_1) {
-        generate->AsetOutputTo0 = disable ? 1 : 0;
-    }
-    else if (channel == RP_CH_2) {
-        generate->BsetOutputTo0 = disable ? 1 : 0;
-    }
-    else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
-    uint32_t value;
-    CHANNEL_ACTION(channel,
-            value = generate->AsetOutputTo0,
-            value = generate->BsetOutputTo0)
-    *enabled = value == 1 ? false : true;
+    *ch_properties = &generate->properties_ch[channel];
     return RP_OK;
 }
 
@@ -133,9 +109,7 @@ int generate_getFrequency(rp_channel_t channel, float *frequency) {
 }
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
-    CHANNEL_ACTION(channel,
-            generate->properties_chA.counterWrap = 65536 * size - 1,
-            generate->properties_chB.counterWrap = 65536 * size - 1)
+    generate->properties_ch[channel].counterWrap = 65536 * size - 1,
     return RP_OK;
 }
 

@@ -46,47 +46,44 @@
 #define GENERATE_BASE_SIZE      0x00030000
 
 typedef struct ch_properties {
-    unsigned int amplitudeScale     :14;
-    unsigned int                    :2;
-    unsigned int amplitudeOffset    :14;
-    unsigned int                    :2;
+    uint32_t amplitudeScale     :14;
+    uint32_t                    :2;
+    uint32_t amplitudeOffset    :14;
+    uint32_t                    :2;
     uint32_t counterWrap;
     uint32_t startOffset;
     uint32_t counterStep;
-    unsigned int                    :2;
-    uint32_t buffReadPointer        :14;
-    unsigned int                    :16;
+    uint32_t                    :2;
+    uint32_t buffReadPointer    :14;
+    uint32_t                    :16;
     uint32_t cyclesInOneBurst;
     uint32_t burstRepetitions;
     uint32_t delayBetweenBurstRepetitions;
 } ch_properties_t;
 
 typedef struct generate_control_s {
-    unsigned int AtriggerSelector   :4;
-    unsigned int ASM_WrapPointer    :1;
-    unsigned int                    :1;
-    unsigned int ASM_reset          :1;
-    unsigned int AsetOutputTo0      :1;
-    unsigned int AgatedBursts       :1;
-    unsigned int                    :7;
+    uint32_t AtriggerSelector   :4;
+    uint32_t ASM_WrapPointer    :1;
+    uint32_t                    :1;
+    uint32_t ASM_reset          :1;
+    uint32_t AsetOutputTo0      :1;
+    uint32_t AgatedBursts       :1;
+    uint32_t                    :7;
 
-    unsigned int BtriggerSelector   :4;
-    unsigned int BSM_WrapPointer    :1;
-    unsigned int                    :1;
-    unsigned int BSM_reset          :1;
-    unsigned int BsetOutputTo0      :1;
-    unsigned int BgatedBursts       :1;
-    unsigned int                    :7;
+    uint32_t BtriggerSelector   :4;
+    uint32_t BSM_WrapPointer    :1;
+    uint32_t                    :1;
+    uint32_t BSM_reset          :1;
+    uint32_t BsetOutputTo0      :1;
+    uint32_t BgatedBursts       :1;
+    uint32_t                    :7;
 
-    ch_properties_t properties_chA;
-    ch_properties_t properties_chB;
+    ch_properties_t properties_ch[2];
 } generate_control_t;
 
 int generate_Init();
 int generate_Release();
 
-int generate_setOutputDisable(rp_channel_t channel, bool disable);
-int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
 int generate_setAmplitude(rp_channel_t channel, float amplitude);
 int generate_getAmplitude(rp_channel_t channel, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, float offset);

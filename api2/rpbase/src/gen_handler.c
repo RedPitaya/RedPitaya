@@ -20,24 +20,22 @@
 
 // global variables
 // TODO: should be organized into a system status structure
-float         chA_amplitude            = 1, chB_amplitude            = 1;
-float         chA_offset               = 0, chB_offset               = 0;
-float         chA_dutyCycle            = 0, chB_dutyCycle            = 0;
-float         chA_frequency               , chB_frequency               ;
-float         chA_phase                = 0, chB_phase                = 0;
-int           chA_burstCount           = 1, chB_burstCount           = 1;
-int           chA_burstRepetition      = 1, chB_burstRepetition      = 1;
-uint32_t      chA_burstPeriod          = 0, chB_burstPeriod          = 0;
-rp_waveform_t chA_waveform                , chB_waveform                ;
-uint32_t      chA_size     = BUFFER_LENGTH, chB_size     = BUFFER_LENGTH;
-uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
+float         ch_amplitude       = {1,1};
+float         ch_offset          = {0,0};
+float         ch_dutyCycle       = {0,0};
+float         ch_frequency              ;
+float         ch_phase           = {0,0};
+int           ch_burstCount      = {1,1};
+int           ch_burstRepetition = {1,1};
+uint32_t      ch_burstPeriod     = {0,0};
+rp_waveform_t ch_waveform               ;
+uint32_t      ch_size            = {BUFFER_LENGTH, BUFFER_LENGTH};
+uint32_t      ch_arb_size        = {BUFFER_LENGTH, BUFFER_LENGTH};
 
 float chA_arbitraryData[BUFFER_LENGTH];
 float chB_arbitraryData[BUFFER_LENGTH];
 
 int gen_SetDefaultValues() {
-    ECHECK(gen_Disable(RP_CH_1));
-    ECHECK(gen_Disable(RP_CH_2));
     ECHECK(gen_setFrequency(RP_CH_1, 1000));
     ECHECK(gen_setFrequency(RP_CH_2, 1000));
     ECHECK(gen_setBurstRepetitions(RP_CH_1, 1));
@@ -65,18 +63,6 @@ int gen_SetDefaultValues() {
     return RP_OK;
 }
 
-int gen_Disable(rp_channel_t channel) {
-    return generate_setOutputDisable(channel, true);
-}
-
-int gen_Enable(rp_channel_t channel) {
-    return generate_setOutputDisable(channel, false);
-}
-
-int gen_IsEnable(rp_channel_t channel, bool *value) {
-    return generate_getOutputEnabled(channel, value);
-}
-
 int gen_checkAmplitudeAndOffset(float amplitude, float offset) {
     if (fabs(amplitude) + fabs(offset) > LEVEL_MAX) {
         return RP_EOOR;
@@ -85,15 +71,9 @@ int gen_checkAmplitudeAndOffset(float amplitude, float offset) {
 }
 
 int gen_setAmplitude(rp_channel_t channel, float amplitude) {
-    float offset;
-    CHANNEL_ACTION(channel,
-            offset = chA_offset,
-            offset = chB_offset)
+    float offset = ch_offset[channel];
     ECHECK(gen_checkAmplitudeAndOffset(amplitude, offset));
-
-    CHANNEL_ACTION(channel,
-            chA_amplitude = amplitude,
-            chB_amplitude = amplitude)
+    ch_amplitude[channel] = amplitude;
     return generate_setAmplitude(channel, amplitude);
 }
 
@@ -102,15 +82,9 @@ int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
 }
 
 int gen_setOffset(rp_channel_t channel, float offset) {
-    float amplitude;
-    CHANNEL_ACTION(channel,
-            amplitude = chA_amplitude,
-            amplitude = chB_amplitude)
+    float amplitude = chA_amplitude[channel];
     ECHECK(gen_checkAmplitudeAndOffset(amplitude, offset));
-
-    CHANNEL_ACTION(channel,
-            chA_offset = offset,
-            chB_offset = offset)
+    ch_offset[channel] = offset;
     return generate_setDCOffset(channel, offset);
 }
 
@@ -122,18 +96,11 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
         return RP_EOOR;
     }
-
-    if (channel == RP_CH_1) {
-        chA_frequency = frequency;
-        gen_setBurstPeriod(channel, chA_burstPeriod);
-    }
-    else if (channel == RP_CH_2) {
-        chB_frequency = frequency;
-        gen_setBurstPeriod(channel, chB_burstPeriod);
-    }
-    else {
+    if (channel > RP_CH_2)
         return RP_EPN;
     }
+    ch_frequency[channel] = frequency;
+    gen_setBurstPeriod(channel, ch_burstPeriod[channel]);
 
     ECHECK(generate_setFrequency(channel, frequency));
     ECHECK(synthesize_signal(channel));
@@ -151,42 +118,29 @@ int gen_setPhase(rp_channel_t channel, float phase) {
     if (phase < 0) {
         phase += 360;
     }
-    CHANNEL_ACTION(channel,
-            chA_phase = phase,
-            chB_phase = phase)
+    ch_phase[channel] = phase;
 
     ECHECK(synthesize_signal(channel));
     return gen_Synchronise();
 }
 
 int gen_getPhase(rp_channel_t channel, float *phase) {
-    CHANNEL_ACTION(channel,
-            *phase = chA_phase,
-            *phase = chB_phase)
+    *phase = ch_phase[channel];
     return RP_OK;
 }
 
 int gen_setWaveform(rp_channel_t channel, rp_waveform_t type) {
-    CHANNEL_ACTION(channel,
-            chA_waveform = type,
-            chB_waveform = type)
+    ch_waveform[channel] = type;
     if (type == RP_WAVEFORM_ARBITRARY) {
-        CHANNEL_ACTION(channel,
-                chA_size = chA_arb_size,
-                chB_size = chB_arb_size)
-    }
-    else{
-        CHANNEL_ACTION(channel,
-                chA_size = BUFFER_LENGTH,
-                chB_size = BUFFER_LENGTH)
+        chA_size = ch_arb_size[channel];
+    } else {
+        ch_size[channel] = BUFFER_LENGTH,
     }
     return synthesize_signal(channel);
 }
 
 int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {
-    CHANNEL_ACTION(channel,
-            *type = chA_waveform,
-            *type = chB_waveform)
+    *type = ch_waveform[channel];
     return RP_OK;
 }
 
@@ -206,9 +160,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
 
     // Save data
     float *pointer;
-    CHANNEL_ACTION(channel,
-            pointer = chA_arbitraryData,
-            pointer = chB_arbitraryData)
+    pointer = ch_arbitraryData[channel];
     for(i = 0; i < length; i++) {
         pointer[i] = data[i];
     }
@@ -259,16 +211,12 @@ int gen_setDutyCycle(rp_channel_t channel, float ratio) {
     if (ratio < DUTY_CYCLE_MIN || ratio > DUTY_CYCLE_MAX) {
         return RP_EOOR;
     }
-    CHANNEL_ACTION(channel,
-            chA_dutyCycle = ratio,
-            chB_dutyCycle = ratio)
+    ch_dutyCycle[channel] = ratio;
     return synthesize_signal(channel);
 }
 
 int gen_getDutyCycle(rp_channel_t channel, float *ratio) {
-    CHANNEL_ACTION(channel,
-            *ratio = chA_dutyCycle,
-            *ratio = chB_dutyCycle)
+    *ratio = ch_dutyCycle[channel],
     return RP_OK;
 }
 
@@ -310,9 +258,7 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
     if ((num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) && num == 0) {
         return RP_EOOR;
     }
-    CHANNEL_ACTION(channel,
-            chA_burstCount = num,
-            chB_burstCount = num)
+    ch_burstCount[channel] = num;
     if (num == -1) {    // -1 represents infinity. In FPGA value 0 represents infinity
         num = 0;
     }
@@ -330,9 +276,7 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
     if ((repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) && repetitions != -1) {
         return RP_EOOR;
     }
-    CHANNEL_ACTION(channel,
-            chA_burstRepetition = repetitions,
-            chB_burstRepetition = repetitions)
+    ch_burstRepetition[channel] = repetitions;
     if (repetitions == -1) {
         repetitions = 0;
     }
@@ -354,9 +298,7 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
         return RP_EOOR;
     }
     int burstCount;
-    CHANNEL_ACTION(channel,
-            burstCount = chA_burstCount,
-            burstCount = chB_burstCount)
+    burstCount = ch_burstCount[channel];
     // period = signal_time * burst_count + delay_time
     int delay = (int) (period - (1 / (channel == RP_CH_1 ? chA_frequency : chB_frequency) * MICRO) * burstCount);
     if (delay <= 0) {
@@ -365,9 +307,7 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
     }
     ECHECK(generate_setBurstDelay(channel, (uint32_t) delay));
 
-    CHANNEL_ACTION(channel,
-                   chA_burstPeriod = period,
-                   chB_burstPeriod = period)
+    ch_burstPeriod[channel] = period;
 
     // trigger channel if internal trigger source
     return triggerIfInternal(channel);
@@ -537,15 +477,11 @@ int synthesis_PWM(float ratio, float *data_out) {
 
 int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) {
     float *pointer;
-    CHANNEL_ACTION(channel,
-            pointer = chA_arbitraryData,
-            pointer = chB_arbitraryData)
+    pointer = ch_arbitraryData[channel];
     for (int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = pointer[i];
     }
-    CHANNEL_ACTION(channel,
-            *size = chA_arb_size,
-            *size = chB_arb_size)
+    *size = ch_arb_size[channel];
     return RP_OK;
 }
 

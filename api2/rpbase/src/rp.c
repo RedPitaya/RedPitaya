@@ -707,20 +707,48 @@ int rp_AcqGetBufSize(uint32_t *size) {
 * Generate methods
 */
 
+int rp_GenSetOutEnable (rp_channel_t channel, bool state) {
+    if (channel == RP_CH_1) {
+        iowrite32(state ? 0 : 1, &generate->AsetOutputTo0);
+    } else if (channel == RP_CH_2) {
+        iowrite32(state ? 0 : 1, &generate->BsetOutputTo0);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int rp_GenGetOutEnable (rp_channel_t channel, uint32_t *state) {
+    if (channel == RP_CH_1) {
+        *state = !ioread32(&generate->AsetOutputTo0);
+    } else if (channel == RP_CH_2) {
+        *state = !ioread32(&generate->BsetOutputTo0);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+/**
+* Generate methods old
+*/
+
 int rp_GenReset() {
+    rp_GenSetOutEnable (RP_CH_1, false);
+    rp_GenSetOutEnable (RP_CH_2, false);
     return gen_SetDefaultValues();
 }
 
 int rp_GenOutDisable(rp_channel_t channel) {
-    return gen_Disable(channel);
+    return rp_GenSetOutEnable(channel, false);
 }
 
 int rp_GenOutEnable(rp_channel_t channel) {
-    return gen_Enable(channel);
+    return rp_GenSetOutEnable(channel, true);
 }
 
 int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
-    return gen_IsEnable(channel, value);
+    return rp_GenGetOutEnable(channel, value);
 }
 
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
