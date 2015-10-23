@@ -41,8 +41,9 @@ OBJECTS =	common.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS=-std=gnu99 -Wall -Werror -fPIC -Os -s
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -L$(OUTPUT_DIR)
+CFLAGS += -I../../include -I../../rpbase/src
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
@@ -53,7 +54,6 @@ SHARED=../../shared/
 LIBS=-lm -lpthread -lrp
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
@@ -89,4 +89,4 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp  rpApp.h   $(INSTALL_DIR)/include
+#	cp  rpApp.h   $(INSTALL_DIR)/include/redpitaya

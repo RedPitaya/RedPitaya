@@ -51,37 +51,18 @@ static const uint32_t EX_CO_N_MASK = 0xFF;
 static const uint32_t EX_CI_P_MASK = 0xFF;
 static const uint32_t EX_CI_N_MASK = 0xFF;
 
-
-int hk_Init();
-int hk_Release();
-
-int hk_GetID(uint32_t *id);
-int hk_GetDNA(uint64_t *dna);
-
-int hk_SetLedBits(uint32_t bits);
-int hk_UnsetLedBits(uint32_t bits);
-int hk_AreLedBitsSet(uint32_t bits, bool* result);
-
-int hk_SetExCdPBits(uint32_t bits);
-int hk_UnsetExCdPBits(uint32_t bits);
-int hk_AreExCdPBitsSet(uint32_t bits, bool* result);
-
-int hk_SetExCdNBits(uint32_t bits);
-int hk_UnsetExCdNBits(uint32_t bits);
-int hk_AreExCdNBitsSet(uint32_t bits, bool* result);
-
-int hk_SetExCoPBits(uint32_t bits);
-int hk_UnsetExCoPBits(uint32_t bits);
-int hk_AreExCoPBitsSet(uint32_t bits, bool* result);
-
-int hk_SetExCoNBits(uint32_t bits);
-int hk_UnsetExCoNBits(uint32_t bits);
-int hk_AreExCoNBitsSet(uint32_t bits, bool* result);
-
-int hk_AreExCiPBitsSet(uint32_t bits, bool* result);
-
-int hk_AreExCiNBitsSet(uint32_t bits, bool* result);
-
 int hk_EnableDigitalLoop(bool enable);
+
+static volatile housekeeping_control_t *hk = NULL;
+
+static int hk_Init() {
+    ECHECK(cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk));
+    return RP_OK;
+}
+
+static int hk_Release() {
+    ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
+    return RP_OK;
+}
 
 #endif //__HOUSEKEEPING_H

@@ -51,7 +51,6 @@ SHARED=../../shared/
 LIBS=-lm -lpthread
 
 # Main GCC executable (used for compiling and linking)
-CROSS_COMPILE?=arm-linux-gnueabi-
 CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .

@@ -15,7 +15,7 @@
  #ifndef COMMON_IMP_H_
  #define COMMON_IMP_H_
 
-#include "../../../rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 
 #define ECHECK_APP(x){ \
  		int retval = (x); \

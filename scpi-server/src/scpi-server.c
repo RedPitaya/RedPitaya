@@ -29,7 +29,7 @@
 #include "common.h"
 
 #include "scpi/parser.h"
-#include "../../api/rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))

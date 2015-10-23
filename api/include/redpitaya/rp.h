@@ -24,6 +24,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#define ADC_BUFFER_SIZE             (16*1024)
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -411,6 +412,27 @@ int rp_IdGetID(uint32_t *id);
 int rp_IdGetDNA(uint64_t *dna);
 
 ///@}
+
+
+/**
+ * LED methods
+ */
+
+int rp_LEDSetState(uint32_t state);
+int rp_LEDGetState(uint32_t *state);
+
+/**
+ * GPIO methods
+ */
+
+int rp_GPIOnSetDirection(uint32_t direction);
+int rp_GPIOnGetDirection(uint32_t *direction);
+int rp_GPIOnSetState(uint32_t state);
+int rp_GPIOnGetState(uint32_t *state);
+int rp_GPIOpSetDirection(uint32_t direction);
+int rp_GPIOpGetDirection(uint32_t *direction);
+int rp_GPIOpSetState(uint32_t state);
+int rp_GPIOpGetState(uint32_t *state);
 
 
 /** @name Digital Input/Output

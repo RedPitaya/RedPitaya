@@ -21,9 +21,9 @@
 #include <inttypes.h>
 
 #include "osciloscopeApp.h"
-#include "common.h"
 #include "../../rpbase/src/common.h"
-#include "../../rpbase/src/rp.h"
+#include "./common.h"
+#include "redpitaya/rp.h"
 
 typedef float thread_data_t[2][ADC_BUFFER_SIZE];
 typedef uint16_t raw_data_t[2][ADC_BUFFER_SIZE];

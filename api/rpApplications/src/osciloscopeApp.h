@@ -15,7 +15,7 @@
 #ifndef __OSCILOSCOPE_H
 #define __OSCILOSCOPE_H
 
-#include "../../rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 #include "rpApp.h"
 
 #define VIEW_SIZE_DEFAULT             1024

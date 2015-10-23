@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 #define CONSTANT_SIGNAL_AMPLITUDE 0.8
 
