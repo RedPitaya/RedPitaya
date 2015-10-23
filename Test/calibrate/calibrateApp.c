@@ -3,7 +3,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 #include "common.h"
 
 

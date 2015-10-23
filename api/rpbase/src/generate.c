@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "rp.h"
+#include "redpitaya/rp.h"
 #include "common.h"
 #include "generate.h"
 #include "calib.h"
