@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-#include "../../../rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 #include "impedance_analyzer.h"
 
 /** @name General

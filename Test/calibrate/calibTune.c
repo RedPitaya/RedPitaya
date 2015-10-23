@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rp.h>
-#include <common.h>
+#include "redpitaya/rp.h"
+#include "common.h"
 
 uint32_t calculateScale(uint32_t calibValue, float value) {
 	return rp_cmn_CalibFullScaleFromVoltage(rp_cmn_CalibFullScaleToVoltage(calibValue) + value);
