@@ -191,6 +191,11 @@
 	<div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
 </div>
 <script>
+$('a').on('click touchend', function(e) {
+    var el = $(this);
+    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
+    window.location = link;
+});
 
 $('#run').click(function(){
 
