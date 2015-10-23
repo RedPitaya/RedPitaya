@@ -278,12 +278,12 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
         // DIO_P
         pin -= RP_DIO0_P;
         tmp = ioread32(&hk->ex_cd_p);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), hk->ex_cd_p);
+        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
         tmp = ioread32(&hk->ex_cd_n);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), hk->ex_cd_p);
+        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
     }
     return RP_OK;
 }
