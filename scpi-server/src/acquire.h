@@ -17,13 +17,12 @@
 #define ACQUIRE_H_
 
 #include "scpi/types.h"
-#include "../../api/rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 
 typedef enum {
     RP_SCPI_VOLTS,
     RP_SCPI_RAW,
 } rp_scpi_acq_unit_t;
-
 
 int RP_AcqSetDefaultValues();
 scpi_result_t RP_AcqSetDataFormat(scpi_t *context);

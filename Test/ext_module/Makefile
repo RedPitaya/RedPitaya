@@ -9,7 +9,7 @@ VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 #Define header includes
-RP_PATH_INCLUDE = -I../../api/rpbase/src/
+RP_PATH_INCLUDE = -I../../api/include
 
 #Define library includes
 RP_LIB_INCLUDE = -L ../../api/lib -lm -lpthread -lrp
