@@ -466,7 +466,8 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
     if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
         return RP_EOOR;
     }
-    return cmn_SetShiftedValue(&ams->dac[pin], value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+    iowrite32((value & ANALOG_OUT_MASK) << ANALOG_OUT_BITS, &ams->dac[pin]);
+    return RP_OK;
 }
 
 int rp_AOpinSetValue(int unsigned pin, float value) {
@@ -478,7 +479,8 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
     if (pin >= 4) {
         return RP_EPN;
     }
-    return cmn_GetShiftedValue(&ams->dac[pin], value, ANALOG_OUT_MASK, ANALOG_OUT_BITS);
+    *value = (ioread32(&ams->dac[pin]) >> ANALOG_OUT_BITS) & ANALOG_OUT_MASK;
+    return RP_OK;
 }
 
 int rp_AOpinGetValue(int unsigned pin, float* value) {
