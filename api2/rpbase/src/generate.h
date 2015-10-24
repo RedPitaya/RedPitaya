@@ -107,4 +107,24 @@ int generate_Synchronise();
 
 int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length);
 
+static volatile generate_control_t *generate = NULL;
+
+static volatile int32_t *data_ch [2] = {NULL, NULL};
+
+int generate_Init() {
+//  ECHECK(cmn_Init());
+    ECHECK(cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate));
+    data_ch[0] = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
+    data_ch[0] = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
+    return RP_OK;
+}
+
+int generate_Release() {
+    ECHECK(cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate));
+//  ECHECK(cmn_Release());
+    data_ch[0] = NULL;
+    data_ch[1] = NULL;
+    return RP_OK;
+}
+
 #endif //__GENERATE_H

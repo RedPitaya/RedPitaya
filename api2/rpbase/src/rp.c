@@ -718,7 +718,7 @@ int rp_GenSetOutEnable (rp_channel_t channel, bool state) {
     return RP_OK;
 }
 
-int rp_GenGetOutEnable (rp_channel_t channel, uint32_t *state) {
+int rp_GenGetOutEnable (rp_channel_t channel, bool *state) {
     if (channel == RP_CH_1) {
         *state = !ioread32(&generate->AsetOutputTo0);
     } else if (channel == RP_CH_2) {

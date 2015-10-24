@@ -21,27 +21,6 @@
 #include "generate.h"
 #include "calib.h"
 
-static volatile generate_control_t *generate = NULL;
-static volatile int32_t *data_chA = NULL;
-static volatile int32_t *data_chB = NULL;
-
-
-int generate_Init() {
-//  ECHECK(cmn_Init());
-    ECHECK(cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate));
-    data_chA = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
-    data_chB = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
-    return RP_OK;
-}
-
-int generate_Release() {
-    ECHECK(cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate));
-//  ECHECK(cmn_Release());
-    data_chA = NULL;
-    data_chB = NULL;
-    return RP_OK;
-}
-
 int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {
     *ch_properties = &generate->properties_ch[channel];
     return RP_OK;
@@ -109,7 +88,7 @@ int generate_getFrequency(rp_channel_t channel, float *frequency) {
 }
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
-    generate->properties_ch[channel].counterWrap = 65536 * size - 1,
+    generate->properties_ch[channel].counterWrap = 65536 * size - 1;
     return RP_OK;
 }
 
@@ -198,9 +177,7 @@ int generate_Synchronise() {
 
 int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length) {
     volatile int32_t *dataOut;
-    CHANNEL_ACTION(channel,
-            dataOut = data_chA,
-            dataOut = data_chB)
+    dataOut = data_ch[channel];
 
     volatile ch_properties_t *properties;
     ECHECK(getChannelPropertiesAddress(&properties, channel));
