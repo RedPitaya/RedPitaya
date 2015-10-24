@@ -737,7 +737,7 @@ int main(int argc, char *argv[]) {
                     fprintf(progress_file , "%d \n" ,  progress_int );
 
                     sprintf(hex, "%x", (int)(255 - (255*progress_int/100)));
-                    strcpy(command, "/opt/bin/monitor 0x40000030 0x" );
+                    strcpy(command, "/opt/redpitaya/bin/monitor 0x40000030 0x" );
                     strcat(command, hex);
                     
                     system(command);
