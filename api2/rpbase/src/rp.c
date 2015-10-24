@@ -85,54 +85,30 @@ const char* rp_GetVersion()
 
 const char* rp_GetError(int errorCode) {
     switch (errorCode) {
-        case RP_OK:
-            return "OK";
-        case RP_EOED:
-            return "Failed to Open EEPROM Device.";
-        case RP_EOMD:
-            return "Failed to open memory device.";
-        case RP_ECMD:
-            return "Failed to close memory device.";
-        case RP_EMMD:
-            return "Failed to map memory device.";
-        case RP_EUMD:
-            return "Failed to unmap memory device.";
-        case RP_EOOR:
-            return "Value out of range.";
-        case RP_ELID:
-            return "LED input direction is not valid.";
-        case RP_EMRO:
-            return "Modifying read only filed is not allowed.";
-        case RP_EWIP:
-            return "Writing to input pin is not valid.";
-        case RP_EPN:
-            return "Invalid Pin number.";
-        case RP_UIA:
-            return "Uninitialized Input Argument.";
-        case RP_FCA:
-            return "Failed to Find Calibration Parameters.";
-        case RP_RCA:
-            return "Failed to Read Calibration Parameters.";
-        case RP_BTS:
-            return "Buffer too small";
-        case RP_EIPV:
-            return "Invalid parameter value";
-        case RP_EUF:
-            return "Unsupported Feature";
-        case RP_ENN:
-            return "Data not normalized";
-        case RP_EFOB:
-            return "Failed to open bus";
-        case RP_EFCB:
-            return "Failed to close bus";
-        case RP_EABA:
-            return "Failed to acquire bus access";
-        case RP_EFRB:
-            return "Failed to read from the bus";
-        case RP_EFWB:
-            return "Failed to write to the bus";
-        default:
-            return "Unknown error";
+        case RP_OK  :  return "OK";
+        case RP_EOED:  return "Failed to Open EEPROM Device.";
+        case RP_EOMD:  return "Failed to open memory device.";
+        case RP_ECMD:  return "Failed to close memory device.";
+        case RP_EMMD:  return "Failed to map memory device.";
+        case RP_EUMD:  return "Failed to unmap memory device.";
+        case RP_EOOR:  return "Value out of range.";
+        case RP_ELID:  return "LED input direction is not valid.";
+        case RP_EMRO:  return "Modifying read only filed is not allowed.";
+        case RP_EWIP:  return "Writing to input pin is not valid.";
+        case RP_EPN :  return "Invalid Pin number.";
+        case RP_UIA :  return "Uninitialized Input Argument.";
+        case RP_FCA :  return "Failed to Find Calibration Parameters.";
+        case RP_RCA :  return "Failed to Read Calibration Parameters.";
+        case RP_BTS :  return "Buffer too small";
+        case RP_EIPV:  return "Invalid parameter value";
+        case RP_EUF :  return "Unsupported Feature";
+        case RP_ENN :  return "Data not normalized";
+        case RP_EFOB:  return "Failed to open bus";
+        case RP_EFCB:  return "Failed to close bus";
+        case RP_EABA:  return "Failed to acquire bus access";
+        case RP_EFRB:  return "Failed to read from the bus";
+        case RP_EFWB:  return "Failed to write to the bus";
+        default:       return "Unknown error";
     }
 }
 
@@ -707,48 +683,51 @@ int rp_AcqGetBufSize(uint32_t *size) {
 * Generate methods
 */
 
-int rp_GenSetOutEnable (rp_channel_t channel, bool state) {
-    if (channel == RP_CH_1) {
-        iowrite32(state ? 0 : 1, &generate->AsetOutputTo0);
-    } else if (channel == RP_CH_2) {
-        iowrite32(state ? 0 : 1, &generate->BsetOutputTo0);
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-int rp_GenGetOutEnable (rp_channel_t channel, bool *state) {
-    if (channel == RP_CH_1) {
-        *state = !ioread32(&generate->AsetOutputTo0);
-    } else if (channel == RP_CH_2) {
-        *state = !ioread32(&generate->BsetOutputTo0);
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
+//int rp_GenSetOutEnable (rp_channel_t channel, bool state) {
+//    if (channel == RP_CH_1) {
+//        iowrite32(state ? 0 : 1, &generate->AsetOutputTo0);
+//    } else if (channel == RP_CH_2) {
+//        iowrite32(state ? 0 : 1, &generate->BsetOutputTo0);
+//    } else {
+//        return RP_EPN;
+//    }
+//    return RP_OK;
+//}
+//
+//int rp_GenGetOutEnable (rp_channel_t channel, bool *state) {
+//    if (channel == RP_CH_1) {
+//        *state = !ioread32(&generate->AsetOutputTo0);
+//    } else if (channel == RP_CH_2) {
+//        *state = !ioread32(&generate->BsetOutputTo0);
+//    } else {
+//        return RP_EPN;
+//    }
+//    return RP_OK;
+//}
 
 /**
 * Generate methods old
 */
 
 int rp_GenReset() {
-    rp_GenSetOutEnable (RP_CH_1, false);
-    rp_GenSetOutEnable (RP_CH_2, false);
+//    rp_GenSetOutEnable (RP_CH_1, false);
+//    rp_GenSetOutEnable (RP_CH_2, false);
     return gen_SetDefaultValues();
 }
 
 int rp_GenOutDisable(rp_channel_t channel) {
-    return rp_GenSetOutEnable(channel, false);
+    return gen_Disable(channel);
+//    return rp_GenSetOutEnable(channel, false);
 }
 
 int rp_GenOutEnable(rp_channel_t channel) {
-    return rp_GenSetOutEnable(channel, true);
+    return gen_Enable(channel);
+//    return rp_GenSetOutEnable(channel, true);
 }
 
 int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
-    return rp_GenGetOutEnable(channel, value);
+    return gen_IsEnable(channel, value);
+//    return rp_GenGetOutEnable(channel, value);
 }
 
 int rp_GenAmp(rp_channel_t channel, float amplitude) {

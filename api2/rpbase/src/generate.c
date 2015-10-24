@@ -21,8 +21,50 @@
 #include "generate.h"
 #include "calib.h"
 
+static volatile generate_control_t *generate = NULL;
+static volatile int32_t *data_ch[2] = {NULL, NULL};
+
+
+int generate_Init() {
+//  ECHECK(cmn_Init());
+    ECHECK(cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate));
+    data_ch[0] = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
+    data_ch[1] = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
+    return RP_OK;
+}
+
+int generate_Release() {
+    ECHECK(cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate));
+//  ECHECK(cmn_Release());
+    data_ch[0] = NULL;
+    data_ch[1] = NULL;
+    return RP_OK;
+}
+
 int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {
     *ch_properties = &generate->properties_ch[channel];
+    return RP_OK;
+}
+
+int generate_setOutputDisable(rp_channel_t channel, bool disable) {
+    if (channel > RP_CH_1) {
+        generate->AsetOutputTo0 = disable ? 1 : 0;
+    }
+    else if (channel == RP_CH_2) {
+        generate->BsetOutputTo0 = disable ? 1 : 0;
+    }
+    else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
+    uint32_t value;
+    CHANNEL_ACTION(channel,
+            value = generate->AsetOutputTo0,
+            value = generate->BsetOutputTo0)
+    *enabled = value == 1 ? false : true;
     return RP_OK;
 }
 

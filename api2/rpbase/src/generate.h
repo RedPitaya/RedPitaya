@@ -84,6 +84,8 @@ typedef struct generate_control_s {
 int generate_Init();
 int generate_Release();
 
+int generate_setOutputDisable(rp_channel_t channel, bool disable);
+int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
 int generate_setAmplitude(rp_channel_t channel, float amplitude);
 int generate_getAmplitude(rp_channel_t channel, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, float offset);
@@ -106,25 +108,5 @@ int generate_simultaneousTrigger();
 int generate_Synchronise();
 
 int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length);
-
-static volatile generate_control_t *generate = NULL;
-
-static volatile int32_t *data_ch [2] = {NULL, NULL};
-
-int generate_Init() {
-//  ECHECK(cmn_Init());
-    ECHECK(cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate));
-    data_ch[0] = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
-    data_ch[0] = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
-    return RP_OK;
-}
-
-int generate_Release() {
-    ECHECK(cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate));
-//  ECHECK(cmn_Release());
-    data_ch[0] = NULL;
-    data_ch[1] = NULL;
-    return RP_OK;
-}
 
 #endif //__GENERATE_H

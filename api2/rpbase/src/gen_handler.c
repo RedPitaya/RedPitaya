@@ -35,6 +35,8 @@ uint32_t      ch_arb_size        [2] = {BUFFER_LENGTH, BUFFER_LENGTH};
 float ch_arbitraryData[2][BUFFER_LENGTH];
 
 int gen_SetDefaultValues() {
+    gen_Disable(RP_CH_1);
+    gen_Disable(RP_CH_2);
     gen_setFrequency(RP_CH_1, 1000);
     gen_setFrequency(RP_CH_2, 1000);
     gen_setBurstRepetitions(RP_CH_1, 1);
@@ -60,6 +62,18 @@ int gen_SetDefaultValues() {
     gen_setPhase(RP_CH_1, 0.0);
     gen_setPhase(RP_CH_2, 0.0);
     return RP_OK;
+}
+
+int gen_Disable(rp_channel_t channel) {
+    return generate_setOutputDisable(channel, true);
+}
+
+int gen_Enable(rp_channel_t channel) {
+    return generate_setOutputDisable(channel, false);
+}
+
+int gen_IsEnable(rp_channel_t channel, bool *value) {
+    return generate_getOutputEnabled(channel, value);
 }
 
 int gen_checkAmplitudeAndOffset(float amplitude, float offset) {
