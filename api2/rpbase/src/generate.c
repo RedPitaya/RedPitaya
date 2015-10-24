@@ -47,23 +47,15 @@ int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_cha
 }
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
-    if (channel > RP_CH_1) {
-        generate->AsetOutputTo0 = disable ? 1 : 0;
-    }
-    else if (channel == RP_CH_2) {
-        generate->BsetOutputTo0 = disable ? 1 : 0;
-    }
-    else {
+    if (channel > RP_CH_2) {
         return RP_EPN;
     }
+    generate->control_ch[channel].setOutputTo0 = disable ? 1 : 0;
     return RP_OK;
 }
 
 int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
-    uint32_t value;
-    CHANNEL_ACTION(channel,
-            value = generate->AsetOutputTo0,
-            value = generate->BsetOutputTo0)
+    uint32_t value = generate->control_ch[channel].setOutputTo0;
     *enabled = value == 1 ? false : true;
     return RP_OK;
 }
@@ -118,7 +110,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
     volatile ch_properties_t *ch_properties;
     ECHECK(getChannelPropertiesAddress(&ch_properties, channel));
     ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
-    channel == RP_CH_1 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
+    generate->control_ch[channel].SM_WrapPointer = 1;
     return RP_OK;
 }
 
@@ -135,30 +127,22 @@ int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
 }
 
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
-    CHANNEL_ACTION(channel,
-            generate->AtriggerSelector = value,
-            generate->BtriggerSelector = value)
+    generate->control_ch[channel].triggerSelector = value;
     return RP_OK;
 }
 
 int generate_getTriggerSource(rp_channel_t channel, uint32_t *value) {
-    CHANNEL_ACTION(channel,
-            *value = generate->AtriggerSelector,
-            *value = generate->BtriggerSelector)
+    *value = generate->control_ch[channel].triggerSelector;
     return RP_OK;
 }
 
 int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
-    CHANNEL_ACTION(channel,
-            generate->AgatedBursts = value,
-            generate->BgatedBursts = value)
+    generate->control_ch[channel].gatedBursts = value;
     return RP_OK;
 }
 
 int generate_getGatedBurst(rp_channel_t channel, uint32_t *value) {
-    CHANNEL_ACTION(channel,
-            *value = generate->AgatedBursts,
-            *value = generate->BgatedBursts)
+    *value = generate->control_ch[channel].gatedBursts;
     return RP_OK;
 }
 
