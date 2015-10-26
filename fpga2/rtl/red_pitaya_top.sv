@@ -433,25 +433,29 @@ red_pitaya_scope i_scope (
 // ASG (arbitrary signal generators)
 ////////////////////////////////////////////////////////////////////////////////
 
-asg_top asg_top (
+
+
+asg_top asg_top [2-1:0] (
   // system signals
-  .clk             (adc_clk     ),
-  .rstn            (adc_rstn    ),
-   // DAC
-  .dac_a_o         (asg_a       ),
-  .dac_b_o         (asg_b       ),
-  .trig_ext_p      (exp_p_in[0] ),
-  .trig_ext_n      (exp_p_in[0] ),
-  .trig_asg_o      (trig_asg_out),
+  .clk             (adc_clk ),
+  .rstn            (adc_rstn),
+   // stream output
+  .str_dat         ({asg_b, asg_a}),
+  .str_vld         (              ),
+  .str_rdy         (1'b1          ),
+  // triggers
+  .trg_ext         (exp_p_in[0] ),
+  .trg_swo         (exp_p_in[0] ),
+  .trg_out         (trig_asg_out),
   // System bus
-  .sys_addr        (sys_addr                 ),
-  .sys_wdata       (sys_wdata                ),
-  .sys_sel         (sys_sel                  ),
-  .sys_wen         (sys_wen[2]               ),
-  .sys_ren         (sys_ren[2]               ),
-  .sys_rdata       (sys_rdata[ 2*32+31: 2*32]),
-  .sys_err         (sys_err[2]               ),
-  .sys_ack         (sys_ack[2]               )
+  .sys_addr        ({sys_addr           , sys_addr           }),
+  .sys_wdata       ({sys_wdata          , sys_wdata          }),
+  .sys_sel         ({sys_sel            , sys_sel            }),
+  .sys_wen         ({sys_wen  [2]       , sys_wen  [2]       }),
+  .sys_ren         ({sys_ren  [2]       , sys_ren  [2]       }),
+  .sys_rdata       ({sys_rdata[2*32+:32], sys_rdata[2*32+:32]}),
+  .sys_err         ({sys_err  [2]       , sys_err  [2]       }),
+  .sys_ack         ({sys_ack  [2]       , sys_ack  [2]       })
 );
 
 //---------------------------------------------------------------------------------
