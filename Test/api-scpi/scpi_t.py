@@ -9,7 +9,7 @@ import collections
 
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.1.241')
+rp_scpi = scpi.scpi('192.168.178.105')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -20,15 +20,16 @@ rp_leds    = {i: 'LED'+str(i) for i in range(8)}
 
 rp_freq_range  = [100, 1000, 10000, 100000, 1e+06, 1e+07, 3e+07]
 rp_volt_range  = [0.25, 0.5, 0.75, 1.0]
-rp_phase_range = [360, -180, -90, -30, 30, 90, 180, 360]
+rp_phase_range = [-360, -180, -90, -30, 30, 90, 180, 360]
 rp_offs_range  = [-0.75, -0.5, -0.25, 0.25, 0.5 , 0.75]
 rp_dcyc_range  = [0.5, 1, 10, 50, 75, 100]
-rp_ncyc_range  = ['INF', 1, 10, 100, 1000, 10000, 50000]
+rp_ncyc_range  = [0, 1, 10, 100, 1000, 10000, 50000]
 rp_nor_range   = rp_ncyc_range[:]
 rp_inp_range   = [i * 100 for i in range(1, 6)]
 rp_channels    = ['CH1', 'CH2', 'MATH']
 rp_scales      = [0.5, 1, 2, 3, 10]
 
+rp_gen_mode    = ['CONTINUOUS', 'BURST']
 rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
 
 # Base functions
@@ -76,7 +77,7 @@ class Base(object):
         return rp_scpi.rx_txt()
 
     def rp_phase(self, channel, phase):
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':PHAS ' + str(phase))
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':PHAS ' + str(phase) + ' DEG')
         rp_scpi.tx_txt('SOUR' + str(channel) + ':PHAS?')
         return rp_scpi.rx_txt()
 
@@ -110,14 +111,11 @@ class Base(object):
     #TODO: Make a better commentary.
     def rp_burst_state(self, channel):
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC 1')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ON')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') != 'ON'):
-            return False
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT OFF')
-        rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
-        if(rp_scpi.rx_txt().strip('\n') != 'OFF'):
-            return False
+        for i in range(len(rp_gen_mode)):
+            rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT ' + rp_gen_mode[i])
+            rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:STAT?')
+            if(rp_scpi.rx_txt().strip('\n') != rp_gen_mode[i]):
+                return False
         return True
 
     def generate_wform(self, channel):
@@ -134,7 +132,7 @@ class Base(object):
         rp_scpi.tx_txt('RP:INIT')
 
         #Enable Red Pitaya digital loop
-        rp_scpi.tx_txt('RP:DIG:LO')
+        rp_scpi.tx_txt('RP:DIg')
         rp_scpi.tx_txt('ACQ:START')
 
         #Set generator options
@@ -159,6 +157,7 @@ class Base(object):
             buff_ctrl[i] = float(buff_ctrl[i].strip('\n'))
 
         rp_scpi.tx_txt('RP:RESET')
+
         return (buff[:] == buff_ctrl[:])
 
 # Main test class
@@ -170,20 +169,20 @@ class MainTest(unittest.TestCase):
     ############### LEDS and GPIOs ###############
     def test0200_led(self):
         for led in range(1, 8):
-            self.assertEquals(Base().rp_led(rp_leds[led], 'ON'), 'ON')
-            self.assertEquals(Base().rp_led(rp_leds[led], 'OFF'), 'OFF')
+            self.assertEquals(Base().rp_led(rp_leds[led], '1'), '1')
+            self.assertEquals(Base().rp_led(rp_leds[led], '0'), '0')
 
 
     def test0201_dpin(self):
         #Test pos state
         for pin in range(1, 8):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], 'ON'), 'ON')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], 'OFF'), 'OFF')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '1'), '1')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '0'), '0')
 
         #Test neg state
         for pin in range(len(rp_dpin_p)):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], 'ON'), 'ON')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], 'OFF'), 'OFF')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '1'), '1')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
 
     def test0202_analog_pin(self):
         for a_pin in range(0, 3):
@@ -235,14 +234,14 @@ class MainTest(unittest.TestCase):
     def test0306_ncyc(self):
         for i in range(len(rp_ncyc_range)):
             ncyc = rp_ncyc_range[i]
-            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc) if i != 0 else  self.assertEquals(Base().rp_burst_ncyc(1, ncyc), 'INF')
-            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc) if i != 0 else  self.assertEquals(Base().rp_burst_ncyc(2, ncyc), 'INF')
+            self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc)
+            self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc)
 
     def test0307_nor(self):
         for i in range(len(rp_nor_range)):
             nor = rp_nor_range[i]
-            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor) if i != 0 else  self.assertEquals(Base().rp_burst_nor(1, nor), 'INF')
-            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor) if i != 0 else  self.assertEquals(Base().rp_burst_nor(2, nor), 'INF')
+            self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor)
+            self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor)
 
     def test0308_intp(self):
         for i in range(len(rp_inp_range)):
@@ -250,9 +249,9 @@ class MainTest(unittest.TestCase):
             self.assertEquals(float(Base().rp_burst_intp(1, intp)), intp)
             self.assertEquals(float(Base().rp_burst_intp(2, intp)), intp)
 
-    def test0309_burst_state(self):
+    def test0000_burst_state(self):
         self.assertTrue(Base().rp_burst_state(1))
-        self.assertTrue(Base().rp_burst_state(1))
+        self.assertTrue(Base().rp_burst_state(2))
 
     #Test generate
     def test000_generate(self):
