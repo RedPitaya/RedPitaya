@@ -61,18 +61,23 @@ typedef struct ch_properties {
     uint32_t delayBetweenBurstRepetitions;
 } ch_properties_t;
 
-typedef struct ch_control {
-    uint32_t triggerSelector    :4;
-    uint32_t SM_WrapPointer     :1;
-    uint32_t                    :1;
-    uint32_t SM_reset           :1;
-    uint32_t setOutputTo0       :1;
-    uint32_t gatedBursts        :1;
-    uint32_t                    :7;
-} ch_control_t;
-
 typedef struct generate_control_s {
-    ch_control_t    control_ch[2];
+    uint32_t AtriggerSelector   :4;
+    uint32_t ASM_WrapPointer    :1;
+    uint32_t                    :1;
+    uint32_t ASM_reset          :1;
+    uint32_t AsetOutputTo0      :1;
+    uint32_t AgatedBursts       :1;
+    uint32_t                    :7;
+
+    uint32_t BtriggerSelector   :4;
+    uint32_t BSM_WrapPointer    :1;
+    uint32_t                    :1;
+    uint32_t BSM_reset          :1;
+    uint32_t BsetOutputTo0      :1;
+    uint32_t BgatedBursts       :1;
+    uint32_t                    :7;
+
     ch_properties_t properties_ch[2];
 } generate_control_t;
 
