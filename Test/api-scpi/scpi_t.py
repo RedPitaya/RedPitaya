@@ -28,6 +28,7 @@ rp_nor_range   = rp_ncyc_range[:]
 rp_inp_range   = [i * 100 for i in range(1, 6)]
 rp_channels    = ['CH1', 'CH2', 'MATH']
 rp_scales      = [0.5, 1, 2, 3, 10]
+rp_decimation  = [1, 8, 64, 1024, 8192, 16384]
 
 rp_gen_mode    = ['CONTINUOUS', 'BURST']
 rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
@@ -99,9 +100,58 @@ class Base(object):
     def rp_burst_intp(self, channel, intp):
         #Set number of cycles to 0, for period repeatibilty (period = signal_time * burst_count + delay_time)
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:NCYC 0')
-
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER ' + str(intp))
         rp_scpi.tx_txt('SOUR' + str(channel) + ':BURS:INT:PER?')
+        return rp_scpi.rx_txt()
+
+    def rp_gen_trig_src(self, channel, source):
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':TRIG:SOUR ' + source)
+        rp_scpi.tx_txt('SOUR' + str(channel) + ':TRIG:SOUR?')
+        return rp_scpi.rx_txt()
+
+    ## ACQUIRE
+    def rp_decimation(self, decimation):
+        rp_scpi.tx_txt('ACQ:DEC ' + decimation)
+        rp_scpi.tx_txt('ACQ:DEC?')
+        return rp_scpi.rx_txt()
+
+    def rp_sampling(self, rate):
+        rp_scpi.tx_txt('ACQ:SRAT ' + rate)
+        rp_scpi.tx_txt('ACQ:SRAT?')
+        return rp_scpi.rx_txt()
+
+    def rp_averaging(self, averaging):
+        rp_scpi.tx_txt('ACQ:AVG ' + averaging)
+        rp_scpi.tx_txt('ACQ:AVG?')
+        return rp_scpi.rx_txt()
+
+    def rp_trigger_delay(self, delay):
+        rp_scpi.tx_txt('ACQ:TRIG:DLY ' + delay)
+        rp_scpi.tx_txt('ACQ:TRIG:DLY?')
+        return rp_scpi.rx_txt()
+
+    def rp_trigger_delay_ns(self, delay_ns):
+        rp_scpi.tx_txt('ACQ:TRIG:DLY:NS ' + delay_ns)
+        rp_scpi.tx_txt('ACQ:TRIG:DLY:NS?')
+        return rp_scpi.rx_txt()
+
+    def rp_trigger_hyst(self, hyst):
+        rp_scpi.tx_txt('ACQ:TRIG:HYST ' + hyst)
+        rp_scpi.tx_txt('ACQ:TRIG:HYST?')
+        return rp_scpi.rx_txt()
+
+    def rp_trigger_level(self, level):
+        rp_scpi.tx_txt('ACQ:TRIG:LEV ' + level)
+        rp_scpi.tx_txt('ACQ:TRIG:LEV?')
+        return rp_scpi.rx_txt()
+
+    def rp_data_units(self, units):
+        rp_scpi.tx_txt('ACQ:DATA:UNITS ' + units)
+        rp_scpi.tx_txt('ACQ:DATA:UNITS?')
+        return rp_scpi.rx_txt()
+
+    def rp_buffer_size(self):
+        rp_scpi.tx_txt('ACQ:BUF:SIZE?')
         return rp_scpi.rx_txt()
 
     #Burst state must also set burst counts to something other than 0.
@@ -260,6 +310,7 @@ class MainTest(unittest.TestCase):
 
     ############### SIGNAL ACQUISITION TOOL ###############
 
+    #TODO: ACQ:WPOS?  ACQ:TPOS?
     #TODO: Arbitrary-waveform. TRAC-DATA
 
 
