@@ -9,7 +9,7 @@ rp_s = scpi.scpi(sys.argv[1])
 rp_s.tx_txt('ACQ:DEC 8')
 rp_s.tx_txt('ACQ:TRIG:LEVEL 100')
 rp_s.tx_txt('ACQ:START')
-rp_s.tx_txt('ACQ:TRIG CH1_PE')
+rp_s.tx_txt('ACQ:TRIG EXT_PE')
 
 while 1:
     rp_s.tx_txt('ACQ:TRIG:STAT?')
