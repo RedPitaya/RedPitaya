@@ -31,10 +31,6 @@ RTL=$(PATH_RTL)/axi_master.v \
     $(PATH_RTL)/red_pitaya_pll.sv \
     $(PATH_RTL)/red_pitaya_asg_ch.v \
     $(PATH_RTL)/red_pitaya_asg.v \
-    $(PATH_RTL)/red_pitaya_daisy_rx.v \
-    $(PATH_RTL)/red_pitaya_daisy_test.v \
-    $(PATH_RTL)/red_pitaya_daisy_tx.v \
-    $(PATH_RTL)/red_pitaya_daisy.v \
     $(PATH_RTL)/red_pitaya_dfilt1.v \
     $(PATH_RTL)/red_pitaya_hk.v \
     $(PATH_RTL)/red_pitaya_pid_block.v \
@@ -50,7 +46,6 @@ TBN=$(PATH_TBN)/axi_master_model.sv \
     $(PATH_TBN)/red_pitaya_pwm_tb.sv \
     $(PATH_TBN)/red_pitaya_pll_tb.sv \
     $(PATH_TBN)/red_pitaya_asg_tb.sv \
-    $(PATH_TBN)/red_pitaya_daisy_tb.sv \
     $(PATH_TBN)/red_pitaya_dfilt1_tb.sv \
     $(PATH_TBN)/red_pitaya_hk_tb.sv \
     $(PATH_TBN)/red_pitaya_pid_tb.sv \
@@ -78,9 +73,6 @@ ams: compile
 
 pll: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_pll_tb
-
-daisy: compile
-	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_daisy_tb
 
 dfilt1: compile
 	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' red_pitaya_dfilt1_tb

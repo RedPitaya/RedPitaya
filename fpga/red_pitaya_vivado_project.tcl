@@ -47,10 +47,6 @@ add_files                         $path_rtl/axi_wr_fifo.v
 add_files                         $path_rtl/red_pitaya_ams.v
 add_files                         $path_rtl/red_pitaya_asg_ch.v
 add_files                         $path_rtl/red_pitaya_asg.v
-add_files                         $path_rtl/red_pitaya_daisy_rx.v
-add_files                         $path_rtl/red_pitaya_daisy_test.v
-add_files                         $path_rtl/red_pitaya_daisy_tx.v
-add_files                         $path_rtl/red_pitaya_daisy.v
 add_files                         $path_rtl/red_pitaya_dfilt1.v
 add_files                         $path_rtl/red_pitaya_hk.v
 add_files                         $path_rtl/red_pitaya_pid_block.v
