@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Linear correction (gain, offset and saturation)
+// Linear transformation (gain, offset and saturation)
 // Author: Matej Oblak, Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module correction_linear #(
+module linear #(
   int unsigned DWI = 14,   // data width for input
   int unsigned DWO = 14,   // data width for output
   int unsigned DWM = 16,   // data width for multiplier (gain)
@@ -115,4 +115,4 @@ else if (sum_rdy)  out_vld <= sti_vld;
 
 assign sum_rdy = out_rdy | ~sum_vld;
 
-endmodule: correction_linear
+endmodule: linear
