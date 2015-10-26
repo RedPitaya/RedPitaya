@@ -166,7 +166,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
     {.pattern = "ACQ:AVG?", .callback                   = RP_AcqAveragingQ,},
     {.pattern = "ACQ:TRIG", .callback                   = RP_AcqTriggerSrc,},
-    {.pattern = "ACQ:TRIG:STAT?", .callback             = RP_AcqTriggerQ,},
+    {.pattern = "ACQ:TRIG:STAT?", .callback             = RP_AcqTriggerSrcQ,},
     {.pattern = "ACQ:TRIG:DLY", .callback               = RP_AcqTriggerDelay,},
     {.pattern = "ACQ:TRIG:DLY?", .callback              = RP_AcqTriggerDelayQ,},
     {.pattern = "ACQ:TRIG:DLY:NS", .callback            = RP_AcqTriggerDelayNs,},
