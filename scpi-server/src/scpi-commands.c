@@ -176,7 +176,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:SOUR#:GAIN", .callback             = RP_AcqGain,},
     {.pattern = "ACQ:SOUR#:GAIN?", .callback            = RP_AcqGainQ,},
     {.pattern = "ACQ:TRIG:LEV", .callback               = RP_AcqTriggerLevel,},
-    {.pattern = "ACQ:TRIG:LEV?", .callback              = RP_AcqTriggerLevel,},
+    {.pattern = "ACQ:TRIG:LEV?", .callback              = RP_AcqTriggerLevelQ,},
     {.pattern = "ACQ:WPOS?", .callback                  = RP_AcqWritePointerQ,},
     {.pattern = "ACQ:TPOS?", .callback                  = RP_AcqWritePointerAtTrigQ,},
     {.pattern = "ACQ:DATA:UNITS", .callback             = RP_AcqScpiDataUnits,},
