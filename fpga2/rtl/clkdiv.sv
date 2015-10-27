@@ -19,22 +19,18 @@ module clkdiv #(
 
 // local signals
 logic [CW-1:0] cnt;  // counter current value
-logic [CW-1:0] nxt;  // counter next value
 logic          clr;  // counter clear
 
 // counter current value
 always_ff @(posedge clk)
 if (~rstn)  cnt <= '0;
 else begin
-  if (ena)  cnt <= clr ? '0 : nxt;
+  if (ena)  cnt <= clr ? '0 : cnt + 'd1;
   else      cnt <= '0;
 end
 
-// counter next value
-assign nxt = cnt + 'd1;
-
 // counter cycle end
-assign clr = nxt == div;
+assign clr = cnt == div;
 
 // output
 always_ff @(posedge clk)
