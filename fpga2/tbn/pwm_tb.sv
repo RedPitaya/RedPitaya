@@ -76,7 +76,7 @@ clkdiv #(
   .rstn     (rstn),
   // configuration
   .ena      (ena),
-  .div      (8'd0),
+  .div      (8'd7),
   // output
   .cke      (cke) 
 );

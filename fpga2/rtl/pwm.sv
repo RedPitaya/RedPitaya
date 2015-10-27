@@ -36,7 +36,7 @@ else begin
 end
 
 // counter next value
-assign nxt = cnt + 'd1;
+assign nxt = cnt + cke;
 
 // counter cycle end
 assign str_rdy = nxt == rng;
