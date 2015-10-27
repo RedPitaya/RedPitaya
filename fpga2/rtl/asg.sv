@@ -59,7 +59,7 @@ module asg #(
   input  logic       [  32-1:0] cfg_rdly ,  // set delay between repetitions
   input  logic                  cfg_wrap ,  // set wrap enable
   // control
-  input  logic                  ctl_rst  ,  // set FSM to reset
+  input  logic                  ctl_rst     // set FSM to reset
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,12 +94,13 @@ if (bus_ena & ~bus_wen)  bus_rdata <= buf_mem[bus_addr];
 //  read pointer & state machine
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  16-1: 0] cyc_cnt;
-logic [  16-1: 0] rep_cnt;
+logic [16-1:0] cyc_cnt;
+logic [16-1:0] rep_cnt;
+logic [32-1:0] dly_cnt;
 
-logic             dac_do  ;
-logic             dac_rep ;
-logic             dac_trg;
+logic          dac_do  ;
+logic          dac_rep ;
+logic          dac_trg;
 
 // state machine
 always_ff @(posedge clk)
@@ -118,7 +119,7 @@ end else begin
   if (trg_i && !dac_do)                                    rep_cnt <= cfg_rnum;
   else if (|rep_cnt && dac_rep && (dac_trg && !dac_do))    rep_cnt <= rep_cnt - 16'h1;
   // count number of table read cycles
-  dac_pntp  <= dac_pnt;
+//  dac_pntp  <= dac_pnt;
 
   else if (!dac_trg && |cyc_cnt && ({1'b0,dac_pntp} > {1'b0,dac_pnt}))    cyc_cnt <= cyc_cnt - 16'h1 ;
   // in cycle mode

@@ -65,10 +65,10 @@ logic sum_vld, sum_rdy, sum_trn;
 
 assign sti_trn = sti_vld & sti_rdy;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (sti_trn)  mul_dat <= sti_dat * cfg_mul;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn)         mul_vld <= 1'b0;
 else if (sti_rdy)  mul_vld <= sti_vld;
 
@@ -78,11 +78,11 @@ assign sti_rdy = mul_rdy | ~mul_vld;
 // shift
 ////////////////////////////////////////////////////////////////////////////////
 
-assign shf_dat <= mul_dat >>> (DWM-1);
+assign shf_dat = mul_dat >>> (DWM-1);
 
 assign shf_vld = mul_vld;
 
-assign sti_rdy = shf_rdy;
+assign mul_rdy = shf_rdy;
 
 ////////////////////////////////////////////////////////////////////////////////
 // summation
@@ -90,14 +90,14 @@ assign sti_rdy = shf_rdy;
 
 assign shf_trn = shf_vld & shf_rdy;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (shf_trn)  sum_dat <= shf_dat + cfg_sum;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn)         sum_vld <= 1'b0;
 else if (shf_rdy)  sum_vld <= sti_vld;
 
-assign shf_rdy = out_rdy | ~sum_vld;
+assign shf_rdy = sto_rdy | ~sum_vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 // saturation
@@ -105,14 +105,14 @@ assign shf_rdy = out_rdy | ~sum_vld;
 
 assign sum_trn = sum_vld & sum_rdy;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (sum_trn)  sto_dat <= ^sum_dat[DWO-1:DWO-2] ? {sum_dat[DWO], {DWO-1{~sum_dat[DWO-1]}}}
                                                :  sum_dat[DWO-1:0];
 
-always @(posedge clk)
-if (~rstn)         out_vld <= 1'b0;
-else if (sum_rdy)  out_vld <= sti_vld;
+always_ff @(posedge clk)
+if (~rstn)         sto_vld <= 1'b0;
+else if (sum_rdy)  sto_vld <= sti_vld;
 
-assign sum_rdy = out_rdy | ~sum_vld;
+assign sum_rdy = sto_rdy | ~sum_vld;
 
 endmodule: linear

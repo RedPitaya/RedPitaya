@@ -6,7 +6,7 @@
 
 `timescale 1ns / 1ps
 
-module red_pitaya_asg_tb #(
+module asg_tb #(
   // time period
   realtime  TP = 8.0ns,  // 125MHz
   // DUT configuration
@@ -161,37 +161,16 @@ sys_bus_model bus (
   .sys_ack      (sys_ack  ) 
 );
 
-red_pitaya_asg asg (
-  // DAC
-  .dac_clk_i      (clk      ),
-  .dac_rstn_i     (rstn     ),
-  .dac_a_o        (dac_a    ),  // CH 1
-  .dac_b_o        (dac_b    ),  // CH 2
-  // trigger
-  .trig_a_i       (trig     ),
-  .trig_b_i       (trig     ),
-  .trig_out_o     (         ),
-  // System bus
-  .sys_addr       (sys_addr ),
-  .sys_wdata      (sys_wdata),
-  .sys_sel        (sys_sel  ),
-  .sys_wen        (sys_wen  ),
-  .sys_ren        (sys_ren  ),
-  .sys_rdata      (sys_rdata),
-  .sys_err        (sys_err  ),
-  .sys_ack        (sys_ack  )
-);
-
-module asg #(
+asg #(
   // data parameters
-  int unsigned DWO = 14,  // data width for output
+  .DWO (14),  // data width for output
   // buffer parameters
-  int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
-  int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
-)(
+  .CWM (14),  // counter width magnitude (fixed point integer)
+  .CWF (16)   // counter width fraction  (fixed point fraction)
+) asg (
   // system signals
-  clk      ,
-  rstn     ,
+  .clk       (clk ),
+  .rstn      (rstn),
   // DAC
   .sto_dat   (),
   .sto_vld   (),
@@ -200,11 +179,11 @@ module asg #(
   .trig_i    (),
   .trig_o    (),
   // CPU buffer access
-  .bus_ena   (),
-  .bus_wen   (),
-  .bus_addr  (),
-  .bus_wdata (),
-  .bus_rdata (),
+  .bus_ena   (sys_wen|sys_ren),
+  .bus_wen   (sys_wen  ),
+  .bus_addr  (sys_addr ),
+  .bus_wdata (sys_wdata),
+  .bus_rdata (sys_rdata),
   // configuration
   .cfg_size  (),
   .cfg_step  (),

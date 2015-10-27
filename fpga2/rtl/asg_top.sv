@@ -25,7 +25,6 @@
 
 module asg_top #(
   // data parameters
-  int unsigned CWM = 14,  // RAM address width
   int unsigned DWO = 14,  // RAM data width
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
@@ -99,7 +98,6 @@ logic     [ 32-1:0] cfg_rdly;
 
 always_ff @(posedge clk)
 if (rstn == 1'b0) begin
-   ctl_rst   <= '0;
    cfg_tsel  <= '0;
    cfg_wrap  <= '0;
    cfg_size  <= '0;
