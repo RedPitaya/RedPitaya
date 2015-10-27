@@ -1,10 +1,10 @@
 [*]
-[*] GTKWave Analyzer v3.3.65 (w)1999-2015 BSI
-[*] Wed Sep  9 08:08:43 2015
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Tue Oct 27 13:59:34 2015
 [*]
 [dumpfile] "/home/izi/Workplace/redpitaya-pwm/fpga/sim/pwm_tb.vcd"
-[dumpfile_mtime] "Wed Sep  9 08:06:12 2015"
-[dumpfile_size] 29255
+[dumpfile_mtime] "Tue Oct 27 13:58:17 2015"
+[dumpfile_size] 78080
 [savefile] "/home/izi/Workplace/redpitaya-pwm/fpga/sim/pwm_tb.gtkw"
 [timestart] 0
 [size] 1535 1176
@@ -22,6 +22,8 @@ pwm_tb.CCE
 pwm_tb.TP
 pwm_tb.clk
 pwm_tb.rstn
+@29
+pwm_tb.cke
 @800200
 -config
 @28

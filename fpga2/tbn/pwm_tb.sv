@@ -42,7 +42,6 @@ always #(TP/2) clk = ~clk;
 
 initial begin
   // TODO, this are now constants, but should be tested
-  cke = 1'b1;
   ena = 1'b1;
   rng = CCE;
   // initialization
@@ -68,6 +67,19 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
+
+clkdiv #(
+  .CW (8)
+) clkdiv (
+  // system signals
+  .clk      (clk ),
+  .rstn     (rstn),
+  // configuration
+  .ena      (ena),
+  .div      (8'd0),
+  // output
+  .cke      (cke) 
+);
 
 pwm #(
   .CW (CW),
