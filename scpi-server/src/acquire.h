@@ -35,7 +35,7 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t * context);
 scpi_result_t RP_AcqAveraging(scpi_t * context);
 scpi_result_t RP_AcqAveragingQ(scpi_t * context);
 scpi_result_t RP_AcqTriggerSrc(scpi_t * context);
-scpi_result_t RP_AcqTriggerQ(scpi_t *context);
+scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context);
 scpi_result_t RP_AcqTriggerDelay(scpi_t * context);
 scpi_result_t RP_AcqTriggerDelayQ(scpi_t * context);
 scpi_result_t RP_AcqTriggerDelayNs(scpi_t * context);
