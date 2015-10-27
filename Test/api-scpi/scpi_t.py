@@ -2,14 +2,11 @@
 __author__ = "Luka Golinar <luka.golinar@gmail.com>"
 
 #Imports
-import sys
 import redpitaya_scpi as scpi
 import unittest
-import collections
-
 
 #Scpi declaration
-rp_scpi = scpi.scpi('192.168.178.105')
+rp_scpi = scpi.scpi('192.168.1.241')
 
 #Global variables
 rp_dpin_p  = {i: 'DIO'+str(i)+'_P' for i in range(8)}
@@ -28,7 +25,11 @@ rp_nor_range   = rp_ncyc_range[:]
 rp_inp_range   = [i * 100 for i in range(1, 6)]
 rp_channels    = ['CH1', 'CH2', 'MATH']
 rp_scales      = [0.5, 1, 2, 3, 10]
-rp_decimation  = [1, 8, 64, 1024, 8192, 16384]
+rp_decimation  = ['1', '8', '64', '1024', '8192', '65536']
+rp_sampling    = ['100', '10000', '100000', '1000000', '10000000', '125000000']
+rp_trig_dly    = ['10', '1000', '10000', '16500']
+rp_trig_dly_ns = ['10', '100', '250', '500']
+rp_trig_level  = ['10', '100', '1000'] #TODO: Add more options
 
 rp_gen_mode    = ['CONTINUOUS', 'BURST']
 rp_wave_forms  = ['SINE', 'SQUARE', 'TRIANGLE', 'PWM', 'SAWU', 'SAWD']
@@ -110,10 +111,18 @@ class Base(object):
         return rp_scpi.rx_txt()
 
     ## ACQUIRE
-    def rp_decimation(self, decimation):
+    def rp_smpl_dec(self, decimation):
+        #Decimation
         rp_scpi.tx_txt('ACQ:DEC ' + decimation)
         rp_scpi.tx_txt('ACQ:DEC?')
-        return rp_scpi.rx_txt()
+        if(rp_scpi.rx_txt() != decimation): return False
+        #Smpl-rate
+        '''
+        rp_scpi.tx_txt('ACQ:SRAT?')
+        sample_rate = rp_scpi.rx_txt().replace('\n\r', '')[:-3]
+        if(rp_scpi.rx_txt() != (decimation) / )
+        '''
+        return True
 
     def rp_sampling(self, rate):
         rp_scpi.tx_txt('ACQ:SRAT ' + rate)
@@ -182,7 +191,7 @@ class Base(object):
         rp_scpi.tx_txt('RP:INIT')
 
         #Enable Red Pitaya digital loop
-        rp_scpi.tx_txt('RP:DIg')
+        rp_scpi.tx_txt('RP:DIG')
         rp_scpi.tx_txt('ACQ:START')
 
         #Set generator options
@@ -207,7 +216,6 @@ class Base(object):
             buff_ctrl[i] = float(buff_ctrl[i].strip('\n'))
 
         rp_scpi.tx_txt('RP:RESET')
-
         return (buff[:] == buff_ctrl[:])
 
 # Main test class
@@ -218,21 +226,21 @@ class MainTest(unittest.TestCase):
 
     ############### LEDS and GPIOs ###############
     def test0200_led(self):
-        for led in range(1, 8):
-            self.assertEquals(Base().rp_led(rp_leds[led], '1'), '1')
-            self.assertEquals(Base().rp_led(rp_leds[led], '0'), '0')
+        for i in rp_leds:
+            self.assertEquals(Base().rp_led(rp_leds[i], '1'), '1')
+            self.assertEquals(Base().rp_led(rp_leds[i], '0'), '0')
 
 
     def test0201_dpin(self):
         #Test pos state
-        for pin in range(1, 8):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '1'), '1')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin], '0'), '0')
+        for pin_p in range(1, 8):
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin_p], '1'), '1')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_p[pin_p], '0'), '0')
 
         #Test neg state
-        for pin in range(len(rp_dpin_p)):
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '1'), '1')
-            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin], '0'), '0')
+        for pin_n in rp_dpin_p:
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin_n], '1'), '1')
+            self.assertEquals(Base().rp_dpin_state(rp_dpin_n[pin_n], '0'), '0')
 
     def test0202_analog_pin(self):
         for a_pin in range(0, 3):
@@ -241,32 +249,27 @@ class MainTest(unittest.TestCase):
 
     ############### SIGNAL GENERATOR ###############
     def test0300_freq(self):
-        for i in range(len(rp_freq_range)):
-            freq = rp_freq_range[i]
+        for freq in rp_freq_range:
             self.assertEquals(float(Base().rp_freq(1, freq)), freq)
             self.assertEquals(float(Base().rp_freq(2, freq)), freq)
 
     def test0301_volt(self):
-        for i in range(len(rp_volt_range)):
-            volt = rp_volt_range[i]
+        for volt in rp_volt_range:
             self.assertAlmostEquals(float(Base().rp_ampl(1, volt)), volt)
             self.assertAlmostEquals(float(Base().rp_ampl(2, volt)), volt)
 
     def test0302_w_form(self):
-        for i in range(len(rp_wave_forms)):
-            w_form = rp_wave_forms[i]
+        for w_form in rp_wave_forms:
             self.assertEquals(Base().rp_w_form(1, w_form), w_form)
             self.assertEquals(Base().rp_w_form(2, w_form), w_form)
 
     def tes0303_offs(self):
-        for i in range(len(rp_offs_range)):
-            offs = rp_offs_range[i]
+        for offs in rp_offs_range:
             self.assertAlmostEquals(float(Base().rp_offs(1, offs)), offs)
             self.assertAlmostEquals(float(Base().rp_offs(2, offs)), offs)
 
     def test0304_phase(self):
-        for i in range(len(rp_phase_range)):
-            phase = rp_phase_range[i]
+        for phase in rp_phase_range:
             if(phase < 0):
                 phase_new = phase + 360
                 self.assertAlmostEquals(float(Base().rp_phase(1, phase)), phase_new)
@@ -276,30 +279,26 @@ class MainTest(unittest.TestCase):
                 self.assertAlmostEquals(float(Base().rp_phase(2, phase)), phase)
 
     def test0305_dcyc(self):
-        for i in range(len(rp_dcyc_range)):
-            dcyc = rp_dcyc_range[i]
+        for dcyc in rp_dcyc_range:
             self.assertEquals(float(Base().rp_dcyc(1, dcyc)), dcyc)
             self.assertEquals(float(Base().rp_dcyc(2, dcyc)), dcyc)
 
     def test0306_ncyc(self):
-        for i in range(len(rp_ncyc_range)):
-            ncyc = rp_ncyc_range[i]
+        for ncyc in rp_ncyc_range:
             self.assertEquals(float(Base().rp_burst_ncyc(1, ncyc)), ncyc)
             self.assertEquals(float(Base().rp_burst_ncyc(2, ncyc)), ncyc)
 
     def test0307_nor(self):
-        for i in range(len(rp_nor_range)):
-            nor = rp_nor_range[i]
+        for nor in rp_nor_range:
             self.assertEquals(float(Base().rp_burst_nor(1, nor)), nor)
             self.assertEquals(float(Base().rp_burst_nor(2, nor)), nor)
 
     def test0308_intp(self):
-        for i in range(len(rp_inp_range)):
-            intp = rp_inp_range[i]
+        for intp in rp_inp_range:
             self.assertEquals(float(Base().rp_burst_intp(1, intp)), intp)
             self.assertEquals(float(Base().rp_burst_intp(2, intp)), intp)
 
-    def test0000_burst_state(self):
+    def test0309_burst_state(self):
         self.assertTrue(Base().rp_burst_state(1))
         self.assertTrue(Base().rp_burst_state(2))
 
@@ -309,6 +308,41 @@ class MainTest(unittest.TestCase):
         assert (Base().generate_wform(2)) is True
 
     ############### SIGNAL ACQUISITION TOOL ###############
+    def test0401_acq_decimation(self):
+        for decimation in rp_decimation:
+            assert (Base().rp_smpl_dec(decimation)) is True
+
+    def test0402_acq_avg(self):
+        self.assertEquals(Base().rp_averaging('ON'), 'ON')
+        self.assertEquals(Base().rp_averaging('OFF'), 'OFF')
+
+    def test0403_trig_dly(self):
+        for delay in rp_trig_dly:
+            self.assertEquals(Base().rp_trigger_delay(delay), delay)
+
+        ''' TODO: Trigger delay in nano seconds
+        for delay_ns in rp_trig_dly_ns:
+            print(delay_ns)
+            self.assertEquals(Base().rp_trigger_delay_ns(delay_ns), delay_ns)
+        '''
+
+    #TODO
+    def test04040_trig_hyst(self):
+        return 0
+
+    def test04050_trig_level(self):
+        return 0
+        '''
+        for lvl in rp_trig_level:
+            self.assertEquals(Base().rp_trigger_level(lvl), lvl)
+        '''
+
+    def test04060_data_units(self):
+        self.assertEquals(Base().rp_data_units('VOLTS'), 'VOLTS')
+        self.assertEquals(Base().rp_data_units('RAW'), 'RAW')
+
+    def test04070_buffer_size(self):
+        self.assertEquals(Base().rp_buffer_size(), '16384')
 
     #TODO: ACQ:WPOS?  ACQ:TPOS?
     #TODO: Arbitrary-waveform. TRAC-DATA
