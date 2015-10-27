@@ -18,6 +18,7 @@ module pwm_tb #(
 // system signals
 logic                  clk ;  // clock
 logic                  rstn;  // reset
+logic                  cke ;  // clock enable (synchronous)
 
 // configuration
 logic                  ena;  // enable
@@ -41,6 +42,7 @@ always #(TP/2) clk = ~clk;
 
 initial begin
   // TODO, this are now constants, but should be tested
+  cke = 1'b1;
   ena = 1'b1;
   rng = CCE;
   // initialization
@@ -74,6 +76,7 @@ pwm #(
   // system signals
   .clk      (clk ),
   .rstn     (rstn),
+  .cke      (cke ),
   // configuration
   .ena      (ena),
   .rng      (rng),

@@ -11,12 +11,13 @@ module pwm #(
   // system signals
   input  logic                  clk ,  // clock
   input  logic                  rstn,  // reset (active low)
+  input  logic                  cke ,  // clock enable (synchronous)
   // configuration
   input  logic                  ena,   // enable
   input  logic         [CW-1:0] rng,   // range
-  // input stream
+  // stream input
   input  logic [OW-1:0][CW-1:0] str_dat,  // data
-  input  logic                  str_vld,  // valid
+  input  logic                  str_vld,  // valid (it is ignored for now
   output logic                  str_rdy,  // ready
   // PWM output
   output logic [OW-1:0]         pwm
@@ -43,14 +44,23 @@ assign str_rdy = nxt == rng;
 generate
 for (genvar i=0; i<OW; i++) begin: out
 
+logic [CW-1:0] dat;
+
+// stream input data copy
+always_ff @(posedge clk)
+if (~rstn)            dat <= '0;
+else begin
+  if (ena & str_rdy)  dat <= str_dat[i];
+end
+
 // PWM output
 always_ff @(posedge clk)
-if (~rstn)                       pwm[i] <= 1'b0;
+if (~rstn)                pwm[i] <= 1'b0;
 else begin
   if (ena) begin
-    if      (cnt == 0         )  pwm[i] <= |str_dat[i];
-    else if (cnt == str_dat[i])  pwm[i] <= 1'b0;
-  end else                       pwm[i] <= 1'b0;
+    if      (cnt == 0  )  pwm[i] <= |dat;
+    else if (cnt == dat)  pwm[i] <= 1'b0;
+  end else                pwm[i] <= 1'b0;
 end
 
 end: out
