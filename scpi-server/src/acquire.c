@@ -307,7 +307,7 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqTriggerQ(scpi_t *context) {
+scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context) {
     
     const char *trig_name;
     // get trigger source
