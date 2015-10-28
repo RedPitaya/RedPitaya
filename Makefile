@@ -149,6 +149,8 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGIN
 	cp -r $(INSTALL_DIR)/* $(TARGET)
 	cp -r OS/filesystem/*  $(TARGET)
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
+	# copy configuration file for WiFi access point
+	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
 	# copy Linaro runtime library to fix dependency issues on Debian
 	# TODO: find a better solution
 	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
