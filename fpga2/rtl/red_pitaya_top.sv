@@ -361,9 +361,9 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(da
 //---------------------------------------------------------------------------------
 //  House Keeping
 
-logic [  8-1: 0] exp_p_in , exp_n_in ;
-logic [  8-1: 0] exp_p_out, exp_n_out;
-logic [  8-1: 0] exp_p_dir, exp_n_dir;
+logic [8-1:0] exp_p_in , exp_n_in ;
+logic [8-1:0] exp_p_out, exp_n_out;
+logic [8-1:0] exp_p_dir, exp_n_dir;
 
 red_pitaya_hk i_hk (
   // system signals
@@ -433,29 +433,25 @@ red_pitaya_scope i_scope (
 // ASG (arbitrary signal generators)
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-asg_top asg_top [2-1:0] (
+red_pitaya_asg i_asg (
   // system signals
-  .clk             (adc_clk ),
-  .rstn            (adc_rstn),
-   // stream output
-  .str_dat         ({asg_b, asg_a}),
-  .str_vld         (              ),
-  .str_rdy         (1'b1          ),
-  // triggers
-  .trg_ext         (exp_p_in[0] ),
-  .trg_swo         (exp_p_in[0] ),
-  .trg_out         (trig_asg_out),
+  .dac_clk_i       (adc_clk ),
+  .dac_rstn_i      (adc_rstn),
+   // DAC
+  .dac_a_o         (asg_a       ),
+  .dac_b_o         (asg_b       ),
+  .trig_a_i        (exp_p_in[0] ),
+  .trig_b_i        (exp_p_in[0] ),
+  .trig_out_o      (trig_asg_out),
   // System bus
-  .sys_addr        ({sys_addr           , sys_addr           }),
-  .sys_wdata       ({sys_wdata          , sys_wdata          }),
-  .sys_sel         ({sys_sel            , sys_sel            }),
-  .sys_wen         ({sys_wen  [2]       , sys_wen  [2]       }),
-  .sys_ren         ({sys_ren  [2]       , sys_ren  [2]       }),
-  .sys_rdata       ({sys_rdata[2*32+:32], sys_rdata[2*32+:32]}),
-  .sys_err         ({sys_err  [2]       , sys_err  [2]       }),
-  .sys_ack         ({sys_ack  [2]       , sys_ack  [2]       })
+  .sys_addr        (sys_addr           ),
+  .sys_wdata       (sys_wdata          ),
+  .sys_sel         (sys_sel            ),
+  .sys_wen         (sys_wen  [2]       ),
+  .sys_ren         (sys_ren  [2]       ),
+  .sys_rdata       (sys_rdata[2*32+:32]),
+  .sys_err         (sys_err  [2]       ),
+  .sys_ack         (sys_ack  [2]       )
 );
 
 //---------------------------------------------------------------------------------
