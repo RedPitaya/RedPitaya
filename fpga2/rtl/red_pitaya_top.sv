@@ -297,15 +297,15 @@ BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
 BUFG bufg_pdm_clk    (.O (pdm_clk   ), .I (pll_pdm_clk   ));
 
 // ADC reset (active low) 
-always @(posedge adc_clk)
+always_ff @(posedge adc_clk)
 adc_rstn <=  frstn[0] &  pll_locked;
 
 // DAC reset (active high)
-always @(posedge dac_clk_1x)
+always_ff @(posedge dac_clk_1x)
 dac_rst  <= ~frstn[0] | ~pll_locked;
 
 // PDM reset (active low)
-always @(posedge pdm_clk)
+always_ff @(posedge pdm_clk)
 pdm_rstn <=  frstn[0] &  pll_locked;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,15 +314,13 @@ pdm_rstn <=  frstn[0] &  pll_locked;
 
 // generating ADC clock is disabled
 assign adc_clk_o = 2'b10;
-//ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
-//ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
 
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
 // IO block registers should be used here
 // lowest 2 bits reserved for 16bit ADC
-always @(posedge adc_clk)
+always_ff @(posedge adc_clk)
 begin
   adc_dat_a <= adc_dat_a_i[16-1:2];
   adc_dat_b <= adc_dat_b_i[16-1:2];
@@ -345,7 +343,7 @@ assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}
 assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
 
 // output registers + signed to unsigned (also to negative slope)
-always @(posedge dac_clk_1x)
+always_ff @(posedge dac_clk_1x)
 begin
   dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
   dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
@@ -455,26 +453,26 @@ red_pitaya_asg asg (
   .sys_ack         (sys_ack  [2]       )
 );
 
-//---------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 //  MIMO PID controller
+////////////////////////////////////////////////////////////////////////////////
 
 red_pitaya_pid pid (
-   // signals
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
-  .dat_a_i         (  adc_a                      ),  // in 1
-  .dat_b_i         (  adc_b                      ),  // in 2
-  .dat_a_o         (  pid_a                      ),  // out 1
-  .dat_b_o         (  pid_b                      ),  // out 2
+  // system signals
+  .clk        (adc_clk ),
+  .rstn       (adc_rstn),
+  // signals
+  .dat_i      ({adc_b, adc_a}),
+  .dat_o      ({pid_b, pid_a}),
   // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[3]                 ),  // write enable
-  .sys_ren         (  sys_ren[3]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 3*32+31: 3*32]  ),  // read data
-  .sys_err         (  sys_err[3]                 ),  // error indicator
-  .sys_ack         (  sys_ack[3]                 )   // acknowledge signal
+  .sys_addr   (sys_addr           ),
+  .sys_wdata  (sys_wdata          ),
+  .sys_sel    (sys_sel            ),
+  .sys_wen    (sys_wen  [3]       ),
+  .sys_ren    (sys_ren  [3]       ),
+  .sys_rdata  (sys_rdata[3+32+:32]),
+  .sys_err    (sys_err  [3]       ),
+  .sys_ack    (sys_ack  [3]       )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
