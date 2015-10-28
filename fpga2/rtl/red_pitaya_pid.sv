@@ -182,10 +182,10 @@ if (sys_ren) begin
     sys_rdata <= {{32-CNO*CNI{1'b0}}, set_irst};
   end else begin
     casez (sys_addr[3:0])
-      4'h0 : sys_rdata <= {{32-14{1'b0}}, set_sp [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
-      4'h4 : sys_rdata <= {{32-14{1'b0}}, set_kp [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
-      4'h8 : sys_rdata <= {{32-14{1'b0}}, set_ki [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
-      4'hC : sys_rdata <= {{32-14{1'b0}}, set_kd [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
+      4'b00?? : sys_rdata <= {{32-14{1'b0}}, set_sp [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
+      4'b01?? : sys_rdata <= {{32-14{1'b0}}, set_kp [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
+      4'b10?? : sys_rdata <= {{32-14{1'b0}}, set_ki [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
+      4'b11?? : sys_rdata <= {{32-14{1'b0}}, set_kd [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
     endcase
   end
 end
