@@ -418,14 +418,14 @@ red_pitaya_scope i_scope (
   .axi0_werr_i   (axi0_werr  ),  .axi1_werr_i   (axi1_werr  ),
   .axi0_wrdy_i   (axi0_wrdy  ),  .axi1_wrdy_i   (axi1_wrdy  ),
   // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[1]                 ),  // write enable
-  .sys_ren         (  sys_ren[1]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 1*32+31: 1*32]  ),  // read data
-  .sys_err         (  sys_err[1]                 ),  // error indicator
-  .sys_ack         (  sys_ack[1]                 )   // acknowledge signal
+  .sys_addr      (sys_addr           ),
+  .sys_wdata     (sys_wdata          ),
+  .sys_sel       (sys_sel            ),
+  .sys_wen       (sys_wen  [1]       ),
+  .sys_ren       (sys_ren  [1]       ),
+  .sys_rdata     (sys_rdata[1*32+:32]),
+  .sys_err       (sys_err  [1]       ),
+  .sys_ack       (sys_ack  [1]       )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,7 +470,7 @@ red_pitaya_pid pid (
   .sys_sel    (sys_sel            ),
   .sys_wen    (sys_wen  [3]       ),
   .sys_ren    (sys_ren  [3]       ),
-  .sys_rdata  (sys_rdata[3+32+:32]),
+  .sys_rdata  (sys_rdata[3*32+:32]),
   .sys_err    (sys_err  [3]       ),
   .sys_ack    (sys_ack  [3]       )
 );
