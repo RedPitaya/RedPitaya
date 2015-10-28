@@ -1,81 +1,71 @@
-/**
- * $Id: red_pitaya_hk.v 961 2014-01-21 11:40:39Z matej.oblak $
- *
- * @brief Red Pitaya house keeping.
- *
- * @Author Matej Oblak
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in Verilog hardware description language (HDL).
- * Please visit http://en.wikipedia.org/wiki/Verilog
- * for more details on the language used herein.
- */
+////////////////////////////////////////////////////////////////////////////////
+// Module: housekeeping
+// Authors: Matej Oblak, Iztok Jeras <iztok.jeras@redpitaya.com>
+// (c) Red Pitaya  (redpitaya.com)
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * GENERAL DESCRIPTION:
- *
- * House keeping module takes care of system identification.
- *
- *
- * This module takes care of system identification via DNA readout at startup and
- * ID register which user can define at compile time.
- *
- * Beside that it is currently also used to test expansion connector and for
- * driving LEDs.
- * 
- */
+////////////////////////////////////////////////////////////////////////////////
+// GENERAL DESCRIPTION:
+//
+// House keeping module takes care of system identification.
+//
+// This module takes care of system identification via DNA readout at startup and
+// ID register which user can define at compile time.
+//
+// Beside that it is currently also used to test expansion connector and for
+// driving LEDs.
+////////////////////////////////////////////////////////////////////////////////
 
 module red_pitaya_hk #(
-  parameter DWL = 8, // data width for LED
-  parameter DWE = 8, // data width for extension
-  parameter [57-1:0] DNA = 57'h0823456789ABCDE
+  unsigned int DWL = 8, // data width for LED
+  unsigned int DWE = 8, // data width for extension
+  bit [57-1:0] DNA = 57'h0823456789ABCDE
 )(
   // system signals
-  input                clk_i      ,  // clock
-  input                rstn_i     ,  // reset - active low
+  input  logic           clk_i      ,  // clock
+  input  logic           rstn_i     ,  // reset - active low
   // LED
-  output reg [DWL-1:0] led_o      ,  // LED output
+  output logic [DWL-1:0] led_o      ,  // LED output
   // global configuration
-  output reg           digital_loop,
+  output logic           digital_loop,
   // Expansion connector
-  input      [DWE-1:0] exp_p_dat_i,  // exp. con. input data
-  output reg [DWE-1:0] exp_p_dat_o,  // exp. con. output data
-  output reg [DWE-1:0] exp_p_dir_o,  // exp. con. 1-output enable
-  input      [DWE-1:0] exp_n_dat_i,  //
-  output reg [DWE-1:0] exp_n_dat_o,  //
-  output reg [DWE-1:0] exp_n_dir_o,  //
+  input  logic [DWE-1:0] exp_p_dat_i,  // exp. con. input data
+  output logic [DWE-1:0] exp_p_dat_o,  // exp. con. output data
+  output logic [DWE-1:0] exp_p_dir_o,  // exp. con. 1-output enable
+  input  logic [DWE-1:0] exp_n_dat_i,  //
+  output logic [DWE-1:0] exp_n_dat_o,  //
+  output logic [DWE-1:0] exp_n_dir_o,  //
   // System bus
-  input      [ 32-1:0] sys_addr   ,  // bus address
-  input      [ 32-1:0] sys_wdata  ,  // bus write data
-  input      [  4-1:0] sys_sel    ,  // bus write byte select
-  input                sys_wen    ,  // bus write enable
-  input                sys_ren    ,  // bus read enable
-  output reg [ 32-1:0] sys_rdata  ,  // bus read data
-  output reg           sys_err    ,  // bus error indicator
-  output reg           sys_ack       // bus acknowledge signal
+  input  logic [ 32-1:0] sys_addr   ,  // bus address
+  input  logic [ 32-1:0] sys_wdata  ,  // bus write data
+  input  logic [  4-1:0] sys_sel    ,  // bus write byte select
+  input  logic           sys_wen    ,  // bus write enable
+  input  logic           sys_ren    ,  // bus read enable
+  output logic [ 32-1:0] sys_rdata  ,  // bus read data
+  output logic           sys_err    ,  // bus error indicator
+  output logic           sys_ack       // bus acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
-//
+////////////////////////////////////////////////////////////////////////////////
 //  Read device DNA
+////////////////////////////////////////////////////////////////////////////////
 
-wire           dna_dout ;
-reg            dna_clk  ;
-reg            dna_read ;
-reg            dna_shift;
-reg  [ 9-1: 0] dna_cnt  ;
-reg  [57-1: 0] dna_value;
-reg            dna_done ;
+logic          dna_dout ;
+logic          dna_clk  ;
+logic          dna_read ;
+logic          dna_shift;
+logic [ 9-1:0] dna_cnt  ;
+logic [57-1:0] dna_value;
+logic          dna_done ;
 
-always @(posedge clk_i)
+always_ff @(posedge clk_i)
 if (rstn_i == 1'b0) begin
-  dna_clk   <=  1'b0;
-  dna_read  <=  1'b0;
-  dna_shift <=  1'b0;
-  dna_cnt   <=  9'd0;
-  dna_value <= 57'd0;
-  dna_done  <=  1'b0;
+  dna_clk   <= '0;
+  dna_read  <= '0;
+  dna_shift <= '0;
+  dna_cnt   <= '0;
+  dna_value <= '0;
+  dna_done  <= '0;
 end else begin
   if (!dna_done)
     dna_cnt <= dna_cnt + 1'd1;
@@ -93,25 +83,25 @@ end
 
 // parameter specifies a sample 57-bit DNA value for simulation
 DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
-  .DOUT  ( dna_dout   ), // 1-bit output: DNA output data.
-  .CLK   ( dna_clk    ), // 1-bit input: Clock input.
-  .DIN   ( 1'b0       ), // 1-bit input: User data input pin.
-  .READ  ( dna_read   ), // 1-bit input: Active high load DNA, active low read input.
-  .SHIFT ( dna_shift  )  // 1-bit input: Active high shift enable input.
+  .DOUT  (dna_dout ), // 1-bit output: DNA output data.
+  .CLK   (dna_clk  ), // 1-bit input: Clock input.
+  .DIN   (1'b0     ), // 1-bit input: User data input pin.
+  .READ  (dna_read ), // 1-bit input: Active high load DNA, active low read input.
+  .SHIFT (dna_shift)  // 1-bit input: Active high shift enable input.
 );
 
-//---------------------------------------------------------------------------------
-//
-//  Desing identification
+////////////////////////////////////////////////////////////////////////////////
+// Desing identification
+////////////////////////////////////////////////////////////////////////////////
 
-wire [32-1: 0] id_value;
+logic [32-1:0] id_value;
 
-assign id_value[31: 4] = 28'h0; // reserved
-assign id_value[ 3: 0] =  4'h1; // board type   1 - release 1
+assign id_value[31:4] = 28'h0; // reserved
+assign id_value[ 3:0] =  4'h1; // board type   1 - release 1
 
-//---------------------------------------------------------------------------------
-//
+////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
+////////////////////////////////////////////////////////////////////////////////
 
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
@@ -160,4 +150,4 @@ end else begin
   endcase
 end
 
-endmodule
+endmodule: red_pitaya_hk
