@@ -1,3 +1,12 @@
+# Release 0.94 RC17
+
+Changes:
+- fixed missing configuration file for WiFi access point mode
+- cleanup of analog output PWM and digital IO API code, it is now reduced to a single layer
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ SPI interface is not working (seems to be a kernel configuration issue)
+
 # Release 0.94 RC16
 
 Changes:
