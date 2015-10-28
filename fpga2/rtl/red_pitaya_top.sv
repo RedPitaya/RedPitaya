@@ -358,41 +358,42 @@ ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(da
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
-//---------------------------------------------------------------------------------
-//  House Keeping
+////////////////////////////////////////////////////////////////////////////////
+// Housekeeping
+////////////////////////////////////////////////////////////////////////////////
 
-logic [8-1:0] exp_p_in , exp_n_in ;
-logic [8-1:0] exp_p_out, exp_n_out;
-logic [8-1:0] exp_p_dir, exp_n_dir;
+logic [8-1:0] exp_p_i , exp_n_i ;
+logic [8-1:0] exp_p_o , exp_n_o ;
+logic [8-1:0] exp_p_oe, exp_n_oe;
 
-red_pitaya_hk i_hk (
+red_pitaya_hk hk (
   // system signals
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
+  .clk           (adc_clk ),
+  .rstn          (adc_rstn),
   // LED
-  .led_o           (  led_o                      ),  // LED output
+  .led_o         (led_o),
   // global configuration
-  .digital_loop    (  digital_loop               ),
+  .digital_loop  (digital_loop),
   // Expansion connector
-  .exp_p_dat_i     (  exp_p_in                   ),  // input data
-  .exp_p_dat_o     (  exp_p_out                  ),  // output data
-  .exp_p_dir_o     (  exp_p_dir                  ),  // 1-output enable
-  .exp_n_dat_i     (  exp_n_in                   ),
-  .exp_n_dat_o     (  exp_n_out                  ),
-  .exp_n_dir_o     (  exp_n_dir                  ),
+  .exp_p_i       (exp_p_i ),
+  .exp_p_o       (exp_p_o ),
+  .exp_p_oe      (exp_p_oe),
+  .exp_n_i       (exp_n_i ),
+  .exp_n_o       (exp_n_o ),
+  .exp_n_oe      (exp_n_oe),
    // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[0]                 ),  // write enable
-  .sys_ren         (  sys_ren[0]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 0*32+31: 0*32]  ),  // read data
-  .sys_err         (  sys_err[0]                 ),  // error indicator
-  .sys_ack         (  sys_ack[0]                 )   // acknowledge signal
+  .sys_addr      (sys_addr           ),
+  .sys_wdata     (sys_wdata          ),
+  .sys_sel       (sys_sel            ),
+  .sys_wen       (sys_wen  [0]       ),
+  .sys_ren       (sys_ren  [0]       ),
+  .sys_rdata     (sys_rdata[0*32+:32]),
+  .sys_err       (sys_err  [0]       ),
+  .sys_ack       (sys_ack  [0]       ) 
 );
 
-IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
-IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
+IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
+IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_oe));
 
 //---------------------------------------------------------------------------------
 //  Oscilloscope application
@@ -405,7 +406,7 @@ red_pitaya_scope i_scope (
   .adc_b_i         (  adc_b                      ),  // CH 2
   .adc_clk_i       (  adc_clk                    ),  // clock
   .adc_rstn_i      (  adc_rstn                   ),  // reset - active low
-  .trig_ext_i      (  exp_p_in[0]                ),  // external trigger
+  .trig_ext_i      (  exp_p_i[0]                 ),  // external trigger
   .trig_asg_i      (  trig_asg_out               ),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
@@ -440,8 +441,8 @@ red_pitaya_asg i_asg (
    // DAC
   .dac_a_o         (asg_a       ),
   .dac_b_o         (asg_b       ),
-  .trig_a_i        (exp_p_in[0] ),
-  .trig_b_i        (exp_p_in[0] ),
+  .trig_a_i        (exp_p_i[0]  ),
+  .trig_b_i        (exp_p_i[0]  ),
   .trig_out_o      (trig_asg_out),
   // System bus
   .sys_addr        (sys_addr           ),
