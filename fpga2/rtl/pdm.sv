@@ -11,23 +11,21 @@ module pdm #(
   // system signals
   input  logic                    clk ,  // clock
   input  logic                    rstn,  // reset (active low)
+  input  logic                    cke ,  // clock enable (synchronous)
   // configuration
   input  logic                    ena,   // enable
   input  logic          [DWC-1:0] rng,   // range
-  // input stream
+  // stream input
   input  logic [CHN-1:0][DWC-1:0] str_dat,  // data
-  input  logic                    str_vld,  // valid
+  input  logic                    str_vld,  // valid (it is ignored for now
   output logic                    str_rdy,  // ready
   // PDM output
   output logic [CHN-1:0]          pdm
 );
 
 // local signals
-logic          [DWC-1:0] cnt;  // counter current value
-logic          [DWC-1:0] nxt;  // counter next value
-logic [CHN-1:0][DWC-1:0] acu;  // accumulator
-logic [CHN-1:0][DWC  :0] sum;  // summation
-logic [CHN-1:0][DWC  :0] sub;  // subtraction
+logic [DWC-1:0] cnt;  // counter current value
+logic [DWC-1:0] nxt;  // counter next value
 
 // counter current value
 always_ff @(posedge clk)
@@ -38,7 +36,7 @@ else begin
 end
 
 // counter next value
-assign nxt = cnt + 'd1;
+assign nxt = cnt + cke;
 
 // counter cycle end
 assign str_rdy = nxt == rng;
@@ -46,22 +44,35 @@ assign str_rdy = nxt == rng;
 generate
 for (genvar i=0; i<CHN; i++) begin: for_chn
 
+logic [DWC-1:0] dat;
+
+// stream input data copy
+always_ff @(posedge clk)
+if (~rstn)            dat <= '0;
+else begin
+  if (ena & str_rdy)  dat <= str_dat[i];
+end
+
+logic [DWC-1:0] acu;  // accumulator
+logic [DWC  :0] sum;  // summation
+logic [DWC  :0] sub;  // subtraction
+
 // accumulator
 always_ff @(posedge clk)
-if (~rstn)  acu[i] <= '0;
+if (~rstn)  acu <= '0;
 else begin
-  if (ena)  acu[i] <= ~sub[i][DWC] ? sub[i][DWC-1:0] : sum[i][DWC-1:0];
-  else      acu[i] <= '0;
+  if (ena)  acu <= ~sub[DWC] ? sub[DWC-1:0] : sum[DWC-1:0];
+  else      acu <= '0;
 end
 
 // summation
-assign sum[i] = acu[i] + str_dat[i];
+assign sum = acu + dat;
 
 // subtraction
-assign sub[i] = sum[i] - rng;
+assign sub = sum - rng;
 
 // PDM output
-assign pdm[i] = ena & (~sub[i][DWC] | ~|sub[i][DWC-1:0]);
+assign pdm[i] = ena & (~sub[DWC] | ~|sub[DWC-1:0]);
 
 end: for_chn
 endgenerate

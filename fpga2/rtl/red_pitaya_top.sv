@@ -511,13 +511,18 @@ pdm #(
   .CHN (PDM_CHN)
 ) pdm (
   // system signals
-  .clk   (pdm_clk ),
-  .rstn  (pdm_rstn),
+  .clk      (pdm_clk ),
+  .rstn     (pdm_rstn),
+  .cke      (1'b1),
   // configuration
-  .cfg   (pdm_cfg),
+  .ena      (1'b1),
+  .rng      (255),
+  // input stream
+  .str_dat  (pdm_cfg),
+  .str_vld  (1'b1   ),
+  .str_rdy  (       ),
   // PWM outputs
-  .pdm_o (dac_pwm_o),
-  .pdm_s ()
+  .pdm      (dac_pwm_o)
 );
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -107,6 +107,7 @@ pdm #(
   // system signals
   .clk      (clk ),
   .rstn     (rstn),
+  .cke      (cke ),
   // configuration
   .ena      (ena),
   .rng      (rng),
