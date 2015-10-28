@@ -5,21 +5,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module clkdiv #(
-  int unsigned CW = 8  // counter width (resolution)
+  int unsigned DWC = 8  // data width counter (resolution)
 )(
   // system signals
-  input  logic                  clk ,  // clock
-  input  logic                  rstn,  // reset (active low)
+  input  logic           clk ,  // clock
+  input  logic           rstn,  // reset (active low)
   // configuration
-  input  logic                  ena,   // enable
-  input  logic         [CW-1:0] div,   // divider (division ratio - 1)
+  input  logic           ena,   // enable
+  input  logic [DWC-1:0] div,   // divider (division ratio - 1)
   // output
-  output logic                  cke    // clock enable (synchronous)
+  output logic           cke    // clock enable (synchronous)
 );
 
 // local signals
-logic [CW-1:0] cnt;  // counter current value
-logic          clr;  // counter clear
+logic [DWC-1:0] cnt;  // counter current value
+logic           clr;  // counter clear
 
 // counter current value
 always_ff @(posedge clk)

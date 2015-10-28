@@ -22,10 +22,10 @@ module red_pitaya_hk #(
   bit [57-1:0] DNA = 57'h0823456789ABCDE
 )(
   // system signals
-  input  logic           clk      ,  // clock
-  input  logic           rstn     ,  // reset - active low
+  input  logic           clk ,  // clock
+  input  logic           rstn,  // reset - active low
   // LED
-  output logic [DWL-1:0] led_o      ,  // LED output
+  output logic [DWL-1:0] led_o,  // LED output
   // global configuration
   output logic           digital_loop,
   // expansion connector

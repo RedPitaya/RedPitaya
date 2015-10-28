@@ -82,8 +82,8 @@ module red_pitaya_top (
   output logic          dac_sel_o  ,  // DAC channel select
   output logic          dac_clk_o  ,  // DAC clock
   output logic          dac_rst_o  ,  // DAC reset
-  // PWM DAC
-  output logic [ 4-1:0] dac_pwm_o  ,  // serial PWM DAC
+  // PDM DAC
+  output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PDM DAC
   // XADC
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
@@ -233,15 +233,15 @@ logic                 pll_dac_clk_1x;
 logic                 pll_dac_clk_2x;
 logic                 pll_dac_clk_2p;
 logic                 pll_ser_clk;
-logic                 pll_pwm_clk;
+logic                 pll_pdm_clk;
 logic                 pll_locked;
 
 // fast serial signals
 logic                 ser_clk ;
 
-// PWM clock and reset
-logic                 pwm_clk ;
-logic                 pwm_rstn;
+// PDM clock and reset
+logic                 pdm_clk ;
+logic                 pdm_rstn;
 
 // ADC signals
 logic                 adc_clk;
@@ -284,7 +284,7 @@ red_pitaya_pll pll (
   .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
   .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
   .clk_ser     (pll_ser_clk   ),  // fast serial clock
-  .clk_pwm     (pll_pwm_clk   ),  // PWM clock
+  .clk_pdm     (pll_pdm_clk   ),  // PDM clock
   // status outputs
   .pll_locked  (pll_locked)
 );
@@ -294,7 +294,7 @@ BUFG bufg_dac_clk_1x (.O (dac_clk_1x), .I (pll_dac_clk_1x));
 BUFG bufg_dac_clk_2x (.O (dac_clk_2x), .I (pll_dac_clk_2x));
 BUFG bufg_dac_clk_2p (.O (dac_clk_2p), .I (pll_dac_clk_2p));
 BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
-BUFG bufg_pwm_clk    (.O (pwm_clk   ), .I (pll_pwm_clk   ));
+BUFG bufg_pdm_clk    (.O (pdm_clk   ), .I (pll_pdm_clk   ));
 
 // ADC reset (active low) 
 always @(posedge adc_clk)
@@ -304,9 +304,9 @@ adc_rstn <=  frstn[0] &  pll_locked;
 always @(posedge dac_clk_1x)
 dac_rst  <= ~frstn[0] | ~pll_locked;
 
-// PWM reset (active low)
-always @(posedge pwm_clk)
-pwm_rstn <=  frstn[0] &  pll_locked;
+// PDM reset (active low)
+always @(posedge pdm_clk)
+pdm_rstn <=  frstn[0] &  pll_locked;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ADC IO
@@ -434,7 +434,7 @@ red_pitaya_scope i_scope (
 // ASG (arbitrary signal generators)
 ////////////////////////////////////////////////////////////////////////////////
 
-red_pitaya_asg i_asg (
+red_pitaya_asg asg (
   // system signals
   .dac_clk_i       (adc_clk ),
   .dac_rstn_i      (adc_rstn),
@@ -458,7 +458,7 @@ red_pitaya_asg i_asg (
 //---------------------------------------------------------------------------------
 //  MIMO PID controller
 
-red_pitaya_pid i_pid (
+red_pitaya_pid pid (
    // signals
   .clk_i           (  adc_clk                    ),  // clock
   .rstn_i          (  adc_rstn                   ),  // reset - active low
@@ -477,44 +477,47 @@ red_pitaya_pid i_pid (
   .sys_ack         (  sys_ack[3]                 )   // acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
-//  Analog mixed signals
-//  XADC and slow PWM DAC control
+////////////////////////////////////////////////////////////////////////////////
+// Analog mixed signals (PDM analog outputs)
+////////////////////////////////////////////////////////////////////////////////
 
-logic [ 24-1: 0] pwm_cfg_a;
-logic [ 24-1: 0] pwm_cfg_b;
-logic [ 24-1: 0] pwm_cfg_c;
-logic [ 24-1: 0] pwm_cfg_d;
+localparam int unsigned PDM_CHN = 4;
+localparam int unsigned PDM_DWC = 8;
 
-red_pitaya_ams i_ams (
-   // power test
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
-  // PWM configuration
-  .dac_a_o         (  pwm_cfg_a                  ),
-  .dac_b_o         (  pwm_cfg_b                  ),
-  .dac_c_o         (  pwm_cfg_c                  ),
-  .dac_d_o         (  pwm_cfg_d                  ),
-   // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[4]                 ),  // write enable
-  .sys_ren         (  sys_ren[4]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
-  .sys_err         (  sys_err[4]                 ),  // error indicator
-  .sys_ack         (  sys_ack[4]                 )   // acknowledge signal
+logic [PDM_CHN-1:0] [PDM_DWC-1:0] pdm_cfg;
+
+red_pitaya_ams #(
+  .DWC (PDM_DWC),
+  .CHN (PDM_CHN)
+) ams (
+  // system signals
+  .clk        (adc_clk ),
+  .rstn       (adc_rstn),
+  // PDM configuration
+  .pdm_cfg    (pdm_cfg),
+  // system bus
+  .sys_addr   (sys_addr           ),
+  .sys_wdata  (sys_wdata          ),
+  .sys_sel    (sys_sel            ),
+  .sys_wen    (sys_wen  [4]       ),
+  .sys_ren    (sys_ren  [4]       ),
+  .sys_rdata  (sys_rdata[4*32+:32]),
+  .sys_err    (sys_err  [4]       ),
+  .sys_ack    (sys_ack  [4]       )
 );
 
-red_pitaya_pwm pwm [4-1:0] (
+pdm #(
+  .DWC (PDM_DWC),
+  .CHN (PDM_CHN)
+) pdm (
   // system signals
-  .clk   (pwm_clk ),
-  .rstn  (pwm_rstn),
+  .clk   (pdm_clk ),
+  .rstn  (pdm_rstn),
   // configuration
-  .cfg   ({pwm_cfg_d, pwm_cfg_c, pwm_cfg_b, pwm_cfg_a}),
+  .cfg   (pdm_cfg),
   // PWM outputs
-  .pwm_o (dac_pwm_o),
-  .pwm_s ()
+  .pdm_o (dac_pwm_o),
+  .pdm_s ()
 );
 
 ////////////////////////////////////////////////////////////////////////////////

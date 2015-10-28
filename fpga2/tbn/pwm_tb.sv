@@ -10,28 +10,28 @@ module pwm_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // PWM parameters
-  int unsigned CW = 4,  // counter width (resolution)
-  int unsigned OW = 4,  // output  width
-  bit [CW-1:0] CCE = 2**CW-1  // 100% value
+  int unsigned DWC = 4,  // counter width (resolution)
+  int unsigned CHN = 4,  // output  width
+  bit [DWC-1:0] CCE = 2**DWC-1  // 100% value
 );
 
 // system signals
-logic                  clk ;  // clock
-logic                  rstn;  // reset
-logic                  cke ;  // clock enable (synchronous)
+logic                    clk ;  // clock
+logic                    rstn;  // reset
+logic                    cke ;  // clock enable (synchronous)
 
 // configuration
-logic                  ena;  // enable
-logic         [CW-1:0] rng;  // range
+logic                    ena;  // enable
+logic          [DWC-1:0] rng;  // range
 
 // data stream
-logic [OW-1:0][CW-1:0] str_dat;
-logic                  str_vld;
-logic                  str_rdy;
+logic [CHN-1:0][DWC-1:0] str_dat;
+logic                    str_vld;
+logic                    str_rdy;
 
 // signals to PWM/PDM IO
-logic [OW-1:0]         pwm;
-logic [OW-1:0]         pdm;
+logic [CHN-1:0]          pwm;
+logic [CHN-1:0]          pdm;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -54,12 +54,12 @@ initial begin
   str_vld = 1'b1;
   // test sequence
   for (int unsigned i=0; i<=CCE; i++) begin
-    str_dat <= {OW{i[CW-1:0]}};
+    str_dat <= {CHN{i[DWC-1:0]}};
     @ (posedge clk);
     while (~str_rdy) @ (posedge clk);
   end
   // end simulation
-  repeat(2**CW) @(posedge clk);
+  repeat(2**DWC) @(posedge clk);
   repeat(4) @(posedge clk);
   $finish();
 end
@@ -69,7 +69,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 clkdiv #(
-  .CW (8)
+  .DWC (8)
 ) clkdiv (
   // system signals
   .clk      (clk ),
@@ -82,8 +82,8 @@ clkdiv #(
 );
 
 pwm #(
-  .CW (CW),
-  .OW (OW)
+  .DWC (DWC),
+  .CHN (CHN)
 ) dut_pwm (
   // system signals
   .clk      (clk ),
@@ -101,8 +101,8 @@ pwm #(
 );
 
 pdm #(
-  .CW (CW),
-  .OW (OW)
+  .DWC (DWC),
+  .CHN (CHN)
 ) dut_pdm (
   // system signals
   .clk      (clk ),

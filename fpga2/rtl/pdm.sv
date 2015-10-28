@@ -5,29 +5,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module pdm #(
-  int unsigned CW = 8,  // counter width (resolution)
-  int unsigned OW = 1   // output  width
+  int unsigned DWC = 8,  // counter width (resolution)
+  int unsigned CHN = 1   // output  width
 )(
   // system signals
-  input  logic                  clk ,  // clock
-  input  logic                  rstn,  // reset (active low)
+  input  logic                    clk ,  // clock
+  input  logic                    rstn,  // reset (active low)
   // configuration
-  input  logic                  ena,   // enable
-  input  logic         [CW-1:0] rng,   // range
+  input  logic                    ena,   // enable
+  input  logic          [DWC-1:0] rng,   // range
   // input stream
-  input  logic [OW-1:0][CW-1:0] str_dat,  // data
-  input  logic                  str_vld,  // valid
-  output logic                  str_rdy,  // ready
+  input  logic [CHN-1:0][DWC-1:0] str_dat,  // data
+  input  logic                    str_vld,  // valid
+  output logic                    str_rdy,  // ready
   // PDM output
-  output logic [OW-1:0]         pdm
+  output logic [CHN-1:0]          pdm
 );
 
 // local signals
-logic         [CW-1:0] cnt;  // counter current value
-logic         [CW-1:0] nxt;  // counter next value
-logic [OW-1:0][CW-1:0] acu;  // accumulator
-logic [OW-1:0][CW  :0] sum;  // summation
-logic [OW-1:0][CW  :0] sub;  // subtraction
+logic          [DWC-1:0] cnt;  // counter current value
+logic          [DWC-1:0] nxt;  // counter next value
+logic [CHN-1:0][DWC-1:0] acu;  // accumulator
+logic [CHN-1:0][DWC  :0] sum;  // summation
+logic [CHN-1:0][DWC  :0] sub;  // subtraction
 
 // counter current value
 always_ff @(posedge clk)
@@ -44,13 +44,13 @@ assign nxt = cnt + 'd1;
 assign str_rdy = nxt == rng;
 
 generate
-for (genvar i=0; i<OW; i++) begin: out
+for (genvar i=0; i<CHN; i++) begin: for_chn
 
 // accumulator
 always_ff @(posedge clk)
 if (~rstn)  acu[i] <= '0;
 else begin
-  if (ena)  acu[i] <= ~sub[i][CW] ? sub[i][CW-1:0] : sum[i][CW-1:0];
+  if (ena)  acu[i] <= ~sub[i][DWC] ? sub[i][DWC-1:0] : sum[i][DWC-1:0];
   else      acu[i] <= '0;
 end
 
@@ -61,9 +61,9 @@ assign sum[i] = acu[i] + str_dat[i];
 assign sub[i] = sum[i] - rng;
 
 // PDM output
-assign pdm[i] = ena & (~sub[i][CW] | ~|sub[i][CW-1:0]);
+assign pdm[i] = ena & (~sub[i][DWC] | ~|sub[i][DWC-1:0]);
 
-end: out
+end: for_chn
 endgenerate
 
 endmodule: pdm

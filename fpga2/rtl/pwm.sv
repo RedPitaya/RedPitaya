@@ -5,27 +5,27 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module pwm #(
-  int unsigned CW = 8,  // counter width (resolution)
-  int unsigned OW = 1   // output  width
+  int unsigned DWC = 8,  // counter width (resolution)
+  int unsigned CHN = 1   // output  width
 )(
   // system signals
-  input  logic                  clk ,  // clock
-  input  logic                  rstn,  // reset (active low)
-  input  logic                  cke ,  // clock enable (synchronous)
+  input  logic                    clk ,  // clock
+  input  logic                    rstn,  // reset (active low)
+  input  logic                    cke ,  // clock enable (synchronous)
   // configuration
-  input  logic                  ena,   // enable
-  input  logic         [CW-1:0] rng,   // range
+  input  logic                    ena,   // enable
+  input  logic          [DWC-1:0] rng,   // range
   // stream input
-  input  logic [OW-1:0][CW-1:0] str_dat,  // data
-  input  logic                  str_vld,  // valid (it is ignored for now
-  output logic                  str_rdy,  // ready
+  input  logic [CHN-1:0][DWC-1:0] str_dat,  // data
+  input  logic                    str_vld,  // valid (it is ignored for now
+  output logic                    str_rdy,  // ready
   // PWM output
-  output logic [OW-1:0]         pwm
+  output logic [CHN-1:0]          pwm
 );
 
 // local signals
-logic [CW-1:0] cnt;  // counter current value
-logic [CW-1:0] nxt;  // counter next value
+logic [DWC-1:0] cnt;  // counter current value
+logic [DWC-1:0] nxt;  // counter next value
 
 // counter current value
 always_ff @(posedge clk)
@@ -42,9 +42,9 @@ assign nxt = cnt + cke;
 assign str_rdy = nxt == rng;
 
 generate
-for (genvar i=0; i<OW; i++) begin: out
+for (genvar i=0; i<CHN; i++) begin: for_chn
 
-logic [CW-1:0] dat;
+logic [DWC-1:0] dat;
 
 // stream input data copy
 always_ff @(posedge clk)
@@ -63,7 +63,7 @@ else begin
   end else                pwm[i] <= 1'b0;
 end
 
-end: out
+end: for_chn
 endgenerate
 
 endmodule: pwm

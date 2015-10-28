@@ -71,9 +71,9 @@ read_verilog                      $path_rtl/red_pitaya_pid_block.sv
 read_verilog                      $path_rtl/red_pitaya_pid.sv
 read_verilog                      $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.sv
-read_verilog                      $path_rtl/red_pitaya_pwm.sv
 read_verilog                      $path_rtl/red_pitaya_scope.sv
 read_verilog                      $path_rtl/red_pitaya_top.sv
+read_verilog                      $path_rtl/pwm.sv
 
 read_xdc                          $path_sdc/red_pitaya.xdc
 
