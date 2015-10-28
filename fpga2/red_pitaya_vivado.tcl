@@ -58,22 +58,22 @@ write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 
 read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
-read_verilog                      $path_rtl/axi_master.v
-read_verilog                      $path_rtl/axi_slave.v
-read_verilog                      $path_rtl/axi_wr_fifo.v
+read_verilog                      $path_rtl/axi_master.sv
+read_verilog                      $path_rtl/axi_slave.sv
+read_verilog                      $path_rtl/axi_wr_fifo.sv
 
-read_verilog                      $path_rtl/red_pitaya_ams.v
-read_verilog                      $path_rtl/red_pitaya_asg_ch.v
-read_verilog                      $path_rtl/red_pitaya_asg.v
-read_verilog                      $path_rtl/red_pitaya_dfilt1.v
-read_verilog                      $path_rtl/red_pitaya_hk.v
-read_verilog                      $path_rtl/red_pitaya_pid_block.v
-read_verilog                      $path_rtl/red_pitaya_pid.v
+read_verilog                      $path_rtl/red_pitaya_ams.sv
+read_verilog                      $path_rtl/red_pitaya_asg_ch.sv
+read_verilog                      $path_rtl/red_pitaya_asg.sv
+read_verilog                      $path_rtl/red_pitaya_dfilt1.sv
+read_verilog                      $path_rtl/red_pitaya_hk.sv
+read_verilog                      $path_rtl/red_pitaya_pid_block.sv
+read_verilog                      $path_rtl/red_pitaya_pid.sv
 read_verilog                      $path_rtl/red_pitaya_pll.sv
-read_verilog                      $path_rtl/red_pitaya_ps.v
+read_verilog                      $path_rtl/red_pitaya_ps.sv
 read_verilog                      $path_rtl/red_pitaya_pwm.sv
-read_verilog                      $path_rtl/red_pitaya_scope.v
-read_verilog                      $path_rtl/red_pitaya_top.v
+read_verilog                      $path_rtl/red_pitaya_scope.sv
+read_verilog                      $path_rtl/red_pitaya_top.sv
 
 read_xdc                          $path_sdc/red_pitaya.xdc
 

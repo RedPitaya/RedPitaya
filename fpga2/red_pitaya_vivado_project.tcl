@@ -40,22 +40,22 @@ generate_target all [get_files    system.bd]
 
 read_verilog                      ./project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
-add_files                         $path_rtl/axi_master.v
-add_files                         $path_rtl/axi_slave.v
-add_files                         $path_rtl/axi_wr_fifo.v
+add_files                         $path_rtl/axi_master.sv
+add_files                         $path_rtl/axi_slave.sv
+add_files                         $path_rtl/axi_wr_fifo.sv
 
-add_files                         $path_rtl/red_pitaya_ams.v
-add_files                         $path_rtl/red_pitaya_asg_ch.v
-add_files                         $path_rtl/red_pitaya_asg.v
-add_files                         $path_rtl/red_pitaya_dfilt1.v
-add_files                         $path_rtl/red_pitaya_hk.v
-add_files                         $path_rtl/red_pitaya_pid_block.v
-add_files                         $path_rtl/red_pitaya_pid.v
+add_files                         $path_rtl/red_pitaya_ams.sv
+add_files                         $path_rtl/red_pitaya_asg_ch.sv
+add_files                         $path_rtl/red_pitaya_asg.sv
+add_files                         $path_rtl/red_pitaya_dfilt1.sv
+add_files                         $path_rtl/red_pitaya_hk.sv
+add_files                         $path_rtl/red_pitaya_pid_block.sv
+add_files                         $path_rtl/red_pitaya_pid.sv
 add_files                         $path_rtl/red_pitaya_pll.sv
-add_files                         $path_rtl/red_pitaya_ps.v
+add_files                         $path_rtl/red_pitaya_ps.sv
 add_files                         $path_rtl/red_pitaya_pwm.sv
-add_files                         $path_rtl/red_pitaya_scope.v
-add_files                         $path_rtl/red_pitaya_top.v
+add_files                         $path_rtl/red_pitaya_scope.sv
+add_files                         $path_rtl/red_pitaya_top.sv
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 
