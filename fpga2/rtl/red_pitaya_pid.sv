@@ -86,14 +86,14 @@ red_pitaya_pid_block #(
   .clk        (clk ),
   .rstn       (rstn),
   // data
-  .dat_i        (dat_i),
-  .dat_o        (pid_out),
+  .dat_i      ({2{dat_i}}),
+  .dat_o      (pid_out),
    // settings
-  .set_sp_i     (set_sp  ),
-  .set_kp_i     (set_kp  ),
-  .set_ki_i     (set_ki  ),
-  .set_kd_i     (set_kd  ),
-  .int_rst_i    (set_irst) 
+  .set_sp     (set_sp  ),
+  .set_kp     (set_kp  ),
+  .set_ki     (set_ki  ),
+  .set_kd     (set_kd  ),
+  .int_rst    (set_irst) 
 );
 
 ////////////////////////////////////////////////////////////////////////////////

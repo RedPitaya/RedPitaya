@@ -46,11 +46,11 @@ module red_pitaya_pid_block #(
   output logic [ 14-1: 0] dat_o,  // output data
 
   // settings
-  input  logic [ 14-1: 0] set_sp_i,  // set point
-  input  logic [ 14-1: 0] set_kp_i,  // Kp
-  input  logic [ 14-1: 0] set_ki_i,  // Ki
-  input  logic [ 14-1: 0] set_kd_i,  // Kd
-  input  logic            int_rst_i  // integrator reset
+  input  logic [ 14-1: 0] set_sp,  // set point
+  input  logic [ 14-1: 0] set_kp,  // Kp
+  input  logic [ 14-1: 0] set_ki,  // Ki
+  input  logic [ 14-1: 0] set_kd,  // Kd
+  input  logic            int_rst  // integrator reset
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ always @(posedge clk)
 if (rstn == 1'b0) begin
   error <= 15'h0 ;
 end else begin
-  error <= $signed(set_sp_i) - $signed(dat_i) ;
+  error <= $signed(set_sp) - $signed(dat_i) ;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ end else begin
   kp_reg <= kp_mult[29-1:PSR] ;
 end
 
-assign kp_mult = $signed(error) * $signed(set_kp_i);
+assign kp_mult = $signed(error) * $signed(set_kp);
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Integrator
@@ -96,8 +96,8 @@ if (rstn == 1'b0) begin
   ki_mult  <= {29{1'b0}};
   int_reg  <= {32{1'b0}};
 end else begin
-  ki_mult <= $signed(error) * $signed(set_ki_i) ;
-  if (int_rst_i)
+  ki_mult <= $signed(error) * $signed(set_ki) ;
+  if (int_rst)
     int_reg <= 32'h0; // reset
   else if (int_sum[33-1:33-2] == 2'b01) // positive saturation
     int_reg <= 32'h7FFFFFFF; // max positive
@@ -130,7 +130,7 @@ end else begin
   kd_reg_s <= $signed(kd_reg) - $signed(kd_reg_r);
 end
 
-assign kd_mult = $signed(error) * $signed(set_kd_i) ;
+assign kd_mult = $signed(error) * $signed(set_kd) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Sum together - saturate output
