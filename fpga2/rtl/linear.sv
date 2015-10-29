@@ -53,7 +53,7 @@ module linear #(
 
 logic signed [DWI+DWM  -1:0] mul_dat;
 logic signed [DWI+    1-1:0] shf_dat;
-logic signed [DWI+   +2-1:0] sum_dat;
+logic signed [DWI+    2-1:0] sum_dat;
 
 logic mul_vld, mul_rdy, mul_trn;
 logic shf_vld, shf_rdy, shf_trn;
@@ -78,7 +78,7 @@ assign sti_rdy = mul_rdy | ~mul_vld;
 // shift
 ////////////////////////////////////////////////////////////////////////////////
 
-assign shf_dat = mul_dat >>> (DWM-1);
+assign shf_dat = mul_dat >>> (DWM-2);
 
 assign shf_vld = mul_vld;
 
@@ -95,7 +95,7 @@ if (shf_trn)  sum_dat <= shf_dat + cfg_sum;
 
 always_ff @(posedge clk)
 if (~rstn)         sum_vld <= 1'b0;
-else if (shf_rdy)  sum_vld <= sti_vld;
+else if (shf_rdy)  sum_vld <= shf_vld;
 
 assign shf_rdy = sto_rdy | ~sum_vld;
 
@@ -106,12 +106,12 @@ assign shf_rdy = sto_rdy | ~sum_vld;
 assign sum_trn = sum_vld & sum_rdy;
 
 always_ff @(posedge clk)
-if (sum_trn)  sto_dat <= ^sum_dat[DWO-1:DWO-2] ? {sum_dat[DWO], {DWO-1{~sum_dat[DWO-1]}}}
-                                               :  sum_dat[DWO-1:0];
+if (sum_trn)  sto_dat <= ^sum_dat[DWO:DWO-1] ? {sum_dat[DWO], {DWO-1{~sum_dat[DWO-1]}}}
+                                             :  sum_dat[DWO-1:0];
 
 always_ff @(posedge clk)
 if (~rstn)         sto_vld <= 1'b0;
-else if (sum_rdy)  sto_vld <= sti_vld;
+else if (sum_rdy)  sto_vld <= sum_vld;
 
 assign sum_rdy = sto_rdy | ~sum_vld;
 
