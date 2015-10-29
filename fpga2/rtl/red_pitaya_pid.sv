@@ -71,10 +71,10 @@ localparam int unsigned DSR = 10;
 ////////////////////////////////////////////////////////////////////////////////
 
 logic signed [4-1:0] [14-1:0] pid_out ;
-logic        [4-1:0] [14-1:0] set_sp  ;
-logic        [4-1:0] [14-1:0] set_kp  ;
-logic        [4-1:0] [14-1:0] set_ki  ;
-logic        [4-1:0] [14-1:0] set_kd  ;
+logic signed [4-1:0] [14-1:0] set_sp  ;
+logic signed [4-1:0] [14-1:0] set_kp  ;
+logic signed [4-1:0] [14-1:0] set_ki  ;
+logic signed [4-1:0] [14-1:0] set_kd  ;
 logic        [4-1:0]          set_irst;
 
 red_pitaya_pid_block #(
