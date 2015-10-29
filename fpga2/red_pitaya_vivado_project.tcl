@@ -56,6 +56,8 @@ add_files                         $path_rtl/red_pitaya_ps.sv
 add_files                         $path_rtl/red_pitaya_scope.sv
 add_files                         $path_rtl/red_pitaya_top.sv
 add_files                         $path_rtl/pdm.sv
+add_files                         $path_rtl/pwm.sv
+add_files                         $path_rtl/linear.sv
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 

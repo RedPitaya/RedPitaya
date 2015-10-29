@@ -74,6 +74,7 @@ read_verilog                      $path_rtl/red_pitaya_ps.sv
 read_verilog                      $path_rtl/red_pitaya_scope.sv
 read_verilog                      $path_rtl/red_pitaya_top.sv
 read_verilog                      $path_rtl/pwm.sv
+read_verilog                      $path_rtl/linear.sv
 
 read_xdc                          $path_sdc/red_pitaya.xdc
 

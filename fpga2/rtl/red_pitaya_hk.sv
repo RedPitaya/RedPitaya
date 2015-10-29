@@ -17,8 +17,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module red_pitaya_hk #(
+  // calibration
+  int unsigned DWM = 16,   // data width for multiplier (gain)
+  int unsigned DWS = 14,   // data width for summation (offset)
+  // GPIO
   int unsigned DWL = 8, // data width for LED
   int unsigned DWE = 8, // data width for extension
+  // ID
   bit [57-1:0] DNA = 57'h0823456789ABCDE
 )(
   // system signals
@@ -28,6 +33,12 @@ module red_pitaya_hk #(
   output logic [DWL-1:0] led_o,  // LED output
   // global configuration
   output logic           digital_loop,
+  // ADC calibration
+  output logic signed [2-1:0] [DWM-1:0] adc_cfg_mul,  // gain
+  output logic signed [2-1:0] [DWS-1:0] adc_cfg_sum,  // offset
+  // DAC calibration
+  output logic signed [2-1:0] [DWM-1:0] dac_cfg_mul,  // gain
+  output logic signed [2-1:0] [DWS-1:0] dac_cfg_sum,  // offset
   // expansion connector
   input  logic [DWE-1:0] exp_p_i ,  // input
   output logic [DWE-1:0] exp_p_o ,  // output
@@ -105,20 +116,43 @@ assign id_value[ 3:0] =  4'h1; // board type   1 - release 1
 
 always @(posedge clk)
 if (!rstn) begin
+  digital_loop <= '0;
+  // LED
   led_o    <= '0;
+  // GPIO
   exp_p_o  <= '0;
   exp_p_oe <= '0;
   exp_n_o  <= '0;
   exp_n_oe <= '0;
+  // ADC calibration
+  adc_cfg_mul[0] <= 1'b0 <<< (DWM-2);
+  adc_cfg_sum[0] <= '0;
+  adc_cfg_mul[1] <= 1'b0 <<< (DWM-2);
+  adc_cfg_sum[1] <= '0;
+  // DAC calibration
+  dac_cfg_mul[0] <= 1'b0 <<< (DWM-2);
+  dac_cfg_sum[0] <= '0;
+  dac_cfg_mul[1] <= 1'b0 <<< (DWM-2);
+  dac_cfg_sum[1] <= '0;
 end else if (sys_wen) begin
   if (sys_addr[19:0]==20'h0c)   digital_loop <= sys_wdata[0];
-
+  // GPIO
   if (sys_addr[19:0]==20'h10)   exp_p_oe <= sys_wdata[DWE-1:0];
   if (sys_addr[19:0]==20'h14)   exp_n_oe <= sys_wdata[DWE-1:0];
   if (sys_addr[19:0]==20'h18)   exp_p_o  <= sys_wdata[DWE-1:0];
   if (sys_addr[19:0]==20'h1C)   exp_n_o  <= sys_wdata[DWE-1:0];
-
+  // LED
   if (sys_addr[19:0]==20'h30)   led_o    <= sys_wdata[DWL-1:0];
+  // ADC calibration
+  if (sys_addr[19:0]==20'h40)   adc_cfg_mul[0] <= sys_wdata[DWM-1:0];
+  if (sys_addr[19:0]==20'h44)   adc_cfg_sum[0] <= sys_wdata[DWS-1:0];
+  if (sys_addr[19:0]==20'h48)   adc_cfg_mul[1] <= sys_wdata[DWM-1:0];
+  if (sys_addr[19:0]==20'h4C)   adc_cfg_sum[1] <= sys_wdata[DWS-1:0];
+  // DAC calibration
+  if (sys_addr[19:0]==20'h50)   dac_cfg_mul[0] <= sys_wdata[DWM-1:0];
+  if (sys_addr[19:0]==20'h54)   dac_cfg_sum[0] <= sys_wdata[DWS-1:0];
+  if (sys_addr[19:0]==20'h58)   dac_cfg_mul[1] <= sys_wdata[DWM-1:0];
+  if (sys_addr[19:0]==20'h5C)   dac_cfg_sum[1] <= sys_wdata[DWS-1:0];
 end
 
 wire sys_en;
@@ -132,19 +166,30 @@ end else begin
   sys_err <= 1'b0;
 
   casez (sys_addr[19:0])
+    // ID
     20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {                id_value          }; end
     20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {                dna_value[32-1: 0]}; end
     20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]}; end
     20'h0000c: begin sys_ack <= sys_en;  sys_rdata <= {{32-  1{1'b0}}, digital_loop      }; end
-
+    // GPIO
     20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_oe}; end
     20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_oe}; end
     20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_o} ; end
     20'h0001C: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_o} ; end
     20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_p_i} ; end
     20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWE{1'b0}}, exp_n_i} ; end
-
+    // LED
     20'h00030: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWL{1'b0}}, led_o}   ; end
+    // ADC calibration
+    20'h00040: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWM{1'b0}}, adc_cfg_mul[0]}; end
+    20'h00044: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWS{1'b0}}, adc_cfg_sum[0]}; end
+    20'h00048: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWM{1'b0}}, adc_cfg_mul[1]}; end
+    20'h0004c: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWS{1'b0}}, adc_cfg_sum[1]}; end
+    // DAC calibration
+    20'h00050: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWM{1'b0}}, dac_cfg_mul[0]}; end
+    20'h00054: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWS{1'b0}}, dac_cfg_sum[0]}; end
+    20'h00058: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWM{1'b0}}, dac_cfg_mul[1]}; end
+    20'h0005c: begin sys_ack <= sys_en;  sys_rdata <= {{32-DWS{1'b0}}, dac_cfg_sum[1]}; end
 
       default: begin sys_ack <= sys_en;  sys_rdata <=  32'h0                    ; end
   endcase

@@ -235,37 +235,38 @@ logic                 pll_dac_clk_2p;
 logic                 pll_ser_clk;
 logic                 pll_pdm_clk;
 logic                 pll_locked;
-
 // fast serial signals
 logic                 ser_clk ;
-
 // PDM clock and reset
 logic                 pdm_clk ;
 logic                 pdm_rstn;
-
 // ADC signals
-logic                 adc_clk;
-logic                 adc_rstn;
-logic        [14-1:0] adc_dat_a, adc_dat_b;
-logic signed [14-1:0] adc_a    , adc_b    ;
-
+logic                         adc_clk;
+logic                         adc_rstn;
+logic signed [2-1:0] [14-1:0] adc_dat;
 // DAC signals
-logic                 dac_clk_1x;
-logic                 dac_clk_2x;
-logic                 dac_clk_2p;
-logic                 dac_rst;
-logic        [14-1:0] dac_dat_a, dac_dat_b;
-logic        [14-1:0] dac_a    , dac_b    ;
-logic signed [15-1:0] dac_a_sum, dac_b_sum;
-
+logic                         dac_clk_1x;
+logic                         dac_clk_2x;
+logic                         dac_clk_2p;
+logic                         dac_rst;
+logic        [2-1:0] [14-1:0] dac_dat;
+logic signed [2-1:0] [14-1:0] dac_dat_cal;
 // ASG
-logic signed [14-1:0] asg_a    , asg_b    ;
-
+logic signed [2-1:0] [14-1:0] asg_dat;
 // PID
-logic signed [14-1:0] pid_a    , pid_b    ;
+logic signed [2-1:0] [14-1:0] pid_dat;
+
+localparam int unsigned DWM = 16;
+localparam int unsigned DWS = 14;
 
 // configuration
 logic                 digital_loop;
+// ADC calibration
+logic signed [2-1:0] [DWM-1:0] adc_cfg_mul;  // gain
+logic signed [2-1:0] [DWS-1:0] adc_cfg_sum;  // offset
+// DAC calibration
+logic signed [2-1:0] [DWM-1:0] dac_cfg_mul;  // gain
+logic signed [2-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -318,43 +319,92 @@ assign adc_clk_o = 2'b10;
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
+// local variables
+logic signed [2-1:0] [14-1:0] adc_dat_raw;
+logic signed [2-1:0] [14-1:0] adc_dat_mux;
+
 // IO block registers should be used here
 // lowest 2 bits reserved for 16bit ADC
 always_ff @(posedge adc_clk)
 begin
-  adc_dat_a <= adc_dat_a_i[16-1:2];
-  adc_dat_b <= adc_dat_b_i[16-1:2];
+  adc_dat_raw[0] <= {adc_dat_a_i[16-1], ~adc_dat_a_i[16-2:2]};
+  adc_dat_raw[1] <= {adc_dat_b_i[16-1], ~adc_dat_b_i[16-2:2]};
 end
     
 // transform into 2's complement (negative slope)
-assign adc_a = digital_loop ? dac_a : {adc_dat_a[14-1], ~adc_dat_a[14-2:0]};
-assign adc_b = digital_loop ? dac_b : {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
+assign adc_dat_mux[0] = digital_loop ? dac_dat_cal[0] : adc_dat_raw[0];
+assign adc_dat_mux[1] = digital_loop ? dac_dat_cal[1] : adc_dat_raw[1];
+
+linear #(
+  .DWI  (14),
+  .DWO  (14),
+  .DWM  (16)
+) linear_adc [2-1:0] (
+  // system signals
+  .clk      (adc_clk ),
+  .rstn     (adc_rstn),
+  // input stream
+  .sti_dat  (adc_dat_mux),
+  .sti_vld  (1'b1),
+  .sti_rdy  (),
+  // output stream
+  .sto_dat  (adc_dat),
+  .sto_vld  (),
+  .sto_rdy  (1'b1),
+  // configuration
+  .cfg_mul  (adc_cfg_mul),
+  .cfg_sum  (adc_cfg_sum)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
+logic signed [2-1:0] [15-1:0] dac_dat_sum;
+logic signed [2-1:0] [14-1:0] dac_dat_sat;
+
 // Sumation of ASG and PID signal perform saturation before sending to DAC 
-assign dac_a_sum = asg_a + pid_a;
-assign dac_b_sum = asg_b + pid_b;
+assign dac_dat_sum[0] = asg_dat[0] + pid_dat[0];
+assign dac_dat_sum[1] = asg_dat[1] + pid_dat[1];
 
 // saturation
-assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
-assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
+assign dac_dat_sat[0] = (^dac_dat_sum[15-1:15-2]) ? {dac_dat_sum[15-1], {13{~dac_dat_sum[15-1]}}} : dac_dat_sum[14-1:0];
+assign dac_dat_sat[1] = (^dac_dat_sum[15-1:15-2]) ? {dac_dat_sum[15-1], {13{~dac_dat_sum[15-1]}}} : dac_dat_sum[14-1:0];
+
+linear #(
+  .DWI  (14),
+  .DWO  (14),
+  .DWM  (16)
+) linear_dac [2-1:0] (
+  // system signals
+  .clk      (adc_clk ),
+  .rstn     (adc_rstn),
+  // input stream
+  .sti_dat  (dac_dat_sat),
+  .sti_vld  (1'b1),
+  .sti_rdy  (),
+  // output stream
+  .sto_dat  (adc_dat_cal),
+  .sto_vld  (),
+  .sto_rdy  (1'b1),
+  // configuration
+  .cfg_mul  (dac_cfg_mul),
+  .cfg_sum  (dac_cfg_sum)
+);
 
 // output registers + signed to unsigned (also to negative slope)
-always_ff @(posedge dac_clk_1x)
+always_comb
 begin
-  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
-  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+  dac_dat[0] = {dac_dat_cal[0][14-1], ~dac_dat_cal[0][14-2:0]};
+  dac_dat[1] = {dac_dat_cal[1][14-1], ~dac_dat_cal[1][14-2:0]};
 end
 
 // DDR outputs
-ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2p), .CE(1'b1), .R(1'b0   ), .S(1'b0));
-ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
-ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
-ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
-ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0      ), .D2(1'b1      ), .C(dac_clk_2p), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0      ), .D2(1'b1      ), .C(dac_clk_2x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1      ), .D2(1'b0      ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst   ), .D2(dac_rst   ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
@@ -372,6 +422,12 @@ red_pitaya_hk hk (
   .led_o         (led_o),
   // global configuration
   .digital_loop  (digital_loop),
+  // ADC calibration
+  .adc_cfg_mul   (adc_cfg_mul),
+  .adc_cfg_sum   (adc_cfg_sum),
+  // DAC calibration
+  .dac_cfg_mul   (dac_cfg_mul),
+  .dac_cfg_sum   (dac_cfg_sum),
   // Expansion connector
   .exp_p_i       (exp_p_i ),
   .exp_p_o       (exp_p_o ),
@@ -400,12 +456,12 @@ logic trig_asg_out ;
 
 red_pitaya_scope i_scope (
   // ADC
-  .adc_a_i         (  adc_a                      ),  // CH 1
-  .adc_b_i         (  adc_b                      ),  // CH 2
-  .adc_clk_i       (  adc_clk                    ),  // clock
-  .adc_rstn_i      (  adc_rstn                   ),  // reset - active low
-  .trig_ext_i      (  exp_p_i[0]                 ),  // external trigger
-  .trig_asg_i      (  trig_asg_out               ),  // ASG trigger
+  .adc_a_i         (adc_dat[0]  ),
+  .adc_b_i         (adc_dat[1]  ),
+  .adc_clk_i       (adc_clk     ),
+  .adc_rstn_i      (adc_rstn    ),
+  .trig_ext_i      (exp_p_i[0]  ),
+  .trig_asg_i      (trig_asg_out),
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
   .axi0_rstn_o   (axi0_rstn  ),  .axi1_rstn_o   (axi1_rstn  ),
@@ -437,8 +493,8 @@ red_pitaya_asg asg (
   .dac_clk_i       (adc_clk ),
   .dac_rstn_i      (adc_rstn),
    // DAC
-  .dac_a_o         (asg_a       ),
-  .dac_b_o         (asg_b       ),
+  .dac_a_o         (asg_dat[0]  ),
+  .dac_b_o         (asg_dat[1]  ),
   .trig_a_i        (exp_p_i[0]  ),
   .trig_b_i        (exp_p_i[0]  ),
   .trig_out_o      (trig_asg_out),
@@ -462,8 +518,8 @@ red_pitaya_pid pid (
   .clk        (adc_clk ),
   .rstn       (adc_rstn),
   // signals
-  .dat_i      ({adc_b, adc_a}),
-  .dat_o      ({pid_b, pid_a}),
+  .dat_i      (adc_dat),
+  .dat_o      (pid_dat),
   // System bus
   .sys_addr   (sys_addr           ),
   .sys_wdata  (sys_wdata          ),
