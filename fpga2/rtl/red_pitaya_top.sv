@@ -368,8 +368,8 @@ assign dac_dat_sum[0] = asg_dat[0] + pid_dat[0];
 assign dac_dat_sum[1] = asg_dat[1] + pid_dat[1];
 
 // saturation
-assign dac_dat_sat[0] = (^dac_dat_sum[15-1:15-2]) ? {dac_dat_sum[15-1], {13{~dac_dat_sum[15-1]}}} : dac_dat_sum[14-1:0];
-assign dac_dat_sat[1] = (^dac_dat_sum[15-1:15-2]) ? {dac_dat_sum[15-1], {13{~dac_dat_sum[15-1]}}} : dac_dat_sum[14-1:0];
+assign dac_dat_sat[0] = (^dac_dat_sum[0][15-1:15-2]) ? {dac_dat_sum[0][15-1], {13{~dac_dat_sum[0][15-1]}}} : dac_dat_sum[0][14-1:0];
+assign dac_dat_sat[1] = (^dac_dat_sum[1][15-1:15-2]) ? {dac_dat_sum[1][15-1], {13{~dac_dat_sum[1][15-1]}}} : dac_dat_sum[1][14-1:0];
 
 linear #(
   .DWI  (14),
