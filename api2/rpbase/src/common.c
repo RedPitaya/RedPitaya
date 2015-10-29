@@ -270,9 +270,6 @@ float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t
     return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off);
 }
 
-float rp_cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off) {
-	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
-}
 /**
  * @brief Converts voltage in [V] to ADC/DAC/Buffer counts
  *
