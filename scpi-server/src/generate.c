@@ -33,7 +33,8 @@ const scpi_choice_def_t scpi_RpWForm[] = {
     {"SAWU",        3},
     {"SAWD",        4},
     {"PWM",         5},
-    {"ARBITRARY",   6},
+    {"DC",          6},
+    {"ARBITRARY",   7},
     SCPI_CHOICE_LIST_END
 };
 
