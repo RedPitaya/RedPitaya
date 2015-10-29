@@ -384,7 +384,7 @@ linear #(
   .sti_vld  (1'b1),
   .sti_rdy  (),
   // output stream
-  .sto_dat  (adc_dat_cal),
+  .sto_dat  (dac_dat_cal),
   .sto_vld  (),
   .sto_rdy  (1'b1),
   // configuration
