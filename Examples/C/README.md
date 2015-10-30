@@ -25,12 +25,12 @@ make all
 make clean
 ```
 
-This will create an executable, which should be copied to your board using `scp` (replace the IP).
+This will create an executable, which should be copied to your board using `scp` (replace the IP, the default password is `root`).
 ```bash
 scp digital_led_blink root@192.168.0.100
 ```
 
-Connect to your board over SSH (replace the IP).
+Connect to your board over SSH (replace the IP, the default password is `root`).
 ```bash
 ssh root@192.168.0.100
 ```
