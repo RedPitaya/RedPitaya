@@ -3,7 +3,7 @@
  * Red Pitaya Spectrum Analizator client
  *
  * Author: Dakus <info@eskala.eu>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
 -->
@@ -25,21 +25,21 @@
 </head>
 <body>
   <div class="full-content">
-    <div class="container-fluid"> 
+    <div class="container-fluid">
       <div class="navbar navbar-inverse" role="navigation">
         <div class="container">
           <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
               <span class="sr-only">T</span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
-            </button> 
+            </button>
             <a class="navbar-brand" href="/">
               <img class="back-btn" src="img/arrow_nav_left.png">
             </a>
             <img class="logo" width=110 src="img/logo.png">
-          </div> 
+          </div>
 
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
@@ -66,7 +66,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Modal settings-->
       <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
         <div class="modal-dialog">
@@ -81,28 +81,28 @@
           </div>
         </div>
       </div>
-      
+<div id="global_container" style="position: relative;">
       <div class="menu-content">
         <div id="right_menu" class="row right-menu-cont">
-          
+
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <button type="button" class="btn menu-btn ch1" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN1</button>
             </div>
           </div>
           <div class="col-xs-6 option-content"><div id="in1" class="right-menu-option edit-mode"><img src="img/gear.png"></div></div>
-          
+
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <button type="button" class="btn menu-btn ch2" data-signal="ch2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN2</button>
             </div>
           </div>
           <div class="col-xs-6 option-content"><div id="in2" class="right-menu-option edit-mode"><img src="img/gear.png"></div></div>
-          
+
           <div class="col-xs-6 option-content">
             <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
           </div>
-          
+
           <div class="col-xs-6 option-content">
             <div id="ctrl" class="right-menu-option edit-mode">RANGE</div>
           </div>
@@ -126,7 +126,7 @@
             </div>
           </div>
 		</div>
-        
+
         <div id="in2_dialog" class="dialog row right-menu-cont">
           <div class="col-xs-12 option-content">
             <div class="ch2 right-menu-option close-dialog">
@@ -144,16 +144,16 @@
               <button id="CH2_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
             </div>
           </div>
-           
+
         </div>
-        
+
         <div id="ctrl_dialog" class="dialog row right-menu-cont">
           <div class="col-xs-6 option-content close-dialog">
             <div class="right-menu-option">
               <img src="img/arrow_nav_left.png">
                Range
             </div>
-          </div> 
+          </div>
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Freq. unit:</span>
@@ -164,7 +164,7 @@
               </select>
             </div>
           </div>
-		  
+
 		  <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <span class="col-info">Start freq.</span>
@@ -177,9 +177,9 @@
               <input class="setfiled" name="xmax" id="xmax" type="text" value="0">
             </div>
           </div>
-		  
+
         </div>
-        
+
         <div id="cursor_dialog" class="dialog row right-menu-cont">
           <div class="col-xs-12 option-content close-dialog">
             <div class="right-menu-option">
@@ -187,7 +187,7 @@
               Cursor
             </div>
           </div>
-          
+
           <div class="col-xs-6 option-content">
             <div class="right-menu-option">
               <button id="SPEC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
@@ -212,7 +212,7 @@
 
 		<div class="between"></div>
 		<div class="row right-menu-cont">
-	  
+
 			<div class="col-xs-12 option-content">
 				<div class="right-menu-option">
 				  <span class="col-info">Peak Ch1:</span>
@@ -226,10 +226,10 @@
 				</div>
 			</div>
 		</div>
-	  
+
 	  </div>
-	  
-	  
+
+
       <div id="main">
         <div id="graphs">
           <canvas id="graph_grid"></canvas>
@@ -239,14 +239,14 @@
           <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
           <div id="cur_x2" class="vline"></div>
           <div id="cur_x2_info" class="cur_info"></div>
-          
+
           <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
           <div id="cur_y1" class="hline"></div>
           <div id="cur_y1_info" class="cur_info"></div>
           <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
           <div id="cur_y2" class="hline"></div>
           <div id="cur_y2_info" class="cur_info"></div>
-          
+
           <div id="cur_y_diff"></div>
           <div id="cur_y_diff_info" class="cur_info"></div>
           <div id="cur_x_diff"></div>
@@ -256,7 +256,7 @@
          <div id="power" class="left-info">
 			dBm
           </div>
-          <div id="freq" class="text-center" style="margin-top: -20px;">			
+          <div id="freq" class="text-center" style="margin-top: -20px;">
           </div>
         </div>
 		<div id="waterfall-holder_ch1" class="waterfall-holder clearfix">
@@ -275,8 +275,6 @@
 				<span id="wait_text_ch2"></span>
 			</div>
         </div>
-      </div>
-      
       <div id="joystick">
         <img id="jtk_fine" src="img/reset.png" />
         <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
@@ -291,7 +289,9 @@
 			<img id="demo_img" width="155" style="margin-top: 90px;"src="img/demo_sig.png">
        </div>
       </div>
+      </div>
     </div>
   </div>
+ </div>
 </body>
 </html>
