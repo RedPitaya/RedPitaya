@@ -111,29 +111,6 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
     return 0;
 }
 
-
-/*
- * Initialize calibration parameters to default values.
-
-int calib_GetDefaultParams(rp_calib_params_t *calib_params)
-{
-    calib_params->fe_ch1_fs_g_hi = 28101971; // 0.6543 [V]
-    calib_params->fe_ch2_fs_g_hi = 28101971; // 0.6543 [V]
-    calib_params->fe_ch1_fs_g_lo = 625682246; // 14.56 [V]
-    calib_params->fe_ch2_fs_g_lo = 625682246; // 14.56 [V]
-    calib_params->fe_ch1_lo_offs = 585;
-    calib_params->fe_ch2_lo_offs = 585;
-    calib_params->fe_ch1_hi_offs = 585;
-    calib_params->fe_ch2_hi_offs = 585;
-    calib_params->be_ch1_fs = 42949673; // 1 [V]
-    calib_params->be_ch2_fs = 42949673; // 1 [V]
-    calib_params->be_ch1_dc_offs = 0x3eac;
-    calib_params->be_ch2_dc_offs = 0x3eac;
-
-    return 0;
-}
- */
-
 int calib_WriteParams(rp_calib_params_t calib_params) {
     FILE   *fp;
     size_t  size;
@@ -182,81 +159,6 @@ int calib_Reset() {
     calib_SetToZero();
     ECHECK(calib_WriteParams(calib));
     return calib_Init();
-}
-
-int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
-    /* Acquire data */
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetGain(channel, gain));
-    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
-    ECHECK(rp_AcqStart());
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
-    usleep(1000000);
-    ECHECK(rp_AcqStop());
-
-    int16_t data[BUFFER_LENGTH];
-    uint32_t bufferSize = (uint32_t) BUFFER_LENGTH;
-    ECHECK(rp_AcqGetDataRaw(channel, 0, &bufferSize, data));
-
-    long long avg = 0;
-    for(int i = 0; i < BUFFER_LENGTH; ++i)
-        avg += data[i];
-
-    avg /= BUFFER_LENGTH;
-    fprintf(stderr, "\ncalib_GetDataMedian: avg = %d\n", (int32_t)avg);
-    return avg;
-}
-
-float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetGain(channel, gain));
-    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
-    ECHECK(rp_AcqStart());
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
-    usleep(1000000);
-    int BUF_SIZE = BUFFER_LENGTH;
-
-    ECHECK(rp_AcqStop());
-
-    float data[BUF_SIZE];
-    uint32_t bufferSize = (uint32_t) BUF_SIZE;
-    ECHECK(rp_AcqGetDataV(channel, 0, &bufferSize, data));
-
-    double avg = 0;
-    for(int i = 0; i < BUFFER_LENGTH; ++i)
-        avg += data[i];
-
-    avg /= BUFFER_LENGTH;
-    fprintf(stderr, "\ncalib_GetDataMedianFloat: avg = %f\n", (float)avg);
-    return avg;
-}
-
-int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max) {
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetGain(channel, gain));
-    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
-    ECHECK(rp_AcqStart());
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
-    usleep(1000000);
-    int BUF_SIZE = BUFFER_LENGTH;
-
-    ECHECK(rp_AcqStop());
-
-    float data[BUF_SIZE];
-    uint32_t bufferSize = (uint32_t) BUF_SIZE;
-    ECHECK(rp_AcqGetDataV(channel, 0, &bufferSize, data));
-
-    float _min = data[0];
-    float _max = data[0];
-    for(int i = 1; i < BUFFER_LENGTH; ++i) {
-        _min = (_min > data[i]) ? data[i] : _min;
-        _max = (_max < data[i]) ? data[i] : _max;
-    }
-
-    fprintf(stderr, "\ncalib_GetDataMinMaxFloat: min = %f, max = %f\n", _min, _max);
-    *min = _min;
-    *max = _max;
-    return RP_OK;
 }
 
 int calib_setCachedParams() {
