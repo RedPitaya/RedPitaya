@@ -81,7 +81,6 @@ int floatCmp(const void *a, const void *b);
 float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
 uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale);
 
-int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts);
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v);
 uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO);
 

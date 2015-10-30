@@ -158,40 +158,6 @@ uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale) {
     return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
 }
 
-/**
- * @brief Calibrates ADC/DAC/Buffer counts and checks for limits
- *
- * Function is used to publish captured signal data to external world in calibrated +- units.
- * Calculation is based on ADC/DAC inputs and calibrated and user defined DC offsets.
- *
- * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
- * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
- * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
- * @retval Calibrated counts
- */
-
-int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts)
-{
-    int32_t m;
-
-    /* check sign */
-    if(cnts & (1 << (field_len - 1))) {
-        /* negative number */
-        m = -1 *((cnts ^ ((1 << field_len) - 1)) + 1);
-    } else {
-        /* positive number */
-        m = cnts;
-    }
-
-    /* check limits */
-    if(m < (-1 * (1 << (field_len - 1))))
-        m = (-1 * (1 << (field_len - 1)));
-    else if(m > (1 << (field_len - 1)))
-        m = (1 << (field_len - 1));
-
-    return m;
-}
-
 /*----------------------------------------------------------------------------*/
 /**
  * @brief Converts ADC/DAC/Buffer counts to voltage [V]
@@ -203,7 +169,6 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts)
  * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
  * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
- * @param[in] calibScale Calibration scale factor, specified in [V]
  * @retval float Signal Value, expressed in user units [V]
  */
 
@@ -233,8 +198,7 @@ static float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float ad
 
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v)
 {
-    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts);
-    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v);
+    return cmn_CnvCalibCntToV(field_len, cnts, adc_max_v);
 }
 
 /**

@@ -685,14 +685,10 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
-    uint32_t cnts;
-
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
-
-        buffer[i] = cmn_CalibCnts(ADC_BITS, cnts);
+        buffer[i] = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
     }
 
     return RP_OK;
