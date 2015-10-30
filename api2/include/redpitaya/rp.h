@@ -327,16 +327,6 @@ int rp_EnableDigitalLoop(bool enable);
 rp_calib_params_t rp_GetCalibrationSettings();
 
 /**
-* Calibrates output channel.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
-
-/**
 * Set default calibration values.
 * Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
 * @return If the function is successful, the return value is RP_OK.

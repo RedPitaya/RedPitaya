@@ -121,10 +121,6 @@ rp_calib_params_t rp_GetCalibrationSettings()
     return calib_GetParams();
 }
 
-int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
-    return calib_CalibrateBackEnd(channel, out_params);
-}
-
 int rp_CalibrationReset() {
     return calib_Reset();
 }

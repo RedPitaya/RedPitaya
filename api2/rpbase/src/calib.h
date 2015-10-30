@@ -28,8 +28,6 @@ rp_calib_params_t calib_GetParams();
 int calib_WriteParams(rp_calib_params_t calib_params);
 void calib_SetToZero();
 
-int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
-
 int calib_Reset();
 
 int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain);
