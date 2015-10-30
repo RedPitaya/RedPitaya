@@ -40,6 +40,8 @@ sudo chown $USER:$USER /opt/linaro
 tar -xpf *linaro*.tar.xz -C /opt/linaro
 ```
 
+**NOTE:** you can skip installing Vivado tools, if you only wish to compile user space software.
+
 # Build process
 
 Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
