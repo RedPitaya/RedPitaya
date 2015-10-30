@@ -32,7 +32,7 @@ LD_LIBRARY_PATH=/opt/redpitaya/lib ./digital_led_blink
 
 When compiling on the target no special preparations are needed. A native toolchain is available directly on the Debian system.
 
-First connect to your board over SSH (replace the IP).
+First connect to your board over SSH (replace the IP, the default password is `root`).
 ```bash
 ssh root@192.168.0.100
 ```
@@ -41,6 +41,11 @@ Now on the target, make a clone of the Red Pitaya Git repository and enter the p
 ```bash
 git clone https://github.com/RedPitaya/RedPitaya.git
 cd RedPitaya
+```
+
+Compile the API.
+```bash
+make api
 ```
 
 To compile one example just use the source file name without the `.c` extension.
