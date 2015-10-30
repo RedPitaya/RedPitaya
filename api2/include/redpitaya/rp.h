@@ -327,57 +327,6 @@ int rp_EnableDigitalLoop(bool enable);
 rp_calib_params_t rp_GetCalibrationSettings();
 
 /**
-* Calibrates input channel offset. This input channel must be grounded to calibrate properly.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) ;
-
-/**
-* Calibrates input channel low voltage scale. Jumpers must be set to LV.
-* This input channel must be connected to stable positive source.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @param referentialVoltage Voltage of the source.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-
-/**
-* Calibrates input channel high voltage scale. Jumpers must be set to HV.
-* This input channel must be connected to stable positive source.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @param referentialVoltage Voltage of the source.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-
-/**
-* Calibrates output channel offset.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEndOffset(rp_channel_t channel);
-
-/**
-* Calibrates output channel voltage scale.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEndScale(rp_channel_t channel);
-
-/**
 * Calibrates output channel.
 * This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
 * Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.

@@ -121,26 +121,6 @@ rp_calib_params_t rp_GetCalibrationSettings()
     return calib_GetParams();
 }
 
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndOffset(channel, gain, out_params);
-}
-
-int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndScaleLV(channel, referentialVoltage, out_params);
-}
-
-int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndScaleHV(channel, referentialVoltage, out_params);
-}
-
-int rp_CalibrateBackEndOffset(rp_channel_t channel) {
-    return calib_SetBackEndOffset(channel);
-}
-
-int rp_CalibrateBackEndScale(rp_channel_t channel) {
-    return calib_SetBackEndScale(channel);
-}
-
 int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
     return calib_CalibrateBackEnd(channel, out_params);
 }
