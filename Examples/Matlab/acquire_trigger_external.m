@@ -2,7 +2,7 @@
 clear all
 close all
 clc
-IP= '192.168.178.102';                 % Input IP of your Red Pitaya...
+IP= '192.168.178.111';                % Input IP of your Red Pitaya...
 port = 5000;
 tcpipObj = tcpip(IP, port);
 tcpipObj.InputBufferSize = 16384*32;
@@ -18,11 +18,9 @@ flushoutput(tcpipObj);
 % Set decimation vale (sampling rate) in respect to you 
 % acquired signal frequency
 
+fprintf(tcpipObj,'ACQ:RST');
 fprintf(tcpipObj,'ACQ:DEC 1');
-
-% Set trigger level to 100 mV
-
-fprintf(tcpipObj,'ACQ:TRIG:LEV 100');
+fprintf(tcpipObj,'ACQ:TRIG:LEV 0');
 
 % Set trigger delay to 0 samples
 % 0 samples delay set trigger to center of the buffer
@@ -32,21 +30,19 @@ fprintf(tcpipObj,'ACQ:TRIG:LEV 100');
 
 fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
 
-pause(0.1) % Wait for data writing
-
 %% Start & Trigg
 % Trigger source setting must be after ACQ:START
-% Set trigger to external source and positive edge
-
+% Set trigger to source 1 positive edge
 
 fprintf(tcpipObj,'ACQ:START');
-fprintf(tcpipObj,'ACQ:TRIG EXT_PE');
 
+pause(1)
+
+fprintf(tcpipObj,'ACQ:TRIG EXT_PE');  
 % Wait for trigger
 % Until trigger is true wait with acquiring
 % Be aware of while loop if trigger is not achieved
 % Ctrl+C will stop code executing in Matlab
-
 
 while 1
      trig_rsp=query(tcpipObj,'ACQ:TRIG:STAT?')
@@ -59,18 +55,21 @@ while 1
  end
  
  
-% Read data from buffer
-
+% Read data from buffer 
 signal_str=query(tcpipObj,'ACQ:SOUR1:DATA?');
+signal_str_2=query(tcpipObj,'ACQ:SOUR2:DATA?');
 
-% Convert values to numbers.% First character in string is “{“
+% Convert values to numbers.% First character in string is “{“   
 % and 2 latest are empty spaces and last is “}”.  
 
 signal_num=str2num(signal_str(1,2:length(signal_str)-3));
+signal_num_2=str2num(signal_str_2(1,2:length(signal_str_2)-3));
 
 plot(signal_num)
+hold on
+plot(signal_num_2,'r')
 grid on
-
-fprintf(tcpipObj,'ACQ:RST');
+ylabel('Voltage / V')
+xlabel('samples')
 
 fclose(tcpipObj)
