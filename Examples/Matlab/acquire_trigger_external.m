@@ -35,7 +35,9 @@ fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
 % Set trigger to source 1 positive edge
 
 fprintf(tcpipObj,'ACQ:START');
-
+% After acquisition is started some time delay is needed in order to acquire fresh samples in to buffer
+% Here we have used time delay of one second but you can calculate exact value taking in to account buffer
+% length and smaling rate
 pause(1)
 
 fprintf(tcpipObj,'ACQ:TRIG EXT_PE');  
