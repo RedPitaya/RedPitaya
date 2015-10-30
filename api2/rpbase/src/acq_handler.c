@@ -17,7 +17,6 @@
 #include <math.h>
 
 #include "common.h"
-#include "calib.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
 
