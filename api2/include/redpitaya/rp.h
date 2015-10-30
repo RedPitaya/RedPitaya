@@ -231,20 +231,16 @@ typedef enum {
  * Calibration parameters, stored in the EEPROM device
  */
 typedef struct {
-    uint32_t fe_ch1_fs_g_hi; //!< High gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_hi; //!< High gain front end full scale voltage, channel B
-    uint32_t fe_ch1_fs_g_lo; //!< Low gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_lo; //!< Low gain front end full scale voltage, channel B
-    int32_t  fe_ch1_lo_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_lo_offs; //!< Front end DC offset, channel B
-    uint32_t be_ch1_fs;      //!< Back end full scale voltage, channel A
-    uint32_t be_ch2_fs;      //!< Back end full scale voltage, channel B
-    int32_t  be_ch1_dc_offs; //!< Back end DC offset, channel A
-    int32_t  be_ch2_dc_offs; //!< Back end DC offset, on channel B
-	uint32_t magic;			 //!
-    int32_t  fe_ch1_hi_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_hi_offs; //!< Front end DC offset, channel B
+    float offset;  // in Volts
+    float gain;    // correction ratio
+} rp_calib_pair_t;
+
+typedef struct {
+    rp_calib_pair_t acq [2] [2];
+    rp_calib_pair_t gen [2];
 } rp_calib_params_t;
+
+
 
 typedef struct wf_func_table_t {
     int (*rp_spectr_wf_init)();
@@ -324,7 +320,7 @@ int rp_EnableDigitalLoop(bool enable);
 * Each rp_GetCalibrationSettings call returns the same cached setting values.
 * @return Calibration settings
 */
-rp_calib_params_t rp_GetCalibrationSettings();
+int rp_GetCalibrationSettings(rp_calib_params_t *calib_params);
 
 /**
 * Set default calibration values.
@@ -348,7 +344,7 @@ int rp_CalibrationSetCachedParams();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
+int rp_CalibrationWriteParams(rp_calib_params_t *calib_params);
 ///@}
 
 

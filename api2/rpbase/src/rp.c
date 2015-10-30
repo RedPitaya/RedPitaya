@@ -116,20 +116,15 @@ const char* rp_GetError(int errorCode) {
  * Calibrate methods
  */
 
-rp_calib_params_t rp_GetCalibrationSettings()
-{
-    return calib_GetParams();
+int rp_GetCalibrationSettings(rp_calib_params_t *calib_params) {
+    return calib_GetParams(calib_params);
 }
 
 int rp_CalibrationReset() {
     return calib_Reset();
 }
 
-int rp_CalibrationSetCachedParams() {
-    return calib_setCachedParams();
-}
-
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
+int rp_CalibrationWriteParams(rp_calib_params_t *calib_params) {
     return calib_WriteParams(calib_params);
 }
 

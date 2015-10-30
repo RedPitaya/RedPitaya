@@ -24,11 +24,12 @@
 int calib_Init();
 int calib_Release();
 
-rp_calib_params_t calib_GetParams();
-int calib_WriteParams(rp_calib_params_t calib_params);
-void calib_SetToZero();
+int calib_GetParams(rp_calib_params_t *calib_params);
+int calib_SetParams(rp_calib_params_t *calib_params);
+
+int calib_ReadParams(rp_calib_params_t *calib_params);
+int calib_WriteParams(rp_calib_params_t *calib_params);
 
 int calib_Reset();
 
-int calib_setCachedParams();
 #endif //__CALIB_H
