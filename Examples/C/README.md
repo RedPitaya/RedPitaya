@@ -1,6 +1,6 @@
 # Compiling and running on host
 
-When compiling on a PC host, a cross compiler must be used. Please read [the instructions](../../README.md) for installing the required tools and setting up the environment variables. During make, you should see the cross compiler `arm-linux-gnueabihf-gcc` beeing used, otherwise some steps from instructions have been missed.
+When compiling on a PC host, a cross compiler must be used. Please read [the instructions](../../README.md) for installing the required tools and setting up the environment variables. During make, you should see the cross compiler `arm-linux-gnueabihf-gcc` being used, otherwise some steps from instructions have been missed.
 
 To compile one example just use the source file name without the `.c` extension.
 ```bash
