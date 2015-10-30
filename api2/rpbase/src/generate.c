@@ -68,12 +68,8 @@ int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
 
 int generate_setAmplitude(rp_channel_t channel, float amplitude) {
     volatile ch_properties_t *ch_properties;
-
-    rp_calib_params_t calib = calib_GetParams();
-    uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX, false, amp_max, 0, 0.0);
+    ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX, false);
     return RP_OK;
 }
 
@@ -86,13 +82,8 @@ int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
 
 int generate_setDCOffset(rp_channel_t channel, float offset) {
     volatile ch_properties_t *ch_properties;
-
-    rp_calib_params_t calib = calib_GetParams();
-    int dc_offs = channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
-    uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false);
     return RP_OK;
 }
 
@@ -213,13 +204,8 @@ int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32
     volatile ch_properties_t *properties;
     getChannelPropertiesAddress(&properties, channel);
     generate_setWrapCounter(channel, length);
-
-    //rp_calib_params_t calib = calib_GetParams();
-    int dc_offs = 0;//channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
-    uint32_t amp_max = 0; //channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
     for(int i = start; i < start+BUFFER_LENGTH; i++) {
-        dataOut[i % BUFFER_LENGTH] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start], AMPLITUDE_MAX, false, amp_max, dc_offs, 0.0);
+        dataOut[i % BUFFER_LENGTH] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start], AMPLITUDE_MAX, false);
     }
     return RP_OK;
 }

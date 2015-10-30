@@ -283,20 +283,13 @@ float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, float us
  * @param[in] voltage Voltage, specified in [V]
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
  * @param[in] calibFS_LO True if calibrating for front size (out) low voltage
- * @param[in] calibScale Calibration scale factor. If zero -> no scaling, specified in [full scale] - EPROM calibration parameter storage format
- * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
- * @param[in] user_dc_off User specified DC offset, , specified in [V]
  * @retval int ADC/DAC counts
  */
-uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off)
+uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO)
 {
     int adc_cnts = 0;
 
-    /* adopt the calculation with calibration scaling. If 0 ->  no calibration */
-    if (calib_scale != 0) {
-        voltage /= (float) cmn_CalibFullScaleToVoltage(calib_scale) / (float)((!calibFS_LO) ? 1.f : (FULL_SCALE_NORM/adc_max_v));
-//        voltage /= (float) cmn_CalibFullScaleToVoltage(calib_scale) / (float)(FULL_SCALE_NORM/adc_max_v);
-    }
+    voltage /= (float) cmn_CalibFullScaleToVoltage(42949673) / (float)((!calibFS_LO) ? 1.f : (FULL_SCALE_NORM/adc_max_v));
 
     /* check and limit the specified voltage arguments towards */
     /* maximal voltages which can be applied on ADC inputs */
@@ -305,14 +298,8 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
     else if(voltage < -adc_max_v)
         voltage = -adc_max_v;
 
-    /* adopt the specified voltage with user defined DC offset */
-    voltage -= user_dc_off;
-
     /* map voltage units into FPGA adc counts */
     adc_cnts = (int)round(voltage * (float) (1 << field_len) / (2 * adc_max_v));
-
-    /* adopt calculated ADC counts with calibration DC offset */
-    adc_cnts += calib_dc_off;
 
     /* check and limit the specified cnt towards */
     /* maximal cnt which can be applied on ADC inputs */
@@ -328,6 +315,3 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
     return (uint32_t)adc_cnts;
 }
 
-uint32_t rp_cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off) {
-	return cmn_CnvVToCnt(field_len, voltage, adc_max_v, calibFS_LO, calib_scale, calib_dc_off, user_dc_off);
-}

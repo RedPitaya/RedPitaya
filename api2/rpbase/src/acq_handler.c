@@ -546,11 +546,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
         return RP_EOOR;
     }
 
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = GET_OFFSET(channel, gain, calib);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
-
-    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, gain == RP_HIGH ? false : true, calibScale, dc_offs, 0.0);
+    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, gain == RP_HIGH ? false : true);
 
     // We cut high bits of negative numbers
     cnt = cnt & ((1 << ADC_BITS) - 1);
@@ -610,11 +606,7 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
         return RP_EOOR;
     }
 
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = GET_OFFSET(channel, gain, calib);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
-
-    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, gain == RP_HIGH ? false : true, calibScale, dc_offs, 0.0);
+    uint32_t cnt = cmn_CnvVToCnt(ADC_BITS, voltage, gainV, gain == RP_HIGH ? false : true);
     if (channel == RP_CH_1) {
         return osc_SetHysteresisChA(cnt);
     }
