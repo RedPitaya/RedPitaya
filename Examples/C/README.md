@@ -1,6 +1,18 @@
-# Compiling and running on host
+# Compiling and running on host PC
 
 When compiling on a PC host, a cross compiler must be used. Please read [the instructions](../../README.md) for installing the required tools and setting up the environment variables. During make, you should see the cross compiler `arm-linux-gnueabihf-gcc` being used, otherwise some steps from instructions have been missed.
+
+Make a clone of the Red Pitaya Git repository, enter the project directory, and setup the environment.
+```bash
+git clone https://github.com/RedPitaya/RedPitaya.git
+cd RedPitaya
+. settings.sh
+```
+
+Compile the API.
+```bash
+make api
+```
 
 To compile one example just use the source file name without the `.c` extension.
 ```bash
