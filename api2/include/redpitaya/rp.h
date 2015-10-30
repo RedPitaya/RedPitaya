@@ -1280,7 +1280,7 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 */
 int rp_GenTrigger(uint32_t channel);
 
-float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, float user_dc_off);
+float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v);
 
 #ifdef __cplusplus
 }

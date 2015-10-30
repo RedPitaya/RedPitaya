@@ -575,7 +575,7 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGainV(channel, &gainV));
     ECHECK(acq_GetGain(channel, &gain));
 
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, 0.0);
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV);
 
     return RP_OK;
 }
@@ -631,7 +631,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGainV(channel, &gainV));
     ECHECK(acq_GetGain(channel, &gain));
 
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, 0.0);
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV);
 
     return RP_OK;
 }
@@ -690,16 +690,10 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
-    rp_pinState_t gain;
-    ECHECK(acq_GetGain(channel, &gain));
-
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = GET_OFFSET(channel, gain, calib);
-
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
 
-        buffer[i] = cmn_CalibCnts(ADC_BITS, cnts, dc_offs);
+        buffer[i] = cmn_CalibCnts(ADC_BITS, cnts);
     }
 
     return RP_OK;
@@ -777,7 +771,7 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
-        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV, 0.0);
+        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV);
     }
 
     return RP_OK;
@@ -812,8 +806,8 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     ptr2 = cnts2;
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1, 0.0);
-        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2, 0.0);
+        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1);
+        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2);
     }
 
     return RP_OK;

@@ -193,7 +193,7 @@ uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale) {
  * @retval Calibrated counts
  */
 
-int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
+int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts)
 {
     int32_t m;
 
@@ -205,9 +205,6 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
         /* positive number */
         m = cnts;
     }
-
-    /* adopt ADC count with calibrated DC offset */
-    m -= calib_dc_off;
 
     /* check limits */
     if(m < (-1 * (1 << (field_len - 1))))
@@ -230,17 +227,13 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
  * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
  * @param[in] calibScale Calibration scale factor, specified in [V]
- * @param[in] user_dc_off User specified DC offset, specified in [V]
  * @retval float Signal Value, expressed in user units [V]
  */
 
-float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off)
+static float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale)
 {
     /* map ADC counts into user units */
     double ret_val = ((double)calib_cnts * adc_max_v / (double)(1 << (field_len - 1)));
-
-    /* and adopt the calculation with user specified DC offset */
-    ret_val += user_dc_off;
     /* adopt the calculation with calibration scaling */
     ret_val *= (double)calibScale / ((double)FULL_SCALE_NORM/(double)adc_max_v);
 
@@ -258,16 +251,13 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
  * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
  * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
  * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
- * @param[in] calibScale Calibration scale factor, specified in [full scale] - EPROM calibration parameter storage format
- * @param[in] calib_dc_off Calibrated DC offset, specified in ADC/DAC counts
- * @param[in] user_dc_off User specified DC offset, specified in [V]
  * @retval float Signal Value, expressed in user units [V]
  */
 
-float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, float user_dc_off)
+float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v)
 {
-    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, 0);
-    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(42949673), user_dc_off);
+    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts);
+    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(42949673));
 }
 
 /**

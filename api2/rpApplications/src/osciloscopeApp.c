@@ -99,7 +99,7 @@ static inline int scaleChannel(rp_channel_t channel, float vpp, float vMean) {
 static inline float convertRawData(uint16_t value, float gainV)
 {
 	const int ADC_BITS = 14;
-	return rp_CmnCnvCntToV(ADC_BITS, value, gainV, 0.0);
+	return rp_CmnCnvCntToV(ADC_BITS, value, gainV);
 }
 
 void checkAutoscale(bool fromThread);

@@ -76,7 +76,7 @@ int generate_setAmplitude(rp_channel_t channel, float amplitude) {
 int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    *amplitude = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX, 0.0);
+    *amplitude = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX);
     return RP_OK;
 }
 
@@ -90,7 +90,7 @@ int generate_setDCOffset(rp_channel_t channel, float offset) {
 int generate_getDCOffset(rp_channel_t channel, float *offset) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), 0);
+    *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f));
     return RP_OK;
 }
 
