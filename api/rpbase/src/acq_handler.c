@@ -517,21 +517,14 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
 
 int acq_SetTriggerLevel(float voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
-        ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
-    }
+    ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
+    ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
     return RP_OK;
 }
 
 int acq_GetTriggerLevel(float *voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_GetChannelThreshold(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
-        ECHECK(acq_GetChannelThreshold(RP_CH_2, voltage));
-    }
+    ECHECK(acq_GetChannelThreshold(RP_CH_1, voltage));
     return RP_OK;
 }
 
@@ -591,21 +584,14 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 
 int acq_SetTriggerHyst(float voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
-        ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, voltage));
-    }
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, voltage));
     return RP_OK;
 }
 
 int acq_GetTriggerHyst(float *voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_GetChannelThresholdHyst(RP_CH_2, voltage));
-    }
+    ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, voltage));
     return RP_OK;
 }
 
