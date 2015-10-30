@@ -8,28 +8,47 @@
 
 int main(int argc, char **argv){
 
-	/* Print error, if rp_Init() function failed */
-	if(rp_Init() != RP_OK){
-		fprintf(stderr, "Rp api init failed!\n");
-	}
-	
-	uint32_t array_size = 16 * 1024; //Current buffer size. 
+        /* Print error, if rp_Init() function failed */
+        if(rp_Init() != RP_OK){
+                fprintf(stderr, "Rp api init failed!\n");
+        }
 
-	float *buff = (float *)malloc(array_size * sizeof(float));
+        /*LOOB BACK FROM OUTPUT 1 - ONLY FOR TESTING*/ 
+        rp_GenReset();
+        rp_GenFreq(RP_CH_1, 20000.0);
+        rp_GenAmp(RP_CH_1, 1.0);
+        rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
+        rp_GenOutEnable(RP_CH_1);
+        
+        int seconds=1;
+        uint32_t buff_size = 16384;
+        sleep(seconds);
+        float *buff = (float *)malloc(buff_size * sizeof(float));
 
-	/* Starts acquisition */
-	rp_AcqStart();
-	rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
 
-	/* Get the whole buffer into buf */
-	rp_AcqGetOldestDataV(RP_CH_1, &array_size, buff);
+        rp_AcqReset();
+        rp_AcqSetDecimation(1);
+        rp_AcqSetTriggerLevel(0.1); 
+        rp_AcqSetTriggerDelayNs(0);
+        rp_AcqStart();
+        rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+        rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
 
-	int i;
-	for (i = 0; i < array_size; ++i)
-	{
-		printf("Data: %f\n", buff[i]);
-	}
+        while(1){
+                rp_AcqGetTriggerState(&state);
+                if(state == RP_TRIG_STATE_TRIGGERED){
+                sleep(seconds);     
+                break;
+                }
+        }
 
+        rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
+
+        int i;
+        for(i = 0; i < buff_size; i++){
+                printf("%f\n", buff[i]);
+        }
+       
 	/* Releasing resources */
 	free(buff);
 	rp_Release();
