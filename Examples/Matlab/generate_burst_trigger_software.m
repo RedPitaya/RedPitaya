@@ -10,7 +10,7 @@ fopen(tcpipObj);
 tcpipObj.Terminator = 'CR/LF';
 
 % The example generate sine bursts every 0.5 seconds indefinety
-fprintf(tcpipObj,'GEN:RST');
+
 fprintf(tcpipObj,'SOUR1:FUNC SINE');       % Set function of output signal
                                            % {sine, square, triangle,
                                            % sawu,sawd, pwm}
