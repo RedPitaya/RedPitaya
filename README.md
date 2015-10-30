@@ -20,9 +20,11 @@ different places one would expect.
 | Test         | Command line utilities (acquire, generate, ...), tests
 | shared       | `libredpitaya.so` API source code (to be deprecated soon hopefully!)
 
-## Requirements
+## Supported platforms
 
-Red Pitaya is developed on Linux, so Linux (preferably Ubuntu) is also the only platform we support.
+Red Pitaya is developed on Linux, so Linux (preferably 64bit Ubuntu) is also the only platform we support.
+
+## Software requirements
 
 You will need the following to build the Red Pitaya components:
 1. Various development packages:
@@ -70,11 +72,12 @@ make
 
 The next components can be built separately.
 - FPGA + device tree
-- API
-- free applications
-- SCPI server
+- u-Boot
 - Linux kernel
 - Debian OS
+- API
+- SCPI server
+- free applications
 
 ## Base system
 
@@ -113,7 +116,7 @@ Since file `tmp/boot.bin.uboot` is created it should be renamed to simply `tmp/b
 
 ### Buildroot
 
-Buildroot is the most basic Linux distribution available for Red Pitaya. It is also used to provide some sources which are dependencies for Userspace applications.
+Buildroot is the most basic Linux distribution available for Red Pitaya. It is also used to provide some sources which are dependencies for user space applications.
 ```bash
 make build/uramdisk.image.gz
 ``` 
@@ -124,18 +127,31 @@ make build/uramdisk.image.gz
 
 ### API
 
-Only instructions for the basic API are provided:
-Navigate to the `api/rpbase` folder and run:
+To compile the API run:
 ```bash
-make
+make api
 ```
 The output of this process is the Red Pitaya `librp.so` library in `api/lib` directory.
-
-### Free applications
-
-To build apps free, follow the instructions given at apps-free [README.md](apps-free/README.md) file.
+The header file for the API is `redpitaya/rp.h` and can be found in `api/includes`.
+You can install it on Red Pitaya by copying it there:
+```
+scp api/lib/librp.so root@192.168.0.100:/opt/redpitaya/lib/
+```
 
 ### SCPI server
 
-Scpi server README can be found [here](scpi-server/README.md)
+Scpi server README can be found [here](scpi-server/README.md).
 
+To compile the server run:
+```bash
+make api
+```
+The compiled executable is `scpi-server/scpi-server`.
+You can install it on Red Pitaya by copying it there:
+```bash
+scp scpi-server/scpi-server root@192.168.0.100:/opt/redpitaya/bin/
+```
+
+### Free applications
+
+To build free applications, follow the instructions given at `apps-free`/[`README.md`](apps-free/README.md) file.
