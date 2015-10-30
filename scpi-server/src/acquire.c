@@ -508,7 +508,6 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
 scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     scpi_number_t value;
 
-    // read first parameter TRIGGER LEVEL (value in mV)
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV is missing first parameter.\n");
         return SCPI_RES_ERR;
@@ -535,7 +534,7 @@ scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
             "trigger level: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    value = value * 1000;       // convert to milli volts
+    value = value;
     // Return back result
     SCPI_ResultDouble(context, value);
 
