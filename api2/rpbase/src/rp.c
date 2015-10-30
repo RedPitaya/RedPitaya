@@ -830,8 +830,8 @@ int rp_GenTrigger(uint32_t channel) {
     return gen_Trigger(channel);
 }
 
-float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
+float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, float user_dc_off)
 {
-	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
+	return cmn_CnvCntToV(field_len, cnts, adc_max_v, user_dc_off);
 }
 

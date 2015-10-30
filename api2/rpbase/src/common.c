@@ -264,10 +264,10 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
  * @retval float Signal Value, expressed in user units [V]
  */
 
-float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
+float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, float user_dc_off)
 {
-    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, calib_dc_off);
-    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off);
+    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, 0);
+    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(42949673), user_dc_off);
 }
 
 /**

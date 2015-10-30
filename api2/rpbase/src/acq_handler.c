@@ -579,11 +579,7 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGainV(channel, &gainV));
     ECHECK(acq_GetGain(channel, &gain));
 
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = GET_OFFSET(channel, gain, calib);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
-
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, 0.0);
 
     return RP_OK;
 }
@@ -643,11 +639,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
     ECHECK(acq_GetGainV(channel, &gainV));
     ECHECK(acq_GetGain(channel, &gain));
 
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = GET_OFFSET(channel, gain, calib);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
-
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, 0.0);
 
     return RP_OK;
 }
@@ -788,16 +780,12 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
     ECHECK(acq_GetGainV(channel, &gainV));
     ECHECK(acq_GetGain(channel, &gain));
 
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs = GET_OFFSET(channel, gain, calib);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
-
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
-        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
+        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV, 0.0);
     }
 
     return RP_OK;
@@ -813,13 +801,6 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     ECHECK(acq_GetGain(RP_CH_1, &gain1));
     ECHECK(acq_GetGainV(RP_CH_2, &gainV2));
     ECHECK(acq_GetGain(RP_CH_2, &gain2));
-
-    rp_calib_params_t calib = calib_GetParams();
-    int32_t dc_offs1 = gain1 == RP_HIGH ? calib.fe_ch1_hi_offs : calib.fe_ch1_lo_offs;
-    uint32_t calibScale1 = calib_GetFrontEndScale(RP_CH_1, gain1);
-
-    int32_t dc_offs2 = gain2 == RP_HIGH ? calib.fe_ch2_hi_offs : calib.fe_ch2_lo_offs;
-    uint32_t calibScale2 = calib_GetFrontEndScale(RP_CH_2, gain2);
 
     const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
@@ -839,8 +820,8 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     ptr2 = cnts2;
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1, calibScale1, dc_offs1, 0.0);
-        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2, calibScale2, dc_offs2, 0.0);
+        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1, 0.0);
+        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2, 0.0);
     }
 
     return RP_OK;

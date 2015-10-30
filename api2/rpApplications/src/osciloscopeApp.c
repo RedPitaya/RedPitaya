@@ -96,10 +96,10 @@ static inline int scaleChannel(rp_channel_t channel, float vpp, float vMean) {
     return RP_OK;
 }
 
-static inline float convertRawData(uint16_t value, float gainV, uint32_t calibScale, int32_t dc_offs)
+static inline float convertRawData(uint16_t value, float gainV)
 {
 	const int ADC_BITS = 14;
-	return rp_CmnCnvCntToV(ADC_BITS, value, gainV, calibScale, dc_offs, 0.0);
+	return rp_CmnCnvCntToV(ADC_BITS, value, gainV, 0.0);
 }
 
 void checkAutoscale(bool fromThread);
@@ -1479,12 +1479,6 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
     rp_AcqGetGainV(RP_CH_2, &gainV2);
     rp_AcqGetGain(RP_CH_2, &gain2);
 
-    rp_calib_params_t calib = rp_GetCalibrationSettings();
-    int32_t dc_offs1 = gain1 == RP_HIGH ? calib.fe_ch1_hi_offs : calib.fe_ch1_lo_offs;
-    uint32_t calibScale1 = gain1 == RP_HIGH ? calib.fe_ch1_fs_g_hi : calib.fe_ch1_fs_g_lo;
-    int32_t dc_offs2 = gain2 == RP_HIGH ? calib.fe_ch2_hi_offs : calib.fe_ch2_lo_offs;
-	uint32_t calibScale2 = gain2 == RP_HIGH ? calib.fe_ch2_fs_g_hi : calib.fe_ch2_fs_g_lo;
-
     // Write data to view buffer
     for (rp_channel_t channel = RP_CH_1; channel <= RP_CH_2; ++channel) {
         int viewFullOffset = (channel * viewSize) + viewEars + viewOffset;
@@ -1501,20 +1495,16 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
             for (i = 0; i < maxViewIdx /*&& (int) (((float)i * curDeltaSample) + buffFullOffset) < ADC_BUFFER_SIZE*/; ++i) {
                 int x0 = ((int)((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE;
                 int x1 = (x0 + 1) % ADC_BUFFER_SIZE;
-                float y = linear(x0, convertRawData(data[channel][x0], gainV1, calibScale1, dc_offs1), x0 + 1,
-					convertRawData(data[channel][x1], gainV2, calibScale2, dc_offs2), ((float)i * curDeltaSample) + buffFullOffset);
+                float y = linear(x0, convertRawData(data[channel][x0], gainV1), x0 + 1,
+					convertRawData(data[channel][x1], gainV2), ((float)i * curDeltaSample) + buffFullOffset);
                 ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, y, view + viewFullOffset + i));
             }
             maxViewIdx = i;
         } else {
             int i;
             for (i = 0; i < maxViewIdx /*&& (int) (((float)i * curDeltaSample) + buffFullOffset) < ADC_BUFFER_SIZE*/; ++i) {
-				ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
-					convertRawData(data[channel][((int) ((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
-/*
                 ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
-					convertRawData(data[channel][((size_t) ((size_t)((float)i * curDeltaSample) + buffFullOffset)) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
-*/
+					convertRawData(data[channel][((int) ((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE], gainV1), view + viewFullOffset + i));
             }
             maxViewIdx = i;
         }
