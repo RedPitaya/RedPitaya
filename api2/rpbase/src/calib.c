@@ -50,6 +50,17 @@ rp_calib_params_t calib_GetParams()
 }
 
 /**
+* @brief Converts scale voltage to calibration Full scale. Result is usually written to EPROM calibration parameters.
+*
+* @param[in] voltageScale Scale value in voltage
+* @retval Scale in volts
+*/
+static uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale) {
+    return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
+}
+
+
+/**
  * @brief Read calibration parameters from EEPROM device.
  *
  * Function reads calibration parameters from EEPROM device and stores them to the

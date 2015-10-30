@@ -147,42 +147,6 @@ int floatCmp(const void *a, const void *b) {
 }
 
 /*----------------------------------------------------------------------------*/
-
-/**
-* @brief Converts scale voltage to calibration Full scale. Result is usually written to EPROM calibration parameters.
-*
-* @param[in] voltageScale Scale value in voltage
-* @retval Scale in volts
-*/
-uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale) {
-    return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
-}
-
-/*----------------------------------------------------------------------------*/
-/**
- * @brief Converts ADC/DAC/Buffer counts to voltage [V]
- *
- * Function is used to publish captured signal data to external world in user units.
- * Calculation is based on maximal voltage, which can be applied on ADC/DAC inputs and
- * calibrated and user defined DC offsets.
- *
- * @param[in] field_len Number of field (ADC/DAC/Buffer) bits
- * @param[in] cnts Captured Signal Value, expressed in ADC/DAC counts
- * @param[in] adc_max_v Maximal ADC/DAC voltage, specified in [V]
- * @retval float Signal Value, expressed in user units [V]
- */
-
-static float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v)
-{
-    /* map ADC counts into user units */
-    double ret_val = ((double)calib_cnts * adc_max_v / (double)(1 << (field_len - 1)));
-    /* adopt the calculation with calibration scaling */
-    ret_val *= 1 / ((double)FULL_SCALE_NORM/(double)adc_max_v);
-
-    return ret_val;
-}
-
-/*----------------------------------------------------------------------------*/
 /**
  * @brief Converts ADC/DAC/Buffer counts to voltage [V]
  *
@@ -198,7 +162,11 @@ static float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float ad
 
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v)
 {
-    return cmn_CnvCalibCntToV(field_len, cnts, adc_max_v);
+    /* map ADC counts into user units */
+    double ret_val = ((double)cnts * adc_max_v / (double)(1 << (field_len - 1)));
+    ret_val *= 1 / ((double)FULL_SCALE_NORM/(double)adc_max_v);
+
+    return ret_val;
 }
 
 /**
