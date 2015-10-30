@@ -149,25 +149,6 @@ int floatCmp(const void *a, const void *b) {
 /*----------------------------------------------------------------------------*/
 
 /**
-* @brief Converts calibration Full scale to volts. Scale is usually read from EPROM calibration parameters.
-* If parameter is 0, a factor 1 is returned -> no scaling.
-*
-* @param[in] fullScaleGain value of full voltage scale
-* @retval Scale in volts
-*/
-float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
-    /* no scale */
-    if (fullScaleGain == 0) {
-        return 1;
-    }
-    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
-}
-
-float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
-	return cmn_CalibFullScaleToVoltage(fullScaleGain);
-}
-
-/**
 * @brief Converts scale voltage to calibration Full scale. Result is usually written to EPROM calibration parameters.
 *
 * @param[in] voltageScale Scale value in voltage
@@ -175,10 +156,6 @@ float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain) {
 */
 uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale) {
     return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
-}
-
-uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale) {
-    return cmn_CalibFullScaleFromVoltage(voltageScale);
 }
 
 /**
@@ -279,7 +256,7 @@ uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool 
 {
     int adc_cnts = 0;
 
-    voltage /= (float) cmn_CalibFullScaleToVoltage(42949673) / (float)((!calibFS_LO) ? 1.f : (FULL_SCALE_NORM/adc_max_v));
+    voltage /= 1.0 / (float)((!calibFS_LO) ? 1.f : (FULL_SCALE_NORM/adc_max_v));
 
     /* check and limit the specified voltage arguments towards */
     /* maximal voltages which can be applied on ADC inputs */
