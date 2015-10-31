@@ -1,3 +1,12 @@
+# Release 0.94 RC19
+
+Changes:
+- fixed licensing related regression
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ generator burst mode is buggy
++ SPI interface is not working (seems to be a kernel configuration issue)
+
 # Release 0.94 RC18
 
 Changes:
@@ -16,6 +25,7 @@ Changes:
 Changes:
 - fixed missing configuration file for WiFi access point mode (Pavel Demin)
 - cleanup of analog output PWM and digital IO API code, it is now reduced to a single layer
+- API header file was moved from other API sources, to avoid header file name conflicts
 
 **Known issues** (at least major ones) are same as in 0.94 RC12.
 + SPI interface is not working (seems to be a kernel configuration issue)
