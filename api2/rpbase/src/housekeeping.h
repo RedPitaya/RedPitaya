@@ -24,32 +24,37 @@
 static const int HOUSEKEEPING_BASE_ADDR = 0x40000000;
 static const int HOUSEKEEPING_BASE_SIZE = 0x30;
 
+static const uint32_t RP_CALIB_DWM = 16;
+static const uint32_t RP_CALIB_DWS = 14;
+
+// calibration gain offset pair
+typedef struct {
+    uint32_t mul;  // fixed point   signed  s1.14 (RP_CALIB_DWM bits)
+    uint32_t sum;  // fixed point unsigned  u1.13 (RP_CALIB_DWS bits)
+} rp_calib_pair_t;
+
 // Housekeeping structure declaration
 typedef struct housekeeping_control_s {
-    uint32_t id;
-    uint32_t dna_lo;
-    uint32_t dna_hi;
-    uint32_t digital_loop;
-    uint32_t ex_cd_p;
-    uint32_t ex_cd_n;
-    uint32_t ex_co_p;
-    uint32_t ex_co_n;
-    uint32_t ex_ci_p;
-    uint32_t ex_ci_n;
-    uint32_t reserved_2;
-    uint32_t reserved_3;
-    uint32_t led_control;
+    uint32_t id;            // 0x00
+    uint32_t dna_lo;        // 0x04
+    uint32_t dna_hi;        // 0x08
+    uint32_t digital_loop;  // 0x0c
+    uint32_t ex_cd_p;       // 0x10
+    uint32_t ex_cd_n;       // 0x14
+    uint32_t ex_co_p;       // 0x18
+    uint32_t ex_co_n;       // 0x1c
+    uint32_t ex_ci_p;       // 0x20
+    uint32_t ex_ci_n;       // 0x24
+    uint32_t reserved_2;    // 0x28
+    uint32_t reserved_3;    // 0x2c
+    uint32_t led_control;   // 0x30
+    calibration_pair_t adc [2];
+    calibration_pair_t dac [2];
 } housekeeping_control_t;
-
 
 static const uint32_t LED_CONTROL_MASK = 0xFF;
 static const uint32_t DIGITAL_LOOP_MASK = 0x1;
-static const uint32_t EX_CD_P_MASK = 0xFF;
-static const uint32_t EX_CD_N_MASK = 0xFF;
-static const uint32_t EX_CO_P_MASK = 0xFF;
-static const uint32_t EX_CO_N_MASK = 0xFF;
-static const uint32_t EX_CI_P_MASK = 0xFF;
-static const uint32_t EX_CI_N_MASK = 0xFF;
+static const uint32_t GPIO_MASK = 0xFF;
 
 int hk_EnableDigitalLoop(bool enable);
 
