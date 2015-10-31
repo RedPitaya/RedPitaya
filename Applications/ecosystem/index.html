@@ -192,12 +192,6 @@
 </div>
 <script>
 
-$('a').on('click touchend', function(e) {
-    var el = $(this);
-    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
-	console.log('clicked ', link);
-    window.location = link;
-});
 $('#run').click(function(){
 
 	if (typeof String.prototype.startsWith != 'function') {
