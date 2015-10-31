@@ -1,7 +1,20 @@
+# Release 0.94 RC18
+
+Changes:
+- fix for WiFi driver switching (Pavel Demin)
+- fixed command prompt issues (Pavel Demin)
+- some SCPI fixes (arbitrary generator sequence support, ...)
+- some cleanup of SCPI and API examples
+- some building documentation updates
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ generator burst mode is buggy
++ SPI interface is not working (seems to be a kernel configuration issue)
+
 # Release 0.94 RC17
 
 Changes:
-- fixed missing configuration file for WiFi access point mode
+- fixed missing configuration file for WiFi access point mode (Pavel Demin)
 - cleanup of analog output PWM and digital IO API code, it is now reduced to a single layer
 
 **Known issues** (at least major ones) are same as in 0.94 RC12.
