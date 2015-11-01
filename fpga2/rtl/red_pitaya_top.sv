@@ -570,7 +570,7 @@ pdm #(
   .cke      (1'b1),
   // configuration
   .ena      (1'b1),
-  .rng      (255),
+  .rng      (8'd255),
   // input stream
   .str_dat  (pdm_cfg),
   .str_vld  (1'b1   ),
