@@ -298,16 +298,19 @@ BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
 BUFG bufg_pdm_clk    (.O (pdm_clk   ), .I (pll_pdm_clk   ));
 
 // ADC reset (active low) 
-always_ff @(posedge adc_clk)
-adc_rstn <=  frstn[0] &  pll_locked;
+always_ff @(posedge adc_clk, negedge frstn[0])
+if (~frstn[0]) adc_rstn <= 1'b0;
+else           adc_rstn <= (frstn[0] & pll_locked);
 
 // DAC reset (active high)
-always_ff @(posedge dac_clk_1x)
-dac_rst  <= ~frstn[0] | ~pll_locked;
+always_ff @(posedge dac_clk_1x, negedge frstn[0])
+if (~frstn[0]) dac_rst <= 1'b0;
+else           dac_rst <= ~(frstn[0] & pll_locked);
 
 // PDM reset (active low)
-always_ff @(posedge pdm_clk)
-pdm_rstn <=  frstn[0] &  pll_locked;
+always_ff @(posedge pdm_clk, negedge frstn[0])
+if (~frstn[0]) pdm_rstn <= 1'b0;
+else           pdm_rstn <= (frstn[0] & pll_locked);
 
 ////////////////////////////////////////////////////////////////////////////////
 // ADC IO
