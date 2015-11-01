@@ -31,7 +31,7 @@ static const uint32_t RP_CALIB_DWS = 14;
 typedef struct {
     uint32_t mul;  // fixed point   signed  s1.14 (RP_CALIB_DWM bits)
     uint32_t sum;  // fixed point unsigned  u1.13 (RP_CALIB_DWS bits)
-} rp_calib_pair_t;
+} hw_calib_pair_t;
 
 // Housekeeping structure declaration
 typedef struct housekeeping_control_s {
@@ -48,8 +48,8 @@ typedef struct housekeeping_control_s {
     uint32_t reserved_2;    // 0x28
     uint32_t reserved_3;    // 0x2c
     uint32_t led_control;   // 0x30
-    calibration_pair_t adc [2];
-    calibration_pair_t dac [2];
+    hw_calib_pair_t adc [2];
+    hw_calib_pair_t dac [2];
 } housekeeping_control_t;
 
 static const uint32_t LED_CONTROL_MASK = 0xFF;
