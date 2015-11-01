@@ -161,12 +161,12 @@ module system_wrapper (
 logic clk;
 logic rstn;
 
-initial       clk = 1'b1;
-always #(8ns) clk = ~clk;
+initial         clk = 1'b1;
+always #(8ns/2) clk = ~clk;
 
 initial begin
   rstn = 1'b0;
-  repeat (8) @ (posedge clk);
+  repeat (4) @ (posedge clk);
   rstn = 1'b1;
 end
 

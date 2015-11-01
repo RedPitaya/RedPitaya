@@ -186,8 +186,8 @@ assign vinp = '0;
 assign vinn = '0;
 
 // Expansion connector
-assign exp_p_io = 8'hz;
-assign exp_n_io = 8'hz;
+assign exp_p_io = 8'h0;
+assign exp_n_io = 8'h0;
 
 // LED
 

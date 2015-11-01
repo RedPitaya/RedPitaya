@@ -42,63 +42,60 @@
 
 module red_pitaya_ps (
   // PS peripherals
-  inout   [ 54-1: 0] FIXED_IO_mio       ,
-  inout              FIXED_IO_ps_clk    ,
-  inout              FIXED_IO_ps_porb   ,
-  inout              FIXED_IO_ps_srstb  ,
-  inout              FIXED_IO_ddr_vrn   ,
-  inout              FIXED_IO_ddr_vrp   ,
+  inout  logic [ 54-1: 0] FIXED_IO_mio       ,
+  inout  logic            FIXED_IO_ps_clk    ,
+  inout  logic            FIXED_IO_ps_porb   ,
+  inout  logic            FIXED_IO_ps_srstb  ,
+  inout  logic            FIXED_IO_ddr_vrn   ,
+  inout  logic            FIXED_IO_ddr_vrp   ,
   // DDR
-  inout   [ 15-1: 0] DDR_addr           ,
-  inout   [  3-1: 0] DDR_ba             ,
-  inout              DDR_cas_n          ,
-  inout              DDR_ck_n           ,
-  inout              DDR_ck_p           ,
-  inout              DDR_cke            ,
-  inout              DDR_cs_n           ,
-  inout   [  4-1: 0] DDR_dm             ,
-  inout   [ 32-1: 0] DDR_dq             ,
-  inout   [  4-1: 0] DDR_dqs_n          ,
-  inout   [  4-1: 0] DDR_dqs_p          ,
-  inout              DDR_odt            ,
-  inout              DDR_ras_n          ,
-  inout              DDR_reset_n        ,
-  inout              DDR_we_n           ,
-
-  output  [  4-1: 0] fclk_clk_o         ,
-  output  [  4-1: 0] fclk_rstn_o        ,
+  inout  logic [ 15-1: 0] DDR_addr           ,
+  inout  logic [  3-1: 0] DDR_ba             ,
+  inout  logic            DDR_cas_n          ,
+  inout  logic            DDR_ck_n           ,
+  inout  logic            DDR_ck_p           ,
+  inout  logic            DDR_cke            ,
+  inout  logic            DDR_cs_n           ,
+  inout  logic [  4-1: 0] DDR_dm             ,
+  inout  logic [ 32-1: 0] DDR_dq             ,
+  inout  logic [  4-1: 0] DDR_dqs_n          ,
+  inout  logic [  4-1: 0] DDR_dqs_p          ,
+  inout  logic            DDR_odt            ,
+  inout  logic            DDR_ras_n          ,
+  inout  logic            DDR_reset_n        ,
+  inout  logic            DDR_we_n           ,
+  // system signals
+  input  logic            clk                ,
+  input  logic            rstn               ,
+  output logic [  4-1: 0] fclk_clk_o         ,
+  output logic [  4-1: 0] fclk_rstn_o        ,
   // XADC
-  input    [ 5-1: 0] vinp_i             ,  // voltages p
-  input    [ 5-1: 0] vinn_i             ,  // voltages n
+  input  logic  [ 5-1: 0] vinp_i             ,  // voltages p
+  input  logic  [ 5-1: 0] vinn_i             ,  // voltages n
   // system read/write channel
-  output             sys_clk_o          ,  // system clock
-  output             sys_rstn_o         ,  // system reset - active low
-  output  [ 32-1: 0] sys_addr_o         ,  // system read/write address
-  output  [ 32-1: 0] sys_wdata_o        ,  // system write data
-  output  [  4-1: 0] sys_sel_o          ,  // system write byte select
-  output             sys_wen_o          ,  // system write enable
-  output             sys_ren_o          ,  // system read enable
-  input   [ 32-1: 0] sys_rdata_i        ,  // system read data
-  input              sys_err_i          ,  // system error indicator
-  input              sys_ack_i          ,  // system acknowledge signal
+  output logic [ 32-1: 0] sys_addr_o         ,  // system read/write address
+  output logic [ 32-1: 0] sys_wdata_o        ,  // system write data
+  output logic [  4-1: 0] sys_sel_o          ,  // system write byte select
+  output logic            sys_wen_o          ,  // system write enable
+  output logic            sys_ren_o          ,  // system read enable
+  input  logic [ 32-1: 0] sys_rdata_i        ,  // system read data
+  input  logic            sys_err_i          ,  // system error indicator
+  input  logic            sys_ack_i          ,  // system acknowledge signal
   // AXI masters
-  input              axi1_clk_i   , axi0_clk_i   ,  // global clock
-  input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
-  input   [ 32-1: 0] axi1_waddr_i , axi0_waddr_i ,  // system write address
-  input   [ 64-1: 0] axi1_wdata_i , axi0_wdata_i ,  // system write data
-  input   [  8-1: 0] axi1_wsel_i  , axi0_wsel_i  ,  // system write byte select
-  input              axi1_wvalid_i, axi0_wvalid_i,  // system write data valid
-  input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
-  input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
-  output             axi1_werr_o  , axi0_werr_o  ,  // system write error
-  output             axi1_wrdy_o  , axi0_wrdy_o     // system write ready
+  input  logic [ 32-1: 0] axi1_waddr_i , axi0_waddr_i ,  // system write address
+  input  logic [ 64-1: 0] axi1_wdata_i , axi0_wdata_i ,  // system write data
+  input  logic [  8-1: 0] axi1_wsel_i  , axi0_wsel_i  ,  // system write byte select
+  input  logic            axi1_wvalid_i, axi0_wvalid_i,  // system write data valid
+  input  logic [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
+  input  logic            axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
+  output logic            axi1_werr_o  , axi0_werr_o  ,  // system write error
+  output logic            axi1_wrdy_o  , axi0_wrdy_o     // system write ready
 );
 
 //------------------------------------------------------------------------------
 // AXI masters
 
-wire            hp1_saxi_clk_i  , hp0_saxi_clk_i  ;
-wire            hp1_saxi_rstn_i , hp0_saxi_rstn_i ;
+wire            hp1_saxi_arstn  , hp0_saxi_arstn  ;
 
 wire            hp1_saxi_arready, hp0_saxi_arready;
 wire            hp1_saxi_awready, hp0_saxi_awready;
@@ -148,8 +145,8 @@ axi_master #(
   .LW   (   4    )  // length width
 ) axi_master [1:0] (
    // global signals
-  .axi_clk_i      ({hp1_saxi_clk_i  , hp0_saxi_clk_i  }), // global clock
-  .axi_rstn_i     ({hp1_saxi_rstn_i , hp0_saxi_rstn_i }), // global reset
+  .axi_clk_i      ({hp1_saxi_aclk   , hp0_saxi_aclk   }), // global clock
+  .axi_rstn_i     ({hp1_saxi_arstn  , hp0_saxi_arstn  }), // global reset
    // axi write address channel
   .axi_awid_o     ({hp1_saxi_awid   , hp0_saxi_awid   }), // write address ID
   .axi_awaddr_o   ({hp1_saxi_awaddr , hp0_saxi_awaddr }), // write address
@@ -211,17 +208,15 @@ axi_master #(
   .sys_rerr_o     (                                    )  // system read error
 );
 
-assign hp0_saxi_arqos  = 4'h0 ;
-assign hp0_saxi_awqos  = 4'h0 ;
-assign hp0_saxi_clk_i  = axi0_clk_i     ;
-assign hp0_saxi_rstn_i = axi0_rstn_i    ;
-assign hp0_saxi_aclk   = hp0_saxi_clk_i ;
+assign hp0_saxi_arqos  = 4'h0;
+assign hp0_saxi_awqos  = 4'h0;
+assign hp0_saxi_arstn  = rstn;
+assign hp0_saxi_aclk   = clk;
 
-assign hp1_saxi_arqos  = 4'h0 ;
-assign hp1_saxi_awqos  = 4'h0 ;
-assign hp1_saxi_clk_i  = axi1_clk_i     ;
-assign hp1_saxi_rstn_i = axi1_rstn_i    ;
-assign hp1_saxi_aclk   = hp1_saxi_clk_i ;
+assign hp1_saxi_arqos  = 4'h0;
+assign hp1_saxi_awqos  = 4'h0;
+assign hp1_saxi_arstn  = rstn;
+assign hp1_saxi_aclk   = clk;
 
 //------------------------------------------------------------------------------
 // AXI SLAVE
@@ -330,18 +325,12 @@ axi_slave #(
   .sys_ack_i        (  sys_ack_i               )   // system acknowledge signal
 );
 
-assign sys_clk_o  = gp0_maxi_aclk   ;
-assign sys_rstn_o = gp0_maxi_arstn  ;
+assign gp0_maxi_aclk  = clk;
+assign gp0_maxi_arstn = rstn;
 
-assign gp0_maxi_aclk  =  axi0_clk_i ;
-
-always @(posedge axi0_clk_i)
-gp0_maxi_arstn <= fclk_rstn[0];
-
-
-
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 // PS STUB
+////////////////////////////////////////////////////////////////////////////////
 
 assign fclk_rstn_o = fclk_rstn;
 
@@ -390,7 +379,7 @@ system_wrapper system_i (
   .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
   .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
-  .M_AXI_GP0_ACLK    (axi0_clk_i),
+  .M_AXI_GP0_ACLK    (gp0_maxi_aclk   ),  // in
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
   .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
   .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
