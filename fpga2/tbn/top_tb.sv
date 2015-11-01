@@ -60,7 +60,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  repeat(10) @(posedge clk);
+  repeat(100) @(posedge clk);
   $finish();
 end
 
