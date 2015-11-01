@@ -125,14 +125,14 @@ if (!rstn) begin
   exp_n_o  <= '0;
   exp_n_oe <= '0;
   // ADC calibration
-  adc_cfg_mul[0] <= 1'b0 <<< (DWM-2);
+  adc_cfg_mul[0] <= 1'b1 <<< (DWM-2);
   adc_cfg_sum[0] <= '0;
-  adc_cfg_mul[1] <= 1'b0 <<< (DWM-2);
+  adc_cfg_mul[1] <= 1'b1 <<< (DWM-2);
   adc_cfg_sum[1] <= '0;
   // DAC calibration
-  dac_cfg_mul[0] <= 1'b0 <<< (DWM-2);
+  dac_cfg_mul[0] <= 1'b1 <<< (DWM-2);
   dac_cfg_sum[0] <= '0;
-  dac_cfg_mul[1] <= 1'b0 <<< (DWM-2);
+  dac_cfg_mul[1] <= 1'b1 <<< (DWM-2);
   dac_cfg_sum[1] <= '0;
 end else if (sys_wen) begin
   if (sys_addr[19:0]==20'h0c)   digital_loop <= sys_wdata[0];
