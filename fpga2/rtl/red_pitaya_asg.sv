@@ -49,11 +49,12 @@
  */
 
 module red_pitaya_asg (
+  // system signals
+  input                 dac_clk_i ,  // DAC clock
+  input                 dac_rstn_i,  // DAC reset - active low
   // DAC
   output     [ 14-1: 0] dac_a_o   ,  // DAC data CHA
   output     [ 14-1: 0] dac_b_o   ,  // DAC data CHB
-  input                 dac_clk_i ,  // DAC clock
-  input                 dac_rstn_i,  // DAC reset - active low
   input                 trig_a_i  ,  // starting trigger CHA
   input                 trig_b_i  ,  // starting trigger CHB
   output                trig_out_o,  // notification trigger

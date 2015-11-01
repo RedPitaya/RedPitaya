@@ -104,7 +104,11 @@ buf_rdata_o <= dac_buf[buf_addr_i] ;
 
 // scale and offset
 always @(posedge dac_clk_i)
-begin
+if (~dac_rstn_i) begin
+   dac_mult <= '0;
+   dac_sum  <= '0;
+   dac_o <= '0;
+end else begin
    dac_mult <= $signed(dac_rdat) * $signed({1'b0,set_amp_i}) ;
    dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
 

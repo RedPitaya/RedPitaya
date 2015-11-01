@@ -363,8 +363,9 @@ logic signed [2-1:0] [15-1:0] dac_dat_sum;
 logic signed [2-1:0] [14-1:0] dac_dat_sat;
 
 // Sumation of ASG and PID signal perform saturation before sending to DAC 
-assign dac_dat_sum[0] = asg_dat[0] + pid_dat[0];
-assign dac_dat_sum[1] = asg_dat[1] + pid_dat[1];
+// TODO: there should be a proper metod to disable PID
+assign dac_dat_sum[0] = asg_dat[0]; // + pid_dat[0];
+assign dac_dat_sum[1] = asg_dat[1]; // + pid_dat[1];
 
 // saturation
 assign dac_dat_sat[0] = (^dac_dat_sum[0][15-1:15-2]) ? {dac_dat_sum[0][15-1], {13{~dac_dat_sum[0][15-1]}}} : dac_dat_sum[0][14-1:0];
