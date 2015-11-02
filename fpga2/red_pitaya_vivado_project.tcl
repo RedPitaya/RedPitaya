@@ -49,6 +49,7 @@ add_files                         $path_rtl/red_pitaya_asg_ch.sv
 add_files                         $path_rtl/red_pitaya_asg.sv
 add_files                         $path_rtl/red_pitaya_dfilt1.sv
 add_files                         $path_rtl/red_pitaya_hk.sv
+add_files                         $path_rtl/red_pitaya_calib.sv
 add_files                         $path_rtl/red_pitaya_pid_block.sv
 add_files                         $path_rtl/red_pitaya_pid.sv
 add_files                         $path_rtl/red_pitaya_pll.sv

@@ -67,6 +67,7 @@ read_verilog                      $path_rtl/red_pitaya_asg_ch.sv
 read_verilog                      $path_rtl/red_pitaya_asg.sv
 read_verilog                      $path_rtl/red_pitaya_dfilt1.sv
 read_verilog                      $path_rtl/red_pitaya_hk.sv
+read_verilog                      $path_rtl/red_pitaya_calib.sv
 read_verilog                      $path_rtl/red_pitaya_pid_block.sv
 read_verilog                      $path_rtl/red_pitaya_pid.sv
 read_verilog                      $path_rtl/red_pitaya_pll.sv

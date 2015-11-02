@@ -296,10 +296,6 @@ assign ps_sys_ack   = |(sys_cs & sys_ack);
 
 // unused system bus slave ports
 
-assign sys_rdata[5*32+:32] = 32'h0; 
-assign sys_err  [5       ] =  1'b0;
-assign sys_ack  [5       ] =  1'b1;
-
 assign sys_rdata[6*32+:32] = 32'h0; 
 assign sys_err  [6       ] =  1'b0;
 assign sys_ack  [6       ] =  1'b1;
@@ -307,6 +303,74 @@ assign sys_ack  [6       ] =  1'b1;
 assign sys_rdata[7*32+:32] = 32'h0; 
 assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
+
+////////////////////////////////////////////////////////////////////////////////
+// Housekeeping
+////////////////////////////////////////////////////////////////////////////////
+
+logic [8-1:0] exp_p_i , exp_n_i ;
+logic [8-1:0] exp_p_o , exp_n_o ;
+logic [8-1:0] exp_p_oe, exp_n_oe;
+
+red_pitaya_hk hk (
+  // system signals
+  .clk           (adc_clk ),
+  .rstn          (adc_rstn),
+  // LED
+  .led_o         (led_o),
+  // global configuration
+  .digital_loop  (digital_loop),
+  // ADC calibration
+  .adc_cfg_mul   (adc_cfg_mul),
+  .adc_cfg_sum   (adc_cfg_sum),
+  // DAC calibration
+  .dac_cfg_mul   (dac_cfg_mul),
+  .dac_cfg_sum   (dac_cfg_sum),
+  // Expansion connector
+  .exp_p_i       (exp_p_i ),
+  .exp_p_o       (exp_p_o ),
+  .exp_p_oe      (exp_p_oe),
+  .exp_n_i       (exp_n_i ),
+  .exp_n_o       (exp_n_o ),
+  .exp_n_oe      (exp_n_oe),
+   // System bus
+  .sys_addr      (sys_addr           ),
+  .sys_wdata     (sys_wdata          ),
+  .sys_sel       (sys_sel            ),
+  .sys_wen       (sys_wen  [0]       ),
+  .sys_ren       (sys_ren  [0]       ),
+  .sys_rdata     (sys_rdata[0*32+:32]),
+  .sys_err       (sys_err  [0]       ),
+  .sys_ack       (sys_ack  [0]       ) 
+);
+
+IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
+IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_oe));
+
+////////////////////////////////////////////////////////////////////////////////
+// Calibration
+////////////////////////////////////////////////////////////////////////////////
+
+red_pitaya_calib calib (
+  // system signals
+  .clk           (adc_clk ),
+  .rstn          (adc_rstn),
+  // ADC calibration
+  .adc_cfg_mul   (adc_cfg_mul),
+  .adc_cfg_sum   (adc_cfg_sum),
+  // DAC calibration
+  .dac_cfg_mul   (dac_cfg_mul),
+  .dac_cfg_sum   (dac_cfg_sum),
+   // System bus
+  .sys_addr      (sys_addr           ),
+  .sys_wdata     (sys_wdata          ),
+  .sys_sel       (sys_sel            ),
+  .sys_wen       (sys_wen  [5]       ),
+  .sys_ren       (sys_ren  [5]       ),
+  .sys_rdata     (sys_rdata[5*32+:32]),
+  .sys_err       (sys_err  [5]       ),
+  .sys_ack       (sys_ack  [5]       ) 
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // ADC IO
@@ -405,49 +469,6 @@ ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0      ), .D2(1'b1      ), .C(
 ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1      ), .D2(1'b0      ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst   ), .D2(dac_rst   ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
-
-////////////////////////////////////////////////////////////////////////////////
-// Housekeeping
-////////////////////////////////////////////////////////////////////////////////
-
-logic [8-1:0] exp_p_i , exp_n_i ;
-logic [8-1:0] exp_p_o , exp_n_o ;
-logic [8-1:0] exp_p_oe, exp_n_oe;
-
-red_pitaya_hk hk (
-  // system signals
-  .clk           (adc_clk ),
-  .rstn          (adc_rstn),
-  // LED
-  .led_o         (led_o),
-  // global configuration
-  .digital_loop  (digital_loop),
-  // ADC calibration
-  .adc_cfg_mul   (adc_cfg_mul),
-  .adc_cfg_sum   (adc_cfg_sum),
-  // DAC calibration
-  .dac_cfg_mul   (dac_cfg_mul),
-  .dac_cfg_sum   (dac_cfg_sum),
-  // Expansion connector
-  .exp_p_i       (exp_p_i ),
-  .exp_p_o       (exp_p_o ),
-  .exp_p_oe      (exp_p_oe),
-  .exp_n_i       (exp_n_i ),
-  .exp_n_o       (exp_n_o ),
-  .exp_n_oe      (exp_n_oe),
-   // System bus
-  .sys_addr      (sys_addr           ),
-  .sys_wdata     (sys_wdata          ),
-  .sys_sel       (sys_sel            ),
-  .sys_wen       (sys_wen  [0]       ),
-  .sys_ren       (sys_ren  [0]       ),
-  .sys_rdata     (sys_rdata[0*32+:32]),
-  .sys_err       (sys_err  [0]       ),
-  .sys_ack       (sys_ack  [0]       ) 
-);
-
-IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
-IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_oe));
 
 //---------------------------------------------------------------------------------
 //  Oscilloscope application
