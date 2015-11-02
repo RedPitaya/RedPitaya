@@ -34,11 +34,11 @@ static char version[50];
 
 int rp_Init()
 {
-    ECHECK(cmn_Init());
-	
-    ECHECK(calib_Init());
-    ECHECK(hk_Init());
+    cmn_Init();
     analog_Init();
+    calib_Init();
+	
+    ECHECK(hk_Init());
     ECHECK(generate_Init());
     ECHECK(osc_Init());
     // TODO: Place other module initializations here
@@ -49,22 +49,15 @@ int rp_Init()
     return RP_OK;
 }
 
-int rp_CalibInit()
-{
-    ECHECK(calib_Init());
-
-    return RP_OK;
-}
-
 int rp_Release()
 {
+    analog_Release();
+    calib_Release();
     ECHECK(osc_Release())
     ECHECK(generate_Release());
-    analog_Release();
     ECHECK(hk_Release());
-    ECHECK(calib_Release());
-    ECHECK(cmn_Release());
     // TODO: Place other module releasing here (in reverse order)
+    cmn_Release();
     return RP_OK;
 }
 
@@ -111,22 +104,6 @@ const char* rp_GetError(int errorCode) {
         case RP_EFWB:  return "Failed to write to the bus";
         default:       return "Unknown error";
     }
-}
-
-/**
- * Calibrate methods
- */
-
-int rp_GetCalibrationSettings(rp_calib_params_t *calib_params) {
-    return calib_GetParams(calib_params);
-}
-
-int rp_CalibrationReset() {
-    return calib_Reset();
-}
-
-int rp_CalibrationWriteParams(rp_calib_params_t *calib_params) {
-    return calib_WriteParams(calib_params);
 }
 
 /**

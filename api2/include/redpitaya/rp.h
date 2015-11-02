@@ -227,21 +227,6 @@ typedef enum {
 } rp_acq_trig_state_t;
 
 
-/**
- * Calibration parameters, stored in the EEPROM device
- */
-typedef struct {
-    float offset;  // in Volts
-    float gain;    // correction ratio
-} rp_calib_pair_t;
-
-typedef struct {
-    rp_calib_pair_t acq [2] [2];
-    rp_calib_pair_t gen [2];
-} rp_calib_params_t;
-
-
-
 typedef struct wf_func_table_t {
     int (*rp_spectr_wf_init)();
     int (*rp_spectr_wf_clean)();
@@ -262,8 +247,6 @@ typedef struct wf_func_table_t {
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_Init();
-
-int rp_CalibInit();
 
 /**
  * Releases the library resources. It must be called last, after library is not used anymore. Typically before
@@ -315,36 +298,55 @@ int rp_EnableDigitalLoop(bool enable);
 ///@{
 
 /**
-* Returns calibration settings.
-* These calibration settings are populated only once from EEPROM at rp_Init().
-* Each rp_GetCalibrationSettings call returns the same cached setting values.
-* @return Calibration settings
-*/
-int rp_GetCalibrationSettings(rp_calib_params_t *calib_params);
+ * Calibration parameters, structure stored in the EEPROM device
+ */
+typedef struct {
+    float offset;  // in Volts
+    float gain;    // correction ratio
+} rp_calib_pair_t;
+
+typedef struct {
+    rp_calib_pair_t acq [2] [2];
+    rp_calib_pair_t gen [2];
+} rp_calib_params_t;
 
 /**
-* Set default calibration values.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* Calibration reset.
+* Default values are written into calibration regisers, EEPROM contents are unchanged.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationReset();
+int rp_CalibReset();
 
 /**
-* Set saved calibration values in case of roll-back calibration.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* Get calibration parameters.
+* Hardware calibration registers are read and stored into calibration parameter structure.
+* @return RP_OK
+*/
+int rp_CalibGetParams(rp_calib_params_t *calib_params, int range[2]);
+
+/**
+* Set calibration parameters.
+* Hardware calibration registers are writen based on calibration parameter structure.
+* @return RP_OK
+*/
+int rp_CalibSetParams(rp_calib_params_t *calib_params, int range[2]);
+
+/**
+* Read calibration parameters.
+* The given calibration parameter structure is populated from EEPROM contents.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationSetCachedParams();
+int rp_CalibReadParams(rp_calib_params_t *calib_params);
 
 /**
-* Write calibration values.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* Write calibration parameters.
+* The given calibration parameter structure is written into EEPROM.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationWriteParams(rp_calib_params_t *calib_params);
+int rp_CalibWriteParams(rp_calib_params_t *calib_params);
 ///@}
 
 

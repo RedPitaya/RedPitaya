@@ -1,15 +1,7 @@
 /**
- * $Id: $
- *
  * @brief Red Pitaya Calibration Module.
- *
  * @Author Red Pitaya
- *
  * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #ifndef __CALIB_H
@@ -19,18 +11,29 @@
 
 #include "redpitaya/rp.h"
 
-static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
-static const int  eeprom_calib_off=0x0008;
+// Base Housekeeping address
+#define RP_CALIB_BASE_ADDR 0x40000000
+#define RP_CALIB_BASE_SIZE 0x30
+
+#define RP_CALIB_EEPROM_PATH "/sys/bus/i2c/devices/0-0050/eeprom"
+#define RP_CALIB_EEPROM_ADDR 0x0008
+
+#define RP_CALIB_DWM 16
+#define RP_CALIB_DWS 14
+
+// hardware - calibration gain offset pair
+typedef struct {
+    uint32_t mul;  // fixed point   signed  s1.14 (RP_CALIB_DWM bits)
+    uint32_t sum;  // fixed point unsigned  u1.13 (RP_CALIB_DWS bits)
+} regset_calib_pair_t;
+
+// hardware - calibration register set structure
+typedef struct {
+    regset_calib_pair_t acq [2];
+    regset_calib_pair_t gen [2];
+} regset_calib_t;
 
 int calib_Init();
 int calib_Release();
-
-int calib_GetParams(rp_calib_params_t *calib_params);
-int calib_SetParams(rp_calib_params_t *calib_params);
-
-int calib_ReadParams(rp_calib_params_t *calib_params);
-int calib_WriteParams(rp_calib_params_t *calib_params);
-
-int calib_Reset();
 
 #endif //__CALIB_H

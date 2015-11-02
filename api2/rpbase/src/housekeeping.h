@@ -24,17 +24,12 @@
 static const int HOUSEKEEPING_BASE_ADDR = 0x40000000;
 static const int HOUSEKEEPING_BASE_SIZE = 0x30;
 
-static const uint32_t RP_CALIB_DWM = 16;
-static const uint32_t RP_CALIB_DWS = 14;
-
-// calibration gain offset pair
-typedef struct {
-    uint32_t mul;  // fixed point   signed  s1.14 (RP_CALIB_DWM bits)
-    uint32_t sum;  // fixed point unsigned  u1.13 (RP_CALIB_DWS bits)
-} hw_calib_pair_t;
+static const uint32_t LED_CONTROL_MASK = 0xFF;
+static const uint32_t DIGITAL_LOOP_MASK = 0x1;
+static const uint32_t GPIO_MASK = 0xFF;
 
 // Housekeeping structure declaration
-typedef struct housekeeping_control_s {
+typedef struct {
     uint32_t id;            // 0x00
     uint32_t dna_lo;        // 0x04
     uint32_t dna_hi;        // 0x08
@@ -48,25 +43,19 @@ typedef struct housekeeping_control_s {
     uint32_t reserved_2;    // 0x28
     uint32_t reserved_3;    // 0x2c
     uint32_t led_control;   // 0x30
-    hw_calib_pair_t adc [2];
-    hw_calib_pair_t dac [2];
 } housekeeping_control_t;
-
-static const uint32_t LED_CONTROL_MASK = 0xFF;
-static const uint32_t DIGITAL_LOOP_MASK = 0x1;
-static const uint32_t GPIO_MASK = 0xFF;
 
 int hk_EnableDigitalLoop(bool enable);
 
 static volatile housekeeping_control_t *hk = NULL;
 
 static int hk_Init() {
-    ECHECK(cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk));
+    cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
     return RP_OK;
 }
 
 static int hk_Release() {
-    ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
+    cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk);
     return RP_OK;
 }
 
