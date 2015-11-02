@@ -45,18 +45,7 @@ typedef struct {
     uint32_t led_control;   // 0x30
 } housekeeping_control_t;
 
-int hk_EnableDigitalLoop(bool enable);
-
-static volatile housekeeping_control_t *hk = NULL;
-
-static int hk_Init() {
-    cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
-    return RP_OK;
-}
-
-static int hk_Release() {
-    cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk);
-    return RP_OK;
-}
+int hk_Init();
+int hk_Release();
 
 #endif //__HOUSEKEEPING_H

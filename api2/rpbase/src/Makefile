@@ -34,21 +34,18 @@ TARGET=$(OUTPUT_DIR)/librp.so
 # List of compiled object files
 OBJECTS =	common.o \
 		analog.o \
-		kiss_fft/kiss_fft.c \
-		kiss_fft/kiss_fftr.c \
+		housekeeping.o \
+		calib.o \
 		oscilloscope.o \
 		acq_handler.o \
 		generate.o \
 		gen_handler.o \
-		calib.o \
-		spec_dsp.o \
-		spec_fpga.o \
 		rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../../include
 LDFLAGS=-shared -Wl,--version-script=exportmap

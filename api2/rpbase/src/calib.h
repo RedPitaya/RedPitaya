@@ -12,7 +12,7 @@
 #include "redpitaya/rp.h"
 
 // Base Housekeeping address
-#define RP_CALIB_BASE_ADDR 0x40000000
+#define RP_CALIB_BASE_ADDR 0x40500000
 #define RP_CALIB_BASE_SIZE 0x30
 
 #define RP_CALIB_EEPROM_PATH "/sys/bus/i2c/devices/0-0050/eeprom"
