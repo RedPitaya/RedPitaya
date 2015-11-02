@@ -33,6 +33,7 @@ TARGET=$(OUTPUT_DIR)/librp.so
 
 # List of compiled object files
 OBJECTS =	common.o \
+		analog.o \
 		kiss_fft/kiss_fft.c \
 		kiss_fft/kiss_fftr.c \
 		oscilloscope.o \

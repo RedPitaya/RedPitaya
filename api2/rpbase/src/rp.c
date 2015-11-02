@@ -17,10 +17,11 @@
 
 #include "version.h"
 #include "common.h"
+#include "analog.h"
 #include "housekeeping.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
-#include "analog_mixed_signals.h"
+#include "analog.h"
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
@@ -37,7 +38,7 @@ int rp_Init()
 	
     ECHECK(calib_Init());
     ECHECK(hk_Init());
-    ECHECK(ams_Init());
+    analog_Init();
     ECHECK(generate_Init());
     ECHECK(osc_Init());
     // TODO: Place other module initializations here
@@ -59,7 +60,7 @@ int rp_Release()
 {
     ECHECK(osc_Release())
     ECHECK(generate_Release());
-    ECHECK(ams_Release());
+    analog_Release();
     ECHECK(hk_Release());
     ECHECK(calib_Release());
     ECHECK(cmn_Release());
@@ -300,149 +301,6 @@ int rp_EnableDigitalLoop(bool enable) {
     iowrite32((uint32_t) enable, &hk->digital_loop);
     return RP_OK;
 }
-
-
-/** @name Analog Inputs/Outputs
- */
-///@{
-
-int rp_ApinReset() {
-    return rp_AOpinReset();
-}
-
-int rp_ApinGetValue(rp_apin_t pin, float* value) {
-    if (pin <= RP_AOUT3) {
-        rp_AOpinGetValue(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value);
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
-    if (pin <= RP_AOUT3) {
-        rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-int rp_ApinSetValue(rp_apin_t pin, float value) {
-    if (pin <= RP_AOUT3) {
-        rp_AOpinSetValue(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
-    if (pin <= RP_AOUT3) {
-        rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
-    if (pin <= RP_AOUT3) {
-        *min_val = ANALOG_OUT_MIN_VAL;
-        *max_val = ANALOG_OUT_MAX_VAL;
-    } else if (pin <= RP_AIN3) {
-        *min_val = ANALOG_IN_MIN_VAL;
-        *max_val = ANALOG_IN_MAX_VAL;
-    } else {
-        return RP_EPN;
-    }
-    return RP_OK;
-}
-
-
-/**
- * Analog Inputs
- */
-
-int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
-    FILE *fp;
-    switch (pin) {
-        case 0:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");  break;
-        case 1:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");   break;
-        case 2:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");  break;
-        case 3:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");  break;
-        default:
-            return RP_EPN;
-    }
-    int r = !fscanf (fp, "%d", value);
-    fclose(fp);
-    return r;
-}
-
-int rp_AIpinGetValue(int unsigned pin, float* value) {
-    uint32_t value_raw;
-    int result = rp_AIpinGetValueRaw(pin, &value_raw);
-    *value = (((float)value_raw / ANALOG_IN_MAX_VAL_INTEGER) * (ANALOG_IN_MAX_VAL - ANALOG_IN_MIN_VAL)) + ANALOG_IN_MIN_VAL;
-    return result;
-}
-
-
-/**
- * Analog Outputs
- */
-
-int rp_AOpinReset() {
-    for (int unsigned pin=0; pin<4; pin++) {
-        rp_AOpinSetValueRaw(pin, 0);
-    }
-    return RP_OK;
-}
-
-int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
-    if (pin >= 4) {
-        return RP_EPN;
-    }
-    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
-        return RP_EOOR;
-    }
-    iowrite32(value & ANALOG_OUT_MASK, &ams->pdm_cfg[pin]);
-    return RP_OK;
-}
-
-int rp_AOpinSetValue(int unsigned pin, float value) {
-    uint32_t value_raw = (uint32_t) (((value - ANALOG_OUT_MIN_VAL) / (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) * ANALOG_OUT_MAX_VAL_INTEGER);
-    return rp_AOpinSetValueRaw(pin, value_raw);
-}
-
-int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
-    if (pin >= 4) {
-        return RP_EPN;
-    }
-    *value = ioread32(&ams->pdm_cfg[pin]) & ANALOG_OUT_MASK;
-    return RP_OK;
-}
-
-int rp_AOpinGetValue(int unsigned pin, float* value) {
-    uint32_t value_raw;
-    int result = rp_AOpinGetValueRaw(pin, &value_raw);
-    *value = (((float)value_raw / ANALOG_OUT_MAX_VAL_INTEGER) * (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) + ANALOG_OUT_MIN_VAL;
-    return result;
-}
-
-int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
-    *min_val = ANALOG_OUT_MIN_VAL;
-    *max_val = ANALOG_OUT_MAX_VAL;
-    return RP_OK;
-}
-
 
 /**
  * Acquire methods
@@ -702,35 +560,43 @@ int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
 }
 
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
-    return gen_setAmplitude(channel, amplitude);
+    return generate_setAmplitude(channel, amplitude);
 }
 
 int rp_GenGetAmp(rp_channel_t channel, float *amplitude) {
-    return gen_getAmplitude(channel, amplitude);
+    return generate_getAmplitude(channel, amplitude);
 }
 
 int rp_GenOffset(rp_channel_t channel, float offset) {
-    return gen_setOffset(channel, offset);
+    return generate_setDCOffset(channel, offset);
 }
 
 int rp_GenGetOffset(rp_channel_t channel, float *offset) {
-    return gen_getOffset(channel, offset);
+    return generate_getDCOffset(channel, offset);
 }
 
 int rp_GenFreq(rp_channel_t channel, float frequency) {
-    return gen_setFrequency(channel, frequency);
+    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+        return RP_EOOR;
+    }
+    return generate_setFrequency(channel, frequency);
 }
 
 int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
-    return gen_getFrequency(channel, frequency);
+    return generate_getFrequency(channel, frequency);
 }
 
 int rp_GenPhase(rp_channel_t channel, float phase) {
-    return gen_setPhase(channel, phase);
+    if (phase < PHASE_MIN || phase > PHASE_MAX) {
+        return RP_EOOR;
+    }
+    // TODO
+    return RP_OK;
 }
 
 int rp_GenGetPhase(rp_channel_t channel, float *phase) {
-    return gen_getPhase(channel, phase);
+    // TODO
+    return RP_OK;
 }
 
 int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {

@@ -19,9 +19,9 @@
 static const int ANALOG_MIXED_SIGNALS_BASE_ADDR = 0x40400000;
 static const int ANALOG_MIXED_SIGNALS_BASE_SIZE = 0x30;
 
-typedef struct analog_mixed_signals_control_s {
+typedef struct {
     uint32_t pdm_cfg [4];
-} analog_mixed_signals_control_t;
+} analog_control_t;
 
 static const uint32_t ANALOG_OUT_MASK            = 0xFF;
 static const uint32_t ANALOG_IN_MASK             = 0xFFF;
@@ -34,16 +34,7 @@ static const float    ANALOG_OUT_MAX_VAL         = 1.8;
 static const float    ANALOG_OUT_MIN_VAL         = 0.0;
 static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 255;
 
-static volatile analog_mixed_signals_control_t *ams = NULL;
-
-static int ams_Init() {
-    ECHECK(cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams));
-    return RP_OK;
-}
-
-static int ams_Release() {
-    ECHECK(cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams));
-    return RP_OK;
-}
+int analog_Init();
+int analog_Release();
 
 #endif //__ANALOG_MIXED_SIGNALS_H

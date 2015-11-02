@@ -13,15 +13,15 @@
 */
 
 #include <float.h>
-#include "math.h"
+#include <math.h>
 #include "common.h"
 #include "generate.h"
 #include "gen_handler.h"
 
+#include "redpitaya/rp.h"
+
 // global variables
 // TODO: should be organized into a system status structure
-float         ch_amplitude       [2] = {1,1};
-float         ch_offset          [2] = {0,0};
 float         ch_dutyCycle       [2] = {0,0};
 float         ch_frequency       [2] = {0,0};
 float         ch_phase           [2] = {0,0};
@@ -37,18 +37,18 @@ float ch_arbitraryData[2][BUFFER_LENGTH];
 int gen_SetDefaultValues() {
     gen_Disable(RP_CH_1);
     gen_Disable(RP_CH_2);
-    gen_setFrequency(RP_CH_1, 1000);
-    gen_setFrequency(RP_CH_2, 1000);
+    rp_GenFreq(RP_CH_1, 1000);
+    rp_GenFreq(RP_CH_2, 1000);
     gen_setBurstRepetitions(RP_CH_1, 1);
     gen_setBurstRepetitions(RP_CH_2, 1);
     gen_setBurstPeriod(RP_CH_1, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
     gen_setBurstPeriod(RP_CH_2, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
     gen_setWaveform(RP_CH_1, RP_WAVEFORM_SINE);
     gen_setWaveform(RP_CH_2, RP_WAVEFORM_SINE);
-    gen_setOffset(RP_CH_1, 0);
-    gen_setOffset(RP_CH_2, 0);
-    gen_setAmplitude(RP_CH_1, 1);
-    gen_setAmplitude(RP_CH_2, 1);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenAmp(RP_CH_1, 1);
+    rp_GenAmp(RP_CH_2, 1);
     gen_setDutyCycle(RP_CH_1, 0.5);
     gen_setDutyCycle(RP_CH_2, 0.5);
     gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
@@ -80,65 +80,6 @@ int gen_checkAmplitudeAndOffset(float amplitude, float offset) {
     if (fabs(amplitude) + fabs(offset) > LEVEL_MAX) {
         return RP_EOOR;
     }
-    return RP_OK;
-}
-
-int gen_setAmplitude(rp_channel_t channel, float amplitude) {
-    float offset = ch_offset[channel];
-    gen_checkAmplitudeAndOffset(amplitude, offset);
-    ch_amplitude[channel] = amplitude;
-    return generate_setAmplitude(channel, amplitude);
-}
-
-int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
-    return generate_getAmplitude(channel, amplitude);
-}
-
-int gen_setOffset(rp_channel_t channel, float offset) {
-    float amplitude = ch_amplitude[channel];
-    gen_checkAmplitudeAndOffset(amplitude, offset);
-    ch_offset[channel] = offset;
-    return generate_setDCOffset(channel, offset);
-}
-
-int gen_getOffset(rp_channel_t channel, float *offset) {
-    return generate_getDCOffset(channel, offset);
-}
-
-int gen_setFrequency(rp_channel_t channel, float frequency) {
-    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
-        return RP_EOOR;
-    }
-    if (channel > RP_CH_2) {
-        return RP_EPN;
-    }
-    ch_frequency[channel] = frequency;
-    gen_setBurstPeriod(channel, ch_burstPeriod[channel]);
-
-    generate_setFrequency(channel, frequency);
-    synthesize_signal(channel);
-    return gen_Synchronise();
-}
-
-int gen_getFrequency(rp_channel_t channel, float *frequency) {
-    return generate_getFrequency(channel, frequency);
-}
-
-int gen_setPhase(rp_channel_t channel, float phase) {
-    if (phase < PHASE_MIN || phase > PHASE_MAX) {
-        return RP_EOOR;
-    }
-    if (phase < 0) {
-        phase += 360;
-    }
-    ch_phase[channel] = phase;
-
-    synthesize_signal(channel);
-    return gen_Synchronise();
-}
-
-int gen_getPhase(rp_channel_t channel, float *phase) {
-    *phase = ch_phase[channel];
     return RP_OK;
 }
 
