@@ -86,12 +86,6 @@ int generate_Release();
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
-int generate_setAmplitude(rp_channel_t channel, float amplitude);
-int generate_getAmplitude(rp_channel_t channel, float *amplitude);
-int generate_setDCOffset(rp_channel_t channel, float offset);
-int generate_getDCOffset(rp_channel_t channel, float *offset);
-int generate_setFrequency(rp_channel_t channel, float frequency);
-int generate_getFrequency(rp_channel_t channel, float *frequency);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value);
 int generate_getTriggerSource(rp_channel_t channel, uint32_t *value);

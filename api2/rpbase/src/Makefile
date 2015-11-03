@@ -39,7 +39,6 @@ OBJECTS =	common.o \
 		oscilloscope.o \
 		acq_handler.o \
 		generate.o \
-		gen_handler.o \
 		rp.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
