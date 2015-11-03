@@ -1,22 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Module: housekeeping
+// Module: calibration
 // Authors: Matej Oblak, Iztok Jeras <iztok.jeras@redpitaya.com>
 // (c) Red Pitaya  (redpitaya.com)
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-// GENERAL DESCRIPTION:
-//
-// House keeping module takes care of system identification.
-//
-// This module takes care of system identification via DNA readout at startup and
-// ID register which user can define at compile time.
-//
-// Beside that it is currently also used to test expansion connector and for
-// driving LEDs.
-////////////////////////////////////////////////////////////////////////////////
-
-module red_pitaya_hk #(
+module red_pitaya_calib #(
   int unsigned DWM = 16,   // data width for multiplier (gain)
   int unsigned DWS = 14    // data width for summation (offset)
 )(
@@ -82,15 +70,15 @@ end else begin
   casez (sys_addr[5-1:0])
     // ADC calibration
     5'b000??: sys_rdata <= adc_cfg_mul[0];
-    5'h001??: sys_rdata <= adc_cfg_sum[0];
-    5'h010??: sys_rdata <= adc_cfg_mul[1];
-    5'h011??: sys_rdata <= adc_cfg_sum[1];
+    5'b001??: sys_rdata <= adc_cfg_sum[0];
+    5'b010??: sys_rdata <= adc_cfg_mul[1];
+    5'b011??: sys_rdata <= adc_cfg_sum[1];
     // DAC calibration
-    5'h100??: sys_rdata <= dac_cfg_mul[0];
-    5'h101??: sys_rdata <= dac_cfg_sum[0];
-    5'h110??: sys_rdata <= dac_cfg_mul[1];
-    5'h111??: sys_rdata <= dac_cfg_sum[1];
+    5'b100??: sys_rdata <= dac_cfg_mul[0];
+    5'b101??: sys_rdata <= dac_cfg_sum[0];
+    5'b110??: sys_rdata <= dac_cfg_mul[1];
+    5'b111??: sys_rdata <= dac_cfg_sum[1];
   endcase
 end
 
-endmodule: red_pitaya_hk
+endmodule: red_pitaya_calib

@@ -58,27 +58,27 @@ module asg_top #(
 // read/write access to buffer
 ////////////////////////////////////////////////////////////////////////////////
 
-logic                  buf_we   ;
-logic        [CWM-1:0] buf_addr ;
-logic signed [DWO-1:0] buf_wdata;
-logic signed [DWO-1:0] buf_rdata;
-logic          [3-1:0] buf_dly ;
-logic                  buf_ack ;
+logic                  bus_we   ;
+logic        [CWM-1:0] bus_addr ;
+logic signed [DWO-1:0] bus_wdata;
+logic signed [DWO-1:0] bus_rdata;
+logic          [3-1:0] bus_dly ;
+logic                  bus_ack ;
 
 always @(posedge clk)
 begin
-  buf_we    <= sys_wen && (sys_addr[19:CWM+2] == 'h1);
-  buf_addr  <= sys_addr[CWM+1:2];
-  buf_wdata <= sys_addr[CWM+1:2];
+  bus_we    <= sys_wen && (sys_addr[19:CWM+2] == 'h1);
+  bus_addr  <= sys_addr[CWM+1:2];
+  bus_wdata <= sys_addr[CWM+1:2];
 end
 
 always_ff @(posedge clk)
 if (rstn == 1'b0) begin
-   buf_dly   <= '0;
-   buf_ack   <= '0;
+   bus_dly   <= '0;
+   bus_ack   <= '0;
 end else begin
-   buf_dly <= {buf_dly[3-2:0], sys_ren};
-   buf_ack <=  buf_dly[3-1] || sys_wen ;
+   bus_dly <= {bus_dly[3-2:0], sys_ren};
+   bus_ack <=  bus_dly[3-1] || sys_wen ;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +137,7 @@ end else begin
      20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32-     16{1'b0}}, cfg_rnum}; end
      20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= cfg_rdly                      ; end
 
-     20'h1zzzz : begin sys_ack <= buf_ack;         sys_rdata <= {{32-    DWO{1'b0}}, buf_rdata}; end
+     20'h1zzzz : begin sys_ack <= bus_ack;         sys_rdata <= {{32-    DWO{1'b0}}, bus_rdata}; end
 
        default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                       ; end
    endcase

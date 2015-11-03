@@ -45,8 +45,6 @@ add_files                         $path_rtl/axi_slave.sv
 add_files                         $path_rtl/axi_wr_fifo.sv
 
 add_files                         $path_rtl/red_pitaya_ams.sv
-add_files                         $path_rtl/red_pitaya_asg_ch.sv
-add_files                         $path_rtl/red_pitaya_asg.sv
 add_files                         $path_rtl/red_pitaya_dfilt1.sv
 add_files                         $path_rtl/red_pitaya_hk.sv
 add_files                         $path_rtl/red_pitaya_calib.sv
@@ -59,6 +57,8 @@ add_files                         $path_rtl/red_pitaya_top.sv
 add_files                         $path_rtl/pdm.sv
 add_files                         $path_rtl/pwm.sv
 add_files                         $path_rtl/linear.sv
+add_files                         $path_rtl/asg_top.sv
+add_files                         $path_rtl/asg.sv
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 

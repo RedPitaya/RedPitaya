@@ -295,11 +295,6 @@ assign ps_sys_err   = |(sys_cs & sys_err);
 assign ps_sys_ack   = |(sys_cs & sys_ack);
 
 // unused system bus slave ports
-
-assign sys_rdata[6*32+:32] = 32'h0; 
-assign sys_err  [6       ] =  1'b0;
-assign sys_ack  [6       ] =  1'b1;
-
 assign sys_rdata[7*32+:32] = 32'h0; 
 assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
@@ -320,12 +315,6 @@ red_pitaya_hk hk (
   .led_o         (led_o),
   // global configuration
   .digital_loop  (digital_loop),
-  // ADC calibration
-  .adc_cfg_mul   (adc_cfg_mul),
-  .adc_cfg_sum   (adc_cfg_sum),
-  // DAC calibration
-  .dac_cfg_mul   (dac_cfg_mul),
-  .dac_cfg_sum   (dac_cfg_sum),
   // Expansion connector
   .exp_p_i       (exp_p_i ),
   .exp_p_o       (exp_p_o ),
@@ -365,11 +354,88 @@ red_pitaya_calib calib (
   .sys_addr      (sys_addr           ),
   .sys_wdata     (sys_wdata          ),
   .sys_sel       (sys_sel            ),
-  .sys_wen       (sys_wen  [5]       ),
-  .sys_ren       (sys_ren  [5]       ),
-  .sys_rdata     (sys_rdata[5*32+:32]),
-  .sys_err       (sys_err  [5]       ),
-  .sys_ack       (sys_ack  [5]       ) 
+  .sys_wen       (sys_wen  [1]       ),
+  .sys_ren       (sys_ren  [1]       ),
+  .sys_rdata     (sys_rdata[1*32+:32]),
+  .sys_err       (sys_err  [1]       ),
+  .sys_ack       (sys_ack  [1]       ) 
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Analog mixed signals (PDM analog outputs)
+////////////////////////////////////////////////////////////////////////////////
+
+localparam int unsigned PDM_CHN = 4;
+localparam int unsigned PDM_DWC = 8;
+
+logic [PDM_CHN-1:0] [PDM_DWC-1:0] pdm_cfg;
+
+red_pitaya_ams #(
+  .DWC (PDM_DWC),
+  .CHN (PDM_CHN)
+) ams (
+  // system signals
+  .clk        (adc_clk ),
+  .rstn       (adc_rstn),
+  // PDM configuration
+  .pdm_cfg    (pdm_cfg),
+  // system bus
+  .sys_addr   (sys_addr           ),
+  .sys_wdata  (sys_wdata          ),
+  .sys_sel    (sys_sel            ),
+  .sys_wen    (sys_wen  [2]       ),
+  .sys_ren    (sys_ren  [2]       ),
+  .sys_rdata  (sys_rdata[2*32+:32]),
+  .sys_err    (sys_err  [2]       ),
+  .sys_ack    (sys_ack  [2]       )
+);
+
+pdm #(
+  .DWC (PDM_DWC),
+  .CHN (PDM_CHN)
+) pdm (
+  // system signals
+  .clk      (pdm_clk ),
+  .rstn     (pdm_rstn),
+  .cke      (1'b1),
+  // configuration
+  .ena      (1'b1),
+  .rng      (8'd255),
+  // input stream
+  .str_dat  (pdm_cfg),
+  .str_vld  (1'b1   ),
+  .str_rdy  (       ),
+  // PWM outputs
+  .pdm      (dac_pwm_o)
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Daisy dummy code
+////////////////////////////////////////////////////////////////////////////////
+
+assign daisy_p_o = 1'bz;
+assign daisy_n_o = 1'bz;
+
+////////////////////////////////////////////////////////////////////////////////
+//  MIMO PID controller
+////////////////////////////////////////////////////////////////////////////////
+
+red_pitaya_pid pid (
+  // system signals
+  .clk        (adc_clk ),
+  .rstn       (adc_rstn),
+  // signals
+  .dat_i      (adc_dat),
+  .dat_o      (pid_dat),
+  // System bus
+  .sys_addr   (sys_addr           ),
+  .sys_wdata  (sys_wdata          ),
+  .sys_sel    (sys_sel            ),
+  .sys_wen    (sys_wen  [3]       ),
+  .sys_ren    (sys_ren  [3]       ),
+  .sys_rdata  (sys_rdata[3*32+:32]),
+  .sys_err    (sys_err  [3]       ),
+  .sys_ack    (sys_ack  [3]       )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,8 +536,36 @@ ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1      ), .D2(1'b0      ), .C(
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst   ), .D2(dac_rst   ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
-//---------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// ASG (arbitrary signal generators)
+////////////////////////////////////////////////////////////////////////////////
+
+asg_top asg_top [2-1:0] (
+  // system signals
+  .clk       (adc_clk ),
+  .rstn      (adc_rstn),
+  // stream output
+  .sto_dat   (asg_dat),
+  .sto_vld   (),
+  .sto_rdy   (1'b1),
+  // triggers
+  .trg_ext   ('0),
+  .trg_swo   (),
+  .trg_out   (),
+  // System bus
+  .sys_sel   ({sys_sel            , sys_sel            }),
+  .sys_wen   ({sys_wen  [5]       , sys_wen  [4]       }),
+  .sys_ren   ({sys_ren  [5]       , sys_ren  [4]       }),
+  .sys_addr  ({sys_addr           , sys_addr           }),
+  .sys_wdata ({sys_wdata          , sys_wdata          }),
+  .sys_rdata ({sys_rdata[5*32+:32], sys_rdata[4*32+:32]}),
+  .sys_err   ({sys_err  [5]       , sys_err  [4]       }),
+  .sys_ack   ({sys_ack  [5]       , sys_ack  [4]       })
+);
+
+////////////////////////////////////////////////////////////////////////////////
 //  Oscilloscope application
+////////////////////////////////////////////////////////////////////////////////
 
 logic trig_asg_out ;
 
@@ -499,113 +593,11 @@ red_pitaya_scope i_scope (
   .sys_addr      (sys_addr           ),
   .sys_wdata     (sys_wdata          ),
   .sys_sel       (sys_sel            ),
-  .sys_wen       (sys_wen  [1]       ),
-  .sys_ren       (sys_ren  [1]       ),
-  .sys_rdata     (sys_rdata[1*32+:32]),
-  .sys_err       (sys_err  [1]       ),
-  .sys_ack       (sys_ack  [1]       )
+  .sys_wen       (sys_wen  [6]       ),
+  .sys_ren       (sys_ren  [6]       ),
+  .sys_rdata     (sys_rdata[6*32+:32]),
+  .sys_err       (sys_err  [6]       ),
+  .sys_ack       (sys_ack  [6]       )
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// ASG (arbitrary signal generators)
-////////////////////////////////////////////////////////////////////////////////
-
-red_pitaya_asg asg (
-  // system signals
-  .dac_clk_i       (adc_clk ),
-  .dac_rstn_i      (adc_rstn),
-   // DAC
-  .dac_a_o         (asg_dat[0]  ),
-  .dac_b_o         (asg_dat[1]  ),
-  .trig_a_i        (exp_p_i[0]  ),
-  .trig_b_i        (exp_p_i[0]  ),
-  .trig_out_o      (trig_asg_out),
-  // System bus
-  .sys_addr        (sys_addr           ),
-  .sys_wdata       (sys_wdata          ),
-  .sys_sel         (sys_sel            ),
-  .sys_wen         (sys_wen  [2]       ),
-  .sys_ren         (sys_ren  [2]       ),
-  .sys_rdata       (sys_rdata[2*32+:32]),
-  .sys_err         (sys_err  [2]       ),
-  .sys_ack         (sys_ack  [2]       )
-);
-
-////////////////////////////////////////////////////////////////////////////////
-//  MIMO PID controller
-////////////////////////////////////////////////////////////////////////////////
-
-red_pitaya_pid pid (
-  // system signals
-  .clk        (adc_clk ),
-  .rstn       (adc_rstn),
-  // signals
-  .dat_i      (adc_dat),
-  .dat_o      (pid_dat),
-  // System bus
-  .sys_addr   (sys_addr           ),
-  .sys_wdata  (sys_wdata          ),
-  .sys_sel    (sys_sel            ),
-  .sys_wen    (sys_wen  [3]       ),
-  .sys_ren    (sys_ren  [3]       ),
-  .sys_rdata  (sys_rdata[3*32+:32]),
-  .sys_err    (sys_err  [3]       ),
-  .sys_ack    (sys_ack  [3]       )
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// Analog mixed signals (PDM analog outputs)
-////////////////////////////////////////////////////////////////////////////////
-
-localparam int unsigned PDM_CHN = 4;
-localparam int unsigned PDM_DWC = 8;
-
-logic [PDM_CHN-1:0] [PDM_DWC-1:0] pdm_cfg;
-
-red_pitaya_ams #(
-  .DWC (PDM_DWC),
-  .CHN (PDM_CHN)
-) ams (
-  // system signals
-  .clk        (adc_clk ),
-  .rstn       (adc_rstn),
-  // PDM configuration
-  .pdm_cfg    (pdm_cfg),
-  // system bus
-  .sys_addr   (sys_addr           ),
-  .sys_wdata  (sys_wdata          ),
-  .sys_sel    (sys_sel            ),
-  .sys_wen    (sys_wen  [4]       ),
-  .sys_ren    (sys_ren  [4]       ),
-  .sys_rdata  (sys_rdata[4*32+:32]),
-  .sys_err    (sys_err  [4]       ),
-  .sys_ack    (sys_ack  [4]       )
-);
-
-pdm #(
-  .DWC (PDM_DWC),
-  .CHN (PDM_CHN)
-) pdm (
-  // system signals
-  .clk      (pdm_clk ),
-  .rstn     (pdm_rstn),
-  .cke      (1'b1),
-  // configuration
-  .ena      (1'b1),
-  .rng      (8'd255),
-  // input stream
-  .str_dat  (pdm_cfg),
-  .str_vld  (1'b1   ),
-  .str_rdy  (       ),
-  // PWM outputs
-  .pdm      (dac_pwm_o)
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// Daisy dummy code
-////////////////////////////////////////////////////////////////////////////////
-
-assign daisy_p_o = 1'bz;
-assign daisy_n_o = 1'bz;
 
 endmodule: red_pitaya_top

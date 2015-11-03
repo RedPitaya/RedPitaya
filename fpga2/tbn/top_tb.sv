@@ -64,10 +64,10 @@ initial begin
   $finish();
 end
 
-initial begin
-  force top.asg.ch[0].dac_o = 14'h00ff;
-  force top.asg.ch[1].dac_o = 14'h00aa;
-end
+//initial begin
+//  force top.asg.ch[0].dac_o = 14'h00ff;
+//  force top.asg.ch[1].dac_o = 14'h00aa;
+//end
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
