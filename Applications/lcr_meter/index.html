@@ -48,6 +48,7 @@
                     </div>
                     <div class="collapse navbar-collapse">
                     	<ul class="nav navbar-nav">
+                    		<li><a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>
                     		<li><a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;">LOG</a></li>
                             <li>
                                 <a id="LCR_HOLD" href="#" style="">HOLD</a>
@@ -109,11 +110,75 @@
 
             		<div class="menu_wrapper">
             			<div class="col-xs-6 menu_header">
-            				<label for="lb_tag" style="color: #d43f3a"><b>MEASURMENT OPTIONS<b></label>
+            				<label for="lb_tag" style="color: #d43f3a">MEASURMENT OPTIONS</label>
             			</div>
             			<div class="separator col-xs-4">
             				<hr>
             			</div>
+            		</div>
+
+            		<div class="menu_wrapper col-xs-4">
+            			<form class="form-horizontal" role="form">
+                			<div>
+			                	<div style="float:left">
+			                		<label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Frequency: </label>
+			                	</div>
+			                  	<div class="col-xs-8" style="float: right">
+			                  		<select class="form-control">
+			                  			<option value="0">100 Hz</option>
+			                  			<option value="1">1 kHz</option>
+			                  			<option value="2">10 kHz</option>
+			                  			<option value="3">100 kHz</option>
+			                  		</select>
+	        					</div>
+			                </div>
+              			</form>
+            		</div>
+
+            		<div class="menu_wrapper col-xs-4">
+	            		<form class="form-horizontal" role="form">
+			                <div>
+			                	<div style="float:left">
+			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Select Mode:</label>
+			                	</div>
+
+			                  	<div style="float: right" class="col-xs-8">
+									<button type="button" class="btn btn-danger" style="width: 50%" value="0">Auto</button>
+									<button type="button" class="btn btn-danger" style="width: 50%" value="1">Manual</button>
+	        					</div>
+			                </div>
+	              		</form>
+	              	</div>
+
+            		<div class="menu_wrapper col-xs-4">
+            			<form class="form-horizontal" role="form">
+                			<div>
+			                	<div style="float:left">
+			                		<label for="lb_mode" style="margin-bottom: 0px; margin-top:5px;">Select Mode: </label>
+			                	</div>
+
+			                	<div class="col-xs-3" style="float: right">
+			                  		<select class="form-control">
+			                  			<option value="0">nH</option>
+			                  			<option value="1">uH</option>
+			                  			<option value="2">mH</option>
+			                  			<option value="3">H</option>
+			                  			<option value="4">kH</option>
+			                  			<option value="5">MH</option>
+			                  		</select>
+	        					</div>
+
+			                	<div class="col-xs-5" style="float: right">
+			                  		<select class="form-control">
+			                  			<option value="0">10.000</option>
+			                  			<option value="1">100.00</option>
+			                  			<option value="2">1000.00</option>
+			                  			<option value="3">10000.0</option>
+			                  		</select>
+	        					</div>
+
+			                </div>
+              			</form>
             		</div>
 
 

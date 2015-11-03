@@ -244,6 +244,10 @@ area:hover {
   display: none;
 }
 
+.col-cxs-8 {
+  float: right;
+}
+
 .col-xs-6.option-content {
   border-bottom: 1px solid #999;
   border-right: 1px solid #999;
@@ -400,7 +404,7 @@ area:hover {
   color: #fff;
   background-color: #343433;
   background-image: none;
-  border: 0px none;
+  border: 1px solid #cccccc;
   box-shadow: none;
   border-radius: 0px;
   height: 33px;
