@@ -29,10 +29,11 @@
 </head>
 
 <body>
-	<div class="full-content">
+	<div class="full-content" style="width: 60%">
 		<div class="container-fluid">
 			<div class="navbar navbar-inverse" role="navigation">
 				<div class="container">
+
 					<!-- Navigation bar -->
 					<div class="navbar-header">
                         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -59,14 +60,19 @@
 				</div>
 			</div>
 			<!-- Data display -->
-			<div></div>
+			<div id="data_window" class="data_wrapper" style="position: relative">
+				<!-- Pimary display -->
+				<div id="prim_displ">
+					
+				</div>
+			</div>
 
 			<!-- table display -->
 			<div></div>
 
 			<!-- Main right menu -->
-			<div id="global_container" style="position: relative;">
-            	<div class="menu-content">
+			<div class="global_container">
+            	<div class="menu_content">
             		<div class="menu_wrapper">
             			<div class="col-xs-4 menu_header">
             				<label for="lb_tag" style="color: #d43f3a">DATA OPTIONS</label>
@@ -154,7 +160,7 @@
             			<form class="form-horizontal" role="form">
                 			<div>
 			                	<div style="float:left">
-			                		<label for="lb_mode" style="margin-bottom: 0px; margin-top:5px;">Select Mode: </label>
+			                		<label for="lb_range" style="margin-bottom: 0px; margin-top:5px;">Select Range: </label>
 			                	</div>
 
 			                	<div class="col-xs-3" style="float: right">
@@ -180,6 +186,17 @@
 			                </div>
               			</form>
             		</div>
+            		<br> &nbsp;
+            		<div class="menu_wrapper col-xs-4">
+	            		<form class="form-horizontal" role="form">
+			                <div>
+			                  	<div style="float: right" class="col-xs-12">
+									<button type="button" class="btn btn-danger" style="width: 50%" value="0">Relative Mode</button>
+									<button type="button" class="btn btn-danger" style="width: 50%" value="1">Tolerance Mode</button>
+	        					</div>
+			                </div>
+	              		</form>
+	              	</div>
 
 
             	</div>
