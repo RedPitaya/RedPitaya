@@ -584,7 +584,9 @@ clean:
 	make -C $(CALIB_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
+ifdef ENABLE_LICENSING
 	make -C $(LIBRPAPP_DIR) clean
+endif
 	make -C $(SDK_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
