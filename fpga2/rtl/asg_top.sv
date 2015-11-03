@@ -58,7 +58,8 @@ module asg_top #(
 // read/write access to buffer
 ////////////////////////////////////////////////////////////////////////////////
 
-logic                  bus_we   ;
+logic                  bus_ena  ;
+logic                  bus_wen  ;
 logic        [CWM-1:0] bus_addr ;
 logic signed [DWO-1:0] bus_wdata;
 logic signed [DWO-1:0] bus_rdata;
@@ -67,9 +68,10 @@ logic                  bus_ack ;
 
 always @(posedge clk)
 begin
-  bus_we    <= sys_wen && (sys_addr[19:CWM+2] == 'h1);
+  bus_ena   <= (sys_wen | sys_ren) & (sys_addr[CWM+2] == 'h1);
+  bus_wen   <= sys_wen;
   bus_addr  <= sys_addr[CWM+1:2];
-  bus_wdata <= sys_addr[CWM+1:2];
+  bus_wdata <= sys_wdata;
 end
 
 always_ff @(posedge clk)
@@ -87,27 +89,30 @@ end
 
 logic               ctl_rst ;
 // configuration
-logic     [TWS-1:0] cfg_tsel; // trigger select
-logic               cfg_wrap;
-logic [CWM+CWF-1:0] cfg_size;
-logic [CWM+CWF-1:0] cfg_step;
-logic [CWM+CWF-1:0] cfg_offs;
-logic     [ 16-1:0] cfg_ncyc;
-logic     [ 16-1:0] cfg_rnum;
-logic     [ 32-1:0] cfg_rdly;
+logic     [TWS-1:0] cfg_tsel;  // trigger select
+
+logic [CWM+CWF-1:0] cfg_size;  // table size
+logic [CWM+CWF-1:0] cfg_step;  // address increment step (frequency)
+logic [CWM+CWF-1:0] cfg_offs;  // address initial offset (phase)
+// burst mode configuraton
+logic               cfg_brst;  // burst mode enable
+logic     [ 16-1:0] cfg_ncyc;  // number of cycles
+logic     [ 16-1:0] cfg_rnum;  // number of repetitions
+logic     [ 32-1:0] cfg_rdly;  // delay between repetitions
 
 always_ff @(posedge clk)
 if (rstn == 1'b0) begin
-   cfg_tsel  <= '0;
-   cfg_wrap  <= '0;
-   cfg_size  <= '0;
-   cfg_offs  <= '0;
-   cfg_step  <= '0;
-   cfg_ncyc  <= '0;
-   cfg_rnum  <= '0;
-   cfg_rdly  <= '0;
+   cfg_tsel <= '0;
+   cfg_size <= '0;
+   cfg_offs <= '0;
+   cfg_step <= '0;
+   cfg_brst <= '0;
+   cfg_ncyc <= '0;
+   cfg_rnum <= '0;
+   cfg_rdly <= '0;
 end else begin
    if (sys_wen) begin
+      if (sys_addr[19:0]==20'h04)  cfg_brst <= sys_wdata[    TWS    ];
       if (sys_addr[19:0]==20'h04)  cfg_tsel <= sys_wdata[    TWS-1:0];
       if (sys_addr[19:0]==20'h08)  cfg_size <= sys_wdata[CWM+CWF-1:0];
       if (sys_addr[19:0]==20'h0C)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
@@ -128,14 +133,14 @@ if (~rstn) begin
 end else begin
    sys_err <= 1'b0;
    casez (sys_addr[19:0])
-     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {{32-1  -TWS{1'b0}}, cfg_wrap
+     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {{32-1  -TWS{1'b0}}, cfg_brst
                                                                                    , cfg_tsel}; end
      20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_size}; end
      20'h0000C : begin sys_ack <= sys_en;          sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs}; end
      20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_step}; end
      20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32-     16{1'b0}}, cfg_ncyc}; end
      20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32-     16{1'b0}}, cfg_rnum}; end
-     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <= cfg_rdly                      ; end
+     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <=                      cfg_rdly ; end
 
      20'h1zzzz : begin sys_ack <= bus_ack;         sys_rdata <= {{32-    DWO{1'b0}}, bus_rdata}; end
 
@@ -178,16 +183,17 @@ asg #(
   .bus_addr  (bus_addr ),
   .bus_wdata (bus_wdata),
   .bus_rdata (bus_rdata),
+  // control
+  .ctl_rst   (ctl_rst  ),
   // configuration
   .cfg_size  (cfg_size ),
   .cfg_step  (cfg_step ),
   .cfg_offs  (cfg_offs ),
+  // configuration (burst mode)
+  .cfg_brst  (cfg_brst ),
   .cfg_ncyc  (cfg_ncyc ),
   .cfg_rnum  (cfg_rnum ),
-  .cfg_rdly  (cfg_rdly ),
-  // control
-  .ctl_rst   (ctl_rst  ),
-  .cfg_wrap  (cfg_wrap )
+  .cfg_rdly  (cfg_rdly )
 );
 
 
