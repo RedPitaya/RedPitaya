@@ -289,7 +289,7 @@ area:hover {
 #prim_displ {
   width: 75%;
   height: 50%;
-  background-color: #a9a9a9;
+  background-color: #dcdcdc;
   float: left;
   padding: 25px 25px 25px 25px;
   font-size: 30px;
@@ -299,16 +299,21 @@ area:hover {
 #sec_displ {
   width: 75%;
   height: 50%;
-  background-color: #a9a9a9;
+  background-color: #dcdcdc;
   float: left;
   padding: 25px 25px 25px 25px;
   font-size: 30px;
+}
+
+.meas_data {
+  margin: 12px 6px 0px 6px;
 }
 
 #meas_displ {
   width: 24%;
   height: 100%;
   background-color: #cc11cc;
+  padding: 2px 2px 2px 2px;
   float: right;
 }
 
