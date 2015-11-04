@@ -283,48 +283,55 @@ area:hover {
   width: 100%;
   height: 40%; 
   padding: 0px 0px 10px 0px;
+
   background-color: transparent;
 }
 
 #prim_displ {
-  width: 75%;
+  width: 60%;
   height: 50%;
   background-color: #dcdcdc;
   float: left;
-  padding: 25px 25px 25px 25px;
-  font-size: 30px;
+  padding: 10px 10px 10px 10px;
+  margin-left: 1%;
+  font-size: 40px;
 }
 
 
 #sec_displ {
-  width: 75%;
+  width: 60%;
   height: 50%;
   background-color: #dcdcdc;
   float: left;
-  padding: 25px 25px 25px 25px;
-  font-size: 30px;
+  padding: 40px 10px 10px 10px;
+  margin-left: 1%;
+  font-size: 32px; 
+}
+
+.displ_text{
+  text-align: right;
 }
 
 .meas_data {
-  margin: 12px 6px 0px 6px;
+  margin: 8px 6px 0px 6px;
 }
 
 #meas_displ {
-  width: 24%;
+  width: 39%;
   height: 100%;
-  background-color: #cc11cc;
+  background-color: #cccccc;
   padding: 2px 2px 2px 2px;
-  float: right;
+  float: left;
 }
 
 
 #table_displ {
   width: 100%;
   height: 60%; 
-  padding: 10px 0px 0px 0px;
   background-color: #cccccc;
+  overflow: scroll;
+  color: #000000;
 }
-
 
 .global_container {
   height: 510px;

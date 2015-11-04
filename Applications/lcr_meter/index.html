@@ -64,11 +64,7 @@
 				<!-- Pimary display -->
 				<div id="data_displ">
 					<div id="rec_displ"></div>
-					<div id="prim_displ">
-							<label class="col-xs-8" for="lb_prim_dspl" style="color: #000000">PD</label>
-							<label class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">PD</label>	
-					</div>
-					
+
 					<div id="meas_displ">
 						<div class="meas_data" style="float: left">
 							<label class="col-xs-5" for="lb_mes_mode" style="color: #000000">MODE: </label>
@@ -97,13 +93,50 @@
 					</div>
 
 					<div id="sec_displ">
-							<label class="col-xs-8" for="lb_sec_dspl" style="color: #000000">PD</label>
-							<label class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">PD</label>
+							<label class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">2.0050</label>
+							<label class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">deg</label>
 					</div>
+
+					<div id="prim_displ">
+							<label class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">1004.05</label>
+							<label class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">mH</label>	
+					</div>
+					
 				</div>
 				<!-- Secondary display -->
 				<div id="table_displ">
-					
+					<table class="table table-bordered table-fixed">
+				        <thead>
+				            <tr>
+				                <th>#</th>
+				                <th>P</th>
+				                <th>Z</th>
+				            </tr>
+				        </thead>
+				        <tbody>
+				            <tr>
+				                <td class="col-xs-2">1</td>
+				                <td class="col-xs-4">100.45 mH</td>
+				                <td class="col-xs-4">2.82501 deg</td>
+				            </tr>
+				  			<tr>
+				                <td class="col-xs-2">1</td>
+				                <td class="col-xs-4">100.45 mH</td>
+				                <td class="col-xs-4">2.82501 deg</td>
+				            </tr>
+				            <tr>
+				                <td class="col-xs-2">1</td>
+				                <td class="col-xs-4">100.45 mH</td>
+				                <td class="col-xs-4">2.82501 deg</td>
+				            </tr>
+				            <tr>
+				                <td class="col-xs-2">1</td>
+				                <td class="col-xs-4">100.45 mH</td>
+				                <td class="col-xs-4">2.82501 deg</td>
+				            </tr>
+
+				        </tbody>
+				    </table>
 				</div>
 
 
@@ -146,7 +179,7 @@
 	            		<form class="form-horizontal" role="form">
 			                <div>
 			                	<div style="float:left">
-			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
+			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
 			                	</div>
 			                  	<div class="meas_btn_group2">
 									<button type="button" class="btn btn-danger">Z</button>
