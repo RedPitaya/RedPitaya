@@ -42,7 +42,11 @@
  * 
  */
 
-module red_pitaya_top (
+module red_pitaya_top #(
+  // module numbers
+  int unsigned MNA = 2,  // number of acquisition modules
+  int unsigned MNG = 2   // number of generator   modules
+)(
   // PS connections
   inout  logic [54-1:0] FIXED_IO_mio     ,
   inout  logic          FIXED_IO_ps_clk  ,
@@ -140,20 +144,20 @@ logic                 ser_clk ;
 logic                 pdm_clk ;
 logic                 pdm_rstn;
 // ADC signals
-logic                         adc_clk;
-logic                         adc_rstn;
-logic signed [2-1:0] [14-1:0] adc_dat;
+logic                           adc_clk;
+logic                           adc_rstn;
+logic signed [MNA-1:0] [14-1:0] adc_dat;
 // DAC signals
-logic                         dac_clk_1x;
-logic                         dac_clk_2x;
-logic                         dac_clk_2p;
-logic                         dac_rst;
-logic        [2-1:0] [14-1:0] dac_dat;
-logic signed [2-1:0] [14-1:0] dac_dat_cal;
+logic                           dac_clk_1x;
+logic                           dac_clk_2x;
+logic                           dac_clk_2p;
+logic                           dac_rst;
+logic        [MNG-1:0] [14-1:0] dac_dat;
+logic signed [MNG-1:0] [14-1:0] dac_dat_cal;
 // ASG
-logic signed [2-1:0] [14-1:0] asg_dat;
+logic signed [MNG-1:0] [14-1:0] asg_dat;
 // PID
-logic signed [2-1:0] [14-1:0] pid_dat;
+logic signed [MNG-1:0] [14-1:0] pid_dat;
 
 localparam int unsigned DWM = 16;
 localparam int unsigned DWS = 14;
@@ -161,11 +165,11 @@ localparam int unsigned DWS = 14;
 // configuration
 logic                 digital_loop;
 // ADC calibration
-logic signed [2-1:0] [DWM-1:0] adc_cfg_mul;  // gain
-logic signed [2-1:0] [DWS-1:0] adc_cfg_sum;  // offset
+logic signed [MNA-1:0] [DWM-1:0] adc_cfg_mul;  // gain
+logic signed [MNA-1:0] [DWS-1:0] adc_cfg_sum;  // offset
 // DAC calibration
-logic signed [2-1:0] [DWM-1:0] dac_cfg_mul;  // gain
-logic signed [2-1:0] [DWS-1:0] dac_cfg_sum;  // offset
+logic signed [MNG-1:0] [DWM-1:0] dac_cfg_mul;  // gain
+logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -274,30 +278,29 @@ red_pitaya_ps i_ps (
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  32-1:0] sys_addr  = ps_sys_addr ;
-logic [  32-1:0] sys_wdata = ps_sys_wdata;
-logic [   4-1:0] sys_sel   = ps_sys_sel  ;
-logic [8   -1:0] sys_wen   ;
-logic [8   -1:0] sys_ren   ;
-logic [8*32-1:0] sys_rdata ;
-logic [8* 1-1:0] sys_err   ;
-logic [8* 1-1:0] sys_ack   ;
-logic [8   -1:0] sys_cs    ;
+logic        [32-1:0] sys_addr  = ps_sys_addr ;
+logic        [32-1:0] sys_wdata = ps_sys_wdata;
+logic        [ 4-1:0] sys_sel   = ps_sys_sel  ;
+logic [8-1:0]         sys_wen   ;
+logic [8-1:0]         sys_ren   ;
+logic [8-1:0][32-1:0] sys_rdata ;
+logic [8-1:0]         sys_err   ;
+logic [8-1:0]         sys_ack   ;
+logic [8-1:0]         sys_cs    ;
 
 assign sys_cs = 8'h01 << sys_addr[22:20];
 
 assign sys_wen = sys_cs & {8{ps_sys_wen}};
 assign sys_ren = sys_cs & {8{ps_sys_ren}};
 
-assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
-
-assign ps_sys_err   = |(sys_cs & sys_err);
-assign ps_sys_ack   = |(sys_cs & sys_ack);
+assign ps_sys_rdata = sys_rdata[sys_addr[22:20]];
+assign ps_sys_err   = sys_err  [sys_addr[22:20]];
+assign ps_sys_ack   = sys_ack  [sys_addr[22:20]];
 
 // unused system bus slave ports
-assign sys_rdata[7*32+:32] = 32'h0; 
-assign sys_err  [7       ] =  1'b0;
-assign sys_ack  [7       ] =  1'b1;
+assign sys_rdata[7] = 32'h0; 
+assign sys_err  [7] =  1'b0;
+assign sys_ack  [7] =  1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
@@ -323,14 +326,14 @@ red_pitaya_hk hk (
   .exp_n_o       (exp_n_o ),
   .exp_n_oe      (exp_n_oe),
    // System bus
-  .sys_addr      (sys_addr           ),
-  .sys_wdata     (sys_wdata          ),
-  .sys_sel       (sys_sel            ),
-  .sys_wen       (sys_wen  [0]       ),
-  .sys_ren       (sys_ren  [0]       ),
-  .sys_rdata     (sys_rdata[0*32+:32]),
-  .sys_err       (sys_err  [0]       ),
-  .sys_ack       (sys_ack  [0]       ) 
+  .sys_addr      (sys_addr    ),
+  .sys_wdata     (sys_wdata   ),
+  .sys_sel       (sys_sel     ),
+  .sys_wen       (sys_wen  [0]),
+  .sys_ren       (sys_ren  [0]),
+  .sys_rdata     (sys_rdata[0]),
+  .sys_err       (sys_err  [0]),
+  .sys_ack       (sys_ack  [0]) 
 );
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
@@ -351,14 +354,14 @@ red_pitaya_calib calib (
   .dac_cfg_mul   (dac_cfg_mul),
   .dac_cfg_sum   (dac_cfg_sum),
    // System bus
-  .sys_addr      (sys_addr           ),
-  .sys_wdata     (sys_wdata          ),
-  .sys_sel       (sys_sel            ),
-  .sys_wen       (sys_wen  [1]       ),
-  .sys_ren       (sys_ren  [1]       ),
-  .sys_rdata     (sys_rdata[1*32+:32]),
-  .sys_err       (sys_err  [1]       ),
-  .sys_ack       (sys_ack  [1]       ) 
+  .sys_addr      (sys_addr    ),
+  .sys_wdata     (sys_wdata   ),
+  .sys_sel       (sys_sel     ),
+  .sys_wen       (sys_wen  [1]),
+  .sys_ren       (sys_ren  [1]),
+  .sys_rdata     (sys_rdata[1]),
+  .sys_err       (sys_err  [1]),
+  .sys_ack       (sys_ack  [1]) 
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,14 +383,14 @@ red_pitaya_ams #(
   // PDM configuration
   .pdm_cfg    (pdm_cfg),
   // system bus
-  .sys_addr   (sys_addr           ),
-  .sys_wdata  (sys_wdata          ),
-  .sys_sel    (sys_sel            ),
-  .sys_wen    (sys_wen  [2]       ),
-  .sys_ren    (sys_ren  [2]       ),
-  .sys_rdata  (sys_rdata[2*32+:32]),
-  .sys_err    (sys_err  [2]       ),
-  .sys_ack    (sys_ack  [2]       )
+  .sys_addr   (sys_addr    ),
+  .sys_wdata  (sys_wdata   ),
+  .sys_sel    (sys_sel     ),
+  .sys_wen    (sys_wen  [2]),
+  .sys_ren    (sys_ren  [2]),
+  .sys_rdata  (sys_rdata[2]),
+  .sys_err    (sys_err  [2]),
+  .sys_ack    (sys_ack  [2])
 );
 
 pdm #(
@@ -428,14 +431,14 @@ red_pitaya_pid pid (
   .dat_i      (adc_dat),
   .dat_o      (pid_dat),
   // System bus
-  .sys_addr   (sys_addr           ),
-  .sys_wdata  (sys_wdata          ),
-  .sys_sel    (sys_sel            ),
-  .sys_wen    (sys_wen  [3]       ),
-  .sys_ren    (sys_ren  [3]       ),
-  .sys_rdata  (sys_rdata[3*32+:32]),
-  .sys_err    (sys_err  [3]       ),
-  .sys_ack    (sys_ack  [3]       )
+  .sys_addr   (sys_addr    ),
+  .sys_wdata  (sys_wdata   ),
+  .sys_sel    (sys_sel     ),
+  .sys_wen    (sys_wen  [3]),
+  .sys_ren    (sys_ren  [3]),
+  .sys_rdata  (sys_rdata[3]),
+  .sys_err    (sys_err  [3]),
+  .sys_ack    (sys_ack  [3])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -449,8 +452,8 @@ assign adc_clk_o = 2'b10;
 assign adc_cdcs_o = 1'b1 ;
 
 // local variables
-logic signed [2-1:0] [14-1:0] adc_dat_raw;
-logic signed [2-1:0] [14-1:0] adc_dat_mux;
+logic signed [MNA-1:0] [14-1:0] adc_dat_raw;
+logic signed [MNA-1:0] [14-1:0] adc_dat_mux;
 
 // IO block registers should be used here
 // lowest 2 bits reserved for 16bit ADC
@@ -468,7 +471,7 @@ linear #(
   .DWI  (14),
   .DWO  (14),
   .DWM  (16)
-) linear_adc [2-1:0] (
+) linear_adc [MNA-1:0] (
   // system signals
   .clk      (adc_clk ),
   .rstn     (adc_rstn),
@@ -489,8 +492,8 @@ linear #(
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [2-1:0] [15-1:0] dac_dat_sum;
-logic signed [2-1:0] [14-1:0] dac_dat_sat;
+logic signed [MNG-1:0] [15-1:0] dac_dat_sum;
+logic signed [MNG-1:0] [14-1:0] dac_dat_sat;
 
 // Sumation of ASG and PID signal perform saturation before sending to DAC 
 // TODO: there should be a proper metod to disable PID
@@ -505,7 +508,7 @@ linear #(
   .DWI  (14),
   .DWO  (14),
   .DWM  (16)
-) linear_dac [2-1:0] (
+) linear_dac [MNG-1:0] (
   // system signals
   .clk      (adc_clk ),
   .rstn     (adc_rstn),
@@ -540,7 +543,18 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(
 // ASG (arbitrary signal generators)
 ////////////////////////////////////////////////////////////////////////////////
 
-asg_top asg_top [2-1:0] (
+logic [MNG-1:0] [MNG+2-1:0] asg_trg_ext;
+logic [MNG-1:0]             asg_trg_swo;
+logic [MNG-1:0]             asg_trg_out;
+
+generate
+for (genvar i=0; i<MNG; i++) begin: for_asg_trg
+  // TODO: external trigger should be properly connected
+  assign asg_trg_ext [i] = {2'b00, asg_trg_swo};
+end: for_asg_trg
+endgenerate
+
+asg_top asg_top [MNG-1:0] (
   // system signals
   .clk       (adc_clk ),
   .rstn      (adc_rstn),
@@ -549,18 +563,18 @@ asg_top asg_top [2-1:0] (
   .sto_vld   (),
   .sto_rdy   (1'b1),
   // triggers
-  .trg_ext   ('0),
-  .trg_swo   (),
-  .trg_out   (),
+  .trg_ext   (asg_trg_ext),
+  .trg_swo   (asg_trg_swo),
+  .trg_out   (asg_trg_out),
   // System bus
-  .sys_sel   ({sys_sel            , sys_sel            }),
-  .sys_wen   ({sys_wen  [5]       , sys_wen  [4]       }),
-  .sys_ren   ({sys_ren  [5]       , sys_ren  [4]       }),
-  .sys_addr  ({sys_addr           , sys_addr           }),
-  .sys_wdata ({sys_wdata          , sys_wdata          }),
-  .sys_rdata ({sys_rdata[5*32+:32], sys_rdata[4*32+:32]}),
-  .sys_err   ({sys_err  [5]       , sys_err  [4]       }),
-  .sys_ack   ({sys_ack  [5]       , sys_ack  [4]       })
+  .sys_sel   (sys_sel       ),
+  .sys_wen   (sys_wen  [5:4]),
+  .sys_ren   (sys_ren  [5:4]),
+  .sys_addr  (sys_addr      ),
+  .sys_wdata (sys_wdata     ),
+  .sys_rdata (sys_rdata[5:4]),
+  .sys_err   (sys_err  [5:4]),
+  .sys_ack   (sys_ack  [5:4])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -590,14 +604,14 @@ red_pitaya_scope i_scope (
   .axi0_werr_i   (axi0_werr  ),  .axi1_werr_i   (axi1_werr  ),
   .axi0_wrdy_i   (axi0_wrdy  ),  .axi1_wrdy_i   (axi1_wrdy  ),
   // System bus
-  .sys_addr      (sys_addr           ),
-  .sys_wdata     (sys_wdata          ),
-  .sys_sel       (sys_sel            ),
-  .sys_wen       (sys_wen  [6]       ),
-  .sys_ren       (sys_ren  [6]       ),
-  .sys_rdata     (sys_rdata[6*32+:32]),
-  .sys_err       (sys_err  [6]       ),
-  .sys_ack       (sys_ack  [6]       )
+  .sys_addr      (sys_addr    ),
+  .sys_wdata     (sys_wdata   ),
+  .sys_sel       (sys_sel     ),
+  .sys_wen       (sys_wen  [6]),
+  .sys_ren       (sys_ren  [6]),
+  .sys_rdata     (sys_rdata[6]),
+  .sys_err       (sys_err  [6]),
+  .sys_ack       (sys_ack  [6])
 );
 
 endmodule: red_pitaya_top
