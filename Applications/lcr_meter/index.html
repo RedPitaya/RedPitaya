@@ -103,6 +103,7 @@
 					</div>
 					
 				</div>
+
 				<!-- Secondary display -->
 				<div id="table_displ">
 					<table class="table table-bordered table-fixed">
@@ -114,31 +115,21 @@
 				            </tr>
 				        </thead>
 				        <tbody>
+				            
 				            <tr>
 				                <td class="col-xs-2">1</td>
 				                <td class="col-xs-4">100.45 mH</td>
 				                <td class="col-xs-4">2.82501 deg</td>
 				            </tr>
-				  			<tr>
-				                <td class="col-xs-2">1</td>
-				                <td class="col-xs-4">100.45 mH</td>
-				                <td class="col-xs-4">2.82501 deg</td>
-				            </tr>
-				            <tr>
-				                <td class="col-xs-2">1</td>
-				                <td class="col-xs-4">100.45 mH</td>
-				                <td class="col-xs-4">2.82501 deg</td>
-				            </tr>
-				            <tr>
-				                <td class="col-xs-2">1</td>
-				                <td class="col-xs-4">100.45 mH</td>
-				                <td class="col-xs-4">2.82501 deg</td>
-				            </tr>
-
 				        </tbody>
 				    </table>
 				</div>
 
+				<div id="table_cmd">
+					<button id="btn_export" type="button" class="btn btn-danger" value="0">Export Table</button>
+					<button id="btn_clear" type="button" class="btn btn-danger" value="0">Clear</button>
+					<button id="btn_clear_all" type="button" class="btn btn-danger btn_clear" value="0">Clear All</button>
+				</div>
 
 			</div>
 
@@ -166,10 +157,10 @@
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
 			                	</div>
 			                  	<div class="meas_btn_group1">
-									<button type="button" class="btn btn-danger">P</button>
-									<button type="button" class="btn btn-danger">D</button>
-									<button type="button" class="btn btn-danger">Q</button>
-									<button type="button" class="btn btn-danger">E</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">E</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">Q</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">D</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">P</button>
 	        					</div>
 			                </div>
 	              		</form>
@@ -182,10 +173,10 @@
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
 			                	</div>
 			                  	<div class="meas_btn_group2">
-									<button type="button" class="btn btn-danger">Z</button>
-									<button type="button" class="btn btn-danger">L</button>
-									<button type="button" class="btn btn-danger">C</button>
-									<button type="button" class="btn btn-danger">R</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">R</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">C</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">L</button>
+									<button type="button" class="btn btn-danger" data-toggle="button">Z</button>
 	        					</div>
 			                </div>
 	              		</form>
@@ -226,8 +217,8 @@
 			                	</div>
 
 			                  	<div style="float: right" class="col-xs-8">
-									<button type="button" class="btn btn-danger" style="width: 50%" value="0">Auto</button>
-									<button type="button" class="btn btn-danger" style="width: 50%" value="1">Manual</button>
+									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="0">Auto</button>
+									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="1">Manual</button>
 	        					</div>
 			                </div>
 	              		</form>
@@ -246,8 +237,8 @@
 			                  			<option value="1">uH</option>
 			                  			<option value="2">mH</option>
 			                  			<option value="3">H</option>
-			                  			<option value="4">kH</option>
-			                  			<option value="5">MH</option>
+			                  			<option value="4" disabled>kH</option>
+			                  			<option value="5" disabled>MH</option>
 			                  		</select>
 	        					</div>
 
@@ -268,15 +259,24 @@
 	            		<form class="form-horizontal" role="form">
 			                <div>
 			                  	<div style="float: right" class="col-xs-12">
-									<button type="button" class="btn btn-danger" style="width: 50%" value="0">Relative Mode</button>
-									<button type="button" class="btn btn-danger" style="width: 50%" value="1">Tolerance Mode</button>
+									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="0">Relative Mode</button>
+									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="1">Tolerance Mode</button>
 	        					</div>
 			                </div>
 	              		</form>
 	              	</div>
-
-
-            	</div>
+	              	<br> &nbsp;
+	              	<div class="menu_wrapper col-xs-4">
+	            		<form class="form-horizontal" role="form">
+			                <div>
+			                  	<div style="float: right" class="col-xs-12">
+									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="0">Paralel</button>
+									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="1">Series</button>
+	        					</div>
+			                </div>
+	              		</form>
+	              	</div>
+        		</div>
             </div>
 
 		</div>
