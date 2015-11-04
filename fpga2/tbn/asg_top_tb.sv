@@ -11,6 +11,8 @@ module asg_top_tb #(
   realtime  TP = 8.0ns,  // 125MHz
   // data parameters
   int unsigned DWO = 14,  // RAM data width
+  int unsigned DWM = 16,  // data width for multiplier (gain)
+  int unsigned DWS = DWO, // data width for summation (offset)
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
@@ -95,10 +97,10 @@ initial begin
 //bus.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
   bus.write(32'h10, 1 * 2**CWF);  // step
   // configure burst mode
-  bus.write(32'h04, {1'b0, TWS'(0)});  // number of cycles
+  bus.write(32'h04, {1'b0, TWS'(0)});  // burst disable
   // configure amplitude and DC offset
-  bus.write(32'h24, 0);  // DC offset
-  bus.write(32'h28, 0);  // DCamplitude
+  bus.write(32'h24, 1 << (DWM-2));  // amplitude
+  bus.write(32'h28, 0);             // DC offset
   // start
   bus.write(32'h00, 2'b10);
   repeat(22) @(posedge clk);
@@ -108,16 +110,16 @@ initial begin
   repeat(20) @(posedge clk);
 
   // configure frequency and phase
-  bus.write(32'h0C, 0 * 2**CWF);  // offset
+  bus.write(32'h0c, 0 * 2**CWF);  // offset
   bus.write(32'h10, 1 * 2**CWF);  // step
   // configure burst mode
-  bus.write(32'h04, {1'b1, TWS'(0)});  // number of cycles
+  bus.write(32'h04, {1'b1, TWS'(0)});  // burst enable
   bus.write(32'h18, 6);  // number of cycles
-  bus.write(32'h1C, 5);  // number of repetitions
-  bus.write(32'h20, 10);  // number of delay periods between repetitions
+  bus.write(32'h1c, 10);  // number of delay periods between repetitions
+  bus.write(32'h20, 5);  // number of repetitions
   // configure amplitude and DC offset
-  bus.write(32'h24, 0);  // DC offset
-  bus.write(32'h28, 0);  // DCamplitude
+  bus.write(32'h24, 1 << (DWM-2));  // amplitude
+  bus.write(32'h28, 0);             // DC offset
   // start
   bus.write(32'h00, 2'b10);
   repeat(120) @(posedge clk);

@@ -26,6 +26,8 @@
 module asg_top #(
   // data parameters
   int unsigned DWO = 14,  // RAM data width
+  int unsigned DWM = 16,  // data width for multiplier (gain)
+  int unsigned DWS = DWO, // data width for summation (offset)
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
@@ -97,11 +99,14 @@ logic [CWM+CWF-1:0] cfg_size;  // table size
 logic [CWM+CWF-1:0] cfg_step;  // address increment step (frequency)
 logic [CWM+CWF-1:0] cfg_offs;  // address initial offset (phase)
 // burst mode configuraton
-logic               cfg_brst;  // burst mode enable
-logic               cfg_infn;  // infinite burst
-logic     [ 16-1:0] cfg_ncyc;  // number of cycles
-logic     [ 16-1:0] cfg_rnum;  // number of repetitions
-logic     [ 32-1:0] cfg_rdly;  // delay between repetitions
+logic               cfg_bena;  // burst enable
+logic               cfg_binf;  // infinite burst
+logic     [ 16-1:0] cfg_bcyc;  // number of data cycles
+logic     [ 32-1:0] cfg_bdly;  // number of delay cycles
+logic     [ 16-1:0] cfg_bnum;  // number of repetitions
+// linear offset and gain
+logic signed [DWM-1:0] cfg_lmul;
+logic signed [DWS-1:0] cfg_lsum;
 
 // control signals
 wire sys_en;
@@ -123,46 +128,61 @@ end
 // write access
 always_ff @(posedge clk)
 if (rstn == 1'b0) begin
+  // configuration
   cfg_tsel <= '0;
   cfg_size <= '0;
   cfg_offs <= '0;
   cfg_step <= '0;
-  cfg_brst <= '0;
-  cfg_infn <= '0;
-  cfg_ncyc <= '0;
-  cfg_rnum <= '0;
-  cfg_rdly <= '0;
+  // burst mode
+  cfg_bena <= '0;
+  cfg_binf <= '0;
+  cfg_bcyc <= '0;
+  cfg_bnum <= '0;
+  cfg_bdly <= '0;
+  // cinear transform
+  cfg_lmul <= 1 << (DWM-2);
+  cfg_lsum <= '0;
 end else begin
   if (sys_wen & ~sys_addr[CWM+2]) begin
+    // configuration
     if (sys_addr[6-1:0]==6'h04)  cfg_tsel <= sys_wdata[    TWS-1:0];
-    if (sys_addr[6-1:0]==6'h04)  cfg_brst <= sys_wdata[    TWS+0  ];
-    if (sys_addr[6-1:0]==6'h04)  cfg_infn <= sys_wdata[    TWS+1  ];
+    if (sys_addr[6-1:0]==6'h04)  cfg_bena <= sys_wdata[    TWS+0  ];
+    if (sys_addr[6-1:0]==6'h04)  cfg_binf <= sys_wdata[    TWS+1  ];
     if (sys_addr[6-1:0]==6'h08)  cfg_size <= sys_wdata[CWM+CWF-1:0];
-    if (sys_addr[6-1:0]==6'h0C)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
+    if (sys_addr[6-1:0]==6'h0c)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
     if (sys_addr[6-1:0]==6'h10)  cfg_step <= sys_wdata[CWM+CWF-1:0];
-    if (sys_addr[6-1:0]==6'h18)  cfg_ncyc <= sys_wdata[     16-1:0];
-    if (sys_addr[6-1:0]==6'h1C)  cfg_rnum <= sys_wdata[     16-1:0];
-    if (sys_addr[6-1:0]==6'h20)  cfg_rdly <= sys_wdata[     32-1:0];
+    // burst mode
+    if (sys_addr[6-1:0]==6'h18)  cfg_bcyc <= sys_wdata[     16-1:0];
+    if (sys_addr[6-1:0]==6'h1c)  cfg_bdly <= sys_wdata[     32-1:0];
+    if (sys_addr[6-1:0]==6'h20)  cfg_bnum <= sys_wdata[     16-1:0];
+    // linear transformation
+    if (sys_addr[6-1:0]==6'h24)  cfg_lmul <= sys_wdata[    DWM-1:0];
+    if (sys_addr[6-1:0]==6'h28)  cfg_lsum <= sys_wdata[    DWS-1:0];
   end
 end
 
-// 
-assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];
-assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];
+// control signals
+assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];  // reset
+assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];  // trigger
 
 // read access
 always_ff @(posedge clk)
 if (~sys_addr[CWM+2]) begin
   casez (sys_addr[19:0])
-    6'h04 : sys_rdata <= {{32-2  -TWS{1'b0}}, cfg_infn
-                                            , cfg_brst
+    // configuration
+    6'h04 : sys_rdata <= {{32-2  -TWS{1'b0}}, cfg_binf
+                                            , cfg_bena
                                             , cfg_tsel};
     6'h08 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
-    6'h0C : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
+    6'h0c : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
     6'h10 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
-    6'h18 : sys_rdata <= {{32-     16{1'b0}}, cfg_ncyc};
-    6'h1C : sys_rdata <= {{32-     16{1'b0}}, cfg_rnum};
-    6'h20 : sys_rdata <=                      cfg_rdly ;
+    // burst mode
+    6'h18 : sys_rdata <= {{32-     16{1'b0}}, cfg_bcyc};
+    6'h1c : sys_rdata <=                      cfg_bdly ;
+    6'h20 : sys_rdata <= {{32-     16{1'b0}}, cfg_bnum};
+    // linear transformation (should be properly sign extended)
+    6'h24 : sys_rdata <= cfg_lmul;
+    6'h28 : sys_rdata <= cfg_lsum;
   endcase
 end else begin
             sys_rdata <= {{32-    DWO{1'b0}}, bus_rdata};
@@ -179,6 +199,11 @@ assign trg_mux = trg_ext [cfg_tsel];
 // generator core instance 
 ////////////////////////////////////////////////////////////////////////////////
 
+// stream from generator
+logic signed [DWO-1:0] stg_dat;  // data
+logic                  stg_vld;  // valid
+logic                  stg_rdy;  // ready
+
 asg #(
   .DWO (DWO),
   .CWM (CWM),
@@ -188,9 +213,9 @@ asg #(
   .clk       (clk      ),
   .rstn      (rstn     ),
   // DAC
-  .sto_dat   (sto_dat  ),
-  .sto_vld   (sto_vld  ),
-  .sto_rdy   (sto_rdy  ),
+  .sto_dat   (stg_dat  ),
+  .sto_vld   (stg_vld  ),
+  .sto_rdy   (stg_rdy  ),
   // trigger
   .trg_i     (trg_mux  ),
   .trg_o     (trg_out  ),
@@ -207,13 +232,34 @@ asg #(
   .cfg_step  (cfg_step ),
   .cfg_offs  (cfg_offs ),
   // configuration (burst mode)
-  .cfg_brst  (cfg_brst ),
-  .cfg_infn  (cfg_infn ),
-  .cfg_ncyc  (cfg_ncyc ),
-  .cfg_rnum  (cfg_rnum ),
-  .cfg_rdly  (cfg_rdly )
+  .cfg_bena  (cfg_bena ),
+  .cfg_binf  (cfg_binf ),
+  .cfg_bcyc  (cfg_bcyc ),
+  .cfg_bdly  (cfg_bdly ),
+  .cfg_bnum  (cfg_bnum )
 );
 
+// TODO: this will be a continuous stream, data stream control needs rethinking
 
+linear #(
+  .DWI (DWO),
+  .DWO (DWO),
+  .DWM (DWM)
+) linear (
+  // system signals
+  .clk       (clk      ),
+  .rstn      (rstn     ),
+  // input stream
+  .sti_dat   (stg_dat),
+  .sti_vld   (1'b1),
+  .sti_rdy   (stg_rdy),
+  // output stream
+  .sto_dat   (sto_dat),
+  .sto_vld   (sto_vld),
+  .sto_rdy   (sto_rdy),
+  // configuration
+  .cfg_mul   (cfg_lmul),
+  .cfg_sum   (cfg_lsum)
+);
 
 endmodule: asg_top

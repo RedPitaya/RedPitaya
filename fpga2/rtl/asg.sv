@@ -55,11 +55,11 @@ module asg #(
   input  logic    [CWM+CWF-1:0] cfg_step ,  // pointer step    size
   input  logic    [CWM+CWF-1:0] cfg_offs ,  // pointer initial offset (used to define phase)
   // configuration (burst mode)
-  input  logic                  cfg_brst ,  // burst mode
-  input  logic                  cfg_infn ,  // infinite mode
-  input  logic       [  16-1:0] cfg_ncyc ,  // set number of cycle
-  input  logic       [  16-1:0] cfg_rnum ,  // set number of repetitions
-  input  logic       [  32-1:0] cfg_rdly ,  // set delay between repetitions
+  input  logic                  cfg_bena ,  // burst enable
+  input  logic                  cfg_binf ,  // infinite
+  input  logic       [  16-1:0] cfg_bcyc ,  // number of data cycle
+  input  logic       [  32-1:0] cfg_bdly ,  // number of delay cycles
+  input  logic       [  16-1:0] cfg_bnum ,  // number of repetitions
   // control
   input  logic                  ctl_rst     // set FSM to reset
 );
@@ -146,15 +146,15 @@ end else begin
       cnt_rep <= '0;
     end else begin
       sts_run <= STS_DAT;
-      if (cfg_brst) begin
-        cnt_cyc <= cfg_ncyc; 
-        cnt_dly <= cfg_rdly;
-        cnt_rep <= sts_end ? cnt_rep-1 : cfg_rnum;
+      if (cfg_bena) begin
+        cnt_cyc <= cfg_bcyc; 
+        cnt_dly <= cfg_bdly;
+        cnt_rep <= sts_end ? cnt_rep-1 : cfg_bnum;
       end
     end
   // decrement counters
   end else begin
-    if (cfg_brst) begin
+    if (cfg_bena) begin
       if (sts_run == STS_DAT & ~|cnt_cyc & |cnt_dly)  sts_run <=  STS_DLY;
       if (sts_run == STS_DAT &  |cnt_cyc           )  cnt_cyc <= cnt_cyc-1;
       if (sts_run == STS_DLY &             |cnt_dly)  cnt_dly <= cnt_dly-1;
@@ -163,9 +163,9 @@ end else begin
 end
 
 assign sts_trg = (trg_i & (sts_run==STS_IDL))
-               | (sts_end & (|cnt_rep | cfg_infn));
+               | (sts_end & (|cnt_rep | cfg_binf));
 
-assign sts_end = cfg_brst & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
+assign sts_end = cfg_bena & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
 assign sts_lst = cnt_rep == 1;
 
 // read pointer logic
