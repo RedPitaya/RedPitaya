@@ -90,11 +90,29 @@ initial begin
     bus.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
   // configure frequency and phase
-  bus.write(32'h08,  buf_len                    * 2**CWF);  // table size
-  bus.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF);  // offset
-  bus.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF);  // step
+  bus.write(32'h08,  buf_len                    * 2**CWF - 1);  // table size
+  bus.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//bus.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
+  bus.write(32'h10, 1 * 2**CWF);  // step
   // configure burst mode
-  bus.write(32'h18, 0);  // number of cycles
+  bus.write(32'h04, {1'b0, TWS'(0)});  // number of cycles
+  // configure amplitude and DC offset
+  bus.write(32'h24, 0);  // DC offset
+  bus.write(32'h28, 0);  // DCamplitude
+  // start
+  bus.write(32'h00, 2'b10);
+  repeat(22) @(posedge clk);
+
+  // stop (reset)
+  bus.write(32'h00, 2'b01);
+  repeat(20) @(posedge clk);
+
+  // configure frequency and phase
+  bus.write(32'h0C, 0 * 2**CWF);  // offset
+  bus.write(32'h10, 1 * 2**CWF);  // step
+  // configure burst mode
+  bus.write(32'h04, {1'b1, TWS'(0)});  // number of cycles
+  bus.write(32'h18, 6);  // number of cycles
   bus.write(32'h1C, 5);  // number of repetitions
   bus.write(32'h20, 10);  // number of delay periods between repetitions
   // configure amplitude and DC offset
@@ -102,12 +120,14 @@ initial begin
   bus.write(32'h28, 0);  // DCamplitude
   // start
   bus.write(32'h00, 2'b10);
+  repeat(120) @(posedge clk);
 
-  repeat(200) @(posedge clk);
+  // stop (reset)
+  bus.write(32'h00, 2'b01);
+  repeat(20) @(posedge clk);
 
-
-  repeat(2000) @(posedge clk);
-
+  // end simulation
+  repeat(20) @(posedge clk);
   $finish();
 end
 

@@ -56,6 +56,7 @@ module asg #(
   input  logic    [CWM+CWF-1:0] cfg_offs ,  // pointer initial offset (used to define phase)
   // configuration (burst mode)
   input  logic                  cfg_brst ,  // burst mode
+  input  logic                  cfg_infn ,  // infinite mode
   input  logic       [  16-1:0] cfg_ncyc ,  // set number of cycle
   input  logic       [  16-1:0] cfg_rnum ,  // set number of repetitions
   input  logic       [  32-1:0] cfg_rdly ,  // set delay between repetitions
@@ -66,6 +67,12 @@ module asg #(
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
+
+typedef enum logic [2-1:0] {
+  STS_IDL = 2'b00,
+  STS_DAT = 2'b01,
+  STS_DLY = 2'b10
+} status_t;
 
 // buffer
 logic signed [    DWO-1:0] buf_mem [0:2**CWM-1];
@@ -79,12 +86,14 @@ logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // counters
 logic [16-1:0] cnt_cyc;
-logic [16-1:0] cnt_rep;
 logic [32-1:0] cnt_dly;
+logic [16-1:0] cnt_rep;
 // status and events
-logic          sts_run ;
-logic          sts_rep;
+status_t       sts_run;
+status_t       sts_vld;
 logic          sts_trg;
+logic          sts_end;
+logic          sts_lst;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DAC buffer RAM
@@ -99,67 +108,65 @@ always @(posedge clk)
 if (bus_ena & ~bus_wen)  bus_rdata <= buf_mem[bus_addr];
 
 // stream read
-// TODO: reduce power consumption
+always @(posedge clk)
+begin 
+  if (sts_run==STS_DAT)  buf_raddr <= ptr_cur[CWF+:CWM];
+  if (sts_vld==STS_DAT)  buf_rdata <= buf_mem[buf_raddr];
+end
+
+// valid signal used to enable memory read access
 always @(posedge clk)
 begin
-  buf_raddr <= ptr_cur[CWF+:CWM];
-  buf_rdata <= buf_mem[buf_raddr];
+  if (ctl_rst) sts_vld <= STS_IDL;
+  else         sts_vld <= sts_run; 
 end
 
 ////////////////////////////////////////////////////////////////////////////////
 //  read pointer & state machine
 ////////////////////////////////////////////////////////////////////////////////
 
-// state run
+// state machine
 always_ff @(posedge clk)
 if (~rstn) begin
-  sts_run <= 1'b0;
-end else begin
-  // synchronous clear
-  if (ctl_rst) begin
-    ptr_cur <= 1'b0;
-  // start on trigger, new triggers are ignored while ASG is running
-  end else if (sts_trg) begin
-    sts_run <= 1'b1;
-  // burst mode
-  end else if (cfg_brst & ~|cnt_cyc) begin
-    sts_run <= 1'b0;
-  end
-end
-
-// burst mode
-always_ff @(posedge clk)
-if (~rstn) begin
+  sts_run <= STS_IDL;
   cnt_cyc <= '0;
   cnt_dly <= '0;
   cnt_rep <= '0;
 end else begin
   // synchronous clear
-  if (ctl_rst | ~cfg_brst) begin
+  if (ctl_rst) begin
+    sts_run <= STS_IDL;
     cnt_cyc <= '0;
     cnt_dly <= '0;
     cnt_rep <= '0;
   // start on trigger, new triggers are ignored while ASG is running
   end else if (sts_trg) begin
-    cnt_cyc <= cfg_ncyc; 
-    cnt_dly <= cfg_rdly;
-    if (~|cnt_rep) begin
-      cnt_rep <= cfg_rnum;
+    if (sts_lst) begin
+      sts_run <= STS_IDL;
+      cnt_rep <= '0;
     end else begin
-      cnt_rep <= cnt_rep - 1;
+      sts_run <= STS_DAT;
+      if (cfg_brst) begin
+        cnt_cyc <= cfg_ncyc; 
+        cnt_dly <= cfg_rdly;
+        cnt_rep <= sts_end ? cnt_rep-1 : cfg_rnum;
+      end
     end
   // decrement counters
   end else begin
-    if (sts_run) begin
-      cnt_cyc <= cnt_cyc - 1;
-    end
-    if (~sts_run) begin
-      cnt_dly <= cnt_dly - 1;
+    if (cfg_brst) begin
+      if (sts_run == STS_DAT & ~|cnt_cyc & |cnt_dly)  sts_run <=  STS_DLY;
+      if (sts_run == STS_DAT &  |cnt_cyc           )  cnt_cyc <= cnt_cyc-1;
+      if (sts_run == STS_DLY &             |cnt_dly)  cnt_dly <= cnt_dly-1;
     end
   end
 end
 
-assign sts_trg = (trg_i ) || (|cnt_rep & ~|cnt_dly);
+assign sts_trg = (trg_i & (sts_run==STS_IDL))
+               | (sts_end & (|cnt_rep | cfg_infn));
+
+assign sts_end = cfg_brst & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
+assign sts_lst = cnt_rep == 1;
 
 // read pointer logic
 always_ff @(posedge clk)
@@ -173,7 +180,7 @@ end else begin
   end else if (sts_trg) begin
     ptr_cur <= cfg_offs;
   // modulo (proper wrapping) increment pointer
-  end else if (sts_run) begin
+  end else if (sts_run==STS_DAT) begin
     ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
   end
 end
@@ -191,7 +198,7 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
 assign trg_o = sts_trg;
 
 // output data
-assign sto_dat = buf_rdata;
+assign sto_dat = sto_vld ? buf_rdata : '0;
 
 // output valid
 always_ff @(posedge clk)
@@ -201,9 +208,8 @@ end else begin
   // synchronous clear
   if (ctl_rst) begin
     sto_vld <= 1'b0;
-  // start on trigger, new triggers are ignored while ASG is running
-  end else if (sts_trg) begin
-    sto_vld <= sts_run;
+  end else begin
+    sto_vld <= |sts_vld;
   end
 end
 

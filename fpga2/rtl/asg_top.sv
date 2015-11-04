@@ -98,6 +98,7 @@ logic [CWM+CWF-1:0] cfg_step;  // address increment step (frequency)
 logic [CWM+CWF-1:0] cfg_offs;  // address initial offset (phase)
 // burst mode configuraton
 logic               cfg_brst;  // burst mode enable
+logic               cfg_infn;  // infinite burst
 logic     [ 16-1:0] cfg_ncyc;  // number of cycles
 logic     [ 16-1:0] cfg_rnum;  // number of repetitions
 logic     [ 32-1:0] cfg_rdly;  // delay between repetitions
@@ -127,13 +128,15 @@ if (rstn == 1'b0) begin
   cfg_offs <= '0;
   cfg_step <= '0;
   cfg_brst <= '0;
+  cfg_infn <= '0;
   cfg_ncyc <= '0;
   cfg_rnum <= '0;
   cfg_rdly <= '0;
 end else begin
   if (sys_wen & ~sys_addr[CWM+2]) begin
-    if (sys_addr[6-1:0]==6'h04)  cfg_brst <= sys_wdata[    TWS    ];
     if (sys_addr[6-1:0]==6'h04)  cfg_tsel <= sys_wdata[    TWS-1:0];
+    if (sys_addr[6-1:0]==6'h04)  cfg_brst <= sys_wdata[    TWS+0  ];
+    if (sys_addr[6-1:0]==6'h04)  cfg_infn <= sys_wdata[    TWS+1  ];
     if (sys_addr[6-1:0]==6'h08)  cfg_size <= sys_wdata[CWM+CWF-1:0];
     if (sys_addr[6-1:0]==6'h0C)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
     if (sys_addr[6-1:0]==6'h10)  cfg_step <= sys_wdata[CWM+CWF-1:0];
@@ -151,7 +154,8 @@ assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];
 always_ff @(posedge clk)
 if (~sys_addr[CWM+2]) begin
   casez (sys_addr[19:0])
-    6'h04 : sys_rdata <= {{32-1  -TWS{1'b0}}, cfg_brst
+    6'h04 : sys_rdata <= {{32-2  -TWS{1'b0}}, cfg_infn
+                                            , cfg_brst
                                             , cfg_tsel};
     6'h08 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
     6'h0C : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
@@ -204,6 +208,7 @@ asg #(
   .cfg_offs  (cfg_offs ),
   // configuration (burst mode)
   .cfg_brst  (cfg_brst ),
+  .cfg_infn  (cfg_infn ),
   .cfg_ncyc  (cfg_ncyc ),
   .cfg_rnum  (cfg_rnum ),
   .cfg_rdly  (cfg_rdly )
