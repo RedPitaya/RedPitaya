@@ -180,10 +180,31 @@ end
 
 // next pointer value and overflow
 assign ptr_nxt = ptr_cur + cfg_step;
-assign ptr_nxt_sub = ptr_nxt - {1'b0,cfg_size} - 1;
+assign ptr_nxt_sub = ptr_nxt - cfg_size - 1;
 assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
+
+////////////////////////////////////////////////////////////////////////////////
+// output stream
+////////////////////////////////////////////////////////////////////////////////
 
 // trigger output
 assign trg_o = sts_trg;
+
+// output data
+assign sto_dat = buf_rdata;
+
+// output valid
+always_ff @(posedge clk)
+if (~rstn) begin
+  sto_vld <= 1'b0;
+end else begin
+  // synchronous clear
+  if (ctl_rst) begin
+    sto_vld <= 1'b0;
+  // start on trigger, new triggers are ignored while ASG is running
+  end else if (sts_trg) begin
+    sto_vld <= sts_run;
+  end
+end
 
 endmodule: asg

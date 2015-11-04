@@ -51,14 +51,6 @@ int unsigned dac_cyc=0;
 always_ff @ (posedge clk)
 dac_cyc <= dac_cyc+1;
 
-always begin
-  trg_ext <= 1'b0 ;
-  repeat(100000) @(posedge clk);
-  trg_ext <= 1'b1 ;
-  repeat(1200) @(posedge clk);
-  trg_ext <= 1'b0 ;
-end
-
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +75,7 @@ localparam ADR_BUF = 1 << (CWM+2);
 
 //int buf_len = 2**CWM;
 int buf_len = 8;
-real freq  = 1_000_000; // 1MHz
+real freq  = 10_000; // 10kHz
 real phase = 0; // DEG
 
 initial begin
@@ -92,31 +84,38 @@ initial begin
   for (int i=0; i<buf_len; i++) begin
     bus.write(ADR_BUF + (i*4), i);  // write table
   end
-  bus.write(32'h08, buf_len);  // table size
-  // configure frequency and phase
-  bus.write(32'h0C, (buf_len * (phase/360.0)) * 2**CWF);  // offset
-  bus.write(32'h10, (buf_len * (freq*TP)    ) * 2**CWF);  // step
-  // configure burst mode
-  bus.write(32'h18, 0);  // number of cycles
-  bus.write(32'h1C, 5);  // number of repetitions
-  bus.write(32'h20, 10);  // number of delay periods between repetitions
-  // configure amplitude and DC offset
-  bus.write(32'h24,{2'h0, 14'd0, 2'h0, 14'h2000}    );  // DC offset, amplitude
-  // start
-  bus.write(32'h00,{8'h0}  ); // write configuration
-
-  repeat(200) @(posedge clk);
-
   // CH1 table data readback
   rdata_blk = new [80];
   for (int i=0; i<buf_len; i++) begin
     bus.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
+  // configure frequency and phase
+  bus.write(32'h08,  buf_len                    * 2**CWF);  // table size
+  bus.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF);  // offset
+  bus.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF);  // step
+  // configure burst mode
+  bus.write(32'h18, 0);  // number of cycles
+  bus.write(32'h1C, 5);  // number of repetitions
+  bus.write(32'h20, 10);  // number of delay periods between repetitions
+  // configure amplitude and DC offset
+  bus.write(32'h24, 0);  // DC offset
+  bus.write(32'h28, 0);  // DCamplitude
+  // start
+  bus.write(32'h00, 2'b10);
+
+  repeat(200) @(posedge clk);
+
 
   repeat(2000) @(posedge clk);
 
   $finish();
 end
+
+////////////////////////////////////////////////////////////////////////////////
+// triggers
+////////////////////////////////////////////////////////////////////////////////
+
+assign trg_ext[0] = trg_swo;
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instances

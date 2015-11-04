@@ -66,21 +66,23 @@ logic signed [DWO-1:0] bus_rdata;
 logic          [3-1:0] bus_dly ;
 logic                  bus_ack ;
 
-always @(posedge clk)
-begin
-  bus_ena   <= (sys_wen | sys_ren) & (sys_addr[CWM+2] == 'h1);
+always_ff @(posedge clk)
+if ((sys_wen | sys_ren) & sys_addr[CWM+2]) begin
+  bus_ena   <= 1'b1;
   bus_wen   <= sys_wen;
-  bus_addr  <= sys_addr[CWM+1:2];
+  bus_addr  <= sys_addr[CWM+2+1:2];
   bus_wdata <= sys_wdata;
+end else begin
+  bus_ena   <= 1'b0;
 end
 
 always_ff @(posedge clk)
-if (rstn == 1'b0) begin
-   bus_dly   <= '0;
-   bus_ack   <= '0;
+if (~rstn) begin
+  bus_dly <= '0;
+  bus_ack <= '0;
 end else begin
-   bus_dly <= {bus_dly[3-2:0], sys_ren};
-   bus_ack <=  bus_dly[3-1] || sys_wen ;
+  bus_dly <= {bus_dly[3-2:0], sys_ren};
+  bus_ack <=  bus_dly[3-1] || sys_wen ;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,56 +102,67 @@ logic     [ 16-1:0] cfg_ncyc;  // number of cycles
 logic     [ 16-1:0] cfg_rnum;  // number of repetitions
 logic     [ 32-1:0] cfg_rdly;  // delay between repetitions
 
-always_ff @(posedge clk)
-if (rstn == 1'b0) begin
-   cfg_tsel <= '0;
-   cfg_size <= '0;
-   cfg_offs <= '0;
-   cfg_step <= '0;
-   cfg_brst <= '0;
-   cfg_ncyc <= '0;
-   cfg_rnum <= '0;
-   cfg_rdly <= '0;
-end else begin
-   if (sys_wen) begin
-      if (sys_addr[19:0]==20'h04)  cfg_brst <= sys_wdata[    TWS    ];
-      if (sys_addr[19:0]==20'h04)  cfg_tsel <= sys_wdata[    TWS-1:0];
-      if (sys_addr[19:0]==20'h08)  cfg_size <= sys_wdata[CWM+CWF-1:0];
-      if (sys_addr[19:0]==20'h0C)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
-      if (sys_addr[19:0]==20'h10)  cfg_step <= sys_wdata[CWM+CWF-1:0];
-      if (sys_addr[19:0]==20'h18)  cfg_ncyc <= sys_wdata[     16-1:0];
-      if (sys_addr[19:0]==20'h1C)  cfg_rnum <= sys_wdata[     16-1:0];
-      if (sys_addr[19:0]==20'h20)  cfg_rdly <= sys_wdata[     32-1:0];
-   end
-end
-
+// control signals
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
 always_ff @(posedge clk)
 if (~rstn) begin
-   sys_err <= 1'b0;
-   sys_ack <= 1'b0;
+  sys_err <= 1'b0;
+  sys_ack <= 1'b0;
 end else begin
-   sys_err <= 1'b0;
-   casez (sys_addr[19:0])
-     20'h00004 : begin sys_ack <= sys_en;          sys_rdata <= {{32-1  -TWS{1'b0}}, cfg_brst
-                                                                                   , cfg_tsel}; end
-     20'h00008 : begin sys_ack <= sys_en;          sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_size}; end
-     20'h0000C : begin sys_ack <= sys_en;          sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs}; end
-     20'h00010 : begin sys_ack <= sys_en;          sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_step}; end
-     20'h00018 : begin sys_ack <= sys_en;          sys_rdata <= {{32-     16{1'b0}}, cfg_ncyc}; end
-     20'h0001C : begin sys_ack <= sys_en;          sys_rdata <= {{32-     16{1'b0}}, cfg_rnum}; end
-     20'h00020 : begin sys_ack <= sys_en;          sys_rdata <=                      cfg_rdly ; end
-
-     20'h1zzzz : begin sys_ack <= bus_ack;         sys_rdata <= {{32-    DWO{1'b0}}, bus_rdata}; end
-
-       default : begin sys_ack <= sys_en;          sys_rdata <=  32'h0                       ; end
-   endcase
+  sys_err <= 1'b0;
+  if (~sys_addr[CWM]) begin
+    sys_ack <= sys_en;
+  end else begin
+    sys_ack <= bus_ack;
+  end
 end
 
+// write access
+always_ff @(posedge clk)
+if (rstn == 1'b0) begin
+  cfg_tsel <= '0;
+  cfg_size <= '0;
+  cfg_offs <= '0;
+  cfg_step <= '0;
+  cfg_brst <= '0;
+  cfg_ncyc <= '0;
+  cfg_rnum <= '0;
+  cfg_rdly <= '0;
+end else begin
+  if (sys_wen & ~sys_addr[CWM+2]) begin
+    if (sys_addr[6-1:0]==6'h04)  cfg_brst <= sys_wdata[    TWS    ];
+    if (sys_addr[6-1:0]==6'h04)  cfg_tsel <= sys_wdata[    TWS-1:0];
+    if (sys_addr[6-1:0]==6'h08)  cfg_size <= sys_wdata[CWM+CWF-1:0];
+    if (sys_addr[6-1:0]==6'h0C)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
+    if (sys_addr[6-1:0]==6'h10)  cfg_step <= sys_wdata[CWM+CWF-1:0];
+    if (sys_addr[6-1:0]==6'h18)  cfg_ncyc <= sys_wdata[     16-1:0];
+    if (sys_addr[6-1:0]==6'h1C)  cfg_rnum <= sys_wdata[     16-1:0];
+    if (sys_addr[6-1:0]==6'h20)  cfg_rdly <= sys_wdata[     32-1:0];
+  end
+end
+
+// 
 assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];
 assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];
+
+// read access
+always_ff @(posedge clk)
+if (~sys_addr[CWM+2]) begin
+  casez (sys_addr[19:0])
+    6'h04 : sys_rdata <= {{32-1  -TWS{1'b0}}, cfg_brst
+                                            , cfg_tsel};
+    6'h08 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
+    6'h0C : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
+    6'h10 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
+    6'h18 : sys_rdata <= {{32-     16{1'b0}}, cfg_ncyc};
+    6'h1C : sys_rdata <= {{32-     16{1'b0}}, cfg_rnum};
+    6'h20 : sys_rdata <=                      cfg_rdly ;
+  endcase
+end else begin
+            sys_rdata <= {{32-    DWO{1'b0}}, bus_rdata};
+end
 
 ////////////////////////////////////////////////////////////////////////////////
 // trigger multiplexer
