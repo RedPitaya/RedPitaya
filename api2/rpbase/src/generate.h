@@ -33,74 +33,53 @@
 #define BURST_REPETITIONS_MAX   50000
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
-#define DAC_FREQUENCY           125e6       // Hz
-
-#define BUFFER_LENGTH           (16 * 1024)
-#define CHA_DATA_OFFSET         0x10000
-#define CHB_DATA_OFFSET         0x20000
-#define DATA_BIT_LENGTH         14
-#define MICRO                   1e6
 
 // Base Generate address
 #define GENERATE_BASE_ADDR      0x40200000
-#define GENERATE_BASE_SIZE      0x00030000
+#define GENERATE_BASE_SIZE      0x00100000
 
-typedef struct ch_properties {
-    uint32_t amplitudeScale     :14;
-    uint32_t                    :2;
-    uint32_t amplitudeOffset    :14;
-    uint32_t                    :2;
-    uint32_t counterWrap;
-    uint32_t startOffset;
-    uint32_t counterStep;
-    uint32_t                    :2;
-    uint32_t buffReadPointer    :14;
-    uint32_t                    :16;
-    uint32_t cyclesInOneBurst;
-    uint32_t burstRepetitions;
-    uint32_t delayBetweenBurstRepetitions;
-} ch_properties_t;
+// global definitions
+#define RP_MNG      2
 
-typedef struct generate_control_s {
-    uint32_t AtriggerSelector   :4;
-    uint32_t ASM_WrapPointer    :1;
-    uint32_t                    :1;
-    uint32_t ASM_reset          :1;
-    uint32_t AsetOutputTo0      :1;
-    uint32_t AgatedBursts       :1;
-    uint32_t                    :7;
+// sampling rate
+#define RP_GEN_SR   125000000
+// number of trigger options
+#define RP_GEN_TWS  RP_MNG+2
+// ASG counter width (mantisa and fraction)
+#define RP_GEN_CWM  14
+#define RP_GEN_CWF  16
+// linear
+#define RP_GEN_DWO  14
+#define RP_GEN_DWM  16
+#define RP_GEN_DWS  14
 
-    uint32_t BtriggerSelector   :4;
-    uint32_t BSM_WrapPointer    :1;
-    uint32_t                    :1;
-    uint32_t BSM_reset          :1;
-    uint32_t BsetOutputTo0      :1;
-    uint32_t BgatedBursts       :1;
-    uint32_t                    :7;
-
-    ch_properties_t properties_ch[2];
-} generate_control_t;
+typedef struct {
+    // control register
+    uint32_t ctl_rst  :1;
+    uint32_t ctl_trg  :1;
+    // configuration
+    uint32_t cfg_tsel :RP_GEN_TWS;
+    uint32_t cfg_bena :1;
+    uint32_t cfg_binf :1;
+    uint32_t cfg_size;
+    uint32_t cfg_offs;
+    uint32_t cfg_step;
+    // burst mode
+    uint32_t cfg_bcyc;
+    uint32_t cfg_bdly;
+    uint32_t cfg_bnum;
+    // linear transformation
+    int32_t  cfg_lmul;
+    int32_t  cfg_lsum;
+    // empty space
+    uint32_t reserved0[(1<<RP_GEN_CWM)-10];
+    // table
+    int32_t  table[(1<<RP_GEN_CWM)];
+    // empty space
+    uint32_t reserved1[GENERATE_BASE_SIZE - (2<<RP_GEN_CWM)];
+} generate_regset_t;
 
 int generate_Init();
 int generate_Release();
-
-int generate_setOutputDisable(rp_channel_t channel, bool disable);
-int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
-int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
-int generate_setTriggerSource(rp_channel_t channel, unsigned short value);
-int generate_getTriggerSource(rp_channel_t channel, uint32_t *value);
-int generate_setGatedBurst(rp_channel_t channel, uint32_t value);
-int generate_getGatedBurst(rp_channel_t channel, uint32_t *value);
-int generate_setBurstCount(rp_channel_t channel, uint32_t num);
-int generate_getBurstCount(rp_channel_t channel, uint32_t *num);
-int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
-int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
-int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
-int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
-
-int generate_simultaneousTrigger();
-int generate_Synchronise();
-
-int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32_t length);
 
 #endif //__GENERATE_H

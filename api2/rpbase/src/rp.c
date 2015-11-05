@@ -24,7 +24,6 @@
 #include "analog.h"
 #include "calib.h"
 #include "generate.h"
-#include "gen_handler.h"
 
 static char version[50];
 
