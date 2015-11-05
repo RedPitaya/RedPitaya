@@ -60,6 +60,10 @@
 						current_app = key;
 					});
 
+					$('a').unbind('click');
+					$('a').unbind('touchend');
+					$('a').on('click touchend', onLinkClicked);
+
 					$('.buttons').click(function() {
 						key = $(this).children('a').attr('href').substr(1);
 						if (key == 'visualprogramming')
@@ -192,13 +196,21 @@
 </div>
 <script>
 
-$('a').on('click touchend', function(e) {
-    var el = $(this);
-    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
-	console.log('clicked ', link);
-    window.location = link;
-});
-$('#run').click(function(){
+var onLinkClicked = function()
+{
+	if ($(this).attr('id') == 'run')
+	{
+		verifyLic($(this));
+	}else
+	{
+	    var el = $(this);
+	    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
+		console.log('clicked ', link);
+	    window.location = link;
+	}
+}
+
+var verifyLic = function(element){
 
 	if (typeof String.prototype.startsWith != 'function') {
 		String.prototype.startsWith = function (str){
@@ -206,7 +218,7 @@ $('#run').click(function(){
 		};
 	}
 
-	if ($(this).attr('href') == undefined)
+	if (element.attr('href') == undefined)
 	{
 		var post_uri = 'http://store.redpitaya.com/upload_id_file/';
 		var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
@@ -273,9 +285,14 @@ $('#run').click(function(){
 				window.location = $('#run').attr('href2');
 			});
 		})
+	} else {
+		window.location = element.attr('href');
 	}
-});
+}
 
+$('a').unbind('click');
+$('a').unbind('touchend');
+$('a').on('click touchend', onLinkClicked);
 </script>
 </body>
 </html>
