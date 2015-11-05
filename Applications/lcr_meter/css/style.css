@@ -501,10 +501,42 @@ tr:nth-child(even)    { background-color:#D7D7D7; }
   color:#000000;
 }
 
-.btn:hover, btn:active {
-  color: #fff !important;
+.btn-danger:focus {
+  background-color: inherit !important;
+}
+
+.btn:hover {
+  background-color: #cc6666;
   background-image: none;
 }
+
+input.bt_check + label {
+  background-image: none;
+  border: 0 solid transparent;
+  white-space: nowrap;
+  line-height: 1.42857143;
+  border-radius: 0;
+  border: 1px solid;
+  float: right;
+  width: 40px;
+  text-shadow: 0px 0px;
+  display: inline-block;
+ /*  box-shadow: 0 0 0 1px #777; */
+  background-color: #cdcccc;
+  color:#000000;
+  font-weight: normal;
+  text-align: center;
+  vertical-align: middle;
+  padding: 6px 12px;
+  font-size: 14px;
+
+} 
+
+input.bt_check:checked + label {
+  background-color: #d43f3a;
+  border: 1px solid #000000;
+  color: #ffffff;
+} 
 
 
 .math-radio-btn:disabled, .math-radio-btn.disabled{

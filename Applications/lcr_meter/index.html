@@ -29,7 +29,7 @@
 </head>
 
 <body>
-	<div class="full-content" style="width: 60%">
+	<div id="content_wrapper" class="full-content" style="width: 60%">
 		<div class="container-fluid">
 			<div class="navbar navbar-inverse" role="navigation">
 				<div class="container">
@@ -126,9 +126,9 @@
 				</div>
 
 				<div id="table_cmd">
-					<button id="btn_export" type="button" class="btn btn-danger" value="0">Export Table</button>
-					<button id="btn_clear" type="button" class="btn btn-danger" value="0">Clear</button>
-					<button id="btn_clear_all" type="button" class="btn btn-danger btn_clear" value="0">Clear All</button>
+					<button id="btn_export" type="button" class="btn">Export Table</button>
+					<button id="btn_clear" type="button" class="btn">Clear</button>
+					<button id="btn_clear_all" type="button" class="btn">Clear All</button>
 				</div>
 
 			</div>
@@ -140,7 +140,7 @@
 
 			<!-- Main right menu -->
 			<div class="global_container">
-            	<div class="menu_content">
+            	<div id="menu_conent" class="menu_content">
             		<div class="menu_wrapper">
             			<div class="col-xs-4 menu_header">
             				<label for="lb_tag" style="color: #d43f3a">DATA OPTIONS</label>
@@ -156,11 +156,18 @@
 			                	<div style="float:left">
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
 			                	</div>
-			                  	<div class="meas_btn_group1">
-									<button type="button" class="btn btn-danger" data-toggle="button">E</button>
-									<button type="button" class="btn btn-danger" data-toggle="button">Q</button>
-									<button type="button" class="btn btn-danger" data-toggle="button">D</button>
-									<button type="button" class="btn btn-danger" data-toggle="button">P</button>
+			                  	<div id="prim_displ_choice">
+			                  		<input style="display:none;" type="checkbox" id="cb_E" name="cb_E" class="bt_check"/>
+  									<label for="cb_E">E</label>
+
+									<input style="display:none;" type="checkbox" id="cb_Q" name="cb_Q" class="bt_check"/>
+  									<label for="cb_Q">Q</label>
+
+									<input style="display:none;" type="checkbox" id="cb_D" name="cb_D" class="bt_check"/>
+  									<label for="cb_D">D</label>
+
+									<input style="display:none;" type="checkbox" id="cb_P" name="cb_P" class="bt_check" checked="checked"/>
+  									<label for="cb_P" >P</label>
 	        					</div>
 			                </div>
 	              		</form>
@@ -172,11 +179,19 @@
 			                	<div style="float:left">
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
 			                	</div>
-			                  	<div class="meas_btn_group2">
-									<button type="button" class="btn btn-danger" data-toggle="button">R</button>
-									<button type="button" class="btn btn-danger" data-toggle="button">C</button>
-									<button type="button" class="btn btn-danger" data-toggle="button">L</button>
-									<button type="button" class="btn btn-danger" data-toggle="button">Z</button>
+			                  	<div id="sec_displ_choice">
+
+									<input style="display:none;" type="checkbox" id="cb_R" name="cb_R" class="bt_check"/>
+  									<label for="cb_R">R</label>
+
+									<input style="display:none;" type="checkbox" id="cb_C" name="cb_C" class="bt_check"/>
+  									<label for="cb_C">C</label>
+
+									<input style="display:none;" type="checkbox" id="cb_L" name="cb_L" class="bt_check"/>
+  									<label for="cb_L">L</label>
+
+									<input style="display:none;" type="checkbox" id="cb_Z" name="cb_Z" class="bt_check" checked="checked" />
+  									<label for="cb_Z">Z</label>
 	        					</div>
 			                </div>
 	              		</form>
@@ -216,9 +231,11 @@
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Select Mode:</label>
 			                	</div>
 
-			                  	<div style="float: right" class="col-xs-8">
-									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="0">Auto</button>
-									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="1">Manual</button>
+			                  	<div id="sel_mode" style="float: right" class="col-xs-8">
+									<input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual" class="bt_check"/>
+  									<label for="cb_manual" style="width: 50%">Manual</label>
+									<input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check"/>
+  									<label for="cb_auto" style="width: 50%">Auto</label>
 	        					</div>
 			                </div>
 	              		</form>
@@ -258,9 +275,12 @@
             		<div class="menu_wrapper col-xs-4">
 	            		<form class="form-horizontal" role="form">
 			                <div>
-			                  	<div style="float: right" class="col-xs-12">
-									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="0">Relative Mode</button>
-									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="1">Tolerance Mode</button>
+			                  	<div id="rel_tol" style="float: right" class="col-xs-12">
+									<input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check"/>
+  									<label for="cb_rel" style="width: 50%">Relative</label>
+									
+									<input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol" class="bt_check"/>
+  									<label for="cb_tol" style="width: 50%">Tolerance</label>
 	        					</div>
 			                </div>
 	              		</form>
@@ -269,19 +289,31 @@
 	              	<div class="menu_wrapper col-xs-4">
 	            		<form class="form-horizontal" role="form">
 			                <div>
-			                  	<div style="float: right" class="col-xs-12">
-									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="0">Paralel</button>
-									<button type="button" class="btn btn-danger" data-toggle="button" style="width: 50%" value="1">Series</button>
+			                  	<div id="parl_ser" style="float: right" class="col-xs-12">
+									
+									<input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check"/>
+  									<label for="cb_ser" style="width: 50%">Series</label>
+
+									<input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" class="bt_check"/>
+  									<label for="cb_paralel" style="width: 50%">Paralel</label>
 	        					</div>
 			                </div>
 	              		</form>
 	              	</div>
         		</div>
             </div>
-
 		</div>
-
 	</div>
-
-
 </body>
+
+<script language="javascript" type="text/javascript">
+	
+	//Set only one measurment parent().find('.checkbox')
+	
+	$('#content_wrapper input:checkbox').on('change', function(){
+		var parent = $(this).parent().closest('div').attr('id');
+		$('#' + parent).find('input[type=checkbox]').prop('checked', false);
+		$(this).prop('checked', true);
+	});
+
+</script>
