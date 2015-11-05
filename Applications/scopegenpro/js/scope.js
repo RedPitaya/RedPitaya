@@ -71,7 +71,7 @@
     trig_dragging: false,
     cursor_dragging: false,
     resized: false,
-    sel_sig_name: null,
+    sel_sig_name: 'ch1',
     fine: false,
 	graph_grid_height: null,
 	graph_grid_width: null,
