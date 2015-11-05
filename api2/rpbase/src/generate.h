@@ -55,12 +55,14 @@
 
 typedef struct {
     // control register
-    uint32_t ctl_rst  :1;
-    uint32_t ctl_trg  :1;
+    uint32_t ctl_sys;
+        // rst :1;
+        // trg :1;
     // configuration
-    uint32_t cfg_tsel :RP_GEN_TWS;
-    uint32_t cfg_bena :1;
-    uint32_t cfg_binf :1;
+    uint32_t cfg_sys;
+        // tsel :RP_GEN_TWS;
+        // bena :1;
+        // binf :1;
     uint32_t cfg_size;
     uint32_t cfg_offs;
     uint32_t cfg_step;
