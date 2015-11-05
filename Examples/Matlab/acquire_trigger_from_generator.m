@@ -41,7 +41,7 @@ fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
 fprintf(tcpipObj,'ACQ:START');
 pause(1);
 fprintf(tcpipObj,'ACQ:TRIG AWG_PE');
-fprintf(tcpipObj,'SOUR2:TRIG:IMM');           % Set generator trigger to immediately
+fprintf(tcpipObj,'SOUR1:TRIG:IMM');           % Set generator trigger to immediately
 
 %% Wait for trigger
  while 1
