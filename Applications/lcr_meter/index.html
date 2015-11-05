@@ -11,7 +11,6 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -21,11 +20,10 @@
     <script src="js/jquery-2.1.3.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
     <script src="js/jquery.ui.touch-punch.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.flot.js"></script>
+    <script src="js/bootstrap.min.js"></script>s
     <script src="js/fastclick.min.js"></script>
     <script src="js/jquery.simulate.js"></script>
-    <script src="js/scope.js?3"></script>
+    <script src="js/lcr.js?"></script>
 </head>
 
 <body>
@@ -93,13 +91,13 @@
 					</div>
 
 					<div id="sec_displ">
-							<label class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">2.0050</label>
-							<label class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">deg</label>
+							<label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">2.0050</label>
+							<label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">deg</label>
 					</div>
 
 					<div id="prim_displ">
-							<label class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">1004.05</label>
-							<label class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">mH</label>	
+							<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">1004.05</label>
+							<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">mH</label>	
 					</div>
 					
 				</div>
@@ -234,7 +232,7 @@
 			                  	<div id="sel_mode" style="float: right" class="col-xs-8">
 									<input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual" class="bt_check"/>
   									<label for="cb_manual" style="width: 50%">Manual</label>
-									<input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check"/>
+									<input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check"  checked="checked"a/>
   									<label for="cb_auto" style="width: 50%">Auto</label>
 	        					</div>
 			                </div>
@@ -276,8 +274,8 @@
 	            		<form class="form-horizontal" role="form">
 			                <div>
 			                  	<div id="rel_tol" style="float: right" class="col-xs-12">
-									<input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check"/>
-  									<label for="cb_rel" style="width: 50%">Relative</label>
+									<input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check" checked="checked"/>
+  									<label for="cb_rel" style="width: 50%" >Relative</label>
 									
 									<input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol" class="bt_check"/>
   									<label for="cb_tol" style="width: 50%">Tolerance</label>
@@ -291,7 +289,7 @@
 			                <div>
 			                  	<div id="parl_ser" style="float: right" class="col-xs-12">
 									
-									<input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check"/>
+									<input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check" checked="checked"/>
   									<label for="cb_ser" style="width: 50%">Series</label>
 
 									<input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" class="bt_check"/>
@@ -317,3 +315,4 @@
 	});
 
 </script>
+</html>
