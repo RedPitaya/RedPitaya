@@ -28,10 +28,7 @@ module scope_dec_avg #(
   // stream output
   output logic signed [DWO-1:0] sto_dat,  // data
   output logic                  sto_vld,  // valid
-  input  logic                  sto_rdy,  // ready
-  // triggers
-  input  logic                  trg_ext,  // external input
-  output logic                  trg_out   // output
+  input  logic                  sto_rdy   // ready
 );
 
 logic signed [DWC+DWI-1:0] sum;

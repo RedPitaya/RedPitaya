@@ -120,14 +120,14 @@ logic            ps_sys_err         ;
 logic            ps_sys_ack         ;
 
 // AXI masters
-logic [ 32-1: 0] axi1_waddr  , axi0_waddr  ;
-logic [ 64-1: 0] axi1_wdata  , axi0_wdata  ;
-logic [  8-1: 0] axi1_wsel   , axi0_wsel   ;
-logic            axi1_wvalid , axi0_wvalid ;
-logic [  4-1: 0] axi1_wlen   , axi0_wlen   ;
-logic            axi1_wfixed , axi0_wfixed ;
-logic            axi1_werr   , axi0_werr   ;
-logic            axi1_wrdy   , axi0_wrdy   ;
+logic        [MNA-1:0][32-1:0] axi_waddr ;
+logic        [MNA-1:0][64-1:0] axi_wdata ;
+logic        [MNA-1:0][ 8-1:0] axi_wsel  ;
+logic        [MNA-1:0]         axi_wvalid;
+logic        [MNA-1:0][ 4-1:0] axi_wlen  ;
+logic        [MNA-1:0]         axi_wfixed;
+logic        [MNA-1:0]         axi_werr  ;
+logic        [MNA-1:0]         axi_wrdy  ;
 
 // PLL signals
 logic                 adc_clk_in;
@@ -264,14 +264,14 @@ red_pitaya_ps i_ps (
   .sys_err_i     (ps_sys_err  ),  // system error indicator
   .sys_ack_i     (ps_sys_ack  ),  // system acknowledge signal
   // AXI masters
-  .axi1_waddr_i  (axi1_waddr  ),  .axi0_waddr_i  (axi0_waddr  ),  // system write address
-  .axi1_wdata_i  (axi1_wdata  ),  .axi0_wdata_i  (axi0_wdata  ),  // system write data
-  .axi1_wsel_i   (axi1_wsel   ),  .axi0_wsel_i   (axi0_wsel   ),  // system write byte select
-  .axi1_wvalid_i (axi1_wvalid ),  .axi0_wvalid_i (axi0_wvalid ),  // system write data valid
-  .axi1_wlen_i   (axi1_wlen   ),  .axi0_wlen_i   (axi0_wlen   ),  // system write burst length
-  .axi1_wfixed_i (axi1_wfixed ),  .axi0_wfixed_i (axi0_wfixed ),  // system write burst type (fixed / incremental)
-  .axi1_werr_o   (axi1_werr   ),  .axi0_werr_o   (axi0_werr   ),  // system write error
-  .axi1_wrdy_o   (axi1_wrdy   ),  .axi0_wrdy_o   (axi0_wrdy   )   // system write ready
+  .axi1_waddr_i  (axi_waddr [1]),  .axi0_waddr_i  (axi_waddr [0]),  // system write address
+  .axi1_wdata_i  (axi_wdata [1]),  .axi0_wdata_i  (axi_wdata [0]),  // system write data
+  .axi1_wsel_i   (axi_wsel  [1]),  .axi0_wsel_i   (axi_wsel  [0]),  // system write byte select
+  .axi1_wvalid_i (axi_wvalid[1]),  .axi0_wvalid_i (axi_wvalid[0]),  // system write data valid
+  .axi1_wlen_i   (axi_wlen  [1]),  .axi0_wlen_i   (axi_wlen  [0]),  // system write burst length
+  .axi1_wfixed_i (axi_wfixed[1]),  .axi0_wfixed_i (axi_wfixed[0]),  // system write burst type (fixed / incremental)
+  .axi1_werr_o   (axi_werr  [1]),  .axi0_werr_o   (axi_werr  [0]),  // system write error
+  .axi1_wrdy_o   (axi_wrdy  [1]),  .axi0_wrdy_o   (axi_wrdy  [0])   // system write ready
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -583,35 +583,31 @@ asg_top asg_top [MNG-1:0] (
 
 logic trig_asg_out ;
 
-red_pitaya_scope i_scope (
+scope_top #(
+) scope [MNA-1:0] (
   // system signals
-  .adc_clk_i       (adc_clk     ),
-  .adc_rstn_i      (adc_rstn    ),
-  // ADC
-  .adc_a_i         (adc_dat[0]  ),
-  .adc_b_i         (adc_dat[1]  ),
-  .trig_ext_i      (exp_p_i[0]  ),
-  .trig_asg_i      (trig_asg_out),
-  // AXI0 master                 // AXI1 master
-  .axi0_clk_o    (           ),  .axi1_clk_o    (           ),
-  .axi0_rstn_o   (           ),  .axi1_rstn_o   (           ),
-  .axi0_waddr_o  (axi0_waddr ),  .axi1_waddr_o  (axi1_waddr ),
-  .axi0_wdata_o  (axi0_wdata ),  .axi1_wdata_o  (axi1_wdata ),
-  .axi0_wsel_o   (axi0_wsel  ),  .axi1_wsel_o   (axi1_wsel  ),
-  .axi0_wvalid_o (axi0_wvalid),  .axi1_wvalid_o (axi1_wvalid),
-  .axi0_wlen_o   (axi0_wlen  ),  .axi1_wlen_o   (axi1_wlen  ),
-  .axi0_wfixed_o (axi0_wfixed),  .axi1_wfixed_o (axi1_wfixed),
-  .axi0_werr_i   (axi0_werr  ),  .axi1_werr_i   (axi1_werr  ),
-  .axi0_wrdy_i   (axi0_wrdy  ),  .axi1_wrdy_i   (axi1_wrdy  ),
-  // System bus
-  .sys_addr      (sys_addr    ),
-  .sys_wdata     (sys_wdata   ),
-  .sys_sel       (sys_sel     ),
-  .sys_wen       (sys_wen  [6]),
-  .sys_ren       (sys_ren  [6]),
-  .sys_rdata     (sys_rdata[6]),
-  .sys_err       (sys_err  [6]),
-  .sys_ack       (sys_ack  [6])
+  .clk           (adc_clk ),
+  .rstn          (adc_rstn),
+  // stream input
+  .sti_dat       (adc_dat),
+  .sti_vld       (adc_vld),
+  .sti_rdy       (adc_rdy),
+  // stream_output
+  .sto_dat       (adc_dat),
+  .sto_vld       (adc_vld),
+  .sto_rdy       (adc_rdy),
+  // triggers
+  .trg_ext       ({trig_asg_out, exp_p_i[0]}),
+  .trg_out       (),
+ // System bus
+  .sys_addr      (sys_addr      ),
+  .sys_wdata     (sys_wdata     ),
+  .sys_sel       (sys_sel       ),
+  .sys_wen       (sys_wen  [7:6]),
+  .sys_ren       (sys_ren  [7:6]),
+  .sys_rdata     (sys_rdata[7:6]),
+  .sys_err       (sys_err  [7:6]),
+  .sys_ack       (sys_ack  [7:6])
 );
 
 endmodule: red_pitaya_top
