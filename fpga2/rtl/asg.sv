@@ -195,7 +195,9 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
 ////////////////////////////////////////////////////////////////////////////////
 
 // trigger output
-assign trg_o = sts_trg;
+always_ff @(posedge clk)
+if (~rstn)  trg_o <= 1'b0;
+else        trg_o <= sts_trg;
 
 // output data
 assign sto_dat = sto_vld ? buf_rdata : '0;
