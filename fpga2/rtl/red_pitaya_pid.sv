@@ -105,6 +105,7 @@ for (genvar o=0; o<CNO; o++) begin: for_cno
 
 logic signed [DWO+1-1:0] out_sum;
 
+// TODO: this should be generalized to a larger number of channels
 assign out_sum = pid_out[o][1] + pid_out[o][0];
 
 always_ff @(posedge clk)
