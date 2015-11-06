@@ -54,7 +54,8 @@ module scope_top #(
   output logic                  sto_rdy,  // ready
   // triggers
   input  logic        [TWA-1:0] trg_ext,  // external input
-  output logic          [2-1:0] trg_out,  // output
+  output logic                  trg_swo,  // output from software
+  output logic          [2-1:0] trg_out,  // output from edge detection
   // System bus
   input  logic         [32-1:0] sys_addr ,  // bus saddress
   input  logic         [32-1:0] sys_wdata,  // bus write data
@@ -83,60 +84,6 @@ logic signed [DWI-1:0] cfg_hst;  // hystheresis
 logic signed [TWS-1:0] cfg_sel;  // trigger select
 
 logic signed  [32-1:0] cfg_dly;
-
-////////////////////////////////////////////////////////////////////////////////
-// Decimation
-////////////////////////////////////////////////////////////////////////////////
-
-scope_dec_avg #(
-  // stream parameters
-  .DWI (DWI),
-  .DWO (DWO),
-  // decimation parameters
-  .DWC (17),
-  .DWS ( 4)
-) dec_avg (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // control
-  .ctl_clr  (ctl_clr),
-  // configuration
-  .cfg_avg  (cfg_avg),
-  .cfg_dec  (cfg_dec),
-  .cfg_shr  (cfg_shr),
-  // stream input
-  .sti_dat  (sti_dat),
-  .sti_vld  (sti_vld),
-  .sti_rdy  (sti_rdy),
-  // stream output
-  .sto_dat  (sto_dat),
-  .sto_vld  (sto_vld),
-  .sto_rdy  (sto_rdy)
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// Edge detection (trigger source)
-////////////////////////////////////////////////////////////////////////////////
-
-scope_edge #(
-  // stream parameters
-  .DWI (DWI)
-) edge_i (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream monitor
-  .sti_dat  (std_dat),
-  .sti_vld  (std_vld),
-  .sti_rdy  (std_rdy),
-  // configuration
-  .cfg_lvl  (cfg_lvl),
-  .cfg_hst  (cfg_hst),
-  // output triggers
-  .trg_pdg  (trg_out[0]),
-  .trg_ndg  (trg_out[1]) 
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -185,6 +132,10 @@ end else begin
   end
 end
 
+// control signals
+assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];  // reset
+assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];  // trigger
+
 always @(posedge clk)
 begin
   casez (sys_addr[19:0])
@@ -202,5 +153,59 @@ begin
       default :sys_rdata <=  32'h0                   ;
   endcase
 end
+
+////////////////////////////////////////////////////////////////////////////////
+// Decimation
+////////////////////////////////////////////////////////////////////////////////
+
+scope_dec_avg #(
+  // stream parameters
+  .DWI (DWI),
+  .DWO (DWO),
+  // decimation parameters
+  .DWC (17),
+  .DWS ( 4)
+) dec_avg (
+  // system signals
+  .clk      (clk ),
+  .rstn     (rstn),
+  // control
+  .ctl_clr  (ctl_clr),
+  // configuration
+  .cfg_avg  (cfg_avg),
+  .cfg_dec  (cfg_dec),
+  .cfg_shr  (cfg_shr),
+  // stream input
+  .sti_dat  (sti_dat),
+  .sti_vld  (sti_vld),
+  .sti_rdy  (sti_rdy),
+  // stream output
+  .sto_dat  (sto_dat),
+  .sto_vld  (sto_vld),
+  .sto_rdy  (sto_rdy)
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Edge detection (trigger source)
+////////////////////////////////////////////////////////////////////////////////
+
+scope_edge #(
+  // stream parameters
+  .DWI (DWI)
+) edge_i (
+  // system signals
+  .clk      (clk ),
+  .rstn     (rstn),
+  // stream monitor
+  .sti_dat  (sti_dat),
+  .sti_vld  (sti_vld),
+  .sti_rdy  (sti_rdy),
+  // configuration
+  .cfg_lvl  (cfg_lvl),
+  .cfg_hst  (cfg_hst),
+  // output triggers
+  .trg_pdg  (trg_out[0]),
+  .trg_ndg  (trg_out[1]) 
+);
 
 endmodule: scope_top

@@ -171,6 +171,17 @@ logic signed [MNA-1:0] [DWS-1:0] adc_cfg_sum;  // offset
 logic signed [MNG-1:0] [DWM-1:0] dac_cfg_mul;  // gain
 logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
+// triggers (generator)
+logic [      MNG    -1:0] gen_trg_swo;
+logic [      MNG    -1:0] gen_trg_out;
+// triggers (generator)
+logic [MNA          -1:0] acq_trg_swo;
+logic [MNA*2        -1:0] acq_trg_out;
+// triggers (GPIO)
+logic [            2-1:0] gio_trg_out;          
+// triggers (combination of all sources)
+logic [MNA*3+MNG*2+2-1:0] top_trg_ext;
+
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,11 +308,6 @@ assign ps_sys_rdata = sys_rdata[sys_addr[22:20]];
 assign ps_sys_err   = sys_err  [sys_addr[22:20]];
 assign ps_sys_ack   = sys_ack  [sys_addr[22:20]];
 
-// unused system bus slave ports
-assign sys_rdata[7] = 32'h0; 
-assign sys_err  [7] =  1'b0;
-assign sys_ack  [7] =  1'b1;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,6 +344,23 @@ red_pitaya_hk hk (
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
 IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_oe));
+
+debounce #(
+  .CW (20),
+  .DI (1'b0)
+) debounce (
+  // system signals
+  .clk  (clk ),
+  .rstn (rstn),
+  // configuration
+  .ena  (1'b1),
+  .len  (20'd62500),  // 0.5ms
+  // input stream
+  .d_i  (exp_p_i[0]),
+  .d_o  (),
+  .d_p  (gio_trg_out[0]),
+  .d_n  (gio_trg_out[1])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Calibration
@@ -543,18 +566,9 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(
 // ASG (arbitrary signal generators)
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [MNG-1:0] [MNG+2-1:0] asg_trg_ext;
-logic [MNG-1:0]             asg_trg_swo;
-logic [MNG-1:0]             asg_trg_out;
-
-generate
-for (genvar i=0; i<MNG; i++) begin: for_asg_trg
-  // TODO: external trigger should be properly connected
-  assign asg_trg_ext [i] = {2'b00, asg_trg_swo};
-end: for_asg_trg
-endgenerate
-
-asg_top asg_top [MNG-1:0] (
+asg_top #(
+  .TWA (MNA*3+MNG*2+2)
+) asg_top [MNG-1:0] (
   // system signals
   .clk       (adc_clk ),
   .rstn      (adc_rstn),
@@ -563,9 +577,9 @@ asg_top asg_top [MNG-1:0] (
   .sto_vld   (),
   .sto_rdy   (1'b1),
   // triggers
-  .trg_ext   (asg_trg_ext),
-  .trg_swo   (asg_trg_swo),
-  .trg_out   (asg_trg_out),
+  .trg_ext   (top_trg_ext),
+  .trg_swo   (gen_trg_swo),
+  .trg_out   (gen_trg_out),
   // System bus
   .sys_sel   (sys_sel       ),
   .sys_wen   (sys_wen  [5:4]),
@@ -581,9 +595,8 @@ asg_top asg_top [MNG-1:0] (
 //  Oscilloscope application
 ////////////////////////////////////////////////////////////////////////////////
 
-logic trig_asg_out ;
-
 scope_top #(
+  .TWA (MNA*3+MNG*2+2)
 ) scope [MNA-1:0] (
   // system signals
   .clk           (adc_clk ),
@@ -597,8 +610,9 @@ scope_top #(
   .sto_vld       (adc_vld),
   .sto_rdy       (adc_rdy),
   // triggers
-  .trg_ext       ({trig_asg_out, exp_p_i[0]}),
-  .trg_out       (),
+  .trg_ext       (top_trg_ext),
+  .trg_swo       (acq_trg_swo),
+  .trg_out       (acq_trg_out),
  // System bus
   .sys_addr      (sys_addr      ),
   .sys_wdata     (sys_wdata     ),
@@ -609,5 +623,17 @@ scope_top #(
   .sys_err       (sys_err  [7:6]),
   .sys_ack       (sys_ack  [7:6])
 );
+
+////////////////////////////////////////////////////////////////////////////////
+// triggers
+////////////////////////////////////////////////////////////////////////////////
+
+assign top_trg_ext = {
+  acq_trg_out,  // MNA*2 - event    triggers from acquire    {negedge, posedge}
+  acq_trg_swo,  // MNA   - software triggers from acquire
+  gen_trg_out,  // MNG   - event    triggers from generators
+  gen_trg_swo,  // MNG   - software triggers from generators
+  gio_trg_out   // 2     - event    triggers from GPIO       {negedge, posedge}
+};
 
 endmodule: red_pitaya_top
