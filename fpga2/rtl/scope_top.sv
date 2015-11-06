@@ -49,9 +49,10 @@ module scope_top #(
   input  logic                  sti_vld,  // valid
   output logic                  sti_rdy,  // ready
   // stream output
-  input  logic signed [DWI-1:0] sto_dat,  // data
-  input  logic                  sto_vld,  // valid
-  output logic                  sto_rdy,  // ready
+  output logic signed [DWI-1:0] sto_dat,  // data
+  output logic                  sto_lst,  // last
+  output logic                  sto_vld,  // valid
+  input  logic                  sto_rdy,  // ready
   // triggers
   input  logic        [TWA-1:0] trg_ext,  // external input
   output logic                  trg_swo,  // output from software
@@ -81,9 +82,18 @@ logic signed [ 25-1:0] cfg_fpp;   // config PP coefficient
 logic signed [DWI-1:0] stf_dat;  // data
 logic                  stf_vld;  // valid
 logic                  stf_rdy;  // ready
+// stream from decimator
+logic signed [DWI-1:0] std_dat;  // data
+logic                  std_vld;  // valid
+logic                  std_rdy;  // ready
 
 // control
-logic                  ctl_clr;  // synchronous clear
+logic                  ctl_rst;  // synchronous clear
+logic                  ctl_acq;  // start acquire run
+// status
+logic                  sts_acq;  // acquire status
+logic                  sts_trg;  // trigger status
+logic        [ 32-1:0] sts_dly;  // delay counter
 // decimation configuration
 logic                  cfg_avg;  // averaging enable
 logic        [DWC-1:0] cfg_dec;  // decimation factor
@@ -93,6 +103,7 @@ logic signed [DWI-1:0] cfg_lvl;  // level
 logic signed [DWI-1:0] cfg_hst;  // hystheresis
 // trigger
 logic signed [TWS-1:0] cfg_sel;  // trigger select
+logic                  trg_mux;  // multiplexed trigger signal
 
 logic signed  [32-1:0] cfg_dly;
 
@@ -105,17 +116,19 @@ wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
 always @(posedge clk)
-if (rstn == 1'b0) begin
-  sys_err <= 1'b0 ;
-  sys_ack <= 1'b0 ;
+if (~rstn) begin
+  sys_err <= 1'b0;
+  sys_ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0 ;
+  sys_err <= 1'b0;
   sys_ack <= sys_en;
 end
 
 // write access
 always @(posedge clk)
-if (rstn == 1'b0) begin
+if (~rstn) begin
+  // control
+  ctl_acq <= 1'b0;
   // dacimation
   cfg_avg <= '0;
   cfg_dec <= '0;
@@ -152,12 +165,17 @@ end else begin
 end
 
 // control signals
-assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];  // reset
-assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];  // trigger
+assign ctl_rst = sys_wen & (sys_addr[6-1:0]==6'h00) & sys_wdata[0];  // reset
+assign trg_swo = sys_wen & (sys_addr[6-1:0]==6'h00) & sys_wdata[1];  // trigger
+assign sts_run = sys_wen & (sys_addr[6-1:0]==6'h00) & sys_wdata[2];  // run acquire
 
+// read access
 always_ff @(posedge clk)
 begin
   casez (sys_addr[19:0])
+    // control/status
+    6'h08 : sys_rdata <= {{32-  3{1'b0}}, sts_acq,
+                                          sts_trg, 1'b0};
     // decimation
     6'h08 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
     6'h0c : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
@@ -221,7 +239,7 @@ scope_dec_avg #(
   .clk      (clk ),
   .rstn     (rstn),
   // control
-  .ctl_clr  (ctl_clr),
+  .ctl_rst  (ctl_rst),
   // configuration
   .cfg_avg  (cfg_avg),
   .cfg_dec  (cfg_dec),
@@ -231,9 +249,9 @@ scope_dec_avg #(
   .sti_vld  (stf_vld),
   .sti_rdy  (stf_rdy),
   // stream output
-  .sto_dat  (sto_dat),
-  .sto_vld  (sto_vld),
-  .sto_rdy  (sto_rdy)
+  .sto_dat  (std_dat),
+  .sto_vld  (std_vld),
+  .sto_rdy  (std_rdy)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,5 +276,62 @@ scope_edge #(
   .trg_pdg  (trg_out[0]),
   .trg_ndg  (trg_out[1]) 
 );
+
+////////////////////////////////////////////////////////////////////////////////
+// aquire and trigger status handler
+////////////////////////////////////////////////////////////////////////////////
+
+assign trg_mux = trg_ext [cfg_sel];
+
+always @(posedge clk)
+if (~rstn) begin
+  sts_acq <= 1'b0;
+  sts_trg <= 1'b0;
+end else begin
+  if (ctl_rst) begin
+    sts_acq <= 1'b0;
+    sts_trg <= 1'b0;
+  end else begin
+    // scquire status
+    if (ctl_acq) begin
+      sts_acq <= 1'b1;
+    end else if (sts_trg & ~|sts_dly) begin
+      sts_acq <= 1'b0;
+    end
+    // trigger status and delay counter
+    if (~sts_trg & trg_mux & sts_acq) begin
+      sts_trg <= 1'b1;
+      sts_dly <= cfg_dly;
+    end else if (sts_trg) begin
+      if (~|sts_dly) begin
+        sts_trg <= 1'b0;
+      end else begin
+        sts_dly <= sts_dly - std_vld;
+      end
+    end
+  end
+end
+
+////////////////////////////////////////////////////////////////////////////////
+// output stream
+////////////////////////////////////////////////////////////////////////////////
+
+// output valid
+always @(posedge clk)
+if (~rstn) begin
+  sto_vld <= 1'b0;
+  sto_lst <= 1'b0;
+end else begin
+  sto_vld <= sts_acq & std_vld;
+  sto_lst <= sts_acq & std_vld & ~|sts_dly;
+end
+
+// output data
+always @(posedge clk)
+if (sts_acq) begin
+  sto_dat <= std_dat;
+end else begin
+  sto_dat <= '0;
+end
 
 endmodule: scope_top

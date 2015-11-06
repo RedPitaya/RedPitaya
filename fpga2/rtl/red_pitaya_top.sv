@@ -143,10 +143,18 @@ logic                 ser_clk ;
 // PDM clock and reset
 logic                 pdm_clk ;
 logic                 pdm_rstn;
-// ADC signals
+// ADC clock/reset
 logic                           adc_clk;
 logic                           adc_rstn;
+// ADC signals
 logic signed [MNA-1:0] [14-1:0] adc_dat;
+logic        [MNA-1:0]          adc_vld;
+logic        [MNA-1:0]          adc_rdy;
+// acquire signals
+logic signed [MNA-1:0] [14-1:0] acq_dat;
+logic        [MNA-1:0]          acq_lst;
+logic        [MNA-1:0]          acq_vld;
+logic        [MNA-1:0]          acq_rdy;
 // DAC signals
 logic                           dac_clk_1x;
 logic                           dac_clk_2x;
@@ -609,9 +617,10 @@ scope_top #(
   .sti_vld       (adc_vld),
   .sti_rdy       (adc_rdy),
   // stream_output
-  .sto_dat       (adc_dat),
-  .sto_vld       (adc_vld),
-  .sto_rdy       (adc_rdy),
+  .sto_dat       (acq_dat),
+  .sto_lst       (acq_lst),
+  .sto_vld       (acq_vld),
+  .sto_rdy       (acq_rdy),
   // triggers
   .trg_ext       (top_trg_ext),
   .trg_swo       (acq_trg_swo),

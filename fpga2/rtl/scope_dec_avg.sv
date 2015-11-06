@@ -16,7 +16,7 @@ module scope_dec_avg #(
   input  logic                  clk ,  // clock
   input  logic                  rstn,  // reset - active low
   // control
-  input  logic                  ctl_clr,  // synchronous clear
+  input  logic                  ctl_rst,  // synchronous reset
   // configuration
   input  logic                  cfg_avg,  // averaging enable
   input  logic        [DWC-1:0] cfg_dec,  // decimation factor
@@ -47,7 +47,7 @@ if (~rstn) begin
   cnt     <= '0;
   sto_vld <= 1'b0;
 end else begin
-  if (ctl_clr) begin
+  if (ctl_rst) begin
     sum <= '0;
     cnt <= '0;
   end else begin
