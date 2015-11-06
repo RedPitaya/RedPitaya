@@ -70,12 +70,12 @@ localparam int unsigned DSR = 10;
 //  PID block instances
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [4-1:0] [14-1:0] pid_out ;
-logic signed [4-1:0] [14-1:0] set_sp  ;
-logic signed [4-1:0] [14-1:0] set_kp  ;
-logic signed [4-1:0] [14-1:0] set_ki  ;
-logic signed [4-1:0] [14-1:0] set_kd  ;
-logic        [4-1:0]          set_irst;
+logic signed [CNO-1:0] [CNI-1:0] [14-1:0] pid_out ;
+logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_sp  ;
+logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_kp  ;
+logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_ki  ;
+logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_kd  ;
+logic        [CNO-1:0] [CNI-1:0]          set_irst;
 
 red_pitaya_pid_block #(
   .PSR (PSR),
@@ -104,11 +104,10 @@ generate
 for (genvar o=0; o<CNO; o++) begin: for_cno
 
 logic signed [DWO+1-1:0] out_sum;
-logic signed [DWO  -1:0] out_sat;
 
-assign out_sum = pid_out[o][1] + pid_out[o][1];
+assign out_sum = pid_out[o][1] + pid_out[o][0];
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (!rstn) begin
    dat_o[o] <= '0;
 end else begin
@@ -167,7 +166,7 @@ endgenerate
 logic sys_en;
 assign sys_en = sys_wen | sys_ren;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (!rstn) begin
   sys_err <= 1'b0;
   sys_ack <= 1'b0;
@@ -176,7 +175,7 @@ end else begin
   sys_ack <= sys_en;
 end
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (sys_ren) begin
   if (sys_addr[4+CLO+CLI]==1'b0) begin
     sys_rdata <= {{32-CNO*CNI{1'b0}}, set_irst};
