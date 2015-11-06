@@ -71,6 +71,17 @@ module scope_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+// filter configuration
+logic signed [ 18-1:0] cfg_faa;   // config AA coefficient
+logic signed [ 25-1:0] cfg_fbb;   // config BB coefficient
+logic signed [ 25-1:0] cfg_fkk;   // config KK coefficient
+logic signed [ 25-1:0] cfg_fpp;   // config PP coefficient
+
+// stream from filter
+logic signed [DWI-1:0] stf_dat;  // data
+logic                  stf_vld;  // valid
+logic                  stf_rdy;  // ready
+
 // control
 logic                  ctl_clr;  // synchronous clear
 // decimation configuration
@@ -114,21 +125,29 @@ if (rstn == 1'b0) begin
   cfg_hst <= '0;
   // trigger
   cfg_sel <= '0;
-
   cfg_dly <= '0;
+  // filter
+  cfg_faa <= '0;
+  cfg_fbb <= '0;
+  cfg_fkk <= 25'hFFFFFF;
+  cfg_fpp <= '0;
 end else begin
   if (sys_wen) begin
     // dacimation
-    if (sys_addr[19:0]==20'h08)   cfg_avg <= sys_wdata[      0];
-    if (sys_addr[19:0]==20'h0c)   cfg_dec <= sys_wdata[DWC-1:0];
-    if (sys_addr[19:0]==20'h10)   cfg_shr <= sys_wdata[DWS-1:0];
+    if (sys_addr[6-1:0]==6'h08)   cfg_avg <= sys_wdata[      0];
+    if (sys_addr[6-1:0]==6'h0c)   cfg_dec <= sys_wdata[DWC-1:0];
+    if (sys_addr[6-1:0]==6'h10)   cfg_shr <= sys_wdata[DWS-1:0];
     // edge detection
-    if (sys_addr[19:0]==20'h14)   cfg_lvl <= sys_wdata[DWI-1:0];
-    if (sys_addr[19:0]==20'h18)   cfg_hst <= sys_wdata[DWI-1:0];
+    if (sys_addr[6-1:0]==6'h14)   cfg_lvl <= sys_wdata[DWI-1:0];
+    if (sys_addr[6-1:0]==6'h18)   cfg_hst <= sys_wdata[DWI-1:0];
     // trigger
-    if (sys_addr[19:0]==20'h1C)   cfg_sel <= sys_wdata[TWS-1:0];
-
-    if (sys_addr[19:0]==20'h20)   cfg_dly <= sys_wdata[ 32-1:0];
+    if (sys_addr[6-1:0]==6'h1C)   cfg_sel <= sys_wdata[TWS-1:0];
+    if (sys_addr[6-1:0]==6'h20)   cfg_dly <= sys_wdata[ 32-1:0];
+    // filter
+    if (sys_addr[6-1:0]==6'h30)   cfg_faa <= sys_wdata[ 18-1:0];
+    if (sys_addr[6-1:0]==6'h34)   cfg_fbb <= sys_wdata[ 25-1:0];
+    if (sys_addr[6-1:0]==6'h38)   cfg_fkk <= sys_wdata[ 25-1:0];
+    if (sys_addr[6-1:0]==6'h3c)   cfg_fpp <= sys_wdata[ 25-1:0];
   end
 end
 
@@ -136,23 +155,55 @@ end
 assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];  // reset
 assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];  // trigger
 
-always @(posedge clk)
+always_ff @(posedge clk)
 begin
   casez (sys_addr[19:0])
     // decimation
-    20'h00008 :sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
-    20'h0000c :sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
-    20'h00010 :sys_rdata <= {{32-DWS{1'b0}}, cfg_hst};
+    6'h08 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
+    6'h0c : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
+    6'h10 : sys_rdata <= {{32-DWS{1'b0}}, cfg_hst};
     // edge detection
-    20'h00014 :sys_rdata <=                  cfg_lvl ;
-    20'h00018 :sys_rdata <=                  cfg_hst ;
+    6'h14 : sys_rdata <=                  cfg_lvl ;
+    6'h18 : sys_rdata <=                  cfg_hst ;
     // trigger
-    20'h0001c :sys_rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
+    6'h1c : sys_rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
+    6'h20 : sys_rdata <=                  cfg_dly ;
+    // filter
+    6'h30 : sys_rdata <=                  cfg_faa ;
+    6'h34 : sys_rdata <=                  cfg_fbb ;
+    6'h38 : sys_rdata <=                  cfg_fkk ;
+    6'h3c : sys_rdata <=                  cfg_fpp ;
 
-    20'h00020 :sys_rdata <= {                cfg_dly};
-      default :sys_rdata <=  32'h0                   ;
+    default:sys_rdata <=  32'h0                   ;
   endcase
 end
+
+////////////////////////////////////////////////////////////////////////////////
+// correction filter
+////////////////////////////////////////////////////////////////////////////////
+
+scope_filter #(
+  // stream parameters
+  .DWI (DWI),
+  .DWO (DWO)
+) filter (
+  // system signals
+  .clk      (clk ),
+  .rstn     (rstn),
+  // input stream
+  .sti_dat  (sti_dat),
+  .sti_vld  (sti_vld),
+  .sti_rdy  (sti_rdy),
+  // output stream
+  .sto_dat  (stf_dat),
+  .sto_vld  (stf_vld),
+  .sto_rdy  (stf_rdy),
+  // configuration
+  .cfg_aa   (cfg_faa),
+  .cfg_bb   (cfg_fbb),
+  .cfg_kk   (cfg_fkk),
+  .cfg_pp   (cfg_fpp)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
@@ -176,9 +227,9 @@ scope_dec_avg #(
   .cfg_dec  (cfg_dec),
   .cfg_shr  (cfg_shr),
   // stream input
-  .sti_dat  (sti_dat),
-  .sti_vld  (sti_vld),
-  .sti_rdy  (sti_rdy),
+  .sti_dat  (stf_dat),
+  .sti_vld  (stf_vld),
+  .sti_rdy  (stf_rdy),
   // stream output
   .sto_dat  (sto_dat),
   .sto_vld  (sto_vld),

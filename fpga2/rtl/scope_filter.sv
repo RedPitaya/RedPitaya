@@ -24,27 +24,25 @@ module scope_filter #(
   int unsigned DWO = 14
 )(
   // system signals
-  input  logic                   clk ,     // clock
-  input  logic                   rstn,     // reset - active low
+  input  logic                  clk ,     // clock
+  input  logic                  rstn,     // reset - active low
   // input stream
-  input  logic signed [DWI-1: 0] sti_dat,  // data
-  input  logic                   sti_vld,  // valid
-  output logic                   sti_rdy,  // ready
+  input  logic signed [DWI-1:0] sti_dat,  // data
+  input  logic                  sti_vld,  // valid
+  output logic                  sti_rdy,  // ready
   // output stream
-  output logic signed [DWO-1: 0] sto_dat,  // ADC data
-  output logic                   sto_vld,  // valid
-  input  logic                   sto_rdy,  // ready
+  output logic signed [DWO-1:0] sto_dat,  // ADC data
+  output logic                  sto_vld,  // valid
+  input  logic                  sto_rdy,  // ready
   // configuration
-  input  logic signed [ 18-1: 0] cfg_aa,   // config AA coefficient
-  input  logic signed [ 25-1: 0] cfg_bb,   // config BB coefficient
-  input  logic signed [ 25-1: 0] cfg_kk,   // config KK coefficient
-  input  logic signed [ 25-1: 0] cfg_pp    // config PP coefficient
+  input  logic signed [ 18-1:0] cfg_aa,   // config AA coefficient
+  input  logic signed [ 25-1:0] cfg_bb,   // config BB coefficient
+  input  logic signed [ 25-1:0] cfg_kk,   // config KK coefficient
+  input  logic signed [ 25-1:0] cfg_pp    // config PP coefficient
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 // FIR
-//
-//
 //
 // Time domain:
 //
@@ -68,7 +66,7 @@ logic signed [ 28-1: 0] r02_reg;
 assign bb_mult = sti_vld * cfg_bb;
 assign r2_sum  = r01_reg + r1_reg;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn) begin
   r1_reg  <= '0;
   r2_reg  <= '0;
@@ -92,7 +90,7 @@ logic [ 49-1: 0] r3_sum ; //24 + 25
 assign aa_mult = $signed(r3_reg) * $signed(cfg_aa);
 assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn) begin
   r3_reg  <= 23'h0;
 end else begin
@@ -111,7 +109,7 @@ logic [ 15-1: 0] r3_shr ;
 assign pp_mult = $signed(r4_reg) * $signed(cfg_pp);
 assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn) begin
   r3_shr <= 15'h0;
   r4_reg <= 15'h0;
@@ -131,7 +129,7 @@ logic [ 14-1: 0] r5_reg   ;
 
 assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk);
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn) begin
   r4_reg_r  <= 15'h0;
   r4_reg_rr <= 15'h0;
