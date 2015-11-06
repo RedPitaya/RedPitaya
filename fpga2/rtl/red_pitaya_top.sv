@@ -446,7 +446,10 @@ assign daisy_n_o = 1'bz;
 //  MIMO PID controller
 ////////////////////////////////////////////////////////////////////////////////
 
-red_pitaya_pid pid (
+red_pitaya_pid #(
+  .CNI (MNA),
+  .CNO (MNG)
+) pid (
   // system signals
   .clk        (adc_clk ),
   .rstn       (adc_rstn),
