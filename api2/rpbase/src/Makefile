@@ -37,7 +37,6 @@ OBJECTS =	common.o \
 		housekeeping.o \
 		calib.o \
 		oscilloscope.o \
-		acq_handler.o \
 		generate.o \
 		rp.o
 
