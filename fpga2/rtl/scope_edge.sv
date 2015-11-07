@@ -17,20 +17,20 @@ module scope_edge #(
   input  logic                  sti_rdy,  // ready
   // configuration
   input  logic signed [DWI-1:0] cfg_lvl,  // level
-  input  logic signed [DWI-1:0] cfg_hst,  // hystheresis
+  input  logic        [DWI-1:0] cfg_hst,  // hystheresis
   // output triggers
   output logic                  trg_pdg,  // positive edge
   output logic                  trg_ndg   // negative edge
 );
 
 // level +/- hystheresys
-logic signed [DWI-1:0] cfg_lvp;
-logic signed [DWI-1:0] cfg_lvn;
+logic signed [DWI-0:0] cfg_lvp;
+logic signed [DWI-0:0] cfg_lvn;
 
 always @(posedge clk)
 begin
-  cfg_lvp <= cfg_lvl + cfg_hst;
-  cfg_lvn <= cfg_lvl - cfg_hst;
+  cfg_lvp <= cfg_lvl + $signed({1'b0, cfg_hst});
+  cfg_lvn <= cfg_lvl - $signed({1'b0, cfg_hst});
 end
 
 // edge status signals
