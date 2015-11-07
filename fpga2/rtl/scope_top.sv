@@ -179,7 +179,7 @@ begin
     // decimation
     6'h08 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
     6'h0c : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
-    6'h10 : sys_rdata <= {{32-DWS{1'b0}}, cfg_hst};
+    6'h10 : sys_rdata <= {{32-DWS{1'b0}}, cfg_shr};
     // edge detection
     6'h14 : sys_rdata <=                  cfg_lvl ;
     6'h18 : sys_rdata <=                  cfg_hst ;
