@@ -17,8 +17,9 @@
 #define DPIN_H_
 
 scpi_result_t RP_DigitalPinReset(scpi_t * context);
-scpi_result_t RP_DigitalPinGetStateQ(scpi_t * context);
-scpi_result_t RP_DigitalPinSetState(scpi_t * context);
-scpi_result_t RP_DigitalPinSetDirection(scpi_t * context);
+scpi_result_t RP_DigitalPinStateQ(scpi_t * context);
+scpi_result_t RP_DigitalPinState(scpi_t * context);
+scpi_result_t RP_DigitalPinDirection(scpi_t * context);
+scpi_result_t RP_DigitalPinDirectionQ(scpi_t *context);
 
 #endif /* DPIN_H_ */

@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 #define ECHECK(x) { \
         int retval = (x); \
@@ -31,14 +31,18 @@
 
 #define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
 if ((CHANNEL) == RP_CH_1) { \
-	CHANNEL_1_ACTION; \
+    CHANNEL_1_ACTION; \
 } \
 else if ((CHANNEL) == RP_CH_2) { \
-	CHANNEL_2_ACTION; \
+    CHANNEL_2_ACTION; \
 } \
 else { \
-	return RP_EPN; \
+    return RP_EPN; \
 }
+
+// unmasked IO read/write (p - pointer, v - value)
+#define ioread32(p) (*(volatile uint32_t *)(p))
+#define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
 
 #define SET_BITS(x,b) ((x) |= (b))
 #define UNSET_BITS(x,b) ((x) &= ~(b))
@@ -81,5 +85,10 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off);
 float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off);
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
+
+float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
+uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale);
+float rp_cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
+uint32_t rp_cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
 
 #endif /* COMMON_H_ */

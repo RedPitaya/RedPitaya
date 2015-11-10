@@ -85,4 +85,3 @@ install:
 	mkdir -p $(INSTALL_DIR)/src/utils/$(TARGET)
 	-rm -f $(TARGET) *.o
 	cp -r * $(INSTALL_DIR)/src/utils/$(TARGET)/
-	-rm `find $(INSTALL_DIR)/src/tools/$(TARGET)/ -iname .svn` -rf

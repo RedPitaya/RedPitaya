@@ -66,7 +66,7 @@ h3 {
 }
 
 .pagewrapper{
-  width: 1000px;
+  max-width: 1200px;
   margin: 0px auto;
   margin-top: -20px;
   padding: 10px;
@@ -129,7 +129,9 @@ a, img {
 
 .bazaar-link {
   text-align: center;
-  padding: 50px 20px 20px 20px;
+
+  padding: 0 0 0 20px;
+
 }
 
 @media (min-width: 768px) {

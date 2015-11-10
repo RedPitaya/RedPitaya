@@ -14,6 +14,7 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 INSTALL_DIR ?= ../../build
 
 CONTROLLERHF = controllerhf.so
+BODE         = ../../build/bin/bode
 
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
@@ -23,10 +24,13 @@ all: $(CONTROLLERHF)
 $(CONTROLLERHF):
 	$(MAKE) -C src
 
+$(BODE):
+	$(MAKE) -C ../../ bode
+
 zip: $(CONTROLLERHF)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLERHF) fpga.conf info index.html target/$(APP)
+	cp -r $(CONTROLLERHF) $(BODE) fpga.conf info index.html style.css images target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r $(INSTALL_DIR)/$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
