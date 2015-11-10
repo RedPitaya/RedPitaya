@@ -142,10 +142,10 @@ set_property PACKAGE_PIN L10 [get_ports {vinn_i[4]}]
 ### Expansion connector
 set_property IOSTANDARD LVCMOS33 [get_ports {exp_p_io[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {exp_n_io[*]}]
-set_property SLEW      FAST      [get_ports {exp_p_io[*]}]
-set_property SLEW      FAST      [get_ports {exp_n_io[*]}]
-set_property DRIVE     8         [get_ports {exp_p_io[*]}]
-set_property DRIVE     8         [get_ports {exp_n_io[*]}]
+set_property SLEW       FAST     [get_ports {exp_p_io[*]}]
+set_property SLEW       FAST     [get_ports {exp_n_io[*]}]
+set_property DRIVE      8        [get_ports {exp_p_io[*]}]
+set_property DRIVE      8        [get_ports {exp_n_io[*]}]
 
 set_property PACKAGE_PIN G17 [get_ports {exp_p_io[0]}]
 set_property PACKAGE_PIN G18 [get_ports {exp_n_io[0]}]
@@ -170,6 +170,11 @@ set_property PACKAGE_PIN M15 [get_ports {exp_n_io[7]}]
 #set_property PULLUP   TRUE [get_ports {exp_n_io[7]}]
 
 ### SATA connector
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_o[*]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_o[*]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_i[*]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_i[*]}]
+
 set_property PACKAGE_PIN T12 [get_ports {daisy_p_o[0]}]
 set_property PACKAGE_PIN U12 [get_ports {daisy_n_o[0]}]
 set_property PACKAGE_PIN U14 [get_ports {daisy_p_o[1]}]
@@ -182,7 +187,7 @@ set_property PACKAGE_PIN P19 [get_ports {daisy_n_i[1]}]
 ### LED
 set_property IOSTANDARD LVCMOS33 [get_ports {led_o[*]}]
 set_property SLEW       SLOW     [get_ports {led_o[*]}]
-set_property DRIVE      8        [get_ports {led_o[*]}]
+set_property DRIVE      4        [get_ports {led_o[*]}]
 
 set_property PACKAGE_PIN F16     [get_ports {led_o[0]}]
 set_property PACKAGE_PIN F17     [get_ports {led_o[1]}]

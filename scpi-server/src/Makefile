@@ -33,19 +33,18 @@ TARGET=$(OUTPUT_DIR)/scpi-server
 
 # List of compiled object files
 OBJECTS =	scpi-commands.o \
-			scpi-server.o \
-			dpin.o \
-			apin.o \
-			acquire.o \
-			generate.o \
-			oscilloscopeApp.o \
-			spectrometerApp.o \
-			utils.o
+		scpi-server.o \
+		api_cmd.o \
+		dpin.o \
+		apin.o \
+		acquire.o \
+		generate.o \
+		common.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror -fPIC
+CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
 
@@ -54,10 +53,10 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../3rdparty/libs/scpi-parser/libscpi/dist -L ../../api/lib
-LIBS= -lm -lpthread -lrp -lrpapp -lscpi
+LIBPATH= -L ../scpi-parser/libscpi/dist -L ../../api/lib
+LIBS= -lm -lpthread -lrp -lscpi
 
-INC= -I../3rdparty/libs/scpi-parser/libscpi/inc -I ../../api/rpbase/src
+INC= -I../scpi-parser/libscpi/inc -I../../api/include
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
