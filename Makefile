@@ -184,10 +184,11 @@ u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(ENVTOOLS_CFG)
 $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
 
-$(UBOOT_DIR): $(UBOOT_TAR)
+$(UBOOT_DIR): $(UBOOT_TAR) fpga
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -d $@ -p 1 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
+	cp fpga/sdk/ps7_init_gpl.[ch] $@/board/xilinx/zynq/custom_hw_platform/
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
