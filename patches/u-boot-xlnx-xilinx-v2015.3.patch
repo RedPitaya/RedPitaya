@@ -64,10 +64,10 @@ index 2979fbe..690a589 100644
  	cli_loop();
 diff --git a/configs/zynq_red_pitaya_defconfig b/configs/zynq_red_pitaya_defconfig
 new file mode 100644
-index 0000000..a3581c5
+index 0000000..f45c955
 --- /dev/null
 +++ b/configs/zynq_red_pitaya_defconfig
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,14 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_ZYNQ=y
 +CONFIG_TARGET_ZYNQ_RED_PITAYA=y
@@ -77,6 +77,9 @@ index 0000000..a3581c5
 +CONFIG_FIT=y
 +CONFIG_FIT_VERBOSE=y
 +# CONFIG_FIT_SIGNATURE is not set
++# CONFIG_CMD_IMLS is not set
++# CONFIG_CMD_FLASH is not set
++# CONFIG_CMD_SETEXPR is not set
 +CONFIG_OF_EMBED=y
 +# CONFIG_OF_CONTROL is not set
 diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
