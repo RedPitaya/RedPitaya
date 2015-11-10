@@ -211,7 +211,7 @@ void resetMathParams() {
     inMathScale.Value() = 1.f;
     inMathScaleMult.Value() = 1.f;
     rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.Value());
-        
+
     inMathOffset.Update();
     inMathOffset.Value() = 0.f;
     rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.Value());
@@ -237,16 +237,24 @@ void checkMathScale() {
 void UpdateParams(void) {
 	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 	CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
-	
+
     bool running;
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
 
-    rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
-    
+#ifdef DIGITAL_LOOP
+	rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+#else
+	static bool inited_loop = false;
+	if (!inited_loop) {
+		rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
+		inited_loop = true;
+	}
+#endif
+
 	rpApp_osc_trig_sweep_t mode;
 	rpApp_OscGetTriggerSweep(&mode);
-	
+
 	if (!running)
 		triggerInfo.Value() = 0;
 	else if (mode == RPAPP_OSC_TRIG_AUTO)
@@ -254,46 +262,46 @@ void UpdateParams(void) {
 	else if (rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
 		triggerInfo.Value() = 2;
 	else if (!rpApp_OscIsTriggered() && mode != RPAPP_OSC_TRIG_AUTO)
-		triggerInfo.Value() = 3;	    
+		triggerInfo.Value() = 3;
 
     if (measureSelect1.Value() != -1) {
 		double val = getMeasureValue(measureSelect1.Value());
-        measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 14 ? val* 100 : val;        
+        measureValue1.Value() = measureSelect1.Value() >= 12 && measureSelect1.Value() <= 14 ? val* 100 : val;
 	}
     if (measureSelect2.Value() != -1) {
 		double val = getMeasureValue(measureSelect2.Value());
-        measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 14 ? val* 100 : val;  
+        measureValue2.Value() = measureSelect2.Value() >= 12 && measureSelect2.Value() <= 14 ? val* 100 : val;
 	}
     if (measureSelect3.Value() != -1) {
 		double val = getMeasureValue(measureSelect3.Value());
-        measureValue3.Value() = measureSelect3.Value() >= 12 && measureSelect3.Value() <= 14 ? val* 100 : val;  
+        measureValue3.Value() = measureSelect3.Value() >= 12 && measureSelect3.Value() <= 14 ? val* 100 : val;
 	}
     if (measureSelect4.Value() != -1) {
 		double val = getMeasureValue(measureSelect4.Value());
-        measureValue4.Value() = measureSelect4.Value() >= 12 && measureSelect4.Value() <= 14 ? val* 100 : val;  
+        measureValue4.Value() = measureSelect4.Value() >= 12 && measureSelect4.Value() <= 14 ? val* 100 : val;
 	}
 
     float portion;
     rpApp_OscGetViewPart(&portion);
     viewPortion.Value() = portion;
-	
+
 	float trigg_limit;
 	float trigg_level;
-	
+
 	rp_channel_t channel = (rp_channel_t) inTrigSource.Value();
 	rp_AcqGetGainV(channel, &trigg_limit);
-	
+
 	if (channel == RPAPP_OSC_TRIG_SRC_CH1)
 		inTriggLimit.Value() = trigg_limit*in1Probe.Value();
-	else if (channel == RPAPP_OSC_TRIG_SRC_CH2)	
+	else if (channel == RPAPP_OSC_TRIG_SRC_CH2)
 		inTriggLimit.Value() = trigg_limit*in2Probe.Value();
 	else
 		inTriggLimit.Value() = trigg_limit;
-		
+
     rp_acq_sampling_rate_t sampling_rate;
     rp_AcqGetSamplingRate(&sampling_rate);
     samplingRate.Value() = sampling_rate;
-    
+
 
     double dvalue;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_CH1, &dvalue);
@@ -308,7 +316,7 @@ void UpdateParams(void) {
     }
 
     inMathScale.Value() = dvalue;
-	
+
 	rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
     in1Offset.Value() = dvalue;
     rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH2, &dvalue);
@@ -330,7 +338,7 @@ void UpdateParams(void) {
     if(in1Scale.IsValueChanged() || in2Scale.IsValueChanged() || inMathScale.IsValueChanged()
        || in1Offset.IsValueChanged() || in2Offset.IsValueChanged() || inMathOffset.IsValueChanged()
        || inTimeOffset.IsValueChanged() || inTimeScale.IsValueChanged()) {
-    
+
         CDataManager::GetInstance()->SendAllParams();
         updateOutCh1 = true;
         updateOutCh2 = true;
@@ -464,11 +472,11 @@ bool check_params(const rp_calib_params_t& current_params, int step) {
 		if (fabs(current_params.fe_ch1_fs_g_hi/42949672.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_hi/42949672.f - 1.f) < 0.2)
 			return true;
 	} else if (step == STEP_BACK_END) {
-		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) && 
+		if ((abs(current_params.be_ch1_dc_offs) < 512 && abs(current_params.be_ch2_dc_offs) < 512) &&
 				fabs(current_params.be_ch1_fs/42949672.f - 1.f) < 0.2 && fabs(current_params.be_ch2_fs/42949672.f - 1.f) < 0.2)
 			return true;
 	}
-	
+
 	return false;
 }
 
@@ -478,7 +486,7 @@ void OnNewParams(void) {
 /* ------ SEND GENERATE PARAMETERS TO API ------*/
     if (IS_NEW(out1State) || IS_NEW(out1Amplitude) || IS_NEW(out1Offset) || IS_NEW(out1Frequancy) || IS_NEW(out1Phase)
         || IS_NEW(out1DCYC) || IS_NEW(out1WAveform) || IS_NEW(out1Burst) || IS_NEW(out1TriggerSource)) {
-    
+
         updateOutCh1 = true;
         IF_VALUE_CHANGED_BOOL(out1State, rp_GenOutEnable(RP_CH_1), rp_GenOutDisable(RP_CH_1));
 
@@ -560,12 +568,12 @@ void OnNewParams(void) {
     cursor2V.Update();
     cursor1T.Update();
     cursor2T.Update();
-	
+
     if(mathShow.IsNewValue() && mathShow.NewValue()) {
         rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue());
 		mathOperation.Update();
     }
-	
+
 	mathShow.Update();
 
 	if (out1Scale.IsNewValue())
@@ -599,7 +607,7 @@ void OnNewParams(void) {
     if (inAutoscale.NewValue()) {
         rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue());
 		mathOperation.Update();
-		
+
         rpApp_OscAutoScale();
 
         double dvalue;
@@ -658,7 +666,7 @@ void OnNewParams(void) {
             mathSource2.Update();
         }
     }
-    
+
     if (update_trig_level)
     {
 		float trigg_level;
@@ -674,18 +682,18 @@ void OnNewParams(void) {
     out2ShowOffset.Update();
 
 /* ------ HANDLE CALIBRATE ------*/
-	static bool is_default_calib_params = true;	
+	static bool is_default_calib_params = true;
 	static rp_calib_params_t default_params = rp_GetCalibrationSettings();
 	static rp_calib_params_t out_params = default_params;
-	
-	
+
+
 	if (calibrateWrite.NewValue()) {
 		calibrateWrite.Update();
 		rp_CalibrationWriteParams(out_params);
 		calibrateWrite.Value() = false;
 		fprintf(stderr, "write\n");
 	}
-	
+
 	if (calibrateCancel.IsNewValue() && !is_default_calib_params) {
 		calibrateCancel.Update();
 		rp_CalibrationSetCachedParams();
@@ -698,7 +706,7 @@ void OnNewParams(void) {
 	}
 
 	if (calibrateFrontEndOffset.NewValue() == 1) {
-		calibrateFrontEndOffset.Update();		
+		calibrateFrontEndOffset.Update();
 		rp_CalibrateFrontEndOffset(RP_CH_1, &out_params);
 		rp_CalibrateFrontEndOffset(RP_CH_2, &out_params);
 		calibrateFrontEndOffset.IsValueChanged();
@@ -708,27 +716,27 @@ void OnNewParams(void) {
 			is_default_calib_params = false;
 		}
 		else
-			calibrateFrontEndOffset.Value() = 0; // send user warning		
+			calibrateFrontEndOffset.Value() = 0; // send user warning
 	}
-    
+
     if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
-		calibrateFrontEndScaleLV.Update();		
+		calibrateFrontEndScaleLV.Update();
         rp_CalibrateFrontEndScaleLV(RP_CH_1, calibrateValue.NewValue(), &out_params);
-        rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue(), &out_params);        
+        rp_CalibrateFrontEndScaleLV(RP_CH_2, calibrateValue.NewValue(), &out_params);
         calibrateFrontEndScaleLV.IsValueChanged();
-		if (check_params(out_params, STEP_FRONT_END_SCALE_LV)) {			
+		if (check_params(out_params, STEP_FRONT_END_SCALE_LV)) {
 			rp_CalibrationWriteParams(out_params);
-			calibrateFrontEndScaleLV.Value() = -1;			
+			calibrateFrontEndScaleLV.Value() = -1;
 		}
 		else {
-			calibrateFrontEndScaleLV.Value() = 0;			
+			calibrateFrontEndScaleLV.Value() = 0;
 		}
         calibrateValue.Update();
     }
-    
+
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
 		calibrateFrontEndScaleHV.Update();
-        rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue(), &out_params);			
+        rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue(), &out_params);
         rp_CalibrateFrontEndScaleHV(RP_CH_2, calibrateValue.NewValue(), &out_params);
         calibrateFrontEndScaleHV.IsValueChanged();
 		if (check_params(out_params, STEP_FRONT_END_SCALE_HV)) {
@@ -736,10 +744,10 @@ void OnNewParams(void) {
 			calibrateFrontEndScaleHV.Value() = -1;
 		}
 		else
-			calibrateFrontEndScaleHV.Value() = 0;		
+			calibrateFrontEndScaleHV.Value() = 0;
         calibrateValue.Update();
     }
-    
+
     if (calibrateBackEnd.NewValue() == 1) {
 		calibrateBackEnd.Update();
         rp_CalibrateBackEnd(RP_CH_1, &out_params);

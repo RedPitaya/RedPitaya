@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include "rpApp.h"
 
-#define ADC_BUFFER_SIZE             (16*1024)
 #define MILLI_TO_NANO               1000000.0
 
 #define ECHECK_APP(x) { \

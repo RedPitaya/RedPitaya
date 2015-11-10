@@ -20,21 +20,19 @@ if [ -f /boot/wpa_supplicant.conf ] && [ -n "$CHECK_INTEFACE" ]
   ln -s -f wlan0.ap /etc/network/interfaces.d/wlan0
   if [ "$1" = "start" ]
   then
+    PATH_REDPITAYA=/opt/redpitaya /opt/redpitaya/sbin/rw
     iw wlan0 info > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
       echo "nl80211"
-      /opt/redpitaya/sbin/rw
       sed -i '/^driver/s/=.*/=nl80211/' $DAEMON_CONF
-      /opt/redpitaya/sbin/ro
       DAEMON_SBIN=/usr/sbin/hostapd
     else
       echo "rtl871xdrv"
-      /opt/redpitaya/sbin/rw
       sed -i '/^driver/s/=.*/=rtl871xdrv/' $DAEMON_CONF
-      /opt/redpitaya/sbin/ro
       DAEMON_SBIN=/opt/redpitaya/sbin/hostapd
     fi
+    PATH_REDPITAYA=/opt/redpitaya /opt/redpitaya/sbin/ro
     echo $DAEMON_SBIN > /run/hostapd.which
   elif [ "$1" = "stop" ]
   then

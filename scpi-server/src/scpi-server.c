@@ -26,10 +26,10 @@
 #include <syslog.h>
 
 #include "scpi-commands.h"
+#include "common.h"
 
-#include "generate.h"
-#include "../3rdparty/libs/scpi-parser/libscpi/inc/scpi/parser.h"
-#include "../../api/rpApplications/src/rpApp.h"
+#include "scpi/parser.h"
+#include "redpitaya/rp.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -110,7 +110,7 @@ void LogMessage(char *m, size_t len) {
     strncpy(buff, m, len);
     buff[len - 1] = '\0';
 
-    syslog(LOG_INFO, "Processing command: %s", buff);
+    RP_LOG(LOG_INFO, "Processing command: %s\n", buff);
 }
 
 /**
@@ -130,7 +130,7 @@ static int handleConnection(int connfd) {
 
     prctl( 1, SIGTERM );
 
-    syslog(LOG_INFO, "Waiting for first client request.");
+    RP_LOG(LOG_INFO, "Waiting for first client request.");
 
     //Receive a message from client
     while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
@@ -168,21 +168,21 @@ static int handleConnection(int connfd) {
             memmove(message_buff, m, msg_end);
         }
 
-        syslog(LOG_INFO, "Waiting for next client request.");
+        RP_LOG(LOG_INFO, "Waiting for next client request.\n");
     }
 
     free(message_buff);
 
-    syslog(LOG_INFO, "Closing client connection...");
+    RP_LOG(LOG_INFO, "Closing client connection...");
 
     if(read_size == 0)
     {
-        syslog(LOG_INFO, "Client is disconnected");
+        RP_LOG(LOG_INFO, "Client is disconnected");
         return 0;
     }
     else if(read_size == -1)
     {
-        syslog(LOG_ERR, "Receive message failed (%s)", strerror(errno));
+        RP_LOG(LOG_ERR, "Receive message failed (%s)", strerror(errno));
         perror("Receive message failed");
         return 1;
     }
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 
-    syslog (LOG_NOTICE, "scpi-server started");
+    RP_LOG (LOG_NOTICE, "scpi-server started");
 
     installTermSignalHandler();
 
@@ -216,15 +216,15 @@ int main(int argc, char *argv[])
     handleCloseChildEvents();
 
 
-    int result = rpApp_Init();
+    int result = rp_Init();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to initialize RP APP library: %s", rp_GetError(result));
+        RP_LOG(LOG_ERR, "Failed to initialize RP APP library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
-    result = rpApp_Reset();
+    result = rp_Reset();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to reset RP APP: %s", rp_GetError(result));
+        RP_LOG(LOG_ERR, "Failed to reset RP APP: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if (listenfd == -1)
     {
-        syslog(LOG_ERR, "Failed to create a socket (%s)", strerror(errno));
+        RP_LOG(LOG_ERR, "Failed to create a socket (%s)", strerror(errno));
         perror("Failed to create a socket");
         return (EXIT_FAILURE);
     }
@@ -250,19 +250,19 @@ int main(int argc, char *argv[])
 
     if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
     {
-        syslog(LOG_ERR, "Failed to bind the socket (%s)", strerror(errno));
+        RP_LOG(LOG_ERR, "Failed to bind the socket (%s)", strerror(errno));
         perror("Failed to bind the socket");
         return (EXIT_FAILURE);
     }
 
     if (listen(listenfd, LISTEN_BACKLOG) == -1)
     {
-        syslog(LOG_ERR, "Failed to listen on the socket (%s)", strerror(errno));
+        RP_LOG(LOG_ERR, "Failed to listen on the socket (%s)", strerror(errno));
         perror("Failed to listen on the socket");
         return (EXIT_FAILURE);
     }
 
-    syslog(LOG_INFO, "Server is listening on port %d\n", LISTEN_PORT);
+    RP_LOG(LOG_INFO, "Server is listening on port %d\n", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
     while(1)
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
         }
 
         if (connfd == -1) {
-            syslog(LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
+            RP_LOG(LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
             perror("Failed to accept connection\n");
             return (EXIT_FAILURE);
         }
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
         // Fork a child process, which will talk to the client
         if (!fork()) {
 
-            syslog(LOG_INFO, "Connection with client ip %s established.", inet_ntoa(cliaddr.sin_addr));
+            RP_LOG(LOG_INFO, "Connection with client ip %s established.", inet_ntoa(cliaddr.sin_addr));
 
             // this is the child process
             close(listenfd); // child doesn't need the listener
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 
             close(connfd);
 
-            syslog(LOG_INFO, "Closing connection with client ip %s.", inet_ntoa(cliaddr.sin_addr));
+            RP_LOG(LOG_INFO, "Closing connection with client ip %s.", inet_ntoa(cliaddr.sin_addr));
 
             if (result == 0) {
                 return(EXIT_SUCCESS);
@@ -312,13 +312,13 @@ int main(int argc, char *argv[])
 
     close(listenfd);
 
-    result = rpApp_Release();
+    result = rp_Release();
     if (result != RP_OK) {
-        syslog(LOG_ERR, "Failed to release RP App library: %s", rp_GetError(result));
+        RP_LOG(LOG_ERR, "Failed to release RP App library: %s", rp_GetError(result));
     }
 
 
-    syslog(LOG_INFO, "scpi-server stopped.");
+    RP_LOG(LOG_INFO, "scpi-server stopped.");
 
     closelog ();
 

@@ -18,14 +18,9 @@
 #include "version.h"
 #include "common.h"
 #include "housekeeping.h"
-#include "id_handler.h"
-#include "dpin_handler.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
-#include "apin_handler.h"
-#include "health.h"
-#include "health_handler.h"
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
@@ -43,7 +38,6 @@ int rp_Init()
     ECHECK(calib_Init());
     ECHECK(hk_Init());
     ECHECK(ams_Init());
-    ECHECK(health_Init());
     ECHECK(generate_Init());
     ECHECK(osc_Init());
     // TODO: Place other module initializations here
@@ -54,11 +48,17 @@ int rp_Init()
     return RP_OK;
 }
 
+int rp_CalibInit()
+{
+    ECHECK(calib_Init());
+
+    return RP_OK;
+}
+
 int rp_Release()
 {
     ECHECK(osc_Release())
     ECHECK(generate_Release());
-    ECHECK(health_Release());
     ECHECK(ams_Release());
     ECHECK(hk_Release());
     ECHECK(calib_Release());
@@ -70,7 +70,7 @@ int rp_Release()
 int rp_Reset()
 {
     ECHECK(rp_DpinReset());
-    ECHECK(rp_ApinReset());
+    ECHECK(rp_AOpinReset());
     ECHECK(rp_GenReset());
     ECHECK(rp_AcqReset());
     // TODO: Place other module resetting here (in reverse order)
@@ -137,14 +137,6 @@ const char* rp_GetError(int errorCode) {
 }
 
 /**
- * Digital loop
- */
-int rp_EnableDigitalLoop(bool enable) {
-    return hk_EnableDigitalLoop(enable);
-}
-
-
-/**
  * Calibrate methods
  */
 
@@ -188,18 +180,78 @@ int rp_CalibrationSetCachedParams() {
 int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
     return calib_WriteParams(calib_params);
 }
+
 /**
  * Identification
  */
 
-int rp_IdGetID(uint32_t *id)
-{
-    return id_GetID(id);
+int rp_IdGetID(uint32_t *id) {
+    *id = ioread32(&hk->id);
+    return RP_OK;
 }
 
-int rp_IdGetDNA(uint64_t *dna)
-{
-    return id_GetDNA(dna);
+int rp_IdGetDNA(uint64_t *dna) {
+    *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
+         | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
+    return RP_OK;
+}
+
+/**
+ * LED methods
+ */
+
+int rp_LEDSetState(uint32_t state) {
+    iowrite32(state, &hk->led_control);
+    return RP_OK;
+}
+
+int rp_LEDGetState(uint32_t *state) {
+    *state = ioread32(&hk->led_control);
+    return RP_OK;
+}
+
+/**
+ * GPIO methods
+ */
+
+int rp_GPIOnSetDirection(uint32_t direction) {
+    iowrite32(direction, &hk->ex_cd_n);
+    return RP_OK;
+}
+
+int rp_GPIOnGetDirection(uint32_t *direction) {
+    *direction = ioread32(&hk->ex_cd_n);
+    return RP_OK;
+}
+
+int rp_GPIOnSetState(uint32_t state) {
+    iowrite32(state, &hk->ex_co_n);
+    return RP_OK;
+}
+
+int rp_GPIOnGetState(uint32_t *state) {
+    *state = ioread32(&hk->ex_ci_n);
+    return RP_OK;
+}
+
+int rp_GPIOpSetDirection(uint32_t direction) {
+    iowrite32(direction, &hk->ex_cd_p);
+    return RP_OK;
+}
+
+int rp_GPIOpGetDirection(uint32_t *direction) {
+    *direction = ioread32(&hk->ex_cd_p);
+    return RP_OK;
+}
+
+int rp_GPIOpSetState(uint32_t state) {
+    iowrite32(state, &hk->ex_co_p);
+    return RP_OK;
+}
+
+int rp_GPIOpGetState(uint32_t *state) {
+    *state = ioread32(&hk->ex_ci_p);
+    return RP_OK;
 }
 
 /**
@@ -207,60 +259,241 @@ int rp_IdGetDNA(uint64_t *dna)
  */
 
 int rp_DpinReset() {
-    return dpin_SetDefaultValues();
+    iowrite32(0, &hk->ex_cd_p);
+    iowrite32(0, &hk->ex_cd_n);
+    iowrite32(0, &hk->ex_co_p);
+    iowrite32(0, &hk->ex_co_n);
+    iowrite32(0, &hk->led_control);
+    iowrite32(0, &hk->digital_loop);
+    return RP_OK;
 }
 
-int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction)
-{
-    return dpin_SetDirection(pin, direction);
+int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
+    uint32_t tmp;
+    if (pin < RP_DIO0_P) {
+        // LEDS
+        return RP_ELID;
+    } else if (pin < RP_DIO0_N) {
+        // DIO_P
+        pin -= RP_DIO0_P;
+        tmp = ioread32(&hk->ex_cd_p);
+        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
+    } else {
+        // DIO_N
+        pin -= RP_DIO0_N;
+        tmp = ioread32(&hk->ex_cd_n);
+        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
+    }
+    return RP_OK;
 }
 
-int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction)
-{
-    return dpin_GetDirection(pin, direction);
+int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
+    if (pin < RP_DIO0_P) {
+        // LEDS
+        *direction = RP_OUT;
+    } else if (pin < RP_DIO0_N) {
+        // DIO_P
+        pin -= RP_DIO0_P;
+        *direction = (ioread32(&hk->ex_cd_p) >> pin) & 0x1;
+    } else {
+        // DIO_N
+        pin -= RP_DIO0_N;
+        *direction = (ioread32(&hk->ex_cd_n) >> pin) & 0x1;
+    }
+    return RP_OK;
 }
 
-int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state)
-{
-    return dpin_SetState(pin, state);
+int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
+    uint32_t tmp;
+    rp_pinDirection_t direction;
+    rp_DpinGetDirection(pin, &direction);
+    if (!direction) {
+        return RP_EWIP;
+    }
+    if (pin < RP_DIO0_P) {
+        // LEDS
+        tmp = ioread32(&hk->led_control);
+        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->led_control);
+    } else if (pin < RP_DIO0_N) {
+        // DIO_P
+        pin -= RP_DIO0_P;
+        tmp = ioread32(&hk->ex_co_p);
+        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_p);
+    } else {
+        // DIO_N
+        pin -= RP_DIO0_N;
+        tmp = ioread32(&hk->ex_co_n);
+        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_n);
+    }
+    return RP_OK;
 }
 
-int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state)
-{
-    return dpin_GetState(pin, state);
+int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
+    if (pin < RP_DIO0_P) {
+        // LEDS
+        *state = (ioread32(&hk->led_control) >> pin) & 0x1;
+    } else if (pin < RP_DIO0_N) {
+        // DIO_P
+        pin -= RP_DIO0_P;
+        *state = (ioread32(&hk->ex_ci_p) >> pin) & 0x1;
+    } else {
+        // DIO_N
+        pin -= RP_DIO0_N;
+        *state = (ioread32(&hk->ex_ci_n) >> pin) & 0x1;
+    }
+    return RP_OK;
 }
+
 
 /**
- * Analog In Output methods
+ * Digital loop
  */
 
+int rp_EnableDigitalLoop(bool enable) {
+    iowrite32((uint32_t) enable, &hk->digital_loop);
+    return RP_OK;
+}
+
+
+/** @name Analog Inputs/Outputs
+ */
+///@{
+
 int rp_ApinReset() {
-    return apin_SetDefaultValues();
+    return rp_AOpinReset();
 }
 
-int rp_ApinSetValue(rp_apin_t pin, float value)
-{
-    return apin_SetValue(pin, value);
+int rp_ApinGetValue(rp_apin_t pin, float* value) {
+    if (pin <= RP_AIN3) {
+        rp_AIpinGetValue(pin-RP_AIN0, value);
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinGetValue(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
 }
 
-int rp_ApinGetValue(rp_apin_t pin, float* value)
-{
-    return apin_GetValue(pin, value);
+int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
+    if (pin <= RP_AIN3) {
+        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
 }
 
-int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value)
-{
-    return apin_SetValueRaw(pin, value);
+int rp_ApinSetValue(rp_apin_t pin, float value) {
+    if (pin <= RP_AIN3) {
+        return RP_EPN;
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinSetValue(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
 }
 
-int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value)
-{
-    return apin_GetValueRaw(pin, value);
+int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
+    if (pin <= RP_AIN3) {
+        return RP_EPN;
+    } else if (pin <= RP_AOUT3) {
+        rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
 }
 
-int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val)
-{
-    return apin_GetRange(pin, min_val, max_val);
+int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
+    if (pin <= RP_AIN3) {
+        *min_val = ANALOG_IN_MIN_VAL;
+        *max_val = ANALOG_IN_MAX_VAL;
+    } else if (pin <= RP_AOUT3) {
+        *min_val = ANALOG_OUT_MIN_VAL;
+        *max_val = ANALOG_OUT_MAX_VAL;
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+
+/**
+ * Analog Inputs
+ */
+
+int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
+    FILE *fp;
+    switch (pin) {
+        case 0:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");  break;
+        case 1:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");   break;
+        case 2:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");  break;
+        case 3:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");  break;
+        default:
+            return RP_EPN;
+    }
+    int r = !fscanf (fp, "%d", value);
+    fclose(fp);
+    return r;
+}
+
+int rp_AIpinGetValue(int unsigned pin, float* value) {
+    uint32_t value_raw;
+    int result = rp_AIpinGetValueRaw(pin, &value_raw);
+    *value = (((float)value_raw / ANALOG_IN_MAX_VAL_INTEGER) * (ANALOG_IN_MAX_VAL - ANALOG_IN_MIN_VAL)) + ANALOG_IN_MIN_VAL;
+    return result;
+}
+
+
+/**
+ * Analog Outputs
+ */
+
+int rp_AOpinReset() {
+    for (int unsigned pin=0; pin<4; pin++) {
+        rp_AOpinSetValueRaw(pin, 0);
+    }
+    return RP_OK;
+}
+
+int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
+    if (pin >= 4) {
+        return RP_EPN;
+    }
+    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+        return RP_EOOR;
+    }
+    iowrite32((value & ANALOG_OUT_MASK) << ANALOG_OUT_BITS, &ams->dac[pin]);
+    return RP_OK;
+}
+
+int rp_AOpinSetValue(int unsigned pin, float value) {
+    uint32_t value_raw = (uint32_t) (((value - ANALOG_OUT_MIN_VAL) / (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) * ANALOG_OUT_MAX_VAL_INTEGER);
+    return rp_AOpinSetValueRaw(pin, value_raw);
+}
+
+int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
+    if (pin >= 4) {
+        return RP_EPN;
+    }
+    *value = (ioread32(&ams->dac[pin]) >> ANALOG_OUT_BITS) & ANALOG_OUT_MASK;
+    return RP_OK;
+}
+
+int rp_AOpinGetValue(int unsigned pin, float* value) {
+    uint32_t value_raw;
+    int result = rp_AOpinGetValueRaw(pin, &value_raw);
+    *value = (((float)value_raw / ANALOG_OUT_MAX_VAL_INTEGER) * (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) + ANALOG_OUT_MIN_VAL;
+    return result;
+}
+
+int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
+    *min_val = ANALOG_OUT_MIN_VAL;
+    *max_val = ANALOG_OUT_MAX_VAL;
+    return RP_OK;
 }
 
 
@@ -471,15 +704,6 @@ int rp_AcqGetBufSize(uint32_t *size) {
 }
 
 /**
- * Health methods
- */
-
-int rp_HealthGetValue(rp_health_t sensor, float* value)
-{
-    return health_GetValue(sensor, value);
-}
-
-/**
 * Generate methods
 */
 
@@ -597,5 +821,10 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
 
 int rp_GenTrigger(int mask) {
     return gen_Trigger(mask);
+}
+
+float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
+{
+	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
 }
 

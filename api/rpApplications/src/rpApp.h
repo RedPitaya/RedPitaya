@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "../../rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 
 
 /** @name Error codes

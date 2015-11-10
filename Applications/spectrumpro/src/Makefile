@@ -8,7 +8,7 @@ RP_API=../../../api/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
 INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../../../../tools/libjson
-INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/rpbase/src/
+INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/include
 INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 JPEG_DIR=./external/jpeg-6b
@@ -17,7 +17,7 @@ JPEG_INC=-I$(JPEG_DIR)
 
 INCLUDE+=$(JPEG_INC)
 
-COMMON_FLAGS+=-Wall -g -fPIC
+COMMON_FLAGS+=-Wall -fPIC -Os -s
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib

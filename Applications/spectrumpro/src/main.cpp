@@ -123,7 +123,12 @@ void UpdateParams(void)
 		rpApp_SpecGetPeakFreq(RP_CH_2, &peak2_freq.Value());
 	}
 
-	rp_EnableDigitalLoop(IsDemoParam.Value());
+	static bool inited_loop = false;
+	if (!inited_loop) {
+		rp_EnableDigitalLoop(IsDemoParam.Value());
+		inited_loop = true;
+	}
+
 	UpdateGen();
 }
 

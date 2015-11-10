@@ -1,4 +1,4 @@
-export PS1="\e[0;31mred\e[1mpitaya\e[0;31m>\e[m "
+export PS1="\[\e[0;31m\]red\[\e[1;31m\]pitaya>\[\e[m\] "
 
 export USER=`id -un`
 export LOGNAME=$USER
