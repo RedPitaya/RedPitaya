@@ -1,13 +1,27 @@
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index daee8bc..c25f4a1 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -54,7 +54,8 @@ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dtb \
+ 	zynq-zc770-xm010.dtb \
+ 	zynq-zc770-xm011.dtb \
+ 	zynq-zc770-xm012.dtb \
+-	zynq-zc770-xm013.dtb
++	zynq-zc770-xm013.dtb \
++	zynq-red-pitaya.dtb
+ dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-ep108.dtb	\
+ 	zynqmp-zc1751-xm015-dc1.dtb		\
+ 	zynqmp-zc1751-xm016-dc2.dtb
 diff --git a/arch/arm/dts/zynq-red-pitaya.dts b/arch/arm/dts/zynq-red-pitaya.dts
 new file mode 100644
-index 0000000..ac14cd0
+index 0000000..d6278c2
 --- /dev/null
 +++ b/arch/arm/dts/zynq-red-pitaya.dts
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +/*
 + * Red Pitaya board DTS
 + *
-+ * Copyright (C) 2013 Xilinx, Inc.
++ *  Copyright (C) 2011 - 2015 Xilinx
 + *
 + * SPDX-License-Identifier:	GPL-2.0+
 + */
@@ -16,15 +30,16 @@ index 0000000..ac14cd0
 +
 +/ {
 +	model = "Red Pitaya Board";
-+	compatible = "xlnx,zynq-red-pitaya", "xlnx,zynq-7000";
++	compatible = "redpitaya,zynq-red-pitaya", "xlnx,zynq-7000";
 +
 +	aliases {
++		ethernet0 = &gem0;
 +		serial0 = &uart0;
 +	};
 +
 +	memory {
 +		device_type = "memory";
-+		reg = <0 0x1E000000>;
++		reg = <0x0 0x1E000000>;
 +	};
 +};
 diff --git a/arch/arm/mach-zynq/Kconfig b/arch/arm/mach-zynq/Kconfig
