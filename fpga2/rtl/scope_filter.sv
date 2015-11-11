@@ -38,10 +38,13 @@ module scope_filter #(
   input  logic signed [ 18-1:0] cfg_aa,   // config AA coefficient
   input  logic signed [ 25-1:0] cfg_bb,   // config BB coefficient
   input  logic signed [ 25-1:0] cfg_kk,   // config KK coefficient
-  input  logic signed [ 25-1:0] cfg_pp    // config PP coefficient
+  input  logic signed [ 25-1:0] cfg_pp,   // config PP coefficient
+  // control
+  input  logic                  ctl_rst   // synchronous reset
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+//
 // FIR
 //
 // Time domain:
@@ -56,96 +59,89 @@ module scope_filter #(
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [ 39-1: 0] bb_mult;
-logic signed [ 33-1: 0] r2_sum ;
-logic signed [ 33-1: 0] r1_reg ;
-logic signed [ 23-1: 0] r2_reg ;
-logic signed [ 32-1: 0] r01_reg;
-logic signed [ 28-1: 0] r02_reg;
+// FIR filter
+logic signed [2-1:0] [   DWI-1:0] fir_buf;  // data buffer
+logic signed [2-1:0] [25    -1:0] fir_cfg;  // coeficients
+logic signed [2-1:0] [25+DWI-1:0] fir_mul;  // multiplications
+logic signed         [23    -1:0] fir_sum;  // summation
 
-assign bb_mult = sti_vld * cfg_bb;
-assign r2_sum  = r01_reg + r1_reg;
+// FIR data buffer
+assign fir_buf [0] = sti_dat;
 
 always_ff @(posedge clk)
-if (~rstn) begin
-  r1_reg  <= '0;
-  r2_reg  <= '0;
-  r01_reg <= '0;
-  r02_reg <= '0;
-end else begin
-  r1_reg  <= r02_reg - r01_reg;
-  r2_reg  <= r2_sum[33-1:10];
-  r01_reg <= {sti_vld,18'h0};
-  r02_reg <= bb_mult[39-2:10];
-end
+fir_buf [1] <= fir_buf [0];
+
+// FIR coeficients
+assign fir_cfg [0] =          (1 <<< 18);
+assign fir_cfg [1] = cfg_bb - (1 <<< 18);
+
+// multiplications
+generate
+for (genvar i=0; i<2; i++) begin: for_fir_mul
+  always_ff @(posedge clk)
+  fir_mul[i] <= fir_buf[i] * fir_cfg[i];
+end: for_fir_mul
+endgenerate
+
+// final summation
+always_ff @(posedge clk)
+fir_sum <= (fir_mul[1] + fir_mul[1]) >>> 10;
 
 ////////////////////////////////////////////////////////////////////////////////
+//
 // IIR 1
+//
+// Time domain:
+//
+// y[n] = ( (2**25     ) * x[n-0] +
+//          (2**25 - aa) * y[n-1] ) / 2**25
+//
+// Frequency domain:
+//
+// TODO
+//
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [ 41-1: 0] aa_mult;
-logic [ 49-1: 0] r3_sum ; //24 + 25
-(* use_dsp48="yes" *) logic [ 23-1: 0] r3_reg;
-
-assign aa_mult = $signed(r3_reg) * $signed(cfg_aa);
-assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
+(* use_dsp48="yes" *) logic signed [23-1:0] iir1_dat;
 
 always_ff @(posedge clk)
-if (~rstn) begin
-  r3_reg  <= 23'h0;
-end else begin
-  r3_reg  <= r3_sum[49-2:25];
-end
+if (~rstn)  iir1_dat <= '0;
+else        iir1_dat <= ((fir_sum <<< 25) + (iir1_dat * ((1 <<< 25) - cfg_aa))) >>> 25;
 
 ////////////////////////////////////////////////////////////////////////////////
+//
 // IIR 2
+//
+// Time domain:
+//
+// y[n] = ( (2**25     ) * x[n-0] +
+//          (2**25 - aa) * y[n-1] ) / 2**25
+//
+// Frequency domain:
+//
+// TODO
+//
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [ 40-1: 0] pp_mult;
-logic [ 16-1: 0] r4_sum ;
-logic [ 15-1: 0] r4_reg ;
-logic [ 15-1: 0] r3_shr ;
-
-assign pp_mult = $signed(r4_reg) * $signed(cfg_pp);
-assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
+logic signed [15-1:0] iir2_dat;
 
 always_ff @(posedge clk)
-if (~rstn) begin
-  r3_shr <= 15'h0;
-  r4_reg <= 15'h0;
-end else begin
-  r3_shr <= r3_reg[23-1:8];
-  r4_reg <= r4_sum[16-2:0];
-end
+if (~rstn)  iir2_dat <= '0;
+else        iir2_dat <= (iir1_dat >>> 8) + ((iir2_dat * cfg_pp) >>> 16);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Scaling and saturation
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [ 40-1: 0] kk_mult  ;
-logic [ 15-1: 0] r4_reg_r ;
-logic [ 15-1: 0] r4_reg_rr;
-logic [ 14-1: 0] r5_reg   ;
+logic signed [40-1:0] kk_mult;
 
-assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk);
+assign kk_mult = ($signed(iir2_dat) * $signed(cfg_kk)) >>> 24;
 
+// saturation
 always_ff @(posedge clk)
-if (~rstn) begin
-  r4_reg_r  <= 15'h0;
-  r4_reg_rr <= 15'h0;
-  r5_reg    <= 14'h0;
-end else begin
-  r4_reg_r  <= r4_reg  ;
-  r4_reg_rr <= r4_reg_r;
-  // saturation
-  if ($signed(kk_mult[40-2:24]) > $signed(14'h1FFF))
-     r5_reg <= 14'h1FFF;
-  else if ($signed(kk_mult[40-2:24]) < $signed(14'h2000))
-     r5_reg <= 14'h2000;
-  else
-     r5_reg <= kk_mult[24+14-1:24];
-end
+if (~rstn)  sto_dat <= '0;
+else        sto_dat <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
 
-assign sto_vld = r5_reg;
+assign sto_vld = 1'b1;
 
 endmodule: scope_filter

@@ -242,7 +242,7 @@ else         pdm_rstn <= ~top_rst;
 //  Connections to PS
 ////////////////////////////////////////////////////////////////////////////////
 
-red_pitaya_ps i_ps (
+red_pitaya_ps ps (
   .FIXED_IO_mio       (  FIXED_IO_mio                ),
   .FIXED_IO_ps_clk    (  FIXED_IO_ps_clk             ),
   .FIXED_IO_ps_porb   (  FIXED_IO_ps_porb            ),
@@ -358,8 +358,8 @@ debounce #(
   .DI (1'b0)
 ) debounce (
   // system signals
-  .clk  (clk ),
-  .rstn (rstn),
+  .clk  (adc_clk ),
+  .rstn (adc_rstn),
   // configuration
   .ena  (1'b1),
   .len  (20'd62500),  // 0.5ms
@@ -515,8 +515,8 @@ linear #(
   .sti_rdy  (),
   // output stream
   .sto_dat  (adc_dat),
-  .sto_vld  (),
-  .sto_rdy  (1'b1),
+  .sto_vld  (adc_vld),
+  .sto_rdy  (adc_rdy),
   // configuration
   .cfg_mul  (adc_cfg_mul),
   .cfg_sum  (adc_cfg_sum)
@@ -579,7 +579,7 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(
 
 asg_top #(
   .TWA (MNA*3+MNG*2+2)
-) asg_top [MNG-1:0] (
+) asg [MNG-1:0] (
   // system signals
   .clk       (adc_clk ),
   .rstn      (adc_rstn),
