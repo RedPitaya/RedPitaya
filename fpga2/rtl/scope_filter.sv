@@ -44,6 +44,22 @@ module scope_filter #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// local signals
+////////////////////////////////////////////////////////////////////////////////
+
+logic signed [23-1:0] fir_dat;
+logic                 fir_vld;
+logic                 fir_rdy;
+
+(* use_dsp48="yes" *) logic signed [23-1:0] iir1_dat;
+                      logic                 iir1_vld;
+                      logic                 iir1_rdy;
+
+logic signed [15-1:0] iir2_dat;
+logic                 iir2_vld;
+logic                 iir2_rdy;
+
+////////////////////////////////////////////////////////////////////////////////
 //
 // FIR
 //
@@ -63,7 +79,9 @@ module scope_filter #(
 logic signed [2-1:0] [   DWI-1:0] fir_buf;  // data buffer
 logic signed [2-1:0] [25    -1:0] fir_cfg;  // coeficients
 logic signed [2-1:0] [25+DWI-1:0] fir_mul;  // multiplications
-logic signed         [23    -1:0] fir_sum;  // summation
+
+logic                             fir_mul_vld;  //
+logic                             fir_mul_rdy;  //
 
 // FIR data buffer
 assign fir_buf [0] = sti_dat;
@@ -85,7 +103,23 @@ endgenerate
 
 // final summation
 always_ff @(posedge clk)
-fir_sum <= (fir_mul[1] + fir_mul[1]) >>> 10;
+fir_dat <= (fir_mul[1] + fir_mul[1]) >>> 10;
+
+// TODO: a generic FOR filter should be used here
+
+// control signals
+always_ff @(posedge clk)
+if (~rstn) begin
+  fir_mul_vld <= 1'b0;
+  fir_vld     <= 1'b0;
+end else begin
+  if (sti_rdy)     fir_mul_vld <= sti_vld;
+  if (fir_mul_rdy) fir_vld     <= fir_mul_vld;
+end
+
+assign sti_rdy     = fir_mul_rdy | ~fir_mul_vld;
+
+assign fir_mul_rdy = fir_rdy     | ~fir_vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -102,11 +136,17 @@ fir_sum <= (fir_mul[1] + fir_mul[1]) >>> 10;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-(* use_dsp48="yes" *) logic signed [23-1:0] iir1_dat;
-
+// data processing
 always_ff @(posedge clk)
 if (~rstn)  iir1_dat <= '0;
-else        iir1_dat <= ((fir_sum <<< 25) + (iir1_dat * ((1 <<< 25) - cfg_aa))) >>> 25;
+else        iir1_dat <= ((fir_dat <<< 25) + (iir1_dat * ((1 <<< 25) - cfg_aa))) >>> 25;
+
+// control signals
+always_ff @(posedge clk)
+if (~rstn)         iir1_vld <= 1'b0;
+else if (fir_rdy)  iir1_vld <= fir_vld;
+
+assign fir_rdy = iir1_rdy | ~iir1_vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -114,8 +154,8 @@ else        iir1_dat <= ((fir_sum <<< 25) + (iir1_dat * ((1 <<< 25) - cfg_aa))) 
 //
 // Time domain:
 //
-// y[n] = ( (2**25     ) * x[n-0] +
-//          (2**25 - aa) * y[n-1] ) / 2**25
+// y[n] = (      x[n-0] / (2**8 ) +
+//          pp * y[n-1] / (2**16) )
 //
 // Frequency domain:
 //
@@ -123,11 +163,16 @@ else        iir1_dat <= ((fir_sum <<< 25) + (iir1_dat * ((1 <<< 25) - cfg_aa))) 
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [15-1:0] iir2_dat;
-
 always_ff @(posedge clk)
 if (~rstn)  iir2_dat <= '0;
 else        iir2_dat <= (iir1_dat >>> 8) + ((iir2_dat * cfg_pp) >>> 16);
+
+// control signals
+always_ff @(posedge clk)
+if (~rstn)          iir2_vld <= 1'b0;
+else if (iir1_rdy)  iir2_vld <= iir1_vld;
+
+assign iir1_rdy = iir2_rdy | ~iir2_vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Scaling and saturation
@@ -142,6 +187,11 @@ always_ff @(posedge clk)
 if (~rstn)  sto_dat <= '0;
 else        sto_dat <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
 
-assign sto_vld = 1'b1;
+// control signals
+always_ff @(posedge clk)
+if (~rstn)          sto_vld <= 1'b0;
+else if (iir2_rdy)  sto_vld <= iir2_vld;
+
+assign iir2_rdy = sto_rdy | ~sto_vld;
 
 endmodule: scope_filter
