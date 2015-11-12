@@ -1,0 +1,71 @@
+diff --git a/arch/arm/configs/xilinx_zynq_defconfig b/arch/arm/configs/xilinx_zynq_defconfig
+index d628d5a..7a6ec5e 100644
+--- a/arch/arm/configs/xilinx_zynq_defconfig
++++ b/arch/arm/configs/xilinx_zynq_defconfig
+@@ -115,8 +115,9 @@ CONFIG_R8169=y
+ CONFIG_XILINX_EMACLITE=y
+ CONFIG_XILINX_AXI_EMAC=y
+ CONFIG_XILINX_PS_EMAC=y
+-CONFIG_MARVELL_PHY=y
+-CONFIG_VITESSE_PHY=y
++CONFIG_MARVELL_PHY=n
++CONFIG_VITESSE_PHY=n
++CONFIG_LANTIQ_PHY=y
+ CONFIG_MDIO_BITBANG=y
+ CONFIG_INPUT_SPARSEKMAP=y
+ CONFIG_INPUT_EVDEV=y
+@@ -245,3 +246,40 @@ CONFIG_RCU_CPU_STALL_TIMEOUT=60
+ CONFIG_FONTS=y
+ CONFIG_FONT_8x8=y
+ CONFIG_FONT_8x16=y
++CONFIG_WIRELESS=y
++CONFIG_RT2X00=y
++CONFIG_RT2800USB=y
++CONFIG_RT2800USB_RT3573=y
++CONFIG_RT2800USB_RT53XX=y
++CONFIG_RT2800USB_RT55XX=y
++CONFIG_RT2800USB_UNKNOWN=y
++CONFIG_CFG80211=y
++CONFIG_MAC80211=y
++CONFIG_RTL8192CU=y
++CONFIG_RTL_CARDS=n
++CONFIG_NETFILTER=y
++CONFIG_NETFILTER_ADVANCED=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_CONNTRACK_PROCFS=y
++CONFIG_NF_NAT=y
++CONFIG_NF_NAT_NEEDED=y
++CONFIG_NETFILTER_XTABLES=y
++CONFIG_NETFILTER_XT_NAT=y
++CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
++CONFIG_NETFILTER_XT_MATCH_STATE=y
++CONFIG_NF_DEFRAG_IPV4=y
++CONFIG_NF_CONNTRACK_IPV4=y
++CONFIG_NF_CONNTRACK_PROC_COMPAT=y
++CONFIG_NF_NAT_IPV4=y
++CONFIG_NF_NAT_MASQUERADE_IPV4=y
++CONFIG_IP_NF_IPTABLES=y
++CONFIG_IP_NF_FILTER=y
++CONFIG_IP_NF_NAT=y
++CONFIG_IP_NF_TARGET_MASQUERADE=y
++CONFIG_IP_NF_MANGLE=y
++CONFIG_NAMESPACES=y
++CONFIG_UTS_NS=y
++CONFIG_IPC_NS=y
++CONFIG_PID_NS=y
++CONFIG_NET_NS=y
++CONFIG_USB_ACM=y
+diff --git a/drivers/misc/eeprom/at24.c b/drivers/misc/eeprom/at24.c
+index d87f77f..faa0a9e 100644
+--- a/drivers/misc/eeprom/at24.c
++++ b/drivers/misc/eeprom/at24.c
+@@ -508,6 +508,9 @@ static int at24_probe(struct i2c_client *client, const struct i2c_device_id *id)
+ 		 * is recommended anyhow.
+ 		 */
+ 		chip.page_size = 1;
++		if(!strncmp(id->name,"24c64",5)){
++			chip.page_size = 32;
++		}
+ 
+ 		/* update chipdata if OF is present */
+ 		at24_get_ofdata(client, &chip);
