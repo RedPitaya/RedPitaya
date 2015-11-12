@@ -119,16 +119,6 @@ logic [ 32-1: 0] ps_sys_rdata       ;
 logic            ps_sys_err         ;
 logic            ps_sys_ack         ;
 
-// AXI masters
-logic        [MNA-1:0][32-1:0] axi_waddr ;
-logic        [MNA-1:0][64-1:0] axi_wdata ;
-logic        [MNA-1:0][ 8-1:0] axi_wsel  ;
-logic        [MNA-1:0]         axi_wvalid;
-logic        [MNA-1:0][ 4-1:0] axi_wlen  ;
-logic        [MNA-1:0]         axi_wfixed;
-logic        [MNA-1:0]         axi_werr  ;
-logic        [MNA-1:0]         axi_wrdy  ;
-
 // PLL signals
 logic                 adc_clk_in;
 logic                 pll_adc_clk;
@@ -271,26 +261,22 @@ red_pitaya_ps ps (
   .fclk_clk_o    (fclk        ),
   .fclk_rstn_o   (frstn       ),
   // ADC analog inputs
-  .vinp_i        (vinp_i      ),  // voltages p
-  .vinn_i        (vinn_i      ),  // voltages n
+  .vinp_i        (vinp_i      ),
+  .vinn_i        (vinn_i      ),
    // system read/write channel
-  .sys_addr_o    (ps_sys_addr ),  // system read/write address
-  .sys_wdata_o   (ps_sys_wdata),  // system write data
-  .sys_sel_o     (ps_sys_sel  ),  // system write byte select
-  .sys_wen_o     (ps_sys_wen  ),  // system write enable
-  .sys_ren_o     (ps_sys_ren  ),  // system read enable
-  .sys_rdata_i   (ps_sys_rdata),  // system read data
-  .sys_err_i     (ps_sys_err  ),  // system error indicator
-  .sys_ack_i     (ps_sys_ack  ),  // system acknowledge signal
+  .sys_addr      (ps_sys_addr ),
+  .sys_wdata     (ps_sys_wdata),
+  .sys_sel       (ps_sys_sel  ),
+  .sys_wen       (ps_sys_wen  ),
+  .sys_ren       (ps_sys_ren  ),
+  .sys_rdata     (ps_sys_rdata),
+  .sys_err       (ps_sys_err  ),
+  .sys_ack       (ps_sys_ack  ),
   // AXI masters
-  .axi1_waddr_i  (axi_waddr [1]),  .axi0_waddr_i  (axi_waddr [0]),  // system write address
-  .axi1_wdata_i  (axi_wdata [1]),  .axi0_wdata_i  (axi_wdata [0]),  // system write data
-  .axi1_wsel_i   (axi_wsel  [1]),  .axi0_wsel_i   (axi_wsel  [0]),  // system write byte select
-  .axi1_wvalid_i (axi_wvalid[1]),  .axi0_wvalid_i (axi_wvalid[0]),  // system write data valid
-  .axi1_wlen_i   (axi_wlen  [1]),  .axi0_wlen_i   (axi_wlen  [0]),  // system write burst length
-  .axi1_wfixed_i (axi_wfixed[1]),  .axi0_wfixed_i (axi_wfixed[0]),  // system write burst type (fixed / incremental)
-  .axi1_werr_o   (axi_werr  [1]),  .axi0_werr_o   (axi_werr  [0]),  // system write error
-  .axi1_wrdy_o   (axi_wrdy  [1]),  .axi0_wrdy_o   (axi_wrdy  [0])   // system write ready
+  .axi1_tdata  (acq_dat[1]),  .axi0_tdata  (acq_dat[0]),
+  .axi1_tlast  (acq_lst[1]),  .axi0_tlast  (acq_lst[0]),
+  .axi1_tvalid (acq_vld[1]),  .axi0_tvalid (acq_vld[0]),
+  .axi1_tready (acq_rdy[1]),  .axi0_tready (acq_rdy[0])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
