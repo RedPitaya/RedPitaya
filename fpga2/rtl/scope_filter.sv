@@ -76,8 +76,8 @@ assign sti_trn = sti_vld & sti_rdy;
 //
 // Time domain:
 //
-// y[n] = ( (     2**18) * x[n-0] +
-//          (bb - 2**18) * x[n-1] ) / 2**10
+// y[n] = ( ( 2**18 + bb / 2**10) * x[n-0] +
+//          (-2**18             ) * x[n-1] ) / 2**10
 //
 // Frequency domain:
 //
@@ -86,10 +86,14 @@ assign sti_trn = sti_vld & sti_rdy;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef logic signed [   DWI-1:0] fir_buf_t;  // data buffer
+typedef logic signed [29    -1:0] fir_cfg_t;  // coeficients
+typedef logic signed [25+DWI-1:0] fir_mul_t;  // multiplications
+
 // FIR filter
-logic signed [2-1:0] [   DWI-1:0] fir_buf;  // data buffer
-logic signed [2-1:0] [25    -1:0] fir_cfg;  // coeficients
-logic signed [2-1:0] [25+DWI-1:0] fir_mul;  // multiplications
+fir_buf_t [2-1:0] fir_buf;  // data buffer
+fir_cfg_t [2-1:0] fir_cfg;  // coeficients
+fir_mul_t [2-1:0] fir_mul;  // multiplications
 
 logic                             fir_mul_trn;  //
 logic                             fir_mul_vld;  //
@@ -103,14 +107,14 @@ if (~rstn)         fir_buf [1] <= '0;
 else if (sti_trn)  fir_buf [1] <= fir_buf [0];
 
 // FIR coeficients
-assign fir_cfg [0] =          (1 <<< 18);
-assign fir_cfg [1] = cfg_bb - (1 <<< 18);
+assign fir_cfg [0] =  (1 <<< (18+10)) + cfg_bb;
+assign fir_cfg [1] = -(1 <<< (18+10))         ;
 
 // multiplications
 generate
 for (genvar i=0; i<2; i++) begin: for_fir_mul
   always_ff @(posedge clk)
-  if (sti_trn) fir_mul[i] <= fir_buf[i] * fir_cfg[i];
+  if (sti_trn) fir_mul[i] <= (fir_buf[i] * fir_cfg[i]) >>> 10;
 end: for_fir_mul
 endgenerate
 

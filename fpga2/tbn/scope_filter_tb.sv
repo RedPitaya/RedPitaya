@@ -32,8 +32,8 @@ logic                  sto_rdy;
 // configuration
 logic signed [ 18-1:0] cfg_aa;   // config AA coefficient
 logic signed [ 25-1:0] cfg_bb;   // config BB coefficient
-logic signed [ 25-1:0] cfg_kk;   // config KK coefficient
 logic signed [ 25-1:0] cfg_pp;   // config PP coefficient
+logic signed [ 25-1:0] cfg_kk;   // config KK coefficient
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -46,8 +46,12 @@ initial begin
   // for now initialize configuration to an idle value
   cfg_aa = 0;
   cfg_bb = 0;
-  cfg_kk = 0;
   cfg_pp = 0;
+  cfg_kk = 0;
+  cfg_aa = 'h7D93;
+  cfg_bb = 'h437C7;
+  cfg_pp = 'h2666;
+  cfg_kk = 'hd9999a;
 
   // initialization
   rstn = 1'b0;
