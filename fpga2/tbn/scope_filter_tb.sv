@@ -108,6 +108,19 @@ scope_filter #(
   .ctl_rst  ()
 );
 
+red_pitaya_dfilt1 dfilt1 (
+   // ADC
+   .adc_clk_i  (clk ),
+   .adc_rstn_i (rstn),
+   .adc_dat_i  (sti_dat),
+   .adc_dat_o  (),
+   // configuration
+   .cfg_aa_i   (cfg_aa),
+   .cfg_bb_i   (cfg_bb),
+   .cfg_kk_i   (cfg_kk),
+   .cfg_pp_i   (cfg_pp)
+);
+
 str_drn #(
   .DW  (DWI)
 ) str_drn (

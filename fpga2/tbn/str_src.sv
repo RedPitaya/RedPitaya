@@ -1,5 +1,6 @@
 module str_src #(
-  int unsigned DW = 1                    // data width
+  int unsigned DW = 1,                   // data width
+  logic        IV = 1'b0                 // idle data bus value
 )(
   // system signals
   input  logic                 clk,      // clock
@@ -36,12 +37,12 @@ assign str_ena = str_trn | ~str_vld;
 // valid is active if there is data in the queue
 always @ (posedge clk, posedge rstn)
 if (!rstn)         str_vld <= 1'b0;
-else if (str_ena)  str_vld <= buf_dat.size() > 0;;
+else if (str_ena)  str_vld <= buf_dat.size() > 0;
 
 // transfer delay counter
 always @ (posedge clk, posedge rstn)
-if (!rstn)         str_dat <= 0;
-else if (str_ena)  str_dat <= buf_dat.pop_front();
+if (!rstn)         str_dat <= '0;
+else if (str_ena)  str_dat <= buf_dat.size() > 0 ? buf_dat.pop_front() : {DW{IV}};
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream data queue
