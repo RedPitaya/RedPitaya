@@ -277,11 +277,11 @@ system_wrapper system_i (
   // AXI-4 streaming interfaces
   .S_AXI_STR1_aclk   (clk        ),  .S_AXI_STR0_aclk   (clk        ),
   .S_AXI_STR1_arstn  (rstn       ),  .S_AXI_STR0_arstn  (rstn       ),
-  .S_AXI_STR1_tdata  (axi1_tdata ),  .S_AXI_STR0_tdata  (axi1_tdata ),
+  .S_AXI_STR1_tdata  (axi1_tdata ),  .S_AXI_STR0_tdata  (axi0_tdata ),
   .S_AXI_STR1_tkeep  ('1         ),  .S_AXI_STR0_tkeep  ('1         ),
-  .S_AXI_STR1_tlast  (axi1_tlast ),  .S_AXI_STR0_tlast  (axi1_tlast ),
-  .S_AXI_STR1_tready (axi1_tready),  .S_AXI_STR0_tready (axi1_tready),
-  .S_AXI_STR1_tvalid (axi1_tvalid),  .S_AXI_STR0_tvalid (axi1_tvalid)
+  .S_AXI_STR1_tlast  (axi1_tlast ),  .S_AXI_STR0_tlast  (axi0_tlast ),
+  .S_AXI_STR1_tready (axi1_tready),  .S_AXI_STR0_tready (axi0_tready),
+  .S_AXI_STR1_tvalid (axi1_tvalid),  .S_AXI_STR0_tvalid (axi0_tvalid)
 );
 
 endmodule
