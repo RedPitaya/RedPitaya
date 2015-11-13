@@ -73,10 +73,11 @@ module scope_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // filter configuration
-logic signed [ 18-1:0] cfg_faa;   // config AA coefficient
-logic signed [ 25-1:0] cfg_fbb;   // config BB coefficient
-logic signed [ 25-1:0] cfg_fkk;   // config KK coefficient
-logic signed [ 25-1:0] cfg_fpp;   // config PP coefficient
+logic                  cfg_byp;  // bypass
+logic signed [ 18-1:0] cfg_faa;  // AA coefficient
+logic signed [ 25-1:0] cfg_fbb;  // BB coefficient
+logic signed [ 25-1:0] cfg_fkk;  // KK coefficient
+logic signed [ 25-1:0] cfg_fpp;  // PP coefficient
 
 // stream from filter
 logic signed [DWI-1:0] stf_dat;  // data
@@ -129,6 +130,8 @@ always @(posedge clk)
 if (~rstn) begin
   // control
   ctl_acq <= 1'b0;
+    // filter bypass
+  cfg_byp <= '0;
   // dacimation
   cfg_avg <= '0;
   cfg_dec <= '0;
@@ -146,6 +149,8 @@ if (~rstn) begin
   cfg_fpp <= '0;
 end else begin
   if (sys_wen) begin
+    // filter bypass
+    if (sys_addr[6-1:0]==6'h04)   cfg_byp <= sys_wdata[      0];
     // dacimation
     if (sys_addr[6-1:0]==6'h08)   cfg_avg <= sys_wdata[      0];
     if (sys_addr[6-1:0]==6'h0c)   cfg_dec <= sys_wdata[DWC-1:0];
@@ -174,8 +179,10 @@ always_ff @(posedge clk)
 begin
   casez (sys_addr[19:0])
     // control/status
-    6'h08 : sys_rdata <= {{32-  3{1'b0}}, sts_acq,
+    6'h00 : sys_rdata <= {{32-  3{1'b0}}, sts_acq,
                                           sts_trg, 1'b0};
+    // filter bypass
+    6'h04 : sys_rdata <= {{32-  1{1'b0}}, cfg_byp};
     // decimation
     6'h08 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
     6'h0c : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
@@ -200,6 +207,20 @@ end
 // correction filter
 ////////////////////////////////////////////////////////////////////////////////
 
+// stream from input
+logic signed [DWI-1:0] tmp_sti_dat;  // data
+logic                  tmp_sti_vld;  // valid
+logic                  tmp_sti_rdy;  // ready
+
+// stream from filter
+logic signed [DWI-1:0] tmp_stf_dat;  // data
+logic                  tmp_stf_vld;  // valid
+logic                  tmp_stf_rdy;  // ready
+
+assign tmp_sti_dat = cfg_byp ? '0      :     sti_dat;
+assign tmp_sti_vld = cfg_byp ? '0      :     sti_vld;
+assign     sti_rdy = cfg_byp ? stf_rdy : tmp_sti_rdy;
+
 scope_filter #(
   // stream parameters
   .DWI (DWI),
@@ -209,13 +230,13 @@ scope_filter #(
   .clk      (clk ),
   .rstn     (rstn),
   // input stream
-  .sti_dat  (sti_dat),
-  .sti_vld  (sti_vld),
-  .sti_rdy  (sti_rdy),
+  .sti_dat  (tmp_sti_dat),
+  .sti_vld  (tmp_sti_vld),
+  .sti_rdy  (tmp_sti_rdy),
   // output stream
-  .sto_dat  (stf_dat),
-  .sto_vld  (stf_vld),
-  .sto_rdy  (stf_rdy),
+  .sto_dat  (tmp_stf_dat),
+  .sto_vld  (tmp_stf_vld),
+  .sto_rdy  (tmp_stf_rdy),
   // configuration
   .cfg_aa   (cfg_faa),
   .cfg_bb   (cfg_fbb),
@@ -224,6 +245,10 @@ scope_filter #(
   // control
   .ctl_rst  (1'b0)
 );
+
+assign     stf_dat = cfg_byp ? sti_dat : tmp_stf_dat;
+assign     stf_vld = cfg_byp ? sti_vld : tmp_stf_vld;
+assign tmp_stf_rdy = cfg_byp ? '0      :     stf_rdy;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
