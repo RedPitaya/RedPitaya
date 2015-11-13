@@ -220,7 +220,9 @@ scope_filter #(
   .cfg_aa   (cfg_faa),
   .cfg_bb   (cfg_fbb),
   .cfg_kk   (cfg_fkk),
-  .cfg_pp   (cfg_fpp)
+  .cfg_pp   (cfg_fpp),
+  // control
+  .ctl_rst  (1'b0)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
