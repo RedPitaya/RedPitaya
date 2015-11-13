@@ -10,7 +10,7 @@
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2015.2
+set scripts_vivado_version 2015.3
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -146,11 +146,68 @@ proc create_root_design { parentCell } {
   set DDR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR ]
   set FIXED_IO [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO ]
   set M_AXI_GP0 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_GP0 ]
-  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.DATA_WIDTH {32} CONFIG.FREQ_HZ {125000000} CONFIG.PROTOCOL {AXI3}  ] $M_AXI_GP0
+  set_property -dict [ list \
+CONFIG.ADDR_WIDTH {32} \
+CONFIG.DATA_WIDTH {32} \
+CONFIG.FREQ_HZ {125000000} \
+CONFIG.PROTOCOL {AXI3} \
+ ] $M_AXI_GP0
   set S_AXI_HP0 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_HP0 ]
-  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.ARUSER_WIDTH {0} CONFIG.AWUSER_WIDTH {0} CONFIG.BUSER_WIDTH {0} CONFIG.DATA_WIDTH {64} CONFIG.FREQ_HZ {125000000} CONFIG.ID_WIDTH {0} CONFIG.MAX_BURST_LENGTH {16} CONFIG.NUM_READ_OUTSTANDING {1} CONFIG.NUM_WRITE_OUTSTANDING {1} CONFIG.PHASE {0.000} CONFIG.PROTOCOL {AXI3} CONFIG.READ_WRITE_MODE {READ_WRITE} CONFIG.RUSER_WIDTH {0} CONFIG.SUPPORTS_NARROW_BURST {1} CONFIG.WUSER_WIDTH {0}  ] $S_AXI_HP0
+  set_property -dict [ list \
+CONFIG.ADDR_WIDTH {32} \
+CONFIG.ARUSER_WIDTH {0} \
+CONFIG.AWUSER_WIDTH {0} \
+CONFIG.BUSER_WIDTH {0} \
+CONFIG.DATA_WIDTH {64} \
+CONFIG.FREQ_HZ {125000000} \
+CONFIG.HAS_BRESP {1} \
+CONFIG.HAS_BURST {1} \
+CONFIG.HAS_CACHE {1} \
+CONFIG.HAS_LOCK {1} \
+CONFIG.HAS_PROT {1} \
+CONFIG.HAS_QOS {1} \
+CONFIG.HAS_REGION {1} \
+CONFIG.HAS_RRESP {1} \
+CONFIG.HAS_WSTRB {1} \
+CONFIG.ID_WIDTH {0} \
+CONFIG.MAX_BURST_LENGTH {16} \
+CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.PHASE {0.000} \
+CONFIG.PROTOCOL {AXI3} \
+CONFIG.READ_WRITE_MODE {READ_WRITE} \
+CONFIG.RUSER_WIDTH {0} \
+CONFIG.SUPPORTS_NARROW_BURST {1} \
+CONFIG.WUSER_WIDTH {0} \
+ ] $S_AXI_HP0
   set S_AXI_HP1 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_HP1 ]
-  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.ARUSER_WIDTH {0} CONFIG.AWUSER_WIDTH {0} CONFIG.BUSER_WIDTH {0} CONFIG.DATA_WIDTH {64} CONFIG.FREQ_HZ {125000000} CONFIG.ID_WIDTH {0} CONFIG.MAX_BURST_LENGTH {16} CONFIG.NUM_READ_OUTSTANDING {1} CONFIG.NUM_WRITE_OUTSTANDING {1} CONFIG.PHASE {0.000} CONFIG.PROTOCOL {AXI3} CONFIG.READ_WRITE_MODE {READ_WRITE} CONFIG.RUSER_WIDTH {0} CONFIG.SUPPORTS_NARROW_BURST {1} CONFIG.WUSER_WIDTH {0}  ] $S_AXI_HP1
+  set_property -dict [ list \
+CONFIG.ADDR_WIDTH {32} \
+CONFIG.ARUSER_WIDTH {0} \
+CONFIG.AWUSER_WIDTH {0} \
+CONFIG.BUSER_WIDTH {0} \
+CONFIG.DATA_WIDTH {64} \
+CONFIG.FREQ_HZ {125000000} \
+CONFIG.HAS_BRESP {1} \
+CONFIG.HAS_BURST {1} \
+CONFIG.HAS_CACHE {1} \
+CONFIG.HAS_LOCK {1} \
+CONFIG.HAS_PROT {1} \
+CONFIG.HAS_QOS {1} \
+CONFIG.HAS_REGION {1} \
+CONFIG.HAS_RRESP {1} \
+CONFIG.HAS_WSTRB {1} \
+CONFIG.ID_WIDTH {0} \
+CONFIG.MAX_BURST_LENGTH {16} \
+CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.PHASE {0.000} \
+CONFIG.PROTOCOL {AXI3} \
+CONFIG.READ_WRITE_MODE {READ_WRITE} \
+CONFIG.RUSER_WIDTH {0} \
+CONFIG.SUPPORTS_NARROW_BURST {1} \
+CONFIG.WUSER_WIDTH {0} \
+ ] $S_AXI_HP1
   set Vaux0 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vaux0 ]
   set Vaux1 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vaux1 ]
   set Vaux8 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vaux8 ]
@@ -167,72 +224,138 @@ proc create_root_design { parentCell } {
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
   set M_AXI_GP0_ACLK [ create_bd_port -dir I -type clk M_AXI_GP0_ACLK ]
-  set_property -dict [ list CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} CONFIG.FREQ_HZ {125000000}  ] $M_AXI_GP0_ACLK
+  set_property -dict [ list \
+CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
+CONFIG.FREQ_HZ {125000000} \
+ ] $M_AXI_GP0_ACLK
   set S_AXI_HP0_aclk [ create_bd_port -dir I -type clk S_AXI_HP0_aclk ]
-  set_property -dict [ list CONFIG.FREQ_HZ {125000000}  ] $S_AXI_HP0_aclk
+  set_property -dict [ list \
+CONFIG.FREQ_HZ {125000000} \
+ ] $S_AXI_HP0_aclk
   set S_AXI_HP1_aclk [ create_bd_port -dir I -type clk S_AXI_HP1_aclk ]
-  set_property -dict [ list CONFIG.FREQ_HZ {125000000}  ] $S_AXI_HP1_aclk
+  set_property -dict [ list \
+CONFIG.FREQ_HZ {125000000} \
+ ] $S_AXI_HP1_aclk
 
   # Create instance: axi_protocol_converter_0, and set properties
   set axi_protocol_converter_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_protocol_converter:2.1 axi_protocol_converter_0 ]
 
   # Create instance: proc_sys_reset, and set properties
   set proc_sys_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset ]
-  set_property -dict [ list CONFIG.C_EXT_RST_WIDTH {1}  ] $proc_sys_reset
+  set_property -dict [ list \
+CONFIG.C_EXT_RST_WIDTH {1} \
+ ] $proc_sys_reset
 
   # Create instance: processing_system7, and set properties
   set processing_system7 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7 ]
-  set_property -dict [ list CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} \
-CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_CLKSRC {ARM PLL} \
-CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_EN_CLK1_PORT {1} \
-CONFIG.PCW_EN_CLK2_PORT {1} CONFIG.PCW_EN_CLK3_PORT {1} \
-CONFIG.PCW_EN_RST1_PORT {1} CONFIG.PCW_EN_RST2_PORT {1} \
-CONFIG.PCW_EN_RST3_PORT {1} CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {125} \
-CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {250} CONFIG.PCW_FPGA3_PERIPHERAL_FREQMHZ {200} \
-CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} CONFIG.PCW_I2C0_I2C0_IO {MIO 50 .. 51} \
-CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} CONFIG.PCW_IRQ_F2P_INTR {1} \
-CONFIG.PCW_MIO_16_PULLUP {disabled} CONFIG.PCW_MIO_16_SLEW {fast} \
-CONFIG.PCW_MIO_17_PULLUP {disabled} CONFIG.PCW_MIO_17_SLEW {fast} \
-CONFIG.PCW_MIO_18_PULLUP {disabled} CONFIG.PCW_MIO_18_SLEW {fast} \
-CONFIG.PCW_MIO_19_PULLUP {disabled} CONFIG.PCW_MIO_19_SLEW {fast} \
-CONFIG.PCW_MIO_20_PULLUP {disabled} CONFIG.PCW_MIO_20_SLEW {fast} \
-CONFIG.PCW_MIO_21_PULLUP {disabled} CONFIG.PCW_MIO_21_SLEW {fast} \
-CONFIG.PCW_MIO_22_PULLUP {disabled} CONFIG.PCW_MIO_22_SLEW {fast} \
-CONFIG.PCW_MIO_23_PULLUP {disabled} CONFIG.PCW_MIO_23_SLEW {fast} \
-CONFIG.PCW_MIO_24_PULLUP {disabled} CONFIG.PCW_MIO_24_SLEW {fast} \
-CONFIG.PCW_MIO_25_PULLUP {disabled} CONFIG.PCW_MIO_25_SLEW {fast} \
-CONFIG.PCW_MIO_26_PULLUP {disabled} CONFIG.PCW_MIO_26_SLEW {fast} \
-CONFIG.PCW_MIO_27_PULLUP {disabled} CONFIG.PCW_MIO_27_SLEW {fast} \
-CONFIG.PCW_MIO_28_PULLUP {disabled} CONFIG.PCW_MIO_28_SLEW {fast} \
-CONFIG.PCW_MIO_29_PULLUP {disabled} CONFIG.PCW_MIO_29_SLEW {fast} \
-CONFIG.PCW_MIO_30_PULLUP {disabled} CONFIG.PCW_MIO_30_SLEW {fast} \
-CONFIG.PCW_MIO_31_PULLUP {disabled} CONFIG.PCW_MIO_31_SLEW {fast} \
-CONFIG.PCW_MIO_32_PULLUP {disabled} CONFIG.PCW_MIO_32_SLEW {fast} \
-CONFIG.PCW_MIO_33_PULLUP {disabled} CONFIG.PCW_MIO_33_SLEW {fast} \
-CONFIG.PCW_MIO_34_PULLUP {disabled} CONFIG.PCW_MIO_34_SLEW {fast} \
-CONFIG.PCW_MIO_35_PULLUP {disabled} CONFIG.PCW_MIO_35_SLEW {fast} \
-CONFIG.PCW_MIO_36_PULLUP {disabled} CONFIG.PCW_MIO_36_SLEW {fast} \
-CONFIG.PCW_MIO_37_PULLUP {disabled} CONFIG.PCW_MIO_37_SLEW {fast} \
-CONFIG.PCW_MIO_38_PULLUP {disabled} CONFIG.PCW_MIO_38_SLEW {fast} \
-CONFIG.PCW_MIO_39_PULLUP {disabled} CONFIG.PCW_MIO_39_SLEW {fast} \
-CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 2.5V} CONFIG.PCW_QSPI_PERIPHERAL_CLKSRC {ARM PLL} \
-CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_QSPI_PERIPHERAL_FREQMHZ {125} \
-CONFIG.PCW_SD0_GRP_CD_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_IO {MIO 46} \
-CONFIG.PCW_SD0_GRP_WP_ENABLE {1} CONFIG.PCW_SD0_GRP_WP_IO {MIO 47} \
-CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {0} \
-CONFIG.PCW_SPI1_PERIPHERAL_ENABLE {1} CONFIG.PCW_SPI1_SPI1_IO {MIO 10 .. 15} \
-CONFIG.PCW_TTC0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART0_PERIPHERAL_ENABLE {1} \
-CONFIG.PCW_UART0_UART0_IO {MIO 14 .. 15} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} \
-CONFIG.PCW_UART1_UART1_IO {MIO 8 .. 9} CONFIG.PCW_UIPARAM_DDR_BUS_WIDTH {16 Bit} \
-CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41J256M16 RE-125} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} \
-CONFIG.PCW_USB0_RESET_ENABLE {1} CONFIG.PCW_USB0_RESET_IO {MIO 48} \
-CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_USE_M_AXI_GP1 {1} \
-CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_USE_S_AXI_HP1 {1} \
+  set_property -dict [ list \
+CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} \
+CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} \
+CONFIG.PCW_ENET0_PERIPHERAL_CLKSRC {ARM PLL} \
+CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_EN_CLK1_PORT {1} \
+CONFIG.PCW_EN_CLK2_PORT {1} \
+CONFIG.PCW_EN_CLK3_PORT {1} \
+CONFIG.PCW_EN_RST1_PORT {1} \
+CONFIG.PCW_EN_RST2_PORT {1} \
+CONFIG.PCW_EN_RST3_PORT {1} \
+CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {125} \
+CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {250} \
+CONFIG.PCW_FPGA3_PERIPHERAL_FREQMHZ {200} \
+CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} \
+CONFIG.PCW_I2C0_I2C0_IO {MIO 50 .. 51} \
+CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_IRQ_F2P_INTR {1} \
+CONFIG.PCW_MIO_16_PULLUP {disabled} \
+CONFIG.PCW_MIO_16_SLEW {fast} \
+CONFIG.PCW_MIO_17_PULLUP {disabled} \
+CONFIG.PCW_MIO_17_SLEW {fast} \
+CONFIG.PCW_MIO_18_PULLUP {disabled} \
+CONFIG.PCW_MIO_18_SLEW {fast} \
+CONFIG.PCW_MIO_19_PULLUP {disabled} \
+CONFIG.PCW_MIO_19_SLEW {fast} \
+CONFIG.PCW_MIO_20_PULLUP {disabled} \
+CONFIG.PCW_MIO_20_SLEW {fast} \
+CONFIG.PCW_MIO_21_PULLUP {disabled} \
+CONFIG.PCW_MIO_21_SLEW {fast} \
+CONFIG.PCW_MIO_22_PULLUP {disabled} \
+CONFIG.PCW_MIO_22_SLEW {fast} \
+CONFIG.PCW_MIO_23_PULLUP {disabled} \
+CONFIG.PCW_MIO_23_SLEW {fast} \
+CONFIG.PCW_MIO_24_PULLUP {disabled} \
+CONFIG.PCW_MIO_24_SLEW {fast} \
+CONFIG.PCW_MIO_25_PULLUP {disabled} \
+CONFIG.PCW_MIO_25_SLEW {fast} \
+CONFIG.PCW_MIO_26_PULLUP {disabled} \
+CONFIG.PCW_MIO_26_SLEW {fast} \
+CONFIG.PCW_MIO_27_PULLUP {disabled} \
+CONFIG.PCW_MIO_27_SLEW {fast} \
+CONFIG.PCW_MIO_28_PULLUP {disabled} \
+CONFIG.PCW_MIO_28_SLEW {fast} \
+CONFIG.PCW_MIO_29_PULLUP {disabled} \
+CONFIG.PCW_MIO_29_SLEW {fast} \
+CONFIG.PCW_MIO_30_PULLUP {disabled} \
+CONFIG.PCW_MIO_30_SLEW {fast} \
+CONFIG.PCW_MIO_31_PULLUP {disabled} \
+CONFIG.PCW_MIO_31_SLEW {fast} \
+CONFIG.PCW_MIO_32_PULLUP {disabled} \
+CONFIG.PCW_MIO_32_SLEW {fast} \
+CONFIG.PCW_MIO_33_PULLUP {disabled} \
+CONFIG.PCW_MIO_33_SLEW {fast} \
+CONFIG.PCW_MIO_34_PULLUP {disabled} \
+CONFIG.PCW_MIO_34_SLEW {fast} \
+CONFIG.PCW_MIO_35_PULLUP {disabled} \
+CONFIG.PCW_MIO_35_SLEW {fast} \
+CONFIG.PCW_MIO_36_PULLUP {disabled} \
+CONFIG.PCW_MIO_36_SLEW {fast} \
+CONFIG.PCW_MIO_37_PULLUP {disabled} \
+CONFIG.PCW_MIO_37_SLEW {fast} \
+CONFIG.PCW_MIO_38_PULLUP {disabled} \
+CONFIG.PCW_MIO_38_SLEW {fast} \
+CONFIG.PCW_MIO_39_PULLUP {disabled} \
+CONFIG.PCW_MIO_39_SLEW {fast} \
+CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 2.5V} \
+CONFIG.PCW_QSPI_PERIPHERAL_CLKSRC {ARM PLL} \
+CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_QSPI_PERIPHERAL_FREQMHZ {125} \
+CONFIG.PCW_SD0_GRP_CD_ENABLE {1} \
+CONFIG.PCW_SD0_GRP_CD_IO {MIO 46} \
+CONFIG.PCW_SD0_GRP_WP_ENABLE {1} \
+CONFIG.PCW_SD0_GRP_WP_IO {MIO 47} \
+CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {0} \
+CONFIG.PCW_SPI1_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_SPI1_SPI1_IO {MIO 10 .. 15} \
+CONFIG.PCW_TTC0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_UART0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_UART0_UART0_IO {MIO 14 .. 15} \
+CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_UART1_UART1_IO {MIO 8 .. 9} \
+CONFIG.PCW_UIPARAM_DDR_BUS_WIDTH {16 Bit} \
+CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41J256M16 RE-125} \
+CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_USB0_RESET_ENABLE {1} \
+CONFIG.PCW_USB0_RESET_IO {MIO 48} \
+CONFIG.PCW_USE_FABRIC_INTERRUPT {1} \
+CONFIG.PCW_USE_M_AXI_GP1 {1} \
+CONFIG.PCW_USE_S_AXI_HP0 {1} \
+CONFIG.PCW_USE_S_AXI_HP1 {1} \
  ] $processing_system7
 
   # Create instance: xadc, and set properties
-  set xadc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.1 xadc ]
-  set_property -dict [ list CONFIG.CHANNEL_ENABLE_VAUXP0_VAUXN0 {true} CONFIG.CHANNEL_ENABLE_VAUXP1_VAUXN1 {true} CONFIG.CHANNEL_ENABLE_VAUXP8_VAUXN8 {true} CONFIG.CHANNEL_ENABLE_VAUXP9_VAUXN9 {true} CONFIG.CHANNEL_ENABLE_VP_VN {true} CONFIG.EXTERNAL_MUX_CHANNEL {VP_VN} CONFIG.SEQUENCER_MODE {Off} CONFIG.SINGLE_CHANNEL_SELECTION {TEMPERATURE} CONFIG.XADC_STARUP_SELECTION {independent_adc}  ] $xadc
+  set xadc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.2 xadc ]
+  set_property -dict [ list \
+CONFIG.CHANNEL_ENABLE_VAUXP0_VAUXN0 {true} \
+CONFIG.CHANNEL_ENABLE_VAUXP1_VAUXN1 {true} \
+CONFIG.CHANNEL_ENABLE_VAUXP8_VAUXN8 {true} \
+CONFIG.CHANNEL_ENABLE_VAUXP9_VAUXN9 {true} \
+CONFIG.CHANNEL_ENABLE_VP_VN {true} \
+CONFIG.ENABLE_AXI4STREAM {false} \
+CONFIG.EXTERNAL_MUX_CHANNEL {VP_VN} \
+CONFIG.SEQUENCER_MODE {Off} \
+CONFIG.SINGLE_CHANNEL_SELECTION {TEMPERATURE} \
+CONFIG.XADC_STARUP_SELECTION {independent_adc} \
+ ] $xadc
 
   # Create instance: xlconstant, and set properties
   set xlconstant [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant ]
@@ -273,7 +396,67 @@ CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_USE_S_AXI_HP1 {1} \
   create_bd_addr_seg -range 0x10000 -offset 0x83C00000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs xadc/s_axi_lite/Reg] SEG_xadc_wiz_0_Reg
   create_bd_addr_seg -range 0x20000000 -offset 0x0 [get_bd_addr_spaces S_AXI_HP0] [get_bd_addr_segs processing_system7/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
   create_bd_addr_seg -range 0x20000000 -offset 0x0 [get_bd_addr_spaces S_AXI_HP1] [get_bd_addr_segs processing_system7/S_AXI_HP1/HP1_DDR_LOWOCM] SEG_processing_system7_0_HP1_DDR_LOWOCM
-  
+
+  # Perform GUI Layout
+  regenerate_bd_layout -layout_string {
+   guistr: "# # String gsaved with Nlview 6.5.5  2015-06-26 bk=1.3371 VDI=38 GEI=35 GUI=JA:1.8
+#  -string -flagsOSRD
+preplace port FCLK_CLK3 -pg 1 -y 250 -defaultsOSRD
+preplace port S_AXI_HP1 -pg 1 -y 160 -defaultsOSRD
+preplace port DDR -pg 1 -y 30 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 850 -defaultsOSRD
+preplace port Vaux0 -pg 1 -y 870 -defaultsOSRD
+preplace port M_AXI_GP0_ACLK -pg 1 -y 180 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 270 -defaultsOSRD
+preplace port Vaux1 -pg 1 -y 890 -defaultsOSRD
+preplace port S_AXI_HP0_aclk -pg 1 -y 220 -defaultsOSRD
+preplace port M_AXI_GP0 -pg 1 -y 90 -defaultsOSRD
+preplace port FCLK_RESET1_N -pg 1 -y 290 -defaultsOSRD
+preplace port S_AXI_HP1_aclk -pg 1 -y 240 -defaultsOSRD
+preplace port FCLK_RESET3_N -pg 1 -y 330 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 50 -defaultsOSRD
+preplace port FCLK_RESET2_N -pg 1 -y 310 -defaultsOSRD
+preplace port FCLK_CLK0 -pg 1 -y 190 -defaultsOSRD
+preplace port FCLK_CLK1 -pg 1 -y 210 -defaultsOSRD
+preplace port Vaux8 -pg 1 -y 910 -defaultsOSRD
+preplace port FCLK_CLK2 -pg 1 -y 230 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 930 -defaultsOSRD
+preplace port S_AXI_HP0 -pg 1 -y 140 -defaultsOSRD
+preplace inst xlconstant -pg 1 -lvl 1 -y 620 -defaultsOSRD
+preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 460 -defaultsOSRD
+preplace inst processing_system7 -pg 1 -lvl 2 -y 180 -defaultsOSRD
+preplace inst xadc -pg 1 -lvl 2 -y 900 -defaultsOSRD
+preplace inst proc_sys_reset -pg 1 -lvl 2 -y 620 -defaultsOSRD
+preplace netloc processing_system7_0_ddr 1 2 1 N
+preplace netloc Vaux0_1 1 0 2 NJ 870 N
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 240 390 720
+preplace netloc s_axi_hp0_1 1 0 2 NJ 140 N
+preplace netloc processing_system7_0_fclk_reset2_n 1 2 1 N
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 N
+preplace netloc xlconstant_dout 1 1 1 NJ
+preplace netloc processing_system7_0_fclk_reset1_n 1 2 1 N
+preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 260 530 710
+preplace netloc Vp_Vn_1 1 0 2 NJ 850 N
+preplace netloc xadc_wiz_0_ip2intc_irpt 1 1 2 230 730 710
+preplace netloc s_axi_hp0_aclk 1 0 2 NJ 220 N
+preplace netloc s_axi_hp1_1 1 0 2 NJ 160 N
+preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 250 710 710
+preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 260 720 730
+preplace netloc Vaux8_1 1 0 2 NJ 910 N
+preplace netloc s_axi_hp1_aclk 1 0 2 NJ 240 N
+preplace netloc processing_system7_0_fclk_reset0_n 1 2 1 N
+preplace netloc processing_system7_0_fixed_io 1 2 1 N
+preplace netloc Vaux9_1 1 0 2 NJ 930 N
+preplace netloc processing_system7_0_fclk_clk0 1 2 1 N
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 260 1070 720
+preplace netloc Vaux1_1 1 0 2 NJ 890 N
+preplace netloc processing_system7_0_fclk_clk1 1 2 1 N
+preplace netloc m_axi_gp0_aclk_1 1 0 2 NJ 180 N
+preplace netloc processing_system7_0_fclk_clk2 1 2 1 N
+preplace netloc processing_system7_0_fclk_clk3 1 1 2 220 380 730
+levelinfo -pg 1 -10 150 490 780 -top -20 -bot 1180
+",
+}
 
   # Restore current instance
   current_bd_instance $oldCurInst
