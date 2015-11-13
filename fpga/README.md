@@ -16,9 +16,9 @@
 
 # Build process
 
-Xilinx Vivado 2015.2 (including SDK) is required. If installed at the default location, then the next command will properly configure system variables:
+Xilinx Vivado 2015.3 (including SDK) is required. If installed at the default location, then the next command will properly configure system variables:
 ```bash
-. /opt/Xilinx/Vivado/2015.2/settings64.sh
+. /opt/Xilinx/Vivado/2015.3/settings64.sh
 ```
 
 The default mode for building the FPGA is to run a TCL script inside Vivado. Non project mode is used, to avoid the generation of project files, which are too many and difficult to handle. This allows us to only place source files and scripts under version control.
