@@ -1,31 +1,91 @@
+##
+# $Id: $
 #
-#  Red Pitaya Api example Makefile
+# (c) Red Pitaya  http://www.redpitaya.com
+#
+# Library librpapp project file. To build the library run:
+# 'make all'
+#
+# This project file is written for GNU/Make software. For more details please 
+# visit: http://www.gnu.org/software/make/manual/make.html
+# GNU Compiler Collection (GCC) tools are used for the compilation and linkage. 
+# For the details about the usage and building please visit:
+# http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-#Define header includes
-RP_PATH_INCLUDE ?= -I../../../rpbase/ -I../../../include
+# Versioning system
+VERSION ?= 0.00-0000
+REVISION ?= devbuild
 
-#Define library includes
-RP_LIB_INCLUDE ?= -L ../../../lib -lm -lpthread -lrp
+# Extensions
+CPPEXT   = .c
+CXXEXT   = .cpp
+OBJEXT   = .o
 
-#Cross compiler definition
-CC = $(CROSS_COMPILE)gcc
+# Input/Output directories
 
-#Flags
-CFLAGS = -g -std=gnu99 -Wall -Werror
+OBJECTS_DIR = ../obj
+INSTALL_DIR ?= .
+SOURCE_DIR  = .
+OUTPUT_DIR  = ../../../lib
 
-#Objects
-OBJECTS = common.o impedance_analyzer.o impApp.o
-#Target file
-TARGET = imp_test
+# Library name
+TARGET=$(OUTPUT_DIR)/librpapp_lcr.so
 
+# List of compiled object files
+OBJECTS =	common.o \
+		impApp.o \
+		impedance_analyzer.o
+
+OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
+
+# GCC compiling & linking flags
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
+CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -L$(OUTPUT_DIR)
+CFLAGS += -I../../../include -I../../../rpbase/src
+LDFLAGS=-shared -Wl,--version-script=exportmap
+
+# Red Pitaya common SW directory
+SHARED=../../shared/
+
+# Additional libraries which needs to be dynamically linked to the executable
+# -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
+LIBS=-lm -lpthread -lrp
+
+# Main GCC executable (used for compiling and linking)
+CC=$(CROSS_COMPILE)gcc
+
+# Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
+# variable.
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS)
-	$(CC) -o $@ $^ $(CFLAGS) $(RP_LIB_INCLUDE)
+# Target with compilation rules to compile object from source files.
+# It applies to all files ending with .o. During partial building only new object
+# files are created for the source files (.c) which have newer timestamp then 
+# objects (.o) files.
+$(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
 
-%.o: %.c
-	$(CC) -c $(CFLAGS) $(RP_PATH_INCLUDE) $< -o $@
+# Makefile target with rules how to link executable for each target from $(TARGET)
+# list.
+$(TARGET): $(OBJS)
+	mkdir -p $(OUTPUT_DIR)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LDFLAGS)
 
+# Version header for traceability
+version.h:
+	cp $(SHARED)/include/redpitaya/version.h . 
+
+# Clean target - when called it cleans all object files and executables.
 clean:
-	-$(RM) $(TARGET) *.o ~* 
+	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
+	rm -rf $(INSTALL_DIR)/lib
+
+# Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
+# executables to that location.
+install:
+	mkdir -p $(INSTALL_DIR)/lib
+	mkdir -p $(INSTALL_DIR)/include
+	cp  $(TARGET) $(INSTALL_DIR)/lib
+#	cp  rpApp.h   $(INSTALL_DIR)/include/redpitaya
