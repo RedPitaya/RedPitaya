@@ -55,10 +55,10 @@ assign sys_en = sys_wen | sys_ren;
 
 always_ff @(posedge clk)
 if (!rstn) begin
-  sys_err <= 1'b0 ;
-  sys_ack <= 1'b0 ;
+  sys_err <= 1'b1;
+  sys_ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0 ;
+  sys_err <= 1'b0;
   sys_ack <= sys_en;
 end
 

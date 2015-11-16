@@ -57,15 +57,17 @@ end else if (sys_wen) begin
   if (sys_addr[19:0]==20'h5C)   dac_cfg_sum[1] <= sys_wdata[DWS-1:0];
 end
 
+always @(posedge clk)
+if (!rstn)  sys_err <= 1'b1;
+else        sys_err <= 1'b0;
+
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
 always @(posedge clk)
 if (!rstn) begin
-  sys_err <= 1'b0;
   sys_ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0;
   sys_ack <= sys_en;
   casez (sys_addr[5-1:0])
     // ADC calibration

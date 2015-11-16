@@ -105,7 +105,7 @@ assign id_value[ 3:0] =  4'h1; // board type   1 - release 1
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (!rstn) begin
   digital_loop <= '0;
   // LED
@@ -126,16 +126,17 @@ end else if (sys_wen) begin
   if (sys_addr[19:0]==20'h30)   led_o    <= sys_wdata[DWL-1:0];
 end
 
-wire sys_en;
+always_ff @(posedge clk)
+if (!rstn)  sys_err <= 1'b1;
+else        sys_err <= 1'b0;
+
+logic sys_en;
 assign sys_en = sys_wen | sys_ren;
 
-always @(posedge clk)
+always_ff @(posedge clk)
 if (!rstn) begin
-  sys_err <= 1'b0;
   sys_ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0;
-
   casez (sys_addr[19:0])
     // ID
     20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {                id_value          }; end
