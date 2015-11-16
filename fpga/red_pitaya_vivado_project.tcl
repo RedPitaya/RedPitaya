@@ -38,7 +38,7 @@ generate_target all [get_files    system.bd]
 # 3. constraints
 ################################################################################
 
-read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
+read_verilog                      ./project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 add_files                         $path_rtl/axi_master.v
 add_files                         $path_rtl/axi_slave.v
