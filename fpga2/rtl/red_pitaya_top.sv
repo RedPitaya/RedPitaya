@@ -274,7 +274,7 @@ red_pitaya_ps ps (
   .sys_ack       (ps_sys_ack  ),
   // AXI masters
   // TODO, handle this bitsize change elsewhere
-  .axi1_tdata  (acq_dat[1]<<<2),  .axi0_tdata  (acq_dat[0]<<<2),
+  .axi1_tdata  (16'(acq_dat[1]<<<2)),  .axi0_tdata  (16'(acq_dat[0]<<<2)),
   .axi1_tlast  (acq_lst[1]),  .axi0_tlast  (acq_lst[0]),
   .axi1_tvalid (acq_vld[1]),  .axi0_tvalid (acq_vld[0]),
   .axi1_tready (acq_rdy[1]),  .axi0_tready (acq_rdy[0])
