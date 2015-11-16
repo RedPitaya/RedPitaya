@@ -20,14 +20,14 @@
 #include "common.h"
 #include "generate.h"
 
-static volatile generate_regset_t (*regset)[RP_MNG];
+static volatile gen_regset_t (*regset)[RP_MNG];
 
-int generate_Init() {
+int gen_Init() {
     cmn_Map((GENERATE_BASE_SIZE * RP_MNG), GENERATE_BASE_ADDR, (void **) &regset);
     return RP_OK;
 }
 
-int generate_Release() {
+int gen_Release() {
     cmn_Unmap(GENERATE_BASE_SIZE * RP_MNG, (void **) &regset);
     return RP_OK;
 }

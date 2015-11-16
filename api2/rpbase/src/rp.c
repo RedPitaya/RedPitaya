@@ -19,7 +19,7 @@
 #include "common.h"
 #include "analog.h"
 #include "housekeeping.h"
-#include "oscilloscope.h"
+#include "acquire.h"
 #include "analog.h"
 #include "calib.h"
 #include "generate.h"
@@ -36,13 +36,15 @@ int rp_Init()
     analog_Init();
     calib_Init();
 	
-    ECHECK(hk_Init());
-    ECHECK(generate_Init());
-    ECHECK(osc_Init());
+    hk_Init();
+    for (int unsigned i=0; i<RP_MNG; i++)
+        gen_Init(i);
+    for (int unsigned i=0; i<RP_MNA; i++)
+        acq_Init(i);
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
-    ECHECK(rp_Reset());
+    rp_Reset();
 
     return RP_OK;
 }
@@ -51,9 +53,11 @@ int rp_Release()
 {
     analog_Release();
     calib_Release();
-    ECHECK(osc_Release())
-    ECHECK(generate_Release());
-    ECHECK(hk_Release());
+    for (int unsigned i=0; i<RP_MNA; i++)
+        acq_Release(i);
+    for (int unsigned i=0; i<RP_MNG; i++)
+        gen_Release(i);
+    hk_Release();
     // TODO: Place other module releasing here (in reverse order)
     cmn_Release();
     return RP_OK;
@@ -63,8 +67,10 @@ int rp_Reset()
 {
     ECHECK(rp_DpinReset());
     ECHECK(rp_AOpinReset());
-    ECHECK(rp_GenReset());
-    ECHECK(rp_AcqReset());
+    for (int unsigned i=0; i<RP_MNG; i++)
+        rp_GenReset(i);
+    for (int unsigned i=0; i<RP_MNA; i++)
+        rp_AcqReset(i);
     // TODO: Place other module resetting here (in reverse order)
     return 0;
 }

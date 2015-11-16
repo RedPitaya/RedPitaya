@@ -79,9 +79,9 @@ typedef struct {
     int32_t  table[(1<<RP_GEN_CWM)];
     // empty space
     uint32_t reserved1[GENERATE_BASE_SIZE - (2<<RP_GEN_CWM)];
-} generate_regset_t;
+} gen_regset_t;
 
-int generate_Init();
-int generate_Release();
+int gen_Init();
+int gen_Release();
 
 #endif //__GENERATE_H

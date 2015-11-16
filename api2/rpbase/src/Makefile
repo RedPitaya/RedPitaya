@@ -36,7 +36,7 @@ OBJECTS =	common.o \
 		analog.o \
 		housekeeping.o \
 		calib.o \
-		oscilloscope.o \
+		acquire.o \
 		generate.o \
 		rp.o
 
