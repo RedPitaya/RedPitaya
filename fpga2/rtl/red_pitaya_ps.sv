@@ -27,50 +27,50 @@
 
 module red_pitaya_ps (
   // PS peripherals
-  inout  logic [ 54-1: 0] FIXED_IO_mio       ,
-  inout  logic            FIXED_IO_ps_clk    ,
-  inout  logic            FIXED_IO_ps_porb   ,
-  inout  logic            FIXED_IO_ps_srstb  ,
-  inout  logic            FIXED_IO_ddr_vrn   ,
-  inout  logic            FIXED_IO_ddr_vrp   ,
+  inout  logic [ 54-1:0] FIXED_IO_mio       ,
+  inout  logic           FIXED_IO_ps_clk    ,
+  inout  logic           FIXED_IO_ps_porb   ,
+  inout  logic           FIXED_IO_ps_srstb  ,
+  inout  logic           FIXED_IO_ddr_vrn   ,
+  inout  logic           FIXED_IO_ddr_vrp   ,
   // DDR
-  inout  logic [ 15-1: 0] DDR_addr           ,
-  inout  logic [  3-1: 0] DDR_ba             ,
-  inout  logic            DDR_cas_n          ,
-  inout  logic            DDR_ck_n           ,
-  inout  logic            DDR_ck_p           ,
-  inout  logic            DDR_cke            ,
-  inout  logic            DDR_cs_n           ,
-  inout  logic [  4-1: 0] DDR_dm             ,
-  inout  logic [ 32-1: 0] DDR_dq             ,
-  inout  logic [  4-1: 0] DDR_dqs_n          ,
-  inout  logic [  4-1: 0] DDR_dqs_p          ,
-  inout  logic            DDR_odt            ,
-  inout  logic            DDR_ras_n          ,
-  inout  logic            DDR_reset_n        ,
-  inout  logic            DDR_we_n           ,
+  inout  logic [ 15-1:0] DDR_addr           ,
+  inout  logic [  3-1:0] DDR_ba             ,
+  inout  logic           DDR_cas_n          ,
+  inout  logic           DDR_ck_n           ,
+  inout  logic           DDR_ck_p           ,
+  inout  logic           DDR_cke            ,
+  inout  logic           DDR_cs_n           ,
+  inout  logic [  4-1:0] DDR_dm             ,
+  inout  logic [ 32-1:0] DDR_dq             ,
+  inout  logic [  4-1:0] DDR_dqs_n          ,
+  inout  logic [  4-1:0] DDR_dqs_p          ,
+  inout  logic           DDR_odt            ,
+  inout  logic           DDR_ras_n          ,
+  inout  logic           DDR_reset_n        ,
+  inout  logic           DDR_we_n           ,
   // system signals
-  input  logic            clk                ,
-  input  logic            rstn               ,
-  output logic [  4-1: 0] fclk_clk_o         ,
-  output logic [  4-1: 0] fclk_rstn_o        ,
+  input  logic           clk                ,
+  input  logic           rstn               ,
+  output logic [  4-1:0] fclk_clk_o         ,
+  output logic [  4-1:0] fclk_rstn_o        ,
   // XADC
-  input  logic  [ 5-1: 0] vinp_i             ,  // voltages p
-  input  logic  [ 5-1: 0] vinn_i             ,  // voltages n
+  input  logic  [ 5-1:0] vinp_i             ,  // voltages p
+  input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // system read/write channel
-  output logic [ 32-1: 0] sys_addr ,  // system read/write address
-  output logic [ 32-1: 0] sys_wdata,  // system write data
-  output logic [  4-1: 0] sys_sel  ,  // system write byte select
-  output logic            sys_wen  ,  // system write enable
-  output logic            sys_ren  ,  // system read enable
-  input  logic [ 32-1: 0] sys_rdata,  // system read data
-  input  logic            sys_err  ,  // system error indicator
-  input  logic            sys_ack  ,  // system acknowledge signal
+  output logic [ 32-1:0] sys_addr ,  // system read/write address
+  output logic [ 32-1:0] sys_wdata,  // system write data
+  output logic [  4-1:0] sys_sel  ,  // system write byte select
+  output logic           sys_wen  ,  // system write enable
+  output logic           sys_ren  ,  // system read enable
+  input  logic [ 32-1:0] sys_rdata,  // system read data
+  input  logic           sys_err  ,  // system error indicator
+  input  logic           sys_ack  ,  // system acknowledge signal
   // AXI-4 stream
-  input  logic [2*8-1: 0] axi1_tdata , axi0_tdata ,  // stream data
-  input  logic            axi1_tlast , axi0_tlast ,  // stream last
-  input  logic            axi1_tvalid, axi0_tvalid,  // stream valid
-  output logic            axi1_tready, axi0_tready   // stream ready
+  input  logic [2*8-1:0] axi1_tdata , axi0_tdata ,  // stream data
+  input  logic           axi1_tlast , axi0_tlast ,  // stream last
+  input  logic           axi1_tvalid, axi0_tvalid,  // stream valid
+  output logic           axi1_tready, axi0_tready   // stream ready
 );
 
 ////////////////////////////////////////////////////////////////////////////////
