@@ -72,7 +72,9 @@ assign sum = acu + dat;
 assign sub = sum - rng;
 
 // PDM output
-assign pdm[i] = ena & (~sub[DWC] | ~|sub[DWC-1:0]);
+always_ff @(posedge clk)
+if (~rstn)  pdm[i] <= 1'b0;
+else        pdm[i] <= ena & (~sub[DWC] | ~|sub[DWC-1:0]);
 
 end: for_chn
 endgenerate
