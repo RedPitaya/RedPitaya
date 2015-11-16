@@ -343,6 +343,8 @@ end
 // output stream
 ////////////////////////////////////////////////////////////////////////////////
 
+assign std_rdy = sto_rdy | ~sto_vld;
+
 // output valid
 always @(posedge clk)
 if (~rstn) begin
