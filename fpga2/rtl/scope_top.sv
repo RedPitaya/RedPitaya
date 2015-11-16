@@ -95,7 +95,7 @@ logic        [ 32-1:0] cfg_dly;  // delay value
 logic        [ 32-1:0] sts_dly;  // delay counter
 // edge detection configuration
 logic signed [DWI-1:0] cfg_lvl;  // level
-logic signed [DWI-1:0] cfg_hst;  // hystheresis
+logic        [DWI-1:0] cfg_hst;  // hystheresis
 // decimation configuration
 logic                  cfg_avg;  // averaging enable
 logic        [DWC-1:0] cfg_dec;  // decimation factor
