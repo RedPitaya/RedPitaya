@@ -72,12 +72,6 @@ module scope_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-// filter configuration
-logic                  cfg_byp;  // bypass
-logic signed [ 18-1:0] cfg_faa;  // AA coefficient
-logic signed [ 25-1:0] cfg_fbb;  // BB coefficient
-logic signed [ 25-1:0] cfg_fkk;  // KK coefficient
-logic signed [ 25-1:0] cfg_fpp;  // PP coefficient
 
 // stream from filter
 logic signed [DWI-1:0] stf_dat;  // data
@@ -93,20 +87,30 @@ logic                  ctl_rst;  // synchronous clear
 logic                  ctl_acq;  // start acquire run
 // status
 logic                  sts_acq;  // acquire status
-logic                  sts_trg;  // trigger status
+// configuration
+logic                  cfg_rng;  // range select
+// trigger
+logic signed [TWS-1:0] cfg_sel;  // trigger select
+logic        [ 32-1:0] cfg_dly;  // delay value
 logic        [ 32-1:0] sts_dly;  // delay counter
+// edge detection configuration
+logic signed [DWI-1:0] cfg_lvl;  // level
+logic signed [DWI-1:0] cfg_hst;  // hystheresis
 // decimation configuration
 logic                  cfg_avg;  // averaging enable
 logic        [DWC-1:0] cfg_dec;  // decimation factor
 logic        [DWS-1:0] cfg_shr;  // shift right
-// edge detection configuration
-logic signed [DWI-1:0] cfg_lvl;  // level
-logic signed [DWI-1:0] cfg_hst;  // hystheresis
+// filter configuration
+logic                  cfg_byp;  // bypass
+logic signed [ 18-1:0] cfg_faa;  // AA coefficient
+logic signed [ 25-1:0] cfg_fbb;  // BB coefficient
+logic signed [ 25-1:0] cfg_fkk;  // KK coefficient
+logic signed [ 25-1:0] cfg_fpp;  // PP coefficient
+
 // trigger
-logic signed [TWS-1:0] cfg_sel;  // trigger select
+logic                  sts_trg;  // trigger status
 logic                  trg_mux;  // multiplexed trigger signal
 
-logic signed  [32-1:0] cfg_dly;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -130,38 +134,38 @@ always @(posedge clk)
 if (~rstn) begin
   // control
   ctl_acq <= 1'b0;
-    // filter bypass
-  cfg_byp <= '0;
-  // dacimation
-  cfg_avg <= '0;
-  cfg_dec <= '0;
-  cfg_shr <= '0;
-  // edge detection
-  cfg_lvl <= '0;
-  cfg_hst <= '0;
+  // configuration
+  cfg_rng <= 1'b0;
   // trigger
   cfg_sel <= '0;
   cfg_dly <= '0;
-  // filter
+  // edge detection
+  cfg_lvl <= '0;
+  cfg_hst <= '0;
+  // filter/dacimation
+  cfg_byp <= '0;
+  cfg_avg <= '0;
+  cfg_dec <= '0;
+  cfg_shr <= '0;
   cfg_faa <= '0;
   cfg_fbb <= '0;
   cfg_fkk <= 25'hFFFFFF;
   cfg_fpp <= '0;
 end else begin
   if (sys_wen) begin
-    // filter bypass
-    if (sys_addr[6-1:0]==6'h04)   cfg_byp <= sys_wdata[      0];
-    // dacimation
-    if (sys_addr[6-1:0]==6'h08)   cfg_avg <= sys_wdata[      0];
-    if (sys_addr[6-1:0]==6'h0c)   cfg_dec <= sys_wdata[DWC-1:0];
-    if (sys_addr[6-1:0]==6'h10)   cfg_shr <= sys_wdata[DWS-1:0];
-    // edge detection
-    if (sys_addr[6-1:0]==6'h14)   cfg_lvl <= sys_wdata[DWI-1:0];
-    if (sys_addr[6-1:0]==6'h18)   cfg_hst <= sys_wdata[DWI-1:0];
+    // configuration
+    if (sys_addr[6-1:0]==6'h04)   cfg_rng <= sys_wdata[      0];
     // trigger
-    if (sys_addr[6-1:0]==6'h1C)   cfg_sel <= sys_wdata[TWS-1:0];
-    if (sys_addr[6-1:0]==6'h20)   cfg_dly <= sys_wdata[ 32-1:0];
-    // filter
+    if (sys_addr[6-1:0]==6'h08)   cfg_sel <= sys_wdata[TWS-1:0];
+    if (sys_addr[6-1:0]==6'h0c)   cfg_dly <= sys_wdata[ 32-1:0];
+    // edge detection
+    if (sys_addr[6-1:0]==6'h10)   cfg_lvl <= sys_wdata[DWI-1:0];
+    if (sys_addr[6-1:0]==6'h14)   cfg_hst <= sys_wdata[DWI-1:0];
+    // filter/dacimation
+    if (sys_addr[6-1:0]==6'h20)   cfg_byp <= sys_wdata[      0];
+    if (sys_addr[6-1:0]==6'h24)   cfg_avg <= sys_wdata[      0];
+    if (sys_addr[6-1:0]==6'h28)   cfg_dec <= sys_wdata[DWC-1:0];
+    if (sys_addr[6-1:0]==6'h2c)   cfg_shr <= sys_wdata[DWS-1:0];
     if (sys_addr[6-1:0]==6'h30)   cfg_faa <= sys_wdata[ 18-1:0];
     if (sys_addr[6-1:0]==6'h34)   cfg_fbb <= sys_wdata[ 25-1:0];
     if (sys_addr[6-1:0]==6'h38)   cfg_fkk <= sys_wdata[ 25-1:0];
@@ -181,19 +185,19 @@ begin
     // control/status
     6'h00 : sys_rdata <= {{32-  3{1'b0}}, sts_acq,
                                           sts_trg, 1'b0};
-    // filter bypass
-    6'h04 : sys_rdata <= {{32-  1{1'b0}}, cfg_byp};
-    // decimation
-    6'h08 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
-    6'h0c : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
-    6'h10 : sys_rdata <= {{32-DWS{1'b0}}, cfg_shr};
-    // edge detection
-    6'h14 : sys_rdata <=                  cfg_lvl ;
-    6'h18 : sys_rdata <=                  cfg_hst ;
+    // configuration
+    6'h04 : sys_rdata <= {{32-  1{1'b0}}, cfg_rng};
     // trigger
-    6'h1c : sys_rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
-    6'h20 : sys_rdata <=                  cfg_dly ;
-    // filter
+    6'h08 : sys_rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
+    6'h0c : sys_rdata <=                  cfg_dly ;
+    // edge detection
+    6'h10 : sys_rdata <=                  cfg_lvl ;
+    6'h14 : sys_rdata <=                  cfg_hst ;
+    // filter/decimation
+    6'h20 : sys_rdata <= {{32-  1{1'b0}}, cfg_byp};
+    6'h24 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
+    6'h28 : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
+    6'h2c : sys_rdata <= {{32-DWS{1'b0}}, cfg_shr};
     6'h30 : sys_rdata <=                  cfg_faa ;
     6'h34 : sys_rdata <=                  cfg_fbb ;
     6'h38 : sys_rdata <=                  cfg_fkk ;
