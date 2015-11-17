@@ -182,7 +182,7 @@ UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
 u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(ENVTOOLS_CFG)
 
 $(UBOOT_TAR): | $(DL)
-	curl -L $(UBOOT_URL) -o $@
+	wget -N $(UBOOT_URL) -O $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
@@ -209,7 +209,7 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 ################################################################################
 
 $(LINUX_TAR): | $(DL)
-	curl -L $(LINUX_URL) -o $@
+	wget -N $(LINUX_URL) -O $@
 
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
@@ -229,7 +229,7 @@ $(LINUX): $(LINUX_DIR)
 ################################################################################
 
 $(DTREE_TAR): | $(DL)
-	curl -L $(DTREE_URL) -o $@
+	rsync $(DTREE_URL) $@
 
 $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
@@ -320,14 +320,14 @@ BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 .PHONY: ecosystem nginx 
 
 $(WEBSOCKETPP_TAR): | $(DL)
-	curl -L $(WEBSOCKETPP_URL) -o $@
+	wget -N $(WEBSOCKETPP_URL) -O $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
 $(CRYPTOPP_TAR): | $(DL)
-	curl -L $(CRYPTOPP_URL) -o $@
+	wget -N $(CRYPTOPP_URL) -O $@
 
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	mkdir -p $@
@@ -335,7 +335,7 @@ $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	patch -d $@ -p1 < patches/cryptopp.patch
 
 $(LIBJSON_TAR): | $(DL)
-	curl -L $(LIBJSON_URL) -o $@
+	wget -N $(LIBJSON_URL) -O $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
@@ -343,7 +343,7 @@ $(LIBJSON_DIR): $(LIBJSON_TAR)
 	patch -d $@ -p1 < patches/libjson.patch
 
 $(LUANGINX_TAR): | $(DL)
-	curl -L $(LUANGINX_URL) -o $@
+	wget -N $(LUANGINX_URL) -O $@
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
@@ -351,7 +351,7 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
 $(NGINX_TAR): | $(DL)
-	curl -L $(NGINX_URL) -o $@
+	wget -N $(NGINX_URL) -O $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
@@ -385,7 +385,7 @@ SCPI_PARSER_DIR = $(SCPI_SERVER_DIR)/scpi-parser
 .PHONY: scpi
 
 $(SCPI_PARSER_TAR): | $(DL)
-	curl -L $(SCPI_PARSER_URL) -o $@
+	wget -N $(SCPI_PARSER_URL) -O $@
 
 $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	mkdir -p $@
