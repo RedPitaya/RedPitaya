@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <complex.h>
 #include <math.h>
 
 #include "impedance_analyzer.h"
@@ -167,7 +166,7 @@ int imp_Sweep(float *ampl_z_out){
 	int i = 0;
 
 	/* Forward memory allocation */
-	float complex *Z 		= (float complex *)malloc((averaging + 1) * sizeof(float complex));
+	float _Complex *Z 		= (float _Complex *)malloc((averaging + 1) * sizeof(float _Complex));
 	float **analysis_data 	= (float **)multiDimensionVector(acq_size);
 	float **z_avg = (float **)multiDimensionVector(acq_size);
 
@@ -252,7 +251,7 @@ int imp_Sweep(float *ampl_z_out){
 			}else if(frequency[i] >= 20){
 				decimation = IMP_DEC_8192;
 				api_decimation = RP_DEC_8192;
-			}else if(frequency[i] >= 2.5){
+			}else{
 				decimation = IMP_DEC_65536;
 				api_decimation = RP_DEC_65536;
 			}
@@ -357,7 +356,7 @@ float imp_data_analysis(float **data,
 						uint32_t size, 
 						float dc_bias, 
 						uint32_t r_shunt, 
-						float complex *Z, 
+						float _Complex *Z, 
 						float w_out, 
 						int decimation){
 
@@ -463,7 +462,7 @@ void *imp_MainThread(){
 	if(calib_mode == IMP_CALIB_OPEN){
 		calib_file = fopen("/tmp/imp_data/calibration/calib_open", "w+");
 
-	}else if(calib_mode == IMP_CALIB_SHORT){
+	}else{
 		calib_file = fopen("/tmp/imp_data/calibration/calib_short", "w+");
 	}
 
@@ -507,6 +506,8 @@ int imp_Run(){
 	
 	return RP_OK;
 }
+
+#if 0
 
 int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 
@@ -553,6 +554,8 @@ int imp_Interpolate(float *calib_data, imp_calib_t calib_mode){
 
 	return RP_OK;
 }
+
+#endif
 
 /* Finds the index of the given interval number 
  * between an array of z amplitudes. Indexes are calibration
@@ -781,10 +784,11 @@ int imp_GetUserWait(bool *user_wait){
 	return RP_OK;
 }
 
+
 int main(int argc, char **argv){
 
-	imp_Init();
-	imp_Run();
-	imp_Release();
+	//imp_Init();
+	//imp_Run();
+	//imp_Release();
 	return 0;
 }
