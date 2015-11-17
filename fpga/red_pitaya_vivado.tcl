@@ -56,7 +56,7 @@ write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 # template
 #read_verilog                      $path_rtl/...
 
-read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
+read_verilog                      project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 read_verilog                      $path_rtl/axi_master.v
 read_verilog                      $path_rtl/axi_slave.v
