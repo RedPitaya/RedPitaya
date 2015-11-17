@@ -15,7 +15,10 @@
 #ifndef __IMPEDANCEANALYZER_H
 #define __IMPEDANCEANALYZER_H
 
-#include <complex.h>
+#ifndef __cplusplus 
+#include <complex.h> 
+#endif
+
 #include "redpitaya/rp.h"
 
 #define REPEAT do
@@ -102,7 +105,7 @@ int imp_SafeThreadAcqData(rp_channel_t channel,
 int imp_Sweep(float *ampl_z_out);
 
 float imp_data_analysis(float **data, uint32_t size, float dc_bias, 
-		uint32_t r_shunt, float complex *Z, float w_out, int decimation);
+		uint32_t r_shunt, float _Complex *Z, float w_out, int decimation);
 
 /* Helper functions */
 uint32_t imp_shuntAlgorithm(float z_ampl);
