@@ -2,7 +2,7 @@
 # setup Xilinx Vivado FPGA tools
 ################################################################################
 
-. /opt/Xilinx/Vivado/2015.3/settings64.sh
+. /opt/Xilinx/Vivado/2015.2/settings64.sh
 
 ################################################################################
 # setup Linaro toolchain
@@ -18,8 +18,7 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 # this path is also used by some other downloads
 ################################################################################
 
-#export BR2_DL_DIR=$HOME/Workplace/buildroot/dl
-export BR2_DL_DIR=/usr/src/others/TARBALLS
+export BR2_DL_DIR=$HOME/Workplace/buildroot/dl
 
 ################################################################################
 # common make procedure, should not be run by this script
