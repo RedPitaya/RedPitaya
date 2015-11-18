@@ -9,8 +9,9 @@
 # define paths
 ################################################################################
 
-set path_rtl rtl
+set path_bd  bd
 set path_ip  ip
+set path_rtl rtl
 set path_sdc sdc
 
 set path_out out
@@ -56,19 +57,22 @@ write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 # template
 #read_verilog                      $path_rtl/...
 
-read_verilog                      project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v
+read_verilog                      $path_bd/system/hdl/system_wrapper.v
 
 read_verilog                      $path_rtl/axi_master.v
+read_verilog                      $path_rtl/axi_pc2leds.v
 read_verilog                      $path_rtl/axi_slave.v
 read_verilog                      $path_rtl/axi_wr_fifo.v
 
+read_verilog                      $path_rtl/pwm.sv
+
 read_verilog                      $path_rtl/red_pitaya_ams.v
-read_verilog                      $path_rtl/red_pitaya_asg_ch.v
 read_verilog                      $path_rtl/red_pitaya_asg.v
+read_verilog                      $path_rtl/red_pitaya_asg_ch.v
 read_verilog                      $path_rtl/red_pitaya_dfilt1.v
 read_verilog                      $path_rtl/red_pitaya_hk.v
-read_verilog                      $path_rtl/red_pitaya_pid_block.v
 read_verilog                      $path_rtl/red_pitaya_pid.v
+read_verilog                      $path_rtl/red_pitaya_pid_block.v
 read_verilog                      $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.v
 read_verilog                      $path_rtl/red_pitaya_pwm.sv
