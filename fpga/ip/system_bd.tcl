@@ -43,7 +43,7 @@ if { [get_projects -quiet] eq "" } {
 set design_name system
 
 # This script was generated for a remote BD.
-set str_bd_folder c:/Users/espero/git/RedPitaya_RadioBox/fpga/bd
+set str_bd_folder ./bd
 set str_bd_filepath ${str_bd_folder}/${design_name}/${design_name}.bd
 
 # Check if remote design exists on disk
