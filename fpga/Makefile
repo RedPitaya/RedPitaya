@@ -27,7 +27,7 @@ HSI    = hsi    -nolog -nojournal -mode batch
 all: $(FPGA_BIT) $(FSBL_ELF) $(MEMTEST_ELF) $(DEVICE_TREE)
 
 clean:
-	rm -rf out .Xil .srcs sdk bd/system
+	rm -rf out .Xil .srcs sdk bd/system/system.bd
 
 project:
 	vivado -source red_pitaya_vivado_project.tcl
