@@ -6,7 +6,8 @@
 #include "version.h"
 
 enum {
-	STEP_FRONT_END_OFFSET = 1,
+	STEP_FRONT_END_OFFSET_LV = 1,
+	STEP_FRONT_END_OFFSET_HV = 1,
 	STEP_FRONT_END_SCALE_LV,
 	STEP_FRONT_END_SCALE_HV,
 	STEP_BACK_END
@@ -154,7 +155,8 @@ CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40
 // 0-nothing		1-commant from web		-1-response OK
 // 1V - TP16
 CIntParameter calibrateReset("CALIB_RESET", CBaseParameter::RW, -2, 0, -2, 1);
-CIntParameter calibrateFrontEndOffset("CALIB_FE_OFF", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndOffsetLV("CALIB_FE_OFF_LV", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndOffsetHV("CALIB_FE_OFF_HV", CBaseParameter::RW, -2, 0, -2, 1);
 CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, -2, 0, -2, 1);
 CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, -2, 0, -2, 1);
 CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, -2, 0, -2, 1);
@@ -462,8 +464,11 @@ void UpdateSignals(void) {
 }
 
 bool check_params(const rp_calib_params_t& current_params, int step) {
-	if (step == STEP_FRONT_END_OFFSET) {
-		if (abs(current_params.fe_ch1_dc_offs) < 512 && abs(current_params.fe_ch2_dc_offs) < 512)
+	if (step == STEP_FRONT_END_OFFSET_LV) {
+		if (abs(current_params.fe_ch1_lo_offs) < 512 && abs(current_params.fe_ch2_lo_offs) < 512)
+			return true;
+	} else if (step == STEP_FRONT_END_OFFSET_HV) {
+		if (abs(current_params.fe_ch1_hi_offs) < 512 && abs(current_params.fe_ch2_hi_offs) < 512)
 			return true;
 	} else if (step == STEP_FRONT_END_SCALE_LV) {
 		if (fabs(current_params.fe_ch1_fs_g_lo/858993459.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_lo/858993459.f - 1.f) < 0.2)
@@ -705,18 +710,22 @@ void OnNewParams(void) {
 		default_params = rp_GetCalibrationSettings();
 	}
 
-	if (calibrateFrontEndOffset.NewValue() == 1) {
-		calibrateFrontEndOffset.Update();
-		rp_CalibrateFrontEndOffset(RP_CH_1, &out_params);
-		rp_CalibrateFrontEndOffset(RP_CH_2, &out_params);
-		calibrateFrontEndOffset.IsValueChanged();
-		if (check_params(out_params, STEP_FRONT_END_OFFSET)) {
+	if (calibrateFrontEndOffsetLV.NewValue() == 1) {
+		calibrateFrontEndOffsetLV.Update();
+
+		rp_pinState_t gain;
+		rp_AcqGetGain(RP_CH_1, &gain);
+		rp_CalibrateFrontEndOffset(RP_CH_1, gain, &out_params);
+		rp_AcqGetGain(RP_CH_2, &gain);
+		rp_CalibrateFrontEndOffset(RP_CH_2, gain, &out_params);
+		calibrateFrontEndOffsetLV.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_OFFSET_LV)) {
 			rp_CalibrationWriteParams(out_params);
-			calibrateFrontEndOffset.Value() = -1; // next calibration step
+			calibrateFrontEndOffsetLV.Value() = -1; // next calibration step
 			is_default_calib_params = false;
 		}
 		else
-			calibrateFrontEndOffset.Value() = 0; // send user warning
+			calibrateFrontEndOffsetLV.Value() = 0; // send user warning
 	}
 
     if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
@@ -733,6 +742,24 @@ void OnNewParams(void) {
 		}
         calibrateValue.Update();
     }
+
+	if (calibrateFrontEndOffsetHV.NewValue() == 1) {
+		calibrateFrontEndOffsetHV.Update();
+
+		rp_pinState_t gain;
+		rp_AcqGetGain(RP_CH_1, &gain);
+		rp_CalibrateFrontEndOffset(RP_CH_1, gain, &out_params);
+		rp_AcqGetGain(RP_CH_2, &gain);
+		rp_CalibrateFrontEndOffset(RP_CH_2, gain, &out_params);
+		calibrateFrontEndOffsetHV.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_OFFSET_HV)) {
+			rp_CalibrationWriteParams(out_params);
+			calibrateFrontEndOffsetHV.Value() = -1; // next calibration step
+			is_default_calib_params = false;
+		}
+		else
+			calibrateFrontEndOffsetHV.Value() = 0; // send user warning
+	}
 
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
 		calibrateFrontEndScaleHV.Update();

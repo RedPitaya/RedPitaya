@@ -29,7 +29,7 @@ int calib_WriteParams(rp_calib_params_t calib_params);
 void calib_SetToZero();
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
-int calib_SetFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params);
+int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);
 int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
 int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
 
@@ -43,5 +43,5 @@ int32_t calib_GetDataMedian(rp_channel_t channel);
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
 int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
 
-int calib_setCachedParams();	
+int calib_setCachedParams();
 #endif //__CALIB_H

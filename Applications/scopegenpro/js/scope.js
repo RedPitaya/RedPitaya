@@ -373,7 +373,7 @@
       }
       // All other parameters
       else {
-		if (['CALIB_RESET', 'CALIB_FE_OFF', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1 && !send_all_params) {
+		if (['CALIB_RESET', 'CALIB_FE_OFF_LV', 'CALIB_FE_OFF_HV', 'CALIB_FE_SCALE_LV', 'CALIB_FE_SCALE_HV', 'CALIB_BE'].indexOf(param_name) != -1 && !send_all_params) {
 			if (new_params[param_name].value == -1) {
 				++OSC.state.calib;
 				OSC.setCalibState(OSC.state.calib);
@@ -2482,10 +2482,13 @@ $(function() {
   OSC.startApp();
 
 	OSC.calib_texts =  	['Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.',
-						'To calibrate inputs DC offset, <b>shortcut</b> IN1 and IN2 and press CALIBRATE.',
-						'DC offset calibration is done. For finishing DC offset calibration press DONE. To continue with gains calibration press CONTINUE.',
+						'To calibrate inputs LV offset, <b>shortcut</b> IN1 and IN2 and press CALIBRATE.',
+						'LV DC offset and gain calibration is done. To finish pres DONE to continue with HV setting calibration press CONTINUE.',
 						'To calibrate inputs low gains set the jumpers to LV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage on LV ' + 'jumper settings is <b>1 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
 						'LOW gains calibration is done. To finish press DONE to continue with high gain calibration press CONTINUE.',
+						'To calibrate HV DC offset set jumpers to HV position, shortcut IN1 and IN2 and press CALIBRATE.',
+						'The HV DC offset calibration is done. For finishing HV DC offset calibration press DONE to continue with HV gain calibration press CONTINUE.',
+
 						'To calibrate inputs high gains set the jumpers to HV settings and connect IN1 and IN2 to the reference voltage source. Notice: <p>Max.</p> reference voltage ' +
 						'on HV jumper settings is <b>20 V</b> ! To continue, input reference voltage value and press CALIBRATE.',
 						'High gains calibration is done. To finish press DONE, to continue with outputs calibration connect OUT1 to IN1 OUT2 to IN2 and set the jumpers to LV settings and press CONTINUE.',
@@ -2497,12 +2500,14 @@ $(function() {
 						 [null,		'DONE', 	'CONTINUE'],
 						 ['CANCEL', 'input', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	'CONTINUE'],
+						 ['CANCEL', null, 		'CALIBRATE'],
+						 [null,		'DONE', 	'CONTINUE'],
 						 ['CANCEL', 'input', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	'CALIBRATE'],
 						 ['CANCEL', 'DONE', 	null],
 						 ['EXIT', 	null, 		null]];
 
-	OSC.calib_params =	['CALIB_RESET', 'CALIB_FE_OFF', null, 'CALIB_FE_SCALE_LV', null, 'CALIB_FE_SCALE_HV', 'CALIB_BE', null, null];
+	OSC.calib_params =	['CALIB_RESET', 'CALIB_FE_OFF_LV', null, 'CALIB_FE_SCALE_LV', null, 'CALIB_FE_OFF_HV', null, 'CALIB_FE_SCALE_HV', 'CALIB_BE', null, null];
 
 	OSC.setCalibState = function(state) {
 		var i = 0;
@@ -2532,10 +2537,10 @@ $(function() {
 		if (OSC.calib_texts[state])
 			$('#calib-text').html(OSC.calib_texts[state]);
 
-		if (state > 3) {
+		if (state > 5) {
 			$('#calib-input').attr('max', '19');
 			$('#calib-input').attr('min', '9');
-			$('#calib-input').val(9);
+			$('#calib-input').val(15);
 		} else {
 			$('#calib-input').attr('max', '0.9');
 			$('#calib-input').attr('min', '0.1');

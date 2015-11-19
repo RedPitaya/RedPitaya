@@ -1469,7 +1469,7 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
         }
     }
     int maxViewIdx = MIN(viewSize, (viewSize - 2*viewEars));
-    int buffFullOffset = bufferEars - buffOffset + (ADC_BUFFER_SIZE - _getBufSize)/2;
+    int buffFullOffset = bufferEars - buffOffset - (ADC_BUFFER_SIZE - _getBufSize)/2;
 
     float gainV1, gainV2;
     rp_pinState_t gain1, gain2;
@@ -1480,9 +1480,9 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
     rp_AcqGetGain(RP_CH_2, &gain2);
 
     rp_calib_params_t calib = rp_GetCalibrationSettings();
-    int32_t dc_offs1 = calib.fe_ch1_dc_offs;
+    int32_t dc_offs1 = gain1 == RP_HIGH ? calib.fe_ch1_hi_offs : calib.fe_ch1_lo_offs;
     uint32_t calibScale1 = gain1 == RP_HIGH ? calib.fe_ch1_fs_g_hi : calib.fe_ch1_fs_g_lo;
-    int32_t dc_offs2 = calib.fe_ch2_dc_offs;
+    int32_t dc_offs2 = gain1 == RP_HIGH ? calib.fe_ch2_hi_offs : calib.fe_ch2_lo_offs;
 	uint32_t calibScale2 = gain2 == RP_HIGH ? calib.fe_ch2_fs_g_hi : calib.fe_ch2_fs_g_lo;
 
     // Write data to view buffer
@@ -1509,8 +1509,12 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
         } else {
             int i;
             for (i = 0; i < maxViewIdx /*&& (int) (((float)i * curDeltaSample) + buffFullOffset) < ADC_BUFFER_SIZE*/; ++i) {
-                ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
+				ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
 					convertRawData(data[channel][((int) ((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
+/*
+                ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
+					convertRawData(data[channel][((size_t) ((size_t)((float)i * curDeltaSample) + buffFullOffset)) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
+*/
             }
             maxViewIdx = i;
         }
