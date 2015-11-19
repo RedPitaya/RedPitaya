@@ -182,7 +182,7 @@ UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
 u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(ENVTOOLS_CFG)
 
 $(UBOOT_TAR): | $(DL)
-	wget -N $(UBOOT_URL) -O $@
+	wget $(UBOOT_URL) -O $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
@@ -191,8 +191,8 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
-	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
+	make -C $< ARCH=arm zynq_red_pitaya_defconfig
+	make -C $< ARCH=arm CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
@@ -209,7 +209,7 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 ################################################################################
 
 $(LINUX_TAR): | $(DL)
-	wget -N $(LINUX_URL) -O $@
+	wget $(LINUX_URL) -O $@
 
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
@@ -229,7 +229,7 @@ $(LINUX): $(LINUX_DIR)
 ################################################################################
 
 $(DTREE_TAR): | $(DL)
-	wget -N $(DTREE_URL) -O $@
+	rsync $(DTREE_URL) $@
 
 $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
@@ -320,14 +320,14 @@ BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 .PHONY: ecosystem nginx 
 
 $(WEBSOCKETPP_TAR): | $(DL)
-	wget -N $(WEBSOCKETPP_URL) -O $@
+	wget $(WEBSOCKETPP_URL) -O $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
 $(CRYPTOPP_TAR): | $(DL)
-	wget -N $(CRYPTOPP_URL) -O $@
+	wget $(CRYPTOPP_URL) -O $@
 
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	mkdir -p $@
@@ -335,7 +335,7 @@ $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	patch -d $@ -p1 < patches/cryptopp.patch
 
 $(LIBJSON_TAR): | $(DL)
-	wget -N $(LIBJSON_URL) -O $@
+	wget $(LIBJSON_URL) -O $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
@@ -343,7 +343,7 @@ $(LIBJSON_DIR): $(LIBJSON_TAR)
 	patch -d $@ -p1 < patches/libjson.patch
 
 $(LUANGINX_TAR): | $(DL)
-	wget -N $(LUANGINX_URL) -O $@
+	wget $(LUANGINX_URL) -O $@
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
@@ -351,7 +351,7 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
 $(NGINX_TAR): | $(DL)
-	wget -N $(NGINX_URL) -O $@
+	wget $(NGINX_URL) -O $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
@@ -385,7 +385,7 @@ SCPI_PARSER_DIR = $(SCPI_SERVER_DIR)/scpi-parser
 .PHONY: scpi
 
 $(SCPI_PARSER_TAR): | $(DL)
-	wget -N $(SCPI_PARSER_URL) -O $@
+	wget $(SCPI_PARSER_URL) -O $@
 
 $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	mkdir -p $@
