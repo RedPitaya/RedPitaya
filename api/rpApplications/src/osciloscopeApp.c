@@ -1482,7 +1482,7 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
     rp_calib_params_t calib = rp_GetCalibrationSettings();
     int32_t dc_offs1 = gain1 == RP_HIGH ? calib.fe_ch1_hi_offs : calib.fe_ch1_lo_offs;
     uint32_t calibScale1 = gain1 == RP_HIGH ? calib.fe_ch1_fs_g_hi : calib.fe_ch1_fs_g_lo;
-    int32_t dc_offs2 = gain1 == RP_HIGH ? calib.fe_ch2_hi_offs : calib.fe_ch2_lo_offs;
+    int32_t dc_offs2 = gain2 == RP_HIGH ? calib.fe_ch2_hi_offs : calib.fe_ch2_lo_offs;
 	uint32_t calibScale2 = gain2 == RP_HIGH ? calib.fe_ch2_fs_g_hi : calib.fe_ch2_fs_g_lo;
 
     // Write data to view buffer
