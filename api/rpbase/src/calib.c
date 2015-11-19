@@ -19,6 +19,8 @@
 #include "generate.h"
 #include "calib.h"
 
+#define CALIB_MAGIC 0xAABBCCDD
+
 int calib_ReadParams(rp_calib_params_t *calib_params);
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
@@ -90,6 +92,11 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
     }
     fclose(fp);
 
+    if (calib_params->magic != CALIB_MAGIC) {
+		calib_params->fe_ch1_hi_offs = calib_params->fe_ch1_lo_offs;
+		calib_params->fe_ch2_hi_offs = calib_params->fe_ch2_lo_offs;
+	}
+
     return 0;
 }
 
@@ -105,6 +112,8 @@ int calib_GetDefaultParams(rp_calib_params_t *calib_params)
     calib_params->fe_ch2_fs_g_lo = 625682246; // 14.56 [V]
     calib_params->fe_ch1_lo_offs = 585;
     calib_params->fe_ch2_lo_offs = 585;
+    calib_params->fe_ch1_hi_offs = 585;
+    calib_params->fe_ch2_hi_offs = 585;
     calib_params->be_ch1_fs = 42949673; // 1 [V]
     calib_params->be_ch2_fs = 42949673; // 1 [V]
     calib_params->be_ch1_dc_offs = 0x3eac;
@@ -131,6 +140,7 @@ int calib_WriteParams(rp_calib_params_t calib_params) {
     }
 
     /* write data to EEPROM component */
+    calib_params.magic = CALIB_MAGIC;
     size = fwrite(&calib_params, sizeof(char), sizeof(rp_calib_params_t), fp);
     if(size != sizeof(rp_calib_params_t)) {
         fclose(fp);
