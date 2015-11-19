@@ -229,7 +229,7 @@ $(LINUX): $(LINUX_DIR)
 ################################################################################
 
 $(DTREE_TAR): | $(DL)
-	rsync $(DTREE_URL) $@
+	wget $(DTREE_URL) -O $@
 
 $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
