@@ -58,12 +58,12 @@ module red_pitaya_radiobox #(
    output reg            sys_ack         ,      // bus acknowledge signal
 
    // AXI streaming master from XADC
-   input              M_AXIS_XADC_aclk   ,      // AXI-streaming from the XADC, clock from the AXI-S FIFO
-   input   [ 16-1: 0] M_AXIS_XADC_tdata  ,      // AXI-streaming from the XADC, data
-   input   [  5-1: 0] M_AXIS_XADC_tid    ,      // AXI-streaming from the XADC, analog data source channel for this data
+   input              xadc_axis_aclk     ,      // AXI-streaming from the XADC, clock from the AXI-S FIFO
+   input   [ 16-1: 0] xadc_axis_tdata    ,      // AXI-streaming from the XADC, data
+   input   [  5-1: 0] xadc_axis_tid      ,      // AXI-streaming from the XADC, analog data source channel for this data
                                                 // TID=0x10:VAUXp0_VAUXn0 & TID=0x18:VAUXp8_VAUXn8, TID=0x11:VAUXp1_VAUXn1 & TID=0x19:VAUXp9_VAUXn9, TID=0x03:Vp_Vn
-   output reg         M_AXIS_XADC_tready ,      // AXI-streaming from the XADC, slave indicating ready for data
-   input              M_AXIS_XADC_tvalid        // AXI-streaming from the XADC, data transfer valid
+   output reg         xadc_axis_tready   ,      // AXI-streaming from the XADC, slave indicating ready for data
+   input              xadc_axis_tvalid          // AXI-streaming from the XADC, data transfer valid
 );
 
 
@@ -280,7 +280,7 @@ wire [47:0] muxin_mix_p;
 wire [15:0] muxin_mix_out;
 assign muxin_mix_out[15:0] = { muxin_mix_p[47], muxin_mix_p[24:9]};    // TODO to be replaced by a saturation variant
 
-always @(posedge M_AXIS_XADC_aclk)                                     // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
+always @(posedge xadc_axis_aclk)                                       // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
 begin
    if (!adc_rstn_i) begin
       rb_xadc[RB_XADC_MAPPING_EXT_CH8] <= 16'b0;
@@ -288,29 +288,29 @@ begin
       rb_xadc[RB_XADC_MAPPING_EXT_CH1] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_EXT_CH9] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_VpVn]    <= 16'b0;
-      M_AXIS_XADC_tready <= 0;
+      xadc_axis_tready <= 0;
       end
 
    else begin
-      M_AXIS_XADC_tready <= 1;                                         // no reason for signaling not to be ready
-      if (M_AXIS_XADC_tvalid) begin
-         casez (M_AXIS_XADC_tid)                                       // @see ug480_7Series_XADC.pdf for XADC channel mapping
+      xadc_axis_tready <= 1;                                           // no reason for signaling not to be ready
+      if (xadc_axis_tvalid) begin
+         casez (xadc_axis_tid)                                         // @see ug480_7Series_XADC.pdf for XADC channel mapping
          5'h10: begin                                                  // channel ID d16 for EXT-CH#0
-            rb_xadc[RB_XADC_MAPPING_EXT_CH0]  <= { sys_wdata[15:0] };  // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
+            rb_xadc[RB_XADC_MAPPING_EXT_CH0]  <= { xadc_axis_tdata };  // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
             end
          5'h18: begin                                                  // channel ID d24 for EXT-CH#8
-            rb_xadc[RB_XADC_MAPPING_EXT_CH8]  <= { sys_wdata[15:0] };  // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
+            rb_xadc[RB_XADC_MAPPING_EXT_CH8]  <= { xadc_axis_tdata };  // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
             end
 
          5'h11: begin                                                  // channel ID d17 for EXT-CH#1
-            rb_xadc[RB_XADC_MAPPING_EXT_CH1]  <= { sys_wdata[15:0] };  // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[2]/vinn_i[2]
+            rb_xadc[RB_XADC_MAPPING_EXT_CH1]  <= { xadc_axis_tdata };  // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[2]/vinn_i[2]
             end
          5'h19: begin                                                  // channel ID d25 for EXT-CH#9
-            rb_xadc[RB_XADC_MAPPING_EXT_CH9]  <= { sys_wdata[15:0] };  // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[3]/vinn_i[3]
+            rb_xadc[RB_XADC_MAPPING_EXT_CH9]  <= { xadc_axis_tdata };  // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[3]/vinn_i[3]
             end
 
          5'h03: begin                                                  // channel ID d3 for dedicated Vp/Vn input lines
-            rb_xadc[RB_XADC_MAPPING_VpVn]     <= { sys_wdata[15:0] };  // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
+            rb_xadc[RB_XADC_MAPPING_VpVn]     <= { xadc_axis_tdata };  // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
             end
 
          default:   begin

@@ -41,6 +41,8 @@
  */
 
 module red_pitaya_ps (
+  // System
+  input              dcm_locked         ,
   // PS peripherals
   inout   [ 54-1: 0] FIXED_IO_mio       ,
   inout              FIXED_IO_ps_clk    ,
@@ -48,6 +50,8 @@ module red_pitaya_ps (
   inout              FIXED_IO_ps_srstb  ,
   inout              FIXED_IO_ddr_vrn   ,
   inout              FIXED_IO_ddr_vrp   ,
+  // Interrupts
+  input   [ 15-1: 0] irq_f2p            ,
   // DDR
   inout   [ 15-1: 0] DDR_addr           ,
   inout   [  3-1: 0] DDR_ba             ,
@@ -91,7 +95,16 @@ module red_pitaya_ps (
   input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
   input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
   output             axi1_werr_o  , axi0_werr_o  ,  // system write error
-  output             axi1_wrdy_o  , axi0_wrdy_o     // system write ready
+  output             axi1_wrdy_o  , axi0_wrdy_o  ,  // system write ready
+  // XADC_AXIS
+  output             xadc_axis_aclk     ,  // XADC AXI-S clock
+  output  [ 16-1: 0] xadc_axis_tdata    ,  // XADC AXI-S databus
+  output  [  5-1: 0] xadc_axis_tid      ,  // XADC AXI-S AD-channel ID for current data
+  input              xadc_axis_tready   ,  // XADC AXI-S ready
+  output             xadc_axis_tvalid   ,  // XADC AXI-S tvalid
+  // AXI GP1 LEDs
+  output             LED_drive_o        ,  // AXI protocol checker display output, overdrive HK and RB LED output
+  output  [  8-1: 0] LED_data_o            // AXI protocol checker display output, LEDs to be lighted
 );
 
 //------------------------------------------------------------------------------
@@ -338,7 +351,13 @@ assign gp0_maxi_aclk  =  axi0_clk_i ;
 always @(posedge axi0_clk_i)
 gp0_maxi_arstn <= fclk_rstn[0];
 
+//------------------------------------------------------------------------------
+// PS LEDs_gpio
 
+wire [   8: 0]  gp1_gpio_leds;
+
+assign LED_drive_o = gp1_gpio_leds[  8] ;
+assign LED_data_o  = gp1_gpio_leds[7:0] ;
 
 //------------------------------------------------------------------------------
 // PS STUB
@@ -351,6 +370,8 @@ BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
 BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
 
 system_wrapper system_i (
+  // System
+  .dcm_locked        (dcm_locked       ),
   // MIO
   .FIXED_IO_mio      (FIXED_IO_mio     ),
   .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
@@ -358,6 +379,8 @@ system_wrapper system_i (
   .FIXED_IO_ps_srstb (FIXED_IO_ps_srstb),
   .FIXED_IO_ddr_vrn  (FIXED_IO_ddr_vrn ),
   .FIXED_IO_ddr_vrp  (FIXED_IO_ddr_vrp ),
+  // Interrupts
+  .IRQ_F2P           (irq_f2p          ),
   // DDR
   .DDR_addr          (DDR_addr         ),
   .DDR_ba            (DDR_ba           ),
@@ -468,7 +491,15 @@ system_wrapper system_i (
   .S_AXI_HP0_awid    (hp0_saxi_awid   ),  .S_AXI_HP1_awid    (hp1_saxi_awid   ), // in 6
   .S_AXI_HP0_wid     (hp0_saxi_wid    ),  .S_AXI_HP1_wid     (hp1_saxi_wid    ), // in 6
   .S_AXI_HP0_wdata   (hp0_saxi_wdata  ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata  ), // in 64
-  .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  )  // in 8
+  .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  ), // in 8
+  // XADC_AXIS
+  .M_AXIS_XADC_aclk  (xadc_axis_aclk  ),
+  .M_AXIS_XADC_tdata (xadc_axis_tdata ),
+  .M_AXIS_XADC_tid   (xadc_axis_tid   ),
+  .M_AXIS_XADC_tready(xadc_axis_tready),
+  .M_AXIS_XADC_tvalid(xadc_axis_tvalid),
+  // AXI GP1 LEDs
+  .GP1_GPIO_LEDS     (gp1_gpio_leds   )
 );
 
 endmodule

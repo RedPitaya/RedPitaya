@@ -137,6 +137,7 @@ CONFIG.ARUSER_WIDTH {0} \
 CONFIG.AWUSER_WIDTH {0} \
 CONFIG.BUSER_WIDTH {0} \
 CONFIG.DATA_WIDTH {64} \
+CONFIG.FREQ_HZ {125000000} \
 CONFIG.HAS_BRESP {1} \
 CONFIG.HAS_BURST {1} \
 CONFIG.HAS_CACHE {1} \
@@ -150,6 +151,7 @@ CONFIG.ID_WIDTH {0} \
 CONFIG.MAX_BURST_LENGTH {16} \
 CONFIG.NUM_READ_OUTSTANDING {1} \
 CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.PHASE {0.000} \
 CONFIG.PROTOCOL {AXI3} \
 CONFIG.READ_WRITE_MODE {READ_WRITE} \
 CONFIG.RUSER_WIDTH {0} \
@@ -163,6 +165,7 @@ CONFIG.ARUSER_WIDTH {0} \
 CONFIG.AWUSER_WIDTH {0} \
 CONFIG.BUSER_WIDTH {0} \
 CONFIG.DATA_WIDTH {64} \
+CONFIG.FREQ_HZ {125000000} \
 CONFIG.HAS_BRESP {1} \
 CONFIG.HAS_BURST {1} \
 CONFIG.HAS_CACHE {1} \
@@ -176,6 +179,7 @@ CONFIG.ID_WIDTH {0} \
 CONFIG.MAX_BURST_LENGTH {16} \
 CONFIG.NUM_READ_OUTSTANDING {1} \
 CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.PHASE {0.000} \
 CONFIG.PROTOCOL {AXI3} \
 CONFIG.READ_WRITE_MODE {READ_WRITE} \
 CONFIG.RUSER_WIDTH {0} \
@@ -200,11 +204,11 @@ CONFIG.ASSOCIATED_BUSIF {M_AXIS_XADC} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
+  set GP1_GPIO_LEDS [ create_bd_port -dir O -from 8 -to 0 GP1_GPIO_LEDS ]
   set IRQ_F2P [ create_bd_port -dir I -from 14 -to 0 -type intr IRQ_F2P ]
   set_property -dict [ list \
 CONFIG.PortWidth {15} \
  ] $IRQ_F2P
-  set LEDs_gpio_io_o [ create_bd_port -dir O -from 8 -to 0 LEDs_gpio_io_o ]
   set M_AXIS_XADC_aclk [ create_bd_port -dir O -type clk M_AXIS_XADC_aclk ]
   set M_AXI_GP0_ACLK [ create_bd_port -dir I -type clk M_AXI_GP0_ACLK ]
   set_property -dict [ list \
@@ -460,7 +464,7 @@ CONFIG.NUM_PORTS {2} \
   # Create port connections
   connect_bd_net -net IRQ_F2P_1 [get_bd_ports IRQ_F2P] [get_bd_pins xlconcat_irq/In1]
   connect_bd_net -net Net [get_bd_pins axi_crossbar_GP1/aresetn] [get_bd_pins axi_protocol_converter_GP1_LEDs/aresetn] [get_bd_pins axi_protocol_converter_GP1_XADC/aresetn] [get_bd_pins proc_sys_reset_0/interconnect_aresetn]
-  connect_bd_net -net axi_gpio_0_gpio_io_o1 [get_bd_ports LEDs_gpio_io_o] [get_bd_pins axi_gpio_GP1_LEDs/gpio_io_o]
+  connect_bd_net -net axi_gpio_0_gpio_io_o1 [get_bd_ports GP1_GPIO_LEDS] [get_bd_pins axi_gpio_GP1_LEDs/gpio_io_o]
   connect_bd_net -net dcm_locked_1 [get_bd_ports dcm_locked] [get_bd_pins proc_sys_reset_0/dcm_locked]
   connect_bd_net -net m_axi_gp0_aclk_1 [get_bd_ports M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_gpio_GP1_LEDs/s_axi_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins xadc_GP1/s_axi_aresetn]
@@ -513,8 +517,8 @@ preplace port Vaux8 -pg 1 -y 760 -defaultsOSRD
 preplace port FCLK_CLK2 -pg 1 -y 260 -defaultsOSRD
 preplace port Vaux9 -pg 1 -y 780 -defaultsOSRD
 preplace port S_AXI_HP0 -pg 1 -y 160 -defaultsOSRD
+preplace portBus GP1_GPIO_LEDS -pg 1 -y 1240 -defaultsOSRD
 preplace portBus IRQ_F2P -pg 1 -y 330 -defaultsOSRD
-preplace portBus LEDs_gpio_io_o -pg 1 -y 1240 -defaultsOSRD
 preplace inst proc_sys_reset_0 -pg 1 -lvl 2 -y 550 -defaultsOSRD
 preplace inst axi_gpio_GP1_LEDs -pg 1 -lvl 5 -y 1230 -defaultsOSRD
 preplace inst xlconcat_irq -pg 1 -lvl 3 -y 320 -defaultsOSRD

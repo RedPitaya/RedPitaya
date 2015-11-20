@@ -25,8 +25,8 @@ preplace port Vaux8 -pg 1 -y 760 -defaultsOSRD
 preplace port FCLK_CLK2 -pg 1 -y 260 -defaultsOSRD
 preplace port Vaux9 -pg 1 -y 780 -defaultsOSRD
 preplace port S_AXI_HP0 -pg 1 -y 160 -defaultsOSRD
+preplace portBus GP1_GPIO_LEDS -pg 1 -y 1240 -defaultsOSRD
 preplace portBus IRQ_F2P -pg 1 -y 330 -defaultsOSRD
-preplace portBus LEDs_gpio_io_o -pg 1 -y 1240 -defaultsOSRD
 preplace inst proc_sys_reset_0 -pg 1 -lvl 2 -y 550 -defaultsOSRD
 preplace inst axi_gpio_GP1_LEDs -pg 1 -lvl 5 -y 1230 -defaultsOSRD
 preplace inst xlconcat_irq -pg 1 -lvl 3 -y 320 -defaultsOSRD
@@ -74,3 +74,4 @@ preplace netloc IRQ_F2P_1 1 0 3 NJ 330 NJ 330 N
 levelinfo -pg 1 -200 -60 410 730 1110 1530 1820 -top -20 -bot 1300
 ",
 }
+0
