@@ -755,7 +755,6 @@ void OnNewParams(void) {
 		}
 		else
 			calibrateFrontEndOffsetHV.Value() = 0; // send user warning
-		rp_AcqSetGain(RP_CH_1, RP_LOW); // set back to low
 	}
 
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
@@ -773,6 +772,7 @@ void OnNewParams(void) {
     }
 
     if (calibrateBackEnd.NewValue() == 1) {
+		rp_AcqSetGain(RP_CH_1, RP_LOW); // set back to low
 		calibrateBackEnd.Update();
         rp_CalibrateBackEnd(RP_CH_1, &out_params);
         rp_CalibrateBackEnd(RP_CH_2, &out_params);
