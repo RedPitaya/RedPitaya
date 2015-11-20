@@ -7,7 +7,7 @@
 
 enum {
 	STEP_FRONT_END_OFFSET_LV = 1,
-	STEP_FRONT_END_OFFSET_HV = 1,
+	STEP_FRONT_END_OFFSET_HV,
 	STEP_FRONT_END_SCALE_LV,
 	STEP_FRONT_END_SCALE_HV,
 	STEP_BACK_END
@@ -713,11 +713,9 @@ void OnNewParams(void) {
 	if (calibrateFrontEndOffsetLV.NewValue() == 1) {
 		calibrateFrontEndOffsetLV.Update();
 
-		rp_pinState_t gain;
-		rp_AcqGetGain(RP_CH_1, &gain);
-		rp_CalibrateFrontEndOffset(RP_CH_1, gain, &out_params);
-		rp_AcqGetGain(RP_CH_2, &gain);
-		rp_CalibrateFrontEndOffset(RP_CH_2, gain, &out_params);
+		rp_AcqSetGain(RP_CH_1, RP_LOW);
+		rp_CalibrateFrontEndOffset(RP_CH_1, RP_LOW, &out_params);
+		rp_CalibrateFrontEndOffset(RP_CH_2, RP_LOW, &out_params);
 		calibrateFrontEndOffsetLV.IsValueChanged();
 		if (check_params(out_params, STEP_FRONT_END_OFFSET_LV)) {
 			rp_CalibrationWriteParams(out_params);
@@ -746,11 +744,9 @@ void OnNewParams(void) {
 	if (calibrateFrontEndOffsetHV.NewValue() == 1) {
 		calibrateFrontEndOffsetHV.Update();
 
-		rp_pinState_t gain;
-		rp_AcqGetGain(RP_CH_1, &gain);
-		rp_CalibrateFrontEndOffset(RP_CH_1, gain, &out_params);
-		rp_AcqGetGain(RP_CH_2, &gain);
-		rp_CalibrateFrontEndOffset(RP_CH_2, gain, &out_params);
+		rp_AcqSetGain(RP_CH_1, RP_HIGH);
+		rp_CalibrateFrontEndOffset(RP_CH_1, RP_HIGH, &out_params);
+		rp_CalibrateFrontEndOffset(RP_CH_2, RP_HIGH, &out_params);
 		calibrateFrontEndOffsetHV.IsValueChanged();
 		if (check_params(out_params, STEP_FRONT_END_OFFSET_HV)) {
 			rp_CalibrationWriteParams(out_params);
