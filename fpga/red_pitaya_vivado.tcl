@@ -63,11 +63,6 @@ write_hwdef    -force -file       $path_sdk/red_pitaya.hwdef
 
 read_verilog                      $path_bd/system/hdl/system_wrapper.v
 
-read_verilog                      $path_rtl/axi_master.v
-read_verilog                      $path_rtl/axi_pc2leds.v
-read_verilog                      $path_rtl/axi_slave.v
-read_verilog                      $path_rtl/axi_wr_fifo.v
-
 read_verilog                      $path_rtl/pwm.sv
 
 read_verilog                      $path_rtl/red_pitaya_ams.v
@@ -84,6 +79,11 @@ read_verilog                      $path_rtl/red_pitaya_radiobox.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 
+read_ip                           $path_ip/clk_adc_pll.xcix
+read_ip                           $path_ip/rb_dds_48_16_125.xcix
+read_ip                           $path_ip/rb_multadd_16s_33s_48u_07lat.xcix
+read_ip                           $path_ip/rb_pipe_07delay.xcix
+
 read_xdc                          $path_sdc/red_pitaya.xdc
 
 
@@ -92,6 +92,11 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 # report utilization and timing estimates
 # write checkpoint design
 ################################################################################
+
+synth_ip                          [get_ips clk_adc_pll]
+synth_ip                          [get_ips rb_dds_48_16_125]
+synth_ip                          [get_ips rb_multadd_16s_33s_48u_07lat]
+synth_ip                          [get_ips rb_pipe_07delay]
 
 #synth_design -top red_pitaya_top
 synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
