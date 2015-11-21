@@ -191,6 +191,7 @@ CONFIG.WUSER_WIDTH {0} \
   set Vaux8 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vaux8 ]
   set Vaux9 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vaux9 ]
   set Vp_Vn [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vp_Vn ]
+  set gpio_GP1_LEDS [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 gpio_GP1_LEDS ]
 
   # Create ports
   set FCLK_CLK0 [ create_bd_port -dir O -type clk FCLK_CLK0 ]
@@ -204,17 +205,16 @@ CONFIG.ASSOCIATED_BUSIF {M_AXIS_XADC} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
-  set GP1_GPIO_LEDS [ create_bd_port -dir O -from 8 -to 0 GP1_GPIO_LEDS ]
   set IRQ_F2P [ create_bd_port -dir I -from 14 -to 0 -type intr IRQ_F2P ]
   set_property -dict [ list \
 CONFIG.PortWidth {15} \
  ] $IRQ_F2P
   set M_AXIS_XADC_aclk [ create_bd_port -dir O -type clk M_AXIS_XADC_aclk ]
-  set M_AXI_GP0_ACLK [ create_bd_port -dir I -type clk M_AXI_GP0_ACLK ]
+  set M_AXI_GP0_aclk [ create_bd_port -dir I -type clk M_AXI_GP0_aclk ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
+CONFIG.CLK_DOMAIN {system_M_AXI_GP0_ACLK} \
 CONFIG.FREQ_HZ {125000000} \
- ] $M_AXI_GP0_ACLK
+ ] $M_AXI_GP0_aclk
   set S_AXI_HP0_aclk [ create_bd_port -dir I -type clk S_AXI_HP0_aclk ]
   set_property -dict [ list \
 CONFIG.FREQ_HZ {125000000} \
@@ -254,16 +254,6 @@ CONFIG.S14_BASE_ID {0x0000e000} \
 CONFIG.S15_BASE_ID {0x0000f000} \
  ] $axi_crossbar_GP1
 
-  # Create instance: axi_gpio_GP1_LEDs, and set properties
-  set axi_gpio_GP1_LEDs [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_GP1_LEDs ]
-  set_property -dict [ list \
-CONFIG.C_ALL_INPUTS_2 {0} \
-CONFIG.C_ALL_OUTPUTS {1} \
-CONFIG.C_GPIO2_WIDTH {32} \
-CONFIG.C_GPIO_WIDTH {9} \
-CONFIG.C_IS_DUAL {0} \
- ] $axi_gpio_GP1_LEDs
-
   # Create instance: axi_protocol_converter_GP1_LEDs, and set properties
   set axi_protocol_converter_GP1_LEDs [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_protocol_converter:2.1 axi_protocol_converter_GP1_LEDs ]
   set_property -dict [ list \
@@ -287,6 +277,16 @@ CONFIG.READ_WRITE_MODE {READ_WRITE} \
 CONFIG.SI_PROTOCOL {AXI3} \
 CONFIG.TRANSLATION_MODE {2} \
  ] $axi_protocol_converter_GP1_XADC
+
+  # Create instance: gpio_GP1_LEDs, and set properties
+  set gpio_GP1_LEDs [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 gpio_GP1_LEDs ]
+  set_property -dict [ list \
+CONFIG.C_ALL_INPUTS_2 {0} \
+CONFIG.C_ALL_OUTPUTS {1} \
+CONFIG.C_GPIO2_WIDTH {32} \
+CONFIG.C_GPIO_WIDTH {9} \
+CONFIG.C_IS_DUAL {0} \
+ ] $gpio_GP1_LEDs
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
@@ -451,8 +451,9 @@ CONFIG.NUM_PORTS {2} \
   connect_bd_intf_net -intf_net Vp_Vn_1 [get_bd_intf_ports Vp_Vn] [get_bd_intf_pins xadc_GP1/Vp_Vn]
   connect_bd_intf_net -intf_net axi_crossbar_GP1_M00_AXI [get_bd_intf_pins axi_crossbar_GP1/M00_AXI] [get_bd_intf_pins axi_protocol_converter_GP1_XADC/S_AXI]
   connect_bd_intf_net -intf_net axi_crossbar_GP1_M01_AXI [get_bd_intf_pins axi_crossbar_GP1/M01_AXI] [get_bd_intf_pins axi_protocol_converter_GP1_LEDs/S_AXI]
-  connect_bd_intf_net -intf_net axi_protocol_converter_0_M_AXI1 [get_bd_intf_pins axi_gpio_GP1_LEDs/S_AXI] [get_bd_intf_pins axi_protocol_converter_GP1_LEDs/M_AXI]
+  connect_bd_intf_net -intf_net axi_protocol_converter_0_M_AXI1 [get_bd_intf_pins axi_protocol_converter_GP1_LEDs/M_AXI] [get_bd_intf_pins gpio_GP1_LEDs/S_AXI]
   connect_bd_intf_net -intf_net axi_protocol_converter_GP1_XADC_M_AXI [get_bd_intf_pins axi_protocol_converter_GP1_XADC/M_AXI] [get_bd_intf_pins xadc_GP1/s_axi_lite]
+  connect_bd_intf_net -intf_net gpio_GP1_LEDS [get_bd_intf_ports gpio_GP1_LEDS] [get_bd_intf_pins gpio_GP1_LEDs/GPIO]
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP1 [get_bd_intf_pins axi_crossbar_GP1/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP1]
   connect_bd_intf_net -intf_net processing_system7_0_ddr [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_fixed_io [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
@@ -463,13 +464,12 @@ CONFIG.NUM_PORTS {2} \
 
   # Create port connections
   connect_bd_net -net IRQ_F2P_1 [get_bd_ports IRQ_F2P] [get_bd_pins xlconcat_irq/In1]
+  connect_bd_net -net M_AXI_GP0_aclk [get_bd_ports M_AXI_GP0_aclk] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK]
   connect_bd_net -net Net [get_bd_pins axi_crossbar_GP1/aresetn] [get_bd_pins axi_protocol_converter_GP1_LEDs/aresetn] [get_bd_pins axi_protocol_converter_GP1_XADC/aresetn] [get_bd_pins proc_sys_reset_0/interconnect_aresetn]
-  connect_bd_net -net axi_gpio_0_gpio_io_o1 [get_bd_ports GP1_GPIO_LEDS] [get_bd_pins axi_gpio_GP1_LEDs/gpio_io_o]
   connect_bd_net -net dcm_locked_1 [get_bd_ports dcm_locked] [get_bd_pins proc_sys_reset_0/dcm_locked]
-  connect_bd_net -net m_axi_gp0_aclk_1 [get_bd_ports M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_gpio_GP1_LEDs/s_axi_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins xadc_GP1/s_axi_aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins gpio_GP1_LEDs/s_axi_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins xadc_GP1/s_axi_aresetn]
   connect_bd_net -net processing_system7_0_FCLK_CLK3 [get_bd_ports FCLK_CLK3] [get_bd_pins processing_system7_0/FCLK_CLK3]
-  connect_bd_net -net processing_system7_0_fclk_clk0 [get_bd_ports FCLK_CLK0] [get_bd_ports M_AXIS_XADC_aclk] [get_bd_pins axi_crossbar_GP1/aclk] [get_bd_pins axi_gpio_GP1_LEDs/s_axi_aclk] [get_bd_pins axi_protocol_converter_GP1_LEDs/aclk] [get_bd_pins axi_protocol_converter_GP1_XADC/aclk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins xadc_GP1/s_axi_aclk] [get_bd_pins xadc_GP1/s_axis_aclk]
+  connect_bd_net -net processing_system7_0_fclk_clk0 [get_bd_ports FCLK_CLK0] [get_bd_ports M_AXIS_XADC_aclk] [get_bd_pins axi_crossbar_GP1/aclk] [get_bd_pins axi_protocol_converter_GP1_LEDs/aclk] [get_bd_pins axi_protocol_converter_GP1_XADC/aclk] [get_bd_pins gpio_GP1_LEDs/s_axi_aclk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins xadc_GP1/s_axi_aclk] [get_bd_pins xadc_GP1/s_axis_aclk]
   connect_bd_net -net processing_system7_0_fclk_clk1 [get_bd_ports FCLK_CLK1] [get_bd_pins processing_system7_0/FCLK_CLK1]
   connect_bd_net -net processing_system7_0_fclk_clk2 [get_bd_ports FCLK_CLK2] [get_bd_pins processing_system7_0/FCLK_CLK2]
   connect_bd_net -net processing_system7_0_fclk_reset0_n [get_bd_ports FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
@@ -483,7 +483,7 @@ CONFIG.NUM_PORTS {2} \
   connect_bd_net -net xlconstant_dout [get_bd_pins proc_sys_reset_0/aux_reset_in] [get_bd_pins proc_sys_reset_0/mb_debug_sys_rst] [get_bd_pins xlconstant_reset/dout]
 
   # Create address segments
-  create_bd_addr_seg -range 0x10000 -offset 0x81200000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_GP1_LEDs/S_AXI/Reg] SEG_axi_gpio_GP1_LEDs_Reg
+  create_bd_addr_seg -range 0x10000 -offset 0x81200000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs gpio_GP1_LEDs/S_AXI/Reg] SEG_axi_gpio_GP1_LEDs_Reg
   create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs M_AXI_GP0/Reg] SEG_system_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x83C00000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs xadc_GP1/s_axi_lite/Reg] SEG_xadc_GP1_Reg
   create_bd_addr_seg -range 0x20000000 -offset 0x0 [get_bd_addr_spaces S_AXI_HP0] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
@@ -493,77 +493,77 @@ CONFIG.NUM_PORTS {2} \
   regenerate_bd_layout -layout_string {
    guistr: "# # String gsaved with Nlview 6.5.5  2015-06-26 bk=1.3371 VDI=38 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
-preplace port FCLK_CLK3 -pg 1 -y 280 -defaultsOSRD
-preplace port S_AXI_HP1 -pg 1 -y 180 -defaultsOSRD
-preplace port DDR -pg 1 -y 60 -defaultsOSRD
-preplace port Vp_Vn -pg 1 -y 680 -defaultsOSRD
-preplace port Vaux0 -pg 1 -y 710 -defaultsOSRD
-preplace port FCLK_RESET0_N -pg 1 -y 300 -defaultsOSRD
-preplace port M_AXI_GP0_ACLK -pg 1 -y 200 -defaultsOSRD
-preplace port Vaux1 -pg 1 -y 730 -defaultsOSRD
+preplace port FCLK_CLK3 -pg 1 -y 290 -defaultsOSRD
+preplace port S_AXI_HP1 -pg 1 -y 200 -defaultsOSRD
+preplace port DDR -pg 1 -y 70 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 550 -defaultsOSRD
+preplace port M_AXI_GP0_aclk -pg 1 -y 220 -defaultsOSRD
+preplace port Vaux0 -pg 1 -y 570 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 310 -defaultsOSRD
+preplace port gpio_GP1_LEDS -pg 1 -y 840 -defaultsOSRD
+preplace port Vaux1 -pg 1 -y 590 -defaultsOSRD
 preplace port S_AXI_HP0_aclk -pg 1 -y 240 -defaultsOSRD
-preplace port M_AXI_GP0 -pg 1 -y 120 -defaultsOSRD
-preplace port FCLK_RESET1_N -pg 1 -y 320 -defaultsOSRD
+preplace port M_AXI_GP0 -pg 1 -y 130 -defaultsOSRD
+preplace port FCLK_RESET1_N -pg 1 -y 330 -defaultsOSRD
 preplace port S_AXI_HP1_aclk -pg 1 -y 260 -defaultsOSRD
-preplace port FCLK_RESET3_N -pg 1 -y 360 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -y 80 -defaultsOSRD
-preplace port FCLK_RESET2_N -pg 1 -y 340 -defaultsOSRD
-preplace port M_AXIS_XADC -pg 1 -y 810 -defaultsOSRD
-preplace port FCLK_CLK0 -pg 1 -y 220 -defaultsOSRD
-preplace port dcm_locked -pg 1 -y 600 -defaultsOSRD
-preplace port FCLK_CLK1 -pg 1 -y 240 -defaultsOSRD
-preplace port M_AXIS_XADC_aclk -pg 1 -y 790 -defaultsOSRD
-preplace port Vaux8 -pg 1 -y 760 -defaultsOSRD
-preplace port FCLK_CLK2 -pg 1 -y 260 -defaultsOSRD
-preplace port Vaux9 -pg 1 -y 780 -defaultsOSRD
-preplace port S_AXI_HP0 -pg 1 -y 160 -defaultsOSRD
-preplace portBus GP1_GPIO_LEDS -pg 1 -y 1240 -defaultsOSRD
+preplace port FCLK_RESET3_N -pg 1 -y 370 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 90 -defaultsOSRD
+preplace port FCLK_RESET2_N -pg 1 -y 350 -defaultsOSRD
+preplace port M_AXIS_XADC -pg 1 -y 480 -defaultsOSRD
+preplace port FCLK_CLK0 -pg 1 -y 210 -defaultsOSRD
+preplace port dcm_locked -pg 1 -y 500 -defaultsOSRD
+preplace port FCLK_CLK1 -pg 1 -y 250 -defaultsOSRD
+preplace port M_AXIS_XADC_aclk -pg 1 -y 230 -defaultsOSRD
+preplace port Vaux8 -pg 1 -y 610 -defaultsOSRD
+preplace port FCLK_CLK2 -pg 1 -y 270 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 630 -defaultsOSRD
+preplace port S_AXI_HP0 -pg 1 -y 180 -defaultsOSRD
 preplace portBus IRQ_F2P -pg 1 -y 330 -defaultsOSRD
-preplace inst proc_sys_reset_0 -pg 1 -lvl 2 -y 550 -defaultsOSRD
-preplace inst axi_gpio_GP1_LEDs -pg 1 -lvl 5 -y 1230 -defaultsOSRD
+preplace inst proc_sys_reset_0 -pg 1 -lvl 2 -y 460 -defaultsOSRD
 preplace inst xlconcat_irq -pg 1 -lvl 3 -y 320 -defaultsOSRD
-preplace inst axi_protocol_converter_GP1_LEDs -pg 1 -lvl 4 -y 1210 -defaultsOSRD
-preplace inst axi_protocol_converter_GP1_XADC -pg 1 -lvl 4 -y 510 -defaultsOSRD
-preplace inst xlconstant_reset -pg 1 -lvl 1 -y 550 -defaultsOSRD
-preplace inst xadc_GP1 -pg 1 -lvl 5 -y 940 -defaultsOSRD
-preplace inst axi_crossbar_GP1 -pg 1 -lvl 3 -y 500 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 5 -y 200 -defaultsOSRD
-preplace netloc Vaux0_1 1 0 5 NJ 710 NJ 710 NJ 710 NJ 710 NJ
+preplace inst axi_protocol_converter_GP1_LEDs -pg 1 -lvl 4 -y 700 -defaultsOSRD
+preplace inst axi_protocol_converter_GP1_XADC -pg 1 -lvl 4 -y 460 -defaultsOSRD
+preplace inst gpio_GP1_LEDs -pg 1 -lvl 5 -y 840 -defaultsOSRD
+preplace inst xlconstant_reset -pg 1 -lvl 1 -y 450 -defaultsOSRD
+preplace inst xadc_GP1 -pg 1 -lvl 5 -y 610 -defaultsOSRD
+preplace inst axi_crossbar_GP1 -pg 1 -lvl 3 -y 450 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 5 -y 220 -defaultsOSRD
+preplace netloc Vaux0_1 1 0 5 NJ 570 NJ 570 NJ 570 NJ 570 NJ
 preplace netloc processing_system7_0_ddr 1 5 1 NJ
 preplace netloc processing_system7_0_fclk_reset3_n 1 5 1 NJ
 preplace netloc processing_system7_0_FCLK_CLK3 1 5 1 NJ
-preplace netloc s_axi_hp0_1 1 0 5 NJ 160 NJ 160 NJ 160 NJ 160 NJ
+preplace netloc s_axi_hp0_1 1 0 5 NJ 180 NJ 180 NJ 180 NJ 180 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 5 1 NJ
-preplace netloc axi_protocol_converter_GP1_XADC_M_AXI 1 4 1 1310
-preplace netloc xlconstant_dout 1 1 1 30
+preplace netloc axi_protocol_converter_GP1_XADC_M_AXI 1 4 1 1060
+preplace netloc M_AXI_GP0_aclk 1 0 5 NJ 210 NJ 210 NJ 210 NJ 210 NJ
+preplace netloc xlconstant_dout 1 1 1 190
 preplace netloc processing_system7_0_fclk_reset1_n 1 5 1 NJ
-preplace netloc Vp_Vn_1 1 0 5 NJ 680 NJ 680 NJ 680 NJ 680 1300
-preplace netloc processing_system7_0_M_AXI_GP1 1 2 4 580 -10 NJ -10 NJ -10 1750
+preplace netloc gpio_GP1_LEDS 1 5 1 N
+preplace netloc Vp_Vn_1 1 0 5 NJ 550 NJ 550 NJ 550 NJ 550 NJ
+preplace netloc processing_system7_0_M_AXI_GP1 1 2 4 520 10 NJ 10 NJ 10 1520
 preplace netloc s_axi_hp0_aclk 1 0 5 NJ 240 NJ 240 NJ 240 NJ 240 NJ
-preplace netloc dcm_locked_1 1 0 2 NJ 600 NJ
-preplace netloc s_axi_hp1_1 1 0 5 NJ 180 NJ 180 NJ 180 NJ 180 NJ
-preplace netloc xadc_GP1_ip2intc_irpt 1 2 4 590 410 NJ 410 NJ 410 1740
-preplace netloc Vaux8_1 1 0 5 NJ 760 NJ 760 NJ 760 NJ 760 NJ
+preplace netloc dcm_locked_1 1 0 2 NJ 500 NJ
+preplace netloc s_axi_hp1_1 1 0 5 NJ 200 NJ 200 NJ 200 NJ 200 NJ
+preplace netloc xadc_GP1_ip2intc_irpt 1 2 4 530 260 NJ 260 NJ 430 1530
+preplace netloc Vaux8_1 1 0 5 NJ 610 NJ 610 NJ 610 NJ 610 NJ
 preplace netloc axi_crossbar_GP1_M00_AXI 1 3 1 N
-preplace netloc xlconcat_0_dout 1 3 2 850 280 N
-preplace netloc s_axi_hp1_aclk 1 0 5 NJ 260 NJ 260 NJ 260 NJ 260 NJ
-preplace netloc processing_system7_0_fclk_reset0_n 1 1 5 20 0 NJ 0 NJ 0 NJ 0 1770
-preplace netloc axi_gpio_0_gpio_io_o1 1 5 1 NJ
-preplace netloc Vaux9_1 1 0 5 NJ 780 NJ 780 NJ 780 NJ 780 NJ
+preplace netloc xlconcat_0_dout 1 3 2 NJ 300 N
+preplace netloc s_axi_hp1_aclk 1 0 5 NJ 250 NJ 250 NJ 250 NJ 250 NJ
+preplace netloc processing_system7_0_fclk_reset0_n 1 1 5 180 230 NJ 230 NJ 230 NJ 420 1520
+preplace netloc Vaux9_1 1 0 5 NJ 630 NJ 630 NJ 630 NJ 630 NJ
 preplace netloc processing_system7_0_fixed_io 1 5 1 NJ
-preplace netloc axi_crossbar_GP1_M01_AXI 1 3 1 850
-preplace netloc processing_system7_0_fclk_clk0 1 1 5 30 460 570 580 860 580 1290 400 1750
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 3 N 590 N 590 1260
-preplace netloc Vaux1_1 1 0 5 NJ 730 NJ 730 NJ 730 NJ 730 NJ
+preplace netloc axi_crossbar_GP1_M01_AXI 1 3 1 780
+preplace netloc processing_system7_0_fclk_clk0 1 1 5 190 370 510 380 790 380 1080 20 1530
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 3 NJ 560 NJ 560 1060
+preplace netloc Vaux1_1 1 0 5 NJ 590 NJ 590 NJ 590 NJ 590 NJ
 preplace netloc processing_system7_0_fclk_clk1 1 5 1 NJ
-preplace netloc m_axi_gp0_aclk_1 1 0 5 NJ 200 NJ 200 NJ 200 NJ 200 NJ
-preplace netloc Net 1 2 2 590 570 870
+preplace netloc Net 1 2 2 530 520 800
 preplace netloc xadc_GP1_M_AXIS 1 5 1 NJ
-preplace netloc axi_protocol_converter_0_M_AXI1 1 4 1 N
+preplace netloc axi_protocol_converter_0_M_AXI1 1 4 1 1070
 preplace netloc processing_system7_0_fclk_clk2 1 5 1 NJ
 preplace netloc processing_system7_0_m_axi_gp0 1 5 1 NJ
-preplace netloc IRQ_F2P_1 1 0 3 NJ 330 NJ 330 N
-levelinfo -pg 1 -200 -60 410 730 1110 1530 1820 -top -20 -bot 1300
+preplace netloc IRQ_F2P_1 1 0 3 NJ 330 NJ 330 NJ
+levelinfo -pg 1 0 100 350 660 930 1310 1550 -top 0 -bot 910
 ",
 }
 

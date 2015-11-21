@@ -413,7 +413,7 @@ system_wrapper system_i (
   .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
   .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
-  .M_AXI_GP0_ACLK    (axi0_clk_i),
+  .M_AXI_GP0_aclk    (axi0_clk_i),
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
   .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
   .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
@@ -499,7 +499,7 @@ system_wrapper system_i (
   .M_AXIS_XADC_tready(xadc_axis_tready),
   .M_AXIS_XADC_tvalid(xadc_axis_tvalid),
   // AXI GP1 LEDs
-  .GP1_GPIO_LEDS     (gp1_gpio_leds   )
+  .gpio_gp1_leds_tri_o (gp1_gpio_leds )
 );
 
 endmodule

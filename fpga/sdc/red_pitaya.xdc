@@ -349,9 +349,6 @@ set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_1]
 set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_2]
 set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_3]
 
-set_false_path -from [get_clocks adc_clk]      -to [get_clocks pll_adc_clk]
-set_false_path -from [get_clocks pll_adc_clk]  -to [get_clocks adc_clk]
-
 set_false_path -from [get_clocks rx_clk]       -to [get_clocks adc_clk]
 set_false_path -from [get_clocks adc_clk]      -to [get_clocks rx_clk]
 
@@ -359,6 +356,9 @@ set_false_path -from [get_ports {exp_p_io[*]}] -to [get_clocks adc_clk]
 set_false_path -from [get_ports {exp_n_io[*]}] -to [get_clocks adc_clk]
 set_false_path -from [get_clocks adc_clk]      -to [get_ports {exp_p_io[*]}]
 set_false_path -from [get_clocks adc_clk]      -to [get_ports {exp_n_io[*]}]
+
+set_false_path -from [get_clocks pll_adc_clk]  -to [get_clocks dna_clk]
+set_false_path -from [get_clocks dna_clk]      -to [get_clocks pll_adc_clk]
 
 #set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_out]
 #set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks ser_clk_out]
