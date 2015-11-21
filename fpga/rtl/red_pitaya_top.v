@@ -121,6 +121,57 @@ module red_pitaya_top (
 
 localparam       SMC = 8                   ;  // Sub Module Count
 
+////////////////////////////////////////////////////////////////////////////////
+// local signals
+////////////////////////////////////////////////////////////////////////////////
+
+// PLL signals
+wire                  adc_clk_in;
+wire                  pll_adc_clk;
+wire                  pll_dac_clk_1x;
+wire                  pll_dac_clk_2x;
+wire                  pll_dac_clk_2p;
+wire                  pll_ser_clk;
+wire                  pll_pwm_clk;
+wire                  pll_locked;
+
+// fast serial signals
+wire                  ser_clk ;
+
+// PWM clock and reset
+wire                  pwm_clk ;
+reg                   pwm_rstn;
+
+// ADC signals
+wire                  adc_clk;
+reg                   adc_rstn;
+reg          [14-1:0] adc_dat_a, adc_dat_b;
+wire  signed [14-1:0] adc_a    , adc_b    ;
+
+// DAC signals
+wire                  dac_clk_1x;
+wire                  dac_clk_2x;
+wire                  dac_clk_2p;
+reg                   dac_rst;
+reg          [14-1:0] dac_dat_a, dac_dat_b;
+wire         [14-1:0] dac_a    , dac_b    ;
+wire  signed [15-1:0] dac_a_sum, dac_b_sum;
+
+// ASG
+wire  signed [14-1:0] asg_a    , asg_b    ;
+
+// PID
+wire  signed [14-1:0] pid_a    , pid_b    ;
+
+// configuration
+wire                  digital_loop;
+
+// RadioBox out signals
+wire                  rb_leds_en;
+wire         [ 8-1:0] rb_leds_data;
+wire                  rb_en               ;  // RadioBox is enabled
+wire         [16-1:0] rb_out_ch     [1:0] ;  // RadioBox output signals
+
 //---------------------------------------------------------------------------------
 //
 //  Connections to PS
@@ -262,58 +313,7 @@ assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
-// local signals
-////////////////////////////////////////////////////////////////////////////////
-
-// PLL signals
-wire                  adc_clk_in;
-wire                  pll_adc_clk;
-wire                  pll_dac_clk_1x;
-wire                  pll_dac_clk_2x;
-wire                  pll_dac_clk_2p;
-wire                  pll_ser_clk;
-wire                  pll_pwm_clk;
-wire                  pll_locked;
-
-// fast serial signals
-wire                  ser_clk ;
-
-// PWM clock and reset
-wire                  pwm_clk ;
-reg                   pwm_rstn;
-
-// ADC signals
-wire                  adc_clk;
-reg                   adc_rstn;
-reg          [14-1:0] adc_dat_a, adc_dat_b;
-wire  signed [14-1:0] adc_a    , adc_b    ;
-
-// DAC signals
-wire                  dac_clk_1x;
-wire                  dac_clk_2x;
-wire                  dac_clk_2p;
-reg                   dac_rst;
-reg          [14-1:0] dac_dat_a, dac_dat_b;
-wire         [14-1:0] dac_a    , dac_b    ;
-wire  signed [15-1:0] dac_a_sum, dac_b_sum;
-
-// ASG
-wire  signed [14-1:0] asg_a    , asg_b    ;
-
-// PID
-wire  signed [14-1:0] pid_a    , pid_b    ;
-
-// configuration
-wire                  digital_loop;
-
-// RadioBox out signals
-wire                  rb_leds_en;
-wire         [ 8-1:0] rb_leds_data;
-wire                  rb_en               ;  // RadioBox is enabled
-wire         [16-1:0] rb_out_ch     [1:0] ;  // RadioBox output signals
-
-////////////////////////////////////////////////////////////////////////////////
-// PLL (clock and reaset)
+// PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
