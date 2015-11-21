@@ -63,6 +63,11 @@ write_hwdef    -force -file       $path_sdk/red_pitaya.hwdef
 
 read_verilog                      $path_bd/system/hdl/system_wrapper.v
 
+read_verilog                      $path_rtl/axi_master.v
+read_verilog                      $path_rtl/axi_pc2leds.v
+read_verilog                      $path_rtl/axi_slave.v
+read_verilog                      $path_rtl/axi_wr_fifo.v
+
 read_verilog                      $path_rtl/pwm.sv
 
 read_verilog                      $path_rtl/red_pitaya_ams.v
