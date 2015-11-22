@@ -362,7 +362,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 $(BOOST_DIR): buildroot
 	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
 
-$(NGINX): buildroot libredpitaya $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
+$(NGINX): buildroot $(BOOST_DIR) libredpitaya $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(WEBSOCKETPP_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
