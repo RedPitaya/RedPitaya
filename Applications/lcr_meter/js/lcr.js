@@ -2,12 +2,13 @@
  * Red Pitaya Oscilloscope client
  *
  * Author: Luka Golinar <luka.golinar@gmail.com>
+ * Author: Dakus <info@eskala.eu>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
 */
 
-(function(OSC, $, undefined){
+(function(LCR, $, undefined){
 
 	console.log('Starting JS script');
 	//Configure APP
@@ -49,6 +50,7 @@
   		.done(function(dresult) {
   			if(dresult.status == 'OK'){
   				LCR.connectWebSocket();
+  				console.log('Socket opened');
   			}
   			else if(dresult.status == 'ERROR'){
   				console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
@@ -78,16 +80,12 @@
 				console.log('Socket opened');
 
 				LCR.params.local['in_command'] = { value: 'send_all_params' };
-			OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
-			OSC.params.local = {};
+				LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
+				LCR.params.local = {};
 			};
 
-			LCR.ws.onclose() = function(){
+			LCR.ws.onclose = function() {
 				LCR.state.socket_opened = false;
-				$('#lb_prim_displ').val('0');
-				$('#lb_prim_displ_units').val('-');
-				$('#lb_sec_displ').val('0');
-				$('#lb_sec_displ_units').val('-');
 				console.log('Socket closed');
 			};
 
@@ -116,4 +114,62 @@
 	      	};
 		}
 	};
+
+	LCR.processParameters = function(new_params){
+		var old_params = $.extend(true, {}, LCR.params.orig);
+
+		var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
+		for(var param_name in new_params){
+			LCR.params.orig[param_name] = new_params[param_name];
+
+			if(param_name == 'DUMMY_PARAM'){
+				$('#lb_prim_displ').empty().append(new_params['DUMMY_PARAM'].value);
+			}
+		}
+	};
+
+	// Sends to server modified parameters
+	LCR.sendParams = function() {
+		if($.isEmptyObject(LCR.params.local)) {
+	  		return false;
+		}
+
+		if(! LCR.state.socket_opened) {
+	  		console.log('ERROR: Cannot save changes, socket not opened');
+	  		return false;
+		}
+
+		LCR.params.local['in_command'] = { value: 'send_all_params' };
+		LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
+		LCR.params.local = {};
+
+		return true;
+	};
+
+
+}(window.LCR = window.LCR || {}, jQuery));
+
+$(function() {
+
+	console.log('Processing on site events');
+
+	//LCR set run state
+	$('#LCR_START').on('click', function(ev) {
+		ev.preventDefault();
+		$('#LCR_START').hide();
+		$('#LCR_HOLD').css('display', 'block');
+		LCR.params.local['LCR_RUN'] = { value: true };
+		LCR.sendParams();
+	});
+
+	//Freeze LCR data
+	$('#LCR_HOLD').on('click', function(ev) {
+		ev.preventDefault();
+		$('#LCR_HOLD').hide();
+		$('#LCR_START').css('display', 'block');
+		LCR.params.local['LCR_RUN'] = { value: false };
+		LCR.sendParams();
+	});
+
+	LCR.startApp();
 });
