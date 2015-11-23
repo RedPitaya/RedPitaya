@@ -1,4 +1,4 @@
 {
-global: __IMPEDANCE_APP_H*;
+global: lcrApp_*;__LCR_APP_*;
 local: *;
 };
