@@ -154,6 +154,11 @@ area:hover {
   color: #31b44b;
 }
 
+#LCR_LOG_STOP, #LCR_LOG_STOP:hover
+{
+  color: #d43f3a;
+}
+
 .navbar {
   border-radius: 0px;
   background-color: #343433;

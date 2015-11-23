@@ -109,7 +109,6 @@
 	      				LCR.processParameters(receive.parameters);
 	      			}
 	      		}
-
 	      		LCR.state.processing = false;
 	      	};
 		}
@@ -125,6 +124,10 @@
 			if(param_name == 'DUMMY_PARAM'){
 				$('#lb_prim_displ').empty().append(new_params['DUMMY_PARAM'].value);
 			}
+
+			if($('#LCR_LOG').val() == '1'){
+	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['DUMMY_PARAM'].value + '</td><td>!</td></tr>');
+	      	}
 		}
 	};
 
@@ -169,6 +172,22 @@ $(function() {
 		$('#LCR_START').css('display', 'block');
 		LCR.params.local['LCR_RUN'] = { value: false };
 		LCR.sendParams();
+	});
+
+
+	//Log data
+	$('#LCR_LOG').click(function(ev){
+		ev.preventDefault();
+		$('#LCR_LOG').hide();
+		$('#LCR_LOG_STOP').css('display', 'block');
+		$('#LCR_LOG').val('1');
+	});
+
+	$('#LCR_LOG_STOP').click(function(ev){
+		ev.preventDefault();
+		$('#LCR_LOG_STOP').hide();
+		$('#LCR_LOG').css('display', 'block');
+		$('#LCR_LOG').val('0');
 	});
 
 	LCR.startApp();
