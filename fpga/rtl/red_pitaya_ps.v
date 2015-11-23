@@ -107,6 +107,12 @@ module red_pitaya_ps (
   output  [  8-1: 0] LED_data_o            // AXI protocol checker display output, LEDs to be lighted
 );
 
+// TODO remove me when PS supports it
+assign xadc_axis_aclk   = sys_clk_o;
+assign xadc_axis_tdata  =  'b0;
+assign xadc_axis_tid    =  'b0;
+assign xadc_axis_tvalid = 1'b0;
+
 //------------------------------------------------------------------------------
 // AXI masters
 
@@ -355,6 +361,7 @@ gp0_maxi_arstn <= fclk_rstn[0];
 // PS LEDs_gpio
 
 wire [   8: 0]  gp1_gpio_leds;
+assign gp1_gpio_leds = 9'b0;  // TODO: remove me, when PS supports it again
 
 assign LED_drive_o = gp1_gpio_leds[  8] ;
 assign LED_data_o  = gp1_gpio_leds[7:0] ;
@@ -370,17 +377,6 @@ BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
 BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
 
 system_wrapper system_i (
-  // System
-  .dcm_locked        (dcm_locked       ),
-  // MIO
-  .FIXED_IO_mio      (FIXED_IO_mio     ),
-  .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
-  .FIXED_IO_ps_porb  (FIXED_IO_ps_porb ),
-  .FIXED_IO_ps_srstb (FIXED_IO_ps_srstb),
-  .FIXED_IO_ddr_vrn  (FIXED_IO_ddr_vrn ),
-  .FIXED_IO_ddr_vrp  (FIXED_IO_ddr_vrp ),
-  // Interrupts
-  .IRQ_F2P           (irq_f2p          ),
   // DDR
   .DDR_addr          (DDR_addr         ),
   .DDR_ba            (DDR_ba           ),
@@ -406,14 +402,15 @@ system_wrapper system_i (
   .FCLK_RESET1_N     (fclk_rstn[1]     ),
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
-  // XADC
-  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
-  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
-  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
-  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
-  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
+  // MIO
+  .FIXED_IO_mio      (FIXED_IO_mio     ),
+  .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
+  .FIXED_IO_ps_porb  (FIXED_IO_ps_porb ),
+  .FIXED_IO_ps_srstb (FIXED_IO_ps_srstb),
+  .FIXED_IO_ddr_vrn  (FIXED_IO_ddr_vrn ),
+  .FIXED_IO_ddr_vrp  (FIXED_IO_ddr_vrp ),
   // GP0
-  .M_AXI_GP0_aclk    (axi0_clk_i),
+  .M_AXI_GP0_ACLK    (axi0_clk_i      ),
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
   .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
   .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
@@ -492,14 +489,24 @@ system_wrapper system_i (
   .S_AXI_HP0_wid     (hp0_saxi_wid    ),  .S_AXI_HP1_wid     (hp1_saxi_wid    ), // in 6
   .S_AXI_HP0_wdata   (hp0_saxi_wdata  ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata  ), // in 64
   .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  ), // in 8
+  // XADC
+  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
+  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
+  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
+  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
+  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4])
   // XADC_AXIS
-  .M_AXIS_XADC_aclk  (xadc_axis_aclk  ),
-  .M_AXIS_XADC_tdata (xadc_axis_tdata ),
-  .M_AXIS_XADC_tid   (xadc_axis_tid   ),
-  .M_AXIS_XADC_tready(xadc_axis_tready),
-  .M_AXIS_XADC_tvalid(xadc_axis_tvalid),
+  //.M_AXIS_XADC_aclk  (xadc_axis_aclk  ),
+  //.M_AXIS_XADC_tdata (xadc_axis_tdata ),
+  //.M_AXIS_XADC_tid   (xadc_axis_tid   ),
+  //.M_AXIS_XADC_tready(xadc_axis_tready),
+  //.M_AXIS_XADC_tvalid(xadc_axis_tvalid),
   // AXI GP1 LEDs
-  .gpio_gp1_leds_tri_o (gp1_gpio_leds )
+  //.gpio_gp1_leds_tri_o (gp1_gpio_leds )
+  // System
+  //.dcm_locked        (dcm_locked       ),
+  // Interrupts
+  //.IRQ_F2P           (irq_f2p          ),
 );
 
 endmodule
