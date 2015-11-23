@@ -3,11 +3,9 @@
 
 #include <DataManager.h>
 #include <CustomParameters.h>
-#include "rpApp.h"
 
-#define CH_SIGNAL_SIZE_DEFAULT		1024
-#define CALIB_FE_LV_REF_V           1.0f
-#define CALIB_FE_HV_REF_V           5.0f
+#include "lcrApp.h"
+
 
 #define IF_VALUE_CHANGED(X, ACTION) \
 if (X.Value() != X.NewValue()) { \
@@ -25,18 +23,6 @@ if (X.Value() != X.NewValue()) { \
         ACTION2;    X.Update(); }}
 
 #define IS_NEW(X) X.Value() != X.NewValue()
-
-
-
-float getMeasureValue(int measure);
-void synthesis_sin(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
-void synthesis_triangle(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
-void synthesis_square(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
-int synthesis_rampUp(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
-int synthesis_rampDown(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
-int synthesis_DC(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff);
-int synthesis_PWM(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff, float ratio);
-void generate(rp_channel_t channel);
 
 
 #ifdef __cplusplus
