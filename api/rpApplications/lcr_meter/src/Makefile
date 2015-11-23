@@ -33,9 +33,10 @@ OUTPUT_DIR  = ../../../lib
 TARGET=$(OUTPUT_DIR)/librpapp_lcr.so
 
 # List of compiled object files
-OBJECTS =	common.o \
-		impApp.o \
-		impedance_analyzer.o
+OBJECTS =	calib.o \
+		utils.o \
+		impedance_analyzer.o \
+		lcrApp.o \
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
@@ -43,10 +44,7 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -L$(OUTPUT_DIR)
 CFLAGS += -I../../../include -I../../../rpbase/src
-LDFLAGS=-shared -Wl,--version-script=exportmap
-
-# Red Pitaya common SW directory
-SHARED=../../shared/
+LDFLAGS=-shared
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
