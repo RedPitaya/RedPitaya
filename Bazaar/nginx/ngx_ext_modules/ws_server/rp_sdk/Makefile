@@ -22,7 +22,10 @@ CRYPTO_DIR=../../../../tools/cryptopp
 CRYPTO_INSTALL_DIR=../../../../tools/build
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
+CXXFLAGS=-c -Wall -O0 -static -std=c++0x -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
+
+AR=$(CROSS_COMPILE)ar
+RANLIB=$(CROSS_COMPILE)ranlib
 
 ifeq ($(ENABLE_LICENSING),true)
 SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
@@ -44,13 +47,14 @@ all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ AR=$(CROSS_COMPILE)ar RANLIB=$(CROSS_COMPILE)ranlib PREFIX=../build static
+	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ AR=$(CROSS_COMPILE)ar RANLIB=$(CROSS_COMPILE)ranlib PREFIX=../build install
 
 $(LIB): $(OBJECTS)
 	mkdir -p $(OBJDIR)/cryptopp
-	cd $(OBJDIR)/cryptopp; ar -x $(CURRENT_DIR)/$(CRYPTO_LIB)
-	ar rc $(LIB) objs/cryptopp/*.o $(OBJECTS)
+	cd $(OBJDIR)/cryptopp; $(CROSS_COMPILE)ar -x $(CURRENT_DIR)/$(CRYPTO_LIB)
+	$(CROSS_COMPILE)ar cr $@ objs/cryptopp/*.o $(OBJECTS)
+	$(CROSS_COMPILE)ranlib $@
 
 $(SDKOBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)

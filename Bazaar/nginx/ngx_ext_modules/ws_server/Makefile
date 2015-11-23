@@ -1,6 +1,6 @@
 LIBJSON_DIR=../../../tools/libjson
-CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O3 -static -std=c++11 -Iwebsocketpp -I$(SYSROOT)/usr/include -I$(LIBJSON_DIR) -I$(LIBJSON_DIR)/.. -L$(SYSROOT)/usr/lib/ -L. -lboost_system -DWEBSOCKETPP_STRICT_MASKING
+
+CXXFLAGS=-c -Wall -O3 -static -std=c++0x -Iwebsocketpp -I$(SYSROOT)/usr/include -I$(LIBJSON_DIR) -I$(LIBJSON_DIR)/.. -L$(SYSROOT)/usr/lib/ -L. -lboost_system -DNDEBUG -D__ARM_PCS_VFP -D_WEBSOCKETPP_NO_CPP11_SYSTEM_ERROR_ -DJSON_ISO_STRICT -DWEBSOCKETPP_STRICT_MASKING
 SOURCES= rp_websocket_server.cpp \
 	ws_server.cpp \
 	$(LIBJSON_DIR)/_internal/Source/internalJSONNode.cpp \
@@ -27,7 +27,8 @@ RP_MANAGER_LIB=$(RP_MANAGER_DIR)/librp_sdk.a
 all: $(RP_MANAGER_LIB) $(SOURCES) $(LIB)
     
 $(LIB): $(OBJECTS) 
-	ar rc $(LIB) $(OBJECTS)
+	$(AR) cr $@ $(OBJECTS)
+	$(RANLIB) $@
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $< -o $@
