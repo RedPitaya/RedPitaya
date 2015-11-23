@@ -74,6 +74,3 @@ preplace netloc IRQ_F2P_1 1 0 3 NJ 330 NJ 330 NJ
 levelinfo -pg 1 0 100 350 660 930 1310 1550 -top 0 -bot 910
 ",
 }
-{
-   da_board_cnt: "1",
-}
