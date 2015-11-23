@@ -47,7 +47,7 @@ create_project -in_memory -part $part
 source                            $path_ip/system_bd.tcl
 
 # generate SDK files
-generate_target all [get_files    system.bd]
+generate_target all               [get_files system.bd]
 write_hwdef    -force -file       $path_sdk/red_pitaya.hwdef
 
 
@@ -61,15 +61,15 @@ write_hwdef    -force -file       $path_sdk/red_pitaya.hwdef
 # template
 #read_verilog                     $path_rtl/...
 
-read_verilog                      $path_bd/system/hdl/system_wrapper.v
-read_bd                           [get_files { $path_bd/system/system.bd .srcs/sources_1/bd/system/system.bd }]
+#read_bd                          [get_files system.bd]
+read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 read_verilog                      $path_rtl/axi_master.v
 read_verilog                      $path_rtl/axi_pc2leds.v
 read_verilog                      $path_rtl/axi_slave.v
 read_verilog                      $path_rtl/axi_wr_fifo.v
 
-read_verilog                      $path_rtl/pwm.sv
+read_verilog   -sv                $path_rtl/pwm.sv
 
 read_verilog                      $path_rtl/red_pitaya_ams.v
 read_verilog                      $path_rtl/red_pitaya_asg.v
@@ -78,10 +78,10 @@ read_verilog                      $path_rtl/red_pitaya_dfilt1.v
 read_verilog                      $path_rtl/red_pitaya_hk.v
 read_verilog                      $path_rtl/red_pitaya_pid.v
 read_verilog                      $path_rtl/red_pitaya_pid_block.v
-read_verilog                      $path_rtl/red_pitaya_pll.sv
+read_verilog   -sv                $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.v
-read_verilog                      $path_rtl/red_pitaya_pwm.sv
-read_verilog                      $path_rtl/red_pitaya_radiobox.sv
+read_verilog   -sv                $path_rtl/red_pitaya_pwm.sv
+read_verilog   -sv                $path_rtl/red_pitaya_radiobox.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 
