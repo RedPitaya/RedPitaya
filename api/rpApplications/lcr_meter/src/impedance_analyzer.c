@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <sys/syslog.h>
 
 #include "impedance_analyzer.h"
 #include "utils.h"
@@ -30,7 +31,7 @@
 #include "redpitaya/rp.h"
 
 /* Global variables definition */
-int 					min_periodes = 20;
+int 					min_periodes = 10;
 uint32_t 				acq_size = 1024;
 
 pthread_mutex_t 		mutex;
@@ -40,16 +41,8 @@ pthread_t 				*imp_thread_handler = NULL;
 params_t main_params = 
 	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false};
 
-/* Decimation constants */
-static const uint32_t IMP_DEC_1		= 1;
-static const uint32_t IMP_DEC_8		= 8;
-static const uint32_t IMP_DEC_64	= 64;
-static const uint32_t IMP_DEC_1024  = 1024;
-static const uint32_t IMP_DEC_8192	= 8192;
-static const uint32_t IMP_DEC_65536 = 65536;
-
 /* Init the main API structure */
-int imp_Init(){
+int lcr_Init(){
 
 	/* Init mutex thread */
 	if(pthread_mutex_init(&mutex, NULL)){
@@ -70,9 +63,8 @@ int imp_Init(){
 	/* Set some default values */
 	ECHECK_APP(rp_AcqReset());
 	ECHECK_APP(rp_GenReset());
-	ECHECK_APP(rp_AcqSetTriggerLevel(0.1));
-	ECHECK_APP(rp_AcqSetTriggerDelay(8192));
-
+	ECHECK_APP(rp_AcqSetTriggerDelay(ADC_BUFF_SIZE / 2));
+	ECHECK_APP(rp_AcqSetTriggerLevel(0));
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
@@ -105,12 +97,12 @@ int imp_SetDefaultValues(){
 	ECHECK_APP(imp_SetAmplitude(1));
 	ECHECK_APP(imp_SetDcBias(0));
 	ECHECK_APP(imp_SetAveraging(1));
-	ECHECK_APP(_setRShunt(R_SHUNT_7_5K));
+	ECHECK_APP(_setRShunt(R_SHUNT_30));
 	ECHECK_APP(imp_SetCalibMode(CALIB_NONE));
 	ECHECK_APP(imp_SetRefReal(0.0));
 	ECHECK_APP(imp_SetRefImg(0.0));
 	ECHECK_APP(imp_SetSteps(0));
-	ECHECK_APP(imp_SetStartFreq(1000.0));
+	ECHECK_APP(lcr_SetStartFreq(1000.0));
 	ECHECK_APP(imp_SetEndFreq(20000.0));
 	ECHECK_APP(imp_SetScaleType(SCALE_LINEAR));
 	ECHECK_APP(imp_SetSweepMode(FREQUENCY_SWEEP));
@@ -136,19 +128,17 @@ int _SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 /* Acquire functions. Callback to the API structure */
 int _SafeThreadAcqData(rp_channel_t channel, 
 	float *data, rp_acq_decimation_t decimation){
+	rp_acq_trig_state_t state;
 
 	pthread_mutex_lock(&mutex);	
-	
-	rp_acq_trig_state_t state = RP_TRIG_STATE_WAITING;
-	
-	ECHECK_APP(rp_AcqSetDecimation(decimation));
+	ECHECK_APP(rp_AcqSetDecimation(1));
+	usleep(1000);
 	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
 	ECHECK_APP(rp_AcqStart());
-
+	state = RP_TRIG_STATE_WAITING;
 	while(state == RP_TRIG_STATE_WAITING){
 		ECHECK_APP(rp_AcqGetTriggerState(&state));
 	}
-
 	ECHECK_APP(rp_AcqGetOldestDataV(channel, &acq_size, data));
 	pthread_mutex_unlock(&mutex);
 
@@ -156,11 +146,12 @@ int _SafeThreadAcqData(rp_channel_t channel,
 }
 
 int main_sweep(float *ampl_z_out){
-
 	float w_out, start_freq, end_freq;
 	float amplitude = main_params.amplitude;
 	int averaging = main_params.avg,
-		dc_bias = main_params.dc_bias, z_ampl;
+		dc_bias = main_params.dc_bias;
+
+	float z_ampl;
 
 	
 	int freq_step, i = 0;
@@ -194,28 +185,32 @@ int main_sweep(float *ampl_z_out){
 	while(1){
 
 		//Calculate output angular velocity
-		w_out = frequency[i] * 2 * M_PI;
+		w_out = frequency[0] * 2 * M_PI;
 		frequency[i] = start_freq + (freq_step * i);
 
 		//Generate a sinusoidal wave form
-		int ret_val = _SafeThreadGen(RP_CH_1, amplitude, frequency[i]);
+		int ret_val = _SafeThreadGen(RP_CH_1, amplitude, frequency[0]);
 		if(ret_val != RP_OK){
 			printf("Error generating api signal: %s\n", rp_GetError(ret_val));
 			return RP_EOOR;
 		}
 
 		//Get decimation value from frequency
-		_getDecimationValue(frequency[i], &api_decimation, &decimation);
-		printf("%d\n", decimation);
-		
-		uint32_t new_size = round((min_periodes * SAMPLE_RATE) /
-			(frequency[0] * decimation));
+		_getDecimationValue(frequency[0], &api_decimation, &decimation);
 
-		acq_size = new_size;
+		syslog(LOG_INFO, "%d\n", decimation);
+		syslog(LOG_INFO, "%f\n", frequency[0]);
+		
+		//uint32_t new_size = round((min_periodes * SAMPLE_RATE) /
+		//	(frequency[0] * decimation));
+
+		syslog(LOG_INFO, "Problem\n");
+		acq_size = 16384;
 		float *ch1_data = (float *)malloc(acq_size * sizeof(float));
 		float *ch2_data = (float *)malloc(acq_size * sizeof(float));
 		float **analysis_data = multiDimensionVector(acq_size);
 
+		syslog(LOG_INFO, "Problem\n");
 		ret_val = _SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
 		if(ret_val != RP_OK){
 			printf("Error acquiring data: %s\n", rp_GetError(ret_val));
@@ -227,21 +222,42 @@ int main_sweep(float *ampl_z_out){
 			printf("Error acquiring data: %s\n", rp_GetError(ret_val));
 			return RP_EOOR;
 		}
+		char file1[20];
+		char file2[20];
+		sprintf(file1, "/tmp/datach1-%d",i);
+		sprintf(file2, "/tmp/datach2-%d",i);
+
+		FILE *f1 = fopen(file1, "w+");
+		FILE *f2 = fopen(file2, "w+");
+
 		/* Two dimension vector creation -- u_acq */
 		for(int k = 0; k < acq_size; k++){
 			analysis_data[0][k] = ch1_data[k];
+			fprintf(f1, "%f\n", ch1_data[k]);
 			analysis_data[1][k] = ch2_data[k];
+			fprintf(f2, "%f\n", ch2_data[k]);
 		}
 		ret_val = _data_analysis(analysis_data, acq_size, dc_bias, 
 					r_shunt, Z, w_out, decimation);
 
+		syslog(LOG_INFO, "Problem\n");
 		z_ampl = sqrtf(powf(creal(*Z), 2) + powf(cimag(*Z), 2));
+
+		FILE *f3 = fopen("/tmp/z_ampl", "a+");
+		fprintf(f3, "%f\n", z_ampl);
 		break;
+		i++;
+		fclose(f1);
+		fclose(f2);
+		fclose(f3);
 	}
+
+
 
 	//Disable channel 1 generation module
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1)); 
 	*ampl_z_out = z_ampl;
+	//syslog(LOG_INFO, "%f\n", z_ampl);
 	return RP_OK;
 }
 
@@ -270,7 +286,7 @@ int _data_analysis(float **data,
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
-		i_dut[i] = data[1][i] / ((r_shunt * 1e6 ) / (r_shunt + 1e6));
+		i_dut[i] = data[1][i] / ((30 * 1e6 ) / (30 + 1e6));
 	}
 
 	for(int i = 0; i < size; i++){
@@ -339,8 +355,6 @@ void *imp_MainThread(void *args){
 /* Main call function */
 int lcr_Run(float *amplitude){
 
-
-	imp_Init();
 	int err;
 	pthread_t imp_thread_handler;
 	err = pthread_create(&imp_thread_handler, 0, imp_MainThread, amplitude);
@@ -469,7 +483,8 @@ int imp_GetSteps(uint32_t *steps){
 	return RP_OK;
 }
 
-int imp_SetStartFreq(float start_freq){
+int lcr_SetStartFreq(float start_freq){
+	syslog(LOG_INFO, "INSIDE SETTER: %f\n", start_freq);
 	main_params.start_freq = start_freq;
 	return RP_OK;
 }
@@ -526,7 +541,7 @@ int imp_GetUserWait(bool *user_wait){
 
 int main(void){
 
-	imp_Init();
+	lcr_Init();
 	float amplitude;
 	main_sweep(&amplitude);
 

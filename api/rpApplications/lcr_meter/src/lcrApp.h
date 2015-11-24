@@ -28,7 +28,7 @@ extern "C" {
 /** TODO: Function desciption is still to be added. */
 
 /* Impedance analyzer measurment specific functions */
-int impApp_ImpInit();
+int lcrApp_lcrInit();
 int lcrApp_LcrRun(float *amplitudez);
 int impApp_ImpStop();
 int impApp_ImpRelease();
@@ -39,7 +39,7 @@ int impApp_ImpSetAmpl(float amplitude);
 int impApp_ImpSetAvg(int averaging);
 int impApp_ImpSetDcBias(float dc_bias);
 int impApp_ImpSetSteps(uint32_t steps);
-int impApp_ImpSetStartFreq(float s_freq);
+int lcrApp_lcrSetStartFreq(float s_freq);
 int impApp_ImpSetEndFreq(float e_freq);
 int impApp_ImpSetYplot(int y_plot);
 int impApp_ImpSetScale(int scale);

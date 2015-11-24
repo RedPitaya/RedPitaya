@@ -19,8 +19,8 @@
 #include "common.h"
 
 /* Resource managment functions */
-int impApp_ImpInit(){
-	return imp_Init();
+int lcrApp_lcrInit(){
+	return lcr_Init();
 }
 
 int impApp_ImpRelease(){
@@ -59,8 +59,8 @@ int impApp_ImpGetSteps(uint32_t *steps){
 	return imp_GetSteps(steps);
 }
 
-int impApp_ImpSetStartFreq(float s_freq){
-	return imp_SetStartFreq(s_freq);
+int lcrApp_lcrSetStartFreq(float s_freq){
+	return lcr_SetStartFreq(s_freq);
 }
 
 int impApp_ImpGetStartFreq(float *s_freq){

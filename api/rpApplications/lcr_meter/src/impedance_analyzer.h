@@ -97,7 +97,7 @@ static inline char *stringFromCalib(enum calibration calib)
 }
 
 /* Resource managment functions */
-int imp_Init();
+int lcr_Init();
 int imp_Release();
 int imp_Reset();
 int imp_SetDefaultValues();
@@ -140,7 +140,7 @@ int imp_GetRefImg(float *ref_img);
 
 int imp_SetSteps(uint32_t steps);
 int imp_GetSteps(uint32_t *steps);
-int imp_SetStartFreq(float start_freq);
+int lcr_SetStartFreq(float start_freq);
 int imp_GetStartFreq(float *start_freq);
 int imp_SetEndFreq(float end_freq);
 int imp_GetEndFreq(float *end_freq);
