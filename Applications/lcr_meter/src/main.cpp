@@ -13,8 +13,9 @@
 //TODO make a more detailed parameters specification. More parameters soon to be added.
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 100);
 
-CIntParameter dummyData("DUMMY_PARAM", CBaseParameter::RW, -1, 0, -1, 10);
+CFloatParameter amplitudeZ("AMPLITUDEZ", CBaseParameter::RW, 0, 0, 0, 1000000);
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
+CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 100000);
 
 
 
@@ -25,6 +26,8 @@ const char *rp_app_desc(void){
 int rp_app_init(void){	
 	fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
+
+	lcrApp_lcrInit();
 
 	//impApp_ImpInit();
 	return 0;
@@ -54,14 +57,26 @@ void UpdateParams(void){
 	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 	CDataManager::GetInstance()->SendAllParams();
 
-	float amplitudez;
+	float ampl_z;
+
+	/*Change frequency*/
+	if(IS_NEW(frequency)){
+		lcrApp_lcrSetStartFreq(frequency.NewValue());
+		frequency.Update();
+	}
+
 
 	if(startMeasure.NewValue() == false){
-		dummyData.Value() = 2;
+		
+		amplitudeZ.Value() = 0;
+		startMeasure.Update();
+		
 	}else if(startMeasure.NewValue() == true){
-		lcrApp_LcrRun(&amplitudez);
-		dummyData.Value() = amplitudez;
+		lcrApp_LcrRun(&ampl_z);
+		startMeasure.Update();
+		amplitudeZ.Value() = ampl_z;
 	}
+
 }
 
 void OnNewParams(void){
