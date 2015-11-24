@@ -121,12 +121,12 @@
 		for(var param_name in new_params){
 			LCR.params.orig[param_name] = new_params[param_name];
 
-			if(param_name == 'DUMMY_PARAM'){
-				$('#lb_prim_displ').empty().append(new_params['DUMMY_PARAM'].value);
+			if(param_name == 'AMPLITUDEZ'){
+				$('#lb_prim_displ').empty().append(Math.round(new_params['AMPLITUDEZ'].value * 100) / 100);
 			}
 
 			if($('#LCR_LOG').val() == '1'){
-	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['DUMMY_PARAM'].value + '</td><td>!</td></tr>');
+	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['AMPLITUDEZ'].value + '</td><td>!</td></tr>');
 	      	}
 		}
 	};
@@ -161,6 +161,10 @@ $(function() {
 		ev.preventDefault();
 		$('#LCR_START').hide();
 		$('#LCR_HOLD').css('display', 'block');
+		
+		//Get value
+		var freq = parseInt($("#LCR_FREQUENCY").val());
+		LCR.params.local['LCR_FREQ'] = { value: freq };
 		LCR.params.local['LCR_RUN'] = { value: true };
 		LCR.sendParams();
 	});
@@ -188,6 +192,12 @@ $(function() {
 		$('#LCR_LOG_STOP').hide();
 		$('#LCR_LOG').css('display', 'block');
 		$('#LCR_LOG').val('0');
+	});
+	
+	$('#LCR_FREQUENCY').change(function(){
+		console.log(parseInt(this.value));
+		LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
+		LCR.sendParams();
 	});
 
 	LCR.startApp();

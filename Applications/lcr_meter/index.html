@@ -210,11 +210,11 @@
 			                		<label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Frequency: </label>
 			                	</div>
 			                  	<div class="col-xs-8" style="float: right">
-			                  		<select class="form-control">
-			                  			<option value="0">100 Hz</option>
-			                  			<option value="1">1 kHz</option>
-			                  			<option value="2">10 kHz</option>
-			                  			<option value="3">100 kHz</option>
+			                  		<select id="LCR_FREQUENCY" class="form-control">
+			                  			<option value="100">100 Hz</option>
+			                  			<option value="1000">1 kHz</option>
+			                  			<option value="10000">10 kHz</option>
+			                  			<option value="100000">100 kHz</option>
 			                  		</select>
 	        					</div>
 			                </div>
@@ -316,7 +316,7 @@
 	function clearTableAll(){
 		$('#m_table td').remove();
 	}
-	
+
 
 
 </script>
