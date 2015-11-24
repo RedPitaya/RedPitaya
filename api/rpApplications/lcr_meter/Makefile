@@ -9,7 +9,7 @@
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-LIRPAPP=../lib/librplcr.so
+LIRPAPP=../lib/librpapp_lcr.so
 
 all: $(LIRPAPP)
 
