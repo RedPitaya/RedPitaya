@@ -28,6 +28,8 @@ add_modules=--add-module=../ngx_ext_modules/lua-nginx-module --add-module=../ngx
 add_conf_params=--with-zlib=../../../OS/buildroot/buildroot-2014.02/output/build/zlib-1.2.8 --with-pcre=../../../OS/buildroot/buildroot-2014.02/output/build/pcre-8.34
 VERSION=$(VER)-$(BUILD_NUMBER)
 
+.PHONY: all install clean
+
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
