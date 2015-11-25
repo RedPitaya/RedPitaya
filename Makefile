@@ -157,7 +157,7 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGIN
 	##cp /opt/Xilinx/SDK/2015.3/gnu/aarch32/lin/gcc-arm-linux-gnueabi/arm-linux-gnueabihf/lib/arm-linux-gnueabi/libstdc++.so.6 $(TARGET)/lib
 	cp $(SYSROOT)/usr/lib/libstdc++.a $(TARGET)/lib
 	$(CROSS_COMPILE)$(CXX) -shared -o $(TARGET)/lib/libstdc++.so -Wl,--whole-archive -L $(TARGET)/usr/lib -lstdc++ -Wl,--no-whole-archive
-	cp $(SYSROOT)/usr/lib/libboost*.so $(TARGET)/lib; chmod 775 $(TARGET)/lib/libboost*.so
+	cp $(SYSROOT)/usr/lib/libboost*.so* $(TARGET)/lib; chmod 775 $(TARGET)/lib/libboost*.so*
 
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
