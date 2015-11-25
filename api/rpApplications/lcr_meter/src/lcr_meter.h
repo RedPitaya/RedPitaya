@@ -12,10 +12,8 @@
 * for more details on the language used herein.
 */
 
-#ifndef __IMPEDANCEANALYZER_H
-#define __IMPEDANCEANALYZER_H
-
-#include <complex.h> 
+#ifndef __LCRMETER_H
+#define __LCRMETER_H
 
 #include "redpitaya/rp.h"
 #include "lcrApp.h"
@@ -96,6 +94,7 @@ int lcr_getRShunt(uint32_t *r_shunt);
 int lcr_SetCalibMode(calib_t mode);
 int lcr_GetCalibMode(calib_t *mode);
 
-#endif //__IMPEDANCEANALYZER_H
+
+#endif //__LCRMETER_H
 
 

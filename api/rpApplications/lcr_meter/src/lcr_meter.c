@@ -22,8 +22,9 @@
 #include <string.h>
 #include <math.h>
 #include <sys/syslog.h>
+#include <complex.h>
 
-#include "impedance_analyzer.h"
+#include "lcr_meter.h"
 #include "utils.h"
 #include "calib.h"
 #include "../../rpbase/src/common.h"
