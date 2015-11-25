@@ -13,9 +13,20 @@
 //TODO make a more detailed parameters specification. More parameters soon to be added.
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 100);
 
+//Meas param
 CFloatParameter amplitudeZ("AMPLITUDEZ", CBaseParameter::RW, 0, 0, 0, 1000000);
+CFloatParameter phaseZ("PHASEZ", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_L("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_C("LCR_C", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_R("LCR_R", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_P("LCR_P", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_D("LCR_D", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_E("LCR_E", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
 CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 100000);
+
 
 
 
@@ -61,7 +72,7 @@ void UpdateParams(void){
 
 	/*Change frequency*/
 	if(IS_NEW(frequency)){
-		lcrApp_lcrSetStartFreq(frequency.NewValue());
+		lcrApp_LcrSetFrequency(frequency.NewValue());
 		frequency.Update();
 	}
 
