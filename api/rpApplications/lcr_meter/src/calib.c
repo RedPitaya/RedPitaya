@@ -17,22 +17,22 @@
 
 #include "calib.h"
 
-FILE* store_calib(const calib_t CALIB_MODE,
-				  const float *amplitude_z){
+int store_calib(const calib_t CALIB_MODE,
+				const float *amplitude_z){
 
 
 	char calib_data_path[100];
-	strcpy(calib_data_path, "/tmp/");
+	strcpy(calib_data_path, APP_PATH);
 	strcat(calib_data_path, stringFromCalib(CALIB_MODE));
 
 	//Open file pointer to store calib data
 	FILE *calibration_data = fopen(&calib_data_path[0], "w+");
 	
 	//Write data to calib_file
-	for(int i = 0; i < CALIB_SIZE; i++){
+	for(int i = 0; i < CALIB_STEPS; i++){
 		fprintf(calibration_data, "%.10f\n", amplitude_z[i]);
 	}
 
 
-	return calibration_data;
+	return 0;
 }

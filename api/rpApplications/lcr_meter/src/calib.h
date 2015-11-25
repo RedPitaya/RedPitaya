@@ -20,7 +20,9 @@
 #include "redpitaya/rp.h"
 #include "impedance_analyzer.h"
 
-FILE* store_calib(const calib_t CALIB_MODE,
+#define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter"
+
+int store_calib(const calib_t CALIB_MODE,
 				  const float *amplitude_z);
 
 #endif //__CALIB_H
