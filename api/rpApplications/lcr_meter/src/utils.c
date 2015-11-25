@@ -129,26 +129,6 @@ float vectorMax(float *data, int size){
 	return max;
 }
 
-#if 0
-float vectorApprox(float *data, int size, float approx_val, bool min){
-
-	/* Get vector max value */
-	float closet_val = vectorMax(data, size);
-
-	for(int i = 0; i < size; ++i){
-		if(min){
-			if(abs(data[i] - approx_val < closet_val) && (data[i] < approx_val)){
-				closet_val = data[i];
-			} 
-		}else if(abs(data[i] - approx_val < closet_val) && (data[i] > approx_val)){
-			closet_val = data[i];
-		}	
-	}
-
-	return closet_val;
-}
-#endif
-
 float trapezoidalApprox(float *data, float T, int size){
 	float result = 0;
 
@@ -184,7 +164,26 @@ float **multiDimensionVector(int second_dimenson){
 }
 
 
-int _getDecimationValue(float frequency,
+int lcr_switchRShunt(float z_ampl, uint32_t *r_shunt){
+
+	if(z_ampl <= 50) 							*r_shunt = R_SHUNT_30;
+	else if(z_ampl <= 100 && z_ampl > 50) 		*r_shunt = R_SHUNT_75;
+	else if(z_ampl <= 500 && z_ampl > 100) 		*r_shunt = R_SHUNT_300;
+	else if(z_ampl <= 1000 && z_ampl > 500) 	*r_shunt = R_SHUNT_750;
+	else if(z_ampl <= 5000 && z_ampl > 1000) 	*r_shunt = R_SHUNT_3K;
+	else if(z_ampl <= 10000 && z_ampl > 5000) 	*r_shunt = R_SHUNT_7_5K;
+	else if(z_ampl <= 50e3 && z_ampl > 10000) 	*r_shunt = R_SHUNT_30K;
+	else if(z_ampl <= 100e3 && z_ampl > 50e3) 	*r_shunt = R_SHUNT_80K;
+	else if(z_ampl <= 500e3 && z_ampl > 100e3) 	*r_shunt = R_SHUNT_430K;
+	else if(z_ampl > 500e3) 					*r_shunt = R_SHUNT_3M;
+	else 										return RP_EOOR;
+
+	return RP_OK;
+}
+
+
+
+int lcr_getDecimationValue(float frequency,
 						rp_acq_decimation_t *api_dec,
 						int *dec_val){
 
