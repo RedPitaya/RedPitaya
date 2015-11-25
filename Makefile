@@ -20,6 +20,17 @@
 
 TMP = tmp
 
+ifndef CROSS_COMPILE
+$(error Are you sure to compile w/o CROSS_COMPILE?  Please start settings.sh prior to this make command)
+endif
+
+# check, which boot image / file system should be entered from the FSBL (first stage boot loader)
+ifndef FSBL_BR
+ifndef FSBL_DEBIAN
+$(error At least one of FSBL_BR or FSBL_DEBIAN has to be enabled for the build process. See in settings.sh for more details)
+endif
+endif
+
 # check if download cache directory is available
 ifdef BR2_DL_DIR
 DL=$(BR2_DL_DIR)
@@ -126,14 +137,37 @@ export GREET_MSG
 # tarball
 ################################################################################
 
+.PHONY: target_base
+
 all: zip sdk apps-free
 
 $(TMP):
 	mkdir -p $@
 
+ifdef FSBL_BR
+ifdef FSBL_DEBIAN
+$(info *** make BuildRoot and build for Debian entry ***) 
 $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api apps_pro rp_communication
+	   scpi api apps_pro rp_communication \
+	   target_base
+else
+$(info *** make BuildRoot ***)
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
+	   scpi api apps_pro rp_communication \
+	   target_base
+endif
+
+else
+$(info *** build for Debian entry ***)
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(IDGEN) $(NGINX) \
+	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
+	   scpi api apps_pro rp_communication \
+	   target_base
+endif
+
+target_base:
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -151,13 +185,10 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGIN
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
-	## copy Linaro runtime library to fix dependency issues on Debian
-	## TODO: find a better solution
-	##cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
-	##cp /opt/Xilinx/SDK/2015.3/gnu/aarch32/lin/gcc-arm-linux-gnueabi/arm-linux-gnueabihf/lib/arm-linux-gnueabi/libstdc++.so.6 $(TARGET)/lib
-	cp $(SYSROOT)/usr/lib/libstdc++.a $(TARGET)/lib
-	$(CROSS_COMPILE)$(CXX) -shared -o $(TARGET)/lib/libstdc++.so -Wl,--whole-archive -L $(TARGET)/usr/lib -lstdc++ -Wl,--no-whole-archive
-	cp $(SYSROOT)/usr/lib/libboost*.so* $(TARGET)/lib; chmod 775 $(TARGET)/lib/libboost*.so*
+	# copy static library that was used for compilation nginx and create shared object of it
+	cp $(SYSROOT)/usr/lib/libstdc++.a $(TARGET)/lib; \
+		$(CROSS_COMPILE)$(CXX) -shared -o $(TARGET)/lib/libstdc++.so \
+		-Wl,--whole-archive -L $(TARGET)/usr/lib -lstdc++ -Wl,--no-whole-archive
 
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
@@ -202,7 +233,13 @@ $(UBOOT): $(UBOOT_DIR)
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Buildroot" -d $(UBOOT_SCRIPT_BUILDROOT) $@.buildroot
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
+ifdef FSBL_DEBIAN
 	cp $@.debian $@
+else
+ifdef FSBL_BR
+	cp $@.buildroot $@
+endif
+endif
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
 	mkdir -p $(INSTALL_DIR)/etc/
