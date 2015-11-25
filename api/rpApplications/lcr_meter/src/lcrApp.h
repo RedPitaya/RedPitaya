@@ -25,42 +25,14 @@ extern "C" {
 */
 ///@{
 
-/** TODO: Function desciption is still to be added. */
-
-/* Impedance analyzer measurment specific functions */
 int lcrApp_lcrInit();
+int lcrApp_LcrRelease();
+
 int lcrApp_LcrRun(float *amplitudez);
-int impApp_ImpStop();
-int impApp_ImpRelease();
-int impApp_ImpReset();
 
-/* Getters and setters */
-int impApp_ImpSetAmpl(float amplitude);
-int impApp_ImpSetAvg(int averaging);
-int impApp_ImpSetDcBias(float dc_bias);
-int impApp_ImpSetSteps(uint32_t steps);
-int lcrApp_lcrSetStartFreq(float s_freq);
-int impApp_ImpSetEndFreq(float e_freq);
-int impApp_ImpSetYplot(int y_plot);
-int impApp_ImpSetScale(int scale);
-int impApp_ImpSetLoadRe(float load_re);
-int impApp_ImpSetLoadImg(float load_img);
-int impApp_ImpSetCalib(int calib);
-
-int impApp_ImpGetAmpl(float *amplitude);
-int impApp_ImpGetAvg(int *averaging);
-int impApp_ImpGetDcBias(float *dc_bias);
-int impApp_ImpGetSteps(uint32_t *steps);
-int impApp_ImpGetStartFreq(float *s_freq);
-int impApp_ImpGetEndFreq(float *e_freq);
-int impApp_ImpGetYplot(int *y_plot);
-int impApp_ImpGetScale(int *scale);
-int impApp_ImpGetLoadRe(float *load_re);
-int impApp_ImpGetLoadImg(float *load_img);
-int impApp_ImpGetCalib(int *calib);
-
-/* Impedance anaylzer save data functionality */
-int lcrApp_ImpSaveData(bool save);
+//Getters, setters
+int lcrApp_LcrSetFrequency(float frequency);
+int lcrApp_LcrGetFrequency(float *frequency);
 
 #ifdef __cplusplus
 }

@@ -23,86 +23,24 @@ int lcrApp_lcrInit(){
 	return lcr_Init();
 }
 
-int impApp_ImpRelease(){
-	return imp_Release();
+int lcrApp_LcrRelease(){
+	return lcr_Release();
 }
 
-int impApp_ImpReset(){
-	return imp_Reset();
+int lcrApp_LcrReset(){
+	return lcr_Reset();
 }
 
 int lcrApp_LcrRun(float *amplitudez){
 	return lcr_Run(amplitudez);
 }
 
-int impApp_ImpSetAmpl(float amplitude){
-	return imp_SetAmplitude(amplitude);
+int lcrApp_LcrSetFrequency(float frequency){
+	return lcr_SetFrequency(frequency);
 }
 
-int impApp_ImpGetAmpl(float *amplitude){
-	return imp_GetAmplitude(amplitude);
+int lcrApp_LcrGetFrequency(float *frequency){
+	return lcr_GetFrequency(frequency);
 }
-
-int impApp_ImpSetDcBias(float dc_bias){
-	return imp_SetDcBias(dc_bias);
-}
-
-int impApp_ImpGetDcBias(float *dc_bias){
-	return imp_GetDcBias(dc_bias);
-}
-
-int impApp_ImpSetSteps(uint32_t steps){
-	return imp_SetSteps(steps);
-}
-
-int impApp_ImpGetSteps(uint32_t *steps){
-	return imp_GetSteps(steps);
-}
-
-int lcrApp_lcrSetStartFreq(float s_freq){
-	return lcr_SetStartFreq(s_freq);
-}
-
-int impApp_ImpGetStartFreq(float *s_freq){
-	return imp_GetStartFreq(s_freq);
-}
-
-int impApp_ImpSetEndFreq(float e_freq){
-	return imp_SetEndFreq(e_freq);
-}
-
-int impApp_ImpGetEndFreq(float *e_freq){
-	return imp_GetEndFreq(e_freq);
-}
-
-/* TODO: Implement in first layer - lcr_meter */
-int impApp_SetYplot(int y_plot) { return 0; }
-
-int impApp_GetYplot(int y_plot) { return 0; }
-
-int impApp_ImpSetLoadRe(float load_re){
-	return imp_SetRefReal(load_re);
-}
-
-int impApp_ImpGetLoadRe(float *load_re){
-	return imp_GetRefReal(load_re);
-}
-
-int impApp_ImpSetLoadImg(float load_img){
-	return imp_SetRefImg(load_img);
-}
-
-int impApp_ImpGetLoadImg(float *load_img){
-	return imp_GetRefImg(load_img);
-}
-
-//int impApp_ImpSetCalib(int calib){
-//	return imp_SetCalibMode(calib);
-//X}
-
-//int impApp_ImpGetCalib(int *calib){
-//	return imp_GetCalibMode(calib);
-//}
-
 
 
