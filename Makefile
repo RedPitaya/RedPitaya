@@ -93,6 +93,7 @@ ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
 SDK_DIR         = SDK/
+BR_BOOST_DIR    = OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0
 
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
@@ -295,10 +296,14 @@ $(BOOT_UBOOT): fpga $(UBOOT)
 
 URAMDISK_DIR    = OS/buildroot
 
-.PHONY: buildroot
+.PHONY: buildroot buildroot_boost
 
 $(INSTALL_DIR):
 	mkdir $(INSTALL_DIR)
+
+buildroot_boost: $(INSTALL_DIR)
+	#$(MAKE) -C $(URAMDISK_DIR) boost   # at the moment there is no quick solution for a less time consuming way
+	$(MAKE) -C $(URAMDISK_DIR)          # using full build instead
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
@@ -356,7 +361,7 @@ CRYPTOPP_DIR    = Bazaar/tools/cryptopp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
-BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
+NGINX_BOOST_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
 .PHONY: ecosystem nginx 
 
@@ -400,10 +405,12 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	patch -d $@ -p1 < patches/nginx.patch
 	cp -f patches/nginx.conf $@/conf/
 
-$(BOOST_DIR): buildroot
-	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
+$(BR_BOOST_DIR): buildroot_boost
 
-$(NGINX): buildroot $(BOOST_DIR) libredpitaya $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(WEBSOCKETPP_DIR)
+$(NGINX_BOOST_DIR): $(BR_BOOST_DIR)
+	ln -sf ../../../../$< $@
+
+$(NGINX): $(NGINX_BOOST_DIR) libredpitaya $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(WEBSOCKETPP_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
