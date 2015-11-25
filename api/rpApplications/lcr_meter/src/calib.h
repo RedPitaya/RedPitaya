@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #include "redpitaya/rp.h"
-#include "impedance_analyzer.h"
+#include "lcr_meter.h"
 
 #define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter"
 

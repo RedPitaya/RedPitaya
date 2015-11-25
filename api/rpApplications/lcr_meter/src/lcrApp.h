@@ -20,6 +20,7 @@ extern "C" {
 #endif
 
 #include "redpitaya/rp.h"
+#include "lcr_meter.h"
 
 /** @name General
 */

@@ -15,7 +15,6 @@
 #include <stdio.h>
 
 #include "lcrApp.h"
-#include "impedance_analyzer.h"
 #include "common.h"
 
 /* Resource managment functions */

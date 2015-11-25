@@ -35,7 +35,7 @@ TARGET=$(OUTPUT_DIR)/librpapp_lcr.so
 # List of compiled object files
 OBJECTS =	calib.o \
 		utils.o \
-		impedance_analyzer.o \
+		lcr_meter.o \
 		lcrApp.o \
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
