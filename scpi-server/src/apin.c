@@ -106,7 +106,7 @@ scpi_result_t RP_AnalogPinValue(scpi_t * context) {
     rp_apin_t pin = choice;
 
     /* Set pin value */
-    int result = rp_ApinSetValue(pin, (float) value);
+    int result = rp_AOpinSetValue(pin, (float) value);
     if (RP_OK != result){
         RP_LOG(LOG_ERR, "*ANALOG:PIN Failed to set pin value: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
