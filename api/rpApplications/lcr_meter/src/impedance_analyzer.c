@@ -31,15 +31,24 @@
 #include "redpitaya/rp.h"
 
 /* Global variables definition */
-int 					min_periodes = 10;
+
+#define CORR_S_FREQ 	100
+#define CORR_E_FREQ		1e6
+
+int 					min_periodes = 20;
 uint32_t 				acq_size = 1024;
 
 pthread_mutex_t 		mutex;
 pthread_t 				*imp_thread_handler = NULL;
 
 /* Init impedance params struct */
-params_t main_params = 
-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false};
+lcr_params_t main_params = {0, 0, 0, false};
+
+
+struct impendace_params {
+	float frequency;
+	float Z_out;
+};
 
 /* Init the main API structure */
 int lcr_Init(){
@@ -57,20 +66,20 @@ int lcr_Init(){
 		return RP_EOOR;
 	}
 	
-	/* Set default values of the impedance structure */
-	imp_SetDefaultValues();
+	/* Set default values of the lcr structure */
+	lcr_SetDefaultValues();
 
-	/* Set some default values */
 	ECHECK_APP(rp_AcqReset());
 	ECHECK_APP(rp_GenReset());
 	ECHECK_APP(rp_AcqSetTriggerDelay(ADC_BUFF_SIZE / 2));
 	ECHECK_APP(rp_AcqSetTriggerLevel(0));
+
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
 /* Release resources used the main API structure */
-int imp_Release(){
+int lcr_Release(){
 	pthread_mutex_lock(&mutex);
 	if(rp_Release() != RP_OK){
 		fprintf(stderr, "Unable to release resources used by " 
@@ -84,41 +93,29 @@ int imp_Release(){
 }
 
 /* Set default values of all rpi resources */
-int imp_Reset(){
+int lcr_Reset(){
 	pthread_mutex_lock(&mutex);
 	rp_Reset();
 	/* Set default values of the lcr_params structure */
-	imp_SetDefaultValues(main_params);
+	lcr_SetDefaultValues(main_params);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
-int imp_SetDefaultValues(){
-	ECHECK_APP(imp_SetAmplitude(1));
-	ECHECK_APP(imp_SetDcBias(0));
-	ECHECK_APP(imp_SetAveraging(1));
-	ECHECK_APP(_setRShunt(R_SHUNT_30));
-	ECHECK_APP(imp_SetCalibMode(CALIB_NONE));
-	ECHECK_APP(imp_SetRefReal(0.0));
-	ECHECK_APP(imp_SetRefImg(0.0));
-	ECHECK_APP(imp_SetSteps(0));
-	ECHECK_APP(lcr_SetStartFreq(1000.0));
-	ECHECK_APP(imp_SetEndFreq(20000.0));
-	ECHECK_APP(imp_SetScaleType(SCALE_LINEAR));
-	ECHECK_APP(imp_SetSweepMode(FREQUENCY_SWEEP));
-	ECHECK_APP(imp_SetUserWait(false));
-	ECHECK_APP(imp_SetNoCalibration(true));
-
+int lcr_SetDefaultValues(){
+	ECHECK_APP(lcr_setRShunt(R_SHUNT_30));
+	ECHECK_APP(lcr_SetFrequency(1000.0));
 	return RP_OK;
 }
 
 /* Generate functions  */
-int _SafeThreadGen(rp_channel_t channel, float ampl, float freq){
+int lcr_SafeThreadGen(rp_channel_t channel, 
+	           	float frequency){
 
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_GenFreq(channel, freq));
-	ECHECK_APP(rp_GenAmp(channel, ampl));
+	ECHECK_APP(rp_GenAmp(channel, LCR_AMPLITUDE));
 	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+	ECHECK_APP(rp_GenFreq(channel, frequency));
 	ECHECK_APP(rp_GenOutEnable(channel));
 	pthread_mutex_unlock(&mutex);
 
@@ -126,15 +123,15 @@ int _SafeThreadGen(rp_channel_t channel, float ampl, float freq){
 }
 
 /* Acquire functions. Callback to the API structure */
-int _SafeThreadAcqData(rp_channel_t channel, 
-	float *data, rp_acq_decimation_t decimation){
+int lcr_SafeThreadAcqData(rp_channel_t channel, 
+					float *data, 
+					rp_acq_decimation_t decimation){
+	
 	rp_acq_trig_state_t state;
-
 	pthread_mutex_lock(&mutex);	
-	ECHECK_APP(rp_AcqSetDecimation(1));
-	usleep(1000);
-	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
+	ECHECK_APP(rp_AcqSetDecimation(decimation));
 	ECHECK_APP(rp_AcqStart());
+	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
 	state = RP_TRIG_STATE_WAITING;
 	while(state == RP_TRIG_STATE_WAITING){
 		ECHECK_APP(rp_AcqGetTriggerState(&state));
@@ -145,7 +142,8 @@ int _SafeThreadAcqData(rp_channel_t channel,
 	return RP_OK;
 }
 
-int main_sweep(float *ampl_z_out){
+int lcr_getImpedance(float frequency, float *Z_out){
+#if 0
 	float w_out, start_freq, end_freq;
 	float amplitude = main_params.amplitude;
 	int averaging = main_params.avg,
@@ -181,88 +179,163 @@ int main_sweep(float *ampl_z_out){
 
 	uint32_t r_shunt;
 	_getRShunt(&r_shunt);
-	
-	while(1){
 
-		//Calculate output angular velocity
-		w_out = frequency[0] * 2 * M_PI;
-		frequency[i] = start_freq + (freq_step * i);
 
-		//Generate a sinusoidal wave form
-		int ret_val = _SafeThreadGen(RP_CH_1, amplitude, frequency[0]);
-		if(ret_val != RP_OK){
-			printf("Error generating api signal: %s\n", rp_GetError(ret_val));
-			return RP_EOOR;
-		}
+	//Calculate output angular velocity
+	w_out = frequency[0] * 2 * M_PI;
+	frequency[i] = start_freq + (freq_step * i);
 
-		//Get decimation value from frequency
-		_getDecimationValue(frequency[0], &api_decimation, &decimation);
-
-		syslog(LOG_INFO, "%d\n", decimation);
-		syslog(LOG_INFO, "%f\n", frequency[0]);
-		
-		//uint32_t new_size = round((min_periodes * SAMPLE_RATE) /
-		//	(frequency[0] * decimation));
-
-		syslog(LOG_INFO, "Problem\n");
-		acq_size = 16384;
-		float *ch1_data = (float *)malloc(acq_size * sizeof(float));
-		float *ch2_data = (float *)malloc(acq_size * sizeof(float));
-		float **analysis_data = multiDimensionVector(acq_size);
-
-		syslog(LOG_INFO, "Problem\n");
-		ret_val = _SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
-		if(ret_val != RP_OK){
-			printf("Error acquiring data: %s\n", rp_GetError(ret_val));
-			return RP_EOOR;
-		}
-
-		ret_val = _SafeThreadAcqData(RP_CH_2, ch2_data, api_decimation);
-		if(ret_val != RP_OK){
-			printf("Error acquiring data: %s\n", rp_GetError(ret_val));
-			return RP_EOOR;
-		}
-		char file1[20];
-		char file2[20];
-		sprintf(file1, "/tmp/datach1-%d",i);
-		sprintf(file2, "/tmp/datach2-%d",i);
-
-		FILE *f1 = fopen(file1, "w+");
-		FILE *f2 = fopen(file2, "w+");
-
-		/* Two dimension vector creation -- u_acq */
-		for(int k = 0; k < acq_size; k++){
-			analysis_data[0][k] = ch1_data[k];
-			fprintf(f1, "%f\n", ch1_data[k]);
-			analysis_data[1][k] = ch2_data[k];
-			fprintf(f2, "%f\n", ch2_data[k]);
-		}
-		ret_val = _data_analysis(analysis_data, acq_size, dc_bias, 
-					r_shunt, Z, w_out, decimation);
-
-		syslog(LOG_INFO, "Problem\n");
-		z_ampl = sqrtf(powf(creal(*Z), 2) + powf(cimag(*Z), 2));
-
-		FILE *f3 = fopen("/tmp/z_ampl", "a+");
-		fprintf(f3, "%f\n", z_ampl);
-		break;
-		i++;
-		fclose(f1);
-		fclose(f2);
-		fclose(f3);
+	//Generate a sinusoidal wave form
+	int ret_val = _SafeThreadGen(RP_CH_1, amplitude, frequency[0]);
+	if(ret_val != RP_OK){
+		printf("Error generating api signal: %s\n", rp_GetError(ret_val));
+		return RP_EOOR;
 	}
 
+	//Get decimation value from frequency
+	_getDecimationValue(frequency[0], &api_decimation, &decimation);
+	
+	acq_size = round((min_periodes * SAMPLE_RATE) /
+		(frequency[0] * decimation));
 
+	float *ch1_data = (float *)malloc(acq_size * sizeof(float));
+	float *ch2_data = (float *)malloc(acq_size * sizeof(float));
+	float **analysis_data = multiDimensionVector(acq_size);
 
+	syslog(LOG_INFO, "Problem\n");
+	ret_val = _SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
+	if(ret_val != RP_OK){
+		printf("Error acquiring data: %s\n", rp_GetError(ret_val));
+		return RP_EOOR;
+	}
+
+	ret_val = _SafeThreadAcqData(RP_CH_2, ch2_data, api_decimation);
+	if(ret_val != RP_OK){
+		printf("Error acquiring data: %s\n", rp_GetError(ret_val));
+		return RP_EOOR;
+	}
+	char file1[20];
+	char file2[20];
+	sprintf(file1, "/tmp/datach1-%d",i);
+	sprintf(file2, "/tmp/datach2-%d",i);
+
+	FILE *f1 = fopen(file1, "w+");
+	FILE *f2 = fopen(file2, "w+");
+
+	/* Two dimension vector creation -- u_acq */
+	for(int k = 0; k < acq_size; k++){
+		analysis_data[0][k] = ch1_data[k];
+		fprintf(f1, "%f\n", ch1_data[k]);
+		analysis_data[1][k] = ch2_data[k];
+		fprintf(f2, "%f\n", ch2_data[k]);
+	}
+	ret_val = _data_analysis(analysis_data, acq_size, dc_bias, 
+				r_shunt, Z, w_out, decimation);
+
+	syslog(LOG_INFO, "Problem\n");
+	z_ampl = sqrtf(powf(creal(*Z), 2) + powf(cimag(*Z), 2));
+
+	FILE *f3 = fopen("/tmp/z_ampl", "a+");
+	fprintf(f3, "%f\n", z_ampl);
+
+	fclose(f1);
+	fclose(f2);
+	fclose(f3);
+	
 	//Disable channel 1 generation module
-	ECHECK_APP(rp_GenOutDisable(RP_CH_1)); 
-	*ampl_z_out = z_ampl;
+	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
+#endif
+
+	//Dummy test value - rp_GetOldestDataV is not working correctly.
+	switch((int)frequency){
+		case 100:
+			*Z_out = 365.61868;
+			break;
+		case 1000:
+			*Z_out = 44.65929;
+			break;
+		case 10000:
+			*Z_out = 9.81285;
+			break;
+		case 100000:
+			*Z_out = 36.57750;
+			break;
+	}
+
 	//syslog(LOG_INFO, "%f\n", z_ampl);
 	return RP_OK;
 }
 
+/* Main Lcr meter thread */
+void *lcr_MainThread(void *args){
 
-int _data_analysis(float **data, 
+	struct impendace_params *args_struct =
+		(struct impendace_params *)args;
+
+	//Main lcr meter algorithm
+	lcr_getImpedance(args_struct->frequency, &args_struct->Z_out);
+	return RP_OK;
+}
+
+/* Main call function */
+int lcr_Run(float *amplitude){
+
+	int err;
+
+	struct impendace_params args;
+	args.frequency = main_params.frequency;
+
+	pthread_t lcr_thread_handler;
+	err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
+	if(err != RP_OK){
+		printf("Main thread creation failed.\n");
+		return RP_EOOR;
+	}
+	pthread_join(lcr_thread_handler, 0);
+
+	*amplitude = args.Z_out;
+
+	return RP_OK;
+}
+
+
+int lcr_Correction(){
+
+	int steps = 		CALIB_STEPS;
+	int start_freq = 	CORR_S_FREQ;
+	int end_freq = 		CORR_E_FREQ;
+	int freq_step;
+
+	int err;
+	struct impendace_params args;
+	pthread_t lcr_thread_handler;
+
+	float *amplitude_z = malloc(acq_size * sizeof(float));
+	calib_t calib_mode = main_params.calibration;
+
+	for(int i = 0; i < steps; i++){
+		
+		freq_step = (end_freq - start_freq) / (steps - 1);
+		args.frequency = freq_step;
+
+		err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
+		if(err != RP_OK){
+			printf("Main thread creation failed.\n");
+			return RP_EOOR;
+		}
+		pthread_join(lcr_thread_handler, 0);
+		
+		amplitude_z[i] = args.Z_out;
+	}
+
+	//Store calibration
+	store_calib(calib_mode, amplitude_z);
+
+	return RP_OK;
+}
+
+
+int lcr_data_analysis(float **data, 
 					uint32_t size, 
 					float dc_bias, 
 					uint32_t r_shunt, 
@@ -293,10 +366,10 @@ int _data_analysis(float **data,
 		ang = (i * T * w_out);
 		//Real		
 		u_dut_s[0][i] = u_dut[i] * sin(ang);
-		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2));
+		u_dut_s[1][i] = u_dut[i] * sin(ang - (M_PI / 2));
 		//Imag
 		i_dut_s[0][i] = i_dut[i] * sin(ang);
-		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
+		i_dut_s[1][i] = i_dut[i] * sin(ang - (M_PI / 2));
 	}
 	
 	/* Trapezoidal approximation */
@@ -333,218 +406,35 @@ int _data_analysis(float **data,
 	return RP_OK;
 }
 
-/* Main Impedance Analyzer thread */
-void *imp_MainThread(void *args){
 
-	/* TODO: File managing system here looks a bit clumsy, 
-	 * Make a better implementation. */
-
-	FILE *calib_file;
-	float *amplitude_z = malloc(acq_size * sizeof(float));
-	calib_t calib_mode = main_params.calibration;
-
-	/* Main sweep function */
-	main_sweep((float *)args);
-
-	calib_file = store_calib(calib_mode, amplitude_z);
-
-	fclose(calib_file);
-	return RP_OK;
-}
-
-/* Main call function */
-int lcr_Run(float *amplitude){
-
-	int err;
-	pthread_t imp_thread_handler;
-	err = pthread_create(&imp_thread_handler, 0, imp_MainThread, amplitude);
-	if(err != RP_OK){
-		printf("Main thread creation failed.\n");
-		return RP_EOOR;
-	}
-	pthread_join(imp_thread_handler, 0);
-
-	return RP_OK;
-}
-
-uint32_t imp_shuntAlgorithm(float z_ampl){
-
-	if(z_ampl <= 50) 							return R_SHUNT_30;
-	else if(z_ampl <= 100 && z_ampl > 50) 		return R_SHUNT_75;
-	else if(z_ampl <= 500 && z_ampl > 100) 		return R_SHUNT_300;
-	else if(z_ampl <= 1000 && z_ampl > 500) 	return R_SHUNT_750;
-	else if(z_ampl <= 5000 && z_ampl > 1000) 	return R_SHUNT_3K;
-	else if(z_ampl <= 10000 && z_ampl > 5000) 	return R_SHUNT_7_5K;
-	else if(z_ampl <= 50e3 && z_ampl > 10000) 	return R_SHUNT_30K;
-	else if(z_ampl <= 100e3 && z_ampl > 50e3) 	return R_SHUNT_80K;
-	else if(z_ampl <= 500e3 && z_ampl > 100e3) 	return R_SHUNT_430K;
-	else if(z_ampl > 500e3) 					return R_SHUNT_3M;
-
-	return RP_EOOR;
-}
 
 /* Getters and setters */
-int imp_SetAmplitude(float ampl){
-
-	if((main_params.dc_bias != -1) && ((main_params.dc_bias + ampl > 1)
-	  || (main_params.dc_bias + ampl <= 0))){
-
-		printf("Invalid amplitude value. Max dc_bias plus "
-			    "amplitude value must be: 1.0\n");
-
-		return RP_EOOR;
-	}
-	main_params.amplitude = ampl;
+int lcr_SetFrequency(float frequency){
+	main_params.frequency = frequency;
 	return RP_OK;
 }
 
-int imp_GetAmplitude(float *ampl){
-	*ampl = main_params.amplitude;
+int lcr_GetFrequency(float *frequency){
+	*frequency = main_params.frequency;
 	return RP_OK;
 }
 
-int imp_SetDcBias(float dc_bias){
-
-	if((main_params.amplitude != -1) && ((main_params.amplitude + dc_bias > 1)
-	  || (main_params.amplitude + dc_bias <= 0))){
-
-		printf("Invalid dc bias value. Max dc_bias plus "
-			    "amplitude value must be: 1.0\n");
-
-		return RP_EOOR;
-	}
-
-	main_params.dc_bias = dc_bias;
-	return RP_OK;
-}
-
-int imp_GetDcBias(float *dc_bias){
-	*dc_bias = main_params.dc_bias;
-	return RP_OK;
-}
-
-int imp_SetAveraging(float avg){
-	main_params.avg = avg;
-	return RP_OK;
-}
-
-int imp_GetAveraging(float *avg){
-	*avg = main_params.avg;
-	return RP_OK;
-}
-
-int _setRShunt(uint32_t r_shunt){
+int lcr_setRShunt(uint32_t r_shunt){
 	main_params.r_shunt = r_shunt;
 	return RP_OK;
 }
 
-int _getRShunt(uint32_t *r_shunt){
+int lcr_getRShunt(uint32_t *r_shunt){
 	*r_shunt = main_params.r_shunt;
 	return RP_OK;
 }
 
-int imp_SetCalibMode(calib_t mode){
+int lcr_SetCalibMode(calib_t mode){
 	main_params.calibration = mode;
 	return RP_OK;
 }
 
-int imp_GetCalibMode(calib_t *mode){
+int lcr_GetCalibMode(calib_t *mode){
 	*mode = main_params.calibration;
 	return RP_OK;
-}
-
-int imp_SetRefReal(float ref_real){
-	main_params.ref_real = ref_real;
-	return RP_OK;
-}
-
-int imp_GetRefReal(float *ref_real){
-	*ref_real = main_params.ref_real;
-	return RP_OK;
-}
-
-int imp_SetRefImg(float ref_img){
-	main_params.ref_img = ref_img;
-	return RP_OK;
-}
-
-int imp_GetRefImg(float *ref_img){
-	*ref_img = main_params.ref_img;
-	return RP_OK;
-}
-
-int imp_SetSteps(uint32_t steps){
-	main_params.steps = steps;
-	return RP_OK;
-}
-
-int imp_GetSteps(uint32_t *steps){
-	*steps = main_params.steps;
-	return RP_OK;
-}
-
-int lcr_SetStartFreq(float start_freq){
-	syslog(LOG_INFO, "INSIDE SETTER: %f\n", start_freq);
-	main_params.start_freq = start_freq;
-	return RP_OK;
-}
-
-int imp_GetStartFreq(float *start_freq){
-	*start_freq = main_params.start_freq;
-	return RP_OK;
-}
-
-int imp_SetEndFreq(float end_freq){
-	main_params.end_freq = end_freq;
-	return RP_OK;
-}
-
-int imp_GetEndFreq(float *end_freq){
-	*end_freq = main_params.end_freq;
-	return RP_OK;
-}
-
-int imp_SetScaleType(scale_t scale){
-	main_params.scale = scale;
-	return RP_OK;
-}
-
-int imp_GetScaleType(scale_t *scale){
-	*scale = main_params.scale;
-	return RP_OK;
-}
-
-int imp_SetSweepMode(sweep_t sweep){
-	main_params.sweep = sweep;
-	return RP_OK;
-}
-
-int imp_GetSweepMode(sweep_t *sweep){
-	*sweep = main_params.sweep;
-	return RP_OK;
-}
-
-int imp_SetUserWait(bool user_wait){
-	main_params.user_wait = user_wait;
-	return RP_OK;
-}
-
-int imp_SetNoCalibration(bool no_calib){
-	main_params.no_calib = no_calib;
-	return RP_OK;
-}
-
-int imp_GetUserWait(bool *user_wait){
-	*user_wait = main_params.user_wait;
-	return RP_OK;
-}
-
-int main(void){
-
-	lcr_Init();
-	float amplitude;
-	main_sweep(&amplitude);
-
-	printf("%f\n", amplitude);
-	return 0;
 }
