@@ -251,7 +251,7 @@ CONFIG.C_EXT_RST_WIDTH {1} \
   set_property -dict [ list \
 CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} \
 CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} \
-CONFIG.PCW_ENET0_PERIPHERAL_CLKSRC {ARM PLL} \
+CONFIG.PCW_ENET0_PERIPHERAL_CLKSRC {IO PLL} \
 CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_EN_CLK1_PORT {1} \
 CONFIG.PCW_EN_CLK2_PORT {1} \
@@ -315,7 +315,7 @@ CONFIG.PCW_MIO_38_SLEW {fast} \
 CONFIG.PCW_MIO_39_PULLUP {disabled} \
 CONFIG.PCW_MIO_39_SLEW {fast} \
 CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 2.5V} \
-CONFIG.PCW_QSPI_PERIPHERAL_CLKSRC {ARM PLL} \
+CONFIG.PCW_QSPI_PERIPHERAL_CLKSRC {IO PLL} \
 CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_QSPI_PERIPHERAL_FREQMHZ {125} \
 CONFIG.PCW_SD0_GRP_CD_ENABLE {1} \
@@ -405,8 +405,8 @@ preplace port S_AXI_HP1 -pg 1 -y 180 -defaultsOSRD
 preplace port DDR -pg 1 -y 60 -defaultsOSRD
 preplace port Vp_Vn -pg 1 -y 430 -defaultsOSRD
 preplace port Vaux0 -pg 1 -y 410 -defaultsOSRD
-preplace port FCLK_RESET0_N -pg 1 -y 300 -defaultsOSRD
 preplace port M_AXI_GP0_ACLK -pg 1 -y 200 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 300 -defaultsOSRD
 preplace port Vaux1 -pg 1 -y 600 -defaultsOSRD
 preplace port S_AXI_HP0_aclk -pg 1 -y 240 -defaultsOSRD
 preplace port M_AXI_GP0 -pg 1 -y 120 -defaultsOSRD
@@ -426,33 +426,33 @@ preplace inst axi_protocol_converter_0 -pg 1 -lvl 3 -y 510 -defaultsOSRD
 preplace inst processing_system7 -pg 1 -lvl 4 -y 200 -defaultsOSRD
 preplace inst xadc -pg 1 -lvl 4 -y 610 -defaultsOSRD
 preplace inst proc_sys_reset -pg 1 -lvl 2 -y 510 -defaultsOSRD
-preplace netloc Vaux0_1 1 0 4 NJ 410 NJ 410 NJ 410 NJ
 preplace netloc processing_system7_0_ddr 1 4 1 NJ
-preplace netloc processing_system7_0_fclk_reset3_n 1 1 4 160 400 NJ 400 NJ 410 1250
+preplace netloc Vaux0_1 1 0 4 NJ 410 NJ 410 NJ 410 NJ
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 4 160 400 NJ 400 NJ 410 1240
 preplace netloc s_axi_hp0_1 1 0 4 NJ 160 NJ 160 NJ 160 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 4 1 NJ
 preplace netloc processing_system7_0_M_AXI_GP0 1 4 1 NJ
 preplace netloc xlconstant_dout 1 1 1 NJ
 preplace netloc processing_system7_0_fclk_reset1_n 1 4 1 NJ
+preplace netloc processing_system7_0_M_AXI_GP1 1 2 3 490 430 NJ 420 1230
 preplace netloc Vp_Vn_1 1 0 4 NJ 430 NJ 420 NJ 420 NJ
-preplace netloc processing_system7_0_M_AXI_GP1 1 2 3 490 430 NJ 420 1240
-preplace netloc xadc_wiz_0_ip2intc_irpt 1 3 2 800 430 1240
+preplace netloc xadc_wiz_0_ip2intc_irpt 1 3 2 800 430 1230
 preplace netloc s_axi_hp0_aclk 1 0 4 NJ 240 NJ 240 NJ 240 NJ
 preplace netloc s_axi_hp1_1 1 0 4 NJ 180 NJ 180 NJ 180 NJ
 preplace netloc proc_sys_reset_0_interconnect_aresetn 1 2 1 N
-preplace netloc Vaux8_1 1 0 4 NJ 620 NJ 620 NJ 620 NJ
 preplace netloc axi_protocol_converter_0_M_AXI 1 3 1 750
+preplace netloc Vaux8_1 1 0 4 NJ 620 NJ 620 NJ 620 NJ
 preplace netloc s_axi_hp1_aclk 1 0 4 NJ 260 NJ 260 NJ 260 NJ
 preplace netloc processing_system7_0_fclk_reset0_n 1 4 1 NJ
-preplace netloc Vaux9_1 1 0 4 NJ 640 NJ 640 NJ 640 NJ
 preplace netloc processing_system7_0_fixed_io 1 4 1 NJ
+preplace netloc Vaux9_1 1 0 4 NJ 640 NJ 640 NJ 640 NJ
 preplace netloc processing_system7_0_fclk_clk0 1 4 1 NJ
 preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 2 490 680 NJ
 preplace netloc Vaux1_1 1 0 4 NJ 600 NJ 600 NJ 600 NJ
 preplace netloc processing_system7_0_fclk_clk1 1 4 1 NJ
 preplace netloc m_axi_gp0_aclk_1 1 0 4 NJ 200 NJ 200 NJ 200 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 4 1 NJ
-preplace netloc processing_system7_0_fclk_clk3 1 1 4 150 390 480 440 780 440 1260
+preplace netloc processing_system7_0_fclk_clk3 1 1 4 150 390 480 440 780 440 1250
 levelinfo -pg 1 0 80 320 620 1020 1280 -top 0 -bot 780
 ",
 }
