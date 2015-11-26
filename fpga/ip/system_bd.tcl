@@ -227,6 +227,10 @@ CONFIG.WUSER_WIDTH {0} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
+  set IRQ_F2P_xlconcat [ create_bd_port -dir I -from 14 -to 0 -type intr IRQ_F2P_xlconcat ]
+  set_property -dict [ list \
+CONFIG.PortWidth {15} \
+ ] $IRQ_F2P_xlconcat
   set M_AXI_GP0_ACLK [ create_bd_port -dir I -type clk M_AXI_GP0_ACLK ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
@@ -319,6 +323,7 @@ CONFIG.PCW_MIO_38_SLEW {fast} \
 CONFIG.PCW_MIO_39_PULLUP {disabled} \
 CONFIG.PCW_MIO_39_SLEW {fast} \
 CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 2.5V} \
+CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} \
 CONFIG.PCW_QSPI_PERIPHERAL_CLKSRC {IO PLL} \
 CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_QSPI_PERIPHERAL_FREQMHZ {125} \
@@ -371,6 +376,13 @@ CONFIG.WAVEFORM_TYPE {TRIANGLE} \
 CONFIG.XADC_STARUP_SELECTION {simultaneous_sampling} \
  ] $xadc
 
+  # Create instance: xlconcat_0, and set properties
+  set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
+  set_property -dict [ list \
+CONFIG.IN0_WIDTH {1} \
+CONFIG.IN1_WIDTH {15} \
+ ] $xlconcat_0
+
   # Create instance: xlconstant, and set properties
   set xlconstant [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant ]
 
@@ -390,6 +402,7 @@ CONFIG.XADC_STARUP_SELECTION {simultaneous_sampling} \
   connect_bd_intf_net -intf_net xadc_M_AXIS [get_bd_intf_ports M_AXIS_GP1_xadc] [get_bd_intf_pins xadc/M_AXIS]
 
   # Create port connections
+  connect_bd_net -net IRQ_F2P_xlconcat_1 [get_bd_ports IRQ_F2P_xlconcat] [get_bd_pins xlconcat_0/In1]
   connect_bd_net -net m_axi_gp0_aclk_1 [get_bd_ports M_AXI_GP0_ACLK] [get_bd_pins processing_system7/M_AXI_GP0_ACLK]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_protocol_converter_0/aresetn] [get_bd_pins proc_sys_reset/interconnect_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset/peripheral_aresetn] [get_bd_pins xadc/s_axi_aresetn]
@@ -403,7 +416,8 @@ CONFIG.XADC_STARUP_SELECTION {simultaneous_sampling} \
   connect_bd_net -net processing_system7_0_fclk_reset3_n [get_bd_ports FCLK_RESET3_N] [get_bd_pins processing_system7/FCLK_RESET3_N]
   connect_bd_net -net s_axi_hp0_aclk [get_bd_ports S_AXI_HP0_aclk] [get_bd_pins processing_system7/S_AXI_HP0_ACLK]
   connect_bd_net -net s_axi_hp1_aclk [get_bd_ports S_AXI_HP1_aclk] [get_bd_pins processing_system7/S_AXI_HP1_ACLK]
-  connect_bd_net -net xadc_wiz_0_ip2intc_irpt [get_bd_pins processing_system7/IRQ_F2P] [get_bd_pins xadc/ip2intc_irpt]
+  connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins xadc/ip2intc_irpt] [get_bd_pins xlconcat_0/In0]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins processing_system7/IRQ_F2P] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconstant_dout [get_bd_pins proc_sys_reset/aux_reset_in] [get_bd_pins xlconstant/dout]
 
   # Create address segments
@@ -438,40 +452,43 @@ preplace port FCLK_CLK2 -pg 1 -y 240 -defaultsOSRD
 preplace port M_AXIS_GP1_xadc -pg 1 -y 480 -defaultsOSRD
 preplace port Vaux9 -pg 1 -y 630 -defaultsOSRD
 preplace port S_AXI_HP0 -pg 1 -y 150 -defaultsOSRD
+preplace portBus IRQ_F2P_xlconcat -pg 1 -y 300 -defaultsOSRD
 preplace inst xlconstant -pg 1 -lvl 1 -y 450 -defaultsOSRD
 preplace inst axi_protocol_converter_0 -pg 1 -lvl 3 -y 470 -defaultsOSRD
+preplace inst xlconcat_0 -pg 1 -lvl 3 -y 290 -defaultsOSRD
 preplace inst processing_system7 -pg 1 -lvl 4 -y 190 -defaultsOSRD
 preplace inst xadc -pg 1 -lvl 4 -y 610 -defaultsOSRD
 preplace inst proc_sys_reset -pg 1 -lvl 2 -y 450 -defaultsOSRD
 preplace netloc Vaux0_1 1 0 4 NJ 570 NJ 570 NJ 570 NJ
 preplace netloc processing_system7_0_ddr 1 4 1 NJ
+preplace netloc IRQ_F2P_xlconcat_1 1 0 3 NJ 300 NJ 300 N
 preplace netloc processing_system7_0_fclk_reset3_n 1 4 1 NJ
 preplace netloc s_axi_hp0_1 1 0 4 NJ 150 NJ 150 NJ 150 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 4 1 NJ
 preplace netloc processing_system7_0_M_AXI_GP0 1 4 1 NJ
+preplace netloc xadc_ip2intc_irpt 1 2 3 640 400 NJ 400 1370
 preplace netloc xlconstant_dout 1 1 1 NJ
 preplace netloc processing_system7_0_fclk_reset1_n 1 4 1 NJ
 preplace netloc Vp_Vn_1 1 0 4 NJ 550 NJ 550 NJ 550 NJ
-preplace netloc processing_system7_0_M_AXI_GP1 1 2 3 480 400 NJ 400 1190
-preplace netloc xadc_wiz_0_ip2intc_irpt 1 3 2 770 410 1190
-preplace netloc s_axi_hp0_aclk 1 0 4 NJ 230 NJ 230 NJ 230 NJ
+preplace netloc processing_system7_0_M_AXI_GP1 1 2 3 650 390 NJ 390 1370
+preplace netloc s_axi_hp0_aclk 1 0 4 NJ 220 NJ 220 NJ 220 NJ
 preplace netloc s_axi_hp1_1 1 0 4 NJ 170 NJ 170 NJ 170 NJ
-preplace netloc proc_sys_reset_0_interconnect_aresetn 1 2 1 480
+preplace netloc proc_sys_reset_0_interconnect_aresetn 1 2 1 640
 preplace netloc Vaux8_1 1 0 4 NJ 610 NJ 610 NJ 610 NJ
-preplace netloc axi_protocol_converter_0_M_AXI 1 3 1 750
-preplace netloc s_axi_hp1_aclk 1 0 4 NJ 250 NJ 250 NJ 250 NJ
-preplace netloc processing_system7_0_fclk_reset0_n 1 1 4 140 360 NJ 390 NJ 390 1200
+preplace netloc axi_protocol_converter_0_M_AXI 1 3 1 920
+preplace netloc s_axi_hp1_aclk 1 0 4 NJ 230 NJ 230 NJ 230 NJ
+preplace netloc processing_system7_0_fclk_reset0_n 1 1 4 310 560 NJ 560 NJ 410 1380
 preplace netloc Vaux9_1 1 0 4 NJ 630 NJ 630 NJ 630 NJ
 preplace netloc processing_system7_0_fixed_io 1 4 1 NJ
-preplace netloc processing_system7_0_fclk_clk0 1 1 4 150 540 490 640 760 420 1210
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 2 NJ 540 750
+preplace netloc processing_system7_0_fclk_clk0 1 1 4 300 540 650 540 940 -10 1380
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 2 NJ 580 920
 preplace netloc Vaux1_1 1 0 4 NJ 590 NJ 590 NJ 590 NJ
 preplace netloc processing_system7_0_fclk_clk1 1 4 1 NJ
 preplace netloc m_axi_gp0_aclk_1 1 0 4 NJ 190 NJ 190 NJ 190 NJ
 preplace netloc xadc_M_AXIS 1 4 1 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 4 1 NJ
 preplace netloc processing_system7_0_fclk_clk3 1 4 1 NJ
-levelinfo -pg 1 0 80 310 620 980 1230 -top 0 -bot 790
+levelinfo -pg 1 -30 240 470 790 1160 1410 -top -20 -bot 790
 ",
 }
 
