@@ -239,7 +239,7 @@ red_pitaya_ps i_ps (
   .fclk_rstn_o   (frstn       ),
   .dcm_locked    (pll_locked  ),
   // Interrupts
-  .irq_f2p       (14'b0       ),
+  .irq_f2p       (15'b0       ),
   // ADC analog inputs
   .vinp_i        (vinp_i      ),  // voltages p
   .vinn_i        (vinn_i      ),  // voltages n

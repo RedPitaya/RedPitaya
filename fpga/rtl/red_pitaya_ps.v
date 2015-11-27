@@ -369,9 +369,6 @@ assign LED_data_o  = gp1_gpio_leds[7:0] ;
 //------------------------------------------------------------------------------
 // PS STUB
 
-wire [  14: 0]  IRQ_F2P;
-
-assign IRQ_F2P = 14'b0;
 assign fclk_rstn_o = fclk_rstn;
 
 BUFG i_fclk0_buf  (.O(fclk_clk_o[0]), .I(fclk_clk[0]));
@@ -413,7 +410,7 @@ system_wrapper system_i (
   .FIXED_IO_ddr_vrn  (FIXED_IO_ddr_vrn ),
   .FIXED_IO_ddr_vrp  (FIXED_IO_ddr_vrp ),
   // PS input interrupts
-  .IRQ_F2P_xlconcat  (IRQ_F2P          ),
+  .IRQ_F2P_xlconcat  (irq_f2p          ),
   // GP0
   .M_AXI_GP0_ACLK    (axi0_clk_i       ),
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid ),  // out
@@ -499,7 +496,7 @@ system_wrapper system_i (
   .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
   .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
   .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
-  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4])
+  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // XADC_AXIS
   //.M_AXIS_XADC_aclk  (xadc_axis_aclk   ),
   //.M_AXIS_XADC_tdata (xadc_axis_tdata  ),
@@ -509,9 +506,7 @@ system_wrapper system_i (
   // AXI GP1 LEDs
   //.gpio_gp1_leds_tri_o (gp1_gpio_leds  )
   // System
-  //.dcm_locked        (dcm_locked       ),
-  // Interrupts
-  //.IRQ_F2P           (irq_f2p          ),
+  .dcm_locked        (dcm_locked       )
 );
 
 endmodule
