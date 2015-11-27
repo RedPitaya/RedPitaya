@@ -119,11 +119,13 @@ HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 #REVISION ?= devbuild
 
 # alternate versioning system by DF4IAH
+GIT_BRANCH ?= $(shell git branch | grep '^*' | cut -b 3-)
+GIT_COMMIT ?= $(shell git log -1 | head -1 | cut -b 8-)
 BUILD_NUMBER ?= $(shell git rev-list HEAD --count)
 REVISION ?= $(shell git log -n1 --pretty=%h)
 
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -E 's/^[^:]*:[^"]*"([^-]*)-.*/\1/')
-GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
+GIT_BRANCH_LOCAL = https://github.com/DF4IAH/RedPitaya_RadioBox.git  $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
