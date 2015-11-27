@@ -85,7 +85,6 @@ read_verilog   -sv                $path_rtl/red_pitaya_radiobox.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 
-read_ip                           $path_ip/clk_adc_pll.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
 read_ip                           $path_ip/rb_multadd_16s_33s_48u_07lat.xcix
 read_ip                           $path_ip/rb_pipe_07delay.xcix
