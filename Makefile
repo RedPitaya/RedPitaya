@@ -117,7 +117,7 @@ HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | sed -E 's/^[^:]*:[^"]*"([^-]*)-.*/\1/')
-GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
+GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | grep version | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
 export REVISION
