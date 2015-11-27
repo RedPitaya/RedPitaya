@@ -114,8 +114,14 @@ HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 # Versioning system
 ################################################################################
 
-BUILD_NUMBER ?= 0
-REVISION ?= devbuild
+# RedPitaya versioning system
+#BUILD_NUMBER ?= 0
+#REVISION ?= devbuild
+
+# alternate versioning system by DF4IAH
+BUILD_NUMBER ?= $(shell git rev-list HEAD --count)
+REVISION ?= $(shell git log -n1 --pretty=%h)
+
 VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -E 's/^[^:]*:[^"]*"([^-]*)-.*/\1/')
 GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)

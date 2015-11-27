@@ -12,15 +12,9 @@ FPGACFG=fpga.conf
 PDF=doc/RedPitaya_RadioBox_Development_Manual.pdf
 
 # Versioning system
-#BUILD_NUMBER ?= 0
-#REVISION ?= devbuild
-
-# alternate versioning system by DF4IAH
-BUILD_NUMBER ?= $(shell git rev-list HEAD --count)
-REVISION ?= $(shell git log -n1 --pretty=%h)
-
+BUILD_NUMBER ?= 0
+REVISION ?= devbuild
 VER:=$(shell grep version info/info.json | sed -E 's/^[^:]*:[^"]*"([^-]*)-.*/\1/')
-
 
 INSTALL_DIR ?= ../../build
 
