@@ -1,0 +1,274 @@
+<!-- $Id$
+ *
+ * Red Pitaya Oscilloscope client
+ *
+ * Author: DF4IAH <espero7757@gmx.net>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+  <meta http-equiv="cache-control" content="no-cache"></meta>
+  <meta http-equiv="expires" content="0"></meta>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Red Pitaya</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/radiobox.css">
+  <script src="js/jquery-2.1.3.js"></script>
+  <script src="js/jquery-ui.js"></script>
+  <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/jquery.flot.js"></script>
+  <script src="js/fastclick.min.js"></script>
+  <script src="js/jquery.simulate.js"></script>
+  <script src="js/radiobox.js"></script>
+</head>
+<body>
+  <div class="full-content">
+    <div class="container-fluid">
+      <div class="navbar navbar-inverse" role="navigation">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">T</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">
+              <img class="back-btn" src="img/arrow_nav_left.png">
+            </a>
+            <img class="logo" width=110 src="img/logo.png">
+          </div>
+
+          <div class="navbar-brand">
+            <span style="padding-left: 100px; padding-right: 25px; white-space: nowrap; font-size: 150%; color: #e0d0b0;">RadioBox</span> by DF4IAH and DD8UU
+          </div>
+
+          <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+
+              <li class="dropdown">
+                <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                  <li><a id="" href="#" data-toggle="modal" data-target="#myModal">CALIBRATION</a></li>
+                </ul>
+              </li>
+              <li>
+                <a id="RB_RUN" href="#" style="">RUN</a>
+                <a id="RB_STOP" href="#" style="display:none;">STOP</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal export-->
+      <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title">Export</h4>
+            </div>
+            <div class="modal-body">
+              Content
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal settings-->
+      <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title">Settings</h4>
+            </div>
+            <div class="modal-body">
+              Content settings
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="main" class="bg-grad" >
+      <form class="form-horizontal" role="form" onsubmit="return false;">
+        <div style="height:20px;"></div>
+
+        <table class="table-toolbox">
+        <tr>
+        <td class="table-header" colspan="3">
+          Transmitter &nbsp; <span style="font-size: 70%">RF Output 1 (SMA)</span>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        <div id="osc1_qrg" class="form-group">
+          <label for="osc1_qrg_f" class="col-xs-5 control-label">OSC-1 frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="osc1_qrg_f" value="0" class="form-control form-bg-osc1-qrg" autocomplete="off" />
+            <span id="apply_osc1_qrg" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="osc1_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="osc1_amp" class="form-group">
+          <label for="osc1_amp_f" class="col-xs-5 control-label">OSC-1 amplitude:</label>
+          <div class="col-xs-4">
+            <input type="text" id="osc1_amp_f" value="0" class="form-control form-bg-osc1-amp" autocomplete="off" />
+            <span id="apply_osc1_amp" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="osc1_amp_units" class="col-xs-3" style="padding: 7px 0 0;">mV &nbsp;(Vpp)</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="osc1_modsrc" class="form-group">
+          <label for="osc1_modsrc_s" class="col-xs-5 control-label">OSC-1 mod. source:</label>
+          <div class="col-xs-6">
+            <select id="osc1_modsrc_s" class="form-control form-bg-osc1-modsrc">
+              <option value="0">(none)</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="15">OSC2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="1">RF Input 1</option>
+              <option value="2">RF Input 2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">EXP AI0</option>
+              <option value="5">EXP AI1</option>
+              <option value="6">EXP AI2</option>
+              <option value="7">EXP AI3</option>
+            </select>
+            <span id="apply_osc1_modsrc" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="osc1_modtyp" class="form-group">
+          <label for="osc1_modtyp_s" class="col-xs-5 control-label">OSC-1 mod. type:</label>
+          <div class="col-xs-6">
+            <select id="osc1_modtyp_s" class="form-control form-bg-osc1-modtyp" disabled="disabled">
+              <option value="0">AM</option>
+              <option value="1">FM</option>
+              <option value="2">PM</option>
+            </select>
+            <span id="apply_osc1_modtyp" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        <div id="osc2_qrg" class="form-group">
+        <label for="osc2_qrg_f" class="col-xs-5 control-label">OSC-2 frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="osc2_qrg_f" value="0" class="form-control form-bg-osc2-qrg" autocomplete="off" disabled="disabled" />
+            <span id="apply_osc2_qrg" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="osc2_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="osc2_mag" class="form-group">
+          <label for="osc2_mag_f" class="col-xs-5 control-label">Modulator magnitude:</label>
+          <div class="col-xs-4">
+            <input type="text" id="osc2_mag_f" value="0" class="form-control form-bg-osc2-mag" autocomplete="off" disabled="disabled" />
+            <span id="apply_osc2_mag" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="osc2_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
+        </div>
+        </td>
+
+        <td>
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="3">
+        <div id="muxin_gain" class="form-group">
+        <label for="muxin_gain_f" class="col-xs-2 control-label">Mic gain:</label>
+          <div class="col-xs-9">
+            <input type="range" id="muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-muxin-gain" disabled="disabled" />
+            <span id="apply_muxin_gain" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+        </table>
+
+      </form>
+    </div>
+
+  </div>
+
+  <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_err_label">Application error</h4>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-close-modal" id="btn_ignore">Ignore</button>
+          <button type="button" class="btn btn-default" id="btn_retry_get">Retry</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+        </div>
+        <div class="modal-body">
+          The <strong><span class="app-id"></span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br />
+          Do you want to switch to newly started application or to restart <strong><span class="app-id"></span></strong>?
+        </div>
+        <div class="modal-footer">
+          <a href="/" class="btn btn-danger pull-left">Exit app</a>
+          <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
