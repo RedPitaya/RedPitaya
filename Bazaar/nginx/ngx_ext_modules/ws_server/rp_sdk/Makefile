@@ -23,6 +23,9 @@ CRYPTO_INSTALL_DIR=../../../../tools/build
 
 CXX=$(CROSS_COMPILE)g++
 CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
+ifeq ($(ALWAYS_PURCHASED),true)
+CXXFLAGS+=-DALWAYS_PURCHASED
+endif
 
 ifeq ($(ENABLE_LICENSING),true)
 SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
