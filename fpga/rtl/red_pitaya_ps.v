@@ -107,12 +107,6 @@ module red_pitaya_ps (
   output  [  8-1: 0] LED_data_o            // AXI protocol checker display output, LEDs to be lighted
 );
 
-// TODO remove me when PS supports it
-assign xadc_axis_aclk   = sys_clk_o;
-assign xadc_axis_tdata  =  'b0;
-assign xadc_axis_tid    =  'b0;
-assign xadc_axis_tvalid = 1'b0;
-
 //------------------------------------------------------------------------------
 // AXI masters
 
