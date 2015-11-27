@@ -498,13 +498,13 @@ system_wrapper system_i (
   .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
   .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // XADC_AXIS
-  //.M_AXIS_XADC_aclk  (xadc_axis_aclk   ),
-  //.M_AXIS_XADC_tdata (xadc_axis_tdata  ),
-  //.M_AXIS_XADC_tid   (xadc_axis_tid    ),
-  //.M_AXIS_XADC_tready(xadc_axis_tready ),
-  //.M_AXIS_XADC_tvalid(xadc_axis_tvalid ),
+  .M_AXIS_GP1_xadc_aclk  (xadc_axis_aclk   ),
+  .M_AXIS_GP1_xadc_tdata (xadc_axis_tdata  ),
+  .M_AXIS_GP1_xadc_tid   (xadc_axis_tid    ),
+  .M_AXIS_GP1_xadc_tready(xadc_axis_tready ),
+  .M_AXIS_GP1_xadc_tvalid(xadc_axis_tvalid ),
   // AXI GP1 LEDs
-  //.gpio_gp1_leds_tri_o (gp1_gpio_leds  )
+  //.gpio_gp1_leds_tri_o (gp1_gpio_leds  ),
   // System
   .dcm_locked        (dcm_locked       )
 );
