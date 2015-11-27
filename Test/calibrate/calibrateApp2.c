@@ -14,7 +14,7 @@ void waitForUser ( void )
     struct termios oldt, newt;
 
     puts("Press 'c' to continue or 'q' to exit.");
-    
+
     tcgetattr ( STDIN_FILENO, &oldt );
     newt = oldt;
     newt.c_lflag &= ~( ICANON | ECHO );
@@ -23,9 +23,9 @@ void waitForUser ( void )
     do {
         ch = getc(stdin);
     } while((ch != 'C') && (ch != 'c') && (ch != 'Q') && (ch != 'q'));
-    
+
     tcsetattr ( STDIN_FILENO, TCSANOW, &oldt );
-    
+
     if((ch == 'Q') || (ch == 'q'))
         exit(1);
 }
@@ -43,16 +43,18 @@ void printParams(const rp_calib_params_t* calib) {
         _calib = rp_GetCalibrationSettings();
         calib = &_calib;
     }
-    
+
     printf("Current calibration params:\n");
     printf("fe_ch1_fs_g_hi = 0x%08X //!< High gain front end full scale voltage, channel A\n", calib->fe_ch1_fs_g_hi);
     printf("fe_ch2_fs_g_hi = 0x%08X //!< High gain front end full scale voltage, channel B\n", calib->fe_ch2_fs_g_hi);
     printf("fe_ch1_fs_g_lo = 0x%08X //!< Low gain front end full scale voltage, channel A\n", calib->fe_ch1_fs_g_lo);
     printf("fe_ch2_fs_g_lo = 0x%08X //!< Low gain front end full scale voltage, channel B\n", calib->fe_ch2_fs_g_lo);
-    
-    printf("fe_ch1_dc_offs = 0x%08X //!< Front end DC offset, channel A\n", calib->fe_ch1_dc_offs);
-    printf("fe_ch2_dc_offs = 0x%08X //!< Front end DC offset, channel B\n", calib->fe_ch2_dc_offs);
-    
+
+    printf("fe_ch1_lo_offs = 0x%08X //!< Front end LV offset, channel A\n", calib->fe_ch1_lo_offs);
+    printf("fe_ch2_lo_offs = 0x%08X //!< Front end LV offset, channel B\n", calib->fe_ch2_lo_offs);
+    printf("fe_ch1_hi_offs = 0x%08X //!< Front end HV offset, channel A\n", calib->fe_ch1_hi_offs);
+    printf("fe_ch2_hi_offs = 0x%08X //!< Front end HV offset, channel B\n", calib->fe_ch2_hi_offs);
+
     printf("be_ch1_fs = 0x%08X //!< Back end full scale voltage, channel A\n", calib->be_ch1_fs);
     printf("be_ch2_fs = 0x%08X //!< Back end full scale voltage, channel B\n", calib->be_ch2_fs);
     printf("be_ch1_dc_offs = 0x%08X //!< Back end DC offset, on channel A\n", calib->be_ch1_dc_offs);
@@ -64,14 +66,14 @@ int restoreParams(const char* path) {
     FILE* fin = fopen(path, "rb");
     if(!fin)
         return -1;
-    
+
     if(fread(&calib, sizeof(rp_calib_params_t), 1, fin) != 1) {
         fclose(fin);
         return -1;
     }
-    
+
     fclose(fin);
-    
+
     ECHECK(rp_CalibrationWriteParams(calib));
     printParams(&calib);
     return 0;
@@ -83,22 +85,27 @@ int main(int argc, char **argv) {
     printf("Library version: %s\n", rp_GetVersion());
 
     ECHECK(rp_Init());
-    
+
     if(argc == 2) {
         ECHECK(restoreParams(argv[1]));
         ECHECK(rp_Release());
         return 0;
     }
-    
-    ECHECK(rp_CalibrationReset());
 
-    puts("---Calibration application---\n");
+	printParams(NULL);
+	puts("---Calibration application---\n");
+	waitForUser();
+    ECHECK(rp_CalibrationReset());
 
     puts("Calibration proces started.");
 
-    puts("Connect CH1 to ground.");
+    puts("Connect CH1 LV to ground.");
     waitForUser();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1, NULL));
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1, RP_LOW, NULL));
+
+    puts("Connect CH1 HV to ground.");
+    waitForUser();
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1, RP_HIGH, NULL));
 
     do {
         puts("Connect CH1 to reference voltage source and set jumpers to HV.");
@@ -120,9 +127,13 @@ int main(int argc, char **argv) {
     waitForUser();
     ECHECK(rp_CalibrateBackEnd(RP_CH_1, NULL));
 
-    puts("Connect CH2 to ground.");
+    puts("Connect CH2 LV to ground.");
     waitForUser();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2, NULL));
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2, RP_LOW, NULL));
+
+    puts("Connect CH2 HV to ground.");
+    waitForUser();
+    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2, RP_HIGH, NULL));
 
     do {
         puts("Connect CH2 to reference voltage source and set jumpers to HV.");
@@ -146,7 +157,7 @@ int main(int argc, char **argv) {
 
     printParams(NULL);
     backupParams();
-    
+
     ECHECK(rp_Release());
     return 0;
 }

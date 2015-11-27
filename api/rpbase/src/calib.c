@@ -196,12 +196,12 @@ int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_p
 
 	if (gain == RP_LOW) {
 		CHANNEL_ACTION(channel,
-			params.fe_ch1_lo_offs = calib_GetDataMedian(channel),
-			params.fe_ch2_lo_offs = calib_GetDataMedian(channel))
+			params.fe_ch1_lo_offs = calib_GetDataMedian(channel, RP_LOW),
+			params.fe_ch2_lo_offs = calib_GetDataMedian(channel, RP_LOW))
 	} else {
 		CHANNEL_ACTION(channel,
-			params.fe_ch1_hi_offs = calib_GetDataMedian(channel),
-			params.fe_ch2_hi_offs = calib_GetDataMedian(channel))
+			params.fe_ch1_hi_offs = calib_GetDataMedian(channel, RP_HIGH),
+			params.fe_ch2_hi_offs = calib_GetDataMedian(channel, RP_HIGH))
 	}
 
     /* Set new local parameter */
@@ -306,8 +306,8 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     ECHECK(rp_GenOutEnable(channel));
 
     CHANNEL_ACTION(channel,
-            params.be_ch1_dc_offs = -calib_GetDataMedian(channel),
-            params.be_ch2_dc_offs = -calib_GetDataMedian(channel))
+            params.be_ch1_dc_offs = -calib_GetDataMedian(channel, RP_LOW),
+            params.be_ch2_dc_offs = -calib_GetDataMedian(channel, RP_LOW))
 
     /* Set new local parameter */
 	ECHECK(calib_WriteParams(params));
@@ -364,7 +364,7 @@ static int getGenDC_int(rp_channel_t channel, float dc) {
     ECHECK(rp_GenOffset(channel, dc));
     ECHECK(rp_GenOutEnable(channel));
 
-    return calib_GetDataMedian(channel);
+    return calib_GetDataMedian(channel, RP_LOW);
 }
 
 int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
@@ -426,9 +426,10 @@ int calib_Reset() {
     return calib_Init();
 }
 
-int32_t calib_GetDataMedian(rp_channel_t channel) {
+int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
     /* Acquire data */
     ECHECK(rp_AcqReset());
+    ECHECK(rp_AcqSetGain(channel, gain));
     ECHECK(rp_AcqSetDecimation(RP_DEC_64));
     ECHECK(rp_AcqStart());
     ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));

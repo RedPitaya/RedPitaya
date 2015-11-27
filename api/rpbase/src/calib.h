@@ -39,7 +39,7 @@ int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
 
 int calib_Reset();
 
-int32_t calib_GetDataMedian(rp_channel_t channel);
+int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain);
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
 int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
 
