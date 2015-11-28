@@ -4,8 +4,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "rp.h"
-#include "common.h"
+#include "redpitaya/rp.h"
+#include "../../api/rpbase/src/common.h"
 
 
 void waitForUser ( void )
