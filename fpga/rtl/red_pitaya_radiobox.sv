@@ -268,8 +268,8 @@ reg  [15:0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
 
 wire [15:0] muxin_mix_in = (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h20) ?  { ~adc_i[0], 2'b0 } :
                            (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h21) ?  { ~adc_i[1], 2'b0 } :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
                            (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
                            (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
                            (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
@@ -283,8 +283,8 @@ assign muxin_mix_out[15:0] = { muxin_mix_p[47], muxin_mix_p[24:9]};    // TODO t
 always @(posedge xadc_axis_aclk)                                       // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
 begin
    if (!adc_rstn_i) begin
-      rb_xadc[RB_XADC_MAPPING_EXT_CH8] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_EXT_CH0] <= 16'b0;
+      rb_xadc[RB_XADC_MAPPING_EXT_CH8] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_EXT_CH1] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_EXT_CH9] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_VpVn]    <= 16'b0;
