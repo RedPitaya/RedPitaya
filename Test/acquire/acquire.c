@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
                  */
 		
                 for(i = 0; i < MIN(size, sig_len); i++) {
-                    printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
+                    printf("%7d;%7d\n", (int)s[1][i], (int)s[2][i]);
                 }
                 break;
             }
