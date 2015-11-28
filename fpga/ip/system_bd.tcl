@@ -357,6 +357,10 @@ CONFIG.AVERAGE_ENABLE_VAUXP0_VAUXN0 {true} \
 CONFIG.AVERAGE_ENABLE_VAUXP1_VAUXN1 {true} \
 CONFIG.AVERAGE_ENABLE_VAUXP8_VAUXN8 {true} \
 CONFIG.AVERAGE_ENABLE_VAUXP9_VAUXN9 {true} \
+CONFIG.BIPOLAR_VAUXP0_VAUXN0 {true} \
+CONFIG.BIPOLAR_VAUXP1_VAUXN1 {true} \
+CONFIG.BIPOLAR_VAUXP8_VAUXN8 {true} \
+CONFIG.BIPOLAR_VAUXP9_VAUXN9 {true} \
 CONFIG.CHANNEL_AVERAGING {16} \
 CONFIG.CHANNEL_ENABLE_VAUXP0_VAUXN0 {true} \
 CONFIG.CHANNEL_ENABLE_VAUXP1_VAUXN1 {true} \
@@ -430,6 +434,7 @@ CONFIG.IN1_WIDTH {15} \
    guistr: "# # String gsaved with Nlview 6.5.5  2015-06-26 bk=1.3371 VDI=38 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
 preplace port FCLK_CLK3 -pg 1 -y 290 -defaultsOSRD
+preplace port M_AXIS_GP1_xadc_aclk -pg 1 -y 530 -defaultsOSRD
 preplace port S_AXI_HP1 -pg 1 -y 200 -defaultsOSRD
 preplace port DDR -pg 1 -y 70 -defaultsOSRD
 preplace port Vp_Vn -pg 1 -y 620 -defaultsOSRD
@@ -446,7 +451,6 @@ preplace port FIXED_IO -pg 1 -y 90 -defaultsOSRD
 preplace port FCLK_RESET2_N -pg 1 -y 350 -defaultsOSRD
 preplace port dcm_locked -pg 1 -y 470 -defaultsOSRD
 preplace port FCLK_CLK0 -pg 1 -y 150 -defaultsOSRD
-preplace port M_AXIS_XADC_aclk -pg 1 -y 530 -defaultsOSRD
 preplace port FCLK_CLK1 -pg 1 -y 250 -defaultsOSRD
 preplace port Vaux8 -pg 1 -y 680 -defaultsOSRD
 preplace port FCLK_CLK2 -pg 1 -y 270 -defaultsOSRD
@@ -468,11 +472,11 @@ preplace netloc s_axi_hp0_1 1 0 4 NJ 180 NJ 180 NJ 180 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 4 1 NJ
 preplace netloc processing_system7_0_M_AXI_GP0 1 4 1 NJ
 preplace netloc dcm_locked_proc_sys_reset_1 1 0 2 NJ 470 NJ
-preplace netloc xadc_ip2intc_irpt 1 2 3 490 500 NJ 500 1210
+preplace netloc xadc_ip2intc_irpt 1 2 3 500 500 NJ 500 1210
 preplace netloc xlconstant_dout 1 1 1 NJ
 preplace netloc processing_system7_0_fclk_reset1_n 1 4 1 NJ
 preplace netloc Vp_Vn_1 1 0 4 NJ 620 NJ 620 NJ 620 NJ
-preplace netloc processing_system7_0_M_AXI_GP1 1 2 3 480 10 NJ 10 1210
+preplace netloc processing_system7_0_M_AXI_GP1 1 2 3 490 10 NJ 10 1210
 preplace netloc s_axi_hp0_aclk 1 0 4 NJ 240 NJ 240 NJ 240 NJ
 preplace netloc s_axi_hp1_1 1 0 4 NJ 200 NJ 200 NJ 200 NJ
 preplace netloc proc_sys_reset_0_interconnect_aresetn 1 2 1 N
@@ -483,15 +487,15 @@ preplace netloc s_axi_hp1_aclk 1 0 4 NJ 250 NJ 250 NJ 250 NJ
 preplace netloc processing_system7_0_fclk_reset0_n 1 1 4 140 20 NJ 20 NJ 20 1220
 preplace netloc Vaux9_1 1 0 4 NJ 700 NJ 700 NJ 700 NJ
 preplace netloc processing_system7_0_fixed_io 1 4 1 NJ
-preplace netloc processing_system7_0_fclk_clk0 1 1 4 150 330 470 230 780 420 1230
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 2 480 490 NJ
+preplace netloc processing_system7_0_fclk_clk0 1 1 4 150 330 480 230 780 420 1230
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 2 490 490 NJ
 preplace netloc Vaux1_1 1 0 4 NJ 660 NJ 660 NJ 660 NJ
 preplace netloc processing_system7_0_fclk_clk1 1 4 1 NJ
 preplace netloc m_axi_gp0_aclk_1 1 0 4 NJ 220 NJ 220 NJ 220 NJ
 preplace netloc xadc_M_AXIS 1 4 1 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 4 1 NJ
 preplace netloc processing_system7_0_fclk_clk3 1 4 1 NJ
-levelinfo -pg 1 0 80 310 630 1000 1250 -top 0 -bot 860
+levelinfo -pg 1 -10 80 320 630 1000 1250 -top 0 -bot 860
 ",
 }
 

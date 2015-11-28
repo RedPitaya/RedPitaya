@@ -205,8 +205,8 @@ enum {
 } RB_LED_CTRL_ENUM;
 
 enum {
-    RB_XADC_MAPPING_EXT_CH8             = 0,    // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
-    RB_XADC_MAPPING_EXT_CH0,                    // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
+    RB_XADC_MAPPING_EXT_CH0             = 0,    // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
+    RB_XADC_MAPPING_EXT_CH8,                    // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
     RB_XADC_MAPPING_EXT_CH1,                    // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[2]/vinn_i[2]
     RB_XADC_MAPPING_EXT_CH9,                    // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[3]/vinn_i[3]
     RB_XADC_MAPPING_VpVn,                       // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
