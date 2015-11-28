@@ -1,5 +1,4 @@
 CC=$(CROSS_COMPILE)gcc
-RM=rm
 
 OBJECTS=main.o fpga_lti.o worker.o dsp.o calib.o fpga_awg.o generate_basic.o
 
@@ -23,5 +22,5 @@ $(CONTROLLER): $(FFT_OBJECTS) $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	$(RM) -f $(OBJECTS)
+	$(RM) $(OBJECTS)
 	$(MAKE) -C $(FFT_DIR) clean

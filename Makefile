@@ -571,12 +571,17 @@ sdk:
 ################################################################################
 
 clean:
+	$(RM) $(DEVICETREE) $(TMP)/devicetree.dts 
+	$(RM) $(UBOOT)
+	$(RM) $(LINUX)
+	$(RM) $(BOOT_UBOOT) boot_uboot.bif
 	-make -C $(LINUX_DIR) clean
+	make -C $(SDK_DIR) clean
 	make -C $(FPGA_DIR) clean
 	-make -C $(UBOOT_DIR) clean
 	make -C shared clean
 	# todo, remove downloaded libraries and symlinks
-	rm -rf Bazaar/tools/cryptopp
+	$(RM) -r Bazaar/tools/cryptopp
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
@@ -590,6 +595,7 @@ endif
 	make -C $(SDK_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
-	$(RM) $(INSTALL_DIR) -rf
-	$(RM) $(TARGET) -rf
+	$(RM) -r $(INSTALL_DIR)
+	$(RM) -r $(TARGET)
 	$(RM) $(NAME)*.zip
+

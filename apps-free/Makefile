@@ -23,4 +23,4 @@ clean:
 		$(MAKE) -C $$app clean; \
 	done
 
-	-$(RM) -rf ./build/
+	-$(RM) -r ./build/

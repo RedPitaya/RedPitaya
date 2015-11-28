@@ -1,5 +1,4 @@
 CC=$(CROSS_COMPILE)gcc
-RM=rm
 
 OBJECTS=main.o fpga.o worker.o dsp.o waterfall.o
 
@@ -30,6 +29,6 @@ $(CONTROLLER): $(FFT_OBJECTS) $(JPEG_LIB) $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(FFT_OBJECTS) $(CFLAGS) $(LDFLAGS) $(JPEG_LIB)
 
 clean:
-	$(RM) -f $(OBJECTS)
+	$(RM) $(OBJECTS)
 	$(MAKE) -C $(FFT_DIR) clean
 	$(MAKE) -C $(JPEG_DIR) clean

@@ -6,7 +6,6 @@
 
 CROSS_COMPILE ?= arm-linux-gnueabihf-
 CC=$(CROSS_COMPILE)gcc
-RM=rm
 
 OBJECTS=main.o worker.o cb_http.o cb_ws.o fpga_sys_xadc.o fpga_hk.o fpga_rb.o fpga.o calib.o
 CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
@@ -22,4 +21,5 @@ $(CONTROLLER): $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	-$(RM) -f $(OBJECTS)
+	-$(RM) $(OBJECTS)
+	-$(RM) -r img

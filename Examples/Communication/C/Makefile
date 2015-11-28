@@ -48,4 +48,4 @@ clean:
 	make -C $(UART_DIR) clean
 	#make -C $(SPI_DIR) clean
 	make -C $(IIC_DIR) clean
-	rm -rf $(TARGET)
+	$(RM) -r $(TARGET)
