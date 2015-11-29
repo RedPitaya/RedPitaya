@@ -1,5 +1,4 @@
 CC=$(CROSS_COMPILE)gcc
-RM=rm
 
 OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o
 
@@ -14,4 +13,4 @@ $(CONTROLLER): $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	-$(RM) -f $(OBJECTS)
+	-$(RM) $(OBJECTS)

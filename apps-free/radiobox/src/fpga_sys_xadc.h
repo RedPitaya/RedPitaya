@@ -24,13 +24,18 @@
 
 /** @brief system XADC starting address of FPGA registers. */
 #define FPGA_SYS_XADC_BASE_ADDR       0x83C00000
-#define FPGA_SYS_GPIO_XADC_BASE_ADDR  0x81200000
-#define FPGA_SYS_GPIO_LEDS_BASE_ADDR  0x81210000
-
-/** @brief system XADC memory map size of FPGA registers. */
 #define FPGA_SYS_XADC_BASE_SIZE       0x10000
+
+#if 0
+/** @brief system GPIO XADC memory map size of FPGA registers. */
+#define FPGA_SYS_GPIO_XADC_BASE_ADDR  0x81200000
 #define FPGA_SYS_GPIO_XADC_BASE_SIZE  0x10000
+
+/** @brief system GPIO LEDa memory map size of FPGA registers. */
 #define FPGA_SYS_GPIO_LEDS_BASE_SIZE  0x10000
+#define FPGA_SYS_GPIO_LEDS_BASE_ADDR  0x81210000
+#endif
+
 
 /** @brief FPGA register offset addresses of the system XADC module base address.
  *

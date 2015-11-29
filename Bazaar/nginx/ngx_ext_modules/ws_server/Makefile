@@ -16,9 +16,9 @@ SOURCES= rp_websocket_server.cpp \
 	$(LIBJSON_DIR)/_internal/Source/JSONValidator.cpp \
 	$(LIBJSON_DIR)/_internal/Source/JSONStream.cpp \
 	$(LIBJSON_DIR)/_internal/Source/JSONAllocator.cpp \
-    	$(LIBJSON_DIR)/_internal/Source/JSONPreparse.cpp \
-	
-OBJECTS=$(SOURCES:.cpp=.o)
+    	$(LIBJSON_DIR)/_internal/Source/JSONPreparse.cpp
+
+OBJECTS=$(patsubst %.cpp, %.o, $(SOURCES))
 LIB=libws_server.a
 
 RP_MANAGER_DIR=./rp_sdk

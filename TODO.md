@@ -1,9 +1,9 @@
 FPGA:
 - replace undocumented system bus with AXI4 Lite
-- move CPU accessible registers out from processing modules
-- separate the code into smaller modules connected over AXI4-Stream
+- move CPU accessible registers out from the processing module
+- separate the code into smaller modules connected over the AXI4-Stream
 - rethink generator and osciloscope SW interface sequences
-- sestructure registers into a hierarchy
+- restructure registers into a hierarchy
 - generalize trigger modes
 - write configurable PLL
 - write streaming benches

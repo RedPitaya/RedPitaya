@@ -19,5 +19,5 @@ $(DOC):
 	cd $(DOXY_STARTUP_DIR); $(DOXY_RUN) $(DOXY_CONF)
 
 clean:
-	rm -f -r $(OUT_DIR)/*
+	$(RM) -r $(OUT_DIR)/*
 

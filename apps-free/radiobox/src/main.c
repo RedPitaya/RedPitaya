@@ -49,20 +49,17 @@ int                             g_fpga_sys_xadc_mem_fd = -1;
 /** @brief The system XADC memory layout of the FPGA registers. */
 fpga_sys_xadc_reg_mem_t*        g_fpga_sys_xadc_reg_mem = NULL;
 
-/** @brief HouseKeeping memory file descriptor used to mmap() the FPGA space */
-int                             g_fpga_hk_mem_fd = -1;
-/** @brief HouseKeeping memory layout of the FPGA registers */
-fpga_hk_reg_mem_t*              g_fpga_hk_reg_mem = NULL;
-
-/** @brief The system GPIO for XADC memory file descriptor used to mmap() the FPGA space. */
-int                             g_fpga_sys_gpio_xadc_mem_fd = -1;
-/** @brief The system GPIO for XADC memory layout of the FPGA registers. */
-fpga_sys_gpio_reg_mem_t*        g_fpga_sys_gpio_xadc_reg_mem = NULL;
-
+#if 0
 /** @brief The system GPIO for LEDs memory file descriptor used to mmap() the FPGA space. */
 int                             g_fpga_sys_gpio_leds_mem_fd = -1;
 /** @brief The system GPIO for LEDs memory layout of the FPGA registers. */
 fpga_sys_gpio_reg_mem_t*        g_fpga_sys_gpio_leds_reg_mem = NULL;
+#endif
+
+/** @brief HouseKeeping memory file descriptor used to mmap() the FPGA space */
+int                             g_fpga_hk_mem_fd = -1;
+/** @brief HouseKeeping memory layout of the FPGA registers */
+fpga_hk_reg_mem_t*              g_fpga_hk_reg_mem = NULL;
 
 /** @brief RadioBox memory file descriptor used to mmap() the FPGA space */
 int                             g_fpga_rb_mem_fd = -1;
