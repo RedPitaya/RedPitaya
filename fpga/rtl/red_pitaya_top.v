@@ -392,8 +392,15 @@ assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}
 // output registers + signed to unsigned (also to negative slope)
 always @(posedge dac_clk_1x)
 begin
-  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
-  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+   if (rb_en) begin
+      dac_dat_a <= {rb_out_ch[0][16-1], ~rb_out_ch[0][16-2:2]};
+      dac_dat_b <= {rb_out_ch[1][16-1], ~rb_out_ch[1][16-2:2]};
+      end
+
+   else begin
+      dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
+      dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+      end
 end
 
 // DDR outputs

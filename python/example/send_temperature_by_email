@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+import smtplib
+from email.mime.text import MIMEText
+from PyRedPitaya.board import RedPitaya
+
+red_pitaya = RedPitaya()
+
+def send_temperature(smtp_server, email_address):
+    smtp = smtplib.SMTP()
+
+    smtp.connect(smtp_server)
+    me = email_address
+
+    msg = MIMEText('The Red Pitaya temperature is {}'.format(red_pitaya.ams.temp))
+    msg['Subject'] = 'Temperature'
+    msg['From']=me
+    msg['To']=me
+    smtp.sendmail(me, [me], msg.as_string())
+    smtp.quit()
+
+if __name__=='__main__':
+    import os
+    smtp_server = os.getenv('SMTP')
+    if not smtp_server:
+        smtp_server = raw_input('Name of the smtp server :')
+    email_address = os.getenv('EMAIL')
+    if not email_address:
+        email_address = raw_input('Your email address :')
+    send_temperature(smtp_server, email_address)

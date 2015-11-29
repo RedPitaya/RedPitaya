@@ -86,8 +86,8 @@ version.h:
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
-	rm -rf $(INSTALL_DIR)/lib
+	$(RM) $(TARGET) $(OBJECTS_DIR)/*.o
+	$(RM) -r $(INSTALL_DIR)/lib
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
@@ -96,3 +96,4 @@ install:
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
 	cp -r ../../include/redpitaya $(INSTALL_DIR)/include
+

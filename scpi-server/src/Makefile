@@ -84,10 +84,11 @@ version.h:
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
+	$(RM) $(TARGET) $(OBJECTS_DIR)/*.o
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(TARGET) $(INSTALL_DIR)/bin
+

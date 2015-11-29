@@ -15,3 +15,4 @@ clean:
 	-$(RM) $(TARGET) *.o ~*
 	-$(RM) -r target
 	-$(RM) $(INSTALL_NAME)
+	-$(RM) $(INSTALL_DIR)$(INSTALL_NAME)
