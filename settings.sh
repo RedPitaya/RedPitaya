@@ -18,7 +18,8 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 # this path is also used by some other downloads
 ################################################################################
 
-export BR2_DL_DIR=$HOME/Workplace/buildroot/dl
+#export BR2_DL_DIR=$HOME/Workplace/buildroot/dl
+export BR2_DL_DIR=dl
 
 ################################################################################
 # common make procedure, should not be run by this script
