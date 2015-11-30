@@ -47,8 +47,22 @@ typedef struct params_e{
 	float frequency;
 	uint32_t r_shunt;
 	calib_t calibration;
-	bool tolerance;
+	bool relative;
+	bool range;
+	bool series;
 } lcr_params_t;
+
+/* Main lcr measurment data */
+typedef struct data_e {
+	float lcr_amplitude;
+	float lcr_phase;
+	float lcr_d;
+	float lcr_q;
+	float lcr_e;
+	float lcr_l;
+	float lcr_c;
+	float lcr_r;
+}lcr_main_data_t;
 
 
 static inline char *stringFromCalib(enum calibration calib)
@@ -68,7 +82,7 @@ int lcr_Reset();
 int lcr_SetDefaultValues();
 
 /* Main lcr functions */
-int lcr_Run(float *amplitude);
+int lcr_Run();
 void *lcr_MainThread();
 
 /* Measurment functions */
@@ -79,6 +93,8 @@ int lcr_SafeThreadAcqData(rp_channel_t channel,
 
 int lcr_getImpedance(float frequency, float *Z_out);
 int lcr_Correction();
+int lcr_CalculateData(float amplitude_z);
+int lcr_CopyParams(lcr_main_data_t *params);
 
 int lcr_data_analysis(float **data, uint32_t size, float dc_bias, 
 		uint32_t r_shunt, float _Complex *Z, float w_out, int decimation);

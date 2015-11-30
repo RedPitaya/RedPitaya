@@ -29,8 +29,9 @@ extern "C" {
 int lcrApp_lcrInit();
 int lcrApp_LcrRelease();
 
-int lcrApp_LcrRun(float *amplitudez);
+int lcrApp_LcrRun();
 int lcrApp_LcrStartCorrection();
+int lcrApp_LcrCopyParams(lcr_main_data_t *data);
 
 //Getters, setters
 int lcrApp_LcrSetFrequency(float frequency);

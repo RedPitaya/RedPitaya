@@ -31,8 +31,12 @@ int lcrApp_LcrReset(){
 	return lcr_Reset();
 }
 
-int lcrApp_LcrRun(float *amplitudez){
-	return lcr_Run(amplitudez);
+int lcrApp_LcrRun(){
+	return lcr_Run();
+}
+
+int lcrApp_LcrCopyParams(lcr_main_data_t *data){
+	return lcr_CopyParams(data);
 }
 
 int lcrApp_LcrStartCorrection(){

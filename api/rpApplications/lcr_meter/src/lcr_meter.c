@@ -42,9 +42,11 @@ uint32_t 				acq_size = 1024;
 pthread_mutex_t 		mutex;
 pthread_t 				*imp_thread_handler = NULL;
 
-/* Init impedance params struct */
+/* Init lcr params struct */
 lcr_params_t main_params = {0, 0, 0, false};
 
+/* Main lcr data params */
+lcr_main_data_t *calc_data;
 
 struct impendace_params {
 	float frequency;
@@ -74,6 +76,9 @@ int lcr_Init(){
 	ECHECK_APP(rp_GenReset());
 	ECHECK_APP(rp_AcqSetTriggerDelay(ADC_BUFF_SIZE / 2));
 	ECHECK_APP(rp_AcqSetTriggerLevel(0));
+
+	/* Malloc global vars */
+	calc_data = malloc(sizeof(calc_data));
 
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
@@ -282,7 +287,7 @@ void *lcr_MainThread(void *args){
 }
 
 /* Main call function */
-int lcr_Run(float *amplitude){
+int lcr_Run(){
 
 	int err;
 
@@ -297,7 +302,10 @@ int lcr_Run(float *amplitude){
 	}
 	pthread_join(lcr_thread_handler, 0);
 
-	*amplitude = args.Z_out;
+	if(lcr_CalculateData(args.Z_out) != RP_OK){
+		return RP_EOOR;
+	}
+
 	return RP_OK;
 }
 
@@ -330,6 +338,25 @@ int lcr_Correction(){
 	
 	//Store calibration
 	store_calib(calib_mode, &amplitude_z[0]);
+	return RP_OK;
+}
+
+int lcr_CalculateData(float amplitude_z){
+
+	//float phasez = 0;
+	calc_data->lcr_amplitude = amplitude_z;
+	return RP_OK;
+}
+
+int lcr_CopyParams(lcr_main_data_t *params){
+	params->lcr_amplitude    = calc_data->lcr_amplitude;
+	params->lcr_phase        = calc_data->lcr_phase ;
+	params->lcr_d         	 = calc_data->lcr_d;
+	params->lcr_q            = calc_data->lcr_q;
+	params->lcr_e         	 = calc_data->lcr_e;
+	params->lcr_l         	 = calc_data->lcr_l;
+	params->lcr_c         	 = calc_data->lcr_c;
+	params->lcr_r         	 = calc_data->lcr_r;
 	return RP_OK;
 }
 
@@ -404,8 +431,6 @@ int lcr_data_analysis(float **data,
 
 	return RP_OK;
 }
-
-
 
 /* Getters and setters */
 int lcr_SetFrequency(float frequency){
