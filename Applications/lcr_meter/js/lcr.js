@@ -178,6 +178,42 @@ $(function() {
 		LCR.sendParams();
 	});
 
+	/* --------------------- CALIBRATION --------------------- */
+	$('#LCR_CALIBRATE').on('click', function(ev) {
+		ev.preventDefault();
+		$('#modal_calib_start').modal('show');
+	});
+
+	$('#bt_calib_start').on('click', function(ev) {
+		ev.preventDefault();
+		LCR.params.local['LCR_CALIB_MODE'] = { value: 1 };
+		LCR.params.local['LCR_CALIBRATION'] = { value: true };
+		$('#modal_calib_start').modal('hide');
+		$('#modal_calib_open').modal('show');
+		LCR.sendParams();
+	});
+
+	$('#bt_calib_open').on('click', function(ev) {
+		ev.preventDefault();
+		LCR.params.local['LCR_CALIB_MODE'] = { value: 2 };
+		LCR.params.local['LCR_CALIBRATION'] = { value: true };
+		$('#modal_calib_open').modal('hide');
+		$('#modal_calib_short').modal('show');
+		LCR.sendParams();
+	});
+
+	$('#bt_calib_short').on('click', function(ev) {
+		ev.preventDefault();
+		LCR.params.local['LCR_CALIB_MODE'] = { value: 3 };
+		LCR.params.local['LCR_CALIBRATION'] = { value: true };
+		$('#modal_calib_short').modal('hide');
+		$('#modal_calib_load').modal('show');
+		LCR.sendParams();
+	});
+
+
+
+	/* ------------------------------------------------------- */
 
 	//Log data
 	$('#LCR_LOG').click(function(ev){
@@ -195,7 +231,6 @@ $(function() {
 	});
 	
 	$('#LCR_FREQUENCY').change(function(){
-		console.log(parseInt(this.value));
 		LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
 		LCR.sendParams();
 	});

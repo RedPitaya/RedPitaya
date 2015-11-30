@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
+#include <sys/syslog.h>
+
 #include "version.h"
 
 /***************************************************************************************
@@ -13,7 +15,7 @@
 //TODO make a more detailed parameters specification. More parameters soon to be added.
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 100);
 
-//Meas param
+//Out params
 CFloatParameter amplitudeZ("AMPLITUDEZ", CBaseParameter::RW, 0, 0, 0, 1000000);
 CFloatParameter phaseZ("PHASEZ", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_L("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
@@ -24,11 +26,12 @@ CFloatParameter lcr_D("LCR_D", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_E("LCR_E", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 
-CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
+//In params
 CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 100000);
+CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 
-
-
+CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
+CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
 
 const char *rp_app_desc(void){
 	return (const char *)"Red Pitaya Lcr meter application.\n";
@@ -76,16 +79,27 @@ void UpdateParams(void){
 		frequency.Update();
 	}
 
+	/* Change calibration mode */
+	if(IS_NEW(calibMode)){
+		syslog(LOG_INFO, "%d\n", startCalibration.Value());
+		calib_t calibration = (calib_t)calibMode.NewValue();
+		lcrApp_LcrSetCalibMode(calibration);
+		calibMode.Update();
+	}
 
-	if(startMeasure.NewValue() == false){
-		
-		amplitudeZ.Value() = 0;
-		startMeasure.Update();
-		
-	}else if(startMeasure.NewValue() == true){
+	if(startMeasure.NewValue() == true){
 		lcrApp_LcrRun(&ampl_z);
 		startMeasure.Update();
 		amplitudeZ.Value() = ampl_z;
+	}
+
+	//Set calibration
+	if(IS_NEW(startCalibration) && calibMode.Value() != 0){
+		syslog(LOG_INFO, "We are in calibration start.\n");
+		//Set correction mode;
+		lcrApp_LcrStartCorrection();
+		startCalibration.Update();
+		startCalibration.Value() = false;
 	}
 
 }
