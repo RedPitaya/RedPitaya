@@ -145,8 +145,8 @@ rp_calib_params_t rp_GetCalibrationSettings()
     return calib_GetParams();
 }
 
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndOffset(channel, out_params);
+int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
+    return calib_SetFrontEndOffset(channel, gain, out_params);
 }
 
 int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
@@ -282,7 +282,7 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
         // DIO_N
         pin -= RP_DIO0_N;
         tmp = ioread32(&hk->ex_cd_n);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
+        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_n);
     }
     return RP_OK;
 }
@@ -819,8 +819,8 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     return gen_getTriggerSource(channel, src);
 }
 
-int rp_GenTrigger(int mask) {
-    return gen_Trigger(mask);
+int rp_GenTrigger(uint32_t channel) {
+    return gen_Trigger(channel);
 }
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
