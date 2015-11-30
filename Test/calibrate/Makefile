@@ -49,7 +49,8 @@ INSTALL_DIR ?= .
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
-all: $(TARGET) $(CALIBRATE) $(CALIBRATE2) $(CALIBTUNE)
+all: $(TARGET) $(CALIBRATE2) 
+#$(CALIBRATE2) $(CALIBTUNE)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object

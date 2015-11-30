@@ -2472,6 +2472,8 @@ $(function() {
 
   // Stop the application when page is unloaded
   window.onbeforeunload = function() {
+    websocket.onclose = function () {}; // disable onclose handler first
+    websocket.close();
     $.ajax({
       url: OSC.config.stop_app_url,
       async: false
