@@ -13,6 +13,7 @@
 */
 
 #include <stdio.h>
+#include <sys/syslog.h>
 
 #include "lcrApp.h"
 #include "common.h"
@@ -34,12 +35,24 @@ int lcrApp_LcrRun(float *amplitudez){
 	return lcr_Run(amplitudez);
 }
 
+int lcrApp_LcrStartCorrection(){
+	return lcr_Correction();
+}
+
 int lcrApp_LcrSetFrequency(float frequency){
 	return lcr_SetFrequency(frequency);
 }
 
 int lcrApp_LcrGetFrequency(float *frequency){
 	return lcr_GetFrequency(frequency);
+}
+
+int lcrApp_LcrSetCalibMode(calib_t calib_mode){
+	return lcr_SetCalibMode(calib_mode);
+}
+
+int lcrApp_LcrGetCalibMode(calib_t *calib_mode){
+	return lcr_GetCalibMode(calib_mode);
 }
 
 

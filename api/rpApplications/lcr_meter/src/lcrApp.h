@@ -30,10 +30,13 @@ int lcrApp_lcrInit();
 int lcrApp_LcrRelease();
 
 int lcrApp_LcrRun(float *amplitudez);
+int lcrApp_LcrStartCorrection();
 
 //Getters, setters
 int lcrApp_LcrSetFrequency(float frequency);
 int lcrApp_LcrGetFrequency(float *frequency);
+int lcrApp_LcrSetCalibMode(calib_t calib_mode);
+int lcrApp_LcrGetCalibMode(calib_t *calib_mode);
 
 #ifdef __cplusplus
 }
