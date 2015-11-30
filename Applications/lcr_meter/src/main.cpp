@@ -71,7 +71,8 @@ void UpdateParams(void){
 	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
 	CDataManager::GetInstance()->SendAllParams();
 
-	float ampl_z;
+	lcr_main_data_t *data = 
+		(lcr_main_data_t *)malloc(sizeof(lcr_main_data_t));
 
 	/*Change frequency*/
 	if(IS_NEW(frequency)){
@@ -81,16 +82,16 @@ void UpdateParams(void){
 
 	/* Change calibration mode */
 	if(IS_NEW(calibMode)){
-		syslog(LOG_INFO, "%d\n", startCalibration.Value());
 		calib_t calibration = (calib_t)calibMode.NewValue();
 		lcrApp_LcrSetCalibMode(calibration);
 		calibMode.Update();
 	}
 
 	if(startMeasure.NewValue() == true){
-		lcrApp_LcrRun(&ampl_z);
+		lcrApp_LcrRun();
 		startMeasure.Update();
-		amplitudeZ.Value() = ampl_z;
+		lcrApp_LcrCopyParams(data);
+		amplitudeZ.Value() = data->lcr_amplitude;
 	}else if(startMeasure.NewValue() == false){
 		startMeasure.Update();
 		amplitudeZ.Value() = 0;
@@ -98,7 +99,6 @@ void UpdateParams(void){
 
 	//Set calibration
 	if(IS_NEW(startCalibration) && calibMode.Value() != 0){
-		syslog(LOG_INFO, "We are in calibration start.\n");
 		//Set correction mode;
 		lcrApp_LcrStartCorrection();
 		startCalibration.Update();
