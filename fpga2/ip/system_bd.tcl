@@ -480,13 +480,13 @@ preplace netloc S_AXI_STR1_arstn_1 1 0 5 NJ 540 NJ 540 NJ 540 NJ 540 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 7 1 NJ
 preplace netloc axi_dma_0_s2mm_prmry_reset_out_n 1 2 4 570 440 NJ 440 NJ 440 1580
 preplace netloc processing_system7_0_M_AXI_GP0 1 7 1 NJ
-preplace netloc xadc_ip2intc_irpt 1 4 2 1180 640 NJ
 preplace netloc xlconstant_dout 1 1 1 NJ
+preplace netloc xadc_ip2intc_irpt 1 4 2 1180 640 NJ
 preplace netloc processing_system7_0_fclk_reset1_n 1 7 1 NJ
 preplace netloc axi_interconnect_0_M02_AXI 1 3 2 NJ 170 1200
 preplace netloc Vp_Vn_1 1 0 4 NJ 670 NJ 670 NJ 670 NJ
-preplace netloc axi_dma_1_s2mm_introut 1 5 1 1550
 preplace netloc s_axi_hp0_aclk 1 0 7 NJ 190 NJ 190 550 340 NJ 340 1210 430 1590 680 NJ
+preplace netloc axi_dma_1_s2mm_introut 1 5 1 1550
 preplace netloc S_AXI_STR0_arstn_1 1 0 5 NJ 380 NJ 380 NJ 380 NJ 380 NJ
 preplace netloc axi_dma_0_s2mm_introut 1 5 1 1570
 preplace netloc Vaux8_1 1 0 4 NJ 730 NJ 730 NJ 730 NJ
@@ -495,7 +495,7 @@ preplace netloc s_axi_hp1_aclk 1 0 7 NJ 230 NJ 230 530 530 NJ 530 1210 630 1600 
 preplace netloc processing_system7_0_fclk_reset0_n 1 7 1 NJ
 preplace netloc processing_system7_M_AXI_GP1 1 2 6 560 310 NJ 310 NJ 250 NJ 250 NJ 250 2360
 preplace netloc processing_system7_0_fixed_io 1 7 1 NJ
-preplace netloc axi_interconnect_0_M00_AXI 1 3 1 880
+preplace netloc axi_interconnect_0_M00_AXI 1 3 1 870
 preplace netloc axi_dma_0_M_AXI_S2MM 1 5 1 N
 preplace netloc Vaux9_1 1 0 4 NJ 750 NJ 750 NJ 750 NJ
 preplace netloc S_AXI_STR0_1 1 0 5 NJ 320 NJ 320 NJ 320 NJ 320 NJ
@@ -507,7 +507,7 @@ preplace netloc m_axi_gp0_aclk_1 1 0 7 NJ 560 NJ 560 NJ 550 NJ 550 NJ 670 NJ 670
 preplace netloc axi_dma_1_s2mm_prmry_reset_out_n 1 2 4 580 450 NJ 450 NJ 450 1550
 preplace netloc S_AXI_STR1_1 1 0 5 NJ 520 NJ 520 NJ 520 NJ 520 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 7 1 NJ
-preplace netloc M00_ACLK_1 1 1 7 160 770 540 770 880 890 NJ 890 NJ 890 1910 690 2360
+preplace netloc M00_ACLK_1 1 1 7 160 770 540 770 870 890 NJ 890 NJ 890 1910 690 2360
 preplace netloc axi_protocol_converter_1_M_AXI 1 6 1 N
 levelinfo -pg 1 0 90 340 730 1030 1380 1740 2130 2380 -top 0 -bot 960
 ",
