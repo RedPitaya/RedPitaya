@@ -125,7 +125,8 @@ export GREET_MSG
 # tarball
 ################################################################################
 
-all: zip sdk apps-free
+#all: zip sdk apps-free
+all: zip
 
 $(DL):
 	mkdir -p $@
@@ -133,9 +134,10 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
-	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api apps_pro rp_communication
+#$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+#	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
+#	   scpi api apps_pro rp_communication
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT) scpi api
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
