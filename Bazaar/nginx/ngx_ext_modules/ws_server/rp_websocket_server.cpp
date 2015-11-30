@@ -18,6 +18,7 @@ using websocketpp::lib::thread;
 
 rp_websocket_server::rp_websocket_server()
     : m_params(NULL)
+    , m_OnClosed(false)
 {
 }
 
@@ -220,7 +221,11 @@ void rp_websocket_server::on_open(connection_hdl hdl)
 void rp_websocket_server::on_close(connection_hdl hdl) {
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server connection closed");
 	m_connections.erase(hdl);
-	std::async([](){ std::this_thread::sleep_for(std::chrono::seconds(2)); abort(); });
+
+	if (!m_OnClosed) {
+		exit(-1);
+		m_OnClosed = true;
+	}
 }
 
 void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg) {
@@ -267,6 +272,10 @@ void rp_websocket_server::join()
 
 void rp_websocket_server::stop()
 {
+	auto th = std::thread([](){ std::this_thread::sleep_for(std::chrono::seconds(1)); exit(-1); });
+	th.detach();
+	m_OnClosed = true;
+
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "stop ws_server");
 
 	m_endpoint.stop_listening();
