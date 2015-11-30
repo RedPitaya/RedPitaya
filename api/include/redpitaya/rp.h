@@ -1278,7 +1278,7 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenTrigger(int mask);
+int rp_GenTrigger(uint32_t channel);
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 
