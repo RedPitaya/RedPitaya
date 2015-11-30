@@ -95,13 +95,13 @@
 					</div>
 
 					<div id="sec_displ">
-							<label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">2.0050</label>
-							<label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">deg</label>
+							<label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
+							<label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">--</label>
 					</div>
 
 					<div id="prim_displ">
-							<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">1004.05</label>
-							<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">mH</label>	
+							<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
+							<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>	
 					</div>
 					
 				</div>
@@ -120,8 +120,8 @@
 				            
 				            <tr>
 				                <td class="col-xs-2">1</td>
-				                <td class="col-xs-4">100.45 mH</td>
-				                <td class="col-xs-4">2.82501 deg</td>
+				                <td class="col-xs-4">0 -</td>
+				                <td class="col-xs-4">0 -</td>
 				            </tr>
 				        </tbody>
 				    </table>
@@ -246,7 +246,7 @@
 			                	</div>
 
 			                	<div class="col-xs-3" style="float: right">
-			                  		<select class="form-control">
+			                  		<select id="range_units "class="form-control">
 			                  			<option value="0">nH</option>
 			                  			<option value="1">uH</option>
 			                  			<option value="2">mH</option>
@@ -299,7 +299,123 @@
 	              	</div>
         		</div>
             </div>
-		</div>
+
+            <!-- Open calib modal -->
+           <div class="modal fade" id="modal_calib_start" role="dialog">
+    			<div class="modal-dialog">
+	      			<!-- Modal content-->
+	      			<div class="modal-content">
+	        			<div class="modal-header">
+	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
+	          					<h4 class="modal-title">Starting calibration process...</h4>
+	        			</div>
+	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
+	        				<div class="modal-body">
+		          				<div class="progress">
+	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="10"
+	  									aria-valuemin="0" aria-valuemax="100" style="width:10%">
+	    								10% Complete
+	  								</div>
+		        				</div>
+		        				<div>
+	        						<h5>Please connect open calibration circuit and press start</h5>
+	        					</div>
+	      					</div>
+	        				<div class="modal-footer" style="width: 100%">
+	        					<button id="bt_calib_start" type="button" class="btn btn-default" style="width: 25%">Start</button>
+	        				</div>
+	      				</div>
+      				</div>
+  				</div>
+			</div>
+
+           <!-- Open calib modal -->
+           <div class="modal fade" id="modal_calib_open" role="dialog">
+    			<div class="modal-dialog">
+	      			<!-- Modal content-->
+	      			<div class="modal-content">
+	        			<div class="modal-header">
+	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
+	          					<h4 class="modal-title">Calibrating....</h4>
+	        			</div>
+	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
+	          				<div class="modal-body">
+		          				<div class="progress">
+	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40"
+	  									aria-valuemin="0" aria-valuemax="100" style="width:40%">
+	    								40% Complete
+	  								</div>
+		        				</div>
+
+		        				<div>
+		        					<h5>Please connect short calibration and press next</h5>
+		        				</div>
+		        			</div>
+	        				<div class="modal-footer" style="width: 100%">
+	        					<button id="bt_calib_open" type="button" class="btn btn-default" style="width: 25%">Next</button>
+	        				</div>
+	      				</div>
+      				</div>
+  				</div>
+			</div>
+
+			<!-- Short calib modal -->
+			<div class="modal fade" id="modal_calib_short" role="dialog">
+    			<div class="modal-dialog">
+	      			<!-- Modal content-->
+	      			<div class="modal-content">
+	        			<div class="modal-header">
+	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
+	          					<h4 class="modal-title">Calibrating.....</h4>
+	        			</div>
+	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
+	        				<div class="modal-body">
+		          				<div class="progress">
+	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="70"
+	  									aria-valuemin="0" aria-valuemax="100" style="width:70%">
+	    								70% Complete
+	  								</div>
+		        				</div>
+		        				<div>
+		        					<h5>Please connect load calibration circuit and press next</h5>
+		        				</div>
+		        			</div>
+	        				<div class="modal-footer" style="width: 100%">
+	        					<button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%">Next</button>
+	        				</div>
+	      				</div>
+      				</div>
+  				</div>
+			</div>
+
+			<!-- Load calib modal -->
+			<div class="modal fade" id="modal_calib_load" role="dialog">
+    			<div class="modal-dialog">
+	      			<!-- Modal content-->
+	      			<div class="modal-content">
+	        			<div class="modal-header">
+	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
+	          					<h4 class="modal-title">Calibrating....</h4>
+	        			</div>
+	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
+	          				<div class="modal-body">
+		          				<div class="progress">
+	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
+	  									aria-valuemin="0" aria-valuemax="100" style="width:100%">
+	    								100% Complete
+	  								</div>
+		        				</div>
+		        				<div>
+		        					<h5>Please Finish to finish calibration</h5>
+		        				</div>
+		        			</div>
+	        				<div class="modal-footer" style="width: 100%">
+	        					<button id="bt_calib_load" type="button" class="btn btn-default" data-dismiss="modal" style="width: 25%">Finish</button>
+	        				</div>
+	      				</div>
+      				</div>
+  				</div>
+			</div>
 	</div>
 </body>
 
