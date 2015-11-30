@@ -91,6 +91,9 @@ void UpdateParams(void){
 		lcrApp_LcrRun(&ampl_z);
 		startMeasure.Update();
 		amplitudeZ.Value() = ampl_z;
+	}else if(startMeasure.NewValue() == false){
+		startMeasure.Update();
+		amplitudeZ.Value() = 0;
 	}
 
 	//Set calibration
