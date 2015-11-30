@@ -16,7 +16,6 @@
 #define __LCRMETER_H
 
 #include "redpitaya/rp.h"
-#include "lcrApp.h"
 
 #define REPEAT do
 #define UNTIL(exp) while(!(exp))

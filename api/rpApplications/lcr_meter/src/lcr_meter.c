@@ -261,6 +261,9 @@ int lcr_getImpedance(float frequency, float *Z_out){
 		case 100000:
 			*Z_out = 36.57750;
 			break;
+		default:
+			*Z_out = 100 + frequency;
+			break;
 	}
 
 	//syslog(LOG_INFO, "%f\n", z_ampl);
@@ -295,29 +298,25 @@ int lcr_Run(float *amplitude){
 	pthread_join(lcr_thread_handler, 0);
 
 	*amplitude = args.Z_out;
-
 	return RP_OK;
 }
 
 
 int lcr_Correction(){
-
-	int steps = 		CALIB_STEPS;
 	int start_freq = 	CORR_S_FREQ;
 	int end_freq = 		CORR_E_FREQ;
-	int freq_step;
 
 	int err;
 	struct impendace_params args;
 	pthread_t lcr_thread_handler;
 
-	float *amplitude_z = malloc(acq_size * sizeof(float));
+	float amplitude_z[CALIB_STEPS];
 	calib_t calib_mode = main_params.calibration;
-
-	for(int i = 0; i < steps; i++){
+	
+	int freq_step = (end_freq - start_freq) / (CALIB_STEPS - 1);
+	for(int i = 0; i < CALIB_STEPS; i++){
 		
-		freq_step = (end_freq - start_freq) / (steps - 1);
-		args.frequency = freq_step;
+		args.frequency = freq_step * i;
 
 		err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
 		if(err != RP_OK){
@@ -328,10 +327,9 @@ int lcr_Correction(){
 		
 		amplitude_z[i] = args.Z_out;
 	}
-
+	
 	//Store calibration
-	store_calib(calib_mode, amplitude_z);
-
+	store_calib(calib_mode, &amplitude_z[0]);
 	return RP_OK;
 }
 
