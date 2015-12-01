@@ -117,9 +117,11 @@
 
     if(window.WebSocket) {
       OSC.ws = new WebSocket(OSC.config.socket_url);
+      OSC.ws.binaryType = "arraybuffer";
     }
     else if(window.MozWebSocket) {
       OSC.ws = new MozWebSocket(OSC.config.socket_url);
+      OSC.ws.binaryType = "arraybuffer";
     }
     else {
       console.log('Browser does not support WebSocket');
@@ -153,7 +155,11 @@
         }
         OSC.state.processing = true;
 
-        var receive = JSON.parse(ev.data);
+try {
+		var data = new Uint8Array(ev.data);
+		var inflate = new Zlib.Gunzip(data);
+		var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+		var receive = JSON.parse(text);
 
         if(receive.parameters) {
           if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
@@ -166,10 +172,10 @@
         }
 
         if(receive.signals) {
-          OSC.processSignals(receive.signals);
+            OSC.processSignals(receive.signals);
         }
-
         OSC.state.processing = false;
+	} catch (e) { console.log(e); } finally {}
       };
     }
   };
@@ -1020,7 +1026,7 @@
     var fps = 1000/(+new Date() - start);
 
     if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
-		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
+		var new_period = 1100/fps < 100 ? 100 : 1100/fps;
 		var period = {};
 		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
 		OSC.ws.send(JSON.stringify({ parameters: period }));
@@ -2472,8 +2478,8 @@ $(function() {
 
   // Stop the application when page is unloaded
   window.onbeforeunload = function() {
-    websocket.onclose = function () {}; // disable onclose handler first
-    websocket.close();
+    //OSC.ws.onclose = function () {}; // disable onclose handler first
+    //OSC.ws.close();
     $.ajax({
       url: OSC.config.stop_app_url,
       async: false
