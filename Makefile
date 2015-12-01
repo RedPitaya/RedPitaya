@@ -262,7 +262,7 @@ URAMDISK_DIR    = OS/buildroot
 .PHONY: buildroot
 
 $(INSTALL_DIR):
-	mkdir $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)/{bin,sbin,lib}
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
@@ -460,10 +460,10 @@ rp_communication:
 # Red Pitaya OS tools
 ################################################################################
 
-$(DISCOVERY):
+$(DISCOVERY): | $(INSTALL_DIR)
 	cp $(OS_TOOLS_DIR)/discovery.sh $@
 
-$(HEARTBEAT):
+$(HEARTBEAT): | $(INSTALL_DIR)
 	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 ################################################################################
