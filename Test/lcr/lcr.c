@@ -387,7 +387,6 @@ int main(int argc, char *argv[]) {
     int TE_step_counter;
     int progress_int = 0;
     char command[70];
-    char hex[45];
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
@@ -747,10 +746,7 @@ int main(int argc, char *argv[]) {
                 if (progress_int <= 100){
                     fprintf(progress_file , "%d \n" ,  progress_int );
 
-                    sprintf(hex, "%x", (int)(255 - (255*progress_int/100)));
-                    strcpy(command, "/opt/redpitaya/bin/monitor 0x40000030 0x0" );
-                    strcat(command, hex);
-
+                    sprintf(command, "/opt/redpitaya/bin/monitor 0x40000030 0x%x", (1 << (8*progress_int/100)) - 1);
                     system(command);
                     fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
