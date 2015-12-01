@@ -14,9 +14,9 @@
  * The code below defines the LCR meter on a Red Pitaya.
  * It uses acquire and generate from the Test/ folder.
  * Data analysis returns frequency, phase and amplitude and other parameters.
- * 
+ *
  * VERSION: VERSION defined in Makefile
- * 
+ *
  * This part of code is written in C programming language.
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
  * for more details on the language used herein.
@@ -37,6 +37,13 @@
 #include "version.h"
 
 #define M_PI 3.14159265358979323846
+
+#include <fcntl.h>
+#include <linux/ioctl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+#include <errno.h>
+#include <stdint.h>
 
 const char *g_argv0 = NULL; // Program name
 
@@ -88,6 +95,8 @@ int LCR_data_analysis(float **s,
                       float complex *Z,
                       double w_out,
                       int f);
+
+int i2c_set_shunt (int k);
 
 /** Print usage information */
 void usage() {
@@ -178,11 +187,11 @@ float max_array(float *arrayptr, int numofelements) {
 float trapz(float *arrayptr, float T, int size1) {
   float result = 0;
   int i;
-  
+
   for (i =0; i < size1 - 1 ; i++) {
     result += ( arrayptr[i] + arrayptr[ i+1 ]  );
   }
-  
+
   result = (T / (float)2) * result;
   return result;
 }
@@ -208,20 +217,20 @@ float mean_array_column(float **arrayptr, int length, int column) {
     for(i = 0; i < length; i++) {
         result = result + arrayptr[i][column];
     }
-    
+
     result = result / length;
     return result;
 }
 
 /** LCR meter  main function it includea all the functionality */
 int main(int argc, char *argv[]) {
-	
+
     /** Set program name */
     g_argv0 = argv[0];
-    
+
     /**
      * Manpage
-     * 
+     *
      * usage() prints its output to stderr, nevertheless main returns
      * zero as calling lcr without any arguments is not an error.
      */
@@ -229,14 +238,14 @@ int main(int argc, char *argv[]) {
 		usage();
 		return 0;
 	}
-    
+
     /** Argument check */
     if (argc<15) {
         fprintf(stderr, "Too few arguments!\n\n");
         usage();
         return -1;
     }
-    
+
     /** Argument parsing */
     /// Channel
     unsigned int ch = atoi(argv[1])-1; // Zero-based internally
@@ -267,9 +276,7 @@ int main(int argc, char *argv[]) {
     /// Shunt resistor
     double R_shunt = strtod(argv[4], NULL);
     if ( !(R_shunt > 0) ) {
-        fprintf(stderr, "Invalid r_shunt value!\n\n");
-        usage();
-        return -1;
+        fprintf(stdout, "Automatic shount resistor, requires hardware module!\n\n");
     }
     /// Averaging
     unsigned int averaging_num = strtod(argv[5], NULL);
@@ -342,7 +349,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     /* /// Wait
-       The program will wait for user before every measurement when measurement sweep seleced 
+       The program will wait for user before every measurement when measurement sweep seleced
        TODO: remove comented code to enable wait function
     */
     unsigned int wait_on_user = strtod(argv[14], NULL);
@@ -387,7 +394,7 @@ int main(int argc, char *argv[]) {
         stepsTE = steps;
     }
     TE_step_counter = stepsTE;
-    
+
     /// If logarythmic scale is selected start and end frequencies are defined to compliment logaritmic output
     if ( scale_type ) {
         a = log10(start_frequency);
@@ -411,7 +418,7 @@ int main(int argc, char *argv[]) {
     }
     else { // Measurement sweep
         measurement_sweep_user_defined = steps;
-		frequency_steps_number = 2; // the first one is for removing 
+		frequency_steps_number = 2; // the first one is for removing
         frequency_step = 0;
     }
     /// Allocated memory size depends on the sweep function
@@ -420,7 +427,7 @@ int main(int argc, char *argv[]) {
     }
     else { // Measurement sweep
         end_results_dimension = measurement_sweep_user_defined;
-    }  
+    }
 
     /** Memory allocation */
 
@@ -473,7 +480,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr,"error allocating memory for Calib_data_measure\n");
         return -1;
     }
-    
+
     float complex *Z_short    = (float complex *)malloc( end_results_dimension * sizeof(float complex));
     if (Z_short == NULL){
         fprintf(stderr,"error allocating memory for Z_short\n");
@@ -547,7 +554,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr,"error allocating memory for Z_final\n");
         return -1;
     }
-    
+
 
     float *Y_abs  = (float *)malloc((end_results_dimension + 1) * sizeof(float) );
     if (Y_abs == NULL){
@@ -609,32 +616,41 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // setting default R_shunt resistor
+    int    R_shunt_auto = !R_shunt;
+    double R_shunt_tbl [10] = {30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
+    int    R_shunt_k = 4;
+    if (R_shunt_auto) {
+        i2c_set_shunt(R_shunt_k);
+        R_shunt = R_shunt_tbl[R_shunt_k];
+    }
+
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
         return -1;
     }
-    
+
     /** User is inquired to correctly set the connections. */
     /*
     if (inquire_user_wait() < 0) {
         printf("error user inquiry at inquire_user_wait\n");
-    } 
+    }
     */
 
-    /* 
+    /*
     * for loop defines measurement purpose switching
     * there are 4 sorts of measurement purposes , 3 pof them reprisent calibration sequence
-    * [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment  
+    * [h=0] - calibration open connections, [h=1] - calibration short circuited, [h=2] calibration load, [h=3] actual measurment
     */
     //FILE *progress_file = fopen("/tmp/lcr_data/progress.txt", "w");
     for (h = 0; h <= 3 ; h++) {
         if (!calib_function) {
             h = 3;
         }
-        /* 
+        /*
         * for floop dedicated to run through the frequency range defined by user
-        * the loop also includes the start and end frequency  
+        * the loop also includes the start and end frequency
         */
         for ( fr = 0; fr < frequency_steps_number; fr++ ) {
 
@@ -646,10 +662,8 @@ int main(int argc, char *argv[]) {
                 Frequency[ fr ] = (int)(start_frequency + ( frequency_step * fr ));
             }
 
-
-
             // eliminates transient effect that spoiles the measuremets
-            // it outputs frequencies below start frequency and increses 
+            // it outputs frequencies below start frequency and increses
             // it to the strat frequency
             if (sweep_function == 1 && transientEffectFlag == 1){
                 if (TE_step_counter > 0){
@@ -661,7 +675,7 @@ int main(int argc, char *argv[]) {
                     Frequency[fr] = start_frequency;
                     transientEffectFlag = 0;
                 }
-                
+
             }
 
             //measurement sweep transient effect
@@ -679,9 +693,6 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-
-            
-            
             w_out = Frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
             /* Signal generator
@@ -693,7 +704,7 @@ int main(int argc, char *argv[]) {
             write_data_fpga( ch, data, &params );
 
             /* TODO calibration sequence parameters adjustments
-            // if measurement sweep selected, only one calibration measurement is made 
+            // if measurement sweep selected, only one calibration measurement is made
             if (sweep_function == 0 ) { // sweep_function == 0 (mesurement sweep)
                 if (h == 0 || h == 1|| h == 2) {
                     measurement_sweep = 1;
@@ -709,13 +720,13 @@ int main(int argc, char *argv[]) {
             * Measurement sweep defined by user, if frequency sweep is used, the for loop goes through only once
             */
             for (i = 0; i < measurement_sweep; i++ ) {
-                
+
                 /*Opens, empties a file and inuts the prorgress number*/
                 if(sweep_function == 0 ){
                     //printf("transient flag = %d\n", transientEffectFlag);
                     if(transientEffectFlag == 1){
                         progress_int = (int)(100*(  ( i)   / (measurement_sweep_user_defined + stepsTE -1)));
-                        
+
                     }
                     else if (transientEffectFlag == 0){
                         progress_int = (int)(100*( (i + stepsTE)  / (measurement_sweep + stepsTE - 1 )));
@@ -737,88 +748,116 @@ int main(int argc, char *argv[]) {
                     fprintf(progress_file , "%d \n" ,  progress_int );
 
                     sprintf(hex, "%x", (int)(255 - (255*progress_int/100)));
-                    strcpy(command, "/opt/redpitaya/bin/monitor 0x40000030 0x" );
+                    strcpy(command, "/opt/redpitaya/bin/monitor 0x40000030 0x0" );
                     strcat(command, hex);
-                    
+
                     system(command);
                     fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
                     //printf(" progress: %d  \n",progress_int);
-                    
+
                     fclose(progress_file);
                 }
-                
-                
-                
-                for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
-                    /* decimation changes depending on frequency */
-                    if      (Frequency[ fr ] >= 160000){      f = 0;    }
-                    else if (Frequency[ fr ] >= 20000) {      f = 1;    }    
-                    else if (Frequency[ fr ] >= 2500)  {      f = 2;    }    
-                    else if (Frequency[ fr ] >= 160)   {      f = 3;    }    
-                    else if (Frequency[ fr ] >= 20)    {      f = 4;    }     
-                    else if (Frequency[ fr ] >= 2.5)   {      f = 5;    }
+                int repeat = 0;
+                do {
+                    for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
-                    /* setting decimtion */
-                    if (f != DEC_MAX) {
-                        t_params[TIME_RANGE_PARAM] = f;
-                    } else {
-                        fprintf(stderr, "Invalid decimation DEC\n");
-                        usage();
-                        return -1;
+                        /* decimation changes depending on frequency */
+                        if      (Frequency[ fr ] >= 160000){      f = 0;    }
+                        else if (Frequency[ fr ] >= 20000) {      f = 1;    }
+                        else if (Frequency[ fr ] >= 2500)  {      f = 2;    }
+                        else if (Frequency[ fr ] >= 160)   {      f = 3;    }
+                        else if (Frequency[ fr ] >= 20)    {      f = 4;    }
+                        else if (Frequency[ fr ] >= 2.5)   {      f = 5;    }
+
+                        /* setting decimtion */
+                        if (f != DEC_MAX) {
+                            t_params[TIME_RANGE_PARAM] = f;
+                        } else {
+                            fprintf(stderr, "Invalid decimation DEC\n");
+                            usage();
+                            return -1;
+                        }
+
+                        /* calculating num of samples */
+                        size = round( ( min_periodes * 125e6 ) / ( Frequency[ fr ] * g_dec[ f ] ) );
+                        if (size > (1<<14)) size = 1<<14;
+
+                        /* Filter parameters for signal Acqusition */
+                        t_params[EQUAL_FILT_PARAM] = equal;
+                        t_params[SHAPE_FILT_PARAM] = shaping;
+
+                        /* Setting of parameters in Oscilloscope main module for signal Acqusition */
+                        if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
+                            fprintf(stderr, "rp_set_params() failed!\n");
+                            return -1;
+                        }
+
+                        /* Data acqusition function, data saved to s */
+                        if (acquire_data(s, size) < 0) {
+                            printf("error acquiring data @ acquire_data\n");
+                            return -1;
+                        }
+
+                        /* Data analyzer, saves darta to Z (complex impedance) */
+                        if( LCR_data_analysis( s, size, DC_bias, R_shunt, Z, w_out, f ) < 0) {
+                            printf("error data analysis LCR_data_analysis\n");
+                            return -1;
+                        }
+
+                        /* Saving data for averaging here all the data is saved the dimention of memmory allocated
+                         * depends on averaging argument user sets
+                        */
+                        switch ( h ) {
+                        case 0:
+                            Calib_data_short_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                            Calib_data_short_for_averaging[ i1 ][ 2 ] = cimag(*Z);
+                            break;
+                        case 1:
+                            Calib_data_open_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                            Calib_data_open_for_averaging[ i1 ][ 2 ] = cimag(*Z);
+                            break;
+                        case 2:
+                            Calib_data_load_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                            Calib_data_load_for_averaging[ i1 ][ 2 ] = cimag(*Z);
+                            break;
+                        case 3:
+                            Calib_data_measure_for_averaging[ i1 ][ 1 ] = creal(*Z);
+                            Calib_data_measure_for_averaging[ i1 ][ 2 ] = cimag(*Z);
+                            break;
+                        default:
+                            printf("error no function set for h = %d, when saving data\n", h);
+                        }
+
+                    } // averaging loop ends here
+
+                    if (R_shunt_auto) {
+                        double Z_amp;
+                        Z_amp = cabs(*Z);
+                        // depending on the mesured reactance compared to the current shunt resistor
+                        // recalculate shunt resistor choice
+                        int R_shunt_old = R_shunt_k;
+                        if ( (Z_amp >= (3.0*R_shunt)) || (Z_amp <= (1.0/3.0*R_shunt)) ) {
+                            if      ((Z_amp > 500e3)                    )  R_shunt_k=9;
+                            else if ((Z_amp > 100e3) && (Z_amp <= 500e3))  R_shunt_k=8;
+                            else if ((Z_amp >  50e3) && (Z_amp <= 100e3))  R_shunt_k=7;
+                            else if ((Z_amp >  10e3) && (Z_amp <=  50e3))  R_shunt_k=6;
+                            else if ((Z_amp >   5e3) && (Z_amp <=  10e3))  R_shunt_k=5;
+                            else if ((Z_amp >  1000) && (Z_amp <=   5e3))  R_shunt_k=4;
+                            else if ((Z_amp >   500) && (Z_amp <=  1000))  R_shunt_k=3;
+                            else if ((Z_amp >   100) && (Z_amp <=   500))  R_shunt_k=2;
+                            else if ((Z_amp >    50) && (Z_amp <=   100))  R_shunt_k=1;
+                            else if ((Z_amp <=   50)                    )  R_shunt_k=0;
+                        }
+                        int repeat = R_shunt_old != R_shunt_k;
+                        if (repeat) {
+                            // set new shunt value
+                            i2c_set_shunt(R_shunt_k);
+                            R_shunt = R_shunt_tbl[R_shunt_k];
+                        }
                     }
-                    
-                    /* calculating num of samples */
-                    size = round( ( min_periodes * 125e6 ) / ( Frequency[ fr ] * g_dec[ f ] ) );
-
-                    /* Filter parameters for signal Acqusition */
-                    t_params[EQUAL_FILT_PARAM] = equal;
-                    t_params[SHAPE_FILT_PARAM] = shaping;
-
-                    /* Setting of parameters in Oscilloscope main module for signal Acqusition */
-                    if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
-                        fprintf(stderr, "rp_set_params() failed!\n");
-                        return -1;
-                    }
-
-                    /* Data acqusition function, data saved to s */
-                    if (acquire_data(s, size) < 0) {
-                        printf("error acquiring data @ acquire_data\n");
-                        return -1;
-                    }
-
-                    /* Data analyzer, saves darta to Z (complex impedance) */
-                    if( LCR_data_analysis( s, size, DC_bias, R_shunt, Z, w_out, f ) < 0) {
-                        printf("error data analysis LCR_data_analysis\n");
-                        return -1;
-                    }
-
-                    /* Saving data for averaging here all the data is saved the dimention of memmory allocated
-                     * depends on averaging argument user sets
-                    */
-                    switch ( h ) {
-                    case 0:
-                        Calib_data_short_for_averaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_short_for_averaging[ i1 ][ 2 ] = cimag(*Z);
-                        break;
-                    case 1:
-                        Calib_data_open_for_averaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_open_for_averaging[ i1 ][ 2 ] = cimag(*Z);
-                        break;
-                    case 2:
-                        Calib_data_load_for_averaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_load_for_averaging[ i1 ][ 2 ] = cimag(*Z);
-                        break;
-                    case 3:
-                        Calib_data_measure_for_averaging[ i1 ][ 1 ] = creal(*Z);
-                        Calib_data_measure_for_averaging[ i1 ][ 2 ] = cimag(*Z);
-                        break;
-                    default:
-                        printf("error no function set for h = %d, when saving data\n", h);
-                    }
-
-                } // averaging loop ends here
+                } while (repeat);
 
                 /* Calculating and saving mean values */
                 switch ( h ) {
@@ -849,7 +888,7 @@ int main(int argc, char *argv[]) {
                 else if(sweep_function == 1) { //sweep_function == 1 (frequency sweep)
                    dimension_step = fr;
                 }
-                
+
                 /* Saving data for output */
                 //printf("Frequency(%d) = %f;\n",(dimension_step),Frequency[fr]);
                 /* vector must be populated with the same values when measuremen sweep selected*/
@@ -860,7 +899,7 @@ int main(int argc, char *argv[]) {
                 Z_measure[dimension_step] = Calib_data_measure[i][1] + Calib_data_measure[i][2] *I;
 
             } // measurement sweep loop ends here
-        
+
         } // frequency sweep loop ends here
 
     } // function step loop ends here
@@ -876,7 +915,7 @@ int main(int argc, char *argv[]) {
     /*
     if (inquire_user_wait() < 0) {
         printf("error user inquiry at inquire_user_wait\n");
-    } 
+    }
     */
 
     /** Opening frequency data */
@@ -894,107 +933,58 @@ int main(int argc, char *argv[]) {
         /* We loop X (Where X is the number of data we want to have) times and create a file for each data type */
         for(f_number = 0; f_number < 16; f_number++){
             switch(f_number){
-                case 0:
-                    strcpy(command, "touch /tmp/lcr_data/data_frequency");
-                    system(command);
-                    break;
-                case 1:
-                    strcpy(command, "touch /tmp/lcr_data/data_amplitude");
-                    system(command);
-                    break;
-                case 2:
-                    strcpy(command, "touch /tmp/lcr_data/data_phase");
-                    system(command);
-                    break;
-                case 3:
-                    strcpy(command, "touch /tmp/lcr_data/data_R_s");
-                    system(command);
-                    break;
-                case 4:
-                    strcpy(command, "touch /tmp/lcr_data/data_X_s");
-                    system(command);
-                    break;
-                case 5:
-                    strcpy(command, "touch /tmp/lcr_data/data_G_p");
-                    system(command);
-                    break;
-                case 6:
-                    strcpy(command, "touch /tmp/lcr_data/data_B_p");
-                    system(command);
-                    break;
-                case 7:
-                    strcpy(command, "touch /tmp/lcr_data/data_C_s");
-                    system(command);
-                    break;
-                case 8:
-                    strcpy(command, "touch /tmp/lcr_data/data_C_p");
-                    system(command);
-                    break;
-                case 9:
-                    strcpy(command, "touch /tmp/lcr_data/data_L_s");
-                    system(command);
-                    break;
-                case 10:
-                    strcpy(command, "touch /tmp/lcr_data/data_L_p");
-                    system(command);
-                    break;
-                case 11:
-                    strcpy(command, "touch /tmp/lcr_data/data_R_p");
-                    system(command);
-                    break;
-                case 12:
-                    strcpy(command, "touch /tmp/lcr_data/data_Q");
-                    system(command);
-                    break;
-                case 13:
-                    strcpy(command, "touch /tmp/lcr_data/data_D");
-                    system(command);
-                    break;
-                case 14:
-                    strcpy(command, "touch /tmp/lcr_data/data_Y_abs");
-                    system(command);
-                    break;
-                case 15:
-                    strcpy(command, "touch /tmp/lcr_data/data_phaseY");
-                    system(command);
-                    break;
-
+                case  0:  strcpy(command, "touch /tmp/lcr_data/data_frequency");  break;
+                case  1:  strcpy(command, "touch /tmp/lcr_data/data_amplitude");  break;
+                case  2:  strcpy(command, "touch /tmp/lcr_data/data_phase");      break;
+                case  3:  strcpy(command, "touch /tmp/lcr_data/data_R_s");        break;
+                case  4:  strcpy(command, "touch /tmp/lcr_data/data_X_s");        break;
+                case  5:  strcpy(command, "touch /tmp/lcr_data/data_G_p");        break;
+                case  6:  strcpy(command, "touch /tmp/lcr_data/data_B_p");        break;
+                case  7:  strcpy(command, "touch /tmp/lcr_data/data_C_s");        break;
+                case  8:  strcpy(command, "touch /tmp/lcr_data/data_C_p");        break;
+                case  9:  strcpy(command, "touch /tmp/lcr_data/data_L_s");        break;
+                case 10:  strcpy(command, "touch /tmp/lcr_data/data_L_p");        break;
+                case 11:  strcpy(command, "touch /tmp/lcr_data/data_R_p");        break;
+                case 12:  strcpy(command, "touch /tmp/lcr_data/data_Q");          break;
+                case 13:  strcpy(command, "touch /tmp/lcr_data/data_D");          break;
+                case 14:  strcpy(command, "touch /tmp/lcr_data/data_Y_abs");      break;
+                case 15:  strcpy(command, "touch /tmp/lcr_data/data_phaseY");     break;
             }
         }
         /* We change the mode to write and add permission. */
+        system(command);
         strcpy(command, "chmod -R 777 /tmp/lcr_data");
-        
+
         /* Command execution for before the next loop */
         system(command);
     }
 
     /** Opening files */
     FILE *file_frequency = fopen("/tmp/lcr_data/data_frequency", "w");
-    FILE *file_phase = fopen("/tmp/lcr_data/data_phase", "w");
+    FILE *file_phase     = fopen("/tmp/lcr_data/data_phase", "w");
     FILE *file_amplitude = fopen("/tmp/lcr_data/data_amplitude", "w");
-    FILE *file_Y_abs = fopen("/tmp/lcr_data/data_Y_abs", "w");
-    FILE *file_PhaseY = fopen("/tmp/lcr_data/data_phaseY", "w");
-    FILE *file_R_s = fopen("/tmp/lcr_data/data_R_s", "w");
-    FILE *file_X_s = fopen("/tmp/lcr_data/data_X_s", "w");
-    FILE *file_G_p = fopen("/tmp/lcr_data/data_G_p", "w");
-    FILE *file_B_p = fopen("/tmp/lcr_data/data_B_p", "w");
-    FILE *file_C_s = fopen("/tmp/lcr_data/data_C_s", "w");
-    FILE *file_C_p = fopen("/tmp/lcr_data/data_C_p", "w");
-    FILE *file_L_s = fopen("/tmp/lcr_data/data_L_s", "w");
-    FILE *file_L_p = fopen("/tmp/lcr_data/data_L_p", "w");
-    FILE *file_R_p = fopen("/tmp/lcr_data/data_R_p", "w");
-    FILE *file_Q = fopen("/tmp/lcr_data/data_Q", "w");
-    FILE *file_D = fopen("/tmp/lcr_data/data_D", "w");
+    FILE *file_Y_abs     = fopen("/tmp/lcr_data/data_Y_abs", "w");
+    FILE *file_PhaseY    = fopen("/tmp/lcr_data/data_phaseY", "w");
+    FILE *file_R_s       = fopen("/tmp/lcr_data/data_R_s", "w");
+    FILE *file_X_s       = fopen("/tmp/lcr_data/data_X_s", "w");
+    FILE *file_G_p       = fopen("/tmp/lcr_data/data_G_p", "w");
+    FILE *file_B_p       = fopen("/tmp/lcr_data/data_B_p", "w");
+    FILE *file_C_s       = fopen("/tmp/lcr_data/data_C_s", "w");
+    FILE *file_C_p       = fopen("/tmp/lcr_data/data_C_p", "w");
+    FILE *file_L_s       = fopen("/tmp/lcr_data/data_L_s", "w");
+    FILE *file_L_p       = fopen("/tmp/lcr_data/data_L_p", "w");
+    FILE *file_R_p       = fopen("/tmp/lcr_data/data_R_p", "w");
+    FILE *file_Q         = fopen("/tmp/lcr_data/data_Q", "w");
+    FILE *file_D         = fopen("/tmp/lcr_data/data_D", "w");
 
-
-    /** Combining all the data and printing it to stdout 
+    /** Combining all the data and printing it to stdout
      * depending on calibration argument output data is calculated
      */
     for ( i = 0; i < end_results_dimension ; i++ ) {
 
         if ( calib_function == 1 ) { // calib. was made including Z_load
-            calib_data_combine[ 1 ] = creal( ( ( ( Z_short[ i ] - Z_measure[ i ]) * (Z_load[ i ] - Z_open[ i ]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
-            calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[ i ] - Z_measure[ i ]) * (Z_load[ i ] - Z_open[ i ]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+            calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
+            calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * (Z_load[i] - Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) * Z_load_ref );
         }
 
         else if ( calib_function == 0 ) { // no calib. were made, outputing data from measurements
@@ -1007,77 +997,56 @@ int main(int argc, char *argv[]) {
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
         w_out = 2 * M_PI * Frequency[ i ]; // angular velocity
-        
+
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
 
         Z_final[ i ] = calib_data_combine[ 1 ] + calib_data_combine[ 2 ]*I;//Z=Z_abs*exp(i*Phase_rad);;
         R_s[ i ] =  calib_data_combine[ 1 ];//R_s=real(Z);
         X_s[ i ] = calib_data_combine[ 2 ];//X_s=imag(Z);
-        
+
         Y [ i ] = 1 / Z_final[ i ];//Y=1/Z;
         Y_abs [ i ] = sqrtf( powf( creal(Y[ i ]), 2 ) + powf(cimag(Y[ i ]), 2 ) );//Y_abs=abs(Y);
         PhaseY[ i ] = -PhaseZ[ i ];// PhaseY=-Phase_rad;
         G_p [ i ] = creal(Y[ i ]);//G_p=real(Y);;
         B_p [ i ] = cimag(Y[ i ]);//B_p=imag(Y);
-        
+
         C_s [ i ] = -1 / (w_out * X_s[ i ]);//C_s=-1/(w*X_s);
         C_p [ i ] = B_p[ i ] / w_out;//C_p=B_p/w; //inf
         L_s [ i ] = X_s[ i ] / w_out;//L_s=X_s/w; //inf
         L_p [ i ] = -1 / (w_out * B_p[ i ]);//L_p=-1/(w*B_p); //inf
         R_p [ i ] = 1 / G_p [ i ]; //R_p=1/G_p;
-        
+
         Q[ i ] =X_s[ i ] / R_s[ i ]; //Q=X_s/R_s;
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
-        
+
         /// Output
-        if ( !sweep_function ) {
-            printf(" %.2f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
-                Frequency[ 0 ],
-                PhaseZ[ i ],
-                AmplitudeZ[ i ],
-                Y_abs[ i ],
-                PhaseY[ i ],
-                R_s[ i ],
-                X_s[ i ],
-                G_p[ i ],
-                B_p[ i ],
-                C_s[ i ],
-                C_p[ i ],
-                L_s[ i ],
-                L_p[ i ],
-                R_p[ i ],
-                Q[ i ],
-                D[ i ]
-                );
-        } else {
-            printf(" %.0f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
-                Frequency[ i ],
-                PhaseZ[ i ],
-                AmplitudeZ[ i ],
-                Y_abs[ i ],
-                PhaseY[ i ],
-                R_s[ i ],
-                X_s[ i ],
-                G_p[ i ],
-                B_p[ i ],
-                C_s[ i ],
-                C_p[ i ],
-                L_s[ i ],
-                L_p[ i ],
-                R_p[ i ],
-                Q[ i ],
-                D[ i ]
-                );
-        }
-        
+        printf(" %.2f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
+            Frequency[ !sweep_function ? 0 : i ],
+            PhaseZ[ i ],
+            AmplitudeZ[ i ],
+            Y_abs[ i ],
+            PhaseY[ i ],
+            R_s[ i ],
+            X_s[ i ],
+            G_p[ i ],
+            B_p[ i ],
+            C_s[ i ],
+            C_p[ i ],
+            L_s[ i ],
+            L_p[ i ],
+            R_p[ i ],
+            Q[ i ],
+            D[ i ]
+            );
+
         /** Saving files */
         if (!sweep_function) {
             fprintf(file_frequency, "%.5f\n", Frequency[0]);
         } else {
             fprintf(file_frequency, "%.5f\n", Frequency[i]);
         }
-        
+
         fprintf(file_phase, "%.5f\n", PhaseZ[i]);
         fprintf(file_amplitude, "%.5f\n", AmplitudeZ[i]);
         fprintf(file_R_s, "%.5f\n", R_s[i]);
@@ -1122,7 +1091,7 @@ int main(int argc, char *argv[]) {
  * Synthesize a desired signal.
  *
  * Generates/synthesized  a signal, based on three pre-defined signal
- * types/shapes, signal amplitude & frequency. The data[] vector of 
+ * types/shapes, signal amplitude & frequency. The data[] vector of
  * samples at 125 MHz is generated to be re-played by the FPGA AWG module.
  *
  * @param ampl  Signal amplitude [V].
@@ -1163,58 +1132,58 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
 
     /* Fill data[] with appropriate buffer samples */
     for(i = 0; i < n; i++) {
-        
+
         /* Sine */
         if (type == eSignalSine) {
             data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
         }
- 
+
         /* Square */
         if (type == eSignalSquare) {
             data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
             if (data[i] > 0)
                 data[i] = amp;
-            else 
+            else
                 data[i] = -amp;
 
             /* Soft linear transitions */
             double mm, qq, xx, xm;
-            double x1, x2, y1, y2;    
+            double x1, x2, y1, y2;
 
-            xx = i;       
+            xx = i;
             xm = n;
-            mm = -2.0*(double)amp/(double)trans; 
+            mm = -2.0*(double)amp/(double)trans;
             qq = (double)amp * (2 + xm/(2.0*(double)trans));
-            
+
             x1 = xm * tt2;
             x2 = xm * tt2 + (double)trans;
-            
-            if ( (xx > x1) && (xx <= x2) ) {  
-                
+
+            if ( (xx > x1) && (xx <= x2) ) {
+
                 y1 = (double)amp;
                 y2 = -(double)amp;
-                
+
                 mm = (y2 - y1) / (x2 - x1);
                 qq = y1 - mm * x1;
 
-                data[i] = round(mm * xx + qq); 
+                data[i] = round(mm * xx + qq);
             }
-            
+
             x1 = xm * 0.75;
             x2 = xm * 0.75 + trans;
-            
-            if ( (xx > x1) && (xx <= x2)) {  
-                    
+
+            if ( (xx > x1) && (xx <= x2)) {
+
                 y1 = -(double)amp;
                 y2 = (double)amp;
-                
+
                 mm = (y2 - y1) / (x2 - x1);
                 qq = y1 - mm * x1;
-                
-                data[i] = round(mm * xx + qq); 
+
+                data[i] = round(mm * xx + qq);
             }
         }
-        
+
         /* Triangle */
         if (type == eSignalTriangle) {
             data[i] = round(-1.0*(double)amp*(acos(cos(2*M_PI*(double)i/(double)n))/M_PI*2-1));
@@ -1232,10 +1201,10 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
             /* Actual formula. Frequency changes from start to end. */
             data[i] = round(amp * (sin((start*T)/log(end/start) * ((exp(t*log(end/start)/T)-1)))));
         }
-        
+
         /* Constant */
 		if (type == eSignalConst) data[i] = amp;
-        
+
         /* TODO: Remove, not necessary in C/C++. */
         if(data[i] < 0)
             data[i] += (1 << 14);
@@ -1329,9 +1298,9 @@ int acquire_data(float **s ,
  * Acquired data analysis function for LCR meter.
  * returnes 1 if execution was successful
  * the function recives data stored in memmory with the pointer "s"
- * data manipulation returnes Phase and Amplitude which is at the end 
+ * data manipulation returnes Phase and Amplitude which is at the end
  * transformed to complex impedance.
- * 
+ *
  * @param s        Pointer where data is read from.
  * @param size     Size of data.
  * @param DC_bias  DC component.
@@ -1382,17 +1351,17 @@ int LCR_data_analysis(float **s,
 
     /* Transform signals from  AD - 14 bit to voltage [ ( s / 2^14 ) * 2 ] */
     for ( i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
-        for( i3 = 0; i3 < size; i3 ++ ) { 
+        for( i3 = 0; i3 < size; i3 ++ ) {
             //division comes after multiplication, this way no accuracy is lost
-            U_acq[i2][i3] = ( ( s[ i2 ][ i3 ] ) * (float)( 2 - DC_bias ) ) / (float)16384 ; 
+            U_acq[i2][i3] = ( ( s[ i2 ][ i3 ] ) * (float)( 2 - DC_bias ) ) / (float)16384 ;
         }
     }
 
     /* Voltage and current on the load can be calculated from gathered data */
-    for (i2 = 0; i2 < size; i2++) { 
+    for (i2 = 0; i2 < size; i2++) {
         U_dut[ i2 ] = (U_acq[ 1 ][ i2 ] - U_acq[ 2 ][ i2 ]); // potencial difference gives the voltage
         // Curent trough the load is the same as trough thr R_shunt. ohm's law is used to calculate the current
-        I_dut[ i2 ] = (U_acq[ 2 ][ i2 ] / R_shunt); 
+        I_dut[ i2 ] = (U_acq[ 2 ][ i2 ] / R_shunt);
     }
 
     /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
@@ -1413,7 +1382,7 @@ int LCR_data_analysis(float **s,
 
     X_component_lock_in_2[ 1 ] = trapz( I_dut_sampled_X, (float)T, size );
     Y_component_lock_in_2[ 1 ] = trapz( I_dut_sampled_Y, (float)T, size );
-    
+
     /* Calculating voltage amplitude and phase */
     U_dut_amp = (float)2 * (sqrtf( powf( X_component_lock_in_1[ 1 ] , (float)2 ) + powf( Y_component_lock_in_1[ 1 ] , (float)2 )));
     Phase_U_dut_amp = atan2f( Y_component_lock_in_1[ 1 ], X_component_lock_in_1[ 1 ] );
@@ -1421,7 +1390,7 @@ int LCR_data_analysis(float **s,
     /* Calculating current amplitude and phase */
     I_dut_amp = (float)2 * (sqrtf( powf( X_component_lock_in_2[ 1 ], (float)2 ) + powf( Y_component_lock_in_2[ 1 ] , (float)2 ) ) );
     Phase_I_dut_amp = atan2f( Y_component_lock_in_2[1], X_component_lock_in_2[1] );
-    
+
     /* Asigning impedance  values (complex value) */
     Phase_Z_rad =  Phase_U_dut_amp - Phase_I_dut_amp;
     Z_amp = U_dut_amp / I_dut_amp; // forming resistance
@@ -1436,22 +1405,22 @@ int LCR_data_analysis(float **s,
     }
     else {
         Phase_Z_rad = Phase_Z_rad;
-    } 
-    
+    }
+
     *Z =  ( ( Z_amp ) * cosf( Phase_Z_rad ) )  +  ( ( Z_amp ) * sinf( Phase_Z_rad ) ) * I; // R + jX
 
     return 1;
 }
 
 /* user wait defined for user inquiry regarding measurement sweep
- * its functionality is not used and will be avaliable in the future if needed 
+ * its functionality is not used and will be avaliable in the future if needed
  * it lets the user know to connect the wires correctly and inquires for input
  */
 int inquire_user_wait() {
     while(1) {
         int calibration_continue;
         printf("Please connect the wires correctly. Continue? [1 = yes|0 = skip ] :");
-        if (fscanf(stdin, "%d", &calibration_continue) > 0) 
+        if (fscanf(stdin, "%d", &calibration_continue) > 0)
         {
             if(calibration_continue == 1)  {
                 calibration_continue = 0;
@@ -1469,3 +1438,65 @@ int inquire_user_wait() {
     }
     return 1;
 }
+
+
+#define I2C_SLAVE_FORCE 		   0x0706
+#define EXPANDER_ADDR            	   0x20
+
+// switching shunt resistors
+int i2c_set_shunt (int k) {
+
+    int  dat;
+    int  fd; 
+    int  status;
+    char str [1+2*11];
+
+    // parse input arguments
+    dat = ~(1<<k);
+
+    // Open the device.
+    fd = open("/dev/i2c-0", O_RDWR);
+    if (fd < 0) {
+        fprintf(stderr, "Cannot open the I2C device\n");
+        return 1;
+    }
+
+    // set slave address
+    status = ioctl(fd, I2C_SLAVE_FORCE, EXPANDER_ADDR);
+    if (status < 0) {
+        fprintf(stderr, "Unable to set the I2C address\n");
+        return -1;
+    }
+
+    // Write to expander
+    str [0] = 0; // set address to 0
+    str [1+0x00] = 0x00; // IODIRA - set all to output
+    str [1+0x01] = 0x00; // IODIRB - set all to output
+    str [1+0x02] = 0x00; // IPOLA
+    str [1+0x03] = 0x00; // IPOLB
+    str [1+0x04] = 0x00; // GPINTENA
+    str [1+0x05] = 0x00; // GPINTENB
+    str [1+0x06] = 0x00; // DEFVALA
+    str [1+0x07] = 0x00; // DEFVALB
+    str [1+0x08] = 0x00; // INTCONA
+    str [1+0x09] = 0x00; // INTCONB
+    str [1+0x0A] = 0x00; // IOCON
+    str [1+0x0B] = 0x00; // IOCON
+    str [1+0x0C] = 0x00; // GPPUA
+    str [1+0x0D] = 0x00; // GPPUB
+    str [1+0x0E] = 0x00; // INTFA
+    str [1+0x0F] = 0x00; // INTFB
+    str [1+0x10] = 0x00; // INTCAPA
+    str [1+0x11] = 0x00; // INTCAPB
+    str [1+0x12] = (dat >> 0) & 0xff; // GPIOA
+    str [1+0x13] = (dat >> 8) & 0xff; // GPIOB
+    str [1+0x14] = (dat >> 0) & 0xff; // OLATA
+    str [1+0x15] = (dat >> 8) & 0xff; // OLATB
+    status = write(fd, str, 1+2*11);
+
+    if (!status) fprintf(stderr, "Error I2C write\n");
+    
+    close(fd);
+    return 0;
+}
+
