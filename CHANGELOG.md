@@ -3,6 +3,7 @@
 Changes:
 - fixed copy-paste error in GPIO API (https://github.com/jjmz)
 - added fallback to static IP if DHCP fails (Pavel Demin)
+- a fix for IMM trigger for generator
 
 **Known issues** (at least major ones) are same as in 0.94 RC12.
 + generator burst mode is buggy
