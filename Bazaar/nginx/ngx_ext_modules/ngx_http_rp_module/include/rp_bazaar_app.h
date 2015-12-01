@@ -63,6 +63,7 @@ typedef const char     *(*rp_ws_get_params_func)(void);
 typedef const char     *(*rp_ws_get_signals_func)(void);
 typedef int		(*rp_ws_set_params_func)(const char *_params);
 typedef int		(*rp_ws_set_signals_func)(const char *_signals);
+typedef void	(*rp_ws_gzip_func)(const char *_in, void* _data, size_t* _size);
 
 typedef struct rp_bazaar_app_s {
     /* Initialization function - called when app. is loaded */
@@ -82,7 +83,7 @@ typedef struct rp_bazaar_app_s {
     rp_get_params_func       get_params_func;
     /* Retrieves last good signals from the application */
     rp_get_signals_func      get_signals_func;
-	
+
 	/*WebSocket Server part*/
 
 	uint8_t ws_api_supported;
@@ -96,6 +97,7 @@ typedef struct rp_bazaar_app_s {
 	rp_ws_set_params_func ws_set_params_func;
 	rp_ws_set_params_interval_func ws_set_params_demo_func;
 	rp_ws_set_params_func verify_app_license_func;
+	rp_ws_gzip_func ws_gzip_func;
 
     /* Dynamic library handle */
     void            *handle;
@@ -127,7 +129,7 @@ typedef enum fpga_stat{
 }fpga_stat_t;
 
 
-int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root, 
+int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose);
 int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app);
 int rp_bazaar_app_unload_module(rp_bazaar_app_t *app);
