@@ -570,7 +570,7 @@ void synthesize_signal(double ampl,
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
-    awg->wrap = round(65536 * (n-1));
+    awg->wrap = round(65536 * n - 1);
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
     uint32_t amp = ampl * 4000.0;    /* 1 V ==> 4000 DAC counts */
