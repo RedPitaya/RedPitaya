@@ -169,16 +169,18 @@ logic signed [MNA-1:0] [DWS-1:0] adc_cfg_sum;  // offset
 logic signed [MNG-1:0] [DWM-1:0] dac_cfg_mul;  // gain
 logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
-// triggers (generator)
-logic [      MNG    -1:0] gen_trg_swo;
-logic [      MNG    -1:0] gen_trg_out;
-// triggers (generator)
-logic [MNA          -1:0] acq_trg_swo;
-logic [MNA*2        -1:0] acq_trg_out;
-// triggers (GPIO)
-logic [            2-1:0] gio_trg_out;          
-// triggers (combination of all sources)
-logic [MNA*3+MNG*2+2-1:0] top_trg_ext;
+// triggers
+struct { 
+  // generator
+  logic [MNG  -1:0] gen_out;  // MNA*2 - event    triggers from acquire    {negedge, posedge}
+  logic [MNG  -1:0] gen_swo;  // MNA   - software triggers from acquire
+  // acquire
+  logic [MNA*2-1:0] acq_out;  // MNG   - event    triggers from generators
+  logic [MNA  -1:0] acq_swo;  // MNG   - software triggers from generators
+  // GPIO
+  logic [    2-1:0] gio_out;  // 2     - event    triggers from GPIO       {negedge, posedge}
+} trg; 
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -353,8 +355,8 @@ debounce #(
   // input stream
   .d_i  (exp_p_i[0]),
   .d_o  (),
-  .d_p  (gio_trg_out[0]),
-  .d_n  (gio_trg_out[1])
+  .d_p  (trg.gio_out[0]),
+  .d_n  (trg.gio_out[1])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -565,7 +567,7 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(
 ////////////////////////////////////////////////////////////////////////////////
 
 asg_top #(
-  .TWA (MNA*3+MNG*2+2)
+  .TWA ($bits(trg))
 ) asg [MNG-1:0] (
   // system signals
   .clk       (adc_clk ),
@@ -575,9 +577,9 @@ asg_top #(
   .sto_vld   (),
   .sto_rdy   (1'b1),
   // triggers
-  .trg_ext   (top_trg_ext),
-  .trg_swo   (gen_trg_swo),
-  .trg_out   (gen_trg_out),
+  .trg_ext   (trg),
+  .trg_swo   (trg.gen_swo),
+  .trg_out   (trg.gen_out),
   // System bus
   .sys_sel   (sys_sel       ),
   .sys_wen   (sys_wen  [5:4]),
@@ -594,7 +596,7 @@ asg_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 scope_top #(
-  .TWA (MNA*3+MNG*2+2)
+  .TWA ($bits(trg))
 ) scope [MNA-1:0] (
   // system signals
   .clk           (adc_clk ),
@@ -609,9 +611,9 @@ scope_top #(
   .sto_vld       (acq_vld),
   .sto_rdy       (acq_rdy),
   // triggers
-  .trg_ext       (top_trg_ext),
-  .trg_swo       (acq_trg_swo),
-  .trg_out       (acq_trg_out),
+  .trg_ext       (trg),
+  .trg_swo       (trg.acq_swo),
+  .trg_out       (trg.acq_out),
  // System bus
   .sys_addr      (sys_addr      ),
   .sys_wdata     (sys_wdata     ),
@@ -622,17 +624,5 @@ scope_top #(
   .sys_err       (sys_err  [7:6]),
   .sys_ack       (sys_ack  [7:6])
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// triggers
-////////////////////////////////////////////////////////////////////////////////
-
-assign top_trg_ext = {
-  acq_trg_out,  // MNA*2 - event    triggers from acquire    {negedge, posedge}
-  acq_trg_swo,  // MNA   - software triggers from acquire
-  gen_trg_out,  // MNG   - event    triggers from generators
-  gen_trg_swo,  // MNG   - software triggers from generators
-  gio_trg_out   // 2     - event    triggers from GPIO       {negedge, posedge}
-};
 
 endmodule: red_pitaya_top
