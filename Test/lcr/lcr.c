@@ -80,7 +80,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+void synthesize_signal(double ampl, double offset, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *params);
 void write_data_fpga(uint32_t ch,
@@ -698,7 +698,7 @@ int main(int argc, char *argv[]) {
              * fills the vector with amplitude values and then sends it to fpga buffer  */
             awg_param_t params;
             /* Prepare data buffer (calculate from input arguments) */
-            synthesize_signal( ampl, Frequency[fr], type, endfreq, data, &params );
+            synthesize_signal( ampl, DC_bias, Frequency[fr], type, endfreq, data, &params );
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga( ch, data, &params );
 
@@ -903,7 +903,7 @@ int main(int argc, char *argv[]) {
     /* Setting amplitude to 0V - turning off the output. */
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
-    synthesize_signal( 0, 1000, type, endfreq, data, &params );
+    synthesize_signal( 0, 0, 1000, type, endfreq, data, &params );
     /* Write the data to the FPGA and set FPGA AWG state machine */
     write_data_fpga( ch, data, &params );
 
@@ -1097,14 +1097,14 @@ int main(int argc, char *argv[]) {
  * @param awg   Returned AWG parameters.
  *
  */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+void synthesize_signal(double ampl, double offset, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *awg) {
 
     uint32_t i;
 
     /* Various locally used constants - HW specific parameters */
-    const int dcoffs = -155;
+    const int dcoffs = (int)(offset * (double)(1<<13));
     const int trans0 = 30;
     const int trans1 = 300;
     const double tt2 = 0.249;
