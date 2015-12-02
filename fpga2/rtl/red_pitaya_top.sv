@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya TOP module. It connects external pins and PS part with 
-// other application modules. 
+// Red Pitaya TOP module. It connects external pins and PS part with
+// other application modules.
 // Authors: Matej Oblak, Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
@@ -8,10 +8,10 @@
 /**
  * GENERAL DESCRIPTION:
  *
- * Top module connects PS part with rest of Red Pitaya applications.  
+ * Top module connects PS part with rest of Red Pitaya applications.
  *
  *
- *                   /-------\      
+ *                   /-------\
  *   PS DDR <------> |  PS   |      AXI <-> custom bus
  *   PS MIO <------> |   /   | <------------+
  *   PS CLK -------> |  ARM  |              |
@@ -28,8 +28,8 @@
  *            \--------/   ^   \-----/      |
  *                         |                |
  *                         |  /-------\     |
- *                         -- |  ASG  | <---+ 
- *                            \-------/     
+ *                         -- |  ASG  | <---+
+ *                            \-------/
  *
  * Inside analog module, ADC data is translated from unsigned neg-slope into
  * two's complement. Similar is done on DAC data.
@@ -39,7 +39,7 @@
  *
  * Daisy chain connects with other boards with fast serial link. Data which is
  * send and received is at the moment undefined. This is left for the user.
- * 
+ *
  */
 
 module red_pitaya_top #(
@@ -72,7 +72,7 @@ module red_pitaya_top #(
   inout  logic          DDR_we_n   ,
 
   // Red Pitaya periphery
-  
+
   // ADC
   input  logic [MNA-1:0] [16-1:2] adc_dat_i,  // ADC data
   input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
@@ -98,7 +98,7 @@ module red_pitaya_top #(
   input  logic [ 2-1:0] daisy_p_i  ,  // line 1 is clock capable
   input  logic [ 2-1:0] daisy_n_i  ,
   // LED
-  output logic [ 8-1:0] led_o       
+  output logic [ 8-1:0] led_o
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ logic signed [MNG-1:0] [DWM-1:0] dac_cfg_mul;  // gain
 logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
 // triggers
-struct packed { 
+struct packed {
   // generator
   logic [MNG  -1:0] gen_out;  // MNA*2 - event    triggers from acquire    {negedge, posedge}
   logic [MNG  -1:0] gen_swo;  // MNA   - software triggers from acquire
@@ -177,7 +177,7 @@ struct packed {
   logic [MNA  -1:0] acq_swo;  // MNG   - software triggers from generators
   // GPIO
   logic [    2-1:0] gio_out;  // 2     - event    triggers from GPIO       {negedge, posedge}
-} trg; 
+} trg;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ BUFG bufg_pdm_clk    (.O (pdm_clk   ), .I (pll_pdm_clk   ));
 logic top_rst;
 assign top_rst = ~frstn[0] | ~pll_locked;
 
-// ADC reset (active low) 
+// ADC reset (active low)
 always_ff @(posedge adc_clk, posedge top_rst)
 if (top_rst) adc_rstn <= 1'b0;
 else         adc_rstn <= ~top_rst;
@@ -334,7 +334,7 @@ red_pitaya_hk hk (
   .sys_ren       (sys_ren  [0]),
   .sys_rdata     (sys_rdata[0]),
   .sys_err       (sys_err  [0]),
-  .sys_ack       (sys_ack  [0]) 
+  .sys_ack       (sys_ack  [0])
 );
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
@@ -379,7 +379,7 @@ red_pitaya_calib calib (
   .sys_ren       (sys_ren  [1]),
   .sys_rdata     (sys_rdata[1]),
   .sys_err       (sys_err  [1]),
-  .sys_ack       (sys_ack  [1]) 
+  .sys_ack       (sys_ack  [1])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -483,7 +483,7 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   // lowest 2 bits reserved for 16bit ADC
   always_ff @(posedge adc_clk)
   adc_dat_raw <= {adc_dat_i[i][16-1], ~adc_dat_i[i][16-2:2]};
-    
+
   // transform into 2's complement (negative slope)
   assign adc_dat_mux[0] = digital_loop ? dac_dat_cal[i] : adc_dat_raw;
 
@@ -521,7 +521,7 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
   logic signed [15-1:0] dac_dat_sum;
   logic signed [14-1:0] dac_dat_sat;
 
-  // Sumation of ASG and PID signal perform saturation before sending to DAC 
+  // Sumation of ASG and PID signal perform saturation before sending to DAC
   // TODO: there should be a proper metod to disable PID
   assign dac_dat_sum = asg_dat[i]; // + pid_dat[0];
 
