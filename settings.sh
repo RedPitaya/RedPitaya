@@ -18,7 +18,7 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 # this path is also used by some other downloads
 ################################################################################
 
-#export BR2_DL_DIR=$HOME/Workplace/buildroot/dl
+export BR2_DL_DIR=dl
 
 ################################################################################
 # which boot image / file system should be entered? Select one of them

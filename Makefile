@@ -37,7 +37,6 @@ DL=$(BR2_DL_DIR)
 else
 DL=$(TMP)
 endif
-#TODO: DL = $(BR2_DL_DIR)
 
 UBOOT_TAG     = xilinx-v2015.2
 LINUX_TAG     = xilinx-v2015.1
@@ -111,7 +110,7 @@ DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 
 ################################################################################
-# Versioning system
+# versioning system
 ################################################################################
 
 # RedPitaya versioning system
@@ -149,6 +148,9 @@ export GREET_MSG
 .PHONY: target_base
 
 all: zip sdk apps-free
+
+$(DL):
+	mkdir -p $@
 
 $(TMP):
 	mkdir -p $@

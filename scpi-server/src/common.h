@@ -24,8 +24,7 @@
     	SCPI_ResultString(cont, "OK"); \
     	return SCPI_RES_OK;
 
-#define MIN_CH			0
-#define MAX_CH			3
+#define CH_NUM		4
 
 #define SCPI_CMD_NUM 	1
 
