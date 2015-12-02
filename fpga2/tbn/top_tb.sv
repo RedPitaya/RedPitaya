@@ -99,8 +99,7 @@ wire           DDR_we_n   ;
 
 // ADC
 logic [2-1:0] [16-1:2] adc_dat;
-logic                  adc_clk_p;
-logic                  adc_clk_n;
+logic         [ 2-1:0] adc_clk;
 logic         [ 2-1:0] adc_clk_o;   // optional ADC clock source
 logic                  adc_cdcs;    // ADC clock duty cycle stabilizer
 // DAC
@@ -150,10 +149,8 @@ red_pitaya_top top (
   // Red Pitaya periphery
   
   // ADC
-  .adc_dat_a_i    (adc_dat[0]),
-  .adc_dat_b_i    (adc_dat[1]),
-  .adc_clk_p_i    (adc_clk_p),
-  .adc_clk_n_i    (adc_clk_n),
+  .adc_dat_i      (adc_dat),
+  .adc_clk_i      (adc_clk),
   .adc_clk_o      (adc_clk_o),
   .adc_cdcs_o     (adc_cdcs_o),
   // DAC
@@ -180,9 +177,9 @@ red_pitaya_top top (
 );
 
 // ADC
-assign adc_dat = '0;
-assign adc_clk_p =  clk;
-assign adc_clk_n = ~clk;
+assign adc_dat    = '0;
+assign adc_clk[1] =  clk;
+assign adc_clk[0] = ~clk;
 // adc_clk_o
 // adc_cdcs
 

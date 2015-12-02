@@ -74,12 +74,10 @@ module red_pitaya_top #(
   // Red Pitaya periphery
   
   // ADC
-  input  logic [16-1:2] adc_dat_a_i,  // ADC CH1
-  input  logic [16-1:2] adc_dat_b_i,  // ADC CH2
-  input  logic          adc_clk_p_i,  // ADC data clock
-  input  logic          adc_clk_n_i,  // ADC data clock
-  output logic [ 2-1:0] adc_clk_o  ,  // optional ADC clock source
-  output logic          adc_cdcs_o ,  // ADC clock duty cycle stabilizer
+  input  logic [MNA-1:0] [16-1:2] adc_dat_i,  // ADC data
+  input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
+  output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
+  output logic                    adc_cdcs_o ,  // ADC clock duty cycle stabilizer
   // DAC
   output logic [14-1:0] dac_dat_o  ,  // DAC combined data
   output logic          dac_wrt_o  ,  // DAC write
@@ -187,7 +185,7 @@ struct {
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
-IBUFDS i_clk (.I (adc_clk_p_i), .IB (adc_clk_n_i), .O (adc_clk_in));  // differential clock input
+IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
 
 red_pitaya_pll pll (
   // inputs
@@ -474,86 +472,88 @@ assign adc_clk_o = 2'b10;
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
-// local variables
-logic signed [MNA-1:0] [14-1:0] adc_dat_raw;
-logic signed [MNA-1:0] [14-1:0] adc_dat_mux;
+generate
+for (genvar i=0; i<MNA; i++) begin: for_adc
 
-// IO block registers should be used here
-// lowest 2 bits reserved for 16bit ADC
-always_ff @(posedge adc_clk)
-begin
-  adc_dat_raw[0] <= {adc_dat_a_i[16-1], ~adc_dat_a_i[16-2:2]};
-  adc_dat_raw[1] <= {adc_dat_b_i[16-1], ~adc_dat_b_i[16-2:2]};
-end
+  // local variables
+  logic signed [14-1:0] adc_dat_raw;
+  logic signed [14-1:0] adc_dat_mux;
+
+  // IO block registers should be used here
+  // lowest 2 bits reserved for 16bit ADC
+  always_ff @(posedge adc_clk)
+  adc_dat_raw <= {adc_dat_i[i][16-1], ~adc_dat_i[i][16-2:2]};
     
-// transform into 2's complement (negative slope)
-assign adc_dat_mux[0] = digital_loop ? dac_dat_cal[0] : adc_dat_raw[0];
-assign adc_dat_mux[1] = digital_loop ? dac_dat_cal[1] : adc_dat_raw[1];
+  // transform into 2's complement (negative slope)
+  assign adc_dat_mux[0] = digital_loop ? dac_dat_cal[i] : adc_dat_raw;
 
-linear #(
-  .DWI  (14),
-  .DWO  (14),
-  .DWM  (16)
-) linear_adc [MNA-1:0] (
-  // system signals
-  .clk      (adc_clk ),
-  .rstn     (adc_rstn),
-  // input stream
-  .sti_dat  (adc_dat_mux),
-  .sti_vld  (1'b1),
-  .sti_rdy  (),
-  // output stream
-  .sto_dat  (adc_dat),
-  .sto_vld  (adc_vld),
-  .sto_rdy  (adc_rdy),
-  // configuration
-  .cfg_mul  (adc_cfg_mul),
-  .cfg_sum  (adc_cfg_sum)
-);
+  linear #(
+    .DWI  (14),
+    .DWO  (14),
+    .DWM  (16)
+  ) linear_adc (
+    // system signals
+    .clk      (adc_clk ),
+    .rstn     (adc_rstn),
+    // input stream
+    .sti_dat  (adc_dat_mux),
+    .sti_vld  (1'b1),
+    .sti_rdy  (),
+    // output stream
+    .sto_dat  (adc_dat[i]),
+    .sto_vld  (adc_vld[i]),
+    .sto_rdy  (adc_rdy[i]),
+    // configuration
+    .cfg_mul  (adc_cfg_mul[i]),
+    .cfg_sum  (adc_cfg_sum[i])
+  );
+
+end: for_adc
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [MNG-1:0] [15-1:0] dac_dat_sum;
-logic signed [MNG-1:0] [14-1:0] dac_dat_sat;
+generate
+for (genvar i=0; i<MNA; i++) begin: for_dac
 
-// Sumation of ASG and PID signal perform saturation before sending to DAC 
-// TODO: there should be a proper metod to disable PID
-assign dac_dat_sum[0] = asg_dat[0]; // + pid_dat[0];
-assign dac_dat_sum[1] = asg_dat[1]; // + pid_dat[1];
+  logic signed [15-1:0] dac_dat_sum;
+  logic signed [14-1:0] dac_dat_sat;
 
-// saturation
-assign dac_dat_sat[0] = (^dac_dat_sum[0][15-1:15-2]) ? {dac_dat_sum[0][15-1], {13{~dac_dat_sum[0][15-1]}}} : dac_dat_sum[0][14-1:0];
-assign dac_dat_sat[1] = (^dac_dat_sum[1][15-1:15-2]) ? {dac_dat_sum[1][15-1], {13{~dac_dat_sum[1][15-1]}}} : dac_dat_sum[1][14-1:0];
+  // Sumation of ASG and PID signal perform saturation before sending to DAC 
+  // TODO: there should be a proper metod to disable PID
+  assign dac_dat_sum = asg_dat[i]; // + pid_dat[0];
 
-linear #(
-  .DWI  (14),
-  .DWO  (14),
-  .DWM  (16)
-) linear_dac [MNG-1:0] (
-  // system signals
-  .clk      (adc_clk ),
-  .rstn     (adc_rstn),
-  // input stream
-  .sti_dat  (dac_dat_sat),
-  .sti_vld  (1'b1),
-  .sti_rdy  (),
-  // output stream
-  .sto_dat  (dac_dat_cal),
-  .sto_vld  (),
-  .sto_rdy  (1'b1),
-  // configuration
-  .cfg_mul  (dac_cfg_mul),
-  .cfg_sum  (dac_cfg_sum)
-);
+  // saturation
+  assign dac_dat_sat = (^dac_dat_sum[15-1:15-2]) ? {dac_dat_sum[15-1], {13{~dac_dat_sum[15-1]}}} : dac_dat_sum[14-1:0];
 
-// output registers + signed to unsigned (also to negative slope)
-always_comb
-begin
-  dac_dat[0] = {dac_dat_cal[0][14-1], ~dac_dat_cal[0][14-2:0]};
-  dac_dat[1] = {dac_dat_cal[1][14-1], ~dac_dat_cal[1][14-2:0]};
-end
+  linear #(
+    .DWI  (14),
+    .DWO  (14),
+    .DWM  (16)
+  ) linear_dac (
+    // system signals
+    .clk      (adc_clk ),
+    .rstn     (adc_rstn),
+    // input stream
+    .sti_dat  (dac_dat_sat),
+    .sti_vld  (1'b1),
+    .sti_rdy  (),
+    // output stream
+    .sto_dat  (dac_dat_cal[i]),
+    .sto_vld  (),
+    .sto_rdy  (1'b1),
+    // configuration
+    .cfg_mul  (dac_cfg_mul[i]),
+    .cfg_sum  (dac_cfg_sum[i])
+  );
+
+  // output registers + signed to unsigned (also to negative slope)
+  assign dac_dat[i] = {dac_dat_cal[i][14-1], ~dac_dat_cal[i][14-2:0]};
+
+end: for_dac
+endgenerate
 
 // DDR outputs
 ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0      ), .D2(1'b1      ), .C(dac_clk_2p), .CE(1'b1), .R(1'b0   ), .S(1'b0));
@@ -615,11 +615,11 @@ scope_top #(
   .trg_swo       (trg.acq_swo),
   .trg_out       (trg.acq_out),
  // System bus
-  .sys_addr      (sys_addr      ),
-  .sys_wdata     (sys_wdata     ),
   .sys_sel       (sys_sel       ),
   .sys_wen       (sys_wen  [7:6]),
   .sys_ren       (sys_ren  [7:6]),
+  .sys_addr      (sys_addr      ),
+  .sys_wdata     (sys_wdata     ),
   .sys_rdata     (sys_rdata[7:6]),
   .sys_err       (sys_err  [7:6]),
   .sys_ack       (sys_ack  [7:6])
