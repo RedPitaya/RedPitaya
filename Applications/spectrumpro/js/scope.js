@@ -1500,8 +1500,8 @@ $(function() {
 
   // Stop the application when page is unloaded
   window.onbeforeunload = function() {
-    websocket.onclose = function () {}; // disable onclose handler first
-    websocket.close();
+    OSC.ws.onclose = function () {}; // disable onclose handler first
+    OSC.ws.close();
     $.ajax({
       url: SPEC.config.stop_app_url,
       async: false
