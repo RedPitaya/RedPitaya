@@ -15,10 +15,7 @@ module asg_top_tb #(
   int unsigned DWS = DWO, // data width for summation (offset)
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
-  int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
-  // trigger parameters
-  int unsigned TWA =  4,          // external trigger array  width
-  int unsigned TWS = $clog2(TWA)  // external trigger select width
+  int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,10 +29,17 @@ logic                  rstn;
 logic signed [DWO-1:0] str_dat;  // data
 logic                  str_vld;  // valid
 logic                  str_rdy;  // ready
+
 // trigger
-logic        [TWA-1:0] trg_ext;
-logic                  trg_swo;
-logic                  trg_out;
+struct packed {
+  logic swo;  // software
+  logic out;  // output from generator
+  logic ext;  // external
+} trg;
+
+// trigger parameters
+localparam int unsigned TWA = $bits(trg);   // trigger array  width
+localparam int unsigned TWS = $clog2(TWA);  // trigger select width
 
 // DAC clock
 initial        clk = 1'b0;
@@ -57,15 +61,6 @@ dac_cyc <= dac_cyc+1;
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [ 32-1: 0] sys_addr ;
-logic [ 32-1: 0] sys_wdata;
-logic [  4-1: 0] sys_sel  ;
-logic            sys_wen  ;
-logic            sys_ren  ;
-logic [ 32-1: 0] sys_rdata;
-logic            sys_err  ;
-logic            sys_ack  ;
-
 logic        [ 32-1: 0] rdata;
 logic signed [ 32-1: 0] rdata_blk [];
 
@@ -84,81 +79,73 @@ initial begin
   repeat(10) @(posedge clk);
   // write table and table size
   for (int i=0; i<buf_len; i++) begin
-    bus.write(ADR_BUF + (i*4), i);  // write table
+    busm.write(ADR_BUF + (i*4), i);  // write table
   end
   // CH1 table data readback
   rdata_blk = new [80];
   for (int i=0; i<buf_len; i++) begin
-    bus.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
+    busm.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
   // configure frequency and phase
-  bus.write(32'h08,  buf_len                    * 2**CWF - 1);  // table size
-  bus.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//bus.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
-  bus.write(32'h10, 1 * 2**CWF);  // step
+  busm.write(32'h08,  buf_len                    * 2**CWF - 1);  // table size
+  busm.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//busm.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
+  busm.write(32'h10, 1 * 2**CWF);  // step
   // configure burst mode
-  bus.write(32'h04, {1'b0, TWS'(0)});  // burst disable
+  busm.write(32'h04, {1'b0, TWS'(0)});  // burst disable
   // configure amplitude and DC offset
-  bus.write(32'h24, 1 << (DWM-2));  // amplitude
-  bus.write(32'h28, 0);             // DC offset
+  busm.write(32'h24, 1 << (DWM-2));  // amplitude
+  busm.write(32'h28, 0);             // DC offset
   // start
-  bus.write(32'h00, 2'b10);
+  busm.write(32'h00, 2'b10);
   repeat(22) @(posedge clk);
 
   // stop (reset)
-  bus.write(32'h00, 2'b01);
+  busm.write(32'h00, 2'b01);
   repeat(20) @(posedge clk);
 
   // configure frequency and phase
-  bus.write(32'h0c, 0 * 2**CWF);  // offset
-  bus.write(32'h10, 1 * 2**CWF);  // step
+  busm.write(32'h0c, 0 * 2**CWF);  // offset
+  busm.write(32'h10, 1 * 2**CWF);  // step
   // configure burst mode
-  bus.write(32'h04, {1'b1, TWS'(0)});  // burst enable
-  bus.write(32'h18, 6);  // number of cycles
-  bus.write(32'h1c, 10);  // number of delay periods between repetitions
-  bus.write(32'h20, 5);  // number of repetitions
+  busm.write(32'h04, {1'b1, TWS'(0)});  // burst enable
+  busm.write(32'h18, 6);  // number of cycles
+  busm.write(32'h1c, 10);  // number of delay periods between repetitions
+  busm.write(32'h20, 5);  // number of repetitions
   // configure amplitude and DC offset
-  bus.write(32'h24, 1 << (DWM-2));  // amplitude
-  bus.write(32'h28, 0);             // DC offset
+  busm.write(32'h24, 1 << (DWM-2));  // amplitude
+  busm.write(32'h28, 0);             // DC offset
   // start
-  bus.write(32'h00, 2'b10);
+  busm.write(32'h00, 2'b10);
   repeat(120) @(posedge clk);
 
   // stop (reset)
-  bus.write(32'h00, 2'b01);
+  busm.write(32'h00, 2'b01);
   repeat(20) @(posedge clk);
 
   // end simulation
   repeat(20) @(posedge clk);
-  $finish();
+  $stop();
+  //$finish();
 end
 
 ////////////////////////////////////////////////////////////////////////////////
 // triggers
 ////////////////////////////////////////////////////////////////////////////////
 
-assign trg_ext[0] = trg_swo;
+assign trg.ext = 1'b0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
 ////////////////////////////////////////////////////////////////////////////////
 
-sys_bus_model bus (
-  // system signals
-  .clk          (clk      ),
-  .rstn         (rstn     ),
-  // bus protocol signals
-  .sys_addr     (sys_addr ),
-  .sys_wdata    (sys_wdata),
-  .sys_sel      (sys_sel  ),
-  .sys_wen      (sys_wen  ),
-  .sys_ren      (sys_ren  ),
-  .sys_rdata    (sys_rdata),
-  .sys_err      (sys_err  ),
-  .sys_ack      (sys_ack  ) 
-);
+sys_bus_if    bus  (.clk (clk), .rstn (rstn));
 
-asg_top asg_top (
+sys_bus_model busm (.bus (bus));
+
+asg_top #(
+  .TWA (TWA)
+) asg_top (
   // system signals
   .clk       (clk ),
   .rstn      (rstn),
@@ -167,18 +154,11 @@ asg_top asg_top (
   .sto_vld   (str_vld),
   .sto_rdy   (str_rdy),
   // triggers
-  .trg_ext   (trg_ext),
-  .trg_swo   (trg_swo),
-  .trg_out   (trg_out),
+  .trg_ext   (trg),
+  .trg_swo   (trg.swo),
+  .trg_out   (trg.out),
   // System bus
-  .sys_addr  (sys_addr ),
-  .sys_wdata (sys_wdata),
-  .sys_sel   (sys_sel  ),
-  .sys_wen   (sys_wen  ),
-  .sys_ren   (sys_ren  ),
-  .sys_rdata (sys_rdata),
-  .sys_err   (sys_err  ),
-  .sys_ack   (sys_ack  )
+  .bus       (bus)
 );
 
 // stream drain

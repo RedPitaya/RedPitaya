@@ -99,25 +99,19 @@ sys_bus_model bus (
 );
 
 red_pitaya_ams ams (
-  .clk_i        (clk ),
-  .rstn_i       (rstn),
-
-  .vinp_i       (   ),  // voltages p
-  .vinn_i       (   ),  // voltages n
-
-  .dac_a_o      (   ),
-  .dac_b_o      (   ),
-  .dac_c_o      (   ),
-  .dac_d_o      (   ),
+  .clk        (clk ),
+  .rstn       (rstn),
+  // PDM configuration
+  .pdm_cfg    (   ),
    // System bus
-  .sys_addr     (sys_addr ),
-  .sys_wdata    (sys_wdata),
-  .sys_sel      (sys_sel  ),
-  .sys_wen      (sys_wen  ),
-  .sys_ren      (sys_ren  ),
-  .sys_rdata    (sys_rdata),
-  .sys_err      (sys_err  ),
-  .sys_ack      (sys_ack  )
+  .sys_addr   (sys_addr ),
+  .sys_wdata  (sys_wdata),
+  .sys_sel    (sys_sel  ),
+  .sys_wen    (sys_wen  ),
+  .sys_ren    (sys_ren  ),
+  .sys_rdata  (sys_rdata),
+  .sys_err    (sys_err  ),
+  .sys_ack    (sys_ack  )
 );
 
 ////////////////////////////////////////////////////////////////////////////////

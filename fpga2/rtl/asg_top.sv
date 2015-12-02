@@ -46,14 +46,7 @@ module asg_top #(
   output logic                  trg_swo,  // output from software
   output logic                  trg_out,  // output from engine
   // System bus
-  input  logic        [  4-1:0] sys_sel  ,  // bus write byte select
-  input  logic                  sys_wen  ,  // bus write enable
-  input  logic                  sys_ren  ,  // bus read enable
-  input  logic        [ 32-1:0] sys_addr ,  // bus address
-  input  logic        [ 32-1:0] sys_wdata,  // bus write data
-  output logic        [ 32-1:0] sys_rdata,  // bus read data
-  output logic                  sys_err  ,  // bus error indicator
-  output logic                  sys_ack     // bus acknowledge signal
+  sys_bus_if.s                  bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,11 +62,11 @@ logic          [3-1:0] bus_dly ;
 logic                  bus_ack ;
 
 always_ff @(posedge clk)
-if ((sys_wen | sys_ren) & sys_addr[CWM+2]) begin
+if ((bus.wen | bus.ren) & bus.addr[CWM+2]) begin
   bus_ena   <= 1'b1;
-  bus_wen   <= sys_wen;
-  bus_addr  <= sys_addr[CWM+2+1:2];
-  bus_wdata <= sys_wdata;
+  bus_wen   <= bus.wen;
+  bus_addr  <= bus.addr[CWM+2+1:2];
+  bus_wdata <= bus.wdata;
 end else begin
   bus_ena   <= 1'b0;
 end
@@ -83,8 +76,8 @@ if (~rstn) begin
   bus_dly <= '0;
   bus_ack <= '0;
 end else begin
-  bus_dly <= {bus_dly[3-2:0], sys_ren};
-  bus_ack <=  bus_dly[3-1] || sys_wen ;
+  bus_dly <= {bus_dly[3-2:0], bus.ren};
+  bus_ack <=  bus_dly[3-1] || bus.wen ;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,19 +102,19 @@ logic signed [DWM-1:0] cfg_lmul;
 logic signed [DWS-1:0] cfg_lsum;
 
 // control signals
-wire sys_en;
-assign sys_en = sys_wen | sys_ren;
+logic  bus_en;
+assign bus_en = bus.wen | bus.ren;
 
 always_ff @(posedge clk)
 if (~rstn) begin
-  sys_err <= 1'b0;
-  sys_ack <= 1'b0;
+  bus.err <= 1'b0;
+  bus.ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0;
-  if (~sys_addr[CWM]) begin
-    sys_ack <= sys_en;
+  bus.err <= 1'b0;
+  if (~bus.addr[CWM]) begin
+    bus.ack <= bus_en;
   end else begin
-    sys_ack <= bus_ack;
+    bus.ack <= bus_ack;
   end
 end
 
@@ -143,49 +136,49 @@ if (rstn == 1'b0) begin
   cfg_lmul <= 1 << (DWM-2);
   cfg_lsum <= '0;
 end else begin
-  if (sys_wen & ~sys_addr[CWM+2]) begin
+  if (bus.wen & ~bus.addr[CWM+2]) begin
     // configuration
-    if (sys_addr[6-1:0]==6'h04)  cfg_tsel <= sys_wdata[    TWS-1:0];
-    if (sys_addr[6-1:0]==6'h04)  cfg_bena <= sys_wdata[    TWS+0  ];
-    if (sys_addr[6-1:0]==6'h04)  cfg_binf <= sys_wdata[    TWS+1  ];
-    if (sys_addr[6-1:0]==6'h08)  cfg_size <= sys_wdata[CWM+CWF-1:0];
-    if (sys_addr[6-1:0]==6'h0c)  cfg_offs <= sys_wdata[CWM+CWF-1:0];
-    if (sys_addr[6-1:0]==6'h10)  cfg_step <= sys_wdata[CWM+CWF-1:0];
+    if (bus.addr[6-1:0]==6'h04)  cfg_tsel <= bus.wdata[    TWS-1:0];
+    if (bus.addr[6-1:0]==6'h04)  cfg_bena <= bus.wdata[    TWS+0  ];
+    if (bus.addr[6-1:0]==6'h04)  cfg_binf <= bus.wdata[    TWS+1  ];
+    if (bus.addr[6-1:0]==6'h08)  cfg_size <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[6-1:0]==6'h0c)  cfg_offs <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[6-1:0]==6'h10)  cfg_step <= bus.wdata[CWM+CWF-1:0];
     // burst mode
-    if (sys_addr[6-1:0]==6'h18)  cfg_bcyc <= sys_wdata[     16-1:0];
-    if (sys_addr[6-1:0]==6'h1c)  cfg_bdly <= sys_wdata[     32-1:0];
-    if (sys_addr[6-1:0]==6'h20)  cfg_bnum <= sys_wdata[     16-1:0];
+    if (bus.addr[6-1:0]==6'h18)  cfg_bcyc <= bus.wdata[     16-1:0];
+    if (bus.addr[6-1:0]==6'h1c)  cfg_bdly <= bus.wdata[     32-1:0];
+    if (bus.addr[6-1:0]==6'h20)  cfg_bnum <= bus.wdata[     16-1:0];
     // linear transformation
-    if (sys_addr[6-1:0]==6'h24)  cfg_lmul <= sys_wdata[    DWM-1:0];
-    if (sys_addr[6-1:0]==6'h28)  cfg_lsum <= sys_wdata[    DWS-1:0];
+    if (bus.addr[6-1:0]==6'h24)  cfg_lmul <= bus.wdata[    DWM-1:0];
+    if (bus.addr[6-1:0]==6'h28)  cfg_lsum <= bus.wdata[    DWS-1:0];
   end
 end
 
 // control signals
-assign ctl_rst = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[0];  // reset
-assign trg_swo = sys_wen & (sys_addr[19:0]==20'h00) & sys_wdata[1];  // trigger
+assign ctl_rst = bus.wen & (bus.addr[19:0]==20'h00) & bus.wdata[0];  // reset
+assign trg_swo = bus.wen & (bus.addr[19:0]==20'h00) & bus.wdata[1];  // trigger
 
 // read access
 always_ff @(posedge clk)
-if (~sys_addr[CWM+2]) begin
-  casez (sys_addr[19:0])
+if (~bus.addr[CWM+2]) begin
+  casez (bus.addr[19:0])
     // configuration
-    6'h04 : sys_rdata <= {{32-2  -TWS{1'b0}}, cfg_binf
+    6'h04 : bus.rdata <= {{32-2  -TWS{1'b0}}, cfg_binf
                                             , cfg_bena
                                             , cfg_tsel};
-    6'h08 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
-    6'h0c : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
-    6'h10 : sys_rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
+    6'h08 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
+    6'h0c : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
+    6'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
     // burst mode
-    6'h18 : sys_rdata <= {{32-     16{1'b0}}, cfg_bcyc};
-    6'h1c : sys_rdata <=                      cfg_bdly ;
-    6'h20 : sys_rdata <= {{32-     16{1'b0}}, cfg_bnum};
+    6'h18 : bus.rdata <= {{32-     16{1'b0}}, cfg_bcyc};
+    6'h1c : bus.rdata <=                      cfg_bdly ;
+    6'h20 : bus.rdata <= {{32-     16{1'b0}}, cfg_bnum};
     // linear transformation (should be properly sign extended)
-    6'h24 : sys_rdata <= cfg_lmul;
-    6'h28 : sys_rdata <= cfg_lsum;
+    6'h24 : bus.rdata <= cfg_lmul;
+    6'h28 : bus.rdata <= cfg_lsum;
   endcase
 end else begin
-            sys_rdata <= {{32-    DWO{1'b0}}, bus_rdata};
+            bus.rdata <= {{32-    DWO{1'b0}}, bus_rdata};
 end
 
 ////////////////////////////////////////////////////////////////////////////////
