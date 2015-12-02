@@ -149,33 +149,58 @@
         console.log('Websocket error: ', ev);
       };
 
+	  var g_count = 0;
+	  var g_time = 0;
+	  var g_iter = 10;
+	  var g_delay = 200;
       OSC.ws.onmessage = function(ev) {
+		++g_count;
+		var start_time = +new Date();
+
         if(OSC.state.processing) {
           return;
         }
         OSC.state.processing = true;
 
-try {
-		var data = new Uint8Array(ev.data);
-		var inflate = new Zlib.Gunzip(data);
-		var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
-		var receive = JSON.parse(text);
+		try {
+			var data = new Uint8Array(ev.data);
+			var inflate = new Zlib.Gunzip(data);
+			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+			var receive = JSON.parse(text);
 
-        if(receive.parameters) {
-          if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-            OSC.params.local['in_command'] = { value: 'send_all_params' };
-            OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
-            OSC.params.local = {};
-          } else {
-            OSC.processParameters(receive.parameters);
-          }
-        }
+			if(receive.parameters) {
+			  if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
+				OSC.params.local['in_command'] = { value: 'send_all_params' };
+				OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+				OSC.params.local = {};
+			  } else {
+				OSC.processParameters(receive.parameters);
+			  }
+			}
 
-        if(receive.signals) {
-            OSC.processSignals(receive.signals);
-        }
-        OSC.state.processing = false;
-	} catch (e) { console.log(e); } finally {}
+			if(receive.signals) {
+				OSC.processSignals(receive.signals);
+			}
+			OSC.state.processing = false;
+
+			g_time += (+new Date() - start_time);
+			if (g_count == g_iter && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
+				g_delay = (g_time/g_count)*10; // TODO
+				if (g_delay > 300)
+					$('#weak_conn_msg').show();
+				else
+					$('#weak_conn_msg').hide();
+				var period = {};
+				period['DEBUG_SIGNAL_PERIOD'] = { value: g_delay };
+				OSC.ws.send(JSON.stringify({ parameters: period }));
+				g_time = 0;
+				g_count = 0;
+			}
+		}
+		catch (e) {
+			console.log(e);
+		}
+		finally {}
       };
     }
   };
@@ -1021,16 +1046,6 @@ try {
     if(OSC.state.sel_sig_name && OSC.graphs[OSC.state.sel_sig_name] && !OSC.graphs[OSC.state.sel_sig_name].elem.is(':visible')) {
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
       //OSC.state.sel_sig_name = null;
-    }
-
-    var fps = 1000/(+new Date() - start);
-
-    if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
-		var new_period = 1100/fps < 100 ? 100 : 1100/fps;
-		var period = {};
-		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
-		OSC.ws.send(JSON.stringify({ parameters: period }));
-		OSC.iterCnt = 0;
     }
   };
 
