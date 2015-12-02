@@ -44,6 +44,8 @@ add_files                         $path_rtl/axi_master.sv
 add_files                         $path_rtl/axi_slave.sv
 add_files                         $path_rtl/axi_wr_fifo.sv
 
+add_files                         $path_rtl/sys_bus_if.sv
+
 add_files                         $path_rtl/red_pitaya_ams.sv
 add_files                         $path_rtl/red_pitaya_hk.sv
 add_files                         $path_rtl/red_pitaya_calib.sv
