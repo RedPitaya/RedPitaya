@@ -311,7 +311,6 @@ void rp_websocket_server::stop()
 
 	}
 	m_connections.clear();
-	exit(-1);
 	join();
 	m_out.close();
 }
