@@ -376,15 +376,18 @@ void fpga_rb_set_osc1_mod_none_am_pm(double osc1_qrg)
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_osc1_mixer_mod_none_fm_pm(double osc1_amp)
 {
-    double gain1 = 0.5 + ((double) (1ULL << 31)) * (osc1_amp / 2048.0);                                 // TODO: DAC amplitude correction goes into here
-    double ofs1  = 0.0f;                                                                                // TODO: DAC offset correction goes into here
+//    double gain1 = 0.5 + ((double) (1ULL << 31)) * (osc1_amp / 2048.0);                                 // TODO: DAC amplitude correction goes into here
+//    double ofs1  = 0.0f;                                                                                // TODO: DAC offset correction goes into here
 //  double ofs1  = (1ULL << 46);                                                                        // TODO: DAC offset correction goes into here
 
     //fprintf(stderr, "INFO - fpga_rb_set_osc1_mixer_mod_none_fm_pm: in(gain1=%lf, ofs=%lf)\n", gain1, ofs1);
 
+// TODO new settings
+    /*
     g_fpga_rb_reg_mem->osc1_mix_gain = (uint32_t) (((uint64_t) gain1) & 0xffffffff);
     g_fpga_rb_reg_mem->osc1_mix_ofs_lo = (uint32_t) (((uint64_t) ofs1)  & 0xffffffff);
     g_fpga_rb_reg_mem->osc1_mix_ofs_hi = (uint32_t) (((uint64_t) ofs1) >> 32);
+    */
 }
 
 /*----------------------------------------------------------------------------*/

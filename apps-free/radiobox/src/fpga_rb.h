@@ -111,7 +111,7 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h05: STAT_OSC1_VALID - '1' Oscillator-1 output is valid. After turning this sub-module active it needs some clocks going into valid state.
      *
-     * bit h06: STAT_OSC1_MIX_VALID - '1' Oscillator-1 multiplier output is valid. After turning this sub-module active it needs some clocks going into valid state.
+     * bit h06: n/a
      *
      * bit h07: n/a
      *
@@ -119,7 +119,7 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h09: STAT_OSC2_VALID - '1' Oscillator-2 output is valid. After turning this sub-module active it needs some clocks going into valid state.
      *
-     * bit h0A: STAT_OSC2_MIX_VALID - '1' Oscillator-2 multiplier output is valid. After turning this sub-module active it needs some clocks going into valid state.
+     * bit h0A: n/a
      *
      * bit h0B: n/a
      *
@@ -193,19 +193,25 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h01  All LEDs are driven off.
      *
-     *   value = h02  LEDs show magnitude function with selected input port MIX1 output.
+     *   value = h02  LEDs show magnitude function with selected input port ADC selector input.
      *
-     *   value = h03  LEDs show magnitude function with selected input port OSC1 output.
+     *   value = h03  LEDs show magnitude function with selected input port modulation amplifier input.
      *
-     *   value = h04  LEDs show magnitude function with selected input port MIX2 output.
+     *   value = h04  LEDs show magnitude function with selected input port modulation amplifier output.
      *
-     *   value = h05  LEDs show magnitude function with selected input port OSC2 output.
+     *   value = h05  LEDs show magnitude function with selected input port QMIX I output at stage 1.
      *
-     *   value = h06  LEDs show magnitude function with selected input port ADC input.
+     *   value = h06  LEDs show magnitude function with selected input port QMIX Q output at stage 1.
      *
-     *   value = h07  LEDs show magnitude function with selected input port Mic MIX output.
+     *   value = h07  LEDs show magnitude function with selected input port HP I output.
      *
-     *   value = h08..h0F  n/a
+     *   value = h08  LEDs show magnitude function with selected input port HP Q output.
+     *
+     *   value = h09  LEDs show magnitude function with selected input port HP CIC I output.
+     *
+     *   value = h0A  LEDs show magnitude function with selected input port HP CIC Q output.
+     *
+     *   value = h0B..h0F  n/a
      *
      * bit h1F..h04: n/a
      *
@@ -249,12 +255,12 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t osc1_ofs_hi;
 
 
-    /** @brief  R/W RB_OSC1_MIX_GAIN - Oscillator-1 output mixer amplitude register, bits 31..0 (addr: 0x40600030)
+    /** @brief  R/W RB_AMP_RF_GAIN - AMP RF gain register, bits 15..0 (addr: 0x40600030)
      *
-     * bit h1F..h00: Oscillator-1 output mixer amplitude.
+     * bit h0F..h00: Amplifier RF gain setting, unsigned value.
      *
      */
-    uint32_t osc1_mix_gain;
+    uint32_t amp_rf_gain;
 
 
     /** @brief  Placeholder for addr: 0x40600034
@@ -265,22 +271,20 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t reserved_34;
 
 
-    /** @brief  R/W RB_OSC1_MIX_OFS_LO - Oscillator-1 output mixer offset register, bits 31..0 (addr: 0x40600038)
+    /** @brief  R/W RB_AMP_RF_OFS - AMP RF offset register, bits 15..0 (addr: 0x40600038)
      *
-     * bit h1F..h00: LSB of Oscillator-1 mixer offset register.
-     *
-     */
-    uint32_t osc1_mix_ofs_lo;
-
-
-    /** @brief  R/W RB_OSC1_MIX_OFS_HI - Oscillator-1 output mixer offset register, bits 47..32 (addr: 0x4060003C)
-     *
-     * bit h0F..h00: MSB of Oscillator-1 mixer offset register.
-     *
-     * bit h1F..h10: n/a
+     * bit h0F..h00: Amplifier RF offset value, signed value.
      *
      */
-    uint32_t osc1_mix_ofs_hi;
+    uint32_t amp_rf_ofs;
+
+
+    /** @brief  Placeholder for addr: 0x4060003C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_3c;
 
 
     /** @brief  R/W RB_OSC2_INC_LO - Oscillator-2 phase increment register, bits 31..0 (addr: 0x40600040)
@@ -378,7 +382,9 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_MUXIN_GAIN - gain for analog MUX input amplifier (addr: 0x40600064)
      *
-     * bit h1F..h00: gain for MUXIN output amplifier.
+     * bit h0F..h00: gain for MUXIN output amplifier.
+     *
+     * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
      *
      */
     uint32_t muxin_gain;
