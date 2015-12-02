@@ -200,6 +200,7 @@ target_base:
 		-Wl,--whole-archive -L $(TARGET)/usr/lib -lstdc++ -Wl,--no-whole-archive
 
 zip: $(TARGET)
+	find . -name ".*DS_Store" -delete
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
 
 ################################################################################

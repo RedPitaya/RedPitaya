@@ -34,3 +34,6 @@ scpi-server/scpi-server
 # SCPI Server examples
 scpi-server/3rdparty/libs/scpi-parser/examples/
 
+# MAC
+.DS_Store
+._.DS_Store
