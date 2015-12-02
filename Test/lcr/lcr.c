@@ -368,11 +368,11 @@ int main(int argc, char *argv[]) {
     signal_e type = eSignalSine;
     float    log_Frequency;
     float    **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
-    uint32_t min_periodes = 10; // max 20
+    uint32_t min_periodes = 8; // max 20
     // when frequency lies below 100Hz number of acquired periodes reduces to 2
     // this reduces measurement time
     if (start_frequency < 100 && sweep_function == 0) {
-        min_periodes = 2;
+        min_periodes = 5;
     }
     uint32_t size; // number of samples varies with number of periodes
     int      dimension_step = 0; // saving data on the right place in allocated memory this is iterator
@@ -760,12 +760,12 @@ int main(int argc, char *argv[]) {
                     for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
                         /* decimation changes depending on frequency */
-                        if      (Frequency[ fr ] >= 160000){      f = 0;    }
-                        else if (Frequency[ fr ] >= 20000) {      f = 1;    }
-                        else if (Frequency[ fr ] >= 2500)  {      f = 2;    }
-                        else if (Frequency[ fr ] >= 160)   {      f = 3;    }
-                        else if (Frequency[ fr ] >= 20)    {      f = 4;    }
-                        else if (Frequency[ fr ] >= 2.5)   {      f = 5;    }
+                        if      (Frequency[ fr ] >= 65000) {      f = 0;    }
+                        else if (Frequency[ fr ] >= 8000)  {      f = 1;    }
+                        else if (Frequency[ fr ] >= 1000)  {      f = 2;    }
+                        else if (Frequency[ fr ] >= 60)    {      f = 3;    }
+                        else if (Frequency[ fr ] >= 8)     {      f = 4;    }
+                        else if (Frequency[ fr ] >= 1)     {      f = 5;    }
 
                         /* setting decimtion */
                         if (f != DEC_MAX) {
