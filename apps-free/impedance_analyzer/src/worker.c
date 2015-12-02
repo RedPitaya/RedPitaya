@@ -973,37 +973,21 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             /* Data check: TODO add switch statment for a niftier code */
 
             float scale = rp_get_params_lcr(15);
-            if(scale == 0){
-                cha_s[out_idx] = amplitude[out_idx];
-            }else if(scale == 1){
-               cha_s[out_idx] = phase[out_idx]; 
-            }else if(scale == 2){
-                cha_s[out_idx] = Y_abs[out_idx];
-            }else if(scale == 3){
-                cha_s[out_idx] = phaseY[out_idx];
-            }else if(scale == 4){
-                cha_s[out_idx] = R_s[out_idx];
-            }else if(scale == 5){
-                cha_s[out_idx] = X_s[out_idx];
-            }else if(scale == 6){
-                cha_s[out_idx] = G_p[out_idx];
-            }else if(scale == 7){
-                cha_s[out_idx] = B_p[out_idx];
-            }else if(scale == 8){
-                cha_s[out_idx] = C_s[out_idx];
-            }else if(scale == 9){
-                cha_s[out_idx] = C_p[out_idx];
-            }else if(scale == 10){
-                cha_s[out_idx] = L_s[out_idx];
-            }else if(scale == 11){
-                cha_s[out_idx] = L_p[out_idx];
-            }else if(scale == 12){
-                cha_s[out_idx] = R_s[out_idx];
-            }else if(scale == 13){
-                cha_s[out_idx] = Q[out_idx];
-            }else if(scale == 14){
-                cha_s[out_idx] = D[out_idx];
-            }
+            if      (scale ==  0) cha_s[out_idx] = amplitude[out_idx];
+            else if (scale ==  1) cha_s[out_idx] = phase[out_idx]; 
+            else if (scale ==  2) cha_s[out_idx] = Y_abs[out_idx];
+            else if (scale ==  3) cha_s[out_idx] = phaseY[out_idx];
+            else if (scale ==  4) cha_s[out_idx] = R_s[out_idx];
+            else if (scale ==  5) cha_s[out_idx] = R_p[out_idx];
+            else if (scale ==  6) cha_s[out_idx] = X_s[out_idx];
+            else if (scale ==  7) cha_s[out_idx] = G_p[out_idx];
+            else if (scale ==  8) cha_s[out_idx] = B_p[out_idx];
+            else if (scale ==  9) cha_s[out_idx] = C_s[out_idx];
+            else if (scale == 10) cha_s[out_idx] = C_p[out_idx];
+            else if (scale == 11) cha_s[out_idx] = L_s[out_idx];
+            else if (scale == 12) cha_s[out_idx] = L_p[out_idx];
+            else if (scale == 13) cha_s[out_idx] = Q[out_idx];
+            else if (scale == 14) cha_s[out_idx] = D[out_idx];
    
             chb_s[out_idx] = 0;
 
