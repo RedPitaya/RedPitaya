@@ -168,7 +168,7 @@ logic signed [MNG-1:0] [DWM-1:0] dac_cfg_mul;  // gain
 logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
 // triggers
-struct { 
+struct packed { 
   // generator
   logic [MNG  -1:0] gen_out;  // MNA*2 - event    triggers from acquire    {negedge, posedge}
   logic [MNG  -1:0] gen_swo;  // MNA   - software triggers from acquire
