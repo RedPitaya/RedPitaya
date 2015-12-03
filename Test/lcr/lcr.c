@@ -118,23 +118,23 @@ void usage() {
                        "[scale type] "
                        "[wait]\n"
             "\n"
-            "\tchannel            Channel to generate signal on [1 / 2].\n"
-            "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
-            "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                   Max sum of amplitude and DC bias is (0-1]V.\n"
-            "\tr_shunt            Shunt resistor value in Ohms [>0].\n"
+            "\tchannel            Output channel                   [1 / 2   ].\n"
+            "\tamplitude          Output signal amplitude in Volts [0 - 0.4 ].\n"
+            "\tdc bias            DC bias in V                     [0 - 0.25].\n"
+            "\tr_shunt            Shunt resistor value in Ohms     [If set to 0, Automatic ranging is used].\n"
+            "\t                   Automatic ranging demands Extenson module.\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
-            "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
-            "\tz_ref real         Reference impedance, real part.\n"
-            "\tz_ref imag         Reference impedance, imaginary part.\n"
-            "\tcount/steps        Number of measurements [>1 / >2, dep. on sweep mode].\n"
+            "\tcalibration mode   Set to 0, Cal is not yet included].\n"
+            "\tz_ref real         Reference impedance, real part [set to 0 -> not yet included].\n"
+            "\tz_ref imag         Reference impedance, [set to 0 -> not yet included].\n"
+            "\tcount/steps        Number of measurements [min 2 for frequency sweep].\n"
             "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
-            "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
-            "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
+            "\tstart freq         Lower frequency limit in Hz [1 - 62.5e6].\n"
+            "\tstop freq          Upper frequency limit in Hz [1 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
             "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n"
-            "Output:\tfrequency [Hz], phase [deg], Z [Ohm], Y, PhaseY, R_s, X_s, G_p, B_p, C_s, C_p, L_s, L_p, R_p, Q, D\n";
+            "Output:\tFrequency [Hz], Z [Ohm], Phase_Z [deg], Y [S], Phase_Y [deg], R_s [Ohm], X_s [H], G_p [S], B_p [S], C_s [F], C_p [F], L_s [H], L_p [H], R_p [Ohm], Q, D\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -1017,10 +1017,10 @@ int main(int argc, char *argv[]) {
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
 
         /// Output
-        printf(" %.2f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
+        printf(" %.1f    %.5f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",
             Frequency[ !sweep_function ? 0 : i ],
-            PhaseZ[ i ],
             AmplitudeZ[ i ],
+            PhaseZ[ i ],
             Y_abs[ i ],
             PhaseY[ i ],
             R_s[ i ],
@@ -1038,26 +1038,26 @@ int main(int argc, char *argv[]) {
 
         /** Saving files */
         if (!sweep_function) {
-            fprintf(file_frequency, "%.5f\n", Frequency[0]);
+            fprintf(file_frequency, "%.1f\n", Frequency[0]);
         } else {
-            fprintf(file_frequency, "%.5f\n", Frequency[i]);
+            fprintf(file_frequency, "%.1f\n", Frequency[i]);
         }
 
-        fprintf(file_phase, "%.5f\n", PhaseZ[i]);
+        fprintf(file_phase, "%.1f\n", PhaseZ[i]);
         fprintf(file_amplitude, "%.5f\n", AmplitudeZ[i]);
-        fprintf(file_R_s, "%.5f\n", R_s[i]);
-        fprintf(file_Y_abs, "%.5f\n", Y_abs[i]);
-        fprintf(file_PhaseY, "%.5f\n", PhaseY[i]);
-        fprintf(file_X_s, "%.5f\n", X_s[i]);
-        fprintf(file_G_p, "%.5f\n", G_p[i]);
-        fprintf(file_B_p, "%.5f\n", B_p[i]);
-        fprintf(file_C_s, "%.5f\n", C_s[i]);
-        fprintf(file_C_p, "%.5f\n", C_p[i]);
-        fprintf(file_L_s, "%.5f\n", L_s[i]);
-        fprintf(file_L_p, "%.5f\n", L_p[i]);
-        fprintf(file_R_p, "%.5f\n", R_p[i]);
-        fprintf(file_Q, "%.5f\n", Q[i]);
-        fprintf(file_D, "%.5f\n", D[i]);
+        fprintf(file_R_s, "%.10f\n", R_s[i]);
+        fprintf(file_Y_abs, "%.10f\n", Y_abs[i]);
+        fprintf(file_PhaseY, "%.10f\n", PhaseY[i]);
+        fprintf(file_X_s, "%.10f\n", X_s[i]);
+        fprintf(file_G_p, "%.10f\n", G_p[i]);
+        fprintf(file_B_p, "%.10f\n", B_p[i]);
+        fprintf(file_C_s, "%.10f\n", C_s[i]);
+        fprintf(file_C_p, "%.10f\n", C_p[i]);
+        fprintf(file_L_s, "%.10f\n", L_s[i]);
+        fprintf(file_L_p, "%.10f\n", L_p[i]);
+        fprintf(file_R_p, "%.10f\n", R_p[i]);
+        fprintf(file_Q, "%.10f\n", Q[i]);
+        fprintf(file_D, "%.10f\n", D[i]);
     }
 
     /** Closing files */
@@ -1349,7 +1349,8 @@ int LCR_data_analysis(float **s,
     for ( i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
         for( i3 = 0; i3 < size; i3 ++ ) {
             //division comes after multiplication, this way no accuracy is lost
-            U_acq[i2][i3] = ( ( s[ i2 ][ i3 ] ) * (float)( 2 - DC_bias ) ) / (float)16384 ;
+            U_acq[i2][i3] = ( ( s[ i2 ][ i3 ] ) * (float)( 2 ) ) / (float)16384 ;
+            /*printf("%f\n",U_acq[i2][i3]);*/
         }
     }
 
