@@ -32,10 +32,6 @@
 #include "redpitaya/rp.h"
 
 /* Global variables definition */
-
-#define CORR_S_FREQ 	100
-#define CORR_E_FREQ		1e6
-
 int 					min_periodes = 20;
 uint32_t 				acq_size = 1024;
 
@@ -278,9 +274,8 @@ int lcr_Run(){
 
 
 int lcr_Correction(){
-	int start_freq = 	CORR_S_FREQ;
-	int end_freq = 		CORR_E_FREQ;
-
+	int start_freq 		= START_CORR_FREQ;
+	
 	int err;
 	struct impendace_params args;
 	pthread_t lcr_thread_handler;
@@ -289,10 +284,9 @@ int lcr_Correction(){
 		malloc(CALIB_STEPS * sizeof(float _Complex));
 
 	calib_t calib_mode = main_params.calibration;
-	int freq_step = (end_freq - start_freq) / (CALIB_STEPS - 1);
 	for(int i = 0; i < CALIB_STEPS; i++){
 		
-		args.frequency = freq_step * i;
+		args.frequency = start_freq * powf(10, i);
 		err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
 		if(err != RP_OK){
 			printf("Main thread creation failed.\n");
@@ -312,11 +306,113 @@ int lcr_Correction(){
 
 int lcr_CalculateData(float _Complex amplitude_z){
 
-	float phasez = 0;
-	calc_data->lcr_amplitude = amplitude_z;
+	//float phasez = 0;
+	bool calibration = false;
+
+	const char *calibrations[] = 
+		{"/opt/redpitaya/www/apps/lcr_meter/CALIB_OPEN",
+		 "/opt/redpitaya/www/apps/lcr_meter/CALIB_SHORT"};
+
+	FILE *f_open  = fopen(calibrations[0], "r");
+	FILE *f_short = fopen(calibrations[1], "r");
+
+	//Calibration was made
+	if((f_open != NULL) && (f_short != NULL)){
+		calibration = true;	
+	}
+
+	float _Complex Z_open[CALIB_STEPS]  = {0, 0, 0, 0};
+	float _Complex Z_short[CALIB_STEPS] = {0, 0, 0, 0};
+	float _Complex Z_final;
+
+	/* Read calibration from file/s */
+	if(calibration){
+		int line = 0;
+		while(!feof(f_open)){
+			float z_temp_imag, z_temp_real;
+			fscanf(f_open, "%f+%fi", &z_temp_real, &z_temp_imag);
+			Z_open[line] = z_temp_real + z_temp_imag*I;
+			line++;
+		}
+
+		line = 0;
+		while(!feof(f_short)){
+			float z_temp_imag, z_temp_real;
+			fscanf(f_short, "%f+%fi", &z_temp_real, &z_temp_imag);
+			Z_short[line] = z_temp_real + z_temp_imag*I;
+			line++;
+		}	
+	}
+
+	/* --------------- CALCULATING OUTPUT PARAMETERS --------------- */
+	int idx = 0;
+	switch((int)main_params.frequency){
+		case 100:
+			idx = 0;
+			break;
+		case 1000:
+			idx = 1;
+			break;
+		case 10000:
+			idx = 2;
+			break;
+		case 100000:
+			idx = 3;
+			break;
+	}
+
+	float z_temp_real, z_temp_imag;
+	//Calibration was made
+	if(calibration){
+		float short_re = creal(Z_short[idx]), short_img = cimag(Z_short[idx]);
+		float open_re = creal(Z_open[idx]), open_img = cimag(Z_open[idx]);
+		syslog(LOG_INFO, "%f %f", short_re, short_img);
+		z_temp_real = ((short_re - creal(amplitude_z)) * open_re) /
+			((creal(amplitude_z) - open_re) * (short_re - open_re));
+
+		z_temp_imag = ((short_img - creal(amplitude_z)) * open_img) /
+			((creal(amplitude_z) - open_img) * (short_img - open_img));
+
+		Z_final = z_temp_real + z_temp_imag * I;
+	//No calibration was made
+	}else{
+		Z_final = creal(amplitude_z) + cimag(amplitude_z) * I;
+	}
+
+	float w_out = 2 * M_PI * main_params.frequency;
+	float Y = 1 / Z_final;
+	//float Y_abs = sqrtf(powf(creal(Y), 2) + powf(cimag(Y), 2));
 	
+	//float B_p = cimag(Y);
+	float G_p = creal(Y);
 
+	float R_s = creal(Z_final);
+	float X_s = cimag(Z_final);
 
+	/* Calculate Z */
+	calc_data->lcr_amplitude = 
+		sqrtf(powf(creal(Z_final), 2) + powf(cimag(Z_final), 2));
+
+	/* Calculate L */
+	calc_data->lcr_L = X_s / w_out;
+
+	/* Calculate C */
+	calc_data->lcr_C = -1 / (w_out * X_s);
+
+	/* Calculate R */
+	calc_data->lcr_R = 1 / G_p;
+
+	/* Calculate phase */
+	calc_data->lcr_phase = 
+		(180 / M_PI) * atan2f(cimag(Z_final), creal(Z_final));
+
+	/* Calculate Q */
+	calc_data->lcr_Q = X_s / R_s;
+
+	/* Calculate D */
+	calc_data->lcr_D = -1 / calc_data->lcr_Q;  
+
+	/* Calculate E - Zumret faggot */
 
 	//Dummy test value - rp_GetOldestDataV is not working correctly.
 	switch((int)main_params.frequency){
@@ -336,19 +432,20 @@ int lcr_CalculateData(float _Complex amplitude_z){
 			calc_data->lcr_amplitude = 100 + main_params.frequency;
 			break;
 	}
-
+	
 	return RP_OK;
 }
 
 int lcr_CopyParams(lcr_main_data_t *params){
 	params->lcr_amplitude    = calc_data->lcr_amplitude;
-	params->lcr_phase        = calc_data->lcr_phase ;
-	params->lcr_d         	 = calc_data->lcr_d;
-	params->lcr_q            = calc_data->lcr_q;
-	params->lcr_e         	 = calc_data->lcr_e;
-	params->lcr_l         	 = calc_data->lcr_l;
-	params->lcr_c         	 = calc_data->lcr_c;
-	params->lcr_r         	 = calc_data->lcr_r;
+	params->lcr_phase        = calc_data->lcr_phase;
+	params->lcr_D         	 = calc_data->lcr_D;
+	params->lcr_Q            = calc_data->lcr_Q;
+	params->lcr_E         	 = calc_data->lcr_E;
+	params->lcr_L         	 = calc_data->lcr_L;
+	params->lcr_C         	 = calc_data->lcr_C;
+	params->lcr_R         	 = calc_data->lcr_R;
+	syslog(LOG_INFO, "HERE\n");
 	return RP_OK;
 }
 

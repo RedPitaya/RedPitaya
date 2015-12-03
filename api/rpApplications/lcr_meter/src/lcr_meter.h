@@ -32,9 +32,9 @@
 #define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
 
 /* Calibration params */
-#define CALIB_STEPS				100
-#define START_CALIB_FREQ		100 //TODO
-#define END_CALIB_FREQ			1e6
+#define CALIB_STEPS				4
+#define START_CORR_FREQ			100
+#define END_CORR_FREQ			100000
 
 typedef enum calibration{
 	CALIB_NONE,
@@ -57,12 +57,12 @@ typedef struct params_e{
 typedef struct data_e {
 	float lcr_amplitude;
 	float lcr_phase;
-	float lcr_d;
-	float lcr_q;
-	float lcr_e;
-	float lcr_l;
-	float lcr_c;
-	float lcr_r;
+	float lcr_D;
+	float lcr_Q;
+	float lcr_E;
+	float lcr_L;
+	float lcr_C;
+	float lcr_R;
 }lcr_main_data_t;
 
 
