@@ -58,14 +58,7 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // system read/write channel
-  output logic [ 32-1:0] sys_addr ,  // system read/write address
-  output logic [ 32-1:0] sys_wdata,  // system write data
-  output logic [  4-1:0] sys_sel  ,  // system write byte select
-  output logic           sys_wen  ,  // system write enable
-  output logic           sys_ren  ,  // system read enable
-  input  logic [ 32-1:0] sys_rdata,  // system read data
-  input  logic           sys_err  ,  // system error indicator
-  input  logic           sys_ack  ,  // system acknowledge signal
+  sys_bus_if.m           bus,
   // AXI-4 stream
   input  logic [2*8-1:0] axi1_tdata , axi0_tdata ,  // stream data
   input  logic           axi1_tlast , axi0_tlast ,  // stream last
@@ -171,14 +164,14 @@ axi_slave #(
   .axi_rvalid_o     (gp0_maxi_rvalid ),
   .axi_rready_i     (gp0_maxi_rready ),
   // system read/write channel
-  .sys_addr_o       (sys_addr        ),
-  .sys_wdata_o      (sys_wdata       ),
-  .sys_sel_o        (sys_sel         ),
-  .sys_wen_o        (sys_wen         ),
-  .sys_ren_o        (sys_ren         ),
-  .sys_rdata_i      (sys_rdata       ),
-  .sys_err_i        (sys_err         ),
-  .sys_ack_i        (sys_ack         )
+  .sys_addr_o       (bus.addr ),
+  .sys_wdata_o      (bus.wdata),
+  .sys_sel_o        (bus.sel  ),
+  .sys_wen_o        (bus.wen  ),
+  .sys_ren_o        (bus.ren  ),
+  .sys_rdata_i      (bus.rdata),
+  .sys_err_i        (bus.err  ),
+  .sys_ack_i        (bus.ack  )
 );
 
 assign gp0_maxi_aclk  = clk;

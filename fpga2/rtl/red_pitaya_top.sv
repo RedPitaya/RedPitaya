@@ -105,17 +105,12 @@ module red_pitaya_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  4-1: 0] fclk               ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
-logic [  4-1: 0] frstn              ;
+logic [  4-1: 0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
+logic [  4-1: 0] frstn;
 
-logic [ 32-1: 0] ps_sys_addr        ;
-logic [ 32-1: 0] ps_sys_wdata       ;
-logic [  4-1: 0] ps_sys_sel         ;
-logic            ps_sys_wen         ;
-logic            ps_sys_ren         ;
-logic [ 32-1: 0] ps_sys_rdata       ;
-logic            ps_sys_err         ;
-logic            ps_sys_ack         ;
+// system bus
+sys_bus_if ps_sys      (.clk (clk), .rstn (rstn));
+sys_bus_if sys [8-1:0] (.clk (clk), .rstn (rstn));
 
 // PLL signals
 logic                 adc_clk_in;
@@ -263,15 +258,8 @@ red_pitaya_ps ps (
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
    // system read/write channel
-  .sys_addr      (ps_sys.addr ),
-  .sys_wdata     (ps_sys.wdata),
-  .sys_sel       (ps_sys.sel  ),
-  .sys_wen       (ps_sys.wen  ),
-  .sys_ren       (ps_sys.ren  ),
-  .sys_rdata     (ps_sys.rdata),
-  .sys_err       (ps_sys.err  ),
-  .sys_ack       (ps_sys.ack  ),
-  // AXI masters
+  .bus           (ps_sys),
+  // AXI streams
   // TODO, handle this bitsize change elsewhere
   .axi1_tdata  (16'(acq_dat[1]<<<2)),  .axi0_tdata  (16'(acq_dat[0]<<<2)),
   .axi1_tlast  (acq_lst[1]),  .axi0_tlast  (acq_lst[0]),
@@ -282,9 +270,6 @@ red_pitaya_ps ps (
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
-
-sys_bus_if ps_sys      (.clk (clk), .rstn (rstn));
-sys_bus_if sys [8-1:0] (.clk (clk), .rstn (rstn));
 
 logic [8-1:0] sys_cs;
 logic [3-1:0] sys_a;
@@ -302,8 +287,8 @@ for (genvar i=0; i<8; i++) begin: for_bus
 assign sys[i].addr  =             ps_sys.addr ;
 assign sys[i].wdata =             ps_sys.wdata;
 assign sys[i].sel   =             ps_sys.sel  ;
-assign sys[i].wen   = sys_cs & {8{ps_sys_wen}};
-assign sys[i].ren   = sys_cs & {8{ps_sys_ren}};
+assign sys[i].wen   = sys_cs & {8{ps_sys.wen}};
+assign sys[i].ren   = sys_cs & {8{ps_sys.ren}};
 
 assign sys_rdata[i] = sys[i].rdata;
 assign sys_err  [i] = sys[i].err  ;
