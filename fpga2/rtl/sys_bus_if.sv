@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya system bus interface
-// Author Matej Oblak
+// system bus interface
+// Authors: Matej Oblak, Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +23,7 @@ logic [DW-1:0] rdata;  // read data
 logic          ack  ;  // acknowledge signal
 logic          err  ;  // error indicator
 
+// master
 modport m (
   input  clk  ,
   input  rstn ,
@@ -36,6 +37,7 @@ modport m (
   input  err
 );
 
+// slave
 modport s (
   input  clk  ,
   input  rstn ,
