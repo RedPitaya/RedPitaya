@@ -169,16 +169,15 @@ logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 
 // triggers
 struct packed {
-  // generator
-  logic [MNG-1:0]         gen_swo;  // MNA   - software triggers from acquire
-  logic [MNG-1:0]         gen_out;  // MNA*2 - event    triggers from acquire    {negedge, posedge}
-  // acquire
-  logic [MNA-1:0]         acq_swo;  // MNG   - software triggers from generators
-  logic [MNA-1:0] [2-1:0] acq_out;  // MNG   - event    triggers from generators
   // GPIO
   logic           [2-1:0] gio_out;  // 2     - event    triggers from GPIO       {negedge, posedge}
+  // generator
+  logic [MNG-1:0]         gen_out;  // MNA*2 - event    triggers from acquire    {negedge, posedge}
+  logic [MNG-1:0]         gen_swo;  // MNA   - software triggers from acquire
+  // acquire
+  logic [MNA-1:0] [2-1:0] acq_out;  // MNG   - event    triggers from generators
+  logic [MNA-1:0]         acq_swo;  // MNG   - software triggers from generators
 } trg;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -341,14 +340,7 @@ red_pitaya_hk hk (
   .exp_n_o       (exp_n_o ),
   .exp_n_oe      (exp_n_oe),
    // System bus
-  .sys_addr      (sys[0].addr ),
-  .sys_wdata     (sys[0].wdata),
-  .sys_sel       (sys[0].sel  ),
-  .sys_wen       (sys[0].wen  ),
-  .sys_ren       (sys[0].ren  ),
-  .sys_rdata     (sys[0].rdata),
-  .sys_err       (sys[0].err  ),
-  .sys_ack       (sys[0].ack  )
+  .bus           (sys[0])
 );
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
@@ -385,15 +377,8 @@ red_pitaya_calib calib (
   // DAC calibration
   .dac_cfg_mul   (dac_cfg_mul),
   .dac_cfg_sum   (dac_cfg_sum),
-   // System bus
-  .sys_addr      (sys[1].addr ),
-  .sys_wdata     (sys[1].wdata),
-  .sys_sel       (sys[1].sel  ),
-  .sys_wen       (sys[1].wen  ),
-  .sys_ren       (sys[1].ren  ),
-  .sys_rdata     (sys[1].rdata),
-  .sys_err       (sys[1].err  ),
-  .sys_ack       (sys[1].ack  )
+  // System bus
+  .bus           (sys[1])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -410,19 +395,12 @@ red_pitaya_ams #(
   .CHN (PDM_CHN)
 ) ams (
   // system signals
-  .clk        (adc_clk ),
-  .rstn       (adc_rstn),
+  .clk       (adc_clk ),
+  .rstn      (adc_rstn),
   // PDM configuration
-  .pdm_cfg    (pdm_cfg),
+  .pdm_cfg   (pdm_cfg),
   // system bus
-  .sys_addr   (sys[2].addr ),
-  .sys_wdata  (sys[2].wdata),
-  .sys_sel    (sys[2].sel  ),
-  .sys_wen    (sys[2].wen  ),
-  .sys_ren    (sys[2].ren  ),
-  .sys_rdata  (sys[2].rdata),
-  .sys_err    (sys[2].err  ),
-  .sys_ack    (sys[2].ack  )
+  .bus       (sys[2])
 );
 
 pdm #(
@@ -460,20 +438,13 @@ red_pitaya_pid #(
   .CNO (MNG)
 ) pid (
   // system signals
-  .clk        (adc_clk ),
-  .rstn       (adc_rstn),
+  .clk       (adc_clk ),
+  .rstn      (adc_rstn),
   // signals
-  .dat_i      (adc_dat),
-  .dat_o      (pid_dat),
+  .dat_i     (adc_dat),
+  .dat_o     (pid_dat),
   // System bus
-  .sys_addr   (sys[3].addr ),
-  .sys_wdata  (sys[3].wdata),
-  .sys_sel    (sys[3].sel  ),
-  .sys_wen    (sys[3].wen  ),
-  .sys_ren    (sys[3].ren  ),
-  .sys_rdata  (sys[3].rdata),
-  .sys_err    (sys[3].err  ),
-  .sys_ack    (sys[3].ack  )
+  .bus       (sys[3])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,30 +586,23 @@ scope_top #(
   .TWA ($bits(trg))
 ) scope (
   // system signals
-  .clk           (adc_clk ),
-  .rstn          (adc_rstn),
+  .clk       (adc_clk ),
+  .rstn      (adc_rstn),
   // stream input
-  .sti_dat       (adc_dat[i]),
-  .sti_vld       (adc_vld[i]),
-  .sti_rdy       (adc_rdy[i]),
+  .sti_dat   (adc_dat[i]),
+  .sti_vld   (adc_vld[i]),
+  .sti_rdy   (adc_rdy[i]),
   // stream_output
-  .sto_dat       (acq_dat[i]),
-  .sto_lst       (acq_lst[i]),
-  .sto_vld       (acq_vld[i]),
-  .sto_rdy       (acq_rdy[i]),
+  .sto_dat   (acq_dat[i]),
+  .sto_lst   (acq_lst[i]),
+  .sto_vld   (acq_vld[i]),
+  .sto_rdy   (acq_rdy[i]),
   // triggers
-  .trg_ext       (trg),
-  .trg_swo       (trg.acq_swo[i]),
-  .trg_out       (trg.acq_out[i]),
- // System bus
-  .sys_sel       (sys[6+i].sel  ),
-  .sys_wen       (sys[6+i].wen  ),
-  .sys_ren       (sys[6+i].ren  ),
-  .sys_addr      (sys[6+i].addr ),
-  .sys_wdata     (sys[6+i].wdata),
-  .sys_rdata     (sys[6+i].rdata),
-  .sys_err       (sys[6+i].err  ),
-  .sys_ack       (sys[6+i].ack  )
+  .trg_ext   (trg),
+  .trg_swo   (trg.acq_swo[i]),
+  .trg_out   (trg.acq_out[i]),
+  // System bus
+  .bus       (sys[6+i])
 );
 
 end: for_acq

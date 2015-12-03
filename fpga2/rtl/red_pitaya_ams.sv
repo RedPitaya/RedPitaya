@@ -19,14 +19,7 @@ module red_pitaya_ams #(
   // PDM 
   output logic [CHN-1:0] [DWC-1:0] pdm_cfg,
   // system bus
-  input  logic [32-1:0] sys_addr ,  // bus address
-  input  logic [32-1:0] sys_wdata,  // bus write data
-  input  logic [ 4-1:0] sys_sel  ,  // bus write byte select
-  input  logic          sys_wen  ,  // bus write enable
-  input  logic          sys_ren  ,  // bus read enable
-  output logic [32-1:0] sys_rdata,  // bus read data
-  output logic          sys_err  ,  // bus error indicator
-  output logic          sys_ack     // bus acknowledge signal
+  sys_bus_if.s                     bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,8 +34,8 @@ always_ff @(posedge clk)
 if (!rstn) begin
   pdm_cfg[i] <= '0;
 end else begin
-  if (sys_wen) begin
-    if (sys_addr[CHL-1:0]==i)  pdm_cfg[i] <= sys_wdata[DWC-1:0];
+  if (bus.wen) begin
+    if (bus.addr[CHL-1:0]==i)  pdm_cfg[i] <= bus.wdata[DWC-1:0];
   end
 end
 
@@ -51,21 +44,21 @@ endgenerate
 
 // control signals
 logic sys_en;
-assign sys_en = sys_wen | sys_ren;
+assign sys_en = bus.wen | bus.ren;
 
 always_ff @(posedge clk)
 if (!rstn) begin
-  sys_err <= 1'b1;
-  sys_ack <= 1'b0;
+  bus.err <= 1'b1;
+  bus.ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0;
-  sys_ack <= sys_en;
+  bus.err <= 1'b0;
+  bus.ack <= sys_en;
 end
 
 // read access
 always_ff @(posedge clk)
-if (sys_ren) begin
-  sys_rdata <= {{32-DWC{1'b0}}, pdm_cfg[sys_addr[CHL-1:0]]};
+if (bus.ren) begin
+  bus.rdata <= {{32-DWC{1'b0}}, pdm_cfg[bus.addr[CHL-1:0]]};
 end
 
 endmodule: red_pitaya_ams

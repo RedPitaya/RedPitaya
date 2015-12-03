@@ -52,14 +52,7 @@ module red_pitaya_pid #(
   input  logic signed [CNI-1:0][DWI-1:0] dat_i,  // input data
   output logic signed [CNO-1:0][DWO-1:0] dat_o,  // output data
   // system bus
-  input  logic [32-1:0] sys_addr ,  // bus address
-  input  logic [32-1:0] sys_wdata,  // bus write data
-  input  logic [ 4-1:0] sys_sel  ,  // bus write byte select
-  input  logic          sys_wen  ,  // bus write enable
-  input  logic          sys_ren  ,  // bus read enable
-  output logic [32-1:0] sys_rdata,  // bus read data
-  output logic          sys_err  ,  // bus error indicator
-  output logic          sys_ack     // bus acknowledge signal
+  sys_bus_if.s                           bus
 );
 
 localparam int unsigned PSR = 12;
@@ -140,8 +133,8 @@ always_ff @(posedge clk)
 if (!rstn) begin
   set_irst <= '1;
 end else begin
-  if (sys_wen & (sys_addr[4+CLO+CLI]==1'b0)) begin
-    set_irst <= sys_wdata[CNO*CNI-1:0];
+  if (bus.wen & (bus.addr[4+CLO+CLI]==1'b0)) begin
+    set_irst <= bus.wdata[CNO*CNI-1:0];
   end
 end
 
@@ -156,11 +149,11 @@ if (!rstn) begin
   set_ki [o][i] <= '0;
   set_kd [o][i] <= '0;
 end else begin
-  if (sys_wen & (sys_addr[4+CLO+CLI]==1'b1) & (sys_addr[4+CLO+CLI-1:4]=={o[CLO-1:0],i[CLI-1:0]})) begin
-    if (sys_addr[3:0]==4'h0) set_sp [o][i] <= sys_wdata[14-1:0];
-    if (sys_addr[3:0]==4'h4) set_kp [o][i] <= sys_wdata[14-1:0];
-    if (sys_addr[3:0]==4'h8) set_ki [o][i] <= sys_wdata[14-1:0];
-    if (sys_addr[3:0]==4'hC) set_kd [o][i] <= sys_wdata[14-1:0];
+  if (bus.wen & (bus.addr[4+CLO+CLI]==1'b1) & (bus.addr[4+CLO+CLI-1:4]=={o[CLO-1:0],i[CLI-1:0]})) begin
+    if (bus.addr[3:0]==4'h0) set_sp [o][i] <= bus.wdata[14-1:0];
+    if (bus.addr[3:0]==4'h4) set_kp [o][i] <= bus.wdata[14-1:0];
+    if (bus.addr[3:0]==4'h8) set_ki [o][i] <= bus.wdata[14-1:0];
+    if (bus.addr[3:0]==4'hC) set_kd [o][i] <= bus.wdata[14-1:0];
   end
 end
 
@@ -170,27 +163,27 @@ endgenerate
 
 // read access
 logic sys_en;
-assign sys_en = sys_wen | sys_ren;
+assign sys_en = bus.wen | bus.ren;
 
 always_ff @(posedge clk)
 if (!rstn) begin
-  sys_err <= 1'b0;
-  sys_ack <= 1'b0;
+  bus.err <= 1'b0;
+  bus.ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0;
-  sys_ack <= sys_en;
+  bus.err <= 1'b0;
+  bus.ack <= sys_en;
 end
 
 always_ff @(posedge clk)
-if (sys_ren) begin
-  if (sys_addr[4+CLO+CLI]==1'b0) begin
-    sys_rdata <= {{32-CNO*CNI{1'b0}}, set_irst};
+if (bus.ren) begin
+  if (bus.addr[4+CLO+CLI]==1'b0) begin
+    bus.rdata <= {{32-CNO*CNI{1'b0}}, set_irst};
   end else begin
-    casez (sys_addr[3:0])
-      4'b00?? : sys_rdata <= {{32-14{1'b0}}, set_sp [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
-      4'b01?? : sys_rdata <= {{32-14{1'b0}}, set_kp [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
-      4'b10?? : sys_rdata <= {{32-14{1'b0}}, set_ki [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
-      4'b11?? : sys_rdata <= {{32-14{1'b0}}, set_kd [sys_addr[4+CLO+CLI-1:4+CLI]] [sys_addr[4+CLI-1:4]]};
+    casez (bus.addr[3:0])
+      4'b00?? : bus.rdata <= {{32-14{1'b0}}, set_sp [bus.addr[4+CLO+CLI-1:4+CLI]] [bus.addr[4+CLI-1:4]]};
+      4'b01?? : bus.rdata <= {{32-14{1'b0}}, set_kp [bus.addr[4+CLO+CLI-1:4+CLI]] [bus.addr[4+CLI-1:4]]};
+      4'b10?? : bus.rdata <= {{32-14{1'b0}}, set_ki [bus.addr[4+CLO+CLI-1:4+CLI]] [bus.addr[4+CLI-1:4]]};
+      4'b11?? : bus.rdata <= {{32-14{1'b0}}, set_kd [bus.addr[4+CLO+CLI-1:4+CLI]] [bus.addr[4+CLI-1:4]]};
     endcase
   end
 end

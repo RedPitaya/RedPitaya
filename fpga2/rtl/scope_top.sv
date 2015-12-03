@@ -58,14 +58,7 @@ module scope_top #(
   output logic                  trg_swo,  // output from software
   output logic          [2-1:0] trg_out,  // output from edge detection
   // System bus
-  input  logic         [32-1:0] sys_addr ,  // bus saddress
-  input  logic         [32-1:0] sys_wdata,  // bus write data
-  input  logic         [ 4-1:0] sys_sel  ,  // bus write byte select
-  input  logic                  sys_wen  ,  // bus write enable
-  input  logic                  sys_ren  ,  // bus read enable
-  output logic         [32-1:0] sys_rdata,  // bus read data
-  output logic                  sys_err  ,  // bus error indicator
-  output logic                  sys_ack     // bus acknowledge signal
+  sys_bus_if.s                  bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,15 +111,15 @@ logic                  trg_mux;  // multiplexed trigger signal
 
 // control signals
 wire sys_en;
-assign sys_en = sys_wen | sys_ren;
+assign sys_en = bus.wen | bus.ren;
 
 always @(posedge clk)
 if (~rstn) begin
-  sys_err <= 1'b0;
-  sys_ack <= 1'b0;
+  bus.err <= 1'b0;
+  bus.ack <= 1'b0;
 end else begin
-  sys_err <= 1'b0;
-  sys_ack <= sys_en;
+  bus.err <= 1'b0;
+  bus.ack <= sys_en;
 end
 
 // write access
@@ -152,58 +145,58 @@ if (~rstn) begin
   cfg_fkk <= 25'hFFFFFF;
   cfg_fpp <= '0;
 end else begin
-  if (sys_wen) begin
+  if (bus.wen) begin
     // configuration
-    if (sys_addr[6-1:0]==6'h04)   cfg_rng <= sys_wdata[      0];
+    if (bus.addr[6-1:0]==6'h04)   cfg_rng <= bus.wdata[      0];
     // trigger
-    if (sys_addr[6-1:0]==6'h08)   cfg_sel <= sys_wdata[TWS-1:0];
-    if (sys_addr[6-1:0]==6'h0c)   cfg_dly <= sys_wdata[ 32-1:0];
+    if (bus.addr[6-1:0]==6'h08)   cfg_sel <= bus.wdata[TWS-1:0];
+    if (bus.addr[6-1:0]==6'h0c)   cfg_dly <= bus.wdata[ 32-1:0];
     // edge detection
-    if (sys_addr[6-1:0]==6'h10)   cfg_lvl <= sys_wdata[DWI-1:0];
-    if (sys_addr[6-1:0]==6'h14)   cfg_hst <= sys_wdata[DWI-1:0];
+    if (bus.addr[6-1:0]==6'h10)   cfg_lvl <= bus.wdata[DWI-1:0];
+    if (bus.addr[6-1:0]==6'h14)   cfg_hst <= bus.wdata[DWI-1:0];
     // filter/dacimation
-    if (sys_addr[6-1:0]==6'h20)   cfg_byp <= sys_wdata[      0];
-    if (sys_addr[6-1:0]==6'h24)   cfg_avg <= sys_wdata[      0];
-    if (sys_addr[6-1:0]==6'h28)   cfg_dec <= sys_wdata[DWC-1:0];
-    if (sys_addr[6-1:0]==6'h2c)   cfg_shr <= sys_wdata[DWS-1:0];
-    if (sys_addr[6-1:0]==6'h30)   cfg_faa <= sys_wdata[ 18-1:0];
-    if (sys_addr[6-1:0]==6'h34)   cfg_fbb <= sys_wdata[ 25-1:0];
-    if (sys_addr[6-1:0]==6'h38)   cfg_fkk <= sys_wdata[ 25-1:0];
-    if (sys_addr[6-1:0]==6'h3c)   cfg_fpp <= sys_wdata[ 25-1:0];
+    if (bus.addr[6-1:0]==6'h20)   cfg_byp <= bus.wdata[      0];
+    if (bus.addr[6-1:0]==6'h24)   cfg_avg <= bus.wdata[      0];
+    if (bus.addr[6-1:0]==6'h28)   cfg_dec <= bus.wdata[DWC-1:0];
+    if (bus.addr[6-1:0]==6'h2c)   cfg_shr <= bus.wdata[DWS-1:0];
+    if (bus.addr[6-1:0]==6'h30)   cfg_faa <= bus.wdata[ 18-1:0];
+    if (bus.addr[6-1:0]==6'h34)   cfg_fbb <= bus.wdata[ 25-1:0];
+    if (bus.addr[6-1:0]==6'h38)   cfg_fkk <= bus.wdata[ 25-1:0];
+    if (bus.addr[6-1:0]==6'h3c)   cfg_fpp <= bus.wdata[ 25-1:0];
   end
 end
 
 // control signals
-assign ctl_rst = sys_wen & (sys_addr[6-1:0]==6'h00) & sys_wdata[0];  // reset
-assign trg_swo = sys_wen & (sys_addr[6-1:0]==6'h00) & sys_wdata[1];  // trigger
-assign sts_run = sys_wen & (sys_addr[6-1:0]==6'h00) & sys_wdata[2];  // run acquire
+assign ctl_rst = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[0];  // reset
+assign trg_swo = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[1];  // trigger
+assign sts_run = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[2];  // run acquire
 
 // read access
 always_ff @(posedge clk)
 begin
-  casez (sys_addr[19:0])
+  casez (bus.addr[19:0])
     // control/status
-    6'h00 : sys_rdata <= {{32-  3{1'b0}}, sts_acq,
+    6'h00 : bus.rdata <= {{32-  3{1'b0}}, sts_acq,
                                           sts_trg, 1'b0};
     // configuration
-    6'h04 : sys_rdata <= {{32-  1{1'b0}}, cfg_rng};
+    6'h04 : bus.rdata <= {{32-  1{1'b0}}, cfg_rng};
     // trigger
-    6'h08 : sys_rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
-    6'h0c : sys_rdata <=                  cfg_dly ;
+    6'h08 : bus.rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
+    6'h0c : bus.rdata <=                  cfg_dly ;
     // edge detection
-    6'h10 : sys_rdata <=                  cfg_lvl ;
-    6'h14 : sys_rdata <=                  cfg_hst ;
+    6'h10 : bus.rdata <=                  cfg_lvl ;
+    6'h14 : bus.rdata <=                  cfg_hst ;
     // filter/decimation
-    6'h20 : sys_rdata <= {{32-  1{1'b0}}, cfg_byp};
-    6'h24 : sys_rdata <= {{32-  1{1'b0}}, cfg_avg};
-    6'h28 : sys_rdata <= {{32-DWC{1'b0}}, cfg_dec};
-    6'h2c : sys_rdata <= {{32-DWS{1'b0}}, cfg_shr};
-    6'h30 : sys_rdata <=                  cfg_faa ;
-    6'h34 : sys_rdata <=                  cfg_fbb ;
-    6'h38 : sys_rdata <=                  cfg_fkk ;
-    6'h3c : sys_rdata <=                  cfg_fpp ;
+    6'h20 : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
+    6'h24 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
+    6'h28 : bus.rdata <= {{32-DWC{1'b0}}, cfg_dec};
+    6'h2c : bus.rdata <= {{32-DWS{1'b0}}, cfg_shr};
+    6'h30 : bus.rdata <=                  cfg_faa ;
+    6'h34 : bus.rdata <=                  cfg_fbb ;
+    6'h38 : bus.rdata <=                  cfg_fkk ;
+    6'h3c : bus.rdata <=                  cfg_fpp ;
 
-    default:sys_rdata <=  32'h0                   ;
+    default:bus.rdata <=  32'h0                   ;
   endcase
 end
 

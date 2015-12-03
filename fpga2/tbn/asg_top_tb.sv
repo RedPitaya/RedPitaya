@@ -32,9 +32,9 @@ logic                  str_rdy;  // ready
 
 // trigger
 struct packed {
-  logic swo;  // software
-  logic out;  // output from generator
   logic ext;  // external
+  logic out;  // output from generator
+  logic swo;  // software
 } trg;
 
 // trigger parameters
@@ -90,7 +90,7 @@ initial begin
   busm.write(32'h08,  buf_len                    * 2**CWF - 1);  // table size
   busm.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
 //busm.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
-  busm.write(32'h10, 1 * 2**CWF);  // step
+  busm.write(32'h10, 1                           * 2**CWF    );  // step
   // configure burst mode
   busm.write(32'h04, {1'b0, TWS'(0)});  // burst disable
   // configure amplitude and DC offset
