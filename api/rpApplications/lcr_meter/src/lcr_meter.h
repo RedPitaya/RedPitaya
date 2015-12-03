@@ -29,6 +29,7 @@
 #define PARAMS_NUM				13
 #define LCR_AMPLITUDE			0.5
 
+#define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
 
 /* Calibration params */
 #define CALIB_STEPS				100
@@ -89,11 +90,12 @@ void *lcr_MainThread();
 int lcr_SafeThreadGen(rp_channel_t channel, float frequency);
 
 int lcr_SafeThreadAcqData(rp_channel_t channel, 
-	float *data, rp_acq_decimation_t decimation);
+						  float **data, 
+						  rp_acq_decimation_t decimation);
 
-int lcr_getImpedance(float frequency, float *Z_out);
+int lcr_getImpedance(float frequency, float _Complex *Z_out);
 int lcr_Correction();
-int lcr_CalculateData(float amplitude_z);
+int lcr_CalculateData(float _Complex amplitude_z);
 int lcr_CopyParams(lcr_main_data_t *params);
 
 int lcr_data_analysis(float **data, uint32_t size, float dc_bias, 

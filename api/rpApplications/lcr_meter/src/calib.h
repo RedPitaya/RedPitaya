@@ -20,9 +20,7 @@
 #include "redpitaya/rp.h"
 #include "lcr_meter.h"
 
-#define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
-
 int store_calib(const calib_t CALIB_MODE,
-				float *amplitude_z);
+				float _Complex *amplitude_z);
 
 #endif //__CALIB_H

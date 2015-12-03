@@ -15,11 +15,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/syslog.h>
+#include <complex.h>
 
 #include "calib.h"
 
 int store_calib(const calib_t CALIB_MODE,
-				float *amplitude_z){
+				float _Complex *amplitude_z){
 
 
 	char calib_data_path[100];
@@ -30,8 +31,10 @@ int store_calib(const calib_t CALIB_MODE,
 	
 	//Write data to calib_file
 	for(int i = 0; i < CALIB_STEPS; i++){
-		fprintf(calibration_data, "%.10f\n", amplitude_z[i]);
+		fprintf(calibration_data, 
+			"%.10f+%.10f\n", creal(amplitude_z[i]), cimag(amplitude_z[i]));
 	}
+
 	fclose(calibration_data);
 	return 0;
 }

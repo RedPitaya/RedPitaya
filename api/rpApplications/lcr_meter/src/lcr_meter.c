@@ -50,7 +50,7 @@ lcr_main_data_t *calc_data;
 
 struct impendace_params {
 	float frequency;
-	float Z_out;
+	float _Complex Z_out;
 };
 
 /* Init the main API structure */
@@ -130,25 +130,31 @@ int lcr_SafeThreadGen(rp_channel_t channel,
 
 /* Acquire functions. Callback to the API structure */
 int lcr_SafeThreadAcqData(rp_channel_t channel, 
-					float *data, 
-					rp_acq_decimation_t decimation){
+						  float **data, 
+						  rp_acq_decimation_t decimation){
 	
 	rp_acq_trig_state_t state;
-	pthread_mutex_lock(&mutex);	
+	//float wait = acq_size/(125e6/decimation);
+	ECHECK_APP(rp_AcqReset());	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
+	ECHECK_APP(rp_AcqSetTriggerLevel(0.4));
+	ECHECK_APP(rp_AcqSetTriggerDelay(8192));
 	ECHECK_APP(rp_AcqStart());
 	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
-	state = RP_TRIG_STATE_WAITING;
-	while(state == RP_TRIG_STATE_WAITING){
-		ECHECK_APP(rp_AcqGetTriggerState(&state));
-	}
-	ECHECK_APP(rp_AcqGetOldestDataV(channel, &acq_size, data));
-	pthread_mutex_unlock(&mutex);
-
+	state = RP_TRIG_STATE_TRIGGERED;
+	while(1){
+        rp_AcqGetTriggerState(&state);
+        if(state == RP_TRIG_STATE_TRIGGERED){
+        	break;
+        }
+    }
+    usleep(100);
+	ECHECK_APP(rp_AcqGetOldestDataV(RP_CH_1, &acq_size, data[0]));
+	ECHECK_APP(rp_AcqGetOldestDataV(RP_CH_2, &acq_size, data[1]));
 	return RP_OK;
 }
 
-int lcr_getImpedance(float frequency, float *Z_out){
+int lcr_getImpedance(float frequency, float _Complex *Z_out){
 #if 0
 	float w_out, start_freq, end_freq;
 	float amplitude = main_params.amplitude;
@@ -204,22 +210,8 @@ int lcr_getImpedance(float frequency, float *Z_out){
 	acq_size = round((min_periodes * SAMPLE_RATE) /
 		(frequency[0] * decimation));
 
-	float *ch1_data = (float *)malloc(acq_size * sizeof(float));
-	float *ch2_data = (float *)malloc(acq_size * sizeof(float));
-	float **analysis_data = multiDimensionVector(acq_size);
-
-	syslog(LOG_INFO, "Problem\n");
-	ret_val = _SafeThreadAcqData(RP_CH_1, ch1_data, api_decimation);
-	if(ret_val != RP_OK){
-		printf("Error acquiring data: %s\n", rp_GetError(ret_val));
-		return RP_EOOR;
-	}
-
-	ret_val = _SafeThreadAcqData(RP_CH_2, ch2_data, api_decimation);
-	if(ret_val != RP_OK){
-		printf("Error acquiring data: %s\n", rp_GetError(ret_val));
-		return RP_EOOR;
-	}
+	float **analysis_data = (float *)malloc(acq_size * sizeof(float));
+	
 	char file1[20];
 	char file2[20];
 	sprintf(file1, "/tmp/datach1-%d",i);
@@ -228,13 +220,6 @@ int lcr_getImpedance(float frequency, float *Z_out){
 	FILE *f1 = fopen(file1, "w+");
 	FILE *f2 = fopen(file2, "w+");
 
-	/* Two dimension vector creation -- u_acq */
-	for(int k = 0; k < acq_size; k++){
-		analysis_data[0][k] = ch1_data[k];
-		fprintf(f1, "%f\n", ch1_data[k]);
-		analysis_data[1][k] = ch2_data[k];
-		fprintf(f2, "%f\n", ch2_data[k]);
-	}
 	ret_val = _data_analysis(analysis_data, acq_size, dc_bias, 
 				r_shunt, Z, w_out, decimation);
 
@@ -252,25 +237,7 @@ int lcr_getImpedance(float frequency, float *Z_out){
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
 #endif
 
-	//Dummy test value - rp_GetOldestDataV is not working correctly.
-	switch((int)frequency){
-		case 100:
-			*Z_out = 365.61868;
-			break;
-		case 1000:
-			*Z_out = 44.65929;
-			break;
-		case 10000:
-			*Z_out = 9.81285;
-			break;
-		case 100000:
-			*Z_out = 36.57750;
-			break;
-		default:
-			*Z_out = 100 + frequency;
-			break;
-	}
-
+	*Z_out = frequency + (5*I);
 	//syslog(LOG_INFO, "%f\n", z_ampl);
 	return RP_OK;
 }
@@ -318,33 +285,58 @@ int lcr_Correction(){
 	struct impendace_params args;
 	pthread_t lcr_thread_handler;
 
-	float amplitude_z[CALIB_STEPS];
+	float _Complex *amplitude_z = 
+		malloc(CALIB_STEPS * sizeof(float _Complex));
+
 	calib_t calib_mode = main_params.calibration;
-	
 	int freq_step = (end_freq - start_freq) / (CALIB_STEPS - 1);
 	for(int i = 0; i < CALIB_STEPS; i++){
 		
 		args.frequency = freq_step * i;
-
 		err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
 		if(err != RP_OK){
 			printf("Main thread creation failed.\n");
 			return RP_EOOR;
 		}
+
 		pthread_join(lcr_thread_handler, 0);
-		
 		amplitude_z[i] = args.Z_out;
 	}
 	
 	//Store calibration
-	store_calib(calib_mode, &amplitude_z[0]);
+	store_calib(calib_mode, amplitude_z);
+	free(amplitude_z);
+
 	return RP_OK;
 }
 
-int lcr_CalculateData(float amplitude_z){
+int lcr_CalculateData(float _Complex amplitude_z){
 
-	//float phasez = 0;
+	float phasez = 0;
 	calc_data->lcr_amplitude = amplitude_z;
+	
+
+
+
+	//Dummy test value - rp_GetOldestDataV is not working correctly.
+	switch((int)main_params.frequency){
+		case 100:
+			calc_data->lcr_amplitude = 365.61868;
+			break;
+		case 1000:
+			calc_data->lcr_amplitude = 44.65929;
+			break;
+		case 10000:
+			calc_data->lcr_amplitude = 9.81285;
+			break;
+		case 100000:
+			calc_data->lcr_amplitude = 36.57750;
+			break;
+		default:
+			calc_data->lcr_amplitude = 100 + main_params.frequency;
+			break;
+	}
+
 	return RP_OK;
 }
 
