@@ -33,7 +33,7 @@
 +&clkc {
 +	fclk-enable = <0xf>;
 +};
-+&xadc {
++&adc {
 +	compatible = "xlnx,axi-xadc-1.00.a";
 +	clocks = <&clkc 18>;
 +	xlnx,channels {

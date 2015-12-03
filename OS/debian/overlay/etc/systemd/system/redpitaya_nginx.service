@@ -9,7 +9,9 @@ PIDFile=/var/run/redpitaya_nginx.pid
 # complains about failing library path, or something else
 #EnvironmentFile=/etc/sysconfig/redpitaya
 Environment=PATH_REDPITAYA=/opt/redpitaya
-Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+Environment=PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib
+Environment=LD_PRELOAD=/opt/redpitaya/lib/libstdc++.so
 ExecStart =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www
 ExecReload=/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s reload
 ExecStop  =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s quit

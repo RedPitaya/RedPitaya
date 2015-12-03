@@ -24,10 +24,11 @@ HSI    = hsi    -nolog -nojournal -mode batch
 
 .PHONY: all clean project
 
-all: $(FPGA_BIT) $(FSBL_ELF) $(MEMTEST_ELF) $(DEVICE_TREE)
+#all: $(FPGA_BIT) $(FSBL_ELF) $(MEMTEST_ELF) $(DEVICE_TREE)  # currently the MEMTEST_ELF fails due to compilation error within HSI
+all: $(FPGA_BIT) $(FSBL_ELF) $(DEVICE_TREE)
 
 clean:
-	rm -rf out .Xil .srcs sdk
+	rm -rf out .Xil .srcs sdk bd/system/system.bd bd/system/hdl/* bd/system/hw_handoff/*
 
 project:
 	vivado -source red_pitaya_vivado_project.tcl
@@ -39,7 +40,7 @@ $(FSBL_ELF): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_fsbl.tcl
 
 $(MEMTEST_ELF): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_dram_test.tcl
+#	$(HSI) -source red_pitaya_hsi_dram_test.tcl
 
 $(DEVICE_TREE): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_dts.tcl

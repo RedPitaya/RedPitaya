@@ -1,0 +1,76 @@
+{
+   guistr: "# # String gsaved with Nlview 6.5.5  2015-06-26 bk=1.3371 VDI=38 GEI=35 GUI=JA:1.6
+#  -string -flagsOSRD
+preplace port FCLK_CLK3 -pg 1 -y 290 -defaultsOSRD
+preplace port S_AXI_HP1 -pg 1 -y 200 -defaultsOSRD
+preplace port DDR -pg 1 -y 70 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 550 -defaultsOSRD
+preplace port M_AXI_GP0_aclk -pg 1 -y 220 -defaultsOSRD
+preplace port Vaux0 -pg 1 -y 570 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 310 -defaultsOSRD
+preplace port gpio_GP1_LEDS -pg 1 -y 840 -defaultsOSRD
+preplace port Vaux1 -pg 1 -y 590 -defaultsOSRD
+preplace port S_AXI_HP0_aclk -pg 1 -y 240 -defaultsOSRD
+preplace port M_AXI_GP0 -pg 1 -y 130 -defaultsOSRD
+preplace port FCLK_RESET1_N -pg 1 -y 330 -defaultsOSRD
+preplace port S_AXI_HP1_aclk -pg 1 -y 260 -defaultsOSRD
+preplace port FCLK_RESET3_N -pg 1 -y 370 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 90 -defaultsOSRD
+preplace port FCLK_RESET2_N -pg 1 -y 350 -defaultsOSRD
+preplace port M_AXIS_XADC -pg 1 -y 480 -defaultsOSRD
+preplace port FCLK_CLK0 -pg 1 -y 210 -defaultsOSRD
+preplace port dcm_locked -pg 1 -y 500 -defaultsOSRD
+preplace port FCLK_CLK1 -pg 1 -y 250 -defaultsOSRD
+preplace port M_AXIS_XADC_aclk -pg 1 -y 230 -defaultsOSRD
+preplace port Vaux8 -pg 1 -y 610 -defaultsOSRD
+preplace port FCLK_CLK2 -pg 1 -y 270 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 630 -defaultsOSRD
+preplace port S_AXI_HP0 -pg 1 -y 180 -defaultsOSRD
+preplace portBus IRQ_F2P -pg 1 -y 330 -defaultsOSRD
+preplace inst proc_sys_reset_0 -pg 1 -lvl 2 -y 460 -defaultsOSRD
+preplace inst xlconcat_irq -pg 1 -lvl 3 -y 320 -defaultsOSRD
+preplace inst axi_protocol_converter_GP1_LEDs -pg 1 -lvl 4 -y 700 -defaultsOSRD
+preplace inst axi_protocol_converter_GP1_XADC -pg 1 -lvl 4 -y 460 -defaultsOSRD
+preplace inst gpio_GP1_LEDs -pg 1 -lvl 5 -y 840 -defaultsOSRD
+preplace inst xlconstant_reset -pg 1 -lvl 1 -y 450 -defaultsOSRD
+preplace inst xadc_GP1 -pg 1 -lvl 5 -y 610 -defaultsOSRD
+preplace inst axi_crossbar_GP1 -pg 1 -lvl 3 -y 450 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 5 -y 220 -defaultsOSRD
+preplace netloc Vaux0_1 1 0 5 NJ 570 NJ 570 NJ 570 NJ 570 NJ
+preplace netloc processing_system7_0_ddr 1 5 1 NJ
+preplace netloc processing_system7_0_fclk_reset3_n 1 5 1 NJ
+preplace netloc processing_system7_0_FCLK_CLK3 1 5 1 NJ
+preplace netloc s_axi_hp0_1 1 0 5 NJ 180 NJ 180 NJ 180 NJ 180 NJ
+preplace netloc processing_system7_0_fclk_reset2_n 1 5 1 NJ
+preplace netloc axi_protocol_converter_GP1_XADC_M_AXI 1 4 1 1060
+preplace netloc M_AXI_GP0_aclk 1 0 5 NJ 210 NJ 210 NJ 210 NJ 210 NJ
+preplace netloc xlconstant_dout 1 1 1 190
+preplace netloc processing_system7_0_fclk_reset1_n 1 5 1 NJ
+preplace netloc gpio_GP1_LEDS 1 5 1 N
+preplace netloc Vp_Vn_1 1 0 5 NJ 550 NJ 550 NJ 550 NJ 550 NJ
+preplace netloc processing_system7_0_M_AXI_GP1 1 2 4 520 10 NJ 10 NJ 10 1520
+preplace netloc s_axi_hp0_aclk 1 0 5 NJ 240 NJ 240 NJ 240 NJ 240 NJ
+preplace netloc dcm_locked_1 1 0 2 NJ 500 NJ
+preplace netloc s_axi_hp1_1 1 0 5 NJ 200 NJ 200 NJ 200 NJ 200 NJ
+preplace netloc xadc_GP1_ip2intc_irpt 1 2 4 530 260 NJ 260 NJ 430 1530
+preplace netloc Vaux8_1 1 0 5 NJ 610 NJ 610 NJ 610 NJ 610 NJ
+preplace netloc axi_crossbar_GP1_M00_AXI 1 3 1 N
+preplace netloc xlconcat_0_dout 1 3 2 NJ 300 N
+preplace netloc s_axi_hp1_aclk 1 0 5 NJ 250 NJ 250 NJ 250 NJ 250 NJ
+preplace netloc processing_system7_0_fclk_reset0_n 1 1 5 180 230 NJ 230 NJ 230 NJ 420 1520
+preplace netloc Vaux9_1 1 0 5 NJ 630 NJ 630 NJ 630 NJ 630 NJ
+preplace netloc processing_system7_0_fixed_io 1 5 1 NJ
+preplace netloc axi_crossbar_GP1_M01_AXI 1 3 1 780
+preplace netloc processing_system7_0_fclk_clk0 1 1 5 190 370 510 380 790 380 1080 20 1530
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 3 NJ 560 NJ 560 1060
+preplace netloc Vaux1_1 1 0 5 NJ 590 NJ 590 NJ 590 NJ 590 NJ
+preplace netloc processing_system7_0_fclk_clk1 1 5 1 NJ
+preplace netloc Net 1 2 2 530 520 800
+preplace netloc xadc_GP1_M_AXIS 1 5 1 NJ
+preplace netloc axi_protocol_converter_0_M_AXI1 1 4 1 1070
+preplace netloc processing_system7_0_fclk_clk2 1 5 1 NJ
+preplace netloc processing_system7_0_m_axi_gp0 1 5 1 NJ
+preplace netloc IRQ_F2P_1 1 0 3 NJ 330 NJ 330 NJ
+levelinfo -pg 1 0 100 350 660 930 1310 1550 -top 0 -bot 910
+",
+}

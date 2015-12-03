@@ -1,5 +1,4 @@
 CC=$(CROSS_COMPILE)gcc
-RM=rm
 
 OBJECTS=main.o fpga.o worker.o dsp.o
 

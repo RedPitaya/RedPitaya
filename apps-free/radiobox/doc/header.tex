@@ -1,0 +1,76 @@
+\documentclass[a4paper,twoside]{book}
+\usepackage{makeidx}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{ifthen}
+\usepackage[table]{xcolor}
+\usepackage{textcomp}
+\usepackage{alltt}
+\usepackage{ifpdf}
+\ifpdf
+\usepackage[pdftex,
+            pagebackref=true,
+            colorlinks=true,
+            linkcolor=blue,
+            unicode
+           ]{hyperref}
+\else
+\usepackage[ps2pdf,
+            pagebackref=true,
+            colorlinks=true,
+            linkcolor=blue,
+            unicode
+           ]{hyperref}
+\usepackage{pspicture}
+\fi
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}
+\usepackage[scaled=.90]{helvet}
+\usepackage{courier}
+\usepackage{sectsty}
+\usepackage[titles]{tocloft}
+\usepackage{fancyhdr}
+%
+\usepackage{doxygen}
+% Bug in Doxygen - @see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=748655
+\newcommand{\+}{\discretionary{\mbox{\scriptsize$\hookleftarrow$}}{}{}}
+%
+% Missing clearemptydoublepage added
+\def\clearemptydoublepage{\clearpage\if@twoside \ifodd\c@page\else
+ \thispagestyle{empty}%
+ \hbox{}\vfill\centerline\blanknote\vfill\hbox{}\newpage
+\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+%
+\lstset{language=C++,inputencoding=utf8,basicstyle=\footnotesize,breaklines=true,breakatwhitespace=true,tabsize=8,numbers=left }
+\makeindex
+\setcounter{tocdepth}{3}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\familydefault}{\sfdefault}
+\hfuzz=15pt
+\setlength{\emergencystretch}{15pt}
+\hbadness=750
+\tolerance=750
+\begin{document}
+\hypersetup{pageanchor=false,citecolor=blue}
+\begin{titlepage}
+\vspace*{7cm}
+\begin{center}
+{\Large RedPitaya RadioBox Development Manual}\\
+\vspace*{1cm}
+{\large Written by Ulrich Habel (DF4IAH)}\\
+\vspace*{0.5cm}
+{\large (c) Red Pitaya  http://www.redpitaya.com.}\\
+\vspace*{0.5cm}
+{\large Ladenburg (JN49hl), $date}\\
+\end{center}
+\end{titlepage}
+\clearemptydoublepage
+\pagenumbering{roman}
+\tableofcontents
+\clearemptydoublepage
+\pagenumbering{arabic}
+\hypersetup{pageanchor=true,citecolor=blue}

@@ -16,6 +16,8 @@ INSTALL_DIR ?= .
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
+.PHONY: all install clean mrproper
+
 all: $(UIMAGE)
 
 ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
