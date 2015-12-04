@@ -2585,7 +2585,10 @@ $(function() {
 		var local = {};
 		local['CALIB_CANCEL'] = {value: 1};
 		OSC.ws.send(JSON.stringify({ parameters: local }));
-		location.reload();
+
+		OSC.ws.onclose = function () {}; // disable onclose handler first
+		OSC.ws.close();
+		setTimeout(function(){location.reload();}, 1000);
 	});
 
 	$('#calib-2').click(function() {
@@ -2602,7 +2605,10 @@ $(function() {
 		OSC.setCalibState(OSC.state.calib);
 
 		$('#myModal').modal('hide');
-		location.reload();
+
+		OSC.ws.onclose = function () {}; // disable onclose handler first
+		OSC.ws.close();
+		setTimeout(function(){location.reload();}, 1000);
 	});
 
 	$('#calib-3').click(function() {
