@@ -20,7 +20,7 @@
 +		phy0: phy@1 {
 +			compatible = "lantiq,phy11g";
 +			device_type = "ethernet-phy";
-+			reg = <1>;
++			reg = <32>;
 +		};
 +	};
 +};
