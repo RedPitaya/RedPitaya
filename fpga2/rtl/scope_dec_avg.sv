@@ -12,23 +12,15 @@ module scope_dec_avg #(
   int unsigned DWC = 17,  // data width for counter
   int unsigned DWS =  4   // data width for shifter
 )(
-  // system signals
-  input  logic                  clk ,  // clock
-  input  logic                  rstn,  // reset - active low
   // control
   input  logic                  ctl_rst,  // synchronous reset
   // configuration
   input  logic                  cfg_avg,  // averaging enable
   input  logic        [DWC-1:0] cfg_dec,  // decimation factor
   input  logic        [DWS-1:0] cfg_shr,  // shift right
-  // stream input
-  input  logic signed [DWI-1:0] sti_dat,  // data
-  input  logic                  sti_vld,  // valid
-  output logic                  sti_rdy,  // ready
-  // stream output
-  output logic signed [DWO-1:0] sto_dat,  // data
-  output logic                  sto_vld,  // valid
-  input  logic                  sto_rdy   // ready
+  // streams
+  str_bus_if.d                  sti,      // input
+  str_bus_if.s                  sto       // output
 );
 
 logic signed [DWC+DWI-1:0] sum;
@@ -38,14 +30,14 @@ logic        [DWC    -1:0] cnt;
 
 logic sti_trn;
 
-assign sti_rdy = sto_rdy | ~sto_vld;
-assign sti_trn = sti_vld & sti_rdy;
+assign sti.rdy = sto.rdy | ~sto.vld;
+assign sti_trn = sti.vld & sti.rdy;
 
-always_ff @(posedge clk)
-if (~rstn) begin
+always_ff @(posedge sti.clk)
+if (~sti.rstn) begin
   sum     <= '0;
   cnt     <= '0;
-  sto_vld <= 1'b0;
+  sto.vld <= 1'b0;
 end else begin
   if (ctl_rst) begin
     sum <= '0;
@@ -54,20 +46,20 @@ end else begin
     if (cfg_avg) begin
       if (cnt == cfg_dec) begin
          cnt <= '0;
-         sum <= sti_dat;
+         sum <= sti.dat;
       end else begin
          cnt <= cnt + 'd1;
-         sum <= sum + sti_dat;
+         sum <= sum + sti.dat;
       end
     end else begin
     end
   end
 end
 
-always_ff @(posedge clk)
+always_ff @(posedge sti.clk)
 begin
-  if (cfg_avg) sto_dat <= sti_dat;
-  else         sto_dat <= sum >>> cfg_shr;
+  if (cfg_avg) sto.dat <= sti.dat;
+  else         sto.dat <= sum >>> cfg_shr;
 end
 
 endmodule: scope_dec_avg

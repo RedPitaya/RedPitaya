@@ -41,22 +41,13 @@ module scope_top #(
   int unsigned TWA =  4,          // external trigger array  width
   int unsigned TWS = $clog2(TWA)  // external trigger select width
 )(
-  // system signals
-  input  logic                  clk    ,  // clock
-  input  logic                  rstn   ,  // reset - active low
-  // stream input
-  input  logic signed [DWI-1:0] sti_dat,  // data
-  input  logic                  sti_vld,  // valid
-  output logic                  sti_rdy,  // ready
-  // stream output
-  output logic signed [DWI-1:0] sto_dat,  // data
-  output logic                  sto_lst,  // last
-  output logic                  sto_vld,  // valid
-  input  logic                  sto_rdy,  // ready
+  // streams
+  str_bus_if.d                  sti,      // input
+  str_bus_if.s                  sto,      // output
   // triggers
   input  logic        [TWA-1:0] trg_ext,  // external input
   output logic                  trg_swo,  // output from software
-  output logic          [2-1:0] trg_out,  // output from edge detection
+  output logic                  trg_out,  // output from edge detection
   // System bus
   sys_bus_if.s                  bus
 );
@@ -66,14 +57,9 @@ module scope_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// stream from filter
-logic signed [DWI-1:0] stf_dat;  // data
-logic                  stf_vld;  // valid
-logic                  stf_rdy;  // ready
-// stream from decimator
-logic signed [DWI-1:0] std_dat;  // data
-logic                  std_vld;  // valid
-logic                  std_rdy;  // ready
+// streams
+str_bus_if #(.DAT_T (logic signed [DWI-1:0])) stf (.clk (sti.clk), .rstn (sti.rstn));  // from filter
+str_bus_if #(.DAT_T (logic signed [DWI-1:0])) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
 
 // control
 logic                  ctl_rst;  // synchronous clear
@@ -81,7 +67,7 @@ logic                  ctl_acq;  // start acquire run
 // status
 logic                  sts_acq;  // acquire status
 // configuration
-logic                  cfg_rng;  // range select
+logic                  cfg_rng;  // range select (this one is only used by the firmware)
 // trigger
 logic signed [TWS-1:0] cfg_sel;  // trigger select
 logic        [ 32-1:0] cfg_dly;  // delay value
@@ -113,8 +99,8 @@ logic                  trg_mux;  // multiplexed trigger signal
 wire sys_en;
 assign sys_en = bus.wen | bus.ren;
 
-always @(posedge clk)
-if (~rstn) begin
+always @(posedge bus.clk)
+if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
 end else begin
@@ -123,8 +109,8 @@ end else begin
 end
 
 // write access
-always @(posedge clk)
-if (~rstn) begin
+always @(posedge bus.clk)
+if (~bus.rstn) begin
   // control
   ctl_acq <= 1'b0;
   // configuration
@@ -172,7 +158,7 @@ assign trg_swo = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[1];  // trigger
 assign sts_run = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[2];  // run acquire
 
 // read access
-always_ff @(posedge clk)
+always_ff @(posedge bus.clk)
 begin
   casez (bus.addr[19:0])
     // control/status
@@ -204,36 +190,23 @@ end
 // correction filter
 ////////////////////////////////////////////////////////////////////////////////
 
-// stream from input
-logic signed [DWI-1:0] tmp_sti_dat;  // data
-logic                  tmp_sti_vld;  // valid
-logic                  tmp_sti_rdy;  // ready
+// streams
+str_bus_if #(.DAT_T (logic signed [DWI-1:0])) tmp_sti (.clk (sti.clk), .rstn (rstn));  // tmp from input
+str_bus_if #(.DAT_T (logic signed [DWI-1:0])) tmp_stf (.clk (sti.clk), .rstn (rstn));  // tmp from filter
 
-// stream from filter
-logic signed [DWI-1:0] tmp_stf_dat;  // data
-logic                  tmp_stf_vld;  // valid
-logic                  tmp_stf_rdy;  // ready
-
-assign tmp_sti_dat = cfg_byp ? '0      :     sti_dat;
-assign tmp_sti_vld = cfg_byp ? '0      :     sti_vld;
-assign     sti_rdy = cfg_byp ? stf_rdy : tmp_sti_rdy;
+assign tmp_sti.dat = cfg_byp ? '0      :     sti.dat;
+assign tmp_sti.vld = cfg_byp ? '0      :     sti.vld;
+assign     sti.rdy = cfg_byp ? stf.rdy : tmp_sti.rdy;
 
 scope_filter #(
   // stream parameters
   .DWI (DWI),
   .DWO (DWO)
 ) filter (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
   // input stream
-  .sti_dat  (tmp_sti_dat),
-  .sti_vld  (tmp_sti_vld),
-  .sti_rdy  (tmp_sti_rdy),
+  .sti      (tmp_sti),
   // output stream
-  .sto_dat  (tmp_stf_dat),
-  .sto_vld  (tmp_stf_vld),
-  .sto_rdy  (tmp_stf_rdy),
+  .sto      (tmp_stf),
   // configuration
   .cfg_aa   (cfg_faa),
   .cfg_bb   (cfg_fbb),
@@ -243,9 +216,9 @@ scope_filter #(
   .ctl_rst  (1'b0)
 );
 
-assign     stf_dat = cfg_byp ? sti_dat : tmp_stf_dat;
-assign     stf_vld = cfg_byp ? sti_vld : tmp_stf_vld;
-assign tmp_stf_rdy = cfg_byp ? '0      :     stf_rdy;
+assign     stf.dat = cfg_byp ? sti.dat : tmp_stf.dat;
+assign     stf.vld = cfg_byp ? sti.vld : tmp_stf.vld;
+assign tmp_stf.rdy = cfg_byp ? '0      :     stf.rdy;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
@@ -259,23 +232,15 @@ scope_dec_avg #(
   .DWC (17),
   .DWS ( 4)
 ) dec_avg (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
   // control
   .ctl_rst  (ctl_rst),
   // configuration
   .cfg_avg  (cfg_avg),
   .cfg_dec  (cfg_dec),
   .cfg_shr  (cfg_shr),
-  // stream input
-  .sti_dat  (stf_dat),
-  .sti_vld  (stf_vld),
-  .sti_rdy  (stf_rdy),
-  // stream output
-  .sto_dat  (std_dat),
-  .sto_vld  (std_vld),
-  .sto_rdy  (std_rdy)
+  // streams
+  .sti      (stf),
+  .sto      (std)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,19 +251,16 @@ scope_edge #(
   // stream parameters
   .DWI (DWI)
 ) edge_i (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream monitor
-  .sti_dat  (sti_dat),
-  .sti_vld  (sti_vld),
-  .sti_rdy  (sti_rdy),
+  // control
+  .ctl_rst  (ctl_rst),
   // configuration
+  .cfg_edg  (cfg_edg),
   .cfg_lvl  (cfg_lvl),
   .cfg_hst  (cfg_hst),
   // output triggers
-  .trg_pdg  (trg_out[0]),
-  .trg_ndg  (trg_out[1]) 
+  .sts_trg  (trg_out),
+  // stream monitor
+  .str      (std)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,57 +269,21 @@ scope_edge #(
 
 assign trg_mux = trg_ext [cfg_sel];
 
-always @(posedge clk)
-if (~rstn) begin
-  sts_acq <= 1'b0;
-  sts_trg <= 1'b0;
-end else begin
-  if (ctl_rst) begin
-    sts_acq <= 1'b0;
-    sts_trg <= 1'b0;
-  end else begin
-    // scquire status
-    if (ctl_acq) begin
-      sts_acq <= 1'b1;
-    end else if (sts_trg & ~|sts_dly) begin
-      sts_acq <= 1'b0;
-    end
-    // trigger status and delay counter
-    if (~sts_trg & trg_mux & sts_acq) begin
-      sts_trg <= 1'b1;
-      sts_dly <= cfg_dly;
-    end else if (sts_trg) begin
-      if (~|sts_dly) begin
-        sts_trg <= 1'b0;
-      end else begin
-        sts_dly <= sts_dly - std_vld;
-      end
-    end
-  end
-end
-
-////////////////////////////////////////////////////////////////////////////////
-// output stream
-////////////////////////////////////////////////////////////////////////////////
-
-assign std_rdy = sto_rdy | ~sto_vld;
-
-// output valid
-always @(posedge clk)
-if (~rstn) begin
-  sto_vld <= 1'b0;
-  sto_lst <= 1'b0;
-end else begin
-  sto_vld <= sts_acq & std_vld;
-  sto_lst <= sts_acq & std_vld & ~|sts_dly;
-end
-
-// output data
-always @(posedge clk)
-if (sts_acq) begin
-  sto_dat <= std_dat;
-end else begin
-  sto_dat <= '0;
-end
+acq #(.DW (DWO), .CW (32)) acq (
+  // streams
+  .sti      (std),
+  .sto      (sto),
+  // control
+  .ctl_rst  (ctl_rst),
+  // delay configuration/status
+  .cfg_dly  (cfg_dly),
+  .sts_dly  (sts_dly),
+  // acquire control/status
+  .ctl_acq  (ctl_acq),
+  .sts_acq  (sts_acq),
+  // trigger control/status
+  .ctl_trg  (ctl_trg),
+  .sts_trg  (sts_trg)
+);
 
 endmodule: scope_top

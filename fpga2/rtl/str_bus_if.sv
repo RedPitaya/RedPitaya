@@ -6,13 +6,13 @@
 
 interface str_bus_if #(
   int unsigned DW = 8,
-  parameter type dat_t = logic signed [DW-1:0]
+  parameter type DAT_T = logic signed [DW-1:0]
 )(
   input  logic clk ,  // clock
   input  logic rstn   // reset - active low
 );
 
-dat_t dat;  // data
+DAT_T dat;  // data
 logic lst;  // last
 logic vld;  // valid
 logic rdy;  // ready
@@ -35,6 +35,16 @@ modport d (
   input  lst ,
   input  vld ,
   output rdy
+);
+
+// monitor
+modport m (
+  input  clk ,
+  input  rstn,
+  input  dat ,
+  input  lst ,
+  input  vld ,
+  input  rdy
 );
 
 endinterface: str_bus_if

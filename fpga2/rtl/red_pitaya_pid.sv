@@ -45,30 +45,56 @@ module red_pitaya_pid #(
   int unsigned CNI = 2,   // channel number for inputs
   int unsigned CNO = 2    // channel number for outputs
 )(
-  // system signals
-  input  logic                           clk ,  // processing clock
-  input  logic                           rstn,  // processing reset - active low
-  // signals
-  input  logic signed [CNI-1:0][DWI-1:0] dat_i,  // input data
-  output logic signed [CNO-1:0][DWO-1:0] dat_o,  // output data
+  // streams
+  str_bus_if.d sti [CNI-1:0],  // input
+  str_bus_if.s sto [CNO-1:0],  // output
   // system bus
-  sys_bus_if.s                           bus
+  sys_bus_if.s bus
 );
 
 localparam int unsigned PSR = 12;
 localparam int unsigned ISR = 18;
 localparam int unsigned DSR = 10;
 
+typedef logic signed [DWI-1:0] dti_t;
+typedef logic signed [DWO-1:0] dto_t;
+typedef logic signed [ 14-1:0] cfg_t;
+
+////////////////////////////////////////////////////////////////////////////////
+// glue logic connecting streams to local signals
+////////////////////////////////////////////////////////////////////////////////
+
+dti_t [CNI-1:0] dat_i;  // input data
+dto_t [CNO-1:0] dat_o;  // output data
+
+generate
+for (genvar i=0; i<CNI; i++) begin: for_dat_i
+  assign dat_i[i] = sti[i].dat;
+end: for_dat_i
+endgenerate
+
+generate
+for (genvar i=0; i<CNI; i++) begin: for_dat_o
+  assign sto[i].dat = dat_o[i];
+end: for_dat_o
+endgenerate
+
+logic clk;
+logic rstn;
+
+assign clk  = sti[0].clk ;
+assign rstn = sti[0].rstn;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  PID block instances
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [CNO-1:0] [CNI-1:0] [14-1:0] pid_out ;
-logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_sp  ;
-logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_kp  ;
-logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_ki  ;
-logic signed [CNO-1:0] [CNI-1:0] [14-1:0] set_kd  ;
-logic        [CNO-1:0] [CNI-1:0]          set_irst;
+dto_t [CNO-1:0] [CNI-1:0] pid_out ;
+cfg_t [CNO-1:0] [CNI-1:0] set_sp  ;
+cfg_t [CNO-1:0] [CNI-1:0] set_kp  ;
+cfg_t [CNO-1:0] [CNI-1:0] set_ki  ;
+cfg_t [CNO-1:0] [CNI-1:0] set_kd  ;
+logic [CNO-1:0] [CNI-1:0] set_irst;
 
 red_pitaya_pid_block #(
   .PSR (PSR),
@@ -129,8 +155,8 @@ localparam int unsigned CLI = $clog2(CNI);
 localparam int unsigned CLO = $clog2(CNO);
 
 // write access
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   set_irst <= '1;
 end else begin
   if (bus.wen & (bus.addr[4+CLO+CLI]==1'b0)) begin
@@ -142,8 +168,8 @@ generate
 for (genvar i=0; i<CNI; i++) begin: wr_cni
 for (genvar o=0; o<CNO; o++) begin: wr_cno
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   set_sp [o][i] <= '0;
   set_kp [o][i] <= '0;
   set_ki [o][i] <= '0;
@@ -165,8 +191,8 @@ endgenerate
 logic sys_en;
 assign sys_en = bus.wen | bus.ren;
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
 end else begin
@@ -174,7 +200,7 @@ end else begin
   bus.ack <= sys_en;
 end
 
-always_ff @(posedge clk)
+always_ff @(posedge bus.clk)
 if (bus.ren) begin
   if (bus.addr[4+CLO+CLI]==1'b0) begin
     bus.rdata <= {{32-CNO*CNI{1'b0}}, set_irst};

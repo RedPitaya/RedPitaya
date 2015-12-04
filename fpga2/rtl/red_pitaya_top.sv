@@ -129,15 +129,12 @@ logic                 pdm_rstn;
 // ADC clock/reset
 logic                           adc_clk;
 logic                           adc_rstn;
-// ADC signals
-logic signed [MNA-1:0] [14-1:0] adc_dat;
-logic        [MNA-1:0]          adc_vld;
-logic        [MNA-1:0]          adc_rdy;
-// acquire signals
-logic signed [MNA-1:0] [14-1:0] acq_dat;
-logic        [MNA-1:0]          acq_lst;
-logic        [MNA-1:0]          acq_vld;
-logic        [MNA-1:0]          acq_rdy;
+// ADC stream
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+// acquire stream
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+// PID stream
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 // DAC signals
 logic                           dac_clk_1x;
 logic                           dac_clk_2x;
@@ -147,8 +144,6 @@ logic        [MNG-1:0] [14-1:0] dac_dat;
 logic signed [MNG-1:0] [14-1:0] dac_dat_cal;
 // ASG
 logic signed [MNG-1:0] [14-1:0] asg_dat;
-// PID
-logic signed [MNG-1:0] [14-1:0] pid_dat;
 
 localparam int unsigned DWM = 16;
 localparam int unsigned DWS = 14;
@@ -165,13 +160,13 @@ logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
 // triggers
 struct packed {
   // GPIO
-  logic           [2-1:0] gio_out;  // 2     - event    triggers from GPIO       {negedge, posedge}
+  logic   [2-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // generator
-  logic [MNG-1:0]         gen_out;  // MNA*2 - event    triggers from acquire    {negedge, posedge}
-  logic [MNG-1:0]         gen_swo;  // MNA   - software triggers from acquire
+  logic [MNG-1:0] gen_out;  // MNA - event    triggers from acquire
+  logic [MNG-1:0] gen_swo;  // MNA - software triggers from acquire
   // acquire
-  logic [MNA-1:0] [2-1:0] acq_out;  // MNG   - event    triggers from generators
-  logic [MNA-1:0]         acq_swo;  // MNG   - software triggers from generators
+  logic [MNA-1:0] acq_out;  // MNG - event    triggers from generators
+  logic [MNA-1:0] acq_swo;  // MNG - software triggers from generators
 } trg;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,10 +256,10 @@ red_pitaya_ps ps (
   .bus           (ps_sys),
   // AXI streams
   // TODO, handle this bitsize change elsewhere
-  .axi1_tdata  (16'(acq_dat[1]<<<2)),  .axi0_tdata  (16'(acq_dat[0]<<<2)),
-  .axi1_tlast  (acq_lst[1]),  .axi0_tlast  (acq_lst[0]),
-  .axi1_tvalid (acq_vld[1]),  .axi0_tvalid (acq_vld[0]),
-  .axi1_tready (acq_rdy[1]),  .axi0_tready (acq_rdy[0])
+  .axi1_tdata  (16'(str_acq[1].dat<<<2)),  .axi0_tdata  (16'(str_acq[0].dat<<<2)),
+  .axi1_tlast  (str_acq[1].lst),  .axi0_tlast  (str_acq[0].lst),
+  .axi1_tvalid (str_acq[1].vld),  .axi0_tvalid (str_acq[0].vld),
+  .axi1_tready (str_acq[1].rdy),  .axi0_tready (str_acq[0].rdy)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -422,12 +417,9 @@ red_pitaya_pid #(
   .CNI (MNA),
   .CNO (MNG)
 ) pid (
-  // system signals
-  .clk       (adc_clk ),
-  .rstn      (adc_rstn),
   // signals
-  .dat_i     (adc_dat),
-  .dat_o     (pid_dat),
+  .sti       (str_adc),
+  .sto       (str_pid),
   // System bus
   .bus       (sys[3])
 );
@@ -470,9 +462,9 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
     .sti_vld  (1'b1),
     .sti_rdy  (),
     // output stream
-    .sto_dat  (adc_dat[i]),
-    .sto_vld  (adc_vld[i]),
-    .sto_rdy  (adc_rdy[i]),
+    .sto_dat  (str_adc[i].dat),
+    .sto_vld  (str_adc[i].vld),
+    .sto_rdy  (str_adc[i].rdy),
     // configuration
     .cfg_mul  (adc_cfg_mul[i]),
     .cfg_sum  (adc_cfg_sum[i])
@@ -570,18 +562,9 @@ for (genvar i=0; i<MNA; i++) begin: for_acq
 scope_top #(
   .TWA ($bits(trg))
 ) scope (
-  // system signals
-  .clk       (adc_clk ),
-  .rstn      (adc_rstn),
-  // stream input
-  .sti_dat   (adc_dat[i]),
-  .sti_vld   (adc_vld[i]),
-  .sti_rdy   (adc_rdy[i]),
-  // stream_output
-  .sto_dat   (acq_dat[i]),
-  .sto_lst   (acq_lst[i]),
-  .sto_vld   (acq_vld[i]),
-  .sto_rdy   (acq_rdy[i]),
+  // streams
+  .sti       (str_adc[i]),
+  .sto       (str_acq[i]),
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.acq_swo[i]),

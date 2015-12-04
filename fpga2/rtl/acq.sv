@@ -6,16 +6,24 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module acq #(
-  int unsigned DW = 8  // data width
+  int unsigned DW = 8,  // data width
+  int unsigned CW = 8   // counter width
 )(
   // stream input
   str_bus_if.d  sti,
   // stream output
   str_bus_if.s  sto,
-  // configuration
-  // trigger
-  input  logic ctl_trg,
-  output logic sts_trg
+  // control
+  input  logic          ctl_rst,
+  // delay configuration/status
+  input  logic [CW-1:0] cfg_dly,  // requested delay value
+  output logic [CW-1:0] sts_dly,  // delay counter status
+  // acquire control/status
+  input  logic          ctl_acq,
+  output logic          sts_acq,
+  // trigger control/status
+  input  logic          ctl_trg,
+  output logic          sts_trg
 );
 
 ////////////////////////////////////////////////////////////////////////////////
