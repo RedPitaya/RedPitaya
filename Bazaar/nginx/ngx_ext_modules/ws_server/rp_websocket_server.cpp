@@ -129,11 +129,9 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 	}
 
 	std::string js(signals);
-	//fprintf(stderr, "JS size %lu\n", js.size());
 	static char buf[1000000];
 	size_t size;
 	m_params->gzip_func(js.c_str(), buf, &size);
-	//fprintf(stderr, "AFTER GZIP size = %lu\n", size);
 
 	if (size) {
 		for (it = m_connections.begin(); it != m_connections.end(); ++it) {
@@ -163,11 +161,9 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 	}
 
 	std::string js(params);
-	fprintf(stderr, "JS param size %lu\n", js.size());
 	static char buf[1000000];
 	size_t size;
 	m_params->gzip_func(js.c_str(), buf, &size);
-	fprintf(stderr, "AFTER GZIP param size = %lu\n", size);
 
 	if (size) {
 		for (it = m_connections.begin(); it != m_connections.end(); ++it) {
