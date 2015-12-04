@@ -81,6 +81,7 @@ read_verilog                      $path_rtl/scope_top.sv
 read_verilog                      $path_rtl/scope_filter.sv
 read_verilog                      $path_rtl/scope_dec_avg.sv
 read_verilog                      $path_rtl/scope_edge.sv
+read_verilog                      $path_rtl/acq.sv
 read_verilog                      $path_rtl/debounce.sv
 
 read_xdc                          $path_sdc/red_pitaya.xdc
