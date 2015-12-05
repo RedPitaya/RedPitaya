@@ -169,7 +169,7 @@ wire                  digital_loop;
 // RadioBox out signals
 wire                  rb_leds_en;
 wire         [ 8-1:0] rb_leds_data;
-wire                  rb_en               ;  // RadioBox is enabled
+wire                  rb_activated        ;  // RadioBox is activated
 wire         [16-1:0] rb_out_ch     [1:0] ;  // RadioBox output signals
 
 //---------------------------------------------------------------------------------
@@ -392,7 +392,7 @@ assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}
 // output registers + signed to unsigned (also to negative slope)
 always @(posedge dac_clk_1x)
 begin
-   if (rb_en) begin
+   if (rb_activated) begin
       dac_dat_a <= {rb_out_ch[0][16-1], ~rb_out_ch[0][16-2:2]};
       dac_dat_b <= {rb_out_ch[1][16-1], ~rb_out_ch[1][16-2:2]};
       end
@@ -581,13 +581,14 @@ red_pitaya_radiobox i_radiobox (
   // ADC clock & reset
   .clk_adc_125mhz  ( adc_clk                     ),  // clock 125 MHz
   .adc_rstn_i      ( adc_rstn                    ),  // reset - active low
+  // activation
+  .rb_activated    ( rb_activated                ),  // RadioBox is enabled
   // LEDs
   .rb_leds_en      ( rb_leds_en                  ),  // RB does overwrite LEDs state
   .rb_leds_data    ( rb_leds_data                ),  // RB LEDs data
   // ADC data
   .adc_i           ( {adc_b, adc_a}              ),  // ADC data { CHB, CHA }
   // DAC data
-  .rb_en           ( rb_en                       ),  // RadioBox is enabled
   .rb_out_ch       ({rb_out_ch[1], rb_out_ch[0] }),  // RadioBox output signals
   // System bus
   .sys_addr        ( sys_addr                    ),  // address

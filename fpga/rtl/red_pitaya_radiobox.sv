@@ -36,15 +36,17 @@ module red_pitaya_radiobox #(
    input                 clk_adc_125mhz  ,      // ADC based clock, 125 MHz
    input                 adc_rstn_i      ,      // ADC reset - active low
 
+   // activation
+   output reg            rb_activated    ,      // RB sub-module is activated
+
    // LEDs
-   output reg            rb_leds_en      ,      // RB does overwrite LEDs state
+   output reg            rb_leds_en      ,      // RB LEDs are enabled and overwrites HK sub-module
    output reg   [  7: 0] rb_leds_data    ,      // RB LEDs data
 
    // ADC data
    input        [ 13: 0] adc_i[1:0]      ,      // ADC data { CHB, CHA }
 
    // DAC data
-   output                rb_en           ,      // RadioBox is enabled
    output       [ 15: 0] rb_out_ch [1:0] ,      // RadioBox output signals
 
    // System bus - slave
@@ -236,6 +238,7 @@ wire         rb_reset_dds_mod_n    = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_
 always @(posedge clk_adc_125mhz)
 begin
    if (!adc_rstn_i) begin
+      rb_activated  <= 1'b0;
       rb_clk_en     <= 1'b0;
       rb_reset_n    <= 1'b0;
       rb_enable_ctr <= 2'b0;
@@ -246,16 +249,20 @@ begin
          rb_enable_ctr <= 2'b11;                // load timer on enable bit change
          if (rb_enable)                         // just enabled
             rb_clk_en <= 1'b1;                  // firing up
-         else                                   // just disabled
-            rb_reset_n <= 1'b0;                 // resetting before sleep
+         else begin                             // just disabled
+            rb_activated <= 1'b0;               // RB sub-module is no more activated
+            rb_reset_n   <= 1'b0;               // resetting before sleep
+            end
          end
       else if (rb_enable_ctr)                   // counter runs
          rb_enable_ctr <= rb_enable_ctr - 1;
 
       if (rb_enable == rb_enable_last && 
           !rb_enable_ctr)                       // after the counter has stopped
-         if (rb_enable)                         // when enabling counter elapsed
-            rb_reset_n <= 1'b1;                 // release reset
+         if (rb_enable) begin                   // when enabling counter elapsed
+            rb_reset_n   <= 1'b1;               // release reset
+            rb_activated <= 1'b1;               // RB sub-module is activated
+            end
          else                                   // when disabling counter elapsed
             rb_clk_en <= 1'b0;                  // going to sleep
       end
@@ -335,7 +342,7 @@ end
 wire [15:0] adc_mod_in;
 wire [31:0] adc_mod_out;
 
-assign adc_mod_in = 33'h0xffff & (muxin_mix_in << ((muxin_mix_gain & 33'h0x70000) >> 4'd16));  // unsigned value: input booster for
+assign adc_mod_in = 33'h0xffff & (muxin_mix_in << ((muxin_mix_gain & 33'h0x70000) >> 5'd16));  // unsigned value: input booster for
                                                                                                // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
 
 rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_dsp48_adc_mod (
@@ -348,7 +355,7 @@ rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_dsp48_adc_mod (
   // modulation offset input
   .D                    ( 16'b0             ),  // offset setting:   SIGNED 16 bit
   // modulation gain input
-  .B                    ( muxin_mix_gain  & 32'h0xffff ),  // gain setting:   UNSIGNED 16 bit
+  .B                    ( muxin_mix_gain[15:0] ),  // gain setting:   UNSIGNED 16 bit
 
   // multiplier output
   .P                    ( adc_mod_out       )   // PreAmp output     SIGNED 32 bit
@@ -416,8 +423,6 @@ rb_dds_48_16_125 i_rb_dds_mod (
 //---------------------------------------------------------------------------------
 //  QMIX_MOD quadrature mixer for the base band
 
-wire [ 47:0] dds_mod_ofs = 48'b0;
-
 wire [ 16:0] qmix_i_s1_out;
 wire [ 47:0] qmix_i_s2_out;
 
@@ -446,7 +451,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_s2_I (
   // offset value for DDS control
   .CONCAT               ( dds_mod_ofs       ),  // offset:         UNSIGNED 48 bit
   // modulation input
-  .C               ((qmix_i_s1_out << 5'd31)),  // offset:           SIGNED 48 bit
+  .C                    ( 48'b0 | (qmix_i_s1_out << 5'd31)),  // offset:           SIGNED 48 bit
 
   // multiplier output
   .P                    ( qmix_i_s2_out     )   // QMIX output     UNSIGNED 48 bit
@@ -474,7 +479,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_s2_Q (
   // offset value for DDS control
   .CONCAT               ( dds_mod_ofs       ),  // offset:         UNSIGNED 48 bit
   // modulation input
-  .C               ((qmix_q_s1_out << 5'd31)),  // offset:           SIGNED 48 bit
+  .C                    ( 48'b0 | (qmix_q_s1_out << 5'd31)),  // offset:           SIGNED 48 bit
 
   // multiplier output
   .P                    ( qmix_q_s2_out     )   // QMIX output     UNSIGNED 48 bit
@@ -601,7 +606,7 @@ wire         dds_car_axis_s_vld   = rb_reset_n;  // TODO
 wire [103:0] dds_car_axis_s_phase = { 7'b0, dds_car_resync, dds_car_ofs, dds_car_inc };
 
 wire         dds_car_axis_m_vld;
-wire [ 15:0] dds_car_axis_m_data;
+wire [ 31:0] dds_car_axis_m_data;
 
 rb_dds_48_16_125 i_rb_dds_car (
   // global signals
@@ -615,7 +620,7 @@ rb_dds_48_16_125 i_rb_dds_car (
 
   // simple-AXI master out port: OSC1 signal
   .m_axis_data_tvalid   ( dds_car_axis_m_vld   ),  // AXIS master DDS_CAR data valid
-  .m_axis_data_tdata    ( dds_car_axis_m_data  )   // AXIS master DDS_CAR output: SIGNED 16 bit
+  .m_axis_data_tdata    ( dds_car_axis_m_data  )   // AXIS master DDS_CAR output: Q SIGNED 16 bit, I SIGNED 16 bit
 );
 
 
@@ -635,7 +640,7 @@ wire [ 15:0] qmix_rf_q         = 16'b0;
 
 wire         amp_rf_gain_mux   = regs[REG_RW_RB_CTRL][RB_CTRL_DDS_CAR_GAIN_SRC_STREAM];
 
-wire [ 15:0] amp_rf_gain       = ( amp_rf_gain_mux ?  (qmix_i_s2_out[47:32] >> 5'd32) : regs[REG_RW_RB_AMP_RF_GAIN][15:0]);
+wire [ 15:0] amp_rf_gain       = ( amp_rf_gain_mux ?  (qmix_i_s2_out[47:32] >> 6'd32) : regs[REG_RW_RB_AMP_RF_GAIN][15:0]);
 wire [ 15:0] amp_rf_ofs        = regs[REG_RW_RB_AMP_RF_OFS][15:0];
 
 wire [ 16:0] amp_rf_out;
@@ -644,6 +649,7 @@ rb_dsp48_AaDmBaC_A16_D16_B16_C17_P17 i_rb_dsp48_amp_rf (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
+  .SCLR                 ( !rb_enable        ),  // put output to neutral when activated
 
   // QMIX RF I output
   .A                    ( qmix_rf_i         ),  // QMIX RF I         SIGNED 16 bit
@@ -652,7 +658,7 @@ rb_dsp48_AaDmBaC_A16_D16_B16_C17_P17 i_rb_dsp48_amp_rf (
   // AMP RF gain
   .B                    ( amp_rf_gain       ),  // AMP RF gain     UNSIGNED 16 bit
   // AMP RF offset
-  .C                    ( amp_rf_ofs        ),  // AMP RF ofs        SIGNED 16 bit
+  .C                    ({ 1'b0, amp_rf_ofs}),  // AMP RF ofs        SIGNED 17 bit
 
   // AMP RF output
   .P                    ( amp_rf_out        )   // AMP RF output     SIGNED 17 bit
@@ -768,11 +774,12 @@ if (!adc_rstn_i || !rb_reset_n) begin
    end
 
 else begin
-   if (led_ctrl && rb_enable) begin
+   if (led_ctrl && rb_activated) begin
       rb_leds_en   <=  1'b1;                    // LEDs magnitude indicator active
 
       if (!led_ctr) begin                       // reduce updating to about 120 Hz
-         casez (led_ctrl[3:0])
+         case (led_ctrl[3:0])
+
          RB_LED_CTRL_NUM_DISABLED: begin
             rb_leds_data <=  8'b0;
             end
@@ -791,7 +798,7 @@ else begin
          RB_LED_CTRL_NUM_QMIX_I_S1_OUT: begin
             rb_leds_data <= fct_mag(qmix_i_s1_out[16:1]);
             end
-         RB_LED_CTRL_NUM_QMIX_I_S1_OUT: begin
+         RB_LED_CTRL_NUM_QMIX_Q_S1_OUT: begin
             rb_leds_data <= fct_mag(qmix_i_s1_out[16:1]);
             end
          RB_LED_CTRL_NUM_HP_I_OUT: begin
@@ -806,6 +813,11 @@ else begin
          RB_LED_CTRL_NUM_CIC_Q_OUT: begin
             rb_leds_data <= fct_mag(cic_q_out[15:0]);
             end
+
+         default: begin
+            rb_leds_data <=  8'b0;
+            end
+
          endcase
          end
       led_ctr <= led_ctr + 1;
