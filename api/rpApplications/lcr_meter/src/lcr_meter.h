@@ -27,7 +27,7 @@
 #define TRANS_EFFECT_STEPS		10
 #define SAMPLE_RATE				125e6
 #define PARAMS_NUM				13
-#define LCR_AMPLITUDE			0.5
+#define LCR_AMPLITUDE			0.2
 
 #define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
 
@@ -89,9 +89,10 @@ void *lcr_MainThread();
 /* Measurment functions */
 int lcr_SafeThreadGen(rp_channel_t channel, float frequency);
 
-int lcr_SafeThreadAcqData(rp_channel_t channel, 
-						  float **data, 
-						  rp_acq_decimation_t decimation);
+int lcr_SafeThreadAcqData(float **data, 
+						  rp_acq_decimation_t decimation,
+						  int acq_size,
+						  int dec);
 
 int lcr_getImpedance(float frequency, float _Complex *Z_out);
 int lcr_Correction();

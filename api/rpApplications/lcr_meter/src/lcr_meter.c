@@ -32,8 +32,7 @@
 #include "redpitaya/rp.h"
 
 /* Global variables definition */
-int 					min_periodes = 20;
-uint32_t 				acq_size = 1024;
+int 					min_periodes = 10;
 
 pthread_mutex_t 		mutex;
 pthread_t 				*imp_thread_handler = NULL;
@@ -116,6 +115,8 @@ int lcr_SafeThreadGen(rp_channel_t channel,
 
 	pthread_mutex_lock(&mutex);
 	ECHECK_APP(rp_GenAmp(channel, LCR_AMPLITUDE));
+	ECHECK_APP(rp_GenOffset(channel, 0.25));
+
 	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
 	ECHECK_APP(rp_GenFreq(channel, frequency));
 	ECHECK_APP(rp_GenOutEnable(channel));
@@ -125,18 +126,23 @@ int lcr_SafeThreadGen(rp_channel_t channel,
 }
 
 /* Acquire functions. Callback to the API structure */
-int lcr_SafeThreadAcqData(rp_channel_t channel, 
-						  float **data, 
-						  rp_acq_decimation_t decimation){
+int lcr_SafeThreadAcqData(float **data, 
+						  rp_acq_decimation_t decimation,
+						  int acq_size,
+						  int dec){
 	
 	rp_acq_trig_state_t state;
+	uint32_t pos;
+	uint32_t acq_u_size = acq_size;
+
 	//float wait = acq_size/(125e6/decimation);
 	ECHECK_APP(rp_AcqReset());	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
-	ECHECK_APP(rp_AcqSetTriggerLevel(0.4));
-	ECHECK_APP(rp_AcqSetTriggerDelay(8192));
-	ECHECK_APP(rp_AcqStart());
+	ECHECK_APP(rp_AcqSetTriggerLevel(0.1));
+	ECHECK_APP(rp_AcqSetTriggerDelay(acq_size - (ADC_BUFF_SIZE / 2)));
 	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
+	ECHECK_APP(rp_AcqStart());
+
 	state = RP_TRIG_STATE_TRIGGERED;
 	while(1){
         rp_AcqGetTriggerState(&state);
@@ -144,96 +150,78 @@ int lcr_SafeThreadAcqData(rp_channel_t channel,
         	break;
         }
     }
-    usleep(100);
-	ECHECK_APP(rp_AcqGetOldestDataV(RP_CH_1, &acq_size, data[0]));
-	ECHECK_APP(rp_AcqGetOldestDataV(RP_CH_2, &acq_size, data[1]));
+
+    ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
+    usleep(100 + (((acq_size * 8) * dec)) / 1000);
+	ECHECK_APP(rp_AcqGetDataV(RP_CH_1, pos, &acq_u_size, data[0]));
+	ECHECK_APP(rp_AcqGetDataV(RP_CH_2, pos, &acq_u_size, data[1]));
+
+	uint32_t pos_after_trig;
+	rp_AcqGetWritePointer(&pos_after_trig);
+
 	return RP_OK;
 }
 
 int lcr_getImpedance(float frequency, float _Complex *Z_out){
-#if 0
-	float w_out, start_freq, end_freq;
-	float amplitude = main_params.amplitude;
-	int averaging = main_params.avg,
-		dc_bias = main_params.dc_bias;
 
-	float z_ampl;
+	float w_out;
 
-	
-	int freq_step, i = 0;
 	int decimation;
-	int steps = main_params.steps;
-	calib_t calibration = main_params.calibration;
+	int acq_size;
 	rp_acq_decimation_t api_decimation;
 
-	float _Complex Z[averaging+1];
-
-	//Calibration mode
-	if(calibration != CALIB_NONE){
-		start_freq = START_CALIB_FREQ, end_freq = END_CALIB_FREQ;
-		steps = CALIB_SIZE;
-		(freq_step = (int)(end_freq - start_freq) / (steps - 1));
-	//Lcr meter mode
-	}else{
-		start_freq = main_params.start_freq, end_freq = start_freq;
-		freq_step = 0;
-	}
-
-	float frequency[steps + 1];
-
-	if(calibration == CALIB_NONE){
-		frequency[0] = start_freq;
-	}
-
 	uint32_t r_shunt;
-	_getRShunt(&r_shunt);
-
+	lcr_getRShunt(&r_shunt);
 
 	//Calculate output angular velocity
-	w_out = frequency[0] * 2 * M_PI;
-	frequency[i] = start_freq + (freq_step * i);
+	w_out = frequency * 2 * M_PI;
 
 	//Generate a sinusoidal wave form
-	int ret_val = _SafeThreadGen(RP_CH_1, amplitude, frequency[0]);
+	int ret_val = lcr_SafeThreadGen(RP_CH_1, frequency);
 	if(ret_val != RP_OK){
 		printf("Error generating api signal: %s\n", rp_GetError(ret_val));
 		return RP_EOOR;
 	}
 
 	//Get decimation value from frequency
-	_getDecimationValue(frequency[0], &api_decimation, &decimation);
+	lcr_getDecimationValue(frequency, &api_decimation, &decimation);
 	
 	acq_size = round((min_periodes * SAMPLE_RATE) /
-		(frequency[0] * decimation));
+		(frequency * decimation));
 
-	float **analysis_data = (float *)malloc(acq_size * sizeof(float));
-	
+	float **analysis_data = multiDimensionVector(acq_size);
+
+	ret_val = lcr_SafeThreadAcqData(analysis_data, api_decimation, acq_size, decimation);
+	if(ret_val != RP_OK){
+		//log error
+		return RP_EOOR;
+	}
+
+	ret_val = lcr_data_analysis(analysis_data, acq_size, 0, 
+				r_shunt, Z_out, w_out, decimation);
+
+/*
 	char file1[20];
 	char file2[20];
-	sprintf(file1, "/tmp/datach1-%d",i);
-	sprintf(file2, "/tmp/datach2-%d",i);
+	sprintf(file1, "/tmp/datach4");
+	sprintf(file2, "/tmp/datach5");
 
 	FILE *f1 = fopen(file1, "w+");
 	FILE *f2 = fopen(file2, "w+");
 
-	ret_val = _data_analysis(analysis_data, acq_size, dc_bias, 
-				r_shunt, Z, w_out, decimation);
+	for(int j = 0; j < acq_size; j++){
+		fprintf(f1, "%f\n", analysis_data[0][j]);
+		fprintf(f2, "%f\n", analysis_data[1][j]);
+	}
 
-	syslog(LOG_INFO, "Problem\n");
-	z_ampl = sqrtf(powf(creal(*Z), 2) + powf(cimag(*Z), 2));
+	free(f1);
+	free(f2);
+*/
 
-	FILE *f3 = fopen("/tmp/z_ampl", "a+");
-	fprintf(f3, "%f\n", z_ampl);
-
-	fclose(f1);
-	fclose(f2);
-	fclose(f3);
-	
 	//Disable channel 1 generation module
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
-#endif
 
-	*Z_out = frequency + (5*I);
+	//*Z_out = frequency + (5*I);
 	//syslog(LOG_INFO, "%f\n", z_ampl);
 	return RP_OK;
 }
@@ -366,7 +354,6 @@ int lcr_CalculateData(float _Complex amplitude_z){
 	if(calibration){
 		float short_re = creal(Z_short[idx]), short_img = cimag(Z_short[idx]);
 		float open_re = creal(Z_open[idx]), open_img = cimag(Z_open[idx]);
-		syslog(LOG_INFO, "%f %f", short_re, short_img);
 		z_temp_real = ((short_re - creal(amplitude_z)) * open_re) /
 			((creal(amplitude_z) - open_re) * (short_re - open_re));
 
@@ -412,9 +399,9 @@ int lcr_CalculateData(float _Complex amplitude_z){
 	/* Calculate D */
 	calc_data->lcr_D = -1 / calc_data->lcr_Q;  
 
-	/* Calculate E - Zumret faggot */
+	/* Calculate ESR - Zumret faggot */
 
-	//Dummy test value - rp_GetOldestDataV is not working correctly.
+	/*Dummy test value - rp_GetOldestDataV is not working correctly.
 	switch((int)main_params.frequency){
 		case 100:
 			calc_data->lcr_amplitude = 365.61868;
@@ -431,7 +418,7 @@ int lcr_CalculateData(float _Complex amplitude_z){
 		default:
 			calc_data->lcr_amplitude = 100 + main_params.frequency;
 			break;
-	}
+	}*/
 	
 	return RP_OK;
 }
@@ -445,7 +432,6 @@ int lcr_CopyParams(lcr_main_data_t *params){
 	params->lcr_L         	 = calc_data->lcr_L;
 	params->lcr_C         	 = calc_data->lcr_C;
 	params->lcr_R         	 = calc_data->lcr_R;
-	syslog(LOG_INFO, "HERE\n");
 	return RP_OK;
 }
 
@@ -464,34 +450,53 @@ int lcr_data_analysis(float **data,
 
 	float T = (decimation / SAMPLE_RATE);
 
-	float *u_dut = (float *)malloc(size * sizeof(float));
-	float *i_dut = (float *)malloc(size * sizeof(float));
+	float u_dut[size];
+	float i_dut[size];
 
-	float **u_dut_s = multiDimensionVector(size);
-	float **i_dut_s = multiDimensionVector(size);
+	float u_dut_s[2][size];
+	float i_dut_s[2][size];
 
-	float **component_lock_in = multiDimensionVector(1);
+	float component_lock_in[2][1];
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
-		i_dut[i] = data[1][i] / ((30 * 1e6 ) / (30 + 1e6));
+		i_dut[i] = data[1][i] / r_shunt;
 	}
+
 
 	for(int i = 0; i < size; i++){
 		ang = (i * T * w_out);
 		//Real		
 		u_dut_s[0][i] = u_dut[i] * sin(ang);
-		u_dut_s[1][i] = u_dut[i] * sin(ang - (M_PI / 2));
+		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2));
 		//Imag
 		i_dut_s[0][i] = i_dut[i] * sin(ang);
-		i_dut_s[1][i] = i_dut[i] * sin(ang - (M_PI / 2));
+		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
 	}
+
+
+	char file1[20];
+	char file2[20];
+	sprintf(file1, "/tmp/datach3");
+	sprintf(file2, "/tmp/datach4");
+
+	FILE *f1 = fopen(file1, "w+");
+	FILE *f2 = fopen(file2, "w+");
+
+	for(int j = 0; j < size; j++){
+		fprintf(f1, "%f\n", u_dut_s[0][j]);
+		fprintf(f2, "%f\n", i_dut_s[0][j]);
+	}
+
+	free(f1);
+	free(f2);
+
 	
 	/* Trapezoidal approximation */
-	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size);
-	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size);
-	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size);
-	component_lock_in[1][1] = trapezoidalApprox(i_dut_s[1], T, size);
+	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size); //X
+	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size); //Y 
+	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size); //X
+	component_lock_in[1][1] = trapezoidalApprox(i_dut_s[1], T, size); //Y
 
 	/* Calculating volatage and phase */
 	u_dut_ampl = 2 * (sqrtf(powf(component_lock_in[0][0], 2.0)) + 
