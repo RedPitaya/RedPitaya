@@ -69,8 +69,6 @@ int lcr_Init(){
 
 	ECHECK_APP(rp_AcqReset());
 	ECHECK_APP(rp_GenReset());
-	ECHECK_APP(rp_AcqSetTriggerDelay(ADC_BUFF_SIZE / 2));
-	ECHECK_APP(rp_AcqSetTriggerLevel(0));
 
 	/* Malloc global vars */
 	calc_data = malloc(sizeof(calc_data));
@@ -292,7 +290,7 @@ int lcr_Correction(){
 	return RP_OK;
 }
 
-int lcr_CalculateData(float _Complex amplitude_z){
+int lcr_CalculateData(float _Complex Z_measured){
 
 	//float phasez = 0;
 	bool calibration = false;
@@ -313,12 +311,12 @@ int lcr_CalculateData(float _Complex amplitude_z){
 	float _Complex Z_short[CALIB_STEPS] = {0, 0, 0, 0};
 	float _Complex Z_final;
 
-	/* Read calibration from file/s */
+	/* Read calibration from files */
 	if(calibration){
 		int line = 0;
 		while(!feof(f_open)){
 			float z_temp_imag, z_temp_real;
-			fscanf(f_open, "%f+%fi", &z_temp_real, &z_temp_imag);
+			fscanf(f_open, "%f %fi", &z_temp_real, &z_temp_imag);
 			Z_open[line] = z_temp_real + z_temp_imag*I;
 			line++;
 		}
@@ -326,44 +324,35 @@ int lcr_CalculateData(float _Complex amplitude_z){
 		line = 0;
 		while(!feof(f_short)){
 			float z_temp_imag, z_temp_real;
-			fscanf(f_short, "%f+%fi", &z_temp_real, &z_temp_imag);
+			fscanf(f_short, "%f %fi", &z_temp_real, &z_temp_imag);
 			Z_short[line] = z_temp_real + z_temp_imag*I;
 			line++;
 		}	
 	}
 
 	/* --------------- CALCULATING OUTPUT PARAMETERS --------------- */
-	int idx = 0;
-	switch((int)main_params.frequency){
-		case 100:
-			idx = 0;
-			break;
-		case 1000:
-			idx = 1;
-			break;
-		case 10000:
-			idx = 2;
-			break;
-		case 100000:
-			idx = 3;
-			break;
-	}
+	int index = log10(main_params.frequency) - 2;
 
-	float z_temp_real, z_temp_imag;
 	//Calibration was made
 	if(calibration){
-		float short_re = creal(Z_short[idx]), short_img = cimag(Z_short[idx]);
-		float open_re = creal(Z_open[idx]), open_img = cimag(Z_open[idx]);
-		z_temp_real = ((short_re - creal(amplitude_z)) * open_re) /
-			((creal(amplitude_z) - open_re) * (short_re - open_re));
+		Z_final = Z_open[index] * ((Z_short[index] - 
+			Z_measured) / (Z_measured - Z_open[index]));
 
-		z_temp_imag = ((short_img - creal(amplitude_z)) * open_img) /
-			((creal(amplitude_z) - open_img) * (short_img - open_img));
+		syslog(LOG_INFO, "CALIBRATION: %d", index);
 
-		Z_final = z_temp_real + z_temp_imag * I;
+
+		syslog(LOG_INFO, "SHORT R: %f | SHORT I: %f\n", 
+			creal(Z_short[index]), cimagf(Z_short[index]));
+
+		syslog(LOG_INFO, "OPEN R: %f | OPEN I: %f\n", 
+			crealf(Z_open[index]), cimagf(Z_open[index]));
+
+		syslog(LOG_INFO, "FINAL R: %f | FINAL I: %f",
+			creal(Z_final), cimag(Z_final));
+
 	//No calibration was made
 	}else{
-		Z_final = creal(amplitude_z) + cimag(amplitude_z) * I;
+		Z_final = Z_measured;
 	}
 
 	float w_out = 2 * M_PI * main_params.frequency;
@@ -468,13 +457,13 @@ int lcr_data_analysis(float **data,
 		ang = (i * T * w_out);
 		//Real		
 		u_dut_s[0][i] = u_dut[i] * sin(ang);
-		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2));
+		u_dut_s[1][i] = u_dut[i] * sin(ang - (M_PI / 2));
 		//Imag
 		i_dut_s[0][i] = i_dut[i] * sin(ang);
-		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
+		i_dut_s[1][i] = i_dut[i] * sin(ang - (M_PI / 2));
 	}
 
-
+/*
 	char file1[20];
 	char file2[20];
 	sprintf(file1, "/tmp/datach3");
@@ -490,7 +479,7 @@ int lcr_data_analysis(float **data,
 
 	free(f1);
 	free(f2);
-
+*/
 	
 	/* Trapezoidal approximation */
 	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size); //X
@@ -510,6 +499,13 @@ int lcr_data_analysis(float **data,
 
 	i_dut_phase_ampl = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
+/*
+	syslog(LOG_INFO, "UDUT_AMPLZ: %f | UDUT PHASE: %f\n", u_dut_ampl,
+		u_dut_phase_ampl);
+
+	syslog(LOG_INFO, "IDUT_AMPLZ: %f | IDUT PHASE: %f\n", i_dut_ampl,
+		i_dut_phase_ampl);
+*/
 	/* Assigning impedance values */
 	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
 	z_ampl = u_dut_ampl / i_dut_ampl;

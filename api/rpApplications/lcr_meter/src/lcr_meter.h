@@ -21,12 +21,9 @@
 #define UNTIL(exp) while(!(exp))
 
 /* Random global defines */
-#define AMPLITUDE_MAX			1.0
 #define ADC_BUFF_SIZE			16384
 #define M_PI					3.14159265358979323846
-#define TRANS_EFFECT_STEPS		10
 #define SAMPLE_RATE				125e6
-#define PARAMS_NUM				13
 #define LCR_AMPLITUDE			0.2
 
 #define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
@@ -96,7 +93,7 @@ int lcr_SafeThreadAcqData(float **data,
 
 int lcr_getImpedance(float frequency, float _Complex *Z_out);
 int lcr_Correction();
-int lcr_CalculateData(float _Complex amplitude_z);
+int lcr_CalculateData(float _Complex Z_measured);
 int lcr_CopyParams(lcr_main_data_t *params);
 
 int lcr_data_analysis(float **data, uint32_t size, float dc_bias, 

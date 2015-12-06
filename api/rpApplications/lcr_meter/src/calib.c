@@ -32,7 +32,10 @@ int store_calib(const calib_t CALIB_MODE,
 	//Write data to calib_file
 	for(int i = 0; i < CALIB_STEPS; i++){
 		fprintf(calibration_data, 
-			"%.10f+%.10f\n", creal(amplitude_z[i]), cimag(amplitude_z[i]));
+			"%f %fi\n", crealf(amplitude_z[i]), cimagf(amplitude_z[i]));
+
+		syslog(LOG_INFO, "%f %fi", 
+			crealf(amplitude_z[i]), cimagf(amplitude_z[i]));
 	}
 
 	fclose(calibration_data);
