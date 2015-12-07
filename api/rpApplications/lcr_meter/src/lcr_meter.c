@@ -131,9 +131,7 @@ int lcr_SafeThreadAcqData(float **data,
 	rp_acq_trig_state_t state;
 	uint32_t pos;
 	uint32_t acq_u_size = acq_size;
-	int retiries = 10000; //micro seconds
 
-	//float wait = acq_size/(125e6/decimation);
 	ECHECK_APP(rp_AcqReset());	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
 	ECHECK_APP(rp_AcqSetTriggerLevel(0.4));
@@ -142,6 +140,7 @@ int lcr_SafeThreadAcqData(float **data,
 	ECHECK_APP(rp_AcqStart());
 
 	state = RP_TRIG_STATE_TRIGGERED;
+	int retiries = 10000; //micro seconds
 	while(retiries > 0){
         rp_AcqGetTriggerState(&state);
         if(state == RP_TRIG_STATE_TRIGGERED){
@@ -199,29 +198,9 @@ int lcr_getImpedance(float frequency, float _Complex *Z_out){
 	ret_val = lcr_data_analysis(analysis_data, acq_size, 0, 
 				r_shunt, Z_out, w_out, decimation);
 
-/*
-	char file1[20];
-	char file2[20];
-	sprintf(file1, "/tmp/datach4");
-	sprintf(file2, "/tmp/datach5");
-
-	FILE *f1 = fopen(file1, "w+");
-	FILE *f2 = fopen(file2, "w+");
-
-	for(int j = 0; j < acq_size; j++){
-		fprintf(f1, "%f\n", analysis_data[0][j]);
-		fprintf(f2, "%f\n", analysis_data[1][j]);
-	}
-
-	free(f1);
-	free(f2);
-*/
-
 	//Disable channel 1 generation module
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
 
-	//*Z_out = frequency + (5*I);
-	//syslog(LOG_INFO, "%f\n", z_ampl);
 	return RP_OK;
 }
 
@@ -231,8 +210,31 @@ void *lcr_MainThread(void *args){
 	struct impendace_params *args_struct =
 		(struct impendace_params *)args;
 
-	//Main lcr meter algorithm
-	lcr_getImpedance(args_struct->frequency, &args_struct->Z_out);
+	set_IIC_Shunt(R_SHUNT_30);
+	//uint32_t new_shunt;
+
+lcr_getImpedance(args_struct->frequency, &args_struct->Z_out);
+	/*Main lcr meter algorithm
+	
+	while(1){
+		
+		
+		if(!main_params.calibration) break;
+		
+		float z_ampl = sqrt(powf(creal(args_struct->Z_out), 2) + 
+			powf(cimag(args_struct->Z_out), 2));
+
+		int ret_val = lcr_switchRShunt(z_ampl, &new_shunt);
+		//Change shunt
+		if(ret_val == 2){
+			//Change r_shunt, set new r_shunt
+			set_IIC_Shunt(new_shunt);
+			lcr_setRShunt(new_shunt);
+		}else{
+			break;
+		}
+	}
+	*/
 	return RP_OK;
 }
 
@@ -258,7 +260,6 @@ int lcr_Run(){
 
 	return RP_OK;
 }
-
 
 int lcr_Correction(){
 	int start_freq 		= START_CORR_FREQ;
@@ -316,17 +317,17 @@ int lcr_CalculateData(float _Complex Z_measured){
 	if(calibration){
 		int line = 0;
 		while(!feof(f_open)){
-			float z_temp_imag, z_temp_real;
-			fscanf(f_open, "%f %fi", &z_temp_real, &z_temp_imag);
-			Z_open[line] = z_temp_real + z_temp_imag*I;
+			float z_open_imag, z_open_real;
+			fscanf(f_open, "%f %fi", &z_open_real, &z_open_imag);
+			Z_open[line] = z_open_real + z_open_imag*I;
 			line++;
 		}
 
 		line = 0;
 		while(!feof(f_short)){
-			float z_temp_imag, z_temp_real;
-			fscanf(f_short, "%f %fi", &z_temp_real, &z_temp_imag);
-			Z_short[line] = z_temp_real + z_temp_imag*I;
+			float z_short_imag, z_short_real;
+			fscanf(f_short, "%f %fi", &z_short_real, &z_short_imag);
+			Z_short[line] = z_short_real + z_short_imag*I;
 			line++;
 		}	
 	}
@@ -336,21 +337,19 @@ int lcr_CalculateData(float _Complex Z_measured){
 
 	//Calibration was made
 	if(calibration){
-		Z_final = Z_measured; //Z_open[index] * ((Z_short[index] - 
-			//Z_measured) / (Z_measured - Z_open[index]));
-
-		syslog(LOG_INFO, "CALIBRATION: %d", index);
-
-
+		
+		Z_final = Z_open[index] - ((Z_short[index] - 
+			Z_measured) / (Z_measured - Z_open[index]));
+/*
 		syslog(LOG_INFO, "SHORT R: %f | SHORT I: %f\n", 
 			creal(Z_short[index]), cimagf(Z_short[index]));
 
 		syslog(LOG_INFO, "OPEN R: %f | OPEN I: %f\n", 
 			crealf(Z_open[index]), cimagf(Z_open[index]));
 
-		syslog(LOG_INFO, "FINAL R: %f | FINAL I: %f",
+		syslog(LOG_INFO, "JAO FINAL R: %f | FINAL I: %f\n\n",
 			creal(Z_final), cimag(Z_final));
-
+*/
 	//No calibration was made
 	}else{
 		Z_final = Z_measured;
@@ -389,27 +388,13 @@ int lcr_CalculateData(float _Complex Z_measured){
 	/* Calculate D */
 	calc_data->lcr_D = -1 / calc_data->lcr_Q;  
 
-	/* Calculate ESR - Zumret faggot */
-
-	/*Dummy test value - rp_GetOldestDataV is not working correctly.
-	switch((int)main_params.frequency){
-		case 100:
-			calc_data->lcr_amplitude = 365.61868;
-			break;
-		case 1000:
-			calc_data->lcr_amplitude = 44.65929;
-			break;
-		case 10000:
-			calc_data->lcr_amplitude = 9.81285;
-			break;
-		case 100000:
-			calc_data->lcr_amplitude = 36.57750;
-			break;
-		default:
-			calc_data->lcr_amplitude = 100 + main_params.frequency;
-			break;
-	}*/
+	/* Calculate ESR */
 	
+	if(calibration){
+		fclose(f_short);
+		fclose(f_open);
+	}
+
 	return RP_OK;
 }
 
@@ -463,24 +448,6 @@ int lcr_data_analysis(float **data,
 		i_dut_s[0][i] = i_dut[i] * sin(ang);
 		i_dut_s[1][i] = i_dut[i] * sin(ang - (M_PI / 2));
 	}
-
-/*
-	char file1[20];
-	char file2[20];
-	sprintf(file1, "/tmp/datach3");
-	sprintf(file2, "/tmp/datach4");
-
-	FILE *f1 = fopen(file1, "w+");
-	FILE *f2 = fopen(file2, "w+");
-
-	for(int j = 0; j < size; j++){
-		fprintf(f1, "%f\n", u_dut_s[0][j]);
-		fprintf(f2, "%f\n", i_dut_s[0][j]);
-	}
-
-	free(f1);
-	free(f2);
-*/
 	
 	/* Trapezoidal approximation */
 	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size); //X
@@ -500,13 +467,6 @@ int lcr_data_analysis(float **data,
 
 	i_dut_phase_ampl = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
-/*
-	syslog(LOG_INFO, "UDUT_AMPLZ: %f | UDUT PHASE: %f\n", u_dut_ampl,
-		u_dut_phase_ampl);
-
-	syslog(LOG_INFO, "IDUT_AMPLZ: %f | IDUT PHASE: %f\n", i_dut_ampl,
-		i_dut_phase_ampl);
-*/
 	/* Assigning impedance values */
 	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
 	z_ampl = u_dut_ampl / i_dut_ampl;
@@ -544,8 +504,8 @@ int lcr_getRShunt(uint32_t *r_shunt){
 	return RP_OK;
 }
 
-int lcr_SetCalibMode(calib_t mode){
-	main_params.calibration = mode;
+int lcr_SetCalibMode(calib_t calibrated){
+	main_params.calibration = calibrated;
 	return RP_OK;
 }
 

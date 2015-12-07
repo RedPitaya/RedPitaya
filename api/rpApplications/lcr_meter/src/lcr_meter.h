@@ -37,7 +37,6 @@ typedef enum calibration{
 	CALIB_NONE,
 	CALIB_OPEN,
 	CALIB_SHORT,
-	CALIB_LOAD,
 } calib_t;
 
 /* Main lcr params structure */
