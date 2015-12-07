@@ -128,6 +128,9 @@
 // Organize the data stream into one or 2^n bytes, since this is required by
 // the DMA, and further memory storage.
 //
+// DMA
+//
+// The DMA is provided by Xilinx
 //
 ////////////////////////////////////////////////////////////////////////////////
 ```
@@ -151,13 +154,46 @@ struct {
    uint32_t acq_run;                  // write - run enable, read - run status
    uint32_t acq_trg;                  // read - trigger status
    uint32_t acq_trg_src;              // trigger source multiplexer
+   uint32_t acq_num_pre; // [32-1:0]  // least amount of data to store pre trigger
+   uint32_t acq_num_pst; // [32-1:0]  // amount of data to store post trigger
    // output stage
    uint32_t lgn_mask;                 // realign mask, lists bits which should go forward
    uint32_t rle_ena;                  // run length encoding enable
 } la_regset_t;
-
 ```
 
+```C
 ////////////////////////////////////////////////////////////////////////////////
+//
+// API:
+//
+// The current plan is to create an API function for each configuration option,
+// some options like trigger will be combined into a single API function.
+//
+// The other option would be to provide a configuration structure similar to the
+// memmory map, containing all configuration option, and then provide a single
+// API function, which would accept this structure as argument.
+//
+// int rp_la_cfg (int unsigned channel, rp_la_cfg_t cfg);
+//
+// The would be separate API functions for starting the acquire process, the
+// plan is to make them blocking, and would return a pointer to data once the
+// trigger and post trigger data arrives.
+//
+// int rp_la_dat (uint8_t **data);
+//
 ////////////////////////////////////////////////////////////////////////////////
+```
 
+```C
+////////////////////////////////////////////////////////////////////////////////
+//
+// Programming sequence
+//
+// 1. program all registers except for 'acq_run'.
+//    rp_la_cfg (cfg) can be used
+// 2. run rp_la_dat (data) and wait for it to return, some applications will have
+//    to run is in a separate thread due to blocking
+//
+////////////////////////////////////////////////////////////////////////////////
+```
