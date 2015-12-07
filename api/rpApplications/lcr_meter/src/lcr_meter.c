@@ -294,8 +294,13 @@ int lcr_Correction(){
 
 int lcr_CalculateData(float _Complex Z_measured){
 
-	//float phasez = 0;
 	bool calibration = false;
+
+	//Client depended parameters
+	float R_out, C_out, L_out, ESR_out;
+
+	//Client independed
+	float ampl_out, phase_out, Q_out, D_out;
 
 	const char *calibrations[] = 
 		{"/opt/redpitaya/www/apps/lcr_meter/CALIB_OPEN",
@@ -356,40 +361,51 @@ int lcr_CalculateData(float _Complex Z_measured){
 	}
 
 	float w_out = 2 * M_PI * main_params.frequency;
-	float Y = 1 / Z_final;
-	//float Y_abs = sqrtf(powf(creal(Y), 2) + powf(cimag(Y), 2));
 	
-	//float B_p = cimag(Y);
+	float Y = 1 / Z_final;
+	
 	float G_p = creal(Y);
+	float B_p = cimag(Y);
 
-	float R_s = creal(Z_final);
 	float X_s = cimag(Z_final);
 
-	/* Calculate Z */
-	calc_data->lcr_amplitude = 
-		sqrtf(powf(creal(Z_final), 2) + powf(cimag(Z_final), 2));
+	/* Tolerance mode */
+	if(main_params.serial){
+		R_out = creal(Z_final);
+		C_out = -1 / (w_out * X_s);
+		L_out = X_s / w_out;
+		ESR_out = R_out;
+	}else{
+		R_out = 1 / G_p;
+		C_out = B_p / w_out;
+		L_out = -1 * (w_out * B_p);
+		ESR_out = 1; //TODO
+	}
 
-	/* Calculate L */
-	calc_data->lcr_L = X_s / w_out;
+	float P_rad = atanf(X_s / R_out);
 
-	/* Calculate C */
-	calc_data->lcr_C = -1 / (w_out * X_s);
+	if(P_rad <= (-M_PI)){
+		P_rad += 2 * M_PI;
+	}else if(P_rad >= M_PI){
+		P_rad -= (2 * M_PI);
+	}
 
-	/* Calculate R */
-	calc_data->lcr_R = 1 / G_p;
+	Q_out = X_s / R_out;
+	D_out = -1 / Q_out;
+	ampl_out = cabs(Z_final);
+	phase_out = 180 * (M_PI / P_rad);
 
-	/* Calculate phase */
-	calc_data->lcr_phase = 
-		(180 / M_PI) * atan2f(cimag(Z_final), creal(Z_final));
+	//Set output structure pointers
+	calc_data->lcr_amplitude = ampl_out;
+	calc_data->lcr_phase     = phase_out;
+	calc_data->lcr_D 		 = D_out;
+	calc_data->lcr_Q         = Q_out;
+	calc_data->lcr_ESR       = ESR_out;
+	calc_data->lcr_L         = L_out;
+	calc_data->lcr_C         = C_out;
+	calc_data->lcr_R         = R_out;
 
-	/* Calculate Q */
-	calc_data->lcr_Q = X_s / R_s;
-
-	/* Calculate D */
-	calc_data->lcr_D = -1 / calc_data->lcr_Q;  
-
-	/* Calculate ESR */
-	
+	//Close files, if calibration	
 	if(calibration){
 		fclose(f_short);
 		fclose(f_open);
@@ -403,7 +419,7 @@ int lcr_CopyParams(lcr_main_data_t *params){
 	params->lcr_phase        = calc_data->lcr_phase;
 	params->lcr_D         	 = calc_data->lcr_D;
 	params->lcr_Q            = calc_data->lcr_Q;
-	params->lcr_E         	 = calc_data->lcr_E;
+	params->lcr_ESR          = calc_data->lcr_ESR;
 	params->lcr_L         	 = calc_data->lcr_L;
 	params->lcr_C         	 = calc_data->lcr_C;
 	params->lcr_R         	 = calc_data->lcr_R;
@@ -513,3 +529,34 @@ int lcr_GetCalibMode(calib_t *mode){
 	*mode = main_params.calibration;
 	return RP_OK;
 }
+
+int lcr_SetMeasSeries(bool serial){
+	main_params.serial = serial;
+	return RP_OK;
+}
+
+int lcr_GetMeasSerial(bool *serial){
+	*serial = main_params.serial;
+	return RP_OK;
+}
+
+int lcr_SetMeasTolerance(bool tolerance){
+	main_params.tolerance = tolerance;
+	return RP_OK;
+}
+
+int lcr_GetMeasTolerance(bool *tolerance){
+	*tolerance = main_params.tolerance;
+	return RP_OK;
+}
+
+int lcr_SetMeasRangeMode(bool range){
+	main_params.range = range;
+	return RP_OK;
+}
+
+int lcr_GetMeasRangeMode(bool *range){
+	*range = main_params.range;
+	return RP_OK;
+}
+

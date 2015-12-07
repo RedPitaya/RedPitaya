@@ -44,9 +44,9 @@ typedef struct params_e{
 	float frequency;
 	uint32_t r_shunt;
 	calib_t calibration;
-	bool relative;
+	bool tolerance;
 	bool range;
-	bool series;
+	bool serial;
 } lcr_params_t;
 
 /* Main lcr measurment data */
@@ -55,7 +55,7 @@ typedef struct data_e {
 	float lcr_phase;
 	float lcr_D;
 	float lcr_Q;
-	float lcr_E;
+	float lcr_ESR;
 	float lcr_L;
 	float lcr_C;
 	float lcr_R;
@@ -107,7 +107,12 @@ int lcr_setRShunt(uint32_t r_shunt);
 int lcr_getRShunt(uint32_t *r_shunt);
 int lcr_SetCalibMode(calib_t mode);
 int lcr_GetCalibMode(calib_t *mode);
-
+int lcr_SetMeasSeries(bool serial);
+int lcr_GetMeasSeries(bool *serial);
+int lcr_SetMeasTolerance(bool tolerance);
+int lcr_GetMeasTolerance(bool *tolerance);
+int lcr_SetMeasRangeMode(bool range);
+int lcr_GetMeasRangeMode(bool *range);
 
 #endif //__LCRMETER_H
 
