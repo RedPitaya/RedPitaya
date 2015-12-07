@@ -386,7 +386,7 @@ int main(int argc, char *argv[]) {
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
     int TE_step_counter;
     int progress_int = 0;
-    char command[70];
+    //char command[70];
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
@@ -746,12 +746,12 @@ int main(int argc, char *argv[]) {
                 if (progress_int <= 100){
                     fprintf(progress_file , "%d \n" ,  progress_int );
 
-                    sprintf(command, "/opt/redpitaya/bin/monitor 0x40000030 0x%x", (1 << (8*progress_int/100)) - 1);
-                    system(command);
+                    //sprintf(command, "/opt/redpitaya/bin/monitor 0x40000030 0x%x", (1 << (8*progress_int/100)) - 1);
+                    //system(command);
                     fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
                     //printf(" progress: %d  \n",progress_int);
-
+                     
                     fclose(progress_file);
                 }
 
@@ -1354,11 +1354,25 @@ int LCR_data_analysis(float **s,
         }
     }
 
+        int i;
+        float sum_buff_in1;
+        float sum_buff_in2;
+
+        for(i = 0; i < size; i++){
+
+        sum_buff_in1 += U_acq[1][i];
+        sum_buff_in2 += U_acq[2][i];
+               
+        }
+        float mean_buff_in1=sum_buff_in1/size;
+        float mean_buff_in2=sum_buff_in2/size;
+
+      
     /* Voltage and current on the load can be calculated from gathered data */
     for (i2 = 0; i2 < size; i2++) {
-        U_dut[ i2 ] = (U_acq[ 1 ][ i2 ] - U_acq[ 2 ][ i2 ]); // potencial difference gives the voltage
+        U_dut[ i2 ] = (((U_acq[ 1 ][ i2 ])- mean_buff_in1) - ((U_acq[ 2 ][ i2 ])- mean_buff_in2)); // potencial difference gives the voltage
         // Curent trough the load is the same as trough thr R_shunt. ohm's law is used to calculate the current
-        I_dut[ i2 ] = (U_acq[ 2 ][ i2 ] / R_shunt);
+        I_dut[ i2 ] = (((U_acq[ 2 ][ i2 ])- mean_buff_in2) / R_shunt);
     }
 
     /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
