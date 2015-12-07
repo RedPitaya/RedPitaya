@@ -24,7 +24,7 @@
 #define ADC_BUFF_SIZE			16384
 #define M_PI					3.14159265358979323846
 #define SAMPLE_RATE				125e6
-#define LCR_AMPLITUDE			0.2
+#define LCR_AMPLITUDE			0.25
 
 #define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
 

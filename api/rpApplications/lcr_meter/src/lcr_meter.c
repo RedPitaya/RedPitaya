@@ -114,7 +114,6 @@ int lcr_SafeThreadGen(rp_channel_t channel,
 	pthread_mutex_lock(&mutex);
 	ECHECK_APP(rp_GenAmp(channel, LCR_AMPLITUDE));
 	ECHECK_APP(rp_GenOffset(channel, 0.25));
-
 	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
 	ECHECK_APP(rp_GenFreq(channel, frequency));
 	ECHECK_APP(rp_GenOutEnable(channel));
@@ -132,21 +131,23 @@ int lcr_SafeThreadAcqData(float **data,
 	rp_acq_trig_state_t state;
 	uint32_t pos;
 	uint32_t acq_u_size = acq_size;
+	int retiries = 10000; //micro seconds
 
 	//float wait = acq_size/(125e6/decimation);
 	ECHECK_APP(rp_AcqReset());	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
-	ECHECK_APP(rp_AcqSetTriggerLevel(0.1));
+	ECHECK_APP(rp_AcqSetTriggerLevel(0.4));
 	ECHECK_APP(rp_AcqSetTriggerDelay(acq_size - (ADC_BUFF_SIZE / 2)));
 	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
 	ECHECK_APP(rp_AcqStart());
 
 	state = RP_TRIG_STATE_TRIGGERED;
-	while(1){
+	while(retiries > 0){
         rp_AcqGetTriggerState(&state);
         if(state == RP_TRIG_STATE_TRIGGERED){
         	break;
         }
+        retiries--;
     }
 
     ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
@@ -335,8 +336,8 @@ int lcr_CalculateData(float _Complex Z_measured){
 
 	//Calibration was made
 	if(calibration){
-		Z_final = Z_open[index] * ((Z_short[index] - 
-			Z_measured) / (Z_measured - Z_open[index]));
+		Z_final = Z_measured; //Z_open[index] * ((Z_short[index] - 
+			//Z_measured) / (Z_measured - Z_open[index]));
 
 		syslog(LOG_INFO, "CALIBRATION: %d", index);
 
