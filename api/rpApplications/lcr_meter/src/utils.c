@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/syslog.h>
 
 #include "utils.h"
 
@@ -83,6 +84,7 @@ int set_IIC_Shunt(uint32_t shunt){
 			iic_shunt = 0x0;
 			break;
 	}
+
 
 	// Write to expander
     str [0] = 0; // set address to 0
@@ -148,8 +150,6 @@ float vectorMean(float *data, int size){
 	return result;
 }
 
-/* TODO: SWD, function placement open discussion. Directly in 
-   FS/MS or in common as a helper tool */
 float **multiDimensionVector(int second_dimenson){
 
 	/* Allocate first dimension */
@@ -163,24 +163,26 @@ float **multiDimensionVector(int second_dimenson){
 	return data_out;
 }
 
-
 int lcr_switchRShunt(float z_ampl, uint32_t *r_shunt){
 
-	if(z_ampl <= 50) 							*r_shunt = R_SHUNT_30;
-	else if(z_ampl <= 100 && z_ampl > 50) 		*r_shunt = R_SHUNT_75;
-	else if(z_ampl <= 500 && z_ampl > 100) 		*r_shunt = R_SHUNT_300;
-	else if(z_ampl <= 1000 && z_ampl > 500) 	*r_shunt = R_SHUNT_750;
-	else if(z_ampl <= 5000 && z_ampl > 1000) 	*r_shunt = R_SHUNT_3K;
-	else if(z_ampl <= 10000 && z_ampl > 5000) 	*r_shunt = R_SHUNT_7_5K;
-	else if(z_ampl <= 50e3 && z_ampl > 10000) 	*r_shunt = R_SHUNT_30K;
-	else if(z_ampl <= 100e3 && z_ampl > 50e3) 	*r_shunt = R_SHUNT_80K;
-	else if(z_ampl <= 500e3 && z_ampl > 100e3) 	*r_shunt = R_SHUNT_430K;
-	else if(z_ampl > 500e3) 					*r_shunt = R_SHUNT_3M;
-	else 										return RP_EOOR;
-
+	if(z_ampl >= (3 * (*r_shunt)) || (z_ampl <= (1 / (3 * (*r_shunt))))){
+		
+		if(z_ampl <= 50) 							*r_shunt = R_SHUNT_30;
+		else if(z_ampl <= 100 && z_ampl > 50) 		*r_shunt = R_SHUNT_75;
+		else if(z_ampl <= 500 && z_ampl > 100) 		*r_shunt = R_SHUNT_300;
+		else if(z_ampl <= 1000 && z_ampl > 500) 	*r_shunt = R_SHUNT_750;
+		else if(z_ampl <= 5000 && z_ampl > 1000) 	*r_shunt = R_SHUNT_3K;
+		else if(z_ampl <= 10000 && z_ampl > 5000) 	*r_shunt = R_SHUNT_7_5K;
+		else if(z_ampl <= 50e3 && z_ampl > 10000) 	*r_shunt = R_SHUNT_30K;
+		else if(z_ampl <= 100e3 && z_ampl > 50e3) 	*r_shunt = R_SHUNT_80K;
+		else if(z_ampl <= 500e3 && z_ampl > 100e3) 	*r_shunt = R_SHUNT_430K;
+		else if(z_ampl > 500e3) 					*r_shunt = R_SHUNT_3M;
+		
+		return 2; //Enum CH_SHUNT
+	}
+	
 	return RP_OK;
 }
-
 
 
 int lcr_getDecimationValue(float frequency,
