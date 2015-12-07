@@ -71,7 +71,7 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode */
         "rb_run",           0.0,   1, 0, 0.0,       1.0  },
 
-    { /* Oscillator-1 modulation source selector
+    { /* OSC_CAR modulation source selector
        * ( 0: none,
        *   1: RF Input 1,
        *   2: RF Input 2,
@@ -79,28 +79,28 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
        *   5: EXT AI1,
        *   6: EXT AI2,
        *   7: EXT AI3,
-       *  15: OSC2
+       *  15: OSC_MOD
        * )
        **/
-        "osc1_modsrc_s",    0.0,   1,  0, 0.0,     15.0  },
+        "osc_car_modsrc_s",    0.0,   1,  0, 0.0,     15.0  },
 
-    { /* Oscillator-1 modulation type selector (0: AM, 1: FM, 2: PM) */
-        "osc1_modtyp_s",    0.0,   1,  0, 0.0,      2.0  },
+    { /* OSC_CAR modulation type selector (0: AM, 1: FM, 2: PM) */
+        "osc_car_modtyp_s",    0.0,   1,  0, 0.0,      2.0  },
 
     { /* RB LED control */
         "rbled_ctrl_s",     0.0,   1,  0, 0.0,     15.0  },
 
-    { /* Oscillator-1 frequency (Hz) */
-        "osc1_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
+    { /* OSC_CAR frequency (Hz) */
+        "osc_car_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
 
-    { /* Oscillator-2 frequency (Hz) */
-        "osc2_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
+    { /* OSC_MOD frequency (Hz) */
+        "osc_mod_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
 
-    { /* Oscillator-1 amplitude (mV) */
-        "osc1_amp_f",       0.0,   1,  0, 0.0,   2047.0  },
+    { /* OSC_CAR amplitude (mV) */
+        "osc_car_amp_f",       0.0,   1,  0, 0.0,   2047.0  },
 
-    { /* Oscillator-2 magnitude (AM:%, FM:Hz, PM:°) */
-        "osc2_mag_f",       0.0,   1,  0, 0.0,     1e+6  },
+    { /* OSC_MOD magnitude (AM:%, FM:Hz, PM:°) */
+        "osc_mod_mag_f",       0.0,   1,  0, 0.0,     1e+6  },
 
     { /* MUX in (Mic in) slider ranges from 0% to 100% */
         "muxin_gain_f",     0.0,   1,  0, 0.0,    100.0  },
@@ -630,23 +630,23 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
             switch (g_transport_pktIdx & 0x7f) {
             case 1:
                 if (!strcmp("rb_run",        src[i].name) ||
-                    !strcmp("osc1_modsrc_s", src[i].name) ||
-                    !strcmp("osc1_modtyp_s", src[i].name) ||
+                    !strcmp("osc_car_modsrc_s", src[i].name) ||
+                    !strcmp("osc_car_modtyp_s", src[i].name) ||
                     !strcmp("rbled_ctrl_s",  src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 2:
-                if (!strcmp("osc1_qrg_f",    src[i].name) ||
-                    !strcmp("osc2_qrg_f",    src[i].name)) {
+                if (!strcmp("osc_car_qrg_f",    src[i].name) ||
+                    !strcmp("osc_mod_qrg_f",    src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 3:
-                if (!strcmp("osc1_amp_f",    src[i].name) ||
-                    !strcmp("osc2_mag_f",    src[i].name)) {
+                if (!strcmp("osc_car_amp_f",    src[i].name) ||
+                    !strcmp("osc_mod_mag_f",    src[i].name)) {
                     found = 1;
                 }
                 break;
