@@ -97,7 +97,7 @@ enum {
     REG_RW_RB_DDS_MOD_OFS_LO,                   // h48: RB OSC2 offset register                 LSB:        (Bit 31: 0)
     REG_RW_RB_DDS_MOD_OFS_HI,                   // h4C: RB OSC2 offset register                 MSB: 16'b0, (Bit 47:32)
 
-    REG_RW_RB_DDS_MOD_MIX_GAIN,                 // h50: RB OSC2 mixer gain:     SIGNED 32 bit
+    REG_RW_RB_DDS_MOD_MIX_GAIN,                 // h50: RB OSC2 mixer gain:   UNSIGNED 16 bit
     //REG_RD_RB_RSVD_H54,
     REG_RW_RB_DDS_MOD_MIX_OFS_LO,               // h58: RB OSC2 mixer offset: UNSIGNED 48 bit   LSB:        (Bit 31: 0)
     REG_RW_RB_DDS_MOD_MIX_OFS_HI,               // h5C: RB OSC2 mixer offset: UNSIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
@@ -201,12 +201,17 @@ enum {
     RB_LED_CTRL_NUM_MUXIN_MIX_IN,               // Magnitude indicator @ ADC selector input
     RB_LED_CTRL_NUM_ADC_MOD_IN,                 // Magnitude indicator @ modulation amplifier input
     RB_LED_CTRL_NUM_ADC_MOD_OUT,                // Magnitude indicator @ modulation amplifier output
-    RB_LED_CTRL_NUM_QMIX_I_S1_OUT,              // Magnitude indicator @ QMIX I output at stage 1
-    RB_LED_CTRL_NUM_QMIX_Q_S1_OUT,              // Magnitude indicator @ QMIX Q output at stage 1
+    RB_LED_CTRL_NUM_QMIX_MOD_I_S1_OUT,          // Magnitude indicator @ QMIX_MOD I output at stage 1
+    RB_LED_CTRL_NUM_QMIX_MOD_Q_S1_OUT,          // Magnitude indicator @ QMIX_MOD Q output at stage 1
+    RB_LED_CTRL_NUM_QMIX_MOD_I_S2_OUT,          // Magnitude indicator @ QMIX_MOD I output at stage 2
+    RB_LED_CTRL_NUM_QMIX_MOD_Q_S2_OUT,          // Magnitude indicator @ QMIX_MOD Q output at stage 2
     RB_LED_CTRL_NUM_HP_I_OUT,                   // Magnitude indicator @ HP I output
     RB_LED_CTRL_NUM_HP_Q_OUT,                   // Magnitude indicator @ HP Q output
     RB_LED_CTRL_NUM_CIC_I_OUT,                  // Magnitude indicator @ CIC I output
     RB_LED_CTRL_NUM_CIC_Q_OUT,                  // Magnitude indicator @ CIC Q output
+    RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT,          // Magnitude indicator @ QMIX_CAR I output at stage 1
+    RB_LED_CTRL_NUM_QMIX_CAR_Q_S1_OUT,          // Magnitude indicator @ QMIX_CAR Q output at stage 1
+    RB_LED_CTRL_NUM_AMP_RF_OUT,                 // Magnitude indicator @ AMP_RF output
 
     RB_LED_CTRL_COUNT
 } RB_LED_CTRL_ENUM;
@@ -278,20 +283,6 @@ end
 
 reg  [15:0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
 
-wire [15:0] muxin_mix_in = (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h20) ?  { ~adc_i[0], 2'b0 } :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h21) ?  { ~adc_i[1], 2'b0 } :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
-                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
-                           16'b0;
-wire [32:0] muxin_mix_gain = { 1'b0, regs[REG_RW_RB_MUXIN_GAIN][31:0] };
-wire [47:0] muxin_mix_p;
-
-wire [15:0] muxin_mix_out;
-assign muxin_mix_out[15:0] = { muxin_mix_p[47], muxin_mix_p[24:9]};    // TODO to be replaced by a saturation variant
-
 always @(posedge xadc_axis_aclk)                                       // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
 begin
    if (!adc_rstn_i) begin
@@ -339,11 +330,21 @@ end
 //---------------------------------------------------------------------------------
 //  ADC modulation offset correction and gain
 
-wire [15:0] adc_mod_in;
-wire [31:0] adc_mod_out;
+wire [15:0] muxin_mix_in = (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h20) ?  { ~adc_i[0], 2'b0 } :
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h21) ?  { ~adc_i[1], 2'b0 } :
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
+                           (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
+                           16'b0;
+wire [15:0] muxin_mix_log2 = regs[REG_RW_RB_MUXIN_GAIN][18:16];
+wire [15:0] muxin_mix_gain = regs[REG_RW_RB_MUXIN_GAIN][15:0];
 
-assign adc_mod_in = 33'h0xffff & (muxin_mix_in << ((muxin_mix_gain & 33'h0x70000) >> 5'd16));  // unsigned value: input booster for
-                                                                                               // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
+wire [15:0] adc_mod_in;
+assign adc_mod_in = 33'h0xffff & (muxin_mix_in << muxin_mix_log2);     // unsigned value: input booster for
+                                                                       // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
+wire [31:0] adc_mod_out;
 
 rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_dsp48_adc_mod (
   // global signals
@@ -355,32 +356,11 @@ rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_dsp48_adc_mod (
   // modulation offset input
   .D                    ( 16'b0             ),  // offset setting:   SIGNED 16 bit
   // modulation gain input
-  .B                    ( muxin_mix_gain[15:0] ),  // gain setting:   UNSIGNED 16 bit
+  .B                    ( muxin_mix_gain    ),  // gain setting:   UNSIGNED 16 bit
 
   // multiplier output
   .P                    ( adc_mod_out       )   // PreAmp output     SIGNED 32 bit
 );
-
-/*
-rb_multadd_16s_33s_48u_07lat i_rb_muxin_multadd (
-  // global signals
-  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
-  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
-  .SCLR                 ( !rb_reset_n       ),  // enable part 2 of RadioBox sub-module
-
-  // multiplier input
-  .A                    ( muxin_mix_in      ),  // MUX in signal:    SIGNED 16 bit
-  .B                    ( muxin_mix_gain    ),  // gain setting:     SIGNED 33 bit
-  .C                    ( 48'b0             ),  // offset setting: UNSIGNED 48 bit
-
-  .SUBTRACT             ( 1'b0              ),  // not used due to signed data
-
-  // multiplier output
-  .P                    ( muxin_mix_p       ),  // PreAmp output   UNSIGNED 48 bit
-
-  .PCOUT                (                   )   // not used
-);
-*/
 
 
 //---------------------------------------------------------------------------------
@@ -423,112 +403,107 @@ rb_dds_48_16_125 i_rb_dds_mod (
 //---------------------------------------------------------------------------------
 //  QMIX_MOD quadrature mixer for the base band
 
-wire [ 16:0] qmix_i_s1_out;
-wire [ 47:0] qmix_i_s2_out;
+wire [15:0] dds_mod_qmix_in    = (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h00) ?  dds_mod_cos : adc_mod_out[31:16];  // when ADC source ID is zero, default to OSC2
+wire [15:0] dds_mod_qmix_gain  =  regs[REG_RW_RB_DDS_MOD_MIX_GAIN][15:0];
+wire [47:0] dds_mod_qmix_ofs   = { regs[REG_RW_RB_DDS_MOD_MIX_OFS_HI][15:0], regs[REG_RW_RB_DDS_MOD_MIX_OFS_LO][31:0] };
 
-wire [ 16:0] qmix_q_s1_out;
-wire [ 47:0] qmix_q_s2_out;
+wire [ 31:0] qmix_mod_i_s1_out;
+wire [ 31:0] qmix_mod_i_s2_out;
+wire [ 47:0] qmix_mod_i_s3_out;
 
-rb_dsp48_AmB_A16_B16_P17 i_rb_dsp48_qmix_s1_I (
+wire [ 31:0] qmix_mod_q_s1_out;
+wire [ 31:0] qmix_mod_q_s2_out;
+wire [ 47:0] qmix_mod_q_s3_out;
+
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_mod_s1_I (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
 
   // modulation input
-  .A                    ( adc_mod_out[31:16]),  // MUX in signal:    SIGNED 16 bit
+  .A                    ( dds_mod_qmix_in   ),  // MUX in signal:    SIGNED 16 bit
   // DDS cos input
   .B                    ( dds_mod_cos       ),  // gain setting:     SIGNED 16 bit
 
   // multiplier output
-  .P                    ( qmix_i_s1_out     )   // QMIX output       SIGNED 17 bit
+  .P                    ( qmix_mod_i_s1_out )   // QMIX output       SIGNED,SIGNED 32 bit
 );
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_s2_I (
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_mod_s2_I (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
 
-  // offset value for DDS control
-  .CONCAT               ( dds_mod_ofs       ),  // offset:         UNSIGNED 48 bit
   // modulation input
-  .C                    ( 48'b0 | (qmix_i_s1_out << 5'd31)),  // offset:           SIGNED 48 bit
+  .A                    ({ qmix_mod_i_s1_out[31], qmix_mod_i_s1_out[29:15] }),  // MUX in signal:    SIGNED 16 bit
+  // DDS cos input
+  .B                    ( dds_mod_qmix_gain ),  // gain setting:     SIGNED 16 bit
 
   // multiplier output
-  .P                    ( qmix_i_s2_out     )   // QMIX output     UNSIGNED 48 bit
+  .P                    ( qmix_mod_i_s2_out )   // QMIX output       SIGNED,SIGNED 32 bit
 );
 
-rb_dsp48_AmB_A16_B16_P17 i_rb_dsp48_qmix_s1_Q (
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_mod_s3_I (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
 
   // modulation input
-  .A                    ( adc_mod_out[31:16]),  // MUX in signal:    SIGNED 16 bit
-  // DDS cos input
+  .C                    ( 48'b0 | ({qmix_mod_i_s2_out[31], qmix_mod_i_s2_out[29:0]} << 5'd16)),  // offset:           SIGNED 48 bit
+  // offset value for DDS control
+  .CONCAT               ( dds_mod_qmix_ofs  ),  // offset:         UNSIGNED 48 bit
+
+  // multiplier output
+  .P                    ( qmix_mod_i_s3_out )   // QMIX output     UNSIGNED 48 bit
+);
+
+
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_mod_s1_Q (
+  // global signals
+  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
+
+  // modulation input
+  .A                    ( dds_mod_qmix_in   ),  // MUX in signal:    SIGNED 16 bit
+  // DDS sin input
   .B                    ( dds_mod_sin       ),  // gain setting:     SIGNED 16 bit
 
   // multiplier output
-  .P                    ( qmix_q_s1_out     )   // QMIX output       SIGNED 17 bit
+  .P                    ( qmix_mod_q_s1_out )   // QMIX output       SIGNED 17 bit
 );
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_s2_Q (
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_mod_s2_Q (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
 
-  // offset value for DDS control
-  .CONCAT               ( dds_mod_ofs       ),  // offset:         UNSIGNED 48 bit
   // modulation input
-  .C                    ( 48'b0 | (qmix_q_s1_out << 5'd31)),  // offset:           SIGNED 48 bit
+  .A                    ({ qmix_mod_q_s1_out[31], qmix_mod_q_s1_out[29:15] }),  // MUX in signal:    SIGNED 16 bit
+  // DDS cos input
+  .B                    ( dds_mod_qmix_gain ),  // gain setting:     SIGNED 16 bit
 
   // multiplier output
-  .P                    ( qmix_q_s2_out     )   // QMIX output     UNSIGNED 48 bit
+  .P                    ( qmix_mod_q_s2_out )   // QMIX output       SIGNED,SIGNED 32 bit
 );
 
-/*
-wire [15:0] dds_mod_stream_in  = (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h00) ?  dds_mod_cos : muxin_mix_out;  // when ADC source ID is zero, default to OSC2
-wire [32:0] dds_mod_mix_gain   = { regs[REG_RW_RB_DDS_MOD_MIX_GAIN][31:0], 1'b0 };
-wire [47:0] dds_mod_mix_ofs    = { regs[REG_RW_RB_DDS_MOD_MIX_OFS_HI][15:0], regs[REG_RW_RB_DDS_MOD_MIX_OFS_LO][31:0] };
-
-wire [ 0:0] dds_mod_mix_vld;
-
-wire [47:0] dds_mod_mixed;
-
-rb_multadd_16s_33s_48u_07lat i_rb_dds_mod_multadd (
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_mod_s3_Q (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
-  .SCLR                 ( !rb_reset_n       ),  // enable part 2 of RadioBox sub-module
 
-  // multiplier input
-  .A                    ( dds_mod_stream_in    ),  // OSC2 signal, stream:   SIGNED 16 bit
-  .B                    ( dds_mod_mix_gain     ),  // OSC2 gain setting:     SIGNED 33 bit
-  .C                    ( dds_mod_mix_ofs      ),  // OSC2 offset setting: UNSIGNED 48 bit
-
-  .SUBTRACT             ( 1'b0              ),  // not used due to signed data
+  // modulation input
+  .C                    (48'b0 | ({qmix_mod_q_s2_out[31], qmix_mod_q_s2_out[29:0]} << 5'd16)),  // offset:           SIGNED 48 bit
+  // offset value for DDS control
+  .CONCAT               ( dds_mod_qmix_ofs  ),  // offset:         UNSIGNED 48 bit
 
   // multiplier output
-  .P                    ( dds_mod_mixed        ),  // mixer output     UNSIGNED 49 bit
-
-  .PCOUT                (                   )   // not used
+  .P                    ( qmix_mod_q_s3_out )   // QMIX output     UNSIGNED 48 bit
 );
-
-rb_pipe_07delay i_rb_dds_mod_multadd_pipe_delay (
-  // global signals
-  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
-  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
-  .SCLR                 ( !rb_reset_n       ),  // enable part 2 of RadioBox sub-module
-
-  .D                    ( dds_mod_axis_m_vld   ),  // transport OSC2 valid state through the multiplier pipe
-
-  .Q                    ( dds_mod_mix_vld      )
-);
-*/
 
 
 //---------------------------------------------------------------------------------
 //  FIR_MOD high pass filter for CIC compensation in the voice band
-
+/*
 wire [ 15:0] fir_hp_i_out;
 wire [ 15:0] fir_hp_q_out;
 
@@ -537,7 +512,7 @@ rb_fir i_rb_fir_hp_I (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( { qmix_i_s1_out[16], qmix_i_s1_out[14:0] }),  // QMIX output I of stage 1
+  .s_axis_data_tdata    ({ qmix_mod_i_s2_out[31], qmix_mod_i_s2_out[29:16] }),  // QMIX output I of stage 2
   .s_axis_data_tvalid   ( 1'b1              ),
   .s_axis_data_tready   (                   ),
 
@@ -550,18 +525,18 @@ rb_fir i_rb_fir_hp_Q (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( { qmix_q_s1_out[16], qmix_q_s1_out[14:0] }),  // QMIX output Q of stage 1
+  .s_axis_data_tdata    ({ qmix_mod_q_s2_out[31], qmix_mod_q_s2_out[29:16] }),  // QMIX output Q of stage 2
   .s_axis_data_tvalid   ( 1'b1              ),
   .s_axis_data_tready   (                   ),
 
   .m_axis_data_tdata    ( fir_hp_q_out      ),  // FIR HP output Q
   .m_axis_data_tvalid   (                   )
 );
-
+*/
 
 //---------------------------------------------------------------------------------
 //  CIC_MOD low pass filters
-
+/*
 wire [15:0] cic_i_out;
 wire [15:0] cic_q_out;
 
@@ -590,7 +565,7 @@ rb_cic_d611_33_48k125M_16T16 i_rb_cic_Q (
   .m_axis_data_tdata    ( cic_q_out         ),  // CIC output Q
   .m_axis_data_tvalid   (                   )
 );
-
+*/
 
 //---------------------------------------------------------------------------------
 //  DDS_CAR carrier frequency generator  (CW, FM, PM modulated)
@@ -599,14 +574,17 @@ wire         dds_car_inc_mux = regs[REG_RW_RB_CTRL][RB_CTRL_DDS_CAR_INC_SRC_STRE
 wire         dds_car_ofs_mux = regs[REG_RW_RB_CTRL][RB_CTRL_DDS_CAR_OFS_SRC_STREAM];
 wire         dds_car_resync  = regs[REG_RW_RB_CTRL][RB_CTRL_DDS_CAR_RESYNC];
 
-wire [ 47:0] dds_car_inc = ( dds_car_inc_mux ?  qmix_i_s2_out : { regs[REG_RW_RB_DDS_CAR_INC_HI][15:0], regs[REG_RW_RB_DDS_CAR_INC_LO][31:0] });
-wire [ 47:0] dds_car_ofs = ( dds_car_ofs_mux ?  qmix_i_s2_out : { regs[REG_RW_RB_DDS_CAR_OFS_HI][15:0], regs[REG_RW_RB_DDS_CAR_OFS_LO][31:0] });
+wire [ 47:0] dds_car_inc = ( dds_car_inc_mux ?  qmix_mod_i_s3_out : { regs[REG_RW_RB_DDS_CAR_INC_HI][15:0], regs[REG_RW_RB_DDS_CAR_INC_LO][31:0] });
+wire [ 47:0] dds_car_ofs = ( dds_car_ofs_mux ?  qmix_mod_i_s3_out : { regs[REG_RW_RB_DDS_CAR_OFS_HI][15:0], regs[REG_RW_RB_DDS_CAR_OFS_LO][31:0] });
 
 wire         dds_car_axis_s_vld   = rb_reset_n;  // TODO
 wire [103:0] dds_car_axis_s_phase = { 7'b0, dds_car_resync, dds_car_ofs, dds_car_inc };
 
 wire         dds_car_axis_m_vld;
 wire [ 31:0] dds_car_axis_m_data;
+
+wire [ 15:0] dds_car_cos = dds_car_axis_m_data[15: 0];
+wire [ 15:0] dds_car_sin = dds_car_axis_m_data[31:16];
 
 rb_dds_48_16_125 i_rb_dds_car (
   // global signals
@@ -627,8 +605,36 @@ rb_dds_48_16_125 i_rb_dds_car (
 //---------------------------------------------------------------------------------
 //  QMIX_CAR quadrature mixer for the radio frequency
 
-wire [ 15:0] qmix_rf_i         = 16'b0;
-wire [ 15:0] qmix_rf_q         = 16'b0;
+wire [ 31:0] qmix_car_i_s1_out;
+wire [ 31:0] qmix_car_q_s1_out;
+
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_I (
+  // global signals
+  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
+
+  // modulation input
+  .A                    ({ qmix_mod_i_s2_out[31],  qmix_mod_i_s2_out[29:15] }),  // MUX in signal:    SIGNED 16 bit
+  // DDS cos input
+  .B                    ( dds_car_cos       ),  // gain setting:     SIGNED 16 bit
+
+  // multiplier output
+  .P                    ( qmix_car_i_s1_out )   // QMIX output       SIGNED,SIGNED 32 bit
+);
+
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_Q (
+  // global signals
+  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
+
+  // modulation input
+  .A                    ({ qmix_mod_q_s2_out[31],  qmix_mod_q_s2_out[29:15] }),  // MUX in signal:    SIGNED 16 bit
+  // DDS cos input
+  .B                    ( dds_car_sin       ),  // gain setting:     SIGNED 16 bit
+
+  // multiplier output
+  .P                    ( qmix_car_q_s1_out )   // QMIX output       SIGNED,SIGNED 32 bit
+);
 
 
 //---------------------------------------------------------------------------------
@@ -638,9 +644,10 @@ wire [ 15:0] qmix_rf_q         = 16'b0;
 //---------------------------------------------------------------------------------
 //  AMP_RF amplifier for the radio frequency output (CW, AM modulated)
 
+wire [ 31:0] amp_rf_q_var      = qmix_car_q_s1_out;  // to be modified with other modulation variants as SSB
 wire         amp_rf_gain_mux   = regs[REG_RW_RB_CTRL][RB_CTRL_DDS_CAR_GAIN_SRC_STREAM];
 
-wire [ 15:0] amp_rf_gain       = ( amp_rf_gain_mux ?  (qmix_i_s2_out[47:32] >> 6'd32) : regs[REG_RW_RB_AMP_RF_GAIN][15:0]);
+wire [ 15:0] amp_rf_gain       = ( amp_rf_gain_mux ?  (qmix_mod_q_s3_out[47:32] >> 6'd32) : regs[REG_RW_RB_AMP_RF_GAIN][15:0]);
 wire [ 15:0] amp_rf_ofs        = regs[REG_RW_RB_AMP_RF_OFS][15:0];
 
 wire [ 16:0] amp_rf_out;
@@ -652,9 +659,9 @@ rb_dsp48_AaDmBaC_A16_D16_B16_C17_P17 i_rb_dsp48_amp_rf (
   .SCLR                 ( !rb_enable        ),  // put output to neutral when activated
 
   // QMIX RF I output
-  .A                    ( qmix_rf_i         ),  // QMIX RF I         SIGNED 16 bit
+  .A                    ({ qmix_car_i_s1_out[31], qmix_car_i_s1_out[29:15] }),  // QMIX RF I         SIGNED 16 bit
   // QMIX RF Q output
-  .D                    ( qmix_rf_q         ),  // QMIX RF Q         SIGNED 16 bit
+  .D                    ({ amp_rf_q_var[31],      amp_rf_q_var[29:15] }),       // QMIX RF Q         SIGNED 16 bit
   // AMP RF gain
   .B                    ( amp_rf_gain       ),  // AMP RF gain     UNSIGNED 16 bit
   // AMP RF offset
@@ -665,44 +672,11 @@ rb_dsp48_AaDmBaC_A16_D16_B16_C17_P17 i_rb_dsp48_amp_rf (
 );
 
 
-/*
-rb_multadd_16s_33s_48u_07lat i_rb_dds_car_multadd (
-  // global signals
-  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
-  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
-  .SCLR                 ( !rb_reset_n       ),  // enable part 2 of RadioBox sub-module
-
-  // multiplier input
-  .A                    ( dds_car_axis_m_data  ),  // OSC1 signal:           SIGNED 16 bit
-  .B                    ( dds_car_mix_gain     ),  // OSC1 gain setting:     SIGNED 32 bit
-  .C                    ( dds_car_mix_ofs      ),  // OSC1 offset setting: UNSIGNED 48 bit
-
-  .SUBTRACT             ( 1'b0              ),  // not used due to signed data
-
-  // multiplier output
-  .P                    ( dds_car_mixed        ),  // mixer output
-
-  .PCOUT                (                   )   // not used
-);
-
-rb_pipe_07delay i_rb_dds_car_multadd_pipe_delay (
-  // global signals
-  .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
-  .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
-  .SCLR                 ( !rb_reset_n       ),  // enable part 2 of RadioBox sub-module
-
-  .D                    ( dds_car_axis_m_vld   ),  // transport OSC1 valid state through the multiplier pipe
-
-  .Q                    ( dds_car_mix_vld      )
-);
-*/
-
-
 //---------------------------------------------------------------------------------
 //  RB output signal assignments
 
 assign rb_out_ch[0] = amp_rf_out[16:1];
-assign rb_out_ch[1] = qmix_i_s1_out[16:1];
+assign rb_out_ch[1] = qmix_mod_i_s1_out[16:1];
 
 
 
@@ -795,12 +769,19 @@ else begin
          RB_LED_CTRL_NUM_ADC_MOD_OUT: begin
             rb_leds_data <= fct_mag(adc_mod_out[31:16]);
             end
-         RB_LED_CTRL_NUM_QMIX_I_S1_OUT: begin
-            rb_leds_data <= fct_mag(qmix_i_s1_out[16:1]);
+         RB_LED_CTRL_NUM_QMIX_MOD_I_S1_OUT: begin
+            rb_leds_data <= fct_mag(qmix_mod_i_s1_out[31:16]);
             end
-         RB_LED_CTRL_NUM_QMIX_Q_S1_OUT: begin
-            rb_leds_data <= fct_mag(qmix_i_s1_out[16:1]);
+         RB_LED_CTRL_NUM_QMIX_MOD_Q_S1_OUT: begin
+            rb_leds_data <= fct_mag(qmix_mod_q_s1_out[31:16]);
             end
+         RB_LED_CTRL_NUM_QMIX_MOD_I_S2_OUT: begin
+               rb_leds_data <= fct_mag(qmix_mod_i_s2_out[31:16]);
+               end
+         RB_LED_CTRL_NUM_QMIX_MOD_Q_S2_OUT: begin
+               rb_leds_data <= fct_mag(qmix_mod_q_s2_out[31:16]);
+               end
+/*
          RB_LED_CTRL_NUM_HP_I_OUT: begin
             rb_leds_data <= fct_mag(fir_hp_i_out[15:0]);
             end
@@ -813,6 +794,16 @@ else begin
          RB_LED_CTRL_NUM_CIC_Q_OUT: begin
             rb_leds_data <= fct_mag(cic_q_out[15:0]);
             end
+*/
+         RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT: begin
+            rb_leds_data <= fct_mag(qmix_car_i_s1_out[31:16]);
+            end
+         RB_LED_CTRL_NUM_QMIX_CAR_Q_S1_OUT: begin
+            rb_leds_data <= fct_mag(qmix_car_q_s1_out[31:16]);
+            end
+         RB_LED_CTRL_NUM_AMP_RF_OUT: begin
+               rb_leds_data <= fct_mag(amp_rf_out[16:1]);
+               end
 
          default: begin
             rb_leds_data <=  8'b0;
