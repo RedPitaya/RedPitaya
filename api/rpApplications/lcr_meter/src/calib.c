@@ -27,17 +27,17 @@ int store_calib(const calib_t CALIB_MODE,
 	strcpy(calib_data_path, APP_PATH);
 	strcat(calib_data_path, stringFromCalib(CALIB_MODE));
 	//Open file pointer to store calib data
-	FILE *calibration_data = fopen(&calib_data_path[0], "w+");
+	FILE *calibration_file = fopen(&calib_data_path[0], "w+");
 	
 	//Write data to calib_file
 	for(int i = 0; i < CALIB_STEPS; i++){
-		fprintf(calibration_data, 
+		fprintf(calibration_file, 
 			"%f %fi\n", crealf(amplitude_z[i]), cimagf(amplitude_z[i]));
 
 		syslog(LOG_INFO, "%f %fi", 
 			crealf(amplitude_z[i]), cimagf(amplitude_z[i]));
 	}
 
-	fclose(calibration_data);
+	fclose(calibration_file);
 	return 0;
 }
