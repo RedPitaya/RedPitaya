@@ -154,17 +154,18 @@
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
 			                	</div>
 			                  	<div id="prim_displ_choice">
-			                  		<input style="display:none;" type="checkbox" id="cb_E" name="cb_E" class="bt_check"/>
-  									<label for="cb_E">E</label>
 
-									<input style="display:none;" type="checkbox" id="cb_Q" name="cb_Q" class="bt_check"/>
-  									<label for="cb_Q">Q</label>
+			                  		<input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check"/>
+  									<label for="LCR_R">R</label>
 
-									<input style="display:none;" type="checkbox" id="cb_D" name="cb_D" class="bt_check"/>
-  									<label for="cb_D">D</label>
+									<input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C" class="bt_check"/>
+  									<label for="LCR_C">C</label>
 
-									<input style="display:none;" type="checkbox" id="cb_P" name="cb_P" class="bt_check" checked="checked"/>
-  									<label for="cb_P" >P</label>
+									<input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check"/>
+  									<label for="LCR_L">L</label>
+
+									<input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" checked="checked" />
+  									<label for="LCR_Z">Z</label>
 	        					</div>
 			                </div>
 	              		</form>
@@ -177,18 +178,17 @@
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
 			                	</div>
 			                  	<div id="sec_displ_choice">
+			                  		<input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check"/>
+  									<label for="LCR_ESR">E</label>
 
-									<input style="display:none;" type="checkbox" id="cb_R" name="cb_R" class="bt_check"/>
-  									<label for="cb_R">R</label>
+									<input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q" class="bt_check"/>
+  									<label for="LCR_Q">Q</label>
 
-									<input style="display:none;" type="checkbox" id="cb_C" name="cb_C" class="bt_check"/>
-  									<label for="cb_C">C</label>
+									<input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check"/>
+  									<label for="LCR_D">D</label>
 
-									<input style="display:none;" type="checkbox" id="cb_L" name="cb_L" class="bt_check"/>
-  									<label for="cb_L">L</label>
-
-									<input style="display:none;" type="checkbox" id="cb_Z" name="cb_Z" class="bt_check" checked="checked" />
-  									<label for="cb_Z">Z</label>
+									<input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" checked="checked"/>
+  									<label for="LCR_P" >P</label>
 	        					</div>
 			                </div>
 	              		</form>
@@ -343,7 +343,7 @@
 		          				<div class="progress">
 	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40"
 	  									aria-valuemin="0" aria-valuemax="100" style="width:40%">
-	    								40% Complete
+	    								50%
 	  								</div>
 		        				</div>
 
@@ -373,44 +373,15 @@
 		          				<div class="progress">
 	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="70"
 	  									aria-valuemin="0" aria-valuemax="100" style="width:70%">
-	    								70% Complete
+	    								100%
 	  								</div>
 		        				</div>
 		        				<div>
-		        					<h5>Please connect load calibration circuit and press next</h5>
+		        					<h5>You have successfully calibrated your Red Pitaya.</h5>
 		        				</div>
 		        			</div>
 	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%">Next</button>
-	        				</div>
-	      				</div>
-      				</div>
-  				</div>
-			</div>
-
-			<!-- Load calib modal -->
-			<div class="modal fade" id="modal_calib_load" role="dialog">
-    			<div class="modal-dialog">
-	      			<!-- Modal content-->
-	      			<div class="modal-content">
-	        			<div class="modal-header">
-	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
-	          					<h4 class="modal-title">Calibrating....</h4>
-	        			</div>
-	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
-	          				<div class="modal-body">
-		          				<div class="progress">
-	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
-	  									aria-valuemin="0" aria-valuemax="100" style="width:100%">
-	    								100% Complete
-	  								</div>
-		        				</div>
-		        				<div>
-		        					<h5>You have successfully calibrated your Red Pitaya</h5>
-		        				</div>
-		        			</div>
-	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_calib_load" type="button" class="btn btn-default" data-dismiss="modal" style="width: 25%">Finish</button>
+	        					<button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%">Finish</button>
 	        				</div>
 	      				</div>
       				</div>

@@ -16,15 +16,14 @@
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 100);
 
 //Out params
-CFloatParameter amplitudeZ("AMPLITUDEZ", CBaseParameter::RW, 0, 0, 0, 1000000);
-CFloatParameter phaseZ("PHASEZ", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_L("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_C("LCR_C", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_R("LCR_R", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_P("LCR_P", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_amplitude("LCR_Z", CBaseParameter::RW, 0, 0, 0, 1000000);
+CFloatParameter lcr_Inductance("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_Capacitance("LCR_C", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_Resitance("LCR_R", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_phase("LCR_P", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_D("LCR_D", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_E("LCR_E", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_ESR("LCR_ESR", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 
 //In params
 CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 100000);
@@ -32,6 +31,9 @@ CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
+CBooleanParameter toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, false, 0);
+CBooleanParameter serialMode("LCR_SERIAL", CBaseParameter::RW, false, 0);
+CBooleanParameter rangeMode("LCR_RANGE", CBaseParameter::RW, false, 0);
 
 const char *rp_app_desc(void){
 	return (const char *)"Red Pitaya Lcr meter application.\n";
@@ -88,13 +90,25 @@ void UpdateParams(void){
 	}
 
 	if(startMeasure.NewValue() == true){
+		
 		lcrApp_LcrRun();
 		startMeasure.Update();
+
+		//Acquire calculated parameters frm RP
 		lcrApp_LcrCopyParams(data);
-		amplitudeZ.Value() = data->lcr_amplitude;
+
+		lcr_amplitude.Value() 		= data->lcr_amplitude;
+		lcr_phase.Value()     		= data->lcr_phase;
+		lcr_Inductance.Value()		= data->lcr_L;
+		lcr_Capacitance.Value() 	= data->lcr_C;
+		lcr_Resitance.Value()		= data->lcr_R;
+		lcr_D.Value()				= data->lcr_D;
+		lcr_Q.Value()				= data->lcr_Q;
+		lcr_ESR.Value()				= data->lcr_ESR;
+
 	}else if(startMeasure.NewValue() == false){
 		startMeasure.Update();
-		amplitudeZ.Value() = 0;
+		lcr_amplitude.Value() = 0;
 	}
 
 	//Set calibration

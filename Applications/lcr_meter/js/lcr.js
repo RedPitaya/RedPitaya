@@ -45,6 +45,11 @@
 
   	LCR.connect_time;
 
+  	LCR.displ_params = {
+  		prim: "LCR_Z",
+  		sec:  "LCR_P"
+  	};
+
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
   		.done(function(dresult) {
@@ -121,12 +126,20 @@
 		for(var param_name in new_params){
 			LCR.params.orig[param_name] = new_params[param_name];
 
-			if(param_name == 'AMPLITUDEZ'){
-				$('#lb_prim_displ').empty().append(Math.round(new_params['AMPLITUDEZ'].value * 100) / 100);
+			if(param_name == LCR.displ_params.prim){
+				$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
+
+				//function check for suffix/units
+			}
+
+			if(param_name == LCR.displ_params.sec){
+				$('#lb_sec_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
+
+				//function check for suffix/units
 			}
 
 			if($('#LCR_LOG').val() == '1'){
-	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['AMPLITUDEZ'].value + '</td><td>!</td></tr>');
+	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['LCR_Z'].value + '</td><td>!</td></tr>');
 	      	}
 		}
 	};
@@ -181,6 +194,10 @@ $(function() {
 	/* --------------------- CALIBRATION --------------------- */
 	$('#LCR_CALIBRATE').on('click', function(ev) {
 		ev.preventDefault();
+		$('#LCR_HOLD').hide();
+		$('#LCR_START').css('display', 'block');
+		LCR.params.local['LCR_RUN'] = { value: false };
+		LCR.sendParams();
 		$('#modal_calib_start').modal('show');
 	});
 
@@ -200,17 +217,11 @@ $(function() {
 		$('#modal_calib_open').modal('hide');
 		$('#modal_calib_short').modal('show');
 		LCR.sendParams();
-	});
-
-	$('#bt_calib_short').on('click', function(ev) {
-		ev.preventDefault();
-		LCR.params.local['LCR_CALIB_MODE'] = { value: 3 };
+		setTimeout(function(){return;}, 100);
+		LCR.params.local['LCR_CALIB_MODE'] = { value: 0};
 		LCR.params.local['LCR_CALIBRATION'] = { value: true };
-		$('#modal_calib_short').modal('hide');
-		$('#modal_calib_load').modal('show');
 		LCR.sendParams();
 	});
-
 
 
 	/* ------------------------------------------------------- */
@@ -233,6 +244,14 @@ $(function() {
 	$('#LCR_FREQUENCY').change(function(){
 		LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
 		LCR.sendParams();
+	});
+
+	$('#prim_displ_choice :checkbox').click(function(){
+		LCR.displ_params.prim = this.id;
+	});
+
+	$('#sec_displ_choice :checkbox').click(function(){
+		LCR.displ_params.sec = this.id;
 	});
 
 	LCR.startApp();
