@@ -32,7 +32,7 @@ CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
 CBooleanParameter toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, false, 0);
-CBooleanParameter serialMode("LCR_SERIAL", CBaseParameter::RW, false, 0);
+CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, false, 0);
 CBooleanParameter rangeMode("LCR_RANGE", CBaseParameter::RW, false, 0);
 
 const char *rp_app_desc(void){
@@ -108,7 +108,14 @@ void UpdateParams(void){
 
 	}else if(startMeasure.NewValue() == false){
 		startMeasure.Update();
-		lcr_amplitude.Value() = 0;
+		lcr_amplitude.Value()   = 0;
+		lcr_phase.Value()       = 0;
+		lcr_Inductance.Value()  = 0;
+		lcr_Capacitance.Value() = 0;
+		lcr_Resitance.Value()   = 0;
+		lcr_D.Value()           = 0;
+		lcr_Q.Value()           = 0;
+		lcr_ESR.Value()         = 0;
 	}
 
 	//Set calibration
@@ -117,6 +124,16 @@ void UpdateParams(void){
 		lcrApp_LcrStartCorrection();
 		startCalibration.Update();
 		startCalibration.Value() = false;
+	}
+
+	if(IS_NEW(toleranceMode)){
+		lcrApp_LcrSetMeasTolerance(toleranceMode.NewValue());
+		toleranceMode.Update();
+	}
+
+	if(IS_NEW(seriesMode)){
+		lcrApp_LcrSetMeasSeries(seriesMode.NewValue());
+		seriesMode.Update();
 	}
 
 }

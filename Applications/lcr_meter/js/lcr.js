@@ -50,6 +50,13 @@
   		sec:  "LCR_P"
   	};
 
+  	LCR.tolerance = {
+  		apply_tolerance: false,
+  		ampl_tol: 0
+  	};
+
+  	//LCR.units = {'Ohm'}
+
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
   		.done(function(dresult) {
@@ -126,16 +133,34 @@
 		for(var param_name in new_params){
 			LCR.params.orig[param_name] = new_params[param_name];
 
-			if(param_name == LCR.displ_params.prim){
+			if(param_name == LCR.displ_params.prim  && LCR.tolerance.apply_tolerance == false){
 				$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
 
 				//function check for suffix/units
 			}
 
-			if(param_name == LCR.displ_params.sec){
+			if(param_name == LCR.displ_params.sec && LCR.tolerance.apply_tolerance == false){
 				$('#lb_sec_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
 
 				//function check for suffix/units
+			}
+
+			if(param_name == 'LCR_Z' && LCR.tolerance.apply_tolerance == true 
+				&& old_params['LCR_RUN'].value == true){
+
+				var diff = (new_params[param_name].value - LCR.tolerance.ampl_tol) / 100;
+				console.log(diff);
+
+				if(diff > Math.abs(0.01)){
+					$('#lb_sec_displ').empty().append((Math.round(diff * 100) / 100) * 100 + "%");
+					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
+				}else if(diff > Math.abs(1)){
+					$('#lb_sec_displ').empty().append("100% >");
+					$('#lb_prim_displ').empty().append("100% >");
+				}else{
+					$('#lb_sec_displ').empty().append("100%");
+					$('#lb_prim_displ').empty().append(Math.round(LCR.tolerance.ampl_tol * 100) / 100);
+				}
 			}
 
 			if($('#LCR_LOG').val() == '1'){
@@ -223,7 +248,6 @@ $(function() {
 		LCR.sendParams();
 	});
 
-
 	/* ------------------------------------------------------- */
 
 	//Log data
@@ -252,6 +276,32 @@ $(function() {
 
 	$('#sec_displ_choice :checkbox').click(function(){
 		LCR.displ_params.sec = this.id;
+	});
+
+	$('#cb_tol').click(function(){
+		LCR.tolerance.apply_tolerance = true;
+		LCR.tolerance.ampl_tol = LCR.params.orig['LCR_Z'].value;
+		LCR.params.local['LCR_TOLERANCE'] = { value: true };
+		$('#lb_prim_displ').empty().append("100%");
+		$('#rec_led').css('display', 'block');
+		LCR.sendParams();
+	});
+
+	$('#cb_rel').click(function(){
+		LCR.tolerance.apply_tolerance = false;
+		LCR.params.local['LCR_TOLERANCE'] = { value: false };
+		LCR.sendParams();
+	});
+
+	$('#cb_ser').click(function(){
+		LCR.params.local['LCR_SERIES'] = { value: true };
+		LCR.sendParams();
+	});
+
+	$('#cb_paralel').click(function(){
+		console.log('Paralel');
+		LCR.params.local['LCR_SERIES'] = { value: false };
+		LCR.sendParams();
 	});
 
 	LCR.startApp();
