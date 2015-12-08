@@ -185,29 +185,26 @@ int lcr_switchRShunt(float z_ampl, uint32_t *r_shunt){
 }
 
 
-int lcr_getDecimationValue(float frequency,
+void lcr_getDecimationValue(float frequency,
 						rp_acq_decimation_t *api_dec,
 						int *dec_val){
 
-		if(frequency >= 160000){
-			*api_dec = RP_DEC_1;
-			*dec_val = 1;
-		}else if(frequency >= 20000){
-			*api_dec = RP_DEC_8;
-			*dec_val = 8;
-		}else if(frequency >= 2500){
-			*api_dec = RP_DEC_64;
-			*dec_val = 64;
-		}else if(frequency >= 160){
-			*api_dec = RP_DEC_1024;
-			*dec_val = 1024;
-		}else if(frequency >= 20){
-			*api_dec = RP_DEC_8192;
-			*dec_val = 8192;
-		}else{
-			*api_dec = RP_DEC_65536;
-			*dec_val = 65536;
+		switch((int)frequency) {
+			case 100000:
+				*api_dec = RP_DEC_1;
+				*dec_val = 1;
+				break;
+			case 10000:
+				*api_dec = RP_DEC_8;
+				*dec_val = 8;
+				break;
+			case 1000:
+				*api_dec = RP_DEC_64;
+				*dec_val = 64;
+				break;
+			case 100:
+				*api_dec = RP_DEC_1024;
+				*dec_val = 1024;
+				break;
 		}
-	
-	return 0;
 }

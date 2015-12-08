@@ -46,7 +46,7 @@ int set_IIC_Shunt(uint32_t shunt);
 
 int lcr_switchRShunt(float z_ampl, uint32_t *r_shunt);
 
-int lcr_getDecimationValue(float frequency,
+void lcr_getDecimationValue(float frequency,
 						rp_acq_decimation_t *api_dec,
 						int *dec_val);
 
