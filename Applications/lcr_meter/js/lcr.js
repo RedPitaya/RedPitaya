@@ -145,7 +145,7 @@
 			}
 
 			if(param_name == 'LCR_Z' && LCR.tolerance.apply_tolerance == true 
-				&& old_params['LCR_RUN'].value == true){
+				&& old_params['LCR_RUN'].value == false){
 
 				var diff = (new_params[param_name].value - LCR.tolerance.ampl_tol) / 100;
 				console.log(diff);
@@ -274,6 +274,7 @@ $(function() {
 
 	$('#prim_displ_choice :checkbox').click(function(){
 		LCR.displ_params.prim = this.id;
+		//if()
 	});
 
 	$('#sec_displ_choice :checkbox').click(function(){
