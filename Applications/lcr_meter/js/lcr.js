@@ -10,7 +10,6 @@
 
 (function(LCR, $, undefined){
 
-	console.log('Starting JS script');
 	//Configure APP
 	LCR.config = {};
 	LCR.config.app_id = 'lcr_meter';
@@ -151,7 +150,7 @@
 				var diff = (new_params[param_name].value - LCR.tolerance.ampl_tol) / 100;
 				console.log(diff);
 
-				if(diff > Math.abs(0.01)){
+				if( Math.abs(diff) > 0.01){
 					$('#lb_sec_displ').empty().append((Math.round(diff * 100) / 100) * 100 + "%");
 					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
 				}else if(diff > Math.abs(1)){
@@ -191,6 +190,9 @@
 }(window.LCR = window.LCR || {}, jQuery));
 
 $(function() {
+
+	//Header options. Prevent aggressive firefox caching
+	$("html :checkbox").attr("autocomplete", "off");
 
 	console.log('Processing on site events');
 
