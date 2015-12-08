@@ -32,7 +32,7 @@
 #include "redpitaya/rp.h"
 
 /* Global variables definition */
-int 					min_periodes = 10;
+int 					min_periodes = 8;
 
 pthread_mutex_t 		mutex;
 pthread_t 				*imp_thread_handler = NULL;
@@ -45,7 +45,8 @@ lcr_main_data_t *calc_data;
 
 struct impendace_params {
 	float frequency;
-	float _Complex Z_out;
+	float _Complex z_out;
+	float phase_out;
 };
 
 /* Init the main API structure */
@@ -117,6 +118,7 @@ int lcr_SafeThreadGen(rp_channel_t channel,
 	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
 	ECHECK_APP(rp_GenFreq(channel, frequency));
 	ECHECK_APP(rp_GenOutEnable(channel));
+	usleep(10000);
 	pthread_mutex_unlock(&mutex);
 
 	return RP_OK;
@@ -135,7 +137,7 @@ int lcr_SafeThreadAcqData(float **data,
 	pthread_mutex_lock(&mutex);
 	ECHECK_APP(rp_AcqReset());	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
-	ECHECK_APP(rp_AcqSetTriggerLevel(0.4));
+	ECHECK_APP(rp_AcqSetTriggerLevel(0.5));
 	ECHECK_APP(rp_AcqSetTriggerDelay(acq_size - (ADC_BUFF_SIZE / 2)));
 	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
 	ECHECK_APP(rp_AcqStart());
@@ -151,7 +153,7 @@ int lcr_SafeThreadAcqData(float **data,
     }
 
     ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
-    usleep(100 + (((acq_size * 8) * dec)) / 1000);
+    usleep(200);//usleep(1000 + (((acq_size * 8) * dec)) / 1000);
 	ECHECK_APP(rp_AcqGetDataV(RP_CH_1, pos, &acq_u_size, data[0]));
 	ECHECK_APP(rp_AcqGetDataV(RP_CH_2, pos, &acq_u_size, data[1]));
 	pthread_mutex_unlock(&mutex);
@@ -159,7 +161,9 @@ int lcr_SafeThreadAcqData(float **data,
 	return RP_OK;
 }
 
-int lcr_getImpedance(float frequency, float _Complex *Z_out){
+int lcr_getImpedance(float frequency, 
+	                 float _Complex *z_out, 
+	                 float *phase_out){
 
 	float w_out;
 
@@ -195,7 +199,7 @@ int lcr_getImpedance(float frequency, float _Complex *Z_out){
 	}
 
 	ret_val = lcr_data_analysis(analysis_data, acq_size, 0, 
-				r_shunt, Z_out, w_out, decimation);
+				r_shunt, w_out, decimation, z_out, phase_out);
 
 	//Disable channel 1 generation module
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
@@ -212,8 +216,10 @@ void *lcr_MainThread(void *args){
 	set_IIC_Shunt(R_SHUNT_30);
 	//uint32_t new_shunt;
 
-lcr_getImpedance(args_struct->frequency, &args_struct->Z_out);
-	/*Main lcr meter algorithm
+	lcr_getImpedance(args_struct->frequency, 
+		&args_struct->z_out, &args_struct->phase_out);
+
+	/* Main lcr meter algorithm
 	
 	while(1){
 		
@@ -253,7 +259,7 @@ int lcr_Run(){
 	}
 	pthread_join(lcr_thread_handler, 0);
 
-	if(lcr_CalculateData(args.Z_out) != RP_OK){
+	if(lcr_CalculateData(args.z_out, args.phase_out) != RP_OK){
 		return RP_EOOR;
 	}
 
@@ -281,7 +287,7 @@ int lcr_Correction(){
 		}
 
 		pthread_join(lcr_thread_handler, 0);
-		amplitude_z[i] = args.Z_out;
+		amplitude_z[i] = args.z_out;
 	}
 	
 	//Store calibration
@@ -291,7 +297,7 @@ int lcr_Correction(){
 	return RP_OK;
 }
 
-int lcr_CalculateData(float _Complex Z_measured){
+int lcr_CalculateData(float _Complex z_measured, float phase_measured){
 
 	bool calibration = false;
 
@@ -313,9 +319,9 @@ int lcr_CalculateData(float _Complex Z_measured){
 		calibration = true;	
 	}
 
-	float _Complex Z_open[CALIB_STEPS]  = {0, 0, 0, 0};
-	float _Complex Z_short[CALIB_STEPS] = {0, 0, 0, 0};
-	float _Complex Z_final;
+	float _Complex z_open[CALIB_STEPS]  = {0, 0, 0, 0};
+	float _Complex z_short[CALIB_STEPS] = {0, 0, 0, 0};
+	float _Complex z_final;
 
 	/* Read calibration from files */
 	if(calibration){
@@ -323,7 +329,7 @@ int lcr_CalculateData(float _Complex Z_measured){
 		while(!feof(f_open)){
 			float z_open_imag, z_open_real;
 			fscanf(f_open, "%f %fi", &z_open_real, &z_open_imag);
-			Z_open[line] = z_open_real + z_open_imag*I;
+			z_open[line] = z_open_real + z_open_imag*I;
 			line++;
 		}
 
@@ -331,7 +337,7 @@ int lcr_CalculateData(float _Complex Z_measured){
 		while(!feof(f_short)){
 			float z_short_imag, z_short_real;
 			fscanf(f_short, "%f %fi", &z_short_real, &z_short_imag);
-			Z_short[line] = z_short_real + z_short_imag*I;
+			z_short[line] = z_short_real + z_short_imag*I;
 			line++;
 		}	
 	}
@@ -341,36 +347,26 @@ int lcr_CalculateData(float _Complex Z_measured){
 
 	//Calibration was made
 	if(calibration){
-		
-		Z_final = Z_open[index] - ((Z_short[index] - 
-			Z_measured) / (Z_measured - Z_open[index]));
-/*
-		syslog(LOG_INFO, "SHORT R: %f | SHORT I: %f\n", 
-			creal(Z_short[index]), cimagf(Z_short[index]));
+		z_final = z_open[index] - ((z_short[index] - 
+			z_measured) / (z_measured - z_open[index]));
 
-		syslog(LOG_INFO, "OPEN R: %f | OPEN I: %f\n", 
-			crealf(Z_open[index]), cimagf(Z_open[index]));
-
-		syslog(LOG_INFO, "JAO FINAL R: %f | FINAL I: %f\n\n",
-			creal(Z_final), cimag(Z_final));
-*/
 	//No calibration was made
 	}else{
-		Z_final = Z_measured;
+		z_final = z_measured;
 	}
 
 	float w_out = 2 * M_PI * main_params.frequency;
 	
-	float Y = 1 / Z_final;
+	float Y = 1 / z_final;
 	
 	float G_p = creal(Y);
 	float B_p = cimag(Y);
 
-	float X_s = cimag(Z_final);
+	float X_s = cimag(z_final);
 
 	/* Series mode */
 	if(main_params.series){
-		R_out = creal(Z_final);
+		R_out = creal(z_final);
 		C_out = -1 / (w_out * X_s);
 		L_out = X_s / w_out;
 		ESR_out = R_out;
@@ -381,18 +377,11 @@ int lcr_CalculateData(float _Complex Z_measured){
 		ESR_out = 1; //TODO
 	}
 
-	float P_rad = atanf(X_s / R_out);
-
-	if(P_rad <= (-M_PI)){
-		P_rad += 2 * M_PI;
-	}else if(P_rad >= M_PI){
-		P_rad -= (2 * M_PI);
-	}
 
 	Q_out = X_s / R_out;
 	D_out = -1 / Q_out;
-	ampl_out = cabs(Z_final);
-	phase_out = 180 * (M_PI / P_rad);
+	ampl_out = cabs(z_final);
+	phase_out = phase_measured;
 
 	//Set output structure pointers
 	calc_data->lcr_amplitude = ampl_out;
@@ -430,9 +419,10 @@ int lcr_data_analysis(float **data,
 					uint32_t size, 
 					float dc_bias, 
 					uint32_t r_shunt, 
-					float _Complex *Z, 
 					float w_out, 
-					int decimation){
+					int decimation,
+					float _Complex *z_out,
+					float *phase_out){
 
 	/* Forward vector and variable declarations */
 	float ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
@@ -446,29 +436,28 @@ int lcr_data_analysis(float **data,
 	float u_dut_s[2][size];
 	float i_dut_s[2][size];
 
-	float component_lock_in[2][1];
+	float component_lock_in[2][2];
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
 		i_dut[i] = data[1][i] / r_shunt;
 	}
 
-
 	for(int i = 0; i < size; i++){
 		ang = (i * T * w_out);
 		//Real		
 		u_dut_s[0][i] = u_dut[i] * sin(ang);
-		u_dut_s[1][i] = u_dut[i] * sin(ang - (M_PI / 2));
+		u_dut_s[1][i] = u_dut[i] * sin(ang + (M_PI / 2));
 		//Imag
 		i_dut_s[0][i] = i_dut[i] * sin(ang);
-		i_dut_s[1][i] = i_dut[i] * sin(ang - (M_PI / 2));
+		i_dut_s[1][i] = i_dut[i] * sin(ang + (M_PI / 2));
 	}
 	
 	/* Trapezoidal approximation */
-	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size); //X
-	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size); //Y 
-	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size); //X
-	component_lock_in[1][1] = trapezoidalApprox(i_dut_s[1], T, size); //Y
+	component_lock_in[0][0] = trapezoidalApprox(u_dut_s[0], T, size); //U_X
+	component_lock_in[0][1] = trapezoidalApprox(u_dut_s[1], T, size); //U_Y 
+	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size); //I_X
+	component_lock_in[1][1] = trapezoidalApprox(i_dut_s[1], T, size); //I_Y
 
 	/* Calculating volatage and phase */
 	u_dut_ampl = 2 * (sqrtf(powf(component_lock_in[0][0], 2.0)) + 
@@ -493,7 +482,8 @@ int lcr_data_analysis(float **data,
 		phase_z_rad = phase_z_rad - (2 * M_PI);
 	}
 
-	*Z = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
+	*z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
+	*phase_out = 180.0 * (phase_z_rad / (2 * M_PI));
 
 	return RP_OK;
 }

@@ -90,15 +90,22 @@ int lcr_SafeThreadAcqData(float **data,
 						  int acq_size,
 						  int dec);
 
-int lcr_getImpedance(float frequency, float _Complex *Z_out);
+int lcr_getImpedance(float frequency, 
+	                 float _Complex *z_out,
+	                 float *phase_out);
+
 int lcr_Correction();
-int lcr_CalculateData(float _Complex Z_measured);
+int lcr_CalculateData(float _Complex Z_measured, float phase_measured);
 int lcr_CopyParams(lcr_main_data_t *params);
 
-int lcr_data_analysis(float **data, uint32_t size, float dc_bias, 
-		uint32_t r_shunt, float _Complex *Z, float w_out, int decimation);
-
-
+int lcr_data_analysis(float **data, 
+	                  uint32_t size, 
+	                  float dc_bias, 
+		              uint32_t r_shunt,  
+		              float w_out, 
+		              int decimation,
+		              float _Complex *z_out,
+		              float *phase_out);
 
 /* Getters and Setters */
 int lcr_SetFrequency(float frequency);
