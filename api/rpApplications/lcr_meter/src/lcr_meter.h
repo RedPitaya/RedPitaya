@@ -42,7 +42,7 @@ typedef enum calibration{
 /* Main lcr params structure */
 typedef struct params_e{
 	float frequency;
-	uint32_t r_shunt;
+	int r_shunt;
 	calib_t calibration;
 	bool tolerance;
 	bool range;
@@ -66,8 +66,7 @@ static inline char *stringFromCalib(enum calibration calib)
 {
     static char *strings[] = { "CALIB_NONE", 
     						   "CALIB_OPEN", 
-    						   "CALIB_SHORT", 
-    						   "CALIB_LOAD"};
+    						   "CALIB_SHORT"};
 
     return strings[calib];
 }
@@ -110,8 +109,8 @@ int lcr_data_analysis(float **data,
 /* Getters and Setters */
 int lcr_SetFrequency(float frequency);
 int lcr_GetFrequency(float *frequency);
-int lcr_setRShunt(uint32_t r_shunt);
-int lcr_getRShunt(uint32_t *r_shunt);
+int lcr_setRShunt(int r_shunt);
+int lcr_getRShunt(int *r_shunt);
 int lcr_SetCalibMode(calib_t mode);
 int lcr_GetCalibMode(calib_t *mode);
 int lcr_SetMeasSeries(bool serial);

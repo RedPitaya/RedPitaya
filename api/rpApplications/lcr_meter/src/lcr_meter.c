@@ -33,12 +33,10 @@
 
 /* Global variables definition */
 int 					min_periodes = 8;
-
 pthread_mutex_t 		mutex;
-pthread_t 				*imp_thread_handler = NULL;
 
 /* Init lcr params struct */
-lcr_params_t main_params = {0, 0, 0, false};
+lcr_params_t main_params = {0, 0, CALIB_NONE, false, false, true};
 
 /* Main lcr data params */
 lcr_main_data_t *calc_data;
@@ -48,6 +46,11 @@ struct impendace_params {
 	float _Complex z_out;
 	float phase_out;
 };
+
+/* R shunt values definition */
+const double R_shunt_tbl[] = 
+	{30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
+
 
 /* Init the main API structure */
 int lcr_Init(){
@@ -103,8 +106,12 @@ int lcr_Reset(){
 }
 
 int lcr_SetDefaultValues(){
-	ECHECK_APP(lcr_setRShunt(R_SHUNT_30));
+	ECHECK_APP(lcr_setRShunt(2));
 	ECHECK_APP(lcr_SetFrequency(1000.0));
+	ECHECK_APP(lcr_SetCalibMode(CALIB_NONE));
+	ECHECK_APP(lcr_SetMeasTolerance(false));
+	ECHECK_APP(lcr_SetMeasRangeMode(false));
+	ECHECK_APP(lcr_SetMeasSeries(false));
 	return RP_OK;
 }
 
@@ -153,7 +160,7 @@ int lcr_SafeThreadAcqData(float **data,
     }
 
     ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
-    usleep(200);//usleep(1000 + (((acq_size * 8) * dec)) / 1000);
+    usleep(1000 + (((acq_size * 8) * dec)) / 1000);
 	ECHECK_APP(rp_AcqGetDataV(RP_CH_1, pos, &acq_u_size, data[0]));
 	ECHECK_APP(rp_AcqGetDataV(RP_CH_2, pos, &acq_u_size, data[1]));
 	pthread_mutex_unlock(&mutex);
@@ -166,13 +173,14 @@ int lcr_getImpedance(float frequency,
 	                 float *phase_out){
 
 	float w_out;
-
 	int decimation;
 	int acq_size;
 	rp_acq_decimation_t api_decimation;
 
-	uint32_t r_shunt;
-	lcr_getRShunt(&r_shunt);
+	int r_shunt_index;
+	lcr_getRShunt(&r_shunt_index);
+
+	double r_shunt = R_shunt_tbl[r_shunt_index];
 
 	//Calculate output angular velocity
 	w_out = frequency * 2 * M_PI;
@@ -191,6 +199,7 @@ int lcr_getImpedance(float frequency,
 		(frequency * decimation));
 
 	float **analysis_data = multiDimensionVector(acq_size);
+	//float analysis_data[2][acq_size];
 
 	ret_val = lcr_SafeThreadAcqData(analysis_data, api_decimation, acq_size, decimation);
 	if(ret_val != RP_OK){
@@ -213,33 +222,41 @@ void *lcr_MainThread(void *args){
 	struct impendace_params *args_struct =
 		(struct impendace_params *)args;
 
-	set_IIC_Shunt(R_SHUNT_30);
-	//uint32_t new_shunt;
+	main_params.r_shunt = 2;
+	int n_shunt_idx = main_params.r_shunt;
+	bool repeat = true;
 
-	lcr_getImpedance(args_struct->frequency, 
-		&args_struct->z_out, &args_struct->phase_out);
+	set_IIC_Shunt(n_shunt_idx);
 
-	/* Main lcr meter algorithm
-	
-	while(1){
-		
-		
-		if(!main_params.calibration) break;
-		
-		float z_ampl = sqrt(powf(creal(args_struct->Z_out), 2) + 
-			powf(cimag(args_struct->Z_out), 2));
+	/* Main lcr meter algorithm */
+	if(main_params.calibration){
 
-		int ret_val = lcr_switchRShunt(z_ampl, &new_shunt);
-		//Change shunt
-		if(ret_val == 2){
-			//Change r_shunt, set new r_shunt
-			set_IIC_Shunt(new_shunt);
-			lcr_setRShunt(new_shunt);
-		}else{
-			break;
-		}
+		lcr_getImpedance(args_struct->frequency, 
+			&args_struct->z_out, &args_struct->phase_out);
+
+	}else{	
+
+		do{	
+
+			lcr_getImpedance(args_struct->frequency, 
+				&args_struct->z_out, &args_struct->phase_out);
+			
+			float z_ampl = cabs(args_struct->z_out);
+
+			lcr_checkRShunt(z_ampl, 
+				R_shunt_tbl[main_params.r_shunt], &n_shunt_idx);
+
+			if(main_params.r_shunt != n_shunt_idx) {
+				main_params.r_shunt = n_shunt_idx;
+				set_IIC_Shunt(n_shunt_idx);
+			}else{
+				repeat = false;
+			}
+
+			syslog(LOG_INFO, "OLD: %d | NEW: %d\n", main_params.r_shunt, n_shunt_idx);
+		}while(repeat != false);
 	}
-	*/
+	
 	return RP_OK;
 }
 
@@ -499,12 +516,12 @@ int lcr_GetFrequency(float *frequency){
 	return RP_OK;
 }
 
-int lcr_setRShunt(uint32_t r_shunt){
+int lcr_setRShunt(int r_shunt){
 	main_params.r_shunt = r_shunt;
 	return RP_OK;
 }
 
-int lcr_getRShunt(uint32_t *r_shunt){
+int lcr_getRShunt(int *r_shunt){
 	*r_shunt = main_params.r_shunt;
 	return RP_OK;
 }

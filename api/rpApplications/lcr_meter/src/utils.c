@@ -25,68 +25,35 @@
 #include <sys/syslog.h>
 
 #include "utils.h"
+#define I2C_SLAVE_FORCE 		   0x0706
+#define EXPANDER_ADDR            	   0x20
 
-#define I2C_SLAVE_FORCE		0x0706
-#define EXPANDER_ADDR		0x20
+// switching shunt resistors
+int set_IIC_Shunt(int k) {
 
-int set_IIC_Shunt(uint32_t shunt){
+    int  dat;
+    int  fd; 
+    int  status;
+    char str [1+2*11];
 
-	char str[1+2*11];
-	int iic_shunt;
+    // parse input arguments
+    dat = ~(1<<k);
 
-	int fd = open("/dev/i2c-0", O_RDWR);
+    // Open the device.
+    fd = open("/dev/i2c-0", O_RDWR);
+    if (fd < 0) {
+        fprintf(stderr, "Cannot open the I2C device\n");
+        return 1;
+    }
 
-	if(fd < 0){
-		printf("Error writing to IIC.\n");
-		return RP_EOOR;
-	}
+    // set slave address
+    status = ioctl(fd, I2C_SLAVE_FORCE, EXPANDER_ADDR);
+    if (status < 0) {
+        fprintf(stderr, "Unable to set the I2C address\n");
+        return -1;
+    }
 
-	int status = ioctl(fd, I2C_SLAVE_FORCE, EXPANDER_ADDR);
-	if(status < 0){
-		printf("Unable to set IIC address.\n");
-		return RP_EOOR;
-	}
-
-	switch(shunt){
-		case 30:
-			iic_shunt = 0xFFFE;
-			break;
-		case 75:
-			iic_shunt = 0xFFFD;
-			break;
-		case 300:
-			iic_shunt = 0xFFFB;
-			break;
-		case 750:
-			iic_shunt = 0xFFF7;
-			break;
-		case 3000:
-			iic_shunt = 0xFFEF;
-			break;
-		case 7500:
-			iic_shunt = 0xFFDF;
-			break;
-		case 30000:
-			iic_shunt = 0xFFBF;
-			break;
-		case 80000:
-			iic_shunt = 0xFF7F;
-			break;
-		case 430000:
-			iic_shunt = 0xFEFF;
-			break;
-		case 3000000:
-			iic_shunt = 0xFDFF;
-			break;
-		case -1:
-			iic_shunt = 0xFFFF;
-		default:
-			iic_shunt = 0x0;
-			break;
-	}
-
-
-	// Write to expander
+    // Write to expander
     str [0] = 0; // set address to 0
     str [1+0x00] = 0x00; // IODIRA - set all to output
     str [1+0x01] = 0x00; // IODIRB - set all to output
@@ -106,18 +73,16 @@ int set_IIC_Shunt(uint32_t shunt){
     str [1+0x0F] = 0x00; // INTFB
     str [1+0x10] = 0x00; // INTCAPA
     str [1+0x11] = 0x00; // INTCAPB
-	str [1+0x12] = (iic_shunt >> 0) & 0xff; // GPIOA
-    str [1+0x13] = (iic_shunt >> 8) & 0xff; // GPIOB
-    str [1+0x14] = (iic_shunt >> 0) & 0xff; // OLATA
-    str [1+0x15] = (iic_shunt >> 8) & 0xff; // OLATB
+    str [1+0x12] = (dat >> 0) & 0xff; // GPIOA
+    str [1+0x13] = (dat >> 8) & 0xff; // GPIOB
+    str [1+0x14] = (dat >> 0) & 0xff; // OLATA
+    str [1+0x15] = (dat >> 8) & 0xff; // OLATB
+    status = write(fd, str, 1+2*11);
 
-    status = write(fd, str, (1 + 2*11));
-    if(status < 0){
-    	printf("Error writing resistor data.\n");
-    	return RP_EOOR;
-    }
-
-	return RP_OK;
+    if (!status) fprintf(stderr, "Error I2C write\n");
+    
+    close(fd);
+    return 0;
 }
 
 float vectorMax(float *data, int size){
@@ -163,24 +128,23 @@ float **multiDimensionVector(int second_dimenson){
 	return data_out;
 }
 
-int lcr_switchRShunt(float z_ampl, uint32_t *r_shunt){
+int lcr_checkRShunt(float z_ampl, double r_shunt, int *new_shunt){
 
-	if(z_ampl >= (3 * (*r_shunt)) || (z_ampl <= (1 / (3 * (*r_shunt))))){
+	if(z_ampl >= (3.0 * r_shunt) || (z_ampl <= (1.0 / (3.0 * r_shunt)))){
 		
-		if(z_ampl <= 50) 							*r_shunt = R_SHUNT_30;
-		else if(z_ampl <= 100 && z_ampl > 50) 		*r_shunt = R_SHUNT_75;
-		else if(z_ampl <= 500 && z_ampl > 100) 		*r_shunt = R_SHUNT_300;
-		else if(z_ampl <= 1000 && z_ampl > 500) 	*r_shunt = R_SHUNT_750;
-		else if(z_ampl <= 5000 && z_ampl > 1000) 	*r_shunt = R_SHUNT_3K;
-		else if(z_ampl <= 10000 && z_ampl > 5000) 	*r_shunt = R_SHUNT_7_5K;
-		else if(z_ampl <= 50e3 && z_ampl > 10000) 	*r_shunt = R_SHUNT_30K;
-		else if(z_ampl <= 100e3 && z_ampl > 50e3) 	*r_shunt = R_SHUNT_80K;
-		else if(z_ampl <= 500e3 && z_ampl > 100e3) 	*r_shunt = R_SHUNT_430K;
-		else if(z_ampl > 500e3) 					*r_shunt = R_SHUNT_3M;
-		
-		return 2; //Enum CH_SHUNT
+		if(z_ampl <= 50) 							*new_shunt = 0;
+		else if(z_ampl <= 100 && z_ampl > 50) 		*new_shunt = 1;
+		else if(z_ampl <= 500 && z_ampl > 100) 		*new_shunt = 2;
+		else if(z_ampl <= 1000 && z_ampl > 500) 	*new_shunt = 3;
+		else if(z_ampl <= 5000 && z_ampl > 1000) 	*new_shunt = 4;
+		else if(z_ampl <= 10000 && z_ampl > 5000) 	*new_shunt = 5;
+		else if(z_ampl <= 50e3 && z_ampl > 10000) 	*new_shunt = 6;
+		else if(z_ampl <= 100e3 && z_ampl > 50e3) 	*new_shunt = 7;
+		else if(z_ampl <= 500e3 && z_ampl > 100e3) 	*new_shunt = 8;
+		else if(z_ampl > 500e3) 					*new_shunt = 9;
 	}
-	
+	syslog(LOG_INFO, "%f\n", 
+		((1 / (3 * r_shunt))));
 	return RP_OK;
 }
 

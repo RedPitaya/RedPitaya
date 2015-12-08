@@ -25,26 +25,14 @@
  		} \
 }
 
-/* R_shunt constans */
-static const uint32_t R_SHUNT_30	 = 30;
-static const uint32_t R_SHUNT_75     = 75;
-static const uint32_t R_SHUNT_300    = 300;
-static const uint32_t R_SHUNT_750    = 750;
-static const uint32_t R_SHUNT_3K     = 3000;
-static const uint32_t R_SHUNT_7_5K   = 7500;
-static const uint32_t R_SHUNT_30K    = 30000;
-static const uint32_t R_SHUNT_80K    = 80000;
-static const uint32_t R_SHUNT_430K   = 430000;
-static const uint32_t R_SHUNT_3M     = 3000000;
-
 float vectorMax(float *data, int size);
 float vectorApprox(float *data, int size, float approx_val, bool min);
 float trapezoidalApprox(float *data, float t, int size);
 float vectorMean(float *data, int steps);
 float **multiDimensionVector(int second_dimenson);
-int set_IIC_Shunt(uint32_t shunt);
+int set_IIC_Shunt(int k);
 
-int lcr_switchRShunt(float z_ampl, uint32_t *r_shunt);
+int lcr_checkRShunt(float z_ampl, double r_shunt, int *new_shunt);
 
 void lcr_getDecimationValue(float frequency,
 						rp_acq_decimation_t *api_dec,
