@@ -46,7 +46,7 @@ typedef struct params_e{
 	calib_t calibration;
 	bool tolerance;
 	bool range;
-	bool serial;
+	bool series;
 } lcr_params_t;
 
 /* Main lcr measurment data */

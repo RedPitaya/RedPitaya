@@ -59,4 +59,26 @@ int lcrApp_LcrGetCalibMode(calib_t *calib_mode){
 	return lcr_GetCalibMode(calib_mode);
 }
 
+int lcrApp_LcrSetMeasSeries(bool series){
+	return lcr_SetMeasSeries(series);
+}
 
+int lcrApp_LcrGetMeasSeries(bool *series){
+	return lcr_GetMeasSeries(series);
+}
+
+int lcrApp_LcrSetMeasTolerance(bool tolerance){
+	return lcr_SetMeasTolerance(tolerance);
+}
+
+int lcrApp_LcrGetMeasTolerance(bool *tolerance){
+	return lcr_GetMeasTolerance(tolerance);
+}
+
+int lcrApp_LcrSetMeasRangeMode(bool range_mode){
+	return lcr_SetMeasRangeMode(range_mode);
+}
+
+int lcrApp_LcrGetMeasRangeMode(bool *range_mode){
+	return lcr_GetMeasRangeMode(range_mode);
+}

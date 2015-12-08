@@ -38,6 +38,12 @@ int lcrApp_LcrSetFrequency(float frequency);
 int lcrApp_LcrGetFrequency(float *frequency);
 int lcrApp_LcrSetCalibMode(calib_t calib_mode);
 int lcrApp_LcrGetCalibMode(calib_t *calib_mode);
+int lcrApp_LcrSetMeasSeries(bool series);
+int lcrApp_LcrGetMeasSeries(bool *series);
+int lcrApp_LcrSetMeasTolerance(bool tolerance);
+int lcrApp_LcrGetMeasTolerance(bool *tolerance);
+int lcrApp_LcrSetMeasRangeMode(bool range_mode);
+int lcrApp_LcrGetMeasRangeMode(bool *range_mode);
 
 #ifdef __cplusplus
 }

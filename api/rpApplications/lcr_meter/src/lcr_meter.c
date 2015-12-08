@@ -132,6 +132,7 @@ int lcr_SafeThreadAcqData(float **data,
 	uint32_t pos;
 	uint32_t acq_u_size = acq_size;
 
+	pthread_mutex_lock(&mutex);
 	ECHECK_APP(rp_AcqReset());	
 	ECHECK_APP(rp_AcqSetDecimation(decimation));
 	ECHECK_APP(rp_AcqSetTriggerLevel(0.4));
@@ -153,9 +154,7 @@ int lcr_SafeThreadAcqData(float **data,
     usleep(100 + (((acq_size * 8) * dec)) / 1000);
 	ECHECK_APP(rp_AcqGetDataV(RP_CH_1, pos, &acq_u_size, data[0]));
 	ECHECK_APP(rp_AcqGetDataV(RP_CH_2, pos, &acq_u_size, data[1]));
-
-	uint32_t pos_after_trig;
-	rp_AcqGetWritePointer(&pos_after_trig);
+	pthread_mutex_unlock(&mutex);
 
 	return RP_OK;
 }
@@ -369,8 +368,8 @@ int lcr_CalculateData(float _Complex Z_measured){
 
 	float X_s = cimag(Z_final);
 
-	/* Tolerance mode */
-	if(main_params.serial){
+	/* Series mode */
+	if(main_params.series){
 		R_out = creal(Z_final);
 		C_out = -1 / (w_out * X_s);
 		L_out = X_s / w_out;
@@ -530,13 +529,13 @@ int lcr_GetCalibMode(calib_t *mode){
 	return RP_OK;
 }
 
-int lcr_SetMeasSeries(bool serial){
-	main_params.serial = serial;
+int lcr_SetMeasSeries(bool series){
+	main_params.series = series;
 	return RP_OK;
 }
 
-int lcr_GetMeasSerial(bool *serial){
-	*serial = main_params.serial;
+int lcr_GetMeasSeries(bool *series){
+	*series = main_params.series;
 	return RP_OK;
 }
 
