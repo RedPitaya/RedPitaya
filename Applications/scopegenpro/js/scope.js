@@ -59,9 +59,9 @@
     // Volts
     1, 2, 5
   ];
-  
+
   OSC.bad_connection = [ false, false, false, false ]; // time in s.
-  
+
   OSC.compressed_data = 0;
   OSC.decompressed_data = 0;
   OSC.refresh_times = [];
@@ -117,11 +117,20 @@
       console.log('Could not start the application (ERR3)');
     });
   };
-  
+
 	Date.prototype.format = function (mask, utc) {
 		return dateFormat(this, mask, utc);
 	};
-	
+
+  var g_count = 0;
+  var g_time = 0;
+  var g_iter = 10;
+  var g_delay = 200;
+  var g_counter = 0;
+  var g_CpuLoad = 100.0;
+  var g_TotalMemory = 256.0;
+  var g_FreeMemory = 256.0;
+
   setInterval(function(){
 	var now = new Date();
 	var now_str = now.getHours() +":"+ now.getMinutes() +":"+ now.getSeconds()+":"+now.getMilliseconds();
@@ -130,11 +139,18 @@
 		times += OSC.refresh_times[i] + " ";
 
 	console.log(now_str + " | compressed="+OSC.compressed_data + "; decompressed: "+OSC.decompressed_data + " | Updates: " + OSC.refresh_times.length + "; Delays: "+times);
+	$('#fps_view').text(OSC.refresh_times.length);
+	$('#throughput_view').text((OSC.compressed_data/1024).toFixed(2) + "kB/s");
+	$('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
+	$('#totalmem_view').text((g_TotalMemory / (1024*1024)).toFixed(2) + "Mb");
+	$('#freemem_view').text((g_FreeMemory / (1024*1024)).toFixed(2) + "Mb");
+	$('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024*1024)).toFixed(2) + "Mb");
+
 	OSC.compressed_data = 0;
 	OSC.decompressed_data = 0;
 	OSC.refresh_times = [];
   }, 1000);
-  
+
   // Creates a WebSocket connection with the web server
   OSC.connectWebSocket = function() {
 
@@ -172,16 +188,9 @@
         console.log('Websocket error: ', ev);
       };
 
-	  var g_count = 0;
-	  var g_time = 0;
-	  var g_iter = 10;
-	  var g_delay = 200;
-	  var g_counter = 0;
-	  
+      var last_time = undefined;
       OSC.ws.onmessage = function(ev) {
-		++g_count;
 		var start_time = +new Date();
-
         if(OSC.state.processing) {
           return;
         }
@@ -192,9 +201,9 @@
 			OSC.compressed_data += data.length;
 			var inflate = new Zlib.Gunzip(data);
 			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
-			
+
 			OSC.decompressed_data += text.length;
-			
+
 			var receive = JSON.parse(text);
 
 			if(receive.parameters) {
@@ -203,42 +212,56 @@
 				OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
 				OSC.params.local = {};
 			  } else {
+			  	if('CPU_LOAD' in receive.parameters && receive.parameters['CPU_LOAD'].value != undefined)
+			  		g_CpuLoad = receive.parameters['CPU_LOAD'].value;
+
+			  	if('TOTAL_RAM' in receive.parameters && receive.parameters['TOTAL_RAM'].value != undefined)
+			  		g_TotalMemory = receive.parameters['TOTAL_RAM'].value;
+
+			  	if('FREE_RAM' in receive.parameters && receive.parameters['FREE_RAM'].value != undefined)
+			  		g_FreeMemory = receive.parameters['FREE_RAM'].value;
+
 				OSC.processParameters(receive.parameters);
 			  }
 			}
 
 			if(receive.signals) {
+				++g_count;
 				OSC.processSignals(receive.signals);
+				if(last_time == undefined)
+					last_time = new Date();
+
+				var diff = new Date() - last_time; //-start_time;
+				last_time = new Date();
+				g_time = diff;
+				OSC.refresh_times.push(diff);
+
+				if (g_count == g_iter && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
+
+					g_delay = (g_time/g_count); // TODO
+					if (g_delay > 350)
+						OSC.bad_connection[g_counter] = true;
+					else
+						OSC.bad_connection[g_counter] = false;
+
+					g_counter++;
+					if(g_counter == 4) g_counter = 0;
+
+					if(OSC.bad_connection[0] && OSC.bad_connection[1] && OSC.bad_connection[2] && OSC.bad_connection[3])
+						$('#weak_conn_msg').show();
+					else
+						$('#weak_conn_msg').hide();
+
+
+					var period = {};
+					period['DEBUG_SIGNAL_PERIOD'] = { value: g_delay*3 };
+					OSC.ws.send(JSON.stringify({ parameters: period }));
+					g_time = 0;
+					g_count = 0;
+				}
 			}
 			OSC.state.processing = false;
 
-			var diff = new Date() - start_time;
-			g_time += diff;
-			OSC.refresh_times.push(diff);
-			
-			if (g_count == g_iter && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
-				
-				g_delay = (g_time/g_count)*10; // TODO
-				if (g_delay > 350)
-					OSC.bad_connection[g_counter] = true;
-				else
-					OSC.bad_connection[g_counter] = false;
-				
-				g_counter++; 
-				if(g_counter == 4) g_counter = 0;
-				
-				if(OSC.bad_connection[0] && OSC.bad_connection[1] && OSC.bad_connection[2] && OSC.bad_connection[3])
-					$('#weak_conn_msg').show();
-				else
-					$('#weak_conn_msg').hide();
-					
-				
-				var period = {};
-				period['DEBUG_SIGNAL_PERIOD'] = { value: g_delay };
-				OSC.ws.send(JSON.stringify({ parameters: period }));
-				g_time = 0;
-				g_count = 0;
-			}
 		}
 		catch (e) {
 			OSC.state.processing = false;

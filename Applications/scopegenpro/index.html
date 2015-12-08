@@ -50,6 +50,7 @@
                                 <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="" href="#" data-toggle="modal" data-target="#myModal">CALIBRATION</a></li>
+                                    <li><a id="sys_info" href="#" >SYS INFO</a></li>
                                 </ul>
                             </li>
                             <li><a id="OSC_AUTOSCALE" href="#" style="padding-left: 23px; white-space: nowrap;">AUTO SCALE</a></li>
@@ -749,7 +750,14 @@
         </div>
     </div>
 
-<div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(255, 0, 0, 0.5); text-align:center; padding: 7px; font-size:18px; color:white; "><span id="delay">Performance problem has occurred</span></div>
+<div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(255, 0, 0, 0.5); text-align:center; padding: 7px; font-size:18px; color:white; ">
+    <span id="delay">Performance problem has occurred</span>
+</div>
+
+<div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.5); text-align:left; padding: 5px; font-size:12px; color:white; ">
+    FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span><br/>
+    Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+</div>
 
 </body>
 <script language="javascript" type="text/javascript">
@@ -1186,6 +1194,20 @@ $("#OSC_CH1_PROBE").change(function() {
 
 $('input[type=text]').iLightInputNumber({
     mobile: false
+});
+
+$('#sys_info').click(function(){
+    var elem = $(this);
+    if(elem.text() == 'SYS INFO')
+    {
+        elem.html('&check; SYS INFO');
+        $('#sys_info_view').show();
+    }
+    else
+    {
+        elem.text('SYS INFO');
+        $('#sys_info_view').hide();
+    }
 });
 </script>
 
