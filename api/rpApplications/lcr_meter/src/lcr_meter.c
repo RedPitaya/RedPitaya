@@ -34,6 +34,7 @@
 /* Global variables definition */
 int 					min_periodes = 8;
 pthread_mutex_t 		mutex;
+//int 					repeated_meas = 0;
 
 /* Init lcr params struct */
 lcr_params_t main_params = {0, 0, CALIB_NONE, false, false, true};
@@ -48,7 +49,7 @@ struct impendace_params {
 };
 
 /* R shunt values definition */
-const double R_shunt_tbl[] = 
+const double SHUNT_TABLE[] = 
 	{30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
 
 
@@ -106,11 +107,11 @@ int lcr_Reset(){
 }
 
 int lcr_SetDefaultValues(){
-	ECHECK_APP(lcr_setRShunt(2));
+	ECHECK_APP(lcr_setRShunt(0));
 	ECHECK_APP(lcr_SetFrequency(1000.0));
 	ECHECK_APP(lcr_SetCalibMode(CALIB_NONE));
 	ECHECK_APP(lcr_SetMeasTolerance(false));
-	ECHECK_APP(lcr_SetMeasRangeMode(false));
+	ECHECK_APP(lcr_SetMeasRangeMode(true));
 	ECHECK_APP(lcr_SetMeasSeries(false));
 	return RP_OK;
 }
@@ -180,7 +181,7 @@ int lcr_getImpedance(float frequency,
 	int r_shunt_index;
 	lcr_getRShunt(&r_shunt_index);
 
-	double r_shunt = R_shunt_tbl[r_shunt_index];
+	double r_shunt = SHUNT_TABLE[r_shunt_index];
 
 	//Calculate output angular velocity
 	w_out = frequency * 2 * M_PI;
@@ -222,9 +223,7 @@ void *lcr_MainThread(void *args){
 	struct impendace_params *args_struct =
 		(struct impendace_params *)args;
 
-	main_params.r_shunt = 2;
 	int n_shunt_idx = main_params.r_shunt;
-	bool repeat = true;
 
 	set_IIC_Shunt(n_shunt_idx);
 
@@ -234,27 +233,22 @@ void *lcr_MainThread(void *args){
 		lcr_getImpedance(args_struct->frequency, 
 			&args_struct->z_out, &args_struct->phase_out);
 
-	}else{	
+	}else if(main_params.range_mode){	
 
-		do{	
+		double z_abs;
+		lcr_getImpedance(args_struct->frequency, 
+			&args_struct->z_out, &args_struct->phase_out);
 
-			lcr_getImpedance(args_struct->frequency, 
-				&args_struct->z_out, &args_struct->phase_out);
-			
-			float z_ampl = cabs(args_struct->z_out);
+		z_abs = cabs(args_struct->z_out);
 
-			lcr_checkRShunt(z_ampl, 
-				R_shunt_tbl[main_params.r_shunt], &n_shunt_idx);
+		lcr_checkRShunt(z_abs, 
+			SHUNT_TABLE[n_shunt_idx], &n_shunt_idx);
 
-			if(main_params.r_shunt != n_shunt_idx) {
-				main_params.r_shunt = n_shunt_idx;
-				set_IIC_Shunt(n_shunt_idx);
-			}else{
-				repeat = false;
-			}
+		main_params.r_shunt = n_shunt_idx;
+		set_IIC_Shunt(main_params.r_shunt);
 
-			syslog(LOG_INFO, "OLD: %d | NEW: %d\n", main_params.r_shunt, n_shunt_idx);
-		}while(repeat != false);
+	}else if(!main_params.range_mode){
+
 	}
 	
 	return RP_OK;
@@ -435,7 +429,7 @@ int lcr_CopyParams(lcr_main_data_t *params){
 int lcr_data_analysis(float **data, 
 					uint32_t size, 
 					float dc_bias, 
-					uint32_t r_shunt, 
+					int r_shunt, 
 					float w_out, 
 					int decimation,
 					float _Complex *z_out,
@@ -557,12 +551,12 @@ int lcr_GetMeasTolerance(bool *tolerance){
 }
 
 int lcr_SetMeasRangeMode(bool range){
-	main_params.range = range;
+	main_params.range_mode = range;
 	return RP_OK;
 }
 
 int lcr_GetMeasRangeMode(bool *range){
-	*range = main_params.range;
+	*range = main_params.range_mode;
 	return RP_OK;
 }
 

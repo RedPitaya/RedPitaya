@@ -25,8 +25,8 @@
 #include <sys/syslog.h>
 
 #include "utils.h"
-#define I2C_SLAVE_FORCE 		   0x0706
-#define EXPANDER_ADDR            	   0x20
+#define I2C_SLAVE_FORCE 		   		0x0706
+#define EXPANDER_ADDR            	   	0x20
 
 // switching shunt resistors
 int set_IIC_Shunt(int k) {
@@ -130,21 +130,23 @@ float **multiDimensionVector(int second_dimenson){
 
 int lcr_checkRShunt(float z_ampl, double r_shunt, int *new_shunt){
 
-	if(z_ampl >= (3.0 * r_shunt) || (z_ampl <= (1.0 / (3.0 * r_shunt)))){
+	if((z_ampl >= (3.0 * r_shunt)) || (z_ampl <= ((1.0 / 3.0) * r_shunt))){
 		
-		if(z_ampl <= 50) 							*new_shunt = 0;
-		else if(z_ampl <= 100 && z_ampl > 50) 		*new_shunt = 1;
-		else if(z_ampl <= 500 && z_ampl > 100) 		*new_shunt = 2;
-		else if(z_ampl <= 1000 && z_ampl > 500) 	*new_shunt = 3;
-		else if(z_ampl <= 5000 && z_ampl > 1000) 	*new_shunt = 4;
-		else if(z_ampl <= 10000 && z_ampl > 5000) 	*new_shunt = 5;
-		else if(z_ampl <= 50e3 && z_ampl > 10000) 	*new_shunt = 6;
-		else if(z_ampl <= 100e3 && z_ampl > 50e3) 	*new_shunt = 7;
-		else if(z_ampl <= 500e3 && z_ampl > 100e3) 	*new_shunt = 8;
-		else if(z_ampl > 500e3) 					*new_shunt = 9;
+		if(z_ampl <= 50) 								*new_shunt = 0;
+		else if(z_ampl <= 100 && z_ampl > 50) 			*new_shunt = 1;
+		else if(z_ampl <= 500 && z_ampl > 100) 			*new_shunt = 2;
+		else if(z_ampl <= 1000 && z_ampl > 500) 		*new_shunt = 3;
+		else if(z_ampl <= 5000 && z_ampl > 1000) 		*new_shunt = 4;
+		else if(z_ampl <= 10000 && z_ampl > 5000) 		*new_shunt = 5;
+		else if(z_ampl <= 50000 && z_ampl > 10000) 		*new_shunt = 6;
+		else if(z_ampl <= 100000 && z_ampl > 50000) 	*new_shunt = 7;
+		else if(z_ampl <= 500000 && z_ampl > 100000) 	*new_shunt = 8;
+		else if(z_ampl > 500000) 						*new_shunt = 9;
 	}
-	syslog(LOG_INFO, "%f\n", 
-		((1 / (3 * r_shunt))));
+
+	//syslog(LOG_INFO, "%f | %f\n", (3.0 * r_shunt),
+	//		((1.0 / (3.0 * r_shunt))));
+
 	return RP_OK;
 }
 

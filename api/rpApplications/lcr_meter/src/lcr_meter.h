@@ -45,7 +45,7 @@ typedef struct params_e{
 	int r_shunt;
 	calib_t calibration;
 	bool tolerance;
-	bool range;
+	bool range_mode;
 	bool series;
 } lcr_params_t;
 
@@ -100,7 +100,7 @@ int lcr_CopyParams(lcr_main_data_t *params);
 int lcr_data_analysis(float **data, 
 	                  uint32_t size, 
 	                  float dc_bias, 
-		              uint32_t r_shunt,  
+		              int r_shunt,  
 		              float w_out, 
 		              int decimation,
 		              float _Complex *z_out,
