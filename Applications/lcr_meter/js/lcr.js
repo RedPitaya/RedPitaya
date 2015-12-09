@@ -147,18 +147,20 @@
 			if(param_name == 'LCR_Z' && LCR.tolerance.apply_tolerance == true 
 				&& old_params['LCR_RUN'].value == false){
 
-				var diff = (new_params[param_name].value - LCR.tolerance.ampl_tol) / 100;
+				var diff = (new_params[param_name].value - new_params['LCR_TOL_SAVED'].value) / 100;
+				
 				console.log(diff);
+				console.log(new_params['LCR_TOL_SAVED'].value);
 
 				if( Math.abs(diff) > 0.01){
 					$('#lb_sec_displ').empty().append((Math.round(diff * 100) / 100) * 100 + "%");
-					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
-				}else if(diff > Math.abs(1)){
+					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_Z'].value * 100) / 100);
+				}else if(Math.abs(diff) > 1){
 					$('#lb_sec_displ').empty().append("100% >");
 					$('#lb_prim_displ').empty().append("100% >");
 				}else{
 					$('#lb_sec_displ').empty().append("100%");
-					$('#lb_prim_displ').empty().append(Math.round(LCR.tolerance.ampl_tol * 100) / 100);
+					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_TOL_SAVED'].value * 100) / 100);
 				}
 			}
 
@@ -283,10 +285,11 @@ $(function() {
 
 	$('#cb_tol').click(function(){
 		LCR.tolerance.apply_tolerance = true;
-		LCR.tolerance.ampl_tol = LCR.params.orig['LCR_Z'].value;
 		LCR.params.local['LCR_TOLERANCE'] = { value: true };
+		LCR.params.local['LCR_RUN'] = { value: false };
 		$('#lb_prim_displ').empty().append("100%");
 		$('#rec_led').css('display', 'block');
+		LCR.tolerance.apply_tolerance = true;
 		LCR.sendParams();
 	});
 
@@ -301,8 +304,7 @@ $(function() {
 		LCR.sendParams();
 	});
 
-	$('#cb_paralel').click(function(){
-		console.log('Paralel');
+	$('#cb_paralel').click(function(){;
 		LCR.params.local['LCR_SERIES'] = { value: false };
 		LCR.sendParams();
 	});

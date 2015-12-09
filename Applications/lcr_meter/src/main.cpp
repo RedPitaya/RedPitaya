@@ -32,6 +32,7 @@ CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
 CBooleanParameter toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, false, 0);
+CFloatParameter tolSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1000000);
 CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, false, 0);
 CBooleanParameter rangeMode("LCR_RANGE", CBaseParameter::RW, false, 0);
 
@@ -97,7 +98,12 @@ void UpdateParams(void){
 		//Acquire calculated parameters frm RP
 		lcrApp_LcrCopyParams(data);
 
-		lcr_amplitude.Value() 		= data->lcr_amplitude;
+		if(IS_NEW(toleranceMode)){
+			lcr_amplitude.Value() = tolSavedZ.Value();	
+		}else{
+			lcr_amplitude.Value() = data->lcr_amplitude;	
+		}
+		
 		lcr_phase.Value()     		= data->lcr_phase;
 		lcr_Inductance.Value()		= data->lcr_L;
 		lcr_Capacitance.Value() 	= data->lcr_C;
@@ -128,6 +134,7 @@ void UpdateParams(void){
 
 	if(IS_NEW(toleranceMode)){
 		lcrApp_LcrSetMeasTolerance(toleranceMode.NewValue());
+		tolSavedZ.Value() = lcr_amplitude.Value();
 		toleranceMode.Update();
 	}
 
