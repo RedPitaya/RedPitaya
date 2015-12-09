@@ -750,15 +750,15 @@
         </div>
     </div>
 
-<div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(255, 0, 0, 0.5); text-align:center; padding: 7px; font-size:18px; color:white; ">
-    <span id="delay">Performance problem has occurred</span>
-</div>
-
-<div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.5); text-align:left; padding: 5px; font-size:12px; color:white; ">
-    FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span><br/>
-    Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
-</div>
-
+    <div>
+        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.5); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span><br/>
+            Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        </div>
+        <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(255, 0, 0, 1); text-align:center; padding: 10px; font-size:18px; color:white; ">
+            <span id="delay">Performance problem has occurred</span>
+        </div>
+    </div>
 </body>
 <script language="javascript" type="text/javascript">
 $(".limits").change(function() {

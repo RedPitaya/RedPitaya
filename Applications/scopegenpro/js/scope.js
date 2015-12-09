@@ -146,6 +146,28 @@
 	$('#freemem_view').text((g_FreeMemory / (1024*1024)).toFixed(2) + "Mb");
 	$('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024*1024)).toFixed(2) + "Mb");
 
+
+	if (OSC.refresh_times.length < 3)
+		OSC.bad_connection[g_counter] = true;
+	else
+		OSC.bad_connection[g_counter] = false;
+
+	g_counter++;
+	if(g_counter == 4) g_counter = 0;
+
+
+	if($('#weak_conn_msg').is(':visible'))
+	{
+		if(!OSC.bad_connection[0] && !OSC.bad_connection[1] && !OSC.bad_connection[2] && !OSC.bad_connection[3])
+			$('#weak_conn_msg').hide();
+	}
+	else
+	{
+		if(OSC.bad_connection[0] && OSC.bad_connection[1] && OSC.bad_connection[2] && OSC.bad_connection[3])
+			$('#weak_conn_msg').show();
+	}
+
+
 	OSC.compressed_data = 0;
 	OSC.decompressed_data = 0;
 	OSC.refresh_times = [];
@@ -239,20 +261,6 @@
 				if (g_count == g_iter && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
 
 					g_delay = (g_time/g_count); // TODO
-					if (g_delay > 350)
-						OSC.bad_connection[g_counter] = true;
-					else
-						OSC.bad_connection[g_counter] = false;
-
-					g_counter++;
-					if(g_counter == 4) g_counter = 0;
-
-					if(OSC.bad_connection[0] && OSC.bad_connection[1] && OSC.bad_connection[2] && OSC.bad_connection[3])
-						$('#weak_conn_msg').show();
-					else
-						$('#weak_conn_msg').hide();
-
-
 					var period = {};
 					period['DEBUG_SIGNAL_PERIOD'] = { value: g_delay*3 };
 					OSC.ws.send(JSON.stringify({ parameters: period }));
