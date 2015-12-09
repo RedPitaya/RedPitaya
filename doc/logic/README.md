@@ -158,7 +158,40 @@ The acquire module is shared between the oscilloscope and logic analyzer. At
 the input it receives a continuous data stream. At the output it provides either
 a continuous stream, or packets (of known or undefined-open size).
 
+Trigger configuration allows for setting the acquisition of single data packets.
 
+In the following example data around a trigger is acquired. `trg_siz` can be used
+to require more than one trigger event inside the acquired package. `trg_pre` is
+used to specify the minimum number of samples to be streamed before trigger
+counting starts. After `trg_cnt` reaches `trg_siz` another `trg_pst` samples must
+be stored, before the last sample in the packet is streamed and acquisition stops.
+
+```
+trg_cnt = 0..................1.......2.......3 = trg_siz
+
+........_____________________T_______T_______T__________________________........
+                             
+       |<------------------->|               |<------------------------>|
+               trg_pre                                 trg_pst
+```
+
+Another example requires just a specified amount of samples after acquire is
+started (`run` request). I am not sure yet, how to handle the start of aquisition.
+
+```
+.......T__________________________........
+       
+       |<------------------------>|
+                 trg_pst
+```
+
+Status registers provide values mainly used in modes, where the acquisition
+stream is running continuously. The number os samples from acquisition start is
+counted, as is the number of trigger events since start. There is a limited
+size FIFO holding the position of the last `trg_siz` samples. `trg_num` holds
+the number of trigger events still present in the FIFO, one of the bits is used
+to indicate overflow. Triger FIFO size is configurable so that for example only
+the last trigger is needed it can be obtained without reading the whole FIFO. 
 
 ```C
 struct {
@@ -178,6 +211,9 @@ struct {
    uint32_t sts_trg :1;            // read - trigger status
 } regset_acq_t;
 ```
+
+The whole register set structiure is a combination of the above structures and
+other configuration registers.
 
 ```C
 struct {
