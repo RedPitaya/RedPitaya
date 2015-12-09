@@ -162,18 +162,20 @@ a continuous stream, or packets (of known or undefined-open size).
 
 ```C
 struct {
-   // status - trigger
-   uint32_t sts_acq_cnt;     // [32-1:0]  // counter of acquired samples
-   uint32_t sts_trg_lst;     // [32-1:0]  // position of the latest trigger in the stream
-   uint32_t sts_trg_cnt;     // [32-1:0]  // counter of received trigger events in the current stream
-   // acquire
-   uint32_t run :1;               // write - run enable, read - run status
-   uint32_t trg :TW;              // read - trigger status
    // trigger configuration
-   uint32_t trg_ena;              // trigger source mask, more than one source is allowed
-   uint32_t trg_hld; // [32-1:0]  // least amount of data to store pre trigger
-   uint32_t trg_pre; // [32-1:0]  // least amount of data to store pre trigger
-   uint32_t trg_pst; // [32-1:0]  // amount of data to store post trigger
+   uint32_t trg_pre;  // [32-1:0]  // least amount of data to store pre trigger
+   uint32_t trg_pst;  // [32-1:0]  // amount of data to store post trigger
+   uint32_t trg_hld;  // [32-1:0]  // trigger hold, minimum delay between two triggers
+   uint32_t trg_siz;  // [32-1:0]  // trigger FIFO buffer size
+   // status
+   uint32_t acq_cnt;  // [32-1:0]  // counter of acquired samples        in the current stream
+   uint32_t trg_cnt;  // [32-1:0]  // counter of received trigger events in the current stream
+   uint32_t trg_num;  // [32-1:0]  // number of trigger events stored in FIFO buffer
+   uint32_t trg_buf;  // [32-1:0]  // trigger FIFO buffer read register
+   // control/status
+   uint32_t trg_ena;  // [TW-1:0]  // trigger source mask, more than one source is allowed
+   uint32_t sts_run :1;            // write - run enable, read - run status
+   uint32_t sts_trg :1;            // read - trigger status
 } regset_acq_t;
 ```
 
@@ -186,9 +188,9 @@ struct {
    uint32_t dgf_ena;     // [0]       // digital glitch filter enable
    uint32_t dec;         // [32-1:0]  // (dec+1) equals the decimation factor
    // configuration - trigger
-   regset_la_trg_t trg
+   regset_la_trg_t trg;
    // acquire
-   regset_acq_t    acq
+   regset_acq_t    acq;
    // output stage
    uint32_t lgn_mask;                 // realign mask, lists bits which should go forward
    uint32_t rle_ena;                  // run length encoding enable
