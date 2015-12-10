@@ -65,7 +65,6 @@
 			<div id="data_window" class="data_wrapper" style="position: relative">
 				<!-- Pimary display -->
 				<div id="data_displ">
-					<div id="rec_displ"></div>
 
 					<div id="meas_displ">
 						<div class="meas_data" style="float: left">
@@ -95,18 +94,19 @@
 					</div>
 					
 					<div id="display">
-						<div id="status_data">
-							<label id="rec_led" style="display: none">REC LED</label>
+						<div id="status_data" >
+							<label id="rec_lb" style="display: none" class="col-xs-2">REC</label>
+							<div id="rec_image" style="float:left; padding: 1px 1px 1px 1px; display: none;"><img id="rec_led" src="img/rec_led.png" style="width: 15px; height: 15px;"></div>
 						</div>
 
 						<div id="sec_displ">
-								<label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
-								<label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">--</label>
+								<label id="lb_sec_displ" class="col-xs-7 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
+								<label id="lb_sec_displ_units" class="col-xs-5" for="lb_sec_dspl_range" style="color: #000000">--</label>
 						</div>
 
 						<div id="prim_displ">
-								<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
-								<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>	
+								<label id="lb_prim_displ" class="col-xs-7 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
+								<label id="lb_prim_displ_units" class="col-xs-5" for="lb_prim_dspl_range" style="color: #000000">--</label>	
 						</div>
 					</div>
 					
@@ -161,16 +161,16 @@
 			                	</div>
 			                  	<div id="prim_displ_choice">
 
-			                  		<input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check"/>
+			                  		<input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check" value="Ω"/>
   									<label for="LCR_R">R</label>
 
-									<input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C" class="bt_check"/>
+									<input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C" class="bt_check" value="H"/>
   									<label for="LCR_C">C</label>
 
-									<input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check"/>
-  									<label for="LCR_L">L</label>
+									<input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check" value="H"/>
+  									<label for="LCR_L" >L</label>
 
-									<input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" checked="checked" />
+									<input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" checked="checked" value="Ω"/>
   									<label for="LCR_Z">Z</label>
 	        					</div>
 			                </div>
@@ -184,16 +184,16 @@
 			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
 			                	</div>
 			                  	<div id="sec_displ_choice">
-			                  		<input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check"/>
+			                  		<input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check" value=""/>
   									<label for="LCR_ESR">E</label>
 
-									<input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q" class="bt_check"/>
+									<input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q" class="bt_check" value=""/>
   									<label for="LCR_Q">Q</label>
 
-									<input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check"/>
+									<input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check" value=""/>
   									<label for="LCR_D">D</label>
 
-									<input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" checked="checked"/>
+									<input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" checked="checked" value="deg"/>
   									<label for="LCR_P" >P</label>
 	        					</div>
 			                </div>

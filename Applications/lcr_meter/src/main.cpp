@@ -4,7 +4,6 @@
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
-#include <sys/syslog.h>
 
 #include "version.h"
 
@@ -43,16 +42,13 @@ const char *rp_app_desc(void){
 int rp_app_init(void){	
 	fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
-
 	lcrApp_lcrInit();
-
-	//impApp_ImpInit();
 	return 0;
 }
 
 int rp_app_exit(void){
+	lcrApp_LcrRelease();
 	fprintf(stderr, "Unloading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
-	//impApp_ImpRelease();
 	return 0;
 }
 
@@ -98,12 +94,13 @@ void UpdateParams(void){
 		//Acquire calculated parameters frm RP
 		lcrApp_LcrCopyParams(data);
 
-		if(IS_NEW(toleranceMode)){
-			lcr_amplitude.Value() = tolSavedZ.Value();	
-		}else{
-			lcr_amplitude.Value() = data->lcr_amplitude;	
+		if(toleranceMode.Value() == true){
+			tolSavedZ.Value() = data->lcr_amplitude;
+			toleranceMode.Value() = false;
+			toleranceMode.Update();
 		}
 		
+		lcr_amplitude.Value()       = data->lcr_amplitude;	
 		lcr_phase.Value()     		= data->lcr_phase;
 		lcr_Inductance.Value()		= data->lcr_L;
 		lcr_Capacitance.Value() 	= data->lcr_C;
@@ -134,12 +131,19 @@ void UpdateParams(void){
 
 	if(IS_NEW(toleranceMode)){
 		lcrApp_LcrSetMeasTolerance(toleranceMode.NewValue());
+		//lcrApp_LcrRun();
+
+		//Acquire calculated parameters frm RP
+		//lcrApp_LcrCopyParams(data);
+
 		tolSavedZ.Value() = lcr_amplitude.Value();
+		tolSavedZ.Update();
 		toleranceMode.Update();
 	}
 
 	if(IS_NEW(seriesMode)){
 		lcrApp_LcrSetMeasSeries(seriesMode.NewValue());
+		syslog(LOG_INFO, "Setting series\n");
 		seriesMode.Update();
 	}
 

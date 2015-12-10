@@ -3,6 +3,7 @@
 
 #include <DataManager.h>
 #include <CustomParameters.h>
+#include <sys/syslog.h> //Add custom RP_LCR LOG system
 
 #include "lcrApp.h"
 

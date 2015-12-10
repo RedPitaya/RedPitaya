@@ -319,7 +319,7 @@ area:hover {
   background-color: #dcdcdc;
   float: left;
   padding: 5px 5px 5px 5px;
-  color: red;
+  color:#000000;
 }
 
 .displ_text{

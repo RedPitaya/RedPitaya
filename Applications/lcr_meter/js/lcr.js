@@ -46,7 +46,9 @@
 
   	LCR.displ_params = {
   		prim: "LCR_Z",
-  		sec:  "LCR_P"
+  		sec:  "LCR_P",
+  		p_units: "Ω",
+  		s_units: "deg"
   	};
 
   	LCR.tolerance = {
@@ -133,34 +135,48 @@
 			LCR.params.orig[param_name] = new_params[param_name];
 
 			if(param_name == LCR.displ_params.prim  && LCR.tolerance.apply_tolerance == false){
-				$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
+				var val = Math.round(new_params[param_name].value * 100) / 100;
+				if(val > 100000000){
+					$('#lb_prim_displ').css('font-size', '70%');
+					$('#lb_prim_displ').empty().append("OVER-RANGE!");	
+				}else{
+					$('#lb_prim_displ').css('font-size', '100%');
+					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);	
+				}
 
+				$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
+				
 				//function check for suffix/units
 			}
 
 			if(param_name == LCR.displ_params.sec && LCR.tolerance.apply_tolerance == false){
 				$('#lb_sec_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
-
+				$('#lb_sec_displ_units').empty().append(LCR.displ_params.s_units);
 				//function check for suffix/units
 			}
 
 			if(param_name == 'LCR_Z' && LCR.tolerance.apply_tolerance == true 
-				&& old_params['LCR_RUN'].value == false){
+				&& old_params['LCR_RUN'].value == true){
 
-				var diff = (new_params[param_name].value - new_params['LCR_TOL_SAVED'].value) / 100;
+				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params['LCR_Z'].value)) / 
+					((new_params['LCR_TOL_SAVED'].value + new_params['LCR_Z'].value) / 2) * 100);
 				
 				console.log(diff);
 				console.log(new_params['LCR_TOL_SAVED'].value);
 
-				if( Math.abs(diff) > 0.01){
-					$('#lb_sec_displ').empty().append((Math.round(diff * 100) / 100) * 100 + "%");
+				if( Math.abs(diff) > 1 && Math.abs(diff) < 100){
+					$('#lb_sec_displ').empty().append(Math.round(diff) + "%");
 					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_Z'].value * 100) / 100);
-				}else if(Math.abs(diff) > 1){
+					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
+				}else if(Math.abs(diff) > 100){
 					$('#lb_sec_displ').empty().append("100% >");
 					$('#lb_prim_displ').empty().append("100% >");
+					$('#lb_prim_displ_units').empty();
+					$('#lb_sec_displ_units').empty();
 				}else{
 					$('#lb_sec_displ').empty().append("100%");
 					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_TOL_SAVED'].value * 100) / 100);
+					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
 				}
 			}
 
@@ -276,24 +292,41 @@ $(function() {
 
 	$('#prim_displ_choice :checkbox').click(function(){
 		LCR.displ_params.prim = this.id;
-		//if()
+		LCR.displ_params.p_units = this.value;
 	});
 
 	$('#sec_displ_choice :checkbox').click(function(){
 		LCR.displ_params.sec = this.id;
+		LCR.displ_params.s_units = this.value;
 	});
 
-	$('#cb_tol').click(function(){
-		LCR.tolerance.apply_tolerance = true;
-		LCR.params.local['LCR_TOLERANCE'] = { value: true };
-		LCR.params.local['LCR_RUN'] = { value: false };
-		$('#lb_prim_displ').empty().append("100%");
-		$('#rec_led').css('display', 'block');
-		LCR.tolerance.apply_tolerance = true;
+	$('#cb_tol').change(function(){
+
+		//var ischecked = $(this).is(':checked');
+		//TODO: Ugly solution, fix!
+
+		if(!LCR.tolerance.apply_tolerance){
+			LCR.tolerance.apply_tolerance = true;
+			LCR.params.local['LCR_TOLERANCE'] = { value: true };
+			//LCR.params.local['LCR_RUN'] = { value: true };
+			$('#lb_prim_displ').empty().append("100%");
+
+			$('#lb_prim_displ_units').empty();
+			$('#lb_sec_displ_units').empty();
+			$('#rec_image').css('display', 'block');
+			$('#rec_lb').css('display', 'block');	
+		}else{
+			LCR.tolerance.apply_tolerance = false;
+			LCR.params.local['LCR_TOLERANCE'] = { value: false };
+			$('#rec_image').css('display', 'none');
+			$('#rec_lb').css('display', 'none');
+			$('#cb_tol').prop("checked", false);
+		}
+		
 		LCR.sendParams();
 	});
 
-	$('#cb_rel').click(function(){
+	$('#cb_rel').change(function(){
 		LCR.tolerance.apply_tolerance = false;
 		LCR.params.local['LCR_TOLERANCE'] = { value: false };
 		LCR.sendParams();
