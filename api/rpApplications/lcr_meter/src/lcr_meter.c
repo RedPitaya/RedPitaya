@@ -51,13 +51,13 @@ struct impendace_params {
 /* R shunt values definition */
 const double SHUNT_TABLE[] = 
 	{30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
-
+/*
 const int RANGE_FORMAT[] =
 	{10.0, 100.0, 1000.0, 10000.0};
 
 const double RANGE_UNITS[] =
 	{10e9, 10e6, 10e3, 1, 10e-3, 10e-6};
-
+*/
 /* Init the main API structure */
 int lcr_Init(){
 
@@ -243,7 +243,7 @@ void *lcr_MainThread(void *args){
 
 	}else{	
 
-		double z_abs;
+		double z_abs = 0;
 		lcr_getImpedance(args_struct->frequency, 
 			&args_struct->z_out, &args_struct->phase_out);
 
@@ -284,6 +284,7 @@ void *lcr_MainThread(void *args){
 			set_IIC_Shunt(main_params.r_shunt);
 			overflow_limitation = 0;
 		}
+
 	}
 	
 	return RP_OK;
