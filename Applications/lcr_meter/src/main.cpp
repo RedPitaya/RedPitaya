@@ -47,7 +47,7 @@ int rp_app_init(void){
 }
 
 int rp_app_exit(void){
-	lcrApp_LcrRelease();
+	//lcrApp_LcrRelease();
 	fprintf(stderr, "Unloading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 	return 0;
 }
