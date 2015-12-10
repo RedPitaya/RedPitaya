@@ -144,9 +144,6 @@ int lcr_checkRShunt(float z_ampl, double r_shunt, int *new_shunt){
 		else if(z_ampl > 500000) 						*new_shunt = 9;
 	}
 
-	//syslog(LOG_INFO, "%f | %f\n", (3.0 * r_shunt),
-	//		((1.0 / (3.0 * r_shunt))));
-
 	return RP_OK;
 }
 

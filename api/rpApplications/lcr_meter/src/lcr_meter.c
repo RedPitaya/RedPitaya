@@ -34,7 +34,7 @@
 /* Global variables definition */
 int 					min_periodes = 8;
 pthread_mutex_t 		mutex;
-//int 					repeated_meas = 0;
+int 					overflow_limitation = 0;
 
 /* Init lcr params struct */
 lcr_params_t main_params = {0, 0, CALIB_NONE, false, false, true};
@@ -107,7 +107,7 @@ int lcr_Reset(){
 }
 
 int lcr_SetDefaultValues(){
-	ECHECK_APP(lcr_setRShunt(0));
+	ECHECK_APP(lcr_setRShunt(2));
 	ECHECK_APP(lcr_SetFrequency(1000.0));
 	ECHECK_APP(lcr_SetCalibMode(CALIB_NONE));
 	ECHECK_APP(lcr_SetMeasTolerance(false));
@@ -200,7 +200,6 @@ int lcr_getImpedance(float frequency,
 		(frequency * decimation));
 
 	float **analysis_data = multiDimensionVector(acq_size);
-	//float analysis_data[2][acq_size];
 
 	ret_val = lcr_SafeThreadAcqData(analysis_data, api_decimation, acq_size, decimation);
 	if(ret_val != RP_OK){
@@ -213,6 +212,8 @@ int lcr_getImpedance(float frequency,
 
 	//Disable channel 1 generation module
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
+
+	free(analysis_data);
 
 	return RP_OK;
 }
@@ -246,6 +247,13 @@ void *lcr_MainThread(void *args){
 
 		main_params.r_shunt = n_shunt_idx;
 		set_IIC_Shunt(main_params.r_shunt);
+
+		if(z_abs > 10e6 || z_abs < 1) overflow_limitation++;
+		if(overflow_limitation > 10){
+			main_params.r_shunt = 2;
+			set_IIC_Shunt(main_params.r_shunt);
+			overflow_limitation = 0;
+		}
 
 	}else if(!main_params.range_mode){
 
@@ -369,10 +377,8 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured){
 	float w_out = 2 * M_PI * main_params.frequency;
 	
 	float Y = 1 / z_final;
-	
 	float G_p = creal(Y);
 	float B_p = cimag(Y);
-
 	float X_s = cimag(z_final);
 
 	/* Series mode */
@@ -387,7 +393,6 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured){
 		L_out = -1 * (w_out * B_p);
 		ESR_out = 1; //TODO
 	}
-
 
 	Q_out = X_s / R_out;
 	D_out = -1 / Q_out;
@@ -450,11 +455,6 @@ int lcr_data_analysis(float **data,
 	float component_lock_in[2][2];
 
 	for(int i = 0; i < size; i++){
-		u_dut[i] = data[0][i] - data[1][i];
-		i_dut[i] = data[1][i] / r_shunt;
-	}
-
-	for(int i = 0; i < size; i++){
 		ang = (i * T * w_out);
 		//Real		
 		u_dut_s[0][i] = u_dut[i] * sin(ang);
@@ -487,7 +487,7 @@ int lcr_data_analysis(float **data,
 	z_ampl = u_dut_ampl / i_dut_ampl;
 
 	/* Applying phase limitation (-180 deg, 180 deg) */
-	if(phase_z_rad <= -M_PI){
+	if(phase_z_rad <= (-1 * M_PI)){
 		phase_z_rad = phase_z_rad + (2 * M_PI);
 	}else if(phase_z_rad >= M_PI){
 		phase_z_rad = phase_z_rad - (2 * M_PI);
