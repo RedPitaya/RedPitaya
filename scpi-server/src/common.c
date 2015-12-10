@@ -21,7 +21,7 @@ int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel){
 
     int32_t ch_usr[1];
     SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
-    if(ch_usr[0] < MIN_CH || ch_usr[0] > MAX_CH){
+    if (!((ch_usr[0] > 0) && (ch_usr[0] <= CH_NUM))) {
         RP_LOG(LOG_ERR, "ERROR: Invalid channel number: %.*s\n", 50, context->param_list.cmd_raw.data);
         return RP_EOOR;
     }

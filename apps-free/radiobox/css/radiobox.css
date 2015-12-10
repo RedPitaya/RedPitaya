@@ -9,60 +9,60 @@
 }
 
 
-#osc1_qrg {
+#osc_car_qrg {
   position:relative;
   z-index:1;
 }
-.form-bg-osc1-qrg {
+.form-bg-osc-car-qrg {
   background:#002050;
 }
 
-#osc1_amp {
+#amp_rf_gain {
   position:relative;
   z-index:1;
 }
-.form-bg-osc1-amp {
+.form-bg-amp-rf-gain {
   background:#602000;
 }
 
-#osc1_modsrc {
+#osc_car_modsrc {
   position:relative;
   z-index:1;
 }
-.form-bg-osc1-modsrc {
+.form-bg-osc-car-modsrc {
   background:#404020;
 }
 
-#osc1_modtyp {
+#osc_car_modtyp {
   position:relative;
   z-index:1;
 }
-.form-bg-osc1-modtyp {
+.form-bg-osc-car-modtyp {
   background:#404020;
 }
-select#osc1_modtyp_s[disabled] {
+select#osc_car_modtyp_s[disabled] {
   background:#707070;
 }
 
-#osc2_qrg {
+#osc_mod_qrg {
   position:relative;
   z-index:1;
 }
-.form-bg-osc2-qrg {
+.form-bg-osc-mod-qrg {
   background:#002050;
 }
-input#osc2_qrg_f[disabled] {
+input#osc_mod_qrg_f[disabled] {
   background:#707070;
 }
 
-#osc2_mag {
+#osc_mod_mag {
   position:relative;
   z-index:1;
 }
-.form-bg-osc2-mag {
+.form-bg-osc-mod-mag {
   background:#602000;
 }
-input#osc2_mag_f[disabled] {
+input#osc_mod_mag_f[disabled] {
   background:#707070;
 }
 

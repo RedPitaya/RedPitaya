@@ -84,13 +84,13 @@ typedef struct rb_app_params_s {
 /** @brief RadioBox parameters */
 enum rb_params_enum_t {
     RB_RUN                  =  0,
-    RB_OSC1_MODSRC,
-    RB_OSC1_MODTYP,
+    RB_OSC_CAR_MODSRC,
+    RB_OSC_CAR_MODTYP,
     RB_LED_CTRL,
-    RB_OSC1_QRG,
-    RB_OSC2_QRG,
-    RB_OSC1_AMP,
-    RB_OSC2_MAG,
+    RB_OSC_CAR_QRG,
+    RB_OSC_MOD_QRG,
+    RB_AMP_RF_GAIN,
+    RB_OSC_MOD_MAG,
     RB_MUXIN_GAIN,
 
     RB_PARAMS_NUM
@@ -106,13 +106,15 @@ enum rb_modsrc_enum_t {
     RB_MODSRC_EXP_AI1,
     RB_MODSRC_EXP_AI2,
     RB_MODSRC_EXP_AI3,
-    RB_MODSRC_OSC2          = 15
+    RB_MODSRC_OSC_MOD       = 15
 } RB_MODSRC_ENUM;
 
 
 /** @brief RadioBox modulation types */
 enum rb_modtyp_enum_t {
-    RB_MODTYP_AM            =  0,
+    RB_MODTYP_USB           =  0,
+    RB_MODTYP_LSB,
+    RB_MODTYP_AM,
     RB_MODTYP_FM,
     RB_MODTYP_PM
 } RB_MODTYP_ENUM;
