@@ -111,39 +111,39 @@
 
         <tr>
         <td>
-        <div id="osc1_qrg" class="form-group">
-          <label for="osc1_qrg_f" class="col-xs-5 control-label">OSC-1 frequency:</label>
+        <div id="osc_car_qrg" class="form-group">
+          <label for="osc_car_qrg_f" class="col-xs-5 control-label">OSC_CAR frequency:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc1_qrg_f" value="0" class="form-control form-bg-osc1-qrg" autocomplete="off" />
-            <span id="apply_osc1_qrg" class="input-group-btn" _style="visibility:hidden">
+            <input type="text" id="osc_car_qrg_f" value="0" class="form-control form-bg-osc-car-qrg" autocomplete="off" />
+            <span id="apply_osc_car_qrg" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc1_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+          <div id="osc_car_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
         </div>
         </td>
 
         <td>
-        <div id="osc1_amp" class="form-group">
-          <label for="osc1_amp_f" class="col-xs-5 control-label">OSC-1 amplitude:</label>
+        <div id="amp_rf_gain" class="form-group">
+          <label for="amp_rf_gain_f" class="col-xs-5 control-label">AMP_RF amplitude:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc1_amp_f" value="0" class="form-control form-bg-osc1-amp" autocomplete="off" />
-            <span id="apply_osc1_amp" class="input-group-btn" _style="visibility:hidden">
+            <input type="text" id="amp_rf_gain_f" value="0" class="form-control form-bg-amp-rf-gain" autocomplete="off" />
+            <span id="apply_amp_rf_gain" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc1_amp_units" class="col-xs-3" style="padding: 7px 0 0;">mV &nbsp;(Vpp)</div>
+          <div id="amp_rf_gain_units" class="col-xs-3" style="padding: 7px 0 0;">mV &nbsp;(Vpp)</div>
         </div>
         </td>
 
         <td>
-        <div id="osc1_modsrc" class="form-group">
-          <label for="osc1_modsrc_s" class="col-xs-5 control-label">OSC-1 mod. source:</label>
+        <div id="osc_car_modsrc" class="form-group">
+          <label for="osc_car_modsrc_s" class="col-xs-5 control-label">OSC_CAR mod. source:</label>
           <div class="col-xs-6">
-            <select id="osc1_modsrc_s" class="form-control form-bg-osc1-modsrc">
+            <select id="osc_car_modsrc_s" class="form-control form-bg-osc-car-modsrc">
               <option value="0">(none)</option>
               <option disabled="disabled">---------------------</option>
-              <option value="15">OSC2</option>
+              <option value="15">OSC_MOD</option>
               <option disabled="disabled">---------------------</option>
               <option value="1">RF Input 1</option>
               <option value="2">RF Input 2</option>
@@ -153,7 +153,7 @@
               <option value="6">EXP AI2</option>
               <option value="7">EXP AI3</option>
             </select>
-            <span id="apply_osc1_modsrc" class="input-group-btn" _style="visibility:hidden">
+            <span id="apply_osc_car_modsrc" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -169,17 +169,17 @@
         </td>
 
         <td>
-        <div id="osc1_modtyp" class="form-group">
-          <label for="osc1_modtyp_s" class="col-xs-5 control-label">OSC-1 mod. type:</label>
+        <div id="osc_car_modtyp" class="form-group">
+          <label for="osc_car_modtyp_s" class="col-xs-5 control-label">OSC_CAR mod. type:</label>
           <div class="col-xs-6">
-            <select id="osc1_modtyp_s" class="form-control form-bg-osc1-modtyp" disabled="disabled">
+            <select id="osc_car_modtyp_s" class="form-control form-bg-osc-car-modtyp" disabled="disabled">
               <option value="0">USB</option>
               <option value="1">LSB</option>
               <option value="2">AM</option>
               <option value="3">FM</option>
               <option value="4">PM</option>
             </select>
-            <span id="apply_osc1_modtyp" class="input-group-btn" style="visibility:hidden">
+            <span id="apply_osc_car_modtyp" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -189,28 +189,28 @@
 
         <tr>
         <td>
-        <div id="osc2_qrg" class="form-group">
-        <label for="osc2_qrg_f" class="col-xs-5 control-label">OSC-2 frequency:</label>
+        <div id="osc_mod_qrg" class="form-group">
+        <label for="osc_mod_qrg_f" class="col-xs-5 control-label">OSC_MOD frequency:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc2_qrg_f" value="0" class="form-control form-bg-osc2-qrg" autocomplete="off" disabled="disabled" />
-            <span id="apply_osc2_qrg" class="input-group-btn" style="visibility:hidden">
+            <input type="text" id="osc_mod_qrg_f" value="0" class="form-control form-bg-osc-mod-qrg" autocomplete="off" disabled="disabled" />
+            <span id="apply_osc_mod_qrg" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc2_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+          <div id="osc_mod_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
         </div>
         </td>
 
         <td>
-        <div id="osc2_mag" class="form-group">
-          <label for="osc2_mag_f" class="col-xs-5 control-label">Modulator magnitude:</label>
+        <div id="osc_mod_mag" class="form-group">
+          <label for="osc_mod_mag_f" class="col-xs-5 control-label">Modulator magnitude:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc2_mag_f" value="0" class="form-control form-bg-osc2-mag" autocomplete="off" disabled="disabled" />
-            <span id="apply_osc2_mag" class="input-group-btn" style="visibility:hidden">
+            <input type="text" id="osc_mod_mag_f" value="0" class="form-control form-bg-osc-mod-mag" autocomplete="off" disabled="disabled" />
+            <span id="apply_osc_mod_mag" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc2_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
+          <div id="osc_mod_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
         </div>
         </td>
 

@@ -79,9 +79,7 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h06: OSC_CAR OFS SRC STREAM - '1' places input MUXer for OSC_CAR DDS offset input to the first streamed input pipe. '0' places MUXer to registers "OSC_CAR OFS HI" and "OSC_CAR OFS LO".
      *
-     * bit h07: OSC_CAR GAIN SRC STREAM - '1' places input MUXer for OSC_CAR amplitude multiplier input to the first streamed input pipe. '0' places MUXer to register "OSC_CAR MIX GAIN".
-     *
-     * bit h0B..h08: n/a
+     * bit h0B..h07: n/a
      *
      * bit h0C: OSC_MOD RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the OSC_CAR resumes operation.
      *
@@ -89,13 +87,14 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h0E: OSC_MOD OFS SRC STREAM - '1' places input MUXer for OSC_MOD DDS offset input to the second streamed input pipe. '0' places MUXer to registers "OSC_MOD OFS HI" and "OSC_MOD OFS LO".
      *
-     * bit h0F: n/a
+     * bit h13..h0F: n/a
      *
-     * bit h1F..h10: n/a
+     * bit h14: AMP_RF_Q_EN - '1' enables the QMIX_CAR Q path for the SSB modulation
+     *
+     * bit h1F..h15: n/a
      *
      */
     uint32_t ctrl;
-
 
     /** @brief  R/O RB_STATUS - Status register (addr: 0x40600004)
      *
@@ -207,19 +206,23 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h08  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 2.
      *
-     *   value = h09  LEDs show magnitude function with selected input port HP I output.
+     *   value = h09  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 3.
      *
-     *   value = h0A  LEDs show magnitude function with selected input port HP Q output.
+     *   value = h0A  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 3.
      *
-     *   value = h0B  LEDs show magnitude function with selected input port LP CIC I output.
+     *   value = h0B  LEDs show magnitude function with selected input port HP I output.
      *
-     *   value = h0C  LEDs show magnitude function with selected input port LP CIC Q output.
+     *   value = h0C  LEDs show magnitude function with selected input port HP Q output.
      *
-     *   value = h0D  LEDs show magnitude function with selected input port QMIX_CAR_I output at stage 1.
+     *   value = h0D  LEDs show magnitude function with selected input port LP CIC I output.
      *
-     *   value = h0E  LEDs show magnitude function with selected input port QMIX_CAR_Q output at stage 1.
+     *   value = h0E  LEDs show magnitude function with selected input port LP CIC Q output.
      *
-     *   value = h0F  LEDs show magnitude function with selected input port AMP_RF output.
+     *   value = h0F  LEDs show magnitude function with selected input port QMIX_CAR_I output at stage 1.
+     *
+     *   value = h10  LEDs show magnitude function with selected input port QMIX_CAR_Q output at stage 1.
+     *
+     *   value = h11  LEDs show magnitude function with selected input port AMP_RF output.
      *
      * bit h1F..h10: n/a
      *
@@ -263,7 +266,7 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_AMP_RF_GAIN - AMP RF gain register, bits 15..0 (addr: 0x40600030)
      *
-     * bit h0F..h00: Amplifier RF gain setting, unsigned value.
+     * bit h0F..h00: SIGNED 16 bit - Amplifier RF gain setting.
      *
      */
     uint32_t amp_rf_gain;
@@ -279,7 +282,7 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_AMP_RF_OFS - AMP RF offset register, bits 15..0 (addr: 0x40600038)
      *
-     * bit h0F..h00: Amplifier RF offset value, signed value.
+     * bit h0F..h00: SIGNED 16 bit - Amplifier RF offset value.
      *
      */
     uint32_t amp_rf_ofs;
@@ -327,12 +330,12 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t osc_mod_ofs_hi;
 
 
-    /** @brief  R/W RB_OSC_MOD_MIX_GAIN - OSC_MOD output mixer amplitude register, bits 15..0 (addr: 0x40600050)
+    /** @brief  R/W RB_QMIX_MOD_GAIN - QMIX_MOD amplitude register, bits 15..0 (addr: 0x40600050)
      *
-     * bit h0F..h00: OSC_MOD output mixer amplitude.
+     * bit h0F..h00: SIGNED 16 bit - QMIX_MOD amplitude setting.
      *
      */
-    uint32_t osc_mod_mix_gain;
+    uint32_t qmix_mod_gain;
 
 
     /** @brief  Placeholder for addr: 0x40600054
@@ -343,21 +346,21 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t reserved_54;
 
 
-    /** @brief  R/W RB_OSC_MOD_MIX_OFS_LO - OSC_MOD output mixer offset register, bits 31..0 (addr: 0x40600058)
+    /** @brief  R/W RB_QMIX_MOD_OFS_LO - QMIX_MOD offset register, bits 31..0 (addr: 0x40600058)
      *
-     * bit h1F..h00: LSB of OSC_MOD mixer offset register.
+     * bit h1F..h00: LSB of QMIX_MOD offset value.
      *
      */
-    uint32_t osc_mod_mix_ofs_lo;
+    uint32_t qmix_mod_ofs_lo;
 
-    /** @brief  R/W RB_OSC_MOD_MIX_OFS_HI - OSC_MOD output mixer offset register, bits 47..32 (addr: 0x4060005C)
+    /** @brief  R/W RB_QMIX_MOD_OFS_HI - QMIX_MOD offset register, bits 47..32 (addr: 0x4060005C)
      *
-     * bit h0F..h00: MSB of OSC_MOD mixer offset register.
+     * bit h0F..h00: MSB of QMIX_MOD offset value.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t osc_mod_mix_ofs_hi;
+    uint32_t qmix_mod_ofs_hi;
 
 
     /** @brief  R/W RB_MUXIN_SRC - analog MUX input selector (addr: 0x40600060)
@@ -385,7 +388,7 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_MUXIN_GAIN - gain for analog MUX input amplifier (addr: 0x40600064)
      *
-     * bit h0F..h00: gain for MUXIN output amplifier.
+     * bit h0F..h00: SIGNED 16 bit - gain for MUXIN output amplifier.
      *
      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
      *
@@ -456,11 +459,11 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @param[in]  led_ctrl      RB LED controller setting to be used.
  * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
  * @param[in]  osc_mod_qrg   Frequency for OSC_MOD in Hz.
- * @param[in]  osc_car_amp   Vpp of OSC_CAR mixer output in mV.
+ * @param[in]  amp_rf_gain   Vpp of AMP_RF output in mV.
  * @param[in]  osc_mod_mag   Magnitude of OSC_MOD mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
  * @param[in]  muxin_gain    Slider value between 0 and 100 for the MUXIN range slider. 50 means amplification of 1:1, 0 and 100 full scale, logarithmic.
  */
-void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double osc_car_qrg, double osc_mod_qrg, double osc_car_amp, double osc_mod_mag, double muxin_gain);
+void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double osc_car_qrg, double osc_mod_qrg, double amp_rf_gain, double osc_mod_mag, double muxin_gain);
 
 /**
  * @brief Calculates and programs the FPGA OSC_CAR for AM and PM
@@ -468,29 +471,29 @@ void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double o
  * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
  */
 //void fpga_rb_set_osc_car_mod_none_am_pm(double osc_car_qrg);
-void fpga_rb_set_osc_car_mod_none_am_pm(double osc_car_qrg);
+void fpga_rb_set_osc_car_qrg__4mod_none_ssb_am_pm(double osc_car_qrg);
 
 /**
  * @brief Calculates and programs the FPGA OSC_CAR mixer for AM
  *
- * @param[in]  osc_car_amp   Vpp amplitude in mV.
+ * @param[in]  amp_rf_gain  Vpp amplitude in mV.
+ * @param[in]  amp_rf_ofs   Vpp amplitude in mV.
  */
-void fpga_rb_set_osc_car_mixer_mod_none_fm_pm(double osc_car_amp);
+void fpga_rb_set_amp_rf_gain_ofs__4mod_all(double amp_rf_gain, double amp_rf_ofs);
 
 /**
  * @brief Calculates and programs the FPGA OSC_MOD for AM and PM
  *
  * @param[in]  osc_mod_qrg   Frequency for OSC_MOD in Hz.
  */
-void fpga_rb_set_osc_mod_mod_am_fm_pm(double osc_mod_qrg);
+void fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(double osc_mod_qrg);
 
 /**
  * @brief Calculates and programs the FPGA OSC_MOD mixer for AM
  *
- * @param[in]  osc_car_amp   Vpp amplitude in mV.
- * @param[in]  osc_mod_mag   Magnitude percentage 0 - 100.
+ * @param[in]  osc_mod_grade   Magnitude grade 0% .. 100%.
  */
-void fpga_rb_set_osc_mod_mixer_mod_am(double osc_car_amp, double osc_mod_mag);
+void fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_am(double qmix_mod_grade);
 
 /**
  * @brief Calculates and programs the FPGA OSC_MOD mixer for FM
@@ -498,7 +501,7 @@ void fpga_rb_set_osc_mod_mixer_mod_am(double osc_car_amp, double osc_mod_mag);
  * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
  * @param[in]  osc_mod_mag   Deviation in Hz.
  */
-void fpga_rb_set_osc_mod_mixer_mod_fm(double osc_car_qrg, double osc_mod_mag);
+void fpga_rb_set_qmix_mod_gain_ofs__4mod_fm(double osc_car_qrg, double osc_mod_mag);
 
 /**
  * @brief Calculates and programs the FPGA OSC_MOD mixer for PM
@@ -506,7 +509,7 @@ void fpga_rb_set_osc_mod_mixer_mod_fm(double osc_car_qrg, double osc_mod_mag);
  * @param[in]  osc_car_qrg   Base frequency in Hz.
  * @param[in]  osc_mod_mag   Deviation in deg.
  */
-void fpga_rb_set_osc_mod_mixer_mod_pm(double osc_car_qrg, double osc_mod_mag);
+void fpga_rb_set_qmix_mod_gain_ofs__4mod_pm(double osc_car_qrg, double osc_mod_mag);
 
 /**
  * @brief Calculates and programs the FPGA MUXIN gain setting

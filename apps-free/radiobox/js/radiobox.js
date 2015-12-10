@@ -57,12 +57,13 @@
     rb_run:              1,  // application running
     osc_car_modsrc_s:    0,  // mod-source: (none)
     osc_car_modtyp_s:    2,  // modulation: AM
-    rbled_ctrl_s:        3,  // RB LEDs set to ADC_MOD in
+    rbled_ctrl_s:       15,  // RB LEDs set to: 0=disabled, 1=off, 2=MUXIN_MIX in, 3=ADC_MOD in, 4=ADC_MOD out, 5=QMIX_MOD_I_S1 out, 6=QMIX_MOD_Q_S1 out, 7=QMIX_MOD_I_S2, 8=QMIX_MOD_Q_S2,
+                             //    9=QMIX_MOD_I_S3, 10=QMIX_MOD_Q_S3, 11=HP_I out, 12=HP_Q out, 13=CIC_I out, 14=CIC_Q out, 15=QMIX_CAR_I_S1 out, 16=QMIX_CAR_Q_S1 out, 17=AMP_RF out
     osc_car_qrg_f:   10000,  // 10 kHz
     osc_mod_qrg_f:    1000,  //  1 kHz
-    osc_car_amp_f: 63.6396,  //  63.6396 mV Vpp @ 50R results to -20 dBm
+    amp_rf_gain_f: 63.6396,  //  63.6396 mV Vpp @ 50R results to -20 dBm
     osc_mod_mag_f:       0,  // no modulation by default
-    muxin_gain_f:     10.0   // slider position in % of 100%
+    muxin_gain_f:     80.0   // slider position in % of 100%
   };
 
   // Other global variables
@@ -240,12 +241,14 @@
         $('#'+param_name).val(intVal);
         switch (intVal) {
           case 0:
+          case 1:
+          case 2:
             $('#osc_mod_mag_units').text('%');
             break;
-          case 1:
+          case 3:
             $('#osc_mod_mag_units').text('Hz');
             break;
-          case 2:
+          case 4:
             $('#osc_mod_mag_units').text('°');
             break;
           default:
@@ -262,7 +265,7 @@
       else if (param_name == 'osc_mod_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
-      else if (param_name == 'osc_car_amp_f') {
+      else if (param_name == 'amp_rf_gain_f') {
           $('#'+param_name).val(dblVal);
         }
       else if (param_name == 'osc_mod_mag_f') {
@@ -498,7 +501,7 @@
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
   if (key == 'osc_car_modsrc_s') {
     if (value == 15) {
-      /* OSC2 */
+      /* OSC_MOD */
       $('#osc_car_modtyp_s').removeAttr("disabled");
       $('#apply_osc_car_modtyp').removeAttr("style");
 
@@ -926,12 +929,12 @@ function cast_params2transport(params, pktIdx)
     break;
 
   case 3:
-    if (params['osc_car_amp_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['osc_car_amp_f']);
-      transport['SE_osc_car_amp_f'] = quad.se;
-      transport['HI_osc_car_amp_f'] = quad.hi;
-      transport['MI_osc_car_amp_f'] = quad.mi;
-      transport['LO_osc_car_amp_f'] = quad.lo;
+    if (params['amp_rf_gain_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['amp_rf_gain_f']);
+      transport['SE_amp_rf_gain_f'] = quad.se;
+      transport['HI_amp_rf_gain_f'] = quad.hi;
+      transport['MI_amp_rf_gain_f'] = quad.mi;
+      transport['LO_amp_rf_gain_f'] = quad.lo;
     }
 
     if (params['osc_mod_mag_f'] !== undefined) {
@@ -1000,13 +1003,13 @@ function cast_transport2params(transport)
     params['osc_mod_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_osc_car_amp_f'] !== undefined) {
+  if (transport['LO_amp_rf_gain_f'] !== undefined) {
     var quad = { };
-    quad.se = transport['SE_osc_car_amp_f'];
-    quad.hi = transport['HI_osc_car_amp_f'];
-    quad.mi = transport['MI_osc_car_amp_f'];
-    quad.lo = transport['LO_osc_car_amp_f'];
-    params['osc_car_amp_f'] = cast_4xfloat_to_1xdouble(quad);
+    quad.se = transport['SE_amp_rf_gain_f'];
+    quad.hi = transport['HI_amp_rf_gain_f'];
+    quad.mi = transport['MI_amp_rf_gain_f'];
+    quad.lo = transport['LO_amp_rf_gain_f'];
+    params['amp_rf_gain_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
   if (transport['LO_osc_mod_mag_f'] !== undefined) {

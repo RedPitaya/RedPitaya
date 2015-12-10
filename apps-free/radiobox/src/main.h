@@ -89,7 +89,7 @@ enum rb_params_enum_t {
     RB_LED_CTRL,
     RB_OSC_CAR_QRG,
     RB_OSC_MOD_QRG,
-    RB_OSC_CAR_AMP,
+    RB_AMP_RF_GAIN,
     RB_OSC_MOD_MAG,
     RB_MUXIN_GAIN,
 

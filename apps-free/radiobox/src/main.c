@@ -69,7 +69,7 @@ fpga_rb_reg_mem_t*              g_fpga_rb_reg_mem = NULL;
 /** @brief Describes app. parameters with some info/limitations in high definition */
 const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode */
-        "rb_run",           0.0,   1, 0, 0.0,       1.0  },
+        "rb_run",              0.0,   1, 0, 0.0,       1.0  },
 
     { /* OSC_CAR modulation source selector
        * ( 0: none,
@@ -88,7 +88,7 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
         "osc_car_modtyp_s",    0.0,   1,  0, 0.0,      2.0  },
 
     { /* RB LED control */
-        "rbled_ctrl_s",     0.0,   1,  0, 0.0,     15.0  },
+        "rbled_ctrl_s",        0.0,   1,  0, 0.0,     15.0  },
 
     { /* OSC_CAR frequency (Hz) */
         "osc_car_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
@@ -96,17 +96,17 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* OSC_MOD frequency (Hz) */
         "osc_mod_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
 
-    { /* OSC_CAR amplitude (mV) */
-        "osc_car_amp_f",       0.0,   1,  0, 0.0,   2047.0  },
+    { /* AMP_RF amplitude (mV) */
+        "amp_rf_gain_f",       0.0,   1,  0, 0.0,   2047.0  },
 
     { /* OSC_MOD magnitude (AM:%, FM:Hz, PM:°) */
         "osc_mod_mag_f",       0.0,   1,  0, 0.0,     1e+6  },
 
     { /* MUX in (Mic in) slider ranges from 0% to 100% */
-        "muxin_gain_f",     0.0,   1,  0, 0.0,    100.0  },
+        "muxin_gain_f",        0.0,   1,  0, 0.0,    100.0  },
 
     { /* Must be last! */
-        NULL,               0.0,  -1, -1, 0.0,      0.0  }
+        NULL,                  0.0,  -1, -1, 0.0,      0.0  }
 };
 
 /** @brief CallBack copy of params to inform the worker */
@@ -629,10 +629,10 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
             /* limit transfer volume to a part of all param entries, @see cb_http.crp_set_params() */
             switch (g_transport_pktIdx & 0x7f) {
             case 1:
-                if (!strcmp("rb_run",        src[i].name) ||
+                if (!strcmp("rb_run",           src[i].name) ||
                     !strcmp("osc_car_modsrc_s", src[i].name) ||
                     !strcmp("osc_car_modtyp_s", src[i].name) ||
-                    !strcmp("rbled_ctrl_s",  src[i].name)) {
+                    !strcmp("rbled_ctrl_s",     src[i].name)) {
                     found = 1;
                 }
                 break;
@@ -645,14 +645,14 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 break;
 
             case 3:
-                if (!strcmp("osc_car_amp_f",    src[i].name) ||
+                if (!strcmp("amp_rf_gain_f",    src[i].name) ||
                     !strcmp("osc_mod_mag_f",    src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 4:
-                if (!strcmp("muxin_gain_f",  src[i].name)) {
+                if (!strcmp("muxin_gain_f",     src[i].name)) {
                     found = 1;
                 }
                 break;
