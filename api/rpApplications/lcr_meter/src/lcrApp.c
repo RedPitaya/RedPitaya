@@ -75,10 +75,26 @@ int lcrApp_LcrGetMeasTolerance(bool *tolerance){
 	return lcr_GetMeasTolerance(tolerance);
 }
 
-int lcrApp_LcrSetMeasRangeMode(bool range_mode){
-	return lcr_SetMeasRangeMode(range_mode);
+int lcrApp_LcrSetMeasRangeMode(int range){
+	return lcr_SetMeasRangeMode(range);
 }
 
-int lcrApp_LcrGetMeasRangeMode(bool *range_mode){
+int lcrApp_LcrGetMeasRangeMode(int *range_mode){
 	return lcr_GetMeasRangeMode(range_mode);
+}
+
+int lcrApp_LcrSetMeasRangeFormat(int format){
+	return lcr_SetRangeFormat(format);
+}
+
+int lcrApp_LcrGetMeasRangeFormat(int *format){
+	return lcr_GetRangeFormat(format);
+}
+
+int lcrApp_SetMeasRangeUnits(int units){
+	return lcr_SetRangeUnits(units);
+}
+
+int lcrApp_GetMeasRangeUnits(int *units){
+	return lcr_GetRangeUnits(units);
 }

@@ -52,6 +52,11 @@ struct impendace_params {
 const double SHUNT_TABLE[] = 
 	{30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
 
+const int RANGE_FORMAT[] =
+	{10.0, 100.0, 1000.0, 10000.0};
+
+const double RANGE_UNITS[] =
+	{10e9, 10e6, 10e3, 1, 10e-3, 10e-6};
 
 /* Init the main API structure */
 int lcr_Init(){
@@ -111,7 +116,9 @@ int lcr_SetDefaultValues(){
 	ECHECK_APP(lcr_SetFrequency(1000.0));
 	ECHECK_APP(lcr_SetCalibMode(CALIB_NONE));
 	ECHECK_APP(lcr_SetMeasTolerance(false));
-	ECHECK_APP(lcr_SetMeasRangeMode(true));
+	ECHECK_APP(lcr_SetMeasRangeMode(0));
+	ECHECK_APP(lcr_SetRangeFormat(0));
+	ECHECK_APP(lcr_SetRangeUnits(0));
 	ECHECK_APP(lcr_SetMeasSeries(false));
 	return RP_OK;
 }
@@ -234,14 +241,37 @@ void *lcr_MainThread(void *args){
 		lcr_getImpedance(args_struct->frequency, 
 			&args_struct->z_out, &args_struct->phase_out);
 
-	}else if(main_params.range_mode){	
+	}else{	
 
 		double z_abs;
 		lcr_getImpedance(args_struct->frequency, 
 			&args_struct->z_out, &args_struct->phase_out);
 
 		z_abs = cabs(args_struct->z_out);
+/*
+		switch(main_params.range){
+			case 1:
+				z_abs = RANGE_FORMAT[main_params.range_format] * 
+					RANGE_UNITS[main_params.range_units];
+				break;
+			case 2: 
+				z_abs = RANGE_FORMAT[main_params.range_format] * 
+					(args_struct->frequency * 2 * M_PI) * RANGE_UNITS
+						[main_params.range_units];
+				break;
+			case 3://Z_amp = 1/ (selected_range * selected_frequency * 2 *PI)*selected_prefix
+				z_abs = 1 / (RANGE_FORMAT[main_params.range_format] * args_struct->frequency *
+					2 * M_PI) * RANGE_UNITS[main_params.range_units];
 
+			case 4:
+				z_abs = RANGE_FORMAT[main_params.range_format] * 
+					RANGE_UNITS[main_params.range_units];
+				break;
+			case 0:
+				z_abs = z_abs;
+				break;
+		}
+*/
 		lcr_checkRShunt(z_abs, 
 			SHUNT_TABLE[n_shunt_idx], &n_shunt_idx);
 
@@ -254,9 +284,6 @@ void *lcr_MainThread(void *args){
 			set_IIC_Shunt(main_params.r_shunt);
 			overflow_limitation = 0;
 		}
-
-	}else if(!main_params.range_mode){
-
 	}
 	
 	return RP_OK;
@@ -550,13 +577,33 @@ int lcr_GetMeasTolerance(bool *tolerance){
 	return RP_OK;
 }
 
-int lcr_SetMeasRangeMode(bool range){
-	main_params.range_mode = range;
+int lcr_SetMeasRangeMode(int range){
+	main_params.range = range;
 	return RP_OK;
 }
 
-int lcr_GetMeasRangeMode(bool *range){
-	*range = main_params.range_mode;
+int lcr_GetMeasRangeMode(int *range){
+	*range = main_params.range;
+	return RP_OK;
+}
+
+int lcr_SetRangeFormat(int format){
+	main_params.range_format = format;
+	return RP_OK;
+}
+
+int lcr_GetRangeFormat(int *format){
+	*format = main_params.range_format;
+	return RP_OK;
+}
+
+int lcr_SetRangeUnits(int units){
+	main_params.range_units = units;
+	return RP_OK;
+}
+
+int lcr_GetRangeUnits(int *units){
+	*units = main_params.range_units;
 	return RP_OK;
 }
 

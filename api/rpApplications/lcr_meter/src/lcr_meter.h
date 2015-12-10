@@ -45,7 +45,9 @@ typedef struct params_e{
 	int r_shunt;
 	calib_t calibration;
 	bool tolerance;
-	bool range_mode;
+	int range;
+	int range_format;
+	int range_units;
 	bool series;
 } lcr_params_t;
 
@@ -117,8 +119,12 @@ int lcr_SetMeasSeries(bool serial);
 int lcr_GetMeasSeries(bool *serial);
 int lcr_SetMeasTolerance(bool tolerance);
 int lcr_GetMeasTolerance(bool *tolerance);
-int lcr_SetMeasRangeMode(bool range);
-int lcr_GetMeasRangeMode(bool *range);
+int lcr_SetMeasRangeMode(int range);
+int lcr_GetMeasRangeMode(int *range);
+int lcr_SetRangeFormat(int format);
+int lcr_GetRangeFormat(int *format);
+int lcr_SetRangeUnits(int units);
+int lcr_GetRangeUnits(int *units);
 
 #endif //__LCRMETER_H
 
