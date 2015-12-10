@@ -471,7 +471,7 @@ void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double o
  * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
  */
 //void fpga_rb_set_osc_car_mod_none_am_pm(double osc_car_qrg);
-void fpga_rb_set_osc_car_qrg__4mod_none_ssb_am_pm(double osc_car_qrg);
+void fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(double osc_car_qrg);
 
 /**
  * @brief Calculates and programs the FPGA OSC_CAR mixer for AM
@@ -492,8 +492,9 @@ void fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(double osc_mod_qrg);
  * @brief Calculates and programs the FPGA OSC_MOD mixer for AM
  *
  * @param[in]  osc_mod_grade   Magnitude grade 0% .. 100%.
+ * @param[in]  isOffset        1=based on 100% carrier minus modulation grade, 0=no carrier.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_am(double qmix_mod_grade);
+void fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_ssbweaver_am(double qmix_mod_grade, int isOffset);
 
 /**
  * @brief Calculates and programs the FPGA OSC_MOD mixer for FM
