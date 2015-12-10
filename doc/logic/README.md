@@ -176,7 +176,7 @@ trg_cnt = 0..................1.......2.......3 = trg_siz
 ```
 
 Another example requires just a specified amount of samples after acquire is
-started (`run` request). I am not sure yet, how to handle the start of aquisition.
+started (`run` request). I am not sure yet, how to handle the start of acquisition.
 
 ```
 .......T__________________________........
@@ -186,11 +186,11 @@ started (`run` request). I am not sure yet, how to handle the start of aquisitio
 ```
 
 Status registers provide values mainly used in modes, where the acquisition
-stream is running continuously. The number os samples from acquisition start is
+stream is running continuously. The number of samples from acquisition start is
 counted, as is the number of trigger events since start. There is a limited
 size FIFO holding the position of the last `trg_siz` samples. `trg_num` holds
 the number of trigger events still present in the FIFO, one of the bits is used
-to indicate overflow. Triger FIFO size is configurable so that for example only
+to indicate overflow. Trigger FIFO size is configurable so that for example only
 the last trigger is needed it can be obtained without reading the whole FIFO. 
 
 ```C
@@ -212,7 +212,7 @@ struct {
 } regset_acq_t;
 ```
 
-The whole register set structiure is a combination of the above structures and
+The whole register set structure is a combination of the above structures and
 other configuration registers.
 
 ```C
@@ -272,7 +272,7 @@ int get_data (uint32_t trg_pos, int32_t from, int32_t to, bool block, int16_t *d
 
 # Acquire use cases
 
-## 1. auto refreshing oscilloscope
+## 1. Auto refreshing oscilloscope
 
 The data is continuously written into a circular buffer by the DMA. The buffer
 is large enough to avoid observed data being overwritten in all but extreme
@@ -307,7 +307,7 @@ Data before trigger is available immediately, while data after trigger might
 require some waiting. This waiting is implemented by blocking the return from
 the function.
 
-### request data before trigger
+### Request data before trigger
 
 Both `from` and `to` values are negative. Data is available, unless there was
 no trigger received yet. User must check that `trigger+from > 0` otherwise
@@ -321,7 +321,7 @@ some data can be invalid.
        from         to            trigger   write pointer
 ```
 
-### request data around trigger (most common case)
+### Request data around trigger (most common case)
 
 This is the most common case, where the user observes the waveform around the
 trigger on the screen. Since it is possible some requested data after the
@@ -335,7 +335,7 @@ trigger did not arrive yet, the request might block.
        from          trigger   write pointer         to
 ```
 
-### request data after trigger
+### Request data after trigger
 Depending on data rate and the distance from the trigger, blocking might take
 a long time. This will reduce the display rate, so it should be used
 carefully.
@@ -356,14 +356,14 @@ the returned data, and the UI will be able to draw the waveform as new data
 arrives. The rate of this non blocking requests should be limited to the
 desired refresh rate, so it should not be done in a short loop.
 
-## 2. auto refreshing oscilloscope (low power mode)
+## 2. Auto refreshing oscilloscope (low power mode)
 
 The size of the buffer is reduced to a minimum. Data is not streamed
 continuously, instead streaming is only started on request by the user
 interface. The time required for getting data after a request is high and
 affecting the display rate.
 
-## 3. single shot oscilloscope and logic analyzer mode
+## 3. Single shot oscilloscope and logic analyzer mode
 
 In this mode a single data package is stored into the buffer. After starting
 acquisition the data will be streamed into the buffer as if it was circular.
@@ -375,7 +375,7 @@ After the buffer is loaded, SW can display its contents relative to the
 trigger.
 It is not clear yet, how will 
 
-## 4. continuous acquisition
+## 4. Continuous acquisition
 
 There is no need for a trigger, so only the `run` bit is used to control
 the data flow. Acquisition is started by writing `1` into the `run` bit, and
@@ -391,7 +391,7 @@ specific rate (for example 60fps), and the DMA driver would return as much
 data as it received after the previous request was made. If the last sample
 was received, this must be indicated.
 
-## 5. acquisition started by run or trigger and ended by counter (optionally stop)
+## 5. Acquisition started by run or trigger and ended by counter (optionally stop)
 
 This mode is intended for measurements combining the generator and acquire.
 The main point of this mode is the data in the buffer is never overwritten,
