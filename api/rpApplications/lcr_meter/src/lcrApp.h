@@ -44,10 +44,10 @@ int lcrApp_LcrSetMeasTolerance(bool tolerance);
 int lcrApp_LcrGetMeasTolerance(bool *tolerance);
 int lcrApp_LcrSetMeasRangeMode(int range_mode);
 int lcrApp_LcrGetMeasRangeMode(int *range_mode);
-int lcrApp_LcrSetRangeFormat(int format);
-int lcrApp_LcrGetRangeFormat(int *format);
-int lcrApp_LcrSetRangeUnits(int units);
-int lcrApp_LcrGetRangeUnits(int *units);
+int lcrApp_LcrSetMeasRangeFormat(int format);
+int lcrApp_LcrGetMeasRangeFormat(int *format);
+int lcrApp_LcrSetMeasRangeUnits(int units);
+int lcrApp_LcrGetMeasRangeUnits(int *units);
 
 #ifdef __cplusplus
 }

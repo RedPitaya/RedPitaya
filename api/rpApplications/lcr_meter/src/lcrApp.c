@@ -91,10 +91,10 @@ int lcrApp_LcrGetMeasRangeFormat(int *format){
 	return lcr_GetRangeFormat(format);
 }
 
-int lcrApp_SetMeasRangeUnits(int units){
+int lcrApp_LcrSetMeasRangeUnits(int units){
 	return lcr_SetRangeUnits(units);
 }
 
-int lcrApp_GetMeasRangeUnits(int *units){
+int lcrApp_LcrGetMeasRangeUnits(int *units){
 	return lcr_GetRangeUnits(units);
 }

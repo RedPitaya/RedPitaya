@@ -51,13 +51,13 @@ struct impendace_params {
 /* R shunt values definition */
 const double SHUNT_TABLE[] = 
 	{30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
-/*
+
 const int RANGE_FORMAT[] =
 	{10.0, 100.0, 1000.0, 10000.0};
 
 const double RANGE_UNITS[] =
 	{10e9, 10e6, 10e3, 1, 10e-3, 10e-6};
-*/
+
 /* Init the main API structure */
 int lcr_Init(){
 
@@ -245,30 +245,37 @@ void *lcr_MainThread(void *args){
 			&args_struct->z_out, &args_struct->phase_out);
 
 		z_abs = cabs(args_struct->z_out);
-/*
+
+		syslog(LOG_INFO, "%d %d\n", main_params.range_format, main_params.range_units);
+		
 		switch(main_params.range){
-			case 1:
+			//Z
+			case 1: 
 				z_abs = RANGE_FORMAT[main_params.range_format] * 
 					RANGE_UNITS[main_params.range_units];
 				break;
+			//L
 			case 2: 
 				z_abs = RANGE_FORMAT[main_params.range_format] * 
 					(args_struct->frequency * 2 * M_PI) * RANGE_UNITS
 						[main_params.range_units];
 				break;
-			case 3://Z_amp = 1/ (selected_range * selected_frequency * 2 *PI)*selected_prefix
+			//C
+			case 3: 
 				z_abs = 1 / (RANGE_FORMAT[main_params.range_format] * args_struct->frequency *
 					2 * M_PI) * RANGE_UNITS[main_params.range_units];
-
-			case 4:
+				break;
+			//R
+			case 4: 
 				z_abs = RANGE_FORMAT[main_params.range_format] * 
 					RANGE_UNITS[main_params.range_units];
 				break;
-			case 0:
+			//Auto-Mode
+			case 0: 
 				z_abs = z_abs;
 				break;
 		}
-*/
+
 		lcr_checkRShunt(z_abs, 
 			SHUNT_TABLE[n_shunt_idx], &n_shunt_idx);
 
