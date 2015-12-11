@@ -219,9 +219,6 @@ int lcr_getImpedance(float frequency,
 
 	//Disable channel 1 generation module
 	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
-
-	free(analysis_data);
-
 	return RP_OK;
 }
 
@@ -286,7 +283,10 @@ void *lcr_MainThread(void *args){
 		}
 
 	}
-	
+
+	//Exit thread
+	pthread_exit(0);
+
 	return RP_OK;
 }
 
@@ -305,7 +305,6 @@ int lcr_Run(){
 		return RP_EOOR;
 	}
 	pthread_join(lcr_thread_handler, 0);
-
 	if(lcr_CalculateData(args.z_out, args.phase_out) != RP_OK){
 		return RP_EOOR;
 	}
@@ -481,6 +480,11 @@ int lcr_data_analysis(float **data,
 	float i_dut_s[2][size];
 
 	float component_lock_in[2][2];
+
+	for(int i = 0; i < size; i++){
+		u_dut[i] = data[0][i] - data[1][i];
+		i_dut[i] = data[1][i] / r_shunt;
+	}
 
 	for(int i = 0; i < size; i++){
 		ang = (i * T * w_out);
