@@ -33,7 +33,11 @@ CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false,
 CBooleanParameter toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, false, 0);
 CFloatParameter tolSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1000000);
 CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, false, 0);
-CBooleanParameter rangeMode("LCR_RANGE", CBaseParameter::RW, false, 0);
+
+CIntParameter   rangeMode("LCR_RANGE", CBaseParameter::RW, 0, 0, 0, 4);
+CIntParameter   rangeFormat("LCR_RANGE_F", CBaseParameter::RW, 0, 0, 0, 3);
+CIntParameter   rangeUnits("LCR_RANGE_U", CBaseParameter::RW, 0, 0, 0, 6);
+
 
 const char *rp_app_desc(void){
 	return (const char *)"Red Pitaya Lcr meter application.\n";
@@ -121,6 +125,8 @@ void UpdateParams(void){
 		lcr_ESR.Value()         = 0;
 	}
 
+	free(data);
+
 	//Set calibration
 	if(IS_NEW(startCalibration) && calibMode.Value() != 0){
 		//Set correction mode;
@@ -143,8 +149,23 @@ void UpdateParams(void){
 
 	if(IS_NEW(seriesMode)){
 		lcrApp_LcrSetMeasSeries(seriesMode.NewValue());
-		syslog(LOG_INFO, "Setting series\n");
 		seriesMode.Update();
+	}
+
+	if(IS_NEW(rangeFormat)){
+		rangeFormat.Update();
+	}
+
+	if(IS_NEW(rangeUnits)){
+		rangeUnits.Update();
+	}
+
+	if(IS_NEW(rangeMode)){
+		lcrApp_LcrSetMeasRangeMode(rangeMode.NewValue());
+		rangeMode.Update();
+
+		lcrApp_LcrSetMeasRangeFormat(rangeFormat.Value());
+		lcrApp_LcrSetMeasRangeUnits(rangeUnits.Value());
 	}
 
 }

@@ -45,8 +45,10 @@
   	LCR.connect_time;
 
   	LCR.displ_params = {
-  		prim: "LCR_Z",
-  		sec:  "LCR_P",
+  		prim: 'LCR_Z',
+  		prim_val: 0,
+  		sec: 'LCR_P',
+  		sec_val: 0,
   		p_units: "Ω",
   		s_units: "deg"
   	};
@@ -134,6 +136,16 @@
 		for(var param_name in new_params){
 			LCR.params.orig[param_name] = new_params[param_name];
 
+			if(param_name == 'LCR_RUN'){
+				if(new_params['LCR_RUN'].value == false){
+					$('#lb_prim_displ').empty().append(LCR.displ_params.prim_val * 100 / 100);
+					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
+
+					$('#lb_sec_displ').empty().append(LCR.displ_params.sec_val * 100 / 100);
+					$('#lb_sec_displ_units').empty().append(LCR.displ_params.s_units);
+				}
+			}
+
 			if(param_name == LCR.displ_params.prim  && LCR.tolerance.apply_tolerance == false){
 				var val = Math.round(new_params[param_name].value * 100) / 100;
 				if(val > 100000000){
@@ -145,8 +157,6 @@
 				}
 
 				$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
-				
-				//function check for suffix/units
 			}
 
 			if(param_name == LCR.displ_params.sec && LCR.tolerance.apply_tolerance == false){
@@ -233,6 +243,10 @@ $(function() {
 		$('#LCR_HOLD').hide();
 		$('#LCR_START').css('display', 'block');
 		LCR.params.local['LCR_RUN'] = { value: false };
+		console.log($('#lb_prim_displ').text());
+		LCR.displ_params.prim_val = $('#lb_prim_displ').text();
+		LCR.displ_params.sec_val = $('#lb_sec_displ').text();
+
 		LCR.sendParams();
 	});
 
@@ -293,6 +307,32 @@ $(function() {
 	$('#prim_displ_choice :checkbox').click(function(){
 		LCR.displ_params.prim = this.id;
 		LCR.displ_params.p_units = this.value;
+
+		var i;
+		var sel_index = 0;
+		var op = document.getElementById("sel_range_u").getElementsByTagName("option");
+		for(i = 0; i < 6; i++){
+			if(op[i].disabled == true) sel_index = i;
+			op[i].disabled = false;
+		}
+
+		if(sel_index < 3){
+			op[0].selected = true;
+		}else{
+			op[3].selected = true;
+		}
+
+		if(this.id == 'LCR_Z' || this.id == 'LCR_R'){
+
+			for(i = 0; i < 3; i++){
+				op[i].disabled = true;
+			}
+		}else if(this.id == 'LCR_C' || this.id == 'LCR_L'){
+			for(i = 3; i < 6; i++){
+				op[i].disabled = true;
+			}
+		}
+
 	});
 
 	$('#sec_displ_choice :checkbox').click(function(){
@@ -302,13 +342,9 @@ $(function() {
 
 	$('#cb_tol').change(function(){
 
-		//var ischecked = $(this).is(':checked');
-		//TODO: Ugly solution, fix!
-
 		if(!LCR.tolerance.apply_tolerance){
 			LCR.tolerance.apply_tolerance = true;
 			LCR.params.local['LCR_TOLERANCE'] = { value: true };
-			//LCR.params.local['LCR_RUN'] = { value: true };
 			$('#lb_prim_displ').empty().append("100%");
 
 			$('#lb_prim_displ_units').empty();
@@ -337,8 +373,37 @@ $(function() {
 		LCR.sendParams();
 	});
 
-	$('#cb_paralel').click(function(){;
+	$('#cb_paralel').click(function(){
 		LCR.params.local['LCR_SERIES'] = { value: false };
+		LCR.sendParams();
+	});
+
+	$('#cb_manual').click(function(){
+		LCR.params.local['LCR_RANGE'] = {
+			value: LCR.displ_params.prim
+		}
+
+		LCR.params.local['LCR_RANGE_F'] = {
+			value: $('#sel_range_f :selected').val()
+		}
+
+		LCR.params.local['LCR_RANGE_U'] = {
+			value: $('#sel_range_u :selected').val()
+		}
+
+		LCR.displ_params.p_units = $('#sel_range_u :selected').text();
+		$('#lb_prim_displ_units').empty().append($('#sel_range_u option:selected').text());
+		LCR.sendParams();
+	});
+
+	$('#sel_range_u').change(function(){
+		LCR.displ_params.p_units = $('#sel_range_u option:selected').text();
+		LCR.params.local['LCR_RANGE_U'] = { value: this.value };
+		LCR.sendParams();
+	});
+
+	$('#sel_range_f').change(function(){
+		LCR.params.local['LCR_RANGE_F'] = { value: this.value };
 		LCR.sendParams();
 	});
 
