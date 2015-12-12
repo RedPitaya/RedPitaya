@@ -190,6 +190,18 @@
 				}
 			}
 
+			if(param_name  == 'LCR_Z_MIN'){
+				$('#meas_min_d').empty().append(new_params['LCR_Z_MIN'].value);
+			}
+
+			if(param_name == 'LCR_Z_MAX'){
+				$('#meas_max_d').empty().append(new_params['LCR_Z_MAX'].value);
+			}
+
+			if(param_name == 'LCR_Z_AVG'){
+				$('#meas_avg_d').empty().append(new_params['LCR_Z_AVG'].value);
+			}
+
 			if($('#LCR_LOG').val() == '1'){
 	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['LCR_Z'].value + '</td><td>!</td></tr>');
 	      	}
@@ -246,7 +258,6 @@ $(function() {
 		console.log($('#lb_prim_displ').text());
 		LCR.displ_params.prim_val = $('#lb_prim_displ').text();
 		LCR.displ_params.sec_val = $('#lb_sec_displ').text();
-
 		LCR.sendParams();
 	});
 
@@ -300,44 +311,45 @@ $(function() {
 	});
 	
 	$('#LCR_FREQUENCY').change(function(){
+		$('#meas_freq_d').empty().append( $('option:selected', $(this)).text());
 		LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
 		LCR.sendParams();
 	});
 
 	$('#prim_displ_choice :checkbox').click(function(){
 		LCR.displ_params.prim = this.id;
-		LCR.displ_params.p_units = this.value;
+				
+		//Changes units if manual mode isn't selected
+		if(LCR.params.orig['LCR_RANGE'].value == 0){
+			LCR.displ_params.p_units = this.value;
+		}
 
 		var i;
-		var sel_index = 0;
 		var op = document.getElementById("sel_range_u").getElementsByTagName("option");
 		for(i = 0; i < 6; i++){
-			if(op[i].disabled == true) sel_index = i;
 			op[i].disabled = false;
 		}
 
-		if(sel_index < 3){
-			op[0].selected = true;
-		}else{
-			op[3].selected = true;
-		}
-
 		if(this.id == 'LCR_Z' || this.id == 'LCR_R'){
-
 			for(i = 0; i < 3; i++){
 				op[i].disabled = true;
 			}
+			op[3].selected = true;
 		}else if(this.id == 'LCR_C' || this.id == 'LCR_L'){
 			for(i = 3; i < 6; i++){
 				op[i].disabled = true;
 			}
+			op[0].selected = true;
 		}
 
+		$('#meas_p_d').empty().append($(this).next('label').text());
 	});
 
 	$('#sec_displ_choice :checkbox').click(function(){
 		LCR.displ_params.sec = this.id;
 		LCR.displ_params.s_units = this.value;
+
+		$('#meas_s_d').empty().append($(this).next('label').text());
 	});
 
 	$('#cb_tol').change(function(){
@@ -379,9 +391,22 @@ $(function() {
 	});
 
 	$('#cb_manual').click(function(){
-		LCR.params.local['LCR_RANGE'] = {
-			value: LCR.displ_params.prim
+		
+		var selected_meas;
+		if($('#LCR_Z').is(":checked")){
+			selected_meas = 1;
+		}else if($('#LCR_L').is(":checked")){
+			selected_meas = 2;
+		}else if($('#LCR_C').is(":checked")){
+			selected_meas = 3;
+		}else if($('#LCR_R').is(":checked")){
+			selected_meas = 4;
 		}
+
+		LCR.params.local['LCR_RANGE'] = {
+			value: selected_meas
+		}
+
 
 		LCR.params.local['LCR_RANGE_F'] = {
 			value: $('#sel_range_f :selected').val()
@@ -396,10 +421,18 @@ $(function() {
 		LCR.sendParams();
 	});
 
-	$('#sel_range_u').change(function(){
-		LCR.displ_params.p_units = $('#sel_range_u option:selected').text();
-		LCR.params.local['LCR_RANGE_U'] = { value: this.value };
+	$('#cb_auto').click(function(){
+		LCR.params.local['LCR_RANGE'] = { value: 0 };
 		LCR.sendParams();
+	});
+
+	$('#sel_range_u').change(function(){
+		if(LCR.params.orig['LCR_RANGE'].value != 0){
+			LCR.displ_params.p_units = $('#sel_range_u :selected').text();
+			LCR.params.local['LCR_RANGE_U'] = { value: this.value };
+			console.log(this.value);
+			LCR.sendParams();
+		}
 	});
 
 	$('#sel_range_f').change(function(){

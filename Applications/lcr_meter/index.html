@@ -68,27 +68,37 @@
 
 					<div id="meas_displ">
 						<div class="meas_data" style="float: left">
-							<label class="col-xs-5" for="lb_mes_mode" style="color: #000000">MODE: </label>
-							<label class="col-xs-7" for="lb_mes_mode" style="color: #000000">data </label>
+							<label class="col-xs-6" for="lb_mes_mode" style="color: #000000">P. DISP </label>
+							<label class="col-xs-6" id="meas_p_d" for="lb_mes_mode" style="color: #000000">Z</label>
 						</div>
 						<div class="meas_data" style="float: left">
-							<label class="col-xs-5" for="lb_mes_freq" style="color: #000000">FREQ.: </label>
-							<label class="col-xs-7" for="lb_mes_freq" style="color: #000000">data </label>
-						</div>
-
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-5" for="lb_mes_min" style="color: #000000">MIN: </label>
-							<label class="col-xs-7" for="lb_mes_min" style="color: #000000">data </label>
+							<label class="col-xs-6" for="lb_mes_freq" style="color: #000000">S. DISP </label>
+							<label class="col-xs-6" id="meas_s_d" for="lb_mes_freq" style="color: #000000">P</label>
 						</div>
 
 						<div class="meas_data" style="float: left">
-							<label class="col-xs-5" for="lb_mes_max" style="color: #000000">MAX: </label>
-							<label class="col-xs-7" for="lb_mes_max" style="color: #000000">data </label>
+							<label class="col-xs-6" for="lb_mes_min" style="color: #000000">MODE </label>
+							<label class="col-xs-6" id="meas_mode_d" for="lb_mes_min" style="color: #000000">AUTO</label>
 						</div>
 
 						<div class="meas_data" style="float: left">
-							<label class="col-xs-5" for="lb_mes_avg" style="color: #000000">AVG.: </label>
-							<label class="col-xs-7" for="lb_mes_avg" style="color: #000000">data </label>
+							<label class="col-xs-6" for="lb_mes_max" style="color: #000000">FREQ. </label>
+							<label class="col-xs-6" id="meas_freq_d" for="lb_mes_max" style="color: #000000">100Hz</label>
+						</div>
+
+						<div class="meas_data" style="float: left">
+							<label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MIN </label>
+							<label class="col-xs-6" id="meas_min_d" for="lb_mes_avg" style="color: #000000">-</label>
+						</div>
+
+						<div class="meas_data" style="float: left">
+							<label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MAX </label>
+							<label class="col-xs-6" id="meas_max_d" for="lb_mes_avg" style="color: #000000">-</label>
+						</div>
+
+						<div class="meas_data" style="float: left">
+							<label class="col-xs-6" for="lb_mes_avg" style="color: #000000">AVG </label>
+							<label class="col-xs-6" id="meas_avg_d" for="lb_mes_avg" style="color: #000000">-</label>
 						</div>
 
 					</div>
@@ -100,13 +110,13 @@
 						</div>
 
 						<div id="sec_displ">
-								<label id="lb_sec_displ" class="col-xs-7 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
-								<label id="lb_sec_displ_units" class="col-xs-5" for="lb_sec_dspl_range" style="color: #000000">--</label>
+								<label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
+								<label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">--</label>
 						</div>
 
 						<div id="prim_displ">
-								<label id="lb_prim_displ" class="col-xs-7 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
-								<label id="lb_prim_displ_units" class="col-xs-5" for="lb_prim_dspl_range" style="color: #000000">--</label>	
+								<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
+								<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>	
 						</div>
 					</div>
 					
@@ -237,7 +247,7 @@
 			                  	<div id="sel_mode" style="float: right" class="col-xs-8">
 									<input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual" class="bt_check"/>
   									<label for="cb_manual" style="width: 50%">Manual</label>
-									<input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check"  checked="checked"a/>
+									<input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check"  checked="checked"/>
   									<label for="cb_auto" style="width: 50%">Auto</label>
 	        					</div>
 			                </div>
@@ -264,8 +274,8 @@
 
 			                	<div class="col-xs-5" style="float: right">
 			                  		<select id="sel_range_f" class="form-control">
-			                  			<option value="0">10</option>
-			                  			<option value="1">100.00</option>
+			                  			<option value="0">10.0000</option>
+			                  			<option value="1">100.000</option>
 			                  			<option value="2">1000.00</option>
 			                  			<option value="3">10000.0</option>
 			                  		</select>
@@ -295,7 +305,7 @@
 			                  	<div id="parl_ser" style="float: right" class="col-xs-12">
 									
 									<input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check"/>
-  									<label for="cb_ser" style="width: 50%">Series</label>
+  									<label for="cb_ser" style="width: 50%" checked="checked">Series</label>
 
 									<input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" class="bt_check"/>
   									<label for="cb_paralel" style="width: 50%">Paralel</label>

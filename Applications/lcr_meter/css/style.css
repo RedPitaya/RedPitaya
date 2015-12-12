@@ -289,7 +289,7 @@ area:hover {
 }
 
 #display{
-  width:60%;
+  width:70%;
   height: 100%;
   float: right;
 }
@@ -300,7 +300,7 @@ area:hover {
   background-color: #dcdcdc;
   float: left;
   padding: 10px 10px 10px 10px;
-  font-size: 40px;
+  font-size: 50px;
 }
 
 
@@ -310,7 +310,7 @@ area:hover {
   background-color: #dcdcdc;
   float: left;
   padding: 40px 10px 10px 10px;
-  font-size: 32px; 
+  font-size: 38px; 
 }
 
 #status_data {
@@ -318,7 +318,7 @@ area:hover {
   height: 10%;
   background-color: #dcdcdc;
   float: left;
-  padding: 5px 5px 5px 5px;
+  padding: 2px 2px 2px 2px;
   color:#000000;
 }
 
@@ -327,14 +327,15 @@ area:hover {
 }
 
 .meas_data {
-  margin: 8px 6px 0px 6px;
+  width: 100%;
+  margin-top: 6px;
 }
 
 #meas_displ {
-  width: 39%;
+  padding: 5px 5px 5px 5px;
+  width: 29%;
   height: 100%;
   background-color: #cccccc;
-  padding: 2px 2px 2px 2px;
   float: left;
 }
 
