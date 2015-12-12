@@ -196,26 +196,31 @@ enum {
 } RB_STAT_BITS_ENUM;
 
 enum {
-    RB_LED_CTRL_NUM_DISABLED            = 0,    // LEDs not touched
+    RB_LED_CTRL_NUM_DISABLED            =  0,   // LEDs not touched
     RB_LED_CTRL_NUM_OFF,                        // all LEDs off (ro be used before switching to DISABLED)
-    RB_LED_CTRL_NUM_MUXIN_MIX_IN,               // Magnitude indicator @ ADC selector input
+
+    RB_LED_CTRL_NUM_MUXIN_MIX_IN        =  4,   // Magnitude indicator @ ADC selector input
     RB_LED_CTRL_NUM_ADC_MOD_IN,                 // Magnitude indicator @ modulation amplifier input
     RB_LED_CTRL_NUM_ADC_MOD_OUT,                // Magnitude indicator @ modulation amplifier output
-    RB_LED_CTRL_NUM_QMIX_MOD_I_S1_OUT,          // Magnitude indicator @ QMIX_MOD I output at stage 1
+
+    RB_LED_CTRL_NUM_QMIX_MOD_I_S1_OUT   =  8,   // Magnitude indicator @ QMIX_MOD I output at stage 1
     RB_LED_CTRL_NUM_QMIX_MOD_Q_S1_OUT,          // Magnitude indicator @ QMIX_MOD Q output at stage 1
     RB_LED_CTRL_NUM_QMIX_MOD_I_S2_OUT,          // Magnitude indicator @ QMIX_MOD I output at stage 2
     RB_LED_CTRL_NUM_QMIX_MOD_Q_S2_OUT,          // Magnitude indicator @ QMIX_MOD Q output at stage 2
     RB_LED_CTRL_NUM_QMIX_MOD_I_S3_OUT,          // Magnitude indicator @ QMIX_MOD I output at stage 3
     RB_LED_CTRL_NUM_QMIX_MOD_Q_S3_OUT,          // Magnitude indicator @ QMIX_MOD Q output at stage 3
-    RB_LED_CTRL_NUM_HP_I_OUT,                   // Magnitude indicator @ HP I output
-    RB_LED_CTRL_NUM_HP_Q_OUT,                   // Magnitude indicator @ HP Q output
-    RB_LED_CTRL_NUM_CIC_I_OUT,                  // Magnitude indicator @ CIC I output
-    RB_LED_CTRL_NUM_CIC_Q_OUT,                  // Magnitude indicator @ CIC Q output
-    RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT,          // Magnitude indicator @ QMIX_CAR I output at stage 1
-    RB_LED_CTRL_NUM_QMIX_CAR_Q_S1_OUT,          // Magnitude indicator @ QMIX_CAR Q output at stage 1
-    RB_LED_CTRL_NUM_AMP_RF_OUT,                 // Magnitude indicator @ AMP_RF output
 
-    RB_LED_CTRL_COUNT
+    RB_LED_CTRL_NUM_CIC_MOD_I_OUT       = 16,   // Magnitude indicator @ CIC_MOD I output
+    RB_LED_CTRL_NUM_CIC_MOD_Q_OUT,              // Magnitude indicator @ CIC_MOD Q output
+    RB_LED_CTRL_NUM_FIR_MOD_I_OUT,              // Magnitude indicator @ FIR_MOD I output
+    RB_LED_CTRL_NUM_FIR_MOD_Q_OUT,              // Magnitude indicator @ FIR_MOD Q output
+    RB_LED_CTRL_NUM_CIC_CAR_I_OUT,              // Magnitude indicator @ CIC_CAR I output
+    RB_LED_CTRL_NUM_CIC_CAR_Q_OUT,              // Magnitude indicator @ CIC_CAR Q output
+
+    RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT   = 24,   // Magnitude indicator @ QMIX_CAR I output at stage 1
+    RB_LED_CTRL_NUM_QMIX_CAR_Q_S1_OUT,          // Magnitude indicator @ QMIX_CAR Q output at stage 1
+
+    RB_LED_CTRL_NUM_AMP_RF_OUT          = 28    // Magnitude indicator @ AMP_RF output
 } RB_LED_CTRL_ENUM;
 
 enum {
@@ -510,67 +515,67 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_mod_s3_Q (
 
 
 //---------------------------------------------------------------------------------
-//  FIR_MOD high pass filter for CIC compensation in the voice band
-/*
-wire [ 15:0] fir_hp_i_out;
-wire [ 15:0] fir_hp_q_out;
+//  CIC_MOD low pass filters
 
-rb_fir i_rb_fir_hp_I (
+wire [31:0] cic_mod_i_out;
+wire [31:0] cic_mod_q_out;
+
+rb_cic_48k_to_8k_32T32_lat13 i_rb_cic_mod_I (
   // global signals
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( qmix_mod_i_s2_out[30:15] ),  // QMIX output I of stage 2
+  .s_axis_data_tdata    ( qmix_mod_i_s2_out ),  // QMIX I stage 2
   .s_axis_data_tvalid   ( 1'b1              ),
   .s_axis_data_tready   (                   ),
 
-  .m_axis_data_tdata    ( fir_hp_i_out      ),  // FIR HP output I
+  .m_axis_data_tdata    ( cic_mod_i_out     ),  // CIC_MOD output I
   .m_axis_data_tvalid   (                   )
 );
 
-rb_fir i_rb_fir_hp_Q (
+rb_cic_48k_to_8k_32T32_lat13 i_rb_cic_mod_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( qmix_mod_q_s2_out[30:15] ),  // QMIX output Q of stage 2
+  .s_axis_data_tdata    ( qmix_mod_q_s2_out ),  // QMIX Q stage 2
   .s_axis_data_tvalid   ( 1'b1              ),
   .s_axis_data_tready   (                   ),
 
-  .m_axis_data_tdata    ( fir_hp_q_out      ),  // FIR HP output Q
+  .m_axis_data_tdata    ( cic_mod_q_out     ),  // CIC_MOD output Q
   .m_axis_data_tvalid   (                   )
 );
-*/
+
 
 //---------------------------------------------------------------------------------
-//  CIC_MOD low pass filters
+//  FIR_MOD high pass filter for CIC compensation in the voice band
 /*
-wire [15:0] cic_i_out;
-wire [15:0] cic_q_out;
+wire [ 15:0] fir_mod_i_out;
+wire [ 15:0] fir_mod_q_out;
 
-rb_cic_d611_33_48k125M_16T16 i_rb_cic_I (
+rb_fir i_rb_fir_mod_I (
   // global signals
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( fir_hp_i_out      ),  // QMIX output I
+  .s_axis_data_tdata    ( cic_mod_i_out     ),  // CIC_MOD output I
   .s_axis_data_tvalid   ( 1'b1              ),
   .s_axis_data_tready   (                   ),
 
-  .m_axis_data_tdata    ( cic_i_out         ),  // FIR output I
+  .m_axis_data_tdata    ( fir_mod_i_out     ),  // FIR_MOD output I
   .m_axis_data_tvalid   (                   )
 );
 
-rb_cic_d611_33_48k125M_16T16 i_rb_cic_Q (
+rb_fir i_rb_fir_mod_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( fir_hp_q_out      ),  // FIR output Q
+  .s_axis_data_tdata    ( cic_mod_q_out     ),  // CIC_MOD output Q
   .s_axis_data_tvalid   ( 1'b1              ),
   .s_axis_data_tready   (                   ),
 
-  .m_axis_data_tdata    ( cic_q_out         ),  // CIC output Q
+  .m_axis_data_tdata    ( fir_mod_q_out     ),  // FIR_MOD output Q
   .m_axis_data_tvalid   (                   )
 );
 */
@@ -613,8 +618,8 @@ rb_dds_48_16_125 i_rb_osc_car (
 //---------------------------------------------------------------------------------
 //  QMIX_CAR quadrature mixer for the radio frequency
 
-wire [ 15:0] qmix_car_i_in = (osc_car_inc_mux || osc_car_ofs_mux)                 ?  16'h7fff : qmix_mod_i_s3_out[47:32];  // QMIX_MOD used, already - use full scale instead for FM and PM
-wire [ 15:0] qmix_car_q_in = (osc_car_inc_mux || osc_car_ofs_mux || !amp_rf_q_en) ?  16'h0000 : qmix_mod_q_s3_out[47:32];  // QMIX_MOD used, already - use full scale instead for FM and PM - keep quiet when Q is disabled
+wire [ 15:0] qmix_car_i_in = (osc_car_inc_mux || osc_car_ofs_mux)                 ?  16'h7fff : amp_rf_q_en ?  cic_mod_i_out[29:14] : qmix_mod_i_s3_out[47:32];  // QMIX_MOD/CIC_MOD uses full scale constant for CW, FM and PM modulations - SSB uses CIC I instead
+wire [ 15:0] qmix_car_q_in = (osc_car_inc_mux || osc_car_ofs_mux || !amp_rf_q_en) ?  16'h0000 :                cic_mod_q_out[29:14]                           ;  // QMIX_MOD/CIC_MOD Q path keep quiet when Q is disabled - SSB uses CIC Q instead
 
 wire [ 31:0] qmix_car_i_s1_out;
 wire [ 31:0] qmix_car_q_s1_out;
@@ -776,22 +781,30 @@ else begin
           if (!led_ctr) rb_leds_data <= fct_mag(qmix_mod_q_s3_out[47:32]);
           monitor <= qmix_mod_q_s3_out[47:32];
           end
+       RB_LED_CTRL_NUM_CIC_MOD_I_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_mod_i_out[29:14]);
+          monitor <= cic_mod_i_out[29:14];
+          end
+       RB_LED_CTRL_NUM_CIC_MOD_Q_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_mod_q_out[29:14]);
+          monitor <= cic_mod_q_out[29:14];
+          end
 /*
-       RB_LED_CTRL_NUM_HP_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(fir_hp_i_out[15:0]);
-          monitor <= fir_hp_i_out[15:0];
+       RB_LED_CTRL_NUM_FIR_MOD_I_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(fir_mod_i_out[15:0]);
+          monitor <= fir_mod_i_out[15:0];
           end
-       RB_LED_CTRL_NUM_HP_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(fir_hp_q_out[15:0]);
-          monitor <= fir_hp_q_out[15:0];
+       RB_LED_CTRL_NUM_FIR_MOD_Q_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(fir_mod_q_out[15:0]);
+          monitor <= fir_mod_q_out[15:0];
           end
-       RB_LED_CTRL_NUM_CIC_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(cic_i_out[15:0]);
-          monitor <= cic_i_out[15:0];
+       RB_LED_CTRL_NUM_CIC_CAR_I_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_i_out[15:0]);
+          monitor <= cic_car_i_out[15:0];
           end
-       RB_LED_CTRL_NUM_CIC_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(cic_q_out[15:0]);
-          monitor <= cic_q_out[15:0];
+       RB_LED_CTRL_NUM_CIC_CAR_Q_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_q_out[15:0]);
+          monitor <= cic_car_q_out[15:0];
           end
 */
        RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT: begin
