@@ -10,7 +10,7 @@
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2015.3
+set scripts_vivado_version 2015.4
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -462,8 +462,8 @@ preplace port M_AXIS_GP1_xadc -pg 1 -y 550 -defaultsOSRD
 preplace port Vaux9 -pg 1 -y 700 -defaultsOSRD
 preplace port S_AXI_HP0 -pg 1 -y 180 -defaultsOSRD
 preplace portBus IRQ_F2P_xlconcat -pg 1 -y 320 -defaultsOSRD
-preplace inst xlconstant -pg 1 -lvl 1 -y 420 -defaultsOSRD
 preplace inst axi_protocol_converter_0 -pg 1 -lvl 3 -y 420 -defaultsOSRD
+preplace inst xlconstant -pg 1 -lvl 1 -y 420 -defaultsOSRD
 preplace inst xlconcat_0 -pg 1 -lvl 3 -y 310 -defaultsOSRD
 preplace inst processing_system7 -pg 1 -lvl 4 -y 220 -defaultsOSRD
 preplace inst xadc -pg 1 -lvl 4 -y 680 -defaultsOSRD
