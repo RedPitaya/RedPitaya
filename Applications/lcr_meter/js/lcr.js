@@ -1,8 +1,7 @@
 /*
- * Red Pitaya Oscilloscope client
+ * Red Pitaya LCR meter client
  *
  * Author: Luka Golinar <luka.golinar@gmail.com>
- * Author: Dakus <info@eskala.eu>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -59,7 +58,17 @@
   		ampl_tol: 0
   	};
 
-  	//LCR.units = {'Ohm'}
+  	LCR.data_log = {
+  		prim_display: 'LCR_Z',
+  		sec_display: 'LCR_P',
+  		save_data: false,
+  		//Web socket params have a very fast interval. Interval ought to be interpredted as 
+  		// something similar to decimation in oscilloscppe. 
+  		interval: 10,
+  		//How much data to be stored.
+  		max_store: 1000,
+  		curr_store: 1
+  	}
 
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
@@ -239,10 +248,14 @@
 			if(param_name == 'LCR_R_AVG' && LCR.displ_params.prim == 'LCR_R'){
 				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_R_AVG'].value * 100) / 100);
 			}
+		}
 
-			if($('#LCR_LOG').val() == '1'){
-	      		$('#m_table tbody').append('<tr><td>1</td><td>' + new_params['LCR_Z'].value + '</td><td>!</td></tr>');
-	      	}
+		if(LCR.data_log.save_data && 
+			LCR.data_log.curr_store < LCR.data_log.max_store){
+			$('#m_table tbody').append('<tr><td>' + LCR.data_log.curr_store + '</td><td>' + 
+				new_params[LCR.data_log.prim_display].value + '</td><td>' + 
+					new_params[LCR.data_log.sec_display].value + '</td></tr>');
+			LCR.data_log.curr_store++;
 		}
 	};
 
@@ -338,14 +351,14 @@ $(function() {
 		ev.preventDefault();
 		$('#LCR_LOG').hide();
 		$('#LCR_LOG_STOP').css('display', 'block');
-		$('#LCR_LOG').val('1');
+		LCR.data_log.save_data = true;
 	});
 
 	$('#LCR_LOG_STOP').click(function(ev){
 		ev.preventDefault();
 		$('#LCR_LOG_STOP').hide();
 		$('#LCR_LOG').css('display', 'block');
-		$('#LCR_LOG').val('0');
+		LCR.data_log.save_data = false;
 	});
 	
 	$('#LCR_FREQUENCY').change(function(){
@@ -381,13 +394,25 @@ $(function() {
 		}
 
 		$('#meas_p_d').empty().append($(this).next('label').text());
+		LCR.data_log.prim_display = this.id;
 	});
 
 	$('#sec_displ_choice :checkbox').click(function(){
 		LCR.displ_params.sec = this.id;
 		LCR.displ_params.s_units = this.value;
 
+		LCR.data_log.sec_display = this.id;
+
 		$('#meas_s_d').empty().append($(this).next('label').text());
+	});
+
+	$('#LCR_LOG').on('click', function(){
+		document.getElementById('table_p_header').innerHTML = LCR.data_log.prim_display[4];
+		document.getElementById('table_s_header').innerHTML = LCR.data_log.sec_display[4];
+		
+		LCR.data_log.curr_store;
+		clearTableAll();
+		LCR.data_log.save_data = true;
 	});
 
 	$('#cb_tol').change(function(){
@@ -420,7 +445,7 @@ $(function() {
 		LCR.secondary_meas.apply_tolerance = false;
 		$('#rec_image').css('display', 'none');
 		$('#rec_lb').css('display', 'none');
-		
+
 		if(!LCR.secondary_meas.apply_relative){
 			LCR.secondary_meas.apply_relative = true;
 			LCR.params.local['LCR_RELATIVE'] = { value: true };
@@ -459,7 +484,6 @@ $(function() {
 			value: selected_meas
 		}
 
-
 		LCR.params.local['LCR_RANGE_F'] = {
 			value: $('#sel_range_f :selected').val()
 		}
@@ -492,6 +516,16 @@ $(function() {
 		LCR.params.local['LCR_RANGE_F'] = { value: this.value };
 		LCR.sendParams();
 	});
+
+	$("#btn_export").click(function (e) {
+    	window.open('data:application/vnd.ms-excel,' + $('#m_table').html());
+    	e.preventDefault();
+	});
+
+	function formatPrint(number){
+
+		return number;
+	}
 
 	LCR.startApp();
 });
