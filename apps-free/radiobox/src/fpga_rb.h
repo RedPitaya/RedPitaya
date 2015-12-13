@@ -214,17 +214,21 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h11  LEDs show magnitude function with selected input port LowPass CIC_MOD Q output.
      *
-     *   value = h12  LEDs show magnitude function with selected input port HighPass FIR_MOD I output.
+     *   value = h12  LEDs show magnitude function with selected input port signal forming FIR_MOD I output.
      *
-     *   value = h13  LEDs show magnitude function with selected input port HighPass FIR_MOD Q output.
+     *   value = h13  LEDs show magnitude function with selected input port signal forming FIR_MOD Q output.
      *
-     *   value = h14  LEDs show magnitude function with selected input port Interpolator CIC_CAR I output.
+     *   value = h14  LEDs show magnitude function with selected input port Interpolator CIC_CAR I stage 1 -   1 MHz output.
      *
-     *   value = h15  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q output.
+     *   value = h15  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q stage 1 -   1 MHz output.
      *
-     *   value = h18  LEDs show magnitude function with selected input port QMIX_CAR_I output at stage 1.
+     *   value = h16  LEDs show magnitude function with selected input port Interpolator CIC_CAR I stage 2 - 125 MHz output.
      *
-     *   value = h19  LEDs show magnitude function with selected input port QMIX_CAR_Q output at stage 1.
+     *   value = h17  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q stage 2 - 125 MHz output.
+     *
+     *   value = h18  LEDs show magnitude function with selected input port QMIX_CAR_I output.
+     *
+     *   value = h19  LEDs show magnitude function with selected input port QMIX_CAR_Q output.
      *
      *   value = h1C  LEDs show magnitude function with selected input port AMP_RF output.
      *

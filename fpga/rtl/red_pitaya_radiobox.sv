@@ -214,11 +214,13 @@ enum {
     RB_LED_CTRL_NUM_CIC_MOD_Q_OUT,              // Magnitude indicator @ CIC_MOD Q output
     RB_LED_CTRL_NUM_FIR_MOD_I_OUT,              // Magnitude indicator @ FIR_MOD I output
     RB_LED_CTRL_NUM_FIR_MOD_Q_OUT,              // Magnitude indicator @ FIR_MOD Q output
-    RB_LED_CTRL_NUM_CIC_CAR_I_OUT,              // Magnitude indicator @ CIC_CAR I output
-    RB_LED_CTRL_NUM_CIC_CAR_Q_OUT,              // Magnitude indicator @ CIC_CAR Q output
+    RB_LED_CTRL_NUM_CIC_CAR_1M_I_OUT,           // Magnitude indicator @ CIC_CAR I stage 1 -   1 MHz output
+    RB_LED_CTRL_NUM_CIC_CAR_1M_Q_OUT,           // Magnitude indicator @ CIC_CAR Q stage 1 -   1 MHz output
+    RB_LED_CTRL_NUM_CIC_CAR_125M_I_OUT,         // Magnitude indicator @ CIC_CAR I stage 1 - 125 MHz output
+    RB_LED_CTRL_NUM_CIC_CAR_125M_Q_OUT,         // Magnitude indicator @ CIC_CAR Q stage 1 - 125 MHz output
 
-    RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT   = 24,   // Magnitude indicator @ QMIX_CAR I output at stage 1
-    RB_LED_CTRL_NUM_QMIX_CAR_Q_S1_OUT,          // Magnitude indicator @ QMIX_CAR Q output at stage 1
+    RB_LED_CTRL_NUM_QMIX_CAR_I_OUT      = 24,   // Magnitude indicator @ QMIX_CAR I output
+    RB_LED_CTRL_NUM_QMIX_CAR_Q_OUT,             // Magnitude indicator @ QMIX_CAR Q output
 
     RB_LED_CTRL_NUM_AMP_RF_OUT          = 28    // Magnitude indicator @ AMP_RF output
 } RB_LED_CTRL_ENUM;
@@ -515,7 +517,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_dsp48_qmix_mod_s3_Q (
 
 
 //---------------------------------------------------------------------------------
-//  CIC_MOD low pass filters
+//  CIC_MOD sampling rate down convertion 48 kSPS to 8 kSPS
 
 wire [31:0] cic_mod_i_out;
 wire [31:0] cic_mod_q_out;
@@ -581,6 +583,69 @@ rb_fir i_rb_fir_mod_Q (
 */
 
 //---------------------------------------------------------------------------------
+//  CIC_CAR sampling rate up convertion 8 kSPS to 125 MSPS
+
+wire [31:0] cic_car_1M_i_out;
+wire [31:0] cic_car_1M_q_out;
+
+wire [31:0] cic_car_125M_i_out;
+wire [31:0] cic_car_125M_q_out;
+
+rb_cic_8k_to_1M_32T32_lat18 i_rb_cic_car_1M_I (
+  // global signals
+  .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
+
+  .s_axis_data_tdata    ( {cic_mod_i_out[30:0], 1'b0} ),  // CIC_MOD I input
+  .s_axis_data_tvalid   ( 1'b1              ),
+  .s_axis_data_tready   (                   ),
+
+  .m_axis_data_tdata    ( cic_car_1M_i_out  ),  // CIC_CAR I stage 1 output - 1 MHz
+  .m_axis_data_tvalid   (                   )
+);
+
+rb_cic_1M_to_125M_32T32_lat22 i_rb_cic_car_125M_I (
+  // global signals
+  .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
+
+  .s_axis_data_tdata    ( cic_car_1M_i_out  ),  // CIC_CAR I stage 1 input - 1 MHz
+  .s_axis_data_tvalid   ( 1'b1              ),
+  .s_axis_data_tready   (                   ),
+
+  .m_axis_data_tdata    ( cic_car_125M_i_out),  // CIC_CAR I stage 2 output - 125 MHz
+  .m_axis_data_tvalid   (                   )
+);
+
+
+rb_cic_8k_to_1M_32T32_lat18 i_rb_cic_car_1M_Q (
+  // global signals
+  .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
+
+  .s_axis_data_tdata    ( {cic_mod_q_out[30:0], 1'b0} ),  // CIC_MOD Q input
+  .s_axis_data_tvalid   ( 1'b1              ),
+  .s_axis_data_tready   (                   ),
+
+  .m_axis_data_tdata    ( cic_car_1M_q_out  ),  // CIC_CAR Q stage 1 output - 1 MHz
+  .m_axis_data_tvalid   (                   )
+);
+
+rb_cic_1M_to_125M_32T32_lat22 i_rb_cic_car_125M_Q (
+  // global signals
+  .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
+  .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
+
+  .s_axis_data_tdata    ( cic_car_1M_q_out  ),  // CIC_CAR Q stage 1 input - 1 MHz
+  .s_axis_data_tvalid   ( 1'b1              ),
+  .s_axis_data_tready   (                   ),
+
+  .m_axis_data_tdata    ( cic_car_125M_q_out),  // CIC_CAR Q stage 2 output - 125 MHz
+  .m_axis_data_tvalid   (                   )
+);
+
+
+//---------------------------------------------------------------------------------
 //  OSC_CAR carrier frequency generator  (CW, FM, PM modulated)
 
 wire         osc_car_inc_mux = regs[REG_RW_RB_CTRL][RB_CTRL_OSC_CAR_INC_SRC_STREAM];
@@ -618,13 +683,13 @@ rb_dds_48_16_125 i_rb_osc_car (
 //---------------------------------------------------------------------------------
 //  QMIX_CAR quadrature mixer for the radio frequency
 
-wire [ 15:0] qmix_car_i_in = (osc_car_inc_mux || osc_car_ofs_mux)                 ?  16'h7fff : amp_rf_q_en ?  cic_mod_i_out[29:14] : qmix_mod_i_s3_out[47:32];  // QMIX_MOD/CIC_MOD uses full scale constant for CW, FM and PM modulations - SSB uses CIC I instead
-wire [ 15:0] qmix_car_q_in = (osc_car_inc_mux || osc_car_ofs_mux || !amp_rf_q_en) ?  16'h0000 :                cic_mod_q_out[29:14]                           ;  // QMIX_MOD/CIC_MOD Q path keep quiet when Q is disabled - SSB uses CIC Q instead
+wire [ 15:0] qmix_car_i_in = (osc_car_inc_mux || osc_car_ofs_mux)                 ?  16'h7fff : amp_rf_q_en ?  cic_car_125M_i_out[30:15] : qmix_mod_i_s3_out[47:32];  // QMIX_MOD/CIC_MOD uses full scale constant for CW, FM and PM modulations - SSB uses CIC I instead
+wire [ 15:0] qmix_car_q_in = (osc_car_inc_mux || osc_car_ofs_mux || !amp_rf_q_en) ?  16'h0000 :                cic_car_125M_q_out[30:15]                           ;  // QMIX_MOD/CIC_MOD Q path keep quiet when Q is disabled - SSB uses CIC Q instead
 
-wire [ 31:0] qmix_car_i_s1_out;
-wire [ 31:0] qmix_car_q_s1_out;
+wire [ 31:0] qmix_car_i_out;
+wire [ 31:0] qmix_car_q_out;
 
-rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_I (
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_I (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en         ),  // enable part 1 of RadioBox sub-module
@@ -635,10 +700,10 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_I (
   .B                    ( osc_car_cos       ),  // OSC_CAR cos:          SIGNED 16 bit
 
   // multiplier output
-  .P                    ( qmix_car_i_s1_out )   // QMIX_CAR I output:    SIGSIG 32 bit
+  .P                    ( qmix_car_i_out    )   // QMIX_CAR I output:    SIGSIG 32 bit
 );
 
-rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_Q (
+rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_Q (
   // global signals
   .CLK                  ( clk_adc_125mhz    ),  // global 125 MHz clock
   .CE                   ( rb_clk_en & amp_rf_q_en ),  // enable part 1 of RadioBox sub-module and the Q path
@@ -649,7 +714,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_Q (
   .B                    ( osc_car_sin       ),  // OSC_CAR sin:          SIGNED 16 bit
 
   // multiplier output
-  .P                    ( qmix_car_q_s1_out )   // QMIX_CAR Q output:    SIGSIG 32 bit
+  .P                    ( qmix_car_q_out    )   // QMIX_CAR Q output:    SIGSIG 32 bit
 );
 
 
@@ -660,8 +725,8 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_dsp48_qmix_car_s1_Q (
 //---------------------------------------------------------------------------------
 //  AMP_RF amplifier for the radio frequency output (CW, AM modulated)
 
-wire [16:0] amp_rf_i_var =                {qmix_car_i_s1_out[30], qmix_car_i_s1_out[30:15]}        ;  // halfed and sign corrected 17 bit extension
-wire [16:0] amp_rf_q_var = amp_rf_q_en ?  {qmix_car_q_s1_out[30], qmix_car_q_s1_out[30:15]} : 17'b0;  // halfed and sign corrected 17 bit extension
+wire [16:0] amp_rf_i_var =                {qmix_car_i_out[30], qmix_car_i_out[30:15]}        ;  // halfed and sign corrected 17 bit extension
+wire [16:0] amp_rf_q_var = amp_rf_q_en ?  {qmix_car_q_out[30], qmix_car_q_out[30:15]} : 17'b0;  // halfed and sign corrected 17 bit extension
 wire [16:0] amp_rf_gain  = {regs[REG_RW_RB_AMP_RF_GAIN][15:0], 1'b0};  // signed register value
 wire [34:0] amp_rf_ofs   = {regs[REG_RW_RB_AMP_RF_OFS][15:0], 19'b0};  // signed register value
 
@@ -696,7 +761,7 @@ reg  [15: 0] monitor  = 16'b0;
 wire [ 4: 0] led_ctrl = regs[REG_RW_RB_LED_CTRL][4:0];
 
 function bit [7:0] fct_mag (input bit [15:0] val);
-   automatic bit [7:0] leds = 8'b0;             // exakt zero indicator
+   automatic bit [7:0] leds = 8'b0;             // exact zero indicator
 
    if (!val[15]) begin                          // positive value
       if (val[14])
@@ -745,6 +810,7 @@ else begin
           rb_leds_data <=  8'b0;                // turn all LEDs off
           monitor      <= 16'b0;
           end
+
        RB_LED_CTRL_NUM_MUXIN_MIX_IN: begin
           if (!led_ctr) rb_leds_data <= fct_mag(muxin_mix_in[15:0]);  // updating about 120 Hz for reducing EMI
           monitor <= muxin_mix_in[15:0];
@@ -757,6 +823,7 @@ else begin
           if (!led_ctr) rb_leds_data <= fct_mag(adc_mod_out[30:15]);
           monitor <= adc_mod_out[30:15];
           end
+
        RB_LED_CTRL_NUM_QMIX_MOD_I_S1_OUT: begin
           if (!led_ctr) rb_leds_data <= fct_mag(qmix_mod_i_s1_out[30:15]);
           monitor <= qmix_mod_i_s1_out[30:15];
@@ -781,40 +848,51 @@ else begin
           if (!led_ctr) rb_leds_data <= fct_mag(qmix_mod_q_s3_out[47:32]);
           monitor <= qmix_mod_q_s3_out[47:32];
           end
+
        RB_LED_CTRL_NUM_CIC_MOD_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(cic_mod_i_out[29:14]);
-          monitor <= cic_mod_i_out[29:14];
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_mod_i_out[30:15]);
+          monitor <= cic_mod_i_out[30:15];
           end
        RB_LED_CTRL_NUM_CIC_MOD_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(cic_mod_q_out[29:14]);
-          monitor <= cic_mod_q_out[29:14];
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_mod_q_out[30:15]);
+          monitor <= cic_mod_q_out[30:15];
           end
 /*
        RB_LED_CTRL_NUM_FIR_MOD_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(fir_mod_i_out[15:0]);
+          if (!led_ctr) rb_leds_data <= fct_mag(fir_mod_i_out[30:15]);
           monitor <= fir_mod_i_out[15:0];
           end
        RB_LED_CTRL_NUM_FIR_MOD_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(fir_mod_q_out[15:0]);
+          if (!led_ctr) rb_leds_data <= fct_mag(fir_mod_q_out[30:15]);
           monitor <= fir_mod_q_out[15:0];
           end
-       RB_LED_CTRL_NUM_CIC_CAR_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_i_out[15:0]);
-          monitor <= cic_car_i_out[15:0];
-          end
-       RB_LED_CTRL_NUM_CIC_CAR_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_q_out[15:0]);
-          monitor <= cic_car_q_out[15:0];
-          end
 */
-       RB_LED_CTRL_NUM_QMIX_CAR_I_S1_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(qmix_car_i_s1_out[30:15]);
-          monitor <= qmix_car_i_s1_out[30:15];
+       RB_LED_CTRL_NUM_CIC_CAR_1M_I_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_1M_i_out[30:15]);
+          monitor <= cic_car_1M_i_out[30:15];
           end
-       RB_LED_CTRL_NUM_QMIX_CAR_Q_S1_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(qmix_car_q_s1_out[30:15]);
-          monitor <= qmix_car_q_s1_out[30:15];
+       RB_LED_CTRL_NUM_CIC_CAR_1M_Q_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_1M_q_out[30:15]);
+          monitor <= cic_car_1M_q_out[30:15];
           end
+       RB_LED_CTRL_NUM_CIC_CAR_125M_I_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_125M_i_out[30:15]);
+          monitor <= cic_car_125M_i_out[30:15];
+          end
+       RB_LED_CTRL_NUM_CIC_CAR_125M_Q_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(cic_car_125M_q_out[30:15]);
+          monitor <= cic_car_125M_q_out[30:15];
+          end
+
+       RB_LED_CTRL_NUM_QMIX_CAR_I_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(qmix_car_i_out[30:15]);
+          monitor <= qmix_car_i_out[30:15];
+          end
+       RB_LED_CTRL_NUM_QMIX_CAR_Q_OUT: begin
+          if (!led_ctr) rb_leds_data <= fct_mag(qmix_car_q_out[30:15]);
+          monitor <= qmix_car_q_out[30:15];
+          end
+
        RB_LED_CTRL_NUM_AMP_RF_OUT: begin
           if (!led_ctr) rb_leds_data <= fct_mag(amp_rf_out[31:16]);
           monitor <= amp_rf_out[31:16];
