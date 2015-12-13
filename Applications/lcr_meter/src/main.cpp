@@ -27,16 +27,16 @@ CFloatParameter lcr_ESR("LCR_ESR", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 //Measurement parameters for primary display
 CFloatParameter lcr_AmpMin("LCR_Z_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
 CFloatParameter lcr_AmpMax("LCR_Z_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_AmpAvg("LCR_Z_AVG", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
+CFloatParameter lcr_AmpAvg("LCR_Z_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_IndMin("LCR_L_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
 CFloatParameter lcr_IndMax("LCR_L_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_IndAvg("LCR_L_AVG", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
+CFloatParameter lcr_IndAvg("LCR_L_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_CapMin("LCR_C_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
 CFloatParameter lcr_CapMax("LCR_C_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_CapAvg("LCR_C_AVG", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
+CFloatParameter lcr_CapAvg("LCR_C_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_ResMin("LCR_R_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
 CFloatParameter lcr_ResMax("LCR_R_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_ResAvg("LCR_R_AVG", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
+CFloatParameter lcr_ResAvg("LCR_R_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 
 //In params
 CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 1e6);
@@ -45,6 +45,8 @@ CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
 CBooleanParameter toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, false, 0);
+CBooleanParameter relativeMode("LCR_RELATIVE", CBaseParameter::RW, false, 0);
+CFloatParameter relSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CFloatParameter tolSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, false, 0);
 
@@ -127,12 +129,12 @@ void UpdateParams(void){
 		lcr_Q.Value()				= data->lcr_Q;
 		lcr_ESR.Value()				= data->lcr_ESR;
 
-		if(lcr_AmpMin.Value() > lcr_amplitude.Value()){
+		if(lcr_AmpMin.Value() > lcr_amplitude.Value() && !(lcr_amplitude.Value() < -1e6)){
 			lcr_AmpMin.Value() = lcr_amplitude.Value();
 			lcr_AmpMin.Update();
 		} 
 
-		if(lcr_AmpMax.Value() < lcr_amplitude.Value()){
+		if(lcr_AmpMax.Value() < lcr_amplitude.Value() && !(lcr_amplitude.Value() > 1e6)){
 			lcr_AmpMax.Value() = lcr_amplitude.Value();
 			lcr_AmpMax.Update();
 		} 
@@ -172,7 +174,6 @@ void UpdateParams(void){
 
 		lcr_IndAvg.Update();
 
-
 		if(lcr_ResMin.Value() > lcr_Resitance.Value()){
 			lcr_ResMin.Value() = lcr_Resitance.Value();
 			lcr_ResMin.Update();
@@ -187,6 +188,12 @@ void UpdateParams(void){
 			(lcr_ResMax.Value() + lcr_ResMin.Value()) / 2;
 
 		lcr_ResAvg.Update();
+
+		//Set measured amplitude to relative, but keep measurment data.
+		if(relativeMode.Value() == true){
+			lcr_amplitude.Value() = 
+				relSavedZ.Value() - lcr_amplitude.Value();
+		}
 
 	}else if(startMeasure.NewValue() == false){
 		startMeasure.Update();
@@ -219,6 +226,12 @@ void UpdateParams(void){
 		tolSavedZ.Value() = lcr_amplitude.Value();
 		tolSavedZ.Update();
 		toleranceMode.Update();
+	}
+
+	if(IS_NEW(relativeMode)){
+		relSavedZ.Value() = lcr_amplitude.Value();
+		relativeMode.Update();
+		relSavedZ.Update();
 	}
 
 	if(IS_NEW(seriesMode)){

@@ -53,8 +53,9 @@
   		s_units: "deg"
   	};
 
-  	LCR.tolerance = {
+  	LCR.secondary_meas = {
   		apply_tolerance: false,
+  		apply_relative: false,
   		ampl_tol: 0
   	};
 
@@ -75,6 +76,7 @@
   		})
   		.fail(function() {
       		console.log('Could not start the application (ERR3)');
+      		$('#modal_reload_page').modal('show');
     	});
   	};
 
@@ -146,7 +148,7 @@
 				}
 			}
 
-			if(param_name == LCR.displ_params.prim  && LCR.tolerance.apply_tolerance == false){
+			if(param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
 				var val = Math.round(new_params[param_name].value * 100) / 100;
 				if(val > 100000000){
 					$('#lb_prim_displ').css('font-size', '70%');
@@ -159,13 +161,13 @@
 				$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
 			}
 
-			if(param_name == LCR.displ_params.sec && LCR.tolerance.apply_tolerance == false){
+			if(param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
 				$('#lb_sec_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
 				$('#lb_sec_displ_units').empty().append(LCR.displ_params.s_units);
 				//function check for suffix/units
 			}
 
-			if(param_name == 'LCR_Z' && LCR.tolerance.apply_tolerance == true 
+			if(param_name == 'LCR_Z' && LCR.secondary_meas.apply_tolerance == true 
 				&& old_params['LCR_RUN'].value == true){
 
 				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params['LCR_Z'].value)) / 
@@ -190,16 +192,52 @@
 				}
 			}
 
-			if(param_name  == 'LCR_Z_MIN'){
-				$('#meas_min_d').empty().append(new_params['LCR_Z_MIN'].value);
+			if(param_name  == 'LCR_Z_MIN' && LCR.displ_params.prim == 'LCR_Z'){
+				$('#meas_min_d').empty().append(Math.round(new_params['LCR_Z_MIN'].value * 100) / 100);
 			}
 
-			if(param_name == 'LCR_Z_MAX'){
-				$('#meas_max_d').empty().append(new_params['LCR_Z_MAX'].value);
+			if(param_name == 'LCR_Z_MAX' && LCR.displ_params.prim == 'LCR_Z'){
+				$('#meas_max_d').empty().append(Math.round(new_params['LCR_Z_MAX'].value * 100) / 100);
 			}
 
-			if(param_name == 'LCR_Z_AVG'){
-				$('#meas_avg_d').empty().append(new_params['LCR_Z_AVG'].value);
+			if(param_name == 'LCR_Z_AVG' && LCR.displ_params.prim == 'LCR_Z'){
+				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_Z_AVG'].value * 100) / 100);
+			}
+
+			if(param_name  == 'LCR_L_MIN' && LCR.displ_params.prim == 'LCR_L'){
+				$('#meas_min_d').empty().append(Math.round(new_params['LCR_L_MIN'].value * 100) / 100);
+			}
+
+			if(param_name == 'LCR_L_MAX' && LCR.displ_params.prim == 'LCR_L'){
+				$('#meas_max_d').empty().append(Math.round(new_params['LCR_L_MAX'].value * 100) / 100);
+			}
+
+			if(param_name == 'LCR_L_AVG' && LCR.displ_params.prim == 'LCR_L'){
+				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_L_AVG'].value * 100) / 100);
+			}
+
+			if(param_name  == 'LCR_C_MIN' && LCR.displ_params.prim == 'LCR_C'){
+				$('#meas_min_d').empty().append(Math.round(new_params['LCR_C_MIN'].value * 100) / 100);
+			}
+
+			if(param_name == 'LCR_C_MAX' && LCR.displ_params.prim == 'LCR_C'){
+				$('#meas_max_d').empty().append(Math.round(new_params['LCR_C_MAX'].value * 100) / 100);
+			}
+
+			if(param_name == 'LCR_C_AVG' && LCR.displ_params.prim == 'LCR_C'){
+				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_C_AVG'].value * 100) / 100);
+			}
+
+			if(param_name  == 'LCR_R_MIN' && LCR.displ_params.prim == 'LCR_R'){
+				$('#meas_min_d').empty().append(Math.round(new_params['LCR_R_MIN'].value * 100) / 100);
+			}
+
+			if(param_name == 'LCR_R_MAX' && LCR.displ_params.prim == 'LCR_R'){
+				$('#meas_max_d').empty().append(Math.round(new_params['LCR_R_MAX'].value * 100) / 100);
+			}
+
+			if(param_name == 'LCR_R_AVG' && LCR.displ_params.prim == 'LCR_R'){
+				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_R_AVG'].value * 100) / 100);
 			}
 
 			if($('#LCR_LOG').val() == '1'){
@@ -354,29 +392,43 @@ $(function() {
 
 	$('#cb_tol').change(function(){
 
-		if(!LCR.tolerance.apply_tolerance){
-			LCR.tolerance.apply_tolerance = true;
+		if(!LCR.secondary_meas.apply_tolerance){
+			LCR.secondary_meas.apply_relative = false;
+			LCR.params.local['LCR_RELATIVE'] = { value: false };
+			$('#cb_rel').prop("checked", false);
+
+			LCR.secondary_meas.apply_tolerance = true;
 			LCR.params.local['LCR_TOLERANCE'] = { value: true };
 			$('#lb_prim_displ').empty().append("100%");
 
 			$('#lb_prim_displ_units').empty();
 			$('#lb_sec_displ_units').empty();
 			$('#rec_image').css('display', 'block');
-			$('#rec_lb').css('display', 'block');	
+			$('#rec_lb').css('display', 'block');
 		}else{
-			LCR.tolerance.apply_tolerance = false;
+			LCR.secondary_meas.apply_tolerance = false;
 			LCR.params.local['LCR_TOLERANCE'] = { value: false };
 			$('#rec_image').css('display', 'none');
 			$('#rec_lb').css('display', 'none');
 			$('#cb_tol').prop("checked", false);
 		}
-		
 		LCR.sendParams();
 	});
 
 	$('#cb_rel').change(function(){
-		LCR.tolerance.apply_tolerance = false;
-		LCR.params.local['LCR_TOLERANCE'] = { value: false };
+		$('#cb_tol').prop("checked", false);
+		LCR.secondary_meas.apply_tolerance = false;
+		$('#rec_image').css('display', 'none');
+		$('#rec_lb').css('display', 'none');
+		
+		if(!LCR.secondary_meas.apply_relative){
+			LCR.secondary_meas.apply_relative = true;
+			LCR.params.local['LCR_RELATIVE'] = { value: true };
+		}else{
+			LCR.secondary_meas.apply_relative = false;
+			LCR.params.local['LCR_RELATIVE'] = { value: false };
+			$('#cb_rel').prop("checked", false);
+		}
 		LCR.sendParams();
 	});
 
@@ -418,11 +470,13 @@ $(function() {
 
 		LCR.displ_params.p_units = $('#sel_range_u :selected').text();
 		$('#lb_prim_displ_units').empty().append($('#sel_range_u option:selected').text());
+		$('#meas_mode_d').empty().append('Manual');
 		LCR.sendParams();
 	});
 
 	$('#cb_auto').click(function(){
 		LCR.params.local['LCR_RANGE'] = { value: 0 };
+		$('#meas_mode_d').empty().append('Auto');
 		LCR.sendParams();
 	});
 
@@ -430,7 +484,6 @@ $(function() {
 		if(LCR.params.orig['LCR_RANGE'].value != 0){
 			LCR.displ_params.p_units = $('#sel_range_u :selected').text();
 			LCR.params.local['LCR_RANGE_U'] = { value: this.value };
-			console.log(this.value);
 			LCR.sendParams();
 		}
 	});
