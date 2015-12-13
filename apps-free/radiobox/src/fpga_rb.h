@@ -186,45 +186,53 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_LED_CTRL - Interrupt status register (addr: 0x4060001C)
      *
-     * bit h03..h00: LED magnitude input selector
+     * bit h05..h00: LED magnitude input selector
      *
      *   value = h00  RadioBox does not touch LED state of other sub-module(s).
      *
      *   value = h01  All LEDs are driven off.
      *
-     *   value = h02  LEDs show magnitude function with selected input port MUXIN_MIX in.
+     *   value = h04  LEDs show magnitude function with selected input port MUXIN_MIX in.
      *
-     *   value = h03  LEDs show magnitude function with selected input port ADC_MOD in.
+     *   value = h05  LEDs show magnitude function with selected input port ADC_MOD in.
      *
-     *   value = h04  LEDs show magnitude function with selected input port ADC_MOD out.
+     *   value = h06  LEDs show magnitude function with selected input port ADC_MOD out.
      *
-     *   value = h05  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 1.
+     *   value = h08  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 1.
      *
-     *   value = h06  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 1.
+     *   value = h09  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 1.
      *
-     *   value = h07  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 2.
+     *   value = h0A  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 2.
      *
-     *   value = h08  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 2.
+     *   value = h0B  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 2.
      *
-     *   value = h09  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 3.
+     *   value = h0C  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 3.
      *
-     *   value = h0A  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 3.
+     *   value = h0D  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 3.
      *
-     *   value = h0B  LEDs show magnitude function with selected input port HP I output.
+     *   value = h10  LEDs show magnitude function with selected input port LowPass CIC_MOD I output.
      *
-     *   value = h0C  LEDs show magnitude function with selected input port HP Q output.
+     *   value = h11  LEDs show magnitude function with selected input port LowPass CIC_MOD Q output.
      *
-     *   value = h0D  LEDs show magnitude function with selected input port LP CIC I output.
+     *   value = h12  LEDs show magnitude function with selected input port signal forming FIR_MOD I output.
      *
-     *   value = h0E  LEDs show magnitude function with selected input port LP CIC Q output.
+     *   value = h13  LEDs show magnitude function with selected input port signal forming FIR_MOD Q output.
      *
-     *   value = h0F  LEDs show magnitude function with selected input port QMIX_CAR_I output at stage 1.
+     *   value = h14  LEDs show magnitude function with selected input port Interpolator CIC_CAR I stage 1 -   1 MHz output.
      *
-     *   value = h10  LEDs show magnitude function with selected input port QMIX_CAR_Q output at stage 1.
+     *   value = h15  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q stage 1 -   1 MHz output.
      *
-     *   value = h11  LEDs show magnitude function with selected input port AMP_RF output.
+     *   value = h16  LEDs show magnitude function with selected input port Interpolator CIC_CAR I stage 2 - 125 MHz output.
      *
-     * bit h1F..h10: n/a
+     *   value = h17  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q stage 2 - 125 MHz output.
+     *
+     *   value = h18  LEDs show magnitude function with selected input port QMIX_CAR_I output.
+     *
+     *   value = h19  LEDs show magnitude function with selected input port QMIX_CAR_Q output.
+     *
+     *   value = h1C  LEDs show magnitude function with selected input port AMP_RF output.
+     *
+     * bit h1F..h06: n/a
      *
      */
     uint32_t led_ctrl;

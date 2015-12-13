@@ -57,8 +57,12 @@
     rb_run:              1,  // application running
     osc_car_modsrc_s:    0,  // mod-source: (none)
     osc_car_modtyp_s:    2,  // modulation: AM
-    rbled_ctrl_s:        9,  // RB LEDs set to: 0=disabled, 1=off, 2=MUXIN_MIX in, 3=ADC_MOD in, 4=ADC_MOD out, 5=QMIX_MOD_I_S1 out, 6=QMIX_MOD_Q_S1 out, 7=QMIX_MOD_I_S2, 8=QMIX_MOD_Q_S2,
-                             //    9=QMIX_MOD_I_S3, 10=QMIX_MOD_Q_S3, 11=HP_I out, 12=HP_Q out, 13=CIC_I out, 14=CIC_Q out, 15=QMIX_CAR_I_S1 out, 16=QMIX_CAR_Q_S1 out, 17=AMP_RF out
+    rbled_ctrl_s:       22,  // RB LEDs set to: 0=disabled, 1=off,
+                             //  4=MUXIN_MIX in,       5=ADC_MOD in,         6=ADC_MOD out,
+                             //  8=QMIX_MOD_I_S1 out,  9=QMIX_MOD_Q_S1 out, 10=QMIX_MOD_I_S2, 11=QMIX_MOD_Q_S2, 12=QMIX_MOD_I_S3, 13=QMIX_MOD_Q_S3,
+                             // 16=CIC_MOD_I out,     17=CIC_MOD_Q out,     18=FIR_MOD_I out, 19=FIR_MOD_Q out, 20=CIC_CAR_1M_I out, 21=CIC_CAR_1M_Q out, 22=CIC_CAR_125M_I out, 23=CIC_CAR_125M_Q out,
+                             // 24=QMIX_CAR_I out, 25=QMIX_CAR_Q out,
+                             // 28=AMP_RF out
     osc_car_qrg_f:   10000,  // 10 kHz
     osc_mod_qrg_f:    1000,  //  1 kHz
     amp_rf_gain_f: 63.6396,  //  63.6396 mV Vpp @ 50R results to -20 dBm

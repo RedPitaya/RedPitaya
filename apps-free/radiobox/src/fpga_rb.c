@@ -375,8 +375,8 @@ void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double o
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for USB\n");
 
                 g_fpga_rb_reg_mem->ctrl |=  0x00100000;                                                 // control: enabling QMIX_CAR Q path in the AMP_RF
-                fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(osc_car_qrg - ssb_weaver_osc_qrg);           // OSC_CAR frequency with ssb_weaver_osc_qrg correction
-                fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(-ssb_weaver_osc_qrg);                  // OSC_MOD weaver method mixer LO frequency
+                fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(osc_car_qrg + ssb_weaver_osc_qrg);           // OSC_CAR frequency with ssb_weaver_osc_qrg correction
+                fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(+ssb_weaver_osc_qrg);                  // OSC_MOD weaver method mixer LO frequency
                 fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_ssbweaver_am(osc_mod_mag, 0);                    // SSB operation has no carrier
             }
             break;
@@ -385,8 +385,8 @@ void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double o
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for LSB\n");
 
                 g_fpga_rb_reg_mem->ctrl |=  0x00100000;                                                 // control: enabling QMIX_CAR Q path in the AMP_RF
-                fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(osc_car_qrg + ssb_weaver_osc_qrg);           // OSC_CAR frequency with ssb_weaver_osc_qrg correction
-                fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(ssb_weaver_osc_qrg);                   // OSC_MOD weaver method mixer LO frequency
+                fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(osc_car_qrg - ssb_weaver_osc_qrg);           // OSC_CAR frequency with ssb_weaver_osc_qrg correction
+                fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(-ssb_weaver_osc_qrg);                  // OSC_MOD weaver method mixer LO frequency
                 fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_ssbweaver_am(osc_mod_mag, 0);                    // SSB operation has no carrier
             }
             break;
