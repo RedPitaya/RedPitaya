@@ -1,3 +1,17 @@
+# Release 0.94 RC21
+
+Changes:
+- fixed copy-paste error in GPIO API (https://github.com/jjmz)
+- added fallback to static IP if DHCP fails (Pavel Demin)
+- a fix for IMM trigger for generator
+- removing some backup files
+- added support for LCR meter addon board to lcr executable
+- come calibration related changes to scopegenpro UI
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ generator burst mode is buggy
++ SPI interface is not working (seems to be a kernel configuration issue)
+
 # Release 0.94 RC19
 
 Changes:

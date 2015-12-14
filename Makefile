@@ -26,11 +26,10 @@ DL=$(BR2_DL_DIR)
 else
 DL=$(TMP)
 endif
-#TODO: DL = $(BR2_DL_DIR)
 
-UBOOT_TAG     = xilinx-v2015.3
-LINUX_TAG     = xilinx-v2015.3
-DTREE_TAG     = xilinx-v2015.3
+UBOOT_TAG     = xilinx-v2015.4
+LINUX_TAG     = xilinx-v2015.4
+DTREE_TAG     = xilinx-v2015.4
 #BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -99,7 +98,7 @@ DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 
 ################################################################################
-# Versioning system
+# versioning system
 ################################################################################
 
 BUILD_NUMBER ?= 0
@@ -127,6 +126,9 @@ export GREET_MSG
 ################################################################################
 
 all: zip sdk apps-free
+
+$(DL):
+	mkdir -p $@
 
 $(TMP):
 	mkdir -p $@
