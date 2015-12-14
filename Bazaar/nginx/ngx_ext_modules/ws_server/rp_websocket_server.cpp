@@ -10,6 +10,7 @@
 #include <iostream>
 #include <streambuf>
 #include <string>
+#include <future>
 
 #include <math.h>
 
@@ -17,11 +18,12 @@ using websocketpp::lib::thread;
 
 rp_websocket_server::rp_websocket_server()
     : m_params(NULL)
+    , m_OnClosed(false)
 {
 }
 
 rp_websocket_server::rp_websocket_server(struct server_parameters* params)
-    : m_params(params) 
+    : m_params(params)
 {
     // set up access channels to only log interesting things
     m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
@@ -66,10 +68,8 @@ void rp_websocket_server::run(std::string docroot, uint16_t port) {
 	m_endpoint.set_reuse_addr(true);
 	// listen on specified port
 	m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
-
 	// Start the server accept loop
 	m_endpoint.start_accept();
-
 	// Start the ASIO io_service run loop
 	try {
 		m_endpoint.run();
@@ -80,9 +80,9 @@ void rp_websocket_server::run(std::string docroot, uint16_t port) {
 }
 
 void rp_websocket_server::set_signal_timer() {
-	
-	if(m_signal_timer!=NULL)	
-		m_signal_timer->cancel();	
+
+	if(m_signal_timer!=NULL)
+		m_signal_timer->cancel();
 	int interval = m_params->get_signals_interval_func != 0 ? m_params->get_signals_interval_func() : m_params->signal_interval;
 	m_signal_timer = m_endpoint.set_timer(
 		interval,
@@ -95,8 +95,8 @@ void rp_websocket_server::set_signal_timer() {
 }
 
 void rp_websocket_server::set_param_timer() {
-	
-	if(m_param_timer!=NULL)	
+
+	if(m_param_timer!=NULL)
 		m_param_timer->cancel();
 	int interval = m_params->get_params_interval_func != 0 ?  m_params->get_params_interval_func() : m_params->param_interval;
 	m_param_timer = m_endpoint.set_timer(
@@ -116,7 +116,7 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 				"Timer Error: "+ec.message());
 		return;
 	}
-	
+
 	con_list::iterator it;
 	const char* signals = m_params->get_signals_func();
 
@@ -132,7 +132,7 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 	for (it = m_connections.begin(); it != m_connections.end(); ++it) {
 		m_endpoint.send(*it, js, websocketpp::frame::opcode::text);
 	}
-	
+
 	// set timer for next check
 	set_signal_timer();
 }
@@ -144,7 +144,7 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 				"Timer Error: "+ec.message());
 		return;
 	}
-	
+
 	con_list::iterator it;
 	const char* params = m_params->get_params_func();
 //	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "on_param_timer");
@@ -159,7 +159,7 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 	for (it = m_connections.begin(); it != m_connections.end(); ++it) {
 		m_endpoint.send(*it, js, websocketpp::frame::opcode::text);
 	}
-	
+
 	// set timer for next check
 	set_param_timer();
 }
@@ -181,7 +181,7 @@ void rp_websocket_server::on_http(connection_hdl hdl) {
 	} else {
 		filename = m_docroot+filename.substr(1);
 	}
-	
+
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app,
 		"http request2: "+filename);
 
@@ -189,13 +189,13 @@ void rp_websocket_server::on_http(connection_hdl hdl) {
 	if (!file) {
 		// 404 error
 		std::stringstream ss;
-	
+
 		ss << "<!doctype html><html><head>"
 		   << "<title>Error 404 (Resource not found)</title><body>"
 		   << "<h1>Error 404</h1>"
 		   << "<p>The requested URL " << filename << " was not found on this server.</p>"
 		   << "</body></head></html>";
-	
+
 		con->set_body(ss.str());
 		con->set_status(websocketpp::http::status_code::not_found);
 		return;
@@ -212,7 +212,7 @@ void rp_websocket_server::on_http(connection_hdl hdl) {
 	con->set_status(websocketpp::http::status_code::ok);
 }
 
-void rp_websocket_server::on_open(connection_hdl hdl) 
+void rp_websocket_server::on_open(connection_hdl hdl)
 {
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server on connection");
 	m_connections.insert(hdl);
@@ -221,24 +221,28 @@ void rp_websocket_server::on_open(connection_hdl hdl)
 void rp_websocket_server::on_close(connection_hdl hdl) {
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server connection closed");
 	m_connections.erase(hdl);
-	exit(-1);
+
+	if (!m_OnClosed) {
+		exit(-1);
+		m_OnClosed = true;
+	}
 }
 
 void rp_websocket_server::on_message(connection_hdl hdl, server::message_ptr msg) {
-//	std::stringstream ss;	
+//	std::stringstream ss;
 //	ss << "Detected " << msg->get_payload() << " test cases.";
 //	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
 	//get child, it is always only one: "parameters" or "signals"
 	JSONNode n = libjson::parse(msg->get_payload());
-	
+
 	JSONNode child = n.at(0);
 	std::string name = child.name();
 
 	std::string data = child.write();
 	const char * data_str = data.c_str();
 	if(name == "parameters")
-	{		
-		set_param_timer();		
+	{
+		set_param_timer();
 		m_params->set_params_func(data_str);
 	}
 	else if(name == "signals")
@@ -264,13 +268,18 @@ void rp_websocket_server::start(std::string docroot, uint16_t port)
 void rp_websocket_server::join()
 {
 	m_thread.join();
-} 
+}
 
 void rp_websocket_server::stop()
-{	
+{
+	auto th = std::thread([](){ std::this_thread::sleep_for(std::chrono::seconds(1)); exit(-1); });
+	th.detach();
+	m_OnClosed = true;
+
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app, "stop ws_server");
-	
+
 	m_endpoint.stop_listening();
+	m_endpoint.stop();
 	m_param_timer->cancel();
 	m_signal_timer->cancel();
 	con_list::iterator it;
