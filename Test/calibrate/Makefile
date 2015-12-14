@@ -43,8 +43,9 @@ CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .
 
-# Main Makefile target 'all' - it iterates over all targets listed.
-all: $(CALIBRATE) $(CALIBRATE2) $(CALIBTUNE)
+# Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
+# variable.
+all: $(TARGET) $(CALIBRATE2) 
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
