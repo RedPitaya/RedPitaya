@@ -28,7 +28,7 @@ DL=$(TMP)
 endif
 
 UBOOT_TAG     = xilinx-v2015.4
-LINUX_TAG     = xilinx-v2015.4
+LINUX_TAG     = xilinx-v2015.4.01
 DTREE_TAG     = xilinx-v2015.4
 #BUILDROOT_TAG = 2015.5
 
