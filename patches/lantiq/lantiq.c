@@ -344,6 +344,19 @@ static struct phy_driver lantiq_phy[] = {
 		.config_intr	= vr9_gphy_config_intr,
 		.driver		= { .owner = THIS_MODULE },
 	}, {
+		.phy_id		= 0xd565a401,
+		.phy_id_mask	= 0xffffffff,
+		.name		= "Lantiq XWAY VR9 GPHY 11G v1.5",
+		.features	= (PHY_GBIT_FEATURES | SUPPORTED_Pause),
+		.flags		= 0, /*PHY_HAS_INTERRUPT,*/
+		.config_init	= vr9_gphy_config_init,
+		.config_aneg	= vr9_gphy_config_aneg,
+		.read_status	= genphy_read_status,
+		.ack_interrupt	= vr9_gphy_ack_interrupt,
+		.did_interrupt	= vr9_gphy_did_interrupt,
+		.config_intr	= vr9_gphy_config_intr,
+		.driver		= { .owner = THIS_MODULE },
+	}, {
 		.phy_id		= 0xd565a418,
 		.phy_id_mask	= 0xfffffff8,
 		.name		= "Lantiq XWAY XRX PHY22F v1.4",
