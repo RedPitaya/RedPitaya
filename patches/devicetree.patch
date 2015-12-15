@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,70 @@
+@@ -86,3 +86,80 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -28,6 +28,13 @@
 +	eep@50 {
 +		compatible = "24c64";
 +		reg = <0x50>;
++	};
++};
++&spi0 {
++	spidev@0 {
++		compatible="spidev";
++		reg =<0>; //chipselect 0
++		spi-max-frequency= <50000000>;
 +	};
 +};
 +&clkc {
@@ -56,6 +63,16 @@
 +		};
 +	};
 +};
++&usb0 {
++  compatible = "xlnx,zynq-usb-2.20a", "chipidea,usb2";
++  usb-phy = <&usb_phy0>;
++};
++/ {
++      usb_phy0: phy0 {
++        compatible = "usb-nop-xceiv";
++        #phy-cells = <0x0>;
++   };
++};
 +/ {
 +	gpio-leds {
 +	    compatible = "gpio-leds";
@@ -71,12 +88,5 @@
 +	        default-state = "off";
 +		linux,default-trigger = "hartbeat";
 +	    };
-+	};
-+};
-+&spi0 {
-+	spidev@0 {
-+		compatible="spidev";
-+		reg =<0>; //chipselect 0
-+		spi-max-frequency= <50000000>;
 +	};
 +};
