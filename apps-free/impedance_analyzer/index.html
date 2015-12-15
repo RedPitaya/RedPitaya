@@ -85,30 +85,45 @@
       return val.toFixed(axis.tickDecimals) + "";
   }
 
-  function funcyTickFormat(val, axis){
-    if (Math.abs(val) < 0.000000000000001) //for zero
-      return (val).toFixed(axis.tickDecimals) + "";
-    else if (Math.abs(val) < 0.000000000001)
-      return (val * 100000000000000).toFixed(axis.tickDecimals) + "p";
-    else if (Math.abs(val) < 0.000000001)
-      return (val * 100000000000).toFixed(axis.tickDecimals) + "n";
-    else if (Math.abs(val) < 0.000001)
-      return (val * 100000000).toFixed(axis.tickDecimals) + "u";
-    else if (Math.abs(val) < 0.001)
-      return (val * 100000).toFixed(axis.tickDecimals) + "m";
-    else if (Math.abs(val) > 1000000000-1)
-      return (val / 1000000000).toFixed(axis.tickDecimals) + "G";
-    else if (Math.abs(val) > 1000000-1)
-      return (val / 1000000).toFixed(axis.tickDecimals) + "M";
-    else if (Math.abs(val) > 1000-1)
-      return (val / 1000).toFixed(axis.tickDecimals) + "k";
+  //function funcyTickFormat(val, axis){
+  //  if (Math.abs(val) < 0.000000000000001) //for zero
+  //    return (val).toFixed(axis.tickDecimals) + "";
+  //  else if (Math.abs(val) < 0.000000000001)
+  //    return (val * 100000000000000).toFixed(axis.tickDecimals) + "p";
+  //  else if (Math.abs(val) < 0.000000001)
+  //    return (val * 100000000000).toFixed(axis.tickDecimals) + "n";
+  //  else if (Math.abs(val) < 0.000001)
+  //    return (val * 100000000).toFixed(axis.tickDecimals) + "u";
+  //  else if (Math.abs(val) < 0.001)
+  //    return (val * 100000).toFixed(axis.tickDecimals) + "m";
+  //  else if (Math.abs(val) > 1000000000-1)
+  //    return (val / 1000000000).toFixed(axis.tickDecimals) + "G";
+  // else if (Math.abs(val) > 1000000-1)
+  //   return (val / 1000000).toFixed(axis.tickDecimals) + "M";
+  //  else if (Math.abs(val) > 1000-1)
+  //    return (val / 1000).toFixed(axis.tickDecimals) + "k";
     
-    else
-      return val.toFixed(axis.tickDecimals) + "";
+  //  else
+  //    return val.toFixed(axis.tickDecimals) + "";
+  // }
 
+   function funcyTickFormat(val, axis){
+   if (Math.abs(val)  <  0.000001) 
+      return (val * 1000000000).toFixed(1) + " n";
+   else if (Math.abs(val)  >=  0.000001 && Math.abs(val)  < 0.001)
+      return (val * 1000000).toFixed(1) + " u";
+   else if (Math.abs(val)  >=  0.001 && Math.abs(val)  < 1)
+      return (val * 1000).toFixed(1) + " m";
+  else if (Math.abs(val)  >= 1 && Math.abs(val)  < 1000)
+      return (val * 1).toFixed(1) + " ";
+   else if (Math.abs(val)  >=  1000  && Math.abs(val)  < 1000000)
+      return (val / 1000).toFixed(1) + " k";
+   else if (Math.abs(val)  >=  1000000 &&  Math.abs(val)  < 1000000000)
+      return (val / 1000000).toFixed(1) + " M";
+   else if (Math.abs(val)  >  1000000000)
+      return (val / 1000000000).toFixed(1) + " G";
 
   }
-
 
   var counter = 0;
   // Settings which should not be modified

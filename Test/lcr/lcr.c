@@ -56,7 +56,7 @@ int32_t data[n]; // AWG data buffer
 
 /** Signal types */
 typedef enum {
-    eSignalSine,         // Sinusoidal waveform
+    eSignalSine,         // Sinusoidal waveform.
     eSignalSquare,       // Square waveform
     eSignalTriangle,     // Triangular waveform
     eSignalSweep,        // Sinusoidal frequency sweep
@@ -147,7 +147,6 @@ int get_gain(int *gain, const char *str) {
     }
     if ( (strncmp(str, "hv", 2) == 0) || (strncmp(str, "HV", 2) == 0) ) {
         *gain = 1;
-        return 0;
     }
 
     fprintf(stderr, "Unknown gain: %s\n", str);
