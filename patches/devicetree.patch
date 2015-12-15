@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,80 @@
+@@ -86,3 +86,79 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -64,14 +64,13 @@
 +	};
 +};
 +&usb0 {
-+  compatible = "xlnx,zynq-usb-2.20a", "chipidea,usb2";
-+  usb-phy = <&usb_phy0>;
++	usb-phy = <&usb_phy0>;
 +};
 +/ {
-+      usb_phy0: phy0 {
-+        compatible = "usb-nop-xceiv";
-+        #phy-cells = <0x0>;
-+   };
++	usb_phy0: phy0 {
++		compatible = "usb-nop-xceiv";
++		#phy-cells = <0x0>;
++	};
 +};
 +/ {
 +	gpio-leds {
