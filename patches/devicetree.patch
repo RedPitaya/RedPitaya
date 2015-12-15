@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,79 @@
+@@ -88,3 +88,70 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -61,15 +61,6 @@
 +		channel@10 {
 +			reg = <10>;
 +		};
-+	};
-+};
-+&usb0 {
-+	usb-phy = <&usb_phy0>;
-+};
-+/ {
-+	usb_phy0: phy0 {
-+		compatible = "usb-nop-xceiv";
-+		#phy-cells = <0x0>;
 +	};
 +};
 +/ {
