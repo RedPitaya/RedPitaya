@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,70 @@
+@@ -86,3 +86,79 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -78,5 +78,14 @@
 +	        default-state = "off";
 +		linux,default-trigger = "hartbeat";
 +	    };
++	};
++};
++&usb0 {
++	usb-phy = <&usb_phy0>;
++};
++/ {
++	usb_phy0: phy0 {
++		compatible = "usb-nop-xceiv";
++		#phy-cells = <0x0>;
 +	};
 +};
