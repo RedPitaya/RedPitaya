@@ -1,3 +1,17 @@
+
+
+Changes:
+- fixed slow analog output API
+- fixed generator code in many old applications, so they can use the latest
+  FPGA bitstream (0.94), this should reduce issues with applications, which
+  do not load their own bitstream (Test, SCPI)
+- migration to Vivado 2015.4 and related U-Boot and Linux versions
+- changes to ARM clocking so the CPU runs at 666MHz instead of 500MHz (Ulrich Habel)
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ generator burst mode is buggy
++ SPI interface is not working (seems to be a kernel configuration issue)
+
 # Release 0.94 RC21
 
 Changes:
