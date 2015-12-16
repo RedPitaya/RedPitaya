@@ -1,0 +1,10 @@
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -118,6 +118,11 @@
++source "drivers/my_drvr/Kconfig"
+diff --git a/drivers/Makefile b/drivers/Makefile
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -24,6 +24,7 @@
++obj-$(CONFIG_DMA_PROXY)        += redpitaya/

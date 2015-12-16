@@ -1,0 +1,6 @@
+config DMA_PROXY
+tristate "DMA proxy"
+depends on ARM
+default y if ARM
+help
+  DMA proxy used for DMA access from user space.
