@@ -106,7 +106,8 @@ scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
 
 
 scpi_result_t RP_AcqStart(scpi_t *context) {
-    int result = rp_AcqStart();
+    int unsigned channel = 0; // TODO
+    int result = rp_AcqStart(channel);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:START Failed to start Red Pitaya acquire: %s\n", rp_GetError(result));
@@ -118,7 +119,8 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqStop(scpi_t *context) {
-    int result = rp_AcqStop();
+    int unsigned channel = 0; // TODO
+    int result = rp_AcqStop(channel);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:STOP Failed to stop Red Pitaya acquisition: %s\n", rp_GetError(result));
@@ -130,7 +132,8 @@ scpi_result_t RP_AcqStop(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqReset(scpi_t *context) {
-    int result = rp_AcqReset();
+    int unsigned channel = 0; // TODO
+    int result = rp_AcqReset(channel);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:RST Failed to reset Red Pitaya acquire: %s\n", rp_GetError(result));
@@ -188,7 +191,8 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
     }
 
     // Now set the decimation
-    int result = rp_AcqSetDecimation(decimation);
+    int unsigned channel = 0; // TODO
+    int result = rp_AcqSetDecimation(channel, decimation);
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:DEC Failed to set decimation: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -199,9 +203,10 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
+    int unsigned channel = 0; // TODO
     // Get decimation
     rp_acq_decimation_t decimation;
-    int result = rp_AcqGetDecimation(&decimation);
+    int result = rp_AcqGetDecimation(channel, &decimation);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:DEC? Failed to get decimation: %s", rp_GetError(result));
