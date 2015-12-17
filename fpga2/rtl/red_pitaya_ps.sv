@@ -221,12 +221,12 @@ system_wrapper system_i (
   .FCLK_RESET1_N     (fclk_rstn[1]     ),
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
-  // XADC
-  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
-  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
-  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
-  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
-  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
+//  // XADC
+//  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
+//  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
+//  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
+//  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
+//  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
   .M_AXI_GP0_ACLK    (gp0_maxi_aclk   ),  // in
   .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
@@ -266,15 +266,16 @@ system_wrapper system_i (
   .M_AXI_GP0_rid     (gp0_maxi_rid    ),  // in 12
   .M_AXI_GP0_bresp   (gp0_maxi_bresp  ),  // in 2
   .M_AXI_GP0_rresp   (gp0_maxi_rresp  ),  // in 2
-  .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
-  // AXI-4 streaming interfaces
-  .S_AXI_STR1_aclk   (clk        ),  .S_AXI_STR0_aclk   (clk        ),
-  .S_AXI_STR1_arstn  (rstn       ),  .S_AXI_STR0_arstn  (rstn       ),
-  .S_AXI_STR1_tdata  (axi1_tdata ),  .S_AXI_STR0_tdata  (axi0_tdata ),
-  .S_AXI_STR1_tkeep  ('1         ),  .S_AXI_STR0_tkeep  ('1         ),
-  .S_AXI_STR1_tlast  (axi1_tlast ),  .S_AXI_STR0_tlast  (axi0_tlast ),
-  .S_AXI_STR1_tready (axi1_tready),  .S_AXI_STR0_tready (axi0_tready),
-  .S_AXI_STR1_tvalid (axi1_tvalid),  .S_AXI_STR0_tvalid (axi0_tvalid)
+//  .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
+  .M_AXI_GP0_rdata   (gp0_maxi_rdata  )  // in 32
+//  // AXI-4 streaming interfaces
+//  .S_AXI_STR1_aclk   (clk        ),  .S_AXI_STR0_aclk   (clk        ),
+//  .S_AXI_STR1_arstn  (rstn       ),  .S_AXI_STR0_arstn  (rstn       ),
+//  .S_AXI_STR1_tdata  (axi1_tdata ),  .S_AXI_STR0_tdata  (axi0_tdata ),
+//  .S_AXI_STR1_tkeep  ('1         ),  .S_AXI_STR0_tkeep  ('1         ),
+//  .S_AXI_STR1_tlast  (axi1_tlast ),  .S_AXI_STR0_tlast  (axi0_tlast ),
+//  .S_AXI_STR1_tready (axi1_tready),  .S_AXI_STR0_tready (axi0_tready),
+//  .S_AXI_STR1_tvalid (axi1_tvalid),  .S_AXI_STR0_tvalid (axi0_tvalid)
 );
 
 endmodule
