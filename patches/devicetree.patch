@@ -40,7 +40,7 @@
 +&clkc {
 +	fclk-enable = <0xf>;
 +};
-+&xadc {
++/* &xadc {
 +	compatible = "xlnx,axi-xadc-1.00.a";
 +	clocks = <&clkc 18>;
 +	xlnx,channels {
@@ -62,7 +62,7 @@
 +			reg = <10>;
 +		};
 +	};
-+};
++}; */
 +/ {
 +	gpio-leds {
 +	    compatible = "gpio-leds";
