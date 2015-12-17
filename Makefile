@@ -137,7 +137,7 @@ $(TMP):
 #$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
 #	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 #	   scpi api apps_pro rp_communication
-$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT) scpi api
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT) api
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -151,7 +151,7 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT) scpi api
 	cd $(TARGET)/fpga; xz -df *.xz
 	#
 	cp -r $(INSTALL_DIR)/* $(TARGET)
-	cp -r OS/filesystem/*  $(TARGET)
+	cp -r OS/filesystem/*  $(TARGET)/
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
@@ -201,8 +201,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_S
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
 	cp $@.debian $@
 
-$(ENVTOOLS_CFG): $(UBOOT_DIR)
-	mkdir -p $(INSTALL_DIR)/etc/
+$(ENVTOOLS_CFG): $(UBOOT_DIR) $(INSTALL_DIR)/etc
 	cp $</tools/env/fw_env.config $(INSTALL_DIR)/etc
 
 ################################################################################
@@ -264,8 +263,11 @@ URAMDISK_DIR    = OS/buildroot
 
 .PHONY: buildroot
 
-$(INSTALL_DIR):
-	mkdir -p $(INSTALL_DIR)/{bin,sbin,lib}
+$(INSTALL_DIR):      ; 	mkdir -p $@
+$(INSTALL_DIR)/bin:  ; 	mkdir -p $@
+$(INSTALL_DIR)/sbin: ; 	mkdir -p $@
+$(INSTALL_DIR)/lib:  ; 	mkdir -p $@
+$(INSTALL_DIR)/etc:  ; 	mkdir -p $@
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
@@ -463,10 +465,10 @@ rp_communication:
 # Red Pitaya OS tools
 ################################################################################
 
-$(DISCOVERY): | $(INSTALL_DIR)
+$(DISCOVERY): | $(INSTALL_DIR)/sbin
 	cp $(OS_TOOLS_DIR)/discovery.sh $@
 
-$(HEARTBEAT): | $(INSTALL_DIR)
+$(HEARTBEAT): | $(INSTALL_DIR)/sbin
 	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 ################################################################################
