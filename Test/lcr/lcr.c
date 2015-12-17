@@ -56,7 +56,7 @@ int32_t data[n]; // AWG data buffer
 
 /** Signal types */
 typedef enum {
-    eSignalSine,         // Sinusoidal waveform
+    eSignalSine,         // Sinusoidal waveform.
     eSignalSquare,       // Square waveform
     eSignalTriangle,     // Triangular waveform
     eSignalSweep,        // Sinusoidal frequency sweep
@@ -134,7 +134,7 @@ void usage() {
             "\tscale type         0 - linear, 1 - logarithmic.\n"
             "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n"
-            "Output:\tFrequency [Hz], Z [Ohm], Phase_Z [deg], Y [S], Phase_Y [deg], R_s [Ohm], X_s [H], G_p [S], B_p [S], C_s [F], C_p [F], L_s [H], L_p [H], R_p [Ohm], Q, D\n";
+            "Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -147,7 +147,6 @@ int get_gain(int *gain, const char *str) {
     }
     if ( (strncmp(str, "hv", 2) == 0) || (strncmp(str, "HV", 2) == 0) ) {
         *gain = 1;
-        return 0;
     }
 
     fprintf(stderr, "Unknown gain: %s\n", str);
@@ -335,6 +334,7 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
+
     if ( (end_frequency < start_frequency) && (sweep_function == 1) ) {
         fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
         usage();
@@ -992,7 +992,15 @@ int main(int argc, char *argv[]) {
             calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
+        
+
+        if (sweep_function==0) 
+        {
+        w_out = 2 * M_PI * start_frequency; // angular velocity
+        }
+        else {
         w_out = 2 * M_PI * Frequency[ i ]; // angular velocity
+        }  
 
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
@@ -1017,66 +1025,109 @@ int main(int argc, char *argv[]) {
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
 
         /// Output
-        printf(" %.1f    %.5f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",
+        printf(" %.1f    %.3f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",
             Frequency[ !sweep_function ? 0 : i ],
             AmplitudeZ[ i ],
             PhaseZ[ i ],
-            Y_abs[ i ],
-            PhaseY[ i ],
-            R_s[ i ],
-            X_s[ i ],
-            G_p[ i ],
-            B_p[ i ],
-            C_s[ i ],
-            C_p[ i ],
             L_s[ i ],
+            C_s[ i ],
+            R_s[ i ],
             L_p[ i ],
+            C_p[ i ],
             R_p[ i ],
             Q[ i ],
-            D[ i ]
+            D[ i ],
+            X_s[ i ],               
+            G_p[ i ],
+            B_p[ i ],           
+            Y_abs[ i ],
+            PhaseY[ i ]
             );
 
+ 
         /** Saving files */
         if (!sweep_function) {
             fprintf(file_frequency, "%.1f\n", Frequency[0]);
         } else {
             fprintf(file_frequency, "%.1f\n", Frequency[i]);
+            
         }
 
+        /*fprintf(file_amplitude, "%.3f\n", AmplitudeZ[i]);        
         fprintf(file_phase, "%.1f\n", PhaseZ[i]);
-        fprintf(file_amplitude, "%.5f\n", AmplitudeZ[i]);
+        
+        fprintf(file_L_s, "%.10f\n", L_s[i]);
+        fprintf(file_C_s, "%.10f\n", C_s[i]);
         fprintf(file_R_s, "%.10f\n", R_s[i]);
-        fprintf(file_Y_abs, "%.10f\n", Y_abs[i]);
-        fprintf(file_PhaseY, "%.10f\n", PhaseY[i]);
+
+        fprintf(file_L_p, "%.10f\n", L_p[i]);
+        fprintf(file_C_p, "%.10f\n", C_p[i]);
+        fprintf(file_R_p, "%.10f\n", R_p[i]);
+
+        fprintf(file_Q, "%.10f\n", Q[i]);
+        fprintf(file_D, "%.10f\n", D[i]);
+
         fprintf(file_X_s, "%.10f\n", X_s[i]);
         fprintf(file_G_p, "%.10f\n", G_p[i]);
         fprintf(file_B_p, "%.10f\n", B_p[i]);
-        fprintf(file_C_s, "%.10f\n", C_s[i]);
-        fprintf(file_C_p, "%.10f\n", C_p[i]);
-        fprintf(file_L_s, "%.10f\n", L_s[i]);
-        fprintf(file_L_p, "%.10f\n", L_p[i]);
-        fprintf(file_R_p, "%.10f\n", R_p[i]);
-        fprintf(file_Q, "%.10f\n", Q[i]);
-        fprintf(file_D, "%.10f\n", D[i]);
+
+        fprintf(file_Y_abs, "%.10f\n", Y_abs[i]);
+        fprintf(file_PhaseY, "%.10f\n", PhaseY[i]);
+        */
+
+        fprintf(file_amplitude, "%.3f\n", 1.0);        
+        fprintf(file_phase, "%.1f\n", 2.0);
+        
+        fprintf(file_L_s, "%.10f\n", 3.0);
+        fprintf(file_C_s, "%.10f\n", 4.0);
+        fprintf(file_R_s, "%.10f\n", 5.0);
+
+        fprintf(file_L_p, "%.10f\n", 6.0);
+        fprintf(file_C_p, "%.10f\n", 7.0);
+        fprintf(file_R_p, "%.10f\n", 8.0);
+
+        fprintf(file_Q, "%.10f\n", 9.0);
+        fprintf(file_D, "%.10f\n", 10.0);
+
+        fprintf(file_X_s, "%.10f\n", 11.0);
+        fprintf(file_G_p, "%.10f\n", 12.0);
+        fprintf(file_B_p, "%.10f\n", 13.0);
+
+        fprintf(file_Y_abs, "%.10f\n", 14.0);
+        fprintf(file_PhaseY, "%.10f\n", 15.0);
+            
+        
+        
+      
     }
+
 
     /** Closing files */
     fclose(file_frequency);
-    fclose(file_phase);
+    
     fclose(file_amplitude);
+    fclose(file_phase);
+
+    fclose(file_L_s);
+    fclose(file_C_s);
     fclose(file_R_s);
-    fclose(file_Y_abs);
-    fclose(file_PhaseY);
+
+    fclose(file_L_p);
+    fclose(file_C_p);
+    fclose(file_R_p);
+
+    fclose(file_Q);
+    fclose(file_D);
+    
     fclose(file_X_s);
     fclose(file_G_p);
     fclose(file_B_p);
-    fclose(file_C_s);
-    fclose(file_C_p);
-    fclose(file_L_s);
-    fclose(file_L_p);
-    fclose(file_R_p);
-    fclose(file_Q);
-    fclose(file_D);
+    
+    fclose(file_Y_abs);
+    fclose(file_PhaseY);
+    
+    
+    
 
     /** All's well that ends well. */
     return 1;
