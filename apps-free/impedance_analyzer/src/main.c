@@ -187,8 +187,8 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
 
     { /* End frequency for frequency sweep.
        * Min value - 200
-       * Max value - 1000000 */
-       "end_freq", 200, 1, 0, 0, 1000000 },
+       * Max value - 100000000 */
+       "end_freq", 200, 1, 0, 0, 100000000 },
     { /* Plots different data depending on user choice
        * 0 - Plots amplitude
        * 1 - Plots phase
