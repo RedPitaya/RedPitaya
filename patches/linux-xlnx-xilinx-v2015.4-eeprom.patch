@@ -1,8 +1,8 @@
 diff --git a/drivers/misc/eeprom/at24.c b/drivers/misc/eeprom/at24.c
-index d87f77f..faa0a9e 100644
+index 2d3db81..5896301 100644
 --- a/drivers/misc/eeprom/at24.c
 +++ b/drivers/misc/eeprom/at24.c
-@@ -508,6 +508,9 @@ static int at24_probe(struct i2c_client *client, const struct i2c_device_id *id)
+@@ -519,6 +519,9 @@ static int at24_probe(struct i2c_client *client, const struct i2c_device_id *id)
  		 * is recommended anyhow.
  		 */
  		chip.page_size = 1;
