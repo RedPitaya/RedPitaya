@@ -164,7 +164,14 @@
 			//Change primary display value
 			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
 				
-				formatRange(1, new_params[param_name].value);
+				if(new_params['LCR_RANGE'].value == 0){
+					formatRangeAuto(1, new_params[param_name].value);
+				}else{
+					formatRangeManual(Math.abs($('#sel_range_f').val() - 4), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
+				}
+
+				console.log(parseInt($('#sel_range_u').val(), 10));
+				
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
@@ -181,7 +188,7 @@
 			//Change secondary display value
 			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
 
-				formatRange(2, new_params[param_name].value);
+				formatRangeAuto(2, new_params[param_name].value);
 				var units = LCR.displ_params.s_units;
 				var data = LCR.displ_params.sec_val;
 
@@ -552,131 +559,150 @@ $(function() {
 });
 
 //TODO: This solution is ugly as fuck. Make it better!
-function formatRange(display, meas_data){
+function formatRangeAuto(display, meas_data){
 
 
-		var data = 0;
-		var sub_idx = 1;
-		var units = "";
-		var base = "";
+	var data = 0;
+	var sub_idx = 1;
+	var units = "";
+	var base = "";
 
-		var inverse;
-		(meas_data < 0) ? (inverse = -1) : (inverse = 1);
-		
-		if(display == 1 && meas_data != 0){
-			base = LCR.displ_params.p_base_u;
-		}else if(display == 2 && meas_data != 0){
-			base = LCR.displ_params.s_base_u;
-		}
-
-		if(meas_data < 0.00000000000010){
-			data = "ERROR";
-		}else if(meas_data > 0.00000000000010 && meas_data <= 0.00000000999990){
-			
-			data = (meas_data * Math.pow(10, 9)).toFixed(4);
-			units = "n" + base;
-
-		}else if(meas_data > 0.00000000999990 && meas_data <= 0.00000009999900){
+	var inverse;
+	(meas_data < 0) ? (inverse = -1) : (inverse = 1);
 	
-			data = (meas_data * Math.pow(10, 9)).toFixed(3);
-			units = "n" + base;
-	
-		}else if(meas_data > 0.00000009999900 && meas_data <= 0.00000099999000){
-	
-			data = (meas_data * Math.pow(10, 9)).toFixed(2);
-			units = "n" + base;
-	
-		}else if(meas_data > 0.000000999990 && meas_data <= 0.00000999990){
-			
-			data = (meas_data * Math.pow(10, 6)).toFixed(4);
-			units = "u" + base;
-		
-		}else if(meas_data > 0.000009999900 && meas_data <= 0.00009999900){
-		
-			data = (meas_data * Math.pow(10, 6)).toFixed(3);
-			units = "u" + base;
-		
-		}else if(meas_data > 0.000099999000 && meas_data <= 0.00099999000){
-
-			data = (meas_data * Math.pow(10, 6)).toFixed(2);
-			units = "u" + base;
-
-		}else if(meas_data > 0.000999990 && meas_data <= 0.00999990){
-
-			data = (meas_data * Math.pow(10, 3)).toFixed(4);
-			units = "m" + base;
-
-		}else if(meas_data > 0.009999900 && meas_data <= 0.09999900){
-			
-			data = (meas_data * Math.pow(10, 3)).toFixed(3);
-			units = "m" + base;
-		}else if(meas_data > 0.099999000 && meas_data <= 0.99999000){
-			
-			data = (meas_data * Math.pow(10, 3)).toFixed(2);
-			units = "m" + base;
-
-		}else if(meas_data > 0.999990 && meas_data <= 9.99990){
-
-			data = meas_data.toFixed(4);
-			units = base;
-
-		}else if(meas_data > 9.99990 && meas_data <= 99.9990){
-
-			data = meas_data.toFixed(3);
-			units = base;
-
-		}else if(meas_data > 99.9990 && meas_data <= 999.990){
-
-			data = meas_data.toFixed(2);
-			units = base;
-
-		}else if(meas_data > 999.990 && meas_data <= 9999.90){
-
-			data = meas_data.toFixed(1);
-			units = base;
-			
-		}else if(meas_data <= 99999.0 && meas_data > 9999.90){
-
-			data = (meas_data / Math.pow(10, 3)).toFixed(3);
-			units = "K" + base;
-
-		}else if(meas_data <=  999990.0 && meas_data > 99999.0){
-			
-			data = (meas_data / Math.pow(10, 3)).toFixed(2);
-			units = "K" + base;			
-		
-		}else if(meas_data <= 9999900.0 && 999990.0){
-			
-			data = (meas_data / Math.pow(10, 6)).toFixed(1);
-			units = "M" + base;
-		
-		}else if(meas_data > 9999900.0){
-
-			data = "OVER RANGE";
-			units = "";
-		}
-
-		switch(display){
-			case 1:
-				if(data == "ERROR" || data == "OVER RANGE"){
-					LCR.displ_params.prim_val = data;
-					LCR.displ_params.p_units = "";
-					return "";
-				}
-				LCR.displ_params.prim_val = inverse * data;
-				LCR.displ_params.p_units = units;
-				break;
-			case 2:
-				if(data == "ERROR" || data == "OVER RANGE"){
-					LCR.displ_params.sec_val = data;
-					LCR.displ_params.s_units = "";
-					return "";
-				}
-
-				LCR.displ_params.sec_val = inverse * data;
-				LCR.displ_params.s_units = units;
-				break;
-		}
-
-		return 0;
+	if(display == 1 && meas_data != 0){
+		base = LCR.displ_params.p_base_u;
+	}else if(display == 2 && meas_data != 0){
+		base = LCR.displ_params.s_base_u;
 	}
+
+	if(meas_data < 0.00000000000010){
+		data = "ERROR";
+	}else if(meas_data > 0.00000000000010 && meas_data <= 0.00000000999990){
+		
+		data = (meas_data * Math.pow(10, 9)).toFixed(4);
+		units = "n" + base;
+
+	}else if(meas_data > 0.00000000999990 && meas_data <= 0.00000009999900){
+
+		data = (meas_data * Math.pow(10, 9)).toFixed(3);
+		units = "n" + base;
+
+	}else if(meas_data > 0.00000009999900 && meas_data <= 0.00000099999000){
+
+		data = (meas_data * Math.pow(10, 9)).toFixed(2);
+		units = "n" + base;
+
+	}else if(meas_data > 0.000000999990 && meas_data <= 0.00000999990){
+		
+		data = (meas_data * Math.pow(10, 6)).toFixed(4);
+		units = "u" + base;
+	
+	}else if(meas_data > 0.000009999900 && meas_data <= 0.00009999900){
+	
+		data = (meas_data * Math.pow(10, 6)).toFixed(3);
+		units = "u" + base;
+	
+	}else if(meas_data > 0.000099999000 && meas_data <= 0.00099999000){
+
+		data = (meas_data * Math.pow(10, 6)).toFixed(2);
+		units = "u" + base;
+
+	}else if(meas_data > 0.000999990 && meas_data <= 0.00999990){
+
+		data = (meas_data * Math.pow(10, 3)).toFixed(4);
+		units = "m" + base;
+
+	}else if(meas_data > 0.009999900 && meas_data <= 0.09999900){
+		
+		data = (meas_data * Math.pow(10, 3)).toFixed(3);
+		units = "m" + base;
+	}else if(meas_data > 0.099999000 && meas_data <= 0.99999000){
+		
+		data = (meas_data * Math.pow(10, 3)).toFixed(2);
+		units = "m" + base;
+
+	}else if(meas_data > 0.999990 && meas_data <= 9.99990){
+
+		data = meas_data.toFixed(4);
+		units = base;
+
+	}else if(meas_data > 9.99990 && meas_data <= 99.9990){
+
+		data = meas_data.toFixed(3);
+		units = base;
+
+	}else if(meas_data > 99.9990 && meas_data <= 999.990){
+
+		data = meas_data.toFixed(2);
+		units = base;
+
+	}else if(meas_data > 999.990 && meas_data <= 9999.90){
+
+		data = meas_data.toFixed(1);
+		units = base;
+		
+	}else if(meas_data <= 99999.0 && meas_data > 9999.90){
+
+		data = (meas_data / Math.pow(10, 3)).toFixed(3);
+		units = "k" + base;
+
+	}else if(meas_data <=  999990.0 && meas_data > 99999.0){
+		
+		data = (meas_data / Math.pow(10, 3)).toFixed(2);
+		units = "k" + base;			
+	
+	}else if(meas_data <= 9999900.0 && 999990.0){
+		
+		data = (meas_data / Math.pow(10, 6)).toFixed(1);
+		units = "M" + base;
+	
+	}else if(meas_data > 9999900.0){
+
+		data = "OVER RANGE";
+		units = "";
+	}
+
+	switch(display){
+		case 1:
+			if(data == "ERROR" || data == "OVER RANGE"){
+				LCR.displ_params.prim_val = data;
+				LCR.displ_params.p_units = "";
+				break;
+			}
+			LCR.displ_params.prim_val = inverse * data;
+			LCR.displ_params.p_units = units;
+			break;
+		case 2:
+			if(data == "ERROR" || data == "OVER RANGE"){
+				LCR.displ_params.sec_val = data;
+				LCR.displ_params.s_units = "";
+				break;
+			}
+
+			LCR.displ_params.sec_val = inverse * data;
+			LCR.displ_params.s_units = units;
+			break;
+	}
+	return 0;
+}
+
+function formatRangeManual(format, power, data){
+
+	var suffixes = ['nH', 'uH', 'mH', 'H','kH', 'MH'];
+
+	var i;
+	var c = 0;
+	for(i = 9; i > -7; i -= 3){
+		if(c == power) {
+			data = (data * Math.pow(10, i)).toFixed(format);
+			break;
+		}
+		c++;
+	}
+
+	LCR.displ_params.prim_val = data;
+	LCR.displ_params.p_units = suffixes[c];
+
+	return data;
+}

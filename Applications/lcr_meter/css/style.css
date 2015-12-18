@@ -295,7 +295,7 @@ area:hover {
 }
 
 #prim_displ {
-  width: 80%;
+  width: 100%;
   height: 50%;
   background-color: #dcdcdc;
   float: left;
@@ -305,7 +305,7 @@ area:hover {
 
 
 #sec_displ {
-  width: 80%;
+  width: 100%;
   height: 50%;
   background-color: #dcdcdc;
   float: left;
