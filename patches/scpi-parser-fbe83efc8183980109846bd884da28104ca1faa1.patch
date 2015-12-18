@@ -1,0 +1,333 @@
+diff --git a/libscpi/inc/scpi/parser.h b/libscpi/inc/scpi/parser.h
+index b645dfe..b4974a6 100644
+--- a/libscpi/inc/scpi/parser.h
++++ b/libscpi/inc/scpi/parser.h
+@@ -59,6 +59,9 @@ extern "C" {
+     size_t SCPI_ResultText(scpi_t * context, const char * data);
+     size_t SCPI_ResultArbitraryBlock(scpi_t * context, const char * data, size_t len);
+     size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val);
++    // TODO, this functions are not upstreamed
++    size_t SCPI_ResultBufferInt16(scpi_t * context, const int16_t *data, uint32_t size);
++    size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size);
+ 
+     scpi_bool_t SCPI_Parameter(scpi_t * context, scpi_parameter_t * parameter, scpi_bool_t mandatory);
+     scpi_bool_t SCPI_ParamIsValid(scpi_parameter_t * parameter);
+@@ -85,6 +88,7 @@ extern "C" {
+ 
+     scpi_bool_t SCPI_ParamBool(scpi_t * context, scpi_bool_t * value, scpi_bool_t mandatory);
+     scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options, int32_t * value, scpi_bool_t mandatory);
++    scpi_bool_t SCPI_ParamBufferFloat(scpi_t * context, float *data, uint32_t *size, scpi_bool_t mandatory);
+ 
+     scpi_bool_t SCPI_IsCmd(scpi_t * context, const char * cmd);
+ #if USE_COMMAND_TAGS
+diff --git a/libscpi/inc/scpi/types.h b/libscpi/inc/scpi/types.h
+index 38ee018..a07d4c2 100644
+--- a/libscpi/inc/scpi/types.h
++++ b/libscpi/inc/scpi/types.h
+@@ -295,6 +295,7 @@ extern "C" {
+         scpi_param_list_t param_list;
+         scpi_interface_t * interface;
+         int_fast16_t output_count;
++        int_fast16_t output_binary_count;
+         int_fast16_t input_count;
+         scpi_bool_t cmd_error;
+         scpi_error_queue_t error_queue;
+@@ -303,6 +304,7 @@ extern "C" {
+         void * user_context;
+         scpi_parser_state_t parser_state;
+         const char * idn[4];
++        bool binary_output;
+     };
+ 
+ #ifdef  __cplusplus
+diff --git a/libscpi/src/parser.c b/libscpi/src/parser.c
+index 62dc151..305d71c 100644
+--- a/libscpi/src/parser.c
++++ b/libscpi/src/parser.c
+@@ -34,8 +34,10 @@
+  *
+  */
+ 
+-#include <ctype.h>
+ #include <string.h>
++#include <sys/socket.h>
++#include <elf.h>
++#include <stdio.h>
+ 
+ #include "scpi/config.h"
+ #include "scpi/parser.h"
+@@ -96,11 +98,47 @@ static size_t writeNewLine(scpi_t * context) {
+         len = writeData(context, SCPI_LINE_ENDING, strlen(SCPI_LINE_ENDING));
+         flushData(context);
+         return len;
+-    } else {
+-        return 0;
++    } else if (context->output_binary_count > 0) {
++        flushData(context);
++    }
++    return 0;
++}
++
++/**
++ * Writes header for binary data
++ * @param context
++ * @param numElems - number of items in the array
++ * @param sizeOfElem - size of each item [sizeof(float), sizeof(int), ...]
++ * @return number of characters written
++ */
++static size_t writeBinHeader(scpi_t * context, uint32_t numElems, size_t sizeOfElem) {
++
++    size_t result = 0;
++    char numBytes[9+1];
++    char numOfNumBytes[2];
++
++    // Calculate number of bytes needed for all elements
++    size_t numDataBytes = numElems * sizeOfElem;
++
++    // Do not allow more than 9 character long size
++    if (numDataBytes > 999999999){
++        return result;
+     }
++
++    // Convert to string and calculate string length
++    size_t len = SCPI_UInt32ToStrBase(numDataBytes, numBytes, sizeof(numBytes), 10);
++
++    // Convert len to sting
++    SCPI_UInt32ToStrBase(len, numOfNumBytes, sizeof(numOfNumBytes), 10);
++
++    result += writeData(context, "#", 1);
++    result += writeData(context, numOfNumBytes, 1);
++    result += writeData(context, numBytes, len);
++
++    return result;
+ }
+ 
++
+ /**
+  * Conditionaly write ";"
+  * @param context
+@@ -128,6 +166,7 @@ static scpi_bool_t processCommand(scpi_t * context) {
+ 
+     context->cmd_error = FALSE;
+     context->output_count = 0;
++    context->output_binary_count = 0;
+     context->input_count = 0;
+ 
+     /* if callback exists - call command callback */
+@@ -485,6 +524,107 @@ size_t SCPI_ResultText(scpi_t * context, const char * data) {
+     return result;
+ }
+ 
++static size_t resultBufferInt16Bin(scpi_t * context, const int16_t *data, size_t size) {
++    size_t result = 0;
++
++    result += writeBinHeader(context, size, sizeof(int16_t));
++
++    if (result == 0) {
++        return result;
++    }
++
++    size_t i;
++    for (i = 0; i < size; i++) {
++        uint16_t value = htons((uint16_t) data[i]);
++        result += writeData(context, (char*)(&value), sizeof(int16_t));
++    }
++    context->output_binary_count++;
++    return result;
++}
++
++#include <inttypes.h>
++static size_t resultBufferInt16Ascii(scpi_t * context, const int16_t *data, size_t size) {
++    size_t result = 0;
++    result += writeDelimiter(context);
++    result += writeData(context, "{", 1);
++
++    size_t i;
++    size_t len;
++    char buffer[12];
++    for (i = 0; i < size; i++) {
++        snprintf(buffer, sizeof (buffer), "%"PRIi16, data[i]);
++        len = strlen(buffer);
++        // TODO: there were casting issues with the following code
++        //len = SCPI_Int32ToStr((int32_t) data[i], buffer, sizeof (buffer));
++        result += writeData(context, buffer, len);
++        if (i < size-1)
++            result += writeData(context, ",", 1);
++    }
++    result += writeData(context, "}", 1);
++    context->output_count++;
++    return result;
++}
++
++size_t SCPI_ResultBufferInt16(scpi_t * context, const int16_t *data, size_t size) {
++
++    if (context->binary_output == true) {
++        return resultBufferInt16Bin(context, data, size);
++    }
++    else {
++        return resultBufferInt16Ascii(context, data, size);
++    }
++}
++
++static size_t resultBufferFloatBin(scpi_t * context, const float *data, size_t size) {
++    size_t result = 0;
++
++    result += writeBinHeader(context, size, sizeof(float));
++
++    if (result == 0) {
++        return result;
++    }
++
++    size_t i;
++    for (i = 0; i < size; i++) {
++        float value = hton_f(data[i]);
++        result += writeData(context, (char*)(&value), sizeof(float));
++    }
++    context->output_binary_count++;
++    return result;
++}
++
++static size_t resultBufferFloatAscii(scpi_t * context, const float *data, size_t size) {
++    size_t result = 0;
++    result += writeDelimiter(context);
++    result += writeData(context, "{", 1);
++
++    size_t i;
++    size_t len;
++    char buffer[50];
++    for (i = 0; i < size; i++) {
++        len = SCPI_DoubleToStr(data[i], buffer, sizeof (buffer));
++        result += writeData(context, buffer, len);
++        if (i < size-1)
++            result += writeData(context, ",", 1);
++    }
++    result += writeData(context, "}", 1);
++    context->output_count++;
++    return result;
++}
++
++size_t SCPI_ResultBufferFloat(scpi_t * context, const float *data, uint32_t size) {
++
++    if (context->binary_output == true) {
++        return resultBufferFloatBin(context, data, size);
++    }
++    else {
++        return resultBufferFloatAscii(context, data, size);
++    }
++}
++
++
++/* parsing parameters */
++
+ /**
+  * Write arbitrary block program data to the result
+  * @param context
+@@ -1192,6 +1332,24 @@ scpi_bool_t SCPI_ParamChoice(scpi_t * context, const scpi_choice_def_t * options
+ }
+ 
+ /**
++ * Red Pitaya added function
++ * TODO, replace with upstream equivalent
++ */
++scpi_bool_t SCPI_ParamBufferFloat(scpi_t * context, float *data, uint32_t *size, scpi_bool_t mandatory) {
++    *size = 0;
++    double value;
++    while (true) {
++        if (!SCPI_ParamDouble(context, &value, mandatory)) {
++            break;
++        }
++        data[*size] = (float) value;
++        *size = *size + 1;
++        mandatory = false;          // only first is mandatory
++    }
++    return true;
++}
++
++/**
+  * Parse one parameter and detect type
+  * @param state
+  * @param token
+@@ -1332,6 +1490,7 @@ int scpiParser_detectProgramMessageUnit(scpi_parser_state_t * state, char * buff
+     return lex_state.pos - lex_state.buffer;
+ }
+ 
++
+ /**
+  * Check current command
+  *  - suitable for one handle to multiple commands
+diff --git a/libscpi/src/utils.c b/libscpi/src/utils.c
+index f92e877..71d14d7 100644
+--- a/libscpi/src/utils.c
++++ b/libscpi/src/utils.c
+@@ -49,6 +49,20 @@ static size_t patternSeparatorPos(const char * pattern, size_t len);
+ static size_t cmdSeparatorPos(const char * cmd, size_t len);
+ 
+ /**
++ * Converts the float from host byte order to network byte order.
++ * @param value
++ * @return
++ */
++float hton_f(float value) {
++    union {float f; unsigned int  i;}val;
++
++    val.f = value;
++
++    val.i = htonl(val.i);
++    return val.f;
++};
++
++/**
+  * Find the first occurrence in str of a character in set.
+  * @param str
+  * @param size
+@@ -141,7 +155,7 @@ size_t UInt32ToStrBaseSign(uint32_t val, char * str, size_t len, int8_t base, sc
+  * @return number of bytes written to str (without '\0')
+  */
+ size_t SCPI_Int32ToStr(int32_t val, char * str, size_t len) {
+-    return UInt32ToStrBaseSign((int32_t) val, str, len, 10, TRUE);
++    return UInt32ToStrBaseSign((uint32_t) val, str, len, 10, TRUE);
+ }
+ 
+ /**
+@@ -229,7 +243,7 @@ size_t UInt64ToStrBaseSign(uint64_t val, char * str, size_t len, int8_t base, sc
+  * @return number of bytes written to str (without '\0')
+  */
+ size_t SCPI_Int64ToStr(int64_t val, char * str, size_t len) {
+-    return UInt64ToStrBaseSign((int64_t) val, str, len, 10, TRUE);
++    return UInt64ToStrBaseSign((uint64_t) val, str, len, 10, TRUE);
+ }
+ 
+ /**
+diff --git a/libscpi/src/utils_private.h b/libscpi/src/utils_private.h
+index f864004..55c88fd 100644
+--- a/libscpi/src/utils_private.h
++++ b/libscpi/src/utils_private.h
+@@ -51,6 +51,7 @@ extern "C" {
+ #define LOCAL
+ #endif
+ 
++    float hton_f(float value) LOCAL;
+     char * strnpbrk(const char *str, size_t size, const char *set) LOCAL;
+     scpi_bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2) LOCAL;
+     scpi_bool_t compareStrAndNum(const char * str1, size_t len1, const char * str2, size_t len2, int32_t * num) LOCAL;
+diff --git a/libscpi/test/test_scpi_utils.c b/libscpi/test/test_scpi_utils.c
+index 4238812..d25b132 100644
+--- a/libscpi/test/test_scpi_utils.c
++++ b/libscpi/test/test_scpi_utils.c
+@@ -85,6 +85,16 @@ static void test_Int32ToStr() {
+         CU_ASSERT(len == strlen(ref));
+         CU_ASSERT_STRING_EQUAL(str, ref);
+     }
++
++    int16_t val16[] = {0, 1, -1, INT16_MIN, INT16_MAX, 0x0123, 0x4567, 0x89ab, 0xcdef};
++    int N16 = sizeof (val16) / sizeof (int16_t);
++    // test signed conversion to decimal numbers
++    for (i = 0; i < N16; i++) {
++        len = SCPI_Int32ToStr((int32_t) val16[i], str, max);
++        snprintf(ref, max, "%"PRIi16, val16[i]);
++        CU_ASSERT(len == strlen(ref));
++        CU_ASSERT_STRING_EQUAL(str, ref);
++    }
+ }
+ 
+ static void test_UInt32ToStrBase() {

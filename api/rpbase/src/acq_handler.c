@@ -30,11 +30,8 @@ static const uint32_t DEC_1024  = 1024;
 static const uint32_t DEC_8192  = 8192;
 static const uint32_t DEC_65536 = 65536;
 
-/* @brief ADC buffer size is 16 k samples. */
-static const uint32_t ADC_BUFFER_SIZE = 16 * 1024;
-
 /* @brief Trig. reg. value offset when set to 0 */
-static const int32_t TRIG_DELAY_ZERO_OFFSET = 8192;
+static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
 
 /* @brief Sampling period (non-decimated) - 8 [ns]. */
 static const uint64_t ADC_SAMPLE_PERIOD = 8;
@@ -465,7 +462,7 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
         *state=RP_TRIG_STATE_TRIGGERED;
     }
     else{
-    	*state=RP_TRIG_STATE_WAITING;
+        *state=RP_TRIG_STATE_WAITING;
     }
 
     return RP_OK;
@@ -473,13 +470,13 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
 
 int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 {
-	int32_t trig_dly;
-	if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
-    		trig_dly=0;
-	}
-	else{
-		trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
-	}
+    int32_t trig_dly;
+    if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
+            trig_dly=0;
+    }
+    else{
+        trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
+    }
 
     ECHECK(osc_SetTriggerDelay(trig_dly));
     triggerDelayInNs = false;
@@ -496,9 +493,9 @@ int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue)
 
 int acq_GetTriggerDelay(int32_t* decimated_data_num)
 {
-	uint32_t trig_dly;
-	int r=osc_GetTriggerDelay(&trig_dly);
-	*decimated_data_num=(int32_t)trig_dly-TRIG_DELAY_ZERO_OFFSET;
+    uint32_t trig_dly;
+    int r=osc_GetTriggerDelay(&trig_dly);
+    *decimated_data_num=(int32_t)trig_dly-TRIG_DELAY_ZERO_OFFSET;
     return r;
 }
 
@@ -526,21 +523,14 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
 
 int acq_SetTriggerLevel(float voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
-        ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
-    }
+    ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
+    ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
     return RP_OK;
 }
 
 int acq_GetTriggerLevel(float *voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_GetChannelThreshold(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
-        ECHECK(acq_GetChannelThreshold(RP_CH_2, voltage));
-    }
+    ECHECK(acq_GetChannelThreshold(RP_CH_1, voltage));
     return RP_OK;
 }
 
@@ -600,21 +590,14 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 
 int acq_SetTriggerHyst(float voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHB_PE) || (last_trig_src == RP_TRIG_SRC_CHB_NE)) {
-        ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, voltage));
-    }
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
+    ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, voltage));
     return RP_OK;
 }
 
 int acq_GetTriggerHyst(float *voltage)
 {
-    if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, voltage));
-    } else if ((last_trig_src == RP_TRIG_SRC_CHA_PE) || (last_trig_src == RP_TRIG_SRC_CHA_NE)) {
-        ECHECK(acq_GetChannelThresholdHyst(RP_CH_2, voltage));
-    }
+    ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, voltage));
     return RP_OK;
 }
 

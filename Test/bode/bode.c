@@ -421,7 +421,7 @@ int main(int argc, char *argv[]) {
         if (progress_int <= 100){
             FILE *progress_file = fopen("/tmp/bode_data/progress.txt", "w");
             sprintf(hex, "%x", (int)(255 - (255*progress_int/100)));
-            strcpy(command, "/opt/bin/monitor 0x40000030 0x" );
+            strcpy(command, "/opt/redpitaya/bin/monitor 0x40000030 0x" );
             strcat(command, hex);
             
             system(command);
@@ -570,7 +570,7 @@ void synthesize_signal(double ampl,
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
-    awg->wrap = round(65536 * (n-1));
+    awg->wrap = round(65536 * n - 1);
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
     uint32_t amp = ampl * 4000.0;    /* 1 V ==> 4000 DAC counts */

@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,63 @@
+@@ -86,3 +86,70 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -71,5 +71,12 @@
 +	        default-state = "off";
 +		linux,default-trigger = "hartbeat";
 +	    };
++	};
++};
++&spi0 {
++	spidev@0 {
++		compatible="spidev";
++		reg =<0>; //chipselect 0
++		spi-max-frequency= <50000000>;
 +	};
 +};
