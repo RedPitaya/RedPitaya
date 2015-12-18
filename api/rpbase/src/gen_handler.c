@@ -426,14 +426,13 @@ int gen_getTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     return RP_OK;
 }
 
-int gen_Trigger(int mask) {
-    switch (mask) {
+int gen_Trigger(uint32_t channel) {
+    switch (channel) {
+        case 0:
         case 1:
-            ECHECK(gen_setGenMode(RP_CH_1, RP_GEN_MODE_BURST));
-            return generate_setTriggerSource(RP_CH_1, RP_GEN_TRIG_SRC_INTERNAL);
+            ECHECK(gen_setGenMode(channel, RP_GEN_MODE_BURST));
+            return generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
         case 2:
-            ECHECK(gen_setGenMode(RP_CH_2, RP_GEN_MODE_BURST));
-            return generate_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
         case 3:
             ECHECK(gen_setGenMode(RP_CH_1, RP_GEN_MODE_BURST));
             ECHECK(gen_setGenMode(RP_CH_2, RP_GEN_MODE_BURST));

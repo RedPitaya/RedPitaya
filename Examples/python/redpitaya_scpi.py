@@ -38,13 +38,32 @@ class scpi (object):
                 break
         return msg[:-2]
 
+    def rx_arb(self):
+        numOfBytes = 0
+        """ Recieve binary data from scpi server"""
+        str=''
+        while (len(str) != 1):
+            str = (self._socket.recv(1))
+        if not (str == '#'):
+            return False
+        str=''
+        while (len(str) != 1):
+            str = (self._socket.recv(1))
+        numOfNumBytes = int(str)
+        if not (numOfNumBytes > 0):
+            return False
+        str=''
+        while (len(str) != numOfNumBytes):
+            str += (self._socket.recv(1))
+        numOfBytes = int(str)
+        str=''
+        while (len(str) != numOfBytes):
+            str += (self._socket.recv(1))
+        return str
+
     def tx_txt(self, msg):
         """Send text string ending and append delimiter."""
         return self._socket.send(msg + self.delimiter)
-
-    #RP help functions
-    def choose_state(self, led, state):
-        return 'DIG:PIN LED' + str(led) + ', ' + str(state) + self.delimiter
 
     def close(self):
         """Close IP connection."""

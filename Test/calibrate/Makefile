@@ -17,21 +17,17 @@
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
-# List of compiled object files (not yet linked to executable)
-OBJS = test.o
-
 CALIB_C = calibrateApp.c
 CALIB2_C = calibrateApp2.c
 CALIBTUNE_C = calibTune.c
 
 # Executable name
-TARGET=testApp
 CALIBRATE=calibrateApp
 CALIBRATE2=calibrateApp2
 CALIBTUNE=calibTune
 
 # GCC compiling & linking flags
-CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api/rpbase/src
+CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Red Pitaya common SW directory
@@ -50,7 +46,6 @@ INSTALL_DIR ?= .
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
 all: $(TARGET) $(CALIBRATE2) 
-#$(CALIBRATE2) $(CALIBTUNE)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
@@ -59,11 +54,7 @@ all: $(TARGET) $(CALIBRATE2)
 %.o: %.c version.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-# Makefile target with rules how to link executable for each target from $(TARGET)
-# list.
-$(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBPATH) $(LIBS)
-
+# Makefile target with rules how to link executable for each target from list.
 $(CALIBRATE):
 	$(CC) -o $@ $(CALIB_C) $(CFLAGS) $(LIBPATH) $(LIBS)
 
@@ -79,13 +70,12 @@ version.h:
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -f $(CALIBRATE) $(CALIBRATE2) $(CALIBTUNE) $(TARGET) *.o
+	rm -f $(CALIBRATE) $(CALIBRATE2) $(CALIBTUNE) *.o
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/bin
-	cp $(TARGET)     $(INSTALL_DIR)/bin
 	cp $(CALIBRATE)  $(INSTALL_DIR)/bin
 	cp $(CALIBRATE2) $(INSTALL_DIR)/bin
 	cp $(CALIBTUNE) $(INSTALL_DIR)/bin
