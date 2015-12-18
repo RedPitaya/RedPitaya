@@ -2,13 +2,13 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES=new_main.cpp
+CXXSOURCES=main.cpp
 
 RP_API=../../../api/lib
 RP_SDK=../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
 
 INCLUDE = -I$(RP_SDK) -I$(RP_SDK)/../../../../tools/libjson
-INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/rpbase/src/
+INCLUDE+= -I../../../api/rpApplications/src/ -I../../../api/include
 INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 JPEG_DIR=./external/jpeg-6b

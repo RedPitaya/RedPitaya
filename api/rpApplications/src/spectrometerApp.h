@@ -15,7 +15,7 @@
 #ifndef __SPECTROMETERAPP_H
 #define __SPECTROMETERAPP_H
 
-#include "../../rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 #include "rpApp.h"
 
 /* Parameters description structure - must be the same for all RP controllers */

@@ -496,7 +496,7 @@ void synthesize_fra_sig(int ampl,  int kstart, int kstep, int II,
 
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * 1);
-    awg->wrap = round(65536 * (NN-1));
+    awg->wrap = round(65536 * NN-1);
 
     // Fill data[] with appropriate buffer samples
     for (jx = 0; jx < II; jx++) {

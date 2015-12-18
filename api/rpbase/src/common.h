@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "rp.h"
+#include "redpitaya/rp.h"
 
 #define ECHECK(x) { \
         int retval = (x); \
@@ -31,14 +31,18 @@
 
 #define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
 if ((CHANNEL) == RP_CH_1) { \
-	CHANNEL_1_ACTION; \
+    CHANNEL_1_ACTION; \
 } \
 else if ((CHANNEL) == RP_CH_2) { \
-	CHANNEL_2_ACTION; \
+    CHANNEL_2_ACTION; \
 } \
 else { \
-	return RP_EPN; \
+    return RP_EPN; \
 }
+
+// unmasked IO read/write (p - pointer, v - value)
+#define ioread32(p) (*(volatile uint32_t *)(p))
+#define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
 
 #define SET_BITS(x,b) ((x) |= (b))
 #define UNSET_BITS(x,b) ((x) &= ~(b))

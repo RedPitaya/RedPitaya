@@ -3,8 +3,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "rp.h"
-#include "common.h"
+#include "redpitaya/rp.h"
 
 
 int mygetch ( void )
@@ -24,10 +23,9 @@ int mygetch ( void )
 
 
 int main(int argc, char **argv) {
-	printf("Library version: %s\n", rp_GetVersion());
+    printf("Library version: %s\n", rp_GetVersion());
 
-    ECHECK(rp_Init());
-
+    rp_Init();
 
     puts("---Calibration application---\n");
 
@@ -35,44 +33,44 @@ int main(int argc, char **argv) {
 
     puts("Connect CH1 to ground. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_1, NULL));
+    rp_CalibrateFrontEndOffset(RP_CH_1, NULL);
 
     puts("Connect CH1 to 5V and set jumpers to HV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_1, 5.0, NULL));
+    rp_CalibrateFrontEndScaleHV(RP_CH_1, 5.0, NULL);
 
     puts("Connect CH1 to 1V and set jumpers to LV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_1, 1.0, NULL));
+    rp_CalibrateFrontEndScaleLV(RP_CH_1, 1.0, NULL);
 
 
 
     puts("Connect CH2 to ground. Press any key to continue.\n");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndOffset(RP_CH_2, NULL));
+    rp_CalibrateFrontEndOffset(RP_CH_2, NULL);
 
     puts("Connect CH2 to 5V and set jumpers to HV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleHV(RP_CH_2, 5.0, NULL));
+    rp_CalibrateFrontEndScaleHV(RP_CH_2, 5.0, NULL);
 
     puts("Connect CH2 to 1V and set jumpers to LV. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateFrontEndScaleLV(RP_CH_2, 1.0, NULL));
+    rp_CalibrateFrontEndScaleLV(RP_CH_2, 1.0, NULL);
 
 
 
     puts("Connect CH1 Outout to CH1 Input. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateBackEndOffset(RP_CH_1));
-    ECHECK(rp_CalibrateBackEndScale(RP_CH_1));
+    rp_CalibrateBackEndOffset(RP_CH_1);
+    rp_CalibrateBackEndScale(RP_CH_1);
 
     puts("Connect CH2 Outout to CH2 Input. Press any key to continue.");
     mygetch();
-    ECHECK(rp_CalibrateBackEndOffset(RP_CH_2));
-    ECHECK(rp_CalibrateBackEndScale(RP_CH_2));
+    rp_CalibrateBackEndOffset(RP_CH_2);
+    rp_CalibrateBackEndScale(RP_CH_2);
 
 
-    ECHECK(rp_Release());
+    rp_Release();
     return 0;
 }
 

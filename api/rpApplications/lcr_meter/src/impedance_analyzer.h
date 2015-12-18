@@ -16,7 +16,7 @@
 #define __IMPEDANCEANALYZER_H
 
 #include <complex.h>
-#include "../../../rpbase/src/rp.h"
+#include "redpitaya/rp.h"
 
 #define REPEAT do
 #define UNTIL(exp) while(!(exp))
