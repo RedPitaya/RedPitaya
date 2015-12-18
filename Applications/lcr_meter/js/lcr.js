@@ -48,8 +48,10 @@
   		prim_val: 0,
   		sec: 'LCR_P',
   		sec_val: 0,
-  		p_units: "Ω",
-  		s_units: "deg"
+  		p_base_u: "Ω",
+  		s_base_u: "deg",
+  		p_units: "",
+  		s_units: ""
   	};
 
   	LCR.secondary_meas = {
@@ -69,6 +71,8 @@
   		max_store: 1000,
   		curr_store: 1
   	}
+
+  	LCR.selected_meas = 1;
 
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
@@ -148,57 +152,67 @@
 			LCR.params.orig[param_name] = new_params[param_name];
 
 			if(param_name == 'LCR_RUN'){
-				if(new_params['LCR_RUN'].value == false){
-					$('#lb_prim_displ').empty().append(LCR.displ_params.prim_val * 100 / 100);
+				if(new_params['LCR_RUN'].value == false && new_params['LCR_TOLERANCE'].value == 0){
+					$('#lb_prim_displ').empty().append(LCR.displ_params.prim_val);
 					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
 
-					$('#lb_sec_displ').empty().append(LCR.displ_params.sec_val * 100 / 100);
+					$('#lb_sec_displ').empty().append(LCR.displ_params.sec_val);
 					$('#lb_sec_displ_units').empty().append(LCR.displ_params.s_units);
 				}
 			}
 
-			if(param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
-				var val = Math.round(new_params[param_name].value * 100) / 100;
-				if(val > 100000000){
-					$('#lb_prim_displ').css('font-size', '70%');
-					$('#lb_prim_displ').empty().append("OVER-RANGE!");	
+			//Change primary display value
+			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
+				
+				formatRange(1, new_params[param_name].value);
+				var units = LCR.displ_params.p_units;
+				var data = LCR.displ_params.prim_val;
+
+				if(data == "OVER RANGE"){
+					$('#lb_prim_displ').css('font-size', '100%');
 				}else{
 					$('#lb_prim_displ').css('font-size', '100%');
-					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);	
+					$('#lb_prim_displ').empty().append(data);	
 				}
 
-				$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
+				$('#lb_prim_displ_units').empty().append(units);
 			}
 
-			if(param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
-				$('#lb_sec_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
-				$('#lb_sec_displ_units').empty().append(LCR.displ_params.s_units);
-				//function check for suffix/units
+			//Change secondary display value
+			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
+
+				formatRange(2, new_params[param_name].value);
+				var units = LCR.displ_params.s_units;
+				var data = LCR.displ_params.sec_val;
+
+				$('#lb_sec_displ').empty().append(data);
+				$('#lb_sec_displ_units').empty().append(units);
+
 			}
 
-			if(param_name == 'LCR_Z' && LCR.secondary_meas.apply_tolerance == true 
-				&& old_params['LCR_RUN'].value == true){
+			if(param_name == LCR.displ_params.prim && LCR.secondary_meas.apply_tolerance == true 
+				&& new_params['LCR_RUN'].value == true){
 
-				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params['LCR_Z'].value)) / 
-					((new_params['LCR_TOL_SAVED'].value + new_params['LCR_Z'].value) / 2) * 100);
-				
-				console.log(diff);
-				console.log(new_params['LCR_TOL_SAVED'].value);
+				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params[param_name].value)) / ((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
 
 				if( Math.abs(diff) > 1 && Math.abs(diff) < 100){
 					$('#lb_sec_displ').empty().append(Math.round(diff) + "%");
-					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_Z'].value * 100) / 100);
-					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
+					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
+					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_base_u);
 				}else if(Math.abs(diff) > 100){
-					$('#lb_sec_displ').empty().append("100% >");
-					$('#lb_prim_displ').empty().append("100% >");
+					$('#lb_sec_displ').empty().append("100%>");
+					$('#lb_prim_displ').empty().append("100%>");
 					$('#lb_prim_displ_units').empty();
 					$('#lb_sec_displ_units').empty();
 				}else{
 					$('#lb_sec_displ').empty().append("100%");
 					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_TOL_SAVED'].value * 100) / 100);
-					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
+					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_base_u);
 				}
+				console.log("selected_meas: "  + LCR.selected_meas);
+				console.log("Saved val: " + new_params['LCR_TOL_SAVED'].value);
+				console.log("CUrrent meas value: " + new_params[param_name].value);
+				//console.log(diff);
 			}
 
 			if(param_name  == 'LCR_Z_MIN' && LCR.displ_params.prim == 'LCR_Z'){
@@ -306,7 +320,6 @@ $(function() {
 		$('#LCR_HOLD').hide();
 		$('#LCR_START').css('display', 'block');
 		LCR.params.local['LCR_RUN'] = { value: false };
-		console.log($('#lb_prim_displ').text());
 		LCR.displ_params.prim_val = $('#lb_prim_displ').text();
 		LCR.displ_params.sec_val = $('#lb_sec_displ').text();
 		LCR.sendParams();
@@ -372,7 +385,7 @@ $(function() {
 				
 		//Changes units if manual mode isn't selected
 		if(LCR.params.orig['LCR_RANGE'].value == 0){
-			LCR.displ_params.p_units = this.value;
+			LCR.displ_params.p_base_u = this.value;
 		}
 
 		var i;
@@ -394,12 +407,36 @@ $(function() {
 		}
 
 		$('#meas_p_d').empty().append($(this).next('label').text());
+
+		if(this.id == 'LCR_Z'){
+			LCR.selected_meas = 1;
+		}else if(this.id == 'LCR_L'){
+			LCR.selected_meas = 2;
+		}else if(this.id == 'LCR_C'){
+			LCR.selected_meas = 3;
+		}else if(this.id == 'LCR_R'){
+			LCR.selected_meas = 4;
+		}
+		console.log("Selected meas: " + LCR.selected_meas);
+
+		if(LCR.params.orig['LCR_TOLERANCE'].value != 0){
+			LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
+		}
+
+		if(LCR.params.orig['LCR_RELATIVE'].value != 0){
+			LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
+		}
+
+		console.log(LCR.params.orig['LCR_RELATIVE'].value);
+		console.log(LCR.params.orig['LCR_TOLERANCE'].value);
+
 		LCR.data_log.prim_display = this.id;
+		LCR.sendParams();
 	});
 
 	$('#sec_displ_choice :checkbox').click(function(){
 		LCR.displ_params.sec = this.id;
-		LCR.displ_params.s_units = this.value;
+		LCR.displ_params.s_base_u = this.value;
 
 		LCR.data_log.sec_display = this.id;
 
@@ -423,7 +460,7 @@ $(function() {
 			$('#cb_rel').prop("checked", false);
 
 			LCR.secondary_meas.apply_tolerance = true;
-			LCR.params.local['LCR_TOLERANCE'] = { value: true };
+			LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
 			$('#lb_prim_displ').empty().append("100%");
 
 			$('#lb_prim_displ_units').empty();
@@ -432,7 +469,7 @@ $(function() {
 			$('#rec_lb').css('display', 'block');
 		}else{
 			LCR.secondary_meas.apply_tolerance = false;
-			LCR.params.local['LCR_TOLERANCE'] = { value: false };
+			LCR.params.local['LCR_TOLERANCE'] = { value: 0 };
 			$('#rec_image').css('display', 'none');
 			$('#rec_lb').css('display', 'none');
 			$('#cb_tol').prop("checked", false);
@@ -448,10 +485,10 @@ $(function() {
 
 		if(!LCR.secondary_meas.apply_relative){
 			LCR.secondary_meas.apply_relative = true;
-			LCR.params.local['LCR_RELATIVE'] = { value: true };
+			LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
 		}else{
 			LCR.secondary_meas.apply_relative = false;
-			LCR.params.local['LCR_RELATIVE'] = { value: false };
+			LCR.params.local['LCR_RELATIVE'] = { value: 0 };
 			$('#cb_rel').prop("checked", false);
 		}
 		LCR.sendParams();
@@ -468,20 +505,9 @@ $(function() {
 	});
 
 	$('#cb_manual').click(function(){
-		
-		var selected_meas;
-		if($('#LCR_Z').is(":checked")){
-			selected_meas = 1;
-		}else if($('#LCR_L').is(":checked")){
-			selected_meas = 2;
-		}else if($('#LCR_C').is(":checked")){
-			selected_meas = 3;
-		}else if($('#LCR_R').is(":checked")){
-			selected_meas = 4;
-		}
 
 		LCR.params.local['LCR_RANGE'] = {
-			value: selected_meas
+			value: LCR.selected_meas
 		}
 
 		LCR.params.local['LCR_RANGE_F'] = {
@@ -492,7 +518,7 @@ $(function() {
 			value: $('#sel_range_u :selected').val()
 		}
 
-		LCR.displ_params.p_units = $('#sel_range_u :selected').text();
+		LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
 		$('#lb_prim_displ_units').empty().append($('#sel_range_u option:selected').text());
 		$('#meas_mode_d').empty().append('Manual');
 		LCR.sendParams();
@@ -506,7 +532,7 @@ $(function() {
 
 	$('#sel_range_u').change(function(){
 		if(LCR.params.orig['LCR_RANGE'].value != 0){
-			LCR.displ_params.p_units = $('#sel_range_u :selected').text();
+			LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
 			LCR.params.local['LCR_RANGE_U'] = { value: this.value };
 			LCR.sendParams();
 		}
@@ -522,10 +548,135 @@ $(function() {
     	e.preventDefault();
 	});
 
-	function formatPrint(number){
-
-		return number;
-	}
-
 	LCR.startApp();
 });
+
+//TODO: This solution is ugly as fuck. Make it better!
+function formatRange(display, meas_data){
+
+
+		var data = 0;
+		var sub_idx = 1;
+		var units = "";
+		var base = "";
+
+		var inverse;
+		(meas_data < 0) ? (inverse = -1) : (inverse = 1);
+		
+		if(display == 1 && meas_data != 0){
+			base = LCR.displ_params.p_base_u;
+		}else if(display == 2 && meas_data != 0){
+			base = LCR.displ_params.s_base_u;
+		}
+
+		if(meas_data < 0.00000000000010){
+			data = "ERROR";
+		}else if(meas_data > 0.00000000000010 && meas_data <= 0.00000000999990){
+			
+			data = (meas_data * Math.pow(10, 9)).toFixed(4);
+			units = "n" + base;
+
+		}else if(meas_data > 0.00000000999990 && meas_data <= 0.00000009999900){
+	
+			data = (meas_data * Math.pow(10, 9)).toFixed(3);
+			units = "n" + base;
+	
+		}else if(meas_data > 0.00000009999900 && meas_data <= 0.00000099999000){
+	
+			data = (meas_data * Math.pow(10, 9)).toFixed(2);
+			units = "n" + base;
+	
+		}else if(meas_data > 0.000000999990 && meas_data <= 0.00000999990){
+			
+			data = (meas_data * Math.pow(10, 6)).toFixed(4);
+			units = "u" + base;
+		
+		}else if(meas_data > 0.000009999900 && meas_data <= 0.00009999900){
+		
+			data = (meas_data * Math.pow(10, 6)).toFixed(3);
+			units = "u" + base;
+		
+		}else if(meas_data > 0.000099999000 && meas_data <= 0.00099999000){
+
+			data = (meas_data * Math.pow(10, 6)).toFixed(2);
+			units = "u" + base;
+
+		}else if(meas_data > 0.000999990 && meas_data <= 0.00999990){
+
+			data = (meas_data * Math.pow(10, 3)).toFixed(4);
+			units = "m" + base;
+
+		}else if(meas_data > 0.009999900 && meas_data <= 0.09999900){
+			
+			data = (meas_data * Math.pow(10, 3)).toFixed(3);
+			units = "m" + base;
+		}else if(meas_data > 0.099999000 && meas_data <= 0.99999000){
+			
+			data = (meas_data * Math.pow(10, 3)).toFixed(2);
+			units = "m" + base;
+
+		}else if(meas_data > 0.999990 && meas_data <= 9.99990){
+
+			data = meas_data.toFixed(4);
+			units = base;
+
+		}else if(meas_data > 9.99990 && meas_data <= 99.9990){
+
+			data = meas_data.toFixed(3);
+			units = base;
+
+		}else if(meas_data > 99.9990 && meas_data <= 999.990){
+
+			data = meas_data.toFixed(2);
+			units = base;
+
+		}else if(meas_data > 999.990 && meas_data <= 9999.90){
+
+			data = meas_data.toFixed(1);
+			units = base;
+			
+		}else if(meas_data <= 99999.0 && meas_data > 9999.90){
+
+			data = (meas_data / Math.pow(10, 3)).toFixed(3);
+			units = "K" + base;
+
+		}else if(meas_data <=  999990.0 && meas_data > 99999.0){
+			
+			data = (meas_data / Math.pow(10, 3)).toFixed(2);
+			units = "K" + base;			
+		
+		}else if(meas_data <= 9999900.0 && 999990.0){
+			
+			data = (meas_data / Math.pow(10, 6)).toFixed(1);
+			units = "M" + base;
+		
+		}else if(meas_data > 9999900.0){
+
+			data = "OVER RANGE";
+			units = "";
+		}
+
+		switch(display){
+			case 1:
+				if(data == "ERROR" || data == "OVER RANGE"){
+					LCR.displ_params.prim_val = data;
+					LCR.displ_params.p_units = "";
+					return "";
+				}
+				LCR.displ_params.prim_val = inverse * data;
+				LCR.displ_params.p_units = units;
+				break;
+			case 2:
+				if(data == "ERROR" || data == "OVER RANGE"){
+					LCR.displ_params.sec_val = data;
+					LCR.displ_params.s_units = "";
+					return "";
+				}
+
+				LCR.displ_params.sec_val = inverse * data;
+				LCR.displ_params.s_units = units;
+				break;
+		}
+
+		return 0;
+	}

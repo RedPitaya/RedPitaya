@@ -10,8 +10,7 @@
 /***************************************************************************************
 *                                     LCR METER                                        *
 ****************************************************************************************/
-
-//TODO make a more detailed parameters specification. More parameters soon to be added.
+//TODO make a more detailed parameters specification.
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 100);
 
 //Out params
@@ -44,15 +43,17 @@ CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
-CBooleanParameter toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, false, 0);
-CBooleanParameter relativeMode("LCR_RELATIVE", CBaseParameter::RW, false, 0);
-CFloatParameter relSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
+CIntParameter   toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, 0, 0, 0, 4);
+CIntParameter   relativeMode("LCR_RELATIVE", CBaseParameter::RW, 0, 0, 0, 4);
+CFloatParameter relSavedZ("LCR_REL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CFloatParameter tolSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, false, 0);
 
 CIntParameter   rangeMode("LCR_RANGE", CBaseParameter::RW, 0, 0, 0, 4);
 CIntParameter   rangeFormat("LCR_RANGE_F", CBaseParameter::RW, 0, 0, 0, 3);
 CIntParameter   rangeUnits("LCR_RANGE_U", CBaseParameter::RW, 0, 0, 0, 6);
+
+
 
 
 const char *rp_app_desc(void){
@@ -113,12 +114,6 @@ void UpdateParams(void){
 
 		//Acquire calculated parameters frm RP
 		lcrApp_LcrCopyParams(data);
-
-		if(toleranceMode.Value() == true){
-			tolSavedZ.Value() = data->lcr_amplitude;
-			toleranceMode.Value() = false;
-			toleranceMode.Update();
-		}
 		
 		lcr_amplitude.Value()       = data->lcr_amplitude;	
 		lcr_phase.Value()     		= data->lcr_phase;
@@ -127,6 +122,7 @@ void UpdateParams(void){
 		lcr_Resitance.Value()		= data->lcr_R;
 		lcr_D.Value()				= data->lcr_D;
 		lcr_Q.Value()				= data->lcr_Q;
+		syslog(LOG_INFO, "%f\n", lcr_Q.Value());
 		lcr_ESR.Value()				= data->lcr_ESR;
 
 		if(lcr_AmpMin.Value() > lcr_amplitude.Value() && !(lcr_amplitude.Value() < -1e6)){
@@ -189,10 +185,26 @@ void UpdateParams(void){
 
 		lcr_ResAvg.Update();
 
-		//Set measured amplitude to relative, but keep measurment data.
-		if(relativeMode.Value() == true){
-			lcr_amplitude.Value() = 
-				relSavedZ.Value() - lcr_amplitude.Value();
+		//Relative mode
+		switch(relativeMode.Value()){
+			case 0:
+				break;
+			case 1:
+				lcr_amplitude.Value() = 
+					relSavedZ.Value() - data->lcr_amplitude;
+				break;
+			case 2:
+				lcr_Inductance.Value() = 
+					relSavedZ.Value() - data->lcr_L;
+				break;
+			case 3:
+				lcr_Capacitance.Value() = 
+					relSavedZ.Value() - data->lcr_C;
+				break;
+			case 4:
+				lcr_Resitance.Value() = 
+					relSavedZ.Value() - data->lcr_R;
+				break;
 		}
 
 	}else if(startMeasure.NewValue() == false){
@@ -217,21 +229,51 @@ void UpdateParams(void){
 	}
 
 	if(IS_NEW(toleranceMode)){
+
 		lcrApp_LcrSetMeasTolerance(toleranceMode.NewValue());
-		//lcrApp_LcrRun();
+		switch(toleranceMode.NewValue()){
+			case 0:
+				break;
+			case 1:
+				tolSavedZ.Value() = lcr_amplitude.Value();
+				break;
+			case 2:
+				tolSavedZ.Value() = lcr_Inductance.Value();
+				break;
+			case 3:
+				tolSavedZ.Value() = lcr_Capacitance.Value();
+				break;
+			case 4:
+				tolSavedZ.Value() = lcr_Resitance.Value();
+				break;
+		}
 
-		//Acquire calculated parameters frm RP
-		//lcrApp_LcrCopyParams(data);
-
-		tolSavedZ.Value() = lcr_amplitude.Value();
 		tolSavedZ.Update();
 		toleranceMode.Update();
 	}
 
 	if(IS_NEW(relativeMode)){
-		relSavedZ.Value() = lcr_amplitude.Value();
-		relativeMode.Update();
+		
+		//lcrApp_LcrSetMeasRelative(relativeMode.NewValue());
+		switch(relativeMode.NewValue()){
+			case 0:
+				break;
+			case 1:
+				relSavedZ.Value() = lcr_amplitude.Value();
+				break;
+			case 2:
+				relSavedZ.Value() = lcr_Inductance.Value();
+				break;
+			case 3:
+				relSavedZ.Value() = lcr_Capacitance.Value();
+				break;
+			case 4:
+				relSavedZ.Value() = lcr_Resitance.Value();
+				break;
+		}
+
 		relSavedZ.Update();
+		relativeMode.Update();
 	}
 
 	if(IS_NEW(seriesMode)){
@@ -239,21 +281,19 @@ void UpdateParams(void){
 		seriesMode.Update();
 	}
 
-	if(IS_NEW(rangeMode)){
-		lcrApp_LcrSetMeasRangeMode(rangeMode.NewValue());
-		rangeMode.Update();
-	}
-
 	if(IS_NEW(rangeFormat)){
-		syslog(LOG_INFO, "Changed format.\n");
 		lcrApp_LcrSetMeasRangeFormat(rangeFormat.NewValue());
 		rangeFormat.Update();
 	}
 
 	if(IS_NEW(rangeUnits)){
-		syslog(LOG_INFO, "Changed units.\n");
 		lcrApp_LcrSetMeasRangeUnits(rangeUnits.NewValue());
 		rangeUnits.Update();
+	}
+
+	if(IS_NEW(rangeMode)){
+		lcrApp_LcrSetMeasRangeMode(rangeMode.NewValue());
+		rangeMode.Update();
 	}
 
 	free(data);
