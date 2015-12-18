@@ -67,11 +67,11 @@ int lcrApp_LcrGetMeasSeries(bool *series){
 	return lcr_GetMeasSeries(series);
 }
 
-int lcrApp_LcrSetMeasTolerance(bool tolerance){
+int lcrApp_LcrSetMeasTolerance(int tolerance){
 	return lcr_SetMeasTolerance(tolerance);
 }
 
-int lcrApp_LcrGetMeasTolerance(bool *tolerance){
+int lcrApp_LcrGetMeasTolerance(int *tolerance){
 	return lcr_GetMeasTolerance(tolerance);
 }
 

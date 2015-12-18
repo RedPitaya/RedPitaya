@@ -115,7 +115,7 @@ int lcr_SetDefaultValues(){
 	ECHECK_APP(lcr_setRShunt(2));
 	ECHECK_APP(lcr_SetFrequency(1000.0));
 	ECHECK_APP(lcr_SetCalibMode(CALIB_NONE));
-	ECHECK_APP(lcr_SetMeasTolerance(false));
+	ECHECK_APP(lcr_SetMeasTolerance(0));
 	ECHECK_APP(lcr_SetMeasRangeMode(0));
 	ECHECK_APP(lcr_SetRangeFormat(0));
 	ECHECK_APP(lcr_SetRangeUnits(0));
@@ -245,8 +245,6 @@ void *lcr_MainThread(void *args){
 			&args_struct->z_out, &args_struct->phase_out);
 
 		z_abs = cabs(args_struct->z_out);
-
-		syslog(LOG_INFO, "%d %d\n", main_params.range_format, main_params.range_units);
 		
 		switch(main_params.range){
 			//Z
@@ -288,7 +286,6 @@ void *lcr_MainThread(void *args){
 			set_IIC_Shunt(main_params.r_shunt);
 			overflow_limitation = 0;
 		}
-
 	}
 
 	//Exit thread
@@ -330,6 +327,12 @@ int lcr_Correction(){
 		malloc(CALIB_STEPS * sizeof(float _Complex));
 
 	calib_t calib_mode = main_params.calibration;
+	
+	char command[100];
+	//Set system to read-write
+	strcpy(command, "rw");
+	system(command);
+
 	for(int i = 0; i < CALIB_STEPS; i++){
 		
 		args.frequency = start_freq * powf(10, i);
@@ -345,7 +348,12 @@ int lcr_Correction(){
 	
 	//Store calibration
 	store_calib(calib_mode, amplitude_z);
+	
 	free(amplitude_z);
+
+	//Set system to read-only.`
+	strcpy(command, "ro");
+	system(command);
 
 	return RP_OK;
 }
@@ -461,6 +469,7 @@ int lcr_CopyParams(lcr_main_data_t *params){
 	params->lcr_L         	 = calc_data->lcr_L;
 	params->lcr_C         	 = calc_data->lcr_C;
 	params->lcr_R         	 = calc_data->lcr_R;
+	syslog(LOG_INFO, "%f\n", calc_data->lcr_C);
 	return RP_OK;
 }
 
@@ -579,12 +588,12 @@ int lcr_GetMeasSeries(bool *series){
 	return RP_OK;
 }
 
-int lcr_SetMeasTolerance(bool tolerance){
+int lcr_SetMeasTolerance(int tolerance){
 	main_params.tolerance = tolerance;
 	return RP_OK;
 }
 
-int lcr_GetMeasTolerance(bool *tolerance){
+int lcr_GetMeasTolerance(int *tolerance){
 	*tolerance = main_params.tolerance;
 	return RP_OK;
 }
