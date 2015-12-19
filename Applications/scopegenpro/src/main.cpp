@@ -4,6 +4,8 @@
 #include <math.h>
 #include <stdio.h>
 #include "version.h"
+#include <sys/types.h>
+#include <sys/sysinfo.h>
 
 enum {
 	STEP_FRONT_END_OFFSET_LV = 1,
@@ -148,6 +150,16 @@ CIntParameter out2TriggerSource("SOUR2_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TR
 CFloatParameter out1ShowOffset("OUTPUT1_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
 
+
+/***************************************************************************************
+*                                   SYSTEM STATUS                                      *
+****************************************************************************************/
+long double cpu_values[4] = {0, 0, 0, 0}; /* reading only user, nice, system, idle */
+CFloatParameter cpuLoad("CPU_LOAD", CBaseParameter::RW, 0, 0, 0, 100);
+
+CFloatParameter memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+CFloatParameter memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+
 /***************************************************************************************
 *                                      CALIBATE                                        *
 ****************************************************************************************/
@@ -243,6 +255,36 @@ void UpdateParams(void) {
     bool running;
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
+
+    static int times = 0;
+
+	if (times == 3)
+	{
+	    FILE *fp = fopen("/proc/stat","r");
+	    if(fp)
+	    {
+	    	long double a[4];
+	    	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
+	    	fclose(fp);
+
+	    	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
+	    	long double loadavg = 100;
+	    	if(divider > 0.01)
+			{
+				loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
+			}
+			cpuLoad.Value() = (float)(loadavg * 100);
+			cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
+	    }
+	    times = 0;
+
+		struct sysinfo memInfo;
+	    sysinfo (&memInfo);
+    	long long totalVirtualMem = memInfo.totalram;
+    	memoryTotal.Value() = (float)memInfo.totalram;
+    	memoryFree.Value() = (float)memInfo.freeram;
+	}
+	times++;
 
 #ifdef DIGITAL_LOOP
 	rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());

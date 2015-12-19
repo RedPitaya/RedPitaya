@@ -17,7 +17,7 @@ SOURCES= rp_websocket_server.cpp \
 	$(LIBJSON_DIR)/_internal/Source/JSONStream.cpp \
 	$(LIBJSON_DIR)/_internal/Source/JSONAllocator.cpp \
     	$(LIBJSON_DIR)/_internal/Source/JSONPreparse.cpp \
-	
+
 OBJECTS=$(SOURCES:.cpp=.o)
 LIB=libws_server.a
 
@@ -25,16 +25,16 @@ RP_MANAGER_DIR=./rp_sdk
 RP_MANAGER_LIB=$(RP_MANAGER_DIR)/librp_sdk.a
 
 all: $(RP_MANAGER_LIB) $(SOURCES) $(LIB)
-    
-$(LIB): $(OBJECTS) 
+
+$(LIB): $(OBJECTS)
 	ar rc $(LIB) $(OBJECTS)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(RP_MANAGER_LIB): 
+$(RP_MANAGER_LIB):
 	cd $(RP_MANAGER_DIR); $(MAKE)
 
-clean: 
+clean:
 	rm -rf $(LIB) $(OBJECTS)
 	$(MAKE) -C $(RP_MANAGER_DIR) clean
