@@ -25,7 +25,8 @@
 
 
 			var current_app = "";
-		    var url = '/';
+			var url_arr = window.location.href.split("/");;
+		    var url = url_arr[0] + '//' + url_arr[2] + '/';
 			$(function() {
 				$.ajax({
 					url: url + 'bazaar?apps=',
@@ -100,7 +101,7 @@
 							}
 							else if (result[key].type == "run")
 							{
-								$("#run").attr('href', url + key + '?type=run');
+								$("#run").attr('href', url + key + '/?type=run');
 								$('#run').html('Run');
 								$("#run").css('visibility', 'visible');
 								$("#demo").css('visibility', 'visible');
@@ -113,7 +114,7 @@
 								$("#demo").css('visibility', 'hidden');
 							}
 
-							$("#demo").attr('href', url + key + '?type=demo');
+							$("#demo").attr('href', url + key + '/?type=demo');
 
 							$(desc).show();
 						}

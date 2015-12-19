@@ -60,6 +60,12 @@
     1, 2, 5
   ];
 
+  OSC.bad_connection = [ false, false, false, false ]; // time in s.
+
+  OSC.compressed_data = 0;
+  OSC.decompressed_data = 0;
+  OSC.refresh_times = [];
+
   // Sampling rates
   OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
 
@@ -112,14 +118,71 @@
     });
   };
 
+	Date.prototype.format = function (mask, utc) {
+		return dateFormat(this, mask, utc);
+	};
+
+  var g_count = 0;
+  var g_time = 0;
+  var g_iter = 10;
+  var g_delay = 200;
+  var g_counter = 0;
+  var g_CpuLoad = 100.0;
+  var g_TotalMemory = 256.0;
+  var g_FreeMemory = 256.0;
+
+  setInterval(function(){
+	var now = new Date();
+	var now_str = now.getHours() +":"+ now.getMinutes() +":"+ now.getSeconds()+":"+now.getMilliseconds();
+	var times = "";
+	for(var i=0; i<OSC.refresh_times.length; i++)
+		times += OSC.refresh_times[i] + " ";
+
+	console.log(now_str + " | compressed="+OSC.compressed_data + "; decompressed: "+OSC.decompressed_data + " | Updates: " + OSC.refresh_times.length + "; Delays: "+times);
+	$('#fps_view').text(OSC.refresh_times.length);
+	$('#throughput_view').text((OSC.compressed_data/1024).toFixed(2) + "kB/s");
+	$('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
+	$('#totalmem_view').text((g_TotalMemory / (1024*1024)).toFixed(2) + "Mb");
+	$('#freemem_view').text((g_FreeMemory / (1024*1024)).toFixed(2) + "Mb");
+	$('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024*1024)).toFixed(2) + "Mb");
+
+
+	if (OSC.refresh_times.length < 3)
+		OSC.bad_connection[g_counter] = true;
+	else
+		OSC.bad_connection[g_counter] = false;
+
+	g_counter++;
+	if(g_counter == 4) g_counter = 0;
+
+
+	if($('#weak_conn_msg').is(':visible'))
+	{
+		if(!OSC.bad_connection[0] && !OSC.bad_connection[1] && !OSC.bad_connection[2] && !OSC.bad_connection[3])
+			$('#weak_conn_msg').hide();
+	}
+	else
+	{
+		if(OSC.bad_connection[0] && OSC.bad_connection[1] && OSC.bad_connection[2] && OSC.bad_connection[3])
+			$('#weak_conn_msg').show();
+	}
+
+
+	OSC.compressed_data = 0;
+	OSC.decompressed_data = 0;
+	OSC.refresh_times = [];
+  }, 1000);
+
   // Creates a WebSocket connection with the web server
   OSC.connectWebSocket = function() {
 
     if(window.WebSocket) {
       OSC.ws = new WebSocket(OSC.config.socket_url);
+      OSC.ws.binaryType = "arraybuffer";
     }
     else if(window.MozWebSocket) {
       OSC.ws = new MozWebSocket(OSC.config.socket_url);
+      OSC.ws.binaryType = "arraybuffer";
     }
     else {
       console.log('Browser does not support WebSocket');
@@ -147,29 +210,74 @@
         console.log('Websocket error: ', ev);
       };
 
+      var last_time = undefined;
       OSC.ws.onmessage = function(ev) {
+		var start_time = +new Date();
         if(OSC.state.processing) {
           return;
         }
         OSC.state.processing = true;
 
-        var receive = JSON.parse(ev.data);
+		try {
+			var data = new Uint8Array(ev.data);
+			OSC.compressed_data += data.length;
+			var inflate = new Zlib.Gunzip(data);
+			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
 
-        if(receive.parameters) {
-          if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-            OSC.params.local['in_command'] = { value: 'send_all_params' };
-            OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
-            OSC.params.local = {};
-          } else {
-            OSC.processParameters(receive.parameters);
-          }
-        }
+			OSC.decompressed_data += text.length;
 
-        if(receive.signals) {
-          OSC.processSignals(receive.signals);
-        }
+			var receive = JSON.parse(text);
 
-        OSC.state.processing = false;
+			if(receive.parameters) {
+			  if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
+				OSC.params.local['in_command'] = { value: 'send_all_params' };
+				OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+				OSC.params.local = {};
+			  } else {
+			  	if('CPU_LOAD' in receive.parameters && receive.parameters['CPU_LOAD'].value != undefined)
+			  		g_CpuLoad = receive.parameters['CPU_LOAD'].value;
+
+			  	if('TOTAL_RAM' in receive.parameters && receive.parameters['TOTAL_RAM'].value != undefined)
+			  		g_TotalMemory = receive.parameters['TOTAL_RAM'].value;
+
+			  	if('FREE_RAM' in receive.parameters && receive.parameters['FREE_RAM'].value != undefined)
+			  		g_FreeMemory = receive.parameters['FREE_RAM'].value;
+
+				OSC.processParameters(receive.parameters);
+			  }
+			}
+
+			if(receive.signals) {
+				++g_count;
+				OSC.processSignals(receive.signals);
+				if(last_time == undefined)
+					last_time = new Date();
+
+				var diff = new Date() - last_time; //-start_time;
+				last_time = new Date();
+				g_time = diff;
+				OSC.refresh_times.push(diff);
+
+				if (g_count == g_iter && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
+
+					g_delay = (g_time/g_count); // TODO
+					var period = {};
+					period['DEBUG_SIGNAL_PERIOD'] = { value: g_delay*3 };
+					OSC.ws.send(JSON.stringify({ parameters: period }));
+					g_time = 0;
+					g_count = 0;
+				}
+			}
+			OSC.state.processing = false;
+
+		}
+		catch (e) {
+			OSC.state.processing = false;
+			console.log(e);
+		}
+		finally {
+			OSC.state.processing = false;
+		}
       };
     }
   };
@@ -1015,16 +1123,6 @@
     if(OSC.state.sel_sig_name && OSC.graphs[OSC.state.sel_sig_name] && !OSC.graphs[OSC.state.sel_sig_name].elem.is(':visible')) {
       $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
       //OSC.state.sel_sig_name = null;
-    }
-
-    var fps = 1000/(+new Date() - start);
-
-    if (OSC.iterCnt++ >= 20 && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
-		var new_period = 1100/fps < 25 ? 25 : 1100/fps;
-		var period = {};
-		period['DEBUG_SIGNAL_PERIOD'] = { value: new_period };
-		OSC.ws.send(JSON.stringify({ parameters: period }));
-		OSC.iterCnt = 0;
     }
   };
 
@@ -2472,8 +2570,8 @@ $(function() {
 
   // Stop the application when page is unloaded
   window.onbeforeunload = function() {
-    websocket.onclose = function () {}; // disable onclose handler first
-    websocket.close();
+    OSC.ws.onclose = function () {}; // disable onclose handler first
+    OSC.ws.close();
     $.ajax({
       url: OSC.config.stop_app_url,
       async: false
@@ -2564,7 +2662,10 @@ $(function() {
 		var local = {};
 		local['CALIB_CANCEL'] = {value: 1};
 		OSC.ws.send(JSON.stringify({ parameters: local }));
-		location.reload();
+
+		OSC.ws.onclose = function () {}; // disable onclose handler first
+		OSC.ws.close();
+		setTimeout(function(){location.reload();}, 1000);
 	});
 
 	$('#calib-2').click(function() {
@@ -2581,7 +2682,10 @@ $(function() {
 		OSC.setCalibState(OSC.state.calib);
 
 		$('#myModal').modal('hide');
-		location.reload();
+
+		OSC.ws.onclose = function () {}; // disable onclose handler first
+		OSC.ws.close();
+		setTimeout(function(){location.reload();}, 1000);
 	});
 
 	$('#calib-3').click(function() {

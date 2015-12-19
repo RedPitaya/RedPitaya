@@ -84,32 +84,32 @@ void GenerateKeyPair()
 
     RSA::PrivateKey privateKey( parameters );
     RSA::PublicKey publicKey( parameters );
-	
+
 	SaveKey(privateKey, "priv.key");
 	SaveKey(publicKey, "pub.key");
 }
 
 void GenerateKeyPair(std::string& public_key, std::string & private_key)
 {
-    std::string strprivkey, strpubkey;    
+    std::string strprivkey, strpubkey;
     AutoSeededRandomPool rng;
     InvertibleRSAFunction privkey;
-    
+
     privkey.Initialize(rng, 1024);
-    
+
     Base64Encoder privkeysink(new StringSink(strprivkey), false);
     privkey.DEREncode(privkeysink);
     privkeysink.MessageEnd();
-        
+
     RSAFunction pubkey(privkey);
-    
+
     Base64Encoder pubkeysink(new StringSink(strpubkey), false);
     pubkey.DEREncode(pubkeysink);
     pubkeysink.MessageEnd();
-    
+
     public_key = strpubkey;
-    
-    private_key = strprivkey;	
+
+    private_key = strprivkey;
 }
 
 std::string Encode(std::string _data)
@@ -122,16 +122,16 @@ std::string Encode(std::string _data)
 	LoadKey("pubkey.txt", publicKey);
 	LoadKey( "privkey.txt" , privateKey);
 	*/
-	
+
 	std::string strprivate(_gPrivateKey);
     StringSource privString(strprivate, true, new Base64Decoder);
 
-    // Signing      
+    // Signing
     RSASS<PSSR, SHA1>::Signer signer( privString );
 
     // Setup
     byte * message = (byte*)(_data.data());
-    size_t messageLen = _data.size();    
+    size_t messageLen = _data.size();
     ////////////////////////////////////////////////
     // Sign and Encode
     SecByteBlock signature(signer.MaxSignatureLength(messageLen));
@@ -144,7 +144,7 @@ std::string Encode(std::string _data)
 			new StringSink(encoded)
 		) // Base64Encoder
 	); // StringSource
-	
+
 	return encoded;
 }
 
@@ -156,13 +156,13 @@ std::string Decode(std::string _encoded_data)
 	LoadKey("pubkey.txt", publicKey);
 	*/
 	std::string strpublic(_gPublicKey);
-    
+
    StringSource pubString(strpublic, true, new Base64Decoder);
 
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
-	
+
 	string decoded = "";
-   
+
 	StringSource ss1(_encoded_data, true,
 		new Base32Decoder(
 			new StringSink(decoded)
@@ -170,7 +170,7 @@ std::string Decode(std::string _encoded_data)
 	); // StringSource
 
 	int signatureLen = decoded.size();
-	
+
     ////////////////////////////////////////////////
     // Verify and Recover
     SecByteBlock recovered(verifier.MaxRecoverableLengthFromSignatureLength(signatureLen));
