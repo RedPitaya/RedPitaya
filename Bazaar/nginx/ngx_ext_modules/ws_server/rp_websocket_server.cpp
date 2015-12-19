@@ -129,10 +129,15 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 	}
 
 	std::string js(signals);
-	for (it = m_connections.begin(); it != m_connections.end(); ++it) {
-		m_endpoint.send(*it, js, websocketpp::frame::opcode::text);
-	}
+	static char buf[1000000];
+	size_t size;
+	m_params->gzip_func(js.c_str(), buf, &size);
 
+	if (size) {
+		for (it = m_connections.begin(); it != m_connections.end(); ++it) {
+			m_endpoint.send(*it, buf, size, websocketpp::frame::opcode::binary);
+		}
+	}
 	// set timer for next check
 	set_signal_timer();
 }
@@ -156,10 +161,15 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 	}
 
 	std::string js(params);
-	for (it = m_connections.begin(); it != m_connections.end(); ++it) {
-		m_endpoint.send(*it, js, websocketpp::frame::opcode::text);
-	}
+	static char buf[1000000];
+	size_t size;
+	m_params->gzip_func(js.c_str(), buf, &size);
 
+	if (size) {
+		for (it = m_connections.begin(); it != m_connections.end(); ++it) {
+			m_endpoint.send(*it, buf, size, websocketpp::frame::opcode::binary);
+		}
+	}
 	// set timer for next check
 	set_param_timer();
 }

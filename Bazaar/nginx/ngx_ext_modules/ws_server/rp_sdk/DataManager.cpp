@@ -8,6 +8,8 @@
 #include "licverify/LicenseVerificator.h"
 #endif
 
+#include "gziping.h"
+
 CBooleanParameter IsDemoParam("is_demo", CBaseParameter::RO, false, 1);
 CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
 CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
@@ -263,7 +265,7 @@ extern "C" int ws_set_signals(const char *_signals)
 	return 0;
 }
 
-extern "C" const char * ws_get_signals(void)
+extern "C" const char* ws_get_signals(void)
 {
 	CDataManager * man = CDataManager::GetInstance();
 	static std::string res = "";
@@ -332,4 +334,12 @@ extern "C" int verify_app_license(const char* app_id)
 #else
 	return 0;
 #endif
+}
+
+extern "C" void ws_gzip(const char* _in, void* _out, size_t* _size)
+{
+	std::string out;
+	Gziping(_in, out);
+	memcpy(_out, out.data(), out.size());
+	*_size = out.size();
 }
