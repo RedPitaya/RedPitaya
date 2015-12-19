@@ -185,7 +185,7 @@ static rp_app_params_t rp_main_params[PARAMS_NUM+1] = {
     { /* Start frequency parameter:
        *    Max value: +1000000
        *    Min value: +0 */
-        "bode_end_f", 1, 1, 0, 0, 1000000},
+        "bode_end_f", 1, 1, 0, 0, 62000000},
     { /* Bode counts:
        *    Max value: +1000000
        *    Min value: +0 */

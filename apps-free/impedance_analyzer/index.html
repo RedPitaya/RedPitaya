@@ -125,20 +125,24 @@
 
 
      function funcyTickFormat(val, axis){
-   if (Math.abs(val)  <  0.000001) 
-      return (val * 1000000000).toFixed(0) + "n";
+   if (Math.abs(val) <  0.00000000000001)
+        return (val * 0).toFixed(0);
+   else if (Math.abs(val)  >=  0.00000000000001 &&  Math.abs(val) <  0.000000001)
+        return (val * 1000000000000).toFixed(2) + " p";
+   else if (Math.abs(val) >=  0.000000001 && Math.abs(val) <  0.000001) 
+      return (val * 1000000000).toFixed(2) + " n";
    else if (Math.abs(val)  >=  0.000001 && Math.abs(val)  < 0.001)
-      return (val * 1000000).toFixed(0) + "u";
+      return (val * 1000000).toFixed(2) + " u";
    else if (Math.abs(val)  >=  0.001 && Math.abs(val)  < 1)
-      return (val * 1000).toFixed(0) + "m";
+      return (val * 1000).toFixed(2) + " m";
   else if (Math.abs(val)  >= 1 && Math.abs(val)  < 1000)
-      return (val * 1).toFixed(0) + " ";
+      return (val * 1).toFixed(2);
    else if (Math.abs(val)  >=  1000  && Math.abs(val)  < 1000000)
-      return (val / 1000).toFixed(0) + "k";
+      return (val / 1000).toFixed(2) + " k";
    else if (Math.abs(val)  >=  1000000 &&  Math.abs(val)  < 1000000000)
-      return (val / 1000000).toFixed(0) + "M";
+      return (val / 1000000).toFixed(2) + " M";
    else if (Math.abs(val)  >=  1000000000)
-      return (val / 1000000000).toFixed(0) + "G";
+      return (val / 1000000000).toFixed(2) + " G";
 
   }
 
@@ -378,8 +382,7 @@
             var axes = plot.getAxes();
             var min = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
             var max = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
-            var offset = (max - min) * range_offset/100;
-            
+            var offset = (max - min) * range_offset/100;            
             if(direction == 'down') {
               min -= offset;
               max -= offset;
@@ -1375,7 +1378,7 @@
                 filterData(datasets, plot.width()),
                 $.extend(true, plot_options, {
                   yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max },
-                  xaxis: { color:'#989898',ticks: [0.001,0.002,0.004,0.008,0.01,0.1,1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
+                  xaxis: { color:'#989898',ticks: [1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
                 })
               );
       
@@ -1410,8 +1413,11 @@
         var axes = plot.getAxes();
         
         // Set Y scale to data min/max + 10%
-        options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - axes.yaxis.datamin * 0.1); 
-        options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + axes.yaxis.datamax * 0.1);
+        /*options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - axes.yaxis.datamin * 0.1); 
+        options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + axes.yaxis.datamax * 0.1);*/
+
+        options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - Math.abs(axes.yaxis.datamin) * 0.1); 
+        options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + Math.abs(axes.yaxis.datamax) * 0.1);
       
         plot.setupGrid();
         plot.draw();
@@ -2646,14 +2652,14 @@
                 <option value="2">|Y| [S]</option>
                 <option value="3">-P [deg]</option>
                 <option value="4">Rs [Ohm]</option>
-                <option value="5">Rp [H]</option>
-                <option value="6">Xs [S]</option>
-                <option value="7">Gp [F]</option>
-                <option value="8">Bp [F]</option>
-                <option value="9">Cs [H]</option>
-                <option value="10">Cp [H]</option>
-                <option value="11">Ls [Ohm]</option>
-                <option value="12">Lp</option>
+                <option value="5">Rp [Ohm]</option>
+                <option value="6">Xs [Ohm]</option>
+                <option value="7">Gp [S]</option>
+                <option value="8">Bp [S]</option>
+                <option value="9">Cs [F]</option>
+                <option value="10">Cp [F]</option>
+                <option value="11">Ls [H]</option>
+                <option value="12">Lp [H]</option>
                 <option value="13">Q</option>
                 <option value="14">D</option>
               </select>

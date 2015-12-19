@@ -1025,7 +1025,11 @@ int main(int argc, char *argv[]) {
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
 
         /// Output
-        printf(" %.1f    %.3f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",
+        /*printf(" %.1f    %.3f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",*/
+         printf(" %.1f    %.3e    %.2f    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.2f\n",  
+        
+        /*"Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";*/   
+         
             Frequency[ !sweep_function ? 0 : i ],
             AmplitudeZ[ i ],
             PhaseZ[ i ],
@@ -1044,6 +1048,7 @@ int main(int argc, char *argv[]) {
             PhaseY[ i ]
             );
 
+
  
         /** Saving files */
         if (!sweep_function) {
@@ -1053,49 +1058,51 @@ int main(int argc, char *argv[]) {
             
         }
 
-        /*fprintf(file_amplitude, "%.3f\n", AmplitudeZ[i]);        
-        fprintf(file_phase, "%.1f\n", PhaseZ[i]);
+        fprintf(file_amplitude, "%.3f\n", AmplitudeZ[i]);        
+        fprintf(file_phase, "%.2f\n", PhaseZ[i]);
         
-        fprintf(file_L_s, "%.10f\n", L_s[i]);
-        fprintf(file_C_s, "%.10f\n", C_s[i]);
-        fprintf(file_R_s, "%.10f\n", R_s[i]);
+        fprintf(file_L_s, "%.15f\n", L_s[i]);
+        fprintf(file_C_s, "%.15f\n", C_s[i]);
+        fprintf(file_R_s, "%.15f\n", R_s[i]);
 
-        fprintf(file_L_p, "%.10f\n", L_p[i]);
-        fprintf(file_C_p, "%.10f\n", C_p[i]);
-        fprintf(file_R_p, "%.10f\n", R_p[i]);
+        fprintf(file_L_p, "%.15f\n", L_p[i]);
+        fprintf(file_C_p, "%.15f\n", C_p[i]);
+        fprintf(file_R_p, "%.15f\n", R_p[i]);
 
-        fprintf(file_Q, "%.10f\n", Q[i]);
-        fprintf(file_D, "%.10f\n", D[i]);
+        fprintf(file_Q, "%.15f\n", Q[i]);
+        fprintf(file_D, "%.15f\n", D[i]);
 
-        fprintf(file_X_s, "%.10f\n", X_s[i]);
-        fprintf(file_G_p, "%.10f\n", G_p[i]);
-        fprintf(file_B_p, "%.10f\n", B_p[i]);
+        fprintf(file_X_s, "%.15f\n", X_s[i]);
+        fprintf(file_G_p, "%.15f\n", G_p[i]);
+        fprintf(file_B_p, "%.15f\n", B_p[i]);
 
-        fprintf(file_Y_abs, "%.10f\n", Y_abs[i]);
-        fprintf(file_PhaseY, "%.10f\n", PhaseY[i]);
-        */
+        fprintf(file_Y_abs, "%.15f\n", Y_abs[i]);
+        fprintf(file_PhaseY, "%.15f\n", PhaseY[i]);
 
-        fprintf(file_amplitude, "%.3f\n", 1.0);        
-        fprintf(file_phase, "%.1f\n", 2.0);
+        /*Dummy data*/
         
-        fprintf(file_L_s, "%.10f\n", 3.0);
-        fprintf(file_C_s, "%.10f\n", 4.0);
-        fprintf(file_R_s, "%.10f\n", 5.0);
+/*
+        fprintf(file_amplitude, "%.15f\n", 1.0e-15*powf((i-5),3.0));        
+        fprintf(file_phase, "%.2f\n", -90.0);
+        
+        fprintf(file_L_s, "%.15f\n", 1.0e12*powf((i-5),3.0));
+        fprintf(file_C_s, "%.15f\n", -110.0);
+        fprintf(file_R_s, "%.15f\n", 90.0);
 
-        fprintf(file_L_p, "%.10f\n", 6.0);
-        fprintf(file_C_p, "%.10f\n", 7.0);
-        fprintf(file_R_p, "%.10f\n", 8.0);
+        fprintf(file_L_p, "%.15f\n", 100.0);
+        fprintf(file_C_p, "%.15f\n", 80.0);
+        fprintf(file_R_p, "%.15f\n", 99.0);
 
-        fprintf(file_Q, "%.10f\n", 9.0);
-        fprintf(file_D, "%.10f\n", 10.0);
+        fprintf(file_Q, "%.15f\n", -95.0);
+        fprintf(file_D, "%.15f\n", -1000.0);
 
-        fprintf(file_X_s, "%.10f\n", 11.0);
-        fprintf(file_G_p, "%.10f\n", 12.0);
-        fprintf(file_B_p, "%.10f\n", 13.0);
+        fprintf(file_X_s, "%.15f\n", 1100.0);
+        fprintf(file_G_p, "%.15f\n", 1200.0);
+        fprintf(file_B_p, "%.15f\n", 1300.0);
 
-        fprintf(file_Y_abs, "%.10f\n", 14.0);
-        fprintf(file_PhaseY, "%.10f\n", 15.0);
-            
+        fprintf(file_Y_abs, "%.15f\n", 1400.0);
+        fprintf(file_PhaseY, "%.15f\n", 1500.0);*/
+          
         
         
       
