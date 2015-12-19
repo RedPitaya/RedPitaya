@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,82 @@
+@@ -86,3 +86,90 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -91,4 +91,12 @@
 +};
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
++};
++/ {
++	dmatest_0: dmatest@0 {
++		compatible ="xlnx,axi-dma-test-1.00.a";
++		dmas = <&axi_dma_0 0
++			&axi_dma_0 1>;
++		dma-names = "axidma0", "axidma1";
++	};
 +};
