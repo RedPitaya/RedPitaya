@@ -46,6 +46,7 @@ module red_pitaya_asg_ch #(
    input                 trig_ext_i      ,  //!< external trigger
    input      [  3-1: 0] trig_src_i      ,  //!< trigger source selector
    output                trig_done_o     ,  //!< trigger event
+   input      [  3-1: 0] trig_evt_i      ,  //!< trigger event condition (0: start of waveform, 1: counter wrap, 2-7: reserved)
    // buffer ctrl
    input                 buf_we_i        ,  //!< buffer write enable
    input      [ 14-1: 0] buf_addr_i      ,  //!< buffer address
@@ -214,7 +215,8 @@ end else begin
 end
 
 assign dac_npnt = dac_pnt + set_step_i;
-assign trig_done_o = !dac_rep && trig_in;
+assign trig_done_o = (trig_evt_i == 3'b000) && (!dac_rep && trig_in) |
+                     (trig_evt_i == 3'b001) && ((dac_trig && !dac_do) || (dac_do && ~dac_npnt_sub_neg)); // start or wrap or go to start
 
 //---------------------------------------------------------------------------------
 //
