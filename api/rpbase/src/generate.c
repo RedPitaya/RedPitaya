@@ -209,6 +209,16 @@ int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay) {
     return RP_OK;
 }
 
+int generate_setTriggerEventCondition(unsigned short value) {
+    generate->trigger_event_cond = value;
+    return RP_OK;
+}
+
+int generate_getTriggerEventCondition(uint32_t *value) {
+    *value = generate->trigger_event_cond;
+    return RP_OK;
+}
+
 int generate_simultaneousTrigger() {
     // simultaneously trigger both channels
     return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);

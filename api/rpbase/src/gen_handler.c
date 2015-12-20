@@ -426,6 +426,18 @@ int gen_getTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     return RP_OK;
 }
 
+int gen_setTriggerEventCondition(rp_trig_evt_t evt) {
+    ECHECK(generate_setTriggerEventCondition(evt));
+    return RP_OK;
+}
+
+int gen_getTriggerEventCondition(rp_trig_evt_t *evt) {
+    uint32_t event;
+    ECHECK(generate_getTriggerEventCondition(&event));
+    *evt = event & 0x0f;
+    return RP_OK;
+}
+
 int gen_Trigger(uint32_t channel) {
     switch (channel) {
         case 0:

@@ -819,6 +819,14 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     return gen_getTriggerSource(channel, src);
 }
 
+int rp_GenTriggerEventCondition(rp_trig_evt_t evt) {
+    return gen_setTriggerEventCondition(evt);
+}
+
+int rp_GenGetTriggerEventCondition(rp_trig_evt_t *evt) {
+    return gen_getTriggerEventCondition(evt);
+}
+
 int rp_GenTrigger(uint32_t channel) {
     return gen_Trigger(channel);
 }
