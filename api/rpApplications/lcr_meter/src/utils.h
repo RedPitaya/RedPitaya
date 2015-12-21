@@ -15,15 +15,22 @@
  #ifndef UTILS_H_
  #define UTILS_H_
 
+
+#include <sys/syslog.h>
 #include "redpitaya/rp.h"
 
-#define ECHECK_APP(x){ \
+#define RP_LOG(...){ \
+	syslog(__VA_ARGS__); \
+}
+
+#define EXEC_CHECK(x){ \
  		int retval = (x); \
  		if(retval != RP_OK) { \
- 			printf("TODO: ADD ERROR\n"); \
+ 			RP_LOG(LOG_INFO, "Execution error.\n"); \
  			return retval; \
  		} \
 }
+
 
 float vectorMax(float *data, int size);
 float vectorApprox(float *data, int size, float approx_val, bool min);
