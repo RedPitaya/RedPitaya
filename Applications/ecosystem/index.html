@@ -83,9 +83,10 @@
 								</ul> \
 							');
 							$('#run').html('Run');
-							$("#run").attr('href', 'http://account.redpitaya.com/try-visual-programming.php');
+							$("#run").attr('href3', 'http://account.redpitaya.com/try-visual-programming.php');
 							$("#run").css('visibility', 'visible');
 							$("#demo").css('visibility', 'hidden');
+							$("#run").removeAttr('href');
 						} else {
 							$('.description').children('.name').html(result[key].name);
 							$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
@@ -193,15 +194,72 @@
 			</div>
 		</div>
 	</div>
+
+  <!-- Modal -->
+	<div class="modal fade" id="no_internet" role="dialog">
+		<div class="modal-dialog">
+
+			<!-- Modal content-->
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Your Red Pitaya has no connection to the Internet!</h4>
+				</div>
+				<div class="modal-body">
+					<p>Without internet connection it is not possible to:</p>
+					<ul>
+						<li>unlock PRO applications</li>
+						<li>install applications from open source marketplace</li>
+						<li>run visual programming</li>
+					</ul>
+					<p>Please follow <a href="http://redpitaya.com/quick-start/">http://redpitaya.com/quick-start/</a> instructions to find out how to connect your Red Pitaya to the internet.</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
 	<div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
 </div>
 <script>
+if (typeof String.prototype.startsWith != 'function') {
+	String.prototype.startsWith = function (str){
+		return this.indexOf(str) === 0;
+	};
+}
+
+function checkNetConnection(){
+	var xhr = new XMLHttpRequest();
+	var file = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js";
+	var r = Math.round(Math.random() * 10000);
+	xhr.open('HEAD', file + "?subins=" + r, false);
+	try {
+		xhr.send();
+		if (xhr.status >= 200 && xhr.status < 304) {
+			return true;
+		} else {
+			return false;
+		}
+	} catch (e) {
+		return false;
+	}
+}
 
 var onLinkClicked = function()
 {
 	if ($(this).attr('id') == 'run')
 	{
-		verifyLic($(this));
+		href3 = $(this).attr('href3');
+		if(href3!=undefined && href3!="")
+		{
+			if (checkNetConnection())
+				window.location = href3;
+			else
+				$('#no_internet').modal('show');
+		} else
+			verifyLic($(this));
 	}else
 	{
 	    var el = $(this);
@@ -213,14 +271,14 @@ var onLinkClicked = function()
 
 var verifyLic = function(element){
 
-	if (typeof String.prototype.startsWith != 'function') {
-		String.prototype.startsWith = function (str){
-			return this.indexOf(str) === 0;
-		};
-	}
-
 	if (element.attr('href') == undefined)
 	{
+		if (!checkNetConnection())
+		{
+			$('#no_internet').modal('show');
+			return;
+		}
+
 		var post_uri = 'http://store.redpitaya.com/upload_id_file/';
 		var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
 
