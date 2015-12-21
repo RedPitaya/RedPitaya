@@ -5,6 +5,7 @@ System changes:
 - fixed generator code in many old applications, so they can use the latest
   FPGA bitstream (0.94), this should reduce issues with applications, which
   do not load their own bitstream (Test, SCPI)
+
 Application changes:
 - system monitor was added under (Settings -> SYS INFO) in order to monitor
   network performances, refresh rate and RP CPU, RAM status
