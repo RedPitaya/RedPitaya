@@ -17,9 +17,6 @@
 
 #include "redpitaya/rp.h"
 
-#define REPEAT do
-#define UNTIL(exp) while(!(exp))
-
 /* Random global defines */
 #define ADC_BUFF_SIZE			16384
 #define M_PI					3.14159265358979323846

@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
-#include <sys/syslog.h>
 #include <complex.h>
 
 #include "lcr_meter.h"
@@ -63,13 +62,14 @@ int lcr_Init(){
 
 	/* Init mutex thread */
 	if(pthread_mutex_init(&mutex, NULL)){
-		fprintf(stderr, "Failed to init thread: %s\n", strerror(errno));
+		RP_LOG(LOG_ERR, "Failed to initialize mutex: %s\n", strerror(errno));
+		return RP_EOOR;
 	}
 
 	pthread_mutex_lock(&mutex);
 
 	if(rp_Init() != RP_OK){
-		fprintf(stderr, "Unable to inicialize the RPI API structure "
+		RP_LOG(LOG_ERR, "Unable to inicialize the RPI API structure "
 			"needed by impedance analyzer application: %s\n", strerror(errno));
 		return RP_EOOR;
 	}
@@ -77,8 +77,8 @@ int lcr_Init(){
 	/* Set default values of the lcr structure */
 	lcr_SetDefaultValues();
 
-	ECHECK_APP(rp_AcqReset());
-	ECHECK_APP(rp_GenReset());
+	EXEC_CHECK(rp_AcqReset());
+	EXEC_CHECK(rp_GenReset());
 
 	/* Malloc global vars */
 	calc_data = malloc(sizeof(calc_data));
@@ -90,12 +90,9 @@ int lcr_Init(){
 /* Release resources used the main API structure */
 int lcr_Release(){
 	pthread_mutex_lock(&mutex);
-	if(rp_Release() != RP_OK){
-		fprintf(stderr, "Unable to release resources used by " 
-			"Impedance analyzer meter API: %s\n", strerror(errno));
-		return RP_EOOR;
-	}
-
+	rp_Release();
+	free(calc_data);
+	RP_LOG(LOG_INFO, "Releasing Red Pitaya library resources.\n");
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_destroy(&mutex);
 	return RP_OK;
@@ -107,32 +104,33 @@ int lcr_Reset(){
 	rp_Reset();
 	/* Set default values of the lcr_params structure */
 	lcr_SetDefaultValues(main_params);
+	calc_data = realloc(&calc_data, sizeof(calc_data));
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
 
 int lcr_SetDefaultValues(){
-	ECHECK_APP(lcr_setRShunt(2));
-	ECHECK_APP(lcr_SetFrequency(1000.0));
-	ECHECK_APP(lcr_SetCalibMode(CALIB_NONE));
-	ECHECK_APP(lcr_SetMeasTolerance(0));
-	ECHECK_APP(lcr_SetMeasRangeMode(0));
-	ECHECK_APP(lcr_SetRangeFormat(0));
-	ECHECK_APP(lcr_SetRangeUnits(0));
-	ECHECK_APP(lcr_SetMeasSeries(false));
+	EXEC_CHECK(lcr_setRShunt(2));
+	EXEC_CHECK(lcr_SetFrequency(1000.0));
+	EXEC_CHECK(lcr_SetCalibMode(CALIB_NONE));
+	EXEC_CHECK(lcr_SetMeasTolerance(0));
+	EXEC_CHECK(lcr_SetMeasRangeMode(0));
+	EXEC_CHECK(lcr_SetRangeFormat(0));
+	EXEC_CHECK(lcr_SetRangeUnits(0));
+	EXEC_CHECK(lcr_SetMeasSeries(false));
 	return RP_OK;
 }
 
 /* Generate functions  */
 int lcr_SafeThreadGen(rp_channel_t channel, 
-	           	float frequency){
+	           		  float frequency){
 
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_GenAmp(channel, LCR_AMPLITUDE));
-	ECHECK_APP(rp_GenOffset(channel, 0.25));
-	ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
-	ECHECK_APP(rp_GenFreq(channel, frequency));
-	ECHECK_APP(rp_GenOutEnable(channel));
+	EXEC_CHECK(rp_GenAmp(channel, LCR_AMPLITUDE));
+	EXEC_CHECK(rp_GenOffset(channel, 0.25));
+	EXEC_CHECK(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+	EXEC_CHECK(rp_GenFreq(channel, frequency));
+	EXEC_CHECK(rp_GenOutEnable(channel));
 	usleep(10000);
 	pthread_mutex_unlock(&mutex);
 
@@ -150,12 +148,12 @@ int lcr_SafeThreadAcqData(float **data,
 	uint32_t acq_u_size = acq_size;
 
 	pthread_mutex_lock(&mutex);
-	ECHECK_APP(rp_AcqReset());	
-	ECHECK_APP(rp_AcqSetDecimation(decimation));
-	ECHECK_APP(rp_AcqSetTriggerLevel(0.5));
-	ECHECK_APP(rp_AcqSetTriggerDelay(acq_size - (ADC_BUFF_SIZE / 2)));
-	ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
-	ECHECK_APP(rp_AcqStart());
+	EXEC_CHECK(rp_AcqReset());	
+	EXEC_CHECK(rp_AcqSetDecimation(decimation));
+	EXEC_CHECK(rp_AcqSetTriggerLevel(0.5));
+	EXEC_CHECK(rp_AcqSetTriggerDelay(acq_size - (ADC_BUFF_SIZE / 2)));
+	EXEC_CHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
+	EXEC_CHECK(rp_AcqStart());
 
 	state = RP_TRIG_STATE_TRIGGERED;
 	int retiries = 10000; //micro seconds
@@ -167,10 +165,10 @@ int lcr_SafeThreadAcqData(float **data,
         retiries--;
     }
 
-    ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
+    EXEC_CHECK(rp_AcqGetWritePointerAtTrig(&pos));
     usleep(1000 + (((acq_size * 8) * dec)) / 1000);
-	ECHECK_APP(rp_AcqGetDataV(RP_CH_1, pos, &acq_u_size, data[0]));
-	ECHECK_APP(rp_AcqGetDataV(RP_CH_2, pos, &acq_u_size, data[1]));
+	EXEC_CHECK(rp_AcqGetDataV(RP_CH_1, pos, &acq_u_size, data[0]));
+	EXEC_CHECK(rp_AcqGetDataV(RP_CH_2, pos, &acq_u_size, data[1]));
 	pthread_mutex_unlock(&mutex);
 
 	return RP_OK;
@@ -204,6 +202,7 @@ int lcr_getImpedance(float frequency,
 	lcr_getDecimationValue(frequency, &api_decimation, &decimation);
 	
 	acq_size = round((min_periodes * SAMPLE_RATE) /
+		(frequency * decimation));acq_size = round((min_periodes * SAMPLE_RATE) /
 		(frequency * decimation));
 
 	float **analysis_data = multiDimensionVector(acq_size);
@@ -218,7 +217,7 @@ int lcr_getImpedance(float frequency,
 				r_shunt, w_out, decimation, z_out, phase_out);
 
 	//Disable channel 1 generation module
-	ECHECK_APP(rp_GenOutDisable(RP_CH_1));
+	EXEC_CHECK(rp_GenOutDisable(RP_CH_1));
 	return RP_OK;
 }
 
@@ -229,7 +228,6 @@ void *lcr_MainThread(void *args){
 		(struct impendace_params *)args;
 
 	int n_shunt_idx = main_params.r_shunt;
-
 	set_IIC_Shunt(n_shunt_idx);
 
 	/* Main lcr meter algorithm */
@@ -246,6 +244,9 @@ void *lcr_MainThread(void *args){
 
 		z_abs = cabs(args_struct->z_out);
 		
+		syslog(LOG_INFO, "ZABS: %f\n", z_abs);
+		syslog(LOG_INFO, "RANGE: %d\n", main_params.range);
+
 		switch(main_params.range){
 			//Z
 			case 1: 
@@ -290,7 +291,6 @@ void *lcr_MainThread(void *args){
 
 	//Exit thread
 	pthread_exit(0);
-
 	return RP_OK;
 }
 
@@ -305,7 +305,6 @@ int lcr_Run(){
 	pthread_t lcr_thread_handler;
 	err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
 	if(err != RP_OK){
-		printf("Main thread creation failed.\n");
 		return RP_EOOR;
 	}
 	pthread_join(lcr_thread_handler, 0);
@@ -319,7 +318,7 @@ int lcr_Run(){
 int lcr_Correction(){
 	int start_freq 		= START_CORR_FREQ;
 	
-	int err;
+	int ret_val;
 	struct impendace_params args;
 	pthread_t lcr_thread_handler;
 
@@ -331,13 +330,17 @@ int lcr_Correction(){
 	char command[100];
 	//Set system to read-write
 	strcpy(command, "rw");
-	system(command);
+	
+	ret_val = system(command);
+	if(ret_val != 0){
+		return RP_EOOR;
+	}
 
 	for(int i = 0; i < CALIB_STEPS; i++){
 		
 		args.frequency = start_freq * powf(10, i);
-		err = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
-		if(err != RP_OK){
+		ret_val = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
+		if(ret_val != 0){
 			printf("Main thread creation failed.\n");
 			return RP_EOOR;
 		}
@@ -351,9 +354,13 @@ int lcr_Correction(){
 	
 	free(amplitude_z);
 
-	//Set system to read-only.`
+	//Set system to read-only
 	strcpy(command, "ro");
-	system(command);
+	
+	ret_val = system(command);
+	if(ret_val != 0){
+		return RP_EOOR;
+	}
 
 	return RP_OK;
 }
@@ -469,7 +476,6 @@ int lcr_CopyParams(lcr_main_data_t *params){
 	params->lcr_L         	 = calc_data->lcr_L;
 	params->lcr_C         	 = calc_data->lcr_C;
 	params->lcr_R         	 = calc_data->lcr_R;
-	syslog(LOG_INFO, "%f\n", calc_data->lcr_C);
 	return RP_OK;
 }
 

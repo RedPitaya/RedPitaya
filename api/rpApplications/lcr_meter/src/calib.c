@@ -14,10 +14,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/syslog.h>
 #include <complex.h>
 
 #include "calib.h"
+#include "lcr_meter.h"
 
 int store_calib(const calib_t CALIB_MODE,
 				float _Complex *amplitude_z){
@@ -29,10 +29,9 @@ int store_calib(const calib_t CALIB_MODE,
 
 	//Open file pointer to store calib data
 	FILE *calibration_file = fopen(&command[0], "w+");
-	
-	//Set system to read-write
-	strcpy(command, "rw");
-	system(command);
+	if(calibration_file == NULL){
+		RP_LOG(LOG_INFO, "Error opening calibration file.\n");
+	}
 
 	//Write data to calib_file
 	for(int i = 0; i < CALIB_STEPS; i++){
@@ -40,10 +39,7 @@ int store_calib(const calib_t CALIB_MODE,
 			"%f %fi\n", crealf(amplitude_z[i]), cimagf(amplitude_z[i]));
 	}
 
-	//Close file and set system to read-only.
 	fclose(calibration_file);
-	strcpy(command, "ro");
-	system(command);
-
+	
 	return 0;
 }

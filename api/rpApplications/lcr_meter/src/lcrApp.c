@@ -13,7 +13,6 @@
 */
 
 #include <stdio.h>
-#include <sys/syslog.h>
 
 #include "lcrApp.h"
 #include "common.h"
