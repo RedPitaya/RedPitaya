@@ -491,7 +491,7 @@ $(function() {
 			value: $('#sel_range_u :selected').val()
 		}
 
-		LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
+		//LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
 		$('#lb_prim_displ_units').empty().append($('#sel_range_u option:selected').text());
 		$('#meas_mode_d').empty().append('Manual');
 		LCR.sendParams();
@@ -505,7 +505,7 @@ $(function() {
 
 	$('#sel_range_u').change(function(){
 		if(LCR.params.orig['LCR_RANGE'].value != 0){
-			LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
+			//LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
 			LCR.params.local['LCR_RANGE_U'] = { value: this.value };
 			LCR.sendParams();
 		}
@@ -670,7 +670,6 @@ function formatRangeManual(format, power, data){
 
 	var i;
 	var c = 0;
-	console.log(data);
 
 	for(i = 9; i > -7; i -= 3){
 		if(c == power) {
@@ -680,9 +679,10 @@ function formatRangeManual(format, power, data){
 		c++;
 	}
 
-	console.log(data);
 	LCR.displ_params.prim_val = data;
-	LCR.displ_params.p_units = LCR.displ_params.p_base_u + suffixes[c];
+	LCR.displ_params.p_units = suffixes[c] + LCR.displ_params.p_base_u;
+	console.log(LCR.displ_params.p_base_u);
+	console.log(suffixes[c]);
 
 	return data;
 }
