@@ -117,6 +117,7 @@
 			LCR.ws.onclose = function() {
 				LCR.state.socket_opened = false;
 				console.log('Socket closed');
+				$('#modal_socket_closed').modal('show');
 			};
 
 			LCR.ws.onerror = function(ev) {
@@ -164,31 +165,36 @@
 			//Change primary display value
 			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
 				
-				if(new_params['LCR_RANGE'].value == 0){
-					formatRangeAuto(1, new_params[param_name].value);
-				}else{
+				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
+					formatRangeAuto(false, 1, new_params[param_name].value);
+				}else if(new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0){
 					formatRangeManual(Math.abs($('#sel_range_f').val() - 4), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
-				}
+				}else{
 
-				console.log(parseInt($('#sel_range_u').val(), 10));
+					if(new_params['LCR_RELATIVE'].value < Math.abs(999)){
+						LCR.displ_params.prim_val = new_params[param_name].value.toFixed(2);
+					}else{
+						formatRangeAuto(false, 1, new_params[param_name].value);
+					}
+				}
 				
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
 				if(data == "OVER RANGE"){
-					$('#lb_prim_displ').css('font-size', '100%');
+					$('#lb_prim_displ').css('font-size', '60%').css('width: 100%');	
 				}else{
 					$('#lb_prim_displ').css('font-size', '100%');
-					$('#lb_prim_displ').empty().append(data);	
 				}
 
+				$('#lb_prim_displ').empty().append(data);
 				$('#lb_prim_displ_units').empty().append(units);
 			}
 
 			//Change secondary display value
 			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
 
-				formatRangeAuto(2, new_params[param_name].value);
+				formatRangeAuto(0, 2, new_params[param_name].value);
 				var units = LCR.displ_params.s_units;
 				var data = LCR.displ_params.sec_val;
 
@@ -212,62 +218,28 @@
 					$('#lb_prim_displ_units').empty();
 					$('#lb_sec_displ_units').empty();
 				}else{
-					$('#lb_sec_displ').empty().append("100%");
+					$('#lb_sec_displ').empty().append("0%");
 					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_TOL_SAVED'].value * 100) / 100);
 					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_base_u);
 				}
 				console.log("selected_meas: "  + LCR.selected_meas);
 				console.log("Saved val: " + new_params['LCR_TOL_SAVED'].value);
 				console.log("CUrrent meas value: " + new_params[param_name].value);
-				//console.log(diff);
 			}
 
-			if(param_name  == 'LCR_Z_MIN' && LCR.displ_params.prim == 'LCR_Z'){
-				$('#meas_min_d').empty().append(Math.round(new_params['LCR_Z_MIN'].value * 100) / 100);
+			console.log(LCR.displ_params.prim);
+			var quantity = param_name.substr(0, param_name.length - 4);
+			if(param_name == (quantity + "_MIN") && param_name == (LCR.displ_params.prim + "_MIN")){
+				console.log(quantity);
+				$('#meas_min_d').empty().append(formatRangeAuto(true, null, new_params[param_name].value));
 			}
 
-			if(param_name == 'LCR_Z_MAX' && LCR.displ_params.prim == 'LCR_Z'){
-				$('#meas_max_d').empty().append(Math.round(new_params['LCR_Z_MAX'].value * 100) / 100);
+			if(param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")){
+				$('#meas_max_d').empty().append(formatRangeAuto(true, null, new_params[param_name].value));	
 			}
 
-			if(param_name == 'LCR_Z_AVG' && LCR.displ_params.prim == 'LCR_Z'){
-				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_Z_AVG'].value * 100) / 100);
-			}
-
-			if(param_name  == 'LCR_L_MIN' && LCR.displ_params.prim == 'LCR_L'){
-				$('#meas_min_d').empty().append(Math.round(new_params['LCR_L_MIN'].value * 100) / 100);
-			}
-
-			if(param_name == 'LCR_L_MAX' && LCR.displ_params.prim == 'LCR_L'){
-				$('#meas_max_d').empty().append(Math.round(new_params['LCR_L_MAX'].value * 100) / 100);
-			}
-
-			if(param_name == 'LCR_L_AVG' && LCR.displ_params.prim == 'LCR_L'){
-				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_L_AVG'].value * 100) / 100);
-			}
-
-			if(param_name  == 'LCR_C_MIN' && LCR.displ_params.prim == 'LCR_C'){
-				$('#meas_min_d').empty().append(Math.round(new_params['LCR_C_MIN'].value * 100) / 100);
-			}
-
-			if(param_name == 'LCR_C_MAX' && LCR.displ_params.prim == 'LCR_C'){
-				$('#meas_max_d').empty().append(Math.round(new_params['LCR_C_MAX'].value * 100) / 100);
-			}
-
-			if(param_name == 'LCR_C_AVG' && LCR.displ_params.prim == 'LCR_C'){
-				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_C_AVG'].value * 100) / 100);
-			}
-
-			if(param_name  == 'LCR_R_MIN' && LCR.displ_params.prim == 'LCR_R'){
-				$('#meas_min_d').empty().append(Math.round(new_params['LCR_R_MIN'].value * 100) / 100);
-			}
-
-			if(param_name == 'LCR_R_MAX' && LCR.displ_params.prim == 'LCR_R'){
-				$('#meas_max_d').empty().append(Math.round(new_params['LCR_R_MAX'].value * 100) / 100);
-			}
-
-			if(param_name == 'LCR_R_AVG' && LCR.displ_params.prim == 'LCR_R'){
-				$('#meas_avg_d').empty().append(Math.round(new_params['LCR_R_AVG'].value * 100) / 100);
+			if(param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")){
+				$('#meas_avg_d').empty().append(formatRangeAuto(true, null, new_params[param_name].value));
 			}
 		}
 
@@ -388,12 +360,8 @@ $(function() {
 	});
 
 	$('#prim_displ_choice :checkbox').click(function(){
-		LCR.displ_params.prim = this.id;
-				
-		//Changes units if manual mode isn't selected
-		if(LCR.params.orig['LCR_RANGE'].value == 0){
-			LCR.displ_params.p_base_u = this.value;
-		}
+		LCR.displ_params.prim = this.id;			
+		LCR.displ_params.p_base_u = this.value;
 
 		var i;
 		var op = document.getElementById("sel_range_u").getElementsByTagName("option");
@@ -424,7 +392,6 @@ $(function() {
 		}else if(this.id == 'LCR_R'){
 			LCR.selected_meas = 4;
 		}
-		console.log("Selected meas: " + LCR.selected_meas);
 
 		if(LCR.params.orig['LCR_TOLERANCE'].value != 0){
 			LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
@@ -463,13 +430,12 @@ $(function() {
 
 		if(!LCR.secondary_meas.apply_tolerance){
 			LCR.secondary_meas.apply_relative = false;
-			LCR.params.local['LCR_RELATIVE'] = { value: false };
+			LCR.params.local['LCR_RELATIVE'] = { value: 0 };
 			$('#cb_rel').prop("checked", false);
-
+			LCR.sendParams();
 			LCR.secondary_meas.apply_tolerance = true;
 			LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
 			$('#lb_prim_displ').empty().append("100%");
-
 			$('#lb_prim_displ_units').empty();
 			$('#lb_sec_displ_units').empty();
 			$('#rec_image').css('display', 'block');
@@ -559,7 +525,7 @@ $(function() {
 });
 
 //TODO: This solution is ugly as fuck. Make it better!
-function formatRangeAuto(display, meas_data){
+function formatRangeAuto(meas_param, display, meas_data){
 
 
 	var data = 0;
@@ -663,6 +629,16 @@ function formatRangeAuto(display, meas_data){
 		units = "";
 	}
 
+	//If we are formatting log data, we do not want to change the main measurment
+	if(meas_param == true){
+		
+		if(data == "ERROR" || data == "OVER RANGE"){
+			return data;
+		}
+		
+		return data + (units + LCR.displ_params.p_base_u);
+	}
+
 	switch(display){
 		case 1:
 			if(data == "ERROR" || data == "OVER RANGE"){
@@ -684,15 +660,18 @@ function formatRangeAuto(display, meas_data){
 			LCR.displ_params.s_units = units;
 			break;
 	}
+
 	return 0;
 }
 
 function formatRangeManual(format, power, data){
 
-	var suffixes = ['nH', 'uH', 'mH', 'H','kH', 'MH'];
+	var suffixes = ['n', 'u', 'm', 'H','k', 'M'];
 
 	var i;
 	var c = 0;
+	console.log(data);
+
 	for(i = 9; i > -7; i -= 3){
 		if(c == power) {
 			data = (data * Math.pow(10, i)).toFixed(format);
@@ -701,8 +680,17 @@ function formatRangeManual(format, power, data){
 		c++;
 	}
 
+	console.log(data);
 	LCR.displ_params.prim_val = data;
-	LCR.displ_params.p_units = suffixes[c];
+	LCR.displ_params.p_units = LCR.displ_params.p_base_u + suffixes[c];
 
 	return data;
+}
+
+//This functions resets user meas data when a specific event occurs.
+function resetMeasData(){
+
+
+
+	return 0;
 }

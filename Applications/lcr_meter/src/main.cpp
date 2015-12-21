@@ -24,16 +24,16 @@ CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_ESR("LCR_ESR", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 
 //Measurement parameters for primary display
-CFloatParameter lcr_AmpMin("LCR_Z_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
+CFloatParameter lcr_AmpMin("LCR_Z_MIN", CBaseParameter::RW, 1e9, 0, -1e6, 1e6);
 CFloatParameter lcr_AmpMax("LCR_Z_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_AmpAvg("LCR_Z_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_IndMin("LCR_L_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
-CFloatParameter lcr_IndMax("LCR_L_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_IndMin("LCR_L_MIN", CBaseParameter::RW, 1e9, 0, -1e6, 1e6);
+CFloatParameter lcr_IndMax("LCR_L_MAX", CBaseParameter::RW, -1e9, 0, -1e6, 1e6);
 CFloatParameter lcr_IndAvg("LCR_L_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_CapMin("LCR_C_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
-CFloatParameter lcr_CapMax("LCR_C_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_CapMin("LCR_C_MIN", CBaseParameter::RW, 1e9, 0, -1e6, 1e6);
+CFloatParameter lcr_CapMax("LCR_C_MAX", CBaseParameter::RW, -1e9, 0, -1e6, 1e6);
 CFloatParameter lcr_CapAvg("LCR_C_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_ResMin("LCR_R_MIN", CBaseParameter::RW, 1e6, 0, -1e6, 1e6);
+CFloatParameter lcr_ResMin("LCR_R_MIN", CBaseParameter::RW, 1e7, 0, -1e6, 1e6);
 CFloatParameter lcr_ResMax("LCR_R_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_ResAvg("LCR_R_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 
@@ -122,7 +122,6 @@ void UpdateParams(void){
 		lcr_Resitance.Value()		= data->lcr_R;
 		lcr_D.Value()				= data->lcr_D;
 		lcr_Q.Value()				= data->lcr_Q;
-		syslog(LOG_INFO, "%f\n", lcr_Q.Value());
 		lcr_ESR.Value()				= data->lcr_ESR;
 
 		if(lcr_AmpMin.Value() > lcr_amplitude.Value() && !(lcr_amplitude.Value() < -1e6)){
@@ -228,30 +227,6 @@ void UpdateParams(void){
 		startCalibration.Value() = false;
 	}
 
-	if(IS_NEW(toleranceMode)){
-
-		lcrApp_LcrSetMeasTolerance(toleranceMode.NewValue());
-		switch(toleranceMode.NewValue()){
-			case 0:
-				break;
-			case 1:
-				tolSavedZ.Value() = lcr_amplitude.Value();
-				break;
-			case 2:
-				tolSavedZ.Value() = lcr_Inductance.Value();
-				break;
-			case 3:
-				tolSavedZ.Value() = lcr_Capacitance.Value();
-				break;
-			case 4:
-				tolSavedZ.Value() = lcr_Resitance.Value();
-				break;
-		}
-
-		tolSavedZ.Update();
-		toleranceMode.Update();
-	}
-
 	if(IS_NEW(relativeMode)){
 		
 		//lcrApp_LcrSetMeasRelative(relativeMode.NewValue());
@@ -274,6 +249,30 @@ void UpdateParams(void){
 
 		relSavedZ.Update();
 		relativeMode.Update();
+	}
+
+	if(IS_NEW(toleranceMode)){
+
+		lcrApp_LcrSetMeasTolerance(toleranceMode.NewValue());
+		switch(toleranceMode.NewValue()){
+			case 0:
+				break;
+			case 1:
+				tolSavedZ.Value() = lcr_amplitude.Value();
+				break;
+			case 2:
+				tolSavedZ.Value() = lcr_Inductance.Value();
+				break;
+			case 3:
+				tolSavedZ.Value() = lcr_Capacitance.Value();
+				break;
+			case 4:
+				tolSavedZ.Value() = lcr_Resitance.Value();
+				break;
+		}
+
+		tolSavedZ.Update();
+		toleranceMode.Update();
 	}
 
 	if(IS_NEW(seriesMode)){
