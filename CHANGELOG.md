@@ -1,12 +1,26 @@
-
-
 Changes:
+- migration to Vivado 2015.4 and related U-Boot and Linux versions
+- changes to ARM clocking so the CPU runs at 666MHz instead of 500MHz (Ulrich Habel)
+- SPI userspace access seems to be fixed, `/dev/spidev1.0` is present, but
+  kernel log still does not mention SPI or QSPI drivers
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ generator burst mode is buggy
+
+# Release 0.94 RC22
+
+System changes:
 - fixed slow analog output API
 - fixed generator code in many old applications, so they can use the latest
   FPGA bitstream (0.94), this should reduce issues with applications, which
   do not load their own bitstream (Test, SCPI)
-- migration to Vivado 2015.4 and related U-Boot and Linux versions
-- changes to ARM clocking so the CPU runs at 666MHz instead of 500MHz (Ulrich Habel)
+
+Application changes:
+- system monitor was added under (Settings -> SYS INFO) in order to monitor
+  network performances, refresh rate and RP CPU, RAM status
+- refresh rate is auto-adjusted to network performance and user is also
+  informed if network performance is too low and can affect user experience
+- transferred data is now compressed
 
 **Known issues** (at least major ones) are same as in 0.94 RC12.
 + generator burst mode is buggy
