@@ -428,6 +428,13 @@ static void cdevice_exit(struct dma_proxy_channel *pchannel_p, int last_channel)
 	}
 }
 
+static bool xdma_filter(struct dma_chan *chan, void *param){
+   if (*((int *)chan->private) == *(int *)param)
+      return true;
+
+   return false;
+}
+
 /* Create a DMA channel by getting a DMA channel from the DMA Engine and then setting
  * up the channel as a character device to allow user space control.
  */
@@ -435,6 +442,10 @@ static int create_channel(struct dma_proxy_channel *pchannel_p, char *name, u32 
 {
 	int rc;
 	dma_cap_mask_t mask;
+	u32 match;
+
+	match = (direction & 0xFF) | XILINX_DMA_IP_DMA;
+	printk("driver: match is %x\n", match);
 
 	/* Zero out the capability mask then initialize it for a slave channel that is 
  	 * private.
@@ -445,7 +456,7 @@ static int create_channel(struct dma_proxy_channel *pchannel_p, char *name, u32 
 	/* Request the DMA channel from the DMA engine and then use the device from
  	 * the channel for the proxy channel also.
  	 */
-	pchannel_p->channel_p = dma_request_channel(mask, NULL, NULL);
+	pchannel_p->channel_p = dma_request_channel(mask, xdma_filter, (void *)&match);
 	if (!pchannel_p->channel_p) {
 		dev_err(pchannel_p->dma_device_p, "DMA channel request error\n");
 		return ERROR;
