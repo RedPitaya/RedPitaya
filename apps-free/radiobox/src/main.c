@@ -82,10 +82,10 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
        *  15: MOD_OSC
        * )
        **/
-        "car_mod_oscsrc_s",    0.0,   1,  0, 0.0,     15.0  },
+        "car_osc_modsrc_s",    0.0,   1,  0, 0.0,     15.0  },
 
     { /* CAR_OSC modulation type selector (0: AM, 1: FM, 2: PM) */
-        "car_mod_osctyp_s",    0.0,   1,  0, 0.0,      2.0  },
+        "car_osc_modtyp_s",    0.0,   1,  0, 0.0,      2.0  },
 
     { /* RB LED control */
         "rbled_ctrl_s",        0.0,   1,  0, 0.0,     15.0  },
@@ -630,8 +630,8 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
             switch (g_transport_pktIdx & 0x7f) {
             case 1:
                 if (!strcmp("rb_run",           src[i].name) ||
-                    !strcmp("car_mod_oscsrc_s", src[i].name) ||
-                    !strcmp("car_mod_osctyp_s", src[i].name) ||
+                    !strcmp("car_osc_modsrc_s", src[i].name) ||
+                    !strcmp("car_osc_modtyp_s", src[i].name) ||
                     !strcmp("rbled_ctrl_s",     src[i].name)) {
                     found = 1;
                 }
