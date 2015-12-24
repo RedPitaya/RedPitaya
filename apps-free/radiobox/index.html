@@ -111,15 +111,15 @@
 
         <tr>
         <td>
-        <div id="osc_car_qrg" class="form-group">
-          <label for="osc_car_qrg_f" class="col-xs-5 control-label">OSC_CAR frequency:</label>
+        <div id="car_osc_qrg" class="form-group">
+          <label for="car_osc_qrg_f" class="col-xs-5 control-label">CAR_OSC frequency:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc_car_qrg_f" value="0" class="form-control form-bg-osc-car-qrg" autocomplete="off" />
-            <span id="apply_osc_car_qrg" class="input-group-btn" _style="visibility:hidden">
+            <input type="text" id="car_osc_qrg_f" value="0" class="form-control form-bg-car-osc-qrg" autocomplete="off" />
+            <span id="apply_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc_car_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+          <div id="car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
         </div>
         </td>
 
@@ -137,13 +137,13 @@
         </td>
 
         <td>
-        <div id="osc_car_modsrc" class="form-group">
-          <label for="osc_car_modsrc_s" class="col-xs-5 control-label">OSC_CAR mod. source:</label>
+        <div id="car_mod_oscsrc" class="form-group">
+          <label for="car_mod_oscsrc_s" class="col-xs-5 control-label">CAR_OSC mod. source:</label>
           <div class="col-xs-6">
-            <select id="osc_car_modsrc_s" class="form-control form-bg-osc-car-modsrc">
+            <select id="car_mod_oscsrc_s" class="form-control form-bg-car-mod-oscsrc">
               <option value="0">(none)</option>
               <option disabled="disabled">---------------------</option>
-              <option value="15">OSC_MOD</option>
+              <option value="15">MOD_OSC</option>
               <option disabled="disabled">---------------------</option>
               <option value="1">RF Input 1</option>
               <option value="2">RF Input 2</option>
@@ -153,7 +153,7 @@
               <option value="6">EXP AI2</option>
               <option value="7">EXP AI3</option>
             </select>
-            <span id="apply_osc_car_modsrc" class="input-group-btn" _style="visibility:hidden">
+            <span id="apply_car_mod_oscsrc" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -169,17 +169,17 @@
         </td>
 
         <td>
-        <div id="osc_car_modtyp" class="form-group">
-          <label for="osc_car_modtyp_s" class="col-xs-5 control-label">OSC_CAR mod. type:</label>
+        <div id="car_mod_osctyp" class="form-group">
+          <label for="car_mod_osctyp_s" class="col-xs-5 control-label">CAR_OSC mod. type:</label>
           <div class="col-xs-6">
-            <select id="osc_car_modtyp_s" class="form-control form-bg-osc-car-modtyp" disabled="disabled">
+            <select id="car_mod_osctyp_s" class="form-control form-bg-car-mod-osctyp" disabled="disabled">
               <option value="0">USB</option>
               <option value="1">LSB</option>
               <option value="2">AM</option>
               <option value="3">FM</option>
               <option value="4">PM</option>
             </select>
-            <span id="apply_osc_car_modtyp" class="input-group-btn" style="visibility:hidden">
+            <span id="apply_car_mod_osctyp" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -189,28 +189,28 @@
 
         <tr>
         <td>
-        <div id="osc_mod_qrg" class="form-group">
-        <label for="osc_mod_qrg_f" class="col-xs-5 control-label">OSC_MOD frequency:</label>
+        <div id="mod_osc_qrg" class="form-group">
+        <label for="mod_osc_qrg_f" class="col-xs-5 control-label">MOD_OSC frequency:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc_mod_qrg_f" value="0" class="form-control form-bg-osc-mod-qrg" autocomplete="off" disabled="disabled" />
-            <span id="apply_osc_mod_qrg" class="input-group-btn" style="visibility:hidden">
+            <input type="text" id="mod_osc_qrg_f" value="0" class="form-control form-bg-mod-osc-qrg" autocomplete="off" disabled="disabled" />
+            <span id="apply_mod_osc_qrg" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc_mod_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+          <div id="mod_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
         </div>
         </td>
 
         <td>
-        <div id="osc_mod_mag" class="form-group">
-          <label for="osc_mod_mag_f" class="col-xs-5 control-label">Modulator magnitude:</label>
+        <div id="mod_osc_mag" class="form-group">
+          <label for="mod_osc_mag_f" class="col-xs-5 control-label">Modulator magnitude:</label>
           <div class="col-xs-4">
-            <input type="text" id="osc_mod_mag_f" value="0" class="form-control form-bg-osc-mod-mag" autocomplete="off" disabled="disabled" />
-            <span id="apply_osc_mod_mag" class="input-group-btn" style="visibility:hidden">
+            <input type="text" id="mod_osc_mag_f" value="0" class="form-control form-bg-mod-osc-mag" autocomplete="off" disabled="disabled" />
+            <span id="apply_mod_osc_mag" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
-          <div id="osc_mod_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
+          <div id="mod_osc_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
         </div>
         </td>
 

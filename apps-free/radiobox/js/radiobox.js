@@ -57,15 +57,16 @@
     rb_run:              1,  // application running
     osc_car_modsrc_s:    0,  // mod-source: (none)
     osc_car_modtyp_s:    2,  // modulation: AM
-    rbled_ctrl_s:       22,  // RB LEDs set to: 0=disabled, 1=off,
-                             //  4=MUXIN_MIX in,       5=ADC_MOD in,         6=ADC_MOD out,
-                             //  8=QMIX_MOD_I_S1 out,  9=QMIX_MOD_Q_S1 out, 10=QMIX_MOD_I_S2, 11=QMIX_MOD_Q_S2, 12=QMIX_MOD_I_S3, 13=QMIX_MOD_Q_S3,
-                             // 16=CIC_MOD_I out,     17=CIC_MOD_Q out,     18=FIR_MOD_I out, 19=FIR_MOD_Q out, 20=CIC_CAR_1M_I out, 21=CIC_CAR_1M_Q out, 22=CIC_CAR_125M_I out, 23=CIC_CAR_125M_Q out,
-                             // 24=QMIX_CAR_I out, 25=QMIX_CAR_Q out,
-                             // 28=AMP_RF out
+    rbled_ctrl_s:       18,  // RB LEDs set to: 0=disabled, 1=off,
+                             //  4=MUXIN_MIX in,       5=MOD_ADC in,         6=MOD_ADC out,
+                             //  8=MOD_QMIX_I_S1 out,  9=MOD_QMIX_Q_S1 out, 10=MOD_QMIX_I_S2, 11=MOD_QMIX_Q_S2, 12=MOD_QMIX_I_S3, 13=MOD_QMIX_Q_S3,
+                             // 16=MOD_CIC_I out,     17=MOD_CIC_Q out,     18=MOD_FIR_I out, 19=MOD_FIR_Q out, 20=CAR_CIC_1M_I out, 21=CAR_CIC_1M_Q out, 22=CAR_CIC_125M_I out, 23=CAR_CIC_125M_Q out,
+                             // 24=CAR_QMIX_I out, 25=CAR_QMIX_Q out,
+                             // 28=AMP_RF out,
+                             // 31=current test vector
     osc_car_qrg_f:   10000,  // 10 kHz
     osc_mod_qrg_f:    1000,  //  1 kHz
-    amp_rf_gain_f: 63.6396,  //  63.6396 mV Vpp @ 50R results to -20 dBm
+    amp_rf_gain_f: 63.6396,  // 63.6396 mV Vpp @ 50R results to -20 dBm
     osc_mod_mag_f:       0,  // no modulation by default
     muxin_gain_f:     80.0   // slider position in % of 100%
   };
