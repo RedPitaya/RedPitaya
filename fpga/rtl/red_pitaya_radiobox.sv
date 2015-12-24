@@ -214,10 +214,8 @@ enum {
     RB_LED_CTRL_NUM_MOD_CIC_Q_OUT,              // Magnitude indicator @ MOD_CIC Q output
     RB_LED_CTRL_NUM_MOD_FIR_I_OUT,              // Magnitude indicator @ MOD_FIR I output
     RB_LED_CTRL_NUM_MOD_FIR_Q_OUT,              // Magnitude indicator @ MOD_FIR Q output
-    RB_LED_CTRL_NUM_CAR_CIC_41M664_I_OUT,           // Magnitude indicator @ CAR_CIC I stage 1 -   1 MHz output
-    RB_LED_CTRL_NUM_CAR_CIC_41M664_Q_OUT,           // Magnitude indicator @ CAR_CIC Q stage 1 -   1 MHz output
-    RB_LED_CTRL_NUM_CAR_CIC_125M_I_OUT,         // Magnitude indicator @ CAR_CIC I stage 1 - 125 MHz output
-    RB_LED_CTRL_NUM_CAR_CIC_125M_Q_OUT,         // Magnitude indicator @ CAR_CIC Q stage 1 - 125 MHz output
+    RB_LED_CTRL_NUM_CAR_CIC_41M664_I_OUT,       // Magnitude indicator @ CAR_CIC I stage 1 -   41.664 MHz output
+    RB_LED_CTRL_NUM_CAR_CIC_41M664_Q_OUT,       // Magnitude indicator @ CAR_CIC Q stage 1 -   41.664 MHz output
 
     RB_LED_CTRL_NUM_CAR_QMIX_I_OUT      = 24,   // Magnitude indicator @ CAR_QMIX I output
     RB_LED_CTRL_NUM_CAR_QMIX_Q_OUT,             // Magnitude indicator @ CAR_QMIX Q output
@@ -628,7 +626,7 @@ rb_fir_8k_to_8k_17T16_35T31_lat41 i_rb_mod_fir_I (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( mod_cic_i_out[31:15] ),  // MOD_CIC output I - 8 kHz (17.16 bit width)
+  .s_axis_data_tdata    ( mod_cic_i_out[30:14] ),  // MOD_CIC output I - 8 kHz (17.16 bit width)
   .s_axis_data_tvalid   ( mod_cic_i_vld     ),
   .s_axis_data_tready   ( mod_cic_i_rdy     ),
 
@@ -642,7 +640,7 @@ rb_fir_8k_to_8k_17T16_35T31_lat41 i_rb_mod_fir_Q (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( mod_cic_q_out[31:15] ),  // MOD_CIC output Q - 8 kHz (17.16 bit width)
+  .s_axis_data_tdata    ( mod_cic_q_out[30:14] ),  // MOD_CIC output Q - 8 kHz (17.16 bit width)
   .s_axis_data_tvalid   ( mod_cic_q_vld     ),
   .s_axis_data_tready   ( mod_cic_q_rdy     ),
 
@@ -666,7 +664,7 @@ rb_cic_8k_to_41M664_32T32_lat14 i_rb_car_cic_I (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( {mod_fir_i_out[31:0], 0'b0} ),  // MOD_FIR I - 8 kHz
+  .s_axis_data_tdata    ( mod_fir_i_out[32:1]),  // MOD_FIR I - 8 kHz
   .s_axis_data_tvalid   ( mod_fir_i_vld     ),
   .s_axis_data_tready   ( mod_fir_i_rdy     ),
 
@@ -679,7 +677,7 @@ rb_cic_8k_to_41M664_32T32_lat14 i_rb_car_cic_Q (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( {mod_fir_q_out[31:0], 0'b0} ),  // MOD_FIR Q - 8 kHz
+  .s_axis_data_tdata    ( mod_fir_q_out[32:1]),  // MOD_FIR Q - 8 kHz
   .s_axis_data_tvalid   ( mod_fir_q_vld     ),
   .s_axis_data_tready   ( mod_fir_q_rdy     ),
 
@@ -726,8 +724,8 @@ rb_dds_48_16_125 i_rb_car_osc (
 //---------------------------------------------------------------------------------
 //  CAR_QMIX quadrature mixer for the radio frequency
 
-wire [ 15:0] car_qmix_i_in = (car_osc_inc_mux || car_osc_ofs_mux)                 ?  16'h7fff : amp_rf_q_en ?  car_cic_41M664_i_out[31:16] : mod_qmix_i_s3_out[47:32];  // MOD_QMIX/MOD_CIC uses full scale constant for CW, FM and PM modulations - SSB uses CIC I instead
-wire [ 15:0] car_qmix_q_in = (car_osc_inc_mux || car_osc_ofs_mux || !amp_rf_q_en) ?  16'h0000 :                car_cic_41M664_q_out[31:16]                           ;  // MOD_QMIX/MOD_CIC Q path keep quiet when Q is disabled - SSB uses CIC Q instead
+wire [ 15:0] car_qmix_i_in = (car_osc_inc_mux || car_osc_ofs_mux)                 ?  16'h7fff : amp_rf_q_en ?  car_cic_41M664_i_out[30:15] : mod_qmix_i_s3_out[47:32];  // MOD_QMIX/MOD_CIC uses full scale constant for CW, FM and PM modulations - SSB uses CIC I instead
+wire [ 15:0] car_qmix_q_in = (car_osc_inc_mux || car_osc_ofs_mux || !amp_rf_q_en) ?  16'h0000 :                car_cic_41M664_q_out[30:15]                           ;  // MOD_QMIX/MOD_CIC Q path keep quiet when Q is disabled - SSB uses CIC Q instead
 
 wire [ 31:0] car_qmix_i_out;
 wire [ 31:0] car_qmix_q_out;
@@ -893,41 +891,30 @@ else begin
           end
 
        RB_LED_CTRL_NUM_MOD_CIC_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(mod_cic_i_out[31:16]);
-          monitor <= mod_cic_i_out[31:16];
+          if (!led_ctr) rb_leds_data <= fct_mag(mod_cic_i_out[30:15]);
+          monitor <= mod_cic_i_out[30:15];
           end
        RB_LED_CTRL_NUM_MOD_CIC_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(mod_cic_q_out[31:16]);
-          monitor <= mod_cic_q_out[31:16];
+          if (!led_ctr) rb_leds_data <= fct_mag(mod_cic_q_out[30:15]);
+          monitor <= mod_cic_q_out[30:15];
           end
        RB_LED_CTRL_NUM_MOD_FIR_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_i_out[31:16]);
-          monitor <= mod_fir_i_out[31:16];
+          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_i_out[32:17]);
+          monitor <= mod_fir_i_out[32:17];
           end
        RB_LED_CTRL_NUM_MOD_FIR_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_q_out[31:16]);
-          monitor <= mod_fir_q_out[31:16];
+          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_q_out[32:17]);
+          monitor <= mod_fir_q_out[32:17];
           end
 
        RB_LED_CTRL_NUM_CAR_CIC_41M664_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(car_cic_41M664_i_out[31:16]);
-          monitor <= car_cic_41M664_i_out[31:16];
+          if (!led_ctr) rb_leds_data <= fct_mag(car_cic_41M664_i_out[30:15]);
+          monitor <= car_cic_41M664_i_out[30:15];
           end
        RB_LED_CTRL_NUM_CAR_CIC_41M664_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(car_cic_41M664_q_out[31:16]);
-          monitor <= car_cic_41M664_q_out[31:16];
+          if (!led_ctr) rb_leds_data <= fct_mag(car_cic_41M664_q_out[30:15]);
+          monitor <= car_cic_41M664_q_out[30:15];
           end
-
-/*
-       RB_LED_CTRL_NUM_CAR_CIC_125M_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(car_cic_125M_i_out[31:16]);
-          monitor <= car_cic_125M_i_out[31:16];
-          end
-       RB_LED_CTRL_NUM_CAR_CIC_125M_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(car_cic_125M_q_out[31:16]);
-          monitor <= car_cic_125M_q_out[31:16];
-          end
-*/
 
        RB_LED_CTRL_NUM_CAR_QMIX_I_OUT: begin
           if (!led_ctr) rb_leds_data <= fct_mag(car_qmix_i_out[30:15]);

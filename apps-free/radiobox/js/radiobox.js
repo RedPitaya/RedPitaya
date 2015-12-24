@@ -60,7 +60,7 @@
     rbled_ctrl_s:       18,  // RB LEDs set to: 0=disabled, 1=off,
                              //  4=MUXIN_MIX in,       5=MOD_ADC in,         6=MOD_ADC out,
                              //  8=MOD_QMIX_I_S1 out,  9=MOD_QMIX_Q_S1 out, 10=MOD_QMIX_I_S2, 11=MOD_QMIX_Q_S2, 12=MOD_QMIX_I_S3, 13=MOD_QMIX_Q_S3,
-                             // 16=MOD_CIC_I out,     17=MOD_CIC_Q out,     18=MOD_FIR_I out, 19=MOD_FIR_Q out, 20=CAR_CIC_1M_I out, 21=CAR_CIC_1M_Q out, 22=CAR_CIC_125M_I out, 23=CAR_CIC_125M_Q out,
+                             // 16=MOD_CIC_I out,     17=MOD_CIC_Q out,     18=MOD_FIR_I out, 19=MOD_FIR_Q out, 20=CAR_CIC_41M664_I out, 21=CAR_CIC_41M664_Q out,
                              // 24=CAR_QMIX_I out, 25=CAR_QMIX_Q out,
                              // 28=AMP_RF out,
                              // 31=current test vector
