@@ -230,9 +230,11 @@ if (typeof String.prototype.startsWith != 'function') {
 	};
 }
 
-function checkNetConnection(){
-	var xhr = new XMLHttpRequest();
-	var file = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js";
+var connectionFlag = -1;
+function checkNetConnectionImpl(success, fail) {
+/*	var xhr = new XMLHttpRequest();
+	xhr.timeout = 2000;
+	var file = "check_jq";
 	var r = Math.round(Math.random() * 10000);
 	xhr.open('HEAD', file + "?subins=" + r, false);
 	try {
@@ -245,7 +247,24 @@ function checkNetConnection(){
 	} catch (e) {
 		return false;
 	}
+	*/
+	$.ajax({ method: "GET",  url: "check_jq",  timeout: 2000})
+	.done(function() { 
+		success(); 
+	})
+	.fail(function() { 
+		fail(); 
+	});
 }
+/*
+function checkNetConnection(){
+	connectionFlag= -1;
+	checkNetConnectionImpl();
+	while(connectionFlag == -1);
+	return connectionFlag == 1;
+}
+*/
+var element  = window;
 
 var onLinkClicked = function()
 {
@@ -254,12 +273,22 @@ var onLinkClicked = function()
 		href3 = $(this).attr('href3');
 		if(href3!=undefined && href3!="")
 		{
-			if (checkNetConnection())
+			var success = function() {
 				window.location = href3;
-			else
+			}
+			var fail = function()
+			{
 				$('#no_internet').modal('show');
+			}	
+			checkNetConnectionImpl(success, fail);
 		} else
-			verifyLic($(this));
+		{
+			element = $(this)
+			var fail = function() {
+				$('#no_internet').modal('show');
+			}	
+			checkNetConnectionImpl(verifyLic, fail);
+		}
 	}else
 	{
 	    var el = $(this);
@@ -273,12 +302,6 @@ var verifyLic = function(element){
 
 	if (element.attr('href') == undefined)
 	{
-		if (!checkNetConnection())
-		{
-			$('#no_internet').modal('show');
-			return;
-		}
-
 		var post_uri = 'http://store.redpitaya.com/upload_id_file/';
 		var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
 
