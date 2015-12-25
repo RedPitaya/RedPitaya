@@ -4,9 +4,12 @@
 #include <math.h>
 #include <stdio.h>
 #include "version.h"
+#include <sys/types.h>
+#include <sys/sysinfo.h>
 
 enum {
-	STEP_FRONT_END_OFFSET = 1,
+	STEP_FRONT_END_OFFSET_LV = 1,
+	STEP_FRONT_END_OFFSET_HV,
 	STEP_FRONT_END_SCALE_LV,
 	STEP_FRONT_END_SCALE_HV,
 	STEP_BACK_END
@@ -147,6 +150,16 @@ CIntParameter out2TriggerSource("SOUR2_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TR
 CFloatParameter out1ShowOffset("OUTPUT1_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
 CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40);
 
+
+/***************************************************************************************
+*                                   SYSTEM STATUS                                      *
+****************************************************************************************/
+long double cpu_values[4] = {0, 0, 0, 0}; /* reading only user, nice, system, idle */
+CFloatParameter cpuLoad("CPU_LOAD", CBaseParameter::RW, 0, 0, 0, 100);
+
+CFloatParameter memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+CFloatParameter memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+
 /***************************************************************************************
 *                                      CALIBATE                                        *
 ****************************************************************************************/
@@ -154,7 +167,8 @@ CFloatParameter out2ShowOffset("OUTPUT2_SHOW_OFF", CBaseParameter::RW, 0, 0, -40
 // 0-nothing		1-commant from web		-1-response OK
 // 1V - TP16
 CIntParameter calibrateReset("CALIB_RESET", CBaseParameter::RW, -2, 0, -2, 1);
-CIntParameter calibrateFrontEndOffset("CALIB_FE_OFF", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndOffsetLV("CALIB_FE_OFF_LV", CBaseParameter::RW, -2, 0, -2, 1);
+CIntParameter calibrateFrontEndOffsetHV("CALIB_FE_OFF_HV", CBaseParameter::RW, -2, 0, -2, 1);
 CIntParameter calibrateFrontEndScaleLV("CALIB_FE_SCALE_LV", CBaseParameter::RW, -2, 0, -2, 1);
 CIntParameter calibrateFrontEndScaleHV("CALIB_FE_SCALE_HV", CBaseParameter::RW, -2, 0, -2, 1);
 CIntParameter calibrateBackEnd("CALIB_BE", CBaseParameter::RW, -2, 0, -2, 1);
@@ -241,6 +255,36 @@ void UpdateParams(void) {
     bool running;
     rpApp_OscIsRunning(&running);
     inRun.Value() = running;
+
+    static int times = 0;
+
+	if (times == 3)
+	{
+	    FILE *fp = fopen("/proc/stat","r");
+	    if(fp)
+	    {
+	    	long double a[4];
+	    	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
+	    	fclose(fp);
+
+	    	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
+	    	long double loadavg = 100;
+	    	if(divider > 0.01)
+			{
+				loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
+			}
+			cpuLoad.Value() = (float)(loadavg * 100);
+			cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
+	    }
+	    times = 0;
+
+		struct sysinfo memInfo;
+	    sysinfo (&memInfo);
+    	long long totalVirtualMem = memInfo.totalram;
+    	memoryTotal.Value() = (float)memInfo.totalram;
+    	memoryFree.Value() = (float)memInfo.freeram;
+	}
+	times++;
 
 #ifdef DIGITAL_LOOP
 	rp_EnableDigitalLoop(digitalLoop.Value() || IsDemoParam.Value());
@@ -462,8 +506,11 @@ void UpdateSignals(void) {
 }
 
 bool check_params(const rp_calib_params_t& current_params, int step) {
-	if (step == STEP_FRONT_END_OFFSET) {
-		if (abs(current_params.fe_ch1_dc_offs) < 512 && abs(current_params.fe_ch2_dc_offs) < 512)
+	if (step == STEP_FRONT_END_OFFSET_LV) {
+		if (abs(current_params.fe_ch1_lo_offs) < 512 && abs(current_params.fe_ch2_lo_offs) < 512)
+			return true;
+	} else if (step == STEP_FRONT_END_OFFSET_HV) {
+		if (abs(current_params.fe_ch1_hi_offs) < 512 && abs(current_params.fe_ch2_hi_offs) < 512)
 			return true;
 	} else if (step == STEP_FRONT_END_SCALE_LV) {
 		if (fabs(current_params.fe_ch1_fs_g_lo/858993459.f - 1.f) < 0.2 && fabs(current_params.fe_ch2_fs_g_lo/858993459.f - 1.f) < 0.2)
@@ -705,18 +752,20 @@ void OnNewParams(void) {
 		default_params = rp_GetCalibrationSettings();
 	}
 
-	if (calibrateFrontEndOffset.NewValue() == 1) {
-		calibrateFrontEndOffset.Update();
-		rp_CalibrateFrontEndOffset(RP_CH_1, &out_params);
-		rp_CalibrateFrontEndOffset(RP_CH_2, &out_params);
-		calibrateFrontEndOffset.IsValueChanged();
-		if (check_params(out_params, STEP_FRONT_END_OFFSET)) {
+	if (calibrateFrontEndOffsetLV.NewValue() == 1) {
+		calibrateFrontEndOffsetLV.Update();
+
+		rp_AcqSetGain(RP_CH_1, RP_LOW);
+		rp_CalibrateFrontEndOffset(RP_CH_1, RP_LOW, &out_params);
+		rp_CalibrateFrontEndOffset(RP_CH_2, RP_LOW, &out_params);
+		calibrateFrontEndOffsetLV.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_OFFSET_LV)) {
 			rp_CalibrationWriteParams(out_params);
-			calibrateFrontEndOffset.Value() = -1; // next calibration step
+			calibrateFrontEndOffsetLV.Value() = -1; // next calibration step
 			is_default_calib_params = false;
 		}
 		else
-			calibrateFrontEndOffset.Value() = 0; // send user warning
+			calibrateFrontEndOffsetLV.Value() = 0; // send user warning
 	}
 
     if (calibrateFrontEndScaleLV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 1.f) {
@@ -734,6 +783,22 @@ void OnNewParams(void) {
         calibrateValue.Update();
     }
 
+	if (calibrateFrontEndOffsetHV.NewValue() == 1) {
+		calibrateFrontEndOffsetHV.Update();
+
+		rp_AcqSetGain(RP_CH_1, RP_HIGH);
+		rp_CalibrateFrontEndOffset(RP_CH_1, RP_HIGH, &out_params);
+		rp_CalibrateFrontEndOffset(RP_CH_2, RP_HIGH, &out_params);
+		calibrateFrontEndOffsetHV.IsValueChanged();
+		if (check_params(out_params, STEP_FRONT_END_OFFSET_HV)) {
+			rp_CalibrationWriteParams(out_params);
+			calibrateFrontEndOffsetHV.Value() = -1; // next calibration step
+			is_default_calib_params = false;
+		}
+		else
+			calibrateFrontEndOffsetHV.Value() = 0; // send user warning
+	}
+
     if (calibrateFrontEndScaleHV.NewValue() == 1 && calibrateValue.IsNewValue() && calibrateValue.NewValue() > 0.f && calibrateValue.NewValue() <= 20.f) {
 		calibrateFrontEndScaleHV.Update();
         rp_CalibrateFrontEndScaleHV(RP_CH_1, calibrateValue.NewValue(), &out_params);
@@ -749,6 +814,7 @@ void OnNewParams(void) {
     }
 
     if (calibrateBackEnd.NewValue() == 1) {
+		rp_AcqSetGain(RP_CH_1, RP_LOW); // set back to low
 		calibrateBackEnd.Update();
         rp_CalibrateBackEnd(RP_CH_1, &out_params);
         rp_CalibrateBackEnd(RP_CH_2, &out_params);

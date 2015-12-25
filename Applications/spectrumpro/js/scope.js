@@ -64,6 +64,10 @@
   SPEC.xmax = 1000000;
   SPEC.ymax = 20.0;
   SPEC.ymin = -120.0;
+  
+  SPEC.compressed_data = 0;
+  SPEC.decompressed_data = 0;
+  SPEC.refresh_times = [];
 
   SPEC.points_per_px = 5;             // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
   SPEC.scale_points_size = 10;
@@ -111,15 +115,17 @@
       console.log('Could not start the application (ERR3)');
     });
   };
-
+	
   // Creates a WebSocket connection with the web server
   SPEC.connectWebSocket = function() {
 
     if(window.WebSocket) {
-      SPEC.ws = new WebSocket(SPEC.config.socket_url);
+		SPEC.ws = new WebSocket(SPEC.config.socket_url);
+		SPEC.ws.binaryType = "arraybuffer";
     }
     else if(window.MozWebSocket) {
-      SPEC.ws = new MozWebSocket(SPEC.config.socket_url);
+		SPEC.ws = new MozWebSocket(SPEC.config.socket_url);
+		SPEC.ws.binaryType = "arraybuffer";
     }
     else {
       console.log('Browser does not support WebSocket');
@@ -150,30 +156,48 @@
         console.log('Websocket error: ', ev);
       };
 
+	  var g_count = 0;
+	  var g_time = 0;
+	  var g_iter = 10;
+	  var g_delay = 200;
+	  
       SPEC.ws.onmessage = function(ev) {
+	  
+	  	++g_count;
+		var start_time = +new Date();
         if(SPEC.state.processing) {
           return;
         }
         SPEC.state.processing = true;
 
-        var receive = JSON.parse(ev.data);
+		try
+		{
+			var data = new Uint8Array(ev.data);
+			var inflate = new Zlib.Gunzip(data);
+			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+			var receive = JSON.parse(text);
 
-        if(receive.parameters) {
-			SPEC.processParameters(receive.parameters);
-			if(Object.keys(SPEC.params.orig).length < 30 && Object.keys(receive.parameters).length < 30) {
-				SPEC.params.local['in_command'] = { value: 'send_all_params' };
-				SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-				SPEC.params.local = {};
-			} else {
+			if(receive.parameters) {
 				SPEC.processParameters(receive.parameters);
+				if(Object.keys(SPEC.params.orig).length < 30 && Object.keys(receive.parameters).length < 30) {
+					SPEC.params.local['in_command'] = { value: 'send_all_params' };
+					SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
+					SPEC.params.local = {};
+				} else {
+					SPEC.processParameters(receive.parameters);
+				}
 			}
-        }
 
-        if(receive.signals) {
-          SPEC.processSignals(receive.signals);
-        }
-
-        SPEC.state.processing = false;
+			if(receive.signals) {
+			  SPEC.processSignals(receive.signals);
+			}
+		} catch(e) 
+		{
+			SPEC.state.processing = false;
+			console.log(e);
+		} finally {
+			SPEC.state.processing = false;
+		}
       };
     }
   };
@@ -1500,6 +1524,8 @@ $(function() {
 
   // Stop the application when page is unloaded
   window.onbeforeunload = function() {
+    OSC.ws.onclose = function () {}; // disable onclose handler first
+    OSC.ws.close();
     $.ajax({
       url: SPEC.config.stop_app_url,
       async: false
