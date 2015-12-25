@@ -1,6 +1,0 @@
-{
-    "name": "lcr_meter",
-    "version": "0.94-BUILD_NUMBER",
-    "revision": "REVISION",
-    "description": "Inductance, capacitance and resistance measurement system. Requires a shunt resistor. Guide available at: http://goo.gl/2lnbeN"
-}

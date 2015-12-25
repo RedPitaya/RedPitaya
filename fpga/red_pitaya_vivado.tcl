@@ -85,9 +85,14 @@ read_verilog   -sv                $path_rtl/red_pitaya_radiobox.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 
+read_ip                           $path_ip/rb_cic_48k_to_8k_32T32_lat13.xcix
+read_ip                           $path_ip/rb_cic_8k_to_41M664_32T32_lat14.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
-read_ip                           $path_ip/rb_multadd_16s_33s_48u_07lat.xcix
-read_ip                           $path_ip/rb_pipe_07delay.xcix
+read_ip                           $path_ip/rb_dsp48_AaDmB_A16_D16_B16_P32.xcix
+read_ip                           $path_ip/rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36.xcix
+read_ip                           $path_ip/rb_dsp48_AmB_A16_B16_P32.xcix
+read_ip                           $path_ip/rb_dsp48_CONaC_CON48_C48_P48.xcix
+read_ip                           $path_ip/rb_fir_8k_to_8k_17T16_35T31_lat41.xcix
 
 read_xdc                          $path_sdc/red_pitaya.xdc
 
@@ -99,9 +104,7 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 ################################################################################
 
 synth_ip                          [get_ips clk_adc_pll]
-synth_ip                          [get_ips rb_dds_48_16_125]
-synth_ip                          [get_ips rb_multadd_16s_33s_48u_07lat]
-synth_ip                          [get_ips rb_pipe_07delay]
+synth_ip                          [get_ips rb_*]
 
 #synth_design -top red_pitaya_top
 synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers

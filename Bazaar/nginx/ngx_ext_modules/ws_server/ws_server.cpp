@@ -15,7 +15,7 @@ void start_ws_server(const struct server_parameters * _params)
     stop_ws_server();
 
 	fprintf(stderr, "start_ws_server()\n");
-	
+
 	struct server_parameters* loaded_params = load_params();
 	if(_params != 0)
 	{
@@ -27,6 +27,7 @@ void start_ws_server(const struct server_parameters * _params)
 		loaded_params->set_params_func = _params->set_params_func;
 		loaded_params->get_signals_func = _params->get_signals_func;
 		loaded_params->set_signals_func = _params->set_signals_func;
+		loaded_params->gzip_func = _params->gzip_func;
 	}
 	if(_params != 0 && _params->port != 0)
 		loaded_params->port = _params->port;

@@ -56,7 +56,7 @@ int32_t data[n]; // AWG data buffer
 
 /** Signal types */
 typedef enum {
-    eSignalSine,         // Sinusoidal waveform
+    eSignalSine,         // Sinusoidal waveform.
     eSignalSquare,       // Square waveform
     eSignalTriangle,     // Triangular waveform
     eSignalSweep,        // Sinusoidal frequency sweep
@@ -80,7 +80,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+void synthesize_signal(double ampl, double offset, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *params);
 void write_data_fpga(uint32_t ch,
@@ -118,23 +118,23 @@ void usage() {
                        "[scale type] "
                        "[wait]\n"
             "\n"
-            "\tchannel            Channel to generate signal on [1 / 2].\n"
-            "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
-            "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                   Max sum of amplitude and DC bias is (0-1]V.\n"
-            "\tr_shunt            Shunt resistor value in Ohms [>0].\n"
+            "\tchannel            Output channel                   [1 / 2   ].\n"
+            "\tamplitude          Output signal amplitude in Volts [0 - 0.4 ].\n"
+            "\tdc bias            DC bias in V                     [0 - 0.25].\n"
+            "\tr_shunt            Shunt resistor value in Ohms     [If set to 0, Automatic ranging is used].\n"
+            "\t                   Automatic ranging demands Extenson module.\n"
             "\taveraging          Number of samples per one measurement [>1].\n"
-            "\tcalibration mode   0 - none, 1 - open and short, 2 - z_ref.\n"
-            "\tz_ref real         Reference impedance, real part.\n"
-            "\tz_ref imag         Reference impedance, imaginary part.\n"
-            "\tcount/steps        Number of measurements [>1 / >2, dep. on sweep mode].\n"
+            "\tcalibration mode   Set to 0, Cal is not yet included].\n"
+            "\tz_ref real         Reference impedance, real part [set to 0 -> not yet included].\n"
+            "\tz_ref imag         Reference impedance, [set to 0 -> not yet included].\n"
+            "\tcount/steps        Number of measurements [min 2 for frequency sweep].\n"
             "\tsweep mode         0 - measurement sweep, 1 - frequency sweep.\n"
-            "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
-            "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
+            "\tstart freq         Lower frequency limit in Hz [1 - 62.5e6].\n"
+            "\tstop freq          Upper frequency limit in Hz [1 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
             "\twait               Wait for user before performing each step [0 / 1].\n"
             "\n"
-            "Output:\tfrequency [Hz], phase [deg], Z [Ohm], Y, PhaseY, R_s, X_s, G_p, B_p, C_s, C_p, L_s, L_p, R_p, Q, D\n";
+            "Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -147,7 +147,6 @@ int get_gain(int *gain, const char *str) {
     }
     if ( (strncmp(str, "hv", 2) == 0) || (strncmp(str, "HV", 2) == 0) ) {
         *gain = 1;
-        return 0;
     }
 
     fprintf(stderr, "Unknown gain: %s\n", str);
@@ -335,6 +334,7 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
+
     if ( (end_frequency < start_frequency) && (sweep_function == 1) ) {
         fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
         usage();
@@ -368,11 +368,11 @@ int main(int argc, char *argv[]) {
     signal_e type = eSignalSine;
     float    log_Frequency;
     float    **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw acquired data saved to this location
-    uint32_t min_periodes = 10; // max 20
+    uint32_t min_periodes = 8; // max 20
     // when frequency lies below 100Hz number of acquired periodes reduces to 2
     // this reduces measurement time
     if (start_frequency < 100 && sweep_function == 0) {
-        min_periodes = 2;
+        min_periodes = 5;
     }
     uint32_t size; // number of samples varies with number of periodes
     int      dimension_step = 0; // saving data on the right place in allocated memory this is iterator
@@ -386,7 +386,7 @@ int main(int argc, char *argv[]) {
     int stepsTE = 10; // number of steps for transient effect(TE) elimination
     int TE_step_counter;
     int progress_int = 0;
-    char command[70];
+    //char command[70];
     // if user sets less than 10 steps than stepsTE is decresed
     // for transient efect to be eliminated only 10 steps of measurements is eliminated
     if (steps < 10){
@@ -698,7 +698,7 @@ int main(int argc, char *argv[]) {
              * fills the vector with amplitude values and then sends it to fpga buffer  */
             awg_param_t params;
             /* Prepare data buffer (calculate from input arguments) */
-            synthesize_signal( ampl, Frequency[fr], type, endfreq, data, &params );
+            synthesize_signal( ampl, DC_bias, Frequency[fr], type, endfreq, data, &params );
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga( ch, data, &params );
 
@@ -746,12 +746,12 @@ int main(int argc, char *argv[]) {
                 if (progress_int <= 100){
                     fprintf(progress_file , "%d \n" ,  progress_int );
 
-                    sprintf(command, "/opt/redpitaya/bin/monitor 0x40000030 0x%x", (1 << (8*progress_int/100)) - 1);
-                    system(command);
+                    //sprintf(command, "/opt/redpitaya/bin/monitor 0x40000030 0x%x", (1 << (8*progress_int/100)) - 1);
+                    //system(command);
                     fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
                     //printf(" progress: %d  \n",progress_int);
-
+                     
                     fclose(progress_file);
                 }
 
@@ -760,12 +760,12 @@ int main(int argc, char *argv[]) {
                     for ( i1 = 0; i1 < averaging_num; i1++ ) {
 
                         /* decimation changes depending on frequency */
-                        if      (Frequency[ fr ] >= 160000){      f = 0;    }
-                        else if (Frequency[ fr ] >= 20000) {      f = 1;    }
-                        else if (Frequency[ fr ] >= 2500)  {      f = 2;    }
-                        else if (Frequency[ fr ] >= 160)   {      f = 3;    }
-                        else if (Frequency[ fr ] >= 20)    {      f = 4;    }
-                        else if (Frequency[ fr ] >= 2.5)   {      f = 5;    }
+                        if      (Frequency[ fr ] >= 65000) {      f = 0;    }
+                        else if (Frequency[ fr ] >= 8000)  {      f = 1;    }
+                        else if (Frequency[ fr ] >= 1000)  {      f = 2;    }
+                        else if (Frequency[ fr ] >= 60)    {      f = 3;    }
+                        else if (Frequency[ fr ] >= 8)     {      f = 4;    }
+                        else if (Frequency[ fr ] >= 1)     {      f = 5;    }
 
                         /* setting decimtion */
                         if (f != DEC_MAX) {
@@ -903,7 +903,7 @@ int main(int argc, char *argv[]) {
     /* Setting amplitude to 0V - turning off the output. */
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
-    synthesize_signal( 0, 1000, type, endfreq, data, &params );
+    synthesize_signal( 0, 0, 1000, type, endfreq, data, &params );
     /* Write the data to the FPGA and set FPGA AWG state machine */
     write_data_fpga( ch, data, &params );
 
@@ -992,7 +992,15 @@ int main(int argc, char *argv[]) {
             calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
+        
+
+        if (sweep_function==0) 
+        {
+        w_out = 2 * M_PI * start_frequency; // angular velocity
+        }
+        else {
         w_out = 2 * M_PI * Frequency[ i ]; // angular velocity
+        }  
 
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
@@ -1017,66 +1025,116 @@ int main(int argc, char *argv[]) {
         D[ i ] = -1 / Q [ i ]; //D=-1/Q;
 
         /// Output
-        printf(" %.2f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f    %.5f\n",
+        /*printf(" %.1f    %.3f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",*/
+         printf(" %.1f    %.3e    %.2f    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.2f\n",  
+        
+        /*"Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";*/   
+         
             Frequency[ !sweep_function ? 0 : i ],
-            PhaseZ[ i ],
             AmplitudeZ[ i ],
-            Y_abs[ i ],
-            PhaseY[ i ],
-            R_s[ i ],
-            X_s[ i ],
-            G_p[ i ],
-            B_p[ i ],
-            C_s[ i ],
-            C_p[ i ],
+            PhaseZ[ i ],
             L_s[ i ],
+            C_s[ i ],
+            R_s[ i ],
             L_p[ i ],
+            C_p[ i ],
             R_p[ i ],
             Q[ i ],
-            D[ i ]
+            D[ i ],
+            X_s[ i ],               
+            G_p[ i ],
+            B_p[ i ],           
+            Y_abs[ i ],
+            PhaseY[ i ]
             );
 
+
+ 
         /** Saving files */
         if (!sweep_function) {
-            fprintf(file_frequency, "%.5f\n", Frequency[0]);
+            fprintf(file_frequency, "%.1f\n", Frequency[0]);
         } else {
-            fprintf(file_frequency, "%.5f\n", Frequency[i]);
+            fprintf(file_frequency, "%.1f\n", Frequency[i]);
+            
         }
 
-        fprintf(file_phase, "%.5f\n", PhaseZ[i]);
-        fprintf(file_amplitude, "%.5f\n", AmplitudeZ[i]);
-        fprintf(file_R_s, "%.5f\n", R_s[i]);
-        fprintf(file_Y_abs, "%.5f\n", Y_abs[i]);
-        fprintf(file_PhaseY, "%.5f\n", PhaseY[i]);
-        fprintf(file_X_s, "%.5f\n", X_s[i]);
-        fprintf(file_G_p, "%.5f\n", G_p[i]);
-        fprintf(file_B_p, "%.5f\n", B_p[i]);
-        fprintf(file_C_s, "%.5f\n", C_s[i]);
-        fprintf(file_C_p, "%.5f\n", C_p[i]);
-        fprintf(file_L_s, "%.5f\n", L_s[i]);
-        fprintf(file_L_p, "%.5f\n", L_p[i]);
-        fprintf(file_R_p, "%.5f\n", R_p[i]);
-        fprintf(file_Q, "%.5f\n", Q[i]);
-        fprintf(file_D, "%.5f\n", D[i]);
+        fprintf(file_amplitude, "%.3f\n", AmplitudeZ[i]);        
+        fprintf(file_phase, "%.2f\n", PhaseZ[i]);
+        
+        fprintf(file_L_s, "%.15f\n", L_s[i]);
+        fprintf(file_C_s, "%.15f\n", C_s[i]);
+        fprintf(file_R_s, "%.15f\n", R_s[i]);
+
+        fprintf(file_L_p, "%.15f\n", L_p[i]);
+        fprintf(file_C_p, "%.15f\n", C_p[i]);
+        fprintf(file_R_p, "%.15f\n", R_p[i]);
+
+        fprintf(file_Q, "%.15f\n", Q[i]);
+        fprintf(file_D, "%.15f\n", D[i]);
+
+        fprintf(file_X_s, "%.15f\n", X_s[i]);
+        fprintf(file_G_p, "%.15f\n", G_p[i]);
+        fprintf(file_B_p, "%.15f\n", B_p[i]);
+
+        fprintf(file_Y_abs, "%.15f\n", Y_abs[i]);
+        fprintf(file_PhaseY, "%.15f\n", PhaseY[i]);
+
+        /*Dummy data*/
+        
+/*
+        fprintf(file_amplitude, "%.15f\n", 1.0e-15*powf((i-5),3.0));        
+        fprintf(file_phase, "%.2f\n", -90.0);
+        
+        fprintf(file_L_s, "%.15f\n", 1.0e12*powf((i-5),3.0));
+        fprintf(file_C_s, "%.15f\n", -110.0);
+        fprintf(file_R_s, "%.15f\n", 90.0);
+
+        fprintf(file_L_p, "%.15f\n", 100.0);
+        fprintf(file_C_p, "%.15f\n", 80.0);
+        fprintf(file_R_p, "%.15f\n", 99.0);
+
+        fprintf(file_Q, "%.15f\n", -95.0);
+        fprintf(file_D, "%.15f\n", -1000.0);
+
+        fprintf(file_X_s, "%.15f\n", 1100.0);
+        fprintf(file_G_p, "%.15f\n", 1200.0);
+        fprintf(file_B_p, "%.15f\n", 1300.0);
+
+        fprintf(file_Y_abs, "%.15f\n", 1400.0);
+        fprintf(file_PhaseY, "%.15f\n", 1500.0);*/
+          
+        
+        
+      
     }
+
 
     /** Closing files */
     fclose(file_frequency);
-    fclose(file_phase);
+    
     fclose(file_amplitude);
+    fclose(file_phase);
+
+    fclose(file_L_s);
+    fclose(file_C_s);
     fclose(file_R_s);
-    fclose(file_Y_abs);
-    fclose(file_PhaseY);
+
+    fclose(file_L_p);
+    fclose(file_C_p);
+    fclose(file_R_p);
+
+    fclose(file_Q);
+    fclose(file_D);
+    
     fclose(file_X_s);
     fclose(file_G_p);
     fclose(file_B_p);
-    fclose(file_C_s);
-    fclose(file_C_p);
-    fclose(file_L_s);
-    fclose(file_L_p);
-    fclose(file_R_p);
-    fclose(file_Q);
-    fclose(file_D);
+    
+    fclose(file_Y_abs);
+    fclose(file_PhaseY);
+    
+    
+    
 
     /** All's well that ends well. */
     return 1;
@@ -1097,14 +1155,14 @@ int main(int argc, char *argv[]) {
  * @param awg   Returned AWG parameters.
  *
  */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+void synthesize_signal(double ampl, double offset, double freq, signal_e type, double endfreq,
                        int32_t *data,
                        awg_param_t *awg) {
 
     uint32_t i;
 
     /* Various locally used constants - HW specific parameters */
-    const int dcoffs = -155;
+    const int dcoffs = (int)(offset * (double)(1<<13));
     const int trans0 = 30;
     const int trans1 = 300;
     const double tt2 = 0.249;
@@ -1112,7 +1170,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
-    awg->wrap = round(65536 * (n-1));
+    awg->wrap = round(65536 * n - 1);
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
     uint32_t amp = ampl * 4000.0;    /* 1 V ==> 4000 DAC counts */
@@ -1349,15 +1407,30 @@ int LCR_data_analysis(float **s,
     for ( i2 = 0; i2 < SIGNALS_NUM; i2++) { // only the 1 and 2 are used for i2
         for( i3 = 0; i3 < size; i3 ++ ) {
             //division comes after multiplication, this way no accuracy is lost
-            U_acq[i2][i3] = ( ( s[ i2 ][ i3 ] ) * (float)( 2 - DC_bias ) ) / (float)16384 ;
+            U_acq[i2][i3] = ( ( s[ i2 ][ i3 ] ) * (float)( 2 ) ) / (float)16384 ;
+            /*printf("%f\n",U_acq[i2][i3]);*/
         }
     }
 
+        int i;
+        float sum_buff_in1;
+        float sum_buff_in2;
+
+        for(i = 0; i < size; i++){
+
+        sum_buff_in1 += U_acq[1][i];
+        sum_buff_in2 += U_acq[2][i];
+               
+        }
+        float mean_buff_in1=sum_buff_in1/size;
+        float mean_buff_in2=sum_buff_in2/size;
+
+      
     /* Voltage and current on the load can be calculated from gathered data */
     for (i2 = 0; i2 < size; i2++) {
-        U_dut[ i2 ] = (U_acq[ 1 ][ i2 ] - U_acq[ 2 ][ i2 ]); // potencial difference gives the voltage
+        U_dut[ i2 ] = (((U_acq[ 1 ][ i2 ])- mean_buff_in1) - ((U_acq[ 2 ][ i2 ])- mean_buff_in2)); // potencial difference gives the voltage
         // Curent trough the load is the same as trough thr R_shunt. ohm's law is used to calculate the current
-        I_dut[ i2 ] = (U_acq[ 2 ][ i2 ] / R_shunt);
+        I_dut[ i2 ] = (((U_acq[ 2 ][ i2 ])- mean_buff_in2) / R_shunt);
     }
 
     /* Acquired signals must be multiplied by the reference signals, used for lock in metod */

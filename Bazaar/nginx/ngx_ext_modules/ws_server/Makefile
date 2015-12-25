@@ -33,9 +33,9 @@ $(LIB): $(OBJECTS)
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(RP_MANAGER_LIB): 
+$(RP_MANAGER_LIB):
 	cd $(RP_MANAGER_DIR); $(MAKE)
 
-clean: 
+clean:
 	rm -rf $(LIB) $(OBJECTS)
 	$(MAKE) -C $(RP_MANAGER_DIR) clean

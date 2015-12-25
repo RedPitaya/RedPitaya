@@ -37,20 +37,20 @@ enum {
     FPGA_RB_ISR                 = 0x0000C,
     FPGA_RB_DMA_CTRL            = 0x00010,
     FPGA_RB_LED_CTRL            = 0x0001C,
-    FPGA_RB_OSC_CAR_INC_LO      = 0x00020,
-    FPGA_RB_OSC_CAR_INC_HI      = 0x00024,
-    FPGA_RB_OSC_CAR_OFS_LO      = 0x00028,
-    FPGA_RB_OSC_CAR_OFS_HI      = 0x0002C,
-    FPGA_RB_OSC_CAR_MIX_GAIN    = 0x00030,
-    FPGA_RB_OSC_CAR_MIX_OFS_LO  = 0x00038,
-    FPGA_RB_OSC_CAR_MIX_OFS_HI  = 0x0003C,
-    FPGA_RB_OSC_MOD_INC_LO      = 0x00040,
-    FPGA_RB_OSC_MOD_INC_HI      = 0x00044,
-    FPGA_RB_OSC_MOD_OFS_LO      = 0x00048,
-    FPGA_RB_OSC_MOD_OFS_HI      = 0x0004C,
-    FPGA_RB_OSC_MOD_MIX_GAIN    = 0x00050,
-    FPGA_RB_OSC_MOD_MIX_OFS_LO  = 0x00058,
-    FPGA_RB_OSC_MOD_MIX_OFS_HI  = 0x0005C,
+    FPGA_RB_CAR_OSC_INC_LO      = 0x00020,
+    FPGA_RB_CAR_OSC_INC_HI      = 0x00024,
+    FPGA_RB_CAR_OSC_OFS_LO      = 0x00028,
+    FPGA_RB_CAR_OSC_OFS_HI      = 0x0002C,
+    FPGA_RB_CAR_OSC_MIX_GAIN    = 0x00030,
+    FPGA_RB_CAR_OSC_MIX_OFS_LO  = 0x00038,
+    FPGA_RB_CAR_OSC_MIX_OFS_HI  = 0x0003C,
+    FPGA_RB_MOD_OSC_INC_LO      = 0x00040,
+    FPGA_RB_MOD_OSC_INC_HI      = 0x00044,
+    FPGA_RB_MOD_OSC_OFS_LO      = 0x00048,
+    FPGA_RB_MOD_OSC_OFS_HI      = 0x0004C,
+    FPGA_RB_MOD_OSC_MIX_GAIN    = 0x00050,
+    FPGA_RB_MOD_OSC_MIX_OFS_LO  = 0x00058,
+    FPGA_RB_MOD_OSC_MIX_OFS_HI  = 0x0005C,
     FPGA_RB_MUXIN_SRC           = 0x00060,
     FPGA_RB_MUXIN_GAIN          = 0x00064
 } FPGA_RB_REG_ENUMS;
@@ -67,29 +67,29 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h00: ENABLE - '1' enables the RadioBox sub-module. DDS-Oscillators, multipliers, LED handling are turned on. The DAC and LEDs are connected to this sub-module when enabled.
      *
-     * bit h01: RESET OSC_CAR - '1' resets the OSC_CAR (carrier oscillator) to its initial state like the accumulating phase register.
+     * bit h01: RESET CAR_OSC - '1' resets the CAR_OSC (carrier oscillator) to its initial state like the accumulating phase register.
      *
-     * bit h02: RESET OSC_MOD - '1' resets the OSC_MOD (modulation oscillator) to its initial state like the accumulating phase register.
+     * bit h02: RESET MOD_OSC - '1' resets the MOD_OSC (modulation oscillator) to its initial state like the accumulating phase register.
      *
      * bit h03: n/a
      *
-     * bit h04: OSC_CAR RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the OSC_CAR resumes operation.
+     * bit h04: CAR_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the CAR_OSC resumes operation.
      *
-     * bit h05: OSC_CAR INC SRC STREAM - '1' places input MUXer for OSC_CAR DDS increment input to the first streamed input pipe. '0' places MUXer to registers "OSC_CAR INC HI" and "OSC_CAR INC LO".
+     * bit h05: CAR_OSC INC SRC STREAM - '1' places input MUXer for CAR_OSC DDS increment input to the first streamed input pipe. '0' places MUXer to registers "CAR_OSC INC HI" and "CAR_OSC INC LO".
      *
-     * bit h06: OSC_CAR OFS SRC STREAM - '1' places input MUXer for OSC_CAR DDS offset input to the first streamed input pipe. '0' places MUXer to registers "OSC_CAR OFS HI" and "OSC_CAR OFS LO".
+     * bit h06: CAR_OSC OFS SRC STREAM - '1' places input MUXer for CAR_OSC DDS offset input to the first streamed input pipe. '0' places MUXer to registers "CAR_OSC OFS HI" and "CAR_OSC OFS LO".
      *
      * bit h0B..h07: n/a
      *
-     * bit h0C: OSC_MOD RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the OSC_CAR resumes operation.
+     * bit h0C: MOD_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the CAR_OSC resumes operation.
      *
-     * bit h0D: OSC_MOD INC SRC STREAM - '1' places input MUXer for OSC_MOD DDS increment input to the second streamed input pipe. '0' places MUXer to registers "OSC_MOD INC HI" and "OSC_MOD INC LO".
+     * bit h0D: MOD_OSC INC SRC STREAM - '1' places input MUXer for MOD_OSC DDS increment input to the second streamed input pipe. '0' places MUXer to registers "MOD_OSC INC HI" and "MOD_OSC INC LO".
      *
-     * bit h0E: OSC_MOD OFS SRC STREAM - '1' places input MUXer for OSC_MOD DDS offset input to the second streamed input pipe. '0' places MUXer to registers "OSC_MOD OFS HI" and "OSC_MOD OFS LO".
+     * bit h0E: MOD_OSC OFS SRC STREAM - '1' places input MUXer for MOD_OSC DDS offset input to the second streamed input pipe. '0' places MUXer to registers "MOD_OSC OFS HI" and "MOD_OSC OFS LO".
      *
      * bit h13..h0F: n/a
      *
-     * bit h14: AMP_RF_Q_EN - '1' enables the QMIX_CAR Q path for the SSB modulation
+     * bit h14: AMP_RF_Q_EN - '1' enables the CAR_QMIX Q path for the SSB modulation
      *
      * bit h1F..h15: n/a
      *
@@ -106,17 +106,17 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h03: n/a
      *
-     * bit h04: STAT_OSC_CAR_ZERO - '1' OSC_CAR output equals zero. This state is based on the output of the DDS oscillator itself.
+     * bit h04: STAT_CAR_OSC_ZERO - '1' CAR_OSC output equals zero. This state is based on the output of the DDS oscillator itself.
      *
-     * bit h05: STAT_OSC_CAR_VALID - '1' OSC_CAR output is valid. After turning this sub-module active it needs some clocks going into valid state.
+     * bit h05: STAT_CAR_OSC_VALID - '1' CAR_OSC output is valid. After turning this sub-module active it needs some clocks going into valid state.
      *
      * bit h06: n/a
      *
      * bit h07: n/a
      *
-     * bit h08: STAT_OSC_MOD_ZERO - '1' OSC_MOD output equals zero. This state is based on the output of the DDS oscillator itself.
+     * bit h08: STAT_MOD_OSC_ZERO - '1' MOD_OSC output equals zero. This state is based on the output of the DDS oscillator itself.
      *
-     * bit h09: STAT_OSC_MOD_VALID - '1' OSC_MOD output is valid. After turning this sub-module active it needs some clocks going into valid state.
+     * bit h09: STAT_MOD_OSC_VALID - '1' MOD_OSC output is valid. After turning this sub-module active it needs some clocks going into valid state.
      *
      * bit h0A: n/a
      *
@@ -194,43 +194,41 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h04  LEDs show magnitude function with selected input port MUXIN_MIX in.
      *
-     *   value = h05  LEDs show magnitude function with selected input port ADC_MOD in.
+     *   value = h05  LEDs show magnitude function with selected input port MOD_ADC in.
      *
-     *   value = h06  LEDs show magnitude function with selected input port ADC_MOD out.
+     *   value = h06  LEDs show magnitude function with selected input port MOD_ADC out.
      *
-     *   value = h08  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 1.
+     *   value = h08  LEDs show magnitude function with selected input port MOD_QMIX_I output at stage 1.
      *
-     *   value = h09  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 1.
+     *   value = h09  LEDs show magnitude function with selected input port MOD_QMIX_Q output at stage 1.
      *
-     *   value = h0A  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 2.
+     *   value = h0A  LEDs show magnitude function with selected input port MOD_QMIX_I output at stage 2.
      *
-     *   value = h0B  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 2.
+     *   value = h0B  LEDs show magnitude function with selected input port MOD_QMIX_Q output at stage 2.
      *
-     *   value = h0C  LEDs show magnitude function with selected input port QMIX_MOD_I output at stage 3.
+     *   value = h0C  LEDs show magnitude function with selected input port MOD_QMIX_I output at stage 3.
      *
-     *   value = h0D  LEDs show magnitude function with selected input port QMIX_MOD_Q output at stage 3.
+     *   value = h0D  LEDs show magnitude function with selected input port MOD_QMIX_Q output at stage 3.
      *
-     *   value = h10  LEDs show magnitude function with selected input port LowPass CIC_MOD I output.
+     *   value = h10  LEDs show magnitude function with selected input port LowPass MOD_CIC I output.
      *
-     *   value = h11  LEDs show magnitude function with selected input port LowPass CIC_MOD Q output.
+     *   value = h11  LEDs show magnitude function with selected input port LowPass MOD_CIC Q output.
      *
-     *   value = h12  LEDs show magnitude function with selected input port signal forming FIR_MOD I output.
+     *   value = h12  LEDs show magnitude function with selected input port signal forming MOD_FIR I output.
      *
-     *   value = h13  LEDs show magnitude function with selected input port signal forming FIR_MOD Q output.
+     *   value = h13  LEDs show magnitude function with selected input port signal forming MOD_FIR Q output.
      *
-     *   value = h14  LEDs show magnitude function with selected input port Interpolator CIC_CAR I stage 1 -   1 MHz output.
+     *   value = h14  LEDs show magnitude function with selected input port Interpolator CAR_CIC I output  41.664 MHz output.
      *
-     *   value = h15  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q stage 1 -   1 MHz output.
+     *   value = h15  LEDs show magnitude function with selected input port Interpolator CAR_CIC Q output  41.664 MHz output.
      *
-     *   value = h16  LEDs show magnitude function with selected input port Interpolator CIC_CAR I stage 2 - 125 MHz output.
+     *   value = h18  LEDs show magnitude function with selected input port CAR_QMIX_I output.
      *
-     *   value = h17  LEDs show magnitude function with selected input port Interpolator CIC_CAR Q stage 2 - 125 MHz output.
-     *
-     *   value = h18  LEDs show magnitude function with selected input port QMIX_CAR_I output.
-     *
-     *   value = h19  LEDs show magnitude function with selected input port QMIX_CAR_Q output.
+     *   value = h19  LEDs show magnitude function with selected input port CAR_QMIX_Q output.
      *
      *   value = h1C  LEDs show magnitude function with selected input port AMP_RF output.
+     *
+     *   value = h1F  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h1F..h06: n/a
      *
@@ -238,38 +236,38 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t led_ctrl;
 
 
-    /** @brief  R/W RB_OSC_CAR_INC_LO - OSC_CAR phase increment register, bits 31..0 (addr: 0x40600020)
+    /** @brief  R/W RB_CAR_OSC_INC_LO - CAR_OSC phase increment register, bits 31..0 (addr: 0x40600020)
      *
-     * bit h1F..h00: LSB of OSC_CAR phase increment register.
+     * bit h1F..h00: LSB of CAR_OSC phase increment register.
      *
      */
-    uint32_t osc_car_inc_lo;
+    uint32_t car_osc_inc_lo;
 
-    /** @brief  R/W RB_OSC_CAR_INC_HI - OSC_CAR phase increment register, bits 47..32 (addr: 0x40600024)
+    /** @brief  R/W RB_CAR_OSC_INC_HI - CAR_OSC phase increment register, bits 47..32 (addr: 0x40600024)
      *
-     * bit h0F..h00: MSB of OSC_CAR phase increment register.
+     * bit h0F..h00: MSB of CAR_OSC phase increment register.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t osc_car_inc_hi;
+    uint32_t car_osc_inc_hi;
 
 
-    /** @brief  R/W RB_OSC_CAR_OFS_LO - OSC_CAR phase offset register, bits 31..0 (addr: 0x40600028)
+    /** @brief  R/W RB_CAR_OSC_OFS_LO - CAR_OSC phase offset register, bits 31..0 (addr: 0x40600028)
      *
-     * bit h1F..h00: LSB of OSC_CAR phase offset register.
+     * bit h1F..h00: LSB of CAR_OSC phase offset register.
      *
      */
-    uint32_t osc_car_ofs_lo;
+    uint32_t car_osc_ofs_lo;
 
-    /** @brief  R/W RB_OSC_CAR_OFS_HI - OSC_CAR phase offset register, bits 47..32 (addr: 0x4060002C)
+    /** @brief  R/W RB_CAR_OSC_OFS_HI - CAR_OSC phase offset register, bits 47..32 (addr: 0x4060002C)
      *
-     * bit h0F..h00: MSB of OSC_CAR phase offset register.
+     * bit h0F..h00: MSB of CAR_OSC phase offset register.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t osc_car_ofs_hi;
+    uint32_t car_osc_ofs_hi;
 
 
     /** @brief  R/W RB_AMP_RF_GAIN - AMP RF gain register, bits 15..0 (addr: 0x40600030)
@@ -304,46 +302,46 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t reserved_3c;
 
 
-    /** @brief  R/W RB_OSC_MOD_INC_LO - OSC_MOD phase increment register, bits 31..0 (addr: 0x40600040)
+    /** @brief  R/W RB_MOD_OSC_INC_LO - MOD_OSC phase increment register, bits 31..0 (addr: 0x40600040)
      *
-     * bit h1F..h00: LSB of OSC_MOD phase increment register.
+     * bit h1F..h00: LSB of MOD_OSC phase increment register.
      *
      */
-    uint32_t osc_mod_inc_lo;
+    uint32_t mod_osc_inc_lo;
 
-    /** @brief  R/W RB_OSC_MOD_INC_HI - OSC_MOD phase increment register, bits 47..32 (addr: 0x40600044)
+    /** @brief  R/W RB_MOD_OSC_INC_HI - MOD_OSC phase increment register, bits 47..32 (addr: 0x40600044)
      *
-     * bit h0F..h00: MSB of OSC_MOD phase increment register.
+     * bit h0F..h00: MSB of MOD_OSC phase increment register.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t osc_mod_inc_hi;
+    uint32_t mod_osc_inc_hi;
 
 
-    /** @brief  R/W RB_OSC_MOD_OFS_LO - OSC_MOD phase offset register, bits 31..0 (addr: 0x40600048)
+    /** @brief  R/W RB_MOD_OSC_OFS_LO - MOD_OSC phase offset register, bits 31..0 (addr: 0x40600048)
      *
-     * bit h1F..h00: LSB of OSC_MOD phase offset register.
+     * bit h1F..h00: LSB of MOD_OSC phase offset register.
      *
      */
-    uint32_t osc_mod_ofs_lo;
+    uint32_t mod_osc_ofs_lo;
 
-    /** @brief  R/W RB_OSC_MOD_OFS_HI - OSC_MOD phase offset register, bits 47..32 (addr: 0x4060004C)
+    /** @brief  R/W RB_MOD_OSC_OFS_HI - MOD_OSC phase offset register, bits 47..32 (addr: 0x4060004C)
      *
-     * bit h0F..h00: MSB of OSC_MOD phase offset register.
+     * bit h0F..h00: MSB of MOD_OSC phase offset register.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t osc_mod_ofs_hi;
+    uint32_t mod_osc_ofs_hi;
 
 
-    /** @brief  R/W RB_QMIX_MOD_GAIN - QMIX_MOD amplitude register, bits 15..0 (addr: 0x40600050)
+    /** @brief  R/W RB_MOD_QMIX_GAIN - MOD_QMIX amplitude register, bits 15..0 (addr: 0x40600050)
      *
-     * bit h0F..h00: SIGNED 16 bit - QMIX_MOD amplitude setting.
+     * bit h0F..h00: SIGNED 16 bit - MOD_QMIX amplitude setting.
      *
      */
-    uint32_t qmix_mod_gain;
+    uint32_t mod_qmix_gain;
 
 
     /** @brief  Placeholder for addr: 0x40600054
@@ -354,28 +352,28 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t reserved_54;
 
 
-    /** @brief  R/W RB_QMIX_MOD_OFS_LO - QMIX_MOD offset register, bits 31..0 (addr: 0x40600058)
+    /** @brief  R/W RB_MOD_QMIX_OFS_LO - MOD_QMIX offset register, bits 31..0 (addr: 0x40600058)
      *
-     * bit h1F..h00: LSB of QMIX_MOD offset value.
+     * bit h1F..h00: LSB of MOD_QMIX offset value.
      *
      */
-    uint32_t qmix_mod_ofs_lo;
+    uint32_t mod_qmix_ofs_lo;
 
-    /** @brief  R/W RB_QMIX_MOD_OFS_HI - QMIX_MOD offset register, bits 47..32 (addr: 0x4060005C)
+    /** @brief  R/W RB_MOD_QMIX_OFS_HI - MOD_QMIX offset register, bits 47..32 (addr: 0x4060005C)
      *
-     * bit h0F..h00: MSB of QMIX_MOD offset value.
+     * bit h0F..h00: MSB of MOD_QMIX offset value.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t qmix_mod_ofs_hi;
+    uint32_t mod_qmix_ofs_hi;
 
 
     /** @brief  R/W RB_MUXIN_SRC - analog MUX input selector (addr: 0x40600060)
      *
      * bit h05..h00: source ID (extended from the XADC source ID)
      *
-     *   value = h00  no external signal used, OSC_MOD used instead.
+     *   value = h00  no external signal used, MOD_OSC used instead.
      *
      *   value = h03  Vp_Vn,     mapped to: vin[4].
      *
@@ -462,27 +460,27 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @brief Calculates and programs the FPGA RB ctrl and oscillator registers
  *
  * @param[in]  rb_run        RadioBox application  0: disabled, else: enabled.
- * @param[in]  modsrc        0==(none), 1==RF Input 1, 2==RF Input 2, 4==EXP AI0, 5==EXP AI1, 6==EXP AI2, 7==EXP AI3, 15==OSC_MOD
- * @param[in]  modtyp        when modsrc == OSC_MOD: 0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
+ * @param[in]  modsrc        0==(none), 1==RF Input 1, 2==RF Input 2, 4==EXP AI0, 5==EXP AI1, 6==EXP AI2, 7==EXP AI3, 15==MOD_OSC
+ * @param[in]  modtyp        when modsrc == MOD_OSC: 0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
  * @param[in]  led_ctrl      RB LED controller setting to be used.
- * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
- * @param[in]  osc_mod_qrg   Frequency for OSC_MOD in Hz.
+ * @param[in]  car_osc_qrg   Frequency for CAR_OSC in Hz.
+ * @param[in]  mod_osc_qrg   Frequency for MOD_OSC in Hz.
  * @param[in]  amp_rf_gain   Vpp of AMP_RF output in mV.
- * @param[in]  osc_mod_mag   Magnitude of OSC_MOD mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
+ * @param[in]  mod_osc_mag   Magnitude of MOD_OSC mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
  * @param[in]  muxin_gain    Slider value between 0 and 100 for the MUXIN range slider. 50 means amplification of 1:1, 0 and 100 full scale, logarithmic.
  */
-void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double osc_car_qrg, double osc_mod_qrg, double amp_rf_gain, double osc_mod_mag, double muxin_gain);
+void fpga_rb_set_ctrl(int rb_run, int modsrc, int modtyp, int led_ctrl, double car_osc_qrg, double mod_osc_qrg, double amp_rf_gain, double mod_osc_mag, double muxin_gain);
 
 /**
- * @brief Calculates and programs the FPGA OSC_CAR for AM and PM
+ * @brief Calculates and programs the FPGA CAR_OSC for AM and PM
  *
- * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
+ * @param[in]  car_osc_qrg   Frequency for CAR_OSC in Hz.
  */
-//void fpga_rb_set_osc_car_mod_none_am_pm(double osc_car_qrg);
-void fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(double osc_car_qrg);
+//void fpga_rb_set_car_osc_mod_none_am_pm(double car_osc_qrg);
+void fpga_rb_set_car_osc_qrg__4mod_cw_ssb_am_pm(double car_osc_qrg);
 
 /**
- * @brief Calculates and programs the FPGA OSC_CAR mixer for AM
+ * @brief Calculates and programs the FPGA CAR_OSC mixer for AM
  *
  * @param[in]  amp_rf_gain  Vpp amplitude in mV.
  * @param[in]  amp_rf_ofs   Vpp amplitude in mV.
@@ -490,35 +488,35 @@ void fpga_rb_set_osc_car_qrg__4mod_cw_ssb_am_pm(double osc_car_qrg);
 void fpga_rb_set_amp_rf_gain_ofs__4mod_all(double amp_rf_gain, double amp_rf_ofs);
 
 /**
- * @brief Calculates and programs the FPGA OSC_MOD for AM and PM
+ * @brief Calculates and programs the FPGA MOD_OSC for AM and PM
  *
- * @param[in]  osc_mod_qrg   Frequency for OSC_MOD in Hz.
+ * @param[in]  mod_osc_qrg   Frequency for MOD_OSC in Hz.
  */
-void fpga_rb_set_osc_mod_qrg__4mod_ssbweaver_am_fm_pm(double osc_mod_qrg);
+void fpga_rb_set_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(double mod_osc_qrg);
 
 /**
- * @brief Calculates and programs the FPGA OSC_MOD mixer for AM
+ * @brief Calculates and programs the FPGA MOD_OSC mixer for AM
  *
- * @param[in]  osc_mod_grade   Magnitude grade 0% .. 100%.
+ * @param[in]  mod_osc_grade   Magnitude grade 0% .. 100%.
  * @param[in]  isOffset        1=based on 100% carrier minus modulation grade, 0=no carrier.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_ssbweaver_am(double qmix_mod_grade, int isOffset);
+void fpga_rb_set_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(double mod_qmix_grade, int isOffset);
 
 /**
- * @brief Calculates and programs the FPGA OSC_MOD mixer for FM
+ * @brief Calculates and programs the FPGA MOD_OSC mixer for FM
  *
- * @param[in]  osc_car_qrg   Frequency for OSC_CAR in Hz.
- * @param[in]  osc_mod_mag   Deviation in Hz.
+ * @param[in]  car_osc_qrg   Frequency for CAR_OSC in Hz.
+ * @param[in]  mod_osc_mag   Deviation in Hz.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_fm(double osc_car_qrg, double osc_mod_mag);
+void fpga_rb_set_mod_qmix_gain_ofs__4mod_fm(double car_osc_qrg, double mod_osc_mag);
 
 /**
- * @brief Calculates and programs the FPGA OSC_MOD mixer for PM
+ * @brief Calculates and programs the FPGA MOD_OSC mixer for PM
  *
- * @param[in]  osc_car_qrg   Base frequency in Hz.
- * @param[in]  osc_mod_mag   Deviation in deg.
+ * @param[in]  car_osc_qrg   Base frequency in Hz.
+ * @param[in]  mod_osc_mag   Deviation in deg.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_pm(double osc_car_qrg, double osc_mod_mag);
+void fpga_rb_set_mod_qmix_gain_ofs__4mod_pm(double car_osc_qrg, double mod_osc_mag);
 
 /**
  * @brief Calculates and programs the FPGA MUXIN gain setting
