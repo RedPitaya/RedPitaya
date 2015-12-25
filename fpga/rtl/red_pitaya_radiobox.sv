@@ -612,6 +612,8 @@ rb_cic_48k_to_8k_32T32_lat13 i_rb_mod_cic_Q (
 //         [10                10                   10                    5                     8                     1                  ]
 //       );
 //
+//  FIR coefficients built with Octave:
+//  hn = fir1(63, [0.40, 0.425], 'pass');
 
 wire [ 34:0] mod_fir_i_out;
 wire         mod_fir_i_vld;
