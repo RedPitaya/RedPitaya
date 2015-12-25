@@ -291,8 +291,6 @@ end
 // AXI streaming master from XADC
 
 reg  [15:0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
-reg         clk_48khz_xadc = 'b0;
-reg         clk_48khz      = 'b0;
 
 always @(posedge xadc_axis_aclk)                                       // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
 begin
@@ -303,7 +301,6 @@ begin
       rb_xadc[RB_XADC_MAPPING_EXT_CH9] <= 16'b0;
       rb_xadc[RB_XADC_MAPPING_VpVn]    <= 16'b0;
       xadc_axis_tready <= 0;
-      clk_48khz_xadc   <= 'b0;
       end
 
    else begin
@@ -312,7 +309,6 @@ begin
          casez (xadc_axis_tid)                                         // @see ug480_7Series_XADC.pdf for XADC channel mapping
          5'h10: begin                                                  // channel ID d16 for EXT-CH#0
             rb_xadc[RB_XADC_MAPPING_EXT_CH0]  <= xadc_axis_tdata;      // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
-            clk_48khz_xadc <= 'b1;
             end
          5'h18: begin                                                  // channel ID d24 for EXT-CH#8
             rb_xadc[RB_XADC_MAPPING_EXT_CH8]  <= xadc_axis_tdata;      // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
@@ -333,19 +329,41 @@ begin
             end
          endcase
          end
-
-      if (clk_48khz)                            // handshaking the 48 kHz clock
-         clk_48khz_xadc <= 'b0;
-
       end
 end
 
+
+parameter CLK_48KHZ_CTR_MAX = 2604;             // long run max value
+parameter CLK_48KHZ_FRC_MAX = 5;
+
+reg  [11:0] clk_48khz_ctr  = 0;
+reg  [ 2:0] clk_48khz_frc  = 0;
+reg         clk_48khz      = 'b0;
+
 always @(posedge clk_adc_125mhz)                // assign clk_48khz
 begin
-   if (!rb_clk_en)
+   if (!rb_clk_en) begin
+      clk_48khz_ctr <= 'b0;
+      clk_48khz_frc <= 'b0;
       clk_48khz <= 'b0;
-   else
-      clk_48khz <= clk_48khz_xadc;              // based on phase shifted 125 MHz clock of the XADC
+      end
+   else begin
+      if (clk_48khz_ctr == CLK_48KHZ_CTR_MAX) begin
+         clk_48khz <= 'b1;
+         if (clk_48khz_frc == CLK_48KHZ_FRC_MAX) begin
+            clk_48khz_frc <= 'b0;
+            clk_48khz_ctr <= 'b0;               // overflow of the frac part makes a long run
+            end
+         else begin
+            clk_48khz_frc = clk_48khz_frc + 1;
+            clk_48khz_ctr <= 12'b1;             // short run
+            end
+         end
+      else begin
+         clk_48khz <= 'b0;
+         clk_48khz_ctr = clk_48khz_ctr + 1;
+         end
+      end
 end
 
 
@@ -605,15 +623,8 @@ rb_cic_48k_to_8k_32T32_lat13 i_rb_mod_cic_Q (
 //---------------------------------------------------------------------------------
 //  MOD_FIR high pass filter for CIC compensation in the voice band
 //
-//  FIR coefficients built with SciLab - line 1: count of coeffs, line 2: freq ranges, line 3: desired gain for each range, line 4: weight of importance for each range:
-//  hn = eqfir(63,
-//         [0/8000 500/8000;  600/8000 1000/8000;  1200/8000 1400/8000;  1600/8000 1700/8000;  1800/8000 2100/8000;  2200/8000 4000/8000],
-//         [10^(0/20)         10^(1.5/20)          10^(4/20)             10^(11.5/20)          10^(-10/20)           10^(-30/20)        ],
-//         [10                10                   10                    5                     8                     1                  ]
-//       );
-//
 //  FIR coefficients built with Octave:
-//  hn = fir1(63, [0.40, 0.425], 'pass');
+//  hn = fir2(62, [0 0.15 0.26 0.35 0.38 0.40 0.41 1], [1 1.5 3.5 10 0.1 0.001 0.0001 0.0001], 512, kaiser(63,6));
 
 wire [ 34:0] mod_fir_i_out;
 wire         mod_fir_i_vld;
@@ -632,7 +643,7 @@ rb_fir_8k_to_8k_17T16_35T31_lat41 i_rb_mod_fir_I (
   .s_axis_data_tvalid   ( mod_cic_i_vld     ),
   .s_axis_data_tready   ( mod_cic_i_rdy     ),
 
-  .m_axis_data_tdata    ( mod_fir_i_out     ),  // MOD_FIR output I - 8kHz (35.31 bit width)
+  .m_axis_data_tdata    ( mod_fir_i_out     ),  // MOD_FIR output I - 8kHz (35.30 bit width)
   .m_axis_data_tvalid   ( mod_fir_i_vld     ),
   .m_axis_data_tready   ( mod_fir_i_rdy     )
 );
@@ -646,7 +657,7 @@ rb_fir_8k_to_8k_17T16_35T31_lat41 i_rb_mod_fir_Q (
   .s_axis_data_tvalid   ( mod_cic_q_vld     ),
   .s_axis_data_tready   ( mod_cic_q_rdy     ),
 
-  .m_axis_data_tdata    ( mod_fir_q_out     ),  // MOD_FIR output Q - 8 kHz (35.31 bit width)
+  .m_axis_data_tdata    ( mod_fir_q_out     ),  // MOD_FIR output Q - 8 kHz (35.30 bit width)
   .m_axis_data_tvalid   ( mod_fir_q_vld     ),
   .m_axis_data_tready   ( mod_fir_q_rdy     )
 );
