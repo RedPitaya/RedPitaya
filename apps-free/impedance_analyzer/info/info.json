@@ -1,0 +1,6 @@
+{
+    "name": "Impedance Analyzer",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "Impedance analyzer. Requires a shunt resistor. Guide available at: http://goo.gl/2lnbeN"
+}

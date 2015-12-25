@@ -364,10 +364,10 @@ int rp_ApinReset() {
 }
 
 int rp_ApinGetValue(rp_apin_t pin, float* value) {
-    if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value);
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinGetValue(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        rp_AIpinGetValue(pin-RP_AIN0, value);
     } else {
         return RP_EPN;
     }
@@ -375,10 +375,10 @@ int rp_ApinGetValue(rp_apin_t pin, float* value) {
 }
 
 int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
-    if (pin <= RP_AIN3) {
-        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
     } else {
         return RP_EPN;
     }
@@ -386,10 +386,10 @@ int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
 }
 
 int rp_ApinSetValue(rp_apin_t pin, float value) {
-    if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinSetValue(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        return RP_EPN;
     } else {
         return RP_EPN;
     }
@@ -397,10 +397,10 @@ int rp_ApinSetValue(rp_apin_t pin, float value) {
 }
 
 int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
-    if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        return RP_EPN;
     } else {
         return RP_EPN;
     }
@@ -408,12 +408,12 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
 }
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
-    if (pin <= RP_AIN3) {
-        *min_val = ANALOG_IN_MIN_VAL;
-        *max_val = ANALOG_IN_MAX_VAL;
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         *min_val = ANALOG_OUT_MIN_VAL;
         *max_val = ANALOG_OUT_MAX_VAL;
+    } else if (pin <= RP_AIN3) {
+        *min_val = ANALOG_IN_MIN_VAL;
+        *max_val = ANALOG_IN_MAX_VAL;
     } else {
         return RP_EPN;
     }
