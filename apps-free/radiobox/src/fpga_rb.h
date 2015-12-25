@@ -341,7 +341,7 @@ typedef struct fpga_rb_reg_mem_s {
      * bit h0F..h00: SIGNED 16 bit - MOD_QMIX amplitude setting.
      *
      */
-    uint32_t qmix_mod_gain;
+    uint32_t mod_qmix_gain;
 
 
     /** @brief  Placeholder for addr: 0x40600054
@@ -357,7 +357,7 @@ typedef struct fpga_rb_reg_mem_s {
      * bit h1F..h00: LSB of MOD_QMIX offset value.
      *
      */
-    uint32_t qmix_mod_ofs_lo;
+    uint32_t mod_qmix_ofs_lo;
 
     /** @brief  R/W RB_MOD_QMIX_OFS_HI - MOD_QMIX offset register, bits 47..32 (addr: 0x4060005C)
      *
@@ -366,7 +366,7 @@ typedef struct fpga_rb_reg_mem_s {
      * bit h1F..h10: n/a
      *
      */
-    uint32_t qmix_mod_ofs_hi;
+    uint32_t mod_qmix_ofs_hi;
 
 
     /** @brief  R/W RB_MUXIN_SRC - analog MUX input selector (addr: 0x40600060)
@@ -500,7 +500,7 @@ void fpga_rb_set_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(double mod_osc_qrg);
  * @param[in]  mod_osc_grade   Magnitude grade 0% .. 100%.
  * @param[in]  isOffset        1=based on 100% carrier minus modulation grade, 0=no carrier.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_ssbweaver_am(double qmix_mod_grade, int isOffset);
+void fpga_rb_set_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(double mod_qmix_grade, int isOffset);
 
 /**
  * @brief Calculates and programs the FPGA MOD_OSC mixer for FM
@@ -508,7 +508,7 @@ void fpga_rb_set_qmix_mod_gain_ofs__4mod_cw_ssbweaver_am(double qmix_mod_grade, 
  * @param[in]  car_osc_qrg   Frequency for CAR_OSC in Hz.
  * @param[in]  mod_osc_mag   Deviation in Hz.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_fm(double car_osc_qrg, double mod_osc_mag);
+void fpga_rb_set_mod_qmix_gain_ofs__4mod_fm(double car_osc_qrg, double mod_osc_mag);
 
 /**
  * @brief Calculates and programs the FPGA MOD_OSC mixer for PM
@@ -516,7 +516,7 @@ void fpga_rb_set_qmix_mod_gain_ofs__4mod_fm(double car_osc_qrg, double mod_osc_m
  * @param[in]  car_osc_qrg   Base frequency in Hz.
  * @param[in]  mod_osc_mag   Deviation in deg.
  */
-void fpga_rb_set_qmix_mod_gain_ofs__4mod_pm(double car_osc_qrg, double mod_osc_mag);
+void fpga_rb_set_mod_qmix_gain_ofs__4mod_pm(double car_osc_qrg, double mod_osc_mag);
 
 /**
  * @brief Calculates and programs the FPGA MUXIN gain setting

@@ -57,7 +57,7 @@
     rb_run:              1,  // application running
     car_osc_modsrc_s:    0,  // mod-source: (none)
     car_osc_modtyp_s:    2,  // modulation: AM
-    rbled_ctrl_s:       18,  // RB LEDs set to: 0=disabled, 1=off,
+    rbled_ctrl_s:       20,  // RB LEDs set to: 0=disabled, 1=off,
                              //  4=MUXIN_MIX in,       5=MOD_ADC in,         6=MOD_ADC out,
                              //  8=MOD_QMIX_I_S1 out,  9=MOD_QMIX_Q_S1 out, 10=MOD_QMIX_I_S2, 11=MOD_QMIX_Q_S2, 12=MOD_QMIX_I_S3, 13=MOD_QMIX_Q_S3,
                              // 16=MOD_CIC_I out,     17=MOD_CIC_Q out,     18=MOD_FIR_I out, 19=MOD_FIR_Q out, 20=CAR_CIC_41M664_I out, 21=CAR_CIC_41M664_Q out,
@@ -474,9 +474,9 @@
         var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
 
         // clear magnitude field when modulation source or type has changed
-        if ((key == 'car_osc_modsrc_s') || (key == 'car_osc_modtyp_s')) {
-          $('#mod_osc_mag_f').val(0);
-        }
+        //if ((key == 'car_osc_modsrc_s') || (key == 'car_osc_modtyp_s')) {
+        //  $('#mod_osc_mag_f').val(0);
+        //}
 
         console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
         RB.params.local[key] = new_value;
