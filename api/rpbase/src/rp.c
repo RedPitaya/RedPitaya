@@ -145,8 +145,8 @@ rp_calib_params_t rp_GetCalibrationSettings()
     return calib_GetParams();
 }
 
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndOffset(channel, out_params);
+int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
+    return calib_SetFrontEndOffset(channel, gain, out_params);
 }
 
 int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
@@ -282,7 +282,7 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
         // DIO_N
         pin -= RP_DIO0_N;
         tmp = ioread32(&hk->ex_cd_n);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
+        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_n);
     }
     return RP_OK;
 }
@@ -364,10 +364,10 @@ int rp_ApinReset() {
 }
 
 int rp_ApinGetValue(rp_apin_t pin, float* value) {
-    if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value);
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinGetValue(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        rp_AIpinGetValue(pin-RP_AIN0, value);
     } else {
         return RP_EPN;
     }
@@ -375,10 +375,10 @@ int rp_ApinGetValue(rp_apin_t pin, float* value) {
 }
 
 int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
-    if (pin <= RP_AIN3) {
-        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
     } else {
         return RP_EPN;
     }
@@ -386,10 +386,10 @@ int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
 }
 
 int rp_ApinSetValue(rp_apin_t pin, float value) {
-    if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinSetValue(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        return RP_EPN;
     } else {
         return RP_EPN;
     }
@@ -397,10 +397,10 @@ int rp_ApinSetValue(rp_apin_t pin, float value) {
 }
 
 int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
-    if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
+    } else if (pin <= RP_AIN3) {
+        return RP_EPN;
     } else {
         return RP_EPN;
     }
@@ -408,12 +408,12 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
 }
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
-    if (pin <= RP_AIN3) {
-        *min_val = ANALOG_IN_MIN_VAL;
-        *max_val = ANALOG_IN_MAX_VAL;
-    } else if (pin <= RP_AOUT3) {
+    if (pin <= RP_AOUT3) {
         *min_val = ANALOG_OUT_MIN_VAL;
         *max_val = ANALOG_OUT_MAX_VAL;
+    } else if (pin <= RP_AIN3) {
+        *min_val = ANALOG_IN_MIN_VAL;
+        *max_val = ANALOG_IN_MAX_VAL;
     } else {
         return RP_EPN;
     }
@@ -819,8 +819,8 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     return gen_getTriggerSource(channel, src);
 }
 
-int rp_GenTrigger(int mask) {
-    return gen_Trigger(mask);
+int rp_GenTrigger(uint32_t channel) {
+    return gen_Trigger(channel);
 }
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)

@@ -286,14 +286,14 @@ void *rp_osc_worker_thread(void *args)
             char f_command[100];
 
             /* If the file doesn't exists yet */
-            if(fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "w") == NULL){
+            if(fopen("/opt/redpitaya/www/apps/impedance_analyzer/lcr_param_data", "w") == NULL){
                 /* Create a normal file, as txt is a just an interpreter */
-                strcpy(f_command, "touch /opt/redpitaya/www/apps/lcr_meter/lcr_param_data");
+                strcpy(f_command, "touch /opt/redpitaya/www/apps/impedance_analyzer/lcr_param_data");
                 system(f_command);
             }
 
             /* Open file for writing */
-            FILE *data = fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "w");
+            FILE *data = fopen("/opt/redpitaya/www/apps/impedance_analyzer/lcr_param_data", "w");
 
             /* Write parameter data */
             fprintf(data, "%.1f\n", rp_get_params_lcr(2));
@@ -364,7 +364,7 @@ void *rp_osc_worker_thread(void *args)
             snprintf(im, 10, "%f", lcr_load_im);
             snprintf(calib, 1, "%f", lcr_calibration);
             
-            strcpy(command, "/opt/redpitaya/www/apps/lcr_meter/lcr 1 ");
+            strcpy(command, "/opt/redpitaya/www/apps/impedance_analyzer/lcr 1 ");
             strcat(command, amp);
             strcat(command, " ");
 
@@ -440,7 +440,7 @@ void *rp_osc_worker_thread(void *args)
 
             char command[100];
             
-            strcpy(command, "/opt/redpitaya/www/apps/lcr_meter/lcr 1 "); 
+            strcpy(command, "/opt/redpitaya/www/apps/impedance_analyzer/lcr 1 "); 
             
             strcat(command, amp);
             strcat(command, " ");
@@ -973,37 +973,21 @@ int lcr_start_Measure(float **cha_signal, int *in_cha_signal,
             /* Data check: TODO add switch statment for a niftier code */
 
             float scale = rp_get_params_lcr(15);
-            if(scale == 0){
-                cha_s[out_idx] = amplitude[out_idx];
-            }else if(scale == 1){
-               cha_s[out_idx] = phase[out_idx]; 
-            }else if(scale == 2){
-                cha_s[out_idx] = Y_abs[out_idx];
-            }else if(scale == 3){
-                cha_s[out_idx] = phaseY[out_idx];
-            }else if(scale == 4){
-                cha_s[out_idx] = R_s[out_idx];
-            }else if(scale == 5){
-                cha_s[out_idx] = X_s[out_idx];
-            }else if(scale == 6){
-                cha_s[out_idx] = G_p[out_idx];
-            }else if(scale == 7){
-                cha_s[out_idx] = B_p[out_idx];
-            }else if(scale == 8){
-                cha_s[out_idx] = C_s[out_idx];
-            }else if(scale == 9){
-                cha_s[out_idx] = C_p[out_idx];
-            }else if(scale == 10){
-                cha_s[out_idx] = L_s[out_idx];
-            }else if(scale == 11){
-                cha_s[out_idx] = L_p[out_idx];
-            }else if(scale == 12){
-                cha_s[out_idx] = R_s[out_idx];
-            }else if(scale == 13){
-                cha_s[out_idx] = Q[out_idx];
-            }else if(scale == 14){
-                cha_s[out_idx] = D[out_idx];
-            }
+            if      (scale ==  0) cha_s[out_idx] = amplitude[out_idx];
+            else if (scale ==  1) cha_s[out_idx] = phase[out_idx]; 
+            else if (scale ==  2) cha_s[out_idx] = Y_abs[out_idx];
+            else if (scale ==  3) cha_s[out_idx] = phaseY[out_idx];
+            else if (scale ==  4) cha_s[out_idx] = R_s[out_idx];
+            else if (scale ==  5) cha_s[out_idx] = R_p[out_idx];
+            else if (scale ==  6) cha_s[out_idx] = X_s[out_idx];
+            else if (scale ==  7) cha_s[out_idx] = G_p[out_idx];
+            else if (scale ==  8) cha_s[out_idx] = B_p[out_idx];
+            else if (scale ==  9) cha_s[out_idx] = C_s[out_idx];
+            else if (scale == 10) cha_s[out_idx] = C_p[out_idx];
+            else if (scale == 11) cha_s[out_idx] = L_s[out_idx];
+            else if (scale == 12) cha_s[out_idx] = L_p[out_idx];
+            else if (scale == 13) cha_s[out_idx] = Q[out_idx];
+            else if (scale == 14) cha_s[out_idx] = D[out_idx];
    
             chb_s[out_idx] = 0;
 
@@ -1456,13 +1440,13 @@ int rp_load_data(float save_data){
     if(save_data == 2){
         float val = 0;
         
-        if(fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "r") == NULL){
+        if(fopen("/opt/redpitaya/www/apps/impedance_analyzer/lcr_param_data", "r") == NULL){
             printf("Parameter data failure!\n");
             return -1;
         }
 
         /* Read data */
-        FILE *data = fopen("/opt/redpitaya/www/apps/lcr_meter/lcr_param_data", "r");
+        FILE *data = fopen("/opt/redpitaya/www/apps/impedance_analyzer/lcr_param_data", "r");
 
         int counter = 4;
         while(!feof(data)){
