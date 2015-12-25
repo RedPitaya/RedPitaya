@@ -25,7 +25,8 @@
 
 
 			var current_app = "";
-		    var url = '/';
+			var url_arr = window.location.href.split("/");;
+		    var url = url_arr[0] + '//' + url_arr[2] + '/';
 			$(function() {
 				$.ajax({
 					url: url + 'bazaar?apps=',
@@ -59,6 +60,10 @@
 						$(buttons).show();
 						current_app = key;
 					});
+
+					$('a').unbind('click');
+					$('a').unbind('touchend');
+					$('a').on('click touchend', onLinkClicked);
 
 					$('.buttons').click(function() {
 						key = $(this).children('a').attr('href').substr(1);
@@ -96,7 +101,7 @@
 							}
 							else if (result[key].type == "run")
 							{
-								$("#run").attr('href', url + key + '?type=run');
+								$("#run").attr('href', url + key + '/?type=run');
 								$('#run').html('Run');
 								$("#run").css('visibility', 'visible');
 								$("#demo").css('visibility', 'visible');
@@ -109,7 +114,7 @@
 								$("#demo").css('visibility', 'hidden');
 							}
 
-							$("#demo").attr('href', url + key + '?type=demo');
+							$("#demo").attr('href', url + key + '/?type=demo');
 
 							$(desc).show();
 						}
@@ -192,7 +197,21 @@
 </div>
 <script>
 
-$('#run').click(function(){
+var onLinkClicked = function()
+{
+	if ($(this).attr('id') == 'run')
+	{
+		verifyLic($(this));
+	}else
+	{
+	    var el = $(this);
+	    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
+		console.log('clicked ', link);
+	    window.location = link;
+	}
+}
+
+var verifyLic = function(element){
 
 	if (typeof String.prototype.startsWith != 'function') {
 		String.prototype.startsWith = function (str){
@@ -200,7 +219,7 @@ $('#run').click(function(){
 		};
 	}
 
-	if ($(this).attr('href') == undefined)
+	if (element.attr('href') == undefined)
 	{
 		var post_uri = 'http://store.redpitaya.com/upload_id_file/';
 		var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
@@ -267,9 +286,14 @@ $('#run').click(function(){
 				window.location = $('#run').attr('href2');
 			});
 		})
+	} else {
+		window.location = element.attr('href');
 	}
-});
+}
 
+$('a').unbind('click');
+$('a').unbind('touchend');
+$('a').on('click touchend', onLinkClicked);
 </script>
 </body>
 </html>

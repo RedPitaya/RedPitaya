@@ -375,7 +375,7 @@ void *rp_lti_worker_thread(void *args)
         dir_gen_set(0, 0, 0xc0);	     // Disable signal on ch1
 	dir_gen_set(0, 1, 8191);            // set Scale parameter
 	dir_gen_set(0, 2, 0);               // set DC Offset parameter	 (TODO: add calibration term here (check calgenscope))
-	dir_gen_set(0, 3, round(65536 * ((16*1024) - 1)));               //set Wrap parameter	(Full 16k buffer wrapping)
+	dir_gen_set(0, 3, round(65536 * 16*1024 - 1));               //set Wrap parameter	(Full 16k buffer wrapping)
 	dir_gen_set(0, 4, 0);               // set TimeOffs parameter	
 	dir_gen_set(0, 5, round(65536.0/curr_dec)); // set Step parameter in order to synchronize INPUT and OUTPUT 16k buffers 	
 	

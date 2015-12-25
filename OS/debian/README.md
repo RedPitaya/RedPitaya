@@ -16,7 +16,7 @@ Multiple steps are needed to prepare a proper SD card image.
 
 ## Debian bootstrap
 
-Run the next command inside the project root directory. Root or sudo privileges are needed.
+Run the next command inside the project root directory. Root or `sudo` privileges are needed.
 ```bash
 sudo OS/debian/image.sh
 ```
@@ -37,7 +37,7 @@ drive may be overwritten, causing permanent loose of user data.
 In case `ecosystem*.zip` was not available for the previous step, it can be extracted later to the FAT partition (128MB) of the SD card. In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image, boot scripts, the Linux kernel and a Buildroot filesystem. Two boot scripts are provided:
 - `u-boot.scr.buildroot` (default) for booting into the Buildroot system, here the Debian EXT4 partition is not needed
 - `u-boot.scr.debian` for booting into the Debian system
-To enable booting into deibian just change the default boot script:
+To enable booting into Debian just change the default boot script:
 ```bash
 cp u-boot.scr.debian u-boot.scr
 ```
@@ -45,13 +45,28 @@ If there are no changes needed to the Debian system, but a new ecosystem is avai
 
 ## Wyliodrin
 
-Unfortunately there are issues with Wyliodrin install process inside a virtualized environment, therefore the provided script `wiliodrin.sh` must be run from a shell on a running Red Pitaya board. The script can be copied to the FAT partition and executed from the `/root/` directory, but some coded meant to be executed on the development machine, should be comment out (everything outside the `chroot`, including the `chroot` lines themselves).
+Unfortunately there are issues with Wyliodrin install process inside a virtualized environment. Therefore the provided script `wiliodrin.sh` must be run from a shell on a running Red Pitaya board. The script can be copied to the FAT partition and executed from the `/root/` directory. Some code which is meant to be executed on the development machine, should be comment out (everything outside the `chroot`, including the `chroot` lines themselves).
 ```bash
 cd /root
 . /opt/redpitaya/wyliodrin.sh
 ```
 
-Then perform a cleanup
+The Wyliodrin team provided the initial support for Red Pitaya inside the `libwyliodrin` library. We are using a fork of the library which includes a few bug fixes and new features. Please have a look at the commit history for details. It would make sense to ask the Wyliodrin team to accept this changes into upstream.
+
+https://github.com/RedPitaya/libwyliodrin
+
+Some effort was made to port the newer C based `wyliodrin-server` instead of using the current `node.js` based server. Most of the effort was spent on attempts to replace compiling dependencies from source with packages provided in Debian. The unfinished branch can be provided to interested developers.
+
+
+## Reducing image size
+
+A cleanup can be performed to reduce the image size. Various things can be done to reduce the image size:
+- remove unused software (this could be software which was needed to compile applications)
+- remove unused source files (remove source repositories used to compile applications)
+- remove temporary files
+- zero out empty space on the partition
+
+The next code only removes APT temporary files and zeroes out the filesystem empty space.
 ```bash
 apt-get clean
 cat /dev/zero > zero.file
