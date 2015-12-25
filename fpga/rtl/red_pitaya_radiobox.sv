@@ -677,7 +677,7 @@ rb_cic_8k_to_41M664_32T32_lat14 i_rb_car_cic_I (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( mod_fir_i_out[32:1]),  // MOD_FIR I - 8 kHz
+  .s_axis_data_tdata    ( mod_fir_i_out[33:2]),  // MOD_FIR I - 8 kHz
   .s_axis_data_tvalid   ( mod_fir_i_vld     ),
   .s_axis_data_tready   ( mod_fir_i_rdy     ),
 
@@ -690,7 +690,7 @@ rb_cic_8k_to_41M664_32T32_lat14 i_rb_car_cic_Q (
   .aclk                 ( clk_adc_125mhz    ),  // global 125 MHz clock
   .aclken               ( rb_clk_en         ),  // enable RadioBox sub-module
 
-  .s_axis_data_tdata    ( mod_fir_q_out[32:1]),  // MOD_FIR Q - 8 kHz
+  .s_axis_data_tdata    ( mod_fir_q_out[33:2]),  // MOD_FIR Q - 8 kHz
   .s_axis_data_tvalid   ( mod_fir_q_vld     ),
   .s_axis_data_tready   ( mod_fir_q_rdy     ),
 
@@ -912,12 +912,12 @@ else begin
           monitor <= mod_cic_q_out[30:15];
           end
        RB_LED_CTRL_NUM_MOD_FIR_I_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_i_out[32:17]);
-          monitor <= mod_fir_i_out[32:17];
+          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_i_out[33:18]);
+          monitor <= mod_fir_i_out[33:18];
           end
        RB_LED_CTRL_NUM_MOD_FIR_Q_OUT: begin
-          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_q_out[32:17]);
-          monitor <= mod_fir_q_out[32:17];
+          if (!led_ctr) rb_leds_data <= fct_mag(mod_fir_q_out[33:18]);
+          monitor <= mod_fir_q_out[33:18];
           end
 
        RB_LED_CTRL_NUM_CAR_CIC_41M664_I_OUT: begin
