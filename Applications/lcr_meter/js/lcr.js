@@ -166,7 +166,7 @@
 			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
 				
 				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
-					formatRangeAuto(false, 1, new_params[param_name].value);
+					formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				}else if(new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0){
 					formatRangeManual(Math.abs($('#sel_range_f').val() - 4), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
 				}else{
@@ -174,15 +174,15 @@
 					if(new_params['LCR_RELATIVE'].value < Math.abs(999)){
 						LCR.displ_params.prim_val = new_params[param_name].value.toFixed(2);
 					}else{
-						formatRangeAuto(false, 1, new_params[param_name].value);
+						formatRangeAuto(false, 1, null, new_params[param_name].value);
 					}
 				}
 				
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
-				if(data == "OVER RANGE"){
-					$('#lb_prim_displ').css('font-size', '60%').css('width: 100%');	
+				if(data == "OVER FLOW"){
+					$('#lb_prim_displ').css('font-size', '100%').css('width: 100%');	
 				}else{
 					$('#lb_prim_displ').css('font-size', '100%');
 				}
@@ -194,7 +194,7 @@
 			//Change secondary display value
 			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
 
-				formatRangeAuto(0, 2, new_params[param_name].value);
+				formatRangeAuto(0, 2, null, new_params[param_name].value);
 				var units = LCR.displ_params.s_units;
 				var data = LCR.displ_params.sec_val;
 
@@ -231,15 +231,15 @@
 			var quantity = param_name.substr(0, param_name.length - 4);
 			if(param_name == (quantity + "_MIN") && param_name == (LCR.displ_params.prim + "_MIN")){
 				console.log(quantity);
-				$('#meas_min_d').empty().append(formatRangeAuto(true, null, new_params[param_name].value));
+				$('#meas_min_d').empty().append(formatRangeAuto(true, null,null, new_params[param_name].value));
 			}
 
 			if(param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")){
-				$('#meas_max_d').empty().append(formatRangeAuto(true, null, new_params[param_name].value));	
+				$('#meas_max_d').empty().append(formatRangeAuto(true, null, null, new_params[param_name].value));	
 			}
 
 			if(param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")){
-				$('#meas_avg_d').empty().append(formatRangeAuto(true, null, new_params[param_name].value));
+				$('#meas_avg_d').empty().append(formatRangeAuto(true, null, null, new_params[param_name].value));
 			}
 		}
 
@@ -367,6 +367,8 @@ $(function() {
 		var op = document.getElementById("sel_range_u").getElementsByTagName("option");
 		for(i = 0; i < 6; i++){
 			op[i].disabled = false;
+			if(i == 3) op[i].text = this.value;
+			else op[i].text = op[i].text.substr(0,1) + this.value;
 		}
 
 		if(this.id == 'LCR_Z' || this.id == 'LCR_R'){
@@ -525,7 +527,7 @@ $(function() {
 });
 
 //TODO: This solution is ugly as fuck. Make it better!
-function formatRangeAuto(meas_param, display, meas_data){
+function formatRangeAuto(meas_param, display, precision, meas_data){
 
 
 	var data = 0;
@@ -542,6 +544,10 @@ function formatRangeAuto(meas_param, display, meas_data){
 		base = LCR.displ_params.s_base_u;
 	}
 
+	if(precision != null && LCR.displ_params.prim == "LCR_C"){
+		meas_data = meas_data * Math.pow(10, -precision);
+	}
+	
 	if(meas_data < 0.00000000000010){
 		data = "ERROR";
 	}else if(meas_data > 0.00000000000010 && meas_data <= 0.00000000999990){
@@ -625,14 +631,14 @@ function formatRangeAuto(meas_param, display, meas_data){
 	
 	}else if(meas_data > 9999900.0){
 
-		data = "OVER RANGE";
+		data = "OVER FLOW";
 		units = "";
 	}
 
 	//If we are formatting log data, we do not want to change the main measurment
 	if(meas_param == true){
 		
-		if(data == "ERROR" || data == "OVER RANGE"){
+		if(data == "ERROR" || data == "OVER FLOW"){
 			return data;
 		}
 		
@@ -641,7 +647,7 @@ function formatRangeAuto(meas_param, display, meas_data){
 
 	switch(display){
 		case 1:
-			if(data == "ERROR" || data == "OVER RANGE"){
+			if(data == "ERROR" || data == "OVER FLOW"){
 				LCR.displ_params.prim_val = data;
 				LCR.displ_params.p_units = "";
 				break;
@@ -650,7 +656,7 @@ function formatRangeAuto(meas_param, display, meas_data){
 			LCR.displ_params.p_units = units;
 			break;
 		case 2:
-			if(data == "ERROR" || data == "OVER RANGE"){
+			if(data == "ERROR" || data == "OVER FLOW"){
 				LCR.displ_params.sec_val = data;
 				LCR.displ_params.s_units = "";
 				break;
@@ -681,8 +687,6 @@ function formatRangeManual(format, power, data){
 
 	LCR.displ_params.prim_val = data;
 	LCR.displ_params.p_units = suffixes[c] + LCR.displ_params.p_base_u;
-	console.log(LCR.displ_params.p_base_u);
-	console.log(suffixes[c]);
 
 	return data;
 }

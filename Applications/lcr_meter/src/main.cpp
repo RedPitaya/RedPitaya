@@ -15,13 +15,15 @@ CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0,
 
 //Out params
 CFloatParameter lcr_amplitude("LCR_Z", CBaseParameter::RW, 0, 0, 0, 1e6);
-CFloatParameter lcr_Inductance("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_Capacitance("LCR_C", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_Resitance("LCR_R", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CDoubleParameter lcr_Inductance("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CDoubleParameter lcr_Capacitance("LCR_C", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CDoubleParameter lcr_Resitance("LCR_R", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_phase("LCR_P", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_D("LCR_D", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_ESR("LCR_ESR", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+
+CFloatParameter lcr_C_precision("LCR_C_PREC", CBaseParameter::RW, 0, 0, 0, 10);
 
 //Measurement parameters for primary display
 CFloatParameter lcr_AmpMin("LCR_Z_MIN", CBaseParameter::RW, 1e9, 0, -1e6, 1e6);
@@ -114,11 +116,25 @@ void UpdateParams(void){
 
 		//Acquire calculated parameters frm RP
 		lcrApp_LcrCopyParams(data);
-		
+			
+		//Precision casting
+		float c_out_prec;
+		if(data->lcr_C < 0.0001){
+			lcr_Capacitance.Value() = data->lcr_C * pow(10, 9);
+			lcr_C_precision.Value() = 9;
+			lcr_Capacitance.Update();
+			lcr_C_precision.Update();
+		}else{
+			lcr_Capacitance.Value() 	= data->lcr_C;
+			lcr_C_precision.Value() = 0;
+			lcr_Capacitance.Update();
+		}
+
+		syslog(LOG_INFO, "CAPC: %.20f\n", data->lcr_C);
+
 		lcr_amplitude.Value()       = data->lcr_amplitude;	
 		lcr_phase.Value()     		= data->lcr_phase;
 		lcr_Inductance.Value()		= data->lcr_L;
-		lcr_Capacitance.Value() 	= data->lcr_C;
 		lcr_Resitance.Value()		= data->lcr_R;
 		lcr_D.Value()				= data->lcr_D;
 		lcr_Q.Value()				= data->lcr_Q;
