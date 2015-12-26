@@ -1,0 +1,251 @@
+### The FPGA internals
+
+**FPGAs for ever!**
+
+***
+
+***FPGA memory allocation***
+
+    0x40 0xxxxx     HouseKeeping
+    0x40 1xxxxx     Oscilloscope
+    0x40 2xxxxx     Arbitrary signal oscillator (ASG)
+    0x40 3xxxxx     PID controller
+    0x40 4xxxxx     Analog mixed signals (AMS)
+    0x40 5xxxxx     ( not assigned )
+    0x40 6xxxxx     RadioBox
+    0x40 7xxxxx     ( not assigned )
+
+
+***
+
+
+***FPGA register allocations for the RadioBox sub-module***
+
+    The RadioBox register layout for the address region 0x40 6xxxxx :
+
+    00000  R/W       RB_CTRL - Control register
+                     - bit h00: ENABLE - '1' enables the RadioBox sub-module. 
+                                DDS-Oscillators, multipliers, LED handling are 
+                                turned on. The DAC and LEDs are connected to this 
+                                sub-module when enabled.
+                     - bit h01: RESET CAR_OSC - '1' resets the CAR_OSC (carrier 
+                                oscillator) to its initial state like the 
+                                accumulating phase register.
+                     - bit h02: RESET MOD_OSC - '1' resets the MOD_OSC (modulation 
+                                oscillator) to its initial state like the 
+                                accumulating phase register.
+                     - bit h03: n/a
+                     - bit h04: CAR_OSC RESYNC - '1' stops incrementing the 
+                                accumulating phase register. That holds the 
+                                oscillator just there, where it is. With '0' 
+                                the CAR_OSC resumes operation.
+                     - bit h05: CAR_OSC INC SRC STREAM - '1' places input MUXer for 
+                                CAR_OSC DDS increment input to the first streamed 
+                                input pipe. '0' places MUXer to registers 
+                                "CAR_OSC INC HI" and "CAR_OSC INC LO".
+                     - bit h06: CAR_OSC OFS SRC STREAM - '1' places input MUXer for 
+                                CAR_OSC DDS offset input to the first streamed 
+                                input pipe. '0' places MUXer to registers 
+                                "CAR_OSC OFS HI" and "CAR_OSC OFS LO".
+                     - bit h0B..h07: n/a
+                     - bit h0C: MOD_OSC RESYNC - '1' stops incrementing the 
+                                accumulating phase register. That holds the 
+                                oscillator just there, where it is. With '0' the 
+                                CAR_OSC resumes operation.
+                     - bit h0D: MOD_OSC INC SRC STREAM - '1' places input MUXer for 
+                                MOD_OSC DDS increment input to the second streamed 
+                                input pipe. '0' places MUXer to registers 
+                                "MOD_OSC INC HI" and "MOD_OSC INC LO".
+                     - bit h0E: MOD_OSC OFS SRC STREAM - '1' places input MUXer for 
+                                MOD_OSC DDS offset input to the second streamed 
+                                input pipe. '0' places MUXer to registers 
+                                "MOD_OSC OFS HI" and "MOD_OSC OFS LO".
+                     - bit h13..h0F: n/a
+                     - bit h14: AMP_RF_Q_EN - '1' enables the CAR_QMIX Q path for
+                                the SSB modulation
+                     - bit h1F..h15: n/a
+
+
+    00004  R/O       RB_STATUS - Status register
+                     - bit h00: STAT_CLK_EN - '1' clock of the RadioBox sub-
+                                system is enabled (power up sub-module).
+                     - bit h01: STAT_RESET - '1' reset of the RadioBox sub-
+                                system is active (clears phase accumulators).
+                     - bit h02: STAT_LEDS_EN - '1' RadioBox LEDs state is 
+                                shown at the diodes, any other output register 
+                                is discarded.
+                     - bit h03: n/a
+                     - bit h04: STAT_CAR_OSC_ZERO - '1' CAR_OSC output 
+                                equals zero. This state is based on the output 
+                                of the DDS oscillator itself.
+                     - bit h05: STAT_CAR_OSC_VALID - '1' CAR_OSC output is 
+                                valid. After turning this sub-module active it 
+                                needs some clocks going into valid state.
+                     - bit h06: n/a
+                     - bit h07: n/a
+                     - bit h08: STAT_MOD_OSC_ZERO - '1' MOD_OSC output equals 
+                                zero. This state is based on the output of the 
+                                DDS oscillator itself.
+                     - bit h09: STAT_MOD_OSC_VALID - '1' MOD_OSC output is 
+                                valid. After turning this sub-module active it 
+                                needs some clocks going into valid state.
+                     - bit h0A: n/a
+                     - bit h0B: n/a
+                     - bit h17..h0C: n/a
+                     - bit h18: STAT_LED0_ON - '1' RadioBox LED0 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h19: STAT_LED1_ON - '1' RadioBox LED1 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h1A: STAT_LED2_ON - '1' RadioBox LED2 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h1B: STAT_LED3_ON - '1' RadioBox LED3 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h1C: STAT_LED4_ON - '1' RadioBox LED4 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h1D: STAT_LED5_ON - '1' RadioBox LED5 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h1E: STAT_LED6_ON - '1' RadioBox LED6 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+                     - bit h1F: STAT_LED7_ON - '1' RadioBox LED7 driver that is 
+                                shown at the diodes, when STAT_LEDS_EN is '1'.
+
+    00008  R/W       RB_ICR - Interrupt control register (reserved)
+                     - bit h1F..h00: n/a
+
+    0000C  R/O       RB_ICR - Interrupt status register (reserved)
+                     - bit h1F..h00: n/a
+
+    00010  R/W       RB_DMA_CTRL - DMA control register (reserved)
+                     - bit h1F..h00: n/a
+
+    0001C  R/W       RB_LED_CTRL - LEDs control register
+                     - bit h05..h00: LED magnitude input selector
+                     -   value = h00  RadioBox does not touch LED state of other 
+                                      sub-module(s).
+                     -   value = h01  All LEDs are driven off.
+                     -   value = h04  LEDs show magnitude function with selected
+                                      input port ADC selector input.
+                     -   value = h05  LEDs show magnitude function with selected
+                                      input port modulation amplifier input.
+                     -   value = h06  LEDs show magnitude function with selected
+                                      input port modulation amplifier output.
+                     -   value = h08  LEDs show magnitude function with selected
+                                      input port MOD_QMIX I output at stage 1.
+                     -   value = h09  LEDs show magnitude function with selected
+                                      input port MOD_QMIX Q output at stage 1.
+                     -   value = h0A  LEDs show magnitude function with selected
+                                      input port MOD_QMIX I output at stage 2.
+                     -   value = h0B  LEDs show magnitude function with selected
+                                      input port MOD_QMIX Q output at stage 2.
+                     -   value = h0C  LEDs show magnitude function with selected
+                                      input port MOD_QMIX I output at stage 3.
+                     -   value = h0D  LEDs show magnitude function with selected
+                                      input port MOD_QMIX Q output at stage 3.
+                     -   value = h10  LEDs show magnitude function with selected
+                                      input port LowPass MOD_CIC I output.
+                     -   value = h11  LEDs show magnitude function with selected
+                                      input port LowPass MOD_CIC Q output.
+                     -   value = h12  LEDs show magnitude function with selected
+                                      input port signal forming MOD_FIR I output.
+                     -   value = h13  LEDs show magnitude function with selected
+                                      input port signal forming MOD_FIR Q output.
+                     -   value = h14  LEDs show magnitude function with selected
+                                      input port Interpolator CAR_CIC I output 41.664 MHz.
+                     -   value = h15  LEDs show magnitude function with selected
+                                      input port Interpolator CAR_CIC Q output 41.664 MHz.
+                     -   value = h18  LEDs show magnitude function with selected
+                                      input port CAR_QMIX I output.
+                     -   value = h19  LEDs show magnitude function with selected
+                                      input port CAR_QMIX Q output.
+                     -   value = h1C  LEDs show magnitude function with selected
+                                      input port AMP_RF output.
+                     -   value = h1F  LEDs show test vector, look for current assignments
+                                      within the red_pitaya_radiobox.sv file.
+                     - bit h1F..h06: n/a
+
+
+    00020  R/W  TX:  RB_CAR_OSC_INC_LO - DDS CAR_OSC, phase increment register
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of CAR_OSC phase increment register.
+
+    00024  R/W  TX:  RB_CAR_OSC_INC_HI - DDS CAR_OSC, phase increment register 
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of CAR_OSC phase increment register.
+                     - bit h1F..h10: n/a
+
+
+    00028  R/W  TX:  RB_CAR_OSC_OFS_LO - DDS CAR_OSC, phase offset register 
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of CAR_OSC phase offset register.
+  
+    0002C  R/W  TX:  RB_CAR_OSC_OFS_HI - DDS CAR_OSC, phase offset register 
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of CAR_OSC phase offset register.
+                     - bit h1F..h10: n/a
+
+
+    00030  R/W  TX:  RB_AMP_RF_GAIN - AMP RF gain register
+                     bit 15..00
+                     - bit h0F..h00: SIGNED 16 bit - Amplifier RF gain setting.
+                     - bit h1F..h10: n/a
+
+    00038  R/W  TX:  RB_AMP_RF_OFS - AMP RF offset register
+                     bit 15..00
+                     - bit h0F..h00: SIGNED 16 bit - Amplifier RF offset value.
+                     - bit h1F..h10: n/a
+
+
+    00040  R/W  TX:  RB_MOD_OSC_INC_LO - DDS MOD_OSC, phase increment register 
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of MOD_OSC phase increment register.
+
+    00044  R/W  TX:  RB_MOD_OSC_INC_HI - DDS MOD_OSC, phase increment register 
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of MOD_OSC phase increment register.
+                     - bit h1F..h10: n/a
+
+
+    00048  R/W  TX:  RB_MOD_OSC_OFS_LO - DDS MOD_OSC, phase offset register 
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of MOD_OSC phase offset register.
+
+    0004C  R/W  TX:  RB_MOD_OSC_OFS_HI - DDS MOD_OSC, phase offset register 
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of CAR_OSC phase offset register.
+                     - bit h1F..h10: n/a
+
+
+    00050  R/W  TX:  RB_MOD_QMIX_GAIN - MOD_QMIX gain setting  (stage 2)
+                     bit 15..00
+                     - bit h0F..h00: SIGNED 16 bit - MOD_QMIX output amplitude.
+                     - bit h1F..h10: n/a
+
+
+    00058  R/W  TX:  RB_MOD_QMIX_OFS_LO - MOD_QMIX offset value  (stage 3)
+                     bit 31..00 (LSB)
+                     - bit h1F..h00: LSB of MOD_QMIX offset value.
+
+    0005C  R/W  TX:  RB_MOD_QMIX_OFS_HI - MOD_QMIX offset value  (stage 3)
+                     bit 47..32 (MSB)
+                     - bit h0F..h00: MSB of MOD_QMIX offset value.
+                     - bit h1F..h10: n/a
+
+
+    00060  R/W  TX:  RB_MUXIN_SRC - Source signal for the analog input MUXer
+                     - bit h05..h00: Source ID
+                     -   value = h00  no external signal used, MOD_OSC used instead.
+                     -   value = h03  Vp_Vn,     mapped to: vin[4].
+                     -   value = h10  XADC CH#0, mapped to: AI1.
+                     -   value = h11  XADC CH#1, mapped to: AI0.
+                     -   value = h18  XADC CH#8, mapped to: AI2.
+                     -   value = h19  XADC CH#9, mapped to: AI3.
+                     -   value = h20  ADC0,      mapped to: RF Input 1.
+                     -   value = h10  ADC1,      mapped to: RF Input 2.
+                     - bit h1F..h06: n/a
+
+    00064  R/W  TX:  RB_MUXIN_GAIN - Source signal gain for MUXIN output amplifier
+                     bit 18..00
+                     - bit h0F..h00: SIGNED 16 bit - MUXIN mixer amplitude.
+                     - bit h12..h10: input booster left shift value from d0..d7 
+                          gives amplification of: 1x .. 128x.
+                     - bit h1F..h13: n/a

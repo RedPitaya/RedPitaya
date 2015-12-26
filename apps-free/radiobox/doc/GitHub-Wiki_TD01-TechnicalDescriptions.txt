@@ -1,0 +1,10 @@
+### Technical Descriptions
+
+**from the pieces to the complete**
+
+***
+
+Getting in touch with the technology:
+
+* [from the very first idea - The Mind Map](TD02-Mind-Map)
+* [FPGA sub-modules address bases: the official and non official ones](TD03-FPGA)
