@@ -1,0 +1,137 @@
+.navbar-radiobox {
+}
+
+.bg-grad {
+  position:relative;
+  z-index:0;
+  background:linear-gradient(#004060 20%, #001040 80%);
+  height:800px;
+}
+
+
+#rfout1_csp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rfout1-csp {
+  background:#508050;
+}
+select#rfout1_csp_s[disabled] {
+  background:#707070;
+}
+
+#rfout2_csp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rfout2-csp {
+  background:#508050;
+}
+select#rfout2_csp_s[disabled] {
+  background:#707070;
+}
+
+#rbled_csp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rbled-csp {
+  background:#508050;
+}
+select#rbled_csp_s[disabled] {
+  background:#707070;
+}
+
+#car_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-car-osc-qrg {
+  background:#0040c0;
+}
+
+#amp_rf_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-amp-rf-gain {
+  background:#602000;
+}
+
+#car_osc_modsrc {
+  position:relative;
+  z-index:1;
+}
+.form-bg-car-osc-modsrc {
+  background:#707040;
+}
+
+#car_osc_modtyp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-car-osc-modtyp {
+  background:#707040;
+}
+select#car_osc_modtyp_s[disabled] {
+  background:#707070;
+}
+
+#mod_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-mod-osc-qrg {
+  background:#0040c0;
+}
+input#mod_osc_qrg_f[disabled] {
+  background:#707070;
+}
+
+#mod_osc_mag {
+  position:relative;
+  z-index:1;
+}
+.form-bg-mod-osc-mag {
+  background:#602000;
+}
+input#mod_osc_mag_f[disabled] {
+  background:#707070;
+}
+
+#muxin_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-muxin-gain {
+  background:#805810;
+}
+input#muxin_gain_f[disabled] {
+  background:#707070;
+}
+
+
+.table-toolbox {
+  border:1px solid;
+  margin-left:15px;
+}
+
+.table-toolbox td {
+  //width:400px;
+}
+
+.table-header {
+  font-size:200%;
+  padding-left:10px;
+  padding-bottom:15px;
+}
+
+
+#RB_RUN, #RB_RUN:hover {
+  color: #31b44b;
+}
+
+#RB_STOP, #RB_STOP:hover {
+  display: none;
+  color: #ee3739;
+}
