@@ -7,7 +7,7 @@
 
 .PHONY : all doxypdf fpgapdf clean
 
-PLANTUML_JAR ?= /usr/share/java/plantuml.jar
+PLANTUML_JAR ?= ./plantuml.jar
 DOXYPDF_FILENAME := RedPitaya_RadioBox_Development_Manual.pdf
 FPGAPDF_FILENAME := RedPitaya_RadioBox_FPGA-Register-Allocation_Manual.pdf
 
