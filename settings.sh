@@ -2,7 +2,7 @@
 # setup Xilinx Vivado FPGA tools
 ################################################################################
 
-. /opt/Xilinx/Vivado/2015.2/settings64.sh
+. /opt/Xilinx/Vivado/2015.4/settings64.sh
 
 ################################################################################
 # setup Linaro toolchain

@@ -1,0 +1,14 @@
+diff --git a/drivers/misc/eeprom/at24.c b/drivers/misc/eeprom/at24.c
+index 2d3db81..5896301 100644
+--- a/drivers/misc/eeprom/at24.c
++++ b/drivers/misc/eeprom/at24.c
+@@ -519,6 +519,9 @@ static int at24_probe(struct i2c_client *client, const struct i2c_device_id *id)
+ 		 * is recommended anyhow.
+ 		 */
+ 		chip.page_size = 1;
++		if(!strncmp(id->name,"24c64",5)){
++			chip.page_size = 32;
++		}
+ 
+ 		/* update chipdata if OF is present */
+ 		at24_get_ofdata(client, &chip);

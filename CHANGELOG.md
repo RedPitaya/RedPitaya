@@ -1,3 +1,12 @@
+Changes:
+- migration to Vivado 2015.4 and related U-Boot and Linux versions
+- changes to ARM clocking so the CPU runs at 666MHz instead of 500MHz (Ulrich Habel)
+- SPI userspace access seems to be fixed, `/dev/spidev1.0` is present, but
+  kernel log still does not mention SPI or QSPI drivers
+
+**Known issues** (at least major ones) are same as in 0.94 RC12.
++ generator burst mode is buggy
+
 # Release 0.94 RC22
 
 System changes:
