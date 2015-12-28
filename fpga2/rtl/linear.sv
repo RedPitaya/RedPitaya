@@ -34,14 +34,9 @@ module linear #(
   // system signals
   input  logic                  clk ,  // clock
   input  logic                  rstn,  // reset - active low
-  // input stream
-  input  logic signed [DWI-1:0] sti_dat,  // data
-  input  logic                  sti_vld,  // valid
-  output logic                  sti_rdy,  // ready
-  // output stream
-  output logic signed [DWO-1:0] sto_dat,  // data
-  output logic                  sto_vld,  // valid
-  input  logic                  sto_rdy,  // ready
+  // input stream input/output
+  str_bus_if.d                  sti,      // input
+  str_bus_if.s                  sto,      // output
   // configuration
   input  logic signed [DWM-1:0] cfg_mul,  // gain
   input  logic signed [DWS-1:0] cfg_sum   // offset
@@ -51,68 +46,68 @@ module linear #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [DWI+DWM  -1:0] mul_dat;
-logic signed [DWI+    1-1:0] shf_dat;
-logic signed [DWI+    2-1:0] sum_dat;
+str_bus_if #(.DAT_T (logic signed [DWI+DWM  -1:0])) str_mul (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (logic signed [DWI+    1-1:0])) str_shf (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (logic signed [DWI+    2-1:0])) str_sum (.clk (clk), .rstn (rstn));
 
-logic mul_vld, mul_rdy, mul_trn;
-logic shf_vld, shf_rdy, shf_trn;
-logic sum_vld, sum_rdy, sum_trn;
+logic str_mul_trn;
+logic str_shf_trn;
+logic str_sum_trn;
 
 ////////////////////////////////////////////////////////////////////////////////
 // multiplication
 ////////////////////////////////////////////////////////////////////////////////
 
-assign sti_trn = sti_vld & sti_rdy;
+assign sti_trn = sti.vld & sti.rdy;
 
 always_ff @(posedge clk)
-if (sti_trn)  mul_dat <= sti_dat * cfg_mul;
+if (sti_trn)  str_mul.dat <= sti.dat * cfg_mul;
 
 always_ff @(posedge clk)
-if (~rstn)         mul_vld <= 1'b0;
-else if (sti_rdy)  mul_vld <= sti_vld;
+if (~rstn)         str_mul.vld <= 1'b0;
+else if (sti.rdy)  str_mul.vld <= sti.vld;
 
-assign sti_rdy = mul_rdy | ~mul_vld;
+assign sti.rdy = str_mul.rdy | ~str_mul.vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 // shift
 ////////////////////////////////////////////////////////////////////////////////
 
-assign shf_dat = mul_dat >>> (DWM-2);
+assign str_shf.dat = str_mul.dat >>> (DWM-2);
 
-assign shf_vld = mul_vld;
+assign str_shf.vld = str_mul.vld;
 
-assign mul_rdy = shf_rdy;
+assign str_mul.rdy = str_shf.rdy;
 
 ////////////////////////////////////////////////////////////////////////////////
 // summation
 ////////////////////////////////////////////////////////////////////////////////
 
-assign shf_trn = shf_vld & shf_rdy;
+assign shf_trn = str_shf.vld & str_shf.rdy;
 
 always_ff @(posedge clk)
-if (shf_trn)  sum_dat <= shf_dat + cfg_sum;
+if (shf_trn)  str_sum.dat <= str_shf.dat + cfg_sum;
 
 always_ff @(posedge clk)
-if (~rstn)         sum_vld <= 1'b0;
-else if (shf_rdy)  sum_vld <= shf_vld;
+if (~rstn)             str_sum.vld <= 1'b0;
+else if (str_shf.rdy)  str_sum.vld <= str_shf.vld;
 
-assign shf_rdy = sto_rdy | ~sum_vld;
+assign str_shf.rdy = sto.rdy | ~str_sum.vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 // saturation
 ////////////////////////////////////////////////////////////////////////////////
 
-assign sum_trn = sum_vld & sum_rdy;
+assign sum_trn = str_sum.vld & str_sum.rdy;
 
 always_ff @(posedge clk)
-if (sum_trn)  sto_dat <= ^sum_dat[DWO:DWO-1] ? {sum_dat[DWO], {DWO-1{~sum_dat[DWO-1]}}}
-                                             :  sum_dat[DWO-1:0];
+if (sum_trn)  sto.dat <= ^str_sum.dat[DWO:DWO-1] ? {str_sum.dat[DWO], {DWO-1{~str_sum.dat[DWO-1]}}}
+                                                 :  str_sum.dat[DWO-1:0];
 
 always_ff @(posedge clk)
-if (~rstn)         sto_vld <= 1'b0;
-else if (sum_rdy)  sto_vld <= sum_vld;
+if (~rstn)             sto.vld <= 1'b0;
+else if (str_sum.rdy)  sto.vld <= str_sum.vld;
 
-assign sum_rdy = sto_rdy | ~sum_vld;
+assign str_sum.rdy = sto.rdy | ~str_sum.vld;
 
 endmodule: linear

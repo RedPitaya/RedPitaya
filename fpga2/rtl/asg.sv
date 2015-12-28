@@ -37,10 +37,8 @@ module asg #(
   // system signals
   input  logic                  clk      ,  // clock
   input  logic                  rstn     ,  // reset - active low
-  // DAC
-  output logic signed [DWO-1:0] sto_dat  ,  // data
-  output logic                  sto_vld  ,  // valid
-  input  logic                  sto_rdy  ,  // ready
+  // stream output
+  str_bus_if.s                  sto      ,  // output
   // trigger
   input  logic                  trg_i    ,  // input
   output logic                  trg_o    ,  // output event
@@ -200,18 +198,18 @@ if (~rstn)  trg_o <= 1'b0;
 else        trg_o <= sts_trg;
 
 // output data
-assign sto_dat = sto_vld ? buf_rdata : '0;
+assign sto.dat = sto.vld ? buf_rdata : '0;
 
 // output valid
 always_ff @(posedge clk)
 if (~rstn) begin
-  sto_vld <= 1'b0;
+  sto.vld <= 1'b0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
-    sto_vld <= 1'b0;
+    sto.vld <= 1'b0;
   end else begin
-    sto_vld <= |sts_vld;
+    sto.vld <= |sts_vld;
   end
 end
 

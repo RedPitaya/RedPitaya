@@ -26,9 +26,7 @@ module asg_top_tb #(
 logic                  clk ;
 logic                  rstn;
 // stream
-logic signed [DWO-1:0] str_dat;  // data
-logic                  str_vld;  // valid
-logic                  str_rdy;  // ready
+str_bus_if #(.DAT_T (logic signed [DWO-1:0])) str (.clk (clk), .rstn (rstn));
 
 // trigger
 struct packed {
@@ -150,9 +148,7 @@ asg_top #(
   .clk       (clk ),
   .rstn      (rstn),
   // stream output
-  .sto_dat   (str_dat),
-  .sto_vld   (str_vld),
-  .sto_rdy   (str_rdy),
+  .sto       (str),
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.swo),
@@ -162,7 +158,7 @@ asg_top #(
 );
 
 // stream drain
-assign str_rdy = 1'b1;
+assign str.rdy = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

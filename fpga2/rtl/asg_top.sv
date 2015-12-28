@@ -38,9 +38,7 @@ module asg_top #(
   input  logic                  clk ,  // DAC clock
   input  logic                  rstn,  // DAC reset - active low
   // stream output
-  output logic signed [DWO-1:0] sto_dat,  // data
-  output logic                  sto_vld,  // valid
-  input  logic                  sto_rdy,  // ready
+  str_bus_if.s                  sto,      // output
   // triggers
   input  logic        [TWA-1:0] trg_ext,  // external input
   output logic                  trg_swo,  // output from software
@@ -193,6 +191,7 @@ assign trg_mux = trg_ext [cfg_tsel];
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream from generator
+str_bus_if #(.DAT_T (logic signed [DWO-1:0])) stg (.clk (clk), .rstn (rstn));
 logic signed [DWO-1:0] stg_dat;  // data
 logic                  stg_vld;  // valid
 logic                  stg_rdy;  // ready
@@ -205,10 +204,8 @@ asg #(
   // system signals
   .clk       (clk      ),
   .rstn      (rstn     ),
-  // DAC
-  .sto_dat   (stg_dat  ),
-  .sto_vld   (stg_vld  ),
-  .sto_rdy   (stg_rdy  ),
+  // stream output
+  .sto       (stg      ),
   // trigger
   .trg_i     (trg_mux  ),
   .trg_o     (trg_out  ),
@@ -240,16 +237,11 @@ linear #(
   .DWM (DWM)
 ) linear (
   // system signals
-  .clk       (clk      ),
-  .rstn      (rstn     ),
-  // input stream
-  .sti_dat   (stg_dat),
-  .sti_vld   (1'b1),
-  .sti_rdy   (stg_rdy),
-  // output stream
-  .sto_dat   (sto_dat),
-  .sto_vld   (sto_vld),
-  .sto_rdy   (sto_rdy),
+  .clk       (clk ),
+  .rstn      (rstn),
+  // stream input/output
+  .sti       (stg),
+  .sto       (sto),
   // configuration
   .cfg_mul   (cfg_lmul),
   .cfg_sum   (cfg_lsum)

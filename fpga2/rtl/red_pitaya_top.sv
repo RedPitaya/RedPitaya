@@ -126,24 +126,24 @@ logic                 ser_clk ;
 // PDM clock and reset
 logic                 pdm_clk ;
 logic                 pdm_rstn;
+
 // ADC clock/reset
 logic                           adc_clk;
 logic                           adc_rstn;
-// ADC stream
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));
-// acquire stream
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));
-// PID stream
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+
+// streams
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // acquire
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // PID
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
+str_bus_if #(.DAT_T (logic signed [14-1:0])) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // DAC signals
 logic                           dac_clk_1x;
 logic                           dac_clk_2x;
 logic                           dac_clk_2p;
 logic                           dac_rst;
 logic        [MNG-1:0] [14-1:0] dac_dat;
-logic signed [MNG-1:0] [14-1:0] dac_dat_cal;
-// ASG
-logic signed [MNG-1:0] [14-1:0] asg_dat;
 
 localparam int unsigned DWM = 16;
 localparam int unsigned DWS = 14;
@@ -418,7 +418,7 @@ red_pitaya_pid #(
   .CNO (MNG)
 ) pid (
   // signals
-  .sti       (str_adc),
+  .sti       (str_osc),
   .sto       (str_pid),
   // System bus
   .bus       (sys[3])
@@ -439,15 +439,15 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
 
   // local variables
   logic signed [14-1:0] adc_dat_raw;
-  logic signed [14-1:0] adc_dat_mux;
 
   // IO block registers should be used here
   // lowest 2 bits reserved for 16bit ADC
   always_ff @(posedge adc_clk)
   adc_dat_raw <= {adc_dat_i[i][16-1], ~adc_dat_i[i][16-2:2]};
 
-  // transform into 2's complement (negative slope)
-  assign adc_dat_mux[0] = digital_loop ? dac_dat_cal[i] : adc_dat_raw;
+  // digital loopback multiplexer
+  assign str_adc[i].vld = 1'b1;
+  assign str_adc[i].dat = digital_loop ? str_dac[i].dat : adc_dat_raw;
 
   linear #(
     .DWI  (14),
@@ -457,14 +457,9 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
     // system signals
     .clk      (adc_clk ),
     .rstn     (adc_rstn),
-    // input stream
-    .sti_dat  (adc_dat_mux),
-    .sti_vld  (1'b1),
-    .sti_rdy  (),
-    // output stream
-    .sto_dat  (str_adc[i].dat),
-    .sto_vld  (str_adc[i].vld),
-    .sto_rdy  (str_adc[i].rdy),
+    // stream input/output
+    .sti      (str_adc[i]),
+    .sto      (str_osc[i]),
     // configuration
     .cfg_mul  (adc_cfg_mul[i]),
     .cfg_sum  (adc_cfg_sum[i])
@@ -480,15 +475,18 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
-  logic signed [15-1:0] dac_dat_sum;
-  logic signed [14-1:0] dac_dat_sat;
+  str_bus_if #(.DAT_T (logic signed [15-1:0])) str_sum (.clk (adc_clk), .rstn (adc_rstn));
+  str_bus_if #(.DAT_T (logic signed [14-1:0])) str_sat (.clk (adc_clk), .rstn (adc_rstn));
 
   // Sumation of ASG and PID signal perform saturation before sending to DAC
-  // TODO: there should be a proper metod to disable PID
-  assign dac_dat_sum = asg_dat[i]; // + pid_dat[0];
+  // TODO: there should be a proper metod to disable PID, and some proper two stream logic
+  assign str_sum.vld = str_asg[i].vld; // ??? str_pid[i].dat;
+  assign str_sum.dat = str_asg[i].dat; // + str_pid[i].dat;
+  assign str_asg[i].rdy = str_sum.rdy;
 
   // saturation
-  assign dac_dat_sat = (^dac_dat_sum[15-1:15-2]) ? {dac_dat_sum[15-1], {13{~dac_dat_sum[15-1]}}} : dac_dat_sum[14-1:0];
+  assign str_sat.vld = str_sum.vld;
+  assign str_sat.dat = (^str_sum.dat[15-1:15-2]) ? {str_sum.dat[15-1], {13{~str_sum.dat[15-1]}}} : str_sum.dat[14-1:0];
 
   linear #(
     .DWI  (14),
@@ -498,21 +496,17 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
     // system signals
     .clk      (adc_clk ),
     .rstn     (adc_rstn),
-    // input stream
-    .sti_dat  (dac_dat_sat),
-    .sti_vld  (1'b1),
-    .sti_rdy  (),
-    // output stream
-    .sto_dat  (dac_dat_cal[i]),
-    .sto_vld  (),
-    .sto_rdy  (1'b1),
+    // stream input/output
+    .sti      (str_sat),
+    .sto      (str_dac[i]),
     // configuration
     .cfg_mul  (dac_cfg_mul[i]),
     .cfg_sum  (dac_cfg_sum[i])
   );
 
   // output registers + signed to unsigned (also to negative slope)
-  assign dac_dat[i] = {dac_dat_cal[i][14-1], ~dac_dat_cal[i][14-2:0]};
+  assign dac_dat[i] = {str_dac[i].dat[14-1], ~str_dac[i].dat[14-2:0]};
+  assign str_dac[i].rdy = 1'b1;
 
 end: for_dac
 endgenerate
@@ -538,9 +532,7 @@ asg_top #(
   .clk       (adc_clk ),
   .rstn      (adc_rstn),
   // stream output
-  .sto_dat   (asg_dat[i]),
-  .sto_vld   (),
-  .sto_rdy   (1'b1),
+  .sto       (str_asg[i]),
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.gen_swo[i]),
@@ -563,7 +555,7 @@ scope_top #(
   .TWA ($bits(trg))
 ) scope (
   // streams
-  .sti       (str_adc[i]),
+  .sti       (str_osc[i]),
   .sto       (str_acq[i]),
   // triggers
   .trg_ext   (trg),
