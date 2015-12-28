@@ -1,6 +1,6 @@
 --- system.dts.old	2015-07-23 23:14:55.434444209 +0200
 +++ system.dts	2015-07-23 23:05:18.198460862 +0200
-@@ -24,7 +24,7 @@
+@@ -26,7 +26,7 @@
  	};
  	memory {
  		device_type = "memory";
@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,70 @@
+@@ -86,3 +86,82 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -28,6 +28,13 @@
 +	eep@50 {
 +		compatible = "24c64";
 +		reg = <0x50>;
++	};
++};
++&spi1 {
++	spidev@0 {
++		compatible="spidev";
++		reg =<0>; //chipselect 0
++		spi-max-frequency= <50000000>;
 +	};
 +};
 +&clkc {
@@ -73,10 +80,15 @@
 +	    };
 +	};
 +};
-+&spi0 {
-+	spidev@0 {
-+		compatible="spidev";
-+		reg =<0>; //chipselect 0
-+		spi-max-frequency= <50000000>;
++/ {
++	usb_phy0: phy0 {
++		compatible = "ulpi-phy";
++		#phy-cells = <0>;
++		reg = <0xe0002000 0x1000>;
++		view-port = <0x0170>;
++		drv-vbus;
 +	};
++};
++&usb0 {
++	usb-phy = <&usb_phy0>;
 +};
