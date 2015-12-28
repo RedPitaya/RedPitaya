@@ -1,11 +1,29 @@
+# Release 0.94 RC23
+
 Changes:
-- migration to Vivado 2015.4 and related U-Boot and Linux versions
+- migration to Vivado 2015.4 and related U-Boot, Linux kernel and devicetree versions
 - changes to ARM clocking so the CPU runs at 666MHz instead of 500MHz (Ulrich Habel)
 - SPI userspace access seems to be fixed, `/dev/spidev1.0` is present, but
   kernel log still does not mention SPI or QSPI drivers
 
-**Known issues** (at least major ones) are same as in 0.94 RC12.
+## Known issues
+
+### FPGA
++ possible timing issues
++ poorly written test benches
 + generator burst mode is buggy
+
+### U-Boot
++ there is no simple method to remove 3 second boot wait
+
+### Linux kernel, device tree
++ Warnings are reported for Lantiq Ethernet PHY devicetree
+
+### OS
++ wireless is broken on Buildroot, and will probably only be futher maintained on Debian/Ubuntu
+
+### Other applications
++ SCPI server is poorly tested and the documentation is old
 
 # Release 0.94 RC22
 
