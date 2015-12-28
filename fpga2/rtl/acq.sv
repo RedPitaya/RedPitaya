@@ -9,9 +9,8 @@ module acq #(
   int unsigned DW = 8,  // data width
   int unsigned CW = 8   // counter width
 )(
-  // stream input
+  // stream input/output
   str_bus_if.d  sti,
-  // stream output
   str_bus_if.s  sto,
   // control
   input  logic          ctl_rst,
