@@ -25,6 +25,7 @@ module asg_top_tb #(
 // syste signals
 logic                  clk ;
 logic                  rstn;
+
 // stream
 str_bus_if #(.DAT_T (logic signed [DWO-1:0])) str (.clk (clk), .rstn (rstn));
 

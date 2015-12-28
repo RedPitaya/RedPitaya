@@ -1,13 +1,11 @@
 module str_drn #(
-  int unsigned DW = 1                    // data width
+  int unsigned DW = 8     // data width
 )(
   // system signals
-  input  logic                 clk,      // clock
-  input  logic                 rstn,     // reset - active low
+  input  logic  clk,      // clock
+  input  logic  rstn,     // reset - active low
   // stream
-  input  logic                 str_vld,  // transfer valid
-  input  logic signed [DW-1:0] str_dat,  // grouped bus signals
-  output logic                 str_rdy   // transfer ready
+  str_bus_if.d  str
 );
 
 logic str_trn;
@@ -21,23 +19,23 @@ int unsigned          buf_tmg [$];
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream transfer event
-assign str_trn = str_vld & str_rdy;
+assign str_trn = str.vld & str.rdy;
 
 // stream enable
-assign str_ena = str_trn | ~str_vld;
+assign str_ena = str_trn | ~str.vld;
 
 //int str_tmg;
 //
 //// transfer delay counter
 //always @ (posedge clk, posedge rst)
 //if (!rstn)         str_tmg <= 0;
-//else if (str_vld)  str_tmg <= str_rdy ? 0 : str_tmg + 1;
+//else if (str.vld)  str_tmg <= str.rdy ? 0 : str_tmg + 1;
 
 // on transfer store data in the queue
 always @ (posedge clk)
-if (str_trn)   buf_dat.push_back(str_dat);
+if (str_trn)   buf_dat.push_back(str.dat);
 
-assign str_rdy = 1'b1;
+assign str.rdy = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -19,21 +19,15 @@ module scope_filter_tb #(
 logic                  clk ;  // clock
 logic                  rstn;  // reset - active low
 
-// stream input
-logic signed [DWI-1:0] sti_dat;
-logic                  sti_vld;
-logic                  sti_rdy;
-
-// stream output
-logic signed [DWO-1:0] sto_dat;
-logic                  sto_vld;
-logic                  sto_rdy;
-
 // configuration
 logic signed [ 18-1:0] cfg_aa;   // config AA coefficient
 logic signed [ 25-1:0] cfg_bb;   // config BB coefficient
 logic signed [ 25-1:0] cfg_pp;   // config PP coefficient
 logic signed [ 25-1:0] cfg_kk;   // config KK coefficient
+
+// stream input/output
+str_bus_if #(.DAT_T (logic signed [DWI-1:0])) sti (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (logic signed [DWO-1:0])) sto (.clk (clk), .rstn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -80,29 +74,19 @@ str_src #(
   .DW  (DWI)
 ) str_src (
   // system signals
-  .clk      (clk    ),
-  .rstn     (rstn   ),
-  // z stream signals
-  .str_dat  (sti_dat),
-  .str_vld  (sti_vld),
-  .str_rdy  (sti_rdy)
+  .clk      (clk ),
+  .rstn     (rstn),
+  // stream
+  .str      (sti)
 );
 
 scope_filter #(
   .DWI (DWI),
   .DWO (DWO)
 ) filter (
-  // system signals
-  .clk      (clk    ),
-  .rstn     (rstn   ),
-  // input stream
-  .sti_dat  (sti_dat),
-  .sti_vld  (sti_vld),
-  .sti_rdy  (sti_rdy),
-  // output stream
-  .sto_dat  (sto_dat),
-  .sto_vld  (sto_vld),
-  .sto_rdy  (sto_rdy),
+  // stream input/output
+  .sti      (sti),
+  .sto      (sto),
   // configuration
   .cfg_aa   (cfg_aa),
   .cfg_bb   (cfg_bb),
@@ -116,7 +100,7 @@ red_pitaya_dfilt1 dfilt1 (
    // ADC
    .adc_clk_i  (clk ),
    .adc_rstn_i (rstn),
-   .adc_dat_i  (sti_dat),
+   .adc_dat_i  (sti.dat),
    .adc_dat_o  (),
    // configuration
    .cfg_aa_i   (cfg_aa),
@@ -129,12 +113,10 @@ str_drn #(
   .DW  (DWI)
 ) str_drn (
   // system signals
-  .clk      (clk    ),
-  .rstn     (rstn   ),
-  // z stream signals
-  .str_dat  (sto_dat),
-  .str_vld  (sto_vld),
-  .str_rdy  (sto_rdy)
+  .clk      (clk ),
+  .rstn     (rstn),
+  // stream
+  .str      (sto)
 );
 
 ////////////////////////////////////////////////////////////////////////////////

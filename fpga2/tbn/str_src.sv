@@ -1,14 +1,12 @@
 module str_src #(
-  int unsigned DW = 1,                   // data width
-  logic        IV = 1'b0                 // idle data bus value
+  int unsigned DW = 8,    // data width
+  logic        IV = 1'b0  // idle data bus value
 )(
   // system signals
-  input  logic                 clk,      // clock
-  input  logic                 rstn,     // reset - active low
+  input  logic  clk,      // clock
+  input  logic  rstn,     // reset - active low
   // stream
-  output logic                 str_vld,  // transfer valid
-  output logic signed [DW-1:0] str_dat,  // grouped bus signals
-  input  logic                 str_rdy   // transfer ready
+  str_bus_if.s  str
 );
 
 logic str_trn;
@@ -22,27 +20,27 @@ int unsigned          buf_tmg [$];
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream transfer event
-assign str_trn = str_vld & str_rdy;
+assign str_trn = str.vld & str.rdy;
 
 // stream enable
-assign str_ena = str_trn | ~str_vld;
+assign str_ena = str_trn | ~str.vld;
 
 //int str_tmg;
 //
 //// transfer delay counter
 //always @ (posedge clk, posedge rst)
 //if (!rstn)         str_tmg <= 0;
-//else if (str_vld)  str_tmg <= str_rdy ? 0 : str_tmg + 1;
+//else if (str.vld)  str_tmg <= str.rdy ? 0 : str_tmg + 1;
 
 // valid is active if there is data in the queue
 always @ (posedge clk, posedge rstn)
-if (!rstn)         str_vld <= 1'b0;
-else if (str_ena)  str_vld <= buf_dat.size() > 0;
+if (!rstn)         str.vld <= 1'b0;
+else if (str_ena)  str.vld <= buf_dat.size() > 0;
 
 // transfer delay counter
 always @ (posedge clk, posedge rstn)
-if (!rstn)         str_dat <= '0;
-else if (str_ena)  str_dat <= buf_dat.size() > 0 ? buf_dat.pop_front() : {DW{IV}};
+if (!rstn)         str.dat <= '0;
+else if (str_ena)  str.dat <= buf_dat.size() > 0 ? buf_dat.pop_front() : {DW{IV}};
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream data queue
