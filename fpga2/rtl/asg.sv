@@ -24,7 +24,25 @@
 //
 //
 // Submodule for ASG which hold buffer data and control registers for one channel.
+//
+// Frequency/phase and resolution:
 // 
+// The frequency is specified by the cfg_step value, the phase by the cfg_offs
+// value and both also depend on the buffer length cfg_size. The cfg_step (step
+// length) and cfg_offs (initial position) values are fixed point with a
+// magnitude of CWM bits and a fraction of CWF bits.
+// The buffer is usually programmed to contain a full period of the desired
+// waveform, and the whole available buffer is usually used since it provides
+// the best resolution. The buffer length is defined as 2**CWM.
+//
+// Δf = Fs/2**(CWM+CWF) = 125Hz/2**(14+16)=
+//
+// A common configurations is u14.16.
+// a common size is 2**14=16384 locations.
+//
+//
+//
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 module asg #(
