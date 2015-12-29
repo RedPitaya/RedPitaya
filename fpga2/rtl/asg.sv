@@ -25,23 +25,46 @@
 //
 // Submodule for ASG which hold buffer data and control registers for one channel.
 //
-// Frequency/phase and resolution:
+////////////////////////////////////////////////////////////////////////////////
+//
+// FREQUENCY/PHASE AND RESOLUTION
 // 
 // The frequency is specified by the cfg_step value, the phase by the cfg_offs
 // value and both also depend on the buffer length cfg_size. The cfg_step (step
 // length) and cfg_offs (initial position) values are fixed point with a
 // magnitude of CWM bits and a fraction of CWF bits.
+//
 // The buffer is usually programmed to contain a full period of the desired
 // waveform, and the whole available buffer is usually used since it provides
-// the best resolution. The buffer length is defined as 2**CWM.
+// the best resolution. The buffer length is defined as (cfg_size+1) and can be
+// at most 2**CWM locations when:
+// cfg_offs = 2**CWF - 1
 //
-// Δf = Fs/2**(CWM+CWF) = 125Hz/2**(14+16)=
+// The frequency and phase resolutions are defined by the smaller values of
+// control variables.
 //
-// A common configurations is u14.16.
-// a common size is 2**14=16384 locations.
+// Frequency:
+// f = Fs/(cfg_size+1) * (cfg_step+1)/(2**CWF)
 //
+// Frequency (max bufer size):
+// f = Fs/(2**(CWM+CWF)) * (cfg_offs+1)
 //
+// Phase:
+// Φ = 360°/(cfg_size+1) * (cfg_offs+1)/(2**CWF)
 //
+// Phase (max bufer size):
+// Φ = 360°/(2**(CWM+CWF)) * (cfg_offs+1)
+//
+// Resolution:
+// Δf = Fs  /2**(CWM+CWF)
+// ΔΦ = 360°/2**(CWM+CWF)
+//
+// Example values:
+// The default fixed point format for cfg_step and cfg_offs is u14.16 and the
+// default buffer size is 2**14=16384 locations.
+// Fs = 125MHz
+// Δf = 125MHz/2**(14+16) = 0.116Hz
+// ΔΦ = 360°  /2**(14+16) = 0.000000335°
 //
 ////////////////////////////////////////////////////////////////////////////////
 
