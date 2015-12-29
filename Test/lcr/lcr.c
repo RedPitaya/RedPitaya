@@ -834,13 +834,13 @@ int main(int argc, char *argv[]) {
                         // depending on the mesured reactance compared to the current shunt resistor
                         // recalculate shunt resistor choice
                         int R_shunt_old = R_shunt_k;
-                        if ( (Z_amp >= (6.0*R_shunt)) || (Z_amp <= (1.0/6.0*R_shunt)) ) {
-                            if      ((Z_amp > 1e6)                    )    R_shunt_k=5; // 1M3
-                            else if ((Z_amp > 100e3) && (Z_amp <= 1e6))     R_shunt_k=4; // 100K
-                            else if ((Z_amp >  10e3) && (Z_amp <= 100e3))   R_shunt_k=3; // 10K 
-                            else if ((Z_amp >  1e3) && (Z_amp <=  10e3))    R_shunt_k=2; // 1K
-                            else if ((Z_amp >   30) && (Z_amp <=  1e3))    R_shunt_k=1; // 100E
-                            else if ((Z_amp <=   30)                    )  R_shunt_k=0; // 10E
+                        if ( (Z_amp >= (10.0*R_shunt)) || (Z_amp <= (1.0/10.0*R_shunt)) ) {
+                            if      ((Z_amp > 1e6)                      )     R_shunt_k=5; // 1M3
+                            else if ((Z_amp > 100e3) && (Z_amp <= 1e6))       R_shunt_k=4; // 100K
+                            else if ((Z_amp >  10e3) && (Z_amp <= 100e3))     R_shunt_k=3; // 10K 
+                            else if ((Z_amp >  1e3)  && (Z_amp <=  10e3))     R_shunt_k=2; // 1K
+                            else if ((Z_amp >  100)  && (Z_amp <=  1e3))      R_shunt_k=1; // 100E
+                            else if ((Z_amp <= 100)                     )     R_shunt_k=0; // 10E
                         }
                         int repeat = R_shunt_old != R_shunt_k;
                         if (repeat) {
