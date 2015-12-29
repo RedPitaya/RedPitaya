@@ -168,7 +168,7 @@
 				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
 					formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				}else if(new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0){
-					formatRangeManual($('#sel_range_f').val(), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
+					formatRangeManual(new_params['LCR_C_PREC'].value, $('#sel_range_f').val(), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
 				}else{
 
 					if(new_params['LCR_RELATIVE'].value < Math.abs(999)){
@@ -400,6 +400,8 @@ $(function() {
 		}else if(this.id == 'LCR_R'){
 			LCR.selected_meas = 4;
 		}
+
+		LCR.params.local['LCR_RANGE'] = { value: LCR.selected_meas };
 
 		if(LCR.params.orig['LCR_TOLERANCE'].value != 0){
 			LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
@@ -676,13 +678,17 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	return 0;
 }
 
-function formatRangeManual(format, power, data){
+function formatRangeManual(precision, format, power, data){
 
 	var suffixes = ['n', 'u', 'm', '','k', 'M'];
 	var formats = [1.0000, 10.000, 100.00, 1000.0];
 	//Direct formats mirror table
 	var limits = [9.999, 99.999, 999.99, 9999.9];
 	var format_size = 5;
+
+	if(precision != null && LCR.displ_params.prim == "LCR_C"){
+		data = data * Math.pow(10, -precision);
+	}
 
 	var i;
 	var c = 0;
@@ -739,9 +745,9 @@ function formatRangeManual(format, power, data){
 			continue;
 		}
 
-		if(m < flt_idx && indicies[m] == 0){
-			continue;
-		}
+		//if(m < flt_idx && indicies[m] == 0){
+		//	continue;
+		//}
 		formatted_data += indicies[m];
 	}
 
