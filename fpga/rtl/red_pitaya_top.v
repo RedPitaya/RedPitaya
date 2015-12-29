@@ -208,8 +208,6 @@ wire  [ 16-1: 0] xadc_axis_tdata           ;
 wire  [  5-1: 0] xadc_axis_tid             ;
 wire             xadc_axis_tready          ;
 wire             xadc_axis_tvalid          ;
-wire             ps_leds_en                ;
-wire  [  8-1: 0] ps_leds_data              ;
 
 red_pitaya_ps i_ps (
   .FIXED_IO_mio       (  FIXED_IO_mio                ),
@@ -270,10 +268,7 @@ red_pitaya_ps i_ps (
   .xadc_axis_tdata    (xadc_axis_tdata            ),  // AXI-streaming from the XADC, data
   .xadc_axis_tid      (xadc_axis_tid              ),  // AXI-streaming from the XADC, analog data source channel for this data
   .xadc_axis_tready   (xadc_axis_tready           ),  // AXI-streaming from the XADC, slave indicating ready for data
-  .xadc_axis_tvalid   (xadc_axis_tvalid           ),  // AXI-streaming from the XADC, data transfer valid
-  // AXI GP1 LEDs
-  .LED_drive_o        (ps_leds_en                 ),  // AXI protocol checker display output, overdrive HK and RB LED output
-  .LED_data_o         (ps_leds_data               )   // AXI protocol checker display output, LEDs to be lighted
+  .xadc_axis_tvalid   (xadc_axis_tvalid           )   // AXI-streaming from the XADC, data transfer valid
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,8 +606,7 @@ red_pitaya_radiobox i_radiobox (
 // LED output to be shared between HK, RB and PS
 ////////////////////////////////////////////////////////////////////////////////
 
-assign led_o = ps_leds_en  ?  ps_leds_data :
-               rb_leds_en  ?  rb_leds_data :
+assign led_o = rb_leds_en  ?  rb_leds_data :
                               hk_leds_data;           // LED multiplexer for HK, RadioBox and PS switching
 
 endmodule
