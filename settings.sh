@@ -22,6 +22,14 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 export BR2_DL_DIR=dl
 
 ################################################################################
+# which boot image / file system should be entered? Select one of them
+# When both are selected, each one is prepared but Debian wins for the FSBL
+################################################################################
+
+#export FSBL_BR=1
+export FSBL_DEBIAN=1
+
+################################################################################
 # common make procedure, should not be run by this script
 ################################################################################
 

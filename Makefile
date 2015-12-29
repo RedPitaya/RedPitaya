@@ -20,6 +20,17 @@
 
 TMP = tmp
 
+ifndef CROSS_COMPILE
+$(error Are you sure to compile w/o CROSS_COMPILE?  Please start settings.sh prior to this make command)
+endif
+
+# check, which boot image / file system should be entered from the FSBL (first stage boot loader)
+ifndef FSBL_BR
+ifndef FSBL_DEBIAN
+$(error At least one of FSBL_BR or FSBL_DEBIAN has to be enabled for the build process. See in settings.sh for more details)
+endif
+endif
+
 # check if download cache directory is available
 ifdef BR2_DL_DIR
 DL=$(BR2_DL_DIR)
@@ -81,6 +92,7 @@ ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
 SDK_DIR         = SDK/
+BR_BOOST_DIR    = OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0
 
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
@@ -125,6 +137,8 @@ export GREET_MSG
 # tarball
 ################################################################################
 
+.PHONY: target_base
+
 all: zip sdk apps-free
 
 $(DL):
@@ -133,9 +147,30 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
+ifdef FSBL_BR
+ifdef FSBL_DEBIAN
+$(info *** make BuildRoot and build for Debian entry ***)
 $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api apps_pro rp_communication
+	   scpi api apps_pro rp_communication \
+	   target_base
+else
+$(info *** make BuildRoot ***)
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
+	   scpi api apps_pro rp_communication \
+	   target_base
+endif
+
+else
+$(info *** build for Debian entry ***)
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(IDGEN) $(NGINX) \
+	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
+	   scpi api apps_pro rp_communication \
+	   target_base
+endif
+
+target_base:
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -153,11 +188,13 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGIN
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
-	# copy Linaro runtime library to fix dependency issues on Debian
-	# TODO: find a better solution
-	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
+	# copy static library that was used for compilation nginx and create shared object of it
+	cp $(SYSROOT)/usr/lib/libstdc++.a $(TARGET)/lib; \
+		$(CROSS_COMPILE)$(CXX) -shared -o $(TARGET)/lib/libstdc++.so \
+		-Wl,--whole-archive -L $(TARGET)/usr/lib -lstdc++ -Wl,--no-whole-archive
 
 zip: $(TARGET)
+	find . -name ".*DS_Store" -delete
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
 
 ################################################################################
@@ -193,14 +230,20 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
-	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
+	make -C $< ARCH=arm zynq_red_pitaya_defconfig
+	make -C $< ARCH=arm CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Buildroot" -d $(UBOOT_SCRIPT_BUILDROOT) $@.buildroot
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
+ifdef FSBL_DEBIAN
 	cp $@.debian $@
+else
+ifdef FSBL_BR
+	cp $@.buildroot $@
+endif
+endif
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
 	mkdir -p $(INSTALL_DIR)/etc/
@@ -260,10 +303,14 @@ $(BOOT_UBOOT): fpga $(UBOOT)
 
 URAMDISK_DIR    = OS/buildroot
 
-.PHONY: buildroot
+.PHONY: buildroot buildroot_boost
 
 $(INSTALL_DIR):
 	mkdir $(INSTALL_DIR)
+
+buildroot_boost: $(INSTALL_DIR)
+	#$(MAKE) -C $(URAMDISK_DIR) boost   # at the moment there is no quick solution for a less time consuming way
+	$(MAKE) -C $(URAMDISK_DIR)          # using full build instead
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
@@ -321,7 +368,7 @@ CRYPTOPP_DIR    = Bazaar/tools/cryptopp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
-BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
+NGINX_BOOST_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
 .PHONY: ecosystem nginx 
 
@@ -365,10 +412,12 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	patch -d $@ -p1 < patches/nginx.patch
 	cp -f patches/nginx.conf $@/conf/
 
-$(BOOST_DIR): buildroot
-	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
+$(BR_BOOST_DIR): buildroot_boost
 
-$(NGINX): buildroot libredpitaya $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
+$(NGINX_BOOST_DIR): $(BR_BOOST_DIR)
+	ln -sf ../../../../$< $@
+
+$(NGINX): $(NGINX_BOOST_DIR) libredpitaya $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(WEBSOCKETPP_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -521,12 +570,17 @@ sdk:
 ################################################################################
 
 clean:
+	$(RM) $(DEVICETREE) $(TMP)/devicetree.dts
+	$(RM) $(UBOOT)
+	$(RM) $(LINUX)
+	$(RM) $(BOOT_UBOOT) boot_uboot.bif
 	-make -C $(LINUX_DIR) clean
+	make -C $(SDK_DIR) clean
 	make -C $(FPGA_DIR) clean
 	-make -C $(UBOOT_DIR) clean
 	make -C shared clean
 	# todo, remove downloaded libraries and symlinks
-	rm -rf Bazaar/tools/cryptopp
+	$(RM) -r Bazaar/tools/cryptopp
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
@@ -534,10 +588,12 @@ clean:
 	make -C $(CALIB_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
+ifdef ENABLE_LICENSING
 	make -C $(LIBRPAPP_DIR) clean
+endif
 	make -C $(SDK_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
-	$(RM) $(INSTALL_DIR) -rf
-	$(RM) $(TARGET) -rf
+	$(RM) -r $(INSTALL_DIR)
+	$(RM) -r $(TARGET)
 	$(RM) $(NAME)*.zip
