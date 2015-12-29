@@ -168,7 +168,7 @@
 				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
 					formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				}else if(new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0){
-					formatRangeManual(Math.abs($('#sel_range_f').val() - 4), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
+					formatRangeManual($('#sel_range_f').val(), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
 				}else{
 
 					if(new_params['LCR_RELATIVE'].value < Math.abs(999)){
@@ -181,7 +181,7 @@
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
-				if(data == "OVER FLOW"){
+				if(data == "OVER R."){
 					$('#lb_prim_displ').css('font-size', '100%').css('width: 100%');	
 				}else{
 					$('#lb_prim_displ').css('font-size', '100%');
@@ -231,15 +231,21 @@
 			var quantity = param_name.substr(0, param_name.length - 4);
 			if(param_name == (quantity + "_MIN") && param_name == (LCR.displ_params.prim + "_MIN")){
 				console.log(quantity);
-				$('#meas_min_d').empty().append(formatRangeAuto(true, null,null, new_params[param_name].value));
+				var format = formatRangeAuto(true, null,null, new_params[param_name].value);
+				if(format == "OVER R.") $('#meas_min_d').empty().append(0);
+				else $('#meas_min_d').empty().append(format);
 			}
 
 			if(param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")){
-				$('#meas_max_d').empty().append(formatRangeAuto(true, null, null, new_params[param_name].value));	
+				var format = formatRangeAuto(true, null,null, new_params[param_name].value);
+				if(format == "OVER R.") $('#meas_max_d').empty().append(0);
+				else $('#meas_max_d').empty().append(format);	
 			}
 
 			if(param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")){
-				$('#meas_avg_d').empty().append(formatRangeAuto(true, null, null, new_params[param_name].value));
+				var format = formatRangeAuto(true, null,null, new_params[param_name].value);
+				if(format == "OVER R.") $('#meas_avg_d').empty().append(0);
+				else $('#meas_avg_d').empty().append(format);
 			}
 		}
 
@@ -549,7 +555,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	}
 	
 	if(meas_data < 0.00000000000010){
-		data = "ERROR";
+		data = "OVER R.";
 	}else if(meas_data > 0.00000000000010 && meas_data <= 0.00000000999990){
 		
 		data = (meas_data * Math.pow(10, 9)).toFixed(4);
@@ -631,14 +637,14 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	
 	}else if(meas_data > 9999900.0){
 
-		data = "OVER FLOW";
+		data = "OVER R.";
 		units = "";
 	}
 
 	//If we are formatting log data, we do not want to change the main measurment
 	if(meas_param == true){
 		
-		if(data == "ERROR" || data == "OVER FLOW"){
+		if(data == "OVER R."){
 			return data;
 		}
 		
@@ -647,7 +653,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 
 	switch(display){
 		case 1:
-			if(data == "ERROR" || data == "OVER FLOW"){
+			if(data == "OVER R."){
 				LCR.displ_params.prim_val = data;
 				LCR.displ_params.p_units = "";
 				break;
@@ -656,7 +662,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 			LCR.displ_params.p_units = units;
 			break;
 		case 2:
-			if(data == "ERROR" || data == "OVER FLOW"){
+			if(data == "OVER R."){
 				LCR.displ_params.sec_val = data;
 				LCR.displ_params.s_units = "";
 				break;
@@ -672,20 +678,80 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 
 function formatRangeManual(format, power, data){
 
-	var suffixes = ['n', 'u', 'm', 'H','k', 'M'];
+	var suffixes = ['n', 'u', 'm', '','k', 'M'];
+	var formats = [1.0000, 10.000, 100.00, 1000.0];
+	//Direct formats mirror table
+	var limits = [9.999, 99.999, 999.99, 9999.9];
+	var format_size = 5;
 
 	var i;
 	var c = 0;
-
 	for(i = 9; i > -7; i -= 3){
 		if(c == power) {
-			data = (data * Math.pow(10, i)).toFixed(format);
+			data = (data * Math.pow(10, i));
 			break;
 		}
 		c++;
 	}
 
-	LCR.displ_params.prim_val = data;
+	var limit = limits[parseInt(format)];
+	if(data < 0 || (data > limit)){
+		LCR.displ_params.prim_val = "OVER R.";
+		LCR.displ_params.p_units = "";
+		return;
+	}
+
+	var string_data = data.toString();
+	var formatted_data = "";
+	var flt_idx = parseInt(format) + 1;
+	var string_flt;
+
+	//Divide whole and decimal part.
+	for(var j = 0; j < string_data.length; j++){
+		if(string_data[j] == '.'){
+			string_flt = j;
+			break;
+		}
+	}
+
+	var w = string_data.substr(0, j);
+	console.log("W: " + w);
+	var d = string_data.substr(j+1, string_data.length-1);
+	console.log("D: " + d);
+	var indicies = [0, 0, 0, 0, 0, 0];
+
+	for(var k = 0; k < w.length; k++){
+		indicies[flt_idx - 1 - k] = w[w.length- 1 -k]; 
+	}
+
+	for(var n = 0; n < (4 - parseInt(format)); n++){
+		indicies[n + flt_idx + 1] = d[n];
+	}
+
+	indicies[flt_idx] = '.';
+
+	console.log(indicies);
+	console.log(data);
+
+	for(var m = 0; m < 6; m++){
+		if(m == 0){
+			formatted_data += indicies[m];
+			continue;
+		}
+
+		if(m < flt_idx && indicies[m] == 0){
+			continue;
+		}
+		formatted_data += indicies[m];
+	}
+
+	if(parseFloat(formatted_data) == 0){
+		LCR.displ_params.prim_val = "OVER R.";
+		LCR.displ_params.p_units = "";
+		return;
+	}
+
+	LCR.displ_params.prim_val = formatted_data;
 	LCR.displ_params.p_units = suffixes[c] + LCR.displ_params.p_base_u;
 
 	return data;
