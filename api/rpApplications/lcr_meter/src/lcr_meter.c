@@ -49,13 +49,13 @@ struct impendace_params {
 
 /* R shunt values definition */
 const double SHUNT_TABLE[] = 
-	{30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
+	{10, 1e2, 1e3, 1e4, 1e5, 1.3e6};
 
 const int RANGE_FORMAT[] =
-	{10.0, 100.0, 1000.0, 10000.0};
+	{1.0, 10.0, 100.0, 1000.0};
 
 const double RANGE_UNITS[] =
-	{10e9, 10e6, 10e3, 1, 10e-3, 10e-6};
+	{1e-9, 1e-6, 1e-3, 1, 1e3, 1e6};
 
 /* Init the main API structure */
 int lcr_Init(){
@@ -243,9 +243,6 @@ void *lcr_MainThread(void *args){
 			&args_struct->z_out, &args_struct->phase_out);
 
 		z_abs = cabs(args_struct->z_out);
-		
-		syslog(LOG_INFO, "ZABS: %f\n", z_abs);
-		syslog(LOG_INFO, "RANGE: %d\n", main_params.range);
 
 		switch(main_params.range){
 			//Z
@@ -261,8 +258,8 @@ void *lcr_MainThread(void *args){
 				break;
 			//C
 			case 3: 
-				z_abs = 1 / (RANGE_FORMAT[main_params.range_format] * args_struct->frequency *
-					2 * M_PI) * RANGE_UNITS[main_params.range_units];
+				z_abs = 1 / (RANGE_FORMAT[main_params.range_format] * args_struct->frequency * 
+					2 * M_PI * RANGE_UNITS[main_params.range_units]);
 				break;
 			//R
 			case 4: 
@@ -275,17 +272,24 @@ void *lcr_MainThread(void *args){
 				break;
 		}
 
+		syslog(LOG_INFO, "VELICINA: %d\n", main_params.range);
+		syslog(LOG_INFO, "FORMAT: %d\n", RANGE_FORMAT[main_params.range_format]);
+		syslog(LOG_INFO, "UNITS: %f\n", RANGE_UNITS[main_params.range_units]);
+		syslog(LOG_INFO, "%.15f\n", z_abs);
+
 		lcr_checkRShunt(z_abs, 
 			SHUNT_TABLE[n_shunt_idx], &n_shunt_idx);
 
 		main_params.r_shunt = n_shunt_idx;
 		set_IIC_Shunt(main_params.r_shunt);
 
-		if(z_abs > 10e6 || z_abs < 1) overflow_limitation++;
-		if(overflow_limitation > 10){
-			main_params.r_shunt = 2;
-			set_IIC_Shunt(main_params.r_shunt);
-			overflow_limitation = 0;
+		if(z_abs > 20e6 || z_abs < 0) {
+			if(overflow_limitation > 10){
+				overflow_limitation = 0;
+				main_params.r_shunt = 2;
+				set_IIC_Shunt(main_params.r_shunt);
+			}
+			overflow_limitation++;
 		}
 	}
 
@@ -370,7 +374,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured){
 	bool calibration = false;
 
 	//Client depended parameters
-	float R_out, C_out, L_out, ESR_out;
+	double R_out, C_out, L_out, ESR_out;
 
 	//Client independed
 	float ampl_out, phase_out, Q_out, D_out;
@@ -479,7 +483,6 @@ int lcr_CopyParams(lcr_main_data_t *params){
 	return RP_OK;
 }
 
-
 int lcr_data_analysis(float **data, 
 					uint32_t size, 
 					float dc_bias, 
@@ -488,20 +491,19 @@ int lcr_data_analysis(float **data,
 					int decimation,
 					float _Complex *z_out,
 					float *phase_out){
-
-	/* Forward vector and variable declarations */
-	float ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
+	
+	double ang, u_dut_ampl, u_dut_phase_ampl, i_dut_ampl, i_dut_phase_ampl,
 		phase_z_rad, z_ampl;
 
-	float T = (decimation / SAMPLE_RATE);
+	double T = (decimation / SAMPLE_RATE);
 
-	float u_dut[size];
-	float i_dut[size];
+	double u_dut[size];
+	double i_dut[size];
 
-	float u_dut_s[2][size];
-	float i_dut_s[2][size];
+	double u_dut_s[2][size];
+	double i_dut_s[2][size];
 
-	float component_lock_in[2][2];
+	double component_lock_in[2][2];
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
@@ -524,31 +526,29 @@ int lcr_data_analysis(float **data,
 	component_lock_in[1][0] = trapezoidalApprox(i_dut_s[0], T, size); //I_X
 	component_lock_in[1][1] = trapezoidalApprox(i_dut_s[1], T, size); //I_Y
 
-	/* Calculating volatage and phase */
-	u_dut_ampl = 2 * (sqrtf(powf(component_lock_in[0][0], 2.0)) + 
-		powf(component_lock_in[0][1], 2.0));
+
+	/* Calculating voltage amplitude and phase */
+	u_dut_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + 
+		powf(component_lock_in[0][1], 2.0)));
 
 	u_dut_phase_ampl = atan2f(component_lock_in[0][1], 
-		component_lock_in[0][0]);
+	    component_lock_in[0][0]);
 
-	i_dut_ampl = 2 * (sqrtf(powf(component_lock_in[1][0], 2.0)) + 
-		powf(component_lock_in[1][1], 2.0));
+	/* Calculating current amplitude and phase */  
+	i_dut_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + 
+		powf(component_lock_in[1][1], 2.0)));
 
 	i_dut_phase_ampl = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
-	/* Assigning impedance values */
-	phase_z_rad = u_dut_phase_ampl - i_dut_phase_ampl;
-	z_ampl = u_dut_ampl / i_dut_ampl;
+	phase_z_rad =  u_dut_phase_ampl - i_dut_phase_ampl;
+	z_ampl = u_dut_ampl / i_dut_ampl; 
 
-	/* Applying phase limitation (-180 deg, 180 deg) */
-	if(phase_z_rad <= (-1 * M_PI)){
-		phase_z_rad = phase_z_rad + (2 * M_PI);
-	}else if(phase_z_rad >= M_PI){
-		phase_z_rad = phase_z_rad - (2 * M_PI);
-	}
+	/* Phase has to be limited between M_PI and -M_PI. */
+	if (phase_z_rad <=  (-M_PI) )     phase_z_rad = phase_z_rad +(2*M_PI);
+	else if ( phase_z_rad >= M_PI )   phase_z_rad = phase_z_rad +(2*M_PI);      
 
+	*phase_out = 180.0 * (phase_z_rad / (2.0 * M_PI));
 	*z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
-	*phase_out = 180.0 * (phase_z_rad / (2 * M_PI));
 
 	return RP_OK;
 }
@@ -633,4 +633,3 @@ int lcr_GetRangeUnits(int *units){
 	*units = main_params.range_units;
 	return RP_OK;
 }
-
