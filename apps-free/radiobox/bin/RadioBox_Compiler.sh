@@ -10,19 +10,16 @@ GIT_COMMIT=`git log -1 | head -1 | cut -b 8-`
 BUILD_NUMBER=`git rev-list HEAD --count`
 REVISION=`git log -n1 --pretty=%h`
 
-VER=`cat $ECOSYSTEM_DIR/info/info.json | grep version | sed -E 's/^[^:]*:[^"]*"([^-]*)-.*/\1/'`
-GIT_BRANCH_NAME=`echo $GIT_BRANCH | sed -e 's/.*\///'`
-
-GIT_BRANCH_LOCAL="https://github.com/DF4IAH/RedPitaya_RadioBox.git $GIT_BRANCH_NAME" 
-VERSION=$VER-$BUILD_NUMBER-$REVISION
-
 echo +++ Building with:
-echo +++ VERSION \\t\\t $VERSION
-echo +++ GIT_BRANCH_LOCAL \\t $GIT_BRANCH_LOCAL
+echo +++ GIT_BRANCH \\t \\t $GIT_BRANCH
+echo +++ GIT_COMMIT \\t \\t GIT_COMMIT
+echo +++ BUILD_NUMBER \\t $BUILD_NUMBER
+echo +++ REVISION \\t \\t $REVISION
 
+export GIT_BRANCH
+export GIT_COMMIT
 export BUILD_NUMBER
 export REVISION
-export VERSION
 
 make $*
 
