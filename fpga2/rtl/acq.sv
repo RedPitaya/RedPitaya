@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module acq #(
+  int unsigned TW = 8,  // time width
   int unsigned DW = 8,  // data width
   int unsigned CW = 8   // counter width
 )(
@@ -14,6 +15,9 @@ module acq #(
   str_bus_if.s  sto,
   // control
   input  logic          ctl_rst,
+  // current time stamp
+  input  logic [TW-1:0] ctl_cts,
+  input  logic [TW-1:0] sts_cts,
   // delay configuration/status
   input  logic [CW-1:0] cfg_dly,  // requested delay value
   output logic [CW-1:0] sts_dly,  // delay counter status

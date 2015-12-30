@@ -9,7 +9,8 @@
 module acq_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
-  // PWM parameters
+  // parameters
+  int unsigned TW = 64,  // time width
   int unsigned DW = 14,  // data width
   int unsigned CW = 32   // counter width
 );
@@ -20,6 +21,9 @@ logic          rstn;  // reset - active low
 
 // control
 logic          ctl_rst;
+// current time stamp
+logic [TW-1:0] ctl_cts;
+logic [TW-1:0] sts_cts;
 // delay configuration/status
 logic [CW-1:0] cfg_dly;
 logic [CW-1:0] sts_dly;
@@ -39,11 +43,18 @@ real gain   = 1.0;
 real offset = 0.1;
 
 ////////////////////////////////////////////////////////////////////////////////
-// clock and test sequence
+// clock and time stamp
 ////////////////////////////////////////////////////////////////////////////////
 
 initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
+
+initial                ctl_cts  = 0;
+always @ (posedge clk) ctl_cts <= ctl_cts+1;
+
+////////////////////////////////////////////////////////////////////////////////
+// test sequence
+////////////////////////////////////////////////////////////////////////////////
 
 initial begin
   // for now initialize configuration to an idle value
@@ -86,14 +97,18 @@ str_src #(
 );
 
 acq #(
+  .TW (TW),
   .DW (DW),
   .CW (CW)
 ) acq (
   // stream input/output
-  .sti      (sti    ),
-  .sto      (sto    ),
+  .sti      (sti),
+  .sto      (sto),
   // control
   .ctl_rst  (ctl_rst),
+  // current time stamp
+  .ctl_cts  (ctl_cts),
+  .sts_cts  (sts_cts),
   // delay configuration/status
   .cfg_dly  (cfg_dly),
   .sts_dly  (sts_dly),
