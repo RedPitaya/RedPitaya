@@ -34,6 +34,8 @@ TBN=$(wildcard $(PATH_TBN)/*.sv)
 # targets
 TGT=$(RTL:.sv=)
 
+TCL='log -r /*; run -all;quit'
+
 .PHONY: compile 
 
 all: $(TGT)
@@ -43,7 +45,8 @@ compile: $(LIB) $(SIP) $(RTL) $(TBN)
 	$(MODELSIM_BIN)/vlog $(LIB) $(SIP) $(RTL) $(TBN)
 
 %_tb: compile
-	$(MODELSIM_BIN)/vsim -c -do 'run -all;quit' $@
+	$(MODELSIM_BIN)/vsim -c -do $(TCL) $@
+	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; add wave -r /*'
 
 clean:
 	rm -rf work *.vcd
