@@ -61,7 +61,7 @@
                                 input pipe. '0' places MUXer to registers
                                 "MOD_OSC OFS HI" and "MOD_OSC OFS LO".
                      - bit h13..h0F: n/a
-                     - bit h14: AMP_RF_Q_EN - '1' enables the CAR_QMIX Q path for
+                     - bit h14: RF_AMP_Q_EN - '1' enables the CAR_QMIX Q path for
                                 the SSB modulation
                      - bit h1F..h15: n/a
 
@@ -141,7 +141,7 @@
                          value = h15  interpolator CAR_CIC Q output 41.664 MHz.
                          value = h18  CAR_QMIX I output.
                          value = h19  CAR_QMIX Q output.
-                         value = h1C  summed-up AMP_RF output.
+                         value = h1C  summed-up RF_AMP output.
                          value = h3F  LEDs show test vector, look for current assignments
                                       within the red_pitaya_radiobox.sv file.
                      - bit h0F..h06: n/a
@@ -165,7 +165,7 @@
                          value = h15  interpolator CAR_CIC Q output 41.664 MHz output.
                          value = h18  CAR_QMIX_I output.
                          value = h19  CAR_QMIX_Q output.
-                         value = h1C  AMP_RF output.
+                         value = h1C  RF_AMP output.
                          value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
                      - bit h17..h16: n/a
                      - bit h1D..h18: RFOUT2 source connection point
@@ -188,7 +188,7 @@
                          value = h15  interpolator CAR_CIC Q output 41.664 MHz output.
                          value = h18  CAR_QMIX_I output.
                          value = h19  CAR_QMIX_Q output.
-                         value = h1C  AMP_RF output.
+                         value = h1C  RF_AMP output.
                          value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
                      - bit h1F..h1E: n/a
 
@@ -213,12 +213,12 @@
                      - bit h1F..h10: n/a
 
 
-    00030  R/W  TX:  RB_AMP_RF_GAIN - AMP RF gain register
+    00030  R/W  TX:  RB_RF_AMP_GAIN - AMP RF gain register
                      bit 15..00
                      - bit h0F..h00: SIGNED 16 bit - Amplifier RF gain setting.
                      - bit h1F..h10: n/a
 
-    00038  R/W  TX:  RB_AMP_RF_OFS - AMP RF offset register
+    00038  R/W  TX:  RB_RF_AMP_OFS - AMP RF offset register
                      bit 15..00
                      - bit h0F..h00: SIGNED 16 bit - Amplifier RF offset value.
                      - bit h1F..h10: n/a
