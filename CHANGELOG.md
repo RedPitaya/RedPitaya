@@ -1,3 +1,13 @@
+# Release 0.94 RC24
+
+Changes:
+- libstdc++.so was removed from /opt/redpitaya/lib, this was made possible
+  by fixing C++ application Makefile-s, some were using g++ while also linking
+  stdc++, which caused conflicts, linking stdc++ was removed
+- small updates to free applications
+
+**Known issues** (at least major ones) are same as in 0.94 RC23.
+
 # Release 0.94 RC23
 
 Changes:
