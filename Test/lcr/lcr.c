@@ -617,8 +617,8 @@ int main(int argc, char *argv[]) {
 
     // setting default R_shunt resistor
     int    R_shunt_auto = !R_shunt;
-    double R_shunt_tbl [10] = {30, 75, 300, 750, 3300, 7500, 30000, 75000, 430000, 3000000};
-    int    R_shunt_k = 4;
+    double R_shunt_tbl [6] = {10, 100, 1000, 10000, 100000, 1300000};
+    int    R_shunt_k = 2;
     if (R_shunt_auto) {
         i2c_set_shunt(R_shunt_k);
         R_shunt = R_shunt_tbl[R_shunt_k];
@@ -834,17 +834,13 @@ int main(int argc, char *argv[]) {
                         // depending on the mesured reactance compared to the current shunt resistor
                         // recalculate shunt resistor choice
                         int R_shunt_old = R_shunt_k;
-                        if ( (Z_amp >= (3.0*R_shunt)) || (Z_amp <= (1.0/3.0*R_shunt)) ) {
-                            if      ((Z_amp > 500e3)                    )  R_shunt_k=9;
-                            else if ((Z_amp > 100e3) && (Z_amp <= 500e3))  R_shunt_k=8;
-                            else if ((Z_amp >  50e3) && (Z_amp <= 100e3))  R_shunt_k=7;
-                            else if ((Z_amp >  10e3) && (Z_amp <=  50e3))  R_shunt_k=6;
-                            else if ((Z_amp >   5e3) && (Z_amp <=  10e3))  R_shunt_k=5;
-                            else if ((Z_amp >  1000) && (Z_amp <=   5e3))  R_shunt_k=4;
-                            else if ((Z_amp >   500) && (Z_amp <=  1000))  R_shunt_k=3;
-                            else if ((Z_amp >   100) && (Z_amp <=   500))  R_shunt_k=2;
-                            else if ((Z_amp >    50) && (Z_amp <=   100))  R_shunt_k=1;
-                            else if ((Z_amp <=   50)                    )  R_shunt_k=0;
+                        if ( (Z_amp >= (10.0*R_shunt)) || (Z_amp <= (1.0/10.0*R_shunt)) ) {
+                            if      ((Z_amp > 1e6)                      )     R_shunt_k=5; // 1M3
+                            else if ((Z_amp > 100e3) && (Z_amp <= 1e6))       R_shunt_k=4; // 100K
+                            else if ((Z_amp >  10e3) && (Z_amp <= 100e3))     R_shunt_k=3; // 10K 
+                            else if ((Z_amp >  1e3)  && (Z_amp <=  10e3))     R_shunt_k=2; // 1K
+                            else if ((Z_amp >  100)  && (Z_amp <=  1e3))      R_shunt_k=1; // 100E
+                            else if ((Z_amp <= 100)                     )     R_shunt_k=0; // 10E
                         }
                         int repeat = R_shunt_old != R_shunt_k;
                         if (repeat) {
@@ -1521,7 +1517,7 @@ int i2c_set_shunt (int k) {
     char str [1+2*11];
 
     // parse input arguments
-    dat = ~(1<<k);
+    dat = (1<<k);
 
     // Open the device.
     fd = open("/dev/i2c-0", O_RDWR);

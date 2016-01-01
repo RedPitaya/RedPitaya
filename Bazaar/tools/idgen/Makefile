@@ -1,6 +1,6 @@
 LIBJSON_DIR=../libjson
-CC=$(CROSS_COMPILE)g++
-CFLAGS=-c -Wall -static -std=c++11 -I../build/include/cryptopp -I$(LIBJSON_DIR) -I../encoder
+CXX=$(CROSS_COMPILE)g++
+CXXFLAGS=-c -Wall -static -std=c++11 -I../build/include/cryptopp -I$(LIBJSON_DIR) -I../encoder
 LDFLAGS= -L../build/lib -lcryptopp
 SOURCES= main.cpp \
 	../encoder/encoder.cpp \
@@ -26,14 +26,14 @@ all: $(CRYPTO_LIB) $(SOURCES) $(EXECUTABLE)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
+	make -C $(CRYPTO_DIR) CXX=${CXX} PREFIX=../build static
+	make -C $(CRYPTO_DIR) CXX=${CXX} PREFIX=../build install
 
 $(EXECUTABLE):	$(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 
 .cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CXX) $(CXXFLAGS) $< -o $@
 
 install:
 	test -d '$(DESTDIR)/sbin' || mkdir -p '$(DESTDIR)/sbin'
@@ -41,5 +41,5 @@ install:
 
 clean: 
 	rm -rf $(EXECUTABLE) $(OBJECTS) $(CRYPTO_LIB) 
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build remove
+	make -C $(CRYPTO_DIR) CXX=${CXX} PREFIX=../build clean
+	make -C $(CRYPTO_DIR) CXX=${CXX} PREFIX=../build remove
