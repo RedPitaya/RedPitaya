@@ -87,9 +87,9 @@ enum {
     REG_RW_RB_CAR_OSC_OFS_LO,                   // h28: RB CAR_OSC offset register                 LSB:        (Bit 31: 0)
     REG_RW_RB_CAR_OSC_OFS_HI,                   // h2C: RB CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
 
-    REG_RW_RB_AMP_RF_GAIN,                      // h30: RB CAR_OSC mixer gain:     SIGNED 16 bit
+    REG_RW_RB_RF_AMP_GAIN,                      // h30: RB CAR_OSC mixer gain:     SIGNED 16 bit
     //REG_RD_RB_RSVD_H34,
-    REG_RW_RB_AMP_RF_OFS,                       // h38: RB CAR_OSC mixer offset:   SIGNED 17 bit
+    REG_RW_RB_RF_AMP_OFS,                       // h38: RB CAR_OSC mixer offset:   SIGNED 17 bit
     //REG_RD_RB_RSVD_H3C,
 
     REG_RW_RB_MOD_OSC_INC_LO,                   // h40: RB MOD_OSC increment register              LSB:        (Bit 31: 0)
@@ -139,7 +139,7 @@ enum {
     RB_CTRL_RSVD_D18,
     RB_CTRL_RSVD_D19,
 
-    RB_CTRL_AMP_RF_Q_EN,                        // AMP_RF enable the CAR_QMIX Q path for the SSB modulation
+    RB_CTRL_RF_AMP_Q_EN,                        // RF_AMP enable the CAR_QMIX Q path for the SSB modulation
     RB_CTRL_RSVD_D21,
     RB_CTRL_RSVD_D22,
     RB_CTRL_RSVD_D23,
@@ -220,7 +220,7 @@ enum {
     RB_SRC_CON_PNT_NUM_CAR_QMIX_I_OUT     = 24, // CAR_QMIX I output
     RB_SRC_CON_PNT_NUM_CAR_QMIX_Q_OUT,          // CAR_QMIX Q output
 
-    RB_SRC_CON_PNT_NUM_AMP_RF_OUT         = 28, // AMP_RF output
+    RB_SRC_CON_PNT_NUM_RF_AMP_OUT         = 28, // RF_AMP output
 
     RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT    = 63  // Current test vector, look at assignments within this file
 } RB_SRC_CON_PNT_ENUM;                          // 64 entries = 2^6 --> 6 bit field
@@ -445,7 +445,7 @@ rb_dds_48_16_125 i_rb_mod_osc (
 //---------------------------------------------------------------------------------
 //  MOD_QMIX quadrature mixer for the base band
 
-wire        amp_rf_q_en    = regs[REG_RW_RB_CTRL][RB_CTRL_AMP_RF_Q_EN];
+wire        amp_rf_q_en    = regs[REG_RW_RB_CTRL][RB_CTRL_RF_AMP_Q_EN];
 
 wire [15:0] mod_qmix_in    = (regs[REG_RW_RB_MUXIN_SRC][5:0] == 6'h00) ?  16'h7fff : mod_adc_out[30:15];  // when ADC source ID is zero take cos() from MOD_OSC only
 wire [15:0] mod_qmix_gain  =  regs[REG_RW_RB_MOD_QMIX_GAIN][15:0];
@@ -783,12 +783,12 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_car_qmix_Q_dsp48 (
 
 
 //---------------------------------------------------------------------------------
-//  AMP_RF amplifier for the radio frequency output (CW, AM modulated)
+//  RF_AMP amplifier for the radio frequency output (CW, AM modulated)
 
 wire [16:0] amp_rf_i_var =                {car_qmix_i_out[30], car_qmix_i_out[30:15]}        ;  // halfed and sign corrected 17 bit extension
 wire [16:0] amp_rf_q_var = amp_rf_q_en ?  {car_qmix_q_out[30], car_qmix_q_out[30:15]} : 17'b0;  // halfed and sign corrected 17 bit extension
-wire [16:0] amp_rf_gain  = {regs[REG_RW_RB_AMP_RF_GAIN][15:0], 1'b0};  // signed register value
-wire [34:0] amp_rf_ofs   = {regs[REG_RW_RB_AMP_RF_OFS][15:0], 19'b0};  // signed register value
+wire [16:0] amp_rf_gain  = {regs[REG_RW_RB_RF_AMP_GAIN][15:0], 1'b0};  // signed register value
+wire [34:0] amp_rf_ofs   = {regs[REG_RW_RB_RF_AMP_OFS][15:0], 19'b0};  // signed register value
 
 wire [35:0] amp_rf_out;
 
@@ -803,9 +803,9 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_amp_rf_dsp48 (
   // QMIX RF Q output
   .D                    ( amp_rf_q_var      ),  // QMIX_RF Q         SIGNED 17 bit
   // AMP RF gain
-  .B                    ( amp_rf_gain       ),  // AMP_RF gain       SIGNED 17 bit
+  .B                    ( amp_rf_gain       ),  // RF_AMP gain       SIGNED 17 bit
   // AMP RF offset
-  .C                    ( amp_rf_ofs        ),  // AMP_RF ofs        SIGSIG 35 bit
+  .C                    ( amp_rf_ofs        ),  // RF_AMP ofs        SIGSIG 35 bit
 
   // AMP RF output
   .P                    ( amp_rf_out        )   // AMP RF output     SIGSIG 36 bit
@@ -939,7 +939,7 @@ else begin
              rb_leds_data <= fct_mag(car_qmix_q_out[30:15]);
           end
 
-       RB_SRC_CON_PNT_NUM_AMP_RF_OUT: begin
+       RB_SRC_CON_PNT_NUM_RF_AMP_OUT: begin
           if (!led_ctr)
              rb_leds_data <= fct_mag(amp_rf_out[31:16]);
           end
@@ -1034,7 +1034,7 @@ else begin
           rb_out_ch[0] <= car_qmix_q_out[30:15];
           end
 
-       RB_SRC_CON_PNT_NUM_AMP_RF_OUT: begin
+       RB_SRC_CON_PNT_NUM_RF_AMP_OUT: begin
           rb_out_ch[0] <= amp_rf_out[31:16];
           end
 
@@ -1124,7 +1124,7 @@ else begin
           rb_out_ch[1] <= car_qmix_q_out[30:15];
           end
 
-       RB_SRC_CON_PNT_NUM_AMP_RF_OUT: begin
+       RB_SRC_CON_PNT_NUM_RF_AMP_OUT: begin
           rb_out_ch[1] <= amp_rf_out[31:16];
           end
 
@@ -1184,8 +1184,8 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_CAR_OSC_INC_HI]         <= 32'h00000000;
    regs[REG_RW_RB_CAR_OSC_OFS_LO]         <= 32'h00000000;
    regs[REG_RW_RB_CAR_OSC_OFS_HI]         <= 32'h00000000;
-   regs[REG_RW_RB_AMP_RF_GAIN]            <= 32'h00000000;
-   regs[REG_RW_RB_AMP_RF_OFS]             <= 32'h00000000;
+   regs[REG_RW_RB_RF_AMP_GAIN]            <= 32'h00000000;
+   regs[REG_RW_RB_RF_AMP_OFS]             <= 32'h00000000;
    regs[REG_RW_RB_MOD_OSC_INC_LO]         <= 32'h00000000;
    regs[REG_RW_RB_MOD_OSC_INC_HI]         <= 32'h00000000;
    regs[REG_RW_RB_MOD_OSC_OFS_LO]         <= 32'h00000000;
@@ -1229,10 +1229,10 @@ else begin
          regs[REG_RW_RB_CAR_OSC_OFS_HI]        <= {16'b0, sys_wdata[15:0]};
          end
       20'h00030: begin
-         regs[REG_RW_RB_AMP_RF_GAIN]           <= sys_wdata[15:0];
+         regs[REG_RW_RB_RF_AMP_GAIN]           <= sys_wdata[15:0];
          end
       20'h00038: begin
-         regs[REG_RW_RB_AMP_RF_OFS]            <= sys_wdata[15:0];
+         regs[REG_RW_RB_RF_AMP_OFS]            <= sys_wdata[15:0];
          end
 
       /* MOD_OSC */
@@ -1336,11 +1336,11 @@ else begin
          end
       20'h00030: begin
          sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_AMP_RF_GAIN];
+         sys_rdata <= regs[REG_RW_RB_RF_AMP_GAIN];
          end
       20'h00038: begin
          sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_AMP_RF_OFS];
+         sys_rdata <= regs[REG_RW_RB_RF_AMP_OFS];
          end
 
       /* MOD_OSC */
