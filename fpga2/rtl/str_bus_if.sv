@@ -5,8 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 interface str_bus_if #(
-  int unsigned DW = 8,
-  parameter type DAT_T = logic signed [DW-1:0]
+  parameter type DAT_T = logic signed [8-1:0]
 )(
   input  logic clk ,  // clock
   input  logic rstn   // reset - active low

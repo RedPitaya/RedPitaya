@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Module: Linear transformation (gain, offset and saturation)
+// Module: Acquire
 // Author: Iztok Jeras
 // (c) Red Pitaya  (redpitaya.com)
 ////////////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,9 @@ module acq_tb #(
   // parameters
   int unsigned TW = 64,  // time width
   int unsigned DW = 14,  // data width
-  int unsigned CW = 32   // counter width
+  int unsigned CW = 32,  // counter width
+  // data bus type
+  type DAT_T = logic signed [DW-1:0]
 );
 
 // system signals
@@ -35,12 +37,8 @@ logic          ctl_trg;
 logic          sts_trg;
 
 // stream input/output
-str_bus_if #(.DAT_T (logic signed [DW-1:0])) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (logic signed [DW-1:0])) sto (.clk (clk), .rstn (rstn));
-
-// calibration
-real gain   = 1.0;
-real offset = 0.1;
+str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (DAT_T)) sto (.clk (clk), .rstn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and time stamp
@@ -87,12 +85,8 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 str_src #(
-  .DW  (DW)
+  .DAT_T (DAT_T)
 ) str_src (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream
   .str      (sti)
 );
 
@@ -121,12 +115,8 @@ acq #(
 );
 
 str_drn #(
-  .DW  (DW)
+  .DAT_T (DAT_T)
 ) str_drn (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream
   .str      (sto)
 );
 
