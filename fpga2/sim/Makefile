@@ -46,7 +46,7 @@ compile: $(LIB) $(SIP) $(RTL) $(TBN)
 
 %_tb: compile
 	$(MODELSIM_BIN)/vsim -c -do $(TCL) $@
-	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; add wave -r /*'
+	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; do $@.do'
 
 clean:
 	rm -rf work *.vcd

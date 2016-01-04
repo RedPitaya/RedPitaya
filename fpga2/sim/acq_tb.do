@@ -1,0 +1,47 @@
+onerror {resume}
+quietly WaveActivateNextPane {} 0
+add wave -noupdate /acq_tb/clk
+add wave -noupdate /acq_tb/rstn
+add wave -noupdate /acq_tb/acq/ctl_rst
+add wave -noupdate /acq_tb/acq/ctl_cts
+add wave -noupdate /acq_tb/acq/sts_cts
+add wave -noupdate /acq_tb/acq/cfg_dly
+add wave -noupdate /acq_tb/acq/sts_dly
+add wave -noupdate /acq_tb/acq/ctl_acq
+add wave -noupdate /acq_tb/acq/sts_acq
+add wave -noupdate /acq_tb/acq/ctl_trg
+add wave -noupdate /acq_tb/acq/sts_trg
+add wave -noupdate -expand -group sti /acq_tb/sti/*
+add wave -noupdate -expand -group sti /acq_tb/str_src/str_trn
+add wave -noupdate -expand -group sti /acq_tb/str_src/str_ena
+add wave -noupdate -expand -group sti /acq_tb/str_src/put/dat
+add wave -noupdate -expand -group sti /acq_tb/str_src/put/tmg
+add wave -noupdate -expand -group sto /acq_tb/sto/*
+add wave -noupdate -expand -group sto /acq_tb/str_drn/str_trn
+add wave -noupdate -expand -group sto /acq_tb/str_drn/str_ena
+
+# difine Radix
+radix signal /acq_tb/acq/ctl_cts -decimal -unsigned
+radix signal /acq_tb/acq/sts_cts -decimal -unsigned
+radix signal /acq_tb/acq/cfg_dly -decimal -unsigned
+radix signal /acq_tb/acq/sts_dly -decimal -unsigned
+#-fpoint
+
+TreeUpdate [SetDefaultTree]
+WaveRestoreCursors {{Cursor 1} {0 ps} 0}
+quietly wave cursor active 0
+configure wave -namecolwidth 204
+configure wave -valuecolwidth 100
+configure wave -justifyvalue left
+configure wave -signalnamewidth 0
+configure wave -snapdistance 10
+configure wave -datasetprefix 0
+configure wave -rowmargin 4
+configure wave -childrowmargin 2
+configure wave -gridoffset 0
+configure wave -gridperiod 1
+configure wave -griddelta 40
+configure wave -timeline 0
+configure wave -timelineunits ps
+update
+WaveRestoreZoom {0 ps} {132300 ps}
