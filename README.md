@@ -51,6 +51,14 @@ tar -xpf *linaro*.tar.xz -C /opt/linaro
 
 **NOTE:** you can skip installing Vivado tools, if you only wish to compile user space software.
 
+4. Missing `gmake` path
+
+Vivado requires a `gmake` executable which does not exist on Ubuntu. It is necessary to create a symbolic link to the regular `make` executable.
+
+```bash
+sudo ln -s /usr/bin/make /usr/bin/gmake
+```
+
 # Build process
 
 Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
