@@ -30,15 +30,25 @@ module acq #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// input stream transfer
+////////////////////////////////////////////////////////////////////////////////
+
+logic sti_trn;
+
+assign sti_trn = sti.vld & sti.rdy;
+
+////////////////////////////////////////////////////////////////////////////////
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
 always @(posedge sti.clk)
 if (~sti.rstn) begin
+  sts_dly <= 1'b0;
   sts_acq <= 1'b0;
   sts_trg <= 1'b0;
 end else begin
   if (ctl_rst) begin
+    sts_dly <= 1'b0;
     sts_acq <= 1'b0;
     sts_trg <= 1'b0;
   end else begin
@@ -56,7 +66,7 @@ end else begin
       if (~|sts_dly) begin
         sts_trg <= 1'b0;
       end else begin
-        sts_dly <= sts_dly - sti.vld;
+        sts_dly <= sts_dly - sti_trn;
       end
     end
   end
@@ -75,7 +85,7 @@ if (~sti.rstn) begin
   sto.lst <= 1'b0;
 end else begin
   sto.vld <= sts_acq & sti.vld;
-  sto.lst <= sts_acq & sti.vld & ~|sts_dly;
+  sto.lst <= sts_acq & sti.lst & ~|sts_dly;
 end
 
 // output data

@@ -34,7 +34,13 @@ TBN=$(wildcard $(PATH_TBN)/*.sv)
 # targets
 TGT=$(RTL:.sv=)
 
-TCL='log -r /*; run -all;quit'
+# simulation configuration
+CFG  = -postsimdataflow
+
+# simulation script
+TCL  = set WildcardFilter [lsearch -not -all -inline $$WildcardFilter Memory];
+TCL += log -r /*;
+TCL += run -all; quit;
 
 .PHONY: compile 
 
@@ -45,7 +51,7 @@ compile: $(LIB) $(SIP) $(RTL) $(TBN)
 	$(MODELSIM_BIN)/vlog $(LIB) $(SIP) $(RTL) $(TBN)
 
 %_tb: compile
-	$(MODELSIM_BIN)/vsim -c -do $(TCL) $@
+	$(MODELSIM_BIN)/vsim $(CFG) -c -do '$(TCL)' $@
 	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; do $@.do'
 
 clean:

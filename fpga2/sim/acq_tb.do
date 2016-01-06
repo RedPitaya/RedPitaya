@@ -14,17 +14,19 @@ add wave -noupdate /acq_tb/acq/sts_trg
 add wave -noupdate -expand -group sti /acq_tb/sti/*
 add wave -noupdate -expand -group sti /acq_tb/str_src/str_trn
 add wave -noupdate -expand -group sti /acq_tb/str_src/str_ena
-add wave -noupdate -expand -group sti /acq_tb/str_src/put/dat
-add wave -noupdate -expand -group sti /acq_tb/str_src/put/tmg
+add wave -noupdate -expand -group sti /acq_tb/str_src/buf_siz
 add wave -noupdate -expand -group sto /acq_tb/sto/*
 add wave -noupdate -expand -group sto /acq_tb/str_drn/str_trn
 add wave -noupdate -expand -group sto /acq_tb/str_drn/str_ena
+add wave -noupdate -expand -group sto /acq_tb/str_drn/buf_siz
 
 # difine Radix
 radix signal /acq_tb/acq/ctl_cts -decimal -unsigned
 radix signal /acq_tb/acq/sts_cts -decimal -unsigned
 radix signal /acq_tb/acq/cfg_dly -decimal -unsigned
 radix signal /acq_tb/acq/sts_dly -decimal -unsigned
+radix signal /acq_tb/str_src/buf_siz -decimal -unsigned
+radix signal /acq_tb/str_drn/buf_siz -decimal -unsigned
 #-fpoint
 
 TreeUpdate [SetDefaultTree]

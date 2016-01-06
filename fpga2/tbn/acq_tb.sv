@@ -69,16 +69,53 @@ initial begin
   repeat(4) @(posedge clk);
 
   // send data into stream
-  for (int i=-8; i<8; i++) begin
-    str_src.put(i);
-  end
-  repeat(16) @(posedge clk);
-  repeat(4) @(posedge clk);
+  src_inc (-8, 8);
+  #0; wait (!str_src.buf_siz);
+  repeat(1) @(posedge clk);
+
+  // activate acquire
+  ctl_acq = 1'b1;
+  repeat(1) @(posedge clk);
+  ctl_acq = 1'b0;
+
+  // send data into stream
+  src_inc (-8, 8);
+  #0; wait (!str_src.buf_siz);
+  repeat(3) @(posedge clk);
+  // check data from stream
+  drn_inc (-8, 8);
 
   // end simulation
   repeat(4) @(posedge clk);
   $finish();
 end
+
+// source incremental sequence
+task src_inc (
+  int from,
+  int to
+);
+  for (int i=from; i<=to; i++) begin
+    str_src.put(i, i==to);
+  end
+endtask
+
+// drain check incremental sequence
+task drn_inc (
+  int from,
+  int to
+);
+  DAT_T        dat;
+  logic        lst;
+  int unsigned tmg;
+  for (int i=from; i<=to; i++) begin
+    str_drn.get(dat, lst, tmg);
+      $display ("data %d is %x/%b", i, dat, lst);
+    if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
+      $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
+    end
+  end
+endtask
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
