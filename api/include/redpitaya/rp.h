@@ -168,10 +168,10 @@ typedef enum {
 } rp_trig_src_t;
 
 typedef enum {
-    RP_GEN_TRIG_EVT_A_START = 0,    //!< Generate trigger when channel A starts generating
-    RP_GEN_TRIG_EVT_A_WRAP = 1,     //!< Generate trigger when channel A buffer starts/wraps
-    RP_GEN_TRIG_EVT_B_START = 8,    //!< Generate trigger when channel B starts generating
-    RP_GEN_TRIG_EVT_B_WRAP = 9      //!< Generate trigger when channel B buffer starts/wraps
+    RP_GEN_TRIG_EVT_A_START_ONCE = 0,   //!< Generate trigger when channel A starts generating
+    RP_GEN_TRIG_EVT_A_START = 1,        //!< Generate trigger when channel A buffer starts/wraps
+    RP_GEN_TRIG_EVT_B_START_ONCE = 8,   //!< Generate trigger when channel B starts generating
+    RP_GEN_TRIG_EVT_B_START = 9         //!< Generate trigger when channel B buffer starts/wraps
 } rp_trig_evt_t;
 
 /**
@@ -1281,7 +1281,7 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 
 /**
 * Sets condition for generation of an outgoing trigger event.
-* @param evt Trigger event condition (A_START, A_WRAP, B_START, B_WRAP).
+* @param evt Trigger event condition (A_START_ONCE, A_START, B_START_ONCE, B_START).
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
