@@ -35,8 +35,6 @@ module asg_top #(
   int unsigned TWA =  4,          // external trigger array  width
   int unsigned TWS = $clog2(TWA)  // external trigger select width
 )(
-  input  logic                  clk ,  // DAC clock
-  input  logic                  rstn,  // DAC reset - active low
   // stream output
   str_bus_if.s                  sto,      // output
   // triggers
@@ -59,7 +57,7 @@ logic signed [DWO-1:0] bus_rdata;
 logic          [3-1:0] bus_dly ;
 logic                  bus_ack ;
 
-always_ff @(posedge clk)
+always_ff @(posedge bus.clk)
 if ((bus.wen | bus.ren) & bus.addr[CWM+2]) begin
   bus_ena   <= 1'b1;
   bus_wen   <= bus.wen;
@@ -69,8 +67,8 @@ end else begin
   bus_ena   <= 1'b0;
 end
 
-always_ff @(posedge clk)
-if (~rstn) begin
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
   bus_dly <= '0;
   bus_ack <= '0;
 end else begin
@@ -103,8 +101,8 @@ logic signed [DWS-1:0] cfg_lsum;
 logic  bus_en;
 assign bus_en = bus.wen | bus.ren;
 
-always_ff @(posedge clk)
-if (~rstn) begin
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
 end else begin
@@ -117,8 +115,8 @@ end else begin
 end
 
 // write access
-always_ff @(posedge clk)
-if (rstn == 1'b0) begin
+always_ff @(posedge bus.clk)
+if (~bus.rstn == 1'b0) begin
   // configuration
   cfg_tsel <= '0;
   cfg_size <= '0;
@@ -157,7 +155,7 @@ assign ctl_rst = bus.wen & (bus.addr[19:0]==20'h00) & bus.wdata[0];  // reset
 assign trg_swo = bus.wen & (bus.addr[19:0]==20'h00) & bus.wdata[1];  // trigger
 
 // read access
-always_ff @(posedge clk)
+always_ff @(posedge bus.clk)
 if (~bus.addr[CWM+2]) begin
   casez (bus.addr[19:0])
     // configuration
@@ -191,7 +189,7 @@ assign trg_mux = trg_ext [cfg_tsel];
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream from generator
-str_bus_if #(.DAT_T (logic signed [DWO-1:0])) stg (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (logic signed [DWO-1:0])) stg (.clk (sto.clk), .rstn (sto.rstn));
 logic signed [DWO-1:0] stg_dat;  // data
 logic                  stg_vld;  // valid
 logic                  stg_rdy;  // ready
@@ -201,9 +199,6 @@ asg #(
   .CWM (CWM),
   .CWF (CWF)
 ) asg (
-  // system signals
-  .clk       (clk      ),
-  .rstn      (rstn     ),
   // stream output
   .sto       (stg      ),
   // trigger
@@ -236,9 +231,6 @@ linear #(
   .DWO (DWO),
   .DWM (DWM)
 ) linear (
-  // system signals
-  .clk       (clk ),
-  .rstn      (rstn),
   // stream input/output
   .sti       (stg),
   .sto       (sto),

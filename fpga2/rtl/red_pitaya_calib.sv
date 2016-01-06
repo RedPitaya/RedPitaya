@@ -8,9 +8,6 @@ module red_pitaya_calib #(
   int unsigned DWM = 16,   // data width for multiplier (gain)
   int unsigned DWS = 14    // data width for summation (offset)
 )(
-  // system signals
-  input  logic           clk ,  // clock
-  input  logic           rstn,  // reset - active low
   // ADC calibration
   output logic signed [2-1:0] [DWM-1:0] adc_cfg_mul,  // gain
   output logic signed [2-1:0] [DWS-1:0] adc_cfg_sum,  // offset
@@ -25,8 +22,8 @@ module red_pitaya_calib #(
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge clk)
-if (!rstn) begin
+always @(posedge bus.clk)
+if (!bus.rstn) begin
   // ADC calibration
   adc_cfg_mul[0] <= 1'b1 <<< (DWM-2);
   adc_cfg_sum[0] <= '0;
@@ -50,15 +47,15 @@ end else if (bus.wen) begin
   if (bus.addr[19:0]==20'h5C)   dac_cfg_sum[1] <= bus.wdata[DWS-1:0];
 end
 
-always @(posedge clk)
-if (!rstn)  bus.err <= 1'b1;
-else        bus.err <= 1'b0;
+always @(posedge bus.clk)
+if (!bus.rstn)  bus.err <= 1'b1;
+else            bus.err <= 1'b0;
 
 wire sys_en;
 assign sys_en = bus.wen | bus.ren;
 
-always @(posedge clk)
-if (!rstn) begin
+always @(posedge bus.clk)
+if (!bus.rstn) begin
   bus.ack <= 1'b0;
 end else begin
   bus.ack <= sys_en;

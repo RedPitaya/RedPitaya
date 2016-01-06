@@ -13,9 +13,6 @@ module red_pitaya_ams #(
   int unsigned CHN =  4,  // channel number
   int unsigned CHL = $clog2(CHN)
 )(
-  // ADC
-  input  logic          clk ,  // clock
-  input  logic          rstn,  // reset - active low
   // PDM 
   output logic [CHN-1:0] [DWC-1:0] pdm_cfg,
   // system bus
@@ -30,8 +27,8 @@ module red_pitaya_ams #(
 generate
 for (genvar i=0; i<CHN; i++) begin: for_chn
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   pdm_cfg[i] <= '0;
 end else begin
   if (bus.wen) begin
@@ -46,8 +43,8 @@ endgenerate
 logic sys_en;
 assign sys_en = bus.wen | bus.ren;
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   bus.err <= 1'b1;
   bus.ack <= 1'b0;
 end else begin
@@ -56,7 +53,7 @@ end else begin
 end
 
 // read access
-always_ff @(posedge clk)
+always_ff @(posedge bus.clk)
 if (bus.ren) begin
   bus.rdata <= {{32-DWC{1'b0}}, pdm_cfg[bus.addr[CHL-1:0]]};
 end

@@ -305,9 +305,6 @@ logic [8-1:0] exp_p_o , exp_n_o ;
 logic [8-1:0] exp_p_oe, exp_n_oe;
 
 red_pitaya_hk hk (
-  // system signals
-  .clk           (adc_clk ),
-  .rstn          (adc_rstn),
   // LED
   .led_o         (led_o),
   // global configuration
@@ -348,9 +345,6 @@ debounce #(
 ////////////////////////////////////////////////////////////////////////////////
 
 red_pitaya_calib calib (
-  // system signals
-  .clk           (adc_clk ),
-  .rstn          (adc_rstn),
   // ADC calibration
   .adc_cfg_mul   (adc_cfg_mul),
   .adc_cfg_sum   (adc_cfg_sum),
@@ -374,9 +368,6 @@ red_pitaya_ams #(
   .DWC (PDM_DWC),
   .CHN (PDM_CHN)
 ) ams (
-  // system signals
-  .clk       (adc_clk ),
-  .rstn      (adc_rstn),
   // PDM configuration
   .pdm_cfg   (pdm_cfg),
   // system bus
@@ -454,9 +445,6 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
     .DWO  (14),
     .DWM  (16)
   ) linear_adc (
-    // system signals
-    .clk      (adc_clk ),
-    .rstn     (adc_rstn),
     // stream input/output
     .sti      (str_adc[i]),
     .sto      (str_osc[i]),
@@ -493,9 +481,6 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
     .DWO  (14),
     .DWM  (16)
   ) linear_dac (
-    // system signals
-    .clk      (adc_clk ),
-    .rstn     (adc_rstn),
     // stream input/output
     .sti      (str_sat),
     .sto      (str_dac[i]),
@@ -528,9 +513,6 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
 asg_top #(
   .TWA ($bits(trg))
 ) asg (
-  // system signals
-  .clk       (adc_clk ),
-  .rstn      (adc_rstn),
   // stream output
   .sto       (str_asg[i]),
   // triggers

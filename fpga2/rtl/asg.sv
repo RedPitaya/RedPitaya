@@ -75,9 +75,6 @@ module asg #(
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 )(
-  // system signals
-  input  logic                  clk      ,  // clock
-  input  logic                  rstn     ,  // reset - active low
   // stream output
   str_bus_if.s                  sto      ,  // output
   // trigger
@@ -139,22 +136,22 @@ logic          sts_lst;
 ////////////////////////////////////////////////////////////////////////////////
 
 // CPU write access
-always @(posedge clk)
+always @(posedge sto.clk)
 if (bus_ena &  bus_wen)  buf_mem[bus_addr] <= bus_wdata;
 
 // CPU read-back access
-always @(posedge clk)
+always @(posedge sto.clk)
 if (bus_ena & ~bus_wen)  bus_rdata <= buf_mem[bus_addr];
 
 // stream read
-always @(posedge clk)
+always @(posedge sto.clk)
 begin 
   if (sts_run==STS_DAT)  buf_raddr <= ptr_cur[CWF+:CWM];
   if (sts_vld==STS_DAT)  buf_rdata <= buf_mem[buf_raddr];
 end
 
 // valid signal used to enable memory read access
-always @(posedge clk)
+always @(posedge sto.clk)
 begin
   if (ctl_rst) sts_vld <= STS_IDL;
   else         sts_vld <= sts_run; 
@@ -165,8 +162,8 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 // state machine
-always_ff @(posedge clk)
-if (~rstn) begin
+always_ff @(posedge sto.clk)
+if (~sto.rstn) begin
   sts_run <= STS_IDL;
   cnt_cyc <= '0;
   cnt_dly <= '0;
@@ -208,8 +205,8 @@ assign sts_end = cfg_bena & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
 assign sts_lst = cnt_rep == 1;
 
 // read pointer logic
-always_ff @(posedge clk)
-if (~rstn) begin
+always_ff @(posedge sto.clk)
+if (~sto.rstn) begin
   ptr_cur <= '0;
 end else begin
   // synchronous clear
@@ -234,16 +231,16 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
 ////////////////////////////////////////////////////////////////////////////////
 
 // trigger output
-always_ff @(posedge clk)
-if (~rstn)  trg_o <= 1'b0;
+always_ff @(posedge sto.clk)
+if (~sto.rstn)  trg_o <= 1'b0;
 else        trg_o <= sts_trg;
 
 // output data
 assign sto.dat = sto.vld ? buf_rdata : '0;
 
 // output valid
-always_ff @(posedge clk)
-if (~rstn) begin
+always_ff @(posedge sto.clk)
+if (~sto.rstn) begin
   sto.vld <= 1'b0;
 end else begin
   // synchronous clear

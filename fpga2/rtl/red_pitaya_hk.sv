@@ -23,9 +23,6 @@ module red_pitaya_hk #(
   // ID
   bit [57-1:0] DNA = 57'h0823456789ABCDE
 )(
-  // system signals
-  input  logic           clk ,  // clock
-  input  logic           rstn,  // reset - active low
   // LED
   output logic [DWL-1:0] led_o,  // LED output
   // global configuration
@@ -53,8 +50,8 @@ logic [ 9-1:0] dna_cnt  ;
 logic [57-1:0] dna_value;
 logic          dna_done ;
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   dna_clk   <= '0;
   dna_read  <= '0;
   dna_shift <= '0;
@@ -98,8 +95,8 @@ assign id_value[ 3:0] =  4'h1; // board type   1 - release 1
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   digital_loop <= '0;
   // LED
   led_o    <= '0;
@@ -119,15 +116,15 @@ end else if (bus.wen) begin
   if (bus.addr[19:0]==20'h30)   led_o    <= bus.wdata[DWL-1:0];
 end
 
-always_ff @(posedge clk)
-if (!rstn)  bus.err <= 1'b1;
-else        bus.err <= 1'b0;
+always_ff @(posedge bus.clk)
+if (!bus.rstn)  bus.err <= 1'b1;
+else            bus.err <= 1'b0;
 
 logic sys_en;
 assign sys_en = bus.wen | bus.ren;
 
-always_ff @(posedge clk)
-if (!rstn) begin
+always_ff @(posedge bus.clk)
+if (!bus.rstn) begin
   bus.ack <= 1'b0;
 end else begin
   bus.ack <= sys_en;
