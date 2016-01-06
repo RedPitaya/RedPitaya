@@ -9,7 +9,9 @@ logic str_trn;
 logic str_ena;
 
 DAT_T        buf_dat [$];
+logic        buf_lst [$];
 int unsigned buf_tmg [$];
+int unsigned buf_siz;
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream
@@ -28,26 +30,42 @@ assign str_ena = str_trn | ~str.vld;
 //if (!str.rstn)     str_tmg <= 0;
 //else if (str.vld)  str_tmg <= str.rdy ? 0 : str_tmg + 1;
 
-// valid is active if there is data in the queue
-always @ (posedge str.clk, posedge str.rstn)
-if (!str.rstn)     str.vld <= 1'b0;
-else if (str_ena)  str.vld <= buf_dat.size() > 0;
+// data, last
+always @ (posedge str.clk, negedge str.rstn)
+if (!str.rstn) begin
+  str.vld <= 1'b0;
+  str.dat <= '0;
+  str.lst <= '0;
+end else if (str_ena) begin
+  if (buf_siz) begin
+    str.vld <= 1'b1;
+    str.dat <= buf_dat.pop_front();
+    str.lst <= buf_lst.pop_front();
+  end else begin
+    str.vld <= 1'b0;
+    str.dat <= {$bits(DAT_T){IV}};
+    str.lst <= {$bits(DAT_T){IV}};
+  end
+end
 
 // transfer delay counter
-always @ (posedge str.clk, posedge str.rstn)
-if (!str.rstn)     str.dat <= '0;
-else if (str_ena)  str.dat <= buf_dat.size() > 0 ? buf_dat.pop_front() : {$bits(DAT_T){IV}};
+// TODO
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream data queue
 ////////////////////////////////////////////////////////////////////////////////
 
-// 
+// queue size
+assign buf_siz = buf_dat.size();
+
+// put data into queue
 task put (
   input  DAT_T        dat,
+  input  logic        lst,
   input  int unsigned tmg = 0
 );
   buf_dat.push_back(dat);
+  buf_lst.push_back(lst);
   buf_tmg.push_back(tmg);
 endtask: put
 
