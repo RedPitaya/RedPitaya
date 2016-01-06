@@ -121,7 +121,7 @@ void synthesize_signal(float ampl, float freq, int calib_dc_offs, int calib_fs,
 
     awg->offsgain = (offsgain << 16) | 0x2000;
     awg->step = round(65536.0 * freq/c_awg_smpl_freq * ((float) AWG_SIG_LEN));
-    awg->wrap = round(65536 * (AWG_SIG_LEN - 1));
+    awg->wrap = round(65536 * AWG_SIG_LEN - 1);
     
     //= (ampl) * (1<<(c_awg_fpga_dac_bits-2));
     //fpga_awg_calc_dac_max_v(calib_fs)
@@ -320,7 +320,7 @@ int  calculate_data(float *in_data, int in_data_len,
     /* modify AWG settings  */
     awg->offsgain = (offsgain << 16) | 0x2000;
     awg->step = round(65536 * freq/c_awg_smpl_freq * in_data_len); 
-    awg->wrap = round(65536 * (in_data_len - 1));
+    awg->wrap = round(65536 * in_data_len - 1);
     
     /* Retrieve max amplitude of the specified Signal Definition, it is used for the normalization */
     max_amp = -1e30;

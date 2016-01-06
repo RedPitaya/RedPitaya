@@ -1,0 +1,21 @@
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 16604bd..9ea7403 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -283,5 +283,6 @@ source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/mwifiex/Kconfig"
+ source "drivers/net/wireless/cw1200/Kconfig"
+ source "drivers/net/wireless/rsi/Kconfig"
++source "drivers/net/wireless/rtl8192cu/Kconfig"
+ 
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 0c88916..5ca51bd 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -60,3 +60,5 @@ obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
+ 
+ obj-$(CONFIG_CW1200)	+= cw1200/
+ obj-$(CONFIG_RSI_91X)	+= rsi/
++
++obj-$(CONFIG_RTL8192CU) += rtl8192cu/

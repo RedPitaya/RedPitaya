@@ -27,9 +27,9 @@ else
 DL=$(TMP)
 endif
 
-UBOOT_TAG     = xilinx-v2015.2
-LINUX_TAG     = xilinx-v2015.1
-DTREE_TAG     = xilinx-v2015.1
+UBOOT_TAG     = xilinx-v2015.4
+LINUX_TAG     = xilinx-v2015.4.01
+DTREE_TAG     = xilinx-v2015.4
 #BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -153,9 +153,6 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGIN
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
-	# copy Linaro runtime library to fix dependency issues on Debian
-	# TODO: find a better solution
-	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
 
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
@@ -216,8 +213,12 @@ $(LINUX_TAR): | $(DL)
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG).patch
-	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
+	cp -r patches/rtl8192cu $@/drivers/net/wireless/
+	cp -r patches/lantiq/*  $@/drivers/net/phy/
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
