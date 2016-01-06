@@ -69,9 +69,9 @@ fpga_rb_reg_mem_t*              g_fpga_rb_reg_mem = NULL;
 /** @brief Describes app. parameters with some info/limitations in high definition - compare initial values with: fpga_rb.fpga_rb_enable() */
 const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode - transport_pktIdx 1 */
-        "rb_run",              0.0,   1, 0, 0.0,       1.0  },
+        "rb_run",          	        0.0,   1, 0, 0.0,       1.0  },
 
-    { /* CAR_OSC modulation source selector - transport_pktIdx 1
+    { /* TX_CAR_OSC modulation source selector - transport_pktIdx 1
        * ( 0: none (CW mode),
        *   1: RF Input 1,
        *   2: RF Input 2,
@@ -79,45 +79,45 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
        *   5: EXT AI1,
        *   6: EXT AI2,
        *   7: EXT AI3,
-       *  15: MOD_OSC
+       *  15: TX_MOD_OSC
        * )
        **/
-        "car_osc_modsrc_s",    0.0,   1,  0, 0.0,     15.0  },
+        "tx_car_osc_modsrc_s",      0.0,   1,  0, 0.0,     15.0  },
 
-    { /* CAR_OSC modulation type selector (0: AM, 1: FM, 2: PM) - transport_pktIdx 1 */
-        "car_osc_modtyp_s",    0.0,   1,  0, 0.0,      2.0  },
+    { /* TX_CAR_OSC modulation type selector (0: AM, 1: FM, 2: PM) - transport_pktIdx 1 */
+        "tx_car_osc_modtyp_s",      0.0,   1,  0, 0.0,      2.0  },
 
 
     { /* RBLED CON_SRC_PNT - transport_pktIdx 2 */
-        "rbled_csp_s",         0.0,   1,  0, 0.0,     63.0  },
+        "rbled_csp_s",              0.0,   1,  0, 0.0,     63.0  },
 
     { /* RFOUT1 CON_SRC_PNT - transport_pktIdx 2 */
-        "rfout1_csp_s",        0.0,   1,  0, 0.0,     63.0  },
+        "rfout1_csp_s",             0.0,   1,  0, 0.0,     63.0  },
 
     { /* RFOUT2 CON_SRC_PNT - transport_pktIdx 2 */
-        "rfout2_csp_s",        0.0,   1,  0, 0.0,     63.0  },
+        "rfout2_csp_s",             0.0,   1,  0, 0.0,     63.0  },
 
 
-    { /* CAR_OSC frequency (Hz) - transport_pktIdx 3 */
-        "car_osc_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
+    { /* TX_CAR_OSC frequency (Hz) - transport_pktIdx 3 */
+        "tx_car_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
 
-    { /* MOD_OSC frequency (Hz) - transport_pktIdx 3 */
-        "mod_osc_qrg_f",       0.0,   1,  0, 0.0,  62.5e+6  },
-
-
-    { /* AMP_RF amplitude (mV) - transport_pktIdx 4 */
-        "amp_rf_gain_f",       0.0,   1,  0, 0.0,   2047.0  },
-
-    { /* MOD_OSC magnitude (AM:%, FM:Hz, PM:°) - transport_pktIdx 4 */
-        "mod_osc_mag_f",       0.0,   1,  0, 0.0,     1e+6  },
+    { /* TX_MOD_OSC frequency (Hz) - transport_pktIdx 3 */
+        "tx_mod_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
 
 
-    { /* MUX in (Mic in) slider ranges from 0% to 100% - transport_pktIdx 5 */
-        "muxin_gain_f",        0.0,   1,  0, 0.0,    100.0  },
+    { /* TX_AMP_RF amplitude (mV) - transport_pktIdx 4 */
+        "tx_amp_rf_gain_f",         0.0,   1,  0, 0.0,   2047.0  },
+
+    { /* TX_MOD_OSC magnitude (AM:%, FM:Hz, PM:°) - transport_pktIdx 4 */
+        "tx_mod_osc_mag_f",         0.0,   1,  0, 0.0,     1e+6  },
+
+
+    { /* TX_MUX in (Mic in) slider ranges from 0% to 100% - transport_pktIdx 5 */
+        "tx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
 
 
     { /* has to be last entry */
-        NULL,                  0.0,  -1, -1, 0.0,      0.0  }
+        NULL,                       0.0,  -1, -1, 0.0,      0.0  }
 };
 
 /** @brief CallBack copy of params to inform the worker */
@@ -641,8 +641,8 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
             switch (g_transport_pktIdx & 0x7f) {
             case 1:
                 if (!strcmp("rb_run",           src[i].name) ||
-                    !strcmp("car_osc_modsrc_s", src[i].name) ||
-                    !strcmp("car_osc_modtyp_s", src[i].name)) {
+                    !strcmp("tx_car_osc_modsrc_s", src[i].name) ||
+                    !strcmp("tx_car_osc_modtyp_s", src[i].name)) {
                     found = 1;
                 }
                 break;
@@ -656,21 +656,21 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 break;
 
             case 3:
-                if (!strcmp("car_osc_qrg_f",    src[i].name) ||
-                    !strcmp("mod_osc_qrg_f",    src[i].name)) {
+                if (!strcmp("tx_car_osc_qrg_f",    src[i].name) ||
+                    !strcmp("tx_mod_osc_qrg_f",    src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 4:
-                if (!strcmp("amp_rf_gain_f",    src[i].name) ||
-                    !strcmp("mod_osc_mag_f",    src[i].name)) {
+                if (!strcmp("tx_amp_rf_gain_f",    src[i].name) ||
+                    !strcmp("tx_mod_osc_mag_f",    src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 5:
-                if (!strcmp("muxin_gain_f",     src[i].name)) {
+                if (!strcmp("tx_muxin_gain_f",     src[i].name)) {
                     found = 1;
                 }
                 break;
