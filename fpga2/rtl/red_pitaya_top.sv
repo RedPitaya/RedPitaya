@@ -266,35 +266,13 @@ red_pitaya_ps ps (
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [8-1:0] sys_cs;
-logic [3-1:0] sys_a;
-
-logic [8-1:0][32-1:0] sys_rdata ;
-logic [8-1:0]         sys_err   ;
-logic [8-1:0]         sys_ack   ;
-
-assign sys_a  = ps_sys.addr[22:20];
-assign sys_cs = 8'h01 << sys_a;
-
-generate
-for (genvar i=0; i<8; i++) begin: for_bus
-
-assign sys[i].addr  =             ps_sys.addr ;
-assign sys[i].wdata =             ps_sys.wdata;
-assign sys[i].sel   =             ps_sys.sel  ;
-assign sys[i].wen   = sys_cs & {8{ps_sys.wen}};
-assign sys[i].ren   = sys_cs & {8{ps_sys.ren}};
-
-assign sys_rdata[i] = sys[i].rdata;
-assign sys_err  [i] = sys[i].err  ;
-assign sys_ack  [i] = sys[i].ack  ;
-
-end: for_bus
-endgenerate
-
-assign ps_sys.rdata = sys_rdata[sys_a];
-assign ps_sys.err   = sys_err  [sys_a];
-assign ps_sys.ack   = sys_ack  [sys_a];
+sys_bus_interconnect #(
+  .SN (8),
+  .SW (20)
+) sys_bus_interconnect (
+  .bus_m (ps_sys),
+  .bus_s (sys)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping

@@ -64,6 +64,7 @@ read_verilog                      $path_rtl/axi_wr_fifo.sv
 
 read_verilog                      $path_rtl/sys_bus_if.sv
 read_verilog                      $path_rtl/str_bus_if.sv
+read_verilog                      $path_rtl/sys_bus_interconnect.sv
 
 read_verilog                      $path_rtl/red_pitaya_ams.sv
 read_verilog                      $path_rtl/red_pitaya_hk.sv
