@@ -63,8 +63,11 @@ add_files                         $path_rtl/red_pitaya_radiobox.sv
 add_files                         $path_rtl/red_pitaya_scope.v
 add_files                         $path_rtl/red_pitaya_top.v
 
+read_ip                           $path_ip/rb_cic_125M_to_5M_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_48k_to_8k_32T32_lat13.xcix
+read_ip                           $path_ip/rb_cic_5M_to_8k_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_41M664_32T32_lat14.xcix
+read_ip                           $path_ip/rb_cic_8k_to_48k_32T32_lat16.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmB_A16_D16_B16_P32.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36.xcix
