@@ -69,7 +69,7 @@ fpga_rb_reg_mem_t*              g_fpga_rb_reg_mem = NULL;
 /** @brief Describes app. parameters with some info/limitations in high definition - compare initial values with: fpga_rb.fpga_rb_enable() */
 const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode - transport_pktIdx 1 */
-        "rb_run",          	        0.0,   1, 0, 0.0,       1.0  },
+        "rb_run",                      0.0,   1, 0, 0.0,       1.0  },
 
     { /* TX_CAR_OSC modulation source selector - transport_pktIdx 1
        * ( 0: none (CW mode),
@@ -82,10 +82,13 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
        *  15: TX_MOD_OSC
        * )
        **/
-        "tx_car_osc_modsrc_s",      0.0,   1,  0, 0.0,     15.0  },
+        "tx_modsrc_s",              0.0,   1,  0, 0.0,     15.0  },
 
-    { /* TX_CAR_OSC modulation type selector (0: AM, 1: FM, 2: PM) - transport_pktIdx 1 */
-        "tx_car_osc_modtyp_s",      0.0,   1,  0, 0.0,      2.0  },
+    { /* TX modulation type selector (0: USB, 1: LSB, 2: AM, 3: FM, 4: PM) - transport_pktIdx 1 */
+        "tx_modtyp_s",              0.0,   1,  0, 0.0,      4.0  },
+
+    { /* TX modulation type selector (0: USB, 1: LSB, 2: AM, 3: FM, 4: PM) - transport_pktIdx 1 */
+        "rx_modtyp_s",              0.0,   1,  0, 0.0,      4.0  },
 
 
     { /* RBLED CON_SRC_PNT - transport_pktIdx 2 */
@@ -96,6 +99,9 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
 
     { /* RFOUT2 CON_SRC_PNT - transport_pktIdx 2 */
         "rfout2_csp_s",             0.0,   1,  0, 0.0,     63.0  },
+
+    { /* RX_MUX source - transport_pktIdx 2 */
+        "rx_muxin_src_s",           0.0,   1,  0, 0.0,     2.0   },
 
 
     { /* TX_CAR_OSC frequency (Hz) - transport_pktIdx 3 */
@@ -114,6 +120,13 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
 
     { /* TX_MUX in (Mic in) slider ranges from 0% to 100% - transport_pktIdx 5 */
         "tx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
+
+    { /* RX_MUX in - transport_pktIdx 5 */
+        "rx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
+
+
+    { /* RX_CAR_OSC frequency (Hz) - transport_pktIdx 6 */
+        "rx_car_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
 
 
     { /* has to be last entry */
@@ -640,17 +653,19 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
             /* limit transfer volume to a part of all param entries, @see main.g_rb_default_params (abt. line 70) for a full list */
             switch (g_transport_pktIdx & 0x7f) {
             case 1:
-                if (!strcmp("rb_run",           src[i].name) ||
-                    !strcmp("tx_car_osc_modsrc_s", src[i].name) ||
-                    !strcmp("tx_car_osc_modtyp_s", src[i].name)) {
+                if (!strcmp("rb_run",              src[i].name) ||
+                    !strcmp("tx_modsrc_s",         src[i].name) ||
+                    !strcmp("tx_modtyp_s",         src[i].name) ||
+                    !strcmp("rx_modtyp_s",         src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 2:
-                if (!strcmp("rbled_csp_s",      src[i].name) ||
-                    !strcmp("rfout1_csp_s",     src[i].name) ||
-                    !strcmp("rfout2_csp_s",     src[i].name)) {
+                if (!strcmp("rbled_csp_s",         src[i].name) ||
+                    !strcmp("rfout1_csp_s",        src[i].name) ||
+                    !strcmp("rfout2_csp_s",        src[i].name) ||
+                    !strcmp("rx_muxin_src_s",      src[i].name)) {
                     found = 1;
                 }
                 break;
@@ -670,14 +685,21 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 break;
 
             case 5:
-                if (!strcmp("tx_muxin_gain_f",     src[i].name)) {
+                if (!strcmp("tx_muxin_gain_f",     src[i].name) ||
+                    !strcmp("rx_muxin_gain_f",     src[i].name)) {
+                    found = 1;
+                }
+                break;
+
+            case 6:
+                if (!strcmp("rx_car_osc_qrg_f",    src[i].name)) {
                     found = 1;
                 }
                 break;
 
             default:
                 /* no limitation of output data */
-                   found = 1;
+                    found = 1;
                 break;
             }
 

@@ -96,7 +96,7 @@ void fpga_rb_enable(int enable)
         g_fpga_rb_reg_mem->ctrl           = 0x00000001;    // enable RB sub-module
         fpga_rb_reset();
 
-        g_fpga_rb_reg_mem->src_con_pnt    = 0x001C0000;    // disable RB LEDs, set RFOUT1 to AMP_RF output and RFOUT2 to silence
+        g_fpga_rb_reg_mem->src_con_pnt    = 0x301C0000;    // disable RB LEDs, set RFOUT1 to AMP_RF output and RFOUT2 to RX_MOD_ADD output
         g_fpga_rb_reg_mem->tx_muxin_gain  = 0x00007FFF;    // open Mic gain 1:1 (FS = 2Vpp) = 80 % Mic gain setting
 
         g_fpga_rb_reg_mem->tx_amp_rf_gain = 0x00000C80;    // open RF output at -10 dBm (= 200 mVpp @ 50 Ohm)
@@ -108,6 +108,8 @@ void fpga_rb_enable(int enable)
         g_fpga_rb_reg_mem->tx_muxin_gain  = 0x00000000;    // shut Mic input
 
         g_fpga_rb_reg_mem->tx_amp_rf_gain = 0;             // no output
+
+        g_fpga_rb_reg_mem->rx_mux_src     = 0x00000000;    // disable receiver input MUX
 
         // disable RadioBox
         //fprintf(stderr, "fpga_rb_enable: disabling RB sub-module\n");
@@ -127,27 +129,41 @@ void fpga_rb_reset(void)
     /* control: turn off all streams into CAR_OSC, MOD_OSC and QMIX_CAR Q for SSB */
     g_fpga_rb_reg_mem->ctrl &= ~0x00106060;
 
-    /* reset all registers of the MOD_OSC to get fixed phase of 0 deg */
+    /* reset all registers of the TX_MOD_OSC to get fixed phase of 0 deg */
     g_fpga_rb_reg_mem->tx_mod_osc_inc_hi = 0;
     g_fpga_rb_reg_mem->tx_mod_osc_inc_lo = 0;
     g_fpga_rb_reg_mem->tx_mod_osc_ofs_hi = 0;
     g_fpga_rb_reg_mem->tx_mod_osc_ofs_hi = 0;
 
-    /* reset all registers of the CAR_OSC to get fixed phase of 0 deg */
+    /* reset all registers of the TX_CAR_OSC to get fixed phase of 0 deg */
     g_fpga_rb_reg_mem->tx_car_osc_inc_hi = 0;
     g_fpga_rb_reg_mem->tx_car_osc_inc_lo = 0;
     g_fpga_rb_reg_mem->tx_car_osc_ofs_hi = 0;
     g_fpga_rb_reg_mem->tx_car_osc_ofs_hi = 0;
 
+    /* reset all registers of the RX_MOD_OSC to get fixed phase of 0 deg */
+    g_fpga_rb_reg_mem->rx_mod_osc_inc_hi = 0;
+    g_fpga_rb_reg_mem->rx_mod_osc_inc_lo = 0;
+    g_fpga_rb_reg_mem->rx_mod_osc_ofs_hi = 0;
+    g_fpga_rb_reg_mem->rx_mod_osc_ofs_hi = 0;
 
-    /* send resync to CAR_OSC and MOD_OSC to zero phase registers */
-    g_fpga_rb_reg_mem->ctrl = 0x00001011;
+    /* reset all registers of the RX_CAR_OSC to get fixed phase of 0 deg */
+    g_fpga_rb_reg_mem->rx_car_osc_inc_hi = 0;
+    g_fpga_rb_reg_mem->rx_car_osc_inc_lo = 0;
+    g_fpga_rb_reg_mem->rx_car_osc_ofs_hi = 0;
+    g_fpga_rb_reg_mem->rx_car_osc_ofs_hi = 0;
 
-    /* send resync and reset to CAR_OSC and MOD_OSC */
-    g_fpga_rb_reg_mem->ctrl = 0x00001017;
+    /* RX MUX disconnect */
+    g_fpga_rb_reg_mem->rx_mux_src = 0;
 
-    /* send resync to CAR_OSC and MOD_OSC */
-    g_fpga_rb_reg_mem->ctrl = 0x00001011;
+    /* send resync to all oscillators to zero phase registers */
+    g_fpga_rb_reg_mem->ctrl = 0x10101011;
+
+    /* send resync and reset to all oscillators */
+    g_fpga_rb_reg_mem->ctrl = 0x10161017;
+
+    /* send resync to all oscillators to zero phase registers */
+    g_fpga_rb_reg_mem->ctrl = 0x10101011;
 
     /* run mode of both oscillators */
     g_fpga_rb_reg_mem->ctrl = 0x00000001;
@@ -157,17 +173,21 @@ void fpga_rb_reset(void)
 /*----------------------------------------------------------------------------*/
 int fpga_rb_update_all_params(rb_app_params_t* p)
 {
-    int    loc_rb_run      = 0;
-    int    loc_modsrc      = 0;
-    int    loc_modtyp      = 0;
-    int    loc_led_csp     = 0;
-    int    loc_rfout1_csp  = 0;
-    int    loc_rfout2_csp  = 0;
+    int    loc_rb_run         = 0;
+    int    loc_tx_modsrc      = 0;
+    int    loc_tx_modtyp      = 0;
+    int    loc_rx_modtyp      = 0;
+    int    loc_led_csp        = 0;
+    int    loc_rfout1_csp     = 0;
+    int    loc_rfout2_csp     = 0;
+    int    loc_rx_muxin_src   = 0;
     double loc_tx_car_osc_qrg = 0.0;
     double loc_tx_mod_osc_qrg = 0.0;
     double loc_tx_amp_rf_gain = 0.0;
     double loc_tx_mod_osc_mag = 0.0;
     double loc_tx_muxin_gain  = 0.0;
+    double loc_rx_car_osc_qrg = 0.0;
+    double loc_rx_muxin_gain  = 0.0;
 
     //fprintf(stderr, "fpga_rb_update_all_params: BEGIN\n");
 
@@ -182,17 +202,26 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
         pthread_mutex_lock(&g_rb_info_worker_params_mutex);
         if (g_rb_info_worker_params) {
             //print_rb_params(rb_info_worker_params);
-            loc_rb_run      = (int) g_rb_info_worker_params[RB_RUN].value;
-            loc_modsrc      = (int) g_rb_info_worker_params[RB_TX_CAR_OSC_MODSRC].value;
-            loc_modtyp      = (int) g_rb_info_worker_params[RB_TX_CAR_OSC_MODTYP].value;
-            loc_led_csp     = (int) g_rb_info_worker_params[RB_LED_CON_SRC_PNT].value;
-            loc_rfout1_csp  = (int) g_rb_info_worker_params[RB_RFOUT1_CON_SRC_PNT].value;
-            loc_rfout2_csp  = (int) g_rb_info_worker_params[RB_RFOUT2_CON_SRC_PNT].value;
+            loc_rb_run         = (int) g_rb_info_worker_params[RB_RUN].value;
+            loc_tx_modsrc      = (int) g_rb_info_worker_params[RB_TX_MODSRC].value;
+            loc_tx_modtyp      = (int) g_rb_info_worker_params[RB_TX_MODTYP].value;
+            loc_rx_modtyp      = (int) g_rb_info_worker_params[RB_RX_MODTYP].value;
+
+            loc_led_csp        = (int) g_rb_info_worker_params[RB_LED_CON_SRC_PNT].value;
+            loc_rfout1_csp     = (int) g_rb_info_worker_params[RB_RFOUT1_CON_SRC_PNT].value;
+            loc_rfout2_csp     = (int) g_rb_info_worker_params[RB_RFOUT2_CON_SRC_PNT].value;
+            loc_rx_muxin_src   = (int) g_rb_info_worker_params[RB_RX_MUXIN_SRC].value;
+
             loc_tx_car_osc_qrg = g_rb_info_worker_params[RB_TX_CAR_OSC_QRG].value;
             loc_tx_mod_osc_qrg = g_rb_info_worker_params[RB_TX_MOD_OSC_QRG].value;
+
             loc_tx_amp_rf_gain = g_rb_info_worker_params[RB_TX_AMP_RF_GAIN].value;
             loc_tx_mod_osc_mag = g_rb_info_worker_params[RB_TX_MOD_OSC_MAG].value;
+
             loc_tx_muxin_gain  = g_rb_info_worker_params[RB_TX_MUXIN_GAIN].value;
+            loc_rx_muxin_gain  = g_rb_info_worker_params[RB_RX_MUXIN_GAIN].value;
+
+            loc_rx_car_osc_qrg = g_rb_info_worker_params[RB_RX_CAR_OSC_QRG].value;
         }
         pthread_mutex_unlock(&g_rb_info_worker_params_mutex);
         //fprintf(stderr, "INFO - fpga_rb_update_all_params: ... done\n");
@@ -218,13 +247,17 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
             fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (p[idx].value));
             loc_rb_run = ((int) (p[idx].value));
 
-        } else if (!strcmp("tx_car_osc_modsrc_s", p[idx].name)) {
-            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_modsrc_s = %d\n", (int) (p[idx].value));
-            loc_modsrc = ((int) (p[idx].value));
+        } else if (!strcmp("tx_modsrc_s", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modsrc_s = %d\n", (int) (p[idx].value));
+            loc_tx_modsrc = ((int) (p[idx].value));
 
-        } else if (!strcmp("tx_car_osc_modtyp_s", p[idx].name)) {
-            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_modtyp_s = %d\n", (int) (p[idx].value));
-            loc_modtyp = ((int) (p[idx].value));
+        } else if (!strcmp("tx_modtyp_s", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modtyp_s = %d\n", (int) (p[idx].value));
+            loc_tx_modtyp = ((int) (p[idx].value));
+
+        } else if (!strcmp("rx_modtyp_s", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_modtyp_s = %d\n", (int) (p[idx].value));
+            loc_rx_modtyp = ((int) (p[idx].value));
 
 
         } else if (!strcmp("rbled_csp_s", p[idx].name)) {
@@ -238,6 +271,10 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
         } else if (!strcmp("rfout2_csp_s", p[idx].name)) {
             fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_csp_s = %d\n", (int) (p[idx].value));
             loc_rfout2_csp = ((int) (p[idx].value));
+
+        } else if (!strcmp("rx_muxin_src_s", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_src_s = %d\n", (int) (p[idx].value));
+            loc_rx_muxin_src = ((int) (p[idx].value));
 
 
         } else if (!strcmp("tx_car_osc_qrg_f", p[idx].name)) {
@@ -261,6 +298,15 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
         } else if (!strcmp("tx_muxin_gain_f", p[idx].name)) {
             fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_muxin_gain_f = %lf\n", p[idx].value);
             loc_tx_muxin_gain = p[idx].value;
+
+        } else if (!strcmp("rx_muxin_gain_f", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_gain_f = %lf\n", p[idx].value);
+            loc_rx_muxin_gain = p[idx].value;
+
+
+        } else if (!strcmp("rx_car_osc_qrg_f", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", p[idx].value);
+            loc_rx_car_osc_qrg = p[idx].value;
         }  // else if ()
     }  // for ()
 
@@ -270,14 +316,18 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
         if (loc_rb_run) {
             fpga_rb_set_ctrl(
                     loc_rb_run,
-                    loc_modsrc,
-                    loc_modtyp,
+                    loc_tx_modsrc,
+                    loc_tx_modtyp,
+                    loc_rx_modtyp,
                     ((loc_rfout2_csp << 0x18) & 0x3f000000) | ((loc_rfout1_csp << 0x10) & 0x003f0000) | (loc_led_csp & 0x0000003f),
+                    loc_rx_muxin_src,
                     loc_tx_car_osc_qrg,
                     loc_tx_mod_osc_qrg,
                     loc_tx_amp_rf_gain,
                     loc_tx_mod_osc_mag,
-                    loc_tx_muxin_gain);
+                    loc_tx_muxin_gain,
+                    loc_rx_muxin_gain,
+                    loc_rx_car_osc_qrg);
         }
     }
 
@@ -287,8 +337,14 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
 
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int src_con_pnt, double tx_car_osc_qrg, double tx_mod_osc_qrg, double tx_amp_rf_gain, double tx_mod_osc_mag, double tx_muxin_gain)
+void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
+        int src_con_pnt, int rx_muxin_src,
+        double tx_car_osc_qrg, double tx_mod_osc_qrg,
+        double tx_amp_rf_gain, double tx_mod_osc_mag,
+        double tx_muxin_gain, double rx_muxin_gain,
+        double rx_car_osc_qrg)
 {
+    // XXX expand for receiver part
     const int ssb_weaver_osc_qrg = 1700.0;
 
     //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",

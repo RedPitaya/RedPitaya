@@ -137,6 +137,14 @@ enum {
     REG_RW_RB_RX_MOD_OSC_OFS_LO,                // h148: RB RX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
     REG_RW_RB_RX_MOD_OSC_OFS_HI,                // h14C: RB RX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
 
+    //REG_RD_RB_RX_RSVD_H150,
+    //REG_RD_RB_RX_RSVD_H154,
+    //REG_RD_RB_RX_RSVD_H158,
+    //REG_RD_RB_RX_RSVD_H15C,
+
+    REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB analog RX MUX input selector:  d0=RF Input 1, d1=RF Input 2
+    REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB analog RX MUX gain for input amplifier
+
     REG_RB_COUNT
 } REG_RB_ENUMS;
 
@@ -190,25 +198,26 @@ enum {
     RB_STAT_LEDS_EN,                            // RB LEDs enabled
     RB_STAT_RSVD_D03,
 
-    RB_STAT_TX_CAR_OSC_ZERO,                    // CAR_OSC output is zero
-    RB_STAT_TX_CAR_OSC_VALID,                   // CAR_OSC output valid
+    RB_STAT_TX_CAR_OSC_ZERO,                    // TX_CAR_OSC output is zero
+    RB_STAT_TX_CAR_OSC_VALID,                   // TX_CAR_OSC output valid
     RB_STAT_RSVD_D06,
     RB_STAT_RSVD_D07,
 
-    RB_STAT_TX_MOD_OSC_ZERO,                    // MOD_OSC output is zero
-    RB_STAT_TX_MOD_OSC_VALID,                   // MOD_OSC output valid
+    RB_STAT_TX_MOD_OSC_ZERO,                    // TX_MOD_OSC output is zero
+    RB_STAT_TX_MOD_OSC_VALID,                   // TX_MOD_OSC output valid
     RB_STAT_RSVD_D10,
     RB_STAT_RSVD_D11,
 
-    RB_STAT_RSVD_D12,
-    RB_STAT_RSVD_D13,
+    RB_STAT_RX_CAR_OSC_ZERO,                    // RX_CAR_OSC output is zero
+    RB_STAT_RX_CAR_OSC_VALID,                   // RX_CAR_OSC output valid
     RB_STAT_RSVD_D14,
     RB_STAT_RSVD_D15,
 
-    RB_STAT_RSVD_D16,
-    RB_STAT_RSVD_D17,
+    RB_STAT_RX_MOD_OSC_ZERO,                    // RX_MOD_OSC output is zero
+    RB_STAT_RX_MOD_OSC_VALID,                   // RX_MOD_OSC output valid
     RB_STAT_RSVD_D18,
     RB_STAT_RSVD_D19,
+
     RB_STAT_RSVD_D20,
     RB_STAT_RSVD_D21,
     RB_STAT_RSVD_D22,
@@ -869,7 +878,7 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_tx_amp_rf_dsp48 (
 // === Receiver section ===
 
 //---------------------------------------------------------------------------------
-//  RX_CAR_OSC carrier beat generator
+//  RX_CAR_OSC carrier generator
 
 wire         rx_car_osc_reset_n         = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_RX_CAR_OSC];
 wire         rx_car_osc_resync          = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_RESYNC];
@@ -905,7 +914,11 @@ rb_dds_48_16_125 i_rb_rx_car_osc (
 //---------------------------------------------------------------------------------
 //  RX_CAR_QMIX quadrature mixer for the radio frequency
 
-wire [ 15:0] rx_car_qmix_in = {adc_i[1], 2'b0};  // TODO - input matrix;
+//wire [ 15:0] rx_mod_qmix_in_gain = regs[REG_RW_RB_RX_MUXIN_GAIN][15:0];
+
+wire [ 15:0] rx_car_qmix_in = regs[REG_RW_RB_RX_MUXIN_SRC] == 1 ?  adc_i[0] :
+                              regs[REG_RW_RB_RX_MUXIN_SRC] == 2 ?  adc_i[1] :
+                                                                   16'b0    ;
 
 wire [ 31:0] rx_car_qmix_i_out;
 wire [ 31:0] rx_car_qmix_q_out;
@@ -1814,6 +1827,12 @@ else begin
   regs[REG_RD_RB_STATUS][RB_STAT_TX_MOD_OSC_ZERO]           <= !tx_mod_osc_sin;  // when phase is 0 deg
   regs[REG_RD_RB_STATUS][RB_STAT_TX_MOD_OSC_VALID]          <=  tx_mod_osc_axis_m_vld;
 
+  regs[REG_RD_RB_STATUS][RB_STAT_RX_CAR_OSC_ZERO]           <= !rx_car_osc_sin;  // when phase is 0 deg
+  regs[REG_RD_RB_STATUS][RB_STAT_RX_CAR_OSC_VALID]          <=  rx_car_osc_axis_m_vld;
+
+  regs[REG_RD_RB_STATUS][RB_STAT_RX_MOD_OSC_ZERO]           <= !rx_mod_osc_sin;  // when phase is 0 deg
+  regs[REG_RD_RB_STATUS][RB_STAT_RX_MOD_OSC_VALID]          <=  rx_mod_osc_axis_m_vld;
+
   regs[REG_RD_RB_STATUS][RB_STAT_LED7_ON : RB_STAT_LED0_ON] <= rb_leds_data;
   end
 
@@ -1854,6 +1873,8 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_RX_MOD_OSC_INC_HI]      <= 32'h00000000;
    regs[REG_RW_RB_RX_MOD_OSC_OFS_LO]      <= 32'h00000000;
    regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]      <= 32'h00000000;
+   regs[REG_RW_RB_RX_MUXIN_SRC]           <= 32'h00000000;
+   regs[REG_RW_RB_RX_MUXIN_GAIN]          <= 32'h00000000;
    end
 
 else begin
@@ -1959,6 +1980,14 @@ else begin
          end
       20'h0014C: begin
          regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]     <= {16'b0, sys_wdata[15:0]};
+         end
+
+      /* RX_MUX */
+      20'h00160: begin
+         regs[REG_RW_RB_RX_MUXIN_SRC]          <= sys_wdata[31:0];
+         end
+      20'h00164: begin
+         regs[REG_RW_RB_RX_MUXIN_GAIN]         <= {16'b0, sys_wdata[15:0]};
          end
 
       default:   begin
@@ -2121,6 +2150,16 @@ else begin
       20'h0014C: begin
         sys_ack   <= sys_en;
         sys_rdata <= regs[REG_RW_RB_RX_MOD_OSC_OFS_HI];
+        end
+
+      /* RX_MUX */
+      20'h00160: begin
+        sys_ack   <= sys_en;
+        sys_rdata <= regs[REG_RW_RB_RX_MUXIN_SRC];
+        end
+      20'h00164: begin
+        sys_ack   <= sys_en;
+        sys_rdata <= regs[REG_RW_RB_RX_MUXIN_GAIN];
         end
 
       default:   begin

@@ -58,22 +58,22 @@ select#rbled_csp_s[disabled] {
   background:#602000;
 }
 
-#tx_car_osc_modsrc {
+#tx_modsrc {
   position:relative;
   z-index:1;
 }
-.form-bg-tx-car-osc-modsrc {
+.form-bg-tx-modsrc {
   background:#707040;
 }
 
-#tx_car_osc_modtyp {
+#tx_modtyp {
   position:relative;
   z-index:1;
 }
-.form-bg-tx-car-osc-modtyp {
+.form-bg-tx-modtyp {
   background:#707040;
 }
-select#tx_car_osc_modtyp_s[disabled] {
+select#tx_modtyp_s[disabled] {
   background:#707070;
 }
 
