@@ -167,6 +167,13 @@ typedef enum {
     RP_GEN_TRIG_GATED_BURST     //!< External trigger gated burst
 } rp_trig_src_t;
 
+typedef enum {
+    RP_GEN_TRIG_EVT_A_START_ONCE = 0,   //!< Generate trigger when channel A starts generating
+    RP_GEN_TRIG_EVT_A_START = 1,        //!< Generate trigger when channel A buffer starts/wraps
+    RP_GEN_TRIG_EVT_B_START_ONCE = 8,   //!< Generate trigger when channel B starts generating
+    RP_GEN_TRIG_EVT_B_START = 9         //!< Generate trigger when channel B buffer starts/wraps
+} rp_trig_evt_t;
+
 /**
  * Type representing Input/Output channels.
  */
@@ -1271,6 +1278,22 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
+
+/**
+* Sets condition for generation of an outgoing trigger event.
+* @param evt Trigger event condition (A_START_ONCE, A_START, B_START_ONCE, B_START).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenTriggerEventCondition(rp_trig_evt_t evt);
+
+/**
+* Gets condition for generation of an outgoing trigger event.
+* @param evt Pointer where value will be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetTriggerEventCondition(rp_trig_evt_t *evt);
 
 /**
 * Sets Trigger for specified channel/channels.

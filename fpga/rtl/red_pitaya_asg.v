@@ -95,6 +95,8 @@ reg   [  32-1: 0] buf_a_rpnt_rd, buf_b_rpnt_rd;
 reg               trig_a_sw    , trig_b_sw    ;
 reg   [   3-1: 0] trig_a_src   , trig_b_src   ;
 wire              trig_a_done  , trig_b_done  ;
+reg               trig_evt_ab                 ;
+reg   [   3-1: 0] trig_evt                    ;
 
 red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   // DAC
@@ -106,6 +108,7 @@ red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   .trig_ext_i      ({trig_b_i         , trig_a_i         }),  // external trigger
   .trig_src_i      ({trig_b_src       , trig_a_src       }),  // trigger source selector
   .trig_done_o     ({trig_b_done      , trig_a_done      }),  // trigger event
+  .trig_evt_i      ({trig_evt         , trig_evt         }),  // trigger event condition (0: start of waveform, 1: counter wrap, 2-7: reserved)
   // buffer ctrl
   .buf_we_i        ({buf_b_we         , buf_a_we         }),  // buffer buffer write
   .buf_addr_i      ({buf_b_addr       , buf_a_addr       }),  // buffer address
@@ -136,7 +139,7 @@ begin
    buf_b_addr <= sys_addr[RSZ+1:2] ;  // can change only synchronous to write clock
 end
 
-assign trig_out_o = trig_a_done ;
+assign trig_out_o = trig_evt_ab ? trig_b_done : trig_a_done ;
 
 //---------------------------------------------------------------------------------
 //
@@ -179,6 +182,8 @@ if (dac_rstn_i == 1'b0) begin
    set_b_rgate <=  1'b0    ;
    ren_dly     <=  3'h0    ;
    ack_dly     <=  1'b0    ;
+   trig_evt_ab <=  1'b0    ;
+   trig_evt    <=  3'h0    ;
 end else begin
    trig_a_sw  <= sys_wen && (sys_addr[19:0]==20'h0) && sys_wdata[0]  ;
    if (sys_wen && (sys_addr[19:0]==20'h0))
@@ -209,6 +214,8 @@ end else begin
       if (sys_addr[19:0]==20'h38)  set_b_ncyc <= sys_wdata[  16-1: 0] ;
       if (sys_addr[19:0]==20'h3C)  set_b_rnum <= sys_wdata[  16-1: 0] ;
       if (sys_addr[19:0]==20'h40)  set_b_rdly <= sys_wdata[  32-1: 0] ;
+
+      if (sys_addr[19:0]==20'h44)  {trig_evt_ab, trig_evt} <= sys_wdata[4-1:0] ;
    end
 
    if (sys_ren) begin
@@ -253,6 +260,8 @@ end else begin
      20'h00038 : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
      20'h0003C : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
      20'h00040 : begin sys_ack <= sys_en;          sys_rdata <= set_b_rdly                         ; end
+
+     20'h00044 : begin sys_ack <= sys_en;          sys_rdata <= {{32-4{1'b0}},trig_evt_ab,trig_evt}; end
 
      20'h1zzzz : begin sys_ack <= ack_dly;         sys_rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
      20'h2zzzz : begin sys_ack <= ack_dly;         sys_rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end

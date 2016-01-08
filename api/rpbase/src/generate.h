@@ -80,6 +80,9 @@ typedef struct generate_control_s {
 
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
+
+    unsigned int trigger_event_cond :4;
+    unsigned int                    :28;
 } generate_control_t;
 
 int generate_Init();
@@ -104,6 +107,8 @@ int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
 int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
 int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
+int generate_setTriggerEventCondition(unsigned short value);
+int generate_getTriggerEventCondition(uint32_t *value);
 
 int generate_simultaneousTrigger();
 int generate_Synchronise();

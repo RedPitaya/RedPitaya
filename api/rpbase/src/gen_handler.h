@@ -46,6 +46,8 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period);
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period);
 int gen_setTriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_getTriggerSource(rp_channel_t chanel, rp_trig_src_t *src);
+int gen_setTriggerEventCondition(rp_trig_evt_t evt);
+int gen_getTriggerEventCondition(rp_trig_evt_t *evt);
 int gen_Trigger(uint32_t channel);
 int gen_Synchronise();
 int triggerIfInternal(rp_channel_t channel);
