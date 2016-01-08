@@ -260,7 +260,7 @@ URAMDISK_DIR    = OS/buildroot
 .PHONY: buildroot
 
 $(INSTALL_DIR):
-	mkdir $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)

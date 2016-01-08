@@ -13,7 +13,7 @@ zips:
 	done
 
 install:
-	mkdir build
+	mkdir -p build
 	for APP in $(APPS); do \
 		$(MAKE) -C $$APP INSTALL_DIR=../../build zip; \
 	done
