@@ -16,7 +16,6 @@ interface sys_bus_if #(
 // bus protocol signals
 logic          wen  ;  // write enable
 logic          ren  ;  // read enable
-logic [SW-1:0] sel  ;  // write byte select
 logic [AW-1:0] addr ;  // read/write address
 logic [DW-1:0] wdata;  // write data
 logic [DW-1:0] rdata;  // read data
@@ -29,7 +28,6 @@ modport m (
   input  rstn ,
   output wen  ,
   output ren  ,
-  output sel  ,
   output addr ,
   output wdata,
   input  rdata,
@@ -43,7 +41,6 @@ modport s (
   input  rstn ,
   input  wen  ,
   input  ren  ,
-  input  sel  ,
   input  addr ,
   input  wdata,
   output rdata,

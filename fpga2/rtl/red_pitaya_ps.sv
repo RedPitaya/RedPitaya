@@ -166,7 +166,7 @@ axi_slave #(
   // system read/write channel
   .sys_addr_o       (bus.addr ),
   .sys_wdata_o      (bus.wdata),
-  .sys_sel_o        (bus.sel  ),
+  .sys_sel_o        (         ),
   .sys_wen_o        (bus.wen  ),
   .sys_ren_o        (bus.ren  ),
   .sys_rdata_i      (bus.rdata),

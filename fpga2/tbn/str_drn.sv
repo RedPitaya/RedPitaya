@@ -1,7 +1,7 @@
 module str_drn #(
-  type DAT_T = logic signed [8-1:0]
+  type DAT_T = logic [8-1:0]
 )(
-  str_bus_if.d  str
+  str_bus_if.d str
 );
 
 logic str_trn;

@@ -18,24 +18,23 @@
 `timescale 1ns / 1ps
 
 interface sys_bus_model #(
-  int unsigned DW = 32  ,  // data width (8,16,...,1024)
-  int unsigned AW = 32  ,  // address width
-  int unsigned SW = DW/8   // select width - 1 bit for every data byte
+  type DAT_T = logic [32-1:0],
+  type ADR_T = logic [32-1:0]
 )(
   sys_bus_if.m bus
 );
 
 initial begin
-  bus.wen <= 1'b0 ;
-  bus.ren <= 1'b0 ;
+  bus.wen <= 1'b0;
+  bus.ren <= 1'b0;
 end
 
 // bus write transfer
 task transaction (
-  input  logic          we,
-  input  logic [AW-1:0] addr,
-  input  logic [DW-1:0] wdata,
-  output logic [DW-1:0] rdata
+  input  logic we,
+  input  ADR_T addr,
+  input  DAT_T wdata,
+  output DAT_T rdata
 );
   @(posedge bus.clk)
   bus.sel    <= '1;
@@ -54,8 +53,8 @@ endtask: transaction
 
 // bus write transfer
 task write (
-  input  logic [AW-1:0] addr,
-  input  logic [DW-1:0] wdata
+  input  ADR_T addr,
+  input  DAT_T wdata
 );
   logic [32-1:0] rdata;
   transaction (.we (1'b1), .addr (addr), .wdata (wdata), .rdata (rdata));
@@ -63,8 +62,8 @@ endtask: write
 
 // bus read transfer
 task read (
-  input  logic [AW-1:0] addr,
-  output logic [DW-1:0] rdata
+  input  ADR_T addr,
+  output DAT_T rdata
 );
   transaction (.we (1'b0), .addr (addr), .wdata ('x), .rdata (rdata));
 endtask: read

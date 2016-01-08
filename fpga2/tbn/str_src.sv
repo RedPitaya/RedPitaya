@@ -1,8 +1,8 @@
 module str_src #(
-  logic IV = 1'b0,  // idle data bus value
-  type DAT_T = logic signed [8-1:0]
+  type DAT_T = logic [8-1:0],
+  logic IV = 1'b0  // idle data bus value
 )(
-  str_bus_if.s  str
+  str_bus_if.s str
 );
 
 logic str_trn;

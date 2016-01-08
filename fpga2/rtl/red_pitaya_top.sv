@@ -131,13 +131,17 @@ logic                 pdm_rstn;
 logic                           adc_clk;
 logic                           adc_rstn;
 
+// stream bus type
+localparam type SBA_T = logic signed [14-1:0];  // acquire
+localparam type SBG_T = logic signed [14-1:0];  // generate
+
 // streams
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // acquire
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // PID
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
-str_bus_if #(.DAT_T (logic signed [14-1:0])) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
+str_bus_if #(.DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
+str_bus_if #(.DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
+str_bus_if #(.DAT_T (SBA_T)) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // acquire
+str_bus_if #(.DAT_T (SBG_T)) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // PID
+str_bus_if #(.DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
+str_bus_if #(.DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // DAC signals
 logic                           dac_clk_1x;
 logic                           dac_clk_2x;
@@ -489,6 +493,7 @@ generate
 for (genvar i=0; i<MNG; i++) begin: for_gen
 
 asg_top #(
+  .DAT_T (SBG_T),
   .TWA ($bits(trg))
 ) asg (
   // stream output

@@ -12,11 +12,12 @@ module asg_top_tb #(
   // data parameters
   int unsigned DWO = 14,  // RAM data width
   int unsigned DWM = 16,  // data width for multiplier (gain)
-  int unsigned DWS = DWO, // data width for summation (offset)
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 );
+
+localparam type DAT_T = logic signed [DWO-1:0];
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC signal generation
@@ -27,7 +28,7 @@ logic                  clk ;
 logic                  rstn;
 
 // stream
-str_bus_if #(.DAT_T (logic signed [DWO-1:0])) str (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
 
 // trigger
 struct packed {

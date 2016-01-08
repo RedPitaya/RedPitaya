@@ -24,6 +24,7 @@
  */
 
 module asg_top #(
+  type DAT_T = logic [8-1:0],
   // data parameters
   int unsigned DWO = 14,  // RAM data width
   int unsigned DWM = 16,  // data width for multiplier (gain)
@@ -49,32 +50,12 @@ module asg_top #(
 // read/write access to buffer
 ////////////////////////////////////////////////////////////////////////////////
 
-logic                  bus_ena  ;
-logic                  bus_wen  ;
-logic        [CWM-1:0] bus_addr ;
-logic signed [DWO-1:0] bus_wdata;
-logic signed [DWO-1:0] bus_rdata;
-logic          [3-1:0] bus_dly ;
-logic                  bus_ack ;
+sys_bus_if #(.DW (DWO), .AW (CWM)) bus_buf (.clk (clk), .rstn (rstn));
 
-always_ff @(posedge bus.clk)
-if ((bus.wen | bus.ren) & bus.addr[CWM+2]) begin
-  bus_ena   <= 1'b1;
-  bus_wen   <= bus.wen;
-  bus_addr  <= bus.addr[CWM+2+1:2];
-  bus_wdata <= bus.wdata;
-end else begin
-  bus_ena   <= 1'b0;
-end
-
-always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
-  bus_dly <= '0;
-  bus_ack <= '0;
-end else begin
-  bus_dly <= {bus_dly[3-2:0], bus.ren};
-  bus_ack <=  bus_dly[3-1] || bus.wen ;
-end
+assign bus_buf.ren   = bus.ren & bus.addr[CWM+2];
+assign bus_buf.wen   = bus.wen & bus.addr[CWM+2];
+assign bus_buf.addr  = bus.addr[2+:CWM];
+assign bus_buf.wdata = bus.wdata;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -106,17 +87,18 @@ if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
 end else begin
-  bus.err <= 1'b0;
-  if (~bus.addr[CWM]) begin
+  if (~bus.addr[CWM+2]) begin
+    bus.err <= 1'b0;
     bus.ack <= bus_en;
   end else begin
-    bus.ack <= bus_ack;
+    bus.err <= bus_buf.err;
+    bus.ack <= bus_buf.ack;
   end
 end
 
 // write access
 always_ff @(posedge bus.clk)
-if (~bus.rstn == 1'b0) begin
+if (~bus.rstn) begin
   // configuration
   cfg_tsel <= '0;
   cfg_size <= '0;
@@ -174,7 +156,7 @@ if (~bus.addr[CWM+2]) begin
     6'h28 : bus.rdata <= cfg_lsum;
   endcase
 end else begin
-            bus.rdata <= {{32-    DWO{1'b0}}, bus_rdata};
+            bus.rdata <= {{32-    DWO{1'b0}}, bus_buf.rdata};
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,13 +171,10 @@ assign trg_mux = trg_ext [cfg_tsel];
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream from generator
-str_bus_if #(.DAT_T (logic signed [DWO-1:0])) stg (.clk (sto.clk), .rstn (sto.rstn));
-logic signed [DWO-1:0] stg_dat;  // data
-logic                  stg_vld;  // valid
-logic                  stg_rdy;  // ready
+str_bus_if #(.DAT_T (DAT_T)) stg (.clk (sto.clk), .rstn (sto.rstn));
 
 asg #(
-  .DWO (DWO),
+  .DAT_T (DAT_T),
   .CWM (CWM),
   .CWF (CWF)
 ) asg (
@@ -204,12 +183,6 @@ asg #(
   // trigger
   .trg_i     (trg_mux  ),
   .trg_o     (trg_out  ),
-  // CPU buffer access
-  .bus_ena   (bus_ena  ),
-  .bus_wen   (bus_wen  ),
-  .bus_addr  (bus_addr ),
-  .bus_wdata (bus_wdata),
-  .bus_rdata (bus_rdata),
   // control
   .ctl_rst   (ctl_rst  ),
   // configuration
@@ -221,7 +194,9 @@ asg #(
   .cfg_binf  (cfg_binf ),
   .cfg_bcyc  (cfg_bcyc ),
   .cfg_bdly  (cfg_bdly ),
-  .cfg_bnum  (cfg_bnum )
+  .cfg_bnum  (cfg_bnum ),
+  // CPU buffer access
+  .bus       (bus_buf  )
 );
 
 // TODO: this will be a continuous stream, data stream control needs rethinking

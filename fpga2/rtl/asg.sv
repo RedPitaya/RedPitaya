@@ -69,35 +69,31 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module asg #(
-  // data parameters
-  int unsigned DWO = 14,  // data width for output
+  // data bus
+  type DAT_T = logic [8-1:0],
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 )(
   // stream output
-  str_bus_if.s                  sto      ,  // output
-  // trigger
-  input  logic                  trg_i    ,  // input
-  output logic                  trg_o    ,  // output event
-  // CPU buffer access
-  input  logic                  bus_ena  ,  // enable
-  input  logic                  bus_wen  ,  // write enable
-  input  logic        [CWM-1:0] bus_addr ,  // address
-  input  logic signed [DWO-1:0] bus_wdata,  // write data
-  output logic signed [DWO-1:0] bus_rdata,  // read  data
-  // configuration
-  input  logic    [CWM+CWF-1:0] cfg_size ,  // data tablesize
-  input  logic    [CWM+CWF-1:0] cfg_step ,  // pointer step    size
-  input  logic    [CWM+CWF-1:0] cfg_offs ,  // pointer initial offset (used to define phase)
-  // configuration (burst mode)
-  input  logic                  cfg_bena ,  // burst enable
-  input  logic                  cfg_binf ,  // infinite
-  input  logic       [  16-1:0] cfg_bcyc ,  // number of data cycle
-  input  logic       [  32-1:0] cfg_bdly ,  // number of delay cycles
-  input  logic       [  16-1:0] cfg_bnum ,  // number of repetitions
+  str_bus_if.s               sto     ,
   // control
-  input  logic                  ctl_rst     // set FSM to reset
+  input  logic               ctl_rst ,  // set FSM to reset
+  // trigger
+  input  logic               trg_i   ,  // input
+  output logic               trg_o   ,  // output event
+  // configuration
+  input  logic [CWM+CWF-1:0] cfg_size,  // data tablesize
+  input  logic [CWM+CWF-1:0] cfg_step,  // pointer step    size
+  input  logic [CWM+CWF-1:0] cfg_offs,  // pointer initial offset (used to define phase)
+  // configuration (burst mode)
+  input  logic               cfg_bena,  // burst enable
+  input  logic               cfg_binf,  // infinite
+  input  logic    [  16-1:0] cfg_bcyc,  // number of data cycle
+  input  logic    [  32-1:0] cfg_bdly,  // number of delay cycles
+  input  logic    [  16-1:0] cfg_bnum,  // number of repetitions
+  // System bus
+  sys_bus_if.s               bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,9 +107,9 @@ typedef enum logic [2-1:0] {
 } status_t;
 
 // buffer
-logic signed [    DWO-1:0] buf_mem [0:2**CWM-1];
-logic signed [    DWO-1:0] buf_rdata;  // read data
-logic        [CWM    -1:0] buf_raddr;  // read address
+DAT_T               buf_mem [0:2**CWM-1];
+DAT_T               buf_rdata;  // read data
+logic [CWM    -1:0] buf_raddr;  // read address
 
 // pointers
 logic [CWM+CWF-1:0] ptr_cur; // current
@@ -137,11 +133,18 @@ logic          sts_lst;
 
 // CPU write access
 always @(posedge sto.clk)
-if (bus_ena &  bus_wen)  buf_mem[bus_addr] <= bus_wdata;
+if (bus.wen)  buf_mem[bus.addr] <= bus.wdata;
 
 // CPU read-back access
 always @(posedge sto.clk)
-if (bus_ena & ~bus_wen)  bus_rdata <= buf_mem[bus_addr];
+if (bus.ren)  bus.rdata <= buf_mem[bus.addr];
+
+// CPU control signals
+always_ff @(posedge bus.clk)
+if (~bus.rstn)  bus.ack <= 1'b0;
+else            bus.ack <= bus.ren | bus.wen;
+
+assign bus.err = 1'b0;
 
 // stream read
 always @(posedge sto.clk)

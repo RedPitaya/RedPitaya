@@ -29,7 +29,6 @@ for (genvar i=0; i<8; i++) begin: for_bus
 
 assign bus_s[i].addr  =                bus_m.addr ;
 assign bus_s[i].wdata =                bus_m.wdata;
-assign bus_s[i].sel   =                bus_m.sel  ;
 assign bus_s[i].wen   = bus_s_cs & {SN{bus_m.wen}};
 assign bus_s[i].ren   = bus_s_cs & {SN{bus_m.ren}};
 
