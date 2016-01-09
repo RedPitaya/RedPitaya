@@ -1421,12 +1421,12 @@ int LCR_data_analysis(float **s,
         float mean_buff_in1=sum_buff_in1/size;
         float mean_buff_in2=sum_buff_in2/size;
 
-      
+      double C_cable=500E-12;
     /* Voltage and current on the load can be calculated from gathered data */
     for (i2 = 0; i2 < size; i2++) {
         U_dut[ i2 ] = (((U_acq[ 1 ][ i2 ])- mean_buff_in1) - ((U_acq[ 2 ][ i2 ])- mean_buff_in2)); // potencial difference gives the voltage
         // Curent trough the load is the same as trough thr R_shunt. ohm's law is used to calculate the current
-        I_dut[ i2 ] = (((U_acq[ 2 ][ i2 ])- mean_buff_in2) / R_shunt);
+        I_dut[ i2 ] = (((U_acq[ 2 ][ i2 ])- mean_buff_in2) / ((R_shunt*(1.0/(w_out*C_cable)))/(R_shunt+(1.0/(w_out*C_cable)))));
     }
 
     /* Acquired signals must be multiplied by the reference signals, used for lock in metod */
@@ -1461,15 +1461,17 @@ int LCR_data_analysis(float **s,
     Z_amp = U_dut_amp / I_dut_amp; // forming resistance
 
 
+
+    float P_correction=atan(-w_out*C_cable*R_shunt);
     /* Phase has to be limited between 180 and -180 deg. */
     if (Phase_Z_rad <=  (-M_PI) ) {
-        Phase_Z_rad = Phase_Z_rad +(2*M_PI);
+        Phase_Z_rad = Phase_Z_rad +(2*M_PI)+P_correction;
     }
     else if ( Phase_Z_rad >= M_PI ) {
-        Phase_Z_rad = Phase_Z_rad -(2*M_PI) ;
+        Phase_Z_rad = Phase_Z_rad -(2*M_PI)+P_correction ;
     }
     else {
-        Phase_Z_rad = Phase_Z_rad;
+        Phase_Z_rad = Phase_Z_rad+P_correction;
     }
 
     *Z =  ( ( Z_amp ) * cosf( Phase_Z_rad ) )  +  ( ( Z_amp ) * sinf( Phase_Z_rad ) ) * I; // R + jX
