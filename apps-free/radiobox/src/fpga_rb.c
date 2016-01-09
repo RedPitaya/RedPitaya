@@ -446,7 +446,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             case RB_MODTYP_USB: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for USB\n");
 
-                g_fpga_rb_reg_mem->ctrl |=  0x00100000;                                                    // control: enabling TX_QMIX_CAR Q path in the TX_AMP_RF
+                g_fpga_rb_reg_mem->ctrl |=  0x00008000;                                                    // control: enabling TX_QMIX_CAR Q path in the TX_AMP_RF
                 fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg + ssb_weaver_osc_qrg);        // TX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
                 fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(+ssb_weaver_osc_qrg);                  // TX_MOD_OSC weaver method mixer LO frequency
                 fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 0);                 // SSB operation has no carrier
@@ -456,7 +456,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             case RB_MODTYP_LSB: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for LSB\n");
 
-                g_fpga_rb_reg_mem->ctrl |=  0x00100000;                                                    // control: enabling TX_QMIX_CAR Q path in the TX_AMP_RF
+                g_fpga_rb_reg_mem->ctrl |=  0x00008000;                                                    // control: enabling TX_QMIX_CAR Q path in the TX_AMP_RF
                 fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg - ssb_weaver_osc_qrg);        // TX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
                 fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(-ssb_weaver_osc_qrg);                  // TX_MOD_OSC weaver method mixer LO frequency
                 fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 0);                 // SSB operation has no carrier

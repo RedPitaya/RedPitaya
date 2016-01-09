@@ -105,7 +105,7 @@
         <table class="table-toolbox">
         <tr>
         <td class="table-header" colspan="3">
-          Transmitter</span>
+          Connection matrix
         </td>
         </tr>
         <tr>
@@ -131,12 +131,14 @@
                 <option value="5">TX_MOD_ADC in</option>
                 <option value="6">TX_MOD_ADC out</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="8">TX_MOD_QMIX_I output at stage 1</option>
-                <option value="9">TX_MOD_QMIX_Q output at stage 1</option>
-                <option value="10">TX_MOD_QMIX_I output at stage 2</option>
-                <option value="11">TX_MOD_QMIX_Q output at stage 2</option>
-                <option value="12">TX_MOD_QMIX_I output at stage 3</option>
-                <option value="13">TX_MOD_QMIX_Q output at stage 3</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="16">low pass TX_MOD_CIC I output</option>
                 <option value="17">low pass TX_MOD_CIC Q output</option>
@@ -145,12 +147,33 @@
                 <option value="20">interpolator TX_CAR_CIC I output 41.664 MHz output</option>
                 <option value="21">interpolator TX_CAR_CIC Q output 41.664 MHz output</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="24">TX_CAR_QMIX_I output</option>
-                <option value="25">TX_CAR_QMIX_Q output</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output</option>
+                <option value="27">TX_CAR_QMIX_Q output</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="28">TX_AMP_RF output</option>
+                <option disabled="disabled">============</option>
+                <option value="32">RX_CAR_OSC_I output</option>
+                <option value="33">RX_CAR_OSC_Q output</option>
+                <option value="34">RX_CAR_QMIX_I output</option>
+                <option value="35">RX_CAR_QMIX_Q output</option>
+                <option value="36">RX_CAR_CIC1_I output</option>
+                <option value="37">RX_CAR_CIC1_Q output</option>
+                <option value="38">RX_CAR_CIC2_I output</option>
+                <option value="39">RX_CAR_CIC2_Q output</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="40">RX_MOD_OSC_I output</option>
+                <option value="41">RX_MOD_OSC_Q output</option>
+                <option value="42">RX_MOD_QMIX_I output</option>
+                <option value="43">RX_MOD_QMIX_Q output</option>
+                <option value="44">RX_MOD_FIR_I output</option>
+                <option value="45">RX_MOD_FIR_Q output</option>
+                <option value="46">RX_MOD_CIC_I output</option>
+                <option value="47">RX_MOD_CIC_Q output</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_ADD output</option>
+                <option disabled="disabled">============</option>
                 <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rfout1_csp" class="input-group-btn" _style="visibility:hidden">
@@ -170,12 +193,14 @@
                 <option value="5">TX_MOD_ADC in</option>
                 <option value="6">TX_MOD_ADC out</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="8">TX_MOD_QMIX_I output at stage 1</option>
-                <option value="9">TX_MOD_QMIX_Q output at stage 1</option>
-                <option value="10">TX_MOD_QMIX_I output at stage 2</option>
-                <option value="11">TX_MOD_QMIX_Q output at stage 2</option>
-                <option value="12">TX_MOD_QMIX_I output at stage 3</option>
-                <option value="13">TX_MOD_QMIX_Q output at stage 3</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="16">low pass TX_MOD_CIC I output</option>
                 <option value="17">low pass TX_MOD_CIC Q output</option>
@@ -184,13 +209,34 @@
                 <option value="20">interpolator TX_CAR_CIC I output 41.664 MHz output</option>
                 <option value="21">interpolator TX_CAR_CIC Q output 41.664 MHz output</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="24">TX_CAR_QMIX_I output</option>
-                <option value="25">TX_CAR_QMIX_Q output</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output</option>
+                <option value="27">TX_CAR_QMIX_Q output</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="28">TX_AMP_RF output</option>
+                <option disabled="disabled">============</option>
+                <option value="32">RX_CAR_OSC_I output</option>
+                <option value="33">RX_CAR_OSC_Q output</option>
+                <option value="34">RX_CAR_QMIX_I output</option>
+                <option value="35">RX_CAR_QMIX_Q output</option>
+                <option value="36">RX_CAR_CIC1_I output</option>
+                <option value="37">RX_CAR_CIC1_Q output</option>
+                <option value="38">RX_CAR_CIC2_I output</option>
+                <option value="39">RX_CAR_CIC2_Q output</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="40">RX_MOD_OSC_I output</option>
+                <option value="41">RX_MOD_OSC_Q output</option>
+                <option value="42">RX_MOD_QMIX_I output</option>
+                <option value="43">RX_MOD_QMIX_Q output</option>
+                <option value="44">RX_MOD_FIR_I output</option>
+                <option value="45">RX_MOD_FIR_Q output</option>
+                <option value="46">RX_MOD_CIC_I output</option>
+                <option value="47">RX_MOD_CIC_Q output</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+                <option value="48">RX_MOD_ADD output</option>
+                <option disabled="disabled">============</option>
+               <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rfout2_csp" class="input-group-btn" _style="visibility:hidden">
                 <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -210,12 +256,14 @@
                 <option value="5">TX_MOD_ADC in</option>
                 <option value="6">TX_MOD_ADC out</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="8">TX_MOD_QMIX_I output at stage 1</option>
-                <option value="9">TX_MOD_QMIX_Q output at stage 1</option>
-                <option value="10">TX_MOD_QMIX_I output at stage 2</option>
-                <option value="11">TX_MOD_QMIX_Q output at stage 2</option>
-                <option value="12">TX_MOD_QMIX_I output at stage 3</option>
-                <option value="13">TX_MOD_QMIX_Q output at stage 3</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="16">low pass TX_MOD_CIC I output</option>
                 <option value="17">low pass TX_MOD_CIC Q output</option>
@@ -224,12 +272,33 @@
                 <option value="20">interpolator TX_CAR_CIC I output 41.664 MHz output</option>
                 <option value="21">interpolator TX_CAR_CIC Q output 41.664 MHz output</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="24">TX_CAR_QMIX_I output</option>
-                <option value="25">TX_CAR_QMIX_Q output</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output</option>
+                <option value="27">TX_CAR_QMIX_Q output</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="28">TX_AMP_RF output</option>
+                <option disabled="disabled">============</option>
+                <option value="32">RX_CAR_OSC_I output</option>
+                <option value="33">RX_CAR_OSC_Q output</option>
+                <option value="34">RX_CAR_QMIX_I output</option>
+                <option value="35">RX_CAR_QMIX_Q output</option>
+                <option value="36">RX_CAR_CIC1_I output</option>
+                <option value="37">RX_CAR_CIC1_Q output</option>
+                <option value="38">RX_CAR_CIC2_I output</option>
+                <option value="39">RX_CAR_CIC2_Q output</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="40">RX_MOD_OSC_I output</option>
+                <option value="41">RX_MOD_OSC_Q output</option>
+                <option value="42">RX_MOD_QMIX_I output</option>
+                <option value="43">RX_MOD_QMIX_Q output</option>
+                <option value="44">RX_MOD_FIR_I output</option>
+                <option value="45">RX_MOD_FIR_Q output</option>
+                <option value="46">RX_MOD_CIC_I output</option>
+                <option value="47">RX_MOD_CIC_Q output</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_ADD output</option>
+                <option disabled="disabled">============</option>
                 <option value="63">LEDs show current test vector @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rbled_csp" class="input-group-btn" _style="visibility:hidden">
@@ -241,6 +310,105 @@
         </tr>
         <tr>
         <td colspan="3"><hr></td>
+        </tr>
+        <tr>
+        <td class="table-header" colspan="3">
+          Receiver
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="rx_car_osc_qrg" class="form-group">
+          <label for="rx_car_osc_qrg_f" class="col-xs-5 control-label">RX_CAR_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="rx_car_osc_qrg_f" value="0" class="form-control form-bg-rx-car-osc-qrg" autocomplete="off" />
+            <span id="apply_rx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="rx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="rx_muxin_src" class="form-group">
+          <label for="rx_muxin_src_s" class="col-xs-5 control-label">RX input:</label>
+          <div class="col-xs-6">
+            <select id="rx_modsrc_s" class="form-control form-bg-rx-muxin-src">
+              <option value="0">(none)</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="1">RF Input 1</option>
+              <option value="2">RF Input 2</option>
+            </select>
+            <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="rx_modtyp" class="form-group">
+          <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
+          <div class="col-xs-6">
+            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+              <option value="0">USB</option>
+              <option value="1">LSB</option>
+              <option value="2">AM</option>
+              <option value="3">FM</option>
+              <option value="4">PM</option>
+            </select>
+            <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="3">
+        <div id="rx_muxin_gain" class="form-group">
+        <label for="rx_muxin_gain_f" class="col-xs-2 control-label">RX MUX input gain:</label>
+          <div class="col-xs-9">
+            <input type="range" id="rx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
+            <span id="apply_rx_muxin_gain" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+
+        <td colspan="3"><hr></td>
+        </tr>
+        <tr>
+        <td class="table-header" colspan="3">
+          Transmitter
+        </td>
         </tr>
         <tr>
         <td>

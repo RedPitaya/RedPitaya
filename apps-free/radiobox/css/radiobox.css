@@ -5,7 +5,6 @@
   position:relative;
   z-index:0;
   background:linear-gradient(#004060 20%, #001040 80%);
-  height:800px;
 }
 
 
@@ -39,6 +38,44 @@ select#rfout2_csp_s[disabled] {
   background:#508050;
 }
 select#rbled_csp_s[disabled] {
+  background:#707070;
+}
+
+#rx_car_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-car-osc-qrg {
+  background:#0040c0;
+}
+
+#rx_muxin_src {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-muxin-src {
+  background:#707040;
+}
+
+#rx_modtyp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-modtyp {
+  background:#707040;
+}
+select#rx_modtyp_s[disabled] {
+  background:#707070;
+}
+
+#rx_muxin_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-muxin-gain {
+  background:#805810;
+}
+input#rx_muxin_gain_f[disabled] {
   background:#707070;
 }
 

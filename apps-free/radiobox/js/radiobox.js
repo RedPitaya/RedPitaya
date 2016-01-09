@@ -243,11 +243,11 @@
               $('#RB_STOP').css('display', 'block');
           }
       }
-      else if (param_name == 'tx_car_osc_modsrc_s') {
+      else if (param_name == 'tx_modsrc_s') {
         $('#'+param_name).val(intVal);
         checkKeyDoEnable(param_name, intVal);
       }
-      else if (param_name == 'tx_car_osc_modtyp_s') {
+      else if (param_name == 'tx_modtyp_s') {
         $('#'+param_name).val(intVal);
         switch (intVal) {
           case 0:
@@ -275,6 +275,9 @@
       else if (param_name == 'rfout2_csp_s') {
           $('#'+param_name).val(intVal);
         }
+      else if (param_name == 'rx_muxin_src_s') {
+          $('#'+param_name).val(dblVal);
+        }
       else if (param_name == 'tx_car_osc_qrg_f') {
           $('#'+param_name).val(dblVal);
         }
@@ -288,6 +291,16 @@
           $('#'+param_name).val(dblVal);
         }
       else if (param_name == 'tx_muxin_gain_f') {
+          $('#'+param_name).val(dblVal);
+        }
+      else if (param_name == 'rx_modtyp_s') {
+          $('#'+param_name).val(intVal);
+          checkKeyDoEnable(param_name, intVal);
+        }
+      else if (param_name == 'rx_car_osc_qrg_f') {
+          $('#'+param_name).val(dblVal);
+        }
+      else if (param_name == 'rx_muxin_gain_f') {
         $('#'+param_name).val(dblVal);
       }
 
@@ -485,7 +498,7 @@
         var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
 
         // clear magnitude field when modulation source or type has changed
-        //if ((key == 'tx_car_osc_modsrc_s') || (key == 'tx_car_osc_modtyp_s')) {
+        //if ((key == 'tx_modsrc_s') || (key == 'tx_modtyp_s')) {
         //  $('#tx_mod_osc_mag_f').val(0);
         //}
 
@@ -515,11 +528,11 @@
 }(window.RB = window.RB || {}, jQuery));
 
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
-  if (key == 'tx_car_osc_modsrc_s') {
+  if (key == 'tx_modsrc_s') {
     if (value == 15) {
       /* OSC_MOD */
-      $('#tx_car_osc_modtyp_s').removeAttr("disabled");
-      $('#apply_tx_car_osc_modtyp').removeAttr("style");
+      $('#tx_modtyp_s').removeAttr("disabled");
+      $('#apply_tx_modtyp').removeAttr("style");
 
       $('#tx_mod_osc_qrg_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_qrg').removeAttr("style");
@@ -532,8 +545,8 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
 
     } else if (value) {
       /* External */
-      $('#tx_car_osc_modtyp_s').removeAttr("disabled");
-      $('#apply_tx_car_osc_modtyp').removeAttr("style");
+      $('#tx_modtyp_s').removeAttr("disabled");
+      $('#apply_tx_modtyp').removeAttr("style");
 
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
@@ -546,8 +559,8 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
 
     } else {
       /* (none) */
-      $('#tx_car_osc_modtyp_s').attr("disabled", "disabled");
-      $('#apply_tx_car_osc_modtyp').attr("style", "visibility:hidden");
+      $('#tx_modtyp_s').attr("disabled", "disabled");
+      $('#apply_tx_modtyp').attr("style", "visibility:hidden");
 
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
@@ -559,6 +572,24 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
   }
+  else if (key == 'rx_muxin_src_s') {
+        if (value) {
+          /* External */
+          $('#rx_modtyp_s').removeAttr("disabled");
+          $('#apply_rx_modtyp').removeAttr("style");
+
+          $('#rx_muxin_gain_f').removeAttr("disabled");
+          $('#apply_rx_muxin_gain').removeAttr("style");
+
+        } else {
+          /* (none) */
+          $('#rx_modtyp_s').attr("disabled", "disabled");
+          $('#apply_rx_modtyp').attr("style", "visibility:hidden");
+
+          $('#rx_muxin_gain_f').attr("disabled", "disabled");
+          $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");
+        }
+      }
 }
 
 function checkKeyIs_F(key) {
@@ -999,7 +1030,7 @@ function cast_params2transport(params, pktIdx)
     break;
 
   case 6:
-	if (params['rx_car_osc_qrg_f'] !== undefined) {
+    if (params['rx_car_osc_qrg_f'] !== undefined) {
       var quad = cast_1xdouble_to_4xfloat(params['rx_car_osc_qrg_f']);
       transport['SE_rx_car_osc_qrg_f'] = quad.se;
       transport['HI_rx_car_osc_qrg_f'] = quad.hi;
@@ -1025,12 +1056,16 @@ function cast_transport2params(transport)
     params['rb_run'] = transport['rb_run'];
   }
 
-  if (transport['tx_car_osc_modsrc_s'] !== undefined) {
-    params['tx_car_osc_modsrc_s'] = transport['tx_car_osc_modsrc_s'];
+  if (transport['tx_modsrc_s'] !== undefined) {
+    params['tx_modsrc_s'] = transport['tx_modsrc_s'];
   }
 
-  if (transport['tx_car_osc_modtyp_s'] !== undefined) {
-    params['tx_car_osc_modtyp_s'] = transport['tx_car_osc_modtyp_s'];
+  if (transport['tx_modtyp_s'] !== undefined) {
+    params['tx_modtyp_s'] = transport['tx_modtyp_s'];
+  }
+
+  if (transport['rx_modtyp_s'] !== undefined) {
+    params['rx_modtyp_s'] = transport['rx_modtyp_s'];
   }
 
   if (transport['rbled_csp_s'] !== undefined) {
@@ -1043,6 +1078,10 @@ function cast_transport2params(transport)
 
   if (transport['rfout2_csp_s'] !== undefined) {
     params['rfout2_csp_s'] = transport['rfout2_csp_s'];
+  }
+
+  if (transport['rx_muxin_src_s'] !== undefined) {
+    params['rx_muxin_src_s'] = transport['rx_muxin_src_s'];
   }
 
   if (transport['LO_tx_car_osc_qrg_f'] !== undefined) {
@@ -1088,6 +1127,24 @@ function cast_transport2params(transport)
     quad.mi = transport['MI_tx_muxin_gain_f'];
     quad.lo = transport['LO_tx_muxin_gain_f'];
     params['tx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
+  if (transport['LO_rx_muxin_gain_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_rx_muxin_gain_f'];
+    quad.hi = transport['HI_rx_muxin_gain_f'];
+    quad.mi = transport['MI_rx_muxin_gain_f'];
+    quad.lo = transport['LO_rx_muxin_gain_f'];
+    params['rx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
+  if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_rx_car_osc_qrg_f'];
+    quad.hi = transport['HI_rx_car_osc_qrg_f'];
+    quad.mi = transport['MI_rx_car_osc_qrg_f'];
+    quad.lo = transport['LO_rx_car_osc_qrg_f'];
+    params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
   console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');
