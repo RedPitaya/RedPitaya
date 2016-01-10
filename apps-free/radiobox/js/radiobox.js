@@ -53,24 +53,27 @@
     local: {},
     init: {}
   };
-  RB.params.init = {         // XXX initital data
-    rb_run:              1,  // application running
-    car_osc_modsrc_s:    0,  // mod-source: (none)
-    car_osc_modtyp_s:    2,  // modulation: AM
-    rbled_csp_s:         6,  // RB LEDs set to: 0=disabled, 1=off,
-                             //  4=MUXIN_MIX in,       5=MOD_ADC in,         6=MOD_ADC out,
-                             //  8=MOD_QMIX_I_S1 out,  9=MOD_QMIX_Q_S1 out, 10=MOD_QMIX_I_S2, 11=MOD_QMIX_Q_S2, 12=MOD_QMIX_I_S3, 13=MOD_QMIX_Q_S3,
-                             // 16=MOD_CIC_I out,     17=MOD_CIC_Q out,     18=MOD_FIR_I out, 19=MOD_FIR_Q out, 20=CAR_CIC_41M664_I out, 21=CAR_CIC_41M664_Q out,
-                             // 24=CAR_QMIX_I out, 25=CAR_QMIX_Q out,
-                             // 28=AMP_RF out,
-                             // 63=current test vector
-    rfout1_csp_s:       28,  // connect to AMP_RF out       (see list above)
-    rfout2_csp_s:        8,  // connect to CAR_CIC_41M664_I (see list above)
-    car_osc_qrg_f:   10000,  // 10 kHz
-    mod_osc_qrg_f:    1000,  //  1 kHz
-    amp_rf_gain_f:   200.0,  // 200 mV Vpp @ 50R results to -10 dBm
-    mod_osc_mag_f:   100.0,  // 100 % modulation by default
-    muxin_gain_f:     80.0   // slider position in % of 100% (80% = FS input with booster 1:1)
+  RB.params.init = {            // XXX initital data
+    rb_run:                 1,  // application running
+    tx_modsrc_s:            0,  // mod-source: (none)
+    tx_modtyp_s:            2,  // modulation: AM
+    rx_modtyp_s:            2,  // modulation: AM
+
+    rbled_csp_s:            6,  // RB LEDs set to: 6=TX_MOD_ADC out
+    rfout1_csp_s:          28,  // connect to TX_AMP_RF out       (see list above)
+    rfout2_csp_s:           8,  // connect to TX_CAR_CIC_41M664_I (see list above)
+    rx_muxin_src_s:         2,  // receiver input set to RF Input 2
+
+    tx_car_osc_qrg_f:   10000,  // 10 kHz
+    tx_mod_osc_qrg_f:    1000,  //  1 kHz
+
+    tx_amp_rf_gain_f:   200.0,  // 200 mV Vpp @ 50R results to -10 dBm
+    tx_mod_osc_mag_f:   100.0,  // 100 % modulation by default
+
+    tx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    rx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
+
+    rx_car_osc_qrg_f:   10000   // 10 kHz
   };
 
   // Other global variables
@@ -117,7 +120,7 @@
     RB.params.orig = $.extend(true, {}, RB.params.init);
 
     var pktIdx = 1;
-    while (pktIdx <= 5) {  // XXX initial pktIdx
+    while (pktIdx <= 6) {  // XXX initial pktIdx
       $.post(
         RB.config.post_url,
         JSON.stringify({ datasets: { params: cast_params2transport(RB.params.orig, pktIdx) } })
@@ -240,26 +243,26 @@
               $('#RB_STOP').css('display', 'block');
           }
       }
-      else if (param_name == 'car_osc_modsrc_s') {
+      else if (param_name == 'tx_modsrc_s') {
         $('#'+param_name).val(intVal);
         checkKeyDoEnable(param_name, intVal);
       }
-      else if (param_name == 'car_osc_modtyp_s') {
+      else if (param_name == 'tx_modtyp_s') {
         $('#'+param_name).val(intVal);
         switch (intVal) {
           case 0:
           case 1:
           case 2:
-            $('#mod_osc_mag_units').text('%');
+            $('#tx_mod_osc_mag_units').text('%');
             break;
           case 3:
-            $('#mod_osc_mag_units').text('Hz');
+            $('#tx_mod_osc_mag_units').text('Hz');
             break;
           case 4:
-            $('#mod_osc_mag_units').text('°');
+            $('#tx_mod_osc_mag_units').text('°');
             break;
           default:
-            $('#mod_osc_mag_units').text('( )');
+            $('#tx_mod_osc_mag_units').text('( )');
         }
         checkKeyDoEnable(param_name, intVal);
       }
@@ -272,19 +275,32 @@
       else if (param_name == 'rfout2_csp_s') {
           $('#'+param_name).val(intVal);
         }
-      else if (param_name == 'car_osc_qrg_f') {
+      else if (param_name == 'rx_muxin_src_s') {
           $('#'+param_name).val(dblVal);
         }
-      else if (param_name == 'mod_osc_qrg_f') {
+      else if (param_name == 'tx_car_osc_qrg_f') {
+          $('#'+param_name).val(dblVal);
+        }
+      else if (param_name == 'tx_mod_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
-      else if (param_name == 'amp_rf_gain_f') {
+      else if (param_name == 'tx_amp_rf_gain_f') {
           $('#'+param_name).val(dblVal);
         }
-      else if (param_name == 'mod_osc_mag_f') {
+      else if (param_name == 'tx_mod_osc_mag_f') {
           $('#'+param_name).val(dblVal);
         }
-      else if (param_name == 'muxin_gain_f') {
+      else if (param_name == 'tx_muxin_gain_f') {
+          $('#'+param_name).val(dblVal);
+        }
+      else if (param_name == 'rx_modtyp_s') {
+          $('#'+param_name).val(intVal);
+          checkKeyDoEnable(param_name, intVal);
+        }
+      else if (param_name == 'rx_car_osc_qrg_f') {
+          $('#'+param_name).val(dblVal);
+        }
+      else if (param_name == 'rx_muxin_gain_f') {
         $('#'+param_name).val(dblVal);
       }
 
@@ -397,7 +413,7 @@
     RB.state.sending = true;
 
     var pktIdx = 1;
-    while (pktIdx <= 5) {  // XXX main-loop pktIdx
+    while (pktIdx <= 6) {  // XXX main-loop pktIdx
       //RB.ws.send(JSON.stringify({ parameters: RB.params.local }));
       $.ajax({
         type: 'POST',
@@ -482,8 +498,8 @@
         var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
 
         // clear magnitude field when modulation source or type has changed
-        //if ((key == 'car_osc_modsrc_s') || (key == 'car_osc_modtyp_s')) {
-        //  $('#mod_osc_mag_f').val(0);
+        //if ((key == 'tx_modsrc_s') || (key == 'tx_modtyp_s')) {
+        //  $('#tx_mod_osc_mag_f').val(0);
         //}
 
         console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
@@ -512,50 +528,68 @@
 }(window.RB = window.RB || {}, jQuery));
 
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
-  if (key == 'car_osc_modsrc_s') {
+  if (key == 'tx_modsrc_s') {
     if (value == 15) {
       /* OSC_MOD */
-      $('#car_osc_modtyp_s').removeAttr("disabled");
-      $('#apply_car_osc_modtyp').removeAttr("style");
+      $('#tx_modtyp_s').removeAttr("disabled");
+      $('#apply_tx_modtyp').removeAttr("style");
 
-      $('#mod_osc_qrg_f').removeAttr("disabled");
-      $('#apply_mod_osc_qrg').removeAttr("style");
+      $('#tx_mod_osc_qrg_f').removeAttr("disabled");
+      $('#apply_tx_mod_osc_qrg').removeAttr("style");
 
-      $('#mod_osc_mag_f').removeAttr("disabled");
-      $('#apply_mod_osc_mag').removeAttr("style");
+      $('#tx_mod_osc_mag_f').removeAttr("disabled");
+      $('#apply_tx_mod_osc_mag').removeAttr("style");
 
-      $('#muxin_gain_f').attr("disabled", "disabled");
-      $('#apply_muxin_gain').attr("style", "visibility:hidden");
+      $('#tx_muxin_gain_f').attr("disabled", "disabled");
+      $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
 
     } else if (value) {
       /* External */
-      $('#car_osc_modtyp_s').removeAttr("disabled");
-      $('#apply_car_osc_modtyp').removeAttr("style");
+      $('#tx_modtyp_s').removeAttr("disabled");
+      $('#apply_tx_modtyp').removeAttr("style");
 
-      $('#mod_osc_qrg_f').attr("disabled", "disabled");
-      $('#apply_mod_osc_qrg').attr("style", "visibility:hidden");
+      $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
+      $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
 
-      $('#mod_osc_mag_f').removeAttr("disabled");
-      $('#apply_mod_osc_mag').removeAttr("style");
+      $('#tx_mod_osc_mag_f').removeAttr("disabled");
+      $('#apply_tx_mod_osc_mag').removeAttr("style");
 
-      $('#muxin_gain_f').removeAttr("disabled");
-      $('#apply_muxin_gain').removeAttr("style");
+      $('#tx_muxin_gain_f').removeAttr("disabled");
+      $('#apply_tx_muxin_gain').removeAttr("style");
 
     } else {
       /* (none) */
-      $('#car_osc_modtyp_s').attr("disabled", "disabled");
-      $('#apply_car_osc_modtyp').attr("style", "visibility:hidden");
+      $('#tx_modtyp_s').attr("disabled", "disabled");
+      $('#apply_tx_modtyp').attr("style", "visibility:hidden");
 
-      $('#mod_osc_qrg_f').attr("disabled", "disabled");
-      $('#apply_mod_osc_qrg').attr("style", "visibility:hidden");
+      $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
+      $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
 
-      $('#mod_osc_mag_f').attr("disabled", "disabled");
-      $('#apply_mod_osc_mag').attr("style", "visibility:hidden");
+      $('#tx_mod_osc_mag_f').attr("disabled", "disabled");
+      $('#apply_tx_mod_osc_mag').attr("style", "visibility:hidden");
 
-      $('#muxin_gain_f').attr("disabled", "disabled");
-      $('#apply_muxin_gain').attr("style", "visibility:hidden");
+      $('#tx_muxin_gain_f').attr("disabled", "disabled");
+      $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
   }
+  else if (key == 'rx_muxin_src_s') {
+        if (value) {
+          /* External */
+          $('#rx_modtyp_s').removeAttr("disabled");
+          $('#apply_rx_modtyp').removeAttr("style");
+
+          $('#rx_muxin_gain_f').removeAttr("disabled");
+          $('#apply_rx_muxin_gain').removeAttr("style");
+
+        } else {
+          /* (none) */
+          $('#rx_modtyp_s').attr("disabled", "disabled");
+          $('#apply_rx_modtyp').attr("style", "visibility:hidden");
+
+          $('#rx_muxin_gain_f').attr("disabled", "disabled");
+          $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");
+        }
+      }
 }
 
 function checkKeyIs_F(key) {
@@ -910,12 +944,16 @@ function cast_params2transport(params, pktIdx)
       transport['rb_run'] = params['rb_run'];
     }
 
-    if (params['car_osc_modsrc_s'] !== undefined) {
-      transport['car_osc_modsrc_s'] = params['car_osc_modsrc_s'];
+    if (params['tx_modsrc_s'] !== undefined) {
+      transport['tx_modsrc_s'] = params['tx_modsrc_s'];
     }
 
-    if (params['car_osc_modtyp_s'] !== undefined) {
-      transport['car_osc_modtyp_s'] = params['car_osc_modtyp_s'];
+    if (params['tx_modtyp_s'] !== undefined) {
+      transport['tx_modtyp_s'] = params['tx_modtyp_s'];
+    }
+
+    if (params['rx_modtyp_s'] !== undefined) {
+      transport['rx_modtyp_s'] = params['rx_modtyp_s'];
     }
     break;
 
@@ -931,51 +969,73 @@ function cast_params2transport(params, pktIdx)
     if (params['rfout2_csp_s'] !== undefined) {
       transport['rfout2_csp_s'] = params['rfout2_csp_s'];
     }
+
+    if (params['rx_muxin_src_s'] !== undefined) {
+      transport['rx_muxin_src_s'] = params['rx_muxin_src_s'];
+    }
     break;
 
   case 3:
-    if (params['car_osc_qrg_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['car_osc_qrg_f']);
-      transport['SE_car_osc_qrg_f'] = quad.se;
-      transport['HI_car_osc_qrg_f'] = quad.hi;
-      transport['MI_car_osc_qrg_f'] = quad.mi;
-      transport['LO_car_osc_qrg_f'] = quad.lo;
+    if (params['tx_car_osc_qrg_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['tx_car_osc_qrg_f']);
+      transport['SE_tx_car_osc_qrg_f'] = quad.se;
+      transport['HI_tx_car_osc_qrg_f'] = quad.hi;
+      transport['MI_tx_car_osc_qrg_f'] = quad.mi;
+      transport['LO_tx_car_osc_qrg_f'] = quad.lo;
     }
 
-    if (params['mod_osc_qrg_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['mod_osc_qrg_f']);
-      transport['SE_mod_osc_qrg_f'] = quad.se;
-      transport['HI_mod_osc_qrg_f'] = quad.hi;
-      transport['MI_mod_osc_qrg_f'] = quad.mi;
-      transport['LO_mod_osc_qrg_f'] = quad.lo;
+    if (params['tx_mod_osc_qrg_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['tx_mod_osc_qrg_f']);
+      transport['SE_tx_mod_osc_qrg_f'] = quad.se;
+      transport['HI_tx_mod_osc_qrg_f'] = quad.hi;
+      transport['MI_tx_mod_osc_qrg_f'] = quad.mi;
+      transport['LO_tx_mod_osc_qrg_f'] = quad.lo;
     }
     break;
 
   case 4:
-    if (params['amp_rf_gain_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['amp_rf_gain_f']);
-      transport['SE_amp_rf_gain_f'] = quad.se;
-      transport['HI_amp_rf_gain_f'] = quad.hi;
-      transport['MI_amp_rf_gain_f'] = quad.mi;
-      transport['LO_amp_rf_gain_f'] = quad.lo;
+    if (params['tx_amp_rf_gain_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['tx_amp_rf_gain_f']);
+      transport['SE_tx_amp_rf_gain_f'] = quad.se;
+      transport['HI_tx_amp_rf_gain_f'] = quad.hi;
+      transport['MI_tx_amp_rf_gain_f'] = quad.mi;
+      transport['LO_tx_amp_rf_gain_f'] = quad.lo;
     }
 
-    if (params['mod_osc_mag_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['mod_osc_mag_f']);
-      transport['SE_mod_osc_mag_f'] = quad.se;
-      transport['HI_mod_osc_mag_f'] = quad.hi;
-      transport['MI_mod_osc_mag_f'] = quad.mi;
-      transport['LO_mod_osc_mag_f'] = quad.lo;
+    if (params['tx_mod_osc_mag_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['tx_mod_osc_mag_f']);
+      transport['SE_tx_mod_osc_mag_f'] = quad.se;
+      transport['HI_tx_mod_osc_mag_f'] = quad.hi;
+      transport['MI_tx_mod_osc_mag_f'] = quad.mi;
+      transport['LO_tx_mod_osc_mag_f'] = quad.lo;
     }
     break;
 
   case 5:
-    if (params['muxin_gain_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['muxin_gain_f']);
-      transport['SE_muxin_gain_f'] = quad.se;
-      transport['HI_muxin_gain_f'] = quad.hi;
-      transport['MI_muxin_gain_f'] = quad.mi;
-      transport['LO_muxin_gain_f'] = quad.lo;
+    if (params['tx_muxin_gain_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['tx_muxin_gain_f']);
+      transport['SE_tx_muxin_gain_f'] = quad.se;
+      transport['HI_tx_muxin_gain_f'] = quad.hi;
+      transport['MI_tx_muxin_gain_f'] = quad.mi;
+      transport['LO_tx_muxin_gain_f'] = quad.lo;
+    }
+
+    if (params['rx_muxin_gain_f'] !== undefined) {
+        var quad = cast_1xdouble_to_4xfloat(params['rx_muxin_gain_f']);
+        transport['SE_rx_muxin_gain_f'] = quad.se;
+        transport['HI_rx_muxin_gain_f'] = quad.hi;
+        transport['MI_rx_muxin_gain_f'] = quad.mi;
+        transport['LO_rx_muxin_gain_f'] = quad.lo;
+      }
+    break;
+
+  case 6:
+    if (params['rx_car_osc_qrg_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['rx_car_osc_qrg_f']);
+      transport['SE_rx_car_osc_qrg_f'] = quad.se;
+      transport['HI_rx_car_osc_qrg_f'] = quad.hi;
+      transport['MI_rx_car_osc_qrg_f'] = quad.mi;
+      transport['LO_rx_car_osc_qrg_f'] = quad.lo;
     }
     break;
 
@@ -996,12 +1056,16 @@ function cast_transport2params(transport)
     params['rb_run'] = transport['rb_run'];
   }
 
-  if (transport['car_osc_modsrc_s'] !== undefined) {
-    params['car_osc_modsrc_s'] = transport['car_osc_modsrc_s'];
+  if (transport['tx_modsrc_s'] !== undefined) {
+    params['tx_modsrc_s'] = transport['tx_modsrc_s'];
   }
 
-  if (transport['car_osc_modtyp_s'] !== undefined) {
-    params['car_osc_modtyp_s'] = transport['car_osc_modtyp_s'];
+  if (transport['tx_modtyp_s'] !== undefined) {
+    params['tx_modtyp_s'] = transport['tx_modtyp_s'];
+  }
+
+  if (transport['rx_modtyp_s'] !== undefined) {
+    params['rx_modtyp_s'] = transport['rx_modtyp_s'];
   }
 
   if (transport['rbled_csp_s'] !== undefined) {
@@ -1016,49 +1080,71 @@ function cast_transport2params(transport)
     params['rfout2_csp_s'] = transport['rfout2_csp_s'];
   }
 
-  if (transport['LO_car_osc_qrg_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_car_osc_qrg_f'];
-    quad.hi = transport['HI_car_osc_qrg_f'];
-    quad.mi = transport['MI_car_osc_qrg_f'];
-    quad.lo = transport['LO_car_osc_qrg_f'];
-    params['car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['rx_muxin_src_s'] !== undefined) {
+    params['rx_muxin_src_s'] = transport['rx_muxin_src_s'];
   }
 
-  if (transport['LO_mod_osc_qrg_f'] !== undefined) {
+  if (transport['LO_tx_car_osc_qrg_f'] !== undefined) {
     var quad = { };
-    quad.se = transport['SE_mod_osc_qrg_f'];
-    quad.hi = transport['HI_mod_osc_qrg_f'];
-    quad.mi = transport['MI_mod_osc_qrg_f'];
-    quad.lo = transport['LO_mod_osc_qrg_f'];
-    params['mod_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
+    quad.se = transport['SE_tx_car_osc_qrg_f'];
+    quad.hi = transport['HI_tx_car_osc_qrg_f'];
+    quad.mi = transport['MI_tx_car_osc_qrg_f'];
+    quad.lo = transport['LO_tx_car_osc_qrg_f'];
+    params['tx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_amp_rf_gain_f'] !== undefined) {
+  if (transport['LO_tx_mod_osc_qrg_f'] !== undefined) {
     var quad = { };
-    quad.se = transport['SE_amp_rf_gain_f'];
-    quad.hi = transport['HI_amp_rf_gain_f'];
-    quad.mi = transport['MI_amp_rf_gain_f'];
-    quad.lo = transport['LO_amp_rf_gain_f'];
-    params['amp_rf_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+    quad.se = transport['SE_tx_mod_osc_qrg_f'];
+    quad.hi = transport['HI_tx_mod_osc_qrg_f'];
+    quad.mi = transport['MI_tx_mod_osc_qrg_f'];
+    quad.lo = transport['LO_tx_mod_osc_qrg_f'];
+    params['tx_mod_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_mod_osc_mag_f'] !== undefined) {
+  if (transport['LO_tx_amp_rf_gain_f'] !== undefined) {
     var quad = { };
-    quad.se = transport['SE_mod_osc_mag_f'];
-    quad.hi = transport['HI_mod_osc_mag_f'];
-    quad.mi = transport['MI_mod_osc_mag_f'];
-    quad.lo = transport['LO_mod_osc_mag_f'];
-    params['mod_osc_mag_f'] = cast_4xfloat_to_1xdouble(quad);
+    quad.se = transport['SE_tx_amp_rf_gain_f'];
+    quad.hi = transport['HI_tx_amp_rf_gain_f'];
+    quad.mi = transport['MI_tx_amp_rf_gain_f'];
+    quad.lo = transport['LO_tx_amp_rf_gain_f'];
+    params['tx_amp_rf_gain_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_muxin_gain_f'] !== undefined) {
+  if (transport['LO_tx_mod_osc_mag_f'] !== undefined) {
     var quad = { };
-    quad.se = transport['SE_muxin_gain_f'];
-    quad.hi = transport['HI_muxin_gain_f'];
-    quad.mi = transport['MI_muxin_gain_f'];
-    quad.lo = transport['LO_muxin_gain_f'];
-    params['muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+    quad.se = transport['SE_tx_mod_osc_mag_f'];
+    quad.hi = transport['HI_tx_mod_osc_mag_f'];
+    quad.mi = transport['MI_tx_mod_osc_mag_f'];
+    quad.lo = transport['LO_tx_mod_osc_mag_f'];
+    params['tx_mod_osc_mag_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
+  if (transport['LO_tx_muxin_gain_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_tx_muxin_gain_f'];
+    quad.hi = transport['HI_tx_muxin_gain_f'];
+    quad.mi = transport['MI_tx_muxin_gain_f'];
+    quad.lo = transport['LO_tx_muxin_gain_f'];
+    params['tx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
+  if (transport['LO_rx_muxin_gain_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_rx_muxin_gain_f'];
+    quad.hi = transport['HI_rx_muxin_gain_f'];
+    quad.mi = transport['MI_rx_muxin_gain_f'];
+    quad.lo = transport['LO_rx_muxin_gain_f'];
+    params['rx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
+  if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_rx_car_osc_qrg_f'];
+    quad.hi = transport['HI_rx_car_osc_qrg_f'];
+    quad.mi = transport['MI_rx_car_osc_qrg_f'];
+    quad.lo = transport['LO_rx_car_osc_qrg_f'];
+    params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
   console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');

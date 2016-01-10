@@ -28,40 +28,40 @@
                                 DDS-Oscillators, multipliers, LED handling are
                                 turned on. The DAC and LEDs are connected to this
                                 sub-module when enabled.
-                     - bit h01: RESET CAR_OSC - '1' resets the CAR_OSC (carrier
+                     - bit h01: RESET TX_CAR_OSC - '1' resets the TX_CAR_OSC (carrier
                                 oscillator) to its initial state like the
                                 accumulating phase register.
-                     - bit h02: RESET MOD_OSC - '1' resets the MOD_OSC (modulation
+                     - bit h02: RESET TX_MOD_OSC - '1' resets the TX_MOD_OSC (modulation
                                 oscillator) to its initial state like the
                                 accumulating phase register.
                      - bit h03: n/a
-                     - bit h04: CAR_OSC RESYNC - '1' stops incrementing the
+                     - bit h04: TX_CAR_OSC RESYNC - '1' stops incrementing the
                                 accumulating phase register. That holds the
                                 oscillator just there, where it is. With '0'
-                                the CAR_OSC resumes operation.
-                     - bit h05: CAR_OSC INC SRC STREAM - '1' places input MUXer for
-                                CAR_OSC DDS increment input to the first streamed
+                                the TX_CAR_OSC resumes operation.
+                     - bit h05: TX_CAR_OSC INC SRC STREAM - '1' places input MUXer for
+                                TX_CAR_OSC DDS increment input to the first streamed
                                 input pipe. '0' places MUXer to registers
-                                "CAR_OSC INC HI" and "CAR_OSC INC LO".
-                     - bit h06: CAR_OSC OFS SRC STREAM - '1' places input MUXer for
-                                CAR_OSC DDS offset input to the first streamed
+                                "TX_CAR_OSC INC HI" and "TX_CAR_OSC INC LO".
+                     - bit h06: TX_CAR_OSC OFS SRC STREAM - '1' places input MUXer for
+                                TX_CAR_OSC DDS offset input to the first streamed
                                 input pipe. '0' places MUXer to registers
-                                "CAR_OSC OFS HI" and "CAR_OSC OFS LO".
+                                "TX_CAR_OSC OFS HI" and "TX_CAR_OSC OFS LO".
                      - bit h0B..h07: n/a
-                     - bit h0C: MOD_OSC RESYNC - '1' stops incrementing the
+                     - bit h0C: TX_MOD_OSC RESYNC - '1' stops incrementing the
                                 accumulating phase register. That holds the
                                 oscillator just there, where it is. With '0' the
-                                CAR_OSC resumes operation.
-                     - bit h0D: MOD_OSC INC SRC STREAM - '1' places input MUXer for
-                                MOD_OSC DDS increment input to the second streamed
+                                TX_CAR_OSC resumes operation.
+                     - bit h0D: TX_MOD_OSC INC SRC STREAM - '1' places input MUXer for
+                                TX_MOD_OSC DDS increment input to the second streamed
                                 input pipe. '0' places MUXer to registers
-                                "MOD_OSC INC HI" and "MOD_OSC INC LO".
-                     - bit h0E: MOD_OSC OFS SRC STREAM - '1' places input MUXer for
-                                MOD_OSC DDS offset input to the second streamed
+                                "TX_MOD_OSC INC HI" and "TX_MOD_OSC INC LO".
+                     - bit h0E: TX_MOD_OSC OFS SRC STREAM - '1' places input MUXer for
+                                TX_MOD_OSC DDS offset input to the second streamed
                                 input pipe. '0' places MUXer to registers
-                                "MOD_OSC OFS HI" and "MOD_OSC OFS LO".
+                                "TX_MOD_OSC OFS HI" and "TX_MOD_OSC OFS LO".
                      - bit h13..h0F: n/a
-                     - bit h14: RF_AMP_Q_EN - '1' enables the CAR_QMIX Q path for
+                     - bit h14: TX_RF_AMP_Q_EN - '1' enables the TX_CAR_QMIX Q path for
                                 the SSB modulation
                      - bit h1F..h15: n/a
 
@@ -75,18 +75,18 @@
                                 shown at the diodes, any other output register
                                 is discarded.
                      - bit h03: n/a
-                     - bit h04: STAT_CAR_OSC_ZERO - '1' CAR_OSC output
+                     - bit h04: STAT_TX_CAR_OSC_ZERO - '1' TX_CAR_OSC output
                                 equals zero. This state is based on the output
                                 of the DDS oscillator itself.
-                     - bit h05: STAT_CAR_OSC_VALID - '1' CAR_OSC output is
+                     - bit h05: STAT_TX_CAR_OSC_VALID - '1' TX_CAR_OSC output is
                                 valid. After turning this sub-module active it
                                 needs some clocks going into valid state.
                      - bit h06: n/a
                      - bit h07: n/a
-                     - bit h08: STAT_MOD_OSC_ZERO - '1' MOD_OSC output equals
+                     - bit h08: STAT_TX_MOD_OSC_ZERO - '1' TX_MOD_OSC output equals
                                 zero. This state is based on the output of the
                                 DDS oscillator itself.
-                     - bit h09: STAT_MOD_OSC_VALID - '1' MOD_OSC output is
+                     - bit h09: STAT_TX_MOD_OSC_VALID - '1' TX_MOD_OSC output is
                                 valid. After turning this sub-module active it
                                 needs some clocks going into valid state.
                      - bit h0A: n/a
@@ -125,144 +125,144 @@
                                       sub-module(s).
                          value = h01  All LEDs are driven off.
                          value = h04  ADC selector input.
-                         value = h05  modulation amplifier input.
-                         value = h06  modulation amplifier output.
-                         value = h08  MOD_QMIX I output at stage 1.
-                         value = h09  MOD_QMIX Q output at stage 1.
-                         value = h0A  MOD_QMIX I output at stage 2.
-                         value = h0B  MOD_QMIX Q output at stage 2.
-                         value = h0C  MOD_QMIX I output at stage 3.
-                         value = h0D  MOD_QMIX Q output at stage 3.
-                         value = h10  lowPass MOD_CIC I output.
-                         value = h11  lowPass MOD_CIC Q output.
-                         value = h12  signal forming MOD_FIR I output.
-                         value = h13  signal forming MOD_FIR Q output.
-                         value = h14  interpolator CAR_CIC I output 41.664 MHz.
-                         value = h15  interpolator CAR_CIC Q output 41.664 MHz.
-                         value = h18  CAR_QMIX I output.
-                         value = h19  CAR_QMIX Q output.
-                         value = h1C  summed-up RF_AMP output.
+                         value = h05  TX modulation amplifier input.
+                         value = h06  TX modulation amplifier output.
+                         value = h08  TX_MOD_QMIX I output at stage 1.
+                         value = h09  TX_MOD_QMIX Q output at stage 1.
+                         value = h0A  TX_MOD_QMIX I output at stage 2.
+                         value = h0B  TX_MOD_QMIX Q output at stage 2.
+                         value = h0C  TX_MOD_QMIX I output at stage 3.
+                         value = h0D  TX_MOD_QMIX Q output at stage 3.
+                         value = h10  lowPass TX_MOD_CIC I output.
+                         value = h11  lowPass TX_MOD_CIC Q output.
+                         value = h12  signal forming TX_MOD_FIR I output.
+                         value = h13  signal forming TX_MOD_FIR Q output.
+                         value = h14  interpolator TX_CAR_CIC I output 41.664 MHz.
+                         value = h15  interpolator TX_CAR_CIC Q output 41.664 MHz.
+                         value = h18  TX_CAR_QMIX I output.
+                         value = h19  TX_CAR_QMIX Q output.
+                         value = h1C  summed-up TX_RF_AMP output.
                          value = h3F  LEDs show test vector, look for current assignments
                                       within the red_pitaya_radiobox.sv file.
                      - bit h0F..h06: n/a
                      - bit h15..h10: RFOUT1 source connection point
                          value = h00  silence.
                          value = h01  silence.
-                         value = h04  MUXIN_MIX in.
-                         value = h05  MOD_ADC in.
-                         value = h06  MOD_ADC out.
-                         value = h08  MOD_QMIX_I output at stage 1.
-                         value = h09  MOD_QMIX_Q output at stage 1.
-                         value = h0A  MOD_QMIX_I output at stage 2.
-                         value = h0B  MOD_QMIX_Q output at stage 2.
-                         value = h0C  MOD_QMIX_I output at stage 3.
-                         value = h0D  MOD_QMIX_Q output at stage 3.
-                         value = h10  low pass MOD_CIC I output.
-                         value = h11  low pass MOD_CIC Q output.
-                         value = h12  signal forming MOD_FIR I output.
-                         value = h13  signal forming MOD_FIR Q output.
-                         value = h14  interpolator CAR_CIC I output 41.664 MHz output.
-                         value = h15  interpolator CAR_CIC Q output 41.664 MHz output.
-                         value = h18  CAR_QMIX_I output.
-                         value = h19  CAR_QMIX_Q output.
-                         value = h1C  RF_AMP output.
+                         value = h04  TX_MUXIN_MIX in.
+                         value = h05  TX_MOD_ADC in.
+                         value = h06  TX_MOD_ADC out.
+                         value = h08  TX_MOD_QMIX_I output at stage 1.
+                         value = h09  TX_MOD_QMIX_Q output at stage 1.
+                         value = h0A  TX_MOD_QMIX_I output at stage 2.
+                         value = h0B  TX_MOD_QMIX_Q output at stage 2.
+                         value = h0C  TX_MOD_QMIX_I output at stage 3.
+                         value = h0D  TX_MOD_QMIX_Q output at stage 3.
+                         value = h10  low pass TX_MOD_CIC I output.
+                         value = h11  low pass TX_MOD_CIC Q output.
+                         value = h12  signal forming TX_MOD_FIR I output.
+                         value = h13  signal forming TX_MOD_FIR Q output.
+                         value = h14  interpolator TX_CAR_CIC I output 41.664 MHz output.
+                         value = h15  interpolator TX_CAR_CIC Q output 41.664 MHz output.
+                         value = h18  TX_CAR_QMIX_I output.
+                         value = h19  TX_CAR_QMIX_Q output.
+                         value = h1C  TX_RF_AMP output.
                          value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
                      - bit h17..h16: n/a
                      - bit h1D..h18: RFOUT2 source connection point
                          value = h00  silence.
                          value = h01  silence.
-                         value = h04  MUXIN_MIX in.
-                         value = h05  MOD_ADC in.
-                         value = h06  MOD_ADC out.
-                         value = h08  MOD_QMIX_I output at stage 1.
-                         value = h09  MOD_QMIX_Q output at stage 1.
-                         value = h0A  MOD_QMIX_I output at stage 2.
-                         value = h0B  MOD_QMIX_Q output at stage 2.
-                         value = h0C  MOD_QMIX_I output at stage 3.
-                         value = h0D  MOD_QMIX_Q output at stage 3.
-                         value = h10  low pass MOD_CIC I output.
-                         value = h11  low pass MOD_CIC Q output.
-                         value = h12  signal forming MOD_FIR I output.
-                         value = h13  signal forming MOD_FIR Q output.
-                         value = h14  interpolator CAR_CIC I output 41.664 MHz output.
-                         value = h15  interpolator CAR_CIC Q output 41.664 MHz output.
-                         value = h18  CAR_QMIX_I output.
-                         value = h19  CAR_QMIX_Q output.
-                         value = h1C  RF_AMP output.
+                         value = h04  TX_MUXIN_MIX in.
+                         value = h05  TX_MOD_ADC in.
+                         value = h06  TX_MOD_ADC out.
+                         value = h08  TX_MOD_QMIX_I output at stage 1.
+                         value = h09  TX_MOD_QMIX_Q output at stage 1.
+                         value = h0A  TX_MOD_QMIX_I output at stage 2.
+                         value = h0B  TX_MOD_QMIX_Q output at stage 2.
+                         value = h0C  TX_MOD_QMIX_I output at stage 3.
+                         value = h0D  TX_MOD_QMIX_Q output at stage 3.
+                         value = h10  low pass TX_MOD_CIC I output.
+                         value = h11  low pass TX_MOD_CIC Q output.
+                         value = h12  signal forming TX_MOD_FIR I output.
+                         value = h13  signal forming TX_MOD_FIR Q output.
+                         value = h14  interpolator TX_CAR_CIC I output 41.664 MHz output.
+                         value = h15  interpolator TX_CAR_CIC Q output 41.664 MHz output.
+                         value = h18  TX_CAR_QMIX_I output.
+                         value = h19  TX_CAR_QMIX_Q output.
+                         value = h1C  TX_RF_AMP output.
                          value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
                      - bit h1F..h1E: n/a
 
 
-    00020  R/W  TX:  RB_CAR_OSC_INC_LO - DDS CAR_OSC, phase increment register
+    00020  R/W  TX:  RB_TX_CAR_OSC_INC_LO - DDS TX_CAR_OSC, phase increment register
                      bit 31..00 (LSB), @ 125 MHz base frequency
-                     - bit h1F..h00: LSB of CAR_OSC phase increment register.
+                     - bit h1F..h00: LSB of TX_CAR_OSC phase increment register.
 
-    00024  R/W  TX:  RB_CAR_OSC_INC_HI - DDS CAR_OSC, phase increment register
+    00024  R/W  TX:  RB_TX_CAR_OSC_INC_HI - DDS TX_CAR_OSC, phase increment register
                      bit 47..32 (MSB), @ 125 MHz base frequency
-                     - bit h0F..h00: MSB of CAR_OSC phase increment register.
+                     - bit h0F..h00: MSB of TX_CAR_OSC phase increment register.
                      - bit h1F..h10: n/a
 
 
-    00028  R/W  TX:  RB_CAR_OSC_OFS_LO - DDS CAR_OSC, phase offset register
+    00028  R/W  TX:  RB_TX_CAR_OSC_OFS_LO - DDS TX_CAR_OSC, phase offset register
                      bit 31..00 (LSB), @ 125 MHz base frequency
-                     - bit h1F..h00: LSB of CAR_OSC phase offset register.
+                     - bit h1F..h00: LSB of TX_CAR_OSC phase offset register.
 
-    0002C  R/W  TX:  RB_CAR_OSC_OFS_HI - DDS CAR_OSC, phase offset register
+    0002C  R/W  TX:  RB_TX_CAR_OSC_OFS_HI - DDS TX_CAR_OSC, phase offset register
                      bit 47..32 (MSB), @ 125 MHz base frequency
-                     - bit h0F..h00: MSB of CAR_OSC phase offset register.
+                     - bit h0F..h00: MSB of TX_CAR_OSC phase offset register.
                      - bit h1F..h10: n/a
 
 
-    00030  R/W  TX:  RB_RF_AMP_GAIN - AMP RF gain register
+    00030  R/W  TX:  RB_TX_RF_AMP_GAIN - TX AMP RF gain register
                      bit 15..00
-                     - bit h0F..h00: SIGNED 16 bit - Amplifier RF gain setting.
+                     - bit h0F..h00: SIGNED 16 bit - TX Amplifier RF gain setting.
                      - bit h1F..h10: n/a
 
-    00038  R/W  TX:  RB_RF_AMP_OFS - AMP RF offset register
+    00038  R/W  TX:  RB_TX_RF_AMP_OFS - TX AMP RF offset register
                      bit 15..00
-                     - bit h0F..h00: SIGNED 16 bit - Amplifier RF offset value.
+                     - bit h0F..h00: SIGNED 16 bit - TX Amplifier RF offset value.
                      - bit h1F..h10: n/a
 
 
-    00040  R/W  TX:  RB_MOD_OSC_INC_LO - DDS MOD_OSC, phase increment register
+    00040  R/W  TX:  RB_TX_MOD_OSC_INC_LO - DDS TX_MOD_OSC, phase increment register
                      bit 31..00 (LSB), @ 125 MHz base frequency
-                     - bit h1F..h00: LSB of MOD_OSC phase increment register.
+                     - bit h1F..h00: LSB of TX_MOD_OSC phase increment register.
 
-    00044  R/W  TX:  RB_MOD_OSC_INC_HI - DDS MOD_OSC, phase increment register
+    00044  R/W  TX:  RB_TX_MOD_OSC_INC_HI - DDS TX_MOD_OSC, phase increment register
                      bit 47..32 (MSB), @ 125 MHz base frequency
-                     - bit h0F..h00: MSB of MOD_OSC phase increment register.
+                     - bit h0F..h00: MSB of TX_MOD_OSC phase increment register.
                      - bit h1F..h10: n/a
 
 
-    00048  R/W  TX:  RB_MOD_OSC_OFS_LO - DDS MOD_OSC, phase offset register
+    00048  R/W  TX:  RB_TX_MOD_OSC_OFS_LO - DDS TX_MOD_OSC, phase offset register
                      bit 31..00 (LSB), @ 125 MHz base frequency
-                     - bit h1F..h00: LSB of MOD_OSC phase offset register.
+                     - bit h1F..h00: LSB of TX_MOD_OSC phase offset register.
 
-    0004C  R/W  TX:  RB_MOD_OSC_OFS_HI - DDS MOD_OSC, phase offset register
+    0004C  R/W  TX:  RB_TX_MOD_OSC_OFS_HI - DDS TX_MOD_OSC, phase offset register
                      bit 47..32 (MSB), @ 125 MHz base frequency
-                     - bit h0F..h00: MSB of CAR_OSC phase offset register.
+                     - bit h0F..h00: MSB of TX_CAR_OSC phase offset register.
                      - bit h1F..h10: n/a
 
 
-    00050  R/W  TX:  RB_MOD_QMIX_GAIN - MOD_QMIX gain setting  (stage 2)
+    00050  R/W  TX:  RB_TX_MOD_QMIX_GAIN - TX_MOD_QMIX gain setting  (stage 2)
                      bit 15..00
-                     - bit h0F..h00: SIGNED 16 bit - MOD_QMIX output amplitude.
+                     - bit h0F..h00: SIGNED 16 bit - TX_MOD_QMIX output amplitude.
                      - bit h1F..h10: n/a
 
 
-    00058  R/W  TX:  RB_MOD_QMIX_OFS_LO - MOD_QMIX offset value  (stage 3)
+    00058  R/W  TX:  RB_TX_MOD_QMIX_OFS_LO - TX_MOD_QMIX offset value  (stage 3)
                      bit 31..00 (LSB)
-                     - bit h1F..h00: LSB of MOD_QMIX offset value.
+                     - bit h1F..h00: LSB of TX_MOD_QMIX offset value.
 
-    0005C  R/W  TX:  RB_MOD_QMIX_OFS_HI - MOD_QMIX offset value  (stage 3)
+    0005C  R/W  TX:  RB_TX_MOD_QMIX_OFS_HI - TX_MOD_QMIX offset value  (stage 3)
                      bit 47..32 (MSB)
-                     - bit h0F..h00: MSB of MOD_QMIX offset value.
+                     - bit h0F..h00: MSB of TX_MOD_QMIX offset value.
                      - bit h1F..h10: n/a
 
 
-    00060  R/W  TX:  RB_MUXIN_SRC - Source signal for the analog input MUXer
+    00060  R/W  TX:  RB_MUXIN_SRC - Source signal for the analog input TX MUXer
                      - bit h05..h00: Source ID
-                         value = h00  no external signal used, MOD_OSC used instead.
+                         value = h00  no external signal used, TX_MOD_OSC used instead.
                          value = h03  Vp_Vn,     mapped to: vin[4].
                          value = h10  XADC CH#0, mapped to: AI1.
                          value = h11  XADC CH#1, mapped to: AI0.
@@ -272,9 +272,9 @@
                          value = h21  ADC1,      mapped to: RF Input 2.
                      - bit h1F..h06: n/a
 
-    00064  R/W  TX:  RB_MUXIN_GAIN - Source signal gain for MUXIN output amplifier
+    00064  R/W  TX:  RB_TX_MUXIN_GAIN - Source signal gain for TX MUXIN output amplifier
                      bit 18..00
-                     - bit h0F..h00: SIGNED 16 bit - MUXIN mixer amplitude.
+                     - bit h0F..h00: SIGNED 16 bit - TX MUXIN mixer amplitude.
                      - bit h12..h10: input booster
                           realized as left shift value: (   7 ..  0)
                           gives amplification of:       (128x .. 1x) .

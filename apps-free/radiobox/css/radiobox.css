@@ -5,7 +5,6 @@
   position:relative;
   z-index:0;
   background:linear-gradient(#004060 20%, #001040 80%);
-  height:800px;
 }
 
 
@@ -42,71 +41,109 @@ select#rbled_csp_s[disabled] {
   background:#707070;
 }
 
-#car_osc_qrg {
+#rx_car_osc_qrg {
   position:relative;
   z-index:1;
 }
-.form-bg-car-osc-qrg {
+.form-bg-rx-car-osc-qrg {
   background:#0040c0;
 }
 
-#amp_rf_gain {
+#rx_muxin_src {
   position:relative;
   z-index:1;
 }
-.form-bg-amp-rf-gain {
-  background:#602000;
-}
-
-#car_osc_modsrc {
-  position:relative;
-  z-index:1;
-}
-.form-bg-car-osc-modsrc {
+.form-bg-rx-muxin-src {
   background:#707040;
 }
 
-#car_osc_modtyp {
+#rx_modtyp {
   position:relative;
   z-index:1;
 }
-.form-bg-car-osc-modtyp {
+.form-bg-rx-modtyp {
   background:#707040;
 }
-select#car_osc_modtyp_s[disabled] {
+select#rx_modtyp_s[disabled] {
   background:#707070;
 }
 
-#mod_osc_qrg {
+#rx_muxin_gain {
   position:relative;
   z-index:1;
 }
-.form-bg-mod-osc-qrg {
-  background:#0040c0;
-}
-input#mod_osc_qrg_f[disabled] {
-  background:#707070;
-}
-
-#mod_osc_mag {
-  position:relative;
-  z-index:1;
-}
-.form-bg-mod-osc-mag {
-  background:#602000;
-}
-input#mod_osc_mag_f[disabled] {
-  background:#707070;
-}
-
-#muxin_gain {
-  position:relative;
-  z-index:1;
-}
-.form-bg-muxin-gain {
+.form-bg-rx-muxin-gain {
   background:#805810;
 }
-input#muxin_gain_f[disabled] {
+input#rx_muxin_gain_f[disabled] {
+  background:#707070;
+}
+
+#tx_car_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-car-osc-qrg {
+  background:#0040c0;
+}
+
+#tx_amp_rf_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-amp-rf-gain {
+  background:#602000;
+}
+
+#tx_modsrc {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-modsrc {
+  background:#707040;
+}
+
+#tx_modtyp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-modtyp {
+  background:#707040;
+}
+select#tx_modtyp_s[disabled] {
+  background:#707070;
+}
+
+#tx_mod_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-mod-osc-qrg {
+  background:#0040c0;
+}
+input#tx_mod_osc_qrg_f[disabled] {
+  background:#707070;
+}
+
+#tx_mod_osc_mag {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-mod-osc-mag {
+  background:#602000;
+}
+input#tx_mod_osc_mag_f[disabled] {
+  background:#707070;
+}
+
+#tx_muxin_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-muxin-gain {
+  background:#805810;
+}
+input#tx_muxin_gain_f[disabled] {
   background:#707070;
 }
 
