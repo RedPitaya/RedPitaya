@@ -9,8 +9,9 @@
 # define paths
 ################################################################################
 
-set path_rtl rtl
+set path_bd  bd
 set path_ip  ip
+set path_rtl rtl
 set path_sdc sdc
 
 ################################################################################
@@ -29,7 +30,10 @@ create_project -part $part -force redpitaya ./project
 source                            $path_ip/system_bd.tcl
 
 # generate SDK files
-generate_target all [get_files    system.bd]
+generate_target all               [get_files system.bd]
+
+# copy fresh system_wrapper.v file to the target directory
+file copy -force                  project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v $path_bd/system/hdl/system_wrapper.v
 
 ################################################################################
 # read files:
@@ -40,7 +44,7 @@ generate_target all [get_files    system.bd]
 
 #read_bd                          [get_files system.bd]
 
-read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
+add_files                         $path_bd/system/hdl/system_wrapper.v
 
 add_files                         $path_rtl/axi_master.v
 add_files                         $path_rtl/axi_pc2leds.v
