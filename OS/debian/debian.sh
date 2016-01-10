@@ -50,7 +50,8 @@ dpkg-reconfigure --frontend=noninteractive tzdata
 
 apt-get -y install openssh-server ca-certificates ntp ntpdate fake-hwclock \
   usbutils psmisc lsof parted curl vim wpasupplicant hostapd isc-dhcp-server \
-  iw firmware-realtek firmware-ralink build-essential ifplugd sudo u-boot-tools
+  iw firmware-realtek firmware-ralink build-essential ifplugd sudo u-boot-tools \
+  nano mc libasound2 alsa-utils
 
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 EOF_CHROOT
