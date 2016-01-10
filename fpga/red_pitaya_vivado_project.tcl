@@ -5,6 +5,7 @@
 # vivado -mode batch -source red_pitaya_vivado_project.tcl
 ################################################################################
 
+
 ################################################################################
 # define paths
 ################################################################################
@@ -14,6 +15,7 @@ set path_ip  ip
 set path_rtl rtl
 set path_sdc sdc
 
+
 ################################################################################
 # setup an in memory project
 ################################################################################
@@ -21,6 +23,7 @@ set path_sdc sdc
 set part xc7z010clg400-1
 
 create_project -part $part -force redpitaya ./project
+
 
 ################################################################################
 # create PS BD (processing system block design)
@@ -34,6 +37,7 @@ generate_target all               [get_files system.bd]
 
 # copy fresh system_wrapper.v file to the target directory
 file copy -force                  project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v $path_bd/system/hdl/system_wrapper.v
+
 
 ################################################################################
 # read files:

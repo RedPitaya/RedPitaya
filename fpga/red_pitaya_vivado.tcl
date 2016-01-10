@@ -50,6 +50,9 @@ source                            $path_ip/system_bd.tcl
 generate_target all               [get_files system.bd]
 write_hwdef    -force -file       $path_sdk/red_pitaya.hwdef
 
+# copy fresh system_wrapper.v file to the target directory
+file copy -force                  .srcs/sources_1/bd/system/hdl/system_wrapper.v $path_bd/system/hdl/system_wrapper.v
+
 
 ################################################################################
 # read files:
@@ -62,7 +65,8 @@ write_hwdef    -force -file       $path_sdk/red_pitaya.hwdef
 #read_verilog                     $path_rtl/...
 
 #read_bd                          [get_files system.bd]
-read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
+
+read_verilog                      $path_bd/system/hdl/system_wrapper.v
 
 read_verilog                      $path_rtl/axi_master.v
 read_verilog                      $path_rtl/axi_pc2leds.v
