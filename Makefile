@@ -113,10 +113,7 @@ export VERSION
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
-# Branch: $(GIT_BRANCH_LOCAL)
-# Build: $(BUILD_NUMBER)
-# Commit: $(GIT_COMMIT)
+# Version: $(VER) SCS
 ##############################################################################
 endef
 export GREET_MSG
