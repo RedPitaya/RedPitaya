@@ -37,7 +37,7 @@ module asg_top #(
   int unsigned TWS = $clog2(TWA)  // external trigger select width
 )(
   // stream output
-  str_bus_if.s                  sto,      // output
+  str_bus_if.s                  sto,
   // triggers
   input  logic        [TWA-1:0] trg_ext,  // external input
   output logic                  trg_swo,  // output from software

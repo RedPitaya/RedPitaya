@@ -257,13 +257,9 @@ red_pitaya_ps ps (
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
    // system read/write channel
-  .bus           (ps_sys),
+  .bus           (ps_sys      ),
   // AXI streams
-  // TODO, handle this bitsize change elsewhere
-  .axi1_tdata  (16'(str_acq[1].dat<<<2)),  .axi0_tdata  (16'(str_acq[0].dat<<<2)),
-  .axi1_tlast  (str_acq[1].lst),  .axi0_tlast  (str_acq[0].lst),
-  .axi1_tvalid (str_acq[1].vld),  .axi0_tvalid (str_acq[0].vld),
-  .axi1_tready (str_acq[1].rdy),  .axi0_tready (str_acq[0].rdy)
+  .sti           (str_acq     )
 );
 
 ////////////////////////////////////////////////////////////////////////////////

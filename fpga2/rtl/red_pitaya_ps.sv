@@ -59,19 +59,16 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // system read/write channel
   sys_bus_if.m           bus,
-  // AXI-4 stream
-  input  logic [2*8-1:0] axi1_tdata , axi0_tdata ,  // stream data
-  input  logic           axi1_tlast , axi0_tlast ,  // stream last
-  input  logic           axi1_tvalid, axi0_tvalid,  // stream valid
-  output logic           axi1_tready, axi0_tready   // stream ready
+  // stream input
+  str_bus_if.d           sti [2-1:0]
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 // AXI SLAVE
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  4-1: 0] fclk_clk             ;
-logic [  4-1: 0] fclk_rstn            ;
+logic [4-1:0] fclk_clk ;
+logic [4-1:0] fclk_rstn;
 
 logic            gp0_maxi_arvalid     ;
 logic            gp0_maxi_awvalid     ;
@@ -269,13 +266,13 @@ system_wrapper system_i (
 //  .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
   .M_AXI_GP0_rdata   (gp0_maxi_rdata  )  // in 32
 //  // AXI-4 streaming interfaces
-//  .S_AXI_STR1_aclk   (clk        ),  .S_AXI_STR0_aclk   (clk        ),
-//  .S_AXI_STR1_arstn  (rstn       ),  .S_AXI_STR0_arstn  (rstn       ),
-//  .S_AXI_STR1_tdata  (axi1_tdata ),  .S_AXI_STR0_tdata  (axi0_tdata ),
+//  .S_AXI_STR1_aclk   (str[1].clk ),  .S_AXI_STR0_aclk   (str[0].clk ),
+//  .S_AXI_STR1_arstn  (str[1].rstn),  .S_AXI_STR0_arstn  (str[0].rstn),
+//  .S_AXI_STR1_tdata  (str[1].dat ),  .S_AXI_STR0_tdata  (str[0].dat ),
 //  .S_AXI_STR1_tkeep  ('1         ),  .S_AXI_STR0_tkeep  ('1         ),
-//  .S_AXI_STR1_tlast  (axi1_tlast ),  .S_AXI_STR0_tlast  (axi0_tlast ),
-//  .S_AXI_STR1_tready (axi1_tready),  .S_AXI_STR0_tready (axi0_tready),
-//  .S_AXI_STR1_tvalid (axi1_tvalid),  .S_AXI_STR0_tvalid (axi0_tvalid)
+//  .S_AXI_STR1_tlast  (str[1].lst ),  .S_AXI_STR0_tlast  (str[0].lst ),
+//  .S_AXI_STR1_tready (str[1].rdy ),  .S_AXI_STR0_tready (str[0].rdy ),
+//  .S_AXI_STR1_tvalid (str[1].vld ),  .S_AXI_STR0_tvalid (str[0].vld )
 );
 
 endmodule
