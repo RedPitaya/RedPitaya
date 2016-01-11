@@ -47,10 +47,10 @@
  */
 
 module axi_slave #(
-  int unsigned AXI_DW =  64        , // data width (8,16,...,1024)
-  int unsigned AXI_AW =  32        , // address width
-  int unsigned AXI_IW =   8        , // ID width
-  int unsigned AXI_SW = AXI_DW >> 3  // sobe width - 1 bit for every data byte
+  int unsigned DW =  64, // data width (8,16,...,1024)
+  int unsigned AW =  32, // address width
+  int unsigned IW =   8, // ID width
+  int unsigned SW = DW >> 3  // select width - 1 bit for every data byte
 )(
   // AXI MM
   axi_bus_if.s axi,
@@ -62,22 +62,22 @@ module axi_slave #(
 //  AXI slave Module
 //---------------------------------------------------------------------------------
 
-logic                ack      ;
-logic [      6-1: 0] ack_cnt  ;
+logic           ack      ;
+logic [ 6-1: 0] ack_cnt  ;
 
-logic                rd_do    ;
-logic [ AXI_IW-1: 0] rd_arid  ;
-logic [ AXI_AW-1: 0] rd_araddr;
-logic                rd_error ;
-logic                rd_errorw;
+logic           rd_do    ;
+logic [IW-1: 0] rd_arid  ;
+logic [AW-1: 0] rd_araddr;
+logic           rd_error ;
+logic           rd_errorw;
 
-logic                wr_do    ;
-logic [ AXI_IW-1: 0] wr_awid  ;
-logic [ AXI_AW-1: 0] wr_awaddr;
-logic [ AXI_IW-1: 0] wr_wid   ;
-logic [ AXI_DW-1: 0] wr_wdata ;
-logic                wr_error ;
-logic                wr_errorw;
+logic           wr_do    ;
+logic [IW-1: 0] wr_awid  ;
+logic [AW-1: 0] wr_awaddr;
+logic [IW-1: 0] wr_wid   ;
+logic [DW-1: 0] wr_wdata ;
+logic           wr_error ;
+logic           wr_errorw;
 
 assign wr_errorw = (axi.AWLEN != 4'h0) || (axi.AWSIZE != 3'b010); // error if write burst and more/less than 4B transfer
 assign rd_errorw = (axi.ARLEN != 4'h0) || (axi.ARSIZE != 3'b010); // error if read burst and more/less than 4B transfer

@@ -73,9 +73,9 @@ logic [4-1:0] fclk_rstn;
 axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
 
 axi_slave #(
-  .AXI_DW     (  32     ), // data width (8,16,...,1024)
-  .AXI_AW     (  32     ), // address width
-  .AXI_IW     (  12     )  // ID width
+  .DW (32),
+  .AW (32),
+  .IW (12)
 ) axi_slave_gp0 (
   // AXI bus
   .axi       (axi_gp),
