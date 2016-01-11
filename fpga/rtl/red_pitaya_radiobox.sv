@@ -920,9 +920,9 @@ rb_dds_48_16_125 i_rb_rx_car_osc (
 
 //wire [ 15:0] rx_mod_qmix_in_gain = regs[REG_RW_RB_RX_MUXIN_GAIN][15:0];
 
-wire [ 15:0] rx_car_qmix_in = regs[REG_RW_RB_RX_MUXIN_SRC] == 1 ?  adc_i[0] :
-                              regs[REG_RW_RB_RX_MUXIN_SRC] == 2 ?  adc_i[1] :
-                                                                   16'b0    ;
+wire [ 15:0] rx_car_qmix_in = regs[REG_RW_RB_RX_MUXIN_SRC] == 1 ?  {~adc_i[0], 2'b0} :
+                              regs[REG_RW_RB_RX_MUXIN_SRC] == 2 ?  {~adc_i[1], 2'b0} :
+                                                                    16'b0            ;
 
 wire [ 31:0] rx_car_qmix_i_out;
 wire [ 31:0] rx_car_qmix_q_out;
@@ -959,43 +959,13 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_Q_dsp48 (
 //---------------------------------------------------------------------------------
 //  RX_CAR_CIC1 sampling rate down convertion 125 MSPS to 5 MSPS
 
-reg          rx_car_cic1_s_vld_i = 'b0;
-wire         rx_car_cic1_s_rdy_i;
 wire [ 31:0] rx_car_cic1_i_out;
 wire         rx_car_cic1_i_vld;
 wire         rx_car_cic1_i_rdy;
 
-reg          rx_car_cic1_s_vld_q = 'b0;
-wire         rx_car_cic1_s_rdy_q;
 wire [ 31:0] rx_car_cic1_q_out;
 wire         rx_car_cic1_q_vld;
 wire         rx_car_cic1_q_rdy;
-
-always @(posedge clk_adc_125mhz)                // assign rx_car_cics_vld_i
-begin
-   if (!rb_clk_en)
-      rx_car_cic1_s_vld_i <= 'b0;
-   else begin
-      if (rx_car_cic1_s_vld_i && rx_car_cic1_s_rdy_i)
-         rx_car_cic1_s_vld_i <= 'b0;            // falling back to non-active state
-
-      if (clk_48khz)                            // trigger able to overwrite rx_car_cic1_s_vld_i
-         rx_car_cic1_s_vld_i <= 'b1;            // entering active state
-      end
-end
-
-always @(posedge clk_adc_125mhz)                // assign rx_car_cic1_s_vld_q
-begin
-   if (!rb_clk_en)
-      rx_car_cic1_s_vld_q <= 'b0;
-   else begin
-      if (rx_car_cic1_s_vld_q && rx_car_cic1_s_rdy_q)
-         rx_car_cic1_s_vld_q <= 'b0;            // falling back to non-active state
-
-      if (clk_48khz)                            // trigger able to overwrite rx_car_cics_vld_q
-         rx_car_cic1_s_vld_q <= 'b1;            // entering active state
-      end
-end
 
 rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_I (
   // global signals
@@ -1004,8 +974,8 @@ rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_I (
   .aresetn              ( rb_reset_n           ),
 
   .s_axis_data_tdata    ( rx_car_qmix_i_out    ),  // RX_CAR_QMIX I
-  .s_axis_data_tvalid   ( rx_car_cic1_s_vld_i  ),
-  .s_axis_data_tready   ( rx_car_cic1_s_rdy_i  ),
+  .s_axis_data_tvalid   ( 1'b1                 ),
+  .s_axis_data_tready   (                      ),
 
   .m_axis_data_tdata    ( rx_car_cic1_i_out    ),  // RX_CAR_CIC1 output I
   .m_axis_data_tvalid   ( rx_car_cic1_i_vld    ),
@@ -1020,8 +990,8 @@ rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_Q (
   .aresetn              ( rb_reset_n           ),
 
   .s_axis_data_tdata    ( rx_car_qmix_q_out    ),  // RX_CAR_QMIX Q
-  .s_axis_data_tvalid   ( rx_car_cic1_s_vld_q  ),
-  .s_axis_data_tready   ( rx_car_cic1_s_rdy_q  ),
+  .s_axis_data_tvalid   ( 1'b1                 ),
+  .s_axis_data_tready   (                      ),
 
   .m_axis_data_tdata    ( rx_car_cic1_q_out    ),  // RX_CAR_CIC1 output Q
   .m_axis_data_tvalid   ( rx_car_cic1_q_vld    ),

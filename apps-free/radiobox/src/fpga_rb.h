@@ -548,6 +548,15 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t tx_muxin_gain;
 
 
+    /** @brief  Placeholder for addr: 0x40600068 .. 0x406000FC
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_068To0fc[((0x0fc - 0x068) >> 2) + 1];
+
+
+
     /* RX section */
 
     /** @brief  Placeholder for addr: 0x40600100
@@ -749,12 +758,13 @@ typedef struct fpga_rb_reg_mem_s {
      /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
       *
       * bit h1F..h00: value.
-      *   value = h00  RF Input 1.
-      *   value = h01  RF Input 2.
-      *   value > h01  (undefined)
+      *   value = h00  off.
+      *   value = h01  RF Input 1.
+      *   value = h02  RF Input 2.
+      *   value > h02  (undefined)
       *
       */
-     uint32_t rx_mux_src;
+     uint32_t rx_muxin_src;
 
      /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
       *
@@ -763,7 +773,7 @@ typedef struct fpga_rb_reg_mem_s {
       * bit h1F..h10: n/a
       *
       */
-     uint32_t rx_mux_gain;
+     uint32_t rx_muxin_gain;
 
 } fpga_rb_reg_mem_t;
 
@@ -896,6 +906,28 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_
  * @param[in]  tx_muxin_gain Slider value between 0 and 100 for the MUXIN range slider. 50 means amplification of 1:1, 0 and 100 full scale, logarithmic.
  */
 void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain);
+
+/**
+ * @brief Calculates and programs the FPGA RX_CAR_OSC for SSB, AM and FM
+ *
+ * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
+ */
+void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(double rx_car_osc_qrg);
+
+/**
+ * @brief Calculates and programs the FPGA RX_MOD_OSC for SSB, AM and FM
+ *
+ * @param[in]  rx_mod_osc_qrg   Frequency for RX_MOD_OSC in Hz.
+ */
+void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(double rx_mod_osc_qrg);
+
+/**
+ * @brief Calculates and programs the FPGA RX_MOD_ADD mixer
+ *
+ * @param[in]  tx_amp_rf_gain  gain between 0% .. 100%.
+ * @param[in]  tx_amp_rf_ofs   Vpp amplitude in mV.
+ */
+void fpga_rb_set_rx_mod_add_gain_ofs__4mod_all(double rx_mod_add_gain, double rx_mod_add_ofs);
 
 
 #if 0
