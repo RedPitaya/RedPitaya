@@ -162,6 +162,7 @@ assign FCLK_RESET3_N = rstn;
 // AMBA AXI-4 GP bus
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 //     M_AXI_GP0_ACLK   ,
 assign M_AXI_GP0_araddr  = '0;
 assign M_AXI_GP0_arburst = '0;
@@ -201,6 +202,56 @@ assign M_AXI_GP0_wlast   = '0;
 //     M_AXI_GP0_wready ,
 assign M_AXI_GP0_wstrb   = '0;
 assign M_AXI_GP0_wvalid  = '0;
+*/
+
+axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
+
+assign axi_gp.ACLK    = M_AXI_GP0_ACLK    ;
+assign axi_gp.ARESETn = S_AXI_STR0_arstn  ;
+assign                  M_AXI_GP0_araddr  = axi_gp.ARADDR ;
+assign                  M_AXI_GP0_arburst = axi_gp.ARBURST;
+assign                  M_AXI_GP0_arcache = axi_gp.ARCACHE;
+assign                  M_AXI_GP0_arid    = axi_gp.ARID   ;
+assign                  M_AXI_GP0_arlen   = axi_gp.ARLEN  ;
+assign                  M_AXI_GP0_arlock  = axi_gp.ARLOCK ;
+assign                  M_AXI_GP0_arprot  = axi_gp.ARPROT ;
+assign                  M_AXI_GP0_arqos   = axi_gp.ARQOS  ;
+assign                  M_AXI_GP0_arsize  = axi_gp.ARSIZE ;
+assign                  M_AXI_GP0_arvalid = axi_gp.ARVALID;
+assign axi_gp.ARREADY = M_AXI_GP0_arready ;
+
+assign                  M_AXI_GP0_awaddr  = axi_gp.AWADDR ;
+assign                  M_AXI_GP0_awburst = axi_gp.AWBURST;
+assign                  M_AXI_GP0_awcache = axi_gp.AWCACHE;
+assign                  M_AXI_GP0_awid    = axi_gp.AWID   ;
+assign                  M_AXI_GP0_awlen   = axi_gp.AWLEN  ;
+assign                  M_AXI_GP0_awlock  = axi_gp.AWLOCK ;
+assign                  M_AXI_GP0_awprot  = axi_gp.AWPROT ;
+assign                  M_AXI_GP0_awqos   = axi_gp.AWQOS  ;
+assign                  M_AXI_GP0_awsize  = axi_gp.AWSIZE ;
+assign                  M_AXI_GP0_awvalid = axi_gp.AWVALID;
+assign axi_gp.AWREADY = M_AXI_GP0_awready ;
+
+assign axi_gp.BID     = M_AXI_GP0_bid     ;
+assign axi_gp.BRESP   = M_AXI_GP0_bresp   ;
+assign axi_gp.BVALID  = M_AXI_GP0_bvalid  ;
+assign                  M_AXI_GP0_bready  = axi_gp.BREADY ;
+
+assign axi_gp.RDATA   = M_AXI_GP0_rdata   ;
+assign axi_gp.RID     = M_AXI_GP0_rid     ;
+assign axi_gp.RLAST   = M_AXI_GP0_rlast   ;
+assign axi_gp.RRESP   = M_AXI_GP0_rresp   ;
+assign axi_gp.RVALID  = M_AXI_GP0_rvalid  ;
+assign                  M_AXI_GP0_rready  = axi_gp.RREADY;
+
+assign                  M_AXI_GP0_wdata   = axi_gp.WDATA ;
+assign                  M_AXI_GP0_wid     = axi_gp.WID   ;
+assign                  M_AXI_GP0_wlast   = axi_gp.WLAST ;
+assign                  M_AXI_GP0_wstrb   = axi_gp.WSTRB ;
+assign                  M_AXI_GP0_wvalid  = axi_gp.WVALID;
+assign axi_gp.WREADY  = M_AXI_GP0_wready  ;
+
+axi_bus_model #(.AW (32), .DW (32), .IW (12), .LW ( 4)) axi_bus_model (axi_gp);
 
 ////////////////////////////////////////////////////////////////////////////////
 // AMBA AXI-4 HP bus
