@@ -57,6 +57,8 @@ logic          RVALID  ;
 logic          RREADY  ;
 
 modport m (
+  input  ACLK    ,
+  input  ARESETn ,
   output AWID    ,
   output AWADDR  ,
   output AWREGION,
@@ -69,6 +71,7 @@ modport m (
   output AWQOS   ,
   output AWVALID ,
   input  AWREADY ,
+  output WID     ,
   output WDATA   ,
   output WSTRB   ,
   output WLAST   ,
@@ -99,6 +102,8 @@ modport m (
 );
 
 modport s (
+  input  ACLK    ,
+  input  ARESETn ,
   input  AWID    ,
   input  AWADDR  ,
   input  AWREGION,
@@ -111,6 +116,7 @@ modport s (
   input  AWQOS   ,
   input  AWVALID ,
   output AWREADY ,
+  input  WID     ,
   input  WDATA   ,
   input  WSTRB   ,
   input  WLAST   ,

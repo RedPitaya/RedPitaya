@@ -77,59 +77,10 @@ axi_slave #(
   .AXI_AW     (  32     ), // address width
   .AXI_IW     (  12     )  // ID width
 ) axi_slave_gp0 (
-  // global signals
-  .axi_clk_i        (axi_gp.ACLK   ),
-  .axi_rstn_i       (axi_gp.ARESETn),
-  // axi write address channel
-  .axi_awid_i       (axi_gp.AWID   ),
-  .axi_awaddr_i     (axi_gp.AWADDR ),
-  .axi_awlen_i      (axi_gp.AWLEN  ),
-  .axi_awsize_i     (axi_gp.AWSIZE ),
-  .axi_awburst_i    (axi_gp.AWBURST),
-  .axi_awlock_i     (axi_gp.AWLOCK ),
-  .axi_awcache_i    (axi_gp.AWCACHE),
-  .axi_awprot_i     (axi_gp.AWPROT ),
-  .axi_awvalid_i    (axi_gp.AWVALID),
-  .axi_awready_o    (axi_gp.AWREADY),
-  // axi write data channel
-  .axi_wid_i        (axi_gp.WID    ),
-  .axi_wdata_i      (axi_gp.WDATA  ),
-  .axi_wstrb_i      (axi_gp.WSTRB  ),
-  .axi_wlast_i      (axi_gp.WLAST  ),
-  .axi_wvalid_i     (axi_gp.WVALID ),
-  .axi_wready_o     (axi_gp.WREADY ),
-  // axi write response channel
-  .axi_bid_o        (axi_gp.BID    ),
-  .axi_bresp_o      (axi_gp.BRESP  ),
-  .axi_bvalid_o     (axi_gp.BVALID ),
-  .axi_bready_i     (axi_gp.BREADY ),
-  // axi read address channel
-  .axi_arid_i       (axi_gp.ARID   ),
-  .axi_araddr_i     (axi_gp.ARADDR ),
-  .axi_arlen_i      (axi_gp.ARLEN  ),
-  .axi_arsize_i     (axi_gp.ARSIZE ),
-  .axi_arburst_i    (axi_gp.ARBURST),
-  .axi_arlock_i     (axi_gp.ARLOCK ),
-  .axi_arcache_i    (axi_gp.ARCACHE),
-  .axi_arprot_i     (axi_gp.ARPROT ),
-  .axi_arvalid_i    (axi_gp.ARVALID),
-  .axi_arready_o    (axi_gp.ARREADY),
-  // axi read data channel
-  .axi_rid_o        (axi_gp.RID    ),
-  .axi_rdata_o      (axi_gp.RDATA  ),
-  .axi_rresp_o      (axi_gp.RRESP  ),
-  .axi_rlast_o      (axi_gp.RLAST  ),
-  .axi_rvalid_o     (axi_gp.RVALID ),
-  .axi_rready_i     (axi_gp.RREADY ),
+  // AXI bus
+  .axi       (axi_gp),
   // system read/write channel
-  .sys_addr_o       (bus.addr ),
-  .sys_wdata_o      (bus.wdata),
-  .sys_sel_o        (         ),
-  .sys_wen_o        (bus.wen  ),
-  .sys_ren_o        (bus.ren  ),
-  .sys_rdata_i      (bus.rdata),
-  .sys_err_i        (bus.err  ),
-  .sys_ack_i        (bus.ack  )
+  .bus       (bus)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,10 +89,7 @@ axi_slave #(
 
 assign fclk_rstn_o = fclk_rstn;
 
-BUFG i_fclk0_buf  (.O(fclk_clk_o[0]), .I(fclk_clk[0]));
-BUFG i_fclk1_buf  (.O(fclk_clk_o[1]), .I(fclk_clk[1]));
-BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
-BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
+BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
 
 system_wrapper system_i (
   // MIO
