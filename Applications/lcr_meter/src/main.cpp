@@ -43,7 +43,7 @@ CFloatParameter lcr_ResAvg("LCR_R_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 1e6);
 CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
 
-CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, false, 0);
+CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, true, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
 CIntParameter   toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, 0, 0, 0, 4);
 CIntParameter   relativeMode("LCR_RELATIVE", CBaseParameter::RW, 0, 0, 0, 4);
