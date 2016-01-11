@@ -49,7 +49,7 @@ CIntParameter   toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, 0, 0, 0, 4);
 CIntParameter   relativeMode("LCR_RELATIVE", CBaseParameter::RW, 0, 0, 0, 4);
 CFloatParameter relSavedZ("LCR_REL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CFloatParameter tolSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
-CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, false, 0);
+CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, true, 0);
 
 CIntParameter   rangeMode("LCR_RANGE", CBaseParameter::RW, 0, 0, 0, 4);
 CIntParameter   rangeFormat("LCR_RANGE_F", CBaseParameter::RW, 0, 0, 0, 3);
@@ -129,8 +129,6 @@ void UpdateParams(void){
 			lcr_C_precision.Value() = 0;
 			lcr_Capacitance.Update();
 		}
-
-		syslog(LOG_INFO, "CAPC: %.20f\n", data->lcr_C);
 
 		lcr_amplitude.Value()       = data->lcr_amplitude;	
 		lcr_phase.Value()     		= data->lcr_phase;

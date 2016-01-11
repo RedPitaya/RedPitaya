@@ -401,7 +401,10 @@ $(function() {
 			LCR.selected_meas = 4;
 		}
 
-		LCR.params.local['LCR_RANGE'] = { value: LCR.selected_meas };
+		//Disable manual model when switching quantities
+		LCR.params.local['LCR_RANGE'] = { value: 0 };
+		$('#cb_manual').prop("checked", false);
+		$('#cb_auto').prop("checked", true);
 
 		if(LCR.params.orig['LCR_TOLERANCE'].value != 0){
 			LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
@@ -410,9 +413,6 @@ $(function() {
 		if(LCR.params.orig['LCR_RELATIVE'].value != 0){
 			LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
 		}
-
-		console.log(LCR.params.orig['LCR_RELATIVE'].value);
-		console.log(LCR.params.orig['LCR_TOLERANCE'].value);
 
 		LCR.data_log.prim_display = this.id;
 		LCR.sendParams();
