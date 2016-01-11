@@ -207,11 +207,16 @@
 				&& new_params['LCR_RUN'].value == true){
 
 				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params[param_name].value)) / ((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
+				
+				formatRangeAuto(false, null,null, new_params['LCR_TOL_SAVED'].value);
+				var units = LCR.displ_params.p_units;
+				var data = LCR.displ_params.prim_val;
 
 				if( Math.abs(diff) > 1 && Math.abs(diff) < 100){
+					LCR.disp	
 					$('#lb_sec_displ').empty().append(Math.round(diff) + "%");
-					$('#lb_prim_displ').empty().append(Math.round(new_params[param_name].value * 100) / 100);
-					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_base_u);
+					$('#lb_prim_displ').empty().append(data);
+					$('#lb_prim_displ_units').empty().append(units);
 				}else if(Math.abs(diff) > 100){
 					$('#lb_sec_displ').empty().append("100%>");
 					$('#lb_prim_displ').empty().append("100%>");
@@ -219,8 +224,8 @@
 					$('#lb_sec_displ_units').empty();
 				}else{
 					$('#lb_sec_displ').empty().append("0%");
-					$('#lb_prim_displ').empty().append(Math.round(new_params['LCR_TOL_SAVED'].value * 100) / 100);
-					$('#lb_prim_displ_units').empty().append(LCR.displ_params.p_base_u);
+					$('#lb_prim_displ').empty().append(data);
+					$('#lb_prim_displ_units').empty().append(units);
 				}
 				console.log("selected_meas: "  + LCR.selected_meas);
 				console.log("Saved val: " + new_params['LCR_TOL_SAVED'].value);
@@ -401,7 +406,7 @@ $(function() {
 			LCR.selected_meas = 4;
 		}
 
-		//Disable manual model when switching quantities
+		//Disable manual model, when switching quantities
 		LCR.params.local['LCR_RANGE'] = { value: 0 };
 		$('#cb_manual').prop("checked", false);
 		$('#cb_auto').prop("checked", true);
