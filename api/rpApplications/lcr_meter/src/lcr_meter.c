@@ -117,7 +117,7 @@ int lcr_SetDefaultValues(){
 	EXEC_CHECK(lcr_SetMeasRangeMode(0));
 	EXEC_CHECK(lcr_SetRangeFormat(0));
 	EXEC_CHECK(lcr_SetRangeUnits(0));
-	EXEC_CHECK(lcr_SetMeasSeries(false));
+	EXEC_CHECK(lcr_SetMeasSeries(true));
 	return RP_OK;
 }
 
@@ -440,6 +440,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured){
 		C_out = -1 / (w_out * X_s);
 		L_out = X_s / w_out;
 		ESR_out = R_out;
+	/* Parallel mode */
 	}else{
 		R_out = 1 / G_p;
 		C_out = B_p / w_out;
