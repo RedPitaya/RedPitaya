@@ -1,0 +1,109 @@
+make -C src
+make[1]: Entering directory `/home/user/work/redpitaya-edu.git-master_dev_ru/Applications/scopegenpro/src'
+arm-linux-gnueabihf-g++ -c -Wall -fPIC -lstdc++ -Os -s -std=c++11 -I../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk -I../../../api/rpApplications/src/ -I../../../api/rpbase/src/ -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson main.cpp -o main.o
+In file included from ../../../Bazaar/tools/libjson/libjson.h:4:0,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/BaseParameter.h:3,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/DataManager.h:4,
+                 from main.h:4,
+                 from main.cpp:1:
+../../../Bazaar/tools/libjson/_internal/Source/JSONDefs.h:69:6: warning: #warning , Using -ansi GCC option, but JSON_ISO_STRICT not on, turning it on for you [-Wcpp]
+     #warning, Using -ansi GCC option, but JSON_ISO_STRICT not on, turning it on for you
+      ^
+../../../Bazaar/tools/libjson/_internal/Source/JSONDefs.h:157:6: warning: #warning , Release build of libjson, but NDEBUG is not on [-Wcpp]
+     #warning, Release build of libjson, but NDEBUG is not on
+      ^
+In file included from ../../../Bazaar/tools/libjson/_internal/Source/internalJSONNode.h:11:0,
+                 from ../../../Bazaar/tools/libjson/_internal/Source/JSONNode.h:5,
+                 from ../../../Bazaar/tools/libjson/libjson.h:177,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/BaseParameter.h:3,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/DataManager.h:4,
+                 from main.h:4,
+                 from main.cpp:1:
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h: In constructor 'json_shared_string::json_shared_string()':
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h:297:17: warning: 'json_shared_string::len' will be initialized after [-Wreorder]
+  mutable size_t len PACKED(20);
+                 ^
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h:295:40: warning:   'json_shared_string::json_shared_string_internal* json_shared_string::_str' [-Wreorder]
+  mutable json_shared_string_internal * _str;
+                                        ^
+In file included from ../../../Bazaar/tools/libjson/_internal/Source/internalJSONNode.h:11:0,
+                 from ../../../Bazaar/tools/libjson/_internal/Source/JSONNode.h:5,
+                 from ../../../Bazaar/tools/libjson/libjson.h:177,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/BaseParameter.h:3,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/DataManager.h:4,
+                 from main.h:4,
+                 from main.cpp:1:
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h:180:9: warning:   when initialized here [-Wreorder]
+  inline json_shared_string(void) : offset(0), len(0), _str(new(json_malloc<json_shared_string_internal>(1)) json_shared_string_internal(json_global(EMPTY_JSON_STRING))) {}
+         ^
+In file included from ../../../Bazaar/tools/libjson/_internal/Source/internalJSONNode.h:11:0,
+                 from ../../../Bazaar/tools/libjson/_internal/Source/JSONNode.h:5,
+                 from ../../../Bazaar/tools/libjson/libjson.h:177,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/BaseParameter.h:3,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/DataManager.h:4,
+                 from main.h:4,
+                 from main.cpp:1:
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h: In constructor 'json_shared_string::json_shared_string(const json_string&)':
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h:297:17: warning: 'json_shared_string::len' will be initialized after [-Wreorder]
+  mutable size_t len PACKED(20);
+                 ^
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h:295:40: warning:   'json_shared_string::json_shared_string_internal* json_shared_string::_str' [-Wreorder]
+  mutable json_shared_string_internal * _str;
+                                        ^
+../../../Bazaar/tools/libjson/_internal/Source/JSONSharedString.h:182:9: warning:   when initialized here [-Wreorder]
+  inline json_shared_string(const json_string & str) : offset(0), len(str.length()), _str(new(json_malloc<json_shared_string_internal>(1)) json_shared_string_internal(str)) {}
+         ^
+main.cpp: In function 'void UpdateParams()':
+main.cpp:283:16: warning: unused variable 'totalVirtualMem' [-Wunused-variable]
+      long long totalVirtualMem = memInfo.totalram;
+                ^
+main.cpp:338:17: warning: comparison between 'enum rp_channel_t' and 'enum rpApp_osc_trig_source_t' [-Wenum-compare]
+  if (channel == RPAPP_OSC_TRIG_SRC_CH1)
+                 ^
+main.cpp:340:22: warning: comparison between 'enum rp_channel_t' and 'enum rpApp_osc_trig_source_t' [-Wenum-compare]
+  else if (channel == RPAPP_OSC_TRIG_SRC_CH2)
+                      ^
+main.cpp:333:8: warning: unused variable 'trigg_level' [-Wunused-variable]
+  float trigg_level;
+        ^
+main.cpp: In function 'int synthesis_rampUp(CFloatSignal*, float, float, float, float, float)':
+main.cpp:919:31: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     for(int unsigned i = 0; i < signal->GetSize() - 1; i++) {
+                               ^
+main.cpp: In function 'int synthesis_rampDown(CFloatSignal*, float, float, float, float, float)':
+main.cpp:932:31: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     for(int unsigned i = 0; i < signal->GetSize() - 1; i++) {
+                               ^
+In file included from ../../../Bazaar/tools/libjson/_internal/Source/JSON_Base64.h:7:0,
+                 from ../../../Bazaar/tools/libjson/_internal/Source/JSONNode.h:10,
+                 from ../../../Bazaar/tools/libjson/libjson.h:177,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/BaseParameter.h:3,
+                 from ../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/DataManager.h:4,
+                 from main.h:4,
+                 from main.cpp:1:
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h: In instantiation of 'libbase64_boundChecker<T>::libbase64_boundChecker(const T*, const T*) [with T = unsigned char]':
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:119:3:   required from 'STRINGTYPE libbase64::encode(const unsigned char*, size_t) [with STRINGTYPE = std::basic_string<char>; CHARTYPE = char; UCHARTYPE = unsigned char; bool SAFETY = true; size_t = unsigned int]'
+../../../Bazaar/tools/libjson/_internal/Source/JSON_Base64.h:19:89:   required from here
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:33:13: warning: 'libbase64_boundChecker<unsigned char>::upperbound' will be initialized after [-Wreorder]
+   const T * upperbound;
+             ^
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:32:13: warning:   'const unsigned char* libbase64_boundChecker<unsigned char>::lowerbound' [-Wreorder]
+   const T * lowerbound;
+             ^
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:25:3: warning:   when initialized here [-Wreorder]
+   libbase64_boundChecker(const T * lbound, const T * ubound) : upperbound(ubound), lowerbound(lbound){};
+   ^
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h: In instantiation of 'libbase64_boundChecker<T>::libbase64_boundChecker(const T*, const T*) [with T = char]':
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:229:3:   required from 'std::string libbase64::decode(const STRINGTYPE&) [with STRINGTYPE = std::basic_string<char>; CHARTYPE = char; UCHARTYPE = unsigned char; bool SAFETY = true; std::string = std::basic_string<char>]'
+../../../Bazaar/tools/libjson/_internal/Source/JSON_Base64.h:27:83:   required from here
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:33:13: warning: 'libbase64_boundChecker<char>::upperbound' will be initialized after [-Wreorder]
+   const T * upperbound;
+             ^
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:32:13: warning:   'const char* libbase64_boundChecker<char>::lowerbound' [-Wreorder]
+   const T * lowerbound;
+             ^
+../../../Bazaar/tools/libjson/_internal/Source/../Dependencies/libbase64++/libbase64++.h:25:3: warning:   when initialized here [-Wreorder]
+   libbase64_boundChecker(const T * lbound, const T * ubound) : upperbound(ubound), lowerbound(lbound){};
+   ^
+arm-linux-gnueabihf-g++ main.o -o ../controllerhf.so -shared -Wall -fPIC -lstdc++ -Os -s -L../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk/lib -Wl,--whole-archive -L../../../Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk -lrp_sdk -L../../../api/lib -lrpapp -lrp -Wl,--no-whole-archive
+make[1]: Leaving directory `/home/user/work/redpitaya-edu.git-master_dev_ru/Applications/scopegenpro/src'
