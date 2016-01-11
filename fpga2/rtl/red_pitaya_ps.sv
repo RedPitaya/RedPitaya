@@ -70,46 +70,7 @@ module red_pitaya_ps (
 logic [4-1:0] fclk_clk ;
 logic [4-1:0] fclk_rstn;
 
-logic            gp0_maxi_arvalid     ;
-logic            gp0_maxi_awvalid     ;
-logic            gp0_maxi_bready      ;
-logic            gp0_maxi_rready      ;
-logic            gp0_maxi_wlast       ;
-logic            gp0_maxi_wvalid      ;
-logic [ 12-1: 0] gp0_maxi_arid        ;
-logic [ 12-1: 0] gp0_maxi_awid        ;
-logic [ 12-1: 0] gp0_maxi_wid         ;
-logic [  2-1: 0] gp0_maxi_arburst     ;
-logic [  2-1: 0] gp0_maxi_arlock      ;
-logic [  3-1: 0] gp0_maxi_arsize      ;
-logic [  2-1: 0] gp0_maxi_awburst     ;
-logic [  2-1: 0] gp0_maxi_awlock      ;
-logic [  3-1: 0] gp0_maxi_awsize      ;
-logic [  3-1: 0] gp0_maxi_arprot      ;
-logic [  3-1: 0] gp0_maxi_awprot      ;
-logic [ 32-1: 0] gp0_maxi_araddr      ;
-logic [ 32-1: 0] gp0_maxi_awaddr      ;
-logic [ 32-1: 0] gp0_maxi_wdata       ;
-logic [  4-1: 0] gp0_maxi_arcache     ;
-logic [  4-1: 0] gp0_maxi_arlen       ;
-logic [  4-1: 0] gp0_maxi_arqos       ;
-logic [  4-1: 0] gp0_maxi_awcache     ;
-logic [  4-1: 0] gp0_maxi_awlen       ;
-logic [  4-1: 0] gp0_maxi_awqos       ;
-logic [  4-1: 0] gp0_maxi_wstrb       ;
-logic            gp0_maxi_aclk        ;
-logic            gp0_maxi_arready     ;
-logic            gp0_maxi_awready     ;
-logic            gp0_maxi_bvalid      ;
-logic            gp0_maxi_rlast       ;
-logic            gp0_maxi_rvalid      ;
-logic            gp0_maxi_wready      ;
-logic [ 12-1: 0] gp0_maxi_bid         ;
-logic [ 12-1: 0] gp0_maxi_rid         ;
-logic [  2-1: 0] gp0_maxi_bresp       ;
-logic [  2-1: 0] gp0_maxi_rresp       ;
-logic [ 32-1: 0] gp0_maxi_rdata       ;
-logic            gp0_maxi_arstn       ;
+axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
 
 axi_slave #(
   .AXI_DW     (  32     ), // data width (8,16,...,1024)
@@ -117,49 +78,49 @@ axi_slave #(
   .AXI_IW     (  12     )  // ID width
 ) axi_slave_gp0 (
   // global signals
-  .axi_clk_i        (gp0_maxi_aclk   ),  // global clock
-  .axi_rstn_i       (gp0_maxi_arstn  ),  // global reset
+  .axi_clk_i        (axi_gp.ACLK   ),
+  .axi_rstn_i       (axi_gp.ARESETn),
   // axi write address channel
-  .axi_awid_i       (gp0_maxi_awid   ),  // write address ID
-  .axi_awaddr_i     (gp0_maxi_awaddr ),  // write address
-  .axi_awlen_i      (gp0_maxi_awlen  ),  // write burst length
-  .axi_awsize_i     (gp0_maxi_awsize ),  // write burst size
-  .axi_awburst_i    (gp0_maxi_awburst),  // write burst type
-  .axi_awlock_i     (gp0_maxi_awlock ),  // write lock type
-  .axi_awcache_i    (gp0_maxi_awcache),  // write cache type
-  .axi_awprot_i     (gp0_maxi_awprot ),  // write protection type
-  .axi_awvalid_i    (gp0_maxi_awvalid),  // write address valid
-  .axi_awready_o    (gp0_maxi_awready),  // write ready
+  .axi_awid_i       (axi_gp.AWID   ),
+  .axi_awaddr_i     (axi_gp.AWADDR ),
+  .axi_awlen_i      (axi_gp.AWLEN  ),
+  .axi_awsize_i     (axi_gp.AWSIZE ),
+  .axi_awburst_i    (axi_gp.AWBURST),
+  .axi_awlock_i     (axi_gp.AWLOCK ),
+  .axi_awcache_i    (axi_gp.AWCACHE),
+  .axi_awprot_i     (axi_gp.AWPROT ),
+  .axi_awvalid_i    (axi_gp.AWVALID),
+  .axi_awready_o    (axi_gp.AWREADY),
   // axi write data channel
-  .axi_wid_i        (gp0_maxi_wid    ),  // write data ID
-  .axi_wdata_i      (gp0_maxi_wdata  ),  // write data
-  .axi_wstrb_i      (gp0_maxi_wstrb  ),  // write strobes
-  .axi_wlast_i      (gp0_maxi_wlast  ),  // write last
-  .axi_wvalid_i     (gp0_maxi_wvalid ),  // write valid
-  .axi_wready_o     (gp0_maxi_wready ),  // write ready
+  .axi_wid_i        (axi_gp.WID    ),
+  .axi_wdata_i      (axi_gp.WDATA  ),
+  .axi_wstrb_i      (axi_gp.WSTRB  ),
+  .axi_wlast_i      (axi_gp.WLAST  ),
+  .axi_wvalid_i     (axi_gp.WVALID ),
+  .axi_wready_o     (axi_gp.WREADY ),
   // axi write response channel
-  .axi_bid_o        (gp0_maxi_bid    ),  // write response ID
-  .axi_bresp_o      (gp0_maxi_bresp  ),  // write response
-  .axi_bvalid_o     (gp0_maxi_bvalid ),  // write response valid
-  .axi_bready_i     (gp0_maxi_bready ),  // write response ready
+  .axi_bid_o        (axi_gp.BID    ),
+  .axi_bresp_o      (axi_gp.BRESP  ),
+  .axi_bvalid_o     (axi_gp.BVALID ),
+  .axi_bready_i     (axi_gp.BREADY ),
   // axi read address channel
-  .axi_arid_i       (gp0_maxi_arid   ),  // read address ID
-  .axi_araddr_i     (gp0_maxi_araddr ),  // read address
-  .axi_arlen_i      (gp0_maxi_arlen  ),  // read burst length
-  .axi_arsize_i     (gp0_maxi_arsize ),  // read burst size
-  .axi_arburst_i    (gp0_maxi_arburst),
-  .axi_arlock_i     (gp0_maxi_arlock ),
-  .axi_arcache_i    (gp0_maxi_arcache),
-  .axi_arprot_i     (gp0_maxi_arprot ),
-  .axi_arvalid_i    (gp0_maxi_arvalid),
-  .axi_arready_o    (gp0_maxi_arready),
+  .axi_arid_i       (axi_gp.ARID   ),
+  .axi_araddr_i     (axi_gp.ARADDR ),
+  .axi_arlen_i      (axi_gp.ARLEN  ),
+  .axi_arsize_i     (axi_gp.ARSIZE ),
+  .axi_arburst_i    (axi_gp.ARBURST),
+  .axi_arlock_i     (axi_gp.ARLOCK ),
+  .axi_arcache_i    (axi_gp.ARCACHE),
+  .axi_arprot_i     (axi_gp.ARPROT ),
+  .axi_arvalid_i    (axi_gp.ARVALID),
+  .axi_arready_o    (axi_gp.ARREADY),
   // axi read data channel
-  .axi_rid_o        (gp0_maxi_rid    ),
-  .axi_rdata_o      (gp0_maxi_rdata  ),
-  .axi_rresp_o      (gp0_maxi_rresp  ),
-  .axi_rlast_o      (gp0_maxi_rlast  ),
-  .axi_rvalid_o     (gp0_maxi_rvalid ),
-  .axi_rready_i     (gp0_maxi_rready ),
+  .axi_rid_o        (axi_gp.RID    ),
+  .axi_rdata_o      (axi_gp.RDATA  ),
+  .axi_rresp_o      (axi_gp.RRESP  ),
+  .axi_rlast_o      (axi_gp.RLAST  ),
+  .axi_rvalid_o     (axi_gp.RVALID ),
+  .axi_rready_i     (axi_gp.RREADY ),
   // system read/write channel
   .sys_addr_o       (bus.addr ),
   .sys_wdata_o      (bus.wdata),
@@ -170,9 +131,6 @@ axi_slave #(
   .sys_err_i        (bus.err  ),
   .sys_ack_i        (bus.ack  )
 );
-
-assign gp0_maxi_aclk  = clk;
-assign gp0_maxi_arstn = rstn;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PS STUB
@@ -225,47 +183,46 @@ system_wrapper system_i (
 //  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
 //  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
-  .M_AXI_GP0_ACLK    (gp0_maxi_aclk   ),  // in
-  .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
-  .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
-  .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
-  .M_AXI_GP0_rready  (gp0_maxi_rready ),  // out
-  .M_AXI_GP0_wlast   (gp0_maxi_wlast  ),  // out
-  .M_AXI_GP0_wvalid  (gp0_maxi_wvalid ),  // out
-  .M_AXI_GP0_arid    (gp0_maxi_arid   ),  // out 12
-  .M_AXI_GP0_awid    (gp0_maxi_awid   ),  // out 12
-  .M_AXI_GP0_wid     (gp0_maxi_wid    ),  // out 12
-  .M_AXI_GP0_arburst (gp0_maxi_arburst),  // out 2
-  .M_AXI_GP0_arlock  (gp0_maxi_arlock ),  // out 2
-  .M_AXI_GP0_arsize  (gp0_maxi_arsize ),  // out 3
-  .M_AXI_GP0_awburst (gp0_maxi_awburst),  // out 2
-  .M_AXI_GP0_awlock  (gp0_maxi_awlock ),  // out 2
-  .M_AXI_GP0_awsize  (gp0_maxi_awsize ),  // out 3
-  .M_AXI_GP0_arprot  (gp0_maxi_arprot ),  // out 3
-  .M_AXI_GP0_awprot  (gp0_maxi_awprot ),  // out 3
-  .M_AXI_GP0_araddr  (gp0_maxi_araddr ),  // out 32
-  .M_AXI_GP0_awaddr  (gp0_maxi_awaddr ),  // out 32
-  .M_AXI_GP0_wdata   (gp0_maxi_wdata  ),  // out 32
-  .M_AXI_GP0_arcache (gp0_maxi_arcache),  // out 4
-  .M_AXI_GP0_arlen   (gp0_maxi_arlen  ),  // out 4
-  .M_AXI_GP0_arqos   (gp0_maxi_arqos  ),  // out 4
-  .M_AXI_GP0_awcache (gp0_maxi_awcache),  // out 4
-  .M_AXI_GP0_awlen   (gp0_maxi_awlen  ),  // out 4
-  .M_AXI_GP0_awqos   (gp0_maxi_awqos  ),  // out 4
-  .M_AXI_GP0_wstrb   (gp0_maxi_wstrb  ),  // out 4
-  .M_AXI_GP0_arready (gp0_maxi_arready),  // in
-  .M_AXI_GP0_awready (gp0_maxi_awready),  // in
-  .M_AXI_GP0_bvalid  (gp0_maxi_bvalid ),  // in
-  .M_AXI_GP0_rlast   (gp0_maxi_rlast  ),  // in
-  .M_AXI_GP0_rvalid  (gp0_maxi_rvalid ),  // in
-  .M_AXI_GP0_wready  (gp0_maxi_wready ),  // in
-  .M_AXI_GP0_bid     (gp0_maxi_bid    ),  // in 12
-  .M_AXI_GP0_rid     (gp0_maxi_rid    ),  // in 12
-  .M_AXI_GP0_bresp   (gp0_maxi_bresp  ),  // in 2
-  .M_AXI_GP0_rresp   (gp0_maxi_rresp  ),  // in 2
-//  .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
-  .M_AXI_GP0_rdata   (gp0_maxi_rdata  )  // in 32
-//  // AXI-4 streaming interfaces
+  .M_AXI_GP0_ACLK    (axi_gp.ACLK   ),
+  .M_AXI_GP0_arvalid (axi_gp.ARVALID),
+  .M_AXI_GP0_awvalid (axi_gp.AWVALID),
+  .M_AXI_GP0_bready  (axi_gp.BREADY ),
+  .M_AXI_GP0_rready  (axi_gp.RREADY ),
+  .M_AXI_GP0_wlast   (axi_gp.WLAST  ),
+  .M_AXI_GP0_wvalid  (axi_gp.WVALID ),
+  .M_AXI_GP0_arid    (axi_gp.ARID   ),
+  .M_AXI_GP0_awid    (axi_gp.AWID   ),
+  .M_AXI_GP0_wid     (axi_gp.WID    ),
+  .M_AXI_GP0_arburst (axi_gp.ARBURST),
+  .M_AXI_GP0_arlock  (axi_gp.ARLOCK ),
+  .M_AXI_GP0_arsize  (axi_gp.ARSIZE ),
+  .M_AXI_GP0_awburst (axi_gp.AWBURST),
+  .M_AXI_GP0_awlock  (axi_gp.AWLOCK ),
+  .M_AXI_GP0_awsize  (axi_gp.AWSIZE ),
+  .M_AXI_GP0_arprot  (axi_gp.ARPROT ),
+  .M_AXI_GP0_awprot  (axi_gp.AWPROT ),
+  .M_AXI_GP0_araddr  (axi_gp.ARADDR ),
+  .M_AXI_GP0_awaddr  (axi_gp.AWADDR ),
+  .M_AXI_GP0_wdata   (axi_gp.WDATA  ),
+  .M_AXI_GP0_arcache (axi_gp.ARCACHE),
+  .M_AXI_GP0_arlen   (axi_gp.ARLEN  ),
+  .M_AXI_GP0_arqos   (axi_gp.ARQOS  ),
+  .M_AXI_GP0_awcache (axi_gp.AWCACHE),
+  .M_AXI_GP0_awlen   (axi_gp.AWLEN  ),
+  .M_AXI_GP0_awqos   (axi_gp.AWQOS  ),
+  .M_AXI_GP0_wstrb   (axi_gp.WSTRB  ),
+  .M_AXI_GP0_arready (axi_gp.ARREADY),
+  .M_AXI_GP0_awready (axi_gp.AWREADY),
+  .M_AXI_GP0_bvalid  (axi_gp.BVALID ),
+  .M_AXI_GP0_rlast   (axi_gp.RLAST  ),
+  .M_AXI_GP0_rvalid  (axi_gp.RVALID ),
+  .M_AXI_GP0_wready  (axi_gp.WREADY ),
+  .M_AXI_GP0_bid     (axi_gp.BID    ),
+  .M_AXI_GP0_rid     (axi_gp.RID    ),
+  .M_AXI_GP0_bresp   (axi_gp.BRESP  ),
+  .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
+  .M_AXI_GP0_rdata   (axi_gp.RDATA  )
+  // AXI-4 streaming interfaces
 //  .S_AXI_STR1_aclk   (str[1].clk ),  .S_AXI_STR0_aclk   (str[0].clk ),
 //  .S_AXI_STR1_arstn  (str[1].rstn),  .S_AXI_STR0_arstn  (str[0].rstn),
 //  .S_AXI_STR1_tdata  (str[1].dat ),  .S_AXI_STR0_tdata  (str[0].dat ),
