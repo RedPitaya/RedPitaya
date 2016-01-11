@@ -1339,27 +1339,27 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TX_MOD_CIC_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_mod_cic_i_vld)
              rb_leds_data <= fct_mag(tx_mod_cic_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_CIC_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_mod_cic_q_vld)
              rb_leds_data <= fct_mag(tx_mod_cic_q_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_FIR_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_mod_fir_i_vld)
              rb_leds_data <= fct_mag(tx_mod_fir_i_out[32:17]);
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_FIR_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_mod_fir_q_vld)
              rb_leds_data <= fct_mag(tx_mod_fir_q_out[32:17]);
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_car_cic_41M664_i_vld)
              rb_leds_data <= fct_mag(tx_car_cic_41M664_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_car_cic_41M664_q_vld)
              rb_leds_data <= fct_mag(tx_car_cic_41M664_q_out[30:15]);
           end
 
@@ -1372,16 +1372,16 @@ else begin
              rb_leds_data <= fct_mag(tx_car_osc_sin[15:0]);
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_car_cic_41M664_i_vld)
              rb_leds_data <= fct_mag(tx_car_qmix_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_car_cic_41M664_q_vld)
              rb_leds_data <= fct_mag(tx_car_qmix_q_out[30:15]);
           end
 
        RB_SRC_CON_PNT_NUM_TX_RF_AMP_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && tx_car_cic_41M664_i_vld)
              rb_leds_data <= fct_mag(tx_amp_rf_out[31:16]);
           end
 
@@ -1402,19 +1402,19 @@ else begin
              rb_leds_data <= fct_mag(rx_car_qmix_q_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_car_cic1_i_vld)
              rb_leds_data <= fct_mag(rx_car_cic1_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_car_cic1_q_vld)
              rb_leds_data <= fct_mag(rx_car_cic1_q_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_car_cic2_i_vld)
              rb_leds_data <= fct_mag(rx_car_cic2_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_car_cic2_q_vld)
              rb_leds_data <= fct_mag(rx_car_cic2_q_out[30:15]);
           end
 
@@ -1427,32 +1427,32 @@ else begin
              rb_leds_data <= fct_mag(rx_mod_osc_sin[15:0]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_car_cic2_i_vld)
              rb_leds_data <= fct_mag(rx_mod_qmix_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_car_cic2_q_vld)
              rb_leds_data <= fct_mag(rx_mod_qmix_q_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_mod_fir_i_vld)
              rb_leds_data <= fct_mag(rx_mod_fir_i_out[32:17]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_mod_fir_q_vld)
              rb_leds_data <= fct_mag(rx_mod_fir_q_out[32:17]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC_I_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_mod_cic_i_vld)
              rb_leds_data <= fct_mag(rx_mod_cic_i_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC_Q_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_mod_cic_q_vld)
              rb_leds_data <= fct_mag(rx_mod_cic_q_out[30:15]);
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
-          if (!led_ctr)
+          if (!led_ctr && rx_mod_cic_i_vld)
              rb_leds_data <= fct_mag(rx_mod_add_out[15:0]);
           end
 
@@ -1526,22 +1526,28 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TX_MOD_CIC_I_OUT: begin
-          rb_out_ch[0] <= tx_mod_cic_i_out[30:15];
+          if (tx_mod_cic_i_vld)
+             rb_out_ch[0] <= tx_mod_cic_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_CIC_Q_OUT: begin
-          rb_out_ch[0] <= tx_mod_cic_q_out[30:15];
+          if (tx_mod_cic_q_vld)
+             rb_out_ch[0] <= tx_mod_cic_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_FIR_I_OUT: begin
-          rb_out_ch[0] <= tx_mod_fir_i_out[32:17];
+          if (tx_mod_fir_i_vld)
+             rb_out_ch[0] <= tx_mod_fir_i_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_FIR_Q_OUT: begin
-          rb_out_ch[0] <= tx_mod_fir_q_out[32:17];
+          if (tx_mod_fir_q_vld)
+             rb_out_ch[0] <= tx_mod_fir_q_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_I_OUT: begin
-          rb_out_ch[0] <= tx_car_cic_41M664_i_out[30:15];
+          if (tx_car_cic_41M664_i_vld)
+             rb_out_ch[0] <= tx_car_cic_41M664_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_Q_OUT: begin
-          rb_out_ch[0] <= tx_car_cic_41M664_q_out[30:15];
+          if (tx_car_cic_41M664_q_vld)
+             rb_out_ch[0] <= tx_car_cic_41M664_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_TX_CAR_OSC_I_OUT: begin
@@ -1551,14 +1557,17 @@ else begin
           rb_out_ch[0] <= tx_car_osc_sin[15:0];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_I_OUT: begin
-          rb_out_ch[0] <= tx_car_qmix_i_out[30:15];
+          if (tx_car_cic_41M664_i_vld)
+             rb_out_ch[0] <= tx_car_qmix_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_Q_OUT: begin
-          rb_out_ch[0] <= tx_car_qmix_q_out[30:15];
+          if (tx_car_cic_41M664_q_vld)
+             rb_out_ch[0] <= tx_car_qmix_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_TX_RF_AMP_OUT: begin
-          rb_out_ch[0] <= tx_amp_rf_out[31:16];
+          if (tx_car_cic_41M664_i_vld)
+             rb_out_ch[0] <= tx_amp_rf_out[31:16];
           end
 
        RB_SRC_CON_PNT_NUM_RX_CAR_OSC_I_OUT: begin
@@ -1574,16 +1583,20 @@ else begin
           rb_out_ch[0] <= rx_car_qmix_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT: begin
-          rb_out_ch[0] <= rx_car_cic1_i_out[30:15];
+          if (rx_car_cic1_i_vld)
+             rb_out_ch[0] <= rx_car_cic1_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT: begin
-          rb_out_ch[0] <= rx_car_cic1_q_out[30:15];
+          if (rx_car_cic1_q_vld)
+             rb_out_ch[0] <= rx_car_cic1_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT: begin
-          rb_out_ch[0] <= rx_car_cic2_i_out[30:15];
+          if (rx_car_cic2_i_vld)
+             rb_out_ch[0] <= rx_car_cic2_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT: begin
-          rb_out_ch[0] <= rx_car_cic2_q_out[30:15];
+          if (rx_car_cic2_q_vld)
+             rb_out_ch[0] <= rx_car_cic2_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
@@ -1593,26 +1606,33 @@ else begin
           rb_out_ch[0] <= rx_mod_osc_sin[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
-          rb_out_ch[0] <= rx_mod_qmix_i_out[30:15];
+          if (rx_car_cic2_i_vld)
+             rb_out_ch[0] <= rx_mod_qmix_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT: begin
-          rb_out_ch[0] <= rx_mod_qmix_q_out[30:15];
+          if (rx_car_cic2_q_vld)
+             rb_out_ch[0] <= rx_mod_qmix_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR_I_OUT: begin
-          rb_out_ch[0] <= rx_mod_fir_i_out[32:17];
+          if (rx_mod_fir_i_vld)
+             rb_out_ch[0] <= rx_mod_fir_i_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR_Q_OUT: begin
-          rb_out_ch[0] <= rx_mod_fir_q_out[32:17];
+          if (rx_mod_fir_q_vld)
+             rb_out_ch[0] <= rx_mod_fir_q_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC_I_OUT: begin
-          rb_out_ch[0] <= rx_mod_cic_i_out[30:15];
+          if (rx_mod_cic_i_vld)
+             rb_out_ch[0] <= rx_mod_cic_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC_Q_OUT: begin
-          rb_out_ch[0] <= rx_mod_cic_q_out[30:15];
+          if (rx_mod_cic_q_vld)
+             rb_out_ch[0] <= rx_mod_cic_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
-          rb_out_ch[0] <= rx_mod_add_out[15:0];
+          if (rx_mod_cic_i_vld)
+             rb_out_ch[0] <= rx_mod_add_out[15:0];
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
@@ -1681,22 +1701,28 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TX_MOD_CIC_I_OUT: begin
-          rb_out_ch[1] <= tx_mod_cic_i_out[30:15];
+          if (tx_mod_cic_i_vld)
+             rb_out_ch[1] <= tx_mod_cic_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_CIC_Q_OUT: begin
-          rb_out_ch[1] <= tx_mod_cic_q_out[30:15];
+          if (tx_mod_cic_q_vld)
+             rb_out_ch[1] <= tx_mod_cic_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_FIR_I_OUT: begin
-          rb_out_ch[1] <= tx_mod_fir_i_out[32:17];
+          if (tx_mod_fir_i_vld)
+             rb_out_ch[1] <= tx_mod_fir_i_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_TX_MOD_FIR_Q_OUT: begin
-          rb_out_ch[1] <= tx_mod_fir_q_out[32:17];
+          if (tx_mod_fir_q_vld)
+             rb_out_ch[1] <= tx_mod_fir_q_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_I_OUT: begin
-          rb_out_ch[1] <= tx_car_cic_41M664_i_out[30:15];
+          if (tx_car_cic_41M664_i_vld)
+             rb_out_ch[1] <= tx_car_cic_41M664_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_Q_OUT: begin
-          rb_out_ch[1] <= tx_car_cic_41M664_q_out[30:15];
+          if (tx_car_cic_41M664_q_vld)
+             rb_out_ch[1] <= tx_car_cic_41M664_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_TX_CAR_OSC_I_OUT: begin
@@ -1706,14 +1732,17 @@ else begin
           rb_out_ch[1] <= tx_car_osc_sin[15:0];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_I_OUT: begin
-          rb_out_ch[1] <= tx_car_qmix_i_out[30:15];
+          if (tx_car_cic_41M664_i_vld)
+             rb_out_ch[1] <= tx_car_qmix_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_Q_OUT: begin
-          rb_out_ch[1] <= tx_car_qmix_q_out[30:15];
+          if (tx_car_cic_41M664_q_vld)
+             rb_out_ch[1] <= tx_car_qmix_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_TX_RF_AMP_OUT: begin
-          rb_out_ch[1] <= tx_amp_rf_out[31:16];
+          if (tx_car_cic_41M664_i_vld)
+             rb_out_ch[1] <= tx_amp_rf_out[31:16];
           end
 
        RB_SRC_CON_PNT_NUM_RX_CAR_OSC_I_OUT: begin
@@ -1729,16 +1758,20 @@ else begin
           rb_out_ch[1] <= rx_car_qmix_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT: begin
-          rb_out_ch[1] <= rx_car_cic1_i_out[30:15];
+          if (rx_car_cic1_i_vld)
+             rb_out_ch[1] <= rx_car_cic1_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT: begin
-          rb_out_ch[1] <= rx_car_cic1_q_out[30:15];
+          if (rx_car_cic1_q_vld)
+             rb_out_ch[1] <= rx_car_cic1_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT: begin
-          rb_out_ch[1] <= rx_car_cic2_i_out[30:15];
+          if (rx_car_cic2_i_vld)
+             rb_out_ch[1] <= rx_car_cic2_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT: begin
-          rb_out_ch[1] <= rx_car_cic2_q_out[30:15];
+          if (rx_car_cic2_q_vld)
+             rb_out_ch[1] <= rx_car_cic2_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
@@ -1748,30 +1781,37 @@ else begin
           rb_out_ch[1] <= rx_mod_osc_sin[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
-          rb_out_ch[1] <= rx_mod_qmix_i_out[30:15];
+          if (rx_car_cic2_i_vld)
+             rb_out_ch[1] <= rx_mod_qmix_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT: begin
-          rb_out_ch[1] <= rx_mod_qmix_q_out[30:15];
+          if (rx_car_cic2_q_vld)
+             rb_out_ch[1] <= rx_mod_qmix_q_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR_I_OUT: begin
-          rb_out_ch[1] <= rx_mod_fir_i_out[32:17];
+          if (rx_mod_fir_i_vld)
+             rb_out_ch[1] <= rx_mod_fir_i_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR_Q_OUT: begin
-          rb_out_ch[1] <= rx_mod_fir_q_out[32:17];
+          if (rx_mod_fir_q_vld)
+             rb_out_ch[1] <= rx_mod_fir_q_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC_I_OUT: begin
-          rb_out_ch[1] <= rx_mod_cic_i_out[30:15];
+          if (rx_mod_cic_i_vld)
+             rb_out_ch[1] <= rx_mod_cic_i_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC_Q_OUT: begin
-          rb_out_ch[1] <= rx_mod_cic_q_out[30:15];
+          if (rx_mod_cic_q_vld)
+             rb_out_ch[1] <= rx_mod_cic_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
-          rb_out_ch[1] <= rx_mod_add_out[15:0];
+          if (rx_mod_cic_i_vld)
+             rb_out_ch[1] <= rx_mod_add_out[15:0];
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-          rb_out_ch[1] <= { 1'b0, tx_mod_fir_q_vld, 14'b0};
+          rb_out_ch[1] <= { 1'b0, tx_mod_fir_i_vld, 14'b0};
           end
 
        default: begin
