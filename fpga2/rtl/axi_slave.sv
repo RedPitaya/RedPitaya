@@ -96,15 +96,8 @@ module axi_slave #(
   output logic              axi_rlast_o  ,  // AXI read last
   output logic              axi_rvalid_o ,  // AXI read response valid
   input  logic              axi_rready_i ,  // AXI read response ready
-  // RP system read/write channel
-  output logic [AXI_AW-1:0] sys_addr_o   ,  // system bus read/write address.
-  output logic [AXI_DW-1:0] sys_wdata_o  ,  // system bus write data.
-  output logic [AXI_SW-1:0] sys_sel_o    ,  // system bus write byte select.
-  output logic              sys_wen_o    ,  // system bus write enable.
-  output logic              sys_ren_o    ,  // system bus read enable.
-  input  logic [AXI_DW-1:0] sys_rdata_i  ,  // system bus read data.
-  input  logic              sys_err_i    ,  // system bus error indicator.
-  input  logic              sys_ack_i       // system bus acknowledge signal.
+  // system read/write channel
+  sys_bus_if.m           bus
 );
 
 //---------------------------------------------------------------------------------
@@ -188,7 +181,7 @@ end else begin
    axi_rlast_o   <= rd_do && ack  ;
    axi_rvalid_o  <= rd_do && ack  ;
    axi_rresp_o   <= {(rd_error || ack_cnt[5]),1'b0} ;  // 2'b10 SLVERR    2'b00 OK
-   axi_rdata_o   <= sys_rdata_i   ;
+   axi_rdata_o   <= bus.rdata;
 end
 
 // acknowledge protection
@@ -204,23 +197,21 @@ end else begin
       ack_cnt <= ack_cnt + 6'h1 ;
 end
 
-assign ack = sys_ack_i || ack_cnt[5] || (rd_do && rd_errorw) || (wr_do && wr_errorw); // bus acknowledge or timeout or error
+assign ack = bus.ack || ack_cnt[5] || (rd_do && rd_errorw) || (wr_do && wr_errorw); // bus acknowledge or timeout or error
 
 //------------------------------------------
 //  Simple slave interface
 
 always_ff @(posedge axi_clk_i)
 if (~axi_rstn_i) begin
-   sys_wen_o  <= 1'b0 ;
-   sys_ren_o  <= 1'b0 ;
-   sys_sel_o  <= {AXI_SW{1'b0}} ;
+   bus.wen <= 1'b0 ;
+   bus.ren <= 1'b0 ;
 end else begin
-   sys_wen_o  <= wr_do && axi_wvalid_i && !wr_errorw ;
-   sys_ren_o  <= axi_arvalid_i && axi_arready_o && !rd_errorw ;
-   sys_sel_o  <= {AXI_SW{1'b1}} ;
+   bus.wen <= wr_do && axi_wvalid_i && !wr_errorw ;
+   bus.ren <= axi_arvalid_i && axi_arready_o && !rd_errorw ;
 end
 
-assign sys_addr_o  = rd_do ? rd_araddr : wr_awaddr  ;
-assign sys_wdata_o = wr_wdata                       ;
+assign bus.addr  = rd_do ? rd_araddr : wr_awaddr  ;
+assign bus.wdata = wr_wdata                       ;
 
 endmodule: axi_slave
