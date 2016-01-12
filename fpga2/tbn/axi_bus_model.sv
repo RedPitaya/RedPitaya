@@ -71,8 +71,8 @@ typedef struct packed {
 ////////////////////////////////////////////////////////////////////////////////
 
 task ARTransfer (
-  input int unsigned delay,
-  input ABeat        ar
+  input  int unsigned delay,
+  input  ABeat        ar
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
   intf.ARVALID  <= 1'b1     ;
@@ -92,8 +92,8 @@ task ARTransfer (
 endtask: ARTransfer
 
 task RTransfer (
-  input int unsigned delay,
-  output RBeat       r
+  input  int unsigned delay,
+  output RBeat        r
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
   intf.RREADY <= 1'b1;
@@ -106,8 +106,8 @@ task RTransfer (
 endtask: RTransfer
 
 task AWTransfer (
-  input int unsigned delay,
-  input ABeat        aw
+  input  int unsigned delay,
+  input  ABeat        aw
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
   intf.AWVALID  <= 1'b1     ;
@@ -127,8 +127,8 @@ task AWTransfer (
 endtask: AWTransfer
 
 task WTransfer (
-  input int unsigned delay,
-  input WBeat        w
+  input  int unsigned delay,
+  input  WBeat        w
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
   intf.WVALID <= 1'b1   ;
@@ -141,8 +141,8 @@ task WTransfer (
 endtask: WTransfer
 
 task BTransfer (
-  input int unsigned delay,
-  output BBeat       b
+  input  int unsigned delay,
+  output BBeat        b
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
   intf.BREADY <= 1'b1;
@@ -170,7 +170,7 @@ task WriteTransaction (
   input  int unsigned AWDelay,
   input  ABeat        aw,
   input  int unsigned  WDelay,
-  output WBeat         w,
+  input  WBeat         w,
   input  int unsigned  BDelay,
   output BBeat         b
 );
