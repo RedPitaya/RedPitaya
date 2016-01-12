@@ -105,12 +105,8 @@ module red_pitaya_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  4-1: 0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
-logic [  4-1: 0] frstn;
-
-// system bus
-sys_bus_if ps_sys      (.clk (clk), .rstn (rstn));
-sys_bus_if sys [8-1:0] (.clk (clk), .rstn (rstn));
+logic [4-1:0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
+logic [4-1:0] frstn;
 
 // PLL signals
 logic                 adc_clk_in;
@@ -128,8 +124,8 @@ logic                 pdm_clk ;
 logic                 pdm_rstn;
 
 // ADC clock/reset
-logic                           adc_clk;
-logic                           adc_rstn;
+logic                    adc_clk;
+logic                    adc_rstn;
 
 // stream bus type
 localparam type SBA_T = logic signed [14-1:0];  // acquire
@@ -143,11 +139,11 @@ str_bus_if #(.DAT_T (SBG_T)) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn)
 str_bus_if #(.DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
 str_bus_if #(.DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // DAC signals
-logic                           dac_clk_1x;
-logic                           dac_clk_2x;
-logic                           dac_clk_2p;
-logic                           dac_rst;
-logic        [MNG-1:0] [14-1:0] dac_dat;
+logic                    dac_clk_1x;
+logic                    dac_clk_2x;
+logic                    dac_clk_2p;
+logic                    dac_rst;
+logic [MNG-1:0] [14-1:0] dac_dat;
 
 localparam int unsigned DWM = 16;
 localparam int unsigned DWS = 14;
@@ -172,6 +168,10 @@ struct packed {
   logic [MNA-1:0] acq_out;  // MNG - event    triggers from generators
   logic [MNA-1:0] acq_swo;  // MNG - software triggers from generators
 } trg;
+
+// system bus
+sys_bus_if ps_sys      (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
