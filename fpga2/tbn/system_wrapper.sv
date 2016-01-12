@@ -43,6 +43,7 @@ module system_wrapper (
   inout  logic        FIXED_IO_ps_srstb,
 
   input  logic        M_AXI_GP0_ACLK   ,
+  input  logic        M_AXI_GP0_ARESETn,
   output logic [31:0] M_AXI_GP0_araddr ,
   output logic  [1:0] M_AXI_GP0_arburst,
   output logic  [3:0] M_AXI_GP0_arcache,
@@ -205,8 +206,8 @@ assign M_AXI_GP0_wvalid  = '0;
 */
 
 axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (
-  .ACLK    (M_AXI_GP0_ACLK  ),
-  .ARESETn (S_AXI_STR0_arstn)
+  .ACLK    (M_AXI_GP0_ACLK   ),
+  .ARESETn (M_AXI_GP0_ARESETn)
 );
 
 assign                  M_AXI_GP0_araddr  = axi_gp.ARADDR ;
