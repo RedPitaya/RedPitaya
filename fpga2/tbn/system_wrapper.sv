@@ -204,10 +204,11 @@ assign M_AXI_GP0_wstrb   = '0;
 assign M_AXI_GP0_wvalid  = '0;
 */
 
-axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
+axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (
+  .ACLK    (M_AXI_GP0_ACLK  ),
+  .ARESETn (S_AXI_STR0_arstn)
+);
 
-assign axi_gp.ACLK    = M_AXI_GP0_ACLK    ;
-assign axi_gp.ARESETn = S_AXI_STR0_arstn  ;
 assign                  M_AXI_GP0_araddr  = axi_gp.ARADDR ;
 assign                  M_AXI_GP0_arburst = axi_gp.ARBURST;
 assign                  M_AXI_GP0_arcache = axi_gp.ARCACHE;
