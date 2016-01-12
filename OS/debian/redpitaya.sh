@@ -38,3 +38,12 @@ install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/p
 # remove existing MOTD and replace it with a link to Red Pitaya version.txt
 rm $ROOT_DIR/etc/motd
 ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd 
+
+# SCS specific stuff
+install -v -m 664 -o root -D $OVERLAY/root/.config/mc/ini $ROOT_DIR/root/.config/mc/ini
+install -v -m 664 -o root -D $OVERLAY/root/.config/mc/panels.ini $ROOT_DIR/root/.config/mc/panels.ini
+install -v -m 664 -o root -D $OVERLAY/usr/local/lib/libNE10.so.10 $ROOT_DIR/usr/local/lib/libNE10.so.10
+CDIR=`pwd`
+cd $ROOT_DIR/usr/local/lib/
+ln -s libNE10.so.10 libNE10.so
+cd $CDIR
