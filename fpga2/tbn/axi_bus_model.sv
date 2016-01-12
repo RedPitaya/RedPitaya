@@ -61,6 +61,7 @@ typedef struct packed {
 } RBeat;
 
 typedef struct packed {
+  bit [IW-1:0] id  ;
   bit [DW-1:0] data;
   bit [SW-1:0] strb;
   bit          last;
@@ -75,20 +76,21 @@ task ARTransfer (
   input  ABeat        ar
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
-  intf.ARVALID  <= 1'b1     ;
-  intf.ARID     <= ar.id    ;
-  intf.ARADDR   <= ar.addr  ;
-  intf.ARREGION <= ar.region;
-  intf.ARLEN    <= ar.len   ;
-  intf.ARSIZE   <= ar.size  ;
-  intf.ARBURST  <= ar.burst ;
-  intf.ARLOCK   <= ar.lock  ;
-  intf.ARCACHE  <= ar.cache ;
-  intf.ARPROT   <= ar.prot  ;
-  intf.ARQOS    <= ar.qos   ;
+  @(posedge intf.ACLK); // TODO
+  intf.ARVALID  = 1'b1     ;
+  intf.ARID     = ar.id    ;
+  intf.ARADDR   = ar.addr  ;
+  intf.ARREGION = ar.region;
+  intf.ARLEN    = ar.len   ;
+  intf.ARSIZE   = ar.size  ;
+  intf.ARBURST  = ar.burst ;
+  intf.ARLOCK   = ar.lock  ;
+  intf.ARCACHE  = ar.cache ;
+  intf.ARPROT   = ar.prot  ;
+  intf.ARQOS    = ar.qos   ;
   @(posedge intf.ACLK);
   while (!intf.ARREADY) @(posedge intf.ACLK);
-  intf.ARVALID  <= 1'b0;
+  intf.ARVALID  = 1'b0;
 endtask: ARTransfer
 
 task RTransfer (
@@ -96,7 +98,8 @@ task RTransfer (
   output RBeat        r
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
-  intf.RREADY <= 1'b1;
+  @(posedge intf.ACLK); // TODO
+  intf.RREADY = 1'b1;
   while(!intf.RVALID) @(posedge intf.ACLK);
   r.id   = intf.RID  ;
   r.data = intf.RDATA;
@@ -110,20 +113,21 @@ task AWTransfer (
   input  ABeat        aw
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
-  intf.AWVALID  <= 1'b1     ;
-  intf.AWID     <= aw.id    ;
-  intf.AWADDR   <= aw.addr  ;
-  intf.AWREGION <= aw.region;
-  intf.AWLEN    <= aw.len   ;
-  intf.AWSIZE   <= aw.size  ;
-  intf.AWBURST  <= aw.burst ;
-  intf.AWLOCK   <= aw.lock  ;
-  intf.AWCACHE  <= aw.cache ;
-  intf.AWPROT   <= aw.prot  ;
-  intf.AWQOS    <= aw.qos   ;
+  @(posedge intf.ACLK); // TODO
+  intf.AWVALID  = 1'b1     ;
+  intf.AWID     = aw.id    ;
+  intf.AWADDR   = aw.addr  ;
+  intf.AWREGION = aw.region;
+  intf.AWLEN    = aw.len   ;
+  intf.AWSIZE   = aw.size  ;
+  intf.AWBURST  = aw.burst ;
+  intf.AWLOCK   = aw.lock  ;
+  intf.AWCACHE  = aw.cache ;
+  intf.AWPROT   = aw.prot  ;
+  intf.AWQOS    = aw.qos   ;
   @(posedge intf.ACLK);
   while (!intf.AWREADY) @(posedge intf.ACLK);
-  intf.AWVALID  <= 1'b0     ;
+  intf.AWVALID  = 1'b0     ;
 endtask: AWTransfer
 
 task WTransfer (
@@ -131,13 +135,15 @@ task WTransfer (
   input  WBeat        w
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
-  intf.WVALID <= 1'b1   ;
-  intf.WDATA  <= w.data;
-  intf.WSTRB  <= w.strb;
-  intf.WLAST  <= w.last;
+  @(posedge intf.ACLK); // TODO
+  intf.WVALID = 1'b1   ;
+  intf.WID    = w.id  ;
+  intf.WDATA  = w.data;
+  intf.WSTRB  = w.strb;
+  intf.WLAST  = w.last;
   @(posedge intf.ACLK);
   while (!intf.WREADY) @(posedge intf.ACLK);
-  intf.WVALID <= 1'b0   ;
+  intf.WVALID = 1'b0   ;
 endtask: WTransfer
 
 task BTransfer (
@@ -145,11 +151,12 @@ task BTransfer (
   output BBeat        b
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
-  intf.BREADY <= 1'b1;
+  @(posedge intf.ACLK); // TODO
+  intf.BREADY = 1'b1;
   while(!intf.BVALID) @(posedge intf.ACLK);
   b.id   = intf.BID;
   b.resp = intf.BRESP;
-  intf.BREADY <= 1'b0;
+  intf.BREADY = 1'b0;
 endtask: BTransfer
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -223,7 +230,7 @@ task WBurst (
       strb_t[j] = strb[SW*i+j];
     end
     last_t = (i == (len -1));
-    WTransfer(0, WBeat'{data_t, strb_t, last_t});
+    WTransfer(0, WBeat'{id, data_t, strb_t, last_t});
   end
 endtask: WBurst
 
@@ -279,6 +286,7 @@ endtask: Run
 
 always @(negedge intf.ARESETn, posedge intf.ACLK)
 if (!intf.ARESETn) begin
+  // address read
   intf.ARID     <= '0;
   intf.ARADDR   <= '0;
   intf.ARREGION <= '0;
@@ -290,7 +298,9 @@ if (!intf.ARESETn) begin
   intf.ARPROT   <= '0;
   intf.ARQOS    <= '0;
   intf.ARVALID  <= '0;
+  // data read
   intf.RREADY   <= '0;
+  // address write
   intf.AWID     <= '0;
   intf.AWADDR   <= '0;
   intf.AWREGION <= '0;
@@ -302,10 +312,13 @@ if (!intf.ARESETn) begin
   intf.AWPROT   <= '0;
   intf.AWQOS    <= '0;
   intf.AWVALID  <= '0;
+  // data write
+  intf.WID      <= '0;
   intf.WDATA    <= '0;
   intf.WSTRB    <= '1;
   intf.WLAST    <= '0;
   intf.WVALID   <= '0;
+  // response write
   intf.BREADY   <= '0;
 end
 
