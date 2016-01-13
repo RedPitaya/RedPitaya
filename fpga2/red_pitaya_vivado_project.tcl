@@ -69,6 +69,9 @@ add_files                         $path_rtl/scope_dec_avg.sv
 add_files                         $path_rtl/scope_edge.sv
 add_files                         $path_rtl/acq.sv
 add_files                         $path_rtl/debounce.sv
+add_files                         $path_rtl/la_top.sv
+add_files                         $path_rtl/la_trigger.sv
+add_files                         $path_rtl/str_dec.sv
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 
