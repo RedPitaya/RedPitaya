@@ -24,13 +24,13 @@
 #define EXPANDER_ADDR                  0x20
  
 
-//int main(int argc, char *argv[])
-
-int main(){
-int k;
-
-for (k=0;k<=5;k++)
+int main(int argc, char *argv[])
 {
+//int main(){
+//int k;
+
+//for (k=0;k<=5;k++)
+//{
  
 sleep(3);
 //printf("%i\n", k );
@@ -40,10 +40,10 @@ sleep(3);
     int  status;
     char str [1+2*11];
 
-    // parse input arguments
-    //dat = (int)strtol(argv[1], NULL, 0);
+    //parse input arguments
+    dat = (int)strtol(argv[1], NULL, 0);
 
-    dat = (1<<k);
+    dat = (1<<dat);
 
     // Open the device.
     fd = open("/dev/i2c-0", O_RDWR);
@@ -86,14 +86,14 @@ sleep(3);
     status = write(fd, str, 1+2*11);
 
     //printf("Resistor data write = 0x%04x.\n", dat);
-    if (status)  printf("Resistor write => %.1f\n", powf(10.0,(float)k+1));
-    else         
-        printf("Error write\n");
+   // if (status)  printf("Resistor write => %.1f\n", powf(10.0,(float)k+1));
+    //else         
+     //   printf("Error write\n");
     
 
     close(fd);
 
-}
+//}
     return 0;
 
 }
