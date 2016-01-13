@@ -47,7 +47,7 @@ CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, true, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
 CIntParameter   toleranceMode("LCR_TOLERANCE", CBaseParameter::RW, 0, 0, 0, 4);
 CIntParameter   relativeMode("LCR_RELATIVE", CBaseParameter::RW, 0, 0, 0, 4);
-CFloatParameter relSavedZ("LCR_REL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
+CFloatParameter relSaved("LCR_REL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CFloatParameter tolSavedZ("LCR_TOL_SAVED", CBaseParameter::RW, 0, 0, 0, 1e6);
 CBooleanParameter seriesMode("LCR_SERIES", CBaseParameter::RW, true, 0);
 
@@ -118,7 +118,6 @@ void UpdateParams(void){
 		lcrApp_LcrCopyParams(data);
 			
 		//Precision casting
-		float c_out_prec;
 		if(data->lcr_C < 0.0001){
 			lcr_Capacitance.Value() = data->lcr_C * pow(10, 9);
 			lcr_C_precision.Value() = 9;
@@ -204,19 +203,19 @@ void UpdateParams(void){
 				break;
 			case 1:
 				lcr_amplitude.Value() = 
-					relSavedZ.Value() - data->lcr_amplitude;
+					relSaved.Value() - data->lcr_amplitude;
 				break;
 			case 2:
 				lcr_Inductance.Value() = 
-					relSavedZ.Value() - data->lcr_L;
+					relSaved.Value() - data->lcr_L;
 				break;
 			case 3:
 				lcr_Capacitance.Value() = 
-					relSavedZ.Value() - data->lcr_C;
+					relSaved.Value() - (data->lcr_C / lcr_C_precision.Value());
 				break;
 			case 4:
 				lcr_Resitance.Value() = 
-					relSavedZ.Value() - data->lcr_R;
+					relSaved.Value() - data->lcr_R;
 				break;
 		}
 
@@ -248,20 +247,20 @@ void UpdateParams(void){
 			case 0:
 				break;
 			case 1:
-				relSavedZ.Value() = lcr_amplitude.Value();
+				relSaved.Value() = lcr_amplitude.Value();
 				break;
 			case 2:
-				relSavedZ.Value() = lcr_Inductance.Value();
+				relSaved.Value() = lcr_Inductance.Value();
 				break;
 			case 3:
-				relSavedZ.Value() = lcr_Capacitance.Value();
+				relSaved.Value() = lcr_Capacitance.Value();
 				break;
 			case 4:
-				relSavedZ.Value() = lcr_Resitance.Value();
+				relSaved.Value() = lcr_Resitance.Value();
 				break;
 		}
 
-		relSavedZ.Update();
+		relSaved.Update();
 		relativeMode.Update();
 	}
 

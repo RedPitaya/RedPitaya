@@ -163,21 +163,21 @@
 			}
 
 			//Change primary display value
-			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
+			if(new_params['LCR_RUN'].
+
+				value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
 				
 				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
 					formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				}else if(new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0){
 					formatRangeManual(new_params['LCR_C_PREC'].value, $('#sel_range_f').val(), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
 				}else{
-
+					console.log(new_params[param_name].value);
 					if(new_params['LCR_RELATIVE'].value < Math.abs(999)){
-						LCR.displ_params.prim_val = new_params[param_name].value.toFixed(2);
-					}else{
 						formatRangeAuto(false, 1, null, new_params[param_name].value);
 					}
 				}
-				
+
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
@@ -192,14 +192,20 @@
 			}
 
 			//Change secondary display value
-			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false){
+			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec 
+				&& LCR.secondary_meas.apply_tolerance == false){
 
 				formatRangeAuto(0, 2, null, new_params[param_name].value);
-				var units = LCR.displ_params.s_units;
-				var data = LCR.displ_params.sec_val;
 
-				$('#lb_sec_displ').empty().append(data);
-				$('#lb_sec_displ_units').empty().append(units);
+				if(param_name == 'LCR_P') {
+					$('#lb_sec_displ').empty().append(new_params[param_name].value.toFixed(2));
+					$('#lb_sec_displ_units').empty().append("deg");				
+				}else{
+					var units = LCR.displ_params.s_units;	
+					var data = LCR.displ_params.sec_val;
+					$('#lb_sec_displ_units').empty().append(units);
+					$('#lb_sec_displ').empty().append(data);
+				}
 
 			}
 
@@ -208,18 +214,17 @@
 
 				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params[param_name].value)) / ((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
 				
-				formatRangeAuto(false, null,null, new_params['LCR_TOL_SAVED'].value);
+				formatRangeAuto(false, 1,null, new_params[param_name].value);
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
 				if( Math.abs(diff) > 1 && Math.abs(diff) < 100){
-					LCR.disp	
-					$('#lb_sec_displ').empty().append(Math.round(diff) + "%");
+					$('#lb_sec_displ').empty().append((100 - diff.toFixed(2)) + "%");
 					$('#lb_prim_displ').empty().append(data);
 					$('#lb_prim_displ_units').empty().append(units);
 				}else if(Math.abs(diff) > 100){
-					$('#lb_sec_displ').empty().append("100%>");
-					$('#lb_prim_displ').empty().append("100%>");
+					$('#lb_sec_displ').empty().append("100% >");
+					$('#lb_prim_displ').empty().append("100% >");
 					$('#lb_prim_displ_units').empty();
 					$('#lb_sec_displ_units').empty();
 				}else{
@@ -547,9 +552,14 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	var sub_idx = 1;
 	var units = "";
 	var base = "";
+	var inverse = 1;
 
-	var inverse;
-	(meas_data < 0) ? (inverse = -1) : (inverse = 1);
+	if(meas_data < 0){
+		meas_data = (Math.abs(meas_data));
+		inverse = -1;
+	}else{
+		meas_data = (Math.abs(meas_data));
+	}
 	
 	if(display == 1 && meas_data != 0){
 		base = LCR.displ_params.p_base_u;
@@ -665,7 +675,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 				LCR.displ_params.p_units = "";
 				break;
 			}
-			LCR.displ_params.prim_val = inverse * data;
+			LCR.displ_params.prim_val = data * inverse;
 			LCR.displ_params.p_units = units;
 			break;
 		case 2:
@@ -675,7 +685,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 				break;
 			}
 
-			LCR.displ_params.sec_val = inverse * data;
+			LCR.displ_params.sec_val = data * inverse;
 			LCR.displ_params.s_units = units;
 			break;
 	}
@@ -770,8 +780,6 @@ function formatRangeManual(precision, format, power, data){
 
 //This functions resets user meas data when a specific event occurs.
 function resetMeasData(){
-
-
 
 	return 0;
 }
