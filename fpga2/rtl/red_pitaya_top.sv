@@ -421,8 +421,8 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   assign str_adc[i].dat = digital_loop ? str_dac[i].dat : adc_dat_raw;
 
   linear #(
-    .DWI  (14),
-    .DWO  (14),
+    .DTI  (SBA_T),
+    .DTO  (SBA_T),
     .DWM  (16)
   ) linear_adc (
     // stream input/output
@@ -444,8 +444,8 @@ generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
   linear #(
-    .DWI  (14),
-    .DWO  (14),
+    .DTI  (SBG_T),
+    .DTO  (SBG_T),
     .DWM  (16)
   ) linear_dac (
     // stream input/output

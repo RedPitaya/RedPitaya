@@ -9,9 +9,11 @@
 module linear_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
-  // PWM parameters
-  int unsigned DWI = 14,   // data width for input
-  int unsigned DWO = 14,   // data width for output
+  // stream parameters
+  type DTI = logic signed [8-1:0], // data type for input
+  type DTO = logic signed [8-1:0], // data type for output
+  int unsigned DWI = $bits(DTI),   // data width for input
+  int unsigned DWO = $bits(DTO),   // data width for output
   int unsigned DWM = 16,   // data width for multiplier (gain)
   int unsigned DWS = DWO   // data width for summation (offset)
 );
@@ -25,8 +27,8 @@ logic signed [DWM-1:0] cfg_mul;
 logic signed [DWS-1:0] cfg_sum;
 
 // stream input/output
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (logic signed [DWO-1:0])) sto (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (DTI)) sti (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (DTO)) sto (.clk (clk), .rstn (rstn));
 
 // calibration
 real gain   = 1.0;
@@ -53,7 +55,7 @@ initial begin
 
   // send data into stream
   for (int i=-8; i<8; i++) begin
-    str_src.put(i);
+    str_src.put(i, 1'b0);
   end
   repeat(16) @(posedge clk);
   repeat(4) @(posedge clk);
@@ -67,25 +69,14 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(
-  .DW  (DWI)
-) str_src (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream
-  .str      (sti)
-);
+str_src #(.DAT_T (DTI)) str_src (.str (sti));
 
 linear #(
-  .DWI (DWI),
-  .DWO (DWO),
+  .DTI (DTI),
+  .DTO (DTO),
   .DWM (DWM),
   .DWS (DWS)
 ) linear (
-  // system signals
-  .clk      (clk    ),
-  .rstn     (rstn   ),
   // stream input/output
   .sti      (sti    ),
   .sto      (sto    ),
@@ -94,15 +85,7 @@ linear #(
   .cfg_sum  (cfg_sum)
 );
 
-str_drn #(
-  .DW  (DWI)
-) str_drn (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream
-  .str      (sto)
-);
+str_drn #(.DAT_T (DTO)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

@@ -26,8 +26,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module linear #(
-  int unsigned DWI = 14,   // data width for input
-  int unsigned DWO = 14,   // data width for output
+  type DTI = logic signed [8-1:0], // data type for input
+  type DTO = logic signed [8-1:0], // data type for output
+  int unsigned DWI = $bits(DTI),   // data width for input
+  int unsigned DWO = $bits(DTO),   // data width for output
   int unsigned DWM = 16,   // data width for multiplier (gain)
   int unsigned DWS = DWO   // data width for summation (offset)
 )(
