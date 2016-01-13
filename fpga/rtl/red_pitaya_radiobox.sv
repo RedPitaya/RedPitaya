@@ -1017,7 +1017,7 @@ rb_cic_5M_to_8k_32T32_lat18 i_rb_rx_car_cic2_I (
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_car_cic1_i_out    ),  // RX_CAR_CIC1 I
+  .s_axis_data_tdata    ( {rx_car_cic1_i_out[30:0], 1'b0}),  // RX_CAR_CIC1 I
   .s_axis_data_tvalid   ( rx_car_cic1_i_vld    ),
   .s_axis_data_tready   ( rx_car_cic1_i_rdy    ),
 
@@ -1033,11 +1033,11 @@ rb_cic_5M_to_8k_32T32_lat18 i_rb_rx_car_cic2_Q (
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_car_cic1_q_out    ),  // RX_CAR_CIC1 Q
+  .s_axis_data_tdata    ( {rx_car_cic1_q_out[30:0], 1'b0}),  // RX_CAR_CIC1 Q
   .s_axis_data_tvalid   ( rx_car_cic1_q_vld    ),
   .s_axis_data_tready   ( rx_car_cic1_q_rdy    ),
 
-  .m_axis_data_tdata    ( rx_car_cic2_q_out    ),  // RX_CAR_CIC1 output Q
+  .m_axis_data_tdata    ( rx_car_cic2_q_out    ),  // RX_CAR_CIC2 output Q
   .m_axis_data_tvalid   ( rx_car_cic2_q_vld    ),
   .m_axis_data_tready   ( rx_car_cic2_q_rdy    ),
   .event_halted         (                      )
@@ -1143,7 +1143,7 @@ rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_rx_mod_fir_I (
   .s_axis_data_tvalid   ( rx_car_cic2_i_vld    ),   // due to the DPS48 delay we read the previous data, extra logic to enhance that function is not needed
   .s_axis_data_tready   ( rx_car_cic2_i_rdy    ),   // handshaking does ignore DSP48 latency
 
-  .m_axis_data_tdata    ( rx_mod_fir_i_out     ),   // RX_MOD_FIR output I - 8kHz (35.30 bit width)
+  .m_axis_data_tdata    ( rx_mod_fir_i_out     ),   // RX_MOD_FIR output I - 8kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_i_vld     ),
   .m_axis_data_tready   ( rx_mod_fir_i_rdy     )
 );
@@ -1158,7 +1158,7 @@ rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_rx_mod_fir_Q (
   .s_axis_data_tvalid   ( rx_car_cic2_q_vld    ),
   .s_axis_data_tready   ( rx_car_cic2_q_rdy    ),
 
-  .m_axis_data_tdata    ( rx_mod_fir_q_out     ),   // RX_MOD_FIR output Q - 8 kHz (35.30 bit width)
+  .m_axis_data_tdata    ( rx_mod_fir_q_out     ),   // RX_MOD_FIR output Q - 8 kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_q_vld     ),
   .m_axis_data_tready   ( rx_mod_fir_q_rdy     )
 );
