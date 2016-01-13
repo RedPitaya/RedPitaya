@@ -85,7 +85,7 @@ read_ip                           $path_ip/rb_fir_8k_8k_25c23_17i16_35o33_lat42.
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 
-import_files -force
+#import_files -force
 
 update_compile_order -fileset sources_1
 
