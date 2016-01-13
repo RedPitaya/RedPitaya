@@ -1022,9 +1022,7 @@ rb_cic_5M_to_8k_32T32_lat18 i_rb_rx_car_cic2_I (
   .s_axis_data_tready   ( rx_car_cic1_i_rdy    ),
 
   .m_axis_data_tdata    ( rx_car_cic2_i_out    ),  // RX_CAR_CIC2 output I
-  .m_axis_data_tvalid   ( rx_car_cic2_i_vld    ),
-  .m_axis_data_tready   ( rx_car_cic2_i_rdy    ),
-  .event_halted         (                      )
+  .m_axis_data_tvalid   ( rx_car_cic2_i_vld    )
 );
 
 rb_cic_5M_to_8k_32T32_lat18 i_rb_rx_car_cic2_Q (
@@ -1038,9 +1036,7 @@ rb_cic_5M_to_8k_32T32_lat18 i_rb_rx_car_cic2_Q (
   .s_axis_data_tready   ( rx_car_cic1_q_rdy    ),
 
   .m_axis_data_tdata    ( rx_car_cic2_q_out    ),  // RX_CAR_CIC2 output Q
-  .m_axis_data_tvalid   ( rx_car_cic2_q_vld    ),
-  .m_axis_data_tready   ( rx_car_cic2_q_rdy    ),
-  .event_halted         (                      )
+  .m_axis_data_tvalid   ( rx_car_cic2_q_vld    )
 );
 
 
@@ -1123,15 +1119,53 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_Q_dsp48 (
 //  TX_MOD_FIR/RX_MOD_FIR coefficients built with Octave:
 //  hn = fir2(62, [0 0.38 0.39 1], [1 1 0.000001 0.000001], 512, kaiser(63,4));
 
-wire [ 23:0] rx_mod_fir_i_in = {3'b0, rx_mod_qmix_i_out[30:14]};
+wire [ 23:0] rx_mod_fir_i_in = {3'b0, rx_mod_qmix_i_out[30:14]};  // bus width is multiple of 8
+reg          rx_mod_fir_s_vld_i;
+wire         rx_mod_fir_s_rdy_i;
 wire [ 39:0] rx_mod_fir_i_out;
 wire         rx_mod_fir_i_vld;
 wire         rx_mod_fir_i_rdy;
 
 wire [ 23:0] rx_mod_fir_q_in = {3'b0, rx_mod_qmix_q_out[30:14]};
+reg          rx_mod_fir_s_vld_q;
+wire         rx_mod_fir_s_rdy_q;
 wire [ 39:0] rx_mod_fir_q_out;
 wire         rx_mod_fir_q_vld;
 wire         rx_mod_fir_q_rdy;
+
+reg  [  2:0] rx_mod_fir_8khz_ctr = 0;
+
+always @(posedge clk_adc_125mhz)                    // assign rx_mod_fir_s_vld_i
+begin
+   if (!rb_clk_en) begin
+      rx_mod_fir_s_vld_i <= 'b0;
+      rx_mod_fir_8khz_ctr <= 'b0;
+      end
+   else begin
+      if (rx_mod_fir_s_vld_i && rx_mod_fir_s_rdy_i)
+         rx_mod_fir_s_vld_i <= 'b0;                 // falling back to non-active state
+      if (clk_48khz)
+         if (!rx_mod_fir_8khz_ctr) begin
+            rx_mod_fir_s_vld_i <= 'b1;              // entering active state
+            rx_mod_fir_8khz_ctr <= 3'd5;
+            end
+         else
+            rx_mod_fir_8khz_ctr <= rx_mod_fir_8khz_ctr - 1;
+      end
+end
+
+always @(posedge clk_adc_125mhz)                    // assign rx_mod_fir_s_vld_q
+begin
+   if (!rb_clk_en)
+      rx_mod_fir_s_vld_q <= 'b0;
+   else begin
+      if (rx_mod_fir_s_vld_q && rx_mod_fir_s_rdy_q)
+         rx_mod_fir_s_vld_q <= 'b0;                 // falling back to non-active state
+
+      if (clk_48khz && !rx_mod_fir_8khz_ctr)
+         rx_mod_fir_s_vld_q <= 'b1;                 // entering active state
+      end
+end
 
 rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_rx_mod_fir_I (
   // global signals
@@ -1140,8 +1174,8 @@ rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_rx_mod_fir_I (
   .aresetn              ( rb_reset_n           ),
 
   .s_axis_data_tdata    ( rx_mod_fir_i_in      ),   // RX_MOD_QMIX output I - 8 kHz
-  .s_axis_data_tvalid   ( rx_car_cic2_i_vld    ),   // due to the DPS48 delay we read the previous data, extra logic to enhance that function is not needed
-  .s_axis_data_tready   ( rx_car_cic2_i_rdy    ),   // handshaking does ignore DSP48 latency
+  .s_axis_data_tvalid   ( rx_mod_fir_s_vld_i   ),
+  .s_axis_data_tready   ( rx_mod_fir_s_rdy_i   ),
 
   .m_axis_data_tdata    ( rx_mod_fir_i_out     ),   // RX_MOD_FIR output I - 8kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_i_vld     ),
@@ -1155,8 +1189,8 @@ rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_rx_mod_fir_Q (
   .aresetn              ( rb_reset_n           ),
 
   .s_axis_data_tdata    ( rx_mod_fir_q_in      ),  // RX_MOD_QMIX output Q - 8 kHz
-  .s_axis_data_tvalid   ( rx_car_cic2_q_vld    ),
-  .s_axis_data_tready   ( rx_car_cic2_q_rdy    ),
+  .s_axis_data_tvalid   ( rx_mod_fir_s_vld_q   ),
+  .s_axis_data_tready   ( rx_mod_fir_s_rdy_q   ),
 
   .m_axis_data_tdata    ( rx_mod_fir_q_out     ),   // RX_MOD_FIR output Q - 8 kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_q_vld     ),
