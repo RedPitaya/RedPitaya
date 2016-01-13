@@ -5,43 +5,6 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * GENERAL DESCRIPTION:
- *
- * Top module connects PS part with rest of Red Pitaya applications.
- *
- *
- *                   /-------\
- *   PS DDR <------> |  PS   |      AXI <-> custom bus
- *   PS MIO <------> |   /   | <------------+
- *   PS CLK -------> |  ARM  |              |
- *                   \-------/              |
- *                                          |
- *                            /-------\     |
- *                         -> | SCOPE | <---+
- *                         |  \-------/     |
- *                         |                |
- *            /--------\   |   /-----\      |
- *   ADC ---> |        | --+-> |     |      |
- *            | ANALOG |       | PID | <----+
- *   DAC <--- |        | <---- |     |      |
- *            \--------/   ^   \-----/      |
- *                         |                |
- *                         |  /-------\     |
- *                         -- |  ASG  | <---+
- *                            \-------/
- *
- * Inside analog module, ADC data is translated from unsigned neg-slope into
- * two's complement. Similar is done on DAC data.
- *
- * Scope module stores data from ADC into RAM, arbitrary signal generator (ASG)
- * sends data from RAM to DAC. MIMO PID uses ADC ADC as input and DAC as its output.
- *
- * Daisy chain connects with other boards with fast serial link. Data which is
- * send and received is at the moment undefined. This is left for the user.
- *
- */
-
 module red_pitaya_top #(
   // module numbers
   int unsigned MNA = 2,  // number of acquisition modules
@@ -130,14 +93,19 @@ logic                    adc_rstn;
 // stream bus type
 localparam type SBA_T = logic signed [14-1:0];  // acquire
 localparam type SBG_T = logic signed [14-1:0];  // generate
+localparam type SBL_T = logic signed [16-1:0];  // logic ananlyzer/generator
 
-// streams
+// analog input streams
 str_bus_if #(.DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
 str_bus_if #(.DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
 str_bus_if #(.DAT_T (SBA_T)) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // acquire
-str_bus_if #(.DAT_T (SBG_T)) str_pid [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // PID
+// analog output streams
 str_bus_if #(.DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
 str_bus_if #(.DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
+// digital input streams
+str_bus_if #(.DAT_T (SBL_T)) str_lg            (.clk (adc_clk), .rstn (adc_rstn));  // LG
+str_bus_if #(.DAT_T (SBL_T)) str_la            (.clk (adc_clk), .rstn (adc_rstn));  // LA
+
 // DAC signals
 logic                    dac_clk_1x;
 logic                    dac_clk_2x;
@@ -145,33 +113,40 @@ logic                    dac_clk_2p;
 logic                    dac_rst;
 logic [MNG-1:0] [14-1:0] dac_dat;
 
-localparam int unsigned DWM = 16;
-localparam int unsigned DWS = 14;
+// calibration mul/sum type
+localparam type CLM_T = logic signed [16-1:0];
+localparam type CLS_T = logic signed [14-1:0];
 
 // configuration
 logic                 digital_loop;
 // ADC calibration
-logic signed [MNA-1:0] [DWM-1:0] adc_cfg_mul;  // gain
-logic signed [MNA-1:0] [DWS-1:0] adc_cfg_sum;  // offset
+CLM_T [MNA-1:0] adc_cfg_mul;  // gain
+CLS_T [MNA-1:0] adc_cfg_sum;  // offset
 // DAC calibration
-logic signed [MNG-1:0] [DWM-1:0] dac_cfg_mul;  // gain
-logic signed [MNG-1:0] [DWS-1:0] dac_cfg_sum;  // offset
+CLM_T [MNG-1:0] dac_cfg_mul;  // gain
+CLS_T [MNG-1:0] dac_cfg_sum;  // offset
 
 // triggers
 struct packed {
   // GPIO
   logic   [2-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
-  // generator
-  logic [MNG-1:0] gen_out;  // MNA - event    triggers from acquire
-  logic [MNG-1:0] gen_swo;  // MNA - software triggers from acquire
-  // acquire
-  logic [MNA-1:0] acq_out;  // MNG - event    triggers from generators
-  logic [MNA-1:0] acq_swo;  // MNG - software triggers from generators
+  // analog generator
+  logic [MNG-1:0] gen_out;  // event    triggers
+  logic [MNG-1:0] gen_swo;  // software triggers
+  // analog acquire
+  logic [MNA-1:0] acq_out;  // event    triggers
+  logic [MNA-1:0] acq_swo;  // software triggers
+  // logic generator
+  logic           lg_out;
+  logic           lg_swo;
+  // logic analyzer
+  logic           la_out;
+  logic           la_swo;
 } trg;
 
 // system bus
-sys_bus_if ps_sys      (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -267,12 +242,21 @@ red_pitaya_ps ps (
 ////////////////////////////////////////////////////////////////////////////////
 
 sys_bus_interconnect #(
-  .SN (8),
-  .SW (20)
+  .SN (16),
+  .SW (19)
 ) sys_bus_interconnect (
   .bus_m (ps_sys),
   .bus_s (sys)
 );
+
+// silence unused busses
+generate
+for (genvar i=9; i<16; i++) begin: for_sys
+  assign sys[i].ack = 1'b1;
+  assign sys[i].err = 1'b1;
+  assign sys[i].rdata = 'x;
+end: for_sys
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
@@ -339,16 +323,15 @@ red_pitaya_calib calib (
 
 localparam int unsigned PDM_CHN = 4;
 localparam int unsigned PDM_DWC = 8;
+localparam type PDM_T = logic [PDM_DWC-1:0];
 
-logic [PDM_CHN-1:0] [PDM_DWC-1:0] pdm_cfg;
+PDM_T [PDM_CHN-1:0]  pdm_cfg;
 
-red_pitaya_ams #(
-  .DWC (PDM_DWC),
-  .CHN (PDM_CHN)
-) ams (
-  // PDM configuration
-  .pdm_cfg   (pdm_cfg),
-  // system bus
+sys_reg_array_o #(
+  .RT (PDM_T  ),
+  .RN (PDM_CHN)
+) regset_pdm (
+  .val       (pdm_cfg),
   .bus       (sys[2])
 );
 
@@ -371,27 +354,45 @@ pdm #(
   .pdm      (dac_pwm_o)
 );
 
+localparam int unsigned PWM_CHN = 4;
+localparam int unsigned PWM_DWC = 8;
+localparam type PWM_T = logic [PWM_DWC-1:0];
+
+PWM_T [PWM_CHN-1:0] pwm_cfg;
+
+sys_reg_array_o #(
+  .RT (PWM_T  ),
+  .RN (PWM_CHN)
+) regset_pwm (
+  .val       (pwm_cfg),
+  .bus       (sys[3])
+);
+
+pwm #(
+  .DWC (PWM_DWC),
+  .CHN (PWM_CHN)
+) pwm (
+  // system signals
+  .clk      (pdm_clk ),
+  .rstn     (pdm_rstn),
+  .cke      (1'b1),
+  // configuration
+  .ena      (1'b1),
+  .rng      (8'd255),
+  // input stream
+  .str_dat  (pwm_cfg),
+  .str_vld  (1'b1   ),
+  .str_rdy  (       ),
+  // PWM outputs
+  .pwm      ()
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Daisy dummy code
 ////////////////////////////////////////////////////////////////////////////////
 
 assign daisy_p_o = 1'bz;
 assign daisy_n_o = 1'bz;
-
-////////////////////////////////////////////////////////////////////////////////
-//  MIMO PID controller
-////////////////////////////////////////////////////////////////////////////////
-
-red_pitaya_pid #(
-  .CNI (MNA),
-  .CNO (MNG)
-) pid (
-  // signals
-  .sti       (str_osc),
-  .sto       (str_pid),
-  // System bus
-  .bus       (sys[3])
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 // ADC IO
@@ -441,26 +442,13 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
-  str_bus_if #(.DAT_T (logic signed [15-1:0])) str_sum (.clk (adc_clk), .rstn (adc_rstn));
-  str_bus_if #(.DAT_T (logic signed [14-1:0])) str_sat (.clk (adc_clk), .rstn (adc_rstn));
-
-  // Sumation of ASG and PID signal perform saturation before sending to DAC
-  // TODO: there should be a proper metod to disable PID, and some proper two stream logic
-  assign str_sum.vld = str_asg[i].vld; // ??? str_pid[i].dat;
-  assign str_sum.dat = str_asg[i].dat; // + str_pid[i].dat;
-  assign str_asg[i].rdy = str_sum.rdy;
-
-  // saturation
-  assign str_sat.vld = str_sum.vld;
-  assign str_sat.dat = (^str_sum.dat[15-1:15-2]) ? {str_sum.dat[15-1], {13{~str_sum.dat[15-1]}}} : str_sum.dat[14-1:0];
-
   linear #(
     .DWI  (14),
     .DWO  (14),
     .DWM  (16)
   ) linear_dac (
     // stream input/output
-    .sti      (str_sat),
+    .sti      (str_asg[i]),
     .sto      (str_dac[i]),
     // configuration
     .cfg_mul  (dac_cfg_mul[i]),
@@ -506,7 +494,7 @@ end: for_gen
 endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Oscilloscope application
+// oscilloscope
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
@@ -528,5 +516,29 @@ scope_top #(
 
 end: for_acq
 endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
+// LG (logic generator)
+////////////////////////////////////////////////////////////////////////////////
+
+asg_top #(
+  .DAT_T (logic [16-1:0]),
+  .TWA ($bits(trg))
+) lg (
+  // stream output
+  .sto       (str_lg),
+  // triggers
+  .trg_ext   (trg),
+  .trg_swo   (trg.lg_swo),
+  .trg_out   (trg.lg_out),
+  // System bus
+  .bus       (sys[8])
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// LA (logic analyzer)
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 endmodule: red_pitaya_top

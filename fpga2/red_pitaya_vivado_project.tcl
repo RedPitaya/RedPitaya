@@ -57,6 +57,7 @@ add_files                         $path_rtl/red_pitaya_pid.sv
 add_files                         $path_rtl/red_pitaya_pll.sv
 add_files                         $path_rtl/red_pitaya_ps.sv
 add_files                         $path_rtl/red_pitaya_top.sv
+add_files                         $path_rtl/sys_reg_array_o.sv
 add_files                         $path_rtl/pdm.sv
 add_files                         $path_rtl/pwm.sv
 add_files                         $path_rtl/linear.sv
