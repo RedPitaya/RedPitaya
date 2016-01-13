@@ -5,23 +5,23 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module la_trigger #(
-  parameter DW = 16   // data width
+  type DAT_T = logic [8-1:0]  // data type
 )(
   // control
-  input  logic          ctl_rst,  // synchronous reset
+  input  logic ctl_rst,  // synchronous reset
   // configuration
-  input  logic [DW-1:0] cfg_msk_cur,  // current mask
-  input  logic [DW-1:0] cfg_msk_old,  // old     mask
-  input  logic [DW-1:0] cfg_val_cur,  // current value
-  input  logic [DW-1:0] cfg_val_old,  // old     value
+  input  DAT_T cfg_msk_cur,  // current mask
+  input  DAT_T cfg_msk_old,  // old     mask
+  input  DAT_T cfg_val_cur,  // current value
+  input  DAT_T cfg_val_old,  // old     value
   // output triggers
-  output logic          sts_trg,
+  output logic sts_trg,
   // stream monitor
-  str_bus_if.m          str
+  str_bus_if.m str
 );
 
-logic          str_trn;
-logic [DW-1:0] str_old;
+logic str_trn;
+DAT_T str_old;
 
 // stream transfer
 assign str_trn = str.vld & str.rdy;

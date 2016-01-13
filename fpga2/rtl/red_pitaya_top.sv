@@ -40,7 +40,7 @@ module red_pitaya_top #(
   input  logic [MNA-1:0] [16-1:2] adc_dat_i,  // ADC data
   input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
   output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
-  output logic                    adc_cdcs_o ,  // ADC clock duty cycle stabilizer
+  output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
   // DAC
   output logic [14-1:0] dac_dat_o  ,  // DAC combined data
   output logic          dac_wrt_o  ,  // DAC write
@@ -103,8 +103,9 @@ str_bus_if #(.DAT_T (SBA_T)) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn)
 str_bus_if #(.DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
 str_bus_if #(.DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // digital input streams
-str_bus_if #(.DAT_T (SBL_T)) str_lg            (.clk (adc_clk), .rstn (adc_rstn));  // LG
-str_bus_if #(.DAT_T (SBL_T)) str_la            (.clk (adc_clk), .rstn (adc_rstn));  // LA
+str_bus_if #(.DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
+str_bus_if #(.DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA (IO -> ACQ)
+str_bus_if #(.DAT_T (SBL_T)) str_lao           (.clk (adc_clk), .rstn (adc_rstn));  // LA (ACQ -> DMA)
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -251,7 +252,7 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=9; i<16; i++) begin: for_sys
+for (genvar i=10; i<16; i++) begin: for_sys
   assign sys[i].ack = 1'b1;
   assign sys[i].err = 1'b1;
   assign sys[i].rdata = 'x;
@@ -522,11 +523,11 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 asg_top #(
-  .DAT_T (logic [16-1:0]),
+  .DAT_T (SBL_T),
   .TWA ($bits(trg))
 ) lg (
   // stream output
-  .sto       (str_lg),
+  .sto       (str_lgo),
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.lg_swo),
@@ -539,6 +540,19 @@ asg_top #(
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
 
-
+la_top #(
+  .DAT_T (SBL_T),
+  .TWA ($bits(trg))
+) la (
+  // streams
+  .sti       (str_lai),
+  .sto       (str_lao),
+  // triggers
+  .trg_ext   (trg),
+  .trg_swo   (trg.la_swo),
+  .trg_out   (trg.la_out),
+  // System bus
+  .bus       (sys[9])
+);
 
 endmodule: red_pitaya_top

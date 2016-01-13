@@ -6,6 +6,7 @@
 
 module la_top #(
   // stream parameters
+  type DAT_T = logic [8-1:0],
   int unsigned DWI = 16,  // data width for input
   int unsigned DWO = 14,  // data width for output
   // decimation parameters
@@ -30,23 +31,23 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) stf (.clk (sti.clk), .rstn (sti.rstn));  // from filter
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
+str_bus_if #(.DAT_T (DAT_T)) stf (.clk (sti.clk), .rstn (sti.rstn));  // from filter
+str_bus_if #(.DAT_T (DAT_T)) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
 
 // control
 logic                  ctl_rst;  // synchronous clear
 logic                  ctl_acq;  // start acquire run
 // status
 logic                  sts_acq;  // acquire status
-// configuration
-logic                  cfg_rng;  // range select (this one is only used by the firmware)
 // trigger
-logic signed [TWS-1:0] cfg_sel;  // trigger select
+logic        [TWS-1:0] cfg_sel;  // trigger select
 logic        [ 32-1:0] cfg_dly;  // delay value
 logic        [ 32-1:0] sts_dly;  // delay counter
-// edge detection configuration
-logic signed [DWI-1:0] cfg_lvl;  // level
-logic        [DWI-1:0] cfg_hst;  // hystheresis
+// trigger source configuration
+DAT_T                  cfg_msk_cur;  // current mask
+DAT_T                  cfg_msk_old;  // old     mask
+DAT_T                  cfg_val_cur;  // current value
+DAT_T                  cfg_val_old;  // old     value
 // decimation configuration
 logic        [DWC-1:0] cfg_dec;  // decimation factor
 
@@ -77,26 +78,26 @@ always @(posedge bus.clk)
 if (~bus.rstn) begin
   // control
   ctl_acq <= 1'b0;
-  // configuration
-  cfg_rng <= 1'b0;
   // trigger
   cfg_sel <= '0;
   cfg_dly <= '0;
-  // edge detection
-  cfg_lvl <= '0;
-  cfg_hst <= '0;
+  // trigger detection
+  cfg_msk_cur <= '0;
+  cfg_msk_old <= '0;
+  cfg_val_cur <= '0;
+  cfg_val_old <= '0;
   // filter/dacimation
   cfg_dec <= '0;
 end else begin
   if (bus.wen) begin
-    // configuration
-    if (bus.addr[6-1:0]==6'h04)   cfg_rng <= bus.wdata[      0];
     // trigger
     if (bus.addr[6-1:0]==6'h08)   cfg_sel <= bus.wdata[TWS-1:0];
     if (bus.addr[6-1:0]==6'h0c)   cfg_dly <= bus.wdata[ 32-1:0];
-    // edge detection
-    if (bus.addr[6-1:0]==6'h10)   cfg_lvl <= bus.wdata[DWI-1:0];
-    if (bus.addr[6-1:0]==6'h14)   cfg_hst <= bus.wdata[DWI-1:0];
+    // trigger detection
+    if (bus.addr[6-1:0]==6'h10)   cfg_msk_cur <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h14)   cfg_msk_old <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h18)   cfg_val_cur <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h1c)   cfg_val_old <= DAT_T'(bus.wdata);
     // filter/dacimation
     if (bus.addr[6-1:0]==6'h28)   cfg_dec <= bus.wdata[DWC-1:0];
   end
@@ -114,14 +115,14 @@ begin
     // control/status
     6'h00 : bus.rdata <= {{32-  3{1'b0}}, sts_acq,
                                           sts_trg, 1'b0};
-    // configuration
-    6'h04 : bus.rdata <= {{32-  1{1'b0}}, cfg_rng};
     // trigger
     6'h08 : bus.rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
     6'h0c : bus.rdata <=                  cfg_dly ;
-    // edge detection
-    6'h10 : bus.rdata <=                  cfg_lvl ;
-    6'h14 : bus.rdata <=                  cfg_hst ;
+    // trigger detection
+    6'h10 : bus.rdata <=                  cfg_msk_cur;
+    6'h14 : bus.rdata <=                  cfg_msk_old;
+    6'h18 : bus.rdata <=                  cfg_val_cur;
+    6'h1c : bus.rdata <=                  cfg_val_old;
     // filter/decimation
     6'h28 : bus.rdata <= {{32-DWC{1'b0}}, cfg_dec};
 
@@ -150,15 +151,15 @@ str_dec #(
 ////////////////////////////////////////////////////////////////////////////////
 
 la_trigger #(
-  // stream parameters
-  .DWI (DWI)
+  .DAT_T (DAT_T)
 ) trigger (
   // control
   .ctl_rst  (ctl_rst),
   // configuration
-  .cfg_edg  (cfg_edg),
-  .cfg_lvl  (cfg_lvl),
-  .cfg_hst  (cfg_hst),
+  .cfg_msk_cur (cfg_msk_cur),
+  .cfg_msk_old (cfg_msk_old),
+  .cfg_val_cur (cfg_val_cur),
+  .cfg_val_old (cfg_val_old),
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor
