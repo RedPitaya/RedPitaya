@@ -272,11 +272,6 @@ void *lcr_MainThread(void *args){
 				break;
 		}
 
-		syslog(LOG_INFO, "VELICINA: %d\n", main_params.range);
-		syslog(LOG_INFO, "FORMAT: %d\n", RANGE_FORMAT[main_params.range_format]);
-		syslog(LOG_INFO, "UNITS: %f\n", RANGE_UNITS[main_params.range_units]);
-		syslog(LOG_INFO, "%.15f\n", z_abs);
-
 		lcr_checkRShunt(z_abs, 
 			SHUNT_TABLE[n_shunt_idx], &n_shunt_idx);
 
@@ -497,6 +492,7 @@ int lcr_data_analysis(float **data,
 		phase_z_rad, z_ampl;
 
 	double T = (decimation / SAMPLE_RATE);
+	double c_calib = 500E-12;
 
 	double u_dut[size];
 	double i_dut[size];
@@ -508,7 +504,9 @@ int lcr_data_analysis(float **data,
 
 	for(int i = 0; i < size; i++){
 		u_dut[i] = data[0][i] - data[1][i];
-		i_dut[i] = data[1][i] / r_shunt;
+		i_dut[i] = data[1][i] / 
+			((r_shunt * (1.0 / (w_out * c_calib))) / (r_shunt + 
+				(1.0 / (w_out * c_calib))));
 	}
 
 	for(int i = 0; i < size; i++){
@@ -544,9 +542,12 @@ int lcr_data_analysis(float **data,
 	phase_z_rad =  u_dut_phase_ampl - i_dut_phase_ampl;
 	z_ampl = u_dut_ampl / i_dut_ampl; 
 
+	float p_corr = atan(-w_out * c_calib * r_shunt);
+
 	/* Phase has to be limited between M_PI and -M_PI. */
-	if (phase_z_rad <=  (-M_PI) )     phase_z_rad = phase_z_rad +(2*M_PI);
-	else if ( phase_z_rad >= M_PI )   phase_z_rad = phase_z_rad +(2*M_PI);      
+	if (phase_z_rad <=  (-M_PI) )     phase_z_rad = phase_z_rad +(2*M_PI) + p_corr;
+	else if ( phase_z_rad >= M_PI )   phase_z_rad = phase_z_rad +(2*M_PI) + p_corr;
+	else phase_z_rad += p_corr;      
 
 	*phase_out = 180.0 * (phase_z_rad / (2.0 * M_PI));
 	*z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
