@@ -617,7 +617,7 @@ int main(int argc, char *argv[]) {
 
     // setting default R_shunt resistor
     int    R_shunt_auto = !R_shunt;
-    double R_shunt_tbl [6] = {10, 100, 1000, 10000, 100000, 1300000};
+    double R_shunt_tbl [6] = {10.0, 100.0, 1000.0, 10000.0, 100000.0, 1300000.0};
     int    R_shunt_k = 2;
     if (R_shunt_auto) {
         i2c_set_shunt(R_shunt_k);
@@ -699,6 +699,7 @@ int main(int argc, char *argv[]) {
             awg_param_t params;
             /* Prepare data buffer (calculate from input arguments) */
             synthesize_signal( ampl, DC_bias, Frequency[fr], type, endfreq, data, &params );
+            usleep(100000);
             /* Write the data to the FPGA and set FPGA AWG state machine */
             write_data_fpga( ch, data, &params );
 
@@ -834,13 +835,13 @@ int main(int argc, char *argv[]) {
                         // depending on the mesured reactance compared to the current shunt resistor
                         // recalculate shunt resistor choice
                         int R_shunt_old = R_shunt_k;
-                        if ( (Z_amp >= (10.0*R_shunt)) || (Z_amp <= (1.0/10.0*R_shunt)) ) {
-                            if      ((Z_amp > 1e6)                      )     R_shunt_k=5; // 1M3
-                            else if ((Z_amp > 100e3) && (Z_amp <= 1e6))       R_shunt_k=4; // 100K
-                            else if ((Z_amp >  10e3) && (Z_amp <= 100e3))     R_shunt_k=3; // 10K 
-                            else if ((Z_amp >  1e3)  && (Z_amp <=  10e3))     R_shunt_k=2; // 1K
-                            else if ((Z_amp >  100)  && (Z_amp <=  1e3))      R_shunt_k=1; // 100E
-                            else if ((Z_amp <= 100)                     )     R_shunt_k=0; // 10E
+                        if ( (Z_amp >= (6.0*R_shunt)) || (Z_amp <= (1.0/6.0*R_shunt)) ) {
+                            if      ((Z_amp > 2e6)                      )     R_shunt_k=5; // 1M3
+                            else if ((Z_amp > 50e3) && (Z_amp <= 2e6))       R_shunt_k=4; // 100K
+                            else if ((Z_amp >  5e3) && (Z_amp <= 50e3))     R_shunt_k=3; // 10K 
+                            else if ((Z_amp >  0.5e3)  && (Z_amp <= 5e3))     R_shunt_k=2; // 1K
+                            else if ((Z_amp >  50)  && (Z_amp <=  0.5e3))      R_shunt_k=1; // 100E
+                            else if ((Z_amp <= 50)                     )     R_shunt_k=0; // 10E
                         }
                         int repeat = R_shunt_old != R_shunt_k;
                         if (repeat) {
@@ -1421,7 +1422,27 @@ int LCR_data_analysis(float **s,
         float mean_buff_in1=sum_buff_in1/size;
         float mean_buff_in2=sum_buff_in2/size;
 
-      double C_cable=500E-12;
+      // MANUAL CORRECTION
+      double C_cable=460E-12;
+      float P_correction=atan(-w_out*C_cable*R_shunt);
+   
+  
+      if        (R_shunt==1300000.0)     {  R_shunt=R_shunt*1.0;  C_cable=465E-12;  }
+
+      else if   (R_shunt==100000.0)      {  R_shunt=R_shunt*1.0;  C_cable=390E-12;  }
+
+      else if   (R_shunt==10000.0)       {  R_shunt=R_shunt*1.0;  C_cable=350E-12;  }
+  
+      else if   (R_shunt==1000.0)        {  R_shunt=R_shunt*1.0;  C_cable=160E-12;  }
+
+      else if   (R_shunt==100.0)         {  R_shunt=R_shunt*1.0;  C_cable=100E-12;  }
+
+      else if   (R_shunt==10.0)          {  R_shunt=R_shunt*1.15;  C_cable=100E-12;  }
+       /////// 
+
+   
+
+
     /* Voltage and current on the load can be calculated from gathered data */
     for (i2 = 0; i2 < size; i2++) {
         U_dut[ i2 ] = (((U_acq[ 1 ][ i2 ])- mean_buff_in1) - ((U_acq[ 2 ][ i2 ])- mean_buff_in2)); // potencial difference gives the voltage
@@ -1461,8 +1482,6 @@ int LCR_data_analysis(float **s,
     Z_amp = U_dut_amp / I_dut_amp; // forming resistance
 
 
-
-    float P_correction=atan(-w_out*C_cable*R_shunt);
     /* Phase has to be limited between 180 and -180 deg. */
     if (Phase_Z_rad <=  (-M_PI) ) {
         Phase_Z_rad = Phase_Z_rad +(2*M_PI)+P_correction;
@@ -1519,6 +1538,7 @@ int i2c_set_shunt (int k) {
     char str [1+2*11];
 
     // parse input arguments
+   
     dat = (1<<k);
 
     // Open the device.
