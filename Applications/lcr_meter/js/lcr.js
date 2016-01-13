@@ -198,6 +198,11 @@
 				formatRangeAuto(0, 2, null, new_params[param_name].value);
 
 				if(param_name == 'LCR_P') {
+
+					if(new_params[param_name].value < -180 || new_params[param_name].value > 180){
+						$('#lb_sec_displ').empty().append("OVER R.");
+						$('#lb_sec_displ_units').empty();
+					}
 					$('#lb_sec_displ').empty().append(new_params[param_name].value.toFixed(2));
 					$('#lb_sec_displ_units').empty().append("deg");				
 				}else{

@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
+#include <sys/syslog.h>
 
 #include "version.h"
 
@@ -203,19 +204,19 @@ void UpdateParams(void){
 				break;
 			case 1:
 				lcr_amplitude.Value() = 
-					relSaved.Value() - data->lcr_amplitude;
+					relSaved.Value() - lcr_amplitude.Value();
 				break;
 			case 2:
 				lcr_Inductance.Value() = 
-					relSaved.Value() - data->lcr_L;
+					relSaved.Value() - lcr_Inductance.Value();
 				break;
 			case 3:
-				lcr_Capacitance.Value() = 
-					relSaved.Value() - (data->lcr_C / lcr_C_precision.Value());
+				lcr_Capacitance.Value() = relSaved.Value() - lcr_Capacitance.Value();
+					//syslog(LOG_INFO, "%f %f\n", lcr_Capacitance.Value(), data->lcr_C);
 				break;
 			case 4:
 				lcr_Resitance.Value() = 
-					relSaved.Value() - data->lcr_R;
+					relSaved.Value() - lcr_Resitance.Value();
 				break;
 		}
 
