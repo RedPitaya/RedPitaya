@@ -45,6 +45,9 @@ end else begin
 end
 
 always_ff @(posedge sti.clk)
-if (sti_trn & (ctl_rst | nul))  sto.dat <= sti.dat;
+if (sti_trn & (ctl_rst | nul)) begin
+  sto.dat <= sti.dat;
+  sto.lst <= sti.lst;
+end
 
 endmodule: str_dec
