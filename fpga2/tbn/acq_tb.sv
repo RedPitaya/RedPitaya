@@ -11,30 +11,39 @@ module acq_tb #(
   realtime  TP = 4.0ns,  // 250MHz
   // parameters
   int unsigned TW = 64,  // time width
-  int unsigned DW = 14,  // data width
   int unsigned CW = 32,  // counter width
   // data bus type
-  type DAT_T = logic signed [DW-1:0]
+  type DAT_T = logic signed [14-1:0]
 );
 
 // system signals
 logic          clk ;  // clock
 logic          rstn;  // reset - active low
 
+// current time stamp
+logic [TW-1:0] cts;
 // control
 logic          ctl_rst;
-// current time stamp
-logic [TW-1:0] ctl_cts;
-logic [TW-1:0] sts_cts;
-// delay configuration/status
-logic [CW-1:0] cfg_dly;
-logic [CW-1:0] sts_dly;
-// acquire control/status
-logic          ctl_acq;
+// configuration (mode)
+logic          cfg_con;  // continuous
+logic          cfg_aut;  // automatic
+// configuration/status pre trigger
+logic [CW-1:0] cfg_pre;
+logic [CW-1:0] sts_pre;
+// configuration/status post trigger
+logic [CW-1:0] cfg_pst;
+logic [CW-1:0] sts_pst;
+// control/status/timestamp acquire
+logic          ctl_acq;  // acquire start
 logic          sts_acq;
-// trigger control/status
+logic [TW-1:0] cts_acq;
+// control/status/timestamp trigger
 logic          ctl_trg;
 logic          sts_trg;
+logic [TW-1:0] cts_trg;
+// control/status/timestamp stop
+logic          ctl_stp;  // acquire stop
+logic [TW-1:0] cts_stp;
 
 // stream input/output
 str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
@@ -47,8 +56,8 @@ str_bus_if #(.DAT_T (DAT_T)) sto (.clk (clk), .rstn (rstn));
 initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
 
-initial                ctl_cts  = 0;
-always @ (posedge clk) ctl_cts <= ctl_cts+1;
+initial                cts  = 0;
+always @ (posedge clk) cts <= cts + 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
@@ -57,9 +66,13 @@ always @ (posedge clk) ctl_cts <= ctl_cts+1;
 initial begin
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
-  cfg_dly = 0;
+  cfg_con = 1'b0;
+  cfg_aut = 1'b0;
+  cfg_pre = 0;
+  cfg_pst = 0;
   ctl_acq = 1'b0;
   ctl_trg = 1'b0;
+  ctl_stp = 1'b0;
 
   // initialization
   rstn = 1'b0;
@@ -121,41 +134,42 @@ endtask
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(
-  .DAT_T (DAT_T)
-) str_src (
-  .str      (sti)
-);
+str_src #(.DAT_T (DAT_T)) str_src (.str (sti));
 
 acq #(
   .TW (TW),
-  .DW (DW),
   .CW (CW)
 ) acq (
   // stream input/output
   .sti      (sti),
   .sto      (sto),
+  // current time stamp
+  .cts      (cts),
   // control
   .ctl_rst  (ctl_rst),
-  // current time stamp
-  .ctl_cts  (ctl_cts),
-  .sts_cts  (sts_cts),
-  // delay configuration/status
-  .cfg_dly  (cfg_dly),
-  .sts_dly  (sts_dly),
-  // acquire control/status
-  .ctl_acq  (ctl_acq),
+  // configuration (mode)
+  .cfg_con  (cfg_con),
+  .cfg_aut  (cfg_aut),
+  // configuration/status pre trigger
+  .cfg_pre  (cfg_pre),
+  .sts_pre  (sts_pre),
+  // configuration/status post trigger
+  .cfg_pst  (cfg_pst),
+  .sts_pst  (sts_pst),
+  // control/status/timestamp acquire
+  .ctl_acq  (ctl_acq),  // acquire start
   .sts_acq  (sts_acq),
-  // trigger control/status
+  .cts_acq  (cts_acq),
+  // control/status/timestamp trigger
   .ctl_trg  (ctl_trg),
-  .sts_trg  (sts_trg)
+  .sts_trg  (sts_trg),
+  .cts_trg  (cts_trg),
+  // control/status/timestamp stop
+  .ctl_stp  (ctl_stp),  // acquire stop
+  .cts_stp  (cts_stp)
 );
 
-str_drn #(
-  .DAT_T (DAT_T)
-) str_drn (
-  .str      (sto)
-);
+str_drn #(.DAT_T (DAT_T)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

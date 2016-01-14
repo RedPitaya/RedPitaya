@@ -2,15 +2,23 @@ onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /acq_tb/clk
 add wave -noupdate /acq_tb/rstn
+add wave -noupdate /acq_tb/acq/cts
 add wave -noupdate /acq_tb/acq/ctl_rst
-add wave -noupdate /acq_tb/acq/ctl_cts
-add wave -noupdate /acq_tb/acq/sts_cts
-add wave -noupdate /acq_tb/acq/cfg_dly
-add wave -noupdate /acq_tb/acq/sts_dly
+add wave -noupdate /acq_tb/acq/cfg_con
+add wave -noupdate /acq_tb/acq/cfg_aut
+add wave -noupdate /acq_tb/acq/cfg_pre
+add wave -noupdate /acq_tb/acq/sts_pre
+add wave -noupdate /acq_tb/acq/cfg_pst
+add wave -noupdate /acq_tb/acq/sts_pst
 add wave -noupdate /acq_tb/acq/ctl_acq
 add wave -noupdate /acq_tb/acq/sts_acq
+add wave -noupdate /acq_tb/acq/cts_acq
 add wave -noupdate /acq_tb/acq/ctl_trg
 add wave -noupdate /acq_tb/acq/sts_trg
+add wave -noupdate /acq_tb/acq/cts_trg
+add wave -noupdate /acq_tb/acq/ctl_stp
+add wave -noupdate /acq_tb/acq/sts_stp
+add wave -noupdate /acq_tb/acq/cts_stp
 add wave -noupdate -expand -group sti /acq_tb/sti/*
 add wave -noupdate -expand -group sti /acq_tb/str_src/str_trn
 add wave -noupdate -expand -group sti /acq_tb/str_src/str_ena
@@ -21,10 +29,16 @@ add wave -noupdate -expand -group sto /acq_tb/str_drn/str_ena
 add wave -noupdate -expand -group sto /acq_tb/str_drn/buf_siz
 
 # difine Radix
-radix signal /acq_tb/acq/ctl_cts -decimal -unsigned
-radix signal /acq_tb/acq/sts_cts -decimal -unsigned
-radix signal /acq_tb/acq/cfg_dly -decimal -unsigned
-radix signal /acq_tb/acq/sts_dly -decimal -unsigned
+radix signal /acq_tb/acq/cts     -decimal -unsigned
+radix signal /acq_tb/acq/cfg_pre -decimal -unsigned
+radix signal /acq_tb/acq/sts_pre -decimal -unsigned
+radix signal /acq_tb/acq/cfg_pst -decimal -unsigned
+radix signal /acq_tb/acq/sts_pst -decimal -unsigned
+radix signal /acq_tb/acq/cts_acq -decimal -unsigned
+radix signal /acq_tb/acq/cts_trg -decimal -unsigned
+radix signal /acq_tb/acq/cts_stp -decimal -unsigned
+radix signal /acq_tb/sti/dat -hexadecimal
+radix signal /acq_tb/sto/dat -hexadecimal
 radix signal /acq_tb/str_src/buf_siz -decimal -unsigned
 radix signal /acq_tb/str_drn/buf_siz -decimal -unsigned
 #-fpoint
