@@ -44,10 +44,10 @@ logic        [TWS-1:0] cfg_sel;  // trigger select
 logic        [ 32-1:0] cfg_dly;  // delay value
 logic        [ 32-1:0] sts_dly;  // delay counter
 // trigger source configuration
-DAT_T                  cfg_msk_cur;  // current mask
-DAT_T                  cfg_msk_old;  // old     mask
-DAT_T                  cfg_val_cur;  // current value
-DAT_T                  cfg_val_old;  // old     value
+DAT_T                  cfg_old_val;  // old     value
+DAT_T                  cfg_old_msk;  // old     mask
+DAT_T                  cfg_cur_val;  // current value
+DAT_T                  cfg_cur_msk;  // current mask
 // decimation configuration
 logic        [DWC-1:0] cfg_dec;  // decimation factor
 
@@ -82,10 +82,10 @@ if (~bus.rstn) begin
   cfg_sel <= '0;
   cfg_dly <= '0;
   // trigger detection
-  cfg_msk_cur <= '0;
-  cfg_msk_old <= '0;
-  cfg_val_cur <= '0;
-  cfg_val_old <= '0;
+  cfg_old_val <= '0;
+  cfg_old_msk <= '0;
+  cfg_cur_val <= '0;
+  cfg_cur_msk <= '0;
   // filter/dacimation
   cfg_dec <= '0;
 end else begin
@@ -94,10 +94,10 @@ end else begin
     if (bus.addr[6-1:0]==6'h08)   cfg_sel <= bus.wdata[TWS-1:0];
     if (bus.addr[6-1:0]==6'h0c)   cfg_dly <= bus.wdata[ 32-1:0];
     // trigger detection
-    if (bus.addr[6-1:0]==6'h10)   cfg_msk_cur <= DAT_T'(bus.wdata);
-    if (bus.addr[6-1:0]==6'h14)   cfg_msk_old <= DAT_T'(bus.wdata);
-    if (bus.addr[6-1:0]==6'h18)   cfg_val_cur <= DAT_T'(bus.wdata);
-    if (bus.addr[6-1:0]==6'h1c)   cfg_val_old <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h10)   cfg_old_val <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h14)   cfg_old_msk <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h18)   cfg_cur_val <= DAT_T'(bus.wdata);
+    if (bus.addr[6-1:0]==6'h1c)   cfg_cur_msk <= DAT_T'(bus.wdata);
     // filter/dacimation
     if (bus.addr[6-1:0]==6'h28)   cfg_dec <= bus.wdata[DWC-1:0];
   end
@@ -119,10 +119,10 @@ begin
     6'h08 : bus.rdata <= {{32-TWS{1'b0}}, cfg_sel}; 
     6'h0c : bus.rdata <=                  cfg_dly ;
     // trigger detection
-    6'h10 : bus.rdata <=                  cfg_msk_cur;
-    6'h14 : bus.rdata <=                  cfg_msk_old;
-    6'h18 : bus.rdata <=                  cfg_val_cur;
-    6'h1c : bus.rdata <=                  cfg_val_old;
+    6'h10 : bus.rdata <=                  cfg_old_val;
+    6'h14 : bus.rdata <=                  cfg_old_msk;
+    6'h18 : bus.rdata <=                  cfg_cur_val;
+    6'h1c : bus.rdata <=                  cfg_cur_msk;
     // filter/decimation
     6'h28 : bus.rdata <= {{32-DWC{1'b0}}, cfg_dec};
 
@@ -156,10 +156,10 @@ la_trigger #(
   // control
   .ctl_rst  (ctl_rst),
   // configuration
-  .cfg_msk_cur (cfg_msk_cur),
-  .cfg_msk_old (cfg_msk_old),
-  .cfg_val_cur (cfg_val_cur),
-  .cfg_val_old (cfg_val_old),
+  .cfg_old_val (cfg_old_val),
+  .cfg_old_msk (cfg_old_msk),
+  .cfg_cur_val (cfg_cur_val),
+  .cfg_cur_msk (cfg_cur_msk),
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor

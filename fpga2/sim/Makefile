@@ -52,7 +52,9 @@ compile: $(LIB) $(SIP) $(RTL) $(TBN)
 
 %_tb: compile
 	$(MODELSIM_BIN)/vsim $(CFG) -c -do '$(TCL)' $@
+ifdef WAV
 	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; do $@.do'
+endif
 
 clean:
 	rm -rf work *.vcd

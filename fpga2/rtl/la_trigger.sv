@@ -10,10 +10,10 @@ module la_trigger #(
   // control
   input  logic ctl_rst,  // synchronous reset
   // configuration
-  input  DAT_T cfg_msk_cur,  // current mask
-  input  DAT_T cfg_msk_old,  // old     mask
-  input  DAT_T cfg_val_cur,  // current value
-  input  DAT_T cfg_val_old,  // old     value
+  input  DAT_T cfg_old_val,  // old     value
+  input  DAT_T cfg_old_msk,  // old     mask
+  input  DAT_T cfg_cur_val,  // current value
+  input  DAT_T cfg_cur_msk,  // current mask
   // output triggers
   output logic sts_trg,
   // stream monitor
@@ -36,8 +36,8 @@ end else begin
   if (ctl_rst) begin
     sts_trg <= '0;
   end if (str_trn) begin
-    sts_trg <= ((str.dat & cfg_msk_cur) == (cfg_val_cur & cfg_msk_cur))
-             | ((str_old & cfg_msk_old) == (cfg_val_old & cfg_msk_old));
+    sts_trg <= ~|((str.dat & cfg_cur_msk) ^ (cfg_cur_val & cfg_cur_msk))
+             & ~|((str_old & cfg_old_msk) ^ (cfg_old_val & cfg_old_msk));
   end
 end
 
