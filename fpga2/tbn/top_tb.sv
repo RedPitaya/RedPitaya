@@ -59,10 +59,20 @@ int b;
 
 initial begin
   repeat(100) @(posedge clk);
+  axi_write (0,'h01234567);
+  axi_write ((0 << 19) + 'h30, 'ha5);
+  repeat(16) @(posedge clk);
+  $finish();
+end
+
+task axi_write (
+  input  logic [32-1:0] adr,
+  input  logic [32-1:0] dat
+);
   top_tb.top.ps.system_i.axi_bus_model.WriteTransaction (
     .AWDelay (0),  .aw ('{
                           id    : 0,
-                          addr  : 0,
+                          addr  : adr,
                           region: 0,
                           len   : 0,
                           size  : 3'b010,
@@ -74,15 +84,13 @@ initial begin
                          }),
      .WDelay (0),   .w ('{
                           id    : 0,
-                          data  : 0,
+                          data  : dat,
                           strb  : '1,
                           last  : 1
                          }),
      .BDelay (0),   .b (b)
   );
-  repeat(16) @(posedge clk);
-  $finish();
-end
+endtask: axi_write
 
 ////////////////////////////////////////////////////////////////////////////////
 // signal generation

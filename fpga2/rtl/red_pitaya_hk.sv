@@ -95,6 +95,8 @@ assign id_value[ 3:0] =  4'h1; // board type   1 - release 1
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
+localparam int unsigned BDW = 6;
+
 always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
   digital_loop <= '0;
@@ -106,14 +108,14 @@ if (!bus.rstn) begin
   exp_n_o  <= '0;
   exp_n_oe <= '0;
 end else if (bus.wen) begin
-  if (bus.addr[19:0]==20'h0c)   digital_loop <= bus.wdata[0];
+  if (bus.addr[BDW-1:0]=='h0c)   digital_loop <= bus.wdata[0];
   // GPIO
-  if (bus.addr[19:0]==20'h10)   exp_p_oe <= bus.wdata[DWE-1:0];
-  if (bus.addr[19:0]==20'h14)   exp_n_oe <= bus.wdata[DWE-1:0];
-  if (bus.addr[19:0]==20'h18)   exp_p_o  <= bus.wdata[DWE-1:0];
-  if (bus.addr[19:0]==20'h1C)   exp_n_o  <= bus.wdata[DWE-1:0];
+  if (bus.addr[BDW-1:0]=='h10)   exp_p_oe <= bus.wdata[DWE-1:0];
+  if (bus.addr[BDW-1:0]=='h14)   exp_n_oe <= bus.wdata[DWE-1:0];
+  if (bus.addr[BDW-1:0]=='h18)   exp_p_o  <= bus.wdata[DWE-1:0];
+  if (bus.addr[BDW-1:0]=='h1C)   exp_n_o  <= bus.wdata[DWE-1:0];
   // LED
-  if (bus.addr[19:0]==20'h30)   led_o    <= bus.wdata[DWL-1:0];
+  if (bus.addr[BDW-1:0]=='h30)   led_o    <= bus.wdata[DWL-1:0];
 end
 
 always_ff @(posedge bus.clk)
@@ -128,23 +130,23 @@ if (!bus.rstn) begin
   bus.ack <= 1'b0;
 end else begin
   bus.ack <= sys_en;
-  casez (bus.addr[19:0])
+  casez (bus.addr[BDW-1:0])
     // ID
-    20'h00000:  bus.rdata <= {                id_value          };
-    20'h00004:  bus.rdata <= {                dna_value[32-1: 0]};
-    20'h00008:  bus.rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]};
-    20'h0000c:  bus.rdata <= {{32-  1{1'b0}}, digital_loop      };
+    'h00:  bus.rdata <= {                id_value          };
+    'h04:  bus.rdata <= {                dna_value[32-1: 0]};
+    'h08:  bus.rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]};
+    'h0c:  bus.rdata <= {{32-  1{1'b0}}, digital_loop      };
     // GPIO
-    20'h00010:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_oe};
-    20'h00014:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_oe};
-    20'h00018:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_o} ;
-    20'h0001C:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_o} ;
-    20'h00020:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_i} ;
-    20'h00024:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_i} ;
+    'h10:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_oe};
+    'h14:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_oe};
+    'h18:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_o} ;
+    'h1C:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_o} ;
+    'h20:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_i} ;
+    'h24:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_i} ;
     // LED
-    20'h00030:  bus.rdata <= {{32-DWL{1'b0}}, led_o}   ;
+    'h30:  bus.rdata <= {{32-DWL{1'b0}}, led_o}   ;
 
-      default:  bus.rdata <=  32'h0                    ;
+    default: bus.rdata <= '0;
   endcase
 end
 
