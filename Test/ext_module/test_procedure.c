@@ -18,17 +18,52 @@
 #include "redpitaya/rp.h"
 
 int main(int argc, char *argv[]){
+    
+    
+   /* Print error, if rp_Init() function failed */
+	if(rp_Init() != RP_OK){
+		fprintf(stderr, "Rp api init failed!\n");
+	}	
+  
+     
+  
+	 //CHEKC button state
+	rp_DpinSetDirection(RP_DIO7_N, RP_IN);
 
+
+
+    while(1){
+    
 	int global_c = 0, sum = 0;
 	int check[12];
 	for (int i = 0; i < 12; i++){
 		check[i] = 0;
 	}
 	
-	/* Print error, if rp_Init() function failed */
-	if(rp_Init() != RP_OK){
-		fprintf(stderr, "Rp api init failed!\n");
-	}	
+	
+    
+	printf("Press button to start test procedure\n");
+
+    while(1){
+
+    usleep(50000);
+    
+    rp_pinState_t button;
+    int count;
+
+    rp_DpinGetState(RP_DIO7_N, &button);
+ 
+    if(button==0){ if(++count>10)  
+
+ 	{ 
+ 		printf("Test Procedure is started\n");
+ 		break; 
+ 	} }  
+ 	else{ count=0;  } 
+    }
+
+
+
 
 	/* Set PIN value */
 	rp_dpin_t pin;
@@ -88,8 +123,20 @@ int main(int argc, char *argv[]){
 		printf("%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\t%.1d\n", 
 			check[0], check[1], check[2], check[3], check[4], check[5], check[6], 
 			check[7], check[8], check[9], check[10], check[11]);
-		return -1;
+		//return -1;
+		usleep(1000000);
+		
 	}
+	else{
+
+	usleep(1000000);
 	printf("Pass!\n");
-	return 0;
+	
+	}
+     
+    
+	//return 0;
+
+    
+}
 }
