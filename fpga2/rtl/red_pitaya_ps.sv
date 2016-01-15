@@ -132,6 +132,7 @@ system_wrapper system_i (
 //  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
   .M_AXI_GP0_ACLK    (axi_gp.ACLK   ),
+  .M_AXI_GP0_ARESETn (axi_gp.ARESETn),
   .M_AXI_GP0_arvalid (axi_gp.ARVALID),
   .M_AXI_GP0_awvalid (axi_gp.AWVALID),
   .M_AXI_GP0_bready  (axi_gp.BREADY ),

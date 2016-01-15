@@ -7,22 +7,24 @@
 module la_top #(
   // stream parameters
   type DAT_T = logic [8-1:0],
-  int unsigned DWI = 16,  // data width for input
-  int unsigned DWO = 14,  // data width for output
   // decimation parameters
-  int unsigned DWC = 17,  // data width for counter
+  int unsigned DCW = 17,  // decimation counter width
+  // aquisition parameters
+  int unsigned CW = 17,  // counter width
   // trigger parameters
-  int unsigned TWA =  4   // external trigger array  width
+  int unsigned TN =  4,  // trigger number
+  // timestamp parameters
+  int unsigned TW = 64   // timestamp width
 )(
   // streams
-  str_bus_if.d                  sti,      // input
-  str_bus_if.s                  sto,      // output
+  str_bus_if.d           sti,      // input
+  str_bus_if.s           sto,      // output
   // triggers
-  input  logic        [TWA-1:0] trg_ext,  // external input
-  output logic                  trg_swo,  // output from software
-  output logic                  trg_out,  // output from edge detection
+  input  logic  [TN-1:0] trg_ext,  // external input
+  output logic           trg_swo,  // output from software
+  output logic           trg_out,  // output from edge detection
   // System bus
-  sys_bus_if.s                  bus
+  sys_bus_if.s           bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,53 +32,46 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if #(.DAT_T (DAT_T)) stf (.clk (sti.clk), .rstn (sti.rstn));  // from filter
 str_bus_if #(.DAT_T (DAT_T)) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
 
-////////////////////////////////////////////////////////////////////////////////
 // acquire regset
-////////////////////////////////////////////////////////////////////////////////
 
 // current time stamp
-logic [TW-1:0] cts;
+logic  [TW-1:0] cts;
 // control
-logic          ctl_rst;
+logic           ctl_rst;
 // configuration (mode)
-logic          cfg_con;  // continuous
-logic          cfg_aut;  // automatic
+logic           cfg_con;  // continuous
+logic           cfg_aut;  // automatic
 // configuration/status pre trigger
-logic [CW-1:0] cfg_pre;
-logic [CW-1:0] sts_pre;
+logic  [CW-1:0] cfg_pre;
+logic  [CW-1:0] sts_pre;
 // configuration/status post trigger
-logic [CW-1:0] cfg_pst;
-logic [CW-1:0] sts_pst;
+logic  [CW-1:0] cfg_pst;
+logic  [CW-1:0] sts_pst;
 // control/status/timestamp acquire
-logic          ctl_acq;  // acquire start
-logic          sts_acq;
-logic [TW-1:0] cts_acq;
+logic           ctl_acq;  // acquire start
+logic           sts_acq;
+logic  [TW-1:0] cts_acq;
 // control/status/timestamp trigger
-logic          ctl_trg;
-logic          sts_trg;
-logic [TW-1:0] cts_trg;
+logic           ctl_trg;
+logic           sts_trg;
+logic  [TW-1:0] cts_trg;
 // control/status/timestamp stop
-logic          ctl_stp;  // acquire stop
-logic [TW-1:0] cts_stp;
+logic           ctl_stp;  // acquire stop
+logic  [TW-1:0] cts_stp;
 
 // trigger
-logic        [TWA-1:0] cfg_trg;  // trigger select
+logic  [TN-1:0] cfg_trg;  // trigger select
 
 // trigger source configuration
-DAT_T                  cfg_old_val;  // old     value
-DAT_T                  cfg_old_msk;  // old     mask
-DAT_T                  cfg_cur_val;  // current value
-DAT_T                  cfg_cur_msk;  // current mask
+DAT_T           cfg_old_val;  // old     value
+DAT_T           cfg_old_msk;  // old     mask
+DAT_T           cfg_cur_val;  // current value
+DAT_T           cfg_cur_msk;  // current mask
+
 // decimation configuration
-logic        [DWC-1:0] cfg_dec;  // decimation factor
-
-// trigger
-logic                  sts_trg;  // trigger status
-logic                  trg_mux;  // multiplexed trigger signal
-
+logic [DCW-1:0] cfg_dec;  // decimation factor
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -95,6 +90,8 @@ end else begin
   bus.ack <= sys_en;
 end
 
+localparam int unsigned BAW=7;
+
 // write access
 always @(posedge bus.clk)
 if (~bus.rstn) begin
@@ -104,64 +101,70 @@ if (~bus.rstn) begin
   cfg_trg <= '0;
   cfg_pre <= '0;
   cfg_pst <= '0;
+
   // trigger detection
   cfg_old_val <= '0;
   cfg_old_msk <= '0;
   cfg_cur_val <= '0;
   cfg_cur_msk <= '0;
+
   // filter/dacimation
   cfg_dec <= '0;
 end else begin
   if (bus.wen) begin
     // acquire regset
-    if (bus.addr[6-1:0]==6'h04)   cfg_con <= bus.wdata[0];
-    if (bus.addr[6-1:0]==6'h04)   cfg_aut <= bus.wdata[1];
-    if (bus.addr[6-1:0]==6'h08)   cfg_trg <= bus.wdata[TWA-1:0];
-    if (bus.addr[6-1:0]==6'h10)   cfg_pre <= bus.wdata[CW-1:0];
-    if (bus.addr[6-1:0]==6'h14)   cfg_pst <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h04)   cfg_con <= bus.wdata[0];
+    if (bus.addr[BAW-1:0]=='h04)   cfg_aut <= bus.wdata[1];
+    if (bus.addr[BAW-1:0]=='h08)   cfg_trg <= bus.wdata[TN-1:0];
+    if (bus.addr[BAW-1:0]=='h10)   cfg_pre <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
 
-    // trigger
     // trigger detection
-    if (bus.addr[6-1:0]==6'h10)   cfg_old_val <= DAT_T'(bus.wdata);
-    if (bus.addr[6-1:0]==6'h14)   cfg_old_msk <= DAT_T'(bus.wdata);
-    if (bus.addr[6-1:0]==6'h18)   cfg_cur_val <= DAT_T'(bus.wdata);
-    if (bus.addr[6-1:0]==6'h1c)   cfg_cur_msk <= DAT_T'(bus.wdata);
-    // filter/dacimation
-    if (bus.addr[6-1:0]==6'h28)   cfg_dec <= bus.wdata[DWC-1:0];
+    if (bus.addr[BAW-1:0]=='h40)   cfg_old_val <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h44)   cfg_old_msk <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h48)   cfg_cur_val <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h4c)   cfg_cur_msk <= DAT_T'(bus.wdata);
+
+    // dacimation
+    if (bus.addr[BAW-1:0]=='h50)   cfg_dec <= bus.wdata[DCW-1:0];
   end
 end
 
 // control signals
-assign trg_swo = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[3];  // trigger
-assign ctl_acq = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[1];  // acquire start
-assign ctl_stp = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[2];  // acquire stop
-assign ctl_rst = bus.wen & (bus.addr[6-1:0]==6'h00) & bus.wdata[0];  // reset
+assign trg_swo = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[3];  // trigger
+assign ctl_acq = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[1];  // acquire start
+assign ctl_stp = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[2];  // acquire stop
+assign ctl_rst = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[0];  // reset
 
 // read access
 always_ff @(posedge bus.clk)
 begin
-  casez (bus.addr[19:0])
+  casez (bus.addr[BAW-1:0])
     // acquire regset
-    6'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, ~sts_acq, sts_acq, 1'b0};
-    6'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
-    6'h08 : bus.rdata <= {{32-TWA{1'b0}}, cfg_trg};
-    6'h10 : bus.rdata <= {{32- CW{1'b0}}, cfg_pre};
-    6'h14 : bus.rdata <= {{32- CW{1'b0}}, cfg_pst};
-    6'h18 : bus.rdata <= {{32- CW{1'b0}}, sts_pre};
-    6'h1c : bus.rdata <= {{32- CW{1'b0}}, sts_pst};
-    6'h20 : bus.rdata <= {{32- TW{1'b0}}, cts_acq};
-    6'h24 : bus.rdata <= {{32- TW{1'b0}}, cts_trg};
-    6'h28 : bus.rdata <= {{32- TW{1'b0}}, cts_stp};
+    'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, ~sts_acq, sts_acq, 1'b0};
+    'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
+    'h08 : bus.rdata <= {{32- TN{1'b0}}, cfg_trg};
+    'h10 : bus.rdata <= {{32- CW{1'b0}}, cfg_pre};
+    'h14 : bus.rdata <= {{32- CW{1'b0}}, cfg_pst};
+    'h18 : bus.rdata <= {{32- CW{1'b0}}, sts_pre};
+    'h1c : bus.rdata <= {{32- CW{1'b0}}, sts_pst};
+    'h20 : bus.rdata <=              32'(cts_acq >>  0);
+    'h24 : bus.rdata <=              32'(cts_acq >> 32);
+    'h28 : bus.rdata <=              32'(cts_trg >>  0);
+    'h2c : bus.rdata <=              32'(cts_trg >> 32);
+    'h30 : bus.rdata <=              32'(cts_stp >>  0);
+    'h34 : bus.rdata <=              32'(cts_stp >> 32);
 
     // trigger detection
-    6'h10 : bus.rdata <=                  cfg_old_val;
-    6'h14 : bus.rdata <=                  cfg_old_msk;
-    6'h18 : bus.rdata <=                  cfg_cur_val;
-    6'h1c : bus.rdata <=                  cfg_cur_msk;
-    // filter/decimation
-    6'h28 : bus.rdata <= {{32-DWC{1'b0}}, cfg_dec};
+    'h40 : bus.rdata <=                  cfg_old_val;
+    'h44 : bus.rdata <=                  cfg_old_msk;
+    'h48 : bus.rdata <=                  cfg_cur_val;
+    'h4c : bus.rdata <=                  cfg_cur_msk;
 
-    default:bus.rdata <=  32'h0                   ;
+    // decimation
+    'h50 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+
+    default : bus.rdata <= '0;
   endcase
 end
 
@@ -170,14 +173,14 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 str_dec #(
-  .CW (DWC)
+  .CW (DCW)
 ) dec (
   // control
   .ctl_rst  (ctl_rst),
   // configuration
   .cfg_dec  (cfg_dec),
   // streams
-  .sti      (stf),
+  .sti      (sti),
   .sto      (std)
 );
 
@@ -205,14 +208,14 @@ la_trigger #(
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-assign trg_mux = trg_ext [cfg_trg];
+assign ctl_trg = |(trg_ext & cfg_trg);
 
 acq #(
   .TW (TW),
   .CW (CW)
 ) acq (
   // stream input/output
-  .sti      (sti),
+  .sti      (std),
   .sto      (sto),
   // current time stamp
   .cts      (cts),
@@ -228,7 +231,7 @@ acq #(
   .cfg_pst  (cfg_pst),
   .sts_pst  (sts_pst),
   // control/status/timestamp acquire
-  .ctl_acq  (ctl_acq),  // acquire start
+  .ctl_acq  (ctl_acq),
   .sts_acq  (sts_acq),
   .cts_acq  (cts_acq),
   // control/status/timestamp trigger
@@ -236,7 +239,7 @@ acq #(
   .sts_trg  (sts_trg),
   .cts_trg  (cts_trg),
   // control/status/timestamp stop
-  .ctl_stp  (ctl_stp),  // acquire stop
+  .ctl_stp  (ctl_stp),
   .cts_stp  (cts_stp)
 );
 

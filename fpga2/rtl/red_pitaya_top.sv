@@ -479,7 +479,7 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
 
 asg_top #(
   .DAT_T (SBG_T),
-  .TWA ($bits(trg))
+  .TN ($bits(trg))
 ) asg (
   // stream output
   .sto       (str_asg[i]),
@@ -502,7 +502,7 @@ generate
 for (genvar i=0; i<MNA; i++) begin: for_acq
 
 scope_top #(
-  .TWA ($bits(trg))
+  .TN ($bits(trg))
 ) scope (
   // streams
   .sti       (str_osc[i]),
@@ -524,7 +524,7 @@ endgenerate
 
 asg_top #(
   .DAT_T (SBL_T),
-  .TWA ($bits(trg))
+  .TN ($bits(trg))
 ) lg (
   // stream output
   .sto       (str_lgo),
@@ -542,7 +542,7 @@ asg_top #(
 
 la_top #(
   .DAT_T (SBL_T),
-  .TWA ($bits(trg))
+  .TN ($bits(trg))
 ) la (
   // streams
   .sti       (str_lai),

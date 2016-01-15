@@ -33,17 +33,16 @@ module asg_top #(
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
   // trigger parameters
-  int unsigned TWA =  4,          // external trigger array  width
-  int unsigned TWS = $clog2(TWA)  // external trigger select width
+  int unsigned TN  =  4   // external trigger array  width
 )(
   // stream output
-  str_bus_if.s                  sto,
+  str_bus_if.s           sto,
   // triggers
-  input  logic        [TWA-1:0] trg_ext,  // external input
-  output logic                  trg_swo,  // output from software
-  output logic                  trg_out,  // output from engine
+  input  logic  [TN-1:0] trg_ext,  // external input
+  output logic           trg_swo,  // output from software
+  output logic           trg_out,  // output from engine
   // System bus
-  sys_bus_if.s                  bus
+  sys_bus_if.s           bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +62,7 @@ assign bus_buf.wdata = bus.wdata;
 
 logic               ctl_rst ;
 // configuration
-logic     [TWS-1:0] cfg_tsel;  // trigger select
+logic      [TN-1:0] cfg_tsel;  // trigger select
 
 logic [CWM+CWF-1:0] cfg_size;  // table size
 logic [CWM+CWF-1:0] cfg_step;  // address increment step (frequency)
@@ -96,6 +95,8 @@ end else begin
   end
 end
 
+localparam int unsigned BAW=6;
+
 // write access
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
@@ -116,47 +117,49 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen & ~bus.addr[CWM+2]) begin
     // configuration
-    if (bus.addr[6-1:0]==6'h04)  cfg_tsel <= bus.wdata[    TWS-1:0];
-    if (bus.addr[6-1:0]==6'h04)  cfg_bena <= bus.wdata[    TWS+0  ];
-    if (bus.addr[6-1:0]==6'h04)  cfg_binf <= bus.wdata[    TWS+1  ];
-    if (bus.addr[6-1:0]==6'h08)  cfg_size <= bus.wdata[CWM+CWF-1:0];
-    if (bus.addr[6-1:0]==6'h0c)  cfg_offs <= bus.wdata[CWM+CWF-1:0];
-    if (bus.addr[6-1:0]==6'h10)  cfg_step <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_tsel <= bus.wdata[     TN-1:0];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_bena <= bus.wdata[     TN+0  ];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_binf <= bus.wdata[     TN+1  ];
+    if (bus.addr[BAW-1:0]=='h08)  cfg_size <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h0c)  cfg_offs <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_step <= bus.wdata[CWM+CWF-1:0];
     // burst mode
-    if (bus.addr[6-1:0]==6'h18)  cfg_bcyc <= bus.wdata[     16-1:0];
-    if (bus.addr[6-1:0]==6'h1c)  cfg_bdly <= bus.wdata[     32-1:0];
-    if (bus.addr[6-1:0]==6'h20)  cfg_bnum <= bus.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h18)  cfg_bcyc <= bus.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h1c)  cfg_bdly <= bus.wdata[     32-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_bnum <= bus.wdata[     16-1:0];
     // linear transformation
-    if (bus.addr[6-1:0]==6'h24)  cfg_lmul <= bus.wdata[    DWM-1:0];
-    if (bus.addr[6-1:0]==6'h28)  cfg_lsum <= bus.wdata[    DWS-1:0];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_lmul <= bus.wdata[    DWM-1:0];
+    if (bus.addr[BAW-1:0]=='h28)  cfg_lsum <= bus.wdata[    DWS-1:0];
   end
 end
 
 // control signals
-assign ctl_rst = bus.wen & (bus.addr[19:0]==20'h00) & bus.wdata[0];  // reset
-assign trg_swo = bus.wen & (bus.addr[19:0]==20'h00) & bus.wdata[1];  // trigger
+assign ctl_rst = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]==20'h00) & bus.wdata[0];  // reset
+assign trg_swo = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]==20'h00) & bus.wdata[1];  // trigger
 
 // read access
 always_ff @(posedge bus.clk)
 if (~bus.addr[CWM+2]) begin
-  casez (bus.addr[19:0])
+  casez (bus.addr[BAW-1:0])
     // configuration
-    6'h04 : bus.rdata <= {{32-2  -TWS{1'b0}}, cfg_binf
-                                            , cfg_bena
-                                            , cfg_tsel};
-    6'h08 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
-    6'h0c : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
-    6'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
+    'h04 : bus.rdata <= {{32-2  - TN{1'b0}}, cfg_binf
+                                           , cfg_bena
+                                           , cfg_tsel};
+    'h08 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
+    'h0c : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
+    'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
     // burst mode
-    6'h18 : bus.rdata <= {{32-     16{1'b0}}, cfg_bcyc};
-    6'h1c : bus.rdata <=                      cfg_bdly ;
-    6'h20 : bus.rdata <= {{32-     16{1'b0}}, cfg_bnum};
+    'h18 : bus.rdata <= {{32-     16{1'b0}}, cfg_bcyc};
+    'h1c : bus.rdata <=                      cfg_bdly ;
+    'h20 : bus.rdata <= {{32-     16{1'b0}}, cfg_bnum};
     // linear transformation (should be properly sign extended)
-    6'h24 : bus.rdata <= cfg_lmul;
-    6'h28 : bus.rdata <= cfg_lsum;
+    'h24 : bus.rdata <= cfg_lmul;
+    'h28 : bus.rdata <= cfg_lsum;
+
+    default : bus.rdata <= '0;
   endcase
 end else begin
-            bus.rdata <= {{32-    DWO{1'b0}}, bus_buf.rdata};
+           bus.rdata <= bus_buf.rdata;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +167,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 logic trg_mux;
-assign trg_mux = trg_ext [cfg_tsel];
+assign trg_mux = |(trg_ext & cfg_tsel);
 
 ////////////////////////////////////////////////////////////////////////////////
 // generator core instance 

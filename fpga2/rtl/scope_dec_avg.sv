@@ -9,23 +9,23 @@ module scope_dec_avg #(
   int unsigned DWI = 14,  // data width for input
   int unsigned DWO = 14,  // data width for output
   // decimation parameters
-  int unsigned DWC = 17,  // data width for counter
-  int unsigned DWS =  4   // data width for shifter
+  int unsigned DCW = 17,  // data width for counter
+  int unsigned DSW =  4   // data width for shifter
 )(
   // control
   input  logic                  ctl_rst,  // synchronous reset
   // configuration
   input  logic                  cfg_avg,  // averaging enable
-  input  logic        [DWC-1:0] cfg_dec,  // decimation factor
-  input  logic        [DWS-1:0] cfg_shr,  // shift right
+  input  logic        [DCW-1:0] cfg_dec,  // decimation factor
+  input  logic        [DSW-1:0] cfg_shr,  // shift right
   // streams
   str_bus_if.d                  sti,      // input
   str_bus_if.s                  sto       // output
 );
 
-logic signed [DWC+DWI-1:0] sum;
+logic signed [DCW+DWI-1:0] sum;
 
-logic        [DWC    -1:0] cnt;
+logic        [DCW    -1:0] cnt;
 
 
 logic sti_trn;
