@@ -95,7 +95,6 @@ read_ip                           $path_ip/rb_cic_5M_to_8k_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_41M664_32T32_lat14.xcix
 read_ip                           $path_ip/rb_cic_8k_to_48k_32T32_lat16.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
-read_ip                           $path_ip/rb_dly_W1_D6.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmB_A16_D16_B16_P32.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36.xcix
 read_ip                           $path_ip/rb_dsp48_AmB_A16_B16_P32.xcix
