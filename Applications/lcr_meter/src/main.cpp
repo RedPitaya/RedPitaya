@@ -15,14 +15,14 @@
 CIntParameter parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 200, 0, 0, 100);
 
 //Out params
-CFloatParameter lcr_amplitude("LCR_Z", CBaseParameter::RW, 0, 0, 0, 1e6);
-CDoubleParameter lcr_Inductance("LCR_L", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CDoubleParameter lcr_Capacitance("LCR_C", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CDoubleParameter lcr_Resitance("LCR_R", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_phase("LCR_P", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_D("LCR_D", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_ESR("LCR_ESR", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_amplitude("LCR_Z", CBaseParameter::RW, 0, 0, 0, 10e6);
+CDoubleParameter lcr_Inductance("LCR_L", CBaseParameter::RW, 0, 0, -10e6, 10e6);
+CDoubleParameter lcr_Capacitance("LCR_C", CBaseParameter::RW, 0, 0, -10e6, 10e6);
+CDoubleParameter lcr_Resitance("LCR_R", CBaseParameter::RW, 0, 0, -10e6, 10e6);
+CFloatParameter lcr_phase("LCR_P", CBaseParameter::RW, 0, 0, -10e6, 10e6);
+CFloatParameter lcr_D("LCR_D", CBaseParameter::RW, 0, 0, -10e6, 10e6);
+CFloatParameter lcr_Q("LCR_Q", CBaseParameter::RW, 0, 0, -10e6, 10e6);
+CFloatParameter lcr_ESR("LCR_ESR", CBaseParameter::RW, 0, 0, -10e6, 10e6);
 
 CFloatParameter lcr_C_precision("LCR_C_PREC", CBaseParameter::RW, 0, 0, 0, 10);
 
@@ -36,13 +36,14 @@ CFloatParameter lcr_IndAvg("LCR_L_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 CFloatParameter lcr_CapMin("LCR_C_MIN", CBaseParameter::RW, 1e9, 0, -1e6, 1e6);
 CFloatParameter lcr_CapMax("LCR_C_MAX", CBaseParameter::RW, -1e9, 0, -1e6, 1e6);
 CFloatParameter lcr_CapAvg("LCR_C_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
-CFloatParameter lcr_ResMin("LCR_R_MIN", CBaseParameter::RW, 1e7, 0, -1e6, 1e6);
-CFloatParameter lcr_ResMax("LCR_R_MAX", CBaseParameter::RW, 0, 0, -1e6, 1e6);
+CFloatParameter lcr_ResMin("LCR_R_MIN", CBaseParameter::RW, 1e9, 0, -1e6, 1e6);
+CFloatParameter lcr_ResMax("LCR_R_MAX", CBaseParameter::RW, -1e9, 0, -1e6, 1e6);
 CFloatParameter lcr_ResAvg("LCR_R_AVG", CBaseParameter::RW, 0, 0, -1e6, 1e6);
 
 //In params
 CFloatParameter frequency("LCR_FREQ", CBaseParameter::RW, 1000, 0, 10, 1e6);
 CIntParameter   calibMode("LCR_CALIB_MODE", CBaseParameter::RW, 0, 0, 0, 3);
+CBooleanParameter resetMeasData("LCR_M_RESET", CBaseParameter::RW, false, 0);
 
 CBooleanParameter startMeasure("LCR_RUN", CBaseParameter::RW, true, 0);
 CBooleanParameter startCalibration("LCR_CALIBRATION", CBaseParameter::RW, false, 0);
@@ -230,6 +231,31 @@ void UpdateParams(void){
 		lcr_D.Value()           = 0;
 		lcr_Q.Value()           = 0;
 		lcr_ESR.Value()         = 0;
+	}
+
+	if(resetMeasData.NewValue() == true){
+		//Rest min saved val
+		lcr_AmpMin.Value() = 1e9;
+		lcr_AmpMin.Update();
+		lcr_IndMin.Value() = 1e9;
+		lcr_IndMin.Update();
+		lcr_ResMin.Value() = 1e9;
+		lcr_ResMin.Update();
+		lcr_CapMin.Value() = 1e9;
+		lcr_CapMin.Update();
+
+		//Reset max saved val
+		lcr_AmpMax.Value() = -1e9;
+		lcr_AmpMax.Update();
+		lcr_IndMax.Value() = -1e9;
+		lcr_IndMax.Update();
+		lcr_ResMax.Value() = -1e9;
+		lcr_ResMax.Update();
+		lcr_CapMax.Value() = -1e9;
+		lcr_CapMax.Update();
+
+		resetMeasData.Value() = false;
+		resetMeasData.Update();
 	}
 
 

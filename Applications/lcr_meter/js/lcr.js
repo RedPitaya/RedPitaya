@@ -232,12 +232,12 @@
 					$('#lb_prim_displ').empty().append(data);
 					$('#lb_prim_displ_units').empty().append(units);
 				}else if(Math.abs(diff) > 100){
-					$('#lb_sec_displ').empty().append("100% >");
-					$('#lb_prim_displ').empty().append("100% >");
+					$('#lb_sec_displ').empty().append("0%");
+					$('#lb_prim_displ').empty().append("0%");
 					$('#lb_prim_displ_units').empty();
 					$('#lb_sec_displ_units').empty();
 				}else{
-					$('#lb_sec_displ').empty().append("0%");
+					$('#lb_sec_displ').empty().append("100%");
 					$('#lb_prim_displ').empty().append(data);
 					$('#lb_prim_displ_units').empty().append(units);
 				}
@@ -326,6 +326,12 @@ $(function() {
 		LCR.params.local['LCR_RUN'] = { value: false };
 		LCR.displ_params.prim_val = $('#lb_prim_displ').text();
 		LCR.displ_params.sec_val = $('#lb_sec_displ').text();
+		LCR.sendParams();
+	});
+
+	$('#btn_c_meas').on('click', function(ev){
+		//ev.preventDefault();
+		LCR.params.local['LCR_M_RESET'] = { value: true };
 		LCR.sendParams();
 	});
 
