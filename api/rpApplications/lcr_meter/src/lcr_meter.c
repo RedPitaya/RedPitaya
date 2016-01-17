@@ -227,22 +227,27 @@ void *lcr_MainThread(void *args){
 	struct impendace_params *args_struct =
 		(struct impendace_params *)args;
 
+
 	int n_shunt_idx = main_params.r_shunt;
 	set_IIC_Shunt(n_shunt_idx);
 
 	/* Main lcr meter algorithm */
 	if(main_params.calibration){
-
-		lcr_getImpedance(args_struct->frequency, 
-			&args_struct->z_out, &args_struct->phase_out);
-
+		
 	}else{	
 
 		double z_abs = 0;
-		lcr_getImpedance(args_struct->frequency, 
-			&args_struct->z_out, &args_struct->phase_out);
+		double z_mean = 0;
 
-		z_abs = cabs(args_struct->z_out);
+		//Software averaging
+		for(int i = 0; i < AVERAGING; i++){
+			lcr_getImpedance(args_struct->frequency, 
+				&args_struct->z_out, &args_struct->phase_out);
+
+			z_mean += cabs(args_struct->z_out);
+		}
+
+		z_abs = z_mean / AVERAGING;
 
 		switch(main_params.range){
 			//Z

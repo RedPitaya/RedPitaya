@@ -22,6 +22,7 @@
 #define M_PI					3.14159265358979323846
 #define SAMPLE_RATE				125e6
 #define LCR_AMPLITUDE			0.25
+#define AVERAGING				2
 
 #define APP_PATH	"/opt/redpitaya/www/apps/lcr_meter/"
 
