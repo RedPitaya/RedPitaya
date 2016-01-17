@@ -224,6 +224,10 @@
 				var data = LCR.displ_params.prim_val;
 
 				if( Math.abs(diff) > 1 && Math.abs(diff) < 100){
+					console.log(diff.toFixed(2));
+					if(diff.toFixed(2).length > 5){
+						diff = parseInteger(String(diff).substr(0, 5));
+					}
 					$('#lb_sec_displ').empty().append((100 - diff.toFixed(2)) + "%");
 					$('#lb_prim_displ').empty().append(data);
 					$('#lb_prim_displ_units').empty().append(units);
@@ -727,6 +731,8 @@ function formatRangeManual(precision, format, power, data){
 		return;
 	}
 
+	console.log("WHOLE: ", data);
+
 	var string_data = data.toString();
 	var formatted_data = "";
 	var flt_idx = parseInt(format) + 1;
@@ -768,7 +774,8 @@ function formatRangeManual(precision, format, power, data){
 		//if(m < flt_idx && indicies[m] == 0){
 		//	continue;
 		//}
-		formatted_data += indicies[m];
+		if(indicies[m] == undefined) formatted_data += '0';
+		else formatted_data += indicies[m];
 	}
 
 	if(parseFloat(formatted_data) == 0){
