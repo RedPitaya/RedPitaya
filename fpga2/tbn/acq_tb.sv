@@ -49,6 +49,15 @@ logic [TW-1:0] cts_stp;
 str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
 str_bus_if #(.DAT_T (DAT_T)) sto (.clk (clk), .rstn (rstn));
 
+typedef struct {
+  DAT_T dat;
+  logic lst;
+} BUS_T;
+
+BUS_T sti_dat [];
+BUS_T sto_dat [];
+int unsigned size;
+
 ////////////////////////////////////////////////////////////////////////////////
 // clock and time stamp
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,9 +96,7 @@ initial begin
   repeat(1) @(posedge clk);
 
   // activate acquire
-  ctl_acq = 1'b1;
-  repeat(1) @(posedge clk);
-  ctl_acq = 1'b0;
+  acq_pls;
 
   // send data into stream
   src_inc (-8, 8);
@@ -98,10 +105,51 @@ initial begin
   // check data from stream
   drn_inc (-8, 8);
 
+  // send array
+  size = 4;
+  sti_dat = new [size];
+  sto_dat = new [size];
+  for (int i=0; i<=size; i++) begin
+    sti_dat[i] = '{i, i==(size-1)};
+  end
+  acq_pls;
+  src_ary (sti_dat);
+  repeat(size+2) @(posedge clk);
+  repeat(size+2) @(posedge clk);
+  drn_ary (sto_dat);
+  $display (sti_dat);
+  $display (sto_dat);
+
   // end simulation
   repeat(4) @(posedge clk);
   $finish();
 end
+
+  // activate acquire
+task acq_pls ();
+  ctl_acq = 1'b1;
+  repeat(1) @(posedge clk);
+  ctl_acq = 1'b0;
+endtask: acq_pls
+
+// source array
+task automatic src_ary (
+  ref BUS_T bus []
+);
+  for (int unsigned i=0; i<bus.size; i++) begin
+    str_src.put(bus[i].dat, bus[i].lst);
+  end
+endtask: src_ary
+
+// drain array
+task automatic drn_ary (
+  ref BUS_T bus []
+);
+  int unsigned tmg;
+  for (int unsigned i=0; i<bus.size; i++) begin
+    str_drn.get(bus[i].dat, bus[i].lst, tmg);
+  end
+endtask: drn_ary
 
 // source incremental sequence
 task src_inc (
