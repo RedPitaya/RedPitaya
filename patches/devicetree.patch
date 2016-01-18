@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,96 @@
+@@ -86,3 +86,132 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -102,7 +102,43 @@
 +};
 +/ {
 +	housekeeping@40000000 {
-+	   compatible = "generic-uio";
-+	   reg = <0x40000000 0x10000>;
++		compatible = "generic-uio";
++		reg = <0x40000000 0x10000>;
++	};
++	calib@40010000 {
++		compatible = "generic-uio";
++		reg = <0x40010000 0x10000>;
++	};
++	pdm@40020000 {
++		compatible = "generic-uio";
++		reg = <0x40020000 0x10000>;
++	};
++	pwm@40030000 {
++		compatible = "generic-uio";
++		reg = <0x40030000 0x10000>;
++	};
++	asg0@40040000 {
++		compatible = "generic-uio";
++		reg = <0x40040000 0x10000>;
++	};
++	asg1@40050000 {
++		compatible = "generic-uio";
++		reg = <0x40050000 0x10000>;
++	};
++	scope0@40060000 {
++		compatible = "generic-uio";
++		reg = <0x40060000 0x10000>;
++	};
++	scope1@40070000 {
++		compatible = "generic-uio";
++		reg = <0x40070000 0x10000>;
++	};
++	lg@40080000 {
++		compatible = "generic-uio";
++		reg = <0x40080000 0x10000>;
++	};
++	la@40090000 {
++		compatible = "generic-uio";
++		reg = <0x40090000 0x10000>;
 +	};
 +};
