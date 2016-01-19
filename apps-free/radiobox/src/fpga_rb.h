@@ -74,14 +74,17 @@ enum {
     FPGA_RW_RB_RX_CAR_OSC_INC_HI   = 0x00124,                                                              // h124: RB RX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_RX_CAR_OSC_OFS_LO   = 0x00128,                                                              // h128: RB RX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
     FPGA_RW_RB_RX_CAR_OSC_OFS_HI   = 0x0012C,                                                              // h12C: RB RX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_RX_MOD_ADD_GAIN,                                                                            // h130: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
+    FPGA_RW_RB_RX_MOD_ADD_GAIN     = 0x00130,                                                              // h130: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
     //FPGA_RD_RB_RX_RSVD_H134,
-    FPGA_RW_RB_RX_MOD_ADD_OFS,                                                                             // h138: RB RX_MOD_OSC mixer offset:   SIGNED 17 bit
+    FPGA_RW_RB_RX_MOD_ADD_OFS      = 0x00138,                                                              // h138: RB RX_MOD_OSC mixer offset:   SIGNED 17 bit
     //FPGA_RD_RB_RX_RSVD_H13C,
     FPGA_RW_RB_RX_MOD_OSC_INC_LO   = 0x00140,                                                              // h140: RB RX_MOD_OSC increment register              LSB:        (Bit 31: 0)
     FPGA_RW_RB_RX_MOD_OSC_INC_HI   = 0x00144,                                                              // h144: RB RX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_RX_MOD_OSC_OFS_LO   = 0x00148,                                                              // h148: RB RX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
-    FPGA_RW_RB_RX_MOD_OSC_OFS_HI   = 0x0014C                                                               // h14C: RB RX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_MOD_OSC_OFS_HI   = 0x0014C,                                                              // h14C: RB RX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+
+    FPGA_RB_RX_MUXIN_SRC           = 0x00160,                                                              // h160: RB analog RX MUX input selector
+    FPGA_RB_RX_MUXIN_GAIN          = 0x00164                                                               // h164: RB analog RX MUX gain for input amplifier
 } FPGA_RB_REG_ENUMS;
 
 /** @brief FPGA registry structure for the RadioBox sub-module.
@@ -165,23 +168,19 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h0B: n/a
      *
-     * bit h0F..h0C: n/a
+     * bit h0C: STAT_RX_CAR_OSC_ZERO - '1' RX_CAR_OSC output equals zero. This state is based on the output of the DDS oscillator itself.
      *
-     * bit h10: STAT_RX_CAR_OSC_ZERO - '1' RX_CAR_OSC output equals zero. This state is based on the output of the DDS oscillator itself.
+     * bit h0D: STAT_RX_CAR_OSC_VALID - '1' RX_CAR_OSC output is valid. After turning this sub-module active it needs some clocks going into valid state.
      *
-     * bit h11: STAT_RX_CAR_OSC_VALID - '1' RX_CAR_OSC output is valid. After turning this sub-module active it needs some clocks going into valid state.
+     * bit h0E: n/a
      *
-     * bit h12: n/a
+     * bit h0F: n/a
      *
-     * bit h13: n/a
+     * bit h10: STAT_RX_MOD_OSC_ZERO - '1' RX_MOD_OSC output equals zero. This state is based on the output of the DDS oscillator itself.
      *
-     * bit h14: STAT_RX_MOD_OSC_ZERO - '1' RX_MOD_OSC output equals zero. This state is based on the output of the DDS oscillator itself.
+     * bit h11: STAT_RX_MOD_OSC_VALID - '1' RX_MOD_OSC output is valid. After turning this sub-module active it needs some clocks going into valid state.
      *
-     * bit h15: STAT_RX_MOD_OSC_VALID - '1' RX_MOD_OSC output is valid. After turning this sub-module active it needs some clocks going into valid state.
-     *
-     * bit h16: n/a
-     *
-     * bit h17: n/a
+     * bit h17..h12: n/a
      *
      * bit h18: STAT_LED0_ON - '1' RadioBox LED0 driver that is shown at the diodes, when STAT_LEDS_EN is '1'.
      *
@@ -279,15 +278,17 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h25  RX_CAR_CIC1_Q output.
      *   value = h26  RX_CAR_CIC2_I output.
      *   value = h27  RX_CAR_CIC2_Q output.
-     *   value = h28  RX_MOD_OSC_I output.
-     *   value = h29  RX_MOD_OSC_Q output.
-     *   value = h2A  RX_MOD_QMIX_I output.
-     *   value = h2B  RX_MOD_QMIX_Q output.
-     *   value = h2C  RX_MOD_FIR_I output.
-     *   value = h2D  RX_MOD_FIR_Q output.
-     *   value = h2E  RX_MOD_CIC_I output.
-     *   value = h2F  RX_MOD_CIC_Q output.
-     *   value = h30  RX_MOD_ADD output.
+     *   value = h28  RX_MOD_FIR_I output.
+     *   value = h29  RX_MOD_FIR_Q output.
+     *   value = h30  RX_MOD_OSC_I output.
+     *   value = h31  RX_MOD_OSC_Q output.
+     *   value = h32  RX_MOD_HLD_I output.
+     *   value = h33  RX_MOD_HLD_Q output.
+     *   value = h34  RX_MOD_QMIX_I output.
+     *   value = h35  RX_MOD_QMIX_Q output.
+     *   value = h36  RX_MOD_FIR_I output.
+     *   value = h37  RX_MOD_FIR_Q output.
+     *   value = h38  RX_MOD_ADD output.
      *   value = h3F  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h0F..h06: n/a
@@ -325,15 +326,17 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h25  RX_CAR_CIC1_Q output.
      *   value = h26  RX_CAR_CIC2_I output.
      *   value = h27  RX_CAR_CIC2_Q output.
-     *   value = h28  RX_MOD_OSC_I output.
-     *   value = h29  RX_MOD_OSC_Q output.
-     *   value = h2A  RX_MOD_QMIX_I output.
-     *   value = h2B  RX_MOD_QMIX_Q output.
-     *   value = h2C  RX_MOD_FIR_I output.
-     *   value = h2D  RX_MOD_FIR_Q output.
-     *   value = h2E  RX_MOD_CIC_I output.
-     *   value = h2F  RX_MOD_CIC_Q output.
-     *   value = h30  RX_MOD_ADD output.
+     *   value = h28  RX_MOD_FIR_I output.
+     *   value = h29  RX_MOD_FIR_Q output.
+     *   value = h30  RX_MOD_OSC_I output.
+     *   value = h31  RX_MOD_OSC_Q output.
+     *   value = h32  RX_MOD_HLD_I output.
+     *   value = h33  RX_MOD_HLD_Q output.
+     *   value = h34  RX_MOD_QMIX_I output.
+     *   value = h35  RX_MOD_QMIX_Q output.
+     *   value = h36  RX_MOD_FIR_I output.
+     *   value = h37  RX_MOD_FIR_Q output.
+     *   value = h38  RX_MOD_ADD output.
      *   value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
      *
      * bit h17..h16: n/a
@@ -371,15 +374,17 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h25  RX_CAR_CIC1_Q output.
      *   value = h26  RX_CAR_CIC2_I output.
      *   value = h27  RX_CAR_CIC2_Q output.
-     *   value = h28  RX_MOD_OSC_I output.
-     *   value = h29  RX_MOD_OSC_Q output.
-     *   value = h2A  RX_MOD_QMIX_I output.
-     *   value = h2B  RX_MOD_QMIX_Q output.
-     *   value = h2C  RX_MOD_FIR_I output.
-     *   value = h2D  RX_MOD_FIR_Q output.
-     *   value = h2E  RX_MOD_CIC_I output.
-     *   value = h2F  RX_MOD_CIC_Q output.
-     *   value = h30  RX_MOD_ADD output.
+     *   value = h28  RX_MOD_FIR_I output.
+     *   value = h29  RX_MOD_FIR_Q output.
+     *   value = h30  RX_MOD_OSC_I output.
+     *   value = h31  RX_MOD_OSC_Q output.
+     *   value = h32  RX_MOD_HLD_I output.
+     *   value = h33  RX_MOD_HLD_Q output.
+     *   value = h34  RX_MOD_QMIX_I output.
+     *   value = h35  RX_MOD_QMIX_Q output.
+     *   value = h36  RX_MOD_FIR_I output.
+     *   value = h37  RX_MOD_FIR_Q output.
+     *   value = h38  RX_MOD_ADD output.
      *   value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
      *
      * bit h1F..h1E: n/a
@@ -546,6 +551,15 @@ typedef struct fpga_rb_reg_mem_s {
      *
      */
     uint32_t tx_muxin_gain;
+
+
+    /** @brief  Placeholder for addr: 0x40600068 .. 0x406000FC
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_068To0fc[((0x0fc - 0x068) >> 2) + 1];
+
 
 
     /* RX section */
@@ -749,12 +763,13 @@ typedef struct fpga_rb_reg_mem_s {
      /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
       *
       * bit h1F..h00: value.
-      *   value = h00  RF Input 1.
-      *   value = h01  RF Input 2.
-      *   value > h01  (undefined)
+      *   value = h00  off.
+      *   value = h01  RF Input 1.
+      *   value = h02  RF Input 2.
+      *   value > h02  (undefined)
       *
       */
-     uint32_t rx_mux_src;
+     uint32_t rx_muxin_src;
 
      /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
       *
@@ -763,7 +778,7 @@ typedef struct fpga_rb_reg_mem_s {
       * bit h1F..h10: n/a
       *
       */
-     uint32_t rx_mux_gain;
+     uint32_t rx_muxin_gain;
 
 } fpga_rb_reg_mem_t;
 
@@ -896,6 +911,28 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_
  * @param[in]  tx_muxin_gain Slider value between 0 and 100 for the MUXIN range slider. 50 means amplification of 1:1, 0 and 100 full scale, logarithmic.
  */
 void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain);
+
+/**
+ * @brief Calculates and programs the FPGA RX_CAR_OSC for SSB, AM and FM
+ *
+ * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
+ */
+void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(double rx_car_osc_qrg);
+
+/**
+ * @brief Calculates and programs the FPGA RX_MOD_OSC for SSB, AM and FM
+ *
+ * @param[in]  rx_mod_osc_qrg   Frequency for RX_MOD_OSC in Hz.
+ */
+void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(double rx_mod_osc_qrg);
+
+/**
+ * @brief Calculates and programs the FPGA RX_MOD_ADD mixer
+ *
+ * @param[in]  tx_amp_rf_gain  gain between 0% .. 100%.
+ * @param[in]  tx_amp_rf_ofs   Vpp amplitude in mV.
+ */
+void fpga_rb_set_rx_mod_add_gain_ofs__4mod_all(double rx_mod_add_gain, double rx_mod_add_ofs);
 
 
 #if 0

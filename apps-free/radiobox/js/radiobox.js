@@ -55,14 +55,14 @@
   };
   RB.params.init = {            // XXX initital data
     rb_run:                 1,  // application running
-    tx_modsrc_s:            0,  // mod-source: (none)
-    tx_modtyp_s:            2,  // modulation: AM
-    rx_modtyp_s:            2,  // modulation: AM
+    tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
+    tx_modtyp_s:            0,  // TX modulation: USB
+    rx_modtyp_s:            0,  // RX modulation: USB
 
     rbled_csp_s:            6,  // RB LEDs set to: 6=TX_MOD_ADC out
-    rfout1_csp_s:          28,  // connect to TX_AMP_RF out       (see list above)
-    rfout2_csp_s:           8,  // connect to TX_CAR_CIC_41M664_I (see list above)
-    rx_muxin_src_s:         2,  // receiver input set to RF Input 2
+    rfout1_csp_s:          28,  // connect to TX_AMP_RF out (RF signal)
+    rfout2_csp_s:          56,  // connect to RX_MOD_ADD out (audio signal)
+    rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
     tx_car_osc_qrg_f:   10000,  // 10 kHz
     tx_mod_osc_qrg_f:    1000,  //  1 kHz
