@@ -19,6 +19,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
+typedef struct {
+  char          *name;
+  char          *dev;
+  int            fd;
+  volatile void *regset;
+           void *context;
+} rp_handle_uio_t;
+
 #include "redpitaya/rp.h"
 
 #define ECHECK(x) { \

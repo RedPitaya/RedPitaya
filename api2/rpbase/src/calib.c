@@ -12,28 +12,57 @@
  * for more details on the language used herein.
  */
 
-#include <stdlib.h>
+// for Init
+#include <fcntl.h>
+#include <sys/mman.h>
 #include <unistd.h>
-#include "redpitaya/rp.h"
+#include <string.h>
+#include <stdio.h>
+
+#include <stdlib.h>
 #include "common.h"
 #include "calib.h"
 
-// context (copy of EEPROM data)
+int rp_CalibInit(char *dev, rp_handle_uio_t *handle) {
+    // make a copy of the device path
+    handle->dev = (char*) malloc((strlen(dev)+1) * sizeof(char));
+    strncpy(handle->dev, dev, strlen(dev)+1);
+    // try opening the device
+    handle->fd = open(handle->dev, O_RDWR);
+    if (!handle->fd) {
+        return -1;
+    } else {
+        // get regset pointer
+        handle->regset = mmap(NULL, RP_CALIB_BASE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
+        if (handle->regset == NULL) {
+            return -1;
+        }
+    }
+    // allocate local context
+    handle->context = (rp_calib_context_t *) malloc(sizeof(rp_calib_context_t));
 
-// register set
-static volatile regset_calib_t *regset = NULL;
-
-int calib_Init() {
-    cmn_Map(RP_CALIB_BASE_SIZE, RP_CALIB_BASE_ADDR, (void**) &regset);
-    int range[2] = {0,0};
-    rp_calib_params_t context;
-    rp_CalibReadParams(&context);
-    rp_CalibSetParams(&context, range);
+    // initialization
+    rp_calib_context_t *context = (rp_calib_context_t *) handle->context;
+    context->chn = 2;
+    for (int unsigned i=0; i<context->chn; i++) {
+      context->range [i] = 1;
+    }
+    rp_CalibReadParams(context);
+    rp_CalibSetParams(handle);
     return RP_OK;
 }
 
-int calib_Release() {
-    cmn_Unmap(RP_CALIB_BASE_SIZE, (void**) &regset);
+int rp_CalibRelease(rp_handle_uio_t *handle) {
+    // release regset
+    munmap((void *) handle->regset, RP_CALIB_BASE_SIZE);
+    // close device
+    close (handle->fd);
+    // free device path
+    free(handle->dev);
+    // free name
+    // TODO
+    // free context
+    free(handle->context);
     return RP_OK;
 }
 
@@ -45,20 +74,19 @@ int calib_Release() {
  * @param[out]   calib_params  Pointer to destination buffer.
  * @retval       RP_OK - Success
  */
-int rp_CalibrationReset() {
-    int range[2] = {0,0};
-    rp_calib_params_t context;
+int rp_CalibrationReset(rp_handle_uio_t *handle) {
+    rp_calib_context_t *context = (rp_calib_context_t *) handle->context;
     for (int range=0; range<2; range++) {
         for (int ch=0; ch<2; ch++) {
-            context.acq[ch][range].offset = 0.0;
-            context.acq[ch][range].gain   = 1.0;
+            context->acq[ch][range].offset = 0.0;
+            context->acq[ch][range].gain   = 1.0;
         }
     }
     for (int ch=0; ch<2; ch++) {
-        context.gen[ch].offset = 0.0;
-        context.gen[ch].gain   = 1.0;
+        context->gen[ch].offset = 0.0;
+        context->gen[ch].gain   = 1.0;
     }
-    rp_CalibSetParams(&context, range);
+    rp_CalibSetParams(handle);
     return RP_OK;
 }
 
@@ -72,30 +100,30 @@ int rp_CalibrationReset() {
  * @retval       RP_OK - Success
  * @retval       else  - Failure
  */
-int rp_CalibReadParams(rp_calib_params_t *context) {
-    FILE   *fp;
-    size_t  size;
+int rp_CalibReadParams(rp_calib_context_t *context) {
+    int    fp;
+    size_t size;
     /* sanity check */
     if (context == NULL) {
         return RP_UIA;
     }
     /* open EEPROM device */
-    fp = fopen(RP_CALIB_EEPROM_PATH, "r");
-    if (fp == NULL) {
+    fp = open(RP_CALIB_EEPROM_PATH, O_RDONLY);
+    if (!fp) {
         return RP_EOED;
     }
     /* ...and seek to the appropriate storage offset */
-    if (fseek(fp, RP_CALIB_EEPROM_ADDR, SEEK_SET) < 0) {
-        fclose(fp);
+    if (lseek(fp, RP_CALIB_EEPROM_ADDR, SEEK_SET) < 0) {
+        close(fp);
         return RP_FCA;
     }
     /* read data from EEPROM component and store it to the specified buffer */
-    size = fread(context, sizeof(char), sizeof(rp_calib_params_t), fp);
-    if(size != sizeof(rp_calib_params_t)) {
-        fclose(fp);
+    size = read(fp, context, sizeof(rp_calib_context_t));
+    if (size != sizeof(rp_calib_context_t)) {
+        close(fp);
         return RP_RCA;
     }
-    fclose(fp);
+    close(fp);
     return RP_OK;
 }
 
@@ -108,43 +136,45 @@ int rp_CalibReadParams(rp_calib_params_t *context) {
  * @retval       RP_OK - Success
  * @retval       else  - Failure
  */
-int rp_CalibWriteParams(rp_calib_params_t *context) {
-    FILE   *fp;
-    size_t  size;
+int rp_CalibWriteParams(rp_calib_context_t *context) {
+    int    fp;
+    size_t size;
     /* open EEPROM device */
-    fp = fopen(RP_CALIB_EEPROM_PATH, "w+");
-    if (fp == NULL) {
+    fp = open(RP_CALIB_EEPROM_PATH, O_WRONLY);
+    if (!fp) {
         return RP_EOED;
     }
     /* ...and seek to the appropriate storage offset */
-    if (fseek(fp, RP_CALIB_EEPROM_ADDR, SEEK_SET) < 0) {
-        fclose(fp);
+    if (lseek(fp, RP_CALIB_EEPROM_ADDR, SEEK_SET) < 0) {
+        close(fp);
         return RP_FCA;
     }
     /* write data to EEPROM component */
-    size = fwrite(context, sizeof(char), sizeof(rp_calib_params_t), fp);
-    if (size != sizeof(rp_calib_params_t)) {
-        fclose(fp);
+    size = write(fp, context, sizeof(rp_calib_context_t));
+    if (size != sizeof(rp_calib_context_t)) {
+        close(fp);
         return RP_RCA;
     }
-    fclose(fp);
+    close(fp);
     return RP_OK;
 }
 
 /**
  * @return RP_OK
  */
-int rp_CalibGetParams(rp_calib_params_t *context, int range[2]) {
+int rp_CalibGetParams(rp_handle_uio_t *handle) {
+    rp_calib_context_t *context = (rp_calib_context_t *) handle->context;
+    rp_calib_regset_t  *regset  = (rp_calib_regset_t  *) handle->regset ;
     const int ratio_dwm = 1 << (RP_CALIB_DWM-2);
     const int ratio_dws = 1 << (RP_CALIB_DWS-1);
-    for (int ch=0; ch<2; ch++) {
-        float scale = range[ch] ? 20 : 1;
-        context->acq[ch][range[ch]].offset = ((float) ioread32 (&regset->acq[ch].sum)) * scale / ratio_dws;
-        context->acq[ch][range[ch]].gain   = ((float) ioread32 (&regset->acq[ch].mul)) * scale / ratio_dwm;
+    for (int ch=0; ch<context->chn; ch++) {
+        float scale = context->range[ch] ? 20 : 1;
+        context->acq[ch][context->range[ch]].offset = ((float) ioread32 (&regset->acq[ch].sum)) * scale / ratio_dws;
+        context->acq[ch][context->range[ch]].gain   = ((float) ioread32 (&regset->acq[ch].mul)) * scale / ratio_dwm;
     }
-    for (int ch=0; ch<2; ch++) {
-        context->gen[ch].offset            = ((float) ioread32 (&regset->gen[ch].sum))         / ratio_dws;
-        context->gen[ch].gain              = ((float) ioread32 (&regset->gen[ch].mul))         / ratio_dwm;
+    for (int ch=0; ch<context->chn; ch++) {
+        context->gen[ch].offset                     = ((float) ioread32 (&regset->gen[ch].sum))         / ratio_dws;
+        context->gen[ch].gain                       = ((float) ioread32 (&regset->gen[ch].mul))         / ratio_dwm;
     }
     return RP_OK;
 }
@@ -152,17 +182,19 @@ int rp_CalibGetParams(rp_calib_params_t *context, int range[2]) {
 /**
  * @return RP_OK
  */
-int rp_CalibSetParams(rp_calib_params_t *context, int range[2]) {
+int rp_CalibSetParams(rp_handle_uio_t *handle) {
+    rp_calib_context_t *context = (rp_calib_context_t *) handle->context;
+    rp_calib_regset_t  *regset  = (rp_calib_regset_t  *) handle->regset ;
     const int ratio_dwm = 1 << (RP_CALIB_DWM-2);
     const int ratio_dws = 1 << (RP_CALIB_DWS-1);
-    for (int ch=0; ch<2; ch++) {
-        float scale = range[ch] ? 20 : 1;
-        iowrite32 ((int32_t) (context->acq[ch][range[ch]].offset / scale * ratio_dws), &regset->acq[ch].sum);
-        iowrite32 ((int32_t) (context->acq[ch][range[ch]].gain   / scale * ratio_dwm), &regset->acq[ch].mul);
+    for (int ch=0; ch<context->chn; ch++) {
+        float scale = context->range[ch] ? 20 : 1;
+        iowrite32 ((int32_t) (context->acq[ch][context->range[ch]].offset / scale * ratio_dws), &regset->acq[ch].sum);
+        iowrite32 ((int32_t) (context->acq[ch][context->range[ch]].gain   / scale * ratio_dwm), &regset->acq[ch].mul);
     }
-    for (int ch=0; ch<2; ch++) {
-        iowrite32 ((int32_t) (context->gen[ch].offset                    * ratio_dws), &regset->gen[ch].sum);
-        iowrite32 ((int32_t) (context->gen[ch].gain                      * ratio_dwm), &regset->gen[ch].mul);
+    for (int ch=0; ch<context->chn; ch++) {
+        iowrite32 ((int32_t) (context->gen[ch].offset                             * ratio_dws), &regset->gen[ch].sum);
+        iowrite32 ((int32_t) (context->gen[ch].gain                               * ratio_dwm), &regset->gen[ch].mul);
     }
     return RP_OK;
 }

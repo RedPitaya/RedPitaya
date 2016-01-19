@@ -34,11 +34,6 @@ int rp_Init()
 {
     cmn_Init();
     analog_Init();
-    calib_Init();
-	
-    hk_Init();
-    for (int unsigned i=0; i<RP_MNG; i++)
-        gen_Init(i);
     for (int unsigned i=0; i<RP_MNA; i++)
         acq_Init(i);
     // TODO: Place other module initializations here
@@ -52,11 +47,8 @@ int rp_Init()
 int rp_Release()
 {
     analog_Release();
-    calib_Release();
     for (int unsigned i=0; i<RP_MNA; i++)
         acq_Release(i);
-    for (int unsigned i=0; i<RP_MNG; i++)
-        gen_Release(i);
     hk_Release();
     // TODO: Place other module releasing here (in reverse order)
     cmn_Release();
@@ -65,10 +57,7 @@ int rp_Release()
 
 int rp_Reset()
 {
-    ECHECK(rp_DpinReset());
     ECHECK(rp_AOpinReset());
-    for (int unsigned i=0; i<RP_MNG; i++)
-        rp_GenReset(i);
     for (int unsigned i=0; i<RP_MNA; i++)
         rp_AcqReset(i);
     // TODO: Place other module resetting here (in reverse order)
@@ -109,8 +98,4 @@ const char* rp_GetError(int errorCode) {
         default:       return "Unknown error";
     }
 }
-
-/**
- * Acquire methods
- */
 
