@@ -12,27 +12,47 @@
  * for more details on the language used herein.
  */
 
+// for Init
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "common.h"
-#include "redpitaya/rp.h"
 #include "acquire.h"
 
 // structure containing available ranges
 static const float ranges [2] = {1.0, 20.0};
 
-// The FPGA register structure for oscilloscope
-static volatile acq_regset_t (*regset)[RP_MNA];
-
-/**
- * general
- */
-
-int acq_Init() {
-    cmn_Map(ACQ_BASE_SIZE, ACQ_BASE_ADDR, (void**)&regset);
+int rp_AcqInit(char *dev, rp_handle_uio_t *handle) {
+    // make a copy of the device path
+    handle->dev = (char*) malloc((strlen(dev)+1) * sizeof(char));
+    strncpy(handle->dev, dev, strlen(dev)+1);
+    // try opening the device
+    handle->fd = open(handle->dev, O_RDWR);
+    if (!handle->fd) {
+        return -1;
+    } else {
+        // get regset pointer
+        handle->regset = mmap(NULL, ACQUIRE_BASE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
+        if (handle->regset == NULL) {
+            return -1;
+        }
+    }
     return RP_OK;
 }
 
-int acq_Release() {
-    cmn_Unmap(ACQ_BASE_SIZE, (void**)&regset);
+int rp_AcqRelease(rp_handle_uio_t *handle) {
+    // release regset
+    munmap((void *) handle->regset, ACQUIRE_BASE_SIZE);
+    // close device
+    close (handle->fd);
+    // free device path
+    free(handle->dev);
+    // free name
+    // TODO
     return RP_OK;
 }
 
@@ -40,150 +60,147 @@ int acq_Release() {
  * Equalization filters
  */
 
-int rp_AcqSetEqFilters(int unsigned channel, int32_t aa, int32_t bb, int32_t kk, int32_t pp) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(aa, &regset[channel]->cfg_faa);
-    iowrite32(bb, &regset[channel]->cfg_fbb);
-    iowrite32(kk, &regset[channel]->cfg_fkk);
-    iowrite32(pp, &regset[channel]->cfg_fpp);
+int rp_AcqSetEqFilters(rp_handle_uio_t *handle, int32_t aa, int32_t bb, int32_t kk, int32_t pp) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(aa, &regset->cfg_faa);
+    iowrite32(bb, &regset->cfg_fbb);
+    iowrite32(kk, &regset->cfg_fkk);
+    iowrite32(pp, &regset->cfg_fpp);
     return RP_OK;
 }
 
-int rp_AcqGetEqFilters(int unsigned channel, int32_t *aa, int32_t *bb, int32_t *kk, int32_t *pp) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *aa = ioread32(&regset[channel]->cfg_faa);
-    *bb = ioread32(&regset[channel]->cfg_fbb);
-    *kk = ioread32(&regset[channel]->cfg_fkk);
-    *pp = ioread32(&regset[channel]->cfg_fpp);
+int rp_AcqGetEqFilters(rp_handle_uio_t *handle, int32_t *aa, int32_t *bb, int32_t *kk, int32_t *pp) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *aa = ioread32(&regset->cfg_faa);
+    *bb = ioread32(&regset->cfg_fbb);
+    *kk = ioread32(&regset->cfg_fkk);
+    *pp = ioread32(&regset->cfg_fpp);
     return RP_OK;
 }
 
-int rp_AcqSetAveraging(int unsigned channel, bool averaging) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(averaging, &regset[channel]->cfg_avg);
+int rp_AcqSetAveraging(rp_handle_uio_t *handle, bool averaging) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(averaging, &regset->cfg_avg);
     return RP_OK;
 }
 
-int rp_AcqGetAveraging(int unsigned channel, bool *averaging) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *averaging = ioread32(&regset[channel]->cfg_avg);
+int rp_AcqGetAveraging(rp_handle_uio_t *handle, bool *averaging) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *averaging = ioread32(&regset->cfg_avg);
     return RP_OK;
 }
 
-int rp_AcqSetDecimation(int unsigned channel, uint32_t decimation) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(decimation, &regset[channel]->cfg_dec);
+int rp_AcqSetDecimation(rp_handle_uio_t *handle, uint32_t decimation) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(decimation, &regset->cfg_dec);
     return RP_OK;
 }
 
-int rp_AcqGetDecimation(int unsigned channel, uint32_t *decimation) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *decimation = ioread32(&regset[channel]->cfg_dec);
+int rp_AcqGetDecimation(rp_handle_uio_t *handle, uint32_t *decimation) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *decimation = ioread32(&regset->cfg_dec);
     return RP_OK;
 }
 
-int rp_AcqSetShiftRight(int unsigned channel, uint32_t shift) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(shift, &regset[channel]->cfg_shr);
+int rp_AcqSetShiftRight(rp_handle_uio_t *handle, uint32_t shift) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(shift, &regset->cfg_shr);
     return RP_OK;
 }
 
-int rp_AcqGetShiftRight(int unsigned channel, uint32_t *shift) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *shift = ioread32(&regset[channel]->cfg_shr);
+int rp_AcqGetShiftRight(rp_handle_uio_t *handle, uint32_t *shift) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *shift = ioread32(&regset->cfg_shr);
     return RP_OK;
 }
 
-int rp_AcqSetTriggerSrc(int unsigned channel, rp_acq_trig_src_t source) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(source, &regset[channel]->cfg_lvl);
+int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t source) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(source, &regset->cfg_lvl);
     return RP_OK;
 }
 
-int rp_AcqGetTriggerSrc(int unsigned channel, rp_acq_trig_src_t *source) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *source = (rp_acq_trig_src_t) ioread32(&regset[channel]->cfg_sel);
+int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t *source) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *source = (rp_acq_trig_src_t) ioread32(&regset->cfg_sel);
     return RP_OK;
 }
 
-int rp_AcqSetTriggerDelay(int unsigned channel, uint32_t value) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(value, &regset[channel]->cfg_dly);
+int rp_AcqSetTriggerDelay(rp_handle_uio_t *handle, uint32_t value) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(value, &regset->cfg_dly);
     return RP_OK;
 }
 
-int rp_AcqGetTriggerDelay(int unsigned channel, uint32_t *value) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *value = ioread32(&regset[channel]->cfg_dly);
+int rp_AcqGetTriggerDelay(rp_handle_uio_t *handle, uint32_t *value) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *value = ioread32(&regset->cfg_dly);
     return RP_OK;
 }
 
-int rp_AcqSetTriggerLevel(int unsigned channel, float voltage) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    float range = ranges[ioread32(&regset[channel]->cfg_rng)];
-    iowrite32((int32_t) (voltage / range * (1 << RP_ACQ_DWI)), &regset[channel]->cfg_lvl);
+int rp_AcqSetTriggerLevel(rp_handle_uio_t *handle, float voltage) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    float range = ranges[ioread32(&regset->cfg_rng)];
+    iowrite32((int32_t) (voltage / range * (1 << RP_ACQ_DWI)), &regset->cfg_lvl);
     return RP_OK;
 }
 
-int rp_AcqGetTriggerLevel(int unsigned channel, float *voltage) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    float range = ranges[ioread32(&regset[channel]->cfg_rng)];
-    *voltage = ((float) (ioread32(&regset[channel]->cfg_lvl) >> RP_ACQ_DWI)) * range;
+int rp_AcqGetTriggerLevel(rp_handle_uio_t *handle, float *voltage) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    float range = ranges[ioread32(&regset->cfg_rng)];
+    *voltage = ((float) (ioread32(&regset->cfg_lvl) >> RP_ACQ_DWI)) * range;
     return RP_OK;
 }
 
-int rp_AcqSetTriggerHyst(int unsigned channel, float voltage) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    float range = ranges[ioread32(&regset[channel]->cfg_rng)];
-    iowrite32((uint32_t) (voltage / range * (1 << RP_ACQ_DWI)), &regset[channel]->cfg_hst);
+int rp_AcqSetTriggerHyst(rp_handle_uio_t *handle, float voltage) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    float range = ranges[ioread32(&regset->cfg_rng)];
+    iowrite32((uint32_t) (voltage / range * (1 << RP_ACQ_DWI)), &regset->cfg_hst);
     return RP_OK;
 }
 
-int rp_AcqGetTriggerHyst(int unsigned channel, float *voltage) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    float range = ranges[ioread32(&regset[channel]->cfg_rng)];
-    *voltage = ((float) (ioread32(&regset[channel]->cfg_hst) >> RP_ACQ_DWI)) * range;
+int rp_AcqGetTriggerHyst(rp_handle_uio_t *handle, float *voltage) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    float range = ranges[ioread32(&regset->cfg_rng)];
+    *voltage = ((float) (ioread32(&regset->cfg_hst) >> RP_ACQ_DWI)) * range;
     return RP_OK;
 }
 
-int rp_AcqGetTriggerState(int unsigned channel, rp_acq_trig_state_t* state) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    *state = (ioread32(&regset[channel]->ctl) & RP_ACQ_CTL_TRG_MASK) != 0;
+int rp_AcqGetTriggerState(rp_handle_uio_t *handle, rp_acq_trig_state_t* state) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    *state = (ioread32(&regset->ctl) & RP_ACQ_CTL_TRG_MASK) != 0;
     return RP_OK;
 }
 
-int rp_AcqStart(int unsigned channel) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(RP_ACQ_CTL_ACQ_MASK, &regset[channel]->ctl);
+int rp_AcqStart(rp_handle_uio_t *handle) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(RP_ACQ_CTL_ACQ_MASK, &regset->ctl);
     return RP_OK;
 }
 
-int rp_AcqStop(int unsigned channel) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(0x0, &regset[channel]->ctl);
+int rp_AcqStop(rp_handle_uio_t *handle) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(0x0, &regset->ctl);
     return RP_OK;
 }
 
-int rp_AcqReset(int unsigned channel) {
-    if (channel >= RP_MNA)  return RP_EPN;
-    iowrite32(RP_ACQ_CTL_RST_MASK, &regset[channel]->ctl);
+int rp_AcqReset(rp_handle_uio_t *handle) {
+    acq_regset_t *regset = (acq_regset_t *) handle->regset;
+    iowrite32(RP_ACQ_CTL_RST_MASK, &regset->ctl);
     return RP_OK;
 }
 
 
 
 
-int rp_AcqGetPreTriggerCounter(int unsigned channel, uint32_t* value) {
-    if (channel >= RP_MNA)  return RP_EPN;
+int rp_AcqGetPreTriggerCounter(rp_handle_uio_t *handle, uint32_t* value) {
     return RP_OK;
 }
 
-int rp_AcqGetData(rp_channel_t channel, uint32_t *size, int16_t *buffer) {
-    if (channel >= RP_MNA)  return RP_EPN;
+int rp_AcqGetData(rp_handle_uio_t *handle, uint32_t *size, int16_t *buffer) {
     return RP_OK;
 }
 
-int rp_AcqGetBufSize(int unsigned channel, uint32_t *size) {
-    if (channel >= RP_MNA)  return RP_EPN;
+int rp_AcqGetBufSize(rp_handle_uio_t *handle, uint32_t *size) {
     return RP_OK;
 }

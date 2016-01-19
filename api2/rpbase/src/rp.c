@@ -34,8 +34,6 @@ int rp_Init()
 {
     cmn_Init();
     analog_Init();
-    for (int unsigned i=0; i<RP_MNA; i++)
-        acq_Init(i);
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
@@ -47,9 +45,6 @@ int rp_Init()
 int rp_Release()
 {
     analog_Release();
-    for (int unsigned i=0; i<RP_MNA; i++)
-        acq_Release(i);
-    hk_Release();
     // TODO: Place other module releasing here (in reverse order)
     cmn_Release();
     return RP_OK;
@@ -57,9 +52,7 @@ int rp_Release()
 
 int rp_Reset()
 {
-    ECHECK(rp_AOpinReset());
-    for (int unsigned i=0; i<RP_MNA; i++)
-        rp_AcqReset(i);
+    rp_AOpinReset();
     // TODO: Place other module resetting here (in reverse order)
     return 0;
 }

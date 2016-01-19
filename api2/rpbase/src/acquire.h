@@ -19,8 +19,7 @@
 #define RP_ACQ_CTL_ACQ_MASK 0x4
 
 // Base acquire address
-static const int ACQ_BASE_ADDR = 0x40600000;
-static const int ACQ_BASE_SIZE = 0x00100000;
+static const int ACQUIRE_BASE_SIZE = 0x00100000;
 
 // acquire structure declaration
 typedef struct {
@@ -80,7 +79,7 @@ int acq_Release();
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetDecimation(int unsigned channel, uint32_t decimation);
+int rp_AcqSetDecimation(rp_handle_uio_t *handle, uint32_t decimation);
 
 /**
  * Gets the decimation used at acquiring signal. There is only a set of pre-defined decimation
@@ -89,7 +88,7 @@ int rp_AcqSetDecimation(int unsigned channel, uint32_t decimation);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDecimation(int unsigned channel, uint32_t *decimation);
+int rp_AcqGetDecimation(rp_handle_uio_t *handle, uint32_t *decimation);
 
 /**
  * Enables or disables averaging of data between samples.
@@ -98,7 +97,7 @@ int rp_AcqGetDecimation(int unsigned channel, uint32_t *decimation);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetAveraging(int unsigned channel, bool enabled);
+int rp_AcqSetAveraging(rp_handle_uio_t *handle, bool enabled);
 
 /**
  * Returns information if averaging of data between samples is enabled or disabled.
@@ -107,7 +106,7 @@ int rp_AcqSetAveraging(int unsigned channel, bool enabled);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetAveraging(int unsigned channel, bool *enabled);
+int rp_AcqGetAveraging(rp_handle_uio_t *handle, bool *enabled);
 
 /**
  * Sets the trigger source used at acquiring signal. When acquiring is started,
@@ -117,7 +116,7 @@ int rp_AcqGetAveraging(int unsigned channel, bool *enabled);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerSrc(int unsigned channel, rp_acq_trig_src_t source);
+int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t source);
 
 /**
  * Gets the trigger source used at acquiring signal. When acquiring is started,
@@ -127,7 +126,7 @@ int rp_AcqSetTriggerSrc(int unsigned channel, rp_acq_trig_src_t source);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerSrc(int unsigned channel, rp_acq_trig_src_t *source);
+int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t *source);
 
 /**
  * Returns the trigger state. Either it is waiting for a trigger to happen, or it has already been triggered.
@@ -136,7 +135,7 @@ int rp_AcqGetTriggerSrc(int unsigned channel, rp_acq_trig_src_t *source);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerState(int unsigned channel, rp_acq_trig_state_t* state);
+int rp_AcqGetTriggerState(rp_handle_uio_t *handle, rp_acq_trig_state_t* state);
 
 /**
  * Sets the number of decimated data after trigger written into memory.
@@ -144,7 +143,7 @@ int rp_AcqGetTriggerState(int unsigned channel, rp_acq_trig_state_t* state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerDelay(int unsigned channel, uint32_t value);
+int rp_AcqSetTriggerDelay(rp_handle_uio_t *handle, uint32_t value);
 
 /**
  * Returns current number of decimated data after trigger written into memory.
@@ -152,7 +151,7 @@ int rp_AcqSetTriggerDelay(int unsigned channel, uint32_t value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerDelay(int unsigned channel, uint32_t *value);
+int rp_AcqGetTriggerDelay(rp_handle_uio_t *handle, uint32_t *value);
 
 /**
  * Returns the number of valid data ponts before trigger.
@@ -160,7 +159,7 @@ int rp_AcqGetTriggerDelay(int unsigned channel, uint32_t *value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetPreTriggerCounter(int unsigned channel, uint32_t* value);
+int rp_AcqGetPreTriggerCounter(rp_handle_uio_t *handle, uint32_t* value);
 
 /**
  * Sets the trigger threshold value in volts. Makes the trigger when ADC value crosses this value.
@@ -168,7 +167,7 @@ int rp_AcqGetPreTriggerCounter(int unsigned channel, uint32_t* value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerLevel(int unsigned channel, float voltage);
+int rp_AcqSetTriggerLevel(rp_handle_uio_t *handle, float voltage);
 
 /**
  * Gets currently set trigger threshold value in volts
@@ -176,7 +175,7 @@ int rp_AcqSetTriggerLevel(int unsigned channel, float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerLevel(int unsigned channel, float *voltage);
+int rp_AcqGetTriggerLevel(rp_handle_uio_t *handle, float *voltage);
 
 /**
  * Sets the trigger threshold hysteresis value in volts.
@@ -185,7 +184,7 @@ int rp_AcqGetTriggerLevel(int unsigned channel, float *voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerHyst(int unsigned channel, float voltage);
+int rp_AcqSetTriggerHyst(rp_handle_uio_t *handle, float voltage);
 
 /**
  * Gets currently set trigger threshold hysteresis value in volts
@@ -193,7 +192,7 @@ int rp_AcqSetTriggerHyst(int unsigned channel, float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerHyst(int unsigned channel, float *voltage);
+int rp_AcqGetTriggerHyst(rp_handle_uio_t *handle, float *voltage);
 
 /**
  * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya
@@ -203,7 +202,7 @@ int rp_AcqGetTriggerHyst(int unsigned channel, float *voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetRange(int unsigned channel, int range);
+int rp_AcqSetRange(rp_handle_uio_t *handle, int range);
 
 /**
  * Returns the currently set acquire gain state in the library. It may not be set to the same value as
@@ -213,7 +212,7 @@ int rp_AcqSetRange(int unsigned channel, int range);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetRange(int unsigned channel, int* range);
+int rp_AcqGetRange(rp_handle_uio_t *handle, int* range);
 
 /**
  * Returns current position of ADC write pointer.
@@ -221,7 +220,7 @@ int rp_AcqGetRange(int unsigned channel, int* range);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetWritePointer(int unsigned channel, uint32_t* pos);
+int rp_AcqGetWritePointer(rp_handle_uio_t *handle, uint32_t* pos);
 
 /**
  * Returns position of ADC write pointer at time when trigger arrived.
@@ -229,28 +228,28 @@ int rp_AcqGetWritePointer(int unsigned channel, uint32_t* pos);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetWritePointerAtTrig(int unsigned channel, uint32_t* pos);
+int rp_AcqGetWritePointerAtTrig(rp_handle_uio_t *handle, uint32_t* pos);
 
 /**
  * Starts the acquire. Signals coming from the input channels are acquired and written into memory.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqStart(int unsigned channel);
+int rp_AcqStart(rp_handle_uio_t *handle);
 
 /**
 * Stops the acquire.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_AcqStop(int unsigned channel);
+int rp_AcqStop(rp_handle_uio_t *handle);
 
 /**
  * Resets the acquire writing state machine.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqReset(int unsigned channel);
+int rp_AcqReset(rp_handle_uio_t *handle);
 
 /**
  * Returns the latest ADC buffer samples in Volt units.
@@ -261,10 +260,10 @@ int rp_AcqReset(int unsigned channel);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetData(rp_channel_t channel, uint32_t* size, int16_t *buffer);
+int rp_AcqGetData(rp_handle_uio_t *handle, uint32_t* size, int16_t *buffer);
 
 
-int rp_AcqGetBufSize(rp_channel_t channel, uint32_t* size);
+int rp_AcqGetBufSize(rp_handle_uio_t *handle, uint32_t* size);
 
 
 #endif // SRC_ACQUIRE_H_
