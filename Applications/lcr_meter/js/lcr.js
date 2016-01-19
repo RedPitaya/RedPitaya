@@ -163,9 +163,8 @@
 			}
 
 			//Change primary display value
-			if(new_params['LCR_RUN'].
-
-				value == true && param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
+			if(new_params['LCR_RUN'].value == true && 
+				param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
 				
 				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
 					formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
@@ -250,19 +249,19 @@
 			var quantity = param_name.substr(0, param_name.length - 4);
 			if(param_name == (quantity + "_MIN") && param_name == (LCR.displ_params.prim + "_MIN")){
 				console.log(quantity);
-				var format = formatRangeAuto(true, null,null, new_params[param_name].value);
+				var format = formatRangeAuto(true, 1,new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				if(format == "OVER R.") $('#meas_min_d').empty().append(0);
 				else $('#meas_min_d').empty().append(format);
 			}
 
 			if(param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")){
-				var format = formatRangeAuto(true, null,null, new_params[param_name].value);
+				var format = formatRangeAuto(true, 1,new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				if(format == "OVER R.") $('#meas_max_d').empty().append(0);
 				else $('#meas_max_d').empty().append(format);	
 			}
 
 			if(param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")){
-				var format = formatRangeAuto(true, null,null, new_params[param_name].value);
+				var format = formatRangeAuto(true, 1,new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				if(format == "OVER R.") $('#meas_avg_d').empty().append(0);
 				else $('#meas_avg_d').empty().append(format);
 			}
@@ -270,7 +269,7 @@
 
 		if(LCR.data_log.save_data && 
 			LCR.data_log.curr_store < LCR.data_log.max_store){
-			$('#m_table tbody').append('<tr><td>' + LCR.data_log.curr_store + '</td><td>' + 
+			$('#m_table tbody').append('<tr><td><input type="checkbox" name="data">' + LCR.data_log.curr_store + '</td><td>' + 
 				new_params[LCR.data_log.prim_display].value + '</td><td>' + 
 					new_params[LCR.data_log.sec_display].value + '</td></tr>');
 			LCR.data_log.curr_store++;
@@ -455,9 +454,6 @@ $(function() {
 	$('#LCR_LOG').on('click', function(){
 		document.getElementById('table_p_header').innerHTML = LCR.data_log.prim_display[4];
 		document.getElementById('table_s_header').innerHTML = LCR.data_log.sec_display[4];
-		
-		LCR.data_log.curr_store;
-		clearTableAll();
 		LCR.data_log.save_data = true;
 	});
 
@@ -585,6 +581,8 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	if(precision != null && LCR.displ_params.prim == "LCR_C"){
 		meas_data = meas_data * Math.pow(10, -precision);
 	}
+
+	console.log("NON-FORMATTED DATA: " + meas_data);
 	
 	if(meas_data < 0.00000000000010){
 		data = "OVER R.";
@@ -679,8 +677,10 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 		if(data == "OVER R."){
 			return data;
 		}
-		
-		return data + (units + LCR.displ_params.p_base_u);
+		console.log("UNITS: " + units);
+		console.log("DATA: " + data);
+
+		return (data * inverse + units);
 	}
 
 	switch(display){
@@ -736,8 +736,6 @@ function formatRangeManual(precision, format, power, data){
 		LCR.displ_params.p_units = "";
 		return;
 	}
-
-	console.log("WHOLE: ", data);
 
 	var string_data = data.toString();
 	var formatted_data = "";
@@ -796,8 +794,13 @@ function formatRangeManual(precision, format, power, data){
 	return data;
 }
 
-//This functions resets user meas data when a specific event occurs.
-function resetMeasData(){
-
-	return 0;
+function clearRowTable(){
+	$('#m_table tr').has('input[name="data"]:checked').remove();
 }
+
+function clearTableAll(){
+	$('#m_table td').remove();
+	LCR.data_log.curr_store = 1;
+}
+
+

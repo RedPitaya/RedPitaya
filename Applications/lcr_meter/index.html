@@ -132,16 +132,13 @@
 				                <th id="table_p_header" class="col-xs-4">Z</th>
 				                <th id="table_s_header" class="col-xs-4">P</th>
 				            </tr>
-				        
-				        	<tr></tr>
-				        
 				    </table>
 				</div>
 
 				<div id="table_cmd">
 					<button id="btn_c_meas" type="button" class="btn">Clear Min/Max</button>
 					<button id="btn_export" type="button" class="btn">Export Table</button>
-					<button id="btn_clear" type="button" class="btn">Clear</button>
+					<button id="btn_clear" type="button" class="btn" onclick="clearRowTable()">Clear</button>
 					<button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear All</button>
 				</div>
 
@@ -456,14 +453,6 @@
 		var parent = $(this).parent().closest('div').attr('id');
 		$('#' + parent).find('input[type=checkbox]').prop('checked', false);
 		$(this).prop('checked', true);
-	});
-
-	function clearTableAll(){
-		$('#m_table td').remove();
-	}
-
-	$('.btn-app-restart').on('click', function(){
-		location.reload();
 	});
 
 </script>
