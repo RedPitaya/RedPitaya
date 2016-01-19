@@ -74,9 +74,7 @@ add_files                         $path_rtl/red_pitaya_top.v
 read_ip                           $path_ip/rb_cic_125M_to_5M_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_48k_to_8k_32T32_lat13.xcix
 read_ip                           $path_ip/rb_cic_4M992_to_48k_32T32.xcix
-#read_ip                          $path_ip/rb_cic_5M_to_8k_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_41M664_32T32_lat14.xcix
-read_ip                           $path_ip/rb_cic_8k_to_48k_32T32_lat16.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmB_A16_D16_B16_P32.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36.xcix
@@ -85,6 +83,8 @@ read_ip                           $path_ip/rb_dsp48_CONaC_CON48_C48_P48.xcix
 read_ip                           $path_ip/rb_fifo_axis_W32_D16.xcix
 read_ip                           $path_ip/rb_fir_48k_48k_25c23_17i16_35o33.xcix
 read_ip                           $path_ip/rb_fir_8k_8k_25c23_17i16_35o33_lat42.xcix
+read_ip                           $path_ip/rb_fir1_48k_to_48k_25c23_17i16_35o33.xcix
+read_ip                           $path_ip/rb_fir2_48k_to_48k_25c23_17i16_35o33.xcix
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 
