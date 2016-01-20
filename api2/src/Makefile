@@ -19,14 +19,13 @@ REVISION ?= devbuild
 
 # Extensions
 CPPEXT   = .c
-CXXEXT   = .cpp
 OBJEXT   = .o
 
 # Directories paths
 OBJECTS_DIR = ../obj
 INSTALL_DIR ?= .
 SOURCE_DIR  = .
-OUTPUT_DIR  = ../../lib
+OUTPUT_DIR  = ../lib
 
 # Library name
 TARGET=$(OUTPUT_DIR)/librp.so
@@ -37,18 +36,18 @@ OBJECTS =	pdm.o \
 		calib.o \
 		acquire.o \
 		generate.o \
-		rp.o
+		rp2.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
 CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-CFLAGS += -I../../include
+CFLAGS += -I../include
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Red Pitaya common SW directory
-SHARED=../../shared/
+SHARED=../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
@@ -90,4 +89,4 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp -r ../../include/redpitaya $(INSTALL_DIR)/include
+	cp -r ../include/redpitaya $(INSTALL_DIR)/include

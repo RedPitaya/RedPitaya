@@ -80,6 +80,7 @@ OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
+LIBRP2_DIR      = api2
 SDK_DIR         = SDK/
 
 # targets
@@ -285,6 +286,10 @@ libredpitaya:
 librp:
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+librp2:
+	$(MAKE) -C $(LIBRP2_DIR)
+	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ifdef ENABLE_LICENSING
 

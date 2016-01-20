@@ -9,11 +9,11 @@
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-LIBRP=../lib/librp.so
+LIBRP2=../lib/librp2.so
 
-all: $(LIBRP)
+all: $(LIBRP2)
 
-$(LIBRP):
+$(LIBRP2):
 	$(MAKE) -C src
 
 docapi:

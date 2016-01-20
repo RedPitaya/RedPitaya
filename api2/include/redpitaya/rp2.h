@@ -20,11 +20,13 @@
 extern "C" {
 #endif
 
-
-#include <stdint.h>
-#include <stdbool.h>
-
-#define ADC_BUFFER_SIZE             (16*1024)
+typedef struct {
+  char          *name;
+  char          *dev;
+  int            fd;
+  volatile void *regset;
+           void *context;
+} rp_handle_uio_t;
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -77,8 +79,6 @@ extern "C" {
 #define RP_EFRB   21
 /** Failed to write to the bus */
 #define RP_EFWB   22
-
-#define SPECTR_OUT_SIG_LEN (2*1024)
 
 ///@}
 
