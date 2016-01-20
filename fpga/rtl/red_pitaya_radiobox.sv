@@ -706,7 +706,7 @@ wire [ 39:0] tx_mod_fir_q_out;
 wire         tx_mod_fir_q_vld;
 wire         tx_mod_fir_q_rdy;
 
-rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_tx_mod_fir_I (
+rb_fir_8k_to_8k_25c23_17i16_35o33 i_rb_tx_mod_fir_I (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
@@ -721,7 +721,7 @@ rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_tx_mod_fir_I (
   .m_axis_data_tready   ( tx_mod_fir_i_rdy     )
 );
 
-rb_fir_8k_8k_25c23_17i16_35o33_lat42 i_rb_tx_mod_fir_Q (
+rb_fir_8k_to_8k_25c23_17i16_35o33 i_rb_tx_mod_fir_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
@@ -1245,15 +1245,20 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_Q_dsp48 (
 //---------------------------------------------------------------------------------
 //  RX_MOD_FIFO1
 
+wire         rx_mod_fir_si_rdy;
+wire         rx_mod_fir_sq_rdy;
+wire         rx_afc_fir_si_rdy;
+wire         rx_afc_fir_sq_rdy;
+
 wire [ 31:0] rx_mod_fifo1_i_out;
 wire         rx_mod_fifo1_i_vld;
-wire         rx_mod_fifo1_i_rdy;
+wire         rx_mod_fifo1_i_rdy = rx_mod_fir_si_rdy & rx_afc_fir_si_rdy;
 wire         rx_mod_fifo1_i_ovl;
 wire         rx_mod_fifo1_i_ufl;
 
 wire [ 31:0] rx_mod_fifo1_q_out;
 wire         rx_mod_fifo1_q_vld;
-wire         rx_mod_fifo1_q_rdy;
+wire         rx_mod_fifo1_q_rdy = rx_mod_fir_sq_rdy & rx_afc_fir_sq_rdy;
 wire         rx_mod_fifo1_q_ovl;
 wire         rx_mod_fifo1_q_ufl;
 
@@ -1306,6 +1311,7 @@ wire         rx_mod_fir_i_vld;
 wire         rx_mod_fir_i_rdy;
 
 wire [ 23:0] rx_mod_fir_q_in = {3'b0, rx_mod_fifo1_q_out[30:14]};
+wire         rx_mod_fir_sq_rdy;
 wire [ 39:0] rx_mod_fir_q_out;
 wire         rx_mod_fir_q_vld;
 wire         rx_mod_fir_q_rdy;
@@ -1316,11 +1322,11 @@ rb_fir2_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir_I (
   .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_mod_fir_i_in      ),   // RX_MOD_QMIX output I - 8 kHz
+  .s_axis_data_tdata    ( rx_mod_fir_i_in      ),
   .s_axis_data_tvalid   ( rx_mod_fifo1_i_vld   ),
-  .s_axis_data_tready   ( rx_mod_fifo1_i_rdy   ),
+  .s_axis_data_tready   ( rx_mod_fir_si_rdy    ),
 
-  .m_axis_data_tdata    ( rx_mod_fir_i_out     ),   // RX_MOD_FIR output I - 8kHz (35.33 bit width)
+  .m_axis_data_tdata    ( rx_mod_fir_i_out     ),   // RX_MOD_FIR output I - 48kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_i_vld     ),
   .m_axis_data_tready   ( rx_mod_fir_i_rdy     )
 );
@@ -1331,13 +1337,83 @@ rb_fir2_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir_Q (
   .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_mod_fir_q_in      ),   // RX_MOD_QMIX output Q - 8 kHz
+  .s_axis_data_tdata    ( rx_mod_fir_q_in      ),
   .s_axis_data_tvalid   ( rx_mod_fifo1_q_vld   ),
-  .s_axis_data_tready   ( rx_mod_fifo1_q_rdy   ),
+  .s_axis_data_tready   ( rx_mod_fir_sq_rdy    ),
 
-  .m_axis_data_tdata    ( rx_mod_fir_q_out     ),   // RX_MOD_FIR output Q - 8 kHz (35.33 bit width)
+  .m_axis_data_tdata    ( rx_mod_fir_q_out     ),   // RX_MOD_FIR output Q - 48 kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_q_vld     ),
   .m_axis_data_tready   ( rx_mod_fir_q_rdy     )
+);
+
+
+//---------------------------------------------------------------------------------
+//  RX_AFC_FIR low pass filter for side-band selection
+//
+//  RX_AFC_FIR coefficients built with Octave:
+//  fir1(62, 3000/48000, 'low', 'chebwin')
+
+wire [ 23:0] rx_afc_fir_i_in = {3'b0, rx_mod_fifo1_i_out[30:14]};  // bus width is multiple of 8
+wire [ 39:0] rx_afc_fir_i_out;
+wire         rx_afc_fir_m_vld;
+wire         rx_afc_fir_m_rdy;
+
+wire [ 23:0] rx_afc_fir_q_in = {3'b0, rx_mod_fifo1_q_out[30:14]};
+wire [ 39:0] rx_afc_fir_q_out;
+
+rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_I (
+  // global signals
+  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n           ),
+
+  .s_axis_data_tdata    ( rx_mod_fir_i_in      ),
+  .s_axis_data_tvalid   ( rx_mod_fifo1_i_vld   ),
+  .s_axis_data_tready   ( rx_afc_fir_si_rdy    ),
+
+  .m_axis_data_tdata    ( rx_afc_fir_i_out     ),   // RX_AFC_FIR output I - 48kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_afc_fir_m_vld     ),
+  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
+);
+
+rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_Q (
+  // global signals
+  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n           ),
+
+  .s_axis_data_tdata    ( rx_mod_fir_q_in      ),
+  .s_axis_data_tvalid   ( rx_mod_fifo1_q_vld   ),
+  .s_axis_data_tready   ( rx_afc_fir_sq_rdy    ),
+
+  .m_axis_data_tdata    ( rx_afc_fir_q_out     ),   // RX_AFC_FIR output Q - 48 kHz (35.33 bit width)
+  .m_axis_data_tvalid   (                      ),
+  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
+);
+
+
+//---------------------------------------------------------------------------------
+//  RX_AFC_CORDIC
+
+wire [ 63:0] rx_afc_cordic_cart_in = { rx_afc_fir_i_out[33:2], rx_afc_fir_q_out[33:2] };
+
+wire [ 63:0] rx_afc_cordic_polar_out;
+wire         rx_afc_cordic_polar_vld;
+wire         rx_afc_cordic_polar_rdy;
+
+rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
+  // global signals
+  .aclk                    ( clk_adc_125mhz          ),  // global 125 MHz clock
+  .aclken                  ( rb_clk_en               ),  // enable RadioBox sub-module
+  .aresetn                 ( rb_reset_n              ),
+
+  .s_axis_cartesian_tdata  ( rx_afc_cordic_cart_in   ),
+  .s_axis_cartesian_tvalid ( rx_afc_fir_m_vld        ),
+  .s_axis_cartesian_tready ( rx_afc_fir_m_rdy        ),
+
+  .m_axis_dout_tdata       ( rx_afc_cordic_polar_out ),
+  .m_axis_dout_tvalid      ( rx_afc_cordic_polar_vld ),
+  .m_axis_dout_tready      ( rx_afc_cordic_polar_rdy )
 );
 
 
