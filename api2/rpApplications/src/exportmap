@@ -1,4 +1,0 @@
-{
-global: rpApp_*;RP_APP_*;
-local: *;
-};
