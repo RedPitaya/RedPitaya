@@ -32,8 +32,7 @@ OUTPUT_DIR  = ../../lib
 TARGET=$(OUTPUT_DIR)/librp.so
 
 # List of compiled object files
-OBJECTS =	common.o \
-		analog.o \
+OBJECTS =	pdm.o \
 		housekeeping.o \
 		calib.o \
 		acquire.o \

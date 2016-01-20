@@ -193,7 +193,7 @@ int rp_GenGetBurstDelay(rp_handle_uio_t *handle, uint32_t *delay) {
     return RP_OK;
 }
 
-int rp_GenSetTriggerSource(rp_handle_uio_t *handle, rp_trig_src_t src) {
+int rp_GenSetTriggerSource(rp_handle_uio_t *handle, uint32_t src) {
     gen_regset_t *regset = (gen_regset_t *) handle->regset;
     uint32_t tmp = ioread32(&regset->cfg_sys);
     uint32_t MASK = 0x00000004;
@@ -202,18 +202,18 @@ int rp_GenSetTriggerSource(rp_handle_uio_t *handle, rp_trig_src_t src) {
     return RP_OK;
 }
 
-int rp_GenGetTriggerSource(rp_handle_uio_t *handle, rp_trig_src_t *src) {
+int rp_GenGetTriggerSource(rp_handle_uio_t *handle, uint32_t *src) {
     gen_regset_t *regset = (gen_regset_t *) handle->regset;
     uint32_t MASK = 0x00000004;
     *src = ioread32(&regset->cfg_sys) & MASK;
     return RP_OK;
 }
 
-int rp_GenSetMode(rp_handle_uio_t *handle, rp_gen_mode_t mode) {
+int rp_GenSetMode(rp_handle_uio_t *handle, uint32_t mode) {
     return RP_OK;
 }
 
-int rp_GenGetMode(rp_handle_uio_t *handle, rp_gen_mode_t *mode) {
+int rp_GenGetMode(rp_handle_uio_t *handle, uint32_t *mode) {
     return RP_OK;
 }
 

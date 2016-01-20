@@ -120,15 +120,15 @@ int rp_AcqGetTrigger(rp_handle_uio_t *handle, float *lvl, float *hst) {
     return RP_OK;
 }
 
-int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t source) {
+int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, uint32_t source) {
     acq_regset_t *regset = (acq_regset_t *) handle->regset;
     iowrite32(source, &regset->cfg_sel);
     return RP_OK;
 }
 
-int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t *source) {
+int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, uint32_t *source) {
     acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    *source = (rp_acq_trig_src_t) ioread32(&regset->cfg_sel);
+    *source = ioread32(&regset->cfg_sel);
     return RP_OK;
 }
 
@@ -144,7 +144,7 @@ int rp_AcqGetTriggerDelay(rp_handle_uio_t *handle, uint32_t *value) {
     return RP_OK;
 }
 
-int rp_AcqGetTriggerState(rp_handle_uio_t *handle, rp_acq_trig_state_t* state) {
+int rp_AcqGetTriggerState(rp_handle_uio_t *handle, uint32_t *state) {
     acq_regset_t *regset = (acq_regset_t *) handle->regset;
     *state = (ioread32(&regset->ctl) & RP_ACQ_CTL_TRG_MASK) != 0;
     return RP_OK;

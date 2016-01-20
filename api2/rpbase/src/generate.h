@@ -164,15 +164,7 @@ int rp_GenGetPhase(rp_handle_uio_t *handle, double *phase);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t length);
-
-/**
-* Gets channel signal waveform.
-* @param channel Channel A or B for witch we want to get waveform.
-* @param type Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+int rp_GenSetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t  length);
 int rp_GenGetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t *length);
 
 /**
@@ -182,16 +174,8 @@ int rp_GenGetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t *leng
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetMode(rp_handle_uio_t *handle, rp_gen_mode_t mode);
-
-/**
-* Gets generation mode.
-* @param channel Channel A or B for witch we want to get generation mode.
-* @param mode Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetMode(rp_handle_uio_t *handle, rp_gen_mode_t *mode);
+int rp_GenSetMode(rp_handle_uio_t *handle, uint32_t  mode);
+int rp_GenGetMode(rp_handle_uio_t *handle, uint32_t *mode);
 
 /**
 * Sets number of generated waveforms in a burst.
@@ -200,15 +184,7 @@ int rp_GenGetMode(rp_handle_uio_t *handle, rp_gen_mode_t *mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetBurstCount(rp_handle_uio_t *handle, int num);
-
-/**
-* Gets number of generated waveforms in a burst.
-* @param channel Channel A or B for witch we want to get number of generated waveforms in a burst.
-* @param num Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+int rp_GenSetBurstCount(rp_handle_uio_t *handle, int  num);
 int rp_GenGetBurstCount(rp_handle_uio_t *handle, int *num);
 
 /**
@@ -218,15 +194,7 @@ int rp_GenGetBurstCount(rp_handle_uio_t *handle, int *num);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetBurstRepetitions(rp_handle_uio_t *handle, int repetitions);
-
-/**
-* Gets number of burst repetitions.
-* @param channel Channel A or B for witch we want to get number of burst repetitions.
-* @param repetitions Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+int rp_GenSetBurstRepetitions(rp_handle_uio_t *handle, int  repetitions);
 int rp_GenGetBurstRepetitions(rp_handle_uio_t *handle, int *repetitions);
 
 /**
@@ -237,15 +205,7 @@ int rp_GenGetBurstRepetitions(rp_handle_uio_t *handle, int *repetitions);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetBurstDelay(rp_handle_uio_t *handle, uint32_t delay);
-
-/**
-* Gets the period of one burst in micro seconds.
-* @param channel Channel A or B for witch we want to get burst period.
-* @param period Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
+int rp_GenSetBurstDelay(rp_handle_uio_t *handle, uint32_t  delay);
 int rp_GenGetBurstDelay(rp_handle_uio_t *handle, uint32_t *delay);
 
 /**
@@ -255,16 +215,8 @@ int rp_GenGetBurstDelay(rp_handle_uio_t *handle, uint32_t *delay);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetTriggerSource(rp_handle_uio_t *handle, rp_trig_src_t src);
-
-/**
-* Gets trigger source.
-* @param channel Channel A or B for witch we want to get burst period.
-* @param src Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetTriggerSource(rp_handle_uio_t *handle, rp_trig_src_t *src);
+int rp_GenSetTriggerSource(rp_handle_uio_t *handle, uint32_t  src);
+int rp_GenGetTriggerSource(rp_handle_uio_t *handle, uint32_t *src);
 
 /**
 * Sets Trigger for specified channel/channels.

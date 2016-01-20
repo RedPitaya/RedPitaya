@@ -17,45 +17,13 @@
 
 #include "version.h"
 #include "common.h"
-#include "analog.h"
+#include "pdm.h"
 #include "housekeeping.h"
 #include "acquire.h"
-#include "analog.h"
 #include "calib.h"
 #include "generate.h"
 
 static char version[50];
-
-/**
- * Global methods
- */
-
-int rp_Init()
-{
-    cmn_Init();
-    analog_Init();
-    // TODO: Place other module initializations here
-
-    // Set default configuration per handler
-    rp_Reset();
-
-    return RP_OK;
-}
-
-int rp_Release()
-{
-    analog_Release();
-    // TODO: Place other module releasing here (in reverse order)
-    cmn_Release();
-    return RP_OK;
-}
-
-int rp_Reset()
-{
-    rp_AOpinReset();
-    // TODO: Place other module resetting here (in reverse order)
-    return 0;
-}
 
 const char* rp_GetVersion()
 {

@@ -101,8 +101,8 @@ int rp_AcqGetDecimation(rp_handle_uio_t *handle, rp_scope_decimation_regset_t *d
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t source);
-int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t *source);
+int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, uint32_t  source);
+int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, uint32_t *source);
 
 /**
  * Returns the trigger state. Either it is waiting for a trigger to happen, or it has already been triggered.
@@ -111,7 +111,7 @@ int rp_AcqGetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t *source);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerState(rp_handle_uio_t *handle, rp_acq_trig_state_t* state);
+int rp_AcqGetTriggerState(rp_handle_uio_t *handle, uint32_t *state);
 
 /**
  * Sets the number of decimated data after trigger written into memory.
@@ -119,7 +119,7 @@ int rp_AcqGetTriggerState(rp_handle_uio_t *handle, rp_acq_trig_state_t* state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerDelay(rp_handle_uio_t *handle, uint32_t value);
+int rp_AcqSetTriggerDelay(rp_handle_uio_t *handle, uint32_t  value);
 int rp_AcqGetTriggerDelay(rp_handle_uio_t *handle, uint32_t *value);
 
 /**

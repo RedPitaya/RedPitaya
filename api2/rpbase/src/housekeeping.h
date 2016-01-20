@@ -91,8 +91,8 @@ typedef enum {
 } rp_pinDirection_t;
 
 
-int hk_Init();
-int hk_Release();
+int rp_HousekeepingInit(char *dev, rp_handle_uio_t *handle);
+int rp_HousekeepingRelease(rp_handle_uio_t *handle);
 
 /**
 * Enable or disables digital loop. This internally connect output to input
@@ -100,38 +100,38 @@ int hk_Release();
 * Each rp_GetCalibrationSettings call returns the same cached setting values.
 * @return Calibration settings
 */
-int rp_EnableDigitalLoop(bool enable);
+int rp_EnableDigitalLoop(rp_handle_uio_t *handle, bool enable);
 
 
 /**
 * Gets FPGA Synthesized ID
 */
-int rp_IdGetID(uint32_t *id);
+int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id);
 
 /**
 * Gets FPGA Unique DNA
 */
-int rp_IdGetDNA(uint64_t *dna);
+int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna);
 
 /**
  * LED methods
  */
 
-int rp_LEDSetState(uint32_t state);
-int rp_LEDGetState(uint32_t *state);
+int rp_LEDSetState(rp_handle_uio_t *handle, uint32_t state);
+int rp_LEDGetState(rp_handle_uio_t *handle, uint32_t *state);
 
 /**
  * GPIO methods
  */
 
-int rp_GPIOnSetDirection(uint32_t direction);
-int rp_GPIOnGetDirection(uint32_t *direction);
-int rp_GPIOnSetState(uint32_t state);
-int rp_GPIOnGetState(uint32_t *state);
-int rp_GPIOpSetDirection(uint32_t direction);
-int rp_GPIOpGetDirection(uint32_t *direction);
-int rp_GPIOpSetState(uint32_t state);
-int rp_GPIOpGetState(uint32_t *state);
+int rp_GPIOnSetDirection(rp_handle_uio_t *handle, uint32_t  direction);
+int rp_GPIOnGetDirection(rp_handle_uio_t *handle, uint32_t *direction);
+int rp_GPIOnSetState    (rp_handle_uio_t *handle, uint32_t  state);
+int rp_GPIOnGetState    (rp_handle_uio_t *handle, uint32_t *state);
+int rp_GPIOpSetDirection(rp_handle_uio_t *handle, uint32_t  direction);
+int rp_GPIOpGetDirection(rp_handle_uio_t *handle, uint32_t *direction);
+int rp_GPIOpSetState    (rp_handle_uio_t *handle, uint32_t  state);
+int rp_GPIOpGetState    (rp_handle_uio_t *handle, uint32_t *state);
 
 
 /** @name Digital Input/Output
@@ -141,7 +141,7 @@ int rp_GPIOpGetState(uint32_t *state);
 /**
 * Sets digital pins to default values. Pins DIO1_P - DIO7_P, RP_DIO0_N - RP_DIO7_N are set al OUTPUT and to LOW. LEDs are set to LOW/OFF
 */
-int rp_DpinReset();
+int rp_DpinReset(rp_handle_uio_t *handle);
 
 /**
  * Sets digital input output pin state.
@@ -150,16 +150,8 @@ int rp_DpinReset();
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state);
-
-/**
- * Gets digital input output pin state.
- * @param pin    Digital input output pin.
- * @param state  High/Low state that is set at the given pin.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state);
+int rp_DpinSetState(rp_handle_uio_t *handle, rp_dpin_t pin, rp_pinState_t state);
+int rp_DpinGetState(rp_handle_uio_t *handle, rp_dpin_t pin, rp_pinState_t* state);
 
 /**
  * Sets digital input output pin direction. LED pins are already automatically set to the output direction,
@@ -170,15 +162,7 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
-
-/**
- * Gets digital input output pin direction.
- * @param pin        Digital input output pin.
- * @param direction  In/Out direction that is set at the given pin.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
+int rp_DpinSetDirection(rp_handle_uio_t *handle, rp_dpin_t pin, rp_pinDirection_t direction);
+int rp_DpinGetDirection(rp_handle_uio_t *handle, rp_dpin_t pin, rp_pinDirection_t* direction);
 
 #endif //__HOUSEKEEPING_H
