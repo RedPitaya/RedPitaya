@@ -60,63 +60,69 @@ int rp_AcqRelease(rp_handle_uio_t *handle) {
  * Equalization filters
  */
 
-int rp_AcqSetEqFilters(rp_handle_uio_t *handle, int32_t aa, int32_t bb, int32_t kk, int32_t pp) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    iowrite32(aa, &regset->cfg_faa);
-    iowrite32(bb, &regset->cfg_fbb);
-    iowrite32(kk, &regset->cfg_fkk);
-    iowrite32(pp, &regset->cfg_fpp);
+int rp_AcqSetEqFilter(rp_handle_uio_t *handle, rp_adc_eqfilter_regset_t *fil) {
+    rp_adc_eqfilter_regset_t *regset = (rp_adc_eqfilter_regset_t *) &(((acq_regset_t *) handle->regset)->fil);
+    iowrite32(fil->byp, &regset->byp);
+    iowrite32(fil->aa , &regset->aa );
+    iowrite32(fil->bb , &regset->bb );
+    iowrite32(fil->kk , &regset->kk );
+    iowrite32(fil->pp , &regset->pp );
     return RP_OK;
 }
 
-int rp_AcqGetEqFilters(rp_handle_uio_t *handle, int32_t *aa, int32_t *bb, int32_t *kk, int32_t *pp) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    *aa = ioread32(&regset->cfg_faa);
-    *bb = ioread32(&regset->cfg_fbb);
-    *kk = ioread32(&regset->cfg_fkk);
-    *pp = ioread32(&regset->cfg_fpp);
+int rp_AcqGetEqFilter(rp_handle_uio_t *handle, rp_adc_eqfilter_regset_t *fil) {
+    rp_adc_eqfilter_regset_t *regset = (rp_adc_eqfilter_regset_t *) &(((acq_regset_t *) handle->regset)->fil);
+    fil->byp = ioread32(&regset->byp);
+    fil->aa  = ioread32(&regset->aa );
+    fil->bb  = ioread32(&regset->bb );
+    fil->kk  = ioread32(&regset->kk );
+    fil->pp  = ioread32(&regset->pp );
     return RP_OK;
 }
 
-int rp_AcqSetAveraging(rp_handle_uio_t *handle, bool averaging) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    iowrite32(averaging, &regset->cfg_avg);
+/**
+ * Decimation
+ */
+
+int rp_AcqSetDecimation(rp_handle_uio_t *handle, rp_scope_decimation_regset_t *dec) {
+    rp_scope_decimation_regset_t *regset = (rp_scope_decimation_regset_t *) &(((acq_regset_t *) handle->regset)->dec);
+    iowrite32(dec->avg, &regset->avg);
+    iowrite32(dec->dec, &regset->dec);
+    iowrite32(dec->shr, &regset->shr);
     return RP_OK;
 }
 
-int rp_AcqGetAveraging(rp_handle_uio_t *handle, bool *averaging) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    *averaging = ioread32(&regset->cfg_avg);
+int rp_AcqGetDecimation(rp_handle_uio_t *handle, rp_scope_decimation_regset_t *dec) {
+    rp_scope_decimation_regset_t *regset = (rp_scope_decimation_regset_t *) &(((acq_regset_t *) handle->regset)->dec);
+    dec->dec = ioread32(&regset->dec);
+    dec->avg = ioread32(&regset->avg);
+    dec->shr = ioread32(&regset->shr);
     return RP_OK;
 }
 
-int rp_AcqSetDecimation(rp_handle_uio_t *handle, uint32_t decimation) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    iowrite32(decimation, &regset->cfg_dec);
+/**
+ * Trigger
+ */
+
+int rp_AcqSetTrigger(rp_handle_uio_t *handle, float lvl, float hst) {
+    rp_scope_trigger_regset_t *regset = (rp_scope_trigger_regset_t *) &(((acq_regset_t *) handle->regset)->trg);
+    float range = ranges[ioread32(&regset->rng)];
+    iowrite32(( int32_t) (lvl / range * (1 << RP_ACQ_DWI)), &regset->lvl);
+    iowrite32((uint32_t) (hst / range * (1 << RP_ACQ_DWI)), &regset->hst);
     return RP_OK;
 }
 
-int rp_AcqGetDecimation(rp_handle_uio_t *handle, uint32_t *decimation) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    *decimation = ioread32(&regset->cfg_dec);
-    return RP_OK;
-}
-
-int rp_AcqSetShiftRight(rp_handle_uio_t *handle, uint32_t shift) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    iowrite32(shift, &regset->cfg_shr);
-    return RP_OK;
-}
-
-int rp_AcqGetShiftRight(rp_handle_uio_t *handle, uint32_t *shift) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    *shift = ioread32(&regset->cfg_shr);
+int rp_AcqGetTrigger(rp_handle_uio_t *handle, float *lvl, float *hst) {
+    rp_scope_trigger_regset_t *regset = (rp_scope_trigger_regset_t *) &(((acq_regset_t *) handle->regset)->trg);
+    float range = ranges[ioread32(&regset->rng)];
+    *lvl = ((float) (ioread32(&regset->lvl) >> RP_ACQ_DWI)) * range;
+    *hst = ((float) (ioread32(&regset->hst) >> RP_ACQ_DWI)) * range;
     return RP_OK;
 }
 
 int rp_AcqSetTriggerSrc(rp_handle_uio_t *handle, rp_acq_trig_src_t source) {
     acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    iowrite32(source, &regset->cfg_lvl);
+    iowrite32(source, &regset->cfg_sel);
     return RP_OK;
 }
 
@@ -135,34 +141,6 @@ int rp_AcqSetTriggerDelay(rp_handle_uio_t *handle, uint32_t value) {
 int rp_AcqGetTriggerDelay(rp_handle_uio_t *handle, uint32_t *value) {
     acq_regset_t *regset = (acq_regset_t *) handle->regset;
     *value = ioread32(&regset->cfg_dly);
-    return RP_OK;
-}
-
-int rp_AcqSetTriggerLevel(rp_handle_uio_t *handle, float voltage) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    float range = ranges[ioread32(&regset->cfg_rng)];
-    iowrite32((int32_t) (voltage / range * (1 << RP_ACQ_DWI)), &regset->cfg_lvl);
-    return RP_OK;
-}
-
-int rp_AcqGetTriggerLevel(rp_handle_uio_t *handle, float *voltage) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    float range = ranges[ioread32(&regset->cfg_rng)];
-    *voltage = ((float) (ioread32(&regset->cfg_lvl) >> RP_ACQ_DWI)) * range;
-    return RP_OK;
-}
-
-int rp_AcqSetTriggerHyst(rp_handle_uio_t *handle, float voltage) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    float range = ranges[ioread32(&regset->cfg_rng)];
-    iowrite32((uint32_t) (voltage / range * (1 << RP_ACQ_DWI)), &regset->cfg_hst);
-    return RP_OK;
-}
-
-int rp_AcqGetTriggerHyst(rp_handle_uio_t *handle, float *voltage) {
-    acq_regset_t *regset = (acq_regset_t *) handle->regset;
-    float range = ranges[ioread32(&regset->cfg_rng)];
-    *voltage = ((float) (ioread32(&regset->cfg_hst) >> RP_ACQ_DWI)) * range;
     return RP_OK;
 }
 
