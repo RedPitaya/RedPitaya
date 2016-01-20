@@ -26,7 +26,7 @@ SRCS = $(subst .o,.c, $(OBJS)))
 TARGET=ut_example
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 # -Wall -Werror
+CFLAGS=-g -std=gnu99  -Wall -Werror
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Red Pitaya common SW directory
