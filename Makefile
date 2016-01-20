@@ -138,7 +138,7 @@ $(TMP):
 #$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
 #	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 #	   scpi api apps_pro rp_communication
-$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT)
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT) api2
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -278,7 +278,7 @@ buildroot: $(INSTALL_DIR)
 # API libraries
 ################################################################################
 
-.PHONY: api librp librpapp libredpitaya
+.PHONY: api2 api librp librpapp libredpitaya
 
 libredpitaya:
 	$(MAKE) -C shared
@@ -304,6 +304,8 @@ else
 api: librp
 
 endif
+
+api2: librp2
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -542,6 +544,7 @@ clean:
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
+	make -C $(LIBRP2_DIR)    clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
