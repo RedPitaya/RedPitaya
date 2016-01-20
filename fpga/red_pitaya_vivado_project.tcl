@@ -81,7 +81,6 @@ read_ip                           $path_ip/rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36.
 read_ip                           $path_ip/rb_dsp48_AmB_A16_B16_P32.xcix
 read_ip                           $path_ip/rb_dsp48_CONaC_CON48_C48_P48.xcix
 read_ip                           $path_ip/rb_fifo_axis_W32_D16.xcix
-read_ip                           $path_ip/rb_fir_48k_48k_25c23_17i16_35o33.xcix
 read_ip                           $path_ip/rb_fir_8k_8k_25c23_17i16_35o33_lat42.xcix
 read_ip                           $path_ip/rb_fir1_48k_to_48k_25c23_17i16_35o33.xcix
 read_ip                           $path_ip/rb_fir2_48k_to_48k_25c23_17i16_35o33.xcix
