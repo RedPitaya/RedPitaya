@@ -28,7 +28,7 @@ SOURCE_DIR  = .
 OUTPUT_DIR  = ../lib
 
 # Library name
-TARGET=$(OUTPUT_DIR)/librp.so
+TARGET=$(OUTPUT_DIR)/librp2.so
 
 # List of compiled object files
 OBJECTS =	pdm.o \
