@@ -51,7 +51,7 @@
                      - bit h0C: TX_MOD_OSC RESYNC - '1' stops incrementing the
                                 accumulating phase register. That holds the
                                 oscillator just there, where it is. With '0' the
-                                TX_CAR_OSC resumes operation.
+                                TX_MOD_OSC resumes operation.
                      - bit h0D: TX_MOD_OSC INC SRC STREAM - '1' places input MUXer for
                                 TX_MOD_OSC DDS increment input to the second streamed
                                 input pipe. '0' places MUXer to registers
@@ -60,10 +60,26 @@
                                 TX_MOD_OSC DDS offset input to the second streamed
                                 input pipe. '0' places MUXer to registers
                                 "TX_MOD_OSC OFS HI" and "TX_MOD_OSC OFS LO".
-                     - bit h13..h0F: n/a
-                     - bit h14: TX_RF_AMP_Q_EN - '1' enables the TX_CAR_QMIX Q path for
-                                the SSB modulation
-                     - bit h1F..h15: n/a
+                     - bit h0F: TX_RF_AMP_Q_EN - '1' enables the Q-path of the
+                                TX SSB section.
+                     - bit h10: n/a
+                     - bit h11: RESET RX_CAR_OSC - '1' resets the RX_CAR_OSC (carrier
+                                oscillator) to its initial state like the
+                                accumulating phase register.
+                     - bit h12: RESET RX_MOD_OSC - '1' resets the RX_MOD_OSC (weaver
+                                oscillator) to its initial state like the
+                                accumulating phase register.
+                     - bit h13: n/a
+                     - bit h14: RX_CAR_OSC RESYNC - '1' stops incrementing the
+                                accumulating phase register. That holds the
+                                oscillator just there, where it is. With '0' the
+                                RX_CAR_OSC resumes operation.
+                     - bit h1B..h15: n/a
+                     - bit h1C: RX_MOD_OSC RESYNC - '1' stops incrementing the
+                                accumulating phase register. That holds the
+                                oscillator just there, where it is. With '0' the
+                                RX_MOD_OSC resumes operation.
+                     - bit h1F..h1D: n/a
 
 
     00004  R/O       RB_STATUS - Status register
@@ -91,7 +107,20 @@
                                 needs some clocks going into valid state.
                      - bit h0A: n/a
                      - bit h0B: n/a
-                     - bit h17..h0C: n/a
+                     - bit h0C: STAT_RX_CAR_OSC_ZERO - '1' RX_CAR_OSC output
+                                equals zero. This state is based on the output
+                                of the DDS oscillator itself.
+                     - bit h0D: STAT_RX_CAR_OSC_VALID - '1' RX_CAR_OSC output is
+                                valid. After turning this sub-module active it
+                                needs some clocks going into valid state.
+                     - bit h0F..h0E: n/a
+                     - bit h10: STAT_RX_MOD_OSC_ZERO - '1' RX_MOD_OSC output
+                                equals zero. This state is based on the output
+                                of the DDS oscillator itself.
+                     - bit h11: STAT_RX_MOD_OSC_VALID - '1' RX_MOD_OSC output is
+                                valid. After turning this sub-module active it
+                                needs some clocks going into valid state.
+                     - bit h17..h12: n/a
                      - bit h18: STAT_LED0_ON - '1' RadioBox LED0 driver that is
                                 shown at the diodes, when STAT_LEDS_EN is '1'.
                      - bit h19: STAT_LED1_ON - '1' RadioBox LED1 driver that is
@@ -260,7 +289,7 @@
                      - bit h1F..h10: n/a
 
 
-    00060  R/W  TX:  RB_MUXIN_SRC - Source signal for the analog input TX MUXer
+    00060  R/W  TX:  RB_TX_MUXIN_SRC - Source signal for the analog input TX MUXer
                      - bit h05..h00: Source ID
                          value = h00  no external signal used, TX_MOD_OSC used instead.
                          value = h03  Vp_Vn,     mapped to: vin[4].
@@ -279,3 +308,79 @@
                           realized as left shift value: (   7 ..  0)
                           gives amplification of:       (128x .. 1x) .
                      - bit h1F..h13: n/a
+
+
+    00120  R/W  RX:  RB_RX_CAR_OSC_INC_LO - DDS RX_CAR_OSC, phase increment register
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of RX_CAR_OSC phase increment register.
+
+    00124  R/W  RX:  RB_RX_CAR_OSC_INC_HI - DDS RX_CAR_OSC, phase increment register
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of RX_CAR_OSC phase increment register.
+                     - bit h1F..h10: n/a
+
+
+    00128  R/W  RX:  RB_RX_CAR_OSC_OFS_LO - DDS RX_CAR_OSC, phase offset register
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of RX_CAR_OSC phase offset register.
+
+    0012C  R/W  RX:  RB_RX_CAR_OSC_OFS_HI - DDS RX_CAR_OSC, phase offset register
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of RX_CAR_OSC phase offset register.
+                     - bit h1F..h10: n/a
+
+
+    00130  R/W  RX:  RB_RX_MOD_ADD_GAIN - RX MOD ADD gain register
+                     bit 15..00
+                     - bit h0F..h00: SIGNED 16 bit - RX MOD ADD SSB/AM decoder output gain setting.
+                     - bit h1F..h10: n/a
+
+    00138  R/W  RX:  RB_RX_MOD_ADD_OFS - RX MOD ADD offset register
+                     bit 16..00
+                     - bit h10..h00: SIGNED 17 bit - RX MOD ADD SSB/AM decoder output offset value.
+                     - bit h1F..h11: n/a
+
+
+    00140  R/W  RX:  RB_RX_MOD_OSC_INC_LO - DDS RX_MOD_OSC, phase increment register
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of TX_MOD_OSC phase increment register.
+
+    00144  R/W  RX:  RB_RX_MOD_OSC_INC_HI - DDS RX_MOD_OSC, phase increment register
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of TX_MOD_OSC phase increment register.
+                     - bit h1F..h10: n/a
+
+
+    00148  R/W  RX:  RB_RX_MOD_OSC_OFS_LO - DDS RX_MOD_OSC, phase offset register
+                     bit 31..00 (LSB), @ 125 MHz base frequency
+                     - bit h1F..h00: LSB of TX_MOD_OSC phase offset register.
+
+    0014C  R/W  RX:  RB_RX_MOD_OSC_OFS_HI - DDS RX_MOD_OSC, phase offset register
+                     bit 47..32 (MSB), @ 125 MHz base frequency
+                     - bit h0F..h00: MSB of TX_CAR_OSC phase offset register.
+                     - bit h1F..h10: n/a
+
+
+    00160  R/W  RX:  RB_RX_MUXIN_SRC - Source signal for the receiver input
+                     - bit h01..h00: Source ID
+                         value = h00  no external signal used, TX_MOD_OSC used instead.
+                         value = h01  ADC0,      mapped to: RF Input 1.
+                         value = h02  ADC1,      mapped to: RF Input 2.
+                     - bit h1F..h02: n/a
+
+    00164  R/W  RX:  RB_RX_MUXIN_GAIN - (not yet implemented) Source signal gain for RX MUXIN input amplifier
+                     bit 18..00
+                     - bit h0F..h00: SIGNED 16 bit - RX MUXIN mixer amplitude.
+                     - bit h12..h10: input booster
+                          realized as left shift value: (   7 ..  0)
+                          gives amplification of:       (128x .. 1x) .
+                     - bit h1F..h13: n/a
+
+
+    00170  R/O  RX:  RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC, magnitude register
+                     bit 31..00, processed each 48 kHz tick based on 125 MHz DDS clock
+                     - bit h1F..h00: RX_AFC_CORDIC AFC carrier magnitude register.
+
+    00174  R/O  RX:  RB_RX_AFC_CORDIC_PHS - RX_AFC_CORDIC, phase register
+                     bit 31..00, processed each 48 kHz tick based on 125 MHz DDS clock
+                     - bit h1F..h00: RX_AFC_CORDIC AFC carrier phase register.
