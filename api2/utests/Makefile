@@ -61,17 +61,13 @@ all: $(TARGET)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
-%.o: %.c version.h
+%.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-
-# Version header for traceability
-version.h:
-	cp $(SHARED)/include/redpitaya/version.h . 
 
 # Clean target - when called it cleans all object files and executables.
 clean:

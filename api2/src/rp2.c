@@ -15,21 +15,12 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "version.h"
 #include "common.h"
 #include "pdm.h"
 #include "housekeeping.h"
 #include "acquire.h"
 #include "calib.h"
 #include "generate.h"
-
-static char version[50];
-
-const char* rp_GetVersion()
-{
-    sprintf(version, "%s (%s)", VERSION_STR, REVISION_STR);
-    return version;
-}
 
 const char* rp_GetError(int errorCode) {
     switch (errorCode) {

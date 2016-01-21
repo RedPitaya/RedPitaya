@@ -83,12 +83,6 @@ typedef struct {
 ///@}
 
 /**
- * Retrieves the library version number
- * @return Library version
- */
-const char* rp_GetVersion();
-
-/**
  * Returns textual representation of error code.
  * @param errorCode Error code returned from API.
  * @return Textual representation of error given error code.
