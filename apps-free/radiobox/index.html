@@ -177,6 +177,11 @@
                 <option disabled="disabled">---------------------</option>
                 <option value="56">RX_MOD_ADD output &nbsp; (audio signal)</option>
                 <option disabled="disabled">============</option>
+                <option value="58">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="59">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="60">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="61">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option disabled="disabled">============</option>
                 <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rfout1_csp" class="input-group-btn" _style="visibility:hidden">
@@ -240,6 +245,11 @@
                 <option value="55">RX_MOD_FIR_Q output &nbsp; (low pass)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="56">RX_MOD_ADD output &nbsp; (audio signal)</option>
+                <option disabled="disabled">============</option>
+                <option value="58">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="59">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="60">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="61">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
                 <option disabled="disabled">============</option>
                <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
@@ -305,6 +315,11 @@
                 <option value="55">RX_MOD_FIR_Q output &nbsp; (low pass)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="56">RX_MOD_ADD output &nbsp; (audio signal)</option>
+                <option disabled="disabled">============</option>
+                <option value="58">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="59">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="60">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="61">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
                 <option disabled="disabled">============</option>
                 <option value="63">LEDs show current test vector @see red_pitaya_radiobox.sv for details</option>
               </select>
@@ -372,7 +387,11 @@
             <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
               <option value="0">USB</option>
               <option value="1">LSB</option>
-              <option value="2">AM</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="2">AM (automatic)</option>
+              <option value="5">AM (sync USB)</option>
+              <option value="6">AM (sync LSB)</option>
+              <option disabled="disabled">---------------------</option>
               <option value="3">FM</option>
               <option value="4">PM</option>
             </select>
