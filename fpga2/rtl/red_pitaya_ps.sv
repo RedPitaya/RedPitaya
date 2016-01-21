@@ -59,6 +59,7 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // system read/write channel
   sys_bus_if.m           bus,
+  axi4_lite_if.m         axi4_lite,
   // stream input
   str_bus_if.d           sti [2-1:0]
 );
@@ -171,6 +172,26 @@ system_wrapper system_i (
   .M_AXI_GP0_bresp   (axi_gp.BRESP  ),
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  )
+  // AXI4-Lite
+  .M_AXI4_LITE_0_araddr  (axi4_lite.ARADDR ),
+  .M_AXI4_LITE_0_arprot  (axi4_lite.ARPROT ),
+  .M_AXI4_LITE_0_arready (axi4_lite.ARREADY),
+  .M_AXI4_LITE_0_arvalid (axi4_lite.ARVALID),
+  .M_AXI4_LITE_0_awaddr  (axi4_lite.AWADDR ),
+  .M_AXI4_LITE_0_awprot  (axi4_lite.AWPROT ),
+  .M_AXI4_LITE_0_awready (axi4_lite.AWREADY),
+  .M_AXI4_LITE_0_awvalid (axi4_lite.AWVALID),
+  .M_AXI4_LITE_0_bready  (axi4_lite.BREADY ),
+  .M_AXI4_LITE_0_bresp   (axi4_lite.BRESP  ),
+  .M_AXI4_LITE_0_bvalid  (axi4_lite.BVALID ),
+  .M_AXI4_LITE_0_rdata   (axi4_lite.RDATA  ),
+  .M_AXI4_LITE_0_rready  (axi4_lite.RREADY ),
+  .M_AXI4_LITE_0_rresp   (axi4_lite.RRESP  ),
+  .M_AXI4_LITE_0_rvalid  (axi4_lite.RVALID ),
+  .M_AXI4_LITE_0_wdata   (axi4_lite.WDATA  ),
+  .M_AXI4_LITE_0_wready  (axi4_lite.WREADY ),
+  .M_AXI4_LITE_0_wstrb   (axi4_lite.WSTRB  ),
+  .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID ),
   // AXI-4 streaming interfaces
 //  .S_AXI_STR1_aclk   (str[1].clk ),  .S_AXI_STR0_aclk   (str[0].clk ),
 //  .S_AXI_STR1_arstn  (str[1].rstn),  .S_AXI_STR0_arstn  (str[0].rstn),

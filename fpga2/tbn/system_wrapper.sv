@@ -83,6 +83,26 @@ module system_wrapper (
   output logic  [3:0] M_AXI_GP0_wstrb  ,
   output logic        M_AXI_GP0_wvalid ,
 
+  output logic [31:0] M_AXI4_LITE_0_araddr ,
+  output logic  [2:0] M_AXI4_LITE_0_arprot ,
+  input  logic  [0:0] M_AXI4_LITE_0_arready,
+  output logic  [0:0] M_AXI4_LITE_0_arvalid,
+  output logic [31:0] M_AXI4_LITE_0_awaddr ,
+  output logic  [2:0] M_AXI4_LITE_0_awprot ,
+  input  logic  [0:0] M_AXI4_LITE_0_awready,
+  output logic  [0:0] M_AXI4_LITE_0_awvalid,
+  output logic  [0:0] M_AXI4_LITE_0_bready ,
+  input  logic  [1:0] M_AXI4_LITE_0_bresp  ,
+  input  logic  [0:0] M_AXI4_LITE_0_bvalid ,
+  input  logic [31:0] M_AXI4_LITE_0_rdata  ,
+  output logic  [0:0] M_AXI4_LITE_0_rready ,
+  input  logic  [1:0] M_AXI4_LITE_0_rresp  ,
+  input  logic  [0:0] M_AXI4_LITE_0_rvalid ,
+  output logic [31:0] M_AXI4_LITE_0_wdata  ,
+  input  logic  [0:0] M_AXI4_LITE_0_wready ,
+  output logic  [3:0] M_AXI4_LITE_0_wstrb  ,
+  output logic  [0:0] M_AXI4_LITE_0_wvalid ,
+
   input  logic        S_AXI_STR1_aclk  , S_AXI_STR0_aclk  ,
   input  logic        S_AXI_STR1_arstn , S_AXI_STR0_arstn ,
   input  logic [15:0] S_AXI_STR1_tdata , S_AXI_STR0_tdata ,
@@ -160,50 +180,8 @@ assign FCLK_RESET3_N = rstn;
 // assign FIXED_IO_ps_srstb = 'z;
 
 ////////////////////////////////////////////////////////////////////////////////
-// AMBA AXI-4 GP bus
+// AMBA AXI4 GP bus
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-//     M_AXI_GP0_ACLK   ,
-assign M_AXI_GP0_araddr  = '0;
-assign M_AXI_GP0_arburst = '0;
-assign M_AXI_GP0_arcache = '0;
-assign M_AXI_GP0_arid    = '0;
-assign M_AXI_GP0_arlen   = '0;
-assign M_AXI_GP0_arlock  = '0;
-assign M_AXI_GP0_arprot  = '0;
-assign M_AXI_GP0_arqos   = '0;
-//     M_AXI_GP0_arready,
-assign M_AXI_GP0_arsize  = '0;
-assign M_AXI_GP0_arvalid = '0;
-assign M_AXI_GP0_awaddr  = '0;
-assign M_AXI_GP0_awburst = '0;
-assign M_AXI_GP0_awcache = '0;
-assign M_AXI_GP0_awid    = '0;
-assign M_AXI_GP0_awlen   = '0;
-assign M_AXI_GP0_awlock  = '0;
-assign M_AXI_GP0_awprot  = '0;
-assign M_AXI_GP0_awqos   = '0;
-//     M_AXI_GP0_awready,
-assign M_AXI_GP0_awsize  = '0;
-assign M_AXI_GP0_awvalid = '0;
-//     M_AXI_GP0_bid    ,
-assign M_AXI_GP0_bready  = '0;
-//     M_AXI_GP0_bresp  ,
-//     M_AXI_GP0_bvalid ,
-//     M_AXI_GP0_rdata  ,
-//     M_AXI_GP0_rid    ,
-//     M_AXI_GP0_rlast  ,
-assign M_AXI_GP0_rready  = '0;
-//     M_AXI_GP0_rresp  ,
-//     M_AXI_GP0_rvalid ,
-assign M_AXI_GP0_wdata   = '0;
-assign M_AXI_GP0_wid     = '0;
-assign M_AXI_GP0_wlast   = '0;
-//     M_AXI_GP0_wready ,
-assign M_AXI_GP0_wstrb   = '0;
-assign M_AXI_GP0_wvalid  = '0;
-*/
 
 axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (
   .ACLK    (M_AXI_GP0_ACLK   ),
@@ -256,7 +234,42 @@ assign axi_gp.WREADY  = M_AXI_GP0_wready  ;
 axi_bus_model #(.AW (32), .DW (32), .IW (12), .LW ( 4)) axi_bus_model (axi_gp);
 
 ////////////////////////////////////////////////////////////////////////////////
-// AMBA AXI-4 HP bus
+// AMBA AXI4-Lite bus
+////////////////////////////////////////////////////////////////////////////////
+
+axi4_lite_if #(.DW (32), .AW (32),) axi4_lite (
+  .ACLK    (M_AXI_GP0_ACLK   ),
+  .ARESETn (M_AXI_GP0_ARESETn)
+);
+
+assign                     M_AXI4_LITE_0_araddr  = axi4_lite.ARADDR ;
+assign                     M_AXI4_LITE_0_arprot  = axi4_lite.ARPROT ;
+assign                     M_AXI4_LITE_0_arvalid = axi4_lite.ARVALID;
+assign axi4_lite.ARREADY = M_AXI4_LITE_0_arready ;
+
+assign                     M_AXI4_LITE_0_awaddr  = axi4_lite.AWADDR ;
+assign                     M_AXI4_LITE_0_awprot  = axi4_lite.AWPROT ;
+assign                     M_AXI4_LITE_0_awvalid = axi4_lite.AWVALID;
+assign axi4_lite.AWREADY = M_AXI4_LITE_0_awready ;
+
+assign axi4_lite.BRESP   = M_AXI4_LITE_0_bresp   ;
+assign axi4_lite.BVALID  = M_AXI4_LITE_0_bvalid  ;
+assign                     M_AXI4_LITE_0_bready  = axi4_lite.BREADY ;
+
+assign axi4_lite.RDATA   = M_AXI4_LITE_0_rdata   ;
+assign axi4_lite.RRESP   = M_AXI4_LITE_0_rresp   ;
+assign axi4_lite.RVALID  = M_AXI4_LITE_0_rvalid  ;
+assign                     M_AXI4_LITE_0_rready  = axi4_lite.RREADY;
+
+assign                     M_AXI4_LITE_0_wdata   = axi4_lite.WDATA ;
+assign                     M_AXI4_LITE_0_wstrb   = axi4_lite.WSTRB ;
+assign                     M_AXI4_LITE_0_wvalid  = axi4_lite.WVALID;
+assign axi4_lite.WREADY  = M_AXI4_LITE_0_wready  ;
+
+axi_bus_model #(.AW (32), .DW (32)) axi4_lite_model (axi4_lite);
+
+////////////////////////////////////////////////////////////////////////////////
+// AMBA AXI4 HP bus
 ////////////////////////////////////////////////////////////////////////////////
 
 //     {S_AXI_HP1_aclk   , S_AXI_HP0_aclk   } = '0;

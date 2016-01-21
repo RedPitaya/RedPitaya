@@ -146,8 +146,9 @@ struct packed {
 } trg;
 
 // system bus
-sys_bus_if ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
+axi4_lite_if axi4_lite    (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -234,6 +235,7 @@ red_pitaya_ps ps (
   .vinn_i        (vinn_i      ),
    // system read/write channel
   .bus           (ps_sys      ),
+  .axi4_lite     (axi4_lite   ),
   // AXI streams
   .sti           (str_acq     )
 );
@@ -258,6 +260,26 @@ for (genvar i=10; i<16; i++) begin: for_sys
   assign sys[i].rdata = 'x;
 end: for_sys
 endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
+// GPIO
+////////////////////////////////////////////////////////////////////////////////
+
+localparam int unsigned GDW = 8;
+
+logic [GDW-1:0] gpio_e;  // output enable
+logic [GDW-1:0] gpio_o;  // output
+logic [GDW-1:0] gpio_i;  // input
+
+
+gpio #(.DW (GDW)) gpio (
+  // expansion connector
+  .gpio_e  (gpio_e),
+  .gpio_o  (gpio_o),
+  .gpio_i  (gpio_i),
+  // system bus
+  .bus     (axi4_lite)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
