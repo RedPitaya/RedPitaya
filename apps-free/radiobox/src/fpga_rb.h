@@ -762,11 +762,13 @@ typedef struct fpga_rb_reg_mem_s {
 
      /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
       *
-      * bit h1F..h00: value.
+      * bit h05..h00: value.
       *   value = h00  off.
       *   value = h01  RF Input 1.
       *   value = h02  RF Input 2.
       *   value > h02  (undefined)
+      *
+      * bit h1F..h06: n/a
       *
       */
      uint32_t rx_muxin_src;
@@ -779,6 +781,41 @@ typedef struct fpga_rb_reg_mem_s {
       *
       */
      uint32_t rx_muxin_gain;
+
+
+     /** @brief  Placeholder for addr: 0x40600168
+      *
+      * n/a
+      *
+      */
+     uint32_t reserved_168;
+
+
+     /** @brief  Placeholder for addr: 0x4060016C
+      *
+      * n/a
+      *
+      */
+     uint32_t reserved_16C;
+
+
+     /** @brief  R/W RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 15..0 (addr: 0x40600170)
+      *
+      * bit h0F..h00: RX_AFC_CORDIC magnitude register.
+      *
+      * bit h1F..h10: n/a
+      *
+      */
+     uint32_t rx_afc_cordic_mag;
+
+     /** @brief  R/W RB_RX_AFC_CORDIC_phs - RX_AFC_CORDIC phase register, bits 15..0 (addr: 0x40600174)
+      *
+      * bit h0F..h00: RX_AFC_CORDIC phase register.
+      *
+      * bit h1F..h10: n/a
+      *
+      */
+     uint32_t rx_afc_cordic_phs;
 
 } fpga_rb_reg_mem_t;
 

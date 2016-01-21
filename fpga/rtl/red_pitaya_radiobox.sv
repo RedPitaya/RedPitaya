@@ -142,8 +142,8 @@ enum {
     //REG_RD_RB_RX_RSVD_H158,
     //REG_RD_RB_RX_RSVD_H15C,
 
-    REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB analog RX MUX input selector:  d0=RF Input 1, d1=RF Input 2
-    REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB analog RX MUX gain for input amplifier
+    REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB audio signal RX MUXIN input selector:  d0=(none), d1=RF Input 1, d2=RF Input 2
+    REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB audio signal RX MUXIN gain for input amplifier
     //REG_RD_RB_RX_RSVD_H168,
     //REG_RD_RB_RX_RSVD_H16C,
 
@@ -291,6 +291,10 @@ enum {
 
     RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT               = 56, // RX_MOD_ADD output
 
+    RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT             = 58, // RX_AFC_FIR I output
+    RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT,                  // RX_AFC_FIR Q output
+    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG,                 // RX_AFC_CORDIC magnitude output
+    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS,                 // RX_AFC_CORDIC phase output
 
     RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT              = 63  // Current test vector, look at assignments within this file
 } RB_SRC_CON_PNT_ENUM;                                    // 64 entries = 2^6 --> 6 bit field
@@ -1754,6 +1758,24 @@ else begin
              rb_leds_data <= fct_mag(rx_mod_add_out[33:16]);
           end
 
+       RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
+          if (!led_ctr && rx_afc_fir_m_vld)
+             rb_leds_data <= fct_mag(rx_afc_fir_i_out[32:17]);
+          end
+       RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
+          if (!led_ctr && rx_afc_fir_m_vld)
+             rb_leds_data <= fct_mag(rx_afc_fir_q_out[32:17]);
+          end
+
+       RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
+          if (!led_ctr && rx_afc_cordic_polar_vld)
+             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out[31: 0]);
+          end
+       RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
+          if (!led_ctr && rx_afc_cordic_polar_vld)
+             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out[63:32]);
+          end
+
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
           if (!led_ctr)
              rb_leds_data <= { rx_car_fifo_q_ovl, rx_car_fifo_q_ufl, rx_mod_fifo1_i_ovl, rx_mod_fifo1_i_ufl, rx_car_fifo_i_vld, rx_car_fir_i_vld, 2'b0 };
@@ -1936,6 +1958,20 @@ else begin
           rb_out_ch[0] <= rx_mod_add_out[33:16];
           end
 
+       RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
+          rb_out_ch[0] <= rx_afc_fir_i_out[32:17];
+          end
+       RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
+          rb_out_ch[0] <= rx_afc_fir_q_out[32:17];
+          end
+
+       RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
+          rb_out_ch[0] <= rx_afc_cordic_polar_out[31: 0];
+          end
+       RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
+          rb_out_ch[0] <= rx_afc_cordic_polar_out[63:32];
+          end
+
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
           rb_out_ch[0] <= { 1'b0, rx_car_fifo_i_vld, 14'b0 };
           end
@@ -2112,6 +2148,20 @@ else begin
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
           rb_out_ch[1] <= rx_mod_add_out[33:16];
+          end
+
+       RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
+          rb_out_ch[1] <= rx_afc_fir_i_out[32:17];
+          end
+       RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
+          rb_out_ch[1] <= rx_afc_fir_q_out[32:17];
+          end
+
+       RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
+          rb_out_ch[1] <= rx_afc_cordic_polar_out[31: 0];
+          end
+       RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
+          rb_out_ch[1] <= rx_afc_cordic_polar_out[63:32];
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
