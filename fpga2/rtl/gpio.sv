@@ -8,44 +8,87 @@ module gpio #(
   int unsigned DW = 8 // data width
 )(
   // expansion connector
-  input  logic [DW-1:0] gpio_i,  // input
-  output logic [DW-1:0] gpio_o,  // output
   output logic [DW-1:0] gpio_e,  // output enable
+  output logic [DW-1:0] gpio_o,  // output
+  input  logic [DW-1:0] gpio_i,  // input
   // system bus
   axi4_lite_if.s        bus
 );
 
+localparam int unsigned AW = 3;
+
 ////////////////////////////////////////////////////////////////////////////////
-//  System bus connection
+// write access
 ////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge bus.clk)
-if (!bus.rstn) begin
+logic AW_syn;
+logic AW_trn;
+logic  W_trn;
+logic  B_trn;
+
+assign AW_trn = bus.AWVALID & bus.AWREADY;
+assign  W_trn = bus.WVALID  & bus.WREADY ;
+assign  B_trn = bus.BVALID  & bus.BREADY ;
+
+// AW - W - synchronization
+// TODO: this does not offer full performance
+// a different sync scheme is needed
+assign AW_syn = bus.AWVALID & bus.WVALID;
+
+// AW - W - ready
+assign bus.AWREADY = AW_syn & ~bus.BVALID | bus.BREADY;
+assign bus.WREADY  = AW_syn & ~bus.BVALID | bus.BREADY;
+
+// W - data
+always_ff @(posedge bus.ACLK)
+if (!bus.ARESETn) begin
   gpio_o <= '0;
   gpio_e <= '0;
-end else if (bus.wen) begin
-  if (bus.addr[BDW-1:0]=='h00)   gpio_e <= bus.wdata[DW-1:0];
-  if (bus.addr[BDW-1:0]=='h04)   gpio_o <= bus.wdata[DW-1:0];
+end else if (AW_trn & W_trn) begin
+  if (AW'(bus.AWADDR)=='h00)  gpio_e <= DW'(bus.WDATA);
+  if (AW'(bus.AWADDR)=='h04)  gpio_o <= DW'(bus.WDATA);
 end
 
-always_ff @(posedge bus.clk)
-if (!bus.rstn)  bus.err <= 1'b1;
-else            bus.err <= 1'b0;
+// B - response
+// TODO: error response in reset state
+assign bus.BRESP = 2'b00;
 
-logic sys_en;
-assign sys_en = bus.wen | bus.ren;
+// B - valid
+always_ff @(posedge bus.ACLK)
+if (~bus.ARESETn)  bus.BVALID <= 1'b0;
+else               bus.BVALID <= (AW_trn & W_trn) | (bus.BVALID & ~B_trn);
 
-always_ff @(posedge bus.clk)
-if (!bus.rstn) begin
-  bus.ack <= 1'b0;
-end else begin
-  bus.ack <= sys_en;
-  casez (bus.addr)
-    'h00:  bus.rdata <= DW'(gpio_e);
-    'h04:  bus.rdata <= DW'(gpio_o);
-    'h08:  bus.rdata <= DW'(gpio_i);
-    default: bus.rdata <= '0;
+////////////////////////////////////////////////////////////////////////////////
+// read access
+////////////////////////////////////////////////////////////////////////////////
+
+logic AR_trn;
+logic  R_trn;
+
+assign AR_trn = bus.ARVALID & bus.ARREADY;
+assign  R_trn = bus.RVALID  & bus.RREADY ;
+
+// AR - ready
+assign bus.ARREADY = ~bus.RVALID | bus.RREADY;
+
+// R - data
+always_ff @(posedge bus.ACLK)
+if (AR_trn) begin
+  case (AW'(bus.ARADDR))
+       'h00: bus.RDATA <= 32'(gpio_e);
+       'h04: bus.RDATA <= 32'(gpio_o);
+       'h08: bus.RDATA <= 32'(gpio_i);
+    default: bus.RDATA <= '0;
   endcase
 end
+
+// R - response
+// TODO: error response in reset state
+assign bus.RRESP = 2'b00;
+
+// R - valid
+always_ff @(posedge bus.ACLK)
+if (~bus.ARESETn)  bus.RVALID <= 1'b0;
+else               bus.RVALID <= AR_trn | (bus.RVALID & ~R_trn);
 
 endmodule: gpio
