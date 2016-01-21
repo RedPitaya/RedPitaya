@@ -39,6 +39,12 @@ logic [DW-1:0] gpio_e;  // enable
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
+// timeout
+initial begin
+  repeat(100) @(posedge clk);
+  $finish();
+end
+
 initial begin
   repeat(8) @(posedge clk);
   axi_write (0, 'h67);
