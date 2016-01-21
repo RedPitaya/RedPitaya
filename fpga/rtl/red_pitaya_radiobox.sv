@@ -144,6 +144,11 @@ enum {
 
     REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB analog RX MUX input selector:  d0=RF Input 1, d1=RF Input 2
     REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB analog RX MUX gain for input amplifier
+    //REG_RD_RB_RX_RSVD_H168,
+    //REG_RD_RB_RX_RSVD_H16C,
+
+    REG_RD_RB_RX_AFC_CORDIC_MAG,                // h170: RB RX_AFC_CORDIC magnitude value
+    REG_RD_RB_RX_AFC_CORDIC_PHS,                // h174: RB_RX_AFC_CORDIC phase value
 
     REG_RB_COUNT
 } REG_RB_ENUMS;
@@ -1151,6 +1156,98 @@ rb_fir1_48k_to_48k_25c23_17i16_35o33 i_rb_rx_car_fir_Q (
 
 
 //---------------------------------------------------------------------------------
+//  RX_AFC_FIR low pass filter for side-band selection
+//
+//  RX_AFC_FIR coefficients built with Octave:
+//  fir1(62, 3000/48000, 'low', 'chebwin')
+
+wire [ 23:0] rx_afc_fir_i_in = {3'b0, rx_car_fifo_i_out[30:14]};  // bus width is multiple of 8
+wire         rx_afc_fir_si_rdy;
+wire [ 39:0] rx_afc_fir_i_out;
+wire         rx_afc_fir_m_vld;
+wire         rx_afc_fir_m_rdy;
+
+wire [ 23:0] rx_afc_fir_q_in = {3'b0, rx_car_fifo_q_out[30:14]};
+wire         rx_afc_fir_sq_rdy;
+wire [ 39:0] rx_afc_fir_q_out;
+
+rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_I (
+  // global signals
+  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n           ),
+
+  .s_axis_data_tdata    ( rx_afc_fir_i_in      ),
+  .s_axis_data_tvalid   ( rx_car_fifo_i_vld    ),
+  .s_axis_data_tready   ( rx_afc_fir_si_rdy    ),
+
+  .m_axis_data_tdata    ( rx_afc_fir_i_out     ),   // RX_AFC_FIR output I - 48kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_afc_fir_m_vld     ),
+  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
+);
+
+rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_Q (
+  // global signals
+  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n           ),
+
+  .s_axis_data_tdata    ( rx_afc_fir_q_in      ),
+  .s_axis_data_tvalid   ( rx_car_fifo_q_vld    ),
+  .s_axis_data_tready   ( rx_afc_fir_sq_rdy    ),
+
+  .m_axis_data_tdata    ( rx_afc_fir_q_out     ),   // RX_AFC_FIR output Q - 48 kHz (35.33 bit width)
+  .m_axis_data_tvalid   (                      ),
+  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
+);
+
+
+//---------------------------------------------------------------------------------
+//  RX_AFC_CORDIC
+
+wire [ 63:0] rx_afc_cordic_cart_in = { rx_afc_fir_i_out[33:2], rx_afc_fir_q_out[33:2] };
+
+wire [ 63:0] rx_afc_cordic_polar_out;
+wire         rx_afc_cordic_polar_vld;
+reg          rx_afc_cordic_polar_rdy;
+
+wire         rx_afc_cordic_polar_out_mag = rx_afc_cordic_polar_out[31: 0];
+wire         rx_afc_cordic_polar_out_phs = rx_afc_cordic_polar_out[63:32];
+
+rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
+  // global signals
+  .aclk                    ( clk_adc_125mhz          ),  // global 125 MHz clock
+  .aclken                  ( rb_clk_en               ),  // enable RadioBox sub-module
+  .aresetn                 ( rb_reset_n              ),
+
+  .s_axis_cartesian_tdata  ( rx_afc_cordic_cart_in   ),
+  .s_axis_cartesian_tvalid ( rx_afc_fir_m_vld        ),
+  .s_axis_cartesian_tready ( rx_afc_fir_m_rdy        ),
+
+  .m_axis_dout_tdata       ( rx_afc_cordic_polar_out ),
+  .m_axis_dout_tvalid      ( rx_afc_cordic_polar_vld ),
+  .m_axis_dout_tready      ( rx_afc_cordic_polar_rdy )
+);
+
+
+//---------------------------------------------------------------------------------
+//  RX_AFC_FSM
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin
+   rx_afc_cordic_polar_rdy <= 'b0;
+   end
+
+else if (rx_afc_cordic_polar_vld) begin
+   rx_afc_cordic_polar_rdy <= 'b0;
+   regs[REG_RD_RB_RX_AFC_CORDIC_MAG] <= rx_afc_cordic_polar_out_mag;
+   regs[REG_RD_RB_RX_AFC_CORDIC_PHS] <= rx_afc_cordic_polar_out_phs;
+   end
+else
+   rx_afc_cordic_polar_rdy <= 'b1;
+
+
+//---------------------------------------------------------------------------------
 //  RX_MOD_OSC modulation oscillator and SSB weaver modulator
 
 wire         rx_mod_osc_reset_n = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_RX_MOD_OSC];
@@ -1344,76 +1441,6 @@ rb_fir2_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir_Q (
   .m_axis_data_tdata    ( rx_mod_fir_q_out     ),   // RX_MOD_FIR output Q - 48 kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir_q_vld     ),
   .m_axis_data_tready   ( rx_mod_fir_q_rdy     )
-);
-
-
-//---------------------------------------------------------------------------------
-//  RX_AFC_FIR low pass filter for side-band selection
-//
-//  RX_AFC_FIR coefficients built with Octave:
-//  fir1(62, 3000/48000, 'low', 'chebwin')
-
-wire [ 23:0] rx_afc_fir_i_in = {3'b0, rx_mod_fifo1_i_out[30:14]};  // bus width is multiple of 8
-wire [ 39:0] rx_afc_fir_i_out;
-wire         rx_afc_fir_m_vld;
-wire         rx_afc_fir_m_rdy;
-
-wire [ 23:0] rx_afc_fir_q_in = {3'b0, rx_mod_fifo1_q_out[30:14]};
-wire [ 39:0] rx_afc_fir_q_out;
-
-rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_I (
-  // global signals
-  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-  .aresetn              ( rb_reset_n           ),
-
-  .s_axis_data_tdata    ( rx_mod_fir_i_in      ),
-  .s_axis_data_tvalid   ( rx_mod_fifo1_i_vld   ),
-  .s_axis_data_tready   ( rx_afc_fir_si_rdy    ),
-
-  .m_axis_data_tdata    ( rx_afc_fir_i_out     ),   // RX_AFC_FIR output I - 48kHz (35.33 bit width)
-  .m_axis_data_tvalid   ( rx_afc_fir_m_vld     ),
-  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
-);
-
-rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_Q (
-  // global signals
-  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-  .aresetn              ( rb_reset_n           ),
-
-  .s_axis_data_tdata    ( rx_mod_fir_q_in      ),
-  .s_axis_data_tvalid   ( rx_mod_fifo1_q_vld   ),
-  .s_axis_data_tready   ( rx_afc_fir_sq_rdy    ),
-
-  .m_axis_data_tdata    ( rx_afc_fir_q_out     ),   // RX_AFC_FIR output Q - 48 kHz (35.33 bit width)
-  .m_axis_data_tvalid   (                      ),
-  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
-);
-
-
-//---------------------------------------------------------------------------------
-//  RX_AFC_CORDIC
-
-wire [ 63:0] rx_afc_cordic_cart_in = { rx_afc_fir_i_out[33:2], rx_afc_fir_q_out[33:2] };
-
-wire [ 63:0] rx_afc_cordic_polar_out;
-wire         rx_afc_cordic_polar_vld;
-wire         rx_afc_cordic_polar_rdy;
-
-rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
-  // global signals
-  .aclk                    ( clk_adc_125mhz          ),  // global 125 MHz clock
-  .aclken                  ( rb_clk_en               ),  // enable RadioBox sub-module
-  .aresetn                 ( rb_reset_n              ),
-
-  .s_axis_cartesian_tdata  ( rx_afc_cordic_cart_in   ),
-  .s_axis_cartesian_tvalid ( rx_afc_fir_m_vld        ),
-  .s_axis_cartesian_tready ( rx_afc_fir_m_rdy        ),
-
-  .m_axis_dout_tdata       ( rx_afc_cordic_polar_out ),
-  .m_axis_dout_tvalid      ( rx_afc_cordic_polar_vld ),
-  .m_axis_dout_tready      ( rx_afc_cordic_polar_rdy )
 );
 
 
@@ -2172,6 +2199,8 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]      <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_SRC]           <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_GAIN]          <= 32'h00000000;
+   regs[REG_RD_RB_RX_AFC_CORDIC_MAG]      <= 32'h00000000;
+   regs[REG_RD_RB_RX_AFC_CORDIC_PHS]      <= 32'h00000000;
    end
 
 else begin
@@ -2457,6 +2486,16 @@ else begin
       20'h00164: begin
         sys_ack   <= sys_en;
         sys_rdata <= regs[REG_RW_RB_RX_MUXIN_GAIN];
+        end
+
+      /* RX_AFC_CORDIC */
+      20'h00170: begin
+        sys_ack   <= sys_en;
+        sys_rdata <= regs[REG_RD_RB_RX_AFC_CORDIC_MAG];
+        end
+      20'h00174: begin
+        sys_ack   <= sys_en;
+        sys_rdata <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS];
         end
 
       default:   begin
