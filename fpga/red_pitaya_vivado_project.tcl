@@ -71,6 +71,7 @@ add_files                         $path_rtl/red_pitaya_radiobox.sv
 add_files                         $path_rtl/red_pitaya_scope.v
 add_files                         $path_rtl/red_pitaya_top.v
 
+read_ip                           $path_ip/rb_broadcaster_axis_m2.xcix
 read_ip                           $path_ip/rb_cic_125M_to_5M_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_48k_to_8k_32T32_lat13.xcix
 read_ip                           $path_ip/rb_cic_4M992_to_48k_32T32.xcix
