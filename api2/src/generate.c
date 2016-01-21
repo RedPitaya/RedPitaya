@@ -181,7 +181,7 @@ int rp_GenGetBurstRepetitions(rp_handle_uio_t *handle, int *repetitions) {
     return RP_OK;
 }
 
-int rp_GeniSetBurstDelay(rp_handle_uio_t *handle, uint32_t delay) {
+int rp_GenSetBurstDelay(rp_handle_uio_t *handle, uint32_t delay) {
     gen_regset_t *regset = (gen_regset_t *) handle->regset;
     iowrite32(delay, &regset->cfg_bdly);
     return RP_OK;
