@@ -25,7 +25,7 @@ assign bus_s_a  = bus_m.addr[SW+:SL];
 assign bus_s_cs = SN'(1) << bus_s_a;
 
 generate
-for (genvar i=0; i<8; i++) begin: for_bus
+for (genvar i=0; i<SN; i++) begin: for_bus
 
 assign bus_s[i].addr  =                bus_m.addr ;
 assign bus_s[i].wdata =                bus_m.wdata;
