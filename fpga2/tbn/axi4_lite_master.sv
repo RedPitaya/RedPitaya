@@ -25,6 +25,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+`timescale 1ns / 1ps
+
 module axi4_lite_master #(
   int unsigned AW = 32,   // address width
   int unsigned DW = 32,   // data width
@@ -61,23 +63,26 @@ task ARTransfer (
   input  ABeat        ar
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
-  @(posedge intf.ACLK); // TODO
+  #1;
   intf.ARVALID  = 1'b1     ;
   intf.ARADDR   = ar.addr  ;
   intf.ARPROT   = ar.prot  ;
   @(posedge intf.ACLK);
   while (!intf.ARREADY) @(posedge intf.ACLK);
+  #1;
   intf.ARVALID  = 1'b0;
 endtask: ARTransfer
 
-task RTransfer (
+task automatic RTransfer (
   input  int unsigned delay,
   output RBeat        r
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
+  #1;
   intf.RREADY = 1'b1;
-  @(posedge intf.ACLK); // TODO
+  @(posedge intf.ACLK);
   while(!intf.RVALID) @(posedge intf.ACLK);
+  #1;
   r.data = intf.RDATA;
   r.resp = intf.RRESP;
   intf.RREADY <= 1'b0;
@@ -88,12 +93,13 @@ task AWTransfer (
   input  ABeat        aw
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
-  @(posedge intf.ACLK); // TODO
+  #1;
   intf.AWVALID  = 1'b1     ;
   intf.AWADDR   = aw.addr  ;
   intf.AWPROT   = aw.prot  ;
   @(posedge intf.ACLK);
   while (!intf.AWREADY) @(posedge intf.ACLK);
+  #1;
   intf.AWVALID  = 1'b0     ;
 endtask: AWTransfer
 
@@ -102,23 +108,26 @@ task WTransfer (
   input  WBeat        w
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
-  @(posedge intf.ACLK); // TODO
+  #1;
   intf.WVALID = 1'b1   ;
   intf.WDATA  = w.data;
   intf.WSTRB  = w.strb;
   @(posedge intf.ACLK);
   while (!intf.WREADY) @(posedge intf.ACLK);
+  #1;
   intf.WVALID = 1'b0   ;
 endtask: WTransfer
 
-task BTransfer (
+task automatic BTransfer (
   input  int unsigned delay,
   output BBeat        b
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
+  #1;
   intf.BREADY = 1'b1;
-  @(posedge intf.ACLK); // TODO
+  @(posedge intf.ACLK);
   while(!intf.BVALID) @(posedge intf.ACLK);
+  #1;
   b.resp = intf.BRESP;
   intf.BREADY = 1'b0;
 endtask: BTransfer
@@ -133,8 +142,10 @@ task ReadTransaction (
   input  int unsigned  RDelay,
   output RBeat         r
 );
-  ARTransfer(ARDelay, ar);
-   RTransfer( RDelay,  r);
+  fork
+    ARTransfer(ARDelay, ar);
+     RTransfer( RDelay,  r);
+  join
 endtask: ReadTransaction
 
 task WriteTransaction (
@@ -148,9 +159,8 @@ task WriteTransaction (
   fork
     AWTransfer(AWDelay, aw);
      WTransfer( WDelay,  w);
+     BTransfer( BDelay,  b);
   join
-  $display ("end of write transfers");
-  BTransfer(BDelay, b);
 endtask: WriteTransaction
   
 ////////////////////////////////////////////////////////////////////////////////

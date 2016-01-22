@@ -63,7 +63,7 @@ task axi_write (
 );
   int b;
   bus_master.WriteTransaction (
-    .AWDelay (0),  .aw ('{
+    .AWDelay (1),  .aw ('{
                           addr: adr,
                           prot: 0
                          }),
