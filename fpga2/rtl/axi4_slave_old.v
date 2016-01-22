@@ -46,7 +46,7 @@
  * 
  */
 
-module axi_slave #(
+module axi4_slave_old #(
   parameter           AXI_DW         =  64           , // data width (8,16,...,1024)
   parameter           AXI_AW         =  32           , // address width
   parameter           AXI_IW         =   8           , // ID width

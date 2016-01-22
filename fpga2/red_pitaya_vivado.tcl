@@ -59,7 +59,7 @@ write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 read_verilog                      $path_rtl/axi_slave.sv
-read_verilog                      $path_rtl/axi4_lite_slave.sv
+read_verilog                      $path_rtl/axi4_lite_slave.v
 
 read_verilog                      $path_rtl/axi_bus_if.sv
 read_verilog                      $path_rtl/axi4_lite_if.sv

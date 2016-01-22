@@ -1,5 +1,5 @@
 /**
- * $Id: axi_slave.v 961 2014-01-21 11:40:39Z matej.oblak $
+ * $Id: axi4_lite_slave.v 961 2014-01-21 11:40:39Z matej.oblak $
  *
  * @brief Red Pitaya symplified AXI slave.
  *
@@ -11,7 +11,7 @@
  * Please visit http://en.wikipedia.org/wiki/Verilog
  * for more details on the language used herein.
  */
-module axi_slave #(
+module axi4_lite_slave #(
   parameter           AXI_DW         =  32           , // data width (8,16,...,1024)
   parameter           AXI_AW         =  32           , // address width
   parameter           AXI_SW         = AXI_DW >> 3     // strobe width - 1 bit for every data byte
