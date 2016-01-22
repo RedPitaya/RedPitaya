@@ -57,6 +57,12 @@ end
 
 int b;
 
+// timeout
+initial begin
+  repeat(1000) @(posedge clk);
+  $finish();
+end
+
 initial begin
   repeat(100) @(posedge clk);
   axi_write (0,'h01234567);
