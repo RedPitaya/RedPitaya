@@ -271,7 +271,6 @@ logic [GDW-1:0] gpio_e;  // output enable
 logic [GDW-1:0] gpio_o;  // output
 logic [GDW-1:0] gpio_i;  // input
 
-
 gpio #(.DW (GDW)) gpio (
   // expansion connector
   .gpio_e  (gpio_e),
@@ -280,6 +279,8 @@ gpio #(.DW (GDW)) gpio (
   // system bus
   .bus     (axi4_lite)
 );
+
+assign led_o = gpio_o;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
@@ -291,7 +292,8 @@ logic [8-1:0] exp_p_oe, exp_n_oe;
 
 red_pitaya_hk hk (
   // LED
-  .led_o         (led_o),
+//  .led_o         (led_o),
+  .led_o         (),
   // global configuration
   .digital_loop  (digital_loop),
   // Expansion connector
