@@ -75,8 +75,8 @@ task RTransfer (
   output RBeat        r
 );
   for (int unsigned i=0; i<delay; i++) @(posedge intf.ACLK);
-  @(posedge intf.ACLK); // TODO
   intf.RREADY = 1'b1;
+  @(posedge intf.ACLK); // TODO
   while(!intf.RVALID) @(posedge intf.ACLK);
   r.data = intf.RDATA;
   r.resp = intf.RRESP;
@@ -116,8 +116,8 @@ task BTransfer (
   output BBeat        b
 );
   for(int i=0; i<delay; i++) @(posedge intf.ACLK);
-  @(posedge intf.ACLK); // TODO
   intf.BREADY = 1'b1;
+  @(posedge intf.ACLK); // TODO
   while(!intf.BVALID) @(posedge intf.ACLK);
   b.resp = intf.BRESP;
   intf.BREADY = 1'b0;
@@ -149,6 +149,7 @@ task WriteTransaction (
     AWTransfer(AWDelay, aw);
      WTransfer( WDelay,  w);
   join
+  $display ("end of write transfers");
   BTransfer(BDelay, b);
 endtask: WriteTransaction
   

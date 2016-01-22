@@ -39,6 +39,8 @@ logic [DW-1:0] gpio_e;  // enable
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
+logic [32-1:0] tmp;
+
 // timeout
 initial begin
   repeat(100) @(posedge clk);
@@ -47,8 +49,10 @@ end
 
 initial begin
   repeat(8) @(posedge clk);
-  axi_write (0, 'h67);
-  axi_write (1, 'ha5);
+  axi_write ('h00, 'h67);
+  axi_write ('h04, 'ha5);
+  axi_read  ('h00, tmp);
+  axi_read  ('h04, tmp);
   repeat(16) @(posedge clk);
   $finish();
 end
@@ -60,17 +64,35 @@ task axi_write (
   int b;
   bus_master.WriteTransaction (
     .AWDelay (0),  .aw ('{
-                          addr  : adr,
-                          prot  : 0
+                          addr: adr,
+                          prot: 0
                          }),
      .WDelay (0),   .w ('{
-                          data  : dat,
-                          strb  : '1
+                          data: dat,
+                          strb: '1
                          }),
      .BDelay (0),   .b (b)
   );
 endtask: axi_write
 
+task axi_read (
+  input  logic [32-1:0] adr,
+  output logic [32-1:0] dat
+);
+  logic [32+2-1:0] r;
+  bus_master.ReadTransaction (
+    .ARDelay (0),  .ar ('{
+                          addr: adr,
+                          prot: 0
+                         }),
+     .RDelay (0),   .r (r)
+//     .RDelay (0),   .r ('{
+//                          data: dat,
+//                          resp: rsp
+//                         })
+  );
+  dat = r >> 2;
+endtask: axi_read
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
