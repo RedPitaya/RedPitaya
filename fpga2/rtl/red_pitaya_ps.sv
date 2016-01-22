@@ -193,13 +193,20 @@ system_wrapper system_i (
   .M_AXI4_LITE_0_wstrb   (axi4_lite.WSTRB  ),
   .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID )
   // AXI-4 streaming interfaces
-//  .S_AXI_STR1_aclk   (str[1].clk ),  .S_AXI_STR0_aclk   (str[0].clk ),
-//  .S_AXI_STR1_arstn  (str[1].rstn),  .S_AXI_STR0_arstn  (str[0].rstn),
-//  .S_AXI_STR1_tdata  (str[1].dat ),  .S_AXI_STR0_tdata  (str[0].dat ),
+//  .S_AXI_STR1_aclk   (sti[1].clk ),  .S_AXI_STR0_aclk   (sti[0].clk ),
+//  .S_AXI_STR1_arstn  (sti[1].rstn),  .S_AXI_STR0_arstn  (sti[0].rstn),
+//  .S_AXI_STR1_tdata  (sti[1].dat ),  .S_AXI_STR0_tdata  (sti[0].dat ),
 //  .S_AXI_STR1_tkeep  ('1         ),  .S_AXI_STR0_tkeep  ('1         ),
-//  .S_AXI_STR1_tlast  (str[1].lst ),  .S_AXI_STR0_tlast  (str[0].lst ),
-//  .S_AXI_STR1_tready (str[1].rdy ),  .S_AXI_STR0_tready (str[0].rdy ),
-//  .S_AXI_STR1_tvalid (str[1].vld ),  .S_AXI_STR0_tvalid (str[0].vld )
+//  .S_AXI_STR1_tlast  (sti[1].lst ),  .S_AXI_STR0_tlast  (sti[0].lst ),
+//  .S_AXI_STR1_tready (sti[1].rdy ),  .S_AXI_STR0_tready (sti[0].rdy ),
+//  .S_AXI_STR1_tvalid (sti[1].vld ),  .S_AXI_STR0_tvalid (sti[0].vld )
 );
+
+assign sti[0].rdy = 1'b1;
+assign sti[1].rdy = 1'b1;
+
+// since the PS GP0 port is AXI3 and the local bus is AXI4
+assign axi_gp.AWREGION = '0;
+assign axi_gp.ARREGION = '0;
 
 endmodule
