@@ -61,7 +61,7 @@ module red_pitaya_top #(
   input  logic [ 2-1:0] daisy_p_i  ,  // line 1 is clock capable
   input  logic [ 2-1:0] daisy_n_i  ,
   // LED
-  output logic [ 8-1:0] led_o
+  inout  logic [ 8-1:0] led_o
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,7 +280,7 @@ gpio #(.DW (GDW)) gpio (
   .bus     (axi4_lite)
 );
 
-assign led_o = gpio_o;
+IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping

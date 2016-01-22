@@ -155,7 +155,7 @@ logic         [ 5-1:0] vinn;        // voltages n
 wire          [ 8-1:0] exp_p_io;
 wire          [ 8-1:0] exp_n_io;
 // LED
-logic         [ 8-1:0] led;
+wire          [ 8-1:0] led;
 
 glbl glbl();
 
