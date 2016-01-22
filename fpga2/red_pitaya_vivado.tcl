@@ -63,6 +63,7 @@ read_verilog                      $path_rtl/axi_slave.sv
 read_verilog                      $path_rtl/axi_wr_fifo.sv
 
 read_verilog                      $path_rtl/axi_bus_if.sv
+read_verilog                      $path_rtl/axi4_lite_if.sv
 read_verilog                      $path_rtl/sys_bus_if.sv
 read_verilog                      $path_rtl/str_bus_if.sv
 read_verilog                      $path_rtl/sys_bus_interconnect.sv
