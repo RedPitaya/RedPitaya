@@ -36,8 +36,9 @@ assign  B_trn = bus.BVALID  & bus.BREADY ;
 assign AW_syn = bus.AWVALID & bus.WVALID;
 
 // AW - W - ready
-assign bus.AWREADY = AW_syn & (~bus.BVALID | bus.BREADY);
-assign bus.WREADY  = AW_syn & (~bus.BVALID | bus.BREADY);
+// TODO: better performance should be supported
+assign bus.AWREADY = AW_syn & ~bus.BVALID;
+assign bus.WREADY  = AW_syn & ~bus.BVALID;
 
 // W - data
 always_ff @(posedge bus.ACLK)
@@ -56,7 +57,7 @@ assign bus.BRESP = 2'b00;
 // B - valid
 always_ff @(posedge bus.ACLK)
 if (~bus.ARESETn)  bus.BVALID <= 1'b0;
-else               bus.BVALID <= (AW_trn & W_trn) | (bus.BVALID & ~B_trn);
+else               bus.BVALID <= AW_syn | (bus.BVALID & ~B_trn);
 
 ////////////////////////////////////////////////////////////////////////////////
 // read access
@@ -69,7 +70,8 @@ assign AR_trn = bus.ARVALID & bus.ARREADY;
 assign  R_trn = bus.RVALID  & bus.RREADY ;
 
 // AR - ready
-assign bus.ARREADY = ~bus.RVALID | bus.RREADY;
+// TODO: better performance should be supported
+assign bus.ARREADY = ~bus.RVALID;
 
 // R - data
 always_ff @(posedge bus.ACLK)
