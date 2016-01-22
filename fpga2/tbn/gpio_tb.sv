@@ -98,10 +98,10 @@ endtask: axi_read
 // module instances
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_lite_if bus (.ACLK (clk), .ARESETn (rstn));
+axi4_lite_if axi4_lite (.ACLK (clk), .ARESETn (rstn));
 
 axi4_lite_master bus_master (
-  .intf (bus)
+  .intf (axi4_lite)
 );
 
 gpio #(.DW (DW)) gpio (
@@ -109,7 +109,7 @@ gpio #(.DW (DW)) gpio (
   .gpio_o    (gpio_o),
   .gpio_i    (gpio_io),
    // System bus
-  .bus       (bus)
+  .bus       (axi4_lite)
 );
 
 //                              tristate output  enable
