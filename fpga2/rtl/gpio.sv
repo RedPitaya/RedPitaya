@@ -37,8 +37,8 @@ assign AW_syn = bus.AWVALID & bus.WVALID;
 
 // AW - W - ready
 // TODO: better performance should be supported
-assign bus.AWREADY = AW_syn & ~bus.BVALID;
-assign bus.WREADY  = AW_syn & ~bus.BVALID;
+assign bus.AWREADY = bus.BVALID;
+assign bus.WREADY  = bus.BVALID;
 
 // W - data
 always_ff @(posedge bus.ACLK)
@@ -57,7 +57,7 @@ assign bus.BRESP = 2'b00;
 // B - valid
 always_ff @(posedge bus.ACLK)
 if (~bus.ARESETn)  bus.BVALID <= 1'b0;
-else               bus.BVALID <= AW_trn | (bus.BVALID & ~bus.BREADY);
+else               bus.BVALID <= (AW_syn & ~bus.BVALID) | (bus.BVALID & ~bus.BREADY);
 
 ////////////////////////////////////////////////////////////////////////////////
 // read access
@@ -71,7 +71,7 @@ assign  R_trn = bus.RVALID  & bus.RREADY ;
 
 // AR - ready
 // TODO: better performance should be supported
-assign bus.ARREADY = ~bus.RVALID;
+assign bus.ARREADY = bus.RVALID;
 
 // R - data
 always_ff @(posedge bus.ACLK)
@@ -91,6 +91,6 @@ assign bus.RRESP = 2'b00;
 // R - valid
 always_ff @(posedge bus.ACLK)
 if (~bus.ARESETn)  bus.RVALID <= 1'b0;
-else               bus.RVALID <= AR_trn | (bus.RVALID & ~bus.RREADY);
+else               bus.RVALID <= (bus.ARVALID & ~bus.RVALID) | (bus.RVALID & ~bus.RREADY);
 
 endmodule: gpio
