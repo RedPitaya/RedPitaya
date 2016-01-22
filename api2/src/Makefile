@@ -32,6 +32,7 @@ TARGET=$(OUTPUT_DIR)/librp2.so
 
 # List of compiled object files
 OBJECTS =	pdm.o \
+		gpio.o \
 		housekeeping.o \
 		calib.o \
 		acquire.o \
