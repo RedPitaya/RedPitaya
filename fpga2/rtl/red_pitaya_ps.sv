@@ -171,7 +171,7 @@ system_wrapper system_i (
   .M_AXI_GP0_rid     (axi_gp.RID    ),
   .M_AXI_GP0_bresp   (axi_gp.BRESP  ),
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
-  .M_AXI_GP0_rdata   (axi_gp.RDATA  )
+  .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
   // AXI4-Lite
   .M_AXI4_LITE_0_araddr  (axi4_lite.ARADDR ),
   .M_AXI4_LITE_0_arprot  (axi4_lite.ARPROT ),
@@ -191,7 +191,7 @@ system_wrapper system_i (
   .M_AXI4_LITE_0_wdata   (axi4_lite.WDATA  ),
   .M_AXI4_LITE_0_wready  (axi4_lite.WREADY ),
   .M_AXI4_LITE_0_wstrb   (axi4_lite.WSTRB  ),
-  .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID ),
+  .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID )
   // AXI-4 streaming interfaces
 //  .S_AXI_STR1_aclk   (str[1].clk ),  .S_AXI_STR0_aclk   (str[0].clk ),
 //  .S_AXI_STR1_arstn  (str[1].rstn),  .S_AXI_STR0_arstn  (str[0].rstn),

@@ -237,7 +237,7 @@ axi_bus_model #(.AW (32), .DW (32), .IW (12), .LW ( 4)) axi_bus_model (axi_gp);
 // AMBA AXI4-Lite bus
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_lite_if #(.DW (32), .AW (32),) axi4_lite (
+axi4_lite_if #(.DW (32), .AW (32)) axi4_lite (
   .ACLK    (M_AXI_GP0_ACLK   ),
   .ARESETn (M_AXI_GP0_ARESETn)
 );
@@ -266,7 +266,7 @@ assign                     M_AXI4_LITE_0_wstrb   = axi4_lite.WSTRB ;
 assign                     M_AXI4_LITE_0_wvalid  = axi4_lite.WVALID;
 assign axi4_lite.WREADY  = M_AXI4_LITE_0_wready  ;
 
-axi_bus_model #(.AW (32), .DW (32)) axi4_lite_model (axi4_lite);
+axi4_lite_master #(.AW (32), .DW (32)) axi4_lite_master (axi4_lite);
 
 ////////////////////////////////////////////////////////////////////////////////
 // AMBA AXI4 HP bus
