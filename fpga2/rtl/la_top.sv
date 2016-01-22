@@ -19,6 +19,8 @@ module la_top #(
   // streams
   str_bus_if.d           sti,      // input
   str_bus_if.s           sto,      // output
+  // current time stamp
+  input  logic  [TW-1:0] cts,
   // triggers
   input  logic  [TN-1:0] trg_ext,  // external input
   output logic           trg_swo,  // output from software
@@ -36,8 +38,6 @@ str_bus_if #(.DAT_T (DAT_T)) std (.clk (sti.clk), .rstn (sti.rstn));  // from de
 
 // acquire regset
 
-// current time stamp
-logic  [TW-1:0] cts;
 // control
 logic           ctl_rst;
 // configuration (mode)

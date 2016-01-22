@@ -573,6 +573,8 @@ la_top #(
   // streams
   .sti       (str_lai),
   .sto       (str_lao),
+  // current time stamp
+  .cts       ('0),  // TODO
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.la_swo),

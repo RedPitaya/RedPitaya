@@ -15,7 +15,7 @@ module gpio #(
   axi4_lite_if.s        bus
 );
 
-localparam int unsigned AW = 3;
+localparam int unsigned AW = 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 // write access
