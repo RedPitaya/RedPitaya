@@ -1553,6 +1553,7 @@ rb_fifo_axis_W32_D16 i_rb_rx_afc_fifo_Q (
 wire [ 23:0] rx_afc_fir_i_in = { 7'b0, rx_afc_fifo_i_out[30:14] };  // bus width is multiple of 8
 wire [ 39:0] rx_afc_fir_i_out;
 wire         rx_afc_fir_m_vld;
+reg          rx_afc_fir_m_rdy = 'b0;
 
 wire [ 23:0] rx_afc_fir_q_in = { 7'b0, rx_afc_fifo_q_out[30:14] };
 wire [ 39:0] rx_afc_fir_q_out;
@@ -1569,7 +1570,7 @@ rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_I (
 
   .m_axis_data_tdata    ( rx_afc_fir_i_out     ),   // RX_AFC_FIR output I - 48kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_afc_fir_m_vld     ),
-  .m_axis_data_tready   ( 1'b1                 )
+  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
 );
 
 rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_Q (
@@ -1584,8 +1585,39 @@ rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_Q (
 
   .m_axis_data_tdata    ( rx_afc_fir_q_out     ),   // RX_AFC_FIR output Q - 48 kHz (35.33 bit width)
   .m_axis_data_tvalid   (                      ),
-  .m_axis_data_tready   ( 1'b1                 )
+  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
 );
+
+
+//---------------------------------------------------------------------------------
+//  RX_AFC_FSM1
+
+reg          rx_afc_cordic_cart_vld = 'b0;
+wire         rx_afc_cordic_cart_rdy;
+reg  [ 1: 0] rx_afc_fsm1_ctr = 'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin
+   rx_afc_fir_m_rdy <= 1'b0;
+   rx_afc_cordic_cart_vld <= 1'b0;
+   rx_afc_fsm1_ctr <= 2'b0;
+   end
+
+else if (rx_afc_fir_m_vld && rx_afc_cordic_cart_rdy && !rx_afc_cordic_cart_vld && !rx_afc_fsm1_ctr) begin  // data input handshake
+   rx_afc_fir_m_rdy <= 1'b1;
+   rx_afc_cordic_cart_vld <= 1'b1;
+   rx_afc_fsm1_ctr <= 2'd3;
+   end
+
+else if (rx_afc_cordic_cart_vld && rx_afc_cordic_cart_rdy) begin  // data output handshake
+   rx_afc_fir_m_rdy <= 1'b0;
+   rx_afc_cordic_cart_vld <= 1'b0;
+   rx_afc_fsm1_ctr <= rx_afc_fsm1_ctr - 1;
+   end
+
+else if (rx_afc_cordic_cart_rdy && !rx_afc_fsm1_ctr) begin
+   rx_afc_cordic_cart_vld <= 1'b1;
+   end
 
 
 //---------------------------------------------------------------------------------
@@ -1595,31 +1627,46 @@ wire [ 63:0] rx_afc_cordic_cart_in = { rx_afc_fir_i_out[34:3], rx_afc_fir_q_out[
 
 wire [ 63:0] rx_afc_cordic_polar_out;
 wire         rx_afc_cordic_polar_vld;
+reg          rx_afc_cordic_polar_rdy;
 
 wire         rx_afc_cordic_polar_out_mag = rx_afc_cordic_polar_out[31: 0];
 wire         rx_afc_cordic_polar_out_phs = rx_afc_cordic_polar_out[63:32];
 
 rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
+  // global signals
+  .aclk                    ( clk_adc_125mhz          ),   // global 125 MHz clock
+  .aclken                  ( rb_clk_en               ),   // enable RadioBox sub-module
+  .aresetn                 ( rb_reset_n              ),
+
   .s_axis_cartesian_tdata  ( rx_afc_cordic_cart_in   ),
-  .s_axis_cartesian_tvalid ( rx_afc_fir_m_vld        ),
+  .s_axis_cartesian_tvalid ( rx_afc_cordic_cart_vld  ),
+  .s_axis_cartesian_tready ( rx_afc_cordic_cart_rdy  ),
 
   .m_axis_dout_tdata       ( rx_afc_cordic_polar_out ),
-  .m_axis_dout_tvalid      ( rx_afc_cordic_polar_vld )
+  .m_axis_dout_tvalid      ( rx_afc_cordic_polar_vld ),
+  .m_axis_dout_tready      ( rx_afc_cordic_polar_rdy )
 );
 
 
 //---------------------------------------------------------------------------------
-//  RX_AFC_FSM
+//---------------------------------------------------------------------------------
+//  RX_AFC_FSM2
 
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i) begin
    regs[REG_RD_RB_RX_AFC_CORDIC_MAG] <= 32'h00000000;
    regs[REG_RD_RB_RX_AFC_CORDIC_PHS] <= 32'h00000000;
+   rx_afc_cordic_polar_rdy <= 1'b0;
    end
 
-else if (rx_afc_cordic_polar_vld) begin
+else if (rx_afc_cordic_polar_vld && rx_afc_cordic_polar_rdy) begin
+   rx_afc_cordic_polar_rdy <= 1'b1;
    regs[REG_RD_RB_RX_AFC_CORDIC_MAG] <= rx_afc_cordic_polar_out_mag;
    regs[REG_RD_RB_RX_AFC_CORDIC_PHS] <= rx_afc_cordic_polar_out_phs;
+   end
+
+else begin
+   rx_afc_cordic_polar_rdy <= 1'b1;
    end
 
 
