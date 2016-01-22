@@ -57,7 +57,7 @@ assign bus.BRESP = 2'b00;
 // B - valid
 always_ff @(posedge bus.ACLK)
 if (~bus.ARESETn)  bus.BVALID <= 1'b0;
-else               bus.BVALID <= AW_trn | (bus.BVALID & ~B_trn);
+else               bus.BVALID <= AW_trn | (bus.BVALID & ~bus.BREADY);
 
 ////////////////////////////////////////////////////////////////////////////////
 // read access
@@ -91,6 +91,6 @@ assign bus.RRESP = 2'b00;
 // R - valid
 always_ff @(posedge bus.ACLK)
 if (~bus.ARESETn)  bus.RVALID <= 1'b0;
-else               bus.RVALID <= AR_trn | (bus.RVALID & ~R_trn);
+else               bus.RVALID <= AR_trn | (bus.RVALID & ~bus.RREADY);
 
 endmodule: gpio
