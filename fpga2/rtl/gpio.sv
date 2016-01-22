@@ -36,8 +36,8 @@ assign  B_trn = bus.BVALID  & bus.BREADY ;
 assign AW_syn = bus.AWVALID & bus.WVALID;
 
 // AW - W - ready
-assign bus.AWREADY = AW_syn & ~bus.BVALID | bus.BREADY;
-assign bus.WREADY  = AW_syn & ~bus.BVALID | bus.BREADY;
+assign bus.AWREADY = AW_syn & (~bus.BVALID | bus.BREADY);
+assign bus.WREADY  = AW_syn & (~bus.BVALID | bus.BREADY);
 
 // W - data
 always_ff @(posedge bus.ACLK)
