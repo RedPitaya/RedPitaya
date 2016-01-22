@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,132 @@
+@@ -86,3 +86,136 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -140,5 +140,9 @@
 +	la@40090000 {
 +		compatible = "generic-uio";
 +		reg = <0x40090000 0x10000>;
++	};
++	gpio@83C00000 {
++		compatible = "generic-uio";
++		reg = <0x83C00000 0x00400000>;
 +	};
 +};
