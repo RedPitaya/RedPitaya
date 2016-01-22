@@ -531,6 +531,8 @@ scope_top #(
   // streams
   .sti       (str_osc[i]),
   .sto       (str_acq[i]),
+  // current time stamp
+  .cts       ('0),  // TODO
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.acq_swo[i]),

@@ -206,6 +206,8 @@ always_ff @(posedge sti.clk)
 if (~sti.rstn)      sto.dat <= '0;
 else if (iir2_trn)  sto.dat <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
 
+assign sto.lst = 1'b0;
+
 // control signals
 always_ff @(posedge sti.clk)
 if (~sti.rstn)      sto.vld <= 1'b0;

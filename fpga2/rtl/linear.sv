@@ -60,7 +60,10 @@ logic str_sum_trn;
 assign sti_trn = sti.vld & sti.rdy;
 
 always_ff @(posedge sti.clk)
-if (sti_trn)  str_mul.dat <= sti.dat * cfg_mul;
+if (sti_trn) begin
+  str_mul.dat <= sti.dat * cfg_mul;
+  str_mul.lst <= sti.lst;
+end
 
 always_ff @(posedge sti.clk)
 if (~sti.rstn)     str_mul.vld <= 1'b0;
@@ -73,6 +76,7 @@ assign sti.rdy = str_mul.rdy | ~str_mul.vld;
 ////////////////////////////////////////////////////////////////////////////////
 
 assign str_shf.dat = str_mul.dat >>> (DWM-2);
+assign str_shf.lst = str_mul.lst;
 
 assign str_shf.vld = str_mul.vld;
 
@@ -85,7 +89,10 @@ assign str_mul.rdy = str_shf.rdy;
 assign shf_trn = str_shf.vld & str_shf.rdy;
 
 always_ff @(posedge sti.clk)
-if (shf_trn)  str_sum.dat <= str_shf.dat + cfg_sum;
+if (shf_trn) begin
+  str_sum.dat <= str_shf.dat + cfg_sum;
+  str_sum.lst <= str_shf.lst;
+end
 
 always_ff @(posedge sti.clk)
 if (~sti.rstn)         str_sum.vld <= 1'b0;
@@ -100,8 +107,11 @@ assign str_shf.rdy = sto.rdy | ~str_sum.vld;
 assign sum_trn = str_sum.vld & str_sum.rdy;
 
 always_ff @(posedge sti.clk)
-if (sum_trn)  sto.dat <= ^str_sum.dat[DWO:DWO-1] ? {str_sum.dat[DWO], {DWO-1{~str_sum.dat[DWO-1]}}}
-                                                 :  str_sum.dat[DWO-1:0];
+if (sum_trn) begin
+  sto.dat <= ^str_sum.dat[DWO:DWO-1] ? {str_sum.dat[DWO], {DWO-1{~str_sum.dat[DWO-1]}}}
+                                     :  str_sum.dat[DWO-1:0];
+  sto.lst <= str_sum.lst;
+end
 
 always_ff @(posedge sti.clk)
 if (~sti.rstn)         sto.vld <= 1'b0;

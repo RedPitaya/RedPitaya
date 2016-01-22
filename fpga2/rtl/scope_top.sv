@@ -46,6 +46,8 @@ module scope_top #(
   // streams
   str_bus_if.d           sti,      // input
   str_bus_if.s           sto,      // output
+  // current time stamp
+  input  logic  [TW-1:0] cts,
   // triggers
   input  logic  [TN-1:0] trg_ext,  // external input
   output logic           trg_swo,  // output from software
@@ -67,8 +69,6 @@ str_bus_if #(.DAT_T (logic signed [DWI-1:0])) std (.clk (sti.clk), .rstn (sti.rs
 
 // acquire regset
 
-// current time stamp
-logic  [TW-1:0] cts;
 // control
 logic           ctl_rst;
 // configuration (mode)
@@ -101,6 +101,7 @@ logic                  cfg_rng;  // range select (this one is only used by the f
 // edge detection configuration
 logic signed [DWI-1:0] cfg_lvl;  // level
 logic        [DWI-1:0] cfg_hst;  // hystheresis
+logic                  cfg_edg;  // edge (0-pos, 1-neg)
 
 // decimation configuration
 logic                  cfg_avg;  // averaging enable
@@ -149,6 +150,7 @@ if (~bus.rstn) begin
   // edge detection
   cfg_lvl <= '0;
   cfg_hst <= '0;
+  cfg_edg <= '0;
 
   // filter/dacimation
   cfg_byp <= '0;
@@ -162,8 +164,8 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen) begin
     // acquire regset
-    if (bus.addr[BAW-1:0]=='h04)   cfg_con <= bus.wdata[0];
-    if (bus.addr[BAW-1:0]=='h04)   cfg_aut <= bus.wdata[1];
+    if (bus.addr[BAW-1:0]=='h04)   cfg_con <= bus.wdata[     0];
+    if (bus.addr[BAW-1:0]=='h04)   cfg_aut <= bus.wdata[     1];
     if (bus.addr[BAW-1:0]=='h08)   cfg_trg <= bus.wdata[TN-1:0];
     if (bus.addr[BAW-1:0]=='h10)   cfg_pre <= bus.wdata[CW-1:0];
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
@@ -174,6 +176,7 @@ end else begin
     // edge detection
     if (bus.addr[BAW-1:0]=='h50)   cfg_lvl <= bus.wdata[DWI-1:0];
     if (bus.addr[BAW-1:0]=='h54)   cfg_hst <= bus.wdata[DWI-1:0];
+    if (bus.addr[BAW-1:0]=='h58)   cfg_edg <= bus.wdata[      0];
 
     // dacimation
     if (bus.addr[BAW-1:0]=='h60)   cfg_avg <= bus.wdata[      0];
@@ -219,6 +222,7 @@ begin
     // edge detection
     'h50 : bus.rdata <=                  cfg_lvl ;
     'h54 : bus.rdata <=                  cfg_hst ;
+    'h58 : bus.rdata <=              32'(cfg_edg);
 
     // decimation
     'h60 : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};

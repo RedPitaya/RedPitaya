@@ -45,14 +45,14 @@ module asg_top #(
 );
 
 // RAM data width
-parameter int unsigned DWO = $bits(DAT_T);
+localparam int unsigned DWO = $bits(DAT_T);
 
 ////////////////////////////////////////////////////////////////////////////////
 // read/write access to buffer
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: the generic bus decoder should be used instead
-sys_bus_if #(.DW (DWO), .AW (CWM)) bus_buf (.clk (clk), .rstn (rstn));
+sys_bus_if #(.DW (DWO), .AW (CWM)) bus_buf (.clk (bus.clk), .rstn (bus.rstn));
 
 assign bus_buf.ren   = bus.ren & bus.addr[CWM+2];
 assign bus_buf.wen   = bus.wen & bus.addr[CWM+2];

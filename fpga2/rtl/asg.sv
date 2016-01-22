@@ -236,10 +236,11 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
 // trigger output
 always_ff @(posedge sto.clk)
 if (~sto.rstn)  trg_o <= 1'b0;
-else        trg_o <= sts_trg;
+else            trg_o <= sts_trg;
 
 // output data
 assign sto.dat = sto.vld ? buf_rdata : '0;
+assign sto.lst = 1'b0;
 
 // output valid
 always_ff @(posedge sto.clk)

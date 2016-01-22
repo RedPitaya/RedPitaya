@@ -62,4 +62,8 @@ begin
   else         sto.dat <= sum >>> cfg_shr;
 end
 
+// TODO: last signal should not be lost due to decimation
+always_ff @(posedge sti.clk)
+sto.lst <= sti.lst;
+
 endmodule: scope_dec_avg
