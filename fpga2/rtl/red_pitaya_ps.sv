@@ -71,8 +71,9 @@ module red_pitaya_ps (
 logic [4-1:0] fclk_clk ;
 logic [4-1:0] fclk_rstn;
 
-axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
+axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (rstn));
 
+/*
 axi_slave #(
   .DW (32),
   .AW (32),
@@ -83,6 +84,70 @@ axi_slave #(
   // system read/write channel
   .bus       (bus)
 );
+*/
+
+axi4_slave_old #(
+  .AXI_DW     (  32     ), // data width (8,16,...,1024)
+  .AXI_AW     (  32     ), // address width
+  .AXI_IW     (  12     )  // ID width
+) axi_slave_gp0 (
+  // global signals
+  .axi_clk_i        (  axi_gp.ACLK           ),  // global clock
+  .axi_rstn_i       (  rstn                  ),  // global reset
+  // axi write address channel
+  .axi_awid_i       (  axi_gp.AWID           ),  // write address ID
+  .axi_awaddr_i     (  axi_gp.AWADDR         ),  // write address
+  .axi_awlen_i      (  axi_gp.AWLEN          ),  // write burst length
+  .axi_awsize_i     (  axi_gp.AWSIZE         ),  // write burst size
+  .axi_awburst_i    (  axi_gp.AWBURST        ),  // write burst type
+  .axi_awlock_i     (  axi_gp.AWLOCK         ),  // write lock type
+  .axi_awcache_i    (  axi_gp.AWCACHE        ),  // write cache type
+  .axi_awprot_i     (  axi_gp.AWPROT         ),  // write protection type
+  .axi_awvalid_i    (  axi_gp.AWVALID        ),  // write address valid
+  .axi_awready_o    (  axi_gp.AWREADY        ),  // write ready
+  // axi write data channel
+  .axi_wid_i        (  axi_gp.WID            ),  // write data ID
+  .axi_wdata_i      (  axi_gp.WDATA          ),  // write data
+  .axi_wstrb_i      (  axi_gp.WSTRB          ),  // write strobes
+  .axi_wlast_i      (  axi_gp.WLAST          ),  // write last
+  .axi_wvalid_i     (  axi_gp.WVALID         ),  // write valid
+  .axi_wready_o     (  axi_gp.WREADY         ),  // write ready
+  // axi write response channeL
+  .axi_bid_o        (  axi_gp.BID            ),  // write response ID
+  .axi_bresp_o      (  axi_gp.BRESP          ),  // write response
+  .axi_bvalid_o     (  axi_gp.BVALID         ),  // write response valid
+  .axi_bready_i     (  axi_gp.BREADY         ),  // write response ready
+  // axi read address channel
+  .axi_arid_i       (  axi_gp.ARID           ),  // read address ID
+  .axi_araddr_i     (  axi_gp.ARADDR         ),  // read address
+  .axi_arlen_i      (  axi_gp.ARLEN          ),  // read burst length
+  .axi_arsize_i     (  axi_gp.ARSIZE         ),  // read burst size
+  .axi_arburst_i    (  axi_gp.ARBURST        ),  // read burst type
+  .axi_arlock_i     (  axi_gp.ARLOCK         ),  // read lock type
+  .axi_arcache_i    (  axi_gp.ARCACHE        ),  // read cache type
+  .axi_arprot_i     (  axi_gp.ARPROT         ),  // read protection type
+  .axi_arvalid_i    (  axi_gp.ARVALID        ),  // read address valid
+  .axi_arready_o    (  axi_gp.ARREADY        ),  // read address ready
+  // axi read data channel
+  .axi_rid_o        (  axi_gp.RID            ),  // read response ID
+  .axi_rdata_o      (  axi_gp.RDATA          ),  // read data
+  .axi_rresp_o      (  axi_gp.RRESP          ),  // read response
+  .axi_rlast_o      (  axi_gp.RLAST          ),  // read last
+  .axi_rvalid_o     (  axi_gp.RVALID         ),  // read response valid
+  .axi_rready_i     (  axi_gp.RREADY         ),  // read response ready
+  // system read/write channel
+  .sys_addr_o       (  bus.addr              ),  // system read/write address
+  .sys_wdata_o      (  bus.wdata             ),  // system write data
+  .sys_sel_o        (                        ),  // system write byte select
+  .sys_wen_o        (  bus.wen               ),  // system write enable
+  .sys_ren_o        (  bus.ren               ),  // system read enable
+  .sys_rdata_i      (  bus.rdata             ),  // system read data
+  .sys_err_i        (  bus.err               ),  // system error indicator
+  .sys_ack_i        (  bus.ack               )   // system acknowledge signal
+);
+
+//always @(posedge bus.clk)
+//rstn <= fclk_rstn[0];
 
 ////////////////////////////////////////////////////////////////////////////////
 // PS STUB
