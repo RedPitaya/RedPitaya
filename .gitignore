@@ -3,19 +3,23 @@
 *.ko
 *.obj
 *.elf
+
 # Precompiled Headers
 *.gch
 *.pch
+
 # Libraries
 *.lib
 *.a
 *.la
 *.lo
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
+
 # Executables
 *.exe
 *.out
@@ -34,3 +38,5 @@ scpi-server/scpi-server
 # SCPI Server examples
 scpi-server/3rdparty/libs/scpi-parser/examples/
 
+# do not ignore NE10 lib
+!OS/debian/overlay/usr/local/lib/**
