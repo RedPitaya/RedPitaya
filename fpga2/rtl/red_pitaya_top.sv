@@ -280,7 +280,7 @@ gpio #(.DW (GDW)) gpio (
   .bus     (axi4_lite)
 );
 
-IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
+//IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
@@ -292,8 +292,7 @@ logic [8-1:0] exp_p_oe, exp_n_oe;
 
 red_pitaya_hk hk (
   // LED
-//  .led_o         (led_o),
-  .led_o         (),
+  .led_o         (led_o),
   // global configuration
   .digital_loop  (digital_loop),
   // Expansion connector
