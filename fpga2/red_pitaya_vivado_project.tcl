@@ -40,9 +40,8 @@ generate_target all [get_files    system.bd]
 
 read_verilog                      ./project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
-add_files                         $path_rtl/axi_slave.sv
+add_files                         $path_rtl/axi4_slave.sv
 add_files                         $path_rtl/axi4_lite_slave.v
-add_files                         $path_rtl/axi4_slave_old.sv
 
 add_files                         $path_rtl/axi_bus_if.sv
 add_files                         $path_rtl/axi4_lite_if.sv

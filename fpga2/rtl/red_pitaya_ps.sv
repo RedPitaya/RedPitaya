@@ -73,8 +73,7 @@ logic [4-1:0] fclk_rstn;
 
 axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (rstn));
 
-/*
-axi_slave #(
+axi4_slave #(
   .DW (32),
   .AW (32),
   .IW (12)
@@ -84,21 +83,6 @@ axi_slave #(
   // system read/write channel
   .bus       (bus)
 );
-*/
-
-axi4_slave_old #(
-  .DW (32),
-  .AW (32),
-  .IW (12)
-) axi_slave_gp0 (
-  // AXI bus
-  .axi       (axi_gp),
-  // system read/write channel
-  .bus       (bus)
-);
-
-//always @(posedge bus.clk)
-//rstn <= fclk_rstn[0];
 
 ////////////////////////////////////////////////////////////////////////////////
 // PS STUB

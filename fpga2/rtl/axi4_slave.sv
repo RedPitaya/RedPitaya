@@ -1,5 +1,5 @@
 /**
- * $Id: axi_slave.v 961 2014-01-21 11:40:39Z matej.oblak $
+ * $Id: axi.slave.v 961 2014-01-21 11:40:39Z matej.oblak $
  *
  * @brief Red Pitaya symplified AXI slave.
  *
@@ -46,7 +46,7 @@
  * 
  */
 
-module axi_slave #(
+module axi4_slave #(
   int unsigned DW =  64, // data width (8,16,...,1024)
   int unsigned AW =  32, // address width
   int unsigned IW =   8, // ID width
@@ -98,7 +98,7 @@ if (~axi.ARESETn) begin
    rd_error <= 1'b0;
 end else begin
    // accept just one read request - write has priority
-   if      (axi.ARVALID & ~xx_do & ~axi.AWVALID)  rd_do <= 1'b1;
+   if      (axi.ARVALID & ~rd_do & ~axi.AWVALID & ~wr_do)  rd_do <= 1'b1;
    else if (axi.RREADY  &  rd_do & ack)           rd_do <= 1'b0;
    // latch ID and address
    if (axi.ARVALID & axi.ARREADY) begin
@@ -114,8 +114,8 @@ assign axi.BID     = wr_awid;
 
 always_ff @(posedge axi.ACLK)
 if (~axi.ARESETn) begin
-   axi.BVALID  <= 1'b0 ;
-   axi.BRESP   <= 2'h0 ;
+   axi.BVALID  <= 1'b0;
+   axi.BRESP   <= 2'h0;
 end else begin
    axi.BVALID  <= wr_do && ack  ;
    axi.BRESP   <= {(wr_error || ack_cnt[5]),1'b0} ;  // 2'b10 SLVERR    2'b00 OK
@@ -131,7 +131,7 @@ if (~axi.ARESETn) begin
    wr_error <= 1'b0;
 end else begin
    // accept just one write request - if idle
-   if      (axi.AWVALID & ~xx_do)        wr_do  <= 1'b1;
+   if      (axi.AWVALID & ~wr_do & ~rd_do)        wr_do  <= 1'b1;
    else if (axi.BREADY  &  wr_do & ack)  wr_do  <= 1'b0;
    // latch ID and address
    if (axi.AWVALID & axi.AWREADY) begin
@@ -140,7 +140,7 @@ end else begin
       wr_error  <= wr_errorw ;
    end
    // latch ID and write data
-   if (axi.WVALID & axi.AWREADY) begin
+   if (axi.WVALID && wr_do) begin
       wr_wid    <= axi.WID  ;
       wr_wdata  <= axi.WDATA;
    end
@@ -187,12 +187,14 @@ always_ff @(posedge axi.ACLK)
 if (~axi.ARESETn) begin
    bus.wen <= 1'b0 ;
    bus.ren <= 1'b0 ;
+//   bus.sel  <= {SW{1'b0}} ;
 end else begin
    bus.wen <= wr_do && axi.WVALID && !wr_errorw;
    bus.ren <= axi.ARVALID && axi.ARREADY && !rd_errorw;
+//   bus.sel  <= {SW{1'b1}} ;
 end
 
 assign bus.addr  = rd_do ? rd_araddr : wr_awaddr;
 assign bus.wdata = wr_wdata                     ;
 
-endmodule: axi_slave
+endmodule: axi4_slave
