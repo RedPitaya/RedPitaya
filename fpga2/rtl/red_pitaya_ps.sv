@@ -87,9 +87,9 @@ axi_slave #(
 */
 
 axi4_slave_old #(
-  .AXI_DW     (  32     ), // data width (8,16,...,1024)
-  .AXI_AW     (  32     ), // address width
-  .AXI_IW     (  12     )  // ID width
+  .DW (32),
+  .AW (32),
+  .IW (12)
 ) axi_slave_gp0 (
   // global signals
   .axi_clk_i        (  axi_gp.ACLK           ),  // global clock
@@ -136,14 +136,7 @@ axi4_slave_old #(
   .axi_rvalid_o     (  axi_gp.RVALID         ),  // read response valid
   .axi_rready_i     (  axi_gp.RREADY         ),  // read response ready
   // system read/write channel
-  .sys_addr_o       (  bus.addr              ),  // system read/write address
-  .sys_wdata_o      (  bus.wdata             ),  // system write data
-  .sys_sel_o        (                        ),  // system write byte select
-  .sys_wen_o        (  bus.wen               ),  // system write enable
-  .sys_ren_o        (  bus.ren               ),  // system read enable
-  .sys_rdata_i      (  bus.rdata             ),  // system read data
-  .sys_err_i        (  bus.err               ),  // system error indicator
-  .sys_ack_i        (  bus.ack               )   // system acknowledge signal
+  .bus       (bus)
 );
 
 //always @(posedge bus.clk)

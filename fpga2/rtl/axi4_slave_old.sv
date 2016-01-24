@@ -47,17 +47,17 @@
  */
 
 module axi4_slave_old #(
-  parameter           AXI_DW         =  64           , // data width (8,16,...,1024)
-  parameter           AXI_AW         =  32           , // address width
-  parameter           AXI_IW         =   8           , // ID width
-  parameter           AXI_SW         = AXI_DW >> 3     // strobe width - 1 bit for every data byte
+  int unsigned DW =  64, // data width (8,16,...,1024)
+  int unsigned AW =  32, // address width
+  int unsigned IW =   8, // ID width
+  int unsigned SW = DW >> 3  // select width - 1 bit for every data byte
 )(
   // global signals
   input                     axi_clk_i      ,  //!< AXI global clock
   input                     axi_rstn_i     ,  //!< AXI global reset
   // axi write address channel
-  input      [ AXI_IW-1: 0] axi_awid_i     ,  //!< AXI write address ID
-  input      [ AXI_AW-1: 0] axi_awaddr_i   ,  //!< AXI write address
+  input      [     IW-1: 0] axi_awid_i     ,  //!< AXI write address ID
+  input      [     AW-1: 0] axi_awaddr_i   ,  //!< AXI write address
   input      [      4-1: 0] axi_awlen_i    ,  //!< AXI write burst length
   input      [      3-1: 0] axi_awsize_i   ,  //!< AXI write burst size
   input      [      2-1: 0] axi_awburst_i  ,  //!< AXI write burst type
@@ -67,20 +67,20 @@ module axi4_slave_old #(
   input                     axi_awvalid_i  ,  //!< AXI write address valid
   output                    axi_awready_o  ,  //!< AXI write ready
   // axi write data channel
-  input      [ AXI_IW-1: 0] axi_wid_i      ,  //!< AXI write data ID
-  input      [ AXI_DW-1: 0] axi_wdata_i    ,  //!< AXI write data
-  input      [ AXI_SW-1: 0] axi_wstrb_i    ,  //!< AXI write strobes
+  input      [     IW-1: 0] axi_wid_i      ,  //!< AXI write data ID
+  input      [     DW-1: 0] axi_wdata_i    ,  //!< AXI write data
+  input      [     SW-1: 0] axi_wstrb_i    ,  //!< AXI write strobes
   input                     axi_wlast_i    ,  //!< AXI write last
   input                     axi_wvalid_i   ,  //!< AXI write valid
   output                    axi_wready_o   ,  //!< AXI write ready
   // axi write response channel
-  output     [ AXI_IW-1: 0] axi_bid_o      ,  //!< AXI write response ID
+  output     [     IW-1: 0] axi_bid_o      ,  //!< AXI write response ID
   output reg [      2-1: 0] axi_bresp_o    ,  //!< AXI write response
   output reg                axi_bvalid_o   ,  //!< AXI write response valid
   input                     axi_bready_i   ,  //!< AXI write response ready
   // axi read address channel
-  input      [ AXI_IW-1: 0] axi_arid_i     ,  //!< AXI read address ID
-  input      [ AXI_AW-1: 0] axi_araddr_i   ,  //!< AXI read address
+  input      [     IW-1: 0] axi_arid_i     ,  //!< AXI read address ID
+  input      [     AW-1: 0] axi_araddr_i   ,  //!< AXI read address
   input      [      4-1: 0] axi_arlen_i    ,  //!< AXI read burst length
   input      [      3-1: 0] axi_arsize_i   ,  //!< AXI read burst size
   input      [      2-1: 0] axi_arburst_i  ,  //!< AXI read burst type
@@ -90,21 +90,14 @@ module axi4_slave_old #(
   input                     axi_arvalid_i  ,  //!< AXI read address valid
   output                    axi_arready_o  ,  //!< AXI read address ready
   // axi read data channel
-  output     [ AXI_IW-1: 0] axi_rid_o      ,  //!< AXI read response ID
-  output reg [ AXI_DW-1: 0] axi_rdata_o    ,  //!< AXI read data
+  output     [     IW-1: 0] axi_rid_o      ,  //!< AXI read response ID
+  output reg [     DW-1: 0] axi_rdata_o    ,  //!< AXI read data
   output reg [      2-1: 0] axi_rresp_o    ,  //!< AXI read response
   output reg                axi_rlast_o    ,  //!< AXI read last
   output reg                axi_rvalid_o   ,  //!< AXI read response valid
   input                     axi_rready_i   ,  //!< AXI read response ready
-  // RP system read/write channel
-  output     [ AXI_AW-1: 0] sys_addr_o     ,  //!< system bus read/write address.
-  output     [ AXI_DW-1: 0] sys_wdata_o    ,  //!< system bus write data.
-  output reg [ AXI_SW-1: 0] sys_sel_o      ,  //!< system bus write byte select.
-  output reg                sys_wen_o      ,  //!< system bus write enable.
-  output reg                sys_ren_o      ,  //!< system bus read enable.
-  input      [ AXI_DW-1: 0] sys_rdata_i    ,  //!< system bus read data.
-  input                     sys_err_i      ,  //!< system bus error indicator.
-  input                     sys_ack_i         //!< system bus acknowledge signal.
+  // system read/write channel
+  sys_bus_if.m bus
 );
 
 //---------------------------------------------------------------------------------
@@ -115,16 +108,16 @@ wire                 ack         ;
 reg   [      6-1: 0] ack_cnt     ;
 
 reg                  rd_do       ;
-reg   [ AXI_IW-1: 0] rd_arid     ;
-reg   [ AXI_AW-1: 0] rd_araddr   ;
+reg   [     IW-1: 0] rd_arid     ;
+reg   [     AW-1: 0] rd_araddr   ;
 reg                  rd_error    ;
 wire                 rd_errorw   ;
 
 reg                  wr_do       ;
-reg   [ AXI_IW-1: 0] wr_awid     ;
-reg   [ AXI_AW-1: 0] wr_awaddr   ;
-reg   [ AXI_IW-1: 0] wr_wid      ;
-reg   [ AXI_DW-1: 0] wr_wdata    ;
+reg   [     IW-1: 0] wr_awid     ;
+reg   [     AW-1: 0] wr_awaddr   ;
+reg   [     IW-1: 0] wr_wid      ;
+reg   [     DW-1: 0] wr_wdata    ;
 reg                  wr_error    ;
 wire                 wr_errorw   ;
 
@@ -188,7 +181,7 @@ end else begin
    axi_rlast_o   <= rd_do && ack  ;
    axi_rvalid_o  <= rd_do && ack  ;
    axi_rresp_o   <= {(rd_error || ack_cnt[5]),1'b0} ;  // 2'b10 SLVERR    2'b00 OK
-   axi_rdata_o   <= sys_rdata_i   ;
+   axi_rdata_o   <= bus.rdata   ;
 end
 
 // acknowledge protection
@@ -204,23 +197,23 @@ end else begin
       ack_cnt <= ack_cnt + 6'h1 ;
 end
 
-assign ack = sys_ack_i || ack_cnt[5] || (rd_do && rd_errorw) || (wr_do && wr_errorw); // bus acknowledge or timeout or error
+assign ack = bus.ack || ack_cnt[5] || (rd_do && rd_errorw) || (wr_do && wr_errorw); // bus acknowledge or timeout or error
 
 //------------------------------------------
 //  Simple slave interface
 
 always @(posedge axi_clk_i)
 if (axi_rstn_i == 1'b0) begin
-   sys_wen_o  <= 1'b0 ;
-   sys_ren_o  <= 1'b0 ;
-   sys_sel_o  <= {AXI_SW{1'b0}} ;
+   bus.wen  <= 1'b0 ;
+   bus.ren  <= 1'b0 ;
+//   bus.sel  <= {    SW{1'b0}} ;
 end else begin
-   sys_wen_o  <= wr_do && axi_wvalid_i && !wr_errorw ;
-   sys_ren_o  <= axi_arvalid_i && axi_arready_o && !rd_errorw ;
-   sys_sel_o  <= {AXI_SW{1'b1}} ;
+   bus.wen  <= wr_do && axi_wvalid_i && !wr_errorw ;
+   bus.ren  <= axi_arvalid_i && axi_arready_o && !rd_errorw ;
+//   bus.sel  <= {    SW{1'b1}} ;
 end
 
-assign sys_addr_o  = rd_do ? rd_araddr : wr_awaddr  ;
-assign sys_wdata_o = wr_wdata                       ;
+assign bus.addr  = rd_do ? rd_araddr : wr_awaddr  ;
+assign bus.wdata = wr_wdata                       ;
 
 endmodule
