@@ -62,74 +62,87 @@ module axi4_slave_old #(
 //  AXI slave Module
 //---------------------------------------------------------------------------------
 
-wire                 ack         ;
-reg   [      6-1: 0] ack_cnt     ;
+logic           ack      ;
+logic [ 6-1: 0] ack_cnt  ;
 
-reg                  rd_do       ;
-reg   [     IW-1: 0] rd_arid     ;
-reg   [     AW-1: 0] rd_araddr   ;
-reg                  rd_error    ;
-wire                 rd_errorw   ;
+logic           rd_do    ;
+logic [IW-1: 0] rd_arid  ;
+logic [AW-1: 0] rd_araddr;
+logic           rd_error ;
+logic           rd_errorw;
 
-reg                  wr_do       ;
-reg   [     IW-1: 0] wr_awid     ;
-reg   [     AW-1: 0] wr_awaddr   ;
-reg   [     IW-1: 0] wr_wid      ;
-reg   [     DW-1: 0] wr_wdata    ;
-reg                  wr_error    ;
-wire                 wr_errorw   ;
+logic           wr_do    ;
+logic [IW-1: 0] wr_awid  ;
+logic [AW-1: 0] wr_awaddr;
+logic [IW-1: 0] wr_wid   ;
+logic [DW-1: 0] wr_wdata ;
+logic           wr_error ;
+logic           wr_errorw;
 
+// check if access type is supported
 assign wr_errorw = (axi.AWLEN != 4'h0) || (axi.AWSIZE != 3'b010); // error if write burst and more/less than 4B transfer
 assign rd_errorw = (axi.ARLEN != 4'h0) || (axi.ARSIZE != 3'b010); // error if read burst and more/less than 4B transfer
 
-always @(posedge axi.ACLK)
-if (axi.ARESETn == 1'b0) begin
-   rd_do    <= 1'b0 ;
-   rd_error <= 1'b0 ;
+////////////////////////////////////////////////////////////////////////////////
+// write access
+////////////////////////////////////////////////////////////////////////////////
+
+always_ff @(posedge axi.ACLK)
+if (~axi.ARESETn) begin
+   rd_do    <= 1'b0;
+   rd_error <= 1'b0;
 end else begin
-   if (axi.ARVALID && !rd_do && !axi.AWVALID && !wr_do) // accept just one read request - write has priority
-      rd_do  <= 1'b1 ;
+   // accept just one read request - write has priority
+   if (axi.ARVALID && !rd_do && !axi.AWVALID && !wr_do)
+      rd_do <= 1'b1;
    else if (axi.RREADY && rd_do && ack)
-      rd_do  <= 1'b0 ;
-
-   if (axi.ARVALID && axi.ARREADY) begin // latch ID and address
-      rd_arid   <= axi.ARID   ;
-      rd_araddr <= axi.ARADDR ;
-      rd_error  <= rd_errorw    ;
+      rd_do <= 1'b0;
+   // latch ID and address
+   if (axi.ARVALID && axi.ARREADY) begin
+      rd_arid   <= axi.ARID  ;
+      rd_araddr <= axi.ARADDR;
+      rd_error  <= rd_errorw ;
    end
 end
 
-always @(posedge axi.ACLK)
-if (axi.ARESETn == 1'b0) begin
-   wr_do    <= 1'b0 ;
-   wr_error <= 1'b0 ;
+assign axi.AWREADY = !wr_do && !rd_do;
+assign axi.WREADY  = (wr_do && axi.WVALID) || (wr_errorw && axi.WVALID);
+assign axi.BID     = wr_awid;
+
+////////////////////////////////////////////////////////////////////////////////
+// read access
+////////////////////////////////////////////////////////////////////////////////
+
+always_ff @(posedge axi.ACLK)
+if (~axi.ARESETn) begin
+   wr_do    <= 1'b0;
+   wr_error <= 1'b0;
 end else begin
-   if (axi.AWVALID && !wr_do && !rd_do) // accept just one write request - if idle
-      wr_do  <= 1'b1 ;
+   // accept just one write request - if idle
+   if (axi.AWVALID && !wr_do && !rd_do)
+      wr_do  <= 1'b1;
    else if (axi.BREADY && wr_do && ack)
-      wr_do  <= 1'b0 ;
-   if (axi.AWVALID && axi.AWREADY) begin // latch ID and address
-      wr_awid   <= axi.AWID   ;
-      wr_awaddr <= axi.AWADDR ;
-      wr_error  <= wr_errorw    ;
+      wr_do  <= 1'b0;
+   // latch ID and address
+   if (axi.AWVALID && axi.AWREADY) begin
+      wr_awid   <= axi.AWID  ;
+      wr_awaddr <= axi.AWADDR;
+      wr_error  <= wr_errorw ;
    end
-   if (axi.WVALID && wr_do) begin // latch ID and write data
-      wr_wid    <= axi.WID    ;
-      wr_wdata  <= axi.WDATA  ;
+   // latch ID and write data
+   if (axi.WVALID && wr_do) begin
+      wr_wid    <= axi.WID  ;
+      wr_wdata  <= axi.WDATA;
    end
 end
 
-assign axi.AWREADY = !wr_do && !rd_do                      ;
-assign axi.WREADY  = (wr_do && axi.WVALID) || (wr_errorw && axi.WVALID)    ;
-assign axi.BID     = wr_awid                               ;
+assign axi.ARREADY = !rd_do && !wr_do && !axi.AWVALID;
+assign axi.RID     = rd_arid                         ;
 
-assign axi.ARREADY = !rd_do && !wr_do && !axi.AWVALID     ;
-assign axi.RID     = rd_arid                                ;
-
-always @(posedge axi.ACLK)
-if (axi.ARESETn == 1'b0) begin
-   axi.BVALID  <= 1'b0 ;
-   axi.BRESP   <= 2'h0 ;
+always_ff @(posedge axi.ACLK)
+if (~axi.ARESETn) begin
+   axi.BVALID  <= 1'b0;
+   axi.BRESP   <= 2'h0;
    axi.RLAST   <= 1'b0 ;
    axi.RVALID  <= 1'b0 ;
    axi.RRESP   <= 2'h0 ;
@@ -139,39 +152,43 @@ end else begin
    axi.RLAST   <= rd_do && ack  ;
    axi.RVALID  <= rd_do && ack  ;
    axi.RRESP   <= {(rd_error || ack_cnt[5]),1'b0} ;  // 2'b10 SLVERR    2'b00 OK
-   axi.RDATA   <= bus.rdata   ;
+   axi.RDATA   <= bus.rdata;
 end
 
+////////////////////////////////////////////////////////////////////////////////
 // acknowledge protection
-always @(posedge axi.ACLK)
-if (axi.ARESETn == 1'b0) begin
+////////////////////////////////////////////////////////////////////////////////
+
+always_ff @(posedge axi.ACLK)
+if (~axi.ARESETn) begin
    ack_cnt   <= 6'h0 ;
 end else begin
    if ((axi.ARVALID && axi.ARREADY) || (axi.AWVALID && axi.AWREADY))  // rd || wr request
-      ack_cnt <= 6'h1 ;
+      ack_cnt <= 6'h1;
    else if (ack)
-      ack_cnt <= 6'h0 ;
+      ack_cnt <= 6'h0;
    else if (|ack_cnt)
-      ack_cnt <= ack_cnt + 6'h1 ;
+      ack_cnt <= ack_cnt + 6'h1;
 end
 
 assign ack = bus.ack || ack_cnt[5] || (rd_do && rd_errorw) || (wr_do && wr_errorw); // bus acknowledge or timeout or error
 
-//------------------------------------------
-//  Simple slave interface
+////////////////////////////////////////////////////////////////////////////////
+// simple slave interface
+////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge axi.ACLK)
-if (axi.ARESETn == 1'b0) begin
-   bus.wen  <= 1'b0 ;
-   bus.ren  <= 1'b0 ;
-//   bus.sel  <= {    SW{1'b0}} ;
+always_ff @(posedge axi.ACLK)
+if (~axi.ARESETn) begin
+   bus.wen <= 1'b0 ;
+   bus.ren <= 1'b0 ;
+//   bus.sel  <= {SW{1'b0}} ;
 end else begin
-   bus.wen  <= wr_do && axi.WVALID && !wr_errorw ;
-   bus.ren  <= axi.ARVALID && axi.ARREADY && !rd_errorw ;
-//   bus.sel  <= {    SW{1'b1}} ;
+   bus.wen <= wr_do && axi.WVALID && !wr_errorw;
+   bus.ren <= axi.ARVALID && axi.ARREADY && !rd_errorw;
+//   bus.sel  <= {SW{1'b1}} ;
 end
 
-assign bus.addr  = rd_do ? rd_araddr : wr_awaddr  ;
-assign bus.wdata = wr_wdata                       ;
+assign bus.addr  = rd_do ? rd_araddr : wr_awaddr;
+assign bus.wdata = wr_wdata                     ;
 
-endmodule
+endmodule: axi4_slave_old
