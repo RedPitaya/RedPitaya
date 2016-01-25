@@ -9,7 +9,9 @@
 //--------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-module system_wrapper (
+module system_wrapper #(
+  int unsigned DN = 1
+)(
   inout  logic [14:0] DDR_addr   ,
   inout  logic  [2:0] DDR_ba     ,
   inout  logic        DDR_cas_n  ,
@@ -103,13 +105,21 @@ module system_wrapper (
   output logic  [3:0] M_AXI4_LITE_0_wstrb  ,
   output logic  [0:0] M_AXI4_LITE_0_wvalid ,
 
-  input  logic        S_AXI_STR1_aclk  , S_AXI_STR0_aclk  ,
-  input  logic        S_AXI_STR1_arstn , S_AXI_STR0_arstn ,
-  input  logic [15:0] S_AXI_STR1_tdata , S_AXI_STR0_tdata ,
-  input  logic  [1:0] S_AXI_STR1_tkeep , S_AXI_STR0_tkeep ,
-  input  logic        S_AXI_STR1_tlast , S_AXI_STR0_tlast ,
-  output logic        S_AXI_STR1_tready, S_AXI_STR0_tready,
-  input  logic        S_AXI_STR1_tvalid, S_AXI_STR0_tvalid,
+  input  logic          S_AXI_STR_RX3_aclk  , S_AXI_STR_RX2_aclk  , S_AXI_STR_RX1_aclk  , S_AXI_STR_RX0_aclk  ,
+  input  logic          S_AXI_STR_RX3_arstn , S_AXI_STR_RX2_arstn , S_AXI_STR_RX1_arstn , S_AXI_STR_RX0_arstn ,
+  input  logic   [15:0] S_AXI_STR_RX3_tdata , S_AXI_STR_RX2_tdata , S_AXI_STR_RX1_tdata , S_AXI_STR_RX0_tdata ,
+  input  logic [DN-1:0] S_AXI_STR_RX3_tkeep , S_AXI_STR_RX2_tkeep , S_AXI_STR_RX1_tkeep , S_AXI_STR_RX0_tkeep ,
+  input  logic          S_AXI_STR_RX3_tlast , S_AXI_STR_RX2_tlast , S_AXI_STR_RX1_tlast , S_AXI_STR_RX0_tlast ,
+  output logic          S_AXI_STR_RX3_tready, S_AXI_STR_RX2_tready, S_AXI_STR_RX1_tready, S_AXI_STR_RX0_tready,
+  input  logic          S_AXI_STR_RX3_tvalid, S_AXI_STR_RX2_tvalid, S_AXI_STR_RX1_tvalid, S_AXI_STR_RX0_tvalid,
+
+  input  logic          M_AXI_STR_TX3_aclk  , M_AXI_STR_TX2_aclk  , M_AXI_STR_TX1_aclk  , M_AXI_STR_TX0_aclk  ,
+  input  logic          M_AXI_STR_TX3_arstn , M_AXI_STR_TX2_arstn , M_AXI_STR_TX1_arstn , M_AXI_STR_TX0_arstn ,
+  output logic   [15:0] M_AXI_STR_TX3_tdata , M_AXI_STR_TX2_tdata , M_AXI_STR_TX1_tdata , M_AXI_STR_TX0_tdata ,
+  output logic [DN-1:0] M_AXI_STR_TX3_tkeep , M_AXI_STR_TX2_tkeep , M_AXI_STR_TX1_tkeep , M_AXI_STR_TX0_tkeep ,
+  output logic          M_AXI_STR_TX3_tlast , M_AXI_STR_TX2_tlast , M_AXI_STR_TX1_tlast , M_AXI_STR_TX0_tlast ,
+  input  logic          M_AXI_STR_TX3_tready, M_AXI_STR_TX2_tready, M_AXI_STR_TX1_tready, M_AXI_STR_TX0_tready,
+  output logic          M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid,
 
   input  logic        Vaux0_v_n,
   input  logic        Vaux0_v_p,
@@ -311,6 +321,13 @@ assign {S_AXI_HP1_rvalid , S_AXI_HP0_rvalid } = '0;
 assign {S_AXI_HP1_wready , S_AXI_HP0_wready } = '0;
 //     {S_AXI_HP1_wstrb  , S_AXI_HP0_wstrb  } = '0;
 //     {S_AXI_HP1_wvalid , S_AXI_HP0_wvalid } = '0;
+
+////////////////////////////////////////////////////////////////////////////////
+// data streams
+////////////////////////////////////////////////////////////////////////////////
+
+assign {S_AXI_STR_RX3_tready, S_AXI_STR_RX2_tready, S_AXI_STR_RX1_tready, S_AXI_STR_RX0_tready} = 1'b1;
+assign {M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid} = 1'b0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // analog inputs
