@@ -14,8 +14,8 @@ module str_pas (
 
 assign sti.rdy = sto.rdy & ena;
 
-assign sto.vld <= sti.vld & ena;
-assign sto.dat <= sti.dat;
-assign sto.lst <= sti.lst;
+assign sto.vld = sti.vld & ena;
+assign sto.dat = sti.dat;
+assign sto.lst = sti.lst;
 
 endmodule: str_pas
