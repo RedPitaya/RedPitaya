@@ -36,23 +36,23 @@ int rp_LaGenOpen(char *dev, rp_handle_uio_t *handle) {
     // get regset pointer
     handle->regset = mmap(NULL, sizeof(la_acq_regset_t), PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
     if (handle->regset == MAP_FAILED) {
-    	return -1;
+        return -1;
     }
 
     return RP_OK;
 }
 
 int rp_LaGenClose(rp_handle_uio_t *handle) {
-	int r=RP_OK;
+    int r=RP_OK;
 
-	// release regset
+    // release regset
     if(munmap((void *) handle->regset, sizeof(la_acq_regset_t))!=0){
-    	r=-1;
+        r=-1;
     }
 
     // close device
     if(close (handle->fd)!=0){
-    	r=-1;
+        r=-1;
     }
 
     // free device path
@@ -66,105 +66,105 @@ int rp_LaGenClose(rp_handle_uio_t *handle) {
 
 /** Control registers setter & getter */
 static int rp_LaGenSetControl(rp_handle_uio_t *handle, rp_la_ctl_regset_t a_reg) {
-	rp_la_ctl_regset_t *regset = (rp_la_ctl_regset_t *) handle->regset.ctl;
-	iowrite32(a_reg.ctl, &regset->ctl);
+    rp_la_ctl_regset_t *regset = (rp_la_ctl_regset_t *) handle->regset.ctl;
+    iowrite32(a_reg.ctl, &regset->ctl);
     return RP_OK;
 }
 
 
 static int rp_LaGenGetControl(rp_handle_uio_t *handle, rp_la_ctl_regset_t * a_reg) {
 
-	rp_la_ctl_regset_t *regset = (rp_la_ctl_regset_t *) handle->regset.ctl;
-	iowrite32(a_reg.ctl, &regset->ctl);
+    rp_la_ctl_regset_t *regset = (rp_la_ctl_regset_t *) handle->regset.ctl;
+    iowrite32(a_reg.ctl, &regset->ctl);
     return RP_OK;
 }
 
 
 /** Acq. control */
 int rp_LaGenReset(rp_handle_uio_t *handle) {
-	rp_la_ctl_regset_t reg;
-	reg.ctl=RP_LA_ACQ_CTL_RST_MASK;
-	rp_LaGenSetControl(reg);
+    rp_la_ctl_regset_t reg;
+    reg.ctl=RP_LA_ACQ_CTL_RST_MASK;
+    rp_LaGenSetControl(reg);
 }
 
 int rp_LaGenRunAcq(rp_handle_uio_t *handle) {
-	rp_la_ctl_regset_t reg;
-	reg.ctl=RP_LA_ACQ_CTL_RST_MASK;
-	rp_LaGenSetControl(reg);
+    rp_la_ctl_regset_t reg;
+    reg.ctl=RP_LA_ACQ_CTL_RST_MASK;
+    rp_LaGenSetControl(reg);
 }
 
 int rp_LaGenStopAcq(rp_handle_uio_t *handle) {
-	rp_la_ctl_regset_t reg;
-	reg.ctl=RP_LA_ACQ_CTL_STO_MASK;
-	rp_LaGenSetControl(reg);
+    rp_la_ctl_regset_t reg;
+    reg.ctl=RP_LA_ACQ_CTL_STO_MASK;
+    rp_LaGenSetControl(reg);
 }
 
 int rp_LaGenTriggerAcq(rp_handle_uio_t *handle) {
-	rp_la_ctl_regset_t reg;
-	reg.ctl=RP_LA_ACQ_CTL_SWT_MASK;
-	rp_LaGenSetControl(reg);
+    rp_la_ctl_regset_t reg;
+    reg.ctl=RP_LA_ACQ_CTL_SWT_MASK;
+    rp_LaGenSetControl(reg);
 }
 
 /** Configuration registers setter & getter */
 int rp_LaGenSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg) {
-	rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) handle->regset.cfg;
-	iowrite32(a_reg.acq, &regset->acq);
-	iowrite32(a_reg.trg, &regset->trg);
-	iowrite32(a_reg.pre, &regset->pre);
-	iowrite32(a_reg.pst, &regset->pst);
+    rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) handle->regset.cfg;
+    iowrite32(a_reg.acq, &regset->acq);
+    iowrite32(a_reg.trg, &regset->trg);
+    iowrite32(a_reg.pre, &regset->pre);
+    iowrite32(a_reg.pst, &regset->pst);
     return RP_OK;
 }
 
 int rp_LaGenGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg) {
-	rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) handle->regset.cfg;
-	*a_reg->acq = ioread32(&regset->acq);
-	*a_reg->trg = ioread32(&regset->trg);
-	*a_reg->pre = ioread32(&regset->pre);
-	*a_reg->pst = ioread32(&regset->pst);
+    rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) handle->regset.cfg;
+    *a_reg->acq = ioread32(&regset->acq);
+    *a_reg->trg = ioread32(&regset->trg);
+    *a_reg->pre = ioread32(&regset->pre);
+    *a_reg->pst = ioread32(&regset->pst);
     return RP_OK;
 }
 
 /** Trigger settings setter & getter */
 int rp_LaGenSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg) {
-	rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) handle->regset.trg;
-	iowrite32(a_reg.cmp_msk, &regset->cmp_msk);
-	iowrite32(a_reg.cmp_val, &regset->cmp_val);
-	iowrite32(a_reg.edg_pos, &regset->edg_pos);
-	iowrite32(a_reg.edg_neg, &regset->edg_neg);
+    rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) handle->regset.trg;
+    iowrite32(a_reg.cmp_msk, &regset->cmp_msk);
+    iowrite32(a_reg.cmp_val, &regset->cmp_val);
+    iowrite32(a_reg.edg_pos, &regset->edg_pos);
+    iowrite32(a_reg.edg_neg, &regset->edg_neg);
     return RP_OK;
 }
 
 int rp_LaGenGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg) {
-	rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) handle->regset.trg;
-	*a_reg->cmp_msk = ioread32(&regset->cmp_msk);
-	*a_reg->cmp_val = ioread32(&regset->cmp_val);
-	*a_reg->edg_pos = ioread32(&regset->edg_pos);
-	*a_reg->edg_neg = ioread32(&regset->edg_neg);
+    rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) handle->regset.trg;
+    *a_reg->cmp_msk = ioread32(&regset->cmp_msk);
+    *a_reg->cmp_val = ioread32(&regset->cmp_val);
+    *a_reg->edg_pos = ioread32(&regset->edg_pos);
+    *a_reg->edg_neg = ioread32(&regset->edg_neg);
     return RP_OK;
 }
 
 /** Decimation settings setter & getter */
 int rp_LaGenSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg) {
-	rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) handle->regset.dec;
-	//iowrite32(a_reg.avg, &regset->avg);
-	iowrite32(a_reg.dec, &regset->dec);
-	//iowrite32(a_reg.shr, &regset->shr);
-	return RP_OK;
+    rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) handle->regset.dec;
+    //iowrite32(a_reg.avg, &regset->avg);
+    iowrite32(a_reg.dec, &regset->dec);
+    //iowrite32(a_reg.shr, &regset->shr);
+    return RP_OK;
 }
 
 int rp_LaGenGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg) {
-	rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) handle->regset.dec;
-	//*a_reg->avg = ioread32(&regset->avg);
-	*a_reg->dec = ioread32(&regset->dec);
-	//*a_reg->shr = ioread32(&regset->shr);
+    rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) handle->regset.dec;
+    //*a_reg->avg = ioread32(&regset->avg);
+    *a_reg->dec = ioread32(&regset->dec);
+    //*a_reg->shr = ioread32(&regset->shr);
     return RP_OK;
 }
 
 /** Data buffer pointers */
 int rp_LaGenGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg) {
-	rp_data_ptrs_regset_t *regset = (rp_data_ptrs_regset_t *) handle->regset.dpt;
-	*a_reg->start = ioread32(&regset->start);
-	*a_reg->trig = ioread32(&regset->trig);
-	*a_reg->stopped = ioread32(&regset->stopped);
+    rp_data_ptrs_regset_t *regset = (rp_data_ptrs_regset_t *) handle->regset.dpt;
+    *a_reg->start = ioread32(&regset->start);
+    *a_reg->trig = ioread32(&regset->trig);
+    *a_reg->stopped = ioread32(&regset->stopped);
     return RP_OK;
 }

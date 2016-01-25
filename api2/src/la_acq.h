@@ -50,10 +50,10 @@ typedef struct {
 
 /** Configuration registers */
 typedef struct {
-    uint32_t acq; 	///< acq. configuration register
-    uint32_t trg; 	///< trig. enable mask, triggers are ORed
-    uint32_t pre; 	///< pre-trigger [number of samples] ; 0 - means that no sample will be taken before trigger
-	uint32_t pst; 	///< post-trigger [number of samples] ; 0 - means that no sample will be taken after trigger
+    uint32_t acq;     ///< acq. configuration register
+    uint32_t trg;     ///< trig. enable mask, triggers are ORed
+    uint32_t pre;     ///< pre-trigger [number of samples] ; 0 - means that no sample will be taken before trigger
+    uint32_t pst;     ///< post-trigger [number of samples] ; 0 - means that no sample will be taken after trigger
 } rp_la_cfg_regset_t;
 
 /** Trigger settings  */
@@ -82,19 +82,19 @@ typedef struct {
 
 /** Data buf. pointers  */
 typedef struct {
-    uint32_t start;  	///< position in the buffer where acq. was started
-    uint32_t trig;   	///< position in the buffer where trigger appeared
-    uint32_t stopped;	///< position in the buffer where acq. was stopped
+    uint32_t start;      ///< position in the buffer where acq. was started
+    uint32_t trig;       ///< position in the buffer where trigger appeared
+    uint32_t stopped;    ///< position in the buffer where acq. was stopped
 } rp_data_ptrs_regset_t;
 
 /** logic analyzer acquire structure declaration */
 typedef struct {
-	rp_la_ctl_regset_t ctl; 		///< control register
-    rp_la_cfg_regset_t cfg; 		///< configuration registers
-    rp_la_trg_regset_t trg;			///< trigger settings register
+    rp_la_ctl_regset_t ctl;         ///< control register
+    rp_la_cfg_regset_t cfg;         ///< configuration registers
+    rp_la_trg_regset_t trg;            ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
     rp_adc_eqfilter_regset_t fil;   ///< (TODO: this filter will be removed for LA)
-    rp_data_ptrs_regset_t dpt;		///< data buf. pointers
+    rp_data_ptrs_regset_t dpt;        ///< data buf. pointers
 } rp_la_acq_regset_t;
 
 
