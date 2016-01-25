@@ -11,29 +11,12 @@
 //
 // This module takes care of system identification via DNA readout at startup and
 // ID register which user can define at compile time.
-//
-// Beside that it is currently also used to test expansion connector and for
-// driving LEDs.
 ////////////////////////////////////////////////////////////////////////////////
 
 module red_pitaya_hk #(
-  // GPIO
-  int unsigned DWL = 8, // data width for LED
-  int unsigned DWE = 8, // data width for extension
   // ID
   bit [57-1:0] DNA = 57'h0823456789ABCDE
 )(
-  // LED
-  output logic [DWL-1:0] led_o,  // LED output
-  // global configuration
-  output logic           digital_loop,
-  // expansion connector
-  input  logic [DWE-1:0] exp_p_i ,  // input
-  output logic [DWE-1:0] exp_p_o ,  // output
-  output logic [DWE-1:0] exp_p_oe,  // output enable
-  input  logic [DWE-1:0] exp_n_i ,  //
-  output logic [DWE-1:0] exp_n_o ,  //
-  output logic [DWE-1:0] exp_n_oe,  //
   // system bus
   sys_bus_if.s           bus
 );
@@ -88,35 +71,15 @@ DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
 
 logic [32-1:0] id_value;
 
-assign id_value[31:4] = 28'h0; // reserved
-assign id_value[ 3:0] =  4'h1; // board type   1 - release 1
+assign id_value = {28'h0,  // reserved
+                    4'h1}; // board type   1 - release 1
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam int unsigned BDW = 6;
-
-always_ff @(posedge bus.clk)
-if (!bus.rstn) begin
-  digital_loop <= '0;
-  // LED
-  led_o    <= '0;
-  // GPIO
-  exp_p_o  <= '0;
-  exp_p_oe <= '0;
-  exp_n_o  <= '0;
-  exp_n_oe <= '0;
-end else if (bus.wen) begin
-  if (bus.addr[BDW-1:0]=='h0c)   digital_loop <= bus.wdata[0];
-  // GPIO
-  if (bus.addr[BDW-1:0]=='h10)   exp_p_oe <= bus.wdata[DWE-1:0];
-  if (bus.addr[BDW-1:0]=='h14)   exp_n_oe <= bus.wdata[DWE-1:0];
-  if (bus.addr[BDW-1:0]=='h18)   exp_p_o  <= bus.wdata[DWE-1:0];
-  if (bus.addr[BDW-1:0]=='h1C)   exp_n_o  <= bus.wdata[DWE-1:0];
-  // LED
-  if (bus.addr[BDW-1:0]=='h30)   led_o    <= bus.wdata[DWL-1:0];
-end
+// bus decoder width
+localparam int unsigned BDW = 4;
 
 always_ff @(posedge bus.clk)
 if (!bus.rstn)  bus.err <= 1'b1;
@@ -135,17 +98,6 @@ end else begin
     'h00:  bus.rdata <= {                id_value          };
     'h04:  bus.rdata <= {                dna_value[32-1: 0]};
     'h08:  bus.rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]};
-    'h0c:  bus.rdata <= {{32-  1{1'b0}}, digital_loop      };
-    // GPIO
-    'h10:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_oe};
-    'h14:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_oe};
-    'h18:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_o} ;
-    'h1C:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_o} ;
-    'h20:  bus.rdata <= {{32-DWE{1'b0}}, exp_p_i} ;
-    'h24:  bus.rdata <= {{32-DWE{1'b0}}, exp_n_i} ;
-    // LED
-    'h30:  bus.rdata <= {{32-DWL{1'b0}}, led_o}   ;
-
     default: bus.rdata <= '0;
   endcase
 end

@@ -243,6 +243,13 @@ red_pitaya_ps ps (
   .sto           (str_dtx     )
 );
 
+// TODO: connect a dummy AXI4-Lite slave here
+assign axi4_lite.AWREADY = 1'b0;
+assign axi4_lite.WREADY  = 1'b0;
+assign axi4_lite.BVALID  = 1'b0;
+assign axi4_lite.ARREADY = 1'b0;
+assign axi4_lite.RVALID  = 1'b0;
+
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +264,7 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=10; i<16; i++) begin: for_sys
+for (genvar i=13; i<16; i++) begin: for_sys
   assign sys[i].ack = 1'b1;
   assign sys[i].err = 1'b1;
   assign sys[i].rdata = 'x;
@@ -265,48 +272,42 @@ end: for_sys
 endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
-// GPIO
-////////////////////////////////////////////////////////////////////////////////
-
-localparam int unsigned GDW = 8;
-
-logic [GDW-1:0] gpio_e;  // output enable
-logic [GDW-1:0] gpio_o;  // output
-logic [GDW-1:0] gpio_i;  // input
-
-gpio #(.DW (GDW)) gpio (
-  // expansion connector
-  .gpio_e  (gpio_e),
-  .gpio_o  (gpio_o),
-  .gpio_i  (gpio_i),
-  // system bus
-  .bus     (axi4_lite)
-);
-
-//IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
-
-////////////////////////////////////////////////////////////////////////////////
 // Housekeeping
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [8-1:0] exp_p_i , exp_n_i ;
-logic [8-1:0] exp_p_o , exp_n_o ;
-logic [8-1:0] exp_p_oe, exp_n_oe;
-
 red_pitaya_hk hk (
-  // LED
-  .led_o         (led_o),
+  .bus           (sys[0])
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// I/O and stream multiplexing
+////////////////////////////////////////////////////////////////////////////////
+
+muxctl muxctl (
   // global configuration
   .digital_loop  (digital_loop),
-  // Expansion connector
-  .exp_p_i       (exp_p_i ),
-  .exp_p_o       (exp_p_o ),
-  .exp_p_oe      (exp_p_oe),
-  .exp_n_i       (exp_n_i ),
-  .exp_n_o       (exp_n_o ),
-  .exp_n_oe      (exp_n_oe),
+  .gpio_mux      (),
    // System bus
-  .bus           (sys[0])
+  .bus           (sys[1])
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// GPIO
+////////////////////////////////////////////////////////////////////////////////
+
+localparam int unsigned GDW = 8+8;
+
+logic [8-1:0] exp_p_e, exp_n_e;  // output enable
+logic [8-1:0] exp_p_o, exp_n_o;  // output
+logic [8-1:0] exp_p_i, exp_n_i;  // input
+
+gpio #(.DW (GDW)) gpio (
+  // expansion connector
+  .gpio_e  ({exp_n_e, exp_p_e}),
+  .gpio_o  ({exp_n_o, exp_p_o}),
+  .gpio_i  ({exp_n_i, exp_p_i}),
+  // system bus
+  .bus     (sys[2])
 );
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
@@ -330,6 +331,21 @@ debounce #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// LED
+////////////////////////////////////////////////////////////////////////////////
+
+gpio #(.DW (8)) led (
+  // expansion connector
+  .gpio_e  (     ),
+  .gpio_o  (led_o),
+  .gpio_i  (led_o),
+  // system bus
+  .bus     (sys[3])
+);
+
+//IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
+
+////////////////////////////////////////////////////////////////////////////////
 // Calibration
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +357,7 @@ red_pitaya_calib calib (
   .dac_cfg_mul   (dac_cfg_mul),
   .dac_cfg_sum   (dac_cfg_sum),
   // System bus
-  .bus           (sys[1])
+  .bus           (sys[4])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +375,7 @@ sys_reg_array_o #(
   .RN (PDM_CHN)
 ) regset_pdm (
   .val       (pdm_cfg),
-  .bus       (sys[2])
+  .bus       (sys[5])
 );
 
 pdm #(
@@ -392,7 +408,7 @@ sys_reg_array_o #(
   .RN (PWM_CHN)
 ) regset_pwm (
   .val       (pwm_cfg),
-  .bus       (sys[3])
+  .bus       (sys[6])
 );
 
 pwm #(
@@ -514,7 +530,7 @@ asg_top #(
   .trg_swo   (trg.gen_swo[i]),
   .trg_out   (trg.gen_out[i]),
   // System bus
-  .bus       (sys[4+i])
+  .bus       (sys[7+i])
 );
 
 end: for_gen
@@ -540,7 +556,7 @@ scope_top #(
   .trg_swo   (trg.acq_swo[i]),
   .trg_out   (trg.acq_out[i]),
   // System bus
-  .bus       (sys[6+i])
+  .bus       (sys[9+i])
 );
 
 end: for_acq
@@ -561,7 +577,7 @@ asg_top #(
   .trg_swo   (trg.lg_swo),
   .trg_out   (trg.lg_out),
   // System bus
-  .bus       (sys[8])
+  .bus       (sys[11])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -582,7 +598,7 @@ la_top #(
   .trg_swo   (trg.la_swo),
   .trg_out   (trg.la_out),
   // System bus
-  .bus       (sys[9])
+  .bus       (sys[12])
 );
 
 ////////////////////////////////////////////////////////////////////////////////

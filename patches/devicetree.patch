@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,136 @@
+@@ -86,3 +86,148 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -95,8 +95,8 @@
 +/ {
 +	dmatest_0: dmatest@0 {
 +		compatible ="xlnx,axi-dma-test-1.00.a";
-+		dmas = <&axi_dma_0 0
-+			&axi_dma_0 1>;
++		dmas = <&axi_dma_3 0
++			&axi_dma_3 1>;
 +		dma-names = "axidma0", "axidma1";
 +	};
 +};
@@ -105,43 +105,55 @@
 +		compatible = "generic-uio";
 +		reg = <0x40000000 0x10000>;
 +	};
-+	calib@40010000 {
++	muxctl@40010000 {
 +		compatible = "generic-uio";
 +		reg = <0x40010000 0x10000>;
 +	};
-+	pdm@40020000 {
++	gpio@40020000 {
 +		compatible = "generic-uio";
 +		reg = <0x40020000 0x10000>;
 +	};
-+	pwm@40030000 {
++	gpio@40030000 {
 +		compatible = "generic-uio";
 +		reg = <0x40030000 0x10000>;
 +	};
-+	asg0@40040000 {
++	calib@40040000 {
 +		compatible = "generic-uio";
 +		reg = <0x40040000 0x10000>;
 +	};
-+	asg1@40050000 {
++	pdm@40050000 {
 +		compatible = "generic-uio";
 +		reg = <0x40050000 0x10000>;
 +	};
-+	scope0@40060000 {
++	pwm@40060000 {
 +		compatible = "generic-uio";
 +		reg = <0x40060000 0x10000>;
 +	};
-+	scope1@40070000 {
++	asg0@40070000 {
 +		compatible = "generic-uio";
 +		reg = <0x40070000 0x10000>;
 +	};
-+	lg@40080000 {
++	asg1@40080000 {
 +		compatible = "generic-uio";
 +		reg = <0x40080000 0x10000>;
 +	};
-+	la@40090000 {
++	scope0@40090000 {
 +		compatible = "generic-uio";
 +		reg = <0x40090000 0x10000>;
 +	};
-+	gpio@83C00000 {
++	scope1@400a0000 {
++		compatible = "generic-uio";
++		reg = <0x400a0000 0x10000>;
++	};
++	lg@400b0000 {
++		compatible = "generic-uio";
++		reg = <0x400b0000 0x10000>;
++	};
++	la@400c0000 {
++		compatible = "generic-uio";
++		reg = <0x400c0000 0x10000>;
++	};
++	dummy@83C00000 {
 +		compatible = "generic-uio";
 +		reg = <0x83C00000 0x00400000>;
 +	};
