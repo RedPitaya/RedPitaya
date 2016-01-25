@@ -200,7 +200,7 @@ system_wrapper system_i (
   .S_AXI_STR_RX3_tkeep  ('1         ),  .S_AXI_STR_RX2_tkeep  ('1         ),  .S_AXI_STR_RX1_tkeep  ('1         ),  .S_AXI_STR_RX0_tkeep  ('1         ),
   .S_AXI_STR_RX3_tlast  (sti[3].lst ),  .S_AXI_STR_RX2_tlast  (sti[2].lst ),  .S_AXI_STR_RX1_tlast  (sti[1].lst ),  .S_AXI_STR_RX0_tlast  (sti[0].lst ),
   .S_AXI_STR_RX3_tready (sti[3].rdy ),  .S_AXI_STR_RX2_tready (sti[2].rdy ),  .S_AXI_STR_RX1_tready (sti[1].rdy ),  .S_AXI_STR_RX0_tready (sti[0].rdy ),
-  .S_AXI_STR_RX3_tvalid (sti[3].vld ),  .S_AXI_STR_RX2_tvalid (sti[2].vld ),  .S_AXI_STR_RX1_tvalid (sti[1].vld ),  .S_AXI_STR_RX0_tvalid (sti[0].vld )
+  .S_AXI_STR_RX3_tvalid (sti[3].vld ),  .S_AXI_STR_RX2_tvalid (sti[2].vld ),  .S_AXI_STR_RX1_tvalid (sti[1].vld ),  .S_AXI_STR_RX0_tvalid (sti[0].vld ),
   // AXI-4 streaming interfaces TX
   .M_AXI_STR_TX3_aclk   (sto[3].clk ),  .M_AXI_STR_TX2_aclk   (sto[2].clk ),  .M_AXI_STR_TX1_aclk   (sto[1].clk ),  .M_AXI_STR_TX0_aclk   (sto[0].clk ),
   .M_AXI_STR_TX3_arstn  (sto[3].rstn),  .M_AXI_STR_TX2_arstn  (sto[2].rstn),  .M_AXI_STR_TX1_arstn  (sto[1].rstn),  .M_AXI_STR_TX0_arstn  (sto[0].rstn),
