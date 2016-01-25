@@ -91,9 +91,10 @@ read_verilog                      $path_rtl/red_pitaya_top.v
 
 read_ip                           $path_ip/rb_broadcaster_axis_m2.xcix
 read_ip                           $path_ip/rb_cic_125M_to_5M_32T32_lat18.xcix
-read_ip                           $path_ip/rb_cic_48k_to_8k_32T32_lat13.xcix
+read_ip                           $path_ip/rb_cic_48k_to_8k_32T32.xcix
 read_ip                           $path_ip/rb_cic_4M992_to_48k_32T32.xcix
 read_ip                           $path_ip/rb_cic_8k_to_41M664_32T32_lat14.xcix
+read_ip                           $path_ip/rb_cic_8k_to_48k_32T32.xcix
 read_ip                           $path_ip/rb_cordic_T_WS_O_SR_32T32_CR_B.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmB_A16_D16_B16_P32.xcix
@@ -102,8 +103,8 @@ read_ip                           $path_ip/rb_dsp48_AmB_A16_B16_P32.xcix
 read_ip                           $path_ip/rb_dsp48_CONaC_CON48_C48_P48.xcix
 read_ip                           $path_ip/rb_fifo_axis_W32_D16.xcix
 read_ip                           $path_ip/rb_fir_8k_to_8k_25c23_17i16_35o33.xcix
-read_ip                           $path_ip/rb_fir1_48k_to_48k_25c23_17i16_35o33.xcix
-read_ip                           $path_ip/rb_fir2_48k_to_48k_25c23_17i16_35o33.xcix
+read_ip                           $path_ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix
+read_ip                           $path_ip/rb_fir2_8k_to_8k_25c_17i16_35o32.xcix
 read_ip                           $path_ip/rb_fir3_48k_to_48k_24c_17i16_35o33.xcix
 
 read_xdc                          $path_sdc/red_pitaya.xdc
