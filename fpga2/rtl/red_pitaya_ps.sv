@@ -192,7 +192,7 @@ system_wrapper system_i (
   .M_AXI4_LITE_0_wdata   (axi4_lite.WDATA  ),
   .M_AXI4_LITE_0_wready  (axi4_lite.WREADY ),
   .M_AXI4_LITE_0_wstrb   (axi4_lite.WSTRB  ),
-  .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID )
+  .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID ),
   // AXI-4 streaming interfaces RX
   .S_AXI_STR_RX3_aclk   (sti[3].clk ),  .S_AXI_STR_RX2_aclk   (sti[2].clk ),  .S_AXI_STR_RX1_aclk   (sti[1].clk ),  .S_AXI_STR_RX0_aclk   (sti[0].clk ),
   .S_AXI_STR_RX3_arstn  (sti[3].rstn),  .S_AXI_STR_RX2_arstn  (sti[2].rstn),  .S_AXI_STR_RX1_arstn  (sti[1].rstn),  .S_AXI_STR_RX0_arstn  (sti[0].rstn),
