@@ -16,6 +16,7 @@ assign sti.rdy = sto.rdy & ena;
 
 assign sto.vld = sti.vld & ena;
 assign sto.dat = sti.dat;
+assign sto.kep = sti.kep;
 assign sto.lst = sti.lst;
 
 endmodule: str_pas
