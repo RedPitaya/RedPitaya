@@ -260,7 +260,7 @@ CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX0} \
 CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX0_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX0_aclk
-  set M_AXI_STR_TX0_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX0_arstn ]
+  set M_AXI_STR_TX0_aresetn[ create_bd_port -dir I -type rst M_AXI_STR_TX0_aresetn]
 
   set M_AXI_STR_TX1_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX1_aclk ]
   set_property -dict [ list \
@@ -268,7 +268,7 @@ CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX1} \
 CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX1_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX1_aclk
-  set M_AXI_STR_TX1_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX1_arstn ]
+  set M_AXI_STR_TX1_aresetn[ create_bd_port -dir I -type rst M_AXI_STR_TX1_aresetn]
 
   set M_AXI_STR_TX2_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX2_aclk ]
   set_property -dict [ list \
@@ -276,7 +276,7 @@ CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX2} \
 CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX2_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX2_aclk
-  set M_AXI_STR_TX2_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX2_arstn ]
+  set M_AXI_STR_TX2_aresetn[ create_bd_port -dir I -type rst M_AXI_STR_TX2_aresetn]
 
   set M_AXI_STR_TX3_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX3_aclk ]
   set_property -dict [ list \
@@ -284,7 +284,7 @@ CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX3} \
 CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX3_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX3_aclk
-  set M_AXI_STR_TX3_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX3_arstn ]
+  set M_AXI_STR_TX3_aresetn[ create_bd_port -dir I -type rst M_AXI_STR_TX3_aresetn]
 
   set S_AXI_STR_RX0_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX0_aclk ]
   set_property -dict [ list \
@@ -292,7 +292,7 @@ CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX0} \
 CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX0_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX0_aclk
-  set S_AXI_STR_RX0_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX0_arstn ]
+  set S_AXI_STR_RX0_aresetn[ create_bd_port -dir I -type rst S_AXI_STR_RX0_aresetn]
 
   set S_AXI_STR_RX1_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX1_aclk ]
   set_property -dict [ list \
@@ -300,7 +300,7 @@ CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX1} \
 CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX1_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX1_aclk
-  set S_AXI_STR_RX1_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX1_arstn ]
+  set S_AXI_STR_RX1_aresetn[ create_bd_port -dir I -type rst S_AXI_STR_RX1_aresetn]
 
   set S_AXI_STR_RX2_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX2_aclk ]
   set_property -dict [ list \
@@ -308,7 +308,7 @@ CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX2} \
 CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX2_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX2_aclk
-  set S_AXI_STR_RX2_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX2_arstn ]
+  set S_AXI_STR_RX2_aresetn[ create_bd_port -dir I -type rst S_AXI_STR_RX2_aresetn]
 
   set S_AXI_STR_RX3_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX3_aclk ]
   set_property -dict [ list \
@@ -316,7 +316,7 @@ CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX3} \
 CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX3_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX3_aclk
-  set S_AXI_STR_RX3_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX3_arstn ]
+  set S_AXI_STR_RX3_aresetn[ create_bd_port -dir I -type rst S_AXI_STR_RX3_aresetn]
 
   # Create instance: axi_dma_0, and set properties
   set axi_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_0 ]
@@ -756,15 +756,15 @@ preplace port Vaux0 -pg 1 -y 1650 -defaultsOSRD
 preplace port M_AXI_GP0_ACLK -pg 1 -y 660 -defaultsOSRD
 preplace port FCLK_RESET0_N -pg 1 -y 1460 -defaultsOSRD
 preplace port Vaux1 -pg 1 -y 1670 -defaultsOSRD
-preplace port M_AXI_STR_TX2_arstn -pg 1 -y 130 -defaultsOSRD
-preplace port M_AXI_STR_TX1_arstn -pg 1 -y 170 -defaultsOSRD
-preplace port S_AXI_STR_RX2_arstn -pg 1 -y 850 -defaultsOSRD
+preplace port M_AXI_STR_TX2_aresetn-pg 1 -y 130 -defaultsOSRD
+preplace port M_AXI_STR_TX1_aresetn-pg 1 -y 170 -defaultsOSRD
+preplace port S_AXI_STR_RX2_aresetn-pg 1 -y 850 -defaultsOSRD
 preplace port M_AXI_STR_TX0_aclk -pg 1 -y 110 -defaultsOSRD
-preplace port S_AXI_STR_RX0_arstn -pg 1 -y 1020 -defaultsOSRD
+preplace port S_AXI_STR_RX0_aresetn-pg 1 -y 1020 -defaultsOSRD
 preplace port M_AXI_STR_TX0 -pg 1 -y 90 -defaultsOSRD
 preplace port M_AXI_GP0 -pg 1 -y 1280 -defaultsOSRD
 preplace port M_AXI_STR_TX3_aclk -pg 1 -y 360 -defaultsOSRD
-preplace port S_AXI_STR_RX1_arstn -pg 1 -y 1180 -defaultsOSRD
+preplace port S_AXI_STR_RX1_aresetn-pg 1 -y 1180 -defaultsOSRD
 preplace port M_AXI_STR_TX1 -pg 1 -y 580 -defaultsOSRD
 preplace port M_AXI_STR_TX2_aclk -pg 1 -y 150 -defaultsOSRD
 preplace port FCLK_RESET1_N -pg 1 -y 1480 -defaultsOSRD
@@ -775,8 +775,8 @@ preplace port FIXED_IO -pg 1 -y 1240 -defaultsOSRD
 preplace port FCLK_RESET2_N -pg 1 -y 1500 -defaultsOSRD
 preplace port S_AXI_STR_RX0 -pg 1 -y 1000 -defaultsOSRD
 preplace port M_AXI4_LITE_0 -pg 1 -y 1770 -defaultsOSRD
-preplace port M_AXI_STR_TX3_arstn -pg 1 -y 340 -defaultsOSRD
-preplace port S_AXI_STR_RX3_arstn -pg 1 -y 1980 -defaultsOSRD
+preplace port M_AXI_STR_TX3_aresetn-pg 1 -y 340 -defaultsOSRD
+preplace port S_AXI_STR_RX3_aresetn-pg 1 -y 1980 -defaultsOSRD
 preplace port FCLK_CLK0 -pg 1 -y 1380 -defaultsOSRD
 preplace port S_AXI_STR_RX1 -pg 1 -y 1160 -defaultsOSRD
 preplace port S_AXI_STR_RX3_aclk -pg 1 -y 2000 -defaultsOSRD
@@ -784,7 +784,7 @@ preplace port S_AXI_STR_RX1_aclk -pg 1 -y 1200 -defaultsOSRD
 preplace port FCLK_CLK1 -pg 1 -y 1400 -defaultsOSRD
 preplace port S_AXI_STR_RX2 -pg 1 -y 830 -defaultsOSRD
 preplace port Vaux8 -pg 1 -y 1690 -defaultsOSRD
-preplace port M_AXI_STR_TX0_arstn -pg 1 -y 90 -defaultsOSRD
+preplace port M_AXI_STR_TX0_aresetn-pg 1 -y 90 -defaultsOSRD
 preplace port FCLK_CLK2 -pg 1 -y 1420 -defaultsOSRD
 preplace port S_AXI_STR_RX3 -pg 1 -y 1960 -defaultsOSRD
 preplace port Vaux9 -pg 1 -y 1710 -defaultsOSRD

@@ -194,21 +194,21 @@ system_wrapper system_i (
   .M_AXI4_LITE_0_wstrb   (axi4_lite.WSTRB  ),
   .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID ),
   // AXI-4 streaming interfaces RX
-  .S_AXI_STR_RX3_aclk   (sti[3].clk ),  .S_AXI_STR_RX2_aclk   (sti[2].clk ),  .S_AXI_STR_RX1_aclk   (sti[1].clk ),  .S_AXI_STR_RX0_aclk   (sti[0].clk ),
-  .S_AXI_STR_RX3_arstn  (sti[3].rstn),  .S_AXI_STR_RX2_arstn  (sti[2].rstn),  .S_AXI_STR_RX1_arstn  (sti[1].rstn),  .S_AXI_STR_RX0_arstn  (sti[0].rstn),
-  .S_AXI_STR_RX3_tdata  (sti[3].dat ),  .S_AXI_STR_RX2_tdata  (sti[2].dat ),  .S_AXI_STR_RX1_tdata  (sti[1].dat ),  .S_AXI_STR_RX0_tdata  (sti[0].dat ),
-  .S_AXI_STR_RX3_tkeep  (sti[3].kep ),  .S_AXI_STR_RX2_tkeep  (sti[2].kep ),  .S_AXI_STR_RX1_tkeep  (sti[1].kep ),  .S_AXI_STR_RX0_tkeep  (sti[0].kep ),
-  .S_AXI_STR_RX3_tlast  (sti[3].lst ),  .S_AXI_STR_RX2_tlast  (sti[2].lst ),  .S_AXI_STR_RX1_tlast  (sti[1].lst ),  .S_AXI_STR_RX0_tlast  (sti[0].lst ),
-  .S_AXI_STR_RX3_tready (sti[3].rdy ),  .S_AXI_STR_RX2_tready (sti[2].rdy ),  .S_AXI_STR_RX1_tready (sti[1].rdy ),  .S_AXI_STR_RX0_tready (sti[0].rdy ),
-  .S_AXI_STR_RX3_tvalid (sti[3].vld ),  .S_AXI_STR_RX2_tvalid (sti[2].vld ),  .S_AXI_STR_RX1_tvalid (sti[1].vld ),  .S_AXI_STR_RX0_tvalid (sti[0].vld ),
+  .S_AXI_STR_RX3_aclk    (sti[3].clk ),  .S_AXI_STR_RX2_aclk    (sti[2].clk ),  .S_AXI_STR_RX1_aclk    (sti[1].clk ),  .S_AXI_STR_RX0_aclk    (sti[0].clk ),
+  .S_AXI_STR_RX3_aresetn (sti[3].rstn),  .S_AXI_STR_RX2_aresetn (sti[2].rstn),  .S_AXI_STR_RX1_aresetn (sti[1].rstn),  .S_AXI_STR_RX0_aresetn (sti[0].rstn),
+  .S_AXI_STR_RX3_tdata   (sti[3].dat ),  .S_AXI_STR_RX2_tdata   (sti[2].dat ),  .S_AXI_STR_RX1_tdata   (sti[1].dat ),  .S_AXI_STR_RX0_tdata   (sti[0].dat ),
+  .S_AXI_STR_RX3_tkeep   (sti[3].kep ),  .S_AXI_STR_RX2_tkeep   (sti[2].kep ),  .S_AXI_STR_RX1_tkeep   (sti[1].kep ),  .S_AXI_STR_RX0_tkeep   (sti[0].kep ),
+  .S_AXI_STR_RX3_tlast   (sti[3].lst ),  .S_AXI_STR_RX2_tlast   (sti[2].lst ),  .S_AXI_STR_RX1_tlast   (sti[1].lst ),  .S_AXI_STR_RX0_tlast   (sti[0].lst ),
+  .S_AXI_STR_RX3_tready  (sti[3].rdy ),  .S_AXI_STR_RX2_tready  (sti[2].rdy ),  .S_AXI_STR_RX1_tready  (sti[1].rdy ),  .S_AXI_STR_RX0_tready  (sti[0].rdy ),
+  .S_AXI_STR_RX3_tvalid  (sti[3].vld ),  .S_AXI_STR_RX2_tvalid  (sti[2].vld ),  .S_AXI_STR_RX1_tvalid  (sti[1].vld ),  .S_AXI_STR_RX0_tvalid  (sti[0].vld ),
   // AXI-4 streaming interfaces TX
-  .M_AXI_STR_TX3_aclk   (sto[3].clk ),  .M_AXI_STR_TX2_aclk   (sto[2].clk ),  .M_AXI_STR_TX1_aclk   (sto[1].clk ),  .M_AXI_STR_TX0_aclk   (sto[0].clk ),
-  .M_AXI_STR_TX3_arstn  (sto[3].rstn),  .M_AXI_STR_TX2_arstn  (sto[2].rstn),  .M_AXI_STR_TX1_arstn  (sto[1].rstn),  .M_AXI_STR_TX0_arstn  (sto[0].rstn),
-  .M_AXI_STR_TX3_tdata  (sto[3].dat ),  .M_AXI_STR_TX2_tdata  (sto[2].dat ),  .M_AXI_STR_TX1_tdata  (sto[1].dat ),  .M_AXI_STR_TX0_tdata  (sto[0].dat ),
-  .M_AXI_STR_TX3_tkeep  (sto[3].kep ),  .M_AXI_STR_TX2_tkeep  (sto[2].kep ),  .M_AXI_STR_TX1_tkeep  (sto[1].kep ),  .M_AXI_STR_TX0_tkeep  (sto[0].kep ),
-  .M_AXI_STR_TX3_tlast  (sto[3].lst ),  .M_AXI_STR_TX2_tlast  (sto[2].lst ),  .M_AXI_STR_TX1_tlast  (sto[1].lst ),  .M_AXI_STR_TX0_tlast  (sto[0].lst ),
-  .M_AXI_STR_TX3_tready (sto[3].rdy ),  .M_AXI_STR_TX2_tready (sto[2].rdy ),  .M_AXI_STR_TX1_tready (sto[1].rdy ),  .M_AXI_STR_TX0_tready (sto[0].rdy ),
-  .M_AXI_STR_TX3_tvalid (sto[3].vld ),  .M_AXI_STR_TX2_tvalid (sto[2].vld ),  .M_AXI_STR_TX1_tvalid (sto[1].vld ),  .M_AXI_STR_TX0_tvalid (sto[0].vld )
+  .M_AXI_STR_TX3_aclk    (sto[3].clk ),  .M_AXI_STR_TX2_aclk    (sto[2].clk ),  .M_AXI_STR_TX1_aclk    (sto[1].clk ),  .M_AXI_STR_TX0_aclk    (sto[0].clk ),
+  .M_AXI_STR_TX3_aresetn (sto[3].rstn),  .M_AXI_STR_TX2_aresetn (sto[2].rstn),  .M_AXI_STR_TX1_aresetn (sto[1].rstn),  .M_AXI_STR_TX0_aresetn (sto[0].rstn),
+  .M_AXI_STR_TX3_tdata   (sto[3].dat ),  .M_AXI_STR_TX2_tdata   (sto[2].dat ),  .M_AXI_STR_TX1_tdata   (sto[1].dat ),  .M_AXI_STR_TX0_tdata   (sto[0].dat ),
+  .M_AXI_STR_TX3_tkeep   (sto[3].kep ),  .M_AXI_STR_TX2_tkeep   (sto[2].kep ),  .M_AXI_STR_TX1_tkeep   (sto[1].kep ),  .M_AXI_STR_TX0_tkeep   (sto[0].kep ),
+  .M_AXI_STR_TX3_tlast   (sto[3].lst ),  .M_AXI_STR_TX2_tlast   (sto[2].lst ),  .M_AXI_STR_TX1_tlast   (sto[1].lst ),  .M_AXI_STR_TX0_tlast   (sto[0].lst ),
+  .M_AXI_STR_TX3_tready  (sto[3].rdy ),  .M_AXI_STR_TX2_tready  (sto[2].rdy ),  .M_AXI_STR_TX1_tready  (sto[1].rdy ),  .M_AXI_STR_TX0_tready  (sto[0].rdy ),
+  .M_AXI_STR_TX3_tvalid  (sto[3].vld ),  .M_AXI_STR_TX2_tvalid  (sto[2].vld ),  .M_AXI_STR_TX1_tvalid  (sto[1].vld ),  .M_AXI_STR_TX0_tvalid  (sto[0].vld )
 );
 
 // since the PS GP0 port is AXI3 and the local bus is AXI4
