@@ -24,6 +24,7 @@
  */
 
 module asg_top #(
+  int unsigned DN = 1,
   type DAT_T = logic [8-1:0],
   // data parameters
   int unsigned DWM = 16,  // data width for multiplier (gain)
@@ -177,9 +178,10 @@ assign trg_mux = |(trg_ext & cfg_tsel);
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream from generator
-str_bus_if #(.DAT_T (DAT_T)) stg (.clk (sto.clk), .rstn (sto.rstn));
+str_bus_if #(.DN (DN), .DAT_T (DAT_T)) stg (.clk (sto.clk), .rstn (sto.rstn));
 
 asg #(
+  .DN    (DN),
   .DAT_T (DAT_T),
   .CWM (CWM),
   .CWF (CWF)
@@ -208,6 +210,7 @@ asg #(
 // TODO: this will be a continuous stream, data stream control needs rethinking
 
 linear #(
+  .DN  (DN),
   .DTI (DAT_T),
   .DTO (DAT_T),
   .DWM (DWM)

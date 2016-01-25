@@ -122,6 +122,9 @@ end
 
 // output data
 always @(posedge sti.clk)
-if (sts_acq)  sto.dat <= sti.dat;
+if (sts_acq) begin
+  sto.dat <= sti.dat;
+  sto.kep <= sti.kep; // TODO
+end
 
 endmodule: acq

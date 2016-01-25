@@ -66,4 +66,8 @@ end
 always_ff @(posedge sti.clk)
 sto.lst <= sti.lst;
 
+// TODO properly handle keep signal
+always_ff @(posedge sti.clk)
+sto.kep <= sti.kep;
+
 endmodule: scope_dec_avg

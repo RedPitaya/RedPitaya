@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module str_dec #(
+  int unsigned DN = 1,  //
   int unsigned CW = 17  // counter width
 )(
   // control
@@ -47,6 +48,7 @@ end
 always_ff @(posedge sti.clk)
 if (sti_trn & (ctl_rst | nul)) begin
   sto.dat <= sti.dat;
+  sto.kep <= sti.kep; // TODO
   sto.lst <= sti.lst;
 end
 

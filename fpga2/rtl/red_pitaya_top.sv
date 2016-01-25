@@ -499,7 +499,7 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
   );
 
   // output registers + signed to unsigned (also to negative slope)
-  assign dac_dat[i] = {str_dac[i].dat[14-1], ~str_dac[i].dat[14-2:0]};
+  assign dac_dat[i] = {str_dac[i].dat[0][14-1], ~str_dac[i].dat[0][14-2:0]};
   assign str_dac[i].rdy = 1'b1;
 
 end: for_dac

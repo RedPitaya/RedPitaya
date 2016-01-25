@@ -70,6 +70,7 @@
 
 module asg #(
   // data bus
+  int unsigned DN = 1,
   type DAT_T = logic [8-1:0],
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
@@ -240,6 +241,7 @@ else            trg_o <= sts_trg;
 
 // output data
 assign sto.dat = sto.vld ? buf_rdata : '0;
+assign sto.kep = '1;
 assign sto.lst = 1'b0;
 
 // output valid

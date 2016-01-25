@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module la_trigger #(
+  int unsigned DN = 1,
   type DAT_T = logic [8-1:0]  // data type
 )(
   // control
@@ -15,7 +16,7 @@ module la_trigger #(
   input  DAT_T cfg_cur_val,  // current value
   input  DAT_T cfg_cur_msk,  // current mask
   // output triggers
-  output logic sts_trg,
+  output logic sts_trg,  // TODO: should have DN wodth
   // stream monitor
   str_bus_if.m str
 );

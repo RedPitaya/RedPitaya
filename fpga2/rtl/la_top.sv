@@ -6,6 +6,7 @@
 
 module la_top #(
   // stream parameters
+  int unsigned DN = 1,
   type DAT_T = logic [8-1:0],
   // decimation parameters
   int unsigned DCW = 17,  // decimation counter width
@@ -34,7 +35,7 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if #(.DAT_T (DAT_T)) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
+str_bus_if #(.DN (DN), .DAT_T (DAT_T)) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
 
 // acquire regset
 
@@ -173,6 +174,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 str_dec #(
+  .DN (DN),
   .CW (DCW)
 ) dec (
   // control
@@ -211,6 +213,7 @@ la_trigger #(
 assign ctl_trg = |(trg_ext & cfg_trg);
 
 acq #(
+//  .DN (DN), // TODO
   .TW (TW),
   .CW (CW)
 ) acq (
