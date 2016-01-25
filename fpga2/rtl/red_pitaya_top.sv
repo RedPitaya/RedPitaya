@@ -98,14 +98,16 @@ localparam type SBL_T = logic signed [16-1:0];  // logic ananlyzer/generator
 // analog input streams
 str_bus_if #(.DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
 str_bus_if #(.DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
-str_bus_if #(.DAT_T (SBA_T)) str_acq [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // acquire
 // analog output streams
 str_bus_if #(.DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
 str_bus_if #(.DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // digital input streams
 str_bus_if #(.DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
-str_bus_if #(.DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA (IO -> ACQ)
-str_bus_if #(.DAT_T (SBL_T)) str_lao           (.clk (adc_clk), .rstn (adc_rstn));  // LA (ACQ -> DMA)
+str_bus_if #(.DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA
+
+// DMA sterams RX/TX
+str_bus_if #(.DAT_T (SBL_T)) str_drx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
+str_bus_if #(.DAT_T (SBL_T)) str_dtx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -237,7 +239,8 @@ red_pitaya_ps ps (
   .bus           (ps_sys      ),
   .axi4_lite     (axi4_lite   ),
   // AXI streams
-  .sti           (str_acq     )
+  .sti           (str_drx     ),
+  .sto           (str_dtx     )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -529,7 +532,7 @@ scope_top #(
 ) scope (
   // streams
   .sti       (str_osc[i]),
-  .sto       (str_acq[i]),
+  .sto       (str_drx[i]),
   // current time stamp
   .cts       ('0),  // TODO
   // triggers
@@ -571,7 +574,7 @@ la_top #(
 ) la (
   // streams
   .sti       (str_lai),
-  .sto       (str_lao),
+  .sto       (str_drx[2]),
   // current time stamp
   .cts       ('0),  // TODO
   // triggers
@@ -580,6 +583,17 @@ la_top #(
   .trg_out   (trg.la_out),
   // System bus
   .bus       (sys[9])
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// on demand HW processor
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO: for now just a loopback
+str_pas on_demand (
+  .ena (1'b1),
+  .sti (str_dtx[3]),
+  .sto (str_drx[3])
 );
 
 endmodule: red_pitaya_top

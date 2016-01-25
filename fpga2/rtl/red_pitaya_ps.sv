@@ -61,7 +61,8 @@ module red_pitaya_ps (
   sys_bus_if.m           bus,
   axi4_lite_if.m         axi4_lite,
   // stream input
-  str_bus_if.d           sti [2-1:0]
+  str_bus_if.d           sti [4-1:0],
+  str_bus_if.s           sto [4-1:0]
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,12 +126,12 @@ system_wrapper system_i (
   .FCLK_RESET1_N     (fclk_rstn[1]     ),
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
-//  // XADC
-//  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
-//  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
-//  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
-//  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
-//  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
+  // XADC
+  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
+  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
+  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
+  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
+  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
   .M_AXI_GP0_ACLK    (axi_gp.ACLK   ),
 //  .M_AXI_GP0_ARESETn (axi_gp.ARESETn),
@@ -192,18 +193,23 @@ system_wrapper system_i (
   .M_AXI4_LITE_0_wready  (axi4_lite.WREADY ),
   .M_AXI4_LITE_0_wstrb   (axi4_lite.WSTRB  ),
   .M_AXI4_LITE_0_wvalid  (axi4_lite.WVALID )
-  // AXI-4 streaming interfaces
-//  .S_AXI_STR1_aclk   (sti[1].clk ),  .S_AXI_STR0_aclk   (sti[0].clk ),
-//  .S_AXI_STR1_arstn  (sti[1].rstn),  .S_AXI_STR0_arstn  (sti[0].rstn),
-//  .S_AXI_STR1_tdata  (sti[1].dat ),  .S_AXI_STR0_tdata  (sti[0].dat ),
-//  .S_AXI_STR1_tkeep  ('1         ),  .S_AXI_STR0_tkeep  ('1         ),
-//  .S_AXI_STR1_tlast  (sti[1].lst ),  .S_AXI_STR0_tlast  (sti[0].lst ),
-//  .S_AXI_STR1_tready (sti[1].rdy ),  .S_AXI_STR0_tready (sti[0].rdy ),
-//  .S_AXI_STR1_tvalid (sti[1].vld ),  .S_AXI_STR0_tvalid (sti[0].vld )
+  // AXI-4 streaming interfaces RX
+  .S_AXI_STR_RX3_aclk   (sti[3].clk ),  .S_AXI_STR_RX2_aclk   (sti[2].clk ),  .S_AXI_STR_RX1_aclk   (sti[1].clk ),  .S_AXI_STR_RX0_aclk   (sti[0].clk ),
+  .S_AXI_STR_RX3_arstn  (sti[3].rstn),  .S_AXI_STR_RX2_arstn  (sti[2].rstn),  .S_AXI_STR_RX1_arstn  (sti[1].rstn),  .S_AXI_STR_RX0_arstn  (sti[0].rstn),
+  .S_AXI_STR_RX3_tdata  (sti[3].dat ),  .S_AXI_STR_RX2_tdata  (sti[2].dat ),  .S_AXI_STR_RX1_tdata  (sti[1].dat ),  .S_AXI_STR_RX0_tdata  (sti[0].dat ),
+  .S_AXI_STR_RX3_tkeep  ('1         ),  .S_AXI_STR_RX2_tkeep  ('1         ),  .S_AXI_STR_RX1_tkeep  ('1         ),  .S_AXI_STR_RX0_tkeep  ('1         ),
+  .S_AXI_STR_RX3_tlast  (sti[3].lst ),  .S_AXI_STR_RX2_tlast  (sti[2].lst ),  .S_AXI_STR_RX1_tlast  (sti[1].lst ),  .S_AXI_STR_RX0_tlast  (sti[0].lst ),
+  .S_AXI_STR_RX3_tready (sti[3].rdy ),  .S_AXI_STR_RX2_tready (sti[2].rdy ),  .S_AXI_STR_RX1_tready (sti[1].rdy ),  .S_AXI_STR_RX0_tready (sti[0].rdy ),
+  .S_AXI_STR_RX3_tvalid (sti[3].vld ),  .S_AXI_STR_RX2_tvalid (sti[2].vld ),  .S_AXI_STR_RX1_tvalid (sti[1].vld ),  .S_AXI_STR_RX0_tvalid (sti[0].vld )
+  // AXI-4 streaming interfaces TX
+  .M_AXI_STR_TX3_aclk   (sto[3].clk ),  .M_AXI_STR_TX2_aclk   (sto[2].clk ),  .M_AXI_STR_TX1_aclk   (sto[1].clk ),  .M_AXI_STR_TX0_aclk   (sto[0].clk ),
+  .M_AXI_STR_TX3_arstn  (sto[3].rstn),  .M_AXI_STR_TX2_arstn  (sto[2].rstn),  .M_AXI_STR_TX1_arstn  (sto[1].rstn),  .M_AXI_STR_TX0_arstn  (sto[0].rstn),
+  .M_AXI_STR_TX3_tdata  (sto[3].dat ),  .M_AXI_STR_TX2_tdata  (sto[2].dat ),  .M_AXI_STR_TX1_tdata  (sto[1].dat ),  .M_AXI_STR_TX0_tdata  (sto[0].dat ),
+  .M_AXI_STR_TX3_tkeep  ('1         ),  .M_AXI_STR_TX2_tkeep  ('1         ),  .M_AXI_STR_TX1_tkeep  ('1         ),  .M_AXI_STR_TX0_tkeep  ('1         ),
+  .M_AXI_STR_TX3_tlast  (sto[3].lst ),  .M_AXI_STR_TX2_tlast  (sto[2].lst ),  .M_AXI_STR_TX1_tlast  (sto[1].lst ),  .M_AXI_STR_TX0_tlast  (sto[0].lst ),
+  .M_AXI_STR_TX3_tready (sto[3].rdy ),  .M_AXI_STR_TX2_tready (sto[2].rdy ),  .M_AXI_STR_TX1_tready (sto[1].rdy ),  .M_AXI_STR_TX0_tready (sto[0].rdy ),
+  .M_AXI_STR_TX3_tvalid (sto[3].vld ),  .M_AXI_STR_TX2_tvalid (sto[2].vld ),  .M_AXI_STR_TX1_tvalid (sto[1].vld ),  .M_AXI_STR_TX0_tvalid (sto[0].vld )
 );
-
-assign sti[0].rdy = 1'b1;
-assign sti[1].rdy = 1'b1;
 
 // since the PS GP0 port is AXI3 and the local bus is AXI4
 assign axi_gp.AWREGION = '0;
