@@ -253,6 +253,7 @@ CONFIG.ASSOCIATED_BUSIF {M_AXI4_LITE_0} \
 CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_GP0_ACLK
+
   set M_AXI_STR_TX0_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX0_aclk ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX0} \
@@ -260,27 +261,31 @@ CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX0_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX0_aclk
   set M_AXI_STR_TX0_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX0_arstn ]
+
   set M_AXI_STR_TX1_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX1_aclk ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX0:M_AXI_STR_TX1} \
+CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX1} \
 CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX1_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX1_aclk
   set M_AXI_STR_TX1_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX1_arstn ]
+
   set M_AXI_STR_TX2_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX2_aclk ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX0:M_AXI_STR_TX1:M_AXI_STR_TX2} \
-CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX1_arstn:M_AXI_STR_TX2_arstn} \
+CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX2} \
+CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX2_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX2_aclk
   set M_AXI_STR_TX2_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX2_arstn ]
+
   set M_AXI_STR_TX3_aclk [ create_bd_port -dir I -type clk M_AXI_STR_TX3_aclk ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX0:M_AXI_STR_TX1:M_AXI_STR_TX3} \
-CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX1_arstn:M_AXI_STR_TX3_arstn} \
+CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX3} \
+CONFIG.ASSOCIATED_RESET {M_AXI_STR_TX3_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $M_AXI_STR_TX3_aclk
   set M_AXI_STR_TX3_arstn [ create_bd_port -dir I -type rst M_AXI_STR_TX3_arstn ]
+
   set S_AXI_STR_RX0_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX0_aclk ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX0} \
@@ -288,6 +293,7 @@ CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX0_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX0_aclk
   set S_AXI_STR_RX0_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX0_arstn ]
+
   set S_AXI_STR_RX1_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX1_aclk ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX1} \
@@ -295,17 +301,19 @@ CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX1_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX1_aclk
   set S_AXI_STR_RX1_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX1_arstn ]
+
   set S_AXI_STR_RX2_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX2_aclk ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX1:S_AXI_STR_RX2} \
-CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX1_arstn:S_AXI_STR_RX2_arstn} \
+CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX2} \
+CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX2_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX2_aclk
   set S_AXI_STR_RX2_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX2_arstn ]
+
   set S_AXI_STR_RX3_aclk [ create_bd_port -dir I -type clk S_AXI_STR_RX3_aclk ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX1:S_AXI_STR_RX3} \
-CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX1_arstn:S_AXI_STR_RX3_arstn} \
+CONFIG.ASSOCIATED_BUSIF {S_AXI_STR_RX3} \
+CONFIG.ASSOCIATED_RESET {S_AXI_STR_RX3_arstn} \
 CONFIG.FREQ_HZ {125000000} \
  ] $S_AXI_STR_RX3_aclk
   set S_AXI_STR_RX3_arstn [ create_bd_port -dir I -type rst S_AXI_STR_RX3_arstn ]
@@ -432,7 +440,7 @@ CONFIG.IS_ACLK_ASYNC {0} \
   # Create instance: axis_data_fifo_1, and set properties
   set axis_data_fifo_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:1.1 axis_data_fifo_1 ]
   set_property -dict [ list \
-CONFIG.FIFO_DEPTH {256} \
+CONFIG.FIFO_DEPTH {2048} \
 CONFIG.FIFO_MODE {2} \
 CONFIG.IS_ACLK_ASYNC {0} \
  ] $axis_data_fifo_1
@@ -440,7 +448,7 @@ CONFIG.IS_ACLK_ASYNC {0} \
   # Create instance: axis_data_fifo_2, and set properties
   set axis_data_fifo_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:1.1 axis_data_fifo_2 ]
   set_property -dict [ list \
-CONFIG.FIFO_DEPTH {256} \
+CONFIG.FIFO_DEPTH {2048} \
 CONFIG.FIFO_MODE {2} \
 CONFIG.IS_ACLK_ASYNC {0} \
  ] $axis_data_fifo_2
@@ -448,7 +456,7 @@ CONFIG.IS_ACLK_ASYNC {0} \
   # Create instance: axis_data_fifo_3, and set properties
   set axis_data_fifo_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:1.1 axis_data_fifo_3 ]
   set_property -dict [ list \
-CONFIG.FIFO_DEPTH {256} \
+CONFIG.FIFO_DEPTH {2048} \
 CONFIG.FIFO_MODE {2} \
 CONFIG.IS_ACLK_ASYNC {0} \
  ] $axis_data_fifo_3
