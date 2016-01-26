@@ -37,7 +37,7 @@ OBJECTS =	pdm.o \
 		calib.o \
 		acquire.o \
 		generate.o \
-		la_acq.h \
+		la_acq.o \
 		rp2.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))

@@ -18,6 +18,7 @@
 #define __LA_ACQ_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "rp2.h"
 
@@ -98,11 +99,13 @@ typedef struct {
 } rp_la_acq_regset_t;
 
 
-int rp_LaGenOpen(char *dev, rp_handle_uio_t *handle);
+int rp_LaGenOpen(const char *a_dev, rp_handle_uio_t *handle);
 int rp_LaGenClose(rp_handle_uio_t *handle);
 int rp_LaGenReset(rp_handle_uio_t *handle);
 int rp_LaGenRunAcq(rp_handle_uio_t *handle);
+int rp_LaGenStopAcq(rp_handle_uio_t *handle);
 int rp_LaGenTriggerAcq(rp_handle_uio_t *handle);
+int rp_LaGenAcqIsStopped(rp_handle_uio_t *handle, bool * status);
 int rp_LaGenSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg);
 int rp_LaGenGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg);
 int rp_LaGenSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);

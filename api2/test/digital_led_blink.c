@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "redpitaya/rp2.h"
+#include "rp2.h"
 #include "housekeeping.h"
 
 int main (int argc, char **argv) {
