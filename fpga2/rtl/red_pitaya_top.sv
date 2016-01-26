@@ -150,7 +150,6 @@ struct packed {
 // system bus
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
-axi4_lite_if axi4_lite    (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -237,18 +236,10 @@ red_pitaya_ps ps (
   .vinn_i        (vinn_i      ),
    // system read/write channel
   .bus           (ps_sys      ),
-  .axi4_lite     (axi4_lite   ),
   // AXI streams
   .sti           (str_drx     ),
   .sto           (str_dtx     )
 );
-
-// TODO: connect a dummy AXI4-Lite slave here
-assign axi4_lite.AWREADY = 1'b0;
-assign axi4_lite.WREADY  = 1'b0;
-assign axi4_lite.BVALID  = 1'b0;
-assign axi4_lite.ARREADY = 1'b0;
-assign axi4_lite.RVALID  = 1'b0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
