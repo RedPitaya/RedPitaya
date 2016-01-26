@@ -92,10 +92,10 @@ typedef struct {
 typedef struct {
     rp_la_ctl_regset_t ctl;         ///< control register
     rp_la_cfg_regset_t cfg;         ///< configuration registers
-    rp_la_trg_regset_t trg;            ///< trigger settings register
+    rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
     rp_adc_eqfilter_regset_t fil;   ///< (TODO: this filter will be removed for LA)
-    rp_data_ptrs_regset_t dpt;        ///< data buf. pointers
+    rp_data_ptrs_regset_t dpt;      ///< data buf. pointers
 } rp_la_acq_regset_t;
 
 

@@ -178,17 +178,17 @@ int rp_LaGenGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg)
 /** Decimation settings setter & getter */
 int rp_LaGenSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg) {
     rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->dec);
-    //iowrite32(a_reg.avg, &regset->avg);
+    iowrite32(a_reg.avg, &regset->avg);
     iowrite32(a_reg.dec, &regset->dec);
-    //iowrite32(a_reg.shr, &regset->shr);
+    iowrite32(a_reg.shr, &regset->shr);
     return RP_OK;
 }
 
 int rp_LaGenGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg) {
     rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->dec);
-    //a_reg->avg = ioread32(&regset->avg);
+    a_reg->avg = ioread32(&regset->avg);
     a_reg->dec = ioread32(&regset->dec);
-    //a_reg->shr = ioread32(&regset->shr);
+    a_reg->shr = ioread32(&regset->shr);
     return RP_OK;
 }
 

@@ -18,23 +18,21 @@ VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
-OBJS = ut_example.o
+OBJS = ut_main.o ut_la_acq.o
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 
 # Executable name
-TARGET=ut_example
+TARGET=ut_main
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99  -Wall -Werror
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-
-# Red Pitaya common SW directory
-SHARED=../../shared/
+CFLAGS += -I../src -I../include/redpitaya
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lcunit
+LIBS=-lm -lcunit -L ../lib -lrp2
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
