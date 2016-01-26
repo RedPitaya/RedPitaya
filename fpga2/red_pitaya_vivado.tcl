@@ -44,7 +44,7 @@ source                            $path_ip/system_bd.tcl
 
 # generate SDK files
 generate_target all [get_files    system.bd]
-write_hwdef              -file    $path_sdk/red_pitaya.hwdef
+write_hwdef -force       -file    $path_sdk/red_pitaya.hwdef
 
 ################################################################################
 # read files:
@@ -63,6 +63,7 @@ read_verilog                      $path_rtl/axi4_lite_slave.v
 
 read_verilog                      $path_rtl/axi_bus_if.sv
 read_verilog                      $path_rtl/axi4_lite_if.sv
+read_verilog                      $path_rtl/axi4_stream_if.sv
 read_verilog                      $path_rtl/sys_bus_if.sv
 read_verilog                      $path_rtl/sys_bus_interconnect.sv
 read_verilog                      $path_rtl/str_bus_if.sv
@@ -153,7 +154,7 @@ write_bitstream -force $path_out/red_pitaya.bit
 # generate system definition
 ################################################################################
 
-write_sysdef             -hwdef   $path_sdk/red_pitaya.hwdef \
+write_sysdef -force      -hwdef   $path_sdk/red_pitaya.hwdef \
                          -bitfile $path_out/red_pitaya.bit \
                          -file    $path_sdk/red_pitaya.sysdef
 
