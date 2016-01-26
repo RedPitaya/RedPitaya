@@ -256,9 +256,7 @@ sys_bus_interconnect #(
 // silence unused busses
 generate
 for (genvar i=13; i<16; i++) begin: for_sys
-  assign sys[i].ack = 1'b1;
-  assign sys[i].err = 1'b1;
-  assign sys[i].rdata = 'x;
+  sys_bus_stub sys_bus_stub_13_16 (sys[i]);
 end: for_sys
 endgenerate
 
@@ -388,6 +386,12 @@ pdm #(
   .pdm      (dac_pwm_o)
 );
 
+////////////////////////////////////////////////////////////////////////////////
+// PWM
+////////////////////////////////////////////////////////////////////////////////
+
+`ifdef ENABLE_PWM
+
 localparam int unsigned PWM_CHN = 4;
 localparam int unsigned PWM_DWC = 8;
 localparam type PWM_T = logic [PWM_DWC-1:0];
@@ -420,6 +424,12 @@ pwm #(
   // PWM outputs
   .pwm      ()
 );
+
+`else
+
+sys_bus_stub sys_bus_stub_6 (sys[6]);
+
+`endif // ENABLE_PWM
 
 ////////////////////////////////////////////////////////////////////////////////
 // Daisy dummy code
@@ -597,10 +607,16 @@ la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: for now just a loopback
+// this is an attempt to minimize the related DMA
+/*
 str_pas on_demand (
   .ena (1'b1),
   .sti (str_dtx[3]),
   .sto (str_drx[3])
 );
+*/
+
+assign str_dtx[3].rdy = 1'b0;
+assign str_drx[3].vld = 1'b0;
 
 endmodule: red_pitaya_top
