@@ -38,6 +38,7 @@ OBJECTS =	pdm.o \
 		acquire.o \
 		generate.o \
 		la_acq.o \
+		rp_api.o \
 		rp2.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))

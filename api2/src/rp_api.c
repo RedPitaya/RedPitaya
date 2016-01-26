@@ -445,7 +445,7 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
                              RP_SIGGEN_TRIG_TYPE triggerType,
                              RP_SIGGEN_TRIG_SOURCE triggerSource,
                              int16_t extInThreshold){
-    return RP_OK
+    return RP_OK;
 }
 
 
