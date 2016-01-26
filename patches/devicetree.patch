@@ -113,7 +113,7 @@
 +		compatible = "generic-uio";
 +		reg = <0x40020000 0x10000>;
 +	};
-+	gpio@40030000 {
++	led@40030000 {
 +		compatible = "generic-uio";
 +		reg = <0x40030000 0x10000>;
 +	};
