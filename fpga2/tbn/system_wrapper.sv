@@ -10,7 +10,7 @@
 `timescale 1 ps / 1 ps
 
 module system_wrapper #(
-  int unsigned DN = 1
+  int unsigned DN = 2
 )(
   inout  logic [14:0] DDR_addr   ,
   inout  logic  [2:0] DDR_ba     ,

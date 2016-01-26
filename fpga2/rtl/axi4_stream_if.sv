@@ -18,6 +18,10 @@ logic          TLAST ;  // last
 logic          TVALID;  // valid
 logic          TREADY;  // ready
 
+logic          transf;
+
+assign transf = TVALID & TREADY;
+
 // source
 modport s (
   input  ACLK   ,
@@ -26,7 +30,8 @@ modport s (
   output TKEEP ,
   output TLAST ,
   output TVALID,
-  input  TREADY
+  input  TREADY,
+  input  transf
 );
 
 // drain
@@ -37,7 +42,8 @@ modport d (
   input  TKEEP ,
   input  TLAST ,
   input  TVALID,
-  output TREADY
+  output TREADY,
+  input  transf
 );
 
 // monitor
@@ -48,7 +54,8 @@ modport m (
   input  TKEEP ,
   input  TLAST ,
   input  TVALID,
-  input  TREADY
+  input  TREADY,
+  input  transf
 );
 
 endinterface: axi4_stream_if
