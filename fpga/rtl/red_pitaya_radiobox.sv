@@ -278,7 +278,9 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT,                 // RX_CAR_CIC2 I output
     RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT,                 // RX_CAR_CIC2 Q output
 
-    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT            = 46, // RX_MOD_FIR1 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_I_OUT            = 44, // RX_MOD_CIC1 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_Q_OUT,                 // RX_MOD_CIC1 Q output
+    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT,                 // RX_MOD_FIR1 I output
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT,                 // RX_MOD_FIR1 Q output
     RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT,                  // RX_MOD_OSC I output
     RB_SRC_CON_PNT_NUM_RX_MOD_OSC_Q_OUT,                  // RX_MOD_OSC Q output
@@ -286,6 +288,8 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT,                 // RX_MOD_QMIX Q output
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT,                 // RX_MOD_FIR I output
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT,                 // RX_MOD_FIR Q output
+    RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT,                 // RX_MOD_CIC2 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT,                 // RX_MOD_CIC2 Q output
 
     RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT               = 56, // RX_MOD_ADD output
 
@@ -1135,13 +1139,13 @@ else if (rx_axis_regs_q_afc_rdy)
 //---------------------------------------------------------------------------------
 //  RX_MOD_CIC1 sampling rate down convertion 48 kSPS to 8 kSPS
 
-wire [ 31:0] rx_mod_cic1_i_in  = { rx_axis_regs_i_data[30:0], 1'b0 };
+wire [ 31:0] rx_mod_cic1_i_in  = rx_axis_regs_i_data[31:0];
 wire [ 31:0] rx_mod_cic1_i_out;
 wire         rx_mod_cic1_i_vld;
 reg          rx_mod_cic1_i_rdy = 1'b0;
 wire         rx_mod_cic1_i_hlt;
 
-wire [ 31:0] rx_mod_cic1_q_in  = { rx_axis_regs_q_data[30:0], 1'b0 };
+wire [ 31:0] rx_mod_cic1_q_in  = rx_axis_regs_q_data[31:0];
 wire [ 31:0] rx_mod_cic1_q_out;
 wire         rx_mod_cic1_q_vld;
 reg          rx_mod_cic1_q_rdy = 1'b0;
@@ -1534,7 +1538,7 @@ if (!adc_rstn_i)
    rx_afc_fir_i_reg <= 32'b0;
 
 else if (rx_afc_fir_i_vld) begin
-   rx_afc_fir_i_reg <= rx_afc_fir_i_out[31:0];
+   rx_afc_fir_i_reg <= rx_afc_fir_i_out[34:3];
    rx_afc_fir_i_rdy <= 1'b1;
    end
 else
@@ -1545,7 +1549,7 @@ if (!adc_rstn_i)
    rx_afc_fir_q_reg <= 32'b0;
 
 else if (rx_afc_fir_q_vld) begin
-   rx_afc_fir_q_reg <= rx_afc_fir_q_out[31:0];
+   rx_afc_fir_q_reg <= rx_afc_fir_q_out[34:3];
    rx_afc_fir_q_rdy <= 1'b1;
    end
 else
@@ -1798,6 +1802,14 @@ else begin
           if (rx_car_cic2_q_vld)
              rb_leds_data <= fct_mag(rx_car_cic2_q_out[30:15]);
           end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_I_OUT: begin
+          if (rx_mod_cic1_i_vld)
+             rb_leds_data <= fct_mag(rx_mod_cic1_i_out[30:15]);
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_Q_OUT: begin
+          if (rx_mod_cic1_q_vld)
+             rb_leds_data <= fct_mag(rx_mod_cic1_q_out[30:15]);
+          end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
           if (rx_mod_fir1_i_vld)
              rb_leds_data <= fct_mag(rx_mod_fir1_i_out[33:18]);
@@ -1831,6 +1843,14 @@ else begin
           if (rx_mod_fir2_q_vld)
              rb_leds_data <= fct_mag(rx_mod_fir2_q_out[33:18]);
           end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
+          if (rx_mod_cic2_i_vld)
+             rb_leds_data <= fct_mag(rx_mod_cic2_i_out[30:15]);
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
+          if (rx_mod_cic2_q_vld)
+             rb_leds_data <= fct_mag(rx_mod_cic2_q_out[30:15]);
+          end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
           if (rx_mod_fir2_i_vld)
@@ -1857,8 +1877,8 @@ else begin
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
           if (!led_ctr)
-             //                LED7               LED6                LED5               LED4                LED3                LED2                 LED1               LED0
-             rb_leds_data <= { 1'b0,              1'b0,               1'b0,              1'b0,               rx_mod_fifo2_i_ofl, rx_mod_fifo2_i_ufl,  1'b0,              1'b0 };
+             //                LED7               LED6                LED5                LED4                LED3                LED2                 LED1               LED0
+             rb_leds_data <= { rx_mod_cic2_i_vld, 1'b0,               rx_mod_fifo2_i_ofl, rx_mod_fifo2_i_ufl, 1'b0,               rx_mod_cic1_i_hlt,   1'b0,              rx_car_cic2_i_hlt };
           end
 
        default: begin
@@ -1998,6 +2018,14 @@ else begin
           if (rx_car_cic2_q_vld)
              rb_out_ch[0] <= rx_car_cic2_q_out[30:15];
           end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_I_OUT: begin
+          if (rx_mod_cic1_i_vld)
+             rb_out_ch[0] <= rx_mod_cic1_i_out[30:15];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_Q_OUT: begin
+          if (rx_mod_cic1_q_vld)
+             rb_out_ch[0] <= rx_mod_cic1_q_out[30:15];
+          end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
           if (rx_mod_fir1_i_vld)
              rb_out_ch[0] <= rx_mod_fir1_i_out[33:18];
@@ -2027,6 +2055,14 @@ else begin
           if (rx_mod_fir2_q_vld)
              rb_out_ch[0] <= rx_mod_fir2_q_out[33:18];
           end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
+          if (rx_mod_cic2_i_vld)
+             rb_out_ch[0] <= rx_mod_cic2_i_out[30:15];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
+          if (rx_mod_cic2_q_vld)
+             rb_out_ch[0] <= rx_mod_cic2_q_out[30:15];
+          end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
           if (rx_mod_fir2_i_vld)
@@ -2052,7 +2088,7 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-          rb_out_ch[0] <= { 1'b0, rx_car_cic2_i_vld, 14'b0 };
+          rb_out_ch[0] <= { 1'b0, rx_mod_fir2_i_rdy, 14'b0 };
           end
 
        default: begin
@@ -2189,6 +2225,14 @@ else begin
           if (rx_car_cic2_q_vld)
              rb_out_ch[1] <= rx_car_cic2_q_out[30:15];
           end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_I_OUT: begin
+          if (rx_mod_cic1_i_vld)
+             rb_out_ch[1] <= rx_mod_cic1_i_out[30:15];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC1_Q_OUT: begin
+          if (rx_mod_cic1_q_vld)
+             rb_out_ch[1] <= rx_mod_cic1_q_out[30:15];
+          end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
            if (rx_mod_fir1_i_vld)
              rb_out_ch[1] <= rx_mod_fir1_i_out[33:18];
@@ -2218,6 +2262,14 @@ else begin
           if (rx_mod_fir2_q_vld)
              rb_out_ch[1] <= rx_mod_fir2_q_out[33:18];
           end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
+          if (rx_mod_cic2_i_vld)
+             rb_out_ch[1] <= rx_mod_cic2_i_out[30:15];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
+          if (rx_mod_cic2_q_vld)
+             rb_out_ch[1] <= rx_mod_cic2_q_out[30:15];
+          end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
           if (rx_mod_fir2_i_vld)
@@ -2243,7 +2295,7 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-          rb_out_ch[1] <= { 1'b0, rx_axis_regs_i_mod_vld, 14'b0 };
+          rb_out_ch[1] <= { 1'b0, rx_mod_cic2_i_vld, 14'b0 };
           end
 
        default: begin
