@@ -220,18 +220,20 @@ generate
 for (genvar i=0; i<4; i++) begin: for_str
 
   // RX
-  for (genvar b=0; b<DN; b+=DN) begin: for_byte_i
-  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
-  end: for_byte_i
+//  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
+//  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
+//  end: for_byte_i
+  assign sai[i].TKEEP           =    sti[i].kep;
   assign sai[i].TDATA           =    sti[i].dat;
   assign sai[i].TLAST           =    sti[i].lst;
   assign sai[i].TVALID          =    sti[i].vld;
   assign sti[i].rdy             =    sai[i].TREADY;
 
   // TX
-  for (genvar b=0; b<DN; b+=DN) begin: for_byte_o
-  assign sto[i].kep           =   &sao[i].TKEEP[DN*b+:DN];
-  end: for_byte_o
+//  for (genvar b=0; b<DN; b=b+DN) begin: for_byte_o
+//  assign sto[i].kep           =   &sao[i].TKEEP[DN*b+:DN];
+//  end: for_byte_o
+  assign sto[i].kep           =   &sao[i].TKEEP ;
   assign sto[i].dat           =    sao[i].TDATA ;
   assign sto[i].lst           =    sao[i].TLAST ;
   assign sto[i].vld           =    sao[i].TVALID;
