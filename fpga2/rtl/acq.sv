@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module acq #(
+  int unsigned TN = 1,   // trigger number
   int unsigned TW = 32,  // time width
   int unsigned CW = 32   // counter width
 )(
@@ -17,6 +18,7 @@ module acq #(
   // control
   input  logic          ctl_rst,
   // configuration (mode)
+  input  logic [TN-1:0] cfg_trg,  // trigger mask
   input  logic          cfg_con,  // continuous
   input  logic          cfg_aut,  // automatic
   // configuration/status pre trigger
@@ -30,7 +32,7 @@ module acq #(
   output logic          sts_acq,
   output logic [TW-1:0] cts_acq,
   // control/status/timestamp trigger
-  input  logic          ctl_trg,
+  input  logic [TN-1:0] ctl_trg,
   output logic          sts_trg,
   output logic [TW-1:0] cts_trg,
   // control/status/timestamp stop
@@ -54,6 +56,9 @@ logic sts_stp;
 assign sts_stp = sts_acq & ( ctl_stp
                | (sts_trg & ~|sts_pst & ~cfg_con)
                | (sti_trn & sti.lst) );
+
+logic trg;
+assign trg = |(ctl_trg & cfg_trg);
 
 always @(posedge sti.clk)
 if (~sti.rstn) begin
@@ -93,7 +98,7 @@ end else begin
     if (sts_acq) begin
       if (~sts_trg) begin
         sts_pre <= sts_pre + sti_trn; // TODO: add out of range
-        if (ctl_trg) begin
+        if (trg) begin
           sts_trg <= 1'b1;
           cts_trg <= cts;
         end

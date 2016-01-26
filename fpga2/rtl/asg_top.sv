@@ -66,20 +66,20 @@ assign bus_buf.wdata = bus.wdata;
 
 logic               ctl_rst ;
 // configuration
-logic      [TN-1:0] cfg_tsel;  // trigger select
+logic      [TN-1:0] cfg_trg;  // trigger mask
 
-logic [CWM+CWF-1:0] cfg_size;  // table size
-logic [CWM+CWF-1:0] cfg_step;  // address increment step (frequency)
-logic [CWM+CWF-1:0] cfg_offs;  // address initial offset (phase)
+logic [CWM+CWF-1:0] cfg_siz;  // table size
+logic [CWM+CWF-1:0] cfg_stp;  // address increment step (frequency)
+logic [CWM+CWF-1:0] cfg_off;  // address initial offset (phase)
 // burst mode configuraton
-logic               cfg_bena;  // burst enable
-logic               cfg_binf;  // infinite burst
-logic     [ 16-1:0] cfg_bcyc;  // number of data cycles
-logic     [ 32-1:0] cfg_bdly;  // number of delay cycles
-logic     [ 16-1:0] cfg_bnum;  // number of repetitions
+logic               cfg_ben;  // burst enable
+logic               cfg_inf;  // infinite burst
+logic     [ 16-1:0] cfg_bdl;  // burst data length
+logic     [ 32-1:0] cfg_bil;  // burst idle length
+logic     [ 16-1:0] cfg_bnm;  // burst repetitions
 // linear offset and gain
-logic signed [DWM-1:0] cfg_lmul;
-logic signed [DWS-1:0] cfg_lsum;
+logic signed [DWM-1:0] cfg_mul;
+logic signed [DWS-1:0] cfg_sum;
 
 // control signals
 logic  bus_en;
@@ -105,35 +105,36 @@ localparam int unsigned BAW=6;
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // configuration
-  cfg_tsel <= '0;
-  cfg_size <= '0;
-  cfg_offs <= '0;
-  cfg_step <= '0;
+  cfg_trg <= '0;
+  cfg_siz <= '0;
+  cfg_off <= '0;
+  cfg_stp <= '0;
   // burst mode
-  cfg_bena <= '0;
-  cfg_binf <= '0;
-  cfg_bcyc <= '0;
-  cfg_bnum <= '0;
-  cfg_bdly <= '0;
+  cfg_ben <= '0;
+  cfg_inf <= '0;
+  cfg_bdl <= '0;
+  cfg_bnm <= '0;
+  cfg_bil <= '0;
   // cinear transform
-  cfg_lmul <= 1 << (DWM-2);
-  cfg_lsum <= '0;
+  cfg_mul <= 1 << (DWM-2);
+  cfg_sum <= '0;
 end else begin
   if (bus.wen & ~bus.addr[CWM+2]) begin
-    // configuration
-    if (bus.addr[BAW-1:0]=='h04)  cfg_tsel <= bus.wdata[     TN-1:0];
-    if (bus.addr[BAW-1:0]=='h04)  cfg_bena <= bus.wdata[     TN+0  ];
-    if (bus.addr[BAW-1:0]=='h04)  cfg_binf <= bus.wdata[     TN+1  ];
-    if (bus.addr[BAW-1:0]=='h08)  cfg_size <= bus.wdata[CWM+CWF-1:0];
-    if (bus.addr[BAW-1:0]=='h0c)  cfg_offs <= bus.wdata[CWM+CWF-1:0];
-    if (bus.addr[BAW-1:0]=='h10)  cfg_step <= bus.wdata[CWM+CWF-1:0];
+    // trigger configuration
+    if (bus.addr[BAW-1:0]=='h04)  cfg_trg <= bus.wdata[     TN-1:0];
+    // buffer configuration
+    if (bus.addr[BAW-1:0]=='h10)  cfg_siz <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h14)  cfg_off <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata[CWM+CWF-1:0];
     // burst mode
-    if (bus.addr[BAW-1:0]=='h18)  cfg_bcyc <= bus.wdata[     16-1:0];
-    if (bus.addr[BAW-1:0]=='h1c)  cfg_bdly <= bus.wdata[     32-1:0];
-    if (bus.addr[BAW-1:0]=='h20)  cfg_bnum <= bus.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[          0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[          1];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h28)  cfg_bil <= bus.wdata[     32-1:0];
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
-    if (bus.addr[BAW-1:0]=='h24)  cfg_lmul <= bus.wdata[    DWM-1:0];
-    if (bus.addr[BAW-1:0]=='h28)  cfg_lsum <= bus.wdata[    DWS-1:0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_mul <= bus.wdata[    DWM-1:0];
+    if (bus.addr[BAW-1:0]=='h34)  cfg_sum <= bus.wdata[    DWS-1:0];
   end
 end
 
@@ -145,33 +146,27 @@ assign trg_swo = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]==20'h00) & bus.wd
 always_ff @(posedge bus.clk)
 if (~bus.addr[CWM+2]) begin
   casez (bus.addr[BAW-1:0])
-    // configuration
-    'h04 : bus.rdata <= {{32-2  - TN{1'b0}}, cfg_binf
-                                           , cfg_bena
-                                           , cfg_tsel};
-    'h08 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_size};
-    'h0c : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_offs};
-    'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_step};
+    // trigger configuration
+    'h04 : bus.rdata <= {{32-     TN{1'b0}}, cfg_trg};
+    // buffer configuration
+    'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
+    'h14 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
+    'h1c : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_stp};
     // burst mode
-    'h18 : bus.rdata <= {{32-     16{1'b0}}, cfg_bcyc};
-    'h1c : bus.rdata <=                      cfg_bdly ;
-    'h20 : bus.rdata <= {{32-     16{1'b0}}, cfg_bnum};
+    'h20 : bus.rdata <= {{32-      2{1'b0}}, cfg_inf
+                                           , cfg_ben};
+    'h24 : bus.rdata <= {{32-     16{1'b0}}, cfg_bdl};
+    'h28 : bus.rdata <=                      cfg_bil ;
+    'h2c : bus.rdata <= {{32-     16{1'b0}}, cfg_bnm};
     // linear transformation (should be properly sign extended)
-    'h24 : bus.rdata <= cfg_lmul;
-    'h28 : bus.rdata <= cfg_lsum;
+    'h30 : bus.rdata <= cfg_mul;
+    'h34 : bus.rdata <= cfg_sum;
 
     default : bus.rdata <= '0;
   endcase
 end else begin
            bus.rdata <= bus_buf.rdata;
 end
-
-////////////////////////////////////////////////////////////////////////////////
-// trigger multiplexer
-////////////////////////////////////////////////////////////////////////////////
-
-logic trg_mux;
-assign trg_mux = |(trg_ext & cfg_tsel);
 
 ////////////////////////////////////////////////////////////////////////////////
 // generator core instance 
@@ -181,30 +176,32 @@ assign trg_mux = |(trg_ext & cfg_tsel);
 str_bus_if #(.DN (DN), .DAT_T (DAT_T)) stg (.clk (sto.clk), .rstn (sto.rstn));
 
 asg #(
+  .TN    (TN),
   .DN    (DN),
   .DAT_T (DAT_T),
   .CWM (CWM),
   .CWF (CWF)
 ) asg (
   // stream output
-  .sto       (stg      ),
+  .sto       (stg    ),
   // trigger
-  .trg_i     (trg_mux  ),
-  .trg_o     (trg_out  ),
+  .trg_i     (trg_ext),
+  .trg_o     (trg_out),
   // control
-  .ctl_rst   (ctl_rst  ),
+  .ctl_rst   (ctl_rst),
   // configuration
-  .cfg_size  (cfg_size ),
-  .cfg_step  (cfg_step ),
-  .cfg_offs  (cfg_offs ),
+  .cfg_trg   (cfg_trg),
+  .cfg_siz   (cfg_siz),
+  .cfg_stp   (cfg_stp),
+  .cfg_off   (cfg_off),
   // configuration (burst mode)
-  .cfg_bena  (cfg_bena ),
-  .cfg_binf  (cfg_binf ),
-  .cfg_bcyc  (cfg_bcyc ),
-  .cfg_bdly  (cfg_bdly ),
-  .cfg_bnum  (cfg_bnum ),
+  .cfg_ben   (cfg_ben),
+  .cfg_inf   (cfg_inf),
+  .cfg_bdl   (cfg_bdl),
+  .cfg_bil   (cfg_bil),
+  .cfg_bnm   (cfg_bnm),
   // CPU buffer access
-  .bus       (bus_buf  )
+  .bus       (bus_buf)
 );
 
 // TODO: this will be a continuous stream, data stream control needs rethinking
@@ -219,8 +216,8 @@ linear #(
   .sti       (stg),
   .sto       (sto),
   // configuration
-  .cfg_mul   (cfg_lmul),
-  .cfg_sum   (cfg_lsum)
+  .cfg_mul   (cfg_mul),
+  .cfg_sum   (cfg_sum)
 );
 
 endmodule: asg_top

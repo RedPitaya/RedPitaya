@@ -18,15 +18,11 @@
 
 #define LEVEL_MAX               1.0         // V
 #define AMPLITUDE_MAX           1.0         // V
-#define ARBITRARY_MIN          -1.0         // V
-#define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V
 #define FREQUENCY_MIN           0           // Hz
 #define FREQUENCY_MAX           62.5e6      // Hz
 #define PHASE_MIN              -360         // deg
 #define PHASE_MAX               360         // deg
-#define DUTY_CYCLE_MIN          0           // %
-#define DUTY_CYCLE_MAX          100         // %
 #define BURST_COUNT_MIN        -1
 #define BURST_COUNT_MAX         50000
 #define BURST_REPETITIONS_MIN   1
@@ -49,32 +45,43 @@
 #define RP_GEN_DWM  16
 #define RP_GEN_DWS  14
 
+// linear transformation
+typedef struct {
+    int32_t mul;  // multiplication (amplitude/gain)
+    int32_t sum;  // summation (offset)
+} linear_regset_t;
+
 typedef struct {
     // control register
     uint32_t ctl_sys;
         // rst :1;
         // trg :1;
+    uint32_t cfg_trg;
+    uint32_t reserved_08;
+    uint32_t reserved_0c;
     // configuration
-    uint32_t cfg_sys;
-        // tsel :RP_GEN_TWS;
-        // bena :1;
-        // binf :1;
-    uint32_t cfg_size;
-    uint32_t cfg_offs;
-    uint32_t cfg_step;
+    uint32_t cfg_siz;
+    uint32_t cfg_off;
+    uint32_t cfg_stp;
+    uint32_t reserved_1c;
     // burst mode
-    uint32_t cfg_bcyc;
-    uint32_t cfg_bdly;
-    uint32_t cfg_bnum;
-    // linear transformation
-    int32_t  cfg_lmul;
-    int32_t  cfg_lsum;
+    uint32_t cfg_bst;  // burst mode
+        // ben :1;
+        // inf :1;
+    uint32_t cfg_bdl;  // burst data length
+    uint32_t cfg_bil;  // burst idle length
+    uint32_t cfg_bnm;  // burst repetition number
     // empty space
-    uint32_t reserved0[(1<<RP_GEN_CWM)-10];
+    uint32_t reserved_30 [(1<<RP_GEN_CWM)-0x30];
     // table
-    int32_t  table[(1<<RP_GEN_CWM)];
-    // empty space
-    uint32_t reserved1[GENERATE_BASE_SIZE - (2<<RP_GEN_CWM)];
+    int32_t  table [(1<<RP_GEN_CWM)];
+} asg_regset_t;
+
+typedef struct {
+    // ASG registers
+    asg_regset_t    asg;
+    // linear transformation
+    linear_regset_t lin;
 } gen_regset_t;
 
 int rp_GenInit(char *dev, rp_handle_uio_t *handle);
@@ -87,75 +94,23 @@ int rp_GenReset();
 
 /**
 * Sets channel signal peak to peak amplitude.
-* @param channel Channel A or B for witch we want to set amplitude
 * @param amplitude Amplitude of the generated signal. From 0 to max value. Max amplitude is 1
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSetAmp(rp_handle_uio_t *handle, float amplitude);
-
-/**
-* Gets channel signal peak to peak amplitude.
-* @param channel Channel A or B for witch we want to get amplitude.
-* @param amplitude Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetAmp(rp_handle_uio_t *handle, float *amplitude);
-
-/**
-* Sets DC offset of the signal. signal = signal + DC_offset.
-* @param channel Channel A or B for witch we want to set DC offset.
 * @param offset DC offset of the generated signal. Max offset is 2.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetOffset(rp_handle_uio_t *handle, float offset);
-
-/**
-* Gets DC offset of the signal.
-* @param channel Channel A or B for witch we want to get amplitude.
-* @param offset Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetOffset(rp_handle_uio_t *handle, float *offset);
+int rp_GenSetLinear(rp_handle_uio_t *handle, float  amplitude, float  offset);
+int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset);
 
 /**
 * Sets channel signal frequency.
-* @param channel Channel A or B for witch we want to set frequency.
 * @param frequency Frequency of the generated signal in Hz.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSetFreq(rp_handle_uio_t *handle, double frequency);
-
-/**
-* Gets channel signal frequency.
-* @param channel Channel A or B for witch we want to get frequency.
-* @param frequency Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetFreq(rp_handle_uio_t *handle, double *frequency);
-
-/**
-* Sets channel signal phase. This shifts the signal in time.
-* @param channel Channel A or B for witch we want to set phase.
 * @param phase Phase in degrees of the generated signal. From 0 deg to 180 deg.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetPhase(rp_handle_uio_t *handle, double phase);
-
-/**
-* Gets channel signal phase.
-* @param channel Channel A or B for witch we want to get phase.
-* @param phase Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetPhase(rp_handle_uio_t *handle, double *phase);
+int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double  frequency, double  phase);
+int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase);
 
 /**
 * Sets channel signal waveform. This determines how the signal looks.
@@ -179,34 +134,14 @@ int rp_GenGetMode(rp_handle_uio_t *handle, uint32_t *mode);
 
 /**
 * Sets number of generated waveforms in a burst.
-* @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
 * @param num Number of generated waveforms. If -1 a continuous signal will be generated.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSetBurstCount(rp_handle_uio_t *handle, int  num);
-int rp_GenGetBurstCount(rp_handle_uio_t *handle, int *num);
-
-/**
-* Sets number of burst repetitions. This determines how many bursts will be generated.
-* @param channel Channel A or B for witch we want to set number of burst repetitions.
 * @param repetitions Number of generated bursts. If -1, infinite bursts will be generated.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSetBurstRepetitions(rp_handle_uio_t *handle, int  repetitions);
-int rp_GenGetBurstRepetitions(rp_handle_uio_t *handle, int *repetitions);
-
-/**
-* Sets the time/period of one burst in micro seconds. Period must be equal or greater then the time of one burst.
-* If it is greater than the difference will be the delay between two consequential bursts.
-* @param channel Channel A or B for witch we want to set burst period.
 * @param period Time in micro seconds.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetBurstDelay(rp_handle_uio_t *handle, uint32_t  delay);
-int rp_GenGetBurstDelay(rp_handle_uio_t *handle, uint32_t *delay);
+int rp_GenSetBurst(rp_handle_uio_t *handle, uint32_t  count, uint32_t  repetitions, uint32_t  delay);
+int rp_GenGetBurst(rp_handle_uio_t *handle, uint32_t *count, uint32_t *repetitions, uint32_t *delay);
 
 /**
 * Sets trigger source.
@@ -215,8 +150,8 @@ int rp_GenGetBurstDelay(rp_handle_uio_t *handle, uint32_t *delay);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetTriggerSource(rp_handle_uio_t *handle, uint32_t  src);
-int rp_GenGetTriggerSource(rp_handle_uio_t *handle, uint32_t *src);
+int rp_GenSetTriggerMask(rp_handle_uio_t *handle, uint32_t  mask);
+int rp_GenGetTriggerMask(rp_handle_uio_t *handle, uint32_t *mask);
 
 /**
 * Sets Trigger for specified channel/channels.

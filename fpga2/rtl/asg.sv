@@ -29,38 +29,38 @@
 //
 // FREQUENCY/PHASE AND RESOLUTION
 // 
-// The frequency is specified by the cfg_step value, the phase by the cfg_offs
-// value and both also depend on the buffer length cfg_size. The cfg_step (step
-// length) and cfg_offs (initial position) values are fixed point with a
+// The frequency is specified by the cfg_stp value, the phase by the cfg_off
+// value and both also depend on the buffer length cfg_siz. The cfg_stp (step
+// length) and cfg_off (initial position) values are fixed point with a
 // magnitude of CWM bits and a fraction of CWF bits.
 //
 // The buffer is usually programmed to contain a full period of the desired
 // waveform, and the whole available buffer is usually used since it provides
-// the best resolution. The buffer length is defined as (cfg_size+1) and can be
+// the best resolution. The buffer length is defined as (cfg_siz+1) and can be
 // at most 2**CWM locations when:
-// cfg_offs = 2**CWF - 1
+// cfg_off = 2**CWF - 1
 //
 // The frequency and phase resolutions are defined by the smaller values of
 // control variables.
 //
 // Frequency:
-// f = Fs/(cfg_size+1) * (cfg_step+1)/(2**CWF)
+// f = Fs/(cfg_siz+1) * (cfg_stp+1)/(2**CWF)
 //
 // Frequency (max bufer size):
-// f = Fs/(2**(CWM+CWF)) * (cfg_offs+1)
+// f = Fs/(2**(CWM+CWF)) * (cfg_off+1)
 //
 // Phase:
-// Φ = 360°/(cfg_size+1) * (cfg_offs+1)/(2**CWF)
+// Φ = 360°/(cfg_siz+1) * (cfg_off+1)/(2**CWF)
 //
 // Phase (max bufer size):
-// Φ = 360°/(2**(CWM+CWF)) * (cfg_offs+1)
+// Φ = 360°/(2**(CWM+CWF)) * (cfg_off+1)
 //
 // Resolution:
 // Δf = Fs  /2**(CWM+CWF)
 // ΔΦ = 360°/2**(CWM+CWF)
 //
 // Example values:
-// The default fixed point format for cfg_step and cfg_offs is u14.16 and the
+// The default fixed point format for cfg_stp and cfg_off is u14.16 and the
 // default buffer size is 2**14=16384 locations.
 // Fs = 125MHz
 // Δf = 125MHz/2**(14+16) = 0.116Hz
@@ -69,6 +69,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module asg #(
+  // trigger
+  int unsigned TN = 1,
   // data bus
   int unsigned DN = 1,
   type DAT_T = logic [8-1:0],
@@ -77,22 +79,23 @@ module asg #(
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 )(
   // stream output
-  str_bus_if.s               sto     ,
+  str_bus_if.s               sto    ,
   // control
-  input  logic               ctl_rst ,  // set FSM to reset
+  input  logic               ctl_rst,  // set FSM to reset
   // trigger
-  input  logic               trg_i   ,  // input
-  output logic               trg_o   ,  // output event
+  input  logic      [TN-1:0] trg_i  ,  // input
+  output logic               trg_o  ,  // output event
   // configuration
-  input  logic [CWM+CWF-1:0] cfg_size,  // data tablesize
-  input  logic [CWM+CWF-1:0] cfg_step,  // pointer step    size
-  input  logic [CWM+CWF-1:0] cfg_offs,  // pointer initial offset (used to define phase)
+  input  logic      [TN-1:0] cfg_trg,  // data tablesize
+  input  logic [CWM+CWF-1:0] cfg_siz,  // data tablesize
+  input  logic [CWM+CWF-1:0] cfg_stp,  // pointer step    size
+  input  logic [CWM+CWF-1:0] cfg_off,  // pointer initial offset (used to define phase)
   // configuration (burst mode)
-  input  logic               cfg_bena,  // burst enable
-  input  logic               cfg_binf,  // infinite
-  input  logic    [  16-1:0] cfg_bcyc,  // number of data cycle
-  input  logic    [  32-1:0] cfg_bdly,  // number of delay cycles
-  input  logic    [  16-1:0] cfg_bnum,  // number of repetitions
+  input  logic               cfg_ben,  // burst enable
+  input  logic               cfg_inf,  // infinite
+  input  logic    [  16-1:0] cfg_bdl,  // burst data length
+  input  logic    [  32-1:0] cfg_bil,  // burst idle length
+  input  logic    [  16-1:0] cfg_bnm,  // burst number of repetitions
   // System bus
   sys_bus_if.s               bus
 );
@@ -186,15 +189,15 @@ end else begin
       cnt_rep <= '0;
     end else begin
       sts_run <= STS_DAT;
-      if (cfg_bena) begin
-        cnt_cyc <= cfg_bcyc; 
-        cnt_dly <= cfg_bdly;
-        cnt_rep <= sts_end ? cnt_rep-1 : cfg_bnum;
+      if (cfg_ben) begin
+        cnt_cyc <= cfg_bdl; 
+        cnt_dly <= cfg_bil;
+        cnt_rep <= sts_end ? cnt_rep-1 : cfg_bnm;
       end
     end
   // decrement counters
   end else begin
-    if (cfg_bena) begin
+    if (cfg_ben) begin
       if (sts_run == STS_DAT & ~|cnt_cyc & |cnt_dly)  sts_run <=  STS_DLY;
       if (sts_run == STS_DAT &  |cnt_cyc           )  cnt_cyc <= cnt_cyc-1;
       if (sts_run == STS_DLY &             |cnt_dly)  cnt_dly <= cnt_dly-1;
@@ -202,10 +205,13 @@ end else begin
   end
 end
 
-assign sts_trg = (trg_i & (sts_run==STS_IDL))
-               | (sts_end & (|cnt_rep | cfg_binf));
+logic trg;
+assign trg = |(trg_i & cfg_trg);
 
-assign sts_end = cfg_bena & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
+assign sts_trg = (trg & (sts_run==STS_IDL))
+               | (sts_end & (|cnt_rep | cfg_inf));
+
+assign sts_end = cfg_ben & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
 assign sts_lst = cnt_rep == 1;
 
 // read pointer logic
@@ -218,7 +224,7 @@ end else begin
     ptr_cur <= '0;
   // start on trigger, new triggers are ignored while ASG is running
   end else if (sts_trg) begin
-    ptr_cur <= cfg_offs;
+    ptr_cur <= cfg_off;
   // modulo (proper wrapping) increment pointer
   end else if (sts_run==STS_DAT) begin
     ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
@@ -226,8 +232,8 @@ end else begin
 end
 
 // next pointer value and overflow
-assign ptr_nxt = ptr_cur + cfg_step;
-assign ptr_nxt_sub = ptr_nxt - cfg_size - 1;
+assign ptr_nxt = ptr_cur + cfg_stp;
+assign ptr_nxt_sub = ptr_nxt - cfg_siz - 1;
 assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
 
 ////////////////////////////////////////////////////////////////////////////////

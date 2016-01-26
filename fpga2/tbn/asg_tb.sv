@@ -9,6 +9,8 @@
 module asg_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
+  // trigger
+  int unsigned TN = 1,
   // data parameters
   int unsigned DWO = 14,  // RAM data width
   int unsigned DWM = 16,  // data width for multiplier (gain)
@@ -24,20 +26,21 @@ logic          clk ;  // clock
 logic          rstn;  // reset - active low
 
 // control
-logic               ctl_rst ;  // set FSM to reset
+logic               ctl_rst;  // set FSM to reset
 // trigger
-logic               trg_i   ;  // input
-logic               trg_o   ;  // output event
+logic      [TN-1:0] trg_i  ;  // input
+logic               trg_o  ;  // output event
 // configuration
-logic [CWM+CWF-1:0] cfg_size;  // data tablesize
-logic [CWM+CWF-1:0] cfg_step;  // pointer step    size
-logic [CWM+CWF-1:0] cfg_offs;  // pointer initial offset (used to define phase)
+logic      [TN-1:0] cfg_trg;  // trigger mask
+logic [CWM+CWF-1:0] cfg_siz;  // data tablesize
+logic [CWM+CWF-1:0] cfg_stp;  // pointer step    size
+logic [CWM+CWF-1:0] cfg_off;  // pointer initial offset (used to define phase)
 // configuration (burst mode)
-logic               cfg_bena;  // burst enable
-logic               cfg_binf;  // infinite
-logic    [  16-1:0] cfg_bcyc;  // number of data cycle
-logic    [  32-1:0] cfg_bdly;  // number of delay cycles
-logic    [  16-1:0] cfg_bnum;  // number of repetitions
+logic               cfg_ben;  // burst enable
+logic               cfg_inf;  // infinite
+logic    [  16-1:0] cfg_bdl;  // number of data cycle
+logic    [  32-1:0] cfg_bil;  // number of delay cycles
+logic    [  16-1:0] cfg_bnm;  // number of repetitions
 
 // stream input/output
 str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
@@ -58,15 +61,16 @@ initial begin
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
   // configuration
-  cfg_size = 2**CWM-1;
-  cfg_step = 1 << CWF;
-  cfg_offs = 0 << CWF;
+  cfg_trg  = '1;
+  cfg_siz = 2**CWM-1;
+  cfg_stp = 1 << CWF;
+  cfg_off = 0 << CWF;
   // configuration (burst mode)
-  cfg_bena = 1'b0;
-  cfg_binf = 0;
-  cfg_bcyc = 0;
-  cfg_bdly = 0;
-  cfg_bnum = 0;
+  cfg_ben = 1'b0;
+  cfg_inf = 0;
+  cfg_bdl = 0;
+  cfg_bil = 0;
+  cfg_bnm = 0;
 
   // initialization
   rstn = 1'b0;
@@ -117,15 +121,16 @@ asg #(
   .trg_i    (trg_i),
   .trg_o    (trg_o),
   // configuration
-  .cfg_size (cfg_size),
-  .cfg_step (cfg_step),
-  .cfg_offs (cfg_offs),
+  .cfg_trg  (cfg_trg),
+  .cfg_siz  (cfg_siz),
+  .cfg_stp  (cfg_stp),
+  .cfg_off  (cfg_off),
   // configuration (burst mode)
-  .cfg_bena (cfg_bena),
-  .cfg_binf (cfg_binf),
-  .cfg_bcyc (cfg_bcyc),
-  .cfg_bdly (cfg_bdly),
-  .cfg_bnum (cfg_bnum),
+  .cfg_ben  (cfg_ben),
+  .cfg_inf  (cfg_inf),
+  .cfg_bdl  (cfg_bdl),
+  .cfg_bil  (cfg_bil),
+  .cfg_bnm  (cfg_bnm),
   // CPU buffer access
   .bus      (bus)
 );

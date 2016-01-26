@@ -10,6 +10,7 @@ module acq_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // parameters
+  int unsigned TN = 1,   // trigger number
   int unsigned TW = 64,  // time width
   int unsigned CW = 32,  // counter width
   // data bus type
@@ -28,6 +29,7 @@ logic          ctl_rst;
 logic          cfg_con;  // continuous
 logic          cfg_aut;  // automatic
 // configuration/status pre trigger
+logic [TN-1:0] cfg_trg;
 logic [CW-1:0] cfg_pre;
 logic [CW-1:0] sts_pre;
 // configuration/status post trigger
@@ -38,7 +40,7 @@ logic          ctl_acq;  // acquire start
 logic          sts_acq;
 logic [TW-1:0] cts_acq;
 // control/status/timestamp trigger
-logic          ctl_trg;
+logic [TN-1:0] ctl_trg;
 logic          sts_trg;
 logic [TW-1:0] cts_trg;
 // control/status/timestamp stop
@@ -75,6 +77,7 @@ always @ (posedge clk) cts <= cts + 1;
 initial begin
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
+  cfg_trg = '1;
   cfg_con = 1'b0;
   cfg_aut = 1'b0;
   cfg_pre = 0;
@@ -196,6 +199,7 @@ acq #(
   // control
   .ctl_rst  (ctl_rst),
   // configuration (mode)
+  .cfg_trg  (cfg_trg),
   .cfg_con  (cfg_con),
   .cfg_aut  (cfg_aut),
   // configuration/status pre trigger

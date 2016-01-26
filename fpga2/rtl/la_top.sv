@@ -55,7 +55,6 @@ logic           ctl_acq;  // acquire start
 logic           sts_acq;
 logic  [TW-1:0] cts_acq;
 // control/status/timestamp trigger
-logic           ctl_trg;
 logic           sts_trg;
 logic  [TW-1:0] cts_trg;
 // control/status/timestamp stop
@@ -210,9 +209,8 @@ la_trigger #(
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-assign ctl_trg = |(trg_ext & cfg_trg);
-
 acq #(
+  .TN (TN),
 //  .DN (DN), // TODO
   .TW (TW),
   .CW (CW)
@@ -225,6 +223,7 @@ acq #(
   // control
   .ctl_rst  (ctl_rst),
   // configuration (mode)
+  .cfg_trg  (cfg_trg),
   .cfg_con  (cfg_con),
   .cfg_aut  (cfg_aut),
   // configuration/status pre trigger
@@ -238,7 +237,7 @@ acq #(
   .sts_acq  (sts_acq),
   .cts_acq  (cts_acq),
   // control/status/timestamp trigger
-  .ctl_trg  (ctl_trg),
+  .ctl_trg  (trg_ext),
   .sts_trg  (sts_trg),
   .cts_trg  (cts_trg),
   // control/status/timestamp stop
