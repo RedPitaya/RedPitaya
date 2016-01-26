@@ -307,10 +307,9 @@ CONFIG.FREQ_HZ {142000000} \
   set_property -dict [ list \
 CONFIG.c_include_mm2s {1} \
 CONFIG.c_include_sg {1} \
-CONFIG.c_m_axi_mm2s_data_width {64} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
-CONFIG.c_m_axis_mm2s_tdata_width {16} \
-CONFIG.c_mm2s_burst_size {64} \
+CONFIG.c_m_axi_mm2s_data_width {32} \
+CONFIG.c_m_axis_mm2s_tdata_width {32} \
+CONFIG.c_mm2s_burst_size {16} \
 CONFIG.c_s2mm_burst_size {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
  ] $axi_dma_0
@@ -320,10 +319,9 @@ CONFIG.c_sg_include_stscntrl_strm {0} \
   set_property -dict [ list \
 CONFIG.c_include_mm2s {1} \
 CONFIG.c_include_sg {1} \
-CONFIG.c_m_axi_mm2s_data_width {64} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
-CONFIG.c_m_axis_mm2s_tdata_width {16} \
-CONFIG.c_mm2s_burst_size {64} \
+CONFIG.c_m_axi_mm2s_data_width {32} \
+CONFIG.c_m_axis_mm2s_tdata_width {32} \
+CONFIG.c_mm2s_burst_size {16} \
 CONFIG.c_s2mm_burst_size {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
  ] $axi_dma_1
@@ -333,10 +331,9 @@ CONFIG.c_sg_include_stscntrl_strm {0} \
   set_property -dict [ list \
 CONFIG.c_include_mm2s {1} \
 CONFIG.c_include_sg {1} \
-CONFIG.c_m_axi_mm2s_data_width {64} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
-CONFIG.c_m_axis_mm2s_tdata_width {16} \
-CONFIG.c_mm2s_burst_size {64} \
+CONFIG.c_m_axi_mm2s_data_width {32} \
+CONFIG.c_m_axis_mm2s_tdata_width {32} \
+CONFIG.c_mm2s_burst_size {16} \
 CONFIG.c_s2mm_burst_size {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
  ] $axi_dma_2
@@ -346,10 +343,9 @@ CONFIG.c_sg_include_stscntrl_strm {0} \
   set_property -dict [ list \
 CONFIG.c_include_mm2s {1} \
 CONFIG.c_include_sg {1} \
-CONFIG.c_m_axi_mm2s_data_width {64} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
-CONFIG.c_m_axis_mm2s_tdata_width {16} \
-CONFIG.c_mm2s_burst_size {64} \
+CONFIG.c_m_axi_mm2s_data_width {32} \
+CONFIG.c_m_axis_mm2s_tdata_width {32} \
+CONFIG.c_mm2s_burst_size {16} \
 CONFIG.c_s2mm_burst_size {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
  ] $axi_dma_3
@@ -366,6 +362,7 @@ CONFIG.NUM_SI {1} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {3} \
+CONFIG.STRATEGY {1} \
  ] $axi_interconnect_1
 
   # Create instance: axi_interconnect_2, and set properties
@@ -373,6 +370,7 @@ CONFIG.NUM_SI {3} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {3} \
+CONFIG.STRATEGY {1} \
  ] $axi_interconnect_2
 
   # Create instance: axi_interconnect_3, and set properties
@@ -380,6 +378,7 @@ CONFIG.NUM_SI {3} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {3} \
+CONFIG.STRATEGY {1} \
  ] $axi_interconnect_3
 
   # Create instance: axi_interconnect_4, and set properties
@@ -387,6 +386,7 @@ CONFIG.NUM_SI {3} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {3} \
+CONFIG.STRATEGY {1} \
  ] $axi_interconnect_4
 
   # Create instance: axis_clock_converter_0, and set properties
@@ -544,7 +544,10 @@ CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {0} \
 CONFIG.PCW_SPI1_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_SPI1_SPI1_IO {MIO 10 .. 15} \
+CONFIG.PCW_S_AXI_HP0_DATA_WIDTH {32} \
+CONFIG.PCW_S_AXI_HP1_DATA_WIDTH {32} \
 CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {32} \
+CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {32} \
 CONFIG.PCW_TTC0_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_UART0_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_UART0_UART0_IO {MIO 14 .. 15} \
@@ -794,8 +797,8 @@ preplace netloc axis_data_fifo_1_M_AXIS 1 4 1 1250
 preplace netloc m_axi_gp0_aclk_1 1 0 8 NJ 1720 NJ 1720 NJ 1720 NJ 1390 NJ 1430 NJ 1440 NJ 1820 NJ
 preplace netloc axi_dma_3_M_AXI_SG 1 6 1 N
 preplace netloc M_AXI_STR_TX2_arstn_1 1 0 8 NJ 1450 NJ 1450 NJ 1460 NJ 1380 NJ 1380 NJ 1430 NJ 1390 NJ
-preplace netloc axi_dma_3_M_AXIS_MM2S 1 6 3 NJ 1030 NJ 950 NJ
 preplace netloc axi_dma_0_M_AXIS_MM2S 1 6 1 2150
+preplace netloc axi_dma_3_M_AXIS_MM2S 1 6 3 NJ 1030 NJ 950 NJ
 preplace netloc axi_dma_1_M_AXI_SG 1 6 1 1980
 preplace netloc processing_system7_0_ddr 1 8 1 NJ
 preplace netloc axi_interconnect_4_M00_AXI 1 7 1 2510
