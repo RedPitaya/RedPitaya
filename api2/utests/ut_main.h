@@ -10,6 +10,11 @@
 #include "CUnit/Automated.h"
 #include "CUnit/CUCurses.h"
 
+int init_example_suite(void);
+int clean_example_suite(void);
+void pass_assertions_test(void);
+void fail_assertions_test(void);
+
 int suite_la_acq_init(void);
 int suite_la_acq_cleanup(void);
 void reg_rw_test(void);
