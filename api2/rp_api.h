@@ -274,4 +274,66 @@ RP_STATUS rpGetValuesAsync(uint32_t startIndex,
 
 RP_STATUS rpStop(void);
 
+
+/** SIGNAL GENERATION  */
+
+typedef enum rpWaveType {
+    RP_SG_SINE, ///< sine wave
+    RP_SG_SQUARE, ///< square wave
+    RP_SG_TRIANGLE, ///< triangle wave
+    RP_SG_DC_VOLTAGE, ///< DC voltage
+    RP_SG_RAMP_UP, ///< rising sawtooth
+    RP_SG_RAMP_DOWN, ///< falling sawtooth
+    RP_SG_SINC, ///< sin (x)/x
+    RP_SG_GAUSSIAN, ///< Gaussian
+    PR_SG_HALF_SINE, ///< half (full-wave rectified) sine
+} RP_WAVE_TYPE;
+
+typedef enum rpSweepType{
+    RP_SWEEP_UP, ///<
+    RP_SWEEP_DOWN, ///<
+    RP_SWEEP_UPDOWN, ///<
+    RP_SWEEP_DOWNUP, ///<
+} RP_SWEEP_TYPE;
+
+
+typedef enum rpExtraOperationType{
+    RP_ES_OFF, ///< normal signal generator operation specified by wavetype.
+    RP_WHITENOISE, ///< the signal generator produces white noise and ignores all settings except pkToPk and offsetVoltage.
+    RP_PRBS, ///< produces a pseudorandom binary sequence with bit rate specified by the start and stop frequencies.
+} RP_EXTRA_OPERATIONS;
+
+
+typedef enum rpTriggerType{
+    RP_SIGGEN_RISING,     ///< trigger on rising edge
+    RP_SIGGEN_FALLING,     ///< trigger on falling edge
+    RP_SIGGEN_GATE_HIGH,///< run while trigger is high
+    RP_SIGGEN_GATE_LOW, ///< run while trigger is low
+} RP_SIGGEN_TRIG_TYPE;
+
+
+typedef enum rpTriggerSource {
+    PS3000A_SIGGEN_NONE, ///< run without waiting for trigger
+    PS3000A_SIGGEN_SCOPE_TRIG, ///< use scope trigger
+    PS3000A_SIGGEN_EXT_IN, ///< use EXT input
+    PS3000A_SIGGEN_SOFT_TRIG, ///< wait for software trigger provided by rpSigGenSoftwareControl()
+    PS3000A_SIGGEN_TRIGGER_RAW // reserved
+} RP_SIGGEN_TRIG_SOURCE;
+
+RP_STATUS rpSigGenSoftwareControl(int16_t state);
+RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
+                             uint32_t pkToPk,
+                             RP_WAVE_TYPE waveType,
+                             float startFrequency,
+                             float stopFrequency,
+                             float increment,
+                             float dwellTime,
+                             RP_SWEEP_TYPE sweepType,
+                             RP_EXTRA_OPERATIONS operation,
+                             uint32_t shots,
+                             uint32_t sweeps,
+                             RP_SIGGEN_TRIG_TYPE triggerType,
+                             RP_SIGGEN_TRIG_SOURCE triggerSource,
+                             int16_t extInThreshold);
+
 #endif // _RP_API_H_

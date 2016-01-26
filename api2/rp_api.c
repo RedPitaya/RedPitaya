@@ -7,6 +7,8 @@
 #include <string.h>
 
 
+/** SIGNAL ACQUISTION  */
+
 /** Maximal digital signal sampling frequency [Hz] */
 const double c_max_dig_sampling_rate = 250e6;
 
@@ -384,3 +386,68 @@ RP_STATUS rpStop(void){
 
     return RP_OK;
 }
+
+/** SIGNAL GENERATION  */
+/**
+ * This function causes a trigger event, or starts and stops gating.
+ * It is used when the signal generator is set to SIGGEN_SOFT_TRIG.
+ *
+ * @param state, sets the trigger gate high or low when the trigger type is
+ * set to either SIGGEN_GATE_HIGH or SIGGEN_GATE_LOW. Ignored for other trigger types.
+ */
+
+RP_STATUS rpSigGenSoftwareControl(int16_t state){
+    return RP_OK;
+}
+
+/**
+ * This function sets up the signal generator to produce a signal from a list of built-in
+ * waveforms. If different start and stop frequencies are specified, the device will sweep
+ * either up, down or up and down.
+ *
+ * @param offsetVoltage     The voltage offset, in microvolts, to be applied to the waveform
+ * @param pkToPk             The peak-to-peak voltage, in microvolts, of the waveform signal.
+ *                             Note that if the signal voltages described by the combination of offsetVoltage and pkToPk
+ *                             extend outside the voltage range of the signal generator, the output waveform will be clipped.
+ * @param waveType            The type of waveform to be generated.
+ * @param startFrequency    The frequency that the signal generator will initially produce.
+ *                             For allowable values see RP_SINE_MAX_FREQUENCY and related values.
+ * @param stopFrequency        The frequency at which the sweep reverses direction or returns to the initial frequency.
+ * @param increment            The amount of frequency increase or decrease in sweep mode.
+ * @param dwellTime            The time for which the sweep stays at each frequency in seconds.
+ * @param sweepType         Whether the frequency will sweep from startFrequency to stopFrequency, or in the opposite direction,
+ *                             or repeatedly reverse direction.
+ * @param operation            The type of extra waveform to be produced.
+ * @param shots                0: Sweep the frequency as specified by sweeps
+ *                             1...RP_MAX_SWEEPS_SHOTS: the number of cycles of the waveform to be produced after a trigger event.
+ *                             Sweeps must be zero.
+ *                             RP_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN: start and run continuously after trigger occurs
+ * @param sweeps            0: produce number of cycles specified by shots
+ *                             1..RP_MAX_SWEEPS_SHOTS: the number of times to sweep the frequency after a trigger event, according to sweepType.
+ *                             shots must be zero.
+ *                             RP_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN: start a sweep and continue after trigger occurs.
+ * @param triggerType        The type of trigger that will be applied to the signal generator.
+ * @param triggerSource        The source that will trigger the signal generator
+ * @param extInThreshold    Used to set trigger level for external trigger.
+ */
+
+RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
+                             uint32_t pkToPk,
+                             RP_WAVE_TYPE waveType,
+                             float startFrequency,
+                             float stopFrequency,
+                             float increment,
+                             float dwellTime,
+                             RP_SWEEP_TYPE sweepType,
+                             RP_EXTRA_OPERATIONS operation,
+                             uint32_t shots,
+                             uint32_t sweeps,
+                             RP_SIGGEN_TRIG_TYPE triggerType,
+                             RP_SIGGEN_TRIG_SOURCE triggerSource,
+                             int16_t extInThreshold){
+    return RP_OK
+}
+
+
+
+
