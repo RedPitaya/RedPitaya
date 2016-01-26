@@ -18,10 +18,10 @@ logic clk ;  // clock
 logic rstn;  // reset - active low
 
 // configuration
-DAT_T cfg_old_val;  // old     value
-DAT_T cfg_old_msk;  // old     mask 
-DAT_T cfg_cur_val;  // current value
-DAT_T cfg_cur_msk;  // current mask 
+DAT_T cfg_cmp_msk;  // comparator mask
+DAT_T cfg_cmp_val;  // comparator value
+DAT_T cfg_edg_pos;  // edge positive
+DAT_T cfg_edg_neg;  // edge negative
 
 // stream input/output
 str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
@@ -35,10 +35,10 @@ always #(TP/2) clk = ~clk;
 
 initial begin
   // for now initialize configuration to an idle value
-  cfg_old_val = '0;
-  cfg_old_msk = '0;
-  cfg_cur_val = 'h0a;
-  cfg_cur_msk = 'hff;
+  cfg_cmp_msk = '0;
+  cfg_cmp_val = '0;
+  cfg_edg_pos = 'h00;
+  cfg_edg_neg = 'h00;
 
   // initialization
   rstn = 1'b0;
@@ -72,10 +72,10 @@ la_trigger #(
   // control
   .ctl_rst  (ctl_rst),
   // configuration
-  .cfg_old_val (cfg_old_val),
-  .cfg_old_msk (cfg_old_msk),
-  .cfg_cur_val (cfg_cur_val),
-  .cfg_cur_msk (cfg_cur_msk),
+  .cfg_cmp_msk (cfg_cmp_msk),
+  .cfg_cmp_val (cfg_cmp_val),
+  .cfg_edg_pos (cfg_edg_pos),
+  .cfg_edg_neg (cfg_edg_neg),
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor

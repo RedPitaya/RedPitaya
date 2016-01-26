@@ -66,10 +66,10 @@ logic  [TW-1:0] cts_stp;
 logic  [TN-1:0] cfg_trg;  // trigger select
 
 // trigger source configuration
-DAT_T           cfg_old_val;  // old     value
-DAT_T           cfg_old_msk;  // old     mask
-DAT_T           cfg_cur_val;  // current value
-DAT_T           cfg_cur_msk;  // current mask
+DAT_T           cfg_cmp_msk;  // comparator mask
+DAT_T           cfg_cmp_val;  // comparator value
+DAT_T           cfg_edg_pos;  // edge positive
+DAT_T           cfg_edg_neg;  // edge negative
 
 // decimation configuration
 logic [DCW-1:0] cfg_dec;  // decimation factor
@@ -104,10 +104,10 @@ if (~bus.rstn) begin
   cfg_pst <= '0;
 
   // trigger detection
-  cfg_old_val <= '0;
-  cfg_old_msk <= '0;
-  cfg_cur_val <= '0;
-  cfg_cur_msk <= '0;
+  cfg_cmp_msk <= '0;
+  cfg_cmp_val <= '0;
+  cfg_edg_pos <= '0;
+  cfg_edg_neg <= '0;
 
   // filter/dacimation
   cfg_dec <= '0;
@@ -121,10 +121,10 @@ end else begin
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
 
     // trigger detection
-    if (bus.addr[BAW-1:0]=='h40)   cfg_old_val <= DAT_T'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h44)   cfg_old_msk <= DAT_T'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h48)   cfg_cur_val <= DAT_T'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h4c)   cfg_cur_msk <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h40)   cfg_cmp_msk <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h44)   cfg_cmp_val <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h48)   cfg_edg_pos <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h4c)   cfg_edg_neg <= DAT_T'(bus.wdata);
 
     // dacimation
     if (bus.addr[BAW-1:0]=='h50)   cfg_dec <= bus.wdata[DCW-1:0];
@@ -157,10 +157,10 @@ begin
     'h34 : bus.rdata <=              32'(cts_stp >> 32);
 
     // trigger detection
-    'h40 : bus.rdata <=                  cfg_old_val;
-    'h44 : bus.rdata <=                  cfg_old_msk;
-    'h48 : bus.rdata <=                  cfg_cur_val;
-    'h4c : bus.rdata <=                  cfg_cur_msk;
+    'h40 : bus.rdata <=                  cfg_cmp_msk;
+    'h44 : bus.rdata <=                  cfg_cmp_val;
+    'h48 : bus.rdata <=                  cfg_edg_pos;
+    'h4c : bus.rdata <=                  cfg_edg_neg;
 
     // decimation
     'h50 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
@@ -196,10 +196,10 @@ la_trigger #(
   // control
   .ctl_rst  (ctl_rst),
   // configuration
-  .cfg_old_val (cfg_old_val),
-  .cfg_old_msk (cfg_old_msk),
-  .cfg_cur_val (cfg_cur_val),
-  .cfg_cur_msk (cfg_cur_msk),
+  .cfg_cmp_msk (cfg_cmp_msk),
+  .cfg_cmp_val (cfg_cmp_val),
+  .cfg_edg_pos (cfg_edg_pos),
+  .cfg_edg_neg (cfg_edg_neg),
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor
