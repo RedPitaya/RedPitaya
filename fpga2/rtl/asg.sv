@@ -93,9 +93,9 @@ module asg #(
   // configuration (burst mode)
   input  logic               cfg_ben,  // burst enable
   input  logic               cfg_inf,  // infinite
-  input  logic    [  16-1:0] cfg_bdl,  // burst data length
-  input  logic    [  32-1:0] cfg_bil,  // burst idle length
-  input  logic    [  16-1:0] cfg_bnm,  // burst number of repetitions
+  input  logic     [CWM-1:0] cfg_bdl,  // burst data length
+  input  logic     [ 32-1:0] cfg_bil,  // burst idle length
+  input  logic     [ 16-1:0] cfg_bnm,  // burst number of repetitions
   // System bus
   sys_bus_if.s               bus
 );
@@ -121,9 +121,9 @@ logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // counters
-logic [16-1:0] cnt_cyc;
-logic [32-1:0] cnt_dly;
-logic [16-1:0] cnt_rep;
+logic [16-1:0] cnt_bdl;
+logic [32-1:0] cnt_bil;
+logic [16-1:0] cnt_bnm;
 // status and events
 status_t       sts_run;
 status_t       sts_vld;
@@ -172,35 +172,35 @@ end
 always_ff @(posedge sto.clk)
 if (~sto.rstn) begin
   sts_run <= STS_IDL;
-  cnt_cyc <= '0;
-  cnt_dly <= '0;
-  cnt_rep <= '0;
+  cnt_bdl <= '0;
+  cnt_bil <= '0;
+  cnt_bnm <= '0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
     sts_run <= STS_IDL;
-    cnt_cyc <= '0;
-    cnt_dly <= '0;
-    cnt_rep <= '0;
+    cnt_bdl <= '0;
+    cnt_bil <= '0;
+    cnt_bnm <= '0;
   // start on trigger, new triggers are ignored while ASG is running
   end else if (sts_trg) begin
     if (sts_lst) begin
       sts_run <= STS_IDL;
-      cnt_rep <= '0;
+      cnt_bnm <= '0;
     end else begin
       sts_run <= STS_DAT;
       if (cfg_ben) begin
-        cnt_cyc <= cfg_bdl; 
-        cnt_dly <= cfg_bil;
-        cnt_rep <= sts_end ? cnt_rep-1 : cfg_bnm;
+        cnt_bdl <= cfg_bdl; 
+        cnt_bil <= cfg_bil;
+        cnt_bnm <= sts_end ? cnt_bnm-1 : cfg_bnm;
       end
     end
   // decrement counters
   end else begin
     if (cfg_ben) begin
-      if (sts_run == STS_DAT & ~|cnt_cyc & |cnt_dly)  sts_run <=  STS_DLY;
-      if (sts_run == STS_DAT &  |cnt_cyc           )  cnt_cyc <= cnt_cyc-1;
-      if (sts_run == STS_DLY &             |cnt_dly)  cnt_dly <= cnt_dly-1;
+      if (sts_run == STS_DAT & ~|cnt_bdl & |cnt_bil)  sts_run <=  STS_DLY;
+      if (sts_run == STS_DAT &  |cnt_bdl           )  cnt_bdl <= cnt_bdl-1;
+      if (sts_run == STS_DLY &             |cnt_bil)  cnt_bil <= cnt_bil-1;
     end
   end
 end
@@ -209,10 +209,10 @@ logic trg;
 assign trg = |(trg_i & cfg_trg);
 
 assign sts_trg = (trg & (sts_run==STS_IDL))
-               | (sts_end & (|cnt_rep | cfg_inf));
+               | (sts_end & (|cnt_bnm | cfg_inf));
 
-assign sts_end = cfg_ben & (sts_run!=STS_IDL) & ~|cnt_cyc & ~|cnt_dly;
-assign sts_lst = cnt_rep == 1;
+assign sts_end = cfg_ben & (sts_run!=STS_IDL) & ~|cnt_bdl & ~|cnt_bil;
+assign sts_lst = cnt_bnm == 1;
 
 // read pointer logic
 always_ff @(posedge sto.clk)

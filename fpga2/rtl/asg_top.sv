@@ -77,7 +77,7 @@ logic [CWM+CWF-1:0] cfg_off;  // address initial offset (phase)
 // burst mode configuraton
 logic               cfg_ben;  // burst enable
 logic               cfg_inf;  // infinite burst
-logic     [ 16-1:0] cfg_bdl;  // burst data length
+logic     [CWM-1:0] cfg_bdl;  // burst data length
 logic     [ 32-1:0] cfg_bil;  // burst idle length
 logic     [ 16-1:0] cfg_bnm;  // burst repetitions
 // linear offset and gain
@@ -132,7 +132,7 @@ end else begin
     // burst mode
     if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[          0];
     if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[          1];
-    if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[    CWM-1:0];
     if (bus.addr[BAW-1:0]=='h28)  cfg_bil <= bus.wdata[     32-1:0];
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
@@ -158,7 +158,7 @@ if (~bus.addr[CWM+2]) begin
     // burst mode
     'h20 : bus.rdata <= {{32-      2{1'b0}}, cfg_inf
                                            , cfg_ben};
-    'h24 : bus.rdata <= {{32-     16{1'b0}}, cfg_bdl};
+    'h24 : bus.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
     'h28 : bus.rdata <=                      cfg_bil ;
     'h2c : bus.rdata <= {{32-     16{1'b0}}, cfg_bnm};
     // linear transformation (should be properly sign extended)
