@@ -519,13 +519,13 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
         case RP_SIGGEN_EXT_IN:
             break;
         case RP_SIGGEN_SOFT_TRIG:
-            rp_GenSetTriggerSource(&sig_gen_handle, 0);
+            rp_GenSetTriggerMask(&sig_gen_handle, 0);
             break;
         case RP_SIGGEN_TRIGGER_RAW:
             break;
     }
 
-    rp_GenSetFreq(&sig_gen_handle, 1);
+    rp_GenSetFreqPhase(&sig_gen_handle, 1, 0);
 
     switch(waveType){
         case RP_SG_SINE:
