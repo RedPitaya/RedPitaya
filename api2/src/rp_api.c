@@ -525,7 +525,6 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
             break;
     }
 
-
     switch(waveType){
         case RP_SG_SINE:
             break;
@@ -546,8 +545,6 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
         case PR_SG_HALF_SINE:
             break;
     }
-
-
 
     return RP_API_OK;
 }
