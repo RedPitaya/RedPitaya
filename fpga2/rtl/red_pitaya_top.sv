@@ -286,21 +286,80 @@ muxctl muxctl (
 
 localparam int unsigned GDW = 8+8;
 
-logic [8-1:0] exp_p_e, exp_n_e;  // output enable
-logic [8-1:0] exp_p_o, exp_n_o;  // output
-logic [8-1:0] exp_p_i, exp_n_i;  // input
+logic [GDW-1:0] gpio_e;  // output enable
+logic [GDW-1:0] gpio_o;  // output
+logic [GDW-1:0] gpio_i;  // input
 
 gpio #(.DW (GDW)) gpio (
   // expansion connector
-  .gpio_e  ({exp_n_e, exp_p_e}),
-  .gpio_o  ({exp_n_o, exp_p_o}),
-  .gpio_i  ({exp_n_i, exp_p_i}),
+  .gpio_e  (gpio_e),
+  .gpio_o  (gpio_o),
+  .gpio_i  (gpio_i),
   // system bus
   .bus     (sys[2])
 );
 
-IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
-IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_oe));
+////////////////////////////////////////////////////////////////////////////////
+// extension connector
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO: there should be a multiplexer between GPIO and LG/LA
+//IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_e));
+//IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_e));
+//IOBUF iobuf_exp [GDW-1:0] (.O(gpio_i), .IO({exp_n_io, exp_p_io}), .I(gpio_o), .T(~gpio_e));
+
+logic [GDW-1:0] exp_e;  // output enable
+logic [GDW-1:0] exp_o;  // output
+logic [GDW-1:0] exp_i;  // input
+
+// IO buffer with output enable
+IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
+
+// input DDR
+IDDR #(
+  .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
+) iddr_exp_i [GDW-1:0] (
+  .Q1 (str_lai.dat),
+  .Q2 (),  // TODO: add DDR support for LA here
+  .C  (adc_clk),
+  .CE (1'b1),
+  .D  (exp_i),
+  .R  (1'b0),
+  .S  (1'b0)
+);
+
+assign str_lai.vld = 1'b1;
+assign str_lai.kep = '1;
+
+// output DDR
+ODDR #(
+  .DDR_CLK_EDGE ("SAME_EDGE")
+) oddr_exp_o [GDW-1:0] (
+  .Q  (exp_o),
+  .C  (adc_clk),
+  .CE (1'b1),
+  .D1 (str_lgo.dat),
+  .D2 (str_lgo.dat),  // TODO: add DDR support for LG here
+  .R  (1'b0),
+  .S  (1'b0)
+);
+
+assign str_lgo.rdy = 1'b1;
+
+// output enable DDR
+ODDR #(
+  .IS_D1_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
+  .IS_D2_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
+  .DDR_CLK_EDGE ("SAME_EDGE")
+) oddr_exp_e [GDW-1:0] (
+  .Q  (exp_e),
+  .C  (adc_clk),
+  .CE (1'b1),
+  .D1 ('1),  // TODO: add a proper signal source here
+  .D2 ('1),  // TODO: add a proper signal source here
+  .R  (1'b0),
+  .S  (1'b0)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // debounce
@@ -317,7 +376,7 @@ debounce #(
   .ena  (1'b1),
   .len  (20'd62500),  // 0.5ms
   // input stream
-  .d_i  (exp_p_i[0]),
+  .d_i  (exp_i[0]),
   .d_o  (),
   .d_p  (trg.gio_out[0]),
   .d_n  (trg.gio_out[1])
