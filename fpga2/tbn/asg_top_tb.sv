@@ -88,40 +88,40 @@ initial begin
     busm.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
   // configure frequency and phase
-  busm.write(32'h08,  buf_len                    * 2**CWF - 1);  // table size
-  busm.write(32'h0C, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//busm.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
-  busm.write(32'h10, 1                           * 2**CWF    );  // step
+  busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
+  busm.write('h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//busm.write('h18, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
+  busm.write('h18, 1                           * 2**CWF    );  // step
   // configure burst mode
-  busm.write(32'h04, {1'b0, TN'(1)});  // burst disable
+  busm.write('h20, 2'b00);  // burst disable
   // configure amplitude and DC offset
-  busm.write(32'h24, 1 << (DWM-2));  // amplitude
-  busm.write(32'h28, 0);             // DC offset
+  busm.write('h30, 1 << (DWM-2));  // amplitude
+  busm.write('h34, 0);             // DC offset
   // start
-  busm.write(32'h00, 2'b10);
+  busm.write('h00, 2'b10);
   repeat(22) @(posedge clk);
 
   // stop (reset)
-  busm.write(32'h00, 2'b01);
+  busm.write('h00, 2'b01);
   repeat(20) @(posedge clk);
 
   // configure frequency and phase
-  busm.write(32'h0c, 0 * 2**CWF);  // offset
-  busm.write(32'h10, 1 * 2**CWF);  // step
+  busm.write('h14, 0 * 2**CWF);  // offset
+  busm.write('h18, 1 * 2**CWF);  // step
   // configure burst mode
-  busm.write(32'h04, {1'b1, TN'(0)});  // burst enable
-  busm.write(32'h18, 6);  // number of cycles
-  busm.write(32'h1c, 10);  // number of delay periods between repetitions
-  busm.write(32'h20, 5);  // number of repetitions
+  busm.write('h20, {1'b1, TN'(0)});  // burst enable
+  busm.write('h24,  6);  // burst data length
+  busm.write('h28, 10);  // burst idle length
+  busm.write('h2c,  5);  // burst number of repetitions
   // configure amplitude and DC offset
-  busm.write(32'h24, 1 << (DWM-2));  // amplitude
-  busm.write(32'h28, 0);             // DC offset
+  busm.write('h30, 1 << (DWM-2));  // amplitude
+  busm.write('h34, 0);             // DC offset
   // start
-  busm.write(32'h00, 2'b10);
+  busm.write('h00, 2'b10);
   repeat(120) @(posedge clk);
 
   // stop (reset)
-  busm.write(32'h00, 2'b01);
+  busm.write('h00, 2'b01);
   repeat(20) @(posedge clk);
 
   // end simulation
