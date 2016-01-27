@@ -156,7 +156,7 @@ sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
-IBUFGDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
+IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
 
 red_pitaya_pll pll (
   // inputs

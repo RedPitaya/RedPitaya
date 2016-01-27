@@ -9,14 +9,12 @@ PATH_TBN=../tbn
 LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
     $(PATH_LIB)/unisims/XADC.v \
     $(PATH_LIB)/unisims/IBUFDS.v \
-    $(PATH_LIB)/unisims/IBUFGDS.v \
     $(PATH_LIB)/unisims/IOBUF.v \
     $(PATH_LIB)/unisims/BUFG.v \
     $(PATH_LIB)/unisims/PLLE2_ADV.v \
     $(PATH_LIB)/unisims/ODDR.v \
     $(PATH_LIB)/unisims/OBUFDS.v \
     $(PATH_LIB)/unisims/OSERDESE2.v \
-    $(PATH_LIB)/retarget/IBUFGDS.v \
     $(PATH_LIB)/unisims/BUFIO.v \
     $(PATH_LIB)/unisims/BUFR.v \
     $(PATH_LIB)/unisims/ISERDESE2.v \
