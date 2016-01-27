@@ -449,26 +449,6 @@
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
-    <FileSet Name="rb_fifo_axis_W32_D16" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rb_fifo_axis_W32_D16">
-      <File Path="$PPRDIR/../ip/rb_fifo_axis_W32_D16.xcix">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PPRDIR/../ip/rb_fifo_axis_W32_D16/rb_fifo_axis_W32_D16.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <Config>
-        <Option Name="TopModule" Val="rb_fifo_axis_W32_D16"/>
-        <Option Name="UseBlackboxStub" Val="1"/>
-      </Config>
-    </FileSet>
     <FileSet Name="rb_cordic_T_WS_O_SR_32T32_CR_B" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rb_cordic_T_WS_O_SR_32T32_CR_B">
       <File Path="$PPRDIR/../ip/rb_cordic_T_WS_O_SR_32T32_CR_B.xcix">
         <FileInfo>
@@ -529,26 +509,6 @@
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
-    <FileSet Name="rb_fir1_8k_to_8k_25c_17i16_35o32" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rb_fir1_8k_to_8k_25c_17i16_35o32">
-      <File Path="$PPRDIR/../ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PPRDIR/../ip/rb_fir1_8k_to_8k_25c_17i16_35o32/rb_fir1_8k_to_8k_25c_17i16_35o32.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <Config>
-        <Option Name="TopModule" Val="rb_fir1_8k_to_8k_25c_17i16_35o32"/>
-        <Option Name="UseBlackboxStub" Val="1"/>
-      </Config>
-    </FileSet>
     <FileSet Name="rb_cic_48k_to_8k_32T32" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rb_cic_48k_to_8k_32T32">
       <File Path="$PPRDIR/../ip/rb_cic_48k_to_8k_32T32.xcix">
         <FileInfo>
@@ -606,6 +566,26 @@
       </File>
       <Config>
         <Option Name="TopModule" Val="rb_fir2_8k_to_8k_25c_17i16_35o32"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="rb_fir1_8k_to_8k_25c_17i16_35o32" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rb_fir1_8k_to_8k_25c_17i16_35o32">
+      <File Path="$PPRDIR/../ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_fir1_8k_to_8k_25c_17i16_35o32/rb_fir1_8k_to_8k_25c_17i16_35o32.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="TopModule" Val="rb_fir1_8k_to_8k_25c_17i16_35o32"/>
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
@@ -698,13 +678,6 @@
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
-    <Run Id="rb_fifo_axis_W32_D16_synth_1" Type="Ft3:Synth" SrcSet="rb_fifo_axis_W32_D16" Part="xc7z010clg400-1" ConstrsSet="rb_fifo_axis_W32_D16" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/rb_fifo_axis_W32_D16_synth_1" IncludeInArchive="true">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015"/>
-        <Step Id="synth_design"/>
-      </Strategy>
-      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
-    </Run>
     <Run Id="rb_cordic_T_WS_O_SR_32T32_CR_B_synth_1" Type="Ft3:Synth" SrcSet="rb_cordic_T_WS_O_SR_32T32_CR_B" Part="xc7z010clg400-1" ConstrsSet="rb_cordic_T_WS_O_SR_32T32_CR_B" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/rb_cordic_T_WS_O_SR_32T32_CR_B_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015"/>
@@ -720,13 +693,6 @@
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
     <Run Id="rb_fir3_48k_to_48k_24c_17i16_35o33_synth_1" Type="Ft3:Synth" SrcSet="rb_fir3_48k_to_48k_24c_17i16_35o33" Part="xc7z010clg400-1" ConstrsSet="rb_fir3_48k_to_48k_24c_17i16_35o33" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/rb_fir3_48k_to_48k_24c_17i16_35o33_synth_1" IncludeInArchive="true">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015"/>
-        <Step Id="synth_design"/>
-      </Strategy>
-      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
-    </Run>
-    <Run Id="rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1" Type="Ft3:Synth" SrcSet="rb_fir1_8k_to_8k_25c_17i16_35o32" Part="xc7z010clg400-1" ConstrsSet="rb_fir1_8k_to_8k_25c_17i16_35o32" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015"/>
         <Step Id="synth_design"/>
@@ -750,6 +716,15 @@
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
     <Run Id="rb_fir2_8k_to_8k_25c_17i16_35o32_synth_1" Type="Ft3:Synth" SrcSet="rb_fir2_8k_to_8k_25c_17i16_35o32" Part="xc7z010clg400-1" ConstrsSet="rb_fir2_8k_to_8k_25c_17i16_35o32" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/rb_fir2_8k_to_8k_25c_17i16_35o32_synth_1" IncludeInArchive="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015">
+          <Desc>Vivado Synthesis Defaults</Desc>
+        </StratHandle>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+    </Run>
+    <Run Id="rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1" Type="Ft3:Synth" SrcSet="rb_fir1_8k_to_8k_25c_17i16_35o32" Part="xc7z010clg400-1" ConstrsSet="rb_fir1_8k_to_8k_25c_17i16_35o32" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015">
           <Desc>Vivado Synthesis Defaults</Desc>
@@ -885,20 +860,6 @@
         <Step Id="write_bitstream"/>
       </Strategy>
     </Run>
-    <Run Id="rb_fifo_axis_W32_D16_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="rb_fifo_axis_W32_D16" Description="Vivado Implementation Defaults" SynthRun="rb_fifo_axis_W32_D16_synth_1" IncludeInArchive="true">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015"/>
-        <Step Id="init_design"/>
-        <Step Id="opt_design"/>
-        <Step Id="power_opt_design"/>
-        <Step Id="place_design"/>
-        <Step Id="post_place_power_opt_design"/>
-        <Step Id="phys_opt_design"/>
-        <Step Id="route_design"/>
-        <Step Id="post_route_phys_opt_design"/>
-        <Step Id="write_bitstream"/>
-      </Strategy>
-    </Run>
     <Run Id="rb_cordic_T_WS_O_SR_32T32_CR_B_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="rb_cordic_T_WS_O_SR_32T32_CR_B" Description="Vivado Implementation Defaults" SynthRun="rb_cordic_T_WS_O_SR_32T32_CR_B_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015"/>
@@ -928,20 +889,6 @@
       </Strategy>
     </Run>
     <Run Id="rb_fir3_48k_to_48k_24c_17i16_35o33_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="rb_fir3_48k_to_48k_24c_17i16_35o33" Description="Vivado Implementation Defaults" SynthRun="rb_fir3_48k_to_48k_24c_17i16_35o33_synth_1" IncludeInArchive="true">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015"/>
-        <Step Id="init_design"/>
-        <Step Id="opt_design"/>
-        <Step Id="power_opt_design"/>
-        <Step Id="place_design"/>
-        <Step Id="post_place_power_opt_design"/>
-        <Step Id="phys_opt_design"/>
-        <Step Id="route_design"/>
-        <Step Id="post_route_phys_opt_design"/>
-        <Step Id="write_bitstream"/>
-      </Strategy>
-    </Run>
-    <Run Id="rb_fir1_8k_to_8k_25c_17i16_35o32_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="rb_fir1_8k_to_8k_25c_17i16_35o32" Description="Vivado Implementation Defaults" SynthRun="rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015"/>
         <Step Id="init_design"/>
@@ -986,6 +933,22 @@
       </Strategy>
     </Run>
     <Run Id="rb_fir2_8k_to_8k_25c_17i16_35o32_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="rb_fir2_8k_to_8k_25c_17i16_35o32" Description="Vivado Implementation Defaults" SynthRun="rb_fir2_8k_to_8k_25c_17i16_35o32_synth_1" IncludeInArchive="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015">
+          <Desc>Vivado Implementation Defaults</Desc>
+        </StratHandle>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+    </Run>
+    <Run Id="rb_fir1_8k_to_8k_25c_17i16_35o32_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="rb_fir1_8k_to_8k_25c_17i16_35o32" Description="Vivado Implementation Defaults" SynthRun="rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015">
           <Desc>Vivado Implementation Defaults</Desc>
