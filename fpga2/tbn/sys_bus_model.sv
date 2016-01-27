@@ -37,7 +37,6 @@ task transaction (
   output DAT_T rdata
 );
   @(posedge bus.clk)
-  bus.sel    <= '1;
   bus.wen    <=  we;
   bus.ren    <= ~we;
   bus.addr   <= addr;
