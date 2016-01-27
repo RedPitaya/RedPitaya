@@ -24,6 +24,9 @@
  */
 
 module asg_top #(
+  // functionality enable
+  bit EN_LIN = 1,
+  // data path
   int unsigned DN = 1,
   type DAT_T = logic [8-1:0],
   // data parameters
@@ -206,18 +209,34 @@ asg #(
 
 // TODO: this will be a continuous stream, data stream control needs rethinking
 
-linear #(
-  .DN  (DN),
-  .DTI (DAT_T),
-  .DTO (DAT_T),
-  .DWM (DWM)
-) linear (
-  // stream input/output
-  .sti       (stg),
-  .sto       (sto),
-  // configuration
-  .cfg_mul   (cfg_mul),
-  .cfg_sum   (cfg_sum)
-);
+generate
+if (EN_LIN) begin: en_lin
+
+  linear #(
+    .DN  (DN),
+    .DTI (DAT_T),
+    .DTO (DAT_T),
+    .DWM (DWM)
+  ) linear (
+    // stream input/output
+    .sti       (stg),
+    .sto       (sto),
+    // configuration
+    .cfg_mul   (cfg_mul),
+    .cfg_sum   (cfg_sum)
+  );
+
+end else begin
+
+  str_pas pass (
+    // control
+    .ena  (1'b1),
+    // streams
+    .sti  (stg),
+    .sto  (sto)
+  );
+
+end
+endgenerate
 
 endmodule: asg_top

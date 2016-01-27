@@ -43,8 +43,7 @@ logic    [  32-1:0] cfg_bil;  // number of delay cycles
 logic    [  16-1:0] cfg_bnm;  // number of repetitions
 
 // stream input/output
-str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (DAT_T)) sto (.clk (clk), .rstn (rstn));
+str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and time stamp
@@ -60,8 +59,10 @@ always #(TP/2) clk = ~clk;
 initial begin
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
+  // control
+  trg_i = '1;
   // configuration
-  cfg_trg  = '1;
+  cfg_trg = '1;
   cfg_siz = 2**CWM-1;
   cfg_stp = 1 << CWF;
   cfg_off = 0 << CWF;
@@ -114,7 +115,7 @@ asg #(
   .CWF (CWF)
 ) asg (
   // stream output
-  .sto      (sto),
+  .sto      (str),
   // control
   .ctl_rst  (ctl_rst),
   // trigger
@@ -138,7 +139,7 @@ asg #(
 str_drn #(
   .DAT_T (DAT_T)
 ) str_drn (
-  .str      (sto)
+  .str      (str)
 );
 
 ////////////////////////////////////////////////////////////////////////////////

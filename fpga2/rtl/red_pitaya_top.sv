@@ -632,6 +632,7 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 asg_top #(
+  .EN_LIN (0),
   .DAT_T (SBL_T),
   .TN ($bits(trg))
 ) lg (
@@ -672,15 +673,11 @@ la_top #(
 
 // TODO: for now just a loopback
 // this is an attempt to minimize the related DMA
-/*
+
 str_pas on_demand (
   .ena (1'b1),
   .sti (str_dtx[3]),
   .sto (str_drx[3])
 );
-*/
-
-assign str_dtx[3].rdy = 1'b0;
-assign str_drx[3].vld = 1'b0;
 
 endmodule: red_pitaya_top

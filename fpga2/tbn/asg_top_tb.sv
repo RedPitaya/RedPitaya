@@ -9,6 +9,8 @@
 module asg_top_tb #(
   // time period
   realtime  TP = 8.0ns,  // 125MHz
+  // functionality enable
+  bit EN_LIN = 0,
   // data parameters
   int unsigned DWO = 14,  // RAM data width
   int unsigned DWM = 16,  // data width for multiplier (gain)
@@ -38,8 +40,7 @@ struct packed {
 } trg;
 
 // trigger parameters
-localparam int unsigned TWA = $bits(trg);   // trigger array  width
-localparam int unsigned TWS = $clog2(TWA);  // trigger select width
+localparam int unsigned TN = $bits(trg);   // trigger array  width
 
 // DAC clock
 initial        clk = 1'b0;
@@ -92,7 +93,7 @@ initial begin
 //busm.write(32'h10, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
   busm.write(32'h10, 1                           * 2**CWF    );  // step
   // configure burst mode
-  busm.write(32'h04, {1'b0, TWS'(0)});  // burst disable
+  busm.write(32'h04, {1'b0, TN'(1)});  // burst disable
   // configure amplitude and DC offset
   busm.write(32'h24, 1 << (DWM-2));  // amplitude
   busm.write(32'h28, 0);             // DC offset
@@ -108,7 +109,7 @@ initial begin
   busm.write(32'h0c, 0 * 2**CWF);  // offset
   busm.write(32'h10, 1 * 2**CWF);  // step
   // configure burst mode
-  busm.write(32'h04, {1'b1, TWS'(0)});  // burst enable
+  busm.write(32'h04, {1'b1, TN'(0)});  // burst enable
   busm.write(32'h18, 6);  // number of cycles
   busm.write(32'h1c, 10);  // number of delay periods between repetitions
   busm.write(32'h20, 5);  // number of repetitions
@@ -144,11 +145,9 @@ sys_bus_if    bus  (.clk (clk), .rstn (rstn));
 sys_bus_model busm (.bus (bus));
 
 asg_top #(
-  .TWA (TWA)
+  .EN_LIN (0),
+  .TN (TN)
 ) asg_top (
-  // system signals
-  .clk       (clk ),
-  .rstn      (rstn),
   // stream output
   .sto       (str),
   // triggers
