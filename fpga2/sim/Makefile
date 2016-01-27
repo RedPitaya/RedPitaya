@@ -9,6 +9,7 @@ PATH_TBN=../tbn
 LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
     $(PATH_LIB)/unisims/XADC.v \
     $(PATH_LIB)/unisims/IBUFDS.v \
+    $(PATH_LIB)/unisims/IBUFGDS.v \
     $(PATH_LIB)/unisims/IOBUF.v \
     $(PATH_LIB)/unisims/BUFG.v \
     $(PATH_LIB)/unisims/PLLE2_ADV.v \

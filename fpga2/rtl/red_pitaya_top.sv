@@ -156,7 +156,7 @@ sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
-IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
+IBUFGDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
 
 red_pitaya_pll pll (
   // inputs
@@ -301,6 +301,10 @@ gpio #(.DW (GDW)) gpio (
 
 IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_oe));
 IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_oe));
+
+////////////////////////////////////////////////////////////////////////////////
+// debounce
+////////////////////////////////////////////////////////////////////////////////
 
 debounce #(
   .CW (20),
