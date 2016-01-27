@@ -25,12 +25,19 @@ CU_TestInfo la_acq_test_array[] = {
   CU_TEST_INFO_NULL,
 };
 
+/** sig gen test */
+CU_TestInfo sig_gen_test_array[] = {
+  { "sig_gen", sig_gen_test},
+  CU_TEST_INFO_NULL,
+};
+
 // add new tests here
 
 /** suite table */
 CU_SuiteInfo suites[] = {
   { "SuiteExampleTest", init_example_suite, clean_example_suite, example_test_array},
   { "suite_la_acq_test", suite_la_acq_init, suite_la_acq_cleanup, la_acq_test_array},
+  { "suite_sig_gen_test", suite_sig_gen_init, suite_sig_gen_cleanup, sig_gen_test_array},
   // add new suite here
   CU_SUITE_INFO_NULL,
 };

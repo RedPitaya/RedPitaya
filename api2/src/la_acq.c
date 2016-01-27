@@ -23,10 +23,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-
 #include "common.h"
-
-#include "rp2.h"
 
 const char c_dummy_dev[]="/dev/dummy";
 
@@ -155,6 +152,18 @@ int rp_LaGenGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg) {
     a_reg->pst = ioread32(&regset->pst);
     return RP_OK;
 }
+
+int rp_AcqGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_reg)
+{
+
+    return RP_OK;
+}
+
+int rp_AcqGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_reg)
+{
+    return RP_OK;
+}
+
 
 /** Trigger settings setter & getter */
 int rp_LaGenSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg) {

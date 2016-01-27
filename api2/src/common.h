@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "redpitaya/rp2.h"
+#include "rp2.h"
 
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t *)(p))

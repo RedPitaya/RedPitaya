@@ -18,7 +18,7 @@ VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
-OBJS = ut_main.o ut_la_acq.o ut_example.o
+OBJS = ut_main.o ut_example.o ut_la_acq.o ut_sig_gen.o 
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 

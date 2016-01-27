@@ -19,5 +19,10 @@ int suite_la_acq_init(void);
 int suite_la_acq_cleanup(void);
 void reg_rw_test(void);
 
+int suite_sig_gen_init(void);
+int suite_sig_gen_cleanup(void);
+void sig_gen_test(void);
+
+
 #endif // __UT_MAIN_H
 

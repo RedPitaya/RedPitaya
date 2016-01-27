@@ -108,6 +108,8 @@ int rp_LaGenTriggerAcq(rp_handle_uio_t *handle);
 int rp_LaGenAcqIsStopped(rp_handle_uio_t *handle, bool * status);
 int rp_LaGenSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg);
 int rp_LaGenGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg);
+int rp_AcqGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_reg);
+int rp_AcqGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_reg);
 int rp_LaGenSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);
 int rp_LaGenGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg);
 int rp_LaGenSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);

@@ -135,8 +135,8 @@ typedef enum {
 
 
 typedef enum rpDigitalPort {
-    PS3000A_DIGITAL_PORT0 = 0x80, // (digital channels 0–7)
-    PS3000A_DIGITAL_PORT1 = 0x81  // (digital channels 8–15)
+    RP_DIGITAL_PORT0 = 0x80, // (digital channels 0–7)
+    RP_DIGITAL_PORT1 = 0x81  // (digital channels 8–15)
 } RP_DIGITAL_PORT;
 
 typedef enum rpDigitalChannel
@@ -313,11 +313,11 @@ typedef enum rpTriggerType{
 
 
 typedef enum rpTriggerSource {
-    PS3000A_SIGGEN_NONE, ///< run without waiting for trigger
-    PS3000A_SIGGEN_SCOPE_TRIG, ///< use scope trigger
-    PS3000A_SIGGEN_EXT_IN, ///< use EXT input
-    PS3000A_SIGGEN_SOFT_TRIG, ///< wait for software trigger provided by rpSigGenSoftwareControl()
-    PS3000A_SIGGEN_TRIGGER_RAW // reserved
+    RP_SIGGEN_NONE, ///< run without waiting for trigger
+    RP_SIGGEN_SCOPE_TRIG, ///< use scope trigger
+    RP_SIGGEN_EXT_IN, ///< use EXT input
+    RP_SIGGEN_SOFT_TRIG, ///< wait for software trigger provided by rpSigGenSoftwareControl()
+    RP_SIGGEN_TRIGGER_RAW // reserved
 } RP_SIGGEN_TRIG_SOURCE;
 
 RP_STATUS rpSigGenSoftwareControl(int16_t state);

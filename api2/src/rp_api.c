@@ -6,23 +6,33 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "generate.h"
+#include "la_acq.h"
 
 /** SIGNAL ACQUISTION  */
 
 /** Maximal digital signal sampling frequency [Hz] */
-const double c_max_dig_sampling_rate = 250e6;
+const double c_max_dig_sampling_rate = 125e6;
 
 /** Maximal digital signal sampling frequency time interval [nS] */
 const double c_max_dig_sampling_rate_time_interval_ns = 4;
 
+rp_handle_uio_t la_acq_handle;
+rp_handle_uio_t sig_gen_handle;
 
 /**
  * Open device
  */
 RP_STATUS rpOpenUnit(void)
 {
-
-    return RP_OK;
+    int r=RP_OK;
+    if(rp_LaGenOpen("/dev/dummy", &la_acq_handle)!=RP_OK){
+        r=-1;
+    }
+    if(rp_GenInit("/dev/dummy", &sig_gen_handle)!=RP_OK){
+        r=-1;
+    }
+    return r;
 }
 
 /**
@@ -30,8 +40,14 @@ RP_STATUS rpOpenUnit(void)
  */
 RP_STATUS rpCloseUnit(void)
 {
-
-    return RP_OK;
+    int r=RP_OK;
+    if(rp_LaGenClose(&la_acq_handle)!=RP_OK){
+        r=-1;
+    }
+    if(rp_GenRelease(&sig_gen_handle)!=RP_OK){
+        r=-1;
+    }
+    return r;
 }
 
 /**
@@ -71,6 +87,9 @@ RP_STATUS rpSetDigitalPort(RP_DIGITAL_PORT port,
                            int16_t enabled,
                            int16_t logiclevel)
 {
+    // TODO:
+    // RP_DIGITAL_PORT0
+    // RP_DIGITAL_PORT1
     return RP_OK;
 }
 
@@ -94,36 +113,65 @@ RP_STATUS rpSetDigitalPort(RP_DIGITAL_PORT port,
 RP_STATUS rpSetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
                                             int16_t nDirections)
 {
-    uint32_t n;
+    // disable triggering by default
+    rp_AcqGlobalTrigDisable(&la_acq_handle, RP_LA_TRI_EN_LGA_MASK);
 
-    // disable digital triggering
+    rp_la_trg_regset_t trg;
+    memset(&trg,0,sizeof(rp_la_trg_regset_t));
+
+    // none of triggers is enabled
     if(directions==NULL){
-
-
         return RP_OK;
     }
 
-    // disable all channels by default
-    for(n=RP_DIGITAL_CHANNEL_0; n < RP_MAX_DIGITAL_CHANNELS; n++){
-
-
-    }
-
-    // enable channels set by
+    uint32_t n;
+    uint32_t edge_cnt=0;
+    // set trigger pattern settings
     for(n=0; n < nDirections; n++){
+        uint32_t mask = (1<<directions[n].channel);
+        if(edge_cnt>1){
+            // more than one pin is set to rising/falling edge
+            return RP_INVALID_PARAMETER;
+        }
         switch(directions[n].direction){
             case RP_DIGITAL_DONT_CARE:
+                // default value is don't care
+                break;
             case RP_DIGITAL_DIRECTION_LOW:
+                trg.cmp_msk|=mask;
+                // default val is low
+                break;
             case RP_DIGITAL_DIRECTION_HIGH:
+                trg.cmp_msk|=mask;
+                trg.cmp_val|=mask;
+                break;
             case RP_DIGITAL_DIRECTION_RISING:
+                trg.cmp_msk|=mask;
+                trg.edg_pos|=mask;
+                edge_cnt++;
+                break;
             case RP_DIGITAL_DIRECTION_FALLING:
+                trg.cmp_msk|=mask;
+                trg.edg_neg|=mask;
+                edge_cnt++;
+                break;
             case RP_DIGITAL_DIRECTION_RISING_OR_FALLING:
-                //directions[n].channel
+                trg.cmp_msk|=mask;
+                trg.edg_pos|=mask;
+                trg.edg_neg|=mask;
+                edge_cnt++;
                 break;
             default:
                 return RP_INVALID_PARAMETER;
                 break;
         }
+    }
+
+    // update settings
+    if(edge_cnt==1){
+        rp_LaGenSetTrigSettings(&la_acq_handle, trg);
+        rp_AcqGlobalTrigEnable(&la_acq_handle, RP_LA_TRI_EN_LGA_MASK);
+        return RP_OK;
     }
 
     return RP_OK;
@@ -223,8 +271,20 @@ RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
     *timeIndisposedMs=(noOfPreTriggerSamples+noOfPostTriggerSamples)*timeIntervalNanoseconds/10e6;
 
     // configure FPGA to start block mode
+    rp_la_decimation_regset_t dec;
+    dec.dec=timebase;
+    rp_LaGenSetDecimation(&la_acq_handle, dec);
+
+    rp_la_cfg_regset_t cfg;
+    cfg.acq=0;
+    //cfg.trg= ?? can this be separated
+    cfg.pre=noOfPreTriggerSamples;
+    cfg.pst=noOfPostTriggerSamples;
+    rp_LaGenSetConfig(&la_acq_handle, cfg);
+    rp_LaGenRunAcq(&la_acq_handle);
 
     // block read
+    // TODO:
 
     // acquisition is completed -> callback
     (*rpReady)(status,pParameter);
@@ -383,8 +443,7 @@ RP_STATUS rpGetStreamingLatestValues(rpStreamingReady rpReady,
 
 
 RP_STATUS rpStop(void){
-
-    return RP_OK;
+    return rp_LaGenStopAcq(&la_acq_handle);
 }
 
 /** SIGNAL GENERATION  */
@@ -397,6 +456,7 @@ RP_STATUS rpStop(void){
  */
 
 RP_STATUS rpSigGenSoftwareControl(int16_t state){
+    rp_GenTrigger(&sig_gen_handle);
     return RP_OK;
 }
 
@@ -445,6 +505,54 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
                              RP_SIGGEN_TRIG_TYPE triggerType,
                              RP_SIGGEN_TRIG_SOURCE triggerSource,
                              int16_t extInThreshold){
+
+    //rp_GenSetAmp(&sig_gen_handle,1.0);
+    //rp_GenSetOffset(&sig_gen_handle, 1.0);
+
+
+    // triggerType
+    switch(triggerSource){
+        case RP_SIGGEN_NONE:
+            break;
+        case RP_SIGGEN_SCOPE_TRIG:
+            break;
+        case RP_SIGGEN_EXT_IN:
+            break;
+        case RP_SIGGEN_SOFT_TRIG:
+            rp_GenSetTriggerSource(&sig_gen_handle, 0);
+            break;
+        case RP_SIGGEN_TRIGGER_RAW:
+            break;
+    }
+
+    rp_GenSetFreq(&sig_gen_handle, 1);
+
+    switch(waveType){
+        case RP_SG_SINE:
+            break;
+        case RP_SG_SQUARE:
+            break;
+        case RP_SG_TRIANGLE:
+            break;
+        case RP_SG_DC_VOLTAGE:
+            break;
+        case RP_SG_RAMP_UP:{
+            int16_t waveform[]={1,2,3};
+            rp_GenSetWaveform(&sig_gen_handle, waveform, sizeof(waveform));
+        }
+            break;
+        case RP_SG_RAMP_DOWN:
+            break;
+        case RP_SG_SINC:
+            break;
+        case RP_SG_GAUSSIAN:
+            break;
+        case PR_SG_HALF_SINE:
+            break;
+    }
+
+
+
     return RP_OK;
 }
 
