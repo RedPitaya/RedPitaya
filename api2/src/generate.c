@@ -24,7 +24,14 @@
 #include "common.h"
 #include "generate.h"
 
-int rp_GenInit(char *dev, rp_handle_uio_t *handle) {
+int rp_OpenUnit3(){
+int x=5;
+x=4;
+   return x;
+}
+
+
+int rp_GenOpen(char *dev, rp_handle_uio_t *handle) {
     // make a copy of the device path
     handle->dev = (char*) malloc((strlen(dev)+1) * sizeof(char));
     strncpy(handle->dev, dev, strlen(dev)+1);
@@ -42,7 +49,7 @@ int rp_GenInit(char *dev, rp_handle_uio_t *handle) {
     return RP_OK;
 }
 
-int rp_GenRelease(rp_handle_uio_t *handle) {
+int rp_GenClose(rp_handle_uio_t *handle) {
     // release regset
     munmap((void *) handle->regset, GENERATE_BASE_SIZE);
     // close device
@@ -61,13 +68,13 @@ int rp_GenReset(rp_handle_uio_t *handle) {
 //    gen_setGenMode(channel, RP_GEN_MODE_CONTINUOUS);
     // clean up table (TODO, should I really)
     uint32_t length = 1 << RP_GEN_CWM;
-    int16_t waveform [length];
+    uint16_t waveform [length];
     for (unsigned int i=0; i<length; i++) {
         waveform[i] = 0;
     }
     rp_GenSetWaveform    (handle, waveform, length);
     rp_GenSetFreqPhase   (handle, 1000.0, 0.0);
-    rp_GenSetTriggerMask (handle, 0x0);
+    rp_DigGenGlobalTrigDisable (handle, RP_TRG_ALL);
     rp_GenSetBurst       (handle, 0, 0, 0);
     rp_GenSetLinear      (handle, 1.0, 0.0);
     return RP_OK;
@@ -112,32 +119,35 @@ int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase
     return RP_OK;
 }
 
-int rp_GenSetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t length) {
+int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    // Check if data is normalized, else return error
-    // TODO: this check should be moved outside
-    for (int unsigned i=0; i<length; i++) {
-        // TODO: use a mask macro
-        if (waveform[i] & ~((1<<RP_GEN_DWO)-1))  return RP_ENN;
+    if(length>RP_GEN_SIG_SAMPLES){
+        return -1;
     }
-    // write array into hardware buffer
-    for (int unsigned i=0; i<length; i++) {
+    for (uint32_t i=0; i<length; i++) {
         iowrite32(waveform[i], &regset->table[i]);
     }
-    iowrite32((length << RP_GEN_CWM) - 1, &regset->cfg_siz);
     return RP_OK;
 }
 
-int rp_GenGetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t *length) {
+int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    *length = (ioread32(&regset->cfg_siz) + 1) >> RP_GEN_CWM;
-    // read array from hardware buffer
-    for (int unsigned i=0; i<*length; i++) {
+    if(length>RP_GEN_SIG_SAMPLES){
+        return -1;
+    }
+    for (uint32_t i=0; i<length; i++) {
         waveform[i] = ioread32(&regset->table[i]);
     }
     return RP_OK;
 }
 
+int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle) {
+    uint16_t ramp[256];
+    for (uint32_t i=0; i<256; i++) {
+        ramp[i] = i;
+    }
+    return rp_GenSetWaveform(handle, ramp, 256);
+}
 
 int rp_GenSetBurst(rp_handle_uio_t *handle, uint32_t len_data, uint32_t len_idle, uint32_t repetitions) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
@@ -155,18 +165,6 @@ int rp_GenGetBurst(rp_handle_uio_t *handle, uint32_t *len_data, uint32_t *len_id
     return RP_OK;
 }
 
-int rp_GenSetTriggerMask(rp_handle_uio_t *handle, uint32_t mask) {
-    asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    iowrite32(mask, &regset->cfg_trg);
-    return RP_OK;
-}
-
-int rp_GenGetTriggerMask(rp_handle_uio_t *handle, uint32_t *mask) {
-    asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    *mask = ioread32(&regset->cfg_trg);
-    return RP_OK;
-}
-
 int rp_GenSetMode(rp_handle_uio_t *handle, uint32_t mode) {
     return RP_OK;
 }
@@ -176,6 +174,47 @@ int rp_GenGetMode(rp_handle_uio_t *handle, uint32_t *mode) {
 }
 
 int rp_GenTrigger(rp_handle_uio_t *handle) {
+    return RP_OK;
+}
+
+
+int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t a_mask)
+{
+    rp_dig_out_t *regset = (rp_dig_out_t *) &(((asg_regset_t*)handle->regset)->dig);
+    uint32_t tmp;
+    tmp=ioread32(&regset->dig_out_en);
+    tmp|=a_mask;
+    iowrite32(tmp, &regset->dig_out_en);
+    return RP_OK;
+}
+
+int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t a_mask)
+{
+    rp_dig_out_t *regset = (rp_dig_out_t *) &(((asg_regset_t*)handle->regset)->dig);
+    uint32_t tmp;
+    tmp=ioread32(&regset->dig_out_en);
+    tmp&=~a_mask;
+    iowrite32(tmp, &regset->dig_out_en);
+    return RP_OK;
+}
+
+int rp_DigGenGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask)
+{
+    rp_global_trig_regset_t *regset = (rp_global_trig_regset_t *) &(((asg_regset_t*)handle->regset)->gtrg);
+    uint32_t tmp;
+    tmp=ioread32(&regset->msk);
+    tmp|=a_mask;
+    iowrite32(tmp, &regset->msk);
+    return RP_OK;
+}
+
+int rp_DigGenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask)
+{
+    rp_global_trig_regset_t *regset = (rp_global_trig_regset_t *) &(((asg_regset_t*)handle->regset)->gtrg);
+    uint32_t tmp;
+    tmp=ioread32(&regset->msk);
+    tmp&=~a_mask;
+    iowrite32(tmp, &regset->msk);
     return RP_OK;
 }
 

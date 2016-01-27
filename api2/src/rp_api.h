@@ -17,7 +17,7 @@ typedef enum {
 } RP_INFO;
 
 typedef enum {
-    RP_OK, ///< The Red Pitaya is functioning correctly
+    RP_API_OK, ///< The Red Pitaya is functioning correctly
     RP_MAX_UNITS_OPENED, ///< An attempt has been made to open more than RP_MAX_UNITS.
     RP_MEMORY_FAIL, //< Not enough memory could be allocated on the host machine
     RP_NOT_FOUND, ///< No PicoScope could be found
@@ -209,19 +209,19 @@ typedef void (*rpStreamingReady)(int32_t noOfSamples,
                                  int16_t autoStop,
                                  void * pParameter);
 
-RP_STATUS rpOpenUnit(void);
+RP_STATUS rp_OpenUnit(void);
 
-RP_STATUS rpCloseUnit(void);
+RP_STATUS rp_CloseUnit(void);
 
-RP_STATUS rpGetUnitInfo(int8_t * string,
+RP_STATUS rp_GetUnitInfo(int8_t * string,
                         int16_t stringLength,
                         int16_t * requiredSize,
                         RP_INFO info);
 
-RP_STATUS rpSetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
+RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
                                             int16_t nDirections);
 
-RP_STATUS rpGetTimebase(uint32_t timebase,
+RP_STATUS rp_GetTimebase(uint32_t timebase,
                         int32_t noSamples,
                         double * timeIntervalNanoseconds,
                         //int16_t oversample,
@@ -229,13 +229,13 @@ RP_STATUS rpGetTimebase(uint32_t timebase,
                         //uint32_t segmentIndex
                         );
 
-RP_STATUS rpSetDataBuffer(RP_DIGITAL_PORT channel,
+RP_STATUS rp_SetDataBuffer(RP_DIGITAL_PORT channel,
                           int16_t * buffer,
                           int32_t bufferLth,
                           // uint32_t segmentIndex,
                           RP_RATIO_MODE mode);
 
-RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
+RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
                        uint32_t noOfPostTriggerSamples,
                        uint32_t timebase,
                        // int16_t oversample,
@@ -245,7 +245,7 @@ RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
                        void * pParameter);
 
 
-RP_STATUS rpRunStreaming(uint32_t * sampleInterval,
+RP_STATUS rp_RunStreaming(uint32_t * sampleInterval,
                         RP_TIME_UNITS sampleIntervalTimeUnits,
                         uint32_t maxPreTriggerSamples,
                         uint32_t maxPostTriggerSamples,
@@ -254,17 +254,17 @@ RP_STATUS rpRunStreaming(uint32_t * sampleInterval,
                         RP_RATIO_MODE downSampleRatioMode,
                         uint32_t overviewBufferSize);
 
-RP_STATUS rpGetValues(uint32_t startIndex,
+RP_STATUS rp_GetValues(uint32_t startIndex,
                       uint32_t * noOfSamples,
                       uint32_t downSampleRatio,
                       RP_RATIO_MODE downSampleRatioMode,
                       //uint32_t segmentIndex,
                       int16_t * overflow);
 
-RP_STATUS rpGetStreamingLatestValues(rpStreamingReady rpReady,
+RP_STATUS rp_GetStreamingLatestValues(rpStreamingReady rpReady,
                                      void * pParameter);
 
-RP_STATUS rpGetValuesAsync(uint32_t startIndex,
+RP_STATUS rp_GetValuesAsync(uint32_t startIndex,
                            uint32_t noOfSamples,
                            uint32_t downSampleRatio,
                            RP_RATIO_MODE downSampleRatioMode,
@@ -272,7 +272,7 @@ RP_STATUS rpGetValuesAsync(uint32_t startIndex,
                            void * lpDataReady,
                            void * pParameter);
 
-RP_STATUS rpStop(void);
+RP_STATUS rp_Stop(void);
 
 
 /** SIGNAL GENERATION  */
@@ -320,8 +320,9 @@ typedef enum rpTriggerSource {
     RP_SIGGEN_TRIGGER_RAW // reserved
 } RP_SIGGEN_TRIG_SOURCE;
 
-RP_STATUS rpSigGenSoftwareControl(int16_t state);
-RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
+RP_STATUS rp_SigGenSoftwareControl(int16_t state);
+
+RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
                              uint32_t pkToPk,
                              RP_WAVE_TYPE waveType,
                              float startFrequency,
@@ -336,4 +337,15 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
                              RP_SIGGEN_TRIG_SOURCE triggerSource,
                              int16_t extInThreshold);
 
+/** DIGITAL SIGNAL GENERATION  */
+
+typedef enum patternType{
+    RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ, ///< counts 8bit
+} RP_DIG_SIGGEN_PAT_TYPE;
+
+RP_STATUS rp_DigSigGenSoftwareControl(int16_t state);
+
+RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
+                                float frequency,
+                                uint32_t triggerSourceMask);
 #endif // _RP_API_H_

@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "common.h"
 #include "generate.h"
 #include "la_acq.h"
 
@@ -23,13 +23,13 @@ rp_handle_uio_t sig_gen_handle;
 /**
  * Open device
  */
-RP_STATUS rpOpenUnit(void)
+RP_STATUS rp_OpenUnit(void)
 {
-    int r=RP_OK;
-    if(rp_LaGenOpen("/dev/dummy", &la_acq_handle)!=RP_OK){
+    int r=RP_API_OK;
+    if(rp_LaAcqOpen("/dev/dummy", &la_acq_handle)!=RP_API_OK){
         r=-1;
     }
-    if(rp_GenInit("/dev/dummy", &sig_gen_handle)!=RP_OK){
+    if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -38,13 +38,13 @@ RP_STATUS rpOpenUnit(void)
 /**
  * Close device
  */
-RP_STATUS rpCloseUnit(void)
+RP_STATUS rp_CloseUnit(void)
 {
-    int r=RP_OK;
-    if(rp_LaGenClose(&la_acq_handle)!=RP_OK){
+    int r=RP_API_OK;
+    if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
         r=-1;
     }
-    if(rp_GenRelease(&sig_gen_handle)!=RP_OK){
+    if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -60,14 +60,14 @@ RP_STATUS rpCloseUnit(void)
  * @param requiredSize  On exit, the required length of the string array.
  * @param info            A number specifying what information is required. The possible values are listed in the table below.
  */
-RP_STATUS rpGetUnitInfo(int8_t * string,
+RP_STATUS rp_GetUnitInfo(int8_t * string,
                         int16_t stringLength,
                         int16_t * requiredSize,
                         RP_INFO info)
 {
 
 
-    return RP_OK;
+    return RP_API_OK;
 }
 
 
@@ -83,14 +83,14 @@ RP_STATUS rpGetUnitInfo(int8_t * string,
  *                         and 1. Range: –32767 (–5 V) to 32767 (5 V).
  *
  */
-RP_STATUS rpSetDigitalPort(RP_DIGITAL_PORT port,
+RP_STATUS rp_SetDigitalPort(RP_DIGITAL_PORT port,
                            int16_t enabled,
                            int16_t logiclevel)
 {
     // TODO:
     // RP_DIGITAL_PORT0
     // RP_DIGITAL_PORT1
-    return RP_OK;
+    return RP_API_OK;
 }
 
 
@@ -110,18 +110,18 @@ RP_STATUS rpSetDigitalPort(RP_DIGITAL_PORT port,
  *                      passed to the driver.
  *
  */
-RP_STATUS rpSetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
+RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
                                             int16_t nDirections)
 {
     // disable triggering by default
-    rp_AcqGlobalTrigDisable(&la_acq_handle, RP_LA_TRI_EN_LGA_MASK);
+    rp_LaAcqGlobalTrigDisable(&la_acq_handle, RP_TRG_LGA_PAT_MASK);
 
     rp_la_trg_regset_t trg;
     memset(&trg,0,sizeof(rp_la_trg_regset_t));
 
     // none of triggers is enabled
     if(directions==NULL){
-        return RP_OK;
+        return RP_API_OK;
     }
 
     uint32_t n;
@@ -169,12 +169,12 @@ RP_STATUS rpSetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dire
 
     // update settings
     if(edge_cnt==1){
-        rp_LaGenSetTrigSettings(&la_acq_handle, trg);
-        rp_AcqGlobalTrigEnable(&la_acq_handle, RP_LA_TRI_EN_LGA_MASK);
-        return RP_OK;
+        rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
+        rp_LaAcqGlobalTrigEnable(&la_acq_handle, RP_TRG_LGA_PAT_MASK);
+        return RP_API_OK;
     }
 
-    return RP_OK;
+    return RP_API_OK;
 }
 
 /**
@@ -193,7 +193,7 @@ RP_STATUS rpSetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dire
  *                         enabled and the timebase chosen.
  *
  */
-RP_STATUS rpGetTimebase(uint32_t timebase,
+RP_STATUS rp_GetTimebase(uint32_t timebase,
                         int32_t noSamples,
                         double * timeIntervalNanoseconds,
                         //int16_t oversample,
@@ -202,7 +202,7 @@ RP_STATUS rpGetTimebase(uint32_t timebase,
                         )
 {
     *timeIntervalNanoseconds=timebase*c_max_dig_sampling_rate_time_interval_ns;
-    return RP_OK;
+    return RP_API_OK;
 };
 
 
@@ -216,7 +216,7 @@ RP_STATUS rpGetTimebase(uint32_t timebase,
  * @param bufferLth The size of the buffer array
  *
  */
-RP_STATUS rpSetDataBuffer(RP_DIGITAL_PORT channel,
+RP_STATUS rp_SetDataBuffer(RP_DIGITAL_PORT channel,
                                  int16_t * buffer,
                                  int32_t bufferLth,
                                 // uint32_t segmentIndex,
@@ -249,7 +249,7 @@ RP_STATUS rpSetDataBuffer(RP_DIGITAL_PORT channel,
  * @param pParameter                A void pointer that is passed to the rpBlockReady() callback function.
  */
 
-RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
+RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
                      uint32_t noOfPostTriggerSamples,
                      uint32_t timebase,
                     // int16_t oversample,
@@ -259,10 +259,12 @@ RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
                      void * pParameter
 )
 {
+    // reset
+
     double timeIntervalNanoseconds;
     uint32_t maxSamples;
-    RP_STATUS status = rpGetTimebase(timebase,0,&timeIntervalNanoseconds,&maxSamples);
-    if(status!=RP_OK) return status;
+    RP_STATUS status = rp_GetTimebase(timebase,0,&timeIntervalNanoseconds,&maxSamples);
+    if(status!=RP_API_OK) return status;
 
     if((noOfPreTriggerSamples+noOfPostTriggerSamples)>maxSamples){
         return RP_INVALID_PARAMETER;
@@ -273,15 +275,14 @@ RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
     // configure FPGA to start block mode
     rp_la_decimation_regset_t dec;
     dec.dec=timebase;
-    rp_LaGenSetDecimation(&la_acq_handle, dec);
+    rp_LaAcqSetDecimation(&la_acq_handle, dec);
 
     rp_la_cfg_regset_t cfg;
     cfg.acq=0;
-    //cfg.trg= ?? can this be separated
     cfg.pre=noOfPreTriggerSamples;
     cfg.pst=noOfPostTriggerSamples;
-    rp_LaGenSetConfig(&la_acq_handle, cfg);
-    rp_LaGenRunAcq(&la_acq_handle);
+    rp_LaAcqSetConfig(&la_acq_handle, cfg);
+    rp_LaAcqRunAcq(&la_acq_handle);
 
     // block read
     // TODO:
@@ -289,7 +290,7 @@ RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
     // acquisition is completed -> callback
     (*rpReady)(status,pParameter);
 
-    return RP_OK;
+    return RP_API_OK;
 }
 
 
@@ -322,7 +323,7 @@ RP_STATUS rpRunBlock(uint32_t noOfPreTriggerSamples,
  *                                     before returning it to the application.
  *                                     The size is the same as the bufferLth value passed to rpSetDataBuffer().
  */
-RP_STATUS rpRunStreaming(uint32_t * sampleInterval,
+RP_STATUS rp_RunStreaming(uint32_t * sampleInterval,
                         RP_TIME_UNITS sampleIntervalTimeUnits,
                         uint32_t maxPreTriggerSamples,
                         uint32_t maxPostTriggerSamples,
@@ -333,7 +334,7 @@ RP_STATUS rpRunStreaming(uint32_t * sampleInterval,
 {
 
     // configure FPGA to start block mode
-    return RP_OK;
+    return RP_API_OK;
 };
 
 
@@ -355,7 +356,7 @@ RP_STATUS rpRunStreaming(uint32_t * sampleInterval,
  *                             on any of the channels. It is a bit field with bit 0 denoting Channel A.
  *
  */
-RP_STATUS rpGetValues(uint32_t startIndex,
+RP_STATUS rp_GetValues(uint32_t startIndex,
                       uint32_t * noOfSamples,
                       uint32_t downSampleRatio,
                       RP_RATIO_MODE downSampleRatioMode,
@@ -363,7 +364,7 @@ RP_STATUS rpGetValues(uint32_t startIndex,
                       int16_t * overflow){
 
 
-    return RP_OK;
+    return RP_API_OK;
 };
 
 /**
@@ -380,7 +381,7 @@ RP_STATUS rpGetValues(uint32_t startIndex,
  * @param pParameter             A void pointer that will be passed to the callback function.
  *                                 the data type is determined by the application.
  */
-RP_STATUS rpGetValuesAsync(
+RP_STATUS rp_GetValuesAsync(
     uint32_t startIndex,
     uint32_t noOfSamples,
     uint32_t downSampleRatio,
@@ -390,7 +391,7 @@ RP_STATUS rpGetValuesAsync(
     void * pParameter)
 {
 
-    return RP_OK;
+    return RP_API_OK;
 }
 
 /**
@@ -405,7 +406,7 @@ RP_STATUS rpGetValuesAsync(
  *                         The callback may optionally use this pointer to return information to the application.
  *
  */
-RP_STATUS rpGetStreamingLatestValues(rpStreamingReady rpReady,
+RP_STATUS rp_GetStreamingLatestValues(rpStreamingReady rpReady,
                                      void * pParameter)
 {
     // block read
@@ -432,7 +433,7 @@ RP_STATUS rpGetStreamingLatestValues(rpStreamingReady rpReady,
                autoStop,
                pParameter);
 
-    return RP_OK;
+    return RP_API_OK;
 }
 
 /**
@@ -442,8 +443,8 @@ RP_STATUS rpGetStreamingLatestValues(rpStreamingReady rpReady,
  */
 
 
-RP_STATUS rpStop(void){
-    return rp_LaGenStopAcq(&la_acq_handle);
+RP_STATUS rp_Stop(void){
+    return rp_LaAcqStopAcq(&la_acq_handle);
 }
 
 /** SIGNAL GENERATION  */
@@ -455,9 +456,9 @@ RP_STATUS rpStop(void){
  * set to either SIGGEN_GATE_HIGH or SIGGEN_GATE_LOW. Ignored for other trigger types.
  */
 
-RP_STATUS rpSigGenSoftwareControl(int16_t state){
-    rp_GenTrigger(&sig_gen_handle);
-    return RP_OK;
+RP_STATUS rp_SigGenSoftwareControl(int16_t state){
+   // rp_GenTrigger(&sig_gen_handle);
+    return RP_API_OK;
 }
 
 /**
@@ -491,7 +492,7 @@ RP_STATUS rpSigGenSoftwareControl(int16_t state){
  * @param extInThreshold    Used to set trigger level for external trigger.
  */
 
-RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
+RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
                              uint32_t pkToPk,
                              RP_WAVE_TYPE waveType,
                              float startFrequency,
@@ -519,13 +520,11 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
         case RP_SIGGEN_EXT_IN:
             break;
         case RP_SIGGEN_SOFT_TRIG:
-            rp_GenSetTriggerMask(&sig_gen_handle, 0);
             break;
         case RP_SIGGEN_TRIGGER_RAW:
             break;
     }
 
-    rp_GenSetFreqPhase(&sig_gen_handle, 1, 0);
 
     switch(waveType){
         case RP_SG_SINE:
@@ -536,10 +535,7 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
             break;
         case RP_SG_DC_VOLTAGE:
             break;
-        case RP_SG_RAMP_UP:{
-            int16_t waveform[]={1,2,3};
-            rp_GenSetWaveform(&sig_gen_handle, waveform, sizeof(waveform));
-        }
+        case RP_SG_RAMP_UP:
             break;
         case RP_SG_RAMP_DOWN:
             break;
@@ -553,9 +549,33 @@ RP_STATUS rpSetSigGenBuiltIn(int32_t offsetVoltage,
 
 
 
-    return RP_OK;
+    return RP_API_OK;
 }
 
+/** DIGITAL SIGNAL GENERATION  */
 
+RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
+{
+
+    return RP_API_OK;
+
+}
+
+RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
+                                float frequency,
+                                uint32_t triggerSourceMask)
+{
+    switch(patternType){
+        case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ:
+            rp_GenSetWaveformUpCountSeq(&sig_gen_handle);
+            break;
+    }
+    // frequency
+    // wrap,
+
+    // trigger
+    rp_DigGenGlobalTrigEnable(&sig_gen_handle, triggerSourceMask);
+    return RP_API_OK;
+}
 
 

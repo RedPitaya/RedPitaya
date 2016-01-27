@@ -45,18 +45,25 @@
 #define RP_GEN_DWM  16
 #define RP_GEN_DWS  14
 
+#define RP_GEN_SIG_SAMPLES (1<<14) ///< 16384
+
 // linear transformation
 typedef struct {
     int32_t mul;  // multiplication (amplitude/gain)
     int32_t sum;  // summation (offset)
 } linear_regset_t;
 
+/** Digital gen. registers */
+typedef struct {
+    uint32_t dig_out_en; ///< this enables digital outputs
+} rp_dig_out_t;
+
 typedef struct {
     // control register
     uint32_t ctl_sys;
         // rst :1;
         // trg :1;
-    uint32_t cfg_trg;
+    rp_global_trig_regset_t gtrg;
     uint32_t reserved_08;
     uint32_t reserved_0c;
     // configuration
@@ -74,7 +81,9 @@ typedef struct {
     // empty space
     uint32_t reserved_30 [(1<<RP_GEN_CWM)-0x30];
     // table
-    int32_t  table [(1<<RP_GEN_CWM)];
+    uint32_t  table [RP_GEN_SIG_SAMPLES];
+
+    rp_dig_out_t dig;
 } asg_regset_t;
 
 typedef struct {
@@ -84,8 +93,11 @@ typedef struct {
     linear_regset_t lin;
 } gen_regset_t;
 
-int rp_GenInit(char *dev, rp_handle_uio_t *handle);
-int rp_GenRelease(rp_handle_uio_t *handle);
+
+int rp_OpenUnit3();
+
+int rp_GenOpen(char *dev, rp_handle_uio_t *handle);
+int rp_GenClose(rp_handle_uio_t *handle);
 
 /**
 * Sets generate to default values.
@@ -119,8 +131,10 @@ int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t  length);
-int rp_GenGetWaveform(rp_handle_uio_t *handle, int16_t *waveform, uint32_t *length);
+int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
+int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
+
+int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle);
 
 /**
 * Sets generation mode.
@@ -150,8 +164,8 @@ int rp_GenGetBurst(rp_handle_uio_t *handle, uint32_t *count, uint32_t *repetitio
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetTriggerMask(rp_handle_uio_t *handle, uint32_t  mask);
-int rp_GenGetTriggerMask(rp_handle_uio_t *handle, uint32_t *mask);
+int rp_DigGenGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask);
+int rp_DigGenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
 
 /**
 * Sets Trigger for specified channel/channels.
@@ -160,5 +174,12 @@ int rp_GenGetTriggerMask(rp_handle_uio_t *handle, uint32_t *mask);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenTrigger(rp_handle_uio_t *handle);
+
+#define RP_GEN_OUT_EN_ALL_MASK 	 0xffff
+#define RP_GEN_OUT_EN_PORT0_MASK 0x00ff ///< lower  8 pins (RP hw 1.1 P_GPIO_PORT)
+#define RP_GEN_OUT_EN_PORT1_MASK 0xff00 ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
+
+int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t  mask);
+int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t  mask);
 
 #endif //__GENERATE_H

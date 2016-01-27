@@ -21,6 +21,7 @@
 #include "acquire.h"
 #include "calib.h"
 #include "generate.h"
+#include "rp_api.h"
 
 const char* rp_GetError(int errorCode) {
     switch (errorCode) {
