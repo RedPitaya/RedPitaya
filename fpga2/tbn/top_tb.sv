@@ -55,9 +55,6 @@ end
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
-int b;
-
-// timeout
 initial begin
   repeat(1000) @(posedge clk);
   $finish();
@@ -67,14 +64,43 @@ initial begin
   repeat(100) @(posedge clk);
   axi_write (0,'h01234567);
   axi_write ((0 << 19) + 'h30, 'ha5);
+  test_asg (32'h402c0000);
   repeat(16) @(posedge clk);
   $finish();
 end
+
+////////////////////////////////////////////////////////////////////////////////
+// AXI4 read/write tasks
+////////////////////////////////////////////////////////////////////////////////
+
+task axi_read (
+  input  logic [32-1:0] adr,
+  output logic [32-1:0] dat
+);
+  int r;
+  top_tb.top.ps.system_i.axi_bus_model.ReadTransaction (
+    .ARDelay (0),  .ar ('{
+                          id    : 0,
+                          addr  : adr,
+                          region: 0,
+                          len   : 0,
+                          size  : 3'b010,
+                          burst : 0,
+                          lock  : 0,
+                          cache : 0,
+                          prot  : 0,
+                          qos   : 0
+                         }),
+     .RDelay (0),   .r (r)
+  );
+  dat = r;
+endtask: axi_read
 
 task axi_write (
   input  logic [32-1:0] adr,
   input  logic [32-1:0] dat
 );
+  int b;
   top_tb.top.ps.system_i.axi_bus_model.WriteTransaction (
     .AWDelay (0),  .aw ('{
                           id    : 0,
@@ -102,10 +128,49 @@ endtask: axi_write
 // signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
-//initial begin
-//  force top.asg.ch[0].dac_o = 14'h00ff;
-//  force top.asg.ch[1].dac_o = 14'h00aa;
-//end
+localparam int unsigned CWM = 14;
+localparam int unsigned CWF = 16;
+localparam ADR_BUF = 1 << (CWM+2);
+
+//int buf_len = 2**CWM;
+int buf_len = 8;
+real freq  = 10_000; // 10kHz
+real phase = 0; // DEG
+
+task test_asg (
+  int unsigned base
+);
+  logic signed [ 32-1: 0] rdata_blk [];
+  repeat(10) @(posedge clk);
+  // write table
+  for (int i=0; i<buf_len; i++) begin
+    axi_write(base+ADR_BUF + (i*4), i);  // write table
+  end
+  // read table
+  rdata_blk = new [80];
+  for (int i=0; i<buf_len; i++) begin
+    axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
+  end
+  // configure frequency and phase
+  axi_write(base+'h10,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(base+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//axi_write(base+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  axi_write(base+'h18, 1                           * 2**CWF - 1);  // step
+  // configure burst mode
+  axi_write(base+'h20, 2'b00);  // burst disable
+//  // configure amplitude and DC offset
+//  axi_write(base+'h30, 1 << (DWM-2));  // amplitude
+//  axi_write(base+'h34, 0);             // DC offset
+  // enable SW trigger
+  axi_write(base+'h04, 'b100);
+  // start
+  axi_write(base+'h00, 2'b10);
+  repeat(22) @(posedge clk);
+
+  // stop (reset)
+  axi_write(base+'h00, 2'b01);
+  repeat(20) @(posedge clk);
+endtask: test_asg
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
@@ -226,8 +291,8 @@ assign vinp = '0;
 assign vinn = '0;
 
 // Expansion connector
-assign exp_p_io = 8'h0;
-assign exp_n_io = 8'h0;
+//assign exp_p_io = 8'h0;
+//assign exp_n_io = 8'h0;
 
 // LED
 

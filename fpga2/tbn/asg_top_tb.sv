@@ -69,7 +69,7 @@ logic signed [ 32-1: 0] rdata_blk [];
 // signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam ADR_BUF = 1 << (CWM+2);
+localparam int unsigned ADR_BUF = 1 << (CWM+2);
 
 //int buf_len = 2**CWM;
 int buf_len = 8;
