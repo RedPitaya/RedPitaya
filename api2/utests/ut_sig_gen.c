@@ -28,6 +28,6 @@ int suite_sig_gen_cleanup(void)
 void sig_gen_test(void)
 {
 	rp_DigSigGenOuput(true);
-    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ,125e6,RP_TRG_DIG_GEN_SWE_MASK);
+    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ,125e6,RP_TRG_DGEN_SWE_MASK);
     rp_DigSigGenSoftwareControl(1);
 }

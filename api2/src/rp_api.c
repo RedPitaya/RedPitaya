@@ -597,7 +597,7 @@ RP_STATUS rp_DigSigGenOuput(bool enable)
 
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 {
-    // trigger
+	rp_GenTrigger(&sig_gen_handle);
     return RP_API_OK;
 }
 
@@ -605,7 +605,9 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 double frequency,
                                 uint32_t triggerSourceMask)
 {
-    switch(patternType){
+    rp_GenStop(&sig_gen_handle);
+
+	switch(patternType){
         case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ:
             rp_GenSetWaveformUpCountSeq(&sig_gen_handle);
             break;
@@ -615,6 +617,9 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     // trigger
     rp_DigGenGlobalTrigEnable(&sig_gen_handle, triggerSourceMask);
+
+    rp_GenRun(&sig_gen_handle);
+
     return RP_API_OK;
 }
 

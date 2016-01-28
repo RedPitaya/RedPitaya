@@ -31,8 +31,6 @@
 /** pre & post trigger mask  */
 #define RP_LA_ACQ_CFG_TRIG_MAX ((1<<26)-1) ///< max. number of samples for pre & post trigger
 
-
-
 /** Configuration registers */
 typedef struct {
     uint32_t acq;     ///< acq. configuration register
@@ -55,31 +53,23 @@ typedef struct {
     uint32_t shr;  ///< (not used by logic analyzer!)
 } rp_la_decimation_regset_t;
 
-/** ADC filter (not used by logic analyzer!) */
-typedef struct {
-    uint32_t byp;  ///<
-    int32_t  aa;   ///<
-    int32_t  bb;   ///<
-    int32_t  kk;   ///<
-    int32_t  pp;   ///<
-} rp_adc_eqfilter_regset_t;
-
 /** Data buf. pointers  */
+/*
 typedef struct {
     uint32_t start;      ///< position in the buffer where acq. was started
     uint32_t trig;       ///< position in the buffer where trigger appeared
     uint32_t stopped;    ///< position in the buffer where acq. was stopped
 } rp_data_ptrs_regset_t;
+*/
 
 /** logic analyzer acquire structure declaration */
 typedef struct {
-    rp_ctl_regset_t ctl;         ///< control register
+    rp_ctl_regset_t ctl;            ///< control register
     rp_global_trig_regset_t gtrg;   ///< global trigger registers
     rp_la_cfg_regset_t cfg;         ///< configuration registers
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
-  //  rp_adc_eqfilter_regset_t fil;   ///< (TODO: this filter will be removed for LA)
-    rp_data_ptrs_regset_t dpt;      ///< data buf. pointers
+    //rp_data_ptrs_regset_t dpt;      ///< data buf. pointers
 } rp_la_acq_regset_t;
 
 
@@ -98,7 +88,7 @@ int rp_LaAcqSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);
 int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg);
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);
 int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg);
-int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg);
+//int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg);
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle);
 
 #endif // __LA_ACQ_H

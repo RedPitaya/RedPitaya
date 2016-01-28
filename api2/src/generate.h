@@ -58,32 +58,32 @@ typedef struct {
     uint32_t dig_out_en; ///< this enables digital outputs
 } rp_dig_out_t;
 
+
+#define RP_GEN_CFG_BURST_MASK (1<<0)      ///< if set generator will operate in burst mode, otherwise periodic mode
+#define RP_GEN_CFG_BURST_INF_MASK (1<<1)  ///< if set cfg_bnm will be inf regardless of cfg_bnm setting
+
 typedef struct {
     // control register
-	rp_ctl_regset_t ctl;
-    rp_global_trig_regset_t gtrg;
+	rp_ctl_regset_t ctl; ///< control register
+    rp_global_trig_regset_t gtrg; ///< global trigger registers
     uint32_t reserved_08;
     uint32_t reserved_0c;
-    // configuration (periodic mode)
+    // configuration that is (used only for periodic mode)
     uint32_t cfg_siz; ///< len = reg + 1
-    uint32_t cfg_off;
-    uint32_t cfg_stp;
+    uint32_t cfg_off; ///< defines offset from which generation will started
+    uint32_t cfg_stp; ///< fixed point 16.16 value
     uint32_t reserved_1c;
     // burst mode
-    uint32_t cfg_bst;  // bit0 burst mode - 0 // periodic generator (stp = fixed point)
-    				   // burst mode - 1 //
-        // ben :1; // bit1 - 1 (inf)
-        // inf :1;
-    // burst mode
-    uint32_t cfg_bdl;  // burst data length
-    uint32_t cfg_bil;  // burst idle length
-    uint32_t cfg_bnm;  // burst repetition number
+    uint32_t cfg_bst;  ///< enables & configures burst mode
+    uint32_t cfg_bdl;  ///< burst data length
+    uint32_t cfg_bil;  ///< burst idle length
+    uint32_t cfg_bnm;  ///< burst repetition number
+
+    rp_dig_out_t dig;  ///< output enable
     // empty space
     uint32_t reserved_30 [(1<<RP_GEN_CWM)-0x30];
     // table
     uint32_t  table [RP_GEN_SIG_SAMPLES];
-
-    rp_dig_out_t dig;
 } asg_regset_t;
 
 typedef struct {
