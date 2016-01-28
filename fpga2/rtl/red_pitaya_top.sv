@@ -247,7 +247,7 @@ red_pitaya_ps ps (
 
 sys_bus_interconnect #(
   .SN (16),
-  .SW (16)
+  .SW (18)
 ) sys_bus_interconnect (
   .bus_m (ps_sys),
   .bus_s (sys)
