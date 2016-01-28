@@ -486,14 +486,19 @@ ifdef ENABLE_LICENSING
 
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
+APP_LA_PRO_DIR = Applications/la_pro
 
-.PHONY: apps_pro scopegenpro spectrumpro
+.PHONY: apps_pro scopegenpro spectrumpro la_pro
 
-apps_pro: scopegenpro spectrumpro
+apps_pro: scopegenpro spectrumpro la_pro
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+la_pro: api $(NGINX)
+	$(MAKE) -C $(APP_LA_PRO_DIR)
+	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR)
