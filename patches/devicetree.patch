@@ -92,14 +92,14 @@
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
 +};
-+/ {
++/* / {
 +	dmatest_0: dmatest@0 {
 +		compatible ="xlnx,axi-dma-test-1.00.a";
 +		dmas = <&axi_dma_3 0
 +			&axi_dma_3 1>;
 +		dma-names = "axidma0", "axidma1";
 +	};
-+};
++}; */
 +/ {
 +	housekeeping@40000000 {
 +		compatible = "generic-uio";
