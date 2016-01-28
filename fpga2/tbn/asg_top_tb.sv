@@ -78,11 +78,11 @@ real phase = 0; // DEG
 
 initial begin
   repeat(10) @(posedge clk);
-  // write table and table size
+  // write table
   for (int i=0; i<buf_len; i++) begin
     busm.write(ADR_BUF + (i*4), i);  // write table
   end
-  // CH1 table data readback
+  // read table
   rdata_blk = new [80];
   for (int i=0; i<buf_len; i++) begin
     busm.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
@@ -90,13 +90,15 @@ initial begin
   // configure frequency and phase
   busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
   busm.write('h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//busm.write('h18, (buf_len * (freq*TP/10**6)) * 2**CWF    );  // step
-  busm.write('h18, 1                           * 2**CWF    );  // step
+//busm.write('h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  busm.write('h18, 1                           * 2**CWF - 1);  // step
   // configure burst mode
   busm.write('h20, 2'b00);  // burst disable
   // configure amplitude and DC offset
   busm.write('h30, 1 << (DWM-2));  // amplitude
   busm.write('h34, 0);             // DC offset
+  // enable SW trigger
+  busm.write('h04, 3'b001);
   // start
   busm.write('h00, 2'b10);
   repeat(22) @(posedge clk);
@@ -106,8 +108,8 @@ initial begin
   repeat(20) @(posedge clk);
 
   // configure frequency and phase
-  busm.write('h14, 0 * 2**CWF);  // offset
-  busm.write('h18, 1 * 2**CWF);  // step
+  busm.write('h14, 0 * 2**CWF    );  // offset
+  busm.write('h18, 1 * 2**CWF - 1);  // step
   // configure burst mode
   busm.write('h20, {1'b1, TN'(0)});  // burst enable
   busm.write('h24,  6);  // burst data length

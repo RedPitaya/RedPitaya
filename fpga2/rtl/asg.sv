@@ -47,7 +47,7 @@
 // f = Fs/(cfg_siz+1) * (cfg_stp+1)/(2**CWF)
 //
 // Frequency (max bufer size):
-// f = Fs/(2**(CWM+CWF)) * (cfg_off+1)
+// f = Fs/(2**(CWM+CWF)) * (cfg_stp+1)
 //
 // Phase:
 // Φ = 360°/(cfg_siz+1) * (cfg_off+1)/(2**CWF)
@@ -86,8 +86,8 @@ module asg #(
   input  logic      [TN-1:0] trg_i  ,  // input
   output logic               trg_o  ,  // output event
   // configuration
-  input  logic      [TN-1:0] cfg_trg,  // data tablesize
-  input  logic [CWM+CWF-1:0] cfg_siz,  // data tablesize
+  input  logic      [TN-1:0] cfg_trg,  // trigger mask
+  input  logic [CWM+CWF-1:0] cfg_siz,  // data table size
   input  logic [CWM+CWF-1:0] cfg_stp,  // pointer step    size
   input  logic [CWM+CWF-1:0] cfg_off,  // pointer initial offset (used to define phase)
   // configuration (burst mode)
