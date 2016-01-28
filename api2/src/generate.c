@@ -64,14 +64,14 @@ int rp_GenClose(rp_handle_uio_t *handle) {
 
 /** Control registers setter & getter */
 static int rp_GenSetControl(rp_handle_uio_t *handle, rp_ctl_regset_t a_reg) {
-	rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((asg_regset_t*)handle->regset)->ctl);
+    rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((asg_regset_t*)handle->regset)->ctl);
     iowrite32(a_reg.ctl, &regset->ctl);
     return RP_OK;
 }
 
 
 static int rp_GenGetControl(rp_handle_uio_t *handle, rp_ctl_regset_t * a_reg) {
-	rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((asg_regset_t*)handle->regset)->ctl);
+    rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((asg_regset_t*)handle->regset)->ctl);
     a_reg->ctl = ioread32(&regset->ctl);
     return RP_OK;
 }
@@ -79,32 +79,32 @@ static int rp_GenGetControl(rp_handle_uio_t *handle, rp_ctl_regset_t * a_reg) {
 
 /** Control */
 int rp_GenReset(rp_handle_uio_t *handle) {
-	rp_ctl_regset_t reg;
+    rp_ctl_regset_t reg;
     reg.ctl=RP_CTL_RST_MASK;
     return rp_GenSetControl(handle,reg);
 }
 
 int rp_GenRun(rp_handle_uio_t *handle) {
-	rp_ctl_regset_t reg;
+    rp_ctl_regset_t reg;
     reg.ctl=RP_CTL_STA_MASK;
     return rp_GenSetControl(handle,reg);
 }
 
 int rp_GenStop(rp_handle_uio_t *handle) {
-	rp_ctl_regset_t reg;
+    rp_ctl_regset_t reg;
     reg.ctl=RP_CTL_STO_MASK;
     return rp_GenSetControl(handle,reg);
 }
 
 int rp_GenTrigger(rp_handle_uio_t *handle) {
-	rp_ctl_regset_t reg;
+    rp_ctl_regset_t reg;
     reg.ctl=RP_CTL_SWT_MASK;
     return rp_GenSetControl(handle,reg);
 }
 
 int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status){
-	rp_ctl_regset_t reg;
-	rp_GenGetControl(handle, &reg);
+    rp_ctl_regset_t reg;
+    rp_GenGetControl(handle, &reg);
     if(reg.ctl&RP_CTL_STA_MASK){
         *status=false;
     }
@@ -183,8 +183,19 @@ int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t leng
     }
     for (uint32_t i=0; i<length; i++) {
         iowrite32(waveform[i], &regset->table[i]);
-        iowrite32((length-1), &regset->cfg_siz);
     }
+
+    // TODO: just for a test..
+    // continuous mode
+    iowrite32((length-1), &regset->cfg_siz);
+    iowrite32(0, &regset->cfg_off);
+
+    // burst mode
+    iowrite32(0x1, &regset->cfg_bst); // burst mode
+    iowrite32((length-1), &regset->cfg_bdl); // reg = len - 1
+    iowrite32(0, &regset->cfg_bil);
+    iowrite32(1, &regset->cfg_bnm); // 0 is not valid
+
     return RP_OK;
 }
 
@@ -273,7 +284,7 @@ int rp_DigGenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask)
 
 int rp_DigGenSetFreq(rp_handle_uio_t *handle, double a_freq)
 {
-	uint32_t reg_val=(a_freq/c_max_freq)+1.0;
+    uint32_t reg_val=(a_freq/c_max_freq)+1.0;
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     iowrite32(reg_val, &regset->cfg_stp);
     return RP_OK;
@@ -281,6 +292,6 @@ int rp_DigGenSetFreq(rp_handle_uio_t *handle, double a_freq)
 
 int rp_DigGenFpgaRegDump(rp_handle_uio_t *handle)
 {
-	return FpgaRegDump(0,(uint32_t*)handle->regset,10);
+    return FpgaRegDump(0,(uint32_t*)handle->regset,10);
 }
 
