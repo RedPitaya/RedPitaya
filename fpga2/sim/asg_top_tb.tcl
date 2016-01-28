@@ -8,7 +8,7 @@ add wave -noupdate /asg_top_tb/rstn
 
 # busses
 str_bus_if str /asg_top_tb/str
-sys_bus_if ps_sys /asg_top_tb/bus
+sys_bus_if bus /asg_top_tb/bus
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

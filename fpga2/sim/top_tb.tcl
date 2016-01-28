@@ -1,37 +1,26 @@
+source "axi4_if.tcl"
+source "axi4_lite_if.tcl"
+source "axi4_stream_if.tcl"
+source "str_bus_if.tcl"
+source "sys_bus_if.tcl"
+
+# set top hierarcy name
+set top top_tb
+
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /top_tb/clk
-add wave -noupdate /top_tb/rstn
-add wave -noupdate /top_tb/led
-# AXI bus
-add wave -noupdate -expand -group axi_gp -group param /top_tb/top/ps/axi_gp/AW
-add wave -noupdate -expand -group axi_gp -group param /top_tb/top/ps/axi_gp/DW
-add wave -noupdate -expand -group axi_gp -group param /top_tb/top/ps/axi_gp/SW
-add wave -noupdate -expand -group axi_gp -group param /top_tb/top/ps/axi_gp/IW
-add wave -noupdate -expand -group axi_gp -group param /top_tb/top/ps/axi_gp/LW
-add wave -noupdate -expand -group axi_gp -group AW    /top_tb/top/ps/axi_gp/AW*
-add wave -noupdate -expand -group axi_gp -group  W    /top_tb/top/ps/axi_gp/W*
-add wave -noupdate -expand -group axi_gp -group  B    /top_tb/top/ps/axi_gp/B*
-add wave -noupdate -expand -group axi_gp -group AR    /top_tb/top/ps/axi_gp/AR*
-add wave -noupdate -expand -group axi_gp -group  R    /top_tb/top/ps/axi_gp/R*
-# AXI4-Lite bus
-add wave -noupdate -expand -group axi4_lite -group param /top_tb/top/ps/axi4_lite/AW
-add wave -noupdate -expand -group axi4_lite -group param /top_tb/top/ps/axi4_lite/DW
-add wave -noupdate -expand -group axi4_lite -group param /top_tb/top/ps/axi4_lite/SW
-add wave -noupdate -expand -group axi4_lite -group AW    /top_tb/top/ps/axi4_lite/AW*
-add wave -noupdate -expand -group axi4_lite -group  W    /top_tb/top/ps/axi4_lite/W*
-add wave -noupdate -expand -group axi4_lite -group  B    /top_tb/top/ps/axi4_lite/B*
-add wave -noupdate -expand -group axi4_lite -group AR    /top_tb/top/ps/axi4_lite/AR*
-add wave -noupdate -expand -group axi4_lite -group  R    /top_tb/top/ps/axi4_lite/R*
-# SYS bus
-add wave -noupdate -expand -group ps_sys /top_tb/top/ps_sys/*
-
-# difine Radix
-radix signal /top_tb/top/ps_sys/addr  -hexadecimal
-radix signal /top_tb/top/ps_sys/wdata -hexadecimal
-radix signal /top_tb/top/ps_sys/rdata -hexadecimal
-radix signal /top_tb/top/ps_sys/*W -decimal -unsigned
-#-fpoint
+# signals
+add wave -noupdate /${top}/clk
+add wave -noupdate /${top}/rstn
+add wave -noupdate /${top}/led
+# busses
+#axi4_lite_if axi4_lite /${top}/top/ps/axi4_lite
+axi4_if      axi_gp    /${top}/top/ps/axi_gp
+sys_bus_if   ps_sys    /${top}/top/ps_sys
+str_bus_if   str_dtx_3 /${top}/top/str_dtx\[3\]
+str_bus_if   str_drx_3 /${top}/top/str_drx\[3\]
+#add wave -position insertpoint {vsim:/top_tb/top/str_drx[3]/*}
+#add wave -position insertpoint {vsim:/top_tb/top/str_dtx[3]/*}
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}
