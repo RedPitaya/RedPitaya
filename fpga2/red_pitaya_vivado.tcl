@@ -79,6 +79,7 @@ read_verilog                      $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.sv
 read_verilog                      $path_rtl/red_pitaya_top.sv
 read_verilog                      $path_rtl/sys_reg_array_o.sv
+read_verilog                      $path_rtl/cts.sv
 read_verilog                      $path_rtl/muxctl.sv
 read_verilog                      $path_rtl/gpio.sv
 read_verilog                      $path_rtl/pdm.sv

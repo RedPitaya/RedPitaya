@@ -264,6 +264,22 @@ endgenerate
 // Housekeeping
 ////////////////////////////////////////////////////////////////////////////////
 
+localparam int unsigned TW = 64;
+
+logic [TW-1:0] cts;
+
+cts cts_i (
+  // system signals
+  .clk  (adc_clk),
+  .rstn (adc_rstn),
+  // counter
+  .cts  (cts)
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Housekeeping
+////////////////////////////////////////////////////////////////////////////////
+
 red_pitaya_hk hk (
   .bus           (sys[0])
 );
@@ -615,7 +631,7 @@ scope_top #(
   .sti       (str_osc[i]),
   .sto       (str_drx[i]),
   // current time stamp
-  .cts       ('0),  // TODO
+  .cts       (cts),
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.acq_swo[i]),
@@ -658,7 +674,7 @@ la_top #(
   .sti       (str_lai),
   .sto       (str_drx[2]),
   // current time stamp
-  .cts       ('0),  // TODO
+  .cts       (cts),
   // triggers
   .trg_ext   (trg),
   .trg_swo   (trg.la_swo),
