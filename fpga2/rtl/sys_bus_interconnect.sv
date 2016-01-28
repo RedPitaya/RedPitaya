@@ -27,10 +27,10 @@ assign bus_s_cs = SN'(1) << bus_s_a;
 generate
 for (genvar i=0; i<SN; i++) begin: for_bus
 
-assign bus_s[i].addr  =                bus_m.addr ;
-assign bus_s[i].wdata =                bus_m.wdata;
-assign bus_s[i].wen   = bus_s_cs & {SN{bus_m.wen}};
-assign bus_s[i].ren   = bus_s_cs & {SN{bus_m.ren}};
+assign bus_s[i].addr  =               bus_m.addr ;
+assign bus_s[i].wdata =               bus_m.wdata;
+assign bus_s[i].wen   = bus_s_cs[i] & bus_m.wen  ;
+assign bus_s[i].ren   = bus_s_cs[i] & bus_m.ren  ;
 
 assign bus_s_rdata[i] = bus_s[i].rdata;
 assign bus_s_err  [i] = bus_s[i].err  ;
