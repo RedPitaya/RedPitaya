@@ -30,8 +30,8 @@ typedef struct {
     uint32_t dna_hi;        // 0x08
 } housekeeping_regset_t;
 
-int rp_HousekeepingInit(char *dev, rp_handle_uio_t *handle);
-int rp_HousekeepingRelease(rp_handle_uio_t *handle);
+int rp_HousekeepingOpen(char *dev, rp_handle_uio_t *handle);
+int rp_HousekeepingClose(rp_handle_uio_t *handle);
 
 /**
 * Gets FPGA Synthesized ID

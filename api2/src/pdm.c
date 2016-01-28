@@ -12,9 +12,7 @@
  * for more details on the language used herein.
  */
 
-// for Init
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -24,33 +22,20 @@
 #include "common.h"
 #include "pdm.h"
 
-int rp_PdmInit(char *dev, rp_handle_uio_t *handle) {
-    // make a copy of the device path
-    handle->dev = (char*) malloc((strlen(dev)+1) * sizeof(char));
-    strncpy(handle->dev, dev, strlen(dev)+1);
-    // try opening the device
-    handle->fd = open(handle->dev, O_RDWR);
-    if (!handle->fd) {
-        return -1;
-    } else {
-        // get regset pointer
-        handle->regset = (volatile pdm_regset_t *) mmap(NULL, PDM_BASE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
-        if (handle->regset == NULL) {
-            return -1;
-        }
+int rp_PdmOpen(char *dev, rp_handle_uio_t *handle) {
+    handle->length = PDM_BASE_SIZE;
+    int status = common_Open (dev, handle);
+    if (status != RP_OK) {
+        return status;
     }
     return RP_OK;
 }
 
-int rp_PdmRelease(rp_handle_uio_t *handle) {
-    // release regset
-    munmap((void *) handle->regset, PDM_BASE_SIZE);
-    // close device
-    close (handle->fd);
-    // free device path
-    free(handle->dev);
-    // free name
-    // TODO
+int rp_PdmClose(rp_handle_uio_t *handle) {
+    int status = common_Close (handle); 
+    if (status != RP_OK) {
+        return status;
+    }
     return RP_OK;
 }
 

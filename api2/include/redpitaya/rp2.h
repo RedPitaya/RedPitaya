@@ -20,9 +20,12 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
+
 typedef struct {
   char          *name;
   char          *dev;
+  size_t         length;
   int            fd;
   volatile void *regset;
            void *context;

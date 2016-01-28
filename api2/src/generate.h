@@ -31,7 +31,7 @@
 #define BURST_PERIOD_MAX        500000000   // us
 
 // Base Generate address
-#define GENERATE_BASE_SIZE      0x00010000
+#define GENERATE_BASE_SIZE      0x00040000
 
 // sampling rate
 #define RP_GEN_SR   125000000

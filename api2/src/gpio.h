@@ -31,9 +31,9 @@ typedef struct {
     uint32_t i;
 } gpio_regset_t;
 
-int rp_GpioInit(char *dev, rp_handle_uio_t *handle);
-int rp_GpioRelease(rp_handle_uio_t *handle);
-int rp_GpioReset  (rp_handle_uio_t *handle);
+int rp_GpioOpen(char *dev, rp_handle_uio_t *handle);
+int rp_GpioClose(rp_handle_uio_t *handle);
+int rp_GpioReset(rp_handle_uio_t *handle);
 
 int rp_GpioSetEnable(rp_handle_uio_t *handle, uint32_t  enable);
 int rp_GpioGetEnable(rp_handle_uio_t *handle, uint32_t *enable);

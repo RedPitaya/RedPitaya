@@ -28,8 +28,8 @@ static const float    PDM_MAX_VAL         = 1.8;
 static const float    PDM_MIN_VAL         = 0.0;
 static const uint32_t PDM_MAX_VAL_INTEGER = 255;
 
-int rp_PdmInit(char *dev, rp_handle_uio_t *handle);
-int rp_PdmRelease(rp_handle_uio_t *handle);
+int rp_PdmOpen(char *dev, rp_handle_uio_t *handle);
+int rp_PdmClose(rp_handle_uio_t *handle);
 
 /**
 * Sets analog outputs to default values (0V).

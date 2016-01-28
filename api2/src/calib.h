@@ -30,8 +30,8 @@ typedef struct {
     regset_calib_pair_t gen [2];
 } rp_calib_regset_t;
 
-int rp_CalibInit(char *dev, rp_handle_uio_t *handle);
-int rp_CalibRelease(rp_handle_uio_t *handle);
+int rp_CalibOpen(char *dev, rp_handle_uio_t *handle);
+int rp_CalibClose(rp_handle_uio_t *handle);
 
 /**
  * Calibration parameters, structure stored in the EEPROM device

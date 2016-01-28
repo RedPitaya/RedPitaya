@@ -77,8 +77,8 @@ static const rp_adc_eqfilter_regset_t fil_hi = {0x0, 0x7D93, 0x437C7, 0xd9999a, 
 static const rp_adc_eqfilter_regset_t fil_lo = {0x0, 0x4C5F, 0x2F38B, 0xd9999a, 0x2666};
 
 
-int rp_AcqInit(char *dev, rp_handle_uio_t *handle);
-int rp_Acqrelease(rp_handle_uio_t *handle);
+int rp_AcqOpen(char *dev, rp_handle_uio_t *handle);
+int rp_AcqClose(rp_handle_uio_t *handle);
 
 int rp_AcqSetEqFilter(rp_handle_uio_t *handle, rp_adc_eqfilter_regset_t *fil);
 int rp_AcqGetEqFilter(rp_handle_uio_t *handle, rp_adc_eqfilter_regset_t *fil);

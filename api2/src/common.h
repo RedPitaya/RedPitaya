@@ -24,6 +24,10 @@
 #define ioread32(p) (*(volatile uint32_t *)(p))
 #define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
 
+// open/close UIO device
+int common_Open(char *dev, rp_handle_uio_t *handle);
+int common_Close(rp_handle_uio_t *handle);
+
 //** trigger mask bits */
 #define RP_TRG_EXT_PE_PAT_MASK   (1<<13)   ///< external trigger positive edge
 #define RP_TRG_EXT_NE_PAT_MASK   (1<<12)   ///< external trigger negative edge
