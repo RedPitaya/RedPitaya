@@ -142,6 +142,11 @@ task test_asg (
 );
   logic signed [ 32-1: 0] rdata_blk [];
   repeat(10) @(posedge clk);
+
+//  // configure amplitude and DC offset
+//  axi_write(base+'h30, 1 << (DWM-2));  // amplitude
+//  axi_write(base+'h34, 0);             // DC offset
+
   // write table
   for (int i=0; i<buf_len; i++) begin
     axi_write(base+ADR_BUF + (i*4), i);  // write table
@@ -151,6 +156,7 @@ task test_asg (
   for (int i=0; i<buf_len; i++) begin
     axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
+
   // configure frequency and phase
   axi_write(base+'h10,  buf_len                    * 2**CWF - 1);  // table size
   axi_write(base+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
@@ -158,18 +164,27 @@ task test_asg (
   axi_write(base+'h18, 1                           * 2**CWF - 1);  // step
   // configure burst mode
   axi_write(base+'h20, 2'b00);  // burst disable
-//  // configure amplitude and DC offset
-//  axi_write(base+'h30, 1 << (DWM-2));  // amplitude
-//  axi_write(base+'h34, 0);             // DC offset
   // enable SW trigger
   axi_write(base+'h04, 'b100);
   // start
   axi_write(base+'h00, 2'b10);
   repeat(22) @(posedge clk);
-
   // stop (reset)
   axi_write(base+'h00, 2'b01);
   repeat(20) @(posedge clk);
+
+  // burst mode
+  axi_write(base+'h24, buf_len - 1);  // burst data length
+  axi_write(base+'h28, buf_len - 1);  // burst idle length
+  axi_write(base+'h2c, 100);  // repetitions
+  axi_write(base+'h20, 'b11);  // enable burst mode and infinite repetitions
+  // start
+  axi_write(base+'h00, 2'b10);
+  repeat(100) @(posedge clk);
+  // stop (reset)
+  axi_write(base+'h00, 2'b01);
+  repeat(20) @(posedge clk);
+
 endtask: test_asg
 
 ////////////////////////////////////////////////////////////////////////////////
