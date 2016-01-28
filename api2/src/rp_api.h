@@ -3,6 +3,7 @@
 #define _RP_API_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum {
     RP_DRIVER_VERSION, ///< Version number of Red Pitaya APIs
@@ -320,6 +321,8 @@ typedef enum rpTriggerSource {
     RP_SIGGEN_TRIGGER_RAW // reserved
 } RP_SIGGEN_TRIG_SOURCE;
 
+RP_STATUS rp_DigSigGenOuput(bool enable);
+
 RP_STATUS rp_SigGenSoftwareControl(int16_t state);
 
 RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
@@ -346,6 +349,6 @@ typedef enum patternType{
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state);
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                float frequency,
+                                double frequency,
                                 uint32_t triggerSourceMask);
 #endif // _RP_API_H_

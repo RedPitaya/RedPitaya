@@ -60,21 +60,21 @@ typedef struct {
 
 typedef struct {
     // control register
-    uint32_t ctl_sys;
-        // rst :1;
-        // trg :1;
+	rp_ctl_regset_t ctl;
     rp_global_trig_regset_t gtrg;
     uint32_t reserved_08;
     uint32_t reserved_0c;
-    // configuration
-    uint32_t cfg_siz;
+    // configuration (periodic mode)
+    uint32_t cfg_siz; ///< len = reg + 1
     uint32_t cfg_off;
     uint32_t cfg_stp;
     uint32_t reserved_1c;
     // burst mode
-    uint32_t cfg_bst;  // burst mode
-        // ben :1;
+    uint32_t cfg_bst;  // bit0 burst mode - 0 // periodic generator (stp = fixed point)
+    				   // burst mode - 1 //
+        // ben :1; // bit1 - 1 (inf)
         // inf :1;
+    // burst mode
     uint32_t cfg_bdl;  // burst data length
     uint32_t cfg_bil;  // burst idle length
     uint32_t cfg_bnm;  // burst repetition number
@@ -93,16 +93,17 @@ typedef struct {
     linear_regset_t lin;
 } gen_regset_t;
 
-
-int rp_OpenUnit3();
-
 int rp_GenOpen(char *dev, rp_handle_uio_t *handle);
 int rp_GenClose(rp_handle_uio_t *handle);
-
+int rp_GenReset(rp_handle_uio_t *handle);
+int rp_GenRun(rp_handle_uio_t *handle);
+int rp_GenStop(rp_handle_uio_t *handle);
+int rp_GenTrigger(rp_handle_uio_t *handle);
+int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status);
 /**
 * Sets generate to default values.
 */
-int rp_GenReset();
+int rp_GenReset2();
 
 /**
 * Sets channel signal peak to peak amplitude.
@@ -167,19 +168,15 @@ int rp_GenGetBurst(rp_handle_uio_t *handle, uint32_t *count, uint32_t *repetitio
 int rp_DigGenGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask);
 int rp_DigGenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
 
-/**
-* Sets Trigger for specified channel/channels.
-* @param mask Mask determines channel: 1->ch1, 2->ch2, 3->ch1&ch2.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenTrigger(rp_handle_uio_t *handle);
-
 #define RP_GEN_OUT_EN_ALL_MASK 	 0xffff
 #define RP_GEN_OUT_EN_PORT0_MASK 0x00ff ///< lower  8 pins (RP hw 1.1 P_GPIO_PORT)
 #define RP_GEN_OUT_EN_PORT1_MASK 0xff00 ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
 
 int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t  mask);
 int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t  mask);
+
+int rp_DigGenSetFreq(rp_handle_uio_t *handle, double a_freq);
+
+int rp_DigGenFpgaRegDump(rp_handle_uio_t *handle);
 
 #endif //__GENERATE_H

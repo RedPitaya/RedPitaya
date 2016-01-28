@@ -103,10 +103,12 @@ void reg_rw_test(void){
 
     // test control bits
     // TODO:
-    //rp_LaAcqReset(&handle);
-    //rp_LaAcqRunAcq(&handle);
-    //rp_LaAcqStopAcq(&handle);
-    //rp_LaAcqTriggerAcq(&handle);
+    rp_LaAcqReset(&handle);
+    rp_LaAcqRunAcq(&handle);
+    rp_LaAcqStopAcq(&handle);
+    rp_LaAcqTriggerAcq(&handle);
+
+    rp_LaAcqFpgaRegDump(&handle);
 
     // rp_data_ptrs_regset_t dpt
     // TODO:

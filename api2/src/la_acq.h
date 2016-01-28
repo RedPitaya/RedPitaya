@@ -22,11 +22,6 @@
 
 #include "common.h"
 
-/** control register masks  */
-#define RP_LA_ACQ_CTL_RST_MASK (1<<0) ///< 1 - reset acq. state machine (TODO: check what exactly it does)
-#define RP_LA_ACQ_CTL_STA_MASK (1<<1) ///< 1 - starts acq.; 0 - when acq. is stopped
-#define RP_LA_ACQ_CTL_STO_MASK (1<<2) ///< 1 - stops acq. (also used to about the acq.)
-#define RP_LA_ACQ_CTL_SWT_MASK (1<<3) ///< 1 - triggers acq. (sw trigger must be enabled)
 
 
 /** configuration register  */
@@ -36,10 +31,7 @@
 /** pre & post trigger mask  */
 #define RP_LA_ACQ_CFG_TRIG_MAX ((1<<26)-1) ///< max. number of samples for pre & post trigger
 
-/** Control registers */
-typedef struct {
-    uint32_t ctl;
-} rp_la_ctl_regset_t;
+
 
 /** Configuration registers */
 typedef struct {
@@ -81,12 +73,12 @@ typedef struct {
 
 /** logic analyzer acquire structure declaration */
 typedef struct {
-    rp_la_ctl_regset_t ctl;         ///< control register
-    rp_la_cfg_regset_t cfg;         ///< configuration registers
+    rp_ctl_regset_t ctl;         ///< control register
     rp_global_trig_regset_t gtrg;   ///< global trigger registers
+    rp_la_cfg_regset_t cfg;         ///< configuration registers
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
-    rp_adc_eqfilter_regset_t fil;   ///< (TODO: this filter will be removed for LA)
+  //  rp_adc_eqfilter_regset_t fil;   ///< (TODO: this filter will be removed for LA)
     rp_data_ptrs_regset_t dpt;      ///< data buf. pointers
 } rp_la_acq_regset_t;
 
@@ -107,5 +99,6 @@ int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg)
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);
 int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg);
 int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg);
+int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle);
 
 #endif // __LA_ACQ_H

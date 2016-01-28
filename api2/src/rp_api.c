@@ -2,6 +2,7 @@
 #include "rp_api.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,16 +21,48 @@ const double c_max_dig_sampling_rate_time_interval_ns = 4;
 rp_handle_uio_t la_acq_handle;
 rp_handle_uio_t sig_gen_handle;
 
+
+/*
+uio9: name=scope0, version=devicetree, events=0
+        map[0]: addr=0x40090000, size=65536
+uio8: name=asg1, version=devicetree, events=0
+        map[0]: addr=0x40080000, size=65536
+uio7: name=asg0, version=devicetree, events=0
+        map[0]: addr=0x40070000, size=65536
+uio6: name=pwm, version=devicetree, events=0
+        map[0]: addr=0x40060000, size=65536
+uio5: name=pdm, version=devicetree, events=0
+        map[0]: addr=0x40050000, size=65536
+uio4: name=calib, version=devicetree, events=0
+        map[0]: addr=0x40040000, size=65536
+uio3: name=led, version=devicetree, events=0
+        map[0]: addr=0x40030000, size=65536
+uio2: name=gpio, version=devicetree, events=0
+        map[0]: addr=0x40020000, size=65536
+uio13: name=dummy, version=devicetree, events=0
+        map[0]: addr=0x83C00000, size=4194304
+uio12: name=la, version=devicetree, events=0
+        map[0]: addr=0x400C0000, size=65536
+uio11: name=lg, version=devicetree, events=0
+        map[0]: addr=0x400B0000, size=65536
+uio10: name=scope1, version=devicetree, events=0
+        map[0]: addr=0x400A0000, size=65536
+uio1: name=muxctl, version=devicetree, events=0
+        map[0]: addr=0x40010000, size=65536
+uio0: name=housekeeping, version=devicetree, events=0
+        map[0]: addr=0x40000000, size=65536
+		*/
+
 /**
  * Open device
  */
 RP_STATUS rp_OpenUnit(void)
 {
     int r=RP_API_OK;
-    if(rp_LaAcqOpen("/dev/dummy", &la_acq_handle)!=RP_API_OK){
+    if(rp_LaAcqOpen("/dev/la", &la_acq_handle)!=RP_API_OK){
         r=-1;
     }
-    if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
+    if(rp_GenOpen("/dev/lg", &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -114,7 +147,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
                                             int16_t nDirections)
 {
     // disable triggering by default
-    rp_LaAcqGlobalTrigDisable(&la_acq_handle, RP_TRG_LGA_PAT_MASK);
+    rp_LaAcqGlobalTrigDisable(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
 
     rp_la_trg_regset_t trg;
     memset(&trg,0,sizeof(rp_la_trg_regset_t));
@@ -170,7 +203,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
     // update settings
     if(edge_cnt==1){
         rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
-        rp_LaAcqGlobalTrigEnable(&la_acq_handle, RP_TRG_LGA_PAT_MASK);
+        rp_LaAcqGlobalTrigEnable(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
         return RP_API_OK;
     }
 
@@ -315,9 +348,9 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
  *
  * @param autoStop                     A flag that specifies if the streaming should stop when all of maxSamples have been captured.
  *
- * @param downSampleRatio             See rp3000aGetValues()
+ * @param downSampleRatio             See rpGetValues()
  *
- * @param downSampleRatioMode         See rp3000aGetValues()
+ * @param downSampleRatioMode         See rpGetValues()
  *
  * @param overviewBufferSize         The size of the overview buffers. These are temporary buffers used for storing the data
  *                                     before returning it to the application.
@@ -457,7 +490,7 @@ RP_STATUS rp_Stop(void){
  */
 
 RP_STATUS rp_SigGenSoftwareControl(int16_t state){
-   // rp_GenTrigger(&sig_gen_handle);
+    rp_GenTrigger(&sig_gen_handle);
     return RP_API_OK;
 }
 
@@ -551,15 +584,25 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
 
 /** DIGITAL SIGNAL GENERATION  */
 
+RP_STATUS rp_DigSigGenOuput(bool enable)
+{
+    if(enable){
+        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_EN_PORT1_MASK);
+    }
+    else{
+        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_EN_PORT1_MASK);
+    }
+    return RP_API_OK;
+}
+
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 {
-
+    // trigger
     return RP_API_OK;
-
 }
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                float frequency,
+                                double frequency,
                                 uint32_t triggerSourceMask)
 {
     switch(patternType){
@@ -567,8 +610,8 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
             rp_GenSetWaveformUpCountSeq(&sig_gen_handle);
             break;
     }
-    // frequency
-    // wrap,
+
+    rp_DigGenSetFreq(&sig_gen_handle,frequency);
 
     // trigger
     rp_DigGenGlobalTrigEnable(&sig_gen_handle, triggerSourceMask);

@@ -84,15 +84,15 @@ int rp_LaAcqClose(rp_handle_uio_t *handle) {
 }
 
 /** Control registers setter & getter */
-static int rp_LaAcqSetControl(rp_handle_uio_t *handle, rp_la_ctl_regset_t a_reg) {
-    rp_la_ctl_regset_t *regset = (rp_la_ctl_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->ctl);
+static int rp_LaAcqSetControl(rp_handle_uio_t *handle, rp_ctl_regset_t a_reg) {
+	rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->ctl);
     iowrite32(a_reg.ctl, &regset->ctl);
     return RP_OK;
 }
 
 
-static int rp_LaAcqGetControl(rp_handle_uio_t *handle, rp_la_ctl_regset_t * a_reg) {
-    rp_la_ctl_regset_t *regset = (rp_la_ctl_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->ctl);
+static int rp_LaAcqGetControl(rp_handle_uio_t *handle, rp_ctl_regset_t * a_reg) {
+	rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->ctl);
     a_reg->ctl = ioread32(&regset->ctl);
     return RP_OK;
 }
@@ -100,33 +100,33 @@ static int rp_LaAcqGetControl(rp_handle_uio_t *handle, rp_la_ctl_regset_t * a_re
 
 /** Acq. control */
 int rp_LaAcqReset(rp_handle_uio_t *handle) {
-    rp_la_ctl_regset_t reg;
-    reg.ctl=RP_LA_ACQ_CTL_RST_MASK;
+	rp_ctl_regset_t reg;
+    reg.ctl=RP_CTL_RST_MASK;
     return rp_LaAcqSetControl(handle,reg);
 }
 
 int rp_LaAcqRunAcq(rp_handle_uio_t *handle) {
-    rp_la_ctl_regset_t reg;
-    reg.ctl=RP_LA_ACQ_CTL_STA_MASK;
+	rp_ctl_regset_t reg;
+    reg.ctl=RP_CTL_STA_MASK;
     return rp_LaAcqSetControl(handle,reg);
 }
 
 int rp_LaAcqStopAcq(rp_handle_uio_t *handle) {
-    rp_la_ctl_regset_t reg;
-    reg.ctl=RP_LA_ACQ_CTL_STO_MASK;
+	rp_ctl_regset_t reg;
+    reg.ctl=RP_CTL_STO_MASK;
     return rp_LaAcqSetControl(handle,reg);
 }
 
 int rp_LaAcqTriggerAcq(rp_handle_uio_t *handle) {
-    rp_la_ctl_regset_t reg;
-    reg.ctl=RP_LA_ACQ_CTL_SWT_MASK;
+	rp_ctl_regset_t reg;
+    reg.ctl=RP_CTL_SWT_MASK;
     return rp_LaAcqSetControl(handle,reg);
 }
 
 int rp_LaAcqAcqIsStopped(rp_handle_uio_t *handle, bool * status){
-    rp_la_ctl_regset_t reg;
+	rp_ctl_regset_t reg;
     rp_LaAcqGetControl(handle, &reg);
-    if(reg.ctl&RP_LA_ACQ_CTL_STA_MASK){
+    if(reg.ctl&RP_CTL_STA_MASK){
         *status=false;
     }
     else{
@@ -216,4 +216,9 @@ int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_r
     a_reg->trig = ioread32(&regset->trig);
     a_reg->stopped = ioread32(&regset->stopped);
     return RP_OK;
+}
+
+int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)
+{
+	return FpgaRegDump(0,(uint32_t*)handle->regset,10);
 }
