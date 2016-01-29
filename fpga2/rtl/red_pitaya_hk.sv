@@ -14,8 +14,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module red_pitaya_hk #(
-  // ID
-  bit [57-1:0] DNA = 57'h0823456789ABCDE
+  bit [160-1:0] GITH = '0,  // GIT hash full length
+  bit  [57-1:0] DNA = 57'h0823456789ABCDE,
+  bit  [32-1:0] ID = {28'h0, 4'h1} // {reserved, board type}:  1 - release 1
 )(
   // system bus
   sys_bus_if.s           bus
@@ -45,7 +46,7 @@ end else begin
   if (!dna_done)
     dna_cnt <= dna_cnt + 1'd1;
 
-  dna_clk <= dna_cnt[2] ;
+  dna_clk   <= dna_cnt[2] ;
   dna_read  <= (dna_cnt < 9'd10);
   dna_shift <= (dna_cnt > 9'd18);
 
@@ -57,7 +58,7 @@ end else begin
 end
 
 // parameter specifies a sample 57-bit DNA value for simulation
-DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
+DNA_PORT #(.SIM_DNA_VALUE (DNA)) dna (
   .DOUT  (dna_dout ), // 1-bit output: DNA output data.
   .CLK   (dna_clk  ), // 1-bit input: Clock input.
   .DIN   (1'b0     ), // 1-bit input: User data input pin.
@@ -66,20 +67,11 @@ DNA_PORT #(.SIM_DNA_VALUE (DNA)) i_DNA (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// Desing identification
-////////////////////////////////////////////////////////////////////////////////
-
-logic [32-1:0] id_value;
-
-assign id_value = {28'h0,  // reserved
-                    4'h1}; // board type   1 - release 1
-
-////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
 // bus decoder width
-localparam int unsigned BDW = 4;
+localparam int unsigned BDW = 6;
 
 always_ff @(posedge bus.clk)
 if (!bus.rstn)  bus.err <= 1'b1;
@@ -95,9 +87,16 @@ end else begin
   bus.ack <= sys_en;
   casez (bus.addr[BDW-1:0])
     // ID
-    'h00:  bus.rdata <= {                id_value          };
+    'h00:  bus.rdata <= {                ID                };
+    // DNA
     'h04:  bus.rdata <= {                dna_value[32-1: 0]};
     'h08:  bus.rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]};
+    // GITH
+    'h10:  bus.rdata <= GITH[32*0+:32];
+    'h14:  bus.rdata <= GITH[32*1+:32];
+    'h18:  bus.rdata <= GITH[32*2+:32];
+    'h1c:  bus.rdata <= GITH[32*3+:32];
+    'h2c:  bus.rdata <= GITH[32*4+:32];
     default: bus.rdata <= '0;
   endcase
 end

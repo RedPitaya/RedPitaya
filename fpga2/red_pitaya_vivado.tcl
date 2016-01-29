@@ -100,6 +100,13 @@ read_verilog                      $path_rtl/str_dec.sv
 read_xdc                          $path_sdc/red_pitaya.xdc
 
 ################################################################################
+# define paths
+################################################################################
+
+set gith [exec git log -1 --format="%H""
+set_property generic "{GITH=160'h$gith}" [current_fileset]
+
+################################################################################
 # run synthesis
 # report utilization and timing estimates
 # write checkpoint design

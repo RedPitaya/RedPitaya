@@ -21,13 +21,15 @@
 #include <stdbool.h>
 
 // Base Housekeeping address
-static const int HOUSEKEEPING_BASE_SIZE = 0x30;
+static const int HOUSEKEEPING_BASE_SIZE = 0x1000;
 
 // Housekeeping structure declaration
 typedef struct {
     uint32_t id;            // 0x00
     uint32_t dna_lo;        // 0x04
     uint32_t dna_hi;        // 0x08
+    uint32_t reserved_0c;   // 0x0c
+    uint32_t gith[5];       // 0x10 - 0x20
 } housekeeping_regset_t;
 
 int rp_HousekeepingOpen(char *dev, rp_handle_uio_t *handle);
@@ -42,5 +44,8 @@ int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id);
 * Gets FPGA Unique DNA
 */
 int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna);
+
+// get 160 bit GIT HASH
+int rp_IdGetGITH(rp_handle_uio_t *handle, uint64_t gith[5]);
 
 #endif //__HOUSEKEEPING_H

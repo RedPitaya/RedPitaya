@@ -49,3 +49,9 @@ int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna) {
     return RP_OK;
 }
 
+int rp_IdGetGITH(rp_handle_uio_t *handle, uint64_t gith[5]) {
+    housekeeping_regset_t *regset = (housekeeping_regset_t *) handle->regset;
+    for (int unsigned i=0; i<5; i++)
+        gith[i] = ioread32(&regset->gith[i]);
+    return RP_OK;
+}
