@@ -12,8 +12,6 @@
  * for more details on the language used herein.
  */
 
-
-
 #ifndef __GPIO_H
 #define __GPIO_H
 
@@ -22,7 +20,6 @@
 
 // Base Gpio address
 static const int GPIO_BASE_SIZE = 0x30;
-static const uint32_t GPIO_MASK = 0xFF;
 
 // Gpio structure declaration
 typedef struct {

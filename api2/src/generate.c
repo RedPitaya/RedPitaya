@@ -28,19 +28,13 @@ const double c_max_freq=125e6;
 
 int rp_GenOpen(char *dev, rp_handle_uio_t *handle) {
     handle->length = GENERATE_BASE_SIZE;
-
-    if(strncmp(c_dummy_dev, dev, sizeof(c_dummy_dev))==0){
-        handle->regset = (asg_regset_t*) malloc(sizeof(asg_regset_t));
+    int status = common_Open (dev, handle);
+    if (status != RP_OK) {
+        return status;
     }
-    else{
-        int status = common_Open (dev, handle);
-        if (status != RP_OK) {
-            return status;
-        }
-    }
-
-    if(rp_GenReset(handle)!=RP_OK){
-        return -1;
+    status = rp_GenReset(handle);
+    if (status != RP_OK) {
+        return status;
     }
     return RP_OK;
 }

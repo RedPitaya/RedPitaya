@@ -9,7 +9,7 @@ int main (int argc, char **argv) {
     rp_handle_uio_t handle;
 
     // Initialization of API
-    if (rp_GenOpen("/dev/uio3", &handle) != RP_OK) {
+    if (rp_GenOpen("/dev/uio11", &handle) != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
     }
