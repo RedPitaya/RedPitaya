@@ -103,7 +103,7 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 # define paths
 ################################################################################
 
-set gith [exec git log -1 --format="%H""
+set gith [exec git log -1 --format="%H"]
 set_property generic "GITH=160'h$gith" [current_fileset]
 
 ################################################################################
