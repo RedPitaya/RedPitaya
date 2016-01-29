@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "rp2.h"
+#include "redpitaya/rp2.h"
 #include "la_acq.h"
 
 

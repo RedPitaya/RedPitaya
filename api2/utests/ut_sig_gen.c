@@ -10,7 +10,7 @@
 #include "ut_main.h"
 
 #include "generate.h"
-#include "rp2.h"
+#include "redpitaya/rp2.h"
 #include "rp_api.h"
 
 int suite_sig_gen_init(void)

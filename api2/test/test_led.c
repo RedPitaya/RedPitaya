@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "rp2.h"
+#include "redpitaya/rp2.h"
 #include "gpio.h"
 
 int main (int argc, char **argv) {

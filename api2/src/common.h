@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "rp2.h"
+#include "redpitaya/rp2.h"
 
 extern const char c_dummy_dev[10];
 
