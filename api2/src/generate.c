@@ -22,10 +22,6 @@
 #include "common.h"
 #include "generate.h"
 
-const double c_max_freq=125e6;
-
-
-
 int rp_GenOpen(char *dev, rp_handle_uio_t *handle) {
     handle->length = GENERATE_BASE_SIZE;
     int status = common_Open (dev, handle);
@@ -106,12 +102,12 @@ int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
 //    gen_setGenMode(channel, RP_GEN_MODE_CONTINUOUS);
     // clean up table (TODO, should I really)
    /*
-    uint32_t length = 1 << RP_GEN_CWM;
-    uint16_t waveform [length];
-    for (unsigned int i=0; i<length; i++) {
+    uint32_t size = 1 << RP_GEN_CWM;
+    uint16_t waveform [size];
+    for (unsigned int i=0; i<size; i++) {
         waveform[i] = 0;
     }
-    rp_GenSetWaveform    (handle, waveform, length);
+    rp_GenSetWaveform    (handle, waveform, size);
     rp_GenSetFreqPhase   (handle, 1000.0, 0.0);
     rp_DigGenGlobalTrigDisable (handle, RP_TRG_ALL);
     rp_GenSetBurst       (handle, 0, 0, 0);
@@ -142,8 +138,6 @@ int rp_GenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask)
 
 
 
-/*
- * TODO: this will be used for analog gen.
 int rp_GenSetLinear(rp_handle_uio_t *handle, float amplitude, float offset) {
     linear_regset_t *regset = (linear_regset_t *) &(((gen_regset_t *) handle->regset)->lin);
     int32_t mul = (int32_t) (amplitude * (1 << RP_GEN_DWM));
@@ -180,37 +174,34 @@ int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase
     *phase     = (double) (ioread32(&regset->cfg_off) / (double) size * 360      );
     return RP_OK;
 }
-*/
 
-int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length) {
+int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t size) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    if((length==0)||(length>RP_GEN_SIG_SAMPLES)){
+    if((size==0)||(size>RP_GEN_SIG_SAMPLES)){
         return -1;
     }
-    for (uint32_t i=0; i<length; i++) {
+    for (uint32_t i=0; i<size; i++) {
         iowrite32(waveform[i], &regset->table[i]);
     }
+    iowrite32((size << RP_GEN_CWF) - 1, &regset->cfg_siz);
     return RP_OK;
 }
 
-int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length) {
+int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t *size) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    if(length>RP_GEN_SIG_SAMPLES){
-        return -1;
-    }
-    for (uint32_t i=0; i<length; i++) {
+    *size = (ioread32(&regset->cfg_siz) + 1) >> RP_GEN_CWF;
+    for (uint32_t i=0; i<*size; i++) {
         waveform[i] = ioread32(&regset->table[i]);
     }
     return RP_OK;
 }
 
-int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t * a_len) {
-    uint16_t ramp[256];
-    for (uint32_t i=0; i<256; i++) {
+int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size) {
+    uint16_t ramp[size];
+    for (uint32_t i=0; i<size; i++) {
         ramp[i] = i;
     }
-    rp_GenSetWaveform(handle, ramp, 256);
-    *a_len=256;
+    rp_GenSetWaveform(handle, ramp, size);
     return RP_OK;
 }
 
@@ -315,7 +306,7 @@ int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t a_mask)
 
 int rp_GenSetSampleRate(rp_handle_uio_t *handle, double a_freq)
 {
-    uint32_t reg_val=(a_freq/c_max_freq)+1.0;
+    uint32_t reg_val=(a_freq/RP_GEN_SR)+1.0;
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     iowrite32(reg_val, &regset->cfg_stp);
     return RP_OK;

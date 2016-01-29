@@ -134,8 +134,8 @@ int rp_GenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-//int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double  frequency, double  phase);
-//int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase);
+int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double  frequency, double  phase);
+int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase);
 
 /**
 * Sets channel signal waveform. This determines how the signal looks.
@@ -164,9 +164,9 @@ int rp_GenSetMode(rp_handle_uio_t *handle, RP_GEN_MODE a_mode);
 int rp_GenSetSampleRate(rp_handle_uio_t *handle, double a_freq);
 
 /** Set waveform */
-int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
-int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
-int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t * a_len);
+int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t  size);
+int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t *size);
+int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size);
 
 /** Burst mode specific */
 int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t a_val);

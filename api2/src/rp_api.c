@@ -613,10 +613,10 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
     rp_GenSetMode(&sig_gen_handle, RP_GEN_MODE_BURST);
 
     // set waveform
-    uint32_t len;
+    uint32_t len = 256;
     switch(patternType){
         case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256:
-            rp_GenSetWaveformUpCountSeq(&sig_gen_handle,&len);
+            rp_GenSetWaveformUpCountSeq(&sig_gen_handle,len);
             rp_GenSetBurstModeBurstDataLen(&sig_gen_handle,len);
             break;
     }
