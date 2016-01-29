@@ -15,19 +15,23 @@
 
 int suite_sig_gen_init(void)
 {
-    rp_OpenUnit();
+    if(rp_OpenUnit()!=RP_OK){
+        return -1;
+    }
     return 0;
 }
 
 int suite_sig_gen_cleanup(void)
 {
-    rp_CloseUnit();
+    if(rp_CloseUnit()!=RP_OK){
+        return -1;
+    }
     return 0;
 }
 
 void sig_gen_test(void)
 {
-	rp_DigSigGenOuput(true);
-    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ,125e6,RP_TRG_DGEN_SWE_MASK);
+    rp_DigSigGenOuput(true);
+    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,125e6,1,0,RP_TRG_DGEN_SWE_MASK);
     rp_DigSigGenSoftwareControl(1);
 }

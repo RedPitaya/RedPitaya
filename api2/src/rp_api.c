@@ -59,10 +59,10 @@ uio0: name=housekeeping, version=devicetree, events=0
 RP_STATUS rp_OpenUnit(void)
 {
     int r=RP_API_OK;
-    if(rp_LaAcqOpen("/dev/la", &la_acq_handle)!=RP_API_OK){
-        r=-1;
-    }
-    if(rp_GenOpen("/dev/lg", &sig_gen_handle)!=RP_API_OK){
+ //   if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
+//        r=-1;
+ //   }
+    if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -74,9 +74,9 @@ RP_STATUS rp_OpenUnit(void)
 RP_STATUS rp_CloseUnit(void)
 {
     int r=RP_API_OK;
-    if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
-        r=-1;
-    }
+  //  if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
+ //       r=-1;
+ //   }
     if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
@@ -602,25 +602,42 @@ RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 }
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                double frequency,
+                                double sample_rate,
+                                uint32_t shots,
+                                uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask)
 {
     rp_GenStop(&sig_gen_handle);
 
-	switch(patternType){
-        case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ:
-            rp_GenSetWaveformUpCountSeq(&sig_gen_handle);
+    // set burst mode - dig. sig. gen will always operate in this mode!
+    rp_GenSetMode(&sig_gen_handle, RP_GEN_MODE_BURST);
+
+    // set waveform
+    uint32_t len;
+    switch(patternType){
+        case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256:
+            rp_GenSetWaveformUpCountSeq(&sig_gen_handle,&len);
+            rp_GenSetBurstModeBurstDataLen(&sig_gen_handle,len);
             break;
     }
 
-    rp_DigGenSetFreq(&sig_gen_handle,frequency);
+    // repetitions
+    rp_GenSetBurstModeRepetitions(&sig_gen_handle, shots);
+
+    // no idle
+    rp_GenSetBurstModeIdle(&sig_gen_handle, delay_between_shots);
+
+    // frequency
+    rp_GenSetSampleRate(&sig_gen_handle,sample_rate);
 
     // trigger
-    rp_DigGenGlobalTrigEnable(&sig_gen_handle, triggerSourceMask);
+    rp_GenGlobalTrigEnable(&sig_gen_handle, triggerSourceMask);
 
     rp_GenRun(&sig_gen_handle);
+
+    rp_GenFpgaRegDump(&sig_gen_handle);
 
     return RP_API_OK;
 }
 
-
+// TODO: add function that will generate protocol from file

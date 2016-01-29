@@ -27,8 +27,6 @@
 #include "la_acq.h"
 #include "generate.h"
 
-const char c_dummy_dev[]="/dev/dummy";
-
 int rp_LaAcqOpen(const char *a_dev, rp_handle_uio_t *handle) {
 
     // make a copy of the device path

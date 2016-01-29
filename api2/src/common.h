@@ -20,6 +20,8 @@
 
 #include "rp2.h"
 
+extern const char c_dummy_dev[10];
+
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t *)(p))
 #define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))

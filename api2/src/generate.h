@@ -47,6 +47,12 @@
 
 #define RP_GEN_SIG_SAMPLES (1<<14) ///< 16384
 
+
+typedef enum {
+    RP_GEN_MODE_CONTINUOUS,
+    RP_GEN_MODE_BURST,
+} RP_GEN_MODE;
+
 // linear transformation
 typedef struct {
     int32_t mul;  // multiplication (amplitude/gain)
@@ -58,6 +64,7 @@ typedef struct {
     uint32_t dig_out_en; ///< this enables digital outputs
 } rp_dig_out_t;
 
+#define RP_GEN_REP_INF 0
 
 #define RP_GEN_CFG_BURST_MASK (1<<0)      ///< if set generator will operate in burst mode, otherwise periodic mode
 #define RP_GEN_CFG_BURST_INF_MASK (1<<1)  ///< if set cfg_bnm will be inf regardless of cfg_bnm setting
@@ -86,6 +93,7 @@ typedef struct {
     uint32_t  table [RP_GEN_SIG_SAMPLES];
 } asg_regset_t;
 
+// ??
 typedef struct {
     // ASG registers
     asg_regset_t    asg;
@@ -93,17 +101,21 @@ typedef struct {
     linear_regset_t lin;
 } gen_regset_t;
 
+/**
+* Common functions / controls
+*/
 int rp_GenOpen(char *dev, rp_handle_uio_t *handle);
 int rp_GenClose(rp_handle_uio_t *handle);
+
 int rp_GenReset(rp_handle_uio_t *handle);
 int rp_GenRun(rp_handle_uio_t *handle);
 int rp_GenStop(rp_handle_uio_t *handle);
 int rp_GenTrigger(rp_handle_uio_t *handle);
 int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status);
-/**
-* Sets generate to default values.
-*/
-int rp_GenReset2();
+int rp_GenDefaultSettings();
+
+int rp_GenGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask);
+int rp_GenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
 
 /**
 * Sets channel signal peak to peak amplitude.
@@ -112,8 +124,8 @@ int rp_GenReset2();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetLinear(rp_handle_uio_t *handle, float  amplitude, float  offset);
-int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset);
+//int rp_GenSetLinear(rp_handle_uio_t *handle, float  amplitude, float  offset);
+//int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset);
 
 /**
 * Sets channel signal frequency.
@@ -122,8 +134,8 @@ int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double  frequency, double  phase);
-int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase);
+//int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double  frequency, double  phase);
+//int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase);
 
 /**
 * Sets channel signal waveform. This determines how the signal looks.
@@ -132,20 +144,7 @@ int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
-int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
 
-int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle);
-
-/**
-* Sets generation mode.
-* @param channel Channel A or B for witch we want to set generation mode.
-* @param mode Type of signal generation (CONTINUOUS, BURST, STREAM).
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSetMode(rp_handle_uio_t *handle, uint32_t  mode);
-int rp_GenGetMode(rp_handle_uio_t *handle, uint32_t *mode);
 
 /**
 * Sets number of generated waveforms in a burst.
@@ -155,19 +154,26 @@ int rp_GenGetMode(rp_handle_uio_t *handle, uint32_t *mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetBurst(rp_handle_uio_t *handle, uint32_t  count, uint32_t  repetitions, uint32_t  delay);
-int rp_GenGetBurst(rp_handle_uio_t *handle, uint32_t *count, uint32_t *repetitions, uint32_t *delay);
+//int rp_GenSetBurst(rp_handle_uio_t *handle, uint32_t  count, uint32_t  repetitions, uint32_t  delay);
+//int rp_GenGetBurst(rp_handle_uio_t *handle, uint32_t *count, uint32_t *repetitions, uint32_t *delay);
 
-/**
-* Sets trigger source.
-* @param channel Channel A or B for witch we want to set trigger source.
-* @param src Trigger source (INTERNAL, EXTERNAL_PE, EXTERNAL_NE, GATED_BURST).
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_DigGenGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask);
-int rp_DigGenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
+/** Set mode */
+int rp_GenSetMode(rp_handle_uio_t *handle, RP_GEN_MODE a_mode);
 
+/** Set frequency */
+int rp_GenSetSampleRate(rp_handle_uio_t *handle, double a_freq);
+
+/** Set waveform */
+int rp_GenSetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
+int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t length);
+int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t * a_len);
+
+/** Burst mode specific */
+int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t a_val);
+int rp_GenSetBurstModeBurstDataLen(rp_handle_uio_t *handle, uint32_t length);
+int rp_GenSetBurstModeIdle(rp_handle_uio_t *handle, uint32_t a_val);
+
+/** Output enable */
 #define RP_GEN_OUT_EN_ALL_MASK 	 0xffff
 #define RP_GEN_OUT_EN_PORT0_MASK 0x00ff ///< lower  8 pins (RP hw 1.1 P_GPIO_PORT)
 #define RP_GEN_OUT_EN_PORT1_MASK 0xff00 ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
@@ -175,8 +181,6 @@ int rp_DigGenGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
 int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t  mask);
 int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t  mask);
 
-int rp_DigGenSetFreq(rp_handle_uio_t *handle, double a_freq);
-
-int rp_DigGenFpgaRegDump(rp_handle_uio_t *handle);
+int rp_GenFpgaRegDump(rp_handle_uio_t *handle);
 
 #endif //__GENERATE_H

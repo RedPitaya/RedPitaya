@@ -343,12 +343,14 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
 /** DIGITAL SIGNAL GENERATION  */
 
 typedef enum patternType{
-    RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ, ///< counts 8bit
+    RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256, ///< counts 8bit
 } RP_DIG_SIGGEN_PAT_TYPE;
 
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state);
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                double frequency,
+                                double sample_rate,
+                                uint32_t shots,
+                                uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask);
 #endif // _RP_API_H_
