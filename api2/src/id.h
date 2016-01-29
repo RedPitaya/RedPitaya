@@ -46,6 +46,6 @@ int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id);
 int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna);
 
 // get 160 bit GIT HASH
-int rp_IdGetGITH(rp_handle_uio_t *handle, uint64_t gith[5]);
+int rp_IdGetGITH(rp_handle_uio_t *handle, uint32_t *gith);
 
 #endif //__ID_H
