@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "rp2.h"
-#include "housekeeping.h"
+#include "gpio.h"
 
 int main (int argc, char **argv) {
     int unsigned period = 1000000; // uS
@@ -18,24 +18,24 @@ int main (int argc, char **argv) {
         led = 0;
     }
     printf("Blinking LED[%u]\n", led);
-    led += RP_LED0;
 
     // Initialization of API
-    if (rp_HousekeepingInit("/dev/uio0", &handle) != RP_OK) {
+    if (rp_GpioOpen("/dev/uio3", &handle) != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
     }
 
+    rp_GpioSetEnable(&handle, 0xff);
     int unsigned retries = 1000;
     while (retries--){
-        rp_DpinSetState(&handle, led, RP_HIGH);
+        rp_GpioSetState(&handle, 1<<led);
         usleep(period/2);
-        rp_DpinSetState(&handle, led, RP_LOW);
+        rp_GpioSetState(&handle, 0);
         usleep(period/2);
     }
 
     // Releasing resources
-    rp_HousekeepingRelease(&handle);
+    rp_GpioClose(&handle);
 
     return EXIT_SUCCESS;
 }
