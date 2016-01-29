@@ -104,7 +104,7 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 ################################################################################
 
 set gith [exec git log -1 --format="%H""
-set_property generic "{GITH=160'h$gith}" [current_fileset]
+set_property generic "GITH=160'h$gith" [current_fileset]
 
 ################################################################################
 # run synthesis
