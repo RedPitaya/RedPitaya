@@ -13,10 +13,10 @@
 #include <stdint.h>
 
 #include "common.h"
-#include "housekeeping.h"
+#include "id.h"
 
-int rp_HousekeepingOpen(char *dev, rp_handle_uio_t *handle) {
-    handle->length = HOUSEKEEPING_BASE_SIZE;
+int rp_IdOpen(char *dev, rp_handle_uio_t *handle) {
+    handle->length = ID_BASE_SIZE;
     int status = common_Open (dev, handle);
     if (status != RP_OK) {
         return status;
@@ -24,7 +24,7 @@ int rp_HousekeepingOpen(char *dev, rp_handle_uio_t *handle) {
     return RP_OK;
 }
 
-int rp_HousekeepingClose(rp_handle_uio_t *handle) {
+int rp_IdClose(rp_handle_uio_t *handle) {
     int status = common_Close (handle); 
     if (status != RP_OK) {
         return status;
@@ -37,20 +37,20 @@ int rp_HousekeepingClose(rp_handle_uio_t *handle) {
  */
 
 int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id) {
-    housekeeping_regset_t *regset = (housekeeping_regset_t *) handle->regset;
+    id_regset_t *regset = (id_regset_t *) handle->regset;
     *id = ioread32(&regset->id);
     return RP_OK;
 }
 
 int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna) {
-    housekeeping_regset_t *regset = (housekeeping_regset_t *) handle->regset;
+    id_regset_t *regset = (id_regset_t *) handle->regset;
     *dna = ((uint64_t) ioread32(&regset->dna_hi) << 32)
          | ((uint64_t) ioread32(&regset->dna_lo) <<  0);
     return RP_OK;
 }
 
 int rp_IdGetGITH(rp_handle_uio_t *handle, uint64_t gith[5]) {
-    housekeeping_regset_t *regset = (housekeeping_regset_t *) handle->regset;
+    id_regset_t *regset = (id_regset_t *) handle->regset;
     for (int unsigned i=0; i<5; i++)
         gith[i] = ioread32(&regset->gith[i]);
     return RP_OK;

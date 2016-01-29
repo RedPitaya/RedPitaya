@@ -1,7 +1,7 @@
 /**
  * $Id: $
  *
- * @brief Red Pitaya library housekeeping module interface
+ * @brief Red Pitaya library id module interface
  *
  * @Author Red Pitaya
  *
@@ -14,26 +14,26 @@
 
 
 
-#ifndef __HOUSEKEEPING_H
-#define __HOUSEKEEPING_H
+#ifndef __ID_H
+#define __ID_H
 
 #include <stdint.h>
 #include <stdbool.h>
 
-// Base Housekeeping address
-static const int HOUSEKEEPING_BASE_SIZE = 0x1000;
+// Base Id address
+static const int ID_BASE_SIZE = 0x1000;
 
-// Housekeeping structure declaration
+// Id structure declaration
 typedef struct {
     uint32_t id;            // 0x00
     uint32_t dna_lo;        // 0x04
     uint32_t dna_hi;        // 0x08
     uint32_t reserved_0c;   // 0x0c
     uint32_t gith[5];       // 0x10 - 0x20
-} housekeeping_regset_t;
+} id_regset_t;
 
-int rp_HousekeepingOpen(char *dev, rp_handle_uio_t *handle);
-int rp_HousekeepingClose(rp_handle_uio_t *handle);
+int rp_IdOpen(char *dev, rp_handle_uio_t *handle);
+int rp_IdClose(rp_handle_uio_t *handle);
 
 /**
 * Gets FPGA Synthesized ID
@@ -48,4 +48,4 @@ int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna);
 // get 160 bit GIT HASH
 int rp_IdGetGITH(rp_handle_uio_t *handle, uint64_t gith[5]);
 
-#endif //__HOUSEKEEPING_H
+#endif //__ID_H

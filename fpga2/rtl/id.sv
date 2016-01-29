@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Module: housekeeping
+// Module: id
 // Authors: Matej Oblak, Iztok Jeras <iztok.jeras@redpitaya.com>
 // (c) Red Pitaya  (redpitaya.com)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,13 +7,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // GENERAL DESCRIPTION:
 //
-// House keeping module takes care of system identification.
+// Module takes care of system identification.
 //
 // This module takes care of system identification via DNA readout at startup and
 // ID register which user can define at compile time.
 ////////////////////////////////////////////////////////////////////////////////
 
-module red_pitaya_hk #(
+module id #(
   bit [160-1:0] GITH = '0,  // GIT hash full length
   bit  [57-1:0] DNA = 57'h0823456789ABCDE,
   bit  [32-1:0] ID = {28'h0, 4'h1} // {reserved, board type}:  1 - release 1
@@ -101,4 +101,4 @@ end else begin
   endcase
 end
 
-endmodule: red_pitaya_hk
+endmodule: id

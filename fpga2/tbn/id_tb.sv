@@ -1,5 +1,5 @@
 /**
- * $Id: red_pitaya_hk_tb.v 961 2014-01-21 11:40:39Z matej.oblak $
+ * $Id: id_tb.v 961 2014-01-21 11:40:39Z matej.oblak $
  *
  * @brief Red Pitaya house keeping testbench.
  *
@@ -24,7 +24,7 @@
 
 `timescale 1ns / 1ps
 
-module hk_tb #(
+module id_tb #(
   // time periods
   realtime  TP = 8.0ns,  // 125MHz
   // RTL config
@@ -76,6 +76,8 @@ initial begin
   dna [57-1:32] = rdata [57-32-1:0];
   $display ("DNA = 0x%016x", dna);
 
+  // TODO add reading GIT HASH
+
   repeat(200) @(posedge clk);
   $finish();
 end
@@ -88,7 +90,7 @@ sys_bus_if    bus  (.clk (clk), .rstn (rstn));
 
 sys_bus_model busm (.bus (bus));
 
-red_pitaya_hk hk (
+id id (
   // System bus
   .bus       (bus)
 );
@@ -98,8 +100,8 @@ red_pitaya_hk hk (
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  $dumpfile("hk_tb.vcd");
-  $dumpvars(0, hk_tb);
+  $dumpfile("id_tb.vcd");
+  $dumpvars(0, id_tb);
 end
 
-endmodule: hk_tb
+endmodule: id_tb

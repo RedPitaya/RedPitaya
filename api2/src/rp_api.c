@@ -49,7 +49,7 @@ uio10: name=scope1, version=devicetree, events=0
         map[0]: addr=0x400A0000, size=65536
 uio1: name=muxctl, version=devicetree, events=0
         map[0]: addr=0x40010000, size=65536
-uio0: name=housekeeping, version=devicetree, events=0
+uio0: name=id, version=devicetree, events=0
         map[0]: addr=0x40000000, size=65536
 		*/
 
