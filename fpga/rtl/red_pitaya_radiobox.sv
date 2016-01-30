@@ -1434,7 +1434,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_Q_dsp48 (
 //  RX_MOD_FIR2 low pass filter for side-band selection
 //
 //  Coefficients built with Octave:
-//  fir2(126, [0 3300/4000 3350/4000 1], [1 1 0.000001 0.000001], 4096, kaiser(127, 3.5))
+//  fir2(126, [0/4000 900/4000 1700/4000 2500/4000 3300/4000  3350/4000 1], [1 1.5 2.25 3.375 5  0.000001 0.000001], 4096, kaiser(127, 4.5))
 
 wire [ 23: 0] rx_mod_fir2_i_in = { 7'b0, rx_mod_qmix_i_out[30:14] };  // bus width is multiple of 8
 wire [ 39: 0] rx_mod_fir2_i_out;
@@ -1498,7 +1498,7 @@ if (!adc_rstn_i) begin                          // register input I
    end
 else if (rx_mod_fir2_i_vld && rx_mod_fir2_i_rdy) begin
    rx_mod_fir2_i_rdy   <= 1'b0;
-   rx_mod_regs2_i_data <= rx_mod_fir2_i_out[32:1];
+   rx_mod_regs2_i_data <= rx_mod_fir2_i_out[31:0];
    rx_mod_regs2_i_new  <= 1'b1;
    end
 else if (rx_mod_fir2_i_vld)
@@ -1514,7 +1514,7 @@ if (!adc_rstn_i) begin                          // register input Q
    end
 else if (rx_mod_fir2_q_vld && rx_mod_fir2_q_rdy) begin
    rx_mod_fir2_q_rdy   <= 1'b0;
-   rx_mod_regs2_q_data <= rx_mod_fir2_q_out[32:1];
+   rx_mod_regs2_q_data <= rx_mod_fir2_q_out[31:0];
    rx_mod_regs2_q_new  <= 1'b1;
    end
 else if (rx_mod_fir2_q_vld)
@@ -1973,11 +1973,11 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT: begin
           if (rx_mod_fir2_i_vld)
-             rb_leds_data <= fct_mag(rx_mod_fir2_i_out[32:17]);
+             rb_leds_data <= fct_mag(rx_mod_fir2_i_out[31:16]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT: begin
           if (rx_mod_fir2_q_vld)
-             rb_leds_data <= fct_mag(rx_mod_fir2_q_out[32:17]);
+             rb_leds_data <= fct_mag(rx_mod_fir2_q_out[31:16]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
           if (rx_mod_cic2_i_vld)
@@ -2183,11 +2183,11 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT: begin
           if (rx_mod_fir2_i_vld)
-             rb_out_ch[0] <= rx_mod_fir2_i_out[32:17];
+             rb_out_ch[0] <= rx_mod_fir2_i_out[31:16];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT: begin
           if (rx_mod_fir2_q_vld)
-             rb_out_ch[0] <= rx_mod_fir2_q_out[32:17];
+             rb_out_ch[0] <= rx_mod_fir2_q_out[31:16];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
           if (rx_mod_cic2_i_vld)
@@ -2388,11 +2388,11 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT: begin
           if (rx_mod_fir2_i_vld)
-             rb_out_ch[1] <= rx_mod_fir2_i_out[32:17];
+             rb_out_ch[1] <= rx_mod_fir2_i_out[31:16];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT: begin
           if (rx_mod_fir2_q_vld)
-             rb_out_ch[1] <= rx_mod_fir2_q_out[32:17];
+             rb_out_ch[1] <= rx_mod_fir2_q_out[31:16];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
           if (rx_mod_cic2_i_vld)
