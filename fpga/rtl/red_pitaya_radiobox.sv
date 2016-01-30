@@ -189,7 +189,7 @@ enum {
     RB_CTRL_RSVD_D24,
     RB_CTRL_RSVD_D25,
     RB_CTRL_RSVD_D26,
-    RB_CTRL_RSVD_D27,
+    RB_CTRL_RX_AFC_ENABLE,                      // enables RX_CAR_OSC carrier frequency corrections for AM-USB, AM-LSB, FM and PM
 
     RB_CTRL_RX_MOD_OSC_RESYNC,                  // RX_MOD_OSC restart with phase register = 0
     RB_CTRL_RSVD_D29,
@@ -278,7 +278,7 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT,                 // RX_CAR_CIC2 I output
     RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT,                 // RX_CAR_CIC2 Q output
 
-    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT            = 46, // RX_MOD_FIR1 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT            = 40, // RX_MOD_FIR1 I output
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT,                 // RX_MOD_FIR1 Q output
     RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT,                  // RX_MOD_OSC I output
     RB_SRC_CON_PNT_NUM_RX_MOD_OSC_Q_OUT,                  // RX_MOD_OSC Q output
@@ -291,9 +291,9 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT,                 // RX_MOD_CIC2 I output
     RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT,                 // RX_MOD_CIC2 Q output
 
-    RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT               = 58, // RX_MOD_ADD output
+    RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT               = 56, // RX_MOD_ADD output
 
-    RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT             = 59, // RX_AFC_FIR I output
+    RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT             = 58, // RX_AFC_FIR I output
     RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT,                  // RX_AFC_FIR Q output
     RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG,                 // RX_AFC_CORDIC magnitude output
     RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS,                 // RX_AFC_CORDIC phase output
