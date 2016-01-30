@@ -154,7 +154,7 @@ if (~bus.addr[CWM+2]) begin
     // buffer configuration
     'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
     'h14 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
-    'h1c : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_stp};
+    'h18 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_stp};
     // burst mode
     'h20 : bus.rdata <= {{32-      2{1'b0}}, cfg_inf
                                            , cfg_ben};
