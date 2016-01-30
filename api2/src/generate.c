@@ -162,16 +162,16 @@ int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double frequency, double phase) 
         return RP_EOOR;
     }
     uint32_t size = ioread32(&regset->cfg_siz) + 1;
-    iowrite32((uint32_t) ((double) size * (frequency / RP_GEN_SR)), &regset->cfg_stp);
-    iowrite32((uint32_t) ((double) size * fmod(phase,360)/360    ), &regset->cfg_off);
+    iowrite32((uint32_t) ((double) size * (frequency / RP_GEN_SR)) - 1, &regset->cfg_stp);
+    iowrite32((uint32_t) ((double) size * fmod(phase,360)/360    )    , &regset->cfg_off);
     return RP_OK;
 }
 
 int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     uint32_t size = ioread32(&regset->cfg_siz) + 1;
-    *frequency = (double) (ioread32(&regset->cfg_stp) / (double) size * RP_GEN_SR);
-    *phase     = (double) (ioread32(&regset->cfg_off) / (double) size * 360      );
+    *frequency = (double) (ioread32(&regset->cfg_stp) + 1) / (double) size * RP_GEN_SR;
+    *phase     = (double) (ioread32(&regset->cfg_off)    ) / (double) size * 360      ;
     return RP_OK;
 }
 
