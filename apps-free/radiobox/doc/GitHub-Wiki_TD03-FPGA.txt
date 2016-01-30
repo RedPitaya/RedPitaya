@@ -74,7 +74,9 @@
                                 accumulating phase register. That holds the
                                 oscillator just there, where it is. With '0' the
                                 RX_CAR_OSC resumes operation.
-                     - bit h1B..h15: n/a
+                     - bit h1A..h15: n/a
+                     - bit h1B: RX_AFC ENABLE - '1' enables RX_CAR_OSC automatic
+                                frequency correction. '0' disabled the AFC feature.
                      - bit h1C: RX_MOD_OSC RESYNC - '1' stops incrementing the
                                 accumulating phase register. That holds the
                                 oscillator just there, where it is. With '0' the
@@ -181,21 +183,23 @@
                          value = h25  RX_CAR_CIC1 Q output
                          value = h26  RX_CAR_CIC2 I output
                          value = h27  RX_CAR_CIC2 Q output
-                         value = h28  RX_MOD_FIR1 I output
-                         value = h29  RX_MOD_FIR1 Q output
-                         value = h30  RX_MOD_OSC I output
-                         value = h31  RX_MOD_OSC Q output
-                         value = h32  RX_MOD_HLD I output
-                         value = h33  RX_MOD_HLD Q output
-                         value = h34  RX_MOD_QMIX I output
-                         value = h35  RX_MOD_QMIX Q output
-                         value = h36  RX_MOD_FIR2 I output
-                         value = h37  RX_MOD_FIR2 Q output
-                         value = h38  RX_MOD_ADD output (** Audio output **)
-                         value = h3A  RX_AFC_FIR I output
-                         value = h3B  RX_AFC_FIR Q output
-                         value = h3C  RX_AFC_CORDIC magnitude output
-                         value = h3D  RX_AFC_CORDIC phase output
+                         value = h28  RX_MOD_FIR1_I output.
+                         value = h29  RX_MOD_FIR1_Q output.
+                         value = h2A  RX_MOD_OSC_I output.
+                         value = h2B  RX_MOD_OSC_Q output.
+                         value = h2C  RX_MOD_HLD_I output.
+                         value = h2D  RX_MOD_HLD_Q output.
+                         value = h2E  RX_MOD_QMIX_I output.
+                         value = h2F  RX_MOD_QMIX_Q output.
+                         value = h30  RX_MOD_FIR2_I output.
+                         value = h31  RX_MOD_FIR2_Q output.
+                         value = h32  RX_MOD_CIC2_I output.
+                         value = h33  RX_MOD_CIC2_Q output.
+                         value = h38  RX_MOD_ADD output.
+                         value = h3A  RX_AFC_FIR1_I output.
+                         value = h3B  RX_AFC_FIR1_Q output.
+                         value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
+                         value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
                          value = h3F  LEDs show test vector, look for current assignments
                                       within the red_pitaya_radiobox.sv file.
                      - bit h0F..h06: n/a
@@ -232,21 +236,23 @@
                          value = h25  RX_CAR_CIC1 Q output
                          value = h26  RX_CAR_CIC2 I output
                          value = h27  RX_CAR_CIC2 Q output
-                         value = h28  RX_MOD_FIR1 I output
-                         value = h29  RX_MOD_FIR1 Q output
-                         value = h30  RX_MOD_OSC I output
-                         value = h31  RX_MOD_OSC Q output
-                         value = h32  RX_MOD_HLD I output
-                         value = h33  RX_MOD_HLD Q output
-                         value = h34  RX_MOD_QMIX I output
-                         value = h35  RX_MOD_QMIX Q output
-                         value = h36  RX_MOD_FIR2 I output
-                         value = h37  RX_MOD_FIR2 Q output
-                         value = h38  RX_MOD_ADD output (** Audio output **)
-                         value = h3A  RX_AFC_FIR I output
-                         value = h3B  RX_AFC_FIR Q output
-                         value = h3C  RX_AFC_CORDIC magnitude output
-                         value = h3D  RX_AFC_CORDIC phase output
+                         value = h28  RX_MOD_FIR1_I output.
+                         value = h29  RX_MOD_FIR1_Q output.
+                         value = h2A  RX_MOD_OSC_I output.
+                         value = h2B  RX_MOD_OSC_Q output.
+                         value = h2C  RX_MOD_HLD_I output.
+                         value = h2D  RX_MOD_HLD_Q output.
+                         value = h2E  RX_MOD_QMIX_I output.
+                         value = h2F  RX_MOD_QMIX_Q output.
+                         value = h30  RX_MOD_FIR2_I output.
+                         value = h31  RX_MOD_FIR2_Q output.
+                         value = h32  RX_MOD_CIC2_I output.
+                         value = h33  RX_MOD_CIC2_Q output.
+                         value = h38  RX_MOD_ADD output.
+                         value = h3A  RX_AFC_FIR1_I output.
+                         value = h3B  RX_AFC_FIR1_Q output.
+                         value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
+                         value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
                          value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
                      - bit h17..h16: n/a
                      - bit h1D..h18: RFOUT2 source connection point
@@ -282,21 +288,23 @@
                          value = h25  RX_CAR_CIC1 Q output
                          value = h26  RX_CAR_CIC2 I output
                          value = h27  RX_CAR_CIC2 Q output
-                         value = h28  RX_MOD_FIR1 I output
-                         value = h29  RX_MOD_FIR1 Q output
-                         value = h30  RX_MOD_OSC I output
-                         value = h31  RX_MOD_OSC Q output
-                         value = h32  RX_MOD_HLD I output
-                         value = h33  RX_MOD_HLD Q output
-                         value = h34  RX_MOD_QMIX I output
-                         value = h35  RX_MOD_QMIX Q output
-                         value = h36  RX_MOD_FIR2 I output
-                         value = h37  RX_MOD_FIR2 Q output
-                         value = h38  RX_MOD_ADD output (** Audio output **)
-                         value = h3A  RX_AFC_FIR I output
-                         value = h3B  RX_AFC_FIR Q output
-                         value = h3C  RX_AFC_CORDIC magnitude output
-                         value = h3D  RX_AFC_CORDIC phase output
+                         value = h28  RX_MOD_FIR1_I output.
+                         value = h29  RX_MOD_FIR1_Q output.
+                         value = h2A  RX_MOD_OSC_I output.
+                         value = h2B  RX_MOD_OSC_Q output.
+                         value = h2C  RX_MOD_HLD_I output.
+                         value = h2D  RX_MOD_HLD_Q output.
+                         value = h2E  RX_MOD_QMIX_I output.
+                         value = h2F  RX_MOD_QMIX_Q output.
+                         value = h30  RX_MOD_FIR2_I output.
+                         value = h31  RX_MOD_FIR2_Q output.
+                         value = h32  RX_MOD_CIC2_I output.
+                         value = h33  RX_MOD_CIC2_Q output.
+                         value = h38  RX_MOD_ADD output.
+                         value = h3A  RX_AFC_FIR1_I output.
+                         value = h3B  RX_AFC_FIR1_Q output.
+                         value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
+                         value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
                          value = h3F  test vector as signal @see red_pitaya_radiobox.sv for details.
                      - bit h1F..h1E: n/a
 

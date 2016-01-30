@@ -264,12 +264,12 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h0E  TX_MOD_QMIX_I output at stage 3.
      *   value = h0F  TX_MOD_QMIX_Q output at stage 3.
      *
-     *   value = h10  low pass TX_MOD_CIC I output.
-     *   value = h11  low pass TX_MOD_CIC Q output.
-     *   value = h12  signal forming TX_MOD_FIR I output.
-     *   value = h13  signal forming TX_MOD_FIR Q output.
-     *   value = h14  interpolator TX_CAR_CIC_41M664 I output 41.664 MHz output.
-     *   value = h15  interpolator TX_CAR_CIC_41M664 Q output 41.664 MHz output.
+     *   value = h10  TX_MOD_CIC I output.
+     *   value = h11  TX_MOD_CIC Q output.
+     *   value = h12  TX_MOD_FIR I output.
+     *   value = h13  TX_MOD_FIR Q output.
+     *   value = h14  TX_CAR_CIC_41M664 I output 41.664 MHz output.
+     *   value = h15  TX_CAR_CIC_41M664 Q output 41.664 MHz output.
      *
      *   value = h18  TX_CAR_OSC_I output.
      *   value = h19  TX_CAR_OSC_Q output.
@@ -328,12 +328,12 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h0E  TX_MOD_QMIX_I output at stage 3.
      *   value = h0F  TX_MOD_QMIX_Q output at stage 3.
      *
-     *   value = h10  low pass TX_MOD_CIC I output.
-     *   value = h11  low pass TX_MOD_CIC Q output.
-     *   value = h12  signal forming TX_MOD_FIR I output.
-     *   value = h13  signal forming TX_MOD_FIR Q output.
-     *   value = h14  interpolator TX_CAR_CIC_41M664 I output 41.664 MHz output.
-     *   value = h15  interpolator TX_CAR_CIC_41M664 Q output 41.664 MHz output.
+     *   value = h10  TX_MOD_CIC I output.
+     *   value = h11  TX_MOD_CIC Q output.
+     *   value = h12  TX_MOD_FIR I output.
+     *   value = h13  TX_MOD_FIR Q output.
+     *   value = h14  TX_CAR_CIC_41M664 I output 41.664 MHz output.
+     *   value = h15  TX_CAR_CIC_41M664 Q output 41.664 MHz output.
      *
      *   value = h18  TX_CAR_OSC_I output.
      *   value = h19  TX_CAR_OSC_Q output.
@@ -392,12 +392,12 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h0E  TX_MOD_QMIX_I output at stage 3.
      *   value = h0F  TX_MOD_QMIX_Q output at stage 3.
      *
-     *   value = h10  low pass TX_MOD_CIC I output.
-     *   value = h11  low pass TX_MOD_CIC Q output.
-     *   value = h12  signal forming TX_MOD_FIR I output.
-     *   value = h13  signal forming TX_MOD_FIR Q output.
-     *   value = h14  interpolator TX_CAR_CIC_41M664 I output 41.664 MHz output.
-     *   value = h15  interpolator TX_CAR_CIC_41M664 Q output 41.664 MHz output.
+     *   value = h10  TX_MOD_CIC I output.
+     *   value = h11  TX_MOD_CIC Q output.
+     *   value = h12  TX_MOD_FIR I output.
+     *   value = h13  TX_MOD_FIR Q output.
+     *   value = h14  TX_CAR_CIC_41M664 I output 41.664 MHz output.
+     *   value = h15  TX_CAR_CIC_41M664 Q output 41.664 MHz output.
      *
      *   value = h18  TX_CAR_OSC_I output.
      *   value = h19  TX_CAR_OSC_Q output.
