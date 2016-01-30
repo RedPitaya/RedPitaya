@@ -189,7 +189,7 @@ enum {
     RB_CTRL_RSVD_D24,
     RB_CTRL_RSVD_D25,
     RB_CTRL_RSVD_D26,
-    RB_CTRL_RSVD_D27,
+    RB_CTRL_RX_AFC_ENABLE,                      // enables RX_CAR_OSC carrier frequency corrections for AM-USB, AM-LSB, FM and PM
 
     RB_CTRL_RX_MOD_OSC_RESYNC,                  // RX_MOD_OSC restart with phase register = 0
     RB_CTRL_RSVD_D29,
@@ -278,16 +278,18 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT,                 // RX_CAR_CIC2 I output
     RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT,                 // RX_CAR_CIC2 Q output
 
-    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT            = 46, // RX_MOD_FIR1 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT            = 40, // RX_MOD_FIR1 I output
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT,                 // RX_MOD_FIR1 Q output
     RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT,                  // RX_MOD_OSC I output
     RB_SRC_CON_PNT_NUM_RX_MOD_OSC_Q_OUT,                  // RX_MOD_OSC Q output
-    RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT,                  // RX_MOD_OSC_HLD I output
-    RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT,                  // RX_MOD_OSC_HLD I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT,                  // RX_MOD_HLD I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT,                  // RX_MOD_HLD Q output
     RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT,                 // RX_MOD_QMIX I output
     RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT,                 // RX_MOD_QMIX Q output
-    RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT,                 // RX_MOD_FIR I output
-    RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT,                 // RX_MOD_FIR Q output
+    RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT,                 // RX_MOD_FIR2 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT,                 // RX_MOD_FIR2 Q output
+    RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT,                 // RX_MOD_CIC2 I output
+    RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT,                 // RX_MOD_CIC2 Q output
 
     RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT               = 56, // RX_MOD_ADD output
 
@@ -313,10 +315,10 @@ enum {
 
 wire rb_enable = regs[REG_RW_RB_CTRL][RB_CTRL_ENABLE];
 
-reg          rb_enable_last     = 1'b0;
-reg          rb_clk_en          = 1'b0;
-reg          rb_reset_n         = 1'b0;
-reg  [ 1: 0] rb_enable_ctr      = 2'b0;
+reg           rb_enable_last     = 1'b0;
+reg           rb_clk_en          = 1'b0;
+reg           rb_reset_n         = 1'b0;
+reg  [  1: 0] rb_enable_ctr      = 2'b0;
 
 
 //---------------------------------------------------------------------------------
@@ -363,7 +365,7 @@ end
 
 // AXI streaming master from XADC
 
-reg  [15:0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
+reg  [ 15: 0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
 
 always @(posedge xadc_axis_aclk)                                       // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
 begin
@@ -409,31 +411,35 @@ end
 parameter CLK_48KHZ_CTR_MAX = 2604;             // long run max value
 parameter CLK_48KHZ_FRC_MAX = 5;
 
-reg  [11:0] clk_48khz_ctr  = 0;
-reg  [ 2:0] clk_48khz_frc  = 0;
-reg         clk_48khz      = 'b0;
+reg  [ 11: 0] clk_48khz_ctr  = 0;
+reg  [  2: 0] clk_48khz_frc  = 0;
+reg           clk_48khz      = 'b0;
+reg           clk_8khz       = 'b0;
 
-always @(posedge clk_adc_125mhz)                // assign clk_48khz
+always @(posedge clk_adc_125mhz)                // assign clk_48khz, clk_8khz
 begin
    if (!rb_clk_en) begin
       clk_48khz_ctr <= 'b0;
       clk_48khz_frc <= 'b0;
       clk_48khz <= 'b0;
+      clk_8khz  <= 'b0;
       end
    else begin
       if (clk_48khz_ctr == CLK_48KHZ_CTR_MAX) begin
-         clk_48khz <= 'b1;
+         clk_48khz <= 1'b1;
          if (clk_48khz_frc == CLK_48KHZ_FRC_MAX) begin
-            clk_48khz_frc <= 'b0;
-            clk_48khz_ctr <= 'b0;               // overflow of the frac part makes a long run
+            clk_48khz_frc <= 1'b0;
+            clk_48khz_ctr <= 1'b0;              // overflow of the frac part makes a long run
+            clk_8khz <= 1'b1;
             end
          else begin
             clk_48khz_frc = clk_48khz_frc + 1;
             clk_48khz_ctr <= 12'b1;             // short run
+            clk_8khz <= 1'b0;
             end
          end
       else begin
-         clk_48khz <= 'b0;
+         clk_48khz <= 1'b0;
          clk_48khz_ctr = clk_48khz_ctr + 1;
          end
       end
@@ -445,21 +451,21 @@ end
 //---------------------------------------------------------------------------------
 //  ADC modulation offset correction and gain
 
-wire [15:0] tx_muxin_mix_in = (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h20) ?  {~adc_i[0], 2'b0}                :
-                              (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h21) ?  {~adc_i[1], 2'b0}                :
-                              (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
-                              (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
-                              (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
-                              (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
-                              (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
-                              16'b0;
-wire [ 2:0] tx_muxin_mix_log2 = regs[REG_RW_RB_TX_MUXIN_GAIN][18:16];
-wire [15:0] tx_muxin_mix_gain = regs[REG_RW_RB_TX_MUXIN_GAIN][15: 0];
+wire [ 15: 0] tx_muxin_mix_in = (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h20) ?  { ~adc_i[0], 2'b0 }              :
+                                (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h21) ?  { ~adc_i[1], 2'b0 }              :
+                                (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
+                                (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
+                                (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
+                                (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
+                                (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
+                                16'b0;
+wire [  2: 0] tx_muxin_mix_log2 = regs[REG_RW_RB_TX_MUXIN_GAIN][18:16];
+wire [ 15: 0] tx_muxin_mix_gain = regs[REG_RW_RB_TX_MUXIN_GAIN][15: 0];
 
-wire [15:0] tx_mod_adc_in = (tx_muxin_mix_in << tx_muxin_mix_log2);  // unsigned value: input booster for
-                                                                     // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
-wire [15:0] tx_mod_adc_ofs = 16'b0;                                  // TODO: FSM for calculating mean value to strip of the DC component
-wire [31:0] tx_mod_adc_out;
+wire [ 15: 0] tx_mod_adc_in = (tx_muxin_mix_in << tx_muxin_mix_log2);  // unsigned value: input booster for
+                                                                       // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
+wire [ 15: 0] tx_mod_adc_ofs = 16'b0;                                  // TODO: FSM for calculating mean value to strip of the DC component
+wire [ 31: 0] tx_mod_adc_out;
 
 rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_tx_mod_adc_dsp48 (
   // global signals
@@ -482,24 +488,24 @@ rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_tx_mod_adc_dsp48 (
 //  TX_MOD_OSC modulation oscillator and SSB weaver modulator
 
 
-wire         tx_mod_osc_inc_mux = regs[REG_RW_RB_CTRL][RB_CTRL_TX_MOD_OSC_INC_SRC_STREAM];
-wire         tx_mod_osc_ofs_mux = regs[REG_RW_RB_CTRL][RB_CTRL_TX_MOD_OSC_OFS_SRC_STREAM];
-wire         tx_mod_osc_reset_n = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_TX_MOD_OSC];
-wire         tx_mod_osc_resync  = regs[REG_RW_RB_CTRL][RB_CTRL_TX_MOD_OSC_RESYNC];
+wire          tx_mod_osc_inc_mux = regs[REG_RW_RB_CTRL][RB_CTRL_TX_MOD_OSC_INC_SRC_STREAM];
+wire          tx_mod_osc_ofs_mux = regs[REG_RW_RB_CTRL][RB_CTRL_TX_MOD_OSC_OFS_SRC_STREAM];
+wire          tx_mod_osc_reset_n = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_TX_MOD_OSC];
+wire          tx_mod_osc_resync  = regs[REG_RW_RB_CTRL][RB_CTRL_TX_MOD_OSC_RESYNC];
 
-wire [ 47:0] tx_mod_osc_inc_stream = 48'b0;  // TODO: ADC
-wire [ 47:0] tx_mod_osc_ofs_stream = 48'b0;  // TODO: ADC
+wire [ 47: 0] tx_mod_osc_inc_stream = 48'b0;  // TODO: ADC
+wire [ 47: 0] tx_mod_osc_ofs_stream = 48'b0;  // TODO: ADC
 
-wire [ 47:0] tx_mod_osc_inc = ( tx_mod_osc_inc_mux ?  tx_mod_osc_inc_stream : {regs[REG_RW_RB_TX_MOD_OSC_INC_HI][15:0], regs[REG_RW_RB_TX_MOD_OSC_INC_LO][31:0]});
-wire [ 47:0] tx_mod_osc_ofs = ( tx_mod_osc_ofs_mux ?  tx_mod_osc_ofs_stream : {regs[REG_RW_RB_TX_MOD_OSC_OFS_HI][15:0], regs[REG_RW_RB_TX_MOD_OSC_OFS_LO][31:0]});
+wire [ 47: 0] tx_mod_osc_inc = ( tx_mod_osc_inc_mux ?  tx_mod_osc_inc_stream : { regs[REG_RW_RB_TX_MOD_OSC_INC_HI][15:0], regs[REG_RW_RB_TX_MOD_OSC_INC_LO][31:0] });
+wire [ 47: 0] tx_mod_osc_ofs = ( tx_mod_osc_ofs_mux ?  tx_mod_osc_ofs_stream : { regs[REG_RW_RB_TX_MOD_OSC_OFS_HI][15:0], regs[REG_RW_RB_TX_MOD_OSC_OFS_LO][31:0] });
 
-wire         tx_mod_osc_axis_s_vld   = rb_reset_n;  // TODO: ADC
-wire [103:0] tx_mod_osc_axis_s_phase = {7'b0, tx_mod_osc_resync, tx_mod_osc_ofs, tx_mod_osc_inc};
+wire          tx_mod_osc_axis_s_vld   = rb_reset_n;  // TODO: ADC
+wire [103: 0] tx_mod_osc_axis_s_phase = { 7'b0, tx_mod_osc_resync, tx_mod_osc_ofs, tx_mod_osc_inc };
 
-wire         tx_mod_osc_axis_m_vld;
-wire [ 31:0] tx_mod_osc_axis_m_data;
-wire [ 15:0] tx_mod_osc_cos = tx_mod_osc_axis_m_data[15: 0];
-wire [ 15:0] tx_mod_osc_sin = tx_mod_osc_axis_m_data[31:16];
+wire          tx_mod_osc_axis_m_vld;
+wire [ 31: 0] tx_mod_osc_axis_m_data;
+wire [ 15: 0] tx_mod_osc_cos = tx_mod_osc_axis_m_data[15: 0];
+wire [ 15: 0] tx_mod_osc_sin = tx_mod_osc_axis_m_data[31:16];
 
 rb_dds_48_16_125 i_rb_tx_mod_osc (
   // global signals
@@ -520,24 +526,24 @@ rb_dds_48_16_125 i_rb_tx_mod_osc (
 //---------------------------------------------------------------------------------
 //  TX_MOD_QMIX quadrature mixer for the base band
 
-wire        tx_amp_rf_q_en = regs[REG_RW_RB_CTRL][RB_CTRL_TX_RF_AMP_Q_EN];
+wire          tx_amp_rf_q_en = regs[REG_RW_RB_CTRL][RB_CTRL_TX_RF_AMP_Q_EN];
 
-wire [15:0] tx_mod_qmix_in      = (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h00) ?  16'h7fff : tx_mod_adc_out[30:15];  // when ADC source ID is zero take cos() from MOD_OSC only
-wire [15:0] tx_mod_qmix_gain    =  regs[REG_RW_RB_TX_MOD_QMIX_GAIN][15:0];
-wire [47:0] tx_mod_qmix_ofs     = {regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI][15:0], regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO][31:0]};
+wire [ 15: 0] tx_mod_qmix_in      =  (regs[REG_RW_RB_TX_MUXIN_SRC][5:0] == 6'h00) ?  16'h7fff : tx_mod_adc_out[30:15];  // when ADC source ID is zero take cos() from MOD_OSC only
+wire [ 15: 0] tx_mod_qmix_gain    =   regs[REG_RW_RB_TX_MOD_QMIX_GAIN][15:0];
+wire [ 47: 0] tx_mod_qmix_ofs     = { regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI][15:0], regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO][31:0] };
 
-wire [31:0] tx_mod_qmix_i_s1_out;
-wire [31:0] tx_mod_qmix_q_s1_out;
+wire [ 31: 0] tx_mod_qmix_i_s1_out;
+wire [ 31: 0] tx_mod_qmix_q_s1_out;
 
-wire [31:0] tx_mod_qmix_i_s2_out;
-wire [31:0] tx_mod_qmix_q_s2_out;
+wire [ 31: 0] tx_mod_qmix_i_s2_out;
+wire [ 31: 0] tx_mod_qmix_q_s2_out;
 
-wire [47:0] tx_mod_qmix_i_s3_in = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_INC_SRC_STREAM] ?
-                               {{15{tx_mod_qmix_i_s2_out[30]}}, tx_mod_qmix_i_s2_out[29:0], 3'b0} :  /* when FM is used, take 2^14 finer resolution */
-                                   {tx_mod_qmix_i_s2_out[30:0], 17'b0};
-wire [47:0] tx_mod_qmix_q_s3_in = {tx_mod_qmix_q_s2_out[30:0], 17'b0};
-wire [47:0] tx_mod_qmix_i_s3_out;
-wire [47:0] tx_mod_qmix_q_s3_out;
+wire [ 47: 0] tx_mod_qmix_i_s3_in = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_INC_SRC_STREAM] ?
+                                    { {15{tx_mod_qmix_i_s2_out[30]}}, tx_mod_qmix_i_s2_out[29:0], 3'b0 } :  /* when FM is used, take 2^14 finer resolution */
+                                    { tx_mod_qmix_i_s2_out[30:0], 17'b0 };
+wire [ 47: 0] tx_mod_qmix_q_s3_in = { tx_mod_qmix_q_s2_out[30:0], 17'b0 };
+wire [ 47: 0] tx_mod_qmix_i_s3_out;
+wire [ 47: 0] tx_mod_qmix_q_s3_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_tx_mod_qmix_I_s1_dsp48 (
   // global signals
@@ -628,17 +634,17 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_tx_mod_qmix_Q_s3_dsp48 (
 //---------------------------------------------------------------------------------
 //  TX_MOD_CIC sampling rate down convertion 48 kSPS to 8 kSPS
 
-reg          tx_mod_cic_s_vld_i = 'b0;
-wire         tx_mod_cic_s_rdy_i;
-wire [ 31:0] tx_mod_cic_i_out;
-wire         tx_mod_cic_i_vld;
-wire         tx_mod_cic_i_rdy;
+reg           tx_mod_cic_s_vld_i = 'b0;
+wire          tx_mod_cic_s_rdy_i;
+wire [ 31: 0] tx_mod_cic_i_out;
+wire          tx_mod_cic_i_vld;
+wire          tx_mod_cic_i_rdy;
 
-reg          tx_mod_cic_s_vld_q = 'b0;
-wire         tx_mod_cic_s_rdy_q;
-wire [ 31:0] tx_mod_cic_q_out;
-wire         tx_mod_cic_q_vld;
-wire         tx_mod_cic_q_rdy;
+reg           tx_mod_cic_s_vld_q = 'b0;
+wire          tx_mod_cic_s_rdy_q;
+wire [ 31: 0] tx_mod_cic_q_out;
+wire          tx_mod_cic_q_vld;
+wire          tx_mod_cic_q_rdy;
 
 always @(posedge clk_adc_125mhz)                // assign tx_mod_cic_s_vld_i
 begin
@@ -666,7 +672,7 @@ begin
       end
 end
 
-rb_cic_48k_to_8k_32T32_lat13 i_rb_tx_mod_cic_I (
+rb_cic_48k_to_8k_32T32 i_rb_tx_mod_cic_I (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
@@ -682,7 +688,7 @@ rb_cic_48k_to_8k_32T32_lat13 i_rb_tx_mod_cic_I (
   .event_halted         (                      )
 );
 
-rb_cic_48k_to_8k_32T32_lat13 i_rb_tx_mod_cic_Q (
+rb_cic_48k_to_8k_32T32 i_rb_tx_mod_cic_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
@@ -705,15 +711,15 @@ rb_cic_48k_to_8k_32T32_lat13 i_rb_tx_mod_cic_Q (
 //  Coefficients built with Octave:
 //  fir2(62, [0 0.38 0.39 1], [1 1 0.000001 0.000001], 512, kaiser(63,4));
 
-wire [ 23:0] tx_mod_fir_i_in = { 7'b0, tx_mod_cic_i_out[30:14] };
-wire [ 39:0] tx_mod_fir_i_out;
-wire         tx_mod_fir_i_vld;
-wire         tx_mod_fir_i_rdy;
+wire [ 23: 0] tx_mod_fir_i_in = { 7'b0, tx_mod_cic_i_out[30:14] };
+wire [ 39: 0] tx_mod_fir_i_out;
+wire          tx_mod_fir_i_vld;
+wire          tx_mod_fir_i_rdy;
 
-wire [ 23:0] tx_mod_fir_q_in = { 7'b0, tx_mod_cic_q_out[30:14] };
-wire [ 39:0] tx_mod_fir_q_out;
-wire         tx_mod_fir_q_vld;
-wire         tx_mod_fir_q_rdy;
+wire [ 23: 0] tx_mod_fir_q_in = { 7'b0, tx_mod_cic_q_out[30:14] };
+wire [ 39: 0] tx_mod_fir_q_out;
+wire          tx_mod_fir_q_vld;
+wire          tx_mod_fir_q_rdy;
 
 rb_fir_8k_to_8k_25c23_17i16_35o33 i_rb_tx_mod_fir_I (
   // global signals
@@ -749,11 +755,11 @@ rb_fir_8k_to_8k_25c23_17i16_35o33 i_rb_tx_mod_fir_Q (
 //---------------------------------------------------------------------------------
 //  TX_CAR_CIC sampling rate up convertion 8 kSPS to 41.664 MSPS
 
-wire [ 31:0] tx_car_cic_41M664_i_out;
-wire         tx_car_cic_41M664_i_vld;
+wire [ 31: 0] tx_car_cic_41M664_i_out;
+wire          tx_car_cic_41M664_i_vld;
 
-wire [ 31:0] tx_car_cic_41M664_q_out;
-wire         tx_car_cic_41M664_q_vld;
+wire [ 31: 0] tx_car_cic_41M664_q_out;
+wire          tx_car_cic_41M664_q_vld;
 
 rb_cic_8k_to_41M664_32T32_lat14 i_rb_tx_car_cic_I (
   // global signals
@@ -786,22 +792,22 @@ rb_cic_8k_to_41M664_32T32_lat14 i_rb_tx_car_cic_Q (
 
 //---------------------------------------------------------------------------------
 //  TX_CAR_OSC carrier frequency oscillator  (CW, FM, PM modulated)
-wire         tx_car_osc_inc_mux         = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_INC_SRC_STREAM];
-wire         tx_car_osc_ofs_mux         = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_OFS_SRC_STREAM];
-wire         tx_car_osc_reset_n         = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_TX_CAR_OSC];
-wire         tx_car_osc_resync          = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_RESYNC];
+wire          tx_car_osc_inc_mux         = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_INC_SRC_STREAM];
+wire          tx_car_osc_ofs_mux         = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_OFS_SRC_STREAM];
+wire          tx_car_osc_reset_n         = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_TX_CAR_OSC];
+wire          tx_car_osc_resync          = regs[REG_RW_RB_CTRL][RB_CTRL_TX_CAR_OSC_RESYNC];
 
-wire [ 47:0] tx_car_osc_inc             = (tx_car_osc_inc_mux ?  tx_mod_qmix_i_s3_out : {regs[REG_RW_RB_TX_CAR_OSC_INC_HI][15:0], regs[REG_RW_RB_TX_CAR_OSC_INC_LO][31:0]});
-wire [ 47:0] tx_car_osc_ofs             = (tx_car_osc_ofs_mux ?  tx_mod_qmix_i_s3_out : {regs[REG_RW_RB_TX_CAR_OSC_OFS_HI][15:0], regs[REG_RW_RB_TX_CAR_OSC_OFS_LO][31:0]});
+wire [ 47: 0] tx_car_osc_inc             = (tx_car_osc_inc_mux ?  tx_mod_qmix_i_s3_out : { regs[REG_RW_RB_TX_CAR_OSC_INC_HI][15:0], regs[REG_RW_RB_TX_CAR_OSC_INC_LO][31:0] });
+wire [ 47: 0] tx_car_osc_ofs             = (tx_car_osc_ofs_mux ?  tx_mod_qmix_i_s3_out : { regs[REG_RW_RB_TX_CAR_OSC_OFS_HI][15:0], regs[REG_RW_RB_TX_CAR_OSC_OFS_LO][31:0] });
 
-wire         tx_car_osc_axis_s_vld      = rb_reset_n;  // TODO
-wire [103:0] tx_car_osc_axis_s_phase    = {7'b0, tx_car_osc_resync, tx_car_osc_ofs, tx_car_osc_inc};
+wire          tx_car_osc_axis_s_vld      = rb_reset_n;  // TODO
+wire [103: 0] tx_car_osc_axis_s_phase    = { 7'b0, tx_car_osc_resync, tx_car_osc_ofs, tx_car_osc_inc };
 
-wire         tx_car_osc_axis_m_vld;
-wire [ 31:0] tx_car_osc_axis_m_data;
+wire          tx_car_osc_axis_m_vld;
+wire [ 31: 0] tx_car_osc_axis_m_data;
 
-wire [ 15:0] tx_car_osc_cos             = tx_car_osc_axis_m_data[15: 0];
-wire [ 15:0] tx_car_osc_sin             = tx_car_osc_axis_m_data[31:16];
+wire [ 15: 0] tx_car_osc_cos             = tx_car_osc_axis_m_data[15: 0];
+wire [ 15: 0] tx_car_osc_sin             = tx_car_osc_axis_m_data[31:16];
 
 rb_dds_48_16_125 i_rb_tx_car_osc (
   // global signals
@@ -822,11 +828,11 @@ rb_dds_48_16_125 i_rb_tx_car_osc (
 //---------------------------------------------------------------------------------
 //  TX_CAR_QMIX quadrature mixer for the radio frequency
 
-wire [ 15:0] tx_car_qmix_i_in = (tx_car_osc_inc_mux || tx_car_osc_ofs_mux)                    ?  16'h7fff : tx_amp_rf_q_en ?  tx_car_cic_41M664_i_out[30:15] : tx_mod_qmix_i_s3_out[47:32];  // TX_MOD_QMIX/TX_MOD_CIC uses full scale constant for CW, FM and PM modulations - SSB uses TX_CIC I instead
-wire [ 15:0] tx_car_qmix_q_in = (tx_car_osc_inc_mux || tx_car_osc_ofs_mux || !tx_amp_rf_q_en) ?  16'h0000 :                   tx_car_cic_41M664_q_out[30:15]                              ;  // TX_MOD_QMIX/TX_MOD_CIC Q path keep quiet when Q is disabled - SSB uses TX_CIC Q instead
+wire [ 15: 0] tx_car_qmix_i_in = (tx_car_osc_inc_mux || tx_car_osc_ofs_mux)                    ?  16'h7fff : tx_amp_rf_q_en ?  tx_car_cic_41M664_i_out[30:15] : tx_mod_qmix_i_s3_out[47:32];  // TX_MOD_QMIX/TX_MOD_CIC uses full scale constant for CW, FM and PM modulations - SSB uses TX_CIC I instead
+wire [ 15: 0] tx_car_qmix_q_in = (tx_car_osc_inc_mux || tx_car_osc_ofs_mux || !tx_amp_rf_q_en) ?  16'h0000 :                   tx_car_cic_41M664_q_out[30:15]                              ;  // TX_MOD_QMIX/TX_MOD_CIC Q path keep quiet when Q is disabled - SSB uses TX_CIC Q instead
 
-wire [ 31:0] tx_car_qmix_i_out;
-wire [ 31:0] tx_car_qmix_q_out;
+wire [ 31: 0] tx_car_qmix_i_out;
+wire [ 31: 0] tx_car_qmix_q_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_tx_car_qmix_I_dsp48 (
   // global signals
@@ -864,12 +870,12 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_tx_car_qmix_Q_dsp48 (
 //---------------------------------------------------------------------------------
 //  TX_RF_AMP amplifier for the radio frequency output (CW, AM modulated)
 
-wire [16:0] tx_amp_rf_i_var =                   {tx_car_qmix_i_out[30], tx_car_qmix_i_out[30:15]}        ;  // halfed and sign corrected 17 bit extension
-wire [16:0] tx_amp_rf_q_var = tx_amp_rf_q_en ?  {tx_car_qmix_q_out[30], tx_car_qmix_q_out[30:15]} : 17'b0;  // halfed and sign corrected 17 bit extension
-wire [16:0] tx_amp_rf_gain  = {regs[REG_RW_RB_TX_RF_AMP_GAIN][15:0],  1'b0};  // signed register value
-wire [34:0] tx_amp_rf_ofs   = {regs[REG_RW_RB_TX_RF_AMP_OFS ][15:0], 19'b0};  // signed register value
+wire [ 16: 0] tx_amp_rf_i_var =                   { tx_car_qmix_i_out[30], tx_car_qmix_i_out[30:15] }        ;  // halfed and sign corrected 17 bit extension
+wire [ 16: 0] tx_amp_rf_q_var = tx_amp_rf_q_en ?  { tx_car_qmix_q_out[30], tx_car_qmix_q_out[30:15] } : 17'b0;  // halfed and sign corrected 17 bit extension
+wire [ 16: 0] tx_amp_rf_gain  = { regs[REG_RW_RB_TX_RF_AMP_GAIN][15:0],  1'b0 };  // signed register value
+wire [ 34: 0] tx_amp_rf_ofs   = { regs[REG_RW_RB_TX_RF_AMP_OFS ][15:0], 19'b0 };  // signed register value
 
-wire [35:0] tx_amp_rf_out;
+wire [ 35: 0] tx_amp_rf_out;
 
 rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_tx_amp_rf_dsp48 (
   // global signals
@@ -896,20 +902,20 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_tx_amp_rf_dsp48 (
 //---------------------------------------------------------------------------------
 //  RX_CAR_OSC carrier oscillator
 
-wire         rx_car_osc_reset_n         = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_RX_CAR_OSC];
-wire         rx_car_osc_resync          = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_RESYNC];
+wire          rx_car_osc_reset_n         = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_RX_CAR_OSC];
+wire          rx_car_osc_resync          = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_RESYNC];
 
-wire [ 47:0] rx_car_osc_inc             = {regs[REG_RW_RB_RX_CAR_OSC_INC_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_INC_LO][31:0]};
-wire [ 47:0] rx_car_osc_ofs             = {regs[REG_RW_RB_RX_CAR_OSC_OFS_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_OFS_LO][31:0]};
+wire [ 47: 0] rx_car_osc_inc             = { regs[REG_RW_RB_RX_CAR_OSC_INC_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_INC_LO][31:0] };
+wire [ 47: 0] rx_car_osc_ofs             = { regs[REG_RW_RB_RX_CAR_OSC_OFS_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_OFS_LO][31:0] };
 
-wire         rx_car_osc_axis_s_vld      = rb_reset_n;  // TODO
-wire [103:0] rx_car_osc_axis_s_phase    = {7'b0, rx_car_osc_resync, rx_car_osc_ofs, rx_car_osc_inc};
+wire          rx_car_osc_axis_s_vld      = rb_reset_n;  // TODO
+wire [103: 0] rx_car_osc_axis_s_phase    = { 7'b0, rx_car_osc_resync, rx_car_osc_ofs, rx_car_osc_inc };
 
-wire         rx_car_osc_axis_m_vld;
-wire [ 31:0] rx_car_osc_axis_m_data;
+wire          rx_car_osc_axis_m_vld;
+wire [ 31: 0] rx_car_osc_axis_m_data;
 
-wire [ 15:0] rx_car_osc_cos             = rx_car_osc_axis_m_data[15: 0];
-wire [ 15:0] rx_car_osc_sin             = rx_car_osc_axis_m_data[31:16];
+wire [ 15: 0] rx_car_osc_cos             = rx_car_osc_axis_m_data[15: 0];
+wire [ 15: 0] rx_car_osc_sin             = rx_car_osc_axis_m_data[31:16];
 
 rb_dds_48_16_125 i_rb_rx_car_osc (
   // global signals
@@ -930,14 +936,14 @@ rb_dds_48_16_125 i_rb_rx_car_osc (
 //---------------------------------------------------------------------------------
 //  RX_CAR_QMIX quadrature mixer for the radio frequency
 
-//wire [ 15:0] rx_mod_qmix_in_gain = regs[REG_RW_RB_RX_MUXIN_GAIN][15:0];
+//wire [ 15: 0] rx_mod_qmix_in_gain = regs[REG_RW_RB_RX_MUXIN_GAIN][15:0];
 
-wire [ 15:0] rx_car_qmix_in = regs[REG_RW_RB_RX_MUXIN_SRC] == 1 ?  {~adc_i[0], 2'b0} :
-                              regs[REG_RW_RB_RX_MUXIN_SRC] == 2 ?  {~adc_i[1], 2'b0} :
-                                                                    16'b0            ;
+wire [ 15: 0] rx_car_qmix_in = regs[REG_RW_RB_RX_MUXIN_SRC] == 1 ?  { ~adc_i[0], 2'b0 } :
+                               regs[REG_RW_RB_RX_MUXIN_SRC] == 2 ?  { ~adc_i[1], 2'b0 } :
+                                                                    16'b0               ;
 
-wire [ 31:0] rx_car_qmix_i_out;
-wire [ 31:0] rx_car_qmix_q_out;
+wire [ 31: 0] rx_car_qmix_i_out;
+wire [ 31: 0] rx_car_qmix_q_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_I_dsp48 (
   // global signals
@@ -971,15 +977,15 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_Q_dsp48 (
 //---------------------------------------------------------------------------------
 //  RX_CAR_CIC1 sampling rate down convertion 125 MSPS to 5 MSPS
 
-wire [ 31:0] rx_car_cic1_i_out;
-wire         rx_car_cic1_i_vld;
-wire         rx_car_cic1_i_rdy;
-wire         rx_car_cic1_i_hlt;
+wire [ 31: 0] rx_car_cic1_i_out;
+wire          rx_car_cic1_i_vld;
+reg           rx_car_cic1_i_rdy;
+wire          rx_car_cic1_i_hlt;
 
-wire [ 31:0] rx_car_cic1_q_out;
-wire         rx_car_cic1_q_vld;
-wire         rx_car_cic1_q_rdy;
-wire         rx_car_cic1_q_hlt;
+wire [ 31: 0] rx_car_cic1_q_out;
+wire          rx_car_cic1_q_vld;
+reg           rx_car_cic1_q_rdy;
+wire          rx_car_cic1_q_hlt;
 
 rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_I (
   // global signals
@@ -987,7 +993,7 @@ rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_I (
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_car_qmix_i_out    ),  // RX_CAR_QMIX I
+  .s_axis_data_tdata    ( rx_car_qmix_i_out    ),
   .s_axis_data_tvalid   ( 1'b1                 ),
   .s_axis_data_tready   (                      ),
 
@@ -1003,7 +1009,7 @@ rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_Q (
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_car_qmix_q_out    ),  // RX_CAR_QMIX Q
+  .s_axis_data_tdata    ( rx_car_qmix_q_out    ),
   .s_axis_data_tvalid   ( 1'b1                 ),
   .s_axis_data_tready   (                      ),
 
@@ -1015,27 +1021,95 @@ rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_Q (
 
 
 //---------------------------------------------------------------------------------
+//  RX_CAR_REGS1
+
+reg  [ 31: 0] rx_car_regs1_i_data = 32'b0;
+reg           rx_car_regs1_i_new  = 1'b0;
+reg           rx_car_regs1_i_vld  = 1'b0;
+wire          rx_car_regs1_i_rdy;
+
+reg  [ 31: 0] rx_car_regs1_q_data = 32'b0;
+reg           rx_car_regs1_q_new  = 1'b0;
+reg           rx_car_regs1_q_vld  = 1'b0;
+wire          rx_car_regs1_q_rdy;
+
+always @(posedge clk_adc_125mhz) begin
+if (!adc_rstn_i) begin                          // register input I
+   rx_car_cic1_i_rdy   <= 1'b0;
+   rx_car_regs1_i_data <= 32'b0;
+   rx_car_regs1_i_new  <= 1'b0;
+   end
+else if (rx_car_cic1_i_vld && rx_car_cic1_i_rdy) begin
+   rx_car_cic1_i_rdy   <= 1'b0;
+   rx_car_regs1_i_data <= rx_car_cic1_i_out;
+   rx_car_regs1_i_new  <= 1'b1;
+   end
+else if (rx_car_cic1_i_vld)
+   rx_car_cic1_i_rdy <= 1'b1;
+if (rx_car_regs1_i_vld && rx_car_regs1_i_rdy)
+   rx_car_regs1_i_new <= 1'b0;
+end
+
+always @(posedge clk_adc_125mhz) begin
+if (!adc_rstn_i) begin                          // register input Q
+   rx_car_cic1_q_rdy   <= 1'b0;
+   rx_car_regs1_q_data <= 32'b0;
+   rx_car_regs1_q_new  <= 1'b0;
+   end
+else if (rx_car_cic1_q_vld && rx_car_cic1_q_rdy) begin
+   rx_car_cic1_q_rdy   <= 1'b0;
+   rx_car_regs1_q_data <= rx_car_cic1_q_out;
+   rx_car_regs1_q_new  <= 1'b1;
+   end
+else if (rx_car_cic1_q_vld)
+   rx_car_cic1_q_rdy <= 1'b1;
+if (rx_car_regs1_q_vld && rx_car_regs1_q_rdy)
+   rx_car_regs1_q_new <= 1'b0;
+end
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output I
+   rx_car_regs1_i_vld <= 1'b0;
+else
+   if (rx_car_regs1_i_new)
+      rx_car_regs1_i_vld <= 1'b1;
+   else if (rx_car_regs1_i_vld && rx_car_regs1_i_rdy)
+      rx_car_regs1_i_vld <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output Q
+   rx_car_regs1_q_vld <= 1'b0;
+else
+   if (rx_car_regs1_q_new)
+      rx_car_regs1_q_vld <= 1'b1;
+   else if (rx_car_regs1_q_vld && rx_car_regs1_q_rdy)
+      rx_car_regs1_q_vld <= 1'b0;
+
+
+//---------------------------------------------------------------------------------
 //  RX_CAR_CIC2 sampling rate down convertion 4.992 MSPS to 48 kSPS
 
-wire [ 31:0] rx_car_cic2_i_out;
-wire         rx_car_cic2_i_vld;
-wire         rx_car_cic2_i_rdy;
-wire         rx_car_cic2_i_hlt;
+wire [ 31: 0] rx_car_cic2_i_in  = { rx_car_regs1_i_data[30:0], 1'b0 };
+wire [ 31: 0] rx_car_cic2_i_out;
+wire          rx_car_cic2_i_vld;
+reg           rx_car_cic2_i_rdy = 1'b0;
+wire          rx_car_cic2_i_hlt;
 
-wire [ 31:0] rx_car_cic2_q_out;
-wire         rx_car_cic2_q_vld;
-wire         rx_car_cic2_q_rdy;
-wire         rx_car_cic2_q_hlt;
+wire [ 31: 0] rx_car_cic2_q_in  = { rx_car_regs1_q_data[30:0], 1'b0 };
+wire [ 31: 0] rx_car_cic2_q_out;
+wire          rx_car_cic2_q_vld;
+reg           rx_car_cic2_q_rdy = 1'b0;
+wire          rx_car_cic2_q_hlt;
 
-rb_cic_4M992_to_48k_32T32 i_rb_rx_car_cic2_I (
+rb_cic_5M_to_8k_32T32 i_rb_rx_car_cic2_I (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( {rx_car_cic1_i_out[30:0], 1'b0}),
-  .s_axis_data_tvalid   ( rx_car_cic1_i_vld    ),
-  .s_axis_data_tready   ( rx_car_cic1_i_rdy    ),
+  .s_axis_data_tdata    ( rx_car_cic2_i_in     ),
+  .s_axis_data_tvalid   ( rx_car_regs1_i_vld   ),
+  .s_axis_data_tready   ( rx_car_regs1_i_rdy   ),
 
   .m_axis_data_tdata    ( rx_car_cic2_i_out    ),  // RX_CAR_CIC2 output I
   .m_axis_data_tvalid   ( rx_car_cic2_i_vld    ),
@@ -1043,15 +1117,15 @@ rb_cic_4M992_to_48k_32T32 i_rb_rx_car_cic2_I (
   .event_halted         ( rx_car_cic2_i_hlt    )
 );
 
-rb_cic_4M992_to_48k_32T32 i_rb_rx_car_cic2_Q (
+rb_cic_5M_to_8k_32T32 i_rb_rx_car_cic2_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
   .aclken               ( rb_clk_en            ),  // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( {rx_car_cic1_q_out[30:0], 1'b0}),
-  .s_axis_data_tvalid   ( rx_car_cic1_q_vld    ),
-  .s_axis_data_tready   ( rx_car_cic1_q_rdy    ),
+  .s_axis_data_tdata    ( rx_car_cic2_q_in     ),
+  .s_axis_data_tvalid   ( rx_car_regs1_q_vld   ),
+  .s_axis_data_tready   ( rx_car_regs1_q_rdy   ),
 
   .m_axis_data_tdata    ( rx_car_cic2_q_out    ),  // RX_CAR_CIC2 output Q
   .m_axis_data_tvalid   ( rx_car_cic2_q_vld    ),
@@ -1061,178 +1135,232 @@ rb_cic_4M992_to_48k_32T32 i_rb_rx_car_cic2_Q (
 
 
 //---------------------------------------------------------------------------------
-//  RX_BROADCASTER_AXIS
+//  RX_CAR_REGS2
 
-wire [ 63:0] rx_bc_i_out;
-wire [  1:0] rx_bc_i_vld;
+reg  [ 31: 0] rx_car_regs2_i_data = 32'b0;
+reg           rx_car_regs2_i_mod_new = 1'b0;
+reg           rx_car_regs2_i_mod_vld = 1'b0;
+wire          rx_car_regs2_i_mod_rdy;
+reg           rx_car_regs2_i_afc_new = 1'b0;
+reg           rx_car_regs2_i_afc_vld = 1'b0;
+wire          rx_car_regs2_i_afc_rdy;
 
-wire [ 63:0] rx_bc_q_out;
-wire [  1:0] rx_bc_q_vld;
+reg  [ 31: 0] rx_car_regs2_q_data = 32'b0;
+reg           rx_car_regs2_q_mod_new = 1'b0;
+reg           rx_car_regs2_q_mod_vld = 1'b0;
+wire          rx_car_regs2_q_mod_rdy;
+reg           rx_car_regs2_q_afc_new = 1'b0;
+reg           rx_car_regs2_q_afc_vld = 1'b0;
+wire          rx_car_regs2_q_afc_rdy;
 
-wire         rx_bc_mod_i_rdy;
-wire         rx_bc_afc_i_rdy;
-wire [  1:0] rx_bc_i_rdy     = { rx_bc_afc_i_rdy, rx_bc_mod_i_rdy };
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin                          // register input I
+   rx_car_cic2_i_rdy      <= 1'b0;
+   rx_car_regs2_i_data    <= 32'b0;
+   rx_car_regs2_i_mod_new <= 1'b0;
+   rx_car_regs2_i_afc_new <= 1'b0;
+   end
+else if (rx_car_cic2_i_vld && rx_car_cic2_i_rdy) begin
+   rx_car_cic2_i_rdy      <= 1'b0;
+   rx_car_regs2_i_data    <= rx_car_cic2_i_out;
+   rx_car_regs2_i_mod_new <= 1'b1;
+   rx_car_regs2_i_afc_new <= 1'b1;
+   end
+else if (rx_car_cic2_i_vld)
+   rx_car_cic2_i_rdy <= 1'b1;
+else begin
+   if (rx_car_regs2_i_mod_vld && rx_car_regs2_i_mod_rdy)
+      rx_car_regs2_i_mod_new <= 1'b0;
+   if (rx_car_regs2_i_afc_vld && rx_car_regs2_i_afc_rdy)
+      rx_car_regs2_i_afc_new <= 1'b0;
+   end
 
-wire         rx_bc_mod_q_rdy;
-wire         rx_bc_afc_q_rdy;
-wire [  1:0] rx_bc_q_rdy     = { rx_bc_afc_q_rdy, rx_bc_mod_q_rdy };
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin                          // register input Q
+   rx_car_cic2_q_rdy      <= 1'b0;
+   rx_car_regs2_q_data    <= 32'b0;
+   rx_car_regs2_q_mod_new <= 1'b0;
+   rx_car_regs2_q_afc_new <= 1'b0;
+   end
+else if (rx_car_cic2_q_vld && rx_car_cic2_q_rdy) begin
+   rx_car_cic2_q_rdy      <= 1'b0;
+   rx_car_regs2_q_data    <= rx_car_cic2_q_out;
+   rx_car_regs2_q_mod_new <= 1'b1;
+   rx_car_regs2_q_afc_new <= 1'b1;
+   end
+else if (rx_car_cic2_q_vld)
+   rx_car_cic2_q_rdy <= 1'b1;
+else begin
+   if (rx_car_regs2_q_mod_vld && rx_car_regs2_q_mod_rdy)
+      rx_car_regs2_q_mod_new <= 1'b0;
+   if (rx_car_regs2_q_afc_vld && rx_car_regs2_q_afc_rdy)
+      rx_car_regs2_q_afc_new <= 1'b0;
+   end
 
-wire [ 31:0] rx_bc_mod_i_out = rx_bc_i_out[31: 0];
-wire         rx_bc_mod_i_vld = rx_bc_i_vld[0];
-wire [ 31:0] rx_bc_mod_q_out = rx_bc_q_out[31: 0];
-wire         rx_bc_mod_q_vld = rx_bc_q_vld[0];
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output I for MOD
+   rx_car_regs2_i_mod_vld <= 1'b0;
+else
+   if (rx_car_regs2_i_mod_new)
+      rx_car_regs2_i_mod_vld <= 1'b1;
+   else if (rx_car_regs2_i_mod_vld && rx_car_regs2_i_mod_rdy)
+      rx_car_regs2_i_mod_vld <= 1'b0;
 
-wire [ 31:0] rx_bc_afc_i_out = rx_bc_i_out[63:32];
-wire         rx_bc_afc_i_vld = rx_bc_i_vld[1];
-wire [ 31:0] rx_bc_afc_q_out = rx_bc_q_out[63:32];
-wire         rx_bc_afc_q_vld = rx_bc_q_vld[1];
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output Q for MOD
+   rx_car_regs2_q_mod_vld <= 1'b0;
+else
+   if (rx_car_regs2_q_mod_new)
+      rx_car_regs2_q_mod_vld <= 1'b1;
+   else if (rx_car_regs2_q_mod_vld && rx_car_regs2_q_mod_rdy)
+      rx_car_regs2_q_mod_vld <= 1'b0;
 
-rb_broadcaster_axis_m2 i_rb_rx_bc_I (
-  // global signals
-.aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-.aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-.aresetn              ( rb_reset_n           ),
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output I for AFC
+   rx_car_regs2_i_afc_vld <= 1'b0;
+else
+   if (rx_car_regs2_i_afc_new)
+      rx_car_regs2_i_afc_vld <= 1'b1;
+   else if (rx_car_regs2_i_afc_vld && rx_car_regs2_i_afc_rdy)
+      rx_car_regs2_i_afc_vld <= 1'b0;
 
-.s_axis_tdata         ( rx_car_cic2_i_out    ),
-.s_axis_tvalid        ( rx_car_cic2_i_vld    ),
-.s_axis_tready        ( rx_car_cic2_i_rdy    ),
-
-.m_axis_tdata         ( rx_bc_i_out          ),
-.m_axis_tvalid        ( rx_bc_i_vld          ),
-.m_axis_tready        ( rx_bc_i_rdy          )
-);
-
-rb_broadcaster_axis_m2 i_rb_rx_bc_Q (
-  // global signals
-.aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-.aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-.aresetn              ( rb_reset_n           ),
-
-.s_axis_tdata         ( rx_car_cic2_q_out    ),
-.s_axis_tvalid        ( rx_car_cic2_q_vld    ),
-.s_axis_tready        ( rx_car_cic2_q_rdy    ),
-
-.m_axis_tdata         ( rx_bc_q_out          ),
-.m_axis_tvalid        ( rx_bc_q_vld          ),
-.m_axis_tready        ( rx_bc_q_rdy          )
-);
-
-
-//---------------------------------------------------------------------------------
-//  RX_MOD_FIFO1
-
-wire [ 31:0] rx_mod_fifo1_i_out;
-wire         rx_mod_fifo1_i_vld;
-wire         rx_mod_fifo1_i_rdy;
-wire         rx_mod_fifo1_i_ofl;
-wire         rx_mod_fifo1_i_ufl;
-
-wire [ 31:0] rx_mod_fifo1_q_out;
-wire         rx_mod_fifo1_q_vld;
-wire         rx_mod_fifo1_q_rdy;
-wire         rx_mod_fifo1_q_ofl;
-wire         rx_mod_fifo1_q_ufl;
-
-rb_fifo_axis_W32_D16 i_rb_rx_mod_fifo1_I (
-  // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
-
-  .s_axis_tdata         ( rx_bc_mod_i_out      ),
-  .s_axis_tvalid        ( rx_bc_mod_i_vld      ),
-  .s_axis_tready        ( rx_bc_mod_i_rdy      ),
-
-  .m_axis_tdata         ( rx_mod_fifo1_i_out   ),
-  .m_axis_tvalid        ( rx_mod_fifo1_i_vld   ),
-  .m_axis_tready        ( rx_mod_fifo1_i_rdy   ),
-
-  .axis_overflow        ( rx_mod_fifo1_i_ofl   ),
-  .axis_underflow       ( rx_mod_fifo1_i_ufl   )
-);
-
-rb_fifo_axis_W32_D16 i_rb_rx_mod_fifo1_Q (
-  // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
-
-  .s_axis_tdata         ( rx_bc_mod_q_out      ),
-  .s_axis_tvalid        ( rx_bc_mod_q_vld      ),
-  .s_axis_tready        ( rx_bc_mod_q_rdy      ),
-
-  .m_axis_tdata         ( rx_mod_fifo1_q_out   ),
-  .m_axis_tvalid        ( rx_mod_fifo1_q_vld   ),
-  .m_axis_tready        ( rx_mod_fifo1_q_rdy   ),
-
-  .axis_overflow        ( rx_mod_fifo1_q_ofl   ),
-  .axis_underflow       ( rx_mod_fifo1_q_ufl   )
-);
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output Q for AFC
+   rx_car_regs2_q_afc_vld <= 1'b0;
+else
+   if (rx_car_regs2_q_afc_new)
+      rx_car_regs2_q_afc_vld <= 1'b1;
+   else if (rx_car_regs2_q_afc_vld && rx_car_regs2_q_afc_rdy)
+      rx_car_regs2_q_afc_vld <= 1'b0;
 
 
 //---------------------------------------------------------------------------------
 //  RX_MOD_FIR1 low pass filter for side-band selection
 //
 //  Coefficients built with Octave:
-//  fir2(126, [0 3000/48000 3050/48000 1], [1 1 0.000001 0.000001], 4096, kaiser(127, 3.5))
+//  fir2(126, [0 1400/8000 1425/8000 1], [1 1 0.000001 0.000001], 4096, kaiser(127, 10))
 
-wire [ 23:0] rx_mod_fir1_i_in = { 7'b0, rx_mod_fifo1_i_out[30:14] };  // bus width is multiple of 8
-wire [ 39:0] rx_mod_fir1_i_out;
-wire         rx_mod_fir1_i_vld;
-wire         rx_mod_fir1_i_rdy;
+wire [ 23: 0] rx_mod_fir1_i_in = { 7'b0, rx_car_regs2_i_data[31:15] };  // bus width is multiple of 8
+wire [ 39: 0] rx_mod_fir1_i_out;
+wire          rx_mod_fir1_i_vld;
+reg           rx_mod_fir1_i_rdy;
 
-wire [ 23:0] rx_mod_fir1_q_in = { 7'b0, rx_mod_fifo1_q_out[30:14] };
-wire [ 39:0] rx_mod_fir1_q_out;
-wire         rx_mod_fir1_q_vld;
-wire         rx_mod_fir1_q_rdy;
+wire [ 23: 0] rx_mod_fir1_q_in = { 7'b0, rx_car_regs2_q_data[31:15] };
+wire [ 39: 0] rx_mod_fir1_q_out;
+wire          rx_mod_fir1_q_vld;
+reg           rx_mod_fir1_q_rdy;
 
-rb_fir1_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir1_I (
+rb_fir1_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir1_I (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-  .aresetn              ( rb_reset_n           ),
+  .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en              ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n             ),
 
-  .s_axis_data_tdata    ( rx_mod_fir1_i_in     ),
-  .s_axis_data_tvalid   ( rx_mod_fifo1_i_vld   ),
-  .s_axis_data_tready   ( rx_mod_fifo1_i_rdy   ),
+  .s_axis_data_tdata    ( rx_mod_fir1_i_in       ),
+  .s_axis_data_tvalid   ( rx_car_regs2_i_mod_vld ),
+  .s_axis_data_tready   ( rx_car_regs2_i_mod_rdy ),
 
-  .m_axis_data_tdata    ( rx_mod_fir1_i_out    ),   // RX_MOD_FIR1 output I - 48kHz (35.33 bit width)
-  .m_axis_data_tvalid   ( rx_mod_fir1_i_vld    ),
-  .m_axis_data_tready   ( rx_mod_fir1_i_rdy    )
+  .m_axis_data_tdata    ( rx_mod_fir1_i_out      ),   // RX_MOD_FIR1 output I - 8kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_mod_fir1_i_vld      ),
+  .m_axis_data_tready   ( rx_mod_fir1_i_rdy      )
 );
 
-rb_fir1_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir1_Q (
+rb_fir1_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir1_Q (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-  .aresetn              ( rb_reset_n           ),
+  .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en              ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n             ),
 
-  .s_axis_data_tdata    ( rx_mod_fir1_q_in     ),
-  .s_axis_data_tvalid   ( rx_mod_fifo1_q_vld   ),
-  .s_axis_data_tready   ( rx_mod_fifo1_q_rdy   ),
+  .s_axis_data_tdata    ( rx_mod_fir1_q_in       ),
+  .s_axis_data_tvalid   ( rx_car_regs2_q_mod_vld ),
+  .s_axis_data_tready   ( rx_car_regs2_q_mod_rdy ),
 
-  .m_axis_data_tdata    ( rx_mod_fir1_q_out    ),   // RX_MOD_FIR1 output Q - 48 kHz (35.33 bit width)
-  .m_axis_data_tvalid   ( rx_mod_fir1_q_vld    ),
-  .m_axis_data_tready   ( rx_mod_fir1_q_rdy    )
+  .m_axis_data_tdata    ( rx_mod_fir1_q_out      ),   // RX_MOD_FIR1 output Q - 8 kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_mod_fir1_q_vld      ),
+  .m_axis_data_tready   ( rx_mod_fir1_q_rdy      )
 );
+
+
+//---------------------------------------------------------------------------------
+//  RX_MOD_REGS1
+
+reg  [ 15: 0] rx_mod_regs1_i_data = 16'b0;
+reg           rx_mod_regs1_i_new  = 1'b0;
+reg           rx_mod_regs1_i_vld  = 1'b0;
+wire          rx_mod_regs1_i_rdy;
+
+reg  [ 15: 0] rx_mod_regs1_q_data = 16'b0;
+reg           rx_mod_regs1_q_new  = 1'b0;
+reg           rx_mod_regs1_q_vld  = 1'b0;
+wire          rx_mod_regs1_q_rdy;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin                          // register input I
+   rx_mod_fir1_i_rdy   <= 1'b0;
+   rx_mod_regs1_i_data <= 32'b0;
+   rx_mod_regs1_i_new  <= 1'b0;
+   end
+else if (rx_mod_fir1_i_vld && rx_mod_fir1_i_rdy) begin
+   rx_mod_fir1_i_rdy   <= 1'b0;
+   rx_mod_regs1_i_data <= rx_mod_fir1_i_out[32:17];
+   rx_mod_regs1_i_new  <= 1'b1;
+   end
+else if (rx_mod_fir1_i_vld)
+   rx_mod_fir1_i_rdy <= 1'b1;
+else if (rx_mod_regs1_i_vld && rx_mod_regs1_i_rdy)
+   rx_mod_regs1_i_new  <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin                          // register input Q
+   rx_mod_fir1_q_rdy   <= 1'b0;
+   rx_mod_regs1_q_data <= 32'b0;
+   rx_mod_regs1_q_new  <= 1'b0;
+   end
+else if (rx_mod_fir1_q_vld && rx_mod_fir1_q_rdy) begin 
+   rx_mod_fir1_q_rdy   <= 1'b0;
+   rx_mod_regs1_q_data <= rx_mod_fir1_q_out[32:17];
+   rx_mod_regs1_q_new  <= 1'b1;
+   end
+else if (rx_mod_fir1_q_vld)
+   rx_mod_fir1_q_rdy <= 1'b1;
+else if (rx_mod_regs1_q_vld && rx_mod_regs1_q_rdy)
+   rx_mod_regs1_q_new  <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output I
+   rx_mod_regs1_i_vld <= 1'b0;
+else
+   if (rx_mod_regs1_i_new)
+      rx_mod_regs1_i_vld <= 1'b1;
+   else if (rx_mod_regs1_i_vld && rx_mod_regs1_i_rdy)
+      rx_mod_regs1_i_vld <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output Q
+   rx_mod_regs1_q_vld <= 1'b0;
+else
+   if (rx_mod_regs1_q_new)
+      rx_mod_regs1_q_vld <= 1'b1;
+   else if (rx_mod_regs1_q_vld && rx_mod_regs1_q_rdy)
+      rx_mod_regs1_q_vld <= 1'b0;
 
 
 //---------------------------------------------------------------------------------
 //  RX_MOD_OSC modulation oscillator and SSB weaver modulator
 
-wire         rx_mod_osc_reset_n = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_RX_MOD_OSC];
-wire         rx_mod_osc_resync  = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_OSC_RESYNC];
+wire          rx_mod_osc_reset_n = rb_reset_n & !regs[REG_RW_RB_CTRL][RB_CTRL_RESET_RX_MOD_OSC];
+wire          rx_mod_osc_resync  = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_OSC_RESYNC];
 
-wire [ 47:0] rx_mod_osc_inc = {regs[REG_RW_RB_RX_MOD_OSC_INC_HI][15:0], regs[REG_RW_RB_RX_MOD_OSC_INC_LO][31:0]};
-wire [ 47:0] rx_mod_osc_ofs = {regs[REG_RW_RB_RX_MOD_OSC_OFS_HI][15:0], regs[REG_RW_RB_RX_MOD_OSC_OFS_LO][31:0]};
+wire [ 47: 0] rx_mod_osc_inc = { regs[REG_RW_RB_RX_MOD_OSC_INC_HI][15:0], regs[REG_RW_RB_RX_MOD_OSC_INC_LO][31:0] };
+wire [ 47: 0] rx_mod_osc_ofs = { regs[REG_RW_RB_RX_MOD_OSC_OFS_HI][15:0], regs[REG_RW_RB_RX_MOD_OSC_OFS_LO][31:0] };
 
-wire         rx_mod_osc_axis_s_vld   = rb_reset_n;  // TODO: ADC
-wire [103:0] rx_mod_osc_axis_s_phase = {7'b0, rx_mod_osc_resync, rx_mod_osc_ofs, rx_mod_osc_inc};
+wire          rx_mod_osc_axis_s_vld   = rb_reset_n;  // TODO: ADC
+wire [103: 0] rx_mod_osc_axis_s_phase = { 7'b0, rx_mod_osc_resync, rx_mod_osc_ofs, rx_mod_osc_inc };
 
-wire         rx_mod_osc_axis_m_vld;
-wire [ 31:0] rx_mod_osc_axis_m_data;
-wire [ 15:0] rx_mod_osc_cos = rx_mod_osc_axis_m_data[15: 0];
-wire [ 15:0] rx_mod_osc_sin = rx_mod_osc_axis_m_data[31:16];
+wire          rx_mod_osc_axis_m_vld;
+wire [ 31: 0] rx_mod_osc_axis_m_data;
+wire [ 15: 0] rx_mod_osc_cos = rx_mod_osc_axis_m_data[15: 0];
+wire [ 15: 0] rx_mod_osc_sin = rx_mod_osc_axis_m_data[31:16];
 
 rb_dds_48_16_125 i_rb_rx_mod_osc (
   // global signals
@@ -1251,34 +1379,27 @@ rb_dds_48_16_125 i_rb_rx_mod_osc (
 
 
 //---------------------------------------------------------------------------------
-//  RX_MOD_OSC_HLD data hold
+//  RX_MOD_HLD sample & hold for the RX_MOD_OSC
 
-reg  [ 15:0] rx_mod_osc_hld_i = 'b0;
-reg  [ 15:0] rx_mod_osc_hld_q = 'b0;
-
-always @(posedge clk_adc_125mhz)
-if (!rx_mod_osc_reset_n)
-   rx_mod_osc_hld_i <= 'b0;
-else if (rx_mod_fir1_i_vld && rx_mod_fir1_i_rdy)
-   rx_mod_osc_hld_i <= rx_mod_osc_cos;
+reg  [ 15: 0] rx_mod_hld_i_data = 16'b0;
+reg  [ 15: 0] rx_mod_hld_q_data = 16'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rx_mod_osc_reset_n)
-   rx_mod_osc_hld_q <= 'b0;
-else if (rx_mod_fir1_q_vld && rx_mod_fir1_q_rdy)
-   rx_mod_osc_hld_q <= rx_mod_osc_sin;
+if (!adc_rstn_i) begin
+   rx_mod_hld_i_data <= 16'b0;
+   rx_mod_hld_q_data <= 16'b0;
+   end
+else if (clk_8khz) begin
+   rx_mod_hld_i_data <= rx_mod_osc_cos;
+   rx_mod_hld_q_data <= rx_mod_osc_sin;
+   end
 
 
 //---------------------------------------------------------------------------------
 //  RX_MOD_QMIX quadrature mixer for the base band
 
-//wire        tx_amp_rf_q_en = regs[REG_RW_RB_CTRL][RB_CTRL_TX_RF_AMP_Q_EN];
-
-wire [15:0] rx_mod_qmix_i_in = rx_mod_fir1_i_out[31:16];
-wire [31:0] rx_mod_qmix_i_out;
-
-wire [15:0] rx_mod_qmix_q_in = rx_mod_fir1_q_out[31:16];
-wire [31:0] rx_mod_qmix_q_out;
+wire [ 31: 0] rx_mod_qmix_i_out;
+wire [ 31: 0] rx_mod_qmix_q_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_I_dsp48 (
   // global signals
@@ -1286,9 +1407,9 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_I_dsp48 (
   .CE                   ( rb_clk_en            ),  // enable part 1 of RadioBox sub-module
 
   // modulation input
-  .A                    ( rx_mod_qmix_i_in     ),  // RX_CAR_QMIX in I signal:  SIGNED 16 bit
+  .A                    ( rx_mod_regs1_i_data  ),  // RX_CAR_QMIX in I signal:  SIGNED 16 bit
   // TX_MOD_OSC cos input
-  .B                    ( rx_mod_osc_hld_i     ),  // RX_MOD_OSC cos:           SIGNED 16 bit
+  .B                    ( rx_mod_hld_i_data    ),  // RX_MOD_OSC cos:           SIGNED 16 bit
 
   // multiplier output stage 1
   .P                    ( rx_mod_qmix_i_out    )   // RX_MOD_QMIX I output:     SIGSIG 32 bit
@@ -1300,9 +1421,9 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_Q_dsp48 (
   .CE                   ( rb_clk_en            ),  // - TODO enable part 1 of RadioBox sub-module and the Q path
 
   // modulation input
-  .A                    ( rx_mod_qmix_q_in     ),  // RX_CAR_QMIX in Q signal:  SIGNED 16 bit
+  .A                    ( rx_mod_regs1_q_data  ),  // RX_CAR_QMIX in Q signal:  SIGNED 16 bit
   // TX_MOD_OSC sin input
-  .B                    ( rx_mod_osc_hld_q     ),  // RX_MOD_OSC sin:           SIGNED 16 bit
+  .B                    ( rx_mod_hld_q_data    ),  // RX_MOD_OSC sin:           SIGNED 16 bit
 
   // multiplier output stage 1
   .P                    ( rx_mod_qmix_q_out    )   // RX_MOD_QMIX I output:     SIGSIG 32 bit
@@ -1310,97 +1431,45 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_qmix_Q_dsp48 (
 
 
 //---------------------------------------------------------------------------------
-//  RX_MOD_FIFO2
-
-wire [ 31:0] rx_mod_fifo2_i_out;
-wire         rx_mod_fifo2_i_vld;
-wire         rx_mod_fifo2_i_rdy;
-wire         rx_mod_fifo2_i_ofl;
-wire         rx_mod_fifo2_i_ufl;
-
-wire [ 31:0] rx_mod_fifo2_q_out;
-wire         rx_mod_fifo2_q_vld;
-wire         rx_mod_fifo2_q_rdy;
-wire         rx_mod_fifo2_q_ofl;
-wire         rx_mod_fifo2_q_ufl;
-
-rb_fifo_axis_W32_D16 i_rb_rx_mod_fifo2_I (
-  // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
-
-  .s_axis_tdata         ( rx_mod_qmix_i_out    ),
-  .s_axis_tvalid        ( rx_mod_fir1_i_vld    ),
-  .s_axis_tready        ( rx_mod_fir1_i_rdy    ),
-
-  .m_axis_tdata         ( rx_mod_fifo2_i_out   ),
-  .m_axis_tvalid        ( rx_mod_fifo2_i_vld   ),
-  .m_axis_tready        ( rx_mod_fifo2_i_rdy   ),
-
-  .axis_overflow        ( rx_mod_fifo2_i_ofl   ),
-  .axis_underflow       ( rx_mod_fifo2_i_ufl   )
-);
-
-rb_fifo_axis_W32_D16 i_rb_rx_mod_fifo2_Q (
-  // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
-
-  .s_axis_tdata         ( rx_mod_qmix_q_out    ),
-  .s_axis_tvalid        ( rx_mod_fir1_q_vld    ),
-  .s_axis_tready        ( rx_mod_fir1_q_rdy    ),
-
-  .m_axis_tdata         ( rx_mod_fifo2_q_out   ),
-  .m_axis_tvalid        ( rx_mod_fifo2_q_vld   ),
-  .m_axis_tready        ( rx_mod_fifo2_q_rdy   ),
-
-  .axis_overflow        ( rx_mod_fifo2_q_ofl   ),
-  .axis_underflow       ( rx_mod_fifo2_q_ufl   )
-);
-
-
-//---------------------------------------------------------------------------------
 //  RX_MOD_FIR2 low pass filter for side-band selection
 //
 //  Coefficients built with Octave:
-//  fir2(126, [0 3300/24000 3350/24000 1], [1 1 0.000001 0.000001], 4096, kaiser(127, 3.5))
+//  fir2(126, [0/4000 900/4000 1700/4000 2500/4000 3300/4000  3350/4000 1], [1 1.5 2.25 3.375 5  0.000001 0.000001], 4096, kaiser(127, 4.5))
 
-wire [ 23:0] rx_mod_fir2_i_in = { 7'b0, rx_mod_fifo2_i_out[30:14] };  // bus width is multiple of 8
-wire [ 39:0] rx_mod_fir2_i_out;
-wire         rx_mod_fir2_i_vld;
-wire         rx_mod_fir2_i_rdy;
+wire [ 23: 0] rx_mod_fir2_i_in = { 7'b0, rx_mod_qmix_i_out[30:14] };  // bus width is multiple of 8
+wire [ 39: 0] rx_mod_fir2_i_out;
+wire          rx_mod_fir2_i_vld;
+reg           rx_mod_fir2_i_rdy;
 
-wire [ 23:0] rx_mod_fir2_q_in = { 7'b0, rx_mod_fifo2_q_out[30:14] };
-wire [ 39:0] rx_mod_fir2_q_out;
-wire         rx_mod_fir2_q_vld;
-wire         rx_mod_fir2_q_rdy;
+wire [ 23: 0] rx_mod_fir2_q_in = { 7'b0, rx_mod_qmix_q_out[30:14] };
+wire [ 39: 0] rx_mod_fir2_q_out;
+wire          rx_mod_fir2_q_vld;
+reg           rx_mod_fir2_q_rdy;
 
-rb_fir2_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir2_I (
+rb_fir2_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir2_I (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
   .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
-  .s_axis_data_tdata    ( rx_mod_fir2_i_in      ),
-  .s_axis_data_tvalid   ( rx_mod_fifo2_i_vld   ),
-  .s_axis_data_tready   ( rx_mod_fifo2_i_rdy   ),
+  .s_axis_data_tdata    ( rx_mod_fir2_i_in     ),
+  .s_axis_data_tvalid   ( rx_mod_regs1_i_vld   ),
+  .s_axis_data_tready   ( rx_mod_regs1_i_rdy   ),
 
-  .m_axis_data_tdata    ( rx_mod_fir2_i_out     ),   // RX_MOD_FIR2 output I - 48kHz (35.33 bit width)
-  .m_axis_data_tvalid   ( rx_mod_fir2_i_vld     ),
-  .m_axis_data_tready   ( rx_mod_fir2_i_rdy     )
+  .m_axis_data_tdata    ( rx_mod_fir2_i_out    ),   // RX_MOD_FIR2 output I - 48kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_mod_fir2_i_vld    ),
+  .m_axis_data_tready   ( rx_mod_fir2_i_rdy    )
 );
 
-rb_fir2_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir2_Q (
+rb_fir2_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir2_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
   .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
   .aresetn              ( rb_reset_n           ),
 
   .s_axis_data_tdata    ( rx_mod_fir2_q_in     ),
-  .s_axis_data_tvalid   ( rx_mod_fifo2_q_vld   ),
-  .s_axis_data_tready   ( rx_mod_fifo2_q_rdy   ),
+  .s_axis_data_tvalid   ( rx_mod_regs1_q_vld   ),
+  .s_axis_data_tready   ( rx_mod_regs1_q_rdy   ),
 
   .m_axis_data_tdata    ( rx_mod_fir2_q_out    ),   // RX_MOD_FIR2 output Q - 48 kHz (35.33 bit width)
   .m_axis_data_tvalid   ( rx_mod_fir2_q_vld    ),
@@ -1409,68 +1478,118 @@ rb_fir2_48k_to_48k_25c23_17i16_35o33 i_rb_rx_mod_fir2_Q (
 
 
 //---------------------------------------------------------------------------------
-//  RX_MOD_FIFO3
+//  RX_MOD_REGS2
 
-wire [ 31:0] rx_mod_fifo3_i_in = rx_mod_fir2_i_out[33:2];
-wire [ 31:0] rx_mod_fifo3_i_out;
-wire         rx_mod_fifo3_i_vld;
-wire         rx_mod_fifo3_i_ofl;
-wire         rx_mod_fifo3_i_ufl;
+reg  [ 31: 0] rx_mod_regs2_i_data = 32'b0;
+reg           rx_mod_regs2_i_new  = 1'b0;
+reg           rx_mod_regs2_i_vld  = 1'b0;
+wire          rx_mod_regs2_i_rdy;
 
-wire [ 31:0] rx_mod_fifo3_q_in = rx_mod_fir2_q_out[33:2];
-wire [ 31:0] rx_mod_fifo3_q_out;
-wire         rx_mod_fifo3_q_vld;
-wire         rx_mod_fifo3_q_ofl;
-wire         rx_mod_fifo3_q_ufl;
+reg  [ 31: 0] rx_mod_regs2_q_data = 32'b0;
+reg           rx_mod_regs2_q_new  = 1'b0;
+reg           rx_mod_regs2_q_vld  = 1'b0;
+wire          rx_mod_regs2_q_rdy;
 
-rb_fifo_axis_W32_D16 i_rb_rx_mod_fifo3_I (
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin                          // register input I
+   rx_mod_fir2_i_rdy   <= 1'b0;
+   rx_mod_regs2_i_data <= 32'b0;
+   rx_mod_regs2_i_new  <= 1'b0;
+   end
+else if (rx_mod_fir2_i_vld && rx_mod_fir2_i_rdy) begin
+   rx_mod_fir2_i_rdy   <= 1'b0;
+   rx_mod_regs2_i_data <= rx_mod_fir2_i_out[31:0];
+   rx_mod_regs2_i_new  <= 1'b1;
+   end
+else if (rx_mod_fir2_i_vld)
+   rx_mod_fir2_i_rdy <= 1'b1;
+else if (rx_mod_regs2_i_vld && rx_mod_regs2_i_rdy)
+   rx_mod_regs2_i_new  <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i) begin                          // register input Q
+   rx_mod_fir2_q_rdy   <= 1'b0;
+   rx_mod_regs2_q_data <= 32'b0;
+   rx_mod_regs2_q_new  <= 1'b0;
+   end
+else if (rx_mod_fir2_q_vld && rx_mod_fir2_q_rdy) begin
+   rx_mod_fir2_q_rdy   <= 1'b0;
+   rx_mod_regs2_q_data <= rx_mod_fir2_q_out[31:0];
+   rx_mod_regs2_q_new  <= 1'b1;
+   end
+else if (rx_mod_fir2_q_vld)
+      rx_mod_fir2_q_rdy <= 1'b1;
+else if (rx_mod_regs2_q_vld && rx_mod_regs2_q_rdy)
+   rx_mod_regs2_q_new  <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output I
+   rx_mod_regs2_i_vld <= 1'b0;
+else
+   if (rx_mod_regs2_i_new)
+      rx_mod_regs2_i_vld <= 1'b1;
+   else if (rx_mod_regs2_i_vld && rx_mod_regs2_i_rdy)
+      rx_mod_regs2_i_vld <= 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i)                                // register output Q
+   rx_mod_regs2_q_vld <= 1'b0;
+else
+   if (rx_mod_regs2_q_new)
+      rx_mod_regs2_q_vld <= 1'b1;
+   else if (rx_mod_regs2_q_vld && rx_mod_regs2_q_rdy)
+      rx_mod_regs2_q_vld <= 1'b0;
+
+
+//---------------------------------------------------------------------------------
+//  RX_MOD_CIC2 sampling rate up convertion 8 kSPS to 48 kSPS
+
+wire [ 31: 0] rx_mod_cic2_i_in  = rx_mod_regs2_i_data;
+wire [ 31: 0] rx_mod_cic2_i_out;
+wire          rx_mod_cic2_i_vld;
+
+wire [ 31: 0] rx_mod_cic2_q_in  = rx_mod_regs2_q_data;
+wire [ 31: 0] rx_mod_cic2_q_out;
+wire          rx_mod_cic2_q_vld;
+
+rb_cic_8k_to_48k_32T32 i_rb_rx_mod_cic2_I (
   // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_clk_en              ),  // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n             ),
 
-  .s_axis_tdata         ( rx_mod_fifo3_i_in    ),
-  .s_axis_tvalid        ( rx_mod_fir2_i_vld    ),
-  .s_axis_tready        ( rx_mod_fir2_i_rdy    ),
+  .s_axis_data_tdata    ( rx_mod_cic2_i_in       ),
+  .s_axis_data_tvalid   ( rx_mod_regs2_i_vld     ),
+  .s_axis_data_tready   ( rx_mod_regs2_i_rdy     ),
 
-  .m_axis_tdata         ( rx_mod_fifo3_i_out   ),
-  .m_axis_tvalid        ( rx_mod_fifo3_i_vld   ),
-  .m_axis_tready        ( clk_48khz            ),  // let out every 48 kHz sample
-
-  .axis_overflow        ( rx_mod_fifo3_i_ofl   ),
-  .axis_underflow       ( rx_mod_fifo3_i_ufl   )
+  .m_axis_data_tdata    ( rx_mod_cic2_i_out      ),  // RX_MOD_CIC2 output I
+  .m_axis_data_tvalid   ( rx_mod_cic2_i_vld      )
 );
 
-rb_fifo_axis_W32_D16 i_rb_rx_mod_fifo3_Q (
+rb_cic_8k_to_48k_32T32 i_rb_rx_mod_cic2_Q (
   // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_clk_en              ),  // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n             ),
 
-  .s_axis_tdata         ( rx_mod_fifo3_i_in    ),
-  .s_axis_tvalid        ( rx_mod_fir2_q_vld    ),
-  .s_axis_tready        ( rx_mod_fir2_q_rdy    ),
+  .s_axis_data_tdata    ( rx_mod_cic2_q_in       ),
+  .s_axis_data_tvalid   ( rx_mod_regs2_q_vld     ),
+  .s_axis_data_tready   ( rx_mod_regs2_q_rdy     ),
 
-  .m_axis_tdata         ( rx_mod_fifo3_q_out   ),
-  .m_axis_tvalid        ( rx_mod_fifo3_q_vld   ),
-  .m_axis_tready        ( clk_48khz            ),  // let out every 48 kHz sample
-
-  .axis_overflow        ( rx_mod_fifo3_q_ofl   ),
-  .axis_underflow       ( rx_mod_fifo3_q_ufl   )
+  .m_axis_data_tdata    ( rx_mod_cic2_q_out      ),  // RX_MOD_CIC2 output Q
+  .m_axis_data_tvalid   ( rx_mod_cic2_q_vld      )
 );
 
 
 //---------------------------------------------------------------------------------
 //  RX_MOD_ADD reconstruction of the modulation
 
-//wire        rx_mod_add_en = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_ADD_Q_EN];
+wire [ 16: 0] rx_mod_add_i_var = rx_mod_cic2_i_out[30:14];
+wire [ 16: 0] rx_mod_add_q_var = rx_mod_cic2_q_out[30:14];
+wire [ 16: 0] rx_mod_add_gain  = { regs[REG_RW_RB_RX_MOD_ADD_GAIN][15:0],  1'b0 };   // signed register value
+wire [ 34: 0] rx_mod_add_ofs   = { regs[REG_RW_RB_RX_MOD_ADD_OFS ][15:0], 19'b0 };   // signed register value
 
-wire [16:0] rx_mod_add_i_var = rx_mod_fifo3_i_out[31:15];
-wire [16:0] rx_mod_add_q_var = rx_mod_fifo3_q_out[31:15];
-wire [16:0] rx_mod_add_gain  = {regs[REG_RW_RB_RX_MOD_ADD_GAIN][15:0],  1'b0};   // signed register value
-wire [34:0] rx_mod_add_ofs   = {regs[REG_RW_RB_RX_MOD_ADD_OFS ][15:0], 19'b0};   // signed register value
-
-wire [35:0] rx_mod_add_out;
+wire [ 35: 0] rx_mod_add_out;
 
 rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_rx_mod_decoder_dsp48 (
   // global signals
@@ -1479,9 +1598,9 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_rx_mod_decoder_dsp48 (
   .SCLR                 ( !rb_enable           ),  // put output to neutral when activated
 
   // RX_MOD_ADD I input
-  .A                    ( rx_mod_add_i_var     ),  // TX_QMIX_RF I      SIGNED 17 bit
+  .A                    ( rx_mod_add_i_var     ),  // RX_MOD_CIC2 I     SIGNED 17 bit
   // RX_MOD_ADD Q input
-  .D                    ( rx_mod_add_q_var     ),  // TX_QMIX_RF Q      SIGNED 17 bit
+  .D                    ( rx_mod_add_q_var     ),  // RX_MOD_CIC2 Q     SIGNED 17 bit
   // RX_MOD_ADD gain
   .B                    ( rx_mod_add_gain      ),  // RX_MOD_ADD gain   SIGNED 17 bit
   // RX_MOD_ADD offset
@@ -1492,145 +1611,116 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_rx_mod_decoder_dsp48 (
 );
 
 
-//---------------------------------------------------------------------------------
-//  RX_AFC_FIFO
-
-wire [ 31:0] rx_afc_fifo_i_out;
-wire         rx_afc_fifo_i_vld;
-wire         rx_afc_fifo_i_rdy;
-wire         rx_afc_fifo_i_ofl;
-wire         rx_afc_fifo_i_ufl;
-
-wire [ 31:0] rx_afc_fifo_q_out;
-wire         rx_afc_fifo_q_vld;
-wire         rx_afc_fifo_q_rdy;
-wire         rx_afc_fifo_q_ofl;
-wire         rx_afc_fifo_q_ufl;
-
-rb_fifo_axis_W32_D16 i_rb_rx_afc_fifo_I (
-  // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
-
-  .s_axis_tdata         ( rx_bc_afc_i_out      ),
-  .s_axis_tvalid        ( rx_bc_afc_i_vld      ),
-  .s_axis_tready        ( rx_bc_afc_i_rdy      ),
-
-  .m_axis_tdata         ( rx_afc_fifo_i_out    ),
-  .m_axis_tvalid        ( rx_afc_fifo_i_vld    ),
-  .m_axis_tready        ( rx_afc_fifo_i_rdy    ),
-
-  .axis_overflow        ( rx_afc_fifo_i_ofl    ),
-  .axis_underflow       ( rx_afc_fifo_i_ufl    )
-);
-
-rb_fifo_axis_W32_D16 i_rb_rx_afc_fifo_Q (
-  // global signals
-  .s_aclk               ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .s_aclk_en            ( rb_clk_en            ),  // enable RadioBox sub-module
-  .s_aresetn            ( rb_reset_n           ),
-
-  .s_axis_tdata         ( rx_bc_afc_q_out      ),
-  .s_axis_tvalid        ( rx_bc_afc_q_vld      ),
-  .s_axis_tready        ( rx_bc_afc_q_rdy      ),
-
-  .m_axis_tdata         ( rx_afc_fifo_q_out    ),
-  .m_axis_tvalid        ( rx_afc_fifo_q_vld    ),
-  .m_axis_tready        ( rx_afc_fifo_q_rdy    ),
-
-  .axis_overflow        ( rx_afc_fifo_q_ofl    ),
-  .axis_underflow       ( rx_afc_fifo_q_ufl    )
-);
-
+// === RX AFC section ===
 
 //---------------------------------------------------------------------------------
-//  RX_AFC_FIR low pass filter for side-band selection
+//  RX_AFC_FIR low pass filter for carrier detection
 //
 //  Coefficients built with Octave:
-//  fir1(62, 15000/48000, 'low', 'chebwin')
+//  fir1(62, 1500/4000, 'low', 'chebwin')
 
-wire [ 23:0] rx_afc_fir_i_in = { 7'b0, rx_afc_fifo_i_out[30:14] };  // bus width is multiple of 8
-wire [ 39:0] rx_afc_fir_i_out;
-wire         rx_afc_fir_m_vld;
-reg          rx_afc_fir_m_rdy = 'b0;
+wire [ 23: 0] rx_afc_fir_i_in = { 7'b0, rx_car_regs2_i_data[31:15] };  // bus width is multiple of 8
+wire [ 39: 0] rx_afc_fir_i_out;
+wire          rx_afc_fir_i_vld;
+reg           rx_afc_fir_i_rdy = 'b0;
 
-wire [ 23:0] rx_afc_fir_q_in = { 7'b0, rx_afc_fifo_q_out[30:14] };
-wire [ 39:0] rx_afc_fir_q_out;
+wire [ 23: 0] rx_afc_fir_q_in = { 7'b0, rx_car_regs2_q_data[31:15] };
+wire [ 39: 0] rx_afc_fir_q_out;
+wire          rx_afc_fir_q_vld;
+reg           rx_afc_fir_q_rdy = 'b0;
 
-rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_I (
+rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_I (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-  .aresetn              ( rb_reset_n           ),
+  .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en              ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n             ),
 
-  .s_axis_data_tdata    ( rx_afc_fir_i_in      ),
-  .s_axis_data_tvalid   ( rx_afc_fifo_i_vld    ),
-  .s_axis_data_tready   ( rx_afc_fifo_i_rdy    ),
+  .s_axis_data_tdata    ( rx_afc_fir_i_in        ),
+  .s_axis_data_tvalid   ( rx_car_regs2_i_afc_vld ),
+  .s_axis_data_tready   ( rx_car_regs2_i_afc_rdy ),
 
-  .m_axis_data_tdata    ( rx_afc_fir_i_out     ),   // RX_AFC_FIR output I - 48kHz (35.33 bit width)
-  .m_axis_data_tvalid   ( rx_afc_fir_m_vld     ),
-  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
+  .m_axis_data_tdata    ( rx_afc_fir_i_out       ),   // RX_AFC_FIR output I - 8kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_afc_fir_i_vld       ),
+  .m_axis_data_tready   ( rx_afc_fir_i_rdy       )
 );
 
-rb_fir3_48k_to_48k_24c_17i16_35o33 i_rb_rx_afc_fir_Q (
+rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_Q (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),   // global 125 MHz clock
-  .aclken               ( rb_clk_en            ),   // enable RadioBox sub-module
-  .aresetn              ( rb_reset_n           ),
+  .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
+  .aclken               ( rb_clk_en              ),   // enable RadioBox sub-module
+  .aresetn              ( rb_reset_n             ),
 
-  .s_axis_data_tdata    ( rx_afc_fir_q_in      ),
-  .s_axis_data_tvalid   ( rx_afc_fifo_q_vld    ),
-  .s_axis_data_tready   ( rx_afc_fifo_q_rdy    ),
+  .s_axis_data_tdata    ( rx_afc_fir_q_in        ),
+  .s_axis_data_tvalid   ( rx_car_regs2_q_afc_vld ),
+  .s_axis_data_tready   ( rx_car_regs2_q_afc_rdy ),
 
-  .m_axis_data_tdata    ( rx_afc_fir_q_out     ),   // RX_AFC_FIR output Q - 48 kHz (35.33 bit width)
-  .m_axis_data_tvalid   (                      ),
-  .m_axis_data_tready   ( rx_afc_fir_m_rdy     )
+  .m_axis_data_tdata    ( rx_afc_fir_q_out       ),   // RX_AFC_FIR output Q - 8 kHz (35.33 bit width)
+  .m_axis_data_tvalid   ( rx_afc_fir_q_vld       ),
+  .m_axis_data_tready   ( rx_afc_fir_q_rdy       )
 );
 
 
 //---------------------------------------------------------------------------------
 //  RX_AFC_FSM1
 
-reg          rx_afc_cordic_cart_vld = 'b0;
-wire         rx_afc_cordic_cart_rdy;
-reg  [ 1: 0] rx_afc_fsm1_ctr = 'b0;
+reg  [ 31: 0] rx_afc_fir_i_reg = 32'b0;
+reg  [ 31: 0] rx_afc_fir_q_reg = 32'b0;
+reg           rx_afc_cordic_cart_vld = 'b0;
+wire          rx_afc_cordic_cart_rdy;
+reg  [  1: 0] rx_afc_fsm1_ctr = 'b0;
+
+always @(posedge clk_adc_125mhz)                // input register I
+if (!adc_rstn_i)
+   rx_afc_fir_i_reg <= 32'b0;
+
+else if (rx_afc_fir_i_vld) begin
+   rx_afc_fir_i_reg <= rx_afc_fir_i_out[33:2];
+   rx_afc_fir_i_rdy <= 1'b1;
+   end
+else
+   rx_afc_fir_i_rdy <= 1'b1;
+
+always @(posedge clk_adc_125mhz)                // input register Q
+if (!adc_rstn_i)
+   rx_afc_fir_q_reg <= 32'b0;
+
+else if (rx_afc_fir_q_vld) begin
+   rx_afc_fir_q_reg <= rx_afc_fir_q_out[33:2];
+   rx_afc_fir_q_rdy <= 1'b1;
+   end
+else
+   rx_afc_fir_q_rdy <= 1'b1;
 
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i) begin
-   rx_afc_fir_m_rdy <= 1'b0;
    rx_afc_cordic_cart_vld <= 1'b0;
    rx_afc_fsm1_ctr <= 2'b0;
    end
 
-else if (rx_afc_fir_m_vld && rx_afc_cordic_cart_rdy && !rx_afc_cordic_cart_vld && !rx_afc_fsm1_ctr) begin  // data input handshake
-   rx_afc_fir_m_rdy <= 1'b1;
-   rx_afc_cordic_cart_vld <= 1'b1;
+else if (!rx_afc_fsm1_ctr && (rx_afc_fir_i_vld || rx_afc_fir_q_vld))  // new data is available
    rx_afc_fsm1_ctr <= 2'd3;
-   end
-
-else if (rx_afc_cordic_cart_vld && rx_afc_cordic_cart_rdy) begin  // data output handshake
-   rx_afc_fir_m_rdy <= 1'b0;
+else if (rx_afc_fsm1_ctr)
+   if (rx_afc_cordic_polar_rdy) begin           // data output handshake
+      rx_afc_cordic_cart_vld <= 1'b1;
+      rx_afc_fsm1_ctr <= rx_afc_fsm1_ctr - 1;
+      end
+   else
+      rx_afc_cordic_cart_vld <= 1'b0;
+else
    rx_afc_cordic_cart_vld <= 1'b0;
-   rx_afc_fsm1_ctr <= rx_afc_fsm1_ctr - 1;
-   end
-
-else if (rx_afc_cordic_cart_rdy && !rx_afc_fsm1_ctr) begin
-   rx_afc_cordic_cart_vld <= 1'b1;
-   end
 
 
 //---------------------------------------------------------------------------------
 //  RX_AFC_CORDIC
 
-wire [ 63:0] rx_afc_cordic_cart_in = { rx_afc_fir_i_out[34:3], rx_afc_fir_q_out[34:3] };
+wire [ 63: 0] rx_afc_cordic_cart_in = { ~rx_afc_fir_q_reg, rx_afc_fir_i_reg };
 
-wire [ 63:0] rx_afc_cordic_polar_out;
-wire         rx_afc_cordic_polar_vld;
-reg          rx_afc_cordic_polar_rdy;
+wire [ 63: 0] rx_afc_cordic_polar_out;
+wire          rx_afc_cordic_polar_vld;
+reg           rx_afc_cordic_polar_rdy;
 
-wire         rx_afc_cordic_polar_out_mag = rx_afc_cordic_polar_out[31: 0];
-wire         rx_afc_cordic_polar_out_phs = rx_afc_cordic_polar_out[63:32];
+wire          rx_afc_cordic_polar_out_mag = rx_afc_cordic_polar_out[31: 0];
+wire          rx_afc_cordic_polar_out_phs = rx_afc_cordic_polar_out[63:32];
 
 rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
   // global signals
@@ -1649,7 +1739,6 @@ rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
 
 
 //---------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------
 //  RX_AFC_FSM2
 
 always @(posedge clk_adc_125mhz)
@@ -1659,15 +1748,13 @@ if (!adc_rstn_i) begin
    rx_afc_cordic_polar_rdy <= 1'b0;
    end
 
-else if (rx_afc_cordic_polar_vld && rx_afc_cordic_polar_rdy) begin
-   rx_afc_cordic_polar_rdy <= 1'b1;
+else if (rx_afc_cordic_polar_vld) begin
    regs[REG_RD_RB_RX_AFC_CORDIC_MAG] <= rx_afc_cordic_polar_out_mag;
    regs[REG_RD_RB_RX_AFC_CORDIC_PHS] <= rx_afc_cordic_polar_out_phs;
-   end
-
-else begin
    rx_afc_cordic_polar_rdy <= 1'b1;
    end
+else
+   rx_afc_cordic_polar_rdy <= 1'b1;
 
 
 // === Connection Matrix section ===
@@ -1675,9 +1762,9 @@ else begin
 //---------------------------------------------------------------------------------
 //  LEDs Magnitude indicator
 
-reg  [19: 0] led_ctr  = 20'b0;
+reg  [ 19: 0] led_ctr  = 20'b0;
 
-wire [ 5: 0] led_src_con_pnt = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][ 5: 0];
+wire [  5: 0] led_src_con_pnt = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][ 5: 0];
 
 function bit [7:0] fct_mag (input bit [15:0] val);
    automatic bit [7:0] leds = 8'b0;             // exact zero indicator
@@ -1853,11 +1940,11 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
           if (rx_mod_fir1_i_vld)
-             rb_leds_data <= fct_mag(rx_mod_fir1_i_out[33:18]);
+             rb_leds_data <= fct_mag(rx_mod_fir1_i_out[32:17]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT: begin
           if (rx_mod_fir1_q_vld)
-             rb_leds_data <= fct_mag(rx_mod_fir1_q_out[33:18]);
+             rb_leds_data <= fct_mag(rx_mod_fir1_q_out[32:17]);
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
@@ -1869,12 +1956,12 @@ else begin
              rb_leds_data <= fct_mag(rx_mod_osc_sin[15:0]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT: begin
-          if (rx_mod_fir1_i_vld)
-             rb_leds_data <= fct_mag(rx_mod_osc_hld_i[15:0]);
+          if (!led_ctr)
+             rb_leds_data <= fct_mag(rx_mod_hld_i_data[15:0]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT: begin
-          if (rx_mod_fir1_q_vld)
-             rb_leds_data <= fct_mag(rx_mod_osc_hld_q[15:0]);
+          if (!led_ctr)
+             rb_leds_data <= fct_mag(rx_mod_hld_q_data[15:0]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
           if (rx_mod_fir1_i_vld)
@@ -1886,30 +1973,38 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT: begin
           if (rx_mod_fir2_i_vld)
-             rb_leds_data <= fct_mag(rx_mod_fir2_i_out[33:18]);
+             rb_leds_data <= fct_mag(rx_mod_fir2_i_out[31:16]);
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT: begin
           if (rx_mod_fir2_q_vld)
-             rb_leds_data <= fct_mag(rx_mod_fir2_q_out[33:18]);
+             rb_leds_data <= fct_mag(rx_mod_fir2_q_out[31:16]);
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
+          if (rx_mod_cic2_i_vld)
+             rb_leds_data <= fct_mag(rx_mod_cic2_i_out[30:15]);
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
+          if (rx_mod_cic2_q_vld)
+             rb_leds_data <= fct_mag(rx_mod_cic2_q_out[30:15]);
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
-          if (rx_mod_fir2_i_vld)
-             rb_leds_data <= fct_mag(rx_mod_add_out[33:18]);
+          if (rx_mod_cic2_i_vld || rx_mod_cic2_q_vld)
+             rb_leds_data <= fct_mag(rx_mod_add_out[32:17]);
           end
 
        RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
-          if (rx_afc_fir_m_vld)
+          if (rx_afc_fir_i_vld)
              rb_leds_data <= fct_mag(rx_afc_fir_i_out[33:18]);
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
-          if (rx_afc_fir_m_vld)
+          if (rx_afc_fir_q_vld)
              rb_leds_data <= fct_mag(rx_afc_fir_q_out[33:18]);
           end
 
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
           if (rx_afc_cordic_polar_vld)
-             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out[31:16]);
+             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out[30:15]);
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
           if (rx_afc_cordic_polar_vld)
@@ -1917,9 +2012,9 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-          if (!led_ctr)
-             //                LED7               LED6                LED5               LED4                LED3                LED2                 LED1               LED0
-             rb_leds_data <= { rx_car_cic2_q_hlt, rx_car_cic2_i_hlt,  rx_afc_fifo_i_ofl, rx_afc_fifo_i_ufl,  rx_mod_fifo2_i_ofl, rx_mod_fifo2_i_ufl,  rx_mod_fifo1_i_ofl, rx_mod_fifo1_i_ufl };
+          //if (!led_ctr)
+          //                LED7                    LED6                    LED5                    LED4                    LED3                    LED2                    LED1                    LED0
+          rb_leds_data <= { rx_mod_regs2_i_new,     rx_mod_regs1_i_new,     rx_mod_fir1_i_rdy,      rx_mod_fir1_i_vld,      rx_car_regs2_i_mod_new, rx_car_cic2_i_hlt,      rx_car_regs1_i_new,     rx_car_cic1_i_hlt };
           end
 
        default: begin
@@ -1940,7 +2035,7 @@ else begin
 //---------------------------------------------------------------------------------
 //  RB RFOUT1 signal assignment
 
-wire [ 5: 0] rfout1_con_src_pnt = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][21:16];
+wire [  5: 0] rfout1_con_src_pnt = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][21:16];
 
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i || !rb_reset_n) begin
@@ -2061,11 +2156,11 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
           if (rx_mod_fir1_i_vld)
-             rb_out_ch[0] <= rx_mod_fir1_i_out[33:18];
+             rb_out_ch[0] <= rx_mod_fir1_i_out[32:17];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT: begin
           if (rx_mod_fir1_q_vld)
-             rb_out_ch[0] <= rx_mod_fir1_q_out[33:18];
+             rb_out_ch[0] <= rx_mod_fir1_q_out[32:17];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
@@ -2075,10 +2170,10 @@ else begin
           rb_out_ch[0] <= rx_mod_osc_sin[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT: begin
-          rb_out_ch[0] <= rx_mod_osc_hld_i[15:0];
+          rb_out_ch[0] <= rx_mod_hld_i_data[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT: begin
-          rb_out_ch[0] <= rx_mod_osc_hld_q[15:0];
+          rb_out_ch[0] <= rx_mod_hld_q_data[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
           rb_out_ch[0] <= rx_mod_qmix_i_out[30:15];
@@ -2088,30 +2183,38 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT: begin
           if (rx_mod_fir2_i_vld)
-             rb_out_ch[0] <= rx_mod_fir2_i_out[33:18];
+             rb_out_ch[0] <= rx_mod_fir2_i_out[31:16];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT: begin
           if (rx_mod_fir2_q_vld)
-             rb_out_ch[0] <= rx_mod_fir2_q_out[33:18];
+             rb_out_ch[0] <= rx_mod_fir2_q_out[31:16];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
+          if (rx_mod_cic2_i_vld)
+             rb_out_ch[0] <= rx_mod_cic2_i_out[30:15];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
+          if (rx_mod_cic2_q_vld)
+             rb_out_ch[0] <= rx_mod_cic2_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
-          if (rx_mod_fir2_i_vld)
-             rb_out_ch[0] <= rx_mod_add_out[33:18];
+          if (rx_mod_cic2_i_vld || rx_mod_cic2_q_vld)
+             rb_out_ch[0] <= rx_mod_add_out[32:17];
           end
 
        RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
-          if (rx_afc_fir_m_vld)
+          if (rx_afc_fir_i_vld)
              rb_out_ch[0] <= rx_afc_fir_i_out[33:18];
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
-          if (rx_afc_fir_m_vld)
+          if (rx_afc_fir_q_vld)
              rb_out_ch[0] <= rx_afc_fir_q_out[33:18];
           end
 
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
           if (rx_afc_cordic_polar_vld)
-             rb_out_ch[0] <= rx_afc_cordic_polar_out[31:16];
+             rb_out_ch[0] <= rx_afc_cordic_polar_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
           if (rx_afc_cordic_polar_vld)
@@ -2119,7 +2222,7 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-          rb_out_ch[0] <= { 1'b0, rx_afc_cordic_polar_vld, 14'b0 };
+          rb_out_ch[0] <= { 1'b0, (rx_car_cic2_i_vld && rx_car_cic2_i_rdy), 14'b0 };
           end
 
        default: begin
@@ -2137,7 +2240,7 @@ else begin
 //---------------------------------------------------------------------------------
 //  RB RFOUT2 signal assignment
 
-wire [ 5: 0] rfout2_con_src_pnt = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][29:24];
+wire [  5: 0] rfout2_con_src_pnt = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][29:24];
 
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i || !rb_reset_n) begin
@@ -2258,11 +2361,11 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
            if (rx_mod_fir1_i_vld)
-             rb_out_ch[1] <= rx_mod_fir1_i_out[33:18];
+             rb_out_ch[1] <= rx_mod_fir1_i_out[32:17];
            end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT: begin
           if (rx_mod_fir1_q_vld)
-             rb_out_ch[1] <= rx_mod_fir1_q_out[33:18];
+             rb_out_ch[1] <= rx_mod_fir1_q_out[32:17];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
@@ -2272,10 +2375,10 @@ else begin
           rb_out_ch[1] <= rx_mod_osc_sin[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT: begin
-          rb_out_ch[1] <= rx_mod_osc_hld_i[15:0];
+          rb_out_ch[1] <= rx_mod_hld_i_data[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT: begin
-          rb_out_ch[1] <= rx_mod_osc_hld_q[15:0];
+          rb_out_ch[1] <= rx_mod_hld_q_data[15:0];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
           rb_out_ch[1] <= rx_mod_qmix_i_out[30:15];
@@ -2285,30 +2388,38 @@ else begin
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_I_OUT: begin
           if (rx_mod_fir2_i_vld)
-             rb_out_ch[1] <= rx_mod_fir2_i_out[33:18];
+             rb_out_ch[1] <= rx_mod_fir2_i_out[31:16];
           end
        RB_SRC_CON_PNT_NUM_RX_MOD_FIR2_Q_OUT: begin
           if (rx_mod_fir2_q_vld)
-             rb_out_ch[1] <= rx_mod_fir2_q_out[33:18];
+             rb_out_ch[1] <= rx_mod_fir2_q_out[31:16];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_I_OUT: begin
+          if (rx_mod_cic2_i_vld)
+             rb_out_ch[1] <= rx_mod_cic2_i_out[30:15];
+          end
+       RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
+          if (rx_mod_cic2_q_vld)
+             rb_out_ch[1] <= rx_mod_cic2_q_out[30:15];
           end
 
        RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
-          if (rx_mod_fir2_i_vld)
-             rb_out_ch[1] <= rx_mod_add_out[33:18];
+          if (rx_mod_cic2_i_vld || rx_mod_cic2_q_vld)
+             rb_out_ch[1] <= rx_mod_add_out[32:17];
           end
 
        RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
-          if (rx_afc_fir_m_vld)
+          if (rx_afc_fir_i_vld)
              rb_out_ch[1] <= rx_afc_fir_i_out[33:18];
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
-          if (rx_afc_fir_m_vld)
+          if (rx_afc_fir_q_vld)
              rb_out_ch[1] <= rx_afc_fir_q_out[33:18];
           end
 
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
           if (rx_afc_cordic_polar_vld)
-             rb_out_ch[1] <= rx_afc_cordic_polar_out[31:16];
+             rb_out_ch[1] <= rx_afc_cordic_polar_out[30:15];
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
           if (rx_afc_cordic_polar_vld)
@@ -2316,7 +2427,7 @@ else begin
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-          rb_out_ch[1] <= { 1'b0, rx_afc_cordic_polar_vld, 14'b0 };
+          rb_out_ch[1] <= { 1'b0, rx_car_regs2_i_mod_new, 14'b0 };
           end
 
        default: begin
@@ -2425,13 +2536,13 @@ else begin
          regs[REG_RW_RB_TX_CAR_OSC_INC_LO]     <= sys_wdata[31:0];
          end
       20'h00024: begin
-         regs[REG_RW_RB_TX_CAR_OSC_INC_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_TX_CAR_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00028: begin
          regs[REG_RW_RB_TX_CAR_OSC_OFS_LO]     <= sys_wdata[31:0];
          end
       20'h0002C: begin
-         regs[REG_RW_RB_TX_CAR_OSC_OFS_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_TX_CAR_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00030: begin
          regs[REG_RW_RB_TX_RF_AMP_GAIN]        <= sys_wdata[15:0];
@@ -2445,13 +2556,13 @@ else begin
          regs[REG_RW_RB_TX_MOD_OSC_INC_LO]     <= sys_wdata[31:0];
          end
       20'h00044: begin
-         regs[REG_RW_RB_TX_MOD_OSC_INC_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_TX_MOD_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00048: begin
          regs[REG_RW_RB_TX_MOD_OSC_OFS_LO]     <= sys_wdata[31:0];
          end
       20'h0004C: begin
-         regs[REG_RW_RB_TX_MOD_OSC_OFS_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_TX_MOD_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00050: begin
          regs[REG_RW_RB_TX_MOD_QMIX_GAIN]      <= sys_wdata[31:0];
@@ -2460,12 +2571,12 @@ else begin
          regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO]    <= sys_wdata[31:0];
          end
       20'h0005C: begin
-         regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]    <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]    <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* Input TX_MUXIN */
       20'h00060: begin
-         regs[REG_RW_RB_TX_MUXIN_SRC]          <= {regs[REG_RW_RB_TX_MUXIN_SRC][31:6], sys_wdata[5:0]};
+         regs[REG_RW_RB_TX_MUXIN_SRC]          <= { regs[REG_RW_RB_TX_MUXIN_SRC][31:6], sys_wdata[5:0] };
          end
       20'h00064: begin
          regs[REG_RW_RB_TX_MUXIN_GAIN]         <= sys_wdata[31:0];
@@ -2476,13 +2587,13 @@ else begin
          regs[REG_RW_RB_RX_CAR_OSC_INC_LO]     <= sys_wdata[31:0];
          end
       20'h00124: begin
-         regs[REG_RW_RB_RX_CAR_OSC_INC_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_RX_CAR_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00128: begin
          regs[REG_RW_RB_RX_CAR_OSC_OFS_LO]     <= sys_wdata[31:0];
          end
       20'h0012C: begin
-         regs[REG_RW_RB_RX_CAR_OSC_OFS_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_RX_CAR_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* RX_MOD_ADD */
@@ -2498,13 +2609,13 @@ else begin
          regs[REG_RW_RB_RX_MOD_OSC_INC_LO]     <= sys_wdata[31:0];
          end
       20'h00144: begin
-         regs[REG_RW_RB_RX_MOD_OSC_INC_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_RX_MOD_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00148: begin
          regs[REG_RW_RB_RX_MOD_OSC_OFS_LO]     <= sys_wdata[31:0];
          end
       20'h0014C: begin
-         regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]     <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* RX_MUX */
@@ -2512,7 +2623,7 @@ else begin
          regs[REG_RW_RB_RX_MUXIN_SRC]          <= sys_wdata[31:0];
          end
       20'h00164: begin
-         regs[REG_RW_RB_RX_MUXIN_GAIN]         <= {16'b0, sys_wdata[15:0]};
+         regs[REG_RW_RB_RX_MUXIN_GAIN]         <= { 16'b0, sys_wdata[15:0] };
          end
 
       default:   begin
@@ -2624,7 +2735,7 @@ else begin
       /* Input TX_MUX */
       20'h00060: begin
          sys_ack   <= sys_en;
-         sys_rdata <= {26'b0, regs[REG_RW_RB_TX_MUXIN_SRC][5:0]};
+         sys_rdata <= { 26'b0, regs[REG_RW_RB_TX_MUXIN_SRC][5:0] };
          end
       20'h00064: begin
          sys_ack   <= sys_en;
