@@ -153,30 +153,37 @@
                 <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
                 <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="28">TX_AMP_RF output</option>
-                <option disabled="disabled">============</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
                 <option value="32">RX_CAR_OSC_I output</option>
                 <option value="33">RX_CAR_OSC_Q output</option>
                 <option value="34">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
                 <option value="35">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
-                <option value="36">RX_CAR_CIC1_I output &nbsp; (1 MHz decimation)</option>
-                <option value="37">RX_CAR_CIC1_Q output &nbsp; (1 MHz decimation)</option>
+                <option value="36">RX_CAR_CIC1_I output &nbsp; (5 MHz decimation)</option>
+                <option value="37">RX_CAR_CIC1_Q output &nbsp; (5 MHz decimation)</option>
                 <option value="38">RX_CAR_CIC2_I output &nbsp; (8 kHz decimation)</option>
                 <option value="39">RX_CAR_CIC2_Q output &nbsp; (8 kHz decimation)</option>
-                <option value="40">RX_CAR_FIR_I output &nbsp; (low pass)</option>
-                <option value="41">RX_CAR_FIR_Q output &nbsp; (low pass)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="48">RX_MOD_OSC_I output</option>
-                <option value="49">RX_MOD_OSC_Q output</option>
-                <option value="50">RX_MOD_HLD_I output &nbsp; (S&H)</option>
-                <option value="51">RX_MOD_HLD_Q output &nbsp; (S&H)</option>
-                <option value="52">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
-                <option value="53">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
-                <option value="54">RX_MOD_FIR_I output &nbsp; (low pass)</option>
-                <option value="55">RX_MOD_FIR_Q output &nbsp; (low pass)</option>
+                <option value="40">RX_MOD_FIR1_I output &nbsp; (low pass)</option>
+                <option value="41">RX_MOD_FIR1_Q output &nbsp; (low pass)</option>
+                <option value="42">RX_MOD_OSC_I output</option>
+                <option value="43">RX_MOD_OSC_Q output</option>
+                <option value="44">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="45">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="46">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="47">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="48">RX_MOD_FIR2_I output &nbsp; (low pass)</option>
+                <option value="49">RX_MOD_FIR2_Q output &nbsp; (low pass)</option>
+                <option value="50">RX_MOD_CIC2_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="51">RX_MOD_CIC2_Q output &nbsp; (48 kHz interpolation)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="56">RX_MOD_ADD output &nbsp; (audio signal)</option>
-                <option disabled="disabled">============</option>
+                <option disabled="disabled">==============</option>
+                <option value="58">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="59">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="60">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="61">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option disabled="disabled">==============</option>
                 <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rfout1_csp" class="input-group-btn" _style="visibility:hidden">
@@ -217,31 +224,38 @@
                 <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
                 <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="28">TX_AMP_RF output</option>
-                <option disabled="disabled">============</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
                 <option value="32">RX_CAR_OSC_I output</option>
                 <option value="33">RX_CAR_OSC_Q output</option>
                 <option value="34">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
                 <option value="35">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
-                <option value="36">RX_CAR_CIC1_I output &nbsp; (1 MHz decimation)</option>
-                <option value="37">RX_CAR_CIC1_Q output &nbsp; (1 MHz decimation)</option>
+                <option value="36">RX_CAR_CIC1_I output &nbsp; (5 MHz decimation)</option>
+                <option value="37">RX_CAR_CIC1_Q output &nbsp; (5 MHz decimation)</option>
                 <option value="38">RX_CAR_CIC2_I output &nbsp; (8 kHz decimation)</option>
                 <option value="39">RX_CAR_CIC2_Q output &nbsp; (8 kHz decimation)</option>
-                <option value="40">RX_CAR_FIR_I output &nbsp; (low pass)</option>
-                <option value="41">RX_CAR_FIR_Q output &nbsp; (low pass)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="48">RX_MOD_OSC_I output</option>
-                <option value="49">RX_MOD_OSC_Q output</option>
-                <option value="50">RX_MOD_HLD_I output &nbsp; (S&H)</option>
-                <option value="51">RX_MOD_HLD_Q output &nbsp; (S&H)</option>
-                <option value="52">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
-                <option value="53">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
-                <option value="54">RX_MOD_FIR_I output &nbsp; (low pass)</option>
-                <option value="55">RX_MOD_FIR_Q output &nbsp; (low pass)</option>
+                <option value="40">RX_MOD_FIR1_I output &nbsp; (low pass)</option>
+                <option value="41">RX_MOD_FIR1_Q output &nbsp; (low pass)</option>
+                <option value="42">RX_MOD_OSC_I output</option>
+                <option value="43">RX_MOD_OSC_Q output</option>
+                <option value="44">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="45">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="46">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="47">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="48">RX_MOD_FIR2_I output &nbsp; (low pass)</option>
+                <option value="49">RX_MOD_FIR2_Q output &nbsp; (low pass)</option>
+                <option value="50">RX_MOD_CIC2_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="51">RX_MOD_CIC2_Q output &nbsp; (48 kHz interpolation)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="56">RX_MOD_ADD output &nbsp; (audio signal)</option>
-                <option disabled="disabled">============</option>
-               <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+                <option disabled="disabled">==============</option>
+                <option value="58">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="59">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="60">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="61">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option disabled="disabled">==============</option>
+                <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rfout2_csp" class="input-group-btn" _style="visibility:hidden">
                 <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -282,31 +296,38 @@
                 <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
                 <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="28">TX_AMP_RF output</option>
-                <option disabled="disabled">============</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
                 <option value="32">RX_CAR_OSC_I output</option>
                 <option value="33">RX_CAR_OSC_Q output</option>
                 <option value="34">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
                 <option value="35">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
-                <option value="36">RX_CAR_CIC1_I output &nbsp; (1 MHz decimation)</option>
-                <option value="37">RX_CAR_CIC1_Q output &nbsp; (1 MHz decimation)</option>
+                <option value="36">RX_CAR_CIC1_I output &nbsp; (5 MHz decimation)</option>
+                <option value="37">RX_CAR_CIC1_Q output &nbsp; (5 MHz decimation)</option>
                 <option value="38">RX_CAR_CIC2_I output &nbsp; (8 kHz decimation)</option>
                 <option value="39">RX_CAR_CIC2_Q output &nbsp; (8 kHz decimation)</option>
-                <option value="40">RX_CAR_FIR_I output &nbsp; (low pass)</option>
-                <option value="41">RX_CAR_FIR_Q output &nbsp; (low pass)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="48">RX_MOD_OSC_I output</option>
-                <option value="49">RX_MOD_OSC_Q output</option>
-                <option value="50">RX_MOD_HLD_I output &nbsp; (S&H)</option>
-                <option value="51">RX_MOD_HLD_Q output &nbsp; (S&H)</option>
-                <option value="52">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
-                <option value="53">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
-                <option value="54">RX_MOD_FIR_I output &nbsp; (low pass)</option>
-                <option value="55">RX_MOD_FIR_Q output &nbsp; (low pass)</option>
+                <option value="40">RX_MOD_FIR1_I output &nbsp; (low pass)</option>
+                <option value="41">RX_MOD_FIR1_Q output &nbsp; (low pass)</option>
+                <option value="42">RX_MOD_OSC_I output</option>
+                <option value="43">RX_MOD_OSC_Q output</option>
+                <option value="44">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="45">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="46">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="47">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="48">RX_MOD_FIR2_I output &nbsp; (low pass)</option>
+                <option value="49">RX_MOD_FIR2_Q output &nbsp; (low pass)</option>
+                <option value="50">RX_MOD_CIC2_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="51">RX_MOD_CIC2_Q output &nbsp; (48 kHz interpolation)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="56">RX_MOD_ADD output &nbsp; (audio signal)</option>
-                <option disabled="disabled">============</option>
-                <option value="63">LEDs show current test vector @see red_pitaya_radiobox.sv for details</option>
+                <option disabled="disabled">==============</option>
+                <option value="58">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="59">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="60">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="61">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option disabled="disabled">==============</option>
+                <option value="63">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
               <span id="apply_rbled_csp" class="input-group-btn" _style="visibility:hidden">
                 <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -372,7 +393,11 @@
             <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
               <option value="0">USB</option>
               <option value="1">LSB</option>
-              <option value="2">AM</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="2">AM (automatic)</option>
+              <option value="5">AM (sync USB)</option>
+              <option value="6">AM (sync LSB)</option>
+              <option disabled="disabled">---------------------</option>
               <option value="3">FM</option>
               <option value="4">PM</option>
             </select>
