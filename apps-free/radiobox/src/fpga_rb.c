@@ -126,9 +126,6 @@ void fpga_rb_reset(void)
         return;
     }
 
-    /* control: turn off all streams into CAR_OSC, MOD_OSC and QMIX_CAR Q for SSB */
-    g_fpga_rb_reg_mem->ctrl &= ~0x00106060;
-
     /* reset all registers of the TX_MOD_OSC to get fixed phase of 0 deg */
     g_fpga_rb_reg_mem->tx_mod_osc_inc_lo = 0;
     g_fpga_rb_reg_mem->tx_mod_osc_inc_hi = 0;
@@ -153,7 +150,7 @@ void fpga_rb_reset(void)
     g_fpga_rb_reg_mem->rx_car_osc_ofs_lo = 0;
     g_fpga_rb_reg_mem->rx_car_osc_ofs_hi = 0;
 
-    /* send resync to all oscillators to zero phase registers */
+    /* send resync to all oscillators to zero phase registers, all streams are turned off */
     g_fpga_rb_reg_mem->ctrl = 0x10101011;
 
     /* send resync and reset to all oscillators */
@@ -439,31 +436,34 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 
 
         if (tx_modsrc != RB_MODSRC_NONE) {
+            fpga_rb_set_tx_modtyp(tx_modtyp);                                                              // power savings control: set TX modulation variant
+
             switch (tx_modtyp) {
 
-            case RB_MODTYP_USB: {
+            case RB_TX_MODTYP_USB: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: USB\n");
 
-                g_fpga_rb_reg_mem->ctrl |=  0x00008000;                                                    // control: enabling TX Q path
+                g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                    // turn off all STREAMING, RESET and RESYNC signals
                 fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg + ssb_weaver_osc_qrg);        // TX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
                 fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(+ssb_weaver_osc_qrg);                  // TX_MOD_OSC weaver method mixer LO frequency
                 fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 0);                 // SSB operation has no carrier
             }
             break;
 
-            case RB_MODTYP_LSB: {
+            case RB_TX_MODTYP_LSB: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: LSB\n");
 
-                g_fpga_rb_reg_mem->ctrl |=  0x00008000;                                                    // control: enabling TX_QMIX_CAR Q path in the TX_AMP_RF
+                g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                    // turn off all STREAMING, RESET and RESYNC signals
                 fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg - ssb_weaver_osc_qrg);        // TX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
                 fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(-ssb_weaver_osc_qrg);                  // TX_MOD_OSC weaver method mixer LO frequency
                 fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 0);                 // SSB operation has no carrier
             }
             break;
 
-            case RB_MODTYP_AM: {
+            case RB_TX_MODTYP_AM: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: AM\n");
 
+                g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                    // turn off all STREAMING, RESET and RESYNC signals
                 fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                             // TX_CAR_OSC frequency
                 if (tx_modsrc == RB_MODSRC_MOD_OSC) {
                     fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(tx_mod_osc_qrg);                   // TX_MOD_OSC frequency
@@ -472,9 +472,10 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             }
             break;
 
-            case RB_MODTYP_FM: {
+            case RB_TX_MODTYP_FM: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: FM\n");
 
+                g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                    // turn off all STREAMING, RESET and RESYNC signals
                 g_fpga_rb_reg_mem->ctrl |=  0x00000020;                                                    // control: FM by TX_CAR_OSC increment streaming
                 if (tx_modsrc == RB_MODSRC_MOD_OSC) {
                     fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(tx_mod_osc_qrg);                   // TX_MOD_OSC frequency
@@ -483,9 +484,10 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             }
             break;
 
-            case RB_MODTYP_PM: {
+            case RB_TX_MODTYP_PM: {
                 fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: PM\n");
 
+                g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                    // turn off all STREAMING, RESET and RESYNC signals
                 g_fpga_rb_reg_mem->ctrl |=  0x00000040;                                                    // control: PM by TX_CAR_OSC offset streaming
                 fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                             // TX_CAR_OSC frequency
                 if (tx_modsrc == RB_MODSRC_MOD_OSC) {
@@ -530,23 +532,68 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         }  // switch (rx_modsrc)
 
 
+        fpga_rb_set_rx_modtyp(rx_modtyp);                                                                  // power savings control: set RX modulation variant
+
         switch (rx_modtyp) {
 
-        case RB_MODTYP_USB: {
+        case RB_RX_MODTYP_USB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: USB\n");
 
-            //g_fpga_rb_reg_mem->ctrl |=  0x00008000;                                                      // control: enabling RX Q path
-            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(rx_car_osc_qrg + ssb_weaver_osc_qrg);               // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
-            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(+ssb_weaver_osc_qrg);                         // RX_MOD_OSC weaver method mixer LO frequency
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
+            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
         }
         break;
 
-        case RB_MODTYP_LSB: {
+        case RB_RX_MODTYP_LSB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: LSB\n");
 
-            //g_fpga_rb_reg_mem->ctrl |=  0x00008000;                                                      // control: enabling RX Q path
-            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(rx_car_osc_qrg - ssb_weaver_osc_qrg);               // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
-            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(-ssb_weaver_osc_qrg);                         // RX_MOD_OSC weaver method mixer LO frequency
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
+            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+        }
+        break;
+
+        case RB_RX_MODTYP_AM: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM (automatic)\n");
+
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
+            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+        }
+        break;
+
+        case RB_RX_MODTYP_AMSYNC_USB: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (USB)\n");
+
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
+            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+        }
+        break;
+
+        case RB_RX_MODTYP_AMSYNC_LSB: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (LSB)\n");
+
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
+            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+        }
+        break;
+
+        case RB_RX_MODTYP_FM: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: FM\n");
+
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
+        }
+        break;
+
+        case RB_RX_MODTYP_PM: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: PM\n");
+
+            g_fpga_rb_reg_mem->ctrl &= ~0x10167076;                                                        // turn off all STREAMING, RESET and RESYNC signals
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
         }
         break;
 
@@ -560,11 +607,30 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                          // TX_MOD_OSC frequency
         fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(0.0f, 0.0);                                              // TX_MOD_QMIX gain/offset control
         g_fpga_rb_reg_mem->rx_muxin_src = 0;                                                               // RX_MUX input off
-        fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(0.0);                                                   // RX_CAR_OSC frequency
-        fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(0.0);                                             // RX_MOD_OSC frequency
+        fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                                // RX_CAR_OSC frequency
+        fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(0.0);                                                // RX_MOD_OSC frequency
 
         fpga_rb_reset();                                                                                   // control: turn off all streams into TX_CAR_OSC and TX_CAR_OSC mixer
     }
+}
+
+
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_tx_modtyp(int tx_modtyp)
+{
+    int tx = tx_modtyp & 0xff;
+    uint32_t cpy = g_fpga_rb_reg_mem->pwr_ctrl & 0xffff00ff;
+    g_fpga_rb_reg_mem->pwr_ctrl = cpy;                                                                     // first disable and reset before entering new modulation variant
+    g_fpga_rb_reg_mem->pwr_ctrl = cpy | (tx << 8);
+}
+
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_modtyp(int rx_modtyp)
+{
+    int rx = rx_modtyp & 0xff;
+    uint32_t cpy = g_fpga_rb_reg_mem->pwr_ctrl & 0xffffff00;
+    g_fpga_rb_reg_mem->pwr_ctrl = cpy;                                                                     // first disable and reset before entering new modulation variant
+    g_fpga_rb_reg_mem->pwr_ctrl = cpy | rx;
 }
 
 
@@ -707,7 +773,7 @@ void fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(double tx_amp_rf_gain, double tx_a
 }
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(double rx_car_osc_qrg)
+void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg)
 {
     double qrg = ((double) (1ULL << 48)) * (rx_car_osc_qrg / g_rp_main_calib_params.base_osc125mhz_realhz);
     if (qrg > 0.0) {
@@ -733,7 +799,7 @@ void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(double rx_car_osc_qrg)
 }
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(double rx_mod_osc_qrg)
+void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
 {
     double qrg = ((double) (1ULL << 48)) * (rx_mod_osc_qrg / g_rp_main_calib_params.base_osc125mhz_realhz);
     if (qrg > 0.0) {

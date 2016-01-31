@@ -121,9 +121,7 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h0E: TX_MOD_OSC OFS SRC STREAM - '1' places input MUXer for TX_MOD_OSC DDS offset input to the second streamed input pipe. '0' places MUXer to registers "TX_MOD_OSC OFS HI" and "TX_MOD_OSC OFS LO".
      *
-     * bit h0F: TX_AMP_RF_Q_EN - '1' enables the TX_CAR_QMIX Q path for the SSB modulation
-     *
-     * bit h10: n/a
+     * bit h10..h0F: n/a
      *
      * bit h11: RESET RX_CAR_OSC - '1' resets the RX_CAR_OSC (carrier oscillator) to its initial state like the accumulating phase register.
      *
@@ -133,13 +131,11 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h14: RX_CAR_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the RX_CAR_OSC resumes operation.
      *
-     * bit h1A..h15: n/a
-     *
-     * bit h1B: RX_AFC ENABLE - '1' enables RX_CAR_OSC automatic frequency correction. '0' disabled the AFC feature.
+     * bit h1B..h15: n/a
      *
      * bit h1C: RX_MOD_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the RX_MOD_OSC resumes operation.
      *
-     * bit h1F..h1E: n/a
+     * bit h1F..h1D: n/a
      *
      */
     uint32_t ctrl;
@@ -236,12 +232,32 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t reserved_014;
 
 
-    /** @brief  Placeholder for addr: 0x40600018
+    /** @brief  R/W RB_PWR_CTRL - power savings control register (addr: 0x40600018)
      *
-     * n/a
+     * bit h07..h00: TX modulation variant
+     *   value = h00  no power savings, all clocks of the transceiver are turned on
+     *   value = h01  complete transmitter is turned off
+     *   value = h02  components of the SSB-USB transmitter are turned on
+     *   value = h03  components of the SSB-LSB transmitter are turned on
+     *   value = h04  components of the AM transmitter are turned on
+     *   value = h07  components of the FM transmitter are turned on
+     *   value = h08  components of the PM transmitter are turned on
+     *
+     * bit h0F..h08: RX modulation variant
+     *   value = h00  no power savings, all clocks of the receiver are turned on
+     *   value = h01  complete receiver is turned off
+     *   value = h02  components of the SSB-USB receiver are turned on
+     *   value = h03  components of the SSB-LSB receiver are turned on
+     *   value = h04  components of the AM receiver are turned on
+     *   value = h05  components of the AM syncro mode USB receiver are turned on
+     *   value = h06  components of the AM syncro mode LSB receiver are turned on
+     *   value = h07  components of the FM receiver are turned on
+     *   value = h08  components of the PM receiver are turned on
+     *
+     * bit h1F..h10: n/a
      *
      */
-    uint32_t reserved_018;
+    uint32_t pwr_ctrl;
 
 
     /** @brief  R/W RB_CON_SRC_PNT - output connection matrix for
@@ -945,8 +961,24 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         double tx_muxin_gain, double rx_muxin_gain,
         double rx_car_osc_qrg);
 
+
 /**
- * @brief Calculates and programs the FPGA TX_CAR_OSC for AM and PM
+ * @brief Power savings control - switches transmitter part to the selected modulation variant
+ *
+ * @param[in]  tx_modtyp   TX modulation variant.
+ */
+void fpga_rb_set_tx_modtyp(int tx_modtyp);
+
+/**
+ * @brief Power savings control - switches receiver part to the selected modulation variant
+ *
+ * @param[in]  rx_modtyp   RX modulation variant.
+ */
+void fpga_rb_set_rx_modtyp(int rx_modtyp);
+
+
+/**
+ * @brief Calculates and programs the FPGA TX_CAR_OSC for CW, SSB, AM and PM
  *
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  */
@@ -962,14 +994,14 @@ void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg);
 void fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(double tx_amp_rf_gain, double tx_amp_rf_ofs);
 
 /**
- * @brief Calculates and programs the FPGA TX_MOD_OSC for AM and PM
+ * @brief Calculates and programs the FPGA TX_MOD_OSC for AM, FM and PM
  *
  * @param[in]  tx_mod_osc_qrg   Frequency for TX_MOD_OSC in Hz.
  */
 void fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(double tx_mod_osc_qrg);
 
 /**
- * @brief Calculates and programs the FPGA TX_MOD_OSC mixer for AM
+ * @brief Calculates and programs the FPGA TX_MOD_OSC mixer for CW, SSB and AM
  *
  * @param[in]  tx_mod_osc_grade   Magnitude grade 0% .. 100%.
  * @param[in]  isOffset           1=based on 100% carrier minus modulation grade, 0=no carrier.
@@ -1004,14 +1036,14 @@ void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain);
  *
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  */
-void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm(double rx_car_osc_qrg);
+void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg);
 
 /**
- * @brief Calculates and programs the FPGA RX_MOD_OSC for SSB, AM and FM
+ * @brief Calculates and programs the FPGA RX_MOD_OSC for SSB and AM
  *
  * @param[in]  rx_mod_osc_qrg   Frequency for RX_MOD_OSC in Hz.
  */
-void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm(double rx_mod_osc_qrg);
+void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg);
 
 /**
  * @brief Calculates and programs the FPGA RX_MOD_ADD mixer

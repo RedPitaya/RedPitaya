@@ -56,8 +56,8 @@
   RB.params.init = {            // XXX initital data
     rb_run:                 1,  // application running
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
-    tx_modtyp_s:            0,  // TX modulation: USB
-    rx_modtyp_s:            0,  // RX modulation: USB
+    tx_modtyp_s:            2,  // TX modulation: USB
+    rx_modtyp_s:            2,  // RX modulation: USB
 
     rbled_csp_s:            6,  // RB LEDs set to: 6=TX_MOD_ADC out
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (RF signal)
@@ -250,15 +250,15 @@
       else if (param_name == 'tx_modtyp_s') {
         $('#'+param_name).val(intVal);
         switch (intVal) {
-          case 0:
-          case 1:
           case 2:
+          case 3:
+          case 4:
             $('#tx_mod_osc_mag_units').text('%');
             break;
-          case 3:
+          case 7:
             $('#tx_mod_osc_mag_units').text('Hz');
             break;
-          case 4:
+          case 8:
             $('#tx_mod_osc_mag_units').text('°');
             break;
           default:
@@ -277,6 +277,7 @@
         }
       else if (param_name == 'rx_muxin_src_s') {
           $('#'+param_name).val(dblVal);
+          checkKeyDoEnable(param_name, intVal);
         }
       else if (param_name == 'tx_car_osc_qrg_f') {
           $('#'+param_name).val(dblVal);
@@ -544,7 +545,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
 
     } else if (value) {
-      /* External */
+      /* external */
       $('#tx_modtyp_s').removeAttr("disabled");
       $('#apply_tx_modtyp').removeAttr("style");
 
@@ -571,25 +572,25 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_muxin_gain_f').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
+
+  } else if (key == 'rx_muxin_src_s') {
+    if (value) {
+      /* active */
+      $('#rx_modtyp_s').removeAttr("disabled");
+      $('#apply_rx_modtyp').removeAttr("style");
+
+      $('#rx_muxin_gain_f').removeAttr("disabled");
+      $('#apply_rx_muxin_gain').removeAttr("style");
+
+    } else {
+      /* (none) */
+      $('#rx_modtyp_s').attr("disabled", "disabled");
+      $('#apply_rx_modtyp').attr("style", "visibility:hidden");
+
+      $('#rx_muxin_gain_f').attr("disabled", "disabled");
+      $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");
+    }
   }
-  else if (key == 'rx_muxin_src_s') {
-        if (value) {
-          /* External */
-          $('#rx_modtyp_s').removeAttr("disabled");
-          $('#apply_rx_modtyp').removeAttr("style");
-
-          $('#rx_muxin_gain_f').removeAttr("disabled");
-          $('#apply_rx_muxin_gain').removeAttr("style");
-
-        } else {
-          /* (none) */
-          $('#rx_modtyp_s').attr("disabled", "disabled");
-          $('#apply_rx_modtyp').attr("style", "visibility:hidden");
-
-          $('#rx_muxin_gain_f').attr("disabled", "disabled");
-          $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");
-        }
-      }
 }
 
 function checkKeyIs_F(key) {
