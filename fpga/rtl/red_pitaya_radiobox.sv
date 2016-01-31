@@ -1719,8 +1719,8 @@ wire [ 63: 0] rx_afc_cordic_polar_out;
 wire          rx_afc_cordic_polar_vld;
 reg           rx_afc_cordic_polar_rdy;
 
-wire          rx_afc_cordic_polar_out_mag = rx_afc_cordic_polar_out[31: 0];
-wire          rx_afc_cordic_polar_out_phs = rx_afc_cordic_polar_out[63:32];
+wire [ 31: 0] rx_afc_cordic_polar_out_mag = rx_afc_cordic_polar_out[31: 0];
+wire [ 31: 0] rx_afc_cordic_polar_out_phs = rx_afc_cordic_polar_out[63:32];
 
 rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
   // global signals
@@ -2004,11 +2004,11 @@ else begin
 
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
           if (rx_afc_cordic_polar_vld)
-             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out[30:15]);
+             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out_mag[30:15] - 16'h8000);
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
           if (rx_afc_cordic_polar_vld)
-             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out[63:48]);
+             rb_leds_data <= fct_mag(rx_afc_cordic_polar_out_phs[31:16]);
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
@@ -2214,11 +2214,11 @@ else begin
 
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
           if (rx_afc_cordic_polar_vld)
-             rb_out_ch[0] <= rx_afc_cordic_polar_out[30:15];
+             rb_out_ch[0] <= (rx_afc_cordic_polar_out_mag[30:15] - 16'h8000);
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
           if (rx_afc_cordic_polar_vld)
-             rb_out_ch[0] <= rx_afc_cordic_polar_out[63:48];
+             rb_out_ch[0] <= rx_afc_cordic_polar_out_phs[31:16];
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
@@ -2419,11 +2419,11 @@ else begin
 
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
           if (rx_afc_cordic_polar_vld)
-             rb_out_ch[1] <= rx_afc_cordic_polar_out[30:15];
+             rb_out_ch[1] <= (rx_afc_cordic_polar_out_mag[30:15] - 16'h8000);
           end
        RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
           if (rx_afc_cordic_polar_vld)
-             rb_out_ch[1] <= rx_afc_cordic_polar_out[63:48];
+             rb_out_ch[1] <= rx_afc_cordic_polar_out_phs[31:16];
           end
 
        RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
