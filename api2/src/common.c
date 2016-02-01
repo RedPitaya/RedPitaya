@@ -18,8 +18,8 @@ int FpgaRegDump(uint32_t a_addr, uint32_t * a_data, uint32_t a_len){
     printf("\n\r fpga reg. dump \n\r");
     printf("\n\r index, addr, value\n\r");
     for(int i=0; i<a_len; i++){
+        printf("0x%04d,0x%08x,0x%08x\n\r",i,addr,a_data[i]);//ioread32(&a_data[i]));
         addr+=0x4;
-        printf("0x%04d,0x%08x,0x%08x\n\r",i,addr,a_data[i]);
     }
     return RP_OK;
 }
@@ -35,9 +35,9 @@ int common_Open(char *dev, rp_handle_uio_t *handle) {
     }
     // get regset pointer
     handle->regset = mmap(NULL, handle->length, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
-    // printf("1:0x%08x\n\r",(uint32_t)handle->regset);
+     printf("1:0x%08x\n\r",(uint32_t)handle->regset);
     if (handle->regset == MAP_FAILED) {
-        //printf("2:0x%08x\n\r",(uint32_t)handle->regset);
+        printf("2:0x%08x\n\r",(uint32_t)handle->regset);
         return -1;
     }
     return RP_OK;

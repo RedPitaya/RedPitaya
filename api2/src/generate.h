@@ -59,11 +59,6 @@ typedef struct {
     int32_t sum;  // summation (offset)
 } linear_regset_t;
 
-/** Digital gen. registers */
-typedef struct {
-    uint32_t dig_out_en; ///< this enables digital outputs
-} rp_dig_out_t;
-
 #define RP_GEN_REP_INF 0
 
 #define RP_GEN_CFG_BURST_MASK (1<<0)      ///< if set generator will operate in burst mode, otherwise periodic mode
@@ -71,8 +66,8 @@ typedef struct {
 
 typedef struct {
     // control register
-	rp_ctl_regset_t ctl; ///< control register
-    rp_global_trig_regset_t gtrg; ///< global trigger registers
+    uint32_t ctl; ///< control register
+    uint32_t trig_mask; ///< global trigger registers
     uint32_t reserved_08;
     uint32_t reserved_0c;
     // configuration that is (used only for periodic mode)
@@ -86,7 +81,7 @@ typedef struct {
     uint32_t cfg_bil;  ///< burst idle length
     uint32_t cfg_bnm;  ///< burst repetition number
 
-    rp_dig_out_t dig;  ///< output enable
+    uint32_t dig_out_en;  ///< output enable
     // empty space
     uint32_t reserved_30 [(1<<RP_GEN_CWM)-0x30];
     // table
@@ -174,13 +169,13 @@ int rp_GenSetBurstModeBurstDataLen(rp_handle_uio_t *handle, uint32_t length);
 int rp_GenSetBurstModeIdle(rp_handle_uio_t *handle, uint32_t a_val);
 
 /** Output enable */
-#define RP_GEN_OUT_EN_ALL_MASK 	 0xffff
+#define RP_GEN_OUT_EN_ALL_MASK  0xffff
 #define RP_GEN_OUT_EN_PORT0_MASK 0x00ff ///< lower  8 pins (RP hw 1.1 P_GPIO_PORT)
 #define RP_GEN_OUT_EN_PORT1_MASK 0xff00 ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
 
 int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t  mask);
 int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t  mask);
 
-int rp_GenFpgaRegDump(rp_handle_uio_t *handle);
+int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len);
 
 #endif //__GENERATE_H

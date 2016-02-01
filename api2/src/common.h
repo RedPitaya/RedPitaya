@@ -60,10 +60,10 @@ typedef struct {
 } rp_global_trig_regset_t;
 
 /** control register masks  */
+#define RP_CTL_STO_MASK (1<<3) ///< 1 - ACQ: stops acq. (also used to about the acq.)
+#define RP_CTL_STA_MASK (1<<2) ///< 1 - ACQ: starts acq.; 0 - when acq. is stopped
+#define RP_CTL_SWT_MASK (1<<1) ///< 1 - sw trigger bit (sw trigger must be enabled)
 #define RP_CTL_RST_MASK (1<<0) ///< 1 - reset state machine so that it is in known state
-#define RP_CTL_STA_MASK (1<<1) ///< 1 - ACQ: starts acq.; 0 - when acq. is stopped
-#define RP_CTL_STO_MASK (1<<2) ///< 1 - ACQ: stops acq. (also used to about the acq.)
-#define RP_CTL_SWT_MASK (1<<3) ///< 1 - sw trigger bit (sw trigger must be enabled)
 
 /** Control registers */
 typedef struct {

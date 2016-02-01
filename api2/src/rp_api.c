@@ -62,7 +62,10 @@ RP_STATUS rp_OpenUnit(void)
  //   if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
 //        r=-1;
  //   }
-    if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
+
+
+    if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
+    //if(rp_GenOpen((char*)c_dummy_dev, &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -598,6 +601,7 @@ RP_STATUS rp_DigSigGenOuput(bool enable)
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 {
 	rp_GenTrigger(&sig_gen_handle);
+    rp_GenFpgaRegDump(&sig_gen_handle,0);
     return RP_API_OK;
 }
 
@@ -635,7 +639,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    rp_GenFpgaRegDump(&sig_gen_handle);
+    rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }
