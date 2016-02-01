@@ -16,24 +16,18 @@ add wave -noupdate /${top}/clk
 add wave -noupdate /${top}/rstn
 
 # configuration/control/status
-add wave -noupdate /${top}/asg_top/asg/ctl_rst
-add wave -noupdate /${top}/asg_top/asg/trg_i
-add wave -noupdate /${top}/asg_top/asg/trg_o
-add wave -noupdate /${top}/asg_top/asg/cfg_trg
-add wave -noupdate /${top}/asg_top/asg/cfg_siz
-add wave -noupdate /${top}/asg_top/asg/cfg_stp
-add wave -noupdate /${top}/asg_top/asg/cfg_off
-add wave -noupdate /${top}/asg_top/asg/cfg_ben
-add wave -noupdate /${top}/asg_top/asg/cfg_inf
-add wave -noupdate /${top}/asg_top/asg/cfg_bdl
-add wave -noupdate /${top}/asg_top/asg/cfg_bil
-add wave -noupdate /${top}/asg_top/asg/cfg_bnm
-radix signal /${top}/asg_top/asg/cfg_siz -hexadecimal
-radix signal /${top}/asg_top/asg/cfg_stp -hexadecimal
-radix signal /${top}/asg_top/asg/cfg_off -hexadecimal
-radix signal /${top}/asg_top/asg/cfg_bdl -decimal -unsigned
-radix signal /${top}/asg_top/asg/cfg_bil -decimal -unsigned
-radix signal /${top}/asg_top/asg/cfg_bnm -decimal -unsigned
+add wave -noupdate           /${top}/asg_top/asg/ctl_rst
+add wave -noupdate           /${top}/asg_top/asg/trg_i
+add wave -noupdate           /${top}/asg_top/asg/trg_o
+add wave -noupdate           /${top}/asg_top/asg/cfg_trg
+add wave -noupdate -hex      /${top}/asg_top/asg/cfg_siz
+add wave -noupdate -hex      /${top}/asg_top/asg/cfg_stp
+add wave -noupdate -hex      /${top}/asg_top/asg/cfg_off
+add wave -noupdate           /${top}/asg_top/asg/cfg_ben
+add wave -noupdate           /${top}/asg_top/asg/cfg_inf
+add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bdl
+add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bil
+add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bnm
 
 # busses
 str_bus_if str /asg_top_tb/str

@@ -10,7 +10,7 @@ module asg_top_tb #(
   // time period
   realtime  TP = 8.0ns,  // 125MHz
   // functionality enable
-  bit EN_LIN = 0,
+  bit EN_LIN = 1,
   // data parameters
   int unsigned DWO = 14,  // RAM data width
   int unsigned DWM = 16,  // data width for multiplier (gain)
@@ -150,7 +150,7 @@ sys_bus_if    bus  (.clk (clk), .rstn (rstn));
 sys_bus_model busm (.bus (bus));
 
 asg_top #(
-  .EN_LIN (0),
+  .EN_LIN (EN_LIN),
   .TN (TN)
 ) asg_top (
   // stream output
