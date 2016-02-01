@@ -176,7 +176,7 @@ int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset) {
     return RP_OK;
 }
 
-int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double frequency, double phase, uint32_t data_len) {
+int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double frequency, double phase) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
         return RP_EOOR;
