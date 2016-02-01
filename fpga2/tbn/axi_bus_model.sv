@@ -32,7 +32,7 @@ module axi_bus_model #(
   int unsigned IW = 1,     // ID width
   int unsigned LW = 4      // length width
 )(
-  axi_bus_if intf
+  axi4_if intf
 );
 
 typedef struct packed {

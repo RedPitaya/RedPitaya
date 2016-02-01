@@ -53,7 +53,7 @@ module axi4_slave #(
   int unsigned SW = DW >> 3  // select width - 1 bit for every data byte
 )(
   // AXI MM
-  axi_bus_if.s axi,
+  axi4_if.s    axi,
   // system read/write channel
   sys_bus_if.m bus
 );

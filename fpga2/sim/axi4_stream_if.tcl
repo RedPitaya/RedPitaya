@@ -1,6 +1,14 @@
 proc axi4_stream_if {name path} {
-  # add interface group 
-  add wave -noupdate -expand -group ${name} ${path}/*
-  # difine Radix
-  radix signal ${path}/TDATA -hexadecimal
+  # parameters
+# add wave -noupdate -group ${name}           ${path}/DAT_T
+  add wave -noupdate -group ${name} -unsigned ${path}/DN
+  # system signals
+  add wave -noupdate -group ${name}           ${path}/ACLK
+  add wave -noupdate -group ${name}           ${path}/ARESETn
+  # stream
+  add wave -noupdate -group ${name} -hex      ${path}/TDATA
+  add wave -noupdate -group ${name}           ${path}/TKEEP
+  add wave -noupdate -group ${name}           ${path}/TLAST
+  add wave -noupdate -group ${name}           ${path}/TVALID
+  add wave -noupdate -group ${name}           ${path}/TREADY
 }

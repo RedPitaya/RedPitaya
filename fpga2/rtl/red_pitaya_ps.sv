@@ -71,7 +71,7 @@ module red_pitaya_ps (
 logic [4-1:0] fclk_clk ;
 logic [4-1:0] fclk_rstn;
 
-axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (rstn));
+axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (rstn));
 
 axi4_slave #(
   .DW (32),

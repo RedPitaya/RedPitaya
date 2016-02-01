@@ -1,4 +1,4 @@
-interface axi_bus_if #(
+interface axi4_if #(
   int unsigned AW = 32,    // address width
   int unsigned DW = 32,    // data width
   int unsigned SW = DW/8,  // select width
@@ -146,4 +146,4 @@ modport s (
   input  RREADY
 );
 
-endinterface: axi_bus_if
+endinterface: axi4_if

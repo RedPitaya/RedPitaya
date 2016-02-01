@@ -43,7 +43,7 @@ read_verilog                      ./project/redpitaya.srcs/sources_1/bd/system/h
 add_files                         $path_rtl/axi4_slave.sv
 add_files                         $path_rtl/axi4_lite_slave.v
 
-add_files                         $path_rtl/axi_bus_if.sv
+add_files                         $path_rtl/axi4_if.sv
 add_files                         $path_rtl/axi4_lite_if.sv
 add_files                         $path_rtl/axi4_stream_if.sv
 add_files                         $path_rtl/sys_bus_if.sv

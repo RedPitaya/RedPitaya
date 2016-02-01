@@ -173,7 +173,7 @@ assign FCLK_RESET3_N = rstn;
 // AMBA AXI4 GP bus
 ////////////////////////////////////////////////////////////////////////////////
 
-axi_bus_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (
+axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (
   .ACLK    (M_AXI_GP0_ACLK   ),
 //.ARESETn (M_AXI_GP0_ARESETn)
   .ARESETn (S_AXI_STR_RX0_arstn)
