@@ -95,21 +95,21 @@ logic                    adc_rstn;
 // stream bus type
 localparam type SBA_T = logic signed [14-1:0];  // acquire
 localparam type SBG_T = logic signed [14-1:0];  // generate
-localparam type SBL_T = logic signed [16-1:0];  // logic ananlyzer/generator
+localparam type SBL_T = logic        [16-1:0];  // logic ananlyzer/generator
 
 // analog input streams
-str_bus_if #(.DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
-str_bus_if #(.DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
+str_bus_if #(           .DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
+str_bus_if #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
 // analog output streams
-str_bus_if #(.DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
-str_bus_if #(.DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
+str_bus_if #(           .DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
+str_bus_if #(           .DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // digital input streams
-str_bus_if #(.DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
-str_bus_if #(.DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA
+str_bus_if #(.DN (  2), .DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
+str_bus_if #(           .DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA
 
 // DMA sterams RX/TX
-str_bus_if #(.DAT_T (SBL_T)) str_drx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
-str_bus_if #(.DAT_T (SBL_T)) str_dtx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
+str_bus_if #(           .DAT_T (SBL_T)) str_drx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
+str_bus_if #(           .DAT_T (SBL_T)) str_dtx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -358,8 +358,8 @@ ODDR #(
   .Q  (exp_o),
   .C  (adc_clk),
   .CE (1'b1),
-  .D1 (str_lgo.dat),
-  .D2 (str_lgo.dat),  // TODO: add DDR support for LG here
+  .D1 (str_lgo.dat[0]),
+  .D2 (str_lgo.dat[0]),  // TODO: add DDR support for LG here
   .R  (1'b0),
   .S  (1'b0)
 );
@@ -375,8 +375,8 @@ ODDR #(
   .Q  (exp_e),
   .C  (adc_clk),
   .CE (1'b1),
-  .D1 ('1),  // TODO: add a proper signal source here
-  .D2 ('1),  // TODO: add a proper signal source here
+  .D1 (str_lgo.dat[1]),  // TODO: add DDR support for LG here
+  .D2 (str_lgo.dat[1]),
   .R  (1'b0),
   .S  (1'b0)
 );
@@ -606,6 +606,8 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
 
 asg_top #(
   .DAT_T (SBG_T),
+  .DAT_M (logic signed [$bits(SBG_T)+2-1:0]),
+  .DAT_S (SBG_T),
   .TN ($bits(trg))
 ) asg (
   // stream output

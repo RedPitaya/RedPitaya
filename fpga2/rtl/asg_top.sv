@@ -29,9 +29,8 @@ module asg_top #(
   // data path
   int unsigned DN = 1,
   type DAT_T = logic [8-1:0],
-  // data parameters
-  int unsigned DWM = 16,  // data width for multiplier (gain)
-  int unsigned DWS = 14,  // data width for summation (offset)
+  type DAT_M = DAT_T,
+  type DAT_S = DAT_T,
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
@@ -48,15 +47,12 @@ module asg_top #(
   sys_bus_if.s           bus
 );
 
-// RAM data width
-localparam int unsigned DWO = $bits(DAT_T);
-
 ////////////////////////////////////////////////////////////////////////////////
 // read/write access to buffer
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: the generic bus decoder should be used instead
-sys_bus_if #(.DW (DWO), .AW (CWM)) bus_buf (.clk (bus.clk), .rstn (bus.rstn));
+sys_bus_if #(.DW ($bits(DAT_T)), .AW (CWM)) bus_buf (.clk (bus.clk), .rstn (bus.rstn));
 
 assign bus_buf.ren   = bus.ren & bus.addr[CWM+2];
 assign bus_buf.wen   = bus.wen & bus.addr[CWM+2];
@@ -81,8 +77,8 @@ logic     [CWM-1:0] cfg_bdl;  // burst data length
 logic     [ 32-1:0] cfg_bil;  // burst idle length
 logic     [ 16-1:0] cfg_bnm;  // burst repetitions
 // linear offset and gain
-logic signed [DWM-1:0] cfg_mul;
-logic signed [DWS-1:0] cfg_sum;
+DAT_M               cfg_mul;
+DAT_S               cfg_sum;
 
 // control signals
 logic  bus_en;
@@ -118,8 +114,8 @@ if (~bus.rstn) begin
   cfg_bdl <= '0;
   cfg_bnm <= '0;
   cfg_bil <= '0;
-  // cinear transform
-  cfg_mul <= 1 << (DWM-2);
+  // linear transform or logic analyzer output enable
+  cfg_mul <= EN_LIN ? 1 << ($bits(DAT_M)-2) : '0;
   cfg_sum <= '0;
 end else begin
   if (bus.wen & ~bus.addr[CWM+2]) begin
@@ -136,8 +132,8 @@ end else begin
     if (bus.addr[BAW-1:0]=='h28)  cfg_bil <= bus.wdata[     32-1:0];
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
-    if (bus.addr[BAW-1:0]=='h30)  cfg_mul <= bus.wdata[    DWM-1:0];
-    if (bus.addr[BAW-1:0]=='h34)  cfg_sum <= bus.wdata[    DWS-1:0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_mul <= DAT_M'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h34)  cfg_sum <= DAT_S'(bus.wdata);
   end
 end
 
@@ -216,7 +212,7 @@ if (EN_LIN) begin: en_lin
     .DN  (DN),
     .DTI (DAT_T),
     .DTO (DAT_T),
-    .DWM (DWM)
+    .DWM ($bits(DAT_M))
   ) linear (
     // stream input/output
     .sti       (stg),
@@ -228,13 +224,13 @@ if (EN_LIN) begin: en_lin
 
 end else begin
 
-  str_pas pass (
-    // control
-    .ena  (1'b1),
-    // streams
-    .sti  (stg),
-    .sto  (sto)
-  );
+  assign sto.vld = stg.vld;
+  assign sto.kep = stg.kep;
+  assign sto.lst = stg.lst;
+  assign stg.rdy = sto.rdy;
+
+  assign sto.dat = '{cfg_mul & (~cfg_sum | cfg_sum & ~stg.dat),  // output enable (optional open colector)
+                                                      stg.dat};  // output
 
 end
 endgenerate

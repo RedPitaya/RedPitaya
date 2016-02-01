@@ -97,6 +97,9 @@ initial begin
   // configure amplitude and DC offset
   busm.write('h30, 1 << (DWM-2));  // amplitude
   busm.write('h34, 0);             // DC offset
+  // configure LG output enable
+  busm.write('h30, '1);  // output ebable
+  busm.write('h34, '0);  // open drain
   // enable SW trigger
   busm.write('h04, 3'b001);
   // start

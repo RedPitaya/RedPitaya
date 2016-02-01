@@ -157,6 +157,11 @@ task test_asg (
     axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
 
+  // configure LG output enable
+  axi_write(base+'h30, '1);  // output ebable
+  axi_write(base+'h34, '0);  // open drain
+//axi_write(base+'h34, 2);  // open drain
+
   // configure frequency and phase
   axi_write(base+'h10,  buf_len                    * 2**CWF - 1);  // table size
   axi_write(base+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
