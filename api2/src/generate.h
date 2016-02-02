@@ -141,6 +141,10 @@ int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
+
+int rp_GenSetStepOffset(rp_handle_uio_t *handle, uint32_t  stp, uint32_t  off);
+int rp_GenGetStepOffset(rp_handle_uio_t *handle, uint32_t *stp, uint32_t *off);
+
 int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double  frequency, double  phase);
 int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase);
 

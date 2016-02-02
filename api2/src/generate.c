@@ -172,23 +172,49 @@ int rp_GenGetLinear(rp_handle_uio_t *handle, float *amplitude, float *offset) {
     return RP_OK;
 }
 
-// TODO: will be used for analog generator
+// 
+
+int rp_GenSetStepOffset(rp_handle_uio_t *handle, uint32_t stp, uint32_t off) {
+    asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
+    if (stp >= (1 << (RP_GEN_CWM+RP_GEN_CWF))) {
+        return RP_EOOR;
+    }
+    if (off >= (1 << (RP_GEN_CWM+RP_GEN_CWF))) {
+        return RP_EOOR;
+    }
+    iowrite32(stp, &regset->cfg_stp);
+    iowrite32(off, &regset->cfg_off);
+    return RP_OK;
+}
+
+int rp_GenGetStepOffset(rp_handle_uio_t *handle, uint32_t *stp, uint32_t *off) {
+    asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
+    *stp = ioread32(&regset->cfg_stp);
+    *off = ioread32(&regset->cfg_off);
+    return RP_OK;
+}
+
 int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double frequency, double phase) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     if(!inrangeDouble(frequency,FREQUENCY_MIN,FREQUENCY_MAX)){
          return RP_EOOR;
     }
-    uint32_t size = ioread32(&regset->cfg_siz) + 1;
-    iowrite32((uint32_t) ((double) size * (frequency / RP_GEN_SR)) - 1, &regset->cfg_stp);
-    iowrite32((uint32_t) ((double) size * fmod(phase,360)/360    )    , &regset->cfg_off);
-    return RP_OK;
+    uint32_t siz = ioread32(&regset->cfg_siz) + 1;
+    uint32_t stp = (uint32_t) ((double) siz * (frequency / RP_GEN_SR)) - 1;
+    uint32_t off = (uint32_t) ((double) siz * fmod(phase,360)/360    )    ;
+    return rp_GenSetStepOffset(handle, stp, off);
 }
 
 int rp_GenGetFreqPhase(rp_handle_uio_t *handle, double *frequency, double *phase) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    uint32_t size = ioread32(&regset->cfg_siz) + 1;
-    *frequency = (double) (ioread32(&regset->cfg_stp) + 1) / (double) size * RP_GEN_SR;
-    *phase     = (double) (ioread32(&regset->cfg_off)    ) / (double) size * 360      ;
+    uint32_t siz = ioread32(&regset->cfg_siz) + 1;
+    uint32_t stp, off;
+    int status = rp_GenGetStepOffset(handle, &stp, &off);
+    if (status != RP_OK) {
+        return status;
+    }
+    *frequency = (double) (stp + 1) / (double) siz * RP_GEN_SR;
+    *phase     = (double) (off    ) / (double) siz * 360      ;
     return RP_OK;
 }
 
@@ -221,6 +247,8 @@ int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size) {
     rp_GenSetWaveform(handle, ramp, size);
     return RP_OK;
 }
+
+//
 
 static int rp_GenSetBst(rp_handle_uio_t *handle, uint32_t a_mask) {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
