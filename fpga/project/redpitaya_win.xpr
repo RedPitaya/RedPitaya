@@ -165,14 +165,7 @@
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_axi_protocol_converter_0_0_1/system_axi_protocol_converter_0_0.xci"/>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_xlconcat_0_0_1/system_xlconcat_0_0.xci"/>
       </File>
-      <File Path="$PPRDIR/../ip/rb_fir2_8k_to_8k_25c_17i16_35o32.xcix">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PPRDIR/../ip/rb_fir2_8k_to_8k_25c_17i16_35o32/rb_fir2_8k_to_8k_25c_17i16_35o32.xci">
+      <File Path="$PPRDIR/../rtl/red_pitaya_rst_clken.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -327,6 +320,20 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../ip/rb_fir1_8k_to_8k_25c_17i16_35o32/rb_fir1_8k_to_8k_25c_17i16_35o32.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_fir2_8k_to_8k_25c_17i16_35o32.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_fir2_8k_to_8k_25c_17i16_35o32/rb_fir2_8k_to_8k_25c_17i16_35o32.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
