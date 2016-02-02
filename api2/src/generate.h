@@ -123,7 +123,7 @@ int rp_GenTrigger(rp_handle_uio_t *handle);
 int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status);
 int rp_GenDefaultSettings();
 
-int rp_GenGlobalTrigSet(rp_handle_uio_t *handle, uint32_t a_mask);
+int rp_GenGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask);
 
 /**
 * Sets channel signal peak to peak amplitude.

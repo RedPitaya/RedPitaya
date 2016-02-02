@@ -12,9 +12,6 @@
  * for more details on the language used herein.
  */
 
-#include "la_acq.h"
-
-
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -23,9 +20,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "common.h"
 #include "la_acq.h"
 #include "generate.h"
+#include "la_acq.h"
 
 int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     int status;
@@ -46,6 +45,7 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     if (status != RP_OK) {
         return status;
     }
+
     return RP_OK;
 }
 
@@ -58,55 +58,66 @@ int rp_LaAcqClose(rp_handle_uio_t *handle) {
 }
 
 int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
-    //rp_LaAcqGlobalTrigSet(handle,RP_TRG_ALL_MASK);
-    //...
+    rp_LaAcqGlobalTrigSet(handle,RP_TRG_ALL_MASK);
+
+    rp_la_cfg_regset_t cfg;
+    cfg.acq=0;
+    cfg.pre=0;
+    cfg.pst=0;
+    rp_LaAcqSetConfig(handle,cfg);
+
+    rp_la_trg_regset_t trg;
+    trg.cmp_msk=0;
+    trg.cmp_val=0;
+    trg.edg_pos=0;
+    trg.edg_neg=0;
+    rp_LaAcqSetTrigSettings(handle,trg);
+
+    rp_la_decimation_regset_t dec;
+    dec.avg=0;
+    dec.dec=0;
+    dec.shr=0;
+    rp_LaAcqSetDecimation(handle,dec);
+
     return RP_OK;
 }
 
 /** Control registers setter & getter */
-static int rp_LaAcqSetControl(rp_handle_uio_t *handle, rp_ctl_regset_t a_reg) {
-    rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->ctl);
-    iowrite32(a_reg.ctl, &regset->ctl);
+static int rp_LaAcqSetControl(rp_handle_uio_t *handle, uint32_t ctl) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    iowrite32(ctl, &regset->ctl);
     return RP_OK;
 }
 
 
-static int rp_LaAcqGetControl(rp_handle_uio_t *handle, rp_ctl_regset_t * a_reg) {
-    rp_ctl_regset_t *regset = (rp_ctl_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->ctl);
-    a_reg->ctl = ioread32(&regset->ctl);
+static int rp_LaAcqGetControl(rp_handle_uio_t *handle, uint32_t * ctl) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    *ctl = ioread32(&regset->ctl);
     return RP_OK;
 }
 
 
 /** Acq. control */
 int rp_LaAcqReset(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_RST_MASK;
-    return rp_LaAcqSetControl(handle,reg);
+    return rp_LaAcqSetControl(handle,RP_CTL_RST_MASK);
 }
 
 int rp_LaAcqRunAcq(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_STA_MASK;
-    return rp_LaAcqSetControl(handle,reg);
+    return rp_LaAcqSetControl(handle,RP_CTL_STA_MASK);
 }
 
 int rp_LaAcqStopAcq(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_STO_MASK;
-    return rp_LaAcqSetControl(handle,reg);
+    return rp_LaAcqSetControl(handle,RP_CTL_STO_MASK);
 }
 
 int rp_LaAcqTriggerAcq(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_SWT_MASK;
-    return rp_LaAcqSetControl(handle,reg);
+    return rp_LaAcqSetControl(handle,RP_CTL_SWT_MASK);
 }
 
 int rp_LaAcqAcqIsStopped(rp_handle_uio_t *handle, bool * status){
-    rp_ctl_regset_t reg;
-    rp_LaAcqGetControl(handle, &reg);
-    if(reg.ctl&RP_CTL_STA_MASK){
+    uint32_t ctl;
+    rp_LaAcqGetControl(handle, &ctl);
+    if(ctl&RP_CTL_STA_MASK){
         *status=false;
     }
     else{
@@ -115,9 +126,20 @@ int rp_LaAcqAcqIsStopped(rp_handle_uio_t *handle, bool * status){
     return RP_OK;
 }
 
+int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
+{
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    iowrite32(mask, &regset->trig_mask);
+    return RP_OK;
+}
+
 /** Configuration registers setter & getter */
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg) {
     rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->cfg);
+    if(!(inrangeUint32(a_reg.pre,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MIN)&&
+         inrangeUint32(a_reg.pst,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MIN))){
+         return RP_EOOR;
+    }
     iowrite32(a_reg.acq, &regset->acq);
     iowrite32(a_reg.pre, &regset->pre);
     iowrite32(a_reg.pst, &regset->pst);
@@ -131,27 +153,6 @@ int rp_LaAcqGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg) {
     a_reg->pst = ioread32(&regset->pst);
     return RP_OK;
 }
-
-int rp_LaAcqGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask)
-{
-    rp_global_trig_regset_t *regset = (rp_global_trig_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->gtrg);
-    uint32_t tmp;
-    tmp=ioread32(&regset->msk);
-    tmp|=a_mask;
-    iowrite32(tmp, &regset->msk);
-    return RP_OK;
-}
-
-int rp_LaAcqGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask)
-{
-    rp_global_trig_regset_t *regset = (rp_global_trig_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->gtrg);
-    uint32_t tmp;
-    tmp=ioread32(&regset->msk);
-    tmp&=~a_mask;
-    iowrite32(tmp, &regset->msk);
-    return RP_OK;
-}
-
 
 /** Trigger settings setter & getter */
 int rp_LaAcqSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg) {
@@ -202,5 +203,7 @@ int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_r
 
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)
 {
-    return FpgaRegDump(0,(uint32_t*)handle->regset,(sizeof(rp_la_acq_regset_t)/sizeof(uint32_t)));
+    int r;
+    r=FpgaRegDump(0,(uint32_t*)handle->regset,(sizeof(rp_la_acq_regset_t)/sizeof(uint32_t)));
+    return r;
 }

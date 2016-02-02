@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "CUnit/Basic.h"
 #include "CUnit/Console.h"
@@ -8,12 +9,10 @@
 #include "CUnit/CUCurses.h"
 
 #include "ut_main.h"
-
 #include "generate.h"
-#include "redpitaya/rp2.h"
 #include "rp_api.h"
 
-#include <unistd.h>
+
 
 int suite_sig_gen_init(void)
 {

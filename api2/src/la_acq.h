@@ -30,6 +30,7 @@
 
 /** pre & post trigger mask  */
 #define RP_LA_ACQ_CFG_TRIG_MAX ((1<<26)-1) ///< max. number of samples for pre & post trigger
+#define RP_LA_ACQ_CFG_TRIG_MIN 0
 
 /** Configuration registers */
 typedef struct {
@@ -64,27 +65,28 @@ typedef struct {
 
 /** logic analyzer acquire structure declaration */
 typedef struct {
-    rp_ctl_regset_t ctl;            ///< control register
-    rp_global_trig_regset_t gtrg;   ///< global trigger registers
+    uint32_t ctl;                   ///< control register
+    uint32_t trig_mask;             ///< global trigger registers
     rp_la_cfg_regset_t cfg;         ///< configuration registers
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
-    //rp_data_ptrs_regset_t dpt;      ///< data buf. pointers
+    //rp_data_ptrs_regset_t dpt;    ///< data buf. pointers
 } rp_la_acq_regset_t;
 
 
 int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle);
 int rp_LaAcqClose(rp_handle_uio_t *handle);
 int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle);
+
 int rp_LaAcqReset(rp_handle_uio_t *handle);
 int rp_LaAcqRunAcq(rp_handle_uio_t *handle);
 int rp_LaAcqStopAcq(rp_handle_uio_t *handle);
 int rp_LaAcqTriggerAcq(rp_handle_uio_t *handle);
 int rp_LaAcqAcqIsStopped(rp_handle_uio_t *handle, bool * status);
+int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask);
+
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg);
 int rp_LaAcqGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg);
-int rp_LaAcqGlobalTrigEnable(rp_handle_uio_t *handle, uint32_t a_mask);
-int rp_LaAcqGlobalTrigDisable(rp_handle_uio_t *handle, uint32_t a_mask);
 int rp_LaAcqSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);
 int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg);
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);

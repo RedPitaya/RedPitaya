@@ -17,8 +17,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <math.h>
+
 #include "common.h"
 #include "generate.h"
 
@@ -68,49 +68,42 @@ int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
 }
 
 /** Control registers setter & getter */
-static int rp_GenSetControl(rp_handle_uio_t *handle, rp_ctl_regset_t a_reg) {
+static int rp_GenSetControl(rp_handle_uio_t *handle, uint32_t ctl) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    iowrite32(a_reg.ctl, &regset->ctl);
+    iowrite32(ctl, &regset->ctl);
     return RP_OK;
 }
 
 
-static int rp_GenGetControl(rp_handle_uio_t *handle, rp_ctl_regset_t * a_reg) {
+static int rp_GenGetControl(rp_handle_uio_t *handle, uint32_t * ctl) {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    a_reg->ctl = ioread32(&regset->ctl);
+    *ctl = ioread32(&regset->ctl);
     return RP_OK;
 }
 
 
 /** Control */
 int rp_GenReset(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_RST_MASK;
-    return rp_GenSetControl(handle,reg);
+
+    return rp_GenSetControl(handle,RP_CTL_RST_MASK);
 }
 
 int rp_GenRun(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_STA_MASK;
-    return rp_GenSetControl(handle,reg);
+    return rp_GenSetControl(handle,RP_CTL_STA_MASK);
 }
 
 int rp_GenStop(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_STO_MASK;
-    return rp_GenSetControl(handle,reg);
+    return rp_GenSetControl(handle,RP_CTL_STO_MASK);
 }
 
 int rp_GenTrigger(rp_handle_uio_t *handle) {
-    rp_ctl_regset_t reg;
-    reg.ctl=RP_CTL_SWT_MASK;
-    return rp_GenSetControl(handle,reg);
+    return rp_GenSetControl(handle,RP_CTL_SWT_MASK);
 }
 
 int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status){
-    rp_ctl_regset_t reg;
-    rp_GenGetControl(handle, &reg);
-    if(reg.ctl&RP_CTL_STA_MASK){
+    uint32_t ctl;
+    rp_GenGetControl(handle, &ctl);
+    if(ctl&RP_CTL_STA_MASK){
         *status=false;
     }
     else{
@@ -143,10 +136,10 @@ int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
     return RP_OK;
 }
 
-int rp_GenGlobalTrigSet(rp_handle_uio_t *handle, uint32_t a_mask)
+int rp_GenGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
 {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    iowrite32(a_mask, &regset->trig_mask);
+    iowrite32(mask, &regset->trig_mask);
     return RP_OK;
 }
 
@@ -371,10 +364,10 @@ int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len)
 {
     int r;
     r=FpgaRegDump(0,(uint32_t*)handle->regset,13);
-    if((data_len)||(data_len<=RP_GEN_SIG_SAMPLES)){
-        if(!inrangeUint32(data_len,1,RP_GEN_SIG_SAMPLES)){
+    if(!inrangeUint32(data_len,1,RP_GEN_SIG_SAMPLES)){
             return RP_EOOR;
-        }
+    }
+    else{
         asg_regset_t *regset = (asg_regset_t *)&(((gen_regset_t*)handle->regset)->asg);
         r=FpgaRegDump(0,(uint32_t*)regset->table,data_len);
     }

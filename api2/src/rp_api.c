@@ -21,7 +21,6 @@ const double c_max_dig_sampling_rate_time_interval_ns = 4;
 rp_handle_uio_t la_acq_handle;
 rp_handle_uio_t sig_gen_handle;
 
-
 /*
 uio9: name=scope0, version=devicetree, events=0
         map[0]: addr=0x40090000, size=65536
@@ -59,13 +58,15 @@ uio0: name=id, version=devicetree, events=0
 RP_STATUS rp_OpenUnit(void)
 {
     int r=RP_API_OK;
- //   if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
-//        r=-1;
- //   }
 
+    if(rp_LaAcqOpen(c_dummy_dev, &la_acq_handle)!=RP_API_OK){
+    //if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
+        r=-1;
+    }
+    rp_LaAcqFpgaRegDump(&la_acq_handle);
 
+    //if(rp_GenOpen(c_dummy_dev, &sig_gen_handle)!=RP_API_OK){
     if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
-    //if(rp_GenOpen((char*)c_dummy_dev, &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -77,9 +78,9 @@ RP_STATUS rp_OpenUnit(void)
 RP_STATUS rp_CloseUnit(void)
 {
     int r=RP_API_OK;
-  //  if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
- //       r=-1;
- //   }
+    if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
+        r=-1;
+    }
     if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
@@ -150,7 +151,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
                                             int16_t nDirections)
 {
     // disable triggering by default
-    rp_LaAcqGlobalTrigDisable(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
+    rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_ALL_MASK);
 
     rp_la_trg_regset_t trg;
     memset(&trg,0,sizeof(rp_la_trg_regset_t));
@@ -206,7 +207,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
     // update settings
     if(edge_cnt==1){
         rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
-        rp_LaAcqGlobalTrigEnable(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
+        rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
         return RP_API_OK;
     }
 
@@ -601,7 +602,7 @@ RP_STATUS rp_DigSigGenOuput(bool enable)
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 {
 	rp_GenTrigger(&sig_gen_handle);
-    rp_GenFpgaRegDump(&sig_gen_handle,0);
+    //rp_GenFpgaRegDump(&sig_gen_handle,0);
     return RP_API_OK;
 }
 
@@ -640,7 +641,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    rp_GenFpgaRegDump(&sig_gen_handle,len);
+    //rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }
