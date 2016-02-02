@@ -75,8 +75,6 @@
 // (repetition of last value read from the buffer). The D*I* sequence can be
 // repeated.
 //
-// stream is cfg_bln+1
-//
 // DDDDDDDDIIIIIIIIDDDDDDDDIIIIIIIIDDDDDDDDIIIIIIII...
 // |<---->|        |<---->|        |<---->|            cfg_bdl+1 data length
 // |<------------>||<------------>||<------------>|    cfg_bln+1 leriod length
@@ -120,12 +118,6 @@ module asg #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef enum logic [2-1:0] {
-  STS_IDL = 2'b00,
-  STS_DAT = 2'b01,
-  STS_DLY = 2'b10
-} status_t;
-
 // buffer
 DAT_T               buf_mem [0:2**CWM-1];
 DAT_T               buf_rdata;  // read data
@@ -138,12 +130,15 @@ logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // counters
 logic     [ 32-1:0] cnt_bln;  // burst length
+logic     [ 32-1:0] cnt_nxt;  // burst length next
 logic     [ 16-1:0] cnt_bnm;  // burst repetitions
 // status and events
-logic               sts_run, sts_rdt;  // running
-logic               sts_vld, sts_rvl;  // valid
+logic               sts_run;  // running
+logic               sts_vld;  // valid
 logic               sts_trg;  // trigger event
 logic               sts_rpt;  // repeat event
+logic               sts_aen;  // address enable
+logic               sts_ren;  // read    enable
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DAC buffer RAM
@@ -167,17 +162,23 @@ assign bus.err = 1'b0;
 // stream read
 always @(posedge sto.clk)
 begin 
-  if (sts_run)  buf_raddr <= ptr_cur[CWF+:CWM];
-  if (sts_vld)  buf_rdata <= buf_mem[buf_raddr];
+  if (sts_aen)  buf_raddr <= ptr_cur[CWF+:CWM];
+  if (sts_ren)  buf_rdata <= buf_mem[buf_raddr];
 end
 
 // valid signal used to enable memory read access
 always @(posedge sto.clk)
 if (~sto.rstn) begin
   sts_vld <= 1'b0;
+  sts_ren <= 1'b0;
 end else begin
-  if (ctl_rst) sts_vld <= 1'b0;
-  else         sts_vld <= sts_run; 
+  if (ctl_rst) begin
+    sts_vld <= 1'b0;
+    sts_ren <= 1'b0;
+  end else begin
+    sts_vld <= sts_run; 
+    sts_ren <= sts_aen;
+  end
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,12 +188,14 @@ end
 // state machine
 always_ff @(posedge sto.clk)
 if (~sto.rstn) begin
+  sts_aen <= 1'b0;
   sts_run <= 1'b0;
   cnt_bln <= '0;
   cnt_bnm <= '0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
+    sts_aen <= 1'b0;
     sts_run <= 1'b0;
     cnt_bln <= '0;
     cnt_bnm <= '0;
@@ -200,27 +203,32 @@ end else begin
     if (cfg_ben) begin
       // burst mode
       if (sts_trg) begin
-        sts_rdt <= sts_run ? |cnt_bnm            : 1'b1;
-        sts_run <= sts_run ? |cnt_bnm            : 1'b1;
-        cnt_bnm <= sts_run ?  cnt_bnm - !cfg_inf : cfg_bnm;
-        cnt_bln <= cfg_bln;
+        sts_aen <= sts_run ? (cnt_bnm!=cfg_bnm)  : 1'b1;
+        sts_run <= sts_run ? (cnt_bnm!=cfg_bnm)  : 1'b1;
+        cnt_bnm <= sts_run ?  cnt_bnm + !cfg_inf : '0;
+        cnt_bln <= '0;
       end else begin
-        cnt_bln <= cnt_bln - sts_run;
+        if (cnt_bln == cfg_bdl) sts_aen <= 1'b0;
+        if (sts_run) cnt_bln <= cnt_nxt;
       end
     end else begin
       // periodic mode
       if (sts_trg) begin
+        sts_aen <= 1'b1;
         sts_run <= 1'b1;
       end
     end
   end
 end
 
+// next value of burst period counter
+assign cnt_nxt = cnt_bln + 1; 
+
 logic trg;
 assign trg = |(trg_i & cfg_trg);
 
 assign sts_trg = sts_run ? sts_rpt : trg;
-assign sts_rpt = sts_run & ~|cnt_bln;
+assign sts_rpt = sts_run & (cnt_bln==cfg_bln) & cfg_ben;
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
@@ -237,7 +245,7 @@ end else begin
   end else if (sts_trg) begin
     ptr_cur <= cfg_off;
   // modulo (proper wrapping) increment pointer
-  end else if (sts_run) begin
+  end else if (sts_aen) begin
     ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
   end
 end
