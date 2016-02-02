@@ -272,8 +272,8 @@ assign {S_AXI_HP1_wready , S_AXI_HP0_wready } = '0;
 // data streams
 ////////////////////////////////////////////////////////////////////////////////
 
-assign {S_AXI_STR_RX3_tready, S_AXI_STR_RX2_tready, S_AXI_STR_RX1_tready, S_AXI_STR_RX0_tready} = 1'b1;
-assign {M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid} = 1'b0;
+assign {S_AXI_STR_RX3_tready, S_AXI_STR_RX2_tready, S_AXI_STR_RX1_tready, S_AXI_STR_RX0_tready} = '1;
+assign {M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid} = '0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // analog inputs

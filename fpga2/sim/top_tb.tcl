@@ -17,11 +17,12 @@ add wave -noupdate /${top}/led
 #axi4_lite_if axi4_lite /${top}/top/ps/axi4_lite
 axi4_if      axi_gp    /${top}/top/ps/axi_gp
 sys_bus_if   ps_sys    /${top}/top/ps_sys
-sys_bus_if   sys_11    /${top}/top/sys\[11\]
+sys_bus_if   sys_lg    /${top}/top/sys\[11\]
+sys_bus_if   sys_la    /${top}/top/sys\[12\]
 #str_bus_if   sys_dtx_2 /${top}/top/str_dtx\[2\]
 #str_bus_if   str_drx_2 /${top}/top/str_drx\[2\]
-str_bus_if   sys_lgo /${top}/top/str_lgo
-str_bus_if   sys_lai /${top}/top/str_lai
+str_bus_if   str_lgo /${top}/top/str_lgo
+str_bus_if   str_lai /${top}/top/str_lai
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

@@ -56,7 +56,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  repeat(1000) @(posedge clk);
+  repeat(10000) @(posedge clk);
   $finish();
 end
 
@@ -64,7 +64,8 @@ initial begin
   repeat(100) @(posedge clk);
   axi_write (0,'h01234567);
   axi_write ((0 << 19) + 'h30, 'ha5);
-  test_asg (32'h402c0000);
+  test_lg (32'h402c0000);
+  test_la (32'h40300000);
   repeat(16) @(posedge clk);
   $finish();
 end
@@ -133,11 +134,11 @@ localparam int unsigned CWF = 16;
 localparam ADR_BUF = 1 << (CWM+2);
 
 //int buf_len = 2**CWM;
-int buf_len = 8;
+int buf_len = 'hff+1;
 real freq  = 10_000; // 10kHz
 real phase = 0; // DEG
 
-task test_asg (
+task test_lg (
   int unsigned base
 );
   logic signed [ 32-1: 0] rdata_blk [];
@@ -151,11 +152,11 @@ task test_asg (
   for (int i=0; i<buf_len; i++) begin
     axi_write(base+ADR_BUF + (i*4), i);  // write table
   end
-  // read table
-  rdata_blk = new [80];
-  for (int i=0; i<buf_len; i++) begin
-    axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
-  end
+//  // read table
+//  rdata_blk = new [80];
+//  for (int i=0; i<buf_len; i++) begin
+//    axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
+//  end
 
   // configure LG output enable
   axi_write(base+'h30, '1);  // output ebable
@@ -187,10 +188,32 @@ task test_asg (
   axi_write(base+'h00, 2'b10);
   repeat(100) @(posedge clk);
   // stop (reset)
-  axi_write(base+'h00, 2'b01);
-  repeat(20) @(posedge clk);
+//axi_write(base+'h00, 2'b01);
+//repeat(20) @(posedge clk);
 
-endtask: test_asg
+endtask: test_lg
+
+
+task test_la (
+  int unsigned base
+);
+  repeat(10) @(posedge clk);
+
+  // configure trigger
+  axi_write(base+'h40, 16'h009f);  // cfg_cmp_msk
+  axi_write(base+'h44, 16'h009f);  // cfg_cmp_val
+  axi_write(base+'h48, 16'h0001);  // cfg_edg_pos
+  axi_write(base+'h4c, 16'h0000);  // cfg_edg_neg
+
+  axi_write(base+'h10, 'd8 );  // cfg_pre
+  axi_write(base+'h14, 'd16);  // cfg_pst
+  // enable LG trigger source
+  axi_write(base+'h08, 'b0010);
+  // start acquire
+  axi_write(base+'h00, 3'b0100);
+  repeat(1000) @(posedge clk);
+
+endtask: test_la
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
