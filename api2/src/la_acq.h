@@ -22,7 +22,7 @@
 
 #include "common.h"
 
-#define LA_ACQ_BASE_SIZE 0x00040000
+#define LA_ACQ_BASE_SIZE 0x00010000
 
 /** configuration register  */
 #define RP_LA_ACQ_CFG_CONT_MASK (1<<0) ///< if set acq. will work in continuous mode and will not stop after post trig.

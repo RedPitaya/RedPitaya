@@ -63,6 +63,7 @@ RP_STATUS rp_OpenUnit(void)
     //if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
         r=-1;
     }
+
     rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     //if(rp_GenOpen(c_dummy_dev, &sig_gen_handle)!=RP_API_OK){
@@ -208,8 +209,11 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
     if(edge_cnt==1){
         rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
-        return RP_API_OK;
     }
+
+    //TEST!!! this will be removed
+    rp_LaAcqRunAcq(&la_acq_handle);
+    rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     return RP_API_OK;
 }
