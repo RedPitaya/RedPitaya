@@ -54,7 +54,7 @@ assign sti_trn = sti.vld & sti.rdy;
 
 logic sts_stp;
 assign sts_stp = sts_acq & ( ctl_stp
-               | (sts_trg & ~|sts_pst & ~cfg_con)
+               | (sts_trg & (sts_pst==cfg_pst) & ~cfg_con)
                | (sti_trn & sti.lst) );
 
 logic trg;
@@ -71,6 +71,8 @@ if (~sti.rstn) begin
   // control/status/timestamp trigger
   sts_trg <= 1'b0;
   cts_trg <= '0;
+  // control/status/timestamp stop
+  cts_stp <= '0;
 end else begin
   if (ctl_rst) begin
     // status pre/post trigger
@@ -82,6 +84,8 @@ end else begin
     // control/status/timestamp trigger
     sts_trg <= 1'b0;
     cts_trg <= '0;
+    // control/status/timestamp stop
+    cts_stp <= '0;
   end else begin
     // acquire
     if (sts_stp) begin
