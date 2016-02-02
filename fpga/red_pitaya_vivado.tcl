@@ -86,6 +86,7 @@ read_verilog   -sv                $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.v
 read_verilog   -sv                $path_rtl/red_pitaya_pwm.sv
 read_verilog   -sv                $path_rtl/red_pitaya_radiobox.sv
+read_verilog   -sv                $path_rtl/red_pitaya_rst_clken.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 

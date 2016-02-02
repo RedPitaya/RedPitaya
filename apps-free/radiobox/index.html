@@ -391,15 +391,16 @@
           <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
           <div class="col-xs-6">
             <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
-              <option value="0">USB</option>
-              <option value="1">LSB</option>
+              <option value="0">(off)</option>
+              <option value="2">USB</option>
+              <option value="3">LSB</option>
               <option disabled="disabled">---------------------</option>
-              <option value="2">AM (automatic)</option>
+              <option value="4">AM (automatic)</option>
               <option value="5">AM (sync USB)</option>
               <option value="6">AM (sync LSB)</option>
               <option disabled="disabled">---------------------</option>
-              <option value="3">FM</option>
-              <option value="4">PM</option>
+              <option value="7">FM</option>
+              <option value="8">PM</option>
             </select>
             <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -506,11 +507,12 @@
           <label for="tx_modtyp_s" class="col-xs-5 control-label">TX mod. type:</label>
           <div class="col-xs-6">
             <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
-              <option value="0">USB</option>
-              <option value="1">LSB</option>
-              <option value="2">AM</option>
-              <option value="3">FM</option>
-              <option value="4">PM</option>
+              <option value="0">(off)</option>
+              <option value="2">USB</option>
+              <option value="3">LSB</option>
+              <option value="4">AM</option>
+              <option value="7">FM</option>
+              <option value="8">PM</option>
             </select>
             <span id="apply_tx_modtyp" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
