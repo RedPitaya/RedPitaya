@@ -191,9 +191,9 @@ end else begin
 end
 
 // control signals
-assign trg_swo = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[3];  // trigger
-assign ctl_acq = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[1];  // acquire start
-assign ctl_stp = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[2];  // acquire stop
+assign ctl_stp = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[3];  // acquire stop
+assign ctl_acq = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[2];  // acquire start
+assign trg_swo = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[1];  // trigger
 assign ctl_rst = bus.wen & (bus.addr[BAW-1:0]=='h00) & bus.wdata[0];  // reset
 
 // read access
@@ -201,7 +201,7 @@ always_ff @(posedge bus.clk)
 begin
   casez (bus.addr[BAW-1:0])
     // acquire regset
-    'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, ~sts_acq, sts_acq, 1'b0};
+    'h00 : bus.rdata <= {{32-  4{1'b0}},~sts_acq, sts_acq, sts_trg, 1'b0};
     'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
     'h08 : bus.rdata <= {{32- TN{1'b0}}, cfg_trg};
     'h10 : bus.rdata <= {{32- CW{1'b0}}, cfg_pre};
