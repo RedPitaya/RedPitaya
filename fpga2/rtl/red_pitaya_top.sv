@@ -350,6 +350,7 @@ IDDR #(
 
 assign str_lai.vld = 1'b1;
 assign str_lai.kep = '1;
+assign str_lai.lst = 1'b0;
 
 // output DDR
 ODDR #(
