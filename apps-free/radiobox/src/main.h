@@ -123,14 +123,27 @@ enum rb_modsrc_enum_t {
 } RB_MODSRC_ENUM;
 
 
-/** @brief RadioBox modulation types */
-enum rb_modtyp_enum_t {
-    RB_MODTYP_USB           =  0,
-    RB_MODTYP_LSB,
-    RB_MODTYP_AM,
-    RB_MODTYP_FM,
-    RB_MODTYP_PM
-} RB_MODTYP_ENUM;
+/** @brief RadioBox TX modulation types */
+enum rb_tx_modtyp_enum_t {
+    RB_TX_MODTYP_OFF        =  0,
+    RB_TX_MODTYP_USB        =  2,
+    RB_TX_MODTYP_LSB,
+    RB_TX_MODTYP_AM,
+    RB_TX_MODTYP_FM         =  7,
+    RB_TX_MODTYP_PM
+} RB_TX_MODTYP_ENUM;
+
+/** @brief RadioBox RX modulation types */
+enum rb_rx_modtyp_enum_t {
+    RB_RX_MODTYP_OFF        =  0,
+    RB_RX_MODTYP_USB        =  2,
+    RB_RX_MODTYP_LSB,
+    RB_RX_MODTYP_AM,
+    RB_RX_MODTYP_AMSYNC_USB,
+    RB_RX_MODTYP_AMSYNC_LSB,
+    RB_RX_MODTYP_FM,
+    RB_RX_MODTYP_PM
+} RB_RX_MODTYP_ENUM;
 
 
 /* Output signals */

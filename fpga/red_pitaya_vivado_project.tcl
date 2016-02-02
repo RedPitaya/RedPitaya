@@ -68,6 +68,7 @@ add_files                         $path_rtl/red_pitaya_pll.sv
 add_files                         $path_rtl/red_pitaya_ps.v
 add_files                         $path_rtl/red_pitaya_pwm.sv
 add_files                         $path_rtl/red_pitaya_radiobox.sv
+add_files                         $path_rtl/red_pitaya_rst_clken.sv
 add_files                         $path_rtl/red_pitaya_scope.v
 add_files                         $path_rtl/red_pitaya_top.v
 
