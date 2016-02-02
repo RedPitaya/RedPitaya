@@ -621,7 +621,8 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
     switch(patternType){
         case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256:
             rp_GenSetWaveformUpCountSeq(&sig_gen_handle,len);
-            rp_GenSetBurstModeBurstDataLen(&sig_gen_handle,len);
+            rp_GenSetBurstModeDataLen(&sig_gen_handle,len);
+            rp_GenSetBurstModePeriodLen(&sig_gen_handle,len);
             break;
     }
 
@@ -629,9 +630,9 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
     rp_GenSetBurstModeRepetitions(&sig_gen_handle, shots);
 
     // no idle
-    rp_GenSetBurstModeIdle(&sig_gen_handle, delay_between_shots);
+    // rp_GenSetBurstModeIdle(&sig_gen_handle, delay_between_shots);
 
-    // frequency
+    // sample rate
     rp_GenSetWaveformSampleRate(&sig_gen_handle,sample_rate);
 
     // trigger

@@ -22,7 +22,7 @@
 
 #include "common.h"
 
-
+#define LA_ACQ_BASE_SIZE 0x00040000
 
 /** configuration register  */
 #define RP_LA_ACQ_CFG_CONT_MASK (1<<0) ///< if set acq. will work in continuous mode and will not stop after post trig.
@@ -73,8 +73,9 @@ typedef struct {
 } rp_la_acq_regset_t;
 
 
-int rp_LaAcqOpen(const char *a_dev, rp_handle_uio_t *handle);
+int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle);
 int rp_LaAcqClose(rp_handle_uio_t *handle);
+int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle);
 int rp_LaAcqReset(rp_handle_uio_t *handle);
 int rp_LaAcqRunAcq(rp_handle_uio_t *handle);
 int rp_LaAcqStopAcq(rp_handle_uio_t *handle);

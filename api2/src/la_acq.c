@@ -27,61 +27,40 @@
 #include "la_acq.h"
 #include "generate.h"
 
-int rp_LaAcqOpen(const char *a_dev, rp_handle_uio_t *handle) {
+int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
+    int status;
 
-    // make a copy of the device path
-    handle->dev = (char*) malloc((strlen(a_dev)+1) * sizeof(char));
-    strncpy(handle->dev, a_dev, strlen(a_dev)+1);
-
-    if(strncmp(c_dummy_dev, a_dev, sizeof(c_dummy_dev))==0){
-        handle->regset = (rp_la_acq_regset_t*) malloc(sizeof(rp_la_acq_regset_t));
+    handle->length = LA_ACQ_BASE_SIZE;
+    handle->struct_size=sizeof(rp_la_acq_regset_t);
+    status = common_Open (dev, handle);
+    if (status != RP_OK) {
+           return status;
     }
-    else{
-        // try opening the device
-        handle->fd = open(handle->dev, O_RDWR);
-        if (handle->fd==-1) {
-            return -1;
-        }
 
-        // get regset pointer
-        handle->regset = mmap(NULL, sizeof(rp_la_acq_regset_t), PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
-        if (handle->regset == MAP_FAILED) {
-            return -1;
-        }
-        if(rp_LaAcqReset(handle)!=RP_OK){
-            return -1;
-        }
+    status = rp_LaAcqReset(handle);
+    if (status != RP_OK) {
+        return status;
+    }
+
+    status=rp_LaAcqDefaultSettings(handle);
+    if (status != RP_OK) {
+        return status;
     }
     return RP_OK;
 }
 
 int rp_LaAcqClose(rp_handle_uio_t *handle) {
-    int r=RP_OK;
-
-    if(strncmp(c_dummy_dev, handle->dev, sizeof(c_dummy_dev))==0){
-
-
-
+    int status = common_Close (handle);
+    if (status != RP_OK) {
+        return status;
     }
-    else{
-        // release regset
-        if(munmap((void *) handle->regset, sizeof(rp_la_acq_regset_t))!=0){
-            r=-1;
-        }
+    return RP_OK;
+}
 
-        // close device
-        if(close (handle->fd)!=0){
-            r=-1;
-        }
-
-        // free device path
-        free(handle->dev);
-
-        // free name
-        free(handle->name);
-
-    }
-    return r;
+int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
+    //rp_LaAcqGlobalTrigSet(handle,RP_TRG_ALL_MASK);
+    //...
+    return RP_OK;
 }
 
 /** Control registers setter & getter */

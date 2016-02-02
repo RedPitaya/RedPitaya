@@ -25,11 +25,9 @@
 #define PHASE_MAX               360         // deg
 #define BURST_COUNT_MIN        -1
 #define BURST_COUNT_MAX         50000
-#define BURST_REPETITIONS_MIN   1
-#define BURST_REPETITIONS_MAX   50000
-#define BURST_PERIOD_MIN        1           // us
-#define BURST_PERIOD_MAX        500000000   // us
 
+#define BURST_REPETITIONS_MAX   0x0000ffff;
+#define BURST_PERIOD_LEN_MAX    0xffffffff;
 
 // Base Generate address
 #define GENERATE_BASE_SIZE      0x00040000
@@ -85,7 +83,7 @@ typedef struct {
     // burst mode
     uint32_t cfg_bst;  ///< enables & configures burst mode
     uint32_t cfg_bdl;  ///< burst data length
-    uint32_t cfg_bil;  ///< burst idle length
+    uint32_t cfg_bil;  ///< burst period length (data length + idle length)
     uint32_t cfg_bnm;  ///< burst repetition number
 
     // empty space
@@ -112,7 +110,7 @@ typedef struct {
 /**
 * Common functions / controls
 */
-int rp_GenOpen(char *dev, rp_handle_uio_t *handle);
+int rp_GenOpen(const char *dev, rp_handle_uio_t *handle);
 int rp_GenClose(rp_handle_uio_t *handle);
 
 int rp_GenReset(rp_handle_uio_t *handle);
@@ -169,8 +167,8 @@ int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size);
  *  Burst mode settings
  */
 int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t val);
-int rp_GenSetBurstModeBurstDataLen(rp_handle_uio_t *handle, uint32_t length);
-int rp_GenSetBurstModeIdle(rp_handle_uio_t *handle, uint32_t val);
+int rp_GenSetBurstModeDataLen(rp_handle_uio_t *handle, uint32_t length);
+int rp_GenSetBurstModePeriodLen(rp_handle_uio_t *handle, uint32_t length); ///< TODO: to be fixed
 
 /*
  *  Enables/disable physical logic outputs

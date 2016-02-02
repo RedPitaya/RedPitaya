@@ -25,17 +25,14 @@
 const double c_max_waveform_sample_rate_freq=125e6;
 const double c_min_waveform_sample_rate_freq=0;
 
-int rp_GenOpen(char *dev, rp_handle_uio_t *handle) {
+int rp_GenOpen(const char  *dev, rp_handle_uio_t *handle) {
     int status;
-    if(strncmp(c_dummy_dev, dev, sizeof(c_dummy_dev))==0){
-        handle->regset = (gen_regset_t*) malloc(sizeof(gen_regset_t));
-    }
-    else{
-        handle->length = GENERATE_BASE_SIZE;
-        status = common_Open (dev, handle);
-        if (status != RP_OK) {
-            return status;
-        }
+
+    handle->length = GENERATE_BASE_SIZE;
+    handle->struct_size=sizeof(gen_regset_t);
+    status = common_Open (dev, handle);
+    if (status != RP_OK) {
+           return status;
     }
 
     status = rp_GenReset(handle);
@@ -51,7 +48,8 @@ int rp_GenOpen(char *dev, rp_handle_uio_t *handle) {
 }
 
 int rp_GenClose(rp_handle_uio_t *handle) {
-    int status = common_Close (handle); 
+
+    int status = common_Close (handle);
     if (status != RP_OK) {
         return status;
     }
@@ -63,9 +61,8 @@ int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
     rp_GenSetFreqPhase(handle, 0, 0); // TODO: not used
     rp_GenSetMode(handle, RP_GEN_CFG_BURST_MASK);
     rp_GenSetBurstModeRepetitions(handle, 0);
-    rp_GenSetBurstModeRepetitions(handle, 0);
-    rp_GenSetBurstModeBurstDataLen(handle, 0);
-    rp_GenSetBurstModeIdle(handle, 0);
+    rp_GenSetBurstModeDataLen(handle, 1);
+    rp_GenSetBurstModePeriodLen(handle, 1);
     rp_GenOutputDisable(handle,RP_GEN_OUT_ALL_MASK);
     return RP_OK;
 }
@@ -312,21 +309,24 @@ int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t val)
     return RP_OK;
 }
 
-int rp_GenSetBurstModeBurstDataLen(rp_handle_uio_t *handle, uint32_t length)
+int rp_GenSetBurstModeDataLen(rp_handle_uio_t *handle, uint32_t length)
 {
 
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     if(!inrangeUint32(length,1,RP_GEN_SIG_SAMPLES)){
          return RP_EOOR;
     }
-    iowrite32(length, &regset->cfg_bdl);
+    iowrite32((length-1), &regset->cfg_bdl);
     return RP_OK;
 }
 
-int rp_GenSetBurstModeIdle(rp_handle_uio_t *handle, uint32_t val)
+int rp_GenSetBurstModePeriodLen(rp_handle_uio_t *handle, uint32_t length)
 {
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    iowrite32(val, &regset->cfg_bil);
+    if(!inrangeUint32(length,1,BURST_PERIOD_LEN_MAX)){
+         return RP_EOOR;
+    }
+    iowrite32((length-1), &regset->cfg_bil);
     return RP_OK;
 }
 

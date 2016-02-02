@@ -27,7 +27,7 @@ extern const char c_dummy_dev[10];
 #define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
 
 // open/close UIO device
-int common_Open(char *dev, rp_handle_uio_t *handle);
+int common_Open(const char *dev, rp_handle_uio_t *handle);
 int common_Close(rp_handle_uio_t *handle);
 
 //** trigger mask bits */

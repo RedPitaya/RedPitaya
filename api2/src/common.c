@@ -24,40 +24,54 @@ int FpgaRegDump(uint32_t a_addr, uint32_t * a_data, uint32_t a_len){
     return RP_OK;
 }
 
-int common_Open(char *dev, rp_handle_uio_t *handle) {
+int common_Open(const char *dev, rp_handle_uio_t *handle) {
     // make a copy of the device path
     handle->dev = (char*) malloc((strlen(dev)+1) * sizeof(char));
     strncpy(handle->dev, dev, strlen(dev)+1);
-    // try opening the device
-    handle->fd = open(handle->dev, O_RDWR);
-    if (handle->fd == -1) {
-        return -1;
+
+    // if this is dummy device, just allocate dummy memeory space
+    if(strncmp(c_dummy_dev, handle->dev, sizeof(c_dummy_dev))==0){
+        handle->regset = malloc(handle->struct_size);
     }
-    // get regset pointer
-    handle->regset = mmap(NULL, handle->length, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
-     printf("1:0x%08x\n\r",(uint32_t)handle->regset);
-    if (handle->regset == MAP_FAILED) {
-        printf("2:0x%08x\n\r",(uint32_t)handle->regset);
-        return -1;
+    else{
+        // try opening the device
+        handle->fd = open(handle->dev, O_RDWR);
+        if (handle->fd == -1) {
+            return -1;
+        }
+        // get regset pointer
+        handle->regset = mmap(NULL, handle->length, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
+         printf("1:0x%08x\n\r",(uint32_t)handle->regset);
+        if (handle->regset == MAP_FAILED) {
+            printf("2:0x%08x\n\r",(uint32_t)handle->regset);
+            return -1;
+        }
     }
     return RP_OK;
 }
 
 int common_Close(rp_handle_uio_t *handle) {
     int r=RP_OK;
-    // release regset
-    if(munmap((void *) handle->regset, handle->length)==-1){
-        r=-1;
+    // if this is dummy device, just allocate dummy memeory space
+    if(strncmp(c_dummy_dev, handle->dev, sizeof(c_dummy_dev))==0){
+        free((void *) handle->regset);
+        free(handle->dev);
     }
-    // close device
-    if(close (handle->fd)==-1){
-        r=-1;
+    else{
+        // release regset
+        if(munmap((void *) handle->regset, handle->length)==-1){
+            r=-1;
+        }
+        // close device
+        if(close (handle->fd)==-1){
+            r=-1;
 
+        }
+        // free device path
+        free(handle->dev);
+        // free name
+        // TODO
     }
-    // free device path
-    free(handle->dev);
-    // free name
-    // TODO
     return r;
 }
 

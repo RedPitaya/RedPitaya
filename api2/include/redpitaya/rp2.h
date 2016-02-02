@@ -29,6 +29,7 @@ typedef struct {
   int            fd;
   volatile void *regset;
            void *context;
+  int            struct_size; ///< only used to reserve dummy memory space for testing
 } rp_handle_uio_t;
 
 /** @name Error codes
