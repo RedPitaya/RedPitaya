@@ -18,6 +18,7 @@ void fail_assertions_test(void);
 int suite_la_acq_init(void);
 int suite_la_acq_cleanup(void);
 void reg_rw_test(void);
+void la_acq_trig_test(void);
 
 int suite_sig_gen_init(void);
 int suite_sig_gen_cleanup(void);

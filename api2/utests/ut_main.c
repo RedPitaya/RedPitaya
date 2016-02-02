@@ -21,7 +21,8 @@ CU_TestInfo example_test_array[] = {
 
 /** la_acq test */
 CU_TestInfo la_acq_test_array[] = {
-  { "la_acq", reg_rw_test},
+ // { "la_acq", reg_rw_test},
+  { "la_acq_trig_test", la_acq_trig_test},
   CU_TEST_INFO_NULL,
 };
 
