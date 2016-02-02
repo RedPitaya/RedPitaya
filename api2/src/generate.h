@@ -26,8 +26,9 @@
 #define BURST_COUNT_MIN        -1
 #define BURST_COUNT_MAX         50000
 
-#define BURST_REPETITIONS_MAX   0x0000ffff;
-#define BURST_PERIOD_LEN_MAX    0xffffffff;
+#define BURST_REPETITIONS_MAX   0x0000ffff
+#define RP_GEN_REP_INF          0
+#define BURST_PERIOD_LEN_MAX    0xffffffff
 
 // Base Generate address
 #define GENERATE_BASE_SIZE      0x00040000
@@ -47,7 +48,6 @@
 #define RP_GEN_SIG_SAMPLES (1<<14) ///< 16384
 
 /** Mode masks */
-#define RP_GEN_REP_INF 0
 #define RP_GEN_CFG_BURST_MASK (1<<0)      ///< if set generator will operate in burst mode, otherwise periodic mode
 #define RP_GEN_CFG_BURST_INF_MASK (1<<1)  ///< if set cfg_bnm will be inf regardless of cfg_bnm setting
 
