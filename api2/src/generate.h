@@ -27,8 +27,11 @@
 #define BURST_COUNT_MAX         50000
 
 #define BURST_REPETITIONS_MAX   0x0000ffff
+#define BURST_REPETITIONS_MIN   1
 #define RP_GEN_REP_INF          0
+
 #define BURST_PERIOD_LEN_MAX    0xffffffff
+#define BURST_PERIOD_LEN_MIN    1
 
 // Base Generate address
 #define GENERATE_BASE_SIZE      0x00040000
