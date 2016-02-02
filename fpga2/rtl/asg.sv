@@ -27,7 +27,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// FREQUENCY/PHASE AND RESOLUTION
+// PERIODIC MODE (FREQUENCY/PHASE AND RESOLUTION
 // 
 // The frequency is specified by the cfg_stp value, the phase by the cfg_off
 // value and both also depend on the buffer length cfg_siz. The cfg_stp (step
@@ -67,6 +67,22 @@
 // ΔΦ = 360°  /2**(14+16) = 0.000000335°
 //
 ////////////////////////////////////////////////////////////////////////////////
+//
+// BURST MODE
+//
+// Burst mode is enabled using the cfg_ben signal.
+// In the next diagram 'D' is date read from the buffer, while I is idle data
+// (repetition of last value read from the buffer). The D*I* sequence can be
+// repeated.
+//
+// stream is cfg_bln+1
+//
+// DDDDDDDDIIIIIIIIDDDDDDDDIIIIIIIIDDDDDDDDIIIIIIII...
+// |<---->|        |<---->|        |<---->|            cfg_bdl+1 data length
+// |<------------>||<------------>||<------------>|    cfg_bln+1 leriod length
+//                                                     cfg_bnm+1 repetitions 
+//
+////////////////////////////////////////////////////////////////////////////////
 
 module asg #(
   // trigger
@@ -85,7 +101,7 @@ module asg #(
   // trigger
   input  logic      [TN-1:0] trg_i  ,  // input
   output logic               trg_o  ,  // output event
-  // configuration
+  // configuration (periodic mode)
   input  logic      [TN-1:0] cfg_trg,  // trigger mask
   input  logic [CWM+CWF-1:0] cfg_siz,  // data table size
   input  logic [CWM+CWF-1:0] cfg_stp,  // pointer step    size
@@ -94,7 +110,7 @@ module asg #(
   input  logic               cfg_ben,  // burst enable
   input  logic               cfg_inf,  // infinite
   input  logic     [CWM-1:0] cfg_bdl,  // burst data length
-  input  logic     [ 32-1:0] cfg_bil,  // burst idle length
+  input  logic     [ 32-1:0] cfg_bln,  // burst      length
   input  logic     [ 16-1:0] cfg_bnm,  // burst number of repetitions
   // System bus
   sys_bus_if.s               bus
@@ -121,15 +137,13 @@ logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // counters
-logic [16-1:0] cnt_bdl;
-logic [32-1:0] cnt_bil;
-logic [16-1:0] cnt_bnm;
+logic     [ 32-1:0] cnt_bln;  // burst length
+logic     [ 16-1:0] cnt_bnm;  // burst repetitions
 // status and events
-status_t       sts_run;
-status_t       sts_vld;
-logic          sts_trg;
-logic          sts_end;
-logic          sts_lst;
+logic               sts_run, sts_rdt;  // running
+logic               sts_vld, sts_rvl;  // valid
+logic               sts_trg;  // trigger event
+logic               sts_rpt;  // repeat event
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DAC buffer RAM
@@ -153,14 +167,16 @@ assign bus.err = 1'b0;
 // stream read
 always @(posedge sto.clk)
 begin 
-  if (sts_run==STS_DAT)  buf_raddr <= ptr_cur[CWF+:CWM];
-  if (sts_vld==STS_DAT)  buf_rdata <= buf_mem[buf_raddr];
+  if (sts_run)  buf_raddr <= ptr_cur[CWF+:CWM];
+  if (sts_vld)  buf_rdata <= buf_mem[buf_raddr];
 end
 
 // valid signal used to enable memory read access
 always @(posedge sto.clk)
-begin
-  if (ctl_rst) sts_vld <= STS_IDL;
+if (~sto.rstn) begin
+  sts_vld <= 1'b0;
+end else begin
+  if (ctl_rst) sts_vld <= 1'b0;
   else         sts_vld <= sts_run; 
 end
 
@@ -171,36 +187,31 @@ end
 // state machine
 always_ff @(posedge sto.clk)
 if (~sto.rstn) begin
-  sts_run <= STS_IDL;
-  cnt_bdl <= '0;
-  cnt_bil <= '0;
+  sts_run <= 1'b0;
+  cnt_bln <= '0;
   cnt_bnm <= '0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
-    sts_run <= STS_IDL;
-    cnt_bdl <= '0;
-    cnt_bil <= '0;
+    sts_run <= 1'b0;
+    cnt_bln <= '0;
     cnt_bnm <= '0;
-  // start on trigger, new triggers are ignored while ASG is running
-  end else if (sts_trg) begin
-    if (sts_lst) begin
-      sts_run <= STS_IDL;
-      cnt_bnm <= '0;
-    end else begin
-      sts_run <= STS_DAT;
-      if (cfg_ben) begin
-        cnt_bdl <= cfg_bdl; 
-        cnt_bil <= cfg_bil;
-        cnt_bnm <= sts_end ? cnt_bnm-1 : cfg_bnm;
-      end
-    end
-  // decrement counters
   end else begin
     if (cfg_ben) begin
-      if (sts_run == STS_DAT & ~|cnt_bdl & |cnt_bil)  sts_run <=  STS_DLY;
-      if (sts_run == STS_DAT &  |cnt_bdl           )  cnt_bdl <= cnt_bdl-1;
-      if (sts_run == STS_DLY &             |cnt_bil)  cnt_bil <= cnt_bil-1;
+      // burst mode
+      if (sts_trg) begin
+        sts_rdt <= sts_run ? |cnt_bnm            : 1'b1;
+        sts_run <= sts_run ? |cnt_bnm            : 1'b1;
+        cnt_bnm <= sts_run ?  cnt_bnm - !cfg_inf : cfg_bnm;
+        cnt_bln <= cfg_bln;
+      end else begin
+        cnt_bln <= cnt_bln - sts_run;
+      end
+    end else begin
+      // periodic mode
+      if (sts_trg) begin
+        sts_run <= 1'b1;
+      end
     end
   end
 end
@@ -208,13 +219,13 @@ end
 logic trg;
 assign trg = |(trg_i & cfg_trg);
 
-assign sts_trg = (trg & (sts_run==STS_IDL))
-               | (sts_end & (|cnt_bnm | cfg_inf));
+assign sts_trg = sts_run ? sts_rpt : trg;
+assign sts_rpt = sts_run & ~|cnt_bln;
 
-assign sts_end = cfg_ben & (sts_run!=STS_IDL) & ~|cnt_bdl & ~|cnt_bil;
-assign sts_lst = cnt_bnm == 1;
-
+////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
+////////////////////////////////////////////////////////////////////////////////
+
 always_ff @(posedge sto.clk)
 if (~sto.rstn) begin
   ptr_cur <= '0;
@@ -226,15 +237,15 @@ end else begin
   end else if (sts_trg) begin
     ptr_cur <= cfg_off;
   // modulo (proper wrapping) increment pointer
-  end else if (sts_run==STS_DAT) begin
+  end else if (sts_run) begin
     ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
   end
 end
 
 // next pointer value and overflow
-assign ptr_nxt = ptr_cur + cfg_stp;
-assign ptr_nxt_sub = ptr_nxt - cfg_siz - 1;
-assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+16];
+assign ptr_nxt     = ptr_cur + (cfg_stp + 1);
+assign ptr_nxt_sub = ptr_nxt - (cfg_siz + 1);
+assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+CWF];
 
 ////////////////////////////////////////////////////////////////////////////////
 // output stream
@@ -246,7 +257,7 @@ if (~sto.rstn)  trg_o <= 1'b0;
 else            trg_o <= sts_trg;
 
 // output data
-assign sto.dat = sto.vld ? buf_rdata : '0;
+assign sto.dat = buf_rdata;
 assign sto.kep = '1;
 assign sto.lst = 1'b0;
 
@@ -259,7 +270,7 @@ end else begin
   if (ctl_rst) begin
     sto.vld <= 1'b0;
   end else begin
-    sto.vld <= |sts_vld;
+    sto.vld <= sts_vld;
   end
 end
 

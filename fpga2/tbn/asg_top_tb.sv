@@ -123,10 +123,10 @@ initial begin
   busm.write('h14, 0 * 2**CWF    );  // offset
   busm.write('h18, 1 * 2**CWF - 1);  // step
   // configure burst mode
-  busm.write('h20, {1'b1, TN'(0)});  // burst enable
-  busm.write('h24,  6);  // burst data length
-  busm.write('h28, 10);  // burst idle length
-  busm.write('h2c,  5);  // burst number of repetitions
+  busm.write('h20, 2'b01);  // burst enable
+  busm.write('h24, 4-1);  // burst data length
+  busm.write('h28, 8-1);  // burst      length
+  busm.write('h2c, 4-1);  // burst number of repetitions
   // start
   busm.write('h00, 2'b10);
   repeat(120) @(posedge clk);

@@ -12,7 +12,7 @@ add wave -noupdate /asg_tb/asg/cfg_off
 add wave -noupdate /asg_tb/asg/cfg_ben
 add wave -noupdate /asg_tb/asg/cfg_inf
 add wave -noupdate /asg_tb/asg/cfg_bdl
-add wave -noupdate /asg_tb/asg/cfg_bil
+add wave -noupdate /asg_tb/asg/cfg_bln
 add wave -noupdate /asg_tb/asg/cfg_bnm
 add wave -noupdate -expand -group str /asg_tb/str/*
 add wave -noupdate -expand -group str /asg_tb/str_drn/str_trn

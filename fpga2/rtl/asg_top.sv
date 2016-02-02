@@ -74,7 +74,7 @@ logic [CWM+CWF-1:0] cfg_off;  // address initial offset (phase)
 logic               cfg_ben;  // burst enable
 logic               cfg_inf;  // infinite burst
 logic     [CWM-1:0] cfg_bdl;  // burst data length
-logic     [ 32-1:0] cfg_bil;  // burst idle length
+logic     [ 32-1:0] cfg_bln;  // burst idle length
 logic     [ 16-1:0] cfg_bnm;  // burst repetitions
 // linear offset and gain
 DAT_M               cfg_mul;
@@ -113,7 +113,7 @@ if (~bus.rstn) begin
   cfg_inf <= '0;
   cfg_bdl <= '0;
   cfg_bnm <= '0;
-  cfg_bil <= '0;
+  cfg_bln <= '0;
   // linear transform or logic analyzer output enable
   cfg_mul <= EN_LIN ? 1 << ($bits(DAT_M)-2) : '0;
   cfg_sum <= '0;
@@ -129,7 +129,7 @@ end else begin
     if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[          0];
     if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[          1];
     if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[    CWM-1:0];
-    if (bus.addr[BAW-1:0]=='h28)  cfg_bil <= bus.wdata[     32-1:0];
+    if (bus.addr[BAW-1:0]=='h28)  cfg_bln <= bus.wdata[     32-1:0];
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
     if (bus.addr[BAW-1:0]=='h30)  cfg_mul <= DAT_M'(bus.wdata);
@@ -155,7 +155,7 @@ if (~bus.addr[CWM+2]) begin
     'h20 : bus.rdata <= {{32-      2{1'b0}}, cfg_inf
                                            , cfg_ben};
     'h24 : bus.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
-    'h28 : bus.rdata <=                      cfg_bil ;
+    'h28 : bus.rdata <=                      cfg_bln ;
     'h2c : bus.rdata <= {{32-     16{1'b0}}, cfg_bnm};
     // linear transformation (should be properly sign extended)
     'h30 : bus.rdata <= cfg_mul;
@@ -197,7 +197,7 @@ asg #(
   .cfg_ben   (cfg_ben),
   .cfg_inf   (cfg_inf),
   .cfg_bdl   (cfg_bdl),
-  .cfg_bil   (cfg_bil),
+  .cfg_bln   (cfg_bln),
   .cfg_bnm   (cfg_bnm),
   // CPU buffer access
   .bus       (bus_buf)
