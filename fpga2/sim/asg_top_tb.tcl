@@ -28,14 +28,13 @@ add wave -noupdate           /${top}/asg_top/asg/cfg_inf
 add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bdl
 add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bln
 add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bnm
-add wave -noupdate -unsigned /${top}/asg_top/asg/cnt_bdl;
-add wave -noupdate -unsigned /${top}/asg_top/asg/cnt_bil;
+add wave -noupdate -unsigned /${top}/asg_top/asg/cnt_bln;
 add wave -noupdate -unsigned /${top}/asg_top/asg/cnt_bnm;
 add wave -noupdate           /${top}/asg_top/asg/sts_run
 add wave -noupdate           /${top}/asg_top/asg/sts_vld
 add wave -noupdate           /${top}/asg_top/asg/sts_trg
-add wave -noupdate           /${top}/asg_top/asg/sts_end
-add wave -noupdate           /${top}/asg_top/asg/sts_lst
+add wave -noupdate           /${top}/asg_top/asg/sts_aen
+add wave -noupdate           /${top}/asg_top/asg/sts_ren
 
 # busses
 str_bus_if stg /asg_top_tb/asg_top/stg

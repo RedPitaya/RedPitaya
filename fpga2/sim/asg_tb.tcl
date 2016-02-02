@@ -1,34 +1,37 @@
+source "axi4_if.tcl"
+source "axi4_lite_if.tcl"
+source "axi4_stream_if.tcl"
+source "str_bus_if.tcl"
+source "sys_bus_if.tcl"
+
+# set top hierarcy name
+set top asg_tb
+set dut asg
+
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /asg_tb/clk
-add wave -noupdate /asg_tb/rstn
-add wave -noupdate /asg_tb/asg/ctl_rst
-add wave -noupdate /asg_tb/asg/trg_i
-add wave -noupdate /asg_tb/asg/trg_o
-add wave -noupdate /asg_tb/asg/cfg_trg
-add wave -noupdate /asg_tb/asg/cfg_siz
-add wave -noupdate /asg_tb/asg/cfg_stp
-add wave -noupdate /asg_tb/asg/cfg_off
-add wave -noupdate /asg_tb/asg/cfg_ben
-add wave -noupdate /asg_tb/asg/cfg_inf
-add wave -noupdate /asg_tb/asg/cfg_bdl
-add wave -noupdate /asg_tb/asg/cfg_bln
-add wave -noupdate /asg_tb/asg/cfg_bnm
-add wave -noupdate -expand -group str /asg_tb/str/*
-add wave -noupdate -expand -group str /asg_tb/str_drn/str_trn
-add wave -noupdate -expand -group str /asg_tb/str_drn/str_ena
-add wave -noupdate -expand -group str /asg_tb/str_drn/buf_siz
 
-# difine Radix
-radix signal /asg_tb/asg/cfg_siz -decimal -unsigned
-radix signal /asg_tb/asg/sts_stp -decimal -unsigned
-radix signal /asg_tb/asg/cfg_off -decimal -unsigned
-radix signal /asg_tb/asg/sts_bdl -decimal -unsigned
-radix signal /asg_tb/asg/cts_bil -decimal -unsigned
-radix signal /asg_tb/asg/cts_bnm -decimal -unsigned
-radix signal /asg_tb/str/dat -hexadecimal
-radix signal /asg_tb/str_drn/buf_siz -decimal -unsigned
-#-fpoint
+add wave -noupdate           /${top}/clk
+add wave -noupdate           /${top}/rstn
+add wave -noupdate           /${top}/asg/ctl_rst
+add wave -noupdate           /${top}/asg/trg_i
+add wave -noupdate           /${top}/asg/trg_o
+add wave -noupdate           /${top}/asg/cfg_trg
+add wave -noupdate -hex      /${top}/asg/cfg_siz
+add wave -noupdate -hex      /${top}/asg/cfg_stp
+add wave -noupdate -hex      /${top}/asg/cfg_off
+add wave -noupdate           /${top}/asg/cfg_ben
+add wave -noupdate           /${top}/asg/cfg_inf
+add wave -noupdate -unsigned /${top}/asg/cfg_bdl
+add wave -noupdate -unsigned /${top}/asg/cfg_bln
+add wave -noupdate -unsigned /${top}/asg/cfg_bnm
+add wave -noupdate -expand -group str /${top}/str_drn/str_trn
+add wave -noupdate -expand -group str /${top}/str_drn/str_ena
+add wave -noupdate -expand -group str /${top}/str_drn/buf_siz
+
+# busses
+str_bus_if str /${top}/str
+sys_bus_if bus /${top}/bus
 
 TreeUpdate [SetDefaultTree]
 WaveRestrreCursors {{Cursor 1} {0 ps} 0}
