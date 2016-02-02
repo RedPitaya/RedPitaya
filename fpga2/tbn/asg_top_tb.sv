@@ -11,15 +11,21 @@ module asg_top_tb #(
   realtime  TP = 8.0ns,  // 125MHz
   // functionality enable
   bit EN_LIN = 1,
+  // types
+  type U16 = logic [16-1:0],
+  type S16 = logic signed [16-1:0],
+  type S14 = logic signed [14-1:0],
   // data parameters
-  int unsigned DWO = 14,  // RAM data width
-  int unsigned DWM = 16,  // data width for multiplier (gain)
+//type DAT_T = EN_LIN ? S14 : U16,
+//type DAT_M = EN_LIN ? S16 : DAT_T,
+//type DAT_S = EN_LIN ? S14 : DAT_T,
+  type DAT_T = S14,
+  type DAT_M = S16,
+  type DAT_S = S14,
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 );
-
-localparam type DAT_T = logic signed [DWO-1:0];
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC signal generation
@@ -30,7 +36,7 @@ logic                  clk ;
 logic                  rstn;
 
 // stream
-str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
+str_bus_if #(.DN (EN_LIN ? 1 : 2), .DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
 
 // trigger
 struct packed {
@@ -87,6 +93,15 @@ initial begin
   for (int i=0; i<buf_len; i++) begin
     busm.read(ADR_BUF + (i*4), rdata_blk [i]);  // read table
   end
+  if (EN_LIN) begin
+    // configure amplitude and DC offset
+    busm.write('h30, 1 << ($bits(DAT_M)-2));  // amplitude
+    busm.write('h34, 0);             // DC offset
+  end else begin
+    // configure LG output enable
+    busm.write('h30, '1);  // output ebable
+    busm.write('h34, '0);  // open drain
+  end
   // configure frequency and phase
   busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
   busm.write('h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
@@ -94,12 +109,6 @@ initial begin
   busm.write('h18, 1                           * 2**CWF - 1);  // step
   // configure burst mode
   busm.write('h20, 2'b00);  // burst disable
-  // configure amplitude and DC offset
-  busm.write('h30, 1 << (DWM-2));  // amplitude
-  busm.write('h34, 0);             // DC offset
-  // configure LG output enable
-  busm.write('h30, '1);  // output ebable
-  busm.write('h34, '0);  // open drain
   // enable SW trigger
   busm.write('h04, 3'b001);
   // start
@@ -118,9 +127,6 @@ initial begin
   busm.write('h24,  6);  // burst data length
   busm.write('h28, 10);  // burst idle length
   busm.write('h2c,  5);  // burst number of repetitions
-  // configure amplitude and DC offset
-  busm.write('h30, 1 << (DWM-2));  // amplitude
-  busm.write('h34, 0);             // DC offset
   // start
   busm.write('h00, 2'b10);
   repeat(120) @(posedge clk);
@@ -151,6 +157,9 @@ sys_bus_model busm (.bus (bus));
 
 asg_top #(
   .EN_LIN (EN_LIN),
+  .DAT_T (DAT_T),
+  .DAT_M (DAT_M),
+  .DAT_S (DAT_S),
   .TN (TN)
 ) asg_top (
   // stream output

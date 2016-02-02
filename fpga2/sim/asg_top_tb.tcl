@@ -30,6 +30,7 @@ add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bil
 add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bnm
 
 # busses
+str_bus_if stg /asg_top_tb/asg_top/stg
 str_bus_if str /asg_top_tb/str
 sys_bus_if bus /asg_top_tb/bus
 
