@@ -52,7 +52,7 @@ int common_Close(rp_handle_uio_t *handle);
 #define RP_TRG_LOA_PAT_MASK      (1<<1)   ///< logic analyzer pattern trigger
 #define RP_TRG_LOA_SWE_MASK      (1<<0)   ///< logic analyzer software trigger
 
-#define RP_TRG_ALL_MASK         0xffffffff
+#define RP_TRG_ALL_MASK         0
 
 /** Global trigger mask */
 typedef struct {
@@ -71,5 +71,9 @@ typedef struct {
 } rp_ctl_regset_t;
 
 int FpgaRegDump(uint32_t a_addr, uint32_t * a_data, uint32_t a_len);
+
+//* Functions that checks if value is in defined range */
+bool inrangeUint32(uint32_t x, uint32_t minval_t, uint32_t maxval);
+bool inrangeDouble(double x, double minval_t, double maxval);
 
 #endif /* COMMON_H_ */

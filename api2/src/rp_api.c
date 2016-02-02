@@ -590,10 +590,10 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
 RP_STATUS rp_DigSigGenOuput(bool enable)
 {
     if(enable){
-        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_EN_PORT1_MASK);
+        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_PORT1_MASK);
     }
     else{
-        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_EN_PORT1_MASK);
+        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_PORT1_MASK);
     }
     return RP_API_OK;
 }
@@ -606,7 +606,7 @@ RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 }
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                double sample_rate,
+                                double * sample_rate,
                                 uint32_t shots,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask)
@@ -632,10 +632,10 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
     rp_GenSetBurstModeIdle(&sig_gen_handle, delay_between_shots);
 
     // frequency
-    rp_GenSetSampleRate(&sig_gen_handle,sample_rate);
+    rp_GenSetWaveformSampleRate(&sig_gen_handle,sample_rate);
 
     // trigger
-    rp_GenGlobalTrigEnable(&sig_gen_handle, triggerSourceMask);
+    rp_GenGlobalTrigSet(&sig_gen_handle, triggerSourceMask);
 
     rp_GenRun(&sig_gen_handle);
 

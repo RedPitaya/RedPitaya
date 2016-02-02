@@ -60,3 +60,18 @@ int common_Close(rp_handle_uio_t *handle) {
     // TODO
     return r;
 }
+
+/**
+ *  Check if value x is in range
+ *  @return true if value x is in [minval,maxval] range
+ */
+bool inrangeUint32(uint32_t x, uint32_t minval, uint32_t maxval)
+{
+    return (x >= minval) && (x <= maxval);
+}
+
+bool inrangeDouble(double x, double minval, double maxval)
+{
+    return (x >= minval) && (x <= maxval);
+}
+

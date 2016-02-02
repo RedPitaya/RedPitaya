@@ -349,7 +349,7 @@ typedef enum patternType{
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state);
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                double sample_rate,
+                                double * sample_rate,
                                 uint32_t shots,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask);

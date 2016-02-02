@@ -34,7 +34,9 @@ int suite_sig_gen_cleanup(void)
 void sig_gen_test(void)
 {
     rp_DigSigGenOuput(true);
-    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,(125e6/2),0,0,RP_TRG_DGEN_SWE_MASK);
+    double sample_rate=125e6;
+    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
+    //printf("sample rate %lf",sample_rate);
     rp_DigSigGenSoftwareControl(1);
     sleep(5);
 }
