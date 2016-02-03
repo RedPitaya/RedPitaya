@@ -34,7 +34,6 @@
 
 /** Configuration registers */
 typedef struct {
-    uint32_t acq;     ///< acq. configuration register
     uint32_t pre;     ///< pre-trigger [number of samples] ; 0 - means that no sample will be taken before trigger
     uint32_t pst;     ///< post-trigger [number of samples] ; 0 - means that no sample will be taken after trigger
 } rp_la_cfg_regset_t;
@@ -49,9 +48,7 @@ typedef struct {
 
 /** Decimation  */
 typedef struct {
-    uint32_t avg;  ///< (not used by logic analyzer!)
     uint32_t dec;  ///<  sample rate = 125Msps/(dec+1)
-    uint32_t shr;  ///< (not used by logic analyzer!)
 } rp_la_decimation_regset_t;
 
 /** Data buf. pointers  */
@@ -65,9 +62,12 @@ typedef struct {
 
 /** logic analyzer acquire structure declaration */
 typedef struct {
-    uint32_t ctl;                   ///< control register
-    uint32_t trig_mask;             ///< global trigger registers
+    uint32_t ctl;                   ///< 0x00 control register
+    uint32_t cfg__aut_con;          ///< 0x04 configuration (bits to enable automatic and continuous modes)
+    uint32_t trig_mask;             ///< 0x08 global trigger registers
+    uint32_t reserved_0c;
     rp_la_cfg_regset_t cfg;         ///< configuration registers
+    uint32_t reserved_18_3c [(0x40-0x18)>>2];
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
     //rp_data_ptrs_regset_t dpt;    ///< data buf. pointers

@@ -61,7 +61,6 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
     rp_LaAcqGlobalTrigSet(handle,RP_TRG_ALL_MASK);
 
     rp_la_cfg_regset_t cfg;
-    cfg.acq=0;
     cfg.pre=0;
     cfg.pst=0;
     rp_LaAcqSetConfig(handle,cfg);
@@ -74,9 +73,7 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
     rp_LaAcqSetTrigSettings(handle,trg);
 
     rp_la_decimation_regset_t dec;
-    dec.avg=0;
     dec.dec=0;
-    dec.shr=0;
     rp_LaAcqSetDecimation(handle,dec);
 
     return RP_OK;
@@ -140,7 +137,6 @@ int rp_LaAcqSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg) {
          inrangeUint32(a_reg.pst,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MIN))){
          return RP_EOOR;
     }
-    iowrite32(a_reg.acq, &regset->acq);
     iowrite32(a_reg.pre, &regset->pre);
     iowrite32(a_reg.pst, &regset->pst);
     return RP_OK;
@@ -148,7 +144,6 @@ int rp_LaAcqSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg) {
 
 int rp_LaAcqGetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg) {
     rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->cfg);
-    a_reg->acq = ioread32(&regset->acq);
     a_reg->pre = ioread32(&regset->pre);
     a_reg->pst = ioread32(&regset->pst);
     return RP_OK;
@@ -176,17 +171,13 @@ int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg)
 /** Decimation settings setter & getter */
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg) {
     rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->dec);
-    iowrite32(a_reg.avg, &regset->avg);
     iowrite32(a_reg.dec, &regset->dec);
-    iowrite32(a_reg.shr, &regset->shr);
     return RP_OK;
 }
 
 int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg) {
     rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->dec);
-    a_reg->avg = ioread32(&regset->avg);
     a_reg->dec = ioread32(&regset->dec);
-    a_reg->shr = ioread32(&regset->shr);
     return RP_OK;
 }
 

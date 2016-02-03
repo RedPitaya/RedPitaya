@@ -320,7 +320,6 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     rp_LaAcqSetDecimation(&la_acq_handle, dec);
 
     rp_la_cfg_regset_t cfg;
-    cfg.acq=0;
     cfg.pre=noOfPreTriggerSamples;
     cfg.pst=noOfPostTriggerSamples;
     rp_LaAcqSetConfig(&la_acq_handle, cfg);
