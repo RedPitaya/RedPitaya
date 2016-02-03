@@ -26,9 +26,8 @@ static const int ID_BASE_SIZE = 0x1000;
 // Id structure declaration
 typedef struct {
     uint32_t id;            // 0x00
-    uint32_t dna_lo;        // 0x04
-    uint32_t dna_hi;        // 0x08
-    uint32_t reserved_0c;   // 0x0c
+    uint32_t reserved_04;   // 0x04
+    uint64_t dna;           // 0x04 - 0x08
     uint32_t gith[5];       // 0x10 - 0x20
 } id_regset_t;
 

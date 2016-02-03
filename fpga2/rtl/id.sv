@@ -14,9 +14,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module id #(
-  bit [160-1:0] GITH = '0,  // GIT hash full length
-  bit  [57-1:0] DNA = 57'h0823456789ABCDE,
-  bit  [32-1:0] ID = {28'h0, 4'h1} // {reserved, board type}:  1 - release 1
+  bit [40*8-1:0] GITH = '0,  // GIT hash full length
+  bit   [57-1:0] DNA = 57'h0823456789ABCDE,
+  bit   [32-1:0] ID = {28'h0, 4'h1} // {reserved, board type}:  1 - release 1
 )(
   // system bus
   sys_bus_if.s           bus
@@ -87,10 +87,10 @@ end else begin
   bus.ack <= sys_en;
   casez (bus.addr[BDW-1:0])
     // ID
-    'h00:  bus.rdata <= {                ID                };
+    'h00:  bus.rdata <= ID;
     // DNA
-    'h04:  bus.rdata <= {                dna_value[32-1: 0]};
-    'h08:  bus.rdata <= {{64- 57{1'b0}}, dna_value[57-1:32]};
+    'h08:  bus.rdata <= {                            dna_value[32-1: 0]};
+    'h0c:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
     // GITH
     'h10:  bus.rdata <= GITH[32*0+:32];
     'h14:  bus.rdata <= GITH[32*1+:32];
@@ -100,5 +100,7 @@ end else begin
     default: bus.rdata <= '0;
   endcase
 end
+
+type(GITH) gith = GITH;
 
 endmodule: id

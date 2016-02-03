@@ -7,7 +7,7 @@
 
 module red_pitaya_top #(
   // identification
-  bit [160-1:0] GITH = '0,
+  bit [40*8-1:0] GITH = '0,
   // module numbers
   int unsigned MNA = 2,  // number of acquisition modules
   int unsigned MNG = 2   // number of generator   modules

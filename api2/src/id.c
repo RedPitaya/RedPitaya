@@ -44,8 +44,7 @@ int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id) {
 
 int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna) {
     id_regset_t *regset = (id_regset_t *) handle->regset;
-    *dna = ((uint64_t) ioread32(&regset->dna_hi) << 32)
-         | ((uint64_t) ioread32(&regset->dna_lo) <<  0);
+    *dna = ioread64(&regset->dna);
     return RP_OK;
 }
 

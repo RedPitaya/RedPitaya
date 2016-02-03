@@ -64,6 +64,8 @@ initial begin
   repeat(100) @(posedge clk);
   axi_write (0,'h01234567);
   axi_write ((0 << 19) + 'h30, 'ha5);
+  repeat(1000) @(posedge clk);
+  test_id (32'h40000000);
   test_lg (32'h402c0000);
   test_la (32'h40300000);
   repeat(16) @(posedge clk);
@@ -215,6 +217,18 @@ task test_la (
 
 endtask: test_la
 
+task test_id (
+  int unsigned base
+);
+  int unsigned dat;
+  // configure trigger
+  axi_read(base+'h10, dat);
+  axi_read(base+'h14, dat);
+  axi_read(base+'h18, dat);
+  axi_read(base+'h1c, dat);
+  axi_read(base+'h20, dat);
+endtask: test_id
+
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +281,9 @@ wire          [ 8-1:0] led;
 
 glbl glbl();
 
-red_pitaya_top top (
+red_pitaya_top #(
+  .GITH ("a0a1a2a3b0b1b2b3c0c1c2c3d0d1d2d3e0e1e2e3")
+) top (
   // PS connections
   .FIXED_IO_mio      (FIXED_IO_mio     ),
   .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
