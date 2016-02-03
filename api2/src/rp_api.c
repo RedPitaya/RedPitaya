@@ -606,7 +606,7 @@ RP_STATUS rp_DigSigGenOuput(bool enable)
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 {
 	rp_GenTrigger(&sig_gen_handle);
-    //rp_GenFpgaRegDump(&sig_gen_handle,0);
+   // rp_GenFpgaRegDump(&sig_gen_handle,0);
     return RP_API_OK;
 }
 

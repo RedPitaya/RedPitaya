@@ -51,8 +51,8 @@
 #define RP_GEN_SIG_SAMPLES (1<<14) ///< 16384
 
 /** Mode masks */
-#define RP_GEN_CFG_BURST_MASK (1<<0)      ///< if set generator will operate in burst mode, otherwise periodic mode
-#define RP_GEN_CFG_BURST_INF_MASK (1<<1)  ///< if set cfg_bnm will be inf regardless of cfg_bnm setting
+#define RP_GEN_CFG_BURST_MASK       (1<<0)  ///< if set generator will operate in burst mode, otherwise periodic mode
+#define RP_GEN_CFG_BURST_INF_MASK   (1<<1)  ///< if set cfg_bnm will be inf regardless of cfg_bnm setting
 
 typedef enum {
     RP_GEN_MODE_CONTINUOUS,
@@ -63,7 +63,7 @@ typedef enum {
 /** Output enable */
 #define RP_GEN_OUT_ALL_MASK  0xffff
 #define RP_GEN_OUT_PORT0_MASK 0x00ff ///< lower  8 pins (RP hw 1.1 P_GPIO_PORT)
-#define RP_GEN_OUT_PORT1_MASK 0xff00 ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
+#define RP_GEN_OUT_PORT1_MASK 0xffff ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
 
 // Analog generator specific
 // linear transformation
@@ -98,9 +98,8 @@ typedef struct {
         lg_spec_regset_t lg_spec;
         ag_regset_t      ag_spec;
     } gen_spec;
-
     // empty space
-    uint32_t reserved_30 [(1<<RP_GEN_CWM)-0x30];
+    uint32_t reserved_30[(1<<RP_GEN_CWM)-(0x30>>2)-2];
     // table
     uint32_t  table [RP_GEN_SIG_SAMPLES];
 } asg_regset_t;

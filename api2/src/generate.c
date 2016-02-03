@@ -59,7 +59,7 @@ int rp_GenClose(rp_handle_uio_t *handle) {
 int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
     rp_GenGlobalTrigSet(handle,RP_TRG_ALL_MASK);
     //rp_GenSetFreqPhase(handle, 0, 0); // TODO: not used
-    rp_GenSetMode(handle, RP_GEN_CFG_BURST_MASK);
+    rp_GenSetMode(handle, RP_GEN_MODE_BURST);
     rp_GenSetBurstModeRepetitions(handle, 0);
     rp_GenSetBurstModeDataLen(handle, 1);
     rp_GenSetBurstModePeriodLen(handle, 1);
@@ -334,6 +334,7 @@ int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t a_mask)
     tmp=ioread32(&regset->gen_spec.lg_spec.dig_out_en);
     tmp|=a_mask;
     iowrite32(tmp, &regset->gen_spec.lg_spec.dig_out_en);
+    iowrite32(0, &regset->gen_spec.lg_spec.dig_openc);
     return RP_OK;
 }
 
@@ -344,6 +345,7 @@ int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t a_mask)
     tmp=ioread32(&regset->gen_spec.lg_spec.dig_out_en);
     tmp&=~a_mask;
     iowrite32(tmp, &regset->gen_spec.lg_spec.dig_out_en);
+    iowrite32(0, &regset->gen_spec.lg_spec.dig_openc);
     return RP_OK;
 }
 
@@ -365,7 +367,7 @@ int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len)
     r=FpgaRegDump(0,(uint32_t*)handle->regset,13);
 
     {
-        lg_spec_regset_t *regset = (lg_spec_regset_t *) &(((gen_regset_t*)handle->regset)->gen_spec.lg_spec);
+        lg_spec_regset_t *regset = (lg_spec_regset_t *) &(((asg_regset_t*)handle->regset)->gen_spec.lg_spec);
         FpgaRegDump(0,(uint32_t*)regset,2);
     }
 
