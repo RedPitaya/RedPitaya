@@ -363,6 +363,13 @@ int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len)
 {
     int r;
     r=FpgaRegDump(0,(uint32_t*)handle->regset,13);
+
+    {
+        lg_spec_regset_t *regset = (lg_spec_regset_t *) &(((gen_regset_t*)handle->regset)->gen_spec.lg_spec);
+        FpgaRegDump(0,(uint32_t*)regset,2);
+    }
+
+
     if(!inrangeUint32(data_len,1,RP_GEN_SIG_SAMPLES)){
             return RP_EOOR;
     }
