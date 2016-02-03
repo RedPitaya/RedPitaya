@@ -132,7 +132,7 @@ CLM_T [MNG-1:0] dac_cfg_mul;  // gain
 CLS_T [MNG-1:0] dac_cfg_sum;  // offset
 
 // triggers
-struct packed {
+typedef struct packed {
   // GPIO
   logic   [2-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
@@ -147,7 +147,29 @@ struct packed {
   // logic analyzer
   logic           la_out;
   logic           la_swo;
-} trg;
+} trg_t;
+
+trg_t trg;
+
+// interrupts
+typedef struct packed {
+  // GPIO
+  logic   [1-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
+  // analog generator
+  logic [MNG-1:0] gen_trg;  // event    triggers
+  logic [MNG-1:0] gen_stp;  // software triggers
+  // analog acquire
+  logic [MNA-1:0] acq_trg;  // trigger
+  logic [MNA-1:0] acq_stp;  // stop
+  // logic generator
+  logic           lg_trg;
+  logic           lg_stp;
+  // logic analyzer
+  logic           la_trg;
+  logic           la_stp;
+} irq_t;
+
+irq_t irq;
 
 // system bus
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
@@ -229,14 +251,14 @@ red_pitaya_ps ps (
   .DDR_reset_n   (DDR_reset_n ),
   .DDR_we_n      (DDR_we_n    ),
   // system signals
-  .clk           (adc_clk     ),
-  .rstn          (adc_rstn    ),
   .fclk_clk_o    (fclk        ),
   .fclk_rstn_o   (frstn       ),
   // ADC analog inputs
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
-   // system read/write channel
+  // interrupts
+  .irq           (irq         ),
+  // system read/write channel
   .bus           (ps_sys      ),
   // AXI streams
   .sti           (str_drx     ),
@@ -315,6 +337,8 @@ gpio #(.DW (GDW)) gpio (
   .gpio_e  (gpio_e),
   .gpio_o  (gpio_o),
   .gpio_i  (gpio_i),
+  // interrupt
+  .irq     (irq.gio_out),
   // system bus
   .bus     (sys[2])
 );
@@ -412,6 +436,8 @@ gpio #(.DW (8)) led (
   .gpio_e  (     ),
   .gpio_o  (led_o),
   .gpio_i  (led_o),
+  // interrupts
+  .irq     (),
   // system bus
   .bus     (sys[3])
 );
@@ -617,6 +643,9 @@ asg_top #(
   .trg_ext   (trg),
   .trg_swo   (trg.gen_swo[i]),
   .trg_out   (trg.gen_out[i]),
+  // interrupts
+  .irq_trg   (irq.gen_trg[i]),
+  .irq_stp   (irq.gen_stp[i]),
   // System bus
   .bus       (sys[7+i])
 );
@@ -643,6 +672,9 @@ scope_top #(
   .trg_ext   (trg),
   .trg_swo   (trg.acq_swo[i]),
   .trg_out   (trg.acq_out[i]),
+  // interrupts
+  .irq_trg   (irq.acq_trg[i]),
+  .irq_stp   (irq.acq_stp[i]),
   // System bus
   .bus       (sys[9+i])
 );
@@ -665,6 +697,9 @@ asg_top #(
   .trg_ext   (trg),
   .trg_swo   (trg.lg_swo),
   .trg_out   (trg.lg_out),
+  // interrupts
+  .irq_trg   (irq.lg_trg),
+  .irq_stp   (irq.lg_stp),
   // System bus
   .bus       (sys[11])
 );
@@ -686,6 +721,9 @@ la_top #(
   .trg_ext   (trg),
   .trg_swo   (trg.la_swo),
   .trg_out   (trg.la_out),
+  // interrupts
+  .irq_trg   (irq.la_trg),
+  .irq_stp   (irq.la_stp),
   // System bus
   .bus       (sys[12])
 );

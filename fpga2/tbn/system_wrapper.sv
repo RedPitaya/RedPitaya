@@ -101,6 +101,16 @@ module system_wrapper #(
   input  logic          M_AXI_STR_TX3_tready, M_AXI_STR_TX2_tready, M_AXI_STR_TX1_tready, M_AXI_STR_TX0_tready,
   output logic          M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid,
 
+  // IRQ
+  input  logic        IRQ_GPIO,
+  input  logic        IRQ_LG  ,
+  input  logic        IRQ_LA  ,
+  input  logic        IRQ_GEN0,
+  input  logic        IRQ_GEN1,
+  input  logic        IRQ_SCP0,
+  input  logic        IRQ_SCP1,
+
+  // XADC
   input  logic        Vaux0_v_n,
   input  logic        Vaux0_v_p,
   input  logic        Vaux1_v_n,

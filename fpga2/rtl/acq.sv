@@ -15,6 +15,9 @@ module acq #(
   str_bus_if.s  sto,
   // current time stamp
   input  logic [TW-1:0] cts,
+  // interrupts
+  output logic          irq_trg,  // trigger
+  output logic          irq_stp,  // stop
   // control
   input  logic          ctl_rst,
   // configuration (mode)
@@ -112,6 +115,10 @@ end else begin
     end
   end
 end
+
+// interrupts
+assign irq_trg = sts_acq & trg & ~sts_trg;  // trigger
+assign irq_stp = sts_stp;  // stop
 
 ////////////////////////////////////////////////////////////////////////////////
 // output stream

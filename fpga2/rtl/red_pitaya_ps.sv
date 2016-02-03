@@ -50,13 +50,13 @@ module red_pitaya_ps (
   inout  logic           DDR_reset_n        ,
   inout  logic           DDR_we_n           ,
   // system signals
-  input  logic           clk                ,
-  input  logic           rstn               ,
   output logic [  4-1:0] fclk_clk_o         ,
   output logic [  4-1:0] fclk_rstn_o        ,
   // XADC
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
+  // interrupts
+  input  logic  [13-1:0] irq,
   // system read/write channel
   sys_bus_if.m           bus,
   // stream input
@@ -71,7 +71,7 @@ module red_pitaya_ps (
 logic [4-1:0] fclk_clk ;
 logic [4-1:0] fclk_rstn;
 
-axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (rstn));
+axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
 
 axi4_slave #(
   .DW (32),
@@ -187,7 +187,16 @@ system_wrapper system_i (
   .M_AXI_STR_TX3_tkeep   (sao[3].TKEEP  ),  .M_AXI_STR_TX2_tkeep   (sao[2].TKEEP  ),  .M_AXI_STR_TX1_tkeep   (sao[1].TKEEP  ),  .M_AXI_STR_TX0_tkeep   (sao[0].TKEEP  ),
   .M_AXI_STR_TX3_tlast   (sao[3].TLAST  ),  .M_AXI_STR_TX2_tlast   (sao[2].TLAST  ),  .M_AXI_STR_TX1_tlast   (sao[1].TLAST  ),  .M_AXI_STR_TX0_tlast   (sao[0].TLAST  ),
   .M_AXI_STR_TX3_tready  (sao[3].TREADY ),  .M_AXI_STR_TX2_tready  (sao[2].TREADY ),  .M_AXI_STR_TX1_tready  (sao[1].TREADY ),  .M_AXI_STR_TX0_tready  (sao[0].TREADY ),
-  .M_AXI_STR_TX3_tvalid  (sao[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (sao[2].TVALID ),  .M_AXI_STR_TX1_tvalid  (sao[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (sao[0].TVALID )
+  .M_AXI_STR_TX3_tvalid  (sao[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (sao[2].TVALID ),  .M_AXI_STR_TX1_tvalid  (sao[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (sao[0].TVALID ),
+  // IRQ
+  // TODO: actual interrupts should be connnected
+  .IRQ_GPIO (1'b0),
+  .IRQ_LG   (1'b0),
+  .IRQ_LA   (1'b0),
+  .IRQ_GEN0 (1'b0),
+  .IRQ_GEN1 (1'b0),
+  .IRQ_SCP0 (1'b0),
+  .IRQ_SCP1 (1'b0)
 );
 
 localparam int unsigned DN=2;

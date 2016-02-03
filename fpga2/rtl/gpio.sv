@@ -11,6 +11,8 @@ module gpio #(
   output logic [DW-1:0] gpio_e,  // output enable
   output logic [DW-1:0] gpio_o,  // output
   input  logic [DW-1:0] gpio_i,  // input
+  // interrupt
+  output logic          irq,
   // system bus
   sys_bus_if.s          bus
 );
@@ -47,5 +49,8 @@ end else begin
     default: bus.rdata <= '0;
   endcase
 end
+
+// TODO
+assign irq = 1'b0;
 
 endmodule: gpio

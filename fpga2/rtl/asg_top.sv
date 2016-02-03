@@ -43,6 +43,9 @@ module asg_top #(
   input  logic  [TN-1:0] trg_ext,  // external input
   output logic           trg_swo,  // output from software
   output logic           trg_out,  // output from engine
+  // interrupts
+  output logic           irq_trg,  // trigger
+  output logic           irq_stp,  // stop
   // System bus
   sys_bus_if.s           bus
 );
@@ -58,6 +61,20 @@ assign bus_buf.ren   = bus.ren & bus.addr[CWM+2];
 assign bus_buf.wen   = bus.wen & bus.addr[CWM+2];
 assign bus_buf.addr  = bus.addr[2+:CWM];
 assign bus_buf.wdata = bus.wdata;
+
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  bus.err <= 1'b0;
+  bus.ack <= 1'b0;
+end else begin
+  if (~bus.addr[CWM+2]) begin
+    bus.err <= 1'b0;
+    bus.ack <= bus.wen | bus.ren;
+  end else begin
+    bus.err <= bus_buf.err;
+    bus.ack <= bus_buf.ack;
+  end
+end
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -79,24 +96,6 @@ logic     [ 16-1:0] cfg_bnm;  // burst repetitions
 // linear offset and gain
 DAT_M               cfg_mul;
 DAT_S               cfg_sum;
-
-// control signals
-logic  bus_en;
-assign bus_en = bus.wen | bus.ren;
-
-always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
-  bus.err <= 1'b0;
-  bus.ack <= 1'b0;
-end else begin
-  if (~bus.addr[CWM+2]) begin
-    bus.err <= 1'b0;
-    bus.ack <= bus_en;
-  end else begin
-    bus.err <= bus_buf.err;
-    bus.ack <= bus_buf.ack;
-  end
-end
 
 localparam int unsigned BAW=6;
 
@@ -138,8 +137,8 @@ end else begin
 end
 
 // control signals
-assign ctl_rst = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]==20'h00) & bus.wdata[0];  // reset
-assign trg_swo = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]==20'h00) & bus.wdata[1];  // trigger
+assign ctl_rst = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]=='h00) & bus.wdata[0];  // reset
+assign trg_swo = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]=='h00) & bus.wdata[1];  // trigger
 
 // read access
 always_ff @(posedge bus.clk)
@@ -186,6 +185,9 @@ asg #(
   // trigger
   .trg_i     (trg_ext),
   .trg_o     (trg_out),
+  // interrupts
+  .irq_trg  (irq_trg),
+  .irq_stp  (irq_stp),
   // control
   .ctl_rst   (ctl_rst),
   // configuration

@@ -13,6 +13,8 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate /${top}/clk
 add wave -noupdate /${top}/rstn
 add wave -noupdate /${top}/led
+add wave -noupdate /${top}/exp_p_io
+add wave -noupdate /${top}/exp_n_io
 # busses
 #axi4_lite_if axi4_lite /${top}/top/ps/axi4_lite
 axi4_if      axi_gp    /${top}/top/ps/axi_gp
@@ -23,6 +25,10 @@ sys_bus_if   sys_la    /${top}/top/sys\[12\]
 #str_bus_if   str_drx_2 /${top}/top/str_drx\[2\]
 str_bus_if   str_lgo /${top}/top/str_lgo
 str_bus_if   str_lai /${top}/top/str_lai
+# LG
+add wave -noupdate -group LG /${top}/top/lg/*
+# LA
+add wave -noupdate -group LA /${top}/top/la/*
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

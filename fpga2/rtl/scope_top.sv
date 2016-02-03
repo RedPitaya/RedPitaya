@@ -52,6 +52,9 @@ module scope_top #(
   input  logic  [TN-1:0] trg_ext,  // external input
   output logic           trg_swo,  // output from software
   output logic           trg_out,  // output from edge detection
+  // interrupts
+  output logic           irq_trg,  // trigger
+  output logic           irq_stp,  // stop
   // System bus
   sys_bus_if.s           bus
 );
@@ -329,6 +332,9 @@ acq #(
   .sto      (sto),
   // current time stamp
   .cts      (cts),
+  // interrupts
+  .irq_trg  (irq_trg),
+  .irq_stp  (irq_stp),
   // control
   .ctl_rst  (ctl_rst),
   // configuration (mode)

@@ -210,7 +210,7 @@ task test_la (
   // enable LG trigger source
   axi_write(base+'h08, 'b0010);
   // start acquire
-  axi_write(base+'h00, 3'b0100);
+  axi_write(base+'h00, 4'b0100);
   repeat(1000) @(posedge clk);
 
 endtask: test_la

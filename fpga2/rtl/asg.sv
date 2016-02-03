@@ -99,6 +99,9 @@ module asg #(
   // trigger
   input  logic      [TN-1:0] trg_i  ,  // input
   output logic               trg_o  ,  // output event
+  // interrupts
+  output logic               irq_trg,  // trigger
+  output logic               irq_stp,  // stop
   // configuration (periodic mode)
   input  logic      [TN-1:0] cfg_trg,  // trigger mask
   input  logic [CWM+CWF-1:0] cfg_siz,  // data table size
@@ -229,6 +232,10 @@ assign trg = |(trg_i & cfg_trg);
 
 assign sts_trg = sts_run ? sts_rpt : trg;
 assign sts_rpt = sts_run & (cnt_bln==cfg_bln) & cfg_ben;
+
+// interrupts
+assign irq_trg = sts_trg;
+assign irq_stp = 1'b0;  // TODO
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
