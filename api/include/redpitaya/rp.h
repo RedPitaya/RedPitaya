@@ -267,6 +267,13 @@ typedef struct wf_func_table_t {
  */
 int rp_Init();
 
+/**
+ * Initializes the library. same as rp_Init but without reseting all modules.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_InitWithoutReset();
+
 int rp_CalibInit();
 
 /**

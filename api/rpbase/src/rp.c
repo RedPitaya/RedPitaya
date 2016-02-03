@@ -48,6 +48,20 @@ int rp_Init()
     return RP_OK;
 }
 
+int rp_InitWithoutReset()
+{
+    ECHECK(cmn_Init());
+    
+    ECHECK(calib_Init());
+    ECHECK(hk_Init());
+    ECHECK(ams_Init());
+    ECHECK(generate_Init());
+    ECHECK(osc_Init());
+    // TODO: Place other module initializations here
+
+    return RP_OK;
+}
+
 int rp_CalibInit()
 {
     ECHECK(calib_Init());
