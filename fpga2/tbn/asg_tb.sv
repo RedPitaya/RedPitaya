@@ -38,8 +38,8 @@ logic [CWM+CWF-1:0] cfg_off;  // pointer initial offset (used to define phase)
 // configuration (burst mode)
 logic               cfg_ben;  // burst enable
 logic               cfg_inf;  // infinite
-logic    [  16-1:0] cfg_bdl;  // number of data cycle
-logic    [  32-1:0] cfg_bil;  // number of delay cycles
+logic    [  16-1:0] cfg_bdl;  // data length
+logic    [  32-1:0] cfg_bln;  // period length (data+idle)
 logic    [  16-1:0] cfg_bnm;  // number of repetitions
 
 // stream input/output
@@ -70,7 +70,7 @@ initial begin
   cfg_ben = 1'b0;
   cfg_inf = 0;
   cfg_bdl = 0;
-  cfg_bil = 0;
+  cfg_bln = 0;
   cfg_bnm = 0;
 
   // initialization
@@ -130,7 +130,7 @@ asg #(
   .cfg_ben  (cfg_ben),
   .cfg_inf  (cfg_inf),
   .cfg_bdl  (cfg_bdl),
-  .cfg_bil  (cfg_bil),
+  .cfg_bln  (cfg_bln),
   .cfg_bnm  (cfg_bnm),
   // CPU buffer access
   .bus      (bus)

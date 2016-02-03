@@ -309,7 +309,6 @@ int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t val)
 
 int rp_GenSetBurstModeDataLen(rp_handle_uio_t *handle, uint32_t length)
 {
-
     asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
     if(!inrangeUint32(length,1,RP_GEN_SIG_SAMPLES)){
          return RP_EOOR;
@@ -324,7 +323,7 @@ int rp_GenSetBurstModePeriodLen(rp_handle_uio_t *handle, uint32_t length)
     if(!inrangeUint32(length,BURST_PERIOD_LEN_MIN,BURST_PERIOD_LEN_MAX)){
          return RP_EOOR;
     }
-    iowrite32((length-1), &regset->cfg_bil);
+    iowrite32((length-1), &regset->cfg_bln);
     return RP_OK;
 }
 

@@ -86,7 +86,7 @@ typedef struct {
     // burst mode
     uint32_t cfg_bst;  ///< enables & configures burst mode
     uint32_t cfg_bdl;  ///< burst data length
-    uint32_t cfg_bil;  ///< burst period length (data length + idle length)
+    uint32_t cfg_bln;  ///< burst period length (data length + idle length)
     uint32_t cfg_bnm;  ///< burst repetition number
 
     // empty space
