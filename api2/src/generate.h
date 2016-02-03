@@ -73,6 +73,11 @@ typedef struct {
 } ag_regset_t;
 
 typedef struct {
+    uint32_t dig_out_en;
+    uint32_t dig_openc;
+} lg_spec_regset_t;
+
+typedef struct {
     // control register
     uint32_t ctl; ///< control register
     uint32_t trig_mask; ///< global trigger registers
@@ -88,27 +93,17 @@ typedef struct {
     uint32_t cfg_bdl;  ///< burst data length
     uint32_t cfg_bln;  ///< burst period length (data length + idle length)
     uint32_t cfg_bnm;  ///< burst repetition number
+    // specific regs
+    union {
+        lg_spec_regset_t lg_spec;
+        ag_regset_t      ag_spec;
+    } gen_spec;
 
     // empty space
     uint32_t reserved_30 [(1<<RP_GEN_CWM)-0x30];
     // table
     uint32_t  table [RP_GEN_SIG_SAMPLES];
 } asg_regset_t;
-
-typedef struct {
-    uint32_t dig_out_en;
-    uint32_t dig_openc;
-} lg_spec_regset_t;
-// ??
-typedef struct {
-    // ASG registers
-    asg_regset_t    asg;
-    // specific regs
-    union {
-        lg_spec_regset_t lg_spec;
-        ag_regset_t ag_spec;
-    } gen_spec;
-} gen_regset_t;
 
 /**
 * Common functions / controls
