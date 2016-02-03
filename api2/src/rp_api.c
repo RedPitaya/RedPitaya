@@ -58,15 +58,14 @@ uio0: name=id, version=devicetree, events=0
 RP_STATUS rp_OpenUnit(void)
 {
     int r=RP_API_OK;
-
-    if(rp_LaAcqOpen(c_dummy_dev, &la_acq_handle)!=RP_API_OK){
-    //if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
+    /*
+    if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
         r=-1;
     }
 
     rp_LaAcqFpgaRegDump(&la_acq_handle);
-
-    //if(rp_GenOpen(c_dummy_dev, &sig_gen_handle)!=RP_API_OK){
+    */
+   // if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
     if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
@@ -79,9 +78,11 @@ RP_STATUS rp_OpenUnit(void)
 RP_STATUS rp_CloseUnit(void)
 {
     int r=RP_API_OK;
-    if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
+
+    /*if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
         r=-1;
     }
+    */
     if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
@@ -645,7 +646,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    //rp_GenFpgaRegDump(&sig_gen_handle,len);
+    rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }

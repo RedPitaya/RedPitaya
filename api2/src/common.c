@@ -41,9 +41,9 @@ int common_Open(const char *dev, rp_handle_uio_t *handle) {
         }
         // get regset pointer
         handle->regset = mmap(NULL, handle->length, PROT_READ|PROT_WRITE, MAP_SHARED, handle->fd, 0x0);
-         printf("1:0x%08x\n\r",(uint32_t)handle->regset);
+        //printf("1:0x%08x\n\r",(uint32_t)handle->regset);
         if (handle->regset == MAP_FAILED) {
-            printf("2:0x%08x\n\r",(uint32_t)handle->regset);
+            //printf("2:0x%08x\n\r",(uint32_t)handle->regset);
             return -1;
         }
     }

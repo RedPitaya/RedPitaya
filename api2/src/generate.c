@@ -58,7 +58,7 @@ int rp_GenClose(rp_handle_uio_t *handle) {
 
 int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
     rp_GenGlobalTrigSet(handle,RP_TRG_ALL_MASK);
-    rp_GenSetFreqPhase(handle, 0, 0); // TODO: not used
+    //rp_GenSetFreqPhase(handle, 0, 0); // TODO: not used
     rp_GenSetMode(handle, RP_GEN_CFG_BURST_MASK);
     rp_GenSetBurstModeRepetitions(handle, 0);
     rp_GenSetBurstModeDataLen(handle, 1);
