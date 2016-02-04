@@ -1,27 +1,27 @@
+source "axi4_if.tcl"
+source "axi4_lite_if.tcl"
+source "axi4_stream_if.tcl"
+source "str_bus_if.tcl"
+source "sys_bus_if.tcl"
+
+# set top hierarcy name
+set top la_trigger_tb
+set dut la_trigger
+
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /la_trigger_tb/clk
-add wave -noupdate /la_trigger_tb/rstn
-add wave -noupdate /la_trigger_tb/la_trigger/ctl_rst
-add wave -noupdate /la_trigger_tb/la_trigger/cfg_old_val
-add wave -noupdate /la_trigger_tb/la_trigger/cfg_old_msk
-add wave -noupdate /la_trigger_tb/la_trigger/cfg_cur_val
-add wave -noupdate /la_trigger_tb/la_trigger/cfg_cur_msk
-add wave -noupdate /la_trigger_tb/la_trigger/sts_trg
-add wave -noupdate -expand -group str /la_trigger_tb/str/*
-add wave -noupdate -expand -group str /la_trigger_tb/str_src/str_trn
-add wave -noupdate -expand -group str /la_trigger_tb/str_src/str_ena
-add wave -noupdate -expand -group str /la_trigger_tb/str_src/buf_siz
 
-# difine Radix
-radix signal /la_trigger_tb/la_trigger/cfg_old_val -hexadecimal
-radix signal /la_trigger_tb/la_trigger/cfg_old_msk -hexadecimal
-radix signal /la_trigger_tb/la_trigger/cfg_cur_val -hexadecimal
-radix signal /la_trigger_tb/la_trigger/cfg_cur_msk -hexadecimal
-radix signal /la_trigger_tb/str/dat -hexadecimal
-radix signal /la_trigger_tb/str_src/buf_siz -decimal -unsigned
-radix signal /la_trigger_tb/str_drn/buf_siz -decimal -unsigned
-#-fpoint
+add wave -noupdate              /${top}/clk
+add wave -noupdate              /${top}/rstn
+add wave -noupdate              /${top}/${dut}/ctl_rst
+add wave -noupdate -hexadecimal /${top}/${dut}/cfg_cmp_msk
+add wave -noupdate -hexadecimal /${top}/${dut}/cfg_cmp_val
+add wave -noupdate -hexadecimal /${top}/${dut}/cfg_edg_pos
+add wave -noupdate -hexadecimal /${top}/${dut}/cfg_edg_neg
+add wave -noupdate              /${top}/${dut}/sts_trg
+
+# busses
+str_bus_if str /${top}/str
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

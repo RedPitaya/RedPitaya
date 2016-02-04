@@ -1,25 +1,25 @@
+source "axi4_if.tcl"
+source "axi4_lite_if.tcl"
+source "axi4_stream_if.tcl"
+source "str_bus_if.tcl"
+source "sys_bus_if.tcl"
+
+# set top hierarcy name
+set top str_dec_tb
+set dut str_dec
+
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /str_dec_tb/clk
-add wave -noupdate /str_dec_tb/rstn
-add wave -noupdate /str_dec_tb/str_dec/ctl_rst
-add wave -noupdate /str_dec_tb/str_dec/cfg_dec
-add wave -noupdate -expand -group sti /str_dec_tb/sti/*
-add wave -noupdate -expand -group sti /str_dec_tb/str_src/str_trn
-add wave -noupdate -expand -group sti /str_dec_tb/str_src/str_ena
-add wave -noupdate -expand -group sti /str_dec_tb/str_src/buf_siz
-add wave -noupdate -expand -group sto /str_dec_tb/sto/*
-add wave -noupdate -expand -group sto /str_dec_tb/str_drn/str_trn
-add wave -noupdate -expand -group sto /str_dec_tb/str_drn/str_ena
-add wave -noupdate -expand -group sto /str_dec_tb/str_drn/buf_siz
 
-# difine Radix
-radix signal /str_dec_tb/str_dec/cfg_dec -decimal -unsigned
-radix signal /str_dec_tb/str_src/buf_siz -decimal -unsigned
-radix signal /str_dec_tb/str_drn/buf_siz -decimal -unsigned
-radix signal /str_dec_tb/sti/dat -hexadecimal
-radix signal /str_dec_tb/sto/dat -hexadecimal
-#-fpoint
+add wave -noupdate           /${top}/clk
+add wave -noupdate           /${top}/rstn
+add wave -noupdate           /${top}/${dut}/ctl_rst
+add wave -noupdate -unsigned /${top}/${dut}/cfg_dec
+
+# busses
+str_bus_if sti /${top}/sti
+str_bus_if sto /${top}/sto
+
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}
