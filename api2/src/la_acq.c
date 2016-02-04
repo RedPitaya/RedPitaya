@@ -61,8 +61,8 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
     rp_LaAcqGlobalTrigSet(handle,RP_TRG_ALL_MASK);
 
     rp_la_cfg_regset_t cfg;
-    cfg.pre=0;
-    cfg.pst=0;
+    cfg.pre=10;
+    cfg.pst=10;
     rp_LaAcqSetConfig(handle,cfg);
 
     rp_la_trg_regset_t trg;
@@ -114,11 +114,11 @@ int rp_LaAcqTriggerAcq(rp_handle_uio_t *handle) {
 int rp_LaAcqAcqIsStopped(rp_handle_uio_t *handle, bool * status){
     uint32_t ctl;
     rp_LaAcqGetControl(handle, &ctl);
-    if(ctl&RP_CTL_STA_MASK){
-        *status=false;
+    if(ctl&RP_CTL_STO_MASK){
+        *status=true;
     }
     else{
-        *status=true;
+        *status=false;
     }
     return RP_OK;
 }
@@ -133,8 +133,8 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
 /** Configuration registers setter & getter */
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg) {
     rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->cfg);
-    if(!(inrangeUint32(a_reg.pre,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MIN)&&
-         inrangeUint32(a_reg.pst,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MIN))){
+    if(!(inrangeUint32(a_reg.pre,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MAX)&&
+         inrangeUint32(a_reg.pst,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MAX))){
          return RP_EOOR;
     }
     iowrite32(a_reg.pre, &regset->pre);
@@ -195,6 +195,8 @@ int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_r
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)
 {
     int r;
-    r=FpgaRegDump(0,(uint32_t*)handle->regset,(sizeof(rp_la_acq_regset_t)/sizeof(uint32_t)));
+    r=FpgaRegDump(0,(uint32_t*)handle->regset,6);
+    rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->trg);
+    FpgaRegDump(0,(uint32_t*)&regset->cmp_msk,5);
     return r;
 }

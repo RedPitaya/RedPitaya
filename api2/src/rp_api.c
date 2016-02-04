@@ -1,6 +1,7 @@
 
 #include "rp_api.h"
 
+#include <unistd.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
@@ -58,13 +59,13 @@ uio0: name=id, version=devicetree, events=0
 RP_STATUS rp_OpenUnit(void)
 {
     int r=RP_API_OK;
-    /*
+
     if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
         r=-1;
     }
 
     rp_LaAcqFpgaRegDump(&la_acq_handle);
-    */
+
    // if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
     if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
         r=-1;
@@ -79,10 +80,10 @@ RP_STATUS rp_CloseUnit(void)
 {
     int r=RP_API_OK;
 
-    /*if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
+    if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
         r=-1;
     }
-    */
+
     if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
@@ -185,17 +186,14 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
                 trg.cmp_val|=mask;
                 break;
             case RP_DIGITAL_DIRECTION_RISING:
-                trg.cmp_msk|=mask;
                 trg.edg_pos|=mask;
                 edge_cnt++;
                 break;
             case RP_DIGITAL_DIRECTION_FALLING:
-                trg.cmp_msk|=mask;
                 trg.edg_neg|=mask;
                 edge_cnt++;
                 break;
             case RP_DIGITAL_DIRECTION_RISING_OR_FALLING:
-                trg.cmp_msk|=mask;
                 trg.edg_pos|=mask;
                 trg.edg_neg|=mask;
                 edge_cnt++;
@@ -209,14 +207,35 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
     // update settings
     if(edge_cnt==1){
         rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
-        rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);
+        rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);//|RP_TRG_LOA_SWE_MASK);
     }
 
     //TEST!!! this will be removed
     rp_LaAcqRunAcq(&la_acq_handle);
+
     rp_LaAcqFpgaRegDump(&la_acq_handle);
 
+    ///
     return RP_API_OK;
+}
+
+RP_STATUS rp_IsAcquistionComplete(void){
+    int i=0;
+    while(i<3){
+        sleep(1);
+        bool status;
+        rp_LaAcqFpgaRegDump(&la_acq_handle);
+        rp_LaAcqAcqIsStopped(&la_acq_handle, &status);
+        if(status){
+            return RP_API_OK;
+        }
+        else{
+            i++;
+        }
+        //rp_LaAcqTriggerAcq(&la_acq_handle);
+    }
+    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    return RP_TRIGGER_ERROR;
 }
 
 /**
@@ -595,10 +614,10 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
 RP_STATUS rp_DigSigGenOuput(bool enable)
 {
     if(enable){
-        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_PORT1_MASK);
+        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_PORT0_MASK);
     }
     else{
-        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_PORT1_MASK);
+        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_PORT0_MASK);
     }
     return RP_API_OK;
 }
@@ -645,7 +664,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    rp_GenFpgaRegDump(&sig_gen_handle,len);
+    //rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }

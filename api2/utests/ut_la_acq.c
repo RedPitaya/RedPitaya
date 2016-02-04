@@ -32,6 +32,7 @@ int suite_la_acq_cleanup(void)
 
 void la_acq_trig_test(void)
 {
+
     RP_STATUS s;
     RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
     dir[0].channel=RP_DIGITAL_CHANNEL_0;
@@ -42,13 +43,21 @@ void la_acq_trig_test(void)
         CU_FAIL("Failed to set trigger properties.");
     }
 
+
+
     rp_DigSigGenOuput(true);
-    double sample_rate=1e6;
+    double sample_rate=60e6;
     rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
     //printf("sample rate %lf",sample_rate);
     rp_DigSigGenSoftwareControl(1);
+
     // how to check if acq. was triggered?
-    sleep(5);
+    if(rp_IsAcquistionComplete()!=RP_API_OK){
+        CU_FAIL("Acq. was not triggered.");
+    }
+
+
+    sleep(1);
 }
 
 void reg_rw_test(void){

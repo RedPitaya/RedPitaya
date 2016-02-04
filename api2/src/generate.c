@@ -103,11 +103,11 @@ int rp_GenTrigger(rp_handle_uio_t *handle) {
 int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status){
     uint32_t ctl;
     rp_GenGetControl(handle, &ctl);
-    if(ctl&RP_CTL_STA_MASK){
-        *status=false;
+    if(ctl&RP_CTL_STO_MASK){
+        *status=true;
     }
     else{
-        *status=true;
+        *status=false;
     }
     return RP_OK;
 }

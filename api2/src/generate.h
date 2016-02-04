@@ -63,7 +63,7 @@ typedef enum {
 /** Output enable */
 #define RP_GEN_OUT_ALL_MASK  0xffff
 #define RP_GEN_OUT_PORT0_MASK 0x00ff ///< lower  8 pins (RP hw 1.1 P_GPIO_PORT)
-#define RP_GEN_OUT_PORT1_MASK 0xffff ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
+#define RP_GEN_OUT_PORT1_MASK 0xff00 ///< higher 8 pins (RP hw 1.1 N_GPIO_PORT)
 
 // Analog generator specific
 // linear transformation
