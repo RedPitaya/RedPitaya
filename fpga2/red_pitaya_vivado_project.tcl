@@ -52,7 +52,6 @@ add_files                         $path_rtl/sys_bus_stub.sv
 add_files                         $path_rtl/str_bus_if.sv
 add_files                         $path_rtl/str_pas.sv
 
-add_files                         $path_rtl/red_pitaya_ams.sv
 add_files                         $path_rtl/id.sv
 add_files                         $path_rtl/red_pitaya_calib.sv
 add_files                         $path_rtl/red_pitaya_pid_block.sv
