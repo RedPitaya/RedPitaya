@@ -44,6 +44,17 @@ module acq #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// local signals
+////////////////////////////////////////////////////////////////////////////////
+
+logic ena_pre;
+logic sts_stp;
+logic trg;
+
+logic [CW-1:0] nxt_pre;
+logic [CW-1:0] nxt_pst;
+
+////////////////////////////////////////////////////////////////////////////////
 // input stream transfer
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,17 +66,17 @@ assign sti_trn = sti.vld & sti.rdy;
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-logic sts_stp;
 assign sts_stp = sts_acq & ( ctl_stp
                | (sts_trg & (sts_pst==cfg_pst) & ~cfg_con)
                | (sti_trn & sti.lst) );
 
-logic trg;
-assign trg = |(ctl_trg & cfg_trg);
+assign trg = |(ctl_trg & cfg_trg)
+           & (sts_acq & ena_pre & ~sts_trg);
 
 always @(posedge sti.clk)
 if (~sti.rstn) begin
   // status pre/post trigger
+  ena_pre <= 1'b0;
   sts_pre <= '0;
   sts_pst <= '0;
   // control/status/timestamp acquire
@@ -79,6 +90,7 @@ if (~sti.rstn) begin
 end else begin
   if (ctl_rst) begin
     // status pre/post trigger
+    ena_pre <= 1'b0;
     sts_pre <= '0;
     sts_pst <= '0;
     // control/status/timestamp acquire
@@ -90,7 +102,7 @@ end else begin
     // control/status/timestamp stop
     cts_stp <= '0;
   end else begin
-    // acquire
+    // acquire stop/start
     if (sts_stp) begin
       sts_acq <= 1'b0;
       cts_stp <= cts;
@@ -98,26 +110,32 @@ end else begin
       sts_acq <= 1'b1;
       cts_acq <= cts;
       sts_trg <= cfg_aut;
+      ena_pre <= ~|cfg_pre;
       sts_pre <= '0;
       sts_pst <= '0;
     end
+    // pre counter trigger enable
+    if (nxt_pre == cfg_pre)
+      ena_pre <= 1'b1;
     // trigger
-    if (sts_acq) begin
-      if (~sts_trg) begin
-        sts_pre <= sts_pre + sti_trn; // TODO: add out of range
-        if (trg) begin
-          sts_trg <= 1'b1;
-          cts_trg <= cts;
-        end
-      end else begin
-        sts_pst <= sts_pst + sti_trn; // TODO: add out of range
-      end
+    if (trg) begin
+      sts_trg <= 1'b1;
+      cts_trg <= cts;
+    end
+    // pre and post trigger counters
+    if (sts_acq & sti_trn) begin
+      if (~sts_trg)  sts_pre <= nxt_pre; // TODO: add out of range
+      if ( sts_trg)  sts_pst <= nxt_pst; // TODO: add out of range
     end
   end
 end
 
+// next counter values
+assign nxt_pre = sts_pre + 1;
+assign nxt_pst = sts_pst + 1;
+
 // interrupts
-assign irq_trg = sts_acq & trg & ~sts_trg;  // trigger
+assign irq_trg = trg;  // trigger
 assign irq_stp = sts_stp;  // stop
 
 ////////////////////////////////////////////////////////////////////////////////

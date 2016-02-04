@@ -202,14 +202,14 @@ task test_la (
   repeat(10) @(posedge clk);
 
   // configure trigger
-  axi_write(base+'h40, 16'h009f);  // cfg_cmp_msk
-  axi_write(base+'h44, 16'h009f);  // cfg_cmp_val
+  axi_write(base+'h40, 16'h0000);  // cfg_cmp_msk
+  axi_write(base+'h44, 16'h0000);  // cfg_cmp_val
   axi_write(base+'h48, 16'h0001);  // cfg_edg_pos
   axi_write(base+'h4c, 16'h0000);  // cfg_edg_neg
 
   axi_write(base+'h10, 'd8 );  // cfg_pre
   axi_write(base+'h14, 'd16);  // cfg_pst
-  // enable LG trigger source
+  // enable LA trigger source
   axi_write(base+'h08, 'b0010);
   // start acquire
   axi_write(base+'h00, 4'b0100);
