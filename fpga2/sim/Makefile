@@ -7,6 +7,7 @@ PATH_TBN=../tbn
 
 # secure IP
 LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
+    $(PATH_LIB)/unisims/EFUSE_USR.v \
     $(PATH_LIB)/unisims/XADC.v \
     $(PATH_LIB)/unisims/PLLE2_ADV.v \
     $(PATH_LIB)/unisims/BUFG.v \

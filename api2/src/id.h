@@ -27,11 +27,15 @@ static const int ID_BASE_SIZE = 0x1000;
 typedef struct {
     uint32_t id;            // 0x00
     uint32_t reserved_04;   // 0x04
+    uint32_t efuse;         // 0x08
+    uint32_t reserved_0c;   // 0x0c
 // TODO: the current FPGA AXI4 bus implementation does not support 64bit transfers
-//    uint64_t dna;           // 0x08 - 0x0c
-    uint32_t dna_lo;        // 0x08
-    uint32_t dna_hi;        // 0x0c
-    uint32_t gith[5];       // 0x10 - 0x20
+//    uint64_t dna;           // 0x10
+    uint32_t dna_lo;        // 0x10
+    uint32_t dna_hi;        // 0x14
+    uint32_t reserved_18;   // 0x18
+    uint32_t reserved_1c;   // 0x1c
+    uint32_t gith[5];       // 0x20 - 0x30
 } id_regset_t;
 
 int rp_IdOpen(char *dev, rp_handle_uio_t *handle);
@@ -41,6 +45,11 @@ int rp_IdClose(rp_handle_uio_t *handle);
 * Gets FPGA Synthesized ID
 */
 int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id);
+
+/**
+* Gets FPGA EFUSE
+*/
+int rp_IdGetEFUSE(rp_handle_uio_t *handle, uint32_t *efuse);
 
 /**
 * Gets FPGA Unique DNA

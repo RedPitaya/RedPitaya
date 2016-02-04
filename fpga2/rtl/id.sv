@@ -16,6 +16,7 @@
 module id #(
   bit [0:5*32-1] GITH = '0,  // GIT hash full length
   bit   [57-1:0] DNA = 57'h0823456789ABCDE,
+  bit   [32-1:0] EFUSE = 32'h01234567,
   bit   [32-1:0] ID = {28'h0, 4'h1} // {reserved, board type}:  1 - release 1
 )(
   // system bus
@@ -58,12 +59,24 @@ end else begin
 end
 
 // parameter specifies a sample 57-bit DNA value for simulation
-DNA_PORT #(.SIM_DNA_VALUE (DNA)) dna (
+DNA_PORT #(.SIM_DNA_VALUE (DNA)) dna_port (
   .DOUT  (dna_dout ), // 1-bit output: DNA output data.
   .CLK   (dna_clk  ), // 1-bit input: Clock input.
   .DIN   (1'b0     ), // 1-bit input: User data input pin.
   .READ  (dna_read ), // 1-bit input: Active high load DNA, active low read input.
   .SHIFT (dna_shift)  // 1-bit input: Active high shift enable input.
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// FUSE
+////////////////////////////////////////////////////////////////////////////////
+
+logic [32-1:0] efuse;
+
+EFUSE_USR #(
+ .SIM_EFUSE_VALUE (EFUSE)  // Value of the 32-bit non-volatile value used in simulation
+) efuse_usr (
+ .EFUSEUSR (efuse)  // 32-bit output: User eFUSE register value output
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,16 +101,18 @@ end else begin
   casez (bus.addr[BDW-1:0])
     // ID
     'h00:  bus.rdata <= ID;
+    // EFUSE
+    'h08:  bus.rdata <= efuse;
     // DNA
-    'h08:  bus.rdata <= {                            dna_value[32-1: 0]};
-    'h0c:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
+    'h10:  bus.rdata <= {                            dna_value[32-1: 0]};
+    'h14:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
     // GITH
-    'h10:  bus.rdata <= GITH[32*0+:32];
-    'h14:  bus.rdata <= GITH[32*1+:32];
-    'h18:  bus.rdata <= GITH[32*2+:32];
-    'h1c:  bus.rdata <= GITH[32*3+:32];
-    'h2c:  bus.rdata <= GITH[32*4+:32];
-    default: bus.rdata <= '0;
+    'h20:  bus.rdata <= GITH[32*0+:32];
+    'h24:  bus.rdata <= GITH[32*1+:32];
+    'h28:  bus.rdata <= GITH[32*2+:32];
+    'h2c:  bus.rdata <= GITH[32*3+:32];
+    'h3c:  bus.rdata <= GITH[32*4+:32];
+    default: bus.rdata <= 'x;
   endcase
 end
 

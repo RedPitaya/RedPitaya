@@ -42,6 +42,12 @@ int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id) {
     return RP_OK;
 }
 
+int rp_IdGetEFUSE(rp_handle_uio_t *handle, uint32_t *efuse) {
+    id_regset_t *regset = (id_regset_t *) handle->regset;
+    *efuse = ioread32(&regset->efuse);
+    return RP_OK;
+}
+
 int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna) {
     id_regset_t *regset = (id_regset_t *) handle->regset;
     *dna = ((uint64_t) ioread32(&regset->dna_hi) << 32)

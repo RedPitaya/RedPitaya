@@ -222,11 +222,11 @@ task test_id (
 );
   int unsigned dat;
   // configure trigger
-  axi_read(base+'h10, dat);
-  axi_read(base+'h14, dat);
-  axi_read(base+'h18, dat);
-  axi_read(base+'h1c, dat);
   axi_read(base+'h20, dat);
+  axi_read(base+'h24, dat);
+  axi_read(base+'h28, dat);
+  axi_read(base+'h2c, dat);
+  axi_read(base+'h30, dat);
 endtask: test_id
 
 ////////////////////////////////////////////////////////////////////////////////
