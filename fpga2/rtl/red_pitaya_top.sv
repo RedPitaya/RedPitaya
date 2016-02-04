@@ -664,8 +664,8 @@ scope_top #(
   .TN ($bits(trg))
 ) scope (
   // streams
-  .sti       (str_osc[i]),
-  .sto       (str_drx[i]),
+  .sti       (str_osc[0+i]),
+  .sto       (str_drx[0+i]),
   // current time stamp
   .cts       (cts),
   // triggers

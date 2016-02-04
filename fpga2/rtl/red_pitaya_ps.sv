@@ -178,7 +178,9 @@ system_wrapper system_i (
   .S_AXI_STR_RX3_tdata   (sai[3].TDATA  ),  .S_AXI_STR_RX2_tdata   (sai[2].TDATA  ),  .S_AXI_STR_RX1_tdata   (sai[1].TDATA  ),  .S_AXI_STR_RX0_tdata   (sai[0].TDATA  ),
   .S_AXI_STR_RX3_tkeep   (sai[3].TKEEP  ),  .S_AXI_STR_RX2_tkeep   (sai[2].TKEEP  ),  .S_AXI_STR_RX1_tkeep   (sai[1].TKEEP  ),  .S_AXI_STR_RX0_tkeep   (sai[0].TKEEP  ),
   .S_AXI_STR_RX3_tlast   (sai[3].TLAST  ),  .S_AXI_STR_RX2_tlast   (sai[2].TLAST  ),  .S_AXI_STR_RX1_tlast   (sai[1].TLAST  ),  .S_AXI_STR_RX0_tlast   (sai[0].TLAST  ),
-  .S_AXI_STR_RX3_tready  (sai[3].TREADY ),  .S_AXI_STR_RX2_tready  (sai[2].TREADY ),  .S_AXI_STR_RX1_tready  (sai[1].TREADY ),  .S_AXI_STR_RX0_tready  (sai[0].TREADY ),
+// TODO: rethink DMA ready signal
+//.S_AXI_STR_RX3_tready  (sai[3].TREADY ),  .S_AXI_STR_RX2_tready  (sai[2].TREADY ),  .S_AXI_STR_RX1_tready  (sai[1].TREADY ),  .S_AXI_STR_RX0_tready  (sai[0].TREADY ),
+  .S_AXI_STR_RX3_tready  (              ),  .S_AXI_STR_RX2_tready  (              ),  .S_AXI_STR_RX1_tready  (              ),  .S_AXI_STR_RX0_tready  (              ),
   .S_AXI_STR_RX3_tvalid  (sai[3].TVALID ),  .S_AXI_STR_RX2_tvalid  (sai[2].TVALID ),  .S_AXI_STR_RX1_tvalid  (sai[1].TVALID ),  .S_AXI_STR_RX0_tvalid  (sai[0].TVALID ),
   // AXI-4 streaming interfaces TX
   .M_AXI_STR_TX3_aclk    (sao[3].ACLK   ),  .M_AXI_STR_TX2_aclk    (sao[2].ACLK   ),  .M_AXI_STR_TX1_aclk    (sao[1].ACLK   ),  .M_AXI_STR_TX0_aclk    (sao[0].ACLK   ),
@@ -198,6 +200,9 @@ system_wrapper system_i (
   .IRQ_SCP0 (1'b0),
   .IRQ_SCP1 (1'b0)
 );
+
+// TODO: rethink DMA ready signal
+assign {sai[3].TREADY, sai[2].TREADY, sai[1].TREADY, sai[0].TREADY} = '1;
 
 localparam int unsigned DN=2;
 
