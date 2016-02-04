@@ -5,7 +5,6 @@ module str_src #(
   str_bus_if.s str
 );
 
-logic str_trn;
 logic str_ena;
 
 DAT_T        buf_dat [$];
@@ -17,11 +16,8 @@ int unsigned buf_siz;
 // stream
 ////////////////////////////////////////////////////////////////////////////////
 
-// stream transfer event
-assign str_trn = str.vld & str.rdy;
-
 // stream enable
-assign str_ena = str_trn | ~str.vld;
+assign str_ena = str.trn | ~str.vld;
 
 //int str_tmg;
 //

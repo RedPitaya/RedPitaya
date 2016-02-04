@@ -20,10 +20,7 @@ module str_dec #(
 logic [CW-1:0] cnt;
 logic          nul;
 
-logic sti_trn;
-
 assign sti.rdy = sto.rdy | ~sto.vld | ~nul;
-assign sti_trn = sti.vld & sti.rdy;
 
 // counter
 always_ff @(posedge sti.clk)
@@ -46,7 +43,7 @@ end else begin
 end
 
 always_ff @(posedge sti.clk)
-if (sti_trn & (ctl_rst | nul)) begin
+if (sti.trn & (ctl_rst | nul)) begin
   sto.dat <= sti.dat;
   sto.kep <= sti.kep; // TODO
   sto.lst <= sti.lst;

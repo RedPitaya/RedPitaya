@@ -27,11 +27,7 @@ logic signed [DCW+DWI-1:0] sum;
 
 logic        [DCW    -1:0] cnt;
 
-
-logic sti_trn;
-
 assign sti.rdy = sto.rdy | ~sto.vld;
-assign sti_trn = sti.vld & sti.rdy;
 
 always_ff @(posedge sti.clk)
 if (~sti.rstn) begin

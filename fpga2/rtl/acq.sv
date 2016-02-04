@@ -55,20 +55,12 @@ logic [CW-1:0] nxt_pre;
 logic [CW-1:0] nxt_pst;
 
 ////////////////////////////////////////////////////////////////////////////////
-// input stream transfer
-////////////////////////////////////////////////////////////////////////////////
-
-logic sti_trn;
-
-assign sti_trn = sti.vld & sti.rdy;
-
-////////////////////////////////////////////////////////////////////////////////
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
 assign sts_stp = sts_acq & ( ctl_stp
                | (sts_trg & (sts_pst==cfg_pst) & ~cfg_con)
-               | (sti_trn & sti.lst) );
+               | (sti.trn & sti.lst) );
 
 assign trg = |(ctl_trg & cfg_trg)
            & (sts_acq & ena_pre & ~sts_trg);
@@ -123,7 +115,7 @@ end else begin
       cts_trg <= cts;
     end
     // pre and post trigger counters
-    if (sts_acq & sti_trn) begin
+    if (sts_acq & sti.trn) begin
       if (~sts_trg)  sts_pre <= nxt_pre; // TODO: add out of range
       if ( sts_trg)  sts_pst <= nxt_pst; // TODO: add out of range
     end

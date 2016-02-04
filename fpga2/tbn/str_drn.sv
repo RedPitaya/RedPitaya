@@ -4,7 +4,6 @@ module str_drn #(
   str_bus_if.d str
 );
 
-logic str_trn;
 logic str_ena;
 
 DAT_T        buf_dat [$];
@@ -16,11 +15,8 @@ int unsigned buf_siz;
 // stream
 ////////////////////////////////////////////////////////////////////////////////
 
-// stream transfer event
-assign str_trn = str.vld & str.rdy;
-
 // stream enable
-assign str_ena = str_trn | ~str.vld;
+assign str_ena = str.trn | ~str.vld;
 
 //int str_tmg;
 //
@@ -34,7 +30,7 @@ always @ (posedge str.clk, negedge str.rstn)
 if (!str.rstn) begin
   buf_dat = {};
   buf_lst = {};
-end else if (str_trn) begin
+end else if (str.trn) begin
   buf_dat.push_back(str.dat);
   buf_lst.push_back(str.lst);
 end

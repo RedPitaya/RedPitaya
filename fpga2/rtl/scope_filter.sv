@@ -20,6 +20,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module scope_filter #(
+  int unsigned DN = 1, // TODO: functionality not yet enabled
   int unsigned DWI = 14,
   int unsigned DWO = 14
 )(
@@ -39,28 +40,9 @@ module scope_filter #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-logic signed [23-1:0] fir_dat;
-logic                 fir_vld;
-logic                 fir_rdy;
-logic                 fir_trn;
-
-(* use_dsp48="yes" *) logic signed [23-1:0] iir1_dat;
-                      logic                 iir1_vld;
-                      logic                 iir1_rdy;
-                      logic                 iir1_trn;
-
-logic signed [15-1:0] iir2_dat;
-logic                 iir2_vld;
-logic                 iir2_rdy;
-logic                 iir2_trn;
-
-////////////////////////////////////////////////////////////////////////////////
-// local signals
-////////////////////////////////////////////////////////////////////////////////
-
-logic sti_trn;
-
-assign sti_trn = sti.vld & sti.rdy;
+str_bus_if #(.DN (DN), .DAT_T (logic signed [23-1:0])) fir  (.clk (sti.clk), .rstn (sti.rstn));
+str_bus_if #(.DN (DN), .DAT_T (logic signed [23-1:0])) iir1 (.clk (sti.clk), .rstn (sti.rstn));
+str_bus_if #(.DN (DN), .DAT_T (logic signed [15-1:0])) iir2 (.clk (sti.clk), .rstn (sti.rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -82,21 +64,18 @@ typedef logic signed [   DWI-1:0] fir_buf_t;  // data buffer
 typedef logic signed [29    -1:0] fir_cfg_t;  // coeficients
 typedef logic signed [25+DWI-1:0] fir_mul_t;  // multiplications
 
+str_bus_if #(.DN (DN), .DAT_T (fir_mul_t [2-1:0])) firm (.clk (sti.clk), .rstn (sti.rstn));
+
 // FIR filter
 fir_buf_t [2-1:0] fir_buf;  // data buffer
 fir_cfg_t [2-1:0] fir_cfg;  // coeficients
-fir_mul_t [2-1:0] fir_mul;  // multiplications
-
-logic                             fir_mul_trn;  //
-logic                             fir_mul_vld;  //
-logic                             fir_mul_rdy;  //
 
 // FIR data buffer
 assign fir_buf [0] = sti.dat;
 
 always_ff @(posedge sti.clk)
 if (~sti.rstn)     fir_buf [1] <= '0;
-else if (sti_trn)  fir_buf [1] <= fir_buf [0];
+else if (sti.trn)  fir_buf [1] <= fir_buf [0];
 
 // FIR coeficients
 assign fir_cfg [0] =  (1 <<< (18+10)) + cfg_bb;
@@ -106,13 +85,13 @@ assign fir_cfg [1] = -(1 <<< (18+10))         ;
 generate
 for (genvar i=0; i<2; i++) begin: for_fir_mul
   always_ff @(posedge sti.clk)
-  if (sti_trn) fir_mul[i] <= (fir_buf[i] * fir_cfg[i]) >>> 10;
+  if (sti.trn) firm.dat[0][i] <= (fir_buf[i] * fir_cfg[i]) >>> 10;
 end: for_fir_mul
 endgenerate
 
 // final summation
 always_ff @(posedge sti.clk)
-if (fir_mul_trn)  fir_dat <= (fir_mul[1] + fir_mul[0]) >>> 10;
+if (firm.trn)  fir.dat <= (firm.dat[0][1] + firm.dat[0][0]) >>> 10;
 
 
 
@@ -121,20 +100,16 @@ if (fir_mul_trn)  fir_dat <= (fir_mul[1] + fir_mul[0]) >>> 10;
 // control signals
 always_ff @(posedge sti.clk)
 if (~sti.rstn) begin
-  fir_mul_vld <= 1'b0;
-  fir_vld     <= 1'b0;
+  firm.vld <= 1'b0;
+  fir.vld     <= 1'b0;
 end else begin
-  if (sti.rdy)     fir_mul_vld <= sti.vld;
-  if (fir_mul_rdy) fir_vld     <= fir_mul_vld;
+  if (sti.rdy)  firm.vld <= sti.vld;
+  if (firm.rdy) fir.vld  <= firm.vld;
 end
 
-assign sti.rdy     = fir_mul_rdy | ~fir_mul_vld;
+assign sti.rdy     = firm.rdy | ~firm.vld;
 
-assign fir_mul_rdy = fir_rdy     | ~fir_vld;
-
-assign fir_mul_trn = fir_mul_vld & fir_mul_rdy;
-
-assign fir_trn = fir_vld & fir_rdy;
+assign firm.rdy = fir.rdy     | ~fir.vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -153,17 +128,15 @@ assign fir_trn = fir_vld & fir_rdy;
 
 // data processing
 always_ff @(posedge sti.clk)
-if (~sti.rstn)     iir1_dat <= '0;
-else if (fir_trn)  iir1_dat <= ((fir_dat <<< 25) + (iir1_dat * ((1 <<< 25) - cfg_aa))) >>> 25;
+if (~sti.rstn)     iir1.dat <= '0;
+else if (fir.trn)  iir1.dat <= ((fir.dat <<< 25) + (iir1.dat * ((1 <<< 25) - cfg_aa))) >>> 25;
 
 // control signals
 always_ff @(posedge sti.clk)
-if (~sti.rstn)     iir1_vld <= 1'b0;
-else if (fir_rdy)  iir1_vld <= fir_vld;
+if (~sti.rstn)     iir1.vld <= 1'b0;
+else if (fir.rdy)  iir1.vld <= fir.vld;
 
-assign fir_rdy = iir1_rdy | ~iir1_vld;
-
-assign iir1_trn = iir1_vld & iir1_rdy;
+assign fir.rdy = iir1.rdy | ~iir1.vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -181,17 +154,15 @@ assign iir1_trn = iir1_vld & iir1_rdy;
 ////////////////////////////////////////////////////////////////////////////////
 
 always_ff @(posedge sti.clk)
-if (~sti.rstn)      iir2_dat <= '0;
-else if (iir1_trn)  iir2_dat <= (iir1_dat >>> 8) + ((iir2_dat * cfg_pp) >>> 16);
+if (~sti.rstn)      iir2.dat <= '0;
+else if (iir1.trn)  iir2.dat <= (iir1.dat >>> 8) + ((iir2.dat * cfg_pp) >>> 16);
 
 // control signals
 always_ff @(posedge sti.clk)
-if (~sti.rstn)      iir2_vld <= 1'b0;
-else if (iir1_rdy)  iir2_vld <= iir1_vld;
+if (~sti.rstn)      iir2.vld <= 1'b0;
+else if (iir1.rdy)  iir2.vld <= iir1.vld;
 
-assign iir1_rdy = iir2_rdy | ~iir2_vld;
-
-assign iir2_trn = iir2_vld & iir2_rdy;
+assign iir1.rdy = iir2.rdy | ~iir2.vld;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Scaling and saturation
@@ -199,20 +170,20 @@ assign iir2_trn = iir2_vld & iir2_rdy;
 
 logic signed [40-1:0] kk_mult;
 
-assign kk_mult = ($signed(iir2_dat) * $signed(cfg_kk)) >>> 24;
+assign kk_mult = ($signed(iir2.dat) * $signed(cfg_kk)) >>> 24;
 
 // saturation
 always_ff @(posedge sti.clk)
 if (~sti.rstn)      sto.dat <= '0;
-else if (iir2_trn)  sto.dat <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
+else if (iir2.trn)  sto.dat <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
 
 assign sto.lst = 1'b0;
 
 // control signals
 always_ff @(posedge sti.clk)
 if (~sti.rstn)      sto.vld <= 1'b0;
-else if (iir2_rdy)  sto.vld <= iir2_vld;
+else if (iir2.rdy)  sto.vld <= iir2.vld;
 
-assign iir2_rdy = sto.rdy | ~sto.vld;
+assign iir2.rdy = sto.rdy | ~sto.vld;
 
 endmodule: scope_filter

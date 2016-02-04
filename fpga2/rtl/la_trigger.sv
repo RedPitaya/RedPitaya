@@ -21,21 +21,17 @@ module la_trigger #(
   str_bus_if.m str
 );
 
-logic str_trn;
 DAT_T str_old;
 
 logic sts_cmp;
 logic sts_edg;
-
-// stream transfer
-assign str_trn = str.vld & str.rdy;
 
 assign sts_cmp = (str.dat & cfg_cmp_msk) == (cfg_cmp_val & cfg_cmp_msk);
 assign sts_edg = |(cfg_edg_pos & (~str_old &  str.dat))
                | |(cfg_edg_neg & ( str_old & ~str.dat));
 
 always @(posedge str.clk)
-if (str_trn)  str_old <= str.dat;
+if (str.trn)  str_old <= str.dat;
 
 always @(posedge str.clk)
 if (~str.rstn) begin
@@ -43,7 +39,7 @@ if (~str.rstn) begin
 end else begin
   if (ctl_rst) begin
     sts_trg <= '0;
-  end if (str_trn) begin
+  end if (str.trn) begin
     sts_trg <= sts_cmp & sts_edg;
   end
 end

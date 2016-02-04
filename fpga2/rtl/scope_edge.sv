@@ -31,9 +31,6 @@ end
 // edge status signals
 logic [2-1:0] sts_edg;
 
-// stream transfer
-assign str_trn = str.vld & str.rdy;
-
 always @(posedge str.clk)
 if (~str.rstn) begin
   sts_edg <= '0;
@@ -43,7 +40,7 @@ end else begin
     sts_edg <= '0;
     sts_trg <= '0;
   end else begin
-    if (str_trn) begin
+    if (str.trn) begin
            if (str.dat >= cfg_lvl)  sts_edg[0] <= 1'b1;  // level reached
       else if (str.dat <  cfg_lvn)  sts_edg[0] <= 1'b0;  // signal goes under hysteresis
   

@@ -50,20 +50,14 @@ str_bus_if #(.DN (DN), .DAT_T (logic signed [DWI+DWM  -1:0])) str_mul (.clk (sti
 str_bus_if #(.DN (DN), .DAT_T (logic signed [DWI+    1-1:0])) str_shf (.clk (sti.clk), .rstn (sti.rstn));
 str_bus_if #(.DN (DN), .DAT_T (logic signed [DWI+    2-1:0])) str_sum (.clk (sti.clk), .rstn (sti.rstn));
 
-logic str_mul_trn;
-logic str_shf_trn;
-logic str_sum_trn;
-
 ////////////////////////////////////////////////////////////////////////////////
 // multiplication
 ////////////////////////////////////////////////////////////////////////////////
 
-assign sti_trn = sti.vld & sti.rdy;
-
 generate
 for (genvar i=0; i<DN; i++) begin: for_mul
   always_ff @(posedge sti.clk)
-  if (sti_trn) begin
+  if (sti.trn) begin
     str_mul.dat[i] <= sti.dat[i] * cfg_mul;
     str_mul.kep[i] <= sti.kep[i];
   end
@@ -71,7 +65,7 @@ end: for_mul
 endgenerate
 
 always_ff @(posedge sti.clk)
-if (sti_trn)  str_mul.lst <= sti.lst;
+if (sti.trn)  str_mul.lst <= sti.lst;
 
 always_ff @(posedge sti.clk)
 if (~sti.rstn)     str_mul.vld <= 1'b0;
@@ -100,12 +94,10 @@ assign str_mul.rdy = str_shf.rdy;
 // summation
 ////////////////////////////////////////////////////////////////////////////////
 
-assign shf_trn = str_shf.vld & str_shf.rdy;
-
 generate
 for (genvar i=0; i<DN; i++) begin: for_sum
   always_ff @(posedge sti.clk)
-  if (shf_trn) begin
+  if (str_shf.trn) begin
     str_sum.dat[i] <= str_shf.dat[i] + cfg_sum;
     str_sum.kep[i] <= str_shf.kep[i];
   end
@@ -113,7 +105,7 @@ end: for_sum
 endgenerate
 
 always_ff @(posedge sti.clk)
-if (shf_trn) begin
+if (str_shf.trn) begin
   str_sum.lst <= str_shf.lst;
 end
 
@@ -127,12 +119,10 @@ assign str_shf.rdy = sto.rdy | ~str_sum.vld;
 // saturation
 ////////////////////////////////////////////////////////////////////////////////
 
-assign sum_trn = str_sum.vld & str_sum.rdy;
-
 generate
 for (genvar i=0; i<DN; i++) begin: for_sat
   always_ff @(posedge sti.clk)
-  if (sum_trn) begin
+  if (str_sum.trn) begin
     sto.dat[i] <= ^str_sum.dat[i][DWO:DWO-1] ? {str_sum.dat[i][DWO], {DWO-1{~str_sum.dat[i][DWO-1]}}}
                                              :  str_sum.dat[i][DWO-1:0];
     sto.kep[i] <= str_sum.kep[i];
@@ -141,7 +131,7 @@ end: for_sat
 endgenerate
 
 always_ff @(posedge sti.clk)
-if (sum_trn) begin
+if (str_sum.trn) begin
   sto.lst <= str_sum.lst;
 end
 
