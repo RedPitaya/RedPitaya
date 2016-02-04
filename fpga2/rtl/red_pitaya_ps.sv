@@ -60,8 +60,8 @@ module red_pitaya_ps (
   // system read/write channel
   sys_bus_if.m           bus,
   // stream input
-  str_bus_if.d           sti [4-1:0],
-  str_bus_if.s           sto [4-1:0]
+  axi4_stream_id.d       srx [4-1:0],
+  axi4_stream_id.s       stx [4-1:0]
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,23 +173,21 @@ system_wrapper system_i (
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
   // AXI-4 streaming interfaces RX
-  .S_AXI_STR_RX3_aclk    (sai[3].ACLK   ),  .S_AXI_STR_RX2_aclk    (sai[2].ACLK   ),  .S_AXI_STR_RX1_aclk    (sai[1].ACLK   ),  .S_AXI_STR_RX0_aclk    (sai[0].ACLK   ),
-  .S_AXI_STR_RX3_arstn   (sai[3].ARESETn),  .S_AXI_STR_RX2_arstn   (sai[2].ARESETn),  .S_AXI_STR_RX1_arstn   (sai[1].ARESETn),  .S_AXI_STR_RX0_arstn   (sai[0].ARESETn),
-  .S_AXI_STR_RX3_tdata   (sai[3].TDATA  ),  .S_AXI_STR_RX2_tdata   (sai[2].TDATA  ),  .S_AXI_STR_RX1_tdata   (sai[1].TDATA  ),  .S_AXI_STR_RX0_tdata   (sai[0].TDATA  ),
-  .S_AXI_STR_RX3_tkeep   (sai[3].TKEEP  ),  .S_AXI_STR_RX2_tkeep   (sai[2].TKEEP  ),  .S_AXI_STR_RX1_tkeep   (sai[1].TKEEP  ),  .S_AXI_STR_RX0_tkeep   (sai[0].TKEEP  ),
-  .S_AXI_STR_RX3_tlast   (sai[3].TLAST  ),  .S_AXI_STR_RX2_tlast   (sai[2].TLAST  ),  .S_AXI_STR_RX1_tlast   (sai[1].TLAST  ),  .S_AXI_STR_RX0_tlast   (sai[0].TLAST  ),
-// TODO: rethink DMA ready signal
-//.S_AXI_STR_RX3_tready  (sai[3].TREADY ),  .S_AXI_STR_RX2_tready  (sai[2].TREADY ),  .S_AXI_STR_RX1_tready  (sai[1].TREADY ),  .S_AXI_STR_RX0_tready  (sai[0].TREADY ),
-  .S_AXI_STR_RX3_tready  (              ),  .S_AXI_STR_RX2_tready  (              ),  .S_AXI_STR_RX1_tready  (              ),  .S_AXI_STR_RX0_tready  (              ),
-  .S_AXI_STR_RX3_tvalid  (sai[3].TVALID ),  .S_AXI_STR_RX2_tvalid  (sai[2].TVALID ),  .S_AXI_STR_RX1_tvalid  (sai[1].TVALID ),  .S_AXI_STR_RX0_tvalid  (sai[0].TVALID ),
+  .S_AXI_STR_RX3_aclk    (srx[3].ACLK   ),  .S_AXI_STR_RX2_aclk    (srx[2].ACLK   ),  .S_AXI_STR_RX1_aclk    (srx[1].ACLK   ),  .S_AXI_STR_RX0_aclk    (srx[0].ACLK   ),
+  .S_AXI_STR_RX3_arstn   (srx[3].ARESETn),  .S_AXI_STR_RX2_arstn   (srx[2].ARESETn),  .S_AXI_STR_RX1_arstn   (srx[1].ARESETn),  .S_AXI_STR_RX0_arstn   (srx[0].ARESETn),
+  .S_AXI_STR_RX3_tdata   (srx[3].TDATA  ),  .S_AXI_STR_RX2_tdata   (srx[2].TDATA  ),  .S_AXI_STR_RX1_tdata   (srx[1].TDATA  ),  .S_AXI_STR_RX0_tdata   (srx[0].TDATA  ),
+  .S_AXI_STR_RX3_tkeep   (srx[3].TKEEP  ),  .S_AXI_STR_RX2_tkeep   (srx[2].TKEEP  ),  .S_AXI_STR_RX1_tkeep   (srx[1].TKEEP  ),  .S_AXI_STR_RX0_tkeep   (srx[0].TKEEP  ),
+  .S_AXI_STR_RX3_tlast   (srx[3].TLAST  ),  .S_AXI_STR_RX2_tlast   (srx[2].TLAST  ),  .S_AXI_STR_RX1_tlast   (srx[1].TLAST  ),  .S_AXI_STR_RX0_tlast   (srx[0].TLAST  ),
+  .S_AXI_STR_RX3_tready  (srx[3].TREADY ),  .S_AXI_STR_RX2_tready  (srx[2].TREADY ),  .S_AXI_STR_RX1_tready  (srx[1].TREADY ),  .S_AXI_STR_RX0_tready  (srx[0].TREADY ),
+  .S_AXI_STR_RX3_tvalid  (srx[3].TVALID ),  .S_AXI_STR_RX2_tvalid  (srx[2].TVALID ),  .S_AXI_STR_RX1_tvalid  (srx[1].TVALID ),  .S_AXI_STR_RX0_tvalid  (srx[0].TVALID ),
   // AXI-4 streaming interfaces TX
-  .M_AXI_STR_TX3_aclk    (sao[3].ACLK   ),  .M_AXI_STR_TX2_aclk    (sao[2].ACLK   ),  .M_AXI_STR_TX1_aclk    (sao[1].ACLK   ),  .M_AXI_STR_TX0_aclk    (sao[0].ACLK   ),
-  .M_AXI_STR_TX3_arstn   (sao[3].ARESETn),  .M_AXI_STR_TX2_arstn   (sao[2].ARESETn),  .M_AXI_STR_TX1_arstn   (sao[1].ARESETn),  .M_AXI_STR_TX0_arstn   (sao[0].ARESETn),
-  .M_AXI_STR_TX3_tdata   (sao[3].TDATA  ),  .M_AXI_STR_TX2_tdata   (sao[2].TDATA  ),  .M_AXI_STR_TX1_tdata   (sao[1].TDATA  ),  .M_AXI_STR_TX0_tdata   (sao[0].TDATA  ),
-  .M_AXI_STR_TX3_tkeep   (sao[3].TKEEP  ),  .M_AXI_STR_TX2_tkeep   (sao[2].TKEEP  ),  .M_AXI_STR_TX1_tkeep   (sao[1].TKEEP  ),  .M_AXI_STR_TX0_tkeep   (sao[0].TKEEP  ),
-  .M_AXI_STR_TX3_tlast   (sao[3].TLAST  ),  .M_AXI_STR_TX2_tlast   (sao[2].TLAST  ),  .M_AXI_STR_TX1_tlast   (sao[1].TLAST  ),  .M_AXI_STR_TX0_tlast   (sao[0].TLAST  ),
-  .M_AXI_STR_TX3_tready  (sao[3].TREADY ),  .M_AXI_STR_TX2_tready  (sao[2].TREADY ),  .M_AXI_STR_TX1_tready  (sao[1].TREADY ),  .M_AXI_STR_TX0_tready  (sao[0].TREADY ),
-  .M_AXI_STR_TX3_tvalid  (sao[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (sao[2].TVALID ),  .M_AXI_STR_TX1_tvalid  (sao[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (sao[0].TVALID ),
+  .M_AXI_STR_TX3_aclk    (stx[3].ACLK   ),  .M_AXI_STR_TX2_aclk    (stx[2].ACLK   ),  .M_AXI_STR_TX1_aclk    (stx[1].ACLK   ),  .M_AXI_STR_TX0_aclk    (stx[0].ACLK   ),
+  .M_AXI_STR_TX3_arstn   (stx[3].ARESETn),  .M_AXI_STR_TX2_arstn   (stx[2].ARESETn),  .M_AXI_STR_TX1_arstn   (stx[1].ARESETn),  .M_AXI_STR_TX0_arstn   (stx[0].ARESETn),
+  .M_AXI_STR_TX3_tdata   (stx[3].TDATA  ),  .M_AXI_STR_TX2_tdata   (stx[2].TDATA  ),  .M_AXI_STR_TX1_tdata   (stx[1].TDATA  ),  .M_AXI_STR_TX0_tdata   (stx[0].TDATA  ),
+  .M_AXI_STR_TX3_tkeep   (stx[3].TKEEP  ),  .M_AXI_STR_TX2_tkeep   (stx[2].TKEEP  ),  .M_AXI_STR_TX1_tkeep   (stx[1].TKEEP  ),  .M_AXI_STR_TX0_tkeep   (stx[0].TKEEP  ),
+  .M_AXI_STR_TX3_tlast   (stx[3].TLAST  ),  .M_AXI_STR_TX2_tlast   (stx[2].TLAST  ),  .M_AXI_STR_TX1_tlast   (stx[1].TLAST  ),  .M_AXI_STR_TX0_tlast   (stx[0].TLAST  ),
+  .M_AXI_STR_TX3_tready  (stx[3].TREADY ),  .M_AXI_STR_TX2_tready  (stx[2].TREADY ),  .M_AXI_STR_TX1_tready  (stx[1].TREADY ),  .M_AXI_STR_TX0_tready  (stx[0].TREADY ),
+  .M_AXI_STR_TX3_tvalid  (stx[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (stx[2].TVALID ),  .M_AXI_STR_TX1_tvalid  (stx[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (stx[0].TVALID ),
   // IRQ
   // TODO: actual interrupts should be connnected
   .IRQ_GPIO (1'b0),
@@ -200,40 +198,6 @@ system_wrapper system_i (
   .IRQ_SCP0 (1'b0),
   .IRQ_SCP1 (1'b0)
 );
-
-// TODO: rethink DMA ready signal
-assign {sai[3].TREADY, sai[2].TREADY, sai[1].TREADY, sai[0].TREADY} = '1;
-
-localparam int unsigned DN=2;
-
-axi4_stream_if #(.DN (DN), .DAT_T (logic [8-1:0])) sai [4-1:0] (.ACLK (sti[0].clk), .ARESETn (sti[0].rstn));
-axi4_stream_if #(.DN (DN), .DAT_T (logic [8-1:0])) sao [4-1:0] (.ACLK (sto[0].clk), .ARESETn (sto[0].rstn));
-
-generate
-for (genvar i=0; i<4; i++) begin: for_str
-
-  // RX
-//  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
-//  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
-//  end: for_byte_i
-  assign sai[i].TKEEP           =    sti[i].kep;
-  assign sai[i].TDATA           =    sti[i].dat;
-  assign sai[i].TLAST           =    sti[i].lst;
-  assign sai[i].TVALID          =    sti[i].vld;
-  assign sti[i].rdy             =    sai[i].TREADY;
-
-  // TX
-//  for (genvar b=0; b<DN; b=b+DN) begin: for_byte_o
-//  assign sto[i].kep           =   &sao[i].TKEEP[DN*b+:DN];
-//  end: for_byte_o
-  assign sto[i].kep           =   &sao[i].TKEEP ;
-  assign sto[i].dat           =    sao[i].TDATA ;
-  assign sto[i].lst           =    sao[i].TLAST ;
-  assign sto[i].vld           =    sao[i].TVALID;
-  assign sao[i].TREADY        =    sto[i].rdy;   
-
-end: for_str
-endgenerate
 
 // since the PS GP0 port is AXI3 and the local bus is AXI4
 assign axi_gp.AWREGION = '0;

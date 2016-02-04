@@ -108,8 +108,12 @@ str_bus_if #(.DN (  2), .DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn
 str_bus_if #(           .DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA
 
 // DMA sterams RX/TX
-str_bus_if #(           .DAT_T (SBL_T)) str_drx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
-str_bus_if #(           .DAT_T (SBL_T)) str_dtx   [4-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
+str_bus_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
+str_bus_if #(           .DAT_T (SBL_T)) str_dtx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
+
+// AXI4-Stream DMA RX/TX
+axi4_stream_if #(.DN (2), .DAT_T (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
+axi4_stream_if #(.DN (2), .DAT_T (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -261,9 +265,37 @@ red_pitaya_ps ps (
   // system read/write channel
   .bus           (ps_sys      ),
   // AXI streams
-  .sti           (str_drx     ),
-  .sto           (str_dtx     )
+  .srx           (axi_drx     ),
+  .stx           (axi_dtx     )
 );
+
+generate
+for (genvar i=0; i<3; i++) begin: for_str
+
+  // RX
+//  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
+//  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
+//  end: for_byte_i
+  assign axi_drx[i].TKEEP           = {2{str_drx[i].kep}};
+  assign axi_drx[i].TDATA           =    str_drx[i].dat;
+  assign axi_drx[i].TLAST           =    str_drx[i].lst;
+  assign axi_drx[i].TVALID          =    str_drx[i].vld;
+// TODO: rethink DMA ready signal
+//  assign str_drx[i].rdy             =    axi_drx[i].TREADY;
+  assign str_drx[i].rdy             =    '1;
+
+  // TX
+//  for (genvar b=0; b<DN; b=b+DN) begin: for_byte_o
+//  assign sto[i].kep           =   &sao[i].TKEEP[DN*b+:DN];
+//  end: for_byte_o
+  assign str_dtx[i].kep           =   &axi_dtx[i].TKEEP ;
+  assign str_dtx[i].dat           =    axi_dtx[i].TDATA ;
+  assign str_dtx[i].lst           =    axi_dtx[i].TLAST ;
+  assign str_dtx[i].vld           =    axi_dtx[i].TVALID;
+  assign axi_dtx[i].TREADY        =    str_dtx[i].rdy;   
+
+end: for_str
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
@@ -735,10 +767,10 @@ la_top #(
 // TODO: for now just a loopback
 // this is an attempt to minimize the related DMA
 
-str_pas on_demand (
+axi4_stream_pas loopback (
   .ena (1'b1),
-  .sti (str_dtx[3]),
-  .sto (str_drx[3])
+  .sti (axi_dtx[3]),
+  .sto (axi_drx[3])
 );
 
 endmodule: red_pitaya_top
