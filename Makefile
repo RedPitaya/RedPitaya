@@ -79,6 +79,7 @@ IDGEN_DIR       = Bazaar/tools/idgen
 OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
+LIBRPLCR_DIR	= api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = api/rpApplications
 SDK_DIR         = SDK/
 
@@ -269,7 +270,7 @@ buildroot: $(INSTALL_DIR)
 # API libraries
 ################################################################################
 
-.PHONY: api librp librpapp libredpitaya
+.PHONY: api librp librpapp libredpitaya liblcr_meter
 
 libredpitaya:
 	$(MAKE) -C shared
@@ -280,11 +281,15 @@ librp:
 
 ifdef ENABLE_LICENSING
 
-api: librp librpapp
+api: librp librpapp liblcr_meter
 
 librpapp:
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+liblcr_meter:
+	$(MAKE) -C $(LIBRPLCR_DIR)
+	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 
@@ -499,6 +504,7 @@ scopegenpro: api $(NGINX)
 spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -535,6 +541,7 @@ clean:
 	-make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
+	make -C $(LIBRPLCR_DIR) clean
 	make -C $(SDK_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
