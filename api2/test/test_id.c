@@ -18,6 +18,10 @@ int main (int argc, char **argv) {
     rp_IdGetID (&handle, &id);
     printf("ID = 0x%08x\n", id);
 
+    uint32_t efuse;
+    rp_IdGetEFUSE (&handle, &efuse);
+    printf("EFUSE = 0x%08x\n", efuse);
+
     uint64_t dna;
     rp_IdGetDNA (&handle, &dna);
     printf("DNA = 0x%" PRIx64 "\n", dna);
@@ -28,6 +32,7 @@ int main (int argc, char **argv) {
     for (int i=0; i<5; i++) {
         printf("%08x", gith[i]);
     }
+    printf("\n");
 
     // Releasing resources
     rp_IdClose(&handle);

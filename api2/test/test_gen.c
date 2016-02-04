@@ -4,18 +4,19 @@
 
 #include "redpitaya/rp2.h"
 #include "generate.h"
+#include "common.h"
 
 int main (int argc, char **argv) {
     rp_handle_uio_t handle;
     int status;
 
     // Initialization of API
-    if (rp_GenOpen("/dev/uio11", &handle) != RP_OK) {
+    if (rp_GenOpen("/dev/uio7", &handle) != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
     }
 
-    int unsigned length = 256;
+    int unsigned length = 1<<13;
     double frequency = 1000;
     double phase = 180;
 
@@ -30,9 +31,7 @@ int main (int argc, char **argv) {
         fprintf(stderr, "Red Pitaya API access failed!\n");
     }
 
-    rp_GenOutputEnable(&handle, 0xffff);
-
-    rp_GenGlobalTrigSet(&handle, RP_TRG_DGEN_SWE_MASK);
+    rp_GenGlobalTrigSet(&handle, RP_TRG_GEN1_SWE_MASK);
     rp_GenTrigger(&handle);
 
     usleep(5*1000*1000);
