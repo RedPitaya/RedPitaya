@@ -111,7 +111,7 @@ int lcr_Reset(){
 
 int lcr_SetDefaultValues(){
 	EXEC_CHECK(lcr_setRShunt(2));
-	EXEC_CHECK(lcr_SetFrequency(1000.0));
+	EXEC_CHECK(lcr_SetFrequency(100.0));
 	EXEC_CHECK(lcr_SetCalibMode(CALIB_NONE));
 	EXEC_CHECK(lcr_SetMeasTolerance(0));
 	EXEC_CHECK(lcr_SetMeasRangeMode(0));
