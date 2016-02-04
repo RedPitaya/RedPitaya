@@ -32,59 +32,59 @@
  */
 enum {
     /* OMNI section */
-    FPGA_RB_CTRL                   = 0x00000,                                                              // h000: RB control register
-    FPGA_RB_STATUS                 = 0x00004,                                                              // h004: EB status register
-    FPGA_RB_ICR                    = 0x00008,                                                              // h008: RB interrupt control register
-    FPGA_RB_ISR                    = 0x0000C,                                                              // h00C: RB interrupt status register
-    FPGA_RB_DMA_CTRL               = 0x00010,                                                              // h010: RB DMA control register
+    FPGA_RW_RB_CTRL                                                                            = 0x00000,  // h000: RB control register
+    FPGA_RD_RB_STATUS                                                                          = 0x00004,  // h004: RB status register
+    FPGA_RW_RB_ICR                                                                             = 0x00008,  // h008: RB interrupt control register
+    FPGA_RD_RB_ISR                                                                             = 0x0000C,  // h00C: RB interrupt status register
+    FPGA_RW_RB_DMA_CTRL                                                                        = 0x00010,  // h010: RB DMA control register
     //FPGA_RD_RB_RSVD_H014,
     //FPGA_RD_RB_RSVD_H018,
-    FPGA_RB_CON_SRC_PNT            = 0x0001C,                                                              // h01C: RB_LED, RB_RFOUT1 and RB_RFOUT2 connection matrix
+    FPGA_RD_RB_CON_SRC_PNT                                                                     = 0x0001C,  // h01C: RB_LED, RB_RFOUT1 and RB_RFOUT2 connection matrix
 
     /* TX section */
-    FPGA_RB_TX_CAR_OSC_INC_LO      = 0x00020,                                                              // h020: RB TX_CAR_OSC increment register              LSB:        (Bit 31: 0)
-    FPGA_RB_TX_CAR_OSC_INC_HI      = 0x00024,                                                              // h024: RB TX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
-    FPGA_RB_TX_CAR_OSC_OFS_LO      = 0x00028,                                                              // h028: RB TX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
-    FPGA_RB_TX_CAR_OSC_OFS_HI      = 0x0002C,                                                              // h02C: RB TX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    FPGA_RB_TX_CAR_OSC_MIX_GAIN    = 0x00030,                                                              // h030: RB TX_CAR_OSC mixer gain:     SIGNED 16 bit
+    FPGA_RW_RB_TX_CAR_OSC_INC_LO                                                               = 0x00020,  // h020: RB TX_CAR_OSC increment register              LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_CAR_OSC_INC_HI                                                               = 0x00024,  // h024: RB TX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_TX_CAR_OSC_OFS_LO                                                               = 0x00028,  // h028: RB TX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_CAR_OSC_OFS_HI                                                               = 0x0002C,  // h02C: RB TX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_TX_CAR_OSC_MIX_GAIN                                                             = 0x00030,  // h030: RB TX_CAR_OSC mixer gain:     SIGNED 16 bit
     //FPGA_RD_RB_TX_RSVD_H034,
-    FPGA_RB_TX_CAR_OSC_MIX_OFS     = 0x00038,                                                              // h038: RB TX_CAR_OSC mixer offset:   SIGNED 17 bit
+    FPGA_RW_RB_TX_CAR_OSC_MIX_OFS                                                              = 0x00038,  // h038: RB TX_CAR_OSC mixer offset:   SIGNED 17 bit
     //FPGA_RD_RB_TX_RSVD_H03C,
-    FPGA_RB_TX_MOD_OSC_INC_LO      = 0x00040,                                                              // h040: RB TX_MOD_OSC increment register              LSB:        (Bit 31: 0)
-    FPGA_RB_TX_MOD_OSC_INC_HI      = 0x00044,                                                              // h044: RB TX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
-    FPGA_RB_TX_MOD_OSC_OFS_LO      = 0x00048,                                                              // h048: RB TX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
-    FPGA_RB_TX_MOD_OSC_OFS_HI      = 0x0004C,                                                              // h04C: RB TX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    FPGA_RB_TX_MOD_OSC_MIX_GAIN    = 0x00050,                                                              // h050: RB TX_MOD_OSC mixer gain:     SIGNED 16 bit
+    FPGA_RW_RB_TX_MOD_OSC_INC_LO                                                               = 0x00040,  // h040: RB TX_MOD_OSC increment register              LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_MOD_OSC_INC_HI                                                               = 0x00044,  // h044: RB TX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_TX_MOD_OSC_OFS_LO                                                               = 0x00048,  // h048: RB TX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_MOD_OSC_OFS_HI                                                               = 0x0004C,  // h04C: RB TX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_TX_MOD_OSC_MIX_GAIN                                                             = 0x00050,  // h050: RB TX_MOD_OSC mixer gain:     SIGNED 16 bit
     //FPGA_RD_RB_TX_RSVD_H054,
-    FPGA_RB_TX_MOD_OSC_MIX_OFS_LO  = 0x00058,                                                              // h058: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   LSB:        (Bit 31: 0)
-    FPGA_RB_TX_MOD_OSC_MIX_OFS_HI  = 0x0005C,                                                              // h05C: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
-    FPGA_RB_TX_MUXIN_SRC           = 0x00060,                                                              // h060: RB analog TX MUX input selector:  ...  @see below
-    FPGA_RB_TX_MUXIN_GAIN          = 0x00064,                                                              // h064: RB analog TX MUX gain for input amplifier
+    FPGA_RW_RB_TX_MOD_OSC_MIX_OFS_LO                                                           = 0x00058,  // h058: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_MOD_OSC_MIX_OFS_HI                                                           = 0x0005C,  // h05C: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_TX_MUXIN_SRC                                                                    = 0x00060,  // h060: RB analog TX MUX input selector:  ...  @see below
+    FPGA_RW_RB_TX_MUXIN_GAIN                                                                   = 0x00064,  // h064: RB analog TX MUX gain for input amplifier
 
     /* RX section */
-    //FPGA_RD_RB_RX_RSVD_H100,
-    //FPGA_RD_RB_RX_RSVD_H104,
-    //FPGA_RD_RB_RX_RSVD_H108,
-    //FPGA_RD_RB_RX_RSVD_H10C,
-    //FPGA_RD_RB_RX_RSVD_H110,
-    //FPGA_RD_RB_RX_RSVD_H114,
-    //FPGA_RD_RB_RX_RSVD_H118,
-    //FPGA_RD_RB_RX_RSVD_H11C,
-    FPGA_RW_RB_RX_CAR_OSC_INC_LO   = 0x00120,                                                              // h120: RB RX_CAR_OSC increment register              LSB:        (Bit 31: 0)
-    FPGA_RW_RB_RX_CAR_OSC_INC_HI   = 0x00124,                                                              // h124: RB RX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_RX_CAR_OSC_OFS_LO   = 0x00128,                                                              // h128: RB RX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
-    FPGA_RW_RB_RX_CAR_OSC_OFS_HI   = 0x0012C,                                                              // h12C: RB RX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_RX_MOD_ADD_GAIN     = 0x00130,                                                              // h130: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
+    FPGA_RD_RB_RX_CAR_SUM_INC_LO                                                               = 0x00100,  // h110: RB RX_CAR_SUM increment register              LSB:        (Bit 31: 0)
+    FPGA_RD_RB_RX_CAR_SUM_INC_HI                                                               = 0x00104,  // h114: RB RX_CAR_SUM increment register              MSB: 16'b0, (Bit 47:32)
+    FPGA_RD_RB_RX_CAR_SUM_OFS_LO                                                               = 0x00108,  // h118: RB RX_CAR_SUM offset register                 LSB:        (Bit 31: 0)
+    FPGA_RD_RB_RX_CAR_SUM_OFS_HI                                                               = 0x0010C,  // h11C: RB RX_CAR_SUM offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RD_RB_RX_CAR_AFC_INC_LO                                                               = 0x00110,  // h110: RB RX_CAR_AFC increment register              LSB:        (Bit 31: 0)
+    FPGA_RD_RB_RX_CAR_AFC_INC_HI                                                               = 0x00114,  // h114: RB RX_CAR_AFC increment register              MSB: 16'b0, (Bit 47:32)
+    FPGA_RD_RB_RX_CAR_AFC_OFS_LO                                                               = 0x00118,  // h118: RB RX_CAR_AFC offset register                 LSB:        (Bit 31: 0)
+    FPGA_RD_RB_RX_CAR_AFC_OFS_HI                                                               = 0x0011C,  // h11C: RB RX_CAR_AFC offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_CAR_OSC_INC_LO                                                               = 0x00120,  // h120: RB RX_CAR_OSC increment register              LSB:        (Bit 31: 0)
+    FPGA_RW_RB_RX_CAR_OSC_INC_HI                                                               = 0x00124,  // h124: RB RX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_CAR_OSC_OFS_LO                                                               = 0x00128,  // h128: RB RX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
+    FPGA_RW_RB_RX_CAR_OSC_OFS_HI                                                               = 0x0012C,  // h12C: RB RX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_MOD_ADD_GAIN                                                                 = 0x00130,  // h130: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
     //FPGA_RD_RB_RX_RSVD_H134,
-    FPGA_RW_RB_RX_MOD_ADD_OFS      = 0x00138,                                                              // h138: RB RX_MOD_OSC mixer offset:   SIGNED 17 bit
+    FPGA_RW_RB_RX_MOD_ADD_OFS                                                                  = 0x00138,  // h138: RB RX_MOD_OSC mixer offset:   SIGNED 17 bit
     //FPGA_RD_RB_RX_RSVD_H13C,
-    FPGA_RW_RB_RX_MOD_OSC_INC_LO   = 0x00140,                                                              // h140: RB RX_MOD_OSC increment register              LSB:        (Bit 31: 0)
-    FPGA_RW_RB_RX_MOD_OSC_INC_HI   = 0x00144,                                                              // h144: RB RX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_RX_MOD_OSC_OFS_LO   = 0x00148,                                                              // h148: RB RX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
-    FPGA_RW_RB_RX_MOD_OSC_OFS_HI   = 0x0014C,                                                              // h14C: RB RX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_MOD_OSC_INC_LO                                                               = 0x00140,  // h140: RB RX_MOD_OSC increment register              LSB:        (Bit 31: 0)
+    FPGA_RW_RB_RX_MOD_OSC_INC_HI                                                               = 0x00144,  // h144: RB RX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_MOD_OSC_OFS_LO                                                               = 0x00148,  // h148: RB RX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
+    FPGA_RW_RB_RX_MOD_OSC_OFS_HI                                                               = 0x0014C,  // h14C: RB RX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
 
-    FPGA_RB_RX_MUXIN_SRC           = 0x00160,                                                              // h160: RB analog RX MUX input selector
-    FPGA_RB_RX_MUXIN_GAIN          = 0x00164                                                               // h164: RB analog RX MUX gain for input amplifier
+    FPGA_RW_RB_RX_MUXIN_SRC                                                                    = 0x00160,  // h160: RB analog RX MUX input selector
+    FPGA_RW_RB_RX_MUXIN_GAIN                                                                   = 0x00164   // h164: RB analog RX MUX gain for input amplifier
 } FPGA_RB_REG_ENUMS;
 
 /** @brief FPGA registry structure for the RadioBox sub-module.
@@ -131,7 +131,11 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h14: RX_CAR_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the RX_CAR_OSC resumes operation.
      *
-     * bit h1B..h15: n/a
+     * bit h15: RX_CAR_OSC INC SRC STREAM - '1' places input MUXer for RX_CAR_OSC DDS increment input to the second streamed input pipe. '0' places MUXer to registers "RX_CAR_OSC INC HI" and "RX_CAR_OSC INC LO".
+     *
+     * bit h16: RX_CAR_OSC OFS SRC STREAM - '1' places input MUXer for RX_CAR_OSC DDS offset input to the second streamed input pipe. '0' places MUXer to registers "RX_CAR_OSC OFS HI" and "RX_CAR_OSC OFS LO".
+     *
+     * bit h1B..h17: n/a
      *
      * bit h1C: RX_MOD_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the RX_MOD_OSC resumes operation.
      *
@@ -318,12 +322,14 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h38  RX_MOD_ADD output.
      *
+     *   value = h39  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
+     *
      *   value = h3A  RX_AFC_FIR1_I output.
      *   value = h3B  RX_AFC_FIR1_Q output.
      *   value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
      *   value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
-     *
-     *   value = h3F  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
+     *   value = h3E  RX_AFC_INC_REG increment deviation value.
+     *   value = h3F  RX_AFC_PHS_REG phase deviation value.
      *
      * bit h0F..h06: n/a
      *
@@ -382,12 +388,14 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h38  RX_MOD_ADD output.
      *
+     *   value = h39  current test vector @see red_pitaya_radiobox.sv for details.
+     *
      *   value = h3A  RX_AFC_FIR1_I output.
      *   value = h3B  RX_AFC_FIR1_Q output.
      *   value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
      *   value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
-     *
-     *   value = h3F  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
+     *   value = h3E  RX_AFC_INC_REG increment deviation value.
+     *   value = h3F  RX_AFC_PHS_REG phase deviation value.
      *
      * bit h17..h16: n/a
      *
@@ -446,12 +454,14 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h38  RX_MOD_ADD output.
      *
+     *   value = h39  current test vector @see red_pitaya_radiobox.sv for details.
+     *
      *   value = h3A  RX_AFC_FIR1_I output.
      *   value = h3B  RX_AFC_FIR1_Q output.
      *   value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
      *   value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
-     *
-     *   value = h3F  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
+     *   value = h3E  RX_AFC_INC_REG increment deviation value.
+     *   value = h3F  RX_AFC_PHS_REG phase deviation value.
      *
      * bit h1F..h1E: n/a
      *
@@ -630,68 +640,71 @@ typedef struct fpga_rb_reg_mem_s {
 
     /* RX section */
 
-    /** @brief  Placeholder for addr: 0x40600100
+    /** @brief  R/O RB_RX_CAR_SUM_INC_LO - RX_CAR_SUM phase increment register, bits 31..0 (addr: 0x40600100)
      *
-     * n/a
-     *
-     */
-    uint32_t reserved_100;
-
-
-    /** @brief  Placeholder for addr: 0x40600104
-     *
-     * n/a
+     * bit h1F..h00: LSB of RX_CAR_SUM phase increment register.
      *
      */
-    uint32_t reserved_104;
+    uint32_t rx_car_sum_inc_lo;
 
-
-    /** @brief  Placeholder for addr: 0x40600108
+    /** @brief  R/O RB_RX_CAR_SUM_INC_HI - RX_CAR_SUM phase increment register, bits 47..32 (addr: 0x40600104)
      *
-     * n/a
+     * bit h0F..h00: MSB of RX_CAR_SUM phase increment register.
      *
-     */
-    uint32_t reserved_108;
-
-
-    /** @brief  Placeholder for addr: 0x4060010C
-     *
-     * n/a
+     * bit h1F..h10: n/a
      *
      */
-    uint32_t reserved_10C;
+    uint32_t rx_car_sum_inc_hi;
 
-
-    /** @brief  Placeholder for addr: 0x40600110
+    /** @brief  R/O RB_RX_CAR_SUM_OFS_LO - RX_CAR_SUM phase offset register, bits 31..0 (addr: 0x40600108)
      *
-     * n/a
-     *
-     */
-    uint32_t reserved_110;
-
-
-    /** @brief  Placeholder for addr: 0x40600114
-     *
-     * n/a
+     * bit h1F..h00: LSB of RX_CAR_SUM phase offset register.
      *
      */
-    uint32_t reserved_114;
+    uint32_t rx_car_sum_ofs_lo;
 
-
-    /** @brief  Placeholder for addr: 0x40600118
+    /** @brief  R/O RB_RX_CAR_SUM_OFS_HI - RX_CAR_SUM phase offset register, bits 47..32 (addr: 0x4060010C)
      *
-     * n/a
+     * bit h0F..h00: MSB of RX_CAR_SUM phase offset register.
      *
-     */
-    uint32_t reserved_118;
-
-
-    /** @brief  Placeholder for addr: 0x4060011C
-     *
-     * n/a
+     * bit h1F..h10: n/a
      *
      */
-    uint32_t reserved_11C;
+    uint32_t rx_car_sum_ofs_hi;
+
+
+    /** @brief  R/O RB_RX_CAR_AFC_INC_LO - RX_CAR_AFC phase increment register, bits 31..0 (addr: 0x40600110)
+     *
+     * bit h1F..h00: LSB of RX_CAR_AFC phase increment register.
+     *
+     */
+    uint32_t rx_car_afc_inc_lo;
+
+    /** @brief  R/O RB_RX_CAR_AFC_INC_HI - RX_CAR_AFC phase increment register, bits 47..32 (addr: 0x40600114)
+     *
+     * bit h0F..h00: MSB of RX_CAR_AFC phase increment register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_car_afc_inc_hi;
+
+
+    /** @brief  R/O RB_RX_CAR_AFC_OFS_LO - RX_CAR_AFC phase offset register, bits 31..0 (addr: 0x40600118)
+     *
+     * bit h1F..h00: LSB of RX_CAR_AFC phase offset register.
+     *
+     */
+    uint32_t rx_car_afc_ofs_lo;
+
+    /** @brief  R/O RB_RX_CAR_AFC_OFS_HI - RX_CAR_AFC phase offset register, bits 47..32 (addr: 0x4060011C)
+     *
+     * bit h0F..h00: MSB of RX_CAR_AFC phase offset register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_car_afc_ofs_hi;
 
 
     /** @brief  R/W RB_RX_CAR_OSC_INC_LO - RX_CAR_OSC phase increment register, bits 31..0 (addr: 0x40600120)
