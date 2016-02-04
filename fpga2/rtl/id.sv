@@ -14,7 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module id #(
-  bit [40*8-1:0] GITH = '0,  // GIT hash full length
+  bit [0:5*32-1] GITH = '0,  // GIT hash full length
   bit   [57-1:0] DNA = 57'h0823456789ABCDE,
   bit   [32-1:0] ID = {28'h0, 4'h1} // {reserved, board type}:  1 - release 1
 )(
@@ -100,7 +100,5 @@ end else begin
     default: bus.rdata <= '0;
   endcase
 end
-
-type(GITH) gith = GITH;
 
 endmodule: id

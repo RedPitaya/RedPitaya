@@ -282,7 +282,7 @@ wire          [ 8-1:0] led;
 glbl glbl();
 
 red_pitaya_top #(
-  .GITH ("a0a1a2a3b0b1b2b3c0c1c2c3d0d1d2d3e0e1e2e3")
+  .GITH (160'ha0a1a2a3b0b1b2b3c0c1c2c3d0d1d2d3e0e1e2e3)
 ) top (
   // PS connections
   .FIXED_IO_mio      (FIXED_IO_mio     ),
