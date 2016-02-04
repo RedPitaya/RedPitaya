@@ -44,7 +44,10 @@ int rp_IdGetID(rp_handle_uio_t *handle, uint32_t *id) {
 
 int rp_IdGetDNA(rp_handle_uio_t *handle, uint64_t *dna) {
     id_regset_t *regset = (id_regset_t *) handle->regset;
-    *dna = ioread64(&regset->dna);
+    *dna = ((uint64_t) ioread32(&regset->dna_hi) << 32)
+         | ((uint64_t) ioread32(&regset->dna_lo) <<  0);
+// TODO: the current FPGA AXI4 bus implementation does not support 64bit transfers
+//    *dna = ioread64(&regset->dna);
     return RP_OK;
 }
 
