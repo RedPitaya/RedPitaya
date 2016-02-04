@@ -23,6 +23,9 @@ logic          rstn;  // reset - active low
 
 // current time stamp
 logic [TW-1:0] cts;
+// interrupts
+logic          irq_trg;  // trigger
+logic          irq_stp;  // stop
 // control
 logic          ctl_rst;
 // configuration (mode)
@@ -196,6 +199,9 @@ acq #(
   .sto      (sto),
   // current time stamp
   .cts      (cts),
+  // interrupts
+  .irq_trg  (irq_trg),
+  .irq_stp  (irq_stp),
   // control
   .ctl_rst  (ctl_rst),
   // configuration (mode)

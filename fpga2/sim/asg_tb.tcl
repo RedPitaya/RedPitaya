@@ -25,7 +25,6 @@ add wave -noupdate           /${top}/asg/cfg_inf
 add wave -noupdate -unsigned /${top}/asg/cfg_bdl
 add wave -noupdate -unsigned /${top}/asg/cfg_bln
 add wave -noupdate -unsigned /${top}/asg/cfg_bnm
-add wave -noupdate -expand -group str /${top}/str_drn/str_trn
 add wave -noupdate -expand -group str /${top}/str_drn/str_ena
 add wave -noupdate -expand -group str /${top}/str_drn/buf_siz
 

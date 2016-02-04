@@ -30,6 +30,9 @@ logic               ctl_rst;  // set FSM to reset
 // trigger
 logic      [TN-1:0] trg_i  ;  // input
 logic               trg_o  ;  // output event
+// interrupts
+logic               irq_trg;  // trigger
+logic               irq_stp;  // stop
 // configuration
 logic      [TN-1:0] cfg_trg;  // trigger mask
 logic [CWM+CWF-1:0] cfg_siz;  // data tablesize
@@ -38,9 +41,9 @@ logic [CWM+CWF-1:0] cfg_off;  // pointer initial offset (used to define phase)
 // configuration (burst mode)
 logic               cfg_ben;  // burst enable
 logic               cfg_inf;  // infinite
-logic    [  16-1:0] cfg_bdl;  // data length
-logic    [  32-1:0] cfg_bln;  // period length (data+idle)
-logic    [  16-1:0] cfg_bnm;  // number of repetitions
+logic     [CWM-1:0] cfg_bdl;  // data length
+logic     [ 32-1:0] cfg_bln;  // period length (data+idle)
+logic     [ 16-1:0] cfg_bnm;  // number of repetitions
 
 // stream input/output
 str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
@@ -121,6 +124,9 @@ asg #(
   // trigger
   .trg_i    (trg_i),
   .trg_o    (trg_o),
+  // interrupts
+  .irq_trg  (irq_trg),
+  .irq_stp  (irq_stp),
   // configuration
   .cfg_trg  (cfg_trg),
   .cfg_siz  (cfg_siz),
