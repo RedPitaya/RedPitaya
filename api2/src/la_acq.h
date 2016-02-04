@@ -66,8 +66,21 @@ typedef struct {
     uint32_t cfg__aut_con;          ///< 0x04 configuration (bits to enable automatic and continuous modes)
     uint32_t trig_mask;             ///< 0x08 global trigger registers
     uint32_t reserved_0c;
-    rp_la_cfg_regset_t cfg;         ///< configuration registers
-    uint32_t reserved_18_3c [(0x40-0x18)>>2];
+    rp_la_cfg_regset_t cfg;         ///< counter configuration registers
+    rp_la_cfg_regset_t sts;         ///< counter status        registers
+    // current time stamp
+    // TODO: 64bit access should be added to FPGA
+//  uint64_t cts_acq;               ///< acquire start time
+//  uint64_t cts_trg;               ///< trigger       time
+//  uint64_t cts_stp;               ///< acquire stop  time
+    uint32_t cts_acq_lo;            ///< acquire start time
+    uint32_t cts_acq_hi;            ///< acquire start time
+    uint32_t cts_trg_lo;            ///< trigger time
+    uint32_t cts_trg_hi;            ///< trigger time
+    uint32_t cts_stp_lo;            ///< acquire stop time
+    uint32_t cts_stp_hi;            ///< acquire stop time
+    uint32_t reserved_38;
+    uint32_t reserved_3c;
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
     //rp_data_ptrs_regset_t dpt;    ///< data buf. pointers
