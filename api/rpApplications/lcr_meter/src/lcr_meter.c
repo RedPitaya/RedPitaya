@@ -497,7 +497,7 @@ int lcr_data_analysis(float **data,
 		phase_z_rad, z_ampl;
 
 	double T = (decimation / SAMPLE_RATE);
-	double c_calib = 500E-12;
+	double c_calib = 450E-12;
 
 	double u_dut[size];
 	double i_dut[size];
