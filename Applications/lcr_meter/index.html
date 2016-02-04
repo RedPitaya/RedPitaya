@@ -23,6 +23,7 @@
     <script src="js/bootstrap.min.js"></script>s
     <script src="js/fastclick.min.js"></script>
     <script src="js/jquery.simulate.js"></script>
+    <script type="text/javascript" src="js/table2CSV.js" > </script>
     <script src="js/lcr.js"></script>
 </head>
 
@@ -137,7 +138,7 @@
 
 				<div id="table_cmd">
 					<button id="btn_c_meas" type="button" class="btn">Clear Min/Max</button>
-					<button id="btn_export" type="button" class="btn">Export Table</button>
+					<button id="btn_export" type="button" class="btn" onclick="export_table()">Export Table</button>
 					<button id="btn_clear" type="button" class="btn" onclick="clearRowTable()">Clear</button>
 					<button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear All</button>
 				</div>

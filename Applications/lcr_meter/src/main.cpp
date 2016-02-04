@@ -335,8 +335,10 @@ void UpdateParams(void){
 		rangeMode.Update();
 	}
 
-	free(data);
+	//Set app to digital loop if in demo mode
+	rp_EnableDigitalLoop(IsDemoParam.Value());
 
+	free(data);
 }
 
 void OnNewParams(void){

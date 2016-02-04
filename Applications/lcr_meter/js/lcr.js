@@ -216,18 +216,21 @@
 			if(param_name == LCR.displ_params.prim && LCR.secondary_meas.apply_tolerance == true 
 				&& new_params['LCR_RUN'].value == true){
 
-				var diff = ((Math.abs(new_params['LCR_TOL_SAVED'].value - new_params[param_name].value)) / ((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
-				
+
+				var diff = 100 - (new_params[param_name].value / Math.abs(new_params['LCR_TOL_SAVED'].value) * 100);
+				//var diff = (( - new_params[param_name].value)) / 
+				//	((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
+
+				var str_diff = diff.toString().substr(0, 5);
+				diff = parseInt(diff);
+
 				formatRangeAuto(false, 1,null, new_params[param_name].value);
 				var units = LCR.displ_params.p_units;
 				var data = LCR.displ_params.prim_val;
 
 				if( Math.abs(diff) > 1 && Math.abs(diff) < 100){
 					console.log(diff.toFixed(2));
-					if(diff.toFixed(2).length > 5){
-						diff = parseInteger(String(diff).substr(0, 5));
-					}
-					$('#lb_sec_displ').empty().append((100 - diff.toFixed(2)) + "%");
+					$('#lb_sec_displ').empty().append(100 - diff + "%");
 					$('#lb_prim_displ').empty().append(data);
 					$('#lb_prim_displ_units').empty().append(units);
 				}else if(Math.abs(diff) > 100){
@@ -547,11 +550,6 @@ $(function() {
 		LCR.sendParams();
 	});
 
-	$("#btn_export").click(function (e) {
-    	window.open('data:application/vnd.ms-excel,' + $('#m_table').html());
-    	e.preventDefault();
-	});
-
 	LCR.startApp();
 });
 
@@ -581,8 +579,6 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	if(precision != null && LCR.displ_params.prim == "LCR_C"){
 		meas_data = meas_data * Math.pow(10, -precision);
 	}
-
-	console.log("NON-FORMATTED DATA: " + meas_data);
 	
 	if(meas_data < 0.00000000000010){
 		data = "OVER R.";
@@ -677,8 +673,6 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 		if(data == "OVER R."){
 			return data;
 		}
-		console.log("UNITS: " + units);
-		console.log("DATA: " + data);
 
 		return (data * inverse + units);
 	}
@@ -802,5 +796,12 @@ function clearTableAll(){
 	$('#m_table td').remove();
 	LCR.data_log.curr_store = 1;
 }
+
+function export_table(){
+	//var csv = $("#m_table").table2CSV({delivery:'value'});
+	//window.location.href = 'data:application/csv;charset=UTF-8,' + encodeURIComponent(csv);
+	$('#m_table').table2CSV();
+}
+
 
 
