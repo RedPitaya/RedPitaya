@@ -179,6 +179,17 @@ irq_t irq;
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 
+// GPIO related signals
+localparam int unsigned GDW = 8+8;
+
+logic [GDW-1:0] gpio_e;  // output enable
+logic [GDW-1:0] gpio_o;  // output
+logic [GDW-1:0] gpio_i;  // input
+
+logic [GDW-1:0] exp_e;  // output enable
+logic [GDW-1:0] exp_o;  // output
+logic [GDW-1:0] exp_i;  // input
+
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,12 +369,6 @@ muxctl muxctl (
 // GPIO
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam int unsigned GDW = 8+8;
-
-logic [GDW-1:0] gpio_e;  // output enable
-logic [GDW-1:0] gpio_o;  // output
-logic [GDW-1:0] gpio_i;  // input
-
 gpio #(.DW (GDW)) gpio (
   // expansion connector
   .gpio_e  (gpio_e),
@@ -375,6 +380,8 @@ gpio #(.DW (GDW)) gpio (
   .bus     (sys[2])
 );
 
+assign gpio_i = exp_i;
+
 ////////////////////////////////////////////////////////////////////////////////
 // extension connector
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,10 +390,6 @@ gpio #(.DW (GDW)) gpio (
 //IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_e));
 //IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_e));
 //IOBUF iobuf_exp [GDW-1:0] (.O(gpio_i), .IO({exp_n_io, exp_p_io}), .I(gpio_o), .T(~gpio_e));
-
-logic [GDW-1:0] exp_e;  // output enable
-logic [GDW-1:0] exp_o;  // output
-logic [GDW-1:0] exp_i;  // input
 
 // IO buffer with output enable
 IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
@@ -414,7 +417,7 @@ ODDR #(
 ) oddr_exp_o [GDW-1:0] (
   .Q  (exp_o),
   .C  (adc_clk),
-  .CE (1'b1),
+  .CE (str_lgo.vld   ),
   .D1 (str_lgo.dat[0]),
   .D2 (str_lgo.dat[0]),  // TODO: add DDR support for LG here
   .R  (1'b0),
