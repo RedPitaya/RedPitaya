@@ -9,7 +9,7 @@ module axi4_stream_mux #(
   int unsigned SN = 2,          // select number of ports
   int unsigned SW = $clog2(SN), // select signal width
   // data stream parameters
-  int unsigned DW = 1,
+  int unsigned DN = 1,
   type DAT_T = logic [8-1:0]
 )(
   // control
@@ -19,10 +19,11 @@ module axi4_stream_mux #(
   axi4_stream_if.s sto            // output
 );
 
-logic [SN-1:0] tvalid;
-DAT_T [SN-1:0] tdata ;
-logic [SN-1:0] tkeep ;
-logic [SN-1:0] tlast ;
+DAT_T [SN-1:0] [DN-1:0] tdata ;
+logic [SN-1:0]          tkeep ;
+logic [SN-1:0]          tlast ;
+logic [SN-1:0]          tvalid;
+logic [SN-1:0]          tready;
 
 generate
 for (genvar i=0; i<SN; i++) begin: for_str
@@ -32,6 +33,8 @@ assign tdata [i] = sti[i].TDATA ;
 assign tkeep [i] = sti[i].TKEEP ;
 assign tlast [i] = sti[i].TLAST ;
 
+assign sti[i].TREADY = tready[i];
+
 end: for_str
 endgenerate
 
@@ -40,6 +43,6 @@ assign sto.TDATA  = tdata [sel];
 assign sto.TKEEP  = tkeep [sel];
 assign sto.TLAST  = tlast [sel];
 
-assign sti.TREADY = SN'(1'b0) << sel;
+assign tready = SN'(1'b0) << sel;
 
 endmodule: axi4_stream_mux

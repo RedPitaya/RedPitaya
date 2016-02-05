@@ -9,7 +9,7 @@ module axi4_stream_demux #(
   int unsigned SN = 2,          // select number of ports
   int unsigned SW = $clog2(SN), // select signal width
   // data stream parameters
-  int unsigned DW = 1,
+  int unsigned DN = 1,
   type DAT_T = logic [8-1:0]
 )(
   // control
@@ -24,10 +24,10 @@ logic [SN-1:0] tready;
 generate
 for (genvar i=0; i<SN; i++) begin: for_str
 
-assign sto[i].TVALID[i] = (i==sel) & sti.TVALID;
-assign sto[i].TDATA [i] =            sti.TDATA ;
-assign sto[i].TKEEP [i] =            sti.TKEEP ;
-assign sto[i].TLAST [i] =            sti.TLAST ;
+assign sto[i].TVALID = (i==sel) & sti.TVALID;
+assign sto[i].TDATA  =            sti.TDATA ;
+assign sto[i].TKEEP  =            sti.TKEEP ;
+assign sto[i].TLAST  =            sti.TLAST ;
 
 assign tready[i] = sto[i].TREADY;
 
