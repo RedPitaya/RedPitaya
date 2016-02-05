@@ -70,7 +70,7 @@ module red_pitaya_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [4-1:0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
+logic [4-1:0] fclk ;  // {200MHz, 166MHz, 142MHz, 125MHz}
 logic [4-1:0] frstn;
 
 // PLL signals
