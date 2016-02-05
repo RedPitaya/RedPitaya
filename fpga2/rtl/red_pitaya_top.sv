@@ -70,6 +70,9 @@ module red_pitaya_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+// GPIO parameter
+localparam int unsigned GDW = 8+8;
+
 logic [4-1:0] fclk ;  // {200MHz, 166MHz, 142MHz, 125MHz}
 logic [4-1:0] frstn;
 
@@ -93,9 +96,9 @@ logic                    adc_clk;
 logic                    adc_rstn;
 
 // stream bus type
-localparam type SBA_T = logic signed [14-1:0];  // acquire
-localparam type SBG_T = logic signed [14-1:0];  // generate
-localparam type SBL_T = logic        [16-1:0];  // logic ananlyzer/generator
+localparam type SBA_T = logic signed [ 14-1:0];  // acquire
+localparam type SBG_T = logic signed [ 14-1:0];  // generate
+localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
 // analog input streams
 str_bus_if #(           .DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
@@ -104,16 +107,25 @@ str_bus_if #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn
 str_bus_if #(           .DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
 str_bus_if #(           .DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
 // digital input streams
-str_bus_if #(.DN (  2), .DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
+str_bus_if #(.DN (2),   .DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
 str_bus_if #(           .DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA
 
 // DMA sterams RX/TX
 str_bus_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
 str_bus_if #(           .DAT_T (SBL_T)) str_dtx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
 
+
 // AXI4-Stream DMA RX/TX
 axi4_stream_if #(.DN (2), .DAT_T (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 axi4_stream_if #(.DN (2), .DAT_T (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
+
+axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         axi_exe [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         axi_exo [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         axi_exi [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+
+axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -178,9 +190,6 @@ irq_t irq;
 // system bus
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
-
-// GPIO related signals
-localparam int unsigned GDW = 8+8;
 
 logic [GDW-1:0] gpio_e;  // output enable
 logic [GDW-1:0] gpio_o;  // output
@@ -380,51 +389,53 @@ gpio #(.DW (GDW)) gpio (
   .bus     (sys[2])
 );
 
-assign gpio_i = exp_i;
+assign axi_exe[0].TDATA  = {2{gpio_e}};
+assign axi_exe[0].TKEEP  = '1;
+assign axi_exe[0].TLAST  = 1'b1;
+assign axi_exe[0].TVALID = 1'b1;
+
+assign axi_exo[0].TDATA  = {2{gpio_o}};
+assign axi_exo[0].TKEEP  = '1;
+assign axi_exo[0].TLAST  = 1'b1;
+assign axi_exo[0].TVALID = 1'b1;
+
+assign gpio_i = axi_exi[0].TDATA;
+assign axi_exi[0].TREADY = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // extension connector
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO: there should be a multiplexer between GPIO and LG/LA
-//IOBUF i_iobufp [8-1:0] (.O(exp_p_i), .IO(exp_p_io), .I(exp_p_o), .T(~exp_p_e));
-//IOBUF i_iobufn [8-1:0] (.O(exp_n_i), .IO(exp_n_io), .I(exp_n_o), .T(~exp_n_e));
-//IOBUF iobuf_exp [GDW-1:0] (.O(gpio_i), .IO({exp_n_io, exp_p_io}), .I(gpio_o), .T(~gpio_e));
+logic [1-1:0] exp_sel = 1'b1;
 
-// IO buffer with output enable
-IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
+// GPIO multiplexer
 
-// input DDR
-IDDR #(
-  .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
-) iddr_exp_i [GDW-1:0] (
-  .Q1 (str_lai.dat),
-  .Q2 (),  // TODO: add DDR support for LA here
-  .C  (adc_clk),
-  .CE (1'b1),
-  .D  (exp_i),
-  .R  (1'b0),
-  .S  (1'b0)
+axi4_stream_mux #(
+  .DN (2),
+  .DAT_T (SBL_T)
+) mux_axe (
+  .sel (exp_sel),
+  .sti (axi_exe),
+  .sto (exp_exe)
 );
 
-assign str_lai.vld = 1'b1;
-assign str_lai.kep = '1;
-assign str_lai.lst = 1'b0;
-
-// output DDR
-ODDR #(
-  .DDR_CLK_EDGE ("SAME_EDGE")
-) oddr_exp_o [GDW-1:0] (
-  .Q  (exp_o),
-  .C  (adc_clk),
-  .CE (str_lgo.vld   ),
-  .D1 (str_lgo.dat[0]),
-  .D2 (str_lgo.dat[0]),  // TODO: add DDR support for LG here
-  .R  (1'b0),
-  .S  (1'b0)
+axi4_stream_mux #(
+  .DN (2),
+  .DAT_T (SBL_T)
+) mux_axo (
+  .sel (exp_sel),
+  .sti (axi_exo),
+  .sto (exp_exo)
 );
 
-assign str_lgo.rdy = 1'b1;
+axi4_stream_demux #(
+  .DN (2),
+  .DAT_T (SBL_T)
+) demux_axi (
+  .sel (exp_sel),
+  .sti (exp_exi),
+  .sto (axi_exi)
+);
 
 // output enable DDR
 ODDR #(
@@ -432,14 +443,51 @@ ODDR #(
   .IS_D2_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
   .DDR_CLK_EDGE ("SAME_EDGE")
 ) oddr_exp_e [GDW-1:0] (
-  .Q  (exp_e),
-  .C  (adc_clk),
-  .CE (1'b1),
-  .D1 (str_lgo.dat[1]),  // TODO: add DDR support for LG here
-  .D2 (str_lgo.dat[1]),
-  .R  (1'b0),
+  .Q  (exp_e           ),
+  .C  (exp_exe.ACLK    ),
+  .CE (exp_exe.TVALID  ),
+  .D1 (exp_exe.TDATA[0]),  // TODO: add DDR support for LG here
+  .D2 (exp_exe.TDATA[1]),
+  .R  (~exp_exe.ARESETn ),
   .S  (1'b0)
 );
+
+assign exp_exe.TREADY = 1'b1;
+
+// output DDR
+ODDR #(
+  .DDR_CLK_EDGE ("SAME_EDGE")
+) oddr_exp_o [GDW-1:0] (
+  .Q  (exp_o           ),
+  .C  (exp_exo.ACLK    ),
+  .CE (exp_exo.TVALID  ),
+  .D1 (exp_exo.TDATA[0]),
+  .D2 (exp_exo.TDATA[1]),  // TODO: add DDR support for LG here
+  .R  (~exp_exo.ARESETn ),
+  .S  (1'b0            )
+);
+
+assign exp_exo.TREADY = 1'b1;
+
+// input DDR
+IDDR #(
+  .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
+) iddr_exp_i [GDW-1:0] (
+  .Q1 (exp_exi.TDATA[0]),
+  .Q2 (exp_exi.TDATA[1]),  // TODO: add DDR support for LA here
+  .C  (exp_exi.ACLK    ),
+  .CE (exp_exi.TREADY  ),
+  .R  (~exp_exi.ARESETn ),
+  .S  (1'b0            ),
+  .D  (exp_i           )
+);
+
+assign exp_exi.TVALID = 1'b1;
+assign exp_exi.TKEEP  = '1;
+assign exp_exi.TLAST  = 1'b1;
+
+// IO buffer with output enable
+IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
 
 ////////////////////////////////////////////////////////////////////////////////
 // debounce
@@ -739,6 +787,18 @@ asg_top #(
   .bus       (sys[11])
 );
 
+assign axi_exe[1].TDATA  = {2{str_lgo.dat[1]}};
+assign axi_exe[1].TKEEP  =    str_lgo.kep  ;
+assign axi_exe[1].TLAST  =    str_lgo.lst  ;
+assign axi_exe[1].TVALID =    str_lgo.vld  ;
+
+assign axi_exo[1].TDATA  = {2{str_lgo.dat[0]}};
+assign axi_exo[1].TKEEP  =    str_lgo.kep  ;
+assign axi_exo[1].TLAST  =    str_lgo.lst  ;
+assign axi_exo[1].TVALID =    str_lgo.vld  ;
+
+assign str_lgo.rdy = axi_exo[1].TREADY;
+
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
@@ -762,6 +822,13 @@ la_top #(
   // System bus
   .bus       (sys[12])
 );
+
+assign str_lai.vld = axi_exi[1].TVALID;
+assign str_lai.lst = axi_exi[1].TLAST ;
+assign str_lai.kep = axi_exi[1].TKEEP ;
+assign str_lai.dat = axi_exi[1].TDATA ;
+
+assign axi_exi[1].TREADY = str_lai.rdy;
 
 ////////////////////////////////////////////////////////////////////////////////
 // on demand HW processor

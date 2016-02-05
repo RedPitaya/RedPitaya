@@ -43,6 +43,6 @@ assign sto.TDATA  = tdata [sel];
 assign sto.TKEEP  = tkeep [sel];
 assign sto.TLAST  = tlast [sel];
 
-assign tready = SN'(1'b0) << sel;
+assign tready = SN'(sto.TREADY) << sel;
 
 endmodule: axi4_stream_mux
