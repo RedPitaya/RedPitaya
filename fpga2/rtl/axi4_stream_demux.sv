@@ -1,10 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
-// AXI4-Stream multiplexer
+// AXI4-Stream demux
 // Authors: Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module axi4_stream_mux #(
+module axi4_stream_demux #(
   // select parameters
   int unsigned SN = 2,          // select number of ports
   int unsigned SW = $clog2(SN), // select signal width
@@ -15,31 +15,25 @@ module axi4_stream_mux #(
   // control
   input  logic [SW-1:0] sel,  // select
   // streams
-  axi4_stream_if.d sti [SN-1:0],  // input
-  axi4_stream_if.s sto            // output
+  axi4_stream_if.d sti,          // input
+  axi4_stream_if.s sto [SN-1:0]  // output
 );
 
-logic [SN-1:0] tvalid;
-DAT_T [SN-1:0] tdata ;
-logic [SN-1:0] tkeep ;
-logic [SN-1:0] tlast ;
+logic [SN-1:0] tready;
 
 generate
 for (genvar i=0; i<SN; i++) begin: for_str
 
-assign tvalid[i] = sti[i].TVALID;
-assign tdata [i] = sti[i].TDATA ;
-assign tkeep [i] = sti[i].TKEEP ;
-assign tlast [i] = sti[i].TLAST ;
+assign sto[i].TVALID[i] = (i==sel) & sti.TVALID;
+assign sto[i].TDATA [i] =            sti.TDATA ;
+assign sto[i].TKEEP [i] =            sti.TKEEP ;
+assign sto[i].TLAST [i] =            sti.TLAST ;
+
+assign tready[i] = sto[i].TREADY;
 
 end: for_str
 endgenerate
 
-assign sto.TVALID = tvalid[sel];
-assign sto.TDATA  = tdata [sel];
-assign sto.TKEEP  = tkeep [sel];
-assign sto.TLAST  = tlast [sel];
+assign sti.TREADY = tready[sel];
 
-assign sti.TREADY = SN'(1'b0) << sel;
-
-endmodule: axi4_stream_mux
+endmodule: axi4_stream_demux

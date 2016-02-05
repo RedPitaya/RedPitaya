@@ -65,7 +65,9 @@ read_verilog                      $path_rtl/axi4_if.sv
 read_verilog                      $path_rtl/axi4_lite_if.sv
 read_verilog                      $path_rtl/axi4_stream_if.sv
 read_verilog                      $path_rtl/axi4_stream_pas.sv
+read_verilog                      $path_rtl/axi4_stream_reg.sv
 read_verilog                      $path_rtl/axi4_stream_mux.sv
+read_verilog                      $path_rtl/axi4_stream_demux.sv
 read_verilog                      $path_rtl/sys_bus_if.sv
 read_verilog                      $path_rtl/sys_bus_interconnect.sv
 read_verilog                      $path_rtl/sys_bus_stub.sv
