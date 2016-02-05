@@ -47,6 +47,7 @@ add_files                         $path_rtl/axi4_if.sv
 add_files                         $path_rtl/axi4_lite_if.sv
 add_files                         $path_rtl/axi4_stream_if.sv
 add_files                         $path_rtl/axi4_stream_pas.sv
+add_files                         $path_rtl/axi4_stream_mux.sv
 add_files                         $path_rtl/sys_bus_if.sv
 add_files                         $path_rtl/sys_bus_interconnect.sv
 add_files                         $path_rtl/sys_bus_stub.sv
