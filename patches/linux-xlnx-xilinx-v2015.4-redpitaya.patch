@@ -19,4 +19,4 @@ index 527a6da..be56551 100644
  obj-$(CONFIG_ANDROID)		+= android/
 +
 +# Red Pitaya drivers
-+obj-$(CONFIG_DMA_PROXY)		+= redpitaya/
++obj-$(CONFIG_RPDMA)		+= redpitaya/
