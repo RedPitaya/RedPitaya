@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,144 @@
+@@ -86,3 +86,152 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -100,6 +100,14 @@
 +		dma-names = "axidma0", "axidma1";
 +	};
 +};*/
++/ {
++	dmatest_1: dmatest@1 {
++		compatible ="xlnx,axi-dma-test-1.00.a";
++		dmas = <&axi_dma_2 0
++			&axi_dma_2 1>;
++		dma-names = "axidma0", "axidma1";
++	};
++};
 +/ {
 +	id@40000000 {
 +		compatible = "generic-uio";

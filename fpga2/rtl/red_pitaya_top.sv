@@ -290,7 +290,7 @@ red_pitaya_ps ps (
 );
 
 generate
-for (genvar i=0; i<3; i++) begin: for_str
+for (genvar i=0; i<2; i++) begin: for_str
 
   // RX
 //  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
@@ -841,6 +841,13 @@ axi4_stream_pas loopback (
   .ena (1'b1),
   .sti (axi_dtx[3]),
   .sto (axi_drx[3])
+);
+
+// NOTE: this is just an experiment, not permanent code
+axi4_stream_pas loopback_1 (
+  .ena (1'b1),
+  .sti (axi_dtx[2]),
+  .sto (axi_drx[2])
 );
 
 endmodule: red_pitaya_top
