@@ -222,8 +222,8 @@ $(LINUX_DIR): $(LINUX_TAR)
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
 	# DMA support related patches
-#	cp -r patches/redpitaya $@/drivers/
-#	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
+	cp -r patches/redpitaya $@/drivers/
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
