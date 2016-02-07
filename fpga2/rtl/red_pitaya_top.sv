@@ -101,18 +101,17 @@ localparam type SBG_T = logic signed [ 14-1:0];  // generate
 localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
 // analog input streams
-str_bus_if #(           .DAT_T (SBA_T)) str_adc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ADC
-str_bus_if #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // osciloscope
+axi4_stream_if #(           .DAT_T (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ADC
+str_bus_if     #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));  // LA
 // analog output streams
-str_bus_if #(           .DAT_T (SBG_T)) str_asg [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // ASG
-str_bus_if #(           .DAT_T (SBG_T)) str_dac [MNG-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // DAC
+axi4_stream_if #(           .DAT_T (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
+axi4_stream_if #(           .DAT_T (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
 // digital input streams
-str_bus_if #(.DN (2),   .DAT_T (SBL_T)) str_lgo           (.clk (adc_clk), .rstn (adc_rstn));  // LG
-str_bus_if #(           .DAT_T (SBL_T)) str_lai           (.clk (adc_clk), .rstn (adc_rstn));  // LA
+axi4_stream_if #(.DN (2),   .DAT_T (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
+str_bus_if     #(           .DAT_T (SBL_T)) str_lai           (.clk  (adc_clk), .rstn    (adc_rstn));  // LA
 
 // DMA sterams RX/TX
 str_bus_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
-str_bus_if #(           .DAT_T (SBL_T)) str_dtx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // TX
 
 
 // AXI4-Stream DMA RX/TX
@@ -303,16 +302,6 @@ for (genvar i=0; i<3; i++) begin: for_str
 // TODO: rethink DMA ready signal
 //  assign str_drx[i].rdy             =    axi_drx[i].TREADY;
   assign str_drx[i].rdy             =    '1;
-
-  // TX
-//  for (genvar b=0; b<DN; b=b+DN) begin: for_byte_o
-//  assign sto[i].kep           =   &sao[i].TKEEP[DN*b+:DN];
-//  end: for_byte_o
-  assign str_dtx[i].kep           =   &axi_dtx[i].TKEEP ;
-  assign str_dtx[i].dat           =    axi_dtx[i].TDATA ;
-  assign str_dtx[i].lst           =    axi_dtx[i].TLAST ;
-  assign str_dtx[i].vld           =    axi_dtx[i].TVALID;
-  assign axi_dtx[i].TREADY        =    str_dtx[i].rdy;   
 
 end: for_str
 endgenerate
@@ -653,8 +642,12 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   adc_dat_raw <= {adc_dat_i[i][16-1], ~adc_dat_i[i][16-2:2]};
 
   // digital loopback multiplexer
-  assign str_adc[i].vld = 1'b1;
-  assign str_adc[i].dat = digital_loop ? str_dac[i].dat : adc_dat_raw;
+  assign str_adc[i].TVALID = 1'b1;
+  assign str_adc[i].TDATA  = digital_loop ? str_dac[i].TDATA : adc_dat_raw;
+  assign str_adc[i].TKEEP  = digital_loop ? str_dac[i].TKEEP : '1;
+  assign str_adc[i].TLAST  = digital_loop ? str_dac[i].TLAST : 1'b0;
+
+  axi4_stream_if #(.DAT_T (SBA_T)) str_lin (.ACLK (adc_clk), .ARESETn (adc_rstn));  // osciloscope
 
   linear #(
     .DTI  (SBA_T),
@@ -663,11 +656,17 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   ) linear_adc (
     // stream input/output
     .sti      (str_adc[i]),
-    .sto      (str_osc[i]),
+    .sto      (str_lin   ),
     // configuration
     .cfg_mul  (adc_cfg_mul[i]),
     .cfg_sum  (adc_cfg_sum[i])
   );
+
+  assign str_osc[i].kep = str_lin.TKEEP ;
+  assign str_osc[i].dat = str_lin.TDATA ;
+  assign str_osc[i].lst = str_lin.TLAST ;
+  assign str_osc[i].vld = str_lin.TVALID;
+  assign str_lin.TREADY = str_osc[i].rdy;
 
 end: for_adc
 endgenerate
@@ -679,13 +678,44 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
+  logic gen_sel = 0;
+
+  axi4_stream_if #(.DN (1), .DAT_T (SBG_T)) str_gen [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
+  axi4_stream_if #(.DN (1), .DAT_T (SBG_T)) str_lin         (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
+
+  axi4_stream_pas pas_0 (
+    .ena (1'b1),
+    .sti (str_asg[i]),
+    .sto (str_gen[0])
+  );
+
+  // TODO this conversion is not actually implemented yet
+  axi4_stream_pas #(
+    .DNI (2),
+    .DNO (1)
+  ) pas_1 (
+    .ena (1'b1),
+    .sti (axi_dtx[0+i]),
+    .sto (str_gen[1])
+  );
+
+  axi4_stream_mux #(
+    .DN (1),
+    .DAT_T (SBG_T)
+  ) mux_gen (
+    .sel (gen_sel),
+    .sti (str_gen),
+    .sto (str_lin)
+  );
+
   linear #(
+    .DN   (1),
     .DTI  (SBG_T),
     .DTO  (SBG_T),
     .DWM  (16)
   ) linear_dac (
     // stream input/output
-    .sti      (str_asg[i]),
+    .sti      (str_lin   ),
     .sto      (str_dac[i]),
     // configuration
     .cfg_mul  (dac_cfg_mul[i]),
@@ -693,8 +723,8 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
   );
 
   // output registers + signed to unsigned (also to negative slope)
-  assign dac_dat[i] = {str_dac[i].dat[0][14-1], ~str_dac[i].dat[0][14-2:0]};
-  assign str_dac[i].rdy = 1'b1;
+  assign dac_dat[i] = {str_dac[i].TDATA[0][14-1], ~str_dac[i].TDATA[0][14-2:0]};
+  assign str_dac[i].TREADY = 1'b1;
 
 end: for_dac
 endgenerate
@@ -787,17 +817,17 @@ asg_top #(
   .bus       (sys[11])
 );
 
-assign axi_exe[1].TDATA  = {2{str_lgo.dat[1]}};
-assign axi_exe[1].TKEEP  =    str_lgo.kep  ;
-assign axi_exe[1].TLAST  =    str_lgo.lst  ;
-assign axi_exe[1].TVALID =    str_lgo.vld  ;
+assign axi_exe[1].TDATA  = {2{str_lgo.TDATA[1]}};
+assign axi_exe[1].TKEEP  =    str_lgo.TKEEP   ;
+assign axi_exe[1].TLAST  =    str_lgo.TLAST   ;
+assign axi_exe[1].TVALID =    str_lgo.TVALID  ;
 
-assign axi_exo[1].TDATA  = {2{str_lgo.dat[0]}};
-assign axi_exo[1].TKEEP  =    str_lgo.kep  ;
-assign axi_exo[1].TLAST  =    str_lgo.lst  ;
-assign axi_exo[1].TVALID =    str_lgo.vld  ;
+assign axi_exo[1].TDATA  = {2{str_lgo.TDATA[0]}};
+assign axi_exo[1].TKEEP  =    str_lgo.TKEEP   ;
+assign axi_exo[1].TLAST  =    str_lgo.TLAST   ;
+assign axi_exo[1].TVALID =    str_lgo.TVALID  ;
 
-assign str_lgo.rdy = axi_exo[1].TREADY;
+assign str_lgo.TREADY = axi_exo[1].TREADY;
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)

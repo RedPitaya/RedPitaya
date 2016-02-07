@@ -16,30 +16,30 @@ add wave -noupdate /${top}/clk
 add wave -noupdate /${top}/rstn
 
 # configuration/control/status
-add wave -noupdate           /${top}/asg_top/asg/ctl_rst
-add wave -noupdate           /${top}/asg_top/asg/trg_i
-add wave -noupdate           /${top}/asg_top/asg/trg_o
-add wave -noupdate           /${top}/asg_top/asg/cfg_trg
-add wave -noupdate -hex      /${top}/asg_top/asg/cfg_siz
-add wave -noupdate -hex      /${top}/asg_top/asg/cfg_stp
-add wave -noupdate -hex      /${top}/asg_top/asg/cfg_off
-add wave -noupdate           /${top}/asg_top/asg/cfg_ben
-add wave -noupdate           /${top}/asg_top/asg/cfg_inf
-add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bdl
-add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bln
-add wave -noupdate -unsigned /${top}/asg_top/asg/cfg_bnm
-add wave -noupdate -unsigned /${top}/asg_top/asg/cnt_bln;
-add wave -noupdate -unsigned /${top}/asg_top/asg/cnt_bnm;
-add wave -noupdate           /${top}/asg_top/asg/sts_run
-add wave -noupdate           /${top}/asg_top/asg/sts_vld
-add wave -noupdate           /${top}/asg_top/asg/sts_trg
-add wave -noupdate           /${top}/asg_top/asg/sts_aen
-add wave -noupdate           /${top}/asg_top/asg/sts_ren
+add wave -noupdate           /${top}/${dut}/asg/ctl_rst
+add wave -noupdate           /${top}/${dut}/asg/trg_i
+add wave -noupdate           /${top}/${dut}/asg/trg_o
+add wave -noupdate           /${top}/${dut}/asg/cfg_trg
+add wave -noupdate -hex      /${top}/${dut}/asg/cfg_siz
+add wave -noupdate -hex      /${top}/${dut}/asg/cfg_stp
+add wave -noupdate -hex      /${top}/${dut}/asg/cfg_off
+add wave -noupdate           /${top}/${dut}/asg/cfg_ben
+add wave -noupdate           /${top}/${dut}/asg/cfg_inf
+add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bdl
+add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bln
+add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bnm
+add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bln;
+add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bnm;
+add wave -noupdate           /${top}/${dut}/asg/sts_run
+add wave -noupdate           /${top}/${dut}/asg/sts_vld
+add wave -noupdate           /${top}/${dut}/asg/sts_trg
+add wave -noupdate           /${top}/${dut}/asg/sts_aen
+add wave -noupdate           /${top}/${dut}/asg/sts_ren
 
 # busses
-str_bus_if stg /asg_top_tb/asg_top/stg
-str_bus_if str /asg_top_tb/str
-sys_bus_if bus /asg_top_tb/bus
+axi4_stream_if stg /${top}/${dut}/stg
+axi4_stream_if str /${top}/str
+sys_bus_if     bus /${top}/bus
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}
@@ -58,5 +58,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {
-0 ps} {132300 ps}
+WaveRestoreZoom {0 ps} {132300 ps}

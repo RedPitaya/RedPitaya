@@ -19,6 +19,7 @@ module asg_tb #(
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 );
 
+localparam int unsigned DN = 1;
 localparam type DAT_T = logic signed [DWO-1:0];
 
 // system signals
@@ -46,7 +47,7 @@ logic     [ 32-1:0] cfg_bln;  // period length (data+idle)
 logic     [ 16-1:0] cfg_bnm;  // number of repetitions
 
 // stream input/output
-str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and time stamp
@@ -93,11 +94,12 @@ task drn_inc (
   int from,
   int to
 );
-  DAT_T        dat;
-  logic        lst;
-  int unsigned tmg;
+  DAT_T [DN-1:0] dat;
+  logic [DN-1:0] kep;
+  logic          lst;
+  int unsigned   tmg;
   for (int i=from; i<=to; i++) begin
-    str_drn.get(dat, lst, tmg);
+    str_drn.get(dat, kep, lst, tmg);
       $display ("data %d is %x/%b", i, dat, lst);
     if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
       $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
@@ -109,9 +111,10 @@ endtask
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-sys_bus_if    bus  (.clk (clk), .rstn (rstn));
+sys_bus_if bus (.clk (clk), .rstn (rstn));
 
 asg #(
+  .DN    (DN),
   .DAT_T (DAT_T),
   // buffer parameters
   .CWM (CWM),
@@ -142,7 +145,7 @@ asg #(
   .bus      (bus)
 );
 
-str_drn #(
+axi4_stream_drn #(
   .DAT_T (DAT_T)
 ) str_drn (
   .str      (str)

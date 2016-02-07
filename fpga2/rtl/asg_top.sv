@@ -38,7 +38,7 @@ module asg_top #(
   int unsigned TN  =  4   // external trigger array  width
 )(
   // stream output
-  str_bus_if.s           sto,
+  axi4_stream_if.s       sto,
   // triggers
   input  logic  [TN-1:0] trg_ext,  // external input
   output logic           trg_swo,  // output from software
@@ -171,7 +171,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream from generator
-str_bus_if #(.DN (DN), .DAT_T (DAT_T)) stg (.clk (sto.clk), .rstn (sto.rstn));
+axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
 asg #(
   .TN    (TN),
@@ -186,8 +186,8 @@ asg #(
   .trg_i     (trg_ext),
   .trg_o     (trg_out),
   // interrupts
-  .irq_trg  (irq_trg),
-  .irq_stp  (irq_stp),
+  .irq_trg   (irq_trg),
+  .irq_stp   (irq_stp),
   // control
   .ctl_rst   (ctl_rst),
   // configuration
@@ -226,13 +226,13 @@ if (EN_LIN) begin: en_lin
 
 end else begin
 
-  assign sto.vld = stg.vld;
-  assign sto.kep = stg.kep;
-  assign sto.lst = stg.lst;
-  assign stg.rdy = sto.rdy;
+  assign sto.TVALID = stg.TVALID;
+  assign sto.TKEEP  = stg.TKEEP ;
+  assign sto.TLAST  = stg.TLAST ;
+  assign stg.TREADY = sto.TREADY;
 
-  assign sto.dat = '{cfg_mul & (~cfg_sum | cfg_sum & ~stg.dat),  // output enable (optional open colector)
-                                                      stg.dat};  // output
+  assign sto.TDATA  = '{cfg_mul & (~cfg_sum | cfg_sum & ~stg.TDATA),  // output enable (optional open colector)
+                                                         stg.TDATA};  // output
 
 end
 endgenerate

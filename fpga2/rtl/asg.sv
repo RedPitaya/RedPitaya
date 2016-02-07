@@ -93,7 +93,7 @@ module asg #(
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
 )(
   // stream output
-  str_bus_if.s               sto    ,
+  axi4_stream_if.s           sto    ,
   // control
   input  logic               ctl_rst,  // set FSM to reset
   // trigger
@@ -148,11 +148,11 @@ logic               sts_ren;  // read    enable
 ////////////////////////////////////////////////////////////////////////////////
 
 // CPU write access
-always @(posedge sto.clk)
+always @(posedge bus.clk)
 if (bus.wen)  buf_mem[bus.addr] <= bus.wdata;
 
 // CPU read-back access
-always @(posedge sto.clk)
+always @(posedge bus.clk)
 if (bus.ren)  bus.rdata <= buf_mem[bus.addr];
 
 // CPU control signals
@@ -163,15 +163,15 @@ else            bus.ack <= bus.ren | bus.wen;
 assign bus.err = 1'b0;
 
 // stream read
-always @(posedge sto.clk)
+always @(posedge sto.ACLK)
 begin 
   if (sts_aen)  buf_raddr <= ptr_cur[CWF+:CWM];
   if (sts_ren)  buf_rdata <= buf_mem[buf_raddr];
 end
 
 // valid signal used to enable memory read access
-always @(posedge sto.clk)
-if (~sto.rstn) begin
+always @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
   sts_vld <= 1'b0;
   sts_ren <= 1'b0;
 end else begin
@@ -189,8 +189,8 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 // state machine
-always_ff @(posedge sto.clk)
-if (~sto.rstn) begin
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
   sts_aen <= 1'b0;
   sts_run <= 1'b0;
   cnt_bln <= '0;
@@ -241,8 +241,8 @@ assign irq_stp = 1'b0;  // TODO
 // read pointer logic
 ////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge sto.clk)
-if (~sto.rstn) begin
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
   ptr_cur <= '0;
 end else begin
   // synchronous clear
@@ -267,25 +267,25 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+CWF];
 ////////////////////////////////////////////////////////////////////////////////
 
 // trigger output
-always_ff @(posedge sto.clk)
-if (~sto.rstn)  trg_o <= 1'b0;
-else            trg_o <= sts_trg;
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn)  trg_o <= 1'b0;
+else               trg_o <= sts_trg;
 
 // output data
-assign sto.dat = buf_rdata;
-assign sto.kep = '1;
-assign sto.lst = 1'b0;
+assign sto.TDATA = buf_rdata;
+assign sto.TKEEP = '1;
+assign sto.TLAST = 1'b0;
 
 // output valid
-always_ff @(posedge sto.clk)
-if (~sto.rstn) begin
-  sto.vld <= 1'b0;
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
+  sto.TVALID <= 1'b0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
-    sto.vld <= 1'b0;
+    sto.TVALID <= 1'b0;
   end else begin
-    sto.vld <= sts_vld;
+    sto.TVALID <= sts_vld;
   end
 end
 

@@ -27,8 +27,8 @@ logic signed [DWM-1:0] cfg_mul;
 logic signed [DWS-1:0] cfg_sum;
 
 // stream input/output
-str_bus_if #(.DAT_T (DTI)) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (DTO)) sto (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DAT_T (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DAT_T (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
 
 // calibration
 real gain   = 1.0;
@@ -55,7 +55,7 @@ initial begin
 
   // send data into stream
   for (int i=-8; i<8; i++) begin
-    str_src.put(i, 1'b0);
+    str_src.put(i, '1, 1'b0);
   end
   repeat(16) @(posedge clk);
   repeat(4) @(posedge clk);
@@ -69,7 +69,7 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(.DAT_T (DTI)) str_src (.str (sti));
+axi4_stream_src #(.DAT_T (DTI)) str_src (.str (sti));
 
 linear #(
   .DTI (DTI),
@@ -85,7 +85,7 @@ linear #(
   .cfg_sum  (cfg_sum)
 );
 
-str_drn #(.DAT_T (DTO)) str_drn (.str (sto));
+axi4_stream_drn #(.DAT_T (DTO)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

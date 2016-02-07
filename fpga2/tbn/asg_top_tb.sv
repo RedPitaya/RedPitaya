@@ -35,8 +35,12 @@ module asg_top_tb #(
 logic                  clk ;
 logic                  rstn;
 
+// interrupts
+logic           irq_trg;  // trigger
+logic           irq_stp;  // stop
+
 // stream
-str_bus_if #(.DN (EN_LIN ? 1 : 2), .DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DN (EN_LIN ? 1 : 2), .DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
 
 // trigger
 struct packed {
@@ -168,12 +172,15 @@ asg_top #(
   .trg_ext   (trg),
   .trg_swo   (trg.swo),
   .trg_out   (trg.out),
-  // System bus
+  // interrupts
+  .irq_trg   (irq_trg),
+  .irq_stp   (irq_stp),
+  // system bus
   .bus       (bus)
 );
 
 // stream drain
-assign str.rdy = 1'b1;
+assign str.TREADY = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

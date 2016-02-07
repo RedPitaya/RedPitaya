@@ -4,7 +4,10 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module axi4_stream_pas (
+module axi4_stream_pas #(
+  int unsigned DNI = 1,  // data number for input
+  int unsigned DNO = 1   // data number for output
+)(
   // control
   input  logic     ena,  // enable
   // streams

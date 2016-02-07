@@ -29,11 +29,11 @@ add wave -noupdate -expand -group str /${top}/str_drn/str_ena
 add wave -noupdate -expand -group str /${top}/str_drn/buf_siz
 
 # busses
-str_bus_if str /${top}/str
-sys_bus_if bus /${top}/bus
+axi4_stream_if str /${top}/str
+sys_bus_if     bus /${top}/bus
 
 TreeUpdate [SetDefaultTree]
-WaveRestrreCursors {{Cursor 1} {0 ps} 0}
+WaveRestoreCursors {{Cursor 1} {0 ps} 0}
 quietly wave cursor active 0
 configure wave -namecolwidth 204
 configure wave -valuecolwidth 100
@@ -49,4 +49,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestrreZoom {0 ps} {132300 ps}
+WaveRestoreZoom {0 ps} {132300 ps}
