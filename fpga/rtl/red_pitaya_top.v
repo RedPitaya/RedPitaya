@@ -119,8 +119,6 @@ module red_pitaya_top (
 );
 
 
-localparam       SMC = 8                   ;  // Sub Module Count
-
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,16 +295,6 @@ assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
 assign ps_sys_err   = |(sys_cs & sys_err);
 assign ps_sys_ack   = |(sys_cs & sys_ack);
 
-// unused system bus slave ports
-
-assign sys_rdata[5*32+:32] = 32'h0; 
-assign sys_err  [5       ] =  1'b0;
-assign sys_ack  [5       ] =  1'b1;
-
-assign sys_rdata[7*32+:32] = 32'h0; 
-assign sys_err  [7       ] =  1'b0;
-assign sys_ack  [7       ] =  1'b1;
-
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +394,7 @@ ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(da
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 //---------------------------------------------------------------------------------
-//  House Keeping
+//  0: House Keeping
 
 wire  [  8-1: 0] exp_p_in , exp_n_in ;
 wire  [  8-1: 0] exp_p_out, exp_n_out;
@@ -443,7 +431,14 @@ IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_di
 IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
 
 //---------------------------------------------------------------------------------
-//  Oscilloscope application
+//  1: Oscilloscope application
+
+/*
+// unused system bus slave ports
+assign sys_rdata[1*32+:32] = 32'h0;
+assign sys_err  [1       ] =  1'b0;
+assign sys_ack  [1       ] =  1'b1;
+*/
 
 wire trig_asg_out ;
 
@@ -478,7 +473,14 @@ red_pitaya_scope i_scope (
 );
 
 //---------------------------------------------------------------------------------
-//  DAC arbitrary signal generator
+//  2: DAC arbitrary signal generator
+
+/*
+// unused system bus slave ports
+assign sys_rdata[2*32+:32] = 32'h0;
+assign sys_err  [2       ] =  1'b0;
+assign sys_ack  [2       ] =  1'b1;
+*/
 
 red_pitaya_asg i_asg (
    // DAC
@@ -501,7 +503,14 @@ red_pitaya_asg i_asg (
 );
 
 //---------------------------------------------------------------------------------
-//  MIMO PID controller
+//  3: MIMO PID controller
+
+/*
+// unused system bus slave ports
+assign sys_rdata[3*32+:32] = 32'h0;
+assign sys_err  [3       ] =  1'b0;
+assign sys_ack  [3       ] =  1'b1;
+*/
 
 red_pitaya_pid i_pid (
    // signals
@@ -523,8 +532,15 @@ red_pitaya_pid i_pid (
 );
 
 //---------------------------------------------------------------------------------
-//  Analog mixed signals
+//  4: Analog mixed signals
 //  XADC and slow PWM DAC control
+
+/*
+// unused system bus slave ports
+assign sys_rdata[4*32+:32] = 32'h0;
+assign sys_err  [4       ] =  1'b0;
+assign sys_ack  [4       ] =  1'b1;
+*/
 
 wire  [ 24-1: 0] pwm_cfg_a;
 wire  [ 24-1: 0] pwm_cfg_b;
@@ -563,14 +579,21 @@ red_pitaya_pwm pwm [4-1:0] (
 );
 
 //---------------------------------------------------------------------------------
-//  Daisy chain
-//  simple communication module
+// 5: unused system bus slave port
 
-assign daisy_p_o = 2'bzz;
-assign daisy_n_o = 2'bzz;
+assign sys_rdata[5*32+:32] = 32'h0;
+assign sys_err  [5       ] =  1'b0;
+assign sys_ack  [5       ] =  1'b1;
 
 //---------------------------------------------------------------------------------
-//  RadioBox module
+//  6: RadioBox module
+
+/*
+// unused system bus slave ports
+assign sys_rdata[6*32+:32] = 32'h0;
+assign sys_err  [6       ] =  1'b0;
+assign sys_ack  [6       ] =  1'b1;
+*/
 
 red_pitaya_radiobox i_radiobox (
   // ADC clock & reset
@@ -602,9 +625,23 @@ red_pitaya_radiobox i_radiobox (
   .xadc_axis_tvalid( xadc_axis_tvalid            )   // AXI-streaming from the XADC, data transfer valid
 );
 
-////////////////////////////////////////////////////////////////////////////////
+//---------------------------------------------------------------------------------
+// 7: unused system bus slave port
+
+assign sys_rdata[7*32+:32] = 32'h0;
+assign sys_err  [7       ] =  1'b0;
+assign sys_ack  [7       ] =  1'b1;
+
+
+//---------------------------------------------------------------------------------
+//  Daisy chain
+//  simple communication module
+
+assign daisy_p_o = 2'bzz;
+assign daisy_n_o = 2'bzz;
+
+//---------------------------------------------------------------------------------
 // LED output to be shared between HK, RB and PS
-////////////////////////////////////////////////////////////////////////////////
 
 assign led_o = rb_leds_en  ?  rb_leds_data :
                               hk_leds_data;           // LED multiplexer for HK, RadioBox and PS switching
