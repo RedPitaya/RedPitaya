@@ -96,8 +96,10 @@
 	LCR.connectWebSocket = function(){
 		if(window.WebSocket){
 			LCR.ws = new WebSocket(LCR.config.socket_url);
+			LCR.ws.binaryType = "arraybuffer";
 		}else if(window.MozWebSocket){
 			LCR.ws = new MozWebSocket(LCR.config.socket_url);
+			LCR.ws.binaryType = "arraybuffer";
 		}else{
 			console.log('Browser does not support WebSocket');
 		}
