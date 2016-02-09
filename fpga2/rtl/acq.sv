@@ -54,12 +54,15 @@ logic trg;
 logic [CW-1:0] nxt_pre;
 logic [CW-1:0] nxt_pst;
 
+logic end_pre;
+logic end_pst;
+
 ////////////////////////////////////////////////////////////////////////////////
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
 assign sts_stp = sts_acq & ( ctl_stp
-               | (sts_trg & (sts_pst==cfg_pst) & ~cfg_con)
+               | (sts_trg & end_pst & ~cfg_con)
                | (sti.trn & sti.lst) );
 
 assign trg = |(ctl_trg & cfg_trg)
@@ -107,7 +110,7 @@ end else begin
       sts_pst <= '0;
     end
     // pre counter trigger enable
-    if (nxt_pre == cfg_pre)
+    if (end_pre)
       ena_pre <= 1'b1;
     // trigger
     if (trg) begin
@@ -126,6 +129,10 @@ end
 assign nxt_pre = sts_pre + 1;
 assign nxt_pst = sts_pst + 1;
 
+// counter ends
+assign end_pre = (nxt_pre == cfg_pre);
+assign end_pst = (nxt_pst == cfg_pst);
+
 // interrupts
 assign irq_trg = trg;  // trigger
 assign irq_stp = sts_stp;  // stop
@@ -143,7 +150,7 @@ if (~sti.rstn) begin
   sto.lst <= 1'b0;
 end else begin
   sto.vld <= sts_acq & sti.vld;
-  sto.lst <= sts_acq & sti.lst & ~|sts_pst;
+  sto.lst <= sts_acq & (sti.lst | end_pst);
 end
 
 // output data
