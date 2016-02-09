@@ -68,6 +68,7 @@ initial begin
   test_id (32'h40000000);
   test_lg (32'h402c0000);
   test_la (32'h40300000);
+  test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
   $finish();
 end
@@ -192,7 +193,6 @@ task test_lg (
   // stop (reset)
 //axi_write(base+'h00, 2'b01);
 //repeat(20) @(posedge clk);
-
 endtask: test_lg
 
 
@@ -214,8 +214,26 @@ task test_la (
   // start acquire
   axi_write(base+'h00, 4'b0100);
   repeat(1000) @(posedge clk);
-
 endtask: test_la
+
+
+task test_la_automatic (
+  int unsigned base
+);
+  repeat(10) @(posedge clk);
+
+  // enable automatic mode
+  axi_write(base+'h04, 'h2);  // cfg_aut <= 1
+  // configure trigger
+  axi_write(base+'h10, 'd0);  // cfg_pre
+  axi_write(base+'h14, 'd4);  // cfg_pst
+  // ignore triggers
+  axi_write(base+'h08, 'b0000);
+  // start acquire
+  axi_write(base+'h00, 4'b0100);
+  repeat(1000) @(posedge clk);
+endtask: test_la_automatic
+
 
 task test_id (
   int unsigned base
