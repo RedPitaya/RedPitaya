@@ -63,8 +63,8 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
     rp_LaAcqSetConfig(handle, RP_LA_ACQ_CFG_AUTO_MASK);
 
     rp_la_cfg_regset_t cfg;
-    cfg.pre=10;
-    cfg.pst=10;
+    cfg.pre=0;
+    cfg.pst=0x1000/2;  // 0x1000 bytes are needed, but LA sends samples which are 2B
     rp_LaAcqSetCntConfig(handle,cfg);
 
     rp_la_trg_regset_t trg;
