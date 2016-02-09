@@ -43,6 +43,28 @@ To generate and open a Vivado project using GUI, run:
 make project
 ```
 
+# Simulation
+
+ModelSim as provoded for free from altera is used to run simulations. Scripts expect the default install location. On Ubuntu the inslall process fails to create an appropriate path to executable files, so this path must be created:
+```bash
+ln 
+```
+
+To run simmulation, Vivado tools have to be installed, but there is no need to source `settings.sh` for not the path to the ModelSim simulator is hardcoded into the simulation `Makefile`.
+```bash
+cd fpga/sim
+```
+
+Simulations can be run by running `make` with the bench file name as target:
+```bash
+make top_tb
+```
+
+Some simulations have a waveform window configuration script like `top_tb.tcl` which will prepare an organized waveform window.
+```bash
+make top_tb WAV=1
+```
+
 # Device tree
 
 Device tree is used by Linux to describe features and address space of memory mapped hardware attached to the CPU.
