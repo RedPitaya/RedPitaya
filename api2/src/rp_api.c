@@ -227,6 +227,10 @@ RP_STATUS rp_IsAcquistionComplete(void){
         rp_LaAcqFpgaRegDump(&la_acq_handle);
         rp_LaAcqAcqIsStopped(&la_acq_handle, &status);
         if(status){
+            uint32_t trig_addr;
+            uint32_t pst_length;
+            rp_LaAcqGetCntStatus(&la_acq_handle, &trig_addr, &pst_length);
+            printf("\n\r trig_addr=%d pst_length=%d\n\r", trig_addr, pst_length);
             return RP_API_OK;
         }
         else{

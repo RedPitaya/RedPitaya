@@ -101,6 +101,7 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask);
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, uint32_t mask);
 int rp_LaAcqSetCntConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg);
 int rp_LaAcqGetCntConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg);
+int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t * pst_length);
 int rp_LaAcqSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);
 int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg);
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);

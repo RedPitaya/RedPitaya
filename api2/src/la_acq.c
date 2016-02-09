@@ -26,6 +26,8 @@
 #include "generate.h"
 #include "la_acq.h"
 
+#define LA_ACQ_BUF_SIZE 0x4000  // TODO: just for test..
+
 int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     int status;
 
@@ -64,7 +66,7 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
 
     rp_la_cfg_regset_t cfg;
     cfg.pre=0;
-    cfg.pst=0x1000/2;  // 0x1000 bytes are needed, but LA sends samples which are 2B
+    cfg.pst=LA_ACQ_BUF_SIZE;
     rp_LaAcqSetCntConfig(handle,cfg);
 
     rp_la_trg_regset_t trg;
@@ -155,6 +157,16 @@ int rp_LaAcqGetCntConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg) {
     rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->cfg);
     a_reg->pre = ioread32(&regset->pre);
     a_reg->pst = ioread32(&regset->pst);
+    return RP_OK;
+}
+
+int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t * pst_length) {
+    rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->sts);
+    rp_la_cfg_regset_t reg;
+    reg.pre = ioread32(&regset->pre);
+    reg.pst = ioread32(&regset->pst);
+    *trig_addr=(reg.pre % LA_ACQ_BUF_SIZE);
+    *pst_length=reg.pst;
     return RP_OK;
 }
 
