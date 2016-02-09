@@ -1,8 +1,54 @@
 #pragma once
 
 #include <stdio.h>
+#include <string.h>
 
 #include "Parameter.h"
+
+#include "decoder.h"
+#include "i2c_decoder.h"
+
+template <typename Type> class CDecoderParameter : public CParameter<Type, Type>
+{
+public:
+	CDecoderParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, int _min, int _max) // min/max - dummy args
+		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _value, _value)
+		, m_SentValue(_value)
+	{}
+
+	void Set(const Type& _value)
+	{
+		this->m_Value.value = _value;
+	}
+
+	bool IsValueChanged() const
+	{
+		bool tmp = memcmp(&m_SentValue, &this->m_Value.value, sizeof(Type)) != 0;
+		m_SentValue = this->m_Value.value;
+		return tmp;
+	}
+
+	JSONNode GetJSONObject()
+	{
+		JSONNode n(JSON_NODE);
+		n.set_name(this->m_Value.name);
+
+		JSONNode val(JSON_NODE);
+		val.set_name("value");
+		val.push_back(JSONNode("scl", this->m_Value.value.scl));
+		val.push_back(JSONNode("sda", this->m_Value.value.sda));
+		val.push_back(JSONNode("acq_speed", this->m_Value.value.acq_speed));
+		val.push_back(JSONNode("address_format", (int)this->m_Value.value.address_format));
+
+		n.push_back(val);
+		n.push_back(JSONNode("access_mode", this->m_Value.access_mode));
+
+		return n;
+	}
+protected:
+	mutable Type m_SentValue;
+};
+
 
 //template for params
 template <typename Type> class CCustomParameter : public CParameter<Type, Type>
@@ -11,12 +57,12 @@ public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
 		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
 		, m_SentValue(_value)
-	{}	
-	
+	{}
+
 	~CCustomParameter()
 	{
 /*		CDataManager * man = CDataManager::GetInstance();
-		if(man)	
+		if(man)
 			man->UnRegisterParam(this->GetName());*/
 	}
 
@@ -31,18 +77,18 @@ public:
 		n.push_back(JSONNode("fpga_update", this->m_Value.fpga_update));
 		return n;
 	}
-	
+
 	Type CheckMinMax(Type _value)
 	{
 		Type value = _value;
-		if(this->m_Value.min > value) 
+		if(this->m_Value.min > value)
 		{
 			dbg_printf("Incorrect parameters value (min value)\n");
 //			dbg_printf("Incorrect parameters value: %f (min:%f), "
-//			"correcting it\n", (float)value, float(this->m_Value.min));				
+//			"correcting it\n", (float)value, float(this->m_Value.min));
 		 	value = this->m_Value.min;
 
-		} else if(this->m_Value.max < value) 
+		} else if(this->m_Value.max < value)
 		{
 			dbg_printf("Incorrect parameters value (max value)\n");
 //			dbg_printf("Incorrect parameters value: %f (max:%f), "
@@ -70,36 +116,54 @@ protected:
 
 };
 
+
+template<class T>
+JSONNode MakeSignalJSONNode(T _value)
+{
+	return JSONNode("", _value);
+}
+
+
+JSONNode MakeSignalJSONNode(OutputPacket _value)
+{
+	JSONNode node(JSON_NODE);
+	node.push_back(JSONNode("control", _value.control));
+	node.push_back(JSONNode("data", _value.data));
+	node.push_back(JSONNode("length", _value.length));
+
+	return node;
+}
+
 //template for signals
 template <typename Type> class CCustomSignal : public CParameter<Type, std::vector<Type> >
 {
 public:
 	CCustomSignal(std::string _name, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}	
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}
 
 	CCustomSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}	
-		
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}
+
 	~CCustomSignal()
 	{
 /*		CDataManager * man = CDataManager::GetInstance();
-		if(man)	
+		if(man)
 			man->UnRegisterSignal(this->GetName());*/
 	}
-	
+
 	JSONNode GetJSONObject()
 	{
 		JSONNode n(JSON_NODE);
 		n.set_name(this->m_Value.name);
 		n.push_back(JSONNode("size", this->m_Value.value.size()));
 
-		JSONNode child(JSON_ARRAY);	
-		child.set_name("value");	
+		JSONNode child(JSON_ARRAY);
+		child.set_name("value");
 		for(unsigned int i=0; i < this->m_Value.value.size(); i++)
-		{	
-			Type res = this->m_Value.value.at(i);			
-			child.push_back(JSONNode("", res));
-		}		
+		{
+			Type res = this->m_Value.value.at(i);
+			child.push_back(MakeSignalJSONNode(res));
+		}
 		n.push_back(child);
 		return n;
 	}
@@ -130,12 +194,12 @@ public:
 	}
 };
 
-//custom CIntParameter 
+//custom CIntParameter
 class CIntParameter : public CCustomParameter<int>
 {
 public:
 	CIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, int _value, int _fpga_update, int _min, int _max)
-		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
 //custom CFloatParameter
@@ -143,7 +207,7 @@ class CFloatParameter : public CCustomParameter<float>
 {
 public:
 	CFloatParameter(std::string _name, CBaseParameter::AccessMode _access_mode, float _value, int _fpga_update, float _min, float _max)
-		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
 //custom CDoubleParameter
@@ -151,7 +215,7 @@ class CDoubleParameter : public CCustomParameter<double>
 {
 public:
 	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max)
-		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
 //custom CBooleanParameter
@@ -174,6 +238,19 @@ public:
 		this->m_Value.value = _value;
 	}
 };
+
+//custom CI2CParameter
+class CI2CParameter : public CDecoderParameter<I2CParameters>
+{
+public:
+	CI2CParameter(std::string _name, CBaseParameter::AccessMode _access_mode, I2CParameters _value, int _fpga_update)
+		:CDecoderParameter(_name, _access_mode, _value, _fpga_update, 0, 0){};
+};
+
+
+
+
+
 
 //custom CIntSignal
 class CIntSignal : public CCustomSignal<int>
@@ -205,6 +282,17 @@ public:
 		:CCustomSignal(_name, _size, _def_value){};
 
 	CDoubleSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, double _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
+};
+
+//custom CDecodedSignal
+class CDecodedSignal : public CCustomSignal<OutputPacket>
+{
+public:
+	CDecodedSignal(std::string _name, int _size, OutputPacket _def_value)
+		:CCustomSignal(_name, _size, _def_value){};
+
+	CDecodedSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, OutputPacket _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
