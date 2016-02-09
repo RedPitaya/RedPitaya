@@ -292,6 +292,7 @@ int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t val)
 {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
     if(val==RP_GEN_REP_INF){
+        iowrite32(2, &regset->cfg_bnm);
         return rp_GenSetBst(handle, RP_GEN_CFG_BURST_INF_MASK);
     }
     else if(inrangeUint32(val,BURST_REPETITIONS_MIN,BURST_REPETITIONS_MAX)){
