@@ -1105,7 +1105,7 @@ wire          rx_car_osc_inc_mux = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_INC_S
 reg  [ 47: 0] rx_car_osc_inc_d   = 48'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_AFC_rst_n)
+if (!rx_car_osc_reset_n)
    rx_car_osc_inc_d <= 48'b0;
 else if (rx_car_osc_inc_mux)
    rx_car_osc_inc_d <= { regs[REG_RD_RB_RX_CAR_SUM_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_SUM_INC_LO][31:0] };
@@ -1116,7 +1116,7 @@ wire          rx_car_osc_ofs_mux = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_OFS_S
 reg  [ 47: 0] rx_car_osc_ofs_d   = 48'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_AFC_rst_n)
+if (!rx_car_osc_reset_n)
    rx_car_osc_ofs_d <= 48'b0;
 else if (rx_car_osc_ofs_mux)
    rx_car_osc_ofs_d <= { regs[REG_RD_RB_RX_CAR_SUM_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_SUM_INC_LO][31:0] };
@@ -2420,7 +2420,7 @@ else if (led_src_con_pnt && rb_reset_n) begin
       end
    RB_SRC_CON_PNT_NUM_RX_MOD_CIC2_Q_OUT: begin
       if (!led_ctr)
-        rb_leds_data <= fct_mag(rx_mod_cic2_q_out[30:15]);
+         rb_leds_data <= fct_mag(rx_mod_cic2_q_out[30:15]);
       end
 
    RB_SRC_CON_PNT_NUM_RX_MOD_ADD_OUT: begin
@@ -2465,11 +2465,10 @@ else if (led_src_con_pnt && rb_reset_n) begin
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      //if (!led_ctr)
+      if (!led_ctr)
          //                LED7                    LED6                    LED5                    LED4                    LED3                    LED2                    LED1                    LED0
       // rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,    rb_pwr_rx_CIC_rst_n,    rb_pwr_tx_Q_rst_n,      rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n  };
-         rb_leds_data <= { rb_enable,              !rb_reset_n,            rb_pwr_rx_AFC_en,       rb_pwr_rx_MOD_en,       rb_pwr_rx_CIC_en,       rb_pwr_tx_Q_en,         rb_pwr_tx_I_en,         rb_pwr_tx_OSC_en     };
-      // rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,    rb_pwr_rx_CIC_rst_n,    rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n,    rx_afc_calc_ld_valid };
+         rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,    rb_pwr_rx_CIC_rst_n,    rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n,    rx_afc_calc_ld_valid };
       end
 
    default: begin
@@ -3000,7 +2999,7 @@ else begin
          regs[REG_RW_RB_PWR_CTRL]              <= { 16'b0, sys_wdata[15:0] };
          end
       20'h0001C: begin
-         regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]<= sys_wdata[31:0] & 32'h3F3F003F;
+         regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]<= sys_wdata[31:0] & 32'hFFFF00FF;
          end
 
       /* TX_CAR_OSC */

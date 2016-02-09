@@ -637,7 +637,7 @@ void fpga_rb_set_tx_modtyp(int tx_modtyp)
     int tx = tx_modtyp & 0xff;
     uint32_t masked = g_fpga_rb_reg_mem->pwr_ctrl & 0xffff00ff;
     g_fpga_rb_reg_mem->pwr_ctrl = masked;                                                                     // first disable and reset before entering new modulation variant
-    g_fpga_rb_reg_mem->pwr_ctrl = masked | (tx << 8);
+    g_fpga_rb_reg_mem->pwr_ctrl = masked | (tx << 0x08);
 }
 
 /*----------------------------------------------------------------------------*/
