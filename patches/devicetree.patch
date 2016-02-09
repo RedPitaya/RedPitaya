@@ -94,7 +94,7 @@
 +};
 +/ {
 +	rpdma_2: rpdma@2 {
-+		compatible ="xlnx,rpdma";
++		compatible ="redpitaya,rpdma";
 +		dmas = <&axi_dma_2 0
 +			&axi_dma_2 1>;
 +		dma-names = "axidma0", "axidma1";
