@@ -92,8 +92,8 @@ logic                 pdm_clk ;
 logic                 pdm_rstn;
 
 // ADC clock/reset
-logic                    adc_clk;
-logic                    adc_rstn;
+logic                 adc_clk;
+logic                 adc_rstn;
 
 // stream bus type
 localparam type SBA_T = logic signed [ 14-1:0];  // acquire
@@ -137,8 +137,11 @@ logic [MNG-1:0] [14-1:0] dac_dat;
 localparam type CLM_T = logic signed [16-1:0];
 localparam type CLS_T = logic signed [14-1:0];
 
-// configuration
-logic                 digital_loop;
+// multiplexer configuration
+logic           mux_gpio;
+logic [MNG-1:0] mux_loop;
+logic [MNG-1:0] mux_gen ;
+logic           mux_lg  ;
 // ADC calibration
 CLM_T [MNA-1:0] adc_cfg_mul;  // gain
 CLS_T [MNA-1:0] adc_cfg_sum;  // offset
@@ -357,10 +360,12 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .digital_loop  (digital_loop),
-  .gpio_mux      (),
+  .mux_gpio  (mux_gpio),
+  .mux_loop  (mux_loop),
+  .mux_gen   (mux_gen ),
+  .mux_lg    (mux_lg  ),
    // System bus
-  .bus           (sys[1])
+  .bus       (sys[1])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -395,15 +400,13 @@ assign axi_exi[0].TREADY = 1'b1;
 // extension connector
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [1-1:0] exp_sel = 1'b1;
-
 // GPIO multiplexer
 
 axi4_stream_mux #(
   .DN (2),
   .DAT_T (SBL_T)
 ) mux_axe (
-  .sel (exp_sel),
+  .sel (mux_gpio),
   .sti (axi_exe),
   .sto (exp_exe)
 );
@@ -412,7 +415,7 @@ axi4_stream_mux #(
   .DN (2),
   .DAT_T (SBL_T)
 ) mux_axo (
-  .sel (exp_sel),
+  .sel (mux_gpio),
   .sti (axi_exo),
   .sto (exp_exo)
 );
@@ -421,7 +424,7 @@ axi4_stream_demux #(
   .DN (2),
   .DAT_T (SBL_T)
 ) demux_axi (
-  .sel (exp_sel),
+  .sel (mux_gpio),
   .sti (exp_exi),
   .sto (axi_exi)
 );
@@ -643,9 +646,9 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
 
   // digital loopback multiplexer
   assign str_adc[i].TVALID = 1'b1;
-  assign str_adc[i].TDATA  = digital_loop ? str_dac[i].TDATA : adc_dat_raw;
-  assign str_adc[i].TKEEP  = digital_loop ? str_dac[i].TKEEP : '1;
-  assign str_adc[i].TLAST  = digital_loop ? str_dac[i].TLAST : 1'b0;
+  assign str_adc[i].TDATA  = mux_loop[i] ? str_dac[i].TDATA : adc_dat_raw;
+  assign str_adc[i].TKEEP  = mux_loop[i] ? str_dac[i].TKEEP : '1;
+  assign str_adc[i].TLAST  = mux_loop[i] ? str_dac[i].TLAST : 1'b0;
 
   axi4_stream_if #(.DAT_T (SBA_T)) str_lin (.ACLK (adc_clk), .ARESETn (adc_rstn));  // osciloscope
 
@@ -678,8 +681,6 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
-  logic gen_sel = 0;
-
   axi4_stream_if #(.DN (1), .DAT_T (SBG_T)) str_gen [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
   axi4_stream_if #(.DN (1), .DAT_T (SBG_T)) str_lin         (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 
@@ -703,7 +704,7 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
     .DN (1),
     .DAT_T (SBG_T)
   ) mux_gen (
-    .sel (gen_sel),
+    .sel (mux_gen[i]),
     .sti (str_gen),
     .sto (str_lin)
   );

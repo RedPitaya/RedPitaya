@@ -34,6 +34,7 @@ TARGET=$(OUTPUT_DIR)/librp2.so
 OBJECTS =	pdm.o \
 		gpio.o \
 		id.o \
+		muxctl.o \
 		calib.o \
 		acquire.o \
 		generate.o \
