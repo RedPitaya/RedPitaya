@@ -476,7 +476,7 @@ IDDR #(
 
 assign exp_exi.TVALID = 1'b1;
 assign exp_exi.TKEEP  = '1;
-assign exp_exi.TLAST  = 1'b1;
+assign exp_exi.TLAST  = 1'b0;
 
 // IO buffer with output enable
 IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
