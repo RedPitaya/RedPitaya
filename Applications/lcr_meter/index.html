@@ -24,6 +24,7 @@
     <script src="js/fastclick.min.js"></script>
     <script src="js/jquery.simulate.js"></script>
     <script type="text/javascript" src="js/table2CSV.js" > </script>
+    <script src="js/zlib_and_gzip.min.js"></script>
     <script src="js/lcr.js"></script>
 </head>
 
@@ -103,7 +104,7 @@
 						</div>
 
 					</div>
-				
+
 					<div id="display">
 						<!--
 						<div id="status_data" >
@@ -118,16 +119,16 @@
 
 						<div id="prim_displ">
 								<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
-								<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>	
+								<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>
 						</div>
 					</div>
-					
+
 				</div>
 
 				<!-- Secondary display -->
 				<div id="table_displ">
 					<table id="m_table" class="table table-bordered table-fixed">
-				        
+
 				            <tr>
 				                <th class="col-xs-2">#</th>
 				                <th id="table_p_header" class="col-xs-4">Z</th>
@@ -285,7 +286,7 @@
 			                  	<div id="rel_tol" style="float: right" class="col-xs-12">
 									<input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check"/>
   									<label for="cb_rel" style="width: 50%" >Relative</label>
-									
+
 									<input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol" class="bt_check"/>
   									<label for="cb_tol" style="width: 50%">Tolerance</label>
 	        					</div>
@@ -297,7 +298,7 @@
 	            		<form class="form-horizontal" role="form">
 			                <div>
 			                  	<div id="parl_ser" style="float: right" class="col-xs-12">
-									
+
 									<input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check" checked="checked"/>
   									<label for="cb_ser" style="width: 50%">Series</label>
 
@@ -447,9 +448,9 @@
 </body>
 
 <script language="javascript" type="text/javascript">
-	
+
 	//Set only one measurment parent().find('.checkbox')
-	
+
 	$('#content_wrapper input:checkbox').on('change', function(){
 		var parent = $(this).parent().closest('div').attr('id');
 		$('#' + parent).find('input[type=checkbox]').prop('checked', false);

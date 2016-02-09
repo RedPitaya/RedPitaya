@@ -64,8 +64,8 @@
   		prim_display: 'LCR_Z',
   		sec_display: 'LCR_P',
   		save_data: false,
-  		//Web socket params have a very fast interval. Interval ought to be interpredted as 
-  		// something similar to decimation in oscilloscppe. 
+  		//Web socket params have a very fast interval. Interval ought to be interpredted as
+  		// something similar to decimation in oscilloscppe.
   		interval: 10,
   		//How much data to be stored.
   		max_store: 1000,
@@ -101,7 +101,7 @@
 		}else{
 			console.log('Browser does not support WebSocket');
 		}
-	
+
 
 		//Define WebSocket event listeners
 		if(LCR.ws){
@@ -128,7 +128,10 @@
 	      		if(LCR.state.processing){ return; }
 
 	      		LCR.state.processing = true;
-	      		var receive = JSON.parse(ev.data);
+				var data = new Uint8Array(ev.data);
+				var inflate = new Zlib.Gunzip(data);
+				var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+				var receive = JSON.parse(text);
 	      		if(receive.parameters){
 	      			if((Object.keys(LCR.params.orig).length == 0)
 	      				&& (Object.keys(receive.parameters).length == 0)){
@@ -163,9 +166,9 @@
 			}
 
 			//Change primary display value
-			if(new_params['LCR_RUN'].value == true && 
+			if(new_params['LCR_RUN'].value == true &&
 				param_name == LCR.displ_params.prim  && LCR.secondary_meas.apply_tolerance == false){
-				
+
 				if(new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0){
 					formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				}else if(new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0){
@@ -181,7 +184,7 @@
 				var data = LCR.displ_params.prim_val;
 
 				if(data == "OVER R."){
-					$('#lb_prim_displ').css('font-size', '100%').css('width: 100%');	
+					$('#lb_prim_displ').css('font-size', '100%').css('width: 100%');
 				}else{
 					$('#lb_prim_displ').css('font-size', '100%');
 				}
@@ -191,7 +194,7 @@
 			}
 
 			//Change secondary display value
-			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec 
+			if(new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec
 				&& LCR.secondary_meas.apply_tolerance == false){
 
 				formatRangeAuto(0, 2, null, new_params[param_name].value);
@@ -203,9 +206,9 @@
 						$('#lb_sec_displ_units').empty();
 					}
 					$('#lb_sec_displ').empty().append(new_params[param_name].value.toFixed(2));
-					$('#lb_sec_displ_units').empty().append("deg");				
+					$('#lb_sec_displ_units').empty().append("deg");
 				}else{
-					var units = LCR.displ_params.s_units;	
+					var units = LCR.displ_params.s_units;
 					var data = LCR.displ_params.sec_val;
 					$('#lb_sec_displ_units').empty().append(units);
 					$('#lb_sec_displ').empty().append(data);
@@ -213,12 +216,12 @@
 
 			}
 
-			if(param_name == LCR.displ_params.prim && LCR.secondary_meas.apply_tolerance == true 
+			if(param_name == LCR.displ_params.prim && LCR.secondary_meas.apply_tolerance == true
 				&& new_params['LCR_RUN'].value == true){
 
 
 				var diff = 100 - (new_params[param_name].value / Math.abs(new_params['LCR_TOL_SAVED'].value) * 100);
-				//var diff = (( - new_params[param_name].value)) / 
+				//var diff = (( - new_params[param_name].value)) /
 				//	((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
 
 				var str_diff = diff.toString().substr(0, 5);
@@ -260,7 +263,7 @@
 			if(param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")){
 				var format = formatRangeAuto(true, 1,new_params['LCR_C_PREC'].value, new_params[param_name].value);
 				if(format == "OVER R.") $('#meas_max_d').empty().append(0);
-				else $('#meas_max_d').empty().append(format);	
+				else $('#meas_max_d').empty().append(format);
 			}
 
 			if(param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")){
@@ -270,10 +273,10 @@
 			}
 		}
 
-		if(LCR.data_log.save_data && 
+		if(LCR.data_log.save_data &&
 			LCR.data_log.curr_store < LCR.data_log.max_store){
-			$('#m_table tbody').append('<tr><td><input type="checkbox" name="data">' + LCR.data_log.curr_store + '</td><td>' + 
-				new_params[LCR.data_log.prim_display].value + '</td><td>' + 
+			$('#m_table tbody').append('<tr><td><input type="checkbox" name="data">' + LCR.data_log.curr_store + '</td><td>' +
+				new_params[LCR.data_log.prim_display].value + '</td><td>' +
 					new_params[LCR.data_log.sec_display].value + '</td></tr>');
 			LCR.data_log.curr_store++;
 		}
@@ -312,7 +315,7 @@ $(function() {
 		ev.preventDefault();
 		$('#LCR_START').hide();
 		$('#LCR_HOLD').css('display', 'block');
-		
+
 		//Get value
 		var freq = parseInt($("#LCR_FREQUENCY").val());
 		LCR.params.local['LCR_FREQ'] = { value: freq };
@@ -385,7 +388,7 @@ $(function() {
 		$('#LCR_LOG').css('display', 'block');
 		LCR.data_log.save_data = false;
 	});
-	
+
 	$('#LCR_FREQUENCY').change(function(){
 		$('#meas_freq_d').empty().append( $('option:selected', $(this)).text());
 		LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
@@ -393,7 +396,7 @@ $(function() {
 	});
 
 	$('#prim_displ_choice :checkbox').click(function(){
-		LCR.displ_params.prim = this.id;			
+		LCR.displ_params.prim = this.id;
 		LCR.displ_params.p_base_u = this.value;
 
 		var i;
@@ -569,7 +572,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	}else{
 		meas_data = (Math.abs(meas_data));
 	}
-	
+
 	if(display == 1 && meas_data != 0){
 		base = LCR.displ_params.p_base_u;
 	}else if(display == 2 && meas_data != 0){
@@ -579,11 +582,11 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 	if(precision != null && LCR.displ_params.prim == "LCR_C"){
 		meas_data = meas_data * Math.pow(10, -precision);
 	}
-	
+
 	if(meas_data < 0.00000000000010){
 		data = "OVER R.";
 	}else if(meas_data > 0.00000000000010 && meas_data <= 0.00000000999990){
-		
+
 		data = (meas_data * Math.pow(10, 9)).toFixed(4);
 		units = "n" + base;
 
@@ -598,15 +601,15 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 		units = "n" + base;
 
 	}else if(meas_data > 0.000000999990 && meas_data <= 0.00000999990){
-		
+
 		data = (meas_data * Math.pow(10, 6)).toFixed(4);
 		units = "u" + base;
-	
+
 	}else if(meas_data > 0.000009999900 && meas_data <= 0.00009999900){
-	
+
 		data = (meas_data * Math.pow(10, 6)).toFixed(3);
 		units = "u" + base;
-	
+
 	}else if(meas_data > 0.000099999000 && meas_data <= 0.00099999000){
 
 		data = (meas_data * Math.pow(10, 6)).toFixed(2);
@@ -618,11 +621,11 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 		units = "m" + base;
 
 	}else if(meas_data > 0.009999900 && meas_data <= 0.09999900){
-		
+
 		data = (meas_data * Math.pow(10, 3)).toFixed(3);
 		units = "m" + base;
 	}else if(meas_data > 0.099999000 && meas_data <= 0.99999000){
-		
+
 		data = (meas_data * Math.pow(10, 3)).toFixed(2);
 		units = "m" + base;
 
@@ -645,22 +648,22 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 
 		data = meas_data.toFixed(1);
 		units = base;
-		
+
 	}else if(meas_data <= 99999.0 && meas_data > 9999.90){
 
 		data = (meas_data / Math.pow(10, 3)).toFixed(3);
 		units = "k" + base;
 
 	}else if(meas_data <=  999990.0 && meas_data > 99999.0){
-		
+
 		data = (meas_data / Math.pow(10, 3)).toFixed(2);
-		units = "k" + base;			
-	
+		units = "k" + base;
+
 	}else if(meas_data <= 9999900.0 && 999990.0){
-		
+
 		data = (meas_data / Math.pow(10, 6)).toFixed(1);
 		units = "M" + base;
-	
+
 	}else if(meas_data > 9999900.0){
 
 		data = "OVER R.";
@@ -669,7 +672,7 @@ function formatRangeAuto(meas_param, display, precision, meas_data){
 
 	//If we are formatting log data, we do not want to change the main measurment
 	if(meas_param == true){
-		
+
 		if(data == "OVER R."){
 			return data;
 		}
@@ -751,7 +754,7 @@ function formatRangeManual(precision, format, power, data){
 	var indicies = [0, 0, 0, 0, 0, 0];
 
 	for(var k = 0; k < w.length; k++){
-		indicies[flt_idx - 1 - k] = w[w.length- 1 -k]; 
+		indicies[flt_idx - 1 - k] = w[w.length- 1 -k];
 	}
 
 	for(var n = 0; n < (4 - parseInt(format)); n++){
