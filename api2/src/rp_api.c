@@ -341,7 +341,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     rp_la_cfg_regset_t cfg;
     cfg.pre=noOfPreTriggerSamples;
     cfg.pst=noOfPostTriggerSamples;
-    rp_LaAcqSetConfig(&la_acq_handle, cfg);
+    rp_LaAcqSetCntConfig(&la_acq_handle, cfg);
     rp_LaAcqRunAcq(&la_acq_handle);
 
     // block read
@@ -664,7 +664,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    //rp_GenFpgaRegDump(&sig_gen_handle,len);
+    rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }

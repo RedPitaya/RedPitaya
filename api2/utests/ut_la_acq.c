@@ -38,18 +38,16 @@ void la_acq_trig_test(void)
     dir[0].channel=RP_DIGITAL_CHANNEL_0;
     dir[0].direction=RP_DIGITAL_DIRECTION_RISING;
 
+    rp_DigSigGenOuput(true);
+    double sample_rate=125e6;
+    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
+    //printf("sample rate %lf",sample_rate);
+    rp_DigSigGenSoftwareControl(1);
+
     s=rp_SetTriggerDigitalPortProperties(dir,1);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to set trigger properties.");
     }
-
-
-
-    rp_DigSigGenOuput(true);
-    double sample_rate=60e6;
-    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
-    //printf("sample rate %lf",sample_rate);
-    rp_DigSigGenSoftwareControl(1);
 
     // how to check if acq. was triggered?
     if(rp_IsAcquistionComplete()!=RP_API_OK){
@@ -79,18 +77,18 @@ void reg_rw_test(void){
     cfgw.acq=RP_LA_ACQ_CFG_AUTO_MASK|RP_LA_ACQ_CFG_CONT_MASK;
     cfgw.pre=UINT32_MAX;
     cfgw.pst=UINT32_MAX;
-    rp_LaAcqSetConfig(&handle,cfgw);
-    rp_LaAcqGetConfig(&handle,&cfgr);
+    rp_LaAcqSetCntConfig(&handle,cfgw);
+    rp_LaAcqGetCntConfig(&handle,&cfgr);
     CU_ASSERT_FALSE(memcmp((char*)&cfgw, (char*)&cfgr, sizeof(rp_la_cfg_regset_t)));
     cfgw.acq=RP_LA_ACQ_CFG_AUTO_MASK;
     cfgw.pre=56456;
     cfgw.pst=45677;
-    rp_LaAcqSetConfig(&handle,cfgw);
-    rp_LaAcqGetConfig(&handle,&cfgr);
+    rp_LaAcqSetCntConfig(&handle,cfgw);
+    rp_LaAcqGetCntConfig(&handle,&cfgr);
     CU_ASSERT_FALSE(memcmp((char*)&cfgw, (char*)&cfgr, sizeof(rp_la_cfg_regset_t)));
     memset(&cfgw, 0, sizeof(rp_la_cfg_regset_t));
-    rp_LaAcqSetConfig(&handle,cfgw);
-    rp_LaAcqGetConfig(&handle,&cfgr);
+    rp_LaAcqSetCntConfig(&handle,cfgw);
+    rp_LaAcqGetCntConfig(&handle,&cfgr);
     CU_ASSERT_FALSE(memcmp((char*)&cfgw, (char*)&cfgr, sizeof(rp_la_cfg_regset_t)));
 
     // rp_la_trg_regset_t trg

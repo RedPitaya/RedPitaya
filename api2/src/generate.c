@@ -230,16 +230,16 @@ int rp_GenGetWaveform(rp_handle_uio_t *handle, uint16_t *waveform, uint32_t *siz
 }
 
 int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size) {
-    uint16_t ramp[size];
+    uint16_t ramp[RP_GEN_SIG_SAMPLES];
     for (uint32_t i=0; i<size; i++) {
         ramp[i] = i;
     }
+    ramp[size-1]=0; // to remain low level
     rp_GenSetWaveform(handle, ramp, size);
     return RP_OK;
 }
 
 //
-
 static int rp_GenSetBst(rp_handle_uio_t *handle, uint32_t a_mask) {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
     uint32_t tmp;
@@ -291,18 +291,15 @@ int rp_GenGetMode(rp_handle_uio_t *handle, RP_GEN_MODE * mode)
 int rp_GenSetBurstModeRepetitions(rp_handle_uio_t *handle, uint32_t val)
 {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
-    if(!inrangeUint32(val,BURST_REPETITIONS_MIN,BURST_REPETITIONS_MAX)){
-        if(val!=RP_GEN_REP_INF){
-            return RP_EOOR;
-        }
-    }
     if(val==RP_GEN_REP_INF){
-        iowrite32(0, &regset->cfg_bnm);
         return rp_GenSetBst(handle, RP_GEN_CFG_BURST_INF_MASK);
     }
-    else{
-        iowrite32(val, &regset->cfg_bnm);
+    else if(inrangeUint32(val,BURST_REPETITIONS_MIN,BURST_REPETITIONS_MAX)){
+        iowrite32((val-1), &regset->cfg_bnm);
         return rp_GenClearBst(handle, RP_GEN_CFG_BURST_INF_MASK);
+    }
+    else{
+        return RP_EOOR;
     }
     return RP_OK;
 }
