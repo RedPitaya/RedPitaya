@@ -267,7 +267,7 @@ typedef struct fpga_rb_reg_mem_s {
     /** @brief  R/W RB_CON_SRC_PNT - output connection matrix for
                                      RB_LEDs, RFOUT1 and RFOUT2 (addr: 0x4060001C)
      *
-     * bit h05..h00: LEDs magnitude scope (logarithmic)  source position
+     * bit h07..h00: LEDs magnitude scope (logarithmic)  source position
      *   value = h00  RadioBox does not touch LED state of other sub-module(s).
      *   value = h01  All LEDs are driven off.
      *
@@ -320,20 +320,22 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h32  RX_MOD_CIC2_I output.
      *   value = h33  RX_MOD_CIC2_Q output.
      *
-     *   value = h38  RX_MOD_ADD output.
+     *   value = h40  RX_MOD_ADD output.
      *
-     *   value = h39  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
+     *   value = h44  RX_AFC_FIR1_I output.
+     *   value = h45  RX_AFC_FIR1_Q output.
+     *   value = h46  RX_AFC_CORDIC_MAG carrier magnitude value.
+     *   value = h47  RX_AFC_CORDIC_PHS carrier phase value.
+     *   value = h48  RX_AFC_INC_REG increment deviation value.
+     *   value = h49  RX_AFC_PHS_REG phase deviation value.
+     *   value = h50  RX_SUM_INC_REG increment value.
+     *   value = h51  RX_SUM_PHS_REG phase value.
      *
-     *   value = h3A  RX_AFC_FIR1_I output.
-     *   value = h3B  RX_AFC_FIR1_Q output.
-     *   value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
-     *   value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
-     *   value = h3E  RX_AFC_INC_REG increment deviation value.
-     *   value = h3F  RX_AFC_PHS_REG phase deviation value.
+     *   value = hFF  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
      *
-     * bit h0F..h06: n/a
+     * bit h0F..h08: n/a
      *
-     * bit h15..h10: RFOUT1 source connection point
+     * bit h17..h10: RFOUT1 source connection point
      *   value = h00  silence.
      *   value = h01  silence.
      *
@@ -386,20 +388,20 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h32  RX_MOD_CIC2_I output.
      *   value = h33  RX_MOD_CIC2_Q output.
      *
-     *   value = h38  RX_MOD_ADD output.
+     *   value = h40  RX_MOD_ADD output.
      *
-     *   value = h39  current test vector @see red_pitaya_radiobox.sv for details.
+     *   value = h44  RX_AFC_FIR1_I output.
+     *   value = h45  RX_AFC_FIR1_Q output.
+     *   value = h46  RX_AFC_CORDIC_MAG carrier magnitude value.
+     *   value = h47  RX_AFC_CORDIC_PHS carrier phase value.
+     *   value = h48  RX_AFC_INC_REG increment deviation value.
+     *   value = h49  RX_AFC_PHS_REG phase deviation value.
+     *   value = h50  RX_SUM_INC_REG increment value.
+     *   value = h51  RX_SUM_PHS_REG phase value.
      *
-     *   value = h3A  RX_AFC_FIR1_I output.
-     *   value = h3B  RX_AFC_FIR1_Q output.
-     *   value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
-     *   value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
-     *   value = h3E  RX_AFC_INC_REG increment deviation value.
-     *   value = h3F  RX_AFC_PHS_REG phase deviation value.
+     *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
-     * bit h17..h16: n/a
-     *
-     * bit h1D..h18: RFOUT2 source connection point
+     * bit h1F..h18: RFOUT2 source connection point
      *   value = h00  silence.
      *   value = h01  silence.
      *
@@ -452,18 +454,18 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h32  RX_MOD_CIC2_I output.
      *   value = h33  RX_MOD_CIC2_Q output.
      *
-     *   value = h38  RX_MOD_ADD output.
+     *   value = h40  RX_MOD_ADD output.
      *
-     *   value = h39  current test vector @see red_pitaya_radiobox.sv for details.
+     *   value = h44  RX_AFC_FIR1_I output.
+     *   value = h45  RX_AFC_FIR1_Q output.
+     *   value = h46  RX_AFC_CORDIC_MAG carrier magnitude value.
+     *   value = h47  RX_AFC_CORDIC_PHS carrier phase value.
+     *   value = h48  RX_AFC_INC_REG increment deviation value.
+     *   value = h49  RX_AFC_PHS_REG phase deviation value.
+     *   value = h50  RX_SUM_INC_REG increment value.
+     *   value = h51  RX_SUM_PHS_REG phase value.
      *
-     *   value = h3A  RX_AFC_FIR1_I output.
-     *   value = h3B  RX_AFC_FIR1_Q output.
-     *   value = h3C  RX_AFC_CORDIC_MAG carrier magnitude value.
-     *   value = h3D  RX_AFC_CORDIC_PHS carrier phase value.
-     *   value = h3E  RX_AFC_INC_REG increment deviation value.
-     *   value = h3F  RX_AFC_PHS_REG phase deviation value.
-     *
-     * bit h1F..h1E: n/a
+     *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
      */
     uint32_t src_con_pnt;

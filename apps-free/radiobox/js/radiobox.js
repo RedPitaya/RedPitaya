@@ -56,12 +56,12 @@
   RB.params.init = {            // XXX initital data
     rb_run:                 1,  // application running
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
-    tx_modtyp_s:            2,  // TX modulation: USB
-    rx_modtyp_s:            2,  // RX modulation: USB
+    tx_modtyp_s:            0,  // TX modulation: USB
+    rx_modtyp_s:            4,  // RX modulation: USB
 
-    rbled_csp_s:            6,  // RB LEDs set to: 6=TX_MOD_ADC out
-    rfout1_csp_s:          28,  // connect to TX_AMP_RF out (RF signal)
-    rfout2_csp_s:          56,  // connect to RX_MOD_ADD out (audio signal)
+    rbled_csp_s:          255,  // RB LEDs set to: 6=TX_MOD_ADC out
+    rfout1_csp_s:         255,  // connect to TX_AMP_RF out (RF signal)
+    rfout2_csp_s:         255,  // connect to RX_MOD_ADD out (audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
     tx_car_osc_qrg_f:   10000,  // 10 kHz

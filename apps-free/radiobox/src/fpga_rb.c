@@ -313,7 +313,7 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
                     loc_tx_modsrc,
                     loc_tx_modtyp,
                     loc_rx_modtyp,
-                    ((loc_rfout2_csp << 0x18) & 0x3f000000) | ((loc_rfout1_csp << 0x10) & 0x003f0000) | (loc_led_csp & 0x0000003f),
+                    ((loc_rfout2_csp & 0xff) << 0x18) | ((loc_rfout1_csp & 0xff) << 0x10) | (loc_led_csp & 0xff),
                     loc_rx_muxin_src,
                     loc_tx_car_osc_qrg,
                     loc_tx_mod_osc_qrg,
@@ -345,7 +345,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
     //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
 
     if ((g_fpga_rb_reg_mem->src_con_pnt) != src_con_pnt) {
-        fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting src_con_pnt to new value = %d\n", src_con_pnt);
+        fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x\n", src_con_pnt);
         g_fpga_rb_reg_mem->src_con_pnt = src_con_pnt;
     }
 
@@ -557,48 +557,58 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_AM: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM (automatic)\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
+            //g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
-            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
         }
         break;
 
         case RB_RX_MODTYP_AMSYNC_USB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (USB)\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
+            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
-            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
         }
         break;
 
         case RB_RX_MODTYP_AMSYNC_LSB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (LSB)\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
+            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
-            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
         }
         break;
 
         case RB_RX_MODTYP_FM: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: FM\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: FM detection by AFC streaming
+            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
-            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: FM detection by AFC streaming
         }
         break;
 
         case RB_RX_MODTYP_PM: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: PM\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
+            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: PM detection by AFC streaming
+            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
-            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: PM detection by AFC streaming
         }
         break;
 
@@ -625,18 +635,18 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 void fpga_rb_set_tx_modtyp(int tx_modtyp)
 {
     int tx = tx_modtyp & 0xff;
-    uint32_t cpy = g_fpga_rb_reg_mem->pwr_ctrl & 0xffff00ff;
-    g_fpga_rb_reg_mem->pwr_ctrl = cpy;                                                                     // first disable and reset before entering new modulation variant
-    g_fpga_rb_reg_mem->pwr_ctrl = cpy | (tx << 8);
+    uint32_t masked = g_fpga_rb_reg_mem->pwr_ctrl & 0xffff00ff;
+    g_fpga_rb_reg_mem->pwr_ctrl = masked;                                                                     // first disable and reset before entering new modulation variant
+    g_fpga_rb_reg_mem->pwr_ctrl = masked | (tx << 8);
 }
 
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_modtyp(int rx_modtyp)
 {
     int rx = rx_modtyp & 0xff;
-    uint32_t cpy = g_fpga_rb_reg_mem->pwr_ctrl & 0xffffff00;
-    g_fpga_rb_reg_mem->pwr_ctrl = cpy;                                                                     // first disable and reset before entering new modulation variant
-    g_fpga_rb_reg_mem->pwr_ctrl = cpy | rx;
+    uint32_t masked = g_fpga_rb_reg_mem->pwr_ctrl & 0xffffff00;
+    g_fpga_rb_reg_mem->pwr_ctrl = masked;                                                                     // first disable and reset before entering new modulation variant
+    g_fpga_rb_reg_mem->pwr_ctrl = masked | rx;
 }
 
 
