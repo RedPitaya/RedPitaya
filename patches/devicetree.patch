@@ -92,11 +92,11 @@
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
 +};
-+/*/ {
-+	dmatest_0: dmatest@0 {
-+		compatible ="xlnx,axi-dma-test-1.00.a";
-+		dmas = <&axi_dma_3 0
-+			&axi_dma_3 1>;
++/ {
++	rpdma_2: rpdma@2 {
++		compatible ="xlnx,rpdma";
++		dmas = <&axi_dma_2 0
++			&axi_dma_2 1>;
 +		dma-names = "axidma0", "axidma1";
 +	};
 +};*/
