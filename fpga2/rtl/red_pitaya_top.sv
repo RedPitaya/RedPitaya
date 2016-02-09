@@ -868,6 +868,8 @@ assign axi_exi[1].TREADY = str_lai.rdy;
 // TODO: for now just a loopback
 // this is an attempt to minimize the related DMA
 
+assign axi_dtx[2].TREADY = 1'b1;
+
 axi4_stream_pas loopback (
   .ena (1'b1),
   .sti (axi_dtx[3]),
