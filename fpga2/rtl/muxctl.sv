@@ -7,7 +7,6 @@
 module muxctl #(
   int unsigned DW = 8 // data width
 )(
-  // expansion connector
   output logic  [1-1:0] mux_gpio,
   output logic  [2-1:0] mux_loop,
   output logic  [2-1:0] mux_gen ,
