@@ -6,7 +6,6 @@
 #include "Parameter.h"
 
 #include "decoder.h"
-#include "i2c_decoder.h"
 
 template <typename Type> class CDecoderParameter : public CParameter<Type, Type>
 {
@@ -117,6 +116,9 @@ protected:
 };
 
 
+namespace
+{
+
 template<class T>
 JSONNode MakeSignalJSONNode(T _value)
 {
@@ -132,6 +134,8 @@ JSONNode MakeSignalJSONNode(OutputPacket _value)
 	node.push_back(JSONNode("length", _value.length));
 
 	return node;
+}
+
 }
 
 //template for signals
@@ -238,17 +242,6 @@ public:
 		this->m_Value.value = _value;
 	}
 };
-
-//custom CI2CParameter
-class CI2CParameter : public CDecoderParameter<I2CParameters>
-{
-public:
-	CI2CParameter(std::string _name, CBaseParameter::AccessMode _access_mode, I2CParameters _value, int _fpga_update)
-		:CDecoderParameter(_name, _access_mode, _value, _fpga_update, 0, 0){};
-};
-
-
-
 
 
 

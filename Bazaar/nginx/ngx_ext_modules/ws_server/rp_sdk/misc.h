@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include "decoder.h"
-#include "i2c_decoder.h"
 
 extern int dbg_printf(const char * format, ...);
 
@@ -66,20 +65,6 @@ inline std::string GetValueFromJSON<std::string>(JSONNode _node, const char* _at
 	return res;
 }
 
-//I2CParameters specialization of function
-template <>
-inline I2CParameters GetValueFromJSON<I2CParameters>(JSONNode _node, const char* _at)
-{
-	uint8_t scl = _node.at(_at).at("scl").as_int();
-	uint8_t sda = _node.at(_at).at("sda").as_int();
-	uint32_t acq_speed = _node.at(_at).at("acq_speed").as_int();
-	AddressFormat address_format = (AddressFormat)_node.at(_at).at("address_format").as_int();
-
-	return {scl, sda, acq_speed, address_format};
-}
-
-// TODO SPI UART
-
 //std::vector<int> specialization of function
 template <>
 inline std::vector<int> GetValueFromJSON<std::vector<int> >(JSONNode _node, const char* _at)
@@ -124,6 +109,7 @@ inline std::vector<double> GetValueFromJSON<std::vector<double> >(JSONNode _node
 
 	return res;
 }
+
 
 //std::vector<OutputPacket> specialization of function
 template <>
