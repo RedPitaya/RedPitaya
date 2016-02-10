@@ -581,12 +581,17 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_AMSYNC_LSB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (LSB)\n");
 
-            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
-            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
-            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
+#if 0
+            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+#else
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // TEST: streaming increment, only
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
+            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+#endif
         }
         break;
 
