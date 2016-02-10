@@ -5,20 +5,27 @@ module axi4_stream_drn #(
   axi4_stream_if.d str
 );
 
-logic str_ena;
-
 DAT_T [DN-1:0] buf_dat [$];
 logic [DN-1:0] buf_kep [$];
 logic          buf_lst [$];
 int unsigned   buf_tmg [$];
 int unsigned   buf_siz;
 
+// clocking 
+default clocking clk @ (posedge str.ACLK);
+  default input #1step output #1step;
+  input  ARESETn = str.ARESETn;
+  input  TDATA   = str.TDATA  ;
+  input  TKEEP   = str.TKEEP  ;
+  input  TLAST   = str.TLAST  ;
+  input  TVALID  = str.TVALID ;
+  output TREADY  = str.TREADY ;
+  input  transf  = str.transf ;
+endclocking: clk
+
 ////////////////////////////////////////////////////////////////////////////////
 // stream
 ////////////////////////////////////////////////////////////////////////////////
-
-// stream enable
-assign str_ena = str.transf | ~str.TVALID;
 
 //int str_tmg;
 //
@@ -28,15 +35,19 @@ assign str_ena = str.transf | ~str.TVALID;
 //else if (str.TVALID)  str_tmg <= str.TREADY ? 0 : str_tmg + 1;
 
 // on transfer store data in the queue
-always @ (posedge str.ACLK, negedge str.ARESETn)
-if (!str.ARESETn) begin
+initial
+begin
   buf_dat = {};
   buf_kep = {};
   buf_lst = {};
-end else if (str.transf) begin
-  buf_dat.push_back(str.TDATA);
-  buf_kep.push_back(str.TKEEP);
-  buf_lst.push_back(str.TLAST);
+  forever begin
+    @(clk);
+    if (clk.transf) begin
+      buf_dat.push_back(clk.TDATA);
+      buf_kep.push_back(clk.TKEEP);
+      buf_lst.push_back(clk.TLAST);
+    end
+  end
 end
 
 assign str.TREADY = 1'b1;

@@ -11,4 +11,5 @@ proc axi4_stream_if {name path} {
   add wave -noupdate -group ${name}           ${path}/TLAST
   add wave -noupdate -group ${name}           ${path}/TVALID
   add wave -noupdate -group ${name}           ${path}/TREADY
+  add wave -noupdate -group ${name}           ${path}/transf
 }
