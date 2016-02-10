@@ -26,7 +26,7 @@ add wave -noupdate -unsigned /${top}/asg/cfg_bdl
 add wave -noupdate -unsigned /${top}/asg/cfg_bln
 add wave -noupdate -unsigned /${top}/asg/cfg_bnm
 add wave -noupdate -expand -group str /${top}/str_drn/str_ena
-add wave -noupdate -expand -group str /${top}/str_drn/buf_siz
+add wave -noupdate -expand -group str -unsigned /${top}/str_drn/buf_siz
 
 # busses
 axi4_stream_if str /${top}/str

@@ -46,6 +46,8 @@ logic     [CWM-1:0] cfg_bdl;  // data length
 logic     [ 32-1:0] cfg_bln;  // period length (data+idle)
 logic     [ 16-1:0] cfg_bnm;  // number of repetitions
 
+DAT_T dat [];
+
 // stream input/output
 axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
 
@@ -64,7 +66,7 @@ initial begin
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
   // control
-  trg_i = '1;
+  trg_i   = '0;
   // configuration
   cfg_trg = '1;
   cfg_siz = 2**CWM-1;
@@ -77,17 +79,32 @@ initial begin
   cfg_bln = 0;
   cfg_bnm = 0;
 
-  // initialization
+  // reset sequence
   rstn = 1'b0;
   repeat(4) @(posedge clk);
-  // start
   rstn = 1'b1;
   repeat(4) @(posedge clk);
 
+  // writing to buffer
+  dat = new [1<<CWM];
+  for (int i=0; i<dat.size(); i++) begin
+    dat[i] = i;
+  end
+  buf_write(dat);
+
   // end simulation
-  repeat(4) @(posedge clk);
+  repeat(400) @(posedge clk);
   $finish();
 end
+
+// write buffer
+task buf_write (
+  DAT_T dat []
+);
+  for (int i=0; i<dat.size(); i++) begin
+    busm.write(i, dat[i]);  // write table
+  end
+endtask: buf_write
 
 // drain check incremental sequence
 task drn_inc (
@@ -105,13 +122,15 @@ task drn_inc (
       $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
     end
   end
-endtask
+endtask: drn_inc
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
 sys_bus_if bus (.clk (clk), .rstn (rstn));
+
+sys_bus_model busm (.bus (bus));
 
 asg #(
   .DN    (DN),
