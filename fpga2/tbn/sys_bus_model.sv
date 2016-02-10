@@ -24,6 +24,18 @@ interface sys_bus_model #(
   sys_bus_if.m bus
 );
 
+// clocking 
+default clocking clk @ (posedge bus.clk);
+  input  rstn  = bus.rstn ;
+  output wen   = bus.wen  ;
+  output ren   = bus.ren  ;
+  output addr  = bus.addr ;
+  output wdata = bus.wdata;
+  input  rdata = bus.rdata;
+  input  ack   = bus.ack  ;
+  input  err   = bus.err  ;
+endclocking: clk
+
 initial begin
   bus.wen <= 1'b0;
   bus.ren <= 1'b0;
@@ -36,18 +48,18 @@ task transaction (
   input  DAT_T wdata,
   output DAT_T rdata
 );
-  @(posedge bus.clk)
+  ##1;
   bus.wen    <=  we;
   bus.ren    <= ~we;
   bus.addr   <= addr;
   bus.wdata  <= wdata;
-  @(posedge bus.clk);
+  ##1;
   bus.wen    <= 1'b0;
   bus.ren    <= 1'b0;
   while (~bus.ack & ~bus.err)
-    @(posedge bus.clk);
+  ##1;
   rdata <= bus.rdata;
-  @(posedge bus.clk);
+  ##1;
 endtask: transaction
 
 // bus write transfer
