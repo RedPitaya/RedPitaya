@@ -326,10 +326,10 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h45  RX_AFC_FIR1_Q output.
      *   value = h46  RX_AFC_CORDIC_MAG carrier magnitude value.
      *   value = h47  RX_AFC_CORDIC_PHS carrier phase value.
-     *   value = h48  RX_AFC_INC_REG increment deviation value.
-     *   value = h49  RX_AFC_PHS_REG phase deviation value.
-     *   value = h50  RX_SUM_INC_REG increment value.
-     *   value = h51  RX_SUM_PHS_REG phase value.
+     *   value = h48  RX_AFC_CORDIC_PHS_PREV carrier phase value.
+     *   value = h49  RX_AFC_CORDIC_PHS_DIFF carrier phase value.
+     *   value = h4A  RX_AFC_INC_REG increment deviation value.
+     *   value = h4B  RX_SUM_INC_REG increment value.
      *
      *   value = hFF  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
      *
@@ -394,10 +394,10 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h45  RX_AFC_FIR1_Q output.
      *   value = h46  RX_AFC_CORDIC_MAG carrier magnitude value.
      *   value = h47  RX_AFC_CORDIC_PHS carrier phase value.
-     *   value = h48  RX_AFC_INC_REG increment deviation value.
-     *   value = h49  RX_AFC_PHS_REG phase deviation value.
-     *   value = h50  RX_SUM_INC_REG increment value.
-     *   value = h51  RX_SUM_PHS_REG phase value.
+     *   value = h48  RX_AFC_CORDIC_PHS_PREV carrier phase value.
+     *   value = h49  RX_AFC_CORDIC_PHS_DIFF carrier phase value.
+     *   value = h4A  RX_AFC_INC_REG increment deviation value.
+     *   value = h4B  RX_SUM_INC_REG increment value.
      *
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
@@ -460,10 +460,10 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h45  RX_AFC_FIR1_Q output.
      *   value = h46  RX_AFC_CORDIC_MAG carrier magnitude value.
      *   value = h47  RX_AFC_CORDIC_PHS carrier phase value.
-     *   value = h48  RX_AFC_INC_REG increment deviation value.
-     *   value = h49  RX_AFC_PHS_REG phase deviation value.
-     *   value = h50  RX_SUM_INC_REG increment value.
-     *   value = h51  RX_SUM_PHS_REG phase value.
+     *   value = h48  RX_AFC_CORDIC_PHS_PREV carrier phase value.
+     *   value = h49  RX_AFC_CORDIC_PHS_DIFF carrier phase value.
+     *   value = h4A  RX_AFC_INC_REG increment deviation value.
+     *   value = h4B  RX_SUM_INC_REG increment value.
      *
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
@@ -663,7 +663,8 @@ typedef struct fpga_rb_reg_mem_s {
      * bit h1F..h00: LSB of RX_CAR_SUM phase offset register.
      *
      */
-    uint32_t rx_car_sum_ofs_lo;
+    //uint32_t rx_car_sum_ofs_lo;
+    uint32_t reserved_108;
 
     /** @brief  R/O RB_RX_CAR_SUM_OFS_HI - RX_CAR_SUM phase offset register, bits 47..32 (addr: 0x4060010C)
      *
@@ -672,7 +673,8 @@ typedef struct fpga_rb_reg_mem_s {
      * bit h1F..h10: n/a
      *
      */
-    uint32_t rx_car_sum_ofs_hi;
+    //uint32_t rx_car_sum_ofs_hi;
+    uint32_t reserved_10c;
 
 
     /** @brief  R/O RB_RX_CAR_AFC_INC_LO - RX_CAR_AFC phase increment register, bits 31..0 (addr: 0x40600110)
@@ -691,13 +693,13 @@ typedef struct fpga_rb_reg_mem_s {
      */
     uint32_t rx_car_afc_inc_hi;
 
-
     /** @brief  R/O RB_RX_CAR_AFC_OFS_LO - RX_CAR_AFC phase offset register, bits 31..0 (addr: 0x40600118)
      *
      * bit h1F..h00: LSB of RX_CAR_AFC phase offset register.
      *
      */
-    uint32_t rx_car_afc_ofs_lo;
+    //uint32_t rx_car_afc_ofs_lo;
+    uint32_t reserved_118;
 
     /** @brief  R/O RB_RX_CAR_AFC_OFS_HI - RX_CAR_AFC phase offset register, bits 47..32 (addr: 0x4060011C)
      *
@@ -706,7 +708,8 @@ typedef struct fpga_rb_reg_mem_s {
      * bit h1F..h10: n/a
      *
      */
-    uint32_t rx_car_afc_ofs_hi;
+    //uint32_t rx_car_afc_ofs_hi;
+    uint32_t reserved_11c;
 
 
     /** @brief  R/W RB_RX_CAR_OSC_INC_LO - RX_CAR_OSC phase increment register, bits 31..0 (addr: 0x40600120)
@@ -882,21 +885,31 @@ typedef struct fpga_rb_reg_mem_s {
 
      /** @brief  R/W RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 15..0 (addr: 0x40600170)
       *
-      * bit h0F..h00: RX_AFC_CORDIC magnitude register.
-      *
-      * bit h1F..h10: n/a
+      * bit h1F..h00: RX_AFC_CORDIC magnitude register.
       *
       */
      uint32_t rx_afc_cordic_mag;
 
      /** @brief  R/W RB_RX_AFC_CORDIC_phs - RX_AFC_CORDIC phase register, bits 15..0 (addr: 0x40600174)
       *
-      * bit h0F..h00: RX_AFC_CORDIC phase register.
-      *
-      * bit h1F..h10: n/a
+      * bit h1F..h00: RX_AFC_CORDIC phase register.
       *
       */
      uint32_t rx_afc_cordic_phs;
+
+     /** @brief  R/W RB_RX_AFC_CORDIC_phs_prev - RX_AFC_CORDIC previous phase register, bits 15..0 (addr: 0x40600178)
+      *
+      * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
+      *
+      */
+     uint32_t rx_afc_cordic_phs_prev;
+
+     /** @brief  R/W RB_RX_AFC_CORDIC_phs_diff - RX_AFC_CORDIC difference phase register, bits 15..0 (addr: 0x4060017C)
+      *
+      * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 8 kHz clocks.
+      *
+      */
+     uint32_t rx_afc_cordic_phs_diff;
 
 } fpga_rb_reg_mem_t;
 
