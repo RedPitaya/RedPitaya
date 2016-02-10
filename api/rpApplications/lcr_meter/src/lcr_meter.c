@@ -554,7 +554,7 @@ int lcr_data_analysis(float **data,
 	else if ( phase_z_rad >= M_PI )   phase_z_rad = phase_z_rad +(2*M_PI) + p_corr;
 	else phase_z_rad += p_corr;      
 
-	*phase_out = 180.0 * (phase_z_rad / (2.0 * M_PI));
+	*phase_out = phase_z_rad * (180.0 / M_PI);
 	*z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
 
 	return RP_OK;
