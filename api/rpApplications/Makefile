@@ -10,11 +10,15 @@
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
 LIRPAPP=../lib/librpapp.so
+LIBRPAPP_LCR=../lib/librpapp_lcr.so
 
-all: $(LIRPAPP)
+all: $(LIRPAPP) $(LIBRPAPP_LCR)
 
 $(LIRPAPP):
 	$(MAKE) -C src
+
+$(LIBRPAPP_LCR):
+	$(MAKE) -C lcr_meter/src
 
 # TODO, there is no documentation directory here
 #docapi:

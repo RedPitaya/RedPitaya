@@ -12,28 +12,37 @@
  * for more details on the language used herein.
  */
 
- #ifndef COMMON_IMP_H_
- #define COMMON_IMP_H_
+ #ifndef UTILS_H_
+ #define UTILS_H_
 
+
+#include <sys/syslog.h>
 #include "redpitaya/rp.h"
 
-#define ECHECK_APP(x){ \
+#define RP_LOG(...){ \
+	syslog(__VA_ARGS__); \
+}
+
+#define EXEC_CHECK(x){ \
  		int retval = (x); \
  		if(retval != RP_OK) { \
- 			printf("TODO: ADD ERROR\n"); \
+ 			RP_LOG(LOG_INFO, "Execution error.\n"); \
  			return retval; \
  		} \
 }
 
+
 float vectorMax(float *data, int size);
 float vectorApprox(float *data, int size, float approx_val, bool min);
-float trapezoidalApprox(float *data, float t, int size);
+float trapezoidalApprox(double *data, float t, int size);
 float vectorMean(float *data, int steps);
 float **multiDimensionVector(int second_dimenson);
-int set_IIC_Shunt(uint32_t shunt);
+int set_IIC_Shunt(int k);
 
-/* Directry creation functions */
-int createPath(char *path);
-int createSingle(char *path);
+int lcr_checkRShunt(float z_ampl, double r_shunt, int *new_shunt);
 
-#endif /* COMMON_IMP_H_ */
+void lcr_getDecimationValue(float frequency,
+						rp_acq_decimation_t *api_dec,
+						int *dec_val);
+
+#endif //UTILS_H_
