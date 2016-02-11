@@ -642,38 +642,35 @@ typedef struct fpga_rb_reg_mem_s {
 
     /* RX section */
 
-    /** @brief  R/O RB_RX_CAR_SUM_INC_LO - RX_CAR_SUM phase increment register, bits 31..0 (addr: 0x40600100)
+    /** @brief  R/W RB_RX_CAR_CALC_WEAVER_INC_LO - RX_CAR_AFC weaver correction increment register, bits 31..0 (addr: 0x40600100)
      *
-     * bit h1F..h00: LSB of RX_CAR_SUM phase increment register.
+     * bit h1F..h00: LSB of RX_CAR_AFC phase increment register.
      *
      */
-    uint32_t rx_car_sum_inc_lo;
+    uint32_t rx_car_calc_weaver_inc_lo;
 
-    /** @brief  R/O RB_RX_CAR_SUM_INC_HI - RX_CAR_SUM phase increment register, bits 47..32 (addr: 0x40600104)
+    /** @brief  R/W RB_RX_CAR_CALC_WEAVER_INC_HI - RX_CAR_AFC weaver correction increment register, bits 47..32 (addr: 0x40600104)
      *
-     * bit h0F..h00: MSB of RX_CAR_SUM phase increment register.
+     * bit h0F..h00: MSB of RX_CAR_AFC phase increment register.
      *
      * bit h1F..h10: n/a
      *
      */
-    uint32_t rx_car_sum_inc_hi;
+    uint32_t rx_car_calc_weaver_inc_hi;
 
-    /** @brief  R/O RB_RX_CAR_SUM_OFS_LO - RX_CAR_SUM phase offset register, bits 31..0 (addr: 0x40600108)
+
+    /** @brief  Placeholder for addr: 0x40600108
      *
-     * bit h1F..h00: LSB of RX_CAR_SUM phase offset register.
+     * n/a
      *
      */
-    //uint32_t rx_car_sum_ofs_lo;
     uint32_t reserved_108;
 
-    /** @brief  R/O RB_RX_CAR_SUM_OFS_HI - RX_CAR_SUM phase offset register, bits 47..32 (addr: 0x4060010C)
+    /** @brief  Placeholder for addr: 0x4060010C
      *
-     * bit h0F..h00: MSB of RX_CAR_SUM phase offset register.
-     *
-     * bit h1F..h10: n/a
+     * n/a
      *
      */
-    //uint32_t rx_car_sum_ofs_hi;
     uint32_t reserved_10c;
 
 
@@ -693,23 +690,22 @@ typedef struct fpga_rb_reg_mem_s {
      */
     uint32_t rx_car_afc_inc_hi;
 
-    /** @brief  R/O RB_RX_CAR_AFC_OFS_LO - RX_CAR_AFC phase offset register, bits 31..0 (addr: 0x40600118)
+
+    /** @brief  R/O RB_RX_CAR_SUM_INC_LO - RX_CAR_SUM phase increment register, bits 31..0 (addr: 0x40600118)
      *
-     * bit h1F..h00: LSB of RX_CAR_AFC phase offset register.
+     * bit h1F..h00: LSB of RX_CAR_SUM phase increment register.
      *
      */
-    //uint32_t rx_car_afc_ofs_lo;
-    uint32_t reserved_118;
+    uint32_t rx_car_sum_inc_lo;
 
-    /** @brief  R/O RB_RX_CAR_AFC_OFS_HI - RX_CAR_AFC phase offset register, bits 47..32 (addr: 0x4060011C)
+    /** @brief  R/O RB_RX_CAR_SUM_INC_HI - RX_CAR_SUM phase increment register, bits 47..32 (addr: 0x4060011C)
      *
-     * bit h0F..h00: MSB of RX_CAR_AFC phase offset register.
+     * bit h0F..h00: MSB of RX_CAR_SUM phase increment register.
      *
      * bit h1F..h10: n/a
      *
      */
-    //uint32_t rx_car_afc_ofs_hi;
-    uint32_t reserved_11c;
+    uint32_t rx_car_sum_inc_hi;
 
 
     /** @brief  R/W RB_RX_CAR_OSC_INC_LO - RX_CAR_OSC phase increment register, bits 31..0 (addr: 0x40600120)

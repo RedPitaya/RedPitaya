@@ -539,7 +539,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_USB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: USB\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all STREAMING, RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off RX RESET, RESYNC, INCREMENT- and PHASE-STREAMING signals
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
         }
@@ -548,7 +548,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_LSB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: LSB\n");
 
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all STREAMING, RESET and RESYNC signals
+            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off RX RESET, RESYNC, INCREMENT- and PHASE-STREAMING signals
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
         }
@@ -557,10 +557,8 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_AM: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM (automatic)\n");
 
-            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
-            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
-            //g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
+            g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: AM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
         }
@@ -569,10 +567,8 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_AMSYNC_USB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (USB)\n");
 
-            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
-            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
-            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
+            g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: AM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
         }
@@ -581,27 +577,18 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_AMSYNC_LSB: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (LSB)\n");
 
-#if 0
-            g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: AM detection by AFC streaming
+            g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: AM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
-#else
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // TEST: streaming increment, only
-            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
-            fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
-#endif
         }
         break;
 
         case RB_RX_MODTYP_FM: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: FM\n");
 
-            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
-            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: FM detection by AFC streaming
-            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
+            g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: FM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
         }
         break;
@@ -609,10 +596,8 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_RX_MODTYP_PM: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: PM\n");
 
-            //g_fpga_rb_reg_mem->ctrl &= ~0x10160000;                                                        // RX: turn off all RESET and RESYNC signals
-            g_fpga_rb_reg_mem->ctrl &= ~0x10760000;                                                        // RX: turn off all RESET and RESYNC signals
-            //g_fpga_rb_reg_mem->ctrl |=  0x00600000;                                                        // RX: PM detection by AFC streaming
-            g_fpga_rb_reg_mem->ctrl |=  0x00400000;                                                        // TEST: streaming phase, only
+            g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: PM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
         }
         break;
@@ -829,11 +814,12 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
         qrg -= -0.5;
     }
 
+    /* RX_MOD_OSC DDS increment value calculation */
     int64_t bitfield = qrg;
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_mod_osc_qrg=%lf)\n",
+    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm: 1 MOD offset INC - (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_mod_osc_qrg=%lf)\n",
             qrg,
             bf_hi,
             bf_lo,
@@ -843,6 +829,22 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
     g_fpga_rb_reg_mem->rx_mod_osc_inc_hi = bf_hi;
     g_fpga_rb_reg_mem->rx_mod_osc_ofs_lo = 0UL;                                                            // no carrier phase offset
     g_fpga_rb_reg_mem->rx_mod_osc_ofs_hi = 0UL;                                                            // no carrier phase offset
+
+
+    /* AFC weaver offset correction - phase correction value cummulated for a 8 kHz = 125 µs time span */
+    qrg *= 15625.0;
+    bitfield = qrg;
+    bf_hi = (uint32_t) (bitfield >> 32);
+    bf_lo = (uint32_t) (bitfield & 0xffffffff);
+
+    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm: 2 AFC correction - (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc AFC weaver phase correction=%lf)\n",
+            qrg,
+            bf_hi,
+            bf_lo,
+            rx_mod_osc_qrg);
+
+    g_fpga_rb_reg_mem->rx_car_calc_weaver_inc_lo = bf_lo;
+    g_fpga_rb_reg_mem->rx_car_calc_weaver_inc_hi = bf_hi;
 }
 
 /*----------------------------------------------------------------------------*/

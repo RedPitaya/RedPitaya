@@ -114,14 +114,14 @@ enum {
 
 
     /* RX section */
-    REG_RD_RB_RX_CAR_SUM_INC_LO,                // h110: RB RX_CAR_SUM increment register              LSB:        (Bit 31: 0)
-    REG_RD_RB_RX_CAR_SUM_INC_HI,                // h114: RB RX_CAR_SUM increment register              MSB: 16'b0, (Bit 47:32)
-    //REG_RD_RB_RX_CAR_SUM_OFS_LO,                // h118: RB RX_CAR_SUM offset register                 LSB:        (Bit 31: 0)
-    //REG_RD_RB_RX_CAR_SUM_OFS_HI,                // h11C: RB RX_CAR_SUM offset register                 MSB: 16'b0, (Bit 47:32)
+    REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO,        // h100: weaver increment phase correction register    LSB:        (Bit 31: 0)
+    REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI,        // h104: weaver increment phase correction register    MSB: 16'b0, (Bit 47:32)
+    //REG_RD_RB_TX_RSVD_H108,
+    //REG_RD_RB_TX_RSVD_H10C,
     REG_RD_RB_RX_CAR_AFC_INC_LO,                // h110: RB RX_CAR_AFC increment register              LSB:        (Bit 31: 0)
     REG_RD_RB_RX_CAR_AFC_INC_HI,                // h114: RB RX_CAR_AFC increment register              MSB: 16'b0, (Bit 47:32)
-    //REG_RD_RB_RX_CAR_AFC_OFS_LO,                // h118: RB RX_CAR_AFC offset register                 LSB:        (Bit 31: 0)
-    //REG_RD_RB_RX_CAR_AFC_OFS_HI,                // h11C: RB RX_CAR_AFC offset register                 MSB: 16'b0, (Bit 47:32)
+    REG_RD_RB_RX_CAR_SUM_INC_LO,                // h118: RB RX_CAR_SUM increment register              LSB:        (Bit 31: 0)
+    REG_RD_RB_RX_CAR_SUM_INC_HI,                // h11C: RB RX_CAR_SUM increment register              MSB: 16'b0, (Bit 47:32)
     REG_RW_RB_RX_CAR_OSC_INC_LO,                // h120: RB RX_CAR_OSC increment register              LSB:        (Bit 31: 0)
     REG_RW_RB_RX_CAR_OSC_INC_HI,                // h124: RB RX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
     REG_RW_RB_RX_CAR_OSC_OFS_LO,                // h128: RB RX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
@@ -391,6 +391,8 @@ wire [ 47: 0] rx_car_osc_ofs         = { regs[REG_RW_RB_RX_CAR_OSC_OFS_HI][15:0]
 wire [ 31: 0] rx_afc_cordic_phs      = regs[REG_RD_RB_RX_AFC_CORDIC_PHS];
 wire [ 31: 0] rx_afc_cordic_phs_prev = regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV];
 wire [ 31: 0] rx_afc_cordic_phs_diff = regs[REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF];
+
+wire [ 47: 0] rx_afc_calc_weaver_inc = { regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI][15:0], regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO][31:0] };
 
 wire [ 47: 0] rx_car_afc_inc         = { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] };
 //wire [ 47: 0] rx_car_afc_ofs         = { regs[REG_RD_RB_RX_CAR_AFC_OFS_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_OFS_LO][31:0] };
@@ -1984,7 +1986,7 @@ if (!rb_pwr_rx_AFC_rst_n) begin
    rx_afc_cordic_dly_ctr <= 8'b0;
    end
 else if (!rx_afc_cordic_dly_ctr && rx_afc_cordic_cart_vld && rx_afc_cordic_cart_rdy)
-   rx_afc_cordic_dly_ctr <= 8'd145;
+   rx_afc_cordic_dly_ctr <= 8'd185;
 else if (rx_afc_cordic_dly_ctr) begin
    if (rx_afc_cordic_dly_ctr == 8'd1)
       rx_afc_cordic_dly_pulse <= 1'b1;
@@ -2026,16 +2028,13 @@ wire [ 31: 0] rx_afc_cordic_polar_out_mag =   rx_afc_cordic_polar_out[31:0];
 wire [ 31: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[63], rx_afc_cordic_polar_out[60:32], 2'b0 };  // -0.999 .. +0.999 represents -180° .. +180°
 
 
-//---------------------------------------------------------------------------------
-//  RX_AFC_CORDIC_FSM2
-
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n) begin
-   regs[REG_RD_RB_RX_AFC_CORDIC_MAG] <= 32'h00000000;
-   regs[REG_RD_RB_RX_AFC_CORDIC_PHS] <= 32'h00000000;
+   regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV] <= 32'h00000000;
+   regs[REG_RD_RB_RX_AFC_CORDIC_MAG]      <= 32'h00000000;
+   regs[REG_RD_RB_RX_AFC_CORDIC_PHS]      <= 32'h00000000;
    end
-
-else if (rx_afc_cordic_polar_vld) begin
+else if (rx_afc_cordic_dly_pulse) begin
    regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS];
    regs[REG_RD_RB_RX_AFC_CORDIC_MAG]      <= rx_afc_cordic_polar_out_mag;
    regs[REG_RD_RB_RX_AFC_CORDIC_PHS]      <= rx_afc_cordic_polar_out_phs;
@@ -2048,7 +2047,7 @@ else if (rx_afc_cordic_polar_vld) begin
 wire [ 47: 0]  rx_afc_cordic_phs_in      = { rx_afc_cordic_phs,      16'b0 };
 wire [ 47: 0]  rx_afc_cordic_phs_prev_in = { rx_afc_cordic_phs_prev, 16'b0 };
 
-wire [ 47: 0]  rx_afc_calc_phs_out;
+wire [ 47: 0]  rx_afc_calc_phs_wvr_diff;
 
 rb_addsub_48M48 i_rb_rx_afc_calc_phase (
   // global signals
@@ -2058,7 +2057,20 @@ rb_addsub_48M48 i_rb_rx_afc_calc_phase (
   .ADD                  ( 1'b0                      ),  // SUBTRACT
   .A                    ( rx_afc_cordic_phs_in      ),  // current CORDIC phase
   .B                    ( rx_afc_cordic_phs_prev_in ),  // previous CORDIC phase
-  .S                    ( rx_afc_calc_phs_out       )   // phase difference between 8kHz samples
+  .S                    ( rx_afc_calc_phs_wvr_diff  )   // phase difference between 8kHz samples
+);
+
+wire [ 47: 0]  rx_afc_calc_phs_out;
+
+rb_addsub_48M48 i_rb_rx_afc_calc_weaver (
+  // global signals
+  .CLK                  ( clk_adc_125mhz            ),  // global 125 MHz clock
+  .CE                   ( rb_pwr_rx_AFC_clken       ),  // power down when needed to
+
+  .ADD                  ( 1'b0                      ),  // SUBTRACT
+  .A                    ( rx_afc_calc_phs_wvr_diff  ),  // phase difference with weaver osc. frequency offset included
+  .B                    ( rx_afc_calc_weaver_inc    ),  // weaver frequency correction increment value for 8 kHz = 125µs time span
+  .S                    ( rx_afc_calc_phs_out       )   // corrected phase value
 );
 
 always @(posedge clk_adc_125mhz)
@@ -2071,7 +2083,7 @@ else
 //---------------------------------------------------------------------------------
 //  RX_AFC_CALC_DIV
 
-wire  [ 31: 0] rx_afc_div_phs_in   = rx_afc_cordic_phs_diff;
+wire  [ 31: 0] rx_afc_div_phs_in  = rx_afc_cordic_phs_diff;
 wire           rx_afc_div_phs_rdy;
 reg            rx_afc_div_phs_vld = 1'b0;
 
@@ -2083,7 +2095,7 @@ else if (rx_afc_cordic_dly_pulse)
 else if (rx_afc_div_phs_vld && rx_afc_div_phs_rdy)
    rx_afc_div_phs_vld <= 1'b0;
 
-wire  [ 15: 0] rx_afc_div_cnst_in  = { 3'b0, 13'd2605 };  // AXIS word expansion
+wire  [ 15: 0] rx_afc_div_cnst_in  = { 3'b0, 13'd3500 };  // AXIS word expansion
 
 wire  [ 47: 0] rx_afc_div_afc_out;
 wire           rx_afc_div_afc_vld;
@@ -2106,13 +2118,13 @@ rb_div_32Div13R13 i_rb_rx_afc_calc_div (
   .m_axis_dout_tvalid     ( rx_afc_div_afc_vld   )
 );
 
-reg   [ 47: 0] rx_afc_div_afc_quot      = 48'b0;
+reg   [ 47: 0] rx_afc_div_afc_quot = 48'b0;
 
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n)
    rx_afc_div_afc_quot <= 48'b0;
 else if (rx_afc_div_afc_vld)
-   rx_afc_div_afc_quot <= { 16'b0, rx_afc_div_afc_out[47:16] };  // quotient's integer part
+   rx_afc_div_afc_quot <= { {16{rx_afc_div_afc_out[47]}}, rx_afc_div_afc_out[47:16] };  // quotient's integer part, sign expanded to 48 bits
 
 reg            rx_afc_div_afc_vld_last  =  1'b0;
 reg            rx_afc_div_afc_pulse     =  1'b0;
@@ -2135,34 +2147,18 @@ else begin
 //---------------------------------------------------------------------------------
 //  RX_AFC_CALC_AFCREG
 
-wire [ 47: 0]  rx_afc_as_inc_out;
+wire [ 47: 0]  rx_afc_reg_inc_out;
 
-rb_addsub_48M48 i_rb_rx_afc_calc_sub_inc (
+rb_addsub_48M48 i_rb_rx_afc_calc_add_inc (
   // global signals
-.CLK                    ( clk_adc_125mhz       ),  // global 125 MHz clock
-.CE                     ( rb_pwr_rx_AFC_clken  ),  // power down when needed to
+  .CLK                  ( clk_adc_125mhz       ),  // global 125 MHz clock
+  .CE                   ( rb_pwr_rx_AFC_clken  ),  // power down when needed to
 
-.ADD                    ( 1'b0                 ),
-.A                      ( rx_car_afc_inc       ),  // current AFC increment value
-.B                      ( rx_afc_div_afc_quot  ),  // AFC correction part to the current AFC increment value
-.S                      ( rx_afc_as_inc_out    )   // next AFC increment value
+  .ADD                  ( 1'b1                 ),  // ADD
+  .A                    ( rx_car_afc_inc       ),  // current AFC increment value
+  .B                    ( rx_afc_div_afc_quot  ),  // AFC correction part to the current AFC increment value
+  .S                    ( rx_afc_reg_inc_out   )   // next AFC increment value
 );
-
-/*
-wire [ 47: 0]  rx_afc_as_phs_in = { regs[REG_RD_RB_RX_AFC_CORDIC_PHS], 16'b0 };
-wire [ 47: 0]  rx_afc_as_phs_out;
-
-rb_addsub_48M48 i_rb_rx_afc_calc_sub_ofs (
-  // global signals
-.CLK                    ( clk_adc_125mhz       ),  // global 125 MHz clock
-.CE                     ( rb_pwr_rx_AFC_clken  ),  // power down when needed to
-
-.ADD                    ( 1'b0                 ),
-.B                      ( rx_car_afc_ofs       ),  // AFC phase correction register
-.A                      ( rx_afc_as_phs_in     ),  // CORDIC phase deviation
-.S                      ( rx_afc_as_phs_out    )   // next AFC offset value to be streamed to the RX_CAR_OSC
-);
-*/
 
 reg            rx_afc_addsub_afc_pulse =  1'b0;
 
@@ -2177,19 +2173,16 @@ reg            rx_afc_calc_ld_valid = 1'b0;
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n) begin
    { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= 48'b0;
-   //{ regs[REG_RD_RB_RX_CAR_AFC_OFS_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_OFS_LO][31:0] } <= 48'b0;
    rx_afc_calc_ld_valid <= 1'b0;
    end
 else if (rx_afc_addsub_afc_pulse)
    if (regs[REG_RD_RB_RX_AFC_CORDIC_MAG][30:28] != 3'b000) begin
       if (rx_afc_calc_ld_valid)                 // correct frequency only when phase monitoring is established
-         { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= rx_afc_as_inc_out;
-      //{ regs[REG_RD_RB_RX_CAR_AFC_OFS_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_OFS_LO][31:0] } <= rx_afc_as_phs_out;
+         { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= rx_afc_reg_inc_out;
       rx_afc_calc_ld_valid <= 1'b1;
       end
    else begin                                   // low signal, reset to center frequency
       { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= 48'b0;
-      //{ regs[REG_RD_RB_RX_CAR_AFC_OFS_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_OFS_LO][31:0] } <= 48'b0;
       rx_afc_calc_ld_valid <= 1'b0;
       end
 
@@ -2199,41 +2192,22 @@ else if (rx_afc_addsub_afc_pulse)
 
 wire [ 47: 0] rx_car_sum_out_inc;
 
-rb_addsub_48M48 i_rb_rx_afc_sum_inc (
+rb_addsub_48M48 i_rb_rx_afc_sum_add_inc (
   // global signals
-.CLK                  ( clk_adc_125mhz       ),  // global 125 MHz clock
-.CE                   ( rb_pwr_rx_AFC_clken  ),  // power down when needed to
+  .CLK                ( clk_adc_125mhz       ),  // global 125 MHz clock
+  .CE                 ( rb_pwr_rx_AFC_clken  ),  // power down when needed to
 
-.ADD                  ( 1'b1                 ),
-.A                    ( rx_car_osc_inc       ),  // carrier frequency:      UNSIGNED 48 bit
-.B                    ( rx_car_afc_inc       ),  // increment value:        UNSIGNED 48 bit
-.S                    ( rx_car_sum_out_inc   )   // RX_CAR_SUM INC:         UNSIGNED 48 bit
+  .ADD                ( 1'b1                 ),  // ADD
+  .A                  ( rx_car_osc_inc       ),  // carrier frequency:      UNSIGNED 48 bit
+  .B                  ( rx_car_afc_inc       ),  // increment value:        UNSIGNED 48 bit
+  .S                  ( rx_car_sum_out_inc   )   // RX_CAR_SUM INC:         UNSIGNED 48 bit
 );
-
-/*
-wire [ 47: 0] rx_car_sum_out_ofs;
-
-rb_addsub_48M48 i_rb_rx_afc_sum_ofs (
-  // global signals
-.CLK                  ( clk_adc_125mhz       ),  // global 125 MHz clock
-.CE                   ( rb_pwr_rx_AFC_clken  ),  // power down when needed to
-
-.ADD                  ( 1'b1                 ),
-.A                    ( rx_car_osc_ofs       ),  // carrier phase:          UNSIGNED 48 bit
-.B                    ( rx_car_afc_ofs       ),  // offset value:           UNSIGNED 48 bit
-.S                    ( rx_car_sum_out_ofs   )   // RX_CAR_SUM OFS:         UNSIGNED 48 bit
-);
-*/
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_AFC_rst_n) begin
+if (!rb_pwr_rx_AFC_rst_n)
    { regs[REG_RD_RB_RX_CAR_SUM_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_SUM_INC_LO][31:0] } <= 48'b0;
-   //{ regs[REG_RD_RB_RX_CAR_SUM_OFS_HI][15:0], regs[REG_RD_RB_RX_CAR_SUM_OFS_LO][31:0] } <= 48'b0;
-   end
-else begin
+else
    { regs[REG_RD_RB_RX_CAR_SUM_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_SUM_INC_LO][31:0] } <= rx_car_sum_out_inc;
-   //{ regs[REG_RD_RB_RX_CAR_SUM_OFS_HI][15:0], regs[REG_RD_RB_RX_CAR_SUM_OFS_LO][31:0] } <= rx_car_sum_out_ofs;
-   end
 
 
 // === Connection Matrix section ===
@@ -2706,12 +2680,10 @@ else if (rfout1_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
-      if (rx_afc_cordic_polar_vld)
-         rb_out_ch[0] <= (regs[REG_RD_RB_RX_AFC_CORDIC_MAG][30:15] - 16'h8000);
+      rb_out_ch[0] <= (regs[REG_RD_RB_RX_AFC_CORDIC_MAG][30:15] - 16'h8000);
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
-      if (rx_afc_cordic_polar_vld)
-         rb_out_ch[0] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS][31:16];
+      rb_out_ch[0] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS][31:16];
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS_PREV: begin
       rb_out_ch[0] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV][31:16];
@@ -2735,7 +2707,7 @@ else if (rfout1_src_con_pnt && rb_reset_n)
       end */
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      rb_out_ch[0] <= { 1'b0, rx_afc_addsub_afc_pulse, 14'b0 };
+      rb_out_ch[0] <= { 1'b0, rx_afc_cordic_dly_pulse, 14'b0 };
       end
 
    default: begin
@@ -2922,12 +2894,10 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
-      if (rx_afc_cordic_polar_vld)
-         rb_out_ch[1] <= (regs[REG_RD_RB_RX_AFC_CORDIC_MAG][30:15] - 16'h8000);
+      rb_out_ch[1] <= (regs[REG_RD_RB_RX_AFC_CORDIC_MAG][30:15] - 16'h8000);
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
-      if (rx_afc_cordic_polar_vld)
-         rb_out_ch[1] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS][31:16];
+      rb_out_ch[1] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS][31:16];
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS_PREV: begin
       rb_out_ch[1] <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV][31:16];
@@ -2951,7 +2921,7 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end */
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      rb_out_ch[1] <= { 1'b0, rx_afc_calc_ld_valid, 14'b0 };
+      rb_out_ch[1] <= { 1'b0, rx_afc_addsub_afc_pulse, 14'b0 };
       end
 
    default: begin
@@ -3001,39 +2971,41 @@ else begin
 // write access to the registers
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i) begin
-   regs[REG_RW_RB_CTRL]                   <= 32'h00000000;
-   regs[REG_RW_RB_ICR]                    <= 32'h00000000;
-   regs[REG_RD_RB_ISR]                    <= 32'h00000000;
-   regs[REG_RW_RB_DMA_CTRL]               <= 32'h00000000;
-   regs[REG_RW_RB_PWR_CTRL]               <= 32'h00000000;
-   regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT] <= 32'h00000000;
-   regs[REG_RW_RB_TX_CAR_OSC_INC_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_CAR_OSC_INC_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_CAR_OSC_OFS_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_CAR_OSC_OFS_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_RF_AMP_GAIN]         <= 32'h00000000;
-   regs[REG_RW_RB_TX_RF_AMP_OFS]          <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_OSC_INC_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_OSC_INC_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_OSC_OFS_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_OSC_OFS_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_QMIX_GAIN]       <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO]     <= 32'h00000000;
-   regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]     <= 32'h00000000;
-   regs[REG_RW_RB_TX_MUXIN_SRC]           <= 32'h00000000;
-   regs[REG_RW_RB_TX_MUXIN_GAIN]          <= 32'h00000000;
-   regs[REG_RW_RB_RX_CAR_OSC_INC_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_CAR_OSC_INC_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_CAR_OSC_OFS_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_CAR_OSC_OFS_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_MOD_ADD_GAIN]        <= 32'h00000000;
-   regs[REG_RW_RB_RX_MOD_ADD_OFS]         <= 32'h00000000;
-   regs[REG_RW_RB_RX_MOD_OSC_INC_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_MOD_OSC_INC_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_MOD_OSC_OFS_LO]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]      <= 32'h00000000;
-   regs[REG_RW_RB_RX_MUXIN_SRC]           <= 32'h00000000;
-   regs[REG_RW_RB_RX_MUXIN_GAIN]          <= 32'h00000000;
+   regs[REG_RW_RB_CTRL]                      <= 32'h00000000;
+   regs[REG_RW_RB_ICR]                       <= 32'h00000000;
+   regs[REG_RD_RB_ISR]                       <= 32'h00000000;
+   regs[REG_RW_RB_DMA_CTRL]                  <= 32'h00000000;
+   regs[REG_RW_RB_PWR_CTRL]                  <= 32'h00000000;
+   regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]    <= 32'h00000000;
+   regs[REG_RW_RB_TX_CAR_OSC_INC_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_CAR_OSC_INC_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_CAR_OSC_OFS_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_CAR_OSC_OFS_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_RF_AMP_GAIN]            <= 32'h00000000;
+   regs[REG_RW_RB_TX_RF_AMP_OFS]             <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_OSC_INC_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_OSC_INC_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_OSC_OFS_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_OSC_OFS_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_QMIX_GAIN]          <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO]        <= 32'h00000000;
+   regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]        <= 32'h00000000;
+   regs[REG_RW_RB_TX_MUXIN_SRC]              <= 32'h00000000;
+   regs[REG_RW_RB_TX_MUXIN_GAIN]             <= 32'h00000000;
+   regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO] <= 32'h00000000;
+   regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI] <= 32'h00000000;
+   regs[REG_RW_RB_RX_CAR_OSC_INC_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_CAR_OSC_INC_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_CAR_OSC_OFS_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_CAR_OSC_OFS_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_MOD_ADD_GAIN]           <= 32'h00000000;
+   regs[REG_RW_RB_RX_MOD_ADD_OFS]            <= 32'h00000000;
+   regs[REG_RW_RB_RX_MOD_OSC_INC_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_MOD_OSC_INC_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_MOD_OSC_OFS_LO]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]         <= 32'h00000000;
+   regs[REG_RW_RB_RX_MUXIN_SRC]              <= 32'h00000000;
+   regs[REG_RW_RB_RX_MUXIN_GAIN]             <= 32'h00000000;
    end
 
 else begin
@@ -3042,114 +3014,122 @@ else begin
 
       /* control */
       20'h00000: begin
-         regs[REG_RW_RB_CTRL]                  <= sys_wdata[31:0];
+         regs[REG_RW_RB_CTRL]                     <= sys_wdata[31:0];
          end
       20'h00008: begin
-         regs[REG_RW_RB_ICR]                   <= sys_wdata[31:0];
+         regs[REG_RW_RB_ICR]                      <= sys_wdata[31:0];
          end
       20'h00010: begin
-         regs[REG_RW_RB_DMA_CTRL]              <= sys_wdata[31:0];
+         regs[REG_RW_RB_DMA_CTRL]                 <= sys_wdata[31:0];
          end
       20'h00018: begin
-         regs[REG_RW_RB_PWR_CTRL]              <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_PWR_CTRL]                 <= { 16'b0, sys_wdata[15:0] };
          end
       20'h0001C: begin
-         regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]<= sys_wdata[31:0] & 32'hFFFF00FF;
+         regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]   <= sys_wdata[31:0] & 32'hFFFF00FF;
          end
 
       /* TX_CAR_OSC */
       20'h00020: begin
-         regs[REG_RW_RB_TX_CAR_OSC_INC_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_CAR_OSC_INC_LO]        <= sys_wdata[31:0];
          end
       20'h00024: begin
-         regs[REG_RW_RB_TX_CAR_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_TX_CAR_OSC_INC_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00028: begin
-         regs[REG_RW_RB_TX_CAR_OSC_OFS_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_CAR_OSC_OFS_LO]        <= sys_wdata[31:0];
          end
       20'h0002C: begin
-         regs[REG_RW_RB_TX_CAR_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_TX_CAR_OSC_OFS_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00030: begin
-         regs[REG_RW_RB_TX_RF_AMP_GAIN]        <= sys_wdata[15:0];
+         regs[REG_RW_RB_TX_RF_AMP_GAIN]           <= sys_wdata[15:0];
          end
       20'h00038: begin
-         regs[REG_RW_RB_TX_RF_AMP_OFS]         <= sys_wdata[15:0];
+         regs[REG_RW_RB_TX_RF_AMP_OFS]            <= sys_wdata[15:0];
          end
 
       /* TX_MOD_OSC */
       20'h00040: begin
-         regs[REG_RW_RB_TX_MOD_OSC_INC_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_MOD_OSC_INC_LO]        <= sys_wdata[31:0];
          end
       20'h00044: begin
-         regs[REG_RW_RB_TX_MOD_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_TX_MOD_OSC_INC_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00048: begin
-         regs[REG_RW_RB_TX_MOD_OSC_OFS_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_MOD_OSC_OFS_LO]        <= sys_wdata[31:0];
          end
       20'h0004C: begin
-         regs[REG_RW_RB_TX_MOD_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_TX_MOD_OSC_OFS_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00050: begin
-         regs[REG_RW_RB_TX_MOD_QMIX_GAIN]      <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_MOD_QMIX_GAIN]         <= sys_wdata[31:0];
          end
       20'h00058: begin
-         regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO]    <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_MOD_QMIX_OFS_LO]       <= sys_wdata[31:0];
          end
       20'h0005C: begin
-         regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]    <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]       <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* Input TX_MUXIN */
       20'h00060: begin
-         regs[REG_RW_RB_TX_MUXIN_SRC]          <= { regs[REG_RW_RB_TX_MUXIN_SRC][31:6], sys_wdata[5:0] };
+         regs[REG_RW_RB_TX_MUXIN_SRC]             <= { regs[REG_RW_RB_TX_MUXIN_SRC][31:6], sys_wdata[5:0] };
          end
       20'h00064: begin
-         regs[REG_RW_RB_TX_MUXIN_GAIN]         <= sys_wdata[31:0];
+         regs[REG_RW_RB_TX_MUXIN_GAIN]            <= sys_wdata[31:0];
          end
+
+      /* RX_CAR_CALC_WEAVER */
+      20'h00100: begin
+        regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO] <= sys_wdata[31:0];
+        end
+      20'h00104: begin
+        regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI] <= { 16'b0, sys_wdata[15:0] };
+        end
 
       /* RX_CAR_OSC */
       20'h00120: begin
-         regs[REG_RW_RB_RX_CAR_OSC_INC_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_RX_CAR_OSC_INC_LO]        <= sys_wdata[31:0];
          end
       20'h00124: begin
-         regs[REG_RW_RB_RX_CAR_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_RX_CAR_OSC_INC_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00128: begin
-         regs[REG_RW_RB_RX_CAR_OSC_OFS_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_RX_CAR_OSC_OFS_LO]        <= sys_wdata[31:0];
          end
       20'h0012C: begin
-         regs[REG_RW_RB_RX_CAR_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_RX_CAR_OSC_OFS_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* RX_MOD_ADD */
       20'h00130: begin
-         regs[REG_RW_RB_RX_MOD_ADD_GAIN]       <= sys_wdata[15:0];
+         regs[REG_RW_RB_RX_MOD_ADD_GAIN]          <= sys_wdata[15:0];
          end
       20'h00138: begin
-         regs[REG_RW_RB_RX_MOD_ADD_OFS]        <= sys_wdata[15:0];
+         regs[REG_RW_RB_RX_MOD_ADD_OFS]           <= sys_wdata[15:0];
          end
 
       /* RX_MOD_OSC */
       20'h00140: begin
-         regs[REG_RW_RB_RX_MOD_OSC_INC_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_RX_MOD_OSC_INC_LO]        <= sys_wdata[31:0];
          end
       20'h00144: begin
-         regs[REG_RW_RB_RX_MOD_OSC_INC_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_RX_MOD_OSC_INC_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
       20'h00148: begin
-         regs[REG_RW_RB_RX_MOD_OSC_OFS_LO]     <= sys_wdata[31:0];
+         regs[REG_RW_RB_RX_MOD_OSC_OFS_LO]        <= sys_wdata[31:0];
          end
       20'h0014C: begin
-         regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]     <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* RX_MUX */
       20'h00160: begin
-         regs[REG_RW_RB_RX_MUXIN_SRC]          <= sys_wdata[31:0];
+         regs[REG_RW_RB_RX_MUXIN_SRC]             <= sys_wdata[31:0];
          end
       20'h00164: begin
-         regs[REG_RW_RB_RX_MUXIN_GAIN]         <= { 16'b0, sys_wdata[15:0] };
+         regs[REG_RW_RB_RX_MUXIN_GAIN]            <= { 16'b0, sys_wdata[15:0] };
          end
 
       default:   begin
@@ -3272,23 +3252,15 @@ else begin
          sys_rdata <= regs[REG_RW_RB_TX_MUXIN_GAIN];
          end
 
-      /* RX_CAR_SUM */
+      /* RX_CAR_CALC_WEAVER */
       20'h00100: begin
         sys_ack   <= sys_en;
-        sys_rdata <= regs[REG_RD_RB_RX_CAR_SUM_INC_LO];
+        sys_rdata <= regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO];
         end
       20'h00104: begin
         sys_ack   <= sys_en;
-        sys_rdata <= regs[REG_RD_RB_RX_CAR_SUM_INC_HI];
+        sys_rdata <= regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI];
         end
-/*    20'h00108: begin
-        sys_ack   <= sys_en;
-        sys_rdata <= regs[REG_RD_RB_RX_CAR_SUM_OFS_LO];
-        end
-      20'h0010C: begin
-        sys_ack   <= sys_en;
-        sys_rdata <= regs[REG_RD_RB_RX_CAR_SUM_OFS_HI];
-        end */
 
       /* RX_CAR_AFC */
       20'h00110: begin
@@ -3299,14 +3271,16 @@ else begin
         sys_ack   <= sys_en;
         sys_rdata <= regs[REG_RD_RB_RX_CAR_AFC_INC_HI];
         end
-/*    20'h00118: begin
+
+      /* RX_CAR_SUM */
+      20'h00118: begin
         sys_ack   <= sys_en;
-        sys_rdata <= regs[REG_RD_RB_RX_CAR_AFC_OFS_LO];
+        sys_rdata <= regs[REG_RD_RB_RX_CAR_SUM_INC_LO];
         end
       20'h0011C: begin
         sys_ack   <= sys_en;
-        sys_rdata <= regs[REG_RD_RB_RX_CAR_AFC_OFS_HI];
-        end */
+        sys_rdata <= regs[REG_RD_RB_RX_CAR_SUM_INC_HI];
+        end
 
       /* RX_CAR_OSC */
       20'h00120: begin
