@@ -30,7 +30,7 @@
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/semaphore.h>
-#include <rpdma.h>
+#include "rpdma.h"
 
 struct dma_chan *tx_chan, *rx_chan;
 static dev_t dev_num;
