@@ -10,6 +10,7 @@ module linear_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // stream parameters
+  int unsigned DN = 1,
   type DTI = logic signed [8-1:0], // data type for input
   type DTO = logic signed [8-1:0], // data type for output
   int unsigned DWI = $bits(DTI),   // data width for input
@@ -57,7 +58,19 @@ initial begin
   for (int i=-8; i<8; i++) begin
     str_src.put(i, '1, 1'b0);
   end
-  repeat(16) @(posedge clk);
+  repeat(16+6) @(posedge clk);
+
+  // check received data
+  for (int i=-8; i<8; i++) begin
+    DTO   [DN-1:0] dat;
+    logic [DN-1:0] kep;
+    logic          lst;
+    int unsigned   tmg;
+
+    str_drn.get(dat, kep, lst, tmg);
+    $display ("%04h", dat);
+  end
+
   repeat(4) @(posedge clk);
 
   // end simulation
