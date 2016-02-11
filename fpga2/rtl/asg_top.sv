@@ -34,6 +34,9 @@ module asg_top #(
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
+  // burst counter parameters
+  int unsigned CWL = 32,  // counter width length
+  int unsigned CWN = 16,  // counter width number
   // trigger parameters
   int unsigned TN  =  4   // external trigger array  width
 )(
@@ -177,8 +180,12 @@ asg #(
   .TN    (TN),
   .DN    (DN),
   .DAT_T (DAT_T),
+  // buffer parameters
   .CWM (CWM),
-  .CWF (CWF)
+  .CWF (CWF),
+  // burst counters
+  .CWL (CWL),
+  .CWN (CWN)
 ) asg (
   // stream output
   .sto       (stg    ),

@@ -90,7 +90,10 @@ module asg #(
   type DAT_T = logic [8-1:0],
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
-  int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
+  int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
+  // burst counter parameters
+  int unsigned CWL = 32,  // counter width length
+  int unsigned CWN = 16   // counter width number
 )(
   // stream output
   axi4_stream_if.s           sto    ,
@@ -111,8 +114,8 @@ module asg #(
   input  logic               cfg_ben,  // burst enable
   input  logic               cfg_inf,  // infinite
   input  logic     [CWM-1:0] cfg_bdl,  // burst data length
-  input  logic     [ 32-1:0] cfg_bln,  // burst      length
-  input  logic     [ 16-1:0] cfg_bnm,  // burst number of repetitions
+  input  logic     [CWL-1:0] cfg_bln,  // burst      length
+  input  logic     [CWN-1:0] cfg_bnm,  // burst number of repetitions
   // System bus
   sys_bus_if.s               bus
 );
@@ -132,9 +135,8 @@ logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // counters
-logic     [ 32-1:0] cnt_bln;  // burst length
-logic     [ 32-1:0] cnt_nxt;  // burst length next
-logic     [ 16-1:0] cnt_bnm;  // burst repetitions
+logic     [CWL-1:0] cnt_bln;  // burst length
+logic     [CWN-1:0] cnt_bnm;  // burst repetitions
 // counter end status
 logic               end_bdl;  // burst data length
 logic               end_bln;  // burst      length
@@ -220,7 +222,7 @@ end else begin
         cnt_bln <= '0;
       end else begin
         if (end_bdl) sts_aen <= 1'b0;
-        if (sts_run) cnt_bln <= cnt_nxt;
+        if (sts_run) cnt_bln <= cnt_bln + 1; 
       end
     end else begin
       // periodic mode
@@ -238,7 +240,6 @@ assign end_bln = (cnt_bln == cfg_bln);
 assign end_bdl = (cnt_bln == cfg_bdl);
 
 // next value of burst period counter
-assign cnt_nxt = cnt_bln + 1; 
 
 logic trg;
 assign trg = |(trg_i & cfg_trg);

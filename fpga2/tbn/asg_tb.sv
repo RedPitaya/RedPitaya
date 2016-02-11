@@ -16,7 +16,10 @@ module asg_tb #(
   int unsigned DWM = 16,  // data width for multiplier (gain)
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
-  int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
+  int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
+  // burst counter parameters
+  int unsigned CWL = 32,  // counter width length
+  int unsigned CWN = 16   // counter width number
 );
 
 localparam int unsigned DN = 1;
@@ -43,8 +46,8 @@ logic [CWM+CWF-1:0] cfg_off;  // pointer initial offset (used to define phase)
 logic               cfg_ben;  // burst enable
 logic               cfg_inf;  // infinite
 logic     [CWM-1:0] cfg_bdl;  // data length
-logic     [ 32-1:0] cfg_bln;  // period length (data+idle)
-logic     [ 16-1:0] cfg_bnm;  // number of repetitions
+logic     [CWL-1:0] cfg_bln;  // period length (data+idle)
+logic     [CWN-1:0] cfg_bnm;  // number of repetitions
 
 DAT_T dat_table [];
 
@@ -96,7 +99,10 @@ initial begin
   buf_write(dat_table);
 
   // running a set of tests
-  test_burst(.dat_table (dat_table));
+  test_burst_length (.bdl (1), .bln (1), .dat_table (dat_table));
+  test_burst_length (.bdl (1), .bln (8), .dat_table (dat_table));
+  test_burst_length (.bdl (7), .bln (8), .dat_table (dat_table));
+  test_burst_length (.bdl (8), .bln (8), .dat_table (dat_table));
 
   // status report
   if (error)  $display ("FAILURE");
@@ -128,7 +134,7 @@ task trg_pulse (logic [TN-1:0] trg);
 endtask: trg_pulse
 
 // drain check incremental sequence
-task automatic test_burst (
+task automatic test_burst_length (
   int unsigned bdl = 8,
   int unsigned bln = 8,
   ref DAT_T dat_table []
@@ -162,21 +168,12 @@ task automatic test_burst (
       ref_kep = '1; // TODO
       ref_lst = i==(str_drn.buf_siz-1);
       str_drn.get (dat, kep, lst, tmg);
-      if (dat != ref_dat) begin
-        error++;
-        $display ("Error: data i=%d missmatch drn=%04h, ref=%04h", i, dat, ref_dat);
-      end
-      if (kep != ref_kep) begin
-        error++;
-        $display ("Error: keep i=%d missmatch drn=%04h, ref=%04h", i, kep, ref_kep);
-      end
-      if (lst != ref_lst) begin
-        error++;
-        $display ("Error: last i=%d missmatch drn=%04h, ref=%04h", i, lst, ref_lst);
-      end
+      if (dat != ref_dat) begin  error++;  $display ("Error: data i=%d missmatch drn=%04h, ref=%04h", i, dat, ref_dat);  end
+      if (kep != ref_kep) begin  error++;  $display ("Error: keep i=%d missmatch drn=%04h, ref=%04h", i, kep, ref_kep);  end
+      if (lst != ref_lst) begin  error++;  $display ("Error: last i=%d missmatch drn=%04h, ref=%04h", i, lst, ref_lst);  end
     end
   end
-endtask: test_burst
+endtask: test_burst_length
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
@@ -191,7 +188,10 @@ asg #(
   .DAT_T (DAT_T),
   // buffer parameters
   .CWM (CWM),
-  .CWF (CWF)
+  .CWF (CWF),
+  // burst counters
+  .CWL (CWL),
+  .CWN (CWN)
 ) asg (
   // stream output
   .sto      (str),
