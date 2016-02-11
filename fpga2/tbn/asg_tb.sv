@@ -51,6 +51,9 @@ DAT_T dat [];
 // stream input/output
 axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
 
+// error counter
+int unsigned error;
+
 ////////////////////////////////////////////////////////////////////////////////
 // clock and time stamp
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,9 +72,9 @@ initial begin
   trg_i   = '0;
   // configuration
   cfg_trg = '1;
-  cfg_siz = 2**CWM-1;
-  cfg_stp = 1 << CWF;
-  cfg_off = 0 << CWF;
+  cfg_siz = (1<<CWM+CWF)-1;
+  cfg_stp = (1<<CWF    )-1;
+  cfg_off = (0<<CWF    );
   // configuration (burst mode)
   cfg_ben = 1'b0;
   cfg_inf = 0;
@@ -92,6 +95,9 @@ initial begin
   end
   buf_write(dat);
 
+  // running a set of tests
+  test_burst();
+
   // end simulation
   repeat(400) @(posedge clk);
   $finish();
@@ -106,23 +112,52 @@ task buf_write (
   end
 endtask: buf_write
 
+////////////////////////////////////////////////////////////////////////////////
+// module instance
+////////////////////////////////////////////////////////////////////////////////
+
+// generate trigger pulse
+task trg_pulse (logic [TN-1:0] trg);
+  trg_i = trg;
+  @(posedge clk);
+  trg_i = '0;
+endtask: trg_pulse
+
 // drain check incremental sequence
-task drn_inc (
-  int from,
-  int to
+task test_burst (
+  int unsigned bdl = 8,
+  int unsigned bln = 8
 );
   DAT_T [DN-1:0] dat;
   logic [DN-1:0] kep;
   logic          lst;
   int unsigned   tmg;
-  for (int i=from; i<=to; i++) begin
-    str_drn.get(dat, kep, lst, tmg);
-      $display ("data %d is %x/%b", i, dat, lst);
-    if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
-      $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
+
+  cfg_ben = 1'b1;  // enable burst mode
+  cfg_inf = 1'b0;  // disable infinite bursts
+  cfg_bdl = bdl-1;
+  cfg_bln = bln-1;
+  for (int unsigned bnm=1; bnm<=4; bnm++) begin
+    int unsigned len;
+    str_drn.clr();
+    cfg_bnm = bnm-1;
+    trg_pulse (1'b1);
+    len = bln*bnm;
+    repeat (len+8) @(posedge clk);
+    // check drain length
+    if (str_drn.buf_siz != len) begin
+      error++;
+      $display ("Error: data stream size %d is not correct, should be %d", str_drn.buf_siz, len);
     end
   end
-endtask: drn_inc
+//  for (int i=from; i<=to; i++) begin
+//    str_drn.get(dat, kep, lst, tmg);
+//      $display ("data %d is %x/%b", i, dat, lst);
+//    if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
+//      $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
+//    end
+//  end
+endtask: test_burst
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance

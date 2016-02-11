@@ -72,4 +72,11 @@ task get (
   tmg = buf_tmg.pop_front();
 endtask: get
 
+task clr ();
+  buf_dat = {};
+  buf_kep = {};
+  buf_lst = {};
+  buf_tmg = {};
+endtask: clr
+
 endmodule: axi4_stream_drn
