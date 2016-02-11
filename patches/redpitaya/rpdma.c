@@ -65,9 +65,9 @@ dma_cookie_t rx_cookie, tx_cookie;
 //number of segments
 
 int rx_segment_cnt=4;
-long rx_segment_size = 1024;
+long rx_segment_size = 1024*1024;
 int tx_segment_cnt=4;
-long tx_segment_size = 1024;
+long tx_segment_size = 1024:
 
 unsigned char* rpdma_rx_addrv;
 unsigned char* rpdma_tx_addrv;
@@ -90,9 +90,9 @@ static ssize_t rpdma_write(struct file *f, const char __user * buf,size_t len, l
     int j;
     //unsigned char c=0;
     printk("rpdma: write()\n");
-	for (j=0; j <  tx_segment_size*tx_segment_cnt; j++) {
-			 rpdma_tx_addrv[j]=(unsigned char)j%255;
-	}
+    for (j=0; j <  tx_segment_size*tx_segment_cnt; j++) {
+             rpdma_tx_addrv[j]=(unsigned char)j%255;
+    }
     return 0;//(ssize_t)copy_from_user(rpdma_tx_addrv, buf, len);
 }
 
@@ -101,13 +101,12 @@ static void rpdma_slave_tx_callback(void *completion)
 {   
     printk("rpdma:tx complete\n");
     complete(completion);
-
 }
 
 //callback
 static void rpdma_slave_rx_callback(void *completion)
 {    
-	printk("rpdma:rx complete\n");
+    printk("rpdma:rx complete\n");
     complete(completion);
     flag=1;
     wake_up_interruptible(&wq);
@@ -133,8 +132,8 @@ int rpdma_read(struct file *filep, char *buff, size_t len, loff_t *off){
 static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg) {
 
         unsigned long rx_tmo = msecs_to_jiffies(3000000); 
-		unsigned long tx_tmo = msecs_to_jiffies(2000000);
-		smp_rmb();
+        unsigned long tx_tmo = msecs_to_jiffies(2000000);
+        smp_rmb();
         printk("rpdma:ioctl cmd:%d arg%d\n",cmd,(int)arg);
     switch(cmd){
     case STOP_TX:{
@@ -156,8 +155,8 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
             tx_cookie = txd->tx_submit(txd);    
             printk("rpdma: tx submit\n"); 
             if (dma_submit_error(tx_cookie)) {
-				printk("rpdma tx submit error %d \n", tx_cookie);
-		    }
+                printk("rpdma tx submit error %d \n", tx_cookie);
+            }
             dma_async_issue_pending(tx_chan);
         }
       } break;
@@ -175,125 +174,138 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
             rx_cookie = rxd->tx_submit(rxd);    
             printk("rpdma:rx_submit\n");
             
-		if(dma_submit_error(rx_cookie)){
-			printk("rpdma rx submit error %d \n", rx_cookie);
+        if(dma_submit_error(rx_cookie)){
+            printk("rpdma rx submit error %d \n", rx_cookie);
         }
         dma_async_issue_pending(rx_chan);
-            flag = 0;
-	}
+        flag = 0;
+    }
     }break;
-   case SIMPLE_RX:{
-		printk("rpdma:rx single dma \n");
-        dma_rx_segment = dma_map_single(rx_dev->dev, rpdma_rx_addrv, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(tx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
-        else{
-        rxd = dmaengine_prep_slave_single(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-			if(!rxd){printk("rpdma:rxd not set properly\n");}
-            else{
-				init_completion(&rx_cmp);
-				rxd->callback = rpdma_slave_rx_callback;
-				rxd->callback_param = &rx_cmp;
-				rx_cookie = rxd->tx_submit(rxd);
-				printk("rpdma:rx submit \n");
-			}
-		}
-
-
-
-
-		printk("rpdma:rx dma_async_issue_pending \n");
-		dma_async_issue_pending(rx_chan);	
-		    flag = 0;
-		
-		
-		//printk("rpdma:rx wait_for_completion_timeout \n");
-		rx_tmo = wait_for_completion_timeout(&rx_cmp, rx_tmo);
-		//status = dma_async_is_tx_complete(rx_chan, rx_cookie,NULL, NULL);
-		//if (rx_tmo == 0) {
-		//	pr_warn("rx test timed out\n");
-		//}else if (status != DMA_COMPLETE) {
-		//	pr_warn("but status is \'%s\'\n", status == DMA_ERROR ? "error" :"in progress");
-		//}
-		
-		dmaengine_terminate_all(rx_chan);
-		
-		if(dma_rx_segment)
-		dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
-		
-			
-	break;
-	}
-	   case SIMPLE_TX:{
-		printk("rpdma:tx single dma \n");
-		dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
-		if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
-        else{
-			txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-			if(!txd){printk("rpdma: txd not set properly\n");}
-			else{
-				init_completion(&tx_cmp);
-				txd->callback = rpdma_slave_tx_callback;
-				txd->callback_param = &tx_cmp;
-				tx_cookie = txd->tx_submit(txd);
-				printk("rpdma:tx submit \n");
-			}
-		}
-		printk("rpdma:rx dma_async_issue_pending \n");
-		dma_async_issue_pending(tx_chan);
-		
-		tx_tmo = wait_for_completion_timeout(&tx_cmp, tx_tmo);
-		dmaengine_terminate_all(tx_chan);
-		if(dma_tx_segment)
-		dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
-		
-	break;
-	}
-	case SIMPLE:{
-		printk("rpdma:tx single dma \n");
-		dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
-		if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
-        else{
-			txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-			if(!txd){printk("rpdma: txd not set properly\n");}
-			else{
-				init_completion(&tx_cmp);
-				txd->callback = rpdma_slave_tx_callback;
-				txd->callback_param = &tx_cmp;
-				tx_cookie = txd->tx_submit(txd);
-				printk("rpdma:tx submit \n");
-			}
-		}
+    case SIMPLE_RX:{
         printk("rpdma:rx single dma \n");
         dma_rx_segment = dma_map_single(rx_dev->dev, rpdma_rx_addrv, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
         if(dma_mapping_error(tx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
         else{
         rxd = dmaengine_prep_slave_single(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-			if(!rxd){printk("rpdma:rxd not set properly\n");}
+            if(!rxd){printk("rpdma:rxd not set properly\n");}
             else{
-				init_completion(&rx_cmp);
-				rxd->callback = rpdma_slave_rx_callback;
-				rxd->callback_param = &rx_cmp;
-				rx_cookie = rxd->tx_submit(rxd);
-				printk("rpdma:rx submit \n");
-			}
-		}
-		printk("rpdma:tx dma_async_issue_pending \n");
-		dma_async_issue_pending(tx_chan);
-		printk("rpdma:rx dma_async_issue_pending \n");
-		dma_async_issue_pending(rx_chan);	
-		
+                init_completion(&rx_cmp);
+                rxd->callback = rpdma_slave_rx_callback;
+                rxd->callback_param = &rx_cmp;
+                rx_cookie = rxd->tx_submit(rxd);
+                printk("rpdma:rx submit \n");
+            }
+        }
 
-		tx_tmo = wait_for_completion_timeout(&tx_cmp, tx_tmo);
-		
-		dmaengine_terminate_all(rx_chan);
-		dmaengine_terminate_all(tx_chan);
-		
-		if(dma_tx_segment)
-		dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
-		if(dma_rx_segment)
-		dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
-	break;
-	}		  
+        printk("rpdma:rx dma_async_issue_pending \n");
+        dma_async_issue_pending(rx_chan);    
+        flag = 0;
+        //printk("rpdma:rx wait_for_completion_timeout \n");
+        rx_tmo = wait_for_completion_timeout(&rx_cmp, rx_tmo);
+        //status = dma_async_is_tx_complete(rx_chan, rx_cookie,NULL, NULL);
+        //if (rx_tmo == 0) {
+        //    pr_warn("rx test timed out\n");
+        //}else if (status != DMA_COMPLETE) {
+        //    pr_warn("but status is \'%s\'\n", status == DMA_ERROR ? "error" :"in progress");
+        //}
+        
+        dmaengine_terminate_all(rx_chan);
+        
+        if(dma_rx_segment)
+        dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
+        
+            
+    break;
+    }
+    case SIMPLE_TX:{
+        printk("rpdma:tx single dma \n");
+        dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
+        if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
+        else{
+            txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            if(!txd){printk("rpdma: txd not set properly\n");}
+            else{
+                init_completion(&tx_cmp);
+                txd->callback = rpdma_slave_tx_callback;
+                txd->callback_param = &tx_cmp;
+                tx_cookie = txd->tx_submit(txd);
+                printk("rpdma:tx submit \n");
+            }
+        }
+        printk("rpdma:rx dma_async_issue_pending \n");
+        dma_async_issue_pending(tx_chan);
+        
+        tx_tmo = wait_for_completion_timeout(&tx_cmp, tx_tmo);
+        dmaengine_terminate_all(tx_chan);
+        if(dma_tx_segment)
+        dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
+        
+    break;
+    }
+    case SIMPLE:{
+        printk("rpdma:tx single dma \n");
+        dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
+        if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
+        else{
+            txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            if(!txd){printk("rpdma: txd not set properly\n");}
+            else{
+                init_completion(&tx_cmp);
+                txd->callback = rpdma_slave_tx_callback;
+                txd->callback_param = &tx_cmp;
+                tx_cookie = txd->tx_submit(txd);
+                printk("rpdma:tx submit \n");
+            }
+        }
+        printk("rpdma:rx single dma \n");
+        dma_rx_segment = dma_map_single(rx_dev->dev, rpdma_rx_addrv, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
+        if(dma_mapping_error(tx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
+        else{
+        rxd = dmaengine_prep_slave_single(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            if(!rxd){printk("rpdma:rxd not set properly\n");}
+            else{
+                init_completion(&rx_cmp);
+                rxd->callback = rpdma_slave_rx_callback;
+                rxd->callback_param = &rx_cmp;
+                rx_cookie = rxd->tx_submit(rxd);
+                printk("rpdma:rx submit \n");
+            }
+        }
+        printk("rpdma:tx dma_async_issue_pending \n");
+        dma_async_issue_pending(tx_chan);
+        printk("rpdma:rx dma_async_issue_pending \n");
+        dma_async_issue_pending(rx_chan);    
+        
+
+        tx_tmo = wait_for_completion_timeout(&tx_cmp, tx_tmo);
+        
+        dmaengine_terminate_all(rx_chan);
+        dmaengine_terminate_all(tx_chan);
+        
+        if(dma_tx_segment)
+        dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
+        if(dma_rx_segment)
+        dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
+    break;
+    }
+    
+    case SET_TX_SEGMENT_CNT:{
+        printk("rpdma:ioctl tx segment cnt set to %d \n",arg);
+        tx_segment_cnt=arg;
+    }break;  
+    case SET_TX_SEGMENT_SIZE :{
+        printk("rpdma:ioctl tx segment size set to %d \n",arg);
+        tx_segment_size=arg;
+   }break;
+    case SET_RX_SEGMENT_CNT:{
+        printk("rpdma:ioctl rx segment cnt set to %d \n",arg);
+        rx_segment_cnt=arg;
+   }break;
+    case SET_RX_SEGMENT_SIZE:{
+        printk("rpdma:ioctl rx segment size set to %d \n",arg);
+        rx_segment_size=arg;
+    }break;  
+              
     }
     return 0;
 }
@@ -301,12 +313,12 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 //dealocate everything for dma
 static int rpdma_release(struct inode *ino, struct file *file)
 {
-	//  dmaengine_terminate_all(tx_chan); 
+    //  dmaengine_terminate_all(tx_chan); 
    //     dmaengine_terminate_all(rx_chan); 
-	//if(dma_tx_segment)
-	//	dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
-	//		if(dma_rx_segment)
-//		dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
+    //if(dma_tx_segment)
+    //    dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
+    //        if(dma_rx_segment)
+//        dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
             flag=1;
     wake_up_interruptible(&wq);
     printk("rpdma:release\n");

@@ -10,5 +10,8 @@ ioctl macro definitions
 #define SIMPLE_RX 10
 #define SIMPLE_TX 11
 #define SIMPLE 12
-#define SINGLE 1
-#define CYCLIC 0
+#define SET_TX_SEGMENT_CNT 14
+#define SET_TX_SEGMENT_SIZE 13
+#define SET_RX_SEGMENT_CNT 16
+#define SET_RX_SEGMENT_SIZE 15
+
