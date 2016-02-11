@@ -30,6 +30,7 @@
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/semaphore.h>
+#include <rpdma.h>
 
 struct dma_chan *tx_chan, *rx_chan;
 static dev_t dev_num;
@@ -49,17 +50,7 @@ struct completion tx_cmp;
 #define PATTERN_OVERWRITE    0x20
 #define PATTERN_COUNT_MASK    0x1f
 */
-#define STOP_TX 0
-#define STOP_RX 1
-#define SET_TX 2
-#define SET_RX 3
-#define START_RX 4
-#define START_TX 5
-#define SIMPLE_RX 10
-#define SIMPLE_TX 11
-#define SIMPLE 12
-#define SINGLE 1
-#define CYCLIC 0
+
 
 dma_addr_t rpdma_handle;
 
@@ -141,8 +132,8 @@ int rpdma_read(struct file *filep, char *buff, size_t len, loff_t *off){
 //function to start and stop dma transfers
 static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg) {
 
-        unsigned long rx_tmo = msecs_to_jiffies(30000); 
-		unsigned long tx_tmo = msecs_to_jiffies(20000);
+        unsigned long rx_tmo = msecs_to_jiffies(3000000); 
+		unsigned long tx_tmo = msecs_to_jiffies(2000000);
 		smp_rmb();
         printk("rpdma:ioctl cmd:%d arg%d\n",cmd,(int)arg);
     switch(cmd){
@@ -188,6 +179,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 			printk("rpdma rx submit error %d \n", rx_cookie);
         }
         dma_async_issue_pending(rx_chan);
+            flag = 0;
 	}
     }break;
    case SIMPLE_RX:{
@@ -206,21 +198,27 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 			}
 		}
 
+
+
+
 		printk("rpdma:rx dma_async_issue_pending \n");
 		dma_async_issue_pending(rx_chan);	
+		    flag = 0;
+		
 		
 		//printk("rpdma:rx wait_for_completion_timeout \n");
-		//rx_tmo = wait_for_completion_timeout(&rx_cmp, rx_tmo);
+		rx_tmo = wait_for_completion_timeout(&rx_cmp, rx_tmo);
 		//status = dma_async_is_tx_complete(rx_chan, rx_cookie,NULL, NULL);
 		//if (rx_tmo == 0) {
 		//	pr_warn("rx test timed out\n");
 		//}else if (status != DMA_COMPLETE) {
 		//	pr_warn("but status is \'%s\'\n", status == DMA_ERROR ? "error" :"in progress");
 		//}
-	//	dmaengine_terminate_all(rx_chan);
 		
-		//if(dma_rx_segment)
-		//dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
+		dmaengine_terminate_all(rx_chan);
+		
+		if(dma_rx_segment)
+		dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
 		
 			
 	break;
@@ -242,9 +240,11 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 		}
 		printk("rpdma:rx dma_async_issue_pending \n");
 		dma_async_issue_pending(tx_chan);
-			
-	//	if(dma_tx_segment)
-	//	dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
+		
+		tx_tmo = wait_for_completion_timeout(&tx_cmp, tx_tmo);
+		dmaengine_terminate_all(tx_chan);
+		if(dma_tx_segment)
+		dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
 		
 	break;
 	}
@@ -298,11 +298,15 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     return 0;
 }
 
-//todo: dealocate everything for dma
+//dealocate everything for dma
 static int rpdma_release(struct inode *ino, struct file *file)
 {
-	  dmaengine_terminate_all(tx_chan); 
-        dmaengine_terminate_all(rx_chan); 
+	//  dmaengine_terminate_all(tx_chan); 
+   //     dmaengine_terminate_all(rx_chan); 
+	//if(dma_tx_segment)
+	//	dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
+	//		if(dma_rx_segment)
+//		dma_unmap_single(rx_dev->dev, dma_rx_segment, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
             flag=1;
     wake_up_interruptible(&wq);
     printk("rpdma:release\n");
@@ -310,7 +314,7 @@ static int rpdma_release(struct inode *ino, struct file *file)
 }
 
 
-//todo check this!
+//mmaps receiver buffer to userspace
 static int rpdma_mmap(struct file * f, struct vm_area_struct * v){
     printk("rpdma:mmap\n");
     return dma_common_mmap(&rpdev->dev, v, rpdma_rx_addrv, rpdma_rx_addrp,v->vm_end - v->vm_start);    
