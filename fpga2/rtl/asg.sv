@@ -135,11 +135,16 @@ logic               ptr_nxt_sub_neg;
 logic     [ 32-1:0] cnt_bln;  // burst length
 logic     [ 32-1:0] cnt_nxt;  // burst length next
 logic     [ 16-1:0] cnt_bnm;  // burst repetitions
+// counter end status
+logic               end_bdl;  // burst data length
+logic               end_bln;  // burst      length
+logic               end_bnm;  // burst repetitions
 // status and events
 logic               sts_run;  // running
 logic               sts_vld;  // valid
+logic               sts_lst;  // valid
 logic               sts_trg;  // trigger event
-logic               sts_rpt;  // repeat event
+logic               sts_rpt;  // repeat  event
 logic               sts_aen;  // address enable
 logic               sts_ren;  // read    enable
 
@@ -174,13 +179,16 @@ always @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
   sts_vld <= 1'b0;
   sts_ren <= 1'b0;
+  sts_lst <= 1'b0;
 end else begin
   if (ctl_rst) begin
     sts_vld <= 1'b0;
     sts_ren <= 1'b0;
+    sts_lst <= 1'b0;
   end else begin
     sts_vld <= sts_run; 
     sts_ren <= sts_aen;
+    sts_lst <= sts_rpt & end_bnm;
   end
 end
 
@@ -206,12 +214,12 @@ end else begin
     if (cfg_ben) begin
       // burst mode
       if (sts_trg) begin
-        sts_aen <= sts_run ? (cnt_bnm!=cfg_bnm)  : 1'b1;
-        sts_run <= sts_run ? (cnt_bnm!=cfg_bnm)  : 1'b1;
-        cnt_bnm <= sts_run ?  cnt_bnm + !cfg_inf : '0;
+        sts_aen <= sts_run ? ~end_bnm : 1'b1;
+        sts_run <= sts_run ? ~end_bnm : 1'b1;
+        cnt_bnm <= sts_run ? cnt_bnm + !cfg_inf : '0;
         cnt_bln <= '0;
       end else begin
-        if (cnt_bln == cfg_bdl) sts_aen <= 1'b0;
+        if (end_bdl) sts_aen <= 1'b0;
         if (sts_run) cnt_bln <= cnt_nxt;
       end
     end else begin
@@ -224,6 +232,11 @@ end else begin
   end
 end
 
+// counter end status
+assign end_bnm = (cnt_bnm == cfg_bnm);
+assign end_bln = (cnt_bln == cfg_bln);
+assign end_bdl = (cnt_bln == cfg_bdl);
+
 // next value of burst period counter
 assign cnt_nxt = cnt_bln + 1; 
 
@@ -231,7 +244,7 @@ logic trg;
 assign trg = |(trg_i & cfg_trg);
 
 assign sts_trg = sts_run ? sts_rpt : trg;
-assign sts_rpt = sts_run & (cnt_bln==cfg_bln) & cfg_ben;
+assign sts_rpt = sts_run & end_bln & cfg_ben;
 
 // interrupts
 assign irq_trg = sts_trg;
@@ -273,8 +286,13 @@ else               trg_o <= sts_trg;
 
 // output data
 assign sto.TDATA = buf_rdata;
-assign sto.TKEEP = '1;
-assign sto.TLAST = 1'b0;  // TODO
+
+// output keep/last
+always_ff @(posedge sto.ACLK)
+begin
+  sto.TKEEP <= '1;
+  sto.TLAST <= sts_lst;
+end
 
 // output valid
 always_ff @(posedge sto.ACLK)
