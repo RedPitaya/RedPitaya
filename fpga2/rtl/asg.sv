@@ -274,7 +274,7 @@ else               trg_o <= sts_trg;
 // output data
 assign sto.TDATA = buf_rdata;
 assign sto.TKEEP = '1;
-assign sto.TLAST = 1'b0;
+assign sto.TLAST = 1'b0;  // TODO
 
 // output valid
 always_ff @(posedge sto.ACLK)

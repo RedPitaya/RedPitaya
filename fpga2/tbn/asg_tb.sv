@@ -46,7 +46,7 @@ logic     [CWM-1:0] cfg_bdl;  // data length
 logic     [ 32-1:0] cfg_bln;  // period length (data+idle)
 logic     [ 16-1:0] cfg_bnm;  // number of repetitions
 
-DAT_T dat [];
+DAT_T dat_table [];
 
 // stream input/output
 axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
@@ -89,23 +89,27 @@ initial begin
   repeat(4) @(posedge clk);
 
   // writing to buffer
-  dat = new [1<<CWM];
-  for (int i=0; i<dat.size(); i++) begin
-    dat[i] = i;
+  dat_table = new [1<<CWM];
+  for (int i=0; i<dat_table.size(); i++) begin
+    dat_table[i] = i;
   end
-  buf_write(dat);
+  buf_write(dat_table);
 
   // running a set of tests
-  test_burst();
+  test_burst(.dat_table (dat_table));
+
+  // status report
+  if (error)  $display ("FAILURE");
+  else        $display ("SUCCESS");
 
   // end simulation
-  repeat(400) @(posedge clk);
+  repeat(4) @(posedge clk);
   $finish();
 end
 
 // write buffer
-task buf_write (
-  DAT_T dat []
+task automatic buf_write (
+  ref DAT_T dat []
 );
   for (int i=0; i<dat.size(); i++) begin
     busm.write(i, dat[i]);  // write table
@@ -124,15 +128,11 @@ task trg_pulse (logic [TN-1:0] trg);
 endtask: trg_pulse
 
 // drain check incremental sequence
-task test_burst (
+task automatic test_burst (
   int unsigned bdl = 8,
-  int unsigned bln = 8
+  int unsigned bln = 8,
+  ref DAT_T dat_table []
 );
-  DAT_T [DN-1:0] dat;
-  logic [DN-1:0] kep;
-  logic          lst;
-  int unsigned   tmg;
-
   cfg_ben = 1'b1;  // enable burst mode
   cfg_inf = 1'b0;  // disable infinite bursts
   cfg_bdl = bdl-1;
@@ -141,22 +141,41 @@ task test_burst (
     int unsigned len;
     str_drn.clr();
     cfg_bnm = bnm-1;
-    trg_pulse (1'b1);
     len = bln*bnm;
+    $display ("Note: burst length = %d", len);
+    trg_pulse (1'b1);
     repeat (len+8) @(posedge clk);
-    // check drain length
+    // check stream length
     if (str_drn.buf_siz != len) begin
       error++;
       $display ("Error: data stream size %d is not correct, should be %d", str_drn.buf_siz, len);
     end
+    // check stream data
+    for (int unsigned i=0; i<str_drn.buf_siz; i++) begin
+      int unsigned idx;
+      DAT_T [DN-1:0] dat, ref_dat;
+      logic [DN-1:0] kep, ref_kep;
+      logic          lst, ref_lst;
+      int unsigned   tmg;
+      idx = (i%bln) > cfg_bdl ? cfg_bdl : (i%bln);
+      ref_dat = dat_table [idx];
+      ref_kep = '1; // TODO
+      ref_lst = i==(str_drn.buf_siz-1);
+      str_drn.get (dat, kep, lst, tmg);
+      if (dat != ref_dat) begin
+        error++;
+        $display ("Error: data i=%d missmatch drn=%04h, ref=%04h", i, dat, ref_dat);
+      end
+      if (kep != ref_kep) begin
+        error++;
+        $display ("Error: keep i=%d missmatch drn=%04h, ref=%04h", i, kep, ref_kep);
+      end
+      if (lst != ref_lst) begin
+        error++;
+        $display ("Error: last i=%d missmatch drn=%04h, ref=%04h", i, lst, ref_lst);
+      end
+    end
   end
-//  for (int i=from; i<=to; i++) begin
-//    str_drn.get(dat, kep, lst, tmg);
-//      $display ("data %d is %x/%b", i, dat, lst);
-//    if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
-//      $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
-//    end
-//  end
 endtask: test_burst
 
 ////////////////////////////////////////////////////////////////////////////////
