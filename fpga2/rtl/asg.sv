@@ -235,7 +235,7 @@ end else begin
 end
 
 // counter end status
-assign end_bnm = (cnt_bnm == cfg_bnm);
+assign end_bnm = (cnt_bnm == cfg_bnm) & ~cfg_inf;
 assign end_bln = (cnt_bln == cfg_bln);
 assign end_bdl = (cnt_bln == cfg_bdl);
 
@@ -249,7 +249,7 @@ assign sts_rpt = sts_run & end_bln & cfg_ben;
 
 // interrupts
 assign irq_trg = sts_trg;
-assign irq_stp = 1'b0;  // TODO
+assign irq_stp = sts_lst;
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
