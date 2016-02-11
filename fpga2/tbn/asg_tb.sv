@@ -99,10 +99,14 @@ initial begin
   buf_write(dat_table);
 
   // running a set of tests
-  test_burst_length (.bdl (1), .bln (1), .dat_table (dat_table));
-  test_burst_length (.bdl (1), .bln (8), .dat_table (dat_table));
-  test_burst_length (.bdl (7), .bln (8), .dat_table (dat_table));
-  test_burst_length (.bdl (8), .bln (8), .dat_table (dat_table));
+  test_burst_num (.bdl (1), .bln (1), .dat_table (dat_table));
+  test_burst_num (.bdl (1), .bln (8), .dat_table (dat_table));
+  test_burst_num (.bdl (7), .bln (8), .dat_table (dat_table));
+  test_burst_num (.bdl (8), .bln (8), .dat_table (dat_table));
+  test_burst_inf (.bdl (1), .bln (1), .dat_table (dat_table));
+  test_burst_inf (.bdl (1), .bln (8), .dat_table (dat_table));
+  test_burst_inf (.bdl (7), .bln (8), .dat_table (dat_table));
+  test_burst_inf (.bdl (8), .bln (8), .dat_table (dat_table));
 
   // status report
   if (error)  $display ("FAILURE");
@@ -123,7 +127,7 @@ task automatic buf_write (
 endtask: buf_write
 
 ////////////////////////////////////////////////////////////////////////////////
-// module instance
+// helper tasks
 ////////////////////////////////////////////////////////////////////////////////
 
 // generate trigger pulse
@@ -133,12 +137,24 @@ task trg_pulse (logic [TN-1:0] trg);
   trg_i = '0;
 endtask: trg_pulse
 
-// drain check incremental sequence
-task automatic test_burst_length (
+// generate trigger pulse
+task rst_pulse ();
+  ctl_rst = 1'b1;
+  @(posedge clk);
+  ctl_rst = 1'b0;
+endtask: rst_pulse
+
+////////////////////////////////////////////////////////////////////////////////
+// tests
+////////////////////////////////////////////////////////////////////////////////
+
+// test bursts with a specified length
+task automatic test_burst_num (
   int unsigned bdl = 8,
   int unsigned bln = 8,
   ref DAT_T dat_table []
 );
+  $display ("Note: burst number test");
   cfg_ben = 1'b1;  // enable burst mode
   cfg_inf = 1'b0;  // disable infinite bursts
   cfg_bdl = bdl-1;
@@ -148,7 +164,7 @@ task automatic test_burst_length (
     str_drn.clr();
     cfg_bnm = bnm-1;
     len = bln*bnm;
-    $display ("Note: burst length = %d", len);
+    $display ("Note: burst number = %d", bnm);
     trg_pulse (1'b1);
     repeat (len+8) @(posedge clk);
     // check stream length
@@ -173,7 +189,52 @@ task automatic test_burst_length (
       if (lst != ref_lst) begin  error++;  $display ("Error: last i=%d missmatch drn=%04h, ref=%04h", i, lst, ref_lst);  end
     end
   end
-endtask: test_burst_length
+endtask: test_burst_num
+
+// test burst of infinite length
+task automatic test_burst_inf (
+  int unsigned bdl = 8,
+  int unsigned bln = 8,
+  ref DAT_T dat_table []
+);
+  $display ("Note: infinite burst test");
+  cfg_ben = 1'b1;  // enable burst mode
+  cfg_inf = 1'b1;  // disable infinite bursts
+  cfg_bdl = bdl-1;
+  cfg_bln = bln-1;
+  for (int unsigned bnm=1; bnm<=4; bnm++) begin
+    int unsigned len;
+    str_drn.clr();
+    cfg_bnm = bnm-1;
+    len = bln*bnm;
+    $display ("Note: burst length = %d", bnm);
+    trg_pulse (1'b1);
+    repeat (len+32) @(posedge clk);
+    rst_pulse ();
+    repeat (4) @(posedge clk);
+    // check stream length
+    if (str_drn.buf_siz <= len) begin
+      error++;
+      $display ("Error: data stream size is too short");
+    end
+    // check stream data
+    for (int unsigned i=0; i<str_drn.buf_siz; i++) begin
+      int unsigned idx;
+      DAT_T [DN-1:0] dat, ref_dat;
+      logic [DN-1:0] kep, ref_kep;
+      logic          lst, ref_lst;
+      int unsigned   tmg;
+      idx = (i%bln) > cfg_bdl ? cfg_bdl : (i%bln);
+      ref_dat = dat_table [idx];
+      ref_kep = '1;
+      ref_lst = 1'b0;
+      str_drn.get (dat, kep, lst, tmg);
+      if (dat != ref_dat) begin  error++;  $display ("Error: data i=%d missmatch drn=%04h, ref=%04h", i, dat, ref_dat);  end
+      if (kep != ref_kep) begin  error++;  $display ("Error: keep i=%d missmatch drn=%04h, ref=%04h", i, kep, ref_kep);  end
+      if (lst != ref_lst) begin  error++;  $display ("Error: last i=%d missmatch drn=%b, ref=%b"    , i, lst, ref_lst);  end
+    end
+  end
+endtask: test_burst_inf
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
