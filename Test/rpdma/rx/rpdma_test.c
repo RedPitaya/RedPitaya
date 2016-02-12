@@ -13,6 +13,8 @@
 #define START_RX 4
 #define START_TX 5
 
+#define SIZE 4*16*1024
+
 int main(int argc, char *argv[]) {
     int fd;
     int status;
@@ -29,14 +31,14 @@ int main(int argc, char *argv[]) {
     }
 
     // allocate data buffer memory
-    map = (unsigned char *) mmap(NULL, 4*16*1024, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    map = (unsigned char *) mmap(NULL, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (map==NULL) {
         printf("Failed to mmap\n");
         if (fd) close(fd);
         return -1;
     }
     // clear buffer
-    for(int l=0; l<4*1024; l++)
+    for (int l=0; l<SIZE; l++)
         map[l] = 0;
 
     // DMA prepare
@@ -53,9 +55,12 @@ int main(int argc, char *argv[]) {
     }
 
     // printout data
-    for(int l=0;l<4*1024;l++)
-        printf("%02x",(char)map[l]);
-	
+    for (int i=0; i<SIZE; i++) {
+        if ((i%64)==0 ) printf("@%08x: ", i);
+        printf("%02x",(char)map[i]);
+        if ((i%64)==63) printf("\n");
+    }
+
     // DMA stop
     ioctl(fd,STOP_RX,0);
 
