@@ -290,19 +290,19 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     }
     
     case SET_TX_SEGMENT_CNT:{
-        printk("rpdma:ioctl tx segment cnt set to %d \n",arg);
+        printk("rpdma:ioctl tx segment cnt set to %lx \n",arg);
         tx_segment_cnt=arg;
     }break;  
     case SET_TX_SEGMENT_SIZE :{
-        printk("rpdma:ioctl tx segment size set to %d \n",arg);
+        printk("rpdma:ioctl tx segment size set to %lx \n",arg);
         tx_segment_size=arg;
    }break;
     case SET_RX_SEGMENT_CNT:{
-        printk("rpdma:ioctl rx segment cnt set to %d \n",arg);
+        printk("rpdma:ioctl rx segment cnt set to %lx \n",arg);
         rx_segment_cnt=arg;
    }break;
     case SET_RX_SEGMENT_SIZE:{
-        printk("rpdma:ioctl rx segment size set to %d \n",arg);
+        printk("rpdma:ioctl rx segment size set to %lx \n",arg);
         rx_segment_size=arg;
     }break;  
               
