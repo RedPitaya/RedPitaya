@@ -107,6 +107,7 @@ read_ip                           $path_ip/rb_fir_8k_to_8k_25c23_17i16_35o33.xci
 read_ip                           $path_ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix
 read_ip                           $path_ip/rb_fir2_8k_to_8k_25c_17i16_35o32.xcix
 read_ip                           $path_ip/rb_fir3_8k_to_8k_24c_17i16_35o.xcix
+read_ip                           $path_ip/rb_mult_S16_m_U16.xcix
 read_ip                           $path_ip/rb_multadd_S16_m_U16_a_S32.xcix
 
 read_xdc                          $path_sdc/red_pitaya.xdc

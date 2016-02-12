@@ -155,14 +155,14 @@ enum {
     REG_RD_RB_RX_AFC_CORDIC_PHS_PREV,           // h178: RB_RX_AFC_CORDIC previous 8kHz clock phase value
     REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF,           // h17C: RB_RX_AFC_CORDIC difference phase value
 
-    REG_RW_RB_RX_SSB_AM_GAIN,                   // h180: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
-    REG_RW_RB_RX_FM_GAIN,                       // h184: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
-    REG_RW_RB_RX_PM_GAIN,                       // h188: RB RX_MOD_OSC mixer gain:     SIGNED 16 bit
+    REG_RW_RB_RX_SSB_AM_GAIN,                   // h180: RB RX_MOD_OSC mixer gain:     UNSIGNED 16 bit
+    REG_RW_RB_RX_FM_GAIN,                       // h184: RB RX_MOD_OSC mixer gain:     UNSIGNED 16 bit
+    REG_RW_RB_RX_PM_GAIN,                       // h188: RB RX_MOD_OSC mixer gain:     UNSIGNED 16 bit
     //REG_RD_RB_RX_RSVD_H18C,
 
-    REG_RW_RB_RX_AUDIO_OUT_GAIN,                // h190: RB RX_AUDIO_OUT mixer gain:   SIGNED 17 bit
+    REG_RW_RB_RX_AUDIO_OUT_GAIN,                // h190: RB RX_AUDIO_OUT mixer gain:   UNSIGNED 16 bit
     //REG_RD_RB_RX_RSVD_H194,
-    REG_RW_RB_RX_AUDIO_OUT_OFS,                 // h198: RB RX_AUDIO_OUT mixer offset: SIGNED 32 bit
+    REG_RW_RB_RX_AUDIO_OUT_OFS,                 // h198: RB RX_AUDIO_OUT mixer offset:   SIGNED 16 bit
     //REG_RD_RB_RX_RSVD_H19C,
 
     REG_RB_COUNT
@@ -258,7 +258,7 @@ enum {
     RB_STAT_RSVD_D18,
     RB_STAT_RSVD_D19,
 
-    RB_STAT_RSVD_D20,
+    RB_STAT_RX_AFC_HIGH_SIG,                    // RX_AFC the receiving AM, FM, PM signal is strong enough to let the AFC do the frequency correction
     RB_STAT_RSVD_D21,
     RB_STAT_RSVD_D22,
     RB_STAT_RSVD_D23,
@@ -376,6 +376,8 @@ wire          rx_car_osc_resync      = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_R
 wire          rx_mod_osc_reset       = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_OSC_RESET];
 wire          rx_mod_osc_resync      = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_OSC_RESYNC];
 
+wire          rx_afc_high_sig        = regs[REG_RD_RB_STATUS][RB_STAT_RX_AFC_HIGH_SIG];
+
 wire [  7: 0] rb_pwr_rx_modvar       = regs[REG_RW_RB_PWR_CTRL][ 7:0];
 wire [  7: 0] rb_pwr_tx_modvar       = regs[REG_RW_RB_PWR_CTRL][15:8];
 
@@ -388,6 +390,8 @@ wire [  5: 0] rx_muxin_src           = regs[REG_RW_RB_RX_MUXIN_SRC][5:0];
 
 wire [ 15: 0] tx_muxin_mix_gain      = regs[REG_RW_RB_TX_MUXIN_GAIN][15: 0];
 wire [  2: 0] tx_muxin_mix_log2      = regs[REG_RW_RB_TX_MUXIN_GAIN][18:16];
+wire [ 15: 0] rx_muxin_mix_gain      = regs[REG_RW_RB_RX_MUXIN_GAIN][15: 0];
+wire [  2: 0] rx_muxin_mix_log2      = regs[REG_RW_RB_RX_MUXIN_GAIN][18:16];
 
 wire [ 15: 0] tx_rf_amp_gain         = regs[REG_RW_RB_TX_RF_AMP_GAIN][15:0];
 wire [ 15: 0] tx_rf_amp_ofs          = regs[REG_RW_RB_TX_RF_AMP_OFS][15:0];
@@ -1171,6 +1175,27 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_tx_amp_rf_dsp48 (
 // === Receiver section ===
 
 //---------------------------------------------------------------------------------
+//  RX_MUXIN amplifier
+
+wire [ 15: 0] rx_muxin_sig = rx_muxin_src == 1 ?  { ~adc_i[0], 2'b0 } :
+                             rx_muxin_src == 2 ?  { ~adc_i[1], 2'b0 } :
+                                                  16'b0               ;
+wire [ 15: 0] rx_muxin_in = (rx_muxin_sig << rx_muxin_mix_log2);  // unsigned value: input booster for
+                                                                  // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
+wire [ 15: 0] rx_muxin_out;
+
+rb_mult_S16_m_U16 i_rb_rx_muxin_amplifier (
+  // global signals
+  .CLK                ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .CE                 ( rb_pwr_rx_CIC_clken    ),  // power down when needed to
+
+  .A                  ( rx_muxin_in            ),  // input signal
+  .B                  ( rx_muxin_mix_gain      ),  // RX amplifier gain
+  .P                  ( rx_muxin_out           )   // RX level adjusted input signal
+);
+
+
+//---------------------------------------------------------------------------------
 //  RX_CAR_OSC carrier oscillator
 
 wire          rx_car_osc_reset_n      = rb_pwr_rx_CIC_rst_n & !rx_car_osc_reset;
@@ -1207,9 +1232,6 @@ wire [ 15: 0] rx_car_osc_sin = rx_car_osc_axis_m_data[31:16];
 
 //wire [ 15: 0] rx_mod_qmix_in_gain = regs[REG_RW_RB_RX_MUXIN_GAIN][15:0];
 
-wire [ 15: 0] rx_car_qmix_in = rx_muxin_src == 1 ?  { ~adc_i[0], 2'b0 } :
-                               rx_muxin_src == 2 ?  { ~adc_i[1], 2'b0 } :
-                                                    16'b0               ;
 wire [ 31: 0] rx_car_qmix_i_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_I_dsp48 (
@@ -1218,7 +1240,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_I_dsp48 (
   .CE                   ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
 
   // RF input
-  .A                    ( rx_car_qmix_in       ),  // RX_MUX in signal:     SIGNED 16 bit
+  .A                    ( rx_muxin_out         ),  // RX_MUX in signal:     SIGNED 16 bit
   // RX_CAR_OSC cos input
   .B                    ( rx_car_osc_cos       ),  // RX_CAR_OSC cos:       SIGNED 16 bit
 
@@ -1234,7 +1256,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_Q_dsp48 (
   .CE                   ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
 
   // RF input
-  .A                    ( rx_car_qmix_in       ),  // RX_MUX in signal:     SIGNED 16 bit
+  .A                    ( rx_muxin_out         ),  // RX_MUX in signal:     SIGNED 16 bit
   // RX_CAR_OSC sin input
   .B                    ( rx_car_osc_sin       ),  // RX_CAR_OSC sin:       SIGNED 16 bit
 
@@ -1866,7 +1888,7 @@ rb_cic_8k_to_48k_32T32 i_rb_rx_mod_cic2_Q (
 
 wire [ 16: 0] rx_mod_ssb_am_i_var = rx_mod_cic2_i_out[30:14];
 wire [ 16: 0] rx_mod_ssb_am_q_var = rx_mod_cic2_q_out[30:14];
-wire [ 16: 0] rx_mod_ssb_am_gain  = { rx_ssb_am_gain,  1'b0 };   // signed register value
+wire [ 16: 0] rx_mod_ssb_am_gain  = { 1'b0, rx_ssb_am_gain };   // signed register value
 
 wire [ 35: 0] rx_mod_ssb_am_out;
 
@@ -2182,22 +2204,19 @@ if (!rb_pwr_rx_AFC_rst_n)
 else
    rx_afc_addsub_afc_pulse <= rx_afc_div_afc_pulse;  // delayed by one clock
 
-reg            rx_afc_calc_ld_valid = 1'b0;
-
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n) begin
    { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= 48'b0;
-   rx_afc_calc_ld_valid <= 1'b0;
    end
 else if (rx_afc_addsub_afc_pulse)
    if (regs[REG_RD_RB_RX_AFC_CORDIC_MAG][30:28] != 3'b000) begin
-      if (rx_afc_calc_ld_valid)                 // correct frequency only when phase monitoring is established
+      if (rx_afc_high_sig)                      // correct frequency only when phase monitoring is established
          { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= rx_afc_reg_inc_out;
-      rx_afc_calc_ld_valid <= 1'b1;
+      regs[REG_RD_RB_STATUS][RB_STAT_RX_AFC_HIGH_SIG] <= 1'b1;
       end
    else begin                                   // low signal, reset to center frequency
       { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][15:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:0] } <= 48'b0;
-      rx_afc_calc_ld_valid <= 1'b0;
+      regs[REG_RD_RB_STATUS][RB_STAT_RX_AFC_HIGH_SIG] <= 1'b0;
       end
 
 
@@ -2227,19 +2246,41 @@ else
 //---------------------------------------------------------------------------------
 //  RX_MOD FM ouput
 
-wire [ 15: 0] rx_mod_fm_out = regs[REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF];
+wire [ 15: 0] rx_mod_fm_out;
+
+rb_mult_S16_m_U16 i_rb_rx_mod_fm_mixer (
+  // global signals
+  .CLK                ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .CE                 ( rb_pwr_rx_AFC_clken    ),  // power down when needed to
+
+  .A                  ( rx_afc_cordic_phs_diff ),  // FM modulation signal
+  .B                  ( rx_fm_gain             ),  // FM mixer gain
+  .P                  ( rx_mod_fm_out          )   // FM demodulated output
+);
 
 
 //---------------------------------------------------------------------------------
 //  RX_MOD PM ouput - lossy integrator
 
-reg  [ 15: 0] rx_mod_pm_out = 16'b0;
+// rx_pm_gain
+reg  [ 15: 0] rx_mod_pm_accu = 16'b0;
+wire [ 15: 0] rx_mod_pm_out;
 
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n)
-   rx_mod_pm_out <= 16'b0;
+   rx_mod_pm_accu <= 16'b0;
 else if (clk_8khz)
-   rx_mod_pm_out <= (rx_mod_pm_out + rx_mod_fm_out) - rx_mod_pm_out[15:7];
+   rx_mod_pm_accu <= (rx_mod_pm_accu + rx_mod_fm_out) - rx_mod_pm_accu[15:7];
+
+rb_mult_S16_m_U16 i_rb_rx_mod_pm_mixer(
+  // global signals
+  .CLK                ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .CE                 ( rb_pwr_rx_AFC_clken    ),  // power down when needed to
+
+  .A                  ( rx_mod_pm_accu         ),  // PM modulation signal
+  .B                  ( rx_pm_gain             ),  // PM mixer gain
+  .P                  ( rx_mod_pm_out          )   // PM demodulated output
+);
 
 
 //---------------------------------------------------------------------------------
