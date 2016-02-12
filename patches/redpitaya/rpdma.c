@@ -67,7 +67,7 @@ dma_cookie_t rx_cookie, tx_cookie;
 int rx_segment_cnt=4;
 long rx_segment_size = 1024*1024;
 int tx_segment_cnt=4;
-long tx_segment_size = 1024:
+long tx_segment_size = 1024;
 
 unsigned char* rpdma_rx_addrv;
 unsigned char* rpdma_tx_addrv;
