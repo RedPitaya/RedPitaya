@@ -65,7 +65,7 @@ dma_cookie_t rx_cookie, tx_cookie;
 //number of segments
 
 int rx_segment_cnt=4;
-long rx_segment_size = 1024*1024;
+long rx_segment_size = 1<<16;
 int tx_segment_cnt=4;
 long tx_segment_size = 1024;
 
