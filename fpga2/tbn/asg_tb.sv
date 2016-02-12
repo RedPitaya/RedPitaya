@@ -135,18 +135,18 @@ endtask: buf_write
 ////////////////////////////////////////////////////////////////////////////////
 
 // generate trigger pulse
-task trg_pulse (logic [TN-1:0] trg);
-  trg_i = trg;
-  @(posedge clk);
-  trg_i = '0;
-endtask: trg_pulse
-
-// generate trigger pulse
-task rst_pulse ();
+task rst_pls ();
   ctl_rst = 1'b1;
   @(posedge clk);
   ctl_rst = 1'b0;
-endtask: rst_pulse
+endtask: rst_pls
+
+// generate trigger pulse
+task trg_pls (logic [TN-1:0] trg);
+  trg_i = trg;
+  @(posedge clk);
+  trg_i = '0;
+endtask: trg_pls
 
 ////////////////////////////////////////////////////////////////////////////////
 // tests
@@ -169,7 +169,7 @@ task automatic test_burst_num (
     cfg_bnm = bnm-1;
     len = bln*bnm;
     $display ("Note: burst number = %d", bnm);
-    trg_pulse (1'b1);
+    trg_pls (1'b1);
     repeat (len+8) @(posedge clk);
     // check stream length
     if (str_drn.buf_siz != len) begin
@@ -212,9 +212,9 @@ task automatic test_burst_inf (
     cfg_bnm = bnm-1;
     len = bln*bnm;
     $display ("Note: burst length = %d", bnm);
-    trg_pulse (1'b1);
+    trg_pls (1'b1);
     repeat (len+32) @(posedge clk);
-    rst_pulse ();
+    rst_pls ();
     repeat (4) @(posedge clk);
     // check stream length
     if (str_drn.buf_siz <= len) begin

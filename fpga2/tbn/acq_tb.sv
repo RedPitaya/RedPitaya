@@ -118,7 +118,7 @@ initial begin
   for (int i=0; i<=size; i++) begin
     sti_dat[i] = '{i, i==(size-1)};
   end
-  acq_pls;
+  acq_pls();
   src_ary (sti_dat);
   repeat(size+2) @(posedge clk);
   repeat(size+2) @(posedge clk);
@@ -131,12 +131,34 @@ initial begin
   $finish();
 end
 
-  // activate acquire
+////////////////////////////////////////////////////////////////////////////////
+// helper tasks
+////////////////////////////////////////////////////////////////////////////////
+
+// generate trigger pulse
+task rst_pls ();
+  ctl_rst = 1'b1;
+  @(posedge clk);
+  ctl_rst = 1'b0;
+endtask: rst_pls
+
+// activate acquire
 task acq_pls ();
   ctl_acq = 1'b1;
   repeat(1) @(posedge clk);
   ctl_acq = 1'b0;
 endtask: acq_pls
+
+// generate trigger pulse
+task trg_pls (logic [TN-1:0] trg);
+  ctl_trg = trg;
+  @(posedge clk);
+  ctl_trg = '0;
+endtask: trg_pls
+
+////////////////////////////////////////////////////////////////////////////////
+// tests
+////////////////////////////////////////////////////////////////////////////////
 
 // source array
 task automatic src_ary (
