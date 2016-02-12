@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     }
 
     // allocate data buffer memory
-    map = (unsigned char *) mmap(NULL, 4*1024, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    map = (unsigned char *) mmap(NULL, 4*16*1024, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (map==NULL) {
         printf("Failed to mmap\n");
         if (fd) close(fd);
@@ -40,10 +40,10 @@ int main(int argc, char *argv[]) {
         map[l] = 0;
 
     // DMA prepare
-//    ioctl(fd, 10, 0);  // single RX
-    ioctl(fd, SET_RX, 0);  // cyclic RX
+    ioctl(fd, 10, 0);  // single RX
+//    ioctl(fd, SET_RX, 0);  // cyclic RX
 
-    for (int b=0; b<2; b++) {
+    for (int b=0; b<1; b++) {
       // blocking read waiting for DMA data
       status = read(fd, buf, 1);
       if (status<0) {
