@@ -99,12 +99,12 @@ initial begin
   end
   if (EN_LIN) begin
     // configure amplitude and DC offset
-    busm.write('h30, 1 << ($bits(DAT_M)-2));  // amplitude
-    busm.write('h34, 0);             // DC offset
+    busm.write('h38, 1 << ($bits(DAT_M)-2));  // amplitude
+    busm.write('h3c, 0);             // DC offset
   end else begin
     // configure LG output enable
-    busm.write('h30, '1);  // output ebable
-    busm.write('h34, '0);  // open drain
+    busm.write('h38, '1);  // output ebable
+    busm.write('h3c, '0);  // open drain
   end
   // configure frequency and phase
   busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size

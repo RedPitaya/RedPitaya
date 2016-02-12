@@ -148,8 +148,8 @@ task test_lg (
   repeat(10) @(posedge clk);
 
 //  // configure amplitude and DC offset
-//  axi_write(base+'h30, 1 << (DWM-2));  // amplitude
-//  axi_write(base+'h34, 0);             // DC offset
+//  axi_write(base+'h38, 1 << (DWM-2));  // amplitude
+//  axi_write(base+'h3c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
@@ -162,9 +162,9 @@ task test_lg (
 //  end
 
   // configure LG output enable
-  axi_write(base+'h30, '1);  // output ebable
-  axi_write(base+'h34, '0);  // open drain
-//axi_write(base+'h34, 2);  // open drain
+  axi_write(base+'h38, '1);  // output ebable
+  axi_write(base+'h3c, '0);  // open drain
+//axi_write(base+'h3c, 2);  // open drain
 
   // configure frequency and phase
   axi_write(base+'h10,  buf_len                    * 2**CWF - 1);  // table size

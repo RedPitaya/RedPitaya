@@ -93,6 +93,9 @@ typedef struct {
     uint32_t cfg_bdl;  ///< burst data length
     uint32_t cfg_bln;  ///< burst period length (data length + idle length)
     uint32_t cfg_bnm;  ///< burst repetition number
+    // status
+    uint32_t sts_bln;  ///< burst period length (data length + idle length)
+    uint32_t sts_bnm;  ///< burst repetition number
     // specific regs
     union {
         lg_spec_regset_t lg_spec;

@@ -96,6 +96,10 @@ logic               cfg_inf;  // infinite burst
 logic     [CWM-1:0] cfg_bdl;  // burst data length
 logic     [ 32-1:0] cfg_bln;  // burst idle length
 logic     [ 16-1:0] cfg_bnm;  // burst repetitions
+// status
+logic     [CWL-1:0] sts_bln;  // burst length counter
+logic     [CWN-1:0] sts_bnm;  // burst number counter
+logic               sts_run;  // running status
 // linear offset and gain
 DAT_M               cfg_mul;
 DAT_S               cfg_sum;
@@ -147,6 +151,7 @@ assign trg_swo = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]=='h00) & bus.wdat
 always_ff @(posedge bus.clk)
 if (~bus.addr[CWM+2]) begin
   casez (bus.addr[BAW-1:0])
+    'h00 : bus.rdata <= {{32-      4{1'b0}},~sts_run, sts_run, 2'b00};
     // trigger configuration
     'h04 : bus.rdata <= {{32-     TN{1'b0}}, cfg_trg};
     // buffer configuration
@@ -159,9 +164,12 @@ if (~bus.addr[CWM+2]) begin
     'h24 : bus.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
     'h28 : bus.rdata <=                      cfg_bln ;
     'h2c : bus.rdata <= {{32-     16{1'b0}}, cfg_bnm};
+    // status
+    'h30 : bus.rdata <= 32'(sts_bln);
+    'h34 : bus.rdata <= 32'(sts_bnm);
     // linear transformation (should be properly sign extended)
-    'h30 : bus.rdata <= cfg_mul;
-    'h34 : bus.rdata <= cfg_sum;
+    'h38 : bus.rdata <= cfg_mul;
+    'h3c : bus.rdata <= cfg_sum;
 
     default : bus.rdata <= '0;
   endcase
@@ -208,6 +216,10 @@ asg #(
   .cfg_bdl   (cfg_bdl),
   .cfg_bln   (cfg_bln),
   .cfg_bnm   (cfg_bnm),
+  // status
+  .sts_bln   (sts_bln),
+  .sts_bnm   (sts_bnm),
+  .sts_run   (sts_run),
   // CPU buffer access
   .bus       (bus_buf)
 );

@@ -48,6 +48,10 @@ logic               cfg_inf;  // infinite
 logic     [CWM-1:0] cfg_bdl;  // data length
 logic     [CWL-1:0] cfg_bln;  // period length (data+idle)
 logic     [CWN-1:0] cfg_bnm;  // number of repetitions
+// status
+logic     [CWL-1:0] sts_bln;  // burst length counter
+logic     [CWN-1:0] sts_bnm;  // burst number counter
+logic               sts_run;  // running status
 
 DAT_T dat_table [];
 
@@ -275,6 +279,10 @@ asg #(
   .cfg_bdl  (cfg_bdl),
   .cfg_bln  (cfg_bln),
   .cfg_bnm  (cfg_bnm),
+  // status
+  .sts_bln  (sts_bln),
+  .sts_bnm  (sts_bnm),
+  .sts_run  (sts_run),
   // CPU buffer access
   .bus      (bus)
 );

@@ -116,6 +116,10 @@ module asg #(
   input  logic     [CWM-1:0] cfg_bdl,  // burst data length
   input  logic     [CWL-1:0] cfg_bln,  // burst      length
   input  logic     [CWN-1:0] cfg_bnm,  // burst number of repetitions
+  // status
+  output logic     [CWL-1:0] sts_bln,  // burst length counter
+  output logic     [CWN-1:0] sts_bnm,  // burst number counter
+  output logic               sts_run,  // running status
   // System bus
   sys_bus_if.s               bus
 );
@@ -134,15 +138,11 @@ logic [CWM+CWF-1:0] ptr_cur; // current
 logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
-// counters
-logic     [CWL-1:0] cnt_bln;  // burst length
-logic     [CWN-1:0] cnt_bnm;  // burst repetitions
 // counter end status
 logic               end_bdl;  // burst data length
 logic               end_bln;  // burst      length
 logic               end_bnm;  // burst repetitions
 // status and events
-logic               sts_run;  // running
 logic               sts_vld;  // valid
 logic               sts_lst;  // last
 logic               sts_trg;  // trigger event
@@ -204,26 +204,26 @@ always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
   sts_aen <= 1'b0;
   sts_run <= 1'b0;
-  cnt_bln <= '0;
-  cnt_bnm <= '0;
+  sts_bln <= '0;
+  sts_bnm <= '0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
     sts_aen <= 1'b0;
     sts_run <= 1'b0;
-    cnt_bln <= '0;
-    cnt_bnm <= '0;
+    sts_bln <= '0;
+    sts_bnm <= '0;
   end else if (sts_rdy) begin
     if (cfg_ben) begin
       // burst mode
       if (sts_trg) begin
         sts_aen <= sts_run ? ~end_bnm : 1'b1;
         sts_run <= sts_run ? ~end_bnm : 1'b1;
-        cnt_bnm <= sts_run ? cnt_bnm + !cfg_inf : '0;
-        cnt_bln <= '0;
+        sts_bnm <= sts_run ? sts_bnm + !cfg_inf : '0;
+        sts_bln <= '0;
       end else begin
         if (end_bdl) sts_aen <= 1'b0;
-        if (sts_run) cnt_bln <= cnt_bln + 1; 
+        if (sts_run) sts_bln <= sts_bln + 1; 
       end
     end else begin
       // periodic mode
@@ -236,9 +236,9 @@ end else begin
 end
 
 // counter end status
-assign end_bnm = (cnt_bnm == cfg_bnm) & ~cfg_inf;
-assign end_bln = (cnt_bln == cfg_bln);
-assign end_bdl = (cnt_bln == cfg_bdl);
+assign end_bnm = (sts_bnm == cfg_bnm) & ~cfg_inf;
+assign end_bln = (sts_bln == cfg_bln);
+assign end_bdl = (sts_bln == cfg_bdl);
 
 // next value of burst period counter
 
