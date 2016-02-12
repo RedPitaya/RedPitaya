@@ -72,7 +72,7 @@ add_files                         $path_rtl/red_pitaya_rst_clken.sv
 add_files                         $path_rtl/red_pitaya_scope.v
 add_files                         $path_rtl/red_pitaya_top.v
 
-read_ip                           $path_ip/rb_broadcaster_axis_m2.xcix
+read_ip                           $path_ip/rb_addsub_48M48.xcix
 read_ip                           $path_ip/rb_cic_125M_to_5M_32T32_lat18.xcix
 read_ip                           $path_ip/rb_cic_48k_to_8k_32T32.xcix
 read_ip                           $path_ip/rb_cic_5M_to_8k_32T32.xcix
@@ -89,7 +89,7 @@ read_ip                           $path_ip/rb_fir_8k_to_8k_25c23_17i16_35o33.xci
 read_ip                           $path_ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix
 read_ip                           $path_ip/rb_fir2_8k_to_8k_25c_17i16_35o32.xcix
 read_ip                           $path_ip/rb_fir3_8k_to_8k_24c_17i16_35o.xcix
-read_ip                           $path_ip/rb_sub_48M32.xcix
+read_ip                           $path_ip/rb_multadd_S16_m_U16_a_S32.xcix
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 
