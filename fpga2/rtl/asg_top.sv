@@ -138,8 +138,8 @@ end else begin
     if (bus.addr[BAW-1:0]=='h28)  cfg_bln <= bus.wdata[     32-1:0];
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
-    if (bus.addr[BAW-1:0]=='h30)  cfg_mul <= DAT_M'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h34)  cfg_sum <= DAT_S'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h38)  cfg_mul <= DAT_M'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_sum <= DAT_S'(bus.wdata);
   end
 end
 
