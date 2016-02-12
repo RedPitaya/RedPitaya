@@ -27,21 +27,10 @@ public:
 		return tmp;
 	}
 
-	JSONNode GetJSONObject()
+	virtual JSONNode GetJSONObject()
 	{
 		JSONNode n(JSON_NODE);
 		n.set_name(this->m_Value.name);
-
-		JSONNode val(JSON_NODE);
-		val.set_name("value");
-		val.push_back(JSONNode("scl", this->m_Value.value.scl));
-		val.push_back(JSONNode("sda", this->m_Value.value.sda));
-		val.push_back(JSONNode("acq_speed", this->m_Value.value.acq_speed));
-		val.push_back(JSONNode("address_format", (int)this->m_Value.value.address_format));
-
-		n.push_back(val);
-		n.push_back(JSONNode("access_mode", this->m_Value.access_mode));
-
 		return n;
 	}
 protected:
