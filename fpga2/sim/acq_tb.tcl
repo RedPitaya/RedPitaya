@@ -13,7 +13,7 @@ quietly WaveActivateNextPane {} 0
 
 add wave -noupdate              /${top}/clk
 add wave -noupdate              /${top}/rstn
-add wave -noupdate              /${top}/${dut}/cts
+add wave -noupdate -hexadecimal /${top}/${dut}/cts
 add wave -noupdate -unsigned    /${top}/${dut}/ctl_rst
 add wave -noupdate -unsigned    /${top}/${dut}/cfg_pre
 add wave -noupdate -unsigned    /${top}/${dut}/sts_pre
