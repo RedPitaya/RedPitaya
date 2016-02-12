@@ -102,7 +102,7 @@ typedef struct {
         ag_regset_t      ag_spec;
     } gen_spec;
     // empty space
-    uint32_t reserved_30[(1<<RP_GEN_CWM)-(0x30>>2)-2];
+    uint32_t reserved_40[(1<<RP_GEN_CWM)-(0x40>>2)];
     // table
     uint32_t  table [RP_GEN_SIG_SAMPLES];
 } asg_regset_t;
