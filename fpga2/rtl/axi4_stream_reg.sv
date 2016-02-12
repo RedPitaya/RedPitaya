@@ -12,13 +12,15 @@ module axi4_stream_reg (
 
 assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
-always_ff @(posedge sti.clk)
-if (sti.rst) begin
+always_ff @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
+  sto.TVALID <= 1'b0;
+end else if (sti.TREADY) begin
   sto.TVALID <= sti.TVALID;
 end
 
 always_ff @(posedge sti.clk)
-begin
+if (sti.transf) begin
   sto.TDATA  <= sti.TDATA ;
   sto.TKEEP  <= sti.TKEEP ;
   sto.TLAST  <= sti.TLAST ;
