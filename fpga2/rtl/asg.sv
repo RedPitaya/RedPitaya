@@ -144,11 +144,12 @@ logic               end_bnm;  // burst repetitions
 // status and events
 logic               sts_run;  // running
 logic               sts_vld;  // valid
-logic               sts_lst;  // valid
+logic               sts_lst;  // last
 logic               sts_trg;  // trigger event
 logic               sts_rpt;  // repeat  event
 logic               sts_aen;  // address enable
 logic               sts_ren;  // read    enable
+logic               sts_rdy;  // ready
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DAC buffer RAM
@@ -187,7 +188,7 @@ end else begin
     sts_vld <= 1'b0;
     sts_ren <= 1'b0;
     sts_lst <= 1'b0;
-  end else begin
+  end else if (sts_rdy) begin
     sts_vld <= sts_run; 
     sts_ren <= sts_aen;
     sts_lst <= sts_rpt & end_bnm;
@@ -212,7 +213,7 @@ end else begin
     sts_run <= 1'b0;
     cnt_bln <= '0;
     cnt_bnm <= '0;
-  end else begin
+  end else if (sts_rdy) begin
     if (cfg_ben) begin
       // burst mode
       if (sts_trg) begin
@@ -262,12 +263,14 @@ end else begin
   // synchronous clear
   if (ctl_rst) begin
     ptr_cur <= '0;
-  // start on trigger, new triggers are ignored while ASG is running
-  end else if (sts_trg) begin
-    ptr_cur <= cfg_off;
-  // modulo (proper wrapping) increment pointer
-  end else if (sts_aen) begin
-    ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
+  end else if (sts_rdy) begin
+    // start on trigger, new triggers are ignored while ASG is running
+    if (sts_trg) begin
+      ptr_cur <= cfg_off;
+    // modulo (proper wrapping) increment pointer
+    end else if (sts_aen) begin
+      ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
+    end
   end
 end
 
@@ -290,7 +293,7 @@ assign sto.TDATA = buf_rdata;
 
 // output keep/last
 always_ff @(posedge sto.ACLK)
-begin
+if (sts_rdy) begin
   sto.TKEEP <= '1;
   sto.TLAST <= sts_lst;
 end
@@ -303,9 +306,11 @@ end else begin
   // synchronous clear
   if (ctl_rst) begin
     sto.TVALID <= 1'b0;
-  end else begin
+  end else if (sts_rdy) begin
     sto.TVALID <= sts_vld;
   end
 end
+
+assign sts_rdy = sto.TREADY | ~sto.TVALID;
 
 endmodule: asg
