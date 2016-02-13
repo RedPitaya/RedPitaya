@@ -344,8 +344,9 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
     //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
     //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
 
-    if ((g_fpga_rb_reg_mem->src_con_pnt) != src_con_pnt) {
-        fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x\n", src_con_pnt);
+    uint32_t src_con_pnt_old = g_fpga_rb_reg_mem->src_con_pnt;
+    if (src_con_pnt_old != src_con_pnt) {
+        fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x, old = 0x%08x\n", src_con_pnt, src_con_pnt_old);
         g_fpga_rb_reg_mem->src_con_pnt = src_con_pnt;
     }
 
@@ -625,15 +626,6 @@ void fpga_rb_set_tx_modtyp(int tx_modtyp)
     g_fpga_rb_reg_mem->pwr_ctrl = masked | (tx << 0x08);
 }
 
-/*----------------------------------------------------------------------------*/
-void fpga_rb_set_rx_modtyp(int rx_modtyp)
-{
-    int rx = rx_modtyp & 0xff;
-    uint32_t masked = g_fpga_rb_reg_mem->pwr_ctrl & 0xffffff00;
-    g_fpga_rb_reg_mem->pwr_ctrl = masked;                                                                     // first disable and reset before entering new modulation variant
-    g_fpga_rb_reg_mem->pwr_ctrl = masked | rx;
-}
-
 
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain)
@@ -773,6 +765,16 @@ void fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(double tx_amp_rf_gain, double tx_a
     g_fpga_rb_reg_mem->tx_amp_rf_ofs  = ((uint32_t) ofs)  & 0xffff;
 }
 
+
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_modtyp(int rx_modtyp)
+{
+    int rx = rx_modtyp & 0xff;
+    uint32_t masked = g_fpga_rb_reg_mem->pwr_ctrl & 0xffffff00;
+    g_fpga_rb_reg_mem->pwr_ctrl = masked;                                                                     // first disable and reset before entering new modulation variant
+    g_fpga_rb_reg_mem->pwr_ctrl = masked | rx;
+}
+
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain)
 {
@@ -784,18 +786,18 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain)
 
     if (rx_muxin_gain <= 0.0) {
         g_fpga_rb_reg_mem->rx_muxin_gain = 0;
-        //fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: ZERO   rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
+        fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: ZERO   rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
 
     } else if (rx_muxin_gain < 80.0) {  // 0% .. 80%-
         uint32_t bitfield = (uint32_t) (0.5 + (rx_muxin_gain * ((double) 0x7fff) / 80.0));
         g_fpga_rb_reg_mem->rx_muxin_gain = (0x7fff & bitfield);  // 16 bit gain value and no booster shift bits
-        //fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: NORMAL rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
+        fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: NORMAL rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
 
     } else {  // 80% .. 100%: set the logarithmic amplifier
         p  = (rx_muxin_gain - 80.0) * (7.0 / 20.0);
         uint32_t bitfield = (uint32_t) (0.5 + p);
         g_fpga_rb_reg_mem->rx_muxin_gain = ((bitfield << 16) | 0x7fff);  // open mixer completely and activate booster
-        //fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: BOOST  rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
+        fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: BOOST  rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
     }
 }
 
@@ -853,7 +855,7 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
 
 
     /* AFC weaver offset correction - phase correction value cummulated for a 8 kHz = 125 µs time span */
-    qrg *= 15625.0;
+    qrg *= -15625.0;
     bitfield = qrg;
     bf_hi = (uint32_t) (bitfield >> 32);
     bf_lo = (uint32_t) (bitfield & 0xffffffff);

@@ -1081,14 +1081,6 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 void fpga_rb_set_tx_modtyp(int tx_modtyp);
 
 /**
- * @brief Power savings control - switches receiver part to the selected modulation variant
- *
- * @param[in]  rx_modtyp   RX modulation variant.
- */
-void fpga_rb_set_rx_modtyp(int rx_modtyp);
-
-
-/**
  * @brief Calculates and programs the FPGA TX_CAR_OSC for CW, SSB, AM and PM
  *
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
@@ -1141,6 +1133,14 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_
  * @param[in]  tx_muxin_gain Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
  */
 void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain);
+
+
+/**
+ * @brief Power savings control - switches receiver part to the selected modulation variant
+ *
+ * @param[in]  rx_modtyp   RX modulation variant.
+ */
+void fpga_rb_set_rx_modtyp(int rx_modtyp);
 
 /**
  * @brief Calculates and programs the FPGA RX_MUXIN gain setting
