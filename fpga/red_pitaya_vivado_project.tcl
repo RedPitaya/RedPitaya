@@ -36,6 +36,7 @@ source                            $path_ip/system_bd.tcl
 generate_target all               [get_files system.bd]
 
 # copy fresh system_wrapper.v file to the target directory
+file mkdir                        $path_bd/system/hdl
 file copy -force                  project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v $path_bd/system/hdl/system_wrapper.v
 
 
