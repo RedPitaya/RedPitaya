@@ -278,7 +278,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
         
     break;
-    
+}
     case SIMPLE:{
         printk("rpdma:tx single dma \n");
         dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
