@@ -171,7 +171,9 @@ void CDataManager::OnNewParams(std::string _params)
 	if(InCommandParam.IsNewValue())
 		m_send_all_params |= InCommandParam.NewValue() == "send_all_params";
 
+fprintf(stderr, "11\n");
 	::OnNewParams();
+fprintf(stderr, "22\n");
 }
 
 void CDataManager::OnNewSignals(std::string _signals)
