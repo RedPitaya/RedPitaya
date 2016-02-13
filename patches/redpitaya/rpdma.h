@@ -3,15 +3,19 @@ ioctl macro definitions
 */
 #define STOP_TX 0
 #define STOP_RX 1
-#define SET_TX 2
-#define SET_RX 3
-#define START_RX 4
-#define START_TX 5
-#define SIMPLE_RX 10
-#define SIMPLE_TX 11
-#define SIMPLE 12
+#define CYCLIC_TX 2
+#define CYCLIC_RX 3
+#define SINGLE_RX 10
+#define SINGLE_TX 11
+#define SIMPLE_RX 18  //blocking until complete
+#define SIMPLE_TX 17  //blocking until complete
+#define SIMPLE 12 //blocking until complete
 #define SET_TX_SEGMENT_CNT 14
 #define SET_TX_SEGMENT_SIZE 13
 #define SET_RX_SEGMENT_CNT 16
 #define SET_RX_SEGMENT_SIZE 15
 
+#define RX_SGMNT_CNT 4
+#define RX_SGMNT_SIZE 4*1024
+#define TX_SGMNT_CNT 4
+#define TX_SGMNT_SIZE  4*1024
