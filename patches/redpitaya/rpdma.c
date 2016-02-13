@@ -213,7 +213,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
         if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
         else{
-            txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            txd = dmaengine_prep_slave_single(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!txd){printk("rpdma: txd not set properly\n");}
             else{
                 init_completion(&tx_cmp);
@@ -259,7 +259,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
         if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
         else{
-            txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            txd = dmaengine_prep_slave_single(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!txd){printk("rpdma: txd not set properly\n");}
             else{
                 init_completion(&tx_cmp);
@@ -284,7 +284,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
         if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
         else{
-            txd = dmaengine_prep_slave_single(tx_chan, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            txd = dmaengine_prep_slave_single(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!txd){printk("rpdma: txd not set properly\n");}
             else{
                 init_completion(&tx_cmp);
