@@ -567,6 +567,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: AM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg + ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(+ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+            fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(+ssb_weaver_osc_qrg);                            // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
         }
         break;
 
@@ -577,6 +578,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: AM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg - ssb_weaver_osc_qrg);            // RX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
             fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(-ssb_weaver_osc_qrg);                            // RX_MOD_OSC weaver method mixer LO frequency
+            fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(-ssb_weaver_osc_qrg);                            // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
         }
         break;
 
@@ -586,6 +588,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
             g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: FM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
+            fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                            // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
         }
         break;
 
@@ -595,6 +598,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
             g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: PM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
+            fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                            // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
         }
         break;
 
@@ -610,6 +614,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(0.0f, 0.0);                                              // TX_MOD_QMIX gain/offset control
         g_fpga_rb_reg_mem->rx_muxin_src = 0;                                                               // RX_MUX input off
         fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                                // RX_CAR_OSC frequency
+        fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                                // RX_CAR_CALC_WEAVER frequency
         fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(0.0);                                                // RX_MOD_OSC frequency
 
         fpga_rb_reset();                                                                                   // control: turn off all streams into TX_CAR_OSC and TX_CAR_OSC mixer
@@ -842,7 +847,7 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm: 1 MOD offset INC - (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_mod_osc_qrg=%lf)\n",
+    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm: MOD offset INC - (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_mod_osc_qrg=%lf)\n",
             qrg,
             bf_hi,
             bf_lo,
@@ -852,19 +857,29 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
     g_fpga_rb_reg_mem->rx_mod_osc_inc_hi = bf_hi;
     g_fpga_rb_reg_mem->rx_mod_osc_ofs_lo = 0UL;                                                            // no carrier phase offset
     g_fpga_rb_reg_mem->rx_mod_osc_ofs_hi = 0UL;                                                            // no carrier phase offset
+}
 
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
+{
+    double qrg = ((double) (1ULL << 48)) * (rx_weaver_qrg / g_rp_main_calib_params.base_osc125mhz_realhz);
+    if (qrg > 0.0) {
+        qrg += 0.5;
+    } else if (qrg < 0.0) {
+        qrg -= -0.5;
+    }
 
-    /* AFC weaver offset correction - phase correction value cummulated for a 8 kHz = 125 µs time span */
+    /* AFC weaver offset correction - phase correction value integrated for a 8 kHz = 125 µs time span */
     qrg *= -15625.0;
-    bitfield = qrg;
-    bf_hi = (uint32_t) (bitfield >> 32);
-    bf_lo = (uint32_t) (bitfield & 0xffffffff);
+    int64_t bitfield = qrg;
+    uint32_t bf_hi = (uint32_t) (bitfield >> 32);
+    uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am_fm: 2 AFC correction - (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc AFC weaver phase correction=%lf)\n",
+    fprintf(stderr, "INFO - fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm: AFC correction - (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc AFC weaver phase correction=%lf)\n",
             qrg,
             bf_hi,
             bf_lo,
-            rx_mod_osc_qrg);
+			rx_weaver_qrg);
 
     g_fpga_rb_reg_mem->rx_car_calc_weaver_inc_lo = bf_lo;
     g_fpga_rb_reg_mem->rx_car_calc_weaver_inc_hi = bf_hi;

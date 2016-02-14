@@ -1164,6 +1164,13 @@ void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg);
 void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg);
 
 /**
+ * @brief Calculates and programs the FPGA RX_AFC_WEAVER register
+ *
+ * @param[in]  rx_weaver_qrg   Weaver frequency in Hz to correct AFC frequency offset.
+ */
+void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg);
+
+/**
  * @brief Calculates and programs the FPGA RX_MOD_SSB_AM mixer
  *
  * @param[in]  rx_mod_ssb_am_gain  gain between 0% .. 100%.
