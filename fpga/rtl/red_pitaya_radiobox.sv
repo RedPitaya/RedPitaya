@@ -1883,9 +1883,15 @@ wire [ 15: 0] rx_mod_ssb_am_out = rx_mod_ssb_mix_out[31:16];
 //  RX_AFC_FIR low pass filter for carrier detection
 //
 //  Coefficients built with Octave:
-//  fir1(62, 1500/4000, 'low', 'chebwin')
-//  = 7.152915606699955e-08 4.946208242848355e-07 1.261123435475036e-06 1.322506440090271e-06 1.8784190126287e-07 1.272587181954568e-06 1.010719802071852e-05 2.370369395272958e-05 2.576419446242799e-05 8.359458918071893e-06 3.254059466270259e-06 6.280345090679983e-05 0.0001745621681973998 0.0002205665188402569 0.0001121787539477759 0 0.000215467899782502 0.0008168792443048057 0.001256410862631169 0.0008892671117921572 9.220818707455994e-05 0.0004849876711778755 0.00315291946924404 0.006359403423421951 0.00625102746383636 0.001938952055545672 0.0007716609189283626 0.01665309378209653 0.05921144543902815 0.1215284937821592 0.1787214743137549 0.2020207973391403 0.1787214743137549 0.1215284937821592 0.05921144543902815 0.01665309378209653 0.0007716609189283626 0.001938952055545672 0.00625102746383636 0.006359403423421953 0.00315291946924404 0.0004849876711778755 9.220818707455995e-05 0.0008892671117921574 0.001256410862631169 0.0008168792443048057 0.0002154678997825021 0 0.0001121787539477759 0.0002205665188402569 0.0001745621681973998 6.280345090679983e-05 3.254059466270258e-06 8.359458918071893e-06 2.576419446242799e-05 2.370369395272958e-05 1.010719802071852e-05 1.272587181954568e-06 1.878419012628701e-07 1.322506440090269e-06 1.261123435475036e-06 4.94620824284838e-07 7.152915606699861e-08
+//  Set 1: SSB / AM - band pass for 1700 Hz with abt. 200 Hz @ -40dB band width
+//  fir2(126, [0/4000 1660/4000 1680/4000 1700/4000 1720/4000 1740/4000 1], [0.000000001 0.00001 0.001 5.9 0.001 0.00001 0.000000001], 4096, kaiser(127, 5))
+//
+//  Set 2: FM / PM - low pass with abt. 2.5 kHz @ -3dB
+//  fir2(126, [0/4000 500/4000 2400/4000 2500/4000 2600/4000 2700/4000 1], [1 1 1 1 0.001 0.00001 0.000000001], 4096, kaiser(127, 5))
+//  //fir1(62, 1500/4000, 'low', 'chebwin')
 
+wire          rx_afc_fir_is_set2 = ((rb_pwr_rx_modvar == 8'd7) || (rb_pwr_rx_modvar == 8'd8)) ?  1'b1 : 1'b0;
+wire [  7: 0] rx_afc_fir_cfg_in = { 7'b0, rx_afc_fir_is_set2 };
 wire [ 23: 0] rx_afc_fir_i_in = { 7'b0, rx_car_regs2_i_data[31:15] };  // bus width is multiple of 8
 wire [ 39: 0] rx_afc_fir_i_out;
 wire          rx_afc_fir_i_vld;
@@ -1895,6 +1901,10 @@ rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_I (
   .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
   .aclken               ( rb_pwr_rx_AFC_clken    ),   // power down when needed to
   .aresetn              ( rb_pwr_rx_AFC_rst_n    ),
+
+  .s_axis_config_tdata  ( rx_afc_fir_cfg_in      ),   // 0: filter set 1 (SSB/AM), 1: filter set 2 (FM/PM)
+  .s_axis_config_tvalid ( 1'b1                   ),
+  .s_axis_config_tready (                        ),
 
   .s_axis_data_tdata    ( rx_afc_fir_i_in        ),
   .s_axis_data_tvalid   ( rx_car_regs2_i_afc_vld ),
@@ -1913,6 +1923,10 @@ rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_Q (
   .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
   .aclken               ( rb_pwr_rx_AFC_clken    ),   // power down when needed to
   .aresetn              ( rb_pwr_rx_AFC_rst_n    ),
+
+  .s_axis_config_tdata  ( rx_afc_fir_cfg_in      ),   // 0: filter set 1 (SSB/AM), 1: filter set 2 (FM/PM)
+  .s_axis_config_tvalid ( 1'b1                   ),
+  .s_axis_config_tready (                        ),
 
   .s_axis_data_tdata    ( rx_afc_fir_q_in        ),
   .s_axis_data_tvalid   ( rx_car_regs2_q_afc_vld ),
@@ -2215,7 +2229,7 @@ else
 //---------------------------------------------------------------------------------
 //  RX_MOD FM ouput
 
-wire          rx_mod_fm_mix_in = rx_afc_cordic_phs_diff[31:16];
+wire [ 15: 0] rx_mod_fm_mix_in = rx_afc_cordic_phs_diff[31:16];
 wire [ 31: 0] rx_mod_fm_mix_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_fm_mixer (
