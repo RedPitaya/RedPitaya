@@ -243,8 +243,8 @@ int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size) {
 static int rp_GenSetBst(rp_handle_uio_t *handle, uint32_t a_mask) {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
     uint32_t tmp;
-    tmp=ioread32(&regset->cfg_bst);
-    tmp|=a_mask;
+    tmp = ioread32(&regset->cfg_bst);
+    tmp |= a_mask;
     iowrite32(tmp, &regset->cfg_bst);
     return RP_OK;
 }
@@ -252,8 +252,8 @@ static int rp_GenSetBst(rp_handle_uio_t *handle, uint32_t a_mask) {
 static int rp_GenClearBst(rp_handle_uio_t *handle, uint32_t a_mask) {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
     uint32_t tmp;
-    tmp=ioread32(&regset->cfg_bst);
-    tmp&=~a_mask;
+    tmp = ioread32(&regset->cfg_bst);
+    tmp &= ~a_mask;
     iowrite32(tmp, &regset->cfg_bst);
     return RP_OK;
 }
