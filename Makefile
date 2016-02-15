@@ -28,8 +28,8 @@ DL=$(TMP)
 endif
 
 UBOOT_TAG     = xilinx-v2015.4
-LINUX_TAG     = xilinx-v2015.4.01
-DTREE_TAG     = xilinx-v2015.4
+LINUX_TAG     = master
+DTREE_TAG     = master
 #BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -216,14 +216,12 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
-	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+	LD_LIBRARY_PATH="" make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################
