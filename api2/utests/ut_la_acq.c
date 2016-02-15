@@ -29,6 +29,10 @@ int suite_la_acq_cleanup(void)
     return 0;
 }
 
+void rpReadyCallback(RP_STATUS status, void * pParameter)
+{
+    printf("\r\nACQ_CALLBACK");
+}
 
 void la_acq_trig_test(void)
 {
@@ -44,15 +48,22 @@ void la_acq_trig_test(void)
     //printf("sample rate %lf",sample_rate);
     rp_DigSigGenSoftwareControl(1);
 
+    printf("\r\nTriggers");
     s=rp_SetTriggerDigitalPortProperties(dir,1);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to set trigger properties.");
     }
 
-    // how to check if acq. was triggered?
-    if(rp_IsAcquistionComplete()!=RP_API_OK){
-        CU_FAIL("Acq. was not triggered.");
+    printf("\r\nRunBlock");
+    double timeIndisposedMs;
+    s=rp_RunBlock(0,(1*0x200/2),0,&timeIndisposedMs,&rpReadyCallback,NULL);
+    if(s!=RP_API_OK){
+        CU_FAIL("Failed to acquire data.");
     }
+
+
+
+
 
 
     sleep(1);

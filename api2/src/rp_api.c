@@ -211,7 +211,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
     }
 
     //TEST!!! this will be removed
-    rp_LaAcqRunAcq(&la_acq_handle);
+    //rp_LaAcqRunAcq(&la_acq_handle);
 
     rp_LaAcqFpgaRegDump(&la_acq_handle);
 
@@ -338,21 +338,30 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     *timeIndisposedMs=(noOfPreTriggerSamples+noOfPostTriggerSamples)*timeIntervalNanoseconds/10e6;
 
     // configure FPGA to start block mode
-    rp_la_decimation_regset_t dec;
-    dec.dec=timebase;
-    rp_LaAcqSetDecimation(&la_acq_handle, dec);
+   // rp_la_decimation_regset_t dec;
+   // dec.dec=timebase;
+   // rp_LaAcqSetDecimation(&la_acq_handle, dec);
 
     rp_la_cfg_regset_t cfg;
     cfg.pre=noOfPreTriggerSamples;
     cfg.pst=noOfPostTriggerSamples;
     rp_LaAcqSetCntConfig(&la_acq_handle, cfg);
+
+    printf("\r\nrp_LaAcqRunAcq");
     rp_LaAcqRunAcq(&la_acq_handle);
 
-    // block read
-    // TODO:
+    rp_LaAcqBlockingRead(&la_acq_handle);
+
+    // how to check if acq. was triggered?
+    if(rp_IsAcquistionComplete()!=RP_API_OK){
+        return RP_OPERATION_FAILED;
+    }
 
     // acquisition is completed -> callback
     (*rpReady)(status,pParameter);
+
+    printf("\r\nrp_LaAcqStopAcq");
+    //rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
 }
