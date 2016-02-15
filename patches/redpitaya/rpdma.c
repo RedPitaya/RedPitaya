@@ -140,7 +140,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         printk("rpdma:ioctl terminate all tx\n");
         dmaengine_terminate_all(tx_chan); 
         if(dma_tx_segment)
-        dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_FROM_DEVICE);
+        dma_unmap_single(tx_dev->dev, dma_tx_segment, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
       }break;  
     case STOP_RX:{
         printk("rpdma:ioctl terminate all rx\n");
@@ -150,7 +150,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
    } break;
     case CYCLIC_TX:{    
             printk("rpdma:ioctl cyclic tx\n");
-            txd = tx_chan->device->device_prep_dma_cyclic(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, tx_segment_size, DMA_TO_DEVICE, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            txd = tx_chan->device->device_prep_dma_cyclic(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, tx_segment_size, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!txd){printk("rpdma: txd not set properly\n");}
             else{
             init_completion(&tx_cmp);
@@ -169,7 +169,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     {   
             printk("rpdma:ioctl cyclic rx\n");
 
-            rxd = rx_dev->device_prep_dma_cyclic(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, rx_segment_size,DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+            rxd = rx_dev->device_prep_dma_cyclic(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, rx_segment_size, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rxd){printk("rpdma:rxd not set properly\n");}
             else{
             init_completion(&rx_cmp);
@@ -188,7 +188,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     case SINGLE_RX:{
         printk("rpdma:rx single dma \n");
         dma_rx_segment = dma_map_single(rx_dev->dev, rpdma_rx_addrv, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(tx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
+        if(dma_mapping_error(rx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
         else{
         rxd = dmaengine_prep_slave_single(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rxd){printk("rpdma:rxd not set properly\n");}
@@ -223,7 +223,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
                 printk("rpdma:tx submit \n");
             }
         }
-        printk("rpdma:rx dma_async_issue_pending \n");
+        printk("rpdma:tx dma_async_issue_pending \n");
         dma_async_issue_pending(tx_chan);
 
         
@@ -233,7 +233,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         case SIMPLE_RX:{
         printk("rpdma:rx single dma \n");
         dma_rx_segment = dma_map_single(rx_dev->dev, rpdma_rx_addrv, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(tx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
+        if(dma_mapping_error(rx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
         else{
         rxd = dmaengine_prep_slave_single(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rxd){printk("rpdma:rxd not set properly\n");}
@@ -256,7 +256,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     }
     case SIMPLE_TX:{
         printk("rpdma:tx single dma \n");
-        dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
+        dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
         if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
         else{
             txd = dmaengine_prep_slave_single(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
@@ -269,7 +269,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
                 printk("rpdma:tx submit \n");
             }
         }
-        printk("rpdma:rx dma_async_issue_pending \n");
+        printk("rpdma:tx dma_async_issue_pending \n");
         dma_async_issue_pending(tx_chan);
         
         tx_tmo = wait_for_completion_timeout(&tx_cmp, tx_tmo);
@@ -281,7 +281,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 }
     case SIMPLE:{
         printk("rpdma:tx single dma \n");
-        dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt,DMA_TO_DEVICE);
+        dma_tx_segment = dma_map_single(tx_dev->dev, rpdma_tx_addrv, tx_segment_size*tx_segment_cnt, DMA_TO_DEVICE);
         if(dma_mapping_error(tx_dev->dev,dma_tx_segment)){printk("rpdma:dma_tx_segment not set properly\n");}
         else{
             txd = dmaengine_prep_slave_single(tx_chan, rpdma_tx_addrp, tx_segment_size*tx_segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
@@ -296,7 +296,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         }
         printk("rpdma:rx single dma \n");
         dma_rx_segment = dma_map_single(rx_dev->dev, rpdma_rx_addrv, rx_segment_size*rx_segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(tx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
+        if(dma_mapping_error(rx_dev->dev,dma_rx_segment)){printk("rpdma:dma_rx_segment not set properly\n");}
         else{
         rxd = dmaengine_prep_slave_single(rx_chan,rpdma_rx_addrp, rx_segment_size*rx_segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rxd){printk("rpdma:rxd not set properly\n");}
