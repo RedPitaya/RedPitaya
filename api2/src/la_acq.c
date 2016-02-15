@@ -163,8 +163,8 @@ int rp_LaAcqSetConfig(rp_handle_uio_t *handle, uint32_t mask)
 /** Configuration registers setter & getter */
 int rp_LaAcqSetCntConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg) {
     rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->cfg);
-    if(!(inrangeUint32(a_reg.pre,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MAX)&&
-         inrangeUint32(a_reg.pst,RP_LA_ACQ_CFG_TRIG_MIN,RP_LA_ACQ_CFG_TRIG_MAX))){
+    if(!(inrangeUint32 (a_reg.pre, RP_LA_ACQ_CFG_TRIG_MIN, RP_LA_ACQ_CFG_TRIG_MAX) &&
+         inrangeUint32 (a_reg.pst, RP_LA_ACQ_CFG_TRIG_MIN, RP_LA_ACQ_CFG_TRIG_MAX))){
          return RP_EOOR;
     }
     iowrite32(a_reg.pre, &regset->pre);
