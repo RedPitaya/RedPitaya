@@ -185,10 +185,10 @@ int rp_GenGetStepOffset(rp_handle_uio_t *handle, uint32_t *stp, uint32_t *off) {
 }
 
 int rp_GenSetFreqPhase(rp_handle_uio_t *handle, double frequency, double phase) {
-    asg_regset_t *regset = (asg_regset_t *) handle->regset;
     if(!inrangeDouble(frequency,FREQUENCY_MIN,FREQUENCY_MAX)){
          return RP_EOOR;
     }
+    asg_regset_t *regset = (asg_regset_t *) handle->regset;
     uint32_t siz = ioread32(&regset->cfg_siz) + 1;
     uint32_t stp = (uint32_t) ((double) siz * (frequency / RP_GEN_SR)) - 1;
     uint32_t off = (uint32_t) ((double) siz * fmod(phase,360)/360    )    ;
@@ -329,10 +329,10 @@ int rp_GenOutputEnable(rp_handle_uio_t *handle, uint32_t a_mask)
 {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
     uint32_t tmp;
-    tmp=ioread32(&regset->gen_spec.lg_spec.dig_out_en);
-    tmp|=a_mask;
+    tmp = ioread32(&regset->gen_spec.lg_spec.dig_out_en);
+    tmp |= a_mask;
     iowrite32(tmp, &regset->gen_spec.lg_spec.dig_out_en);
-    iowrite32(0, &regset->gen_spec.lg_spec.dig_openc);
+    iowrite32(0  , &regset->gen_spec.lg_spec.dig_openc );
     return RP_OK;
 }
 
@@ -340,10 +340,10 @@ int rp_GenOutputDisable(rp_handle_uio_t *handle, uint32_t a_mask)
 {
     asg_regset_t *regset = (asg_regset_t *) handle->regset;
     uint32_t tmp;
-    tmp=ioread32(&regset->gen_spec.lg_spec.dig_out_en);
-    tmp&=~a_mask;
+    tmp = ioread32(&regset->gen_spec.lg_spec.dig_out_en);
+    tmp &= ~a_mask;
     iowrite32(tmp, &regset->gen_spec.lg_spec.dig_out_en);
-    iowrite32(0, &regset->gen_spec.lg_spec.dig_openc);
+    iowrite32(0  , &regset->gen_spec.lg_spec.dig_openc );
     return RP_OK;
 }
 
