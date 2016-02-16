@@ -27,10 +27,11 @@
 			var current_app = "";
 			var url_arr = window.location.href.split("/");;
 		    var url = url_arr[0] + '//' + url_arr[2] + '/';
-			$(function() {
+		    var getApps = function(){
 				$.ajax({
-					url: url + 'bazaar?apps=',
-					cache: false
+					url: 'bazaar?apps=',
+					cache: false,
+					async: true
 				}).done(function( result ) {
 					var buttons = $('#main_buttons');
 					$(buttons).removeAttr('id');
@@ -134,9 +135,10 @@
 
 
 				}).fail(function( msg ) {
-					location.reload();
-			  }	)
-			});
+					getApps();
+			  	});
+		    }
+		    getApps();
 
 			$(function() {
 				document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya ("+window.location.hostname+")");
