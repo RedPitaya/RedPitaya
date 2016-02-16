@@ -308,10 +308,10 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_CAR_OSC_Q_OUT,                  // RX_CAR_OSC Q output
     RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_I_OUT,                 // RX_CAR_QMIX I output
     RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_Q_OUT,                 // RX_CAR_QMIX Q output
-    RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT,                 // RX_CAR_CIC1 I output
-    RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT,                 // RX_CAR_CIC1 Q output
-    RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT,                 // RX_CAR_CIC2 I output
-    RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT,                 // RX_CAR_CIC2 Q output
+    RB_SRC_CON_PNT_NUM_RX_CAR_1M_I_OUT,                 // RX_CAR_CIC1 I output
+    RB_SRC_CON_PNT_NUM_RX_CAR_1M_Q_OUT,                 // RX_CAR_CIC1 Q output
+    RB_SRC_CON_PNT_NUM_RX_CAR_48K_I_OUT,                 // RX_CAR_CIC2 I output
+    RB_SRC_CON_PNT_NUM_RX_CAR_48K_Q_OUT,                 // RX_CAR_CIC2 Q output
 
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT            = 40, // RX_MOD_FIR1 I output
     RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_Q_OUT,                 // RX_MOD_FIR1 Q output
@@ -537,75 +537,75 @@ red_pitaya_rst_clken rb_rst_clken_tx_Q (
   .clk_en_o             ( rb_pwr_tx_Q_clken   )
 );
 
-reg           rb_pwr_rx_CIC_en            = 1'b0;
+reg           rb_pwr_rx_CAR_en            = 1'b0;
 reg           rb_pwr_rx_MOD_en            = 1'b0;
 reg           rb_pwr_rx_AFC_en            = 1'b0;
 
 always @(posedge clk_adc_125mhz)                                       // power savings control based on RX modulation variants
 if (!adc_rstn_i || !rb_reset_n) begin
-   rb_pwr_rx_CIC_en <= 1'b0;
+   rb_pwr_rx_CAR_en <= 1'b0;
    rb_pwr_rx_MOD_en <= 1'b0;
    rb_pwr_rx_AFC_en <= 1'b0;
    end
 else begin
    case (rb_pwr_rx_modvar)
    8'h02: begin                                                        // USB
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b1;
       rb_pwr_rx_AFC_en <= 1'b0;
       end
    8'h03: begin                                                        // LSB
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b1;
       rb_pwr_rx_AFC_en <= 1'b0;
       end
    8'h04: begin                                                        // AM
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b1;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
    8'h05: begin                                                        // AM-SYNC-USB
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b1;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
    8'h06: begin                                                        // AM-SYNC-LSB
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b1;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
    8'h07: begin                                                        // FM
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b0;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
    8'h08: begin                                                        // PM
-      rb_pwr_rx_CIC_en <= 1'b1;
+      rb_pwr_rx_CAR_en <= 1'b1;
       rb_pwr_rx_MOD_en <= 1'b0;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
    default: begin                                                      // OFF
-      rb_pwr_rx_CIC_en <= 1'b0;
+      rb_pwr_rx_CAR_en <= 1'b0;
       rb_pwr_rx_MOD_en <= 1'b0;
       rb_pwr_rx_AFC_en <= 1'b0;
       end
    endcase
    end
 
-wire          rb_pwr_rx_CIC_rst_n;
-wire          rb_pwr_rx_CIC_clken;
+wire          rb_pwr_rx_CAR_rst_n;
+wire          rb_pwr_rx_CAR_clken;
 
-red_pitaya_rst_clken rb_rst_clken_rx_CIC (
+red_pitaya_rst_clken rb_rst_clken_rx_CAR (
   // global signals
   .clk                  ( clk_adc_125mhz      ),                       // global 125 MHz clock
   .global_rst_n         ( adc_rstn_i          ),                       // ADC global reset
 
   // input signals
-  .enable_i             ( rb_pwr_rx_CIC_en    ),
+  .enable_i             ( rb_pwr_rx_CAR_en    ),
 
   // output signals
-  .reset_n_o            ( rb_pwr_rx_CIC_rst_n ),
-  .clk_en_o             ( rb_pwr_rx_CIC_clken )
+  .reset_n_o            ( rb_pwr_rx_CAR_rst_n ),
+  .clk_en_o             ( rb_pwr_rx_CAR_clken )
 );
 
 wire          rb_pwr_rx_MOD_rst_n;
@@ -1129,16 +1129,11 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_tx_amp_rf_dsp48 (
   .CE                   ( rb_pwr_tx_OSC_clken  ),  // power down when needed to
   .SCLR                 ( !rb_pwr_tx_OSC_rst_n ),  // put output to neutral when activated
 
-  // TX_QMIX RF I output
   .A                    ( tx_amp_rf_i_var      ),  // TX_QMIX_RF I      SIGNED 17 bit
-  // TX_QMIX RF Q output
   .D                    ( tx_amp_rf_q_var      ),  // TX_QMIX_RF Q      SIGNED 17 bit
-  // TX_AMP RF gain
   .B                    ( tx_amp_rf_gain       ),  // TX_RF_AMP gain    SIGNED 17 bit
-  // TX_AMP RF offset
   .C                    ( tx_amp_rf_ofs        ),  // TX_RF_AMP ofs     SIGSIG 35 bit
 
-  // TX_AMP RF output
   .P                    ( tx_amp_rf_out        )   // TX_AMP RF output  SIGSIG 36 bit
 );
 
@@ -1158,7 +1153,7 @@ wire [ 31: 0] rx_muxin_mix_out;
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_muxin_amplifier (
   // global signals
   .CLK                ( clk_adc_125mhz         ),  // global 125 MHz clock
-  .CE                 ( rb_pwr_rx_CIC_clken    ),  // power down when needed to
+  .CE                 ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
 
   .A                  ( rx_muxin_mix_in        ),  // input signal            SIGNED 16 bit
   .B                  ( rx_muxin_mix_gain      ),  // RX amplifier gain       SIGNED 16 bit
@@ -1172,12 +1167,12 @@ wire [ 15: 0] rx_muxin_out = rx_muxin_mix_out[27:12];
 //---------------------------------------------------------------------------------
 //  RX_CAR_OSC carrier oscillator
 
-wire          rx_car_osc_reset_n      = rb_pwr_rx_CIC_rst_n & !rx_car_osc_reset;
+wire          rx_car_osc_reset_n      = rb_pwr_rx_CAR_rst_n & !rx_car_osc_reset;
 wire [ 47: 0] rx_car_osc_stream_inc   = rx_car_osc_inc_mux ?  rx_car_sum_inc :
                                                               rx_car_osc_inc ;
 wire [ 47: 0] rx_car_osc_stream_ofs   = rx_car_osc_ofs;
 
-wire          rx_car_osc_axis_s_vld   = rb_pwr_rx_CIC_rst_n;
+wire          rx_car_osc_axis_s_vld   = rb_pwr_rx_CAR_rst_n;
 wire [103: 0] rx_car_osc_axis_s_phase = { 7'b0, rx_car_osc_resync, rx_car_osc_stream_ofs, rx_car_osc_stream_inc };
 wire          rx_car_osc_axis_m_vld;
 wire [ 31: 0] rx_car_osc_axis_m_data;
@@ -1185,7 +1180,7 @@ wire [ 31: 0] rx_car_osc_axis_m_data;
 rb_dds_48_16_125 i_rb_rx_car_osc (
   // global signals
   .aclk                 ( clk_adc_125mhz          ),  // global 125 MHz clock
-  .aclken               ( rb_pwr_rx_CIC_clken     ),  // power down when needed to
+  .aclken               ( rb_pwr_rx_CAR_clken     ),  // power down when needed to
   .aresetn              ( rx_car_osc_reset_n      ),  // reset of RX_CAR_OSC
 
   // simple-AXI slave in port: streaming data for RX_CAR_OSC modulation
@@ -1209,7 +1204,7 @@ wire [ 31: 0] rx_car_qmix_i_out;
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_I_dsp48 (
   // global signals
   .CLK                  ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .CE                   ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
+  .CE                   ( rb_pwr_rx_CAR_clken  ),  // power down when needed to
 
   .A                    ( rx_muxin_out         ),  // RX_MUX in signal:       SIGNED 16 bit
   .B                    ( rx_car_osc_cos       ),  // RX_CAR_OSC cos:         SIGNED 16 bit
@@ -1222,7 +1217,7 @@ wire [ 31: 0] rx_car_qmix_q_out;
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_Q_dsp48 (
   // global signals
   .CLK                  ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .CE                   ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
+  .CE                   ( rb_pwr_rx_CAR_clken  ),  // power down when needed to
 
   .A                    ( rx_muxin_out         ),  // RX_MUX in signal:       SIGNED 16 bit
   .B                    ( rx_car_osc_sin       ),  // RX_CAR_OSC sin:         SIGNED 16 bit
@@ -1231,192 +1226,253 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_car_qmix_Q_dsp48 (
 );
 
 
+/*
 //---------------------------------------------------------------------------------
-//  RX_CAR_CIC1 sampling rate down convertion 125 MSPS to 5 MSPS
+//  RX_CAR_FIR1 sampling rate down convertion 125 MSPS to 1 MSPS
+//
+//  Coefficients built with Octave:
+//  hn=fir1(62, 0.38, 'low', 'chebwin'); freqz(hn);
 
-wire [ 31: 0] rx_car_cic1_i_out;
-wire          rx_car_cic1_i_vld;
-reg           rx_car_cic1_i_rdy;
-wire          rx_car_cic1_i_hlt;
+wire [ 23: 0] rx_car_fir1_i_in = { 7'b0, rx_car_qmix_i_out[31:15] };  // bus width is multiple of 8
+wire [ 39: 0] rx_car_fir1_i_out;
+wire          rx_car_fir1_i_out_vld;
 
-rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_I (
+wire [ 23: 0] rx_car_fir1_q_in = { 7'b0, rx_car_qmix_q_out[31:15] };  // bus width is multiple of 8
+wire [ 39: 0] rx_car_fir1_q_out;
+wire          rx_car_fir1_q_out_vld;
+
+rb_fir_125M_to_1M_24c_17s16_35o i_rb_rx_car_fir1_I (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .aclken               ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
-  .aresetn              ( rb_pwr_rx_CIC_rst_n  ),
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n    ),
 
-  .s_axis_data_tdata    ( rx_car_qmix_i_out    ),
-  .s_axis_data_tvalid   ( 1'b1                 ),
-  .s_axis_data_tready   (                      ),
+  .s_axis_data_tdata    ( rx_car_fir1_i_in       ),
+  .s_axis_data_tvalid   ( 1'b1                   ),
+  .s_axis_data_tready   (                        ),
 
-  .m_axis_data_tdata    ( rx_car_cic1_i_out    ),  // RX_CAR_CIC1 output I
-  .m_axis_data_tvalid   ( rx_car_cic1_i_vld    ),
-  .m_axis_data_tready   ( rx_car_cic1_i_rdy    ),
-  .event_halted         ( rx_car_cic1_i_hlt    )
+  .m_axis_data_tdata    ( rx_car_fir1_i_out      ),   // RX_CAR_FIR1 output I - 1 MHz (35.xx bit width)
+  .m_axis_data_tvalid   ( rx_car_fir1_i_out_vld  )
 );
 
-wire [ 31: 0] rx_car_cic1_q_out;
-wire          rx_car_cic1_q_vld;
-reg           rx_car_cic1_q_rdy;
-wire          rx_car_cic1_q_hlt;
-
-rb_cic_125M_to_5M_32T32_lat18 i_rb_rx_car_cic1_Q (
+rb_fir_125M_to_1M_24c_17s16_35o i_rb_rx_car_fir1_Q (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .aclken               ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
-  .aresetn              ( rb_pwr_rx_CIC_rst_n  ),
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n    ),
 
-  .s_axis_data_tdata    ( rx_car_qmix_q_out    ),
-  .s_axis_data_tvalid   ( 1'b1                 ),
-  .s_axis_data_tready   (                      ),
+  .s_axis_data_tdata    ( rx_car_fir1_q_in       ),
+  .s_axis_data_tvalid   ( 1'b1                   ),
+  .s_axis_data_tready   (                        ),
 
-  .m_axis_data_tdata    ( rx_car_cic1_q_out    ),  // RX_CAR_CIC1 output Q
-  .m_axis_data_tvalid   ( rx_car_cic1_q_vld    ),
-  .m_axis_data_tready   ( rx_car_cic1_q_rdy    ),
-  .event_halted         ( rx_car_cic1_q_hlt    )
+  .m_axis_data_tdata    ( rx_car_fir1_q_out      ),   // RX_CAR_FIR1 output Q - 1 MHz (35.xx bit width)
+  .m_axis_data_tvalid   ( rx_car_fir1_q_out_vld  )
+);
+*/
+
+
+//---------------------------------------------------------------------------------
+//  RX_CAR_CIC1 sampling rate down convertion 125 MSPS to 1 MSPS
+
+wire [ 23: 0] rx_car_cic1_i_in = { 6'b0, rx_car_qmix_i_out[31:14] };
+wire [ 23: 0] rx_car_cic1_i_out;
+wire          rx_car_cic1_i_out_vld;
+
+rb_cic_125M_to_1M_18T18 i_rb_rx_car_cic1_I (
+  // global signals
+  .aclk                 ( clk_adc_125mhz        ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken   ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n   ),
+
+  .s_axis_data_tdata    ( rx_car_cic1_i_in      ),
+  .s_axis_data_tvalid   ( 1'b1                  ),
+  .s_axis_data_tready   (                       ),
+
+  .m_axis_data_tdata    ( rx_car_cic1_i_out     ),  // RX_CAR_CIC1 output I
+  .m_axis_data_tvalid   ( rx_car_cic1_i_out_vld )
+);
+
+wire [ 23: 0] rx_car_cic1_q_in = { 6'b0, rx_car_qmix_q_out[31:14] };
+wire [ 23: 0] rx_car_cic1_q_out;
+wire          rx_car_cic1_q_out_vld;
+
+rb_cic_125M_to_1M_18T18 i_rb_rx_car_cic1_Q (
+  // global signals
+  .aclk                 ( clk_adc_125mhz        ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken   ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n   ),
+
+  .s_axis_data_tdata    ( rx_car_cic1_q_in      ),
+  .s_axis_data_tvalid   ( 1'b1                  ),
+  .s_axis_data_tready   (                       ),
+
+  .m_axis_data_tdata    ( rx_car_cic1_q_out     ),  // RX_CAR_CIC1 output Q
+  .m_axis_data_tvalid   ( rx_car_cic1_q_out_vld )
 );
 
 
 //---------------------------------------------------------------------------------
 //  RX_CAR_REGS1
 
-reg  [ 31: 0] rx_car_regs1_i_data = 32'b0;
+reg  [ 17: 0] rx_car_regs1_i_data =  'b0;
 reg           rx_car_regs1_i_new  = 1'b0;
-wire          rx_car_regs1_i_rdy;
 
 always @(posedge clk_adc_125mhz) begin
-if (!rb_pwr_rx_CIC_rst_n) begin                    // register input I
-   rx_car_cic1_i_rdy   <= 1'b0;
-   rx_car_regs1_i_data <= 32'b0;
+if (!rb_pwr_rx_CAR_rst_n) begin                    // register input I
+   rx_car_regs1_i_data <=  'b0;
    rx_car_regs1_i_new  <= 1'b0;
    end
-else if (rx_car_cic1_i_vld && rx_car_cic1_i_rdy) begin
-   rx_car_cic1_i_rdy   <= 1'b0;
-   rx_car_regs1_i_data <= rx_car_cic1_i_out;
+else if (rx_car_cic1_i_out_vld) begin
+   rx_car_regs1_i_data <= rx_car_cic1_i_out[17:0];
    rx_car_regs1_i_new  <= 1'b1;
    end
-else if (rx_car_cic1_i_vld)
-   rx_car_cic1_i_rdy <= 1'b1;
-if (rx_car_regs1_i_vld && rx_car_regs1_i_rdy)
+if (rx_car_regs1_i_out_vld && rx_car_regs1_i_out_rdy)
    rx_car_regs1_i_new <= 1'b0;
 end
 
-reg  [ 31: 0] rx_car_regs1_q_data = 32'b0;
+reg  [ 17: 0] rx_car_regs1_q_data =  'b0;
 reg           rx_car_regs1_q_new  = 1'b0;
-wire          rx_car_regs1_q_rdy;
 
 always @(posedge clk_adc_125mhz) begin
-if (!rb_pwr_rx_CIC_rst_n) begin                    // register input Q
-   rx_car_cic1_q_rdy   <= 1'b0;
-   rx_car_regs1_q_data <= 32'b0;
+if (!rb_pwr_rx_CAR_rst_n) begin                    // register input Q
+   rx_car_regs1_q_data <=  'b0;
    rx_car_regs1_q_new  <= 1'b0;
    end
-else if (rx_car_cic1_q_vld && rx_car_cic1_q_rdy) begin
-   rx_car_cic1_q_rdy   <= 1'b0;
-   rx_car_regs1_q_data <= rx_car_cic1_q_out;
+else if (rx_car_cic1_q_out_vld) begin
+   rx_car_regs1_q_data <= rx_car_cic1_q_out[17:0];
    rx_car_regs1_q_new  <= 1'b1;
    end
-else if (rx_car_cic1_q_vld)
-   rx_car_cic1_q_rdy <= 1'b1;
-if (rx_car_regs1_q_vld && rx_car_regs1_q_rdy)
+if (rx_car_regs1_q_out_vld && rx_car_regs1_q_out_rdy)
    rx_car_regs1_q_new <= 1'b0;
 end
 
-reg           rx_car_regs1_i_vld  = 1'b0;
+reg           rx_car_regs1_i_out_vld  = 1'b0;
+wire          rx_car_regs1_i_out_rdy;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n)                          // register output I
-   rx_car_regs1_i_vld <= 1'b0;
+if (!rb_pwr_rx_CAR_rst_n)                          // register output I
+   rx_car_regs1_i_out_vld <= 1'b0;
 else
    if (rx_car_regs1_i_new)
-      rx_car_regs1_i_vld <= 1'b1;
-   else if (rx_car_regs1_i_vld && rx_car_regs1_i_rdy)
-      rx_car_regs1_i_vld <= 1'b0;
+      rx_car_regs1_i_out_vld <= 1'b1;
+   else if (rx_car_regs1_i_out_vld && rx_car_regs1_i_out_rdy)
+      rx_car_regs1_i_out_vld <= 1'b0;
 
-reg           rx_car_regs1_q_vld  = 1'b0;
+reg           rx_car_regs1_q_out_vld  = 1'b0;
+wire          rx_car_regs1_q_out_rdy;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n)                          // register output Q
-   rx_car_regs1_q_vld <= 1'b0;
+if (!rb_pwr_rx_CAR_rst_n)                          // register output Q
+   rx_car_regs1_q_out_vld <= 1'b0;
 else
    if (rx_car_regs1_q_new)
-      rx_car_regs1_q_vld <= 1'b1;
-   else if (rx_car_regs1_q_vld && rx_car_regs1_q_rdy)
-      rx_car_regs1_q_vld <= 1'b0;
+      rx_car_regs1_q_out_vld <= 1'b1;
+   else if (rx_car_regs1_q_out_vld && rx_car_regs1_q_out_rdy)
+      rx_car_regs1_q_out_vld <= 1'b0;
+
+
+/*
+//---------------------------------------------------------------------------------
+//  RX_CAR_FIR2 sampling rate down convertion 1 MSPS to 48 kSPS
+
+wire [ 23: 0] rx_car_fir2_i_in = { 7'b0, rx_car_regs1_i_data };  // bus width is multiple of 8
+wire [ 39: 0] rx_car_fir2_i_out;
+wire          rx_car_fir2_i_out_vld;
+
+wire [ 23: 0] rx_car_fir2_q_in = { 7'b0, rx_car_regs1_q_data };  // bus width is multiple of 8
+wire [ 39: 0] rx_car_fir2_q_out;
+wire          rx_car_fir2_q_out_vld;
+
+rb_fir_1M_to_48k_24c_17s16_35o i_rb_rx_car_fir2_I (
+  // global signals
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n    ),
+
+  .s_axis_data_tdata    ( rx_car_fir2_i_in       ),
+  .s_axis_data_tvalid   ( rx_car_regs1_i_out_vld ),
+  .s_axis_data_tready   ( rx_car_regs1_i_out_rdy ),
+
+  .m_axis_data_tdata    ( rx_car_fir2_i_out      ),   // RX_CAR_FIR1 output I - 1 MHz (35.xx bit width)
+  .m_axis_data_tvalid   ( rx_car_fir2_i_out_vld  )
+);
+
+rb_fir_1M_to_48k_24c_17s16_35o i_rb_rx_car_fir2_Q (
+  // global signals
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n    ),
+
+  .s_axis_data_tdata    ( rx_car_fir2_q_in       ),
+  .s_axis_data_tvalid   ( rx_car_regs1_q_out_vld ),
+  .s_axis_data_tready   ( rx_car_regs1_q_out_rdy ),
+
+  .m_axis_data_tdata    ( rx_car_fir2_q_out      ),   // RX_CAR_FIR1 output Q - 1 MHz (35.xx bit width)
+  .m_axis_data_tvalid   ( rx_car_fir2_q_out_vld  )
+);
+*/
 
 
 //---------------------------------------------------------------------------------
-//  RX_CAR_CIC2 sampling rate down convertion 5 MSPS to 8 kSPS
+//  RX_CAR_CIC2 sampling rate down convertion 1.008 MSPS to 48 kSPS
 
-wire [ 31: 0] rx_car_cic2_i_in  = { rx_car_regs1_i_data[30:0], 1'b0 };
-wire [ 31: 0] rx_car_cic2_i_out;
-wire          rx_car_cic2_i_vld;
-reg           rx_car_cic2_i_rdy = 1'b0;
-wire          rx_car_cic2_i_hlt;
+wire [ 23: 0] rx_car_cic2_i_in  = { 6'b0, rx_car_regs1_i_data };
+wire [ 23: 0] rx_car_cic2_i_out;
+wire          rx_car_cic2_i_out_vld;
 
-rb_cic_5M_to_8k_32T32 i_rb_rx_car_cic2_I (
+rb_cic_1M008_to_48k_18T18 i_rb_rx_car_cic2_I (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .aclken               ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
-  .aresetn              ( rb_pwr_rx_CIC_rst_n  ),
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n    ),
 
-  .s_axis_data_tdata    ( rx_car_cic2_i_in     ),
-  .s_axis_data_tvalid   ( rx_car_regs1_i_vld   ),
-  .s_axis_data_tready   ( rx_car_regs1_i_rdy   ),
+  .s_axis_data_tdata    ( rx_car_cic2_i_in       ),
+  .s_axis_data_tvalid   ( rx_car_regs1_i_out_vld ),
+  .s_axis_data_tready   ( rx_car_regs1_i_out_rdy ),
 
-  .m_axis_data_tdata    ( rx_car_cic2_i_out    ),  // RX_CAR_CIC2 output I
-  .m_axis_data_tvalid   ( rx_car_cic2_i_vld    ),
-  .m_axis_data_tready   ( rx_car_cic2_i_rdy    ),
-  .event_halted         ( rx_car_cic2_i_hlt    )
+  .m_axis_data_tdata    ( rx_car_cic2_i_out      ),  // RX_CAR_CIC2 output I
+  .m_axis_data_tvalid   ( rx_car_cic2_i_out_vld  )
 );
 
-wire [ 31: 0] rx_car_cic2_q_in  = { rx_car_regs1_q_data[30:0], 1'b0 };
-wire [ 31: 0] rx_car_cic2_q_out;
-wire          rx_car_cic2_q_vld;
-reg           rx_car_cic2_q_rdy = 1'b0;
-wire          rx_car_cic2_q_hlt;
+wire [ 23: 0] rx_car_cic2_q_in  = { 6'b0, rx_car_regs1_q_data };
+wire [ 23: 0] rx_car_cic2_q_out;
+wire          rx_car_cic2_q_out_vld;
 
-rb_cic_5M_to_8k_32T32 i_rb_rx_car_cic2_Q (
+rb_cic_1M008_to_48k_18T18 i_rb_rx_car_cic2_Q (
   // global signals
-  .aclk                 ( clk_adc_125mhz       ),  // global 125 MHz clock
-  .aclken               ( rb_pwr_rx_CIC_clken  ),  // power down when needed to
-  .aresetn              ( rb_pwr_rx_CIC_rst_n  ),
+  .aclk                 ( clk_adc_125mhz         ),  // global 125 MHz clock
+  .aclken               ( rb_pwr_rx_CAR_clken    ),  // power down when needed to
+  .aresetn              ( rb_pwr_rx_CAR_rst_n    ),
 
-  .s_axis_data_tdata    ( rx_car_cic2_q_in     ),
-  .s_axis_data_tvalid   ( rx_car_regs1_q_vld   ),
-  .s_axis_data_tready   ( rx_car_regs1_q_rdy   ),
+  .s_axis_data_tdata    ( rx_car_cic2_q_in       ),
+  .s_axis_data_tvalid   ( rx_car_regs1_q_out_vld ),
+  .s_axis_data_tready   ( rx_car_regs1_q_out_rdy ),
 
-  .m_axis_data_tdata    ( rx_car_cic2_q_out    ),  // RX_CAR_CIC2 output Q
-  .m_axis_data_tvalid   ( rx_car_cic2_q_vld    ),
-  .m_axis_data_tready   ( rx_car_cic2_q_rdy    ),
-  .event_halted         ( rx_car_cic2_q_hlt    )
+  .m_axis_data_tdata    ( rx_car_cic2_q_out      ),  // RX_CAR_CIC2 output Q
+  .m_axis_data_tvalid   ( rx_car_cic2_q_out_vld  )
 );
 
 
 //---------------------------------------------------------------------------------
 //  RX_CAR_REGS2
 
-reg  [ 31: 0] rx_car_regs2_i_data = 32'b0;
+reg  [ 17: 0] rx_car_regs2_i_data = 'b0;
 reg           rx_car_regs2_i_mod_new = 1'b0;
 wire          rx_car_regs2_i_mod_rdy;
 reg           rx_car_regs2_i_afc_new = 1'b0;
 wire          rx_car_regs2_i_afc_rdy;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n) begin                    // register input I
-   rx_car_cic2_i_rdy      <= 1'b0;
-   rx_car_regs2_i_data    <= 32'b0;
+if (!rb_pwr_rx_CAR_rst_n) begin                    // register input I
+   rx_car_regs2_i_data    <=  'b0;
    rx_car_regs2_i_mod_new <= 1'b0;
    rx_car_regs2_i_afc_new <= 1'b0;
    end
-else if (rx_car_cic2_i_vld && rx_car_cic2_i_rdy) begin
-   rx_car_cic2_i_rdy      <= 1'b0;
-   rx_car_regs2_i_data    <= rx_car_cic2_i_out;
+else if (rx_car_cic2_i_out_vld) begin
+   rx_car_regs2_i_data    <= rx_car_cic2_i_out[17:0];
    rx_car_regs2_i_mod_new <= 1'b1;
    rx_car_regs2_i_afc_new <= 1'b1;
    end
-else if (rx_car_cic2_i_vld)
-   rx_car_cic2_i_rdy <= 1'b1;
 else begin
    if (rx_car_regs2_i_mod_vld && rx_car_regs2_i_mod_rdy)
       rx_car_regs2_i_mod_new <= 1'b0;
@@ -1424,27 +1480,23 @@ else begin
       rx_car_regs2_i_afc_new <= 1'b0;
    end
 
-reg  [ 31: 0] rx_car_regs2_q_data = 32'b0;
+reg  [ 17: 0] rx_car_regs2_q_data = 'b0;
 reg           rx_car_regs2_q_mod_new = 1'b0;
 wire          rx_car_regs2_q_mod_rdy;
 reg           rx_car_regs2_q_afc_new = 1'b0;
 wire          rx_car_regs2_q_afc_rdy;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n) begin                    // register input Q
-   rx_car_cic2_q_rdy      <= 1'b0;
-   rx_car_regs2_q_data    <= 32'b0;
+if (!rb_pwr_rx_CAR_rst_n) begin                    // register input Q
+   rx_car_regs2_q_data    <=  'b0;
    rx_car_regs2_q_mod_new <= 1'b0;
    rx_car_regs2_q_afc_new <= 1'b0;
    end
-else if (rx_car_cic2_q_vld && rx_car_cic2_q_rdy) begin
-   rx_car_cic2_q_rdy      <= 1'b0;
-   rx_car_regs2_q_data    <= rx_car_cic2_q_out;
+else if (rx_car_cic2_q_out_vld) begin
+   rx_car_regs2_q_data    <= rx_car_cic2_q_out[17:0];
    rx_car_regs2_q_mod_new <= 1'b1;
    rx_car_regs2_q_afc_new <= 1'b1;
    end
-else if (rx_car_cic2_q_vld)
-   rx_car_cic2_q_rdy <= 1'b1;
 else begin
    if (rx_car_regs2_q_mod_vld && rx_car_regs2_q_mod_rdy)
       rx_car_regs2_q_mod_new <= 1'b0;
@@ -1455,7 +1507,7 @@ else begin
 reg           rx_car_regs2_i_mod_vld = 1'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n)                          // register output I for MOD
+if (!rb_pwr_rx_CAR_rst_n)                          // register output I for MOD
    rx_car_regs2_i_mod_vld <= 1'b0;
 else
    if (rx_car_regs2_i_mod_new && rx_car_regs2_q_mod_new)
@@ -1466,7 +1518,7 @@ else
 reg           rx_car_regs2_q_mod_vld = 1'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n)                          // register output Q for MOD
+if (!rb_pwr_rx_CAR_rst_n)                          // register output Q for MOD
    rx_car_regs2_q_mod_vld <= 1'b0;
 else
    if (rx_car_regs2_i_mod_new && rx_car_regs2_q_mod_new)
@@ -1477,7 +1529,7 @@ else
 reg           rx_car_regs2_i_afc_vld = 1'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n)                          // register output I for AFC
+if (!rb_pwr_rx_CAR_rst_n)                          // register output I for AFC
    rx_car_regs2_i_afc_vld <= 1'b0;
 else
    if (rx_car_regs2_i_afc_new && rx_car_regs2_q_afc_new)
@@ -1488,7 +1540,7 @@ else
 reg           rx_car_regs2_q_afc_vld = 1'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_CIC_rst_n)                          // register output Q for AFC
+if (!rb_pwr_rx_CAR_rst_n)                          // register output Q for AFC
    rx_car_regs2_q_afc_vld <= 1'b0;
 else
    if (rx_car_regs2_i_afc_new && rx_car_regs2_q_afc_new)
@@ -1498,12 +1550,16 @@ else
 
 
 //---------------------------------------------------------------------------------
+//  RX_MOD_CIC1 sampling rate down convertion 48 kSPS to 8 kSPS
+
+
+//---------------------------------------------------------------------------------
 //  RX_MOD_FIR1 low pass filter for side-band selection
 //
 //  Coefficients built with Octave:
 //  fir2(126, [0 1400/8000 1425/8000 1], [1 1 0.000001 0.000001], 4096, kaiser(127, 10))
 
-wire [ 23: 0] rx_mod_fir1_i_in = { 7'b0, rx_car_regs2_i_data[31:15] };  // bus width is multiple of 8
+wire [ 23: 0] rx_mod_fir1_i_in = { 7'b0, rx_car_regs2_i_data };  // bus width is multiple of 8
 wire [ 39: 0] rx_mod_fir1_i_out;
 wire          rx_mod_fir1_i_vld;
 reg           rx_mod_fir1_i_rdy;
@@ -1512,7 +1568,7 @@ rb_fir1_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir1_I (
   // global signals
   .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
   .aclken               ( rb_pwr_rx_MOD_clken    ),   // power down when needed to
-  .aresetn              ( rb_pwr_rx_MOD_rst_n    ),
+  .aresetn              ( 1'b0    ),  // rb_pwr_rx_MOD_rst_n
 
   .s_axis_data_tdata    ( rx_mod_fir1_i_in       ),
   .s_axis_data_tvalid   ( rx_car_regs2_i_mod_vld ),
@@ -1523,7 +1579,7 @@ rb_fir1_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir1_I (
   .m_axis_data_tready   ( rx_mod_fir1_i_rdy      )
 );
 
-wire [ 23: 0] rx_mod_fir1_q_in = { 7'b0, rx_car_regs2_q_data[31:15] };
+wire [ 23: 0] rx_mod_fir1_q_in = { 7'b0, rx_car_regs2_q_data };
 wire [ 39: 0] rx_mod_fir1_q_out;
 wire          rx_mod_fir1_q_vld;
 reg           rx_mod_fir1_q_rdy;
@@ -1532,7 +1588,7 @@ rb_fir1_8k_to_8k_25c_17i16_35o32 i_rb_rx_mod_fir1_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
   .aclken               ( rb_pwr_rx_MOD_clken    ),   // power down when needed to
-  .aresetn              ( rb_pwr_rx_MOD_rst_n    ),
+  .aresetn              ( 1'b0    ),  // rb_pwr_rx_MOD_rst_n
 
   .s_axis_data_tdata    ( rx_mod_fir1_q_in       ),
   .s_axis_data_tvalid   ( rx_car_regs2_q_mod_vld ),
@@ -1848,8 +1904,9 @@ rb_cic_8k_to_48k_32T32 i_rb_rx_mod_cic2_Q (
 //---------------------------------------------------------------------------------
 //  RX_MOD_SSB_ADD reconstruction of the modulation
 
-wire [ 16: 0] rx_mod_ssb_am_i_var = rx_mod_cic2_i_out[30:14];
-wire [ 16: 0] rx_mod_ssb_am_q_var = rx_mod_cic2_q_out[30:14];
+wire [ 16: 0] rx_mod_ssb_am_i_var = { rx_mod_cic2_i_out[30], rx_mod_cic2_i_out[30:15] };
+wire [ 16: 0] rx_mod_ssb_am_q_var = { rx_mod_cic2_q_out[30], rx_mod_cic2_q_out[30:15] };
+wire [ 16: 0] rx_mod_ssb_am_g_var = { 1'b0, rx_ssb_am_gain };  // expand unsigned 16 bit to signed 17 bit
 
 wire [ 35: 0] rx_mod_ssb_mix_out;
 
@@ -1859,16 +1916,11 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_rx_mod_ssb_am_dsp48 (
   .CE                   ( rb_pwr_rx_MOD_clken  ),  // power down when needed to
   .SCLR                 ( !rb_pwr_rx_MOD_rst_n ),  // put output to neutral when activated
 
-  // I input
   .A                    ( rx_mod_ssb_am_i_var  ),  // RX_MOD_CIC2 I     SIGNED 17 bit
-  // Q input
   .D                    ( rx_mod_ssb_am_q_var  ),  // RX_MOD_CIC2 Q     SIGNED 17 bit
-  // gain input
-  .B                    ( rx_ssb_am_gain       ),  // RX_MOD SSB gain   SIGNED 17 bit
-  // offset input
-  .C                    ( 35'b0                ),
+  .B                    ( rx_mod_ssb_am_g_var  ),  // RX_MOD SSB gain   SIGNED 17 bit
+  .C                    ( 35'b0                ),  // no offset value specified
 
-  // demodulated output
   .P                    ( rx_mod_ssb_mix_out   )   // RX_MOD SSB output SIGSIG 36 bit
 );
 
@@ -1890,7 +1942,7 @@ wire [ 15: 0] rx_mod_ssb_am_out = rx_mod_ssb_mix_out[31:16];
 
 wire          rx_afc_fir_is_set2 = ((rb_pwr_rx_modvar == 8'd7) || (rb_pwr_rx_modvar == 8'd8)) ?  1'b1 : 1'b0;
 wire [  7: 0] rx_afc_fir_cfg_in = { 7'b0, rx_afc_fir_is_set2 };
-wire [ 23: 0] rx_afc_fir_i_in = { 7'b0, rx_car_regs2_i_data[31:15] };  // bus width is multiple of 8
+wire [ 23: 0] rx_afc_fir_i_in = { 7'b0, rx_car_regs2_i_data };  // bus width is multiple of 8
 wire [ 39: 0] rx_afc_fir_i_out;
 wire          rx_afc_fir_i_vld;
 
@@ -1898,7 +1950,7 @@ rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_I (
   // global signals
   .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
   .aclken               ( rb_pwr_rx_AFC_clken    ),   // power down when needed to
-  .aresetn              ( rb_pwr_rx_AFC_rst_n    ),
+  .aresetn              ( 1'b0    ),  // rb_pwr_rx_AFC_rst_n
 
   .s_axis_config_tdata  ( rx_afc_fir_cfg_in      ),   // 0: filter set 1 (SSB/AM), 1: filter set 2 (FM/PM)
   .s_axis_config_tvalid ( 1'b1                   ),
@@ -1912,7 +1964,7 @@ rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_I (
   .m_axis_data_tvalid   ( rx_afc_fir_i_vld       )
 );
 
-wire [ 23: 0] rx_afc_fir_q_in = { 7'b0, rx_car_regs2_q_data[31:15] };
+wire [ 23: 0] rx_afc_fir_q_in = { 7'b0, rx_car_regs2_q_data };
 wire [ 39: 0] rx_afc_fir_q_out;
 wire          rx_afc_fir_q_vld;
 
@@ -1920,7 +1972,7 @@ rb_fir3_8k_to_8k_24c_17i16_35o i_rb_rx_afc_fir_Q (
   // global signals
   .aclk                 ( clk_adc_125mhz         ),   // global 125 MHz clock
   .aclken               ( rb_pwr_rx_AFC_clken    ),   // power down when needed to
-  .aresetn              ( rb_pwr_rx_AFC_rst_n    ),
+  .aresetn              ( 1'b0    ),  // rb_pwr_rx_AFC_rst_n
 
   .s_axis_config_tdata  ( rx_afc_fir_cfg_in      ),   // 0: filter set 1 (SSB/AM), 1: filter set 2 (FM/PM)
   .s_axis_config_tvalid ( 1'b1                   ),
@@ -2278,6 +2330,7 @@ wire [ 15: 0] rx_audio_out_var_in =  rb_pwr_rx_MOD_en ?           rx_mod_ssb_am_
                                     (rb_pwr_rx_modvar == 8'd7) ?  rx_mod_fm_out     :
                                     (rb_pwr_rx_modvar == 8'd8) ?  rx_mod_pm_out     :
                                                                   16'b0;
+wire [ 31: 0] rx_audio_out_ofs_in = { rx_audio_out_ofs, 16'b0 };
 
 wire [ 31: 0] rx_audio_mix_out;
 
@@ -2457,21 +2510,21 @@ else if (led_src_con_pnt && rb_reset_n) begin
       if (!led_ctr)
          rb_leds_data <= fct_mag(rx_car_qmix_q_out[30:15]);
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT: begin
+   RB_SRC_CON_PNT_NUM_RX_CAR_1M_I_OUT: begin
       if (!led_ctr)
-         rb_leds_data <= fct_mag(rx_car_cic1_i_out[30:15]);
+         rb_leds_data <= fct_mag(rx_car_regs1_i_data[16:1]);
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT: begin
+   RB_SRC_CON_PNT_NUM_RX_CAR_1M_Q_OUT: begin
       if (!led_ctr)
-         rb_leds_data <= fct_mag(rx_car_cic1_q_out[30:15]);
+         rb_leds_data <= fct_mag(rx_car_regs1_q_data[16:1]);      
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT: begin
+   RB_SRC_CON_PNT_NUM_RX_CAR_48K_I_OUT: begin
       if (!led_ctr)
-         rb_leds_data <= fct_mag(rx_car_cic2_i_out[30:15]);
+         rb_leds_data <= fct_mag(rx_car_regs2_i_data[16:1]);
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT: begin
+   RB_SRC_CON_PNT_NUM_RX_CAR_48K_Q_OUT: begin
       if (!led_ctr)
-         rb_leds_data <= fct_mag(rx_car_cic2_q_out[30:15]);
+         rb_leds_data <= fct_mag(rx_car_regs2_q_data[16:1]);
       end
    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
       if (!led_ctr)
@@ -2580,7 +2633,7 @@ else if (led_src_con_pnt && rb_reset_n) begin
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
       if (!led_ctr)
          //                LED7                    LED6                    LED5                    LED4                    LED3                    LED2                    LED1                    LED0
-         rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,    rb_pwr_rx_CIC_rst_n,    rb_pwr_tx_Q_rst_n,      rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n  };
+         rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,    rb_pwr_rx_CAR_rst_n,    rb_pwr_tx_Q_rst_n,      rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n  };
       end
 
    default: begin
@@ -2697,21 +2750,17 @@ else if (rfout1_src_con_pnt && rb_reset_n)
    RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_Q_OUT: begin
       rb_out_ch[0] <= rx_car_qmix_q_out[30:15];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT: begin
-      if (rx_car_cic1_i_vld)
-         rb_out_ch[0] <= rx_car_cic1_i_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_1M_I_OUT: begin
+      rb_out_ch[0] <= rx_car_regs1_i_data[16:1];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT: begin
-      if (rx_car_cic1_q_vld)
-         rb_out_ch[0] <= rx_car_cic1_q_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_1M_Q_OUT: begin
+      rb_out_ch[0] <= rx_car_regs1_q_data[16:1];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT: begin
-      if (rx_car_cic2_i_vld)
-         rb_out_ch[0] <= rx_car_cic2_i_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_48K_I_OUT: begin
+      rb_out_ch[0] <= rx_car_regs2_i_data[16:1];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT: begin
-      if (rx_car_cic2_q_vld)
-         rb_out_ch[0] <= rx_car_cic2_q_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_48K_Q_OUT: begin
+      rb_out_ch[0] <= rx_car_regs2_q_data[16:1];
       end
    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
       if (rx_mod_fir1_i_vld)
@@ -2802,7 +2851,7 @@ else if (rfout1_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      rb_out_ch[0] <= { 1'b0, rx_mod_regs2_i_rdy, 14'b0 };
+      rb_out_ch[0] <= { 1'b0, rx_car_regs2_i_mod_vld, 14'b0 };
       end
 
    default: begin
@@ -2915,21 +2964,17 @@ else if (rfout2_src_con_pnt && rb_reset_n)
    RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_Q_OUT: begin
       rb_out_ch[1] <= rx_car_qmix_q_out[30:15];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_I_OUT: begin
-      if (rx_car_cic1_i_vld)
-         rb_out_ch[1] <= rx_car_cic1_i_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_1M_I_OUT: begin
+      rb_out_ch[1] <= rx_car_regs1_i_data[16:1];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC1_Q_OUT: begin
-      if (rx_car_cic1_q_vld)
-         rb_out_ch[1] <= rx_car_cic1_q_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_1M_Q_OUT: begin
+      rb_out_ch[1] <= rx_car_regs1_q_data[16:1];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_I_OUT: begin
-      if (rx_car_cic2_i_vld)
-         rb_out_ch[1] <= rx_car_cic2_i_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_48K_I_OUT: begin
+      rb_out_ch[1] <= rx_car_regs2_i_data[16:1];
       end
-   RB_SRC_CON_PNT_NUM_RX_CAR_CIC2_Q_OUT: begin
-      if (rx_car_cic2_q_vld)
-         rb_out_ch[1] <= rx_car_cic2_q_out[30:15];
+   RB_SRC_CON_PNT_NUM_RX_CAR_48K_Q_OUT: begin
+      rb_out_ch[1] <= rx_car_regs2_q_data[16:1];
       end
    RB_SRC_CON_PNT_NUM_RX_MOD_FIR1_I_OUT: begin
       if (rx_mod_fir1_i_vld)
@@ -3020,7 +3065,7 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      rb_out_ch[1] <= { 1'b0, rx_mod_cic2_i_vld, 14'b0 };
+      rb_out_ch[1] <= { 1'b0, rx_car_regs2_i_mod_rdy, 14'b0 };
       end
 
    default: begin
