@@ -108,13 +108,16 @@
       }
       else if(dresult.status == 'ERROR') {
         console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
+        location.reload();
       }
       else {
         console.log('Could not start the application (ERR2)');
+        location.reload();
       }
     })
     .fail(function() {
       console.log('Could not start the application (ERR3)');
+      OSC.startApp();
     });
   };
 
@@ -132,6 +135,8 @@
   var g_FreeMemory = 256.0;
 
   setInterval(function(){
+  	if (!OSC.state.socket_opened)
+  		return;
 	var now = new Date();
 	var now_str = now.getHours() +":"+ now.getMinutes() +":"+ now.getSeconds()+":"+now.getMilliseconds();
 	var times = "";
