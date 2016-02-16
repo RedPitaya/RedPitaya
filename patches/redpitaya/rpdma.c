@@ -59,7 +59,6 @@ struct rpdma_channel{
     long segment_size;
     unsigned char* addrv;
     dma_addr_t addrp;
-    dma_addr_t segment;
     int flag;
     int flags;
     enum dma_data_direction direction;
@@ -151,14 +150,10 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     case STOP_TX:{
         printk("rpdma:ioctl terminate all tx\n");
         dmaengine_terminate_all(tx.chan); 
-		if(tx.segment)
-        dma_unmap_single(tx.dev->dev, tx.segment, tx.segment_size*tx.segment_cnt, DMA_TO_DEVICE);
       }break;  
     case STOP_RX:{
         printk("rpdma:ioctl terminate all rx\n");
         dmaengine_terminate_all(rx.chan); 
-      if(rx.segment)
-        dma_unmap_single(rx.dev->dev, rx.segment, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
         rx.flag = 1;
    } break;
     case CYCLIC_TX:{    
@@ -200,9 +195,6 @@ smp_rmb();
     }break;
    case SINGLE_RX:{
         printk("rpdma:rx single dma \n");smp_rmb();
-        rx.segment = dma_map_single(rx.dev->dev, rx.addrv, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(tx.dev->dev,rx.segment)){printk("rpdma:rx.segment not set properly\n");}
-        else{
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rx.d){printk("rpdma:rxd not set properly\n");}
             else{
@@ -214,16 +206,10 @@ smp_rmb();
             }
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
-
-        
-            
     break;
     }
     case SINGLE_TX:{
         printk("rpdma:tx single dma \n");smp_rmb();
-        tx.segment = dma_map_single(tx.dev->dev, tx.addrv, tx.segment_size*tx.segment_cnt,DMA_TO_DEVICE);
-        if(dma_mapping_error(tx.dev->dev,tx.segment)){printk("rpdma:dma_tx_segment not set properly\n");}
-        else{
             tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!tx.d){printk("rpdma: txd not set properly\n");}
             else{
@@ -234,14 +220,11 @@ smp_rmb();
                 printk("rpdma:tx submit \n");
             }
         printk("rpdma:tx dma_async_issue_pending \n");
-        dma_async_issue_pending(tx_chan);
+        dma_async_issue_pending(tx.chan);
     break;
     }
         case SIMPLE_RX:{
         printk("rpdma:rx single dma \n");smp_rmb();
-        rx.segment = dma_map_single(rx.dev->dev, rx.addrv, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(rx.dev->dev,rx.segment)){printk("rpdma:dma_rx_segment not set properly\n");}
-        else{
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rx.d){printk("rpdma:rxd not set properly\n");}
             else{
@@ -251,21 +234,14 @@ smp_rmb();
                 rx.cookie = rx.d->tx_submit(rx.d);
                 printk("rpdma:rx submit \n");
             }
-
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
         rx.flag = 0;
         rx.tmo = wait_for_completion_timeout(&rx.cmp, rx.tmo);
-        if(rx.segment)
-        dma_unmap_single(rx.dev->dev, rx.segment, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
-            
     break;
     }
     case SIMPLE_TX:{
         printk("rpdma:tx single dma \n");smp_rmb();
-        tx.segment = dma_map_single(tx.dev->dev, tx.addrv, tx.segment_size*tx.segment_cnt,DMA_TO_DEVICE);
-        if(dma_mapping_error(tx.dev->dev,tx.segment)){printk("rpdma:dma_tx_segment not set properly\n");}
-        else{
             tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!tx.d){printk("rpdma: txd not set properly\n");}
             else{
@@ -280,17 +256,11 @@ smp_rmb();
         
         tx.tmo = wait_for_completion_timeout(&tx.cmp, tx.tmo);
         dmaengine_terminate_all(tx.chan);
-        if(tx.segment)
-        dma_unmap_single(tx.dev->dev, tx.segment, tx.segment_size*tx.segment_cnt, DMA_TO_DEVICE);
-        
     break;
     }
     case SIMPLE:{
         printk("rpdma:tx single dma \n");
         smp_rmb();
-        tx.segment = dma_map_single(tx.dev->dev, tx.addrv, tx.segment_size*tx.segment_cnt,DMA_TO_DEVICE);
-        if(dma_mapping_error(tx.dev->dev,tx.segment)){printk("rpdma:dma_tx_segment not set properly\n");}
-        else{
             tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!tx.d){printk("rpdma: txd not set properly\n");}
             else{
@@ -301,9 +271,6 @@ smp_rmb();
                 printk("rpdma:tx submit \n");
             }
         printk("rpdma:rx single dma \n");
-        rx.segment = dma_map_single(rx.dev->dev, rx.addrv, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
-        if(dma_mapping_error(tx.dev->dev,rx.segment)){printk("rpdma:dma_rx_segment not set properly\n");}
-        else{
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
             if(!rx.d){printk("rpdma:rxd not set properly\n");}
             else{
@@ -313,7 +280,6 @@ smp_rmb();
                 rx.cookie = rx.d->tx_submit(rx.d);
                 printk("rpdma:rx submit \n");
             }
-        }
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);  
         printk("rpdma:tx dma_async_issue_pending \n");
@@ -321,13 +287,8 @@ smp_rmb();
   
         tx.tmo = wait_for_completion_timeout(&tx.cmp, tx.tmo);
         
-        
         dmaengine_terminate_all(tx.chan);
         dmaengine_terminate_all(rx.chan);
-        if(tx.segment)
-        dma_unmap_single(tx.dev->dev, tx.segment, tx.segment_size*tx.segment_cnt, DMA_TO_DEVICE);
-        if(rx.segment)
-        dma_unmap_single(rx.dev->dev, rx.segment, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
     break;
     }
     
@@ -357,10 +318,6 @@ static int rpdma_release(struct inode *ino, struct file *file)
 {
     //  dmaengine_terminate_all(tx.chan); 
    //     dmaengine_terminate_all(rx.chan); 
-    //if(tx.segment)
-    //    dma_unmap_single(tx.dev->dev, tx.segment, tx.segment_size*tx.segment_cnt, DMA_TO_DEVICE);
-    //        if(rx.segment)
-//        dma_unmap_single(rx.dev->dev, rx.segment, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
             rx.flag=1;
     wake_up_interruptible(&rx.wq);
     printk("rpdma:release\n");
