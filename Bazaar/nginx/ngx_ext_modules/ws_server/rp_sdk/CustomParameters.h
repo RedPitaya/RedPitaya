@@ -5,8 +5,6 @@
 
 #include "Parameter.h"
 
-#include "decoder.h"
-
 template <typename Type> class CDecoderParameter : public CParameter<Type, Type>
 {
 public:
@@ -105,28 +103,6 @@ protected:
 };
 
 
-namespace
-{
-
-template<class T>
-JSONNode MakeSignalJSONNode(T _value)
-{
-	return JSONNode("", _value);
-}
-
-
-JSONNode MakeSignalJSONNode(OutputPacket _value)
-{
-	JSONNode node(JSON_NODE);
-	node.push_back(JSONNode("control", _value.control));
-	node.push_back(JSONNode("data", _value.data));
-	node.push_back(JSONNode("length", _value.length));
-
-	return node;
-}
-
-}
-
 //template for signals
 template <typename Type> class CCustomSignal : public CParameter<Type, std::vector<Type> >
 {
@@ -155,7 +131,7 @@ public:
 		for(unsigned int i=0; i < this->m_Value.value.size(); i++)
 		{
 			Type res = this->m_Value.value.at(i);
-			child.push_back(MakeSignalJSONNode(res));
+			child.push_back(JSONNode("", res));
 		}
 		n.push_back(child);
 		return n;
@@ -264,17 +240,6 @@ public:
 		:CCustomSignal(_name, _size, _def_value){};
 
 	CDoubleSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, double _def_value)
-		:CCustomSignal(_name, _access_mode, _size, _def_value){};
-};
-
-//custom CDecodedSignal
-class CDecodedSignal : public CCustomSignal<OutputPacket>
-{
-public:
-	CDecodedSignal(std::string _name, int _size, OutputPacket _def_value)
-		:CCustomSignal(_name, _size, _def_value){};
-
-	CDecodedSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, OutputPacket _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
