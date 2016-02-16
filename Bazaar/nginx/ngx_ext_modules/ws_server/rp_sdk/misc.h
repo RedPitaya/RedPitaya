@@ -3,8 +3,6 @@
 #include <vector>
 #include <stdio.h>
 
-#include "decoder.h"
-
 extern int dbg_printf(const char * format, ...);
 
 template <typename BaseT, typename ValueT>
@@ -106,25 +104,6 @@ inline std::vector<double> GetValueFromJSON<std::vector<double> >(JSONNode _node
         	res.push_back(i->as_float());
         	++i;
     	}
-
-	return res;
-}
-
-
-//std::vector<OutputPacket> specialization of function
-template <>
-inline std::vector<OutputPacket> GetValueFromJSON<std::vector<OutputPacket> >(JSONNode _node, const char* _at)
-{
-	JSONNode n = _node.at(_at);
-	std::vector<OutputPacket> res;
-	for (auto i = n.begin(); i != n.end(); ++i)
-	{
-		uint8_t control = i->at("control").as_int();
-		uint8_t data = i->at("data").as_int();
-		uint16_t length = i->at("length").as_int();
-
-		res.push_back(OutputPacket{control, data, length});
-	}
 
 	return res;
 }
