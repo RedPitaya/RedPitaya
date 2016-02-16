@@ -9,7 +9,7 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,144 @@
+@@ -86,3 +86,160 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
@@ -92,11 +92,27 @@
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
 +};
-+/ {
-+	rpdma_2: rpdma@2 {
++/*/{
++       rpdma_2: rpdma@2 {
++               compatible ="redpitaya,rpdma";
++               dmas = <&axi_dma_2 0
++                       &axi_dma_2 1>;
++               dma-names = "axidma0", "axidma1";
++       };
++};*/
++/* /{
++	rpdma_3: rpdma@3 {
 +		compatible ="redpitaya,rpdma";
-+		dmas = <&axi_dma_2 0
-+			&axi_dma_2 1>;
++		dmas = <&axi_dma_3 0
++			&axi_dma_3 1>;
++		dma-names = "axidma0", "axidma1";
++	};
++};*/
++/ {
++	dmatest_0: dmatest@0 {
++		compatible ="xlnx,axi-dma-test-1.00.a";
++		dmas = <&axi_dma_3 0
++			&axi_dma_3 1>;
 +		dma-names = "axidma0", "axidma1";
 +	};
 +};*/
