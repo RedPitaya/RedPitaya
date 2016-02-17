@@ -102,7 +102,7 @@ static ssize_t rpdma_write(struct file *f, const char __user * buf,size_t len, l
     //unsigned char c=0;
     printk("rpdma: write()\n");
     for (j=0; j <  tx.segment_size*tx.segment_cnt; j++) {
-             tx.addrv[j]=(unsigned char)j%255;
+             tx.addrv[j]=(unsigned char)j%256;
     }
     return 0;//(ssize_t)copy_from_user(tx.addrv, buf, len);
 }
@@ -157,10 +157,10 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         rx.flag = 1;
    } break;
     case CYCLIC_TX:{    
-            printk("rpdma:ioctl cyclic tx\n");smp_rmb();
-            tx.d = tx.chan->device->device_prep_dma_cyclic(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, tx.segment_size, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!tx.d){printk("rpdma: txd not set properly\n");}
-            else{
+        printk("rpdma:ioctl cyclic tx\n");smp_rmb();
+        tx.d = tx.chan->device->device_prep_dma_cyclic(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, tx.segment_size, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+        if(!tx.d){printk("rpdma: txd not set properly\n");}
+        else{
             init_completion(&tx.cmp);
             tx.d->callback = rpdma_slave_tx_callback; //set up completition callback
             tx.d->callback_param = &tx.cmp;
@@ -177,14 +177,14 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
     {   
             printk("rpdma:ioctl cyclic rx\n");
 smp_rmb();
-            rx.d = rx.dev->device_prep_dma_cyclic(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, rx.segment_size,DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!rx.d){printk("rpdma:rxd not set properly\n");}
-            else{
-            init_completion(&rx.cmp);
-            rx.d->callback = rpdma_slave_rx_callback; //set completion callback
-            rx.d->callback_param = &rx.cmp;
-            rx.cookie = rx.d->tx_submit(rx.d);    
-            printk("rpdma:rx_submit\n");
+        rx.d = rx.dev->device_prep_dma_cyclic(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, rx.segment_size,DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+        if(!rx.d){printk("rpdma:rxd not set properly\n");}
+        else{
+        init_completion(&rx.cmp);
+        rx.d->callback = rpdma_slave_rx_callback; //set completion callback
+        rx.d->callback_param = &rx.cmp;
+        rx.cookie = rx.d->tx_submit(rx.d);    
+        printk("rpdma:rx_submit\n");
             
         if(dma_submit_error(rx.cookie)){
             printk("rpdma rx submit error %d \n", rx.cookie);
@@ -196,29 +196,31 @@ smp_rmb();
    case SINGLE_RX:{
         printk("rpdma:rx single dma \n");smp_rmb();
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!rx.d){printk("rpdma:rxd not set properly\n");}
-            else{
-                init_completion(&rx.cmp);
-                rx.d->callback = rpdma_slave_rx_callback;
-                rx.d->callback_param = &rx.cmp;
-                rx.cookie = rx.d->tx_submit(rx.d);
-                printk("rpdma:rx submit \n");
-            }
+        if(!rx.d){printk("rpdma:rxd not set properly\n");}
+        else{
+            init_completion(&rx.cmp);
+            rx.d->callback = rpdma_slave_rx_callback;
+            rx.d->callback_param = &rx.cmp;
+            rx.cookie = rx.d->tx_submit(rx.d);
+            printk("rpdma:rx submit \n");
+        }
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
     break;
     }
     case SINGLE_TX:{
-        printk("rpdma:tx single dma \n");smp_rmb();
-            tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!tx.d){printk("rpdma: txd not set properly\n");}
-            else{
-                init_completion(&tx.cmp);
-                tx.d->callback = rpdma_slave_tx_callback;
-                tx.d->callback_param = &tx.cmp;
-                tx.cookie = tx.d->tx_submit(tx.d);
-                printk("rpdma:tx submit \n");
-            }
+        printk("rpdma:tx single dma \n");
+        smp_rmb();
+        
+        tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+        if(!tx.d){printk("rpdma: txd not set properly\n");}
+        else{
+            init_completion(&tx.cmp);
+            tx.d->callback = rpdma_slave_tx_callback;
+            tx.d->callback_param = &tx.cmp;
+            tx.cookie = tx.d->tx_submit(tx.d);
+            printk("rpdma:tx submit \n");
+        }
         printk("rpdma:tx dma_async_issue_pending \n");
         dma_async_issue_pending(tx.chan);
     break;
@@ -226,14 +228,15 @@ smp_rmb();
         case SIMPLE_RX:{
         printk("rpdma:rx single dma \n");smp_rmb();
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!rx.d){printk("rpdma:rxd not set properly\n");}
-            else{
-                init_completion(&rx.cmp);
-                rx.d->callback = rpdma_slave_rx_callback;
-                rx.d->callback_param = &rx.cmp;
-                rx.cookie = rx.d->tx_submit(rx.d);
-                printk("rpdma:rx submit \n");
-            }
+        if(!rx.d){printk("rpdma:rxd not set properly\n");}
+        else{
+            init_completion(&rx.cmp);
+            rx.d->callback = rpdma_slave_rx_callback;
+            rx.d->callback_param = &rx.cmp;
+            rx.cookie = rx.d->tx_submit(rx.d);
+            printk("rpdma:rx submit \n");
+        }
+        
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
         rx.flag = 0;
@@ -242,15 +245,16 @@ smp_rmb();
     }
     case SIMPLE_TX:{
         printk("rpdma:tx single dma \n");smp_rmb();
-            tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!tx.d){printk("rpdma: txd not set properly\n");}
-            else{
-                init_completion(&tx.cmp);
-                tx.d->callback = rpdma_slave_tx_callback;
-                tx.d->callback_param = &tx.cmp;
-                tx.cookie = tx.d->tx_submit(tx.d);
-                printk("rpdma:tx submit \n");
-            }
+        tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+        if(!tx.d){printk("rpdma: txd not set properly\n");}
+        else{
+            init_completion(&tx.cmp);
+            tx.d->callback = rpdma_slave_tx_callback;
+            tx.d->callback_param = &tx.cmp;
+            tx.cookie = tx.d->tx_submit(tx.d);
+            printk("rpdma:tx submit \n");
+        }
+        
         printk("rpdma:tx dma_async_issue_pending \n");
         dma_async_issue_pending(tx.chan);
         
@@ -261,25 +265,28 @@ smp_rmb();
     case SIMPLE:{
         printk("rpdma:tx single dma \n");
         smp_rmb();
-            tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!tx.d){printk("rpdma: txd not set properly\n");}
-            else{
-                init_completion(&tx.cmp);
-                tx.d->callback = rpdma_slave_tx_callback;
-                tx.d->callback_param = &tx.cmp;
-                tx.cookie = tx.d->tx_submit(tx.d);
-                printk("rpdma:tx submit \n");
-            }
+        tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+        if(!tx.d){printk("rpdma: txd not set properly\n");}
+        else{
+            init_completion(&tx.cmp);
+            tx.d->callback = rpdma_slave_tx_callback;
+            tx.d->callback_param = &tx.cmp;
+            tx.cookie = tx.d->tx_submit(tx.d);
+            printk("rpdma:tx submit \n");
+        }
+        
         printk("rpdma:rx single dma \n");
+        
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
-            if(!rx.d){printk("rpdma:rxd not set properly\n");}
-            else{
-                init_completion(&rx.cmp);
-                rx.d->callback = rpdma_slave_rx_callback;
-                rx.d->callback_param = &rx.cmp;
-                rx.cookie = rx.d->tx_submit(rx.d);
-                printk("rpdma:rx submit \n");
-            }
+        if(!rx.d){printk("rpdma:rxd not set properly\n");}
+        else{
+            init_completion(&rx.cmp);
+            rx.d->callback = rpdma_slave_rx_callback;
+            rx.d->callback_param = &rx.cmp;
+            rx.cookie = rx.d->tx_submit(rx.d);
+            printk("rpdma:rx submit \n");
+        }
+        
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);  
         printk("rpdma:tx dma_async_issue_pending \n");
