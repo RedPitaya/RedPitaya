@@ -89,12 +89,14 @@
 							$('#run').html('Run');
 							$("#run").attr('href', 'http://account.redpitaya.com/try-visual-programming.php');
 							$("#run").css('visibility', 'visible');
+							$('#run').attr('target', "_blank");
 							$("#demo").css('visibility', 'hidden');
 						} else {
 							$('.description').children('.name').html(result[key].name);
 							$('.description').children('.icon').attr('src', url + key + '/info/icon.png');
 							$('.description').children('.icon').css('width', '');
 							$('.description').children('.desc').html(result[key].description);
+							$('#run').removeAttr('target');
 							if (result[key].type == "demo")
 							{
 									$("#run").removeAttr('href');
@@ -337,7 +339,8 @@ var verifyLic = function(element){
 			});
 		})
 	} else {
-		window.location = element.attr('href');
+		if (element.attr('href') != 'http://account.redpitaya.com/try-visual-programming.php')
+			window.location = element.attr('href');
 	}
 }
 
