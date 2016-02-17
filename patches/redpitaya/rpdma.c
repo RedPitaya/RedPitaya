@@ -132,7 +132,7 @@ int rpdma_open(struct inode * i, struct file * f) {
 //function blocks its user until rpdma_slave_rx_callback is called by dma engine
 int rpdma_read(struct file *filep, char *buff, size_t len, loff_t *off){
     
-    printk("rpdma:read wait\n");
+    printk("rpdma:read wait flag:%d\n",rx.flag);
     wait_event_interruptible(rx.wq, rx.flag != 0); 
     rx.flag = 0;
     printk("rpdma: read go\n");
@@ -155,9 +155,10 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
         printk("rpdma:ioctl terminate all rx\n");
         dmaengine_terminate_all(rx.chan); 
         rx.flag = 1;
+        wake_up_interruptible(&rx.wq);
    } break;
     case CYCLIC_TX:{    
-        printk("rpdma:ioctl cyclic tx\n");smp_rmb();
+        printk("rpdma:ioctl cyclic tx s:%d c:%d\n", tx.segment_size,tx.segment_cnt );smp_rmb();
         tx.d = tx.chan->device->device_prep_dma_cyclic(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, tx.segment_size, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
         if(!tx.d){printk("rpdma: txd not set properly\n");}
         else{
@@ -175,7 +176,7 @@ static long rpdma_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
  
     case CYCLIC_RX://rx prepair
     {   
-            printk("rpdma:ioctl cyclic rx\n");
+            printk("rpdma:ioctl cyclic rx s:%d c:%d\n",rx.segment_size,rx.segment_cnt);
 smp_rmb();
         rx.d = rx.dev->device_prep_dma_cyclic(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, rx.segment_size,DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
         if(!rx.d){printk("rpdma:rxd not set properly\n");}
@@ -190,11 +191,12 @@ smp_rmb();
             printk("rpdma rx submit error %d \n", rx.cookie);
         }
         dma_async_issue_pending(rx.chan);
-        //    rx.flag = 0;
+
     }
     }break;
    case SINGLE_RX:{
-        printk("rpdma:rx single dma \n");smp_rmb();
+        printk("rpdma:rx single dma s:%d c:%d\n",rx.segment_size,rx.segment_cnt);smp_rmb();
+        
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
         if(!rx.d){printk("rpdma:rxd not set properly\n");}
         else{
@@ -209,7 +211,7 @@ smp_rmb();
     break;
     }
     case SINGLE_TX:{
-        printk("rpdma:tx single dma \n");
+        printk("rpdma:tx single dma s:%d c:%d\n", tx.segment_size,tx.segment_cnt );
         smp_rmb();
         
         tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
@@ -226,7 +228,8 @@ smp_rmb();
     break;
     }
         case SIMPLE_RX:{
-        printk("rpdma:rx single dma \n");smp_rmb();
+        printk("rpdma:rx single dma s:%d c:%d\n",rx.segment_size,rx.segment_cnt);smp_rmb();
+        
         rx.d = dmaengine_prep_slave_single(rx.chan,rx.addrp, rx.segment_size*rx.segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
         if(!rx.d){printk("rpdma:rxd not set properly\n");}
         else{
@@ -239,12 +242,11 @@ smp_rmb();
         
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
-        rx.flag = 0;
         rx.tmo = wait_for_completion_timeout(&rx.cmp, rx.tmo);
     break;
     }
     case SIMPLE_TX:{
-        printk("rpdma:tx single dma \n");smp_rmb();
+        printk("rpdma:tx single dma s:%d c:%d\n", tx.segment_size,tx.segment_cnt );smp_rmb();
         tx.d = dmaengine_prep_slave_single(tx.chan, tx.addrp, tx.segment_size*tx.segment_cnt, DMA_MEM_TO_DEV, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
         if(!tx.d){printk("rpdma: txd not set properly\n");}
         else{
@@ -401,22 +403,13 @@ static int rpdma_probe(struct platform_device *pdev)
     printk("rpdma: ERROR rx not allocated\n");
     }else {
 		printk("rpdma: reserved %ld for rx at %x\n",RX_SGMNT_CNT*RX_SGMNT_SIZE,rx.addrp);
-		int r;
-		for(r=0;r<RX_SGMNT_CNT*RX_SGMNT_SIZE;r++)
-		rx.addrv[r]=r%256;
-		int t=1;
-		for(r=0;r<RX_SGMNT_CNT*RX_SGMNT_SIZE;r++)
-		if(rx.addrv[r]!=r%256)t=0;
-		if(t!=1)printk("rpdma: rx buffer broken \n");
-        
-        for(r=0;r<RX_SGMNT_CNT*RX_SGMNT_SIZE;r++)rx.addrv[r]=0;
 	}
         
     tx.segment_cnt=TX_SGMNT_CNT;
     tx.segment_size=TX_SGMNT_SIZE;
     rx.segment_cnt=RX_SGMNT_CNT;
     rx.segment_size=RX_SGMNT_SIZE;
-    
+    rx.flag=0;
     init_waitqueue_head(&rx.wq);
     return 0;
     
