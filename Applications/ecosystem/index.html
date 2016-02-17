@@ -14,6 +14,9 @@
 		<link rel="stylesheet" href="./style.css" type="text/css" />
 		<link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
 		<script src="assets/jquery.mCustomScrollbar.concat.min.js"></script>
+		<script type="text/javascript">
+			window.onunload = function(){};
+		</script>>
 
 		<script type="text/javascript">
 			$(window).load(function() {
@@ -245,7 +248,8 @@ var onLinkClicked = function()
 			});
 	    } else if (el.attr('id') == 'openInstructions')
 	    {
-	    	window.location.replace('http://redpitaya.com/faq-page/#Applications|37515');
+	    	$('#bazaar_na').modal('hide');
+		    window.open('http://redpitaya.com/faq-page/#Applications|37515', '_blank');
 	    }
 	    else
 	    {
