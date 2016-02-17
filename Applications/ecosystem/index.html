@@ -220,11 +220,6 @@
   </div>
 </div>
 <script>
-
-$('#openInstructions').click(function () {
-	window.location.replace('http://redpitaya.com/faq-page/#Applications|37515');
-});
-
 var onLinkClicked = function()
 {
 	if ($(this).attr('id') == 'run')
@@ -248,7 +243,11 @@ var onLinkClicked = function()
 		        	$('#bazaar_na').modal('show');
 		        }
 			});
-	    } else
+	    } else if (el.attr('id') == 'openInstructions')
+	    {
+	    	window.location.replace('http://redpitaya.com/faq-page/#Applications|37515');
+	    }
+	    else
 	    {
 		    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
 			console.log('clicked ', link);
