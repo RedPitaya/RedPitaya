@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
     unsigned char* map=NULL;
 
     printf("rpdma read test\n");
+    printf("SEGMENT_CNT = %u\n", SEGMENT_CNT);
+    printf("SGMNT_SIZE  = %u\n", SGMNT_SIZE );
 
     // open DMA driver device
     fd = open("/dev/rpdma", O_RDWR);
@@ -45,7 +47,7 @@ int main(int argc, char *argv[]) {
     ioctl(fd, SINGLE_RX, 0);  // single RX
 //    ioctl(fd, CYCLIC_RX, 0);  // cyclic RX
 
-    for (int b=0; b<1; b++) {
+    for (int b=0; b<2; b++) {
       // blocking read waiting for DMA data
       status = read(fd, buf, 1);
       if (status<0) {
@@ -62,6 +64,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // DMA stop
+    ioctl(fd,STOP_RX,0);
+
     // printout data
     for (int i=0; i<SIZE; i++) {
         if ((i%64)==0 ) printf("@%08x: ", i);
@@ -71,9 +76,6 @@ int main(int argc, char *argv[]) {
 
     // release memory
     status = munmap (map, 4*1024);
-
-    // DMA stop
-    ioctl(fd,STOP_RX,0);
 
     if (fd) close(fd);
     return 0;

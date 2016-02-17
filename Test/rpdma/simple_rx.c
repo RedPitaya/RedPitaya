@@ -23,9 +23,6 @@ unsigned char* map=NULL;
 
 int main(int argc, char *argv[])
 {
-	int i,l;
-	int dummy;
-
 	printf("rpdma read test\n");
 
 	fd = open("/dev/rpdma", O_RDWR);
@@ -44,7 +41,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-         for(l=0;l<4*4*1024;l++)
+         for(int unsigned l=0;l<4*4*1024;l++)
            map[l]=0;
 
 
@@ -55,7 +52,7 @@ int main(int argc, char *argv[])
 	}else
 		printf(".");
 
-	for(l=0;l<4*4*1024;l++){
+	for(int unsigned l=0;l<4*4*1024;l++){
         	printf("%c ",(char)map[l]);
 	}
     	if(fd)close(fd);

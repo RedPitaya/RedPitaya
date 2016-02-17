@@ -32,9 +32,6 @@ unsigned char* map=NULL;
 
 int main(int argc, char *argv[])
 {
-	int i;
-	int dummy;
-
 	printf("rpdma read test\n");
 
 	fd = open("/dev/rpdma", O_RDWR);
@@ -46,7 +43,6 @@ int main(int argc, char *argv[])
 
 	ioctl(fd,CYCLIC_RX, 0);
 
-int r;
 //for(r=0;r<4;r++)
 while(1)
 		if(read(fd, buf, 1)<0){
