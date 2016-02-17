@@ -15,6 +15,7 @@
 		<link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
 		<script src="assets/jquery.mCustomScrollbar.concat.min.js"></script>
 		<script type="text/javascript">
+			var appstore_opened = false;
 			window.onunload = function(){};
 		</script>
 
@@ -176,7 +177,7 @@
 							</div>
 						</div>
 						<div class="bazaar-link" style="margin-top: 20px; margin-left: -40px">
-							<a href="#" id="goto_bazaar" class="list-group-item more">Get more applications</a>
+							<a href="#" id="goto_bazaar" class="list-group-item more">Get more applications &nbsp;<img id="appstore_opened" style="display:none; width: 25px;" src="images/loader.gif"/></a>
 						</div>
 					</div>
 
@@ -225,26 +226,44 @@
   </div>
 </div>
 <script>
-var onLinkClicked = function()
+var onLinkClicked = function(e)
 {
 	if ($(this).attr('id') == 'run')
 	{
-		verifyLic($(this));
-	}else
-	{
+		if (!appstore_opened)
+		{
+			verifyLic($(this));
+		} else 
+		{
+			if ($(this).attr('href')!=undefined && $(this).attr('href') != "")
+				e.preventDefault();
+		}
+	} else if ($(this).attr('id') == 'demo') {
+		if (appstore_opened) {
+			if ($(this).attr('href')!=undefined && $(this).attr('href') != "")
+				e.preventDefault();
+		}
+		
+	} else {
 	    var el = $(this);
 	    if (el.attr('id') == 'goto_bazaar')
 	    {
+			$('#appstore_opened').show();
+			appstore_opened = true;
 			$.ajax({
 		        method: "get",
 		        url: "bazaar",
-		        timeout: (3500),
+		        timeout: (5500),
 		        success: function(){
+					$('#appstore_opened').hide();
+					appstore_opened = false;
 		        	var url_arr = window.location.href.split("/");;
 					var url = url_arr[0] + '//' + url_arr[2] + '/bazaar';
 		            window.location.replace(url);
 		        },
 		        error: function( objAJAXRequest, strError ){
+					appstore_opened = false;
+					$('#appstore_opened').hide();
 		        	$('#bazaar_na').modal('show');
 		        }
 			});
@@ -319,22 +338,29 @@ var verifyLic = function(element){
 								if (msg.responseText.startsWith("OK"))
 									window.location = "index.html";
 								else
+								{
+									console.log("LIC: ERR1");
 									window.location = $('#run').attr('href2');
+								}
 							});
 						})
 						.fail(function( msg ) {
+							console.log("LIC: ERR2");
 							window.location = $('#run').attr('href2');
 						});
 					} else
 					{
+						console.log("LIC: ERR3");
 						window.location = $('#run').attr('href2');
 					}
 				})
 				.fail(function( msg ) {
+					console.log("LIC: ERR4");
 					window.location = $('#run').attr('href2');
 				});
 			})
 			.fail(function( msg ) {
+				console.log("LIC: ERR4");
 				window.location = $('#run').attr('href2');
 			});
 		})
