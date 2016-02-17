@@ -1,8 +1,52 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..fc93938 100644
+index 9902daf..a17f39e 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
-@@ -653,13 +653,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+@@ -479,7 +479,7 @@ static void xilinx_dma_chan_desc_cleanup(struct xilinx_dma_chan *chan)
+ {
+ 	struct xilinx_dma_tx_descriptor *desc;
+ 	unsigned long flags;
+-
++	printk("clean up dma descriptor chan%p \n",chan);
+ 	spin_lock_irqsave(&chan->lock, flags);
+ 
+ 	while (!list_empty(&chan->done_list)) {
+@@ -545,6 +545,7 @@ static enum dma_status xilinx_dma_tx_status(struct dma_chan *dchan,
+ 	if (chan->has_sg) {
+ 		list_for_each_entry(segment, &desc->segments, node) {
+ 			hw = &segment->hw;
++			printk("hw%x\n",hw);
+ 			residue += (hw->control - hw->status) &
+ 				   XILINX_DMA_MAX_TRANS_LEN;
+ 		}
+@@ -614,14 +615,18 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+ 	struct xilinx_dma_tx_descriptor *head_desc, *tail_desc;
+ 	struct xilinx_dma_tx_segment *tail_segment;
+ 
++	printk("xilinx_dma_start_transfer %p\n",chan);
+ 	if (chan->err)
+ 		return;
++	printk("xilinx_dma_start_transfer chan->err\n");
+ 
+ 	if (list_empty(&chan->pending_list))
+ 		return;
++	printk("xilinx_dma_start_transfer list_empty\n");
+ 
+ 	if (!chan->idle)
+ 		return;
++	printk("xilinx_dma_start_transfer !chan->idle\n");
+ 
+ 	head_desc = list_first_entry(&chan->pending_list,
+ 				     struct xilinx_dma_tx_descriptor, node);
+@@ -636,6 +641,7 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+ 				  XILINX_DMA_CR_COALESCE_SHIFT;
+ 		dma_ctrl_write(chan, XILINX_DMA_REG_CONTROL, chan->ctrl_reg);
+ 	}
++	printk("xilinx_dma_start_transfer ctrl_reg:%08x\n", chan->ctrl_reg);
+ 
+ 	if (chan->has_sg)
+ #ifdef CONFIG_PHYS_ADDR_T_64BIT
+@@ -653,13 +659,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
  
  	/* Start the transfer */
  	if (chan->has_sg) {
@@ -30,3 +74,19 @@ index 9902daf..fc93938 100644
  	} else {
  		struct xilinx_dma_tx_segment *segment;
  		struct xilinx_dma_desc_hw *hw;
+@@ -762,6 +778,7 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
+ 
+ 	/* Read the status and ack the interrupts. */
+ 	status = dma_ctrl_read(chan, XILINX_DMA_REG_STATUS);
++	printk("xilinx_dma_irq_handler chan:%p status:%08x\n", chan, status);
+ 	if (!(status & XILINX_DMA_XR_IRQ_ALL_MASK))
+ 		return IRQ_NONE;
+ 
+@@ -1072,6 +1089,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+ 
+ 	segment = list_first_entry(&desc->segments,
+ 				   struct xilinx_dma_tx_segment, node);
++	printk("segment->phys:%x", segment->phys);
+ 	desc->async_tx.phys = segment->phys;
+ 	desc->cyclic = true;
+ 	chan->ctrl_reg |= XILINX_DMA_CR_CYCLIC_BD_EN_MASK;
