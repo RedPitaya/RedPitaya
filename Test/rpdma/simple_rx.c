@@ -5,17 +5,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
-//ioctl commands
-#define STOP_TX 0
-#define STOP_RX 1
-#define SET_TX 2
-#define SET_RX 3
-#define START_RX 4
-#define START_TX 5
-#define SIMPLE 10
-#define CYCLIC 0
-#define SIMPLE_RX 10
-#define SIMPLE_TX 11
+#include "rpdma.h"
+
 int fd;
 char buf[256];
 unsigned char* map=NULL;

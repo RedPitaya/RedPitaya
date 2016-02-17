@@ -3,15 +3,10 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
-
 #include <unistd.h>
 
-#define STOP_TX 0
-#define STOP_RX 1
-#define SET_TX 2
-#define SET_RX 3
-#define START_RX 4
-#define START_TX 5
+#include "rpdma.h"
+
 int fd;
 
 int main(int argc, char *argv[])

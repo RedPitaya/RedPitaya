@@ -5,7 +5,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-//ioctl commands
 #include "rpdma.h"
 
 int fd;

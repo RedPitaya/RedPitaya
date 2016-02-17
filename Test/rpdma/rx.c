@@ -9,7 +9,7 @@
 
 #include "rpdma.h"
 
-#define SIZE SEGMENT_CNT*SGMNT_SIZE
+#define SIZE SGMNT_CNT*SGMNT_SIZE
 
 int main(int argc, char *argv[]) {
     int fd;
@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
     unsigned char* map=NULL;
 
     printf("rpdma read test\n");
-    printf("SEGMENT_CNT = %u\n", SEGMENT_CNT);
-    printf("SGMNT_SIZE  = %u\n", SGMNT_SIZE );
+    printf("SGMNT_CNT  = %u\n", SGMNT_CNT );
+    printf("SGMNT_SIZE = %u\n", SGMNT_SIZE);
 
     // open DMA driver device
     fd = open("/dev/rpdma", O_RDWR);

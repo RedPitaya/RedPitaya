@@ -5,16 +5,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
-//ioctl commands
-#define STOP_TX 0
-#define STOP_RX 1
-#define SET_TX 2
-#define SET_RX 3
-#define START_RX 4
-#define START_TX 5
-#define SINGLE 1
-#define CYCLIC 0
-#define SIMPLE 12
+#include "rpdma.h"
 
 int fd;
 char buf[256];
