@@ -248,12 +248,38 @@ var onLinkClicked = function(e)
 	    var el = $(this);
 	    if (el.attr('id') == 'goto_bazaar')
 	    {
-			$('#appstore_opened').show();
-			appstore_opened = true;
-			$.ajax({
-		        method: "get",
-		        url: "bazaar",
+//			$('#appstore_opened').show();
+//			appstore_opened = true;
+
+	//				$('#appstore_opened').hide();
+	//				appstore_opened = false;
+		        	var url_arr = window.location.href.split("/");;
+					var url = url_arr[0] + '//' + url_arr[2] + '/bazaar';
+		            window.location.replace(url);	
+	
+			/*$.ajax({
+		        type: 'HEAD',
+		        url: "http://bazaar.redpitaya.com/",
+				crossDomain: true,
 		        timeout: (5500),
+				statusCode: {
+				  200: function (response) {
+					 alert('1');
+					 AfterSavedAll();
+				  },
+				  201: function (response) {
+					 alert('2');
+					 AfterSavedAll();
+				  },
+				  400: function (response) {
+					 alert('3');
+					 bootbox.alert('<span style="color:Red;">Error While Saving Outage Entry Please Check</span>', function () { });
+				  },
+				  404: function (response) {
+					 alert('4');
+					 bootbox.alert('<span style="color:Red;">Error While Saving Outage Entry Please Check</span>', function () { });
+				  }
+			   },
 		        success: function(){
 					$('#appstore_opened').hide();
 					appstore_opened = false;
@@ -264,9 +290,9 @@ var onLinkClicked = function(e)
 		        error: function( objAJAXRequest, strError ){
 					appstore_opened = false;
 					$('#appstore_opened').hide();
-		        	$('#bazaar_na').modal('show');
+					$('#bazaar_na').modal('show');
 		        }
-			});
+			});*/
 	    } else if (el.attr('id') == 'openInstructions')
 	    {
 	    	$('#bazaar_na').modal('hide');
