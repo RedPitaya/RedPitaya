@@ -259,3 +259,16 @@ position: relative;
 	color: #FCFCFC;
 	padding-bottom: 20px;
 }
+
+.modal-body {
+  font-size: 18px;
+  text-align: center;
+}
+
+.modal-content {
+  background-color: #343433;
+  border: 1px solid #999;
+  border-radius: 0px;
+  outline: 0;
+  color: silver;
+}
