@@ -171,7 +171,7 @@
 							</div>
 						</div>
 						<div class="bazaar-link" style="margin-top: 20px; margin-left: -40px">
-							<a href="bazaar" class="list-group-item more">Get more applications</a>
+							<a href="#" id="goto_bazaar" class="list-group-item more">Get more applications</a>
 						</div>
 					</div>
 
@@ -197,7 +197,33 @@
 	</div>
 	<div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
 </div>
+<!-- Modal -->
+<div class="modal fade" id="bazaar_na" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
+      </div>
+      <div class="modal-body">
+        Red Pitaya is at the moment unable to access application marketplace! Please try it again later or follow instructions about how to manualy install applications.
+      </div>
+      <div class="modal-footer">
+			<div class="bazaar-link" style="float: left; width: 50%;">
+				<a href="#" id="openInstructions" class="list-group-item btn">Open instructions</a>
+			</div>
+			<div class="bazaar-link" style="float: left; width: 50%;" >
+				<a href="" data-dismiss="modal" class="list-group-item btn">Close</a>
+			</div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
+
+$('#openInstructions').click(function () {
+	window.location.replace('http://redpitaya.com/faq-page/#Applications|37515');
+});
 
 var onLinkClicked = function()
 {
@@ -207,9 +233,28 @@ var onLinkClicked = function()
 	}else
 	{
 	    var el = $(this);
-	    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
-		console.log('clicked ', link);
-	    window.location = link;
+	    if (el.attr('id') == 'goto_bazaar')
+	    {
+			$.ajax({
+		        method: "get",
+		        url: "bazaar",
+		        timeout: (3500),
+		        success: function(){
+		        	var url_arr = window.location.href.split("/");;
+					var url = url_arr[0] + '//' + url_arr[2] + '/bazaar';
+		            window.location.replace(url);
+		        },
+		        error: function( objAJAXRequest, strError ){
+		        	$('#bazaar_na').modal('show');
+		        }
+			});
+	    } else
+	    {
+		    var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
+			console.log('clicked ', link);
+		    window.location = link;
+	    }
+
 	}
 }
 
