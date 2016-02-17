@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 
 	ioctl(fd,CYCLIC_RX, 0);
 
-//for(r=0;r<4;r++)
-while(1)
+int r;
+for(r=0;r<4;r++){
 		if(read(fd, buf, 1)<0){
             		printf("read error\n");
 		}else{
@@ -60,10 +60,10 @@ while(1)
 		int l;
         for (l=0;l<16*1024;l++){
         		printf("%x ",(char)map[l]);
-
+//                map[l]=0;
 		}
 	}
-
+}
 
 usleep(10000);
  ioctl(fd,STOP_RX, 0);
