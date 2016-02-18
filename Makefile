@@ -219,7 +219,8 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidmatest-cyc.patch
+	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
 	# DMA support related patches
