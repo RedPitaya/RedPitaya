@@ -445,7 +445,7 @@ static int xilinx_axidmatest_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id xilinx_axidmatest_of_ids[] = {
-	{ .compatible = "xlnx,axi-dma-test-1.00.a",},
+	{ .compatible = "xlnx,axi-dma-test-cyc-1.00.a",},
 	{}
 };
 
