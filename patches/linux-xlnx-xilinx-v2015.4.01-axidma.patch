@@ -1,5 +1,5 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..a17f39e 100644
+index 9902daf..d3a211c 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
 @@ -479,7 +479,7 @@ static void xilinx_dma_chan_desc_cleanup(struct xilinx_dma_chan *chan)
@@ -46,35 +46,36 @@ index 9902daf..a17f39e 100644
  
  	if (chan->has_sg)
  #ifdef CONFIG_PHYS_ADDR_T_64BIT
-@@ -653,13 +659,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+@@ -653,13 +659,24 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
  
  	/* Start the transfer */
  	if (chan->has_sg) {
++		printk("xilinx_dma_start_transfer chan->cyclic:%d\n", chan->cyclic);
 +		if (chan->cyclic) {
++#ifdef CONFIG_PHYS_ADDR_T_64BIT
++			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
++				       head_desc->async_tx.phys + 0x10);
++#else
++			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
++				       head_desc->async_tx.phys + 0x10);
++#endif
++		} else {
  #ifdef CONFIG_PHYS_ADDR_T_64BIT
 -		dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
 -			       tail_segment->phys);
 +			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
-+				       head_desc->async_tx.phys + 0x10);
++				       tail_segment->phys);
  #else
 -		dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
 -			       tail_segment->phys);
 +			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
-+				       head_desc->async_tx.phys + 0x10);
++				       tail_segment->phys);
  #endif
-+		} else {
-+#ifdef CONFIG_PHYS_ADDR_T_64BIT
-+			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
-+				       tail_segment->phys);
-+#else
-+			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
-+				       tail_segment->phys);
-+#endif
 +		}
  	} else {
  		struct xilinx_dma_tx_segment *segment;
  		struct xilinx_dma_desc_hw *hw;
-@@ -762,6 +778,7 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
+@@ -762,6 +779,7 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
  
  	/* Read the status and ack the interrupts. */
  	status = dma_ctrl_read(chan, XILINX_DMA_REG_STATUS);
@@ -82,7 +83,7 @@ index 9902daf..a17f39e 100644
  	if (!(status & XILINX_DMA_XR_IRQ_ALL_MASK))
  		return IRQ_NONE;
  
-@@ -1072,6 +1089,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+@@ -1072,6 +1090,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
  
  	segment = list_first_entry(&desc->segments,
  				   struct xilinx_dma_tx_segment, node);
@@ -90,3 +91,21 @@ index 9902daf..a17f39e 100644
  	desc->async_tx.phys = segment->phys;
  	desc->cyclic = true;
  	chan->ctrl_reg |= XILINX_DMA_CR_CYCLIC_BD_EN_MASK;
+@@ -1086,6 +1105,17 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+ 		segment->hw.control |= XILINX_DMA_BD_EOP;
+ 	}
+ 
++        // list descriptors for debug purposes
++	list_for_each_entry(segment, &desc->segments, node) {
++		hw = &segment->hw;
++		printk("descriptor @:%p\n", hw);
++		printk("descriptor next_desc: %08x %08x\n", hw->next_desc_msb, hw->next_desc);
++		printk("descriptor buf_addr : %08x %08x\n", hw->buf_addr_msb , hw->buf_addr );
++		printk("descriptor pad 1, 2 : %08x %08x\n", hw->pad1         , hw->pad2     );
++		printk("descriptor ctl, sts : %08x %08x\n", hw->control      , hw->status   );
++		printk("descriptor app      : %08x %08x %08x %08x %08x\n", hw->app[0], hw->app[1], hw->app[2], hw->app[3], hw->app[4]);
++	}
++
+ 	return &desc->async_tx;
+ 
+ error:
