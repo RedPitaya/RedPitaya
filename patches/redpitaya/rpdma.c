@@ -190,6 +190,7 @@ smp_rmb();
         if(dma_submit_error(rx.cookie)){
             printk("rpdma rx submit error %d \n", rx.cookie);
         }
+        rx.flag=0;
         dma_async_issue_pending(rx.chan);
 
     }
