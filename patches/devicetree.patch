@@ -108,14 +108,14 @@
 +		dma-names = "axidma0", "axidma1";
 +	};
 +};*/
-+/*/ {
-+	dmatest_0: dmatest@0 {
-+		compatible ="xlnx,axi-dma-test-1.00.a";
++/ {
++	dmatest_cyc_3: dmatest_cyc@3 {
++		compatible ="xlnx,axi-dma-test-cyc-1.00.a";
 +		dmas = <&axi_dma_3 0
 +			&axi_dma_3 1>;
 +		dma-names = "axidma0", "axidma1";
 +	};
-+};*/
++};
 +/ {
 +	id@40000000 {
 +		compatible = "generic-uio";
