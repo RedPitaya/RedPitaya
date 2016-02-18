@@ -28,7 +28,8 @@
 		fine: false,
 		graph_grid_height: null,
 		graph_grid_width: null,
-		calib: 0
+		calib: 0,
+		demo_label_visible : false
 	};
 
 	// Params cache
@@ -144,6 +145,17 @@
 	      			}else{
 	      				LCR.processParameters(receive.parameters);
 	      			}
+					if (LCR.params.orig['is_demo'] && !LCR.state.demo_label_visible)
+					{
+						LCR.state.demo_label_visible = true;
+						$('#demo_label').show();
+					}
+
+					if (!LCR.params.orig['is_demo'] && LCR.state.demo_label_visible)
+					{
+						LCR.state.demo_label_visible = false;
+						$('#demo_label').hide();
+					}
 	      		}
 	      		LCR.state.processing = false;
 	      	};

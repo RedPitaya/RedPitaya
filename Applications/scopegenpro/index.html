@@ -749,6 +749,28 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Licence error</h4>
+                </div>
+                <div class="modal-body"  style="text-align: center; font-size: 18px;">
+                    <p id="lic_failed">Application is running in demo mode! </p>
+                    <p> Please visit <a style="color: #dd0020" href="http://store.redpitaya.com/scopegenpro.html" target="_blank">Red Pitaya store</a> to get the licence.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" id="get_license" class="list-group-item btn">Get licence</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div>
         <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
@@ -758,8 +780,20 @@
         <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(255, 0, 0, 1); text-align:center; padding: 10px; font-size:18px; color:white; ">
             <span id="delay">Performance problem has occurred</span>
         </div>
+        <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
+            You are working in demo mode. Click here to see details.
+        </div>
     </div>
 </body>
+<script type="text/javascript">
+    $('#demo_label').click(function(){
+        $('#get_lic').modal('show');
+    });
+    $('#get_license').click(function(){
+        window.open('http://store.redpitaya.com/scopegenpro.html', '_blank');
+        $('#get_lic').modal('hide');
+    });
+</script>
 <script language="javascript" type="text/javascript">
 $(".limits").change(function() {
     if (['SOUR1_PHAS', 'SOUR1_DCYC', 'SOUR2_PHAS', 'SOUR2_DCYC'].indexOf($(this).attr('id')) != -1) {

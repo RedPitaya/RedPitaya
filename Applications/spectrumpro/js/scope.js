@@ -64,7 +64,7 @@
   SPEC.xmax = 1000000;
   SPEC.ymax = 20.0;
   SPEC.ymin = -120.0;
-  
+
   SPEC.compressed_data = 0;
   SPEC.decompressed_data = 0;
   SPEC.refresh_times = [];
@@ -79,7 +79,8 @@
     resized: false,
 	cursor_dragging: false,
     sel_sig_name: null,
-    fine: false
+    fine: false,
+    demo_label_visible: false
   };
 
   // Params cache
@@ -115,7 +116,7 @@
       console.log('Could not start the application (ERR3)');
     });
   };
-	
+
   // Creates a WebSocket connection with the web server
   SPEC.connectWebSocket = function() {
 
@@ -160,9 +161,9 @@
 	  var g_time = 0;
 	  var g_iter = 10;
 	  var g_delay = 200;
-	  
+
       SPEC.ws.onmessage = function(ev) {
-	  
+
 	  	++g_count;
 		var start_time = +new Date();
         if(SPEC.state.processing) {
@@ -186,12 +187,24 @@
 				} else {
 					SPEC.processParameters(receive.parameters);
 				}
+
+        if (SPEC.params.orig['is_demo'] && !SPEC.state.demo_label_visible)
+        {
+          SPEC.state.demo_label_visible = true;
+          $('#demo_label').show();
+        }
+
+        if (!SPEC.params.orig['is_demo'] && SPEC.state.demo_label_visible)
+        {
+          SPEC.state.demo_label_visible = false;
+          $('#demo_label').hide();
+        }
 			}
 
 			if(receive.signals) {
 			  SPEC.processSignals(receive.signals);
 			}
-		} catch(e) 
+		} catch(e)
 		{
 			SPEC.state.processing = false;
 			console.log(e);

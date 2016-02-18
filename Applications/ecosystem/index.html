@@ -131,12 +131,12 @@
                         $("#run").attr('href2', url + 'instruct.html#' + key);
                         $('#run').html('Run');
                         $("#run").css('visibility', 'visible');
-                        $("#demo").css('visibility', 'visible');
+                        $("#demo").css('visibility', 'hidden');
                     } else if (result[key].type == "run") {
                         $("#run").attr('href', url + key + '/?type=run');
                         $('#run').html('Run');
                         $("#run").css('visibility', 'visible');
-                        $("#demo").css('visibility', 'visible');
+                        $("#demo").css('visibility', 'hidden');
                     } else if (result[key].type == "old_app") {
                         $('#run').html('Run');
                         $("#run").attr('href', url + key);
@@ -144,7 +144,7 @@
                         $("#demo").css('visibility', 'hidden');
                     }
 
-                    $("#demo").attr('href', url + key + '/?type=demo');
+                    $("#demo").attr('href', url + key + '/?type=run');
 
                     $(desc).show();
                 }
@@ -341,10 +341,7 @@
                     method: "GET",
                     url: "lic.lic"
                 })
-                .done(function(msg) {
-                    window.location = $('#run').attr('href2');
-                })
-                .fail(function(msg) {
+                .always(function(msg) {
                     $.ajax({
                             method: "GET",
                             url: "idfile.id"
@@ -378,31 +375,26 @@
                                                     })
                                                     .done(function(msg) {})
                                                     .fail(function(msg) {
-                                                        if (msg.responseText.startsWith("OK"))
-                                                            window.location = "index.html";
-                                                        else {
-                                                            console.log("LIC: ERR1");
-                                                            window.location = $('#run').attr('href2');
-                                                        }
+                                                        window.location = $('#demo').attr('href');
                                                     });
                                             })
                                             .fail(function(msg) {
                                                 console.log("LIC: ERR2");
-                                                window.location = $('#run').attr('href2');
+                                                window.location = $('#demo').attr('href');
                                             });
                                     } else {
                                         console.log("LIC: ERR3");
-                                        window.location = $('#run').attr('href2');
+                                        window.location = $('#demo').attr('href');
                                     }
                                 })
                                 .fail(function(msg) {
                                     console.log("LIC: ERR4");
-                                    window.location = $('#run').attr('href2');
+                                    window.location = $('#demo').attr('href');
                                 });
                         })
                         .fail(function(msg) {
                             console.log("LIC: ERR4");
-                            window.location = $('#run').attr('href2');
+                            window.location = $('#demo').attr('href');
                         });
                 })
         } else {
