@@ -135,10 +135,10 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
-#$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+#$(TARGET): $(BOOT_UBOOT) u-boot devicetree linux buildroot $(IDGEN) $(NGINX) \
 #	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 #	   scpi api apps_pro rp_communication
-$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(HEARTBEAT) api2
+$(TARGET): $(BOOT_UBOOT) u-boot devicetree linux $(HEARTBEAT) api2
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -209,6 +209,10 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR) $(INSTALL_DIR)/etc
 # Linux build provides: $(LINUX)
 ################################################################################
 
+.PHONY: linux
+
+linux: $(LINUX)
+
 $(LINUX_TAR): | $(DL)
 	curl -L $(LINUX_URL) -o $@
 
@@ -234,14 +238,14 @@ $(LINUX): $(LINUX_DIR)
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 	cp $</arch/arm/boot/uImage $@
 
-.PHONY: linux
-
-linux: $(LINUX)
-
 ################################################################################
 # device tree processing
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
+
+.PHONY: devicetree
+
+devicetree: $(DEVICETREE)
 
 $(DTREE_TAR): | $(DL)
 	curl -L $(DTREE_URL) -o $@
