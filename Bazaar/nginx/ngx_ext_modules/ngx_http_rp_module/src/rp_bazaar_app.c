@@ -229,6 +229,8 @@ inline int is_registered(const char *dir,
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
 
+    fprintf(stderr, "is_registered dir: %s\n app_id: %s\n fname: %s\n", dir, app_id, fname);
+
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
     if(stat((const char *)file, &stat_buf) < 0) {
@@ -255,6 +257,8 @@ inline int is_registered(const char *dir,
         rp_bazaar_app_unload_module(&app);
         return 0;
     }
+
+    fprintf(stderr, "App loaded %s\n", app_id);
 
     int is_reg = 1;
     if(app.verify_app_license_func)
@@ -396,7 +400,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         if (info == NULL)
             continue;
 
-        /* We have an application */
+       /* We have an application */
         int demo = !is_registered(dir, app_id, "controllerhf.so");
 
         if (verbose) {
