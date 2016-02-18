@@ -1,0 +1,29 @@
+diff --git a/drivers/dma/xilinx/Kconfig b/drivers/dma/xilinx/Kconfig
+index 967f0d2..8798a82 100644
+--- a/drivers/dma/xilinx/Kconfig
++++ b/drivers/dma/xilinx/Kconfig
+@@ -24,6 +24,13 @@ config XILINX_DMATEST
+ 	  Simple DMA test client. Say N unless you're debugging a
+ 	  DMA Device driver.
+ 
++config XILINX_DMATEST_CYC
++	tristate "DMA Test client for AXI DMA cyclic configuration"
++	depends on XILINX_AXIDMA
++	help
++	  Simple DMA test client. Say N unless you're debugging a
++	  DMA Device driver.
++
+ config XILINX_VDMATEST
+ 	tristate "DMA Test client for VDMA"
+ 	depends on XILINX_VDMA
+diff --git a/drivers/dma/xilinx/Makefile b/drivers/dma/xilinx/Makefile
+index 6ffd2c7..4e2a547 100644
+--- a/drivers/dma/xilinx/Makefile
++++ b/drivers/dma/xilinx/Makefile
+@@ -1,5 +1,6 @@
+ obj-$(CONFIG_XILINX_AXIDMA) += xilinx_dma.o
+ obj-$(CONFIG_XILINX_DMATEST) += axidmatest.o
++obj-$(CONFIG_XILINX_DMATEST_CYC) += axidmatest-cyc.o
+ obj-$(CONFIG_XILINX_VDMATEST) += vdmatest.o
+ obj-$(CONFIG_XILINX_AXICDMA) += xilinx_cdma.o
+ obj-$(CONFIG_XILINX_CDMATEST) += cdmatest.o
