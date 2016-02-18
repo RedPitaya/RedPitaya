@@ -233,6 +233,10 @@ $(LINUX): $(LINUX_DIR)
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 	cp $</arch/arm/boot/uImage $@
 
+.PHONY: linux
+
+linux: $(LINUX)
+
 ################################################################################
 # device tree processing
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
