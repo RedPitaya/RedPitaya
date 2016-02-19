@@ -161,6 +161,11 @@ public:
 	{
 		return this->m_Value.value.size();
 	}
+
+	std::vector<Type> GetData()
+	{
+		return this->m_Value.value;
+	}
 };
 
 //custom CIntParameter
@@ -218,6 +223,17 @@ public:
 		:CCustomSignal(_name, _size, _def_value){};
 
 	CIntSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, int _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
+};
+
+//custom CByteSignal
+class CByteSignal : public CCustomSignal<uint8_t>
+{
+public:
+	CByteSignal(std::string _name, uint8_t _size, uint8_t _def_value)
+		:CCustomSignal(_name, _size, _def_value){};
+
+	CByteSignal(std::string _name, CBaseParameter::AccessMode _access_mode, uint8_t _size, uint8_t _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
