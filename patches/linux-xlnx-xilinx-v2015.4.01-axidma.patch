@@ -1,5 +1,5 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..d49fcd1 100644
+index 9902daf..59001a0 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
 @@ -653,13 +653,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
@@ -53,7 +53,7 @@ index 9902daf..d49fcd1 100644
  
 +	head_desc = list_first_entry(&desc->segments, struct xilinx_dma_tx_segment, node);
 +	tail_desc = list_last_entry (&desc->segments, struct xilinx_dma_tx_segment, node);
-+	last->hw.tail_desc = (u32) head_desc->phys;
++	tail_desc->hw.next_desc = (u32) head_desc->phys;
 +
  	return &desc->async_tx;
  
