@@ -1,5 +1,5 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..99d177f 100644
+index 9902daf..a887928e 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
 @@ -653,13 +653,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
@@ -39,13 +39,14 @@ index 9902daf..99d177f 100644
  		spin_lock(&chan->lock);
  		xilinx_dma_complete_descriptor(chan);
  		chan->idle = true;
-@@ -1086,6 +1096,10 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+@@ -1086,6 +1096,11 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
  		segment->hw.control |= XILINX_DMA_BD_EOP;
  	}
  
-+	first = list_first_entry(&desc->segments,struct xilinx_dma_tx_segment, node);
-+	last = list_last_entry(&desc->segments, struct xilinx_dma_tx_segment,  node);
-+	last->hw.next_desc=(u32)first->phys;
++	struct xilinx_dma_tx_descriptor *head_desc, *tail_desc;
++	head_desc = list_first_entry(&desc->segments, struct xilinx_dma_tx_segment, node);
++	tail_desc = list_last_entry (&desc->segments, struct xilinx_dma_tx_segment, node);
++	last->hw.tail_desc = (u32) head_desc->phys;
 +
  	return &desc->async_tx;
  
