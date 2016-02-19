@@ -153,7 +153,8 @@ std::string Encode(std::string _data)
 std::string Decode(std::string _encoded_data)
 {
     ofstream myfile;
-    myfile.open ("/tmp/decoder.log");
+    myfile.open ("/tmp/decoder.log", ios::out | ios::app);
+    myfile << "----------------------------------------" << endl;
     myfile << "_encoded_data: " << _encoded_data << endl;
 	AutoSeededRandomPool rng;
 	/*
