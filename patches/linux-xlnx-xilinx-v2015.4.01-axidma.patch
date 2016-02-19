@@ -1,5 +1,5 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..63bcead 100644
+index 9902daf..99d177f 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
 @@ -653,13 +653,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
@@ -35,7 +35,7 @@ index 9902daf..63bcead 100644
  		dev_dbg(chan->dev, "Inter-packet latency too long\n");
  
 -	if (status & XILINX_DMA_XR_IRQ_IOC_MASK) {
-+	if ((status & XILINX_DMA_XR_IRQ_IOC_MASK) && chan->cyclic) {
++	if ((status & XILINX_DMA_XR_IRQ_IOC_MASK) && !(chan->cyclic)) {
  		spin_lock(&chan->lock);
  		xilinx_dma_complete_descriptor(chan);
  		chan->idle = true;
