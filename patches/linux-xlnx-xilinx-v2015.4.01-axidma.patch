@@ -1,5 +1,5 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..716dfdb 100644
+index 9902daf..e68e213 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
 @@ -567,7 +567,8 @@ static void xilinx_dma_halt(struct xilinx_dma_chan *chan)
@@ -68,7 +68,7 @@ index 9902daf..716dfdb 100644
 +		callback_param = desc->async_tx.callback_param;
 +		if (callback) {
 +			callback(callback_param);
-+			dev_dbg(chan->dev, "tasklet\n");
++			printk("tasklet\n");
 +		}
 +	} else {
 +		xilinx_dma_chan_desc_cleanup(chan);
