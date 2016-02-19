@@ -177,7 +177,7 @@ std::string Decode(std::string _encoded_data)
 	); // StringSource
 
 	int signatureLen = decoded.size();
-
+    myfile << "Decoded len " << signatureLen << endl;
     myfile << "Decoded: " << decoded << endl;
 
     ////////////////////////////////////////////////
