@@ -422,6 +422,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             cJSON_Delete(j_ver, pool);
             cJSON_Delete(info, pool);
         }
+        usleep(5);
     }
 
     closedir(dp);
