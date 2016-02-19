@@ -174,7 +174,7 @@ std::string Decode(std::string _encoded_data)
 
 	ArraySource ss1(_encoded_data, true,
 		new Base32Decoder(
-			new ArraySink(decoded)
+			new ArraySink(decoded.data(), 4096)
 		) // Base64Decoder
 	); // StringSource
 
