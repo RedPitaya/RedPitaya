@@ -38,6 +38,7 @@
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <stdint.h>
   
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
@@ -48,7 +49,7 @@
 int main(int argc, char **argv) {
     int fd;
     void *map_base, *virt_addr; 
-	unsigned long read_result, writeval;
+	uint32_t read_result, writeval;
 	off_t target;
 	int access_type = 'w';
 	
@@ -79,38 +80,38 @@ int main(int argc, char **argv) {
     virt_addr = map_base + (target & MAP_MASK);
     switch(access_type) {
 		case 'b':
-			read_result = *((unsigned char *) virt_addr);
+			read_result = *((uint8_t *) virt_addr);
 			break;
 		case 'h':
-			read_result = *((unsigned short *) virt_addr);
+			read_result = *((uint16_t *) virt_addr);
 			break;
 		case 'w':
-			read_result = *((unsigned long *) virt_addr);
+			read_result = *((uint32_t *) virt_addr);
 			break;
 		default:
 			fprintf(stderr, "Illegal data type '%c'.\n", access_type);
 			exit(2);
 	}
-    printf("Value at address 0x%X (%p): 0x%X\n", target, virt_addr, read_result); 
+    printf("Value at address 0x%08X (%p): 0x%08X\n", (int) target, virt_addr, read_result); 
     fflush(stdout);
 
 	if(argc > 3) {
 		writeval = strtoul(argv[3], 0, 0);
 		switch(access_type) {
 			case 'b':
-				*((unsigned char *) virt_addr) = writeval;
-				read_result = *((unsigned char *) virt_addr);
+				*((uint8_t *) virt_addr) = writeval;
+				read_result = *((uint8_t *) virt_addr);
 				break;
 			case 'h':
-				*((unsigned short *) virt_addr) = writeval;
-				read_result = *((unsigned short *) virt_addr);
+				*((uint16_t *) virt_addr) = writeval;
+				read_result = *((uint16_t *) virt_addr);
 				break;
 			case 'w':
-				*((unsigned long *) virt_addr) = writeval;
-				read_result = *((unsigned long *) virt_addr);
+				*((uint32_t *) virt_addr) = writeval;
+				read_result = *((uint32_t *) virt_addr);
 				break;
 		}
-		printf("Written 0x%X; readback 0x%X\n", writeval, read_result); 
+		printf("Written 0x%08X; readback 0x%08X\n", writeval, read_result); 
 		fflush(stdout);
 	}
 	
