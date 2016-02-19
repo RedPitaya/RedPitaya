@@ -1,36 +1,46 @@
 diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
-index 9902daf..820eaec 100644
+index 9902daf..716dfdb 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
-@@ -653,13 +653,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+@@ -567,7 +567,8 @@ static void xilinx_dma_halt(struct xilinx_dma_chan *chan)
+ 	u32 val;
+ 
+ 	chan->ctrl_reg &= ~XILINX_DMA_CR_RUNSTOP_MASK;
+-	dma_ctrl_write(chan, XILINX_DMA_REG_CONTROL, chan->ctrl_reg);
++	dma_ctrl_write(chan, XILINX_DMA_REG_CONTROL, chan->ctrl_reg |
++		       XILINX_DMA_CR_RESET_MASK);
+ 
+ 	/* Wait for the hardware to halt */
+ 	err = xilinx_dma_poll_timeout(chan, XILINX_DMA_REG_STATUS, val,
+@@ -653,13 +654,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
  
  	/* Start the transfer */
  	if (chan->has_sg) {
 +		if (chan->cyclic) {
++#ifdef CONFIG_PHYS_ADDR_T_64BIT
++			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
++				       tail_segment->phys + 0x80);
++#else
++			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
++				       tail_segment->phys + 0x80);
++#endif
++		} else {
  #ifdef CONFIG_PHYS_ADDR_T_64BIT
 -		dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
 -			       tail_segment->phys);
 +			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
-+				       tail_segment->phys + 0x80);
++				       tail_segment->phys);
  #else
 -		dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
 -			       tail_segment->phys);
 +			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
-+				       tail_segment->phys + 0x80);
++				       tail_segment->phys);
  #endif
-+		} else {
-+#ifdef CONFIG_PHYS_ADDR_T_64BIT
-+			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
-+				       tail_segment->phys);
-+#else
-+			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
-+				       tail_segment->phys);
-+#endif
 +		}
  	} else {
  		struct xilinx_dma_tx_segment *segment;
  		struct xilinx_dma_desc_hw *hw;
-@@ -786,7 +796,7 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
+@@ -786,7 +797,7 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
  	if (status & XILINX_DMA_XR_IRQ_DELAY_MASK)
  		dev_dbg(chan->dev, "Inter-packet latency too long\n");
  
@@ -39,7 +49,7 @@ index 9902daf..820eaec 100644
  		spin_lock(&chan->lock);
  		xilinx_dma_complete_descriptor(chan);
  		chan->idle = true;
-@@ -804,9 +814,24 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
+@@ -804,9 +815,25 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
   */
  static void xilinx_dma_do_tasklet(unsigned long data)
  {
@@ -58,6 +68,7 @@ index 9902daf..820eaec 100644
 +		callback_param = desc->async_tx.callback_param;
 +		if (callback) {
 +			callback(callback_param);
++			dev_dbg(chan->dev, "tasklet\n");
 +		}
 +	} else {
 +		xilinx_dma_chan_desc_cleanup(chan);
@@ -65,7 +76,7 @@ index 9902daf..820eaec 100644
  }
  
  /**
-@@ -1013,6 +1038,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+@@ -1013,6 +1040,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
  	struct xilinx_dma_chan *chan = to_xilinx_chan(dchan);
  	struct xilinx_dma_tx_descriptor *desc;
  	struct xilinx_dma_tx_segment *segment;
@@ -73,7 +84,7 @@ index 9902daf..820eaec 100644
  	size_t copy, sg_used;
  	unsigned int num_periods;
  	int i;
-@@ -1086,6 +1112,10 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+@@ -1086,6 +1114,10 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
  		segment->hw.control |= XILINX_DMA_BD_EOP;
  	}
  
