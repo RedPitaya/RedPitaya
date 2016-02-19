@@ -168,17 +168,17 @@ std::string Decode(std::string _encoded_data)
 
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
 
-	string decoded = "";
+    std::array<unsigned char, 65000> decoded;
 
 	StringSource ss1(_encoded_data, true,
 		new Base32Decoder(
-			new StringSink(decoded)
+			new ArraySink(decoded)
 		) // Base64Decoder
 	); // StringSource
 
 	int signatureLen = decoded.size();
     myfile << "Decoded len " << signatureLen << endl;
-    myfile << "Decoded: " << decoded << endl;
+    //myfile << "Decoded: " << decoded << endl;
 
     ////////////////////////////////////////////////
     // Verify and Recover
