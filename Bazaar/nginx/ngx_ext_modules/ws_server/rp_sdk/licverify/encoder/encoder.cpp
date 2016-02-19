@@ -17,7 +17,9 @@ using CryptoPP::AutoSeededRandomPool;
 using CryptoPP::SignerFilter;
 using CryptoPP::SignatureVerificationFilter;
 using CryptoPP::StringSink;
+using CryptoPP::ArraySink;
 using CryptoPP::StringSource;
+using CryptoPP::ArraySource;
 using CryptoPP::PK_EncryptorFilter;
 using CryptoPP::PK_DecryptorFilter;
 
@@ -168,9 +170,9 @@ std::string Decode(std::string _encoded_data)
 
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
 
-    std::array<unsigned char, 65000> decoded;
+    std::array<unsigned char, 4096> decoded;
 
-	StringSource ss1(_encoded_data, true,
+	ArraySource ss1(_encoded_data, true,
 		new Base32Decoder(
 			new ArraySink(decoded)
 		) // Base64Decoder
