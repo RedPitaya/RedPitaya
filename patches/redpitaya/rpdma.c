@@ -445,11 +445,11 @@ static int rpdma_remove(struct platform_device *pdev)
     
     //if dma memmory is still allocated return it to cma memory allocator pool
     if(rx.addrv){
-       dma_free_coherent(NULL, RX_SGMNT_CNT*RX_SGMNT_SIZE, rx.addrv, rx.rpdma_handle);
+       dma_free_coherent(NULL, RX_SGMNT_CNT*RX_SGMNT_SIZE, rx.addrv, rx.addrp);
     }
     
     if(tx.addrv){
-       dma_free_coherent(NULL,TX_SGMNT_CNT*TX_SGMNT_SIZE, tx.addrv, tx.rpdma_handle);
+       dma_free_coherent(NULL,TX_SGMNT_CNT*TX_SGMNT_SIZE, tx.addrv, tx.addrp);
     }
     return 0;
 }
