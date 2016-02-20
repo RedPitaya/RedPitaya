@@ -177,17 +177,17 @@ std::string Decode(std::string _encoded_data)
 		new Base32Decoder(as) // Base64Decoder
 	); // StringSource
 
-	int signatureLen = decoded.size();
+	int signatureLen = as->TotalPutLength();
     myfile << "Decoded len " << signatureLen << endl;
-    myfile << "AvaliableSize len " << as->AvaliableSize() << endl;
-    myfile << "TotalPutlen len " << as->TotalPutLength() << endl;
+    //myfile << "AvaliableSize len " << as->AvaliableSize() << endl;
+    myfile << "TotalPutlen len " << signatureLen << endl;
     //myfile << "Decoded: " << decoded << endl;
 
     ////////////////////////////////////////////////
     // Verify and Recover
     SecByteBlock recovered(verifier.MaxRecoverableLengthFromSignatureLength(signatureLen));
 
-	SecByteBlock b1((unsigned char*)decoded.data(), decoded.size());
+	SecByteBlock b1((unsigned char*)decoded.data(), signatureLen);
     DecodingResult result = verifier.RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
     myfile << "== BEFORE IF ==" << endl;
