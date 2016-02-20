@@ -171,15 +171,16 @@ std::string Decode(std::string _encoded_data)
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
 
     std::array<unsigned char, 4096> decoded;
+    ArraySink* as = new ArraySink(decoded.data(), 4096);
 
 	ArraySource ss1(_encoded_data, true,
-		new Base32Decoder(
-			new ArraySink(decoded.data(), 4096)
-		) // Base64Decoder
+		new Base32Decoder(as) // Base64Decoder
 	); // StringSource
 
 	int signatureLen = decoded.size();
     myfile << "Decoded len " << signatureLen << endl;
+    myfile << "AvaliableSize len " << as.AvaliableSize() << endl;
+    myfile << "TotalPutlen len " << as.TotalPutLength() << endl;
     //myfile << "Decoded: " << decoded << endl;
 
     ////////////////////////////////////////////////
@@ -189,9 +190,12 @@ std::string Decode(std::string _encoded_data)
 	SecByteBlock b1((unsigned char*)decoded.data(), decoded.size());
     DecodingResult result = verifier.RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
+    myfile << "== BEFORE IF ==" << endl;
 
     if (!result.isValidCoding) {
-        throw Exception( Exception::OTHER_ERROR, "Invalid Signature" );
+        myfile << "Exc: Invalid Signature" << endl;
+        return "";
+        //throw Exception( Exception::OTHER_ERROR, "Invalid Signature" );
     }
 
 	string res((char*)recovered.data(), recovered.size());
