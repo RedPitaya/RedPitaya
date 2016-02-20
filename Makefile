@@ -168,7 +168,7 @@ zip: $(TARGET)
 .PHONY: fpga
 
 fpga: $(DTREE_DIR)
-	make -C $(FPGA_DIR)
+	#make -C $(FPGA_DIR)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -324,7 +324,7 @@ LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
-.PHONY: ecosystem nginx 
+.PHONY: ecosystem nginx
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
@@ -481,7 +481,7 @@ ecosystem:
 
 apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) all
-	$(MAKE) -C $(APPS_FREE_DIR) install 
+	$(MAKE) -C $(APPS_FREE_DIR) install
 
 ################################################################################
 # Red Pitaya PRO applications
