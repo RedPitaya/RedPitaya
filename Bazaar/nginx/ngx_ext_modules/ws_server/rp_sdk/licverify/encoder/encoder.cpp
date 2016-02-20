@@ -179,8 +179,8 @@ std::string Decode(std::string _encoded_data)
 
 	int signatureLen = decoded.size();
     myfile << "Decoded len " << signatureLen << endl;
-    myfile << "AvaliableSize len " << as.AvaliableSize() << endl;
-    myfile << "TotalPutlen len " << as.TotalPutLength() << endl;
+    myfile << "AvaliableSize len " << as->AvaliableSize() << endl;
+    myfile << "TotalPutlen len " << as->TotalPutLength() << endl;
     //myfile << "Decoded: " << decoded << endl;
 
     ////////////////////////////////////////////////
