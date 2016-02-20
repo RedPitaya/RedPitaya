@@ -168,7 +168,7 @@ zip: $(TARGET)
 .PHONY: fpga
 
 fpga: $(DTREE_DIR)
-	#make -C $(FPGA_DIR)
+	make -C $(FPGA_DIR)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
