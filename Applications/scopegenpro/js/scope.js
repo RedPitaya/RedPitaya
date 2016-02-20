@@ -251,18 +251,20 @@
 
 				OSC.processParameters(receive.parameters);
 
-				if (OSC.params.orig['is_demo'] && !OSC.state.demo_label_visible)
+				if (OSC.params.orig['is_demo'])
 				{
-					OSC.state.demo_label_visible = true;
-					$('#demo_label').show();
+					if (!OSC.state.demo_label_visible)
+					{
+						OSC.state.demo_label_visible = true;
+						$('#demo_label').show();
+					}
+				} else {
+					if (OSC.state.demo_label_visible)
+					{
+						OSC.state.demo_label_visible = false;
+						$('#demo_label').hide();
+					}
 				}
-
-				if (!OSC.params.orig['is_demo'] && OSC.state.demo_label_visible)
-				{
-					OSC.state.demo_label_visible = false;
-					$('#demo_label').hide();
-				}
-
 			  }
 			}
 
@@ -522,8 +524,10 @@
 			$('#calib-2').children().attr('disabled', 'true');
 			$('#calib-3').children().attr('disabled', 'true');
 			$('#calib-text').html('Calibration is not available in demo mode');
+			OSC.params.orig['is_demo'] = new_params['is_demo'].value;
 		} else if (param_name == 'is_demo' && !new_params['is_demo'].value && OSC.state.calib == 0) {
 			$('#calib-text').html('Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.');
+			OSC.params.orig['is_demo'] = new_params['is_demo'].value;
 		}
 
         if (param_name == 'OSC_TRIG_INFO') {

@@ -187,17 +187,19 @@
 				} else {
 					SPEC.processParameters(receive.parameters);
 				}
-
-        if (SPEC.params.orig['is_demo'] && !SPEC.state.demo_label_visible)
+        if (SPEC.params.orig['is_demo'])
         {
-          SPEC.state.demo_label_visible = true;
-          $('#demo_label').show();
-        }
-
-        if (!SPEC.params.orig['is_demo'] && SPEC.state.demo_label_visible)
-        {
-          SPEC.state.demo_label_visible = false;
-          $('#demo_label').hide();
+          if (!SPEC.state.demo_label_visible)
+          {
+            SPEC.state.demo_label_visible = true;
+            $('#demo_label').show();
+          }
+        } else {
+          if (SPEC.state.demo_label_visible)
+          {
+            SPEC.state.demo_label_visible = false;
+            $('#demo_label').hide();
+          }
         }
 			}
 
@@ -239,6 +241,8 @@
 		if (param_name == 'is_demo') {
 			if (SPEC.config.gen_enable == undefined)
 				SPEC.config.gen_enable = new_params['is_demo'].value;
+
+      SPEC.params.orig['is_demo'] = new_params['is_demo'].value;
 
 			if (new_params['is_demo'].value)
 				$('#demo-info').show();

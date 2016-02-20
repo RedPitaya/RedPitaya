@@ -145,16 +145,19 @@
 	      			}else{
 	      				LCR.processParameters(receive.parameters);
 	      			}
-					if (LCR.params.orig['is_demo'] && !LCR.state.demo_label_visible)
+					if (LCR.params.orig['is_demo'])
 					{
-						LCR.state.demo_label_visible = true;
-						$('#demo_label').show();
-					}
-
-					if (!LCR.params.orig['is_demo'] && LCR.state.demo_label_visible)
-					{
-						LCR.state.demo_label_visible = false;
-						$('#demo_label').hide();
+						if (!LCR.state.demo_label_visible)
+						{
+							LCR.state.demo_label_visible = true;
+							$('#demo_label').show();
+						}
+					} else {
+						if (LCR.state.demo_label_visible)
+						{
+							LCR.state.demo_label_visible = false;
+							$('#demo_label').hide();
+						}
 					}
 	      		}
 	      		LCR.state.processing = false;
@@ -264,6 +267,8 @@
 				console.log("Saved val: " + new_params['LCR_TOL_SAVED'].value);
 				console.log("CUrrent meas value: " + new_params[param_name].value);
 			}
+			if (param_name == 'is_demo')
+				LCR.params.orig['is_demo'] = new_params['is_demo'].value;
 
 			console.log(LCR.displ_params.prim);
 			var quantity = param_name.substr(0, param_name.length - 4);
