@@ -154,19 +154,14 @@ std::string Encode(std::string _data)
 
 std::string Decode(std::string _encoded_data)
 {
-    ofstream myfile;
-    myfile.open ("/tmp/decoder.log", ios::out | ios::app);
-    myfile << "----------------------------------------" << endl;
-    myfile << "_encoded_data: " << _encoded_data << endl;
 	AutoSeededRandomPool rng;
 	/*
     RSA::PublicKey publicKey;
 	LoadKey("pubkey.txt", publicKey);
 	*/
 	std::string strpublic(_gPublicKey);
-    myfile << "strpublic: " << strpublic << endl;
 
-   StringSource pubString(strpublic, true, new Base64Decoder);
+    StringSource pubString(strpublic, true, new Base64Decoder);
 
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
 
@@ -178,11 +173,6 @@ std::string Decode(std::string _encoded_data)
 	); // StringSource
 
 	int signatureLen = as->TotalPutLength();
-    myfile << "Decoded len " << signatureLen << endl;
-    //myfile << "AvaliableSize len " << as->AvaliableSize() << endl;
-    myfile << "TotalPutlen len " << signatureLen << endl;
-    //myfile << "Decoded: " << decoded << endl;
-
     ////////////////////////////////////////////////
     // Verify and Recover
     SecByteBlock recovered(verifier.MaxRecoverableLengthFromSignatureLength(signatureLen));
@@ -190,17 +180,10 @@ std::string Decode(std::string _encoded_data)
 	SecByteBlock b1((unsigned char*)decoded.data(), signatureLen);
     DecodingResult result = verifier.RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
-    myfile << "== BEFORE IF ==" << endl;
-
     if (!result.isValidCoding) {
-        myfile << "Exc: Invalid Signature" << endl;
-        return "";
-        //throw Exception( Exception::OTHER_ERROR, "Invalid Signature" );
+        throw Exception( Exception::OTHER_ERROR, "Invalid Signature" );
     }
 
 	string res((char*)recovered.data(), recovered.size());
-    myfile << "Res: " << res << endl;
-    myfile.close();
-
 	return res;
 }
