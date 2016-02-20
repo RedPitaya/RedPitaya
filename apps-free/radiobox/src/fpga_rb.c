@@ -869,8 +869,8 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
         qrg -= -0.5;
     }
 
-    /* AFC weaver offset correction - phase correction value integrated for a 8 kHz = 125 µs time span */
-    qrg *= -15625.0;
+    /* AFC weaver offset correction - phase correction value integrated for a 200 kHz = 5 µs time span */
+    qrg *= -625.0;
     int64_t bitfield = qrg;
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
