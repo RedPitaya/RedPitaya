@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
-
+#include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -16,7 +16,9 @@ int main(int argc, char *argv[]) {
     int status;
     char buf[256];
     unsigned char* map=NULL;
+    int periods=4;
 
+    if(argc==2)periods=atoi(argv[1]);
     printf("rpdma read test\n");
     printf("SGMNT_CNT  = %u\n", SGMNT_CNT );
     printf("SGMNT_SIZE = %u\n", SGMNT_SIZE);
@@ -44,10 +46,10 @@ int main(int argc, char *argv[]) {
     status = munmap (map, 4*1024);
 
     // DMA prepare
-    ioctl(fd, SINGLE_RX, 0);  // single RX
-//    ioctl(fd, CYCLIC_RX, 0);  // cyclic RX
+//    ioctl(fd, SINGLE_RX, 0);  // single RX
+    ioctl(fd, CYCLIC_RX, 0);  // cyclic RX
 
-    for (int b=0; b<2; b++) {
+    for (int b=0; b<periods; b++) {
       // blocking read waiting for DMA data
       status = read(fd, buf, 1);
       if (status<0) {
