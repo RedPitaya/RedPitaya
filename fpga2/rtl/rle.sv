@@ -104,7 +104,7 @@ end else begin
   end
 end
 
-assign trn = ~cmp | max | old.TLAST; 
+assign trn = ~cfg_ena | ~cmp | max | old.TLAST; 
 
 ////////////////////////////////////////////////////////////////////////////////
 // compression

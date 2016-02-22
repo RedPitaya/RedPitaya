@@ -141,6 +141,7 @@ initial begin
 
   // RTL tests
   test_rle();
+  test_bypass();
 
   // end simulation
   repeat(4) @(posedge clk);
@@ -200,6 +201,38 @@ task test_rle ();
 
   repeat(4) @(posedge clk);
 endtask: test_rle
+
+task test_bypass ();
+  DTI_A dat;
+  $display ("TEST: rle bypass");
+  dat = new [8];
+  dat = '{0,0,1,2,2,3,3,3};
+  $display ("dat [%d] = %p", dat.size(), dat);
+  // disable RLE (enable bypass
+  cfg_ena = 1'b0;
+  repeat(4) @(posedge clk);
+  // send data into stream
+  for (int i=0; i<dat.size(); i++) begin
+    str_src.put(dat[i], '1, 1'b0);
+  end
+  repeat(dat.size()+4) @(posedge clk);
+
+  // check received data
+  for (int i=0; i<dat.size(); i++) begin
+    DTC   [DN-1:0] dto;
+    logic [DN-1:0] kep;
+    logic          lst;
+    int unsigned   tmg;
+
+    str_drn.get(dto, kep, lst, tmg);
+    if (DTC'{CW'(0), dat[i]} != dto) begin
+      $display ("Error: i=%d: (out=%p) != (ref=%p)", i, dat[i], dto);
+      error++;
+    end
+  end
+
+  repeat(4) @(posedge clk);
+endtask: test_bypass
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
