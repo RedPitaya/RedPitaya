@@ -9,6 +9,7 @@
 // GENERAL DESCRIPTION:
 //
 // A RLE compression is applied to the signal.
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 module rle #(
@@ -28,17 +29,31 @@ module rle #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// store previous value
+// local variables
 ////////////////////////////////////////////////////////////////////////////////
 
+// old values
 DTI   old_tdata ;
 logic old_tvalid;
-logic old_tlast ;
+
+// comparator
+logic cmp;
+
+// counter
+logic [CW-1:0] cnt;
+logic [CW-1:0] nxt;
+logic          max;
+
+// compression
+logic trn;
+
+////////////////////////////////////////////////////////////////////////////////
+// store previous value
+////////////////////////////////////////////////////////////////////////////////
 
 always_ff @(posedge sti.ACLK)
 if (sti.transf) begin
   old_tdata <= sti.TDATA;
-  old_tlast <= sti.TLAST;
 end
 
 always_ff @(posedge sti.ACLK)
@@ -49,29 +64,36 @@ else if (sti.transf)  old_tvalid <= ~sti.TLAST;
 // comparator
 ////////////////////////////////////////////////////////////////////////////////
 
-logic cmp;  // compare
-
 assign cmp = (old_tdata == sti.TDATA);
 
 ////////////////////////////////////////////////////////////////////////////////
 // counter
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [CW-1:0] cnt;
-logic [CW-1:0] nxt;
+assign nxt = cnt + 1;
+assign max = &cnt;
 
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn)     cnt <= '0;
-else if (sti.transf)  cnt <= nxt;
-
-assign nxt = cnt + 1;
+else if (sti.transf)  cnt <= trn ? '0 : nxt;
 
 ////////////////////////////////////////////////////////////////////////////////
-// output
+// compression
 ////////////////////////////////////////////////////////////////////////////////
+
+assign trn = ~old_tvalid | ~cmp | max | sti.TLAST; 
+
+assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
 always_ff @(posedge sti.ACLK)
-if (sti.transf)  sto.TLAST <= old_tlast;
+if (~sti.ARESETn)     sto.TVALID <= 1'b0;
+else if (sti.transf)  sto.TVALID <= trn;
+
+always_ff @(posedge sti.ACLK)
+if (sti.transf) begin
+  sto.TLAST <= sti.TLAST;
+  sto.TKEEP <= sti.TKEEP;
+end
 
 assign sto.TDATA = {cnt, old_tdata};
 
