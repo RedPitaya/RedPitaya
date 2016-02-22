@@ -45,7 +45,7 @@ end else begin
   if (ctl_rst) begin
     sts_cur <= '0;
     sts_lst <= '0;
-  end if (str.transfr) begin
+  end if (str.transf) begin
     if (str.TLAST) begin
       sts_cur <= '0;
       sts_lst <= sts_nxt;
