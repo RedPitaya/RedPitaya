@@ -194,9 +194,6 @@ std::string Decode(std::string _encoded_data)
     DecodingResult result = verifier.RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
     myfile << "== BEFORE IF ==" << endl;
-    
-    delete b64d;
-    delete b32d;
 
     if (!result.isValidCoding) {
         myfile << "Exc: Invalid Signature" << endl;
