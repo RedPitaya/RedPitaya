@@ -19,7 +19,7 @@ module la_top #(
 )(
   // streams
   str_bus_if.d           sti,      // input
-  str_bus_if.s           sto,      // output
+  axi4_stream_if.s       sto,      // output
   // current time stamp
   input  logic  [TW-1:0] cts,
   // triggers
@@ -38,7 +38,9 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if #(.DN (DN), .DAT_T (DAT_T)) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
+str_bus_if     #(.DN (DN), .DAT_T (DAT_T)) std (.clk  (sti.clk), .rstn    (sti.rstn));  // from decimator
+str_bus_if     #(.DN (DN), .DAT_T (DAT_T)) sta_str (.clk  (sti.clk), .rstn    (sti.rstn));  // from acquire
+axi4_stream_if #(.DN (DN), .DAT_T (logic [8-1:0])) sta (.ACLK (sti.clk), .ARESETn (sti.rstn));  // from acquire
 
 // acquire regset
 
@@ -75,6 +77,13 @@ DAT_T           cfg_edg_neg;  // edge negative
 
 // decimation configuration
 logic [DCW-1:0] cfg_dec;  // decimation factor
+
+// RLE configuration
+logic           cfg_rle;  // RLE enable
+
+// stream counter staus
+logic  [CW-1:0] sts_cur;  // current     counter status
+logic  [CW-1:0] sts_lst;  // last packet counter status
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -113,6 +122,9 @@ if (~bus.rstn) begin
 
   // filter/dacimation
   cfg_dec <= '0;
+
+  // RLE
+  cfg_rle <= 1'b0;
 end else begin
   if (bus.wen) begin
     // acquire regset
@@ -130,6 +142,9 @@ end else begin
 
     // dacimation
     if (bus.addr[BAW-1:0]=='h50)   cfg_dec <= bus.wdata[DCW-1:0];
+
+    // RLE
+    if (bus.addr[BAW-1:0]=='h54)   cfg_rle <= bus.wdata[0];
   end
 end
 
@@ -166,6 +181,13 @@ begin
 
     // decimation
     'h50 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+
+    // RLE configuration
+    'h54 : bus.rdata <= {{32-  1{1'b0}}, cfg_rle};
+
+    // stream counter status
+    'h58 : bus.rdata <= {{32- CW{1'b0}}, sts_cur};
+    'h5c : bus.rdata <= {{32- CW{1'b0}}, sts_lst};
 
     default : bus.rdata <= '0;
   endcase
@@ -220,7 +242,7 @@ acq #(
 ) acq (
   // stream input/output
   .sti      (std),
-  .sto      (sto),
+  .sto      (sta_str),
   // current time stamp
   .cts      (cts),
   // interrupts
@@ -249,6 +271,41 @@ acq #(
   // control/status/timestamp stop
   .ctl_stp  (ctl_stp),
   .cts_stp  (cts_stp)
+);
+
+assign sta.TDATA  = sta_str.dat[8-1:0];
+assign sta.TKEEP  = sta_str.kep;
+assign sta.TLAST  = sta_str.lst;
+assign sta.TVALID = sta_str.vld;
+assign sta_str.rdy = sta.TREADY;
+
+rle #(
+  // counter properties
+  .CW (8),
+  // stream properties
+  .DN (1),
+  .DTI (logic [   8-1:0]),
+  .DTO (logic [CW+8-1:0])
+) rle (
+  // input stream input/output
+  .sti      (sta),
+  .sto      (sto),
+  // configuration
+  .ctl_rst  (ctl_rst),
+  .cfg_ena  (cfg_rle)
+);
+
+axi4_stream_cnt #(
+  .DN (1),
+  .CW (CW)
+) axi4_stream_cnt (
+  // control
+  .ctl_rst  (ctl_rst),
+  // counter staus
+  .sts_cur  (sts_cur),
+  .sts_lst  (sts_lst),
+  // stream monitor
+  .str      (sto)
 );
 
 endmodule: la_top

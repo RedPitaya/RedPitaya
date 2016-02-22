@@ -111,7 +111,7 @@ axi4_stream_if #(.DN (2),   .DAT_T (SBL_T)) str_lgo           (.ACLK (adc_clk), 
 str_bus_if     #(           .DAT_T (SBL_T)) str_lai           (.clk  (adc_clk), .rstn    (adc_rstn));  // LA
 
 // DMA sterams RX/TX
-str_bus_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.clk (adc_clk), .rstn (adc_rstn));  // RX
+axi4_stream_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 
 
 // AXI4-Stream DMA RX/TX
@@ -292,19 +292,17 @@ red_pitaya_ps ps (
 );
 
 generate
-for (genvar i=0; i<3; i++) begin: for_str
+for (genvar i=0; i<2; i++) begin: for_str
 
   // RX
 //  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
 //  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
 //  end: for_byte_i
-  assign axi_drx[i].TKEEP           = {2{str_drx[i].kep}};
-  assign axi_drx[i].TDATA           =    str_drx[i].dat;
-  assign axi_drx[i].TLAST           =    str_drx[i].lst;
-  assign axi_drx[i].TVALID          =    str_drx[i].vld;
-// TODO: rethink DMA ready signal
-//  assign str_drx[i].rdy             =    axi_drx[i].TREADY;
-  assign str_drx[i].rdy             =    '1;
+  assign axi_drx[i].TKEEP           = {2{str_drx[i].TKEEP}};
+  assign axi_drx[i].TDATA           =    str_drx[i].TDATA  ;
+  assign axi_drx[i].TLAST           =    str_drx[i].TLAST  ;
+  assign axi_drx[i].TVALID          =    str_drx[i].TVALID ;
+  assign str_drx[i].TREADY          =    axi_drx[i].TREADY;
 
 end: for_str
 endgenerate

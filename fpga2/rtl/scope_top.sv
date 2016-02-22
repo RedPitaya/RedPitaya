@@ -45,7 +45,7 @@ module scope_top #(
 )(
   // streams
   str_bus_if.d           sti,      // input
-  str_bus_if.s           sto,      // output
+  axi4_stream_if.s       sto,      // output
   // current time stamp
   input  logic  [TW-1:0] cts,
   // triggers
@@ -69,6 +69,7 @@ localparam int unsigned DWO = $bits(DAT_T);  // data width for output
 // streams
 str_bus_if #(.DAT_T (logic signed [DWI-1:0])) stf (.clk (sti.clk), .rstn (sti.rstn));  // from filter
 str_bus_if #(.DAT_T (logic signed [DWI-1:0])) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
+str_bus_if #(.DAT_T (logic signed [DWI-1:0])) sta (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
 
 // acquire regset
 
@@ -329,7 +330,7 @@ acq #(
 ) acq (
   // stream input/output
   .sti      (std),
-  .sto      (sto),
+  .sto      (sta),
   // current time stamp
   .cts      (cts),
   // interrupts
@@ -359,5 +360,11 @@ acq #(
   .ctl_stp  (ctl_stp),
   .cts_stp  (cts_stp)
 );
+
+assign sto.TDATA  = sta.dat;
+assign sto.TKEEP  = sta.kep;
+assign sto.TLAST  = sta.lst;
+assign sto.TVALID = sta.vld;
+assign sta.rdy = sto.TREADY;
 
 endmodule: scope_top
