@@ -181,7 +181,7 @@ std::string Decode(std::string _encoded_data)
     DecodingResult result = verifier.RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
     if (!result.isValidCoding) {
-        throw Exception( Exception::OTHER_ERROR, "Invalid Signature" );
+        return "";
     }
 
 	string res((char*)recovered.data(), recovered.size());
