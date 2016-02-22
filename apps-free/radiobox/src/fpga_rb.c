@@ -646,14 +646,14 @@ void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain)
         //fprintf(stderr, "INFO - fpga_rb_set_tx_muxin_gain: ZERO   tx_muxin_gain=%lf --> bitfield=0x%08x\n", tx_muxin_gain, g_fpga_rb_reg_mem->tx_muxin_gain);
 
     } else if (tx_muxin_gain < 80.0) {  // 0% .. 80%-
-        uint32_t bitfield = (uint32_t) (0.5 + (tx_muxin_gain * ((double) 0x7fff) / 80.0));
+        uint32_t bitfield = (uint32_t) (0.5 + (tx_muxin_gain * ((double) 0xffff) / 80.0));
         g_fpga_rb_reg_mem->tx_muxin_gain = (0x7fff & bitfield);  // 16 bit gain value and no booster shift bits
         //fprintf(stderr, "INFO - fpga_rb_set_tx_muxin_gain: NORMAL tx_muxin_gain=%lf --> bitfield=0x%08x\n", tx_muxin_gain, g_fpga_rb_reg_mem->tx_muxin_gain);
 
     } else {  // 80% .. 100%: set the logarithmic amplifier
         p  = (tx_muxin_gain - 80.0) * (7.0 / 20.0);
         uint32_t bitfield = (uint32_t) (0.5 + p);
-        g_fpga_rb_reg_mem->tx_muxin_gain = ((bitfield << 16) | 0x7fff);  // open mixer completely and activate booster
+        g_fpga_rb_reg_mem->tx_muxin_gain = ((bitfield << 16) | 0xffff);  // open mixer completely and activate booster
         //fprintf(stderr, "INFO - fpga_rb_set_tx_muxin_gain: BOOST  tx_muxin_gain=%lf --> bitfield=0x%08x\n", tx_muxin_gain, g_fpga_rb_reg_mem->tx_muxin_gain);
     }
 }
@@ -794,14 +794,14 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain)
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: ZERO   rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
 
     } else if (rx_muxin_gain < 80.0) {  // 0% .. 80%-
-        uint32_t bitfield = (uint32_t) (0.5 + (rx_muxin_gain * ((double) 0x7fff) / 80.0));
+        uint32_t bitfield = (uint32_t) (0.5 + (rx_muxin_gain * ((double) 0xffff) / 80.0));
         g_fpga_rb_reg_mem->rx_muxin_gain = (0x7fff & bitfield);  // 16 bit gain value and no booster shift bits
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: NORMAL rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
 
     } else {  // 80% .. 100%: set the logarithmic amplifier
         p  = (rx_muxin_gain - 80.0) * (7.0 / 20.0);
         uint32_t bitfield = (uint32_t) (0.5 + p);
-        g_fpga_rb_reg_mem->rx_muxin_gain = ((bitfield << 16) | 0x7fff);  // open mixer completely and activate booster
+        g_fpga_rb_reg_mem->rx_muxin_gain = ((bitfield << 16) | 0xffff);  // open mixer completely and activate booster
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: BOOST  rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
     }
 }

@@ -652,7 +652,7 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_TX_MUXIN_GAIN - gain for analog TX MUX input amplifier (addr: 0x40600064)
      *
-     * bit h0F..h00: SIGNED 16 bit - gain for TX MUXIN output amplifier.
+     * bit h0F..h00: UNSIGNED 16 bit - gain for TX MUXIN output amplifier.
      *
      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
      *
@@ -877,9 +877,9 @@ typedef struct fpga_rb_reg_mem_s {
 
      /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
       *
-      * bit h0F..h00: gain value for the MUX input.
+      * bit h0F..h00: UNSIGNED 16 bit - gain for RX MUXIN input amplifier.
       *
-      * bit h1F..h10: n/a
+      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
       *
       */
      uint32_t rx_muxin_gain;
