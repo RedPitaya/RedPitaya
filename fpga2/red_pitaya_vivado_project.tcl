@@ -50,6 +50,7 @@ add_files                         $path_rtl/axi4_stream_pas.sv
 add_files                         $path_rtl/axi4_stream_reg.sv
 add_files                         $path_rtl/axi4_stream_mux.sv
 add_files                         $path_rtl/axi4_stream_demux.sv
+add_files                         $path_rtl/axi4_stream_cnt.sv
 add_files                         $path_rtl/sys_bus_if.sv
 add_files                         $path_rtl/sys_bus_interconnect.sv
 add_files                         $path_rtl/sys_bus_stub.sv
@@ -77,6 +78,7 @@ add_files                         $path_rtl/scope_filter.sv
 add_files                         $path_rtl/scope_dec_avg.sv
 add_files                         $path_rtl/scope_edge.sv
 add_files                         $path_rtl/acq.sv
+add_files                         $path_rtl/rle.sv
 add_files                         $path_rtl/debounce.sv
 add_files                         $path_rtl/la_top.sv
 add_files                         $path_rtl/la_trigger.sv

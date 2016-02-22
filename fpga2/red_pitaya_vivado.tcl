@@ -68,6 +68,7 @@ read_verilog                      $path_rtl/axi4_stream_pas.sv
 read_verilog                      $path_rtl/axi4_stream_reg.sv
 read_verilog                      $path_rtl/axi4_stream_mux.sv
 read_verilog                      $path_rtl/axi4_stream_demux.sv
+read_verilog                      $path_rtl/axi4_stream_cnt.sv
 read_verilog                      $path_rtl/sys_bus_if.sv
 read_verilog                      $path_rtl/sys_bus_interconnect.sv
 read_verilog                      $path_rtl/sys_bus_stub.sv
@@ -95,6 +96,7 @@ read_verilog                      $path_rtl/scope_filter.sv
 read_verilog                      $path_rtl/scope_dec_avg.sv
 read_verilog                      $path_rtl/scope_edge.sv
 read_verilog                      $path_rtl/acq.sv
+read_verilog                      $path_rtl/rle.sv
 read_verilog                      $path_rtl/debounce.sv
 read_verilog                      $path_rtl/la_top.sv
 read_verilog                      $path_rtl/la_trigger.sv
