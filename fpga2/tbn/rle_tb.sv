@@ -9,31 +9,108 @@
 module rle_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
+  // counter properties
+  int unsigned CW = 8,
   // stream parameters
   int unsigned DN = 1,
-  type DTI = logic signed [8-1:0], // data type for input
-  type DTO = logic signed [8-1:0], // data type for output
-  int unsigned DWI = $bits(DTI),   // data width for input
-  int unsigned DWO = $bits(DTO),   // data width for output
-  int unsigned DWM = 16,   // data width for multiplier (gain)
-  int unsigned DWS = DWO   // data width for summation (offset)
+  int unsigned DW = 8,
+  type DTI = logic [DW-1:0], // data type for input
+  type DTO = logic [DW-1:0]  // data type for output
 );
 
+////////////////////////////////////////////////////////////////////////////////
+// RLE compression/decompression
+////////////////////////////////////////////////////////////////////////////////
+
+// compressed data type
+typedef struct packed {
+  logic [CW-1:0] cnt;
+  logic [DW-1:0] dat;
+} DTC;
+
+// dynamic array data types
+typedef DTI DTI_A [];
+typedef DTC DTC_A [];
+
+// compression counter
+function automatic int unsigned rle_compress_cnt (ref DTI_A dat);
+  DTI tmp;
+  bit [CW-1:0] cnt;
+  int unsigned j;
+  j=0;
+  tmp = dat[0];
+  for (int unsigned i=1; i<dat.size(); i++) begin
+    if ((dat[i] == tmp) && (~&cnt)) begin
+      cnt++;
+    end else begin
+      j++;
+    end
+  end
+  return j;
+endfunction: rle_compress_cnt
+
+// compression
+function automatic DTC_A rle_compress (ref DTI_A dat);
+  int unsigned j;
+  // output array memory allocation
+  DTC_A dtc;
+  dtc = new [rle_compress_cnt(dat)];
+  // output array populate
+  j=0;
+  dtc[j] = '{cnt: 0, dat: dat[0]};
+  for (int unsigned i=1; i<dat.size(); i++) begin
+    if ((dat[i] == dtc[j].dat) && (~&dtc[j].cnt)) begin
+      dtc[j].cnt++;
+    end else begin
+      j++;
+      dtc[j] = '{cnt: 0, dat: dat[i]};
+    end
+  end
+  return dtc;
+endfunction: rle_compress
+
+// decompression counter
+function automatic int unsigned rle_decompress_cnt (ref DTC_A dtc);
+  int unsigned j;
+  j=0;
+  for (int unsigned i=0; i<dtc.size(); i++) begin
+    j += dtc[i].cnt;
+  end
+  return j;
+endfunction: rle_decompress_cnt
+
+// decompression
+function automatic DTI_A rle_decompress (ref DTC_A dtc);
+  int unsigned j;
+  // output array memory allocation
+  DTI_A dat;
+  dat = new [rle_decompress_cnt(dtc)];
+  // output array populate
+  j=0;
+  for (int unsigned i=0; i<dtc.size(); i++) begin
+    for (int unsigned cnt=0; cnt<=dtc[i].cnt; cnt++) begin
+      dat[j] = dtc[i].dat;
+      j++;
+    end
+  end
+  return dat;
+endfunction: rle_decompress
+
+////////////////////////////////////////////////////////////////////////////////
+// local signals
+////////////////////////////////////////////////////////////////////////////////
+
 // system signals
-logic                  clk ;  // clock
-logic                  rstn;  // reset - active low
+logic clk ;  // clock
+logic rstn;  // reset - active low
 
 // configuration
-logic signed [DWM-1:0] cfg_mul;
-logic signed [DWS-1:0] cfg_sum;
+logic ctl_rst;  // reset
+logic cfg_ena;  // enable
 
 // stream input/output
 axi4_stream_if #(.DAT_T (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
 axi4_stream_if #(.DAT_T (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
-
-// calibration
-real gain   = 1.0;
-real offset = 0.1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -44,8 +121,8 @@ always #(TP/2) clk = ~clk;
 
 initial begin
   // for now initialize configuration to an idle value
-  cfg_sum = (offset * 2**(DWS-1));
-  cfg_mul = (gain   * 2**(DWM-2));
+  ctl_rst = 1'b0;
+  cfg_ena = 1'b1;
 
   // initialization
   rstn = 1'b0;
@@ -82,23 +159,23 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DAT_T (DTI)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DAT_T (DTI)) str_src (.str (sti));
 
 rle #(
+  .DN  (DN),
   .DTI (DTI),
   .DTO (DTO),
-  .DWM (DWM),
-  .DWS (DWS)
+  .CW  (CW)
 ) rle (
   // stream input/output
   .sti      (sti    ),
   .sto      (sto    ),
-  // configuration
-  .cfg_mul  (cfg_mul),
-  .cfg_sum  (cfg_sum)
+  // configuration/control
+  .ctl_rst  (ctl_rst),
+  .cfg_ena  (cfg_ena)
 );
 
-axi4_stream_drn #(.DAT_T (DTO)) str_drn (.str (sto));
+axi4_stream_drn #(.DN (DN), .DAT_T (DTO)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms
