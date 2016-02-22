@@ -61,15 +61,23 @@ end
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   old.TLAST  <= 1'b1;
-end else if (sti.transf) begin
-  old.TLAST  <= sti.TLAST;
+end else begin
+  if (ctl_rst) begin
+    old.TLAST  <= 1'b1;
+  end else if (sti.transf) begin
+    old.TLAST  <= sti.TLAST;
+  end
 end
 
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   old.TVALID <= 1'b0;
-end else if (sti.TREADY) begin
-  old.TVALID <= sti.TVALID;
+end else begin
+  if (ctl_rst) begin
+    old.TVALID <= 1'b0;
+  end else if (sti.TREADY) begin
+    old.TVALID <= sti.TVALID;
+  end
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,8 +94,15 @@ assign nxt = cnt + 1;
 assign max = &cnt;
 
 always_ff @(posedge sti.ACLK)
-if (~sti.ARESETn)     cnt <= '0;
-else if (sti.transf)  cnt <= trn ? '0 : nxt;
+if (~sti.ARESETn) begin
+  cnt <= '0;
+end else begin
+  if (ctl_rst) begin
+    cnt <= '0;
+  end else if (sti.transf) begin
+    cnt <= trn ? '0 : nxt;
+  end
+end
 
 assign trn = ~cmp | max | old.TLAST; 
 
@@ -98,8 +113,15 @@ assign trn = ~cmp | max | old.TLAST;
 assign old.TREADY = sto.TREADY | ~sto.TVALID;
 
 always_ff @(posedge sti.ACLK)
-if (~sti.ARESETn)     sto.TVALID <= 1'b0;
-else if (old.TREADY)  sto.TVALID <= old.TVALID & trn;
+if (~sti.ARESETn) begin
+  sto.TVALID <= 1'b0;
+end else begin
+  if (ctl_rst) begin
+    sto.TVALID <= 1'b0;
+  end else if (old.TREADY) begin
+    sto.TVALID <= old.TVALID & trn;
+  end
+end
 
 always_ff @(posedge sti.ACLK)
 if (old.transf) begin
