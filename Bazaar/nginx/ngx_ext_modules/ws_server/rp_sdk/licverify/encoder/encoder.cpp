@@ -164,23 +164,18 @@ std::string Decode(std::string _encoded_data)
     myfile << "strpublic: " << strpublic << endl;
     Base64Decoder* b64d = new Base64Decoder();
 
-    StringSource pubString(strpublic, true, b64d);
+    StringSource *pubString = new StringSource(strpublic, true, b64d);
 
-    RSASS<PSSR, SHA1>::Verifier verifier( pubString );
+    RSASS<PSSR, SHA1>::Verifier* verifier = new RSASS<PSSR, SHA1>::Verifier( *pubString );
 
     std::array<unsigned char, 256> decoded;
     ArraySink* as = new ArraySink(decoded.data(), 256);
     Base32Decoder* b32d = new Base32Decoder(as);
 
-	ArraySource ss1(_encoded_data, true, b32d); // StringSource
+	ArraySource *ss1 = new ArraySource(_encoded_data, true, b32d); // StringSource
 
 	int signatureLen = as->TotalPutLength();
-	
-	myfile << "Size of strpublic " << sizeof(strpublic) << endl;
-	myfile << "Size of pubString " << sizeof(pubString) << endl;
-	myfile << "Size of verifier " << sizeof(verifier) << endl;
-	myfile << "Size of ss1 " << sizeof(ss1) << endl;
-	
+
     myfile << "Decoded len " << signatureLen << endl;
     //myfile << "AvaliableSize len " << as->AvaliableSize() << endl;
     myfile << "TotalPutlen len " << signatureLen << endl;
@@ -188,11 +183,16 @@ std::string Decode(std::string _encoded_data)
 
     ////////////////////////////////////////////////
     // Verify and Recover
-    SecByteBlock recovered(verifier.MaxRecoverableLengthFromSignatureLength(signatureLen));
+    SecByteBlock recovered(verifier->MaxRecoverableLengthFromSignatureLength(signatureLen));
 
 	SecByteBlock b1((unsigned char*)decoded.data(), signatureLen);
-    DecodingResult result = verifier.RecoverMessage(recovered, NULL,
+    DecodingResult result = verifier->RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
+    
+    myfile << "== BEFORE DELETE ==" << endl;
+    delete verifier;
+    delete ss1;
+    delete pubString;
     myfile << "== BEFORE IF ==" << endl;
 
     if (!result.isValidCoding) {
