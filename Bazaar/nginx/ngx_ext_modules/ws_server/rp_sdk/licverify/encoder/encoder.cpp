@@ -154,8 +154,6 @@ std::string Encode(std::string _data)
 
 std::string Decode(std::string _encoded_data)
 {
-    return "5207588936462420;scopegenpro;5b7020795f0b5d7a8b8f1cf8dc9469c5;";
-    /*
     ofstream myfile;
     myfile.open ("/tmp/decoder.log", ios::out | ios::app);
     myfile << "----------------------------------------" << endl;
@@ -164,17 +162,17 @@ std::string Decode(std::string _encoded_data)
 
 	std::string strpublic(_gPublicKey);
     myfile << "strpublic: " << strpublic << endl;
+    Base64Decoder* b64d = new Base64Decoder();
 
-   StringSource pubString(strpublic, true, new Base64Decoder);
+    StringSource pubString(strpublic, true, b64d);
 
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
 
     std::array<unsigned char, 256> decoded;
     ArraySink* as = new ArraySink(decoded.data(), 256);
+    Base32Decoder* b32d = new Base32Decoder(as);
 
-	ArraySource ss1(_encoded_data, true,
-		new Base32Decoder(as) // Base64Decoder
-	); // StringSource
+	ArraySource ss1(_encoded_data, true, b32d); // StringSource
 
 	int signatureLen = as->TotalPutLength();
     myfile << "Decoded len " << signatureLen << endl;
@@ -190,6 +188,9 @@ std::string Decode(std::string _encoded_data)
     DecodingResult result = verifier.RecoverMessage(recovered, NULL,
             0, b1, signatureLen);
     myfile << "== BEFORE IF ==" << endl;
+    
+    delete b64d;
+    delete b32d;
 
     if (!result.isValidCoding) {
         myfile << "Exc: Invalid Signature" << endl;
@@ -202,5 +203,4 @@ std::string Decode(std::string _encoded_data)
     myfile.close();
 
 	return res;
-	*/
 }
