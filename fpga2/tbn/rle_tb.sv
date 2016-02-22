@@ -45,8 +45,9 @@ function automatic int unsigned rle_compress_cnt (ref DTI_A dat);
     end else begin
       j++;
     end
+    tmp=dat[i];
   end
-  return j;
+  return j+1;
 endfunction: rle_compress_cnt
 
 // compression
@@ -74,7 +75,7 @@ function automatic int unsigned rle_decompress_cnt (ref DTC_A dtc);
   int unsigned j;
   j=0;
   for (int unsigned i=0; i<dtc.size(); i++) begin
-    j += dtc[i].cnt;
+    j += dtc[i].cnt + 1;
   end
   return j;
 endfunction: rle_decompress_cnt
@@ -124,6 +125,10 @@ initial begin
   ctl_rst = 1'b0;
   cfg_ena = 1'b1;
 
+  // tests
+  test_compress();
+  test_decompress();
+
   // initialization
   rstn = 1'b0;
   repeat(4) @(posedge clk);
@@ -154,6 +159,28 @@ initial begin
   repeat(4) @(posedge clk);
   $finish();
 end
+
+task test_compress ();
+  DTI_A dat;
+  DTC_A dtc;
+  $display ("TEST: compression function");
+  dat = new [8];
+  dat = '{0,0,1,2,2,3,3,3};
+  dtc = rle_compress (dat);
+  $display ("dat [%d] = %p", dat.size(), dat);
+  $display ("dtc [%d] = %p", dtc.size(), dtc);
+endtask: test_compress
+
+task test_decompress ();
+  DTC_A dtc;
+  DTI_A dat;
+  $display ("TEST: decompression function");
+  dtc = new [4];
+  dtc = '{'{0,4},'{1,5},'{2,6},'{3,7}};
+  dat = rle_decompress (dtc);
+  $display ("dtc [%d] = %p", dtc.size(), dtc);
+  $display ("dat [%d] = %p", dat.size(), dat);
+endtask: test_decompress
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
