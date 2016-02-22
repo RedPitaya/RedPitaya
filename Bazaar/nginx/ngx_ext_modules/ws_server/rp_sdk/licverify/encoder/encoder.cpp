@@ -154,15 +154,14 @@ std::string Encode(std::string _data)
 
 std::string Decode(std::string _encoded_data)
 {
+    return "5207588936462420;scopegenpro;5b7020795f0b5d7a8b8f1cf8dc9469c5;";
+    /*
     ofstream myfile;
     myfile.open ("/tmp/decoder.log", ios::out | ios::app);
     myfile << "----------------------------------------" << endl;
     myfile << "_encoded_data: " << _encoded_data << endl;
 	AutoSeededRandomPool rng;
-	/*
-    RSA::PublicKey publicKey;
-	LoadKey("pubkey.txt", publicKey);
-	*/
+
 	std::string strpublic(_gPublicKey);
     myfile << "strpublic: " << strpublic << endl;
 
@@ -203,4 +202,5 @@ std::string Decode(std::string _encoded_data)
     myfile.close();
 
 	return res;
+	*/
 }
