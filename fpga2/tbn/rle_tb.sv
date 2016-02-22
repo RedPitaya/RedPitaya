@@ -193,7 +193,7 @@ task test_rle ();
 
     str_drn.get(dto, kep, lst, tmg);
     if (dtc[i] != dto) begin
-      $display ("Error: (out = %p) != (ref = %p)", dtc[i], dto);
+      $display ("Error: i=%d: (out=%p) != (ref=%p)", i, dtc[i], dto);
       error++;
     end
   end

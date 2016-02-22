@@ -89,7 +89,7 @@ always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn)     cnt <= '0;
 else if (sti.transf)  cnt <= trn ? '0 : nxt;
 
-assign trn = (old.TVALID & (~cmp | max)) | old.TLAST; 
+assign trn = ~cmp | max | old.TLAST; 
 
 ////////////////////////////////////////////////////////////////////////////////
 // compression
@@ -99,7 +99,7 @@ assign old.TREADY = sto.TREADY | ~sto.TVALID;
 
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn)     sto.TVALID <= 1'b0;
-else if (old.transf)  sto.TVALID <= trn;
+else if (old.TREADY)  sto.TVALID <= old.TVALID & trn;
 
 always_ff @(posedge sti.ACLK)
 if (old.transf) begin
