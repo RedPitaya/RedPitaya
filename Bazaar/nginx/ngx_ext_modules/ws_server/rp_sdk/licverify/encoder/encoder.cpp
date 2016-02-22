@@ -175,6 +175,12 @@ std::string Decode(std::string _encoded_data)
 	ArraySource ss1(_encoded_data, true, b32d); // StringSource
 
 	int signatureLen = as->TotalPutLength();
+	
+	myfile << "Size of strpublic " << sizeof(strpublic) << endl;
+	myfile << "Size of pubString " << sizeof(pubString) << endl;
+	myfile << "Size of verifier " << sizeof(verifier) << endl;
+	myfile << "Size of ss1 " << sizeof(ss1) << endl;
+	
     myfile << "Decoded len " << signatureLen << endl;
     //myfile << "AvaliableSize len " << as->AvaliableSize() << endl;
     myfile << "TotalPutlen len " << signatureLen << endl;
