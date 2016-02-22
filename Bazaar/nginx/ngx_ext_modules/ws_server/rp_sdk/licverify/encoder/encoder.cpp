@@ -170,8 +170,8 @@ std::string Decode(std::string _encoded_data)
 
     RSASS<PSSR, SHA1>::Verifier verifier( pubString );
 
-    std::array<unsigned char, 4096> decoded;
-    ArraySink* as = new ArraySink(decoded.data(), 4096);
+    std::array<unsigned char, 256> decoded;
+    ArraySink* as = new ArraySink(decoded.data(), 256);
 
 	ArraySource ss1(_encoded_data, true,
 		new Base32Decoder(as) // Base64Decoder
