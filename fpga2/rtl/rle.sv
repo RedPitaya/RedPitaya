@@ -17,8 +17,8 @@ module rle #(
   int unsigned CW = 8,
   // stream properties
   int unsigned DN = 1,
-  type DTI = logic [8-1:0], // data type for input
-  type DTO = logic [8-1:0]  // data type for output
+  type DTI = logic [   8-1:0], // data type for input
+  type DTO = logic [CW+8-1:0]  // data type for output
 )(
   // input stream input/output
   axi4_stream_if.d sti,  // input
@@ -33,8 +33,7 @@ module rle #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // old values
-DTI   old_tdata ;
-logic old_tvalid;
+axi4_stream_if #(.DN (1), .DAT_T (DTI)) old (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 // comparator
 logic cmp;
@@ -51,20 +50,33 @@ logic trn;
 // store previous value
 ////////////////////////////////////////////////////////////////////////////////
 
+assign sti.TREADY = old.TREADY | ~old.TVALID;
+
 always_ff @(posedge sti.ACLK)
 if (sti.transf) begin
-  old_tdata <= sti.TDATA;
+  old.TDATA  <= sti.TDATA;
+  old.TKEEP  <= sti.TKEEP;
 end
 
 always_ff @(posedge sti.ACLK)
-if (~sti.ARESETn)     old_tvalid <= 1'b0;
-else if (sti.transf)  old_tvalid <= ~sti.TLAST;
+if (~sti.ARESETn) begin
+  old.TLAST  <= 1'b1;
+end else if (sti.transf) begin
+  old.TLAST  <= sti.TLAST;
+end
+
+always_ff @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
+  old.TVALID <= 1'b0;
+end else if (sti.TREADY) begin
+  old.TVALID <= sti.TVALID;
+end
 
 ////////////////////////////////////////////////////////////////////////////////
 // comparator
 ////////////////////////////////////////////////////////////////////////////////
 
-assign cmp = (old_tdata == sti.TDATA);
+assign cmp = (old.TDATA == sti.TDATA);
 
 ////////////////////////////////////////////////////////////////////////////////
 // counter
@@ -77,24 +89,23 @@ always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn)     cnt <= '0;
 else if (sti.transf)  cnt <= trn ? '0 : nxt;
 
+assign trn = (old.TVALID & (~cmp | max)) | old.TLAST; 
+
 ////////////////////////////////////////////////////////////////////////////////
 // compression
 ////////////////////////////////////////////////////////////////////////////////
 
-assign trn = ~old_tvalid | ~cmp | max | sti.TLAST; 
-
-assign sti.TREADY = sto.TREADY | ~sto.TVALID;
+assign old.TREADY = sto.TREADY | ~sto.TVALID;
 
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn)     sto.TVALID <= 1'b0;
-else if (sti.transf)  sto.TVALID <= trn;
+else if (old.transf)  sto.TVALID <= trn;
 
 always_ff @(posedge sti.ACLK)
-if (sti.transf) begin
-  sto.TLAST <= sti.TLAST;
-  sto.TKEEP <= sti.TKEEP;
+if (old.transf) begin
+  sto.TLAST <= old.TLAST;
+  sto.TKEEP <= '1;
+  sto.TDATA <= {cnt, old.TDATA};
 end
-
-assign sto.TDATA = {cnt, old_tdata};
 
 endmodule: rle

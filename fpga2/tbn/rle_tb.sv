@@ -14,8 +14,8 @@ module rle_tb #(
   // stream parameters
   int unsigned DN = 1,
   int unsigned DW = 8,
-  type DTI = logic [DW-1:0], // data type for input
-  type DTO = logic [DW-1:0]  // data type for output
+  type DTI = logic [   DW-1:0], // data type for input
+  type DTO = logic [CW+DW-1:0]  // data type for output
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +113,9 @@ logic cfg_ena;  // enable
 axi4_stream_if #(.DAT_T (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
 axi4_stream_if #(.DAT_T (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
 
+// error counter
+int unsigned error = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +128,7 @@ initial begin
   ctl_rst = 1'b0;
   cfg_ena = 1'b1;
 
-  // tests
+  // function tests
   test_compress();
   test_decompress();
 
@@ -136,24 +139,8 @@ initial begin
   rstn = 1'b1;
   repeat(4) @(posedge clk);
 
-  // send data into stream
-  for (int i=-8; i<8; i++) begin
-    str_src.put(i, '1, 1'b0);
-  end
-  repeat(16+6) @(posedge clk);
-
-  // check received data
-  for (int i=-8; i<8; i++) begin
-    DTO   [DN-1:0] dat;
-    logic [DN-1:0] kep;
-    logic          lst;
-    int unsigned   tmg;
-
-    str_drn.get(dat, kep, lst, tmg);
-    $display ("%04h", dat);
-  end
-
-  repeat(4) @(posedge clk);
+  // RTL tests
+  test_rle();
 
   // end simulation
   repeat(4) @(posedge clk);
@@ -181,6 +168,38 @@ task test_decompress ();
   $display ("dtc [%d] = %p", dtc.size(), dtc);
   $display ("dat [%d] = %p", dat.size(), dat);
 endtask: test_decompress
+
+task test_rle ();
+  DTI_A dat;
+  DTC_A dtc;
+  $display ("TEST: rle RTL");
+  dat = new [8];
+  dat = '{0,0,1,2,2,3,3,3};
+  dtc = rle_compress (dat);
+  $display ("dat [%d] = %p", dat.size(), dat);
+  $display ("dtc [%d] = %p", dtc.size(), dtc);
+  // send data into stream
+  for (int i=0; i<dat.size(); i++) begin
+    str_src.put(dat[i], '1, 1'b0);
+  end
+  repeat(dat.size()+4) @(posedge clk);
+
+  // check received data
+  for (int i=0; i<dtc.size(); i++) begin
+    DTC   [DN-1:0] dto;
+    logic [DN-1:0] kep;
+    logic          lst;
+    int unsigned   tmg;
+
+    str_drn.get(dto, kep, lst, tmg);
+    if (dtc[i] != dto) begin
+      $display ("Error: (out = %p) != (ref = %p)", dtc[i], dto);
+      error++;
+    end
+  end
+
+  repeat(4) @(posedge clk);
+endtask: test_rle
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
