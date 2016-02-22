@@ -647,7 +647,7 @@ void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain)
 
     } else if (tx_muxin_gain < 80.0) {  // 0% .. 80%-
         uint32_t bitfield = (uint32_t) (0.5 + (tx_muxin_gain * ((double) 0xffff) / 80.0));
-        g_fpga_rb_reg_mem->tx_muxin_gain = (0x7fff & bitfield);  // 16 bit gain value and no booster shift bits
+        g_fpga_rb_reg_mem->tx_muxin_gain = (0xffff & bitfield);  // 16 bit gain value and no booster shift bits
         //fprintf(stderr, "INFO - fpga_rb_set_tx_muxin_gain: NORMAL tx_muxin_gain=%lf --> bitfield=0x%08x\n", tx_muxin_gain, g_fpga_rb_reg_mem->tx_muxin_gain);
 
     } else {  // 80% .. 100%: set the logarithmic amplifier
@@ -795,7 +795,7 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain)
 
     } else if (rx_muxin_gain < 80.0) {  // 0% .. 80%-
         uint32_t bitfield = (uint32_t) (0.5 + (rx_muxin_gain * ((double) 0xffff) / 80.0));
-        g_fpga_rb_reg_mem->rx_muxin_gain = (0x7fff & bitfield);  // 16 bit gain value and no booster shift bits
+        g_fpga_rb_reg_mem->rx_muxin_gain = (0xffff & bitfield);  // 16 bit gain value and no booster shift bits
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: NORMAL rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
 
     } else {  // 80% .. 100%: set the logarithmic amplifier
@@ -927,7 +927,7 @@ void fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(double rx_audio_out_gain, doubl
     fprintf(stderr, "INFO - fpga_rb_set_rx_audio_out_gain_ofs__4mod_all: (gain=%lf, ofs=%lf) <-- in(rx_audio_out_gain=%lf, rx_audio_out_ofs=%lf)\n",
             gain, ofs, rx_audio_out_gain, rx_audio_out_ofs);
 
-    g_fpga_rb_reg_mem->rx_audio_out_gain = ((uint32_t) gain) & 0xffff;
+    g_fpga_rb_reg_mem->rx_audio_out_gain = ((uint32_t) gain) & 0x7fff;
     g_fpga_rb_reg_mem->rx_audio_out_ofs  = ((uint32_t) ofs)  & 0xffff;
 }
 
