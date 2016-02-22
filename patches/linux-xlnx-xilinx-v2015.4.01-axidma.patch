@@ -2,16 +2,6 @@ diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
 index 9902daf..e68e213 100644
 --- a/drivers/dma/xilinx/xilinx_dma.c
 +++ b/drivers/dma/xilinx/xilinx_dma.c
-@@ -567,7 +567,8 @@ static void xilinx_dma_halt(struct xilinx_dma_chan *chan)
- 	u32 val;
- 
- 	chan->ctrl_reg &= ~XILINX_DMA_CR_RUNSTOP_MASK;
--	dma_ctrl_write(chan, XILINX_DMA_REG_CONTROL, chan->ctrl_reg);
-+	dma_ctrl_write(chan, XILINX_DMA_REG_CONTROL, chan->ctrl_reg |
-+		       XILINX_DMA_CR_RESET_MASK);
- 
- 	/* Wait for the hardware to halt */
- 	err = xilinx_dma_poll_timeout(chan, XILINX_DMA_REG_STATUS, val,
 @@ -653,13 +654,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
  
  	/* Start the transfer */
@@ -40,42 +30,6 @@ index 9902daf..e68e213 100644
  	} else {
  		struct xilinx_dma_tx_segment *segment;
  		struct xilinx_dma_desc_hw *hw;
-@@ -786,7 +797,7 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
- 	if (status & XILINX_DMA_XR_IRQ_DELAY_MASK)
- 		dev_dbg(chan->dev, "Inter-packet latency too long\n");
- 
--	if (status & XILINX_DMA_XR_IRQ_IOC_MASK) {
-+	if ((status & XILINX_DMA_XR_IRQ_IOC_MASK) && !(chan->cyclic)) {
- 		spin_lock(&chan->lock);
- 		xilinx_dma_complete_descriptor(chan);
- 		chan->idle = true;
-@@ -804,9 +815,25 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
-  */
- static void xilinx_dma_do_tasklet(unsigned long data)
- {
-+	struct xilinx_dma_tx_descriptor *desc;
-+	dma_async_tx_callback callback;
-+	void *callback_param;
-+
- 	struct xilinx_dma_chan *chan = (struct xilinx_dma_chan *)data;
- 
--	xilinx_dma_chan_desc_cleanup(chan);
-+	if (chan->cyclic) {
-+		desc = list_first_entry(&chan->active_list,
-+			struct xilinx_dma_tx_descriptor, node);
-+
-+		callback = desc->async_tx.callback;
-+		callback_param = desc->async_tx.callback_param;
-+		if (callback) {
-+			callback(callback_param);
-+			printk("tasklet\n");
-+		}
-+	} else {
-+		xilinx_dma_chan_desc_cleanup(chan);
-+	}
- }
- 
- /**
 @@ -1013,6 +1040,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
  	struct xilinx_dma_chan *chan = to_xilinx_chan(dchan);
  	struct xilinx_dma_tx_descriptor *desc;
