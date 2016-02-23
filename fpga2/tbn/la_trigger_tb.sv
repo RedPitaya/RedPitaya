@@ -24,7 +24,7 @@ DAT_T cfg_edg_pos;  // edge positive
 DAT_T cfg_edg_neg;  // edge negative
 
 // stream input/output
-str_bus_if #(.DAT_T (DAT_T)) str (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -63,8 +63,8 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(.DAT_T (DAT_T)) str_src (.str (str));
-str_drn #(.DAT_T (DAT_T)) str_drn (.str (str));
+axi4_stream_src #(.DAT_T (DAT_T)) str_src (.str (str));
+axi4_stream_drn #(.DAT_T (DAT_T)) str_drn (.str (str));
 
 la_trigger #(
   .DAT_T (DAT_T)

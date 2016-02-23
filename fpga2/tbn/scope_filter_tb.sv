@@ -26,8 +26,8 @@ logic signed [ 25-1:0] cfg_pp;   // config PP coefficient
 logic signed [ 25-1:0] cfg_kk;   // config KK coefficient
 
 // stream input/output
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (logic signed [DWO-1:0])) sto (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DAT_T (logic signed [DWI-1:0])) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DAT_T (logic signed [DWO-1:0])) sto (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -70,7 +70,7 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(
+axi4_stream_src #(
   .DW  (DWI)
 ) str_src (
   // system signals
@@ -109,7 +109,7 @@ red_pitaya_dfilt1 dfilt1 (
    .cfg_pp_i   (cfg_pp)
 );
 
-str_drn #(
+axi4_stream_drn #(
   .DW  (DWI)
 ) str_drn (
   // system signals

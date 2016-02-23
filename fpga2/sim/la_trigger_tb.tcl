@@ -1,7 +1,6 @@
 source "axi4_if.tcl"
 source "axi4_lite_if.tcl"
 source "axi4_stream_if.tcl"
-source "str_bus_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name
@@ -21,7 +20,7 @@ add wave -noupdate -hexadecimal /${top}/${dut}/cfg_edg_neg
 add wave -noupdate              /${top}/${dut}/sts_trg
 
 # busses
-str_bus_if str /${top}/str
+axi4_stream_if str /${top}/str
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

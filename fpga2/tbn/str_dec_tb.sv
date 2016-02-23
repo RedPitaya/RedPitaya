@@ -24,8 +24,8 @@ logic          ctl_rst;  // synchronous reset
 logic [CW-1:0] cfg_dec;  // decimation factor
 
 // stream input/output
-str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (DAT_T)) sto (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DAT_T (DAT_T)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DAT_T (DAT_T)) sto (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -62,7 +62,7 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(.DAT_T (DAT_T)) str_src (.str (sti));
+axi4_stream_src #(.DAT_T (DAT_T)) str_src (.str (sti));
 
 str_dec #(
   .CW (CW)
@@ -76,7 +76,7 @@ str_dec #(
   .sto      (sto    )
 );
 
-str_drn #(.DAT_T (DAT_T)) str_drn (.str (sto));
+axi4_stream_drn #(.DAT_T (DAT_T)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

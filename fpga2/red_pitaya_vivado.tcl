@@ -72,7 +72,6 @@ read_verilog                      $path_rtl/axi4_stream_cnt.sv
 read_verilog                      $path_rtl/sys_bus_if.sv
 read_verilog                      $path_rtl/sys_bus_interconnect.sv
 read_verilog                      $path_rtl/sys_bus_stub.sv
-read_verilog                      $path_rtl/str_bus_if.sv
 read_verilog                      $path_rtl/str_to_ram.sv
 
 read_verilog                      $path_rtl/id.sv

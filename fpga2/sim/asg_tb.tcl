@@ -1,7 +1,6 @@
 source "axi4_if.tcl"
 source "axi4_lite_if.tcl"
 source "axi4_stream_if.tcl"
-source "str_bus_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name

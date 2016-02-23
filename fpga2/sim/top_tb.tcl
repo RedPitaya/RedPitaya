@@ -1,7 +1,6 @@
 source "axi4_if.tcl"
 source "axi4_lite_if.tcl"
 source "axi4_stream_if.tcl"
-source "str_bus_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name
@@ -23,7 +22,6 @@ sys_bus_if   sys_lg    /${top}/top/sys\[11\]
 sys_bus_if   sys_la    /${top}/top/sys\[12\]
 
 axi4_stream_if str_lgo   /${top}/top/str_lgo
-str_bus_if     str_lai   /${top}/top/str_lai
 
 axi4_stream_if axi_drx_0 /${top}/top/axi_drx\[0\]
 axi4_stream_if axi_drx_1 /${top}/top/axi_drx\[1\]
