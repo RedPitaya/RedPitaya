@@ -178,6 +178,7 @@ if (~sti.ARESETn)      sto.TDATA <= '0;
 else if (iir2.transf)  sto.TDATA <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
 
 assign sto.TLAST = 1'b0;
+assign sto.TKEEP = '1;
 
 // control signals
 always_ff @(posedge sti.ACLK)
