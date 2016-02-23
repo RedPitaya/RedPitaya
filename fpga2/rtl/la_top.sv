@@ -18,7 +18,7 @@ module la_top #(
   int unsigned TW = 64   // timestamp width
 )(
   // streams
-  str_bus_if.d           sti,      // input
+  axi4_stream_if.d       sti,      // input
   axi4_stream_if.s       sto,      // output
   // current time stamp
   input  logic  [TW-1:0] cts,
@@ -38,9 +38,9 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if     #(.DN (DN), .DAT_T (DAT_T)) std (.clk  (sti.clk), .rstn    (sti.rstn));  // from decimator
-str_bus_if     #(.DN (DN), .DAT_T (DAT_T)) sta_str (.clk  (sti.clk), .rstn    (sti.rstn));  // from acquire
-axi4_stream_if #(.DN (DN), .DAT_T (logic [8-1:0])) sta (.ACLK (sti.clk), .ARESETn (sti.rstn));  // from acquire
+axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) std         (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
+axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) sta_str     (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
+axi4_stream_if #(.DN (DN), .DAT_T (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 
 // acquire regset
 
@@ -273,11 +273,11 @@ acq #(
   .cts_stp  (cts_stp)
 );
 
-assign sta.TDATA  = sta_str.dat[0][8-1:0];
-assign sta.TKEEP  = sta_str.kep;
-assign sta.TLAST  = sta_str.lst;
-assign sta.TVALID = sta_str.vld;
-assign sta_str.rdy = sta.TREADY;
+assign sta.TDATA  = sta_str.TDATA [0][8-1:0];
+assign sta.TKEEP  = sta_str.TKEEP ;
+assign sta.TLAST  = sta_str.TLAST ;
+assign sta.TVALID = sta_str.TVALID;
+assign sta_str.TREADY = sta.TREADY;
 
 rle #(
   // counter properties

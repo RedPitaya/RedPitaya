@@ -11,8 +11,8 @@ module acq #(
   int unsigned CW = 32   // counter width
 )(
   // stream input/output
-  str_bus_if.d  sti,
-  str_bus_if.s  sto,
+  axi4_stream_if.d  sti,
+  axi4_stream_if.s  sto,
   // current time stamp
   input  logic [TW-1:0] cts,
   // interrupts
@@ -63,13 +63,13 @@ logic end_pst;
 
 assign sts_stp = sts_acq & ( ctl_stp
                | (sts_trg & end_pst & ~cfg_con)
-               | (sti.trn & sti.lst) );
+               | (sti.transf & sti.TLAST) );
 
 assign trg = |(ctl_trg & cfg_trg)
            & (sts_acq & ena_pre & ~sts_trg);
 
-always @(posedge sti.clk)
-if (~sti.rstn) begin
+always @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
   // status pre/post trigger
   ena_pre <= 1'b0;
   sts_pre <= '0;
@@ -118,7 +118,7 @@ end else begin
       cts_trg <= cts;
     end
     // pre and post trigger counters
-    if (sts_acq & sti.trn) begin
+    if (sts_acq & sti.transf) begin
       if (~sts_trg)  sts_pre <= nxt_pre; // TODO: add out of range
       if ( sts_trg)  sts_pst <= nxt_pst; // TODO: add out of range
     end
@@ -141,23 +141,23 @@ assign irq_stp = sts_stp;  // stop
 // output stream
 ////////////////////////////////////////////////////////////////////////////////
 
-assign sti.rdy = sto.rdy | ~sto.vld;
+assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
 // output valid
-always @(posedge sti.clk)
-if (~sti.rstn) begin
-  sto.vld <= 1'b0;
-  sto.lst <= 1'b0;
+always @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
+  sto.TVALID <= 1'b0;
+  sto.TLAST  <= 1'b0;
 end else begin
-  sto.vld <= sts_acq & sti.vld;
-  sto.lst <= sts_acq & (sti.lst | end_pst);
+  sto.TVALID <= sts_acq & sti.TVALID;
+  sto.TLAST  <= sts_acq & (sti.TLAST | end_pst);
 end
 
 // output data
-always @(posedge sti.clk)
+always @(posedge sti.ACLK)
 if (sts_acq) begin
-  sto.dat <= sti.dat;
-  sto.kep <= sti.kep; // TODO
+  sto.TDATA <= sti.TDATA;
+  sto.TKEEP <= sti.TKEEP; // TODO
 end
 
 endmodule: acq

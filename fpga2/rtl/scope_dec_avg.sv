@@ -19,21 +19,21 @@ module scope_dec_avg #(
   input  logic        [DCW-1:0] cfg_dec,  // decimation factor
   input  logic        [DSW-1:0] cfg_shr,  // shift right
   // streams
-  str_bus_if.d                  sti,      // input
-  str_bus_if.s                  sto       // output
+  axi4_stream_if.d              sti,      // input
+  axi4_stream_if.s              sto       // output
 );
 
 logic signed [DCW+DWI-1:0] sum;
 
 logic        [DCW    -1:0] cnt;
 
-assign sti.rdy = sto.rdy | ~sto.vld;
+assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
-always_ff @(posedge sti.clk)
-if (~sti.rstn) begin
-  sum     <= '0;
-  cnt     <= '0;
-  sto.vld <= 1'b0;
+always_ff @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
+  sum        <= '0;
+  cnt        <= '0;
+  sto.TVALID <= 1'b0;
 end else begin
   if (ctl_rst) begin
     sum <= '0;
@@ -42,28 +42,28 @@ end else begin
     if (cfg_avg) begin
       if (cnt == cfg_dec) begin
          cnt <= '0;
-         sum <= sti.dat;
+         sum <= sti.TDATA;
       end else begin
          cnt <= cnt + 'd1;
-         sum <= sum + sti.dat;
+         sum <= sum + sti.TDATA;
       end
     end else begin
     end
   end
 end
 
-always_ff @(posedge sti.clk)
+always_ff @(posedge sti.ACLK)
 begin
-  if (cfg_avg) sto.dat <= sti.dat;
-  else         sto.dat <= sum >>> cfg_shr;
+  if (cfg_avg) sto.TDATA <= sti.TDATA;
+  else         sto.TDATA <= sum >>> cfg_shr;
 end
 
 // TODO: last signal should not be lost due to decimation
-always_ff @(posedge sti.clk)
-sto.lst <= sti.lst;
+always_ff @(posedge sti.ACLK)
+sto.TLAST <= sti.TLAST;
 
 // TODO properly handle keep signal
-always_ff @(posedge sti.clk)
-sto.kep <= sti.kep;
+always_ff @(posedge sti.ACLK)
+sto.TKEEP <= sti.TKEEP;
 
 endmodule: scope_dec_avg

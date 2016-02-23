@@ -17,13 +17,13 @@ module scope_edge #(
   // output triggers
   output logic                  sts_trg,  // positive edge
   // stream monitor
-  str_bus_if.m                  str
+  axi4_stream_if.m              str
 );
 
 // level +/- hystheresys
 logic signed [DWI-0:0] cfg_lvn;
 
-always @(posedge str.clk)
+always @(posedge str.ACLK)
 begin
   cfg_lvn <= cfg_lvl - $signed({1'b0, cfg_hst});
 end
@@ -31,8 +31,8 @@ end
 // edge status signals
 logic [2-1:0] sts_edg;
 
-always @(posedge str.clk)
-if (~str.rstn) begin
+always @(posedge str.ACLK)
+if (~str.ARESETn) begin
   sts_edg <= '0;
   sts_trg <= '0;
 end else begin
@@ -40,9 +40,9 @@ end else begin
     sts_edg <= '0;
     sts_trg <= '0;
   end else begin
-    if (str.trn) begin
-           if (str.dat >= cfg_lvl)  sts_edg[0] <= 1'b1;  // level reached
-      else if (str.dat <  cfg_lvn)  sts_edg[0] <= 1'b0;  // signal goes under hysteresis
+    if (str.transf) begin
+           if (str.TDATA >= cfg_lvl)  sts_edg[0] <= 1'b1;  // level reached
+      else if (str.TDATA <  cfg_lvn)  sts_edg[0] <= 1'b0;  // signal goes under hysteresis
   
       sts_edg[1] <= sts_edg[0];
     end

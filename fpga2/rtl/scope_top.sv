@@ -44,7 +44,7 @@ module scope_top #(
   int unsigned TW = 64   // timestamp width
 )(
   // streams
-  str_bus_if.d           sti,      // input
+  axi4_stream_if.d       sti,      // input
   axi4_stream_if.s       sto,      // output
   // current time stamp
   input  logic  [TW-1:0] cts,
@@ -67,9 +67,8 @@ localparam int unsigned DWO = $bits(DAT_T);  // data width for output
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) stf (.clk (sti.clk), .rstn (sti.rstn));  // from filter
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) std (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
-str_bus_if #(.DAT_T (logic signed [DWI-1:0])) sta (.clk (sti.clk), .rstn (sti.rstn));  // from decimator
+axi4_stream_if #(.DAT_T (logic signed [DWI-1:0])) stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from filter
+axi4_stream_if #(.DAT_T (logic signed [DWI-1:0])) std (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
 
 // acquire regset
 
@@ -247,12 +246,14 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-str_bus_if #(.DAT_T (DAT_T)) tmp_sti (.clk (sti.clk), .rstn (sti.rstn));  // tmp from input
-str_bus_if #(.DAT_T (DAT_T)) tmp_stf (.clk (sti.clk), .rstn (sti.rstn));  // tmp from filter
+axi4_stream_if #(.DAT_T (DAT_T)) tmp_sti (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // tmp from input
+axi4_stream_if #(.DAT_T (DAT_T)) tmp_stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // tmp from filter
 
-assign tmp_sti.dat = cfg_byp ? '0      :     sti.dat;
-assign tmp_sti.vld = cfg_byp ? '0      :     sti.vld;
-assign     sti.rdy = cfg_byp ? stf.rdy : tmp_sti.rdy;
+assign tmp_sti.TDATA  = cfg_byp ? '0         :     sti.TDATA ;
+assign tmp_sti.TLAST  = cfg_byp ? '0         :     sti.TLAST ;
+assign tmp_sti.TKEEP  = cfg_byp ? '0         :     sti.TKEEP ;
+assign tmp_sti.TVALID = cfg_byp ? '0         :     sti.TVALID;
+assign     sti.TREADY = cfg_byp ? stf.TREADY : tmp_sti.TREADY;
 
 scope_filter #(
   // stream parameters
@@ -272,9 +273,11 @@ scope_filter #(
   .ctl_rst  (1'b0)
 );
 
-assign     stf.dat = cfg_byp ? sti.dat : tmp_stf.dat;
-assign     stf.vld = cfg_byp ? sti.vld : tmp_stf.vld;
-assign tmp_stf.rdy = cfg_byp ? '0      :     stf.rdy;
+assign     stf.TDATA  = cfg_byp ? sti.TDATA  : tmp_stf.TDATA ;
+assign     stf.TLAST  = cfg_byp ? sti.TLAST  : tmp_stf.TLAST ;
+assign     stf.TKEEP  = cfg_byp ? sti.TKEEP  : tmp_stf.TKEEP ;
+assign     stf.TVALID = cfg_byp ? sti.TVALID : tmp_stf.TVALID;
+assign tmp_stf.TREADY = cfg_byp ? '0         :     stf.TREADY;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
@@ -330,7 +333,7 @@ acq #(
 ) acq (
   // stream input/output
   .sti      (std),
-  .sto      (sta),
+  .sto      (sto),
   // current time stamp
   .cts      (cts),
   // interrupts
@@ -360,11 +363,5 @@ acq #(
   .ctl_stp  (ctl_stp),
   .cts_stp  (cts_stp)
 );
-
-assign sto.TDATA  = sta.dat;
-assign sto.TKEEP  = sta.kep;
-assign sto.TLAST  = sta.lst;
-assign sto.TVALID = sta.vld;
-assign sta.rdy = sto.TREADY;
 
 endmodule: scope_top

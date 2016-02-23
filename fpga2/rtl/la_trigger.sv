@@ -18,7 +18,7 @@ module la_trigger #(
   // output triggers
   output logic sts_trg,  // TODO: should have DN width
   // stream monitor
-  str_bus_if.m str
+  axi4_stream_if.m str
 );
 
 DAT_T str_old;
@@ -26,20 +26,20 @@ DAT_T str_old;
 logic sts_cmp;
 logic sts_edg;
 
-assign sts_cmp = (str.dat & cfg_cmp_msk) == (cfg_cmp_val & cfg_cmp_msk);
-assign sts_edg = |(cfg_edg_pos & (~str_old &  str.dat))
-               | |(cfg_edg_neg & ( str_old & ~str.dat));
+assign sts_cmp = (str.TDATA & cfg_cmp_msk) == (cfg_cmp_val & cfg_cmp_msk);
+assign sts_edg = |(cfg_edg_pos & (~str_old &  str.TDATA))
+               | |(cfg_edg_neg & ( str_old & ~str.TDATA));
 
-always @(posedge str.clk)
-if (str.trn)  str_old <= str.dat;
+always @(posedge str.ACLK)
+if (str.transf)  str_old <= str.TDATA;
 
-always @(posedge str.clk)
-if (~str.rstn) begin
+always @(posedge str.ACLK)
+if (~str.ARESETn) begin
   sts_trg <= '0;
 end else begin
   if (ctl_rst) begin
     sts_trg <= '0;
-  end if (str.trn) begin
+  end if (str.transf) begin
     sts_trg <= sts_cmp & sts_edg;
   end
 end

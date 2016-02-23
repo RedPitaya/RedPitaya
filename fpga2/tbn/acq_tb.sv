@@ -14,6 +14,7 @@ module acq_tb #(
   int unsigned TW = 64,  // time width
   int unsigned CW = 32,  // counter width
   // data bus type
+  int unsigned DN = 1,
   type DAT_T = logic signed [14-1:0]
 );
 
@@ -51,12 +52,13 @@ logic          ctl_stp;  // acquire stop
 logic [TW-1:0] cts_stp;
 
 // stream input/output
-str_bus_if #(.DAT_T (DAT_T)) sti (.clk (clk), .rstn (rstn));
-str_bus_if #(.DAT_T (DAT_T)) sto (.clk (clk), .rstn (rstn));
+axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) sto (.ACLK (clk), .ARESETn (rstn));
 
 typedef struct {
-  DAT_T dat;
-  logic lst;
+  DAT_T          dat;
+  logic [DN-1:0] kep;
+  logic          lst;
 } BUS_T;
 
 BUS_T sti_dat [];
@@ -116,7 +118,7 @@ initial begin
   sti_dat = new [size];
   sto_dat = new [size];
   for (int i=0; i<=size; i++) begin
-    sti_dat[i] = '{i, i==(size-1)};
+    sti_dat[i] = '{i, '1, i==(size-1)};
   end
   acq_pls();
   src_ary (sti_dat);
@@ -165,7 +167,7 @@ task automatic src_ary (
   ref BUS_T bus []
 );
   for (int unsigned i=0; i<bus.size; i++) begin
-    str_src.put(bus[i].dat, bus[i].lst);
+    str_src.put(bus[i].dat, bus[i].kep, bus[i].lst);
   end
 endtask: src_ary
 
@@ -175,7 +177,7 @@ task automatic drn_ary (
 );
   int unsigned tmg;
   for (int unsigned i=0; i<bus.size; i++) begin
-    str_drn.get(bus[i].dat, bus[i].lst, tmg);
+    str_drn.get(bus[i].dat, bus[i].kep, bus[i].lst, tmg);
   end
 endtask: drn_ary
 
@@ -185,7 +187,7 @@ task src_inc (
   int to
 );
   for (int i=from; i<=to; i++) begin
-    str_src.put(i, i==to);
+    str_src.put(i, '1, i==to);
   end
 endtask
 
@@ -195,13 +197,14 @@ task drn_inc (
   int to
 );
   DAT_T        dat;
+  logic        kep;
   logic        lst;
   int unsigned tmg;
   for (int i=from; i<=to; i++) begin
-    str_drn.get(dat, lst, tmg);
-      $display ("data %d is %x/%b", i, dat, lst);
+    str_drn.get(dat, kep, lst, tmg);
+      $display ("data %d is %x/%b/%b", i, dat, kep, lst);
     if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
-      $display ("data %d is %x/%b, should be %x/%b", i, dat, lst, DAT_T'(i), 1'(i==to));
+      $display ("data %d is %x/%b/%b, should be %x/%b/%b", i, dat, kep, lst, DAT_T'(i), '1, 1'(i==to));
     end
   end
 endtask
@@ -210,7 +213,7 @@ endtask
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-str_src #(.DAT_T (DAT_T)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DAT_T (DAT_T)) str_src (.str (sti));
 
 acq #(
   .TW (TW),
@@ -249,7 +252,7 @@ acq #(
   .cts_stp  (cts_stp)
 );
 
-str_drn #(.DAT_T (DAT_T)) str_drn (.str (sto));
+axi4_stream_drn #(.DN (DN), .DAT_T (DAT_T)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

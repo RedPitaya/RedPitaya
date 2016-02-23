@@ -13,18 +13,18 @@ module str_dec #(
   // configuration
   input  logic [CW-1:0] cfg_dec,  // decimation factor
   // streams
-  str_bus_if.d          sti,      // input
-  str_bus_if.s          sto       // output
+  axi4_stream_if.d      sti,      // input
+  axi4_stream_if.s      sto       // output
 );
 
 logic [CW-1:0] cnt;
 logic          nul;
 
-assign sti.rdy = sto.rdy | ~sto.vld | ~nul;
+assign sti.TREADY = sto.TREADY | ~sto.TVALID | ~nul;
 
 // counter
-always_ff @(posedge sti.clk)
-if (~sti.rstn) begin
+always_ff @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
   cnt <= '0;
 end else begin
   if (ctl_rst)  cnt <= '0;
@@ -34,19 +34,19 @@ end
 assign nul = ~|cnt;
 
 // output valid signal
-always_ff @(posedge sti.clk)
-if (~sti.rstn) begin
-  sto.vld <= 1'b0;
+always_ff @(posedge sti.ACLK)
+if (~sti.ARESETn) begin
+  sto.TVALID <= 1'b0;
 end else begin
-  if (ctl_rst)  sto.vld <= sti.vld;
-  else          sto.vld <= sti.vld & nul;
+  if (ctl_rst)  sto.TVALID <= sti.TVALID;
+  else          sto.TVALID <= sti.TVALID & nul;
 end
 
-always_ff @(posedge sti.clk)
-if (sti.trn & (ctl_rst | nul)) begin
-  sto.dat <= sti.dat;
-  sto.kep <= sti.kep; // TODO
-  sto.lst <= sti.lst;
+always_ff @(posedge sti.ACLK)
+if (sti.transf & (ctl_rst | nul)) begin
+  sto.TDATA <= sti.TDATA;
+  sto.TKEEP <= sti.TKEEP; // TODO
+  sto.TLAST <= sti.TLAST;
 end
 
 endmodule: str_dec

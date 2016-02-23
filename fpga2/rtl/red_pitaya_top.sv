@@ -102,13 +102,12 @@ localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
 // analog input streams
 axi4_stream_if #(           .DAT_T (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ADC
-str_bus_if     #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));  // LA
+axi4_stream_if #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LA
 // analog output streams
 axi4_stream_if #(           .DAT_T (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 axi4_stream_if #(           .DAT_T (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
 // digital input streams
 axi4_stream_if #(.DN (2),   .DAT_T (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
-str_bus_if     #(           .DAT_T (SBL_T)) str_lai           (.clk  (adc_clk), .rstn    (adc_rstn));  // LA
 
 // DMA sterams RX/TX
 axi4_stream_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
@@ -292,7 +291,7 @@ red_pitaya_ps ps (
 );
 
 generate
-for (genvar i=0; i<2; i++) begin: for_str
+for (genvar i=0; i<3; i++) begin: for_str
 
   // RX
 //  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
@@ -648,8 +647,6 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   assign str_adc[i].TKEEP  = mux_loop[i] ? str_dac[i].TKEEP : '1;
   assign str_adc[i].TLAST  = mux_loop[i] ? str_dac[i].TLAST : 1'b0;
 
-  axi4_stream_if #(.DAT_T (SBA_T)) str_lin (.ACLK (adc_clk), .ARESETn (adc_rstn));  // osciloscope
-
   linear #(
     .DTI  (SBA_T),
     .DTO  (SBA_T),
@@ -657,17 +654,11 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   ) linear_adc (
     // stream input/output
     .sti      (str_adc[i]),
-    .sto      (str_lin   ),
+    .sto      (str_osc[0+i]),
     // configuration
     .cfg_mul  (adc_cfg_mul[i]),
     .cfg_sum  (adc_cfg_sum[i])
   );
-
-  assign str_osc[i].kep = str_lin.TKEEP ;
-  assign str_osc[i].dat = str_lin.TDATA ;
-  assign str_osc[i].lst = str_lin.TLAST ;
-  assign str_osc[i].vld = str_lin.TVALID;
-  assign str_lin.TREADY = str_osc[i].rdy;
 
 end: for_adc
 endgenerate
@@ -837,7 +828,7 @@ la_top #(
   .TN ($bits(trg))
 ) la (
   // streams
-  .sti       (str_lai),
+  .sti       (axi_exi[1]),
   .sto       (str_drx[2]),
   // current time stamp
   .cts       (cts),
@@ -851,13 +842,6 @@ la_top #(
   // System bus
   .bus       (sys[12])
 );
-
-assign str_lai.vld = axi_exi[1].TVALID;
-assign str_lai.lst = axi_exi[1].TLAST ;
-assign str_lai.kep = axi_exi[1].TKEEP ;
-assign str_lai.dat = axi_exi[1].TDATA ;
-
-assign axi_exi[1].TREADY = str_lai.rdy;
 
 ////////////////////////////////////////////////////////////////////////////////
 // on demand HW processor
