@@ -46,10 +46,10 @@ module red_pitaya_pid #(
   int unsigned CNO = 2    // channel number for outputs
 )(
   // streams
-  str_bus_if.d sti [CNI-1:0],  // input
-  str_bus_if.s sto [CNO-1:0],  // output
+  axi4_stream_if.d  sti [CNI-1:0],  // input
+  axi4_stream_if.s  sto [CNO-1:0],  // output
   // system bus
-  sys_bus_if.s bus
+  sys_bus_if.s      bus
 );
 
 localparam int unsigned PSR = 12;
@@ -69,21 +69,21 @@ dto_t [CNO-1:0] dat_o;  // output data
 
 generate
 for (genvar i=0; i<CNI; i++) begin: for_dat_i
-  assign dat_i[i] = sti[i].dat;
+  assign dat_i[i] = sti[i].TDATA;
 end: for_dat_i
 endgenerate
 
 generate
 for (genvar i=0; i<CNI; i++) begin: for_dat_o
-  assign sto[i].dat = dat_o[i];
+  assign sto[i].TDATA = dat_o[i];
 end: for_dat_o
 endgenerate
 
 logic clk;
 logic rstn;
 
-assign clk  = sti[0].clk ;
-assign rstn = sti[0].rstn;
+assign clk  = sti[0].ACLK   ;
+assign rstn = sti[0].ARESETn;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  PID block instances
