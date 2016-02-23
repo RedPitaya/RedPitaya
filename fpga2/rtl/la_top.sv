@@ -273,7 +273,7 @@ acq #(
   .cts_stp  (cts_stp)
 );
 
-assign sta.TDATA  = sta_str.dat[8-1:0];
+assign sta.TDATA  = sta_str.dat[0][8-1:0];
 assign sta.TKEEP  = sta_str.kep;
 assign sta.TLAST  = sta_str.lst;
 assign sta.TVALID = sta_str.vld;
