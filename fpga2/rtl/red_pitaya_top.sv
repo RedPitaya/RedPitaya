@@ -679,15 +679,19 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
     .sto (str_gen[0])
   );
 
+`ifdef ENABLE_GEN_DMA
   // TODO this conversion is not actually implemented yet
-  axi4_stream_pas #(
-    .DNI (2),
-    .DNO (1)
-  ) pas_1 (
+  axi4_stream_pas #(.DNI (2), .DNO (1)) pas_1 (
     .ena (1'b1),
     .sti (axi_dtx[0+i]),
     .sto (str_gen[1])
   );
+`else
+  // toward DMA
+  assign axi_dtx[0+i].TREADY = 1'b0;
+  // toward DAC
+  assign str_gen[1].TVALID = 1'b0;
+`endif
 
   axi4_stream_mux #(
     .DN (1),
