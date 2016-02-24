@@ -162,10 +162,10 @@ begin
     'h00 : bus.rdata <= {{32-  4{1'b0}},~sts_acq, sts_acq, sts_trg, 1'b0};
     'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
     'h08 : bus.rdata <= {{32- TN{1'b0}}, cfg_trg};
-    'h10 : bus.rdata <= {{32- CW{1'b0}}, cfg_pre};
-    'h14 : bus.rdata <= {{32- CW{1'b0}}, cfg_pst};
-    'h18 : bus.rdata <= {{32- CW{1'b0}}, sts_pre};
-    'h1c : bus.rdata <= {{32- CW{1'b0}}, sts_pst};
+    'h10 : bus.rdata <=              32'(cfg_pre);
+    'h14 : bus.rdata <=              32'(cfg_pst);
+    'h18 : bus.rdata <=              32'(sts_pre);
+    'h1c : bus.rdata <=              32'(sts_pst);
     'h20 : bus.rdata <=              32'(cts_acq >>  0);
     'h24 : bus.rdata <=              32'(cts_acq >> 32);
     'h28 : bus.rdata <=              32'(cts_trg >>  0);
@@ -186,8 +186,8 @@ begin
     'h54 : bus.rdata <= {{32-  1{1'b0}}, cfg_rle};
 
     // stream counter status
-    'h58 : bus.rdata <= {{32- CW{1'b0}}, sts_cur};
-    'h5c : bus.rdata <= {{32- CW{1'b0}}, sts_lst};
+    'h58 : bus.rdata <=              32'(sts_cur);
+    'h5c : bus.rdata <=              32'(sts_lst);
 
     default : bus.rdata <= '0;
   endcase
