@@ -32,9 +32,9 @@ typedef struct {
   int            struct_size; ///< only used to reserve dummy memory space for testing
 
   char          *dma_dev;
-  size_t         dma_length;
+  size_t         dma_size;
   int            dma_fd;
-  volatile void *dma_mem;
+  //volatile void *dma_mem;
 } rp_handle_uio_t;
 
 /** @name Error codes

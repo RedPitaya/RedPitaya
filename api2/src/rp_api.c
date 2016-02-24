@@ -364,7 +364,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     (*rpReady)(status,pParameter);
 
     printf("\r\nrp_LaAcqStopAcq");
-    //rp_LaAcqStopAcq(&la_acq_handle);
+    rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
 }

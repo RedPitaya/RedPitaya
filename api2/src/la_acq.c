@@ -150,7 +150,8 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
 }
 
 int rp_LaAcqBlockingRead(rp_handle_uio_t *handle) {
-    return rp_DmaRead(handle);
+    rp_DmaRead(handle);
+    rp_DmaMemDump(handle);
     return RP_OK;
 }
 
