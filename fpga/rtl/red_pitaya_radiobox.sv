@@ -2331,8 +2331,8 @@ wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[30:15];
 //---------------------------------------------------------------------------------
 //  RX_MOD PM ouput - lossy integrator
 
-wire   signed [ 47: 0] rx_mod_fm_in           = 48'b0;  // { {12{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 20'b0 };  // sign extension
-wire   signed [ 47: 0] rx_mod_pm_accu_release = 48'b0 - { {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };        // sign extension, balance to zero
+wire   signed [ 47: 0] rx_mod_fm_in           = { {3{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 29'b0 };        // sign extension
+wire   signed [ 47: 0] rx_mod_pm_accu_release = 48'b0 - { {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };  // sign extension, balance to zero within 400 ms
 wire   signed [ 15: 0] rx_pm_gain_in          = { 1'b0, rx_pm_gain[15:1] };
 
 wire   signed [ 47: 0] rx_mod_pm_s1_out;
@@ -2355,7 +2355,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s2 (
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
-  .CONCAT                  ( rx_mod_pm_accu              ),  // accumulator             SIGNED 48 bit
+  .CONCAT                  ( rx_mod_pm_s1_out            ),  // accumulator             SIGNED 48 bit
   .C                       ( rx_mod_pm_accu_release      ),  // release                 SIGNED 48 bit
 
   .P                       ( rx_mod_pm_s2_out            )   // step 2                  SIGNED 48 bit
@@ -2363,7 +2363,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s2 (
 
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n)
-   rx_mod_pm_accu <= 48'h7fffffffffff;
+   rx_mod_pm_accu <= 'b0;
 else if (clk_200khz)
    rx_mod_pm_accu <= rx_mod_pm_s2_out;
 
