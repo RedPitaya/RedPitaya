@@ -10,7 +10,7 @@ module rle_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // counter properties
-  int unsigned CW = 8,
+  int unsigned CW = 4,
   // stream parameters
   int unsigned DN = 1,
   int unsigned DW = 8,
@@ -43,6 +43,7 @@ function automatic int unsigned rle_compress_cnt (ref DTI_A dat);
     if ((dat[i] == tmp) && (~&cnt)) begin
       cnt++;
     end else begin
+      cnt = 0;
       j++;
     end
     tmp=dat[i];
@@ -145,6 +146,8 @@ initial begin
 
   // end simulation
   repeat(4) @(posedge clk);
+  if (error)  $display("FAILURE");
+  else        $display("SUCCESS");
   $finish();
 end
 
@@ -152,8 +155,11 @@ task test_compress ();
   DTI_A dat;
   DTC_A dtc;
   $display ("TEST: compression function");
-  dat = new [8];
-  dat = '{0,0,1,2,2,3,3,3};
+  dat = new [32];
+  dat [0*8+:8] = '{0,0,1,2,2,3,3,3};
+  dat [1*8+:8] = '{4,4,4,4,4,4,4,4};
+  dat [2*8+:8] = '{4,4,4,4,4,4,4,4};
+  dat [3*8+:8] = '{4,4,4,4,2,3,3,3};
   dtc = rle_compress (dat);
   $display ("dat [%d] = %p", dat.size(), dat);
   $display ("dtc [%d] = %p", dtc.size(), dtc);
@@ -174,8 +180,11 @@ task test_rle ();
   DTI_A dat;
   DTC_A dtc;
   $display ("TEST: rle RTL");
-  dat = new [8];
-  dat = '{0,0,1,2,2,3,3,3};
+  dat = new [32];
+  dat [0*8+:8] = '{0,0,1,2,2,3,3,3};
+  dat [1*8+:8] = '{4,4,4,4,4,4,4,4};
+  dat [2*8+:8] = '{4,4,4,4,4,4,4,4};
+  dat [3*8+:8] = '{4,4,4,4,2,3,3,3};
   dtc = rle_compress (dat);
   $display ("dat [%d] = %p", dat.size(), dat);
   $display ("dtc [%d] = %p", dtc.size(), dtc);
