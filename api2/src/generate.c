@@ -234,7 +234,7 @@ int rp_GenSetWaveformUpCountSeq(rp_handle_uio_t *handle, uint32_t size) {
     for (uint32_t i=0; i<size; i++) {
         ramp[i] = i;
     }
-    ramp[size-1]=0; // to remain low level
+    //ramp[size-1]=0; // to remain low level
     rp_GenSetWaveform(handle, ramp, size);
     return RP_OK;
 }
@@ -362,11 +362,11 @@ int rp_GenSetWaveformSampleRate(rp_handle_uio_t *handle, double * sample_rate)
 int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len)
 {
     int r;
-    r=FpgaRegDump(0,(uint32_t*)handle->regset,13);
+    r=FpgaRegDump("Gen reg",0,(uint32_t*)handle->regset,13);
 
     {
         lg_spec_regset_t *regset = (lg_spec_regset_t *) &(((asg_regset_t*)handle->regset)->gen_spec.lg_spec);
-        FpgaRegDump(0,(uint32_t*)regset,2);
+        FpgaRegDump("Logic gen reg",0,(uint32_t*)regset,2);
     }
 
 
@@ -375,7 +375,7 @@ int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len)
     }
     else{
         asg_regset_t *regset = (asg_regset_t *) handle->regset;
-        r=FpgaRegDump(0,(uint32_t*)regset->table,data_len);
+        r=FpgaRegDump("Pattern/waveform",0,(uint32_t*)regset->table,data_len);
     }
     return r;
 }

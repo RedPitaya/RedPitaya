@@ -62,7 +62,7 @@ int common_Close(rp_handle_uio_t *handle);
 #define RP_CTL_SWT_MASK         (1<<1) ///< 1 - sw trigger bit (sw trigger must be enabled)
 #define RP_CTL_RST_MASK         (1<<0) ///< 1 - reset state machine so that it is in known state
 
-int FpgaRegDump(uint32_t a_addr, uint32_t * a_data, uint32_t a_len);
+int FpgaRegDump(char * desc, uint32_t a_addr, uint32_t * a_data, uint32_t a_len);
 
 //* Functions that checks if value is in defined range */
 bool inrangeUint32(uint32_t x, uint32_t minval_t, uint32_t maxval);

@@ -32,6 +32,9 @@
 #define RP_LA_ACQ_CFG_TRIG_MAX ((1<<26)-1) ///< max. number of samples for pre & post trigger
 #define RP_LA_ACQ_CFG_TRIG_MIN 0
 
+/** RLE config register */
+#define RP_LA_ACQ_RLE_ENABLE_MASK (1<<0) ///< if set, run length decoding will be enabled
+
 /** Configuration registers */
 typedef struct {
     uint32_t pre;     ///< pre-trigger [number of samples] ; 0 - means that no sample will be taken before trigger
@@ -83,7 +86,7 @@ typedef struct {
     uint32_t reserved_3c;
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
-    uint32_t cfg_rle;               ///<
+    uint32_t cfg_rle;               ///< RLE configuration register
     uint32_t sts_cur;               ///<
     uint32_t sts_lst;               ///<
 } rp_la_acq_regset_t;
@@ -109,6 +112,11 @@ int rp_LaAcqSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);
 int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg);
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);
 int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg);
+
+int rp_LaAcqEnableRLE(rp_handle_uio_t *handle);
+int rp_LaAcqDisableRLE(rp_handle_uio_t *handle);
+int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last);
+
 //int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg);
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle);
 

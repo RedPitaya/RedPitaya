@@ -16,9 +16,6 @@
 
 #include "rp_dma.h"
 
-#define SGMNT_CNT 4
-#define SGMNT_SIZE 4*1024
-
 static int rp_DmaMemSet(rp_handle_uio_t *handle, int value)
 {
     // allocate data buffer memory
@@ -46,8 +43,6 @@ int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
     handle->dma_dev = (char*) malloc((strlen(dev)+1) * sizeof(char));
     strncpy(handle->dma_dev, dev, strlen(dev)+1);
 
-    handle->dma_size=SGMNT_CNT*SGMNT_SIZE;
-
     // open DMA driver device
     handle->dma_fd = open(handle->dma_dev, O_RDWR);
     if (handle->dma_fd < 1) {
@@ -63,11 +58,8 @@ int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
 int rp_DmaCtrl(rp_handle_uio_t *handle, RP_DMA_CTRL ctrl)
 {
     switch(ctrl){
-        //case RP_DMA_SINGLE:
-            //ioctl(fd, 10, 0);  // single RX
-        //break;
         case RP_DMA_CYCLIC:
-            ioctl(handle->dma_fd, CYCLIC_RX, 0);  // cyclic RX
+            ioctl(handle->dma_fd, CYCLIC_RX, 0);
         break;
         case RP_DMA_STOP_RX:
             ioctl(handle->dma_fd, STOP_RX, 0);

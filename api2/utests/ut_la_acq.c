@@ -39,12 +39,14 @@ void la_acq_trig_test(void)
 
     RP_STATUS s;
     RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
-    dir[0].channel=RP_DIGITAL_CHANNEL_0;
+    dir[0].channel=RP_DIGITAL_CHANNEL_7;
     dir[0].direction=RP_DIGITAL_DIRECTION_RISING;
 
     rp_DigSigGenOuput(true);
     double sample_rate=125e6;
     rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
+
+
     //printf("sample rate %lf",sample_rate);
     rp_DigSigGenSoftwareControl(1);
 
@@ -56,10 +58,16 @@ void la_acq_trig_test(void)
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;
-    s=rp_RunBlock(0,512*5,0,&timeIndisposedMs,&rpReadyCallback,NULL); // 1024*5
+   // s=rp_RunBlock(512,512,0,&timeIndisposedMs,&rpReadyCallback,NULL); // ok
+    s=rp_RunBlock(1024,1024,0,&timeIndisposedMs,&rpReadyCallback,NULL);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to acquire data.");
     }
+
+    // get data
+
+    // verify data
+
 
     sleep(1);
 }

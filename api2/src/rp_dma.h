@@ -1,3 +1,16 @@
+/**
+ * $Id: $
+ *
+ * @brief Red Pitaya DMA library
+ *
+ * @Author Red Pitaya
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in C programming language.
+ * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
+ * for more details on the language used herein.
+ */
 
 #ifndef _RP_DMA_H_
 #define _RP_DMA_H_
@@ -6,18 +19,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-/*
-typedef struct {
-  char          *name;
-  char          *dev;
-  size_t         length;
-  int            fd;
- // volatile void *regset;
- //          void *context;
- // int            struct_size; ///< only used to reserve dummy memory space for testing
-} rp_handle_uio_t;
-*/
 
 typedef enum
 {

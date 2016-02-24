@@ -13,9 +13,9 @@
 
 const char c_dummy_dev[10]="/dev/dummy";
 
-int FpgaRegDump(uint32_t a_addr, uint32_t * a_data, uint32_t a_len){
+int FpgaRegDump(char * desc, uint32_t a_addr, uint32_t * a_data, uint32_t a_len){
     uint32_t addr=a_addr;
-    printf("\n\r fpga reg. dump \n\r");
+    printf("\n\r %s\n\r",desc);
     printf("\n\r index, addr, value\n\r");
     for(int i=0; i<a_len; i++){
         printf("0x%04d,0x%08x,0x%08x\n\r",i,addr,a_data[i]);//ioread32(&a_data[i]));

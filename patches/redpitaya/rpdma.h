@@ -1,7 +1,7 @@
 /**
  * $Id: $
  *
- * @brief Red Pitaya DMA library
+ * @brief Red Pitaya DMA
  *
  * @Author Red Pitaya
  *

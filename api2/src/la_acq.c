@@ -30,6 +30,9 @@
 
 #define LA_ACQ_BUF_SIZE 0x4000  // TODO: just for test..
 
+#define SGMNT_CNT 4
+#define SGMNT_SIZE (4*1024)
+
 int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     int status;
 
@@ -50,6 +53,7 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
+    handle->dma_size=SGMNT_CNT*SGMNT_SIZE;
     status = rp_DmaOpen("/dev/rpdma", handle);
     if (status != RP_OK) {
         return status;
@@ -75,7 +79,8 @@ int rp_LaAcqClose(rp_handle_uio_t *handle) {
 int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
     rp_LaAcqGlobalTrigSet(handle,RP_TRG_ALL_MASK);
 
-    rp_LaAcqSetConfig(handle, RP_LA_ACQ_CFG_AUTO_MASK);
+    rp_LaAcqSetConfig(handle, 0);
+    //rp_LaAcqSetConfig(handle, RP_LA_ACQ_CFG_AUTO_MASK);
 
     rp_la_cfg_regset_t cfg;
     cfg.pre=0;
@@ -92,6 +97,8 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t *handle) {
     rp_la_decimation_regset_t dec;
     dec.dec=0;
     rp_LaAcqSetDecimation(handle,dec);
+
+    rp_LaAcqDisableRLE(handle);
 
     return RP_OK;
 }
@@ -151,7 +158,6 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
 
 int rp_LaAcqBlockingRead(rp_handle_uio_t *handle) {
     rp_DmaRead(handle);
-    rp_DmaMemDump(handle);
     return RP_OK;
 }
 
@@ -186,7 +192,7 @@ int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t
     rp_la_cfg_regset_t reg;
     reg.pre = ioread32(&regset->pre);
     reg.pst = ioread32(&regset->pst);
-    *trig_addr=(reg.pre % LA_ACQ_BUF_SIZE);
+    *trig_addr=reg.pre;//(reg.pre % LA_ACQ_BUF_SIZE);
     *pst_length=reg.pst;
     return RP_OK;
 }
@@ -223,6 +229,25 @@ int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a
     return RP_OK;
 }
 
+int rp_LaAcqEnableRLE(rp_handle_uio_t *handle) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    iowrite32(RP_LA_ACQ_RLE_ENABLE_MASK, &regset->cfg_rle);
+    return RP_OK;
+}
+
+int rp_LaAcqDisableRLE(rp_handle_uio_t *handle) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    iowrite32(0, &regset->cfg_rle);
+    return RP_OK;
+}
+
+int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    *current = ioread32(&regset->sts_cur);
+    *last = ioread32(&regset->sts_lst);
+    return RP_OK;
+}
+
 /** Data buffer pointers */
 /*
 int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg) {
@@ -237,8 +262,8 @@ int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_r
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)
 {
     int r;
-    r=FpgaRegDump(0,(uint32_t*)handle->regset,6);
+    r=FpgaRegDump("La acq reg",0,(uint32_t*)handle->regset,6);
     rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->trg);
-    FpgaRegDump(0,(uint32_t*)&regset->cmp_msk,5);
+    FpgaRegDump("La acq trig reg",0,(uint32_t*)&regset->cmp_msk,5);
     return r;
 }

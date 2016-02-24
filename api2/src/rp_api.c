@@ -7,6 +7,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
+
 #include "common.h"
 #include "generate.h"
 
@@ -211,12 +213,8 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);//|RP_TRG_LOA_SWE_MASK);
     }
 
-    //TEST!!! this will be removed
-    //rp_LaAcqRunAcq(&la_acq_handle);
-
     rp_LaAcqFpgaRegDump(&la_acq_handle);
 
-    ///
     return RP_API_OK;
 }
 
@@ -315,6 +313,9 @@ RP_STATUS rp_SetDataBuffer(RP_DIGITAL_PORT channel,
  * @param pParameter                A void pointer that is passed to the rpBlockReady() callback function.
  */
 
+#include "rp_dma.h"
+#define TRIG_DELAY_SAMPLES 2
+
 RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
                      uint32_t noOfPostTriggerSamples,
                      uint32_t timebase,
@@ -332,9 +333,9 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     RP_STATUS status = rp_GetTimebase(timebase,0,&timeIntervalNanoseconds,&maxSamples);
     if(status!=RP_API_OK) return status;
 
-    if((noOfPreTriggerSamples+noOfPostTriggerSamples)>maxSamples){
-        return RP_INVALID_PARAMETER;
-    }
+    //if((noOfPreTriggerSamples+noOfPostTriggerSamples)>maxSamples){
+    //    return RP_INVALID_PARAMETER;
+    //}
 
     *timeIndisposedMs=(noOfPreTriggerSamples+noOfPostTriggerSamples)*timeIntervalNanoseconds/10e6;
 
@@ -353,17 +354,111 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
 
     rp_LaAcqBlockingRead(&la_acq_handle);
 
+
+    unsigned char* map=NULL;
+    // allocate data buffer memory
+    map = (unsigned char *) mmap(NULL, la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, la_acq_handle.dma_fd, 0);
+    if (map==NULL) {
+        printf("Failed to mmap\n");
+        if (la_acq_handle.dma_fd) {
+            close(la_acq_handle.dma_fd);
+        }
+        return -1;
+    }
+
+
+
+    rp_DmaMemDump(&la_acq_handle);
+
     // how to check if acq. was triggered?
-    /*
+   /*
     if(rp_IsAcquistionComplete()!=RP_API_OK){
         return RP_OPERATION_FAILED;
     }
     */
 
+
     // acquisition is completed -> callback
     (*rpReady)(status,pParameter);
 
-    printf("\r\nrp_LaAcqStopAcq");
+
+    printf("\n\r req: pre=%d pos=%d\n\r", noOfPreTriggerSamples, noOfPostTriggerSamples);
+
+    uint32_t trig_addr;
+    uint32_t pst_length;
+    rp_LaAcqGetCntStatus(&la_acq_handle, &trig_addr, &pst_length);
+    printf("\n\r sta: trig_addr=%d pst_length=%d\n\r", trig_addr, pst_length);
+
+    uint32_t current;
+    uint32_t last;
+    rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last);
+    printf("\n\r sta: current=%d last=%d\n\r", current, last);
+
+    // verify trigger position
+    trig_addr=trig_addr-TRIG_DELAY_SAMPLES; // seems like 2 is fixed trigger delay
+    printf("\n\r data @ trigger pos \n\r");
+    printf("\n\r %02x",(char)map[(trig_addr*2)-2]);
+    printf("\n\r ->%02x",(char)map[(trig_addr*2)]);
+    printf("\n\r %02x",(char)map[(trig_addr*2)+2]);
+
+    // verify data before trigger
+    for(int i=0; i<noOfPreTriggerSamples; i++){
+        int addr = (trig_addr*2)-(2*i);
+        char cur=(char)map[addr];
+        char prev=(char)map[addr-2];
+
+        if(cur==0)
+            cur=0xff;
+        else
+            cur-=1;
+
+       // printf("\r\n %i 0x%x==0x%x",i,prev,cur);
+        if(prev!=cur){
+            printf("\r\n pre trigger data mismatch %i 0x%x!=0x%x",trig_addr-i-TRIG_DELAY_SAMPLES,prev,cur);
+            printf("\n\r %02x",(char)map[addr-2]);
+            printf("\n\r %02x",(char)map[addr]);
+            printf("\n\r %02x",(char)map[addr+2]);
+            return -1;
+        }
+    }
+
+    // verify data after trigger
+    for(int i=0; i<(noOfPostTriggerSamples-TRIG_DELAY_SAMPLES); i++){
+        int addr=(trig_addr*2)+(2*i);
+        char cur=(char)map[addr];
+        char next=(char)map[addr+2];
+
+        if(cur==0xff)
+            cur=0;
+        else
+            cur+=1;
+
+       // printf("\r\n %i 0x%x==0x%x",i,cur,next);
+        if(next!=cur){
+            printf("\r\n post trigger data mismatch %i 0x%x!=0x%x",trig_addr+i-TRIG_DELAY_SAMPLES,next,cur);
+            printf("\n\r %02x",(char)map[addr-2]);
+            printf("\n\r %02x",(char)map[addr]);
+            printf("\n\r %02x",(char)map[addr+2]);
+            return -1;
+        }
+    }
+
+    /*
+    // printout data
+    for (int i=0; i<handle->dma_size; i++) {
+        if ((i%64)==0 ) printf("@%08x: ", i);
+        printf("%02x",(char)map[i]);
+        if ((i%64)==63) printf("\n");
+    }
+    */
+
+    if(munmap (map, la_acq_handle.dma_size)==-1){
+        printf("Failed to munmap\n");
+        return -1;
+    }
+
+
+    printf("\r\n sta: rp_LaAcqStopAcq");
     rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
