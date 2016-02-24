@@ -83,7 +83,9 @@ typedef struct {
     uint32_t reserved_3c;
     rp_la_trg_regset_t trg;         ///< trigger settings register
     rp_la_decimation_regset_t dec;  ///< decimation
-    //rp_data_ptrs_regset_t dpt;    ///< data buf. pointers
+    uint32_t cfg_rle;               ///<
+    uint32_t sts_cur;               ///<
+    uint32_t sts_lst;               ///<
 } rp_la_acq_regset_t;
 
 

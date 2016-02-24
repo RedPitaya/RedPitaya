@@ -9,6 +9,7 @@
 #include <string.h>
 #include "common.h"
 #include "generate.h"
+
 #include "la_acq.h"
 
 /** SIGNAL ACQUISTION  */
@@ -353,9 +354,11 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     rp_LaAcqBlockingRead(&la_acq_handle);
 
     // how to check if acq. was triggered?
+    /*
     if(rp_IsAcquistionComplete()!=RP_API_OK){
         return RP_OPERATION_FAILED;
     }
+    */
 
     // acquisition is completed -> callback
     (*rpReady)(status,pParameter);

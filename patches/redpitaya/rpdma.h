@@ -1,3 +1,21 @@
+/**
+ * $Id: $
+ *
+ * @brief Red Pitaya DMA library
+ *
+ * @Author Red Pitaya
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in C programming language.
+ * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
+ * for more details on the language used herein.
+ */
+
+#ifndef __RPDMA_H
+#define __RPDMA_H
+
+
 /*
 ioctl macro definitions
 */
@@ -22,3 +40,5 @@ ioctl macro definitions
 #define RX_SGMNT_SIZE SGMNT_SIZE
 #define TX_SGMNT_CNT SGMNT_CNT
 #define TX_SGMNT_SIZE SGMNT_SIZE
+
+#endif // __RPDMA_H

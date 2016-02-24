@@ -41,7 +41,7 @@ OBJECTS =	pdm.o \
 		la_acq.o \
 		rp2.o \
 		rp_api.o \
-		rpdma.o \
+		rp_dma.o \
 		common.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
@@ -49,7 +49,7 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 # GCC compiling & linking flags
 CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-CFLAGS += -I../include -I../include/redpitaya
+CFLAGS += -I../include -I../include/redpitaya -I../../patches/redpitaya/
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Additional libraries which needs to be dynamically linked to the executable

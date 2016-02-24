@@ -56,15 +56,10 @@ void la_acq_trig_test(void)
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;
-    s=rp_RunBlock(0,(1*0x200/2),0,&timeIndisposedMs,&rpReadyCallback,NULL);
+    s=rp_RunBlock(0,512*5,0,&timeIndisposedMs,&rpReadyCallback,NULL); // 1024*5
     if(s!=RP_API_OK){
         CU_FAIL("Failed to acquire data.");
     }
-
-
-
-
-
 
     sleep(1);
 }

@@ -25,7 +25,8 @@
 #include "la_acq.h"
 #include "generate.h"
 #include "la_acq.h"
-#include "rpdma.h"
+
+#include "rp_dma.h"
 
 #define LA_ACQ_BUF_SIZE 0x4000  // TODO: just for test..
 
@@ -48,12 +49,12 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     if (status != RP_OK) {
         return status;
     }
-/*
+
     status = rp_DmaOpen("/dev/rpdma", handle);
     if (status != RP_OK) {
         return status;
     }
-*/
+
     return RP_OK;
 }
 
@@ -62,12 +63,12 @@ int rp_LaAcqClose(rp_handle_uio_t *handle) {
     if (status != RP_OK) {
         return status;
     }
-/*
+
     status = rp_DmaClose(handle);
     if (status != RP_OK) {
         return status;
     }
-*/
+
     return RP_OK;
 }
 
@@ -116,12 +117,12 @@ int rp_LaAcqReset(rp_handle_uio_t *handle) {
 }
 
 int rp_LaAcqRunAcq(rp_handle_uio_t *handle) {
-    //rp_DmaCtrl(handle, RP_DMA_SINGLE);
+    rp_DmaCtrl(handle, RP_DMA_CYCLIC);
     return rp_LaAcqSetControl(handle,RP_CTL_STA_MASK);
 }
 
 int rp_LaAcqStopAcq(rp_handle_uio_t *handle) {
-    //rp_DmaCtrl(handle, RP_DMA_STOP_RX);
+    rp_DmaCtrl(handle, RP_DMA_STOP_RX);
     return rp_LaAcqSetControl(handle,RP_CTL_STO_MASK);
 }
 
@@ -149,7 +150,7 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
 }
 
 int rp_LaAcqBlockingRead(rp_handle_uio_t *handle) {
-    //return rp_DmaRead(handle);
+    return rp_DmaRead(handle);
     return RP_OK;
 }
 
