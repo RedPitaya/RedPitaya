@@ -110,7 +110,7 @@ enum {
                                                 //      d16=EXT-CH0,  d24=EXT-CH8,
                                                 //      d17=EXT-CH1,  d25=EXT-CH9,
                                                 //      d32=adc_i[0], d33=adc_i[1]
-    REG_RW_RB_TX_MUXIN_GAIN,                    // h064: RB analog TX MUX gain for input amplifier
+    REG_RW_RB_TX_MUXIN_GAIN,                    // h064: RB analog TX MUX gain:      UNSIGNED 16 bit
 
 
     /* RX section */
@@ -146,7 +146,7 @@ enum {
     //REG_RD_RB_RX_RSVD_H15C,
 
     REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB audio signal RX MUXIN input selector:  d0=(none), d1=RF Input 1, d2=RF Input 2
-    REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB audio signal RX MUXIN gain for input amplifier
+    REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB audio signal RX MUXIN    UNSIGNED 16 bit
     //REG_RD_RB_RX_RSVD_H168,
     //REG_RD_RB_RX_RSVD_H16C,
 
@@ -727,18 +727,18 @@ else
 
 parameter CLK_200KHZ_CTR_MAX = 624;
 
-reg  [ 11: 0] clk_200khz_ctr = 0;
-reg           clk_200khz     = 'b0;
+reg                    clk_200khz     = 1'b0;
+reg  unsigned [ 11: 0] clk_200khz_ctr =  'b0;
 
-always @(posedge clk_adc_125mhz)                // assign clk_48khz, clk_8khz
+always @(posedge clk_adc_125mhz)                // assign clk_200khz
 if (!rb_clk_en) begin
-   clk_200khz_ctr <= 'b0;
-   clk_200khz     <= 'b0;
+   clk_200khz     <= 1'b0;
+   clk_200khz_ctr <=  'b0;
    end
 else
    if (clk_200khz_ctr == CLK_200KHZ_CTR_MAX) begin
       clk_200khz     <= 1'b1;
-      clk_200khz_ctr <= 1'b0;
+      clk_200khz_ctr <=  'b0;
       end
    else begin
       clk_200khz     <= 1'b0;
@@ -842,7 +842,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_tx_mod_qmix_I_s2_dsp48 (
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_tx_OSC_clken         ),  // power down when needed to
 
-  .A                       ( tx_mod_qmix_i_s1_out[30:15] ),  // TX_MUX in signal:  SIGNED 16 bit
+  .A                       ( tx_mod_qmix_i_s1_out[30:15] ),  // TX_MUX in signal:         SIGNED 16 bit
   .B                       ( tx_mod_qmix_gain            ),  // gain setting:             SIGNED 16 bit
 
   .P                       ( tx_mod_qmix_i_s2_out        )   // TX_QMIX I regulated:      SIGSIG 32 bit
@@ -2331,19 +2331,41 @@ wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[30:15];
 //---------------------------------------------------------------------------------
 //  RX_MOD PM ouput - lossy integrator
 
-wire   signed [ 15: 0] rx_pm_gain_in = { 1'b0, rx_pm_gain };
-wire   signed [ 31: 0] rx_mod_pm_accu_s1;
-wire   signed [ 31: 0] rx_mod_pm_accu_s2;
-reg    signed [ 31: 0] rx_mod_pm_accu = 'b0;
+wire   signed [ 47: 0] rx_mod_fm_in           = 48'b0;  // { {12{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 20'b0 };  // sign extension
+wire   signed [ 47: 0] rx_mod_pm_accu_release = 48'b0 - { {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };        // sign extension, balance to zero
+wire   signed [ 15: 0] rx_pm_gain_in          = { 1'b0, rx_pm_gain[15:1] };
 
-assign rx_mod_pm_accu_s1 = rx_mod_pm_accu    + (rx_mod_fm_out[15:0] << 3'd4);  // integration: FM --> PM
-assign rx_mod_pm_accu_s2 = rx_mod_pm_accu_s1;  // - rx_mod_pm_accu[31:14];          // release
+wire   signed [ 47: 0] rx_mod_pm_s1_out;
+wire   signed [ 47: 0] rx_mod_pm_s2_out;
+reg    signed [ 47: 0] rx_mod_pm_accu         = 'b0;         // integration: FM --> PM
+
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s1 (
+  // global signals
+  .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .CE                      ( rb_reset_n                  ),  // power down when needed to
+
+  .CONCAT                  ( rx_mod_pm_accu              ),  // accumulator             SIGNED 48 bit
+  .C                       ( rx_mod_fm_in                ),  // FM modulation signal    SIGNED 48 bit
+
+  .P                       ( rx_mod_pm_s1_out            )   // step 1                  SIGNED 48 bit
+);
+
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s2 (
+  // global signals
+  .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .CE                      ( rb_reset_n                  ),  // power down when needed to
+
+  .CONCAT                  ( rx_mod_pm_accu              ),  // accumulator             SIGNED 48 bit
+  .C                       ( rx_mod_pm_accu_release      ),  // release                 SIGNED 48 bit
+
+  .P                       ( rx_mod_pm_s2_out            )   // step 2                  SIGNED 48 bit
+);
 
 always @(posedge clk_adc_125mhz)
 if (!rb_pwr_rx_AFC_rst_n)
-   rx_mod_pm_accu <= 'b0;
+   rx_mod_pm_accu <= 48'h7fffffffffff;
 else if (clk_200khz)
-   rx_mod_pm_accu <= rx_mod_pm_accu_s2;
+   rx_mod_pm_accu <= rx_mod_pm_s2_out;
 
 wire   signed [ 31: 0] rx_mod_pm_mix_out;
 
@@ -2352,7 +2374,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_pm_mixer (
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_rx_AFC_clken         ),  // power down when needed to
 
-  .A                       ( rx_mod_pm_accu[31:16]       ),  // PM modulation signal    SIGNED 16 bit
+  .A                       ( rx_mod_pm_accu[47:32]       ),  // PM modulation signal    SIGNED 16 bit
   .B                       ( rx_pm_gain_in               ),  // PM mixer gain           SIGNED 16 bit
 
   .P                       ( rx_mod_pm_mix_out           )   // PM demodulated output   SIGSIG 32 bit
@@ -2900,8 +2922,8 @@ else if (rfout1_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      rb_out_ch[0] <= { 1'b0, rx_mod_cic4_chk_rst_n, 14'b0 };
-      // rb_out_ch[0] <= rx_mod_fir2_i_in[17:2];
+      // rb_out_ch[0] <= { 1'b0, clk_200khz, 14'b0 };
+      rb_out_ch[0] <= rx_mod_pm_s2_out[47:32];
       end
 
    default: begin
@@ -3117,9 +3139,9 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
-      rb_out_ch[1] <= { 1'b0, rx_mod_cic4_chk_rst_cnt, 12'b0 };
+      // rb_out_ch[1] <= { 1'b0, rx_mod_cic4_chk_rst_cnt, 12'b0 };
       // rb_out_ch[1] <= { 1'b0, rx_mod_cic1_chk_rst, 14'b0 };
-      // rb_out_ch[1] <= rx_mod_fir2_i_out[33:18];
+      rb_out_ch[1] <= rx_mod_pm_accu[47:32];
       end
 
    default: begin
