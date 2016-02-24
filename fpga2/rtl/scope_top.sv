@@ -37,7 +37,7 @@ module scope_top #(
   int unsigned DCW = 17,  // data width for counter
   int unsigned DSW =  4,  // data width for shifter
   // aquisition parameters
-  int unsigned CW = 17,  // counter width
+  int unsigned CW = 32,  // counter width
   // trigger parameters
   int unsigned TN =  4,  // external trigger array  width
   // timestamp parameters

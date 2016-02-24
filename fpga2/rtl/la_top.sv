@@ -11,7 +11,7 @@ module la_top #(
   // decimation parameters
   int unsigned DCW = 17,  // decimation counter width
   // aquisition parameters
-  int unsigned CW = 17,  // counter width
+  int unsigned CW = 32,  // counter width
   // trigger parameters
   int unsigned TN =  4,  // trigger number
   // timestamp parameters
@@ -283,9 +283,9 @@ rle #(
   // counter properties
   .CW (8),
   // stream properties
-  .DN (1),
-  .DTI (logic [   8-1:0]),
-  .DTO (logic [CW+8-1:0])
+  .DN (DN),
+  .DTI (logic [  8-1:0]),
+  .DTO (logic [8+8-1:0])
 ) rle (
   // input stream input/output
   .sti      (sta),
@@ -296,7 +296,7 @@ rle #(
 );
 
 axi4_stream_cnt #(
-  .DN (1),
+  .DN (DN),
   .CW (CW)
 ) axi4_stream_cnt (
   // control
