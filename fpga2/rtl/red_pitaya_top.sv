@@ -768,7 +768,8 @@ generate
 for (genvar i=0; i<MNA; i++) begin: for_acq
 
 scope_top #(
-  .TN ($bits(trg))
+  .TN ($bits(trg)),
+  .CW (28)
 ) scope (
   // streams
   .sti       (str_osc[0+i]),
@@ -829,7 +830,8 @@ assign str_lgo.TREADY = axi_exo[1].TREADY;
 
 la_top #(
   .DAT_T (SBL_T),
-  .TN ($bits(trg))
+  .TN ($bits(trg)),
+  .CW (28)
 ) la (
   // streams
   .sti       (axi_exi[1]),
