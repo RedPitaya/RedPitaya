@@ -26,7 +26,7 @@ int main (int argc, char **argv) {
     rp_la_cfg_regset_t cfg;
     cfg.pre=0;
     cfg.pst=length;
-    rp_LaAcqSetCntConfig (&handle,cfg);
+    rp_LaAcqSetCntConfig (&handle, cfg);
 
     rp_LaAcqSetConfig    (&handle, 0x2);
     rp_LaAcqGlobalTrigSet(&handle, 0x0);
