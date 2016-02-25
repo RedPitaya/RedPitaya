@@ -202,10 +202,13 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     if (rp_bazaar_get_mac("/sys/class/net/eth0/address", mac)) {
         fprintf(stderr, "Cannot obtain MAC address.");
     }
-    unsigned long long dna = 0;
-    if (rp_bazaar_get_dna(&dna)) {
-        fprintf(stderr, "Cannot obtain DNA number.");
-    }
+
+    static unsigned long long dna = 0;
+    if (!dna || dna == 1) {
+		if (rp_bazaar_get_dna(&dna)) {
+			fprintf(stderr, "Cannot obtain DNA number.");
+		}
+	}
     char dna_s[64];
     sprintf(dna_s, "%016llx", dna);
 
