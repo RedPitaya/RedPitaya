@@ -394,7 +394,7 @@ CONFIG.NUM_SI {1} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {2} \
-CONFIG.STRATEGY {1} \
+CONFIG.STRATEGY {0} \
  ] $axi_interconnect_1
 
   # Create instance: axi_interconnect_2, and set properties
@@ -402,7 +402,7 @@ CONFIG.STRATEGY {1} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {2} \
-CONFIG.STRATEGY {1} \
+CONFIG.STRATEGY {0} \
  ] $axi_interconnect_2
 
   # Create instance: axi_interconnect_3, and set properties
@@ -410,7 +410,7 @@ CONFIG.STRATEGY {1} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {2} \
-CONFIG.STRATEGY {1} \
+CONFIG.STRATEGY {0} \
  ] $axi_interconnect_3
 
   # Create instance: axi_interconnect_4, and set properties
@@ -418,7 +418,7 @@ CONFIG.STRATEGY {1} \
   set_property -dict [ list \
 CONFIG.NUM_MI {1} \
 CONFIG.NUM_SI {2} \
-CONFIG.STRATEGY {1} \
+CONFIG.STRATEGY {0} \
  ] $axi_interconnect_4
 
   # Create instance: axi_interconnect_5, and set properties
