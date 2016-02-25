@@ -1984,8 +1984,9 @@ wire [ 15: 0] rx_mod_ssb_am_out = rx_mod_ssb_mix_out[31:16];
 //  Set 2: FM / PM - low pass with abt. 2.56 kHz @ -6 dB
 //  hn=fir1(254, 50000/200000, 'low', 'barthannwin'); freqz(hn);
 
-wire                   rx_afc_fir_is_set2   = ((rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM) ||
-                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM)) ?  1'b1 : 1'b0;
+wire                   rx_afc_fir_is_set2   = ((rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM)      ||
+                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM)      ||
+                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_ENV)) ?  1'b1 : 1'b0;
 wire unsigned [  7: 0] rx_afc_fir_cfg_in    = { 7'b0, rx_afc_fir_is_set2 };         // AXIS word expansion
 wire   signed [ 23: 0] rx_afc_fir_i_in      = { 7'b0, rx_car_regs2_i_data[17:1] };  // AXIS word expansion
 wire unsigned [ 39: 0] rx_afc_fir_i_out;
@@ -2344,13 +2345,15 @@ wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[30:15];
 //---------------------------------------------------------------------------------
 //  RX_MOD PM ouput - strategy: lossy integrator
 
-wire   signed [ 47: 0] rx_mod_fm_in           = { {3{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 29'b0 };        // sign extension
-wire   signed [ 47: 0] rx_mod_pm_accu_release = 48'b0 - { {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };  // sign extension, balance to zero within 400 ms
-wire   signed [ 15: 0] rx_pm_gain_in          = { 1'b0, rx_pm_gain[15:1] };
+reg    signed [ 47: 0] rx_mod_pm_accu         = 'b0;                                                     // integration: FM --> PM
 
+wire   signed [ 47: 0] rx_mod_fm_in           = { {3{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 29'b0 };  // sign extension
 wire   signed [ 47: 0] rx_mod_pm_s1_out;
+
+wire   signed [ 47: 0] rx_mod_pm_accu_release = ~{ {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };   // sign extension and negation, balance to zero within 400 ms
 wire   signed [ 47: 0] rx_mod_pm_s2_out;
-reg    signed [ 47: 0] rx_mod_pm_accu         = 'b0;         // integration: FM --> PM
+
+wire   signed [ 15: 0] rx_pm_gain_in          = { 1'b0, rx_pm_gain[15:1] };
 
 rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s1 (
   // global signals
@@ -2399,25 +2402,30 @@ wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 //---------------------------------------------------------------------------------
 //  RX_MOD_AMENV envelope ouput - strategy: difference to lossy integrator
 
-wire   signed [ 47: 0] rx_mod_amenv_s1_in        = { {3{rx_afc_cordic_polar_out_mag[31]}}, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // sign extension
-wire   signed [ 47: 0] rx_mod_amenv_s3_in        = { rx_afc_cordic_polar_out_mag[31:0], 16'b0 };                                        // sign extension
-wire   signed [ 47: 0] rx_mod_amenv_accu_release = 48'b0 - { {9{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:9] };                    // sign extension, balance to zero within 10 ms
+reg    signed [ 47: 0] rx_mod_amenv_accu         = 'b0;      // mean value of magnitue = mean value of AM envelope
 
-reg    signed [ 47: 0] rx_mod_amenv_accu         = 'b0;         // mean value of magnitue = mean value of AM envelope
+wire   signed [ 47: 0] rx_mod_amenv_s1_sig_in    = { {3{rx_afc_cordic_polar_out_mag[31]}}, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // sign extension
+wire   signed [ 47: 0] rx_mod_amenv_s1_out;
+
+wire   signed [ 47: 0] rx_mod_amenv_accu_release = ~{ {9{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:9] };                           // sign extension, balance to zero within 10 ms
+wire   signed [ 47: 0] rx_mod_amenv_s2_out;
+
+wire   signed [ 47: 0] rx_mod_amenv_s3_mean_in   = ~rx_mod_amenv_s2_out;
+wire   signed [ 47: 0] rx_mod_amenv_s3_sig_in    = { rx_afc_cordic_polar_out_mag[31:0], 16'b0 };                                        // sign extension
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s1 (
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s1 (     // mean value - signal integrator
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
   .CONCAT                  ( rx_mod_amenv_accu           ),  // accumulator             SIGNED 48 bit
-  .C                       ( rx_mod_amenv_in             ),  // CORDIC mag signal       SIGNED 48 bit
+  .C                       ( rx_mod_amenv_s1_sig_in      ),  // CORDIC mag signal       SIGNED 48 bit
 
   .P                       ( rx_mod_amenv_s1_out         )   // accu step 1             SIGNED 48 bit
 );
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s2 (
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s2 (     // mean value - release unit
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
@@ -2428,16 +2436,22 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s2 (
   .P                       ( rx_mod_amenv_s2_out         )   // accu step 2             SIGNED 48 bit
 );
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demodulation
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
-  .CONCAT                  ( rx_mod_amenv_s2_out         ),  // accu step 2             SIGNED 48 bit
-  .C                       ( rx_mod_amenv_s3_in          ),  // current magnitude       SIGNED 48 bit
+  .CONCAT                  ( rx_mod_amenv_s3_mean_in     ),  // negative accu step      SIGNED 48 bit
+  .C                       ( rx_mod_amenv_s3_sig_in      ),  // current magnitude       SIGNED 48 bit
 
   .P                       ( rx_mod_amenv_diff_out       )   // AM envelope             SIGNED 48 bit
 );
+
+always @(posedge clk_adc_125mhz)
+if (!rb_pwr_rx_AFC_rst_n)
+   rx_mod_amenv_accu <= 'b0;
+else if (clk_200khz)
+   rx_mod_amenv_accu <= rx_mod_amenv_s2_out;
 
 wire   signed [ 15: 0] rx_mod_amenv_out = rx_mod_amenv_diff_out[31:16];
 

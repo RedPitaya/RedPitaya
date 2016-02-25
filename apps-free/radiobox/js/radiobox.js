@@ -64,8 +64,8 @@
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
-    tx_car_osc_qrg_f:   10000,  // 10 kHz
-    tx_mod_osc_qrg_f:    1000,  //  1 kHz
+    tx_car_osc_qrg_f:  100000,  // 100 kHz
+    tx_mod_osc_qrg_f:    1000,  //   1 kHz
 
     tx_amp_rf_gain_f:   200.0,  // 200 mV Vpp @ 50R results to -10 dBm
     tx_mod_osc_mag_f:   100.0,  // 100 % modulation by default
@@ -73,7 +73,7 @@
     tx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
     rx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
 
-    rx_car_osc_qrg_f:   10000   // 10 kHz
+    rx_car_osc_qrg_f:  100000   // 100 kHz
   };
 
   // Other global variables
