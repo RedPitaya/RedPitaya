@@ -106,7 +106,8 @@ enum {
     REG_RW_RB_TX_MOD_QMIX_OFS_LO,               // h058: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   LSB:        (Bit 31: 0)
     REG_RW_RB_TX_MOD_QMIX_OFS_HI,               // h05C: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
 
-    REG_RW_RB_TX_MUXIN_SRC,                     // h060: RB analog TX MUX input selector:  d3=VpVn,
+    REG_RW_RB_TX_MUXIN_SRC,                     // h060: RB analog TX MUX input selector:
+                                                //      d0 =(none),   d3 =VpVn,
                                                 //      d16=EXT-CH0,  d24=EXT-CH8,
                                                 //      d17=EXT-CH1,  d25=EXT-CH9,
                                                 //      d32=adc_i[0], d33=adc_i[1]
@@ -145,7 +146,11 @@ enum {
     //REG_RD_RB_RX_RSVD_H158,
     //REG_RD_RB_RX_RSVD_H15C,
 
-    REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB audio signal RX MUXIN input selector:  d0=(none), d1=RF Input 1, d2=RF Input 2
+    REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB audio signal RX MUXIN input selector:
+                                                //      d0 =(none),   d3 =VpVn,
+                                                //      d16=EXT-CH0,  d24=EXT-CH8,
+                                                //      d17=EXT-CH1,  d25=EXT-CH9,
+                                                //      d32=adc_i[0], d33=adc_i[1]
     REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB audio signal RX MUXIN    UNSIGNED 16 bit
     //REG_RD_RB_RX_RSVD_H168,
     //REG_RD_RB_RX_RSVD_H16C,
@@ -225,7 +230,7 @@ enum {
     RB_PWR_CTRL_RX_MOD_OFF                =  0, // RB_PWR_CTRL RX modulation: complete receiver is turned off
     RB_PWR_CTRL_RX_MOD_USB                =  2, // RB_PWR_CTRL RX modulation: components of the SSB-USB receiver are turned on
     RB_PWR_CTRL_RX_MOD_LSB,                     // RB_PWR_CTRL RX modulation: components of the SSB-LSB receiver are turned on
-    RB_PWR_CTRL_RX_MOD_AM,                      // RB_PWR_CTRL RX modulation: components of the AM receiver are turned on
+    RB_PWR_CTRL_RX_MOD_AM_ENV,                  // RB_PWR_CTRL RX modulation: components of the AM receiver are turned on
     RB_PWR_CTRL_RX_MOD_AM_SYNC_USB,             // RB_PWR_CTRL RX modulation: components of the AM syncro mode USB receiver are turned on
     RB_PWR_CTRL_RX_MOD_AM_SYNC_LSB,             // RB_PWR_CTRL RX modulation: components of the AM syncro mode LSB receiver are turned on
     RB_PWR_CTRL_RX_MOD_FM,                      // RB_PWR_CTRL RX modulation: components of the FM receiver are turned on
@@ -327,7 +332,7 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_MOD_VB2_Q_OUT,                  // RX_MOD_FIR3 Q output (weaver speech band, double sized)
     RB_SRC_CON_PNT_NUM_RX_MOD_48K_I_OUT,                  // RX_MOD_CIC4 I output
     RB_SRC_CON_PNT_NUM_RX_MOD_48K_Q_OUT,                  // RX_MOD_CIC4 Q output
-    RB_SRC_CON_PNT_NUM_RX_MOD_SSB_AM_OUT,                 // RX_MOD_SSB_AM output
+    RB_SRC_CON_PNT_NUM_RX_MOD_SSB_AM_OUT,                 // RX_MOD_SSB_AM SSB or AM-sync output
 
     RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT             = 64, // RX_AFC_FIR I output
     RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT,                  // RX_AFC_FIR Q output
@@ -339,6 +344,7 @@ enum {
     RB_SRC_CON_PNT_NUM_RX_SUM_INC_REG,                    // RX_SUM increment correction
     RB_SRC_CON_PNT_NUM_RX_MOD_FM_OUT,                     // RX_MOD FM output
     RB_SRC_CON_PNT_NUM_RX_MOD_PM_OUT,                     // RX_MOD PM output
+    RB_SRC_CON_PNT_NUM_RX_MOD_AMENV_OUT,                  // RX_MOD AM-envelope output
 
     RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT                 = 80, // RX_AUDIO output
 
@@ -347,11 +353,11 @@ enum {
 } RB_SRC_CON_PNT_ENUM;                                    // 256 entries = 2^8 --> 8 bit field
 
 enum {
-    RB_XADC_MAPPING_EXT_CH0               =  0, // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
-    RB_XADC_MAPPING_EXT_CH8,                    // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
-    RB_XADC_MAPPING_EXT_CH1,                    // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[2]/vinn_i[2]
-    RB_XADC_MAPPING_EXT_CH9,                    // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[3]/vinn_i[3]
-    RB_XADC_MAPPING_VpVn,                       // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
+    RB_XADC_MAPPING_EXT_CH0                         =  0, // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[0]/vinn_i[0]
+    RB_XADC_MAPPING_EXT_CH8,                              // CH0 and CH8 are sampled simultaneously, mapped to: vinp_i[1]/vinn_i[1]
+    RB_XADC_MAPPING_EXT_CH1,                              // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[2]/vinn_i[2]
+    RB_XADC_MAPPING_EXT_CH9,                              // CH1 and CH9 are sampled simultaneously, mapped to: vinp_i[3]/vinn_i[3]
+    RB_XADC_MAPPING_VpVn,                                 // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
     RB_XADC_MAPPING__COUNT
 } RB_XADC_MAPPING_ENUM;
 
@@ -561,9 +567,9 @@ else begin
       rb_pwr_rx_MOD_en <= 1'b1;
       rb_pwr_rx_AFC_en <= 1'b0;
       end
-   8'h04: begin                                                        // AM
+   8'h04: begin                                                        // AM-ENV
       rb_pwr_rx_CAR_en <= 1'b1;
-      rb_pwr_rx_MOD_en <= 1'b1;
+      rb_pwr_rx_MOD_en <= 1'b0;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
    8'h05: begin                                                        // AM-SYNC-USB
@@ -1191,9 +1197,15 @@ rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36 i_rb_tx_amp_rf_dsp48 (
 //---------------------------------------------------------------------------------
 //  RX_MUXIN amplifier
 
-wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 1) ?  { ~adc_i[0], 2'b0 } :
-                                      (rx_muxin_src == 2) ?  { ~adc_i[1], 2'b0 } :
-                                                             16'b0               ;
+wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 6'h20) ?  { ~adc_i[0], 2'b0 }              :
+                                      (rx_muxin_src == 6'h21) ?  { ~adc_i[1], 2'b0 }              :
+                                      (rx_muxin_src == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
+                                      (rx_muxin_src == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
+                                      (rx_muxin_src == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
+                                      (rx_muxin_src == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
+                                      (rx_muxin_src == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
+                                      16'b0                                                       ;
+
 wire   signed [ 15: 0] rx_muxin_mix_in = (rx_muxin_sig << rx_muxin_mix_log2);  // unsigned value: input booster for
                                                                                // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
 wire   signed [ 15: 0] rx_muxin_mix_gain_in = { 1'b0, rx_muxin_mix_gain[15:1] };
@@ -1972,7 +1984,8 @@ wire [ 15: 0] rx_mod_ssb_am_out = rx_mod_ssb_mix_out[31:16];
 //  Set 2: FM / PM - low pass with abt. 2.56 kHz @ -6 dB
 //  hn=fir1(254, 50000/200000, 'low', 'barthannwin'); freqz(hn);
 
-wire                   rx_afc_fir_is_set2   = ((rb_pwr_rx_modvar == 8'h07) || (rb_pwr_rx_modvar == 8'h08)) ?  1'b1 : 1'b0;
+wire                   rx_afc_fir_is_set2   = ((rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM) ||
+                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM)) ?  1'b1 : 1'b0;
 wire unsigned [  7: 0] rx_afc_fir_cfg_in    = { 7'b0, rx_afc_fir_is_set2 };         // AXIS word expansion
 wire   signed [ 23: 0] rx_afc_fir_i_in      = { 7'b0, rx_car_regs2_i_data[17:1] };  // AXIS word expansion
 wire unsigned [ 39: 0] rx_afc_fir_i_out;
@@ -2308,7 +2321,7 @@ else
 
 
 //---------------------------------------------------------------------------------
-//  RX_MOD FM ouput
+//  RX_MOD FM ouput - strategy: rx_afc_cordic_phs_diff = delta-f = FM modulation
 
 wire   signed [ 15: 0] rx_mod_fm_mix_in = rx_afc_cordic_phs_diff[28:13];
 wire   signed [ 15: 0] rx_fm_gain_in = { 1'b0, rx_fm_gain };
@@ -2329,7 +2342,7 @@ wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[30:15];
 
 
 //---------------------------------------------------------------------------------
-//  RX_MOD PM ouput - lossy integrator
+//  RX_MOD PM ouput - strategy: lossy integrator
 
 wire   signed [ 47: 0] rx_mod_fm_in           = { {3{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 29'b0 };        // sign extension
 wire   signed [ 47: 0] rx_mod_pm_accu_release = 48'b0 - { {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };  // sign extension, balance to zero within 400 ms
@@ -2383,15 +2396,65 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_pm_mixer (
 wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 
 
+//---------------------------------------------------------------------------------
+//  RX_MOD_AMENV envelope ouput - strategy: difference to lossy integrator
+
+wire   signed [ 47: 0] rx_mod_amenv_s1_in        = { {3{rx_afc_cordic_polar_out_mag[31]}}, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // sign extension
+wire   signed [ 47: 0] rx_mod_amenv_s3_in        = { rx_afc_cordic_polar_out_mag[31:0], 16'b0 };                                        // sign extension
+wire   signed [ 47: 0] rx_mod_amenv_accu_release = 48'b0 - { {9{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:9] };                    // sign extension, balance to zero within 10 ms
+
+reg    signed [ 47: 0] rx_mod_amenv_accu         = 'b0;         // mean value of magnitue = mean value of AM envelope
+wire   signed [ 47: 0] rx_mod_amenv_diff_out;
+
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s1 (
+  // global signals
+  .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .CE                      ( rb_reset_n                  ),  // power down when needed to
+
+  .CONCAT                  ( rx_mod_amenv_accu           ),  // accumulator             SIGNED 48 bit
+  .C                       ( rx_mod_amenv_in             ),  // CORDIC mag signal       SIGNED 48 bit
+
+  .P                       ( rx_mod_amenv_s1_out         )   // accu step 1             SIGNED 48 bit
+);
+
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s2 (
+  // global signals
+  .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .CE                      ( rb_reset_n                  ),  // power down when needed to
+
+  .CONCAT                  ( rx_mod_amenv_s1_out         ),  // accu step 1             SIGNED 48 bit
+  .C                       ( rx_mod_amenv_accu_release   ),  // release                 SIGNED 48 bit
+
+  .P                       ( rx_mod_amenv_s2_out         )   // accu step 2             SIGNED 48 bit
+);
+
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (
+  // global signals
+  .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .CE                      ( rb_reset_n                  ),  // power down when needed to
+
+  .CONCAT                  ( rx_mod_amenv_s2_out         ),  // accu step 2             SIGNED 48 bit
+  .C                       ( rx_mod_amenv_s3_in          ),  // current magnitude       SIGNED 48 bit
+
+  .P                       ( rx_mod_amenv_diff_out       )   // AM envelope             SIGNED 48 bit
+);
+
+wire   signed [ 15: 0] rx_mod_amenv_out = rx_mod_amenv_diff_out[31:16];
+
+
 // === RX_AUDIO section ===
 
 //---------------------------------------------------------------------------------
 //  RX_AUDIO_OUT audio output mixer
 
-wire   signed [ 15: 0] rx_audio_out_var_in =  rb_pwr_rx_MOD_en ?           rx_mod_ssb_am_out :
-                                             (rb_pwr_rx_modvar == 8'd7) ?  rx_mod_fm_out     :
-                                             (rb_pwr_rx_modvar == 8'd8) ?  rx_mod_pm_out     :
-                                                                           16'b0             ;
+wire   signed [ 15: 0] rx_audio_out_var_in = (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_USB)         ||
+                                             (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_LSB)         ||
+                                             (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_SYNC_USB) ||
+                                             (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_SYNC_LSB) ?  rx_mod_ssb_am_out :
+                                             (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM)          ?  rx_mod_fm_out     :
+                                             (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM)          ?  rx_mod_pm_out     :
+                                             (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_ENV)      ?  rx_mod_amenv_out  :
+                                                                                                     16'b0             ;
 wire   signed [ 31: 0] rx_audio_out_ofs_in = { rx_audio_out_ofs, 16'b0 };
 wire   signed [ 31: 0] rx_audio_mix_out;
 
@@ -2693,6 +2756,10 @@ else if (led_src_con_pnt && rb_reset_n) begin
       if (!led_ctr)
          rb_leds_data <= fct_mag(rx_mod_pm_out);
       end
+   RB_SRC_CON_PNT_NUM_RX_MOD_AMENV_OUT: begin
+      if (!led_ctr)
+         rb_leds_data <= fct_mag(rx_mod_amenv_out);
+      end
 
    RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT: begin
       if (!led_ctr)
@@ -2916,6 +2983,9 @@ else if (rfout1_src_con_pnt && rb_reset_n)
    RB_SRC_CON_PNT_NUM_RX_MOD_PM_OUT: begin
       rb_out_ch[0] <= rx_mod_pm_out;
       end
+   RB_SRC_CON_PNT_NUM_RX_MOD_AMENV_OUT: begin
+      rb_out_ch[0] <= rx_mod_amenv_out;
+      end
 
    RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT: begin
       rb_out_ch[0] <= rx_audio_out;
@@ -3132,6 +3202,9 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end
    RB_SRC_CON_PNT_NUM_RX_MOD_PM_OUT: begin
       rb_out_ch[1] <= rx_mod_pm_out;
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_AMENV_OUT: begin
+      rb_out_ch[1] <= rx_mod_amenv_out;
       end
 
    RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT: begin

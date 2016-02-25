@@ -533,6 +533,46 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         }
         break;
 
+        case RB_MODSRC_EXP_AI0: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI0\n");
+
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            g_fpga_rb_reg_mem->rx_muxin_src = 0x00000010;                                                  // source ID: 16
+        }
+        break;
+
+        case RB_MODSRC_EXP_AI1: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI1\n");
+
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            g_fpga_rb_reg_mem->rx_muxin_src = 0x00000018;                                                  // source ID: 24
+        }
+        break;
+
+        case RB_MODSRC_EXP_AI2: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI2\n");
+
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            g_fpga_rb_reg_mem->rx_muxin_src = 0x00000011;                                                  // source ID: 17
+        }
+        break;
+
+        case RB_MODSRC_EXP_AI3: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI3\n");
+
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            g_fpga_rb_reg_mem->rx_muxin_src = 0x00000019;                                                  // source ID: 25
+        }
+        break;
+
+#if 0
+        case RB_MODSRC_VP_VN: {
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            g_fpga_rb_reg_mem->rx_muxin_src = 0x00000003;                                                  // source ID: 3
+        }
+        break;
+#endif
+
         }  // switch (rx_modsrc)
 
 
@@ -558,7 +598,6 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         }
         break;
 
-        case RB_RX_MODTYP_AM:
         case RB_RX_MODTYP_AMSYNC_USB: {
             //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM (automatic)\n");
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-SYNC (USB)\n");
@@ -597,6 +636,16 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 
             g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
             g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: PM detection by AFC increment streaming
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
+            fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                            // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
+        }
+        break;
+
+        case RB_RX_MODTYP_AMENV: {
+            fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: AM-ENV\n");
+
+            g_fpga_rb_reg_mem->ctrl &= ~0x10560000;                                                        // RX: turn off RX RESET, RESYNC and PHASE-STREAMING signals
+            g_fpga_rb_reg_mem->ctrl |=  0x00200000;                                                        // RX: FM detection by AFC increment streaming
             fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(rx_car_osc_qrg);                                 // RX_CAR_OSC frequency
             fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                            // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
         }

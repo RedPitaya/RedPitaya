@@ -179,7 +179,7 @@
                 <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
                 <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM decoder signal)</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
                 <option disabled="disabled">==============</option>
                 <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
                 <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
@@ -192,6 +192,7 @@
                 <option disabled="disabled">---------------------</option>
                 <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
                 <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
                 <option disabled="disabled">==============</option>
@@ -261,7 +262,7 @@
                 <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
                 <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM decoder signal)</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
                 <option disabled="disabled">==============</option>
                 <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
                 <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
@@ -274,6 +275,7 @@
                 <option disabled="disabled">---------------------</option>
                 <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
                 <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
                 <option disabled="disabled">==============</option>
@@ -344,7 +346,7 @@
                 <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
                 <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM decoder signal)</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
                 <option disabled="disabled">==============</option>
                 <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
                 <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
@@ -357,6 +359,7 @@
                 <option disabled="disabled">---------------------</option>
                 <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
                 <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
                 <option disabled="disabled">==============</option>
@@ -403,6 +406,11 @@
               <option disabled="disabled">---------------------</option>
               <option value="1">RF Input 1</option>
               <option value="2">RF Input 2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">EXP AI0</option>
+              <option value="5">EXP AI1</option>
+              <option value="6">EXP AI2</option>
+              <option value="7">EXP AI3</option>
             </select>
             <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>

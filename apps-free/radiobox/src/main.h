@@ -141,7 +141,7 @@ enum rb_rx_modtyp_enum_t {
 
     RB_RX_MODTYP_USB        =  2,
     RB_RX_MODTYP_LSB,
-    RB_RX_MODTYP_AM,
+    RB_RX_MODTYP_AMENV,
     RB_RX_MODTYP_AMSYNC_USB,
     RB_RX_MODTYP_AMSYNC_LSB,
     RB_RX_MODTYP_FM,
