@@ -25,6 +25,8 @@ const double c_max_dig_sampling_rate_time_interval_ns = 4;
 rp_handle_uio_t la_acq_handle;
 rp_handle_uio_t sig_gen_handle;
 
+rp_acq_data_t acq_data;
+
 /*
 uio9: name=scope0, version=devicetree, events=0
         map[0]: addr=0x40090000, size=65536
@@ -90,6 +92,7 @@ RP_STATUS rp_CloseUnit(void)
     if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
+
     return r;
 }
 
@@ -276,19 +279,29 @@ RP_STATUS rp_GetTimebase(uint32_t timebase,
  * This function tells the driver where to store the data.
  *
  * @param channel    The channel you want to use with the buffer.
- * @param buffer      The location of the buffer
- * @param bufferLth The size of the buffer array
+ * @param buffer     The location of the buffer
+ * @param bufferLth  The size of the buffer array (notice that one sample is 16 bits)
  *
  */
-RP_STATUS rp_SetDataBuffer(RP_DIGITAL_PORT channel,
+RP_STATUS rp_SetDataBuffer(RP_CHANNEL channel,
                                  int16_t * buffer,
                                  int32_t bufferLth,
                                 // uint32_t segmentIndex,
                                 RP_RATIO_MODE mode)
 {
-
-
-    return 0;
+    switch(channel){
+        case RP_CH_AIN1:
+        case RP_CH_AIN2:
+        case RP_CH_AIN3:
+        case RP_CH_AIN4:
+            break;
+        case RP_CH_DIN:
+            acq_data.buf = buffer;
+            acq_data.buf_size = bufferLth;
+            return RP_API_OK;
+        break;
+    }
+    return RP_INVALID_PARAMETER;
 }
 
 
@@ -314,7 +327,6 @@ RP_STATUS rp_SetDataBuffer(RP_DIGITAL_PORT channel,
  */
 
 #include "rp_dma.h"
-#define TRIG_DELAY_SAMPLES 2
 
 RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
                      uint32_t noOfPostTriggerSamples,
@@ -326,20 +338,24 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
                      void * pParameter
 )
 {
-    // reset
-
     double timeIntervalNanoseconds;
-    uint32_t maxSamples;
-    RP_STATUS status = rp_GetTimebase(timebase,0,&timeIntervalNanoseconds,&maxSamples);
-    if(status!=RP_API_OK) return status;
+    uint32_t maxSamples=rp_LaAcqBufLenInSamples(&la_acq_handle);
 
-    //if((noOfPreTriggerSamples+noOfPostTriggerSamples)>maxSamples){
-    //    return RP_INVALID_PARAMETER;
-    //}
+    if(rp_GetTimebase(timebase,0,&timeIntervalNanoseconds,&maxSamples)!=RP_API_OK){
+        return RP_INVALID_TIMEBASE;
+    }
+
+    if(!(inrangeUint32 (noOfPreTriggerSamples+noOfPostTriggerSamples, 10, maxSamples))){
+        return RP_INVALID_PARAMETER;
+    }
+
+    printf("\r\n max: %d", maxSamples);
 
     *timeIndisposedMs=(noOfPreTriggerSamples+noOfPostTriggerSamples)*timeIntervalNanoseconds/10e6;
 
     // configure FPGA to start block mode
+
+   // TODO; sampling rate
    // rp_la_decimation_regset_t dec;
    // dec.dec=timebase;
    // rp_LaAcqSetDecimation(&la_acq_handle, dec);
@@ -347,119 +363,50 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     rp_la_cfg_regset_t cfg;
     cfg.pre=noOfPreTriggerSamples;
     cfg.pst=noOfPostTriggerSamples;
-    rp_LaAcqSetCntConfig(&la_acq_handle, cfg);
+    if(rp_LaAcqSetCntConfig(&la_acq_handle, cfg)!=RP_OK){
+        return RP_INVALID_PARAMETER;
+    }
 
     printf("\r\nrp_LaAcqRunAcq");
-    rp_LaAcqRunAcq(&la_acq_handle);
+    // start acq.
+    if(rp_LaAcqRunAcq(&la_acq_handle)!=RP_OK){
+        rp_LaAcqStopAcq(&la_acq_handle);
+        return RP_BLOCK_MODE_FAILED;
+    }
 
+    // block till acq. is complete
     rp_LaAcqBlockingRead(&la_acq_handle);
 
-
-    unsigned char* map=NULL;
-    // allocate data buffer memory
-    map = (unsigned char *) mmap(NULL, la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, la_acq_handle.dma_fd, 0);
-    if (map==NULL) {
-        printf("Failed to mmap\n");
-        if (la_acq_handle.dma_fd) {
-            close(la_acq_handle.dma_fd);
-        }
-        return -1;
+    // make sure acq. is stopped
+    bool isStoped;
+    rp_LaAcqAcqIsStopped(&la_acq_handle, &isStoped);
+    if(!isStoped){
+        rp_LaAcqStopAcq(&la_acq_handle);
+        return RP_BLOCK_MODE_FAILED;
     }
 
-
-
-    rp_DmaMemDump(&la_acq_handle);
-
-    // how to check if acq. was triggered?
-   /*
-    if(rp_IsAcquistionComplete()!=RP_API_OK){
-        return RP_OPERATION_FAILED;
+    // get trigger position
+    uint32_t trig_sample;
+    uint32_t pst_length;
+    if(rp_LaAcqGetCntStatus(&la_acq_handle, &trig_sample, &pst_length)!=RP_OK){
+        rp_LaAcqStopAcq(&la_acq_handle);
+        return RP_BLOCK_MODE_FAILED;
     }
-    */
 
+    // acquired number of post samples must match to req.
+    if(pst_length!=noOfPostTriggerSamples){
+        rp_LaAcqStopAcq(&la_acq_handle);
+        return RP_BLOCK_MODE_FAILED;
+    }
+
+    // save properties of current acq.
+    acq_data.pre_samples=noOfPreTriggerSamples;
+    acq_data.post_samples=noOfPostTriggerSamples;
+    acq_data.trig_sample=trig_sample;
 
     // acquisition is completed -> callback
+    RP_STATUS status=RP_API_OK;
     (*rpReady)(status,pParameter);
-
-
-    printf("\n\r req: pre=%d pos=%d\n\r", noOfPreTriggerSamples, noOfPostTriggerSamples);
-
-    uint32_t trig_addr;
-    uint32_t pst_length;
-    rp_LaAcqGetCntStatus(&la_acq_handle, &trig_addr, &pst_length);
-    printf("\n\r sta: trig_addr=%d pst_length=%d\n\r", trig_addr, pst_length);
-
-    uint32_t current;
-    uint32_t last;
-    rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last);
-    printf("\n\r sta: current=%d last=%d\n\r", current, last);
-
-    // verify trigger position
-    trig_addr=trig_addr-TRIG_DELAY_SAMPLES; // seems like 2 is fixed trigger delay
-    printf("\n\r data @ trigger pos \n\r");
-    printf("\n\r %02x",(char)map[(trig_addr*2)-2]);
-    printf("\n\r ->%02x",(char)map[(trig_addr*2)]);
-    printf("\n\r %02x",(char)map[(trig_addr*2)+2]);
-
-    // verify data before trigger
-    for(int i=0; i<noOfPreTriggerSamples; i++){
-        int addr = (trig_addr*2)-(2*i);
-        char cur=(char)map[addr];
-        char prev=(char)map[addr-2];
-
-        if(cur==0)
-            cur=0xff;
-        else
-            cur-=1;
-
-       // printf("\r\n %i 0x%x==0x%x",i,prev,cur);
-        if(prev!=cur){
-            printf("\r\n pre trigger data mismatch %i 0x%x!=0x%x",trig_addr-i-TRIG_DELAY_SAMPLES,prev,cur);
-            printf("\n\r %02x",(char)map[addr-2]);
-            printf("\n\r %02x",(char)map[addr]);
-            printf("\n\r %02x",(char)map[addr+2]);
-            return -1;
-        }
-    }
-
-    // verify data after trigger
-    for(int i=0; i<(noOfPostTriggerSamples-TRIG_DELAY_SAMPLES); i++){
-        int addr=(trig_addr*2)+(2*i);
-        char cur=(char)map[addr];
-        char next=(char)map[addr+2];
-
-        if(cur==0xff)
-            cur=0;
-        else
-            cur+=1;
-
-       // printf("\r\n %i 0x%x==0x%x",i,cur,next);
-        if(next!=cur){
-            printf("\r\n post trigger data mismatch %i 0x%x!=0x%x",trig_addr+i-TRIG_DELAY_SAMPLES,next,cur);
-            printf("\n\r %02x",(char)map[addr-2]);
-            printf("\n\r %02x",(char)map[addr]);
-            printf("\n\r %02x",(char)map[addr+2]);
-            return -1;
-        }
-    }
-
-    /*
-    // printout data
-    for (int i=0; i<handle->dma_size; i++) {
-        if ((i%64)==0 ) printf("@%08x: ", i);
-        printf("%02x",(char)map[i]);
-        if ((i%64)==63) printf("\n");
-    }
-    */
-
-    if(munmap (map, la_acq_handle.dma_size)==-1){
-        printf("Failed to munmap\n");
-        return -1;
-    }
-
-
-    printf("\r\n sta: rp_LaAcqStopAcq");
-    rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -534,6 +481,66 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
                       //uint32_t segmentIndex,
                       int16_t * overflow){
 
+    // TODO: startIndex & noOfSamples not used yet..
+
+    int16_t * map=NULL;
+    map = (int16_t *) mmap(NULL, la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, la_acq_handle.dma_fd, 0);
+    if (map==NULL) {
+        printf("Failed to mmap\n");
+        if (la_acq_handle.dma_fd) {
+            close(la_acq_handle.dma_fd);
+        }
+        return -1;
+    }
+
+    int32_t first_sample =   acq_data.trig_sample - acq_data.pre_samples;
+    int32_t last_sample =   acq_data.trig_sample + acq_data.post_samples;
+    int32_t buf_len =  rp_LaAcqBufLenInSamples(&la_acq_handle);
+
+    printf("\n\r req: pre=%d pos=%d\n\r", acq_data.pre_samples, acq_data.post_samples);
+    printf("\n\r sta: first=%d trig=%d last=%d\n\r", first_sample, acq_data.trig_sample, last_sample);
+
+    int32_t wlen;
+    if(first_sample<0){
+
+        printf("\n\r first_sample > last_sample\n\r");
+
+        wlen=abs(first_sample);
+        first_sample=buf_len+first_sample;
+        printf("\n\r sta: first=%d wlen=%d\n\r", first_sample, wlen);
+        for(int i=0; i<wlen; i++){
+            acq_data.buf[i]=map[first_sample+i];
+        }
+        for(int i=0; i<last_sample; i++){
+            acq_data.buf[wlen+i]=map[i];
+        }
+
+    }
+    else if(last_sample>=buf_len){
+
+        printf("\n\r last_sample > size\n\r");
+
+        wlen=buf_len-first_sample;
+        for(int i=0; i<wlen; i++){
+            acq_data.buf[i]=map[first_sample+i];
+        }
+        last_sample-=buf_len;
+        for(int i=0; i<last_sample; i++){
+            acq_data.buf[wlen+i]=map[i];
+        }
+
+    }
+    else{
+        printf("\n\r last_sample > first_sample\n\r");
+        for(int i=0; i<(*noOfSamples); i++){
+            acq_data.buf[i]=map[first_sample+i];
+        }
+    }
+
+    if(munmap (map, la_acq_handle.dma_size)==-1){
+        printf("Failed to munmap\n");
+        return -1;
+    }
 
     return RP_API_OK;
 };

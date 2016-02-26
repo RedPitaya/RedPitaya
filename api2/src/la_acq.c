@@ -59,6 +59,11 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
+    status = rp_LaAcqStopAcq(handle);
+    if (status != RP_OK) {
+        return status;
+    }
+
     return RP_OK;
 }
 
@@ -157,8 +162,7 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask)
 }
 
 int rp_LaAcqBlockingRead(rp_handle_uio_t *handle) {
-    rp_DmaRead(handle);
-    return RP_OK;
+    return rp_DmaRead(handle);
 }
 
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, uint32_t mask)
@@ -192,8 +196,21 @@ int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t
     rp_la_cfg_regset_t reg;
     reg.pre = ioread32(&regset->pre);
     reg.pst = ioread32(&regset->pst);
-    *trig_addr=reg.pre;//(reg.pre % LA_ACQ_BUF_SIZE);
+    *trig_addr=(reg.pre % rp_LaAcqBufLenInSamples(handle));
     *pst_length=reg.pst;
+
+    // calc. real trigger address
+    if(*trig_addr<TRIG_DELAY_SAMPLES){
+        *trig_addr=rp_LaAcqBufLenInSamples(handle)-TRIG_DELAY_SAMPLES+*trig_addr;
+    }
+    else{
+        *trig_addr-=TRIG_DELAY_SAMPLES;
+    }
+
+    if(!(inrangeUint32 (*trig_addr, 0, (rp_LaAcqBufLenInSamples(handle)-1)))){
+        return RP_EOOR;
+    }
+
     return RP_OK;
 }
 
@@ -258,6 +275,11 @@ int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_r
     return RP_OK;
 }
 */
+
+uint32_t rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle)
+{
+    return (handle->dma_size/(sizeof(int16_t)));
+}
 
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)
 {

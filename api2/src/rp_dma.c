@@ -99,14 +99,11 @@ int rp_DmaMemDump(rp_handle_uio_t *handle)
 
 int rp_DmaRead(rp_handle_uio_t *handle)
 {
-    printf("rp_DmaRead.\n");
     int s = read(handle->dma_fd, NULL, 1);
     if (s<0) {
       printf("read error\n");
       return -1;
     }
-    printf("Read unblocked.\n");
-
     return RP_OK;
 }
 

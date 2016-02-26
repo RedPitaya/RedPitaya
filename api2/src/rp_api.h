@@ -140,6 +140,15 @@ typedef enum rpDigitalPort {
     RP_DIGITAL_PORT1 = 0x81  // (digital channels 8–15)
 } RP_DIGITAL_PORT;
 
+
+typedef enum rpChannel {
+    RP_CH_AIN1=0,
+    RP_CH_AIN2,
+    RP_CH_AIN3,
+    RP_CH_AIN4,
+    RP_CH_DIN
+} RP_CHANNEL;
+
 typedef enum rpDigitalChannel
 {
 RP_DIGITAL_CHANNEL_0,
@@ -199,7 +208,7 @@ typedef enum rpTimeUnits
 } RP_TIME_UNITS;
 
 
-typedef void (*rpBlockReady)(RP_STATUS status,
+typedef void (*rpBlockReady)(RP_STATUS rp_status,
                              void * pParameter);
 
 typedef void (*rpStreamingReady)(int32_t noOfSamples,
@@ -232,7 +241,7 @@ RP_STATUS rp_GetTimebase(uint32_t timebase,
                         //uint32_t segmentIndex
                         );
 
-RP_STATUS rp_SetDataBuffer(RP_DIGITAL_PORT channel,
+RP_STATUS rp_SetDataBuffer(RP_CHANNEL channel,
                           int16_t * buffer,
                           int32_t bufferLth,
                           // uint32_t segmentIndex,

@@ -32,7 +32,7 @@ CFLAGS += -I../src -I../include
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lcunit -L ../lib -lrp2
+LIBS=-lm -lcunit -lpthread -L ../lib -lrp2 
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc

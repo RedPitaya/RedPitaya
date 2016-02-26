@@ -37,6 +37,16 @@ typedef struct {
   //volatile void *dma_mem;
 } rp_handle_uio_t;
 
+typedef struct {
+    int16_t *      buf;
+    size_t         buf_size;
+    uint32_t       pre_samples;
+    uint32_t       post_samples;
+    uint32_t       trig_sample;
+} rp_acq_data_t;
+
+
+
 /** @name Error codes
  *  Various error codes returned by the API.
  */
