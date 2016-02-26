@@ -365,8 +365,8 @@ CONFIG.c_include_mm2s {1} \
 CONFIG.c_include_sg {1} \
 CONFIG.c_m_axi_mm2s_data_width {32} \
 CONFIG.c_m_axis_mm2s_tdata_width {16} \
-CONFIG.c_mm2s_burst_size {16} \
-CONFIG.c_s2mm_burst_size {16} \
+CONFIG.c_mm2s_burst_size {64} \
+CONFIG.c_s2mm_burst_size {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
 CONFIG.c_sg_length_width {23} \
  ] $axi_dma_2
@@ -759,82 +759,82 @@ preplace inst axis_clock_converter_6 -pg 1 -lvl 8 -y 1890 -defaultsOSRD
 preplace inst axi_interconnect_2 -pg 1 -lvl 7 -y 420 -defaultsOSRD
 preplace inst proc_sys_reset -pg 1 -lvl 2 -y 1770 -defaultsOSRD
 preplace inst axi_interconnect_3 -pg 1 -lvl 7 -y 1100 -defaultsOSRD
-preplace netloc S_AXI_STR_RX1_1 1 0 9 NJ 2010 NJ 2010 NJ 2010 NJ 2010 NJ 2010 NJ 2010 NJ 2140 NJ 2140 NJ
-preplace netloc axi_dma_2_mm2s_introut 1 6 1 1900
-preplace netloc axi_dma_0_mm2s_introut 1 6 1 1910
-preplace netloc proc_sys_reset_interconnect_aresetn 1 2 6 520 1900 850 1810 1180 1840 1540 1640 2000 1810 NJ
-preplace netloc axi_dma_3_M_AXI_MM2S 1 6 1 1920
+preplace netloc axi_dma_2_mm2s_introut 1 6 1 1920
+preplace netloc S_AXI_STR_RX1_1 1 0 9 NJ 2000 NJ 2000 NJ 2000 NJ 2000 NJ 2000 NJ 2000 NJ 2140 NJ 2130 NJ
+preplace netloc axi_dma_0_mm2s_introut 1 6 1 1970
+preplace netloc proc_sys_reset_interconnect_aresetn 1 2 6 510 1750 840 1750 1200 1660 1560 580 2050 1830 NJ
+preplace netloc axi_dma_3_M_AXI_MM2S 1 6 1 1940
 preplace netloc processing_system7_0_fclk_reset1_n 1 8 1 NJ
-preplace netloc axi_interconnect_0_M04_AXI 1 3 1 840
-preplace netloc xlconcat_0_dout 1 7 1 2350
-preplace netloc axi_dma_1_M_AXI_MM2S 1 6 1 1930
-preplace netloc axi_dma_0_M_AXI_SG 1 6 1 1950
+preplace netloc axi_interconnect_0_M04_AXI 1 3 1 850
+preplace netloc xlconcat_0_dout 1 7 1 2400
+preplace netloc axi_dma_1_M_AXI_MM2S 1 6 1 1980
+preplace netloc axi_dma_0_M_AXI_SG 1 6 1 2000
 preplace netloc processing_system7_FCLK_CLK0 1 8 1 NJ
 preplace netloc IRQ_SCP1_1 1 0 7 NJ 1580 NJ 1580 NJ 1580 NJ 1580 NJ 1580 NJ 1580 NJ
-preplace netloc axi_dma_3_M_AXI_S2MM 1 6 1 1900
-preplace netloc processing_system7_FCLK_CLK1 1 1 8 170 1680 510 1940 860 1820 1190 1830 1520 1650 1990 1830 2340 2160 2890
-preplace netloc axi_interconnect_0_M01_AXI 1 3 3 NJ 1240 NJ 1240 1530
-preplace netloc S01_AXI_1 1 6 1 1980
+preplace netloc axi_dma_3_M_AXI_S2MM 1 6 1 1920
+preplace netloc processing_system7_FCLK_CLK1 1 1 8 170 1680 520 1680 830 1810 1200 1830 1520 330 1960 2150 2440 2150 2940
+preplace netloc axi_interconnect_0_M01_AXI 1 3 3 NJ 640 NJ 640 N
+preplace netloc S01_AXI_1 1 6 1 2030
 preplace netloc axi_interconnect_0_M02_AXI 1 3 3 NJ 1260 NJ 1260 N
-preplace netloc axi_dma_3_s2mm_introut 1 6 1 2010
+preplace netloc axi_dma_3_s2mm_introut 1 6 1 2060
 preplace netloc processing_system7_FCLK_CLK3 1 8 1 NJ
-preplace netloc axi_dma_1_s2mm_introut 1 6 1 1890
-preplace netloc axi_interconnect_1_M00_AXI 1 7 1 2430
+preplace netloc axi_dma_1_s2mm_introut 1 6 1 1930
+preplace netloc axi_interconnect_1_M00_AXI 1 7 1 2480
 preplace netloc m_axi_gp0_aclk_1 1 0 8 NJ 2390 NJ 2390 NJ 2390 NJ 2390 NJ 2390 NJ 2390 NJ 2390 NJ
 preplace netloc IRQ_SCP0_1 1 0 7 NJ 1560 NJ 1560 NJ 1560 NJ 1560 NJ 1560 NJ 1560 NJ
-preplace netloc axi_dma_3_M_AXI_SG 1 6 1 1970
-preplace netloc M_AXI_STR_TX2_arstn_1 1 0 8 NJ 1850 NJ 1860 NJ 1860 NJ 1800 NJ 1850 NJ 1900 NJ 1820 NJ
-preplace netloc axi_dma_0_M_AXIS_MM2S 1 5 2 1550 340 1890
-preplace netloc axi_dma_3_M_AXIS_MM2S 1 6 3 NJ 1800 NJ 1800 NJ
+preplace netloc axi_dma_3_M_AXI_SG 1 6 1 2020
+preplace netloc M_AXI_STR_TX2_arstn_1 1 0 8 NJ 1850 NJ 1860 NJ 1820 NJ 1820 NJ 1840 NJ 1910 NJ 1840 NJ
+preplace netloc axi_dma_0_M_AXIS_MM2S 1 5 2 1570 340 1920
+preplace netloc axi_dma_3_M_AXIS_MM2S 1 6 3 NJ 1790 NJ 1790 NJ
 preplace netloc IRQ_LA_1 1 0 7 NJ 1500 NJ 1500 NJ 1500 NJ 1500 NJ 1500 NJ 1500 NJ
 preplace netloc axi_dma_1_M_AXI_SG 1 6 1 N
-preplace netloc axi_interconnect_4_M00_AXI 1 7 1 2330
 preplace netloc processing_system7_0_ddr 1 8 1 NJ
-preplace netloc axi_dma_2_M_AXIS_MM2S 1 6 1 1950
+preplace netloc axi_interconnect_4_M00_AXI 1 7 1 2390
+preplace netloc axi_dma_2_M_AXIS_MM2S 1 6 1 1970
 preplace netloc IRQ_GEN1_1 1 0 7 NJ 1540 NJ 1540 NJ 1540 NJ 1540 NJ 1540 NJ 1540 NJ
-preplace netloc axis_clock_converter_2_M_AXIS 1 4 1 1170
 preplace netloc processing_system7_0_fixed_io 1 8 1 NJ
-preplace netloc axi_dma_0_M_AXI_MM2S 1 6 1 1900
-preplace netloc axi_interconnect_3_M00_AXI 1 7 1 2370
-preplace netloc axi_dma_3_mm2s_introut 1 6 1 1890
+preplace netloc axis_clock_converter_2_M_AXIS 1 4 1 1190
+preplace netloc axi_dma_0_M_AXI_MM2S 1 6 1 1930
+preplace netloc axi_interconnect_3_M00_AXI 1 7 1 2420
+preplace netloc axi_dma_3_mm2s_introut 1 6 1 2030
 preplace netloc axis_clock_converter_6_M_AXIS 1 8 1 NJ
-preplace netloc axi_dma_0_M_AXI_S2MM 1 6 1 1910
+preplace netloc axi_dma_0_M_AXI_S2MM 1 6 1 1950
 preplace netloc axis_data_fifo_2_M_AXIS 1 5 1 1550
 preplace netloc Vp_Vn_1 1 0 4 NJ 2130 NJ 2130 NJ 2130 NJ
-preplace netloc processing_system7_0_fclk_reset3_n 1 1 8 170 2000 NJ 2000 NJ 2000 NJ 2000 NJ 2000 NJ 1840 NJ 1980 2900
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 8 170 2010 NJ 2010 NJ 2010 NJ 2010 NJ 2010 NJ 2160 NJ 2160 2930
 preplace netloc Vaux0_1 1 0 4 NJ 2150 NJ 2150 NJ 2150 NJ
-preplace netloc axis_data_fifo_6_M_AXIS 1 7 1 2440
-preplace netloc axi_dma_2_M_AXI_SG 1 6 1 1950
+preplace netloc axis_data_fifo_6_M_AXIS 1 7 1 2470
+preplace netloc axi_dma_2_M_AXI_SG 1 6 1 2000
 preplace netloc IRQ_LG_1 1 0 7 NJ 1480 NJ 1480 NJ 1480 NJ 1480 NJ 1480 NJ 1480 NJ
-preplace netloc axi_dma_1_mm2s_introut 1 6 1 1900
-preplace netloc axi_interconnect_2_M00_AXI 1 7 1 2410
-preplace netloc processing_system7_M_AXI_GP1 1 2 7 530 2350 NJ 2350 NJ 2350 NJ 2350 NJ 2350 NJ 2150 2880
+preplace netloc axi_dma_1_mm2s_introut 1 6 1 2040
+preplace netloc processing_system7_M_AXI_GP1 1 2 7 530 1770 NJ 1770 NJ 1900 NJ 1900 NJ 1800 NJ 1800 2920
+preplace netloc axi_interconnect_2_M00_AXI 1 7 1 2450
 preplace netloc Vaux8_1 1 0 4 NJ 2190 NJ 2190 NJ 2190 NJ
-preplace netloc S_AXI_STR_RX2_1 1 0 4 NJ 1870 NJ 1870 NJ 1870 NJ
 preplace netloc S_AXI_STR_RX2_aclk_1 1 0 4 NJ 1930 NJ 1930 NJ 1930 NJ
-preplace netloc xadc_wiz_0_ip2intc_irpt 1 4 3 NJ 2060 NJ 2060 1960
+preplace netloc xadc_wiz_0_ip2intc_irpt 1 4 3 NJ 1440 NJ 1440 N
+preplace netloc S_AXI_STR_RX2_1 1 0 4 NJ 1870 NJ 1870 NJ 1870 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 8 1 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 8 1 NJ
 preplace netloc S_AXI_STR_RX3_1 1 0 6 NJ 1670 NJ 1670 NJ 1670 NJ 1670 NJ 1670 NJ
 preplace netloc S_AXI_STR_RX2_arstn_1 1 0 4 NJ 1890 NJ 1890 NJ 1890 NJ
 preplace netloc processing_system7_0_fclk_reset0_n 1 8 1 NJ
+preplace netloc axi_interconnect_5_M00_AXI 1 7 1 2460
 preplace netloc S_AXI_STR_RX0_1 1 0 9 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ
-preplace netloc axi_interconnect_5_M00_AXI 1 7 1 2420
-preplace netloc axi_dma_1_M_AXIS_MM2S 1 5 2 1550 580 1890
 preplace netloc processing_system7_0_M_AXI_GP0 1 8 1 NJ
+preplace netloc axi_dma_1_M_AXIS_MM2S 1 5 2 1570 820 1920
 preplace netloc Vaux1_1 1 0 4 NJ 2170 NJ 2170 NJ 2170 NJ
-preplace netloc M_AXI_STR_TX2_aclk_1 1 0 8 NJ 1650 NJ 1650 NJ 1650 NJ 1650 NJ 1650 NJ 1660 NJ 1790 NJ
-preplace netloc axi_dma_1_M_AXI_S2MM 1 6 1 1940
+preplace netloc M_AXI_STR_TX2_aclk_1 1 0 8 NJ 1650 NJ 1650 NJ 1650 NJ 1650 NJ 1650 NJ 1650 NJ 1810 NJ
+preplace netloc axi_dma_1_M_AXI_S2MM 1 6 1 1990
 preplace netloc Vaux9_1 1 0 4 NJ 2210 NJ 2210 NJ 2210 NJ
-preplace netloc axi_dma_0_s2mm_introut 1 6 1 2010
+preplace netloc axi_dma_0_s2mm_introut 1 6 1 2060
 preplace netloc xlconstant_dout 1 1 1 NJ
 preplace netloc IRQ_GEN0_1 1 0 7 NJ 1520 NJ 1520 NJ 1520 NJ 1520 NJ 1520 NJ 1520 NJ
 preplace netloc IRQ_GPIO_1 1 0 7 NJ 1460 NJ 1460 NJ 1460 NJ 1460 NJ 1460 NJ 1460 NJ
 preplace netloc axi_interconnect_0_M03_AXI 1 3 3 NJ 1280 NJ 1280 1530
-preplace netloc axi_interconnect_0_M00_AXI 1 3 3 NJ 1220 NJ 1220 1510
-preplace netloc S00_AXI_1 1 6 1 1960
-preplace netloc axi_dma_2_s2mm_introut 1 6 1 1980
-levelinfo -pg 1 0 90 340 680 1010 1350 1720 2170 2660 2920 -top 0 -bot 2580
+preplace netloc axi_interconnect_0_M00_AXI 1 3 3 NJ 400 NJ 400 N
+preplace netloc S00_AXI_1 1 6 1 2010
+preplace netloc axi_dma_2_s2mm_introut 1 6 1 2040
+levelinfo -pg 1 0 90 340 680 1010 1360 1750 2230 2700 2960 -top 0 -bot 2580
 ",
 }
 
