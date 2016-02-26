@@ -769,7 +769,7 @@ for (genvar i=0; i<MNA; i++) begin: for_acq
 
 scope_top #(
   .TN ($bits(trg)),
-  .CW (28)
+  .CW (32)
 ) scope (
   // streams
   .sti       (str_osc[0+i]),
@@ -831,7 +831,7 @@ assign str_lgo.TREADY = axi_exo[1].TREADY;
 la_top #(
   .DAT_T (SBL_T),
   .TN ($bits(trg)),
-  .CW (28)
+  .CW (32)
 ) la (
   // streams
   .sti       (axi_exi[1]),
