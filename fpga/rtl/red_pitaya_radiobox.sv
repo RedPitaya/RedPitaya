@@ -2404,10 +2404,10 @@ wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 
 reg    signed [ 47: 0] rx_mod_amenv_accu         = 'b0;      // mean value of magnitue = mean value of AM envelope
 
-wire   signed [ 47: 0] rx_mod_amenv_s1_sig_in    = { 5'b0, rx_afc_cordic_polar_out_mag[31:0], 11'b0 };   // magnitude is unsigned
+wire   signed [ 47: 0] rx_mod_amenv_s1_sig_in    = { 7'b0, rx_afc_cordic_polar_out_mag[31:0], 9'b0 };           // magnitude is unsigned
 wire   signed [ 47: 0] rx_mod_amenv_s1_out;
 
-wire   signed [ 47: 0] rx_mod_amenv_accu_release = ~{ {4{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:4] };  // sign extension, balance to zero within 10 ms
+wire   signed [ 47: 0] rx_mod_amenv_accu_release = ~{ {4{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:4] };   // sign extension, balance to zero within 10 ms
 wire   signed [ 47: 0] rx_mod_amenv_s2_out;
 
 wire   signed [ 47: 0] rx_mod_amenv_s3_mean_in   = ~rx_mod_amenv_s2_out;
