@@ -2404,14 +2404,14 @@ wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 
 reg    signed [ 47: 0] rx_mod_amenv_accu         = 'b0;      // mean value of magnitue = mean value of AM envelope
 
-wire   signed [ 47: 0] rx_mod_amenv_s1_sig_in    = { {3{rx_afc_cordic_polar_out_mag[31]}}, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // sign extension
+wire   signed [ 47: 0] rx_mod_amenv_s1_sig_in    = { 4'b0, rx_afc_cordic_polar_out_mag[31:0], 12'b0 };   // magnitude is unsigned
 wire   signed [ 47: 0] rx_mod_amenv_s1_out;
 
-wire   signed [ 47: 0] rx_mod_amenv_accu_release = ~{ {9{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:9] };                           // sign extension, balance to zero within 10 ms
+wire   signed [ 47: 0] rx_mod_amenv_accu_release = ~{ {2{rx_mod_amenv_accu[47]}} , rx_mod_amenv_accu[47:2] };  // sign extension, balance to zero within 10 ms
 wire   signed [ 47: 0] rx_mod_amenv_s2_out;
 
 wire   signed [ 47: 0] rx_mod_amenv_s3_mean_in   = ~rx_mod_amenv_s2_out;
-wire   signed [ 47: 0] rx_mod_amenv_s3_sig_in    = { rx_afc_cordic_polar_out_mag[31:0], 16'b0 };                                        // sign extension
+wire   signed [ 47: 0] rx_mod_amenv_s3_sig_in    = { rx_afc_cordic_polar_out_mag[31:0], 16'b0 };
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
 rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s1 (     // mean value - signal integrator
@@ -3007,7 +3007,7 @@ else if (rfout1_src_con_pnt && rb_reset_n)
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
       // rb_out_ch[0] <= { 1'b0, clk_200khz, 14'b0 };
-      rb_out_ch[0] <= rx_mod_pm_s2_out[47:32];
+      rb_out_ch[0] <= rx_mod_amenv_s1_out[47:32];
       end
 
    default: begin
@@ -3228,7 +3228,7 @@ else if (rfout2_src_con_pnt && rb_reset_n)
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
       // rb_out_ch[1] <= { 1'b0, rx_mod_cic4_chk_rst_cnt, 12'b0 };
       // rb_out_ch[1] <= { 1'b0, rx_mod_cic1_chk_rst, 14'b0 };
-      rb_out_ch[1] <= rx_mod_pm_accu[47:32];
+      rb_out_ch[1] <= rx_mod_amenv_s2_out[47:32];
       end
 
    default: begin
