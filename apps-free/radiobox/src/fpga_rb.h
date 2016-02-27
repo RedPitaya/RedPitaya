@@ -938,7 +938,16 @@ typedef struct fpga_rb_reg_mem_s {
       */
      uint32_t rx_mod_ssb_am_gain;
 
-     /** @brief  R/W RB_RX_MOD_FM_GAIN -  bits 15..0 (addr: 0x40600184)
+     /** @brief  R/W RB_RX_MOD_AMENV_GAIN -  bits 15..0 (addr: 0x40600184)
+      *
+      * bit h0F..h00: UNSIGNED 16 bit - gain value for the AM-Envelope demodulator output.
+      *
+      * bit h1F..h10: n/a
+      *
+      */
+     uint32_t rx_mod_amenv_gain;
+
+     /** @brief  R/W RB_RX_MOD_FM_GAIN -  bits 15..0 (addr: 0x40600188)
       *
       * bit h0F..h00: UNSIGNED 16 bit - gain value for the FM demodulator output.
       *
@@ -947,7 +956,7 @@ typedef struct fpga_rb_reg_mem_s {
       */
      uint32_t rx_mod_fm_gain;
 
-     /** @brief  R/W RB_RX_MOD_PM_GAIN -  bits 15..0 (addr: 0x40600188)
+     /** @brief  R/W RB_RX_MOD_PM_GAIN -  bits 15..0 (addr: 0x4060018C)
       *
       * bit h0F..h00: UNSIGNED 16 bit - gain value for the PM demodulator output.
       *
@@ -955,14 +964,6 @@ typedef struct fpga_rb_reg_mem_s {
       *
       */
      uint32_t rx_mod_pm_gain;
-
-
-     /** @brief  Placeholder for addr: 0x4060018C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_18c;
 
 
      /** @brief  R/W RB_RX_AUDIO_OUT_GAIN - RX_AUDIO_OUT amplitude register, bits 15..0 (addr: 0x40600190)
@@ -1085,7 +1086,6 @@ void fpga_rb_set_tx_modtyp(int tx_modtyp);
  *
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  */
-//void fpga_rb_set_tx_car_osc_mod_none_am_pm(double tx_car_osc_qrg);
 void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg);
 
 /**
@@ -1176,6 +1176,13 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg);
  * @param[in]  rx_mod_ssb_am_gain  gain between 0% .. 100%.
  */
 void fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(double rx_mod_ssb_am_gain);
+
+/**
+ * @brief Calculates and programs the FPGA RX_MOD_AMENV mixer
+ *
+ * @param[in]  rx_mod_amenv_gain  gain between 0% .. 100%.
+ */
+void fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(double rx_mod_amenv_gain);
 
 /**
  * @brief Calculates and programs the FPGA RX_MOD_FM mixer

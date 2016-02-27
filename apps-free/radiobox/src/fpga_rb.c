@@ -355,6 +355,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                     // TX_AMP_RF     gain setting [mV] is global and not modulation dependent
 
         fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(100.0);                                                // RX_MOD_SSB_AM gain setting [ %] only for the SSB demodulator
+        fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(100.0);                                                  // RX_MOD_AMENV  gain setting [ %] only for the AM-Envelope demodulator
         fpga_rb_set_rx_mod_fm_gain__4mod_fm(100.0);                                                        // RX_MOD_FM     gain setting [ %] only for the FM demodulator
         fpga_rb_set_rx_mod_pm_gain__4mod_pm(100.0);                                                        // RX_MOD_PM     gain setting [ %] only for the PM demodulator
         fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(100.0, 0.0);                                           // RX_AUDIO_OUT  gain setting [ %] is global and not modulation dependent
@@ -936,7 +937,7 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(double rx_mod_ssb_am_gain)
 {
-    double gain = ((double) 0x7fff) * (rx_mod_ssb_am_gain /  100.0);
+    double gain = ((double) 0xffff) * (rx_mod_ssb_am_gain / 100.0);
 
     fprintf(stderr, "INFO - fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am: (gain=%lf) <-- in(rx_mod_ssb_am_gain=%lf)\n",
             gain, rx_mod_ssb_am_gain);
@@ -945,9 +946,20 @@ void fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(double rx_mod_ssb_am_gain)
 }
 
 /*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(double rx_mod_amenv_gain)
+{
+    double gain = ((double) 0xffff) * (rx_mod_amenv_gain / 100.0);
+
+    fprintf(stderr, "INFO - fpga_rb_set_rx_mod_amenv_gain__4mod_amenv: (gain=%lf) <-- in(rx_mod_amenv_gain=%lf)\n",
+            gain, rx_mod_amenv_gain);
+
+    g_fpga_rb_reg_mem->rx_mod_amenv_gain = ((uint32_t) gain) & 0xffff;
+}
+
+/*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_mod_fm_gain__4mod_fm(double rx_mod_fm_gain)
 {
-    double gain = ((double) 0x7fff) * (rx_mod_fm_gain /  100.0);
+    double gain = ((double) 0xffff) * (rx_mod_fm_gain / 100.0);
 
     fprintf(stderr, "INFO - fpga_rb_set_rx_mod_fm_gain__4mod_fm: (gain=%lf) <-- in(rx_mod_fm_gain=%lf)\n",
             gain, rx_mod_fm_gain);
@@ -958,7 +970,7 @@ void fpga_rb_set_rx_mod_fm_gain__4mod_fm(double rx_mod_fm_gain)
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_mod_pm_gain__4mod_pm(double rx_mod_pm_gain)
 {
-    double gain = ((double) 0x7fff) * (rx_mod_pm_gain /  100.0);
+    double gain = ((double) 0xffff) * (rx_mod_pm_gain / 100.0);
 
     fprintf(stderr, "INFO - fpga_rb_set_rx_mod_pm_gain__4mod_pm: (gain=%lf) <-- in(rx_mod_pm_gain=%lf)\n",
             gain, rx_mod_pm_gain);
