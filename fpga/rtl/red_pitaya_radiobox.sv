@@ -2478,7 +2478,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_amenv_mixer (
   .P                       ( rx_mod_amenv_mix_out        )   // AM-ENV demod. output    SIGSIG 32 bit
 );
 
-wire   signed [ 15: 0] rx_mod_amenv_out = rx_mod_amenv_mix_out[28:13];
+wire   signed [ 15: 0] rx_mod_amenv_out = rx_mod_amenv_mix_out[29:14];
 
 
 // === RX_AUDIO section ===
