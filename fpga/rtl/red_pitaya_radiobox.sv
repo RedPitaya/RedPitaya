@@ -1627,8 +1627,8 @@ if (!rb_pwr_rx_MOD_rst_n) begin                    // register input I
    rx_mod_regs2_i_new  <= 1'b0;
    end
 else if (rx_mod_fir2_i_out_vld) begin
-   rx_mod_regs2_i_data <= rb_pwr_rx_AFC_en ?  rx_mod_fir2_i_out[32:17] :
-                                              rx_mod_fir2_i_out[33:18] ;  // drive by factor 2 when modulation is AM-Sync, FM, PM, AM-Env
+   rx_mod_regs2_i_data <= rb_pwr_rx_AFC_en ?  rx_mod_fir2_i_out[31:16] :
+                                              rx_mod_fir2_i_out[33:18] ;  // drive by factor 4 when modulation is AM-Sync, FM, PM, AM-Env
    rx_mod_regs2_i_new  <= 1'b1;
    end
 else if (rx_mod_regs2_i_out_vld)
@@ -1643,8 +1643,8 @@ if (!rb_pwr_rx_MOD_rst_n) begin                    // register input Q
    rx_mod_regs2_q_new  <= 1'b0;
    end
 else if (rx_mod_fir2_q_out_vld) begin
-   rx_mod_regs2_q_data <= rb_pwr_rx_AFC_en ?  rx_mod_fir2_q_out[32:17] :
-                                              rx_mod_fir2_q_out[33:18] ;  // drive by factor 2 when modulation is AM-Sync, FM, PM, AM-Env
+   rx_mod_regs2_q_data <= rb_pwr_rx_AFC_en ?  rx_mod_fir2_q_out[31:16] :
+                                              rx_mod_fir2_q_out[33:18] ;  // drive by factor 4 when modulation is AM-Sync, FM, PM, AM-Env
    rx_mod_regs2_q_new  <= 1'b1;
    end
 else if (rx_mod_regs2_q_out_vld)
@@ -1989,7 +1989,7 @@ wire                   rx_afc_fir_is_set2   = ((rb_pwr_rx_modvar == RB_PWR_CTRL_
                                                (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM)      ||
                                                (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_ENV)) ?  1'b1 : 1'b0;
 wire unsigned [  7: 0] rx_afc_fir_cfg_in    = { 7'b0, rx_afc_fir_is_set2 };         // AXIS word expansion
-wire   signed [ 23: 0] rx_afc_fir_i_in      = { 7'b0, rx_car_regs2_i_data[16:0] };  // AXIS word expansion
+wire   signed [ 23: 0] rx_afc_fir_i_in      = { 7'b0, rx_car_regs2_i_data[17:1] };  // AXIS word expansion
 wire unsigned [ 39: 0] rx_afc_fir_i_out;
 wire                   rx_afc_fir_i_out_vld;
 
@@ -2011,7 +2011,7 @@ rb_fir3_200k_to_200k_24c_17i16_35o i_rb_rx_afc_fir_I (
   .m_axis_data_tvalid      ( rx_afc_fir_i_out_vld        )
 );
 
-wire   signed [ 23: 0] rx_afc_fir_q_in      = { 7'b0, rx_car_regs2_q_data[16:0] };  // AXIS word expansion
+wire   signed [ 23: 0] rx_afc_fir_q_in      = { 7'b0, rx_car_regs2_q_data[17:1] };  // AXIS word expansion
 wire unsigned [ 39: 0] rx_afc_fir_q_out;
 wire                   rx_afc_fir_q_out_vld;
 
