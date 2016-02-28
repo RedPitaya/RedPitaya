@@ -892,12 +892,12 @@ typedef struct fpga_rb_reg_mem_s {
       */
      uint32_t reserved_168;
 
-     /** @brief  Placeholder for addr: 0x4060016C
+     /** @brief  R/W RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec, bits 31..0 (addr: 0x4060016C)
       *
-      * n/a
+      * bit h1F..h00: RX_AFC_CORDIC magnitude mean value register.
       *
       */
-     uint32_t reserved_16c;
+     uint32_t rx_signal_strength;
 
 
      /** @brief  R/W RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 15..0 (addr: 0x40600170)

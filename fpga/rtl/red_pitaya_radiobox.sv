@@ -3338,7 +3338,6 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]         <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_SRC]              <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_GAIN]             <= 32'h00000000;
-   regs[REG_RD_RB_RX_SIGNAL_STRENGTH]        <= 32'h00000000;
    regs[REG_RW_RB_RX_SSB_AM_GAIN]            <= 32'h00000000;
    regs[REG_RW_RB_RX_AMENV_GAIN]             <= 32'h00000000;
    regs[REG_RW_RB_RX_FM_GAIN]                <= 32'h00000000;
@@ -3461,9 +3460,6 @@ else begin
          end
       20'h00164: begin
          regs[REG_RW_RB_RX_MUXIN_GAIN]            <= { 13'b0, sys_wdata[18:0] };
-         end
-      20'h0016C: begin
-         regs[REG_RD_RB_RX_SIGNAL_STRENGTH]       <= sys_wdata[31:0];
          end
 
       /* RX_DEMOD_GAIN */
