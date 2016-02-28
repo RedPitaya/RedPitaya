@@ -153,7 +153,7 @@ enum {
                                                 //      d32=adc_i[0], d33=adc_i[1]
     REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB audio signal RX MUXIN    UNSIGNED 16 bit
     //REG_RD_RB_RX_RSVD_H168,
-    //REG_RD_RB_RX_RSVD_H16C,
+    REG_RD_RB_RX_SIGNAL_STRENGTH,
 
     REG_RD_RB_RX_AFC_CORDIC_MAG,                // h170: RB RX_AFC_CORDIC magnitude value
     REG_RD_RB_RX_AFC_CORDIC_PHS,                // h174: RB_RX_AFC_CORDIC phase value
@@ -2340,7 +2340,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_fm_mixer (
   .P                       ( rx_mod_fm_mix_out           )   // FM demodulated output   SIGSIG 32 bit
 );
 
-wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[30:15];
+wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[29:14];
 
 
 //---------------------------------------------------------------------------------
@@ -2348,7 +2348,7 @@ wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[30:15];
 
 reg    signed [ 47: 0] rx_mod_pm_accu         = 'b0;                                                     // integration: FM --> PM
 
-wire   signed [ 47: 0] rx_mod_fm_in           = { {3{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 29'b0 };  // sign extension
+wire   signed [ 47: 0] rx_mod_fm_in           = { {4{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 28'b0 };  // sign extension
 wire   signed [ 47: 0] rx_mod_pm_s1_out;
 
 wire   signed [ 47: 0] rx_mod_pm_accu_release = ~{ {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };   // sign extension and negation, balance to zero within 400 ms
@@ -2447,6 +2447,8 @@ else if (clk_200khz)
       end
    else
       rx_mod_amenv_accu <= rx_mod_amenv_s1_out;
+
+assign regs[REG_RD_RB_RX_SIGNAL_STRENGTH] = rx_mod_amenv_mean[47:32];
 
 wire   signed [ 47: 0] rx_mod_amenv_mean_in   = ~(rx_mod_amenv_mean[47:0]);
 wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 3'b0, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
@@ -3336,6 +3338,7 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]         <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_SRC]              <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_GAIN]             <= 32'h00000000;
+   regs[REG_RD_RB_RX_SIGNAL_STRENGTH]        <= 32'h00000000;
    regs[REG_RW_RB_RX_SSB_AM_GAIN]            <= 32'h00000000;
    regs[REG_RW_RB_RX_AMENV_GAIN]             <= 32'h00000000;
    regs[REG_RW_RB_RX_FM_GAIN]                <= 32'h00000000;
@@ -3458,6 +3461,9 @@ else begin
          end
       20'h00164: begin
          regs[REG_RW_RB_RX_MUXIN_GAIN]            <= { 13'b0, sys_wdata[18:0] };
+         end
+      20'h0016C: begin
+         regs[REG_RD_RB_RX_SIGNAL_STRENGTH]       <= sys_wdata[31:0];
          end
 
       /* RX_DEMOD_GAIN */
@@ -3676,6 +3682,10 @@ else begin
       20'h00164: begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_RX_MUXIN_GAIN];
+         end
+      20'h0016C: begin
+         sys_ack   <= sys_en;
+         sys_rdata <= regs[REG_RD_RB_RX_SIGNAL_STRENGTH];
          end
 
       /* RX_AFC_CORDIC */
