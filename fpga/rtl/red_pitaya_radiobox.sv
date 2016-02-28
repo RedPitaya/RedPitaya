@@ -2348,7 +2348,7 @@ wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[29:14];
 
 reg    signed [ 47: 0] rx_mod_pm_accu         = 'b0;                                                     // integration: FM --> PM
 
-wire   signed [ 47: 0] rx_mod_fm_in           = { {4{rx_mod_fm_out[15]}}, rx_mod_fm_out[15:0], 28'b0 };  // sign extension
+wire   signed [ 47: 0] rx_mod_fm_in           = { {4{rx_mod_fm_mix_out[30]}}, rx_mod_fm_mix_out[30:15], 28'b0 };  // sign extension
 wire   signed [ 47: 0] rx_mod_pm_s1_out;
 
 wire   signed [ 47: 0] rx_mod_pm_accu_release = ~{ {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };   // sign extension and negation, balance to zero within 400 ms
