@@ -1943,7 +1943,7 @@ else if (clk_48khz)
    else begin
       if (rx_mod_cic4_chk_rst_cnt == 3'b100)
          rx_mod_cic4_chk_rst_n   <= 1'b1;                    // release of reset from distorted state
-      rx_mod_cic4_chk_rst_cnt <= rx_mod_cic4_chk_rst_cnt - 1;
+      rx_mod_cic4_chk_rst_cnt    <= rx_mod_cic4_chk_rst_cnt - 1;
       end
 
 
@@ -2402,22 +2402,6 @@ wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 //---------------------------------------------------------------------------------
 //  RX_MOD_AMENV envelope ouput - strategy: difference to mean value of the magnitude
 
-reg  unsigned [  7: 0] rx_mod_pm_clk_cnt   =  'b0;
-reg                    rx_mod_pm_clk_pulse = 1'b0;
-
-always @(posedge clk_adc_125mhz)
-if (!rb_pwr_rx_AFC_rst_n) begin
-   rx_mod_pm_clk_cnt   <=  'b0;
-   rx_mod_pm_clk_pulse <= 1'b0;
-   end
-else if (clk_8khz) begin
-   if (rx_mod_pm_clk_cnt == 8'hff)
-      rx_mod_pm_clk_pulse <= 1'b1;
-   else
-      rx_mod_pm_clk_pulse <= 1'b0;
-   rx_mod_pm_clk_cnt <= rx_mod_pm_clk_cnt + 1;
-   end
-
 reg  unsigned [ 47: 0] rx_mod_amenv_accu         = 'b0;                                                         // mean value of magnitue = mean value of AM envelope
 wire unsigned [ 47: 0] rx_mod_amenv_s1_sig_in    = { 16'b0, rx_afc_cordic_polar_out_mag[31:0] };                // magnitude is unsigned
 wire unsigned [ 47: 0] rx_mod_amenv_s1_out;
@@ -2433,6 +2417,22 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s1 (     // mean value - sig
   .P                       ( rx_mod_amenv_s1_out         )   // accu step 1           UNSIGNED 48 bit
 );
 
+reg  unsigned [ 12: 0] rx_mod_amenv_clk_cnt   =  'b0;
+reg                    rx_mod_amenv_clk_pulse = 1'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!rb_pwr_rx_AFC_rst_n) begin
+   rx_mod_amenv_clk_cnt   <=  'b0;
+   rx_mod_amenv_clk_pulse <= 1'b0;
+   end
+else begin
+   if (rx_mod_amenv_clk_cnt == 13'b0)
+      rx_mod_amenv_clk_pulse <= 1'b1;
+   else
+      rx_mod_amenv_clk_pulse <= 1'b0;
+   rx_mod_amenv_clk_cnt <= rx_mod_amenv_clk_cnt - 1;
+   end
+
 reg  unsigned [ 47: 0] rx_mod_amenv_mean = 'b0;
 
 always @(posedge clk_adc_125mhz)
@@ -2441,15 +2441,15 @@ if (!rb_pwr_rx_AFC_rst_n) begin
    rx_mod_amenv_accu <= 'b0;
    end
 else if (clk_200khz)
-   if (rx_mod_pm_clk_pulse) begin
+   if (rx_mod_amenv_clk_pulse) begin
       rx_mod_amenv_mean <= rx_mod_amenv_s1_out;
       rx_mod_amenv_accu <= 'b0;
       end
    else
       rx_mod_amenv_accu <= rx_mod_amenv_s1_out;
 
-wire   signed [ 47: 0] rx_mod_amenv_mean_in   = ~rx_mod_amenv_mean;
-wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 5'b0, rx_afc_cordic_polar_out_mag[31:0], 11'b0 };
+wire   signed [ 47: 0] rx_mod_amenv_mean_in   = ~(rx_mod_amenv_mean[47:0]);
+wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 4'b0, rx_afc_cordic_polar_out_mag[31:0], 12'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
 rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demodulation
@@ -2463,7 +2463,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demo
   .P                       ( rx_mod_amenv_diff_out       )   // AM envelope             SIGNED 48 bit
 );
 
-wire   signed [ 15: 0] rx_mod_amenv_mix_in = rx_mod_amenv_diff_out[43:28];
+wire   signed [ 15: 0] rx_mod_amenv_mix_in = rx_mod_amenv_diff_out[44:29];
 wire   signed [ 15: 0] rx_amenv_gain_in = { 1'b0, rx_amenv_gain[15:1] };
 wire   signed [ 47: 0] rx_mod_amenv_mix_out;
 
@@ -2478,7 +2478,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_amenv_mixer (
   .P                       ( rx_mod_amenv_mix_out        )   // AM-ENV demod. output    SIGSIG 32 bit
 );
 
-wire   signed [ 15: 0] rx_mod_amenv_out = rx_mod_amenv_mix_out[30:15];
+wire   signed [ 15: 0] rx_mod_amenv_out = rx_mod_amenv_mix_out[31:16];
 
 
 // === RX_AUDIO section ===
