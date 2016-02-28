@@ -2449,7 +2449,7 @@ else if (clk_200khz)
       rx_mod_amenv_accu <= rx_mod_amenv_s1_out;
 
 wire   signed [ 47: 0] rx_mod_amenv_mean_in   = ~(rx_mod_amenv_mean[47:0]);
-wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 4'b0, rx_afc_cordic_polar_out_mag[31:0], 12'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
+wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 3'b0, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
 rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demodulation
