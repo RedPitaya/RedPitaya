@@ -24,13 +24,13 @@
 *.x86_64
 *.hex
 # Generated misc files
-+*.jou
-+*.log
-+*.bif
-+*.os
-+*.xpr
-+*.gz
-+*.str
+*.jou
+*.log
+*.bif
+*.os
+*.xpr
+*.gz
+*.str
 
 scpi-server/scpi-server
 
