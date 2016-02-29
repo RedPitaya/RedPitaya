@@ -112,6 +112,8 @@ enum {
                                                 //      d17=EXT-CH1,  d25=EXT-CH9,
                                                 //      d32=adc_i[0], d33=adc_i[1]
     REG_RW_RB_TX_MUXIN_GAIN,                    // h064: RB analog TX MUX gain:      UNSIGNED 16 bit
+    REG_RW_RB_TX_MUXIN_OFS,                     // h068: RB analog TX MUX gain:        SIGNED 16 bit
+    //REG_RD_RB_TX_RSVD_H06C,
 
 
     /* RX section */
@@ -152,8 +154,8 @@ enum {
                                                 //      d17=EXT-CH1,  d25=EXT-CH9,
                                                 //      d32=adc_i[0], d33=adc_i[1]
     REG_RW_RB_RX_MUXIN_GAIN,                    // h164: RB audio signal RX MUXIN    UNSIGNED 16 bit
-    //REG_RD_RB_RX_RSVD_H168,
-    REG_RD_RB_RX_SIGNAL_STRENGTH,
+    REG_RW_RB_RX_MUXIN_OFS,                     // h168: RB analog RX MUX gain:        SIGNED 16 bit
+    REG_RD_RB_RX_SIGNAL_STRENGTH,               // h16C: RB RX signal strength:      UNSIGNED 32 bit
 
     REG_RD_RB_RX_AFC_CORDIC_MAG,                // h170: RB RX_AFC_CORDIC magnitude value
     REG_RD_RB_RX_AFC_CORDIC_PHS,                // h174: RB_RX_AFC_CORDIC phase value
@@ -396,8 +398,10 @@ wire unsigned [  5: 0] rx_muxin_src           = regs[REG_RW_RB_RX_MUXIN_SRC][5:0
 
 wire unsigned [ 15: 0] tx_muxin_mix_gain      = regs[REG_RW_RB_TX_MUXIN_GAIN][15: 0];
 wire unsigned [  2: 0] tx_muxin_mix_log2      = regs[REG_RW_RB_TX_MUXIN_GAIN][18:16];
+wire   signed [ 15: 0] tx_muxin_mix_ofs       = regs[REG_RW_RB_TX_MUXIN_OFS][15: 0];
 wire unsigned [ 15: 0] rx_muxin_mix_gain      = regs[REG_RW_RB_RX_MUXIN_GAIN][15: 0];
 wire unsigned [  2: 0] rx_muxin_mix_log2      = regs[REG_RW_RB_RX_MUXIN_GAIN][18:16];
+wire   signed [ 15: 0] rx_muxin_mix_ofs       = regs[REG_RW_RB_RX_MUXIN_OFS][15: 0];
 
 wire   signed [ 15: 0] tx_rf_amp_gain         = regs[REG_RW_RB_TX_RF_AMP_GAIN][15:0];
 wire   signed [ 15: 0] tx_rf_amp_ofs          = regs[REG_RW_RB_TX_RF_AMP_OFS][15:0];
@@ -770,7 +774,7 @@ wire   signed [ 15: 0] tx_muxin_mix_in = (tx_muxin_src == 6'h20) ?  { ~adc_i[0],
 
 wire   signed [ 15: 0] tx_mod_adc_in = (tx_muxin_mix_in << tx_muxin_mix_log2);  // unsigned value: input booster for
                                                                                 // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
-wire   signed [ 15: 0] tx_mod_adc_ofs = 16'b0;                                  // TODO: FSM for calculating mean value to strip of the DC component
+wire   signed [ 15: 0] tx_mod_adc_ofs = tx_muxin_mix_ofs;                       // strip of the DC component
 wire   signed [ 15: 0] tx_muxin_mix_gain_in = { 1'b0, tx_muxin_mix_gain[15:1] };
 wire   signed [ 31: 0] tx_mod_adc_out;
 
@@ -792,15 +796,15 @@ rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_tx_mod_adc_dsp48 (
 
 wire          tx_mod_osc_reset_n = rb_pwr_tx_OSC_rst_n & !tx_mod_osc_reset;
 
-wire [ 47: 0] tx_mod_osc_inc_stream = 48'b0;  // TODO: ADC
-wire [ 47: 0] tx_mod_osc_ofs_stream = 48'b0;  // TODO: ADC
+wire [ 47: 0] tx_mod_osc_inc_stream = 48'b0;  // not used, yet
+wire [ 47: 0] tx_mod_osc_ofs_stream = 48'b0;  // not used, yet
 
 wire [ 47: 0] tx_mod_osc_stream_inc = tx_mod_osc_inc_mux ?  tx_mod_osc_inc_stream :
                                                             tx_mod_osc_inc        ;
 wire [ 47: 0] tx_mod_osc_stream_ofs = tx_mod_osc_ofs_mux ?  tx_mod_osc_ofs_stream :
                                                             tx_mod_osc_ofs        ;
 
-wire          tx_mod_osc_axis_s_vld   = tx_mod_osc_reset_n;  // TODO: ADC
+wire          tx_mod_osc_axis_s_vld   = tx_mod_osc_reset_n;
 wire [103: 0] tx_mod_osc_axis_s_phase = { 7'b0, tx_mod_osc_resync, tx_mod_osc_stream_ofs, tx_mod_osc_stream_inc };
 
 wire          tx_mod_osc_axis_m_vld;
@@ -1209,15 +1213,17 @@ wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 6'h20) ?  { ~adc_i[0], 2'
 
 wire   signed [ 15: 0] rx_muxin_mix_in = (rx_muxin_sig << rx_muxin_mix_log2);  // unsigned value: input booster for
                                                                                // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
+wire   signed [ 15: 0] rx_muxin_mix_ofs_in  = rx_muxin_mix_ofs;
 wire   signed [ 15: 0] rx_muxin_mix_gain_in = { 1'b0, rx_muxin_mix_gain[15:1] };
 wire   signed [ 31: 0] rx_muxin_mix_out;
 
-rb_dsp48_AmB_A16_B16_P32 i_rb_rx_muxin_amplifier (
+rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_rx_muxin_amplifier (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_rx_CAR_clken         ),  // power down when needed to
 
   .A                       ( rx_muxin_mix_in             ),  // input signal            SIGNED 16 bit
+  .D                       ( rx_muxin_mix_ofs_in         ),  // RX amplifier offset     SIGNED 16 bit
   .B                       ( rx_muxin_mix_gain_in        ),  // RX amplifier gain       SIGNED 16 bit
 
   .P                       ( rx_muxin_mix_out            )   // RX level adj. input     SIGSIG 32 bit
@@ -3326,6 +3332,7 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_TX_MOD_QMIX_OFS_HI]        <= 32'h00000000;
    regs[REG_RW_RB_TX_MUXIN_SRC]              <= 32'h00000000;
    regs[REG_RW_RB_TX_MUXIN_GAIN]             <= 32'h00000000;
+   regs[REG_RW_RB_TX_MUXIN_OFS]              <= 32'h00000000;
    regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO] <= 32'h00000000;
    regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI] <= 32'h00000000;
    regs[REG_RW_RB_RX_CAR_OSC_INC_LO]         <= 32'h00000000;
@@ -3338,6 +3345,7 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]         <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_SRC]              <= 32'h00000000;
    regs[REG_RW_RB_RX_MUXIN_GAIN]             <= 32'h00000000;
+   regs[REG_RW_RB_RX_MUXIN_OFS]              <= 32'h00000000;
    regs[REG_RW_RB_RX_SSB_AM_GAIN]            <= 32'h00000000;
    regs[REG_RW_RB_RX_AMENV_GAIN]             <= 32'h00000000;
    regs[REG_RW_RB_RX_FM_GAIN]                <= 32'h00000000;
@@ -3417,6 +3425,9 @@ else begin
       20'h00064: begin
          regs[REG_RW_RB_TX_MUXIN_GAIN]            <= { 13'b0, sys_wdata[18:0] };
          end
+      20'h00068: begin
+         regs[REG_RW_RB_TX_MUXIN_OFS]             <= { 16'b0, sys_wdata[15:0] };
+         end
 
       /* RX_CAR_CALC_WEAVER */
       20'h00100: begin
@@ -3460,6 +3471,9 @@ else begin
          end
       20'h00164: begin
          regs[REG_RW_RB_RX_MUXIN_GAIN]            <= { 13'b0, sys_wdata[18:0] };
+         end
+      20'h00168: begin
+         regs[REG_RW_RB_RX_MUXIN_OFS]             <= { 16'b0, sys_wdata[15:0] };
          end
 
       /* RX_DEMOD_GAIN */
@@ -3603,6 +3617,10 @@ else begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_TX_MUXIN_GAIN];
          end
+      20'h00068: begin
+         sys_ack   <= sys_en;
+         sys_rdata <= regs[REG_RW_RB_TX_MUXIN_OFS];
+         end
 
       /* RX_CAR_CALC_WEAVER */
       20'h00100: begin
@@ -3678,6 +3696,10 @@ else begin
       20'h00164: begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_RX_MUXIN_GAIN];
+         end
+      20'h00168: begin
+         sys_ack   <= sys_en;
+         sys_rdata <= regs[REG_RW_RB_RX_MUXIN_OFS];
          end
       20'h0016C: begin
          sys_ack   <= sys_en;

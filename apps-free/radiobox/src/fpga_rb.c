@@ -366,7 +366,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_NONE: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to (none)\n");
 
-            fpga_rb_set_tx_muxin_gain(0.0);                                                                // MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(0.0, 0x0000);                                                        // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000000;
             fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                                 // TX_CAR_OSC frequency
             fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(0.0, 1);                                // CW operation
@@ -376,7 +376,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_MOD_OSC: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to TX_MOD_OSC\n");
 
-            fpga_rb_set_tx_muxin_gain(0.0);                                                                // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(0.0, 0x0000);                                                        // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000000;
         }
         break;
@@ -384,7 +384,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to RF_inp_1\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000020;                                                  // source ID: 32
         }
         break;
@@ -392,7 +392,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to RF_inp_2\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000021;                                                  // source ID: 33
         }
         break;
@@ -400,7 +400,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI0: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI0\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000010;                                                  // source ID: 16
         }
         break;
@@ -408,7 +408,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI1\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000018;                                                  // source ID: 24
         }
         break;
@@ -416,7 +416,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI2\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000011;                                                  // source ID: 17
         }
         break;
@@ -424,7 +424,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI3: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI3\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000019;                                                  // source ID: 25
         }
         break;
@@ -513,7 +513,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_NONE: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to (none)\n");
 
-            fpga_rb_set_rx_muxin_gain(0.0);                                                                // MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000000;
         }
         break;
@@ -521,7 +521,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to RF_inp_1\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000020;
         }
         break;
@@ -529,7 +529,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to RF_inp_2\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000021;
         }
         break;
@@ -537,7 +537,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI0: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI0\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000010;
         }
         break;
@@ -545,7 +545,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI1\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000018;
         }
         break;
@@ -553,7 +553,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI2\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000011;
         }
         break;
@@ -561,14 +561,14 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI3: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI3\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000019;
         }
         break;
 
 #if 0
         case RB_MODSRC_VP_VN: {
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain);                                                      // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000003;
         }
         break;
@@ -682,7 +682,7 @@ void fpga_rb_set_tx_modtyp(int tx_modtyp)
 
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain)
+void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain, int tx_muxin_ofs)
 {
     double p;
 
@@ -705,6 +705,8 @@ void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain)
         g_fpga_rb_reg_mem->tx_muxin_gain = ((bitfield << 16) | 0xffff);  // open mixer completely and activate booster
         //fprintf(stderr, "INFO - fpga_rb_set_tx_muxin_gain: BOOST  tx_muxin_gain=%lf --> bitfield=0x%08x\n", tx_muxin_gain, g_fpga_rb_reg_mem->tx_muxin_gain);
     }
+
+    g_fpga_rb_reg_mem->tx_muxin_ofs = tx_muxin_ofs & 0xffff;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -830,7 +832,7 @@ void fpga_rb_set_rx_modtyp(int rx_modtyp)
 }
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain)
+void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs)
 {
     double p;
 
@@ -853,6 +855,8 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain)
         g_fpga_rb_reg_mem->rx_muxin_gain = ((bitfield << 16) | 0xffff);  // open mixer completely and activate booster
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: BOOST  rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
     }
+
+    g_fpga_rb_reg_mem->rx_muxin_ofs = rx_muxin_ofs & 0xffff;
 }
 
 /*----------------------------------------------------------------------------*/

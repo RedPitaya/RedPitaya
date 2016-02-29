@@ -60,6 +60,8 @@ enum {
     FPGA_RW_RB_TX_MOD_OSC_MIX_OFS_HI                                                           = 0x0005C,  // h05C: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_TX_MUXIN_SRC                                                                    = 0x00060,  // h060: RB analog TX MUX input selector:  ...  @see below
     FPGA_RW_RB_TX_MUXIN_GAIN                                                                   = 0x00064,  // h064: RB analog TX MUX gain for input amplifier
+    FPGA_RW_RB_TX_MUXIN_OFS                                                                    = 0x00068,  // h068: RB analog TX MUX offset for input amplifier
+    //FPGA_RD_RB_TX_RSVD_H06C,
 
     /* RX section */
     FPGA_RW_RB_RX_CAR_CALC_WEAVER_INC_LO                                                       = 0x00100,  // h100: RB RX_CAR_CALC_WEAVER increment register      LSB:        (Bit 31: 0)
@@ -88,8 +90,8 @@ enum {
     //FPGA_RD_RB_RX_RSVD_H15C,
     FPGA_RW_RB_RX_MUXIN_SRC                                                                    = 0x00160,  // h160: RB analog RX MUX input selector
     FPGA_RW_RB_RX_MUXIN_GAIN                                                                   = 0x00164,  // h164: RB analog RX MUX gain for input amplifier
-    //FPGA_RD_RB_RX_RSVD_H168,
-    //FPGA_RD_RB_RX_RSVD_H16C,
+    FPGA_RW_RB_RX_MUXIN_OFS                                                                    = 0x00168,  // h168: RB analog RX MUX offset for input amplifier
+    FPGA_RD_RB_RX_SIGNAL_STRENGTH                                                              = 0x0016C,  // h16C: RB RX signal strength
     FPGA_RW_RB_RX_AFC_CORDIC_MAG                                                               = 0x00170,  // h170: RB RX_AFC_CORDIC magnitude register                16'b0, (Bit 15: 0)
     FPGA_RW_RB_RX_AFC_CORDIC_PHS                                                               = 0x00174,  // h174: RB RX_AFC_CORDIC current phase register            16'b0, (Bit 15: 0)
     FPGA_RW_RB_RX_AFC_CORDIC_PHS_PREV                                                          = 0x00178,  // h178: RB RX_AFC_CORDIC previous phase register           16'b0, (Bit 15: 0)
@@ -659,14 +661,27 @@ typedef struct fpga_rb_reg_mem_s {
      */
     uint32_t tx_muxin_gain;
 
+    /** @brief  R/W RB_TX_MUXIN_OFS - offset value for analog TX MUX input amplifier (addr: 0x40600068)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - gain for TX MUXIN output amplifier.
+     *
+     */
+    uint32_t tx_muxin_ofs;
 
-    /** @brief  Placeholder for addr: 0x40600068 .. 0x406000FC
+    /** @brief  Placeholder for addr: 0x4060006C
      *
      * n/a
      *
      */
-    uint32_t reserved_068To0fc[((0x0fc - 0x068) >> 2) + 1];
+    uint32_t reserved_06C;
 
+
+    /** @brief  Placeholder for addr: 0x40600070 .. 0x406000FC
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_070To0fc[((0x0fc - 0x070) >> 2) + 1];
 
 
     /* RX section */
@@ -884,13 +899,12 @@ typedef struct fpga_rb_reg_mem_s {
       */
      uint32_t rx_muxin_gain;
 
-
-     /** @brief  Placeholder for addr: 0x40600168
+     /** @brief  R/W RB_RX_MUX_OFS -  bits 15..0 (addr: 0x40600168)
       *
-      * n/a
+      * bit h0F..h00:   SIGNED 16 bit - offset value for RX MUXIN input amplifier.
       *
       */
-     uint32_t reserved_168;
+     uint32_t rx_muxin_ofs;
 
      /** @brief  R/W RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec, bits 31..0 (addr: 0x4060016C)
       *
@@ -1130,9 +1144,10 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_
 /**
  * @brief Calculates and programs the FPGA TX_MUXIN gain setting
  *
- * @param[in]  tx_muxin_gain Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
+ * @param[in]  tx_muxin_gain   Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
+ * @param[in]  tx_muxin_ofs    ADC offset value, signed 16 bit.
  */
-void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain);
+void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain, int tx_muxin_ofs);
 
 
 /**
@@ -1145,9 +1160,10 @@ void fpga_rb_set_rx_modtyp(int rx_modtyp);
 /**
  * @brief Calculates and programs the FPGA RX_MUXIN gain setting
  *
- * @param[in]  rx_muxin_gain Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
+ * @param[in]  rx_muxin_gain   Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
+ * @param[in]  rx_muxin_ofs    ADC offset value, signed 16 bit.
  */
-void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain);
+void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs);
 
 /**
  * @brief Calculates and programs the FPGA RX_CAR_OSC for SSB, AM and FM
