@@ -1,0 +1,77 @@
+diff -wuNr cryptopp/integer.cpp cryptopp_new/integer.cpp
+--- cryptopp/integer.cpp	2010-08-06 17:46:22.000000000 +0700
++++ cryptopp_new/integer.cpp	2016-02-29 14:16:18.344420718 +0600
+@@ -2861,17 +2861,23 @@
+ 
+ const Integer &Integer::Zero()
+ {
+-	return Singleton<Integer>().Ref();
++	static Integer zero;
++	return zero;
++	//return Singleton<Integer>().Ref();
+ }
+ 
+ const Integer &Integer::One()
+ {
+-	return Singleton<Integer, NewInteger<1> >().Ref();
++	static Integer one(1);
++	return one;
++	//return Singleton<Integer, NewInteger<1> >().Ref();
+ }
+ 
+ const Integer &Integer::Two()
+ {
+-	return Singleton<Integer, NewInteger<2> >().Ref();
++	static Integer two(2);
++	return two;
++	//return Singleton<Integer, NewInteger<2> >().Ref();
+ }
+ 
+ bool Integer::operator!() const
+Binary files cryptopp/libcryptopp.a and cryptopp_new/libcryptopp.a differ
+diff -wuNr cryptopp/pubkey.h cryptopp_new/pubkey.h
+--- cryptopp/pubkey.h	2010-08-06 17:46:26.000000000 +0700
++++ cryptopp_new/pubkey.h	2016-02-29 14:19:28.508415158 +0600
+@@ -3,6 +3,8 @@
+ #ifndef CRYPTOPP_PUBKEY_H
+ #define CRYPTOPP_PUBKEY_H
+ 
++#include <stdio.h>
++
+ /** \file
+ 
+ 	This file contains helper classes/functions for implementing public key algorithms.
+@@ -316,7 +318,6 @@
+ 		{return this->GetMessageEncodingInterface().MaxRecoverableLength(MessageRepresentativeBitLength(), GetHashIdentifier().second, GetDigestSize());}
+ 	size_t MaxRecoverableLengthFromSignatureLength(size_t signatureLength) const
+ 		{return this->MaxRecoverableLength();}
+-
+ 	bool IsProbabilistic() const 
+ 		{return this->GetTrapdoorFunctionInterface().IsRandomized() || this->GetMessageEncodingInterface().IsProbabilistic();}
+ 	bool AllowNonrecoverablePart() const 
+@@ -398,7 +399,11 @@
+ 
+ protected:
+ 	const typename BASE::MessageEncodingInterface & GetMessageEncodingInterface() const 
+-		{return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();}
++		{
++			static CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod MEM;
++			return MEM;
++			//return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();
++		}
+ 	const TrapdoorFunctionBounds & GetTrapdoorFunctionBounds() const 
+ 		{return GetKey();}
+ 	const typename BASE::TrapdoorFunctionInterface & GetTrapdoorFunctionInterface() const 
+@@ -1330,7 +1335,11 @@
+ 	HashIdentifier GetHashIdentifier() const
+ 		{return HashIdentifier();}
+ 	const PK_SignatureMessageEncodingMethod & GetMessageEncodingInterface() const 
+-		{return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();}
++		{
++			static CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod MEM;
++			return MEM;
++			//return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();
++		}
+ };
+ 
+ //! _
