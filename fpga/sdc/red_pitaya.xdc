@@ -278,59 +278,8 @@ set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise
 set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_pid/*_reg[*]/D}] 0.000
 set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_pid/*_reg[*]/D}] 7.000
 
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[0][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[0][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[2][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[2][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[4][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[4][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[5][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[5][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[6][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[6][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[7][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[7][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[8][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[8][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[9][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[9][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[10][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[10][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[11][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[11][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[12][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[12][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[13][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[13][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[14][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[14][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[15][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[15][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[16][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[16][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[17][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[17][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[18][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[18][*]/D}] 7.000
-
-set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[19][*]/D}] 0.000
-set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[19][*]/D}] 7.000
+set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[*][0]/D}]  0.000
+set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[*][0]/D}]  7.000
 
 set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_scope/*_reg[*]/D}] 0.000
 set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_scope/*_reg[*]/D}] 7.000

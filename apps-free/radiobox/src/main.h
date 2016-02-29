@@ -111,6 +111,7 @@ enum rb_params_enum_t {
 /** @brief RadioBox modulation sources */
 enum rb_modsrc_enum_t {
     RB_MODSRC_NONE          =  0,
+
     RB_MODSRC_RF_IN1,
     RB_MODSRC_RF_IN2,
 
@@ -126,6 +127,7 @@ enum rb_modsrc_enum_t {
 /** @brief RadioBox TX modulation types */
 enum rb_tx_modtyp_enum_t {
     RB_TX_MODTYP_OFF        =  0,
+
     RB_TX_MODTYP_USB        =  2,
     RB_TX_MODTYP_LSB,
     RB_TX_MODTYP_AM,
@@ -136,9 +138,10 @@ enum rb_tx_modtyp_enum_t {
 /** @brief RadioBox RX modulation types */
 enum rb_rx_modtyp_enum_t {
     RB_RX_MODTYP_OFF        =  0,
+
     RB_RX_MODTYP_USB        =  2,
     RB_RX_MODTYP_LSB,
-    RB_RX_MODTYP_AM,
+    RB_RX_MODTYP_AMENV,
     RB_RX_MODTYP_AMSYNC_USB,
     RB_RX_MODTYP_AMSYNC_LSB,
     RB_RX_MODTYP_FM,
