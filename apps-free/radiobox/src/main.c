@@ -69,39 +69,29 @@ fpga_rb_reg_mem_t*              g_fpga_rb_reg_mem = NULL;
 /** @brief Describes app. parameters with some info/limitations in high definition - compare initial values with: fpga_rb.fpga_rb_enable() */
 const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode - transport_pktIdx 1 */
-        "rb_run",                      0.0,   1, 0, 0.0,       1.0  },
+        "rb_run",                   0.0,   1, 0, 0.0,       1.0  },
 
-    { /* TX_CAR_OSC modulation source selector - transport_pktIdx 1
-       * ( 0: none (CW mode),
-       *   1: RF Input 1,
-       *   2: RF Input 2,
-       *   4: EXT AI0,
-       *   5: EXT AI1,
-       *   6: EXT AI2,
-       *   7: EXT AI3,
-       *  15: TX_MOD_OSC
-       * )
-       **/
-        "tx_modsrc_s",              0.0,   1,  0, 0.0,     15.0  },
+    { /* TX_CAR_OSC modulation source selector - transport_pktIdx 1 */
+        "tx_modsrc_s",              0.0,   1,  0, 0.0,    255.0  },
 
-    { /* TX modulation type selector (0: USB, 1: LSB, 2: AM, 3: FM, 4: PM) - transport_pktIdx 1 */
-        "tx_modtyp_s",              0.0,   1,  0, 0.0,      4.0  },
+    { /* TX modulation type selector - transport_pktIdx 1 */
+        "tx_modtyp_s",              0.0,   1,  0, 0.0,    255.0  },
 
-    { /* TX modulation type selector (0: USB, 1: LSB, 2: AM, 3: FM, 4: PM) - transport_pktIdx 1 */
-        "rx_modtyp_s",              0.0,   1,  0, 0.0,      4.0  },
+    { /* TX modulation type selector - transport_pktIdx 1 */
+        "rx_modtyp_s",              0.0,   1,  0, 0.0,    255.0  },
 
 
     { /* RBLED CON_SRC_PNT - transport_pktIdx 2 */
-        "rbled_csp_s",              0.0,   1,  0, 0.0,     63.0  },
+        "rbled_csp_s",              0.0,   1,  0, 0.0,    255.0  },
 
     { /* RFOUT1 CON_SRC_PNT - transport_pktIdx 2 */
-        "rfout1_csp_s",             0.0,   1,  0, 0.0,     63.0  },
+        "rfout1_csp_s",             0.0,   1,  0, 0.0,    255.0  },
 
     { /* RFOUT2 CON_SRC_PNT - transport_pktIdx 2 */
-        "rfout2_csp_s",             0.0,   1,  0, 0.0,     63.0  },
+        "rfout2_csp_s",             0.0,   1,  0, 0.0,    255.0  },
 
     { /* RX_MUX source - transport_pktIdx 2 */
-        "rx_muxin_src_s",           0.0,   1,  0, 0.0,     2.0   },
+        "rx_muxin_src_s",           0.0,   1,  0, 0.0,    255.0  },
 
 
     { /* TX_CAR_OSC frequency (Hz) - transport_pktIdx 3 */

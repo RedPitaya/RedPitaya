@@ -155,8 +155,8 @@
         </FileInfo>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_xlconstant_0_1/system_xlconstant_0.xci"/>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_processing_system7_0_1/system_processing_system7_0.xci"/>
-        <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_proc_sys_reset_0_1/system_proc_sys_reset_0.xci"/>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_xadc_0_1/system_xadc_0.xci"/>
+        <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="ip/system_proc_sys_reset_0_1/system_proc_sys_reset_0.xci"/>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="hw_handoff/system_bd.tcl"/>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="hw_handoff/system.hwh"/>
         <CompFileExtendedInfo CompFileName="system.bd" FileRelPathName="system_ooc.xdc"/>
@@ -169,6 +169,12 @@
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_fir3_200k_to_200k_24c_17i16_35o__AllSets.coe">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
@@ -228,14 +234,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_48k_to_8k_32T32.xcix">
+      <File Path="$PPRDIR/../ip/rb_cic_48k_to_8k_18T18.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_48k_to_8k_32T32/rb_cic_48k_to_8k_32T32.xci">
+      <File Path="$PPRDIR/../ip/rb_cic_48k_to_8k_18T18/rb_cic_48k_to_8k_18T18.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -256,14 +262,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_8k_to_41M664_32T32_lat14.xcix">
+      <File Path="$PPRDIR/../ip/rb_cic_8k_to_41M664_18T18.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_8k_to_41M664_32T32_lat14/rb_cic_8k_to_41M664_32T32_lat14.xci">
+      <File Path="$PPRDIR/../ip/rb_cic_8k_to_41M664_18T18/rb_cic_8k_to_41M664_18T18.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -284,28 +290,42 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_125M_to_5M_32T32_lat18.xcix">
+      <File Path="$PPRDIR/../ip/rb_cic_125M_to_5M_18T18.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_125M_to_5M_32T32_lat18/rb_cic_125M_to_5M_32T32_lat18.xci">
+      <File Path="$PPRDIR/../ip/rb_cic_125M_to_5M_18T18/rb_cic_125M_to_5M_18T18.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_5M_to_8k_32T32.xcix">
+      <File Path="$PPRDIR/../ip/rb_cic_5M_to_200k_18T18.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_5M_to_8k_32T32/rb_cic_5M_to_8k_32T32.xci">
+      <File Path="$PPRDIR/../ip/rb_cic_5M_to_200k_18T18/rb_cic_5M_to_200k_18T18.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_cic_200k_to_8k_18T18.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_cic_200k_to_8k_18T18/rb_cic_200k_to_8k_18T18.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -340,28 +360,28 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_8k_to_48k_32T32.xcix">
+      <File Path="$PPRDIR/../ip/rb_cic_8k_to_48k_18T18.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_cic_8k_to_48k_32T32/rb_cic_8k_to_48k_32T32.xci">
+      <File Path="$PPRDIR/../ip/rb_cic_8k_to_48k_18T18/rb_cic_8k_to_48k_18T18.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_fir3_8k_to_8k_24c_17i16_35o.xcix">
+      <File Path="$PPRDIR/../ip/rb_fir3_200k_to_200k_24c_17i16_35o.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_fir3_8k_to_8k_24c_17i16_35o/rb_fir3_8k_to_8k_24c_17i16_35o.xci">
+      <File Path="$PPRDIR/../ip/rb_fir3_200k_to_200k_24c_17i16_35o/rb_fir3_200k_to_200k_24c_17i16_35o.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -376,6 +396,48 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../ip/rb_cordic_T_WS_O_SR_32T32_CR_B/rb_cordic_T_WS_O_SR_32T32_CR_B.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_addsub_48M48.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_addsub_48M48/rb_addsub_48M48.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_div_32Div13R13.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_div_32Div13R13/rb_div_32Div13R13.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_dsp48_AmBaC_A16_B16_C32_P32.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../ip/rb_dsp48_AmBaC_A16_B16_C32_P32/rb_dsp48_AmBaC_A16_B16_C32_P32.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
