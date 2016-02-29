@@ -23,6 +23,14 @@
 *.i*86
 *.x86_64
 *.hex
+# Generated misc files
+*.jou
+*.log
+*.bif
+*.os
+*.xpr
+*.gz
+*.str
 
 scpi-server/scpi-server
 
@@ -33,4 +41,18 @@ scpi-server/scpi-server
 
 # SCPI Server examples
 scpi-server/3rdparty/libs/scpi-parser/examples/
+
+# Generated folders
+tmp/
+build/
+out/
+dl/
+sdk/
+#bd/
+.Xil/
+*.cache/
+*.hw/
+*.runs/
+*.srcs/
+buildroot-*/
 
