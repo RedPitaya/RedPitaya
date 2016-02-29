@@ -2340,7 +2340,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_fm_mixer (
   .P                       ( rx_mod_fm_mix_out           )   // FM demodulated output   SIGSIG 32 bit
 );
 
-wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[29:14];
+wire signed [ 15: 0] rx_mod_fm_out = rx_mod_fm_mix_out[28:13];
 
 
 //---------------------------------------------------------------------------------
@@ -2390,7 +2390,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_pm_mixer (
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_rx_AFC_clken         ),  // power down when needed to
 
-  .A                       ( rx_mod_pm_accu[47:32]       ),  // PM modulation signal    SIGNED 16 bit
+  .A                       ( rx_mod_pm_accu[46:31]       ),  // PM modulation signal    SIGNED 16 bit
   .B                       ( rx_pm_gain_in               ),  // PM mixer gain           SIGNED 16 bit
 
   .P                       ( rx_mod_pm_mix_out           )   // PM demodulated output   SIGSIG 32 bit
