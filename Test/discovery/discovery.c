@@ -73,7 +73,7 @@ int get_xilinx_dna(unsigned long long *dna)
         close(fd);
         return -1;
     }
-    
+
     close (fd);
 
     return 0;
@@ -117,6 +117,21 @@ std::string GetOSVersion(const std::string path)
     return ss.str();
 }
 
+std::string GetUrl() {
+    std::string name("/opt/redpitaya/www/conf/testurl")
+    ifstream f(name.c_str());
+    if (f.good()) {
+        std::string line;
+        std::getline(infile, line);
+        f.close();
+        return line;
+    } else {
+        f.close();
+        std::string line;
+        return false;
+    }
+}
+
 std::string GetOSBuild(const std::string path)
 {
     std::ifstream infile(path);
@@ -130,7 +145,7 @@ std::string GetOSBuild(const std::string path)
     {
         std::getline(infile, line);
     }
-    
+
     infile.close();
 
     for(size_t i=0; i<line.length(); i++)
@@ -192,7 +207,7 @@ int main(int argc, char **argv)
     unsigned long long dna;
     char string_buffer[18];
     int res;
-    
+
     // Get DNA
     get_xilinx_dna(&dna);
     sprintf(string_buffer, "%llX", dna);
@@ -256,10 +271,10 @@ int main(int argc, char **argv)
     if(vIP_WIFI != "")
         cmd << "&mac_wifi=" << vMAC_WIFI;
 
-    cmd << "'" << " http://192.168.1.12:82/html/dumper.php";
+    cmd << "' " << GetUrl();
 
     system(cmd.str().c_str());
-    
+
     return 0;
 }
 
