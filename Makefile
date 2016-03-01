@@ -73,6 +73,7 @@ NAME=ecosystem
 
 # directories
 FPGA_DIR        = fpga
+FPGA2_DIR       = fpga2
 
 NGINX_DIR       = Bazaar/nginx
 IDGEN_DIR       = Bazaar/tools/idgen
@@ -87,7 +88,7 @@ SDK_DIR         = SDK/
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
 MEMTEST         = $(FPGA_DIR)/sdk/dram_test/executable.elf
-DTS             = $(FPGA_DIR)/sdk/dts/system.dts
+DTS             = $(FPGA2_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
 LINUX           = $(TMP)/uImage
@@ -255,7 +256,7 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA_DIR)/sdk/dts/ $(TMP)/devicetree.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA2_DIR)/sdk/dts/ $(TMP)/devicetree.dts
 
 ################################################################################
 # boot file generator
