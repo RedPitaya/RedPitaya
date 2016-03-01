@@ -206,6 +206,11 @@
 		OSC.params.local['in_command'] = { value: 'send_all_params' };
 		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
 		OSC.params.local = {};
+
+		setTimeout(function(){
+			if (OSC.state.demo_label_visible)
+				$('#get_lic').modal('show');
+		}, 2500);
       };
 
       OSC.ws.onclose = function() {
@@ -2702,7 +2707,7 @@ $(function() {
                 OSC.offsetForDecoded = OSC.counts_offset;
 
                 console.log(OSC.counts_offset);
-		        
+
 		        var buf_width = $('#buffer').width();
 		        /*var zero_pos = (buf_width + 2) / 2;
 		        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
