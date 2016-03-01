@@ -27,36 +27,45 @@ endclocking: clk
 // stream
 ////////////////////////////////////////////////////////////////////////////////
 
-//int str_tmg;
-//
-//// transfer delay counter
-//always @ (posedge str.ACLK, posedge str.ARESETn)
-//if (!str.ARESETn)     str_tmg <= 0;
-//else if (str.TVALID)  str_tmg <= str.TREADY ? 0 : str_tmg + 1;
+logic tready;
+
+assign tready = str.TREADY | ~str.TVALID;
+
+int str_tmg;
+
+// transfer delay counter
+always @ (posedge str.ACLK, posedge str.ARESETn)
+if (!str.ARESETn)     str_tmg <= 0;
+else if (str.TVALID)  str_tmg <= str.TREADY ? 0 : str_tmg + 1;
 
 initial begin
-  clk.TVALID <= 1'b0;
-  clk.TDATA  <= '0;
-  clk.TKEEP  <= '0;
-  clk.TLAST  <= '0;
+  int unsigned tmg;
+  idle();
   forever begin
     if (buf_siz) begin
+      tmg = buf_tmg.pop_front();
+      if (tmg) begin
+        idle();
+        ##(tmg);
+      end
       clk.TVALID <= 1'b1;
       clk.TDATA  <= buf_dat.pop_front();
       clk.TKEEP  <= buf_kep.pop_front();
       clk.TLAST  <= buf_lst.pop_front();
     end else begin
-      clk.TVALID <= 1'b0;
-      clk.TDATA  <= {$bits(DAT_T){IV}};
-      clk.TKEEP  <= {$bits(DN   ){IV}};
-      clk.TLAST  <=               IV  ;
+      idle();
     end
     ##1;
   end
 end
 
-// transfer delay counter
-// TODO
+// set idle state
+task idle;
+  clk.TVALID <= 1'b0;
+  clk.TDATA  <= {$bits(DAT_T){IV}};
+  clk.TKEEP  <= {$bits(DN   ){IV}};
+  clk.TLAST  <=               IV  ;
+endtask: idle
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream data queue
