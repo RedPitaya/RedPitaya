@@ -66,6 +66,8 @@
   OSC.decompressed_data = 0;
   OSC.refresh_times = [];
 
+  OSC.counts_offset = 0;
+
   // Sampling rates
   OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
 
@@ -2671,40 +2673,37 @@ $(function() {
 	}
 
     $("#graphs").mousewheel(function(event) {
-        time_zoom(event.deltaY > 0 ? '+' : '-');
+        OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
     });
 
-	var time_zoom = function(ev) {
-        if (ev == '+' && OSC.scale_index > 0) {
-            --OSC.scale_index;
-        } else if (ev == '-' && OSC.scale_index + 1 < OSC.scales.length) {
-            ++OSC.scale_index;
-        }
+    var laAxesMoving = false;
+    var curXPos = 0;
+    $("#graphs").mousedown(function(event) {
+        laAxesMoving = true;
+        curXPos = event.pageX;
+    });
 
-        OSC.params.local['SCALE'] = { value: OSC.scales[OSC.scale_index] };
-        for (var i = 1; i < 5; i++) {
-            var bus = "bus" + i;
-            if (OSC.buses[bus].name !== undefined && OSC.buses[bus].name == "UART" && OSC.buses[bus].enabled) {
-                OSC.buses[bus].samplerate = OSC.state.acq_speed; // * OSC.scales[OSC.scale_index];
-                OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-                    value: OSC.buses[bus]
-                };
+    $("#graphs").mouseup(function(event) {
+        laAxesMoving = false;
+    });
+    $("#graphs").mouseout(function(event) {
+        laAxesMoving = false;
+    });
+    $("#graphs").mousemove(function(event) {
+        if (OSC.state.line_moving) return;
+        if (laAxesMoving) {
+            if (!$.isEmptyObject(OSC.graphs)) {
+                var diff = event.pageX - curXPos;
+                curXPos = event.pageX;
+                OSC.counts_offset -= diff;
+                if (OSC.counts_offset <= 0)
+                    OSC.counts_offset = 0;
+
+                OSC.offsetForDecoded = OSC.counts_offset;
+
+                console.log(OSC.counts_offset);
             }
         }
-
-        OSC.ws.send(JSON.stringify({
-            parameters: OSC.params.local
-        }));
-        OSC.params.local = {};
-
-        OSC.state.resized = true;
-
-        OSC.changeXZoom(ev);
-    }
-    $('#jtk_left, #jtk_right').on('click', function(ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        time_zoom(ev.target.id == 'jtk_left' ? '+' : '-')
     });
 
 	$('#calib-1').click(function() {
