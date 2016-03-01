@@ -117,18 +117,19 @@ std::string GetOSVersion(const std::string path)
     return ss.str();
 }
 
-std::string GetUrl() {
-    std::string name("/opt/redpitaya/www/conf/testurl")
-    ifstream f(name.c_str());
+std::string GetUrl()
+{
+    std::string defaulturl("http://account.redpitaya.com/discovery.php");
+    std::ifstream f("/opt/redpitaya/www/conf/testurl");
     if (f.good()) {
         std::string line;
-        std::getline(infile, line);
+        std::getline(f, line);
         f.close();
         return line;
     } else {
         f.close();
-        std::string line;
-        return false;
+
+        return defaulturl;
     }
 }
 
@@ -272,6 +273,8 @@ int main(int argc, char **argv)
         cmd << "&mac_wifi=" << vMAC_WIFI;
 
     cmd << "' " << GetUrl();
+
+    // std::cout << cmd.str().c_str() << std::endl;
 
     system(cmd.str().c_str());
 
