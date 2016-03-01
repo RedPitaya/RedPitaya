@@ -2702,6 +2702,16 @@ $(function() {
                 OSC.offsetForDecoded = OSC.counts_offset;
 
                 console.log(OSC.counts_offset);
+		        
+		        var buf_width = $('#buffer').width();
+		        /*var zero_pos = (buf_width + 2) / 2;
+		        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
+		        var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);*/
+
+		        //OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+
+		        OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset) };
+		        OSC.sendParams();
             }
         }
     });
