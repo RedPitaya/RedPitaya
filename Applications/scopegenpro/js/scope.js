@@ -2710,7 +2710,7 @@ $(function() {
 
 		        //OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
 
-		        OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset) };
+		        OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset * OSC.params.orig['OSC_TIME_SCALE'].value / 100) };
 		        OSC.sendParams();
             }
         }
