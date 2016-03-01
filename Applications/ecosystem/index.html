@@ -350,6 +350,21 @@
                             var obj = jQuery.parseJSON(msg);
                             if (obj != undefined && obj != null && obj.mac_address != undefined && obj.mac_address != null)
                                 req_uri = req_uri + obj.mac_address;
+                            else
+                            {
+                                console.log("LIC: ERR10");
+                                window.location = $('#demo').attr('href');
+                            }
+
+                            if (obj != undefined && obj != null && obj.zynq_id != undefined && obj.zynq_id != null)
+                            {
+                                req_uri = req_uri + "&dna="+obj.zynq_id ;
+                            }
+                            else
+                            {
+                                console.log("LIC: ERR11");
+                                window.location = $('#demo').attr('href');
+                            }
                             $.ajax({
                                     method: "POST",
                                     url: post_uri,
