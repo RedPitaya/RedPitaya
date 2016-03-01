@@ -163,10 +163,13 @@ zip: $(TARGET)
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-.PHONY: fpga
+.PHONY: fpga fpga2
 
 fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR)
+
+fpga2: $(DTREE_DIR)
+	make -C $(FPGA2_DIR)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -253,7 +256,7 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
+$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA2_DIR)/sdk/dts/ $(TMP)/devicetree.dts
