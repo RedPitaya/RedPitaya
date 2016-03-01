@@ -22,6 +22,7 @@
 #include "common.h"
 #include "generate.h"
 
+
 const double c_max_waveform_sample_rate_freq=125e6;
 const double c_min_waveform_sample_rate_freq=0;
 
@@ -109,30 +110,6 @@ int rp_GenIsStopped(rp_handle_uio_t *handle, bool * status){
     else{
         *status=false;
     }
-    return RP_OK;
-}
-
-int rp_GenDefaultSettings(rp_handle_uio_t *handle) {
-    //asg_regset_t *regset = (asg_regset_t *) &(((gen_regset_t *) handle->regset)->asg);
-    // reset generator state machine
-    //iowrite32(0x1, &regset->ctl_sys);
-//    gen_setGenMode(channel, RP_GEN_MODE_CONTINUOUS);
-    // clean up table (TODO, should I really)
-   /*
-    uint32_t size = 1 << RP_GEN_CWM;
-    uint16_t waveform [size];
-    for (unsigned int i=0; i<size; i++) {
-        waveform[i] = 0;
-    }
-    rp_GenSetWaveform    (handle, waveform, size);
-    rp_GenSetFreqPhase   (handle, 1000.0, 0.0);
-    rp_DigGenGlobalTrigDisable (handle, RP_TRG_ALL);
-    rp_GenSetBurst       (handle, 0, 0, 0);
-    rp_GenSetLinear      (handle, 1.0, 0.0);
-    */
-
-    rp_GenGlobalTrigDisable(handle,RP_TRG_ALL_MASK);
-    rp_GenOutputDisable(handle,RP_GEN_OUT_EN_ALL_MASK);
     return RP_OK;
 }
 
