@@ -66,6 +66,8 @@
   OSC.decompressed_data = 0;
   OSC.refresh_times = [];
 
+  OSC.counts_offset = 0;
+
   // Sampling rates
   OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
 
@@ -2669,6 +2671,50 @@ $(function() {
 			$('#calib-input').attr('min', '0.1');
 		}
 	}
+
+    $("#graphs").mousewheel(function(event) {
+        OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
+    });
+
+    var laAxesMoving = false;
+    var curXPos = 0;
+    $("#graphs").mousedown(function(event) {
+        laAxesMoving = true;
+        curXPos = event.pageX;
+    });
+
+    $("#graphs").mouseup(function(event) {
+        laAxesMoving = false;
+    });
+    $("#graphs").mouseout(function(event) {
+        laAxesMoving = false;
+    });
+    $("#graphs").mousemove(function(event) {
+        if (OSC.state.line_moving) return;
+        if (laAxesMoving) {
+            if (!$.isEmptyObject(OSC.graphs)) {
+                var diff = event.pageX - curXPos;
+                curXPos = event.pageX;
+                OSC.counts_offset -= diff;
+                if (OSC.counts_offset <= 0)
+                    OSC.counts_offset = 0;
+
+                OSC.offsetForDecoded = OSC.counts_offset;
+
+                console.log(OSC.counts_offset);
+		        
+		        var buf_width = $('#buffer').width();
+		        /*var zero_pos = (buf_width + 2) / 2;
+		        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
+		        var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);*/
+
+		        //OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+
+		        OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset * OSC.params.orig['OSC_TIME_SCALE'].value / 100) };
+		        OSC.sendParams();
+            }
+        }
+    });
 
 	$('#calib-1').click(function() {
 		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value == false) {
