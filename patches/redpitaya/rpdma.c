@@ -59,6 +59,7 @@ struct rpdma_channel{
     long segment_size;
     unsigned char* addrv;
     dma_addr_t addrp;
+    dma_addr_t segment;
     int flag;
     int flags;
     enum dma_data_direction direction;
@@ -66,35 +67,6 @@ struct rpdma_channel{
     unsigned long tmo;
 }rx, tx;
 
-dma_addr_t rpdma_handle;
-
-struct dma_device *tx_dev;
-struct dma_device *rx_dev;
-    
-struct dma_async_tx_descriptor *txd = NULL;
-struct dma_async_tx_descriptor *rxd = NULL;
-    
-dma_cookie_t rx_cookie, tx_cookie;
-
-//number of segments
-
-int rx_segment_cnt=RX_SGMNT_CNT;
-long rx_segment_size = RX_SGMNT_SIZE;
-int tx_segment_cnt=TX_SGMNT_CNT;
-long tx_segment_size = TX_SGMNT_SIZE;
-
-unsigned char* rpdma_rx_addrv;
-unsigned char* rpdma_tx_addrv;
-
-dma_addr_t rpdma_rx_addrp;
-dma_addr_t rpdma_tx_addrp;
-
-int sync=1;
-
-
-//for blocking read
-static int flag = 0;
-static DECLARE_WAIT_QUEUE_HEAD(wq);
 
 // write shall wrte users buffer to dma memory, so that loopback fpga code can write that data to dma buffer 
 static ssize_t rpdma_write(struct file *f, const char __user * buf,size_t len, loff_t * off){
@@ -207,8 +179,12 @@ smp_rmb();
             rx.cookie = rx.d->tx_submit(rx.d);
             printk("rpdma:rx submit \n");
         }
+
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
+
+        
+            
     break;
     }
     case SINGLE_TX:{
@@ -224,10 +200,14 @@ smp_rmb();
             tx.cookie = tx.d->tx_submit(tx.d);
             printk("rpdma:tx submit \n");
         }
+        
         printk("rpdma:tx dma_async_issue_pending \n");
         dma_async_issue_pending(tx.chan);
+
+        
     break;
     }
+    
         case SIMPLE_RX:{
         printk("rpdma:rx single dma s:%d c:%d\n",rx.segment_size,rx.segment_cnt);smp_rmb();
         
@@ -241,9 +221,11 @@ smp_rmb();
             printk("rpdma:rx submit \n");
         }
         
+
         printk("rpdma:rx dma_async_issue_pending \n");
         dma_async_issue_pending(rx.chan);    
         rx.tmo = wait_for_completion_timeout(&rx.cmp, rx.tmo);
+            
     break;
     }
     case SIMPLE_TX:{
@@ -263,6 +245,7 @@ smp_rmb();
         
         tx.tmo = wait_for_completion_timeout(&tx.cmp, tx.tmo);
         dmaengine_terminate_all(tx.chan);
+
     break;
     }
     case SIMPLE:{
@@ -297,8 +280,10 @@ smp_rmb();
   
         tx.tmo = wait_for_completion_timeout(&tx.cmp, tx.tmo);
         
+        
         dmaengine_terminate_all(tx.chan);
         dmaengine_terminate_all(rx.chan);
+
     break;
     }
     
@@ -328,8 +313,12 @@ static int rpdma_release(struct inode *ino, struct file *file)
 {
     //  dmaengine_terminate_all(tx.chan); 
    //     dmaengine_terminate_all(rx.chan); 
-            rx.flag=1;
-    wake_up_interruptible(&rx.wq);
+    //if(tx.segment)
+    //    dma_unmap_single(tx.dev->dev, tx.segment, tx.segment_size*tx.segment_cnt, DMA_TO_DEVICE);
+    //        if(rx.segment)
+//        dma_unmap_single(rx.dev->dev, rx.segment, rx.segment_size*rx.segment_cnt, DMA_FROM_DEVICE);
+    //rx.flag=1;
+    //wake_up_interruptible(&rx.wq);
     printk("rpdma:release\n");
     return 0;
 }

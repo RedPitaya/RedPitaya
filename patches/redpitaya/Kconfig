@@ -1,6 +1,5 @@
-config DMA_PROXY
-tristate "DMA proxy"
-depends on ARM
-default y if ARM
-help
-  DMA proxy used for DMA access from user space.
+config RPDMA
+	tristate "Red Pitaya client for AXI DMA driver"
+	depends on XILINX_AXIDMA
+	help
+	  Simple DMA test client. Y fo Red Pitaya

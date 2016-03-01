@@ -1,1 +1,1 @@
-obj-$(CONFIG_DMA_PROXY) += dma_proxy.o
+obj-$(CONFIG_RPDMA) += rpdma.o
