@@ -2670,6 +2670,43 @@ $(function() {
 		}
 	}
 
+    $("#graphs").mousewheel(function(event) {
+        time_zoom(event.deltaY > 0 ? '+' : '-');
+    });
+
+	var time_zoom = function(ev) {
+        if (ev == '+' && OSC.scale_index > 0) {
+            --OSC.scale_index;
+        } else if (ev == '-' && OSC.scale_index + 1 < OSC.scales.length) {
+            ++OSC.scale_index;
+        }
+
+        OSC.params.local['SCALE'] = { value: OSC.scales[OSC.scale_index] };
+        for (var i = 1; i < 5; i++) {
+            var bus = "bus" + i;
+            if (OSC.buses[bus].name !== undefined && OSC.buses[bus].name == "UART" && OSC.buses[bus].enabled) {
+                OSC.buses[bus].samplerate = OSC.state.acq_speed; // * OSC.scales[OSC.scale_index];
+                OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
+                    value: OSC.buses[bus]
+                };
+            }
+        }
+
+        OSC.ws.send(JSON.stringify({
+            parameters: OSC.params.local
+        }));
+        OSC.params.local = {};
+
+        OSC.state.resized = true;
+
+        OSC.changeXZoom(ev);
+    }
+    $('#jtk_left, #jtk_right').on('click', function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        time_zoom(ev.target.id == 'jtk_left' ? '+' : '-')
+    });
+
 	$('#calib-1').click(function() {
 		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value == false) {
 			$('#calib-2').children().removeAttr('disabled');
