@@ -6,11 +6,16 @@ module axi4_stream_src #(
   axi4_stream_if.s str
 );
 
-DAT_T [DN-1:0] buf_dat [$];
-logic [DN-1:0] buf_kep [$];
-logic          buf_lst [$];
-int unsigned   buf_tmg [$];
-int unsigned   buf_siz;
+typedef struct {
+  DAT_T [DN-1:0] dat;
+  logic [DN-1:0] kep;
+  logic          lst;
+  int unsigned   vld;
+//  int unsigned   rdy;
+} mem_t;
+
+mem_t        mem [$];
+int unsigned mem_siz;
 
 // clocking 
 default clocking clk @ (posedge str.ACLK);
@@ -27,10 +32,6 @@ endclocking: clk
 // stream
 ////////////////////////////////////////////////////////////////////////////////
 
-logic tready;
-
-assign tready = str.TREADY | ~str.TVALID;
-
 int str_tmg;
 
 // transfer delay counter
@@ -39,19 +40,19 @@ if (!str.ARESETn)     str_tmg <= 0;
 else if (str.TVALID)  str_tmg <= str.TREADY ? 0 : str_tmg + 1;
 
 initial begin
-  int unsigned tmg;
+  mem_t val;
   idle();
   forever begin
-    if (buf_siz) begin
-      tmg = buf_tmg.pop_front();
-      if (tmg) begin
+    if (mem_siz) begin
+      val = mem.pop_front();
+      if (val.vld) begin
         idle();
-        ##(tmg);
+        ##(val.vld);
       end
       clk.TVALID <= 1'b1;
-      clk.TDATA  <= buf_dat.pop_front();
-      clk.TKEEP  <= buf_kep.pop_front();
-      clk.TLAST  <= buf_lst.pop_front();
+      clk.TDATA  <= val.dat;
+      clk.TKEEP  <= val.kep;
+      clk.TLAST  <= val.lst;
     end else begin
       idle();
     end
@@ -72,19 +73,16 @@ endtask: idle
 ////////////////////////////////////////////////////////////////////////////////
 
 // queue size
-assign buf_siz = buf_dat.size();
+assign buf_siz = mem.size();
 
 // put data into queue
 task put (
   input  DAT_T [DN-1:0] dat,
   input  logic [DN-1:0] kep,
   input  logic          lst,
-  input  int unsigned   tmg = 0
+  input  int unsigned   vld = 0
 );
-  buf_dat.push_back(dat);
-  buf_kep.push_back(kep);
-  buf_lst.push_back(lst);
-  buf_tmg.push_back(tmg);
+  mem.push_back('{dat, kep, lst, vld});
 endtask: put
 
 endmodule: axi4_stream_src

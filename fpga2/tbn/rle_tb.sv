@@ -247,7 +247,9 @@ endtask: data_check
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DN (DN), .DAT_T (DTI), .IV (1'b0)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DAT_T (DTI), .IV (1'bx)) str_src (.str (sti));
+
+//str_src.mem_t mem;
 
 rle #(
   .DN  (DN),

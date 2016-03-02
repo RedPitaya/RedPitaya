@@ -41,7 +41,7 @@ begin
   buf_kep = {};
   buf_lst = {};
   forever begin
-    @(clk);
+    ##1;
     if (clk.transf) begin
       buf_dat.push_back(clk.TDATA);
       buf_kep.push_back(clk.TKEEP);
