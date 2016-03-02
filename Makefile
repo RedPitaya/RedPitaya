@@ -86,6 +86,7 @@ SDK_DIR         = SDK/
 
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
+FPGA2           = $(FPGA2_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
 MEMTEST         = $(FPGA_DIR)/sdk/dram_test/executable.elf
 DTS             = $(FPGA2_DIR)/sdk/dts/system.dts
@@ -147,6 +148,7 @@ $(TARGET): $(BOOT_UBOOT) u-boot devicetree linux buildroot $(IDGEN) $(NGINX) \
 	# copy FPGA bitstream images and decompress them
 	mkdir -p               $(TARGET)/fpga
 	cp $(FPGA)             $(TARGET)/fpga/fpga.bit
+	cp $(FPGA2)            $(TARGET)/fpga/fpga2.bit
 	cp fpga/archive/*.xz   $(TARGET)/fpga
 	cd $(TARGET)/fpga; xz -df *.xz
 	#
