@@ -115,6 +115,10 @@
 				LCR.params.local['in_command'] = { value: 'send_all_params' };
 				LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
 				LCR.params.local = {};
+				setTimeout(function(){
+					if (LCR.state.demo_label_visible)
+						$('#get_lic').modal('show');
+				}, 2500);
 			};
 
 			LCR.ws.onclose = function() {
