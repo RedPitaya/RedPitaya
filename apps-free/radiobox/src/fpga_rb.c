@@ -384,7 +384,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to RF_inp_1\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0));    // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x20)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000020;                                                  // source ID: 32
         }
         break;
@@ -392,7 +392,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to RF_inp_2\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 1));    // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x21)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000021;                                                  // source ID: 33
         }
         break;
@@ -400,7 +400,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI0: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI0\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x10)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000010;                                                  // source ID: 16
         }
         break;
@@ -408,7 +408,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI1\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x18)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000018;                                                  // source ID: 24
         }
         break;
@@ -416,7 +416,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI2\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x11)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000011;                                                  // source ID: 17
         }
         break;
@@ -424,14 +424,14 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI3: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AI3\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x19)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000019;                                                  // source ID: 25
         }
         break;
 
 #if 0
         case RB_MODSRC_VP_VN: {
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x03)); // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000003;                                                  // source ID: 3
         }
         break;
@@ -521,7 +521,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to RF_inp_1\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0));    // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x20)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000020;
         }
         break;
@@ -529,7 +529,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to RF_inp_2\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 1));    // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x21)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000021;
         }
         break;
@@ -537,7 +537,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI0: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI0\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x10)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000010;
         }
         break;
@@ -545,7 +545,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI1\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x18)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000018;
         }
         break;
@@ -553,7 +553,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI2\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x11)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000011;
         }
         break;
@@ -561,14 +561,14 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_EXP_AI3: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AI3\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x19)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000019;
         }
         break;
 
 #if 0
         case RB_MODSRC_VP_VN: {
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x03)); // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000003;
         }
         break;
@@ -1056,14 +1056,17 @@ uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction)
 	{
 		struct timespec rqtp;
 
+#if 0
 		// 5 ms equals to 50 waves @ 10 kHz
 		rqtp.tv_sec  = 0;
 		rqtp.tv_nsec = 5000000L;
 		nanosleep(&rqtp, NULL);
+#endif
 
 		// each 200 kHz timestamp there is a new result available - sum up to reduce noise during measurement
 		rqtp.tv_sec  = 0;
 		rqtp.tv_nsec = 5000L;
+		nanosleep(&rqtp, NULL);
 
 		int iter;
 		for (iter = 32; iter; --iter) {
@@ -1125,14 +1128,46 @@ void rp_measure_calib_params(rp_calib_params_t* calib_params)
 	// measure offset of channel ADC0 mapped to "RF In 1"
 	prepare_rx_measurement(0x20);
 	thisOfsValue = rp_minimize_noise();
-	fprintf(stderr, "INFO rp_measure_calib_params: channel 0 - ofs=0x%08x=%d\n", thisOfsValue, thisOfsValue);
-	calib_set_ADC_offset(calib_params, 0, thisOfsValue);
+	fprintf(stderr, "INFO rp_measure_calib_params:  ADC channel 0 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x20, thisOfsValue);
 
 	// measure offset of channel ADC1 mapped to "RF In 2"
 	prepare_rx_measurement(0x21);
 	thisOfsValue = rp_minimize_noise();
-	fprintf(stderr, "INFO rp_measure_calib_params: channel 1 - ofs=0x%08x=%d\n", thisOfsValue, thisOfsValue);
-	calib_set_ADC_offset(calib_params, 1, thisOfsValue);
+	fprintf(stderr, "INFO rp_measure_calib_params:  ADC channel 1 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x21, thisOfsValue);
+
+	// measure offset of XADC channel #8 mapped to "Vin0"
+	prepare_rx_measurement(0x18);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: XADC channel 0 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x18, thisOfsValue);
+
+	// measure offset of XADC channel #0 mapped to "Vin1"
+	prepare_rx_measurement(0x10);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: XADC channel 1 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x10, thisOfsValue);
+
+	// measure offset of XADC channel #1 mapped to "Vin2"
+	prepare_rx_measurement(0x11);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: XADC channel 2 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x11, thisOfsValue);
+
+	// measure offset of XADC channel #9 mapped to "Vin3"
+	prepare_rx_measurement(0x19);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: XADC channel 3 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x19, thisOfsValue);
+
+#if 0
+	// measure offset of XADC channel Vp/Vn mapped to "Vin4"
+	prepare_rx_measurement(0x03);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: XADC channel 4 - ofs=0x%04x = %d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0x03, thisOfsValue);
+#endif
 
 	finish_rx_measurement();
 	fprintf(stderr, "\n");

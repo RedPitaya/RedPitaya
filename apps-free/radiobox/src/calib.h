@@ -54,6 +54,39 @@ typedef struct rp_calib_params_s {
 	/** @brief Back end DC offset, on channel 2 */
 	int32_t  be_ch2_dc_offs;
 
+
+	/* RadioBox extension */
+
+	/** @brief Front end XADC ticks per volt factor, Vin0 */
+	float	 fe_xadc_vin0_ticks_per_volt;
+
+	/** @brief Front end XADC ticks per volt factor, Vin1 */
+	float	 fe_xadc_vin1_ticks_per_volt;
+
+	/** @brief Front end XADC ticks per volt factor, Vin2 */
+	float	 fe_xadc_vin2_ticks_per_volt;
+
+	/** @brief Front end XADC ticks per volt factor, Vin3 */
+	float	 fe_xadc_vin3_ticks_per_volt;
+
+	/** @brief Front end XADC ticks per volt factor, Vin4 */
+	float	 fe_xadc_vin4_ticks_per_volt;
+
+	/** @brief Back end XADC DC offset, Vin0 */
+	int32_t  be_xadc_vin0_dc_offs;
+
+	/** @brief Back end XADC DC offset, Vin1 */
+	int32_t  be_xadc_vin1_dc_offs;
+
+	/** @brief Back end XADC DC offset, Vin2 */
+	int32_t  be_xadc_vin2_dc_offs;
+
+	/** @brief Back end XADC DC offset, Vin3 */
+	int32_t  be_xadc_vin3_dc_offs;
+
+	/** @brief Back end XADC DC offset, Vin4 */
+	int32_t  be_xadc_vin4_dc_offs;
+
 	/** @brief Base attributes: real frequency of the 125 MHz ADC clock in Hz */
 	double	 base_osc125mhz_realhz;
 
