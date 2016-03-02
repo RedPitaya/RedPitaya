@@ -42,7 +42,7 @@ extern fpga_sys_gpio_reg_mem_t* g_fpga_sys_gpio_leds_reg_mem;
 /*----------------------------------------------------------------------------*/
 int fpga_sys_xadc_init(void)
 {
-    fprintf(stderr, "fpga_sys_xadc_init: BEGIN\n");
+    //fprintf(stderr, "fpga_sys_xadc_init: BEGIN\n");
 
     /* make sure all previous data is vanished */
     fpga_sys_xadc_exit();
@@ -53,7 +53,7 @@ int fpga_sys_xadc_init(void)
         fpga_exit();
         return -1;
     }
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_xadc_reg_mem - having access pointer.\n");
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_xadc_reg_mem - having access pointer.\n");
 
 #if 0
     /* maps the system GPIO LEDs module */
@@ -62,39 +62,39 @@ int fpga_sys_xadc_init(void)
         fpga_exit();
         return -1;
     }
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - having access pointer.\n");
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - having access pointer.\n");
 #endif
 
     {
-		uint32_t temp = g_fpga_sys_xadc_reg_mem->stat_temp;
-		fprintf(stderr, "DEBUG fpga_sys_xadc_init: 1) temp value of XADC register = %4.2f°C.\n", (((float) temp) * 503.975f / 65536.0f) - 273.15);
+        uint32_t temp = g_fpga_sys_xadc_reg_mem->stat_temp;
+        fprintf(stderr, "DEBUG fpga_sys_xadc_init: 1) temp value of XADC register = %4.2f°C.\n", (((float) temp) * 503.975f / 65536.0f) - 273.15);
     }
 
 #if 0
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: before setting registers.\n");
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: before setting registers.\n");
     sync();
 
     uint32_t val;
     val = g_fpga_sys_gpio_leds_reg_mem->gpio_data;  // GPIO_DATA
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO_DATA\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO_DATA\t= 0x%08x.\n", val);
 
     val = g_fpga_sys_gpio_leds_reg_mem->gpio_tri;  // GPIO_TRI
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO_TRI\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO_TRI\t= 0x%08x.\n", val);
 
     val = g_fpga_sys_gpio_leds_reg_mem->gpio2_data;  // GPIO2_DATA
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO2_DATA\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO2_DATA\t= 0x%08x.\n", val);
 
     val = g_fpga_sys_gpio_leds_reg_mem->gpio2_tri;  // GPIO2_TRI
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO2_TRI\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GPIO2_TRI\t= 0x%08x.\n", val);
 
     val = g_fpga_sys_gpio_leds_reg_mem->gier;  // GIER
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GIER\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read GIER\t= 0x%08x.\n", val);
 
     val = g_fpga_sys_gpio_leds_reg_mem->ip_ier;  // IP IER
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read IP IER\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read IP IER\t= 0x%08x.\n", val);
 
     val = g_fpga_sys_gpio_leds_reg_mem->ip_isr;  // IP ISR
-    fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read IP ISR\t= 0x%08x.\n", val);
+    //fprintf(stderr, "DEBUG fpga_sys_xadc_init: g_fpga_sys_gpio_leds_reg_mem - Read IP ISR\t= 0x%08x.\n", val);
 
     uint32_t i;
     g_fpga_sys_gpio_leds_reg_mem->gpio_tri = 0x00000000;  // all bits are output
@@ -111,8 +111,8 @@ int fpga_sys_xadc_init(void)
     g_fpga_sys_xadc_reg_mem->sysmonrr           = 0x00000000;
 
     {
-		uint32_t temp = g_fpga_sys_xadc_reg_mem->stat_temp;
-		fprintf(stderr, "DEBUG fpga_sys_xadc_init: 2) temp value of XADC register = %4.2f°C.\n", (((float) temp) * 503.975f / 65536.0f) - 273.15);
+        uint32_t temp = g_fpga_sys_xadc_reg_mem->stat_temp;
+        fprintf(stderr, "DEBUG fpga_sys_xadc_init: 2) temp value of XADC register = %4.2f°C.\n", (((float) temp) * 503.975f / 65536.0f) - 273.15);
     }
 
     g_fpga_sys_xadc_reg_mem->gier               = 0x00000000;                 // global interrupt disabled
@@ -150,18 +150,18 @@ int fpga_sys_xadc_init(void)
     g_fpga_sys_xadc_reg_mem->alarm15_vccoddr_lo = 0x6666;                     // Vccddro lower alarm limit
 
     {
-		uint32_t temp = g_fpga_sys_xadc_reg_mem->stat_temp;
-		fprintf(stderr, "DEBUG fpga_sys_xadc_init: 3) temp value of XADC register = %4.2f°C.\n", (((float) temp) * 503.975f / 65536.0f) - 273.15);
+        uint32_t temp = g_fpga_sys_xadc_reg_mem->stat_temp;
+        fprintf(stderr, "DEBUG fpga_sys_xadc_init: 3) temp value of XADC register = %4.2f°C.\n", (((float) temp) * 503.975f / 65536.0f) - 273.15);
     }
 
-    fprintf(stderr, "fpga_sys_xadc_init: END\n");
+    //fprintf(stderr, "fpga_sys_xadc_init: END\n");
     return 0;
 }
 
 /*----------------------------------------------------------------------------*/
 int fpga_sys_xadc_exit(void)
 {
-    fprintf(stderr, "fpga_sys_xadc_exit: BEGIN\n");
+    //fprintf(stderr, "fpga_sys_xadc_exit: BEGIN\n");
 
     if (g_fpga_sys_xadc_reg_mem) {
         /* reset the AXI XADC IP core */
@@ -187,6 +187,6 @@ int fpga_sys_xadc_exit(void)
         fprintf(stderr, "ERROR - fpga_sys_xadc_exit: g_fpga_sys_xadc_reg_mem - munmap() failed: %s\n", strerror(errno));
     }
 
-    fprintf(stderr, "fpga_sys_xadc_exit: END\n");
+    //fprintf(stderr, "fpga_sys_xadc_exit: END\n");
     return 0;
 }

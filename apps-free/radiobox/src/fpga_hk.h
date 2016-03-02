@@ -21,25 +21,25 @@
  */
 
 /** @brief House-keeping starting address of FPGA registers. */
-#define FPGA_HK_BASE_ADDR		0x40000000
+#define FPGA_HK_BASE_ADDR        0x40000000
 
 /** @brief House-keeping memory map size of FPGA registers. */
-#define FPGA_HK_BASE_SIZE		0x10000
+#define FPGA_HK_BASE_SIZE        0x10000
 
 /** @brief FPGA register offset addresses of the House-keeping sub-system base address.
  */
 enum {
-	HK_REV						= 0x00000,
-	HK_DNA_LO					= 0x00004,
-	HK_DNA_HI					= 0x00008,
-	HK_DIGITAL_LOOP				= 0x0000C,
-	HK_EXP_DIR_P				= 0x00010,
-	HK_EXP_DIR_N				= 0x00014,
-	HK_EXP_OUT_P				= 0x00018,
-	HK_EXP_OUT_N				= 0x0001C,
-	HK_EXP_IN_P					= 0x00020,
-	HK_EXP_IN_N					= 0x00024,
-	HK_LEDS						= 0x00030
+    HK_REV                     = 0x00000,
+    HK_DNA_LO                  = 0x00004,
+    HK_DNA_HI                  = 0x00008,
+    HK_DIGITAL_LOOP            = 0x0000C,
+    HK_EXP_DIR_P               = 0x00010,
+    HK_EXP_DIR_N               = 0x00014,
+    HK_EXP_OUT_P               = 0x00018,
+    HK_EXP_OUT_N               = 0x0001C,
+    HK_EXP_IN_P                = 0x00020,
+    HK_EXP_IN_N                = 0x00024,
+    HK_LEDS                    = 0x00030
 } HK_REG_ENUMS;
 
 /** @brief FPGA registry structure for the House-keeping sub-module.
@@ -50,8 +50,8 @@ enum {
  */
 typedef struct fpga_hk_reg_mem_s {
 
-	/** @brief  R/O HK_REV - ID of the FPGA (addr: 0x40000000
-	 *
+    /** @brief  R/O HK_REV - ID of the FPGA (addr: 0x40000000
+     *
      * bit h03..h00: Hardware revision
      *
      * bit h31..h04: n/a (reserved)

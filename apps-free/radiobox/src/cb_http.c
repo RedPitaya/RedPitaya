@@ -114,7 +114,7 @@ int rp_set_params(rp_app_params_t* p, int len)
 {
     rp_app_params_t* p_copy = NULL;
 
-    fprintf(stderr, "!!! rp_set_params: BEGIN\n");
+    //fprintf(stderr, "!!! rp_set_params: BEGIN\n");
 
     if (!p || (len < 0)) {
         fprintf(stderr, "ERROR rp_set_params - non-valid parameter\n");
@@ -146,7 +146,7 @@ int rp_set_params(rp_app_params_t* p, int len)
     int idx = rp_find_parms_index(p, TRANSPORT_pktIdx);
     g_transport_pktIdx = (int) (p[idx].value) | 0x80;                                                   // 0x80 flag: processing changed data
 
-    fprintf(stderr, "!!! rp_set_params: END - pktIdx = %s = %lf\n", p[0].name, p[0].value);
+    //fprintf(stderr, "!!! rp_set_params: END - pktIdx = %s = %lf\n", p[0].name, p[0].value);
 #if 0
     rp_free_params(&p);                                                                                 // do NOT free this object!
 #endif
@@ -159,10 +159,10 @@ int rp_get_params(rp_app_params_t** p)
     rp_app_params_t* p_copy = NULL;
     int count = 0;
 
-    fprintf(stderr, "??? rp_get_params: BEGIN\n");
+    //fprintf(stderr, "??? rp_get_params: BEGIN\n");
 
     /* wait until the worker has processed the input data */
-    fprintf(stderr, "?.. rp_get_params: waiting for worker has processed the input data - waiting ...\n");
+    //fprintf(stderr, "?.. rp_get_params: waiting for worker has processed the input data - waiting ...\n");
     do {
         if (!(g_transport_pktIdx & 0x80)) {
             break;
@@ -173,9 +173,9 @@ int rp_get_params(rp_app_params_t** p)
             usleep(1000);
         }
     } while (1);
-    fprintf(stderr, "?.. rp_get_params: waiting for worker has processed data - done.\n");
+    //fprintf(stderr, "?.. rp_get_params: waiting for worker has processed data - done.\n");
 
-    fprintf(stderr, "?.. rp_get_params: waiting for worker has exported the current params data - waiting ...\n");
+    //fprintf(stderr, "?.. rp_get_params: waiting for worker has exported the current params data - waiting ...\n");
     pthread_mutex_lock(&g_rb_info_worker_params_mutex);
     do {
         if (g_rb_info_worker_params) {
@@ -192,12 +192,12 @@ int rp_get_params(rp_app_params_t** p)
         }
     } while (1);
     pthread_mutex_unlock(&g_rb_info_worker_params_mutex);
-    fprintf(stderr, "?.. rp_get_params: waiting for worker has exported the current params data - done.\n");
+    //fprintf(stderr, "?.. rp_get_params: waiting for worker has exported the current params data - done.\n");
 
-    fprintf(stderr, "?-> rp_get_params - having list with count = %d\n", count);
+    //fprintf(stderr, "?-> rp_get_params - having list with count = %d\n", count);
     *p = p_copy;
 
-    fprintf(stderr, "??? rp_get_params: END\n\n");
+    //fprintf(stderr, "??? rp_get_params: END\n\n");
     return count;
 }
 
@@ -206,7 +206,7 @@ int rp_get_signals(float*** s, int* trc_num, int* trc_len)
 {
     int ret_val = 0;
 
-    fprintf(stderr, "rp_get_signals: BEGIN\n");
+    //fprintf(stderr, "rp_get_signals: BEGIN\n");
 
     if (!*s) {
         return -1;
@@ -215,6 +215,6 @@ int rp_get_signals(float*** s, int* trc_num, int* trc_len)
     *trc_num = TRACE_NUM;
     *trc_len = TRACE_LENGTH;
 
-    fprintf(stderr, "rp_get_signals: END\n");
+    //fprintf(stderr, "rp_get_signals: END\n");
     return ret_val;
 }
