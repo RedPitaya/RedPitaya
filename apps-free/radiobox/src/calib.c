@@ -140,3 +140,19 @@ float rp_calib_calc_max_v(uint32_t fe_gain_fs, int probe_att)
 
     return probe_att_fact * 100.0f * (fe_gain_fs / ((float) (1ULL << 32)));
 }
+
+/*----------------------------------------------------------------------------*/
+void calib_set_ADC_offset(rp_calib_params_t *calib_params, int adcChannel, int16_t adcOfs)
+{
+	switch (adcChannel) {
+
+	case 0:
+		calib_params->fe_ch1_dc_offs = adcOfs;
+		break;
+
+	case 1:
+		calib_params->fe_ch2_dc_offs = adcOfs;
+		break;
+
+	}
+}

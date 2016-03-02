@@ -15,6 +15,8 @@
 
 #include <stdint.h>
 
+#include "calib.h"
+
 #include "main.h"
 
 
@@ -262,7 +264,7 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/W RB_PWR_CTRL - power savings control register (addr: 0x40600018)
      *
-     * bit h07..h00: TX modulation variant
+     * bit h07..h00: RX modulation variant
      *   value = h00  no power savings, all clocks of the transceiver are turned on
      *   value = h01  complete transmitter is turned off
      *   value = h02  components of the SSB-USB transmitter are turned on
@@ -271,7 +273,7 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h07  components of the FM transmitter are turned on
      *   value = h08  components of the PM transmitter are turned on
      *
-     * bit h0F..h08: RX modulation variant
+     * bit h0F..h08: TX modulation variant
      *   value = h00  no power savings, all clocks of the receiver are turned on
      *   value = h01  complete receiver is turned off
      *   value = h02  components of the SSB-USB receiver are turned on
@@ -1221,6 +1223,41 @@ void fpga_rb_set_rx_mod_pm_gain__4mod_pm(double rx_mod_pm_gain);
  * @param[in]  rx_audio_out_ofs   Vpp amplitude in mV.
  */
 void fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(double rx_audio_out_gain, double rx_audio_out_ofs);
+
+
+/**
+ * @brief Prepare settings of the FPGA to measure the DC offset voltage of the RX path
+ *
+ */
+void prepare_rx_measurement();
+
+/**
+ * @brief Finish the measurement and reset all RX registers to their defaulting values
+ *
+ */
+void finish_rx_measurement();
+
+/**
+ * @brief Run a single measure step and return the state of minimizing the DC offset
+ *
+ * @param[in] adc_offset_val  ADC offset value to be tried and measured.
+ * @param[in] reduction       shift right value to reduce the input signal magnitude
+ * @retval                    signal strength as unsigned 32 bit value: lower is better.
+ */
+uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction);
+
+/**
+ * @brief Minimizing the noise by ADC offset value compensation
+ *
+ */
+int16_t rp_minimize_noise();
+
+/**
+ * @brief Measuring offset voltages to update entities of calib_params
+ *
+ * @param[inout]  calib_params  set of calibration data to be updated with the help of this measuring process.
+ */
+void rp_measure_calib_params(rp_calib_params_t* calib_params);
 
 
 #if 0

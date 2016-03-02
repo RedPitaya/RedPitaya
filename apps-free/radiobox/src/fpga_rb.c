@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include <pthread.h>
 #include <errno.h>
 #include <sys/mman.h>
@@ -850,7 +851,7 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs)
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: NORMAL rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
 
     } else {  // 80% .. 100%: set the logarithmic amplifier
-        p  = (rx_muxin_gain - 80.0) * (7.0 / 20.0);
+        p  = (rx_muxin_gain - 80.0) * (5.0 / 20.0);
         uint32_t bitfield = (uint32_t) (0.5 + p);
         g_fpga_rb_reg_mem->rx_muxin_gain = ((bitfield << 16) | 0xffff);  // open mixer completely and activate booster
         fprintf(stderr, "INFO - fpga_rb_set_rx_muxin_gain: BOOST  rx_muxin_gain=%lf --> bitfield=0x%08x\n", rx_muxin_gain, g_fpga_rb_reg_mem->rx_muxin_gain);
@@ -996,7 +997,143 @@ void fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(double rx_audio_out_gain, doubl
 }
 
 
+
+/* --------------------------------------------------------------------------- *
+ * CALIBRATION
+ * --------------------------------------------------------------------------- */
+
+void prepare_rx_measurement(int inputLine)
+{
+	// enable RB
+	g_fpga_rb_reg_mem->ctrl = 0x00000001;
+
+	// power up the RX_CAR and RX_AFC section like for modulation FM (broad RX_AFC_FIR filter)
+	g_fpga_rb_reg_mem->pwr_ctrl = 0x00000007;
+
+	// keep all output silent
+	g_fpga_rb_reg_mem->src_con_pnt = 0x00000000;
+
+	// RX_OSC set to 10 kHz
+	g_fpga_rb_reg_mem->rx_car_osc_inc_lo = 0x3e2d6238;
+	g_fpga_rb_reg_mem->rx_car_osc_inc_hi = 0x00000005;
+
+	// select input line
+	fprintf(stderr, "\nINFO prepare_rx_measurement: preparing ADC channel 0x%02x\n", inputLine);
+	g_fpga_rb_reg_mem->rx_muxin_src = inputLine;
+
+	// set the input gain to maximum but no boost enabled
+	g_fpga_rb_reg_mem->rx_muxin_gain = 0x00001fff;
+}
+
+void finish_rx_measurement()
+{
+	// clear the input offset register
+	g_fpga_rb_reg_mem->rx_muxin_ofs = 0x00000000;
+
+	// close input line
+	g_fpga_rb_reg_mem->rx_muxin_src = 0;
+
+	// RX_OSC clear
+	g_fpga_rb_reg_mem->rx_car_osc_inc_lo = 0;
+	g_fpga_rb_reg_mem->rx_car_osc_inc_hi = 0;
+
+	// no power savings enabled
+	g_fpga_rb_reg_mem->pwr_ctrl = 0x00000000;
+
+	// disable RB
+	g_fpga_rb_reg_mem->ctrl = 0;
+}
+
+uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction)
+{
+	// set the ADC offset value
+	g_fpga_rb_reg_mem->rx_muxin_ofs = adc_offset_val;
+
+	g_fpga_rb_reg_mem->rx_muxin_gain = 0x0000ffff >> reduction;
+
+	// delay for filters going to be stable
+	{
+		struct timespec rqtp;
+
+		// 5 ms equals to 50 waves @ 10 kHz
+		rqtp.tv_sec  = 0;
+		rqtp.tv_nsec = 5000000L;
+
+		nanosleep(&rqtp, NULL);
+	}
+
+	// read the current magnitude value of the CORDIC engine
+	return g_fpga_rb_reg_mem->rx_afc_cordic_mag;
+}
+
+int16_t rp_minimize_noise()
+{
+	// binary search algorithm
+
+	uint16_t min_ofs_value = 0x0000;
+	uint16_t test_ofs_lo;
+	uint16_t test_ofs_hi;
+	uint32_t test_sig_lo;
+	uint32_t test_sig_hi;
+
+	int i;
+	for (i = 15; i > 0; --i) {
+		int reduction = i - 11;
+		if (reduction < 0) {
+			reduction = 0;
+		}
+
+		test_ofs_lo = min_ofs_value | (0b01 << (i - 1));
+		test_ofs_hi = min_ofs_value | (0b11 << (i - 1));
+
+		test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), reduction);
+		test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), reduction);
+		fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+		if (test_sig_hi < test_sig_lo) {
+			min_ofs_value |= (1 << i);
+		}
+	}
+	test_ofs_lo = min_ofs_value;
+	test_ofs_hi = min_ofs_value | 0b1;
+	test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), 0);
+	test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), 0);
+	fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+	if (test_sig_hi < test_sig_lo) {
+		min_ofs_value = test_ofs_hi;
+	}
+
+	fprintf(stderr, "INFO rp_measure_calib_params: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
+	return (int16_t) (((int32_t) min_ofs_value) - 0x8000);
+}
+
+void rp_measure_calib_params(rp_calib_params_t* calib_params)
+{
+	int16_t thisOfsValue;
+
+	fprintf(stderr, "\n\n<== calibration offset values of the ADC channels ==>\n");
+
+	// measure offset of channel ADC0 mapped to "RF In 1"
+	prepare_rx_measurement(0x20);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: channel 0 - ofs=0x%08x=%d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 0, thisOfsValue);
+
+	// measure offset of channel ADC1 mapped to "RF In 2"
+	prepare_rx_measurement(0x21);
+	thisOfsValue = rp_minimize_noise();
+	fprintf(stderr, "INFO rp_measure_calib_params: channel 1 - ofs=0x%08x=%d\n", thisOfsValue, thisOfsValue);
+	calib_set_ADC_offset(calib_params, 1, thisOfsValue);
+
+	finish_rx_measurement();
+	fprintf(stderr, "\n\n");
+}
+
+
 #if 0
+/* --------------------------------------------------------------------------- *
+ * FPGA SECOND ACCESS METHOD
+ * --------------------------------------------------------------------------- */
+
 /*----------------------------------------------------------------------------*/
 /**
  * @brief Reads value from the specific RadioBox sub-module register
