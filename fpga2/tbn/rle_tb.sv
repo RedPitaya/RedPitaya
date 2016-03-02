@@ -192,6 +192,8 @@ task test_rle ();
   for (int i=0; i<dat.size(); i++) begin
     str_src.put(dat[i], '1, i==(dat.size()-1), 1);
   end
+  // TODO: use source/drain status instead of a constant delay
+  repeat(dat.size()+4) @(posedge clk);
   repeat(dat.size()+4) @(posedge clk);
 
   // check received data
@@ -202,8 +204,9 @@ task test_rle ();
     int unsigned   tmg;
 
     str_drn.get(dto, kep, lst, tmg);
-    if (dtc[i] != dto) begin
-      $display ("Error: i=%d: (out=%p) != (ref=%p)", i, dtc[i], dto);
+    if ( (dto != dtc[i])
+       | (lst != (i==(dtc.size()-1))) ) begin
+      $display ("Error: i=%d: (out=%p/%b) != (ref=%p/%b)", i, dtc[i], lst, dto, (i==(dtc.size()-1)));
       error++;
     end
   end
@@ -247,7 +250,7 @@ endtask: test_bypass
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DN (DN), .DAT_T (DTI), .IV (1'bx)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DAT_T (DTI), .IV (1'b0)) str_src (.str (sti));
 
 rle #(
   .DN  (DN),

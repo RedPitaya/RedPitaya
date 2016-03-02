@@ -43,7 +43,7 @@ logic [CW-1:0] cnt;
 logic [CW-1:0] nxt;
 logic          max;
 
-// compression
+// new compressed value
 logic trn;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ if (~sti.ARESETn) begin
 end else begin
   if (ctl_rst) begin
     old.TVALID <= 1'b0;
-  end else if (sti.TREADY) begin
+  end else if (old.TREADY & trn) begin
     old.TVALID <= sti.TVALID;
   end
 end
@@ -104,13 +104,14 @@ end else begin
   end
 end
 
-assign trn = ~cfg_ena | ~cmp | max | old.TLAST; 
+// transfer due to (bypass) or (counter full or end of stream) or (input data change)
+assign trn = ~cfg_ena | (max | old.TLAST) | (~cmp & sti.TVALID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // compression
 ////////////////////////////////////////////////////////////////////////////////
 
-assign old.TREADY = sto.TREADY | ~sto.TVALID;
+assign old.TREADY = (sto.TREADY | ~sto.TVALID);
 
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
