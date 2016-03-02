@@ -190,7 +190,7 @@ task test_rle ();
   $display ("dtc [%d] = %p", dtc.size(), dtc);
   // send data into stream
   for (int i=0; i<dat.size(); i++) begin
-    str_src.put(dat[i], '1, i==(dat.size()-1), 0);
+    str_src.put(dat[i], '1, i==(dat.size()-1), 1);
   end
   repeat(dat.size()+4) @(posedge clk);
 
@@ -222,7 +222,7 @@ task test_bypass ();
   repeat(4) @(posedge clk);
   // send data into stream
   for (int i=0; i<dat.size(); i++) begin
-    str_src.put(dat[i], '1, 1'b0);
+    str_src.put(dat[i], '1, i==(dat.size()-1), 0);
   end
   repeat(dat.size()+4) @(posedge clk);
 
@@ -247,7 +247,7 @@ endtask: test_bypass
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DN (DN), .DAT_T (DTI)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DAT_T (DTI), .IV (1'bx)) str_src (.str (sti));
 
 rle #(
   .DN  (DN),
