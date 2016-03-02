@@ -100,6 +100,9 @@
 
   OSC.connect_time;
 
+  OSC.inGainValue1 = '-';
+  OSC.inGainValue2 = '-';
+
   // Starts the oscilloscope application on server
   OSC.startApp = function() {
     $.get(
@@ -206,6 +209,36 @@
 		OSC.params.local['in_command'] = { value: 'send_all_params' };
 		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
 		OSC.params.local = {};
+
+		setTimeout(function(){
+		  	var ch1_cookie_value = $.cookie("scope_osc_ch1_in_gain");
+		  	var ch2_cookie_value = $.cookie("scope_osc_ch2_in_gain");
+
+      		OSC.params.local = {};
+		  	if(ch1_cookie_value == '1'){
+		  		$("#OSC_CH1_IN_GAIN").parent().removeClass("active")
+		  		$("#OSC_CH1_IN_GAIN1").parent().addClass("active")
+		  		OSC.params.local['OSC_CH1_IN_GAIN'] = { value: 1 };
+		  	}
+		  	else if(ch1_cookie_value == '0'){
+		  		$("#OSC_CH1_IN_GAIN1").parent().removeClass("active")
+		  		$("#OSC_CH1_IN_GAIN").parent().addClass("active")
+		  		OSC.params.local['OSC_CH1_IN_GAIN'] = { value: 0 };
+		  	}
+
+		  	if(ch2_cookie_value == '1'){
+		  		$("#OSC_CH2_IN_GAIN").parent().removeClass("active")
+		  		$("#OSC_CH2_IN_GAIN1").parent().addClass("active")
+		  		OSC.params.local['OSC_CH2_IN_GAIN'] = { value: 1 };
+		  	}
+		  	else if(ch2_cookie_value == '0'){
+		  		$("#OSC_CH2_IN_GAIN1").parent().removeClass("active")
+		  		$("#OSC_CH2_IN_GAIN").parent().addClass("active")
+		  		OSC.params.local['OSC_CH2_IN_GAIN'] = { value: 0 };
+		  	}
+      		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+      		OSC.params.local = {};
+	  	}, 2000);
       };
 
       OSC.ws.onclose = function() {
@@ -2601,6 +2634,21 @@ $(function() {
       url: OSC.config.stop_app_url,
       async: false
     });
+
+    var scope_osc_ch1_in_gain;
+    if($("#OSC_CH1_IN_GAIN").parent().hasClass("active"))
+    	scope_osc_ch1_in_gain = '0';
+    else if($("#OSC_CH1_IN_GAIN1").parent().hasClass("active"))
+    	scope_osc_ch1_in_gain = '1';
+
+    var scope_osc_ch2_in_gain;
+    if($("#OSC_CH2_IN_GAIN").parent().hasClass("active"))
+    	scope_osc_ch2_in_gain = '0';
+    else if($("#OSC_CH2_IN_GAIN1").parent().hasClass("active"))
+    	scope_osc_ch2_in_gain = '1';
+
+    $.cookie('scope_osc_ch1_in_gain', scope_osc_ch1_in_gain);
+    $.cookie('scope_osc_ch2_in_gain', scope_osc_ch2_in_gain);
   };
 
   // Everything prepared, start application
