@@ -149,7 +149,7 @@
 	for(var i=0; i<OSC.refresh_times.length; i++)
 		times += OSC.refresh_times[i] + " ";
 
-	console.log(now_str + " | compressed="+OSC.compressed_data + "; decompressed: "+OSC.decompressed_data + " | Updates: " + OSC.refresh_times.length + "; Delays: "+times);
+	//console.log(now_str + " | compressed="+OSC.compressed_data + "; decompressed: "+OSC.decompressed_data + " | Updates: " + OSC.refresh_times.length + "; Delays: "+times);
 	$('#fps_view').text(OSC.refresh_times.length);
 	$('#throughput_view').text((OSC.compressed_data/1024).toFixed(2) + "kB/s");
 	$('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
