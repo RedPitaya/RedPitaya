@@ -205,6 +205,15 @@ int main(int argc, char **argv)
     std::string vOS_VER;
     std::string vOS_BUILD;
 
+    bool verbose = false;
+
+    if (argc == 2)
+    {
+        std::string param(argv[1]);
+        if (param == "-v" || param == "--verbose")
+            verbose = true;
+    }
+
     unsigned long long dna;
     char string_buffer[18];
     int res;
@@ -274,7 +283,8 @@ int main(int argc, char **argv)
 
     cmd << "' " << GetUrl();
 
-    // std::cout << cmd.str().c_str() << std::endl;
+    if (verbose)
+        std::cout << "Executing: " << cmd.str().c_str() << std::endl;
 
     system(cmd.str().c_str());
 
