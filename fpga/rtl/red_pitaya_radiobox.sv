@@ -1210,20 +1210,32 @@ wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 6'h20) ?  { ~adc_i[0], 2'
                                       (rx_muxin_src == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
                                       (rx_muxin_src == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
                                       16'b0                                                       ;
+wire   signed [ 47: 0] rx_muxin_sig_in = { rx_muxin_sig, 32'b0 };
+wire   signed [ 47: 0] rx_muxin_ofs_in = { rx_muxin_mix_ofs, 32'b0 };
+wire   signed [ 47: 0] rx_muxin_biased_out;
 
-wire   signed [ 15: 0] rx_muxin_mix_in = (rx_muxin_sig << rx_muxin_mix_log2);  // unsigned value: input booster for
-                                                                               // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
-wire   signed [ 15: 0] rx_muxin_mix_ofs_in  = rx_muxin_mix_ofs;
+rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_muxin_offset_bias (
+  // global signals
+  .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .CE                      ( rb_pwr_rx_CAR_clken         ),  // power down when needed to
+
+  .CONCAT                  ( rx_muxin_sig_in             ),  // ADC raw value           SIGNED 48 bit
+  .C                       ( rx_muxin_ofs_in             ),  // ADC offset value        SIGNED 48 bit
+
+  .P                       ( rx_muxin_biased_out         )   // biased output           SIGNED 48 bit
+);
+
+wire   signed [ 15: 0] rx_muxin_mix_in = (rx_muxin_biased_out[47:32] << rx_muxin_mix_log2);  // unsigned value: input booster for
+                                                                                             // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
 wire   signed [ 15: 0] rx_muxin_mix_gain_in = { 1'b0, rx_muxin_mix_gain[15:1] };
 wire   signed [ 31: 0] rx_muxin_mix_out;
 
-rb_dsp48_AaDmB_A16_D16_B16_P32 i_rb_rx_muxin_amplifier (
+rb_dsp48_AmB_A16_B16_P32 i_rb_rx_muxin_amplifier (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_rx_CAR_clken         ),  // power down when needed to
 
   .A                       ( rx_muxin_mix_in             ),  // input signal            SIGNED 16 bit
-  .D                       ( rx_muxin_mix_ofs_in         ),  // RX amplifier offset     SIGNED 16 bit
   .B                       ( rx_muxin_mix_gain_in        ),  // RX amplifier gain       SIGNED 16 bit
 
   .P                       ( rx_muxin_mix_out            )   // RX level adj. input     SIGSIG 32 bit

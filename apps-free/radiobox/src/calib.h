@@ -125,11 +125,20 @@ float rp_calib_calc_max_v(uint32_t fe_gain_fs, int probe_att);
 /**
  * Initialize calibration parameters to default values.
  *
- * @param[out] calib_params  Pointer to target buffer to be initialized.
+ * @param[out] calib_params  Pointer to target buffer to be accessed.
  * @param[in]  adcChannel    ADC channel entry to be updated.
  * @param[in]  adcOfs        offset value to be added to the ADC value to level out the offset.
  */
 void calib_set_ADC_offset(rp_calib_params_t *calib_params, int adcChannel, int16_t adcOfs);
+
+/**
+ * Initialize calibration parameters to default values.
+ *
+ * @param[out] calib_params  Pointer to target buffer to be accessed.
+ * @param[in]  adcChannel    ADC channel entry to be retrieved.
+ * @retval     int16_t       offset value to be added to the ADC value to level out the offset.
+ */
+int16_t calib_get_ADC_offset(rp_calib_params_t *calib_params, int adcChannel);
 
 
 /** @} */

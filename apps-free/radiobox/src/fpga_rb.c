@@ -339,7 +339,6 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         double tx_muxin_gain, double rx_muxin_gain,
         double rx_car_osc_qrg)
 {
-    // XXX expand for receiver part
     const int ssb_weaver_osc_qrg = 1700.0;
 
     //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
@@ -385,7 +384,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to RF_inp_1\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0));    // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000020;                                                  // source ID: 32
         }
         break;
@@ -393,7 +392,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to RF_inp_2\n");
 
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 1));    // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000021;                                                  // source ID: 33
         }
         break;
@@ -432,7 +431,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 
 #if 0
         case RB_MODSRC_VP_VN: {
-            fpga_rb_set_tx_muxin_gain(tx_muxin_gain);                                                      // TX MUXIN gain setting
+            fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0x0000);                                              // TX MUXIN gain setting
             g_fpga_rb_reg_mem->tx_muxin_src = 0x00000003;                                                  // source ID: 3
         }
         break;
@@ -522,7 +521,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN1: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to RF_inp_1\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0));    // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000020;
         }
         break;
@@ -530,7 +529,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         case RB_MODSRC_RF_IN2: {
             fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to RF_inp_2\n");
 
-            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0x0000);                                              // RX MUXIN gain setting
+            fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 1));    // RX MUXIN gain setting
             g_fpga_rb_reg_mem->rx_muxin_src = 0x00000021;
         }
         break;
@@ -1018,7 +1017,7 @@ void prepare_rx_measurement(int inputLine)
 	g_fpga_rb_reg_mem->rx_car_osc_inc_hi = 0x00000005;
 
 	// select input line
-	fprintf(stderr, "\nINFO prepare_rx_measurement: preparing ADC channel 0x%02x\n", inputLine);
+	//fprintf(stderr, "\nDEBUG prepare_rx_measurement: preparing ADC channel 0x%02x\n", inputLine);
 	g_fpga_rb_reg_mem->rx_muxin_src = inputLine;
 
 	// set the input gain to maximum but no boost enabled
@@ -1046,6 +1045,8 @@ void finish_rx_measurement()
 
 uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction)
 {
+	uint32_t sumreg = 0;
+
 	// set the ADC offset value
 	g_fpga_rb_reg_mem->rx_muxin_ofs = adc_offset_val;
 
@@ -1058,12 +1059,21 @@ uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction)
 		// 5 ms equals to 50 waves @ 10 kHz
 		rqtp.tv_sec  = 0;
 		rqtp.tv_nsec = 5000000L;
-
 		nanosleep(&rqtp, NULL);
+
+		// each 200 kHz timestamp there is a new result available - sum up to reduce noise during measurement
+		rqtp.tv_sec  = 0;
+		rqtp.tv_nsec = 5000L;
+
+		int iter;
+		for (iter = 32; iter; --iter) {
+			sumreg += ((g_fpga_rb_reg_mem->rx_afc_cordic_mag + 16) >> 5);
+			nanosleep(&rqtp, NULL);
+		}
 	}
 
 	// read the current magnitude value of the CORDIC engine
-	return g_fpga_rb_reg_mem->rx_afc_cordic_mag;
+	return sumreg;
 }
 
 int16_t rp_minimize_noise()
@@ -1088,7 +1098,7 @@ int16_t rp_minimize_noise()
 
 		test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), reduction);
 		test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), reduction);
-		fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+		//fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
 		if (test_sig_hi < test_sig_lo) {
 			min_ofs_value |= (1 << i);
 		}
@@ -1097,12 +1107,12 @@ int16_t rp_minimize_noise()
 	test_ofs_hi = min_ofs_value | 0b1;
 	test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), 0);
 	test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), 0);
-	fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+	//fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
 	if (test_sig_hi < test_sig_lo) {
 		min_ofs_value = test_ofs_hi;
 	}
 
-	fprintf(stderr, "INFO rp_measure_calib_params: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
+	//fprintf(stderr, "INFO rp_measure_calib_params: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
 	return (int16_t) (((int32_t) min_ofs_value) - 0x8000);
 }
 
@@ -1110,7 +1120,7 @@ void rp_measure_calib_params(rp_calib_params_t* calib_params)
 {
 	int16_t thisOfsValue;
 
-	fprintf(stderr, "\n\n<== calibration offset values of the ADC channels ==>\n");
+	fprintf(stderr, "\n<== ADC offset calibration ==>\n");
 
 	// measure offset of channel ADC0 mapped to "RF In 1"
 	prepare_rx_measurement(0x20);
@@ -1125,7 +1135,7 @@ void rp_measure_calib_params(rp_calib_params_t* calib_params)
 	calib_set_ADC_offset(calib_params, 1, thisOfsValue);
 
 	finish_rx_measurement();
-	fprintf(stderr, "\n\n");
+	fprintf(stderr, "\n");
 }
 
 
