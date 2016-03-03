@@ -1,6 +1,6 @@
-diff -wuNr cryptopp/integer.cpp cryptopp_new/integer.cpp
---- cryptopp/integer.cpp	2010-08-06 17:46:22.000000000 +0700
-+++ cryptopp_new/integer.cpp	2016-02-29 14:16:18.344420718 +0600
+diff -wu /home/user/cryptopp/integer.cpp cryptopp/integer.cpp
+--- /home/user/cryptopp/integer.cpp	2010-08-06 17:46:22.000000000 +0700
++++ cryptopp/integer.cpp	2016-03-03 12:56:46.638122079 +0600
 @@ -2861,17 +2861,23 @@
  
  const Integer &Integer::Zero()
@@ -28,10 +28,10 @@ diff -wuNr cryptopp/integer.cpp cryptopp_new/integer.cpp
  }
  
  bool Integer::operator!() const
-Binary files cryptopp/libcryptopp.a and cryptopp_new/libcryptopp.a differ
-diff -wuNr cryptopp/pubkey.h cryptopp_new/pubkey.h
---- cryptopp/pubkey.h	2010-08-06 17:46:26.000000000 +0700
-+++ cryptopp_new/pubkey.h	2016-02-29 14:19:28.508415158 +0600
+Only in cryptopp/: integer.cpp.orig
+diff -wu /home/user/cryptopp/pubkey.h cryptopp/pubkey.h
+--- /home/user/cryptopp/pubkey.h	2010-08-06 17:46:26.000000000 +0700
++++ cryptopp/pubkey.h	2016-03-03 12:56:41.838122219 +0600
 @@ -3,6 +3,8 @@
  #ifndef CRYPTOPP_PUBKEY_H
  #define CRYPTOPP_PUBKEY_H
@@ -55,8 +55,8 @@ diff -wuNr cryptopp/pubkey.h cryptopp_new/pubkey.h
  	const typename BASE::MessageEncodingInterface & GetMessageEncodingInterface() const 
 -		{return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();}
 +		{
-+			static CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod MEM;
-+			return MEM;
++			static typename SCHEME_OPTIONS::MessageEncodingMethod* MEM = new typename SCHEME_OPTIONS::MessageEncodingMethod;
++			return *MEM;
 +			//return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();
 +		}
  	const TrapdoorFunctionBounds & GetTrapdoorFunctionBounds() const 
@@ -68,10 +68,12 @@ diff -wuNr cryptopp/pubkey.h cryptopp_new/pubkey.h
  	const PK_SignatureMessageEncodingMethod & GetMessageEncodingInterface() const 
 -		{return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();}
 +		{
-+			static CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod MEM;
-+			return MEM;
++			static typename SCHEME_OPTIONS::MessageEncodingMethod* MEM = new typename SCHEME_OPTIONS::MessageEncodingMethod;
++			return *MEM;
 +			//return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();
 +		}
  };
  
  //! _
+Common subdirectories: /home/user/cryptopp/TestData and cryptopp/TestData
+Common subdirectories: /home/user/cryptopp/TestVectors and cryptopp/TestVectors
