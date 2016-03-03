@@ -221,6 +221,17 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
     return RP_API_OK;
 }
 
+RP_STATUS rp_EnableDigitalPortDataRLE(bool enable)
+{
+    if(enable){
+        rp_LaAcqEnableRLE(&la_acq_handle);
+    }
+    else{
+        rp_LaAcqDisableRLE(&la_acq_handle);
+    }
+    return RP_API_OK;
+}
+
 RP_STATUS rp_IsAcquistionComplete(void){
     int i=0;
     while(i<3){
@@ -393,6 +404,10 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
+
+
+   // rp_DmaMemDump(&la_acq_handle);
+
     // acquired number of post samples must match to req.
     if(pst_length!=noOfPostTriggerSamples){
         rp_LaAcqStopAcq(&la_acq_handle);
@@ -493,47 +508,132 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         return -1;
     }
 
-    int32_t first_sample =   acq_data.trig_sample - acq_data.pre_samples;
-    int32_t last_sample =   acq_data.trig_sample + acq_data.post_samples;
-    int32_t buf_len =  rp_LaAcqBufLenInSamples(&la_acq_handle);
+    bool rle;
+    rp_LaAcqIsRLE(&la_acq_handle,&rle);
+    if(rle){ // RLE mode
+        uint32_t current, last;
+        rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last);
 
-    printf("\n\r req: pre=%d pos=%d\n\r", acq_data.pre_samples, acq_data.post_samples);
-    printf("\n\r sta: first=%d trig=%d last=%d\n\r", first_sample, acq_data.trig_sample, last_sample);
+        // find first sample an trigger sample
+        uint32_t first_sample=0;
+        uint32_t samples=0;
+        acq_data.trig_sample=0;
 
-    int32_t wlen;
-    if(first_sample<0){
+        uint32_t len=0;
+        uint32_t i=0;
+        uint32_t index = last;
+        uint32_t total = acq_data.pre_samples+acq_data.post_samples;
 
-        printf("\n\r first_sample > last_sample\n\r");
+        // two samples must be removed to fix trigger delay
+        for(i=0;i<2;i++){
 
-        wlen=abs(first_sample);
-        first_sample=buf_len+first_sample;
-        printf("\n\r sta: first=%d wlen=%d\n\r", first_sample, wlen);
-        for(int i=0; i<wlen; i++){
-            acq_data.buf[i]=map[first_sample+i];
-        }
-        for(int i=0; i<last_sample; i++){
-            acq_data.buf[wlen+i]=map[i];
-        }
+            len=(map[index]>>8)+1;
 
-    }
-    else if(last_sample>=buf_len){
-
-        printf("\n\r last_sample > size\n\r");
-
-        wlen=buf_len-first_sample;
-        for(int i=0; i<wlen; i++){
-            acq_data.buf[i]=map[first_sample+i];
-        }
-        last_sample-=buf_len;
-        for(int i=0; i<last_sample; i++){
-            acq_data.buf[wlen+i]=map[i];
+            len-=1; // decrease length of current sampole
+            if(len==0){ // if it is zero we have to remove it
+                if(index==0){
+                    index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
+                }
+                else{
+                    index--;
+                }
+            }
         }
 
+        // find first and last sample
+        i=0;
+        len=0;
+        for(;;){
+
+            i++;
+            len+=(map[index]>>8)+1;
+
+            if(len==acq_data.post_samples){
+                acq_data.trig_sample=i;
+            }
+
+            if(len>=total){
+                first_sample=index;
+                samples=i;
+                break;
+            }
+
+          //  printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
+          //  printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
+
+            if(index==0){
+                index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
+            }
+            else{
+                index--;
+            }
+
+
+        }
+
+        // copy data
+        index=first_sample;
+        for(i=0;i<samples;i++){
+            if(index>=rp_LaAcqBufLenInSamples(&la_acq_handle)){
+                index=0;
+            }
+            acq_data.buf[i]=map[index];
+            index++;
+        }
+
+        printf("\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
+/*
+        for(i=0;i<samples;i++){
+            printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(acq_data.buf[i]>>8),(uint8_t)acq_data.buf[i]);
+        }
+        */
+
+        *noOfSamples=samples;
     }
     else{
-        printf("\n\r last_sample > first_sample\n\r");
-        for(int i=0; i<(*noOfSamples); i++){
-            acq_data.buf[i]=map[first_sample+i];
+
+        int32_t first_sample =   acq_data.trig_sample - acq_data.pre_samples;
+        int32_t last_sample =   acq_data.trig_sample + acq_data.post_samples;
+        int32_t buf_len =  rp_LaAcqBufLenInSamples(&la_acq_handle);
+
+        printf("\n\r req: pre=%d pos=%d\n\r", acq_data.pre_samples, acq_data.post_samples);
+        printf("\n\r sta: first=%d trig=%d last=%d\n\r", first_sample, acq_data.trig_sample, last_sample);
+
+        int32_t wlen;
+        if(first_sample<0){
+
+            printf("\n\r first_sample > last_sample\n\r");
+
+            wlen=abs(first_sample);
+            first_sample=buf_len+first_sample;
+            printf("\n\r sta: first=%d wlen=%d\n\r", first_sample, wlen);
+            for(int i=0; i<wlen; i++){
+                acq_data.buf[i]=map[first_sample+i];
+            }
+            for(int i=0; i<last_sample; i++){
+                acq_data.buf[wlen+i]=map[i];
+            }
+
+        }
+        else if(last_sample>=buf_len){
+
+            printf("\n\r last_sample > size\n\r");
+
+            wlen=buf_len-first_sample;
+            for(int i=0; i<wlen; i++){
+                acq_data.buf[i]=map[first_sample+i];
+            }
+            last_sample-=buf_len;
+            for(int i=0; i<last_sample; i++){
+                acq_data.buf[wlen+i]=map[i];
+            }
+
+        }
+        else{
+            printf("\n\r last_sample > first_sample\n\r");
+            for(int i=0; i<(*noOfSamples); i++){
+                acq_data.buf[i]=map[first_sample+i];
+            }
         }
     }
 

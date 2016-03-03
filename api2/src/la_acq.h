@@ -119,6 +119,7 @@ int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a
 int rp_LaAcqEnableRLE(rp_handle_uio_t *handle);
 int rp_LaAcqDisableRLE(rp_handle_uio_t *handle);
 int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last);
+int rp_LaAcqIsRLE(rp_handle_uio_t *handle, bool * state);
 
 uint32_t rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle);
 
