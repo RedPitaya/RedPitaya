@@ -14,8 +14,7 @@ module rle_tb #(
   // stream parameters
   int unsigned DN = 1,
   int unsigned DW = 8,
-  type DTI = logic [   DW-1:0], // data type for input
-  type DTO = logic [CW+DW-1:0]  // data type for output
+  type DTI = logic [DW-1:0] // data type for input
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +111,7 @@ logic cfg_ena;  // enable
 
 // stream input/output
 axi4_stream_if #(.DAT_T (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DAT_T (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DAT_T (DTC)) sto (.ACLK (clk), .ARESETn (rstn));
 
 // error counter
 int unsigned error = 0;
@@ -179,6 +178,10 @@ endtask: test_decompress
 task test_rle ();
   DTI_A dat;
   DTC_A dtc;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTI)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTC)) clo;
+  cli = new;
+  clo = new;
   $display ("TEST: rle RTL");
   dat = new [32];
   dat [0*8+:8] = '{0,0,1,2,2,3,3,3};
@@ -189,21 +192,24 @@ task test_rle ();
   $display ("dat [%d] = %p", dat.size(), dat);
   $display ("dtc [%d] = %p", dtc.size(), dtc);
   // send data into stream
-  for (int i=0; i<dat.size(); i++) begin
-    str_src.put(dat[i], '1, i==(dat.size()-1), 1);
-  end
-  // TODO: use source/drain status instead of a constant delay
-  repeat(dat.size()+4) @(posedge clk);
-  repeat(dat.size()+4) @(posedge clk);
-
+  cli.set_packet (dat);
+  clo.set_packet (dtc, .rdy (1));
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
   // check received data
-  data_check (dtc);
+  data_check (dtc, clo);
   repeat(4) @(posedge clk);
 endtask: test_rle
 
 task test_bypass ();
   DTI_A dat;
   DTC_A dtc;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTI)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTC)) clo;
+  cli = new;
+  clo = new;
   $display ("TEST: rle bypass");
   dat = new [8];
   dtc = new [8];
@@ -213,31 +219,26 @@ task test_bypass ();
   cfg_ena = 1'b0;
   repeat(4) @(posedge clk);
   // send data into stream
-  for (int i=0; i<dat.size(); i++) begin
-    str_src.put(dat[i], '1, i==(dat.size()-1), 0);
-    dtc[i] = '{0, dat[i]};
-  end
-  repeat(dat.size()+4) @(posedge clk);
-
+  cli.set_packet (dat);
+  clo.set_packet (dtc, .rdy (1));
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
   // check received data
-  data_check (dtc);
+  data_check (dtc, clo);
   repeat(4) @(posedge clk);
 endtask: test_bypass
 
 // check received data
 task automatic data_check (
-  ref DTC_A dtc
+  ref DTC_A dtc,
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTC)) cls
 );
   for (int i=0; i<dtc.size(); i++) begin
-    DTC   [DN-1:0] dto;
-    logic [DN-1:0] kep;
-    logic          lst;
-    int unsigned   tmg;
-
-    str_drn.get(dto, kep, lst, tmg);
-    if ( (dto != dtc[i])
-       | (lst != (i==(dtc.size()-1))) ) begin
-      $display ("Error: i=%d: (out=%p/%b) != (ref=%p/%b)", i, dtc[i], lst, dto, (i==(dtc.size()-1)));
+    if ( (cls.mem[i].dat != dtc[i])
+       | (cls.mem[i].lst != (i==(dtc.size()-1))) ) begin
+      $display ("Error: i=%d: (out=%p/%b) != (ref=%p/%b)", i, cls.mem[i].dat, cls.mem[i].lst, dtc[i], (i==(dtc.size()-1)));
       error++;
     end
   end
@@ -247,14 +248,14 @@ endtask: data_check
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DN (DN), .DAT_T (DTI), .IV (1'bx)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DT (DTI), .IV (1'bx)) str_src (.str (sti));
 
 //str_src.mem_t mem;
 
 rle #(
   .DN  (DN),
   .DTI (DTI),
-  .DTO (DTO),
+  .DTO (DTC),
   .CW  (CW)
 ) rle (
   // stream input/output
@@ -265,7 +266,7 @@ rle #(
   .cfg_ena  (cfg_ena)
 );
 
-axi4_stream_drn #(.DN (DN), .DAT_T (DTO)) str_drn (.str (sto));
+axi4_stream_drn #(.DN (DN), .DT (DTC)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms
