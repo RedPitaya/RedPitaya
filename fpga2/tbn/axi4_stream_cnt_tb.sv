@@ -11,7 +11,7 @@ module axi4_stream_cnt_tb #(
   realtime  TP = 4.0ns,  // 250MHz
   // stream parameters
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0],  // data type
+  type DT = logic [8-1:0],  // data type
   // counter width
   int unsigned CW = 8
 );
@@ -27,7 +27,7 @@ logic [CW-1:0] sts_cur;  // current     counter status
 logic [CW-1:0] sts_lst;  // last packet counter status
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DAT_T (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -37,6 +37,10 @@ initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
 
 initial begin
+  DT dat [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
 
@@ -48,11 +52,17 @@ initial begin
   repeat(4) @(posedge clk);
 
   // send data into stream
-  for (int unsigned i=0; i<16; i++) begin
-    str_src.put(i, '1, i==(16-1));
-  end
-  repeat(16) @(posedge clk);
-  repeat(4) @(posedge clk);
+  cli = new;
+  clo = new;
+  dat = cli.range (0, 16);
+  $display ("dat [%d] = %p", dat.size(), dat);
+  // send data into stream
+  cli.set_packet (dat);
+  clo.set_packet (dat);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
 
   // end simulation
   repeat(4) @(posedge clk);
@@ -63,8 +73,8 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DAT_T (DAT_T)) str_src (.str (str));
-axi4_stream_drn #(.DAT_T (DAT_T)) str_drn (.str (str));
+axi4_stream_src #(.DT (DT)) str_src (.str (str));
+axi4_stream_drn #(.DT (DT)) str_drn (.str (str));
 
 axi4_stream_cnt #(
   .DN (DN),

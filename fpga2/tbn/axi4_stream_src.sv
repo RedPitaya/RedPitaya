@@ -25,7 +25,7 @@ endclocking: clk
 // stream
 ////////////////////////////////////////////////////////////////////////////////
 
-task run (axi4_stream_pkg::axi4_stream_class cls);
+task run (axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cls);
   @(clk);
   foreach (cls.mem[i]) begin
     if (cls.mem[i].vld) begin

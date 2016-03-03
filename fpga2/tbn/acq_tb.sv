@@ -15,8 +15,10 @@ module acq_tb #(
   int unsigned CW = 32,  // counter width
   // data bus type
   int unsigned DN = 1,
-  type DAT_T = logic signed [14-1:0]
+  type DT = logic signed [14-1:0]
 );
+
+typedef DT DT_A [];
 
 // system signals
 logic          clk ;  // clock
@@ -52,18 +54,10 @@ logic          ctl_stp;  // acquire stop
 logic [TW-1:0] cts_stp;
 
 // stream input/output
-axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (DN), .DAT_T (DT)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (DN), .DAT_T (DT)) sto (.ACLK (clk), .ARESETn (rstn));
 
-typedef struct {
-  DAT_T          dat;
-  logic [DN-1:0] kep;
-  logic          lst;
-} BUS_T;
-
-BUS_T sti_dat [];
-BUS_T sto_dat [];
-int unsigned size;
+int unsigned error = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and time stamp
@@ -80,6 +74,11 @@ always @ (posedge clk) cts <= cts + 1;
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
+  DT dti [];
+  DT dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+
   // for now initialize configuration to an idle value
   ctl_rst = 1'b0;
   cfg_trg = '1;
@@ -99,37 +98,57 @@ initial begin
   repeat(4) @(posedge clk);
 
   // send data into stream
-  src_inc (-8, 8);
-  #0; wait (!str_src.buf_siz);
-  repeat(1) @(posedge clk);
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+//  dto = TODO;
+  // send data into stream
+  cli.set_packet (dti);
+  clo.set_packet (dto);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
 
   // activate acquire
   acq_pls;
 
   // send data into stream
-  src_inc (-8, 8);
-  #0; wait (!str_src.buf_siz);
-  repeat(3) @(posedge clk);
-  // check data from stream
-  drn_inc (-8, 8);
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = clo.range (-8, 8);;
+  // send data into stream
+  cli.set_packet (dti);
+  clo.set_packet (dto);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
 
-  // send array
-  size = 4;
-  sti_dat = new [size];
-  sto_dat = new [size];
-  for (int i=0; i<=size; i++) begin
-    sti_dat[i] = '{i, '1, i==(size-1)};
-  end
-  acq_pls();
-  src_ary (sti_dat);
-  repeat(size+2) @(posedge clk);
-  repeat(size+2) @(posedge clk);
-  drn_ary (sto_dat);
-  $display (sti_dat);
-  $display (sto_dat);
+//  // send array
+//  size = 4;
+//  sti_dat = new [size];
+//  sto_dat = new [size];
+//  for (int i=0; i<=size; i++) begin
+//    sti_dat[i] = '{i, '1, i==(size-1)};
+//  end
+//  acq_pls();
+//  src_ary (sti_dat);
+//  repeat(size+2) @(posedge clk);
+//  repeat(size+2) @(posedge clk);
+//  drn_ary (sto_dat);
+//  $display (sti_dat);
+//  $display (sto_dat);
 
   // end simulation
   repeat(4) @(posedge clk);
+  if (error)  $display("FAILURE");
+  else        $display("SUCCESS");
   $finish();
 end
 
@@ -137,7 +156,7 @@ end
 // helper tasks
 ////////////////////////////////////////////////////////////////////////////////
 
-// generate trigger pulse
+// generate reset pulse
 task rst_pls ();
   ctl_rst = 1'b1;
   @(posedge clk);
@@ -162,58 +181,11 @@ endtask: trg_pls
 // tests
 ////////////////////////////////////////////////////////////////////////////////
 
-// source array
-task automatic src_ary (
-  ref BUS_T bus []
-);
-  for (int unsigned i=0; i<bus.size; i++) begin
-    str_src.put(bus[i].dat, bus[i].kep, bus[i].lst);
-  end
-endtask: src_ary
-
-// drain array
-task automatic drn_ary (
-  ref BUS_T bus []
-);
-  int unsigned tmg;
-  for (int unsigned i=0; i<bus.size; i++) begin
-    str_drn.get(bus[i].dat, bus[i].kep, bus[i].lst, tmg);
-  end
-endtask: drn_ary
-
-// source incremental sequence
-task src_inc (
-  int from,
-  int to
-);
-  for (int i=from; i<=to; i++) begin
-    str_src.put(i, '1, i==to);
-  end
-endtask
-
-// drain check incremental sequence
-task drn_inc (
-  int from,
-  int to
-);
-  DAT_T        dat;
-  logic        kep;
-  logic        lst;
-  int unsigned tmg;
-  for (int i=from; i<=to; i++) begin
-    str_drn.get(dat, kep, lst, tmg);
-      $display ("data %d is %x/%b/%b", i, dat, kep, lst);
-    if ((dat !== DAT_T'(i)) || (lst !== 1'(i==to))) begin
-      $display ("data %d is %x/%b/%b, should be %x/%b/%b", i, dat, kep, lst, DAT_T'(i), '1, 1'(i==to));
-    end
-  end
-endtask
-
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DN (DN), .DAT_T (DAT_T)) str_src (.str (sti));
+axi4_stream_src #(.DN (DN), .DT (DT)) str_src (.str (sti));
 
 acq #(
   .TW (TW),
@@ -252,7 +224,7 @@ acq #(
   .cts_stp  (cts_stp)
 );
 
-axi4_stream_drn #(.DN (DN), .DAT_T (DAT_T)) str_drn (.str (sto));
+axi4_stream_drn #(.DN (DN), .DT (DT)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

@@ -9,8 +9,9 @@
 module la_trigger_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
-  // PWM parameters
-  type DAT_T = logic [8-1:0]  // data type
+  // stream parameters
+  int unsigned DN = 1,
+  type DT = logic [8-1:0]  // data type
 );
 
 // system signals
@@ -18,13 +19,13 @@ logic clk ;  // clock
 logic rstn;  // reset - active low
 
 // configuration
-DAT_T cfg_cmp_msk;  // comparator mask
-DAT_T cfg_cmp_val;  // comparator value
-DAT_T cfg_edg_pos;  // edge positive
-DAT_T cfg_edg_neg;  // edge negative
+DT    cfg_cmp_msk;  // comparator mask
+DT    cfg_cmp_val;  // comparator value
+DT    cfg_edg_pos;  // edge positive
+DT    cfg_edg_neg;  // edge negative
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DAT_T (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -34,6 +35,10 @@ initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
 
 initial begin
+  DT dat [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+
   // for now initialize configuration to an idle value
   cfg_cmp_msk = '0;
   cfg_cmp_val = '0;
@@ -48,11 +53,17 @@ initial begin
   repeat(4) @(posedge clk);
 
   // send data into stream
-  for (int unsigned i=0; i<16; i++) begin
-    str_src.put(i, 1'b0);
-  end
-  repeat(16) @(posedge clk);
-  repeat(4) @(posedge clk);
+  cli = new;
+  clo = new;
+  dat = cli.range (0, 16);
+  $display ("dat [%d] = %p", dat.size(), dat);
+  // send data into stream
+  cli.set_packet (dat);
+  clo.set_packet (dat);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
 
   // end simulation
   repeat(4) @(posedge clk);
@@ -63,11 +74,11 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DAT_T (DAT_T)) str_src (.str (str));
-axi4_stream_drn #(.DAT_T (DAT_T)) str_drn (.str (str));
+axi4_stream_src #(.DT (DT)) str_src (.str (str));
+axi4_stream_drn #(.DT (DT)) str_drn (.str (str));
 
 la_trigger #(
-  .DAT_T (DAT_T)
+  .DAT_T (DT)
 ) la_trigger (
   // control
   .ctl_rst  (ctl_rst),

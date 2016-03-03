@@ -13,11 +13,12 @@ module linear_tb #(
   int unsigned DN = 1,
   type DTI = logic signed [8-1:0], // data type for input
   type DTO = logic signed [8-1:0], // data type for output
-  int unsigned DWI = $bits(DTI),   // data width for input
-  int unsigned DWO = $bits(DTO),   // data width for output
-  int unsigned DWM = 16,   // data width for multiplier (gain)
-  int unsigned DWS = DWO   // data width for summation (offset)
+  int unsigned DWM = 16,           // data width for multiplier (gain)
+  int unsigned DWS = $bits(DTO)    // data width for summation (offset)
 );
+
+typedef DTI DTI_A [];
+typedef DTO DTO_A [];
 
 // system signals
 logic                  clk ;  // clock
@@ -35,6 +36,8 @@ axi4_stream_if #(.DAT_T (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
 real gain   = 1.0;
 real offset = 0.1;
 
+int unsigned error = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,6 +46,11 @@ initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
 
 initial begin
+  DTI dti [];
+  DTO dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTI)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTO)) clo;
+
   // for now initialize configuration to an idle value
   cfg_sum = (offset * 2**(DWS-1));
   cfg_mul = (gain   * 2**(DWM-2));
@@ -55,34 +63,38 @@ initial begin
   repeat(4) @(posedge clk);
 
   // send data into stream
-  for (int i=-8; i<8; i++) begin
-    str_src.put(i, '1, 1'b0);
-  end
-  repeat(16+6) @(posedge clk);
-
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = calc(dti);
+  // send data into stream
+  cli.set_packet (dti);
+  clo.set_packet (dto);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
   // check received data
-  for (int i=-8; i<8; i++) begin
-    DTO   [DN-1:0] dat;
-    logic [DN-1:0] kep;
-    logic          lst;
-    int unsigned   tmg;
-
-    str_drn.get(dat, kep, lst, tmg);
-    $display ("%04h", dat);
-  end
-
-  repeat(4) @(posedge clk);
+  error += clo.check (dto);
 
   // end simulation
   repeat(4) @(posedge clk);
+  if (error)  $display("FAILURE");
+  else        $display("SUCCESS");
   $finish();
 end
+
+// calculate linear transformation
+// TODO: implement actual calculation
+function automatic DTO_A calc (ref DTI_A dat);
+  calc = new [dat.size()] (dat);
+endfunction: calc
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DAT_T (DTI)) str_src (.str (sti));
+axi4_stream_src #(.DT (DTI)) str_src (.str (sti));
 
 linear #(
   .DTI (DTI),
@@ -98,7 +110,7 @@ linear #(
   .cfg_sum  (cfg_sum)
 );
 
-axi4_stream_drn #(.DAT_T (DTO)) str_drn (.str (sto));
+axi4_stream_drn #(.DT (DTO)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

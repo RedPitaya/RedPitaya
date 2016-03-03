@@ -199,7 +199,7 @@ task test_rle ();
     str_drn.run (clo);
   join
   // check received data
-  data_check (dtc, clo);
+  error += clo.check (dtc);
   repeat(4) @(posedge clk);
 endtask: test_rle
 
@@ -226,23 +226,9 @@ task test_bypass ();
     str_drn.run (clo);
   join
   // check received data
-  data_check (dtc, clo);
+  error += clo.check (dtc);
   repeat(4) @(posedge clk);
 endtask: test_bypass
-
-// check received data
-task automatic data_check (
-  ref DTC_A dtc,
-  axi4_stream_pkg::axi4_stream_class #(.DT (DTC)) cls
-);
-  for (int i=0; i<dtc.size(); i++) begin
-    if ( (cls.mem[i].dat != dtc[i])
-       | (cls.mem[i].lst != (i==(dtc.size()-1))) ) begin
-      $display ("Error: i=%d: (out=%p/%b) != (ref=%p/%b)", i, cls.mem[i].dat, cls.mem[i].lst, dtc[i], (i==(dtc.size()-1)));
-      error++;
-    end
-  end
-endtask: data_check
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
