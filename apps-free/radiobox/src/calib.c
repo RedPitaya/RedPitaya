@@ -156,23 +156,23 @@ void calib_set_ADC_offset(rp_calib_params_t *calib_params, int adcChannel, int16
         break;
 
     case 0x10:
-        calib_params->be_xadc_vin0_dc_offs = -adcOfs;
+        calib_params->be_xadc_vin0_dc_offs = adcOfs;
         break;
 
     case 0x18:
-        calib_params->be_xadc_vin1_dc_offs = -adcOfs;
+        calib_params->be_xadc_vin1_dc_offs = adcOfs;
         break;
 
     case 0x11:
-        calib_params->be_xadc_vin2_dc_offs = -adcOfs;
+        calib_params->be_xadc_vin2_dc_offs = adcOfs;
         break;
 
     case 0x19:
-        calib_params->be_xadc_vin3_dc_offs = -adcOfs;
+        calib_params->be_xadc_vin3_dc_offs = adcOfs;
         break;
 
     case 0x03:
-        calib_params->be_xadc_vin4_dc_offs = -adcOfs;
+        calib_params->be_xadc_vin4_dc_offs = adcOfs;
         break;
     }
 }
@@ -181,25 +181,25 @@ int16_t calib_get_ADC_offset(rp_calib_params_t *calib_params, int adcChannel)
 {
     switch (adcChannel) {
     case 0x20:
-        return -(calib_params->fe_ch1_dc_offs);
+        return calib_params->fe_ch1_dc_offs;
 
     case 0x21:
-        return -(calib_params->fe_ch2_dc_offs);
+        return calib_params->fe_ch2_dc_offs;
 
     case 0x10:
-        return -(calib_params->be_xadc_vin0_dc_offs);
+        return calib_params->be_xadc_vin0_dc_offs;
 
     case 0x18:
-        return -(calib_params->be_xadc_vin1_dc_offs);
+        return calib_params->be_xadc_vin1_dc_offs;
 
     case 0x11:
-        return -(calib_params->be_xadc_vin2_dc_offs);
+        return calib_params->be_xadc_vin2_dc_offs;
 
     case 0x19:
-        return -(calib_params->be_xadc_vin3_dc_offs);
+        return calib_params->be_xadc_vin3_dc_offs;
 
     case 0x03:
-        return -(calib_params->be_xadc_vin4_dc_offs);
+        return calib_params->be_xadc_vin4_dc_offs;
 
     default:
         return 0;

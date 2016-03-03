@@ -18,12 +18,36 @@
 /**
  * GENERAL DESCRIPTION:
  *
- * TODO: explanations.
+ * This modules enables the Red Pitaya to behave like a Transceiver for voice transmission. At the time of writing these modulation variants are supported:
+ *   transmitter:  SSB - USB upper-side-band modulation                      - realized with a weaver oscillator @ 1700 Hz
+ *                 SSB - LSB lower-side-band modulation                      - realized with a weaver oscillator @ 1700 Hz
+ *                 AM  - amplitude modulation                                - realized by modulating the carrier output amplifier
+ *                 FM  - frequency modulation                                - realized by modulating the DDS phase increment value
+ *                 PM  - phase modulation                                    - realized by modulating the DDS phase offset value
+ *
+ *   receiver:     SSB - USB upper-side-band demodulation                    - realized with a weaver oscillator @ 1700 Hz
+ *                 SSB - LSB lower-side-band demodulation                    - realized with a weaver oscillator @ 1700 Hz
+ *                 AM  - amplitude envelope demodulation                     - realized by the OORDIC magnitude information
+ *                 AM  - synchronized carrier upper-side-band demodulation   - realized by a CORDIC assisted automatic frequency correction (AFC) and weaver USB demodulation
+ *                 AM  - synchronized carrier lower-side-band demodulation   - realized by a CORDIC assisted automatic frequency correction (AFC) and weaver LSB demodulation
+ *                 FM  - frequency demodulation                              - realized by a CORDIC assisted automatic frequency correction (AFC) frequency offset as demodulation information
+ *                 PM  - phase demodulation                                  - realized by an integrator of the FM signal
+ *
  *
  * TODO: graphics - exmaple by red_pitaya_scope.v
  *
- * TODO: detailed information
- * 
+ *
+ * The idea of this concept is to realize a complete audio transceiver for all known analog voice transmissions by short wave radio stations as well as HAM radio operators. Due to the used digital
+ * concept all frequencies could be kept at a very low value because the "amplifiers" and "mixers" are simply multiplicators which does not have any "DC" blockers within. Students and radio enthusiasts
+ * are able to play and learn about the idea behind modulation and demodulation of radio frequencies (RF). Any new ideas to have any variants of "modulation" and "demodulation" are welcome.
+ *
+ * For any further connections to the Red Pitaya the Linux sound system could be connected as audio streams to enable SDR radio-software to access this RadioBox submodule. Want to connect digital
+ * CODECS to this RadioBox submodule? Simply connect the audio system to and from it. By doinf this it would be easy to use fldigi or other digital software working with a baseband concept.
+ *
+ * Another realization would be to adapt a front plate on top of the Red Pitaya to have a display, controllers and anything you need to operate this Red Pitaya anywhere you like and without the help
+ * of a browser.
+ *
+ * Just have fun and learn!
  */
 
 
@@ -41,7 +65,7 @@ module red_pitaya_radiobox #(
 
    // LEDs
    output reg            rb_leds_en      ,      // RB LEDs are enabled and overwrites HK sub-module
-   output reg   [  7: 0] rb_leds_data    ,      // RB LEDs data
+   output reg   [  7: 0] rb_leds_data    ,      // RB LEDs data, LED0 is located at the connector, ... , LED7 is located near to the red / green / blue LEDs
 
    // ADC data
    input        [ 13: 0] adc_i[1:0]      ,      // ADC data { CHB, CHA }
@@ -763,8 +787,8 @@ else
 //---------------------------------------------------------------------------------
 //  ADC modulation offset correction and gain
 
-wire   signed [ 15: 0] tx_muxin_mix_in = (tx_muxin_src == 6'h20) ?  { ~adc_i[0], 2'b0 }              :
-                                         (tx_muxin_src == 6'h21) ?  { ~adc_i[1], 2'b0 }              :
+wire   signed [ 15: 0] tx_muxin_mix_in = (tx_muxin_src == 6'h20) ?  { adc_i[0], 2'b0 }               :
+                                         (tx_muxin_src == 6'h21) ?  { adc_i[1], 2'b0 }               :
                                          (tx_muxin_src == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
                                          (tx_muxin_src == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
                                          (tx_muxin_src == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
