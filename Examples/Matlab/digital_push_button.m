@@ -10,7 +10,7 @@ fopen(tcpipObj);
 tcpipObj.Terminator = 'CR/LF';
 
 
-fprintf(tcpipObj,'DIG:PIN:DIR INP,DIO5_N'); % Set DIO5_N  to be input
+fprintf(tcpipObj,'DIG:PIN:DIR IN,DIO5_N'); % Set DIO5_N  to be input
 
 i=1;
 
