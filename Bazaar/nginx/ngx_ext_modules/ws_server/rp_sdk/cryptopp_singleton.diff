@@ -1,11 +1,12 @@
 diff -wu /home/user/cryptopp/integer.cpp cryptopp/integer.cpp
 --- /home/user/cryptopp/integer.cpp	2010-08-06 17:46:22.000000000 +0700
-+++ cryptopp/integer.cpp	2016-03-03 12:56:46.638122079 +0600
-@@ -2861,17 +2861,23 @@
++++ cryptopp/integer.cpp	2016-03-03 14:33:47.241951894 +0600
+@@ -2861,17 +2861,26 @@
  
  const Integer &Integer::Zero()
  {
 -	return Singleton<Integer>().Ref();
++	fprintf(stderr, "%s\n", __FUNCTION__);
 +	static Integer zero;
 +	return zero;
 +	//return Singleton<Integer>().Ref();
@@ -14,6 +15,7 @@ diff -wu /home/user/cryptopp/integer.cpp cryptopp/integer.cpp
  const Integer &Integer::One()
  {
 -	return Singleton<Integer, NewInteger<1> >().Ref();
++	fprintf(stderr, "%s\n", __FUNCTION__);
 +	static Integer one(1);
 +	return one;
 +	//return Singleton<Integer, NewInteger<1> >().Ref();
@@ -22,6 +24,7 @@ diff -wu /home/user/cryptopp/integer.cpp cryptopp/integer.cpp
  const Integer &Integer::Two()
  {
 -	return Singleton<Integer, NewInteger<2> >().Ref();
++	fprintf(stderr, "%s\n", __FUNCTION__);
 +	static Integer two(2);
 +	return two;
 +	//return Singleton<Integer, NewInteger<2> >().Ref();
@@ -29,9 +32,11 @@ diff -wu /home/user/cryptopp/integer.cpp cryptopp/integer.cpp
  
  bool Integer::operator!() const
 Only in cryptopp/: integer.cpp.orig
+Only in cryptopp/: integer.cpp.rej
+Only in /home/user/cryptopp: libcryptopp.a
 diff -wu /home/user/cryptopp/pubkey.h cryptopp/pubkey.h
 --- /home/user/cryptopp/pubkey.h	2010-08-06 17:46:26.000000000 +0700
-+++ cryptopp/pubkey.h	2016-03-03 12:56:41.838122219 +0600
++++ cryptopp/pubkey.h	2016-03-03 14:38:01.997944446 +0600
 @@ -3,6 +3,8 @@
  #ifndef CRYPTOPP_PUBKEY_H
  #define CRYPTOPP_PUBKEY_H
@@ -41,20 +46,13 @@ diff -wu /home/user/cryptopp/pubkey.h cryptopp/pubkey.h
  /** \file
  
  	This file contains helper classes/functions for implementing public key algorithms.
-@@ -316,7 +318,6 @@
- 		{return this->GetMessageEncodingInterface().MaxRecoverableLength(MessageRepresentativeBitLength(), GetHashIdentifier().second, GetDigestSize());}
- 	size_t MaxRecoverableLengthFromSignatureLength(size_t signatureLength) const
- 		{return this->MaxRecoverableLength();}
--
- 	bool IsProbabilistic() const 
- 		{return this->GetTrapdoorFunctionInterface().IsRandomized() || this->GetMessageEncodingInterface().IsProbabilistic();}
- 	bool AllowNonrecoverablePart() const 
-@@ -398,7 +399,11 @@
+@@ -398,7 +400,12 @@
  
  protected:
  	const typename BASE::MessageEncodingInterface & GetMessageEncodingInterface() const 
 -		{return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();}
 +		{
++			fprintf(stderr, "%s 2\n", __FUNCTION__);
 +			static typename SCHEME_OPTIONS::MessageEncodingMethod* MEM = new typename SCHEME_OPTIONS::MessageEncodingMethod;
 +			return *MEM;
 +			//return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();
@@ -62,12 +60,13 @@ diff -wu /home/user/cryptopp/pubkey.h cryptopp/pubkey.h
  	const TrapdoorFunctionBounds & GetTrapdoorFunctionBounds() const 
  		{return GetKey();}
  	const typename BASE::TrapdoorFunctionInterface & GetTrapdoorFunctionInterface() const 
-@@ -1330,7 +1335,11 @@
+@@ -1330,7 +1337,12 @@
  	HashIdentifier GetHashIdentifier() const
  		{return HashIdentifier();}
  	const PK_SignatureMessageEncodingMethod & GetMessageEncodingInterface() const 
 -		{return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();}
 +		{
++			fprintf(stderr, "%s\n", __FUNCTION__);
 +			static typename SCHEME_OPTIONS::MessageEncodingMethod* MEM = new typename SCHEME_OPTIONS::MessageEncodingMethod;
 +			return *MEM;
 +			//return Singleton<CPP_TYPENAME SCHEME_OPTIONS::MessageEncodingMethod>().Ref();
@@ -75,5 +74,6 @@ diff -wu /home/user/cryptopp/pubkey.h cryptopp/pubkey.h
  };
  
  //! _
+Only in cryptopp/: pubkey.h.rej
 Common subdirectories: /home/user/cryptopp/TestData and cryptopp/TestData
 Common subdirectories: /home/user/cryptopp/TestVectors and cryptopp/TestVectors
