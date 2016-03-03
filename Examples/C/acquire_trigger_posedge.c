@@ -42,9 +42,9 @@ int main(int argc, char **argv){
         while(1){
                 rp_AcqGetTriggerState(&state);
                 if(state == RP_TRIG_STATE_TRIGGERED){
-                sleep(1);
                 break;
                 }
+        }
                 
         rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
         int i;
@@ -56,6 +56,4 @@ int main(int argc, char **argv){
         rp_Release();
         return 0;
 }
-
-        }
         
