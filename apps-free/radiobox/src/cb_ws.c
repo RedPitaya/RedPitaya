@@ -26,11 +26,11 @@ void ws_set_signals_interval(int interval) {
 }
 
 int ws_get_params_interval() {
-	return 3000;
+    return 3000;
 }
 
 int ws_get_signals_interval() {
-	return 3000;
+    return 3000;
 }
 
 void ws_set_params() {
@@ -54,7 +54,7 @@ void ws_set_demo_mode(int isDemo) {
 }
 
 int verify_app_license() {
-	return 0;
+    return 0;
 }
 
 #endif
