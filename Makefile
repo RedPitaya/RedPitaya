@@ -113,10 +113,7 @@ export VERSION
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
-# Branch: $(GIT_BRANCH_LOCAL)
-# Build: $(BUILD_NUMBER)
-# Commit: $(GIT_COMMIT)
+# Version: $(VER) SCS
 ##############################################################################
 endef
 export GREET_MSG
@@ -265,7 +262,7 @@ URAMDISK_DIR    = OS/buildroot
 .PHONY: buildroot
 
 $(INSTALL_DIR):
-	mkdir $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
