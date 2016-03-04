@@ -735,7 +735,7 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 p_dst[j_lo].name[CAST_NAME_EXT_LEN + slen] = '\0';
 
                 rb2rp_params_value_copy(&(p_dst[j_se]), &(p_dst[j_hi]), &(p_dst[j_mi]), &(p_dst[j_lo]), src[i]);
-                fprintf(stderr, "INFO rp_copy_params_rb2rp - out[%d, %d, %d, %d] copied from in[%d] - name = %s, val = %lf\n", j_se, j_hi, j_mi, j_lo, i, src[i].name, src[i].value);
+                //fprintf(stderr, "INFO rp_copy_params_rb2rp - out[%d, %d, %d, %d] copied from in[%d] - name = %s, val = %lf\n", j_se, j_hi, j_mi, j_lo, i, src[i].name, src[i].value);
 
             } else {                                                                                    // SINGLE parameter
                 p_dst[j].name = (char*) malloc(slen + 1);
@@ -752,7 +752,7 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 p_dst[j].read_only   = src[i].read_only;
                 p_dst[j].min_val     = src[i].min_val;
                 p_dst[j].max_val     = src[i].max_val;
-                fprintf(stderr, "INFO rp_copy_params_rb2rp - out[%d] copied from in[%d] - name = %s, val = %lf\n", j, i, src[i].name, src[i].value);
+                //fprintf(stderr, "INFO rp_copy_params_rb2rp - out[%d] copied from in[%d] - name = %s, val = %lf\n", j, i, src[i].name, src[i].value);
 
                 j++;
             }  // else SINGLE
@@ -859,7 +859,7 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 }
 
                 rp2rb_params_value_copy(&(p_dst[j]), src[i_se], src[i_hi], src[i_mi], src[i_lo]);
-                fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d, %d, %d, %d] - name = %s, val = %lf\n", j, i_se, i_hi, i_mi, i_lo, src[i_lo].name + CAST_NAME_EXT_LEN, p_dst[j].value);
+                //fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d, %d, %d, %d] - name = %s, val = %lf\n", j, i_se, i_hi, i_mi, i_lo, src[i_lo].name + CAST_NAME_EXT_LEN, p_dst[j].value);
 
             } else {                                                                                    // SINGLE element
                 j = rb_find_parms_index(p_dst, src[i].name);
@@ -874,7 +874,7 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 p_dst[j].read_only   = src[i].read_only;
                 p_dst[j].min_val     = src[i].min_val;
                 p_dst[j].max_val     = src[i].max_val;
-                fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d] - name = %s, val = %lf\n", j, i, src[i].name, src[i].value);
+                //fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d] - name = %s, val = %lf\n", j, i, src[i].name, src[i].value);
             }
         }  // for ()
 
@@ -941,7 +941,7 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 p_dst[j].name[slen] = '\0';
 
                 rp2rb_params_value_copy(&(p_dst[j]), src[i_se], src[i_hi], src[i_mi], src[i_lo]);
-                fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d,%d,%d,%d] - name = %s, val = %lf\n", j, i_se, i_hi, i_mi, i_lo, src[i_lo].name + CAST_NAME_EXT_LEN, p_dst[j].value);
+                //fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d,%d,%d,%d] - name = %s, val = %lf\n", j, i_se, i_hi, i_mi, i_lo, src[i_lo].name + CAST_NAME_EXT_LEN, p_dst[j].value);
 
                 j++;
 
@@ -969,7 +969,7 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 p_dst[j].read_only   = src[i].read_only;
                 p_dst[j].min_val     = src[i].min_val;
                 p_dst[j].max_val     = src[i].max_val;
-                fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d] - name = %s, val = %lf\n", j, i, src[i].name, src[i].value);
+                //fprintf(stderr, "INFO rp_copy_params_rp2rb - out[%d] copied from in[%d] - name = %s, val = %lf\n", j, i, src[i].name, src[i].value);
 
                 j++;
             }

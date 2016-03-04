@@ -24,38 +24,71 @@
  */
 typedef struct rp_calib_params_s {
 
-	/** @brief High gain front end full scale voltage, channel 1 */
-	uint32_t fe_ch1_fs_g_hi;
+    /** @brief High gain front end full scale voltage, channel 1 */
+    uint32_t fe_ch1_fs_g_hi;
 
-	/** @brief High gain front end full scale voltage, channel 2 */
-	uint32_t fe_ch2_fs_g_hi;
+    /** @brief High gain front end full scale voltage, channel 2 */
+    uint32_t fe_ch2_fs_g_hi;
 
-	/** @brief Low gain front end full scale voltage, channel 1  */
-	uint32_t fe_ch1_fs_g_lo;
+    /** @brief Low gain front end full scale voltage, channel 1  */
+    uint32_t fe_ch1_fs_g_lo;
 
-	/** @brief Low gain front end full scale voltage, channel 2  */
-	uint32_t fe_ch2_fs_g_lo;
+    /** @brief Low gain front end full scale voltage, channel 2  */
+    uint32_t fe_ch2_fs_g_lo;
 
-	/** @brief Front end DC offset, channel 1  */
-	int32_t  fe_ch1_dc_offs;
+    /** @brief Front end DC offset, channel 1  */
+    int32_t  fe_ch1_dc_offs;
 
-	/** @brief Front end DC offset, channel 2  */
-	int32_t  fe_ch2_dc_offs;
+    /** @brief Front end DC offset, channel 2  */
+    int32_t  fe_ch2_dc_offs;
 
-	/** @brief Back end full scale voltage, channel 1  */
-	uint32_t be_ch1_fs;
+    /** @brief Back end full scale voltage, channel 1  */
+    uint32_t be_ch1_fs;
 
-	/** @brief Back end full scale voltage, channel 2  */
-	uint32_t be_ch2_fs;
+    /** @brief Back end full scale voltage, channel 2  */
+    uint32_t be_ch2_fs;
 
-	/** @brief Back end DC offset, channel 1 */
-	int32_t  be_ch1_dc_offs;
+    /** @brief Back end DC offset, channel 1 */
+    int32_t  be_ch1_dc_offs;
 
-	/** @brief Back end DC offset, on channel 2 */
-	int32_t  be_ch2_dc_offs;
+    /** @brief Back end DC offset, on channel 2 */
+    int32_t  be_ch2_dc_offs;
 
-	/** @brief Base attributes: real frequency of the 125 MHz ADC clock in Hz */
-	double	 base_osc125mhz_realhz;
+
+    /* RadioBox extension */
+
+    /** @brief Front end XADC ticks per volt factor, Vin0 */
+    float     fe_xadc_vin0_ticks_per_volt;
+
+    /** @brief Front end XADC ticks per volt factor, Vin1 */
+    float     fe_xadc_vin1_ticks_per_volt;
+
+    /** @brief Front end XADC ticks per volt factor, Vin2 */
+    float     fe_xadc_vin2_ticks_per_volt;
+
+    /** @brief Front end XADC ticks per volt factor, Vin3 */
+    float     fe_xadc_vin3_ticks_per_volt;
+
+    /** @brief Front end XADC ticks per volt factor, Vin4 */
+    float     fe_xadc_vin4_ticks_per_volt;
+
+    /** @brief Back end XADC DC offset, Vin0 */
+    int32_t  be_xadc_vin0_dc_offs;
+
+    /** @brief Back end XADC DC offset, Vin1 */
+    int32_t  be_xadc_vin1_dc_offs;
+
+    /** @brief Back end XADC DC offset, Vin2 */
+    int32_t  be_xadc_vin2_dc_offs;
+
+    /** @brief Back end XADC DC offset, Vin3 */
+    int32_t  be_xadc_vin3_dc_offs;
+
+    /** @brief Back end XADC DC offset, Vin4 */
+    int32_t  be_xadc_vin4_dc_offs;
+
+    /** @brief Base attributes: real frequency of the 125 MHz ADC clock in Hz */
+    double     base_osc125mhz_realhz;
 
 } rp_calib_params_t;
 
@@ -94,7 +127,7 @@ int rp_write_calib_params(rp_calib_params_t* calib_params);
  * Initialize calibration parameters to default values.
  *
  * @param[out] calib_params  Pointer to target buffer to be initialized.
-
+ *
  * @retval     0             Success, could never fail.
  */
 int rp_default_calib_params(rp_calib_params_t* calib_params);
@@ -121,6 +154,25 @@ int rp_default_calib_params(rp_calib_params_t* calib_params);
  * @retval    float          Maximum voltage, expressed in [V]
  */
 float rp_calib_calc_max_v(uint32_t fe_gain_fs, int probe_att);
+
+/**
+ * Initialize calibration parameters to default values.
+ *
+ * @param[out] calib_params  Pointer to target buffer to be accessed.
+ * @param[in]  adcChannel    ADC channel entry to be updated.
+ * @param[in]  adcOfs        offset value to be added to the ADC value to level out the offset.
+ */
+void calib_set_ADC_offset(rp_calib_params_t *calib_params, int adcChannel, int16_t adcOfs);
+
+/**
+ * Initialize calibration parameters to default values.
+ *
+ * @param[out] calib_params  Pointer to target buffer to be accessed.
+ * @param[in]  adcChannel    ADC channel entry to be retrieved.
+ * @retval     int16_t       offset value to be added to the ADC value to level out the offset.
+ */
+int16_t calib_get_ADC_offset(rp_calib_params_t *calib_params, int adcChannel);
+
 
 /** @} */
 

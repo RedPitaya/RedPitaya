@@ -84,7 +84,7 @@ int worker_init(rb_app_params_t* params, int params_len)
 
     ret_val = pthread_create(s_worker_thread_handler, NULL, worker_thread, NULL);
     if (ret_val) {
-        fprintf(stderr, "pthread_create() failed: %s\n", strerror(errno));
+        fprintf(stderr, "ERROR pthread_create() failed: %s\n", strerror(errno));
         free(s_worker_thread_handler);
         s_worker_thread_handler = NULL;
         worker_exit();
@@ -120,7 +120,7 @@ int worker_exit(void)
         //fprintf(stderr, "worker_exit: after setting worker_thread_handler=NULL\n");
     }
     if (ret_val) {
-        fprintf(stderr, "pthread_join() failed: %s\n", strerror(errno));
+        fprintf(stderr, "ERROR pthread_join() failed: %s\n", strerror(errno));
     }
 
     //fprintf(stderr, "worker_exit: before freeing traces\n");
@@ -129,11 +129,11 @@ int worker_exit(void)
     //fprintf(stderr, "worker_exit: after freeing traces\n");
 
     //fprintf(stderr, "worker_exit: before freeing worker_params\n");
-    fprintf(stderr, "INFO pthread_join: freeing (1) ...\n");
+    //fprintf(stderr, "INFO pthread_join: freeing (1) ...\n");
     rb_free_params(&s_worker_params);
     //fprintf(stderr, "worker_exit: after freeing worker_params\n");
 
-    fprintf(stderr, "worker_exit: END\n");
+    //fprintf(stderr, "worker_exit: END\n");
     return 0;
 }
 
@@ -160,7 +160,7 @@ void* worker_thread(void* args)
         int l_params_init_done = g_params_init_done;
         if (!l_params_init_done) {
             /* copy default params in worker_params to cb_in_copy_params, also - the FPGA is going to be configured by these entries */
-            fprintf(stderr, "INFO worker_thread: rp_cb_in_params - new data, copying ...\n");
+            //fprintf(stderr, "INFO worker_thread: rp_cb_in_params - new data, copying ...\n");
             rb_copy_params(&l_cb_in_copy_params, s_worker_params, -1, 1);
 
             /* take FSM out of idle l_state */
@@ -228,18 +228,18 @@ void* worker_thread(void* args)
             //fprintf(stderr, "worker_thread: worker_quit_state received\n");
             //fprintf(stderr, "worker_thread: before freeing curr_params\n");
 #if 1
-            fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9a) ...\n");
+            //fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9a) ...\n");
             rp_free_params(&g_rp_cb_in_params);
 #else
-            fprintf(stderr, "INFO worker_thread: rp_cb_in_params - NULLing (9b) ...\n");
+            //fprintf(stderr, "INFO worker_thread: rp_cb_in_params - NULLing (9b) ...\n");
             g_rp_cb_in_params = NULL;
 #endif
 
-            fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9c) ...\n");
+            //fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9c) ...\n");
             rb_free_params(&l_cb_in_copy_params);
-            fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9d) ...\n");
+            //fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9d) ...\n");
             rb_free_params(&g_rb_info_worker_params);
-            fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9e) ...\n");
+            //fprintf(stderr, "INFO worker_thread: rp_cb_in_params - freeing (9e) ...\n");
             rb_free_params(&l_next_params);
             //fprintf(stderr, "worker_thread: after freeing curr_params\n");
             break;
@@ -258,7 +258,7 @@ void* worker_thread(void* args)
             if (l_cb_in_copy_params) {
                 int fpga_update_count = mark_changed_fpga_update_entries(s_worker_params, l_cb_in_copy_params, !l_params_init_done);  // return count of modified FPGA update values
 
-                fprintf(stderr, "INFO worker_thread: worker_normal_state, processing new data --> update_count = %d\n", fpga_update_count);
+                //fprintf(stderr, "INFO worker_thread: worker_normal_state, processing new data --> update_count = %d\n", fpga_update_count);
                 if (fpga_update_count > 0) {
                     //fprintf(stderr, "DEBUG worker_thread: fpga_update: -->  delegate to fpga_rb_update_all_params()\n");
                     if (fpga_rb_update_all_params(l_cb_in_copy_params)) {
