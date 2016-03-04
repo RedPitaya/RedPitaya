@@ -313,6 +313,8 @@ assign axi_a_clr = adc_rst_do ;
 
 always @(posedge axi0_clk_o) begin
    if (axi0_rstn_o == 1'b0) begin
+      axi_a_we      <=  1'b0 ;
+      axi_a_dat     <= 64'h0 ;
       axi_a_dat_sel <=  2'h0 ;
       axi_a_dat_dv  <=  1'b0 ;
       axi_a_dly_cnt <= 32'h0 ;
@@ -419,6 +421,8 @@ assign axi_b_clr = adc_rst_do ;
 
 always @(posedge axi1_clk_o) begin
    if (axi1_rstn_o == 1'b0) begin
+      axi_b_we      <=  1'b0 ;
+      axi_b_dat     <= 64'h0 ;
       axi_b_dat_sel <=  2'h0 ;
       axi_b_dat_dv  <=  1'b0 ;
       axi_b_dly_cnt <= 32'h0 ;
