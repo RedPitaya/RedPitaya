@@ -25,6 +25,7 @@
 
 #include "main.h"
 #include "calib.h"
+#include "rp_gain_compensation.h"
 #include "fpga.h"
 #include "cb_http.h"
 
@@ -340,6 +341,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         double rx_car_osc_qrg)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
+    double tx_amp_rf_gain_corrected = tx_amp_rf_gain * get_compensation_factor(tx_car_osc_qrg, 0);  // TODO: add output connection variant: 1 = 50R / 0 = open
 
     //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
     //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
@@ -352,7 +354,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 
     if (rb_run) {
         fpga_rb_reset();
-        fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                     // TX_AMP_RF     gain setting [mV] is global and not modulation dependent
+        fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain_corrected, 0.0);                           // TX_AMP_RF     gain setting [mV] is global and not modulation dependent
 
         fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(100.0);                                                // RX_MOD_SSB_AM gain setting [ %] only for the SSB demodulator
         fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(100.0);                                                  // RX_MOD_AMENV  gain setting [ %] only for the AM-Envelope demodulator
