@@ -34,11 +34,11 @@ ioctl macro definitions
 #define SET_RX_SGMNT_CNT 16
 #define SET_RX_SGMNT_SIZE 15
 
-#define SGMNT_CNT 4
-#define SGMNT_SIZE 4*1024
+#define SGMNT_CNT 8
+#define SGMNT_SIZE 4*1024*1024
 #define RX_SGMNT_CNT SGMNT_CNT
 #define RX_SGMNT_SIZE SGMNT_SIZE
-#define TX_SGMNT_CNT SGMNT_CNT
+#define TX_SGMNT_CNT 0
 #define TX_SGMNT_SIZE SGMNT_SIZE
 
 #endif // __RPDMA_H

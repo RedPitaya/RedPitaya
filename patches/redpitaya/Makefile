@@ -1,1 +1,1 @@
-obj-$(CONFIG_RPDMA) += rpdma.o
+obj-$(CONFIG_RPRX) += rprx.o

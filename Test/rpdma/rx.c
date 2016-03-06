@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-
+#include <string.h>
 #include "rpdma.h"
 
 #define SIZE SGMNT_CNT*SGMNT_SIZE
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     int status;
     char buf[256];
     unsigned char* map=NULL;
-    int periods=4;
+    int periods=SGMNT_CNT+1;
 
     if(argc==2)periods=atoi(argv[1]);
     printf("rpdma read test\n");
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     printf("SGMNT_SIZE = %u\n", SGMNT_SIZE);
 
     // open DMA driver device
-    fd = open("/dev/rpdma", O_RDWR);
+    fd = open("/dev/rprx", O_RDWR);
     if (fd < 1) {
         printf("Unable to open device file");
         return -1;
@@ -38,12 +38,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // clear buffer
-    for (int l=0; l<SIZE; l++)
-        map[l] = 0;
-
+    memset(map, 0, SIZE);
     // release memory
-    status = munmap (map, 4*1024);
+    status = munmap (map, SIZE);
 
     // DMA prepare
 //    ioctl(fd, SINGLE_RX, 0);  // single RX
@@ -77,7 +74,7 @@ int main(int argc, char *argv[]) {
     }
 
     // release memory
-    status = munmap (map, 4*1024);
+    status = munmap (map, SIZE);
 
     if (fd) close(fd);
     return 0;

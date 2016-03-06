@@ -1,16 +1,30 @@
 --- system.dts.old	2015-07-23 23:14:55.434444209 +0200
 +++ system.dts	2015-07-23 23:05:18.198460862 +0200
-@@ -26,7 +26,7 @@
- 	};
- 	memory {
+@@ -28,6 +28,22 @@
  		device_type = "memory";
--		reg = <0x0 0x20000000>;
-+		reg = <0x0 0x1c000000>;
+ 		reg = <0x0 0x20000000>;
  	};
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0x1000000>;
++			alignment = <0x2000>;
++			linux,cma-default;
++		};
++		rprx_reserverd: labuf@1c000000 {
++			/*compatible = "redpitaya,rprx-memory";*/
++			reg = <0x1c000000 0x2000000>;
++		};
++	};
  };
  &gem0 {
-@@ -86,3 +86,160 @@
- 	fclk-enable = <0x0>;
+ 	local-mac-address = [00 0a 35 00 00 00];
+@@ -86,3 +102,153 @@
+ 	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
 +
@@ -93,29 +107,22 @@
 +	usb-phy = <&usb_phy0>;
 +};
 +/{
-+       rpdma_2: rpdma@2 {
-+               compatible ="redpitaya,rpdma";
-+               dmas = <&axi_dma_2 0
-+                       &axi_dma_2 1>;
-+               dma-names = "axidma0", "axidma1";
++   rprx_2: rprx@2 {
++       compatible ="redpitaya,rprx";
++       dmas = <&axi_dma_2 0
++           &axi_dma_2 1>;
++       dma-names = "axidma0", "axidma1";
++       memory-region = <&rprx_reserverd>;
 +       };
 +};
-+/* /{
-+	rpdma_3: rpdma@3 {
-+		compatible ="redpitaya,rpdma";
-+		dmas = <&axi_dma_3 0
-+			&axi_dma_3 1>;
-+		dma-names = "axidma0", "axidma1";
-+	};
-+};*/
-+/ {
++/*/ {
 +	dmatest_cyc_3: dmatest_cyc@3 {
 +		compatible ="xlnx,axi-dma-test-cyc-1.00.a";
 +		dmas = <&axi_dma_3 0
 +			&axi_dma_3 1>;
 +		dma-names = "axidma0", "axidma1";
 +	};
-+};
++};*/
 +/ {
 +	id@40000000 {
 +		compatible = "generic-uio";
