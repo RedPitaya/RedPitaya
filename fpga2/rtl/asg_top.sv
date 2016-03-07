@@ -28,9 +28,10 @@ module asg_top #(
   bit EN_LIN = 1,
   // data path
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0],
-  type DAT_M = DAT_T,
-  type DAT_S = DAT_T,
+  type DT = logic [8-1:0],
+  // configuration parameters
+  type DTM = DT,  // data type for multiplication
+  type DTS = DT,  // data type for summation
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
@@ -58,7 +59,7 @@ module asg_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: the generic bus decoder should be used instead
-sys_bus_if #(.DW ($bits(DAT_T)), .AW (CWM)) bus_buf (.clk (bus.clk), .rstn (bus.rstn));
+sys_bus_if #(.DW ($bits(DT)), .AW (CWM)) bus_buf (.clk (bus.clk), .rstn (bus.rstn));
 
 assign bus_buf.ren   = bus.ren & bus.addr[CWM+2];
 assign bus_buf.wen   = bus.wen & bus.addr[CWM+2];
@@ -101,8 +102,8 @@ logic     [CWL-1:0] sts_bln;  // burst length counter
 logic     [CWN-1:0] sts_bnm;  // burst number counter
 logic               sts_run;  // running status
 // linear offset and gain
-DAT_M               cfg_mul;
-DAT_S               cfg_sum;
+DTM                 cfg_mul;
+DTS                 cfg_sum;
 
 localparam int unsigned BAW=6;
 
@@ -121,7 +122,7 @@ if (~bus.rstn) begin
   cfg_bnm <= '0;
   cfg_bln <= '0;
   // linear transform or logic analyzer output enable
-  cfg_mul <= EN_LIN ? 1 << ($bits(DAT_M)-2) : '0;
+  cfg_mul <= EN_LIN ? 1 << ($bits(DTM)-2) : '0;
   cfg_sum <= '0;
 end else begin
   if (bus.wen & ~bus.addr[CWM+2]) begin
@@ -138,8 +139,8 @@ end else begin
     if (bus.addr[BAW-1:0]=='h28)  cfg_bln <= bus.wdata[     32-1:0];
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
-    if (bus.addr[BAW-1:0]=='h38)  cfg_mul <= DAT_M'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h3c)  cfg_sum <= DAT_S'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h38)  cfg_mul <= DTM'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_sum <= DTS'(bus.wdata);
   end
 end
 
@@ -182,12 +183,12 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream from generator
-axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (DT)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
 asg #(
-  .TN    (TN),
-  .DN    (DN),
-  .DAT_T (DAT_T),
+  .TN (TN),
+  .DN (DN),
+  .DT (DT),
   // buffer parameters
   .CWM (CWM),
   .CWF (CWF),
@@ -231,9 +232,9 @@ if (EN_LIN) begin: en_lin
 
   linear #(
     .DN  (DN),
-    .DTI (DAT_T),
-    .DTO (DAT_T),
-    .DWM ($bits(DAT_M))
+    .DTI (DT),
+    .DTO (DT),
+    .DWM ($bits(DTM))
   ) linear (
     // stream input/output
     .sti       (stg),

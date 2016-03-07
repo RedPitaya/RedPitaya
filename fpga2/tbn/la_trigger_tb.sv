@@ -25,7 +25,7 @@ DT    cfg_edg_pos;  // edge positive
 DT    cfg_edg_neg;  // edge negative
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DT)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -78,7 +78,7 @@ axi4_stream_src #(.DT (DT)) str_src (.str (str));
 axi4_stream_drn #(.DT (DT)) str_drn (.str (str));
 
 la_trigger #(
-  .DAT_T (DT)
+  .DT (DT)
 ) la_trigger (
   // control
   .ctl_rst  (ctl_rst),

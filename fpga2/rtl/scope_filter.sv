@@ -40,9 +40,9 @@ module scope_filter #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_if #(.DN (DN), .DAT_T (logic signed [23-1:0])) fir  (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
-axi4_stream_if #(.DN (DN), .DAT_T (logic signed [23-1:0])) iir1 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
-axi4_stream_if #(.DN (DN), .DAT_T (logic signed [15-1:0])) iir2 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [23-1:0])) fir  (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [23-1:0])) iir1 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [15-1:0])) iir2 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -64,7 +64,7 @@ typedef logic signed [   DWI-1:0] fir_buf_t;  // data buffer
 typedef logic signed [29    -1:0] fir_cfg_t;  // coeficients
 typedef logic signed [25+DWI-1:0] fir_mul_t;  // multiplications
 
-axi4_stream_if #(.DN (DN), .DAT_T (fir_mul_t [2-1:0])) firm (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (fir_mul_t [2-1:0])) firm (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 // FIR filter
 fir_buf_t [2-1:0] fir_buf;  // data buffer

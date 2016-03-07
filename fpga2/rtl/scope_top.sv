@@ -32,7 +32,7 @@
 
 module scope_top #(
   // stream parameters
-  type DAT_T = logic signed [14-1:0],
+  type DT = logic signed [14-1:0],
   // decimation parameters
   int unsigned DCW = 17,  // data width for counter
   int unsigned DSW =  4,  // data width for shifter
@@ -59,16 +59,16 @@ module scope_top #(
   sys_bus_if.s           bus
 );
 
-localparam int unsigned DWI = $bits(DAT_T);  // data width for input
-localparam int unsigned DWO = $bits(DAT_T);  // data width for output
+localparam int unsigned DWI = $bits(DT);  // data width for input
+localparam int unsigned DWO = $bits(DT);  // data width for output
 
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-axi4_stream_if #(.DAT_T (logic signed [DWI-1:0])) stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from filter
-axi4_stream_if #(.DAT_T (logic signed [DWI-1:0])) std (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
+axi4_stream_if #(.DT (logic signed [DWI-1:0])) stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from filter
+axi4_stream_if #(.DT (logic signed [DWI-1:0])) std (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
 
 // acquire regset
 
@@ -246,8 +246,8 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-axi4_stream_if #(.DAT_T (DAT_T)) tmp_sti (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // tmp from input
-axi4_stream_if #(.DAT_T (DAT_T)) tmp_stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // tmp from filter
+axi4_stream_if #(.DT (DT)) tmp_sti (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // tmp from input
+axi4_stream_if #(.DT (DT)) tmp_stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // tmp from filter
 
 assign tmp_sti.TDATA  = cfg_byp ? '0         :     sti.TDATA ;
 assign tmp_sti.TLAST  = cfg_byp ? '0         :     sti.TLAST ;

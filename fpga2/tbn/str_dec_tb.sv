@@ -26,8 +26,8 @@ logic          ctl_rst;  // synchronous reset
 logic [CW-1:0] cfg_dec;  // decimation factor
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DT)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DAT_T (DT)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DT)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DT)) sto (.ACLK (clk), .ARESETn (rstn));
 
 int unsigned error = 0;
 

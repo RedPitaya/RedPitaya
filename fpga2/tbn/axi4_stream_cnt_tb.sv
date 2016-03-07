@@ -27,7 +27,7 @@ logic [CW-1:0] sts_cur;  // current     counter status
 logic [CW-1:0] sts_lst;  // last packet counter status
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DT)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence

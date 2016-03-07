@@ -101,29 +101,29 @@ localparam type SBG_T = logic signed [ 14-1:0];  // generate
 localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
 // analog input streams
-axi4_stream_if #(           .DAT_T (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ADC
-axi4_stream_if #(           .DAT_T (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LA
+axi4_stream_if #(         .DT (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ADC
+axi4_stream_if #(         .DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LA
 // analog output streams
-axi4_stream_if #(           .DAT_T (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
-axi4_stream_if #(           .DAT_T (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
+axi4_stream_if #(         .DT (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
+axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
 // digital input streams
-axi4_stream_if #(.DN (2),   .DAT_T (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
+axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
 // DMA sterams RX/TX
-axi4_stream_if #(           .DAT_T (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
+axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 
 
 // AXI4-Stream DMA RX/TX
-axi4_stream_if #(.DN (2), .DAT_T (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
-axi4_stream_if #(.DN (2), .DAT_T (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
+axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
+axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
 
-axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         axi_exe [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         axi_exo [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         axi_exi [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exe [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exo [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exi [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
-axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DAT_T (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -399,28 +399,19 @@ assign axi_exi[0].TREADY = 1'b1;
 
 // GPIO multiplexer
 
-axi4_stream_mux #(
-  .DN (2),
-  .DAT_T (SBL_T)
-) mux_axe (
+axi4_stream_mux #(.DN (2), .DT (SBL_T)) mux_axe (
   .sel (mux_gpio),
   .sti (axi_exe),
   .sto (exp_exe)
 );
 
-axi4_stream_mux #(
-  .DN (2),
-  .DAT_T (SBL_T)
-) mux_axo (
+axi4_stream_mux #(.DN (2), .DT (SBL_T)) mux_axo (
   .sel (mux_gpio),
   .sti (axi_exo),
   .sto (exp_exo)
 );
 
-axi4_stream_demux #(
-  .DN (2),
-  .DAT_T (SBL_T)
-) demux_axi (
+axi4_stream_demux #(.DN (2), .DT (SBL_T)) demux_axi (
   .sel (mux_gpio),
   .sti (exp_exi),
   .sto (axi_exi)
@@ -670,8 +661,8 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
-  axi4_stream_if #(.DN (1), .DAT_T (SBG_T)) str_gen [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
-  axi4_stream_if #(.DN (1), .DAT_T (SBG_T)) str_lin         (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
+  axi4_stream_if #(.DN (1), .DT (SBG_T)) str_gen [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
+  axi4_stream_if #(.DN (1), .DT (SBG_T)) str_lin         (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 
   axi4_stream_pas pas_0 (
     .ena (1'b1),
@@ -693,10 +684,7 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
   assign str_gen[1].TVALID = 1'b0;
 `endif
 
-  axi4_stream_mux #(
-    .DN (1),
-    .DAT_T (SBG_T)
-  ) mux_gen (
+  axi4_stream_mux #(.DN (1), .DT (SBG_T)) mux_gen (
     .sel (mux_gen[i]),
     .sti (str_gen),
     .sto (str_lin)
@@ -739,9 +727,9 @@ generate
 for (genvar i=0; i<MNG; i++) begin: for_gen
 
 asg_top #(
-  .DAT_T (SBG_T),
-  .DAT_M (logic signed [$bits(SBG_T)+2-1:0]),
-  .DAT_S (SBG_T),
+  .DT  (SBG_T),
+  .DTM (logic signed [$bits(SBG_T)+2-1:0]),
+  .DTS (SBG_T),
   .TN ($bits(trg))
 ) asg (
   // stream output
@@ -796,7 +784,7 @@ endgenerate
 
 asg_top #(
   .EN_LIN (0),
-  .DAT_T (SBL_T),
+  .DT (SBL_T),
   .TN ($bits(trg))
 ) lg (
   // stream output
@@ -829,7 +817,7 @@ assign str_lgo.TREADY = axi_exo[1].TREADY;
 ////////////////////////////////////////////////////////////////////////////////
 
 la_top #(
-  .DAT_T (SBL_T),
+  .DT (SBL_T),
   .TN ($bits(trg)),
   .CW (32)
 ) la (

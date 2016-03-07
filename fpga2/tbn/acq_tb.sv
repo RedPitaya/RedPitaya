@@ -54,8 +54,8 @@ logic          ctl_stp;  // acquire stop
 logic [TW-1:0] cts_stp;
 
 // stream input/output
-axi4_stream_if #(.DN (DN), .DAT_T (DT)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DN (DN), .DAT_T (DT)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (DN), .DT (DT)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (DN), .DT (DT)) sto (.ACLK (clk), .ARESETn (rstn));
 
 int unsigned error = 0;
 

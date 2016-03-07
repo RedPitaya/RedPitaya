@@ -7,7 +7,7 @@
 module str_to_ram #(
   // data bus
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0],
+  type DT = logic [8-1:0],
   int unsigned AW = 14  // counter width magnitude (fixed point integer)
 )(
   // control
@@ -23,9 +23,9 @@ module str_to_ram #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // buffer
-DAT_T          buf_mem [0:2**AW-1];
+DT             buf_mem [0:2**AW-1];
 logic          buf_wen  , buf_ren;
-DAT_T          buf_wdata, buf_rdata;
+DT             buf_wdata, buf_rdata;
 logic [AW-1:0] buf_waddr, buf_raddr;
 
 ////////////////////////////////////////////////////////////////////////////////

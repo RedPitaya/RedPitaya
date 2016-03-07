@@ -23,7 +23,7 @@ module asg_tb #(
 );
 
 localparam int unsigned DN = 1;
-localparam type DAT_T = logic signed [DWO-1:0];
+localparam type DT = logic signed [DWO-1:0];
 
 // system signals
 logic          clk ;  // clock
@@ -53,10 +53,10 @@ logic     [CWL-1:0] sts_bln;  // burst length counter
 logic     [CWN-1:0] sts_bnm;  // burst number counter
 logic               sts_run;  // running status
 
-DAT_T dat_table [];
+DT dat_table [];
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 // error counter
 int unsigned error;
@@ -123,7 +123,7 @@ end
 
 // write buffer
 task automatic buf_write (
-  ref DAT_T dat []
+  ref DT dat []
 );
   for (int i=0; i<dat.size(); i++) begin
     busm.write(i, dat[i]);  // write table
@@ -156,7 +156,7 @@ endtask: trg_pls
 task automatic test_burst_num (
   int unsigned bdl = 8,
   int unsigned bln = 8,
-  ref DAT_T dat_table []
+  ref DT dat_table []
 );
   $display ("Note: burst number test");
   cfg_ben = 1'b1;  // enable burst mode
@@ -179,7 +179,7 @@ task automatic test_burst_num (
     // check stream data
     for (int unsigned i=0; i<str_drn.buf_siz; i++) begin
       int unsigned idx;
-      DAT_T [DN-1:0] dat, ref_dat;
+      DT    [DN-1:0] dat, ref_dat;
       logic [DN-1:0] kep, ref_kep;
       logic          lst, ref_lst;
       int unsigned   tmg;
@@ -199,7 +199,7 @@ endtask: test_burst_num
 task automatic test_burst_inf (
   int unsigned bdl = 8,
   int unsigned bln = 8,
-  ref DAT_T dat_table []
+  ref DT dat_table []
 );
   $display ("Note: infinite burst test");
   cfg_ben = 1'b1;  // enable burst mode
@@ -224,7 +224,7 @@ task automatic test_burst_inf (
     // check stream data
     for (int unsigned i=0; i<str_drn.buf_siz; i++) begin
       int unsigned idx;
-      DAT_T [DN-1:0] dat, ref_dat;
+      DT    [DN-1:0] dat, ref_dat;
       logic [DN-1:0] kep, ref_kep;
       logic          lst, ref_lst;
       int unsigned   tmg;
@@ -249,8 +249,8 @@ sys_bus_if bus (.clk (clk), .rstn (rstn));
 sys_bus_model busm (.bus (bus));
 
 asg #(
-  .DN    (DN),
-  .DAT_T (DAT_T),
+  .DN (DN),
+  .DT (DT),
   // buffer parameters
   .CWM (CWM),
   .CWF (CWF),
@@ -288,7 +288,8 @@ asg #(
 );
 
 axi4_stream_drn #(
-  .DAT_T (DAT_T)
+  .DN (DN),
+  .DT (DT)
 ) str_drn (
   .str      (str)
 );

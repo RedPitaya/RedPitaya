@@ -6,13 +6,13 @@
 
 interface axi4_stream_if #(
   int unsigned DN = 1,
-  type DAT_T = logic signed [8-1:0]
+  type DT = logic signed [8-1:0]
 )(
   input  logic ACLK   ,  // clock
   input  logic ARESETn   // reset - active low
 );
 
-DAT_T [DN-1:0] TDATA ;  // data
+DT    [DN-1:0] TDATA ;  // data
 logic [DN-1:0] TKEEP ;  // keep
 logic          TLAST ;  // last
 logic          TVALID;  // valid

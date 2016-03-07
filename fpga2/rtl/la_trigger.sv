@@ -6,22 +6,22 @@
 
 module la_trigger #(
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0]  // str.dat type
+  type DT = logic [8-1:0]  // str.dat type
 )(
   // control
   input  logic ctl_rst,  // synchronous reset
   // configuration
-  input  DAT_T cfg_cmp_msk,  // comparator mask
-  input  DAT_T cfg_cmp_val,  // comparator value
-  input  DAT_T cfg_edg_pos,  // edge positive
-  input  DAT_T cfg_edg_neg,  // edge negative
+  input  DT    cfg_cmp_msk,  // comparator mask
+  input  DT    cfg_cmp_val,  // comparator value
+  input  DT    cfg_edg_pos,  // edge positive
+  input  DT    cfg_edg_neg,  // edge negative
   // output triggers
   output logic sts_trg,  // TODO: should have DN width
   // stream monitor
   axi4_stream_if.m str
 );
 
-DAT_T str_old;
+DT    str_old;
 
 logic sts_cmp;
 logic sts_edg;

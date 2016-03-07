@@ -87,7 +87,7 @@ module asg #(
   int unsigned TN = 1,
   // data bus
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0],
+  type DT = logic [8-1:0],
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
@@ -129,8 +129,8 @@ module asg #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // buffer
-DAT_T               buf_mem [0:2**CWM-1];
-DAT_T               buf_rdata;  // read data
+DT                  buf_mem [0:2**CWM-1];
+DT                  buf_rdata;  // read data
 logic [CWM    -1:0] buf_raddr;  // read address
 
 // pointers

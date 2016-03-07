@@ -1,6 +1,6 @@
 proc axi4_stream_if {name path} {
   # parameters
-# add wave -noupdate -group ${name}           ${path}/DAT_T
+# add wave -noupdate -group ${name}           ${path}/DT
   add wave -noupdate -group ${name} -unsigned ${path}/DN
   # system signals
   add wave -noupdate -group ${name}           ${path}/ACLK

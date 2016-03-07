@@ -16,12 +16,12 @@ module asg_top_tb #(
   type S16 = logic signed [16-1:0],
   type S14 = logic signed [14-1:0],
   // data parameters
-//type DAT_T = EN_LIN ? S14 : U16,
-//type DAT_M = EN_LIN ? S16 : DAT_T,
-//type DAT_S = EN_LIN ? S14 : DAT_T,
-  type DAT_T = S14,
-  type DAT_M = S16,
-  type DAT_S = S14,
+//type DT = EN_LIN ? S14 : U16,
+//type DTM = EN_LIN ? S16 : DT,
+//type DTS = EN_LIN ? S14 : DT,
+  type DT = S14,
+  type DTM = S16,
+  type DTS = S14,
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16   // counter width fraction  (fixed point fraction)
@@ -40,7 +40,7 @@ logic           irq_trg;  // trigger
 logic           irq_stp;  // stop
 
 // stream
-axi4_stream_if #(.DN (EN_LIN ? 1 : 2), .DAT_T (DAT_T)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (EN_LIN ? 1 : 2), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 // trigger
 struct packed {
@@ -99,7 +99,7 @@ initial begin
   end
   if (EN_LIN) begin
     // configure amplitude and DC offset
-    busm.write('h38, 1 << ($bits(DAT_M)-2));  // amplitude
+    busm.write('h38, 1 << ($bits(DTM)-2));  // amplitude
     busm.write('h3c, 0);             // DC offset
   end else begin
     // configure LG output enable
@@ -161,10 +161,10 @@ sys_bus_model busm (.bus (bus));
 
 asg_top #(
   .EN_LIN (EN_LIN),
-  .DAT_T (DAT_T),
-  .DAT_M (DAT_M),
-  .DAT_S (DAT_S),
-  .TN (TN)
+  .DT  (DT),
+  .DTM (DTM),
+  .DTS (DTS),
+  .TN  (TN)
 ) asg_top (
   // stream output
   .sto       (str),

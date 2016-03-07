@@ -29,8 +29,8 @@ logic signed [DWM-1:0] cfg_mul;
 logic signed [DWS-1:0] cfg_sum;
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DAT_T (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
 
 // calibration
 real gain   = 1.0;

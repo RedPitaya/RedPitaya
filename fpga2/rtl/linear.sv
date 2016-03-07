@@ -46,9 +46,9 @@ module linear #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_if #(.DN (DN), .DAT_T (logic signed [DWI+DWM  -1:0])) str_mul (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
-axi4_stream_if #(.DN (DN), .DAT_T (logic signed [DWI+    1-1:0])) str_shf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
-axi4_stream_if #(.DN (DN), .DAT_T (logic signed [DWI+    2-1:0])) str_sum (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [DWI+DWM  -1:0])) str_mul (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [DWI+    1-1:0])) str_shf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [DWI+    2-1:0])) str_sum (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // multiplication

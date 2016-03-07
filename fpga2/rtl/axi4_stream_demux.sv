@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// AXI4-Stream demux
+// Module: AXI4-Stream demux
 // Authors: Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@ module axi4_stream_demux #(
   int unsigned SW = $clog2(SN), // select signal width
   // data stream parameters
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0]
+  type DT = logic [8-1:0]
 )(
   // control
   input  logic [SW-1:0] sel,  // select

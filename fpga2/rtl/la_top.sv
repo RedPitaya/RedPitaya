@@ -7,7 +7,7 @@
 module la_top #(
   // stream parameters
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0],
+  type DT = logic [8-1:0],
   // decimation parameters
   int unsigned DCW = 17,  // decimation counter width
   // aquisition parameters
@@ -38,9 +38,9 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) std         (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
-axi4_stream_if #(.DN (DN), .DAT_T (DAT_T)) sta_str     (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
-axi4_stream_if #(.DN (DN), .DAT_T (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
+axi4_stream_if #(.DN (DN), .DT (DT)) std            (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
+axi4_stream_if #(.DN (DN), .DT (DT)) sta_str        (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
+axi4_stream_if #(.DN (DN), .DT (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 
 // acquire regset
 
@@ -70,10 +70,10 @@ logic  [TW-1:0] cts_stp;
 logic  [TN-1:0] cfg_trg;  // trigger select
 
 // trigger source configuration
-DAT_T           cfg_cmp_msk;  // comparator mask
-DAT_T           cfg_cmp_val;  // comparator value
-DAT_T           cfg_edg_pos;  // edge positive
-DAT_T           cfg_edg_neg;  // edge negative
+DT              cfg_cmp_msk;  // comparator mask
+DT              cfg_cmp_val;  // comparator value
+DT              cfg_edg_pos;  // edge positive
+DT              cfg_edg_neg;  // edge negative
 
 // decimation configuration
 logic [DCW-1:0] cfg_dec;  // decimation factor
@@ -135,10 +135,10 @@ end else begin
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
 
     // trigger detection
-    if (bus.addr[BAW-1:0]=='h40)   cfg_cmp_msk <= DAT_T'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h44)   cfg_cmp_val <= DAT_T'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h48)   cfg_edg_pos <= DAT_T'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h4c)   cfg_edg_neg <= DAT_T'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h40)   cfg_cmp_msk <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h44)   cfg_cmp_val <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h48)   cfg_edg_pos <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h4c)   cfg_edg_neg <= DT'(bus.wdata);
 
     // dacimation
     if (bus.addr[BAW-1:0]=='h50)   cfg_dec <= bus.wdata[DCW-1:0];
@@ -215,7 +215,7 @@ str_dec #(
 ////////////////////////////////////////////////////////////////////////////////
 
 la_trigger #(
-  .DAT_T (DAT_T)
+  .DT (DT)
 ) trigger (
   // control
   .ctl_rst  (ctl_rst),

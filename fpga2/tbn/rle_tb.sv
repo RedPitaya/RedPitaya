@@ -110,8 +110,8 @@ logic ctl_rst;  // reset
 logic cfg_ena;  // enable
 
 // stream input/output
-axi4_stream_if #(.DAT_T (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DAT_T (DTC)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTC)) sto (.ACLK (clk), .ARESETn (rstn));
 
 // error counter
 int unsigned error = 0;
@@ -141,6 +141,7 @@ initial begin
 
   // RTL tests
   test_rle();
+  test_bypass();
   test_bypass();
 
   // end simulation

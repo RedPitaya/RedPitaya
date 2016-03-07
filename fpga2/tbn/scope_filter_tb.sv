@@ -26,8 +26,8 @@ logic signed [ 25-1:0] cfg_pp;   // config PP coefficient
 logic signed [ 25-1:0] cfg_kk;   // config KK coefficient
 
 // stream input/output
-axi4_stream_if #(.DAT_T (logic signed [DWI-1:0])) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DAT_T (logic signed [DWO-1:0])) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (logic signed [DWI-1:0])) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (logic signed [DWO-1:0])) sto (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence

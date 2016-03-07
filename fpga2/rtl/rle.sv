@@ -33,7 +33,7 @@ module rle #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // old values
-axi4_stream_if #(.DN (1), .DAT_T (DTI)) old (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (1), .DT (DTI)) old (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 // comparator
 logic cmp;

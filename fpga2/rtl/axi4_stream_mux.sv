@@ -10,7 +10,7 @@ module axi4_stream_mux #(
   int unsigned SW = $clog2(SN), // select signal width
   // data stream parameters
   int unsigned DN = 1,
-  type DAT_T = logic [8-1:0]
+  type DT = logic [8-1:0]
 )(
   // control
   input  logic [SW-1:0] sel,  // select
@@ -19,7 +19,7 @@ module axi4_stream_mux #(
   axi4_stream_if.s sto            // output
 );
 
-DAT_T [SN-1:0] [DN-1:0] tdata ;
+DT    [SN-1:0] [DN-1:0] tdata ;
 logic [SN-1:0]          tkeep ;
 logic [SN-1:0]          tlast ;
 logic [SN-1:0]          tvalid;
