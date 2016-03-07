@@ -139,7 +139,7 @@ $(TMP):
 
 $(TARGET): $(BOOT_UBOOT) u-boot devicetree linux buildroot $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api api2 apps_pro rp_communication
+	   scpi fpga api api2 apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
