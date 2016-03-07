@@ -88,6 +88,7 @@ SDK_DIR         = SDK/
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FPGA2           = $(FPGA2_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
+FSBL2           = $(FPGA2_DIR)/sdk/fsbl/executable.elf
 MEMTEST         = $(FPGA_DIR)/sdk/dram_test/executable.elf
 DTS             = $(FPGA2_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
@@ -267,8 +268,8 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 # boot file generator
 ################################################################################
 
-$(BOOT_UBOOT): fpga $(UBOOT)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+$(BOOT_UBOOT): fpga2 $(UBOOT)
+	@echo img:{[bootloader] $(FSBL2) $(FPGA2) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 
 ################################################################################
