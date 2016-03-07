@@ -11,22 +11,19 @@
  */
 
 #include <stdio.h>
+#include <math.h>
 
 #include "rp_gain_compensation.h"
 
 
 const rb_gain_params_t g_rb_gain_params_hw_1v1[RB_GAIN_PARAMS_HW_1V1_NUM] = {
 
-	{  0,    0,     0 },
-	{  1,    1,     1 },
-    {  2,    2,     2 },
-    {  3,    3,     3 },
-    {  4,    4,     4 },
-    {  5,    5,     5 }
-#if 0
-    {    0,    0.85,     1.12 },
-    {1e-12,    0.85,     1.12 },
     {  1e0,    0.85,     1.12 },
+    {  1e1,    1.08,     1.12 },
+    {  1e2,    1.08,     1.12 },
+    {  1e3,    1.08,     1.12 },
+    {  1e4,    1.08,     1.12 },
+    {  1e5,    1.08,     1.12 },
     {  1e6,    1.08,     1.12 },
     {  2e6,    1.06,     1.14 },
     {  3e6,    1.06,     1.15 },
@@ -88,34 +85,10 @@ const rb_gain_params_t g_rb_gain_params_hw_1v1[RB_GAIN_PARAMS_HW_1V1_NUM] = {
     { 59e6,    0.66,     0.91 },
     { 60e6,    0.65,     1.06 },
     { 61e6,    0.66,     1.40 },
-    { 62e6,    0.66,     1.80 }
-#endif
+    { 62e6,    0.66,     1.80 },
+    { 63e6,    0.66,     1.80 }
 };
 
-
-#if 0
-/*----------------------------------------------------------------------------------*/
-int get_table_pos_int(float frequency_hz)
-{
-    int   idx = RB_GAIN_PARAMS_HW_1V1_NUM;
-    float frequency_leftSide  = 0.0;
-    float frequency_rightSide = g_rb_gain_params_hw_1v1[idx - 1][RB_GAIN_PARAMS_FREQUENCY];
-
-    for (;;) {
-        if (--idx < 0)
-            return -1;
-
-        frequency_leftSide = g_rb_gain_params_hw_1v1[idx][RB_GAIN_PARAMS_FREQUENCY];
-        if (frequency_leftSide <= frequency_hz) {
-            // *frac = (frequency_hz - frequency_leftSide) / (frequency_rightSide - frequency_leftSide);
-            return idx;
-        }
-
-        frequency_rightSide = frequency_leftSide;
-    }
-    return -2;
-}
-#endif
 
 /*----------------------------------------------------------------------------------*/
 int bspline_j_k_n(int j, int k, int n)
@@ -140,10 +113,10 @@ float bspline_n_i_k(int i, int k, float t)
     int j_pk_m1     = bspline_j_k_n(i_pk_m1, RB_GAIN_PARAMS_BSPLINE_K, RB_GAIN_PARAMS_HW_1V1_NUM - 1);
     int j_pk        = bspline_j_k_n(i_pk,    RB_GAIN_PARAMS_BSPLINE_K, RB_GAIN_PARAMS_HW_1V1_NUM - 1);
 
-    float t_i       = g_rb_gain_params_hw_1v1[j      ].frequency_hz;
-    float t_i_p1    = g_rb_gain_params_hw_1v1[j_p1   ].frequency_hz;
-    float t_i_pk_m1 = g_rb_gain_params_hw_1v1[j_pk_m1].frequency_hz;
-    float t_i_pk    = g_rb_gain_params_hw_1v1[j_pk   ].frequency_hz;
+    float t_i       = log10(g_rb_gain_params_hw_1v1[j      ].frequency_hz);
+    float t_i_p1    = log10(g_rb_gain_params_hw_1v1[j_p1   ].frequency_hz);
+    float t_i_pk_m1 = log10(g_rb_gain_params_hw_1v1[j_pk_m1].frequency_hz);
+    float t_i_pk    = log10(g_rb_gain_params_hw_1v1[j_pk   ].frequency_hz);
 
     float q1;
     if (!(t_i_pk_m1 - t_i))
@@ -163,6 +136,7 @@ float bspline_n_i_k(int i, int k, float t)
     else if (k > 1)
         r = q1 * bspline_n_i_k(i, k - 1, t) + q2 * bspline_n_i_k(i + 1, k - 1, t);
 
+#if 0
     fprintf(stderr, "DEBUG bspline_n_i_k: k=%d - i=%02d, i_p1=%02d, i_pk_m1=%02d, i_pk=%02d\n",
             k, i, i_p1, i_pk_m1, i_pk);
     fprintf(stderr, "DEBUG bspline_n_i_k: k=%d - j=%02d, j_p1=%02d, j_pk_m1=%02d, j_pk=%02d\n",
@@ -173,16 +147,15 @@ float bspline_n_i_k(int i, int k, float t)
             k, t_i_pk - t, t_i_pk    - t_i_p1,  t_i_pk, t  , t_i_p1   );
     fprintf(stderr, "DEBUG bspline_n_i_k: k=%d - q1=%+9.3f, q2=%+9.3f\n",
             k, q1, q2);
-    fprintf(stderr, "DEBUG bspline_n_i_k: k=%d --> return %+3.1f\n",
+    fprintf(stderr, "DEBUG bspline_n_i_k: k=%d --> return %+9.3f\n",
             k, r);
+#endif
     return r;
 }
 
 /*----------------------------------------------------------------------------------*/
 float get_compensation_factor(float frequency_hz, char isTerminated)
 {
-    fprintf(stderr, "\nDEBUG get_compensation_factor: in(frequency_hz=%f, isTerminated=%d) with spline_k=%d\n", frequency_hz, isTerminated, RB_GAIN_PARAMS_BSPLINE_K);
-
     if (frequency_hz < 1e-12f) {
         frequency_hz = 1e-12f;
     } else if (frequency_hz > 62.5e6f) {
@@ -195,22 +168,26 @@ float get_compensation_factor(float frequency_hz, char isTerminated)
 
     int bspline_i;
     for (bspline_i = 0; bspline_i <= bspline_n; bspline_i++) {  // Sigma over 0 to n
-        int bspline_j = bspline_j_k_n(bspline_i, RB_GAIN_PARAMS_BSPLINE_K, RB_GAIN_PARAMS_HW_1V1_NUM - 1);
-        float bspline_nik = bspline_n_i_k(bspline_i, RB_GAIN_PARAMS_BSPLINE_K, frequency_hz);
-        float bspline_p_i = isTerminated ?  g_rb_gain_params_hw_1v1[bspline_i].gain_terminated50R :
-                                            g_rb_gain_params_hw_1v1[bspline_i].gain_openEnd       ;
+        int bspline_i_m1 = bspline_i - 1;
+        if (bspline_i_m1 < 0)
+            bspline_i_m1 = 0;
+
+        float bspline_nik = bspline_n_i_k(bspline_i, RB_GAIN_PARAMS_BSPLINE_K, log10f(frequency_hz));
+        float bspline_p_i = isTerminated ?  g_rb_gain_params_hw_1v1[bspline_i_m1].gain_terminated50R :
+                                            g_rb_gain_params_hw_1v1[bspline_i_m1].gain_openEnd       ;
 
         float bspline_p_i_f = bspline_nik * bspline_p_i;
 
         bspline_p += bspline_p_i_f;
-        fprintf(stderr, "DEBUG get_compensation_factor: bspline_i=%2d, bspline_j=%2d - frequency=%+12.3f, weight=%+6.3f, gain=%+6.3f --> part=%+6.3f\n",
-                bspline_i, bspline_j, g_rb_gain_params_hw_1v1[bspline_i].frequency_hz, bspline_nik, bspline_p_i, bspline_p_i_f);
+        //fprintf(stderr, "DEBUG get_compensation_factor: bspline_i=%2d, bspline_i_m1=%2d - frequency=%+12.3f, weight=%+6.3f, gain=%+6.3f --> part=%+6.3f\n",
+        //        bspline_i, bspline_i_m1, g_rb_gain_params_hw_1v1[bspline_i_m1].frequency_hz, bspline_nik, bspline_p_i, bspline_p_i_f);
     }
 
-    if (bspline_p < 1e-3f) {
-        bspline_p = 1e-3f;
+    if (bspline_p < 1e-3f) {  // out of table --> no correction
+        bspline_p = 1.0f;
     }
-    fprintf(stderr, "DEBUG get_compensation_factor: --> out(gain=%f, correction=%f)\n", bspline_p, 1.0/ bspline_p);
+    fprintf(stderr, "DEBUG get_compensation_factor: in(frequency_hz=%f, isTerminated=%d) with spline_k=%d --> out(gain=%f, correction=%f)\n",
+            frequency_hz, isTerminated, RB_GAIN_PARAMS_BSPLINE_K, bspline_p, 1.0/ bspline_p);
 
     return 1.0f / bspline_p;
 }

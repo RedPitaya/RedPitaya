@@ -36,9 +36,8 @@ typedef struct rb_gain_params_s {
     float gain_openEnd;
 } rb_gain_params_t;
 
-#define RB_GAIN_PARAMS_BSPLINE_K    2
-#define RB_GAIN_PARAMS_HW_1V1_NUM   6
-//64
+#define RB_GAIN_PARAMS_BSPLINE_K    4
+#define RB_GAIN_PARAMS_HW_1V1_NUM  69
 
 enum rb_gain_params_columns {
     RB_GAIN_PARAMS_FREQUENCY = 0,
@@ -46,16 +45,6 @@ enum rb_gain_params_columns {
     RB_GAIN_PARAMS_GAIN_OPEN
 };
 
-
-#if 0
-/**
- * @brief Calculates the table index and the fraction value between idx and idx_p1
- *
- * @param[in]  frequency_hz    The frequency to be looked-up in the table.
- * @retval     int             The index position of the left-side value idx for the next lower frequency entry in the table.
- */
-int get_table_pos_int(float frequency_hz);
-#endif
 
 /**
  * @brief b-spline helper function to correct the access index by the k factor
