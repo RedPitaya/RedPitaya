@@ -2,9 +2,6 @@
 
 <head>
     <meta charset="utf-8" />
-    <!--[if IE]>
-			<link rel="stylesheet" href="./ie9.css" type="text/css" />
-    <![endif]-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
     <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
@@ -12,7 +9,6 @@
     <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="./style.css" type="text/css" />
     <link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
-    <!--link href="../assets/offline-theme-dark.css" rel="stylesheet" type="text/css"-->
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
@@ -22,163 +18,7 @@
     <script type="text/javascript">
     var isOnline = true;
     </script>
-    <script type="text/javascript">
-    Offline.options = {
-        checks: {
-            xhr: {
-                url: '/check_inet'
-            }
-        },
-        checkOnLoad: false,
-    };
-    Offline.on('up', function() {
-        isOnline = true;
-    });
-    Offline.on('down', function() {
-        isOnline = false;
-    });
-    Offline.check();
-    var appstore_opened = false;
-    window.onunload = function() {};
-    var run = function() {
-        Offline.check();
-    }
-    setInterval(run, 3000);
-    </script>
-    <script type="text/javascript">
-    $(window).load(function() {
-        $("#mcs_container").mCustomScrollbar({
-            alwaysShowScrollbar: 2
-        });
-        $("#mcs_container2").mCustomScrollbar({
-            alwaysShowScrollbar: 2
-        });
-
-    });
-
-
-    var current_app = "";
-    var url_arr = window.location.href.split("/");;
-    var url = url_arr[0] + '//' + url_arr[2] + '/';
-    var getApps = function() {
-        $.ajax({
-            url: 'bazaar?apps=',
-            cache: false,
-            async: true
-        }).done(function(result) {
-            var buttons = $('#main_buttons');
-            $(buttons).removeAttr('id');
-            buttons = buttons.clone();
-            if (first_button == null)
-                first_button = buttons;
-            $(buttons).children('a').html("Visual programming");
-            $(buttons).children('a').attr('href', '#visualprogramming');
-            $(buttons).children('a').removeClass('lock');
-            $(buttons).appendTo('.list-group');
-            $(buttons).show();
-            current_app = 'visualprogramming';
-
-            desc = $('.description');
-            var first_button = null;
-            $.each(result, function(key, value) {
-                buttons = buttons.clone();
-                if (first_button == null)
-                    first_button = buttons;
-                $(buttons).children('a').html(value.name);
-                $(buttons).children('a').attr('href', '#' + key);
-                $(buttons).children('a').removeClass('lock');
-                if (value.type == 'demo')
-                    $(buttons).children('a').addClass('lock');
-
-                $(buttons).appendTo('.list-group');
-                $(buttons).show();
-                current_app = key;
-            });
-
-            $('a').unbind('click');
-            $('a').unbind('touchend');
-            $('a').on('click touchend', onLinkClicked);
-
-            $('.buttons').click(function() {
-                key = $(this).children('a').attr('href').substr(1);
-                if (key == 'visualprogramming') {
-                    $('.description').children('.name').html("Visual programming");
-                    $('.description').children('.icon').attr('src', 'images/img_visualprog.png');
-                    $('.description').children('.icon').css('width', '480px');
-                    $('.description').children('.desc').html('<p>This is the perfect tool for newcomers to have fun while learning and putting their ideas into practice. It is equally suitable for developers that would like to prototype their ideas faster</p> \
-								<p>Features:</p> \
-								<ul> \
-								<li>Program Red Pitaya via intuitive WEB based service using blocks or other programming languages (python, C/C++, Java Script,..)</li> \
-								<li>Create your own dashboards with real time graphs, dials, meters, sliders and buttons</li> \
-								<li>Connect sensors and measure temperature, moisture, alcohol, water level, vibrations, UV light, sound, pressure, air quality or detect motion and more</li> \
-								<li>Connect actuators and indicators such as LEDs, displays, motors or relays in order to control high load devices</li> \
-								<li>Share measurements or send notifications to email or even social networks like Facebook and Twitter</li> \
-								</ul> \
-							');
-                    $('#run').html('Run');
-                    $("#run").attr('href', 'http://account.redpitaya.com/try-visual-programming.php');
-                    $("#run").css('visibility', 'visible');
-                    $('#run').attr('target', "_blank");
-                    $("#demo").css('visibility', 'hidden');
-                } else {
-                    $('.description').children('.name').html(result[key].name);
-                    $('.description').children('.icon').attr('src', url + key + '/info/icon.png');
-                    $('.description').children('.icon').css('width', '');
-                    $('.description').children('.desc').html(result[key].description);
-                    $('#run').removeAttr('target');
-                    if (result[key].type == "demo") {
-                        $("#run").removeAttr('href');
-                        $("#run").attr('href2', url + 'instruct.html#' + key);
-                        $('#run').html('Run');
-                        $("#run").css('visibility', 'visible');
-                        $("#demo").css('visibility', 'hidden');
-                    } else if (result[key].type == "run") {
-                        $("#run").attr('href', url + key + '/?type=run');
-                        $('#run').html('Run');
-                        $("#run").css('visibility', 'visible');
-                        $("#demo").css('visibility', 'hidden');
-                    } else if (result[key].type == "old_app") {
-                        $('#run').html('Run');
-                        $("#run").attr('href', url + key);
-                        $("#run").css('visibility', 'visible');
-                        $("#demo").css('visibility', 'hidden');
-                    }
-
-                    $("#demo").attr('href', url + key + '/?type=run');
-
-                    $(desc).show();
-                }
-            });
-
-            first_button.click();
-
-            //$(selector).mCustomScrollbar({ option: value });
-            $("#mcs_container .buttons a").on('click', function() {
-                $("#mcs_container .buttons a").removeClass('item-active');
-                $("#mcs_container .buttons a").removeClass('item-active-lock');
-                if ($(this).hasClass('lock'))
-                    $(this).addClass('item-active-lock');
-                else
-                    $(this).addClass('item-active');
-            });
-
-
-        }).fail(function(msg) {
-            getApps();
-        });
-    }
-    getApps();
-
-    $(function() {
-        document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya (" + window.location.hostname + ")");
-
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", 'info/info.json', false);
-        xmlHttp.send(null);
-        var info = JSON.parse(xmlHttp.responseText);
-        $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
-    });
-    </script>
+    <script type="text/javascript"></script>
     <title>My Red Pitaya</title>
 </head>
 
