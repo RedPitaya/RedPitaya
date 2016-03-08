@@ -24,21 +24,25 @@ endclocking: clk
 // on transfer store data in the queue
 task automatic run (ref axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT)) cls);
   @(clk);
-  foreach (cls.mem[i]) begin
-    if (cls.mem[i].rdy) begin
-      idle();
-      ##(cls.mem[i].rdy);
-    end
-    clk.TREADY <= 1'b1;
-    do begin
-      ##1;
-    end while (~clk.TVALID);
-    // TODO: with the proper operator ModelSim reports an error
-    cls.mem[i].dat = clk.TDATA;
-    cls.mem[i].kep = clk.TKEEP;
-    cls.mem[i].lst <= clk.TLAST;
-  end
   idle();
+  while (cls.que.size()) begin
+    cls.pkt = cls.que.pop_front();
+    foreach (cls.pkt[i]) begin
+      if (cls.pkt[i].rdy) begin
+        idle();
+        ##(cls.pkt[i].rdy);
+      end
+      clk.TREADY <= 1'b1;
+      do begin
+        ##1;
+      end while (~clk.TVALID);
+      // TODO: with the proper operator ModelSim reports an error
+      cls.pkt[i].dat = clk.TDATA;
+      cls.pkt[i].kep = clk.TKEEP;
+      cls.pkt[i].lst <= clk.TLAST;
+    end
+    cls.pkt.delete();
+  end
 endtask: run
 
 // set idle state
