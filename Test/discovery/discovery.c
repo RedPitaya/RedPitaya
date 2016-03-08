@@ -281,6 +281,8 @@ int main(int argc, char **argv)
     if(vIP_WIFI != "")
         cmd << "&mac_wifi=" << vMAC_WIFI;
 
+    cmd << "'";
+
     if (verbose)
         std::cout << "Executing: " << cmd.str().c_str() << std::endl;
 
