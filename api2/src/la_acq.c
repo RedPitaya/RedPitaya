@@ -54,7 +54,7 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     }
 
     handle->dma_size=SGMNT_CNT*SGMNT_SIZE;
-    status = rp_DmaOpen("/dev/rpdma", handle);
+    status = rp_DmaOpen("/dev/rprx", handle);
     if (status != RP_OK) {
         return status;
     }

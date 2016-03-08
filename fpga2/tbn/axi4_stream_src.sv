@@ -27,20 +27,25 @@ endclocking: clk
 
 task run (axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cls);
   @(clk);
-  foreach (cls.mem[i]) begin
-    if (cls.mem[i].vld) begin
-      idle();
-      ##(cls.mem[i].vld);
+  while (cls.que.size()) begin
+    idle();
+    cls.pkt = cls.que.pop_front();
+    foreach (cls.pkt[i]) begin
+      if (cls.pkt[i].vld) begin
+        idle();
+        ##(cls.pkt[i].vld);
+      end
+      clk.TVALID <= 1'b1;
+      clk.TDATA  <= cls.pkt[i].dat;
+      clk.TKEEP  <= cls.pkt[i].kep;
+      clk.TLAST  <= cls.pkt[i].lst;
+      do begin
+        ##1;
+      end while (~clk.TREADY);
     end
-    clk.TVALID <= 1'b1;
-    clk.TDATA  <= cls.mem[i].dat;
-    clk.TKEEP  <= cls.mem[i].kep;
-    clk.TLAST  <= cls.mem[i].lst;
-    do begin
-      ##1;
-    end while (~clk.TREADY);
+    cls.pkt.delete();
+    idle();
   end
-  idle();
 endtask: run
 
 // set idle state

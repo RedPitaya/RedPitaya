@@ -57,8 +57,8 @@ initial begin
   dat = cli.range (0, 16);
   $display ("dat [%d] = %p", dat.size(), dat);
   // send data into stream
-  cli.set_packet (dat);
-  clo.set_packet (dat);
+  cli.add_pkt (dat);
+  clo.add_pkt (dat);
   fork
     str_src.run (cli);
     str_drn.run (clo);

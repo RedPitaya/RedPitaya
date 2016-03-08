@@ -142,7 +142,6 @@ initial begin
   // RTL tests
   test_rle();
   test_bypass();
-  test_bypass();
 
   // end simulation
   repeat(4) @(posedge clk);
@@ -193,8 +192,8 @@ task test_rle ();
   $display ("dat [%d] = %p", dat.size(), dat);
   $display ("dtc [%d] = %p", dtc.size(), dtc);
   // send data into stream
-  cli.set_packet (dat);
-  clo.set_packet (dtc, .rdy (1));
+  cli.add_pkt (dat);
+  clo.add_pkt (dtc, .rdy_rnd (1));
   fork
     str_src.run (cli);
     str_drn.run (clo);
@@ -220,8 +219,10 @@ task test_bypass ();
   cfg_ena = 1'b0;
   repeat(4) @(posedge clk);
   // send data into stream
-  cli.set_packet (dat);
-  clo.set_packet (dtc, .rdy (1));
+  cli.add_pkt (dat);
+  cli.add_pkt (dat);
+  clo.add_pkt (dtc, .rdy_rnd (1));
+  clo.add_pkt (dtc, .rdy_rnd (1));
   fork
     str_src.run (cli);
     str_drn.run (clo);

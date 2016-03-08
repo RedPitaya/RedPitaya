@@ -94,7 +94,7 @@ DTS             = $(FPGA2_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
 LINUX           = $(TMP)/uImage
-BOOT_UBOOT      = $(TMP)/boot.bin
+BOOT            = $(TMP)/boot.bin
 
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
@@ -137,12 +137,12 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT_UBOOT) u-boot devicetree linux buildroot $(IDGEN) $(NGINX) \
+$(TARGET): $(BOOT) u-boot devicetree linux buildroot $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 	   scpi fpga api api2 apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
-	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
+	cp $(BOOT)             $(TARGET)/boot.bin
 	# copy device tree and Linux kernel
 	cp $(DEVICETREE)       $(TARGET)
 	cp $(LINUX)            $(TARGET)
@@ -268,7 +268,7 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 # boot file generator
 ################################################################################
 
-$(BOOT_UBOOT): fpga2 $(UBOOT)
+$(BOOT): fpga2 $(UBOOT)
 	@echo img:{[bootloader] $(FSBL2) $(FPGA2) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 

@@ -7,7 +7,7 @@
 
 int main (int argc, char **argv) {
     rp_handle_uio_t handle;
-//    int status;
+    int status;
     int unsigned length;
 
     if (argc > 1) {
@@ -18,7 +18,8 @@ int main (int argc, char **argv) {
     printf("Length = %u\n", length);
 
     // Initialization of API
-    if (rp_LaAcqOpen("/dev/uio12", &handle) != RP_OK) {
+    status = rp_LaAcqOpen("/dev/uio12", &handle);
+    if (status != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
     }

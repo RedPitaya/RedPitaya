@@ -61,8 +61,8 @@ initial begin
   dti = cli.range (-8, 8);
   dto = calc(dti);
   // send data into stream
-  cli.set_packet (dti);
-  clo.set_packet (dto);
+  cli.add_pkt (dti);
+  clo.add_pkt (dto);
   fork
     str_src.run (cli);
     str_drn.run (clo);
