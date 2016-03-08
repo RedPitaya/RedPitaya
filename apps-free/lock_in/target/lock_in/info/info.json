@@ -1,0 +1,6 @@
+{
+    "name": "Oscilloscope",
+    "version": "0.94-1",
+    "revision": "devbuild",
+    "description": "A two channel time domain signal visualization system."
+}
