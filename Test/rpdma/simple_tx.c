@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
 	printf("rpdma simple write test\n");
 
-	fd = open("/dev/rpdma", O_RDWR);
+	fd = open("/dev/rprx", O_RDWR);
 	if (fd < 1) {
 		printf("Unable to open device file");
 		return -1;

@@ -12,7 +12,7 @@ int fd;
 int main(int argc, char *argv[])
 {
 	char buf[1024];
-	fd = open("/dev/rpdma", O_RDWR);
+	fd = open("/dev/rprx", O_RDWR);
 
 	if (fd < 1) {
 		printf("Unable to open device file");
