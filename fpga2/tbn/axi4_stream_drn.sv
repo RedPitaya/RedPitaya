@@ -24,8 +24,8 @@ endclocking: clk
 // on transfer store data in the queue
 task automatic run (ref axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT)) cls);
   @(clk);
-  idle();
   while (cls.que.size()) begin
+    idle();
     cls.pkt = cls.que.pop_front();
     foreach (cls.pkt[i]) begin
       if (cls.pkt[i].rdy) begin
@@ -42,6 +42,7 @@ task automatic run (ref axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT))
       cls.pkt[i].lst <= clk.TLAST;
     end
     cls.pkt.delete();
+    idle();
   end
 endtask: run
 

@@ -142,7 +142,6 @@ initial begin
   // RTL tests
   test_rle();
   test_bypass();
-  test_bypass();
 
   // end simulation
   repeat(4) @(posedge clk);
@@ -221,6 +220,8 @@ task test_bypass ();
   repeat(4) @(posedge clk);
   // send data into stream
   cli.add_pkt (dat);
+  cli.add_pkt (dat);
+  clo.add_pkt (dtc, .rdy (1));
   clo.add_pkt (dtc, .rdy (1));
   fork
     str_src.run (cli);

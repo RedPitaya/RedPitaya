@@ -27,8 +27,8 @@ endclocking: clk
 
 task run (axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cls);
   @(clk);
-  idle();
   while (cls.que.size()) begin
+    idle();
     cls.pkt = cls.que.pop_front();
     foreach (cls.pkt[i]) begin
       if (cls.pkt[i].vld) begin
@@ -44,6 +44,7 @@ task run (axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cls);
       end while (~clk.TREADY);
     end
     cls.pkt.delete();
+    idle();
   end
 endtask: run
 
