@@ -64,8 +64,8 @@ class axi4_stream_class #(
       for (int unsigned j=0; j<DN; j++) begin
         pkt[i].dat [j] = dat[DN*i+j];
       end
-      pkt[i].kep = '1;
-      pkt[i].lst = lst & ((dat.size()-i*DN)<=DN);
+      pkt[i].kep = ((dat.size()-i)<=DN) ? 1<<(dat.size()-i)-1 : '1; // TODO for now at least check if the last transfer is correct
+      pkt[i].lst = ((dat.size()-i)<=DN) & lst;
       pkt[i].vld = $dist_poisson(seed, vld_rnd);
       pkt[i].rdy = $dist_poisson(seed, rdy_rnd);
     end
@@ -83,9 +83,9 @@ class axi4_stream_class #(
     // TODO check TKEEP
     for (int i=0; i<dat.size(); i+=DN) begin
       for (int unsigned j=0; j<DN; j++) begin
-        if ( (pkt[i].dat [j] != dat[i+j]                )
-           | (pkt[i].lst     != ((dat.size()-i*DN)<=DN) ) ) begin
-          $display ("Error: i=%d: (val=%p/%b) != (ref=%p/%b)", i, pkt[i].dat[j], pkt[i].lst, dat[i+j], ((dat.size()-i*DN)<=DN));
+        if ( (pkt[i].dat [j] != dat[i+j]               )
+           | (pkt[i].lst     != ((dat.size()-i)<=DN) ) ) begin
+          $display ("Error: i=%d: (val=%p/%b) != (ref=%p/%b)", i, pkt[i].dat[j], pkt[i].lst, dat[i+j], ((dat.size()-i)<=DN));
           check++;
         end
       end
