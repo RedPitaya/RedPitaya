@@ -22,7 +22,7 @@ endclocking: clk
 ////////////////////////////////////////////////////////////////////////////////
 
 // on transfer store data in the queue
-task automatic run (ref axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cls);
+task automatic run (ref axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT)) cls);
   @(clk);
   foreach (cls.mem[i]) begin
     if (cls.mem[i].rdy) begin
