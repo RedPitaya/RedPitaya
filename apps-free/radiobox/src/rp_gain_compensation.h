@@ -37,7 +37,7 @@ typedef struct rb_gain_params_s {
 } rb_gain_params_t;
 
 #define RB_GAIN_PARAMS_BSPLINE_K    4
-#define RB_GAIN_PARAMS_HW_1V1_NUM  69
+#define RB_GAIN_PARAMS_HW_1V1_NUM 113
 
 enum rb_gain_params_columns {
     RB_GAIN_PARAMS_FREQUENCY = 0,
