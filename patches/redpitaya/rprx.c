@@ -271,7 +271,7 @@ static int rprx_probe(struct platform_device *pd)
 		dev_err(dev, "DMA reserved memory not allocated\n");
 	goto rmdev;
 	}else {
-		dev_info(dev, "rprx reserved dma: %p and 0x%x KiB @0x%x\n",(void*)rx->chan,(RX_SGMNT_CNT*RX_SGMNT_SIZE)/1024,rx->addrp);
+		dev_info(dev, "reserved dma: %p and 0x%x KiB @0x%x\n",(void*)rx->chan,(RX_SGMNT_CNT*RX_SGMNT_SIZE)/1024,rx->addrp);
 	}
 
 	rx->segment_cnt=RX_SGMNT_CNT;
@@ -293,7 +293,7 @@ static int rprx_remove(struct platform_device *pdev)
 {
 	struct rprx_channel *rx = (struct rprx_channel *)platform_get_drvdata(pdev);
 	const struct device * dev =(const struct device *)&rx->rpdev->dev;
-	dev_info(dev, "rprx remove\n");
+	dev_info(dev, "remove\n");
 	if(rx->chan){
 		dma_release_channel(rx->chan);
 	}
