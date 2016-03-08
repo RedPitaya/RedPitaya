@@ -193,7 +193,7 @@ task test_rle ();
   $display ("dtc [%d] = %p", dtc.size(), dtc);
   // send data into stream
   cli.add_pkt (dat);
-  clo.add_pkt (dtc, .rdy (1));
+  clo.add_pkt (dtc, .rdy_rnd (1));
   fork
     str_src.run (cli);
     str_drn.run (clo);
@@ -221,8 +221,8 @@ task test_bypass ();
   // send data into stream
   cli.add_pkt (dat);
   cli.add_pkt (dat);
-  clo.add_pkt (dtc, .rdy (1));
-  clo.add_pkt (dtc, .rdy (1));
+  clo.add_pkt (dtc, .rdy_rnd (1));
+  clo.add_pkt (dtc, .rdy_rnd (1));
   fork
     str_src.run (cli);
     str_drn.run (clo);

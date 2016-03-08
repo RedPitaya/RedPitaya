@@ -52,8 +52,11 @@ class axi4_stream_class #(
   task add_pkt (
     ref   DT_A         dat,
     input bit          lst = 1,
-    input int unsigned vld = 0,
-    input int unsigned rdy = 0
+    input int unsigned vld_max = 0,
+    input int unsigned vld_rnd = 1,
+    input int unsigned rdy_max = 0,
+    input int unsigned rdy_rnd = 1,
+    input int          seed = 0
   );
     pkt_t pkt;
     pkt = new [dat.size()];
@@ -63,8 +66,8 @@ class axi4_stream_class #(
       end
       pkt[i].kep = '1;
       pkt[i].lst = lst & ((dat.size()-i*DN)<=DN);
-      pkt[i].vld = vld;
-      pkt[i].rdy = rdy;
+      pkt[i].vld = $dist_poisson(seed, vld_rnd);
+      pkt[i].rdy = $dist_poisson(seed, rdy_rnd);
     end
     que.push_back(pkt);
   endtask: add_pkt
