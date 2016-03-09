@@ -102,6 +102,7 @@
 
   OSC.inGainValue1 = '-';
   OSC.inGainValue2 = '-';
+  OSC.loaderShow = false;
 
   // Starts the oscilloscope application on server
   OSC.startApp = function() {
@@ -529,6 +530,9 @@
           $('#OSC_RUN').show();
         }
       }
+      else if(param_name == "OSC_AUTOSCALE"){
+      	  console.log(new_params[param_name]);
+	  }
       // Buffer size parameter
       else if(param_name == 'OSC_VIEV_PART') {
         var full_width = $('#buffer').width() - 4;
@@ -1105,6 +1109,7 @@
         continue;
       }
 
+
       var points = [];
       var sig_btn = $('#right_menu .menu-btn.' + sig_name);
       var color = OSC.config.graph_colors[sig_name];
@@ -1128,6 +1133,14 @@
 
       if(OSC.graphs[sig_name]) {
         OSC.graphs[sig_name].elem.show();
+
+      if(points.length !== 0){
+       	$('#img_loading').hide();
+    	OSC.loaderShow = false;
+      }else if(points.length === 0){
+       	$('#img_loading').show();
+    	OSC.loaderShow = true;
+      }
 
         if(OSC.state.resized) {
           OSC.graphs[sig_name].plot.resize();
@@ -2070,6 +2083,8 @@ $(function() {
     ev.preventDefault();
     OSC.params.local['OSC_AUTOSCALE'] = { value: true };
     OSC.sendParams();
+    $('#img_loading').show();
+    OSC.loaderShow = true;
   });
 
   // Selecting active signal
