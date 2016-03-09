@@ -16,27 +16,6 @@
 
 #include "rp_dma.h"
 
-static int rp_DmaMemSet(rp_handle_uio_t *handle, int value)
-{
-    // allocate data buffer memory
-    unsigned char* map=NULL;
-    map = (unsigned char *) mmap(NULL, handle->dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle->dma_fd, 0);
-    if (map==NULL) {
-        printf("Failed to mmap\n");
-        if (handle->dma_fd) close(handle->dma_fd);
-        return -1;
-    }
-
-    // clear buffer
-    for (int l=0; l<handle->dma_size; l++)
-        map[l] = value;
-
-    if(munmap (map, handle->dma_size)==-1){
-        printf("Failed to munmap\n");
-    }
-    return RP_OK;
-}
-
 int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
 {
     // make a copy of the device path
@@ -49,8 +28,6 @@ int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
         printf("Unable to open device file");
         return -1;
     }
-    // set mem. to zero
-    rp_DmaMemSet(handle, 0);
 
     return RP_OK;
 }
