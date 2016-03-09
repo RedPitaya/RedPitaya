@@ -1073,6 +1073,7 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @param[in]  tx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
  * @param[in]  rx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
+ * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  * @param[in]  tx_mod_osc_qrg   Frequency for TX_MOD_OSC in Hz.
@@ -1083,7 +1084,7 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  */
 void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int rx_muxin_src,
+        int src_con_pnt, int term, int rx_muxin_src,
         double tx_car_osc_qrg, double tx_mod_osc_qrg,
         double tx_amp_rf_gain, double tx_mod_osc_mag,
         double tx_muxin_gain, double rx_muxin_gain,

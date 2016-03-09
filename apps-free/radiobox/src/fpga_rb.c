@@ -184,6 +184,8 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
     double loc_tx_muxin_gain  = 0.0;
     double loc_rx_car_osc_qrg = 0.0;
     double loc_rx_muxin_gain  = 0.0;
+    int    loc_rfout1_term    = 0;
+    int    loc_rfout2_term    = 0;
 
     //fprintf(stderr, "fpga_rb_update_all_params: BEGIN\n");
 
@@ -218,6 +220,8 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
             loc_rx_muxin_gain  = g_rb_info_worker_params[RB_RX_MUXIN_GAIN].value;
 
             loc_rx_car_osc_qrg = g_rb_info_worker_params[RB_RX_CAR_OSC_QRG].value;
+            loc_rfout1_term    = (int) g_rb_info_worker_params[RB_RFOUT1_TERM].value;
+            loc_rfout2_term    = (int) g_rb_info_worker_params[RB_RFOUT2_TERM].value;
         }
         pthread_mutex_unlock(&g_rb_info_worker_params_mutex);
         //fprintf(stderr, "INFO - fpga_rb_update_all_params: ... done\n");
@@ -303,6 +307,14 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
         } else if (!strcmp("rx_car_osc_qrg_f", p[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", p[idx].value);
             loc_rx_car_osc_qrg = p[idx].value;
+
+        } else if (!strcmp("rfout1_term_s", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_term_s = %d\n", (int) (p[idx].value));
+            loc_rfout1_term = ((int) (p[idx].value));
+
+        } else if (!strcmp("rfout2_term_s", p[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_term_s = %d\n", (int) (p[idx].value));
+            loc_rfout2_term = ((int) (p[idx].value));
         }  // else if ()
     }  // for ()
 
@@ -315,7 +327,8 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
                     loc_tx_modsrc,
                     loc_tx_modtyp,
                     loc_rx_modtyp,
-                    ((loc_rfout2_csp & 0xff) << 0x18) | ((loc_rfout1_csp & 0xff) << 0x10) | (loc_led_csp & 0xff),
+                    ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff),
+					((loc_rfout2_term & 0x01) << 0x01) | ( loc_rfout1_term & 0x01         ),
                     loc_rx_muxin_src,
                     loc_tx_car_osc_qrg,
                     loc_tx_mod_osc_qrg,
@@ -334,17 +347,18 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
 
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int rx_muxin_src,
+        int src_con_pnt, int term, int rx_muxin_src,
         double tx_car_osc_qrg, double tx_mod_osc_qrg,
         double tx_amp_rf_gain, double tx_mod_osc_mag,
         double tx_muxin_gain, double rx_muxin_gain,
         double rx_car_osc_qrg)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
-    double tx_amp_rf_gain_corrected = tx_amp_rf_gain * get_compensation_factor(tx_car_osc_qrg, 0);  // TODO: add output connection variant: 1 = 50R / 0 = open
+    double tx_amp_rf_gain_corrected = tx_amp_rf_gain * get_compensation_factor(tx_car_osc_qrg,     (term & 0x01 ?  1 : 0));
+    double rx_out_gain_corrected    = 100.0          * get_compensation_factor(ssb_weaver_osc_qrg, (term & 0x02 ?  1 : 0));
 
-    //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
-    //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
+    //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, term=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
+    //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, term, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
 
     uint32_t src_con_pnt_old = g_fpga_rb_reg_mem->src_con_pnt;
     if (src_con_pnt_old != src_con_pnt) {
@@ -360,7 +374,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(100.0);                                                  // RX_MOD_AMENV  gain setting [ %] only for the AM-Envelope demodulator
         fpga_rb_set_rx_mod_fm_gain__4mod_fm(100.0);                                                        // RX_MOD_FM     gain setting [ %] only for the FM demodulator
         fpga_rb_set_rx_mod_pm_gain__4mod_pm(100.0);                                                        // RX_MOD_PM     gain setting [ %] only for the PM demodulator
-        fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(100.0, 0.0);                                           // RX_AUDIO_OUT  gain setting [ %] is global and not modulation dependent
+        fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(rx_out_gain_corrected, 0.0);                           // RX_AUDIO_OUT  gain setting [ %] is global and not modulation dependent
 
         switch (tx_modsrc) {
 

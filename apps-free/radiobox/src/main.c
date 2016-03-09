@@ -118,6 +118,12 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* RX_CAR_OSC frequency (Hz) - transport_pktIdx 6 */
         "rx_car_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
 
+    { /* RFOUT1 termination information - transport_pktIdx 6 */
+        "rfout1_term_s",            0.0,   1,  0, 0.0,      1.0  },
+
+    { /* RFOUT2 termination information - transport_pktIdx 6 */
+        "rfout2_term_s",            0.0,   1,  0, 0.0,      1.0  },
+
 
     { /* has to be last entry */
         NULL,                       0.0,  -1, -1, 0.0,      0.0  }
@@ -682,7 +688,9 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 break;
 
             case 6:
-                if (!strcmp("rx_car_osc_qrg_f",    src[i].name)) {
+                if (!strcmp("rx_car_osc_qrg_f",    src[i].name) ||
+                    !strcmp("rfout1_term_s",       src[i].name) ||
+                    !strcmp("rfout2_term_s",       src[i].name)) {
                     found = 1;
                 }
                 break;
