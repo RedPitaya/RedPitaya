@@ -149,8 +149,8 @@ int rp_GenSetStepOffset(rp_handle_uio_t *handle, uint32_t stp, uint32_t off) {
     if (off >= (1 << (RP_GEN_CWM+RP_GEN_CWF))) {
         return RP_EOOR;
     }
-    iowrite32(stp, &regset->cfg_stp-1);
-    iowrite32(off, &regset->cfg_off);
+    iowrite32(stp-1, &regset->cfg_stp);
+    iowrite32(off  , &regset->cfg_off);
     return RP_OK;
 }
 
