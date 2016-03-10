@@ -1,11 +1,11 @@
 //-------------------------------------------------
-//		Quick Pager jquery plugin
-//		Created by dan and emanuel @geckonm.com
-//		www.geckonewmedia.com
+//      Quick Pager jquery plugin
+//      Created by dan and emanuel @geckonm.com
+//      www.geckonewmedia.com
 //
 //
-//		18/09/09 * bug fix by John V - http://blog.geekyjohn.com/
-//		1.2 - allows reloading of pager with new items
+//      18/09/09 * bug fix by John V - http://blog.geekyjohn.com/
+//      1.2 - allows reloading of pager with new items
 //-------------------------------------------------
 
 (function($) {
@@ -58,18 +58,24 @@
 
     var refillList = function() {
         $('.app-item').unbind('click');
+        $('.app-item').unbind('mouseenter');
+        $('.app-item').unbind('mouseleave');
 
         $('#list-container').empty();
         for (var i = 0; i < apps.length; i++) {
             var txt = '<li class="app-item" key="' + i + '" >';
-            txt += '<a href="#" class="app-link"><img class="app-icon" src="' + apps[i]['image'] + '"><span class="app-name">' + apps[i]['name'] + '</span></a>';
+            txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" src="' + apps[i]['image'] + '"></div><span class="app-name">' + apps[i]['name'] + '</span></a>';
             txt += '</li>';
             $('#list-container').append(txt);
         }
         $('.app-item').click(clickApp);
+        $('.app-item').mouseenter(overApp);
+        $('.app-item').mouseleave(leaveApp);
     }
 
-    var GetListOfApps = function() {
+    var getListOfApps = function() {
+        $('#loader-desc').html('Getting the list of applications');
+        $('body').removeClass('loaded');
         $.ajax({
             url: 'bazaar?apps=',
             cache: false,
@@ -91,17 +97,106 @@
 
             refillList();
             placeElements();
+            $('body').addClass('loaded');
         }).fail(function(msg) { /*GetListOfApps();*/ });
     }
 
-    var clickApp = function() {
+    var clickApp = function(e) {
         var key = parseInt($(this).attr('key')) * 1;
-        window.open(apps[key].url, '_blank');
+        if (key < default_apps.length)
+            window.open(apps[key].url, '_blank');
+        else {
+            e.preventDefault();
+            licVerify(apps[key].url);
+        }
+    }
+
+    var overApp = function(e) {
+        var key = parseInt($(this).attr('key')) * 1;
+        $('#description').html(apps[key].description);
+    }
+
+    var leaveApp = function(e) {
+        $('#description').html("");
+    }
+
+    var licVerify = function(success_url) {
+        var post_uri = 'http://store.redpitaya.com/upload_id_file/';
+        var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
+        $('#loader-desc').html('Preparing application to run<br/>Please allow popups for this page');
+        $('body').removeClass('loaded');
+        // TODO: uncomment
+        // if (!isOnline) {
+        //     $('#lic_failed').show();
+        //     $('#ic_missing').modal('show');
+        //     return;
+        // }
+        $.ajax({
+                method: "GET",
+                url: "idfile.id"
+            })
+            .done(function(msg) {
+                var obj = jQuery.parseJSON(msg);
+                if (obj != undefined && obj != null && obj.mac_address != undefined && obj.mac_address != null)
+                    req_uri = req_uri + obj.mac_address;
+                $.ajax({
+                        method: "POST",
+                        url: post_uri,
+                        data: 'id_file=' + encodeURIComponent(msg)
+                    }).done(function(msg) {
+                        if (msg == "OK") {
+                            $.ajax({
+                                    method: "GET",
+                                    url: req_uri
+                                }).done(function(msg) {
+                                    var res_msg = msg + "\r\n";
+                                    $.ajax({
+                                            method: "POST",
+                                            dataType: 'json',
+                                            data: {
+                                                'lic.lic': res_msg
+                                            },
+                                            contentType: 'application/json; charset=utf-8',
+                                            url: "/lic_upload",
+                                        })
+                                        .done(function(msg) {})
+                                        .fail(function(msg) {
+                                            setTimeout(function() { $('body').addClass('loaded'); }, 2000);
+                                            window.open(success_url, '_blank');
+                                        });
+                                })
+                                .fail(function(msg) {
+                                    console.log("LIC: ERR2");
+                                    setTimeout(function() { $('body').addClass('loaded'); }, 2000);
+                                    window.open(success_url, '_blank');
+                                });
+                        } else {
+                            console.log("LIC: ERR3");
+                            setTimeout(function() { $('body').addClass('loaded'); }, 2000);
+                            window.open(success_url, '_blank');
+                        }
+                    })
+                    .fail(function(msg) {
+                        console.log("LIC: ERR4");
+                        setTimeout(function() { $('body').addClass('loaded'); }, 2000);
+                        window.open(success_url, '_blank');
+                    });
+            })
+            .fail(function(msg) {
+                console.log("LIC: ERR4");
+                setTimeout(function() { $('body').addClass('loaded'); }, 2000);
+                window.open(success_url, '_blank');
+            });
     }
 
     $(document).ready(function($) {
-        GetListOfApps();
+        getListOfApps();
         prepareOffline();
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", 'info/info.json', false);
+        xmlHttp.send(null);
+        var info = JSON.parse(xmlHttp.responseText);
+        $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
     });
 
     $(window).resize(function($) {
