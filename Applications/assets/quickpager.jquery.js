@@ -55,9 +55,9 @@
             var pageNav = "<ul class='simplePagerNav'>";
             for (i = 1; i <= pageCounter; i++) {
                 if (i == options.currentPage) {
-                	pageNav += "<li class='currentPage simplePageNav" + i + "'><a rel='" + i + "' href='#'><div class='active-dot'></div></a></li>";
+                	pageNav += "<li class='currentPage simplePageNav" + i + "'><a rel='" + i + "' href='#'><div id='dot' class='active-dot'></div></a></li>";
                 } else {
-                    pageNav += "<li class='simplePageNav" + i + "'><a rel='" + i + "' href='#'><div class='dot'></div></a></li>";
+                    pageNav += "<li class='simplePageNav" + i + "'><a rel='" + i + "' href='#'><div id='dot' class='dot'></div></a></li>";
                 }
             }
             pageNav += "</ul>";
@@ -86,13 +86,23 @@
                 options.currentPage = clickedLink;
 
                 if (options.holder) {
+                    $(this).parent("li").parent("ul").parent(options.holder).find("li.currentPage").find('#dot').addClass('dot');
+                    $(this).parent("li").parent("ul").parent(options.holder).find("li.currentPage").find('#dot').removeClass('active-dot');
                     $(this).parent("li").parent("ul").parent(options.holder).find("li.currentPage").removeClass("currentPage");
+
                     $(this).parent("li").parent("ul").parent(options.holder).find("a[rel='" + clickedLink + "']").parent("li").addClass("currentPage");
+                    $(this).parent("li").parent("ul").parent(options.holder).find("a[rel='" + clickedLink + "']").parent("li").find('#dot').addClass("active-dot");
+                    $(this).parent("li").parent("ul").parent(options.holder).find("a[rel='" + clickedLink + "']").parent("li").find('#dot').removeClass("dot");
                 } else {
                     //remove current current (!) page
+                    $(this).parent("li").parent("ul").parent(".simplePagerContainer").find("li.currentPage").find('#dot').addClass("dot");
+                    $(this).parent("li").parent("ul").parent(".simplePagerContainer").find("li.currentPage").find('#dot').removeClass("active-dot");
                     $(this).parent("li").parent("ul").parent(".simplePagerContainer").find("li.currentPage").removeClass("currentPage");
+
                     //Add current page highlighting
                     $(this).parent("li").parent("ul").parent(".simplePagerContainer").find("a[rel='" + clickedLink + "']").parent("li").addClass("currentPage");
+                    $(this).parent("li").parent("ul").parent(".simplePagerContainer").find("a[rel='" + clickedLink + "']").parent("li").find('#dot').addClass("active-dot");
+                    $(this).parent("li").parent("ul").parent(".simplePagerContainer").find("a[rel='" + clickedLink + "']").parent("li").find('#dot').removeClass("dot");
                 }
 
                 //hide and show relevant links
