@@ -62,6 +62,7 @@
         $('.app-item').unbind('click');
         $('.app-item').unbind('mouseenter');
         $('.app-item').unbind('mouseleave');
+        $('#main-container').empty();
 
         $('#list-container').empty();
         for (var i = 0; i < apps.length; i++) {
