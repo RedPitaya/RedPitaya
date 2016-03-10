@@ -1,3 +1,9 @@
+////////////////////////////////////////////////////////////////////////////////
+// Module: AXI4-Stream package
+// Author: Iztok Jeras
+// (c) Red Pitaya  (redpitaya.com)
+////////////////////////////////////////////////////////////////////////////////
+
 package axi4_stream_pkg;
 
 class axi4_stream_class #(
@@ -66,8 +72,12 @@ class axi4_stream_class #(
       end
       pkt[i].kep = ((dat.size()-i)<=DN) ? 1<<(dat.size()-i)-1 : '1; // TODO for now at least check if the last transfer is correct
       pkt[i].lst = ((dat.size()-i)<=DN) & lst;
+      // calculate random timing TODO: rethink this part
       pkt[i].vld = $dist_poisson(seed, vld_rnd);
       pkt[i].rdy = $dist_poisson(seed, rdy_rnd);
+      // limit to max value
+      pkt[i].vld = pkt[i].vld > vld_max ? vld_max : pkt[i].vld;
+      pkt[i].rdy = pkt[i].rdy > rdy_max ? vld_max : pkt[i].rdy;
     end
     que.push_back(pkt);
   endtask: add_pkt
