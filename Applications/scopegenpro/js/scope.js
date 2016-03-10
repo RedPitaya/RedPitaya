@@ -103,6 +103,7 @@
   OSC.inGainValue1 = '-';
   OSC.inGainValue2 = '-';
   OSC.loaderShow = false;
+  OSC.running = true;
 
   // Starts the oscilloscope application on server
   OSC.startApp = function() {
@@ -2060,6 +2061,7 @@ $(function() {
     $('#OSC_STOP').css('display','block');
     OSC.params.local['OSC_RUN'] = { value: true };
     OSC.sendParams();
+    OSC.running = true;
   });
 
 //  $('#OSC_STOP').on('click touchstart', function(ev) {
@@ -2069,6 +2071,7 @@ $(function() {
     $('#OSC_RUN').show();
     OSC.params.local['OSC_RUN'] = { value: false };
     OSC.sendParams();
+    OSC.running = false;
   });
 
 //  $('#OSC_SINGLE').on('click touchstart', function(ev) {
@@ -2080,6 +2083,8 @@ $(function() {
 
 //  $('#OSC_AUTOSCALE').on('click touchstart', function(ev) {
   $('#OSC_AUTOSCALE').on('click', function(ev) {
+    if(OSC.running == false)
+    	return;
     ev.preventDefault();
     OSC.params.local['OSC_AUTOSCALE'] = { value: true };
     OSC.sendParams();

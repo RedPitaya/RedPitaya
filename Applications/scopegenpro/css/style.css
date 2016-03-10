@@ -727,7 +727,7 @@ area:hover {
   height:100%;
 
   display: none;
-  /*background-color: rgba(0, 0, 0, 0.5);*/
+  background-color: rgba(0, 0, 0, 0.5);
 }
 /*
 .centerer {

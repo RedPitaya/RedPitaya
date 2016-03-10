@@ -1635,7 +1635,7 @@ void *mainThreadFun() {
                 }
             }
 
-            g_triggerTS = _clock() + 5.f * _timeScale * (float)DIVISIONS_COUNT_X;
+            g_triggerTS = _clock() + MAX((5.f * _timeScale * (float)DIVISIONS_COUNT_X), 20);
 
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {
