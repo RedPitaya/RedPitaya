@@ -22,7 +22,7 @@ CRYPTO_DIR=../../../../tools/cryptopp
 CRYPTO_INSTALL_DIR=../../../../tools/build
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
+CXXFLAGS=-c -Wall -Os -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
 ifeq ($(ALWAYS_PURCHASED),true)
 CXXFLAGS+=-DALWAYS_PURCHASED
 endif
@@ -46,7 +46,6 @@ CURRENT_DIR := $(shell pwd)
 all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
-	patch -Nd $(CRYPTO_DIR) < cryptopp_singleton.diff &> /dev/null
 	mkdir -p $(CRYPTO_INSTALL_DIR)
 	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
 	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
