@@ -3,111 +3,40 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+
     <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
     <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
-    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="./style.css" type="text/css" />
-    <link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
+    <link href="./style.css" rel="stylesheet" type="text/css" />
+
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
+
+    <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
     <script src="../assets/offline.min.js"></script>
     <script src="../assets/ui.js"></script>
-    <script src="assets/jquery.mCustomScrollbar.concat.min.js"></script>
-    <script type="text/javascript">
-    var isOnline = true;
-    </script>
-    <script type="text/javascript"></script>
+    <script src="../assets/ui.js"></script>
+    <script src="../assets/quickpager.jquery.js"></script>
+    <script src="../assets/ecosystem.js"></script>
+
     <title>My Red Pitaya</title>
 </head>
 
 <body style="background-color: #1D1D1D;">
-    <div class="pagewrapper">
-        <div class="panel panel-default" style="background-color: #1D1D1D; margin: 50px auto;">
-            <div class="panel-body">
-                <div class="divider"></div>
-                <div class="row" style="padding: 20px;">
-                    <div class="col-xs-2" style="min-width: 270px; height: 400;">
-                        <div id="mcs_container">
-                            <img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">
-                            <h4 style="color: silver;">Select the Instrument:</h4>
-                            <div class="list-group pull-left">
-                                <div class="buttons" id="main_buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">
-                                    <a href="#" id="buttons" style="border-radius: 0;" class="list-group-item">1</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bazaar-link" style="margin-top: 20px; margin-left: -40px">
-                            <a href="#" id="goto_bazaar" class="list-group-item more">Get more applications &nbsp;<img id="appstore_opened" style="display:none; width: 25px;" src="images/loader.gif"/></a>
-                        </div>
-                    </div>
-                    <div class="col-xm-9" id="right-col" style="mix-width: 500px; height: 400;color: silver;">
-                        <div id="mcs_container2">
-                            <div class="description" style="display: none;">
-                                <h2 class="name"></h2>
-                                <img class="icon" src="">
-                                <p class="desc"></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="container">
-                    <div class="bazaar-link" style="float:right; visibility: hidden;">
-                        <a href="#run" id="run" class="list-group-item btn" style="margin: 0 60 0 0;">Run</a>
-                    </div>
-                    <div class="bazaar-link" style="float:right; visibility: hidden;">
-                        <a href="#demo" id="demo" class="list-group-item btn">Demo</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
+    <div id="header">
+        <div id="description">Copyleft © W3Schools.com Copyleft © W3Schools.com Copyleft © W3Schools.com Copyleft © W3Schools.com Copyleft © W3Schools.com </div>
     </div>
-    <!-- Modal -->
-    <div class="modal fade" id="bazaar_na" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
-                </div>
-                <div class="modal-body">
-                    Red Pitaya is at the moment unable to access application marketplace! Please try it again later or follow instructions about how to manualy install applications.
-                </div>
-                <div class="modal-footer">
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" id="openInstructions" class="list-group-item btn">Open instructions</a>
-                    </div>
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="panel panel-default" id="main-container">
+        <ul class="paging" id="list-container">
+        </ul>
     </div>
-    <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
-                </div>
-                <div class="modal-body">
-                    <p id="lic_failed">Licence verification failed! </p>
-                    <p>RedPitaya is offline and cannot access the server! </p> Please follow <a style="color: #dd0020" href="http://redpitaya.com/quick-start/" target="_blank">quick start instrucitons</a> to put it online.
-                </div>
-                <div class="modal-footer">
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" id="quick_start" class="list-group-item btn">Open instructions</a>
-                    </div>
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="footer">
+        Copyright © W3Schools.com
     </div>
+    <script type="text/javascript">
+
+    </script>
 </body>
 
 </html>
