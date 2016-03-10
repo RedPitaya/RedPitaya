@@ -28,21 +28,20 @@
 
 /* line 8, ../sass/offline-theme-dark-indicator.sass */
 .offline-ui {
-  -webkit-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+/*  -webkit-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
   -moz-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
   -webkit-border-radius: 4px 4px 0 0;
   -moz-border-radius: 4px 4px 0 0;
   -ms-border-radius: 4px 4px 0 0;
-  -o-border-radius: 4px 4px 0 0;
+  -o-border-radius: 4px 4px 0 0;*/
   border-radius: 4px 4px 0 0;
   font-family: "Helvetica Neue", sans-serif;
   font-weight: 300;
-  padding: 1em;
   background: black;
   color: #cccccc;
-  bottom: 0;
-  left: 20px;
+  top: 5;
+  right: 50px;
 }
 /* line 19, ../sass/offline-theme-dark-indicator.sass */
 .offline-ui .offline-ui-content {
@@ -58,10 +57,10 @@
   content: " ";
   display: block;
   position: absolute;
-  top: 0;
+  top: 5;
   bottom: 0;
-  left: 1em;
-  margin: auto;
+  left: 5em;
+  right: auto;
   height: 0.8em;
   width: 0.8em;
 }
