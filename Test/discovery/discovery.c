@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 
     // Build curl command
     std::stringstream cmd;
-    cmd << "curl --data '" << "dna=" << vDNA << "&";
+    cmd << "curl '" << GetUrl() << "?dna=00" << vDNA << "&";
     cmd << "ip_lan=" << vIP_LAN << "&";
     cmd << "mac_lan=" << vMAC_LAN << "&";
     cmd << "os_ver=" << vOS_VER << "&";
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
     if(vIP_WIFI != "")
         cmd << "&mac_wifi=" << vMAC_WIFI;
 
-    cmd << "' " << GetUrl();
+    cmd << "'";
 
     if (verbose)
         std::cout << "Executing: " << cmd.str().c_str() << std::endl;
