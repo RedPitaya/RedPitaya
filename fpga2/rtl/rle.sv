@@ -75,7 +75,7 @@ if (~sti.ARESETn) begin
 end else begin
   if (ctl_rst) begin
     old.TVALID <= 1'b0;
-  end else if (old.TREADY & trn) begin
+  end else if (sti.TREADY & trn) begin
     old.TVALID <= sti.TVALID;
   end
 end
