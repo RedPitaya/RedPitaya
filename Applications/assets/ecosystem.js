@@ -29,6 +29,8 @@
         var elemsInCol = Math.floor(containerHeight / elemHeight);
         elemsInCol = (elemsInCol == 0) ? 1 : elemsInCol;
 
+
+
         $("ul.paging").quickPager({
             pageSize: elemsInRow * elemsInCol
         });
@@ -120,6 +122,23 @@
         $('#description').html("");
     }
 
+    var onSwipe = function(ev) {
+        if ($('.simplePagerNav').length == 0)
+            return;
+        var rel = 1;
+        if (ev.direction == Hammer.DIRECTION_LEFT)
+            rel = parseInt($('.active-dot').parent().attr('rel')) * 1 + 1;
+        else if (ev.direction == Hammer.DIRECTION_RIGHT) {
+            var crel = parseInt($('.active-dot').parent().attr('rel')) * 1;
+            if (crel == 1) return;
+            rel = crel - 1;
+        }
+        var obj = $('.simplePageNav' + rel).find('a');
+        if (obj.length == 0)
+            return;
+        else obj.click();
+    }
+
     var licVerify = function(success_url) {
         var post_uri = 'http://store.redpitaya.com/upload_id_file/';
         var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
@@ -192,6 +211,11 @@
     $(document).ready(function($) {
         getListOfApps();
         prepareOffline();
+
+        var myElement = document.getElementById('main-container');
+        var mc = new Hammer(myElement);
+        mc.on('swipe', onSwipe);
+
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open("GET", 'info/info.json', false);
         xmlHttp.send(null);
