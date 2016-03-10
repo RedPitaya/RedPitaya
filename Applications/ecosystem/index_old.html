@@ -23,27 +23,7 @@
     var isOnline = true;
     </script>
     <script type="text/javascript">
-    Offline.options = {
-        checks: {
-            xhr: {
-                url: '/check_inet'
-            }
-        },
-        checkOnLoad: false,
-    };
-    Offline.on('up', function() {
-        isOnline = true;
-    });
-    Offline.on('down', function() {
-        isOnline = false;
-    });
-    Offline.check();
-    var appstore_opened = false;
-    window.onunload = function() {};
-    var run = function() {
-        Offline.check();
-    }
-    setInterval(run, 3000);
+
     </script>
     <script type="text/javascript">
     $(window).load(function() {
