@@ -368,7 +368,7 @@
                             $.ajax({
                                     method: "POST",
                                     url: post_uri,
-                                    data: 'id_file=' + encodeURIComponent(msg)
+                                    data: 'id_file=' + encodeURIComponent(msg) + '&version=2'
                                 })
                                 .done(function(msg) {
                                     if (msg == "OK") {
