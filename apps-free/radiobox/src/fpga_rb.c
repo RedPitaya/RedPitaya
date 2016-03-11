@@ -25,6 +25,7 @@
 
 #include "main.h"
 #include "calib.h"
+#include "rp_gain_compensation.h"
 #include "fpga.h"
 #include "cb_http.h"
 
@@ -183,6 +184,8 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
     double loc_tx_muxin_gain  = 0.0;
     double loc_rx_car_osc_qrg = 0.0;
     double loc_rx_muxin_gain  = 0.0;
+    int    loc_rfout1_term    = 0;
+    int    loc_rfout2_term    = 0;
 
     //fprintf(stderr, "fpga_rb_update_all_params: BEGIN\n");
 
@@ -217,6 +220,8 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
             loc_rx_muxin_gain  = g_rb_info_worker_params[RB_RX_MUXIN_GAIN].value;
 
             loc_rx_car_osc_qrg = g_rb_info_worker_params[RB_RX_CAR_OSC_QRG].value;
+            loc_rfout1_term    = (int) g_rb_info_worker_params[RB_RFOUT1_TERM].value;
+            loc_rfout2_term    = (int) g_rb_info_worker_params[RB_RFOUT2_TERM].value;
         }
         pthread_mutex_unlock(&g_rb_info_worker_params_mutex);
         //fprintf(stderr, "INFO - fpga_rb_update_all_params: ... done\n");
@@ -302,6 +307,14 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
         } else if (!strcmp("rx_car_osc_qrg_f", p[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", p[idx].value);
             loc_rx_car_osc_qrg = p[idx].value;
+
+        } else if (!strcmp("rfout1_term_s", p[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_term_s = %d\n", (int) (p[idx].value));
+            loc_rfout1_term = ((int) (p[idx].value));
+
+        } else if (!strcmp("rfout2_term_s", p[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_term_s = %d\n", (int) (p[idx].value));
+            loc_rfout2_term = ((int) (p[idx].value));
         }  // else if ()
     }  // for ()
 
@@ -314,7 +327,8 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
                     loc_tx_modsrc,
                     loc_tx_modtyp,
                     loc_rx_modtyp,
-                    ((loc_rfout2_csp & 0xff) << 0x18) | ((loc_rfout1_csp & 0xff) << 0x10) | (loc_led_csp & 0xff),
+                    ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff),
+                    ((loc_rfout2_term & 0x01) << 0x01) | ( loc_rfout1_term & 0x01         ),
                     loc_rx_muxin_src,
                     loc_tx_car_osc_qrg,
                     loc_tx_mod_osc_qrg,
@@ -333,20 +347,57 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
 
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int rx_muxin_src,
+        int src_con_pnt, int term, int rx_muxin_src,
         double tx_car_osc_qrg, double tx_mod_osc_qrg,
         double tx_amp_rf_gain, double tx_mod_osc_mag,
         double tx_muxin_gain, double rx_muxin_gain,
         double rx_car_osc_qrg)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
+    double rfout1_amp_gain = 0.0;
+    double rfout2_amp_gain = 0.0;
 
-    //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
-    //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
+    //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, term=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%lf\n",
+    //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, term, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
 
     uint32_t src_con_pnt_old = g_fpga_rb_reg_mem->src_con_pnt;
     if (src_con_pnt_old != src_con_pnt) {
         //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x, old = 0x%08x\n", src_con_pnt, src_con_pnt_old);
+        g_fpga_rb_reg_mem->src_con_pnt = src_con_pnt & 0x000000ff;  // switch off output until new gain settings are made
+
+        double rfout_frequency[2];
+        uint8_t rfout_con_pnt[2];
+        rfout_con_pnt[0] = (src_con_pnt & 0x00ff0000) >> 16;
+        rfout_con_pnt[1] = (src_con_pnt & 0xff000000) >> 24;
+
+        int rfout_i;
+        for (rfout_i = 0; rfout_i <= 1; rfout_i++) {
+            if ((0x04 <= rfout_con_pnt[rfout_i]) && (rfout_con_pnt[rfout_i] <= 0x17)) {
+                rfout_frequency[rfout_i] = ssb_weaver_osc_qrg;  // represents audio frequencies
+
+            } else if ((0x18 <= rfout_con_pnt[rfout_i]) && (rfout_con_pnt[rfout_i] <= 0x1f)) {
+                rfout_frequency[rfout_i] = tx_car_osc_qrg;
+
+            } else if ((0x20 <= rfout_con_pnt[rfout_i]) && (rfout_con_pnt[rfout_i] <= 0x21)) {
+                rfout_frequency[rfout_i] = rx_car_osc_qrg;
+
+            } else if ((0x22 <= rfout_con_pnt[rfout_i]) && (rfout_con_pnt[rfout_i] <= 0x41)) {
+                rfout_frequency[rfout_i] = ssb_weaver_osc_qrg;  // represents audio frequencies
+
+            } else if ((0x48 <= rfout_con_pnt[rfout_i]) && (rfout_con_pnt[rfout_i] <= 0x50)) {
+                rfout_frequency[rfout_i] = ssb_weaver_osc_qrg;  // represents audio frequencies
+
+            } else {
+                rfout_frequency[rfout_i] = 0.0;  // default value for switch off gain correction
+            }
+        }
+
+        rfout1_amp_gain = get_compensation_factor(rfout_frequency[0], (term & 0x01 ?  1 : 0));
+        rfout2_amp_gain = get_compensation_factor(rfout_frequency[1], (term & 0x02 ?  1 : 0));
+
+        fpga_rb_set_rfout1_gain_ofs(rfout1_amp_gain, 0.0);                                                 // RFOUT1_AMP    gain correction setting of the RF Output 1 line, DAC offset value
+        fpga_rb_set_rfout2_gain_ofs(rfout2_amp_gain, 0.0);                                                 // RFOUT2_AMP    gain correction setting of the RF Output 2 line, DAC offset value
+
         g_fpga_rb_reg_mem->src_con_pnt = src_con_pnt;
     }
 
@@ -358,7 +409,6 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(100.0);                                                  // RX_MOD_AMENV  gain setting [ %] only for the AM-Envelope demodulator
         fpga_rb_set_rx_mod_fm_gain__4mod_fm(100.0);                                                        // RX_MOD_FM     gain setting [ %] only for the FM demodulator
         fpga_rb_set_rx_mod_pm_gain__4mod_pm(100.0);                                                        // RX_MOD_PM     gain setting [ %] only for the PM demodulator
-        fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(100.0, 0.0);                                           // RX_AUDIO_OUT  gain setting [ %] is global and not modulation dependent
 
         switch (tx_modsrc) {
 
@@ -983,18 +1033,34 @@ void fpga_rb_set_rx_mod_pm_gain__4mod_pm(double rx_mod_pm_gain)
 }
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(double rx_audio_out_gain, double rx_audio_out_ofs)
+void fpga_rb_set_rfout1_gain_ofs(double rfout1_gain, uint16_t rfout1_ofs)
 {
-    double gain = ((double) 0x7fff) * (rx_audio_out_gain /  100.0);
-    double ofs  = ((double) 0x7fff) * (rx_audio_out_ofs  / 2048.0);
+    if (!rfout1_gain) {  // no output gain correction --> multiply with 1.0000
+        rfout1_gain = 1.0;
+    }
+    double gain = ((double) 0x0100) * rfout1_gain;  // 8 bit integer . 8 bit fractional part
 
-    //fprintf(stderr, "INFO - fpga_rb_set_rx_audio_out_gain_ofs__4mod_all: (gain=%lf, ofs=%lf) <-- in(rx_audio_out_gain=%lf, rx_audio_out_ofs=%lf)\n",
-    //        gain, ofs, rx_audio_out_gain, rx_audio_out_ofs);
+    //fprintf(stderr, "INFO - fpga_rb_set_rfout1_gain_ofs: (gain=0x%08x) <-- in(rfout1_gain=%lf, rfout1_ofs=%d)\n",
+    //                (uint32_t) gain, rfout1_gain, rfout1_ofs);
 
-    g_fpga_rb_reg_mem->rx_audio_out_gain = ((uint32_t) gain) & 0x7fff;
-    g_fpga_rb_reg_mem->rx_audio_out_ofs  = ((uint32_t) ofs)  & 0xffff;
+    g_fpga_rb_reg_mem->rfout1_gain = ((uint32_t) gain) & 0xffff;
+    g_fpga_rb_reg_mem->rfout1_ofs  = rfout1_ofs;
 }
 
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_rfout2_gain_ofs(double rfout2_gain, uint16_t rfout2_ofs)
+{
+    if (!rfout2_gain) {  // no output gain correction --> multiply with 1.0000
+        rfout2_gain = 1.0;
+    }
+    double gain = ((double) 0x0100) * rfout2_gain;  // 8 bit integer . 8 bit fractional part
+
+    //fprintf(stderr, "INFO - fpga_rb_set_rfout2_gain_ofs: (gain=0x%08x) <-- in(rfout2_gain=%lf, rfout2_ofs=%d)\n",
+    //                (uint32_t) gain, rfout2_gain, rfout2_ofs);
+
+    g_fpga_rb_reg_mem->rfout2_gain = ((uint32_t) gain) & 0xffff;
+    g_fpga_rb_reg_mem->rfout2_ofs  = rfout2_ofs;
+}
 
 
 /* --------------------------------------------------------------------------- *

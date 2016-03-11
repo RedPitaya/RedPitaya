@@ -103,6 +103,8 @@ enum rb_params_enum_t {
     RB_RX_MUXIN_GAIN,
 
     RB_RX_CAR_OSC_QRG,
+    RB_RFOUT1_TERM,
+    RB_RFOUT2_TERM,
 
     RB_PARAMS_NUM
 } RB_PARAMS_ENUM;

@@ -73,7 +73,9 @@
     tx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
     rx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
 
-    rx_car_osc_qrg_f:  100000   // 100 kHz
+    rx_car_osc_qrg_f:  100000,  // 100 kHz
+    rfout1_term_s:          0,  // RF Output 1: '0' open ended, '1' 50 ohms terminated
+    rfout2_term_s:          0   // RF Output 2: '0' open ended, '1' 50 ohms terminated
   };
 
   // Other global variables
@@ -229,7 +231,7 @@
       var dblVal = parseFloat(RB.params.orig[param_name]);
       dblVal = Math.floor(dblVal * 1e+7 + 0.5) / 1e+7;
 
-      console.log("CHECK RB.processParameters: param_name='" + param_name + "', content_old='" + old_params[param_name] + "', content_new='" + new_params[param_name] + "', dblVal=" + dblVal);
+      // console.log("CHECK RB.processParameters: param_name='" + param_name + "', content_old='" + old_params[param_name] + "', content_new='" + new_params[param_name] + "', dblVal=" + dblVal);
 
       if (param_name == 'rb_run') {
           if (intVal) {  // enabling RB
@@ -267,42 +269,48 @@
         checkKeyDoEnable(param_name, intVal);
       }
       else if (param_name == 'rbled_csp_s') {
-          $('#'+param_name).val(intVal);
-        }
+        $('#'+param_name).val(intVal);
+      }
       else if (param_name == 'rfout1_csp_s') {
-          $('#'+param_name).val(intVal);
-        }
+        $('#'+param_name).val(intVal);
+      }
       else if (param_name == 'rfout2_csp_s') {
-          $('#'+param_name).val(intVal);
-        }
+        $('#'+param_name).val(intVal);
+      }
       else if (param_name == 'rx_muxin_src_s') {
-          $('#'+param_name).val(dblVal);
-          checkKeyDoEnable(param_name, intVal);
-        }
+        $('#'+param_name).val(dblVal);
+        checkKeyDoEnable(param_name, intVal);
+      }
       else if (param_name == 'tx_car_osc_qrg_f') {
-          $('#'+param_name).val(dblVal);
-        }
+        $('#'+param_name).val(dblVal);
+      }
       else if (param_name == 'tx_mod_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
       else if (param_name == 'tx_amp_rf_gain_f') {
-          $('#'+param_name).val(dblVal);
-        }
+        $('#'+param_name).val(dblVal);
+      }
       else if (param_name == 'tx_mod_osc_mag_f') {
-          $('#'+param_name).val(dblVal);
-        }
+        $('#'+param_name).val(dblVal);
+      }
       else if (param_name == 'tx_muxin_gain_f') {
-          $('#'+param_name).val(dblVal);
-        }
+        $('#'+param_name).val(dblVal);
+      }
       else if (param_name == 'rx_modtyp_s') {
-          $('#'+param_name).val(intVal);
-          checkKeyDoEnable(param_name, intVal);
-        }
+        $('#'+param_name).val(intVal);
+        checkKeyDoEnable(param_name, intVal);
+      }
       else if (param_name == 'rx_car_osc_qrg_f') {
-          $('#'+param_name).val(dblVal);
-        }
+        $('#'+param_name).val(dblVal);
+      }
       else if (param_name == 'rx_muxin_gain_f') {
         $('#'+param_name).val(dblVal);
+      }
+      else if (param_name == 'rfout1_term_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'rfout2_term_s') {
+        $('#'+param_name).val(intVal);
       }
 
       /*
@@ -465,32 +473,39 @@
 
   // Exits from editing mode - create local parameters of changed values and send them away
   RB.exitEditing = function(noclose) {
-    console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    // console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
     for (var key in RB.params.orig) {  // XXX controller to message handling
       var field = $('#' + key);
       var value = undefined;
 
-      if (key == 'RB_RUN'){
-        value = (field.is(':visible') ? 1 : 0);
+      if (key == 'rb_run'){
+        value = ($('#RB_RUN').is(':visible') ?  1 : 0);
       }
 
       else if (field.is('button')) {
+        // console.log('DEBUG key ' + key + ' is a button');
         value = (field.hasClass('active') ? 1 : 0);
       }
 
       else if (field.is('input:radio')) {
-          value = parseInt($('input[name="' + key + '"]:checked').val());
+        // console.log('DEBUG key ' + key + ' is a input:radio');
+        // value = parseInt($('input[name="' + key + '"]:checked').val());
+        // console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
+        value = (field.is(":checked") ?  1 : 0);
       }
 
       else if (field.is('select') || field.is('input')) {
+        // console.log('DEBUG key ' + key + ' is a select or input');
         if (checkKeyIs_F(key)) {
           value = parseFloat(field.val());
         } else {
           value = parseInt(field.val());
         }
+      } else {
+          console.log('DEBUG key ' + key + ' field is UNKNOWN');
       }
 
-      console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
+      // console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
 
       // Check for specific values and enables/disables controllers
       checkKeyDoEnable(key, value);
@@ -503,7 +518,7 @@
         //  $('#tx_mod_osc_mag_f').val(0);
         //}
 
-        console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
+        // console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
         RB.params.local[key] = new_value;
         //RB.params.local[key] = { value: new_value };
 
@@ -603,6 +618,10 @@ $(function() {
   $('#modal-warning').hide();
 
   $('button').bind('activeChanged', function() {
+    RB.exitEditing(true);
+  });
+
+  $('input:radio').bind('activeChanged', function() {
     RB.exitEditing(true);
   });
 
@@ -1038,6 +1057,14 @@ function cast_params2transport(params, pktIdx)
       transport['MI_rx_car_osc_qrg_f'] = quad.mi;
       transport['LO_rx_car_osc_qrg_f'] = quad.lo;
     }
+
+    if (params['rfout1_term_s'] !== undefined) {
+      transport['rfout1_term_s'] = params['rfout1_term_s'];
+    }
+
+    if (params['rfout2_term_s'] !== undefined) {
+      transport['rfout2_term_s'] = params['rfout2_term_s'];
+    }
     break;
 
   default:
@@ -1146,6 +1173,14 @@ function cast_transport2params(transport)
     quad.mi = transport['MI_rx_car_osc_qrg_f'];
     quad.lo = transport['LO_rx_car_osc_qrg_f'];
     params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
+  if (transport['rfout1_term_s'] !== undefined) {
+    params['rfout1_term_s'] = transport['rfout1_term_s'];
+  }
+
+  if (transport['rfout2_term_s'] !== undefined) {
+    params['rfout2_term_s'] = transport['rfout2_term_s'];
   }
 
   console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');
