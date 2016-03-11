@@ -26,7 +26,7 @@
 
   // App configuration
   OSC.config = {};
-  OSC.config.app_id = 'scopegenpro';
+  OSC.config.app_id = 'scpi_server';
   OSC.config.server_ip = '';  // Leave empty on production, it is used for testing only
   OSC.config.start_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?start=' + OSC.config.app_id + '?' + location.search.substr(1);
   OSC.config.stop_app_url = (OSC.config.server_ip.length ? 'http://' + OSC.config.server_ip : '') + '/bazaar?stop=' + OSC.config.app_id;
@@ -171,11 +171,46 @@
 			$('#weak_conn_msg').show();
 	}
 
-
 	OSC.compressed_data = 0;
 	OSC.decompressed_data = 0;
 	OSC.refresh_times = [];
   }, 1000);
+
+
+    OSC.convertUnpacked = function(array) {
+        var CHUNK_SIZE = 0x8000; // arbitrary number here, not too small, not too big
+        var index = 0;
+        var length = array.length;
+        var result = '';
+        var slice;
+        while (index < length) {
+            slice = array.slice(index, Math.min(index + CHUNK_SIZE, length)); // `Math.min` is not really necessary here I think
+            result += String.fromCharCode.apply(null, slice);
+            index += CHUNK_SIZE;
+        }
+        return result;
+    }
+
+  // Processes newly received values for parameters
+  OSC.processParameters = function(new_params) {
+      // Run/Stop button
+      for (var param_name in new_params) {
+	      if(param_name == 'OSC_RUNNING') {
+	        if(new_params[param_name].value === true) {
+  		  	  console.log("Running");
+	          $('#OSC_RUN').hide();
+	          $('#OSC_STOP').css('display','block');
+	          OSC.running = true;
+	        }
+	        else {
+  		  	  console.log("Stopped");
+	          $('#OSC_STOP').hide();
+	          $('#OSC_RUN').show();
+	          OSC.running = false;
+	        }
+	      }
+	   }
+  };
 
   // Creates a WebSocket connection with the web server
   OSC.connectWebSocket = function() {
@@ -199,50 +234,14 @@
         OSC.state.socket_opened = true;
         console.log('Socket opened');
 
-		OSC.params.local['in_command'] = { value: 'send_all_params' };
-		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
-		OSC.params.local = {};
-
 		setTimeout(function(){
-		  	var ch1_cookie_value = $.cookie("scope_osc_ch1_in_gain");
-		  	var ch2_cookie_value = $.cookie("scope_osc_ch2_in_gain");
-
-      		OSC.params.local = {};
-		  	if(ch1_cookie_value == '1'){
-		  		$("#OSC_CH1_IN_GAIN").parent().removeClass("active")
-		  		$("#OSC_CH1_IN_GAIN1").parent().addClass("active")
-		  		OSC.params.local['OSC_CH1_IN_GAIN'] = { value: 1 };
-		  	}
-		  	else if(ch1_cookie_value == '0'){
-		  		$("#OSC_CH1_IN_GAIN1").parent().removeClass("active")
-		  		$("#OSC_CH1_IN_GAIN").parent().addClass("active")
-		  		OSC.params.local['OSC_CH1_IN_GAIN'] = { value: 0 };
-		  	}
-
-		  	if(ch2_cookie_value == '1'){
-		  		$("#OSC_CH2_IN_GAIN").parent().removeClass("active")
-		  		$("#OSC_CH2_IN_GAIN1").parent().addClass("active")
-		  		OSC.params.local['OSC_CH2_IN_GAIN'] = { value: 1 };
-		  	}
-		  	else if(ch2_cookie_value == '0'){
-		  		$("#OSC_CH2_IN_GAIN1").parent().removeClass("active")
-		  		$("#OSC_CH2_IN_GAIN").parent().addClass("active")
-		  		OSC.params.local['OSC_CH2_IN_GAIN'] = { value: 0 };
-		  	}
       		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
       		OSC.params.local = {};
 	  	}, 2000);
-
-		setTimeout(function(){
-			if (OSC.state.demo_label_visible)
-				$('#get_lic').modal('show');
-		}, 2500);
-
       };
 
       OSC.ws.onclose = function() {
         OSC.state.socket_opened = false;
-        $('#graphs .plot').hide();  // Hide all graphs
         console.log('Socket closed');
       };
 
@@ -251,81 +250,27 @@
       };
 
       var last_time = undefined;
+
       OSC.ws.onmessage = function(ev) {
 		var start_time = +new Date();
         if(OSC.state.processing) {
           return;
         }
-        OSC.state.processing = true;
 
-		try {
-			var data = new Uint8Array(ev.data);
-			OSC.compressed_data += data.length;
-			var inflate = new Zlib.Gunzip(data);
-			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+        try {
+            var data = new Uint8Array(ev.data);
+            OSC.compressed_data += data.length;
 
-			OSC.decompressed_data += text.length;
+            var inflate = new Zlib.Gunzip(data);
+            var decompressed = inflate.decompress();
+            var arr = new Uint16Array(decompressed)
+            var text = OSC.convertUnpacked(arr);
+            OSC.decompressed_data += text.length;
 
-			var receive = JSON.parse(text);
-
-			if(receive.parameters) {
-			  if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-				OSC.params.local['in_command'] = { value: 'send_all_params' };
-				OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
-				OSC.params.local = {};
-			  } else {
-			  	if('CPU_LOAD' in receive.parameters && receive.parameters['CPU_LOAD'].value != undefined)
-			  		g_CpuLoad = receive.parameters['CPU_LOAD'].value;
-
-			  	if('TOTAL_RAM' in receive.parameters && receive.parameters['TOTAL_RAM'].value != undefined)
-			  		g_TotalMemory = receive.parameters['TOTAL_RAM'].value;
-
-			  	if('FREE_RAM' in receive.parameters && receive.parameters['FREE_RAM'].value != undefined)
-			  		g_FreeMemory = receive.parameters['FREE_RAM'].value;
-
-				OSC.processParameters(receive.parameters);
-
-				if (OSC.params.orig['is_demo'])
-				{
-					if (!OSC.state.demo_label_visible)
-					{
-						OSC.state.demo_label_visible = true;
-						$('#demo_label').show();
-					}
-				} else {
-					if (OSC.state.demo_label_visible)
-					{
-						OSC.state.demo_label_visible = false;
-						$('#demo_label').hide();
-					}
-				}
-			  }
-			}
-
-			if(receive.signals) {
-				++g_count;
-				OSC.processSignals(receive.signals);
-				if(last_time == undefined)
-					last_time = new Date();
-
-				var diff = new Date() - last_time; //-start_time;
-				last_time = new Date();
-				g_time = diff;
-				OSC.refresh_times.push(diff);
-
-				if (g_count == g_iter && OSC.params.orig['DEBUG_SIGNAL_PERIOD']) {
-
-					g_delay = (g_time/g_count); // TODO
-					var period = {};
-					period['DEBUG_SIGNAL_PERIOD'] = { value: g_delay*3 };
-					OSC.ws.send(JSON.stringify({ parameters: period }));
-					g_time = 0;
-					g_count = 0;
-				}
-			}
-			OSC.state.processing = false;
-
-		}
+            var receive = JSON.parse(text);
+            
+            OSC.processParameters(receive.parameters);
+        }
 		catch (e) {
 			OSC.state.processing = false;
 			console.log(e);
@@ -348,17 +293,7 @@
       return false;
     }
 
-    OSC.setDefCursorVals();
-
-    // TEMP TEST
-    // TODO: Set the update period depending on device type
-    //OSC.params.local['DEBUG_PARAM_PERIOD'] = { value: 200 };
-    //OSC.params.local['DEBUG_SIGNAL_PERIOD'] = { value: 100 };
-
-    OSC.params.local['in_command'] = { value: 'send_all_params' };
-    // Send new values and reset the local params object
-//    if (OSC.params.local['OSC_MATH_OFFSET'])
-//		OSC.params.local['OSC_MATH_OFFSET'].value *= OSC.div;
+    OSC.params.local['in_command'] = { value: 'OSC_RUN' };
     OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
     OSC.params.local = {};
 
@@ -372,25 +307,29 @@ $(function() {
   // Process clicks on top menu buttons
   $('#OSC_RUN').on('click', function(ev) {
     ev.preventDefault();
-    $('#OSC_RUN').hide();
-    $('#OSC_STOP').css('display','block');
+    //$('#OSC_RUN').hide();
+    //$('#OSC_STOP').css('display','block');
     OSC.params.local['OSC_RUN'] = { value: true };
     OSC.sendParams();
-    OSC.running = true;
+    //OSC.running = true;
   });
 
   $('#OSC_STOP').on('click', function(ev) {
     ev.preventDefault();
-    $('#OSC_STOP').hide();
-    $('#OSC_RUN').show();
+    //$('#OSC_STOP').hide();
+    //$('#OSC_RUN').show();
     OSC.params.local['OSC_RUN'] = { value: false };
     OSC.sendParams();
-    OSC.running = false;
+    //OSC.running = false;
   });
 
   // Stop the application when page is unloaded
   window.onbeforeunload = function() {
     OSC.ws.onclose = function () {}; // disable onclose handler first
+    // Stop SCPI server and close socket
+    OSC.params.local['OSC_RUN'] = { value: false };
+    OSC.sendParams();
+    OSC.running = false;
     OSC.ws.close();
     $.ajax({
       url: OSC.config.stop_app_url,
