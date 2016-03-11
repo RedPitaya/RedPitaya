@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
     double a,b,c;
     double    endfreq = 0; // endfreq set for generate's sweep
     double    k;
-//  double    w_out; // angular velocity
+    double    w_out; // angular velocity
     uint32_t  min_periodes = 10; // max 20
     uint32_t  size; // number of samples varies with number of periodes
     signal_e type = eSignalSine;
@@ -403,7 +403,7 @@ int main(int argc, char *argv[]) {
 
 
 
-  //      w_out = frequency[ fr ] * 2 * M_PI; // omega - angular velocity
+        w_out = frequency[ fr ] * 2 * M_PI; // omega - angular velocity
 
        /**
         * At first the signal generator generates a signal before the
