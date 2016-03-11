@@ -63,6 +63,7 @@
         $('.app-item').unbind('mouseenter');
         $('.app-item').unbind('mouseleave');
         $('#main-container').empty();
+        $('#main-container').append('<ul class="paging" id="list-container"></ul>');
 
         $('#list-container').empty();
         for (var i = 0; i < apps.length; i++) {
@@ -107,7 +108,7 @@
     var clickApp = function(e) {
         var key = parseInt($(this).attr('key')) * 1;
         if (key < default_apps.length)
-            window.open(apps[key].url, '_blank');
+            window.location = success_url;
         else {
             e.preventDefault();
             licVerify(apps[key].url);
@@ -143,7 +144,7 @@
     var licVerify = function(success_url) {
         var post_uri = 'http://store.redpitaya.com/upload_id_file/';
         var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
-        $('#loader-desc').html('Preparing application to run<br/>Please allow popups for this page');
+        $('#loader-desc').html('Preparing application to run');
         $('body').removeClass('loaded');
         // TODO: uncomment
         // if (!isOnline) {
@@ -182,30 +183,30 @@
                                         .done(function(msg) {})
                                         .fail(function(msg) {
                                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                            window.open(success_url, '_blank');
+                                            window.location = success_url;
                                         });
                                 })
                                 .fail(function(msg) {
                                     console.log("LIC: ERR2");
                                     setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                    window.open(success_url, '_blank');
+                                    window.location = success_url;
                                 });
                         } else {
                             console.log("LIC: ERR3");
                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                            window.open(success_url, '_blank');
+                            window.location = success_url;
                         }
                     })
                     .fail(function(msg) {
                         console.log("LIC: ERR4");
                         setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                        window.open(success_url, '_blank');
+                        window.location = success_url;
                     });
             })
             .fail(function(msg) {
                 console.log("LIC: ERR4");
                 setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                window.open(success_url, '_blank');
+                window.location = success_url;
             });
     }
 

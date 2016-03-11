@@ -11,9 +11,13 @@ body {
 
 body {
     font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
-    background: #fff;
+    background: #000;
     color: #CCC;
     margin: 0;
+    background-image: url('../assets/images/backgr-01.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
 }
 
 a {
@@ -80,7 +84,6 @@ a:visited {
 }
 
 #main-container {
-    background-color: #1D1D1D;
     margin: 10px 20%;
     height: 90%;
 }
@@ -109,7 +112,9 @@ a:visited {
     margin: 10px;
 }
 
-.app-name {}
+.app-name {
+    font-size:15px;
+}
 
 .paging {
     margin-bottom: 0px;
