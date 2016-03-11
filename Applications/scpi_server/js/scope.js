@@ -201,12 +201,16 @@
 	          $('#OSC_RUN').hide();
 	          $('#OSC_STOP').css('display','block');
 	          OSC.running = true;
+	          $('#label-is-runnung').hide();
+	          $('#label-is-not-runnung').show();
 	        }
 	        else {
   		  	  console.log("Stopped");
 	          $('#OSC_STOP').hide();
 	          $('#OSC_RUN').show();
 	          OSC.running = false;
+	          $('#label-is-not-runnung').hide();
+	          $('#label-is-runnung').show();
 	        }
 	      }
 	   }
