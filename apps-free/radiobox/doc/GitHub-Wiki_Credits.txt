@@ -1,0 +1,9 @@
+### Credits
+
+**the list of fames**
+
+***
+
+* the RedPitaya team
+* DD8UU for pointing me to RedPitaya and asking for more features
+* Nils Roos for giving support

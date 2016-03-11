@@ -1,0 +1,683 @@
+<!-- $Id$
+ *
+ * Red Pitaya Oscilloscope client
+ *
+ * Author: DF4IAH <espero7757@gmx.net>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+  <meta http-equiv="cache-control" content="no-cache"></meta>
+  <meta http-equiv="expires" content="0"></meta>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Red Pitaya</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/radiobox.css">
+  <script src="js/jquery-2.1.3.js"></script>
+  <script src="js/jquery-ui.js"></script>
+  <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/jquery.flot.js"></script>
+  <script src="js/fastclick.min.js"></script>
+  <script src="js/jquery.simulate.js"></script>
+  <script src="js/radiobox.js"></script>
+</head>
+<body>
+  <div class="full-content">
+    <div class="container-fluid">
+      <div class="navbar navbar-inverse" role="navigation">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">T</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">
+              <img class="back-btn" src="img/arrow_nav_left.png">
+            </a>
+            <img class="logo" width=110 src="img/logo.png">
+          </div>
+
+          <div class="navbar-brand">
+            <span style="padding-left: 100px; padding-right: 25px; white-space: nowrap; font-size: 150%; color: #e0d0b0;">RadioBox</span> by DF4IAH and DD8UU
+          </div>
+
+          <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+
+              <li class="dropdown">
+                <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                  <li><a id="" href="#" data-toggle="modal" data-target="#myModal">CON. MATRIX</a></li>
+                  <li><a id="" href="#" data-toggle="modal" data-target="#myModal">CALIBRATION</a></li>
+                </ul>
+              </li>
+              <li>
+                <a id="RB_RUN" href="#" style="">RUN</a>
+                <a id="RB_STOP" href="#" style="display:none;">STOP</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal export-->
+      <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title">Export</h4>
+            </div>
+            <div class="modal-body">
+              Content
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal settings-->
+      <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title">Settings</h4>
+            </div>
+            <div class="modal-body">
+              Content settings
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="main" class="bg-grad" >
+      <form class="form-horizontal" role="form" onsubmit="return false;">
+        <div style="height:20px;"></div>
+
+        <table class="table-toolbox">
+        <tr>
+        <td class="table-header" colspan="3">
+          Connection matrix
+        </td>
+        </tr>
+        <tr>
+        <td class="table-header">
+          <span style="font-size: 70%">RF Output 1 (SMA)</span>
+        </td>
+        <td class="table-header">
+          <span style="font-size: 70%">RF Output 2 (SMA)</span>
+        </td>
+        <td class="table-header">
+          <span style="font-size: 70%">RB Scope LEDs</span>
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="rfout1_csp" class="form-group">
+          <label for="rfout1_csp_s" class="col-xs-5 control-label">connect source point:</label>
+            <div class="col-xs-6">
+              <select id="rfout1_csp_s" class="form-control form-bg-rfout1-csp">
+                <option value="0">silence</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="4">TX_MUXIN_MIX in &nbsp; (audio signal)</option>
+                <option value="5">TX_MOD_ADC in &nbsp; (audio amplifier)</option>
+                <option value="6">TX_MOD_ADC out &nbsp; (audio amplifier)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2 &nbsp; (amplitude)</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2 &nbsp; (amplitude)</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3 &nbsp; (offset)</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3 &nbsp; (offset)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="16">TX_MOD_CIC I output &nbsp; (low pass)</option>
+                <option value="17">TX_MOD_CIC Q output &nbsp; (low pass)</option>
+                <option value="18">TX_MOD_FIR I output &nbsp; (voice band)</option>
+                <option value="19">TX_MOD_FIR Q output &nbsp; (voice band)</option>
+                <option value="20">TX_CAR_CIC I output &nbsp; (41.664 MHz interpolator)</option>
+                <option value="21">TX_CAR_CIC Q output &nbsp; (41.664 MHz interpolator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
+                <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="32">RX_CAR_OSC_I output</option>
+                <option value="33">RX_CAR_OSC_Q output</option>
+                <option value="34">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
+                <option value="35">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
+                <option value="36">RX_CAR_5M_I output &nbsp; (5 MHz decimation)</option>
+                <option value="37">RX_CAR_5M_Q output &nbsp; (5 MHz decimation)</option>
+                <option value="38">RX_CAR_200K_I output &nbsp; (200 kHz decimation)</option>
+                <option value="39">RX_CAR_200K_Q output &nbsp; (200 kHz decimation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_8K_I output &nbsp; (8 kHz decimation)</option>
+                <option value="49">RX_MOD_8K_Q output &nbsp; (8 kHz decimation)</option>
+                <option value="50">RX_MOD_BP1_I output &nbsp; (voice band)</option>
+                <option value="51">RX_MOD_BP1_Q output &nbsp; (voice band)</option>
+                <option value="52">RX_MOD_OSC_I output</option>
+                <option value="53">RX_MOD_OSC_Q output</option>
+                <option value="54">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="55">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="56">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="57">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="58">RX_MOD_BP2_I output &nbsp; (weaver & CIC comp.)</option>
+                <option value="59">RX_MOD_BP2_Q output &nbsp; (weaver & CIC comp.)</option>
+                <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="66">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="67">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option value="68">RX_AFC_CORDIC_PHS_PREV output &nbsp; (AFC previous phase)</option>
+                <option value="69">RX_AFC_CORDIC_PHS_DIFF output &nbsp; (AFC phase difference)</option>
+                <option value="70">RX_AFC_INC_REG output &nbsp; (AFC increment correction)</option>
+                <option value="71">RX_SUM_INC_REG output &nbsp; (SUM increment correction)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
+                <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+        <div id="rfout2_csp" class="form-group">
+          <label for="rfout2_csp_s" class="col-xs-5 control-label">connect source point:</label>
+            <div class="col-xs-6">
+              <select id="rfout2_csp_s" class="form-control form-bg-rfout2-csp">
+                <option value="0">silence</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="4">TX_MUXIN_MIX in &nbsp; (audio signal)</option>
+                <option value="5">TX_MOD_ADC in &nbsp; (audio amplifier)</option>
+                <option value="6">TX_MOD_ADC out &nbsp; (audio amplifier)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2 &nbsp; (amplitude)</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2 &nbsp; (amplitude)</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3 &nbsp; (offset)</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3 &nbsp; (offset)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="16">TX_MOD_CIC I output &nbsp; (low pass)</option>
+                <option value="17">TX_MOD_CIC Q output &nbsp; (low pass)</option>
+                <option value="18">TX_MOD_FIR I output &nbsp; (voice band)</option>
+                <option value="19">TX_MOD_FIR Q output &nbsp; (voice band)</option>
+                <option value="20">TX_CAR_CIC I output &nbsp; (41.664 MHz interpolator)</option>
+                <option value="21">TX_CAR_CIC Q output &nbsp; (41.664 MHz interpolator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
+                <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="32">RX_CAR_OSC_I output</option>
+                <option value="33">RX_CAR_OSC_Q output</option>
+                <option value="34">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
+                <option value="35">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
+                <option value="36">RX_CAR_5M_I output &nbsp; (5 MHz decimation)</option>
+                <option value="37">RX_CAR_5M_Q output &nbsp; (5 MHz decimation)</option>
+                <option value="38">RX_CAR_200K_I output &nbsp; (200 kHz decimation)</option>
+                <option value="39">RX_CAR_200K_Q output &nbsp; (200 kHz decimation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_8K_I output &nbsp; (8 kHz decimation)</option>
+                <option value="49">RX_MOD_8K_Q output &nbsp; (8 kHz decimation)</option>
+                <option value="50">RX_MOD_BP1_I output &nbsp; (voice band)</option>
+                <option value="51">RX_MOD_BP1_Q output &nbsp; (voice band)</option>
+                <option value="52">RX_MOD_OSC_I output</option>
+                <option value="53">RX_MOD_OSC_Q output</option>
+                <option value="54">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="55">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="56">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="57">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="58">RX_MOD_BP2_I output &nbsp; (weaver & CIC comp.)</option>
+                <option value="59">RX_MOD_BP2_Q output &nbsp; (weaver & CIC comp.)</option>
+                <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="66">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="67">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option value="68">RX_AFC_CORDIC_PHS_PREV output &nbsp; (AFC previous phase)</option>
+                <option value="69">RX_AFC_CORDIC_PHS_DIFF output &nbsp; (AFC phase difference)</option>
+                <option value="70">RX_AFC_INC_REG output &nbsp; (AFC increment correction)</option>
+                <option value="71">RX_SUM_INC_REG output &nbsp; (SUM increment correction)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
+                <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+        <div id="rbled_csp" class="form-group">
+          <label for="rbled_csp_s" class="col-xs-5 control-label">connect source point:</label>
+            <div class="col-xs-6">
+              <select id="rbled_csp_s" class="form-control form-bg-rbled-csp">
+                <option value="0">disabled</option>
+                <option value="1">LEDS all off</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="4">TX_MUXIN_MIX in &nbsp; (audio signal)</option>
+                <option value="5">TX_MOD_ADC in &nbsp; (audio amplifier)</option>
+                <option value="6">TX_MOD_ADC out &nbsp; (audio amplifier)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2 &nbsp; (amplitude)</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2 &nbsp; (amplitude)</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3 &nbsp; (offset)</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3 &nbsp; (offset)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="16">TX_MOD_CIC I output &nbsp; (low pass)</option>
+                <option value="17">TX_MOD_CIC Q output &nbsp; (low pass)</option>
+                <option value="18">TX_MOD_FIR I output &nbsp; (voice band)</option>
+                <option value="19">TX_MOD_FIR Q output &nbsp; (voice band)</option>
+                <option value="20">TX_CAR_CIC I output &nbsp; (41.664 MHz interpolator)</option>
+                <option value="21">TX_CAR_CIC Q output &nbsp; (41.664 MHz interpolator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
+                <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="32">RX_CAR_OSC_I output</option>
+                <option value="33">RX_CAR_OSC_Q output</option>
+                <option value="34">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
+                <option value="35">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
+                <option value="36">RX_CAR_5M_I output &nbsp; (5 MHz decimation)</option>
+                <option value="37">RX_CAR_5M_Q output &nbsp; (5 MHz decimation)</option>
+                <option value="38">RX_CAR_200K_I output &nbsp; (200 kHz decimation)</option>
+                <option value="39">RX_CAR_200K_Q output &nbsp; (200 kHz decimation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_8K_I output &nbsp; (8 kHz decimation)</option>
+                <option value="49">RX_MOD_8K_Q output &nbsp; (8 kHz decimation)</option>
+                <option value="50">RX_MOD_BP1_I output &nbsp; (voice band)</option>
+                <option value="51">RX_MOD_BP1_Q output &nbsp; (voice band)</option>
+                <option value="52">RX_MOD_OSC_I output</option>
+                <option value="53">RX_MOD_OSC_Q output</option>
+                <option value="54">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="55">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="56">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="57">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="58">RX_MOD_BP2_I output &nbsp; (weaver & CIC comp.)</option>
+                <option value="59">RX_MOD_BP2_Q output &nbsp; (weaver & CIC comp.)</option>
+                <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="66">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="67">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option value="68">RX_AFC_CORDIC_PHS_PREV output &nbsp; (AFC previous phase)</option>
+                <option value="69">RX_AFC_CORDIC_PHS_DIFF output &nbsp; (AFC phase difference)</option>
+                <option value="70">RX_AFC_INC_REG output &nbsp; (AFC increment correction)</option>
+                <option value="71">RX_SUM_INC_REG output &nbsp; (SUM increment correction)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
+                <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        </tr>
+        <tr>
+        <td>
+          <div id="rfout1_term" class="form-group">
+            <label for="rfout1_term_s" class="col-xs-5 control-label">line termination:</label>
+            <div class="col-xs-6">
+              <fieldset>
+                <input type="radio" name="rfout1_term_s_rb" id="rfout1_term_s" value="1" /><label for="rfout1_term_s">&nbsp;&nbsp;50 ohms&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input type="radio" name="rfout1_term_s_rb" id="rfout1_term_s_0" value="0" checked="checked" /><label for="rfout1_term_s_0">&nbsp;&nbsp;open ended&nbsp;&nbsp;&nbsp;&nbsp;</label>
+              </fieldset>
+              <span id="apply_rfout1_csp" class="input-group-btn" _style="visibility:hidden">
+                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+              </span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div id="rfout2_term" class="form-group">
+            <label for="rfout2_term_s" class="col-xs-5 control-label">line termination:</label>
+            <div class="col-xs-6">
+              <fieldset>
+                <input type="radio" name="rfout2_term_s_rb" id="rfout2_term_s" value="1" /><label for="rfout2_term_s">&nbsp;&nbsp;50 ohms&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input type="radio" name="rfout2_term_s_rb" id="rfout2_term_s_0" value="0" checked="checked" /><label for="rfout2_term_s_0">&nbsp;&nbsp;open ended&nbsp;&nbsp;&nbsp;&nbsp;</label>
+              </fieldset>
+              <span id="apply_rfout2_csp" class="input-group-btn" _style="visibility:hidden">
+                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+              </span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div id="rbled_csp_b" class="form-group">
+            <label for="rbled_csp_b" class="col-xs-5 control-label">&nbsp;</label>
+            <div class="col-xs-6">
+              <span id="apply_rbled_csp" class="input-group-btn" _style="visibility:hidden">
+                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+              </span>
+            </div>
+          </div>
+        </td>
+        </tr>
+        <tr>
+        <td colspan="3"><hr></td>
+        </tr>
+        <tr>
+        <td class="table-header" colspan="3">
+          Receiver
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="rx_car_osc_qrg" class="form-group">
+          <label for="rx_car_osc_qrg_f" class="col-xs-5 control-label">RX_CAR_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="rx_car_osc_qrg_f" value="0" class="form-control form-bg-rx-car-osc-qrg" autocomplete="off" />
+            <span id="apply_rx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="rx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="rx_muxin_src" class="form-group">
+          <label for="rx_muxin_src_s" class="col-xs-5 control-label">RX input:</label>
+          <div class="col-xs-6">
+            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src">
+              <option value="0">(none)</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="1">RF Input 1</option>
+              <option value="2">RF Input 2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">EXP AI0</option>
+              <option value="5">EXP AI1</option>
+              <option value="6">EXP AI2</option>
+              <option value="7">EXP AI3</option>
+            </select>
+            <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="rx_modtyp" class="form-group">
+          <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
+          <div class="col-xs-6">
+            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+              <option value="0">(off)</option>
+              <option value="2">USB</option>
+              <option value="3">LSB</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">AM-Envelope</option>
+              <option value="5">AM-Sync-USB</option>
+              <option value="6">AM-Sync-LSB</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="7">FM</option>
+              <option value="8">PM</option>
+            </select>
+            <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="3">
+        <div id="rx_muxin_gain" class="form-group">
+        <label for="rx_muxin_gain_f" class="col-xs-2 control-label">RX MUX input gain:</label>
+          <div class="col-xs-9">
+            <input type="range" id="rx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
+            <span id="apply_rx_muxin_gain" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+
+        <td colspan="3"><hr></td>
+        </tr>
+        <tr>
+        <td class="table-header" colspan="3">
+          Transmitter
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="tx_car_osc_qrg" class="form-group">
+          <label for="tx_car_osc_qrg_f" class="col-xs-5 control-label">TX_CAR_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_car_osc_qrg_f" value="0" class="form-control form-bg-tx-car-osc-qrg" autocomplete="off" />
+            <span id="apply_tx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="tx_amp_rf_gain" class="form-group">
+          <label for="tx_amp_rf_gain_f" class="col-xs-5 control-label">AMP_RF amplitude:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_amp_rf_gain_f" value="0" class="form-control form-bg-tx-amp-rf-gain" autocomplete="off" />
+            <span id="apply_tx_amp_rf_gain" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_amp_rf_gain_units" class="col-xs-3" style="padding: 7px 0 0;">mV &nbsp;(Vpp)</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="tx_modsrc" class="form-group">
+          <label for="tx_modsrc_s" class="col-xs-5 control-label">TX mod. source:</label>
+          <div class="col-xs-6">
+            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc">
+              <option value="0">(none)</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="15">TX_MOD_OSC</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="1">RF Input 1</option>
+              <option value="2">RF Input 2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">EXP AI0</option>
+              <option value="5">EXP AI1</option>
+              <option value="6">EXP AI2</option>
+              <option value="7">EXP AI3</option>
+            </select>
+            <span id="apply_tx_modsrc" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="tx_modtyp" class="form-group">
+          <label for="tx_modtyp_s" class="col-xs-5 control-label">TX mod. type:</label>
+          <div class="col-xs-6">
+            <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+              <option value="0">(off)</option>
+              <option value="2">USB</option>
+              <option value="3">LSB</option>
+              <option value="4">AM</option>
+              <option value="7">FM</option>
+              <option value="8">PM</option>
+            </select>
+            <span id="apply_tx_modtyp" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        <div id="tx_mod_osc_qrg" class="form-group">
+        <label for="tx_mod_osc_qrg_f" class="col-xs-5 control-label">TX_MOD_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_mod_osc_qrg_f" value="0" class="form-control form-bg-tx-mod-osc-qrg" autocomplete="off" disabled="disabled" />
+            <span id="apply_tx_mod_osc_qrg" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_mod_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="tx_mod_osc_mag" class="form-group">
+          <label for="tx_mod_osc_mag_f" class="col-xs-5 control-label">TX Modulator magnitude:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_mod_osc_mag_f" value="0" class="form-control form-bg-tx-mod-osc-mag" autocomplete="off" disabled="disabled" />
+            <span id="apply_tx_mod_osc_mag" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_mod_osc_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
+        </div>
+        </td>
+
+        <td>
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="3">
+        <div id="tx_muxin_gain" class="form-group">
+        <label for="tx_muxin_gain_f" class="col-xs-2 control-label">TX Mic gain:</label>
+          <div class="col-xs-9">
+            <input type="range" id="tx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-tx-muxin-gain" disabled="disabled" />
+            <span id="apply_tx_muxin_gain" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+        </table>
+
+      </form>
+    </div>
+
+  </div>
+
+  <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_err_label">Application error</h4>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-close-modal" id="btn_ignore">Ignore</button>
+          <button type="button" class="btn btn-default" id="btn_retry_get">Retry</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+        </div>
+        <div class="modal-body">
+          The <strong><span class="app-id"></span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br />
+          Do you want to switch to newly started application or to restart <strong><span class="app-id"></span></strong>?
+        </div>
+        <div class="modal-footer">
+          <a href="/" class="btn btn-danger pull-left">Exit app</a>
+          <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

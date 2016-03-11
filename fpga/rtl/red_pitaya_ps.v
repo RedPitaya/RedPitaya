@@ -41,6 +41,8 @@
  */
 
 module red_pitaya_ps (
+  // System
+  input              dcm_locked         ,
   // PS peripherals
   inout   [ 54-1: 0] FIXED_IO_mio       ,
   inout              FIXED_IO_ps_clk    ,
@@ -48,6 +50,8 @@ module red_pitaya_ps (
   inout              FIXED_IO_ps_srstb  ,
   inout              FIXED_IO_ddr_vrn   ,
   inout              FIXED_IO_ddr_vrp   ,
+  // Interrupts
+  input   [ 15-1: 0] irq_f2p            ,
   // DDR
   inout   [ 15-1: 0] DDR_addr           ,
   inout   [  3-1: 0] DDR_ba             ,
@@ -91,7 +95,16 @@ module red_pitaya_ps (
   input   [  4-1: 0] axi1_wlen_i  , axi0_wlen_i  ,  // system write burst length
   input              axi1_wfixed_i, axi0_wfixed_i,  // system write burst type (fixed / incremental)
   output             axi1_werr_o  , axi0_werr_o  ,  // system write error
-  output             axi1_wrdy_o  , axi0_wrdy_o     // system write ready
+  output             axi1_wrdy_o  , axi0_wrdy_o  ,  // system write ready
+  // XADC_AXIS
+  output             xadc_axis_aclk     ,  // XADC AXI-S clock
+  output  [ 16-1: 0] xadc_axis_tdata    ,  // XADC AXI-S databus
+  output  [  5-1: 0] xadc_axis_tid      ,  // XADC AXI-S AD-channel ID for current data
+  input              xadc_axis_tready   ,  // XADC AXI-S ready
+  output             xadc_axis_tvalid   ,  // XADC AXI-S tvalid
+  // AXI GP1 LEDs
+  output             LED_drive_o        ,  // AXI protocol checker display output, overdrive HK and RB LED output
+  output  [  8-1: 0] LED_data_o            // AXI protocol checker display output, LEDs to be lighted
 );
 
 //------------------------------------------------------------------------------
@@ -338,7 +351,14 @@ assign gp0_maxi_aclk  =  axi0_clk_i ;
 always @(posedge axi0_clk_i)
 gp0_maxi_arstn <= fclk_rstn[0];
 
+//------------------------------------------------------------------------------
+// PS LEDs_gpio
 
+wire [   8: 0]  gp1_gpio_leds;
+assign gp1_gpio_leds = 9'b0;  // TODO: remove me, when PS supports it again
+
+assign LED_drive_o = gp1_gpio_leds[  8] ;
+assign LED_data_o  = gp1_gpio_leds[7:0] ;
 
 //------------------------------------------------------------------------------
 // PS STUB
@@ -351,13 +371,6 @@ BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
 BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
 
 system_wrapper system_i (
-  // MIO
-  .FIXED_IO_mio      (FIXED_IO_mio     ),
-  .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
-  .FIXED_IO_ps_porb  (FIXED_IO_ps_porb ),
-  .FIXED_IO_ps_srstb (FIXED_IO_ps_srstb),
-  .FIXED_IO_ddr_vrn  (FIXED_IO_ddr_vrn ),
-  .FIXED_IO_ddr_vrp  (FIXED_IO_ddr_vrp ),
   // DDR
   .DDR_addr          (DDR_addr         ),
   .DDR_ba            (DDR_ba           ),
@@ -383,92 +396,111 @@ system_wrapper system_i (
   .FCLK_RESET1_N     (fclk_rstn[1]     ),
   .FCLK_RESET2_N     (fclk_rstn[2]     ),
   .FCLK_RESET3_N     (fclk_rstn[3]     ),
+  // MIO
+  .FIXED_IO_mio      (FIXED_IO_mio     ),
+  .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
+  .FIXED_IO_ps_porb  (FIXED_IO_ps_porb ),
+  .FIXED_IO_ps_srstb (FIXED_IO_ps_srstb),
+  .FIXED_IO_ddr_vrn  (FIXED_IO_ddr_vrn ),
+  .FIXED_IO_ddr_vrp  (FIXED_IO_ddr_vrp ),
+  // PS input interrupts
+  .IRQ_F2P_xlconcat  (irq_f2p          ),
+  // GP0
+  .M_AXI_GP0_ACLK    (axi0_clk_i       ),
+  .M_AXI_GP0_arvalid (gp0_maxi_arvalid ),  // out
+  .M_AXI_GP0_awvalid (gp0_maxi_awvalid ),  // out
+  .M_AXI_GP0_bready  (gp0_maxi_bready  ),  // out
+  .M_AXI_GP0_rready  (gp0_maxi_rready  ),  // out
+  .M_AXI_GP0_wlast   (gp0_maxi_wlast   ),  // out
+  .M_AXI_GP0_wvalid  (gp0_maxi_wvalid  ),  // out
+  .M_AXI_GP0_arid    (gp0_maxi_arid    ),  // out 12
+  .M_AXI_GP0_awid    (gp0_maxi_awid    ),  // out 12
+  .M_AXI_GP0_wid     (gp0_maxi_wid     ),  // out 12
+  .M_AXI_GP0_arburst (gp0_maxi_arburst ),  // out 2
+  .M_AXI_GP0_arlock  (gp0_maxi_arlock  ),  // out 2
+  .M_AXI_GP0_arsize  (gp0_maxi_arsize  ),  // out 3
+  .M_AXI_GP0_awburst (gp0_maxi_awburst ),  // out 2
+  .M_AXI_GP0_awlock  (gp0_maxi_awlock  ),  // out 2
+  .M_AXI_GP0_awsize  (gp0_maxi_awsize  ),  // out 3
+  .M_AXI_GP0_arprot  (gp0_maxi_arprot  ),  // out 3
+  .M_AXI_GP0_awprot  (gp0_maxi_awprot  ),  // out 3
+  .M_AXI_GP0_araddr  (gp0_maxi_araddr  ),  // out 32
+  .M_AXI_GP0_awaddr  (gp0_maxi_awaddr  ),  // out 32
+  .M_AXI_GP0_wdata   (gp0_maxi_wdata   ),  // out 32
+  .M_AXI_GP0_arcache (gp0_maxi_arcache ),  // out 4
+  .M_AXI_GP0_arlen   (gp0_maxi_arlen   ),  // out 4
+  .M_AXI_GP0_arqos   (gp0_maxi_arqos   ),  // out 4
+  .M_AXI_GP0_awcache (gp0_maxi_awcache ),  // out 4
+  .M_AXI_GP0_awlen   (gp0_maxi_awlen   ),  // out 4
+  .M_AXI_GP0_awqos   (gp0_maxi_awqos   ),  // out 4
+  .M_AXI_GP0_wstrb   (gp0_maxi_wstrb   ),  // out 4
+  .M_AXI_GP0_arready (gp0_maxi_arready ),  // in
+  .M_AXI_GP0_awready (gp0_maxi_awready ),  // in
+  .M_AXI_GP0_bvalid  (gp0_maxi_bvalid  ),  // in
+  .M_AXI_GP0_rlast   (gp0_maxi_rlast   ),  // in
+  .M_AXI_GP0_rvalid  (gp0_maxi_rvalid  ),  // in
+  .M_AXI_GP0_wready  (gp0_maxi_wready  ),  // in
+  .M_AXI_GP0_bid     (gp0_maxi_bid     ),  // in 12
+  .M_AXI_GP0_rid     (gp0_maxi_rid     ),  // in 12
+  .M_AXI_GP0_bresp   (gp0_maxi_bresp   ),  // in 2
+  .M_AXI_GP0_rresp   (gp0_maxi_rresp   ),  // in 2
+  .M_AXI_GP0_rdata   (gp0_maxi_rdata   ),  // in 32
+  // HP0                                  // HP1
+  .S_AXI_HP0_arready (hp0_saxi_arready ),  .S_AXI_HP1_arready (hp1_saxi_arready ), // out
+  .S_AXI_HP0_awready (hp0_saxi_awready ),  .S_AXI_HP1_awready (hp1_saxi_awready ), // out
+  .S_AXI_HP0_bvalid  (hp0_saxi_bvalid  ),  .S_AXI_HP1_bvalid  (hp1_saxi_bvalid  ), // out
+  .S_AXI_HP0_rlast   (hp0_saxi_rlast   ),  .S_AXI_HP1_rlast   (hp1_saxi_rlast   ), // out
+  .S_AXI_HP0_rvalid  (hp0_saxi_rvalid  ),  .S_AXI_HP1_rvalid  (hp1_saxi_rvalid  ), // out
+  .S_AXI_HP0_wready  (hp0_saxi_wready  ),  .S_AXI_HP1_wready  (hp1_saxi_wready  ), // out
+  .S_AXI_HP0_bresp   (hp0_saxi_bresp   ),  .S_AXI_HP1_bresp   (hp1_saxi_bresp   ), // out 2
+  .S_AXI_HP0_rresp   (hp0_saxi_rresp   ),  .S_AXI_HP1_rresp   (hp1_saxi_rresp   ), // out 2
+  .S_AXI_HP0_bid     (hp0_saxi_bid     ),  .S_AXI_HP1_bid     (hp1_saxi_bid     ), // out 6
+  .S_AXI_HP0_rid     (hp0_saxi_rid     ),  .S_AXI_HP1_rid     (hp1_saxi_rid     ), // out 6
+  .S_AXI_HP0_rdata   (hp0_saxi_rdata   ),  .S_AXI_HP1_rdata   (hp1_saxi_rdata   ), // out 64
+  .S_AXI_HP0_aclk    (hp0_saxi_aclk    ),  .S_AXI_HP1_aclk    (hp1_saxi_aclk    ), // in
+  .S_AXI_HP0_arvalid (hp0_saxi_arvalid ),  .S_AXI_HP1_arvalid (hp1_saxi_arvalid ), // in
+  .S_AXI_HP0_awvalid (hp0_saxi_awvalid ),  .S_AXI_HP1_awvalid (hp1_saxi_awvalid ), // in
+  .S_AXI_HP0_bready  (hp0_saxi_bready  ),  .S_AXI_HP1_bready  (hp1_saxi_bready  ), // in
+  .S_AXI_HP0_rready  (hp0_saxi_rready  ),  .S_AXI_HP1_rready  (hp1_saxi_rready  ), // in
+  .S_AXI_HP0_wlast   (hp0_saxi_wlast   ),  .S_AXI_HP1_wlast   (hp1_saxi_wlast   ), // in
+  .S_AXI_HP0_wvalid  (hp0_saxi_wvalid  ),  .S_AXI_HP1_wvalid  (hp1_saxi_wvalid  ), // in
+  .S_AXI_HP0_arburst (hp0_saxi_arburst ),  .S_AXI_HP1_arburst (hp1_saxi_arburst ), // in 2
+  .S_AXI_HP0_arlock  (hp0_saxi_arlock  ),  .S_AXI_HP1_arlock  (hp1_saxi_arlock  ), // in 2
+  .S_AXI_HP0_arsize  (hp0_saxi_arsize  ),  .S_AXI_HP1_arsize  (hp1_saxi_arsize  ), // in 3
+  .S_AXI_HP0_awburst (hp0_saxi_awburst ),  .S_AXI_HP1_awburst (hp1_saxi_awburst ), // in 2
+  .S_AXI_HP0_awlock  (hp0_saxi_awlock  ),  .S_AXI_HP1_awlock  (hp1_saxi_awlock  ), // in 2
+  .S_AXI_HP0_awsize  (hp0_saxi_awsize  ),  .S_AXI_HP1_awsize  (hp1_saxi_awsize  ), // in 3
+  .S_AXI_HP0_arprot  (hp0_saxi_arprot  ),  .S_AXI_HP1_arprot  (hp1_saxi_arprot  ), // in 3
+  .S_AXI_HP0_awprot  (hp0_saxi_awprot  ),  .S_AXI_HP1_awprot  (hp1_saxi_awprot  ), // in 3
+  .S_AXI_HP0_araddr  (hp0_saxi_araddr  ),  .S_AXI_HP1_araddr  (hp1_saxi_araddr  ), // in 32
+  .S_AXI_HP0_awaddr  (hp0_saxi_awaddr  ),  .S_AXI_HP1_awaddr  (hp1_saxi_awaddr  ), // in 32
+  .S_AXI_HP0_arcache (hp0_saxi_arcache ),  .S_AXI_HP1_arcache (hp1_saxi_arcache ), // in 4
+  .S_AXI_HP0_arlen   (hp0_saxi_arlen   ),  .S_AXI_HP1_arlen   (hp1_saxi_arlen   ), // in 4
+  .S_AXI_HP0_arqos   (hp0_saxi_arqos   ),  .S_AXI_HP1_arqos   (hp1_saxi_arqos   ), // in 4
+  .S_AXI_HP0_awcache (hp0_saxi_awcache ),  .S_AXI_HP1_awcache (hp1_saxi_awcache ), // in 4
+  .S_AXI_HP0_awlen   (hp0_saxi_awlen   ),  .S_AXI_HP1_awlen   (hp1_saxi_awlen   ), // in 4
+  .S_AXI_HP0_awqos   (hp0_saxi_awqos   ),  .S_AXI_HP1_awqos   (hp1_saxi_awqos   ), // in 4
+  .S_AXI_HP0_arid    (hp0_saxi_arid    ),  .S_AXI_HP1_arid    (hp1_saxi_arid    ), // in 6
+  .S_AXI_HP0_awid    (hp0_saxi_awid    ),  .S_AXI_HP1_awid    (hp1_saxi_awid    ), // in 6
+  .S_AXI_HP0_wid     (hp0_saxi_wid     ),  .S_AXI_HP1_wid     (hp1_saxi_wid     ), // in 6
+  .S_AXI_HP0_wdata   (hp0_saxi_wdata   ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata   ), // in 64
+  .S_AXI_HP0_wstrb   (hp0_saxi_wstrb   ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb   ), // in 8
   // XADC
   .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
   .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
   .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
   .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
   .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
-  // GP0
-  .M_AXI_GP0_ACLK    (axi0_clk_i),
-  .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
-  .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
-  .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
-  .M_AXI_GP0_rready  (gp0_maxi_rready ),  // out
-  .M_AXI_GP0_wlast   (gp0_maxi_wlast  ),  // out
-  .M_AXI_GP0_wvalid  (gp0_maxi_wvalid ),  // out
-  .M_AXI_GP0_arid    (gp0_maxi_arid   ),  // out 12
-  .M_AXI_GP0_awid    (gp0_maxi_awid   ),  // out 12
-  .M_AXI_GP0_wid     (gp0_maxi_wid    ),  // out 12
-  .M_AXI_GP0_arburst (gp0_maxi_arburst),  // out 2
-  .M_AXI_GP0_arlock  (gp0_maxi_arlock ),  // out 2
-  .M_AXI_GP0_arsize  (gp0_maxi_arsize ),  // out 3
-  .M_AXI_GP0_awburst (gp0_maxi_awburst),  // out 2
-  .M_AXI_GP0_awlock  (gp0_maxi_awlock ),  // out 2
-  .M_AXI_GP0_awsize  (gp0_maxi_awsize ),  // out 3
-  .M_AXI_GP0_arprot  (gp0_maxi_arprot ),  // out 3
-  .M_AXI_GP0_awprot  (gp0_maxi_awprot ),  // out 3
-  .M_AXI_GP0_araddr  (gp0_maxi_araddr ),  // out 32
-  .M_AXI_GP0_awaddr  (gp0_maxi_awaddr ),  // out 32
-  .M_AXI_GP0_wdata   (gp0_maxi_wdata  ),  // out 32
-  .M_AXI_GP0_arcache (gp0_maxi_arcache),  // out 4
-  .M_AXI_GP0_arlen   (gp0_maxi_arlen  ),  // out 4
-  .M_AXI_GP0_arqos   (gp0_maxi_arqos  ),  // out 4
-  .M_AXI_GP0_awcache (gp0_maxi_awcache),  // out 4
-  .M_AXI_GP0_awlen   (gp0_maxi_awlen  ),  // out 4
-  .M_AXI_GP0_awqos   (gp0_maxi_awqos  ),  // out 4
-  .M_AXI_GP0_wstrb   (gp0_maxi_wstrb  ),  // out 4
-  .M_AXI_GP0_arready (gp0_maxi_arready),  // in
-  .M_AXI_GP0_awready (gp0_maxi_awready),  // in
-  .M_AXI_GP0_bvalid  (gp0_maxi_bvalid ),  // in
-  .M_AXI_GP0_rlast   (gp0_maxi_rlast  ),  // in
-  .M_AXI_GP0_rvalid  (gp0_maxi_rvalid ),  // in
-  .M_AXI_GP0_wready  (gp0_maxi_wready ),  // in
-  .M_AXI_GP0_bid     (gp0_maxi_bid    ),  // in 12
-  .M_AXI_GP0_rid     (gp0_maxi_rid    ),  // in 12
-  .M_AXI_GP0_bresp   (gp0_maxi_bresp  ),  // in 2
-  .M_AXI_GP0_rresp   (gp0_maxi_rresp  ),  // in 2
-  .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
-  // HP0                                  // HP1
-  .S_AXI_HP0_arready (hp0_saxi_arready),  .S_AXI_HP1_arready (hp1_saxi_arready), // out
-  .S_AXI_HP0_awready (hp0_saxi_awready),  .S_AXI_HP1_awready (hp1_saxi_awready), // out
-  .S_AXI_HP0_bvalid  (hp0_saxi_bvalid ),  .S_AXI_HP1_bvalid  (hp1_saxi_bvalid ), // out
-  .S_AXI_HP0_rlast   (hp0_saxi_rlast  ),  .S_AXI_HP1_rlast   (hp1_saxi_rlast  ), // out
-  .S_AXI_HP0_rvalid  (hp0_saxi_rvalid ),  .S_AXI_HP1_rvalid  (hp1_saxi_rvalid ), // out
-  .S_AXI_HP0_wready  (hp0_saxi_wready ),  .S_AXI_HP1_wready  (hp1_saxi_wready ), // out
-  .S_AXI_HP0_bresp   (hp0_saxi_bresp  ),  .S_AXI_HP1_bresp   (hp1_saxi_bresp  ), // out 2
-  .S_AXI_HP0_rresp   (hp0_saxi_rresp  ),  .S_AXI_HP1_rresp   (hp1_saxi_rresp  ), // out 2
-  .S_AXI_HP0_bid     (hp0_saxi_bid    ),  .S_AXI_HP1_bid     (hp1_saxi_bid    ), // out 6
-  .S_AXI_HP0_rid     (hp0_saxi_rid    ),  .S_AXI_HP1_rid     (hp1_saxi_rid    ), // out 6
-  .S_AXI_HP0_rdata   (hp0_saxi_rdata  ),  .S_AXI_HP1_rdata   (hp1_saxi_rdata  ), // out 64
-  .S_AXI_HP0_aclk    (hp0_saxi_aclk   ),  .S_AXI_HP1_aclk    (hp1_saxi_aclk   ), // in
-  .S_AXI_HP0_arvalid (hp0_saxi_arvalid),  .S_AXI_HP1_arvalid (hp1_saxi_arvalid), // in
-  .S_AXI_HP0_awvalid (hp0_saxi_awvalid),  .S_AXI_HP1_awvalid (hp1_saxi_awvalid), // in
-  .S_AXI_HP0_bready  (hp0_saxi_bready ),  .S_AXI_HP1_bready  (hp1_saxi_bready ), // in
-  .S_AXI_HP0_rready  (hp0_saxi_rready ),  .S_AXI_HP1_rready  (hp1_saxi_rready ), // in
-  .S_AXI_HP0_wlast   (hp0_saxi_wlast  ),  .S_AXI_HP1_wlast   (hp1_saxi_wlast  ), // in
-  .S_AXI_HP0_wvalid  (hp0_saxi_wvalid ),  .S_AXI_HP1_wvalid  (hp1_saxi_wvalid ), // in
-  .S_AXI_HP0_arburst (hp0_saxi_arburst),  .S_AXI_HP1_arburst (hp1_saxi_arburst), // in 2
-  .S_AXI_HP0_arlock  (hp0_saxi_arlock ),  .S_AXI_HP1_arlock  (hp1_saxi_arlock ), // in 2
-  .S_AXI_HP0_arsize  (hp0_saxi_arsize ),  .S_AXI_HP1_arsize  (hp1_saxi_arsize ), // in 3
-  .S_AXI_HP0_awburst (hp0_saxi_awburst),  .S_AXI_HP1_awburst (hp1_saxi_awburst), // in 2
-  .S_AXI_HP0_awlock  (hp0_saxi_awlock ),  .S_AXI_HP1_awlock  (hp1_saxi_awlock ), // in 2
-  .S_AXI_HP0_awsize  (hp0_saxi_awsize ),  .S_AXI_HP1_awsize  (hp1_saxi_awsize ), // in 3
-  .S_AXI_HP0_arprot  (hp0_saxi_arprot ),  .S_AXI_HP1_arprot  (hp1_saxi_arprot ), // in 3
-  .S_AXI_HP0_awprot  (hp0_saxi_awprot ),  .S_AXI_HP1_awprot  (hp1_saxi_awprot ), // in 3
-  .S_AXI_HP0_araddr  (hp0_saxi_araddr ),  .S_AXI_HP1_araddr  (hp1_saxi_araddr ), // in 32
-  .S_AXI_HP0_awaddr  (hp0_saxi_awaddr ),  .S_AXI_HP1_awaddr  (hp1_saxi_awaddr ), // in 32
-  .S_AXI_HP0_arcache (hp0_saxi_arcache),  .S_AXI_HP1_arcache (hp1_saxi_arcache), // in 4
-  .S_AXI_HP0_arlen   (hp0_saxi_arlen  ),  .S_AXI_HP1_arlen   (hp1_saxi_arlen  ), // in 4
-  .S_AXI_HP0_arqos   (hp0_saxi_arqos  ),  .S_AXI_HP1_arqos   (hp1_saxi_arqos  ), // in 4
-  .S_AXI_HP0_awcache (hp0_saxi_awcache),  .S_AXI_HP1_awcache (hp1_saxi_awcache), // in 4
-  .S_AXI_HP0_awlen   (hp0_saxi_awlen  ),  .S_AXI_HP1_awlen   (hp1_saxi_awlen  ), // in 4
-  .S_AXI_HP0_awqos   (hp0_saxi_awqos  ),  .S_AXI_HP1_awqos   (hp1_saxi_awqos  ), // in 4
-  .S_AXI_HP0_arid    (hp0_saxi_arid   ),  .S_AXI_HP1_arid    (hp1_saxi_arid   ), // in 6
-  .S_AXI_HP0_awid    (hp0_saxi_awid   ),  .S_AXI_HP1_awid    (hp1_saxi_awid   ), // in 6
-  .S_AXI_HP0_wid     (hp0_saxi_wid    ),  .S_AXI_HP1_wid     (hp1_saxi_wid    ), // in 6
-  .S_AXI_HP0_wdata   (hp0_saxi_wdata  ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata  ), // in 64
-  .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  )  // in 8
+  // XADC_AXIS
+  .M_AXIS_GP1_xadc_aclk  (xadc_axis_aclk   ),
+  .M_AXIS_GP1_xadc_tdata (xadc_axis_tdata  ),
+  .M_AXIS_GP1_xadc_tid   (xadc_axis_tid    ),
+  .M_AXIS_GP1_xadc_tready(xadc_axis_tready ),
+  .M_AXIS_GP1_xadc_tvalid(xadc_axis_tvalid ),
+  // AXI GP1 LEDs
+  //.gpio_gp1_leds_tri_o (gp1_gpio_leds  ),
+  // System
+  .dcm_locked        (dcm_locked       )
 );
 
 endmodule
