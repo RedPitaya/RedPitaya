@@ -1,12 +1,15 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya oscilloscope application, used for capturing ADC data into BRAMs,
-// which can be later read by SW.
+// Module: acquire (start/trigger/stop on a data stream)
 // Authors: Matej Oblak, Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
 module acq #(
+  // data stream
+  int unsigned DN = 1,   // data number
+  // trigger
   int unsigned TN = 1,   // trigger number
+  // timer/counter
   int unsigned TW = 32,  // time width
   int unsigned CW = 32   // counter width
 )(
