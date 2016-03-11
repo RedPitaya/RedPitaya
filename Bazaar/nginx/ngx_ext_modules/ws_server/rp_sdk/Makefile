@@ -23,6 +23,7 @@ CRYPTO_INSTALL_DIR=../../../../tools/build
 
 CXX=$(CROSS_COMPILE)g++
 CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
+
 ifeq ($(ALWAYS_PURCHASED),true)
 CXXFLAGS+=-DALWAYS_PURCHASED
 endif
@@ -39,7 +40,7 @@ endif
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
-CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
+CRYPTO_LIB=libcryptopp.a
 
 CURRENT_DIR := $(shell pwd)
 
