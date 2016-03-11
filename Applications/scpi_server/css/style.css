@@ -750,3 +750,27 @@ area:hover {
     width: 120px;
     margin-left: -120px;
 }
+
+.control_href:link { 
+    font-size: 16pt;
+    color:gray;
+    text-decoration: none;
+}
+
+.control_href:visited {
+    font-size: 16pt;
+    color:gray;
+    text-decoration: none;
+}
+
+.control_href:hover {
+    font-size:16pt;
+    color:gray;
+    text-decoration: none;
+}
+
+.control_href:active {
+    font-size: 16pt;
+    color:gray;
+    text-decoration: none;
+}
