@@ -69,88 +69,149 @@ always #(TP/2) clk = ~clk;
 initial                cts  = 0;
 always @ (posedge clk) cts <= cts + 1;
 
+// clocking 
+default clocking cb @ (posedge clk);
+  // current time stamp
+  input  rstn;
+  // current time stamp
+  input  cts;
+  // interrupts
+  input  irq_trg;
+  input  irq_stp;
+  // control
+  output ctl_rst;
+  // configuration (mode)
+  output cfg_con;
+  output cfg_aut;
+  // configuration/status pre trigger
+  output cfg_trg;
+  output cfg_pre;
+  input  sts_pre;
+  // configuration/status post trigger
+  output cfg_pst;
+  input  sts_pst;
+  // control/status/timestamp acquire
+  output ctl_acq;
+  input  sts_acq;
+  input  cts_acq;
+  // control/status/timestamp trigger
+  output ctl_trg;
+  input  sts_trg;
+  input  cts_trg;
+  // control/status/timestamp stop
+  output ctl_stp;
+  input  cts_stp;
+endclocking: cb
+
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  DT dti [];
-  DT dto [];
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
-
   // for now initialize configuration to an idle value
-  ctl_rst = 1'b0;
-  cfg_trg = '1;
-  cfg_con = 1'b0;
-  cfg_aut = 1'b0;
-  cfg_pre = 0;
-  cfg_pst = 0;
-  ctl_acq = 1'b0;
-  ctl_trg = 1'b0;
-  ctl_stp = 1'b0;
+  cb.ctl_rst <= 1'b0;
+  cb.cfg_trg <= '1;
+  cb.cfg_con <= 1'b0;
+  cb.cfg_aut <= 1'b0;
+  cb.cfg_pre <= 0;
+  cb.cfg_pst <= 0;
+  cb.ctl_acq <= 1'b0;
+  cb.ctl_trg <= 1'b0;
+  cb.ctl_stp <= 1'b0;
 
   // initialization
-  rstn = 1'b0;
-  repeat(4) @(posedge clk);
-  // start
-  rstn = 1'b1;
-  repeat(4) @(posedge clk);
+  rstn <= 1'b0;
+  ##4;
+  rstn <= 1'b1;
+  ##4;
 
-  // send data into stream
-  cli = new;
-  clo = new;
-  dti = cli.range (-8, 8);
-//  dto = TODO;
-  // send data into stream
-  cli.add_pkt (dti);
-  clo.add_pkt (dto);
-  fork
-    str_src.run (cli);
-    str_drn.run (clo);
-  join
-  // check received data
-  error += clo.check (dto);
-
-  // activate acquire
-  acq_pls;
-
-  // send data into stream
-  cli = new;
-  clo = new;
-  dti = cli.range (-8, 8);
-  dto = clo.range (-8, 8);;
-  // send data into stream
-  cli.add_pkt (dti);
-  clo.add_pkt (dto);
-  fork
-    str_src.run (cli);
-    str_drn.run (clo);
-  join
-  // check received data
-  error += clo.check (dto);
-
-//  // send array
-//  size = 4;
-//  sti_dat = new [size];
-//  sto_dat = new [size];
-//  for (int i=0; i<=size; i++) begin
-//    sti_dat[i] = '{i, '1, i==(size-1)};
-//  end
-//  acq_pls();
-//  src_ary (sti_dat);
-//  repeat(size+2) @(posedge clk);
-//  repeat(size+2) @(posedge clk);
-//  drn_ary (sto_dat);
-//  $display (sti_dat);
-//  $display (sto_dat);
+  // tests
+  test_block;
+  test_pass;
+  test_trigger;
 
   // end simulation
-  repeat(4) @(posedge clk);
+  ##4;
   if (error)  $display("FAILURE");
   else        $display("SUCCESS");
   $finish();
 end
+
+////////////////////////////////////////////////////////////////////////////////
+// tests
+////////////////////////////////////////////////////////////////////////////////
+
+task test_block;
+  DT dti [];
+  DT dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  // prepare data
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = new [0];
+  // add packet into queue
+  cli.add_pkt (dti);
+  clo.add_pkt (dto);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
+endtask: test_block
+
+
+task test_pass;
+  DT dti [];
+  DT dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  // prepare data
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = clo.range (-8, 8);;
+  // add packet into queue
+  cli.add_pkt (dti);
+  clo.add_pkt (dto);
+  // activate acquire
+  acq_pls;
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
+endtask: test_pass
+
+
+task test_trigger;
+  DT dti [];
+  DT dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  // prepare data
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = clo.range (-8, 8);;
+  // add packet into queue
+  cli.add_pkt (dti);
+  clo.add_pkt (dto);
+  // activate acquire
+  acq_pls;
+  fork
+    wait ((sti.TDATA == 0) & sti.transf) begin
+      trg_pls ('1);
+    end
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
+endtask: test_trigger
 
 ////////////////////////////////////////////////////////////////////////////////
 // helper tasks
@@ -158,28 +219,24 @@ end
 
 // generate reset pulse
 task rst_pls ();
-  ctl_rst = 1'b1;
-  @(posedge clk);
-  ctl_rst = 1'b0;
+  cb.ctl_rst <= 1'b1;
+  ##1;
+  cb.ctl_rst <= 1'b0;
 endtask: rst_pls
 
 // activate acquire
 task acq_pls ();
-  ctl_acq = 1'b1;
-  repeat(1) @(posedge clk);
-  ctl_acq = 1'b0;
+  cb.ctl_acq <= 1'b1;
+  ##1;
+  cb.ctl_acq <= 1'b0;
 endtask: acq_pls
 
 // generate trigger pulse
 task trg_pls (logic [TN-1:0] trg);
-  ctl_trg = trg;
-  @(posedge clk);
-  ctl_trg = '0;
+  cb.ctl_trg <= trg;
+  ##1;
+  cb.ctl_trg <= '0;
 endtask: trg_pls
-
-////////////////////////////////////////////////////////////////////////////////
-// tests
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
@@ -188,6 +245,8 @@ endtask: trg_pls
 axi4_stream_src #(.DN (DN), .DT (DT)) str_src (.str (sti));
 
 acq #(
+  .DN (DN),
+  .TN (TN),
   .TW (TW),
   .CW (CW)
 ) acq (
