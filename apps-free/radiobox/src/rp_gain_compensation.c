@@ -200,8 +200,12 @@ float bspline_n_i_k(int i, int k, float t)
 /*----------------------------------------------------------------------------------*/
 float get_compensation_factor(float frequency_hz, char isTerminated)
 {
-    if (frequency_hz < 1e-12f) {
-        frequency_hz = 1e-12f;
+    if (!frequency_hz) {
+        return 0.0;  // marks the gain correction block to switch off
+    }
+
+    if (frequency_hz < 1e-2f) {
+        frequency_hz = 1e-2f;
     } else if (frequency_hz > 62.5e6f) {
         frequency_hz = 62.5e6f;
     }
@@ -230,8 +234,8 @@ float get_compensation_factor(float frequency_hz, char isTerminated)
     if (bspline_p < 1e-6f) {  // out of table --> no correction
         bspline_p = 1.0f;
     }
-    fprintf(stderr, "DEBUG get_compensation_factor: in(frequency_hz=%f, isTerminated=%d) with spline_k=%d --> out(gain=%f, correction=%f)\n",
-            frequency_hz, isTerminated, RB_GAIN_PARAMS_BSPLINE_K, bspline_p, 1.0/ bspline_p);
+    //fprintf(stderr, "DEBUG get_compensation_factor: in(frequency_hz=%f, isTerminated=%d) with spline_k=%d --> out(gain=%f, correction=%f)\n",
+    //        frequency_hz, isTerminated, RB_GAIN_PARAMS_BSPLINE_K, bspline_p, 1.0/ bspline_p);
 
     return 1.0f / bspline_p;
 }
