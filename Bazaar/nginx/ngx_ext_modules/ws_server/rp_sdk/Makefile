@@ -22,15 +22,15 @@ CRYPTO_DIR=../../../../tools/cryptopp
 CRYPTO_INSTALL_DIR=../../../../tools/build
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
-ifeq ($(ALWAYS_PURCHASED),true)
-CXXFLAGS+=-DALWAYS_PURCHASED
-endif
+CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_DIR)
+#ifeq ($(ALWAYS_PURCHASED),true)
+#CXXFLAGS+=-DALWAYS_PURCHASED
+#endif
 
-ifeq ($(ENABLE_LICENSING),true)
+#ifeq ($(ENABLE_LICENSING),true)
 SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
 CXXFLAGS+=-Ilicverify/encoder -DENABLE_LICENSING
-endif
+#endif
 
 ifeq ($(DIGITAL_LOOP),true)
 CXXFLAGS+=-DIGITAL_LOOP
@@ -39,7 +39,7 @@ endif
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
-CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
+CRYPTO_LIB=libcryptopp.a
 
 CURRENT_DIR := $(shell pwd)
 
@@ -47,8 +47,8 @@ all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
 	mkdir -p $(CRYPTO_INSTALL_DIR)
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
+	#make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
+	#make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
 
 $(LIB): $(OBJECTS)
 	mkdir -p $(OBJDIR)/cryptopp
@@ -61,5 +61,5 @@ $(SDKOBJDIR)/%.o: %.cpp
 
 clean:
 	rm -rf $(LIB) $(OBJDIR)
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build remove
+	#make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
+	#make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build remove
