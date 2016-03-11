@@ -14,16 +14,16 @@
 #
 
 # Versioning system
-VERSION ?= 0.00-0000
+VERSION ?= 0.25
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
-OBJS = fpga_awg.o generate.o
+OBJS = fpga_awg.o bode.o fpga_osc.o main_osc.o worker.o
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 
 # Executable name
-TARGET=generate
+TARGET=bode
 
 # GCC compiling & linking flags
 CFLAGS=-g -std=gnu99 -Wall -Werror
@@ -34,7 +34,7 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm
+LIBS=-lm -lpthread
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc

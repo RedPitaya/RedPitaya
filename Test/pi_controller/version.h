@@ -20,13 +20,13 @@
 #define STR(s) #s
  
 #ifndef VERSION
-#define VERSION_STR "0.00-0000"
+#define VERSION_STR "0.x"
 #else
 #define VERSION_STR XSTR(VERSION)
 #endif
  
 #ifndef REVISION
-#define REVISION_STR "unknown"
+#define REVISION_STR "dev"
 #else
 #define REVISION_STR XSTR(REVISION)
 #endif
