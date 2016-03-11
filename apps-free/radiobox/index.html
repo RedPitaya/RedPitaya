@@ -198,9 +198,6 @@
                 <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
-              <span id="apply_rfout1_csp" class="input-group-btn" _style="visibility:hidden">
-                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-              </span>
             </div>
           </div>
         </td>
@@ -281,9 +278,6 @@
                 <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
-              <span id="apply_rfout2_csp" class="input-group-btn" _style="visibility:hidden">
-                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-              </span>
             </div>
           </div>
         </td>
@@ -365,6 +359,43 @@
                 <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
+            </div>
+          </div>
+        </td>
+        </tr>
+        <tr>
+        <td>
+          <div id="rfout1_term" class="form-group">
+            <label for="rfout1_term_s" class="col-xs-5 control-label">line termination:</label>
+            <div class="col-xs-6">
+              <fieldset>
+                <input type="radio" name="rfout1_term_s_rb" id="rfout1_term_s" value="1" /><label for="rfout1_term_s">&nbsp;&nbsp;50 ohms&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input type="radio" name="rfout1_term_s_rb" id="rfout1_term_s_0" value="0" checked="checked" /><label for="rfout1_term_s_0">&nbsp;&nbsp;open ended&nbsp;&nbsp;&nbsp;&nbsp;</label>
+              </fieldset>
+              <span id="apply_rfout1_csp" class="input-group-btn" _style="visibility:hidden">
+                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+              </span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div id="rfout2_term" class="form-group">
+            <label for="rfout2_term_s" class="col-xs-5 control-label">line termination:</label>
+            <div class="col-xs-6">
+              <fieldset>
+                <input type="radio" name="rfout2_term_s_rb" id="rfout2_term_s" value="1" /><label for="rfout2_term_s">&nbsp;&nbsp;50 ohms&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input type="radio" name="rfout2_term_s_rb" id="rfout2_term_s_0" value="0" checked="checked" /><label for="rfout2_term_s_0">&nbsp;&nbsp;open ended&nbsp;&nbsp;&nbsp;&nbsp;</label>
+              </fieldset>
+              <span id="apply_rfout2_csp" class="input-group-btn" _style="visibility:hidden">
+                <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+              </span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div id="rbled_csp_b" class="form-group">
+            <label for="rbled_csp_b" class="col-xs-5 control-label">&nbsp;</label>
+            <div class="col-xs-6">
               <span id="apply_rbled_csp" class="input-group-btn" _style="visibility:hidden">
                 <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
               </span>

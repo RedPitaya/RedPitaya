@@ -102,10 +102,12 @@ enum {
     FPGA_RW_RB_RX_FM_GAIN                                                                      = 0x00184,  // h184: RB RX_FM gain:              UNSIGNED 16 bit        16'b0, (Bit 15: 0)
     FPGA_RW_RB_RX_PM_GAIN                                                                      = 0x00188,  // h188: RB RX_PM gain:              UNSIGNED 16 bit        16'b0, (Bit 15: 0)
     //FPGA_RD_RB_RX_RSVD_H18C,
-    FPGA_RW_RB_RX_AUDIO_OUT_GAIN                                                               = 0x00190,  // h190: RB RX_AUDIO_OUT gain:       UNSIGNED 16 bit        16'b0, (Bit 15: 0)
+  //FPGA_RW_RB_RX_AUDIO_OUT_GAIN                                                               = 0x00190,  // h190: RB RX_AUDIO_OUT gain:       UNSIGNED 16 bit        16'b0, (Bit 15: 0)
+    //FPGA_RD_RB_RX_RSVD_H190,
     //FPGA_RD_RB_RX_RSVD_H194,
-    FPGA_RW_RB_RX_AUDIO_OUT_OFS                                                                = 0x00198   // h198: RB RX_AUDIO_OUT gain:         SIGNED 16 bit        16'b0, (Bit 15: 0)
-    //FPGA_RD_RB_RX_RSVD_H19C,
+  //FPGA_RW_RB_RX_AUDIO_OUT_OFS                                                                = 0x00198   // h198: RB RX_AUDIO_OUT gain:         SIGNED 16 bit        16'b0, (Bit 15: 0)
+    //FPGA_RD_RB_RX_RSVD_H198,
+    ////FPGA_RD_RB_RX_RSVD_H19C,
 
 } FPGA_RB_REG_ENUMS;
 
@@ -982,12 +984,12 @@ typedef struct fpga_rb_reg_mem_s {
      uint32_t rx_mod_pm_gain;
 
 
-     /** @brief  R/W RB_RX_AUDIO_OUT_GAIN - RX_AUDIO_OUT amplitude register, bits 15..0 (addr: 0x40600190)
+     /** @brief  Placeholder for addr: 0x40600190
       *
-      * bit h0F..h00: UNSIGNED 16 bit - RX_AUDIO_OUT amplitude setting.
+      * n/a
       *
       */
-     uint32_t rx_audio_out_gain;
+     uint32_t reserved_190;
 
      /** @brief  Placeholder for addr: 0x40600194
       *
@@ -996,13 +998,12 @@ typedef struct fpga_rb_reg_mem_s {
       */
      uint32_t reserved_194;
 
-     /** @brief  R/W RB_RX_AUDIO_OUT_OFS - RX_AUDIO_OUT offset register, bits 15..0 (addr: 0x40600198)
+     /** @brief  Placeholder for addr: 0x40600198
       *
-      * bit h0F..h00: SIGNED 16 bit - RX_AUDIO_OUT offset value.
+      * n/a
       *
       */
-     uint32_t rx_audio_out_ofs;
-
+     uint32_t reserved_198;
 
      /** @brief  Placeholder for addr: 0x4060019C
       *
@@ -1010,6 +1011,35 @@ typedef struct fpga_rb_reg_mem_s {
       *
       */
      uint32_t reserved_19c;
+
+
+     /** @brief  R/W RB_RFOUT1_GAIN - RFOUT1 amplitude register, bits 15..0 (addr: 0x406001A0)
+      *
+      * bit h0F..h00:   SIGNED 16 bit - RFOUT1 amplitude setting - 8 bit integer . 8 bit fraction value.
+      *
+      */
+     uint32_t rfout1_gain;
+
+     /** @brief  R/W RB_RFOUT1_OFS - RFOUT1 offset register, bits 15..0 (addr: 0x406001A4)
+      *
+      * bit h0F..h00:   SIGNED 16 bit - RFOUT1 offset value - 16 bit DAC value offset.
+      *
+      */
+     uint32_t rfout1_ofs;
+
+     /** @brief  R/W RB_RFOUT2_GAIN - RFOUT2 amplitude register, bits 15..0 (addr: 0x406001A8)
+      *
+      * bit h0F..h00:   SIGNED 16 bit - RFOUT2 amplitude setting - 8 bit integer . 8 bit fraction value.
+      *
+      */
+     uint32_t rfout2_gain;
+
+     /** @brief  R/W RB_RFOUT2_OFS - RFOUT2 offset register, bits 15..0 (addr: 0x406001AC)
+      *
+      * bit h0F..h00:   SIGNED 16 bit - RFOUT2 offset value - 16 bit DAC value offset.
+      *
+      */
+     uint32_t rfout2_ofs;
 
 } fpga_rb_reg_mem_t;
 
@@ -1073,6 +1103,7 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @param[in]  tx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
  * @param[in]  rx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
+ * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  * @param[in]  tx_mod_osc_qrg   Frequency for TX_MOD_OSC in Hz.
@@ -1083,7 +1114,7 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  */
 void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int rx_muxin_src,
+        int src_con_pnt, int term, int rx_muxin_src,
         double tx_car_osc_qrg, double tx_mod_osc_qrg,
         double tx_amp_rf_gain, double tx_mod_osc_mag,
         double tx_muxin_gain, double rx_muxin_gain,
@@ -1216,6 +1247,7 @@ void fpga_rb_set_rx_mod_fm_gain__4mod_fm(double rx_mod_fm_gain);
  */
 void fpga_rb_set_rx_mod_pm_gain__4mod_pm(double rx_mod_pm_gain);
 
+#if 0
 /**
  * @brief Calculates and programs the FPGA RX_AUDIO_OUT mixer
  *
@@ -1223,6 +1255,23 @@ void fpga_rb_set_rx_mod_pm_gain__4mod_pm(double rx_mod_pm_gain);
  * @param[in]  rx_audio_out_ofs   Vpp amplitude in mV.
  */
 void fpga_rb_set_rx_audio_out_gain_ofs__4mod_all(double rx_audio_out_gain, double rx_audio_out_ofs);
+#endif
+
+/**
+ * @brief Calculates and programs the FPGA RFOUT1 gain correction amplifier
+ *
+ * @param[in]  rfout1_gain  signed factor value: 8 bit integer . 8 bit fractional part - value = (-127.999 .. +127.999) .
+ * @param[in]  rfout1_ofs   DAC offset value.
+ */
+void fpga_rb_set_rfout1_gain_ofs(double rfout1_gain, uint16_t rfout1_ofs);
+
+/**
+ * @brief Calculates and programs the FPGA RFOUT2 gain correction amplifier
+ *
+ * @param[in]  rfout2_gain  signed factor value: 8 bit integer . 8 bit fractional part - value = (-127.999 .. +127.999) .
+ * @param[in]  rfout2_ofs   DAC offset value.
+ */
+void fpga_rb_set_rfout2_gain_ofs(double rfout2_gain, uint16_t rfout2_ofs);
 
 
 /**
