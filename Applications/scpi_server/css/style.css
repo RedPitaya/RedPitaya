@@ -729,14 +729,24 @@ area:hover {
   display: none;
   background-color: rgba(0, 0, 0, 0.5);
 }
-/*
-.centerer {
-  display: inline-block;
-  vertical-align: middle;
-}*/
 
 .centerer {
   display: inline-block;
   vertical-align: middle;
   height: 80%;
+}
+
+.left-scpi {
+    float:left;
+    width:100%;
+}
+
+.left-content-scpi {
+    margin-right:120px;
+}
+
+.right-scpi {
+    float:right;
+    width: 120px;
+    margin-left: -120px;
 }
