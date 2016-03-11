@@ -40,7 +40,7 @@ endif
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
-CRYPTO_LIB=libcryptopp.a
+CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
 
 CURRENT_DIR := $(shell pwd)
 
