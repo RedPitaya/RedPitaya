@@ -245,15 +245,26 @@ int main(int argc, char **argv)
 
     // Build curl command
     std::stringstream cmd;
-    cmd << "curl --data '" << "dna=" << vDNA << "&";
-    cmd << "ip_lan=" << vIP_LAN << "&";
-    cmd << "mac_lan=" << vMAC_LAN << "&";
-    cmd << "os_ver=" << vOS_VER << "&";
-    cmd << "os_build=" << vOS_BUILD;
+
+    if(vDNA != "")
+        cmd << "curl --data '" << "dna=" << vDNA;
+
+    if(vIP_LAN != "")
+        cmd << "&ip_lan=" << vIP_LAN;
+
+    if(vMAC_LAN != "")
+        cmd << "&mac_lan=" << vMAC_LAN;
+
+    if(vOS_VER != "")
+        cmd << "&os_ver=" << vOS_VER;
+
+    if(vOS_BUILD != "")
+        cmd << "&os_build=" << vOS_BUILD;
 
     if(vIP_WIFI != "")
         cmd << "&ip_wifi=" << vIP_WIFI;
-    if(vIP_WIFI != "")
+
+    if(vMAC_WIFI != "")
         cmd << "&mac_wifi=" << vMAC_WIFI;
 
     cmd << "'" << " http://192.168.1.12:82/html/dumper.php";
