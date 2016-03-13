@@ -10,10 +10,10 @@
 
 (function($) {
     var isOnline = false;
-    var default_apps = [{ id: "marketplace", name: "Marketplace", description: "Provides access to new applications", url: "http://bazaar.redpitaya.com/", image: "http://moball.tv/wp-content/plugins/moball_app_factory/images/sofit-app-icon.png" },
-        { id: "appstore", name: "Store", description: "Provides access to new hardware", url: "http://store.redpitaya.com/", image: "http://moball.tv/wp-content/plugins/moball_app_factory/images/sofit-app-icon.png" },
-        { id: "github", name: "Github", description: "Our github", url: "https://github.com/redpitaya", image: "http://moball.tv/wp-content/plugins/moball_app_factory/images/sofit-app-icon.png" },
-        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png" },
+    var default_apps = [{ id: "marketplace", name: "Marketplace", description: "Provides access to new applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true },
+        { id: "appstore", name: "Store", description: "Provides access to new hardware", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false },
+        { id: "github", name: "Github", description: "Our github", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false },
+        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true  },
     ];
 
     var apps = [];
@@ -87,8 +87,7 @@
         }).done(function(result) {
             var url_arr = window.location.href.split("/");;
             var url = url_arr[0] + '//' + url_arr[2] + '/';
-            apps = default_apps.slice();
-
+            apps = [];
             $.each(result, function(key, value) {
                 var obj = {};
                 obj['id'] = key;
@@ -96,8 +95,14 @@
                 obj['description'] = value['description'];
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
+                obj['check_online'] = true;
                 apps.push(obj);
             });
+
+            for(var i=0; i<default_apps.length; i++)
+            {
+                apps.push(default_apps[i]);
+            }
 
             refillList();
             placeElements();
@@ -107,12 +112,16 @@
 
     var clickApp = function(e) {
         var key = parseInt($(this).attr('key')) * 1;
-        if (key < default_apps.length)
-            window.location = success_url;
-        else {
-            e.preventDefault();
-            licVerify(apps[key].url);
+        e.preventDefault();
+        if(apps[key].check_online)
+        {
+            if (!isOnline) {
+                $('#lic_failed').show();
+                $('#ic_missing').modal('show');
+                return;
+            }
         }
+        licVerify(apps[key].url);
     }
 
     var overApp = function(e) {
@@ -146,12 +155,6 @@
         var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
         $('#loader-desc').html('Preparing application to run');
         $('body').removeClass('loaded');
-        // TODO: uncomment
-        // if (!isOnline) {
-        //     $('#lic_failed').show();
-        //     $('#ic_missing').modal('show');
-        //     return;
-        // }
         $.ajax({
                 method: "GET",
                 url: "idfile.id"

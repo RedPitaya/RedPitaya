@@ -35,6 +35,28 @@
         </div>
         <div id="footer">&nbsp;</div>
     </div>
+    <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="lic_failed">Licence verification failed! </p>
+                    <p>RedPitaya is offline and cannot access the server! </p> Please follow <a style="color: #dd0020" href="http://redpitaya.com/quick-start/" target="_blank">quick start instrucitons</a> to put it online.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" id="quick_start" class="list-group-item btn">Open instructions</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
