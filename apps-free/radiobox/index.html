@@ -403,114 +403,11 @@
           </div>
         </td>
         </tr>
-        <tr>
-        <td colspan="3"><hr></td>
-        </tr>
-        <tr>
-        <td class="table-header" colspan="3">
-          Receiver
-        </td>
-        </tr>
-        <tr>
-        <td>
-        <div id="rx_car_osc_qrg" class="form-group">
-          <label for="rx_car_osc_qrg_f" class="col-xs-5 control-label">RX_CAR_OSC frequency:</label>
-          <div class="col-xs-4">
-            <input type="text" id="rx_car_osc_qrg_f" value="0" class="form-control form-bg-rx-car-osc-qrg" autocomplete="off" />
-            <span id="apply_rx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-          <div id="rx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
-        </div>
-        </td>
-
-        <td>
-        </td>
-
-        <td>
-        <div id="rx_muxin_src" class="form-group">
-          <label for="rx_muxin_src_s" class="col-xs-5 control-label">RX input:</label>
-          <div class="col-xs-6">
-            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src">
-              <option value="0">(none)</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="1">RF Input 1</option>
-              <option value="2">RF Input 2</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="4">EXP AI0</option>
-              <option value="5">EXP AI1</option>
-              <option value="6">EXP AI2</option>
-              <option value="7">EXP AI3</option>
-            </select>
-            <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-        </div>
-        </td>
-        </tr>
-
-        <tr>
-        <td>
-        </td>
-
-        <td>
-        </td>
-
-        <td>
-        <div id="rx_modtyp" class="form-group">
-          <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
-          <div class="col-xs-6">
-            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
-              <option value="0">(off)</option>
-              <option value="2">USB</option>
-              <option value="3">LSB</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="4">AM-Envelope</option>
-              <option value="5">AM-Sync-USB</option>
-              <option value="6">AM-Sync-LSB</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="7">FM</option>
-              <option value="8">PM</option>
-            </select>
-            <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-        </div>
-        </td>
-        </tr>
-
-        <tr>
-        <td>
-        </td>
-
-        <td>
-        </td>
-
-        <td>
-        </td>
-        </tr>
-
-        <tr>
-        <td colspan="3">
-        <div id="rx_muxin_gain" class="form-group">
-        <label for="rx_muxin_gain_f" class="col-xs-2 control-label">RX MUX input gain:</label>
-          <div class="col-xs-9">
-            <input type="range" id="rx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
-            <span id="apply_rx_muxin_gain" class="input-group-btn" style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-        </div>
-        </td>
-        </tr>
-
 
         <td colspan="3"><hr></td>
         </tr>
         <tr>
+
         <td class="table-header" colspan="3">
           Transmitter
         </td>
@@ -638,6 +535,194 @@
         </div>
         </td>
         </tr>
+
+        <tr>
+        <td colspan="3"><hr></td>
+        </tr>
+
+        <tr>
+        <td class="table-header" colspan="3">
+          Frequency
+        </td>
+        </tr>
+        <tr>
+        <td colspan="3"><span style="display:inline-block; width:70px;"></span>
+        <table class="qrg_table">
+          <tr>
+            <td class="qrg_col01" rowspan="4">&nbsp;</td>
+            <td class="qrg_col02 qrg_tx">TX</td>
+            <td class="qrg_col03" rowspan="4">&nbsp;</td>
+            <td class="qrg_col04"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e7_b" name="qrg_up_1e7">&uArr;</button></td>
+            <td class="qrg_col05"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e6_b" name="qrg_up_1e6">&uArr;</button></td>
+            <td class="qrg_col06" rowspan="4">&nbsp;</td>
+            <td class="qrg_col07"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e5_b" name="qrg_up_1e5">&uArr;</button></td>
+            <td class="qrg_col08"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e4_b" name="qrg_up_1e4">&uArr;</button></td>
+            <td class="qrg_col09"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e3_b" name="qrg_up_1e3">&uArr;</button></td>
+            <td class="qrg_col10" rowspan="4">&nbsp;</td>
+            <td class="qrg_col11"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e2_b" name="qrg_up_1e2">&uArr;</button></td>
+            <td class="qrg_col12"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e1_b" name="qrg_up_1e1">&uArr;</button></td>
+            <td class="qrg_col13"><button class="qrg_up_dn_but" type="button" id="qrg_up_1e0_b" name="qrg_up_1e0">&uArr;</button></td>
+            <td class="qrg_col14" rowspan="4">&nbsp;</td>
+            <td class="qrg_col15"><button class="qrg_entry_but" type="button" id="qrg_entry_7_b" name="qrg_entry_7">7</button></td>
+            <td class="qrg_col16"><button class="qrg_entry_but" type="button" id="qrg_entry_8_b" name="qrg_entry_8">8</button></td>
+            <td class="qrg_col17"><button class="qrg_entry_but" type="button" id="qrg_entry_9_b" name="qrg_entry_9">9</button></td>
+            <td class="qrg_col18" rowspan="4">&nbsp;</td>
+          </tr>
+          <tr>
+            <td class="qrg_col02"><button class="qrg_send_tx_rx_but" type="button" id="qrg_send_tx_b" name="qrg_send_tx">&uarr;</button></td>
+
+            <td class="qrg_col04" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e7_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+            <td class="qrg_col05" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e6_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+
+            <td class="qrg_col07" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e5_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+            <td class="qrg_col08" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e4_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+            <td class="qrg_col09" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e3_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+
+            <td class="qrg_col11" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e2_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+            <td class="qrg_col12" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e1_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+            <td class="qrg_col13" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e0_f" value="-" class="form-control form-bg-qrg qrg_display" autocomplete="off" /></td>
+
+            <td class="qrg_col15"><button class="qrg_entry_but" type="button" id="qrg_entry_4_b" name="qrg_entry_4">4</button></td>
+            <td class="qrg_col16"><button class="qrg_entry_but" type="button" id="qrg_entry_5_b" name="qrg_entry_5">5</button></td>
+            <td class="qrg_col17"><button class="qrg_entry_but" type="button" id="qrg_entry_6_b" name="qrg_entry_6">6</button></td>
+          </tr>
+          <tr>
+            <td class="qrg_col02"><button class="qrg_send_tx_rx_but" type="button" id="qrg_send_rx_b" name="qrg_send_rx">&darr;</button></td>
+
+            <td class="qrg_col15"><button class="qrg_entry_but" type="button" id="qrg_entry_1_b" name="qrg_entry_1">1</button></td>
+            <td class="qrg_col16"><button class="qrg_entry_but" type="button" id="qrg_entry_2_b" name="qrg_entry_2">2</button></td>
+            <td class="qrg_col17"><button class="qrg_entry_but" type="button" id="qrg_entry_3_b" name="qrg_entry_3">3</button></td>
+          </tr>
+          <tr>
+            <td class="qrg_col02 qrg_rx">RX</td>
+
+            <td class="qrg_col04"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e7_b" name="qrg_dn_1e7">&dArr;</button></td>
+            <td class="qrg_col05"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e6_b" name="qrg_dn_1e6">&dArr;</button></td>
+
+            <td class="qrg_col07"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e5_b" name="qrg_dn_1e5">&dArr;</button></td>
+            <td class="qrg_col08"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e4_b" name="qrg_dn_1e4">&dArr;</button></td>
+            <td class="qrg_col09"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e3_b" name="qrg_dn_1e3">&dArr;</button></td>
+
+            <td class="qrg_col11"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e2_b" name="qrg_dn_1e2">&dArr;</button></td>
+            <td class="qrg_col12"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e1_b" name="qrg_dn_1e1">&dArr;</button></td>
+            <td class="qrg_col13"><button class="qrg_up_dn_but" type="button" id="qrg_dn_1e0_b" name="qrg_dn_1e0">&dArr;</button></td>
+
+            <td class="qrg_col15"><button class="qrg_entry_but" type="button" id="qrg_entry_0_b" name="qrg_entry_0">0</button></td>
+            <td class="qrg_col16"><button class="qrg_entry_but" type="button" id="qrg_entry_del_b" name="qrg_entry_del"><span class="qrg_no">&#x232B;</span></button></td>
+            <td class="qrg_col17"><button class="qrg_entry_but" type="button" id="qrg_entry_enter_b" name="qrg_entry_enter"><span class="qrg_yes">&radic;</span></button></td>
+          </tr>
+        </table>
+        </td>
+        <tr>
+        </tr>
+
+
+        <tr>
+        <td colspan="3"><hr></td>
+        </tr>
+
+        <tr>
+        <td class="table-header" colspan="3">
+          Receiver
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="rx_car_osc_qrg" class="form-group">
+          <label for="rx_car_osc_qrg_f" class="col-xs-5 control-label">RX_CAR_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="rx_car_osc_qrg_f" value="0" class="form-control form-bg-rx-car-osc-qrg" autocomplete="off" />
+            <span id="apply_rx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="rx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="rx_muxin_src" class="form-group">
+          <label for="rx_muxin_src_s" class="col-xs-5 control-label">RX input:</label>
+          <div class="col-xs-6">
+            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src">
+              <option value="0">(none)</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="1">RF Input 1</option>
+              <option value="2">RF Input 2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">EXP AI0</option>
+              <option value="5">EXP AI1</option>
+              <option value="6">EXP AI2</option>
+              <option value="7">EXP AI3</option>
+            </select>
+            <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="rx_modtyp" class="form-group">
+          <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
+          <div class="col-xs-6">
+            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+              <option value="0">(off)</option>
+              <option value="2">USB</option>
+              <option value="3">LSB</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">AM-Envelope</option>
+              <option value="5">AM-Sync-USB</option>
+              <option value="6">AM-Sync-LSB</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="7">FM</option>
+              <option value="8">PM</option>
+            </select>
+            <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="3">
+        <div id="rx_muxin_gain" class="form-group">
+        <label for="rx_muxin_gain_f" class="col-xs-2 control-label">RX MUX input gain:</label>
+          <div class="col-xs-9">
+            <input type="range" id="rx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
+            <span id="apply_rx_muxin_gain" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+
         </table>
 
       </form>

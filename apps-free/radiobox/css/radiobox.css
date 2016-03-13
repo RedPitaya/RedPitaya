@@ -172,3 +172,95 @@ input#tx_muxin_gain_f[disabled] {
   display: none;
   color: #ee3739;
 }
+
+
+.qrg_table {
+	display:inline-block;
+	padding:15px;
+	font-size:225%;
+	text-align:center;
+	border:3px inset;
+}
+.qrg_col01 {
+	width:10px;
+}
+.qrg_col02 {
+    width:60px;
+}
+.qrg_col03 {
+    width:40px;
+}
+.qrg_col04 {
+    width:50px;
+}
+.qrg_col05 {
+    width:50px;
+}
+.qrg_col06 {
+    width:5px;
+}
+.qrg_col07 {
+    width:50px;
+}
+.qrg_col08 {
+    width:50px;
+}
+.qrg_col09 {
+    width:50px;
+}
+.qrg_col10 {
+    width:5px;
+}
+.qrg_col11 {
+    width:50px;
+}
+.qrg_col12 {
+    width:50px;
+}
+.qrg_col13 {
+    width:50px;
+}
+.qrg_col14 {
+    width:45px;
+}
+.qrg_col15 {
+    width:55px;
+}
+.qrg_col16 {
+    width:55px;
+}
+.qrg_col17 {
+    width:55px;
+}
+.qrg_col18 {
+    width:20px;
+}
+
+.qrg_tx {
+	font-size:80%;
+    color:#ff6000;
+}
+.qrg_rx {
+    font-size:80%;
+    color:#00e000;
+}
+
+.qrg_no {
+	color:#ff6000;
+}
+.qrg_yes {
+    color:#00e000;
+}
+
+.form-bg-qrg {
+    background:#4080c0;
+}
+.qrg_display {
+    height:100px;
+    font-size:50px;
+    text-alignment:center;
+}
+
+.qrg_entry_but {
+	width: 50px;
+}
