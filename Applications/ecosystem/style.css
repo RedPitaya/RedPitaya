@@ -13,9 +13,9 @@ body {
     font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
     color: #CCC;
     margin: 0;
-
     background: #000;
-    background: url('../assets/images/backgr-01.png') fixed center no-repeat, linear-gradient(#333, #000); /* Standard syntax */
+    background: url('../assets/images/backgr-01.png') fixed center no-repeat, linear-gradient(#333, #000);
+    /* Standard syntax */
 }
 
 a {
@@ -87,14 +87,17 @@ a:visited {
 }
 
 .app-item {
-    width: 200px;
-    height: 240px;
+    width: 120px;
+    height: 160px;
+    padding: 10px;
     /*background-color: #F00;*/
     display: inline-block;
     margin: 7px;
     text-align: center;
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
+    -webkit-filter: drop-shadow(5px 5px 5px #222);
+    filter: drop-shadow(5px 5px 5px #222);
 }
 
 .app-item:hover {
@@ -102,16 +105,24 @@ a:visited {
     transition: opacity 0.3s ease-in-out;
 }
 
+.img-container {
+    display: table-cell;
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    vertical-align: middle;
+}
+
 .app-icon {
     max-width: 100%;
     max-height: 100%;
-    width: 180px;
-    height: 180px;
-    margin: 10px;
 }
 
 .app-name {
-    font-size:15px;
+    display: table-row;
+    font-size: 15px;
+    width: 100px;
+    height: 60px;
 }
 
 .paging {
@@ -124,7 +135,14 @@ a:visited {
     position: fixed;
     text-align: center;
     bottom: 30px;
-    width: 80%;
+    width: 60%;
+    /* It's connected with #main-container width*/
+}
+
+.simplePagerContainer {
+    width: 100%;
+    height: 100%;
+    position: relative;
 }
 
 .simplePagerNav > li {
@@ -157,17 +175,28 @@ a:visited {
     #main-container {
         margin: 10px 15%;
     }
+    .simplePagerNav {
+        width: 70%;
+        /* It's connected with #main-container width*/
+    }
 }
 
 @media only screen and (max-width: 768px) {
     #main-container {
         margin: 10px 10%;
     }
+    .simplePagerNav {
+        width: 80%;
+        /* It's connected with #main-container width*/
+    }
 }
 
 @media only screen and (max-width: 512px) {
     #main-container {
         margin: 10px auto;
+    }
+    .simplePagerNav {
+        width: 100%;
     }
 }
 
@@ -369,4 +398,47 @@ a:visited {
     visibility: hidden;
     -webkit-transition: all 0.3s ease-out;
     transition: all 0.3s ease-out;
+}
+
+.instruct_text {
+    text-shadow: 2px 2px 8px #000;
+    font-size: 29px;
+    color: #FCFCFC;
+    padding-bottom: 20px;
+}
+
+.modal-body {
+    font-size: 18px;
+    text-align: center;
+}
+
+.modal-content {
+    background-color: #343433;
+    border: 1px solid #999;
+    border-radius: 0px;
+    outline: 0;
+    color: silver;
+}
+
+.list-group-item {
+    background-color: #323232;
+    font-family: sans-serif;
+    color: blue;
+}
+
+a.list-group-item {
+    color: silver;
+    #555555;
+}
+
+a.list-group-item:hover:visited {
+    color: black;
+}
+
+.list-group-item.more {
+    font-size: 18px;
+}
+
+.list-group-item.btn {
+    font-weight: bold;
 }
