@@ -11,13 +11,11 @@ body {
 
 body {
     font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
-    background: #000;
     color: #CCC;
     margin: 0;
-    background-image: url('../assets/images/backgr-01.png');
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-position: center;
+
+    background: #000;
+    background: url('../assets/images/backgr-01.png') fixed center no-repeat, linear-gradient(#333, #000); /* Standard syntax */
 }
 
 a {
