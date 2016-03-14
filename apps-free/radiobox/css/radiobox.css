@@ -175,14 +175,15 @@ input#tx_muxin_gain_f[disabled] {
 
 
 .qrg_table {
-	display:inline-block;
-	padding:15px;
-	font-size:225%;
-	text-align:center;
-	border:3px inset;
+    display:inline-block;
+    border:3px inset;
+    padding:15px;
+    color:#707078;
+    text-align:center;
+    font-size:225%;
 }
 .qrg_col01 {
-	width:10px;
+    width:10px;
 }
 .qrg_col02 {
     width:60px;
@@ -236,31 +237,30 @@ input#tx_muxin_gain_f[disabled] {
     width:20px;
 }
 
-.qrg_tx {
-	font-size:80%;
-    color:#ff6000;
+.qrg_up_dn_but {
+    width:50px;
 }
-.qrg_rx {
+
+.qrg_tx, .qrg_no {
     font-size:80%;
-    color:#00e000;
+    color:#e04000;
+}
+.qrg_rx, .qrg_yes {
+    font-size:80%;
+    color:#00b000;
 }
 
-.qrg_no {
-	color:#ff6000;
-}
-.qrg_yes {
-    color:#00e000;
-}
-
-.form-bg-qrg {
-    background:#4080c0;
-}
 .qrg_display {
     height:100px;
-    font-size:50px;
-    text-alignment:center;
+    width:48px;
+    font-size:40px;
+    text-align:center;
 }
 
 .qrg_entry_but {
-	width: 50px;
+    width:50px;
+    height:50px;
+}
+.qrg_entry_but_del, .qrg_entry_but_enter {
+    font-size:75%;
 }
