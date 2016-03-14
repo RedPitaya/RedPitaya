@@ -32,6 +32,16 @@ body {
 
 }
 
+li {
+    list-style-type: none;
+   }
+
+
+li:before
+{
+  content: "- ";
+}
+
 input, #info div, #info span, .selectable {
   -webkit-touch-callout: text;
   -webkit-user-select: text;
@@ -751,7 +761,7 @@ area:hover {
     margin-left: -120px;
 }
 
-.control_href:link { 
+.control_href:link {
     font-size: 16pt;
     color:gray;
     text-decoration: none;

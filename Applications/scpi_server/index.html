@@ -59,26 +59,28 @@
             <div id="global_container" style="position: relative;">
                 <div id="main">
                     <div class="left-scpi">
-                        <div class="left-content-scpi" style="font-size: 14pt; color: gray;">
-                            &nbsp;SCPI server application<br>
-                            <br>
-                            &nbsp;- enables remote control of Red Pitaya using MATLAB/Python/LabVIEW/Scilab<br>
-                            &nbsp;- provides comlete access to Red Pitaya hardware functionalities<br>
-                            &nbsp;&nbsp;&nbsp;(GPIO, slow and fast DACs and ADCs, I2C, SPI, UART)<br>
-                            &nbsp;- supports WIFI or LAN remote interface
-                            <br><br><br><br><br><br>
+                        <div class="left-content-scpi" style="font-size: 18pt; color: gray;">
+                            <p>SCPI server application</p>
+                            <ul>
+                                <li>enables remote control of Red Pitaya using MATLAB/Python/LabVIEW/Scilab</li>
+                                <li>provides comlete access to Red Pitaya hardware functionalities
+                                    <br/> &nbsp;&nbsp;&nbsp;(GPIO, slow and fast DACs and ADCs, I2C, SPI, UART)</li>
+                                <li>supports WIFI or LAN remote interface</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="right-scpi">
-                        <br><br><br>
+                        <br>
+                        <br>
+                        <br>
                         <img src="img/apps.png" width="200%">
                     </div>
                     <div>
-                        <div id="label-is-runnung" align=center style="font-size: 16pt; color: red">
-                            SCPI server is not running
+                        <div id="label-is-runnung" align=center style="font-size: 16pt; color: red; display: none;">
+                            SCPI server is not running, press RUN button to start it
                         </div>
-                        <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green; display: none;">
-                            SCPI server is running...
+                        <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green;">
+                            SCPI server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
                         </div>
                         <div align=center>
                             <a class="control_href" target="_blank" href="http://redpitaya.com/control/">Click here to see the example about how to Control your Red Pitaya using MATLAB/Python/LabVIEW/Scilab.</a>
@@ -88,19 +90,17 @@
             </div>
         </div>
     </div>
-
     <div>
         <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
-            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span><br/>
-            Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
-        </div>
-        <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white; ">
-            <span id="delay">Performance problem has occurred</span>
-        </div>
-        <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
-            You are working in demo mode. Click here to see details.
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
         </div>
     </div>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $("#ip-addr").text(window.location.hostname);
+    })
+    </script>
 </body>
 
 </html>
