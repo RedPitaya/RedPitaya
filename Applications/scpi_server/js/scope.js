@@ -116,11 +116,11 @@
       }
       else if(dresult.status == 'ERROR') {
         console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-        location.reload();
+      OSC.startApp();
       }
       else {
         console.log('Could not start the application (ERR2)');
-        location.reload();
+      OSC.startApp();
       }
     })
     .fail(function() {
