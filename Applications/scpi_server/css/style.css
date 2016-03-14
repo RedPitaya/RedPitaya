@@ -755,22 +755,26 @@ area:hover {
     font-size: 16pt;
     color:gray;
     text-decoration: none;
+    border-bottom: 1px dashed gray;
 }
 
 .control_href:visited {
     font-size: 16pt;
     color:gray;
     text-decoration: none;
+    border-bottom: 1px dashed gray;
 }
 
 .control_href:hover {
     font-size:16pt;
     color:gray;
     text-decoration: none;
+    border-bottom: 1px dashed gray;
 }
 
 .control_href:active {
     font-size: 16pt;
     color:gray;
     text-decoration: none;
+    border-bottom: 1px dashed gray;
 }
