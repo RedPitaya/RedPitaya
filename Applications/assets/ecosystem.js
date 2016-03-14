@@ -10,10 +10,11 @@
 
 (function($) {
     var isOnline = true;
-    var default_apps = [{ id: "marketplace", name: "Marketplace", description: "Provides access to new applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true },
-        { id: "appstore", name: "Store", description: "Provides access to new hardware", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false },
-        { id: "github", name: "Github", description: "Our github", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false },
+    var default_apps = [
         { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true  },
+        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true },
+        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false },
+        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false },
     ];
 
     var apps = [];
