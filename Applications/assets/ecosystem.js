@@ -101,6 +101,8 @@
 
             for(var i=0; i<default_apps.length; i++)
             {
+                if(default_apps[i].id == "marketplace")
+                    default_apps[i].url = url + 'bazaar'
                 apps.push(default_apps[i]);
             }
 
@@ -221,11 +223,18 @@
         var mc = new Hammer(myElement);
         mc.on('swipe', onSwipe);
 
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", 'info/info.json', false);
-        xmlHttp.send(null);
-        var info = JSON.parse(xmlHttp.responseText);
-        $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+        var url_arr = window.location.href.split("/");;
+        var url = url_arr[0] + '//' + url_arr[2] + '/info/info.json';
+        $.ajax({
+            method: "GET",
+            url: url
+        }).done(function(msg) {
+            var info = JSON.parse(msg);
+            $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+        }).fail(function(msg) {
+            var info = JSON.parse(msg.responseText);
+            $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+        } );
     });
 
     $(window).resize(function($) {
