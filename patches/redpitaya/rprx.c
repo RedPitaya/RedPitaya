@@ -157,20 +157,12 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 	break;
 	}
 	case SET_RX_SGMNT_CNT:{
-		if(arg>RX_SGMNT_CNT){
-			rx->segment_cnt=RX_SGMNT_CNT;
-		}else{
-			rx->segment_cnt=arg;
-		}
+		rx->segment_cnt=arg;
 		dev_info(dev, "ioctl segment cnt set to 0x%x \n",rx->segment_cnt);
 	}break;
 	case SET_RX_SGMNT_SIZE:{
-		if(arg>RX_SGMNT_SIZE){
-			rx->segment_size=RX_SGMNT_SIZE;
-		}else{
-			rx->segment_size=arg;
-		}
-		dev_err(dev, "ioctl segment size set to 0x%lx \n",rx->segment_size);
+		rx->segment_size=arg;
+		dev_info(dev, "ioctl segment size set to 0x%lx \n",rx->segment_size);
 	}break;
 	default:
 		dev_info(dev, "ioctl %d-%lx not inmplemented \n",cmd,arg);

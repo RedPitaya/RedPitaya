@@ -34,6 +34,14 @@ ioctl macro definitions
 #define SET_RX_SGMNT_CNT 16
 #define SET_RX_SGMNT_SIZE 15
 
+/*
+ * SGMNT_CNT*SGMNT_SIZE should never be larger than second reg argiment
+ * in DT
+ * 	rprx_reserverd: labuf@1c000000 {
+ *		reg = <0x1c000000 0x2000000>;
+ *	};
+ * and SGMNT_SIZE should not be larger then 0x400000
+ * */
 #define SGMNT_CNT 8
 #define SGMNT_SIZE 4*1024*1024
 #define RX_SGMNT_CNT SGMNT_CNT
