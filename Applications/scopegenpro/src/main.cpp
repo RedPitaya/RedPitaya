@@ -58,6 +58,9 @@ CFloatParameter in2Scale("OSC_CH2_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 100
 CFloatParameter out1Scale("OSC_OUTPUT1_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
 CFloatParameter out2Scale("OSC_OUTPUT2_SCALE", CBaseParameter::RWSA, 1, 0, 0.00005, 1000);
 CDoubleParameter inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 1e-12, 1e+12);
+
+CStringParameter inMathScaleStr("OSC_MATH_SCALE_STR", CBaseParameter::RW, "", 10);
+
 CDoubleParameter inMathScaleMult("OSC_MATH_SCALE_MULT", CBaseParameter::RW, 1, 0, 1e-12, 1e+12);
 CFloatParameter in1Probe("OSC_CH1_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
 CFloatParameter in2Probe("OSC_CH2_PROBE", CBaseParameter::RW, 1, 0, 0, 1000);
@@ -360,6 +363,7 @@ void UpdateParams(void) {
     }
 
     inMathScale.Value() = dvalue;
+    inMathScaleStr.Value() = std::to_string(dvalue);
 
 	rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
     in1Offset.Value() = dvalue;
