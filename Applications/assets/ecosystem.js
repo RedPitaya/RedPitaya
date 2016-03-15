@@ -11,10 +11,10 @@
 (function($) {
     var isOnline = true;
     var default_apps = [
-        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true  },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true },
-        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false },
-        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false },
+        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true, licensable : false  },
+        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false, licensable : false },
+        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false, licensable : false },
+        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true, licensable : false },
     ];
 
     var apps = [];
@@ -97,6 +97,7 @@
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
                 obj['check_online'] = true;
+                obj['licensable'] = true;
                 apps.push(obj);
             });
 
@@ -119,7 +120,11 @@
         if(apps[key].check_online)
         {
             if (!isOnline) {
-                $('#lic_failed').show();
+                if (apps[key].licensable)
+                    $('#lic_failed').show();
+                else
+                    $('#lic_failed').hide();
+
                 $('#ic_missing').modal('show');
                 return;
             }
