@@ -29,6 +29,7 @@ public:
 		n.push_back(JSONNode("max", this->m_Value.max));
 		n.push_back(JSONNode("access_mode", this->m_Value.access_mode));
 		n.push_back(JSONNode("fpga_update", this->m_Value.fpga_update));
+
 		return n;
 	}
 	
