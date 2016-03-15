@@ -32,12 +32,12 @@ body {
 
 }
 
-li {
+.left-content-scpi > ul > li {
     list-style-type: none;
    }
 
 
-li:before
+.left-content-scpi > ul > li:before
 {
   content: "- ";
 }
