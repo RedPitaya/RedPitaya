@@ -30,7 +30,7 @@ typedef enum
 
 int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle);
 int rp_DmaCtrl(rp_handle_uio_t *handle, RP_DMA_CTRL ctrl);
-int rp_SetSgmntN(rp_handle_uio_t *handle, unsigned long no);
+int rp_SetSgmntC(rp_handle_uio_t *handle, unsigned long no);
 int rp_SetSgmntS(rp_handle_uio_t *handle, unsigned long no);
 int rp_DmaRead(rp_handle_uio_t *handle);
 int rp_DmaMemDump(rp_handle_uio_t *handle);
