@@ -84,13 +84,15 @@
   			}
   			else if(dresult.status == 'ERROR'){
   				console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
+  				LCR.startApp();
   			}else{
   				console.log('Could not start application (ERR2)');
+  				LCR.startApp();
   			}
   		})
   		.fail(function() {
       		console.log('Could not start the application (ERR3)');
-      		$('#modal_reload_page').modal('show');
+      		LCR.startApp();
     	});
   	};
 
