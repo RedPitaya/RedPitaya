@@ -116,11 +116,11 @@
       }
       else if(dresult.status == 'ERROR') {
         console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-        location.reload();
+      	OSC.startApp();
       }
       else {
         console.log('Could not start the application (ERR2)');
-        location.reload();
+      	OSC.startApp();
       }
     })
     .fail(function() {
@@ -276,6 +276,7 @@
 			OSC.decompressed_data += text.length;
 
 			var receive = JSON.parse(text);
+			//console.log(text);
 
 			if(receive.parameters) {
 			  if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
@@ -352,6 +353,15 @@
 
     var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
     for(var param_name in new_params) {
+    	if(new_params['OSC_MATH_SCALE'] !== undefined)
+    		console.log("OSC_MATH_SCALE (double): " + new_params['OSC_MATH_SCALE'].value);
+    	if(new_params['OSC_MATH_SCALE_STR'] !== undefined){
+    		console.log("OSC_MATH_SCALE (str): " + new_params['OSC_MATH_SCALE_STR'].value);
+    		new_params['OSC_MATH_SCALE'].value = parseFloat(new_params['OSC_MATH_SCALE_STR'].value) * 1;
+    		//new_params['OSC_MATH_SCALE'].value /= 1000;
+    		console.log("Now OSC_MATH_SCALE (double) IS: " + new_params['OSC_MATH_SCALE'].value);
+    		console.log("-----");
+    	}
 
       // Save new parameter value
       OSC.params.orig[param_name] = new_params[param_name];
