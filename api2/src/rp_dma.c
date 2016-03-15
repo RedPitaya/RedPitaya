@@ -16,6 +16,9 @@
 
 #include "rp_dma.h"
 
+#define RP_SGMNT_CNT 4
+#define RP_SGMNT_SIZE (4*1024)
+
 int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
 {
     // make a copy of the device path
@@ -28,6 +31,11 @@ int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
         printf("Unable to open device file");
         return -1;
     }
+
+    // TODO: check for max. memory size..
+    handle->dma_size=RP_SGMNT_CNT*RP_SGMNT_SIZE;
+    rp_SetSgmntC(handle,RP_SGMNT_CNT);
+    rp_SetSgmntS(handle,RP_SGMNT_SIZE);
 
     return RP_OK;
 }

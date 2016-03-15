@@ -22,16 +22,12 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "la_acq.h"
 #include "generate.h"
 #include "la_acq.h"
 
 #include "rp_dma.h"
 
 #define LA_ACQ_BUF_SIZE 0x4000  // TODO: just for test..
-
-#define SGMNT_CNT 4
-#define SGMNT_SIZE (4*1024)
 
 int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     int status;
@@ -53,7 +49,6 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
-    handle->dma_size=SGMNT_CNT*SGMNT_SIZE;
     status = rp_DmaOpen("/dev/rprx", handle);
     if (status != RP_OK) {
         return status;
