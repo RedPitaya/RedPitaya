@@ -684,7 +684,7 @@ void OnNewParams(void) {
         inTrigSweep.Value() = sweep;
     }
 
-    if(mathSource1.IsNewValue() || mathSource2.IsNewValue() || mathOperation.IsNewValue()) {
+    if(mathSource1.IsNewValue() || mathSource2.IsNewValue() || mathOperation.IsNewValue() || IS_NEW(inTimeScale)) {
         resetMathParams();
     }
 
