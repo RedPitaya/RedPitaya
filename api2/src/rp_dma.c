@@ -47,6 +47,18 @@ int rp_DmaCtrl(rp_handle_uio_t *handle, RP_DMA_CTRL ctrl)
     return RP_OK;
 }
 
+int rp_SetSgmntN(rp_handle_uio_t *handle, unsigned long no)
+{
+    ioctl(handle->dma_fd, SET_RX_SGMNT_CNT, no);
+    return RP_OK;
+}
+
+int rp_SetSgmntS(rp_handle_uio_t *handle, unsigned long no)
+{
+    ioctl(handle->dma_fd, SET_RX_SGMNT_SIZE, no);
+    return RP_OK;
+}
+
 int rp_DmaMemDump(rp_handle_uio_t *handle)
 {
     unsigned char* map=NULL;
