@@ -38,7 +38,7 @@ pthread_t tid;
 
 void* trigGen(void *arg)
 {
-    sleep(1);
+    sleep(2);
     rp_DigSigGenSoftwareControl(1);
     return NULL;
 }
@@ -59,16 +59,19 @@ void la_acq_trig_test(void)
     // start trigger a bit later in a new thread
     int err;
     err = pthread_create(&tid, NULL, &trigGen, NULL);
-           if (err != 0)
-               printf("\ncan't create thread :[%s]", strerror(err));
-           else
-               printf("\n Thread created successfully\n");
+    if (err != 0)
+        printf("\ncan't create thread :[%s]", strerror(err));
+    else
+        printf("\n Thread created successfully\n");
 
     printf("\r\nTriggers");
     s=rp_SetTriggerDigitalPortProperties(dir,1);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to set trigger properties.");
     }
+
+    // enable RLE
+    rp_EnableDigitalPortDataRLE(1);
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;

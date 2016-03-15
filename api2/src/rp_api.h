@@ -231,6 +231,8 @@ RP_STATUS rp_GetUnitInfo(int8_t * string,
 RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
                                             int16_t nDirections);
 
+
+RP_STATUS rp_EnableDigitalPortDataRLE(bool enable);
 RP_STATUS rp_IsAcquistionComplete();
 
 RP_STATUS rp_GetTimebase(uint32_t timebase,

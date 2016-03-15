@@ -22,16 +22,12 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "la_acq.h"
 #include "generate.h"
 #include "la_acq.h"
 
 #include "rp_dma.h"
 
 #define LA_ACQ_BUF_SIZE 0x4000  // TODO: just for test..
-
-#define SGMNT_CNT 4
-#define SGMNT_SIZE (4*1024)
 
 int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     int status;
@@ -53,7 +49,6 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
-    handle->dma_size=SGMNT_CNT*SGMNT_SIZE;
     status = rp_DmaOpen("/dev/rprx", handle);
     if (status != RP_OK) {
         return status;
@@ -258,11 +253,26 @@ int rp_LaAcqDisableRLE(rp_handle_uio_t *handle) {
     return RP_OK;
 }
 
+int rp_LaAcqIsRLE(rp_handle_uio_t *handle, bool * state) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    if(ioread32(&regset->cfg_rle)&RP_LA_ACQ_RLE_ENABLE_MASK)
+        *state=true;
+    else
+        *state=false;
+    return RP_OK;
+}
+
 int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last) {
     rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
     *current = ioread32(&regset->sts_cur);
-    *last = ioread32(&regset->sts_lst);
-    return RP_OK;
+    *last = (ioread32(&regset->sts_lst)%rp_LaAcqBufLenInSamples(handle));
+    if(*last>0){
+        *last-=1;
+        return RP_OK;
+    }
+    else{
+        return RP_EOOR;
+    }
 }
 
 /** Data buffer pointers */
