@@ -1509,8 +1509,8 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
         } else {
             int i;
             for (i = 0; i < maxViewIdx /*&& (int) (((float)i * curDeltaSample) + buffFullOffset) < ADC_BUFFER_SIZE*/; ++i) {
-				ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
-					convertRawData(data[channel][((int) ((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
+				const size_t idx = ((size_t)((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE;
+				ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, convertRawData(data[channel][idx], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
 /*
                 ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
 					convertRawData(data[channel][((size_t) ((size_t)((float)i * curDeltaSample) + buffFullOffset)) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
@@ -1635,7 +1635,7 @@ void *mainThreadFun() {
                 }
             }
 
-            g_triggerTS = _clock() + 5.f * _timeScale * (float)DIVISIONS_COUNT_X;
+            g_triggerTS = _clock() + MAX((5.f * _timeScale * (float)DIVISIONS_COUNT_X), 20);
 
             // Reset autoSweep timer
             if (trigSweep == RPAPP_OSC_TRIG_AUTO) {

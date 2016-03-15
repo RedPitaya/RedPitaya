@@ -138,6 +138,10 @@
       SPEC.ws.onopen = function() {
         SPEC.state.socket_opened = true;
         console.log('Socket opened');
+        setTimeout(function(){
+          if (SPEC.state.demo_label_visible)
+            $('#get_lic').modal('show');
+        }, 2500);
       };
 
       SPEC.ws.onclose = function() {

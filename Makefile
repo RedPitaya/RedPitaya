@@ -492,10 +492,11 @@ ifdef ENABLE_LICENSING
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
+APP_SCPISERVER_DIR    = Applications/scpi_server
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server
 
-apps_pro: scopegenpro spectrumpro lcr_meter
+apps_pro: scopegenpro spectrumpro lcr_meter scpi_server
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -508,6 +509,10 @@ spectrumpro: api $(NGINX)
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+scpi_server: api $(NGINX)
+	$(MAKE) -C $(APP_SCPISERVER_DIR)
+	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 

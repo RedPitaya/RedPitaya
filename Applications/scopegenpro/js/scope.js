@@ -66,6 +66,8 @@
   OSC.decompressed_data = 0;
   OSC.refresh_times = [];
 
+  OSC.counts_offset = 0;
+
   // Sampling rates
   OSC.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
 
@@ -97,6 +99,11 @@
   OSC.touch = {};
 
   OSC.connect_time;
+
+  OSC.inGainValue1 = '-';
+  OSC.inGainValue2 = '-';
+  OSC.loaderShow = false;
+  OSC.running = true;
 
   // Starts the oscilloscope application on server
   OSC.startApp = function() {
@@ -144,7 +151,7 @@
 	for(var i=0; i<OSC.refresh_times.length; i++)
 		times += OSC.refresh_times[i] + " ";
 
-	console.log(now_str + " | compressed="+OSC.compressed_data + "; decompressed: "+OSC.decompressed_data + " | Updates: " + OSC.refresh_times.length + "; Delays: "+times);
+	//console.log(now_str + " | compressed="+OSC.compressed_data + "; decompressed: "+OSC.decompressed_data + " | Updates: " + OSC.refresh_times.length + "; Delays: "+times);
 	$('#fps_view').text(OSC.refresh_times.length);
 	$('#throughput_view').text((OSC.compressed_data/1024).toFixed(2) + "kB/s");
 	$('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
@@ -204,6 +211,42 @@
 		OSC.params.local['in_command'] = { value: 'send_all_params' };
 		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
 		OSC.params.local = {};
+
+		setTimeout(function(){
+		  	var ch1_cookie_value = $.cookie("scope_osc_ch1_in_gain");
+		  	var ch2_cookie_value = $.cookie("scope_osc_ch2_in_gain");
+
+      		OSC.params.local = {};
+		  	if(ch1_cookie_value == '1'){
+		  		$("#OSC_CH1_IN_GAIN").parent().removeClass("active")
+		  		$("#OSC_CH1_IN_GAIN1").parent().addClass("active")
+		  		OSC.params.local['OSC_CH1_IN_GAIN'] = { value: 1 };
+		  	}
+		  	else if(ch1_cookie_value == '0'){
+		  		$("#OSC_CH1_IN_GAIN1").parent().removeClass("active")
+		  		$("#OSC_CH1_IN_GAIN").parent().addClass("active")
+		  		OSC.params.local['OSC_CH1_IN_GAIN'] = { value: 0 };
+		  	}
+
+		  	if(ch2_cookie_value == '1'){
+		  		$("#OSC_CH2_IN_GAIN").parent().removeClass("active")
+		  		$("#OSC_CH2_IN_GAIN1").parent().addClass("active")
+		  		OSC.params.local['OSC_CH2_IN_GAIN'] = { value: 1 };
+		  	}
+		  	else if(ch2_cookie_value == '0'){
+		  		$("#OSC_CH2_IN_GAIN1").parent().removeClass("active")
+		  		$("#OSC_CH2_IN_GAIN").parent().addClass("active")
+		  		OSC.params.local['OSC_CH2_IN_GAIN'] = { value: 0 };
+		  	}
+      		OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+      		OSC.params.local = {};
+	  	}, 2000);
+
+		setTimeout(function(){
+			if (OSC.state.demo_label_visible)
+				$('#get_lic').modal('show');
+		}, 2500);
+
       };
 
       OSC.ws.onclose = function() {
@@ -488,6 +531,9 @@
           $('#OSC_RUN').show();
         }
       }
+      else if(param_name == "OSC_AUTOSCALE"){
+      	  console.log(new_params[param_name]);
+	  }
       // Buffer size parameter
       else if(param_name == 'OSC_VIEV_PART') {
         var full_width = $('#buffer').width() - 4;
@@ -1064,6 +1110,7 @@
         continue;
       }
 
+
       var points = [];
       var sig_btn = $('#right_menu .menu-btn.' + sig_name);
       var color = OSC.config.graph_colors[sig_name];
@@ -1087,6 +1134,14 @@
 
       if(OSC.graphs[sig_name]) {
         OSC.graphs[sig_name].elem.show();
+
+      if(points.length !== 0){
+       	$('#img_loading').hide();
+    	OSC.loaderShow = false;
+      }else if(points.length === 0){
+       	$('#img_loading').show();
+    	OSC.loaderShow = true;
+      }
 
         if(OSC.state.resized) {
           OSC.graphs[sig_name].plot.resize();
@@ -2006,6 +2061,7 @@ $(function() {
     $('#OSC_STOP').css('display','block');
     OSC.params.local['OSC_RUN'] = { value: true };
     OSC.sendParams();
+    OSC.running = true;
   });
 
 //  $('#OSC_STOP').on('click touchstart', function(ev) {
@@ -2015,6 +2071,7 @@ $(function() {
     $('#OSC_RUN').show();
     OSC.params.local['OSC_RUN'] = { value: false };
     OSC.sendParams();
+    OSC.running = false;
   });
 
 //  $('#OSC_SINGLE').on('click touchstart', function(ev) {
@@ -2026,9 +2083,13 @@ $(function() {
 
 //  $('#OSC_AUTOSCALE').on('click touchstart', function(ev) {
   $('#OSC_AUTOSCALE').on('click', function(ev) {
+    if(OSC.running == false)
+    	return;
     ev.preventDefault();
     OSC.params.local['OSC_AUTOSCALE'] = { value: true };
     OSC.sendParams();
+    $('#img_loading').show();
+    OSC.loaderShow = true;
   });
 
   // Selecting active signal
@@ -2599,6 +2660,21 @@ $(function() {
       url: OSC.config.stop_app_url,
       async: false
     });
+
+    var scope_osc_ch1_in_gain;
+    if($("#OSC_CH1_IN_GAIN").parent().hasClass("active"))
+    	scope_osc_ch1_in_gain = '0';
+    else if($("#OSC_CH1_IN_GAIN1").parent().hasClass("active"))
+    	scope_osc_ch1_in_gain = '1';
+
+    var scope_osc_ch2_in_gain;
+    if($("#OSC_CH2_IN_GAIN").parent().hasClass("active"))
+    	scope_osc_ch2_in_gain = '0';
+    else if($("#OSC_CH2_IN_GAIN1").parent().hasClass("active"))
+    	scope_osc_ch2_in_gain = '1';
+
+    $.cookie('scope_osc_ch1_in_gain', scope_osc_ch1_in_gain);
+    $.cookie('scope_osc_ch2_in_gain', scope_osc_ch2_in_gain);
   };
 
   // Everything prepared, start application
@@ -2669,6 +2745,50 @@ $(function() {
 			$('#calib-input').attr('min', '0.1');
 		}
 	}
+
+    $("#graphs").mousewheel(function(event) {
+        OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
+    });
+
+    var laAxesMoving = false;
+    var curXPos = 0;
+    $("#graphs").mousedown(function(event) {
+        laAxesMoving = true;
+        curXPos = event.pageX;
+    });
+
+    $("#graphs").mouseup(function(event) {
+        laAxesMoving = false;
+    });
+    $("#graphs").mouseout(function(event) {
+        laAxesMoving = false;
+    });
+    $("#graphs").mousemove(function(event) {
+        if (OSC.state.line_moving) return;
+        if (laAxesMoving) {
+            if (!$.isEmptyObject(OSC.graphs)) {
+                var diff = event.pageX - curXPos;
+                curXPos = event.pageX;
+                OSC.counts_offset -= diff;
+                if (OSC.counts_offset <= 0)
+                    OSC.counts_offset = 0;
+
+                OSC.offsetForDecoded = OSC.counts_offset;
+
+                console.log(OSC.counts_offset);
+
+		        var buf_width = $('#buffer').width();
+		        /*var zero_pos = (buf_width + 2) / 2;
+		        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
+		        var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);*/
+
+		        //OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+
+		        OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset * OSC.params.orig['OSC_TIME_SCALE'].value / 100) };
+		        OSC.sendParams();
+            }
+        }
+    });
 
 	$('#calib-1').click(function() {
 		if (OSC.params.orig['is_demo'] && OSC.params.orig['is_demo'].value == false) {

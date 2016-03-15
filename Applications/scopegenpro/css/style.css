@@ -718,3 +718,25 @@ area:hover {
   top: 8px;
   z-index: 15;
 }
+
+.img-container {
+  text-align:center;
+
+  position:absolute;
+  width:100%;
+  height:100%;
+
+  display: none;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+/*
+.centerer {
+  display: inline-block;
+  vertical-align: middle;
+}*/
+
+.centerer {
+  display: inline-block;
+  vertical-align: middle;
+  height: 80%;
+}
