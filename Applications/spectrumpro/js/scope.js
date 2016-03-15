@@ -107,13 +107,16 @@
       }
       else if(dresult.status == 'ERROR') {
         console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
+        SPEC.startApp();
       }
       else {
         console.log('Could not start the application (ERR2)');
+        SPEC.startApp();
       }
     })
     .fail(function() {
       console.log('Could not start the application (ERR3)');
+      SPEC.startApp();
     });
   };
 
