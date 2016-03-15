@@ -46,7 +46,7 @@ CURRENT_DIR := $(shell pwd)
 all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
 
 $(CRYPTO_LIB):
-	patch -td $(CRYPTO_DIR) < cryptopp_singleton.diff
+	patch -Nd $(CRYPTO_DIR) < cryptopp_singleton.diff
 	mkdir -p $(CRYPTO_INSTALL_DIR)
 	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
 	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
