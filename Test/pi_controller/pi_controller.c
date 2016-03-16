@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   //  double    w_out = frequency * 2 * M_PI; // angular velocity
     uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
-    signal_e type = eSignalSine;
+  //  signal_e type = eSignalSine;
     int       f = 1; // used in for lop, setting the decimation
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
