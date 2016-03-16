@@ -104,6 +104,7 @@
   OSC.inGainValue2 = '-';
   OSC.loaderShow = false;
   OSC.running = true;
+  OSC.unexpectedClose = true;
 
   // Starts the oscilloscope application on server
   OSC.startApp = function() {
@@ -253,7 +254,21 @@
         OSC.state.socket_opened = false;
         $('#graphs .plot').hide();  // Hide all graphs
         console.log('Socket closed');
+        if(OSC.unexpectedClose == true) {
+			$('#feedback_error').modal('show');
+        }
       };
+
+      $('#send_report_btn').on('click', function() {
+        mail = "support@redpitaya.com";
+        subject = "Feedback";
+        body = "Socket closed";
+        document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+      });
+
+      $('#restart_app_btn').on('click', function() {
+        location.reload();
+      });
 
       OSC.ws.onerror = function(ev) {
         console.log('Websocket error: ', ev);
@@ -2685,6 +2700,8 @@ $(function() {
 
     $.cookie('scope_osc_ch1_in_gain', scope_osc_ch1_in_gain);
     $.cookie('scope_osc_ch2_in_gain', scope_osc_ch2_in_gain);
+
+    OSC.unexpectedClose = false;
   };
 
   // Everything prepared, start application
