@@ -173,8 +173,8 @@ int main(int argc, char *argv[]) {
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    float *Amplitude_output         = (float *)malloc( sizeof(float));
-    float *Phase_output             = (float *)malloc( sizeof(float));
+    float *Amplitude         = (float *)malloc( sizeof(float));
+    float *Phase             = (float *)malloc( sizeof(float));
     float *measured_data_amplitude  = (float *)malloc((2) * sizeof(float) );
     float *measured_data_phase      = (float *)malloc((2) * sizeof(float) );
 	
