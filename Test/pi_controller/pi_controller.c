@@ -63,6 +63,7 @@ void usage() {
             "Usage:\t%s [channel in] "
                        "[channel out] "
                        "[frequency] "
+                       "[phase shift] "
                        "[k_p] "
                        "[k_i] "
                        "[T_int]\n"
@@ -70,9 +71,10 @@ void usage() {
             "\tchannel in         Channel to acquire error signal on [1 / 2].\n"
             "\tchannel out        Channel to generate controll signal on [1 / 2].\n"
             "\tfrequency          Refference frequency in Hz [~12000].\n"
-            "\tk_p                 Proportional coefficient\n"
-            "\tk_i                 Integrator coefficient\n"
-            "\tT_int               Low-pass filter coefficient in s\n"
+            "\tphase shift        Phase shift of ref signal in deg [0 - 360]\n"
+            "\tk_p                Proportional coefficient\n"
+            "\tk_i                Integrator coefficient\n"
+            "\tT_int              Low-pass filter coefficient in s\n"
             "\n";
 
     fprintf(stderr, format, g_argv0);
@@ -124,7 +126,7 @@ int main(int argc, char *argv[]) {
 	}
     
     /** Argument check */
-    if (argc<6) {
+    if (argc<7) {
         fprintf(stderr, "Too few arguments!\n\n");
         usage();
         return -1;
@@ -145,6 +147,31 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }
+	
+	
+	/** Parameters initialization and calculation */
+    double    k;
+    double    w_out; // angular velocity
+    uint32_t  min_periodes = 10; // max 20
+    uint32_t  size; // number of samples varies with number of periodes
+    signal_e type = eSignalSine;
+    int       f = 0; // used in for lop, setting the decimation
+    int       i1, fr; // iterators in for loops
+    int       equal = 0; // parameter initialized for generator functionality
+    int       shaping = 0; // parameter initialized for generator functionality
+    int transientEffectFlag = 1;
+    char command[70];
+    char hex[45];
+	
+	 /** Memory allocation */
+    float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
+    float *Amplitude                = (float *)malloc( sizeof(float));
+    float *Amplitude_output         = (float *)malloc( sizeof(float));
+    float *Phase                    = (float *)malloc( sizeof(float));
+    float *Phase_output             = (float *)malloc( sizeof(float));
+    float *measured_data_amplitude  = (float *)malloc((2) * sizeof(float) );
+    float *measured_data_phase      = (float *)malloc((2) * sizeof(float) );
+    float *frequency                = (float *)malloc((steps + 1) * sizeof(float) );
 	
 	
 }
