@@ -155,28 +155,24 @@ int main(int argc, char *argv[]) {
         return -1;
     }	
     /// Phase_shift
-	double phase_shift = strtod(argv[4], NULL);
-    if ( (phase_shift < 0) ) {
+	double phase = strtod(argv[4], NULL);
+    if ( (phase < 0) ) {
         fprintf(stderr, "Invalid phase!\n\n");
         usage();
         return -1;
     }
 	
 	/** Parameters initialization and calculation */
-    double    k;
     double    w_out; // angular velocity
     uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
     signal_e type = eSignalSine;
-    int       f = 0; // used in for lop, setting the decimation
-    int       i1, fr; // iterators in for loops
+    int       f = 1; // used in for lop, setting the decimation
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
-    char hex[45];
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    float *Amplitude                = (float *)malloc( sizeof(float));
     float *Amplitude_output         = (float *)malloc( sizeof(float));
     float *Phase_output             = (float *)malloc( sizeof(float));
     float *measured_data_amplitude  = (float *)malloc((2) * sizeof(float) );
@@ -189,10 +185,6 @@ int main(int argc, char *argv[]) {
     }
     /// Showtime.
         w_out = frequency * 2 * M_PI; // omega - angular velocity
-
-      
-            /* decimation */
-			f=1;
 
             /* setting decimtion */
             t_params[TIME_RANGE_PARAM] = f;           
@@ -223,12 +215,5 @@ int main(int argc, char *argv[]) {
 
         
             Amplitude_output= measured_data_amplitude;
-            Phase_output= measured_data_phase       
-
-        
-
-     
-   
- 
-	
+            Phase_output= measured_data_phase;    
 }
