@@ -306,7 +306,7 @@ LUANGINX_TAG    = v0.8.7
 NGINX_TAG       = 1.5.3
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
-CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp562.zip
+CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp563.zip
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
