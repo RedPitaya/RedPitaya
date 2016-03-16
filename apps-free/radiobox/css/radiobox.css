@@ -222,7 +222,9 @@ input#tx_muxin_gain_f[disabled] {
     width:50px;
 }
 .qrg_col14 {
-    width:45px;
+    width:75px;
+    padding-left:10px;
+    text-align:left;
 }
 .qrg_col15 {
     width:55px;
@@ -234,7 +236,7 @@ input#tx_muxin_gain_f[disabled] {
     width:55px;
 }
 .qrg_col18 {
-    width:20px;
+    width:28px;
 }
 
 .qrg_up_dn_but {
