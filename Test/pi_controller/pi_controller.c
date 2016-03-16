@@ -215,6 +215,9 @@ int main(int argc, char *argv[]) {
 				if (s[1][2]==s[2][1]||size==3){};
 				
 	fprintf(stderr, "dziala2\n");
+	for(int i = 0; i < size; i++) {
+                    printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
+                }
 }
 
 /**
