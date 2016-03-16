@@ -21,7 +21,6 @@ const char *g_argv0 = NULL; // Program name
 int32_t data[n]; // AWG data buffer
 
 /** Signal types */
-/*
 typedef enum {
     eSignalSine,         // Sinusoidal waveform
     eSignalSquare,       // Square waveform
@@ -29,7 +28,7 @@ typedef enum {
     eSignalSweep,        // Sinusoidal frequency sweep
 	eSignalConst         // Constant signal
 } signal_e;
-*/
+
 /** AWG FPGA parameters */
 typedef struct {
     int32_t  offsgain;   // AWG offset & gain
@@ -199,8 +198,11 @@ int main(int argc, char *argv[]) {
             }
 
             /* ADC Data acqusition - saved to s */
-            if (acquire_data( s, size ) < 0) {
+ /*           if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
-            }     
+            }  
+
+				*/   
+				if (s[1][2]==s[2][1]||size==3){};
 }
