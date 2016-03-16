@@ -33,6 +33,8 @@
     <script src="js/jquery.simulate.js"></script>
     <script src="js/zlib_and_gzip.min.js"></script>
     <script src="js/jquery.cookie.js"></script>
+    <script src="../assets/analytics-core.js"></script>
+    <script src="js/analytics-main.js"></script>
     <script src="js/scope.js?3"></script>
     <script src="js/jquery.browser.js"></script>
 </head>
@@ -803,6 +805,28 @@
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
                         <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Statistics</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
                     </div>
                 </div>
             </div>

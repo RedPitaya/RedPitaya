@@ -382,14 +382,9 @@
 
     var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
     for(var param_name in new_params) {
-    	if(new_params['OSC_MATH_SCALE'] !== undefined)
-    		console.log("OSC_MATH_SCALE (double): " + new_params['OSC_MATH_SCALE'].value);
+
     	if(new_params['OSC_MATH_SCALE_STR'] !== undefined){
-    		console.log("OSC_MATH_SCALE (str): " + new_params['OSC_MATH_SCALE_STR'].value);
     		new_params['OSC_MATH_SCALE'].value = parseFloat(new_params['OSC_MATH_SCALE_STR'].value) * 1;
-    		//new_params['OSC_MATH_SCALE'].value /= 1000;
-    		console.log("Now OSC_MATH_SCALE (double) IS: " + new_params['OSC_MATH_SCALE'].value);
-    		console.log("-----");
     	}
 
       // Save new parameter value
@@ -571,7 +566,7 @@
         }
       }
       else if(param_name == "OSC_AUTOSCALE"){
-      	  console.log(new_params[param_name]);
+      	  // console.log(new_params[param_name]);
 	  }
       // Buffer size parameter
       else if(param_name == 'OSC_VIEV_PART') {
@@ -2692,33 +2687,33 @@ $(function() {
   }).resize();
 
   // Stop the application when page is unloaded
-  window.onbeforeunload = function() {
-    OSC.ws.onclose = function () {}; // disable onclose handler first
-    OSC.ws.close();
-    $.ajax({
-      url: OSC.config.stop_app_url,
-      async: false
-    });
+	$(window).on('beforeunload', function(){
+	    OSC.ws.onclose = function () {}; // disable onclose handler first
+	    OSC.ws.close();
+	    $.ajax({
+	      url: OSC.config.stop_app_url,
+	      async: false
+	    });
 
-    var scope_osc_ch1_in_gain;
-    if($("#OSC_CH1_IN_GAIN").parent().hasClass("active"))
-    	scope_osc_ch1_in_gain = '0';
-    else if($("#OSC_CH1_IN_GAIN1").parent().hasClass("active"))
-    	scope_osc_ch1_in_gain = '1';
+	    var scope_osc_ch1_in_gain;
+	    if($("#OSC_CH1_IN_GAIN").parent().hasClass("active"))
+	    	scope_osc_ch1_in_gain = '0';
+	    else if($("#OSC_CH1_IN_GAIN1").parent().hasClass("active"))
+	    	scope_osc_ch1_in_gain = '1';
 
-    var scope_osc_ch2_in_gain;
-    if($("#OSC_CH2_IN_GAIN").parent().hasClass("active"))
-    	scope_osc_ch2_in_gain = '0';
-    else if($("#OSC_CH2_IN_GAIN1").parent().hasClass("active"))
-    	scope_osc_ch2_in_gain = '1';
+	    var scope_osc_ch2_in_gain;
+	    if($("#OSC_CH2_IN_GAIN").parent().hasClass("active"))
+	    	scope_osc_ch2_in_gain = '0';
+	    else if($("#OSC_CH2_IN_GAIN1").parent().hasClass("active"))
+	    	scope_osc_ch2_in_gain = '1';
 
-    $.cookie('scope_osc_ch1_in_gain', scope_osc_ch1_in_gain);
-    $.cookie('scope_osc_ch2_in_gain', scope_osc_ch2_in_gain);
+	    $.cookie('scope_osc_ch1_in_gain', scope_osc_ch1_in_gain);
+	    $.cookie('scope_osc_ch2_in_gain', scope_osc_ch2_in_gain);
 
-    OSC.unexpectedClose = false;
-  };
+	    OSC.unexpectedClose = false;
+	});
 
-  // Everything prepared, start application
+ // Everything prepared, start application
   OSC.startApp();
 
 	OSC.calib_texts =  	['Calibration of fast analog inputs and outputs is started. To proceed with calibration press CONTINUE. For factory calibration settings press DEFAULT.',

@@ -9,297 +9,281 @@
 -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <meta http-equiv="cache-control" content="max-age=0" />
-  <meta http-equiv="cache-control" content="no-cache" />
-  <meta http-equiv="expires" content="0" />
-  <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
-  <meta http-equiv="pragma" content="no-cache" />
-  <title>Red Pitaya</title>
-  <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/style.css?1">
-  <script src="js/jquery-2.1.3.min.js"></script>
-  <script src="js/jquery-ui.min.js"></script>
-  <script src="js/jquery.ui.touch-punch.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <script src="js/jquery.flot.js"></script>
-  <script src="js/fastclick.min.js"></script>
-  <script src="js/zlib_and_gzip.min.js"></script>
-  <script src="js/scope.js?1"></script>
-  <script src="js/jquery.browser.js"></script>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <title>Red Pitaya</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css?1">
+    <script src="js/jquery-2.1.3.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/jquery.ui.touch-punch.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.flot.js"></script>
+    <script src="js/fastclick.min.js"></script>
+    <script src="../assets/analytics-core.js"></script>
+    <script src="js/analytics-main.js"></script>
+    <script src="js/zlib_and_gzip.min.js"></script>
+    <script src="js/scope.js?1"></script>
+    <script src="js/jquery.browser.js"></script>
 </head>
+
 <body>
-  <div class="full-content">
-    <div class="container-fluid">
-      <div class="navbar navbar-inverse" role="navigation">
-        <div class="container">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-              <span class="sr-only">T</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">
-              <img class="back-btn" src="img/arrow_nav_left.png">
-            </a>
-            <img class="logo" width=110 src="img/logo.png">
-          </div>
-
-          <div class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-              <li>
-                <a id="SPEC_RUN" href="#">RUN</a>
-                <a id="SPEC_STOP" href="#" style="display:none">STOP</a>
-              </li>
-            </ul>
-          </div>
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="img/arrow_nav_left.png">
+                        </a>
+                        <img class="logo" width=110 src="img/logo.png">
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a id="SPEC_RUN" href="#">RUN</a>
+                                <a id="SPEC_STOP" href="#" style="display:none">STOP</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal export-->
+            <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title">Export</h4>
+                        </div>
+                        <div class="modal-body">
+                            Content
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal settings-->
+            <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title">Settings</h4>
+                        </div>
+                        <div class="modal-body">
+                            Content settings
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="global_container" style="position: relative;">
+                <div class="menu-content">
+                    <div id="right_menu" class="row right-menu-cont">
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch1" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in1" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch2" data-signal="ch2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in2" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="ctrl" class="right-menu-option edit-mode">RANGE</div>
+                        </div>
+                    </div>
+                    <div id="in1_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch1 right-menu-option close-dialog">
+                                <img src="img/arrow_nav_left.png"> Input 1
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH1_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH1_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="in2_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch2 right-menu-option close-dialog">
+                                <img src="img/arrow_nav_left.png"> Input 2
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH2_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH2_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="ctrl_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-6 option-content close-dialog">
+                            <div class="right-menu-option">
+                                <img src="img/arrow_nav_left.png"> Range
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info">Freq. unit:</span>
+                                <select id="freq_unit" class="form-control styled-select">
+                                    <option value="0">Hz</option>
+                                    <option value="1">kHz</option>
+                                    <option value="2">MHz</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info">Start freq.</span>
+                                <input class="setfiled" name="xmin" id="xmin" type="text" value="0">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info">End freq.</span>
+                                <input class="setfiled" name="xmax" id="xmax" type="text" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="cursor_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option">
+                                <img src="img/arrow_nav_left.png"> Cursor
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="SPEC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="SPEC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="SPEC_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="SPEC_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="between"></div>
+                    <div class="row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info">Peak Ch1:</span>
+                                <input class="setfiled" name="peak_ch1" id="peak_ch1" type="text" value="0" readonly>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info">Peak Ch2:</span>
+                                <input class="setfiled" name="peak_ch2" id="peak_ch2" type="text" value="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="main">
+                    <div id="graphs">
+                        <canvas id="graph_grid"></canvas>
+                        <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                        <div id="cur_x1" class="vline"></div>
+                        <div id="cur_x1_info" class="cur_info"></div>
+                        <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                        <div id="cur_x2" class="vline"></div>
+                        <div id="cur_x2_info" class="cur_info"></div>
+                        <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                        <div id="cur_y1" class="hline"></div>
+                        <div id="cur_y1_info" class="cur_info"></div>
+                        <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                        <div id="cur_y2" class="hline"></div>
+                        <div id="cur_y2_info" class="cur_info"></div>
+                        <div id="cur_y_diff"></div>
+                        <div id="cur_y_diff_info" class="cur_info"></div>
+                        <div id="cur_x_diff"></div>
+                        <div id="cur_x_diff_info" class="cur_info"></div>
+                    </div>
+                    <div id="info" class="clear">
+                        <div id="power" class="left-info">
+                            dBm
+                        </div>
+                        <div id="freq" class="text-center" style="margin-top: -20px;">
+                        </div>
+                    </div>
+                    <div id="waterfall-holder_ch1" class="waterfall-holder clearfix">
+                        <div class="waterfall_title ch1">IN1</div>
+                        <img id="waterfall_ch1" src=" " onload="SPEC.updateImg(this, true);" onerror="SPEC.updateImg(this, false);">
+                        <div id="wait_waterfall_ch1" class="wait">
+                            <img id="waitdata_ch1" src="img/wait.png" onerror="">
+                            <span id="wait_text_ch1"></span>
+                        </div>
+                    </div>
+                    <div id="waterfall-holder_ch2" class="waterfall-holder clearfix">
+                        <div class="waterfall_title ch2">IN2</div>
+                        <img id="waterfall_ch2" src="" onload="SPEC.updateImg(this, true);" onerror="SPEC.updateImg(this, false);">
+                        <div id="wait_waterfall_ch2" class="wait">
+                            <img id="waitdata_ch2" src="img/wait.png" onerror="">
+                            <span id="wait_text_ch2"></span>
+                        </div>
+                    </div>
+                    <div id="joystick">
+                        <img id="jtk_fine" src="img/reset.png" />
+                        <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
+                        <map name="jtk_btns_map">
+                            <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
+                            <area id="jtk_up" shape="poly" coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
+                            <area id="jtk_right" shape="poly" coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
+                            <area id="jtk_down" shape="poly" coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
+                        </map>
+                        <div id="demo-info" hidden>
+                            <div id="demo_toggle" class="calib-button">
+                                <button type="button" class="btn">Disable Demo signals</button>
+                            </div>
+                            <img id="demo_img" width="155" style="margin-top: 90px;" src="img/demo_sig.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <!-- Modal export-->
-      <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-              <h4 class="modal-title">Export</h4>
-            </div>
-            <div class="modal-body">
-              Content
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal settings-->
-      <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-              <h4 class="modal-title">Settings</h4>
-            </div>
-            <div class="modal-body">
-              Content settings
-            </div>
-          </div>
-        </div>
-      </div>
-<div id="global_container" style="position: relative;">
-      <div class="menu-content">
-        <div id="right_menu" class="row right-menu-cont">
-
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button type="button" class="btn menu-btn ch1" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN1</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content"><div id="in1" class="right-menu-option edit-mode"><img src="img/gear.png"></div></div>
-
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button type="button" class="btn menu-btn ch2" data-signal="ch2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN2</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content"><div id="in2" class="right-menu-option edit-mode"><img src="img/gear.png"></div></div>
-
-          <div class="col-xs-6 option-content">
-            <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
-          </div>
-
-          <div class="col-xs-6 option-content">
-            <div id="ctrl" class="right-menu-option edit-mode">RANGE</div>
-          </div>
-        </div>
-
-        <div id="in1_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-12 option-content">
-            <div class="ch1 right-menu-option close-dialog">
-              <img src="img/arrow_nav_left.png">
-              Input 1
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="CH1_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="CH1_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
-            </div>
-          </div>
-		</div>
-
-        <div id="in2_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-12 option-content">
-            <div class="ch2 right-menu-option close-dialog">
-              <img src="img/arrow_nav_left.png">
-              Input 2
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="CH2_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="CH2_FREEZE" type="button" class="btn freeze" data-toggle="button" aria-pressed="false" autocomplete="off">FREEZE</button>
-            </div>
-          </div>
-
-        </div>
-
-        <div id="ctrl_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-6 option-content close-dialog">
-            <div class="right-menu-option">
-              <img src="img/arrow_nav_left.png">
-               Range
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <span class="col-info">Freq. unit:</span>
-              <select id="freq_unit" class="form-control styled-select">
-                <option value="0">Hz</option>
-                <option value="1">kHz</option>
-				<option value="2">MHz</option>
-              </select>
-            </div>
-          </div>
-
-		  <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <span class="col-info">Start freq.</span>
-              <input class="setfiled" name="xmin" id="xmin" type="text" value="0">
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <span class="col-info">End freq.</span>
-              <input class="setfiled" name="xmax" id="xmax" type="text" value="0">
-            </div>
-          </div>
-
-        </div>
-
-        <div id="cursor_dialog" class="dialog row right-menu-cont">
-          <div class="col-xs-12 option-content close-dialog">
-            <div class="right-menu-option">
-              <img src="img/arrow_nav_left.png">
-              Cursor
-            </div>
-          </div>
-
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="SPEC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="SPEC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="SPEC_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
-            </div>
-          </div>
-          <div class="col-xs-6 option-content">
-            <div class="right-menu-option">
-              <button id="SPEC_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
-            </div>
-          </div>
-        </div>
-
-		<div class="between"></div>
-		<div class="row right-menu-cont">
-
-			<div class="col-xs-12 option-content">
-				<div class="right-menu-option">
-				  <span class="col-info">Peak Ch1:</span>
-				  <input class="setfiled" name="peak_ch1" id="peak_ch1" type="text" value="0" readonly>
-				</div>
-			</div>
-			<div class="col-xs-12 option-content">
-				<div class="right-menu-option">
-				  <span class="col-info">Peak Ch2:</span>
-				  <input class="setfiled" name="peak_ch2" id="peak_ch2" type="text" value="0" readonly>
-				</div>
-			</div>
-		</div>
-
-	  </div>
-
-
-      <div id="main">
-        <div id="graphs">
-          <canvas id="graph_grid"></canvas>
-		  <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
-          <div id="cur_x1" class="vline"></div>
-          <div id="cur_x1_info" class="cur_info"></div>
-          <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
-          <div id="cur_x2" class="vline"></div>
-          <div id="cur_x2_info" class="cur_info"></div>
-
-          <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
-          <div id="cur_y1" class="hline"></div>
-          <div id="cur_y1_info" class="cur_info"></div>
-          <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
-          <div id="cur_y2" class="hline"></div>
-          <div id="cur_y2_info" class="cur_info"></div>
-
-          <div id="cur_y_diff"></div>
-          <div id="cur_y_diff_info" class="cur_info"></div>
-          <div id="cur_x_diff"></div>
-          <div id="cur_x_diff_info" class="cur_info"></div>
-        </div>
-       <div id="info" class="clear">
-         <div id="power" class="left-info">
-			dBm
-          </div>
-          <div id="freq" class="text-center" style="margin-top: -20px;">
-          </div>
-        </div>
-		<div id="waterfall-holder_ch1" class="waterfall-holder clearfix">
-			<div class="waterfall_title ch1">IN1</div>
-			<img id="waterfall_ch1" src=" " onload="SPEC.updateImg(this, true);" onerror = "SPEC.updateImg(this, false);">
-			<div id="wait_waterfall_ch1" class="wait">
-				<img id="waitdata_ch1" src="img/wait.png" onerror = "">
-				<span id="wait_text_ch1"></span>
-			</div>
-		</div>
-        <div id="waterfall-holder_ch2" class="waterfall-holder clearfix">
-            <div class="waterfall_title ch2">IN2</div>
-            <img id="waterfall_ch2" src="" onload="SPEC.updateImg(this, true);" onerror = "SPEC.updateImg(this, false);">
-			<div id="wait_waterfall_ch2" class="wait">
-				<img id="waitdata_ch2" src="img/wait.png" onerror = "">
-				<span id="wait_text_ch2"></span>
-			</div>
-        </div>
-      <div id="joystick">
-        <img id="jtk_fine" src="img/reset.png" />
-        <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
-        <map name="jtk_btns_map">
-          <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
-          <area id="jtk_up" shape="poly" coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
-          <area id="jtk_right" shape="poly" coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
-          <area id="jtk_down" shape="poly" coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
-        </map>
-        <div id="demo-info" hidden>
-			<div id="demo_toggle" class="calib-button" ><button type="button" class="btn" >Disable Demo signals</button></div>
-			<img id="demo_img" width="155" style="margin-top: 90px;"src="img/demo_sig.png">
-       </div>
-      </div>
-      </div>
     </div>
-  </div>
- </div>
     <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -307,7 +291,7 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
                 </div>
-                <div class="modal-body"  style="text-align: center; font-size: 18px;">
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
                     <p id="lic_failed">Application is running in demo mode! </p>
                     <p> Please visit <a style="color: #dd0020" href="http://store.redpitaya.com/spectrumpro.html" target="_blank">Red Pitaya store</a> to get the licence.
                 </div>
@@ -322,42 +306,62 @@
             </div>
         </div>
     </div>
- <div>
-
-    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                    <h4 class="modal-title" id="bazaar_naLabel">Statistics</h4>
                 </div>
-                <div class="modal-body"  style="text-align: center; font-size: 18px;">
-                    <p>Please, contact us for more supports or reolad the application</p>
+                <div class="modal-body">
+                    <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-  <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
-      You are working in demo mode. Click here to see details.
-  </div>
- </div>
+    <div>
+        <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center; font-size: 18px;">
+                        <p>Please, contact us for more supports or reolad the application</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        </div>
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
+            You are working in demo mode. Click here to see details.
+        </div>
+    </div>
 </body>
 <script type="text/javascript">
-    $('#demo_label').click(function(){
-        $('#get_lic').modal('show');
-    });
-    $('#get_license').click(function(){
-        window.open('http://store.redpitaya.com/spectrumpro.html', '_blank');
-        $('#get_lic').modal('hide');
-    });
+$('#demo_label').click(function() {
+    $('#get_lic').modal('show');
+});
+$('#get_license').click(function() {
+    window.open('http://store.redpitaya.com/spectrumpro.html', '_blank');
+    $('#get_lic').modal('hide');
+});
 </script>
+
 </html>
