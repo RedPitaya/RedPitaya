@@ -178,8 +178,8 @@
 		try
 		{
 			var data = new Uint8Array(ev.data);
-			var inflate = new Zlib.Gunzip(data);
-			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+			var inflate = pako.inflate(data);
+			var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
 			var receive = JSON.parse(text);
 
 			if(receive.parameters) {

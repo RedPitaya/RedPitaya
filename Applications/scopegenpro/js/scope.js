@@ -270,13 +270,12 @@
 		try {
 			var data = new Uint8Array(ev.data);
 			OSC.compressed_data += data.length;
-			var inflate = new Zlib.Gunzip(data);
-			var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+			var inflate = pako.inflate(data);
+			var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
 
 			OSC.decompressed_data += text.length;
 
 			var receive = JSON.parse(text);
-			//console.log(text);
 
 			if(receive.parameters) {
 			  if((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
