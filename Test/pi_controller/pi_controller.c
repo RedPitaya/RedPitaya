@@ -70,9 +70,9 @@ void usage() {
             "\tchannel in         Channel to acquire error signal on [1 / 2].\n"
             "\tchannel out        Channel to generate controll signal on [1 / 2].\n"
             "\tfrequency          Refference frequency in Hz [~12000].\n"
-            "\k_p                 Proportional coefficient\n"
-            "\k_i                 Integrator coefficient\n"
-            "\T_int               Low-pass filter coefficient in s\n"
+            "\tk_p                 Proportional coefficient\n"
+            "\tk_i                 Integrator coefficient\n"
+            "\tT_int               Low-pass filter coefficient in s\n"
             "\n";
 
     fprintf(stderr, format, g_argv0);
