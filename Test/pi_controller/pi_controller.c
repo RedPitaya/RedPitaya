@@ -43,7 +43,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Decimation translation table */
 #define DEC_MAX 6 // Max decimation index
-static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+//static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
 void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
@@ -109,6 +109,7 @@ float max_array(float *arrayptr, int numofelements) {
 }
 
 int main(int argc, char *argv[]) {
+
 	fprintf(stderr, "dziala\n");
 	
 /** Set program name */
@@ -126,7 +127,7 @@ int main(int argc, char *argv[]) {
 	}
     
     /** Argument check */
-    if (argc<7) {
+    if (argc<8) {
         fprintf(stderr, "Too few arguments!\n\n");
         usage();
         return -1;
@@ -154,17 +155,24 @@ int main(int argc, char *argv[]) {
         usage();
         return -1;
     }	
-    /// Phase_shift
+    /// Phase
 	double phase = strtod(argv[4], NULL);
     if ( (phase < 0) ) {
         fprintf(stderr, "Invalid phase!\n\n");
+        usage();
+        return -1;
+		
+    }/// Periodes
+	double periodes = strtod(argv[8], NULL);
+    if ( (periodes < 0) ) {
+        fprintf(stderr, "Invalid periodes!\n\n");
         usage();
         return -1;
     }
 	
 	/** Parameters initialization and calculation */
   //  double    w_out = frequency * 2 * M_PI; // angular velocity
-    uint32_t  min_periodes = 1; // max 20
+   // uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
   //  signal_e type = eSignalSine;
     int       f = 1; // used in for lop, setting the decimation
@@ -185,7 +193,7 @@ int main(int argc, char *argv[]) {
             t_params[TIME_RANGE_PARAM] = f;           
             
             /* calculating num of samples */
-            size = round( ( min_periodes * 125e6 ) / ( frequency* g_dec[f] ) );
+            size = round( ( periodes * 15625e3 ) /  frequency ); // (125MS/s)/8 
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
@@ -198,13 +206,45 @@ int main(int argc, char *argv[]) {
             }
 
             /* ADC Data acqusition - saved to s */
- /*           if (acquire_data( s, size ) < 0) {
+            if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
             }  
 
-				*/   
+			 
 				if (s[1][2]==s[2][1]||size==3){};
 				
 	fprintf(stderr, "dziala2\n");
+}
+
+/**
+ * Acquire data from FPGA to memory (s).
+ *
+ * @param **s   Points to a memory where data is saved.
+ * @param size  Size of data.
+ */
+int acquire_data(float **s ,uint32_t size) {
+
+    int retries = 150000;
+    int j, sig_num, sig_len;
+    int ret_val;
+    while(retries >= 0) {
+        if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
+            /* Signals acquired in s[][]:
+             * s[0][i] - TODO
+             * s[1][i] - Channel ADC1 raw signal
+             * s[2][i] - Channel ADC2 raw signal
+             */
+            for(j = 0; j < MIN(size, sig_len); j++) {
+                //printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
+            }
+            break;
+        }
+        if(retries-- == 0) {
+            fprintf(stderr, "Signal acquisition was not triggered!\n");
+            break;
+        }
+        usleep(10);
+    }
+    return 1;
 }
