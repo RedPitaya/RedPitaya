@@ -21,6 +21,7 @@ const char *g_argv0 = NULL; // Program name
 int32_t data[n]; // AWG data buffer
 
 /** Signal types */
+/*
 typedef enum {
     eSignalSine,         // Sinusoidal waveform
     eSignalSquare,       // Square waveform
@@ -28,7 +29,7 @@ typedef enum {
     eSignalSweep,        // Sinusoidal frequency sweep
 	eSignalConst         // Constant signal
 } signal_e;
-
+*/
 /** AWG FPGA parameters */
 typedef struct {
     int32_t  offsgain;   // AWG offset & gain
@@ -163,7 +164,7 @@ int main(int argc, char *argv[]) {
     }
 	
 	/** Parameters initialization and calculation */
-    double    w_out; // angular velocity
+  //  double    w_out = frequency * 2 * M_PI; // angular velocity
     uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
     signal_e type = eSignalSine;
@@ -180,7 +181,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     /// Showtime.
-        w_out = frequency * 2 * M_PI; // omega - angular velocity
 
             /* setting decimtion */
             t_params[TIME_RANGE_PARAM] = f;           
