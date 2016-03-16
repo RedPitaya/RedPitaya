@@ -239,7 +239,7 @@ int acquire_data(float **s ,uint32_t size) {
              * s[2][i] - Channel ADC2 raw signal
              */
             for(j = 0; j < MIN(size, sig_len); j++) {
-                //printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
+                printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
             }
             break;
         }
@@ -247,7 +247,6 @@ int acquire_data(float **s ,uint32_t size) {
             fprintf(stderr, "Signal acquisition was not triggered!\n");
             break;
         }
-        usleep(10);
     }
     return 1;
 }
