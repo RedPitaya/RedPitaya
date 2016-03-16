@@ -15,6 +15,20 @@
 #define M_PI 3.14159265358979323846
 
 
+const char *g_argv0 = NULL; // Program name
+
+#define n (16*1024) // AWG buffer length [samples]
+int32_t data[n]; // AWG data buffer
+
+/** Signal types */
+typedef enum {
+    eSignalSine,         // Sinusoidal waveform
+    eSignalSquare,       // Square waveform
+    eSignalTriangle,     // Triangular waveform
+    eSignalSweep,        // Sinusoidal frequency sweep
+	eSignalConst         // Constant signal
+} signal_e;
+
 /** AWG FPGA parameters */
 typedef struct {
     int32_t  offsgain;   // AWG offset & gain
@@ -27,9 +41,9 @@ typedef struct {
  */
 float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/** Decimation translation table */
+/** Decimation translation table 
 #define DEC_MAX 6 // Max decimation index
-static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };*/
 
 /** Forward declarations */
 void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
