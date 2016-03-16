@@ -143,32 +143,6 @@ float trapz(float *arrayptr, float T, int size1) {
   return result;
 }
 
-/** Finds a mean value of an array */
-float mean_array(float *arrayptr, int numofelements) {
-  int i = 1;
-  float mean = 0;
-
-  for(i = 0; i < numofelements; i++) {
-    mean += arrayptr[i];
-  }
-
-  mean = mean / numofelements;
-  return mean;
-}
-
-/** Finds a mean value of an array by columns, acquiring values from rows */
-float mean_array_column(float **arrayptr, int length, int column) {
-    float result = 0;
-    int i;
-
-    for(i = 0; i < length; i++) {
-        result = result + arrayptr[i][column];
-    }
-    
-    result = result / length;
-    return result;
-}
-
 /** Bode analyzer */
 int main(int argc, char *argv[]) {
 	
@@ -462,13 +436,10 @@ int main(int argc, char *argv[]) {
             data_for_avreaging[ i1 ][ 2 ] = *Phase;
         } // avearging loop end
 
-        /* Calculating and saving mean values */
-        measured_data_amplitude[ 1 ] = mean_array_column( data_for_avreaging, averaging_num, 1 );
-        measured_data_phase[ 1 ]     = mean_array_column( data_for_avreaging, averaging_num, 2 );
-
+   
         if (transientEffectFlag == 0) {
-            Amplitude_output[fr] = measured_data_amplitude[ 1 ];
-            Phase_output[fr] = measured_data_phase[ 1 ];
+            Amplitude_output[fr] = data_for_avreaging[1];
+            Phase_output[fr] = data_for_avreaging[2];
 
             //printf("%.2f    %.5f    %.5f\n", frequency[fr], measured_data_phase[ 1 ], measured_data_amplitude[ 1 ]);
 
@@ -555,58 +526,8 @@ void synthesize_signal(double ampl,
         /* Sine */
         if (type == eSignalSine) {
             data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
-        }
- 
-        /* Square */
-        if (type == eSignalSquare) {
-            data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
-            if (data[i] > 0)
-                data[i] = amp;
-            else 
-                data[i] = -amp;
-
-            /* Soft linear transitions */
-            double mm, qq, xx, xm;
-            double x1, x2, y1, y2;    
-
-            xx = i;       
-            xm = n;
-            mm = -2.0*(double)amp/(double)trans; 
-            qq = (double)amp * (2 + xm/(2.0*(double)trans));
-            
-            x1 = xm * tt2;
-            x2 = xm * tt2 + (double)trans;
-            
-            if ( (xx > x1) && (xx <= x2) ) {  
-                
-                y1 = (double)amp;
-                y2 = -(double)amp;
-                
-                mm = (y2 - y1) / (x2 - x1);
-                qq = y1 - mm * x1;
-
-                data[i] = round(mm * xx + qq); 
-            }
-            
-            x1 = xm * 0.75;
-            x2 = xm * 0.75 + trans;
-            
-            if ( (xx > x1) && (xx <= x2)) {  
-                    
-                y1 = -(double)amp;
-                y2 = (double)amp;
-                
-                mm = (y2 - y1) / (x2 - x1);
-                qq = y1 - mm * x1;
-                
-                data[i] = round(mm * xx + qq); 
-            }
-        }
-        
-        /* Triangle */
-        if (type == eSignalTriangle) {
-            data[i] = round(-1.0*(double)amp*(acos(cos(2*M_PI*(double)i/(double)n))/M_PI*2-1));
-        }
+        }         
+       
 
         /* Sweep */
         /* Loops from i = 0 to n = 16*1024. Generates a sine wave signal that
