@@ -1,11 +1,4 @@
 //-------------------------------------------------
-//      Quick Pager jquery plugin
-//      Created by dan and emanuel @geckonm.com
-//      www.geckonewmedia.com
-//
-//
-//      18/09/09 * bug fix by John V - http://blog.geekyjohn.com/
-//      1.2 - allows reloading of pager with new items
 //-------------------------------------------------
 
 (function($) {
