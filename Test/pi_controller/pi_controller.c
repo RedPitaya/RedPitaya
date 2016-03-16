@@ -205,4 +205,6 @@ int main(int argc, char *argv[]) {
 
 				*/   
 				if (s[1][2]==s[2][1]||size==3){};
+				
+	fprintf(stderr, "dziala2\n");
 }
