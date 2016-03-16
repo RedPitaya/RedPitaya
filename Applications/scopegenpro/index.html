@@ -34,6 +34,7 @@
     <script src="js/zlib_and_gzip.min.js"></script>
     <script src="js/jquery.cookie.js"></script>
     <script src="js/scope.js?3"></script>
+    <script src="js/jquery.browser.js"></script>
 </head>
 
 <body>
@@ -780,6 +781,28 @@
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
                         <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                </div>
+                <div class="modal-body"  style="text-align: center; font-size: 18px;">
+                    <p>Please, contact us for more supports or reolad the application</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
                     </div>
                 </div>
             </div>

@@ -74,6 +74,7 @@
   	}
 
   	LCR.selected_meas = 1;
+  	LCR.unexpectedClose = true;
 
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
@@ -126,8 +127,36 @@
 			LCR.ws.onclose = function() {
 				LCR.state.socket_opened = false;
 				console.log('Socket closed');
-				$('#modal_socket_closed').modal('show');
+				//$('#modal_socket_closed').modal('show');
+				if(LCR.unexpectedClose == true) {
+					$('#feedback_error').modal('show');
+		        }
 			};
+
+      $('#send_report_btn').on('click', function() {
+        //var file = new FileReader();
+        var mail = "support@redpitaya.com";
+        var subject = "Feedback";
+        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: LCR.params }) + "%0D%0A";
+        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
+
+        var url = 'info/info.json';
+        $.ajax({
+            method: "GET",
+            url: url
+        }).done(function(msg) {
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+        }).fail(function(msg) {
+            console.log(msg.responseText);
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+        } );
+      });
+
+	      $('#restart_app_btn').on('click', function() {
+	        location.reload();
+	      });
 
 			LCR.ws.onerror = function(ev) {
 	        	console.log('Websocket error: ', ev);

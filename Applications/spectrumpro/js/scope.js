@@ -95,6 +95,7 @@
   SPEC.touch = {};
 
   SPEC.datasets = [];
+  SPEC.unexpectedClose = true;
 
   // Starts the spectrum application on server
   SPEC.startApp = function() {
@@ -153,12 +154,40 @@
         SPEC.hideCursors();
 		SPEC.hideInfo();
         console.log('Socket closed. Trying to reopen in ' + SPEC.config.socket_reconnect_timeout/1000 + ' sec...');
-
+/*
         // Try to reconnect after a defined timeout
         setTimeout(function() {
           SPEC.ws = new WebSocket(SPEC.config.socket_url);
-        }, SPEC.config.socket_reconnect_timeout);
+        }, SPEC.config.socket_reconnect_timeout);*/
+        if(SPEC.unexpectedClose == true) {
+            $('#feedback_error').modal('show');
+          }
       };
+
+      $('#send_report_btn').on('click', function() {
+        //var file = new FileReader();
+        var mail = "support@redpitaya.com";
+        var subject = "Feedback";
+        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
+        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
+
+        var url = 'info/info.json';
+        $.ajax({
+            method: "GET",
+            url: url
+        }).done(function(msg) {
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+        }).fail(function(msg) {
+            console.log(msg.responseText);
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+        } );
+      });
+
+        $('#restart_app_btn').on('click', function() {
+          location.reload();
+        });
 
       SPEC.ws.onerror = function(ev) {
         console.log('Websocket error: ', ev);
@@ -1554,6 +1583,7 @@ $(function() {
       url: SPEC.config.stop_app_url,
       async: false
     });
+    SPEC.unexpectedClose = false;
   };
 
   // Everything prepared, start application
