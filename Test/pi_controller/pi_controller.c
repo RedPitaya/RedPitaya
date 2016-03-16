@@ -113,5 +113,5 @@ float max_array(float *arrayptr, int numofelements) {
 }
 
 int main(int argc, char *argv[]) {
-
+	fprintf("dziala");
 }
