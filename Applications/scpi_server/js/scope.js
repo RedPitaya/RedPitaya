@@ -255,15 +255,23 @@
 
       $('#send_report_btn').on('click', function() {
         //var file = new FileReader();
-        mail = "support@redpitaya.com";
-        subject = "Feedback";
-        infoJson = $.get("info/info.json");
-        body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+        var mail = "support@redpitaya.com";
+        var subject = "Feedback";
+        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-        if(infoJson.status == 200)
-          body += " Info.json: " + "%0D%0A" + infoJson.responseText;
-        document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+
+        var url = 'info/info.json';
+        $.ajax({
+            method: "GET",
+            url: url
+        }).done(function(msg) {
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+        }).fail(function(msg) {
+            console.log(msg.responseText);
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+        } );
       });
 
       $('#restart_app_btn').on('click', function() {
