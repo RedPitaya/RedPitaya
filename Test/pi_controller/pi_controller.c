@@ -133,14 +133,14 @@ int main(int argc, char *argv[]) {
     /** Argument parsing */
     /// Channel in
     unsigned int ch_in = atoi(argv[1])-1; // Zero-based internally
-    if (ch > 1) {
+    if (ch_in > 1) {
         fprintf(stderr, "Invalid channel value!\n\n");
         usage();
         return -1;
     }
     /// Channel out
     unsigned int ch_out = atoi(argv[2])-1; // Zero-based internally
-    if (ch > 1) {
+    if (ch_out > 1) {
         fprintf(stderr, "Invalid channel value!\n\n");
         usage();
         return -1;
