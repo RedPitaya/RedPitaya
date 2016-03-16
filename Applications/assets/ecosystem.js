@@ -3,12 +3,6 @@
 
 (function($) {
     var isOnline = true;
-    var default_apps = [
-        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true, licensable : false  },
-        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false, licensable : false },
-        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false, licensable : false },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true, licensable : false },
-    ];
 
     var apps = [];
 
@@ -122,7 +116,17 @@
                 return;
             }
         }
-        licVerify(apps[key].url);
+        if(apps[key].url != "")
+            licVerify(apps[key].url);
+        if(apps[key].callback !== undefined)
+            apps[key].callback();
+    }
+
+    var showFeedBack = function() {
+        mail = "support@redpitaya.com";
+        subject = "Feedback";
+        body = "";
+        document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
     }
 
     var overApp = function(e) {
@@ -240,4 +244,12 @@
         refillList();
         placeElements();
     });
+
+    var default_apps = [
+        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true, licensable : false, callback: undefined },
+        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false, licensable : false, callback: undefined },
+        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false, licensable : false, callback: undefined },
+        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true, licensable : false, callback: undefined },
+        { id: "feedback", name: "Application feedback", description: "Feedback", url: "", image: "images/download_icon.png", check_online : true, licensable : false, callback: showFeedBack },
+    ];
 })(jQuery);
