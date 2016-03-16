@@ -58,30 +58,24 @@ int acquire_data(float **s ,
 				 /** Print usage information */
 void usage() {
     const char *format =
-            "Bode analyzer version %s, compiled at %s\n"
+            "PI controller\n"
             "\n"
-            "Usage:\t%s [channel] "
-                       "[amplitude] "
-                       "[dc bias] "
-                       "[averaging] "
-                       "[count/steps] "
-                       "[start freq] "
-                       "[stop freq] "
-                       "[scale type]\n"
+            "Usage:\t%s [channel in] "
+                       "[channel out] "
+                       "[frequency] "
+                       "[k_p] "
+                       "[k_i] "
+                       "[T_int]\n"
             "\n"
-            "\tchannel            Channel to generate signal on [1 / 2].\n"
-            "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
-            "\tdc bias            DC bias/offset/component in V [0 - 1].\n"
-            "\t                   Max sum of amplitude and DC bias is (0-1]V.\n"
-            "\taveraging          Number of samples per one measurement [>1].\n"
-            "\tcount/steps        Number of measurements [>2].\n"
-            "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
-            "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
-            "\tscale type         0 - linear, 1 - logarithmic.\n"
-            "\n"
-            "Output:\tfrequency [Hz], phase [deg], amplitude [dB]\n";
+            "\tchannel in         Channel to acquire error signal on [1 / 2].\n"
+            "\tchannel out        Channel to generate controll signal on [1 / 2].\n"
+            "\tfrequency          Refference frequency in Hz [~12000].\n"
+            "\k_p                 Proportional coefficient\n"
+            "\k_i                 Integrator coefficient\n"
+            "\T_int               Low-pass filter coefficient in s\n"
+            "\n";
 
-    fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
+    fprintf(stderr, format, g_argv0);
 }
 
 
@@ -113,5 +107,44 @@ float max_array(float *arrayptr, int numofelements) {
 }
 
 int main(int argc, char *argv[]) {
-	fprintf(stderr, "dziala");
+	fprintf(stderr, "dziala\n");
+	
+/** Set program name */
+    g_argv0 = argv[0];
+    
+    /**
+     * Manpage
+     * 
+     * usage() prints its output to stderr, nevertheless main returns
+     * zero as calling lcr without any arguments is not an error.
+     */
+    if (argc==1) {
+		usage();
+		return 0;
+	}
+    
+    /** Argument check */
+    if (argc<6) {
+        fprintf(stderr, "Too few arguments!\n\n");
+        usage();
+        return -1;
+    }
+    
+    /** Argument parsing */
+    /// Channel in
+    unsigned int ch = atoi(argv[1])-1; // Zero-based internally
+    if (ch > 1) {
+        fprintf(stderr, "Invalid channel value!\n\n");
+        usage();
+        return -1;
+    }
+    /// Channel out
+    unsigned int ch = atoi(argv[2])-1; // Zero-based internally
+    if (ch > 1) {
+        fprintf(stderr, "Invalid channel value!\n\n");
+        usage();
+        return -1;
+    }
+	
+	
 }
