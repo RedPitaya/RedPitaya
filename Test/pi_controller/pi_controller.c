@@ -173,10 +173,6 @@ int main(int argc, char *argv[]) {
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-    float *Amplitude         = (float *)malloc( sizeof(float));
-    float *Phase             = (float *)malloc( sizeof(float));
-    float *measured_data_amplitude  = (float *)malloc((2) * sizeof(float) );
-    float *measured_data_phase      = (float *)malloc((2) * sizeof(float) );
 	
 	/* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -207,13 +203,4 @@ int main(int argc, char *argv[]) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
             }     
-
-            
-        /* Calculating and saving mean values */
-        measured_data_amplitude = *Amplitude;
-        measured_data_phase     = *Phase;
-
-        
-            Amplitude_output= measured_data_amplitude;
-            Phase_output= measured_data_phase;    
 }
