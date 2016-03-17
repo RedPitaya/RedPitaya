@@ -40,7 +40,7 @@
   font-weight: 300;
   background: black;
   color: #cccccc;
-  top: 5;
+  top: 5px;
   right: 50px;
 }
 /* line 19, ../sass/offline-theme-dark-indicator.sass */
@@ -57,8 +57,7 @@
   content: " ";
   display: block;
   position: absolute;
-  top: 5;
-  bottom: 0;
+  top: 5px;
   left: 5em;
   right: auto;
   height: 0.8em;
