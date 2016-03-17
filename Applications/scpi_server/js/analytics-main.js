@@ -9,12 +9,13 @@
         AnalyticsCore.init(function(){
             AnalyticsCore.sendScreenView('/scpi_server', 'Redpitaya', 'Remote control');
             AnalyticsCore.sendSysInfo('/scpi_server');
+            AnalyticsCore.sendExecTime('/scpi_server', 'scpi_server');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      AnalyticsCore.sendTiming('/scpi_server', 'App executed', 'Remote control', performance.now() - startUsing);
+	      $.cookie('scpi_server-run', performance.now() - startUsing);
 	});
 
 })(jQuery);

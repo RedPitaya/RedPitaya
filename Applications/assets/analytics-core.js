@@ -53,14 +53,14 @@
             if (debugPrints) console.log("[AnalyticsCore] sendSysInfo", page);
             var info = JSON.parse(msg);
             $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
-            AnalyticsCore.sendEvent(page, 'Revision', 'loaded', info['revision']);
-            AnalyticsCore.sendEvent(page, 'Version', 'loaded', info['version']);
+            AnalyticsCore.sendEvent(page, 'info', 'Revision', info['revision']);
+            AnalyticsCore.sendEvent(page, 'info', 'Version', info['version']);
         }).fail(function(msg) {
             if (debugPrints) console.log("[AnalyticsCore] sendSysInfo", page);
             var info = JSON.parse(msg.responseText);
             $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
-            AnalyticsCore.sendEvent(page, 'Revision', 'loaded', info['revision']);
-            AnalyticsCore.sendEvent(page, 'Version', 'loaded', info['version']);
+            AnalyticsCore.sendEvent(page, 'info', 'Revision', info['revision']);
+            AnalyticsCore.sendEvent(page, 'info', 'Version', info['version']);
         });
     }
 
@@ -88,6 +88,15 @@
             timingVar: timing_var,
             timingValue: timing_val
         });
+    }
+
+    AnalyticsCore.sendExecTime = function(page, app) {
+        if($.cookie(app+'-run') !== undefined)
+        {
+            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app+'-run'));
+            AnalyticsCore.sendEvent(page, 'info', 'Execution time', $.cookie(app+'-run'));
+        }
+
     }
 
     AnalyticsCore.sendScreenView = function(page, app_name, screen_name) {
