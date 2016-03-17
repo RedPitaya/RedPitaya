@@ -717,3 +717,14 @@ area:hover {
 #cur_x_diff_info.cur_info {
   top: 30px;
 }
+
+#header {
+    background-color: black;
+    color: #CCC;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+    height: 30px;
+    width: 100%;
+    white-space: nowrap;
+}

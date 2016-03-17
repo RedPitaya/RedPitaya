@@ -31,6 +31,7 @@
     <script src="js/zlib_and_gzip.min.js"></script>
     <script src="js/lcr.js"></script>
     <script src="js/jquery.browser.js"></script>
+    <script src="js/jquery.cookie.js"></script>
 
 
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
@@ -38,6 +39,15 @@
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
     <script src="../assets/offline.min.js"></script>
     <script src="../assets/ui.js"></script>
+
+    <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
+    <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
+    <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
+
+    <script src="../assets/offline.min.js"></script>
+    <script src="../assets/ui.js"></script>
+    <script src="../assets/onlinecheck.js"></script>
+    
     <script type="text/javascript">
     Offline.options = {
         checks: {
@@ -55,6 +65,10 @@
 </head>
 
 <body>
+    <div id="header">
+        <div id="description">&nbsp;</div>
+    </div>
+
 	<div id="content_wrapper" class="full-content" style="width: 60%">
 		<div class="container-fluid">
 			<div class="navbar navbar-inverse" role="navigation">

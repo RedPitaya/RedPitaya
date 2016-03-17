@@ -825,3 +825,14 @@ input.bt_check:checked + label {
   top: 8px;
   z-index: 15;
 }
+
+#header {
+    background-color: black;
+    color: #CCC;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+    height: 30px;
+    width: 100%;
+    white-space: nowrap;
+}
