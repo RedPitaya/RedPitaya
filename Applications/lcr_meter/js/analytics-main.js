@@ -9,12 +9,13 @@
         AnalyticsCore.init(function(){
             AnalyticsCore.sendScreenView('/lcr_meter', 'Redpitaya', 'LCR meter');
             AnalyticsCore.sendSysInfo('/lcr_meter');
+            AnalyticsCore.sendExecTime('/lcr_meter', 'lcr_meter');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      AnalyticsCore.sendTiming('/lcr_meter', 'App executed', 'LCR meter', performance.now() - startUsing);
+	      $.cookie('lcr_meter-run', performance.now() - startUsing);
 	});
 
 })(jQuery);

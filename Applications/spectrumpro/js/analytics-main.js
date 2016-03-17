@@ -9,12 +9,13 @@
         AnalyticsCore.init(function(){
             AnalyticsCore.sendScreenView('/spectrumpro', 'Redpitaya', 'Spectrum analyser Pro');
             AnalyticsCore.sendSysInfo('/spectrumpro');
+            AnalyticsCore.sendExecTime('/spectrumpro', 'spectrumpro');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      AnalyticsCore.sendTiming('/spectrumpro', 'App executed', 'Spectrum analyser Pro', performance.now() - startUsing);
+	      $.cookie('spectrumpro-run', performance.now() - startUsing);
 	});
 
 })(jQuery);
