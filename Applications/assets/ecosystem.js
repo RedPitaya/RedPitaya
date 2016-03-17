@@ -97,8 +97,12 @@
             if(apps[key].id !== 'scpi_server'){
                 licVerify(apps[key].url);
             }
-            else
+            else {
                 window.location = apps[key].url;
+            }
+        }
+        else {
+            window.location = apps[key].url;
         }
         if(apps[key].callback !== undefined)
             apps[key].callback();
