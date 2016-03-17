@@ -83,8 +83,8 @@
         e.preventDefault();
         if(apps[key].check_online)
         {
-            if (!OnlineChecker.isOnline()) {
-                if (apps[key].licensable)
+            if (!OnlineChecker.isOnline() && apps[key].type !== 'run') {
+                if (apps[key].licensable && apps[key].id !== 'scpi_server')
                     $('#lic_failed').show();
                 else
                     $('#lic_failed').hide();
