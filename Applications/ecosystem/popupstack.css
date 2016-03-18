@@ -1,0 +1,16 @@
+.browser_detect_dialog {
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    height: 100px;
+    background-color: #27272C;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.shadow_box {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+}
