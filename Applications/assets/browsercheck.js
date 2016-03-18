@@ -43,8 +43,7 @@
 		var verResult = BrowserChecker.checkVer();
 
 		if(!nameResult) {
-        	var htmlText = "<div class='close popup browser_detect_close' style='background-color: whitesmoke;'>X</div>\
-        	<p id='browser_detect_text'>You are using unsupported browser.<br>Please, install Mozilla Firefox or Google Chrome.<br>\
+        	var htmlText = "<p id='browser_detect_text'>You are using unsupported browser.<br>Please, install Mozilla Firefox or Google Chrome.<br>\
         	<a href='http://www.google.com/chrome/browser/desktop/index.html'><img src='../assets/images/gchrome_logo.png' style='width: 10%;'/></a>\
         	<a href='http://www.mozilla.org/download'><img src='../assets/images/mfirefox_logo.png' style='width: 10%;'/></a></p>";
 
@@ -55,8 +54,7 @@
 			 "<a href='http://www.google.com/chrome/browser/desktop/index.html'><img src='../assets/images/gchrome_logo.png' style='width: 10%;'/></a>" :
 			 "<a href='http://www.mozilla.org/download'><img src='../assets/images/mfirefox_logo.png' style='width: 10%;'/></a>";
 
-        	var htmlText = "<div class='close popup browser_detect_close' style='background-color: whitesmoke;'>X</div>\
-        	<p id='browser_detect_text'>Your browser is too old. Please, update your browser.<br>" + imgHtml + "</p>";
+        	var htmlText = "<p id='browser_detect_text'>Your browser is too old. Please, update your browser.<br>" + imgHtml + "</p>";
 
         	PopupStack.add(htmlText);
 		}

@@ -185,7 +185,10 @@
 						if (!LCR.state.demo_label_visible)
 						{
 							LCR.state.demo_label_visible = true;
-							$('#demo_label').show();
+							//$('#demo_label').show();
+				        	var htmlText = "<p id='browser_detect_text'>You are working in demo mode.</p>";
+							PopupStack.add(htmlText);
+							$('#demo_label').hide();
 						}
 					} else {
 						if (LCR.state.demo_label_visible)
