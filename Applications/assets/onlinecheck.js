@@ -1,5 +1,5 @@
 //-------------------------------------------------
-//      Redpitaya analytics core system
+//      Redpitaya network status checker
 //      Created by Artem Kokos
 //-------------------------------------------------
 
