@@ -11,7 +11,6 @@
 	// Variables
 	BrowserChecker.browserName = "";
 	BrowserChecker.browserVer = 0;
-	BrowserChecker.popupBottomOffset = 20;
 
 
 	BrowserChecker.checkName = function() {
@@ -44,30 +43,23 @@
 		var verResult = BrowserChecker.checkVer();
 
 		if(!nameResult) {
-			// Show dialog with unsupported browser
-			$('#browser_detect_dialog').css('bottom', BrowserChecker.popupBottomOffset + 'px');
-			$('#browser_detect_text').html("You are using unsupported browser.<br>Please, install Mozilla Firefox or Google Chrome.<br>\
-			<a href='http://www.google.com/chrome/browser/desktop/index.html'><img src='images/gchrome_logo.png' style='width: 10%;'/></a>\
-			<a href='http://www.mozilla.org/download'><img src='images/mfirefox_logo.png' style='width: 10%;'/></a>");
-        	$('#browser_detect_dialog').show();
+        	var htmlText = "<div class='close popup browser_detect_close' style='background-color: whitesmoke;'>X</div>\
+        	<p id='browser_detect_text'>You are using unsupported browser.<br>Please, install Mozilla Firefox or Google Chrome.<br>\
+        	<a href='http://www.google.com/chrome/browser/desktop/index.html'><img src='../assets/images/gchrome_logo.png' style='width: 10%;'/></a>\
+        	<a href='http://www.mozilla.org/download'><img src='../assets/images/mfirefox_logo.png' style='width: 10%;'/></a></p>";
+
+			PopupStack.add(htmlText);
 		}
 		else if(!verResult) {
-			// Show update browser dialog
 			var imgHtml = (BrowserChecker.browserName == "chrome") ?
-			 "<a href='http://www.google.com/chrome/browser/desktop/index.html'><img src='images/gchrome_logo.png' style='width: 10%;'/></a>" :
-			 "<a href='http://www.mozilla.org/download'><img src='images/mfirefox_logo.png' style='width: 10%;'/></a>";
+			 "<a href='http://www.google.com/chrome/browser/desktop/index.html'><img src='../assets/images/gchrome_logo.png' style='width: 10%;'/></a>" :
+			 "<a href='http://www.mozilla.org/download'><img src='../assets/images/mfirefox_logo.png' style='width: 10%;'/></a>";
 
-			$('#browser_detect_dialog').css('bottom', BrowserChecker.popupBottomOffset + 'px');
-			$('#browser_detect_text').html("Your browser is too old. Please, update your browser." + "<br>" + imgHtml);
-        	$('#browser_detect_dialog').show();
+        	var htmlText = "<div class='close popup browser_detect_close' style='background-color: whitesmoke;'>X</div>\
+        	<p id='browser_detect_text'>Your browser is too old. Please, update your browser.<br>" + imgHtml + "</p>";
+
+        	PopupStack.add(htmlText);
 		}
 	});
 
 })(window.BrowserChecker = window.BrowserChecker || {}, jQuery);
-
-// Page event handler
-$(function() {
-	$('#browser_detect_close').on('click', function(ev) {
-		$('#browser_detect_dialog').hide();
-	});
-});
