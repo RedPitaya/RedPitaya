@@ -23,7 +23,8 @@
 	}
 
 	PopupStack.add = function(html) {
-		var popupHtml = "<div class='shadow_box browser_detect_dialog' key='" + PopupStack.lastAdded + "' style='bottom: " + PopupStack.nextBottomOffset + "px'>" + html + "</div>";
+		var popupHtml = "<div class='shadow_box browser_detect_dialog' key='" + PopupStack.lastAdded + "' style='bottom: " + PopupStack.nextBottomOffset + "px'>" + 
+		"<div class='close popup browser_detect_close' style='background-color: whitesmoke;'>X</div>" + html + "</div>";
 		PopupStack.array.push(PopupStack.lastAdded);
 		PopupStack.lastAdded++;
 		PopupStack.nextBottomOffset += PopupStack.popupBottomOffset + PopupStack.popupHeight;
