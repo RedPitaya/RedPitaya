@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
 	// float *r  = create_table_size(SIGNAL_LENGTH); //refference signal
-	int32_t data  = [n];
+	int32_t data[n];
 	/* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
