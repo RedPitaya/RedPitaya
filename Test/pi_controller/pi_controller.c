@@ -112,6 +112,7 @@ int main(int argc, char *argv[]) {
 
 	fprintf(stderr, "dziala\n");
 	
+	
 /** Set program name */
     g_argv0 = argv[0];
     
@@ -178,22 +179,32 @@ int main(int argc, char *argv[]) {
     int       f = 1; // used in for lop, setting the decimation
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
+	int       freq_act = 0;
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-	
+	// float *r  = create_table_size(SIGNAL_LENGTH); //refference signal
+	int32_t *data  = create_table_size(SIGNAL_LENGTH);
 	/* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
         return -1;
     }
     /// Showtime.
+	while (1){
+			/* Calculate/recalculate refference signal if frequency has changed*/
+			if (freq_act != frequency){
+				freq_act=frequency;
+				size=round(1953125e5/freq_act);  //calculating number of samples 
+				for (int i=0; i<size; i++){
+			//	r[i]=cos(i * 
+				}
+			}
 
             /* setting decimtion */
             t_params[TIME_RANGE_PARAM] = f;           
             
-            /* calculating num of samples */
-            size = round( ( periodes * 15625e3 ) /  frequency ); // (125MS/s)/8 
+           
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
@@ -205,6 +216,11 @@ int main(int argc, char *argv[]) {
                 return -1;
             }
 
+			/* Refference signal*/
+			if (freq_act != frequency){
+			
+			}
+
             /* ADC Data acqusition - saved to s */
             if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
@@ -213,11 +229,65 @@ int main(int argc, char *argv[]) {
 
 			 
 				if (s[1][2]==s[2][1]||size==3){};
-				
-	fprintf(stderr, "dziala2\n");
 	for(int i = 0; i < size; i++) {
-                    printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
-                }
+                   data[i]=round(s[1][i]*8191);
+    }         			
+	fprintf(stderr, "dziala2\n");
+	
+    /* Setting amplitude to 0V - turning off the output. */
+    awg_param_t params;
+	/// Write the data to the FPGA and set FPGA AWG state machine
+        write_data_fpga(ch_out, data, &params);	
+   }
+}
+
+/**
+ * Write synthesized data[] to FPGA buffer.
+ *
+ * @param ch    Channel number [0, 1].
+ * @param data  AWG data to write to FPGA.
+ * @param awg   AWG paramters to write to FPGA.
+ */
+void write_data_fpga(uint32_t ch,
+                     const int32_t *data,
+                     const awg_param_t *awg) {
+
+    uint32_t i;
+
+    fpga_awg_init();
+
+    if(ch == 0) {
+        /* Channel A */
+        g_awg_reg->state_machine_conf = 0x000041;
+        g_awg_reg->cha_scale_off      = awg->offsgain;
+        g_awg_reg->cha_count_wrap     = awg->wrap;
+        g_awg_reg->cha_count_step     = awg->step;
+        g_awg_reg->cha_start_off      = 0;
+
+        for(i = 0; i < n; i++) {
+            g_awg_cha_mem[i] = data[i];
+        }
+    } else {
+        /* Channel B */
+        g_awg_reg->state_machine_conf = 0x410000;
+        g_awg_reg->chb_scale_off      = awg->offsgain;
+        g_awg_reg->chb_count_wrap     = awg->wrap;
+        g_awg_reg->chb_count_step     = awg->step;
+        g_awg_reg->chb_start_off      = 0;
+
+        for(i = 0; i < n; i++) {
+            g_awg_chb_mem[i] = data[i];
+        }
+    }
+
+    /* Enable both channels */
+    /* TODO: Should this only happen for the specified channel?
+     *       Otherwise, the not-to-be-affected channel is restarted as well
+     *       causing unwanted disturbances on that channel.
+     */
+    g_awg_reg->state_machine_conf = 0x110011;
+
+    fpga_awg_exit();
 }
 
 /**
