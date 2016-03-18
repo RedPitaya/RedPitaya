@@ -48,30 +48,24 @@
 
 int main(int argc, char **argv) {
     int fd;
-    void *map_base, *virt_addr; 
-	off_t target;
+    void *map_base;
+    int32_t address;
+    int   number;
 	
-	if(argc < 2) {
-		fprintf(stderr, "\nUsage:\t%s { address } [ type [ data ] ]\n"
-			"\taddress : memory address to act upon\n"
-			"\ttype    : access operation type : [b]yte, [h]alfword, [w]ord\n"
-			"\tdata    : data to be written\n\n",
-			argv[0]);
-		exit(1);
-	}
-	target = strtoul(argv[1], 0, 0);
+    if(argc < 3) {
+       fprintf(stderr, "\nUsage:\t%s { address } [ type [ data ] ]\n"
+       	"\taddress : address of first descriptor\n"
+       	"\tnumber  : number of descriptors to display\n\n",
+       	argv[0]);
+       exit(1);
+    }
+    address = strtoul(argv[1], 0, 0);
+    number  = strtoul(argv[2], 0, 0);
 
     if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
     printf("/dev/mem opened.\n"); 
     fflush(stdout);
     
-    /* Map one page */
-    map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
-    if(map_base == (void *) -1) FATAL;
-    printf("Memory mapped at address %p.\n", map_base); 
-    fflush(stdout);
-    
-
     struct xilinx_dma_desc_hw {
         uint32_t next_desc;
         uint32_t next_desc_msb;
@@ -83,18 +77,26 @@ int main(int argc, char **argv) {
         uint32_t status;
         uint32_t app[5];
     };
-    for (int i=0; i<4; i++) {
-            virt_addr = map_base + (target & MAP_MASK) + i * 0x80;
 
-	    printf ("Descriptor %d at address 0x%08X (%p):\n", i, (int) target, virt_addr); 
-            struct xilinx_dma_desc_hw *hw;
-            hw = virt_addr;
-            printf ("descriptor @:%p\n", hw);
-            printf ("descriptor next_desc: %08x %08x\n", hw->next_desc_msb, hw->next_desc);
-            printf ("descriptor buf_addr : %08x %08x\n", hw->buf_addr_msb , hw->buf_addr );
-            printf ("descriptor pad 1, 2 : %08x %08x\n", hw->pad1         , hw->pad2     );
-            printf ("descriptor ctl, sts : %08x %08x\n", hw->control      , hw->status   );
-            printf ("descriptor app      : %08x %08x %08x %08x %08x\n", hw->app[0], hw->app[1], hw->app[2], hw->app[3], hw->app[4]);
+    for (int i=0; i<number; i++) {
+        /* Map one page */
+        map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, address & ~MAP_MASK);
+        if(map_base == (void *) -1) FATAL;
+
+        // virtual address
+        struct xilinx_dma_desc_hw *hw;
+        hw = map_base + (address & MAP_MASK);
+        // ptintout descriptor
+        printf ("descriptor %d @p:0x%08X @v:0x%p\n", i, address, hw);
+        printf ("descriptor next_desc: %08x %08x\n", hw->next_desc_msb, hw->next_desc);
+        printf ("descriptor buf_addr : %08x %08x\n", hw->buf_addr_msb , hw->buf_addr );
+        printf ("descriptor pad 1, 2 : %08x %08x\n", hw->pad1         , hw->pad2     );
+        printf ("descriptor ctl, sts : %08x %08x\n", hw->control      , hw->status   );
+        printf ("descriptor app      : %08x %08x %08x %08x %08x\n", hw->app[0], hw->app[1], hw->app[2], hw->app[3], hw->app[4]);
+        fflush(stdout);
+
+        address = hw->next_desc;
+        munmap (map_base, MAP_SIZE);
     }
     fflush(stdout);
     close(fd);
