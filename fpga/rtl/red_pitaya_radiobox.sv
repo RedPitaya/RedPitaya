@@ -115,9 +115,9 @@ enum {
     REG_RW_RB_TX_CAR_OSC_OFS_LO,                // h028: RB TX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
     REG_RW_RB_TX_CAR_OSC_OFS_HI,                // h02C: RB TX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
 
-    REG_RW_RB_TX_RF_AMP_GAIN,                   // h030: RB TX_CAR_OSC mixer gain:     SIGNED 16 bit
+    REG_RW_RB_TX_RF_AMP_GAIN,                   // h030: RB TX_RF_AMP gain:            SIGNED 16 bit
     //REG_RD_RB_TX_RSVD_H034,
-    REG_RW_RB_TX_RF_AMP_OFS,                    // h038: RB TX_CAR_OSC mixer offset:   SIGNED 17 bit
+    REG_RW_RB_TX_RF_AMP_OFS,                    // h038: RB TX_RF_AMP offset:          SIGNED 16 bit
     //REG_RD_RB_TX_RSVD_H03C,
 
     REG_RW_RB_TX_MOD_OSC_INC_LO,                // h040: RB TX_MOD_OSC increment register              LSB:        (Bit 31: 0)
@@ -181,10 +181,10 @@ enum {
     REG_RW_RB_RX_MUXIN_OFS,                     // h168: RB analog RX MUX gain:        SIGNED 16 bit
     REG_RD_RB_RX_SIGNAL_STRENGTH,               // h16C: RB RX signal strength:      UNSIGNED 32 bit
 
-    REG_RD_RB_RX_AFC_CORDIC_MAG,                // h170: RB RX_AFC_CORDIC magnitude value
-    REG_RD_RB_RX_AFC_CORDIC_PHS,                // h174: RB_RX_AFC_CORDIC phase value
-    REG_RD_RB_RX_AFC_CORDIC_PHS_PREV,           // h178: RB_RX_AFC_CORDIC previous 8kHz clock phase value
-    REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF,           // h17C: RB_RX_AFC_CORDIC difference phase value
+    REG_RD_RB_RX_AFC_CORDIC_MAG,                // h170: RB RX_AFC_CORDIC magnitude value,                 UNSIGNED 32 bit
+    REG_RD_RB_RX_AFC_CORDIC_PHS,                // h174: RB_RX_AFC_CORDIC phase value,                       SIGNED 32 bit
+    REG_RD_RB_RX_AFC_CORDIC_PHS_PREV,           // h178: RB_RX_AFC_CORDIC previous 8kHz clock phase value,   SIGNED 32 bit
+    REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF,           // h17C: RB_RX_AFC_CORDIC difference phase value,            SIGNED 32 bit
 
     REG_RW_RB_RX_SSB_AM_GAIN,                   // h180: RB RX_MOD SSB/AM-Sync gain:   UNSIGNED 16 bit
     REG_RW_RB_RX_AMENV_GAIN,                    // h184: RB RX_MOD AM-ENV mixer gain:  UNSIGNED 16 bit
@@ -250,7 +250,8 @@ enum {
 } RB_CTRL_BITS_ENUM;
 
 enum {
-    RB_PWR_CTRL_TX_MOD_OFF                =  0, // RB_PWR_CTRL TX modulation: complete transmitter is turned off
+    RB_PWR_CTRL_TX_MOD_ALL_ON             =  0, // RB_PWR_CTRL TX modulation: no power savings, all clocks of the receiver are turned on
+    RB_PWR_CTRL_TX_MOD_OFF,                     // RB_PWR_CTRL TX modulation: complete transmitter is turned off
     RB_PWR_CTRL_TX_MOD_USB                =  2, // RB_PWR_CTRL TX modulation: components of the SSB-USB transmitter are turned on
     RB_PWR_CTRL_TX_MOD_LSB,                     // RB_PWR_CTRL TX modulation: components of the SSB-LSB transmitter are turned on
     RB_PWR_CTRL_TX_MOD_AM,                      // RB_PWR_CTRL TX modulation: components of the AM transmitter are turned on
@@ -259,7 +260,8 @@ enum {
 } RB_PWR_CTRL_TX_MOD_BITS_ENUM;
 
 enum {
-    RB_PWR_CTRL_RX_MOD_OFF                =  0, // RB_PWR_CTRL RX modulation: complete receiver is turned off
+    RB_PWR_CTRL_RX_MOD_ALL_ON             =  0, // RB_PWR_CTRL RX modulation: no power savings, all clocks of the transceiver are turned on
+    RB_PWR_CTRL_RX_MOD_OFF,                     // RB_PWR_CTRL RX modulation: complete receiver is turned off
     RB_PWR_CTRL_RX_MOD_USB                =  2, // RB_PWR_CTRL RX modulation: components of the SSB-USB receiver are turned on
     RB_PWR_CTRL_RX_MOD_LSB,                     // RB_PWR_CTRL RX modulation: components of the SSB-LSB receiver are turned on
     RB_PWR_CTRL_RX_MOD_AM_ENV,                  // RB_PWR_CTRL RX modulation: components of the AM receiver are turned on
@@ -527,10 +529,16 @@ else begin
       rb_pwr_tx_I_en   <= 1'b0;
       rb_pwr_tx_Q_en   <= 1'b0;
       end
-   default: begin                                                      // OFF
+
+   8'h01: begin                                                        // OFF
       rb_pwr_tx_OSC_en <= 1'b0;
       rb_pwr_tx_I_en   <= 1'b0;
       rb_pwr_tx_Q_en   <= 1'b0;
+      end
+   default: begin                                                      // ALL_ON (no power reduction selected)
+      rb_pwr_tx_OSC_en <= 1'b1;
+      rb_pwr_tx_I_en   <= 1'b1;
+      rb_pwr_tx_Q_en   <= 1'b1;
       end
    endcase
    end
@@ -630,10 +638,16 @@ else begin
       rb_pwr_rx_MOD_en <= 1'b0;
       rb_pwr_rx_AFC_en <= 1'b1;
       end
-   default: begin                                                      // OFF
+
+   8'h01: begin                                                        // OFF
       rb_pwr_rx_CAR_en <= 1'b0;
       rb_pwr_rx_MOD_en <= 1'b0;
       rb_pwr_rx_AFC_en <= 1'b0;
+      end
+   default: begin                                                      // ALL_ON (no power reduction selected)
+      rb_pwr_rx_CAR_en <= 1'b1;
+      rb_pwr_rx_MOD_en <= 1'b1;
+      rb_pwr_rx_AFC_en <= 1'b1;
       end
    endcase
    end
@@ -2189,7 +2203,7 @@ rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
 );
 
 wire unsigned [ 31: 0] rx_afc_cordic_polar_out_mag =   rx_afc_cordic_polar_out[31:0];
-wire   signed [ 31: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[63], rx_afc_cordic_polar_out[60:32], 2'b0 };  // -0.999 .. +0.999 represents -180° .. +180°
+wire   signed [ 31: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[63], rx_afc_cordic_polar_out[60:32], 2'b0 };  // -0.999 .. +0.999 represents -180Â° .. +180Â°
 
 
 always @(posedge clk_adc_125mhz)
@@ -2233,7 +2247,7 @@ rb_addsub_48M48 i_rb_rx_afc_calc_weaver (
 
   .ADD                  ( 1'b0                      ),  // SUBTRACT
   .A                    ( rx_afc_calc_phs_wvr_diff  ),  // phase difference with weaver osc. frequency offset included
-  .B                    ( rx_afc_calc_weaver_inc    ),  // weaver frequency correction increment value for 8 kHz = 125µs time span
+  .B                    ( rx_afc_calc_weaver_inc    ),  // weaver frequency correction increment value for 8 kHz = 125Âµs time span
   .S                    ( rx_afc_calc_phs_out       )   // corrected phase value
 );
 
