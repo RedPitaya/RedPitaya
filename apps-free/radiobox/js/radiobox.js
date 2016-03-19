@@ -45,6 +45,7 @@
     processing: false,
     editing: false,
     resized: false,
+    eventLast: { id: "" }
   };
 
   // Params cache
@@ -473,7 +474,7 @@
 
   // Exits from editing mode - create local parameters of changed values and send them away
   RB.exitEditing = function(noclose) {
-    // console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
     for (var key in RB.params.orig) {  // XXX controller to message handling
       var field = $('#' + key);
       var value = undefined;
@@ -483,19 +484,19 @@
       }
 
       else if (field.is('button')) {
-        // console.log('DEBUG key ' + key + ' is a button');
+        //console.log('DEBUG key ' + key + ' is a button');
         value = (field.hasClass('active') ? 1 : 0);
       }
 
       else if (field.is('input:radio')) {
-        // console.log('DEBUG key ' + key + ' is a input:radio');
+        //console.log('DEBUG key ' + key + ' is a input:radio');
         // value = parseInt($('input[name="' + key + '"]:checked').val());
         // console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
         value = (field.is(":checked") ?  1 : 0);
       }
 
       else if (field.is('select') || field.is('input')) {
-        // console.log('DEBUG key ' + key + ' is a select or input');
+        //console.log('DEBUG key ' + key + ' is a select or input');
         if (checkKeyIs_F(key)) {
           value = parseFloat(field.val());
         } else {
@@ -505,7 +506,16 @@
           console.log('DEBUG key ' + key + ' field is UNKNOWN');
       }
 
-      // console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
+      /* btnevt handling */
+      if (RB.state.eventLast.id !== undefined) {
+          console.log('DEBUG eventLast: id=' + RB.state.eventLast.id);
+      }
+      if (RB.state.eventLast.id == "qrg_up_1e7_b") {
+          console.log('DEBUG eventLast: qrg_up_1e7_b FOUND');
+      }
+      RB.state.eventLast.id = undefined;
+
+      //console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
 
       // Check for specific values and enables/disables controllers
       checkKeyDoEnable(key, value);
@@ -617,15 +627,20 @@ function checkKeyIs_F(key) {
 $(function() {
   $('#modal-warning').hide();
 
+  /*
   $('button').bind('activeChanged', function() {
+    console.log('DEBUG button.bind.activeChanged()\n');
     RB.exitEditing(true);
   });
 
   $('input:radio').bind('activeChanged', function() {
+    console.log('DEBUG input:radio.bind.activeChanged()\n');
     RB.exitEditing(true);
   });
+  */
 
   $('select, input').on('change', function() {
+    //console.log('DEBUG select,input.on.change()\n');
     RB.exitEditing(true);
   });
 
@@ -668,23 +683,28 @@ $(function() {
   });
   */
 
-  $('.btn').on('click', function() {
+  $('.btnevt, .btn').on('click', function() {
+    //console.log('DEBUG .btn.on("click")()\n');
     var btn = $(this);
     setTimeout(function() {
       btn.blur();
     }, 10);
   });
 
-  $('.btn').mouseup(function() {
+  $('.btnevt, .btn').mouseup(function(ev) {
+    //console.log('DEBUG .btn.mouseup()\n');
+    console.log('DEBUG .btn.mouseup() --> event.target.xxx = ' + ev.target.getId() + '\n');
+    RB.state.eventLast.id = ev.target.getId();
     setTimeout(function() {
-        //updateLimits();
-        //formatVals();
-      RB.exitEditing(true);
+      //updateLimits();
+      //formatVals();
+        RB.exitEditing(true);
     }, 20);
   });
 
   // Close parameters dialog after Enter key is pressed
   $('input').keyup(function(event) {
+    //console.log('DEBUG input.keyup(event)\n');
     if (event.keyCode == 13) {
       RB.exitEditing(true);
     }
@@ -768,7 +788,7 @@ $(function() {
   RB.startApp();
 });
 
-
+/*
 $(".limits").change(function() {
   if (['SOUR1_PHAS', 'SOUR1_DCYC', 'SOUR2_PHAS', 'SOUR2_DCYC'].indexOf($(this).attr('id')) != -1) {
     var min = 0;
@@ -788,10 +808,10 @@ $(".limits").change(function() {
       $(this).val(min == -1 ? 0 : 1);
   }
 }).change();
+*/
 
-
+/*
 function updateLimits() {
-    /*
     { // RB_CH1_OFFSET limits
       var probeAttenuation = parseInt($("#RB_CH1_PROBE option:selected").text());
       var jumperSettings = $("#RB_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
@@ -802,9 +822,8 @@ function updateLimits() {
       $("#RB_CH1_OFFSET").attr("min", newMin);
       $("#RB_CH1_OFFSET").attr("max", newMax);
     }
-    */
 }
-
+*/
 
 /*
 $('#RB_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function() {
