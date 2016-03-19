@@ -45,7 +45,17 @@
     processing: false,
     editing: false,
     resized: false,
-    eventLast: { id: "" }
+    eventLast: {
+        id: ""
+    },
+    qrgController: {
+        tx: {
+                radio_enabled: false
+            },
+        rx: {
+                radio_enabled: false
+            }
+    }
   };
 
   // Params cache
@@ -507,13 +517,7 @@
       }
 
       /* btnevt handling */
-      if (RB.state.eventLast.id !== undefined) {
-          console.log('DEBUG eventLast: id=' + RB.state.eventLast.id);
-      }
-      if (RB.state.eventLast.id == "qrg_up_1e7_b") {
-          console.log('DEBUG eventLast: qrg_up_1e7_b FOUND');
-      }
-      RB.state.eventLast.id = undefined;
+      btnevt_handling();
 
       //console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
 
@@ -552,6 +556,94 @@
     $('#right_menu').show();
   };
 }(window.RB = window.RB || {}, jQuery));
+
+function btnevt_handling() {
+    if (RB.state.eventLast.id === undefined) {
+        return;
+    }
+
+    console.log('DEBUG btnevt_handling: eventLast.id=' + RB.state.eventLast.id);
+    if (RB.state.eventLast.id == "qrg_up_1e0_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e1_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e2_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e3_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e4_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e5_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e6_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_up_1e7_b") {
+
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e0_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e1_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e2_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e3_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e4_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e5_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e6_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_dn_1e7_b") {
+
+
+    } else if (RB.state.eventLast.id == "qrg_entry_0_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_1_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_2_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_3_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_4_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_5_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_6_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_7_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_8_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_9_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_del_b") {
+
+    } else if (RB.state.eventLast.id == "qrg_entry_enter_b") {
+
+
+    } else if (RB.state.eventLast.id == "qrg_send_tx_b") {
+        if ($('#' + RB.state.eventLast.id).hasClass("btn_evt_checked")) {
+            $('#' + RB.state.eventLast.id).removeClass("btn_evt_checked");
+            RB.state.qrgController.tx.radio_enabled = false;
+        } else {
+            $('#' + RB.state.eventLast.id).addClass("btn_evt_checked");
+            RB.state.qrgController.tx.radio_enabled = true;
+        }
+    } else if (RB.state.eventLast.id == "qrg_send_rx_b") {
+        if ($('#' + RB.state.eventLast.id).hasClass("btn_evt_checked")) {
+            $('#' + RB.state.eventLast.id).removeClass("btn_evt_checked");
+            RB.state.qrgController.rx.radio_enabled = false;
+        } else {
+            $('#' + RB.state.eventLast.id).addClass("btn_evt_checked");
+            RB.state.qrgController.rx.radio_enabled = true;
+        }
+    }
+
+    console.log('DEBUG btnevt_handling: qrgController.tx.radio_enabled = ' + RB.state.qrgController.tx.radio_enabled);
+    console.log('DEBUG btnevt_handling: qrgController.rx.radio_enabled = ' + RB.state.qrgController.rx.radio_enabled);
+    RB.state.eventLast.id = undefined;
+}
 
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
   if (key == 'tx_modsrc_s') {
@@ -693,8 +785,7 @@ $(function() {
 
   $('.btnevt, .btn').mouseup(function(ev) {
     //console.log('DEBUG .btn.mouseup()\n');
-    console.log('DEBUG .btn.mouseup() --> event.target.xxx = ' + ev.target.getId() + '\n');
-    RB.state.eventLast.id = ev.target.getId();
+    RB.state.eventLast.id = ev.target.id;
     setTimeout(function() {
       //updateLimits();
       //formatVals();

@@ -265,3 +265,8 @@ input#tx_muxin_gain_f[disabled] {
 .qrg_entry_but_del, .qrg_entry_but_enter {
     font-size:75%;
 }
+
+.btn_evt_checked {
+	color:#f04000;
+    background-color:#ffe0e0;
+}
