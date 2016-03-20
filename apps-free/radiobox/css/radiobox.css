@@ -266,7 +266,16 @@ input#tx_muxin_gain_f[disabled] {
     font-size:75%;
 }
 
-.btn_evt_checked {
-	color:#f04000;
+.qrg_entering {
+    color:#ff8080;
+}
+
+.btnevttx_checked {
+    color:#f04000;
     background-color:#ffe0e0;
+}
+
+.btnevtrx_checked {
+    color:#00a000;
+    background-color:#e0ffe0;
 }

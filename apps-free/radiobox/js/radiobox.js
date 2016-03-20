@@ -40,8 +40,11 @@
   RB.state = {
     app_started: false,
     socket_opened: false,
+    pktIdx: 0,
+    pktIdxMax: 6,  // XXX set count of transport frames
     sending: false,
     send_que: false,
+    receiving: false,
     processing: false,
     editing: false,
     resized: false,
@@ -50,11 +53,17 @@
     },
     qrgController: {
         tx: {
-                radio_enabled: false
-            },
+            button_enabled: false
+        },
         rx: {
-                radio_enabled: false
-            }
+            button_enabled: false
+        },
+        digit: {
+            e: [ 0, 0, 0, 0, 0, 0, 0, 0 ]
+        },
+        editing: true,
+        enter: false,
+        frequency: 0.0
     }
   };
 
@@ -132,11 +141,12 @@
     // init the RB.params.orig parameter list
     RB.params.orig = $.extend(true, {}, RB.params.init);
 
-    var pktIdx = 1;
-    while (pktIdx <= 6) {  // XXX initial pktIdx
+    RB.state.sending = true;
+    RB.state.pktIdx = 1;
+    while (RB.state.pktIdx <= RB.state.pktIdxMax) {
       $.post(
         RB.config.post_url,
-        JSON.stringify({ datasets: { params: cast_params2transport(RB.params.orig, pktIdx) } })
+        JSON.stringify({ datasets: { params: cast_params2transport(RB.params.orig, RB.state.pktIdx) } })
       )
       .done(function(dresult) {
         RB.state.socket_opened = true;
@@ -147,8 +157,10 @@
         showModalError('Can not initialize the application with the default parameters.', false, true);
       });
 
-      pktIdx++;
+      RB.state.pktIdx++;
     }  // while()
+    RB.state.pktIdx = 0;
+    RB.state.sending = false;
   }
 
   /*
@@ -423,6 +435,11 @@
       return false;
     }
 
+    if (RB.state.sending == true) {
+      // busy - drop this push, no data get lost by this
+      return false;
+    }
+
     /*
     if (!RB.state.socket_opened) {
       console.log('ERROR: Cannot save changes, socket not opened');
@@ -431,14 +448,13 @@
     */
 
     RB.state.sending = true;
-
-    var pktIdx = 1;
-    while (pktIdx <= 6) {  // XXX main-loop pktIdx
+    RB.state.pktIdx = 1;
+    while (RB.state.pktIdx <= RB.state.pktIdxMax) {
       //RB.ws.send(JSON.stringify({ parameters: RB.params.local }));
       $.ajax({
         type: 'POST',
         url: RB.config.post_url,
-        data: JSON.stringify({ app: { id: 'radiobox' }, datasets: { params: cast_params2transport(RB.params.local, pktIdx) } }),
+        data: JSON.stringify({ app: { id: 'radiobox' }, datasets: { params: cast_params2transport(RB.params.local, RB.state.pktIdx) } }),
         timeout: RB.config.request_timeout,
         cache: false
       })
@@ -462,6 +478,7 @@
         showModalError('Can not connect the web-server (ERR3).', false, true, true);
       })
       .always(function() {
+        RB.state.pktIdx  = 0;
         RB.state.sending = false;
         RB.state.editing = false;
 
@@ -473,9 +490,13 @@
         }
       });
 
-      pktIdx++;
+      RB.state.pktIdx++;
     }  // while ()
 
+    RB.state.pktIdx = 0;
+    RB.state.sending = false;
+
+    RB.params.local = {};
     return true;
   };
 
@@ -484,7 +505,7 @@
 
   // Exits from editing mode - create local parameters of changed values and send them away
   RB.exitEditing = function(noclose) {
-    console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    //console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
     for (var key in RB.params.orig) {  // XXX controller to message handling
       var field = $('#' + key);
       var value = undefined;
@@ -513,7 +534,7 @@
           value = parseInt(field.val());
         }
       } else {
-          console.log('DEBUG key ' + key + ' field is UNKNOWN');
+        console.log('DEBUG key ' + key + ' field is UNKNOWN');
       }
 
       /* btnevt handling */
@@ -532,7 +553,7 @@
         //  $('#tx_mod_osc_mag_f').val(0);
         //}
 
-        // console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
+        //console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
         RB.params.local[key] = new_value;
         //RB.params.local[key] = { value: new_value };
 
@@ -558,91 +579,201 @@
 }(window.RB = window.RB || {}, jQuery));
 
 function btnevt_handling() {
-    if (RB.state.eventLast.id === undefined) {
-        return;
+  if (RB.state.eventLast.id === undefined) {
+    return;
+  }
+
+  var btn_shift_digit = undefined;
+
+  //console.log('DEBUG btnevt_handling: eventLast.id=' + RB.state.eventLast.id);
+
+  /* locate released button */
+  if (RB.state.eventLast.id == "qrg_send_tx_b") {
+    if ($('#' + RB.state.eventLast.id).hasClass("btnevttx_checked")) {
+      $('#' + RB.state.eventLast.id).removeClass("btnevttx_checked");
+      RB.state.qrgController.tx.button_enabled = false;
+    } else {
+      $('#' + RB.state.eventLast.id).addClass("btnevttx_checked");
+      RB.state.qrgController.tx.button_enabled = true;
     }
 
-    console.log('DEBUG btnevt_handling: eventLast.id=' + RB.state.eventLast.id);
-    if (RB.state.eventLast.id == "qrg_up_1e0_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e1_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e2_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e3_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e4_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e5_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e6_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_up_1e7_b") {
-
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e0_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e1_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e2_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e3_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e4_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e5_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e6_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_dn_1e7_b") {
-
-
-    } else if (RB.state.eventLast.id == "qrg_entry_0_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_1_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_2_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_3_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_4_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_5_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_6_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_7_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_8_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_9_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_del_b") {
-
-    } else if (RB.state.eventLast.id == "qrg_entry_enter_b") {
-
-
-    } else if (RB.state.eventLast.id == "qrg_send_tx_b") {
-        if ($('#' + RB.state.eventLast.id).hasClass("btn_evt_checked")) {
-            $('#' + RB.state.eventLast.id).removeClass("btn_evt_checked");
-            RB.state.qrgController.tx.radio_enabled = false;
-        } else {
-            $('#' + RB.state.eventLast.id).addClass("btn_evt_checked");
-            RB.state.qrgController.tx.radio_enabled = true;
-        }
-    } else if (RB.state.eventLast.id == "qrg_send_rx_b") {
-        if ($('#' + RB.state.eventLast.id).hasClass("btn_evt_checked")) {
-            $('#' + RB.state.eventLast.id).removeClass("btn_evt_checked");
-            RB.state.qrgController.rx.radio_enabled = false;
-        } else {
-            $('#' + RB.state.eventLast.id).addClass("btn_evt_checked");
-            RB.state.qrgController.rx.radio_enabled = true;
-        }
+  } else if (RB.state.eventLast.id == "qrg_send_rx_b") {
+    if ($('#' + RB.state.eventLast.id).hasClass("btnevtrx_checked")) {
+      $('#' + RB.state.eventLast.id).removeClass("btnevtrx_checked");
+      RB.state.qrgController.rx.button_enabled = false;
+    } else {
+      $('#' + RB.state.eventLast.id).addClass("btnevtrx_checked");
+      RB.state.qrgController.rx.button_enabled = true;
     }
 
-    console.log('DEBUG btnevt_handling: qrgController.tx.radio_enabled = ' + RB.state.qrgController.tx.radio_enabled);
-    console.log('DEBUG btnevt_handling: qrgController.rx.radio_enabled = ' + RB.state.qrgController.rx.radio_enabled);
-    RB.state.eventLast.id = undefined;
+  } else if (RB.state.eventLast.id == "qrg_entry_del_b") {
+    if (RB.state.qrgController.editing == false) {
+      qrg_digits_clear();
+    } else {
+      btn_shift_digit = 'x';
+    }
+
+  } else if (RB.state.eventLast.id == "qrg_entry_enter_b") {
+    var zero_idx;
+    var zero_cnt = 0;
+    for (zero_idx = 7; zero_idx >= 0; zero_idx--) {
+      if (RB.state.qrgController.digit.e[zero_idx] == 0)  zero_cnt++;
+      else  break;
+    }
+
+    switch (zero_cnt) {
+    case 7:  // x MHz
+      RB.state.qrgController.digit.e[7] = 0;
+      RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[0];
+      RB.state.qrgController.digit.e[5] = 0;
+      RB.state.qrgController.digit.e[4] = 0;
+      RB.state.qrgController.digit.e[3] = 0;
+      RB.state.qrgController.digit.e[2] = 0;
+      RB.state.qrgController.digit.e[1] = 0;
+      RB.state.qrgController.digit.e[0] = 0;
+      break;
+    case 6:  // xx MHz
+      if (RB.state.qrgController.digit.e[1] <= 6) {
+        RB.state.qrgController.digit.e[7] = RB.state.qrgController.digit.e[1];
+        RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[0];
+        RB.state.qrgController.digit.e[5] = 0;
+        RB.state.qrgController.digit.e[4] = 0;
+        RB.state.qrgController.digit.e[3] = 0;
+        RB.state.qrgController.digit.e[2] = 0;
+        RB.state.qrgController.digit.e[1] = 0;
+        RB.state.qrgController.digit.e[0] = 0;
+      }
+      break;
+    case 4:  // x xxx kHz
+      RB.state.qrgController.digit.e[7] = 0;
+      RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[3];
+      RB.state.qrgController.digit.e[5] = RB.state.qrgController.digit.e[2];
+      RB.state.qrgController.digit.e[4] = RB.state.qrgController.digit.e[1];
+      RB.state.qrgController.digit.e[3] = RB.state.qrgController.digit.e[0];
+      RB.state.qrgController.digit.e[2] = 0;
+      RB.state.qrgController.digit.e[1] = 0;
+      RB.state.qrgController.digit.e[0] = 0;
+      break;
+    case 3:  // xx xxx kHz
+      if (RB.state.qrgController.digit.e[4] <= 6) {
+        RB.state.qrgController.digit.e[7] = RB.state.qrgController.digit.e[4];
+        RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[3];
+        RB.state.qrgController.digit.e[5] = RB.state.qrgController.digit.e[2];
+        RB.state.qrgController.digit.e[4] = RB.state.qrgController.digit.e[1];
+        RB.state.qrgController.digit.e[3] = RB.state.qrgController.digit.e[0];
+        RB.state.qrgController.digit.e[2] = 0;
+        RB.state.qrgController.digit.e[1] = 0;
+        RB.state.qrgController.digit.e[0] = 0;
+      }
+      break;
+    }
+    RB.state.qrgController.editing = false;
+    RB.state.qrgController.enter = true;
+
+  } else {
+    var btn_idx;
+    for (btn_idx = 0; btn_idx <= 9; btn_idx++) {
+      var btn_up = "qrg_up_1e"  + btn_idx + "_b";
+      var btn_dn = "qrg_dn_1e"  + btn_idx + "_b";
+      var btn_dt = "qrg_entry_" + btn_idx + "_b";
+
+      if (btn_idx <= 7 && RB.state.eventLast.id == btn_up) {
+        RB.state.qrgController.digit.e[btn_idx]++;
+        RB.state.qrgController.enter = true;
+        break;
+      } else if (btn_idx <= 7 && RB.state.eventLast.id == btn_dn) {
+        RB.state.qrgController.digit.e[btn_idx]--;
+        RB.state.qrgController.enter = true;
+        break;
+      } else if (RB.state.eventLast.id == btn_dt) {
+        if (RB.state.qrgController.editing == false) {
+          qrg_digits_clear();
+        }
+        btn_shift_digit = btn_idx;
+        RB.state.qrgController.editing = true;
+        break;
+      }
+    }
+  }
+
+  /* normalize frequency digits */
+  var norm_idx;
+  for (norm_idx = 0; norm_idx <= 7; norm_idx++) {
+    if (RB.state.qrgController.digit.e[norm_idx] > 9) {
+      RB.state.qrgController.digit.e[norm_idx] = 0;
+      if (norm_idx < 7)  RB.state.qrgController.digit.e[norm_idx + 1]++;
+    } else if (RB.state.qrgController.digit.e[norm_idx] < 0) {
+      RB.state.qrgController.digit.e[norm_idx] = 9;
+      if (norm_idx < 7)  RB.state.qrgController.digit.e[norm_idx + 1]--;
+    }
+  }
+
+  /* shift register*/
+  if (btn_shift_digit == 'x') {
+    // remove one digit
+    var shift_idx;
+    for (shift_idx = 0; shift_idx < 7; shift_idx++) {
+      RB.state.qrgController.digit.e[shift_idx] = RB.state.qrgController.digit.e[shift_idx + 1];  // shift left
+    }
+    RB.state.qrgController.digit.e[7] = 0;
+
+  } else if (btn_shift_digit !== undefined) {
+    // new digit concatenated
+    var shift_idx;
+    for (shift_idx = 7; shift_idx > 0; shift_idx--) {
+      RB.state.qrgController.digit.e[shift_idx] = RB.state.qrgController.digit.e[shift_idx - 1];  // shift left
+    }
+    RB.state.qrgController.digit.e[0] = btn_shift_digit;
+  }
+
+  /* output digits and sum up resulting frequency */
+  RB.state.qrgController.frequency = 0.0;
+  var digchr = ' ';
+  var dig_hide = true;
+  for (idx = 7; idx >= 0; idx--) {
+    var idstr = "#qrg_display_1e" + idx + "_f";
+    var dig = RB.state.qrgController.digit.e[idx];
+
+    RB.state.qrgController.frequency += dig * Math.pow(10, idx);
+    if (dig > 0 || !dig_hide || idx == 0) {
+      digchr = dig;
+      dig_hide = false;
+    }
+    $(idstr).val(digchr);
+  }
+
+  if (RB.state.qrgController.enter == true) {
+    if (RB.state.qrgController.tx.button_enabled == true) {
+      if (RB.state.sending == false) {
+        $('#tx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
+        $('#tx_car_osc_qrg_f').addClass('qrg_entering');
+        setTimeout(function() {
+          $('#tx_car_osc_qrg_f').removeClass('qrg_entering');
+        }, 150);
+      }
+    }
+
+    if (RB.state.qrgController.rx.button_enabled == true) {
+      if (RB.state.sending == false) {
+        $('#rx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
+        $('#rx_car_osc_qrg_f').addClass('qrg_entering');
+        setTimeout(function() {
+          $('#rx_car_osc_qrg_f').removeClass('qrg_entering');
+        }, 150);
+      }
+    }
+
+    RB.state.qrgController.enter = false;
+  }
+
+  RB.state.eventLast.id = undefined;
+}
+
+function qrg_digits_clear() {
+  var clear_idx;
+  for (clear_idx = 0; clear_idx <= 7; clear_idx++) {
+    RB.state.qrgController.digit.e[clear_idx] = 0;
+  }
 }
 
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
@@ -1182,7 +1313,7 @@ function cast_params2transport(params, pktIdx)
     break;
   }
 
-  console.log('INFO cast_params2transport: out(transport=', transport, ') <-- in(params=', params, ')\n');
+  //console.log('INFO cast_params2transport: out(transport=', transport, ') <-- in(params=', params, ')\n');
   return transport;
 }
 
@@ -1293,7 +1424,7 @@ function cast_transport2params(transport)
     params['rfout2_term_s'] = transport['rfout2_term_s'];
   }
 
-  console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');
+  //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');
   return params;
 }
 
