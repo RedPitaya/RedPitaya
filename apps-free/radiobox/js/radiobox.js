@@ -160,7 +160,6 @@
       RB.state.pktIdx++;
     }  // while()
     RB.state.pktIdx = 0;
-    RB.state.sending = false;
   }
 
   /*
@@ -237,6 +236,12 @@
 
       if (dresult.datasets.signals !== undefined) {
         RB.processSignals(dresult.datasets.signals);
+      }
+
+      if (RB.state.pktIdx == RB.state.pktIdxMax || RB.state.pktIdx == 0) {  // when last packet is acknowledged
+        setTimeout(function() {
+          RB.state.sending = false;
+        }, 100);
       }
     }
   };
@@ -479,7 +484,6 @@
       })
       .always(function() {
         RB.state.pktIdx  = 0;
-        RB.state.sending = false;
         RB.state.editing = false;
 
         if (RB.state.send_que) {
@@ -494,7 +498,6 @@
     }  // while ()
 
     RB.state.pktIdx = 0;
-    RB.state.sending = false;
 
     RB.params.local = {};
     return true;
@@ -746,9 +749,9 @@ function btnevt_handling() {
     if (RB.state.qrgController.tx.button_enabled == true) {
       if (RB.state.sending == false) {
         $('#tx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
-        $('#tx_car_osc_qrg_f').addClass('qrg_entering');
+        $('#tx_car_osc_qrg_f').addClass('qrg-entering');
         setTimeout(function() {
-          $('#tx_car_osc_qrg_f').removeClass('qrg_entering');
+          $('#tx_car_osc_qrg_f').removeClass('qrg-entering');
         }, 150);
       }
     }
@@ -756,9 +759,9 @@ function btnevt_handling() {
     if (RB.state.qrgController.rx.button_enabled == true) {
       if (RB.state.sending == false) {
         $('#rx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
-        $('#rx_car_osc_qrg_f').addClass('qrg_entering');
+        $('#rx_car_osc_qrg_f').addClass('qrg-entering');
         setTimeout(function() {
-          $('#rx_car_osc_qrg_f').removeClass('qrg_entering');
+          $('#rx_car_osc_qrg_f').removeClass('qrg-entering');
         }, 150);
       }
     }

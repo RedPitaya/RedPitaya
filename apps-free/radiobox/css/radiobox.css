@@ -266,8 +266,12 @@ input#tx_muxin_gain_f[disabled] {
     font-size:75%;
 }
 
-.qrg_entering {
+#tx_car_osc_qrg .qrg-entering {
     color:#ff8080;
+}
+
+#rx_car_osc_qrg .qrg-entering {
+    color:#80ff80;
 }
 
 .btnevttx_checked {
