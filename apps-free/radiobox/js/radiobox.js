@@ -42,6 +42,7 @@
     socket_opened: false,
     pktIdx: 0,
     pktIdxMax: 6,  // XXX set count of transport frames
+    blocking: false,
     sending: false,
     send_que: false,
     receiving: false,
@@ -159,7 +160,13 @@
 
       RB.state.pktIdx++;
     }  // while()
+
     RB.state.pktIdx = 0;
+    setTimeout(function() {
+      RB.params.local = {};
+      RB.state.sending = false;
+      RB.state.blocking = false;
+    }, 500);
   }
 
   /*
@@ -237,12 +244,13 @@
       if (dresult.datasets.signals !== undefined) {
         RB.processSignals(dresult.datasets.signals);
       }
-
+/*
       if (RB.state.pktIdx == RB.state.pktIdxMax || RB.state.pktIdx == 0) {  // when last packet is acknowledged
         setTimeout(function() {
           RB.state.sending = false;
-        }, 100);
-      }
+          RB.state.blocking = false;
+        }, 1000);
+      } */
     }
   };
 
@@ -498,8 +506,12 @@
     }  // while ()
 
     RB.state.pktIdx = 0;
+    setTimeout(function() {
+      RB.params.local = {};
+      RB.state.sending = false;
+      RB.state.blocking = false;
+    }, 500);
 
-    RB.params.local = {};
     return true;
   };
 
@@ -746,23 +758,27 @@ function btnevt_handling() {
   }
 
   if (RB.state.qrgController.enter == true) {
+    var blockingOld = RB.state.blocking;
+
     if (RB.state.qrgController.tx.button_enabled == true) {
-      if (RB.state.sending == false) {
+      if (blockingOld == false) {
+        RB.state.blocking = true;
         $('#tx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
         $('#tx_car_osc_qrg_f').addClass('qrg-entering');
         setTimeout(function() {
           $('#tx_car_osc_qrg_f').removeClass('qrg-entering');
-        }, 150);
+        }, 200);
       }
     }
 
     if (RB.state.qrgController.rx.button_enabled == true) {
-      if (RB.state.sending == false) {
+      if (blockingOld == false) {
+        RB.state.blocking = true;
         $('#rx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
         $('#rx_car_osc_qrg_f').addClass('qrg-entering');
         setTimeout(function() {
           $('#rx_car_osc_qrg_f').removeClass('qrg-entering');
-        }, 150);
+        }, 200);
       }
     }
 
