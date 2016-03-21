@@ -236,14 +236,14 @@ int main(int argc, char *argv[]) {
 
 				if (s[1][2]==s[2][1]||size==3){};
 	for(int i = 0; i < n; i++) {
-            data[i]=round(s[2][i]*8191);
+            data[i]=round(s[1][i]*8191);
           //  data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
 			/* Truncate to max value if needed */
 			if (data[i] > 8191) {
 			data[i] = 8191;
     }
         if(data[i] < 0)
-            data[i] += (1 << 14);	
+            data[i] = 0);	
     }
 	//fprintf(stderr, "dziala2\n");
 	
