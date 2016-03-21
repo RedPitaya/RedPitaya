@@ -906,7 +906,7 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_tx_mod_qmix_I_s2_dsp48 (
   .P                       ( tx_mod_qmix_i_s2_out        )   // TX_QMIX I regulated:      SIGSIG 32 bit
 );
 
-wire [ 47: 0] tx_mod_qmix_i_s3_in = tx_car_osc_inc_mux ?  { {15{tx_mod_qmix_i_s2_out[30]}}, tx_mod_qmix_i_s2_out[29:0], 3'b0 } :  /* when FM is used, take 2^14 finer resolution */
+wire [ 47: 0] tx_mod_qmix_i_s3_in = tx_car_osc_inc_mux ?  { {14{tx_mod_qmix_i_s2_out[30]}}, tx_mod_qmix_i_s2_out[29:0], 4'b0 } :  /* when FM is used, take 2^14 finer resolution */
                                                           { tx_mod_qmix_i_s2_out[30:0], 17'b0 }                                ;
 wire [ 47: 0] tx_mod_qmix_i_s3_out;
 
@@ -1153,10 +1153,10 @@ else if (tx_car_cic_41M664_q_out_vld)
 //  TX_CAR_OSC carrier frequency oscillator  (CW, FM, PM modulated)
 wire          tx_car_osc_reset_n      = rb_pwr_tx_OSC_rst_n & !tx_car_osc_reset;
 
-wire [ 47: 0] tx_car_osc_stream_inc   = tx_car_osc_inc_mux ?  tx_mod_qmix_i_s3_out :
-                                                              tx_car_osc_inc       ;
-wire [ 47: 0] tx_car_osc_stream_ofs   = tx_car_osc_ofs_mux ?  tx_mod_qmix_i_s3_out :
-                                                              tx_car_osc_ofs       ;
+wire [ 47: 0] tx_car_osc_stream_inc   = tx_car_osc_inc_mux ?    tx_mod_qmix_i_s3_out[47:0]         :
+                                                                tx_car_osc_inc                     ;
+wire [ 47: 0] tx_car_osc_stream_ofs   = tx_car_osc_ofs_mux ?  { tx_mod_qmix_i_s3_out[46:0], 1'b0 } :
+                                                                tx_car_osc_ofs                     ;
 wire          tx_car_osc_axis_s_vld   = tx_car_osc_reset_n;
 wire [103: 0] tx_car_osc_axis_s_phase = { 7'b0, tx_car_osc_resync, tx_car_osc_stream_ofs, tx_car_osc_stream_inc };
 
@@ -2532,7 +2532,7 @@ rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demo
 
 wire   signed [ 15: 0] rx_mod_amenv_mix_in = rx_mod_amenv_diff_out[44:29];
 wire   signed [ 15: 0] rx_amenv_gain_in = { 1'b0, rx_amenv_gain[15:1] };
-wire   signed [ 47: 0] rx_mod_amenv_mix_out;
+wire   signed [ 31: 0] rx_mod_amenv_mix_out;
 
 rb_dsp48_AmB_A16_B16_P32 i_rb_rx_mod_amenv_mixer (
   // global signals
