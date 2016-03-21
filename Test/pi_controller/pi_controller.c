@@ -179,7 +179,8 @@ int main(int argc, char *argv[]) {
     int       f = 1; // used in for lop, setting the decimation
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
-	int       freq_act = 0;
+	double    freq_act = 0;
+	
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
@@ -197,14 +198,13 @@ int main(int argc, char *argv[]) {
 				freq_act=frequency;
 				size=round(1953125e5/freq_act);  //calculating number of samples 
 				for (int i=0; i<size; i++){
-			//	r[i]=cos(i * 
+					
+					//	r[i]=cos(i * 
 				}
 			}
 
-            /* setting decimtion */
-            t_params[TIME_RANGE_PARAM] = f;           
-            
-           
+            /* setting decimation */
+            t_params[TIME_RANGE_PARAM] = f;                
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
@@ -227,7 +227,6 @@ int main(int argc, char *argv[]) {
                 return -1;
             }  
 
-			 
 				if (s[1][2]==s[2][1]||size==3){};
 	for(int i = 0; i < size; i++) {
                    data[i]=round(s[1][i]*8191);
@@ -237,9 +236,67 @@ int main(int argc, char *argv[]) {
     /* Setting amplitude to 0V - turning off the output. */
     awg_param_t params;
 	/// Write the data to the FPGA and set FPGA AWG state machine
-        write_data_fpga(ch_out, data, &params);	
+    write_data_fpga(ch_out, data, &params);	
    }
 }
+
+
+/**
+ * Synthesize a desired signal.
+ *
+ * Generates/synthesized  a signal, based on three pre-defined signal
+ * types/shapes, signal amplitude & frequency. The data[] vector of 
+ * samples at 125 MHz is generated to be re-played by the FPGA AWG module.
+ *
+ * @param ampl  Signal amplitude [Vpp].
+ * @param freq  Signal frequency [Hz].
+ * @param type  Signal type/shape [Sine, Square, Triangle].
+ * @param data  Returned synthesized AWG data vector.
+ * @param awg   Returned AWG parameters.
+ *
+ */
+void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+                       int32_t *data,
+                       awg_param_t *awg) {
+
+    uint32_t i;
+
+    /* Various locally used constants - HW specific parameters */
+    const int dcoffs = -155;
+    const int trans0 = 30;
+    const int trans1 = 300;
+    //const double tt2 = 0.249;
+
+    /* This is where frequency is used... */
+    awg->offsgain = (dcoffs << 16) + 0x1fff;
+    awg->step = round(65536 * freq/c_awg_smpl_freq * n);
+    awg->wrap = round(65536 * n - 1);
+
+    int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
+    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
+    if (amp > 8191) {
+        /* Truncate to max value if needed */
+        amp = 8191;
+    }
+
+    if (trans <= 10) {
+        trans = trans0;
+    }
+
+    /* Fill data[] with appropriate buffer samples */
+    for(i = 0; i < n; i++) {
+        
+        /* Sine */
+        if (type == eSignalSine) {
+            data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
+        }
+         
+        /* TODO: Remove, not necessary in C/C++. */
+        if(data[i] < 0)
+            data[i] += (1 << 14);
+    }
+}
+
 
 /**
  * Write synthesized data[] to FPGA buffer.
@@ -253,6 +310,8 @@ void write_data_fpga(uint32_t ch,
                      const awg_param_t *awg) {
 
     uint32_t i;
+	
+	
 
     fpga_awg_init();
 
