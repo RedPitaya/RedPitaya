@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
     write_data_fpga(ch_out, data, &params);	
    }
 }
-//
+
 
 /**
  * Synthesize a desired signal.
