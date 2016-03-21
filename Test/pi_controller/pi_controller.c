@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 			data[i] = 8191;
     }
         if(data[i] < 0)
-            data[i] = 0);	
+            data[i] = 0;	
     }
 	//fprintf(stderr, "dziala2\n");
 	
