@@ -13,7 +13,7 @@ module str_to_ram #(
   // control
   input  logic      ctl_rst,  // set FSM to reset
   // stream input
-  axi4_stream_if.d  str,
+  axi4_stream_if.m  str,
   // System bus
   sys_bus_if.s      bus
 );
@@ -31,8 +31,6 @@ logic [AW-1:0] buf_waddr, buf_raddr;
 ////////////////////////////////////////////////////////////////////////////////
 // stream write
 ////////////////////////////////////////////////////////////////////////////////
-
-assign str.TREADY = 1'b1;
 
 assign buf_wdata = str.TDATA;
 assign buf_wen   = str.transf;

@@ -320,7 +320,7 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=13; i<16; i++) begin: for_sys
+for (genvar i=14; i<16; i++) begin: for_sys
   sys_bus_stub sys_bus_stub_13_16 (sys[i]);
 end: for_sys
 endgenerate
@@ -835,6 +835,19 @@ la_top #(
   .irq_stp   (irq.la_stp),
   // System bus
   .bus       (sys[12])
+);
+
+str_to_ram #(
+  .DN  (1),
+  .DT  (SBL_T),
+  .AW  (14)
+) str_to_ram (
+  // control
+  .ctl_rst  (ctl_rst),
+  // stream input
+  .str      (str_drx[2]),
+  // System bus
+  .bus      (sys[13])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
