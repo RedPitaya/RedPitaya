@@ -46,9 +46,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 //static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
-                       int32_t *data,
-                       awg_param_t *params);
+void synthesize_signal(double ampl, double freq_act, awg_param_t *params);
 void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
@@ -180,11 +178,13 @@ int main(int argc, char *argv[]) {
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
+	double ampl = 1;	
+	awg_param_t params;
 	
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-	// float *r  = create_table_size(SIGNAL_LENGTH); //refference signal
+	// uint32_t *r  = create_table_size(SIGNAL_LENGTH); //refference signal
 	int32_t data[n];
 	/* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -226,6 +226,9 @@ int main(int argc, char *argv[]) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
             }  
+    /* Prepare data buffer (calculate from input arguments) */
+    
+    synthesize_signal(ampl, freq_act, &params);
 
 				if (s[1][2]==s[2][1]||size==3){};
 	for(int i = 0; i < size; i++) {
@@ -233,9 +236,7 @@ int main(int argc, char *argv[]) {
     }         			
 	fprintf(stderr, "dziala2\n");
 	
-    /* Setting amplitude to 0V - turning off the output. */
-    awg_param_t params;
-	/// Write the data to the FPGA and set FPGA AWG state machine
+   	/// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch_out, data, &params);	
    }
 }
@@ -250,16 +251,10 @@ int main(int argc, char *argv[]) {
  *
  * @param ampl  Signal amplitude [Vpp].
  * @param freq  Signal frequency [Hz].
- * @param type  Signal type/shape [Sine, Square, Triangle].
- * @param data  Returned synthesized AWG data vector.
  * @param awg   Returned AWG parameters.
  *
  */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
-                       int32_t *data,
-                       awg_param_t *awg) {
-
-    uint32_t i;
+void synthesize_signal(double ampl, double freq, awg_param_t *awg) {
 
     /* Various locally used constants - HW specific parameters */
     const int dcoffs = -155;
@@ -281,20 +276,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
 
     if (trans <= 10) {
         trans = trans0;
-    }
-
-    /* Fill data[] with appropriate buffer samples */
-    for(i = 0; i < n; i++) {
-        
-        /* Sine */
-        if (type == eSignalSine) {
-            data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
-        }
-         
-        /* TODO: Remove, not necessary in C/C++. */
-        if(data[i] < 0)
-            data[i] += (1 << 14);
-    }
+    }    
 }
 
 
