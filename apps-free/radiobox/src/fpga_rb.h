@@ -585,6 +585,8 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h0F..h00: SIGNED 16 bit - TX Amplifier RF gain setting.
      *
+     * bit h1F..h10: n/a
+     *
      */
     uint32_t tx_amp_rf_gain;
 
@@ -600,6 +602,8 @@ typedef struct fpga_rb_reg_mem_s {
     /** @brief  R/W RB_TX_AMP_RF_OFS - TX AMP RF offset register, bits 15..0 (addr: 0x40600038)
      *
      * bit h0F..h00: SIGNED 16 bit - TX Amplifier RF offset value.
+     *
+     * bit h1F..h10: n/a
      *
      */
     uint32_t tx_amp_rf_ofs;
@@ -651,6 +655,8 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h0F..h00: SIGNED 16 bit - TX_MOD_QMIX amplitude setting.
      *
+     * bit h1F..h10: n/a
+     *
      */
     uint32_t tx_mod_qmix_gain;
 
@@ -692,6 +698,8 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h20  ADC0,      mapped to: RF Input 1.
      *   value = h21  ADC1,      mapped to: RF Input 2.
      *
+     * bit h1F..h06: n/a
+     *
      */
     uint32_t tx_muxin_src;
 
@@ -701,12 +709,16 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
      *
+     * bit h1F..h13: n/a
+     *
      */
     uint32_t tx_muxin_gain;
 
     /** @brief  R/W RB_TX_MUXIN_OFS - offset value for analog TX MUX input amplifier (addr: 0x40600068)
      *
      * bit h0F..h00:   SIGNED 16 bit - gain for TX MUXIN output amplifier.
+     *
+     * bit h1F..h10: n/a
      *
      */
     uint32_t tx_muxin_ofs;
@@ -836,253 +848,265 @@ typedef struct fpga_rb_reg_mem_s {
      */
     uint32_t reserved_130;
 
-     /** @brief  Placeholder for addr: 0x40600134
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_134;
+    /** @brief  Placeholder for addr: 0x40600134
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_134;
 
-     /** @brief  Placeholder for addr: 0x40600138
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_138;
+    /** @brief  Placeholder for addr: 0x40600138
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_138;
 
-     /** @brief  Placeholder for addr: 0x4060013C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_13c;
-
-
-     /** @brief  R/W RB_RX_MOD_OSC_INC_LO - RX_MOD_OSC phase increment register, bits 31..0 (addr: 0x40600140)
-      *
-      * bit h1F..h00: LSB of RX_MOD_OSC phase increment register.
-      *
-      */
-     uint32_t rx_mod_osc_inc_lo;
-
-     /** @brief  R/W RB_RX_MOD_OSC_INC_HI - RX_MOD_OSC phase increment register, bits 47..32 (addr: 0x40600144)
-      *
-      * bit h0F..h00: MSB of RX_MOD_OSC phase increment register.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_osc_inc_hi;
-
-     /** @brief  R/W RB_RX_MOD_OSC_OFS_LO - RX_MOD_OSC phase offset register, bits 31..0 (addr: 0x40600148)
-      *
-      * bit h1F..h00: LSB of RX_MOD_OSC phase offset register.
-      *
-      */
-     uint32_t rx_mod_osc_ofs_lo;
-
-     /** @brief  R/W RB_RX_MOD_OSC_OFS_HI - RX_MOD_OSC phase offset register, bits 47..32 (addr: 0x4060014C)
-      *
-      * bit h0F..h00: MSB of RX_MOD_OSC phase offset register.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_osc_ofs_hi;
+    /** @brief  Placeholder for addr: 0x4060013C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_13c;
 
 
-     /** @brief  Placeholder for addr: 0x40600150
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_150;
+    /** @brief  R/W RB_RX_MOD_OSC_INC_LO - RX_MOD_OSC phase increment register, bits 31..0 (addr: 0x40600140)
+     *
+     * bit h1F..h00: LSB of RX_MOD_OSC phase increment register.
+     *
+     */
+    uint32_t rx_mod_osc_inc_lo;
 
-     /** @brief  Placeholder for addr: 0x40600154
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_154;
+    /** @brief  R/W RB_RX_MOD_OSC_INC_HI - RX_MOD_OSC phase increment register, bits 47..32 (addr: 0x40600144)
+     *
+     * bit h0F..h00: MSB of RX_MOD_OSC phase increment register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_osc_inc_hi;
 
-     /** @brief  Placeholder for addr: 0x40600158
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_158;
+    /** @brief  R/W RB_RX_MOD_OSC_OFS_LO - RX_MOD_OSC phase offset register, bits 31..0 (addr: 0x40600148)
+     *
+     * bit h1F..h00: LSB of RX_MOD_OSC phase offset register.
+     *
+     */
+    uint32_t rx_mod_osc_ofs_lo;
 
-     /** @brief  Placeholder for addr: 0x4060015C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_15c;
-
-
-     /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
-      *
-      * bit h05..h00: source ID (extended from the XADC source ID)
-      *   value = h00  no external signal used, TX_MOD_OSC used instead.
-      *   value = h03  Vp_Vn,     mapped to: vin[4].
-      *   value = h10  XADC CH#0, mapped to: AI1.
-      *   value = h11  XADC CH#1, mapped to: AI0.
-      *   value = h18  XADC CH#8, mapped to: AI2.
-      *   value = h19  XADC CH#9, mapped to: AI3.
-      *   value = h20  ADC0,      mapped to: RF Input 1.
-      *   value = h21  ADC1,      mapped to: RF Input 2.
-      *
-      * bit h1F..h06: n/a
-      *
-      */
-     uint32_t rx_muxin_src;
-
-     /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain for RX MUXIN input amplifier.
-      *
-      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
-      *
-      */
-     uint32_t rx_muxin_gain;
-
-     /** @brief  R/W RB_RX_MUX_OFS -  bits 15..0 (addr: 0x40600168)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - offset value for RX MUXIN input amplifier.
-      *
-      */
-     uint32_t rx_muxin_ofs;
-
-     /** @brief  R/W RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec, bits 31..0 (addr: 0x4060016C)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC magnitude mean value register.
-      *
-      */
-     uint32_t rx_signal_strength;
+    /** @brief  R/W RB_RX_MOD_OSC_OFS_HI - RX_MOD_OSC phase offset register, bits 47..32 (addr: 0x4060014C)
+     *
+     * bit h0F..h00: MSB of RX_MOD_OSC phase offset register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_osc_ofs_hi;
 
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 15..0 (addr: 0x40600170)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC magnitude register.
-      *
-      */
-     uint32_t rx_afc_cordic_mag;
+    /** @brief  Placeholder for addr: 0x40600150
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_150;
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_phs - RX_AFC_CORDIC phase register, bits 15..0 (addr: 0x40600174)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC phase register.
-      *
-      */
-     uint32_t rx_afc_cordic_phs;
+    /** @brief  Placeholder for addr: 0x40600154
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_154;
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_phs_prev - RX_AFC_CORDIC previous phase register, bits 15..0 (addr: 0x40600178)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
-      *
-      */
-     uint32_t rx_afc_cordic_phs_prev;
+    /** @brief  Placeholder for addr: 0x40600158
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_158;
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_phs_diff - RX_AFC_CORDIC difference phase register, bits 15..0 (addr: 0x4060017C)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 8 kHz clocks.
-      *
-      */
-     uint32_t rx_afc_cordic_phs_diff;
-
-
-     /** @brief  R/W RB_RX_MOD_SSB_AM_GAIN -  bits 15..0 (addr: 0x40600180)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the SSB/AM demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_ssb_am_gain;
-
-     /** @brief  R/W RB_RX_MOD_AMENV_GAIN -  bits 15..0 (addr: 0x40600184)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the AM-Envelope demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_amenv_gain;
-
-     /** @brief  R/W RB_RX_MOD_FM_GAIN -  bits 15..0 (addr: 0x40600188)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the FM demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_fm_gain;
-
-     /** @brief  R/W RB_RX_MOD_PM_GAIN -  bits 15..0 (addr: 0x4060018C)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the PM demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_pm_gain;
+    /** @brief  Placeholder for addr: 0x4060015C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_15c;
 
 
-     /** @brief  Placeholder for addr: 0x40600190
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_190;
+    /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
+     *
+     * bit h05..h00: source ID (extended from the XADC source ID)
+     *   value = h00  no external signal used, TX_MOD_OSC used instead.
+     *   value = h03  Vp_Vn,     mapped to: vin[4].
+     *   value = h10  XADC CH#0, mapped to: AI1.
+     *   value = h11  XADC CH#1, mapped to: AI0.
+     *   value = h18  XADC CH#8, mapped to: AI2.
+     *   value = h19  XADC CH#9, mapped to: AI3.
+     *   value = h20  ADC0,      mapped to: RF Input 1.
+     *   value = h21  ADC1,      mapped to: RF Input 2.
+     *
+     * bit h1F..h06: n/a
+     *
+     */
+    uint32_t rx_muxin_src;
 
-     /** @brief  Placeholder for addr: 0x40600194
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_194;
+    /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain for RX MUXIN input amplifier.
+     *
+     * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
+     *
+     * bit h1F..h13: n/a
+     *
+     */
+    uint32_t rx_muxin_gain;
 
-     /** @brief  Placeholder for addr: 0x40600198
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_198;
+    /** @brief  R/W RB_RX_MUX_OFS -  bits 15..0 (addr: 0x40600168)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - offset value for RX MUXIN input amplifier.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_muxin_ofs;
 
-     /** @brief  Placeholder for addr: 0x4060019C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_19c;
+    /** @brief  R/O RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec, bits 31..0 (addr: 0x4060016C)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC magnitude mean value register.
+     *
+     */
+    uint32_t rx_signal_strength;
 
 
-     /** @brief  R/W RB_RFOUT1_GAIN - RFOUT1 amplitude register, bits 15..0 (addr: 0x406001A0)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT1 amplitude setting - 8 bit integer . 8 bit fraction value.
-      *
-      */
-     uint32_t rfout1_gain;
+    /** @brief  R/O RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 31..0 (addr: 0x40600170)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC magnitude register.
+     *
+     */
+    uint32_t rx_afc_cordic_mag;
 
-     /** @brief  R/W RB_RFOUT1_OFS - RFOUT1 offset register, bits 15..0 (addr: 0x406001A4)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT1 offset value - 16 bit DAC value offset.
-      *
-      */
-     uint32_t rfout1_ofs;
+    /** @brief  R/O RB_RX_AFC_CORDIC_phs - RX_AFC_CORDIC phase register, bits 31..0 (addr: 0x40600174)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC phase register.
+     *
+     */
+    uint32_t rx_afc_cordic_phs;
 
-     /** @brief  R/W RB_RFOUT2_GAIN - RFOUT2 amplitude register, bits 15..0 (addr: 0x406001A8)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT2 amplitude setting - 8 bit integer . 8 bit fraction value.
-      *
-      */
-     uint32_t rfout2_gain;
+    /** @brief  R/O RB_RX_AFC_CORDIC_phs_prev - RX_AFC_CORDIC previous phase register, bits 31..0 (addr: 0x40600178)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
+     *
+     */
+    uint32_t rx_afc_cordic_phs_prev;
 
-     /** @brief  R/W RB_RFOUT2_OFS - RFOUT2 offset register, bits 15..0 (addr: 0x406001AC)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT2 offset value - 16 bit DAC value offset.
-      *
-      */
-     uint32_t rfout2_ofs;
+    /** @brief  R/O RB_RX_AFC_CORDIC_phs_diff - RX_AFC_CORDIC difference phase register, bits 31..0 (addr: 0x4060017C)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 8 kHz clocks.
+     *
+     */
+    uint32_t rx_afc_cordic_phs_diff;
+
+
+    /** @brief  R/W RB_RX_MOD_SSB_AM_GAIN -  bits 15..0 (addr: 0x40600180)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the SSB/AM demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_ssb_am_gain;
+
+    /** @brief  R/W RB_RX_MOD_AMENV_GAIN -  bits 15..0 (addr: 0x40600184)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the AM-Envelope demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_amenv_gain;
+
+    /** @brief  R/W RB_RX_MOD_FM_GAIN -  bits 15..0 (addr: 0x40600188)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the FM demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_fm_gain;
+
+    /** @brief  R/W RB_RX_MOD_PM_GAIN -  bits 15..0 (addr: 0x4060018C)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the PM demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_pm_gain;
+
+
+    /** @brief  Placeholder for addr: 0x40600190
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_190;
+
+    /** @brief  Placeholder for addr: 0x40600194
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_194;
+
+    /** @brief  Placeholder for addr: 0x40600198
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_198;
+
+    /** @brief  Placeholder for addr: 0x4060019C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_19c;
+
+
+    /** @brief  R/W RB_RFOUT1_GAIN - RFOUT1 amplitude register, bits 15..0 (addr: 0x406001A0)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT1 amplitude setting - 8 bit integer . 8 bit fraction value.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout1_gain;
+
+    /** @brief  R/W RB_RFOUT1_OFS - RFOUT1 offset register, bits 15..0 (addr: 0x406001A4)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT1 offset value - 16 bit DAC value offset.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout1_ofs;
+
+    /** @brief  R/W RB_RFOUT2_GAIN - RFOUT2 amplitude register, bits 15..0 (addr: 0x406001A8)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT2 amplitude setting - 8 bit integer . 8 bit fraction value.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout2_gain;
+
+    /** @brief  R/W RB_RFOUT2_OFS - RFOUT2 offset register, bits 15..0 (addr: 0x406001AC)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT2 offset value - 16 bit DAC value offset.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout2_ofs;
 
 } fpga_rb_reg_mem_t;
 
