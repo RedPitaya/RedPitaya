@@ -26,8 +26,16 @@ systemctl enable redpitaya_nginx
 #systemctl enable redpitaya_scpi
 systemctl enable redpitaya_heartbeat
 
+# libraries used by Bazaar
 apt-get -y install libluajit-5.1 lua-cjson unzip
 apt-get -y install libboost-system1.55.0 libboost-regex1.55.0 libboost-thread1.55.0
+apt-get -y install libcrypto++9
+
+# libraries used to compile Bazaar
+apt-get -y install libboost-system1.55-dev libboost-regex1.55-dev libboost-thread1.55-dev
+apt-get -y install libcrypto++-dev
+apt-get -y install libcurl4-openssl-dev
+
 EOF_CHROOT
 
 # profile for PATH variables, ...
