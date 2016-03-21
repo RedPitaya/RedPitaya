@@ -18,11 +18,8 @@ SOURCES= DataManager.cpp \
 OBJDIR=./objs
 SDKOBJDIR=$(OBJDIR)/rp_sdk
 
-CRYPTO_DIR=../../../../tools/cryptopp
-CRYPTO_INSTALL_DIR=../../../../tools/build
-
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -DNDEBUG
+CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(SYSROOT)/usr/include/crypto++/ -DNDEBUG
 
 ifeq ($(ALWAYS_PURCHASED),true)
 CXXFLAGS+=-DALWAYS_PURCHASED
@@ -40,21 +37,13 @@ endif
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
-CRYPTO_LIB=$(CRYPTO_INSTALL_DIR)/lib/libcryptopp.a
 
 CURRENT_DIR := $(shell pwd)
 
-all: $(CRYPTO_LIB) $(SOURCES) $(LIB)
-
-$(CRYPTO_LIB):
-	mkdir -p $(CRYPTO_INSTALL_DIR)
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build static
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build install
+all: $(SOURCES) $(LIB)
 
 $(LIB): $(OBJECTS)
-	mkdir -p $(OBJDIR)/cryptopp
-	cd $(OBJDIR)/cryptopp; ar -x $(CURRENT_DIR)/$(CRYPTO_LIB)
-	ar rc $(LIB) objs/cryptopp/*.o $(OBJECTS)
+	ar rc $(LIB) $(OBJECTS)
 
 $(SDKOBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
@@ -62,5 +51,3 @@ $(SDKOBJDIR)/%.o: %.cpp
 
 clean:
 	rm -rf $(LIB) $(OBJDIR)
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build clean
-	make -C $(CRYPTO_DIR) CXX=${CROSS_COMPILE}g++ PREFIX=../build remove

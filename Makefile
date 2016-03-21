@@ -53,15 +53,9 @@ LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
 DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
 BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
-ifeq ($(CROSS_COMPILE),arm-xilinx-linux-gnueabi-)
-SYSROOT=$(PWD)/OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabi/sysroot
-LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
-UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=soft"
-else
-SYSROOT=$(PWD)/OS/buildroot/buildroot-2014.02/output/host/usr/arm-buildroot-linux-gnueabihf/sysroot
+SYSROOT=/
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
-endif
 
 ################################################################################
 #
@@ -303,19 +297,16 @@ LUANGINX_TAG    = v0.8.7
 NGINX_TAG       = 1.5.3
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
-CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp563.zip
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
-CRYPTOPP_TAR    = $(DL)/cryptopp562.zip
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
-CRYPTOPP_DIR    = Bazaar/tools/cryptopp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
@@ -329,14 +320,6 @@ $(WEBSOCKETPP_TAR): | $(DL)
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-
-$(CRYPTOPP_TAR): | $(DL)
-	curl -L $(CRYPTOPP_URL) -o $@
-
-$(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
-	mkdir -p $@
-	unzip $< -d $@
-	patch -d $@ -p1 < patches/cryptopp.patch
 
 $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
@@ -363,10 +346,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	patch -d $@ -p1 < patches/nginx.patch
 	cp -f patches/nginx.conf $@/conf/
 
-$(BOOST_DIR): buildroot
-	ln -sf ../../../../OS/buildroot/buildroot-2014.02/output/build/boost-1.55.0 $@
-
-$(NGINX): buildroot libredpitaya $(WEBSOCKETPP_DIR) $(CRYPTOPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR) $(BOOST_DIR)
+$(NGINX): libredpitaya $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -529,7 +509,6 @@ clean:
 	-make -C $(UBOOT_DIR) clean
 	make -C shared clean
 	# todo, remove downloaded libraries and symlinks
-	rm -rf Bazaar/tools/cryptopp
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean

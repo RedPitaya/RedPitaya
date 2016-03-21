@@ -25,13 +25,12 @@ WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
 # We will add things one-by-one accoording to our needs in add_modules.
 without:=`cat configure_withouts.txt`
 add_modules=--add-module=../ngx_ext_modules/lua-nginx-module --add-module=../ngx_ext_modules/ngx_http_rp_module
-add_conf_params=--with-zlib=../../../OS/buildroot/buildroot-2014.02/output/build/zlib-1.2.8 --with-pcre=../../../OS/buildroot/buildroot-2014.02/output/build/pcre-8.34
 VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_conf_params) $(add_modules);
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB): 

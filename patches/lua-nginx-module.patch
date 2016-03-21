@@ -1,17 +1,12 @@
 diff -rupN lua-nginx-module.old/config lua-nginx-module.new/config
 --- lua-nginx-module.old/config	2013-09-02 21:58:33.000000000 +0200
 +++ lua-nginx-module.new/config	2015-06-12 14:39:57.279348839 +0200
-@@ -6,6 +6,20 @@ ngx_feature_incs="#include <lauxlib.h>"
+@@ -6,6 +6,15 @@ ngx_feature_incs="#include <lauxlib.h>"
  ngx_feature_path=
  ngx_feature_test="(void) luaL_newstate();"
  
-+# LUAJIT_INC="-I ${SYSROOT}/usr/include";
-+# LUAJIT_LIB="-L ${SYSROOT}/usr/lib -lluajit";
-+
-+# ngx_custom_path should be available from wherever the ./configure for Nginx is called
-+ngx_custom_path="../../../OS/buildroot/buildroot-2014.02/output/build/luajit-2.0.2/src/"
-+LUAJIT_INC="-I ${ngx_custom_path}";
-+LUAJIT_LIB="-L ${ngx_custom_path} -lluajit";
++LUAJIT_INC="-I ${SYSROOT}/usr/include -I ${SYSROOT}/usr/include/luajit-2.0 ";
++LUAJIT_LIB="-L ${SYSROOT}/usr/lib -lluajit-5.1";
 +ngx_force_module=yes;
 +
 +if test -n "$ngx_force_module"; then
