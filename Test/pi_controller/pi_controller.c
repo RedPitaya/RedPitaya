@@ -245,7 +245,7 @@ int main(int argc, char *argv[]) {
         if(data[i] < 0)
             data[i] += (1 << 14);	
     }
-	fprintf(stderr, "dziala2\n");
+	//fprintf(stderr, "dziala2\n");
 	
    	/// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch_out, data, &params);	
