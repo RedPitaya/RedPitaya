@@ -248,7 +248,6 @@ int main(int argc, char *argv[]) {
 	
    	/// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch_out, data, &params);	
-	usleep(1000000);
    }
 }
 
