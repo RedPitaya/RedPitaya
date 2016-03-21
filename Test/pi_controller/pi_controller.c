@@ -234,8 +234,9 @@ int main(int argc, char *argv[]) {
 	for(int i = 0; i < n; i++) {
     //               data[i]=round(s[1][i]*8191);
             data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
-	
-    }         			
+        if(data[i] < 0)
+            data[i] += (1 << 14);	
+    }
 	fprintf(stderr, "dziala2\n");
 	
    	/// Write the data to the FPGA and set FPGA AWG state machine
@@ -260,8 +261,8 @@ void synthesize_signal(double ampl, double freq, awg_param_t *awg) {
 
     /* Various locally used constants - HW specific parameters */
     const int dcoffs = -155;
-    const int trans0 = 30;
-    const int trans1 = 300;
+    //const int trans0 = 30;
+   // const int trans1 = 300;
     //const double tt2 = 0.249;
 
     /* This is where frequency is used... */
@@ -269,16 +270,13 @@ void synthesize_signal(double ampl, double freq, awg_param_t *awg) {
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
     awg->wrap = round(65536 * n - 1);
 
-    int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
+   // int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
     uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
     if (amp > 8191) {
         /* Truncate to max value if needed */
         amp = 8191;
     }
 
-    if (trans <= 10) {
-        trans = trans0;
-    }    
 }
 
 
@@ -352,7 +350,7 @@ int acquire_data(float **s ,uint32_t size) {
              * s[2][i] - Channel ADC2 raw signal
              */
             for(j = 0; j < MIN(size, sig_len); j++) {
-                printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
+             //   printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
             }
             break;
         }
