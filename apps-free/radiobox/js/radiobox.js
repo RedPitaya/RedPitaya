@@ -54,13 +54,13 @@
     },
     qrgController: {
         tx: {
-            button_enabled: false
+            button_checked: true
         },
         rx: {
-            button_enabled: false
+            button_checked: true
         },
         digit: {
-            e: [ 0, 0, 0, 0, 0, 0, 0, 0 ]
+            e: [ 0, 0, 0, 0, 0, 1, 0, 0 ]  // reversed digits
         },
         editing: true,
         enter: false,
@@ -606,19 +606,19 @@ function btnevt_handling() {
   if (RB.state.eventLast.id == "qrg_send_tx_b") {
     if ($('#' + RB.state.eventLast.id).hasClass("btnevttx_checked")) {
       $('#' + RB.state.eventLast.id).removeClass("btnevttx_checked");
-      RB.state.qrgController.tx.button_enabled = false;
+      RB.state.qrgController.tx.button_checked = false;
     } else {
       $('#' + RB.state.eventLast.id).addClass("btnevttx_checked");
-      RB.state.qrgController.tx.button_enabled = true;
+      RB.state.qrgController.tx.button_checked = true;
     }
 
   } else if (RB.state.eventLast.id == "qrg_send_rx_b") {
     if ($('#' + RB.state.eventLast.id).hasClass("btnevtrx_checked")) {
       $('#' + RB.state.eventLast.id).removeClass("btnevtrx_checked");
-      RB.state.qrgController.rx.button_enabled = false;
+      RB.state.qrgController.rx.button_checked = false;
     } else {
       $('#' + RB.state.eventLast.id).addClass("btnevtrx_checked");
-      RB.state.qrgController.rx.button_enabled = true;
+      RB.state.qrgController.rx.button_checked = true;
     }
 
   } else if (RB.state.eventLast.id == "qrg_entry_del_b") {
@@ -760,7 +760,7 @@ function btnevt_handling() {
   if (RB.state.qrgController.enter == true) {
     var blockingOld = RB.state.blocking;
 
-    if (RB.state.qrgController.tx.button_enabled == true) {
+    if (RB.state.qrgController.tx.button_checked == true) {
       if (blockingOld == false) {
         RB.state.blocking = true;
         $('#tx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
@@ -771,7 +771,7 @@ function btnevt_handling() {
       }
     }
 
-    if (RB.state.qrgController.rx.button_enabled == true) {
+    if (RB.state.qrgController.rx.button_checked == true) {
       if (blockingOld == false) {
         RB.state.blocking = true;
         $('#rx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
