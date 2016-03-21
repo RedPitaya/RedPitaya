@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
-	double ampl = 4000;	
+	double ampl = 4000;	 //ADC count 4000 = 1Vpp output
 	awg_param_t params;
 	
 	
@@ -231,7 +231,7 @@ int main(int argc, char *argv[]) {
     synthesize_signal(ampl, freq_act, &params);
 
 				if (s[1][2]==s[2][1]||size==3){};
-	for(int i = 0; i < n; i++) {
+	for(int i = 0; i < size; i++) {
     //               data[i]=round(s[1][i]*8191);
             data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
         if(data[i] < 0)
@@ -329,8 +329,7 @@ void write_data_fpga(uint32_t ch,
     g_awg_reg->state_machine_conf = 0x110011;
 
     fpga_awg_exit();
-	
-	fprintf(stderr, "dziala3\n");
+		
 }
 
 /**
@@ -352,7 +351,7 @@ int acquire_data(float **s ,uint32_t size) {
              * s[2][i] - Channel ADC2 raw signal
              */
             for(j = 0; j < MIN(size, sig_len); j++) {
-             //   printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
+                printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
             }
             break;
         }
