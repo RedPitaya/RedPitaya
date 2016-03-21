@@ -39,6 +39,9 @@ apt-get -y install libcrypto++-dev
 apt-get -y install libcurl4-openssl-dev
 apt-get -y install libssl-dev
 
+# tools used to compile applications
+apt-get -y install zip
+
 EOF_CHROOT
 
 # profile for PATH variables, ...
