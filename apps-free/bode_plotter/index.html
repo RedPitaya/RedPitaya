@@ -53,14 +53,14 @@
     zoom: { interactive: false, trigger: null },
 
     yaxis: {  color:'#989898' ,tickFormatter: funcyTickFormat},
-    xaxis: { color:'#989898',ticks: [0.001,0.002,0.004,0.008,0.01,0.1,1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
+    xaxis: { color:'#989898',ticks: [1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
     
     grid: { borderWidth: 1, color:'#989898',backgroundColor: 'transparent' },
     legend: { show:0, noColumns: 2, margin: [0, 0]},
     touch: { autoWidth: false, autoHeight: false }
   };
 
-  function funcxTickFormat(val, axis){
+  /*function funcxTickFormat(val, axis){
     if (val > 1000000000-1)
       return (val / 1000000000).toFixed(axis.tickDecimals) + "G";
     else if (val > 1000000-1)
@@ -98,7 +98,45 @@
       return (val / 1000).toFixed(axis.tickDecimals) + "k";
     else
       return val.toFixed(axis.tickDecimals) + "";
+  }*/
+
+
+     function funcxTickFormat(val, axis){
+   
+   if (Math.abs(val)  >= 0 && Math.abs(val)  < 1000)
+      return (val * 1).toFixed(0) + " ";
+   else if (Math.abs(val)  >=  1000  && Math.abs(val)  < 1000000)
+      return (val / 1000).toFixed(0) + "k";
+   else if (Math.abs(val)  >=  1000000 )
+      return (val / 1000000).toFixed(0) + "M";
+    }
+
+
+     function funcyTickFormat(val, axis){
+   if (Math.abs(val) <  0.00000000000001)
+        return (val * 0).toFixed(0);
+   else if (Math.abs(val)  >=  0.00000000000001 &&  Math.abs(val) <  0.000000001)
+        return (val * 1000000000000).toFixed(2) + " p";
+   else if (Math.abs(val) >=  0.000000001 && Math.abs(val) <  0.000001) 
+      return (val * 1000000000).toFixed(2) + " n";
+   else if (Math.abs(val)  >=  0.000001 && Math.abs(val)  < 0.001)
+      return (val * 1000000).toFixed(2) + " u";
+   else if (Math.abs(val)  >=  0.001 && Math.abs(val)  < 1)
+      return (val * 1000).toFixed(2) + " m";
+  else if (Math.abs(val)  >= 1 && Math.abs(val)  < 1000)
+      return (val * 1).toFixed(2);
+   else if (Math.abs(val)  >=  1000  && Math.abs(val)  < 1000000)
+      return (val / 1000).toFixed(2) + " k";
+   else if (Math.abs(val)  >=  1000000 &&  Math.abs(val)  < 1000000000)
+      return (val / 1000000).toFixed(2) + " M";
+   else if (Math.abs(val)  >=  1000000000)
+      return (val / 1000000000).toFixed(2) + " G";
+
   }
+
+
+
+
 
   var bode_modal;
   
@@ -1293,7 +1331,7 @@
             filterData(datasets, plot.width()),
             $.extend(true, plot_options, {
               yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max },
-              xaxis: { color:'#989898',ticks: [0.001,0.002,0.004,0.008,0.01,0.1,1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
+              xaxis: { color:'#989898',ticks: [1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
             })
           );
 
@@ -1327,8 +1365,8 @@
     var axes = plot.getAxes();
     
     // Set Y scale to data min/max + 10%
-    options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - axes.yaxis.datamin * 0.1); 
-    options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + axes.yaxis.datamax * 0.1);
+    options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - Math.abs(axes.yaxis.datamin) * 0.2); 
+    options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + Math.abs(axes.yaxis.datamax) * 0.2);
 
     plot.setupGrid();
     plot.draw();

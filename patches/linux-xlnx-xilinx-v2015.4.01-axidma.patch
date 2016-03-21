@@ -1,0 +1,51 @@
+diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
+index 9902daf..e68e213 100644
+--- a/drivers/dma/xilinx/xilinx_dma.c
++++ b/drivers/dma/xilinx/xilinx_dma.c
+@@ -653,13 +654,23 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+ 
+ 	/* Start the transfer */
+ 	if (chan->has_sg) {
++		if (chan->cyclic) {
++#ifdef CONFIG_PHYS_ADDR_T_64BIT
++			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
++				       tail_segment->phys + 0x80);
++#else
++			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
++				       tail_segment->phys + 0x80);
++#endif
++		} else {
+ #ifdef CONFIG_PHYS_ADDR_T_64BIT
+-		dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
+-			       tail_segment->phys);
++			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
++				       tail_segment->phys);
+ #else
+-		dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
+-			       tail_segment->phys);
++			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
++				       tail_segment->phys);
+ #endif
++		}
+ 	} else {
+ 		struct xilinx_dma_tx_segment *segment;
+ 		struct xilinx_dma_desc_hw *hw;
+@@ -1013,6 +1040,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+ 	struct xilinx_dma_chan *chan = to_xilinx_chan(dchan);
+ 	struct xilinx_dma_tx_descriptor *desc;
+ 	struct xilinx_dma_tx_segment *segment;
++	struct xilinx_dma_tx_segment *head_desc, *tail_desc;
+ 	size_t copy, sg_used;
+ 	unsigned int num_periods;
+ 	int i;
+@@ -1086,6 +1114,10 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+ 		segment->hw.control |= XILINX_DMA_BD_EOP;
+ 	}
+ 
++	head_desc = list_first_entry(&desc->segments, struct xilinx_dma_tx_segment, node);
++	tail_desc = list_last_entry (&desc->segments, struct xilinx_dma_tx_segment, node);
++	tail_desc->hw.next_desc = (u32) head_desc->phys;
++
+ 	return &desc->async_tx;
+ 
+ error:

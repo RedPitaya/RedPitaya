@@ -1,16 +1,5 @@
 # Red Pitaya specifics
 
-## FSBL (first stage boot loader)
-
-### Version
-FSBL version is defined by the Vivado tool, version **2015.1** is used for this project.
-
-### Patches
-```
-FPGA/patches/memtest-vivado.patch
-```
-This patch seems to enable status reporting after a memory test. TODO: details
-
 ## U-Boot specifics
 
 ### Version

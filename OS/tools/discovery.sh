@@ -13,7 +13,7 @@ if [ -n "$IP_LAN" ];then
         PAYLOAD=$PAYLOAD"&ipwifi=$IP_WAN"
     fi
 else
-    PAYLOAD="?mac=$MAC_LAN&ip=$IP_WAN"
+    PAYLOAD="?mac=$MAC_LAN&ipwifi=$IP_WAN"
 fi
 
 curl $URL$PAYLOAD >> $LOGFILE 2>&1

@@ -1,5 +1,5 @@
-echo Set devicetree and ramdisk high loading address to 512MB-64MB
-setenv high        0x1c000000
+echo Set devicetree and ramdisk high loading address to 512MB
+setenv high        0x20000000
 setenv fdt_high    ${high}
 setenv initrd_high ${high}
 
@@ -9,7 +9,7 @@ fatload mmc 0 0x2001000 uImage
 fatload mmc 0 0x4000000 devicetree.dtb
 
 echo Booting Linux kernel with ramdisk and devicetree
-setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait
+setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" loglevel=7 dyndbg="file axidmatest.c +p"
 setenv sdboot bootm 0x2001000 - 0x4000000
 setenv bootdelay 0
 bootd

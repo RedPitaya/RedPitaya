@@ -31,16 +31,18 @@ You will need the following to build the Red Pitaya components:
 1. Various development packages:
 
 ```bash
-sudo apt-get install make u-boot-tools curl xz-utils nano
+# generic dependencies
+sudo apt-get install make curl xz-utils
+# U-Boot build dependencies
+sudo apt-get install libssl-dev device-tree-compiler u-boot-tools
 ```
 
-2. Xilinx [Vivado 2015.2](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2015-2.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
+2. Xilinx [Vivado 2015.4](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2015-4.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
 
 3. Linaro [ARM toolchain](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/) for cross compiling Linux applications. We recommend to install it to `/opt/linaro/` since build process instructions relly on it.
 
 ```bash
 TOOLCHAIN="http://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz"
-#TOOLCHAIN="http://releases.linaro.org/15.02/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf.tar.xz"
 curl -O $TOOLCHAIN
 sudo mkdir -p /opt/linaro
 sudo chown $USER:$USER /opt/linaro
@@ -48,6 +50,14 @@ tar -xpf *linaro*.tar.xz -C /opt/linaro
 ```
 
 **NOTE:** you can skip installing Vivado tools, if you only wish to compile user space software.
+
+4. Missing `gmake` path
+
+Vivado requires a `gmake` executable which does not exist on Ubuntu. It is necessary to create a symbolic link to the regular `make` executable.
+
+```bash
+sudo ln -s /usr/bin/make /usr/bin/gmake
+```
 
 # Build process
 
@@ -113,9 +123,8 @@ The build process downloads the Xilinx version of Linux sources from Github, app
 
 The created boot file contains FSBL, FPGA bitstream and U-Boot binary.
 ```bash
-make tmp/boot.bin.uboot
+make tmp/boot.bin
 ```
-Since file `tmp/boot.bin.uboot` is created it should be renamed to simply `tmp/boot.bin`. There are some preparations for creating a memory test `tmp/boot.bin.memtest` which would run from the SD card, but it did not go es easy es we would like, so it is not working.
 
 ## Linux user space
 

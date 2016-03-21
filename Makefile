@@ -27,9 +27,9 @@ else
 DL=$(TMP)
 endif
 
-UBOOT_TAG     = xilinx-v2015.2
-LINUX_TAG     = xilinx-v2015.1
-DTREE_TAG     = xilinx-v2015.1
+UBOOT_TAG     = xilinx-v2015.4
+LINUX_TAG     = xilinx-v2015.4.01
+DTREE_TAG     = xilinx-v2015.4
 #BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -73,6 +73,7 @@ NAME=ecosystem
 
 # directories
 FPGA_DIR        = fpga
+FPGA2_DIR       = fpga2
 
 NGINX_DIR       = Bazaar/nginx
 IDGEN_DIR       = Bazaar/tools/idgen
@@ -80,17 +81,20 @@ OS_TOOLS_DIR    = OS/tools
 ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
+LIBRP2_DIR      = api2
 SDK_DIR         = SDK/
 
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
+FPGA2           = $(FPGA2_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
+FSBL2           = $(FPGA2_DIR)/sdk/fsbl/executable.elf
 MEMTEST         = $(FPGA_DIR)/sdk/dram_test/executable.elf
-DTS             = $(FPGA_DIR)/sdk/dts/system.dts
+DTS             = $(FPGA2_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(TMP)/devicetree.dtb
 UBOOT           = $(TMP)/u-boot.elf
 LINUX           = $(TMP)/uImage
-BOOT_UBOOT      = $(TMP)/boot.bin
+BOOT            = $(TMP)/boot.bin
 
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
@@ -133,29 +137,27 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+$(TARGET): $(BOOT) u-boot devicetree linux buildroot $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api apps_pro rp_communication
+	   scpi fpga api api2 apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
-	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
+	cp $(BOOT)             $(TARGET)/boot.bin
 	# copy device tree and Linux kernel
 	cp $(DEVICETREE)       $(TARGET)
 	cp $(LINUX)            $(TARGET)
 	# copy FPGA bitstream images and decompress them
 	mkdir -p               $(TARGET)/fpga
 	cp $(FPGA)             $(TARGET)/fpga/fpga.bit
+	cp $(FPGA2)            $(TARGET)/fpga/fpga2.bit
 	cp fpga/archive/*.xz   $(TARGET)/fpga
 	cd $(TARGET)/fpga; xz -df *.xz
 	#
 	cp -r $(INSTALL_DIR)/* $(TARGET)
-	cp -r OS/filesystem/*  $(TARGET)
+	cp -r OS/filesystem/*  $(TARGET)/
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
-	# copy Linaro runtime library to fix dependency issues on Debian
-	# TODO: find a better solution
-	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
 
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
@@ -164,10 +166,13 @@ zip: $(TARGET)
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-.PHONY: fpga
+.PHONY: fpga fpga2
 
 fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR)
+
+fpga2: $(DTREE_DIR)
+	make -C $(FPGA2_DIR)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -202,13 +207,16 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_S
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
 	cp $@.debian $@
 
-$(ENVTOOLS_CFG): $(UBOOT_DIR)
-	mkdir -p $(INSTALL_DIR)/etc/
+$(ENVTOOLS_CFG): $(UBOOT_DIR) $(INSTALL_DIR)/etc
 	cp $</tools/env/fw_env.config $(INSTALL_DIR)/etc
 
 ################################################################################
 # Linux build provides: $(LINUX)
 ################################################################################
+
+.PHONY: linux
+
+linux: $(LINUX)
 
 $(LINUX_TAR): | $(DL)
 	curl -L $(LINUX_URL) -o $@
@@ -216,8 +224,18 @@ $(LINUX_TAR): | $(DL)
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG).patch
-	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidmatest-cyc.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
+	cp -r patches/rtl8192cu $@/drivers/net/wireless/
+	cp -r patches/lantiq/*  $@/drivers/net/phy/
+	cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
+	# DMA support related patches
+	cp -r patches/redpitaya $@/drivers/
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
@@ -230,6 +248,10 @@ $(LINUX): $(LINUX_DIR)
 # TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
+.PHONY: devicetree
+
+devicetree: $(DEVICETREE)
+
 $(DTREE_TAR): | $(DL)
 	curl -L $(DTREE_URL) -o $@
 
@@ -237,17 +259,17 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
+$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA_DIR)/sdk/dts/ $(TMP)/devicetree.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA2_DIR)/sdk/dts/ $(TMP)/devicetree.dts
 
 ################################################################################
 # boot file generator
 ################################################################################
 
-$(BOOT_UBOOT): fpga $(UBOOT)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+$(BOOT): fpga2 $(UBOOT)
+	@echo img:{[bootloader] $(FSBL2) $(FPGA2) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 
 ################################################################################
@@ -258,8 +280,11 @@ URAMDISK_DIR    = OS/buildroot
 
 .PHONY: buildroot
 
-$(INSTALL_DIR):
-	mkdir $(INSTALL_DIR)
+$(INSTALL_DIR):      ; 	mkdir -p $@
+$(INSTALL_DIR)/bin:  ; 	mkdir -p $@
+$(INSTALL_DIR)/sbin: ; 	mkdir -p $@
+$(INSTALL_DIR)/lib:  ; 	mkdir -p $@
+$(INSTALL_DIR)/etc:  ; 	mkdir -p $@
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
@@ -269,7 +294,7 @@ buildroot: $(INSTALL_DIR)
 # API libraries
 ################################################################################
 
-.PHONY: api librp librpapp libredpitaya
+.PHONY: api2 api librp librpapp libredpitaya
 
 libredpitaya:
 	$(MAKE) -C shared
@@ -277,6 +302,10 @@ libredpitaya:
 librp:
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+librp2:
+	$(MAKE) -C $(LIBRP2_DIR)
+	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ifdef ENABLE_LICENSING
 
@@ -291,6 +320,8 @@ else
 api: librp
 
 endif
+
+api2: librp2
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -457,10 +488,10 @@ rp_communication:
 # Red Pitaya OS tools
 ################################################################################
 
-$(DISCOVERY):
+$(DISCOVERY): | $(INSTALL_DIR)/sbin
 	cp $(OS_TOOLS_DIR)/discovery.sh $@
 
-$(HEARTBEAT):
+$(HEARTBEAT): | $(INSTALL_DIR)/sbin
 	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 ################################################################################
@@ -534,6 +565,7 @@ clean:
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
+	make -C $(LIBRP2_DIR)    clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(SDK_DIR) clean
