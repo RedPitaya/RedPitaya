@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
-	double ampl = 1;	
+	double ampl = 4000;	
 	awg_param_t params;
 	
 	
@@ -329,6 +329,8 @@ void write_data_fpga(uint32_t ch,
     g_awg_reg->state_machine_conf = 0x110011;
 
     fpga_awg_exit();
+	
+	fprintf(stderr, "dziala3\n");
 }
 
 /**
