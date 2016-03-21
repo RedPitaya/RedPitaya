@@ -191,12 +191,16 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "rp_app_init() failed!\n");
         return -1;
     }
+	
+	
+	
     /// Showtime.
 	while (1){
 			/* Calculate/recalculate refference signal if frequency has changed*/
 			if (freq_act != frequency){
 				freq_act=frequency;
-				size=round(1953125e5/freq_act);  //calculating number of samples 
+				//size=round(1953125e5/freq_act);  //calculating number of samples 
+				size = n;
 				for (int i=0; i<size; i++){
 					
 					//	r[i]=cos(i * 
@@ -232,8 +236,12 @@ int main(int argc, char *argv[]) {
 
 				if (s[1][2]==s[2][1]||size==3){};
 	for(int i = 0; i < n; i++) {
-    //               data[i]=round(s[1][i]*8191);
-            data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
+            data[i]=round(s[1][i]*8191);
+          //  data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
+			/* Truncate to max value if needed */
+			if (data[i] > 8191) {
+			data[i] = 8191;
+    }
         if(data[i] < 0)
             data[i] += (1 << 14);	
     }
