@@ -242,13 +242,13 @@ int main(int argc, char *argv[]) {
 			if (data[i] > 8191) {
 			data[i] = 8191;
     }
-        if(data[i] < 0)
-            data[i] = 0;	
+       
     }
 	//fprintf(stderr, "dziala2\n");
 	
    	/// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch_out, data, &params);	
+	usleep(1000000);
    }
 }
 
