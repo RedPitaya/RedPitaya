@@ -823,7 +823,7 @@ la_top #(
 ) la (
   // streams
   .sti       (axi_exi[1]),
-  .sto       (str_drx[2]),
+  .sto       (str_la),
   // current time stamp
   .cts       (cts),
   // triggers
@@ -837,15 +837,21 @@ la_top #(
   .bus       (sys[12])
 );
 
+assign str_drx[2].TVALID = 1'b0;
+
+axi4_stream_if #(.DT (SBL_T)) str_la (.ACLK (adc_clk), .ARESETn (adc_rstn));
+
+assign str_la.TREADY = 1'b1;
+
 str_to_ram #(
   .DN  (1),
   .DT  (SBL_T),
-  .AW  (14)
+  .AW  (15)
 ) str_to_ram (
   // control
   .ctl_rst  (ctl_rst),
   // stream input
-  .str      (str_drx[2]),
+  .str      (str_la),
   // System bus
   .bus      (sys[13])
 );
