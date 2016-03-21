@@ -109,10 +109,16 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
 
 
     { /* TX_MUX in (Mic in) slider ranges from 0% to 100% - transport_pktIdx 5 */
-        "tx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
+        "tx_muxin_gain_s",          0.0,   1,  0, 0.0,    100.0  },
 
     { /* RX_MUX in - transport_pktIdx 5 */
-        "rx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
+        "rx_muxin_gain_s",          0.0,   1,  0, 0.0,    100.0  },
+
+    { /* Frequency QRG controller influences TX - transport_pktIdx 5 */
+        "tx_qrg_sel_s",             0.0,   1,  0, 0.0,      1.0  },
+
+    { /* Frequency QRG controller influences RX - transport_pktIdx 5 */
+        "rx_qrg_sel_s",             0.0,   1,  0, 0.0,      1.0  },
 
 
     { /* RX_CAR_OSC frequency (Hz) - transport_pktIdx 6 */
@@ -123,6 +129,9 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
 
     { /* RFOUT2 termination information - transport_pktIdx 6 */
         "rfout2_term_s",            0.0,   1,  0, 0.0,      1.0  },
+
+    { /* Frequency QRG increment range controller - transport_pktIdx 6 */
+        "qrg_inc_s",                0.0,   1,  0, 0.0,    100.0  },
 
 
     { /* has to be last entry */
@@ -681,8 +690,10 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 break;
 
             case 5:
-                if (!strcmp("tx_muxin_gain_f",     src[i].name) ||
-                    !strcmp("rx_muxin_gain_f",     src[i].name)) {
+                if (!strcmp("tx_muxin_gain_s",     src[i].name) ||
+                    !strcmp("rx_muxin_gain_s",     src[i].name) ||
+                    !strcmp("tx_qrg_sel_s",        src[i].name) ||
+                    !strcmp("rx_qrg_sel_s",        src[i].name)) {
                     found = 1;
                 }
                 break;
@@ -690,7 +701,8 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
             case 6:
                 if (!strcmp("rx_car_osc_qrg_f",    src[i].name) ||
                     !strcmp("rfout1_term_s",       src[i].name) ||
-                    !strcmp("rfout2_term_s",       src[i].name)) {
+                    !strcmp("rfout2_term_s",       src[i].name) ||
+                    !strcmp("qrg_inc_s",           src[i].name)) {
                     found = 1;
                 }
                 break;

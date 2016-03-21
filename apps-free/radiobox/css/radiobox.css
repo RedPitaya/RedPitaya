@@ -235,7 +235,13 @@ input#tx_muxin_gain_f[disabled] {
     width:55px;
 }
 .qrg_col18 {
-    width:28px;
+    width:35px;
+}
+.qrg_col19 {
+    width:25px;
+}
+.qrg_col20 {
+    width:17px;
 }
 
 .qrg_up_dn_but {
@@ -282,4 +288,10 @@ input#tx_muxin_gain_f[disabled] {
 .btnevtrx_checked {
     color:#00a000;
     background-color:#e0ffe0;
+}
+
+.range_vert {
+    height:180px;
+    writing-mode:bt-lr;
+    -webkit-appearance:slider-vertical;
 }

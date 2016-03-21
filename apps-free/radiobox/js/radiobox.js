@@ -42,6 +42,7 @@
     socket_opened: false,
     pktIdx: 0,
     pktIdxMax: 6,  // XXX set count of transport frames
+    doUpdate: false,
     blocking: false,
     sending: false,
     send_que: false,
@@ -52,6 +53,7 @@
     eventLast: {
         id: ""
     },
+    eventClickId: '',
     qrgController: {
         tx: {
             button_checked: true
@@ -91,12 +93,15 @@
     tx_amp_rf_gain_f:   200.0,  // 200 mV Vpp @ 50R results to -10 dBm
     tx_mod_osc_mag_f:   100.0,  // 100 % modulation by default
 
-    tx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
-    rx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    tx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    rx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    tx_qrg_sel_s:           1,  // QRG controller influence TX frequency
+    rx_qrg_sel_s:           1,  // QRG controller influence RX frequency
 
     rx_car_osc_qrg_f:  100000,  // 100 kHz
     rfout1_term_s:          0,  // RF Output 1: '0' open ended, '1' 50 ohms terminated
-    rfout2_term_s:          0   // RF Output 2: '0' open ended, '1' 50 ohms terminated
+    rfout2_term_s:          0,  // RF Output 2: '0' open ended, '1' 50 ohms terminated
+    qrg_inc_s:             50   // Frequency range controller increment value [0%..100%]
   };
 
   // Other global variables
@@ -161,12 +166,12 @@
       RB.state.pktIdx++;
     }  // while()
 
-    RB.state.pktIdx = 0;
     setTimeout(function() {
       RB.params.local = {};
+      RB.state.pktIdx = 0;
       RB.state.sending = false;
       RB.state.blocking = false;
-    }, 500);
+    }, 600);
   }
 
   /*
@@ -240,17 +245,9 @@
       if (dresult.datasets.params !== undefined) {
         RB.processParameters(dresult.datasets.params);
       }
-
       if (dresult.datasets.signals !== undefined) {
         RB.processSignals(dresult.datasets.signals);
       }
-/*
-      if (RB.state.pktIdx == RB.state.pktIdxMax || RB.state.pktIdx == 0) {  // when last packet is acknowledged
-        setTimeout(function() {
-          RB.state.sending = false;
-          RB.state.blocking = false;
-        }, 1000);
-      } */
     }
   };
 
@@ -329,8 +326,25 @@
       else if (param_name == 'tx_mod_osc_mag_f') {
         $('#'+param_name).val(dblVal);
       }
-      else if (param_name == 'tx_muxin_gain_f') {
-        $('#'+param_name).val(dblVal);
+      else if (param_name == 'tx_muxin_gain_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'rx_muxin_gain_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'tx_qrg_sel_s') {
+        if (intVal > 0) {
+          $('#'+param_name).addClass('btnevttx_checked');
+        } else {
+          $('#'+param_name).removeClass('btnevttx_checked');
+        }
+      }
+      else if (param_name == 'rx_qrg_sel_s') {
+        if (intVal > 0) {
+          $('#'+param_name).addClass('btnevtrx_checked');
+        } else {
+          $('#'+param_name).removeClass('btnevtrx_checked');
+        }
       }
       else if (param_name == 'rx_modtyp_s') {
         $('#'+param_name).val(intVal);
@@ -339,14 +353,14 @@
       else if (param_name == 'rx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
-      else if (param_name == 'rx_muxin_gain_f') {
-        $('#'+param_name).val(dblVal);
-      }
       else if (param_name == 'rfout1_term_s') {
         $('#'+param_name).val(intVal);
       }
       else if (param_name == 'rfout2_term_s') {
         $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'qrg_inc_s') {
+        //$('#'+param_name).val(intVal);
       }
 
       /*
@@ -501,17 +515,19 @@
           }, 100);
         }
       });
-
       RB.state.pktIdx++;
     }  // while ()
 
-    RB.state.pktIdx = 0;
     setTimeout(function() {
       RB.params.local = {};
+      RB.state.pktIdx = 0;
       RB.state.sending = false;
       RB.state.blocking = false;
-    }, 500);
-
+      if (RB.state.doUpdate == true) {
+        RB.state.doUpdate = false;
+        RB.exitEditing(true);
+      }
+    }, 600);
     return true;
   };
 
@@ -520,65 +536,19 @@
 
   // Exits from editing mode - create local parameters of changed values and send them away
   RB.exitEditing = function(noclose) {
-    //console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    /* btnevt handling */
+    btnevt_handling();
+
+    if (RB.state.eventClickId != '') {
+      RB.state.eventLast.id = RB.state.eventClickId;
+      RB.state.eventClickId = '';
+      RB.state.qrgController.editing = false;
+      RB.state.doUpdate = true;
+      processField(RB.state.eventLast.id);
+    }
     for (var key in RB.params.orig) {  // XXX controller to message handling
-      var field = $('#' + key);
-      var value = undefined;
-
-      if (key == 'rb_run'){
-        value = ($('#RB_RUN').is(':visible') ?  1 : 0);
-      }
-
-      else if (field.is('button')) {
-        //console.log('DEBUG key ' + key + ' is a button');
-        value = (field.hasClass('active') ? 1 : 0);
-      }
-
-      else if (field.is('input:radio')) {
-        //console.log('DEBUG key ' + key + ' is a input:radio');
-        // value = parseInt($('input[name="' + key + '"]:checked').val());
-        // console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
-        value = (field.is(":checked") ?  1 : 0);
-      }
-
-      else if (field.is('select') || field.is('input')) {
-        //console.log('DEBUG key ' + key + ' is a select or input');
-        if (checkKeyIs_F(key)) {
-          value = parseFloat(field.val());
-        } else {
-          value = parseInt(field.val());
-        }
-      } else {
-        console.log('DEBUG key ' + key + ' field is UNKNOWN');
-      }
-
-      /* btnevt handling */
-      btnevt_handling();
-
-      //console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
-
-      // Check for specific values and enables/disables controllers
-      checkKeyDoEnable(key, value);
-
-      if (value !== undefined && value != RB.params.orig[key]) {
-        var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
-
-        // clear magnitude field when modulation source or type has changed
-        //if ((key == 'tx_modsrc_s') || (key == 'tx_modtyp_s')) {
-        //  $('#tx_mod_osc_mag_f').val(0);
-        //}
-
-        //console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
-        RB.params.local[key] = new_value;
-        //RB.params.local[key] = { value: new_value };
-
-        // } else {
-        //   if (value === undefined) {
-        //     console.log(key + ' value is undefined');
-        //   } else {
-        //     console.log(key + ' not changed with that value = ' + value);
-        // }
-      }
+      processField(key);
     }
 
     // Send params then reset editing state and hide dialog
@@ -593,6 +563,69 @@
   };
 }(window.RB = window.RB || {}, jQuery));
 
+function processField(key) {
+  var field = $('#' + key);
+
+  if (key == 'rb_run'){
+    value = ($('#RB_RUN').is(':visible') ?  1 : 0);
+  }
+  else if (key == 'tx_qrg_sel_s') {
+    value = (field.hasClass('btnevttx_checked')) ?  1 : 0;
+  }
+  else if (key == 'rx_qrg_sel_s') {
+    value = (field.hasClass('btnevtrx_checked')) ?  1 : 0;
+  }
+
+  else if (field.is('button')) {
+    //console.log('DEBUG key ' + key + ' is a button');
+    value = (field.hasClass('active') ? 1 : 0);
+  }
+
+  else if (field.is('input:button, input:radio')) {
+    //console.log('DEBUG key ' + key + ' is a input:radio');
+    //value = parseInt($('input[name="' + key + '"]:checked').val());
+    //console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
+    value = (field.is(":checked") ?  1 : 0);
+  }
+
+  else if (field.is('select') || field.is('input')) {
+    if (checkKeyIs_F(key)) {
+      value = parseFloat(field.val());
+    } else {
+      value = parseInt(field.val());
+    }
+    //console.log('DEBUG key ' + key + ' is a select or input: value = ' + value);
+
+  } else {
+    console.log('DEBUG key ' + key + ' field is UNKNOWN');
+  }
+
+  //console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
+
+  // Check for specific values and enables/disables controllers
+  checkKeyDoEnable(key, value);
+
+  if (value !== undefined && value != RB.params.orig[key]) {
+    var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
+
+    // clear magnitude field when modulation source or type has changed
+    //if ((key == 'tx_modsrc_s') || (key == 'tx_modtyp_s')) {
+    //  $('#tx_mod_osc_mag_f').val(0);
+    //}
+
+    //console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
+    RB.params.local[key] = new_value;
+    //RB.params.local[key] = { value: new_value };
+
+    // } else {
+    //   if (value === undefined) {
+    //     console.log(key + ' value is undefined');
+    //   } else {
+    //     console.log(key + ' not changed with that value = ' + value);
+    // }
+  }
+};
+
 function btnevt_handling() {
   if (RB.state.eventLast.id === undefined) {
     return;
@@ -603,7 +636,7 @@ function btnevt_handling() {
   //console.log('DEBUG btnevt_handling: eventLast.id=' + RB.state.eventLast.id);
 
   /* locate released button */
-  if (RB.state.eventLast.id == "qrg_send_tx_b") {
+  if (RB.state.eventLast.id == "tx_qrg_sel_s") {
     if ($('#' + RB.state.eventLast.id).hasClass("btnevttx_checked")) {
       $('#' + RB.state.eventLast.id).removeClass("btnevttx_checked");
       RB.state.qrgController.tx.button_checked = false;
@@ -612,7 +645,7 @@ function btnevt_handling() {
       RB.state.qrgController.tx.button_checked = true;
     }
 
-  } else if (RB.state.eventLast.id == "qrg_send_rx_b") {
+  } else if (RB.state.eventLast.id == "rx_qrg_sel_s") {
     if ($('#' + RB.state.eventLast.id).hasClass("btnevtrx_checked")) {
       $('#' + RB.state.eventLast.id).removeClass("btnevtrx_checked");
       RB.state.qrgController.rx.button_checked = false;
@@ -694,10 +727,12 @@ function btnevt_handling() {
 
       if (btn_idx <= 7 && RB.state.eventLast.id == btn_up) {
         RB.state.qrgController.digit.e[btn_idx]++;
+        RB.state.qrgController.editing = false;
         RB.state.qrgController.enter = true;
         break;
       } else if (btn_idx <= 7 && RB.state.eventLast.id == btn_dn) {
         RB.state.qrgController.digit.e[btn_idx]--;
+        RB.state.qrgController.editing = false;
         RB.state.qrgController.enter = true;
         break;
       } else if (RB.state.eventLast.id == btn_dt) {
@@ -781,10 +816,8 @@ function btnevt_handling() {
         }, 200);
       }
     }
-
     RB.state.qrgController.enter = false;
   }
-
   RB.state.eventLast.id = undefined;
 }
 
@@ -808,7 +841,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_mag_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_mag').removeAttr("style");
 
-      $('#tx_muxin_gain_f').attr("disabled", "disabled");
+      $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
 
     } else if (value) {
@@ -822,7 +855,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_mag_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_mag').removeAttr("style");
 
-      $('#tx_muxin_gain_f').removeAttr("disabled");
+      $('#tx_muxin_gain_s').removeAttr("disabled");
       $('#apply_tx_muxin_gain').removeAttr("style");
 
     } else {
@@ -836,7 +869,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_mag_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_mag').attr("style", "visibility:hidden");
 
-      $('#tx_muxin_gain_f').attr("disabled", "disabled");
+      $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
 
@@ -846,7 +879,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#rx_modtyp_s').removeAttr("disabled");
       $('#apply_rx_modtyp').removeAttr("style");
 
-      $('#rx_muxin_gain_f').removeAttr("disabled");
+      $('#rx_muxin_gain_s').removeAttr("disabled");
       $('#apply_rx_muxin_gain').removeAttr("style");
 
     } else {
@@ -854,7 +887,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#rx_modtyp_s').attr("disabled", "disabled");
       $('#apply_rx_modtyp').attr("style", "visibility:hidden");
 
-      $('#rx_muxin_gain_f').attr("disabled", "disabled");
+      $('#rx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");
     }
   }
@@ -933,20 +966,30 @@ $(function() {
     }, 10);
   });
 
-  $('.btnevt, .btn').mouseup(function(ev) {
-    //console.log('DEBUG .btn.mouseup()\n');
+  $('.btnevt, .btn, .rangeevt').mouseup(function(ev) {
+    //console.log('DEBUG .btn.mouseup(), id = ' + ev.target.id);
     RB.state.eventLast.id = ev.target.id;
     setTimeout(function() {
       //updateLimits();
       //formatVals();
-        RB.exitEditing(true);
+      RB.exitEditing(true);
+    }, 250);
+  });
+
+  $('.btnevt, .btn, .rangeevt').on('input', function(ev) {
+    //console.log('DEBUG .btn.on("input", f())\n');
+    RB.state.eventLast.id = ev.target.id;
+    setTimeout(function() {
+      //updateLimits();
+      //formatVals();
+      RB.exitEditing(true);
     }, 20);
   });
 
   // Close parameters dialog after Enter key is pressed
-  $('input').keyup(function(event) {
-    //console.log('DEBUG input.keyup(event)\n');
-    if (event.keyCode == 13) {
+  $('input').keyup(function(ev) {
+    //console.log('DEBUG input.keyup(ev)\n');
+    if (ev.keyCode == 13) {
       RB.exitEditing(true);
     }
   });
@@ -955,6 +998,52 @@ $(function() {
   //$('.close-dialog').on('click touchstart', function() {
   $('.close-dialog').on('click', function() {
     RB.exitEditing();
+  });
+
+  // Mousewheel elements
+  $('.mswheelbtn').mousewheel(function(ev, delta) {
+    //console.log('DEBUG mousewheel(ev, delta): delta = ' + delta + '\n');
+    ev.stopPropagation();
+    ev.preventDefault();
+    var btnId = 'qrg_';
+    if (delta <= -3) {
+      btnId += 'up_1e';
+    } else if (delta >= 3) {
+      btnId += 'dn_1e';
+    } else {
+      return;
+    }
+    var id = ev.target.id;
+    if (id !== undefined && id.length >= 3) {
+      btnId += id.substr(14,1) + '_b';
+    } else {
+      return;
+    }
+    setTimeout(function() {
+      console.log('DEBUG mousewheel(ev, delta) click(): id = ' + id + ', btnId = ' + btnId + ', delta = ' + delta + '\n');
+      //$('#' + btnId).attr('style', 'background:#000000;');
+      //$('#' + btnId).click();
+      RB.state.eventClickId = btnId;
+      RB.exitEditing(true);
+    }, 10);
+  });
+
+  $('.mswheelrange').mousewheel(function(ev, delta) {
+    //console.log('DEBUG mousewheel(ev, delta): delta = ' + delta + '\n');
+    var mw = $(this);
+    var max = 100;
+    ev.stopPropagation();
+    ev.preventDefault();
+    setTimeout(function() {
+      var cur = parseInt(mw.val()) - (delta / 3);
+      if (cur < 0) {
+        cur = 0;
+      } else if (cur > max) {
+        cur = max;
+      }
+      mw.val(cur);
+      RB.exitEditing(true);
+    }, 10);
   });
 
   /*
@@ -1292,21 +1381,21 @@ function cast_params2transport(params, pktIdx)
     break;
 
   case 5:
-    if (params['tx_muxin_gain_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['tx_muxin_gain_f']);
-      transport['SE_tx_muxin_gain_f'] = quad.se;
-      transport['HI_tx_muxin_gain_f'] = quad.hi;
-      transport['MI_tx_muxin_gain_f'] = quad.mi;
-      transport['LO_tx_muxin_gain_f'] = quad.lo;
+    if (params['tx_muxin_gain_s'] !== undefined) {
+      transport['tx_muxin_gain_s'] = params['tx_muxin_gain_s'];
     }
 
-    if (params['rx_muxin_gain_f'] !== undefined) {
-        var quad = cast_1xdouble_to_4xfloat(params['rx_muxin_gain_f']);
-        transport['SE_rx_muxin_gain_f'] = quad.se;
-        transport['HI_rx_muxin_gain_f'] = quad.hi;
-        transport['MI_rx_muxin_gain_f'] = quad.mi;
-        transport['LO_rx_muxin_gain_f'] = quad.lo;
-      }
+    if (params['rx_muxin_gain_s'] !== undefined) {
+      transport['rx_muxin_gain_s'] = params['rx_muxin_gain_s'];
+    }
+
+    if (params['tx_qrg_sel_s'] !== undefined) {
+      transport['tx_qrg_sel_s'] = params['tx_qrg_sel_s'];
+    }
+
+    if (params['rx_qrg_sel_s'] !== undefined) {
+      transport['rx_qrg_sel_s'] = params['rx_qrg_sel_s'];
+    }
     break;
 
   case 6:
@@ -1324,6 +1413,10 @@ function cast_params2transport(params, pktIdx)
 
     if (params['rfout2_term_s'] !== undefined) {
       transport['rfout2_term_s'] = params['rfout2_term_s'];
+    }
+
+    if (params['qrg_inc_s'] !== undefined) {
+      transport['qrg_inc_s'] = params['qrg_inc_s'];
     }
     break;
 
@@ -1408,22 +1501,20 @@ function cast_transport2params(transport)
     params['tx_mod_osc_mag_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_tx_muxin_gain_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_tx_muxin_gain_f'];
-    quad.hi = transport['HI_tx_muxin_gain_f'];
-    quad.mi = transport['MI_tx_muxin_gain_f'];
-    quad.lo = transport['LO_tx_muxin_gain_f'];
-    params['tx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_muxin_gain_s'] !== undefined) {
+    params['tx_muxin_gain_s'] = transport['tx_muxin_gain_s'];
   }
 
-  if (transport['LO_rx_muxin_gain_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_rx_muxin_gain_f'];
-    quad.hi = transport['HI_rx_muxin_gain_f'];
-    quad.mi = transport['MI_rx_muxin_gain_f'];
-    quad.lo = transport['LO_rx_muxin_gain_f'];
-    params['rx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['rx_muxin_gain_s'] !== undefined) {
+    params['rx_muxin_gain_s'] = transport['rx_muxin_gain_s'];
+  }
+
+  if (transport['tx_qrg_sel_s'] !== undefined) {
+    params['tx_qrg_sel_s'] = transport['tx_qrg_sel_s'];
+  }
+
+  if (transport['rx_qrg_sel_s'] !== undefined) {
+    params['rx_qrg_sel_s'] = transport['rx_qrg_sel_s'];
   }
 
   if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
@@ -1441,6 +1532,10 @@ function cast_transport2params(transport)
 
   if (transport['rfout2_term_s'] !== undefined) {
     params['rfout2_term_s'] = transport['rfout2_term_s'];
+  }
+
+  if (transport['qrg_inc_s'] !== undefined) {
+    params['qrg_inc_s'] = transport['qrg_inc_s'];
   }
 
   //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');

@@ -1178,14 +1178,17 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  * @param[in]  tx_mod_osc_mag   Magnitude of TX_MOD_OSC mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
  * @param[in]  tx_muxin_gain    Slider value between 0% (value==0) and 100% (value==80) for the MUXIN range slider, 80 means amplification of 1:1. 80..100 logarithmic amplification.
  * @param[in]  rx_muxin_gain    Slider value between 0% and 100%.
+ * @param[in]  tx_qrg_sel       Frequency QRG controller induces into TX frequency: 1==on, 0==off.
+ * @param[in]  rx_qrg_sel       Frequency QRG controller induces into RX frequency: 1==on, 0==off.
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
+ * @param[in]  qrg_inc          Frequency QRG range controller increment value, 0%-100%.
  */
 void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         int src_con_pnt, int term, int rx_muxin_src,
         double tx_car_osc_qrg, double tx_mod_osc_qrg,
         double tx_amp_rf_gain, double tx_mod_osc_mag,
-        double tx_muxin_gain, double rx_muxin_gain,
-        double rx_car_osc_qrg);
+        int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
+        double rx_car_osc_qrg, int qrg_inc);
 
 
 /**
@@ -1201,6 +1204,13 @@ void fpga_rb_set_tx_modtyp(int tx_modtyp);
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  */
 void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg);
+
+/**
+ * @brief Calculates and programs the FPGA TX_CAR_OSC sweep increment for CW, SSB, AM and PM
+ *
+ * @param[in]  tx_car_osc_qrg_inc   Range controller represents frequency increment, 0%-100%.
+ */
+void fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(int tx_car_osc_qrg_inc);
 
 /**
  * @brief Calculates and programs the FPGA TX_CAR_OSC mixer for AM
@@ -1247,7 +1257,7 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_
  * @param[in]  tx_muxin_gain   Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
  * @param[in]  tx_muxin_ofs    ADC offset value, signed 16 bit.
  */
-void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain, int tx_muxin_ofs);
+void fpga_rb_set_tx_muxin_gain(int tx_muxin_gain, int tx_muxin_ofs);
 
 
 /**
@@ -1263,7 +1273,7 @@ void fpga_rb_set_rx_modtyp(int rx_modtyp);
  * @param[in]  rx_muxin_gain   Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
  * @param[in]  rx_muxin_ofs    ADC offset value, signed 16 bit.
  */
-void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs);
+void fpga_rb_set_rx_muxin_gain(int rx_muxin_gain, int rx_muxin_ofs);
 
 /**
  * @brief Calculates and programs the FPGA RX_CAR_OSC for SSB, AM and FM
@@ -1271,6 +1281,13 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs);
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  */
 void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg);
+
+/**
+ * @brief Calculates and programs the FPGA RX_CAR_OSC sweep increment for SSB, AM and FM
+ *
+ * @param[in]  rx_car_osc_qrg_inc   Range controller represents frequency increment, 0%-100%.
+ */
+void fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(int rx_car_osc_qrg_inc);
 
 /**
  * @brief Calculates and programs the FPGA RX_MOD_OSC for SSB and AM

@@ -21,6 +21,7 @@
   <script src="js/jquery-2.1.3.js"></script>
   <script src="js/jquery-ui.js"></script>
   <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/jquery.mousewheel.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
   <script src="js/jquery.flot.js"></script>
   <script src="js/fastclick.min.js"></script>
@@ -525,9 +526,9 @@
         <tr>
         <td colspan="3">
         <div id="tx_muxin_gain" class="form-group">
-        <label for="tx_muxin_gain_f" class="col-xs-2 control-label"><span style="padding-right:16%">TX Mic gain:</span></label>
+        <label for="tx_muxin_gain_s" class="col-xs-2 control-label"><span style="padding-right:16%">TX Mic gain:</span></label>
           <div class="col-xs-9">
-            <input type="range" id="tx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-tx-muxin-gain" disabled="disabled" />
+            <input type="range" id="tx_muxin_gain_s" min="0" max="100" value="0" class="form-control form-bg-tx-muxin-gain" disabled="disabled" />
             <span id="apply_tx_muxin_gain" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
@@ -567,27 +568,29 @@
             <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_8_b" name="qrg_entry_8" value="8" /></td>
             <td class="qrg_col17"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_9_b" name="qrg_entry_9" value="9" /></td>
             <td class="qrg_col18" rowspan="4">&nbsp;</td>
+            <td class="qrg_col19" rowspan="4"><input id="qrg_inc_s" name="qrg_inc" class="rangeevt mswheelrange range_vert qrg_inc_range" type="range" orient="vertical" min="0" max="100" value="50" /></td>
+            <td class="qrg_col20" rowspan="4">&nbsp;</td>
           </tr>
           <tr>
-            <td class="qrg_col02"><input class="btnevt qrg_send_tx_rx_but btnevttx_checked" type="button" id="qrg_send_tx_b" name="qrg_send_tx" value="&uArr;" /></td>
+            <td class="qrg_col02"><input class="btnevt qrg_send_tx_rx_but btnevttx_checked" type="button" id="tx_qrg_sel_s" name="qrg_send_tx" value="&uArr;" /></td>
 
-            <td class="qrg_col04" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e7_f" value=" " class="form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col05" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e6_f" value=" " class="form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col04" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e7_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col05" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e6_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
 
-            <td class="qrg_col07" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e5_f" value="1" class="form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col08" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e4_f" value="0" class="form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col09" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e3_f" value="0" class="form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col07" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e5_f" value="1" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col08" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e4_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col09" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e3_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
 
-            <td class="qrg_col11" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e2_f" value="0" class="form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col12" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e1_f" value="0" class="form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col13" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e0_f" value="0" class="form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col11" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e2_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col12" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e1_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col13" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e0_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
 
             <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_4_b" name="qrg_entry_4" value="4" /></td>
             <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_5_b" name="qrg_entry_5" value="5" /></td>
             <td class="qrg_col17"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_6_b" name="qrg_entry_6" value="6" /></td>
           </tr>
           <tr>
-            <td class="qrg_col02"><input class="btnevt qrg_send_tx_rx_but btnevtrx_checked" type="button" id="qrg_send_rx_b" name="qrg_send_rx" value="&dArr;" /></td>
+            <td class="qrg_col02"><input class="btnevt qrg_send_tx_rx_but btnevtrx_checked" type="button" id="rx_qrg_sel_s" name="qrg_send_rx" value="&dArr;" /></td>
 
             <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_1_b" name="qrg_entry_1" value="1" /></td>
             <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_2_b" name="qrg_entry_2" value="2" /></td>
@@ -711,9 +714,9 @@
         <tr>
         <td colspan="3">
         <div id="rx_muxin_gain" class="form-group">
-        <label for="rx_muxin_gain_f" class="col-xs-2 control-label"><span style="padding-right:16%">RX MUX input gain:</span></label>
+        <label for="rx_muxin_gain_s" class="col-xs-2 control-label"><span style="padding-right:16%">RX MUX input gain:</span></label>
           <div class="col-xs-9">
-            <input type="range" id="rx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
+            <input type="range" id="rx_muxin_gain_s" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
             <span id="apply_rx_muxin_gain" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
