@@ -38,7 +38,7 @@ pthread_t tid;
 
 void* trigGen(void *arg)
 {
-    sleep(2);
+    sleep(1);
     rp_DigSigGenSoftwareControl(1);
     return NULL;
 }
