@@ -43,7 +43,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Decimation translation table */
 #define DEC_MAX 6 // Max decimation index
-static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+// static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
 void synthesize_signal(uint32_t size, double freq, awg_param_t *params);
