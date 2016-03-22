@@ -228,7 +228,9 @@ int main(int argc, char *argv[]) {
     /* Prepare data buffer (calculate from input arguments) */
     
     synthesize_signal(size, freq_act, &params);
-				
+	for(int i = 0; i < n; i++) {
+           data[i]=0);
+		   }			
 	for(int i = 0; i < size; i++) {
            data[i]=round(s[1][i]);
             // data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
@@ -265,8 +267,8 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
-    awg->step = round(65536 * size / 1024  );
-    awg->wrap = round(65536 * size - 1);
+    awg->step = round(65536 * n / 1024  );
+    awg->wrap = round(65536 * n - 1);
 	printf("%7d", (int)awg->step);
 	printf("%7d\n", (int)awg->wrap);
 }
