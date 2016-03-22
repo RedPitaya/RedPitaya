@@ -43,7 +43,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Decimation translation table */
 #define DEC_MAX 6 // Max decimation index
-//static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
 void synthesize_signal(uint32_t size, double freq, awg_param_t *params);
@@ -167,12 +167,30 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 	
+	/* Optional decimation */
+	uint32_t dec = strtod(argv[4], NULL);
+        uint32_t idx;
+
+        for (idx = 0; idx < DEC_MAX; idx++) {
+            if (dec == g_dec[idx]) {
+                break;
+            }
+        }
+
+        if (idx != DEC_MAX) {
+            t_params[TIME_RANGE_PARAM] = idx;
+        } else {
+            fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
+            usage();
+            return -1;
+        }
+	
 	/** Parameters initialization and calculation */
   //  double    w_out = frequency * 2 * M_PI; // angular velocity
    // uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
   //  signal_e type = eSignalSine;
-    uint32_t  ind = 0; //setting the decimation index (ind=3 => dec=1024)
+    // uint32_t  ind = 3; //setting the decimation index (ind=3 => dec=1024)
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
@@ -197,9 +215,8 @@ int main(int argc, char *argv[]) {
 			if (freq_act != frequency){
 				freq_act=frequency;
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
-				size = 100;
+				size = 10;
 				
-
 				printf("%7d", (int)size);
 				for (int i=0; i<size; i++){
 					
@@ -207,8 +224,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-            /* setting decimation */
-            t_params[TIME_RANGE_PARAM] = ind;                
+                     
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
@@ -220,10 +236,6 @@ int main(int argc, char *argv[]) {
                 return -1;
             }
 
-			/* Refference signal*/
-			if (freq_act != frequency){
-			
-			}
 
             /* ADC Data acqusition - saved to s */
             if (acquire_data( s, size ) < 0) {
@@ -233,8 +245,7 @@ int main(int argc, char *argv[]) {
     /* Prepare data buffer (calculate from input arguments) */
     
     synthesize_signal(size, freq_act, &params);
-
-				if (s[1][2]==s[2][1]||size==3){};
+				
 	for(int i = 0; i < size; i++) {
            data[i]=round(s[1][i]);
             // data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
@@ -273,8 +284,8 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * size * freq/c_awg_smpl_freq);
     awg->wrap = round(65536 * size - 1);
-	printf("%7d", (int)awg->step);
-	printf("%7d\n", (int)awg->wrap);
+	//printf("%7d", (int)awg->step);
+	//printf("%7d\n", (int)awg->wrap);
 }
 
 
