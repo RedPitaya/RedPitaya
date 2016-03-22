@@ -111,11 +111,6 @@
     OSC.parameterStack = [];
     OSC.signalStack = [];
 
-    var g_count = 0;
-    var g_time = 0;
-    var g_iter = 10;
-    var g_delay = 200;
-    var g_counter = 0;
     var g_CpuLoad = 100.0;
     var g_TotalMemory = 256.0;
     var g_FreeMemory = 256.0;
@@ -148,8 +143,10 @@
 
     var guiHandler = function() {
         if (OSC.signalStack.length > 0) {
+            var p = performance.now();
             OSC.processSignals(OSC.signalStack[0]);
             OSC.signalStack.splice(0, 1);
+            // console.log("Drawing: " + (performance.now() - p));
         }
         if (OSC.signalStack.length > 2)
             OSC.signalStack.length = [];
@@ -157,7 +154,7 @@
 
     var parametersHandler = function() {
         if (OSC.parameterStack.length > 0) {
-    		var p = performance.now();
+            var p = performance.now();
             OSC.processParameters(OSC.parameterStack[0]);
             if (OSC.params.orig['is_demo']) {
                 if (!OSC.state.demo_label_visible) {
@@ -496,7 +493,6 @@
         OSC.outShowOffset("2", new_params);
     }
 
-
     OSC.timeOffset = function(new_params) {
         var old_params = $.extend(true, {}, OSC.params.old);
         if (!$('#time_offset_arrow').is(':visible') ||
@@ -554,7 +550,6 @@
                                 probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
                                 jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
                             }
-                            //$('#OSC_TRIG_LEVEL').val(new_params[param_name].value);
                             OSC.setValue($('#OSC_TRIG_LEVEL'), OSC.formatInputValue(new_params[param_name].value, probeAttenuation, false, jumperSettings == 20));
                         }
                     }
@@ -792,7 +787,6 @@
                         new_params[param_name].value = 'ERROR';
                     else
                         new_params[param_name].value = z.toFixed(1);
-
                 } else // P2P, MEAN, MAX, MIN, RMS
                 {
                     y = Math.abs(y);
@@ -1053,7 +1047,6 @@
                     var ch = (param_name == "OSC_CH1_OFFSET") ? "CH1" : "CH2";
                     var units = $('#OSC_' + ch + '_OFFSET_UNIT').html();
                     var multiplier = units == "mV" ? 1000 : 1;
-
                     var probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
                     var jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
 
@@ -1086,16 +1079,16 @@
         for (sig_name in new_signals) {
 
             // Ignore empty signals
-            if (new_signals[sig_name].size == 0) {
-                continue; }
+            if (new_signals[sig_name].size == 0)
+                continue;
 
             // Ignore disabled signals
-            if (OSC.params.orig[sig_name.toUpperCase() + '_SHOW'] && OSC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
-                continue; }
+            if (OSC.params.orig[sig_name.toUpperCase() + '_SHOW'] && OSC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false)
+                continue;
 
             // Ignore math signal if no operator defined
-            if (sig_name == 'math' && (!OSC.params.orig['MATH_SHOW'] || OSC.params.orig['MATH_SHOW'].value == false)) {
-                continue; }
+            if (sig_name == 'math' && (!OSC.params.orig['MATH_SHOW'] || OSC.params.orig['MATH_SHOW'].value == false))
+                continue;
 
             var points = [];
             var sig_btn = $('#right_menu .menu-btn.' + sig_name);
@@ -1183,7 +1176,6 @@
         // Check if selected signal is still visible
         if (OSC.state.sel_sig_name && OSC.graphs[OSC.state.sel_sig_name] && !OSC.graphs[OSC.state.sel_sig_name].elem.is(':visible')) {
             $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
-            //OSC.state.sel_sig_name = null;
         }
     };
 
@@ -1241,7 +1233,6 @@
         // Check changes in measurement list
         var mi_count = 0;
         $('#info-meas').empty();
-        //    $($('#meas_list .meas-item').get().reverse()).each(function(index, elem) {
         $('#meas_list .meas-item').each(function(index, elem) {
             var $elem = $(elem);
             var item_val = $elem.data('value');
@@ -1311,7 +1302,6 @@
         OSC.params.local['in_command'] = { value: 'send_all_params' };
         OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
         OSC.params.local = {};
-
         return true;
     };
 
@@ -1419,14 +1409,11 @@
         for (var i = 0; i < OSC.voltage_steps.length - 1; i++) {
 
             if (OSC.state.fine && (curr_scale == OSC.voltage_steps[i] || (curr_scale > OSC.voltage_steps[i] && curr_scale < OSC.voltage_steps[i + 1]) || (curr_scale == OSC.voltage_steps[i + 1] && direction == '-'))) {
-
                 new_scale = curr_scale + (OSC.voltage_steps[i + 1] / 100) * (direction == '-' ? -1 : 1);
-
                 // Do not allow values smaller than the lowest possible one
                 if (new_scale < OSC.voltage_steps[0]) {
                     new_scale = OSC.voltage_steps[0];
                 }
-
                 break;
             }
 
@@ -1464,16 +1451,12 @@
         var new_scale;
 
         for (var i = 0; i < OSC.time_steps.length - 1; i++) {
-
             if (OSC.state.fine && (curr_scale == OSC.time_steps[i] || (curr_scale > OSC.time_steps[i] && curr_scale < OSC.time_steps[i + 1]) || (curr_scale == OSC.time_steps[i + 1] && direction == '-'))) {
-
                 new_scale = curr_scale + (OSC.time_steps[i + 1] / 100) * (direction == '-' ? -1 : 1);
-
                 // Do not allow values smaller than the lowest possible one
                 if (new_scale < OSC.time_steps[0]) {
                     new_scale = OSC.time_steps[0];
                 }
-
                 break;
             }
 
@@ -1490,7 +1473,6 @@
 
             // Fix float length
             new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 8 : 6));
-
             if (send_changes !== false) {
                 var new_offset = OSC.params.orig['OSC_TIME_OFFSET'].value * new_scale / OSC.params.orig['OSC_TIME_SCALE'].value;
                 OSC.params.local['OSC_TIME_OFFSET'] = { value: new_offset };
@@ -1499,7 +1481,6 @@
             }
             return new_scale;
         }
-
         return null;
     };
 
@@ -1662,56 +1643,30 @@
         var zero_pos = (graph_height + 7) / 2;
         var new_value;
 
-        if (ui.helper[0].id == 'ch1_offset_arrow') {
-            var volt_per_px = (OSC.params.orig['OSC_CH1_SCALE'].value * 10) / graph_height;
-
+        if (ui.helper[0].id == 'ch1_offset_arrow' || ui.helper[0].id == "ch2_offset_arrow") {
+            var ch_n = (ui.helper[0].id == 'ch1_offset_arrow') ? "1" : "2";
+            var volt_per_px = (OSC.params.orig['OSC_CH' + ch_n + '_SCALE'].value * 10) / graph_height;
             new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-            $('#info_box').html('IN1 zero offset ' + OSC.convertVoltage(new_value));
 
-            if ($('#in1_dialog').is(':visible')) {
-                //$('#OSC_CH1_OFFSET').val(+(new_value));
-                //$('#OSC_CH1_OFFSET').change();
-                var units = $('#OSC_CH1_OFFSET_UNIT').html();
+            $('#info_box').html('IN' + ch_n + ' zero offset ' + OSC.convertVoltage(new_value));
+
+            if ($('#in' + ch_n + '_dialog').is(':visible')) {
+                var units = $('#OSC_CH' + ch_n + '_OFFSET_UNIT').html();
                 var multiplier = units == "mV" ? 1000 : 1;
 
-                var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
-                var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-                OSC.setValue($('#OSC_CH1_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
+                var probeAttenuation = parseInt($("#OSC_CH" + ch_n + "_PROBE option:selected").text());
+                var jumperSettings = $("#OSC_CH" + ch_n + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+                OSC.setValue($('#OSC_CH' + ch_n + '_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
             }
-
-            //else if(save) {
-            OSC.params.local['OSC_CH1_OFFSET'] = { value: new_value };
-            //}
-        } else if (ui.helper[0].id == 'ch2_offset_arrow') {
-            var volt_per_px = (OSC.params.orig['OSC_CH2_SCALE'].value * 10) / graph_height;
-
-            new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-            $('#info_box').html('IN2 zero offset ' + OSC.convertVoltage(new_value));
-
-            if ($('#in2_dialog').is(':visible')) {
-                var units = $('#OSC_CH2_OFFSET_UNIT').html();
-                var multiplier = units == "mV" ? 1000 : 1;
-
-                var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
-                var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-                OSC.setValue($('#OSC_CH2_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
-            }
-            OSC.params.local['OSC_CH2_OFFSET'] = { value: new_value };
-        } else if (ui.helper[0].id == 'output1_offset_arrow') {
+            OSC.params.local['OSC_CH' + ch_n + '_OFFSET'] = { value: new_value };
+        } else if (ui.helper[0].id == 'output1_offset_arrow' || ui.helper[0].id == 'output2_offset_arrow') {
             var volt_per_px = 10 / graph_height;
+            var ch_n = (ui.helper[0].id == 'output1_offset_arrow') ? "1" : "2";
 
             new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-            $('#info_box').html('OUT1 zero offset ' + OSC.convertVoltage(new_value));
+            $('#info_box').html('OUT' + ch_n + ' zero offset ' + OSC.convertVoltage(new_value));
             if (save) {
-                OSC.params.local['OUTPUT1_SHOW_OFF'] = { value: new_value };
-            }
-        } else if (ui.helper[0].id == 'output2_offset_arrow') {
-            var volt_per_px = 10 / graph_height;
-
-            new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-            $('#info_box').html('OUT2 zero offset ' + OSC.convertVoltage(new_value));
-            if (save) {
-                OSC.params.local['OUTPUT2_SHOW_OFF'] = { value: new_value };
+                OSC.params.local['OUTPUT' + ch_n + '_SHOW_OFF'] = { value: new_value };
             }
         } else if (ui.helper[0].id == 'math_offset_arrow') {
             var volt_per_px = (OSC.params.orig['OSC_MATH_SCALE'].value * 10) / graph_height;
@@ -1719,17 +1674,14 @@
             new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
             $('#info_box').html('MATH zero offset ' + OSC.convertVoltage(new_value));
 
-            if ($('#math_dialog').is(':visible')) {
+            if ($('#math_dialog').is(':visible'))
                 OSC.convertValueToMathUnit(new_value);
-            }
-            //else if(save) {
+
             OSC.params.local['OSC_MATH_OFFSET'] = { value: new_value };
-            //}
         }
 
-        if (new_value !== undefined && save) {
+        if (new_value !== undefined && save)
             OSC.sendParams();
-        }
     };
 
 
@@ -1741,25 +1693,19 @@
                 switch (attenuation) {
                     case 1:
                         return z.toFixed(2);
-                        break;
                     case 10:
                         return z.toFixed(1);
-                        break;
                     case 100:
                         return z.toFixed(0);
-                        break;
                 }
             } else {
                 switch (attenuation) {
                     case 1:
                         return z.toFixed(3);
-                        break;
                     case 10:
                         return z.toFixed(2);
-                        break;
                     case 100:
                         return z.toFixed(1);
-                        break;
                 }
             }
             return z;
@@ -1791,10 +1737,8 @@
                     }
 
                     if ($('#trig_dialog').is(':visible')) {
-                        //$('#OSC_TRIG_LEVEL').val(+(new_value));
-                        //$('#OSC_TRIG_LEVEL').change();
-                        var probeAttenuation = 1;
-                        var jumperSettings = 1;
+                        var probeAttenuation = 1,
+                            jumperSettings = 1;
                         var ch = "";
                         if ($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
                             ch = "CH1";
@@ -1910,21 +1854,18 @@
         var value = parseFloat($('#OSC_MATH_OFFSET').val());
         var unit = $('#OSC_MATH_OFFSET_UNIT').html().charAt(0);
         var precision = 3;
-        if (unit === 'm') {
+        if (unit === 'm')
             value /= 1000;
-
-        } else if (unit === 'M') {
+        else if (unit === 'M')
             value *= 1000000;
-
-        } else if (unit === 'k') {
+        else if (unit === 'k')
             value *= 1000;
-        }
+
         return value;
     };
 
     OSC.setValue = function(input, value) {
         input.val(value);
-        //input.change();
     };
 
 
@@ -1936,13 +1877,8 @@ $(function() {
     $('#calib-input-text').hide();
     $('#modal-warning').hide();
 
-    $('button').bind('activeChanged', function() {
-        OSC.exitEditing(true);
-    });
+    $('button').bind('activeChanged', function() { OSC.exitEditing(true); });
     $('select, input').on('change', function() { OSC.exitEditing(true); });
-
-    // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
-    //new FastClick(document.body);
 
     $(".dbl").on('dblclick', function() {
         var cls = $(this).attr('class');
@@ -1958,7 +1894,6 @@ $(function() {
     });
 
     // Process clicks on top menu buttons
-    //  $('#OSC_RUN').on('click touchstart', function(ev) {
     $('#OSC_RUN').on('click', function(ev) {
         ev.preventDefault();
         $('#OSC_RUN').hide();
@@ -1968,7 +1903,6 @@ $(function() {
         OSC.running = true;
     });
 
-    //  $('#OSC_STOP').on('click touchstart', function(ev) {
     $('#OSC_STOP').on('click', function(ev) {
         ev.preventDefault();
         $('#OSC_STOP').hide();
@@ -1978,14 +1912,12 @@ $(function() {
         OSC.running = false;
     });
 
-    //  $('#OSC_SINGLE').on('click touchstart', function(ev) {
     $('#OSC_SINGLE').on('click', function(ev) {
         ev.preventDefault();
         OSC.params.local['OSC_SINGLE'] = { value: true };
         OSC.sendParams();
     });
 
-    //  $('#OSC_AUTOSCALE').on('click touchstart', function(ev) {
     $('#OSC_AUTOSCALE').on('click', function(ev) {
         if (OSC.running == false)
             return;
@@ -1997,7 +1929,6 @@ $(function() {
     });
 
     // Selecting active signal
-    //  $('.menu-btn').on('click touchstart', function() {
     $('.menu-btn').on('click', function() {
         $('#right_menu .menu-btn').not(this).removeClass('active');
         if (!$(this).hasClass('active'))
@@ -2009,7 +1940,6 @@ $(function() {
     });
 
     // Opening a dialog for changing parameters
-    //  $('.edit-mode').on('click touchstart', function() {
     $('.edit-mode').on('click', function() {
         OSC.state.editing = true;
         $('#right_menu').hide();
@@ -2039,13 +1969,11 @@ $(function() {
 
     // Close parameters dialog after Enter key is pressed
     $('input').keyup(function(event) {
-        if (event.keyCode == 13) {
+        if (event.keyCode == 13)
             OSC.exitEditing(true);
-        }
     });
 
     // Close parameters dialog on close button click
-    //  $('.close-dialog').on('click touchstart', function() {
     $('.close-dialog').on('click', function() {
         OSC.exitEditing();
     });
@@ -2061,9 +1989,8 @@ $(function() {
             var item_id = 'meas_' + operator_name + '_' + signal_name;
 
             // Check if the item already exists
-            if ($('#' + item_id).length > 0) {
+            if ($('#' + item_id).length > 0)
                 return;
-            }
 
             var sig_text = 'MATH';
             if (signal_name == 'CH1')
@@ -2087,13 +2014,11 @@ $(function() {
     });
 
     // Process events from other controls in parameters dialogs
-    //  $('#edge1').on('click touchstart', function() {
     $('#edge1').on('click', function() {
         $('#edge1').find('img').attr('src', 'img/edge1_active.png');
         $('#edge2').find('img').attr('src', 'img/edge2.png');
     });
 
-    //  $('#edge2').on('click touchstart', function() {
     $('#edge2').on('click', function() {
         $('#edge2').find('img').attr('src', 'img/edge2_active.png');
         $('#edge1').find('img').attr('src', 'img/edge1.png');
@@ -2105,10 +2030,8 @@ $(function() {
     $('#jtk_right').on('mousedown touchstart', function() { $('#jtk_btns').attr('src', 'img/node_right.png'); });
     $('#jtk_down').on('mousedown touchstart', function() { $('#jtk_btns').attr('src', 'img/node_down.png'); });
 
-    //  $('#jtk_fine').on('click touchstart', function(ev){
     $('#jtk_fine').on('click', function(ev) {
         var img = $('#jtk_fine');
-
         if (img.attr('src') == 'img/fine.png') {
             img.attr('src', 'img/fine_active.png');
             OSC.state.fine = true;
@@ -2125,14 +2048,12 @@ $(function() {
         $('#jtk_btns').attr('src', 'img/node_fine.png');
     });
 
-    //  $('#jtk_up, #jtk_down').on('click touchstart', function(ev) {
     $('#jtk_up, #jtk_down').on('click', function(ev) {
         ev.preventDefault();
         ev.stopPropagation();
         OSC.changeYZoom(ev.target.id == 'jtk_down' ? '+' : '-');
     });
 
-    //  $('#jtk_left, #jtk_right').on('click touchstart', function(ev) {
     $('#jtk_left, #jtk_right').on('click', function(ev) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -2319,7 +2240,6 @@ $(function() {
 
             // Skip first touch event
             if (OSC.touch.prev) {
-
                 // Time zoom
                 if (OSC.touch.zoom_axis == 'x') {
                     var prev_delta_x = Math.abs(OSC.touch.prev[0].clientX - OSC.touch.prev[1].clientX);
@@ -2378,19 +2298,14 @@ $(function() {
                 // Time offset
                 if (OSC.touch.offset_axis == 'x') {
                     var delta_x = ev.originalEvent.touches[0].clientX - OSC.touch.prev[0].clientX;
-
-                    if (delta_x != 0) {
-                        //$('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
+                    if (delta_x != 0)
                         $('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
-                    }
                 }
                 // Voltage offset
                 else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
                     var delta_y = ev.originalEvent.touches[0].clientY - OSC.touch.prev[0].clientY;
-
-                    if (delta_y != 0) {
+                    if (delta_y != 0)
                         $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', { dx: 0, dy: delta_y });
-                    }
                 }
             }
 
@@ -2647,9 +2562,8 @@ $(function() {
             $('#calib-2').children().removeAttr('disabled');
             $('#calib-3').children().removeAttr('disabled');
         }
-        if (OSC.state.calib == 0) {
+        if (OSC.state.calib == 0)
             return;
-        }
 
         OSC.state.calib = 0;
         OSC.setCalibState(OSC.state.calib);
@@ -2715,5 +2629,4 @@ $(function() {
         ++OSC.state.calib;
         OSC.setCalibState(OSC.state.calib);
     });
-
 });
