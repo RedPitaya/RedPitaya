@@ -193,12 +193,11 @@ int main(int argc, char *argv[]) {
 	
 	
     /// Showtime.
-	while (1){
 			/* Calculate/recalculate refference signal if frequency has changed*/
 			if (freq_act != frequency){
 				freq_act=frequency;
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
-				size = 2000;
+				size = 10;
 				
 
 				printf("%7d", (int)size);
@@ -249,7 +248,7 @@ int main(int argc, char *argv[]) {
 	
    	/// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch_out, data, &params);	
-   }
+   
 }
 
 
@@ -275,7 +274,7 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
     awg->step = round(65536 * size * freq/c_awg_smpl_freq);
     awg->wrap = round(65536 * size - 1);
 	printf("%7d", (int)awg->step);
-	printf("%7d", (int)awg->wrap);
+	printf("%7d\n", (int)awg->wrap);
 }
 
 
@@ -350,7 +349,7 @@ int acquire_data(float **s ,uint32_t size) {
              * s[2][i] - Channel ADC2 raw signal
              */
             for(j = 0; j < MIN(size, sig_len); j++) {
-              //  printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
+                printf("%7d, %7d\n",(int)s[1][j], (int)s[2][j]);
             }
             break;
         }
