@@ -10,8 +10,6 @@ module str_to_ram #(
   type DT = logic [8-1:0],
   int unsigned AW = 14  // counter width magnitude (fixed point integer)
 )(
-  // control
-  input  logic      ctl_rst,  // set FSM to reset
   // stream input
   axi4_stream_if.m  str,
   // System bus
@@ -21,6 +19,9 @@ module str_to_ram #(
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
+
+// control
+logic          ctl_rst;
 
 // buffer
 DT             buf_mem [0:2**AW-1];
@@ -35,7 +36,7 @@ logic [AW-1:0] buf_waddr, buf_raddr;
 assign buf_wdata = str.TDATA;
 assign buf_wen   = str.transf;
 
-always @(posedge str.ACLK)
+always_ff @(posedge str.ACLK)
 if (~str.ARESETn) begin
   buf_waddr <= '0;
 end else begin
@@ -46,7 +47,7 @@ end else begin
   end
 end
 
-always @(posedge str.ACLK)
+always_ff @(posedge str.ACLK)
 if (buf_wen)  buf_mem[buf_waddr] <= buf_wdata;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,5 +73,17 @@ end
 
 assign bus.err = 1'b0;
 assign bus.rdata = buf_rdata;
+
+////////////////////////////////////////////////////////////////////////////////
+// CPU write access
+////////////////////////////////////////////////////////////////////////////////
+
+// SW reset
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  ctl_rst <= 1'b0;
+end else begin
+  ctl_rst <= bus.wen;
+end
 
 endmodule: str_to_ram

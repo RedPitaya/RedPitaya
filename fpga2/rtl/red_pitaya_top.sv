@@ -842,8 +842,6 @@ str_to_ram #(
   .DT  (SBL_T),
   .AW  (14)
 ) str_to_ram (
-  // control
-  .ctl_rst  (ctl_rst),
   // stream input
   .str      (str_drx[2]),
   // System bus
