@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
 			if (freq_act != frequency){
 				freq_act=frequency;
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
-				size = n;
+				size = round(n * freq/c_awg_smpl_freq);
 				for (int i=0; i<size; i++){
 					
 					//	r[i]=cos(i * 
@@ -232,12 +232,12 @@ int main(int argc, char *argv[]) {
             }  
     /* Prepare data buffer (calculate from input arguments) */
     
-    synthesize_signal(ampl, freq_act, &params);
+    synthesize_signal(size, freq_act, &params);
 
 				if (s[1][2]==s[2][1]||size==3){};
-	for(int i = 0; i < n; i++) {
-           // data[i]=round(s[1][i]);
-            data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
+	for(int i = 0; i < size; i++) {
+           data[i]=round(s[1][i]);
+            // data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
 			/* Truncate to max value if needed */
 			if (data[i] > 8191) {
 			data[i] = 8191;
@@ -264,26 +264,15 @@ int main(int argc, char *argv[]) {
  * @param awg   Returned AWG parameters.
  *
  */
-void synthesize_signal(double ampl, double freq, awg_param_t *awg) {
+void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
 
     /* Various locally used constants - HW specific parameters */
     const int dcoffs = -155;
-    //const int trans0 = 30;
-   // const int trans1 = 300;
-    //const double tt2 = 0.249;
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
-    awg->step = round(65536 * n * freq/c_awg_smpl_freq);
-    awg->wrap = round((65536 * n - 1)/4);
-
-   // int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
-    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
-    if (amp > 8191) {
-        /* Truncate to max value if needed */
-        amp = 8191;
-    }
-
+    awg->step = round(65536 * size * freq/c_awg_smpl_freq);
+    awg->wrap = round(65536 * size - 1);
 }
 
 
