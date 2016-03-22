@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
    // uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
   //  signal_e type = eSignalSine;
-    int       f = 0; // used in for lop, setting the decimation
+    uint32_t      f = 3; //setting the decimation
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
@@ -213,7 +213,6 @@ int main(int argc, char *argv[]) {
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
             t_params[SHAPE_FILT_PARAM] = shaping;
-			//t_params[TIME_RANGE_PARAM] = 3;
 
             /* Setting of parameters in Oscilloscope main module for signal Acqusition */
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
