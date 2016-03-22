@@ -2401,6 +2401,15 @@ $(function() {
             }
         }
 
+        $(window).on('focus', function() {
+            console.log("Tab FOCUS");
+            OSC.drawGraphGrid();
+        });
+
+        $(window).on('blur', function() {
+            console.log("Tab BLUR");
+        });
+
         $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
 
         // Resize the graph holders
