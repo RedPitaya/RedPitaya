@@ -24,7 +24,7 @@ module str_to_ram #(
 logic          ctl_rst;
 
 // buffer
-DT     [2-1:0] buf_mem [0:2**AW-1];
+DT     [2-1:0] buf_mem [0:2**(AW-1)-1];
 logic          buf_wen  , buf_ren;
 DT             buf_wdata           ;
 logic [32-1:0]            buf_rdata;
