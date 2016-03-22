@@ -32,25 +32,77 @@ int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
         return -1;
     }
 
-    // TODO: check for max. memory size..
-    handle->dma_size=RP_SGMNT_CNT*RP_SGMNT_SIZE;
-    rp_SetSgmntC(handle,RP_SGMNT_CNT);
-    rp_SetSgmntS(handle,RP_SGMNT_SIZE);
+    switch(handle->mem_type){
+        case RP_MEM_DEV_DMA:
+                // TODO: check for max. memory size..
+                handle->dma_size=RP_SGMNT_CNT*RP_SGMNT_SIZE;
+                rp_SetSgmntC(handle,RP_SGMNT_CNT);
+                rp_SetSgmntS(handle,RP_SGMNT_SIZE);
+            break;
+        case RP_MEM_DEV_BRAM:
+                handle->dma_size=(32768);
+        break;
+        default:
+                return RP_EIPV;
+            break;
+    }
+    return RP_OK;
+}
 
+static int rp_BramReset(rp_handle_uio_t *handle){
+    uint32_t * map=NULL;
+    // allocate data buffer memory
+    map = (uint32_t *) mmap(NULL, handle->dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle->dma_fd, 0);
+    if (map==NULL) {
+        printf("Failed to mmap\n");
+        if (handle->dma_fd) {
+            close(handle->dma_fd);
+        }
+        return -1;
+    }
+
+    map[0]=0;
+
+    if(munmap (map, handle->dma_size)==-1){
+        printf("Failed to munmap\n");
+        return -1;
+    }
     return RP_OK;
 }
 
 int rp_DmaCtrl(rp_handle_uio_t *handle, RP_DMA_CTRL ctrl)
 {
-    switch(ctrl){
-        case RP_DMA_CYCLIC:
-            ioctl(handle->dma_fd, CYCLIC_RX, 0);
+    if(handle->mem_type!=RP_MEM_DEV_DMA)
+        return RP_OK;
+
+    switch(handle->mem_type){
+        case RP_MEM_DEV_DMA:
+            switch(ctrl){
+                case RP_DMA_CYCLIC:
+                    ioctl(handle->dma_fd, CYCLIC_RX, 0);
+                break;
+                case RP_DMA_STOP_RX:
+                    ioctl(handle->dma_fd, STOP_RX, 0);
+                break;
+                default:
+                    return RP_EOOR;
+            }
         break;
-        case RP_DMA_STOP_RX:
-            ioctl(handle->dma_fd, STOP_RX, 0);
+        case RP_MEM_DEV_BRAM:
+            switch(ctrl){
+                case RP_DMA_CYCLIC:
+                    return RP_OK;
+                break;
+                case RP_DMA_STOP_RX:
+                    return rp_BramReset(handle);
+                break;
+                default:
+                    return RP_EOOR;
+            }
         break;
         default:
             return RP_EOOR;
+        break;
     }
     return RP_OK;
 }
@@ -69,6 +121,34 @@ int rp_SetSgmntS(rp_handle_uio_t *handle, unsigned long no)
 
 int rp_DmaMemDump(rp_handle_uio_t *handle)
 {
+    uint32_t samples;
+    rp_DmaSizeInSamples(handle, &samples);
+
+    uint32_t * map=NULL;
+    // allocate data buffer memory
+    map = (uint32_t *) mmap(NULL, handle->dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle->dma_fd, 0);
+    if (map==NULL) {
+        printf("Failed to mmap\n");
+        if (handle->dma_fd) {
+            close(handle->dma_fd);
+        }
+        return -1;
+    }
+
+    // printout data
+    for (int i=0; i<samples; i++) {
+        if ((i%64)==0 ) printf("@%02x:", i);
+        printf("%02x,",map[i]);
+        if ((i%64)==63) printf("\n");
+    }
+
+    if(munmap (map, handle->dma_size)==-1){
+        printf("Failed to munmap\n");
+        return -1;
+    }
+    return RP_OK;
+
+    /*
     unsigned char* map=NULL;
     // allocate data buffer memory
     map = (unsigned char *) mmap(NULL, handle->dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle->dma_fd, 0);
@@ -92,16 +172,37 @@ int rp_DmaMemDump(rp_handle_uio_t *handle)
         return -1;
     }
     return RP_OK;
+    */
 }
 
 int rp_DmaRead(rp_handle_uio_t *handle)
 {
+    if(handle->mem_type!=RP_MEM_DEV_DMA)
+        return RP_OK;
+
     int s = read(handle->dma_fd, NULL, 1);
     if (s<0) {
       printf("read error\n");
       return -1;
     }
     return RP_OK;
+}
+
+int rp_DmaSizeInSamples(rp_handle_uio_t *handle, uint32_t * samples)
+{
+    switch(handle->mem_type){
+        case RP_MEM_DEV_DMA:
+            *samples=handle->dma_size/(sizeof(int16_t));
+            return RP_OK;
+            break;
+        case RP_MEM_DEV_BRAM:
+            *samples=handle->dma_size/(sizeof(int32_t));
+            return RP_OK;
+        break;
+        default:
+            return RP_EIPV;
+        break;
+    }
 }
 
 int rp_DmaClose(rp_handle_uio_t *handle)
@@ -116,3 +217,5 @@ int rp_DmaClose(rp_handle_uio_t *handle)
 
     return RP_OK;
 }
+
+

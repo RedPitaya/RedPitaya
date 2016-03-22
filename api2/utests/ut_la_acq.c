@@ -71,12 +71,12 @@ void la_acq_trig_test(void)
     }
 
     // enable RLE
-    rp_EnableDigitalPortDataRLE(1);
+   // rp_EnableDigitalPortDataRLE(1);
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;
-    uint32_t pre=100;
-    uint32_t post=8000;
+    uint32_t pre=10;
+    uint32_t post=10;
     s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to acquire data.");
@@ -93,6 +93,7 @@ void la_acq_trig_test(void)
     rp_SetDataBuffer(RP_CH_DIN,buf,samples,RP_RATIO_MODE_NONE);
 
     // get data
+
     rp_GetValues(0,&samples,1,RP_RATIO_MODE_NONE,NULL);
 
     // verify data
@@ -100,7 +101,7 @@ void la_acq_trig_test(void)
     for(int i=0;i<samples;i++){
         if(buf[i]!=first){
             printf("\n\r data mismatch @ i=%d buf=%04x exp=%04x",i,buf[i],first);
-            break;
+           // break;
         }
         if(first==0xff)
             first=0;
