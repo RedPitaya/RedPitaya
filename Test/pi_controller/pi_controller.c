@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
 			if (freq_act != frequency){
 				freq_act=frequency;
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
-				size = round(n * freq_act/c_awg_smpl_freq);
+				size = 2000;
 				
 
 				printf("%7d", (int)size);
