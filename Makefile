@@ -294,7 +294,7 @@ endif
 
 WEBSOCKETPP_TAG = 0.5.0
 LUANGINX_TAG    = v0.10.2
-NGINX_TAG       = 1.6.3
+NGINX_TAG       = 1.8.1
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
@@ -309,7 +309,7 @@ NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
-NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
+NGINX_SRC_DIR   = Bazaar/nginx/nginx
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
 .PHONY: ecosystem nginx

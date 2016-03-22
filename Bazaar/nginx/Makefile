@@ -11,7 +11,7 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat ../../Applications/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-NGINX_DIR=nginx-1.5.3
+NGINX_DIR=nginx
 NGINX=$(NGINX_DIR)/objs/nginx
 
 STRIP=$(CROSS_COMPILE)strip
