@@ -30,28 +30,23 @@ endif
 UBOOT_TAG     = xilinx-v2015.2
 LINUX_TAG     = xilinx-v2015.1
 DTREE_TAG     = xilinx-v2015.1
-#BUILDROOT_TAG = 2015.5
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
 DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
-BUILDROOT_DIR = $(TMP)/buildroot-$(BUILDROOT_TAG)
 
 UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
 LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
 DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
-BUILDROOT_TAR = $(DL)/buildroot-$(BUILDROOT_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
 UBOOT_URL     ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
 LINUX_URL     ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
 DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
-BUILDROOT_URL ?= http://buildroot.uclibc.org/downloads/buildroot-$(BUILDROOT_TAG).tar.gz
 
 UBOOT_GIT     ?= https://github.com/Xilinx/u-boot-xlnx.git
 LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
 DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
-BUILDROOT_GIT ?= http://git.buildroot.net/git/buildroot.git
 
 SYSROOT=/
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
@@ -128,7 +123,7 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
-$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
+$(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 	   scpi api apps_pro rp_communication
 	mkdir -p               $(TARGET)
@@ -167,9 +162,7 @@ fpga: $(DTREE_DIR)
 
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
 
-UBOOT_SCRIPT_BUILDROOT = patches/u-boot.script.buildroot
-UBOOT_SCRIPT_DEBIAN    = patches/u-boot.script.debian
-UBOOT_SCRIPT           = $(INSTALL_DIR)/u-boot.scr
+UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
 
 .PHONY: u-boot
 
@@ -189,9 +182,8 @@ $(UBOOT): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
-$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
-	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Buildroot" -d $(UBOOT_SCRIPT_BUILDROOT) $@.buildroot
-	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian"    -d $(UBOOT_SCRIPT_DEBIAN)    $@.debian
+$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR)
+	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d $(UBOOT_SCRIPT) $@
 	cp $@.debian $@
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
@@ -219,7 +211,6 @@ $(LINUX): $(LINUX_DIR)
 
 ################################################################################
 # device tree processing
-# TODO: here separate device trees should be provided for Ubuntu and buildroot
 ################################################################################
 
 $(DTREE_TAR): | $(DL)
@@ -241,21 +232,6 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
 $(BOOT_UBOOT): fpga $(UBOOT)
 	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
-
-################################################################################
-# root file system
-################################################################################
-
-URAMDISK_DIR    = OS/buildroot
-
-.PHONY: buildroot
-
-$(INSTALL_DIR):
-	mkdir $(INSTALL_DIR)
-
-buildroot: $(INSTALL_DIR)
-	$(MAKE) -C $(URAMDISK_DIR)
-	$(MAKE) -C $(URAMDISK_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # API libraries
