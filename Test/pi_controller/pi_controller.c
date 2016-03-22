@@ -213,6 +213,7 @@ int main(int argc, char *argv[]) {
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
             t_params[SHAPE_FILT_PARAM] = shaping;
+			t_params[TIME_RANGE_PARAM] = 3;
 
             /* Setting of parameters in Oscilloscope main module for signal Acqusition */
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
