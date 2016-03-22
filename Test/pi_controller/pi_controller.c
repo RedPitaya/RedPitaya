@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
 				size = 10;
 				
-				printf("%7d", (int)size);
+				printf("%7d\n", (int)size);
 				for (int i=0; i<size; i++){
 					
 					//	r[i]=cos(i * 
@@ -349,7 +349,7 @@ void write_data_fpga(uint32_t ch,
  */
 int acquire_data(float **s ,uint32_t size) {
 
-    int retries = 150000;
+    int retries = 500000;
     int j, sig_num, sig_len;
     int ret_val;
     while(retries >= 0) {
