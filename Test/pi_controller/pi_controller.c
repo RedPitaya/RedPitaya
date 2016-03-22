@@ -46,7 +46,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 //static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
-void synthesize_signal(double ampl, double freq, awg_param_t *params);
+void synthesize_signal(uint32_t size, double freq, awg_param_t *params);
 void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
