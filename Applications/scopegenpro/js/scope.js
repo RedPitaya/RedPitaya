@@ -178,6 +178,7 @@
             return;
 
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
+        $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
         $('#totalmem_view').text((g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#freemem_view').text((g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
