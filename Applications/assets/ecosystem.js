@@ -235,6 +235,8 @@
         { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
         { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
         { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true, licensable : false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Application feedback", description: "Feedback", url: "", image: "images/download_icon.png", check_online : true, licensable : false, callback: showFeedBack, type: 'run' },
+        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online : true, licensable : false, callback: showFeedBack, type: 'run' },
+        { id: "wifi_soon", name: "WIFI wizard", description: "Simple way to establish wireless connection with the Red Pitaya", url: "", image: "../assets/images/wifi_soon.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
+        { id: "la_pro_soon", name: "Logic analyzer", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
     ];
 })(jQuery);
