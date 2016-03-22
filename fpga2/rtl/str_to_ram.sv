@@ -24,9 +24,10 @@ module str_to_ram #(
 logic          ctl_rst;
 
 // buffer
-DT             buf_mem [0:2**AW-1];
+DT     [2-1:0] buf_mem [0:2**AW-1];
 logic          buf_wen  , buf_ren;
-DT             buf_wdata, buf_rdata;
+DT             buf_wdata           ;
+logic [32-1:0]            buf_rdata;
 logic [AW-1:0] buf_waddr, buf_raddr;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +49,7 @@ end else begin
 end
 
 always_ff @(posedge str.ACLK)
-if (buf_wen)  buf_mem[buf_waddr] <= buf_wdata;
+if (buf_wen)  buf_mem[buf_waddr[AW-1:1]][buf_waddr[0]] <= buf_wdata;
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic

@@ -821,6 +821,8 @@ assign axi_dtx[2].TREADY = 1'b1;
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
 
+axi4_stream_if #(.DT (SBL_T)) str_la (.ACLK (adc_clk), .ARESETn (adc_rstn));
+
 la_top #(
   .DT (SBL_T),
   .TN ($bits(trg)),
@@ -843,8 +845,6 @@ la_top #(
 );
 
 assign str_drx[2].TVALID = 1'b0;
-
-axi4_stream_if #(.DT (SBL_T)) str_la (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 assign str_la.TREADY = 1'b1;
 
