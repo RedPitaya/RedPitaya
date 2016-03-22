@@ -25,9 +25,9 @@ logic          ctl_rst;
 
 // buffer
 logic [32-1:0] buf_mem [0:2**(AW-1)-1];
-logic          buf_wen  , buf_ren;
-logic [32-1:0] buf_wdata, buf_rdata;
-logic [AW-1:0] buf_waddr, buf_raddr;
+logic          buf_wen  ;
+logic [32-1:0] buf_wdata;
+logic [AW-1:0] buf_waddr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream write
@@ -59,24 +59,18 @@ if (buf_wen)  buf_mem[buf_waddr>>1] <= buf_wdata;
 ////////////////////////////////////////////////////////////////////////////////
 
 // CPU read access
-always @(posedge bus.clk)
-begin
-  if (bus.ren)  buf_raddr <= bus.addr >> 2;
-  if (buf_ren)  buf_rdata <= buf_mem[buf_raddr];
-end
+always_ff @(posedge bus.clk)
+if (bus.ren)  bus.rdata <= buf_mem[bus.addr >> 2];
 
 // CPU control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  buf_ren <= 1'b0;
   bus.ack <= 1'b0;
 end else begin
-  buf_ren <= bus.ren | bus.wen;
-  bus.ack <= buf_ren;
+  bus.ack <= bus.ren | bus.wen;
 end
 
 assign bus.err = 1'b0;
-assign bus.rdata = buf_rdata;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CPU write access
