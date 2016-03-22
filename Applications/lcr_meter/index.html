@@ -7,10 +7,9 @@
  * (c) Red Pitaya  http://www.redpitaya.com
  *
 -->
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -23,27 +22,22 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/fastclick.min.js"></script>
     <script src="js/jquery.simulate.js"></script>
-    <script type="text/javascript" src="js/table2CSV.js" > </script>
-
+    <script type="text/javascript" src="js/table2CSV.js">
+    </script>
     <script src="../assets/analytics-core.js"></script>
     <script src="js/analytics-main.js"></script>
-
     <script src="js/zlib_and_gzip.min.js"></script>
     <script src="js/lcr.js"></script>
     <script src="js/jquery.browser.js"></script>
     <script src="js/jquery.cookie.js"></script>
-
-
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
     <script src="../assets/offline.min.js"></script>
     <script src="../assets/ui.js"></script>
-
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
-
     <script src="../assets/offline.min.js"></script>
     <script src="../assets/ui.js"></script>
     <script src="../assets/onlinecheck.js"></script>
@@ -51,7 +45,6 @@
     <script src="../assets/popupstack.js"></script>
     <script src="../assets/jquery.browser.js"></script>
     <link href="../popupstack.css" rel="stylesheet" type="text/css" />
-    
     <script type="text/javascript">
     Offline.options = {
         checks: {
@@ -62,24 +55,23 @@
         checkOnLoad: false,
     };
     Offline.check();
-    var run = function() { Offline.check(); }
+    var run = function() {
+        Offline.check();
+    }
     setInterval(run, 3000);
     </script>
-
 </head>
 
 <body>
     <div id="header">
         <div id="description">&nbsp;</div>
     </div>
-
-	<div id="content_wrapper" class="full-content" style="width: 60%">
-		<div class="container-fluid">
-			<div class="navbar navbar-inverse" role="navigation">
-				<div class="container">
-
-					<!-- Navigation bar -->
-					<div class="navbar-header">
+    <div id="content_wrapper" class="full-content" style="width: 60%">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <!-- Navigation bar -->
+                    <div class="navbar-header">
                         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
@@ -92,497 +84,445 @@
                         <img class="logo" width=110 src="img/logo.png">
                     </div>
                     <div class="collapse navbar-collapse">
-                    	<ul class="nav navbar-nav">
-                    		<!--<li><a id="LCR_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>-->
-                    		<li>
-                    			<a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;" value="0">LOG DATA</a>
-                    			<a id="LCR_LOG_STOP" href="#" style="padding-left: 23px; white-space: nowrap; display:none;" value="0">STOP</a>
-                    		</li>
-
+                        <ul class="nav navbar-nav">
+                            <!--<li><a id="LCR_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>-->
+                            <li>
+                                <a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;" value="0">LOG DATA</a>
+                                <a id="LCR_LOG_STOP" href="#" style="padding-left: 23px; white-space: nowrap; display:none;" value="0">STOP</a>
+                            </li>
                             <li>
                                 <a id="LCR_HOLD" href="#" style="display:block;">HOLD</a>
                                 <a id="LCR_START" href="#" style="display: none;">START</a>
                             </li>
-                    	</ul>
+                        </ul>
                     </div>
-				</div>
-			</div>
-			<!-- Data display -->
-			<div id="data_window" class="data_wrapper" style="position: relative">
-				<!-- Pimary display -->
-				<div id="data_displ">
-
-					<div id="meas_displ">
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_mode" style="color: #000000">P. DISP: </label>
-							<label class="col-xs-6" id="meas_p_d" for="lb_mes_mode" style="color: #000000">Z</label>
-						</div>
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_freq" style="color: #000000">S. DISP: </label>
-							<label class="col-xs-6" id="meas_s_d" for="lb_mes_freq" style="color: #000000">P</label>
-						</div>
-
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_min" style="color: #000000">MODE: </label>
-							<label class="col-xs-6" id="meas_mode_d" for="lb_mes_min" style="color: #000000">AUTO</label>
-						</div>
-
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_max" style="color: #000000">FREQ.: </label>
-							<label class="col-xs-6" id="meas_freq_d" for="lb_mes_max" style="color: #000000">100Hz</label>
-						</div>
-
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MIN: </label>
-							<label class="col-xs-6" id="meas_min_d" for="lb_mes_avg" style="color: #000000">-</label>
-						</div>
-
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MAX: </label>
-							<label class="col-xs-6" id="meas_max_d" for="lb_mes_avg" style="color: #000000">-</label>
-						</div>
-
-						<div class="meas_data" style="float: left">
-							<label class="col-xs-6" for="lb_mes_avg" style="color: #000000">AVG: </label>
-							<label class="col-xs-6" id="meas_avg_d" for="lb_mes_avg" style="color: #000000">-</label>
-						</div>
-
-					</div>
-
-					<div id="display">
-						<!--
+                </div>
+            </div>
+            <!-- Data display -->
+            <div id="data_window" class="data_wrapper" style="position: relative">
+                <!-- Pimary display -->
+                <div id="data_displ">
+                    <div id="meas_displ">
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_mode" style="color: #000000">P. DISP: </label>
+                            <label class="col-xs-6" id="meas_p_d" for="lb_mes_mode" style="color: #000000">Z</label>
+                        </div>
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_freq" style="color: #000000">S. DISP: </label>
+                            <label class="col-xs-6" id="meas_s_d" for="lb_mes_freq" style="color: #000000">P</label>
+                        </div>
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_min" style="color: #000000">MODE: </label>
+                            <label class="col-xs-6" id="meas_mode_d" for="lb_mes_min" style="color: #000000">AUTO</label>
+                        </div>
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_max" style="color: #000000">FREQ.: </label>
+                            <label class="col-xs-6" id="meas_freq_d" for="lb_mes_max" style="color: #000000">100Hz</label>
+                        </div>
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MIN: </label>
+                            <label class="col-xs-6" id="meas_min_d" for="lb_mes_avg" style="color: #000000">-</label>
+                        </div>
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MAX: </label>
+                            <label class="col-xs-6" id="meas_max_d" for="lb_mes_avg" style="color: #000000">-</label>
+                        </div>
+                        <div class="meas_data" style="float: left">
+                            <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">AVG: </label>
+                            <label class="col-xs-6" id="meas_avg_d" for="lb_mes_avg" style="color: #000000">-</label>
+                        </div>
+                    </div>
+                    <div id="display">
+                        <!--
 						<div id="status_data" >
 							<label id="rec_lb" style="display: none" class="col-xs-2">REC</label>
 							<div id="rec_image" style="float:left; padding: 1px 1px 1px 1px; display: none;"><img id="rec_led" src="img/rec_led.png" style="width: 15px; height: 15px;"></div>
 						</div>
 						-->
-						<div id="sec_displ">
-								<label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
-								<label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">--</label>
-						</div>
-
-						<div id="prim_displ">
-								<label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
-								<label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>
-						</div>
-					</div>
-
-				</div>
-
-				<!-- Secondary display -->
-				<div id="table_displ">
-					<table id="m_table" class="table table-bordered table-fixed">
-
-				            <tr>
-				                <th class="col-xs-2">#</th>
-				                <th id="table_p_header" class="col-xs-4">Z</th>
-				                <th id="table_s_header" class="col-xs-4">P</th>
-				            </tr>
-				    </table>
-				</div>
-
-				<div id="table_cmd">
-					<button id="btn_c_meas" type="button" class="btn">Clear Min/Max</button>
-					<button id="btn_export" type="button" class="btn" onclick="export_table()">Export Table</button>
-					<button id="btn_clear" type="button" class="btn" onclick="clearRowTable()">Clear</button>
-					<button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear All</button>
-				</div>
-
-			</div>
-
-			<!-- Main right menu -->
-			<div class="global_container">
-            	<div id="menu_conent" class="menu_content">
-            		<div class="menu_wrapper">
-            			<div class="col-xs-4 menu_header">
-            				<label for="lb_tag" style="color: #d43f3a">DATA OPTIONS</label>
-            			</div>
-            			<div class="separator col-xs-4">
-            				<hr>
-            			</div>
-            		</div>
-
-            		<div class="menu_wrapper col-xs-4">
-	            		<form class="form-horizontal" role="form">
-			                <div>
-			                	<div style="float:left">
-			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
-			                	</div>
-			                  	<div id="prim_displ_choice">
-
-			                  		<input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check" value="Ω"/>
-  									<label for="LCR_R">R</label>
-
-									<input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C" class="bt_check" value="F"/>
-  									<label for="LCR_C">C</label>
-
-									<input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check" value="H"/>
-  									<label for="LCR_L" >L</label>
-
-									<input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" checked="checked" value="Ω"/>
-  									<label for="LCR_Z">Z</label>
-	        					</div>
-			                </div>
-	              		</form>
-	              	</div>
-
-	              	<div class="menu_wrapper col-xs-4">
-	            		<form class="form-horizontal" role="form">
-			                <div>
-			                	<div style="float:left">
-			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
-			                	</div>
-			                  	<div id="sec_displ_choice">
-			                  		<input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check" value="Ω"/>
-  									<label for="LCR_ESR">E</label>
-
-									<input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q" class="bt_check" value=""/>
-  									<label for="LCR_Q">Q</label>
-
-									<input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check" value=""/>
-  									<label for="LCR_D">D</label>
-
-									<input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" checked="checked" value="deg"/>
-  									<label for="LCR_P" >P</label>
-	        					</div>
-			                </div>
-	              		</form>
-	              	</div>
-
-            		<div class="menu_wrapper">
-            			<div class="col-xs-6 menu_header">
-            				<label for="lb_tag" style="color: #d43f3a">MEASURMENT OPTIONS</label>
-            			</div>
-            			<div class="separator col-xs-4">
-            				<hr>
-            			</div>
-            		</div>
-
-            		<div class="menu_wrapper col-xs-4">
-            			<form class="form-horizontal" role="form">
-                			<div>
-			                	<div style="float:left">
-			                		<label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Frequency: </label>
-			                	</div>
-			                  	<div class="col-xs-8" style="float: right">
-			                  		<select id="LCR_FREQUENCY" class="form-control">
-			                  			<option value="100">100 Hz</option>
-			                  			<option value="1000">1 kHz</option>
-			                  			<option value="10000">10 kHz</option>
-			                  			<option value="100000">100 kHz</option>
-			                  		</select>
-	        					</div>
-			                </div>
-              			</form>
-            		</div>
-
-            		<div class="menu_wrapper col-xs-4">
-	            		<form class="form-horizontal" role="form">
-			                <div>
-			                	<div style="float:left">
-			                		<label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Select Mode:</label>
-			                	</div>
-
-			                  	<div id="sel_mode" style="float: right" class="col-xs-8">
-									<input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual" class="bt_check"/>
-  									<label for="cb_manual" style="width: 50%">Manual</label>
-									<input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check"  checked="checked"/>
-  									<label for="cb_auto" style="width: 50%">Auto</label>
-	        					</div>
-			                </div>
-	              		</form>
-	              	</div>
-
-            		<div class="menu_wrapper col-xs-4">
-            			<form class="form-horizontal" role="form">
-                			<div>
-			                	<div style="float:left">
-			                		<label for="lb_range" style="margin-bottom: 0px; margin-top:5px;">Select Range: </label>
-			                	</div>
-
-			                	<div class="col-xs-3" style="float: right">
-			                  		<select id="sel_range_u" class="form-control">
-			                  			<option value="0" disabled='true'>nΩ</option>
-			                  			<option value="1" disabled='true'>uΩ</option>
-			                  			<option value="2" disabled='true'>mΩ</option>
-			                  			<option value="3">Ω</option>
-			                  			<option value="4">kΩ</option>
-			                  			<option value="5">MΩ</option>
-			                  		</select>
-	        					</div>
-
-			                	<div class="col-xs-5" style="float: right">
-			                  		<select id="sel_range_f" class="form-control">
-			                  			<option value="0">1.0000</option>
-			                  			<option value="1">10.000</option>
-			                  			<option value="2">100.00</option>
-			                  			<option value="3">1000.0</option>
-			                  		</select>
-	        					</div>
-
-			                </div>
-              			</form>
-            		</div>
-            		<br> &nbsp;
-            		<div class="menu_wrapper col-xs-4">
-	            		<form class="form-horizontal" role="form">
-			                <div>
-			                  	<div id="rel_tol" style="float: right" class="col-xs-12">
-									<input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check"/>
-  									<label for="cb_rel" style="width: 50%" >Relative</label>
-
-									<input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol" class="bt_check"/>
-  									<label for="cb_tol" style="width: 50%">Tolerance</label>
-	        					</div>
-			                </div>
-	              		</form>
-	              	</div>
-	              	<br> &nbsp;
-	              	<div class="menu_wrapper col-xs-4">
-	            		<form class="form-horizontal" role="form">
-			                <div>
-			                  	<div id="parl_ser" style="float: right" class="col-xs-12">
-
-									<input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check" checked="checked"/>
-  									<label for="cb_ser" style="width: 50%">Series</label>
-
-									<input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" class="bt_check"/>
-  									<label for="cb_paralel" style="width: 50%">Paralel</label>
-	        					</div>
-			                </div>
-	              		</form>
-	              	</div>
-        		</div>
+                        <div id="sec_displ">
+                            <label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
+                            <label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">--</label>
+                        </div>
+                        <div id="prim_displ">
+                            <label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
+                            <label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- Secondary display -->
+                <div id="table_displ">
+                    <table id="m_table" class="table table-bordered table-fixed">
+                        <tr>
+                            <th class="col-xs-2">#</th>
+                            <th id="table_p_header" class="col-xs-4">Z</th>
+                            <th id="table_s_header" class="col-xs-4">P</th>
+                        </tr>
+                    </table>
+                </div>
+                <div id="table_cmd">
+                    <button id="btn_c_meas" type="button" class="btn">Clear Min/Max</button>
+                    <button id="btn_export" type="button" class="btn" onclick="export_table()">Export Table</button>
+                    <button id="btn_clear" type="button" class="btn" onclick="clearRowTable()">Clear</button>
+                    <button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear All</button>
+                </div>
             </div>
-
+            <!-- Main right menu -->
+            <div class="global_container">
+                <div id="menu_conent" class="menu_content">
+                    <div class="menu_wrapper">
+                        <div class="col-xs-4 menu_header">
+                            <label for="lb_tag" style="color: #d43f3a">DATA OPTIONS</label>
+                        </div>
+                        <div class="separator col-xs-4">
+                            <hr>
+                        </div>
+                    </div>
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div style="float:left">
+                                    <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
+                                </div>
+                                <div id="prim_displ_choice">
+                                    <input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check" value="Ω" />
+                                    <label for="LCR_R">R</label>
+                                    <input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C" class="bt_check" value="F" />
+                                    <label for="LCR_C">C</label>
+                                    <input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check" value="H" />
+                                    <label for="LCR_L">L</label>
+                                    <input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" checked="checked" value="Ω" />
+                                    <label for="LCR_Z">Z</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div style="float:left">
+                                    <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
+                                </div>
+                                <div id="sec_displ_choice">
+                                    <input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check" value="Ω" />
+                                    <label for="LCR_ESR">E</label>
+                                    <input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q" class="bt_check" value="" />
+                                    <label for="LCR_Q">Q</label>
+                                    <input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check" value="" />
+                                    <label for="LCR_D">D</label>
+                                    <input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" checked="checked" value="deg" />
+                                    <label for="LCR_P">P</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="menu_wrapper">
+                        <div class="col-xs-6 menu_header">
+                            <label for="lb_tag" style="color: #d43f3a">MEASURMENT OPTIONS</label>
+                        </div>
+                        <div class="separator col-xs-4">
+                            <hr>
+                        </div>
+                    </div>
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div style="float:left">
+                                    <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Frequency: </label>
+                                </div>
+                                <div class="col-xs-8" style="float: right">
+                                    <select id="LCR_FREQUENCY" class="form-control">
+                                        <option value="100">100 Hz</option>
+                                        <option value="1000">1 kHz</option>
+                                        <option value="10000">10 kHz</option>
+                                        <option value="100000">100 kHz</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div style="float:left">
+                                    <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Select Mode:</label>
+                                </div>
+                                <div id="sel_mode" style="float: right" class="col-xs-8">
+                                    <input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual" class="bt_check" />
+                                    <label for="cb_manual" style="width: 50%">Manual</label>
+                                    <input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" class="bt_check" checked="checked" />
+                                    <label for="cb_auto" style="width: 50%">Auto</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div style="float:left">
+                                    <label for="lb_range" style="margin-bottom: 0px; margin-top:5px;">Select Range: </label>
+                                </div>
+                                <div class="col-xs-3" style="float: right">
+                                    <select id="sel_range_u" class="form-control">
+                                        <option value="0" disabled='true'>nΩ</option>
+                                        <option value="1" disabled='true'>uΩ</option>
+                                        <option value="2" disabled='true'>mΩ</option>
+                                        <option value="3">Ω</option>
+                                        <option value="4">kΩ</option>
+                                        <option value="5">MΩ</option>
+                                    </select>
+                                </div>
+                                <div class="col-xs-5" style="float: right">
+                                    <select id="sel_range_f" class="form-control">
+                                        <option value="0">1.0000</option>
+                                        <option value="1">10.000</option>
+                                        <option value="2">100.00</option>
+                                        <option value="3">1000.0</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <br> &nbsp;
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div id="rel_tol" style="float: right" class="col-xs-12">
+                                    <input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check" />
+                                    <label for="cb_rel" style="width: 50%">Relative</label>
+                                    <input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol" class="bt_check" />
+                                    <label for="cb_tol" style="width: 50%">Tolerance</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <br> &nbsp;
+                    <div class="menu_wrapper col-xs-4">
+                        <form class="form-horizontal" role="form">
+                            <div>
+                                <div id="parl_ser" style="float: right" class="col-xs-12">
+                                    <input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" class="bt_check" checked="checked" />
+                                    <label for="cb_ser" style="width: 50%">Series</label>
+                                    <input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" class="bt_check" />
+                                    <label for="cb_paralel" style="width: 50%">Paralel</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
             <!-- Open calib modal -->
-           <div class="modal fade" id="modal_calib_start" role="dialog">
-    			<div class="modal-dialog">
-	      			<!-- Modal content-->
-	      			<div class="modal-content">
-	        			<div class="modal-header">
-	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
-	          					<h4 class="modal-title">Starting calibration process...</h4>
-	        			</div>
-	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
-	        				<div class="modal-body">
-		          				<div class="progress">
-	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="10"
-	  									aria-valuemin="0" aria-valuemax="100" style="width:10%">
-	    								10% Complete
-	  								</div>
-		        				</div>
-		        				<div>
-	        						<h5>Please connect open calibration circuit and press start</h5>
-	        					</div>
-	      					</div>
-	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_calib_start" type="button" class="btn btn-default" style="width: 25%">Start</button>
-	        				</div>
-	      				</div>
-      				</div>
-  				</div>
-			</div>
-
-           <!-- Open calib modal -->
-           <div class="modal fade" id="modal_calib_open" role="dialog">
-    			<div class="modal-dialog">
-	      			<!-- Modal content-->
-	      			<div class="modal-content">
-	        			<div class="modal-header">
-	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
-	          					<h4 class="modal-title">Calibrating....</h4>
-	        			</div>
-	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
-	          				<div class="modal-body">
-		          				<div class="progress">
-	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="50"
-	  									aria-valuemin="0" aria-valuemax="100" style="width:50%">
-	    								50%
-	  								</div>
-		        				</div>
-
-		        				<div>
-		        					<h5>Please connect short calibration and press next</h5>
-		        				</div>
-		        			</div>
-	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_calib_open" type="button" class="btn btn-default" style="width: 25%">Next</button>
-	        				</div>
-	      				</div>
-      				</div>
-  				</div>
-			</div>
-
-			<!-- Short calib modal -->
-			<div class="modal fade" id="modal_calib_short" role="dialog">
-    			<div class="modal-dialog">
-	      			<!-- Modal content-->
-	      			<div class="modal-content">
-	        			<div class="modal-header">
-	          				<button type="button" class="close" data-dismiss="modal">&times;</button>
-	          					<h4 class="modal-title">Calibrating.....</h4>
-	        			</div>
-	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
-	        				<div class="modal-body">
-		          				<div class="progress">
-	  								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="70"
-	  									aria-valuemin="0" aria-valuemax="100" style="width:100%">
-	    								100%
-	  								</div>
-		        				</div>
-		        				<div>
-		        					<h5>You have successfully calibrated your Red Pitaya.</h5>
-		        				</div>
-		        			</div>
-	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%" data-dismiss="modal">Finish</button>
-	        				</div>
-	      				</div>
-      				</div>
-  				</div>
-			</div>
-
-			<!-- Socket not opened modal -->
-			<div class="modal fade" id="modal_reload_page" role="dialog">
-    			<div class="modal-dialog">
-	      			<!-- Modal content-->
-	      			<div class="modal-content">
-	        			<div class="modal-header">
-	          				<button type="button" class="close">&times;</button>
-	          					<h4 class="modal-title">Unable to load application.</h4>
-	        			</div>
-	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
-	        				<div class="modal-body">
-		        				<div>
-		        					<h5>E3: Socket not opened. Press Reload to reload the application.</h5>
-		        				</div>
-		        			</div>
-	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart" style="width: 50%" data-dismiss="modal">Reload</button>
-	        				</div>
-	      				</div>
-      				</div>
-  				</div>
-			</div>
-
-			<!-- Socket closed modal(yes, it differs) -->
-			<div class="modal fade" id="modal_socket_closed" role="dialog">
-    			<div class="modal-dialog">
-	      			<!-- Modal content-->
-	      			<div class="modal-content">
-	        			<div class="modal-header">
-	          				<button type="button" class="close">&times;</button>
-	          					<h4 class="modal-title">Time-out.</h4>
-	        			</div>
-	        			<div class="modal-body" style="padding: 15px 0 15px 0px">
-	        				<div class="modal-body">
-		        				<div>
-		        					<h5>Socket closed. Press reload to reload the application.</h5>
-		        				</div>
-		        			</div>
-	        				<div class="modal-footer" style="width: 100%">
-	        					<button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart" style="width: 50%" data-dismiss="modal">Reload</button>
-	        				</div>
-	      				</div>
-      				</div>
-  				</div>
-			</div>
-
-		    <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-		        <div class="modal-dialog">
-		            <div class="modal-content">
-		                <div class="modal-header">
-		                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		                    <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
-		                </div>
-		                <div class="modal-body"  style="text-align: center; font-size: 18px;">
-		                    <p id="lic_failed">Application is running in demo mode! </p>
-		                    <p> Please visit <a style="color: #dd0020;" href="http://store.redpitaya.com/lcrmeter.html" target="_blank">Red Pitaya store</a> to get the licence.
-		                </div>
-		                <div class="modal-footer">
-		                    <div class="bazaar-link" style="float: left; width: 50%;">
-		                        <a href="#" style="border: 1px solid;  width: 100%" id="get_license" class="list-group-item btn">Get licence</a>
-		                    </div>
-		                    <div class="bazaar-link" style="float: left; width: 50%;">
-		                        <a href="#" style="border: 1px solid;  width: 100%" data-dismiss="modal" class="list-group-item btn">Close</a>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		    </div>
-	</div>
- <div>
-
-    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
-                </div>
-                <div class="modal-body"  style="text-align: center; font-size: 18px;">
-                    <p>Please, contact us for more support or restart the application</p>
-                </div>
-                <div class="modal-footer">
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+            <div class="modal fade" id="modal_calib_start" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Starting calibration process...</h4>
+                        </div>
+                        <div class="modal-body" style="padding: 15px 0 15px 0px">
+                            <div class="modal-body">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width:10%">
+                                        10% Complete
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>Please connect open calibration circuit and press start</h5>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="width: 100%">
+                                <button id="bt_calib_start" type="button" class="btn btn-default" style="width: 25%">Start</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                </div>
+            </div>
+            <!-- Open calib modal -->
+            <div class="modal fade" id="modal_calib_open" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Calibrating....</h4>
+                        </div>
+                        <div class="modal-body" style="padding: 15px 0 15px 0px">
+                            <div class="modal-body">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%">
+                                        50%
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>Please connect short calibration and press next</h5>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="width: 100%">
+                                <button id="bt_calib_open" type="button" class="btn btn-default" style="width: 25%">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Short calib modal -->
+            <div class="modal fade" id="modal_calib_short" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Calibrating.....</h4>
+                        </div>
+                        <div class="modal-body" style="padding: 15px 0 15px 0px">
+                            <div class="modal-body">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                                        100%
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>You have successfully calibrated your Red Pitaya.</h5>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="width: 100%">
+                                <button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%" data-dismiss="modal">Finish</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Socket not opened modal -->
+            <div class="modal fade" id="modal_reload_page" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close">&times;</button>
+                            <h4 class="modal-title">Unable to load application.</h4>
+                        </div>
+                        <div class="modal-body" style="padding: 15px 0 15px 0px">
+                            <div class="modal-body">
+                                <div>
+                                    <h5>E3: Socket not opened. Press Reload to reload the application.</h5>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="width: 100%">
+                                <button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart" style="width: 50%" data-dismiss="modal">Reload</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Socket closed modal(yes, it differs) -->
+            <div class="modal fade" id="modal_socket_closed" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close">&times;</button>
+                            <h4 class="modal-title">Time-out.</h4>
+                        </div>
+                        <div class="modal-body" style="padding: 15px 0 15px 0px">
+                            <div class="modal-body">
+                                <div>
+                                    <h5>Socket closed. Press reload to reload the application.</h5>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="width: 100%">
+                                <button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart" style="width: 50%" data-dismiss="modal">Reload</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
+                        </div>
+                        <div class="modal-body" style="text-align: center; font-size: 18px;">
+                            <p id="lic_failed">Application is running in demo mode! </p>
+                            <p> Please visit <a style="color: #dd0020;" href="http://store.redpitaya.com/lcrmeter.html" target="_blank">Red Pitaya store</a> to get the licence.
+                        </div>
+                        <div class="modal-footer">
+                            <div class="bazaar-link" style="float: left; width: 50%;">
+                                <a href="#" style="border: 1px solid;  width: 100%" id="get_license" class="list-group-item btn">Get licence</a>
+                            </div>
+                            <div class="bazaar-link" style="float: left; width: 50%;">
+                                <a href="#" style="border: 1px solid;  width: 100%" data-dismiss="modal" class="list-group-item btn">Close</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="bazaar_naLabel">Statistics</h4>
-                </div>
-                <div class="modal-body">
-                    <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
-                </div>
-                <div class="modal-footer">
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
-                    </div>
-                    <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
+        <div>
+            <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                        </div>
+                        <div class="modal-body" style="text-align: center; font-size: 18px;">
+                            <p>Please, contact us for more support or restart the application</p>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="bazaar-link" style="float: left; width: 50%;">
+                                <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                            </div>
+                            <div class="bazaar-link" style="float: left; width: 50%;">
+                                <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="bazaar_naLabel">Statistics</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="bazaar-link" style="float: left; width: 50%;">
+                                <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
+                            </div>
+                            <div class="bazaar-link" style="float: left; width: 50%;">
+                                <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
+                You are working in demo mode. Click here to see details.
+            </div>
         </div>
-    </div>
-
-  <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
-      You are working in demo mode. Click here to see details.
-  </div>
- </div>
 </body>
-
 <script language="javascript" type="text/javascript">
+//Set only one measurment parent().find('.checkbox')
 
-	//Set only one measurment parent().find('.checkbox')
-
-	$('#content_wrapper input:checkbox').on('change', function(){
-		var parent = $(this).parent().closest('div').attr('id');
-		$('#' + parent).find('input[type=checkbox]').prop('checked', false);
-		$(this).prop('checked', true);
-	});
-
+$('#content_wrapper input:checkbox').on('change', function() {
+    var parent = $(this).parent().closest('div').attr('id');
+    $('#' + parent).find('input[type=checkbox]').prop('checked', false);
+    $(this).prop('checked', true);
+});
 </script>
-
 <script type="text/javascript">
-    $('#demo_label').click(function(){
-        $('#get_lic').modal('show');
-    });
-    $('#get_license').click(function(){
-        window.open('http://store.redpitaya.com/lcrmeter.html', '_blank');
-        $('#get_lic').modal('hide');
-    });
+$('#demo_label').click(function() {
+    $('#get_lic').modal('show');
+});
+$('#get_license').click(function() {
+    window.open('http://store.redpitaya.com/lcrmeter.html', '_blank');
+    $('#get_lic').modal('hide');
+});
 </script>
+
 </html>

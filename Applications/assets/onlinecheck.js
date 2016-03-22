@@ -4,13 +4,13 @@
 //-------------------------------------------------
 
 (function(OnlineChecker, $) {
-	OnlineChecker.online = true;
+    OnlineChecker.online = true;
 
-	OnlineChecker.isOnline = function() {
-		return OnlineChecker.online;
-	}
+    OnlineChecker.isOnline = function() {
+        return OnlineChecker.online;
+    }
 
-	$(document).ready(function($) {
+    $(document).ready(function($) {
         Offline.options = {
             checks: {
                 xhr: {
@@ -30,6 +30,6 @@
             Offline.check();
         }
         setInterval(run, 3000);
-	});
+    });
 
 })(window.OnlineChecker = window.OnlineChecker || {}, jQuery);
