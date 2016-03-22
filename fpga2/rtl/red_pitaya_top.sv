@@ -812,9 +812,16 @@ assign axi_exo[1].TVALID =    str_lgo.TVALID  ;
 
 assign str_lgo.TREADY = axi_exo[1].TREADY;
 
+// TODO: for now just a loopback
+// this is an attempt to minimize the related DMA
+
+assign axi_dtx[2].TREADY = 1'b1;
+
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
+
+axi4_stream_if #(.DT (SBL_T)) str_la (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 la_top #(
   .DT (SBL_T),
@@ -839,8 +846,6 @@ la_top #(
 
 assign str_drx[2].TVALID = 1'b0;
 
-axi4_stream_if #(.DT (SBL_T)) str_la (.ACLK (adc_clk), .ARESETn (adc_rstn));
-
 assign str_la.TREADY = 1'b1;
 
 str_to_ram #(
@@ -857,11 +862,6 @@ str_to_ram #(
 ////////////////////////////////////////////////////////////////////////////////
 // on demand HW processor
 ////////////////////////////////////////////////////////////////////////////////
-
-// TODO: for now just a loopback
-// this is an attempt to minimize the related DMA
-
-assign axi_dtx[2].TREADY = 1'b1;
 
 axi4_stream_pas loopback (
   .ena (1'b1),
