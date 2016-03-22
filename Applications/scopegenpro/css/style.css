@@ -754,8 +754,7 @@ area:hover {
 
 #connection_meter {
   position: fixed;
-  right: 130px;
-
+  right: 100px;
   width: 200px;
 }
 
