@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
    // uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
   //  signal_e type = eSignalSine;
-    uint32_t      f = 3; //setting the decimation
+    uint32_t  ind = 1; //setting the decimation index (ind=3 => dec=1024)
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
 			}
 
             /* setting decimation */
-            t_params[TIME_RANGE_PARAM] = f;                
+            t_params[TIME_RANGE_PARAM] = ind;                
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
