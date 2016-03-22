@@ -23,13 +23,17 @@ WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
 
 # Remove everything we can.
 # We will add things one-by-one accoording to our needs in add_modules.
-without:=`cat configure_withouts.txt`
-add_modules=--add-module=../ngx_ext_modules/lua-nginx-module --add-module=../ngx_ext_modules/ngx_http_rp_module
+add_modules  = --add-module=../ngx_ext_modules/ngx_http_rp_module
+add_modules += --add-module=../ngx_ext_modules/lua-nginx-module
+add_modules += --with-ld-opt="-Wl,-rpath,${SYSROOT}/usr/lib"
+
 VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
+	export LUAJIT_INC="-I ${SYSROOT}/usr/include -I ${SYSROOT}/usr/include/luajit-2.0 ";
+	export LUAJIT_LIB="-L ${SYSROOT}/usr/lib";
 	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
@@ -51,7 +55,6 @@ install:
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
 	test -d '$(DESTDIR)/www/logs'             || mkdir -p '$(DESTDIR)/www/logs'
 	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
-	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	cp $(NGINX)                     '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'

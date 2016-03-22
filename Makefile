@@ -293,8 +293,8 @@ endif
 ################################################################################
 
 WEBSOCKETPP_TAG = 0.5.0
-LUANGINX_TAG    = v0.8.7
-NGINX_TAG       = 1.5.3
+LUANGINX_TAG    = v0.10.2
+NGINX_TAG       = 1.6.3
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
@@ -335,7 +335,6 @@ $(LUANGINX_TAR): | $(DL)
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	patch -d $@ -p1 < patches/lua-nginx-module.patch
 
 $(NGINX_TAR): | $(DL)
 	curl -L $(NGINX_URL) -o $@
@@ -343,7 +342,6 @@ $(NGINX_TAR): | $(DL)
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	patch -d $@ -p1 < patches/nginx.patch
 	cp -f patches/nginx.conf $@/conf/
 
 $(NGINX): libredpitaya $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
@@ -351,7 +349,7 @@ $(NGINX): libredpitaya $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(IDGEN): $(NGINX)
-	$(MAKE) -C $(IDGEN_DIR)
+	$(MAKE) -C $(IDGEN_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 nginx: $(NGINX) $(IDGEN)
