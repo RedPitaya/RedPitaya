@@ -107,8 +107,6 @@ float max_array(float *arrayptr, int numofelements) {
 }
 
 int main(int argc, char *argv[]) {
-
-	fprintf(stderr, "dziala\n");
 	
 	
 /** Set program name */
@@ -201,6 +199,9 @@ int main(int argc, char *argv[]) {
 				freq_act=frequency;
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
 				size = round(n * freq_act/c_awg_smpl_freq);
+				
+
+				printf("%7d", (int)size);
 				for (int i=0; i<size; i++){
 					
 					//	r[i]=cos(i * 
@@ -273,6 +274,8 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * size * freq/c_awg_smpl_freq);
     awg->wrap = round(65536 * size - 1);
+	printf("%7d", (int)awg->step);
+	printf("%7d", (int)awg->wrap);
 }
 
 
