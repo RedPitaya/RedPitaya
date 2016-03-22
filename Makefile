@@ -292,7 +292,7 @@ endif
 # Red Pitaya ecosystem
 ################################################################################
 
-WEBSOCKETPP_TAG = 0.5.0
+WEBSOCKETPP_TAG = 0.5.1
 LUANGINX_TAG    = v0.10.2
 NGINX_TAG       = 1.8.1
 
