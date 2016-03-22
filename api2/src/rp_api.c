@@ -412,7 +412,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
-    rp_DmaMemDump(&la_acq_handle);
+    //rp_DmaMemDump(&la_acq_handle);
 
     // acquired number of post samples must match to req.
     if(pst_length!=noOfPostTriggerSamples){
@@ -501,26 +501,13 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
                       RP_RATIO_MODE downSampleRatioMode,
                       //uint32_t segmentIndex,
                       int16_t * overflow){
+    // TODO: startIndex & noOfSamples not used yet..
+
     uint32_t maxSamples;
     rp_LaAcqBufLenInSamples(&la_acq_handle,&maxSamples);
 
-    // TODO: startIndex & noOfSamples not used yet..
-
-    /*
     int16_t * map=NULL;
     map = (int16_t *) mmap(NULL, la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, la_acq_handle.dma_fd, 0);
-    if (map==NULL) {
-        printf("Failed to mmap\n");
-        if (la_acq_handle.dma_fd) {
-            close(la_acq_handle.dma_fd);
-        }
-        return -1;
-    }
-    */
-
-    // BRAM implementaton - didn't know how to solve this..
-    int32_t * map=NULL;
-    map = (int32_t *) mmap(NULL, la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, la_acq_handle.dma_fd, 0);
     if (map==NULL) {
         printf("Failed to mmap\n");
         if (la_acq_handle.dma_fd) {
@@ -654,7 +641,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         else{
             printf("\n\r last_sample > first_sample\n\r");
             for(int i=0; i<(*noOfSamples); i++){
-                acq_data.buf[i]=(int16_t)map[first_sample+i];
+                acq_data.buf[i]=map[first_sample+i];
             }
         }
     }
