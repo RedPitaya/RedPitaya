@@ -46,7 +46,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 //static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
 
 /** Forward declarations */
-void synthesize_signal(double ampl, double freq_act, awg_param_t *params);
+void synthesize_signal(double ampl, double freq, awg_param_t *params);
 void write_data_fpga(uint32_t ch,
                      const int32_t *data,
                      const awg_param_t *awg);
@@ -236,8 +236,8 @@ int main(int argc, char *argv[]) {
 
 				if (s[1][2]==s[2][1]||size==3){};
 	for(int i = 0; i < n; i++) {
-            data[i]=round(s[1][i]);
-          //  data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
+           // data[i]=round(s[1][i]);
+            data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
 			/* Truncate to max value if needed */
 			if (data[i] > 8191) {
 			data[i] = 8191;
