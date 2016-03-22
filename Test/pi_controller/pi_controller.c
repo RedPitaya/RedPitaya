@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
     }
 	
 	
-	
+	while(1) {
     /// Showtime.
 			/* Calculate/recalculate refference signal if frequency has changed*/
 			if (freq_act != frequency){
@@ -259,7 +259,7 @@ int main(int argc, char *argv[]) {
 	
    	/// Write the data to the FPGA and set FPGA AWG state machine
     write_data_fpga(ch_out, data, &params);	
-   
+   }
 }
 
 
