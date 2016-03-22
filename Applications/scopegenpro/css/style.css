@@ -751,3 +751,16 @@ area:hover {
     width: 100%;
     white-space: nowrap;
 }
+
+#connection_meter {
+  position: fixed;
+  right: 130px;
+
+  width: 200px;
+}
+
+#throughput_view2 {
+  position: fixed;
+  text-align: right;
+  width: 75px;
+}
