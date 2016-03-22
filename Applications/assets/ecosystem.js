@@ -65,9 +65,8 @@
                 apps.push(obj);
             });
 
-            for(var i=0; i<default_apps.length; i++)
-            {
-                if(default_apps[i].id == "marketplace")
+            for (var i = 0; i < default_apps.length; i++) {
+                if (default_apps[i].id == "marketplace")
                     default_apps[i].url = url + 'bazaar'
                 apps.push(default_apps[i]);
             }
@@ -81,8 +80,7 @@
     var clickApp = function(e) {
         var key = parseInt($(this).attr('key')) * 1;
         e.preventDefault();
-        if(apps[key].check_online)
-        {
+        if (apps[key].check_online) {
             if (!OnlineChecker.isOnline() && apps[key].type !== 'run' && apps[key].id !== 'scpi_server') {
                 if (apps[key].licensable)
                     $('#lic_failed').show();
@@ -93,18 +91,17 @@
                 return;
             }
         }
-        if(apps[key].url != "" && apps[key].type !== 'run') {
-            if(apps[key].id !== 'scpi_server'){
+        if (apps[key].url != "" && apps[key].type !== 'run') {
+            if (apps[key].id !== 'scpi_server') {
                 licVerify(apps[key].url);
-            }
-            else {
+            } else {
                 window.location = apps[key].url;
             }
+        } else {
+            if (apps[key].url != "")
+                window.location = apps[key].url;
         }
-        else {
-            window.location = apps[key].url;
-        }
-        if(apps[key].callback !== undefined)
+        if (apps[key].callback !== undefined)
             apps[key].callback();
     }
 
@@ -222,7 +219,7 @@
         }).fail(function(msg) {
             var info = JSON.parse(msg.responseText);
             $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
-        } );
+        });
     });
 
     $(window).resize(function($) {
@@ -231,12 +228,12 @@
     });
 
     var default_apps = [
-        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online : true, licensable : false, callback: undefined, type: 'run' },
-        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
-        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online : true, licensable : false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online : true, licensable : false, callback: showFeedBack, type: 'run' },
-        { id: "wifi_soon", name: "WIFI wizard", description: "Simple way to establish wireless connection with the Red Pitaya", url: "", image: "../assets/images/wifi_soon.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
-        { id: "la_pro_soon", name: "Logic analyzer", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online : false, licensable : false, callback: undefined, type: 'run' },
+        { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
+        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
+        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
+        { id: "wifi_soon", name: "WIFI wizard", description: "Simple way to establish wireless connection with the Red Pitaya", url: "", image: "../assets/images/wifi_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "la_pro_soon", name: "Logic analyzer", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 })(jQuery);
