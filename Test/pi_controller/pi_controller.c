@@ -167,36 +167,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 	
-	/* Optional decimation */
-	uint32_t dec = strtod(argv[4], NULL);
-        uint32_t idx;
-
-        for (idx = 0; idx < DEC_MAX; idx++) {
-            if (dec == g_dec[idx]) {
-                break;
-            }
-        }
-
-        if (idx != DEC_MAX) {
-            t_params[TIME_RANGE_PARAM] = idx;
-        } else {
-            fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
-            usage();
-            return -1;
-        }
-	
+		
 	/** Parameters initialization and calculation */
   //  double    w_out = frequency * 2 * M_PI; // angular velocity
    // uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
   //  signal_e type = eSignalSine;
-    // uint32_t  ind = 3; //setting the decimation index (ind=3 => dec=1024)
+     uint32_t  idx = 3; //setting the decimation index (ind=3 => dec=1024)
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
 	//double ampl = 4000;	 //ADC count 4000 = 1Vpp output
 	awg_param_t params;
-	
 	
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
@@ -229,6 +211,7 @@ int main(int argc, char *argv[]) {
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
             t_params[SHAPE_FILT_PARAM] = shaping;
+            t_params[TIME_RANGE_PARAM] = idx;
 
             /* Setting of parameters in Oscilloscope main module for signal Acqusition */
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
@@ -282,7 +265,7 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
-    awg->step = round(65536 * size * 1024 / c_awg_smpl_freq);
+    awg->step = round(65536 * n * 1024 / c_awg_smpl_freq);
     awg->wrap = round(65536 * size - 1);
 	printf("%7d", (int)awg->step);
 	printf("%7d\n", (int)awg->wrap);
