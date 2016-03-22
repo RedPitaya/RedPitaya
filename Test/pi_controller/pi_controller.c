@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
-	double ampl = 4000;	 //ADC count 4000 = 1Vpp output
+	//double ampl = 4000;	 //ADC count 4000 = 1Vpp output
 	awg_param_t params;
 	
 	
