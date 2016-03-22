@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
    // uint32_t  min_periodes = 1; // max 20
     uint32_t  size; // number of samples varies with number of periodes
   //  signal_e type = eSignalSine;
-    uint32_t  ind = 4; //setting the decimation index (ind=3 => dec=1024)
+    uint32_t  ind = 0; //setting the decimation index (ind=3 => dec=1024)
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
 	double    freq_act = 0;
@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
 			if (freq_act != frequency){
 				freq_act=frequency;
 				//size=round(1953125e5/freq_act);  //calculating number of samples 
-				size = 10;
+				size = 100;
 				
 
 				printf("%7d", (int)size);
