@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
     
     synthesize_signal(size, freq_act, &params);
 	for(int i = 0; i < n; i++) {
-           data[i]=0);
+           data[i]=0;
 		   }			
 	for(int i = 0; i < size; i++) {
            data[i]=round(s[1][i]);
