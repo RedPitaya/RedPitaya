@@ -178,13 +178,13 @@ int main(int argc, char *argv[]) {
     int       shaping = 0; // parameter initialized for generator functionality
     //int       mode = 1; // parameter initialized for generator functionality
 	double    freq_act = 0;
-	//double ampl = 4000;	 //ADC count 4000 = 1Vpp output
+	double ampl = 4000;	 //ADC count 4000 = 1Vpp output
 	awg_param_t params;
-	
+	unsigned int ch2=1;  //channel for generate referrence signal [0/1]
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-	// uint32_t *r  = create_table_size(SIGNAL_LENGTH); //refference signal
-	int32_t data[n];
+	//uint32_t *r  = create_table_size(SIGNAL_LENGTH); //refference signal
+	int32_t r[n];
 	/* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
@@ -197,17 +197,18 @@ int main(int argc, char *argv[]) {
 			/* Calculate/recalculate refference signal if frequency has changed*/
 			if (freq_act != frequency){
 				freq_act=frequency;
-				//size=round(1953125e5/freq_act);  //calculating number of samples 
-				size = 100;
+				size = 10;
 				
-				printf("%7d\n", (int)size);
-				for (int i=0; i<size; i++){
+				for(int i = 0; i < n; i++) {  
+					r[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
 					
-					//	r[i]=cos(i * 
 				}
 			}
-
-                     
+			
+			synthesize_signal(size, freq_act, &params);
+			
+            /// Write the data to the FPGA and set FPGA AWG state machine
+			write_data_fpga(ch2, r, &params);	         
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
@@ -227,27 +228,9 @@ int main(int argc, char *argv[]) {
             if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
-            }  
-    /* Prepare data buffer (calculate from input arguments) */
-    
-    synthesize_signal(size, freq_act, &params);
-	for(int i = 0; i < n; i++) {
-           data[i]=0;
-		   }			
-	for(int i = 0; i < size; i++) {
-           data[i]=round(s[1][i]);
-            // data[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
-			/* Truncate to max value if needed */
-			if (data[i] > 8191) {
-			data[i] = 8191;
+            } 
+			
     }
-       
-    }
-	//fprintf(stderr, "dziala2\n");
-	
-   	/// Write the data to the FPGA and set FPGA AWG state machine
-    write_data_fpga(ch_out, data, &params);	
-   }
 }
 
 
@@ -270,8 +253,8 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
-    awg->step = round(65536 / 1024 * n);
-    awg->wrap = round(65536 * size - 1);
+    awg->step = round(65536 * freq/c_awg_smpl_freq * n);
+    awg->wrap = round(65536 * n - 1);
 	//printf("%7d", (int)awg->step);
 	//printf("%7d\n", (int)awg->wrap);
 }
@@ -296,7 +279,7 @@ void write_data_fpga(uint32_t ch,
 
     if(ch == 0) {
         /* Channel A */
-        g_awg_reg->state_machine_conf = 0x000061;    //61 - single pulse, 41 - continuous signal
+        g_awg_reg->state_machine_conf = 0x000041;    //61 - single pulse, 41 - continuous signal
         g_awg_reg->cha_scale_off      = awg->offsgain;
         g_awg_reg->cha_count_wrap     = awg->wrap;
         g_awg_reg->cha_count_step     = awg->step;
