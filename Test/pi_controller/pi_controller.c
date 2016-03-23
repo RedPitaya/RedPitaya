@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
      uint32_t  idx = 3; //setting the decimation index (ind=3 => dec=1024)
     int       equal = 0; // parameter initialized for generator functionality
     int       shaping = 0; // parameter initialized for generator functionality
-    int       mode = 1; // parameter initialized for generator functionality
+    //int       mode = 1; // parameter initialized for generator functionality
 	double    freq_act = 0;
 	//double ampl = 4000;	 //ADC count 4000 = 1Vpp output
 	awg_param_t params;
@@ -213,7 +213,8 @@ int main(int argc, char *argv[]) {
             t_params[EQUAL_FILT_PARAM] = equal;
             t_params[SHAPE_FILT_PARAM] = shaping;
             t_params[TIME_RANGE_PARAM] = idx;
-            t_params[GEN_SIG_MOD_CH1] = mode;
+			
+            //t_params[GEN_SIG_MOD_CH1] = mode;
 
             /* Setting of parameters in Oscilloscope main module for signal Acqusition */
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
@@ -295,7 +296,7 @@ void write_data_fpga(uint32_t ch,
 
     if(ch == 0) {
         /* Channel A */
-        g_awg_reg->state_machine_conf = 0x000041;
+        g_awg_reg->state_machine_conf = 0x000061;
         g_awg_reg->cha_scale_off      = awg->offsgain;
         g_awg_reg->cha_count_wrap     = awg->wrap;
         g_awg_reg->cha_count_step     = awg->step;
