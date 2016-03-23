@@ -273,13 +273,13 @@ WEBSOCKETPP_TAG = 0.5.1
 LUANGINX_TAG    = v0.10.2
 NGINX_TAG       = 1.8.1
 
-CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp562.zip
+CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp563.zip
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 
-CRYPTOPP_TAR    = $(DL)/cryptopp562.zip
+CRYPTOPP_TAR    = $(DL)/cryptopp563.zip
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
@@ -299,6 +299,7 @@ $(CRYPTOPP_TAR): | $(DL)
 $(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
 	mkdir -p $@
 	unzip $< -d $@
+	mv $(CRYPTOPP_DIR)/config.recommend $(CRYPTOPP_DIR)/config.h
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
