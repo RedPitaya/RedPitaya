@@ -271,7 +271,7 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 / 1024 * n);
-    awg->wrap = round(65536 * size);
+    awg->wrap = round(65536 * size - 1);
 	//printf("%7d", (int)awg->step);
 	//printf("%7d\n", (int)awg->wrap);
 }
@@ -296,7 +296,7 @@ void write_data_fpga(uint32_t ch,
 
     if(ch == 0) {
         /* Channel A */
-        g_awg_reg->state_machine_conf = 0x000061;
+        g_awg_reg->state_machine_conf = 0x000061;    //61 - single pulse, 41 - continuous signal
         g_awg_reg->cha_scale_off      = awg->offsgain;
         g_awg_reg->cha_count_wrap     = awg->wrap;
         g_awg_reg->cha_count_step     = awg->step;
@@ -352,8 +352,6 @@ int acquire_data(float **s ,uint32_t size) {
             }
             break;
         }
-		
-                printf("%7d\n",(int)retries);
         if(retries-- == 0) {
             fprintf(stderr, "Signal acquisition was not triggered!\n");
             break;
