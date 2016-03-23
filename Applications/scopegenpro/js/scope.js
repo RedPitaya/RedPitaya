@@ -221,7 +221,7 @@
             $('#get_lic').modal('show');
     }
 
-    var formEmail = function() {
+    OSC.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
         var subject = "Feedback";
@@ -245,8 +245,8 @@
     setInterval(performanceHandler, 1000);
     setInterval(guiHandler, 40);
     setInterval(parametersHandler, 1);
-    $('#send_report_btn').on('click', formEmail);
-    $('#restart_app_btn').on('click', location.reload);
+    // $('#send_report_btn').on('click', formEmail);
+    // $('#restart_app_btn').on('click', location.reload);
 
     // Creates a WebSocket connection with the web server
     OSC.connectWebSocket = function() {
@@ -2535,6 +2535,9 @@ $(function() {
     $("#graphs").mousewheel(function(event) {
         OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
     });
+
+    $('#send_report_btn').on('click', function() { OSC.formEmail() });
+    $('#restart_app_btn').on('click', function() { location.reload() });
 
     var laAxesMoving = false;
     var curXPos = 0;
