@@ -23,7 +23,7 @@
  };
  &gem0 {
  	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,153 @@
+@@ -86,3 +102,157 @@
  	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
@@ -175,5 +175,9 @@
 +	la@40300000 {
 +		compatible = "generic-uio";
 +		reg = <0x40300000 0x10000>;
++	};
++	labuf@40340000 {
++		compatible = "generic-uio";
++		reg = <0x40340000 0x10000>;
 +	};
 +};

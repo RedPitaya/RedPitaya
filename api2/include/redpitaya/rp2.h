@@ -23,6 +23,11 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+typedef enum {
+    RP_MEM_DEV_DMA=0,
+    RP_MEM_DEV_BRAM,
+} rp_mem_t;
+
 typedef struct {
   char          *name;
   char          *dev;
@@ -32,6 +37,7 @@ typedef struct {
            void *context;
   int            struct_size; ///< only used to reserve dummy memory space for testing
 
+  rp_mem_t       mem_type;
   char          *dma_dev;
   size_t         dma_size;
   int            dma_fd;

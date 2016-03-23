@@ -320,7 +320,7 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=13; i<16; i++) begin: for_sys
+for (genvar i=14; i<16; i++) begin: for_sys
   sys_bus_stub sys_bus_stub_13_16 (sys[i]);
 end: for_sys
 endgenerate
@@ -812,9 +812,16 @@ assign axi_exo[1].TVALID =    str_lgo.TVALID  ;
 
 assign str_lgo.TREADY = axi_exo[1].TREADY;
 
+// TODO: for now just a loopback
+// this is an attempt to minimize the related DMA
+
+assign axi_dtx[2].TREADY = 1'b1;
+
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
+
+axi4_stream_if #(.DT (SBL_T)) str_la (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 la_top #(
   .DT (SBL_T),
@@ -823,7 +830,7 @@ la_top #(
 ) la (
   // streams
   .sti       (axi_exi[1]),
-  .sto       (str_drx[2]),
+  .sto       (str_la),
   // current time stamp
   .cts       (cts),
   // triggers
@@ -837,14 +844,24 @@ la_top #(
   .bus       (sys[12])
 );
 
+assign str_drx[2].TVALID = 1'b0;
+
+assign str_la.TREADY = 1'b1;
+
+str_to_ram #(
+  .DN  (1),
+  .DT  (SBL_T),
+  .AW  (15)
+) str_to_ram (
+  // stream input
+  .str      (str_la),
+  // System bus
+  .bus      (sys[13])
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 // on demand HW processor
 ////////////////////////////////////////////////////////////////////////////////
-
-// TODO: for now just a loopback
-// this is an attempt to minimize the related DMA
-
-assign axi_dtx[2].TREADY = 1'b1;
 
 axi4_stream_pas loopback (
   .ena (1'b1),

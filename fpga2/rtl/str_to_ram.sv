@@ -7,13 +7,11 @@
 module str_to_ram #(
   // data bus
   int unsigned DN = 1,
-  type DT = logic [8-1:0],
+  type DT = logic [16-1:0],
   int unsigned AW = 14  // counter width magnitude (fixed point integer)
 )(
-  // control
-  input  logic      ctl_rst,  // set FSM to reset
   // stream input
-  axi4_stream_if.d  str,
+  axi4_stream_if.m  str,
   // System bus
   sys_bus_if.s      bus
 );
@@ -22,56 +20,68 @@ module str_to_ram #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+// control
+logic          ctl_rst;
+
 // buffer
-DT             buf_mem [0:2**AW-1];
-logic          buf_wen  , buf_ren;
-DT             buf_wdata, buf_rdata;
-logic [AW-1:0] buf_waddr, buf_raddr;
+logic [32-1:0] buf_mem [0:2**(AW-1)-1];
+logic          buf_wen  ;
+logic [32-1:0] buf_wdata;
+logic [AW-1:0] buf_waddr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // stream write
 ////////////////////////////////////////////////////////////////////////////////
 
-assign buf_wdata = str.TDATA;
-assign buf_wen   = str.transf;
+assign buf_wen = str.transf & (buf_waddr[0] | str.TLAST);
 
-always @(posedge str.ACLK)
-if (str.ARESETn) begin
+assign buf_wdata[1*16+:16] = str.TDATA;
+
+always @(posedge bus.clk)
+if (str.transf) buf_wdata[0*16+:16] <= str.TDATA;
+
+always_ff @(posedge str.ACLK)
+if (~str.ARESETn) begin
   buf_waddr <= '0;
 end else begin
   if (ctl_rst) begin
     buf_waddr <= '0;
   end else begin
-    buf_waddr <= buf_waddr + buf_wen;
+    buf_waddr <= buf_waddr + str.transf;
   end
 end
 
-always @(posedge str.ACLK)
-if (buf_wen)  buf_mem[buf_waddr] <= buf_wdata;
+always_ff @(posedge str.ACLK)
+if (buf_wen)  buf_mem[buf_waddr>>1] <= buf_wdata;
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
 ////////////////////////////////////////////////////////////////////////////////
 
-assign buf_raddr = bus.addr;
-assign buf_ren   = bus.ren;
-
 // CPU read access
-always @(posedge bus.ACLK)
-if (buf_ren)  buf_rdata <= buf_mem[buf_raddr];
+always_ff @(posedge bus.clk)
+if (bus.ren)  bus.rdata <= buf_mem[bus.addr >> 2];
 
 // CPU control signals
-always_ff @(posedge bus.ACLK)
-if (~bus.ARESETn)  bus.ack <= 1'b0;
-else            bus.ack <= bus.ren | bus.wen;
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  bus.ack <= 1'b0;
+end else begin
+  bus.ack <= bus.ren | bus.wen;
+end
 
 assign bus.err = 1'b0;
 
-//// stream read
-//always @(posedge sto.ACLK)
-//begin 
-//  if (sts_aen)  buf_raddr <= ptr_cur[CWF+:CWM];
-//  if (sts_ren)  buf_rdata <= buf_mem[buf_raddr];
-//end
+////////////////////////////////////////////////////////////////////////////////
+// CPU write access
+////////////////////////////////////////////////////////////////////////////////
+
+// SW reset
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  ctl_rst <= 1'b0;
+end else begin
+  ctl_rst <= bus.wen;
+end
 
 endmodule: str_to_ram

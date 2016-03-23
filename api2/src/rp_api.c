@@ -69,7 +69,7 @@ RP_STATUS rp_OpenUnit(void)
         r=-1;
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
    // if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
     if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
@@ -216,7 +216,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);//|RP_TRG_LOA_SWE_MASK);
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -234,10 +234,10 @@ RP_STATUS rp_EnableDigitalPortDataRLE(bool enable)
 
 RP_STATUS rp_IsAcquistionComplete(void){
     int i=0;
-    while(i<3){
-        sleep(1);
+    while(i<3000){
+        usleep(1000);
         bool status;
-        rp_LaAcqFpgaRegDump(&la_acq_handle);
+        //rp_LaAcqFpgaRegDump(&la_acq_handle);
         rp_LaAcqAcqIsStopped(&la_acq_handle, &status);
         if(status){
             uint32_t trig_addr;
@@ -251,7 +251,7 @@ RP_STATUS rp_IsAcquistionComplete(void){
         }
         //rp_LaAcqTriggerAcq(&la_acq_handle);
     }
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+   // rp_LaAcqFpgaRegDump(&la_acq_handle);
     return RP_TRIGGER_ERROR;
 }
 
@@ -350,7 +350,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
 )
 {
     double timeIntervalNanoseconds;
-    uint32_t maxSamples=rp_LaAcqBufLenInSamples(&la_acq_handle);
+    uint32_t maxSamples;
+    rp_LaAcqBufLenInSamples(&la_acq_handle,&maxSamples);
 
     if(rp_GetTimebase(timebase,0,&timeIntervalNanoseconds,&maxSamples)!=RP_API_OK){
         return RP_INVALID_TIMEBASE;
@@ -360,7 +361,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_INVALID_PARAMETER;
     }
 
-    printf("\r\n max: %d", maxSamples);
+    //printf("\r\n max: %d", maxSamples);
 
     *timeIndisposedMs=(noOfPreTriggerSamples+noOfPostTriggerSamples)*timeIntervalNanoseconds/10e6;
 
@@ -378,7 +379,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_INVALID_PARAMETER;
     }
 
-    printf("\r\nrp_LaAcqRunAcq");
+    //printf("\r\nrp_LaAcqRunAcq");
     // start acq.
     if(rp_LaAcqRunAcq(&la_acq_handle)!=RP_OK){
         rp_LaAcqStopAcq(&la_acq_handle);
@@ -386,12 +387,19 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     }
 
     // block till acq. is complete
-    rp_LaAcqBlockingRead(&la_acq_handle);
+    //printf("\r\nrp_LaAcqBlockingRead");
+    if(la_acq_handle.mem_type==RP_MEM_DEV_DMA)
+        rp_LaAcqBlockingRead(&la_acq_handle);
+    else{
+        if(rp_IsAcquistionComplete()!=RP_OK)
+            return RP_BLOCK_MODE_FAILED;
+    }
 
     // make sure acq. is stopped
     bool isStoped;
     rp_LaAcqAcqIsStopped(&la_acq_handle, &isStoped);
     if(!isStoped){
+        printf("\r\nrp_LaAcqStopAcq");
         rp_LaAcqStopAcq(&la_acq_handle);
         return RP_BLOCK_MODE_FAILED;
     }
@@ -404,9 +412,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
-
-
-   // rp_DmaMemDump(&la_acq_handle);
+    //rp_DmaMemDump(&la_acq_handle);
 
     // acquired number of post samples must match to req.
     if(pst_length!=noOfPostTriggerSamples){
@@ -422,6 +428,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     // acquisition is completed -> callback
     RP_STATUS status=RP_API_OK;
     (*rpReady)(status,pParameter);
+
+    rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -495,8 +503,10 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
                       RP_RATIO_MODE downSampleRatioMode,
                       //uint32_t segmentIndex,
                       int16_t * overflow){
-
     // TODO: startIndex & noOfSamples not used yet..
+
+    uint32_t maxSamples;
+    rp_LaAcqBufLenInSamples(&la_acq_handle,&maxSamples);
 
     int16_t * map=NULL;
     map = (int16_t *) mmap(NULL, la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, la_acq_handle.dma_fd, 0);
@@ -527,12 +537,12 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         // two samples must be removed to fix trigger delay
         for(i=0;i<2;i++){
 
-            len=(map[index]>>8)+1;
+            len=((int16_t)map[index]>>8)+1;
 
             len-=1; // decrease length of current sampole
             if(len==0){ // if it is zero we have to remove it
                 if(index==0){
-                    index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
+                    index=maxSamples-1;
                 }
                 else{
                     index--;
@@ -546,7 +556,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         for(;;){
 
             i++;
-            len+=(map[index]>>8)+1;
+            len+=((int16_t)map[index]>>8)+1;
 
             if(len==acq_data.post_samples){
                 acq_data.trig_sample=i;
@@ -562,7 +572,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
           //  printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
 
             if(index==0){
-                index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
+                index=maxSamples-1;
             }
             else{
                 index--;
@@ -574,10 +584,10 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         // copy data
         index=first_sample;
         for(i=0;i<samples;i++){
-            if(index>=rp_LaAcqBufLenInSamples(&la_acq_handle)){
+            if(index>=maxSamples){
                 index=0;
             }
-            acq_data.buf[i]=map[index];
+            acq_data.buf[i]=(int16_t)map[index];
             index++;
         }
 
@@ -594,7 +604,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 
         int32_t first_sample =   acq_data.trig_sample - acq_data.pre_samples;
         int32_t last_sample =   acq_data.trig_sample + acq_data.post_samples;
-        int32_t buf_len =  rp_LaAcqBufLenInSamples(&la_acq_handle);
+        int32_t buf_len =  maxSamples;
 
         printf("\n\r req: pre=%d pos=%d\n\r", acq_data.pre_samples, acq_data.post_samples);
         printf("\n\r sta: first=%d trig=%d last=%d\n\r", first_sample, acq_data.trig_sample, last_sample);
@@ -608,10 +618,10 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
             first_sample=buf_len+first_sample;
             printf("\n\r sta: first=%d wlen=%d\n\r", first_sample, wlen);
             for(int i=0; i<wlen; i++){
-                acq_data.buf[i]=map[first_sample+i];
+                acq_data.buf[i]=(int16_t)map[first_sample+i];
             }
             for(int i=0; i<last_sample; i++){
-                acq_data.buf[wlen+i]=map[i];
+                acq_data.buf[wlen+i]=(int16_t)map[i];
             }
 
         }
@@ -621,11 +631,12 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 
             wlen=buf_len-first_sample;
             for(int i=0; i<wlen; i++){
-                acq_data.buf[i]=map[first_sample+i];
+                acq_data.buf[i]=(int16_t)map[first_sample+i];
             }
+
             last_sample-=buf_len;
             for(int i=0; i<last_sample; i++){
-                acq_data.buf[wlen+i]=map[i];
+                acq_data.buf[wlen+i]=(int16_t)map[i];
             }
 
         }
@@ -853,7 +864,10 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask)
 {
+    rp_GenReset(&sig_gen_handle); // TODO: check why stop doesn't stop signal gen.
     rp_GenStop(&sig_gen_handle);
+
+   // sleep(1);
 
     // set burst mode - dig. sig. gen will always operate in this mode!
     rp_GenSetMode(&sig_gen_handle, RP_GEN_MODE_BURST);
@@ -882,7 +896,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    rp_GenFpgaRegDump(&sig_gen_handle,len);
+   // rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }
