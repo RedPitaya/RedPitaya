@@ -270,7 +270,7 @@ void synthesize_signal(uint32_t  size, double freq, awg_param_t *awg) {
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
-    awg->step = round(65536 * n / 1024  );
+    awg->step = round(65536 * freq/c_awg_smpl_freq * n);
     awg->wrap = round(65536 * n - 1);
 	printf("%7d", (int)awg->step);
 	printf("%7d\n", (int)awg->wrap);
