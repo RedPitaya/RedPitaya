@@ -165,7 +165,7 @@
                 var mail = "support@redpitaya.com";
                 var subject = "Feedback";
                 var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-                body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
+                body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: SPEC.params }) + "%0D%0A";
                 body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
 
                 var url = 'info/info.json';
@@ -1548,8 +1548,8 @@ $(function() {
 
     // Stop the application when page is unloaded
     window.onbeforeunload = function() {
-        OSC.ws.onclose = function() {}; // disable onclose handler first
-        OSC.ws.close();
+        SPEC.ws.onclose = function() {}; // disable onclose handler first
+        SPEC.ws.close();
         $.ajax({
             url: SPEC.config.stop_app_url,
             async: false
