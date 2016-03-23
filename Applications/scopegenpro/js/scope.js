@@ -111,6 +111,7 @@
     OSC.parameterStack = [];
     OSC.signalStack = [];
 
+    var g_PacketsRecv = 0;
     var g_CpuLoad = 100.0;
     var g_TotalMemory = 256.0;
     var g_FreeMemory = 256.0;
@@ -183,6 +184,14 @@
         $('#totalmem_view').text((g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#freemem_view').text((g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#connection_icon').attr('src', '../assets/images/good_net.png');
+        $('#connection_meter').attr('title', 'It seems like your connection is ok');
+        if(g_PacketsRecv < 5 || g_PacketsRecv > 25)
+        {
+            $('#connection_icon').attr('src', '../assets/images/bad_net.png');
+            $('#connection_meter').attr('title', 'Connection problem');
+        }
+        g_PacketsRecv = 0;
 
         OSC.compressed_data = 0;
         OSC.decompressed_data = 0;
@@ -314,10 +323,11 @@
                     }
 
                     if (receive.signals)
+                    {
+                        g_PacketsRecv++;
                         OSC.signalStack.push(receive.signals);
-
+                    }
                     OSC.state.processing = false;
-
                 } catch (e) {
                     OSC.state.processing = false;
                     console.log(e);
