@@ -27,7 +27,7 @@ endif
 
 ifeq ($(ENABLE_LICENSING),true)
 SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
-CXXFLAGS+=-Ilicverify/encoder -DENABLE_LICENSING
+CXXFLAGS+=-Ilicverify/encoder -I../../../../tools -DENABLE_LICENSING
 endif
 
 ifeq ($(DIGITAL_LOOP),true)

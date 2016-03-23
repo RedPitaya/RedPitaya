@@ -330,7 +330,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f patches/nginx.conf $@/conf/
 
-$(NGINX): libredpitaya $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
+$(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
