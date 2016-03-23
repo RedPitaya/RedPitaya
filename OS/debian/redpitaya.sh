@@ -42,6 +42,9 @@ apt-get -y install libssl-dev
 # tools used to compile applications
 apt-get -y install zip
 
+# debug tools
+apt-get -y install gdb cgdb libcunit1-ncurses-dev
+
 EOF_CHROOT
 
 # profile for PATH variables, ...
