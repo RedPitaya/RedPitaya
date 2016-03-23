@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
 	unsigned int ch2=0;  //channel for generate referrence signal [0/1]
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
-	//uint32_t *r  = create_table_size(SIGNAL_LENGTH); //refference signal
+	float *mix_data  = create_table_size(SIGNAL_LENGTH); //mixed  signals
 	int32_t r[n];
 	/* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
@@ -197,38 +197,41 @@ int main(int argc, char *argv[]) {
 			/* Calculate/recalculate refference signal if frequency has changed*/
 			if (freq_act != frequency){
 				freq_act=frequency;
-				size = 10;
+				size = 20;
 				
 				for(int i = 0; i < n; i++) {  
 					r[i] = round(ampl * cos(2*M_PI*(double)i/(double)n));
-					
 				}
-			}
+				synthesize_signal(size, freq_act, &params);
 			
-			synthesize_signal(size, freq_act, &params);
-			
-            /// Write the data to the FPGA and set FPGA AWG state machine
-			write_data_fpga(ch2, r, &params);	         
+				/// Write the data to the FPGA and set FPGA AWG state machine
+				write_data_fpga(ch2, r, &params);	
+			}       
 
             /* Filter parameters for signal Acqusition */
             t_params[EQUAL_FILT_PARAM] = equal;
             t_params[SHAPE_FILT_PARAM] = shaping;
             t_params[TIME_RANGE_PARAM] = idx;
-			
-            //t_params[GEN_SIG_MOD_CH1] = mode;
 
             /* Setting of parameters in Oscilloscope main module for signal Acqusition */
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
                 fprintf(stderr, "rp_set_params() failed!\n");
                 return -1;
             }
-
-
+			
             /* ADC Data acqusition - saved to s */
             if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;
             } 
+			
+			for(int i = 0; i < size; i++){
+				mix_data[i] = s[1][i] * s[2][i];
+                printf("%7d\n",(int)mix_data[i]);
+				
+			}
+			if (mix_data[0] > 0);
+			
 			
     }
 }
