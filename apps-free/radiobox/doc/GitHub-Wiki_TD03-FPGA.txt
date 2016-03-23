@@ -158,14 +158,6 @@
 
     00018  R/W       RB_PWR_CTRL - power savings control register.
                      - bit h07..h00: RX modulation variant
-                         value = h00  no power savings, all clocks of the transceiver are turned on
-                         value = h01  complete transmitter is turned off
-                         value = h02  components of the SSB-USB transmitter are turned on
-                         value = h03  components of the SSB-LSB transmitter are turned on
-                         value = h04  components of the AM transmitter are turned on
-                         value = h07  components of the FM transmitter are turned on
-                         value = h08  components of the PM transmitter are turned on
-                     - bit h0F..h08: TX modulation variant
                          value = h00  no power savings, all clocks of the receiver are turned on
                          value = h01  complete receiver is turned off
                          value = h02  components of the SSB-USB receiver are turned on
@@ -175,6 +167,14 @@
                          value = h06  components of the AM syncro mode LSB receiver are turned on
                          value = h07  components of the FM receiver are turned on
                          value = h08  components of the PM receiver are turned on
+                     - bit h0F..h08: TX modulation variant
+                         value = h00  no power savings, all clocks of the transceiver are turned on
+                         value = h01  complete transmitter is turned off
+                         value = h02  components of the SSB-USB transmitter are turned on
+                         value = h03  components of the SSB-LSB transmitter are turned on
+                         value = h04  components of the AM transmitter are turned on
+                         value = h07  components of the FM transmitter are turned on
+                         value = h08  components of the PM transmitter are turned on
                      - bit h1F..h10: n/a
 
     0001C  R/W       RB_SRC_CON_PNT - output connection matrix for
