@@ -268,27 +268,37 @@ endif
 # Red Pitaya ecosystem
 ################################################################################
 
+
 WEBSOCKETPP_TAG = 0.5.1
 LUANGINX_TAG    = v0.10.2
 NGINX_TAG       = 1.8.1
 
+CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp562.zip
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 
+CRYPTOPP_TAR    = $(DL)/cryptopp562.zip
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 
+CRYPTOPP_DIR    = Bazaar/tools/cryptopp
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx
-BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
 .PHONY: ecosystem nginx
+
+$(CRYPTOPP_TAR): | $(DL)
+	curl -L $(CRYPTOPP_URL) -o $@
+
+$(CRYPTOPP_DIR): $(CRYPTOPP_TAR)
+	mkdir -p $@
+	unzip $< -d $@
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
