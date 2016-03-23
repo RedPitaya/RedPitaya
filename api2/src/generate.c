@@ -85,7 +85,6 @@ static int rp_GenGetControl(rp_handle_uio_t *handle, uint32_t * ctl) {
 
 /** Control */
 int rp_GenReset(rp_handle_uio_t *handle) {
-
     return rp_GenSetControl(handle,RP_CTL_RST_MASK);
 }
 

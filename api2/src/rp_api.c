@@ -69,7 +69,7 @@ RP_STATUS rp_OpenUnit(void)
         r=-1;
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
    // if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
     if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
@@ -216,7 +216,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);//|RP_TRG_LOA_SWE_MASK);
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -234,10 +234,10 @@ RP_STATUS rp_EnableDigitalPortDataRLE(bool enable)
 
 RP_STATUS rp_IsAcquistionComplete(void){
     int i=0;
-    while(i<3){
-        sleep(1);
+    while(i<3000){
+        usleep(1000);
         bool status;
-        rp_LaAcqFpgaRegDump(&la_acq_handle);
+        //rp_LaAcqFpgaRegDump(&la_acq_handle);
         rp_LaAcqAcqIsStopped(&la_acq_handle, &status);
         if(status){
             uint32_t trig_addr;
@@ -251,7 +251,7 @@ RP_STATUS rp_IsAcquistionComplete(void){
         }
         //rp_LaAcqTriggerAcq(&la_acq_handle);
     }
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+   // rp_LaAcqFpgaRegDump(&la_acq_handle);
     return RP_TRIGGER_ERROR;
 }
 
@@ -361,7 +361,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_INVALID_PARAMETER;
     }
 
-    printf("\r\n max: %d", maxSamples);
+    //printf("\r\n max: %d", maxSamples);
 
     *timeIndisposedMs=(noOfPreTriggerSamples+noOfPostTriggerSamples)*timeIntervalNanoseconds/10e6;
 
@@ -379,7 +379,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_INVALID_PARAMETER;
     }
 
-    printf("\r\nrp_LaAcqRunAcq");
+    //printf("\r\nrp_LaAcqRunAcq");
     // start acq.
     if(rp_LaAcqRunAcq(&la_acq_handle)!=RP_OK){
         rp_LaAcqStopAcq(&la_acq_handle);
@@ -387,7 +387,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     }
 
     // block till acq. is complete
-    printf("\r\nrp_LaAcqBlockingRead");
+    //printf("\r\nrp_LaAcqBlockingRead");
     if(la_acq_handle.mem_type==RP_MEM_DEV_DMA)
         rp_LaAcqBlockingRead(&la_acq_handle);
     else{
@@ -428,6 +428,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     // acquisition is completed -> callback
     RP_STATUS status=RP_API_OK;
     (*rpReady)(status,pParameter);
+
+    rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -862,7 +864,10 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask)
 {
+    rp_GenReset(&sig_gen_handle); // TODO: check why stop doesn't stop signal gen.
     rp_GenStop(&sig_gen_handle);
+
+   // sleep(1);
 
     // set burst mode - dig. sig. gen will always operate in this mode!
     rp_GenSetMode(&sig_gen_handle, RP_GEN_MODE_BURST);
@@ -891,7 +896,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    rp_GenFpgaRegDump(&sig_gen_handle,len);
+   // rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }

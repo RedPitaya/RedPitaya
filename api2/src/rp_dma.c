@@ -47,8 +47,6 @@ int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
             break;
     }
 
-    rp_DmaMemDump(handle);
-
     return RP_OK;
 }
 
@@ -75,9 +73,6 @@ static int rp_BramReset(rp_handle_uio_t *handle){
 
 int rp_DmaCtrl(rp_handle_uio_t *handle, RP_DMA_CTRL ctrl)
 {
-    if(handle->mem_type!=RP_MEM_DEV_DMA)
-        return RP_OK;
-
     switch(handle->mem_type){
         case RP_MEM_DEV_DMA:
             switch(ctrl){
