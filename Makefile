@@ -285,7 +285,7 @@ LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 
-CRYPTOPP_DIR    = Bazaar/tools/cryptopp
+CRYPTOPP_DIR    = Bazaar/tools/crypto++
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module

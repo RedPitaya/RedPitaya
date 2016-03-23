@@ -19,7 +19,7 @@ OBJDIR=./objs
 SDKOBJDIR=$(OBJDIR)/rp_sdk
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(SYSROOT)/usr/include/crypto++/ -DNDEBUG
+CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -DNDEBUG
 
 ifeq ($(ALWAYS_PURCHASED),true)
 CXXFLAGS+=-DALWAYS_PURCHASED
