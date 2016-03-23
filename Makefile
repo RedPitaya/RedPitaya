@@ -219,7 +219,8 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR) $(INSTALL_DIR)/etc
 linux: $(LINUX)
 
 $(LINUX_TAR): | $(DL)
-	curl -L $(LINUX_URL) -o $@
+#	curl -L $(LINUX_URL) -o $@
+	curl -L https://github.com/na1pir/linux-xlnx/archive/dma_err.tar.gz -o $@
 
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
@@ -228,11 +229,11 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidmatest-cyc.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
+	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidmatest-cyc.patch
+	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
-	cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
+	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
 	# DMA support related patches
 	cp -r patches/redpitaya $@/drivers/
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
@@ -350,7 +351,7 @@ LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx-1.5.3
 BOOST_DIR       = Bazaar/nginx/ngx_ext_modules/ws_server/boost
 
-.PHONY: ecosystem nginx 
+.PHONY: ecosystem nginx
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
@@ -507,7 +508,7 @@ ecosystem:
 
 apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) all
-	$(MAKE) -C $(APPS_FREE_DIR) install 
+	$(MAKE) -C $(APPS_FREE_DIR) install
 
 ################################################################################
 # Red Pitaya PRO applications
@@ -548,6 +549,8 @@ sdk:
 ################################################################################
 
 clean:
+#	rm tmp/linux-xlnx-xilinx-v2015.4.01/ -rf
+#	rm dl/linux-xlnx-xilinx-v2015.4.01.tar.gz
 	-make -C $(LINUX_DIR) clean
 	make -C $(FPGA_DIR) clean
 	-make -C $(UBOOT_DIR) clean
