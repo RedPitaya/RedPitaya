@@ -486,6 +486,20 @@ sdk:
 	$(MAKE) -C $(SDK_DIR) install INSTALL_DIR=$(abspath .)
 
 ################################################################################
+# local (on RP board) install process
+# TODO: generalized install should be provided instead
+################################################################################
+
+localinstall:
+	systemctl stop redpitaya_nginx
+	rw
+	/bin/cp build/sbin/* /opt/redpitaya/sbin/
+	/bin/cp build/lib/* /opt/redpitaya/lib/
+	/bin/cp -r build/www/apps/* /opt/redpitaya/www/apps/
+	ro
+	systemctl start redpitaya_nginx
+
+################################################################################
 #
 ################################################################################
 
