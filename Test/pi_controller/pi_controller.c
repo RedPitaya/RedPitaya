@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
 	double    freq_act = 0;
 	double ampl = 4000;	 //ADC count 4000 = 1Vpp output
 	awg_param_t params;
-	unsigned int ch2=1;  //channel for generate referrence signal [0/1]
+	unsigned int ch2=0;  //channel for generate referrence signal [0/1]
 	 /** Memory allocation */
     float **s = create_2D_table_size(SIGNALS_NUM, SIGNAL_LENGTH); // raw data saved to this location
 	//uint32_t *r  = create_table_size(SIGNAL_LENGTH); //refference signal
