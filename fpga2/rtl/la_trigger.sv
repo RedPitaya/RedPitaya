@@ -39,12 +39,12 @@ end: for_dn
 endgenerate
 
 // data chain for checking edges
-always @(posedge str.ACLK)
+always_ff @(posedge str.ACLK)
 if (str.transf)  dat [0] <= str.TDATA [DN-1];
 
 assign dat [DN:1] = str.TDATA;
 
-always @(posedge str.ACLK)
+always_ff @(posedge str.ACLK)
 if (~str.ARESETn) begin
   sts_trg <= '0;
 end else begin

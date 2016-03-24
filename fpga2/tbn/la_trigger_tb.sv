@@ -25,7 +25,7 @@ DT    cfg_edg_pos;  // edge positive
 DT    cfg_edg_neg;  // edge negative
 
 // stream input/output
-axi4_stream_if #(.DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
@@ -40,10 +40,10 @@ initial begin
   axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
 
   // for now initialize configuration to an idle value
-  cfg_cmp_msk = '0;
-  cfg_cmp_val = '0;
+  cfg_cmp_msk = '1;
+  cfg_cmp_val = 'h08;
   cfg_edg_pos = 'h00;
-  cfg_edg_neg = 'h00;
+  cfg_edg_neg = 'h01;
 
   // initialization
   rstn = 1'b0;
@@ -74,10 +74,11 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DT (DT)) str_src (.str (str));
-axi4_stream_drn #(.DT (DT)) str_drn (.str (str));
+axi4_stream_src #(.DN (DN), .DT (DT)) str_src (.str (str));
+axi4_stream_drn #(.DN (DN), .DT (DT)) str_drn (.str (str));
 
 la_trigger #(
+  .DN (DN),
   .DT (DT)
 ) la_trigger (
   // control
