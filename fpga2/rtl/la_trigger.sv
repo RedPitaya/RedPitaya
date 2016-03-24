@@ -32,8 +32,8 @@ for (genvar i=0; i<DN; i++) begin: for_dn
 // comparator
 assign sts_cmp [i] = (str.TDATA[i] & cfg_cmp_msk) == (cfg_cmp_val & cfg_cmp_msk);
 // edge detection
-assign sts_edg = |(cfg_edg_pos & (~dat[i] &  dat[i+1]))
-               | |(cfg_edg_neg & ( dat[i] & ~dat[i+1]));
+assign sts_edg [i] = |(cfg_edg_pos & (~dat[i] &  dat[i+1]))
+                   | |(cfg_edg_neg & ( dat[i] & ~dat[i+1]));
 
 end: for_dn
 endgenerate
