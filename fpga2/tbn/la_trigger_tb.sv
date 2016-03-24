@@ -10,7 +10,7 @@ module la_trigger_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // stream parameters
-  int unsigned DN = 1,
+  int unsigned DN = 2,
   type DT = logic [8-1:0]  // data type
 );
 
@@ -24,6 +24,9 @@ DT    cfg_cmp_val;  // comparator value
 DT    cfg_edg_pos;  // edge positive
 DT    cfg_edg_neg;  // edge negative
 
+// trigger output
+logic [DN-1:0] trg_out;
+
 // stream input/output
 axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
@@ -36,8 +39,10 @@ always #(TP/2) clk = ~clk;
 
 initial begin
   DT dat [];
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT)) clo;
+  cli = new;
+  clo = new;
 
   // for now initialize configuration to an idle value
   cfg_cmp_msk = '1;
@@ -52,14 +57,13 @@ initial begin
   rstn = 1'b1;
   repeat(4) @(posedge clk);
 
-  // send data into stream
-  cli = new;
-  clo = new;
+  // create data array
   dat = cli.range (0, 16);
   $display ("dat [%d] = %p", dat.size(), dat);
   // send data into stream
   cli.add_pkt (dat);
   clo.add_pkt (dat);
+  $display ("cli.que = %p", cli.que);
   fork
     str_src.run (cli);
     str_drn.run (clo);
