@@ -224,7 +224,7 @@ $(LINUX_TAR): | $(DL)
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 
-	git clone --depth 1 -b dma_err https://github.com/na1pir/linux-xlnx.git
+	git clone --depth 1 -b dma_err https://github.com/na1pir/linux-xlnx.git $(LINUX_DIR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
