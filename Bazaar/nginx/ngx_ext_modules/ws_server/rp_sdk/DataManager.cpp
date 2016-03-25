@@ -132,9 +132,7 @@ std::string CDataManager::GetSignalsJson()
 	JSONNode signals(JSON_NODE);
 	signals.set_name("signals");
 	for(size_t i=0; i < m_signals.size(); i++) {
-		bool need = NeedSend(*m_signals[i]);
-		fprintf(stderr, "sa %d need %d name %s changed %d\n", m_send_all_params, need, m_signals[i]->GetName(), m_signals[i]->IsValueChanged());
-		if(need) {
+		if(NeedSend(*m_signals[i])) {
 			JSONNode n(JSON_NODE);
 			n = m_signals[i]->GetJSONObject();
 			signals.push_back(n);

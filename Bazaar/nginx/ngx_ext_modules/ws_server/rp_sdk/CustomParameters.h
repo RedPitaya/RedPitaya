@@ -145,28 +145,24 @@ public:
 
 	Type& operator [](int _index)
 	{
-		fprintf(stderr, "11 %d\n", m_Dirty);
 		m_Dirty = true;
 		return this->m_Value.value.at(_index);
 	}
 
 	void Set(const std::vector<Type>& _value)
 	{
-		fprintf(stderr, "22 %d\n", m_Dirty);
 		m_Dirty = true;
 		this->m_Value.value = _value;
 	}
 
 	void Resize(int _new_size)
 	{
-		fprintf(stderr, "33 %d\n", m_Dirty);
 		m_Dirty = true;
 		this->m_Value.value.resize(_new_size);
 	}
 
 	void Update()
 	{
-		fprintf(stderr, "44 %d\n", m_Dirty);
 		m_Dirty = false;
 	}
 
@@ -182,7 +178,6 @@ public:
 
 	bool IsValueChanged() const
 	{
-		fprintf(stderr, "call IVC %d\n", m_Dirty);
 		return m_Dirty;
 	}
 private:
