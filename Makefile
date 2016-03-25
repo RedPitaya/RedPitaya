@@ -48,7 +48,6 @@ UBOOT_GIT     ?= https://github.com/Xilinx/u-boot-xlnx.git
 LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
 DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
 
-SYSROOT=/
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
@@ -499,6 +498,11 @@ localinstall:
 	/bin/cp -r build/www/apps/* /opt/redpitaya/www/apps/
 	ro
 	systemctl start redpitaya_nginx
+
+imagemount:
+	DEVICE=`losetup -f`
+	sudo losetup -P -f ../red_pitaya_OS_23-Mar-2016.img
+	mount -o ro $(DEVICE)p2 sysroot
 
 ################################################################################
 #
