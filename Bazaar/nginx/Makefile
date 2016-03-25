@@ -27,15 +27,14 @@ CRYPTO_LIB=../tools/crypto++/libcryptopp.a
 # We will add things one-by-one accoording to our needs in add_modules.
 add_modules  = --add-module=../ngx_ext_modules/ngx_http_rp_module
 add_modules += --add-module=../ngx_ext_modules/lua-nginx-module
-add_modules += --with-ld-opt="-Wl,-rpath,${SYSROOT}/usr/lib"
+#add_modules += --with-cc-opt="${SYSROOT}"
+#add_modules += --with-ld-opt="${SYSROOT}"
 
 VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB) $(CRYPTO_LIB)
-	export LUAJIT_INC="-I ${SYSROOT}/usr/include -I ${SYSROOT}/usr/include/luajit-2.0 ";
-	export LUAJIT_LIB="-L ${SYSROOT}/usr/lib";
 	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
