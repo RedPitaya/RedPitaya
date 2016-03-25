@@ -47,7 +47,7 @@ OBJECTS =	pdm.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -O0 -g
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../include -I../include/redpitaya -I../../patches/redpitaya/
 LDFLAGS=-shared -Wl,--version-script=exportmap

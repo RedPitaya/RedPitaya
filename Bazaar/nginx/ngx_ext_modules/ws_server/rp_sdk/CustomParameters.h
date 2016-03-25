@@ -99,7 +99,6 @@ public:
 
 protected:
 	mutable Type m_SentValue;
-
 };
 
 
@@ -108,10 +107,12 @@ template <typename Type> class CCustomSignal : public CParameter<Type, std::vect
 {
 public:
 	CCustomSignal(std::string _name, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)),
+		m_Dirty(true){}
 
 	CCustomSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)),
+		m_Dirty(true) {}
 
 	~CCustomSignal()
 	{
@@ -144,17 +145,29 @@ public:
 
 	Type& operator [](int _index)
 	{
+		fprintf(stderr, "11 %d\n", m_Dirty);
+		m_Dirty = true;
 		return this->m_Value.value.at(_index);
 	}
 
 	void Set(const std::vector<Type>& _value)
 	{
+		fprintf(stderr, "22 %d\n", m_Dirty);
+		m_Dirty = true;
 		this->m_Value.value = _value;
 	}
 
 	void Resize(int _new_size)
 	{
+		fprintf(stderr, "33 %d\n", m_Dirty);
+		m_Dirty = true;
 		this->m_Value.value.resize(_new_size);
+	}
+
+	void Update()
+	{
+		fprintf(stderr, "44 %d\n", m_Dirty);
+		m_Dirty = false;
 	}
 
 	int GetSize()
@@ -166,6 +179,14 @@ public:
 	{
 		return this->m_Value.value;
 	}
+
+	bool IsValueChanged() const
+	{
+		fprintf(stderr, "call IVC %d\n", m_Dirty);
+		return m_Dirty;
+	}
+private:
+	bool m_Dirty;
 };
 
 //custom CIntParameter

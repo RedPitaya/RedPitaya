@@ -13,8 +13,8 @@
  * for more details on the language used herein.
  */
 
-#ifndef __RP_H
-#define __RP_H
+#ifndef __RP_H2
+#define __RP_H2
 
 #ifdef __cplusplus
 extern "C" {

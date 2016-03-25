@@ -20,15 +20,15 @@ public:
 	const ValueT& Value() const; // access the value
 	const ValueT& NewValue();  //access the value is stored in temp storage
 
-	void Update(); //apply change of value
+	virtual void Update(); //apply change of value
 
 	virtual JSONNode GetJSONObject() = 0; //get JSON-formatted string with parameters or signals
 	void SetValueFromJSON(JSONNode _node);// set the m_TmpValue->value from JSON object
 
 	AccessMode GetAccessMode() const;
 
-	bool IsValueChanged() const;
-	bool IsNewValue() const;
+	virtual bool IsValueChanged() const;
+	virtual bool IsNewValue() const;
 	void ClearNewValue();
 
 protected:
