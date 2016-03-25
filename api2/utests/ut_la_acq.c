@@ -46,6 +46,10 @@ void* trigGen(void *arg)
 void la_acq_trig_test(void)
 {
 
+    for(int i=0; i<100; i++){
+
+        //sleep(1);
+
     RP_STATUS s;
     RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
     dir[0].channel=RP_DIGITAL_CHANNEL_7;
@@ -115,6 +119,7 @@ void la_acq_trig_test(void)
     printf("\n\r %04x",buf[pre+1]);
 
     free(buf);
+    }
 }
 
 void reg_rw_test(void){

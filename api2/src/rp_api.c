@@ -69,7 +69,7 @@ RP_STATUS rp_OpenUnit(void)
         r=-1;
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
    // if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
     if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
@@ -216,7 +216,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);//|RP_TRG_LOA_SWE_MASK);
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -237,7 +237,7 @@ RP_STATUS rp_IsAcquistionComplete(void){
     while(i<3){
         sleep(1);
         bool status;
-        rp_LaAcqFpgaRegDump(&la_acq_handle);
+        //rp_LaAcqFpgaRegDump(&la_acq_handle);
         rp_LaAcqAcqIsStopped(&la_acq_handle, &status);
         if(status){
             uint32_t trig_addr;
@@ -251,7 +251,7 @@ RP_STATUS rp_IsAcquistionComplete(void){
         }
         //rp_LaAcqTriggerAcq(&la_acq_handle);
     }
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+   // rp_LaAcqFpgaRegDump(&la_acq_handle);
     return RP_TRIGGER_ERROR;
 }
 
@@ -392,6 +392,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     bool isStoped;
     rp_LaAcqAcqIsStopped(&la_acq_handle, &isStoped);
     if(!isStoped){
+        printf("\r\n not stopped!!");
         rp_LaAcqStopAcq(&la_acq_handle);
         return RP_BLOCK_MODE_FAILED;
     }
@@ -422,6 +423,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     // acquisition is completed -> callback
     RP_STATUS status=RP_API_OK;
     (*rpReady)(status,pParameter);
+
+    rp_LaAcqStopAcq(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -853,6 +856,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask)
 {
+    rp_GenReset(&sig_gen_handle); // TODO: stop not working that's why reset is needed here
     rp_GenStop(&sig_gen_handle);
 
     // set burst mode - dig. sig. gen will always operate in this mode!
@@ -882,7 +886,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-    rp_GenFpgaRegDump(&sig_gen_handle,len);
+   // rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }
