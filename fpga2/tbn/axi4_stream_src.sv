@@ -27,7 +27,7 @@ endclocking: clk
 // stream
 ////////////////////////////////////////////////////////////////////////////////
 
-task run (axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cls);
+task run (axi4_stream_pkg::axi4_stream_class #(.DN (DN), .DT (DT)) cls);
   @(clk);
   while (cls.que.size()) begin
     idle();
