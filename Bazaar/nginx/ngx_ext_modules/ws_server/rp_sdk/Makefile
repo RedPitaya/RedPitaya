@@ -19,7 +19,7 @@ OBJDIR=./objs
 SDKOBJDIR=$(OBJDIR)/rp_sdk
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -DNDEBUG
+CXXFLAGS=-c -Wall -O0 -s -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools
 
 ifeq ($(ALWAYS_PURCHASED),true)
 CXXFLAGS+=-DALWAYS_PURCHASED
@@ -27,7 +27,7 @@ endif
 
 ifeq ($(ENABLE_LICENSING),true)
 SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
-CXXFLAGS+=-Ilicverify/encoder -I../../../../tools -DENABLE_LICENSING
+CXXFLAGS+=-Ilicverify/encoder -DENABLE_LICENSING
 endif
 
 ifeq ($(DIGITAL_LOOP),true)
@@ -37,8 +37,6 @@ endif
 OBJECTS=$(patsubst %.cpp,$(SDKOBJDIR)/%.o, $(SOURCES))
 
 LIB=librp_sdk.a
-
-CURRENT_DIR := $(shell pwd)
 
 all: $(SOURCES) $(LIB)
 
