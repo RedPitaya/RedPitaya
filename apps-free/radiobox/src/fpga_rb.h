@@ -391,6 +391,8 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h50  RX_AUDIO output.
      *
+     *   value = hF8  TX_CAR_OSC_INC frequency value.
+     *   value = hF9  RX_CAR_OSC_INC frequency value.
      *   value = hFF  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h0F..h08: n/a
@@ -465,6 +467,8 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h50  RX_AUDIO output.
      *
+     *   value = hF8  TX_CAR_OSC_INC frequency value.
+     *   value = hF9  RX_CAR_OSC_INC frequency value.
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h1F..h18: RFOUT2 source connection point
@@ -537,6 +541,8 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h50  RX_AUDIO output.
      *
+     *   value = hF8  TX_CAR_OSC_INC frequency value.
+     *   value = hF9  RX_CAR_OSC_INC frequency value.
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
      */

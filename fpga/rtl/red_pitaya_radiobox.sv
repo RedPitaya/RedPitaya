@@ -923,15 +923,15 @@ wire [ 47: 0] tx_mod_qmix_i_s3_in = tx_car_osc_inc_mux ?  { {14{tx_mod_qmix_i_s2
                                                           { tx_mod_qmix_i_s2_out[30:0], 17'b0 }                                ;
 wire [ 47: 0] tx_mod_qmix_i_s3_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_tx_mod_qmix_I_s3_dsp48 (
+rb_addsub_48M48 i_rb_tx_mod_qmix_I_s3_dsp48 (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_tx_OSC_clken         ),  // power down when needed to
 
-  .C                       ( tx_mod_qmix_i_s3_in         ),  // modulation:               SIGNED 48 bit
-  .CONCAT                  ( tx_mod_qmix_ofs             ),  // offset:                   SIGNED 48 bit
-
-  .P                       ( tx_mod_qmix_i_s3_out        )   // TX_QMIX I for OSC:        SIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( tx_mod_qmix_i_s3_in         ),  // modulation:               SIGNED 48 bit
+  .B                       ( tx_mod_qmix_ofs             ),  // offset:                   SIGNED 48 bit
+  .S                       ( tx_mod_qmix_i_s3_out        )   // TX_QMIX I for OSC:        SIGNED 48 bit
 );
 
 wire [ 31: 0] tx_mod_qmix_q_s1_out;
@@ -963,15 +963,15 @@ rb_dsp48_AmB_A16_B16_P32 i_rb_tx_mod_qmix_Q_s2_dsp48 (
 wire [ 47: 0] tx_mod_qmix_q_s3_in = { tx_mod_qmix_q_s2_out[30:0], 17'b0 };
 wire [ 47: 0] tx_mod_qmix_q_s3_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_tx_mod_qmix_Q_s3_dsp48 (
+rb_addsub_48M48 i_rb_tx_mod_qmix_Q_s3_dsp48 (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_tx_Q_clken           ),  // power down when needed to
 
-  .C                       ( tx_mod_qmix_q_s3_in         ),  // modulation:               SIGNED 48 bit
-  .CONCAT                  ( tx_mod_qmix_ofs             ),  // offset:                   SIGNED 48 bit
-
-  .P                       ( tx_mod_qmix_q_s3_out        )   // TX_QMIX Q for OSC:        SIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( tx_mod_qmix_q_s3_in         ),  // modulation:               SIGNED 48 bit
+  .B                       ( tx_mod_qmix_ofs             ),  // offset:                   SIGNED 48 bit
+  .S                       ( tx_mod_qmix_q_s3_out        )   // TX_QMIX Q for OSC:        SIGNED 48 bit
 );
 
 
@@ -1291,15 +1291,15 @@ wire   signed [ 47: 0] rx_muxin_sig_in = { rx_muxin_sig, 32'b0 };
 wire   signed [ 47: 0] rx_muxin_ofs_in = { rx_muxin_mix_ofs, 32'b0 };
 wire   signed [ 47: 0] rx_muxin_biased_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_muxin_offset_bias (
+rb_addsub_48M48 i_rb_rx_muxin_offset_bias (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_pwr_rx_CAR_clken         ),  // power down when needed to
 
-  .CONCAT                  ( rx_muxin_sig_in             ),  // ADC raw value           SIGNED 48 bit
-  .C                       ( rx_muxin_ofs_in             ),  // ADC offset value        SIGNED 48 bit
-
-  .P                       ( rx_muxin_biased_out         )   // biased output           SIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( rx_muxin_sig_in             ),  // ADC raw value           SIGNED 48 bit
+  .B                       ( rx_muxin_ofs_in             ),  // ADC offset value        SIGNED 48 bit
+  .S                       ( rx_muxin_biased_out         )   // biased output           SIGNED 48 bit
 );
 
 wire   signed [ 15: 0] rx_muxin_mix_in = (rx_muxin_biased_out[47:32] << rx_muxin_mix_log2);  // unsigned value: input booster for
@@ -2466,26 +2466,26 @@ wire   signed [ 47: 0] rx_mod_pm_s1_out;
 wire   signed [ 47: 0] rx_mod_pm_accu_release = ~{ {14{rx_mod_pm_accu[47]}} , rx_mod_pm_accu[47:14] };   // sign extension and negation, balance to zero within 400 ms
 wire   signed [ 47: 0] rx_mod_pm_s2_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s1 (
+rb_addsub_48M48 i_rb_rx_mod_pm_accu_s1 (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
-  .CONCAT                  ( rx_mod_pm_accu              ),  // accumulator             SIGNED 48 bit
-  .C                       ( rx_mod_fm_in                ),  // FM modulation signal    SIGNED 48 bit
-
-  .P                       ( rx_mod_pm_s1_out            )   // step 1                  SIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( rx_mod_pm_accu              ),  // accumulator             SIGNED 48 bit
+  .B                       ( rx_mod_fm_in                ),  // FM modulation signal    SIGNED 48 bit
+  .S                       ( rx_mod_pm_s1_out            )   // step 1                  SIGNED 48 bit
 );
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_pm_accu_s2 (
+rb_addsub_48M48 i_rb_rx_mod_pm_accu_s2 (
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
-  .CONCAT                  ( rx_mod_pm_s1_out            ),  // accumulator             SIGNED 48 bit
-  .C                       ( rx_mod_pm_accu_release      ),  // release                 SIGNED 48 bit
-
-  .P                       ( rx_mod_pm_s2_out            )   // step 2                  SIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( rx_mod_pm_s1_out            ),  // accumulator             SIGNED 48 bit
+  .B                       ( rx_mod_pm_accu_release      ),  // release                 SIGNED 48 bit
+  .S                       ( rx_mod_pm_s2_out            )   // step 2                  SIGNED 48 bit
 );
 
 always @(posedge clk_adc_125mhz)
@@ -2518,15 +2518,15 @@ reg  unsigned [ 47: 0] rx_mod_amenv_accu         = 'b0;                         
 wire unsigned [ 47: 0] rx_mod_amenv_s1_sig_in    = { 16'b0, rx_afc_cordic_polar_out_mag[31:0] };                // magnitude is unsigned
 wire unsigned [ 47: 0] rx_mod_amenv_s1_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_s1 (     // mean value - signal integrator
+rb_addsub_48M48 i_rb_rx_mod_amenv_accu_s1 (     // mean value - signal integrator
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
-  .CONCAT                  ( rx_mod_amenv_accu           ),  // accumulator           UNSIGNED 48 bit
-  .C                       ( rx_mod_amenv_s1_sig_in      ),  // CORDIC mag signal     UNSIGNED 48 bit
-
-  .P                       ( rx_mod_amenv_s1_out         )   // accu step 1           UNSIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( rx_mod_amenv_accu           ),  // accumulator           UNSIGNED 48 bit
+  .B                       ( rx_mod_amenv_s1_sig_in      ),  // CORDIC mag signal     UNSIGNED 48 bit
+  .S                       ( rx_mod_amenv_s1_out         )   // accu step 1           UNSIGNED 48 bit
 );
 
 reg  unsigned [ 12: 0] rx_mod_amenv_clk_cnt   =  'b0;
@@ -2566,15 +2566,15 @@ wire   signed [ 47: 0] rx_mod_amenv_mean_in   = ~(rx_mod_amenv_mean[47:0]);
 wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 3'b0, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
-rb_dsp48_CONaC_CON48_C48_P48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demodulation
+rb_addsub_48M48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demodulation
   // global signals
   .CLK                     ( clk_adc_125mhz              ),  // global 125 MHz clock
   .CE                      ( rb_reset_n                  ),  // power down when needed to
 
-  .CONCAT                  ( rx_mod_amenv_mean_in        ),  // negative accu           SIGNED 48 bit
-  .C                       ( rx_mod_amenv_sig_in         ),  // current magnitude       SIGNED 48 bit
-
-  .P                       ( rx_mod_amenv_diff_out       )   // AM envelope             SIGNED 48 bit
+  .ADD                     ( 1'b1                        ),  // ADD
+  .A                       ( rx_mod_amenv_mean_in        ),  // negative accu           SIGNED 48 bit
+  .B                       ( rx_mod_amenv_sig_in         ),  // current magnitude       SIGNED 48 bit
+  .S                       ( rx_mod_amenv_diff_out       )   // AM envelope             SIGNED 48 bit
 );
 
 wire   signed [ 15: 0] rx_mod_amenv_mix_in = rx_mod_amenv_diff_out[44:29];
