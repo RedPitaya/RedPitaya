@@ -1136,8 +1136,8 @@ void fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(int rx_car_osc_qrg_inc)
 
     if (fabs(hzPerSec) < 0.1) {  // middle-range is inactive
         fprintf(stderr, "!23!INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: STOPPING SCANNER <-- mid-range\n");
-        g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo = 0;
-        g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi = 0;
+        g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_lo = 0;
+        g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_hi = 0;
         return;
     }
 

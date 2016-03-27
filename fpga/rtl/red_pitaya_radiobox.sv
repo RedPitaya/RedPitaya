@@ -1165,12 +1165,12 @@ else if (tx_car_cic_41M664_q_out_vld)
 //---------------------------------------------------------------------------------
 //  TX_CAR_OSC_INC_ACCU
 
-reg  [ 47: 0] tx_car_osc_inc_next = 'b0;
+wire [ 47: 0] tx_car_osc_inc_next;
 
 rb_addsub_48M48 i_rb_tx_osc_inc_accu_addsub (
   // global signals
   .CLK                  ( clk_adc_125mhz            ),  // global 125 MHz clock
-  .CE                   ( rb_clk_en                 ),  // power down when needed to
+  .CE                   ( rb_pwr_tx_OSC_clken       ),  // power down when needed to
 
   .ADD                  ( 1'b1                      ),  // ADD
   .A                    ( tx_car_osc_inc            ),  // current TX_CAR_OSC_INC
@@ -1324,12 +1324,12 @@ wire [ 15: 0] rx_muxin_out = rx_muxin_mix_out[27:12];
 //---------------------------------------------------------------------------------
 //  RX_CAR_OSC_INC_ACCU
 
-reg  [ 47: 0] rx_car_osc_inc_next = 'b0;
+wire [ 47: 0] rx_car_osc_inc_next;
 
 rb_addsub_48M48 i_rb_rx_car_osc_inc_accu_addsub (
   // global signals
   .CLK                  ( clk_adc_125mhz            ),  // global 125 MHz clock
-  .CE                   ( rb_clk_en                 ),  // power down when needed to
+  .CE                   ( rb_pwr_rx_CAR_clken       ),  // power down when needed to
 
   .ADD                  ( 1'b1                      ),  // ADD
   .A                    ( rx_car_osc_inc            ),  // current RX_CAR_OSC_INC
@@ -2904,11 +2904,11 @@ else if (led_src_con_pnt && rb_reset_n) begin
       end
 
    RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC: begin
-      rb_leds_data <= tx_car_osc_inc[39:32];
+      rb_leds_data <= tx_car_osc_inc[28:21];
       end
 
    RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC: begin
-      rb_leds_data <= rx_car_osc_inc[39:32];
+      rb_leds_data <= rx_car_osc_inc[28:21];
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
@@ -3139,11 +3139,11 @@ else if (rfout1_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC: begin
-      rfout1_amp_in <= tx_car_osc_inc[47:32];
+      rfout1_amp_in <= tx_car_osc_inc[36:21];
       end
 
    RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC: begin
-      rfout1_amp_in <= rx_car_osc_inc[47:32];
+      rfout1_amp_in <= rx_car_osc_inc[36:21];
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
@@ -3392,11 +3392,11 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC: begin
-      rfout2_amp_in <= tx_car_osc_inc[47:32];
+      rfout2_amp_in <= tx_car_osc_inc[36:21];
       end
 
    RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC: begin
-      rfout2_amp_in <= rx_car_osc_inc[47:32];
+      rfout2_amp_in <= rx_car_osc_inc[36:21];
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
