@@ -1874,6 +1874,15 @@
 
 // Page onload event handler
 $(function() {
+
+    var reloaded = $.cookie("osc_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("osc_forced_reload", "true");
+        window.location.reload(true);
+    }
+
+    
     $('#calib-input').hide();
     $('#calib-input-text').hide();
     $('#modal-warning').hide();

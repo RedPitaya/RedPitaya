@@ -362,6 +362,12 @@
 
 $(function() {
 
+    var reloaded = $.cookie("lcr_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("lcr_forced_reload", "true");
+        window.location.reload(true);
+    }
 	//Header options. Prevent aggressive firefox caching
 	$("html :checkbox").attr("autocomplete", "off");
 

@@ -1309,14 +1309,4 @@ $('#sys_info').click(function() {
     }
 });
 </script>
-
-<script>
-    var reloaded = $.cookie("forced_reload");
-    if(reloaded == undefined || reloaded == "false")
-    {
-        $.cookie("forced_reload", "true");
-        window.location.reload(true);
-    }
-</script>
-
 </html>

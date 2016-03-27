@@ -1186,6 +1186,13 @@
 
 // Page onload event handler
 $(function() {
+
+    var reloaded = $.cookie("spectrum_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("spectrum_forced_reload", "true");
+        window.location.reload(true);
+    }
     $('button').bind('activeChanged', function() {
         SPEC.exitEditing(true);
     });
