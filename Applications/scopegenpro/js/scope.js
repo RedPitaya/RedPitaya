@@ -122,7 +122,11 @@
             )
             .done(function(dresult) {
                 if (dresult.status == 'OK') {
-                    OSC.connectWebSocket();
+                    try {
+                        OSC.connectWebSocket();
+                    } catch(e) {
+                        OSC.startApp();
+                    }
                 } else if (dresult.status == 'ERROR') {
                     console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
                     OSC.startApp();
@@ -236,9 +240,15 @@
         }).done(function(msg) {
             body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg.responseText);
+            var info_json = msg.responseText
+            var ver = '';
+            try{
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch(e) {};
+
             body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
     }
 

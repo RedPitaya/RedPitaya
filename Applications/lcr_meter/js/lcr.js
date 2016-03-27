@@ -80,8 +80,12 @@
   		$.get(LCR.config.start_app_url)
   		.done(function(dresult) {
   			if(dresult.status == 'OK'){
-  				LCR.connectWebSocket();
-  				console.log('Socket opened');
+	            try {
+					LCR.connectWebSocket();
+					console.log('Socket opened');
+	            } catch(e) {
+	                LCR.startApp();
+	            }
   			}
   			else if(dresult.status == 'ERROR'){
   				console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
@@ -148,9 +152,15 @@
         }).done(function(msg) {
             body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg.responseText);
+            var info_json = msg.responseText
+            var ver = '';
+            try{
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch(e) {};
+
             body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         } );
       });
 
