@@ -82,7 +82,7 @@
     tx_modtyp_s:            0,  // TX modulation: USB
     rx_modtyp_s:            5,  // RX modulation: AM-sync USB
 
-    rbled_csp_s:            6,  // RB LEDs set to: TX_MOD_ADC out
+    rbled_csp_s:          248,  //6,  // RB LEDs set to: TX_MOD_ADC out
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2

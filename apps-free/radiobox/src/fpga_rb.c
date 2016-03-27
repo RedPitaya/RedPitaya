@@ -167,7 +167,7 @@ void fpga_rb_reset(void)
 
 
 /*----------------------------------------------------------------------------*/
-int fpga_rb_update_all_params(rb_app_params_t* p)
+int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t* pn)  // pb: base data of complete data set, pn: new overwriting data sets
 {
     int    loc_rb_run         = 0;
     int    loc_tx_modsrc      = 0;
@@ -190,149 +190,153 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
     int    loc_rfout2_term    = 0;
     int    loc_qrg_inc        = 0;
 
-    //fprintf(stderr, "fpga_rb_update_all_params: BEGIN\n");
+    double loc_RD_tx_car_osc_qrg = 0.0;
+    double loc_RD_rx_car_osc_qrg = 0.0;
 
-    if (!g_fpga_rb_reg_mem || !p) {
-        fprintf(stderr, "ERROR - fpga_rb_update_all_params: bad parameter (p=%p) or not init'ed(g=%p)\n", p, g_fpga_rb_reg_mem);
+    //fprintf(stderr, "DEBUG fpga_rb_update_all_params: BEGIN\n");
+
+    if (!g_fpga_rb_reg_mem || !pb || !pn) {
+        fprintf(stderr, "ERROR - fpga_rb_update_all_params: bad parameter (pb=%p), (pn=%p) or not init'ed(g=%p)\n", pb, pn, g_fpga_rb_reg_mem);
         return -1;
     }
 
     /* Get current parameters from the worker */
     {
-        //fprintf(stderr, "INFO - fpga_rb_update_all_params: waiting for cb_out_params ...\n");
-        pthread_mutex_lock(&g_rb_info_worker_params_mutex);
-        if (g_rb_info_worker_params) {
-            //print_rb_params(rb_info_worker_params);
-            loc_rb_run         = (int) g_rb_info_worker_params[RB_RUN].value;
-            loc_tx_modsrc      = (int) g_rb_info_worker_params[RB_TX_MODSRC].value;
-            loc_tx_modtyp      = (int) g_rb_info_worker_params[RB_TX_MODTYP].value;
-            loc_rx_modtyp      = (int) g_rb_info_worker_params[RB_RX_MODTYP].value;
+        //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: getting local data: ...\n");
+        //print_rb_params(pb);
+        loc_rb_run         = (int) pb[RB_RUN].value;
+        loc_tx_modsrc      = (int) pb[RB_TX_MODSRC].value;
+        loc_tx_modtyp      = (int) pb[RB_TX_MODTYP].value;
+        loc_rx_modtyp      = (int) pb[RB_RX_MODTYP].value;
 
-            loc_led_csp        = (int) g_rb_info_worker_params[RB_LED_CON_SRC_PNT].value;
-            loc_rfout1_csp     = (int) g_rb_info_worker_params[RB_RFOUT1_CON_SRC_PNT].value;
-            loc_rfout2_csp     = (int) g_rb_info_worker_params[RB_RFOUT2_CON_SRC_PNT].value;
-            loc_rx_muxin_src   = (int) g_rb_info_worker_params[RB_RX_MUXIN_SRC].value;
+        loc_led_csp        = (int) pb[RB_LED_CON_SRC_PNT].value;
+        loc_rfout1_csp     = (int) pb[RB_RFOUT1_CON_SRC_PNT].value;
+        loc_rfout2_csp     = (int) pb[RB_RFOUT2_CON_SRC_PNT].value;
+        loc_rx_muxin_src   = (int) pb[RB_RX_MUXIN_SRC].value;
 
-            loc_tx_car_osc_qrg = g_rb_info_worker_params[RB_TX_CAR_OSC_QRG].value;
-            loc_tx_mod_osc_qrg = g_rb_info_worker_params[RB_TX_MOD_OSC_QRG].value;
+        loc_tx_car_osc_qrg = pb[RB_TX_CAR_OSC_QRG].value;
+        loc_tx_mod_osc_qrg = pb[RB_TX_MOD_OSC_QRG].value;
 
-            loc_tx_amp_rf_gain = g_rb_info_worker_params[RB_TX_AMP_RF_GAIN].value;
-            loc_tx_mod_osc_mag = g_rb_info_worker_params[RB_TX_MOD_OSC_MAG].value;
+        loc_tx_amp_rf_gain = pb[RB_TX_AMP_RF_GAIN].value;
+        loc_tx_mod_osc_mag = pb[RB_TX_MOD_OSC_MAG].value;
 
-            loc_tx_muxin_gain  = (int) g_rb_info_worker_params[RB_TX_MUXIN_GAIN].value;
-            loc_rx_muxin_gain  = (int) g_rb_info_worker_params[RB_RX_MUXIN_GAIN].value;
-            loc_tx_qrg_sel     = (int) g_rb_info_worker_params[RB_TX_QRG_SEL].value;
-			loc_rx_qrg_sel     = (int) g_rb_info_worker_params[RB_RX_QRG_SEL].value;
+        loc_tx_muxin_gain  = (int) pb[RB_TX_MUXIN_GAIN].value;
+        loc_rx_muxin_gain  = (int) pb[RB_RX_MUXIN_GAIN].value;
+        loc_tx_qrg_sel     = (int) pb[RB_TX_QRG_SEL].value;
+        loc_rx_qrg_sel     = (int) pb[RB_RX_QRG_SEL].value;
 
-            loc_rx_car_osc_qrg = g_rb_info_worker_params[RB_RX_CAR_OSC_QRG].value;
-            loc_rfout1_term    = (int) g_rb_info_worker_params[RB_RFOUT1_TERM].value;
-            loc_rfout2_term    = (int) g_rb_info_worker_params[RB_RFOUT2_TERM].value;
-            loc_qrg_inc        = (int) g_rb_info_worker_params[RB_QRG_INC].value;
-        }
-        pthread_mutex_unlock(&g_rb_info_worker_params_mutex);
-        //fprintf(stderr, "INFO - fpga_rb_update_all_params: ... done\n");
+        loc_rx_car_osc_qrg = pb[RB_RX_CAR_OSC_QRG].value;
+        loc_rfout1_term    = (int) pb[RB_RFOUT1_TERM].value;
+        loc_rfout2_term    = (int) pb[RB_RFOUT2_TERM].value;
+        loc_qrg_inc        = (int) pb[RB_QRG_INC].value;
+        //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: ... done.\n");
     }
 
+    int p_tx_car_osc_qrg_idx = -1;
+    int p_rx_car_osc_qrg_idx = -1;
     int idx;
-    for (idx = 0; p[idx].name; idx++) {
-        if (!(p[idx].name)) {
+    for (idx = 0; pn[idx].name; idx++) {
+        if (!(pn[idx].name)) {
             break;  // end of list
         }
 
-        if (!(p[idx].fpga_update & 0x80)) {  // MARKer set?
-            //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: skipped not modified parameter (name=%s)\n", p[idx].name);
+        if (!(pn[idx].fpga_update & 0x80)) {  // MARKer set?
+            //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: skipped not modified parameter (name=%s)\n", pn[idx].name);
             continue;  // this value is not marked to update the FPGA
         }
         //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: this parameter has to update the FPGA (name=%s)\n", p[idx].name);
 
         /* Remove the marker */
-        p[idx].fpga_update &= ~0x80;
+        pn[idx].fpga_update &= ~0x80;
 
         /* Since here process on each known parameter accordingly */
-        if (!strcmp("rb_run", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (p[idx].value));
-            loc_rb_run = ((int) (p[idx].value));
+        if (!strcmp("rb_run", pn[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (pn[idx].value));
+            loc_rb_run = ((int) (pn[idx].value));
 
-        } else if (!strcmp("tx_modsrc_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modsrc_s = %d\n", (int) (p[idx].value));
-            loc_tx_modsrc = ((int) (p[idx].value));
+        } else if (!strcmp("tx_modsrc_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modsrc_s = %d\n", (int) (pn[idx].value));
+            loc_tx_modsrc = ((int) (pn[idx].value));
 
-        } else if (!strcmp("tx_modtyp_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modtyp_s = %d\n", (int) (p[idx].value));
-            loc_tx_modtyp = ((int) (p[idx].value));
+        } else if (!strcmp("tx_modtyp_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modtyp_s = %d\n", (int) (pn[idx].value));
+            loc_tx_modtyp = ((int) (pn[idx].value));
 
-        } else if (!strcmp("rx_modtyp_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_modtyp_s = %d\n", (int) (p[idx].value));
-            loc_rx_modtyp = ((int) (p[idx].value));
-
-
-        } else if (!strcmp("rbled_csp_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rbled_csp_s = %d\n", (int) (p[idx].value));
-            loc_led_csp = ((int) (p[idx].value));
-
-        } else if (!strcmp("rfout1_csp_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_csp_s = %d\n", (int) (p[idx].value));
-            loc_rfout1_csp = ((int) (p[idx].value));
-
-        } else if (!strcmp("rfout2_csp_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_csp_s = %d\n", (int) (p[idx].value));
-            loc_rfout2_csp = ((int) (p[idx].value));
-
-        } else if (!strcmp("rx_muxin_src_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_src_s = %d\n", (int) (p[idx].value));
-            loc_rx_muxin_src = ((int) (p[idx].value));
+        } else if (!strcmp("rx_modtyp_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_modtyp_s = %d\n", (int) (pn[idx].value));
+            loc_rx_modtyp = ((int) (pn[idx].value));
 
 
-        } else if (!strcmp("tx_car_osc_qrg_f", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_qrg_f = %lf\n", p[idx].value);
-            loc_tx_car_osc_qrg = p[idx].value;
+        } else if (!strcmp("rbled_csp_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rbled_csp_s = %d\n", (int) (pn[idx].value));
+            loc_led_csp = ((int) (pn[idx].value));
 
-        } else if (!strcmp("tx_mod_osc_qrg_f", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_mod_osc_qrg_f = %lf\n", p[idx].value);
-            loc_tx_mod_osc_qrg = p[idx].value;
+        } else if (!strcmp("rfout1_csp_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_csp_s = %d\n", (int) (pn[idx].value));
+            loc_rfout1_csp = ((int) (pn[idx].value));
 
+        } else if (!strcmp("rfout2_csp_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_csp_s = %d\n", (int) (pn[idx].value));
+            loc_rfout2_csp = ((int) (pn[idx].value));
 
-        } else if (!strcmp("tx_amp_rf_gain_f", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_amp_rf_gain_f = %lf\n", p[idx].value);
-            loc_tx_amp_rf_gain = p[idx].value;
-
-        } else if (!strcmp("tx_mod_osc_mag_f", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_mod_osc_mag_f = %lf\n", p[idx].value);
-            loc_tx_mod_osc_mag = p[idx].value;
-
-
-        } else if (!strcmp("tx_muxin_gain_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_muxin_gain_s = %d\n", p[idx].value);
-            loc_tx_muxin_gain = p[idx].value;
-
-        } else if (!strcmp("rx_muxin_gain_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_gain_s = %d\n", p[idx].value);
-            loc_rx_muxin_gain = p[idx].value;
-
-        } else if (!strcmp("tx_qrg_sel_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_qrg_sel_s = %d\n", (int) (p[idx].value));
-            loc_tx_qrg_sel = ((int) (p[idx].value));
-
-        } else if (!strcmp("rx_qrg_sel_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_qrg_sel_s = %d\n", (int) (p[idx].value));
-            loc_rx_qrg_sel = ((int) (p[idx].value));
+        } else if (!strcmp("rx_muxin_src_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_src_s = %d\n", (int) (pn[idx].value));
+            loc_rx_muxin_src = ((int) (pn[idx].value));
 
 
-        } else if (!strcmp("rx_car_osc_qrg_f", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", p[idx].value);
-            loc_rx_car_osc_qrg = p[idx].value;
+        } else if (!strcmp("tx_car_osc_qrg_f", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_qrg_f = %lf\n", pn[idx].value);
 
-        } else if (!strcmp("rfout1_term_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_term_s = %d\n", (int) (p[idx].value));
-            loc_rfout1_term = ((int) (p[idx].value));
+            loc_tx_car_osc_qrg = pn[idx].value;
+            p_tx_car_osc_qrg_idx = idx;
 
-        } else if (!strcmp("rfout2_term_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_term_s = %d\n", (int) (p[idx].value));
-            loc_rfout2_term = ((int) (p[idx].value));
+        } else if (!strcmp("tx_mod_osc_qrg_f", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_mod_osc_qrg_f = %lf\n", pn[idx].value);
+            loc_tx_mod_osc_qrg = pn[idx].value;
 
-        } else if (!strcmp("qrg_inc_s", p[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got qrg_inc_s = %d\n", (int) (p[idx].value));
-            loc_qrg_inc = ((int) (p[idx].value));
+
+        } else if (!strcmp("tx_amp_rf_gain_f", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_amp_rf_gain_f = %lf\n", pn[idx].value);
+            loc_tx_amp_rf_gain = pn[idx].value;
+
+        } else if (!strcmp("tx_mod_osc_mag_f", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_mod_osc_mag_f = %lf\n", pn[idx].value);
+            loc_tx_mod_osc_mag = pn[idx].value;
+
+
+        } else if (!strcmp("tx_muxin_gain_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_muxin_gain_s = %d\n", pn[idx].value);
+            loc_tx_muxin_gain = pn[idx].value;
+
+        } else if (!strcmp("rx_muxin_gain_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_gain_s = %d\n", pn[idx].value);
+            loc_rx_muxin_gain = pn[idx].value;
+
+        } else if (!strcmp("tx_qrg_sel_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_qrg_sel_s = %d\n", (int) (pn[idx].value));
+            loc_tx_qrg_sel = ((int) (pn[idx].value));
+
+        } else if (!strcmp("rx_qrg_sel_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_qrg_sel_s = %d\n", (int) (pn[idx].value));
+            loc_rx_qrg_sel = ((int) (pn[idx].value));
+
+
+        } else if (!strcmp("rx_car_osc_qrg_f", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", pn[idx].value);
+            loc_rx_car_osc_qrg = pn[idx].value;
+            p_rx_car_osc_qrg_idx = idx;
+
+        } else if (!strcmp("rfout1_term_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_term_s = %d\n", (int) (pn[idx].value));
+            loc_rfout1_term = ((int) (pn[idx].value));
+
+        } else if (!strcmp("rfout2_term_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout2_term_s = %d\n", (int) (pn[idx].value));
+            loc_rfout2_term = ((int) (pn[idx].value));
+
+        } else if (!strcmp("qrg_inc_s", pn[idx].name)) {
+            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got qrg_inc_s = %d\n", (int) (pn[idx].value));
+            loc_qrg_inc = ((int) (pn[idx].value));
         }  // else if ()
     }  // for ()
 
@@ -354,10 +358,26 @@ int fpga_rb_update_all_params(rb_app_params_t* p)
                     loc_tx_mod_osc_mag,
                     loc_tx_muxin_gain,
                     loc_rx_muxin_gain,
-					loc_tx_qrg_sel,
-					loc_rx_qrg_sel,
+                    loc_tx_qrg_sel,
+                    loc_rx_qrg_sel,
                     loc_rx_car_osc_qrg,
-					loc_qrg_inc);
+                    loc_qrg_inc);
+        }
+    }
+
+    /* get current FPGA settings */
+    {
+        fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings: loc_rb_run = %d, p_tx_car_osc_qrg_idx = %d, p_rx_car_osc_qrg_idx = %d\n", loc_rb_run, p_tx_car_osc_qrg_idx, p_rx_car_osc_qrg_idx);
+          fpga_rb_get_ctrl(
+                    &loc_RD_tx_car_osc_qrg,
+                    &loc_RD_rx_car_osc_qrg,
+                    loc_tx_car_osc_qrg,
+                    loc_rx_car_osc_qrg);
+          if (p_tx_car_osc_qrg_idx >= 0) {  // writing back to the new data-set
+              pn[p_tx_car_osc_qrg_idx].value = loc_RD_tx_car_osc_qrg;
+          }
+          if (p_rx_car_osc_qrg_idx >= 0) {
+            pn[p_rx_car_osc_qrg_idx].value = loc_RD_rx_car_osc_qrg;
         }
     }
 
@@ -381,9 +401,11 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
     int rx_car_osc_qrg_inc = 50;
 
     if (tx_qrg_sel) {
+      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting tx_car_osc_qrg_inc = %+3d, old = %+3d\n", qrg_inc, tx_car_osc_qrg_inc);
       tx_car_osc_qrg_inc = qrg_inc;
     }
     if (rx_qrg_sel) {
+      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting rx_car_osc_qrg_inc = %+3d, old = %+3d\n", qrg_inc, rx_car_osc_qrg_inc);
       rx_car_osc_qrg_inc = qrg_inc;
     }
 
@@ -587,6 +609,10 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
             }
             break;
 
+            default:
+                fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                             // CW mode keeps oscillator on QRG frequency
+                fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                     // CW mode keeps scanner active
+
             }  // switch (tx_modtyp)
         }  // if (tx_modsrc != RB_MODSRC_NONE)
 
@@ -743,6 +769,10 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         }
         break;
 
+        default:
+            fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                            // no need for oscillator to run
+            fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(50);                                         // no need for oscillator to scan
+
         }  // switch (rx_modtyp)
 
 
@@ -762,6 +792,33 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 
         fpga_rb_reset();                                                                                   // control: turn off all streams into TX_CAR_OSC and TX_CAR_OSC mixer
     }
+}
+
+
+/*----------------------------------------------------------------------------*/
+int fpga_rb_get_ctrl(double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg,
+                     double  loc_tx_car_osc_qrg,    double  loc_rx_car_osc_qrg)
+{
+    int bf = 0b00;
+
+    fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: requesting current FPGA data ...\n");
+
+    if (fpga_rb_get_tx_car_osc_qrg_inc()) {
+        *loc_RD_tx_car_osc_qrg = fpga_rb_get_tx_car_osc_qrg();
+        bf |= 0b10;
+    } else {
+        *loc_RD_tx_car_osc_qrg = loc_tx_car_osc_qrg;
+    }
+
+    if (fpga_rb_get_rx_car_osc_qrg_inc()) {
+        *loc_RD_rx_car_osc_qrg = fpga_rb_get_rx_car_osc_qrg();
+        bf |= 0b01;
+    } else {
+        *loc_RD_rx_car_osc_qrg = loc_rx_car_osc_qrg;
+    }
+
+    fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: ... bf = 0x%1x, tx_car_osc_qrg = %lf, rx_car_osc_qrg = %lf\n", bf, *loc_RD_tx_car_osc_qrg, *loc_RD_rx_car_osc_qrg);
+    return bf;
 }
 
 
@@ -890,11 +947,11 @@ void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg)
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    //fprintf(stderr, "INFO - fpga_rb_set_tx_car_osc_qrg__4mod_none_ssb_am_pm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg=%lf)\n",
-    //        qrg,
-    //        bf_hi,
-    //        bf_lo,
-    //        tx_car_osc_qrg);
+    fprintf(stderr, "!11!INFO - fpga_rb_set_tx_car_osc_qrg__4mod_none_ssb_am_pm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg=%lf)\n",
+            qrg,
+            bf_hi,
+            bf_lo,
+            tx_car_osc_qrg);
 
     g_fpga_rb_reg_mem->tx_car_osc_inc_lo = bf_lo;
     g_fpga_rb_reg_mem->tx_car_osc_inc_hi = bf_hi;
@@ -903,9 +960,81 @@ void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg)
 }
 
 /*----------------------------------------------------------------------------*/
+double fpga_rb_get_tx_car_osc_qrg()
+{
+    int64_t bitfield;
+    bitfield  =            g_fpga_rb_reg_mem->tx_car_osc_inc_lo;
+    bitfield |= ((int64_t) g_fpga_rb_reg_mem->tx_car_osc_inc_hi) << 32;
+
+    double tx_car_osc_qrg = (((double) bitfield) * 125e6) / ((double) (1ULL << 48));
+    fprintf(stderr, "!12!INFO - fpga_rb_get_tx_car_osc_qrg: read tx_car_osc_qrg = %f, bitfield = %lld\n", tx_car_osc_qrg, bitfield);
+    return tx_car_osc_qrg;
+}
+
+/*----------------------------------------------------------------------------*/
 void fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(int tx_car_osc_qrg_inc)
 {
-// TODO
+    const double maxDev   = 10000.0;
+    const double dynamic  = 3.0;
+    double       hzPerSec = ((tx_car_osc_qrg_inc - 50) / 50.0);
+    int          neg      = 0;
+
+    if (fabs(hzPerSec) < 0.1) {  // middle-range is inactive
+        fprintf(stderr, "!13!INFO - fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm: STOPPING SCANNER <-- mid-range\n");
+        g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo = 0;
+        g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi = 0;
+        return;
+    }
+
+    if (hzPerSec < 0.0) {
+        hzPerSec = -hzPerSec;
+        neg = 1;
+    }
+
+    hzPerSec *= dynamic;
+    hzPerSec -= dynamic;
+
+    hzPerSec = maxDev * pow(10.0, hzPerSec);
+
+    int64_t bitfield = hzPerSec * ((1ULL << 48) / 125e6) / 200e3;
+    if (neg) {
+        bitfield = ~bitfield;
+    }
+    uint32_t bf_hi = (uint32_t) (bitfield >> 32);
+    uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
+
+    fprintf(stderr, "!13!INFO - fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm: (hzPerSec=%lf, bitfield=%lld, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg_inc=%d%%)\n",
+            hzPerSec,
+            bitfield,
+            bf_hi,
+            bf_lo,
+            tx_car_osc_qrg_inc);
+
+    g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo = bf_lo;
+    g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi = bf_hi;
+}
+
+/*----------------------------------------------------------------------------*/
+double fpga_rb_get_tx_car_osc_qrg_inc()
+{
+    int neg            = 0;
+    int64_t bitfield   =            g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo;
+    bitfield          |= ((int64_t) g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi) << 32;
+    if (!bitfield) {
+        return 0.0;
+    }
+
+    if (bitfield < 0) {
+        neg = 1;
+        bitfield = ~bitfield;
+    }
+
+    double tx_car_osc_qrg_inc = (((double) bitfield) * 125e6 * 200e3) / ((double) (1ULL << 48));
+    if (neg) {
+        tx_car_osc_qrg_inc = -tx_car_osc_qrg_inc;
+    }
+    fprintf(stderr, "!14!INFO - fpga_rb_get_tx_car_osc_qrg_inc: read tx_car_osc_qrg_inc = %f Hz/s, bitfield=%lld\n", tx_car_osc_qrg_inc, bitfield);
+    return tx_car_osc_qrg_inc;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -973,16 +1102,94 @@ void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg)
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    //fprintf(stderr, "INFO - fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg=%lf)\n",
-    //        qrg,
-    //        bf_hi,
-    //        bf_lo,
-    //        rx_car_osc_qrg);
+    fprintf(stderr, "!21!INFO - fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg=%lf)\n",
+            qrg,
+            bf_hi,
+            bf_lo,
+            rx_car_osc_qrg);
 
     g_fpga_rb_reg_mem->rx_car_osc_inc_lo = bf_lo;
     g_fpga_rb_reg_mem->rx_car_osc_inc_hi = bf_hi;
     g_fpga_rb_reg_mem->rx_car_osc_ofs_lo = 0UL;                                                            // no carrier phase offset
     g_fpga_rb_reg_mem->rx_car_osc_ofs_hi = 0UL;                                                            // no carrier phase offset
+}
+
+/*----------------------------------------------------------------------------*/
+double fpga_rb_get_rx_car_osc_qrg()
+{
+    int64_t bitfield;
+    bitfield  =            g_fpga_rb_reg_mem->rx_car_osc_inc_lo;
+    bitfield |= ((int64_t) g_fpga_rb_reg_mem->rx_car_osc_inc_hi) << 32;
+
+    double rx_car_osc_qrg = (((double) bitfield) * 125e6) / ((double) (1ULL << 48));
+    fprintf(stderr, "!22!INFO - fpga_rb_get_rx_car_osc_qrg: read rx_car_osc_qrg = %f, bitfield = %lld\n", rx_car_osc_qrg, bitfield);
+    return rx_car_osc_qrg;
+}
+
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(int rx_car_osc_qrg_inc)
+{
+    const double maxDev   = 10000.0;
+    const double dynamic  = 3.0;
+    double       hzPerSec = ((rx_car_osc_qrg_inc - 50) / 50.0);
+    int          neg      = 0;
+
+    if (fabs(hzPerSec) < 0.1) {  // middle-range is inactive
+        fprintf(stderr, "!23!INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: STOPPING SCANNER <-- mid-range\n");
+        g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo = 0;
+        g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi = 0;
+        return;
+    }
+
+    if (hzPerSec < 0.0) {
+        hzPerSec = -hzPerSec;
+        neg = 1;
+    }
+
+    hzPerSec *= dynamic;
+    hzPerSec -= dynamic;
+
+    hzPerSec = maxDev * pow(10.0, hzPerSec);
+
+    int64_t bitfield = (hzPerSec * (1ULL << 48) / 125e6) / 200e3;
+    if (neg) {
+        bitfield = ~bitfield;
+    }
+    uint32_t bf_hi = (uint32_t) (bitfield >> 32);
+    uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
+
+    fprintf(stderr, "!23!INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: (hzPerSec=%lf, bitfield=%lld, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg_inc=%d%%)\n",
+            hzPerSec,
+            bitfield,
+            bf_hi,
+            bf_lo,
+            rx_car_osc_qrg_inc);
+
+    g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_lo = bf_lo;
+    g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_hi = bf_hi;
+}
+
+/*----------------------------------------------------------------------------*/
+double fpga_rb_get_rx_car_osc_qrg_inc()
+{
+    int neg            = 0;
+    int64_t bitfield   =            g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_lo;
+    bitfield          |= ((int64_t) g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_hi) << 32;
+    if (!bitfield) {
+        return 0.0;
+    }
+
+    if (bitfield < 0) {
+        neg = 1;
+        bitfield = ~bitfield;
+    }
+
+    double rx_car_osc_qrg_inc = (((double) bitfield) * 125e6 * 200e3) / ((double) (1ULL << 48));
+    if (neg) {
+        rx_car_osc_qrg_inc = -rx_car_osc_qrg_inc;
+    }
+    fprintf(stderr, "!24!INFO - fpga_rb_get_rx_car_osc_qrg_inc: read rx_car_osc_qrg_inc = %f Hz/s, bitfield=%lld\n", rx_car_osc_qrg_inc, bitfield);
+    return rx_car_osc_qrg_inc;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1010,12 +1217,6 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg)
     g_fpga_rb_reg_mem->rx_mod_osc_inc_hi = bf_hi;
     g_fpga_rb_reg_mem->rx_mod_osc_ofs_lo = 0UL;                                                            // no carrier phase offset
     g_fpga_rb_reg_mem->rx_mod_osc_ofs_hi = 0UL;                                                            // no carrier phase offset
-}
-
-/*----------------------------------------------------------------------------*/
-void fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(int rx_car_osc_qrg_inc)
-{
-// TODO
 }
 
 /*----------------------------------------------------------------------------*/

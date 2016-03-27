@@ -131,7 +131,7 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
         "rfout2_term_s",            0.0,   1,  0, 0.0,      1.0  },
 
     { /* Frequency QRG increment range controller - transport_pktIdx 6 */
-        "qrg_inc_s",                0.0,   1,  0, 0.0,    100.0  },
+        "qrg_inc_s",               50.0,   1,  0, 0.0,    100.0  },
 
 
     { /* has to be last entry */
