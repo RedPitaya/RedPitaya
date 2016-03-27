@@ -337,6 +337,12 @@
 // Page onload event handler
 $(function() {
 
+    var reloaded = $.cookie("scpi_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("scpi_forced_reload", "true");
+        window.location.reload(true);
+    }
   // Process clicks on top menu buttons
   $('#OSC_RUN').on('click', function(ev) {
     ev.preventDefault();

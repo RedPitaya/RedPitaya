@@ -2,6 +2,13 @@
 //-------------------------------------------------
 
 (function($) {
+
+    var reloaded = $.cookie("main_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("main_forced_reload", "true");
+        window.location.reload(true);
+    }
     var apps = [];
 
     placeElements = function() {
