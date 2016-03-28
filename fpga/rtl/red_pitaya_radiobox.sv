@@ -1170,7 +1170,7 @@ wire [ 47: 0] tx_car_osc_inc_next;
 rb_addsub_48M48 i_rb_tx_osc_inc_accu_addsub (
   // global signals
   .CLK                  ( clk_adc_125mhz            ),  // global 125 MHz clock
-  .CE                   ( rb_pwr_tx_OSC_clken       ),  // power down when needed to
+  .CE                   ( rb_clk_en                 ),  // power down when needed to
 
   .ADD                  ( 1'b1                      ),  // ADD
   .A                    ( tx_car_osc_inc            ),  // current TX_CAR_OSC_INC
@@ -1329,7 +1329,7 @@ wire [ 47: 0] rx_car_osc_inc_next;
 rb_addsub_48M48 i_rb_rx_car_osc_inc_accu_addsub (
   // global signals
   .CLK                  ( clk_adc_125mhz            ),  // global 125 MHz clock
-  .CE                   ( rb_pwr_rx_CAR_clken       ),  // power down when needed to
+  .CE                   ( rb_clk_en                 ),  // power down when needed to
 
   .ADD                  ( 1'b1                      ),  // ADD
   .A                    ( rx_car_osc_inc            ),  // current RX_CAR_OSC_INC
@@ -3497,8 +3497,6 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_TX_MUXIN_SRC]              <= 32'h00000000;
    regs[REG_RW_RB_TX_MUXIN_GAIN]             <= 32'h00000000;
    regs[REG_RW_RB_TX_MUXIN_OFS]              <= 32'h00000000;
-   regs[REG_RW_RB_TX_CAR_OSC_INC_SCNR_LO]    <= 32'h00000000;
-   regs[REG_RW_RB_TX_CAR_OSC_INC_SCNR_HI]    <= 32'h00000000;
    regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_LO] <= 32'h00000000;
    regs[REG_RW_RB_RX_CAR_CALC_WEAVER_INC_HI] <= 32'h00000000;
    regs[REG_RW_RB_RX_CAR_OSC_INC_LO]         <= 32'h00000000;
