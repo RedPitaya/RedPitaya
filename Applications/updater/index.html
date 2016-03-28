@@ -20,21 +20,16 @@
     <script src="js/jquery-ui.min.js"></script>
     <script src="js/jquery.ui.touch-punch.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.flot.js"></script>
     <script src="js/jquery.mousewheel.min.js"></script>
     <script src="js/fastclick.min.js"></script>
-    <script src="js/jquery.simulate.js"></script>
-    <script src="js/zlib_and_gzip.min.js"></script>
     <script src="js/jquery.cookie.js"></script>
     <script src="js/scope.js?3"></script>
     <script src="../assets/analytics-core.js"></script>
     <script src="js/analytics-main.js"></script>
     <script src="js/jquery.browser.js"></script>
-
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
-
     <script src="../assets/offline.min.js"></script>
     <script src="../assets/ui.js"></script>
     <script src="../assets/onlinecheck.js"></script>
@@ -42,7 +37,6 @@
     <script src="../assets/popupstack.js"></script>
     <script src="../assets/jquery.browser.js"></script>
     <link href="../assets/popupstack.css" rel="stylesheet" type="text/css" />
-
 </head>
 
 <body>
@@ -64,23 +58,42 @@
                             <img class="back-btn" src="img/arrow_nav_left.png">
                         </a>
                         <img class="logo" width=110 src="img/logo.png">
-						</div>
-                        <div style="font-size: 14pt; color: white; text-align:center;">
-								RedPitaya update wizard
-						</div>
+                    </div>
+                    <div style="font-size: 14pt; color: white; text-align:center;">
+                        RedPitaya update wizard
+                    </div>
                 </div>
             </div>
             <div id="global_container" style="position: relative;">
                 <div id="main">
                     <div class="left-scpi">
                         <div class="left-content-scpi" style="font-size: 18pt; color: white;">
-                            <ul>
-                                <li id="check_inet">Step 1. Checking Internet connetion on RedPitaya</li>
-                                <li id="check_upd">Step 2. Checking for updates</li>
-                                <li id="download">Step 3. Downloading ecosystem update</li>
-                                <li id="apply">Step 4. Applying changes</li>
-                                <li id="run">Step 5. Preparing to run</li>
-                            </ul>
+                            <table class="main_table">
+                                <tr id="step_1" class="step">
+                                    <td class="step_desc">Step 1. Checking Internet connetion on RedPitaya</td>
+                                    <td class="step_icon"></td>
+                                </tr>
+                                <tr id="step_2" class="step">
+                                    <td class="step_desc">Step 2. Checking for updates</td>
+                                    <td class="step_icon"></td>
+                                </tr>
+                                <tr id="step_3" class="step">
+                                    <td class="step_desc">Step 3. Downloading ecosystem update</td>
+                                    <td class="step_icon"></td>
+                                </tr>
+                                <tr id="step_4" class="step">
+                                    <td class="step_desc">Step 4. Applying changes</td>
+                                    <td class="step_icon"></td>
+                                </tr>
+                                <tr id="step_5" class="step">
+                                    <td class="step_desc">Step 5. Preparing to run</td>
+                                    <td class="step_icon"></td>
+                                </tr>
+                                <tr id="step_6" class="step">
+                                    <td class="step_desc">Step 6. Done</td>
+                                    <td class="step_icon"></td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
