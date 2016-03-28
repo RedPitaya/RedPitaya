@@ -113,7 +113,11 @@
     )
     .done(function(dresult) {
       if(dresult.status == 'OK') {
-        OSC.connectWebSocket();
+        try {
+            OSC.connectWebSocket();
+        } catch(e) {
+            OSC.startApp();
+        }
       }
       else if(dresult.status == 'ERROR') {
         console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
@@ -256,7 +260,7 @@
       $('#send_report_btn').on('click', function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
-        var subject = "Feedback";
+        var subject = "Feedback Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
@@ -268,9 +272,15 @@
         }).done(function(msg) {
             body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg.responseText);
+            var info_json = msg.responseText
+            var ver = '';
+            try{
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch(e) {};
+
             body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         } );
       });
 
@@ -337,6 +347,12 @@
 // Page onload event handler
 $(function() {
 
+    var reloaded = $.cookie("scpi_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("scpi_forced_reload", "true");
+        window.location.reload(true);
+    }
   // Process clicks on top menu buttons
   $('#OSC_RUN').on('click', function(ev) {
     ev.preventDefault();
