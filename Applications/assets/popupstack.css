@@ -13,6 +13,7 @@
 .shadow_box {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     padding: 10px;
+    z-index: 666;
 }
 
 .close_d {

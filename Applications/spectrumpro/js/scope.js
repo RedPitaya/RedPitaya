@@ -95,7 +95,7 @@
     SPEC.touch = {};
 
     SPEC.datasets = [];
-    SPEC.unexpectedClose = true;
+    SPEC.unexpectedClose = false;
 
     // Starts the spectrum application on server
     SPEC.startApp = function() {
@@ -146,6 +146,7 @@
                     if (SPEC.state.demo_label_visible)
                         $('#get_lic').modal('show');
                 }, 2500);
+                SPEC.unexpectedClose = true;
             };
 
             SPEC.ws.onclose = function() {
@@ -197,6 +198,8 @@
 
             SPEC.ws.onerror = function(ev) {
                 console.log('Websocket error: ', ev);
+                if (!SPEC.unexpectedClose)
+                    SPEC.startApp();
             };
 
             var g_count = 0;

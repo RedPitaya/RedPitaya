@@ -106,7 +106,7 @@
     OSC.inGainValue2 = '-';
     OSC.loaderShow = false;
     OSC.running = true;
-    OSC.unexpectedClose = true;
+    OSC.unexpectedClose = false;
 
     OSC.parameterStack = [];
     OSC.signalStack = [];
@@ -293,6 +293,7 @@
 
                 setTimeout(loadParams, 2000);
                 setTimeout(showLicenseDialog, 2500);
+                OSC.unexpectedClose = true;
             };
 
             OSC.ws.onclose = function() {
@@ -303,7 +304,11 @@
                     $('#feedback_error').modal('show');
             };
 
-            OSC.ws.onerror = function(ev) { console.log('Websocket error: ', ev); };
+            OSC.ws.onerror = function(ev) {
+                if (!OSC.state.socket_opened)
+                  OSC.startApp();
+                console.log('Websocket error: ', ev);
+            };
 
             var last_time = undefined;
             OSC.ws.onmessage = function(ev) {
@@ -1902,7 +1907,7 @@ $(function() {
         window.location.reload(true);
     }
 
-    
+
     $('#calib-input').hide();
     $('#calib-input-text').hide();
     $('#modal-warning').hide();

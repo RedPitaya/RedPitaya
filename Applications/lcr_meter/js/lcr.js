@@ -74,7 +74,7 @@
   	}
 
   	LCR.selected_meas = 1;
-  	LCR.unexpectedClose = true;
+  	LCR.unexpectedClose = false;
 
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
@@ -126,6 +126,7 @@
 					if (LCR.state.demo_label_visible)
 						$('#get_lic').modal('show');
 				}, 2500);
+				LCR.unexpectedClose = true;
 			};
 
 			LCR.ws.onclose = function() {
@@ -169,6 +170,8 @@
 	      });
 
 			LCR.ws.onerror = function(ev) {
+				if (!LCR.unexpectedClose)
+					LCR.startApp();
 	        	console.log('Websocket error: ', ev);
 	      	};
 
