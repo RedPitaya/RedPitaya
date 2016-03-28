@@ -1194,25 +1194,23 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
  * @param[in]  tx_modtyp        2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
  * @param[in]  rx_modtyp        2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
- * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
+ * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  * @param[in]  tx_mod_osc_qrg   Frequency for TX_MOD_OSC in Hz.
- * @param[in]  tx_amp_rf_gain   Vpp of TX_AMP_RF output in mV.
- * @param[in]  tx_mod_osc_mag   Magnitude of TX_MOD_OSC mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
  * @param[in]  tx_muxin_gain    Slider value between 0% (value==0) and 100% (value==80) for the MUXIN range slider, 80 means amplification of 1:1. 80..100 logarithmic amplification.
  * @param[in]  rx_muxin_gain    Slider value between 0% and 100%.
  * @param[in]  tx_qrg_sel       Frequency QRG controller induces into TX frequency: 1==on, 0==off.
  * @param[in]  rx_qrg_sel       Frequency QRG controller induces into RX frequency: 1==on, 0==off.
- * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
+ * @param[in]  tx_amp_rf_gain   Vpp of TX_AMP_RF output in mV.
+ * @param[in]  tx_mod_osc_mag   Magnitude of TX_MOD_OSC mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
+ * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
  * @param[in]  qrg_inc          Frequency QRG range controller increment value, 0%-100%.
  */
-void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int term, int rx_muxin_src,
-        double tx_car_osc_qrg, double tx_mod_osc_qrg,
-        double tx_amp_rf_gain, double tx_mod_osc_mag,
-        int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
-        double rx_car_osc_qrg, int qrg_inc);
+void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int rx_muxin_src,
+        double tx_car_osc_qrg, double rx_car_osc_qrg,
+        double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
+        int tx_amp_rf_gain, int tx_mod_osc_mag, int term, int qrg_inc);
 
 /**
  * @brief Reads FPGA RadioBox automatic registers

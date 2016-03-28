@@ -180,14 +180,14 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
     int    loc_rfout2_csp     = 0;
     int    loc_rx_muxin_src   = 0;
     double loc_tx_car_osc_qrg = 0.0;
+    double loc_rx_car_osc_qrg = 0.0;
     double loc_tx_mod_osc_qrg = 0.0;
-    double loc_tx_amp_rf_gain = 0.0;
-    double loc_tx_mod_osc_mag = 0.0;
+    int    loc_tx_amp_rf_gain = 0;
+    int    loc_tx_mod_osc_mag = 0;
     int    loc_tx_muxin_gain  = 0;
     int    loc_rx_muxin_gain  = 0;
     int    loc_tx_qrg_sel     = 0;
     int    loc_rx_qrg_sel     = 0;
-    double loc_rx_car_osc_qrg = 0.0;
     int    loc_rfout1_term    = 0;
     int    loc_rfout2_term    = 0;
     int    loc_qrg_inc        = 0;
@@ -212,24 +212,22 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         loc_tx_modsrc      = (int) pb[RB_TX_MODSRC].value;
         loc_tx_modtyp      = (int) pb[RB_TX_MODTYP].value;
         loc_rx_modtyp      = (int) pb[RB_RX_MODTYP].value;
-
         loc_led_csp        = (int) pb[RB_LED_CON_SRC_PNT].value;
         loc_rfout1_csp     = (int) pb[RB_RFOUT1_CON_SRC_PNT].value;
         loc_rfout2_csp     = (int) pb[RB_RFOUT2_CON_SRC_PNT].value;
         loc_rx_muxin_src   = (int) pb[RB_RX_MUXIN_SRC].value;
 
         loc_tx_car_osc_qrg = pb[RB_TX_CAR_OSC_QRG].value;
+        loc_rx_car_osc_qrg = pb[RB_RX_CAR_OSC_QRG].value;
+
         loc_tx_mod_osc_qrg = pb[RB_TX_MOD_OSC_QRG].value;
-
-        loc_tx_amp_rf_gain = pb[RB_TX_AMP_RF_GAIN].value;
-        loc_tx_mod_osc_mag = pb[RB_TX_MOD_OSC_MAG].value;
-
         loc_tx_muxin_gain  = (int) pb[RB_TX_MUXIN_GAIN].value;
         loc_rx_muxin_gain  = (int) pb[RB_RX_MUXIN_GAIN].value;
         loc_tx_qrg_sel     = (int) pb[RB_TX_QRG_SEL].value;
         loc_rx_qrg_sel     = (int) pb[RB_RX_QRG_SEL].value;
 
-        loc_rx_car_osc_qrg = pb[RB_RX_CAR_OSC_QRG].value;
+        loc_tx_amp_rf_gain = (int) pb[RB_TX_AMP_RF_GAIN].value;
+        loc_tx_mod_osc_mag = (int) pb[RB_TX_MOD_OSC_MAG].value;
         loc_rfout1_term    = (int) pb[RB_RFOUT1_TERM].value;
         loc_rfout2_term    = (int) pb[RB_RFOUT2_TERM].value;
         loc_qrg_inc        = (int) pb[RB_QRG_INC].value;
@@ -269,7 +267,6 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_modtyp_s = %d\n", (int) (pn[idx].value));
             loc_rx_modtyp = ((int) (pn[idx].value));
 
-
         } else if (!strcmp("rbled_csp_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rbled_csp_s = %d\n", (int) (pn[idx].value));
             loc_led_csp = ((int) (pn[idx].value));
@@ -291,27 +288,31 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_qrg_f = %lf\n", pn[idx].value);
             loc_tx_car_osc_qrg = pn[idx].value;
 
+        } else if (!strcmp("rx_car_osc_qrg_f", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", pn[idx].value);
+            loc_rx_car_osc_qrg = pn[idx].value;
+
+
         } else if (!strcmp("tx_mod_osc_qrg_f", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_mod_osc_qrg_f = %lf\n", pn[idx].value);
             loc_tx_mod_osc_qrg = pn[idx].value;
 
-
-        } else if (!strcmp("tx_amp_rf_gain_f", pn[idx].name)) {
+        } else if (!strcmp("tx_amp_rf_gain_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_amp_rf_gain_f = %lf\n", pn[idx].value);
-            loc_tx_amp_rf_gain = pn[idx].value;
+            loc_tx_amp_rf_gain = ((int) pn[idx].value);
 
-        } else if (!strcmp("tx_mod_osc_mag_f", pn[idx].name)) {
+        } else if (!strcmp("tx_mod_osc_mag_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_mod_osc_mag_f = %lf\n", pn[idx].value);
-            loc_tx_mod_osc_mag = pn[idx].value;
-
+            loc_tx_mod_osc_mag = ((int) pn[idx].value);
 
         } else if (!strcmp("tx_muxin_gain_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_muxin_gain_s = %d\n", pn[idx].value);
-            loc_tx_muxin_gain = pn[idx].value;
+            loc_tx_muxin_gain = ((int) pn[idx].value);
 
         } else if (!strcmp("rx_muxin_gain_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_muxin_gain_s = %d\n", pn[idx].value);
-            loc_rx_muxin_gain = pn[idx].value;
+            loc_rx_muxin_gain = ((int) pn[idx].value);
+
 
         } else if (!strcmp("tx_qrg_sel_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_qrg_sel_s = %d\n", (int) (pn[idx].value));
@@ -320,11 +321,6 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         } else if (!strcmp("rx_qrg_sel_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_qrg_sel_s = %d\n", (int) (pn[idx].value));
             loc_rx_qrg_sel = ((int) (pn[idx].value));
-
-
-        } else if (!strcmp("rx_car_osc_qrg_f", pn[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", pn[idx].value);
-            loc_rx_car_osc_qrg = pn[idx].value;
 
         } else if (!strcmp("rfout1_term_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rfout1_term_s = %d\n", (int) (pn[idx].value));
@@ -343,24 +339,10 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
     /* set the new values */
     {
         if (loc_rb_run) {
-            fpga_rb_set_ctrl(
-                    loc_rb_run,
-                    loc_tx_modsrc,
-                    loc_tx_modtyp,
-                    loc_rx_modtyp,
-                    ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff),
-                    ((loc_rfout2_term & 0x01) << 0x01) | ( loc_rfout1_term & 0x01         ),
-                    loc_rx_muxin_src,
-                    loc_tx_car_osc_qrg,
-                    loc_tx_mod_osc_qrg,
-                    loc_tx_amp_rf_gain,
-                    loc_tx_mod_osc_mag,
-                    loc_tx_muxin_gain,
-                    loc_rx_muxin_gain,
-                    loc_tx_qrg_sel,
-                    loc_rx_qrg_sel,
-                    loc_rx_car_osc_qrg,
-                    loc_qrg_inc);
+            fpga_rb_set_ctrl(loc_rb_run, loc_tx_modsrc, loc_tx_modtyp, loc_rx_modtyp, ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff), loc_rx_muxin_src,
+                    loc_tx_car_osc_qrg, loc_rx_car_osc_qrg,
+                    loc_tx_mod_osc_qrg, loc_tx_muxin_gain, loc_rx_muxin_gain, loc_tx_qrg_sel, loc_rx_qrg_sel,
+                    loc_tx_amp_rf_gain, loc_tx_mod_osc_mag, ((loc_rfout2_term & 0x01) << 0x01) | ( loc_rfout1_term & 0x01), loc_qrg_inc);
         }
     }
 
@@ -446,12 +428,10 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb:
 
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int term, int rx_muxin_src,
-        double tx_car_osc_qrg, double tx_mod_osc_qrg,
-        double tx_amp_rf_gain, double tx_mod_osc_mag,
-        int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
-        double rx_car_osc_qrg, int qrg_inc)
+void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int rx_muxin_src,
+        double tx_car_osc_qrg, double rx_car_osc_qrg,
+        double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
+        int tx_amp_rf_gain, int tx_mod_osc_mag, int term, int qrg_inc)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
     double rfout1_amp_gain = 0.0;
@@ -459,6 +439,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
     int tx_car_osc_qrg_inc = 50;
     int rx_car_osc_qrg_inc = 50;
 
+    //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: checking tx_qrg_sel = %d, rx_qrg_sel = %d, qrg_inc = %d\n", tx_qrg_sel, rx_qrg_sel, qrg_inc);
     if (tx_qrg_sel) {
       //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting tx_car_osc_qrg_inc = %+3d\n", qrg_inc);
       tx_car_osc_qrg_inc = qrg_inc;

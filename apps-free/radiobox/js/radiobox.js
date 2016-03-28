@@ -41,7 +41,7 @@
     app_started: false,
     socket_opened: false,
     pktIdx: 0,
-    pktIdxMax: 6,  // XXX set count of transport frames
+    pktIdxMax: 4,  // XXX set count of transport frames
     doUpdate: false,
     blocking: false,
     sending: false,
@@ -81,24 +81,22 @@
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
     rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-
     rbled_csp_s:          249,  // RB LEDs set to: RX_CAR_OSC_INC frequency value
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
     tx_car_osc_qrg_f:  100000,  // 100 kHz
+    rx_car_osc_qrg_f:  100000,  // 100 kHz
+
     tx_mod_osc_qrg_f:    1000,  //   1 kHz
-
-    tx_amp_rf_gain_f:   200.0,  // 200 mV Vpp @ 50R results to -10 dBm
-    tx_mod_osc_mag_f:   100.0,  // 100 % modulation by default
-
     tx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
     rx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
     tx_qrg_sel_s:           1,  // QRG controller influence TX frequency
     rx_qrg_sel_s:           1,  // QRG controller influence RX frequency
 
-    rx_car_osc_qrg_f:  100000,  // 100 kHz
+    tx_amp_rf_gain_s:     200,  // 200 mV Vpp @ 50R results to -10 dBm
+    tx_mod_osc_mag_s:     100,  // 100 % modulation by default
     rfout1_term_s:          0,  // RF Output 1: '0' open ended, '1' 50 ohms terminated
     rfout2_term_s:          0,  // RF Output 2: '0' open ended, '1' 50 ohms terminated
     qrg_inc_s:             50   // Frequency range controller increment value [0%..100%]
@@ -311,20 +309,23 @@
         $('#'+param_name).val(intVal);
       }
       else if (param_name == 'rx_muxin_src_s') {
-        $('#'+param_name).val(dblVal);
+        $('#'+param_name).val(intVal);
         checkKeyDoEnable(param_name, intVal);
       }
       else if (param_name == 'tx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
+      else if (param_name == 'rx_car_osc_qrg_f') {
+        $('#'+param_name).val(dblVal);
+      }
       else if (param_name == 'tx_mod_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
-      else if (param_name == 'tx_amp_rf_gain_f') {
-        $('#'+param_name).val(dblVal);
+      else if (param_name == 'tx_amp_rf_gain_s') {
+        $('#'+param_name).val(intVal);
       }
-      else if (param_name == 'tx_mod_osc_mag_f') {
-        $('#'+param_name).val(dblVal);
+      else if (param_name == 'tx_mod_osc_mag_s') {
+        $('#'+param_name).val(intVal);
       }
       else if (param_name == 'tx_muxin_gain_s') {
         $('#'+param_name).val(intVal);
@@ -349,9 +350,6 @@
       else if (param_name == 'rx_modtyp_s') {
         $('#'+param_name).val(intVal);
         checkKeyDoEnable(param_name, intVal);
-      }
-      else if (param_name == 'rx_car_osc_qrg_f') {
-        $('#'+param_name).val(dblVal);
       }
       else if (param_name == 'rfout1_term_s') {
         $('#'+param_name).val(intVal);
@@ -1333,9 +1331,7 @@ function cast_params2transport(params, pktIdx)
     if (params['rx_modtyp_s'] !== undefined) {
       transport['rx_modtyp_s'] = params['rx_modtyp_s'];
     }
-    break;
 
-  case 2:
     if (params['rbled_csp_s'] !== undefined) {
       transport['rbled_csp_s'] = params['rbled_csp_s'];
     }
@@ -1353,7 +1349,7 @@ function cast_params2transport(params, pktIdx)
     }
     break;
 
-  case 3:
+  case 2:
     if (params['tx_car_osc_qrg_f'] !== undefined) {
       var quad = cast_1xdouble_to_4xfloat(params['tx_car_osc_qrg_f']);
       transport['SE_tx_car_osc_qrg_f'] = quad.se;
@@ -1362,6 +1358,16 @@ function cast_params2transport(params, pktIdx)
       transport['LO_tx_car_osc_qrg_f'] = quad.lo;
     }
 
+    if (params['rx_car_osc_qrg_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['rx_car_osc_qrg_f']);
+      transport['SE_rx_car_osc_qrg_f'] = quad.se;
+      transport['HI_rx_car_osc_qrg_f'] = quad.hi;
+      transport['MI_rx_car_osc_qrg_f'] = quad.mi;
+      transport['LO_rx_car_osc_qrg_f'] = quad.lo;
+    }
+    break;
+
+  case 3:
     if (params['tx_mod_osc_qrg_f'] !== undefined) {
       var quad = cast_1xdouble_to_4xfloat(params['tx_mod_osc_qrg_f']);
       transport['SE_tx_mod_osc_qrg_f'] = quad.se;
@@ -1369,27 +1375,7 @@ function cast_params2transport(params, pktIdx)
       transport['MI_tx_mod_osc_qrg_f'] = quad.mi;
       transport['LO_tx_mod_osc_qrg_f'] = quad.lo;
     }
-    break;
 
-  case 4:
-    if (params['tx_amp_rf_gain_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['tx_amp_rf_gain_f']);
-      transport['SE_tx_amp_rf_gain_f'] = quad.se;
-      transport['HI_tx_amp_rf_gain_f'] = quad.hi;
-      transport['MI_tx_amp_rf_gain_f'] = quad.mi;
-      transport['LO_tx_amp_rf_gain_f'] = quad.lo;
-    }
-
-    if (params['tx_mod_osc_mag_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['tx_mod_osc_mag_f']);
-      transport['SE_tx_mod_osc_mag_f'] = quad.se;
-      transport['HI_tx_mod_osc_mag_f'] = quad.hi;
-      transport['MI_tx_mod_osc_mag_f'] = quad.mi;
-      transport['LO_tx_mod_osc_mag_f'] = quad.lo;
-    }
-    break;
-
-  case 5:
     if (params['tx_muxin_gain_s'] !== undefined) {
       transport['tx_muxin_gain_s'] = params['tx_muxin_gain_s'];
     }
@@ -1407,13 +1393,13 @@ function cast_params2transport(params, pktIdx)
     }
     break;
 
-  case 6:
-    if (params['rx_car_osc_qrg_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['rx_car_osc_qrg_f']);
-      transport['SE_rx_car_osc_qrg_f'] = quad.se;
-      transport['HI_rx_car_osc_qrg_f'] = quad.hi;
-      transport['MI_rx_car_osc_qrg_f'] = quad.mi;
-      transport['LO_rx_car_osc_qrg_f'] = quad.lo;
+  case 4:
+    if (params['tx_amp_rf_gain_s'] !== undefined) {
+      transport['tx_amp_rf_gain_s'] = params['tx_amp_rf_gain_s'];
+    }
+
+    if (params['tx_mod_osc_mag_s'] !== undefined) {
+      transport['tx_mod_osc_mag_s'] = params['tx_mod_osc_mag_s'];
     }
 
     if (params['rfout1_term_s'] !== undefined) {
@@ -1491,6 +1477,15 @@ function cast_transport2params(transport)
     params['tx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
+  if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_rx_car_osc_qrg_f'];
+    quad.hi = transport['HI_rx_car_osc_qrg_f'];
+    quad.mi = transport['MI_rx_car_osc_qrg_f'];
+    quad.lo = transport['LO_rx_car_osc_qrg_f'];
+    params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
   if (transport['LO_tx_mod_osc_qrg_f'] !== undefined) {
     var quad = { };
     quad.se = transport['SE_tx_mod_osc_qrg_f'];
@@ -1500,22 +1495,12 @@ function cast_transport2params(transport)
     params['tx_mod_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_tx_amp_rf_gain_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_tx_amp_rf_gain_f'];
-    quad.hi = transport['HI_tx_amp_rf_gain_f'];
-    quad.mi = transport['MI_tx_amp_rf_gain_f'];
-    quad.lo = transport['LO_tx_amp_rf_gain_f'];
-    params['tx_amp_rf_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_amp_rf_gain_s'] !== undefined) {
+    params['tx_amp_rf_gain_s'] = transport['tx_amp_rf_gain_s'];
   }
 
-  if (transport['LO_tx_mod_osc_mag_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_tx_mod_osc_mag_f'];
-    quad.hi = transport['HI_tx_mod_osc_mag_f'];
-    quad.mi = transport['MI_tx_mod_osc_mag_f'];
-    quad.lo = transport['LO_tx_mod_osc_mag_f'];
-    params['tx_mod_osc_mag_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_mod_osc_mag_s'] !== undefined) {
+    params['tx_mod_osc_mag_s'] = transport['tx_mod_osc_mag_s'];
   }
 
   if (transport['tx_muxin_gain_s'] !== undefined) {
@@ -1532,15 +1517,6 @@ function cast_transport2params(transport)
 
   if (transport['rx_qrg_sel_s'] !== undefined) {
     params['rx_qrg_sel_s'] = transport['rx_qrg_sel_s'];
-  }
-
-  if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_rx_car_osc_qrg_f'];
-    quad.hi = transport['HI_rx_car_osc_qrg_f'];
-    quad.mi = transport['MI_rx_car_osc_qrg_f'];
-    quad.lo = transport['LO_rx_car_osc_qrg_f'];
-    params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
   if (transport['rfout1_term_s'] !== undefined) {
