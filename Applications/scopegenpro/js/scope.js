@@ -123,7 +123,11 @@
             )
             .done(function(dresult) {
                 if (dresult.status == 'OK') {
-                    OSC.connectWebSocket();
+                    try {
+                        OSC.connectWebSocket();
+                    } catch(e) {
+                        OSC.startApp();
+                    }
                 } else if (dresult.status == 'ERROR') {
                     console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
                     OSC.startApp();
@@ -230,10 +234,10 @@
             $('#get_lic').modal('show');
     }
 
-    var formEmail = function() {
+    OSC.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
-        var subject = "Feedback";
+        var subject = "Feedback Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
@@ -245,17 +249,23 @@
         }).done(function(msg) {
             body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg.responseText);
+            var info_json = msg.responseText
+            var ver = '';
+            try{
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch(e) {};
+
             body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
     }
 
     setInterval(performanceHandler, 1000);
     setInterval(guiHandler, 40);
     setInterval(parametersHandler, 1);
-    $('#send_report_btn').on('click', formEmail);
-    $('#restart_app_btn').on('click', location.reload);
+    // $('#send_report_btn').on('click', formEmail);
+    // $('#restart_app_btn').on('click', location.reload);
 
     // Creates a WebSocket connection with the web server
     OSC.connectWebSocket = function() {
@@ -1884,6 +1894,15 @@
 
 // Page onload event handler
 $(function() {
+
+    var reloaded = $.cookie("osc_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("osc_forced_reload", "true");
+        window.location.reload(true);
+    }
+
+    
     $('#calib-input').hide();
     $('#calib-input-text').hide();
     $('#modal-warning').hide();
@@ -2545,6 +2564,9 @@ $(function() {
     $("#graphs").mousewheel(function(event) {
         OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
     });
+
+    $('#send_report_btn').on('click', function() { OSC.formEmail() });
+    $('#restart_app_btn').on('click', function() { location.reload() });
 
     var laAxesMoving = false;
     var curXPos = 0;
