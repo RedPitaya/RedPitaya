@@ -1162,12 +1162,12 @@ void fpga_rb_reset(void);
  * Being called out of the worker context.
  *
  * @param[inout]  pb     List of base parameters with complete set of data entries.
- * @param[in]     pn     List of parameters to be scanned for marked entries, removes MARKER.
+ * @param[in]     p_pn   List of parameters to be scanned for marked entries, removes MARKER.
  *
  * @retval        0      Success
  * @retval        -1     Failure, parameter list or RB accessor not valid
  */
-int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t* pn);
+int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
 
 
 /**
@@ -1203,12 +1203,8 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
  *
  * @param[out] loc_RD_tx_car_osc_qrg   Current frequency read-out of the TX_CAR_OSC oscillator.
  * @param[out] loc_RD_rx_car_osc_qrg   Current frequency read-out of the RX_CAR_OSC oscillator.
- * @param[in]  loc_tx_car_osc_qrg      Last value of the TX_CAR_OSC oscillator frequency.
- * @param[in]  loc_rx_car_osc_qrg      Last value of the RX_CAR_OSC oscillator frequency.
- * @retval     int                     0b1x: TX changed, 0bx1: RX changed.
  */
-int fpga_rb_get_ctrl(double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg,
-                     double  loc_tx_car_osc_qrg,    double loc_rx_car_osc_qrg);
+void fpga_rb_get_ctrl(double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg);
 
 
 /**

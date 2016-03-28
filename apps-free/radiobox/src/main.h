@@ -257,6 +257,15 @@ int rb_find_parms_index(const rb_app_params_t* src, const char* name);
 
 
 /**
+ * @brief Returns the index number of the params vector for which the name attribute matches
+ *
+ * @param[inout] dst          Destination application parameters, in case of ptr to NULL a new parameter list is generated.
+ * @param[in]    param_name   Param name to be updated or created.
+ * @param[in]    param_value  Value to assign.
+ */
+void rb_update_param(rb_app_params_t** dst, const char* param_name, double param_value);
+
+/**
  * @brief Copies RedPitaya standard parameters vector to RadioBox high definition parameters vector
  *
  * @param[inout] dst_line     RadioBox high definition parameters vector.

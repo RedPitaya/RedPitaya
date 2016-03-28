@@ -1416,7 +1416,12 @@ function cast_params2transport(params, pktIdx)
     }
 
     if (params['qrg_inc_s'] !== undefined) {
-      transport['qrg_inc_s'] = params['qrg_inc_s'];
+      var value = params['qrg_inc_s'];
+      if ((value <= 40) || (value >= 60)) {  // +/-10 %
+        transport['qrg_inc_s'] = value;
+      } else {
+        transport['qrg_inc_s'] = 50;
+      }
     }
     break;
 

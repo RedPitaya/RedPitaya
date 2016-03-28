@@ -362,6 +362,66 @@ int rb_find_parms_index(const rb_app_params_t* src, const char* name)
 
 
 /*----------------------------------------------------------------------------------*/
+void rb_update_param(rb_app_params_t** dst, const char* param_name, double param_value)
+{
+    if (!dst || !param_name) {
+        fprintf(stderr, "ERROR rb_update_param - Bad function arguments received.\n");
+        return;
+    }
+    int l_num_params = 0;
+	int param_name_len = strlen(param_name);
+
+	//fprintf(stderr, "DEBUG rb_update_param - entry ...\n");
+	//fprintf(stderr, "DEBUG rb_update_param - list before modify:\n");
+	//print_rb_params(*dst);
+
+	rb_app_params_t* p_dst = *dst;
+	if (p_dst) {
+		int idx = rb_find_parms_index(p_dst, param_name);
+		if (idx >= 0) {
+			/* update existing entry */
+			double param_value_cor = param_value;
+			if (param_value_cor < p_dst[idx].min_val) {
+				param_value_cor = p_dst[idx].min_val;
+			} else if (param_value_cor > p_dst[idx].max_val) {
+				param_value_cor = p_dst[idx].max_val;
+			}
+			p_dst[idx].value = param_value_cor;
+			//fprintf(stderr, "DEBUG rb_update_param - updating %s with value = %f, bounds corrected value = %f\n", param_name, param_value, param_value_cor);
+
+			//fprintf(stderr, "DEBUG rb_update_param - list after modify:\n");
+			//print_rb_params(*dst);
+			return;
+		}
+
+		/* count entries */
+		while (p_dst[l_num_params].name)
+			l_num_params++;
+
+	} else {
+		l_num_params++;
+	}
+
+	/* re-map to a bigger buffer */
+	//fprintf(stderr, "DEBUG rb_update_param - realloc buffer for %d elements. Old ptr = %p\n", l_num_params + 1, p_dst);
+	p_dst = *dst = realloc(p_dst, sizeof(rb_app_params_t) * (l_num_params + 1));
+	//fprintf(stderr, "DEBUG rb_update_param - realloc buffer for %d elements. New ptr = %p\n", l_num_params + 1, p_dst);
+
+	p_dst[l_num_params].name = malloc(param_name_len + 1);
+	strncpy(p_dst[l_num_params].name, param_name, param_name_len + 1);
+	p_dst[l_num_params].value       = param_value;
+	p_dst[l_num_params].fpga_update = 1;
+	p_dst[l_num_params].read_only   = 0;
+	p_dst[l_num_params].min_val     = 0.0;
+	p_dst[l_num_params].max_val     = 62.5e6;
+	p_dst[l_num_params + 1].name = NULL;
+
+	//fprintf(stderr, "DEBUG rb_update_param - list after modify:\n");
+	//print_rb_params(*dst);
+	//fprintf(stderr, "DEBUG rb_update_param - ... done.\n");
+}
+
+/*----------------------------------------------------------------------------------*/
 void rp2rb_params_value_copy(rb_app_params_t* dst_line, const rp_app_params_t src_line_se, const rp_app_params_t src_line_hi, const rp_app_params_t src_line_mi, const rp_app_params_t src_line_lo)
 {
     dst_line->value          = cast_4xbf_to_1xdouble(src_line_se.value, src_line_hi.value, src_line_mi.value, src_line_lo.value);
