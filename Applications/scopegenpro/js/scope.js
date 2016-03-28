@@ -106,11 +106,12 @@
     OSC.inGainValue2 = '-';
     OSC.loaderShow = false;
     OSC.running = true;
-    OSC.unexpectedClose = true;
+    OSC.unexpectedClose = false;
 
     OSC.parameterStack = [];
     OSC.signalStack = [];
 
+    var g_PacketsRecv = 0;
     var g_CpuLoad = 100.0;
     var g_TotalMemory = 256.0;
     var g_FreeMemory = 256.0;
@@ -122,7 +123,11 @@
             )
             .done(function(dresult) {
                 if (dresult.status == 'OK') {
-                    OSC.connectWebSocket();
+                    try {
+                        OSC.connectWebSocket();
+                    } catch(e) {
+                        OSC.startApp();
+                    }
                 } else if (dresult.status == 'ERROR') {
                     console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
                     OSC.startApp();
@@ -174,15 +179,20 @@
     }
 
     var performanceHandler = function() {
-        if (!OSC.state.socket_opened)
-            return;
-
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
         $('#totalmem_view').text((g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#freemem_view').text((g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#connection_icon').attr('src', '../assets/images/good_net.png');
+        $('#connection_meter').attr('title', 'It seems like your connection is ok');
+        if(g_PacketsRecv < 5 || g_PacketsRecv > 25)
+        {
+            $('#connection_icon').attr('src', '../assets/images/bad_net.png');
+            $('#connection_meter').attr('title', 'Connection problem');
+        }
+        g_PacketsRecv = 0;
 
         OSC.compressed_data = 0;
         OSC.decompressed_data = 0;
@@ -224,7 +234,7 @@
     OSC.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
-        var subject = "Feedback";
+        var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
@@ -236,9 +246,15 @@
         }).done(function(msg) {
             body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg.responseText);
+            var info_json = msg.responseText
+            var ver = '';
+            try{
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch(e) {};
+
             body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
     }
 
@@ -274,6 +290,7 @@
 
                 setTimeout(loadParams, 2000);
                 setTimeout(showLicenseDialog, 2500);
+                OSC.unexpectedClose = true;
             };
 
             OSC.ws.onclose = function() {
@@ -284,7 +301,11 @@
                     $('#feedback_error').modal('show');
             };
 
-            OSC.ws.onerror = function(ev) { console.log('Websocket error: ', ev); };
+            OSC.ws.onerror = function(ev) {
+                if (!OSC.state.socket_opened)
+                  OSC.startApp();
+                console.log('Websocket error: ', ev);
+            };
 
             var last_time = undefined;
             OSC.ws.onmessage = function(ev) {
@@ -314,10 +335,11 @@
                     }
 
                     if (receive.signals)
+                    {
+                        g_PacketsRecv++;
                         OSC.signalStack.push(receive.signals);
-
+                    }
                     OSC.state.processing = false;
-
                 } catch (e) {
                     OSC.state.processing = false;
                     console.log(e);
@@ -1874,6 +1896,15 @@
 
 // Page onload event handler
 $(function() {
+
+    var reloaded = $.cookie("osc_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("osc_forced_reload", "true");
+        window.location.reload(true);
+    }
+
+
     $('#calib-input').hide();
     $('#calib-input-text').hide();
     $('#modal-warning').hide();

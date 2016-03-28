@@ -2,7 +2,14 @@
 //-------------------------------------------------
 
 (function($) {
+
+    var reloaded = $.cookie("main_forced_reload");
+    if (reloaded == undefined || reloaded == "false") {
+        $.cookie("main_forced_reload", "true");
+        window.location.reload(true);
+    }
     var apps = [];
+    var version = '';
 
     placeElements = function() {
         var elemWidth = $('.app-item').outerWidth(true);
@@ -107,8 +114,9 @@
 
     var showFeedBack = function() {
         mail = "support@redpitaya.com";
-        subject = "Feedback";
-        body = "";
+        subject = "Feedback Red Pitaya OS " + version;
+        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
         document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
     }
 
@@ -215,10 +223,12 @@
             url: url
         }).done(function(msg) {
             var info = JSON.parse(msg);
-            $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            version = info['version'];
+            $('#footer').html('Red Pitaya OS ' + info['version']);
         }).fail(function(msg) {
             var info = JSON.parse(msg.responseText);
-            $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            version = info['version'];
+            $('#footer').html('Red Pitaya OS ' + info['version']);
         });
     });
 
@@ -233,7 +243,8 @@
         { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
+        { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://wiki.redpitaya.com/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "wifi_soon", name: "WIFI wizard", description: "Simple way to establish wireless connection with the Red Pitaya", url: "", image: "../assets/images/wifi_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "la_pro_soon", name: "Logic analyzer", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "la_pro_soon", name: "Logic analyser", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 })(jQuery);

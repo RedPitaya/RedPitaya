@@ -74,14 +74,18 @@
   	}
 
   	LCR.selected_meas = 1;
-  	LCR.unexpectedClose = true;
+  	LCR.unexpectedClose = false;
 
   	LCR.startApp = function(){
   		$.get(LCR.config.start_app_url)
   		.done(function(dresult) {
   			if(dresult.status == 'OK'){
-  				LCR.connectWebSocket();
-  				console.log('Socket opened');
+	            try {
+					LCR.connectWebSocket();
+					console.log('Socket opened');
+	            } catch(e) {
+	                LCR.startApp();
+	            }
   			}
   			else if(dresult.status == 'ERROR'){
   				console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
@@ -122,6 +126,7 @@
 					if (LCR.state.demo_label_visible)
 						$('#get_lic').modal('show');
 				}, 2500);
+				LCR.unexpectedClose = true;
 			};
 
 			LCR.ws.onclose = function() {
@@ -136,7 +141,7 @@
       $('#send_report_btn').on('click', function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
-        var subject = "Feedback";
+        var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: LCR.params }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
@@ -148,9 +153,15 @@
         }).done(function(msg) {
             body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg.responseText);
+            var info_json = msg.responseText
+            var ver = '';
+            try{
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch(e) {};
+
             body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         } );
       });
 
@@ -159,6 +170,8 @@
 	      });
 
 			LCR.ws.onerror = function(ev) {
+				if (!LCR.unexpectedClose)
+					LCR.startApp();
 	        	console.log('Websocket error: ', ev);
 	      	};
 
@@ -362,6 +375,12 @@
 
 $(function() {
 
+    var reloaded = $.cookie("lcr_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("lcr_forced_reload", "true");
+        window.location.reload(true);
+    }
 	//Header options. Prevent aggressive firefox caching
 	$("html :checkbox").attr("autocomplete", "off");
 

@@ -95,7 +95,7 @@
     SPEC.touch = {};
 
     SPEC.datasets = [];
-    SPEC.unexpectedClose = true;
+    SPEC.unexpectedClose = false;
 
     // Starts the spectrum application on server
     SPEC.startApp = function() {
@@ -104,7 +104,11 @@
             )
             .done(function(dresult) {
                 if (dresult.status == 'OK') {
-                    SPEC.connectWebSocket();
+                    try {
+                        SPEC.connectWebSocket();
+                    } catch(e) {
+                        SPEC.startApp();
+                    }
                 } else if (dresult.status == 'ERROR') {
                     console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
                     SPEC.startApp();
@@ -142,6 +146,7 @@
                     if (SPEC.state.demo_label_visible)
                         $('#get_lic').modal('show');
                 }, 2500);
+                SPEC.unexpectedClose = true;
             };
 
             SPEC.ws.onclose = function() {
@@ -163,7 +168,7 @@
             $('#send_report_btn').on('click', function() {
                 //var file = new FileReader();
                 var mail = "support@redpitaya.com";
-                var subject = "Feedback";
+                var subject = "Crash report Red Pitaya OS";
                 var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
                 body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: SPEC.params }) + "%0D%0A";
                 body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
@@ -175,9 +180,15 @@
                 }).done(function(msg) {
                     body += " info.json: " + "%0D%0A" + msg.responseText;
                 }).fail(function(msg) {
-                    console.log(msg.responseText);
+                    var info_json = msg.responseText
+                    var ver = '';
+                    try{
+                        var obj = JSON.parse(msg.responseText);
+                        ver = " " + obj['version'];
+                    } catch(e) {};
+
                     body += " info.json: " + "%0D%0A" + msg.responseText;
-                    document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+                    document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
                 });
             });
 
@@ -187,6 +198,8 @@
 
             SPEC.ws.onerror = function(ev) {
                 console.log('Websocket error: ', ev);
+                if (!SPEC.unexpectedClose)
+                    SPEC.startApp();
             };
 
             var g_count = 0;
@@ -1186,6 +1199,13 @@
 
 // Page onload event handler
 $(function() {
+
+    var reloaded = $.cookie("spectrum_forced_reload");
+    if(reloaded == undefined || reloaded == "false")
+    {
+        $.cookie("spectrum_forced_reload", "true");
+        window.location.reload(true);
+    }
     $('button').bind('activeChanged', function() {
         SPEC.exitEditing(true);
     });

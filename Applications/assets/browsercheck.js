@@ -15,7 +15,11 @@
 
     BrowserChecker.checkName = function() {
         BrowserChecker.browserName = $.browser.name;
+        if ($.browser.webkit)
+            return true;
 
+        if (window.chrome || $.browser.chrome)
+            return true;
         if (BrowserChecker.browserName != "chrome" && BrowserChecker.browserName != "mozilla")
             return false;
 
