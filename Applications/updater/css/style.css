@@ -820,5 +820,19 @@ area:hover {
 
 .step_icon
 {
+    text-align: center;
+    vertical-align: center;
     width: 60px;
+}
+
+.step_icon > img
+{
+    width: 40px;
+}
+
+.error_msg
+{
+    font-size: 12px;
+    color:red;
+    display: none;
 }
