@@ -141,7 +141,7 @@
       $('#send_report_btn').on('click', function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
-        var subject = "Feedback Red Pitaya OS";
+        var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: LCR.params }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
