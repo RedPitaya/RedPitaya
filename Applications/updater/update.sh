@@ -18,9 +18,10 @@ for d in `grep -Po 'ecosystem.+\.zip"' download.html | sed -e 's/ecosystem-0.\([
 		max_hash=$hash
 	fi
 done
+grep "ecosystem-0.$max_major-$max_minor-$max_hash.zip" download.html | awk '{print $5}'
 
 rm -rf /tmp/build
 mkdir /tmp/build
-grep "ecosystem-0.$max_major-$max_minor-$max_hash.zip" download.html | awk '{print $5}'
 wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/downloads/ecosystem-0.$max_major-$max_minor-$max_hash.zip" &> /dev/null
-
+cd /tmp/build && unzip build.zip
+#cd /tmp/build && killall nginx && rw && rm -rf /opt/redpitaya/* && cd /tmp/build/ && cp -fr * /opt/redpitaya/ && reboot &
