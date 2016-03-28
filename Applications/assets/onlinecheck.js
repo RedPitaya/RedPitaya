@@ -4,7 +4,7 @@
 //-------------------------------------------------
 
 (function(OnlineChecker, $) {
-    OnlineChecker.online = true;
+    OnlineChecker.online = false;
 
     OnlineChecker.isOnline = function() {
         return OnlineChecker.online;
