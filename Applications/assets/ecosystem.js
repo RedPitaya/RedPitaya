@@ -4,12 +4,12 @@
 (function($) {
 
     var reloaded = $.cookie("main_forced_reload");
-    if(reloaded == undefined || reloaded == "false")
-    {
+    if (reloaded == undefined || reloaded == "false") {
         $.cookie("main_forced_reload", "true");
         window.location.reload(true);
     }
     var apps = [];
+    var version = '';
 
     placeElements = function() {
         var elemWidth = $('.app-item').outerWidth(true);
@@ -114,8 +114,9 @@
 
     var showFeedBack = function() {
         mail = "support@redpitaya.com";
-        subject = "Feedback Red Pitaya OS";
-        body = "";
+        subject = "Feedback Red Pitaya OS " + version;
+        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
         document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
     }
 
@@ -222,10 +223,12 @@
             url: url
         }).done(function(msg) {
             var info = JSON.parse(msg);
-            $('#footer').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            version = info['version'];
+            $('#footer').html('Red Pitaya OS ' + info['version']);
         }).fail(function(msg) {
             var info = JSON.parse(msg.responseText);
-            $('#footer').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            version = info['version'];
+            $('#footer').html('Red Pitaya OS ' + info['version']);
         });
     });
 
