@@ -216,7 +216,6 @@ area:hover {
 }
 
 #main {
-  margin-right: 188px;
 }
 
 #buffer {
@@ -757,7 +756,6 @@ area:hover {
 }
 
 .left-content-scpi {
-    margin-right:120px;
 }
 
 .right-scpi {
@@ -803,4 +801,24 @@ area:hover {
     height: 30px;
     width: 100%;
     white-space: nowrap;
+}
+
+
+.main_table
+{
+    width: 600px;
+    margin: 0px auto;
+    margin-top: 60px;
+}
+
+.step
+{
+    color: #666;
+    margin-bottom: 35px;
+    height: 60px;
+}
+
+.step_icon
+{
+    width: 60px;
 }
