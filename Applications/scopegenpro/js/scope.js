@@ -179,9 +179,6 @@
     }
 
     var performanceHandler = function() {
-        if (!OSC.state.socket_opened)
-            return;
-
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
