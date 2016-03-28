@@ -92,7 +92,7 @@ void fpga_rb_enable(int enable)
         return;
     }
 
-    //fprintf(stderr, "fpga_rb_enable(%d): BEGIN\n", enable);
+    //fprintf(stderr, "DEBUG - fpga_rb_enable(%d): BEGIN\n", enable);
 
     if (enable) {
         // enable RadioBox
@@ -118,7 +118,7 @@ void fpga_rb_enable(int enable)
         g_fpga_rb_reg_mem->ctrl           = 0x00000000;    // disable RB sub-module
     }
 
-    //fprintf(stderr, "fpga_rb_enable(%d): END\n", enable);
+    //fprintf(stderr, "DEBUG - fpga_rb_enable(%d): END\n", enable);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -127,6 +127,8 @@ void fpga_rb_reset(void)
     if (!g_fpga_rb_reg_mem) {
         return;
     }
+
+    //fprintf(stderr, "INFO - fpga_rb_reset\n");
 
     /* reset all registers of the TX_MOD_OSC to get fixed phase of 0 deg */
     g_fpga_rb_reg_mem->tx_mod_osc_inc_lo = 0;
@@ -251,8 +253,9 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
 
         /* Since here process on each known parameter accordingly */
         if (!strcmp("rb_run", pn[idx].name)) {
-            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (pn[idx].value));
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (pn[idx].value));
             loc_rb_run = ((int) (pn[idx].value));
+            fpga_rb_enable(loc_rb_run);
 
         } else if (!strcmp("tx_modsrc_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modsrc_s = %d\n", (int) (pn[idx].value));
@@ -285,7 +288,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
 
 
         } else if (!strcmp("tx_car_osc_qrg_f", pn[idx].name)) {
-            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_qrg_f = %lf\n", pn[idx].value);
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_car_osc_qrg_f = %lf\n", pn[idx].value);
             loc_tx_car_osc_qrg = pn[idx].value;
 
         } else if (!strcmp("tx_mod_osc_qrg_f", pn[idx].name)) {
@@ -320,7 +323,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
 
 
         } else if (!strcmp("rx_car_osc_qrg_f", pn[idx].name)) {
-            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", pn[idx].value);
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rx_car_osc_qrg_f = %lf\n", pn[idx].value);
             loc_rx_car_osc_qrg = pn[idx].value;
 
         } else if (!strcmp("rfout1_term_s", pn[idx].name)) {
@@ -332,14 +335,13 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             loc_rfout2_term = ((int) (pn[idx].value));
 
         } else if (!strcmp("qrg_inc_s", pn[idx].name)) {
-            fprintf(stderr, "INFO - fpga_rb_update_all_params: #got qrg_inc_s = %d\n", (int) (pn[idx].value));
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got qrg_inc_s = %d\n", (int) (pn[idx].value));
             loc_qrg_inc = ((int) (pn[idx].value));
         }  // else if ()
     }  // for ()
 
     /* set the new values */
     {
-        fpga_rb_enable(loc_rb_run);
         if (loc_rb_run) {
             fpga_rb_set_ctrl(
                     loc_rb_run,
@@ -400,11 +402,11 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
     int rx_car_osc_qrg_inc = 50;
 
     if (tx_qrg_sel) {
-      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting tx_car_osc_qrg_inc = %+3d\n", qrg_inc);
+      //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting tx_car_osc_qrg_inc = %+3d\n", qrg_inc);
       tx_car_osc_qrg_inc = qrg_inc;
     }
     if (rx_qrg_sel) {
-      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting rx_car_osc_qrg_inc = %+3d\n", qrg_inc);
+      //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting rx_car_osc_qrg_inc = %+3d\n", qrg_inc);
       rx_car_osc_qrg_inc = qrg_inc;
     }
 
@@ -824,7 +826,7 @@ void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
         double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
-    fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: requesting current FPGA data ...\n");
+    //fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: requesting current FPGA data ...\n");
 
     *loc_RD_tx_car_osc_qrg = fpga_rb_get_tx_car_osc_qrg();
     switch (tx_modtyp) {
@@ -849,7 +851,7 @@ void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
       *loc_RD_rx_car_osc_qrg += ssb_weaver_osc_qrg;
       break;
     }
-    fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: ... tx_car_osc_qrg = %lf, rx_car_osc_qrg = %lf\n", *loc_RD_tx_car_osc_qrg, *loc_RD_rx_car_osc_qrg);
+    //fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: ... tx_car_osc_qrg = %lf, rx_car_osc_qrg = %lf\n", *loc_RD_tx_car_osc_qrg, *loc_RD_rx_car_osc_qrg);
 }
 
 
