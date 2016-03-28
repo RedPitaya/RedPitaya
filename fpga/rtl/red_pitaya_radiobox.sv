@@ -2232,7 +2232,7 @@ else
 
 wire unsigned [ 63: 0] rx_afc_cordic_cart_in = { ~rx_afc_fir_q_reg, rx_afc_fir_i_reg };
 
-wire unsigned [ 63: 0] rx_afc_cordic_polar_out;
+wire          [ 63: 0] rx_afc_cordic_polar_out;
 wire                   rx_afc_cordic_polar_out_vld;
 
 rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
@@ -2249,8 +2249,8 @@ rb_cordic_T_WS_O_SR_32T32_CR_B i_rb_rx_afc_cordic (
   .m_axis_dout_tvalid      ( rx_afc_cordic_polar_out_vld )
 );
 
-wire unsigned [ 31: 0] rx_afc_cordic_polar_out_mag =   rx_afc_cordic_polar_out[31:0];
-wire   signed [ 31: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[63], rx_afc_cordic_polar_out[60:32], 2'b0 };  // -0.999 .. +0.999 represents -180Â° .. +180Â°
+wire   signed [ 31: 0] rx_afc_cordic_polar_out_mag =   rx_afc_cordic_polar_out[31:0];
+wire   signed [ 31: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[63], rx_afc_cordic_polar_out[60:32], 2'b0 };  // -0.999 .. +0.999 represents -180° .. +180°
 
 
 always @(posedge clk_adc_125mhz)
@@ -2515,7 +2515,7 @@ wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 //  RX_MOD_AMENV envelope ouput - strategy: difference to mean value of the magnitude
 
 reg  unsigned [ 47: 0] rx_mod_amenv_accu         = 'b0;                                                         // mean value of magnitue = mean value of AM envelope
-wire unsigned [ 47: 0] rx_mod_amenv_s1_sig_in    = { 16'b0, rx_afc_cordic_polar_out_mag[31:0] };                // magnitude is unsigned
+wire unsigned [ 47: 0] rx_mod_amenv_s1_sig_in    = { 17'b0, rx_afc_cordic_polar_out_mag[30:0] };                // magnitude is signed
 wire unsigned [ 47: 0] rx_mod_amenv_s1_out;
 
 rb_addsub_48M48 i_rb_rx_mod_amenv_accu_s1 (     // mean value - signal integrator
@@ -2563,7 +2563,7 @@ else if (clk_200khz)
 assign regs[REG_RD_RB_RX_SIGNAL_STRENGTH] = rx_mod_amenv_mean[47:32];
 
 wire   signed [ 47: 0] rx_mod_amenv_mean_in   = ~(rx_mod_amenv_mean[47:0]);
-wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 3'b0, rx_afc_cordic_polar_out_mag[31:0], 13'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
+wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 4'b0, rx_afc_cordic_polar_out_mag[30:0], 13'b0 };  // due to integration the mean value is 1/2, compensation by 1 bit is needed
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
 rb_addsub_48M48 i_rb_rx_mod_amenv_accu_mod (    // AM envelope demodulation
@@ -2860,7 +2860,7 @@ else if (led_src_con_pnt && rb_reset_n) begin
 
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
       if (!led_ctr)
-         rb_leds_data <= fct_mag(rx_afc_cordic_polar_out_mag[30:15] - 16'h8000);
+         rb_leds_data <= fct_mag(rx_afc_cordic_polar_out_mag[31:16] - 16'h8000);
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
       if (!led_ctr)
@@ -3104,7 +3104,7 @@ else if (rfout1_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
-      rfout1_amp_in <= (rx_afc_cordic_polar_out_mag[30:15] - 16'h8000);
+      rfout1_amp_in <= (rx_afc_cordic_polar_out_mag[31:16] - 16'h8000);
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
       rfout1_amp_in <= rx_afc_cordic_polar_out_phs[31:16];
@@ -3357,7 +3357,7 @@ else if (rfout2_src_con_pnt && rb_reset_n)
       end
 
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
-      rfout2_amp_in <= (rx_afc_cordic_polar_out_mag[30:15] - 16'h8000);
+      rfout2_amp_in <= (rx_afc_cordic_polar_out_mag[31:16] - 16'h8000);
       end
    RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
       rfout2_amp_in <= rx_afc_cordic_polar_out_phs[31:16];
