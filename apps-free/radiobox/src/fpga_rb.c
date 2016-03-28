@@ -190,10 +190,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
     int    loc_rfout2_term    = 0;
     int    loc_qrg_inc        = 0;
 
-    double loc_RD_tx_car_osc_qrg = 0.0;
-    double loc_RD_rx_car_osc_qrg = 0.0;
-
-    //fprintf(stderr, "DEBUG fpga_rb_update_all_params: BEGIN\n");
+    //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: BEGIN\n");
 
     if (!g_fpga_rb_reg_mem || !pb || !p_pn) {
         fprintf(stderr, "ERROR - fpga_rb_update_all_params: bad parameter (pb=%p), (p_pn=%p) or not init'ed(g=%p)\n", pb, p_pn, g_fpga_rb_reg_mem);
@@ -368,8 +365,13 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
     /* get current FPGA settings */
     {
       if (loc_qrg_inc != 50) {
-        fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings ...\n");
+        double loc_RD_tx_car_osc_qrg = 0.0;
+        double loc_RD_rx_car_osc_qrg = 0.0;
+
+        //fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings ...\n");
         fpga_rb_get_ctrl(
+                    loc_tx_modtyp,
+                    loc_rx_modtyp,
                     &loc_RD_tx_car_osc_qrg,
                     &loc_RD_rx_car_osc_qrg);
 
@@ -378,7 +380,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
       }
     }
 
-    fprintf(stderr, "fpga_rb_update_all_params: END\n");
+    //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: END\n");
     return 0;
 }
 
@@ -398,11 +400,11 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
     int rx_car_osc_qrg_inc = 50;
 
     if (tx_qrg_sel) {
-      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting tx_car_osc_qrg_inc = %+3d, old = %+3d\n", qrg_inc, tx_car_osc_qrg_inc);
+      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting tx_car_osc_qrg_inc = %+3d\n", qrg_inc);
       tx_car_osc_qrg_inc = qrg_inc;
     }
     if (rx_qrg_sel) {
-      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting rx_car_osc_qrg_inc = %+3d, old = %+3d\n", qrg_inc, rx_car_osc_qrg_inc);
+      fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting rx_car_osc_qrg_inc = %+3d\n", qrg_inc);
       rx_car_osc_qrg_inc = qrg_inc;
     }
 
@@ -616,7 +618,9 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
         break;
 
         default:
-          fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                                   // CW mode keeps oscillator on QRG frequency
+          if (tx_car_osc_qrg_inc == 50) {
+            fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                                 // CW mode keeps oscillator on QRG frequency
+          }
           fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                           // CW mode keeps scanner active
 
         }  // switch (tx_modtyp)
@@ -797,30 +801,54 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 
 
     } else {  // else if (rb_run)
-        g_fpga_rb_reg_mem->ctrl &= ~0x10767076;                                                            // TX/RX: turn off all STREAMING, RESET and RESYNC signals
-        g_fpga_rb_reg_mem->tx_muxin_src = 0x00000000;                                                      // TX_MUXIN input off
-        fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(0.0, 0.0);                                                // TX_AMP_RF gain/offset control
-        //fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(0.0);                                              // do not loose current frequency of TX_CAR_OSC
-        fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(50);                                             // TX_CAR_OSC frequency sweep increment, mid-range
-        fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                          // TX_MOD_OSC frequency
-        fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(0.0f, 0.0);                                              // TX_MOD_QMIX gain/offset control
-        g_fpga_rb_reg_mem->rx_muxin_src = 0;                                                               // RX_MUX input off
-        //fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                              // do not loose current frequency of RX_CAR_OSC frequency
-        fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(50);                                             // RX_CAR_OSC frequency sweep increment, mid-range
-        fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                                // RX_CAR_CALC_WEAVER frequency
-        fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(0.0);                                                // RX_MOD_OSC frequency
+      g_fpga_rb_reg_mem->ctrl &= ~0x10767076;                                                              // TX/RX: turn off all STREAMING, RESET and RESYNC signals
+      g_fpga_rb_reg_mem->tx_muxin_src = 0x00000000;                                                        // TX_MUXIN input off
+      fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(0.0, 0.0);                                                  // TX_AMP_RF gain/offset control
+      //fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(0.0);                                                // do not loose current frequency of TX_CAR_OSC
+      fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(50);                                               // TX_CAR_OSC frequency sweep increment, mid-range
+      fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                            // TX_MOD_OSC frequency
+      fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(0.0f, 0.0);                                                // TX_MOD_QMIX gain/offset control
+      g_fpga_rb_reg_mem->rx_muxin_src = 0;                                                                 // RX_MUX input off
+      //fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                                // do not loose current frequency of RX_CAR_OSC frequency
+      fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(50);                                               // RX_CAR_OSC frequency sweep increment, mid-range
+      fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                                  // RX_CAR_CALC_WEAVER frequency
+      fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(0.0);                                                  // RX_MOD_OSC frequency
 
-        //fpga_rb_reset();                                                                                   // control: turn off all streams into TX_CAR_OSC and TX_CAR_OSC mixer
+      //fpga_rb_reset();                                                                                   // control: turn off all streams into TX_CAR_OSC and TX_CAR_OSC mixer
     }
 }
 
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_get_ctrl(double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg)
+void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
+        double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg)
 {
+    const int ssb_weaver_osc_qrg = 1700.0;
     fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: requesting current FPGA data ...\n");
+
     *loc_RD_tx_car_osc_qrg = fpga_rb_get_tx_car_osc_qrg();
+    switch (tx_modtyp) {
+    case RB_TX_MODTYP_USB:
+      *loc_RD_tx_car_osc_qrg -= ssb_weaver_osc_qrg;
+      break;
+
+    case RB_TX_MODTYP_LSB:
+      *loc_RD_tx_car_osc_qrg += ssb_weaver_osc_qrg;
+      break;
+    }
+
     *loc_RD_rx_car_osc_qrg = fpga_rb_get_rx_car_osc_qrg();
+    switch (rx_modtyp) {
+    case RB_RX_MODTYP_USB:
+    case RB_RX_MODTYP_AMSYNC_USB:
+      *loc_RD_rx_car_osc_qrg -= ssb_weaver_osc_qrg;
+      break;
+
+    case RB_TX_MODTYP_LSB:
+    case RB_RX_MODTYP_AMSYNC_LSB:
+      *loc_RD_rx_car_osc_qrg += ssb_weaver_osc_qrg;
+      break;
+    }
     fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: ... tx_car_osc_qrg = %lf, rx_car_osc_qrg = %lf\n", *loc_RD_tx_car_osc_qrg, *loc_RD_rx_car_osc_qrg);
 }
 
@@ -950,11 +978,11 @@ void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg)
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "!11!INFO - fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg=%lf)\n",
-            qrg,
-            bf_hi,
-            bf_lo,
-            tx_car_osc_qrg);
+    //fprintf(stderr, "INFO - fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg=%lf)\n",
+    //        qrg,
+    //        bf_hi,
+    //        bf_lo,
+    //        tx_car_osc_qrg);
 
     g_fpga_rb_reg_mem->tx_car_osc_inc_lo = bf_lo;
     g_fpga_rb_reg_mem->tx_car_osc_inc_hi = bf_hi;
@@ -969,9 +997,9 @@ double fpga_rb_get_tx_car_osc_qrg()
     bitfield  =            g_fpga_rb_reg_mem->tx_car_osc_inc_lo;
     bitfield |= ((int64_t) g_fpga_rb_reg_mem->tx_car_osc_inc_hi) << 32;
 
-    double tx_car_osc_qrg = (((double) bitfield) * 125e6) / ((double) (1ULL << 48));
+    double tx_car_osc_qrg = g_rp_main_calib_params.base_osc125mhz_realhz * (((double) bitfield) / ((double) (1ULL << 48)));
     tx_car_osc_qrg = floor(tx_car_osc_qrg + 0.5);
-    fprintf(stderr, "!12!INFO - fpga_rb_get_tx_car_osc_qrg: read tx_car_osc_qrg = %f, bitfield = %lld\n", tx_car_osc_qrg, bitfield);
+    //fprintf(stderr, "INFO - fpga_rb_get_tx_car_osc_qrg: read tx_car_osc_qrg = %f, bitfield = %lld\n", tx_car_osc_qrg, bitfield);
     return tx_car_osc_qrg;
 }
 
@@ -980,39 +1008,39 @@ void fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(int tx_car_osc_qrg_inc)
 {
     const double maxDev   = 10000.0;
     const double dynamic  = 3.0;
-    double       hzPerSec = ((tx_car_osc_qrg_inc - 50) / 50.0);
+    double       rngctrlr = ((tx_car_osc_qrg_inc - 50) / 50.0);  // [-1.0 .. +1.0]
     int          neg      = 0;
 
-    if (fabs(hzPerSec) < 0.1) {  // middle-range is inactive  +/-10 %
-        fprintf(stderr, "!13!INFO - fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm: STOPPING SCANNER <-- mid-range\n");
+    if (fabs(rngctrlr) < 0.1) {  // middle-range is inactive  +/-10 %
+        //fprintf(stderr, "INFO - fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm: STOPPING SCANNER <-- mid-range\n");
         g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo = 0;
         g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi = 0;
         return;
     }
 
-    if (hzPerSec < 0.0) {
-        hzPerSec = -hzPerSec;
+    if (rngctrlr < 0.0) {
+        rngctrlr = -rngctrlr;
         neg = 1;
     }
 
-    hzPerSec *= dynamic;
-    hzPerSec -= dynamic;
+    rngctrlr *= dynamic;
+    rngctrlr -= dynamic;  // [-dynamic .. 0]
 
-    hzPerSec = maxDev * pow(10.0, hzPerSec);
+    double hzPerSec = maxDev * pow(10.0, rngctrlr);
 
-    int64_t bitfield = hzPerSec * ((1ULL << 48) / 125e6) / 200e3;
+    int64_t bitfield = hzPerSec * ((1ULL << 48) / g_rp_main_calib_params.base_osc125mhz_realhz) / 200e3;
     if (neg) {
         bitfield = ~bitfield;
     }
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "!13!INFO - fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm: (hzPerSec=%lf, bitfield=%lld, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg_inc=%d%%)\n",
-            hzPerSec,
-            bitfield,
-            bf_hi,
-            bf_lo,
-            tx_car_osc_qrg_inc);
+    //fprintf(stderr, "INFO - fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm: (hzPerSec=%lf, bitfield=%lld, HI=0x%08x, LO=0x%08x) <-- in(tx_car_osc_qrg_inc=%d%%)\n",
+    //        hzPerSec,
+    //        bitfield,
+    //        bf_hi,
+    //        bf_lo,
+    //        tx_car_osc_qrg_inc);
 
     g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_lo = bf_lo;
     g_fpga_rb_reg_mem->tx_car_osc_inc_scnr_hi = bf_hi;
@@ -1033,11 +1061,11 @@ double fpga_rb_get_tx_car_osc_qrg_inc()
         bitfield = ~bitfield;
     }
 
-    double tx_car_osc_qrg_inc = (((double) bitfield) * 125e6 * 200e3) / ((double) (1ULL << 48));
+    double tx_car_osc_qrg_inc = (((double) bitfield) * g_rp_main_calib_params.base_osc125mhz_realhz * 200e3) / ((double) (1ULL << 48));
     if (neg) {
         tx_car_osc_qrg_inc = -tx_car_osc_qrg_inc;
     }
-    fprintf(stderr, "!14!INFO - fpga_rb_get_tx_car_osc_qrg_inc: read tx_car_osc_qrg_inc = %f Hz/s, bitfield=%lld\n", tx_car_osc_qrg_inc, bitfield);
+    //fprintf(stderr, "INFO - fpga_rb_get_tx_car_osc_qrg_inc: read tx_car_osc_qrg_inc = %f Hz/s, bitfield=%lld\n", tx_car_osc_qrg_inc, bitfield);
     return tx_car_osc_qrg_inc;
 }
 
@@ -1106,11 +1134,11 @@ void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg)
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "!21!INFO - fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg=%lf)\n",
-            qrg,
-            bf_hi,
-            bf_lo,
-            rx_car_osc_qrg);
+    //fprintf(stderr, "INFO - fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm: (qrg=%lf, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg=%lf)\n",
+    //        qrg,
+    //        bf_hi,
+    //        bf_lo,
+    //        rx_car_osc_qrg);
 
     g_fpga_rb_reg_mem->rx_car_osc_inc_lo = bf_lo;
     g_fpga_rb_reg_mem->rx_car_osc_inc_hi = bf_hi;
@@ -1125,9 +1153,9 @@ double fpga_rb_get_rx_car_osc_qrg()
     bitfield  =            g_fpga_rb_reg_mem->rx_car_osc_inc_lo;
     bitfield |= ((int64_t) g_fpga_rb_reg_mem->rx_car_osc_inc_hi) << 32;
 
-    double rx_car_osc_qrg = (((double) bitfield) * 125e6) / ((double) (1ULL << 48));
+    double rx_car_osc_qrg = g_rp_main_calib_params.base_osc125mhz_realhz * (((double) bitfield) / ((double) (1ULL << 48)));
     rx_car_osc_qrg = floor(rx_car_osc_qrg + 0.5);
-    fprintf(stderr, "!22!INFO - fpga_rb_get_rx_car_osc_qrg: read rx_car_osc_qrg = %f, bitfield = %lld\n", rx_car_osc_qrg, bitfield);
+    //fprintf(stderr, "INFO - fpga_rb_get_rx_car_osc_qrg: read rx_car_osc_qrg = %f, bitfield = %lld\n", rx_car_osc_qrg, bitfield);
     return rx_car_osc_qrg;
 }
 
@@ -1136,39 +1164,39 @@ void fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(int rx_car_osc_qrg_inc)
 {
     const double maxDev   = 10000.0;
     const double dynamic  = 3.0;
-    double       hzPerSec = ((rx_car_osc_qrg_inc - 50) / 50.0);
+    double       rngctrlr = ((rx_car_osc_qrg_inc - 50) / 50.0);  // [-1.0 .. +1.0]
     int          neg      = 0;
 
-    if (fabs(hzPerSec) < 0.1) {  // middle-range is inactive  +/-10 %
-        fprintf(stderr, "!23!INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: STOPPING SCANNER <-- mid-range\n");
+    if (fabs(rngctrlr) < 0.1) {  // middle-range is inactive  +/-10 %
+        //fprintf(stderr, "INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: STOPPING SCANNER <-- mid-range\n");
         g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_lo = 0;
         g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_hi = 0;
         return;
     }
 
-    if (hzPerSec < 0.0) {
-        hzPerSec = -hzPerSec;
+    if (rngctrlr < 0.0) {
+        rngctrlr = -rngctrlr;
         neg = 1;
     }
 
-    hzPerSec *= dynamic;
-    hzPerSec -= dynamic;
+    rngctrlr *= dynamic;
+    rngctrlr -= dynamic;  // [-dynamic .. 0]
 
-    hzPerSec = maxDev * pow(10.0, hzPerSec);
+    double hzPerSec = maxDev * pow(10.0, rngctrlr);
 
-    int64_t bitfield = (hzPerSec * (1ULL << 48) / 125e6) / 200e3;
+    int64_t bitfield = (hzPerSec * (1ULL << 48) / g_rp_main_calib_params.base_osc125mhz_realhz) / 200e3;
     if (neg) {
         bitfield = ~bitfield;
     }
     uint32_t bf_hi = (uint32_t) (bitfield >> 32);
     uint32_t bf_lo = (uint32_t) (bitfield & 0xffffffff);
 
-    fprintf(stderr, "!23!INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: (hzPerSec=%lf, bitfield=%lld, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg_inc=%d%%)\n",
-            hzPerSec,
-            bitfield,
-            bf_hi,
-            bf_lo,
-            rx_car_osc_qrg_inc);
+    //fprintf(stderr, "INFO - fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm: (hzPerSec=%lf, bitfield=%lld, HI=0x%08x, LO=0x%08x) <-- in(rx_car_osc_qrg_inc=%d%%)\n",
+    //        hzPerSec,
+    //        bitfield,
+    //        bf_hi,
+    //        bf_lo,
+    //        rx_car_osc_qrg_inc);
 
     g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_lo = bf_lo;
     g_fpga_rb_reg_mem->rx_car_osc_inc_scnr_hi = bf_hi;
@@ -1189,11 +1217,11 @@ double fpga_rb_get_rx_car_osc_qrg_inc()
         bitfield = ~bitfield;
     }
 
-    double rx_car_osc_qrg_inc = (((double) bitfield) * 125e6 * 200e3) / ((double) (1ULL << 48));
+    double rx_car_osc_qrg_inc = (((double) bitfield) * g_rp_main_calib_params.base_osc125mhz_realhz * 200e3) / ((double) (1ULL << 48));
     if (neg) {
         rx_car_osc_qrg_inc = -rx_car_osc_qrg_inc;
     }
-    fprintf(stderr, "!24!INFO - fpga_rb_get_rx_car_osc_qrg_inc: read rx_car_osc_qrg_inc = %f Hz/s, bitfield=%lld\n", rx_car_osc_qrg_inc, bitfield);
+    //fprintf(stderr, "INFO - fpga_rb_get_rx_car_osc_qrg_inc: read rx_car_osc_qrg_inc = %f Hz/s, bitfield=%lld\n", rx_car_osc_qrg_inc, bitfield);
     return rx_car_osc_qrg_inc;
 }
 

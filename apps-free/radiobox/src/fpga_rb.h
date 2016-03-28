@@ -1175,8 +1175,8 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
  *
  * @param[in]  rb_run           RadioBox application  0: disabled, else: enabled.
  * @param[in]  tx_modsrc        0==(none), 1==RF Input 1, 2==RF Input 2, 4==EXP AI0, 5==EXP AI1, 6==EXP AI2, 7==EXP AI3, 15==TX_MOD_OSC
- * @param[in]  tx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
- * @param[in]  rx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
+ * @param[in]  tx_modtyp        2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
+ * @param[in]  rx_modtyp        2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
  * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
@@ -1201,10 +1201,13 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
 /**
  * @brief Reads FPGA RadioBox automatic registers
  *
+ * @param[in]  tx_modtyp               2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
+ * @param[in]  rx_modtyp               2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
  * @param[out] loc_RD_tx_car_osc_qrg   Current frequency read-out of the TX_CAR_OSC oscillator.
  * @param[out] loc_RD_rx_car_osc_qrg   Current frequency read-out of the RX_CAR_OSC oscillator.
  */
-void fpga_rb_get_ctrl(double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg);
+void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
+        double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg);
 
 
 /**
