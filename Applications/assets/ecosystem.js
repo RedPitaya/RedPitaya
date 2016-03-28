@@ -215,10 +215,10 @@
             url: url
         }).done(function(msg) {
             var info = JSON.parse(msg);
-            $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            $('#footer').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
         }).fail(function(msg) {
             var info = JSON.parse(msg.responseText);
-            $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            $('#footer').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
         });
     });
 
@@ -234,6 +234,6 @@
         { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
         { id: "wifi_soon", name: "WIFI wizard", description: "Simple way to establish wireless connection with the Red Pitaya", url: "", image: "../assets/images/wifi_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "la_pro_soon", name: "Logic analyzer", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "la_pro_soon", name: "Logic analyser", description: "Logic analyzer 125Msps with automatic I2C, SPI, UART decoding", url: "", image: "../assets/images/logic_analyzer_soon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 })(jQuery);
