@@ -364,26 +364,84 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         }
     }
 
-    /* get current FPGA settings */
-    {
-      if (loc_qrg_inc != 50) {
-        double loc_RD_tx_car_osc_qrg = 0.0;
-        double loc_RD_rx_car_osc_qrg = 0.0;
-
-        //fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings ...\n");
-        fpga_rb_get_ctrl(
-                    loc_tx_modtyp,
-                    loc_rx_modtyp,
-                    &loc_RD_tx_car_osc_qrg,
-                    &loc_RD_rx_car_osc_qrg);
-
-        rb_update_param(p_pn, "tx_car_osc_qrg_f", loc_RD_tx_car_osc_qrg);
-        rb_update_param(p_pn, "rx_car_osc_qrg_f", loc_RD_rx_car_osc_qrg);
-      }
-    }
-
     //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: END\n");
     return 0;
+}
+
+/*----------------------------------------------------------------------------*/
+int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb: base data of complete data set, pn: new overwriting data sets
+{
+  int    state              = 0;
+  int    loc_tx_modtyp      = 0;
+  int    loc_rx_modtyp      = 0;
+  int    loc_qrg_inc        = 0;
+
+  //fprintf(stderr, "DEBUG - fpga_rb_get_fpga_params: BEGIN\n");
+
+  if (!g_fpga_rb_reg_mem || !pb || !p_pn) {
+    fprintf(stderr, "ERROR - fpga_rb_get_fpga_params: bad parameter (pb=%p), (p_pn=%p) or not init'ed(g=%p)\n", pb, p_pn, g_fpga_rb_reg_mem);
+    return -1;
+  }
+  rb_app_params_t* pn = *p_pn;
+  if (!pn) {
+    fprintf(stderr, "ERROR - fpga_rb_get_fpga_params: bad parameter (pn=%p)\n", pn);
+    return -2;
+  }
+
+  /* Get base parameters from the worker */
+  {
+      //fprintf(stderr, "DEBUG - fpga_rb_get_fpga_params: getting local data: ...\n");
+      //print_rb_params(pb);
+      loc_tx_modtyp      = (int) pb[RB_TX_MODTYP].value;
+      loc_rx_modtyp      = (int) pb[RB_RX_MODTYP].value;
+      loc_qrg_inc        = (int) pb[RB_QRG_INC].value;
+      //fprintf(stderr, "DEBUG - fpga_rb_get_fpga_params: ... done.\n");
+  }
+
+  /* Get current parameters from the worker */
+  {
+    int idx;
+    for (idx = 0; pn[idx].name; idx++) {
+      if (!(pn[idx].name)) {
+        break;  // end of list
+
+      } else if (!strcmp("tx_modtyp_s", pn[idx].name)) {
+        //fprintf(stderr, "INFO - fpga_rb_get_fpga_params: #got tx_modtyp_s = %d, was = %d\n", (int) (pn[idx].value), loc_tx_modtyp);
+        loc_tx_modtyp = ((int) (pn[idx].value));
+
+      } else if (!strcmp("rx_modtyp_s", pn[idx].name)) {
+        //fprintf(stderr, "INFO - fpga_rb_get_fpga_params: #got rx_modtyp_s = %d, was = %d\n", (int) (pn[idx].value), loc_rx_modtyp);
+        loc_rx_modtyp = ((int) (pn[idx].value));
+
+      } else if (!strcmp("qrg_inc_s", pn[idx].name)) {
+        //fprintf(stderr, "INFO - fpga_rb_get_fpga_params: #got qrg_inc_s = %d, was = %d\n", (int) (pn[idx].value), loc_qrg_inc);
+        loc_qrg_inc = ((int) (pn[idx].value));
+      }  // else if ()
+    }  // for ()
+  }
+
+  /* get current FPGA settings */
+  {
+    if (loc_qrg_inc != 50) {
+      double loc_RD_tx_car_osc_qrg = 0.0;
+      double loc_RD_rx_car_osc_qrg = 0.0;
+
+      //fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings ...\n");
+      fpga_rb_get_ctrl(
+              loc_tx_modtyp,
+              loc_rx_modtyp,
+              &loc_RD_tx_car_osc_qrg,
+              &loc_RD_rx_car_osc_qrg);
+
+      rb_update_param(p_pn, "tx_car_osc_qrg_f", loc_RD_tx_car_osc_qrg);
+      rb_update_param(p_pn, "rx_car_osc_qrg_f", loc_RD_rx_car_osc_qrg);
+      //print_rb_params(*p_pn);
+      state = 1;
+    }
+  }
+
+  //fprintf(stderr, "DEBUG - fpga_rb_get_fpga_params: END\n");
+  return state;
 }
 
 

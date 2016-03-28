@@ -528,6 +528,16 @@
         RB.exitEditing(true);
       }
     }, 600);
+
+    if (RB.params.orig['qrg_inc_s'] <= 40 || RB.params.orig['qrg_inc_s'] >= 60) {  // re-fire when range controller is active
+      setTimeout(function() {
+        if ($.isEmptyObject(RB.params.local)) {
+          RB.params.local['qrg_inc_s'] = RB.params.orig['qrg_inc_s'];
+          //console.log('INFO *** RB.sendParams: re-firing due to scanner operation. RB.params.local = ', RB.params.local);
+          RB.sendParams();
+        }
+      }, 750);
+    }
     return true;
   };
 
@@ -536,7 +546,7 @@
 
   // Exits from editing mode - create local parameters of changed values and send them away
   RB.exitEditing = function(noclose) {
-    console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    //console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
     /* btnevt handling */
     btnevt_handling();
 
@@ -600,7 +610,7 @@ function processField(key) {
     console.log('DEBUG key ' + key + ' field is UNKNOWN');
   }
 
-  //console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
+  //console.log('DEBUG RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
 
   // Check for specific values and enables/disables controllers
   checkKeyDoEnable(key, value);
@@ -608,21 +618,9 @@ function processField(key) {
   if (value !== undefined && value != RB.params.orig[key]) {
     var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
 
-    // clear magnitude field when modulation source or type has changed
-    //if ((key == 'tx_modsrc_s') || (key == 'tx_modtyp_s')) {
-    //  $('#tx_mod_osc_mag_f').val(0);
-    //}
-
     //console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
     RB.params.local[key] = new_value;
     //RB.params.local[key] = { value: new_value };
-
-    // } else {
-    //   if (value === undefined) {
-    //     console.log(key + ' value is undefined');
-    //   } else {
-    //     console.log(key + ' not changed with that value = ' + value);
-    // }
   }
 };
 
@@ -825,6 +823,14 @@ function qrg_digits_clear() {
   var clear_idx;
   for (clear_idx = 0; clear_idx <= 7; clear_idx++) {
     RB.state.qrgController.digit.e[clear_idx] = 0;
+  }
+}
+
+function qrg_inc_enable(enable) {
+  if (enable) {
+    $('.btnevt').removeAttr("disabled");
+  } else {
+    $('.btnevt').attr("disabled", "disabled");
   }
 }
 
@@ -1239,6 +1245,7 @@ function cast_1xdouble_to_4xfloat(d)
 
   var di = d;
   var quad = { se: 0, hi: 0, mi: 0, lo: 0 };
+  var ctr = 0;
 
   //console.log('INFO cast_1xdouble_to_4xfloat (1): in(d=', d, ')\n');
 
@@ -1256,15 +1263,17 @@ function cast_1xdouble_to_4xfloat(d)
   // determine the exponent
   quad.se += IEEE754_DOUBLE_EXP_BIAS;
   if (d >= 2.0) {
-    while (d >= 2.0) {
+    while ((d >= 2.0) && (ctr < 1023)) {
       d /= 2.0;
       quad.se += 1;
+      ctr++;
     }
 
   } else if (d < 1.0) {
-    while (d < 1.0) {
+    while ((d < 1.0)  && (ctr < 1023)) {
       d *= 2.0;
       quad.se -= 1;
+      ctr++;
     }
   }
 
@@ -1418,10 +1427,13 @@ function cast_params2transport(params, pktIdx)
     if (params['qrg_inc_s'] !== undefined) {
       var value = params['qrg_inc_s'];
       if ((value <= 40) || (value >= 60)) {  // +/-10 %
-        transport['qrg_inc_s'] = value;
+        qrg_inc_enable(0);
       } else {
-        transport['qrg_inc_s'] = 50;
+        qrg_inc_enable(1);
+        value = 50;
       }
+      transport['qrg_inc_s']      = value;
+      RB.params.orig['qrg_inc_s'] = value;
     }
     break;
 

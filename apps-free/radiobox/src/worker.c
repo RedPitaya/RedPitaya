@@ -233,7 +233,7 @@ void* worker_thread(void* args)
                 //fprintf(stderr, "INFO worker_thread: worker_normal_state, processing new data --> update_count = %d\n", fpga_update_count);
                 if (fpga_update_count > 0) {
                     //fprintf(stderr, "DEBUG worker_thread: fpga_update: -->  delegate to fpga_rb_update_all_params()\n");
-                    if (fpga_rb_update_all_params(s_worker_params, &l_cb_in_copy_params)) {  // does update frequency entries as returned values
+                    if (fpga_rb_update_all_params(s_worker_params, &l_cb_in_copy_params)) {
                         fprintf(stderr, "ERROR worker - RadioBox: setting/getting of FPGA registers failed\n");
                     }
 
@@ -241,6 +241,9 @@ void* worker_thread(void* args)
                     g_params_init_done = 1;
                     pthread_mutex_unlock(&g_rp_cb_in_params_mutex);
                 }
+
+                /* read back current values of automatic FPGA registers */
+                fpga_rb_get_fpga_params(s_worker_params, &l_cb_in_copy_params);
 
                 /* update worker_params */
                 //fprintf(stderr, "DEBUG worker_thread: updating worker_params\n");

@@ -1166,8 +1166,24 @@ void fpga_rb_reset(void);
  *
  * @retval        0      Success
  * @retval        -1     Failure, parameter list or RB accessor not valid
+ * @retval        -2     Failure, parameter list or RB accessor not valid
  */
 int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
+
+/**
+ * @brief Read back automatic register values from the RadioBox FPGA sub-module
+ *
+ * Being called out of the worker context.
+ *
+ * @param[inout]  pb     List of base parameters with complete set of data entries.
+ * @param[in]     p_pn   List of returned FPGA parameters added to that list.
+ *
+ * @retval        1      Success, new data available
+ * @retval        0      Success, no change of data
+ * @retval        -1     Failure, parameter list or RB accessor not valid
+ * @retval        -2     Failure, parameter list or RB accessor not valid
+ */
+int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
 
 
 /**
