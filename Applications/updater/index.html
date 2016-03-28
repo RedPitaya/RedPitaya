@@ -70,28 +70,34 @@
                         <div class="left-content-scpi" style="font-size: 18pt; color: white;">
                             <table class="main_table">
                                 <tr id="step_1" class="step">
-                                    <td class="step_desc">Step 1. Checking Internet connetion on RedPitaya</td>
-                                    <td class="step_icon"><img src="img/fail.png" ></td>
+                                    <td class="step_desc">Step 1. Checking Internet connetion on RedPitaya
+                                        <p class="error_msg">Your RedPitaya currently offline. Please follow <a style="color: #FFFF33" href="http://redpitaya.com/quick-start/" target="_blank">quick start instrucitons</a> to put it online.</p>
+                                    </td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_2" class="step">
-                                    <td class="step_desc">Step 2. Checking for updates</td>
-                                    <td class="step_icon"><img src="img/fail.png" ></td>
+                                    <td class="step_desc">Step 2. Checking for updates
+                                        <select id="ecosystem_ver" disabled>
+                                        </select>
+                                        <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later</p>
+                                    </td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_3" class="step">
                                     <td class="step_desc">Step 3. Downloading ecosystem update</td>
-                                    <td class="step_icon"><img src="img/fail.png" ></td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_4" class="step">
                                     <td class="step_desc">Step 4. Applying changes</td>
-                                    <td class="step_icon"><img src="img/fail.png" ></td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_5" class="step">
                                     <td class="step_desc">Step 5. Preparing to run</td>
-                                    <td class="step_icon"><img src="img/success.png" ></td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_6" class="step">
                                     <td class="step_desc">Step 6. Done</td>
-                                    <td class="step_icon"><img src="img/loader.gif" ></td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                             </table>
                         </div>
