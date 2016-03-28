@@ -4,7 +4,7 @@
 //-------------------------------------------------
 
 (function(OnlineChecker, $) {
-    OnlineChecker.online = true;
+    OnlineChecker.online = false;
 
     OnlineChecker.isOnline = function() {
         return OnlineChecker.online;
@@ -29,7 +29,7 @@
         var run = function() {
             Offline.check();
         }
-        setInterval(run, 3000);
+        setInterval(run, 8000);
     });
 
 })(window.OnlineChecker = window.OnlineChecker || {}, jQuery);
