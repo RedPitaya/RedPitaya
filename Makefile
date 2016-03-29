@@ -18,6 +18,8 @@
 #
 # TODO #1: Make up a new name for OS dir, as OS is building one level higher now.
 
+SHELL=/bin/bash
+
 TMP = tmp
 
 # check if download cache directory is available
