@@ -42,6 +42,7 @@
     socket_opened: false,
     pktIdx: 0,
     pktIdxMax: 4,  // XXX set count of transport frames
+    mouseWheelLim: 20,
     doUpdate: false,
     blocking: false,
     sending: false,
@@ -61,6 +62,7 @@
         rx: {
             button_checked: true
         },
+        mousewheelsum: 0,
         digit: {
             e: [ 0, 0, 0, 0, 0, 1, 0, 0 ]  // reversed digits
         },
@@ -1056,10 +1058,15 @@ $(function() {
     //console.log('DEBUG mousewheel(ev, delta): delta = ' + delta + '\n');
     ev.stopPropagation();
     ev.preventDefault();
+    RB.state.qrgController.mousewheelsum += delta;
+
+    var lim = RB.state.mouseWheelLim;
     var btnId = 'qrg_';
-    if (delta <= -3) {
+    if (RB.state.qrgController.mousewheelsum <= -lim) {
+      RB.state.qrgController.mousewheelsum += lim;
       btnId += 'up_1e';
-    } else if (delta >= 3) {
+    } else if (RB.state.qrgController.mousewheelsum >= lim) {
+      RB.state.qrgController.mousewheelsum -= lim;
       btnId += 'dn_1e';
     } else {
       return;
