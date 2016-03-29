@@ -1,6 +1,6 @@
 
 CC =	cc
-CFLAGS =   -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Werror -g  -I ../ngx_ext_modules/ngx_http_rp_module/include -I../../../shared/include -I../ngx_ext_modules/ngx_http_rp_module/../ws_server -I/usr/include -DVERSION=0.94-0 -DREVISION=devbuild -DNDK_SET_VAR
+CFLAGS =   -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Werror -g  -I ../ngx_ext_modules/ngx_http_rp_module/include -I../../../shared/include -I../ngx_ext_modules/ngx_http_rp_module/../ws_server -DVERSION=0.94-0 -DREVISION=devbuild -DNDK_SET_VAR
 CPP =	cc -E
 LINK =	$(CC)
 
@@ -391,7 +391,7 @@ objs/nginx:	objs/src/core/nginx.o \
 	objs/addon/src/ngx_http_lua_lex.o \
 	objs/addon/src/ngx_http_lua_balancer.o \
 	objs/ngx_modules.o \
-	-Wl,-E -lpthread -L../../../shared/libredpitaya -L../ngx_ext_modules/ngx_http_rp_module/../ws_server -L/usr/lib -lm -ldl -lcurl -lssl -L../../tools/crypto++ -lcrypto -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread --sysroot= -L/usr/lib -lm -lluajit-5.1 -ldl -lpcre -lcrypto -lcrypto -lz
+	-Wl,-E -lpthread -L../../../shared/libredpitaya -L../ngx_ext_modules/ngx_http_rp_module/../ws_server -lm -ldl -lcurl -lssl -L../../tools/crypto++ -lcrypto -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread -lm -lluajit-5.1 -ldl -lpcre -lcrypto -lcrypto -lz
 	
 
 
