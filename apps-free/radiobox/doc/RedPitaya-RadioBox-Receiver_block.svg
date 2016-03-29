@@ -16,7 +16,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="RedPitaya-RadioBox-Receiver_block.svg"
-   inkscape:export-filename="/Users/espero/Downloads/RedPitaya-RadioBox-Receiver_block_PM.png"
+   inkscape:export-filename="/Users/espero/git/RedPitaya_RadioBox/apps-free/radiobox/doc/RedPitaya-RadioBox-Receiver_block_PM.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150">
   <defs
@@ -25,13 +25,13 @@
        inkscape:collect="always"
        id="linearGradient10850">
       <stop
-         style="stop-color:#ecfeee;stop-opacity:1"
          offset="0"
-         id="stop10852" />
+         id="stop10852"
+         style="stop-color:#e0fae0;stop-opacity:1" />
       <stop
-         style="stop-color:#ace8b8;stop-opacity:0"
          offset="1"
-         id="stop10854" />
+         id="stop10854"
+         style="stop-color:#ffffff;stop-opacity:1" />
     </linearGradient>
     <marker
        inkscape:stockid="Arrow2Mstart"
@@ -203,7 +203,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.117486"
-     inkscape:cx="247.21346"
+     inkscape:cx="235.5802"
      inkscape:cy="526.18109"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
