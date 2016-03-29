@@ -504,9 +504,10 @@ localinstall:
 	systemctl start redpitaya_nginx
 
 imagemount:
-	DEVICE=`losetup -f`
-	sudo losetup -P -f ../red_pitaya_OS_23-Mar-2016.img
-	mount -o ro $(DEVICE)p2 sysroot
+	DEVICE=`sudo losetup -f`
+	sudo losetup -v $DEVICE -o 127926272 red_pitaya_OS_23-Mar-2016.img
+	#sudo losetup -P -f ../red_pitaya_OS_23-Mar-2016.img
+	mount -o ro ${DEVICE} sysroot
 
 ################################################################################
 #
