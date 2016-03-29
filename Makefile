@@ -331,8 +331,8 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	mkdir -p Bazaar/nginx/nginx/objs/{src/{{core,misc},event/modules,http/modules/perl,os/{unix,win32},mail},addon/src}
-	cp -fr patches/nginx/*    $@/
-	cp -f  patches/nginx.conf $@/conf/
+	cp -fr patches/nginx/nginx/* $@/
+	cp -f  patches/nginx.conf    $@/conf/
 
 $(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
