@@ -336,13 +336,13 @@
       }
       else if (param_name == 'tx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
-        if (isTxQrgSel && !isRxQrgSel) {
+        if (isTxQrgSel && !isRxQrgSel && RB.state.qrgController.editing) {
           scannerShowFrequency(dblVal);
         }
       }
       else if (param_name == 'rx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
-        if (isRxQrgSel) {
+        if (isRxQrgSel && !RB.state.qrgController.editing) {
           scannerShowFrequency(dblVal);
         }
       }
