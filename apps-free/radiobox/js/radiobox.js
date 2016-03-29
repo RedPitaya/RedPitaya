@@ -1090,10 +1090,19 @@ $(function() {
     //console.log('DEBUG mousewheel(ev, delta): delta = ' + delta + '\n');
     var mw = $(this);
     var max = 100;
+    var deltaCor = delta;
+
+    // make mousewheel more sensitive
+    if (deltaCor > 0) {
+      deltaCor += RB.state.mouseWheelLim >> 1;
+    } else if (deltaCor < 0) {
+      deltaCor -= RB.state.mouseWheelLim >> 1;
+    }
+
     ev.stopPropagation();
     ev.preventDefault();
     setTimeout(function() {
-      var cur = parseInt(mw.val()) - (delta / 3);
+      var cur = parseInt(mw.val()) - (deltaCor / RB.state.mouseWheelLim);
       if (cur < 0) {
         cur = 0;
       } else if (cur > max) {
