@@ -21,6 +21,7 @@
   <script src="js/jquery-2.1.3.js"></script>
   <script src="js/jquery-ui.js"></script>
   <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/jquery.mousewheel.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
   <script src="js/jquery.flot.js"></script>
   <script src="js/fastclick.min.js"></script>
@@ -194,6 +195,9 @@
                 <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
                 <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="248">TX_CAR_OSC_INC value</option>
+                <option value="249">RX_CAR_OSC_INC value</option>
+                <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
                 <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
@@ -275,6 +279,9 @@
                 <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="248">TX_CAR_OSC_INC value</option>
+                <option value="249">RX_CAR_OSC_INC value</option>
                 <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
@@ -356,6 +363,9 @@
                 <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="248">TX_CAR_OSC_INC value</option>
+                <option value="249">RX_CAR_OSC_INC value</option>
                 <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
@@ -403,9 +413,226 @@
           </div>
         </td>
         </tr>
+
+        <td colspan="3"><hr></td>
+        </tr>
+        <tr>
+
+        <td class="table-header" colspan="3">
+          Transmitter
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="tx_car_osc_qrg" class="form-group">
+          <label for="tx_car_osc_qrg_f" class="col-xs-5 control-label">TX_CAR_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_car_osc_qrg_f" value="0" class="form-control form-bg-tx-car-osc-qrg" autocomplete="off" />
+            <span id="apply_tx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="tx_amp_rf_gain" class="form-group">
+          <label for="tx_amp_rf_gain_s" class="col-xs-5 control-label">AMP_RF amplitude:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_amp_rf_gain_s" value="0" class="form-control form-bg-tx-amp-rf-gain" autocomplete="off" />
+            <span id="apply_tx_amp_rf_gain" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_amp_rf_gain_units" class="col-xs-3" style="padding: 7px 0 0;">mV &nbsp;(Vpp)</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="tx_modsrc" class="form-group">
+          <label for="tx_modsrc_s" class="col-xs-5 control-label">TX mod. source:</label>
+          <div class="col-xs-6">
+            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc">
+              <option value="0">(none)</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="15">TX_MOD_OSC</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="1">RF Input 1</option>
+              <option value="2">RF Input 2</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="4">EXP AI0</option>
+              <option value="5">EXP AI1</option>
+              <option value="6">EXP AI2</option>
+              <option value="7">EXP AI3</option>
+            </select>
+            <span id="apply_tx_modsrc" class="input-group-btn" _style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        </td>
+
+        <td>
+        </td>
+
+        <td>
+        <div id="tx_modtyp" class="form-group">
+          <label for="tx_modtyp_s" class="col-xs-5 control-label">TX mod. type:</label>
+          <div class="col-xs-6">
+            <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+              <option value="1">(off)</option>
+              <option value="2">USB</option>
+              <option value="3">LSB</option>
+              <option value="4">AM</option>
+              <option value="7">FM</option>
+              <option value="8">PM</option>
+            </select>
+            <span id="apply_tx_modtyp" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td>
+        <div id="tx_mod_osc_qrg" class="form-group">
+        <label for="tx_mod_osc_qrg_f" class="col-xs-5 control-label">TX_MOD_OSC frequency:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_mod_osc_qrg_f" value="0" class="form-control form-bg-tx-mod-osc-qrg" autocomplete="off" disabled="disabled" />
+            <span id="apply_tx_mod_osc_qrg" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_mod_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
+        </div>
+        </td>
+
+        <td>
+        <div id="tx_mod_osc_mag" class="form-group">
+          <label for="tx_mod_osc_mag_s" class="col-xs-5 control-label">TX Modulator magnitude:</label>
+          <div class="col-xs-4">
+            <input type="text" id="tx_mod_osc_mag_s" value="0" class="form-control form-bg-tx-mod-osc-mag" autocomplete="off" disabled="disabled" />
+            <span id="apply_tx_mod_osc_mag" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+          <div id="tx_mod_osc_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
+        </div>
+        </td>
+
+        <td>
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="3">
+        <div id="tx_muxin_gain" class="form-group">
+        <label for="tx_muxin_gain_s" class="col-xs-2 control-label"><span style="padding-right:16%">TX Mic gain:</span></label>
+          <div class="col-xs-9">
+            <input type="range" id="tx_muxin_gain_s" min="0" max="100" value="0" class="form-control form-bg-tx-muxin-gain" disabled="disabled" />
+            <span id="apply_tx_muxin_gain" class="input-group-btn" style="visibility:hidden">
+              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
+            </span>
+          </div>
+        </div>
+        </td>
+        </tr>
+
         <tr>
         <td colspan="3"><hr></td>
         </tr>
+
+        <tr>
+        <td class="table-header" colspan="3">
+          Frequency
+        </td>
+        </tr>
+        <tr>
+        <td colspan="3"><span style="display:inline-block; width:70px;"></span>
+        <table class="qrg_table">
+          <tr>
+            <td class="qrg_col01" rowspan="4">&nbsp;</td>
+            <td class="qrg_col02 qrg_tx">TX</td>
+            <td class="qrg_col03" rowspan="4">&nbsp;</td>
+            <td class="qrg_col04"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e7_b" name="qrg_up_1e7" value="&uArr;" /></td>
+            <td class="qrg_col05"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e6_b" name="qrg_up_1e6" value="&uArr;" /></td>
+            <td class="qrg_col06" rowspan="4">&nbsp;</td>
+            <td class="qrg_col07"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e5_b" name="qrg_up_1e5" value="&uArr;" /></td>
+            <td class="qrg_col08"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e4_b" name="qrg_up_1e4" value="&uArr;" /></td>
+            <td class="qrg_col09"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e3_b" name="qrg_up_1e3" value="&uArr;" /></td>
+            <td class="qrg_col10" rowspan="4">&nbsp;</td>
+            <td class="qrg_col11"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e2_b" name="qrg_up_1e2" value="&uArr;" /></td>
+            <td class="qrg_col12"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e1_b" name="qrg_up_1e1" value="&uArr;" /></td>
+            <td class="qrg_col13"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_up_1e0_b" name="qrg_up_1e0" value="&uArr;" /></td>
+            <td class="qrg_col14" rowspan="4">Hz</td>
+            <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_7_b" name="qrg_entry_7" value="7" /></td>
+            <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_8_b" name="qrg_entry_8" value="8" /></td>
+            <td class="qrg_col17"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_9_b" name="qrg_entry_9" value="9" /></td>
+            <td class="qrg_col18" rowspan="4">&nbsp;</td>
+            <td class="qrg_col19" rowspan="4"><input id="qrg_inc_s" name="qrg_inc" class="rangeevt mswheelrange range_vert qrg_inc_range" type="range" orient="vertical" min="0" max="100" value="50" /></td>
+            <td class="qrg_col20" rowspan="4">&nbsp;</td>
+          </tr>
+          <tr>
+            <td class="qrg_col02"><input class="btnevt qrg_send_tx_rx_but btnevttx_checked" type="button" id="tx_qrg_sel_s" name="qrg_send_tx" value="&uArr;" /></td>
+
+            <td class="qrg_col04" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e7_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col05" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e6_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+
+            <td class="qrg_col07" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e5_f" value="1" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col08" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e4_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col09" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e3_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+
+            <td class="qrg_col11" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e2_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col12" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e1_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col13" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e0_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+
+            <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_4_b" name="qrg_entry_4" value="4" /></td>
+            <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_5_b" name="qrg_entry_5" value="5" /></td>
+            <td class="qrg_col17"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_6_b" name="qrg_entry_6" value="6" /></td>
+          </tr>
+          <tr>
+            <td class="qrg_col02"><input class="btnevt qrg_send_tx_rx_but btnevtrx_checked" type="button" id="rx_qrg_sel_s" name="qrg_send_rx" value="&dArr;" /></td>
+
+            <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_1_b" name="qrg_entry_1" value="1" /></td>
+            <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_2_b" name="qrg_entry_2" value="2" /></td>
+            <td class="qrg_col17"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_3_b" name="qrg_entry_3" value="3" /></td>
+          </tr>
+          <tr>
+            <td class="qrg_col02 qrg_rx">RX</td>
+
+            <td class="qrg_col04"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e7_b" name="qrg_dn_1e7" value="&dArr;" /></td>
+            <td class="qrg_col05"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e6_b" name="qrg_dn_1e6" value="&dArr;" /></td>
+
+            <td class="qrg_col07"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e5_b" name="qrg_dn_1e5" value="&dArr;" /></td>
+            <td class="qrg_col08"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e4_b" name="qrg_dn_1e4" value="&dArr;" /></td>
+            <td class="qrg_col09"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e3_b" name="qrg_dn_1e3" value="&dArr;" /></td>
+
+            <td class="qrg_col11"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e2_b" name="qrg_dn_1e2" value="&dArr;" /></td>
+            <td class="qrg_col12"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e1_b" name="qrg_dn_1e1" value="&dArr;" /></td>
+            <td class="qrg_col13"><input class="btnevt qrg_up_dn_but mswheelbtn" type="button" id="qrg_dn_1e0_b" name="qrg_dn_1e0" value="&dArr;" /></td>
+
+            <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_0_b" name="qrg_entry_0" value="0" /></td>
+            <td class="qrg_col16"><input class="btnevt qrg_entry_but qrg_entry_but_del qrg_no" type="button" id="qrg_entry_del_b" name="qrg_entry_del" value="&#x232B;" /></td>
+            <td class="qrg_col17"><input class="btnevt qrg_entry_but qrg_entry_but_enter qrg_yes" type="button" id="qrg_entry_enter_b" name="qrg_entry_enter" value="&radic;" /></td>
+          </tr>
+        </table>
+        </td>
+        <tr>
+        </tr>
+
+
+        <tr>
+        <td colspan="3"><hr></td>
+        </tr>
+
         <tr>
         <td class="table-header" colspan="3">
           Receiver
@@ -463,7 +690,7 @@
           <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
           <div class="col-xs-6">
             <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
-              <option value="0">(off)</option>
+              <option value="1">(off)</option>
               <option value="2">USB</option>
               <option value="3">LSB</option>
               <option disabled="disabled">---------------------</option>
@@ -496,9 +723,9 @@
         <tr>
         <td colspan="3">
         <div id="rx_muxin_gain" class="form-group">
-        <label for="rx_muxin_gain_f" class="col-xs-2 control-label">RX MUX input gain:</label>
+        <label for="rx_muxin_gain_s" class="col-xs-2 control-label"><span style="padding-right:16%">RX MUX input gain:</span></label>
           <div class="col-xs-9">
-            <input type="range" id="rx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
+            <input type="range" id="rx_muxin_gain_s" min="0" max="100" value="0" class="form-control form-bg-rx-muxin-gain" disabled="disabled" />
             <span id="apply_rx_muxin_gain" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
@@ -508,136 +735,6 @@
         </tr>
 
 
-        <td colspan="3"><hr></td>
-        </tr>
-        <tr>
-        <td class="table-header" colspan="3">
-          Transmitter
-        </td>
-        </tr>
-        <tr>
-        <td>
-        <div id="tx_car_osc_qrg" class="form-group">
-          <label for="tx_car_osc_qrg_f" class="col-xs-5 control-label">TX_CAR_OSC frequency:</label>
-          <div class="col-xs-4">
-            <input type="text" id="tx_car_osc_qrg_f" value="0" class="form-control form-bg-tx-car-osc-qrg" autocomplete="off" />
-            <span id="apply_tx_car_osc_qrg" class="input-group-btn" _style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-          <div id="tx_car_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
-        </div>
-        </td>
-
-        <td>
-        <div id="tx_amp_rf_gain" class="form-group">
-          <label for="tx_amp_rf_gain_f" class="col-xs-5 control-label">AMP_RF amplitude:</label>
-          <div class="col-xs-4">
-            <input type="text" id="tx_amp_rf_gain_f" value="0" class="form-control form-bg-tx-amp-rf-gain" autocomplete="off" />
-            <span id="apply_tx_amp_rf_gain" class="input-group-btn" _style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-          <div id="tx_amp_rf_gain_units" class="col-xs-3" style="padding: 7px 0 0;">mV &nbsp;(Vpp)</div>
-        </div>
-        </td>
-
-        <td>
-        <div id="tx_modsrc" class="form-group">
-          <label for="tx_modsrc_s" class="col-xs-5 control-label">TX mod. source:</label>
-          <div class="col-xs-6">
-            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc">
-              <option value="0">(none)</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="15">TX_MOD_OSC</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="1">RF Input 1</option>
-              <option value="2">RF Input 2</option>
-              <option disabled="disabled">---------------------</option>
-              <option value="4">EXP AI0</option>
-              <option value="5">EXP AI1</option>
-              <option value="6">EXP AI2</option>
-              <option value="7">EXP AI3</option>
-            </select>
-            <span id="apply_tx_modsrc" class="input-group-btn" _style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-        </div>
-        </td>
-        </tr>
-
-        <tr>
-        <td>
-        </td>
-
-        <td>
-        </td>
-
-        <td>
-        <div id="tx_modtyp" class="form-group">
-          <label for="tx_modtyp_s" class="col-xs-5 control-label">TX mod. type:</label>
-          <div class="col-xs-6">
-            <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
-              <option value="0">(off)</option>
-              <option value="2">USB</option>
-              <option value="3">LSB</option>
-              <option value="4">AM</option>
-              <option value="7">FM</option>
-              <option value="8">PM</option>
-            </select>
-            <span id="apply_tx_modtyp" class="input-group-btn" style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-        </div>
-        </td>
-        </tr>
-
-        <tr>
-        <td>
-        <div id="tx_mod_osc_qrg" class="form-group">
-        <label for="tx_mod_osc_qrg_f" class="col-xs-5 control-label">TX_MOD_OSC frequency:</label>
-          <div class="col-xs-4">
-            <input type="text" id="tx_mod_osc_qrg_f" value="0" class="form-control form-bg-tx-mod-osc-qrg" autocomplete="off" disabled="disabled" />
-            <span id="apply_tx_mod_osc_qrg" class="input-group-btn" style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-          <div id="tx_mod_osc_qrg_units" class="col-xs-3" style="padding: 7px 0 0;">Hz</div>
-        </div>
-        </td>
-
-        <td>
-        <div id="tx_mod_osc_mag" class="form-group">
-          <label for="tx_mod_osc_mag_f" class="col-xs-5 control-label">TX Modulator magnitude:</label>
-          <div class="col-xs-4">
-            <input type="text" id="tx_mod_osc_mag_f" value="0" class="form-control form-bg-tx-mod-osc-mag" autocomplete="off" disabled="disabled" />
-            <span id="apply_tx_mod_osc_mag" class="input-group-btn" style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-          <div id="tx_mod_osc_mag_units" class="col-xs-3" style="padding: 7px 0 0;">( )</div>
-        </div>
-        </td>
-
-        <td>
-        </td>
-        </tr>
-
-        <tr>
-        <td colspan="3">
-        <div id="tx_muxin_gain" class="form-group">
-        <label for="tx_muxin_gain_f" class="col-xs-2 control-label">TX Mic gain:</label>
-          <div class="col-xs-9">
-            <input type="range" id="tx_muxin_gain_f" min="0" max="100" value="0" class="form-control form-bg-tx-muxin-gain" disabled="disabled" />
-            <span id="apply_tx_muxin_gain" class="input-group-btn" style="visibility:hidden">
-              <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
-            </span>
-          </div>
-        </div>
-        </td>
-        </tr>
         </table>
 
       </form>
