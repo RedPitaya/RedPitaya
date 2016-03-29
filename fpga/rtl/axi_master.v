@@ -101,8 +101,8 @@ module axi_master #(
 assign axi_awid_o    = ID ;
 assign axi_awsize_o  = {2'b01,(DW==64)} ; // 4 or 8 byte transfer      ; // write burst size
 assign axi_awlock_o  = 2'h0   ; // normal
-assign axi_awcache_o = 4'h0   ; // non-cacheable
-assign axi_awprot_o  = 3'b010 ; // data, non-secured, unprivileged
+assign axi_awcache_o = 4'b0001; // bufferable, non-cacheable
+assign axi_awprot_o  = 3'b000 ; // data, non-secured, unprivileged
 
 reg [    4-1: 0] wr_cnt           ;
 reg [    4-1: 0] axi_awwr_pt      ;
@@ -291,8 +291,8 @@ end
 assign axi_arid_o    = ID ;
 assign axi_arsize_o  = {2'b01,(DW==64)} ; // 4 or 8 byte transfer 
 assign axi_arlock_o  = 2'h0   ; // normal
-assign axi_arcache_o = 4'h0   ; // non-cacheable
-assign axi_arprot_o  = 3'b010 ; // data, non-secured, unprivileged
+assign axi_arcache_o = 4'b0001; // bufferable, non-cacheable
+assign axi_arprot_o  = 3'b000 ; // data, non-secured, unprivileged
 
 reg [4-1: 0] rd_cnt  ; // counts data received by system port
 reg          nxt_burst_rdy;
