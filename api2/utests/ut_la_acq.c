@@ -48,29 +48,29 @@ void la_acq_trig_test(void)
 
     for(int i=0; i<100; i++){
 
-        RP_STATUS s;
-        RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
-        dir[0].channel=RP_DIGITAL_CHANNEL_7;
-        dir[0].direction=RP_DIGITAL_DIRECTION_RISING;
+    RP_STATUS s;
+    RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
+    dir[0].channel=RP_DIGITAL_CHANNEL_7;
+    dir[0].direction=RP_DIGITAL_DIRECTION_RISING;
 
-        rp_DigSigGenOuput(true);
-        double sample_rate=125e6;
-        rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
-        //printf("sample rate %lf",sample_rate);
+    rp_DigSigGenOuput(true);
+    double sample_rate=125e6;
+    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
+    //printf("sample rate %lf",sample_rate);
 
-        // start trigger a bit later in a new thread
-        int err;
-        err = pthread_create(&tid, NULL, &trigGen, NULL);
-        if (err != 0)
-            printf("\ncan't create thread :[%s]", strerror(err));
-       // else
-       //     printf("\n Thread created successfully\n");
+    // start trigger a bit later in a new thread
+    int err;
+    err = pthread_create(&tid, NULL, &trigGen, NULL);
+    if (err != 0)
+        printf("\ncan't create thread :[%s]", strerror(err));
+    else
+        printf("\n Thread created successfully\n");
 
-       // printf("\r\nTriggers");
-        s=rp_SetTriggerDigitalPortProperties(dir,1);
-        if(s!=RP_API_OK){
-            CU_FAIL("Failed to set trigger properties.");
-        }
+    printf("\r\nTriggers");
+    s=rp_SetTriggerDigitalPortProperties(dir,1);
+    if(s!=RP_API_OK){
+        CU_FAIL("Failed to set trigger properties.");
+    }
 
         // enable RLE
         rp_EnableDigitalPortDataRLE(1);
@@ -118,7 +118,6 @@ void la_acq_trig_test(void)
         printf("\n\r %04x",buf[pre+1]);
 
         free(buf);
-
     }
 }
 

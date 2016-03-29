@@ -864,7 +864,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask)
 {
-    rp_GenReset(&sig_gen_handle); // TODO: check why stop doesn't stop signal gen.
+    rp_GenReset(&sig_gen_handle); // TODO: stop not working that's why reset is needed here
     rp_GenStop(&sig_gen_handle);
 
    // sleep(1);
