@@ -40,11 +40,36 @@
   RB.state = {
     app_started: false,
     socket_opened: false,
+    pktIdx: 0,
+    pktIdxMax: 4,  // XXX set count of transport frames
+    mouseWheelLim: 20,
+    doUpdate: false,
+    blocking: false,
     sending: false,
     send_que: false,
+    receiving: false,
     processing: false,
     editing: false,
     resized: false,
+    eventLast: {
+        id: ""
+    },
+    eventClickId: '',
+    qrgController: {
+        tx: {
+            button_checked: true
+        },
+        rx: {
+            button_checked: true
+        },
+        mousewheelsum: 0,
+        digit: {
+            e: [ 0, 0, 0, 0, 0, 1, 0, 0 ]  // reversed digits
+        },
+        editing: true,
+        enter: false,
+        frequency: 0.0
+    }
   };
 
   // Params cache
@@ -56,26 +81,27 @@
   RB.params.init = {            // XXX initital data
     rb_run:                 1,  // application running
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
-    tx_modtyp_s:            0,  // TX modulation: USB
+    tx_modtyp_s:            1,  // TX modulation: off
     rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-
-    rbled_csp_s:            6,  // RB LEDs set to: TX_MOD_ADC out
+    rbled_csp_s:          249,  // RB LEDs set to: RX_CAR_OSC_INC frequency value
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
     tx_car_osc_qrg_f:  100000,  // 100 kHz
-    tx_mod_osc_qrg_f:    1000,  //   1 kHz
-
-    tx_amp_rf_gain_f:   200.0,  // 200 mV Vpp @ 50R results to -10 dBm
-    tx_mod_osc_mag_f:   100.0,  // 100 % modulation by default
-
-    tx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
-    rx_muxin_gain_f:     80.0,  // slider position in % of 100% (80% = FS input with booster 1:1)
-
     rx_car_osc_qrg_f:  100000,  // 100 kHz
+
+    tx_mod_osc_qrg_f:    1000,  //   1 kHz
+    tx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    rx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    tx_qrg_sel_s:           1,  // QRG controller influence TX frequency
+    rx_qrg_sel_s:           1,  // QRG controller influence RX frequency
+
+    tx_amp_rf_gain_s:     200,  // 200 mV Vpp @ 50R results to -10 dBm
+    tx_mod_osc_mag_s:     100,  // 100 % modulation by default
     rfout1_term_s:          0,  // RF Output 1: '0' open ended, '1' 50 ohms terminated
-    rfout2_term_s:          0   // RF Output 2: '0' open ended, '1' 50 ohms terminated
+    rfout2_term_s:          0,  // RF Output 2: '0' open ended, '1' 50 ohms terminated
+    qrg_inc_s:             50   // Frequency range controller increment value [0%..100%]
   };
 
   // Other global variables
@@ -121,11 +147,12 @@
     // init the RB.params.orig parameter list
     RB.params.orig = $.extend(true, {}, RB.params.init);
 
-    var pktIdx = 1;
-    while (pktIdx <= 6) {  // XXX initial pktIdx
+    RB.state.sending = true;
+    RB.state.pktIdx = 1;
+    while (RB.state.pktIdx <= RB.state.pktIdxMax) {
       $.post(
         RB.config.post_url,
-        JSON.stringify({ datasets: { params: cast_params2transport(RB.params.orig, pktIdx) } })
+        JSON.stringify({ datasets: { params: cast_params2transport(RB.params.orig, RB.state.pktIdx) } })
       )
       .done(function(dresult) {
         RB.state.socket_opened = true;
@@ -136,8 +163,15 @@
         showModalError('Can not initialize the application with the default parameters.', false, true);
       });
 
-      pktIdx++;
+      RB.state.pktIdx++;
     }  // while()
+
+    setTimeout(function() {
+      RB.params.local = {};
+      RB.state.pktIdx = 0;
+      RB.state.sending = false;
+      RB.state.blocking = false;
+    }, 600);
   }
 
   /*
@@ -211,7 +245,6 @@
       if (dresult.datasets.params !== undefined) {
         RB.processParameters(dresult.datasets.params);
       }
-
       if (dresult.datasets.signals !== undefined) {
         RB.processSignals(dresult.datasets.signals);
       }
@@ -223,6 +256,28 @@
     var new_params = cast_transport2params(new_params_transport);
     var old_params = $.extend(true, {}, RB.params.orig);
     var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
+
+    var isTxQrgSel = false;
+    if (new_params['tx_qrg_sel_s'] !== undefined) {
+      if (new_params['tx_qrg_sel_s']) {
+        isTxQrgSel = true;
+      }
+    } else if (old_params['tx_qrg_sel_s'] !== undefined) {
+      if (old_params['tx_qrg_sel_s']) {
+        isTxQrgSel = true;
+      }
+    }
+
+    var isRxQrgSel = false;
+    if (new_params['rx_qrg_sel_s'] !== undefined) {
+      if (new_params['rx_qrg_sel_s']) {
+        isRxQrgSel = true;
+      }
+    } else if (old_params['rx_qrg_sel_s'] !== undefined) {
+      if (old_params['rx_qrg_sel_s']) {
+        isRxQrgSel = true;
+      }
+    }
 
     for (var param_name in new_params) {  // XXX receiving data from the back-end
       // Save new parameter value
@@ -278,39 +333,62 @@
         $('#'+param_name).val(intVal);
       }
       else if (param_name == 'rx_muxin_src_s') {
-        $('#'+param_name).val(dblVal);
+        $('#'+param_name).val(intVal);
         checkKeyDoEnable(param_name, intVal);
       }
       else if (param_name == 'tx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
+        if (isTxQrgSel && !isRxQrgSel && RB.state.qrgController.editing) {
+          scannerShowFrequency(dblVal);
+        }
+      }
+      else if (param_name == 'rx_car_osc_qrg_f') {
+        $('#'+param_name).val(dblVal);
+        if (isRxQrgSel && !RB.state.qrgController.editing) {
+          scannerShowFrequency(dblVal);
+        }
       }
       else if (param_name == 'tx_mod_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
       }
-      else if (param_name == 'tx_amp_rf_gain_f') {
-        $('#'+param_name).val(dblVal);
+      else if (param_name == 'tx_amp_rf_gain_s') {
+        $('#'+param_name).val(intVal);
       }
-      else if (param_name == 'tx_mod_osc_mag_f') {
-        $('#'+param_name).val(dblVal);
+      else if (param_name == 'tx_mod_osc_mag_s') {
+        $('#'+param_name).val(intVal);
       }
-      else if (param_name == 'tx_muxin_gain_f') {
-        $('#'+param_name).val(dblVal);
+      else if (param_name == 'tx_muxin_gain_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'rx_muxin_gain_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'tx_qrg_sel_s') {
+        if (intVal > 0) {
+          $('#'+param_name).addClass('btnevttx_checked');
+        } else {
+          $('#'+param_name).removeClass('btnevttx_checked');
+        }
+      }
+      else if (param_name == 'rx_qrg_sel_s') {
+        if (intVal > 0) {
+          $('#'+param_name).addClass('btnevtrx_checked');
+        } else {
+          $('#'+param_name).removeClass('btnevtrx_checked');
+        }
       }
       else if (param_name == 'rx_modtyp_s') {
         $('#'+param_name).val(intVal);
         checkKeyDoEnable(param_name, intVal);
-      }
-      else if (param_name == 'rx_car_osc_qrg_f') {
-        $('#'+param_name).val(dblVal);
-      }
-      else if (param_name == 'rx_muxin_gain_f') {
-        $('#'+param_name).val(dblVal);
       }
       else if (param_name == 'rfout1_term_s') {
         $('#'+param_name).val(intVal);
       }
       else if (param_name == 'rfout2_term_s') {
         $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'qrg_inc_s') {
+        //$('#'+param_name).val(intVal);
       }
 
       /*
@@ -412,6 +490,11 @@
       return false;
     }
 
+    if (RB.state.sending == true) {
+      // busy - drop this push, no data get lost by this
+      return false;
+    }
+
     /*
     if (!RB.state.socket_opened) {
       console.log('ERROR: Cannot save changes, socket not opened');
@@ -420,14 +503,13 @@
     */
 
     RB.state.sending = true;
-
-    var pktIdx = 1;
-    while (pktIdx <= 6) {  // XXX main-loop pktIdx
+    RB.state.pktIdx = 1;
+    while (RB.state.pktIdx <= RB.state.pktIdxMax) {
       //RB.ws.send(JSON.stringify({ parameters: RB.params.local }));
       $.ajax({
         type: 'POST',
         url: RB.config.post_url,
-        data: JSON.stringify({ app: { id: 'radiobox' }, datasets: { params: cast_params2transport(RB.params.local, pktIdx) } }),
+        data: JSON.stringify({ app: { id: 'radiobox' }, datasets: { params: cast_params2transport(RB.params.local, RB.state.pktIdx) } }),
         timeout: RB.config.request_timeout,
         cache: false
       })
@@ -451,7 +533,7 @@
         showModalError('Can not connect the web-server (ERR3).', false, true, true);
       })
       .always(function() {
-        RB.state.sending = false;
+        RB.state.pktIdx  = 0;
         RB.state.editing = false;
 
         if (RB.state.send_que) {
@@ -461,10 +543,29 @@
           }, 100);
         }
       });
-
-      pktIdx++;
+      RB.state.pktIdx++;
     }  // while ()
 
+    setTimeout(function() {
+      RB.params.local = {};
+      RB.state.pktIdx = 0;
+      RB.state.sending = false;
+      RB.state.blocking = false;
+      if (RB.state.doUpdate == true) {
+        RB.state.doUpdate = false;
+        RB.exitEditing(true);
+      }
+    }, 600);
+
+    if (RB.params.orig['qrg_inc_s'] <= 40 || RB.params.orig['qrg_inc_s'] >= 60) {  // re-fire when range controller is active
+      setTimeout(function() {
+        if ($.isEmptyObject(RB.params.local)) {
+          RB.params.local['qrg_inc_s'] = RB.params.orig['qrg_inc_s'];
+          //console.log('INFO *** RB.sendParams: re-firing due to scanner operation. RB.params.local = ', RB.params.local);
+          RB.sendParams();
+        }
+      }, 750);
+    }
     return true;
   };
 
@@ -473,62 +574,19 @@
 
   // Exits from editing mode - create local parameters of changed values and send them away
   RB.exitEditing = function(noclose) {
-    // console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    //console.log('INFO *** RB.exitEditing: RB.params.orig = ', RB.params.orig);
+    /* btnevt handling */
+    btnevt_handling();
+
+    if (RB.state.eventClickId != '') {
+      RB.state.eventLast.id = RB.state.eventClickId;
+      RB.state.eventClickId = '';
+      RB.state.qrgController.editing = false;
+      RB.state.doUpdate = true;
+      processField(RB.state.eventLast.id);
+    }
     for (var key in RB.params.orig) {  // XXX controller to message handling
-      var field = $('#' + key);
-      var value = undefined;
-
-      if (key == 'rb_run'){
-        value = ($('#RB_RUN').is(':visible') ?  1 : 0);
-      }
-
-      else if (field.is('button')) {
-        // console.log('DEBUG key ' + key + ' is a button');
-        value = (field.hasClass('active') ? 1 : 0);
-      }
-
-      else if (field.is('input:radio')) {
-        // console.log('DEBUG key ' + key + ' is a input:radio');
-        // value = parseInt($('input[name="' + key + '"]:checked').val());
-        // console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
-        value = (field.is(":checked") ?  1 : 0);
-      }
-
-      else if (field.is('select') || field.is('input')) {
-        // console.log('DEBUG key ' + key + ' is a select or input');
-        if (checkKeyIs_F(key)) {
-          value = parseFloat(field.val());
-        } else {
-          value = parseInt(field.val());
-        }
-      } else {
-          console.log('DEBUG key ' + key + ' field is UNKNOWN');
-      }
-
-      // console.log('INFO RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
-
-      // Check for specific values and enables/disables controllers
-      checkKeyDoEnable(key, value);
-
-      if (value !== undefined && value != RB.params.orig[key]) {
-        var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
-
-        // clear magnitude field when modulation source or type has changed
-        //if ((key == 'tx_modsrc_s') || (key == 'tx_modtyp_s')) {
-        //  $('#tx_mod_osc_mag_f').val(0);
-        //}
-
-        // console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
-        RB.params.local[key] = new_value;
-        //RB.params.local[key] = { value: new_value };
-
-        // } else {
-        //   if (value === undefined) {
-        //     console.log(key + ' value is undefined');
-        //   } else {
-        //     console.log(key + ' not changed with that value = ' + value);
-        // }
-      }
+      processField(key);
     }
 
     // Send params then reset editing state and hide dialog
@@ -543,6 +601,286 @@
   };
 }(window.RB = window.RB || {}, jQuery));
 
+function processField(key) {
+  var field = $('#' + key);
+
+  if (key == 'rb_run'){
+    value = ($('#RB_RUN').is(':visible') ?  1 : 0);
+  }
+  else if (key == 'tx_qrg_sel_s') {
+    value = (field.hasClass('btnevttx_checked')) ?  1 : 0;
+  }
+  else if (key == 'rx_qrg_sel_s') {
+    value = (field.hasClass('btnevtrx_checked')) ?  1 : 0;
+  }
+
+  else if (field.is('button')) {
+    //console.log('DEBUG key ' + key + ' is a button');
+    value = (field.hasClass('active') ? 1 : 0);
+  }
+
+  else if (field.is('input:button, input:radio')) {
+    //console.log('DEBUG key ' + key + ' is a input:radio');
+    //value = parseInt($('input[name="' + key + '"]:checked').val());
+    //console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
+    value = (field.is(":checked") ?  1 : 0);
+  }
+
+  else if (field.is('select') || field.is('input')) {
+    if (checkKeyIs_F(key)) {
+      value = parseFloat(field.val());
+    } else {
+      value = parseInt(field.val());
+    }
+    //console.log('DEBUG key ' + key + ' is a select or input: value = ' + value);
+
+  } else {
+    console.log('DEBUG key ' + key + ' field is UNKNOWN');
+  }
+
+  //console.log('DEBUG RB.exitEditing: ' + key + ' WANT to change from ' + RB.params.orig[key] + ' to ' + value);
+
+  // Check for specific values and enables/disables controllers
+  checkKeyDoEnable(key, value);
+
+  if (value !== undefined && value != RB.params.orig[key]) {
+    var new_value = ($.type(RB.params.orig[key]) == 'boolean' ?  !!value : value);
+
+    //console.log('INFO RB.exitEditing: ' + key + ' CHANGED from ' + RB.params.orig[key] + ' to ' + new_value);
+    RB.params.local[key] = new_value;
+    //RB.params.local[key] = { value: new_value };
+  }
+};
+
+function btnevt_handling() {
+  if (RB.state.eventLast.id === undefined) {
+    return;
+  }
+
+  var btn_shift_digit = undefined;
+
+  //console.log('DEBUG btnevt_handling: eventLast.id=' + RB.state.eventLast.id);
+
+  /* locate released button */
+  if (RB.state.eventLast.id == "tx_qrg_sel_s") {
+    if ($('#' + RB.state.eventLast.id).hasClass("btnevttx_checked")) {
+      $('#' + RB.state.eventLast.id).removeClass("btnevttx_checked");
+      RB.state.qrgController.tx.button_checked = false;
+    } else {
+      $('#' + RB.state.eventLast.id).addClass("btnevttx_checked");
+      RB.state.qrgController.tx.button_checked = true;
+    }
+
+  } else if (RB.state.eventLast.id == "rx_qrg_sel_s") {
+    if ($('#' + RB.state.eventLast.id).hasClass("btnevtrx_checked")) {
+      $('#' + RB.state.eventLast.id).removeClass("btnevtrx_checked");
+      RB.state.qrgController.rx.button_checked = false;
+    } else {
+      $('#' + RB.state.eventLast.id).addClass("btnevtrx_checked");
+      RB.state.qrgController.rx.button_checked = true;
+    }
+
+  } else if (RB.state.eventLast.id == "qrg_entry_del_b") {
+    if (RB.state.qrgController.editing == false) {
+      qrg_digits_clear();
+    } else {
+      btn_shift_digit = 'x';
+    }
+
+  } else if (RB.state.eventLast.id == "qrg_entry_enter_b") {
+    var zero_idx;
+    var zero_cnt = 0;
+    for (zero_idx = 7; zero_idx >= 0; zero_idx--) {
+      if (RB.state.qrgController.digit.e[zero_idx] == 0)  zero_cnt++;
+      else  break;
+    }
+
+    switch (zero_cnt) {
+    case 7:  // x MHz
+      RB.state.qrgController.digit.e[7] = 0;
+      RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[0];
+      RB.state.qrgController.digit.e[5] = 0;
+      RB.state.qrgController.digit.e[4] = 0;
+      RB.state.qrgController.digit.e[3] = 0;
+      RB.state.qrgController.digit.e[2] = 0;
+      RB.state.qrgController.digit.e[1] = 0;
+      RB.state.qrgController.digit.e[0] = 0;
+      break;
+    case 6:  // xx MHz
+      if (RB.state.qrgController.digit.e[1] <= 6) {
+        RB.state.qrgController.digit.e[7] = RB.state.qrgController.digit.e[1];
+        RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[0];
+        RB.state.qrgController.digit.e[5] = 0;
+        RB.state.qrgController.digit.e[4] = 0;
+        RB.state.qrgController.digit.e[3] = 0;
+        RB.state.qrgController.digit.e[2] = 0;
+        RB.state.qrgController.digit.e[1] = 0;
+        RB.state.qrgController.digit.e[0] = 0;
+      }
+      break;
+    case 4:  // x xxx kHz
+      RB.state.qrgController.digit.e[7] = 0;
+      RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[3];
+      RB.state.qrgController.digit.e[5] = RB.state.qrgController.digit.e[2];
+      RB.state.qrgController.digit.e[4] = RB.state.qrgController.digit.e[1];
+      RB.state.qrgController.digit.e[3] = RB.state.qrgController.digit.e[0];
+      RB.state.qrgController.digit.e[2] = 0;
+      RB.state.qrgController.digit.e[1] = 0;
+      RB.state.qrgController.digit.e[0] = 0;
+      break;
+    case 3:  // xx xxx kHz
+      if (RB.state.qrgController.digit.e[4] <= 6) {
+        RB.state.qrgController.digit.e[7] = RB.state.qrgController.digit.e[4];
+        RB.state.qrgController.digit.e[6] = RB.state.qrgController.digit.e[3];
+        RB.state.qrgController.digit.e[5] = RB.state.qrgController.digit.e[2];
+        RB.state.qrgController.digit.e[4] = RB.state.qrgController.digit.e[1];
+        RB.state.qrgController.digit.e[3] = RB.state.qrgController.digit.e[0];
+        RB.state.qrgController.digit.e[2] = 0;
+        RB.state.qrgController.digit.e[1] = 0;
+        RB.state.qrgController.digit.e[0] = 0;
+      }
+      break;
+    }
+    RB.state.qrgController.editing = false;
+    RB.state.qrgController.enter = true;
+
+  } else {
+    var btn_idx;
+    for (btn_idx = 0; btn_idx <= 9; btn_idx++) {
+      var btn_up = "qrg_up_1e"  + btn_idx + "_b";
+      var btn_dn = "qrg_dn_1e"  + btn_idx + "_b";
+      var btn_dt = "qrg_entry_" + btn_idx + "_b";
+
+      if (btn_idx <= 7 && RB.state.eventLast.id == btn_up) {
+        RB.state.qrgController.digit.e[btn_idx]++;
+        RB.state.qrgController.editing = false;
+        RB.state.qrgController.enter = true;
+        break;
+      } else if (btn_idx <= 7 && RB.state.eventLast.id == btn_dn) {
+        RB.state.qrgController.digit.e[btn_idx]--;
+        RB.state.qrgController.editing = false;
+        RB.state.qrgController.enter = true;
+        break;
+      } else if (RB.state.eventLast.id == btn_dt) {
+        if (RB.state.qrgController.editing == false) {
+          qrg_digits_clear();
+        }
+        btn_shift_digit = btn_idx;
+        RB.state.qrgController.editing = true;
+        break;
+      }
+    }
+  }
+
+  /* normalize frequency digits */
+  var norm_idx;
+  for (norm_idx = 0; norm_idx <= 7; norm_idx++) {
+    if (RB.state.qrgController.digit.e[norm_idx] > 9) {
+      RB.state.qrgController.digit.e[norm_idx] = 0;
+      if (norm_idx < 7)  RB.state.qrgController.digit.e[norm_idx + 1]++;
+    } else if (RB.state.qrgController.digit.e[norm_idx] < 0) {
+      RB.state.qrgController.digit.e[norm_idx] = 9;
+      if (norm_idx < 7)  RB.state.qrgController.digit.e[norm_idx + 1]--;
+    }
+  }
+
+  /* shift register*/
+  if (btn_shift_digit == 'x') {
+    // remove one digit
+    var shift_idx;
+    for (shift_idx = 0; shift_idx < 7; shift_idx++) {
+      RB.state.qrgController.digit.e[shift_idx] = RB.state.qrgController.digit.e[shift_idx + 1];  // shift left
+    }
+    RB.state.qrgController.digit.e[7] = 0;
+
+  } else if (btn_shift_digit !== undefined) {
+    // new digit concatenated
+    var shift_idx;
+    for (shift_idx = 7; shift_idx > 0; shift_idx--) {
+      RB.state.qrgController.digit.e[shift_idx] = RB.state.qrgController.digit.e[shift_idx - 1];  // shift left
+    }
+    RB.state.qrgController.digit.e[0] = btn_shift_digit;
+  }
+
+  /* output digits and sum up resulting frequency */
+  RB.state.qrgController.frequency = 0.0;
+  var digchr = ' ';
+  var dig_hide = true;
+  for (idx = 7; idx >= 0; idx--) {
+    var idstr = "#qrg_display_1e" + idx + "_f";
+    var dig = RB.state.qrgController.digit.e[idx];
+
+    RB.state.qrgController.frequency += dig * Math.pow(10, idx);
+    if (dig > 0 || !dig_hide || idx == 0) {
+      digchr = dig;
+      dig_hide = false;
+    }
+    $(idstr).val(digchr);
+  }
+
+  if (RB.state.qrgController.enter == true) {
+    var blockingOld = RB.state.blocking;
+
+    if (RB.state.qrgController.tx.button_checked == true) {
+      if (blockingOld == false) {
+        RB.state.blocking = true;
+        $('#tx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
+        $('#tx_car_osc_qrg_f').addClass('qrg-entering');
+        setTimeout(function() {
+          $('#tx_car_osc_qrg_f').removeClass('qrg-entering');
+        }, 200);
+      }
+    }
+
+    if (RB.state.qrgController.rx.button_checked == true) {
+      if (blockingOld == false) {
+        RB.state.blocking = true;
+        $('#rx_car_osc_qrg_f').val(RB.state.qrgController.frequency);
+        $('#rx_car_osc_qrg_f').addClass('qrg-entering');
+        setTimeout(function() {
+          $('#rx_car_osc_qrg_f').removeClass('qrg-entering');
+        }, 200);
+      }
+    }
+    RB.state.qrgController.enter = false;
+  }
+  RB.state.eventLast.id = undefined;
+}
+
+function qrg_digits_clear() {
+  var clear_idx;
+  for (clear_idx = 0; clear_idx <= 7; clear_idx++) {
+    RB.state.qrgController.digit.e[clear_idx] = 0;
+  }
+}
+
+function scannerShowFrequency(frequency) {
+  var digchr = ' ';
+  var dig_hide = true;
+
+  RB.state.qrgController.frequency = frequency;
+
+  var show_idx;
+  for (show_idx = 7; show_idx >= 0; show_idx--) {
+    var idstr = "#qrg_display_1e" + show_idx + "_f";
+    var dig = Math.floor(((frequency / Math.pow(10, show_idx)) % 10));
+    RB.state.qrgController.digit.e[show_idx] = dig;
+    if (dig > 0 || !dig_hide || show_idx == 0) {
+      digchr = dig;
+      dig_hide = false;
+    }
+    $(idstr).val(digchr);
+  }
+}
+
+function qrg_inc_enable(enable) {
+  if (enable) {
+    $('.btnevt').removeAttr("disabled");
+  } else {
+    $('.btnevt').attr("disabled", "disabled");
+  }
+}
+
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
   if (key == 'tx_modsrc_s') {
     if (value == 15) {
@@ -556,7 +894,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_mag_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_mag').removeAttr("style");
 
-      $('#tx_muxin_gain_f').attr("disabled", "disabled");
+      $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
 
     } else if (value) {
@@ -570,7 +908,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_mag_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_mag').removeAttr("style");
 
-      $('#tx_muxin_gain_f').removeAttr("disabled");
+      $('#tx_muxin_gain_s').removeAttr("disabled");
       $('#apply_tx_muxin_gain').removeAttr("style");
 
     } else {
@@ -584,7 +922,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_mag_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_mag').attr("style", "visibility:hidden");
 
-      $('#tx_muxin_gain_f').attr("disabled", "disabled");
+      $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
 
@@ -594,7 +932,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#rx_modtyp_s').removeAttr("disabled");
       $('#apply_rx_modtyp').removeAttr("style");
 
-      $('#rx_muxin_gain_f').removeAttr("disabled");
+      $('#rx_muxin_gain_s').removeAttr("disabled");
       $('#apply_rx_muxin_gain').removeAttr("style");
 
     } else {
@@ -602,7 +940,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#rx_modtyp_s').attr("disabled", "disabled");
       $('#apply_rx_modtyp').attr("style", "visibility:hidden");
 
-      $('#rx_muxin_gain_f').attr("disabled", "disabled");
+      $('#rx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");
     }
   }
@@ -617,15 +955,20 @@ function checkKeyIs_F(key) {
 $(function() {
   $('#modal-warning').hide();
 
+  /*
   $('button').bind('activeChanged', function() {
+    console.log('DEBUG button.bind.activeChanged()\n');
     RB.exitEditing(true);
   });
 
   $('input:radio').bind('activeChanged', function() {
+    console.log('DEBUG input:radio.bind.activeChanged()\n');
     RB.exitEditing(true);
   });
+  */
 
   $('select, input').on('change', function() {
+    //console.log('DEBUG select,input.on.change()\n');
     RB.exitEditing(true);
   });
 
@@ -668,24 +1011,38 @@ $(function() {
   });
   */
 
-  $('.btn').on('click', function() {
+  $('.btnevt, .btn').on('click', function() {
+    //console.log('DEBUG .btn.on("click")()\n');
     var btn = $(this);
     setTimeout(function() {
       btn.blur();
     }, 10);
   });
 
-  $('.btn').mouseup(function() {
+  $('.btnevt, .btn, .rangeevt').mouseup(function(ev) {
+    //console.log('DEBUG .btn.mouseup(), id = ' + ev.target.id);
+    RB.state.eventLast.id = ev.target.id;
     setTimeout(function() {
-        //updateLimits();
-        //formatVals();
+      //updateLimits();
+      //formatVals();
+      RB.exitEditing(true);
+    }, 250);
+  });
+
+  $('.btnevt, .btn, .rangeevt').on('input', function(ev) {
+    //console.log('DEBUG .btn.on("input", f())\n');
+    RB.state.eventLast.id = ev.target.id;
+    setTimeout(function() {
+      //updateLimits();
+      //formatVals();
       RB.exitEditing(true);
     }, 20);
   });
 
   // Close parameters dialog after Enter key is pressed
-  $('input').keyup(function(event) {
-    if (event.keyCode == 13) {
+  $('input').keyup(function(ev) {
+    //console.log('DEBUG input.keyup(ev)\n');
+    if (ev.keyCode == 13) {
       RB.exitEditing(true);
     }
   });
@@ -694,6 +1051,66 @@ $(function() {
   //$('.close-dialog').on('click touchstart', function() {
   $('.close-dialog').on('click', function() {
     RB.exitEditing();
+  });
+
+  // Mousewheel elements
+  $('.mswheelbtn').mousewheel(function(ev, delta) {
+    //console.log('DEBUG mousewheel(ev, delta): delta = ' + delta + '\n');
+    ev.stopPropagation();
+    ev.preventDefault();
+    RB.state.qrgController.mousewheelsum += delta;
+
+    var lim = RB.state.mouseWheelLim;
+    var btnId = 'qrg_';
+    if (RB.state.qrgController.mousewheelsum <= -lim) {
+      RB.state.qrgController.mousewheelsum += lim;
+      btnId += 'up_1e';
+    } else if (RB.state.qrgController.mousewheelsum >= lim) {
+      RB.state.qrgController.mousewheelsum -= lim;
+      btnId += 'dn_1e';
+    } else {
+      return;
+    }
+    var id = ev.target.id;
+    if (id !== undefined && id.length >= 3) {
+      btnId += id.substr(id.length - 3,1) + '_b';
+    } else {
+      return;
+    }
+    setTimeout(function() {
+      //console.log('DEBUG mousewheel(ev, delta) click(): id = ' + id + ', btnId = ' + btnId + ', delta = ' + delta + '\n');
+      //$('#' + btnId).attr('style', 'background:#000000;');
+      //$('#' + btnId).click();
+      RB.state.eventClickId = btnId;
+      RB.exitEditing(true);
+    }, 10);
+  });
+
+  $('.mswheelrange').mousewheel(function(ev, delta) {
+    //console.log('DEBUG mousewheel(ev, delta): delta = ' + delta + '\n');
+    var mw = $(this);
+    var max = 100;
+    var deltaCor = delta;
+
+    // make mousewheel more sensitive
+    if (deltaCor > 0) {
+      deltaCor += RB.state.mouseWheelLim >> 1;
+    } else if (deltaCor < 0) {
+      deltaCor -= RB.state.mouseWheelLim >> 1;
+    }
+
+    ev.stopPropagation();
+    ev.preventDefault();
+    setTimeout(function() {
+      var cur = parseInt(mw.val()) - (deltaCor / RB.state.mouseWheelLim);
+      if (cur < 0) {
+        cur = 0;
+      } else if (cur > max) {
+        cur = max;
+      }
+      mw.val(cur);
+      RB.exitEditing(true);
+    }, 10);
   });
 
   /*
@@ -768,7 +1185,7 @@ $(function() {
   RB.startApp();
 });
 
-
+/*
 $(".limits").change(function() {
   if (['SOUR1_PHAS', 'SOUR1_DCYC', 'SOUR2_PHAS', 'SOUR2_DCYC'].indexOf($(this).attr('id')) != -1) {
     var min = 0;
@@ -788,10 +1205,10 @@ $(".limits").change(function() {
       $(this).val(min == -1 ? 0 : 1);
   }
 }).change();
+*/
 
-
+/*
 function updateLimits() {
-    /*
     { // RB_CH1_OFFSET limits
       var probeAttenuation = parseInt($("#RB_CH1_PROBE option:selected").text());
       var jumperSettings = $("#RB_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
@@ -802,9 +1219,8 @@ function updateLimits() {
       $("#RB_CH1_OFFSET").attr("min", newMin);
       $("#RB_CH1_OFFSET").attr("max", newMax);
     }
-    */
 }
-
+*/
 
 /*
 $('#RB_CH1_OFFSET_UNIT').bind("DOMSubtreeModified",function() {
@@ -890,6 +1306,7 @@ function cast_1xdouble_to_4xfloat(d)
 
   var di = d;
   var quad = { se: 0, hi: 0, mi: 0, lo: 0 };
+  var ctr = 0;
 
   //console.log('INFO cast_1xdouble_to_4xfloat (1): in(d=', d, ')\n');
 
@@ -907,15 +1324,17 @@ function cast_1xdouble_to_4xfloat(d)
   // determine the exponent
   quad.se += IEEE754_DOUBLE_EXP_BIAS;
   if (d >= 2.0) {
-    while (d >= 2.0) {
+    while ((d >= 2.0) && (ctr < 1023)) {
       d /= 2.0;
       quad.se += 1;
+      ctr++;
     }
 
   } else if (d < 1.0) {
-    while (d < 1.0) {
+    while ((d < 1.0)  && (ctr < 1023)) {
       d *= 2.0;
       quad.se -= 1;
+      ctr++;
     }
   }
 
@@ -975,9 +1394,7 @@ function cast_params2transport(params, pktIdx)
     if (params['rx_modtyp_s'] !== undefined) {
       transport['rx_modtyp_s'] = params['rx_modtyp_s'];
     }
-    break;
 
-  case 2:
     if (params['rbled_csp_s'] !== undefined) {
       transport['rbled_csp_s'] = params['rbled_csp_s'];
     }
@@ -995,7 +1412,7 @@ function cast_params2transport(params, pktIdx)
     }
     break;
 
-  case 3:
+  case 2:
     if (params['tx_car_osc_qrg_f'] !== undefined) {
       var quad = cast_1xdouble_to_4xfloat(params['tx_car_osc_qrg_f']);
       transport['SE_tx_car_osc_qrg_f'] = quad.se;
@@ -1004,6 +1421,16 @@ function cast_params2transport(params, pktIdx)
       transport['LO_tx_car_osc_qrg_f'] = quad.lo;
     }
 
+    if (params['rx_car_osc_qrg_f'] !== undefined) {
+      var quad = cast_1xdouble_to_4xfloat(params['rx_car_osc_qrg_f']);
+      transport['SE_rx_car_osc_qrg_f'] = quad.se;
+      transport['HI_rx_car_osc_qrg_f'] = quad.hi;
+      transport['MI_rx_car_osc_qrg_f'] = quad.mi;
+      transport['LO_rx_car_osc_qrg_f'] = quad.lo;
+    }
+    break;
+
+  case 3:
     if (params['tx_mod_osc_qrg_f'] !== undefined) {
       var quad = cast_1xdouble_to_4xfloat(params['tx_mod_osc_qrg_f']);
       transport['SE_tx_mod_osc_qrg_f'] = quad.se;
@@ -1011,51 +1438,31 @@ function cast_params2transport(params, pktIdx)
       transport['MI_tx_mod_osc_qrg_f'] = quad.mi;
       transport['LO_tx_mod_osc_qrg_f'] = quad.lo;
     }
+
+    if (params['tx_muxin_gain_s'] !== undefined) {
+      transport['tx_muxin_gain_s'] = params['tx_muxin_gain_s'];
+    }
+
+    if (params['rx_muxin_gain_s'] !== undefined) {
+      transport['rx_muxin_gain_s'] = params['rx_muxin_gain_s'];
+    }
+
+    if (params['tx_qrg_sel_s'] !== undefined) {
+      transport['tx_qrg_sel_s'] = params['tx_qrg_sel_s'];
+    }
+
+    if (params['rx_qrg_sel_s'] !== undefined) {
+      transport['rx_qrg_sel_s'] = params['rx_qrg_sel_s'];
+    }
     break;
 
   case 4:
-    if (params['tx_amp_rf_gain_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['tx_amp_rf_gain_f']);
-      transport['SE_tx_amp_rf_gain_f'] = quad.se;
-      transport['HI_tx_amp_rf_gain_f'] = quad.hi;
-      transport['MI_tx_amp_rf_gain_f'] = quad.mi;
-      transport['LO_tx_amp_rf_gain_f'] = quad.lo;
+    if (params['tx_amp_rf_gain_s'] !== undefined) {
+      transport['tx_amp_rf_gain_s'] = params['tx_amp_rf_gain_s'];
     }
 
-    if (params['tx_mod_osc_mag_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['tx_mod_osc_mag_f']);
-      transport['SE_tx_mod_osc_mag_f'] = quad.se;
-      transport['HI_tx_mod_osc_mag_f'] = quad.hi;
-      transport['MI_tx_mod_osc_mag_f'] = quad.mi;
-      transport['LO_tx_mod_osc_mag_f'] = quad.lo;
-    }
-    break;
-
-  case 5:
-    if (params['tx_muxin_gain_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['tx_muxin_gain_f']);
-      transport['SE_tx_muxin_gain_f'] = quad.se;
-      transport['HI_tx_muxin_gain_f'] = quad.hi;
-      transport['MI_tx_muxin_gain_f'] = quad.mi;
-      transport['LO_tx_muxin_gain_f'] = quad.lo;
-    }
-
-    if (params['rx_muxin_gain_f'] !== undefined) {
-        var quad = cast_1xdouble_to_4xfloat(params['rx_muxin_gain_f']);
-        transport['SE_rx_muxin_gain_f'] = quad.se;
-        transport['HI_rx_muxin_gain_f'] = quad.hi;
-        transport['MI_rx_muxin_gain_f'] = quad.mi;
-        transport['LO_rx_muxin_gain_f'] = quad.lo;
-      }
-    break;
-
-  case 6:
-    if (params['rx_car_osc_qrg_f'] !== undefined) {
-      var quad = cast_1xdouble_to_4xfloat(params['rx_car_osc_qrg_f']);
-      transport['SE_rx_car_osc_qrg_f'] = quad.se;
-      transport['HI_rx_car_osc_qrg_f'] = quad.hi;
-      transport['MI_rx_car_osc_qrg_f'] = quad.mi;
-      transport['LO_rx_car_osc_qrg_f'] = quad.lo;
+    if (params['tx_mod_osc_mag_s'] !== undefined) {
+      transport['tx_mod_osc_mag_s'] = params['tx_mod_osc_mag_s'];
     }
 
     if (params['rfout1_term_s'] !== undefined) {
@@ -1065,6 +1472,18 @@ function cast_params2transport(params, pktIdx)
     if (params['rfout2_term_s'] !== undefined) {
       transport['rfout2_term_s'] = params['rfout2_term_s'];
     }
+
+    if (params['qrg_inc_s'] !== undefined) {
+      var value = params['qrg_inc_s'];
+      if ((value <= 40) || (value >= 60)) {  // +/-10 %
+        qrg_inc_enable(0);
+      } else {
+        qrg_inc_enable(1);
+        value = 50;
+      }
+      transport['qrg_inc_s']      = value;
+      RB.params.orig['qrg_inc_s'] = value;
+    }
     break;
 
   default:
@@ -1072,7 +1491,7 @@ function cast_params2transport(params, pktIdx)
     break;
   }
 
-  console.log('INFO cast_params2transport: out(transport=', transport, ') <-- in(params=', params, ')\n');
+  //console.log('INFO cast_params2transport: out(transport=', transport, ') <-- in(params=', params, ')\n');
   return transport;
 }
 
@@ -1121,6 +1540,15 @@ function cast_transport2params(transport)
     params['tx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
+  if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
+    var quad = { };
+    quad.se = transport['SE_rx_car_osc_qrg_f'];
+    quad.hi = transport['HI_rx_car_osc_qrg_f'];
+    quad.mi = transport['MI_rx_car_osc_qrg_f'];
+    quad.lo = transport['LO_rx_car_osc_qrg_f'];
+    params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
+  }
+
   if (transport['LO_tx_mod_osc_qrg_f'] !== undefined) {
     var quad = { };
     quad.se = transport['SE_tx_mod_osc_qrg_f'];
@@ -1130,49 +1558,28 @@ function cast_transport2params(transport)
     params['tx_mod_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
   }
 
-  if (transport['LO_tx_amp_rf_gain_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_tx_amp_rf_gain_f'];
-    quad.hi = transport['HI_tx_amp_rf_gain_f'];
-    quad.mi = transport['MI_tx_amp_rf_gain_f'];
-    quad.lo = transport['LO_tx_amp_rf_gain_f'];
-    params['tx_amp_rf_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_amp_rf_gain_s'] !== undefined) {
+    params['tx_amp_rf_gain_s'] = transport['tx_amp_rf_gain_s'];
   }
 
-  if (transport['LO_tx_mod_osc_mag_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_tx_mod_osc_mag_f'];
-    quad.hi = transport['HI_tx_mod_osc_mag_f'];
-    quad.mi = transport['MI_tx_mod_osc_mag_f'];
-    quad.lo = transport['LO_tx_mod_osc_mag_f'];
-    params['tx_mod_osc_mag_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_mod_osc_mag_s'] !== undefined) {
+    params['tx_mod_osc_mag_s'] = transport['tx_mod_osc_mag_s'];
   }
 
-  if (transport['LO_tx_muxin_gain_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_tx_muxin_gain_f'];
-    quad.hi = transport['HI_tx_muxin_gain_f'];
-    quad.mi = transport['MI_tx_muxin_gain_f'];
-    quad.lo = transport['LO_tx_muxin_gain_f'];
-    params['tx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_muxin_gain_s'] !== undefined) {
+    params['tx_muxin_gain_s'] = transport['tx_muxin_gain_s'];
   }
 
-  if (transport['LO_rx_muxin_gain_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_rx_muxin_gain_f'];
-    quad.hi = transport['HI_rx_muxin_gain_f'];
-    quad.mi = transport['MI_rx_muxin_gain_f'];
-    quad.lo = transport['LO_rx_muxin_gain_f'];
-    params['rx_muxin_gain_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['rx_muxin_gain_s'] !== undefined) {
+    params['rx_muxin_gain_s'] = transport['rx_muxin_gain_s'];
   }
 
-  if (transport['LO_rx_car_osc_qrg_f'] !== undefined) {
-    var quad = { };
-    quad.se = transport['SE_rx_car_osc_qrg_f'];
-    quad.hi = transport['HI_rx_car_osc_qrg_f'];
-    quad.mi = transport['MI_rx_car_osc_qrg_f'];
-    quad.lo = transport['LO_rx_car_osc_qrg_f'];
-    params['rx_car_osc_qrg_f'] = cast_4xfloat_to_1xdouble(quad);
+  if (transport['tx_qrg_sel_s'] !== undefined) {
+    params['tx_qrg_sel_s'] = transport['tx_qrg_sel_s'];
+  }
+
+  if (transport['rx_qrg_sel_s'] !== undefined) {
+    params['rx_qrg_sel_s'] = transport['rx_qrg_sel_s'];
   }
 
   if (transport['rfout1_term_s'] !== undefined) {
@@ -1183,7 +1590,11 @@ function cast_transport2params(transport)
     params['rfout2_term_s'] = transport['rfout2_term_s'];
   }
 
-  console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');
+  if (transport['qrg_inc_s'] !== undefined) {
+    params['qrg_inc_s'] = transport['qrg_inc_s'];
+  }
+
+  //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');
   return params;
 }
 

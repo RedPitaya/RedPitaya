@@ -147,9 +147,6 @@ int rp_set_params(rp_app_params_t* p, int len)
     g_transport_pktIdx = (int) (p[idx].value) | 0x80;                                                   // 0x80 flag: processing changed data
 
     //fprintf(stderr, "!!! rp_set_params: END - pktIdx = %s = %lf\n", p[0].name, p[0].value);
-#if 0
-    rp_free_params(&p);                                                                                 // do NOT free this object!
-#endif
     return 0;
 }
 
@@ -169,7 +166,6 @@ int rp_get_params(rp_app_params_t** p)
 
         } else {
             /* wait for the worker to process previous job */
-            //pthread_yield();
             usleep(1000);
         }
     } while (1);

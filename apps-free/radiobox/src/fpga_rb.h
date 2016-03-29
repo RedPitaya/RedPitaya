@@ -38,76 +38,102 @@ enum {
     FPGA_RD_RB_STATUS                                                                          = 0x00004,  // h004: RB status register
     FPGA_RW_RB_ICR                                                                             = 0x00008,  // h008: RB interrupt control register
     FPGA_RD_RB_ISR                                                                             = 0x0000C,  // h00C: RB interrupt status register
+
     FPGA_RW_RB_DMA_CTRL                                                                        = 0x00010,  // h010: RB DMA control register
     //FPGA_RD_RB_RSVD_H014,
-    //FPGA_RD_RB_RSVD_H018,
-    FPGA_RD_RB_CON_SRC_PNT                                                                     = 0x0001C,  // h01C: RB_LED, RB_RFOUT1 and RB_RFOUT2 connection matrix
+    FPGA_RW_RB_PWR_CTRL                                                                        = 0x00018,  // h018: RB power savings control register             RX_MOD:     (Bit  7: 0), TX_MOD:     (Bit 15: 8)
+    FPGA_RW_RB_CON_SRC_PNT                                                                     = 0x0001C,  // h01C: RB_LED, RB_RFOUT1 and RB_RFOUT2 connection matrix
 
     /* TX section */
     FPGA_RW_RB_TX_CAR_OSC_INC_LO                                                               = 0x00020,  // h020: RB TX_CAR_OSC increment register              LSB:        (Bit 31: 0)
     FPGA_RW_RB_TX_CAR_OSC_INC_HI                                                               = 0x00024,  // h024: RB TX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_TX_CAR_OSC_OFS_LO                                                               = 0x00028,  // h028: RB TX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
     FPGA_RW_RB_TX_CAR_OSC_OFS_HI                                                               = 0x0002C,  // h02C: RB TX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_TX_CAR_OSC_MIX_GAIN                                                             = 0x00030,  // h030: RB TX_CAR_OSC mixer gain:     SIGNED 16 bit
-    //FPGA_RD_RB_TX_RSVD_H034,
-    FPGA_RW_RB_TX_CAR_OSC_MIX_OFS                                                              = 0x00038,  // h038: RB TX_CAR_OSC mixer offset:   SIGNED 17 bit
-    //FPGA_RD_RB_TX_RSVD_H03C,
+
+    FPGA_RW_RB_TX_CAR_OSC_INC_SCNR_LO                                                          = 0x00030,  // h030: RB TX_CAR_OSC_SCNR increment register         LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_CAR_OSC_INC_SCNR_HI                                                          = 0x00034,  // h034: RB TX_CAR_OSC_SCNR increment register         MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_TX_RF_AMP_GAIN                                                                  = 0x00038,  // h038: RB TX_RF_AMP gain:            SIGNED 16 bit
+    FPGA_RW_RB_TX_RF_AMP_OFS                                                                   = 0x0003C,  // h03C: RB TX_RF_AMP offset:          SIGNED 16 bit
+
     FPGA_RW_RB_TX_MOD_OSC_INC_LO                                                               = 0x00040,  // h040: RB TX_MOD_OSC increment register              LSB:        (Bit 31: 0)
     FPGA_RW_RB_TX_MOD_OSC_INC_HI                                                               = 0x00044,  // h044: RB TX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_TX_MOD_OSC_OFS_LO                                                               = 0x00048,  // h048: RB TX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
     FPGA_RW_RB_TX_MOD_OSC_OFS_HI                                                               = 0x0004C,  // h04C: RB TX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_TX_MOD_OSC_MIX_GAIN                                                             = 0x00050,  // h050: RB TX_MOD_OSC mixer gain:     SIGNED 16 bit
+
+    FPGA_RW_RB_TX_MOD_QMIX_GAIN                                                                = 0x00050,  // h050: RB TX_MOD_OSC mixer gain:     SIGNED 16 bit
     //FPGA_RD_RB_TX_RSVD_H054,
-    FPGA_RW_RB_TX_MOD_OSC_MIX_OFS_LO                                                           = 0x00058,  // h058: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   LSB:        (Bit 31: 0)
-    FPGA_RW_RB_TX_MOD_OSC_MIX_OFS_HI                                                           = 0x0005C,  // h05C: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
-    FPGA_RW_RB_TX_MUXIN_SRC                                                                    = 0x00060,  // h060: RB analog TX MUX input selector:  ...  @see below
-    FPGA_RW_RB_TX_MUXIN_GAIN                                                                   = 0x00064,  // h064: RB analog TX MUX gain for input amplifier
-    FPGA_RW_RB_TX_MUXIN_OFS                                                                    = 0x00068,  // h068: RB analog TX MUX offset for input amplifier
+    FPGA_RW_RB_TX_MOD_QMIX_OFS_LO                                                              = 0x00058,  // h058: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   LSB:        (Bit 31: 0)
+    FPGA_RW_RB_TX_MOD_QMIX_OFS_HI                                                              = 0x0005C,  // h05C: RB TX_MOD_OSC mixer offset:   SIGNED 48 bit   MSB: 16'b0, (Bit 47:32)
+
+    FPGA_RW_RB_TX_MUXIN_SRC                                                                    = 0x00060,  // h060: RB analog TX MUX input selector:
+                                                                                                           //       d0 =(none),   d3 =VpVn,
+                                                                                                           //       d16=EXT-CH0,  d24=EXT-CH8,
+                                                                                                           //       d17=EXT-CH1,  d25=EXT-CH9,
+                                                                                                           //       d32=adc_i[0], d33=adc_i[1]
+    FPGA_RW_RB_TX_MUXIN_GAIN                                                                   = 0x00064,  // h064: RB analog TX MUX gain:      UNSIGNED 16 bit
+    FPGA_RW_RB_TX_MUXIN_OFS                                                                    = 0x00068,  // h068: RB analog TX MUX gain:        SIGNED 16 bit
     //FPGA_RD_RB_TX_RSVD_H06C,
 
     /* RX section */
-    FPGA_RW_RB_RX_CAR_CALC_WEAVER_INC_LO                                                       = 0x00100,  // h100: RB RX_CAR_CALC_WEAVER increment register      LSB:        (Bit 31: 0)
-    FPGA_RW_RB_RX_CAR_CALC_WEAVER_INC_HI                                                       = 0x00104,  // h104: RB RX_CAR_CALC_WEAVER increment register      MSB: 16'b0, (Bit 47:32)
+    FPGA_RW_RB_RX_CAR_CALC_WEAVER_INC_LO                                                       = 0x00100,  // h100: weaver increment phase correction register    LSB:        (Bit 31: 0)
+    FPGA_RW_RB_RX_CAR_CALC_WEAVER_INC_HI                                                       = 0x00104,  // h104: weaver increment phase correction register    MSB: 16'b0, (Bit 47:32)
     //FPGA_RD_RB_RX_RSVD_H108,
     //FPGA_RD_RB_RX_RSVD_H10C,
+
     FPGA_RD_RB_RX_CAR_AFC_INC_LO                                                               = 0x00110,  // h110: RB RX_CAR_AFC increment register              LSB:        (Bit 31: 0)
     FPGA_RD_RB_RX_CAR_AFC_INC_HI                                                               = 0x00114,  // h114: RB RX_CAR_AFC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RD_RB_RX_CAR_SUM_INC_LO                                                               = 0x00118,  // h118: RB RX_CAR_SUM increment register              LSB:        (Bit 31: 0)
     FPGA_RD_RB_RX_CAR_SUM_INC_HI                                                               = 0x0011C,  // h11C: RB RX_CAR_SUM increment register              MSB: 16'b0, (Bit 47:32)
+
     FPGA_RW_RB_RX_CAR_OSC_INC_LO                                                               = 0x00120,  // h120: RB RX_CAR_OSC increment register              LSB:        (Bit 31: 0)
     FPGA_RW_RB_RX_CAR_OSC_INC_HI                                                               = 0x00124,  // h124: RB RX_CAR_OSC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_RX_CAR_OSC_OFS_LO                                                               = 0x00128,  // h128: RB RX_CAR_OSC offset register                 LSB:        (Bit 31: 0)
     FPGA_RW_RB_RX_CAR_OSC_OFS_HI                                                               = 0x0012C,  // h12C: RB RX_CAR_OSC offset register                 MSB: 16'b0, (Bit 47:32)
-    //FPGA_RD_RB_RX_RSVD_H130,
-    //FPGA_RD_RB_RX_RSVD_H134,
+
+    FPGA_RW_RB_RX_CAR_OSC_INC_SCNR_LO                                                          = 0x00130,  // h130: RB RX_CAR_OSC_SCNR increment register         LSB:        (Bit 31: 0)
+    FPGA_RW_RB_RX_CAR_OSC_INC_SCNR_HI                                                          = 0x00134,  // h134: RB RX_CAR_OSC_SCNR increment register         MSB: 16'b0, (Bit 47:32)
     //FPGA_RD_RB_RX_RSVD_H138,
     //FPGA_RD_RB_RX_RSVD_H13C,
+
     FPGA_RW_RB_RX_MOD_OSC_INC_LO                                                               = 0x00140,  // h140: RB RX_MOD_OSC increment register              LSB:        (Bit 31: 0)
     FPGA_RW_RB_RX_MOD_OSC_INC_HI                                                               = 0x00144,  // h144: RB RX_MOD_OSC increment register              MSB: 16'b0, (Bit 47:32)
     FPGA_RW_RB_RX_MOD_OSC_OFS_LO                                                               = 0x00148,  // h148: RB RX_MOD_OSC offset register                 LSB:        (Bit 31: 0)
     FPGA_RW_RB_RX_MOD_OSC_OFS_HI                                                               = 0x0014C,  // h14C: RB RX_MOD_OSC offset register                 MSB: 16'b0, (Bit 47:32)
+
     //FPGA_RD_RB_RX_RSVD_H150,
     //FPGA_RD_RB_RX_RSVD_H154,
     //FPGA_RD_RB_RX_RSVD_H158,
     //FPGA_RD_RB_RX_RSVD_H15C,
-    FPGA_RW_RB_RX_MUXIN_SRC                                                                    = 0x00160,  // h160: RB analog RX MUX input selector
-    FPGA_RW_RB_RX_MUXIN_GAIN                                                                   = 0x00164,  // h164: RB analog RX MUX gain for input amplifier
-    FPGA_RW_RB_RX_MUXIN_OFS                                                                    = 0x00168,  // h168: RB analog RX MUX offset for input amplifier
-    FPGA_RD_RB_RX_SIGNAL_STRENGTH                                                              = 0x0016C,  // h16C: RB RX signal strength
-    FPGA_RW_RB_RX_AFC_CORDIC_MAG                                                               = 0x00170,  // h170: RB RX_AFC_CORDIC magnitude register                16'b0, (Bit 15: 0)
-    FPGA_RW_RB_RX_AFC_CORDIC_PHS                                                               = 0x00174,  // h174: RB RX_AFC_CORDIC current phase register            16'b0, (Bit 15: 0)
-    FPGA_RW_RB_RX_AFC_CORDIC_PHS_PREV                                                          = 0x00178,  // h178: RB RX_AFC_CORDIC previous phase register           16'b0, (Bit 15: 0)
-    FPGA_RW_RB_RX_AFC_CORDIC_PHS_DIFF                                                          = 0x0017C,  // h17C: RB RX_AFC_CORDIC phase difference register         16'b0, (Bit 15: 0)
+
+    FPGA_RW_RB_RX_MUXIN_SRC                                                                    = 0x00160,  // h160: RB audio signal RX MUXIN input selector:
+                                                                                                           //       d0 =(none),   d3 =VpVn,
+                                                                                                           //       d16=EXT-CH0,  d24=EXT-CH8,
+                                                                                                           //       d17=EXT-CH1,  d25=EXT-CH9,
+                                                                                                           //       d32=adc_i[0], d33=adc_i[1]
+    FPGA_RW_RB_RX_MUXIN_GAIN                                                                   = 0x00164,  // h164: RB audio signal RX MUXIN:   UNSIGNED 16 bit
+    FPGA_RW_RB_RX_MUXIN_OFS                                                                    = 0x00168,  // h168: RB analog RX MUX gain:        SIGNED 16 bit
+    FPGA_RD_RB_RX_SIGNAL_STRENGTH                                                              = 0x0016C,  // h16C: RB RX signal strength:      UNSIGNED 32 bit
+
+    FPGA_RD_RB_RX_AFC_CORDIC_MAG                                                               = 0x00170,  // h170: RB RX_AFC_CORDIC magnitude value:                 UNSIGNED 32 bit
+    FPGA_RD_RB_RX_AFC_CORDIC_PHS                                                               = 0x00174,  // h174: RB_RX_AFC_CORDIC phase value:                       SIGNED 32 bit
+    FPGA_RD_RB_RX_AFC_CORDIC_PHS_PREV                                                          = 0x00178,  // h178: RB_RX_AFC_CORDIC previous 8kHz clock phase value:   SIGNED 32 bit
+    FPGA_RD_RB_RX_AFC_CORDIC_PHS_DIFF                                                          = 0x0017C,  // h17C: RB_RX_AFC_CORDIC difference phase value:            SIGNED 32 bit
+
     FPGA_RW_RB_RX_SSB_AM_GAIN                                                                  = 0x00180,  // h180: RB RX_SSB_AM gain:          UNSIGNED 16 bit        16'b0, (Bit 15: 0)
-    FPGA_RW_RB_RX_FM_GAIN                                                                      = 0x00184,  // h184: RB RX_FM gain:              UNSIGNED 16 bit        16'b0, (Bit 15: 0)
-    FPGA_RW_RB_RX_PM_GAIN                                                                      = 0x00188,  // h188: RB RX_PM gain:              UNSIGNED 16 bit        16'b0, (Bit 15: 0)
-    //FPGA_RD_RB_RX_RSVD_H18C,
-  //FPGA_RW_RB_RX_AUDIO_OUT_GAIN                                                               = 0x00190,  // h190: RB RX_AUDIO_OUT gain:       UNSIGNED 16 bit        16'b0, (Bit 15: 0)
+    FPGA_RW_RB_RX_AMENV_GAIN                                                                   = 0x00184,  // h184: RB RX_MOD AM-ENV mixer gain:UNSIGNED 16 bit
+    FPGA_RW_RB_RX_FM_GAIN                                                                      = 0x00188,  // h184: RB RX_FM gain:              UNSIGNED 16 bit        16'b0, (Bit 15: 0)
+    FPGA_RW_RB_RX_PM_GAIN                                                                      = 0x0018C,  // h188: RB RX_PM gain:              UNSIGNED 16 bit        16'b0, (Bit 15: 0)
+
     //FPGA_RD_RB_RX_RSVD_H190,
     //FPGA_RD_RB_RX_RSVD_H194,
-  //FPGA_RW_RB_RX_AUDIO_OUT_OFS                                                                = 0x00198   // h198: RB RX_AUDIO_OUT gain:         SIGNED 16 bit        16'b0, (Bit 15: 0)
     //FPGA_RD_RB_RX_RSVD_H198,
-    ////FPGA_RD_RB_RX_RSVD_H19C,
+    //FPGA_RD_RB_RX_RSVD_H19C,
+
+    /* RFOUTx AMP section */
+    FPGA_RW_RB_RFOUT1_AMP_GAIN                                                                 = 0x001A0,  // h1A0: RB RFOUT1 AMP output gain:    SIGNED 16 bit
+    FPGA_RW_RB_RFOUT1_AMP_OFS                                                                  = 0x001A4,  // h1A4: RB RFOUT1 AMP output offset:  SIGNED 16 bit
+    FPGA_RW_RB_RFOUT2_AMP_GAIN                                                                 = 0x001A8,  // h1A8: RB RFOUT2 AMP output gain:    SIGNED 16 bit
+    FPGA_RW_RB_RFOUT2_AMP_OFS                                                                  = 0x001AC   // h1AC: RB RFOUT2 AMP output offset:  SIGNED 16 bit
 
 } FPGA_RB_REG_ENUMS;
 
@@ -330,23 +356,26 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h21  RX_CAR_OSC_Q output.
      *   value = h22  RX_CAR_QMIX_I output.
      *   value = h23  RX_CAR_QMIX_Q output.
-     *   value = h24  RX_CAR_CIC1_I output.
-     *   value = h25  RX_CAR_CIC1_Q output.
-     *   value = h26  RX_CAR_CIC2_I output.
-     *   value = h27  RX_CAR_CIC2_Q output.
+     *   value = h24  RX_CAR_5M_I output.
+     *   value = h25  RX_CAR_5M_Q output.
+     *   value = h26  RX_CAR_200K_I output.
+     *   value = h27  RX_CAR_200K_Q output.
      *
-     *   value = h28  RX_MOD_FIR1_I output.
-     *   value = h29  RX_MOD_FIR1_Q output.
-     *   value = h2A  RX_MOD_OSC_I output.
-     *   value = h2B  RX_MOD_OSC_Q output.
-     *   value = h2C  RX_MOD_HLD_I output.
-     *   value = h2D  RX_MOD_HLD_Q output.
-     *   value = h2E  RX_MOD_QMIX_I output.
-     *   value = h2F  RX_MOD_QMIX_Q output.
-     *   value = h30  RX_MOD_FIR2_I output.
-     *   value = h31  RX_MOD_FIR2_Q output.
-     *   value = h32  RX_MOD_CIC2_I output.
-     *   value = h33  RX_MOD_CIC2_Q output.
+     *   value = h28  RX_MOD_8K_I output.
+     *   value = h29  RX_MOD_8K_Q output.
+     *   value = h2A  RX_MOD_VB1_I output.
+     *   value = h2B  RX_MOD_VB1_Q output.
+     *   value = h2C  RX_MOD_OSC_I output.
+     *   value = h2D  RX_MOD_OSC_Q output.
+     *   value = h2E  RX_MOD_HLD_I output.
+     *   value = h2F  RX_MOD_HLD_Q output.
+     *   value = h30  RX_MOD_QMIX_I output.
+     *   value = h31  RX_MOD_QMIX_Q output.
+     *   value = h32  RX_MOD_VB2_I output.
+     *   value = h33  RX_MOD_VB2_Q output.
+     *   value = h34  RX_MOD_48K_I output.
+     *   value = h35  RX_MOD_48K_Q output.
+     *   value = h36  RX_MOD_SSB_AM_OUT output.
      *
      *   value = h40  RX_AFC_FIR1_I output.
      *   value = h41  RX_AFC_FIR1_Q output.
@@ -358,9 +387,12 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h47  RX_SUM_INC_REG increment value.
      *   value = h48  RX_MOD_FM output.
      *   value = h49  RX_MOD_PM output.
+     *   value = h4A  RX_MOD_AMENV_OUT output.
      *
      *   value = h50  RX_AUDIO output.
      *
+     *   value = hF8  TX_CAR_OSC_INC frequency value.
+     *   value = hF9  RX_CAR_OSC_INC frequency value.
      *   value = hFF  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h0F..h08: n/a
@@ -400,23 +432,26 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h21  RX_CAR_OSC_Q output.
      *   value = h22  RX_CAR_QMIX_I output.
      *   value = h23  RX_CAR_QMIX_Q output.
-     *   value = h24  RX_CAR_CIC1_I output.
-     *   value = h25  RX_CAR_CIC1_Q output.
-     *   value = h26  RX_CAR_CIC2_I output.
-     *   value = h27  RX_CAR_CIC2_Q output.
+     *   value = h24  RX_CAR_5M_I output.
+     *   value = h25  RX_CAR_5M_Q output.
+     *   value = h26  RX_CAR_200K_I output.
+     *   value = h27  RX_CAR_200K_Q output.
      *
-     *   value = h28  RX_MOD_FIR1_I output.
-     *   value = h29  RX_MOD_FIR1_Q output.
-     *   value = h2A  RX_MOD_OSC_I output.
-     *   value = h2B  RX_MOD_OSC_Q output.
-     *   value = h2C  RX_MOD_HLD_I output.
-     *   value = h2D  RX_MOD_HLD_Q output.
-     *   value = h2E  RX_MOD_QMIX_I output.
-     *   value = h2F  RX_MOD_QMIX_Q output.
-     *   value = h30  RX_MOD_FIR2_I output.
-     *   value = h31  RX_MOD_FIR2_Q output.
-     *   value = h32  RX_MOD_CIC2_I output.
-     *   value = h33  RX_MOD_CIC2_Q output.
+     *   value = h28  RX_MOD_8K_I output.
+     *   value = h29  RX_MOD_8K_Q output.
+     *   value = h2A  RX_MOD_VB1_I output.
+     *   value = h2B  RX_MOD_VB1_Q output.
+     *   value = h2C  RX_MOD_OSC_I output.
+     *   value = h2D  RX_MOD_OSC_Q output.
+     *   value = h2E  RX_MOD_HLD_I output.
+     *   value = h2F  RX_MOD_HLD_Q output.
+     *   value = h30  RX_MOD_QMIX_I output.
+     *   value = h31  RX_MOD_QMIX_Q output.
+     *   value = h32  RX_MOD_VB2_I output.
+     *   value = h33  RX_MOD_VB2_Q output.
+     *   value = h34  RX_MOD_48K_I output.
+     *   value = h35  RX_MOD_48K_Q output.
+     *   value = h36  RX_MOD_SSB_AM_OUT output.
      *
      *   value = h40  RX_AFC_FIR1_I output.
      *   value = h41  RX_AFC_FIR1_Q output.
@@ -428,9 +463,12 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h47  RX_SUM_INC_REG increment value.
      *   value = h48  RX_MOD_FM output.
      *   value = h49  RX_MOD_PM output.
+     *   value = h4A  RX_MOD_AMENV_OUT output.
      *
      *   value = h50  RX_AUDIO output.
      *
+     *   value = hF8  TX_CAR_OSC_INC frequency value.
+     *   value = hF9  RX_CAR_OSC_INC frequency value.
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h1F..h18: RFOUT2 source connection point
@@ -468,24 +506,26 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h21  RX_CAR_OSC_Q output.
      *   value = h22  RX_CAR_QMIX_I output.
      *   value = h23  RX_CAR_QMIX_Q output.
-     *   value = h24  RX_CAR_CIC1_I output.
-     *   value = h25  RX_CAR_CIC1_Q output.
-     *   value = h26  RX_CAR_CIC2_I output.
-     *   value = h27  RX_CAR_CIC2_Q output.
+     *   value = h24  RX_CAR_5M_I output.
+     *   value = h25  RX_CAR_5M_Q output.
+     *   value = h26  RX_CAR_200K_I output.
+     *   value = h27  RX_CAR_200K_Q output.
      *
-     *   value = h28  RX_MOD_FIR1_I output.
-     *   value = h29  RX_MOD_FIR1_Q output.
-     *   value = h2A  RX_MOD_OSC_I output.
-     *   value = h2B  RX_MOD_OSC_Q output.
-     *   value = h2C  RX_MOD_HLD_I output.
-     *   value = h2D  RX_MOD_HLD_Q output.
-     *   value = h2E  RX_MOD_QMIX_I output.
-     *   value = h2F  RX_MOD_QMIX_Q output.
-     *   value = h30  RX_MOD_FIR2_I output.
-     *   value = h31  RX_MOD_FIR2_Q output.
-     *   value = h32  RX_MOD_CIC2_I output.
-     *   value = h33  RX_MOD_CIC2_Q output.
-     *   value = h34  RX_MOD_SSB_AM output.
+     *   value = h28  RX_MOD_8K_I output.
+     *   value = h29  RX_MOD_8K_Q output.
+     *   value = h2A  RX_MOD_VB1_I output.
+     *   value = h2B  RX_MOD_VB1_Q output.
+     *   value = h2C  RX_MOD_OSC_I output.
+     *   value = h2D  RX_MOD_OSC_Q output.
+     *   value = h2E  RX_MOD_HLD_I output.
+     *   value = h2F  RX_MOD_HLD_Q output.
+     *   value = h30  RX_MOD_QMIX_I output.
+     *   value = h31  RX_MOD_QMIX_Q output.
+     *   value = h32  RX_MOD_VB2_I output.
+     *   value = h33  RX_MOD_VB2_Q output.
+     *   value = h34  RX_MOD_48K_I output.
+     *   value = h35  RX_MOD_48K_Q output.
+     *   value = h36  RX_MOD_SSB_AM_OUT output.
      *
      *   value = h40  RX_AFC_FIR1_I output.
      *   value = h41  RX_AFC_FIR1_Q output.
@@ -497,9 +537,12 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h47  RX_SUM_INC_REG increment value.
      *   value = h48  RX_MOD_FM output.
      *   value = h49  RX_MOD_PM output.
+     *   value = h4A  RX_MOD_AMENV_OUT output.
      *
      *   value = h50  RX_AUDIO output.
      *
+     *   value = hF8  TX_CAR_OSC_INC frequency value.
+     *   value = hF9  RX_CAR_OSC_INC frequency value.
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
      */
@@ -542,36 +585,40 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t tx_car_osc_ofs_hi;
 
 
-    /** @brief  R/W RB_TX_AMP_RF_GAIN - TX_AMP_RF gain register, bits 15..0 (addr: 0x40600030)
+    /** @brief  R/W RB_TX_CAR_OSC_INC_SCNR_LO increment register, bits 31..0 (addr: 0x40600030)
+     *
+     * bit h1F..h00: LSB of TX_CAR_OSC_INC_SCNR register.
+     *
+     */
+    uint32_t tx_car_osc_inc_scnr_lo;
+
+    /** @brief  R/W RB_TX_CAR_OSC_INC_SCNR_HI increment register, bits 47..32 (addr: 0x40600034)
+     *
+     * bit h0F..h00: MSB of TX_CAR_OSC_INC_SCNR register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t tx_car_osc_inc_scnr_hi;
+
+
+    /** @brief  R/W RB_TX_AMP_RF_GAIN - TX_AMP_RF gain register, bits 15..0 (addr: 0x40600038)
      *
      * bit h0F..h00: SIGNED 16 bit - TX Amplifier RF gain setting.
+     *
+     * bit h1F..h10: n/a
      *
      */
     uint32_t tx_amp_rf_gain;
 
-
-    /** @brief  Placeholder for addr: 0x40600034
-     *
-     * n/a
-     *
-     */
-    uint32_t reserved_034;
-
-
-    /** @brief  R/W RB_TX_AMP_RF_OFS - TX AMP RF offset register, bits 15..0 (addr: 0x40600038)
+    /** @brief  R/W RB_TX_AMP_RF_OFS - TX AMP RF offset register, bits 15..0 (addr: 0x4060003C)
      *
      * bit h0F..h00: SIGNED 16 bit - TX Amplifier RF offset value.
      *
+     * bit h1F..h10: n/a
+     *
      */
     uint32_t tx_amp_rf_ofs;
-
-
-    /** @brief  Placeholder for addr: 0x4060003C
-     *
-     * n/a
-     *
-     */
-    uint32_t reserved_03c;
 
 
     /** @brief  R/W RB_TX_MOD_OSC_INC_LO - TX_MOD_OSC phase increment register, bits 31..0 (addr: 0x40600040)
@@ -611,6 +658,8 @@ typedef struct fpga_rb_reg_mem_s {
     /** @brief  R/W RB_TX_MOD_QMIX_GAIN - TX_MOD_QMIX amplitude register, bits 15..0 (addr: 0x40600050)
      *
      * bit h0F..h00: SIGNED 16 bit - TX_MOD_QMIX amplitude setting.
+     *
+     * bit h1F..h10: n/a
      *
      */
     uint32_t tx_mod_qmix_gain;
@@ -653,6 +702,8 @@ typedef struct fpga_rb_reg_mem_s {
      *   value = h20  ADC0,      mapped to: RF Input 1.
      *   value = h21  ADC1,      mapped to: RF Input 2.
      *
+     * bit h1F..h06: n/a
+     *
      */
     uint32_t tx_muxin_src;
 
@@ -662,12 +713,16 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
      *
+     * bit h1F..h13: n/a
+     *
      */
     uint32_t tx_muxin_gain;
 
     /** @brief  R/W RB_TX_MUXIN_OFS - offset value for analog TX MUX input amplifier (addr: 0x40600068)
      *
      * bit h0F..h00:   SIGNED 16 bit - gain for TX MUXIN output amplifier.
+     *
+     * bit h1F..h10: n/a
      *
      */
     uint32_t tx_muxin_ofs;
@@ -790,256 +845,275 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t rx_car_osc_ofs_hi;
 
 
-    /** @brief  Placeholder for addr: 0x40600130
+    /** @brief  R/W RB_RX_CAR_OSC_INC_SCNR_LO increment register, bits 31..0 (addr: 0x40600130)
+     *
+     * bit h1F..h00: LSB of RX_CAR_OSC_INC_SCNR register.
+     *
+     */
+    uint32_t rx_car_osc_inc_scnr_lo;
+
+    /** @brief  R/W RB_RX_CAR_OSC_INC_SCNR_HI increment register, bits 47..32 (addr: 0x40600134)
+     *
+     * bit h0F..h00: MSB of RX_CAR_OSC_INC_SCNR register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_car_osc_inc_scnr_hi;
+
+
+    /** @brief  Placeholder for addr: 0x40600138
      *
      * n/a
      *
      */
-    uint32_t reserved_130;
+    uint32_t reserved_138;
 
-     /** @brief  Placeholder for addr: 0x40600134
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_134;
-
-     /** @brief  Placeholder for addr: 0x40600138
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_138;
-
-     /** @brief  Placeholder for addr: 0x4060013C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_13c;
+    /** @brief  Placeholder for addr: 0x4060013C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_13c;
 
 
-     /** @brief  R/W RB_RX_MOD_OSC_INC_LO - RX_MOD_OSC phase increment register, bits 31..0 (addr: 0x40600140)
-      *
-      * bit h1F..h00: LSB of RX_MOD_OSC phase increment register.
-      *
-      */
-     uint32_t rx_mod_osc_inc_lo;
+    /** @brief  R/W RB_RX_MOD_OSC_INC_LO - RX_MOD_OSC phase increment register, bits 31..0 (addr: 0x40600140)
+     *
+     * bit h1F..h00: LSB of RX_MOD_OSC phase increment register.
+     *
+     */
+    uint32_t rx_mod_osc_inc_lo;
 
-     /** @brief  R/W RB_RX_MOD_OSC_INC_HI - RX_MOD_OSC phase increment register, bits 47..32 (addr: 0x40600144)
-      *
-      * bit h0F..h00: MSB of RX_MOD_OSC phase increment register.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_osc_inc_hi;
+    /** @brief  R/W RB_RX_MOD_OSC_INC_HI - RX_MOD_OSC phase increment register, bits 47..32 (addr: 0x40600144)
+     *
+     * bit h0F..h00: MSB of RX_MOD_OSC phase increment register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_osc_inc_hi;
 
-     /** @brief  R/W RB_RX_MOD_OSC_OFS_LO - RX_MOD_OSC phase offset register, bits 31..0 (addr: 0x40600148)
-      *
-      * bit h1F..h00: LSB of RX_MOD_OSC phase offset register.
-      *
-      */
-     uint32_t rx_mod_osc_ofs_lo;
+    /** @brief  R/W RB_RX_MOD_OSC_OFS_LO - RX_MOD_OSC phase offset register, bits 31..0 (addr: 0x40600148)
+     *
+     * bit h1F..h00: LSB of RX_MOD_OSC phase offset register.
+     *
+     */
+    uint32_t rx_mod_osc_ofs_lo;
 
-     /** @brief  R/W RB_RX_MOD_OSC_OFS_HI - RX_MOD_OSC phase offset register, bits 47..32 (addr: 0x4060014C)
-      *
-      * bit h0F..h00: MSB of RX_MOD_OSC phase offset register.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_osc_ofs_hi;
-
-
-     /** @brief  Placeholder for addr: 0x40600150
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_150;
-
-     /** @brief  Placeholder for addr: 0x40600154
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_154;
-
-     /** @brief  Placeholder for addr: 0x40600158
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_158;
-
-     /** @brief  Placeholder for addr: 0x4060015C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_15c;
+    /** @brief  R/W RB_RX_MOD_OSC_OFS_HI - RX_MOD_OSC phase offset register, bits 47..32 (addr: 0x4060014C)
+     *
+     * bit h0F..h00: MSB of RX_MOD_OSC phase offset register.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_osc_ofs_hi;
 
 
-     /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
-      *
-      * bit h05..h00: value.
-      *   value = h00  off.
-      *   value = h01  RF Input 1.
-      *   value = h02  RF Input 2.
-      *   value > h02  (undefined)
-      *
-      * bit h1F..h06: n/a
-      *
-      */
-     uint32_t rx_muxin_src;
+    /** @brief  Placeholder for addr: 0x40600150
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_150;
 
-     /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain for RX MUXIN input amplifier.
-      *
-      * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
-      *
-      */
-     uint32_t rx_muxin_gain;
+    /** @brief  Placeholder for addr: 0x40600154
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_154;
 
-     /** @brief  R/W RB_RX_MUX_OFS -  bits 15..0 (addr: 0x40600168)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - offset value for RX MUXIN input amplifier.
-      *
-      */
-     uint32_t rx_muxin_ofs;
+    /** @brief  Placeholder for addr: 0x40600158
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_158;
 
-     /** @brief  R/W RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec, bits 31..0 (addr: 0x4060016C)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC magnitude mean value register.
-      *
-      */
-     uint32_t rx_signal_strength;
+    /** @brief  Placeholder for addr: 0x4060015C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_15c;
 
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 15..0 (addr: 0x40600170)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC magnitude register.
-      *
-      */
-     uint32_t rx_afc_cordic_mag;
+    /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
+     *
+     * bit h05..h00: source ID (extended from the XADC source ID)
+     *   value = h00  no external signal used, TX_MOD_OSC used instead.
+     *   value = h03  Vp_Vn,     mapped to: vin[4].
+     *   value = h10  XADC CH#0, mapped to: AI1.
+     *   value = h11  XADC CH#1, mapped to: AI0.
+     *   value = h18  XADC CH#8, mapped to: AI2.
+     *   value = h19  XADC CH#9, mapped to: AI3.
+     *   value = h20  ADC0,      mapped to: RF Input 1.
+     *   value = h21  ADC1,      mapped to: RF Input 2.
+     *
+     * bit h1F..h06: n/a
+     *
+     */
+    uint32_t rx_muxin_src;
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_phs - RX_AFC_CORDIC phase register, bits 15..0 (addr: 0x40600174)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC phase register.
-      *
-      */
-     uint32_t rx_afc_cordic_phs;
+    /** @brief  R/W RB_RX_MUX_GAIN -  bits 15..0 (addr: 0x40600164)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain for RX MUXIN input amplifier.
+     *
+     * bit h12..h10: input booster left shift value from d0 .. d7 gives amplification of: 1x .. 128x.
+     *
+     * bit h1F..h13: n/a
+     *
+     */
+    uint32_t rx_muxin_gain;
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_phs_prev - RX_AFC_CORDIC previous phase register, bits 15..0 (addr: 0x40600178)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
-      *
-      */
-     uint32_t rx_afc_cordic_phs_prev;
+    /** @brief  R/W RB_RX_MUX_OFS -  bits 15..0 (addr: 0x40600168)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - offset value for RX MUXIN input amplifier.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_muxin_ofs;
 
-     /** @brief  R/W RB_RX_AFC_CORDIC_phs_diff - RX_AFC_CORDIC difference phase register, bits 15..0 (addr: 0x4060017C)
-      *
-      * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 8 kHz clocks.
-      *
-      */
-     uint32_t rx_afc_cordic_phs_diff;
-
-
-     /** @brief  R/W RB_RX_MOD_SSB_AM_GAIN -  bits 15..0 (addr: 0x40600180)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the SSB/AM demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_ssb_am_gain;
-
-     /** @brief  R/W RB_RX_MOD_AMENV_GAIN -  bits 15..0 (addr: 0x40600184)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the AM-Envelope demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_amenv_gain;
-
-     /** @brief  R/W RB_RX_MOD_FM_GAIN -  bits 15..0 (addr: 0x40600188)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the FM demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_fm_gain;
-
-     /** @brief  R/W RB_RX_MOD_PM_GAIN -  bits 15..0 (addr: 0x4060018C)
-      *
-      * bit h0F..h00: UNSIGNED 16 bit - gain value for the PM demodulator output.
-      *
-      * bit h1F..h10: n/a
-      *
-      */
-     uint32_t rx_mod_pm_gain;
+    /** @brief  R/O RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec, bits 31..0 (addr: 0x4060016C)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC magnitude mean value register.
+     *
+     */
+    uint32_t rx_signal_strength;
 
 
-     /** @brief  Placeholder for addr: 0x40600190
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_190;
+    /** @brief  R/O RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register, bits 31..0 (addr: 0x40600170)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC magnitude register.
+     *
+     */
+    uint32_t rx_afc_cordic_mag;
 
-     /** @brief  Placeholder for addr: 0x40600194
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_194;
+    /** @brief  R/O RB_RX_AFC_CORDIC_phs - RX_AFC_CORDIC phase register, bits 31..0 (addr: 0x40600174)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC phase register.
+     *
+     */
+    uint32_t rx_afc_cordic_phs;
 
-     /** @brief  Placeholder for addr: 0x40600198
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_198;
+    /** @brief  R/O RB_RX_AFC_CORDIC_phs_prev - RX_AFC_CORDIC previous phase register, bits 31..0 (addr: 0x40600178)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
+     *
+     */
+    uint32_t rx_afc_cordic_phs_prev;
 
-     /** @brief  Placeholder for addr: 0x4060019C
-      *
-      * n/a
-      *
-      */
-     uint32_t reserved_19c;
+    /** @brief  R/O RB_RX_AFC_CORDIC_phs_diff - RX_AFC_CORDIC difference phase register, bits 31..0 (addr: 0x4060017C)
+     *
+     * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 8 kHz clocks.
+     *
+     */
+    uint32_t rx_afc_cordic_phs_diff;
 
 
-     /** @brief  R/W RB_RFOUT1_GAIN - RFOUT1 amplitude register, bits 15..0 (addr: 0x406001A0)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT1 amplitude setting - 8 bit integer . 8 bit fraction value.
-      *
-      */
-     uint32_t rfout1_gain;
+    /** @brief  R/W RB_RX_MOD_SSB_AM_GAIN -  bits 15..0 (addr: 0x40600180)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the SSB/AM demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_ssb_am_gain;
 
-     /** @brief  R/W RB_RFOUT1_OFS - RFOUT1 offset register, bits 15..0 (addr: 0x406001A4)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT1 offset value - 16 bit DAC value offset.
-      *
-      */
-     uint32_t rfout1_ofs;
+    /** @brief  R/W RB_RX_MOD_AMENV_GAIN -  bits 15..0 (addr: 0x40600184)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the AM-Envelope demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_amenv_gain;
 
-     /** @brief  R/W RB_RFOUT2_GAIN - RFOUT2 amplitude register, bits 15..0 (addr: 0x406001A8)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT2 amplitude setting - 8 bit integer . 8 bit fraction value.
-      *
-      */
-     uint32_t rfout2_gain;
+    /** @brief  R/W RB_RX_MOD_FM_GAIN -  bits 15..0 (addr: 0x40600188)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the FM demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_fm_gain;
 
-     /** @brief  R/W RB_RFOUT2_OFS - RFOUT2 offset register, bits 15..0 (addr: 0x406001AC)
-      *
-      * bit h0F..h00:   SIGNED 16 bit - RFOUT2 offset value - 16 bit DAC value offset.
-      *
-      */
-     uint32_t rfout2_ofs;
+    /** @brief  R/W RB_RX_MOD_PM_GAIN -  bits 15..0 (addr: 0x4060018C)
+     *
+     * bit h0F..h00: UNSIGNED 16 bit - gain value for the PM demodulator output.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rx_mod_pm_gain;
+
+
+    /** @brief  Placeholder for addr: 0x40600190
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_190;
+
+    /** @brief  Placeholder for addr: 0x40600194
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_194;
+
+    /** @brief  Placeholder for addr: 0x40600198
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_198;
+
+    /** @brief  Placeholder for addr: 0x4060019C
+     *
+     * n/a
+     *
+     */
+    uint32_t reserved_19c;
+
+
+    /** @brief  R/W RB_RFOUT1_GAIN - RFOUT1 amplitude register, bits 15..0 (addr: 0x406001A0)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT1 amplitude setting - 8 bit integer . 8 bit fraction value.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout1_gain;
+
+    /** @brief  R/W RB_RFOUT1_OFS - RFOUT1 offset register, bits 15..0 (addr: 0x406001A4)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT1 offset value - 16 bit DAC value offset.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout1_ofs;
+
+    /** @brief  R/W RB_RFOUT2_GAIN - RFOUT2 amplitude register, bits 15..0 (addr: 0x406001A8)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT2 amplitude setting - 8 bit integer . 8 bit fraction value.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout2_gain;
+
+    /** @brief  R/W RB_RFOUT2_OFS - RFOUT2 offset register, bits 15..0 (addr: 0x406001AC)
+     *
+     * bit h0F..h00:   SIGNED 16 bit - RFOUT2 offset value - 16 bit DAC value offset.
+     *
+     * bit h1F..h10: n/a
+     *
+     */
+    uint32_t rfout2_ofs;
 
 } fpga_rb_reg_mem_t;
 
@@ -1087,12 +1161,29 @@ void fpga_rb_reset(void);
  *
  * Being called out of the worker context.
  *
- * @param[inout]  p      List of parameters to be scanned for marked entries, removes MARKER.
+ * @param[inout]  pb     List of base parameters with complete set of data entries.
+ * @param[in]     p_pn   List of parameters to be scanned for marked entries, removes MARKER.
  *
  * @retval        0      Success
  * @retval        -1     Failure, parameter list or RB accessor not valid
+ * @retval        -2     Failure, parameter list or RB accessor not valid
  */
-int fpga_rb_update_all_params(rb_app_params_t* p);
+int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
+
+/**
+ * @brief Read back automatic register values from the RadioBox FPGA sub-module
+ *
+ * Being called out of the worker context.
+ *
+ * @param[inout]  pb     List of base parameters with complete set of data entries.
+ * @param[in]     p_pn   List of returned FPGA parameters added to that list.
+ *
+ * @retval        1      Success, new data available
+ * @retval        0      Success, no change of data
+ * @retval        -1     Failure, parameter list or RB accessor not valid
+ * @retval        -2     Failure, parameter list or RB accessor not valid
+ */
+int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
 
 
 /**
@@ -1100,25 +1191,37 @@ int fpga_rb_update_all_params(rb_app_params_t* p);
  *
  * @param[in]  rb_run           RadioBox application  0: disabled, else: enabled.
  * @param[in]  tx_modsrc        0==(none), 1==RF Input 1, 2==RF Input 2, 4==EXP AI0, 5==EXP AI1, 6==EXP AI2, 7==EXP AI3, 15==TX_MOD_OSC
- * @param[in]  tx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
- * @param[in]  rx_modtyp        0==USB, 1==LSB, 2==AM, 3==FM, 4==PM - else ignored.
+ * @param[in]  tx_modtyp        2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
+ * @param[in]  rx_modtyp        2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
- * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
+ * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  * @param[in]  tx_mod_osc_qrg   Frequency for TX_MOD_OSC in Hz.
- * @param[in]  tx_amp_rf_gain   Vpp of TX_AMP_RF output in mV.
- * @param[in]  tx_mod_osc_mag   Magnitude of TX_MOD_OSC mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
  * @param[in]  tx_muxin_gain    Slider value between 0% (value==0) and 100% (value==80) for the MUXIN range slider, 80 means amplification of 1:1. 80..100 logarithmic amplification.
  * @param[in]  rx_muxin_gain    Slider value between 0% and 100%.
- * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
+ * @param[in]  tx_qrg_sel       Frequency QRG controller induces into TX frequency: 1==on, 0==off.
+ * @param[in]  rx_qrg_sel       Frequency QRG controller induces into RX frequency: 1==on, 0==off.
+ * @param[in]  tx_amp_rf_gain   Vpp of TX_AMP_RF output in mV.
+ * @param[in]  tx_mod_osc_mag   Magnitude of TX_MOD_OSC mixer output. AM: 0-100%, FM: 0-1000000 Hz deviation, PM: 0-360°.
+ * @param[in]  term             bit 0 set: RF Output 2 is terminated with 50 ohms, else the port is open. bit 0 set: RF Output 1 is terminated with 50 ohms, else the port is open.
+ * @param[in]  qrg_inc          Frequency QRG range controller increment value, 0%-100%.
  */
-void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp,
-        int src_con_pnt, int term, int rx_muxin_src,
-        double tx_car_osc_qrg, double tx_mod_osc_qrg,
-        double tx_amp_rf_gain, double tx_mod_osc_mag,
-        double tx_muxin_gain, double rx_muxin_gain,
-        double rx_car_osc_qrg);
+void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int rx_muxin_src,
+        double tx_car_osc_qrg, double rx_car_osc_qrg,
+        double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
+        int tx_amp_rf_gain, int tx_mod_osc_mag, int term, int qrg_inc);
+
+/**
+ * @brief Reads FPGA RadioBox automatic registers
+ *
+ * @param[in]  tx_modtyp               2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
+ * @param[in]  rx_modtyp               2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
+ * @param[out] loc_RD_tx_car_osc_qrg   Current frequency read-out of the TX_CAR_OSC oscillator.
+ * @param[out] loc_RD_rx_car_osc_qrg   Current frequency read-out of the RX_CAR_OSC oscillator.
+ */
+void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
+        double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg);
 
 
 /**
@@ -1134,6 +1237,27 @@ void fpga_rb_set_tx_modtyp(int tx_modtyp);
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  */
 void fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(double tx_car_osc_qrg);
+
+/**
+ * @brief Pulls current FPGA TX_CAR_OSC frequency setting
+ *
+ * @retval     double           Current frequency of TX_CAR_OSC in Hz.
+ */
+double fpga_rb_get_tx_car_osc_qrg();
+
+/**
+ * @brief Calculates and programs the FPGA TX_CAR_OSC sweep increment for CW, SSB, AM and PM
+ *
+ * @param[in]  tx_car_osc_qrg_inc   Range controller represents frequency increment, 0%-100%.
+ */
+void fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(int tx_car_osc_qrg_inc);
+
+/**
+ * @brief Pulls current FPGA TX_CAR_OSC_SCNR_INC frequency setting
+ *
+ * @retval     double           Current scanner frequency increment in Hz/s of TX_CAR_OSC in Hz.
+ */
+double fpga_rb_get_tx_car_osc_qrg_inc();
 
 /**
  * @brief Calculates and programs the FPGA TX_CAR_OSC mixer for AM
@@ -1180,7 +1304,7 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_
  * @param[in]  tx_muxin_gain   Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
  * @param[in]  tx_muxin_ofs    ADC offset value, signed 16 bit.
  */
-void fpga_rb_set_tx_muxin_gain(double tx_muxin_gain, int tx_muxin_ofs);
+void fpga_rb_set_tx_muxin_gain(int tx_muxin_gain, int tx_muxin_ofs);
 
 
 /**
@@ -1196,7 +1320,7 @@ void fpga_rb_set_rx_modtyp(int rx_modtyp);
  * @param[in]  rx_muxin_gain   Slider value between 0% and 100% for the MUXIN range slider. 80% means amplification of 1:1, over 80% the logarithmic booster is enabled.
  * @param[in]  rx_muxin_ofs    ADC offset value, signed 16 bit.
  */
-void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs);
+void fpga_rb_set_rx_muxin_gain(int rx_muxin_gain, int rx_muxin_ofs);
 
 /**
  * @brief Calculates and programs the FPGA RX_CAR_OSC for SSB, AM and FM
@@ -1204,6 +1328,27 @@ void fpga_rb_set_rx_muxin_gain(double rx_muxin_gain, int rx_muxin_ofs);
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
  */
 void fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(double rx_car_osc_qrg);
+
+/**
+ * @brief Pulls current FPGA RX_CAR_OSC frequency setting
+ *
+ * @retval     double           Current frequency of RX_CAR_OSC in Hz.
+ */
+double fpga_rb_get_rx_car_osc_qrg();
+
+/**
+ * @brief Calculates and programs the FPGA RX_CAR_OSC sweep increment for SSB, AM and FM
+ *
+ * @param[in]  rx_car_osc_qrg_inc   Range controller represents frequency increment, 0%-100%.
+ */
+void fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(int rx_car_osc_qrg_inc);
+
+/**
+ * @brief Pulls current FPGA RX_CAR_OSC_SCNR_INC frequency setting
+ *
+ * @retval     double           Current scanner frequency increment in Hz/s of RX_CAR_OSC in Hz.
+ */
+double fpga_rb_get_rx_car_osc_qrg_inc();
 
 /**
  * @brief Calculates and programs the FPGA RX_MOD_OSC for SSB and AM

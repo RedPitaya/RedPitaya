@@ -87,24 +87,25 @@ enum rb_params_enum_t {
     RB_TX_MODSRC,
     RB_TX_MODTYP,
     RB_RX_MODTYP,
-
     RB_LED_CON_SRC_PNT,
     RB_RFOUT1_CON_SRC_PNT,
     RB_RFOUT2_CON_SRC_PNT,
     RB_RX_MUXIN_SRC,
 
     RB_TX_CAR_OSC_QRG,
+    RB_RX_CAR_OSC_QRG,
+
     RB_TX_MOD_OSC_QRG,
+    RB_TX_MUXIN_GAIN,
+    RB_RX_MUXIN_GAIN,
+    RB_TX_QRG_SEL,
+    RB_RX_QRG_SEL,
 
     RB_TX_AMP_RF_GAIN,
     RB_TX_MOD_OSC_MAG,
-
-    RB_TX_MUXIN_GAIN,
-    RB_RX_MUXIN_GAIN,
-
-    RB_RX_CAR_OSC_QRG,
     RB_RFOUT1_TERM,
     RB_RFOUT2_TERM,
+    RB_QRG_INC,
 
     RB_PARAMS_NUM
 } RB_PARAMS_ENUM;
@@ -128,7 +129,8 @@ enum rb_modsrc_enum_t {
 
 /** @brief RadioBox TX modulation types */
 enum rb_tx_modtyp_enum_t {
-    RB_TX_MODTYP_OFF        =  0,
+    RB_TX_MODTYP_ALL_ON     =  0,
+    RB_TX_MODTYP_OFF,
 
     RB_TX_MODTYP_USB        =  2,
     RB_TX_MODTYP_LSB,
@@ -139,7 +141,8 @@ enum rb_tx_modtyp_enum_t {
 
 /** @brief RadioBox RX modulation types */
 enum rb_rx_modtyp_enum_t {
-    RB_RX_MODTYP_OFF        =  0,
+    RB_RX_MODTYP_ALL_ON     =  0,
+    RB_RX_MODTYP_OFF,
 
     RB_RX_MODTYP_USB        =  2,
     RB_RX_MODTYP_LSB,
@@ -250,6 +253,15 @@ int rp_find_parms_index(const rp_app_params_t* src, const char* name);
  */
 int rb_find_parms_index(const rb_app_params_t* src, const char* name);
 
+
+/**
+ * @brief Returns the index number of the params vector for which the name attribute matches
+ *
+ * @param[inout] dst          Destination application parameters, in case of ptr to NULL a new parameter list is generated.
+ * @param[in]    param_name   Param name to be updated or created.
+ * @param[in]    param_value  Value to assign.
+ */
+void rb_update_param(rb_app_params_t** dst, const char* param_name, double param_value);
 
 /**
  * @brief Copies RedPitaya standard parameters vector to RadioBox high definition parameters vector

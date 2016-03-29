@@ -220,14 +220,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_dsp48_CONaC_CON48_C48_P48.xcix">
+      <File Path="$PPRDIR/../ip/rb_addsub_48M48.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/rb_dsp48_CONaC_CON48_C48_P48/rb_dsp48_CONaC_CON48_C48_P48.xci">
+      <File Path="$PPRDIR/../ip/rb_addsub_48M48/rb_addsub_48M48.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -396,20 +396,6 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../ip/rb_cordic_T_WS_O_SR_32T32_CR_B/rb_cordic_T_WS_O_SR_32T32_CR_B.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PPRDIR/../ip/rb_addsub_48M48.xcix">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PPRDIR/../ip/rb_addsub_48M48/rb_addsub_48M48.xci">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>

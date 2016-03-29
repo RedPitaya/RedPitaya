@@ -80,49 +80,56 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* TX modulation type selector - transport_pktIdx 1 */
         "rx_modtyp_s",              0.0,   1,  0, 0.0,    255.0  },
 
-
-    { /* RBLED CON_SRC_PNT - transport_pktIdx 2 */
+    { /* RBLED CON_SRC_PNT - transport_pktIdx 1 */
         "rbled_csp_s",              0.0,   1,  0, 0.0,    255.0  },
 
-    { /* RFOUT1 CON_SRC_PNT - transport_pktIdx 2 */
+    { /* RFOUT1 CON_SRC_PNT - transport_pktIdx 1 */
         "rfout1_csp_s",             0.0,   1,  0, 0.0,    255.0  },
 
-    { /* RFOUT2 CON_SRC_PNT - transport_pktIdx 2 */
+    { /* RFOUT2 CON_SRC_PNT - transport_pktIdx 1 */
         "rfout2_csp_s",             0.0,   1,  0, 0.0,    255.0  },
 
-    { /* RX_MUX source - transport_pktIdx 2 */
+    { /* RX_MUX source - transport_pktIdx 1 */
         "rx_muxin_src_s",           0.0,   1,  0, 0.0,    255.0  },
 
 
-    { /* TX_CAR_OSC frequency (Hz) - transport_pktIdx 3 */
+    { /* TX_CAR_OSC frequency (Hz) - transport_pktIdx 2 */
         "tx_car_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
+
+    { /* RX_CAR_OSC frequency (Hz) - transport_pktIdx 2 */
+        "rx_car_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
+
 
     { /* TX_MOD_OSC frequency (Hz) - transport_pktIdx 3 */
         "tx_mod_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
 
+    { /* TX_MUX in (Mic in) slider ranges from 0% to 100% - transport_pktIdx 3 */
+        "tx_muxin_gain_s",          0.0,   1,  0, 0.0,    100.0  },
+
+    { /* RX_MUX in - transport_pktIdx 3 */
+        "rx_muxin_gain_s",          0.0,   1,  0, 0.0,    100.0  },
+
+    { /* Frequency QRG controller influences TX - transport_pktIdx 3 */
+        "tx_qrg_sel_s",             0.0,   1,  0, 0.0,      1.0  },
+
+    { /* Frequency QRG controller influences RX - transport_pktIdx 3 */
+        "rx_qrg_sel_s",             0.0,   1,  0, 0.0,      1.0  },
+
 
     { /* TX_AMP_RF amplitude (mV) - transport_pktIdx 4 */
-        "tx_amp_rf_gain_f",         0.0,   1,  0, 0.0,   2047.0  },
+        "tx_amp_rf_gain_s",         0.0,   1,  0, 0.0,   2047.0  },
 
     { /* TX_MOD_OSC magnitude (AM:%, FM:Hz, PM:°) - transport_pktIdx 4 */
-        "tx_mod_osc_mag_f",         0.0,   1,  0, 0.0,     1e+6  },
+        "tx_mod_osc_mag_s",         0.0,   1,  0, 0.0,     1e+6  },
 
-
-    { /* TX_MUX in (Mic in) slider ranges from 0% to 100% - transport_pktIdx 5 */
-        "tx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
-
-    { /* RX_MUX in - transport_pktIdx 5 */
-        "rx_muxin_gain_f",          0.0,   1,  0, 0.0,    100.0  },
-
-
-    { /* RX_CAR_OSC frequency (Hz) - transport_pktIdx 6 */
-        "rx_car_osc_qrg_f",         0.0,   1,  0, 0.0,  62.5e+6  },
-
-    { /* RFOUT1 termination information - transport_pktIdx 6 */
+    { /* RFOUT1 termination information - transport_pktIdx 4 */
         "rfout1_term_s",            0.0,   1,  0, 0.0,      1.0  },
 
-    { /* RFOUT2 termination information - transport_pktIdx 6 */
+    { /* RFOUT2 termination information - transport_pktIdx 4 */
         "rfout2_term_s",            0.0,   1,  0, 0.0,      1.0  },
+
+    { /* Frequency QRG increment range controller - transport_pktIdx 4 */
+        "qrg_inc_s",               50.0,   1,  0, 0.0,    100.0  },
 
 
     { /* has to be last entry */
@@ -351,6 +358,66 @@ int rb_find_parms_index(const rb_app_params_t* src, const char* name)
     return -1;
 }
 
+
+/*----------------------------------------------------------------------------------*/
+void rb_update_param(rb_app_params_t** dst, const char* param_name, double param_value)
+{
+    if (!dst || !param_name) {
+        fprintf(stderr, "ERROR rb_update_param - Bad function arguments received.\n");
+        return;
+    }
+    int l_num_params = 0;
+    int param_name_len = strlen(param_name);
+
+    //fprintf(stderr, "DEBUG rb_update_param - entry ...\n");
+    //fprintf(stderr, "DEBUG rb_update_param - list before modify:\n");
+    //print_rb_params(*dst);
+
+    rb_app_params_t* p_dst = *dst;
+    if (p_dst) {
+        int idx = rb_find_parms_index(p_dst, param_name);
+        if (idx >= 0) {
+            /* update existing entry */
+            double param_value_cor = param_value;
+            if (param_value_cor < p_dst[idx].min_val) {
+                param_value_cor = p_dst[idx].min_val;
+            } else if (param_value_cor > p_dst[idx].max_val) {
+                param_value_cor = p_dst[idx].max_val;
+            }
+            p_dst[idx].value = param_value_cor;
+            //fprintf(stderr, "DEBUG rb_update_param - updating %s with value = %f, bounds corrected value = %f\n", param_name, param_value, param_value_cor);
+
+            //fprintf(stderr, "DEBUG rb_update_param - list after modify:\n");
+            //print_rb_params(*dst);
+            return;
+        }
+
+        /* count entries */
+        while (p_dst[l_num_params].name)
+            l_num_params++;
+
+    } else {
+        l_num_params++;
+    }
+
+    /* re-map to a bigger buffer */
+    //fprintf(stderr, "DEBUG rb_update_param - realloc buffer for %d elements. Old ptr = %p\n", l_num_params + 1, p_dst);
+    p_dst = *dst = realloc(p_dst, sizeof(rb_app_params_t) * (l_num_params + 1));
+    //fprintf(stderr, "DEBUG rb_update_param - realloc buffer for %d elements. New ptr = %p\n", l_num_params + 1, p_dst);
+
+    p_dst[l_num_params].name = malloc(param_name_len + 1);
+    strncpy(p_dst[l_num_params].name, param_name, param_name_len + 1);
+    p_dst[l_num_params].value       = param_value;
+    p_dst[l_num_params].fpga_update = 1;
+    p_dst[l_num_params].read_only   = 0;
+    p_dst[l_num_params].min_val     = 0.0;
+    p_dst[l_num_params].max_val     = 62.5e6;
+    p_dst[l_num_params + 1].name = NULL;
+
+    //fprintf(stderr, "DEBUG rb_update_param - list after modify:\n");
+    //print_rb_params(*dst);
+    //fprintf(stderr, "DEBUG rb_update_param - ... done.\n");
+}
 
 /*----------------------------------------------------------------------------------*/
 void rp2rb_params_value_copy(rb_app_params_t* dst_line, const rp_app_params_t src_line_se, const rp_app_params_t src_line_hi, const rp_app_params_t src_line_mi, const rp_app_params_t src_line_lo)
@@ -652,13 +719,8 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 if (!strcmp("rb_run",              src[i].name) ||
                     !strcmp("tx_modsrc_s",         src[i].name) ||
                     !strcmp("tx_modtyp_s",         src[i].name) ||
-                    !strcmp("rx_modtyp_s",         src[i].name)) {
-                    found = 1;
-                }
-                break;
-
-            case 2:
-                if (!strcmp("rbled_csp_s",         src[i].name) ||
+                    !strcmp("rx_modtyp_s",         src[i].name) ||
+                    !strcmp("rbled_csp_s",         src[i].name) ||
                     !strcmp("rfout1_csp_s",        src[i].name) ||
                     !strcmp("rfout2_csp_s",        src[i].name) ||
                     !strcmp("rx_muxin_src_s",      src[i].name)) {
@@ -666,31 +728,29 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                 }
                 break;
 
-            case 3:
+            case 2:
                 if (!strcmp("tx_car_osc_qrg_f",    src[i].name) ||
-                    !strcmp("tx_mod_osc_qrg_f",    src[i].name)) {
+                    !strcmp("rx_car_osc_qrg_f",    src[i].name)) {
+                    found = 1;
+                }
+                break;
+
+            case 3:
+                if (!strcmp("tx_mod_osc_qrg_f",    src[i].name) ||
+                    !strcmp("tx_muxin_gain_s",     src[i].name) ||
+                    !strcmp("rx_muxin_gain_s",     src[i].name) ||
+                    !strcmp("tx_qrg_sel_s",        src[i].name) ||
+                    !strcmp("rx_qrg_sel_s",        src[i].name)) {
                     found = 1;
                 }
                 break;
 
             case 4:
-                if (!strcmp("tx_amp_rf_gain_f",    src[i].name) ||
-                    !strcmp("tx_mod_osc_mag_f",    src[i].name)) {
-                    found = 1;
-                }
-                break;
-
-            case 5:
-                if (!strcmp("tx_muxin_gain_f",     src[i].name) ||
-                    !strcmp("rx_muxin_gain_f",     src[i].name)) {
-                    found = 1;
-                }
-                break;
-
-            case 6:
-                if (!strcmp("rx_car_osc_qrg_f",    src[i].name) ||
+                if (!strcmp("tx_amp_rf_gain_s",    src[i].name) ||
+                    !strcmp("tx_mod_osc_mag_s",    src[i].name) ||
                     !strcmp("rfout1_term_s",       src[i].name) ||
-                    !strcmp("rfout2_term_s",       src[i].name)) {
+                    !strcmp("rfout2_term_s",       src[i].name) ||
+                    !strcmp("qrg_inc_s",           src[i].name)) {
                     found = 1;
                 }
                 break;
