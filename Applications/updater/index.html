@@ -12,6 +12,11 @@
 
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Red Pitaya</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
@@ -77,22 +82,32 @@
                                 </tr>
                                 <tr id="step_2" class="step">
                                     <td class="step_desc">Step 2. Checking for updates
-                                        <select id="ecosystem_ver" disabled>
-                                        </select>
+                                        <p class="select_ver">Select version to install:
+                                            <select id="ecosystem_ver" disabled>
+                                            </select>
+                                            <button id="apply">Apply</button>
+                                        </p>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_3" class="step">
-                                    <td class="step_desc">Step 3. Downloading ecosystem update</td>
-                                    <td class="step_icon"><img style="display: none" src=""></td>
+                                    <td class="step_desc">Step 3. Downloading ecosystem update
+                                        <p class="error_msg">Download problem has occured. Please check your RedPitaya power supply and Internet connection</p>
+                                    </td>
+                                    <td class="step_icon">
+                                        <p id="percent" style="display: none;">0%</p><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_4" class="step">
-                                    <td class="step_desc">Step 4. Applying changes</td>
+                                    <td class="step_desc">Step 4. Applying changes
+                                        <p class="error_msg">Can not extract file. Check your SD-card empty space or try to redownload it</p>
+                                    </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_5" class="step">
-                                    <td class="step_desc">Step 5. Preparing to run</td>
+                                    <td class="step_desc">Step 5. Preparing to run
+                                        <p class="error_msg">Versions mismatch</p>
+                                    </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_6" class="step">

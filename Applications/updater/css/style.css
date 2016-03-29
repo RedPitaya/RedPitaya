@@ -806,7 +806,7 @@ area:hover {
 
 .main_table
 {
-    width: 600px;
+    width: 750px;
     margin: 0px auto;
     margin-top: 60px;
 }
@@ -835,4 +835,20 @@ area:hover {
     font-size: 12px;
     color:red;
     display: none;
+}
+
+.select_ver
+{
+    font-size: 15px;
+    display: none;
+}
+
+#ecosystem_ver {
+    color: black;
+    width: 150px;
+    height: 27px;
+}
+
+#apply{
+    color:black;
 }
