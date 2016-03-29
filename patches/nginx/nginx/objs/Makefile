@@ -1,5 +1,5 @@
 
-CC =	cc
+CC =	cc $(SYSROOT)
 CFLAGS =   -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Werror -g  -I ../ngx_ext_modules/ngx_http_rp_module/include -I../../../shared/include -I../ngx_ext_modules/ngx_http_rp_module/../ws_server -I/usr/include -DVERSION=0.94-0 -DREVISION=devbuild -DNDK_SET_VAR
 CPP =	cc -E
 LINK =	$(CC)
