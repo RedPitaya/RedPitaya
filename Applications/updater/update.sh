@@ -20,11 +20,10 @@
 #done
 #grep "ecosystem-0.$max_major-$max_minor-$max_hash.zip" download.html | awk '{print $5}'
 #wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/downloads/ecosystem-0.$max_major-$max_minor-$max_hash.zip" &> /dev/null
-
+killall wget &> /dev/null
 rm -rf /tmp/build
 mkdir -p /tmp/build
-echo "START http://downloads.redpitaya.com/downloads/$1"
 wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/downloads/$1" &> /dev/null
-echo "END $1"
 cd /tmp/build && unzip build.zip &> /dev/null
 #cd /tmp/build && killall nginx && rw && rm -rf /opt/redpitaya/* && cd /tmp/build/ && cp -fr * /opt/redpitaya/ && reboot &
+echo "OK"
