@@ -255,6 +255,28 @@
     var old_params = $.extend(true, {}, RB.params.orig);
     var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
 
+    var isTxQrgSel = false;
+    if (new_params['tx_qrg_sel_s'] !== undefined) {
+      if (new_params['tx_qrg_sel_s']) {
+        isTxQrgSel = true;
+      }
+    } else if (old_params['tx_qrg_sel_s'] !== undefined) {
+      if (old_params['tx_qrg_sel_s']) {
+        isTxQrgSel = true;
+      }
+    }
+
+    var isRxQrgSel = false;
+    if (new_params['rx_qrg_sel_s'] !== undefined) {
+      if (new_params['rx_qrg_sel_s']) {
+        isRxQrgSel = true;
+      }
+    } else if (old_params['rx_qrg_sel_s'] !== undefined) {
+      if (old_params['rx_qrg_sel_s']) {
+        isRxQrgSel = true;
+      }
+    }
+
     for (var param_name in new_params) {  // XXX receiving data from the back-end
       // Save new parameter value
       RB.params.orig[param_name] = new_params[param_name];
@@ -314,9 +336,15 @@
       }
       else if (param_name == 'tx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
+        if (isTxQrgSel && !isRxQrgSel) {
+          scannerShowFrequency(dblVal);
+        }
       }
       else if (param_name == 'rx_car_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
+        if (isRxQrgSel) {
+          scannerShowFrequency(dblVal);
+        }
       }
       else if (param_name == 'tx_mod_osc_qrg_f') {
         $('#'+param_name).val(dblVal);
@@ -821,6 +849,25 @@ function qrg_digits_clear() {
   var clear_idx;
   for (clear_idx = 0; clear_idx <= 7; clear_idx++) {
     RB.state.qrgController.digit.e[clear_idx] = 0;
+  }
+}
+
+function scannerShowFrequency(frequency) {
+  var digchr = ' ';
+  var dig_hide = true;
+
+  RB.state.qrgController.frequency = frequency;
+
+  var show_idx;
+  for (show_idx = 7; show_idx >= 0; show_idx--) {
+    var idstr = "#qrg_display_1e" + show_idx + "_f";
+    var dig = Math.floor(((frequency / Math.pow(10, show_idx)) % 10));
+    RB.state.qrgController.digit.e[show_idx] = dig;
+    if (dig > 0 || !dig_hide || show_idx == 0) {
+      digchr = dig;
+      dig_hide = false;
+    }
+    $(idstr).val(digchr);
   }
 }
 
