@@ -391,6 +391,7 @@ objs/nginx:	objs/src/core/nginx.o \
 	objs/addon/src/ngx_http_lua_lex.o \
 	objs/addon/src/ngx_http_lua_balancer.o \
 	objs/ngx_modules.o \
+	$(SYSROOT) \
 	-Wl,-E -lpthread -L../../../shared/libredpitaya -L../ngx_ext_modules/ngx_http_rp_module/../ws_server -lm -ldl -lcurl -lssl -L../../tools/crypto++ -lcrypto -lredpitaya -lws_server -lboost_system -lboost_regex -lboost_thread -lm -lluajit-5.1 -ldl -lpcre -lcrypto -lcrypto -lz
 	
 
