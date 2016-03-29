@@ -1073,12 +1073,12 @@ $(function() {
     }
     var id = ev.target.id;
     if (id !== undefined && id.length >= 3) {
-      btnId += id.substr(14,1) + '_b';
+      btnId += id.substr(id.length - 3,1) + '_b';
     } else {
       return;
     }
     setTimeout(function() {
-      console.log('DEBUG mousewheel(ev, delta) click(): id = ' + id + ', btnId = ' + btnId + ', delta = ' + delta + '\n');
+      //console.log('DEBUG mousewheel(ev, delta) click(): id = ' + id + ', btnId = ' + btnId + ', delta = ' + delta + '\n');
       //$('#' + btnId).attr('style', 'background:#000000;');
       //$('#' + btnId).click();
       RB.state.eventClickId = btnId;
