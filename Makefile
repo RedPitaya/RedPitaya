@@ -122,6 +122,9 @@ $(DL):
 $(TMP):
 	mkdir -p $@
 
+$(INSTALL_DIR):
+	mkdir -p $@
+
 $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
 	   scpi api apps_pro rp_communication
