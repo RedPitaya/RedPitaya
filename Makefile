@@ -328,6 +328,7 @@ $(NGINX_TAR): | $(DL)
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
+	mkdir -p Bazaar/nginx/nginx/objs/{src/{{core,misc},event/modules,http/modules/perl,os/{unix,win32},mail},addon/src}
 	cp -fr patches/nginx/*    $@/
 	cp -f  patches/nginx.conf $@/conf/
 
