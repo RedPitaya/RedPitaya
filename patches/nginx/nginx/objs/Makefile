@@ -10,7 +10,7 @@ ALL_INCS = -I src/core \
 	-I src/event/modules \
 	-I src/os/unix \
 	-I ../ngx_ext_modules/lua-nginx-module/src/api \
-	-I /usr/include/luajit-2.0 \
+	-I=/usr/include/luajit-2.0 \
 	-I objs \
 	-I src/http \
 	-I src/http/modules \
@@ -81,7 +81,7 @@ CORE_INCS = -I src/core \
 	-I src/event/modules \
 	-I src/os/unix \
 	-I ../ngx_ext_modules/lua-nginx-module/src/api \
-	-I /usr/include/luajit-2.0 \
+	-I=/usr/include/luajit-2.0 \
 	-I objs
 
 
