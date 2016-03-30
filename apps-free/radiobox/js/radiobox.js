@@ -885,9 +885,6 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
   if (key == 'tx_modsrc_s') {
     if (value == 15) {
       /* OSC_MOD */
-      $('#tx_modtyp_s').removeAttr("disabled");
-      $('#apply_tx_modtyp').removeAttr("style");
-
       $('#tx_mod_osc_qrg_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_qrg').removeAttr("style");
 
@@ -899,9 +896,6 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
 
     } else if (value) {
       /* external */
-      $('#tx_modtyp_s').removeAttr("disabled");
-      $('#apply_tx_modtyp').removeAttr("style");
-
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
 
@@ -913,9 +907,6 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
 
     } else {
       /* (none) */
-      $('#tx_modtyp_s').attr("disabled", "disabled");
-      $('#apply_tx_modtyp').attr("style", "visibility:hidden");
-
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
 
