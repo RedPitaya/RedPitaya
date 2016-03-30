@@ -236,6 +236,8 @@
                          value = h48  RX_MOD_FM output.
                          value = h49  RX_MOD_PM output.
                          value = h50  RX_AUDIO output.
+                         value = hF8  TX_CAR_OSC_INC frequency value.
+                         value = hF9  RX_CAR_OSC_INC frequency value.
                          value = hFF  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
                      - bit h0F..h08: n/a
                      - bit h17..h10: RFOUT1 source connection point
@@ -294,6 +296,8 @@
                          value = h48  RX_MOD_FM output.
                          value = h49  RX_MOD_PM output.
                          value = h50  RX_AUDIO output.
+                         value = hF8  TX_CAR_OSC_INC frequency value.
+                         value = hF9  RX_CAR_OSC_INC frequency value.
                          value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
                      - bit h1F..h18: RFOUT2 source connection point
                          value = h00  silence.
@@ -351,6 +355,8 @@
                          value = h48  RX_MOD_FM output.
                          value = h49  RX_MOD_PM output.
                          value = h50  RX_AUDIO output.
+                         value = hF8  TX_CAR_OSC_INC frequency value.
+                         value = hF9  RX_CAR_OSC_INC frequency value.
                          value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
 
     00020  R/W  TX:  RB_TX_CAR_OSC_INC_LO - DDS TX_CAR_OSC, phase increment register.
@@ -373,12 +379,21 @@
                      - bit h1F..h10: n/a
 
 
-    00030  R/W  TX:  RB_TX_RF_AMP_GAIN - TX AMP RF gain register.
+    00030  R/W  TX:  RB_TX_CAR_OSC_SCNR_LO - TX_CAR_OSC scanner increment register.
+                     bit 31..00 (LSB), TX_CAR_OSC_INC_SCNR register
+                     - bit h1F..h00: LSB of TX_CAR_OSC_INC_SCNR register.
+
+    00034  R/W  TX:  RB_TX_CAR_OSC_SCNR_HI - TX_CAR_OSC scanner increment register.
+                     bit 47..32 (MSB), TX_CAR_OSC_INC_SCNR register
+                     - bit h0F..h00: MSB of TX_CAR_OSC_INC_SCNR register.
+                     - bit h1F..h10: n/a
+
+    00038  R/W  TX:  RB_TX_RF_AMP_GAIN - TX AMP RF gain register.
                      bit 15..00
                      - bit h0F..h00: SIGNED 16 bit - TX Amplifier RF gain setting.
                      - bit h1F..h10: n/a
 
-    00038  R/W  TX:  RB_TX_RF_AMP_OFS - TX AMP RF offset register.
+    0003C  R/W  TX:  RB_TX_RF_AMP_OFS - TX AMP RF offset register.
                      bit 15..00
                      - bit h0F..h00: SIGNED 16 bit - TX Amplifier RF offset value.
                      - bit h1F..h10: n/a
@@ -484,14 +499,13 @@
                      - bit h1F..h10: n/a
 
 
-    00130  R/W  RX:  RB_RX_MOD_ADD_GAIN - RX MOD ADD gain register.
-                     bit 15..00
-                     - bit h0F..h00: SIGNED 16 bit - RX MOD decoder gain setting.
-                     - bit h1F..h10: n/a
+    00130  R/W  RX:  RB_RX_CAR_OSC_SCNR_LO - RX_CAR_OSC scanner increment register.
+                     bit 31..00 (LSB), RX_CAR_OSC_INC_SCNR register
+                     - bit h1F..h00: LSB of RX_CAR_OSC_INC_SCNR register.
 
-    00138  R/W  RX:  RB_RX_MOD_ADD_OFS - RX MOD ADD offset register.
-                     bit 15..00
-                     - bit h0F..h00: SIGNED 16 bit - RX MOD decoder offset value.
+    00134  R/W  RX:  RB_RX_CAR_OSC_SCNR_HI - RX_CAR_OSC scanner increment register.
+                     bit 47..32 (MSB), RX_CAR_OSC_INC_SCNR register
+                     - bit h0F..h00: MSB of RX_CAR_OSC_INC_SCNR register.
                      - bit h1F..h10: n/a
 
 
@@ -560,12 +574,12 @@
 
     00178  R/O  RX:  RB_RX_AFC_CORDIC_PHS_PREV - RX_AFC_CORDIC previous phase register.
                      bit 31..00, @ 125 MHz base frequency
-                     - bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
+                     - bit h1F..h00: RX_AFC_CORDIC previous phase register - the 200 kHz clock before.
 
     0017C  R/O  RX:  RB_RX_AFC_CORDIC_PHS_DIFF - RX_AFC_CORDIC difference phase register.
                      bit 31..00, @ 125 MHz base frequency
                      - bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase
-                       within 8 kHz clocks.
+                       within 200 kHz clocks.
 
 
     00180  R/W  RX:  RB_RX_MOD_SSB_AM_GAIN - SSB demodulator signal output gain.
