@@ -891,7 +891,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_qrg_f').removeAttr("disabled");
       $('#apply_tx_mod_osc_qrg').removeAttr("style");
 
-      $('#tx_mod_osc_mag_f').removeAttr("disabled");
+      $('#tx_mod_osc_mag_s').removeAttr("disabled");
       $('#apply_tx_mod_osc_mag').removeAttr("style");
 
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
@@ -905,7 +905,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
 
-      $('#tx_mod_osc_mag_f').removeAttr("disabled");
+      $('#tx_mod_osc_mag_s').removeAttr("disabled");
       $('#apply_tx_mod_osc_mag').removeAttr("style");
 
       $('#tx_muxin_gain_s').removeAttr("disabled");
@@ -919,7 +919,7 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
 
-      $('#tx_mod_osc_mag_f').attr("disabled", "disabled");
+      $('#tx_mod_osc_mag_s').attr("disabled", "disabled");
       $('#apply_tx_mod_osc_mag').attr("style", "visibility:hidden");
 
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
