@@ -66,7 +66,7 @@
         digit: {
             e: [ 0, 0, 0, 0, 0, 1, 0, 0 ]  // reversed digits
         },
-        editing: true,
+        editing: false,
         enter: false,
         frequency: 0.0
     }
