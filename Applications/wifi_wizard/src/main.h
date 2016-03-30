@@ -53,13 +53,24 @@ typedef struct rp_osc_meas_res_s {
     float period;
 } rp_osc_meas_res_t;
 
+typedef struct WIFINode {
+    std::string essid;
+    bool keyEn;
+    int quality;
+    int sigLevel;
+} WIFINode;
+
 const char *rp_app_desc(void);
 int rp_app_init(void);
 int rp_app_exit(void);
 int rp_set_params(rp_app_params_t *p, int len);
 int rp_get_params(rp_app_params_t **p);
 int rp_get_signals(float ***s, int *sig_num, int *sig_len);
-int IsRunning(void);
+std::string GetListOfWIFI(std::string wlanInterfaceName);
+std::string ParseLineOfESSID(std::string str);
+bool ParseLineEncPass(std::string str);
+int ParseLineQuality(std::string str);
+int ParseLineSiglevel(std::string str);
 
 #ifdef __cplusplus
 }

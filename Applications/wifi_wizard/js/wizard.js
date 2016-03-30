@@ -1,7 +1,7 @@
 /*
- * Red Pitaya WIZARDillWIZARDope client
+ * Red Pitaya WIFI wizard client
  *
- * Author: Dakus <info@eskala.eu>
+ * Author: 
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -26,39 +26,11 @@
 
     // App configuration
     WIZARD.config = {};
-    WIZARD.config.app_id = 'scpi_server';
+    WIZARD.config.app_id = 'wifi_wizard';
     WIZARD.config.server_ip = ''; // Leave empty on production, it is used for testing only
     WIZARD.config.start_app_url = (WIZARD.config.server_ip.length ? 'http://' + WIZARD.config.server_ip : '') + '/bazaar?start=' + WIZARD.config.app_id + '?' + location.search.substr(1);
     WIZARD.config.stop_app_url = (WIZARD.config.server_ip.length ? 'http://' + WIZARD.config.server_ip : '') + '/bazaar?stop=' + WIZARD.config.app_id;
     WIZARD.config.socket_url = 'ws://' + (WIZARD.config.server_ip.length ? WIZARD.config.server_ip : window.location.hostname) + ':9002'; // WebSocket server URI
-    WIZARD.config.graph_colors = {
-        'ch1': '#f3ec1a',
-        'ch2': '#31b44b',
-        'output1': '#9595ca',
-        'output2': '#ee3739',
-        'math': '#ab4d9d',
-        'trig': '#75cede'
-    };
-
-    // Time scale steps in millisecods
-    WIZARD.time_steps = [
-        // Nanoseconds
-        100 / 1000000, 200 / 1000000, 500 / 1000000,
-        // Microseconds
-        1 / 1000, 2 / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
-        // Millisecods
-        1, 2, 5, 10, 20, 50, 100, 200, 500,
-        // Seconds
-        1 * 1000, 2 * 1000, 5 * 1000, 10 * 1000, 20 * 1000, 50 * 1000
-    ];
-
-    // Voltage scale steps in volts
-    WIZARD.voltage_steps = [
-        // Millivolts
-        1 / 1000, 2 / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
-        // Volts
-        1, 2, 5
-    ];
 
     WIZARD.bad_connection = [false, false, false, false]; // time in s.
 
@@ -66,24 +38,12 @@
     WIZARD.decompressed_data = 0;
     WIZARD.refresh_times = [];
 
-    WIZARD.counts_offset = 0;
-
-    // Sampling rates
-    WIZARD.sample_rates = ['125M', '15.625M', '1.953M', '122.070k', '15.258k', '1.907k'];
-
     // App state
     WIZARD.state = {
         socket_opened: false,
         processing: false,
         editing: false,
-        trig_dragging: false,
-        cursor_dragging: false,
         resized: false,
-        sel_sig_name: 'ch1',
-        fine: false,
-        graph_grid_height: null,
-        graph_grid_width: null,
-        calib: 0,
         demo_label_visible: false
     };
 
@@ -95,18 +55,11 @@
 
     // Other global variables
     WIZARD.ws = null;
-    WIZARD.graphs = {};
-    WIZARD.touch = {};
 
-    WIZARD.connect_time;
-
-    WIZARD.inGainValue1 = '-';
-    WIZARD.inGainValue2 = '-';
-    WIZARD.loaderShow = false;
     WIZARD.running = true;
     WIZARD.unexpectedClose = false;
 
-    // Starts the WIZARDillWIZARDope application on server
+    // Starts the WIFI wizard application on server
     WIZARD.startApp = function() {
         $.get(
                 WIZARD.config.start_app_url
@@ -193,26 +146,7 @@
 
     // Processes newly received values for parameters
     WIZARD.processParameters = function(new_params) {
-        // Run/Stop button
-        for (var param_name in new_params) {
-            if (param_name == 'WIZARD_RUNNING') {
-                if (new_params[param_name].value === true) {
-                    // console.log("Running");
-                    $('#WIZARD_RUN').hide();
-                    $('#WIZARD_STOP').css('display', 'block');
-                    WIZARD.running = true;
-                    $('#label-is-runnung').hide();
-                    $('#label-is-not-runnung').show();
-                } else {
-                    // console.log("Stopped");
-                    $('#WIZARD_STOP').hide();
-                    $('#WIZARD_RUN').show();
-                    WIZARD.running = false;
-                    $('#label-is-not-runnung').hide();
-                    $('#label-is-runnung').show();
-                }
-            }
-        }
+        for (var param_name in new_params) {}
     };
 
     // Creates a WebSocket connection with the web server
@@ -250,8 +184,8 @@
                 }
             };
 
+            // Send report button
             $('#send_report_btn').on('click', function() {
-                //var file = new FileReader();
                 var mail = "support@redpitaya.com";
                 var subject = "Crash report Red Pitaya OS";
                 var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
@@ -277,13 +211,14 @@
                 });
             });
 
+            // Restart application button
             $('#restart_app_btn').on('click', function() {
                 location.reload();
             });
 
             WIZARD.ws.onerror = function(ev) {
                 if (!WIZARD.state.socket_opened)
-                  WIZARD.startApp();
+                    WIZARD.startApp();
                 console.log('Websocket error: ', ev);
             };
 
@@ -345,30 +280,10 @@ $(function() {
         $.cookie("scpi_forced_reload", "true");
         window.location.reload(true);
     }
-    // Process clicks on top menu buttons
-    $('#WIZARD_RUN').on('click', function(ev) {
-        ev.preventDefault();
-        //$('#WIZARD_RUN').hide();
-        //$('#WIZARD_STOP').css('display','block');
-        WIZARD.params.local['WIZARD_RUN'] = { value: true };
-        WIZARD.sendParams();
-        //WIZARD.running = true;
-    });
-
-    $('#WIZARD_STOP').on('click', function(ev) {
-        ev.preventDefault();
-        //$('#WIZARD_STOP').hide();
-        //$('#WIZARD_RUN').show();
-        WIZARD.params.local['WIZARD_RUN'] = { value: false };
-        WIZARD.sendParams();
-        //WIZARD.running = false;
-    });
 
     // Stop the application when page is unloaded
     window.onbeforeunload = function() {
         WIZARD.ws.onclose = function() {}; // disable onclose handler first
-        // Stop SCPI server and close socket
-        WIZARD.params.local['WIZARD_RUN'] = { value: false };
         WIZARD.sendParams();
         WIZARD.running = false;
         WIZARD.ws.close();

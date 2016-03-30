@@ -1,6 +1,6 @@
 {
-    "name": "Wi-Fi Wizard",
+    "name": "WIFI wizard",
     "version": "0.94-BUILD_NUMBER",
     "revision": "REVISION",
-    "description": "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python"
+    "description": "Simple way to establish wireless connection with the Red Pitaya"
 }
