@@ -155,6 +155,12 @@ public:
 		this->m_Value.value = _value;
 	}
 
+	void Set(const Type* _value, size_t _size)
+	{
+		m_Dirty = true;
+		this->m_Value.value.assign(_value, _value + _size);
+	}
+
 	void Resize(int _new_size)
 	{
 		m_Dirty = true;
