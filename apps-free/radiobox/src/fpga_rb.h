@@ -116,7 +116,7 @@ enum {
 
     FPGA_RD_RB_RX_AFC_CORDIC_MAG                                                               = 0x00170,  // h170: RB RX_AFC_CORDIC magnitude value:                 UNSIGNED 32 bit
     FPGA_RD_RB_RX_AFC_CORDIC_PHS                                                               = 0x00174,  // h174: RB_RX_AFC_CORDIC phase value:                       SIGNED 32 bit
-    FPGA_RD_RB_RX_AFC_CORDIC_PHS_PREV                                                          = 0x00178,  // h178: RB_RX_AFC_CORDIC previous 8kHz clock phase value:   SIGNED 32 bit
+    FPGA_RD_RB_RX_AFC_CORDIC_PHS_PREV                                                          = 0x00178,  // h178: RB_RX_AFC_CORDIC previous 200kHz clock phase value: SIGNED 32 bit
     FPGA_RD_RB_RX_AFC_CORDIC_PHS_DIFF                                                          = 0x0017C,  // h17C: RB_RX_AFC_CORDIC difference phase value:            SIGNED 32 bit
 
     FPGA_RW_RB_RX_SSB_AM_GAIN                                                                  = 0x00180,  // h180: RB RX_SSB_AM gain:          UNSIGNED 16 bit        16'b0, (Bit 15: 0)
@@ -585,14 +585,14 @@ typedef struct fpga_rb_reg_mem_s {
     uint32_t tx_car_osc_ofs_hi;
 
 
-    /** @brief  R/W RB_TX_CAR_OSC_INC_SCNR_LO increment register, bits 31..0 (addr: 0x40600030)
+    /** @brief  R/W RB_TX_CAR_OSC_INC_SCNR_LO - TX_CAR_OSC scanner increment register, bits 31..0 (addr: 0x40600030)
      *
      * bit h1F..h00: LSB of TX_CAR_OSC_INC_SCNR register.
      *
      */
     uint32_t tx_car_osc_inc_scnr_lo;
 
-    /** @brief  R/W RB_TX_CAR_OSC_INC_SCNR_HI increment register, bits 47..32 (addr: 0x40600034)
+    /** @brief  R/W RB_TX_CAR_OSC_INC_SCNR_HI - TX_CAR_OSC scanner increment register, bits 47..32 (addr: 0x40600034)
      *
      * bit h0F..h00: MSB of TX_CAR_OSC_INC_SCNR register.
      *
@@ -1000,14 +1000,14 @@ typedef struct fpga_rb_reg_mem_s {
 
     /** @brief  R/O RB_RX_AFC_CORDIC_phs_prev - RX_AFC_CORDIC previous phase register, bits 31..0 (addr: 0x40600178)
      *
-     * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 8 kHz clock before.
+     * bit h1F..h00: RX_AFC_CORDIC previous phase register - the 200 kHz clock before.
      *
      */
     uint32_t rx_afc_cordic_phs_prev;
 
     /** @brief  R/O RB_RX_AFC_CORDIC_phs_diff - RX_AFC_CORDIC difference phase register, bits 31..0 (addr: 0x4060017C)
      *
-     * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 8 kHz clocks.
+     * bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase within 200 kHz clocks.
      *
      */
     uint32_t rx_afc_cordic_phs_diff;
