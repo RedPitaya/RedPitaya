@@ -667,9 +667,7 @@
         <div id="rx_muxin_src" class="form-group">
           <label for="rx_muxin_src_s" class="col-xs-5 control-label">RX input:</label>
           <div class="col-xs-6">
-            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src">
-              <option value="0">(none)</option>
-              <option disabled="disabled">---------------------</option>
+            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src" disabled="disabled">
               <option value="1">RF Input 1</option>
               <option value="2">RF Input 2</option>
               <option disabled="disabled">---------------------</option>
@@ -678,7 +676,7 @@
               <option value="6">EXP AI2</option>
               <option value="7">EXP AI3</option>
             </select>
-            <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
+            <span id="apply_rx_muxin_src" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -697,7 +695,8 @@
         <div id="rx_modtyp" class="form-group">
           <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
           <div class="col-xs-6">
-            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp">
+              <option value="1">(off)</option>
               <option value="2">USB</option>
               <option value="3">LSB</option>
               <option disabled="disabled">---------------------</option>
@@ -708,7 +707,7 @@
               <option value="7">FM</option>
               <option value="8">PM</option>
             </select>
-            <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
+            <span id="apply_rx_modtyp" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>

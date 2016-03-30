@@ -917,19 +917,19 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
 
-  } else if (key == 'rx_muxin_src_s') {
-    if (value) {
+  } else if (key == 'rx_modtyp_s') {
+    if (value != 1) {
       /* active */
-      $('#rx_modtyp_s').removeAttr("disabled");
-      $('#apply_rx_modtyp').removeAttr("style");
+      $('#rx_muxin_src_s').removeAttr("disabled");
+      $('#apply_rx_muxin_src').removeAttr("style");
 
       $('#rx_muxin_gain_s').removeAttr("disabled");
       $('#apply_rx_muxin_gain').removeAttr("style");
 
     } else {
       /* (none) */
-      $('#rx_modtyp_s').attr("disabled", "disabled");
-      $('#apply_rx_modtyp').attr("style", "visibility:hidden");
+      $('#rx_muxin_src_s').attr("disabled", "disabled");
+      $('#apply_rx_muxin_src').attr("style", "visibility:hidden");
 
       $('#rx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_rx_muxin_gain').attr("style", "visibility:hidden");

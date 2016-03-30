@@ -61,14 +61,6 @@ input#tx_mod_osc_qrg_f[disabled] {
 }
 
 
-#rx_muxin_src {
-  position:relative;
-  z-index:1;
-}
-.form-bg-rx-muxin-src {
-  background:#707040;
-}
-
 #rx_modtyp {
   position:relative;
   z-index:1;
@@ -77,6 +69,17 @@ input#tx_mod_osc_qrg_f[disabled] {
   background:#707040;
 }
 select#rx_modtyp_s[disabled] {
+  background:#707070;
+}
+
+#rx_muxin_src {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-muxin-src {
+  background:#707040;
+}
+select#rx_muxin_src_s[disabled] {
   background:#707070;
 }
 
