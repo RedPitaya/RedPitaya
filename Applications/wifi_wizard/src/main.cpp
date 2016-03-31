@@ -14,10 +14,9 @@
 #include <sys/sysinfo.h>
 
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
-CBooleanParameter inRun("OSC_RUN", CBaseParameter::RW, false, 0);
-// CIntParameter qualitySignal("QUALITY", CBaseParameter::RW, 200, 0, 0, 2);
-
-std::vector<WIFINode> g_ListWIFI;
+CStringParameter listOfWIFI("WIFI_LIST", CBaseParameter::RWSA, "", 10000);
+CStringParameter essidIn("WIFI_SSID", CBaseParameter::RW, "", 10000);
+CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -28,10 +27,7 @@ const char *rp_app_desc(void) {
 
 int rp_app_init(void) {
     fprintf(stderr, "Loading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
-    // GetListOfWIFI(std::string("wlan0"));
-    // std::string res = ParseLineOfESSID(std::string("                    ESSID:\"IntegraSources\""));
-    // fprintf(stderr, "rerererererere %d\n", ParseLineEncPass(std::string("                    Encryption key:off")));
-    CDataManager::GetInstance()->SetParamInterval(1000);
+    CDataManager::GetInstance()->SetParamInterval(2000);
 
     rpApp_Init();
     rpApp_OscRun();
@@ -68,47 +64,111 @@ void UpdateSignals(void) {
 }
 
 void UpdateParams(void) {
-    // qualitySignal.Value() = // function with grepping
+	listOfWIFI.Value() = GetListOfWIFI("wlan0");
 }
 
 bool check_params(const rp_calib_params_t& current_params, int step) {
+	return false;
+}
+
+// Stringify list to JSON
+std::string ToString(std::vector<WIFINode> array) {
+	std::stringstream JSONstr;
+
+	JSONstr << "{";
+
+	for(size_t i=0; i<array.size(); i++)
+	{
+		JSONstr << "\"wifi" << i << "\"" << ": {";
+		JSONstr << "\"essid\": " << "\"" << array[i].essid << "\",";
+		JSONstr << "\"keyEn\": " << "\"" << array[i].keyEn << "\",";
+		JSONstr << "\"quality\": " << "\"" << array[i].quality << "\",";
+		JSONstr << "\"sigLevel\": " << "\"" << array[i].sigLevel << "\"";
+		JSONstr << "}";
+
+		if(i < (array.size()-1))
+		JSONstr << ",";
+	}
+
+	JSONstr << "}";
+
+	return JSONstr.str();
+}
+
+bool CheckIwlist() {
+	std::string lineFromResult;
+	std::string tmpFileName = "iwlist.result";
+	std::string command = "iwlist -v" + tmpFileName;
+
+	system(command.c_str());
+
+	std::ifstream tmpFile(tmpFileName);
+	std::getline(tmpFile, lineFromResult);
+
+	size_t found = lineFromResult.find("iwlist    Wireless-Tools version");
+		if (found != std::string::npos)
+			return true;
 
 	return false;
 }
 
+void InstallIwlist() {
+	system("apt-get install wireless-tools");
+}
+
 std::string GetListOfWIFI(std::string wlanInterfaceName) {
 	std::stringstream command;
-	std::stringstream grepResult;
 	std::string tmpFileName = "scanning.result";
-	std::string rmTmpFile = "rm -f " + tmpFileName;
 	std::string lineFromResult;
+	int lineNumber = 0;
 
-	command << "cat /opt/redpitaya/www/apps/wifi_wizard/scan_wlan0_res | grep '\\(ESSID\\|Encryption\\|Quality\\)' > " << tmpFileName;
+	command << "iwlist " << wlanInterfaceName << " scan | grep '\\(ESSID\\|Encryption\\|Quality\\)' > " << tmpFileName;
+	// command << "cat /opt/redpitaya/www/apps/wifi_wizard/scan_wlan0_res | grep '\\(ESSID\\|Encryption\\|Quality\\)' > " << tmpFileName;
 
 	system(command.str().c_str());
 
+	// Get number of lines in result file
+	std::ifstream tmpFile(tmpFileName);
+	while(std::getline(tmpFile, lineFromResult))
+		lineNumber++;
+	tmpFile.close();
+
 	std::ifstream infile(tmpFileName);
 
-	
+	std::vector<WIFINode> listWiFi;
+
+	for(int i=0; i<(lineNumber/3); i++)
 	{
 		WIFINode wifi;
+
 		std::getline(infile, lineFromResult);
 		wifi.essid = ParseLineOfESSID(lineFromResult);
+
 		std::getline(infile, lineFromResult);
 		wifi.keyEn = ParseLineEncPass(lineFromResult);
+
 		std::getline(infile, lineFromResult);
 		wifi.quality = ParseLineQuality(lineFromResult);
-		std::getline(infile, lineFromResult);
 		wifi.sigLevel = ParseLineSiglevel(lineFromResult);
-		g_ListWIFI.push_back(wifi);
-	}
 
+		listWiFi.push_back(wifi);
+	}
 	infile.close();
 
-	grepResult << std::ifstream(tmpFileName).rdbuf();
-	system(rmTmpFile.c_str());
+	return ToString(listWiFi);
+}
 
-	return grepResult.str();
+void CreateWPA_SUPPL(std::string ssid, std::string pass) {
+	std::stringstream result;
+
+	result << "ctrl_interface=/var/run/wpa_supplicant" << '\n' << "network={" << '\n';
+	result << "\t\t" << "ssid=\"" << ssid << "\"" << '\n';
+	result << "\t\t" << "key_mgmt=WPA-PSK" << '\n';
+	result << "\t\t" << "psk=\"" << pass << "\"" << '\n';
+	result << "}";
+
+	std::string command = "echo '" + result.str() + "' > /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+	system(command.c_str());
 }
 
 std::string ParseLineOfESSID(std::string str) {
@@ -134,46 +194,55 @@ bool ParseLineEncPass(std::string str) {
 
 int ParseLineQuality(std::string str) {
 	size_t start = 0;
-
-	for(size_t i=0; i<str.size(); i++)
-	{
-		if(str[i] == '=' && start == 0)
-			start = i;
-	}
-
-	std::string result = str.substr(start+1, 2);
-	return atoi(result.c_str());
-}
-
-int ParseLineSiglevel(std::string str) {
-	size_t start = 0;
 	size_t stop = 0;
 
 	for(size_t i=0; i<str.size(); i++)
 	{
 		if(str[i] == '=' && start == 0)
 			start = i;
-		if(str[i] == '=' && start != 0)
+		if(str[i] == '/' && start != 0)
 			stop = i;
 	}
 
-	std::string result = str.substr(stop+1, 2);
+	std::string result = str.substr(start+1, stop-start-1);
+	return atoi(result.c_str());
+}
+
+int ParseLineSiglevel(std::string str) {
+	size_t start = 0;
+	size_t stop = 0;
+	bool first = false;
+
+	for(size_t i=0; i<str.size(); i++)
+	{
+		if(!first)
+		{
+			if(str[i] == '=')
+				start = i;
+			if(str[i] == '/' && start != 0)
+			{
+				start = 0;
+				first = true;
+			}
+		}
+		else
+		{
+			if(str[i] == '=')
+				start = i;
+			if(str[i] == '/' && start != 0)
+				stop = i;
+		}
+	}
+
+	std::string result = str.substr(start+1, stop-start-1);
 	return atoi(result.c_str());
 }
 
 void OnNewParams(void) {
-// /* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
-// 	fprintf(stderr, "-----LOG SCPI SERVER OnNewParams()------\n");
-//     //IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
-
-//     if(inRun.NewValue() == false)
-//     {
-//     	system("killall scpi-server");
-//     	inRun.Value() = false;
-//     }
-//     else if(inRun.NewValue() == true)
-//     {
-//     	system("export LD_LIBRARY_PATH=/opt/redpitaya/lib/ && /opt/redpitaya/bin/scpi-server &");
-//     	inRun.Value() = true;
-//     }
+	if(essidIn.IsNewValue())
+	{
+		essidIn.Update();
+		passwIn.Update();
+		CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
+	}
 }

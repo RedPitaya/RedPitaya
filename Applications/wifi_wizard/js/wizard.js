@@ -1,7 +1,7 @@
 /*
  * Red Pitaya WIFI wizard client
  *
- * Author: 
+ * Author: Artem Kokos
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -146,8 +146,41 @@
 
     // Processes newly received values for parameters
     WIZARD.processParameters = function(new_params) {
-        for (var param_name in new_params) {}
+        for (var param_name in new_params) {
+            if (param_name == 'WIFI_LIST') {
+                if (new_params[param_name].value != "")
+                    WIZARD.updateList(JSON.parse(new_params[param_name].value))
+            }
+        }
     };
+
+    WIZARD.updateList = function(list) {
+        var htmlList = "";
+
+        for (var item in list) {
+            var icon = "";
+            var lock = list[item].keyEn ? "<img src='img/wifi-icons/lock.png' width=15>" : "";
+
+            if (parseInt(list[item].sigLevel) < 20)
+                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_0.png' width=25>" + lock + "</div>";
+            else if (parseInt(list[item].sigLevel) < 50)
+                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_1.png' width=25>" + lock + "</div>";
+            else if (parseInt(list[item].sigLevel) < 80)
+                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_2.png' width=25>" + lock + "</div>";
+            else
+                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_3.png' width=25>" + lock + "</div>";
+
+            htmlList += icon + "<div key='" + list[item].essid + "' class='btn-wifi-item btn'>" + list[item].essid + "</div>";
+        }
+        htmlList = "<div>Select Wi-Fi Network:</div>" + htmlList;
+        if ($('#list_container').html() != htmlList)
+            $('#list_container').html(htmlList);
+
+        $('.btn-wifi-item').click(function() {
+            $('#essid_enter').val($(this).attr('key'))
+            console.log($(this).attr('key'));
+        });
+    }
 
     // Creates a WebSocket connection with the web server
     WIZARD.connectWebSocket = function() {
@@ -264,7 +297,7 @@
             return false;
         }
 
-        WIZARD.params.local['in_command'] = { value: 'WIZARD_RUN' };
+        WIZARD.params.local['in_command'] = { value: 'WIFI_LIST' };
         WIZARD.ws.send(JSON.stringify({ parameters: WIZARD.params.local }));
         WIZARD.params.local = {};
 
@@ -274,6 +307,15 @@
 
 // Page onload event handler
 $(function() {
+    $('#connect_btn').click(function() {
+        var ssid = $('#essid_enter').val();
+        var pass = $('#passw_enter').val();
+        WIZARD.params.local['WIFI_SSID'] = { value: ssid };
+        WIZARD.params.local['WIFI_PASSW'] = { value: pass };
+        WIZARD.sendParams();
+        WIZARD.params.local = {};
+    });
+
 
     var reloaded = $.cookie("scpi_forced_reload");
     if (reloaded == undefined || reloaded == "false") {

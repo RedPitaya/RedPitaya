@@ -66,11 +66,16 @@ int rp_app_exit(void);
 int rp_set_params(rp_app_params_t *p, int len);
 int rp_get_params(rp_app_params_t **p);
 int rp_get_signals(float ***s, int *sig_num, int *sig_len);
+
+std::string ToString(std::vector<WIFINode> array);
 std::string GetListOfWIFI(std::string wlanInterfaceName);
 std::string ParseLineOfESSID(std::string str);
 bool ParseLineEncPass(std::string str);
 int ParseLineQuality(std::string str);
 int ParseLineSiglevel(std::string str);
+bool CheckIwlist();
+void InstallIwlist();
+void CreateWPA_SUPPL(std::string ssid, std::string pass);
 
 #ifdef __cplusplus
 }
