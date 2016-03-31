@@ -453,20 +453,20 @@
         <div id="tx_modsrc" class="form-group">
           <label for="tx_modsrc_s" class="col-xs-5 control-label">TX mod. source:</label>
           <div class="col-xs-6">
-            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc">
-              <option value="0">(none)</option>
+            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc" disabled="disabled">
+              <option id="tx_modsrc_o_0" value="0">(no modulation / CW mode)</option>
               <option disabled="disabled">---------------------</option>
-              <option value="15">TX_MOD_OSC</option>
+              <option id="tx_modsrc_o_15" value="15">TX_MOD_OSC</option>
               <option disabled="disabled">---------------------</option>
-              <option value="1">RF Input 1</option>
-              <option value="2">RF Input 2</option>
+              <option id="tx_modsrc_o_1" value="1">RF Input 1</option>
+              <option id="tx_modsrc_o_2" value="2">RF Input 2</option>
               <option disabled="disabled">---------------------</option>
-              <option value="4">EXP AI0</option>
-              <option value="5">EXP AI1</option>
-              <option value="6">EXP AI2</option>
-              <option value="7">EXP AI3</option>
+              <option id="tx_modsrc_o_4" value="4">EXP AI0</option>
+              <option id="tx_modsrc_o_5" value="5">EXP AI1</option>
+              <option id="tx_modsrc_o_6" value="6">EXP AI2</option>
+              <option id="tx_modsrc_o_7" value="7">EXP AI3</option>
             </select>
-            <span id="apply_tx_modsrc" class="input-group-btn" _style="visibility:hidden">
+            <span id="apply_tx_modsrc" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -485,15 +485,15 @@
         <div id="tx_modtyp" class="form-group">
           <label for="tx_modtyp_s" class="col-xs-5 control-label">TX mod. type:</label>
           <div class="col-xs-6">
-            <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
-              <option value="1">(off)</option>
-              <option value="2">USB</option>
-              <option value="3">LSB</option>
-              <option value="4">AM</option>
-              <option value="7">FM</option>
-              <option value="8">PM</option>
+            <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp">
+              <option id="tx_modtyp_o_1" value="1">(off)</option>
+              <option id="tx_modtyp_o_2" value="2">USB</option>
+              <option id="tx_modtyp_o_3" value="3">LSB</option>
+              <option id="tx_modtyp_o_4" value="4">AM</option>
+              <option id="tx_modtyp_o_7" value="7">FM</option>
+              <option id="tx_modtyp_o_8" value="8">PM</option>
             </select>
-            <span id="apply_tx_modtyp" class="input-group-btn" style="visibility:hidden">
+            <span id="apply_tx_modtyp" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -624,7 +624,7 @@
             <td class="qrg_col17"><input class="btnevt qrg_entry_but qrg_entry_but_enter qrg_yes" type="button" id="qrg_entry_enter_b" name="qrg_entry_enter" value="&radic;" /></td>
           </tr>
         </table>
-        <span style="display:inline-block; width:20%;"></span>
+        <span style="display:inline-block; width:10%;"></span>
         <table style="display:inline-block; text-align:right;">
           <tr>
             <td><a href="doc/RedPitaya-RadioBox-Transmitter_block.png" target="RB_TX_model"><img src="doc/RedPitaya-RadioBox-Transmitter_block.png" style="height:250px;" /></a></td>
@@ -667,9 +667,7 @@
         <div id="rx_muxin_src" class="form-group">
           <label for="rx_muxin_src_s" class="col-xs-5 control-label">RX input:</label>
           <div class="col-xs-6">
-            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src">
-              <option value="0">(none)</option>
-              <option disabled="disabled">---------------------</option>
+            <select id="rx_muxin_src_s" class="form-control form-bg-rx-muxin-src" disabled="disabled">
               <option value="1">RF Input 1</option>
               <option value="2">RF Input 2</option>
               <option disabled="disabled">---------------------</option>
@@ -678,7 +676,7 @@
               <option value="6">EXP AI2</option>
               <option value="7">EXP AI3</option>
             </select>
-            <span id="apply_rx_muxin_src" class="input-group-btn" _style="visibility:hidden">
+            <span id="apply_rx_muxin_src" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -697,7 +695,7 @@
         <div id="rx_modtyp" class="form-group">
           <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
           <div class="col-xs-6">
-            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp" disabled="disabled">
+            <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp">
               <option value="1">(off)</option>
               <option value="2">USB</option>
               <option value="3">LSB</option>
@@ -709,7 +707,7 @@
               <option value="7">FM</option>
               <option value="8">PM</option>
             </select>
-            <span id="apply_rx_modtyp" class="input-group-btn" style="visibility:hidden">
+            <span id="apply_rx_modtyp" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>

@@ -434,6 +434,10 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         int tx_amp_rf_gain, int tx_mod_osc_mag, int term, int qrg_inc)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
+    static double tx_car_osc_qrg_old = 0.0;
+    static double rx_car_osc_qrg_old = 0.0;
+    static uint32_t src_con_pnt_old = 0;
+    static int term_old = 0;
     double rfout1_amp_gain = 0.0;
     double rfout2_amp_gain = 0.0;
     int tx_car_osc_qrg_inc = 50;
@@ -449,13 +453,20 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       rx_car_osc_qrg_inc = qrg_inc;
     }
 
-    //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, term=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%lf, tx_mod_osc_mag=%lf, tx_muxin_gain=%d\n",
+    //fprintf(stderr, "INFO - fpga_rb_set_ctrl: rb_run=%d, tx_modsrc=%d, tx_modtyp=%d, src_con_pnt=%d, term=%d, tx_car_osc_qrg=%lf, tx_mod_osc_qrg=%lf, tx_amp_rf_gain=%d, tx_mod_osc_mag=%d, tx_muxin_gain=%d\n",
     //        rb_run, tx_modsrc, tx_modtyp, src_con_pnt, term, tx_car_osc_qrg, tx_mod_osc_qrg, tx_amp_rf_gain, tx_mod_osc_mag, tx_muxin_gain);
 
-    uint32_t src_con_pnt_old = g_fpga_rb_reg_mem->src_con_pnt;
-    if (src_con_pnt_old != src_con_pnt) {
-      //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x, old = 0x%08x\n", src_con_pnt, src_con_pnt_old);
-      g_fpga_rb_reg_mem->src_con_pnt = src_con_pnt & 0x000000ff;  // switch off output until new gain settings are made
+    /* RF Out x Gain settings - only when relevant changes were made */
+    if (
+            (src_con_pnt_old != src_con_pnt) ||
+            (term_old != term) ||
+            (tx_car_osc_qrg_old != tx_car_osc_qrg) ||
+            (rx_car_osc_qrg_old != rx_car_osc_qrg)) {
+      //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x, old = 0x%08x / term = %d, term_old = %d\n", src_con_pnt, src_con_pnt_old, term, term_old);
+      tx_car_osc_qrg_old = tx_car_osc_qrg;
+      rx_car_osc_qrg_old = rx_car_osc_qrg;
+      src_con_pnt_old = src_con_pnt;
+      term_old = term;
 
       double rfout_frequency[2];
       uint8_t rfout_con_pnt[2];
@@ -486,6 +497,9 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
       rfout1_amp_gain = get_compensation_factor(rfout_frequency[0], (term & 0x01 ?  1 : 0));
       rfout2_amp_gain = get_compensation_factor(rfout_frequency[1], (term & 0x02 ?  1 : 0));
+      //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: get_compensation_factor(rfout1_term_on, QRG = %f) = %f, get_compensation_factor(rfout2_term_on, QRG = %f) = %f\n",
+      //        rfout_frequency[0], rfout1_amp_gain,
+      //        rfout_frequency[1], rfout2_amp_gain);
 
       fpga_rb_set_rfout1_gain_ofs(rfout1_amp_gain, 0.0);                                                   // RFOUT1_AMP    gain correction setting of the RF Output 1 line, DAC offset value
       fpga_rb_set_rfout2_gain_ofs(rfout2_amp_gain, 0.0);                                                   // RFOUT2_AMP    gain correction setting of the RF Output 2 line, DAC offset value
