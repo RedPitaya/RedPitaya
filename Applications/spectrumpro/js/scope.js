@@ -88,7 +88,6 @@
         orig: {},
         local: {}
     };
-
     // Other global variables
     SPEC.ws = null;
     SPEC.graphs = {};

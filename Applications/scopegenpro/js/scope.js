@@ -230,7 +230,6 @@
         if (OSC.state.demo_label_visible)
             $('#get_lic').modal('show');
     }
-
     OSC.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
@@ -318,8 +317,8 @@
                 try {
                     var data = new Uint8Array(ev.data);
                     OSC.compressed_data += data.length;
-                    var inflate = new Zlib.Gunzip(data);
-                    var text = String.fromCharCode.apply(null, new Uint16Array(inflate.decompress()));
+                    var inflate = pako.inflate(data);
+                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
 
                     OSC.decompressed_data += text.length;
                     var receive = JSON.parse(text);
