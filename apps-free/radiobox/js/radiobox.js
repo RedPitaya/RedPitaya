@@ -882,6 +882,40 @@ function qrg_inc_enable(enable) {
 }
 
 function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
+  if (key == 'tx_modtyp_s') {
+    if (value == 1) {
+      /* (none) */
+      $('#tx_modsrc_o_0').removeAttr("disabled");
+      $('#tx_modsrc_o_15').removeAttr("disabled");
+
+      $('#tx_modsrc_s').attr("disabled", "disabled");
+      $('#apply_tx_modsrc').attr("style", "visibility:hidden");
+
+      $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
+      $('#apply_tx_mod_osc_qrg').attr("style", "visibility:hidden");
+
+      $('#tx_mod_osc_mag_s').attr("disabled", "disabled");
+      $('#apply_tx_mod_osc_mag').attr("style", "visibility:hidden");
+
+      $('#tx_muxin_gain_s').attr("disabled", "disabled");
+      $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
+
+
+    } else if (value == 2 || value == 3) {
+      $('#tx_modsrc_s').removeAttr("disabled");
+      $('#apply_tx_modsrc').removeAttr("style");
+
+      $('#tx_modsrc_o_0').attr("disabled", "disabled");
+      $('#tx_modsrc_o_15').attr("disabled", "disabled");
+
+    } else {
+      $('#tx_modsrc_o_0').removeAttr("disabled");
+      $('#tx_modsrc_o_15').removeAttr("disabled");
+      $('#tx_modsrc_s').removeAttr("disabled");
+      $('#apply_tx_modsrc').removeAttr("style");
+    }
+  }
+
   if (key == 'tx_modsrc_s') {
     if (value == 15) {
       /* OSC_MOD */
@@ -916,8 +950,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
     }
+  }
 
-  } else if (key == 'rx_modtyp_s') {
+  if (key == 'rx_modtyp_s') {
     if (value != 1) {
       /* active */
       $('#rx_muxin_src_s').removeAttr("disabled");

@@ -453,20 +453,20 @@
         <div id="tx_modsrc" class="form-group">
           <label for="tx_modsrc_s" class="col-xs-5 control-label">TX mod. source:</label>
           <div class="col-xs-6">
-            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc">
-              <option value="0">(none)</option>
+            <select id="tx_modsrc_s" class="form-control form-bg-tx-modsrc" disabled="disabled">
+              <option id="tx_modsrc_o_0" value="0">(no modulation / CW mode)</option>
               <option disabled="disabled">---------------------</option>
-              <option value="15">TX_MOD_OSC</option>
+              <option id="tx_modsrc_o_15" value="15">TX_MOD_OSC</option>
               <option disabled="disabled">---------------------</option>
-              <option value="1">RF Input 1</option>
-              <option value="2">RF Input 2</option>
+              <option id="tx_modsrc_o_1" value="1">RF Input 1</option>
+              <option id="tx_modsrc_o_2" value="2">RF Input 2</option>
               <option disabled="disabled">---------------------</option>
-              <option value="4">EXP AI0</option>
-              <option value="5">EXP AI1</option>
-              <option value="6">EXP AI2</option>
-              <option value="7">EXP AI3</option>
+              <option id="tx_modsrc_o_4" value="4">EXP AI0</option>
+              <option id="tx_modsrc_o_5" value="5">EXP AI1</option>
+              <option id="tx_modsrc_o_6" value="6">EXP AI2</option>
+              <option id="tx_modsrc_o_7" value="7">EXP AI3</option>
             </select>
-            <span id="apply_tx_modsrc" class="input-group-btn" _style="visibility:hidden">
+            <span id="apply_tx_modsrc" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
@@ -486,14 +486,14 @@
           <label for="tx_modtyp_s" class="col-xs-5 control-label">TX mod. type:</label>
           <div class="col-xs-6">
             <select id="tx_modtyp_s" class="form-control form-bg-tx-modtyp">
-              <option value="1">(off)</option>
-              <option value="2">USB</option>
-              <option value="3">LSB</option>
-              <option value="4">AM</option>
-              <option value="7">FM</option>
-              <option value="8">PM</option>
+              <option id="tx_modtyp_o_1" value="1">(off)</option>
+              <option id="tx_modtyp_o_2" value="2">USB</option>
+              <option id="tx_modtyp_o_3" value="3">LSB</option>
+              <option id="tx_modtyp_o_4" value="4">AM</option>
+              <option id="tx_modtyp_o_7" value="7">FM</option>
+              <option id="tx_modtyp_o_8" value="8">PM</option>
             </select>
-            <span id="apply_tx_modtyp" class="input-group-btn" style="visibility:hidden">
+            <span id="apply_tx_modtyp" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
             </span>
           </div>
