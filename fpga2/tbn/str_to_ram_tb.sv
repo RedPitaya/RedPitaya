@@ -10,10 +10,8 @@ module str_to_ram_tb #(
   // time period
   realtime  TP = 8.0ns,  // 125MHz
   // types
-  type S16 = logic signed [16-1:0],
-  type S14 = logic signed [14-1:0],
   int unsigned DN = 1,
-  type DT = S14,
+  type DT = logic [16-1:0],
   // buffer parameters
   int unsigned AW = 14
 );
@@ -25,9 +23,6 @@ module str_to_ram_tb #(
 // syste signals
 logic clk ;
 logic rstn;
-
-// control
-logic ctl_rst;  // set FSM to reset
 
 // stream
 axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
@@ -56,9 +51,11 @@ initial begin
   DT dat [];
   DT rdata_blk [];
   axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  repeat(8) @(posedge clk);
 
-  ctl_rst = 1'b0;
-  repeat(10) @(posedge clk);
+  // SW reset
+  busm.write(0, 0);
+  repeat(8) @(posedge clk);
 
   cli = new;
   dat = new [8];
@@ -68,6 +65,11 @@ initial begin
   fork
     str_src.run (cli);
   join
+  repeat(4) @(posedge clk);
+
+  // SW reset
+  busm.write(0, 0);
+  repeat(8) @(posedge clk);
 
   // read table
   rdata_blk = new [buf_len];
@@ -98,8 +100,6 @@ str_to_ram #(
   .DT  (DT),
   .AW  (AW)
 ) str_to_ram (
-  // control
-  .ctl_rst  (ctl_rst),
   // stream input
   .str      (str),
   // System bus
