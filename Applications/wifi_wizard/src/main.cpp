@@ -20,6 +20,8 @@ CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
 CStringParameter errorOut("WIFI_ERROR", CBaseParameter::RW, "", 10000);
 CStringParameter okOut("WIFI_OK", CBaseParameter::RW, "", 10000);
 CBooleanParameter installWT("WIFI_INSTALL", CBaseParameter::RW, false, 0);
+CBooleanParameter connectedWifi("WIFI_CONNECTED", CBaseParameter::RW, false, 0);
+CBooleanParameter doConnect("WIFI_CONNECT", CBaseParameter::RW, false, 0);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -193,6 +195,19 @@ void CreateWPA_SUPPL(std::string ssid, std::string pass) {
 	system(command.c_str());
 }
 
+bool ConnectToNetwork() {
+	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+	bool result = system(command.c_str());
+	if(result == 0)
+		return true;
+	return false;
+}
+
+bool DisconnectNetwork() {
+	std::string command = "killall pidof wpa_supplicant";
+	bool result = system(command.c_str());
+}
+
 std::string ParseLineOfESSID(std::string str) {
 	size_t start = 0;
 	size_t stop = 0;
@@ -261,12 +276,29 @@ int ParseLineSiglevel(std::string str) {
 }
 
 void OnNewParams(void) {
-	if(essidIn.IsNewValue())
+	// Connect and disconnect command
+	if(doConnect.IsNewValue())
 	{
-		essidIn.Update();
-		passwIn.Update();
-		CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
+		doConnect.Update();
+		if(doConnect.Value())
+		{
+			essidIn.Update();
+			passwIn.Update();
+			CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
+			bool connected = ConnectToNetwork();
+			if(connected)
+			{
+				connectedWifi.Value() = true;
+			}
+		}
+		else
+		{
+			DisconnectNetwork();
+			connectedWifi.Value() = false;
+		}
 	}
+
+	// Install wireless-tools command
 	if(installWT.IsNewValue())
 	{
 		installWT.Update();

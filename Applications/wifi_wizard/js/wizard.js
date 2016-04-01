@@ -59,6 +59,8 @@
     WIZARD.running = true;
     WIZARD.unexpectedClose = false;
 
+    WIZARD.state.connected = false;
+
     // Starts the WIFI wizard application on server
     WIZARD.startApp = function() {
         $.get(
@@ -155,12 +157,25 @@
                     WIZARD.installWTDialog();
             } else if (param_name == 'WIFI_OK') {
                 console.log(new_params[param_name].value);
+            } else if (param_name == 'WIFI_CONNECTED') {
+                WIZARD.connectionControl(new_params[param_name].value);
+                console.log(new_params[param_name].value);
             }
         }
     };
 
     WIZARD.installWTDialog = function() {
         $('#wtools_missing').modal('show');
+    }
+
+    WIZARD.connectionControl = function(result) {
+        if (result && !WIZARD.state.connected) {
+            $('#connect_btn').text("Disconnect");
+            WIZARD.state.connected = true;
+        } else if (!result && WIZARD.state.connected) {
+            $('#connect_btn').text("Connect");
+            WIZARD.state.connected = false;
+        }
     }
 
     WIZARD.updateList = function(list) {
@@ -320,6 +335,10 @@ $(function() {
         var pass = $('#passw_enter').val();
         WIZARD.params.local['WIFI_SSID'] = { value: ssid };
         WIZARD.params.local['WIFI_PASSW'] = { value: pass };
+        if (!WIZARD.state.connected)
+            WIZARD.params.local['WIFI_CONNECT'] = { value: true };
+        else
+            WIZARD.params.local['WIFI_CONNECT'] = { value: false };
         WIZARD.sendParams();
         WIZARD.params.local = {};
     });

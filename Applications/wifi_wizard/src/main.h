@@ -76,6 +76,8 @@ int ParseLineSiglevel(std::string str);
 bool CheckIwlist();
 void InstallIwlist();
 void CreateWPA_SUPPL(std::string ssid, std::string pass);
+bool ConnectToNetwork();
+bool DisconnectNetwork();
 
 #ifdef __cplusplus
 }
