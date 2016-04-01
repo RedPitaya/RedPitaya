@@ -150,17 +150,16 @@ assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 always @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   sto.TVALID <= 1'b0;
-  sto.TLAST  <= 1'b0;
 end else begin
   sto.TVALID <= sts_acq & sti.TVALID;
-  sto.TLAST  <= sts_acq & (sti.TLAST | end_pst);
 end
 
 // output data
 always @(posedge sti.ACLK)
-if (sts_acq) begin
+if (sts_acq & sti.transf) begin
   sto.TDATA <= sti.TDATA;
   sto.TKEEP <= sti.TKEEP; // TODO
+  sto.TLAST <= sti.TLAST | sts_stp;
 end
 
 endmodule: acq
