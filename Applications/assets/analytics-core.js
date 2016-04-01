@@ -77,6 +77,20 @@
         });
     }
 
+    AnalyticsCore.sendEventWithValue = function(page, event_category, event_action, event_label, event_value) {
+        if (!sendData) return;
+        if (debugPrints) console.log("[AnalyticsCore] sendEvent", page, event_category, event_action, event_label);
+        ga('send', {
+            location: location,
+            page: page,
+            hitType: 'event',
+            eventCategory: event_category,
+            eventAction: event_action,
+            eventLabel: event_label,
+            eventValue: event_value
+        });
+    }
+
     AnalyticsCore.sendTiming = function(page, timing_category, timing_var, timing_val) {
         if (!sendData) return;
         if (debugPrints) console.log("[AnalyticsCore] sendTiming", page, timing_category, timing_var, timing_val);
@@ -91,10 +105,9 @@
     }
 
     AnalyticsCore.sendExecTime = function(page, app) {
-        if($.cookie(app+'-run') !== undefined)
-        {
-            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app+'-run'));
-            AnalyticsCore.sendEvent(page, 'info', 'Execution time', $.cookie(app+'-run'));
+        if ($.cookie(app + '-run') !== undefined) {
+            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app + '-run'));
+            AnalyticsCore.sendEventWithValue(page, 'info', 'Execution time', $.cookie(app + '-run'), $.cookie(app + '-run'));
         }
 
     }
