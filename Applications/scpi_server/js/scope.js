@@ -302,7 +302,7 @@
                     var inflate = new Zlib.Gunzip(data);
                     var decompressed = inflate.decompress();
                     var arr = new Uint16Array(decompressed)
-                    var text = OSC.convertUnpacked(arr);
+                    var text = String.fromCharCode.apply(null, arr);
                     OSC.decompressed_data += text.length;
 
                     var receive = JSON.parse(text);
