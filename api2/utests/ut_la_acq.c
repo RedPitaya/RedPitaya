@@ -71,15 +71,15 @@ void la_acq_trig_test(void)
 
     // start gen a bit later in a new thread
     if(pthread_create(&tid, NULL, &trigGen, NULL)!=0){
-        printf("\ncan't create thread :[%s]", strerror(err));
+    	CU_FAIL("can't create thread.");
     }
     // software trig. acq.
     if(pthread_create(&tid2, NULL, &trigAcq, NULL)!=0){
-        printf("\ncan't create thread :[%s]", strerror(err));
+		CU_FAIL("can't create thread.");
     }
 
     printf("\r\nTriggers");
-    s=rp_SetTriggerDigitalPortProperties(dir,0); //,1)
+    s=rp_SetTriggerDigitalPortProperties(dir,0); //1);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to set trigger properties.");
     }
