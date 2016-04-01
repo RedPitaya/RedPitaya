@@ -1,0 +1,164 @@
+
+TMP = tmp
+
+# check if download cache directory is available
+ifdef BR2_DL_DIR
+DL=$(BR2_DL_DIR)
+else
+DL=$(TMP)
+endif
+
+UBOOT_TAG     = xilinx-v2015.2
+LINUX_TAG     = xilinx-v2015.1
+DTREE_TAG     = xilinx-v2015.1
+
+UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
+LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
+DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
+
+UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
+LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
+DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
+
+# it is possible to use an alternative download location (local) by setting environment variables
+UBOOT_URL     ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+LINUX_URL     ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
+
+UBOOT_GIT     ?= https://github.com/Xilinx/u-boot-xlnx.git
+LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
+DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
+
+LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+
+################################################################################
+#
+################################################################################
+
+INSTALL_DIR=build
+NAME=ecosystem
+
+# directories
+FPGA_DIR        = fpga
+
+# targets
+FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
+FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
+DTS             = $(FPGA_DIR)/sdk/dts/system.dts
+DEVICETREE      = $(TMP)/devicetree.dtb
+UBOOT           = $(TMP)/u-boot.elf
+LINUX           = $(TMP)/uImage
+BOOT_UBOOT      = $(TMP)/boot.bin
+
+################################################################################
+# tarball
+################################################################################
+
+all: zip apps-free
+
+$(DL):
+	mkdir -p $@
+
+$(TMP):
+	mkdir -p $@
+
+$(INSTALL_DIR):
+	mkdir -p $@
+
+################################################################################
+# FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
+################################################################################
+
+.PHONY: fpga
+
+fpga: $(DTREE_DIR)
+	make -C $(FPGA_DIR)
+
+################################################################################
+# U-Boot build provides: $(UBOOT)
+################################################################################
+
+ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
+
+UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
+
+.PHONY: u-boot
+
+u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(ENVTOOLS_CFG)
+
+$(UBOOT_TAR): | $(DL)
+	curl -L $(UBOOT_URL) -o $@
+
+$(UBOOT_DIR): $(UBOOT_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+	patch -d $@ -p 1 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
+
+$(UBOOT): $(UBOOT_DIR)
+	mkdir -p $(@D)
+	make -C $< arch=ARM zynq_red_pitaya_defconfig
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
+	cp $</u-boot $@
+
+$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR)
+	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d $(UBOOT_SCRIPT) $@
+
+$(ENVTOOLS_CFG): $(UBOOT_DIR)
+	mkdir -p $(INSTALL_DIR)/etc/
+	cp $</tools/env/fw_env.config $(INSTALL_DIR)/etc
+
+################################################################################
+# Linux build provides: $(LINUX)
+################################################################################
+
+$(LINUX_TAR): | $(DL)
+	curl -L $(LINUX_URL) -o $@
+
+$(LINUX_DIR): $(LINUX_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG).patch
+	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
+
+$(LINUX): $(LINUX_DIR)
+	make -C $< mrproper
+	make -C $< ARCH=arm xilinx_zynq_defconfig
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+	cp $</arch/arm/boot/uImage $@
+
+################################################################################
+# device tree processing
+################################################################################
+
+$(DTREE_TAR): | $(DL)
+	curl -L $(DTREE_URL) -o $@
+
+$(DTREE_DIR): $(DTREE_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+
+$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
+	cp $(DTS) $(TMP)/devicetree.dts
+	patch $(TMP)/devicetree.dts patches/devicetree.patch
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA_DIR)/sdk/dts/ $(TMP)/devicetree.dts
+
+################################################################################
+# boot file generator
+################################################################################
+
+$(BOOT_UBOOT): fpga $(UBOOT)
+	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+	bootgen -image boot_uboot.bif -w -o $@
+
+################################################################################
+#
+################################################################################
+
+clean:
+	-make -C $(LINUX_DIR) clean
+	make -C $(FPGA_DIR) clean
+	-make -C $(UBOOT_DIR) clean
+	# todo, remove downloaded libraries and symlinks
+	$(RM) $(INSTALL_DIR) -rf
+	$(RM) $(NAME)*.zip
