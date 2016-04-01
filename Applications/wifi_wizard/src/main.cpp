@@ -38,6 +38,10 @@ int rp_app_init(void) {
     rpApp_Init();
     rpApp_OscRun();
 
+    // Kill wpa_supplicant, if it up
+	std::string command_Kill_supl = "killall pidof wpa_supplicant";
+	system(command_Kill_supl.c_str());
+
     // Check iw tools
     if(!CheckIwlist())
     	errorOut.Value() = "wt not installed";
@@ -207,6 +211,7 @@ void CreateWPA_SUPPL(std::string ssid, std::string pass) {
 
 bool ConnectToNetwork() {
 	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+
 	bool result = system(command.c_str());
 	if(result == 0)
 		return true;
@@ -241,7 +246,7 @@ bool CheckConnection() {
 
 bool CheckDongleOn() {
 	std::string tmpFileName = "checking.result";
-	std::string command = "ifconfig | grep wlan > " + tmpFileName;
+	std::string command = "ip addr | grep wlan > " + tmpFileName;
 	std::string lineFromResult;
 
 	system(command.c_str());
@@ -249,6 +254,8 @@ bool CheckDongleOn() {
 	std::ifstream infile(tmpFileName);
 	std::getline(infile, lineFromResult);
 	infile.close();
+
+	fprintf(stderr, "-----%s\n", lineFromResult.c_str());
 
 	size_t found = lineFromResult.find("wlan0");
 		if (found != std::string::npos)
