@@ -17,6 +17,7 @@
 CStringParameter listOfWIFI("WIFI_LIST", CBaseParameter::RWSA, "", 10000);
 CStringParameter essidIn("WIFI_SSID", CBaseParameter::RW, "", 10000);
 CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
+CStringParameter errorOut("WIFI_ERROR", CBaseParameter::RW, "", 10000);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -113,7 +114,7 @@ bool CheckIwlist() {
 }
 
 void InstallIwlist() {
-	system("apt-get install wireless-tools");
+	system("apt-get install -y wireless-tools");
 }
 
 std::string GetListOfWIFI(std::string wlanInterfaceName) {
@@ -159,12 +160,15 @@ std::string GetListOfWIFI(std::string wlanInterfaceName) {
 }
 
 void CreateWPA_SUPPL(std::string ssid, std::string pass) {
+	if(ssid == "" || pass == "")
+		return;
+
 	std::stringstream result;
 
 	result << "ctrl_interface=/var/run/wpa_supplicant" << '\n' << "network={" << '\n';
-	result << "\t\t" << "ssid=\"" << ssid << "\"" << '\n';
-	result << "\t\t" << "key_mgmt=WPA-PSK" << '\n';
-	result << "\t\t" << "psk=\"" << pass << "\"" << '\n';
+	result << "\t\tssid=\"" << ssid << "\"" << '\n';
+	result << "\t\tkey_mgmt=WPA-PSK\n";
+	result << "\t\tpsk=\"" << pass << "\"" << '\n';
 	result << "}";
 
 	std::string command = "echo '" + result.str() + "' > /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";

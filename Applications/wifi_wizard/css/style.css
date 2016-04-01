@@ -837,26 +837,28 @@ btn:active {
 }
 
 .wifi-main-container {
-    width: 200px;
-    left: 400px;
+    /*width: 400px;*/
+    /*left: 400px;*/
+    margin-left: 40%
 }
 
 .list-wifi-container {
     float: left;
     width: 200px;
     left: 400px;
+    padding-bottom: 1em;
 }
 
 .btn-wifi-item {
     width: 150px;
     float: left;
+    text-align: left;
 }
 
 .control-wifi-container {
     float: left;
     width: 200px;
     left: 250px;
-    position: absolute;
 }
 
 .input-wifi {

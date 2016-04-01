@@ -150,6 +150,8 @@
             if (param_name == 'WIFI_LIST') {
                 if (new_params[param_name].value != "")
                     WIZARD.updateList(JSON.parse(new_params[param_name].value))
+            } else if(param_name == 'WIFI_ERROR') {
+                console.log(new_params[param_name].value);
             }
         }
     };
@@ -159,7 +161,7 @@
 
         for (var item in list) {
             var icon = "";
-            var lock = list[item].keyEn ? "<img src='img/wifi-icons/lock.png' width=15>" : "";
+            var lock = (list[item].keyEn == "1") ? "<img src='img/wifi-icons/lock.png' width=15>" : "";
 
             if (parseInt(list[item].sigLevel) < 20)
                 icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_0.png' width=25>" + lock + "</div>";
