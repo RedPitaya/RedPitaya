@@ -122,8 +122,8 @@ end else begin
     end
     // pre and post trigger counters
     if (sts_acq & sti.transf) begin
-      if (~sts_trg)  sts_pre <= nxt_pre; // TODO: add out of range
-      if ( sts_trg)  sts_pst <= nxt_pst; // TODO: add out of range
+      if (~sts_trg | trg)  sts_pre <= nxt_pre; // TODO: add out of range
+      if ( sts_trg | trg)  sts_pst <= nxt_pst; // TODO: add out of range
     end
   end
 end
