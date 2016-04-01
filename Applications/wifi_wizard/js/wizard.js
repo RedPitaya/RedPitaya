@@ -171,7 +171,7 @@
     }
 
     WIZARD.dongleEnablingDialog = function(state) {
-        if(!state)
+        if (!state)
             $('#dongle_missing').modal('show');
     }
 
@@ -351,9 +351,12 @@ $(function() {
     });
 
     $('#get_wtools').on('click', function() {
-        WIZARD.params.local['WIFI_INSTALL'] = { value: true };
-        WIZARD.sendParams();
-        WIZARD.params.local = {};
+        if (OnlineChecker.isOnline()) {
+            WIZARD.params.local['WIFI_INSTALL'] = { value: true };
+            WIZARD.sendParams();
+            WIZARD.params.local = {};
+        } else
+            $('#offline_dialog').modal('show');
     });
 
     var reloaded = $.cookie("scpi_forced_reload");
