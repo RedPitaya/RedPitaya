@@ -49,21 +49,9 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
-    handle->mem_type=RP_MEM_DEV_BRAM;
-    //handle->mem_type=RP_MEM_DEV_DMA;
-    switch(handle->mem_type){
-        case RP_MEM_DEV_DMA:
-            status = rp_DmaOpen("/dev/rprx", handle);
-            if (status != RP_OK) {
-                return status;
-            }
-            break;
-        case RP_MEM_DEV_BRAM:
-            status = rp_DmaOpen("/dev/uio13", handle);
-            if (status != RP_OK) {
-                return status;
-            }
-            break;
+    status = rp_DmaOpen("/dev/rprx", handle);
+    if (status != RP_OK) {
+        return status;
     }
 
     status = rp_LaAcqStopAcq(handle);
@@ -203,20 +191,18 @@ int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t
     rp_la_cfg_regset_t reg;
     reg.pre = ioread32(&regset->pre);
     reg.pst = ioread32(&regset->pst);
-    uint32_t samples;
-    rp_LaAcqBufLenInSamples(handle,&samples);
-    *trig_addr=(reg.pre % samples);
+    *trig_addr=(reg.pre % rp_LaAcqBufLenInSamples(handle));
     *pst_length=reg.pst;
 
     // calc. real trigger address
     if(*trig_addr<TRIG_DELAY_SAMPLES){
-        *trig_addr=samples-TRIG_DELAY_SAMPLES+*trig_addr;
+        *trig_addr=rp_LaAcqBufLenInSamples(handle)-TRIG_DELAY_SAMPLES+*trig_addr;
     }
     else{
         *trig_addr-=TRIG_DELAY_SAMPLES;
     }
 
-    if(!(inrangeUint32 (*trig_addr, 0, samples-1))){
+    if(!(inrangeUint32 (*trig_addr, 0, (rp_LaAcqBufLenInSamples(handle)-1)))){
         return RP_EOOR;
     }
 
@@ -278,10 +264,8 @@ int rp_LaAcqIsRLE(rp_handle_uio_t *handle, bool * state) {
 
 int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last) {
     rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
-    uint32_t samples;
-    rp_LaAcqBufLenInSamples(handle,&samples);
     *current = ioread32(&regset->sts_cur);
-    *last = (ioread32(&regset->sts_lst)%samples);
+    *last = (ioread32(&regset->sts_lst)%rp_LaAcqBufLenInSamples(handle));
     if(*last>0){
         *last-=1;
         return RP_OK;
@@ -302,9 +286,9 @@ int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_r
 }
 */
 
-int rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle, uint32_t * samples)
+uint32_t rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle)
 {
-    return rp_DmaSizeInSamples(handle, samples);
+    return (handle->dma_size/(sizeof(int16_t)));
 }
 
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)

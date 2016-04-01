@@ -43,13 +43,17 @@ public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
 		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
 		, m_SentValue(_value)
+		, m_NeedUnregister(false)
 	{}
 
 	~CCustomParameter()
 	{
-/*		CDataManager * man = CDataManager::GetInstance();
-		if(man)
-			man->UnRegisterParam(this->GetName());*/
+		if (m_NeedUnregister)
+		{
+			CDataManager * man = CDataManager::GetInstance();
+			if(man)
+				man->UnRegisterParam(this->GetName());
+		}
 	}
 
 	JSONNode GetJSONObject()
@@ -97,8 +101,13 @@ public:
 		return tmp;
 	}
 
+	void NeedUnregister(bool _value)
+	{
+		m_NeedUnregister = _value;
+	}
 protected:
 	mutable Type m_SentValue;
+	bool m_NeedUnregister;
 };
 
 

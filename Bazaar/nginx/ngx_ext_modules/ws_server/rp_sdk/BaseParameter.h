@@ -4,7 +4,7 @@
 
 class CBaseParameter  //base class for parameter and signal
 {
-public:	
+public:
 	enum AccessMode
 	{
 		RW = 0,
@@ -17,7 +17,7 @@ public:
 		AccessModes
 	};
 
-	virtual ~CBaseParameter(){}; 
+	virtual ~CBaseParameter(){};
 	virtual const char* GetName() const = 0;
 	virtual void Update() = 0;		//apply change of value
 	virtual JSONNode GetJSONObject() = 0;	//get JSON-formatted string with parameters or signals

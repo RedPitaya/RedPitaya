@@ -34,7 +34,6 @@ int rp_SetSgmntC(rp_handle_uio_t *handle, unsigned long no);
 int rp_SetSgmntS(rp_handle_uio_t *handle, unsigned long no);
 int rp_DmaRead(rp_handle_uio_t *handle);
 int rp_DmaMemDump(rp_handle_uio_t *handle);
-int rp_DmaSizeInSamples(rp_handle_uio_t *handle, uint32_t * samples);
 int rp_DmaClose(rp_handle_uio_t *handle);
 
 #endif // _RP_DMA_H_

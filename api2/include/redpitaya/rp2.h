@@ -13,8 +13,8 @@
  * for more details on the language used herein.
  */
 
-#ifndef __RP_H2
-#define __RP_H2
+#ifndef __RP_H
+#define __RP_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,11 +22,6 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
-
-typedef enum {
-    RP_MEM_DEV_DMA=0,
-    RP_MEM_DEV_BRAM,
-} rp_mem_t;
 
 typedef struct {
   char          *name;
@@ -37,7 +32,6 @@ typedef struct {
            void *context;
   int            struct_size; ///< only used to reserve dummy memory space for testing
 
-  rp_mem_t       mem_type;
   char          *dma_dev;
   size_t         dma_size;
   int            dma_fd;

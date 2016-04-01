@@ -46,7 +46,7 @@ $(DEPLIBS):
 # of its default install.
 # TODO: Configure nginx to exclude client_body_temp.
 install:
-	$(STRIP) $(NGINX)
+	$(NGINX)
 	test -d '$(DESTDIR)/sbin'                 || mkdir -p '$(DESTDIR)/sbin'
 	test -d '$(DESTDIR)/lib'                  || mkdir -p '$(DESTDIR)/lib'
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'

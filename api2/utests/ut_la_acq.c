@@ -38,7 +38,7 @@ pthread_t tid;
 
 void* trigGen(void *arg)
 {
-    sleep(1);
+    sleep(2);
     rp_DigSigGenSoftwareControl(1);
     return NULL;
 }
@@ -47,6 +47,8 @@ void la_acq_trig_test(void)
 {
 
     for(int i=0; i<100; i++){
+
+        //sleep(1);
 
     RP_STATUS s;
     RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
@@ -72,52 +74,51 @@ void la_acq_trig_test(void)
         CU_FAIL("Failed to set trigger properties.");
     }
 
-        // enable RLE
-        rp_EnableDigitalPortDataRLE(1);
+    // enable RLE
+    rp_EnableDigitalPortDataRLE(1);
 
-      //  printf("\r\nRunBlock");
-        double timeIndisposedMs;
-        uint32_t pre=10;
-        uint32_t post=8000;
-        s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
-        if(s!=RP_API_OK){
-            CU_FAIL("Failed to acquire data.");
+    printf("\r\nRunBlock");
+    double timeIndisposedMs;
+    uint32_t pre=100;
+    uint32_t post=8000;
+    s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
+    if(s!=RP_API_OK){
+        CU_FAIL("Failed to acquire data.");
+    }
+
+    uint32_t samples=pre+post;
+
+    int16_t * buf = malloc(samples * sizeof(int16_t));
+    if (NULL == buf) {
+        CU_FAIL("malloc failed");
+    }
+
+    // set data buffer to which data will be read from memory space
+    rp_SetDataBuffer(RP_CH_DIN,buf,samples,RP_RATIO_MODE_NONE);
+
+    // get data
+    rp_GetValues(0,&samples,1,RP_RATIO_MODE_NONE,NULL);
+
+    // verify data
+    int first=buf[0];
+    for(int i=0;i<samples;i++){
+        if(buf[i]!=first){
+            printf("\n\r data mismatch @ i=%d buf=%04x exp=%04x",i,buf[i],first);
+            break;
         }
+        if(first==0xff)
+            first=0;
+        else
+            first++;
+    }
 
-        uint32_t samples=pre+post;
+    // verify trigger position
+    printf("\n\r data @ trigger pos \n\r");
+    printf("\n\r %04x",buf[pre-1]);
+    printf("\n\r ->%04x",buf[pre]);
+    printf("\n\r %04x",buf[pre+1]);
 
-        int16_t * buf = malloc(samples * sizeof(int16_t));
-        if (NULL == buf) {
-            CU_FAIL("malloc failed");
-        }
-
-        // set data buffer to which data will be read from memory space
-        rp_SetDataBuffer(RP_CH_DIN,buf,samples,RP_RATIO_MODE_NONE);
-
-        // get data
-
-        rp_GetValues(0,&samples,1,RP_RATIO_MODE_NONE,NULL);
-
-        // verify data
-        int first=buf[0];
-        for(int i=0;i<samples;i++){
-            if(buf[i]!=first){
-                printf("\n\r data mismatch @ i=%d buf=%04x exp=%04x",i,buf[i],first);
-               // break;
-            }
-            if(first==0xff)
-                first=0;
-            else
-                first++;
-        }
-
-        // verify trigger position
-        printf("\n\r data @ trigger pos \n\r");
-        printf("\n\r %04x",buf[pre-1]);
-        printf("\n\r ->%04x",buf[pre]);
-        printf("\n\r %04x",buf[pre+1]);
-
-        free(buf);
+    free(buf);
     }
 }
 
