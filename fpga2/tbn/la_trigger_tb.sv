@@ -25,8 +25,8 @@ DT    cfg_edg_pos;  // edge positive
 DT    cfg_edg_neg;  // edge negative
 
 // stream input/output
-axi4_stream_if #(.DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
-
+axi4_stream_if #(.DT (DT)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DT)) sto (.ACLK (clk), .ARESETn (rstn));
 ////////////////////////////////////////////////////////////////////////////////
 // clock and test sequence
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,6 @@ initial begin
     str_src.run (cli);
     str_drn.run (clo);
   join
-
   // end simulation
   repeat(4) @(posedge clk);
   $finish();
@@ -74,8 +73,8 @@ end
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DT (DT)) str_src (.str (str));
-axi4_stream_drn #(.DT (DT)) str_drn (.str (str));
+axi4_stream_src #(.DT (DT)) str_src (.str (sti));
+axi4_stream_drn #(.DT (DT)) str_drn (.str (sto));
 
 la_trigger #(
   .DT (DT)
@@ -90,7 +89,8 @@ la_trigger #(
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor
-  .str      (str)
+  .sti      (sti),
+  .sto      (sto)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
