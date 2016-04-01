@@ -209,6 +209,47 @@
             });
     }
 
+    var checkUpdates = function(current) {
+        $.ajax({
+                url: '/update_list',
+                type: 'GET',
+            })
+            .fail(function(msg) {
+                var resp = msg.responseText;
+                var arr = resp.split('\n');
+                if (arr.length == 0 || arr.length <= 2 || arr.length % 2 != 0) {
+                    $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                    $('#step_' + currentStep).find('.error_msg').show();
+                    return;
+                }
+                var ecosystems = [];
+                var ver = current['version'].split("-");
+                var cMajor = parseFloat(ver[0]) * 1;
+                var cMinor = parseFloat(ver[1]) * 1;
+                var showUpdatePopup = false;
+                for (var i = 0; i < arr.length; i += 2) {
+                    if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
+                        var ecosystem = arr[i].split('-');
+                        var vMajor = parseFloat(ecosystem[1]) * 1;
+                        var vMinor = parseFloat(ecosystem[2]) * 1;
+                        if (vMajor >= cMajor) {
+                            if (vMajor > cMajor)
+                                showUpdatePopup = true;
+                            else {
+                                if (vMinor > cMinor)
+                                    showUpdatePopup = true;
+                            }
+                        }
+                    }
+                }
+                if (showUpdatePopup) {
+                    var htmlText = "<p id='update_required_text'>Update for your ecosystem is available. Please update your <a style='color:red' href='/updater/'>ecosystem here</a>.</p>";
+
+                    PopupStack.add(htmlText);
+                }
+            })
+    }
+
     $(document).ready(function($) {
         getListOfApps();
 
@@ -224,12 +265,17 @@
         }).done(function(msg) {
             var info = JSON.parse(msg);
             version = info['version'];
-            $('#footer').html('Red Pitaya OS ' + info['version']);
+            $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
+            checkUpdates(info);
         }).fail(function(msg) {
             var info = JSON.parse(msg.responseText);
             version = info['version'];
-            $('#footer').html('Red Pitaya OS ' + info['version']);
+            $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
+            checkUpdates(info);
         });
+
+
+
     });
 
     $(window).resize(function($) {
