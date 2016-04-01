@@ -78,6 +78,7 @@ void InstallIwlist();
 void CreateWPA_SUPPL(std::string ssid, std::string pass);
 bool ConnectToNetwork();
 bool DisconnectNetwork();
+bool CheckConnection();
 
 #ifdef __cplusplus
 }

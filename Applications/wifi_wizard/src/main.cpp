@@ -20,7 +20,7 @@ CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
 CStringParameter errorOut("WIFI_ERROR", CBaseParameter::RW, "", 10000);
 CStringParameter okOut("WIFI_OK", CBaseParameter::RW, "", 10000);
 CBooleanParameter installWT("WIFI_INSTALL", CBaseParameter::RW, false, 0);
-CBooleanParameter connectedWifi("WIFI_CONNECTED", CBaseParameter::RW, false, 0);
+CBooleanParameter connectedWifi("WIFI_CONNECTED", CBaseParameter::RWSA, false, 0);
 CBooleanParameter doConnect("WIFI_CONNECT", CBaseParameter::RW, false, 0);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
@@ -76,6 +76,7 @@ void UpdateSignals(void) {
 
 void UpdateParams(void) {
 	listOfWIFI.Value() = GetListOfWIFI("wlan0");
+	connectedWifi.Value() = CheckConnection();
 }
 
 bool check_params(const rp_calib_params_t& current_params, int step) {
@@ -115,8 +116,7 @@ bool CheckIwlist() {
 
 	std::ifstream tmpFile(tmpFileName);
 	std::getline(tmpFile, lineFromResult);
-
-	fprintf(stderr, "adfasfasdfasdfasdfasdfasd::::: %s\n", lineFromResult.c_str());
+	tmpFile.close();
 
 	size_t found = lineFromResult.find("iwlist    Wireless-Tools version");
 		if (found != std::string::npos)
@@ -210,6 +210,24 @@ bool DisconnectNetwork() {
 	bool result = system(command.c_str());
 }
 
+bool CheckConnection() {
+	std::string tmpFileName = "checking.result";
+	std::string command = "iwconfig wlan0 | grep ESSID > " + tmpFileName;
+	std::string lineFromResult;
+
+	system(command.c_str());
+
+	std::ifstream infile(tmpFileName);
+	std::getline(infile, lineFromResult);
+	infile.close();
+
+	size_t found = lineFromResult.find("wlan0");
+		if (found != std::string::npos)
+			return true;
+
+	return false;
+}
+
 std::string ParseLineOfESSID(std::string str) {
 	size_t start = 0;
 	size_t stop = 0;
@@ -287,17 +305,10 @@ void OnNewParams(void) {
 			essidIn.Update();
 			passwIn.Update();
 			CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
-			bool connected = ConnectToNetwork();
-			if(connected)
-			{
-				connectedWifi.Value() = true;
-			}
+			ConnectToNetwork();
 		}
 		else
-		{
 			DisconnectNetwork();
-			connectedWifi.Value() = false;
-		}
 	}
 
 	// Install wireless-tools command
