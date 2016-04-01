@@ -129,8 +129,7 @@ initial begin
   test_block;
   test_pass;
   test_trigger;
-  test_sparse;
-  test_sparse_trigger;
+  test_trigger (.vld_max (2), .vld_rnd (2));
 
   // end simulation
   ##4;
@@ -189,7 +188,14 @@ task test_pass;
 endtask: test_pass
 
 
-task test_trigger;
+task test_trigger (
+  int unsigned vld_max = 0,
+  int unsigned vld_rnd = 1,
+  int unsigned vld_fix = 0,
+  int unsigned rdy_max = 0,
+  int unsigned rdy_rnd = 1,
+  int unsigned rdy_fix = 0
+);
   DT dti [];
   DT dto [];
   axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
@@ -200,7 +206,12 @@ task test_trigger;
   dti = cli.range (-8, 8);
   dto = clo.range (-8, 8);;
   // add packet into queue
-  cli.add_pkt (dti);
+  cli.add_pkt (dti, .vld_max (vld_max),
+                    .vld_rnd (vld_rnd),
+                    .vld_fix (vld_fix),
+                    .rdy_max (rdy_max),
+                    .rdy_rnd (rdy_rnd),
+                    .rdy_fix (rdy_fix) );
   clo.add_pkt (dto);
   // activate acquire
   acq_pls;
@@ -214,61 +225,6 @@ task test_trigger;
   // check received data
   error += clo.check (dto);
 endtask: test_trigger
-
-
-task test_sparse;
-  DT dti [];
-  DT dto [];
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
-  // prepare data
-  cli = new;
-  clo = new;
-  dti = cli.range (-8, 8);
-  dto = clo.range (-8, 8);;
-  // add packet into queue
-  cli.add_pkt (dti, .vld_max (2), .vld_rnd (2), .vld_fix (0), .rdy_max (0), .rdy_rnd (1), .rdy_fix (0) );
-  clo.add_pkt (dto);
-  // activate acquire
-  acq_pls;
-  fork
-    wait ((sti.TDATA == 0) & sti.transf) begin
-      trg_pls ('1);
-    end
-    str_src.run (cli);
-    str_drn.run (clo);
-  join
-  // check received data
-  error += clo.check (dto);
-endtask: test_sparse
-
-
-
-task test_sparse_trigger;
-  DT dti [];
-  DT dto [];
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
-  // prepare data
-  cli = new;
-  clo = new;
-  dti = cli.range (-8, 8);
-  dto = clo.range (-8, 8);;
-  // add packet into queue
-  cli.add_pkt (dti, .vld_max (2), .vld_rnd (2), .vld_fix (0), .rdy_max (0), .rdy_rnd (1), .rdy_fix (0) );
-  clo.add_pkt (dto);
-  // activate acquire
-  acq_pls;
-  fork
-    wait ((sti.TDATA == 0) & sti.transf) begin
-      trg_pls ('1);
-    end
-    str_src.run (cli);
-    str_drn.run (clo);
-  join
-  // check received data
-  error += clo.check (dto);
-endtask: test_sparse_trigger
 
 ////////////////////////////////////////////////////////////////////////////////
 // helper tasks
