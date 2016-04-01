@@ -27,10 +27,10 @@ class axi4_stream_class #(
     int unsigned   rdy;
   } trn_t;
 
-  // data packet type
+  // data packet type (dynamic array of transfers)
   typedef trn_t pkt_t [];
 
-  // data queue type
+  // data queue type (queue of packets)
   typedef pkt_t que_t [$];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,19 +71,19 @@ class axi4_stream_class #(
     pkt = new [dat.size()];
     for (int unsigned i=0; i<dat.size(); i+=DN) begin
       for (int unsigned j=0; j<DN; j++) begin
-        pkt[i].dat [j] = dat[DN*i+j];
+        pkt[i/DN].dat [j] = dat[i+j];
       end
-      pkt[i].kep = ((dat.size()-i)<=DN) ? 1<<(dat.size()-i)-1 : '1; // TODO for now at least check if the last transfer is correct
-      pkt[i].lst = ((dat.size()-i)<=DN) & lst;
+      pkt[i/DN].kep = ((dat.size()-i)<=DN) ? 1<<(dat.size()-i)-1 : '1; // TODO for now at least check if the last transfer is correct
+      pkt[i/DN].lst = ((dat.size()-i)<=DN) & lst;
       // calculate random timing TODO: rethink this part
-      pkt[i].vld = $dist_poisson(seed, vld_rnd);
-      pkt[i].rdy = $dist_poisson(seed, rdy_rnd);
+      pkt[i/DN].vld = $dist_poisson(seed, vld_rnd);
+      pkt[i/DN].rdy = $dist_poisson(seed, rdy_rnd);
       // limit to max value
-      pkt[i].vld = pkt[i].vld > vld_max ? vld_max : pkt[i].vld;
-      pkt[i].rdy = pkt[i].rdy > rdy_max ? vld_max : pkt[i].rdy;
+      pkt[i/DN].vld = pkt[i/DN].vld > vld_max ? vld_max : pkt[i/DN].vld;
+      pkt[i/DN].rdy = pkt[i/DN].rdy > rdy_max ? vld_max : pkt[i/DN].rdy;
       // add fixed value
-      pkt[i].vld += vld_fix;
-      pkt[i].rdy += rdy_fix;
+      pkt[i/DN].vld += vld_fix;
+      pkt[i/DN].rdy += rdy_fix;
     end
     que.push_back(pkt);
   endtask: add_pkt
@@ -99,8 +99,8 @@ class axi4_stream_class #(
     // TODO check TKEEP
     for (int i=0; i<dat.size(); i+=DN) begin
       for (int unsigned j=0; j<DN; j++) begin
-        if ( (pkt[i].dat [j] != dat[i+j]               )
-           | (pkt[i].lst     != ((dat.size()-i)<=DN) ) ) begin
+        if ( (pkt[i/DN].dat [j] != dat[i+j]               )
+           | (pkt[i/DN].lst     != ((dat.size()-i)<=DN) ) ) begin
           $display ("Error: i=%d: (val=%p/%b) != (ref=%p/%b)", i, pkt[i].dat[j], pkt[i].lst, dat[i+j], ((dat.size()-i)<=DN));
           check++;
         end

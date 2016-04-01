@@ -33,19 +33,19 @@ for (genvar i=0; i<DN; i++) begin: for_dn
 // comparator
 assign sts_cmp [i] = (sti.TDATA[i] & cfg_cmp_msk) == (cfg_cmp_val & cfg_cmp_msk);
 // edge detection
-assign sts_edg = |(cfg_edg_pos & (~dat[i] &  dat[i+1]))
-               | |(cfg_edg_neg & ( dat[i] & ~dat[i+1]));
+assign sts_edg [i] = |(cfg_edg_pos & (~dat[i] &  dat[i+1]))
+                   | |(cfg_edg_neg & ( dat[i] & ~dat[i+1]));
 
 end: for_dn
 endgenerate
 
 // data chain for checking edges
-always @(posedge sti.ACLK)
+always_ff @(posedge str.ACLK)
 if (sti.transf)  dat [0] <= sti.TDATA [DN-1];
 
 assign dat [DN:1] = sti.TDATA;
 
-always @(posedge sti.ACLK)
+always_ff @(posedge str.ACLK)
 if (~sti.ARESETn) begin
   sts_trg <= '0;
 end else begin
@@ -58,6 +58,5 @@ end
 
 // align data with trigger edge
 axi4_stream_reg align_reg(.sti (sti), .sto (sto));
-
 
 endmodule: la_trigger
