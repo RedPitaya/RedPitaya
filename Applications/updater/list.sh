@@ -1,5 +1,5 @@
 #!/bin/bash
-wget -O download.html http://downloads.redpitaya.com/downloads/ &> /dev/null
+wget -O download.html http://downloads.redpitaya.com/jenkins/master_oldkernel_desktop/ &> /dev/null
 
 IFS=$'\n'
 for l in `cat download.html`; do
