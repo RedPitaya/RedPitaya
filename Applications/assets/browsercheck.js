@@ -15,7 +15,8 @@
 
     BrowserChecker.checkName = function() {
         BrowserChecker.browserName = $.browser.name;
-        if ($.browser.webkit)
+        // alert(JSON.stringify($.browser));
+        if ($.browser.platform == "iphone" || $.browser.platform == "ipad")
             return true;
 
         if (window.chrome || $.browser.chrome)
