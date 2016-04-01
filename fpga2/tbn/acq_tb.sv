@@ -129,6 +129,8 @@ initial begin
   test_block;
   test_pass;
   test_trigger;
+  test_sparse;
+  test_sparse_trigger;
 
   // end simulation
   ##4;
@@ -212,6 +214,61 @@ task test_trigger;
   // check received data
   error += clo.check (dto);
 endtask: test_trigger
+
+
+task test_sparse;
+  DT dti [];
+  DT dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  // prepare data
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = clo.range (-8, 8);;
+  // add packet into queue
+  cli.add_pkt (dti, .vld_max (2), .vld_rnd (2), .vld_fix (0), .rdy_max (0), .rdy_rnd (1), .rdy_fix (0) );
+  clo.add_pkt (dto);
+  // activate acquire
+  acq_pls;
+  fork
+    wait ((sti.TDATA == 0) & sti.transf) begin
+      trg_pls ('1);
+    end
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
+endtask: test_sparse
+
+
+
+task test_sparse_trigger;
+  DT dti [];
+  DT dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  // prepare data
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = clo.range (-8, 8);;
+  // add packet into queue
+  cli.add_pkt (dti, .vld_max (2), .vld_rnd (2), .vld_fix (0), .rdy_max (0), .rdy_rnd (1), .rdy_fix (0) );
+  clo.add_pkt (dto);
+  // activate acquire
+  acq_pls;
+  fork
+    wait ((sti.TDATA == 0) & sti.transf) begin
+      trg_pls ('1);
+    end
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+  error += clo.check (dto);
+endtask: test_sparse_trigger
 
 ////////////////////////////////////////////////////////////////////////////////
 // helper tasks
