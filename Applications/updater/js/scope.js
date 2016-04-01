@@ -182,7 +182,7 @@
                         $.ajax({
                                 url: '/info/info.json',
                                 type: 'GET',
-                                timeout: 750
+                                timeout: 5000
                             })
                             .fail(function(msg) {
                                 var res = msg.responseText;
@@ -194,7 +194,7 @@
                                         var arr = eco.split('-');
                                         var ver = arr[1] + '-' + arr[2];
                                         if (obj['version'] == ver) {
-                                            nextStep();
+                                            UPD.nextStep();
                                             clearInterval(prepare_check);
                                         } else {
                                             $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
