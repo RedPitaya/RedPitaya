@@ -151,12 +151,17 @@
                 if (new_params[param_name].value != "")
                     WIZARD.updateList(JSON.parse(new_params[param_name].value))
             } else if (param_name == 'WIFI_ERROR') {
-                console.log(new_params[param_name].value);
+                if (new_params[param_name].value == "wt not installed")
+                    WIZARD.installWTDialog();
             } else if (param_name == 'WIFI_OK') {
                 console.log(new_params[param_name].value);
             }
         }
     };
+
+    WIZARD.installWTDialog = function() {
+        $('#wtools_missing').modal('show');
+    }
 
     WIZARD.updateList = function(list) {
         var htmlList = "";
@@ -319,6 +324,11 @@ $(function() {
         WIZARD.params.local = {};
     });
 
+    $('#get_wtools').on('click', function() {
+        WIZARD.params.local['WIFI_INSTALL'] = { value: true };
+        WIZARD.sendParams();
+        WIZARD.params.local = {};
+    });
 
     var reloaded = $.cookie("scpi_forced_reload");
     if (reloaded == undefined || reloaded == "false") {

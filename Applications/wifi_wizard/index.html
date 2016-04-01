@@ -2,7 +2,7 @@
  *
  * Red Pitaya Oscilloscope client
  *
- * Author: 
+ * Author: Artem Kokos
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -96,6 +96,28 @@
         $("#ip-addr").text(window.location.hostname);
     })
     </script>
+    <!-- Install Iwlist Dialog -->
+    <div class="modal fade" id="wtools_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Wireless Software missing</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="wtools_missing_msg">Wireless-tool missing on your RedPitaya. Do you want to install it (iwlist, iwconfig)?</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" id="get_wtools" data-dismiss="modal" class="list-group-item btn">Yes</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">No</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

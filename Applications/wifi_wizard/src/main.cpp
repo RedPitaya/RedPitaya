@@ -19,6 +19,7 @@ CStringParameter essidIn("WIFI_SSID", CBaseParameter::RW, "", 10000);
 CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
 CStringParameter errorOut("WIFI_ERROR", CBaseParameter::RW, "", 10000);
 CStringParameter okOut("WIFI_OK", CBaseParameter::RW, "", 10000);
+CBooleanParameter installWT("WIFI_INSTALL", CBaseParameter::RW, false, 0);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -35,9 +36,9 @@ int rp_app_init(void) {
     rpApp_OscRun();
 
     if(!CheckIwlist())
-    	errorOut.Value() = "wireless-tools not installed";
+    	errorOut.Value() = "wt not installed";
     else
-    	okOut.Value() = "wireless-tools installed";
+    	okOut.Value() = "wt installed";
 
     return 0;
 }
@@ -122,7 +123,7 @@ bool CheckIwlist() {
 
 void InstallIwlist() {
 	system("apt-get install -y wireless-tools");
-	okOut.Value() = "wireless-tools installed";
+	okOut.Value() = "wt installed";
 }
 
 std::string GetListOfWIFI(std::string wlanInterfaceName) {
@@ -265,5 +266,12 @@ void OnNewParams(void) {
 		essidIn.Update();
 		passwIn.Update();
 		CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
+	}
+	if(installWT.IsNewValue())
+	{
+		installWT.Update();
+		if(installWT.Value())
+			InstallIwlist();
+		installWT.Value() = false;
 	}
 }
