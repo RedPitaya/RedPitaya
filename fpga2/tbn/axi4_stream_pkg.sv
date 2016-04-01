@@ -60,11 +60,14 @@ class axi4_stream_class #(
     input bit          lst = 1,
     input int unsigned vld_max = 0,
     input int unsigned vld_rnd = 1,
+    input int unsigned vld_fix = 0,
     input int unsigned rdy_max = 0,
     input int unsigned rdy_rnd = 1,
+    input int unsigned rdy_fix = 0,
     input int          seed = 0
   );
     pkt_t pkt;
+    
     pkt = new [dat.size()];
     for (int unsigned i=0; i<dat.size(); i+=DN) begin
       for (int unsigned j=0; j<DN; j++) begin
@@ -78,6 +81,9 @@ class axi4_stream_class #(
       // limit to max value
       pkt[i].vld = pkt[i].vld > vld_max ? vld_max : pkt[i].vld;
       pkt[i].rdy = pkt[i].rdy > rdy_max ? vld_max : pkt[i].rdy;
+      // add fixed value
+      pkt[i].vld += vld_fix;
+      pkt[i].rdy += rdy_fix;
     end
     que.push_back(pkt);
   endtask: add_pkt
