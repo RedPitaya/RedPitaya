@@ -212,8 +212,14 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
 
     // update settings
     if(edge_cnt==1){
+    	// edge - enable pattern & software trigger
         rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
-        rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK);//|RP_TRG_LOA_SWE_MASK);
+        rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_PAT_MASK|RP_TRG_LOA_SWE_MASK);
+    }
+    else{
+    	// else leave only software trigger on
+        rp_LaAcqSetTrigSettings(&la_acq_handle, trg);
+        rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_SWE_MASK);
     }
 
     //rp_LaAcqFpgaRegDump(&la_acq_handle);
@@ -232,6 +238,11 @@ RP_STATUS rp_EnableDigitalPortDataRLE(bool enable)
     return RP_API_OK;
 }
 
+RP_STATUS rp_SoftwareTrigger(void){
+	rp_LaAcqTriggerAcq(&la_acq_handle);
+	return RP_API_OK;
+}
+
 RP_STATUS rp_IsAcquistionComplete(void){
     int i=0;
     while(i<3){
@@ -242,7 +253,8 @@ RP_STATUS rp_IsAcquistionComplete(void){
         if(status){
             uint32_t trig_addr;
             uint32_t pst_length;
-            rp_LaAcqGetCntStatus(&la_acq_handle, &trig_addr, &pst_length);
+            bool buf_ovfl;
+            rp_LaAcqGetCntStatus(&la_acq_handle, &trig_addr, &pst_length, &buf_ovfl);
             printf("\n\r trig_addr=%d pst_length=%d\n\r", trig_addr, pst_length);
             return RP_API_OK;
         }
@@ -397,19 +409,21 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
+    printf("\r\n get trigger position");
     // get trigger position
     uint32_t trig_sample;
     uint32_t pst_length;
-    if(rp_LaAcqGetCntStatus(&la_acq_handle, &trig_sample, &pst_length)!=RP_OK){
+    bool buf_ovfl;
+    if(rp_LaAcqGetCntStatus(&la_acq_handle, &trig_sample, &pst_length, &buf_ovfl)!=RP_OK){
         rp_LaAcqStopAcq(&la_acq_handle);
         return RP_BLOCK_MODE_FAILED;
     }
 
-
+    printf("\r\n trig_sample %d, pst_length %d, buf_ovfl %d", trig_sample, pst_length, buf_ovfl);
 
    // rp_DmaMemDump(&la_acq_handle);
 
-    // acquired number of post samples must match to req.
+    // acquired number of post samples must match to req
     if(pst_length!=noOfPostTriggerSamples){
         rp_LaAcqStopAcq(&la_acq_handle);
         return RP_BLOCK_MODE_FAILED;
@@ -425,6 +439,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     (*rpReady)(status,pParameter);
 
     rp_LaAcqStopAcq(&la_acq_handle);
+
+    printf("\r\n RP_API_OK");
 
     return RP_API_OK;
 }
@@ -514,8 +530,12 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
     bool rle;
     rp_LaAcqIsRLE(&la_acq_handle,&rle);
     if(rle){ // RLE mode
+
+    	printf("RLE mode\n");
+
         uint32_t current, last;
-        rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last);
+        bool buf_ovfl;
+        rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last, &buf_ovfl);
 
         // find first sample an trigger sample
         uint32_t first_sample=0;
@@ -527,71 +547,58 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         uint32_t index = last;
         uint32_t total = acq_data.pre_samples+acq_data.post_samples;
 
-        // two samples must be removed to fix trigger delay
-        for(i=0;i<2;i++){
+			// find first and last sample
+			i=0;
+			len=0;
+			for(;;){
 
-            len=(map[index]>>8)+1;
+				i++;
+				len+=((uint8_t)(map[index]>>8))+1;
 
-            len-=1; // decrease length of current sampole
-            if(len==0){ // if it is zero we have to remove it
-                if(index==0){
-                    index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
-                }
-                else{
-                    index--;
-                }
-            }
-        }
+				if(len==acq_data.post_samples){
+					acq_data.trig_sample=i;
+				}
 
-        // find first and last sample
-        i=0;
-        len=0;
-        for(;;){
+				if(len>=total){
+					first_sample=index;
+					samples=i;
+					//printf("len %d >= total %d\n",len,total);
+					break;
+				}
 
-            i++;
-            len+=(map[index]>>8)+1;
+			   // printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
+			   // printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
 
-            if(len==acq_data.post_samples){
-                acq_data.trig_sample=i;
-            }
-
-            if(len>=total){
-                first_sample=index;
-                samples=i;
-                break;
-            }
-
-          //  printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
-          //  printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
-
-            if(index==0){
-                index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
-            }
-            else{
-                index--;
-            }
+				if(index==0){
+					index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
+				}
+				else{
+					index--;
+				}
 
 
-        }
+			}
 
-        // copy data
-        index=first_sample;
-        for(i=0;i<samples;i++){
-            if(index>=rp_LaAcqBufLenInSamples(&la_acq_handle)){
-                index=0;
-            }
-            acq_data.buf[i]=map[index];
-            index++;
-        }
+			//printf("copy data\n");
 
-        printf("\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
-/*
-        for(i=0;i<samples;i++){
-            printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(acq_data.buf[i]>>8),(uint8_t)acq_data.buf[i]);
-        }
-        */
+			// copy data
+			index=first_sample;
+			for(i=0;i<samples;i++){
+				if(index>=rp_LaAcqBufLenInSamples(&la_acq_handle)){
+					index=0;
+				}
+				acq_data.buf[i]=map[index];
+				index++;
+			}
 
-        *noOfSamples=samples;
+			printf("\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
+
+			for(i=0;i<samples;i++){
+				printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(acq_data.buf[i]>>8),(uint8_t)acq_data.buf[i]);
+			}
+
+
+			*noOfSamples=samples;
     }
     else{
 
@@ -722,10 +729,8 @@ RP_STATUS rp_GetStreamingLatestValues(rpStreamingReady rpReady,
  * before a trigger event occurs, the oscilloscope may not contain valid data.
  * Always call this function after the end of a capture to ensure that the scope is ready for the next capture.
  */
-
-
 RP_STATUS rp_Stop(void){
-    return rp_LaAcqStopAcq(&la_acq_handle);
+	return rp_LaAcqStopAcq(&la_acq_handle);
 }
 
 /** SIGNAL GENERATION  */

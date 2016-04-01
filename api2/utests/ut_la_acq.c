@@ -35,18 +35,27 @@ void rpReadyCallback(RP_STATUS status, void * pParameter)
 }
 
 pthread_t tid;
+pthread_t tid2;
 
 void* trigGen(void *arg)
 {
-    sleep(2);
+    sleep(1);
     rp_DigSigGenSoftwareControl(1);
     return NULL;
 }
 
+void* trigAcq(void *arg)
+{
+    sleep(2);
+    rp_SoftwareTrigger();
+    return NULL;
+}
+
+
 void la_acq_trig_test(void)
 {
 
-    for(int i=0; i<100; i++){
+    for(int i=0; i<1; i++){
 
         //sleep(1);
 
@@ -60,16 +69,17 @@ void la_acq_trig_test(void)
     rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
     //printf("sample rate %lf",sample_rate);
 
-    // start trigger a bit later in a new thread
-    int err;
-    err = pthread_create(&tid, NULL, &trigGen, NULL);
-    if (err != 0)
+    // start gen a bit later in a new thread
+    if(pthread_create(&tid, NULL, &trigGen, NULL)!=0){
         printf("\ncan't create thread :[%s]", strerror(err));
-    else
-        printf("\n Thread created successfully\n");
+    }
+    // software trig. acq.
+    if(pthread_create(&tid2, NULL, &trigAcq, NULL)!=0){
+        printf("\ncan't create thread :[%s]", strerror(err));
+    }
 
     printf("\r\nTriggers");
-    s=rp_SetTriggerDigitalPortProperties(dir,1);
+    s=rp_SetTriggerDigitalPortProperties(dir,0); //,1)
     if(s!=RP_API_OK){
         CU_FAIL("Failed to set trigger properties.");
     }
@@ -98,6 +108,7 @@ void la_acq_trig_test(void)
 
     // get data
     rp_GetValues(0,&samples,1,RP_RATIO_MODE_NONE,NULL);
+
 
     // verify data
     int first=buf[0];
