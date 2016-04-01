@@ -869,3 +869,8 @@ btn:active {
 .connect-btn {
     background-color: 666666;
 }
+
+.logo-wifi-wizard {
+    padding-top: 10px;
+    text-align: center;
+}

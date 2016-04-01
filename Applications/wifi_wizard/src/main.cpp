@@ -116,6 +116,8 @@ bool CheckIwlist() {
 	std::ifstream tmpFile(tmpFileName);
 	std::getline(tmpFile, lineFromResult);
 
+	fprintf(stderr, "adfasfasdfasdfasdfasdfasd::::: %s\n", lineFromResult.c_str());
+
 	size_t found = lineFromResult.find("iwlist    Wireless-Tools version");
 		if (found != std::string::npos)
 			return true;
