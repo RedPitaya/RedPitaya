@@ -342,11 +342,15 @@ $(function() {
         var pass = $('#passw_enter').val();
         WIZARD.params.local['WIFI_SSID'] = { value: ssid };
         WIZARD.params.local['WIFI_PASSW'] = { value: pass };
-        if (!WIZARD.state.connected)
-            WIZARD.params.local['WIFI_CONNECT'] = { value: true };
-        else
-            WIZARD.params.local['WIFI_CONNECT'] = { value: false };
         WIZARD.sendParams();
+        if (!WIZARD.state.connected) {
+            WIZARD.params.local['WIFI_CONNECT'] = { value: true };
+            $.get("/connect_wifi");
+        } else {
+            WIZARD.params.local['WIFI_CONNECT'] = { value: false };
+            WIZARD.sendParams();
+        }
+        // WIZARD.sendParams();
         WIZARD.params.local = {};
     });
 

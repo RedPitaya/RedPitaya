@@ -39,8 +39,8 @@ int rp_app_init(void) {
     rpApp_OscRun();
 
     // Kill wpa_supplicant, if it up
-	std::string command_Kill_supl = "killall pidof wpa_supplicant";
-	system(command_Kill_supl.c_str());
+	// std::string command_Kill_supl = "killall pidof wpa_supplicant";
+	// system(command_Kill_supl.c_str());
 
     // Check iw tools
     if(!CheckIwlist())
@@ -121,7 +121,7 @@ std::string ToString(std::vector<WIFINode> array) {
 
 bool CheckIwlist() {
 	std::string lineFromResult;
-	std::string tmpFileName = "iwlist.result";
+	std::string tmpFileName = "/tmp/iwlist.result";
 	std::string command = "iwlist -v > " + tmpFileName;
 
 	system(command.c_str());
@@ -144,7 +144,7 @@ void InstallIwlist() {
 
 std::string GetListOfWIFI(std::string wlanInterfaceName) {
 	std::stringstream command;
-	std::string tmpFileName = "scanning.result";
+	std::string tmpFileName = "/tmp/scanning.result";
 	std::string lineFromResult;
 	int lineNumber = 0;
 
@@ -209,16 +209,15 @@ void CreateWPA_SUPPL(std::string ssid, std::string pass) {
 	system(command.c_str());
 }
 
-bool ConnectToNetwork() {
+void ConnectToNetwork() {
     // Kill wpa_supplicant, if it up
 	std::string command_Kill_supl = "killall pidof wpa_supplicant";
 	system(command_Kill_supl.c_str());
+	system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
 
-	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
-	bool result = system(command.c_str());
-	if(result == 0)
-		return true;
-	return false;
+	// std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+	std::string command = "curl http://127.0.0.1/connect_wifi";
+	system(command.c_str());
 }
 
 bool DisconnectNetwork() {
@@ -230,7 +229,7 @@ bool DisconnectNetwork() {
 }
 
 bool CheckConnection() {
-	std::string tmpFileName = "checking.result";
+	std::string tmpFileName = "/tmp/checking.result";
 	std::string command = "iwconfig wlan0 | grep ESSID > " + tmpFileName;
 	std::string lineFromResult;
 
@@ -248,7 +247,7 @@ bool CheckConnection() {
 }
 
 bool CheckDongleOn() {
-	std::string tmpFileName = "checking.result";
+	std::string tmpFileName = "/tmp/checking.result";
 	std::string command = "ip addr | grep wlan > " + tmpFileName;
 	std::string lineFromResult;
 
