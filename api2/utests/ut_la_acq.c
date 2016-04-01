@@ -45,81 +45,83 @@ void* trigGen(void *arg)
 
 void la_acq_trig_test(void)
 {
+	double srates[] = {1e6, 2e6, 5e6, 10e6, 25e6, 50e6, 100e6, 200e6};
+    for(int i=0; i<8; i++) { // 0-7 DIN
+    	for(int j=0; j<7; j++) { // all directions
+    		for(int k=6; k<8; k++) { // all sample rates
+				fprintf(stderr, "ch %d dir %d sr %f\n", i, j, srates[k]);
+				RP_STATUS s;
+				RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
+				dir[0].channel=i;
+				dir[0].direction=j;
 
-    for(int i=0; i<100; i++){
+				rp_DigSigGenOuput(true);
+				double sample_rate=srates[k];
+				rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
+				//printf("sample rate %lf",sample_rate);
 
-        //sleep(1);
+				// start trigger a bit later in a new thread
+				int err;
+				err = pthread_create(&tid, NULL, &trigGen, NULL);
+				if (err != 0)
+					printf("\ncan't create thread :[%s]", strerror(err));
+				else
+					printf("\n Thread created successfully\n");
 
-    RP_STATUS s;
-    RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
-    dir[0].channel=RP_DIGITAL_CHANNEL_7;
-    dir[0].direction=RP_DIGITAL_DIRECTION_RISING;
+				printf("\r\nTriggers");
+				s=rp_SetTriggerDigitalPortProperties(dir,1);
+				if(s!=RP_API_OK){
+					CU_FAIL("Failed to set trigger properties.");
+				}
 
-    rp_DigSigGenOuput(true);
-    double sample_rate=125e6;
-    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
-    //printf("sample rate %lf",sample_rate);
+				// enable RLE
+				rp_EnableDigitalPortDataRLE(1);
 
-    // start trigger a bit later in a new thread
-    int err;
-    err = pthread_create(&tid, NULL, &trigGen, NULL);
-    if (err != 0)
-        printf("\ncan't create thread :[%s]", strerror(err));
-    else
-        printf("\n Thread created successfully\n");
+				printf("\r\nRunBlock");
+				double timeIndisposedMs;
+				uint32_t pre=100;
+				uint32_t post=8000;
+				s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
+				if(s!=RP_API_OK){
+					CU_FAIL("Failed to acquire data.");
+				}
 
-    printf("\r\nTriggers");
-    s=rp_SetTriggerDigitalPortProperties(dir,1);
-    if(s!=RP_API_OK){
-        CU_FAIL("Failed to set trigger properties.");
-    }
+				uint32_t samples=pre+post;
 
-    // enable RLE
-    rp_EnableDigitalPortDataRLE(1);
+				int16_t * buf = malloc(samples * sizeof(int16_t));
+				if (NULL == buf) {
+					CU_FAIL("malloc failed");
+				}
 
-    printf("\r\nRunBlock");
-    double timeIndisposedMs;
-    uint32_t pre=100;
-    uint32_t post=8000;
-    s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
-    if(s!=RP_API_OK){
-        CU_FAIL("Failed to acquire data.");
-    }
+				// set data buffer to which data will be read from memory space
+				rp_SetDataBuffer(RP_CH_DIN,buf,samples,RP_RATIO_MODE_NONE);
 
-    uint32_t samples=pre+post;
+				// get data
+				rp_GetValues(0,&samples,1,RP_RATIO_MODE_NONE,NULL);
 
-    int16_t * buf = malloc(samples * sizeof(int16_t));
-    if (NULL == buf) {
-        CU_FAIL("malloc failed");
-    }
+				// verify data
+				int first=buf[0];
+				for(int i=0;i<samples;i++){
+					if(buf[i]!=first){
+						printf("\n\r data mismatch @ i=%d buf=%04x exp=%04x",i,buf[i],first);
+						break;
+					}
+					if(first==0xff)
+						first=0;
+					else
+						first++;
+				}
 
-    // set data buffer to which data will be read from memory space
-    rp_SetDataBuffer(RP_CH_DIN,buf,samples,RP_RATIO_MODE_NONE);
+				// verify trigger position
+				printf("\n\r data @ trigger pos \n\r");
+				printf("\n\r %04x",buf[pre-1]);
+				printf("\n\r ->%04x",buf[pre]);
+				printf("\n\r %04x",buf[pre+1]);
 
-    // get data
-    rp_GetValues(0,&samples,1,RP_RATIO_MODE_NONE,NULL);
-
-    // verify data
-    int first=buf[0];
-    for(int i=0;i<samples;i++){
-        if(buf[i]!=first){
-            printf("\n\r data mismatch @ i=%d buf=%04x exp=%04x",i,buf[i],first);
-            break;
-        }
-        if(first==0xff)
-            first=0;
-        else
-            first++;
-    }
-
-    // verify trigger position
-    printf("\n\r data @ trigger pos \n\r");
-    printf("\n\r %04x",buf[pre-1]);
-    printf("\n\r ->%04x",buf[pre]);
-    printf("\n\r %04x",buf[pre+1]);
-
-    free(buf);
-    }
+				free(buf);
+			}
+		}
+	}
 }
 
 void reg_rw_test(void){
