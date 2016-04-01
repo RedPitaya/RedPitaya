@@ -22,6 +22,7 @@ CStringParameter okOut("WIFI_OK", CBaseParameter::RW, "", 10000);
 CBooleanParameter installWT("WIFI_INSTALL", CBaseParameter::RW, false, 0);
 CBooleanParameter connectedWifi("WIFI_CONNECTED", CBaseParameter::RWSA, false, 0);
 CBooleanParameter doConnect("WIFI_CONNECT", CBaseParameter::RW, false, 0);
+CBooleanParameter checkDongleOn("WIFI_DONGLE_STATE", CBaseParameter::RW, true, 0);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -37,10 +38,17 @@ int rp_app_init(void) {
     rpApp_Init();
     rpApp_OscRun();
 
+    // Check iw tools
     if(!CheckIwlist())
     	errorOut.Value() = "wt not installed";
     else
     	okOut.Value() = "wt installed";
+
+    // Check dongle connection
+    if(!CheckDongleOn())
+    	checkDongleOn.Value() = false;
+    else
+    	checkDongleOn.Value() = true;
 
     return 0;
 }
@@ -206,13 +214,34 @@ bool ConnectToNetwork() {
 }
 
 bool DisconnectNetwork() {
+	std::string command_kill_AP = "killall pidof hostapd";
 	std::string command = "killall pidof wpa_supplicant";
+
+	system(command_kill_AP.c_str());    // Kill hostapd, if it up
 	bool result = system(command.c_str());
 }
 
 bool CheckConnection() {
 	std::string tmpFileName = "checking.result";
 	std::string command = "iwconfig wlan0 | grep ESSID > " + tmpFileName;
+	std::string lineFromResult;
+
+	system(command.c_str());
+
+	std::ifstream infile(tmpFileName);
+	std::getline(infile, lineFromResult);
+	infile.close();
+
+	size_t found = lineFromResult.find("wlan0");
+		if (found != std::string::npos)
+			return true;
+
+	return false;
+}
+
+bool CheckDongleOn() {
+	std::string tmpFileName = "checking.result";
+	std::string command = "ifconfig | grep wlan > " + tmpFileName;
 	std::string lineFromResult;
 
 	system(command.c_str());

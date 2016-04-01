@@ -159,13 +159,20 @@
                 console.log(new_params[param_name].value);
             } else if (param_name == 'WIFI_CONNECTED') {
                 WIZARD.connectionControl(new_params[param_name].value);
-                console.log(new_params[param_name].value);
+            } else if (param_name == 'WIFI_DONGLE_STATE') {
+                WIZARD.dongleEnablingDialog(new_params[param_name].value);
+                console.log("DONGLE: " + new_params[param_name].value);
             }
         }
     };
 
     WIZARD.installWTDialog = function() {
         $('#wtools_missing').modal('show');
+    }
+
+    WIZARD.dongleEnablingDialog = function(state) {
+        if(!state)
+            $('#dongle_missing').modal('show');
     }
 
     WIZARD.connectionControl = function(result) {
